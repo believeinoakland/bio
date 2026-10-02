@@ -476,9 +476,9 @@ var deriveInquiryTitle = (question) => {
   const flat = line.replace(/\s+/g, " ");
   if (flat === "") return null;
   if (flat.length <= 120) return flat;
-  const cut3 = flat.slice(0, 120);
-  const at26 = cut3.lastIndexOf(" ");
-  return (at26 > 0 ? cut3.slice(0, at26) : cut3) + "\u2026";
+  const cut4 = flat.slice(0, 120);
+  const at26 = cut4.lastIndexOf(" ");
+  return (at26 > 0 ? cut4.slice(0, at26) : cut4) + "\u2026";
 };
 var inquiryQuestionOf = (markdown) => {
   const m = /\n## Question[^\S\n]*\n([\s\S]*?)(?=\n## |$)/.exec("\n" + String(markdown == null ? "" : markdown));
@@ -4301,7 +4301,7 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     penKnown = true;
     markInk();
   };
-  const run = async (toks2, depth, formChain) => {
+  const run2 = async (toks2, depth, formChain) => {
     for (const tk of toks2) {
       if (tk.t !== "op") {
         stack.push(tk);
@@ -4481,7 +4481,7 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       scopeTag = "f" + (key ?? "?" + depth) + ":";
     }
     try {
-      await run(formToks, depth + 1, key != null ? [...formChain, key] : formChain);
+      await run2(formToks, depth + 1, key != null ? [...formChain, key] : formChain);
     } finally {
       ({
         ctm,
@@ -4501,7 +4501,7 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       } = saved);
     }
   };
-  await run(toks, 0, []);
+  await run2(toks, 0, []);
   let text5 = pieces.join("").replace(/\n{2,}/g, "\n").replace(/^\n+|\n+$/g, "");
   if (!text5.length && !undetermined.length && pageDrawsImage(doc, resources) && (!fontDict || await pageShowsText(doc, pageMap) === false)) {
     undetermined.push({
@@ -5619,9 +5619,9 @@ var CONTENT_TYPES_PART2 = "[Content_Types].xml";
 var MAIN_PART = "word/document.xml";
 var COMMENTS_PART = "word/comments.xml";
 var EMBEDDINGS_DIR = "word/embeddings/";
-function docParaRef(para, run = null) {
+function docParaRef(para, run2 = null) {
   const ref = { kind: "doc-para", ref: `\xB6${para + 1}`, para };
-  if (run != null) ref.run = run;
+  if (run2 != null) ref.run = run2;
   return ref;
 }
 function docTableRef(table2, cell = null) {
@@ -5684,7 +5684,7 @@ function walkDocumentBody(xml) {
   const commentRefs = /* @__PURE__ */ new Map();
   const ridUsage = /* @__PURE__ */ new Map();
   let para = -1;
-  let run = -1;
+  let run2 = -1;
   let inPara = false;
   let last = -1;
   const outer = [];
@@ -5697,7 +5697,7 @@ function walkDocumentBody(xml) {
     for (const key of ["id", "embed", "link"]) {
       const v = attrs[key];
       if (typeof v === "string" && /^rId/.test(v) && !ridUsage.has(v))
-        ridUsage.set(v, { para, run: run >= 0 ? run : null });
+        ridUsage.set(v, { para, run: run2 >= 0 ? run2 : null });
     }
   };
   const appendVisible = (s) => {
@@ -5726,7 +5726,7 @@ function walkDocumentBody(xml) {
     if (closing) {
       if (name2 === "t" || name2 === "delText") textTarget = null;
       else if (name2 === "p") {
-        if (outer.length) ({ para, run } = outer.pop());
+        if (outer.length) ({ para, run: run2 } = outer.pop());
         else inPara = false;
       } else if (name2 === "hyperlink") {
         const h = hyperStack.pop();
@@ -5744,25 +5744,25 @@ function walkDocumentBody(xml) {
     switch (name2) {
       case "p":
         if (!selfClosed) {
-          if (inPara) outer.push({ para, run });
+          if (inPara) outer.push({ para, run: run2 });
           para = ++last;
-          run = -1;
+          run2 = -1;
           inPara = true;
           paragraphs.push({ para, text: "" });
         } else {
           paragraphs.push({ para: ++last, text: "" });
           if (!inPara) {
             para = last;
-            run = -1;
+            run2 = -1;
           }
         }
         break;
       case "r":
         if (inPara && !selfClosed) {
-          run++;
-          for (const c of hyperStack) if (c.run == null) c.run = run;
-          for (const c of insStack) if (c.run == null) c.run = run;
-          for (const c of delStack) if (c.run == null) c.run = run;
+          run2++;
+          for (const c of hyperStack) if (c.run == null) c.run = run2;
+          for (const c of insStack) if (c.run == null) c.run = run2;
+          for (const c of delStack) if (c.run == null) c.run = run2;
         }
         break;
       case "t":
@@ -5799,7 +5799,7 @@ function walkDocumentBody(xml) {
         break;
       case "commentReference":
         if (attrs.id != null && !commentRefs.has(attrs.id))
-          commentRefs.set(attrs.id, { para, run: run >= 0 ? run : null });
+          commentRefs.set(attrs.id, { para, run: run2 >= 0 ? run2 : null });
         break;
       default:
         noteRid(attrs);
@@ -6015,13 +6015,13 @@ function docxRenumbering(xml) {
       if (skip) paragraphs[old] = { old, new: null, outer: now.s.inPara ? now.s.para : null };
       else paragraphs[old] = { old, new: now.openP(selfClosed), outer: null };
     } else if (name2 === "r" && !selfClosed) {
-      const run = was.openR();
-      if (run == null) continue;
+      const run2 = was.openR();
+      if (run2 == null) continue;
       const para = was.s.para;
       if (skip) {
         const p = paragraphs[para];
-        runs.push({ old: { para, run }, new: null, outer: p ? p.new ?? p.outer : null });
-      } else runs.push({ old: { para, run }, new: { para: now.s.para, run: now.openR() }, outer: null });
+        runs.push({ old: { para, run: run2 }, new: null, outer: p ? p.new ?? p.outer : null });
+      } else runs.push({ old: { para, run: run2 }, new: { para: now.s.para, run: now.openR() }, outer: null });
     } else if (name2 === "tbl") {
       tables.push({ old: tables.length, new: skip ? null : tablesNew++ });
     }
@@ -7675,7 +7675,7 @@ function elementsNested(xml, localName, limit = Infinity) {
 }
 function stripElement(xml, localName) {
   let out = "";
-  let cut3 = 0;
+  let cut4 = 0;
   const RE = tokens();
   let m, depth = 0, start = -1;
   while ((m = RE.exec(xml)) !== null) {
@@ -7685,26 +7685,26 @@ function stripElement(xml, localName) {
     const selfClosed = m[3] === "/";
     if (selfClosed) {
       if (depth === 0) {
-        out += xml.slice(cut3, m.index);
-        cut3 = RE.lastIndex;
+        out += xml.slice(cut4, m.index);
+        cut4 = RE.lastIndex;
       }
       continue;
     }
     if (closing) {
       depth--;
       if (depth === 0 && start >= 0) {
-        cut3 = RE.lastIndex;
+        cut4 = RE.lastIndex;
         start = -1;
       }
       continue;
     }
     if (depth === 0) {
-      out += xml.slice(cut3, m.index);
+      out += xml.slice(cut4, m.index);
       start = m.index;
     }
     depth++;
   }
-  return out + xml.slice(cut3);
+  return out + xml.slice(cut4);
 }
 function visibleText(xml) {
   let out = "";
@@ -9601,6 +9601,9 @@ function registerFormat(entry) {
 }
 function getFormat(format) {
   return REGISTRY.get(format) || null;
+}
+function listFormats() {
+  return [...REGISTRY.keys()];
 }
 function detectFormat(bytes2, contentType) {
   const b = bytes2 instanceof Uint8Array && bytes2.length ? bytes2 : null;
@@ -16370,13 +16373,13 @@ var RecordCore = class _RecordCore {
                        WHERE typeof(${column}) = 'text' AND substr(${column}, 1, length(?)) = ?`, at26, head, head);
     }
     const scopes = _RecordCore.UNTAILED_GATED_PREFIXES.map((p) => `${p}-[0-9][0-9][0-9][0-9]`);
-    const inScope = (col) => scopes.map(() => `${col} GLOB ?`).join(" OR ");
+    const inScope2 = (col) => scopes.map(() => `${col} GLOB ?`).join(" OR ");
     this.#sql.exec(
       `INSERT OR IGNORE INTO minted_ids (id,recorded_at,source)
                     WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n
-                      WHERE i < (SELECT MIN(9999, COALESCE(MAX(next), 1) - 1) FROM seq WHERE ${inScope("scope")}))
+                      WHERE i < (SELECT MIN(9999, COALESCE(MAX(next), 1) - 1) FROM seq WHERE ${inScope2("scope")}))
                     SELECT s.scope || '-' || printf('%04d', n.i), ?, 'counter'
-                      FROM seq s JOIN n ON n.i < s.next WHERE ${inScope("s.scope")}`,
+                      FROM seq s JOIN n ON n.i < s.next WHERE ${inScope2("s.scope")}`,
       ...scopes,
       at26,
       ...scopes
@@ -16485,9 +16488,9 @@ var RecordCore = class _RecordCore {
    *  K is `_history/bundle_K.md`, `data/changes.json` is `_history/data/changes_K.json` — because the
    *  check catalogue parses exactly this shape (C-12.2). */
   static snapPath(path, snapKey) {
-    const cut3 = path.lastIndexOf("/");
-    const dir = cut3 === -1 ? "" : path.slice(0, cut3 + 1);
-    const name2 = cut3 === -1 ? path : path.slice(cut3 + 1);
+    const cut4 = path.lastIndexOf("/");
+    const dir = cut4 === -1 ? "" : path.slice(0, cut4 + 1);
+    const name2 = cut4 === -1 ? path : path.slice(cut4 + 1);
     const dot = name2.lastIndexOf(".");
     return dot === -1 ? `_history/${dir}${name2}_${snapKey}` : `_history/${dir}${name2.slice(0, dot)}_${snapKey}${name2.slice(dot)}`;
   }
@@ -17169,7 +17172,7 @@ var RecordCore = class _RecordCore {
   /* `grammars()`' list. With `wrap`, each claimant's arm is called through `wrap(registration, run)`: the audit wraps each
      claimant on its own (one that throws is one error of its own, R67); `null` calls each as it is. */
   #bundleGrammars(wrap) {
-    const out = [], composed = /* @__PURE__ */ new Map(), call = wrap || ((g, run) => run());
+    const out = [], composed = /* @__PURE__ */ new Map(), call = wrap || ((g, run2) => run2());
     const passThrough = (g) => g.slots.length === 0 || g.slots.length === 1 && !this.#grammars.some((x) => x !== g && x.slots.includes(g.slots[0]));
     for (const g of this.#grammars) {
       if (passThrough(g)) {
@@ -17262,9 +17265,9 @@ var RecordCore = class _RecordCore {
         if (got && typeof got === "object") Object.assign(extra, got);
       }
       if (typeof context === "function") Object.assign(extra, context(id) || {});
-      const grammars = this.#bundleGrammars(async (g, run) => {
+      const grammars = this.#bundleGrammars(async (g, run2) => {
         try {
-          await run();
+          await run2();
         } catch (e) {
           failOn(failed2, g.module, id, e);
         }
@@ -33140,9 +33143,9 @@ var EXT = [
 ];
 function runLookup(codes) {
   const t = new Int32Array(1 << 13);
-  for (const [n, code, run] of [...codes, ...EXT]) {
+  for (const [n, code, run2] of [...codes, ...EXT]) {
     const base = code << 13 - n;
-    for (let i = 0; i < 1 << 13 - n; i++) t[base | i] = n << 16 | run + 1;
+    for (let i = 0; i < 1 << 13 - n; i++) t[base | i] = n << 16 | run2 + 1;
   }
   return t;
 }
@@ -33176,9 +33179,9 @@ function mmrRun(br, lut) {
     const e = lut[br.peek(13)];
     if (!e || e >> 16 > br.left) return -1;
     br.skip(e >> 16);
-    const run = (e & 65535) - 1;
-    total += run;
-    if (run < 64) return total;
+    const run2 = (e & 65535) - 1;
+    total += run2;
+    if (run2 < 64) return total;
   }
 }
 function decodeMmr(d, p, end2, w, h) {
@@ -33724,10 +33727,10 @@ function decodeSymbolDict(seg, r, results, tables, used) {
   const exported = [];
   let exFlag = 0, i = 0;
   while (i < all.length) {
-    const run = intOrThrow(huff ? bits.huff(standardTable(1)) : iaDecode(mq, ia.EX), "an export run");
-    if (run < 0 || i + run > all.length) throw corrupt("an export run past the symbols");
-    if (exFlag) exported.push(...all.slice(i, i + run));
-    i += run;
+    const run2 = intOrThrow(huff ? bits.huff(standardTable(1)) : iaDecode(mq, ia.EX), "an export run");
+    if (run2 < 0 || i + run2 > all.length) throw corrupt("an export run past the symbols");
+    if (exFlag) exported.push(...all.slice(i, i + run2));
+    i += run2;
     exFlag ^= 1;
   }
   if (exported.length !== numEx) throw corrupt(`${exported.length} symbols exported where SDNUMEXSYMS is ${numEx}`);
@@ -35227,12 +35230,12 @@ function ccittDecode(data, { K: K3 = 0, columns = 1728, rows: rows2 = 0, byteAli
         color ^= 1;
       } else {
         const s = a0 < 0 ? 0 : a0;
-        const run = readRun(br, color === 0 ? WHITE_ALL : BLACK_ALL);
-        if (run == null) {
+        const run2 = readRun(br, color === 0 ? WHITE_ALL : BLACK_ALL);
+        if (run2 == null) {
           broken = true;
           break;
         }
-        const m = Math.min(columns, s + run);
+        const m = Math.min(columns, s + run2);
         cur.push(m);
         a0 = m;
         color ^= 1;
@@ -36406,11 +36409,11 @@ var Calibration = class {
         for (const l of this.#listeners) {
           const r = l.fn({ calibration_id: id, engine: cal.engine, version: cal.version, supersedes, drift: d });
           if (r == null) continue;
-          const cut3 = r && typeof r === "object" && !Array.isArray(r) && Array.isArray(r.obligations) && (r.truncated === void 0 || typeof r.truncated === "boolean");
-          if (!Array.isArray(r) && !cut3)
+          const cut4 = r && typeof r === "object" && !Array.isArray(r) && Array.isArray(r.obligations) && (r.truncated === void 0 || typeof r.truncated === "boolean");
+          if (!Array.isArray(r) && !cut4)
             throw new TypeError(`calibration listener ${l.module} answered something other than a list of obligations`);
-          obligations.push(...cut3 ? r.obligations : r);
-          if (cut3 && r.truncated === true) truncated3 = true;
+          obligations.push(...cut4 ? r.obligations : r);
+          if (cut4 && r.truncated === true) truncated3 = true;
         }
       }
       return {
@@ -38353,20 +38356,20 @@ function textUnitsFor(i2text) {
     ) : Array.isArray(i2text.sheets) ? arm(i2text.sheets, "sheet-range", sheetRangeOf).filter((u) => u.extent.sheet !== null) : null;
     let budget = ACQUIRE_TEXT_UNITS_BUDGET, dropped = 0;
     const kept = [], runs = [];
-    let run = null;
+    let run2 = null;
     const skip = (u) => {
-      if (run) {
-        run.last = u.extent;
-        run.last_seq = u.seq;
-        run.units++;
+      if (run2) {
+        run2.last = u.extent;
+        run2.last_seq = u.seq;
+        run2.units++;
         return;
       }
-      run = { first: u.extent, first_seq: u.seq, last: u.extent, last_seq: u.seq, units: 1 };
-      runs.push(run);
+      run2 = { first: u.extent, first_seq: u.seq, last: u.extent, last_seq: u.seq, units: 1 };
+      runs.push(run2);
     };
     for (const u of units || []) {
-      const cut3 = u.text.length > CAPTURE_TEXT_UNIT_CAP;
-      const text5 = cut3 ? u.text.slice(0, CAPTURE_TEXT_UNIT_CAP) : u.text;
+      const cut4 = u.text.length > CAPTURE_TEXT_UNIT_CAP;
+      const text5 = cut4 ? u.text.slice(0, CAPTURE_TEXT_UNIT_CAP) : u.text;
       const size = new TextEncoder().encode(text5).length + ACQUIRE_TEXT_UNIT_ENVELOPE;
       if (size > budget) {
         dropped++;
@@ -38374,8 +38377,8 @@ function textUnitsFor(i2text) {
         continue;
       }
       budget -= size;
-      kept.push(cut3 ? { ...u, text: text5, truncated: true } : u);
-      run = null;
+      kept.push(cut4 ? { ...u, text: text5, truncated: true } : u);
+      run2 = null;
     }
     textUnits = kept.length ? kept : null;
     textUnitsOverBound = dropped;
@@ -39607,16 +39610,16 @@ var Extraction = class _Extraction {
     const kinds = /* @__PURE__ */ new Set(), unaddressed = [];
     const seen = /* @__PURE__ */ new Set();
     const runs = [];
-    let run = null;
+    let run2 = null;
     const skip = (u, extent) => {
-      if (run) {
-        run.last = u.extent;
-        run.lastExtent = extent;
-        run.last_seq = u.seq;
-        run.units++;
+      if (run2) {
+        run2.last = u.extent;
+        run2.lastExtent = extent;
+        run2.last_seq = u.seq;
+        run2.units++;
         return;
       }
-      run = {
+      run2 = {
         first: u.extent,
         firstExtent: extent,
         first_seq: u.seq,
@@ -39626,7 +39629,7 @@ var Extraction = class _Extraction {
         units: 1,
         side: "store"
       };
-      runs.push(run);
+      runs.push(run2);
     };
     for (const u of ordered) {
       const kind = u.extent && typeof u.extent === "object" && typeof u.extent.kind === "string" ? u.extent.kind : null;
@@ -39651,9 +39654,9 @@ var Extraction = class _Extraction {
         continue;
       }
       bytes2 += size;
-      run = null;
-      const cut3 = capped.length < full.length || u.wireCut;
-      if (cut3) truncatedUnits++;
+      run2 = null;
+      const cut4 = capped.length < full.length || u.wireCut;
+      if (cut4) truncatedUnits++;
       const chainKind2 = kindOf(u.extent);
       kinds.add(chainKind2);
       this.#sql.exec(
@@ -39666,7 +39669,7 @@ var Extraction = class _Extraction {
         describeExtent(u.extent),
         u.seq,
         capped,
-        cut3 ? 1 : 0,
+        cut4 ? 1 : 0,
         chainKind2
       );
       written++;
@@ -43136,8 +43139,8 @@ async function checkInformationExtension(ctx, findings) {
   const dsRaw = ctx.files.get("data/dataset.json");
   if (dsRaw && chOk) {
     try {
-      const canon3 = canonicalJson(JSON.parse(asText6(dsRaw)));
-      const actual = "sha256:" + await ctx.sha256(canon3);
+      const canon4 = canonicalJson(JSON.parse(asText6(dsRaw)));
+      const actual = "sha256:" + await ctx.sha256(canon4);
       if (actual !== ch) {
         findings.push(f8(
           "C-2.7",
@@ -46690,18 +46693,18 @@ var Capture = class _Capture {
     );
     const seq = found.slice(0, cap).reverse();
     const fps = [...new Set(seq.map((o) => o.fingerprint))];
-    const linksOf = new Map(fps.map((f17) => [f17, JSON.parse(this.#one(`SELECT links FROM site_chrome WHERE host = ? AND fingerprint = ?`, h, f17)?.links || "[]")]));
+    const linksOf2 = new Map(fps.map((f17) => [f17, JSON.parse(this.#one(`SELECT links FROM site_chrome WHERE host = ? AND fingerprint = ?`, h, f17)?.links || "[]")]));
     const records = fps.map((f17) => {
       const mine = seq.filter((o) => o.fingerprint === f17);
       return {
         fingerprint: f17,
-        links: linksOf.get(f17),
+        links: linksOf2.get(f17),
         captures: mine.length,
         first_observed: mine.map((o) => o.first_observed).sort()[0],
         last_observed: mine.map((o) => o.last_observed).sort().pop()
       };
     });
-    const pagesCarrying = (a) => new Set(seq.filter((o) => linksOf.get(o.fingerprint).includes(a)).map((o) => o.page));
+    const pagesCarrying = (a) => new Set(seq.filter((o) => linksOf2.get(o.fingerprint).includes(a)).map((o) => o.page));
     const obs = (o) => ({
       source_capture: o.source_capture,
       page: o.page,
@@ -46713,14 +46716,14 @@ var Capture = class _Capture {
     for (let i = 1; i < seq.length; i++) {
       const a = seq[i - 1], b = seq[i];
       if (a.fingerprint === b.fingerprint) continue;
-      const A = new Set(linksOf.get(a.fingerprint)), B = new Set(linksOf.get(b.fingerprint));
+      const A = new Set(linksOf2.get(a.fingerprint)), B = new Set(linksOf2.get(b.fingerprint));
       const gone = [...A].filter((x) => !B.has(x)).sort();
       const came = [...B].filter((x) => !A.has(x)).sort();
       changes.push({ from: obs(a), to: obs(b), lost: gone, gained: came, same_page: a.page === b.page });
       for (const address_norm of gone) {
         const pages = pagesCarrying(address_norm);
         if (pages.size >= 2) {
-          const again = seq.filter((o) => o.last_observed > b.first_observed && linksOf.get(o.fingerprint).includes(address_norm)).map((o) => o.last_observed).sort().pop() || null;
+          const again = seq.filter((o) => o.last_observed > b.first_observed && linksOf2.get(o.fingerprint).includes(address_norm)).map((o) => o.last_observed).sort().pop() || null;
           lost.push({
             address_norm,
             recurred_on: pages.size,
@@ -49791,7 +49794,7 @@ function checkConnectionMentionUnchosen({
   pairGrade = null,
   pairReached = false,
   mentions = [],
-  cut: cut3 = false,
+  cut: cut4 = false,
   extentKind,
   extent,
   covers: covers2,
@@ -49811,7 +49814,7 @@ function checkConnectionMentionUnchosen({
   const name2 = (list2) => list2.map((m) => `${m.ref} (${m.position ? `read at ${m.position.ref}` : "where it was read is not recorded"})`).join(", ");
   if (!pairReached) {
     const bearing = others.filter((m) => m.inside !== false);
-    if (!bearing.length && !cut3) return null;
+    if (!bearing.length && !cut4) return null;
     const inside = bearing.filter((m) => m.inside === true);
     return refusal6(
       "CONNECTION_PAIR_MENTION_UNCHOSEN",
@@ -49820,7 +49823,7 @@ function checkConnectionMentionUnchosen({
     );
   }
   const tied = others.filter((m) => r(m.grade) >= r(pairGrade) && m.inside !== true);
-  if (!tied.length && !cut3) return null;
+  if (!tied.length && !cut4) return null;
   return refusal6(
     "CONNECTION_PAIR_MENTION_UNCHOSEN",
     `the connection's pair (${pairRef ?? "unnamed"}) was read inside ${part}, but it was kept over ` + (tied.length ? `an equal-grade mention of the same subject, ${name2(tied)}, that is not inside it,` : `mentions of the subject that were not all read,`) + ` by a tie-break \u2014 sort order, which says nothing about which mention is on point \u2014 so whether this connection reaches the citation is undetermined`,
@@ -52639,9 +52642,9 @@ function derivationStatement(row2 = null, missingCause2 = null) {
     const documents = derivationDocumentsFrom(row2.detail);
     const at26 = row2.at == null ? null : String(row2.at);
     const over = documents == null ? "an unrecorded number of documents" : `${documents} document(s)`;
-    const cut3 = row2.state === "partial";
-    const says = cut3 ? `the latest derivation (${at26}) was CUT by its bound after ${over}: the connections here are true but are part of the set through this subject, not all of it` : row2.state === "PRESENT" ? `the latest derivation (${at26}) read ${over} and was not cut` : row2.state === "LOOKED_ABSENT" ? `the latest derivation (${at26}) ran over ${over}, was not cut, and formed no connection` : `the latest derivation (${at26}) recorded state ${row2.state}`;
-    return { state: row2.state, cut: cut3, at: at26, documents, derived: "derived", says };
+    const cut4 = row2.state === "partial";
+    const says = cut4 ? `the latest derivation (${at26}) was CUT by its bound after ${over}: the connections here are true but are part of the set through this subject, not all of it` : row2.state === "PRESENT" ? `the latest derivation (${at26}) read ${over} and was not cut` : row2.state === "LOOKED_ABSENT" ? `the latest derivation (${at26}) ran over ${over}, was not cut, and formed no connection` : `the latest derivation (${at26}) recorded state ${row2.state}`;
+    return { state: row2.state, cut: cut4, at: at26, documents, derived: "derived", says };
   }
   const cause = typeof missingCause2 === "string" ? missingCause2 : "purged";
   if (cause === "never_looked")
@@ -60408,8 +60411,8 @@ function appendSessionLog2(text5, entry) {
   const at26 = text5.indexOf("## Session Log");
   if (at26 < 0) return text5 + "\n## Session Log\n\n" + entry;
   const nxt = text5.indexOf("\n## ", at26 + 1);
-  const cut3 = nxt === -1 ? text5.length : nxt + 1;
-  return text5.slice(0, cut3) + entry + "\n" + text5.slice(cut3);
+  const cut4 = nxt === -1 ? text5.length : nxt + 1;
+  return text5.slice(0, cut4) + entry + "\n" + text5.slice(cut4);
 }
 function spliceBasisGround(text5, byOrd) {
   const lines = text5.split("\n");
@@ -60618,10 +60621,10 @@ function contradictionFindings(fm) {
             incomplete("reason", "a corrected resolution says why that side is wrong: a non-empty `reason`.");
           else if (present(reason) && (text2(reason) === null || text2(reason).trim() === ""))
             incomplete("reason", "`reason` is a non-empty statement.");
-          const canon3 = block.canon;
-          if (kind === "conflict_of_norms" && !present(canon3))
+          const canon4 = block.canon;
+          if (kind === "conflict_of_norms" && !present(canon4))
             incomplete("canon", `a conflict of norms names the canon that reconciles them, or says none does: \`canon\` from ${NORM_CANONS.join(", ")}.`);
-          else if (present(canon3) && !NORM_CANONS.includes(canon3))
+          else if (present(canon4) && !NORM_CANONS.includes(canon4))
             incomplete("canon", `\`canon\` is one of ${NORM_CANONS.join(", ")}.`);
           for (const [key, name2] of [["qualifier_a", "a"], ["qualifier_b", "b"]]) {
             const v = block[key];
@@ -62868,13 +62871,13 @@ Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(
    *  the next read's continuation. */
   #backfillLegContent(bundleId, legs) {
     const need = legs.filter((l) => !l.content_id);
-    const run = need.slice(0, LEG_BACKFILL_MAX);
-    if (!run.length) return { ran: 0, truncated: false };
+    const run2 = need.slice(0, LEG_BACKFILL_MAX);
+    if (!run2.length) return { ran: 0, truncated: false };
     const outcomes = /* @__PURE__ */ new Map();
     this.record.transact(() => {
-      for (const l of run) outcomes.set(l.ord, this.ensureLegContent(bundleId, l.ord));
+      for (const l of run2) outcomes.set(l.ord, this.ensureLegContent(bundleId, l.ord));
     });
-    for (const l of run) {
+    for (const l of run2) {
       const o = outcomes.get(l.ord);
       if (!o || !o.ok) {
         l.why_no_content = o && o.detail ? o.detail : null;
@@ -62888,7 +62891,7 @@ Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(
         l.why_no_content = o.why || null;
       }
     }
-    return { ran: run.length, truncated: need.length > run.length };
+    return { ran: run2.length, truncated: need.length > run2.length };
   }
   /* ===================== REC-18 · THE EARNED BASIS GRADES ===========   *
    * DATA-MODEL D1(b), as DEC-15 closed it: a document leg's CONNECTION grade is
@@ -64517,7 +64520,7 @@ function versionAsWritten({
   claim,
   relationship,
   derived_from,
-  run,
+  run: run2,
   author,
   at: at26,
   level,
@@ -64536,7 +64539,7 @@ function versionAsWritten({
       claim: opt(claim),
       relationship: fs(String(relationship ?? "and").trim().toLowerCase()),
       derived_from: opt(derived_from),
-      run: fs(run),
+      run: fs(run2),
       author: blank2(author) ? null : fs(author),
       at: fs(at26),
       level: opt(level),
@@ -66126,7 +66129,7 @@ Claim: ${f17.claim}
    *  numbers inline, text quoted. Whether the composition differs in substance from every held version is the
    *  caller's check. Refusals: `NO_SUCH_BUNDLE`, `NOT_AN_INQUIRY`, `NO_DOCUMENT`, `UNSPLICEABLE_BASIS`; promote's own
    *  come back unchanged. */
-  appendVersion({ target, version, grounds = [], legs = [], author, run, kind, at: at26, log } = {}) {
+  appendVersion({ target, version, grounds = [], legs = [], author, run: run2, kind, at: at26, log } = {}) {
     const tgt = String(target ?? "").trim();
     const b = this.#held(tgt);
     if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target: tgt || null };
@@ -66137,7 +66140,7 @@ Claim: ${f17.claim}
     const fm0 = parseFrontmatter(src).data || {};
     const v = version && typeof version === "object" ? { ...version } : {};
     if (kind !== void 0 && v.kind === void 0) v.kind = kind;
-    if (run !== void 0 && v.run === void 0) v.run = run;
+    if (run2 !== void 0 && v.run === void 0) v.run = run2;
     const when = at26 || this.now();
     const name2 = String(v.name ?? "");
     const vLines = [];
@@ -69444,10 +69447,10 @@ function redactAxis(axis, keep2, hidden) {
       return true;
     };
     const id = ID_IN_PROSE.source;
-    let t = v.replace(new RegExp(`\\s*\\(through (${id})\\)`, "g"), (m, x) => gone(x) ? "" : m).replace(new RegExp(`, which is (${id})`, "g"), (m, x) => gone(x) ? "" : m).replace(new RegExp(`(?:${id})(?:, (?:${id}))+`, "g"), (run) => {
-      const ids = run.split(", ");
+    let t = v.replace(new RegExp(`\\s*\\(through (${id})\\)`, "g"), (m, x) => gone(x) ? "" : m).replace(new RegExp(`, which is (${id})`, "g"), (m, x) => gone(x) ? "" : m).replace(new RegExp(`(?:${id})(?:, (?:${id}))+`, "g"), (run2) => {
+      const ids = run2.split(", ");
       const kept = ids.filter((x) => !unseen(x));
-      if (!kept.length || kept.length === ids.length) return run;
+      if (!kept.length || kept.length === ids.length) return run2;
       hit = true;
       return kept.join(", ");
     });
@@ -70024,9 +70027,9 @@ function appendSessionLog3(text5, entry) {
   const at26 = text5.indexOf("## Session Log");
   if (at26 < 0) return text5.replace(/\s*$/, "\n") + "\n## Session Log\n\n" + entry + "\n";
   const nxt = text5.indexOf("\n## ", at26 + 1);
-  const cut3 = nxt === -1 ? text5.length : nxt + 1;
-  const head = text5.slice(0, cut3);
-  return head + (head.endsWith("\n") ? "" : "\n") + entry + "\n" + text5.slice(cut3);
+  const cut4 = nxt === -1 ? text5.length : nxt + 1;
+  const head = text5.slice(0, cut4);
+  return head + (head.endsWith("\n") ? "" : "\n") + entry + "\n" + text5.slice(cut4);
 }
 function setOrAddScalar3(text5, key, value) {
   const lines = text5.split("\n");
@@ -70844,11 +70847,11 @@ var Contradiction = class _Contradiction {
     const cap = Number.isFinite(n) && n >= 1 ? Math.min(Math.floor(n), max) : max;
     const scope = viewerPredicate(viewer).scope;
     const denied = scope === "DENY";
-    const run = new Set(asked ? [asked] : names);
+    const run2 = new Set(asked ? [asked] : names);
     const pairs = [];
     const keys = names.map((name2) => {
       const spec = CONTRADICTION_KEYS[name2];
-      if (!run.has(name2))
+      if (!run2.has(name2))
         return {
           ...spec,
           ran: false,
@@ -70903,7 +70906,7 @@ var Contradiction = class _Contradiction {
         by: "the machine, inside an investigative run, as labelled machine work (DEC-24)",
         why: "whether either side of a pair here CONTRADICTS the other is semantic work this read does not do. A run's judgement over a pair enters only as a labelled proposal, and is read through candidatesFor, never here. A pair is not a claim that its two sides disagree: it is a claim that they are WORTH COMPARING, by the named key, and nothing more"
       },
-      says: denied ? "this read compared NOTHING, because no viewer the record recognises was stamped on it. That is an outage and not a statement about the record: every key below reads empty for want of a reader, and none of them looked" : `${formed} candidate pair(s) over ${[...run].join(", ")}, each carrying the KEY that brought its two sides together` + (undetermined ? `; ${undetermined} further pair(s) were NOT formed because a date or a doctype their readers never stated was needed to tell the two apart, and that is COUNTED rather than rounded to agreement` : "") + `. Every key that formed nothing NAMES THE LEVEL that was empty: absence at one level is never evidence of absence at the next, and a key with nothing to join says the record is SPARSE there, not that it is consistent. The pairing answers pairs; a run's judgements over them are read through candidatesFor`
+      says: denied ? "this read compared NOTHING, because no viewer the record recognises was stamped on it. That is an outage and not a statement about the record: every key below reads empty for want of a reader, and none of them looked" : `${formed} candidate pair(s) over ${[...run2].join(", ")}, each carrying the KEY that brought its two sides together` + (undetermined ? `; ${undetermined} further pair(s) were NOT formed because a date or a doctype their readers never stated was needed to tell the two apart, and that is COUNTED rather than rounded to agreement` : "") + `. Every key that formed nothing NAMES THE LEVEL that was empty: absence at one level is never evidence of absence at the next, and a key with nothing to join says the record is SPARSE there, not that it is consistent. The pairing answers pairs; a run's judgements over them are read through candidatesFor`
     };
   }
   /* ===================================================================== *
@@ -70981,7 +70984,7 @@ var Contradiction = class _Contradiction {
    *  THE LABEL IS A PROPOSAL (DEC-24): every row is `origin = 'machine'`, `state = 'proposed'`, and nothing here
    *  grades, edits or closes either side (R19). §7's over-strictness gate is a property of the JUDGEMENT (M-162
    *  measured the prompt `../contradiction.mjs` pins, R2, R57). */
-  propose({ run, proposals, proposedBy, viewer = null, caller = null, at: at26 = null } = {}) {
+  propose({ run: run2, proposals, proposedBy, viewer = null, caller = null, at: at26 = null } = {}) {
     const refusal21 = (code, detail, extra) => {
       const row2 = CONTRADICTION_CANDIDATE_CHECKS[code];
       return {
@@ -70994,9 +70997,9 @@ var Contradiction = class _Contradiction {
         ...extra || {}
       };
     };
-    const gate = this.#runRefusals({ run, proposedBy, viewer, caller });
+    const gate = this.#runRefusals({ run: run2, proposedBy, viewer, caller });
     if (gate) return gate;
-    const runId = _Contradiction.#runId(run);
+    const runId = _Contradiction.#runId(run2);
     const list2 = Array.isArray(proposals) ? proposals : [];
     if (list2.length === 0)
       return refusal21(
@@ -72561,10 +72564,10 @@ var Contradiction = class _Contradiction {
     });
   }
   /** op=contradictionrecommend — R37: the machine's one act. */
-  recommend({ run = null, candidate = null, coordinates = null, proposedBy = null, viewer = null, caller = null, at: at26 = null } = {}) {
-    const gate = this.#runRefusals({ run, proposedBy, viewer, caller });
+  recommend({ run: run2 = null, candidate = null, coordinates = null, proposedBy = null, viewer = null, caller = null, at: at26 = null } = {}) {
+    const gate = this.#runRefusals({ run: run2, proposedBy, viewer, caller });
     if (gate) return gate;
-    const runId = _Contradiction.#runId(run);
+    const runId = _Contradiction.#runId(run2);
     const list2 = Array.isArray(coordinates) ? coordinates : [];
     if (!list2.length)
       return _Contradiction.#refuse("RECOMMEND_NO_COORDINATES", "name at least one respect in which the sides may differ", { run: runId });
@@ -72627,13 +72630,13 @@ var Contradiction = class _Contradiction {
   }
   /** R13's first four refusals, shared by `propose` and `recommend` (R37): proposer, run, principal, running. Answers
    *  the refusal, or null. */
-  #runRefusals({ run, proposedBy, viewer, caller }) {
+  #runRefusals({ run: run2, proposedBy, viewer, caller }) {
     if (typeof proposedBy !== "string" || !proposedBy.trim())
       return _Contradiction.#refuse(
         "CANDIDATE_NO_PROPOSER",
         "machine work records who proposed it; the plane stamps that from the credential that asked, so an empty one means the act arrived by a route that does not attribute it"
       );
-    const runId = _Contradiction.#runId(run);
+    const runId = _Contradiction.#runId(run2);
     const r = runId && this.#runGate ? this.#runGate.gate(runId, viewer, caller) : null;
     if (!r || r.found !== true)
       return _Contradiction.#refuse(
@@ -72662,8 +72665,8 @@ var Contradiction = class _Contradiction {
     return null;
   }
   /** A run named by a request, trimmed; empty when none. */
-  static #runId(run) {
-    return typeof run === "string" ? run.trim() : "";
+  static #runId(run2) {
+    return typeof run2 === "string" ? run2.trim() : "";
   }
   /** R38: the promotion check registered with `promotion` (its R39). A non-replay promotion whose document names a
    *  candidate this module does not hold, or one with a side its author may not see, is refused `CANDIDATE_NOT_HELD`
@@ -75612,8 +75615,8 @@ var Reevaluation = class {
   correctedDependents({ after = null, limit = null, viewer = null } = {}) {
     const cap = clamp2(limit, CORRECTED_LIMIT_DEFAULT, CORRECTED_LIMIT_MAX);
     const aft = String(after ?? "");
-    const cut3 = aft.lastIndexOf("#");
-    const [aDep, aCand] = cut3 >= 0 ? [aft.slice(0, cut3), aft.slice(cut3 + 1)] : [aft, ""];
+    const cut4 = aft.lastIndexOf("#");
+    const [aDep, aCand] = cut4 >= 0 ? [aft.slice(0, cut4), aft.slice(cut4 + 1)] : [aft, ""];
     const visible = this.#redactor(viewer);
     const entries = [];
     let read2 = true, from = aDep, first = true;
@@ -79705,8 +79708,8 @@ var Publication = class {
     if (!d || typeof d.text !== "string") return null;
     const dfm = parseFrontmatter(d.text).data || {};
     if (!caseDocumentStatesMemberBlocks(dfm)) return null;
-    const strip2 = ({ target, ...rest }) => rest;
-    const rowsOf2 = (key, m) => (Array.isArray(dfm[key]) ? dfm[key] : []).filter((r) => r && typeof r === "object" && String(r.target ?? "") === m).map(strip2);
+    const strip3 = ({ target, ...rest }) => rest;
+    const rowsOf2 = (key, m) => (Array.isArray(dfm[key]) ? dfm[key] : []).filter((r) => r && typeof r === "object" && String(r.target ?? "") === m).map(strip3);
     const out = /* @__PURE__ */ new Map();
     const excludes = sectionText(parseFrontmatter(d.text).body || "", "## What This Excludes");
     for (const r of Array.isArray(dfm.case_roles) ? dfm.case_roles : []) {
@@ -84576,20 +84579,20 @@ function caseMemberFindings(fm) {
   checkPublishedExtension(fm, out);
   return out;
 }
-function caseMemberImageFindings(image, parse5) {
+function caseMemberImageFindings(image, parse7) {
   const md = image && image.files instanceof Map ? image.files.get("bundle.md") : image ? image["bundle.md"] : null;
   const text5 = typeof md === "string" ? md : md instanceof Uint8Array ? new TextDecoder().decode(md) : null;
   if (text5 === null) return [];
   let fm = null;
   try {
-    fm = parse5(text5).data;
+    fm = parse7(text5).data;
   } catch {
     fm = null;
   }
   return caseMemberFindings(fm);
 }
-function withCaseMemberChecks(image, gate, parse5) {
-  const errs = caseMemberImageFindings(image, parse5).filter((x) => x.severity === "error").map((x) => ({ check: x.check, detail: x.message, ...x.repairs ? { repairs: x.repairs } : {} }));
+function withCaseMemberChecks(image, gate, parse7) {
+  const errs = caseMemberImageFindings(image, parse7).filter((x) => x.severity === "error").map((x) => ({ check: x.check, detail: x.message, ...x.repairs ? { repairs: x.repairs } : {} }));
   if (!errs.length || !gate || typeof gate !== "object") return gate;
   return { ...gate, ok: false, findings: [...Array.isArray(gate.findings) ? gate.findings : [], ...errs] };
 }
@@ -87658,11 +87661,11 @@ var Bias = class _Bias {
   }
   /* R37: THE ONE WRITER OF A SETTLEMENT. Every act that settles a debt appends its row here and stamps the debt from
      the same values, so the append-only record and the debt's state cannot disagree about which act closed it. */
-  #settle({ run, kind, at: at26, actor = null, reason = null, byRun = null, lensThen = null, lensNow = null }) {
+  #settle({ run: run2, kind, at: at26, actor = null, reason = null, byRun = null, lensThen = null, lensNow = null }) {
     this.#sql.exec(
       `INSERT INTO bias_debt_settlements (run, kind, at, actor, reason, by_run, lens_then, lens_now)
        VALUES (?,?,?,?,?,?,?,?)`,
-      run,
+      run2,
       kind,
       at26,
       actor,
@@ -87671,15 +87674,15 @@ var Bias = class _Bias {
       lensThen,
       lensNow
     );
-    this.#sql.exec(`UPDATE bias_debts SET cleared_at = ?, settled_kind = ?, observed = ? WHERE run = ?`, at26, kind, at26, run);
-    return { run, kind, at: at26, actor, reason, by_run: byRun, lens_then: lensThen, lens_now: lensNow };
+    this.#sql.exec(`UPDATE bias_debts SET cleared_at = ?, settled_kind = ?, observed = ? WHERE run = ?`, at26, kind, at26, run2);
+    return { run: run2, kind, at: at26, actor, reason, by_run: byRun, lens_then: lensThen, lens_now: lensNow };
   }
-  #settlements(run, limit) {
+  #settlements(run2, limit) {
     const cap = Math.max(1, Math.min(Math.floor(Number(limit) || BIAS_DEBT_SETTLEMENTS_MAX), BIAS_DEBT_SETTLEMENTS_MAX));
     const rows2 = this.#rows(
       `SELECT seq, kind, at, actor, reason, by_run, lens_then, lens_now
          FROM bias_debt_settlements WHERE run = ? ORDER BY seq LIMIT ?`,
-      run,
+      run2,
       cap + 1
     );
     return {
@@ -87714,12 +87717,12 @@ var Bias = class _Bias {
   /** R35 — op=biasdebtresolve: A MEMBER'S RESOLVE, WITH A REQUIRED STATED REASON (BOB #32's third act). The four
    *  conditions about the ACT are asked before the record is read, so a caller who may not see the work learns
    *  nothing from the order of the answers; a debt this viewer may not see answers exactly as one never raised. */
-  biasDebtResolve({ run = null, reason = null, actor = null, viewer = null, at: at26 = null } = {}) {
+  biasDebtResolve({ run: run2 = null, reason = null, actor = null, viewer = null, at: at26 = null } = {}) {
     const refusal21 = (code, detail, extra = {}) => {
       const row3 = BIAS_CHECKS[code];
       return { ok: false, reason: code, code, check: row3.check, translation: row3.translation, detail, ...extra };
     };
-    const id = String(run ?? "").trim();
+    const id = String(run2 ?? "").trim();
     const who2 = String(actor ?? "").trim();
     const said2 = typeof reason === "string" ? reason.trim() : "";
     if (!id)
@@ -87776,8 +87779,8 @@ var Bias = class _Bias {
   }
   /** R36 — op=biasdebt: one work product's debt and every settlement on it, in order, at most 50, the bound
    *  published. A debt the viewer may not see answers byte-identically to one never raised. */
-  biasDebt({ run = null, viewer = null, limit = null } = {}) {
-    const id = String(run ?? "").trim();
+  biasDebt({ run: run2 = null, viewer = null, limit = null } = {}) {
+    const id = String(run2 ?? "").trim();
     const absent = {
       ok: true,
       run: id || null,
@@ -89063,8 +89066,8 @@ var CaseAuthoring = class _CaseAuthoring {
     whatChanged = void 0,
     viewer = null,
     author = null
-  } = {}, run = {}) {
-    const seen = run.seen || {};
+  } = {}, run2 = {}) {
+    const seen = run2.seen || {};
     const who2 = str11(author);
     if (!who2 || isMachineIdentity(who2))
       return actRefusal2("MACHINE_CANNOT_PUBLISH", {
@@ -89396,7 +89399,7 @@ var CaseAuthoring = class _CaseAuthoring {
         /* R15 — REC-17 / DEC-12: a NEW edition of the finding above 1 surfaces the re-evaluation
            obligation on everything whose basis names it (reevaluation R7); bytes another case already
            carried across are the edition a leg already rests on, so nothing moved under anybody. */
-        ...!already && memberEdition > 1 ? { reevaluation: run.preflight ? { source: "edition", edition: memberEdition, raised_when: "published" } : this.reevaluation.raise({
+        ...!already && memberEdition > 1 ? { reevaluation: run2.preflight ? { source: "edition", edition: memberEdition, raised_when: "published" } : this.reevaluation.raise({
           target: memberId,
           source: "edition",
           since: when,
@@ -92354,7 +92357,7 @@ var FilingTemplates = class _FilingTemplates {
     why = null,
     proposer = null,
     viewer = null,
-    run = null,
+    run: run2 = null,
     model = null,
     skill_pack = null
   } = {}) {
@@ -92373,7 +92376,7 @@ var FilingTemplates = class _FilingTemplates {
     if (!textUpTo(why, PROPOSAL_WHY_MAX))
       return refuse4("TEMPLATE_WHY_REFUSED", `say why in 1 to ${PROPOSAL_WHY_MAX} characters`, { max: PROPOSAL_WHY_MAX });
     const at26 = this.#when();
-    const cut3 = (v) => str12(v) ? String(v).trim().slice(0, 200) : null;
+    const cut4 = (v) => str12(v) ? String(v).trim().slice(0, 200) : null;
     return this.record.transact(() => {
       const id = this.#mint("TPP", at26.slice(0, 4));
       if (!id) return mintExhausted("TPP");
@@ -92390,9 +92393,9 @@ var FilingTemplates = class _FilingTemplates {
         sha,
         why.trim(),
         who2,
-        cut3(run),
-        cut3(model),
-        cut3(skill_pack),
+        cut4(run2),
+        cut4(model),
+        cut4(skill_pack),
         at26
       );
       return {
@@ -93969,8 +93972,8 @@ function appendSessionLog4(text5, entry) {
   const at26 = text5.indexOf("## Session Log");
   if (at26 < 0) return text5 + "\n## Session Log\n\n" + entry;
   const nxt = text5.indexOf("\n## ", at26 + 1);
-  const cut3 = nxt === -1 ? text5.length : nxt + 1;
-  return text5.slice(0, cut3) + entry + "\n" + text5.slice(cut3);
+  const cut4 = nxt === -1 ? text5.length : nxt + 1;
+  return text5.slice(0, cut4) + entry + "\n" + text5.slice(cut4);
 }
 
 // src/citation/index.mjs
@@ -99429,8 +99432,8 @@ async function readerOf(url, env, storeName, presented, doAnswer2) {
   const cls = await classify(t, env);
   if (cls) {
     const scope = scopeFor(cls, url);
-    const inScope = OPS.index.classes.includes(cls) && !scope.error && scope.name === storeName;
-    return { viewer: inScope ? `${MACHINE_CLASS_PREFIX}${cls}` : "", cls };
+    const inScope2 = OPS.index.classes.includes(cls) && !scope.error && scope.name === storeName;
+    return { viewer: inScope2 ? `${MACHINE_CLASS_PREFIX}${cls}` : "", cls };
   }
   if (AI_TOKEN_SHAPE.test(t)) {
     let cred = presented;
@@ -101334,13 +101337,13 @@ var AiRuns = class _AiRuns {
       { name: "ai_run_bounds", keys: [] },
       { name: "ai_runs", keys: [] }
     ]);
-    observationLogOf(ctx).registerAuthority("run", (run, viewer) => !!this.runFor(run, viewer));
+    observationLogOf(ctx).registerAuthority("run", (run2, viewer) => !!this.runFor(run2, viewer));
     const retrieval = retrievalOf(ctx);
     retrieval.registerHiddenRunTail("ai-runs", hiddenRuns);
     retrieval.registerProjectionDecoration("ai-runs", (row2, { viewer }) => normalizeType(row2.object_type) === "inquiry" ? this.surfacedIn(row2.bundle_id, viewer).then((s) => ({ surfaced_in: s })) : { surfaced_in: null });
     biasOf(ctx, { env: this.env }).registerWorkProducts("ai-run", this.workProducts());
-    contradictionOf(ctx).registerRunGate("ai-runs", (run, viewer, caller) => {
-      const g = this.runGate(run, viewer, caller, "proposing contradictions under a run");
+    contradictionOf(ctx).registerRunGate("ai-runs", (run2, viewer, caller) => {
+      const g = this.runGate(run2, viewer, caller, "proposing contradictions under a run");
       return { found: g.found, running: g.running, refusal: g.refusal };
     });
     promotionOf(ctx).registerStep("ai-runs", { check: (c) => this.#surfacingCheck(c), project: (c) => this.#surfacingProject(c) });
@@ -101392,10 +101395,10 @@ var AiRuns = class _AiRuns {
         String(after ?? ""),
         Math.max(1, Math.floor(Number(limit) || 50))
       ).map((r) => String(r.run)),
-      read: async (run) => {
-        const row2 = this.#one(`SELECT rerun_of, created FROM ai_runs WHERE run = ?`, String(run ?? ""));
+      read: async (run2) => {
+        const row2 = this.#one(`SELECT rerun_of, created FROM ai_runs WHERE run = ?`, String(run2 ?? ""));
         if (!row2) return null;
-        const a = await this.read({ run, viewer: "admin" });
+        const a = await this.read({ run: run2, viewer: "admin" });
         const s = a && a.found === true ? a.session : null;
         if (!s) return null;
         const bias = s.bias || {};
@@ -101411,7 +101414,7 @@ var AiRuns = class _AiRuns {
           registered: typeof row2.created === "string" && Number.isFinite(Date.parse(row2.created)) ? row2.created : null
         };
       },
-      visible: async (run, viewer) => !!this.runFor(run, viewer)
+      visible: async (run2, viewer) => !!this.runFor(run2, viewer)
     };
   }
   #rows(q7, ...a) {
@@ -101562,7 +101565,7 @@ var AiRuns = class _AiRuns {
    *  on `run` for exactly this reason UNTIL REC-100 (2026-09-18, IC-130): the
    *  rollup ruling gave the run's two rollup writers a referent, and a bare
    *  `run` PRESENT is now refused here like any other — see its catalogue row. */
-  #aiRunAppend(run, entry, at26, terminal = 0, actor = null) {
+  #aiRunAppend(run2, entry, at26, terminal = 0, actor = null) {
     return this.#observations().observe({
       actorClass: "machine",
       /* WHO the machine was, PASSED IN BY THE CALLER RATHER THAN LOOKED UP
@@ -101585,7 +101588,7 @@ var AiRuns = class _AiRuns {
          be a false attribution in the one field that says who looked. */
       actor: actor || null,
       authorityKind: "run",
-      authority: run == null ? null : String(run),
+      authority: run2 == null ? null : String(run2),
       level: entry && entry.level ? entry.level : "document",
       /* `unstated`, and it is the honest word rather than a derived one.
          `ai_run_log` never recorded what KIND of subject a row was about, so
@@ -101638,16 +101641,16 @@ var AiRuns = class _AiRuns {
   /** A non-terminal restatement of the rollup (the wake's entry, a dispatch that did not complete): `NEVER_LOOKED` is
    *  never stored as a look (observation-log R3; only a run's terminal rollup may say it, K148), so a run whose own log
    *  holds no look yet restates LOOKED_INDETERMINATE — what its search established is not yet known from its log. */
-  #aiRunRestatedState(run) {
-    const s = this.#aiRunSearchState(run, false);
+  #aiRunRestatedState(run2) {
+    const s = this.#aiRunSearchState(run2, false);
     return s.state === "NEVER_LOOKED" ? { ...s, state: "LOOKED_INDETERMINATE" } : s;
   }
-  #aiRunSearchState(run, stoppedByBound) {
+  #aiRunSearchState(run2, stoppedByBound) {
     const latest = new Map(this.#rows(
       `SELECT state, MAX(seq) seq FROM observation_log
         WHERE authority_kind = 'run' AND authority = ? AND terminal = 0
         GROUP BY state`,
-      run
+      run2
     ).map((r) => [r.state, r.seq]));
     let s = latest.has("PRESENT") ? "PRESENT" : latest.has("partial") ? "partial" : latest.has("LOOKED_INDETERMINATE") ? "LOOKED_INDETERMINATE" : latest.has("LOOKED_ABSENT") ? "LOOKED_ABSENT" : "NEVER_LOOKED";
     if (stoppedByBound && (s === "LOOKED_ABSENT" || s === "NEVER_LOOKED")) s = "LOOKED_INDETERMINATE";
@@ -101675,16 +101678,16 @@ var AiRuns = class _AiRuns {
    *      ask: the budget rows and the clock are the only evidence there is, and
    *      `finishedBound` is the one function that reads them.
    */
-  #aiRunTerminate({ run, offered = null, condition = null, at: at26, expired = false, derive = true }) {
-    const row2 = this.#one(`SELECT * FROM ai_runs WHERE run = ?`, run);
+  #aiRunTerminate({ run: run2, offered = null, condition = null, at: at26, expired = false, derive = true }) {
+    const row2 = this.#one(`SELECT * FROM ai_runs WHERE run = ?`, run2);
     if (!row2) return {
-      run,
+      run: run2,
       found: false,
       note: "no such run: it either never existed or was purged"
     };
     if (row2.status !== "running")
       return {
-        run,
+        run: run2,
         found: true,
         terminated: false,
         status: row2.status,
@@ -101692,23 +101695,23 @@ var AiRuns = class _AiRuns {
         condition: row2.stopped_condition,
         note: "this run already ended; a second ending would overwrite the first, and the log is append-only for the same reason state history is"
       };
-    const bounds = this.#rows(`SELECT bound, allowed, consumed FROM ai_run_bounds WHERE run = ?`, run);
+    const bounds = this.#rows(`SELECT bound, allowed, consumed FROM ai_run_bounds WHERE run = ?`, run2);
     const bound = derive ? finishedBound(bounds, { expired, offered }) : offered == null ? "" : String(offered);
     const badBound = checkBound(bound);
-    if (badBound) return { run, found: true, terminated: false, ...badBound };
+    if (badBound) return { run: run2, found: true, terminated: false, ...badBound };
     const badCondition = checkCondition(condition, CONDITION_KINDS);
-    if (badCondition) return { run, found: true, terminated: false, ...badCondition };
+    if (badCondition) return { run: run2, found: true, terminated: false, ...badCondition };
     const stoppedByBound = Object.prototype.hasOwnProperty.call(RUN_BOUNDS, bound);
-    const rollup = this.#aiRunSearchState(run, stoppedByBound);
+    const rollup = this.#aiRunSearchState(run2, stoppedByBound);
     const state = rollup.state;
     const last = this.#one(
       `SELECT level FROM observation_log
         WHERE authority_kind = 'run' AND authority = ? AND terminal = 0
         ORDER BY seq DESC LIMIT 1`,
-      run
+      run2
     );
     return this.#transact(() => {
-      const bad = this.#aiRunAppend(run, {
+      const bad = this.#aiRunAppend(run2, {
         level: last ? last.level : "document",
         subject: row2.context_id,
         /* `state`, `result_kind`, `result_ref` — the rollup and its referent
@@ -101719,7 +101722,7 @@ var AiRuns = class _AiRuns {
         bound,
         detail: stoppedByBound ? `the run stopped because the '${bound}' bound was reached (${RUN_BOUNDS[bound]})` : `the run ended: ${RUN_ENDINGS[bound]}`
       }, at26, 1);
-      if (bad) return { run, found: true, terminated: false, ...bad };
+      if (bad) return { run: run2, found: true, terminated: false, ...bad };
       const status = runStatusFor(bound);
       this.sql.exec(
         `UPDATE ai_runs SET status = ?, updated = ?, stopped_bound = ?, stopped_condition = ?, stopped_at = ?
@@ -101729,10 +101732,10 @@ var AiRuns = class _AiRuns {
         bound,
         condition,
         at26,
-        run
+        run2
       );
       return {
-        run,
+        run: run2,
         found: true,
         terminated: true,
         status,
@@ -101902,7 +101905,7 @@ var AiRuns = class _AiRuns {
    *  is still never derived: the plane refuses, it does not fill in. The
    *  refusal is C-22.7, built in `run-rules checkSkillVersion`. */
   async open({
-    run,
+    run: run2,
     contextType,
     contextId,
     label = null,
@@ -101938,9 +101941,9 @@ var AiRuns = class _AiRuns {
     const now = _AiRuns.#aiIso(nowMs);
     const refusal21 = (code, more = {}) => {
       const row2 = ROW2(code);
-      return { run: run || null, started: false, code, check: row2.check, translation: row2.translation, ...more };
+      return { run: run2 || null, started: false, code, check: row2.check, translation: row2.translation, ...more };
     };
-    if (!run || !contextType || !contextId)
+    if (!run2 || !contextType || !contextId)
       return refusal21("AI_RUN_NO_CONTEXT", {
         note: "a run needs an id and the context it runs in (an inquiry or a project): a run nothing is in the context of has nowhere to be visible"
       });
@@ -101948,7 +101951,7 @@ var AiRuns = class _AiRuns {
       const existence = this.#membership().existenceAct(String(contextId ?? ""), viewer ?? "");
       if (existence)
         return {
-          run,
+          run: run2,
           started: false,
           code: existence.code,
           check: existence.check,
@@ -101961,7 +101964,7 @@ var AiRuns = class _AiRuns {
     const kind = checkRunContextKind({ contextType, contextId, found: this.#runContextKind(contextId, viewer) });
     if (kind)
       return {
-        run,
+        run: run2,
         started: false,
         code: kind.code,
         check: kind.check,
@@ -101972,7 +101975,7 @@ var AiRuns = class _AiRuns {
     const gate = this.#aiRunProjectGate({ actor, contextType, contextId, viewer });
     if (!gate.permitted)
       return {
-        run,
+        run: run2,
         started: false,
         code: gate.code,
         check: gate.check,
@@ -101987,7 +101990,7 @@ var AiRuns = class _AiRuns {
     const badSkill = checkSkillVersion(skillVersion);
     if (badSkill)
       return {
-        run,
+        run: run2,
         started: false,
         code: badSkill.code,
         check: badSkill.check,
@@ -102019,7 +102022,7 @@ var AiRuns = class _AiRuns {
     const badSeed = checkConsume(bounds, { list: true });
     if (badSeed)
       return {
-        run,
+        run: run2,
         started: false,
         code: badSeed.code,
         check: badSeed.check,
@@ -102029,7 +102032,7 @@ var AiRuns = class _AiRuns {
     const badState = checkRunState(state);
     if (badState)
       return {
-        run,
+        run: run2,
         started: false,
         code: badState.code,
         check: badState.check,
@@ -102052,11 +102055,11 @@ var AiRuns = class _AiRuns {
       bundles: (Array.isArray(lensNow.bundles) ? lensNow.bundles : []).map((b) => ({ bundle_id: b.bundle_id, revision: b.revision ?? null })),
       at: now
     });
-    if (this.#one(`SELECT run FROM ai_runs WHERE run = ?`, run))
+    if (this.#one(`SELECT run FROM ai_runs WHERE run = ?`, run2))
       return refusal21("AI_RUN_ALREADY_OPEN", { note: "a run with this id already exists" });
     const reRuns = String(rerunOf ?? "").trim();
     if (reRuns) {
-      if (reRuns === String(run))
+      if (reRuns === String(run2))
         return refusal21("AI_RUN_RERUN_SELF", {
           note: "a run cannot be the re-run of itself: the link exists to say which EARLIER run's work this one repeats, and a self-reference would let one run discharge its own bias debt"
         });
@@ -102079,7 +102082,7 @@ var AiRuns = class _AiRuns {
         said2 = void 0;
       }
       if (said2 !== null)
-        return said2 && typeof said2 === "object" && typeof said2.code === "string" ? { run, started: false, ...said2 } : refusal21("AI_RUN_MODE_UNCHECKED", {
+        return said2 && typeof said2 === "object" && typeof said2.code === "string" ? { run: run2, started: false, ...said2 } : refusal21("AI_RUN_MODE_UNCHECKED", {
           detail: held ? `the check ${held.module} registered for mode '${runMode}' gave no answer` : `nothing is registered to check a run in mode '${runMode}'`,
           note: "Nothing was written"
         });
@@ -102092,7 +102095,7 @@ var AiRuns = class _AiRuns {
            bias_manifest, standard_pair, created, updated, expires, ticks, state, lens_at_open,
            rerun_of, plan)
          VALUES (?, 'running', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)`,
-        run,
+        run2,
         label,
         runMode,
         String(contextType),
@@ -102123,7 +102126,7 @@ var AiRuns = class _AiRuns {
         this.sql.exec(
           `INSERT INTO ai_run_bounds (run, bound, allowed, consumed, unit) VALUES (?, ?, ?, ?, ?)
            ON CONFLICT(run, bound) DO NOTHING`,
-          run,
+          run2,
           String(b.bound),
           b.allowed,
           /* REC-177: judged above, a whole number of one or more (C-22.16); the old `absent is 0` default was the no-ceiling path */
@@ -102136,12 +102139,12 @@ var AiRuns = class _AiRuns {
     const expires = _AiRuns.#aiIso(nowMs + lease);
     for (const l of this.#runListeners) {
       try {
-        await l.fn({ run, contextType: String(contextType), contextId: String(contextId), expires });
+        await l.fn({ run: run2, contextType: String(contextType), contextId: String(contextId), expires });
       } catch {
       }
     }
     return {
-      run,
+      run: run2,
       started: true,
       status: "running",
       ticks: 1,
@@ -102158,9 +102161,9 @@ var AiRuns = class _AiRuns {
   /** REC-152 — CAN THIS VIEWER SEE THIS RUN? `aiRunRead`'s own predicate (D-15's `#bundleGate` over the
    *  run's context), asked of one run id, so the tick and the close hide exactly what `op=airun` hides. An
    *  absent stamp fails closed, as it does there. */
-  #aiRunInSight(run, viewer) {
+  #aiRunInSight(run2, viewer) {
     const seen = this.#bundleGate("r.context_id", viewer);
-    return !!this.#one(`SELECT 1 AS x FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`, run, ...seen.args);
+    return !!this.#one(`SELECT 1 AS x FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`, run2, ...seen.args);
   }
   /** op=airuntick. The heartbeat, the work list, and the log — one call.
    *
@@ -102176,7 +102179,7 @@ var AiRuns = class _AiRuns {
    *  is a fact about the run's state, and a late tick from a straggling
    *  sub-session must not resurrect a run whose log is already closed. */
   tick({
-    run,
+    run: run2,
     state = null,
     consume = null,
     log = null,
@@ -102190,21 +102193,21 @@ var AiRuns = class _AiRuns {
   } = {}) {
     const nowMs = at26 ? Date.parse(at26) : Date.now();
     const now = _AiRuns.#aiIso(nowMs);
-    const row2 = this.#one(`SELECT * FROM ai_runs WHERE run = ?`, run);
+    const row2 = this.#one(`SELECT * FROM ai_runs WHERE run = ?`, run2);
     if (!row2) return {
-      run: run || null,
+      run: run2 || null,
       found: false,
       note: "no such run: it either never existed or was purged"
     };
-    if (!this.#aiRunInSight(run, viewer)) return {
-      run: run || null,
+    if (!this.#aiRunInSight(run2, viewer)) return {
+      run: run2 || null,
       found: false,
       note: "no such run: it either never existed or was purged"
     };
     const notPrincipal = runPrincipalGate({ caller, principal: row2.principal_plane });
     if (notPrincipal)
       return {
-        run,
+        run: run2,
         ticked: false,
         found: true,
         status: row2.status,
@@ -102217,7 +102220,7 @@ var AiRuns = class _AiRuns {
     const gate = this.#aiRunProjectGate({ actor, contextType: row2.context_type, contextId: row2.context_id, viewer });
     if (!gate.permitted)
       return {
-        run,
+        run: run2,
         ticked: false,
         found: true,
         status: row2.status,
@@ -102229,7 +102232,7 @@ var AiRuns = class _AiRuns {
       };
     if (row2.status !== "running")
       return {
-        run,
+        run: run2,
         found: true,
         ticked: false,
         status: row2.status,
@@ -102239,7 +102242,7 @@ var AiRuns = class _AiRuns {
     const badConsume = checkConsume(consume, { map: true });
     if (badConsume)
       return {
-        run,
+        run: run2,
         ticked: false,
         found: true,
         status: row2.status,
@@ -102253,7 +102256,7 @@ var AiRuns = class _AiRuns {
     const badState = checkRunState(state);
     if (badState)
       return {
-        run,
+        run: run2,
         ticked: false,
         found: true,
         status: row2.status,
@@ -102270,7 +102273,7 @@ var AiRuns = class _AiRuns {
     let appended = 0;
     this.#transact(() => {
       for (const e of Array.isArray(log) ? log : []) {
-        const bad = this.#aiRunAppend(run, e, now, 0, row2.principal_claude || null);
+        const bad = this.#aiRunAppend(run2, e, now, 0, row2.principal_claude || null);
         if (bad) refused2.push(bad);
         else appended += 1;
       }
@@ -102279,7 +102282,7 @@ var AiRuns = class _AiRuns {
         this.sql.exec(
           `INSERT INTO ai_run_bounds (run, bound, allowed, consumed) VALUES (?, ?, 0, ?)
            ON CONFLICT(run, bound) DO UPDATE SET consumed = consumed + ?`,
-          run,
+          run2,
           k,
           v,
           v
@@ -102288,20 +102291,20 @@ var AiRuns = class _AiRuns {
       this.sql.exec(
         `UPDATE ai_runs SET updated = ?, expires = ?, ticks = ticks + 1${state == null ? "" : ", state = ?"}
          WHERE run = ?`,
-        ...state == null ? [now, _AiRuns.#aiIso(nowMs + lease), run] : [now, _AiRuns.#aiIso(nowMs + lease), JSON.stringify(state), run]
+        ...state == null ? [now, _AiRuns.#aiIso(nowMs + lease), run2] : [now, _AiRuns.#aiIso(nowMs + lease), JSON.stringify(state), run2]
       );
     });
-    const bounds = this.#rows(`SELECT bound, allowed, consumed FROM ai_run_bounds WHERE run = ?`, run);
+    const bounds = this.#rows(`SELECT bound, allowed, consumed FROM ai_run_bounds WHERE run = ?`, run2);
     const hit = finishedBound(bounds, { expired: false, offered: null });
     const ended = Object.prototype.hasOwnProperty.call(RUN_BOUNDS, hit) ? this.#aiRunTerminate({
-      run,
+      run: run2,
       offered: hit,
       condition: hit === "runtime" ? "runtime-ceiling-reached" : null,
       at: now
     }) : null;
-    const after = this.#one(`SELECT ticks, status, expires FROM ai_runs WHERE run = ?`, run);
+    const after = this.#one(`SELECT ticks, status, expires FROM ai_runs WHERE run = ?`, run2);
     return {
-      run,
+      run: run2,
       found: true,
       ticked: true,
       ticks: after.ticks,
@@ -102324,7 +102327,7 @@ var AiRuns = class _AiRuns {
      still synchronous, and the REAPER still calls it directly — so a lapsed run is closed by the clock on
      exactly the path it was before, with no member and no discharge. */
   async close({
-    run,
+    run: run2,
     bound = null,
     condition = null,
     at: at26 = null,
@@ -102334,17 +102337,17 @@ var AiRuns = class _AiRuns {
     caller = null
   } = {}) {
     const now = at26 ? _AiRuns.#aiIso(Date.parse(at26)) : _AiRuns.#aiIso(Date.now());
-    const row2 = this.#one(`SELECT context_type, context_id, principal_plane FROM ai_runs WHERE run = ?`, run);
+    const row2 = this.#one(`SELECT context_type, context_id, principal_plane FROM ai_runs WHERE run = ?`, run2);
     if (row2) {
-      if (!this.#aiRunInSight(run, viewer)) return {
-        run,
+      if (!this.#aiRunInSight(run2, viewer)) return {
+        run: run2,
         found: false,
         note: "no such run: it either never existed or was purged"
       };
       const notPrincipal = runPrincipalGate({ caller, principal: row2.principal_plane });
       if (notPrincipal)
         return {
-          run,
+          run: run2,
           terminated: false,
           found: true,
           ok: false,
@@ -102357,7 +102360,7 @@ var AiRuns = class _AiRuns {
       const gate = this.#aiRunProjectGate({ actor, contextType: row2.context_type, contextId: row2.context_id, viewer });
       if (!gate.permitted)
         return {
-          run,
+          run: run2,
           terminated: false,
           found: true,
           ok: false,
@@ -102368,9 +102371,9 @@ var AiRuns = class _AiRuns {
           note: "closing a run over a project is licensed by PARTICIPATION IN THAT PROJECT (DEC-63), and the contribute capability is only the floor beneath that. The run is untouched and is still running"
         };
     }
-    const ended = this.#aiRunTerminate({ run, offered: bound, condition, at: now, derive: false });
+    const ended = this.#aiRunTerminate({ run: run2, offered: bound, condition, at: now, derive: false });
     if (ended && ended.terminated === true) {
-      const discharge = await this.#bias().biasDebtRerun({ kind: "ai-run", key: run, at: now });
+      const discharge = await this.#bias().biasDebtRerun({ kind: "ai-run", key: run2, at: now });
       if (discharge) return { ...ended, bias_debt: discharge };
     }
     return ended;
@@ -102497,7 +102500,7 @@ var AiRuns = class _AiRuns {
     const w = this.#wait();
     if (!w) return [];
     const ids = w.woken(_AiRuns.AI_RUN_WAKE_TICK_BATCH);
-    return (Array.isArray(ids) ? ids : []).slice(0, _AiRuns.AI_RUN_WAKE_TICK_BATCH).map((run) => this.#one(`SELECT run, context_id, principal_plane FROM ai_runs WHERE run = ? AND status = 'running'`, String(run))).filter(Boolean);
+    return (Array.isArray(ids) ? ids : []).slice(0, _AiRuns.AI_RUN_WAKE_TICK_BATCH).map((run2) => this.#one(`SELECT run, context_id, principal_plane FROM ai_runs WHERE run = ? AND status = 'running'`, String(run2))).filter(Boolean);
   }
   wakeDue(now) {
     const iso5 = _AiRuns.#aiIso(now);
@@ -102662,8 +102665,8 @@ var AiRuns = class _AiRuns {
     };
   }
   /** THE GATE, and the sentence the wake entry carries. `dispatch` is true ONLY on equality of the two stamps. */
-  #aiRunResumeDecision(run, resumer) {
-    const principal = String(run && run.principal_plane || "");
+  #aiRunResumeDecision(run2, resumer) {
+    const principal = String(run2 && run2.principal_plane || "");
     if (resumer && resumer.ready && principal === resumer.stamp)
       return {
         dispatch: true,
@@ -102777,17 +102780,17 @@ var AiRuns = class _AiRuns {
    *
    *  ASYNC now, because the effective set is HASHED and `crypto.subtle` is. The
    *  dispatch already awaits every handler. */
-  async read({ run, viewer = null } = {}) {
+  async read({ run: run2, viewer = null } = {}) {
     const seen = this.#bundleGate("r.context_id", viewer);
     const row2 = this.#one(
       `SELECT r.* FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`,
-      run,
+      run2,
       ...seen.args
     );
-    if (!row2) return { run: run || null, found: false, session: null };
+    if (!row2) return { run: run2 || null, found: false, session: null };
     const bounds = this.#rows(
       `SELECT bound, allowed, consumed, unit FROM ai_run_bounds WHERE run = ? ORDER BY bound`,
-      run
+      run2
     );
     const cond = row2.stopped_bound ? {
       kind: row2.stopped_condition || "",
@@ -102796,7 +102799,7 @@ var AiRuns = class _AiRuns {
       at: row2.stopped_at
     } : null;
     const bias = await this.#biasForRun(row2, viewer);
-    return { run, found: true, session: {
+    return { run: run2, found: true, session: {
       id: row2.run,
       label: row2.label,
       mode: row2.mode,
@@ -103174,19 +103177,19 @@ var AiRuns = class _AiRuns {
    *  thinks they are being helpful.
    *
    *  GATED on the run's context, exactly as `aiRunRead` and `aiRunLog` are. */
-  async spawnPayload({ run, half = "search", viewer = null } = {}) {
+  async spawnPayload({ run: run2, half = "search", viewer = null } = {}) {
     const seen = this.#bundleGate("r.context_id", viewer);
     const row2 = this.#one(
       `SELECT r.* FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`,
-      run,
+      run2,
       ...seen.args
     );
-    if (!row2) return { run: run || null, found: false, half: null, payload: null };
+    if (!row2) return { run: run2 || null, found: false, half: null, payload: null };
     const composing = String(half) === "compose";
     const budgetCap = Object.keys(RUN_BOUNDS).length;
     const budgetRows = this.#rows(
       `SELECT bound, allowed, consumed, unit FROM ai_run_bounds WHERE run = ? ORDER BY bound LIMIT ?`,
-      run,
+      run2,
       budgetCap + 1
     );
     const bounds = budgetRows.slice(0, budgetCap);
@@ -103220,7 +103223,7 @@ var AiRuns = class _AiRuns {
       }))
     };
     return {
-      run,
+      run: run2,
       found: true,
       half: composing ? "compose" : "search",
       payload,
@@ -103290,11 +103293,11 @@ var AiRuns = class _AiRuns {
    *  went with the suite. R24's test holds the published bound (the page,
    *  `limit` and `truncated` over 205 entries); the SQL `LIMIT` below is what
    *  keeps the read itself bounded, and no test reads it from the source. */
-  log({ run, viewer = null, limit = null } = {}) {
+  log({ run: run2, viewer = null, limit = null } = {}) {
     const seen = this.#bundleGate("r.context_id", viewer);
     const row2 = this.#one(
       `SELECT r.* FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`,
-      run,
+      run2,
       ...seen.args
     );
     const cap = Math.max(1, Math.min(
@@ -103302,7 +103305,7 @@ var AiRuns = class _AiRuns {
       _AiRuns.AI_RUN_LOG_LIMIT_MAX
     ));
     if (!row2) return {
-      run: run || null,
+      run: run2 || null,
       found: false,
       entries: [],
       stopped: null,
@@ -103314,7 +103317,7 @@ var AiRuns = class _AiRuns {
               result_kind, result_ref
        FROM observation_log WHERE authority_kind = 'run' AND authority = ?
        ORDER BY seq LIMIT ?`,
-      run,
+      run2,
       cap + 1
     );
     const ordinal = new Map(page.slice(0, cap).map((e, i) => [String(e.seq), i + 1]));
@@ -103331,7 +103334,7 @@ var AiRuns = class _AiRuns {
       coverage: observationCoverage({ state: e.state, resultRef: e.result_ref })
     }));
     return {
-      run,
+      run: run2,
       found: true,
       status: row2.status,
       entries,
@@ -103365,9 +103368,9 @@ var AiRuns = class _AiRuns {
    *  run and an invisible one alike. Never throws, writes nothing. Whether the caller holds it is R5 over
    *  `principal_plane`; `principal_claude` is the level that pays, which a production under the run records
    *  (capture-requests' request row). */
-  runFor(run, viewer) {
+  runFor(run2, viewer) {
     try {
-      const id = run == null ? "" : String(run).trim();
+      const id = run2 == null ? "" : String(run2).trim();
       if (!id) return null;
       const seen = this.#bundleGate("r.context_id", viewer);
       const r = this.#one(`SELECT r.run, r.status, r.mode, r.context_type, r.context_id, r.principal_plane, r.principal_claude,
@@ -103387,10 +103390,10 @@ var AiRuns = class _AiRuns {
     }
   }
   /** R29: one bound's `{allowed, consumed}`, or null when the run declared none. */
-  boundOf(run, bound) {
+  boundOf(run2, bound) {
     const r = this.#one(
       `SELECT allowed, consumed FROM ai_run_bounds WHERE run = ? AND bound = ?`,
-      String(run ?? ""),
+      String(run2 ?? ""),
       String(bound ?? "")
     );
     return r ? { allowed: Number(r.allowed), consumed: Number(r.consumed) } : null;
@@ -103398,7 +103401,7 @@ var AiRuns = class _AiRuns {
   /** R29: add `n` to a bound's consumption, inside the caller's transaction (the row made at allowed 0 when none
    *  was declared). `n` 0 writes nothing; a figure that is not a non-negative safe integer is C-22.13 and nothing
    *  is written. It never ends a run: an exhausted bound ends it at the next tick (R12). */
-  consumeBound(run, bound, n) {
+  consumeBound(run2, bound, n) {
     const b = String(bound ?? "");
     const figure2 = typeof n === "number" && Number.isSafeInteger(n) && n >= 0;
     const bad = checkConsume([[b, figure2 ? 0 : n]], { seed: false });
@@ -103408,7 +103411,7 @@ var AiRuns = class _AiRuns {
       this.sql.exec(
         `INSERT INTO ai_run_bounds (run, bound, allowed, consumed) VALUES (?, ?, 0, ?)
          ON CONFLICT(run, bound) DO UPDATE SET consumed = consumed + ?`,
-        String(run),
+        String(run2),
         String(bound),
         n,
         n
@@ -103418,8 +103421,8 @@ var AiRuns = class _AiRuns {
   }
   /** R37: the run gate `contradiction` offers (its R21), from R28 and R5: `found` false for blank, absent and
    *  invisible alike; `refusal` null or R5's `AI_RUN_NOT_PRINCIPAL` naming `act`. */
-  runGate(run, viewer, caller, act = null) {
-    const r = this.runFor(run, viewer);
+  runGate(run2, viewer, caller, act = null) {
+    const r = this.runFor(run2, viewer);
     if (!r) return { found: false, running: false, refusal: null, run: null };
     return {
       found: true,
@@ -103450,7 +103453,7 @@ var AiRuns = class _AiRuns {
    *  question above is asked of it. */
   #surfacingGate(pkg) {
     const caller = String(pkg.assistantPrincipal ?? "").trim();
-    const run = String(pkg.run ?? "").trim();
+    const run2 = String(pkg.run ?? "").trim();
     const refusal21 = (code, detail, extra) => {
       const row2 = ROW2(code);
       return {
@@ -103460,15 +103463,15 @@ var AiRuns = class _AiRuns {
         check: row2.check,
         translation: row2.translation,
         detail,
-        run: run || null,
+        run: run2 || null,
         ...extra || {}
       };
     };
-    const runRow = this.runFor(run, pkg.actorViewer ?? null);
+    const runRow = this.runFor(run2, pkg.actorViewer ?? null);
     if (!runRow)
       return refusal21(
         "SURFACE_NO_RUN",
-        run ? `no run named '${run.slice(0, 60)}' is open here. An assistant opens a question only inside a run it holds (INVESTIGATIVE-SESSION.md \xA711 item 5, rule 2): the run carries the lens in force and the objective the question was surfaced under. Nothing was created.` : "an assistant opens a question only inside a run it holds: pass run=<the run this question is surfaced under> in the promotion. The run carries the lens in force and the objective it pursued (INVESTIGATIVE-SESSION.md \xA711 item 5, rule 2). Nothing was created."
+        run2 ? `no run named '${run2.slice(0, 60)}' is open here. An assistant opens a question only inside a run it holds (INVESTIGATIVE-SESSION.md \xA711 item 5, rule 2): the run carries the lens in force and the objective the question was surfaced under. Nothing was created.` : "an assistant opens a question only inside a run it holds: pass run=<the run this question is surfaced under> in the promotion. The run carries the lens in force and the objective it pursued (INVESTIGATIVE-SESSION.md \xA711 item 5, rule 2). Nothing was created."
       );
     const notPrincipal = runPrincipalGate({
       caller,
@@ -103483,25 +103486,25 @@ var AiRuns = class _AiRuns {
         check: notPrincipal.check,
         translation: notPrincipal.translation,
         detail: notPrincipal.detail,
-        run,
+        run: run2,
         note: "an assistant opens a question only inside a run it holds. Nothing was created"
       };
     if (runRow.status !== "running")
       return refusal21(
         "SURFACE_RUN_NOT_RUNNING",
-        `the run '${run.slice(0, 60)}' has ended (${String(runRow.status).slice(0, 40)}), and a question is read against the conditions of the run that surfaced it, which stopped being current when it stopped. Nothing was created.`,
+        `the run '${run2.slice(0, 60)}' has ended (${String(runRow.status).slice(0, 40)}), and a question is read against the conditions of the run that surfaced it, which stopped being current when it stopped. Nothing was created.`,
         { status: runRow.status }
       );
-    const bound = this.boundOf(run, "surfaces");
+    const bound = this.boundOf(run2, "surfaces");
     if (!bound || !(bound.allowed > 0))
       return refusal21(
         "SURFACE_NO_BOUND",
-        `the run '${run.slice(0, 60)}' declares no 'surfaces' bound, so the questions it may open would be unbounded. The bound is declared at op=airunopen, by the member who opens the run. Nothing was created.`
+        `the run '${run2.slice(0, 60)}' declares no 'surfaces' bound, so the questions it may open would be unbounded. The bound is declared at op=airunopen, by the member who opens the run. Nothing was created.`
       );
     if (bound.consumed >= bound.allowed)
       return refusal21(
         "SURFACE_BOUND_REACHED",
-        `the run '${run.slice(0, 60)}' has reached its 'surfaces' bound (${bound.consumed} of ${bound.allowed}). Nothing was created; the next tick ends the run, and the log says which bound stopped it.`,
+        `the run '${run2.slice(0, 60)}' has reached its 'surfaces' bound (${bound.consumed} of ${bound.allowed}). Nothing was created; the next tick ends the run, and the log says which bound stopped it.`,
         { allowed: bound.allowed, consumed: bound.consumed }
       );
     return null;
@@ -103517,20 +103520,20 @@ var AiRuns = class _AiRuns {
    *  bound after this spend. */
   #surfacingProject(c) {
     if (!_AiRuns.#surfacing(c)) return null;
-    const run = String(c.pkg.run).trim(), principal = c.pkg.assistantPrincipal.trim();
+    const run2 = String(c.pkg.run).trim(), principal = c.pkg.assistantPrincipal.trim();
     const at26 = (/* @__PURE__ */ new Date()).toISOString();
     this.#transact(() => {
       this.sql.exec(
         `INSERT INTO inquiry_run_surfacings (bundle_id, run, principal, at) VALUES (?,?,?,?)`,
         c.bundleId,
-        run,
+        run2,
         principal,
         at26
       );
-      this.consumeBound(run, "surfaces", 1);
+      this.consumeBound(run2, "surfaces", 1);
     });
-    const left2 = this.boundOf(run, "surfaces");
-    return { surfaced_in: { run, at: at26, bound: { bound: "surfaces", allowed: left2.allowed, consumed: left2.consumed } } };
+    const left2 = this.boundOf(run2, "surfaces");
+    return { surfaced_in: { run: run2, at: at26, bound: { bound: "surfaces", allowed: left2.allowed, consumed: left2.consumed } } };
   }
   /* ---- R36: HIDDEN RUNS — `hiddenRuns` (R42, module level) is what retrieval holds; observation-log's resolver is
      `runFor` (R28), the same sight. ------------------------------------------------------------------------------ */
@@ -104040,13 +104043,13 @@ var RunProductions = class _RunProductions {
         "no question by that id is readable here, so there is nothing to add a reading to.",
         { target }
       );
-    const run = String(args.run ?? "").trim();
-    const runRow = run ? this.aiRuns.runFor(run, viewer) : null;
+    const run2 = String(args.run ?? "").trim();
+    const runRow = run2 ? this.aiRuns.runFor(run2, viewer) : null;
     if (!runRow)
       return refusal21(
         "SUGGEST_NO_RUN",
-        run ? `no run named '${run.slice(0, 60)}' is open in this store, and a version is only interpretable against the conditions its run was formed under (\xA711).` : "pass run=<the run that composed this>: \xA711 requires every version to name the piece of work that produced it, because the bias in force, the declared standard and the claim set can all change at the drop of a hat.",
-        { target, run: run || null }
+        run2 ? `no run named '${run2.slice(0, 60)}' is open in this store, and a version is only interpretable against the conditions its run was formed under (\xA711).` : "pass run=<the run that composed this>: \xA711 requires every version to name the piece of work that produced it, because the bias in force, the declared standard and the claim set can all change at the drop of a hat.",
+        { target, run: run2 || null }
       );
     const notPrincipal = runPrincipalGate({
       caller: args.caller ?? null,
@@ -104062,22 +104065,22 @@ var RunProductions = class _RunProductions {
         translation: notPrincipal.translation,
         detail: notPrincipal.detail,
         target,
-        run,
+        run: run2,
         note: "a suggestion names a run its caller holds. Nothing was composed or written"
       };
     if (runRow.status !== "running")
       return refusal21(
         "SUGGEST_RUN_NOT_RUNNING",
-        `the run '${run.slice(0, 60)}' has ended, and a version is formed under a LIVE run's conditions (\xA711 item 5, rule 1): open a new run to go on working, as the member's act.`,
-        { target, run }
+        `the run '${run2.slice(0, 60)}' has ended, and a version is formed under a LIVE run's conditions (\xA711 item 5, rule 1): open a new run to go on working, as the member's act.`,
+        { target, run: run2 }
       );
     const ctxId = String(runRow.context_id ?? "");
     const inContext = target === ctxId || String(runRow.context_type) === "project" && this.connections.citesInto(target).confirmed.includes(ctxId);
     if (!inContext)
       return refusal21(
         "SUGGEST_OUTSIDE_RUN_CONTEXT",
-        `${target.slice(0, 60)} is outside the context of the run '${run.slice(0, 60)}': a run's readings land on its own question, or, for a run over a project, on a question that project cites. Work on another question opens a run over it.`,
-        { target, run }
+        `${target.slice(0, 60)} is outside the context of the run '${run2.slice(0, 60)}': a run's readings land on its own question, or, for a run over a project, on a question that project cites. Work on another question opens a run over it.`,
+        { target, run: run2 }
       );
     const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
     if (!liveMd || liveMd.content === null)
@@ -104120,7 +104123,7 @@ var RunProductions = class _RunProductions {
       derived_from: args.derived_from ?? null,
       level,
       observed_at: observedAt,
-      run,
+      run: run2,
       grounds: (Array.isArray(args.grounds) ? args.grounds : []).map((g) => ({
         ground: g?.ground ?? null,
         statement: g?.statement ?? null,
@@ -104302,7 +104305,7 @@ var RunProductions = class _RunProductions {
       claim: args.claim,
       relationship: args.relationship,
       derived_from: args.derived_from,
-      run,
+      run: run2,
       author: who2 || null,
       at: nowIso,
       level: kind === "level-empty" ? level : null,
@@ -104355,9 +104358,9 @@ var RunProductions = class _RunProductions {
       legs: persisted.legs.map((l) => Object.fromEntries(Object.entries(l).filter(([, v]) => v !== null))),
       author: pv.author,
       at: pv.at,
-      log: `### Session ${nowIso} | Suggestion | ${who2 || run}
+      log: `### Session ${nowIso} | Suggestion | ${who2 || run2}
 Trigger: op=suggest on ${target}
-Changes: reading '${name2}' proposed as ${kind}, in state suggested, carrying run ${run}.
+Changes: reading '${name2}' proposed as ${kind}, in state suggested, carrying run ${run2}.
 `
     });
     if (promoted && promoted.ok === false && promoted.reason === "UNSPLICEABLE_BASIS")
@@ -104432,7 +104435,7 @@ Changes: reading '${name2}' proposed as ${kind}, in state suggested, carrying ru
    *  is written, the batch is written in one transaction, and the bound is consumed by what was ACTUALLY minted. A
    *  proposal that says WHERE it read the reference mints that passage through `content` (on the capture's own chain,
    *  so a member's later citation of the same passage finds this row); one with no position mints nothing. */
-  extractPropose({ run, bundleId, fn, version, cap = null, refs, proposedBy, viewer = null, at: at26 = null, caller = null }) {
+  extractPropose({ run: run2, bundleId, fn, version, cap = null, refs, proposedBy, viewer = null, at: at26 = null, caller = null }) {
     const refuse8 = (code, detail, extra) => {
       const row2 = EXTRACT_PROPOSE_CHECKS[code];
       return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail, ...extra || {} };
@@ -104442,12 +104445,12 @@ Changes: reading '${name2}' proposed as ${kind}, in state suggested, carrying ru
         "NO_PROPOSER",
         `a proposed reading records WHO proposed it. The plane stamps that from the credential that asked, so an empty one means the act arrived by a route that does not attribute it \u2014 which is refused rather than filled in`
       );
-    if (typeof run !== "string" || !run.trim())
+    if (typeof run2 !== "string" || !run2.trim())
       return refuse8(
         "NO_RUN",
         `EXTRACT runs in DEC-62's RUN and nowhere else: the run is the object that bounds this work, logs it, resumes it and checks it plane-side. A production outside one would be a second place a machine writes`
       );
-    const runId = run.trim();
+    const runId = run2.trim();
     const r = this.aiRuns.runFor(runId, viewer);
     if (!r)
       return refuse8(
@@ -104631,10 +104634,10 @@ Changes: reading '${name2}' proposed as ${kind}, in state suggested, carrying ru
    *  proposals: §7.3 asks whether the passages a machine marked citable are ever cited. Its documents are the ones this
    *  scope names that the viewer may see, each asked once, so a document the viewer may not see moves neither the list
    *  nor the ratio (an instrument that moved with them would report their existence). */
-  extractProposals({ run = null, bundleId = null, viewer = null, limit = EXTRACT_PROPOSALS_LIMIT_DEFAULT } = {}) {
+  extractProposals({ run: run2 = null, bundleId = null, viewer = null, limit = EXTRACT_PROPOSALS_LIMIT_DEFAULT } = {}) {
     const n = Math.max(1, Math.min(EXTRACT_PROPOSALS_LIMIT_MAX, Math.floor(Number(limit)) || EXTRACT_PROPOSALS_LIMIT_DEFAULT));
     const where = [], args = [];
-    const runId = run != null && String(run).trim() ? String(run).trim() : null;
+    const runId = run2 != null && String(run2).trim() ? String(run2).trim() : null;
     const bundleArm = bundleId != null && String(bundleId).trim() ? String(bundleId).trim() : null;
     if (runId) {
       where.push("run = ?");
@@ -106774,17 +106777,315 @@ __export(checks_exports45, {
   GATH_ID_RE: () => GATH_ID_RE,
   GATH_STATUS_ENUM: () => GATH_STATUS_ENUM,
   MONITORING_CHECKS: () => MONITORING_CHECKS,
+  SWEEP_BOUNDS: () => SWEEP_BOUNDS,
+  SWEEP_CADENCES: () => SWEEP_CADENCES,
+  SWEEP_CHECKS: () => SWEEP_CHECKS,
+  SWEEP_FIELDS: () => SWEEP_FIELDS,
+  SWEEP_ID_RE: () => SWEEP_ID_RE,
   checkGatheringGrammar: () => checkGatheringGrammar,
   frequencyRefusal: () => frequencyRefusal
 });
-function f14(check, severity, message2) {
-  return { check, severity, message: message2 };
+
+// src/monitoring/sweep-match.mjs
+function inScope(address, sources) {
+  if (typeof address !== "string" || !Array.isArray(sources)) return false;
+  let a;
+  try {
+    a = normalizeAddress(address);
+  } catch {
+    return false;
+  }
+  return sources.some((p) => {
+    if (typeof p !== "string" || !p) return false;
+    let n;
+    try {
+      n = normalizeAddress(p);
+    } catch {
+      return false;
+    }
+    return a === n || a.startsWith(n) && (n.endsWith("/") || a[n.length] === "/");
+  });
+}
+var TERM_MAX = 200;
+var MATCH_TEXT_MAX = 2048;
+var TERM_PROGRAM_MAX = 4e3;
+var TERM_REPEAT_MAX = 100;
+var fold2 = (c) => {
+  const l = c.toLowerCase();
+  return l.length === 1 ? l : c;
+};
+var unfold = (c) => {
+  const u = c.toUpperCase();
+  return u.length === 1 ? u : c;
+};
+var isWord = (c) => c !== void 0 && /^[A-Za-z0-9_]$/.test(c);
+var CLASS = { d: (c) => c >= "0" && c <= "9", w: isWord, s: (c) => /^\s$/u.test(c) };
+var Refused = class extends Error {
+  constructor(construct, detail) {
+    super(detail);
+    this.construct = construct;
+  }
+};
+function parse3(src) {
+  const cs = Array.from(src);
+  let i = 0;
+  const peek = () => cs[i], eat = () => cs[i++];
+  const escape = (inClass) => {
+    const c = eat();
+    if (c === void 0) throw new Refused("a trailing backslash", "the expression ends with a backslash");
+    if (/[1-9]/.test(c) || c === "k") throw new Refused("a backreference", `\\${c} refers back to a group, and a backreference cannot be matched in linear time`);
+    const low = c.toLowerCase();
+    if (CLASS[low]) {
+      const f17 = CLASS[low];
+      return c === low ? f17 : (x) => !f17(x);
+    }
+    if (!inClass && (c === "b" || c === "B")) return { assert: c };
+    const ctl = { n: "\n", r: "\r", t: "	", f: "\f", v: "\v", 0: "\0" }[c];
+    if (ctl !== void 0) return ctl;
+    if (c === "x" || c === "u") {
+      const n = c === "x" ? 2 : 4, h = cs.slice(i, i + n).join("");
+      if (!new RegExp(`^[0-9a-fA-F]{${n}}$`).test(h)) throw new Refused(`\\${c} without ${n} hex digits`, `\\${c} needs ${n} hex digits`);
+      i += n;
+      return String.fromCharCode(parseInt(h, 16));
+    }
+    if (/[A-Za-z]/.test(c)) throw new Refused(`the escape \\${c}`, `\\${c} is not an escape a term reads`);
+    return c;
+  };
+  const klass = () => {
+    const neg = peek() === "^" && !!eat();
+    const items = [];
+    let first = true;
+    for (; ; ) {
+      let c = eat();
+      if (c === void 0) throw new Refused("an unclosed class", "a [ has no closing ]");
+      if (c === "]" && !first) break;
+      first = false;
+      let lo = c === "\\" ? escape(true) : c;
+      if (typeof lo === "string" && peek() === "-" && cs[i + 1] !== void 0 && cs[i + 1] !== "]") {
+        eat();
+        c = eat();
+        const hi = c === "\\" ? escape(true) : c;
+        if (typeof hi !== "string" || hi < lo) throw new Refused("a reversed or open range", "a range in a class runs backwards or ends in a class");
+        items.push([lo, hi]);
+        continue;
+      }
+      items.push(lo);
+    }
+    const hit = (c) => items.some((x) => typeof x === "function" ? x(c) : Array.isArray(x) ? c >= x[0] && c <= x[1] : c === x);
+    return { t: "char", test: (c) => (hit(c) || hit(unfold(c)) || hit(fold2(c))) !== neg };
+  };
+  const atom = () => {
+    const c = eat();
+    if (c === "(") {
+      if (peek() === "?") {
+        eat();
+        const k = eat();
+        if (k === "=" || k === "!") throw new Refused("a lookahead", `(?${k} looks ahead, which a term may not`);
+        if (k === "<" && (peek() === "=" || peek() === "!")) throw new Refused("a lookbehind", `(?<${peek()} looks behind, which a term may not`);
+        if (k === "<") {
+          while (peek() !== void 0 && peek() !== ">") eat();
+          if (eat() !== ">") throw new Refused("an unclosed group name", "a named group's name has no closing >");
+        } else if (k !== ":") throw new Refused(`the group (?${k ?? ""}`, `(?${k ?? ""} is not a group a term reads`);
+      }
+      const x = alt();
+      if (eat() !== ")") throw new Refused("an unclosed group", "a ( has no closing )");
+      return x;
+    }
+    if (c === "[") return klass();
+    if (c === ".") return { t: "char", test: (x) => x !== "\n" && x !== "\r" };
+    if (c === "^" || c === "$") return { t: "assert", k: c };
+    if (c === "\\") {
+      const e = escape(false);
+      if (e && e.assert) return { t: "assert", k: e.assert };
+      return typeof e === "function" ? { t: "char", test: e } : lit(e);
+    }
+    if ("*+?{".includes(c)) throw new Refused("a quantifier with nothing to repeat", `${c} repeats nothing`);
+    if (c === ")") throw new Refused("an unopened group", "a ) closes no group");
+    return lit(c);
+  };
+  const lit = (ch) => {
+    const f17 = fold2(ch);
+    return { t: "char", test: (x) => fold2(x) === f17 };
+  };
+  const quant = (x) => {
+    let min, max;
+    const c = peek();
+    if (c === "*") {
+      min = 0;
+      max = Infinity;
+    } else if (c === "+") {
+      min = 1;
+      max = Infinity;
+    } else if (c === "?") {
+      min = 0;
+      max = 1;
+    } else if (c === "{") {
+      const m = /^\{(\d+)(,(\d*))?\}/.exec(cs.slice(i, i + 12).join(""));
+      if (!m) return x;
+      min = Number(m[1]);
+      max = m[2] ? m[3] === "" ? Infinity : Number(m[3]) : min;
+      if (min > TERM_REPEAT_MAX || max !== Infinity && max > TERM_REPEAT_MAX || max < min)
+        throw new Refused("a count past the bound", `a count is at most ${TERM_REPEAT_MAX} and never runs backwards`);
+      i += m[0].length - 1;
+    } else return x;
+    eat();
+    if (peek() === "?") eat();
+    if (x.t === "assert") throw new Refused("a repeated assertion", "an anchor or word boundary cannot be repeated");
+    return quant({ t: "rep", x, min, max });
+  };
+  const seq = () => {
+    const xs = [];
+    while (peek() !== void 0 && peek() !== "|" && peek() !== ")") xs.push(quant(atom()));
+    return { t: "seq", xs };
+  };
+  const alt = () => {
+    const xs = [seq()];
+    while (peek() === "|") {
+      eat();
+      xs.push(seq());
+    }
+    return xs.length === 1 ? xs[0] : { t: "alt", xs };
+  };
+  const tree = alt();
+  if (i < cs.length) throw new Refused("an unopened group", "a ) closes no group");
+  return tree;
+}
+function compile5(tree) {
+  const prog = [];
+  const add = (s) => {
+    if (prog.length >= TERM_PROGRAM_MAX) throw new Refused("an expression past the bound", `the term compiles to more than ${TERM_PROGRAM_MAX} states`);
+    prog.push(s);
+    return prog.length - 1;
+  };
+  const patch = (holes2, to) => {
+    for (const [s, k] of holes2) prog[s][k] = to;
+  };
+  const emit = (n) => {
+    if (n.t === "char") {
+      const s = add({ op: "char", test: n.test, next: -1 });
+      return [s, [[s, "next"]]];
+    }
+    if (n.t === "assert") {
+      const s = add({ op: "assert", k: n.k, next: -1 });
+      return [s, [[s, "next"]]];
+    }
+    if (n.t === "seq") {
+      if (!n.xs.length) {
+        const s = add({ op: "split", a: -1, b: -1 });
+        return [s, [[s, "a"], [s, "b"]]];
+      }
+      let [entry2, holes3] = emit(n.xs[0]);
+      for (const x of n.xs.slice(1)) {
+        const [e, h] = emit(x);
+        patch(holes3, e);
+        holes3 = h;
+      }
+      return [entry2, holes3];
+    }
+    if (n.t === "alt") {
+      let [entry2, holes3] = emit(n.xs[0]);
+      for (const x of n.xs.slice(1)) {
+        const [e, h] = emit(x);
+        entry2 = add({ op: "split", a: entry2, b: e });
+        holes3 = [...holes3, ...h];
+      }
+      return [entry2, holes3];
+    }
+    const parts = [];
+    for (let k = 0; k < n.min; k++) parts.push(emit(n.x));
+    if (n.max === Infinity) {
+      const [e, h] = emit(n.x);
+      const s = add({ op: "split", a: e, b: -1 });
+      patch(h, s);
+      parts.push([s, [[s, "b"]]]);
+    } else for (let k = n.min; k < n.max; k++) {
+      const [e, h] = emit(n.x);
+      const s = add({ op: "split", a: e, b: -1 });
+      parts.push([s, [...h, [s, "b"]]]);
+    }
+    if (!parts.length) {
+      const s = add({ op: "split", a: -1, b: -1 });
+      return [s, [[s, "a"], [s, "b"]]];
+    }
+    let [entry, holes2] = parts[0];
+    for (const [e, h] of parts.slice(1)) {
+      patch(holes2, e);
+      holes2 = h;
+    }
+    return [entry, holes2];
+  };
+  const [start, holes] = emit(tree);
+  patch(holes, add({ op: "match" }));
+  return { prog, start };
+}
+function run({ prog, start }, chars) {
+  const mark = new Int32Array(prog.length).fill(-1);
+  let gen = 0;
+  const closure = (list2, s, pos) => {
+    const stack = [s];
+    while (stack.length) {
+      const x = stack.pop();
+      if (x < 0 || mark[x] === gen) continue;
+      mark[x] = gen;
+      const st = prog[x];
+      if (st.op === "split") {
+        stack.push(st.b, st.a);
+        continue;
+      }
+      if (st.op === "assert") {
+        const before = chars[pos - 1], after = chars[pos];
+        const ok2 = st.k === "^" ? pos === 0 : st.k === "$" ? pos === chars.length : isWord(before) !== isWord(after) === (st.k === "b");
+        if (ok2) stack.push(st.next);
+        continue;
+      }
+      if (st.op === "match") return true;
+      list2.push(x);
+    }
+    return false;
+  };
+  let live = [];
+  for (let pos = 0; ; pos++) {
+    gen++;
+    const next = [];
+    for (const s of live) if (closure(next, prog[s].next, pos)) return true;
+    if (closure(next, start, pos)) return true;
+    if (pos >= chars.length) return false;
+    const c = chars[pos];
+    live = next.filter((s) => prog[s].test(c));
+  }
+}
+function compileTerm(term) {
+  if (typeof term !== "string" || !term.length || term.length > TERM_MAX || /[\r\n]/.test(term))
+    return { ok: false, construct: "not a term", detail: `a term is a single line of 1 to ${TERM_MAX} characters` };
+  const regex = term.length >= 2 && term.startsWith("/") && term.endsWith("/");
+  if (!regex) {
+    const needle = Array.from(term, fold2).join("");
+    return { ok: true, kind: "literal", test: (text5) => Array.from(cut3(text5), fold2).join("").includes(needle) };
+  }
+  try {
+    const m = compile5(parse3(term.slice(1, -1)));
+    return { ok: true, kind: "regex", test: (text5) => run(m, Array.from(cut3(text5))) };
+  } catch (e) {
+    if (e instanceof Refused) return { ok: false, construct: e.construct, detail: e.message };
+    return { ok: false, construct: "an expression that does not compile", detail: String(e && e.message || e).slice(0, 160) };
+  }
+}
+function cut3(text5) {
+  const s = typeof text5 === "string" ? text5 : "";
+  if (s.length <= MATCH_TEXT_MAX) return s;
+  return Array.from(s).slice(0, MATCH_TEXT_MAX).join("");
+}
+var isCut = (text5) => typeof text5 === "string" && text5.length > MATCH_TEXT_MAX && Array.from(text5).length > MATCH_TEXT_MAX;
+
+// src/monitoring/checks.mjs
+function f14(check, severity, message2, extra) {
+  return { check, severity, message: message2, ...extra || {} };
 }
 function asText8(v) {
   if (typeof v === "string") return v;
   return new TextDecoder().decode(v);
 }
-var at23 = (fn, region) => `src/monitoring/index.mjs ${fn} > ${region}`;
+var at23 = (fn, region, file = "index") => `src/monitoring/${file}.mjs ${fn} > ${region}`;
 var DRIVE_TICK_CHECKS = Object.freeze({
   DRIVE_TICK_EXPORT_IS_THE_SHELL: Object.freeze({
     check: "C-48.8",
@@ -106837,7 +107138,24 @@ var FREQUENCY_CHECKS = Object.freeze({
     translation: "A frequency is set with a reason: one of the listed reasons, or your own words of up to 2,000 characters. Nothing was changed."
   })
 });
-var MONITORING_CHECKS = Object.freeze({ ...DRIVE_TICK_CHECKS, ...GATHERING_CHECKS, ...FREQUENCY_CHECKS });
+var SWEEP_CHECKS = Object.freeze({
+  SWEEP_TERM_REFUSED: Object.freeze({
+    check: "C-18.16",
+    where: at23("gatheringCheck", "is-sweep-term"),
+    translation: "This was not saved: a search term of a sweep is a pattern the record cannot match safely. A term may be plain words or a simple pattern between slashes, without references back to an earlier part, look-aheads or look-behinds. The findings beside this name the term and what in it was refused. Nothing was changed."
+  }),
+  SWEEP_NOT_A_MEMBER: Object.freeze({
+    check: "C-18.17",
+    where: at23("sweepFence", "is-sweep-member", "sweep"),
+    translation: "This was not saved: a sweep is added, removed or changed only by a named member. An assistant or a machine may stop a sweep by unratifying it, and nothing more. Nothing was changed."
+  }),
+  SWEEP_RATIFY_NOT_AN_OWNER: Object.freeze({
+    check: "C-18.18",
+    where: at23("sweepFence", "is-sweep-owner", "sweep"),
+    translation: "This was not saved: a sweep is ratified, and a ratified sweep is changed, only by an owner of the project its list belongs to. Ask an owner of that project; anyone may still stop the sweep by unratifying it. Nothing was changed."
+  })
+});
+var MONITORING_CHECKS = Object.freeze({ ...DRIVE_TICK_CHECKS, ...GATHERING_CHECKS, ...FREQUENCY_CHECKS, ...SWEEP_CHECKS });
 function frequencyRefusal(code, detail, extra) {
   const row2 = FREQUENCY_CHECKS[code];
   return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail, ...extra || {} };
@@ -106902,19 +107220,103 @@ function checkGatheringGrammar(ctx, findings) {
     if (r.planted !== void 0 && !ISO_TS_RE.test(r.planted)) findings.push(f14("C-18.5", "error", `gathering.json requests[${i}].planted must be an ISO 8601 UTC instant`));
   }
   const sweeps = Array.isArray(g.sweeps) ? g.sweeps : [];
+  const ids = /* @__PURE__ */ new Set();
   for (let i = 0; i < sweeps.length; i++) {
     const s = sweeps[i];
-    if (typeof s !== "object" || s === null) {
+    if (typeof s !== "object" || s === null || Array.isArray(s)) {
       findings.push(f14("C-18.5", "error", `gathering.json sweeps[${i}] is not an object`));
       continue;
     }
-    if (typeof s.id !== "string" || s.id.trim() === "") findings.push(f14("C-18.5", "error", `gathering.json sweeps[${i}].id must be a nonempty string`));
-    if (s.ratified !== void 0 && typeof s.ratified !== "boolean") findings.push(f14("C-18.5", "error", `gathering.json sweeps[${i}].ratified must be boolean`));
-    if (s.sources !== void 0) {
-      if (!Array.isArray(s.sources)) findings.push(f14("C-18.5", "error", `gathering.json sweeps[${i}].sources must be an array`));
-      else for (let L2 = 0; L2 < s.sources.length; L2++) if (!isPublicHttpsLocator(s.sources[L2])) findings.push(f14("C-18.5", "error", `gathering.json sweeps[${i}].sources[${L2}] is not an https public-host locator`));
+    for (const err of sweepErrors(s, ids)) findings.push(f14(
+      "C-18.5",
+      "error",
+      `gathering.json sweeps[${i}]${err.field ? `.${err.field}` : ""} ${err.message}`,
+      err.code ? { code: err.code } : void 0
+    ));
+  }
+}
+var SWEEP_FIELDS = Object.freeze(["id", "title", "ratified", "sources", "seeds", "match", "cadence", "budget"]);
+var SWEEP_ID_RE = /^[a-z0-9][a-z0-9-]{0,39}$/;
+var SWEEP_CADENCES = Object.freeze(["daily", "weekly", "monthly"]);
+var SWEEP_BOUNDS = Object.freeze({
+  sources: [1, 20],
+  seeds: [1, 10],
+  terms: [0, 20],
+  paths: [0, 20],
+  formats: [0, 10],
+  per_run: [1, 100],
+  backlog: [1, 1e3],
+  title: 200
+});
+function sweepErrors(s, ids) {
+  const out = [];
+  const bad = (field, message2, code) => out.push({ field, message: message2, ...code ? { code } : {} });
+  for (const k of Object.keys(s)) if (!SWEEP_FIELDS.includes(k)) bad(null, `carries '${String(k).slice(0, 40)}', which is not a sweep's field (${SWEEP_FIELDS.join(", ")})`);
+  for (const k of SWEEP_FIELDS) if (!(k in s)) bad(k, "is missing");
+  if ("id" in s) {
+    if (typeof s.id !== "string" || !SWEEP_ID_RE.test(s.id)) bad("id", "must be 1 to 40 lowercase letters, digits or hyphens, starting with a letter or digit");
+    else if (ids.has(s.id)) bad("id", `'${s.id}' is not unique within the file`);
+    else ids.add(s.id);
+  }
+  if ("title" in s && (typeof s.title !== "string" || !s.title.trim() || s.title.length > SWEEP_BOUNDS.title || /[\r\n]/.test(s.title)))
+    bad("title", `must be a nonempty single line of at most ${SWEEP_BOUNDS.title} characters`);
+  if ("ratified" in s && typeof s.ratified !== "boolean") bad("ratified", "must be boolean");
+  const list2 = (v, [lo, hi]) => Array.isArray(v) && v.length >= lo && v.length <= hi;
+  let sources = null;
+  if ("sources" in s) {
+    if (!list2(s.sources, SWEEP_BOUNDS.sources)) bad("sources", `must be an array of ${SWEEP_BOUNDS.sources.join(" to ")} prefixes`);
+    else {
+      const wrong = s.sources.findIndex((p) => !isPublicHttpsLocator(p) || /[?#]/.test(p));
+      if (wrong >= 0) bad("sources", `[${wrong}] is not a public https prefix without a query or fragment`);
+      else sources = s.sources;
     }
   }
+  const scoped = (field, v) => {
+    const wrong = v.findIndex((u) => !isPublicHttpsLocator(u) || sources && !inScope(u, sources));
+    if (wrong >= 0) bad(field, `[${wrong}] is not a public https locator within the sweep's sources`);
+  };
+  if ("seeds" in s) {
+    if (!list2(s.seeds, SWEEP_BOUNDS.seeds)) bad("seeds", `must be an array of ${SWEEP_BOUNDS.seeds.join(" to ")} locators`);
+    else scoped("seeds", s.seeds);
+  }
+  if ("match" in s) {
+    const m = s.match;
+    if (typeof m !== "object" || m === null || Array.isArray(m)) bad("match", "must be an object");
+    else {
+      for (const k of Object.keys(m)) if (!["terms", "paths", "formats"].includes(k)) bad("match", `carries '${String(k).slice(0, 40)}', which is not terms, paths or formats`);
+      if (m.terms !== void 0) {
+        if (!list2(m.terms, SWEEP_BOUNDS.terms)) bad("match.terms", `must be an array of at most ${SWEEP_BOUNDS.terms[1]} terms`);
+        else m.terms.forEach((t, j) => {
+          const c = compileTerm(t);
+          if (!c.ok) bad(
+            `match.terms[${j}]`,
+            `SWEEP_TERM_REFUSED: the term ${JSON.stringify(String(t).slice(0, 80))} is refused for ${c.construct} (${c.detail})`,
+            "SWEEP_TERM_REFUSED"
+          );
+        });
+      }
+      if (m.paths !== void 0) {
+        if (!list2(m.paths, SWEEP_BOUNDS.paths)) bad("match.paths", `must be an array of at most ${SWEEP_BOUNDS.paths[1]} prefixes`);
+        else scoped("match.paths", m.paths);
+      }
+      if (m.formats !== void 0) {
+        const known = listFormats();
+        if (!list2(m.formats, SWEEP_BOUNDS.formats)) bad("match.formats", `must be an array of at most ${SWEEP_BOUNDS.formats[1]} format names`);
+        else {
+          const wrong = m.formats.findIndex((x) => !known.includes(x));
+          if (wrong >= 0) bad("match.formats", `[${wrong}] is not a format this instance reads (${known.join(", ")})`);
+        }
+      }
+    }
+  }
+  if ("cadence" in s && !SWEEP_CADENCES.includes(s.cadence)) bad("cadence", `must be one of: ${SWEEP_CADENCES.join(", ")}`);
+  if ("budget" in s) {
+    const b = s.budget;
+    const n = (v, [lo, hi]) => Number.isInteger(v) && v >= lo && v <= hi;
+    if (typeof b !== "object" || b === null || Array.isArray(b) || Object.keys(b).some((k) => k !== "per_run" && k !== "backlog") || !n(b.per_run, SWEEP_BOUNDS.per_run) || !n(b.backlog, SWEEP_BOUNDS.backlog))
+      bad("budget", `must be {per_run, backlog}: per_run an integer ${SWEEP_BOUNDS.per_run.join(" to ")}, backlog an integer ${SWEEP_BOUNDS.backlog.join(" to ")}`);
+  }
+  return out;
 }
 
 // src/tasks/checks.mjs
@@ -107454,13 +107856,13 @@ var CaptureRequests = class _CaptureRequests {
       const row2 = CAPTURE_REQUEST_CHECKS[code];
       return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail, ...extra || {} };
     };
-    const run = text3(args.run).trim();
-    const runRow = run ? this.#deps.runs.runFor(run, viewer) : null;
+    const run2 = text3(args.run).trim();
+    const runRow = run2 ? this.#deps.runs.runFor(run2, viewer) : null;
     if (!runRow)
       return refusal21(
         "CAPTURE_REQUEST_NO_RUN",
-        run ? `no run named '${run.slice(0, 60)}' is running in this store. DEC-47 makes the SESSION LAUNCH the authorisation for reaching a public source, so a request that cannot name a live session is a fetch nothing authorised.` : "pass run=<the run asking>: the inquiry and the session launch ARE the authorisation (DEC-47), and a request naming no session names no authorisation.",
-        { run: run || null }
+        run2 ? `no run named '${run2.slice(0, 60)}' is running in this store. DEC-47 makes the SESSION LAUNCH the authorisation for reaching a public source, so a request that cannot name a live session is a fetch nothing authorised.` : "pass run=<the run asking>: the inquiry and the session launch ARE the authorisation (DEC-47), and a request naming no session names no authorisation.",
+        { run: run2 || null }
       );
     const notPrincipal = runPrincipalGate({
       caller,
@@ -107475,14 +107877,14 @@ var CaptureRequests = class _CaptureRequests {
         check: notPrincipal.check,
         translation: notPrincipal.translation,
         detail: notPrincipal.detail,
-        run,
+        run: run2,
         note: "a capture request names a run its caller holds. Nothing was requested or written"
       };
     if (runRow.status !== "running")
       return refusal21(
         "CAPTURE_REQUEST_NO_RUN",
-        `no run named '${run.slice(0, 60)}' is running in this store. DEC-47 makes the SESSION LAUNCH the authorisation for reaching a public source, so a request that cannot name a live session is a fetch nothing authorised.`,
-        { run }
+        `no run named '${run2.slice(0, 60)}' is running in this store. DEC-47 makes the SESSION LAUNCH the authorisation for reaching a public source, so a request that cannot name a live session is a fetch nothing authorised.`,
+        { run: run2 }
       );
     const address = text3(args.address).trim();
     if (!isPublicHttpsLocator(address))
@@ -107547,7 +107949,7 @@ var CaptureRequests = class _CaptureRequests {
     const sweep = typeof sweepRaw === "string" ? sweepRaw.trim() || null : sweepRaw === null ? null : shown(sweepRaw);
     const standing = this.#one(
       `SELECT * FROM capture_requests WHERE run=? AND address=? AND render=? AND state IN ('requested','draining','captured')`,
-      run,
+      run2,
       address,
       render
     );
@@ -107555,7 +107957,7 @@ var CaptureRequests = class _CaptureRequests {
       return {
         ok: true,
         request: standing.request,
-        run,
+        run: run2,
         target: standing.target,
         address,
         host: standing.host,
@@ -107582,7 +107984,7 @@ var CaptureRequests = class _CaptureRequests {
          principal_plane, principal_claude, state, attempts, requested_at, updated, expires, lead_inquiry, render, sweep)
        VALUES (?,?,?,?,?,?,?,?,?,'requested',0,?,?,?,?,?,?)`,
       request,
-      run,
+      run2,
       target,
       address,
       host,
@@ -108377,11 +108779,11 @@ var CaptureRequests = class _CaptureRequests {
   }
   /** R23–R25, op=capturerequests: rows whose target the viewer can see, filtered by run, target and state, oldest
    *  first. */
-  captureRequests({ run = null, target = null, state = null, limit = null, viewer = null } = {}) {
+  captureRequests({ run: run2 = null, target = null, state = null, limit = null, viewer = null } = {}) {
     const where = [], args = [];
-    if (run) {
+    if (run2) {
       where.push("cr.run=?");
-      args.push(String(run));
+      args.push(String(run2));
     }
     if (target) {
       where.push("cr.target=?");
@@ -108448,24 +108850,24 @@ var CaptureRequests = class _CaptureRequests {
   /** R29, D-583: a run's outstanding requests (`requested` or `draining`, not past `expires`) and its completions not
    *  yet told to it (`captured`, `refused` and `expired` with `run_woken_at` null), each bounded by 25 and saying when
    *  it was cut. A run's wait is bounded by its requests' own expiry. */
-  waits({ run, now = null } = {}) {
+  waits({ run: run2, now = null } = {}) {
     const iso5 = stampInstant("second", Number.isFinite(now) ? now : this.#nowMs());
     const n = CAPTURE_REQUEST_WAIT_BATCH;
     const out = this.#rows(
       `SELECT * FROM capture_requests WHERE run = ? AND state IN ('requested','draining') AND expires > ?
         ORDER BY requested_at, request LIMIT ?`,
-      String(run ?? ""),
+      String(run2 ?? ""),
       iso5,
       n + 1
     );
     const done = this.#rows(
       `SELECT * FROM capture_requests WHERE run = ? AND state IN ('captured','refused','expired') AND run_woken_at IS NULL
         ORDER BY updated, request LIMIT ?`,
-      String(run ?? ""),
+      String(run2 ?? ""),
       n + 1
     );
     return {
-      run: run ?? null,
+      run: run2 ?? null,
       outstanding: out.slice(0, n).map(_CaptureRequests.project),
       outstanding_truncated: out.length > n,
       completions: done.slice(0, n).map(_CaptureRequests.project),
@@ -108503,9 +108905,9 @@ var CaptureRequests = class _CaptureRequests {
         after = keyOf2(page[page.length - 1]);
       }
     };
-    const running = (run) => {
+    const running = (run2) => {
       try {
-        const r = this.#deps.runs.runFor(run, "class:daemon");
+        const r = this.#deps.runs.runFor(run2, "class:daemon");
         return !!r && r.status === "running";
       } catch {
         return false;
@@ -108543,11 +108945,11 @@ var CaptureRequests = class _CaptureRequests {
         );
         return out;
       },
-      completions: (run, limit) => this.#rows(
+      completions: (run2, limit) => this.#rows(
         `SELECT request, state FROM capture_requests
           WHERE run = ? AND state IN ('captured','refused','expired') AND run_woken_at IS NULL
           ORDER BY updated, request LIMIT ?`,
-        String(run ?? ""),
+        String(run2 ?? ""),
         bound(limit)
       ).map((r) => ({ request: r.request, state: r.state })),
       markWoken: (requests, iso5) => this.markWoken({ requests, at: iso5 }).marked
@@ -109962,9 +110364,9 @@ ${bodyText(note)}`
    *  at most CONTACTS_MAX pairs are listed, in the order of their first and then second aspiration's id; `truncated`
    *  says either was cut (N209, K338). */
   contacts({ viewer = null } = {}) {
-    const { held, truncated: cut3 } = this.#heldAspirations(viewer);
+    const { held, truncated: cut4 } = this.#heldAspirations(viewer);
     const pairs = [];
-    let truncated3 = cut3;
+    let truncated3 = cut4;
     outer: for (let i = 0; i < held.length; i++)
       for (let j = i + 1; j < held.length; j++) {
         const a = held[i], b = held[j];
@@ -110230,7 +110632,7 @@ ${bodyText(note)}`
     reason = null,
     author = null,
     viewer = null,
-    run = null,
+    run: run2 = null,
     assistantPrincipal = null
   } = {}) {
     if (!TRIAGE_ACTS.includes(act))
@@ -110279,7 +110681,7 @@ ${bodyText(note)}`
       const r = this.#revise(proj, text5, str14(author), viewer);
       if (!r.ok) return r;
     } else if (act === "question") {
-      const opened = this.#openQuestion(found, author, viewer, run, assistantPrincipal, at26);
+      const opened = this.#openQuestion(found, author, viewer, run2, assistantPrincipal, at26);
       if (!opened.ok) return opened;
       inquiry = opened.bundleId;
       extra = { inquiry, surfaced_by: isMachine3 ? "agent" : "human" };
@@ -110322,7 +110724,7 @@ ${bodyText(note)}`
   }
   /* R16's `question`: a new inquiry at `surfaced`, through promotion (so inquiry's check and ai-runs' surfacing step,
      its R25, run inside it), the proposal as its basis. */
-  #openQuestion(found, author, viewer, run, assistantPrincipal, at26) {
+  #openQuestion(found, author, viewer, run2, assistantPrincipal, at26) {
     const id = `${this.record.allocId("INQ", at26.slice(0, 4)).id}-question`;
     const question = questionOf(found);
     const who2 = str14(author) || PLANE_ACTOR;
@@ -110379,7 +110781,7 @@ ${bodyText(note)}`
       author: who2,
       files: [{ path: "bundle.md", text: text5 }],
       meta: { object_type: "inquiry", current_state: "surfaced", created: at26, last_updated: at26 },
-      ...run ? { run } : {},
+      ...run2 ? { run: run2 } : {},
       ...str14(assistantPrincipal) ? { assistantPrincipal: str14(assistantPrincipal) } : {},
       actorViewer: viewer ?? null
     });
@@ -110493,7 +110895,7 @@ ${bodyText(note)}`
    *  `objective`. `run` carries what `ai-runs.open` takes (its id, principals, skill version, bounds, …). The member's
    *  reason (DEC-88 (4)) is recorded on the run's opening as its `label`, which ai-runs stores at the open, never
    *  changes, and answers with the run's budget and context (its R10, R19), and is carried in the instructions. */
-  async workObjective({ project, reason, author, viewer = null, run = {} } = {}) {
+  async workObjective({ project, reason, author, viewer = null, run: run2 = {} } = {}) {
     if (machine(author))
       return refusal14("MACHINE_CANNOT_CHOOSE_THE_QUESTION", "setting an assistant to work an objective is a member's act (DEC-24 rule 2). No run was opened.");
     const why = reasonOf(reason);
@@ -110509,7 +110911,7 @@ ${bodyText(note)}`
       reason: why
     };
     const opened = await this.#lazy(this.aiRunsRef).open({
-      ...isObj12(run) ? run : {},
+      ...isObj12(run2) ? run2 : {},
       contextType: "project",
       contextId: project,
       label: why,
@@ -113773,8 +114175,8 @@ var Actions = class _Actions {
     const at26 = text5.indexOf("## Session Log");
     if (at26 < 0) return text5 + "\n## Session Log\n\n" + entry;
     const nxt = text5.indexOf("\n## ", at26 + 1);
-    const cut3 = nxt === -1 ? text5.length : nxt + 1;
-    return text5.slice(0, cut3) + entry + "\n" + text5.slice(cut3);
+    const cut4 = nxt === -1 ? text5.length : nxt + 1;
+    return text5.slice(0, cut4) + entry + "\n" + text5.slice(cut4);
   }
   /* A revision of `id` through promotion, carrying every other live file (R14, R16, R18, R24). */
   #revise(id, text5, fm, b, when, who2, marks = {}, state = null) {
@@ -117135,11 +117537,11 @@ var SCALES = Object.freeze({
   tn: 12
 });
 var FIGURE = /^(-|\()?\s*([$€£¥])?\s*(-)?\s*(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?|\.\d+)\s*([a-z]+)?\s*(\))?$/i;
-var fold2 = (s) => String(s).replace(/[   \s]+/g, " ").replace(/[−–]/g, "-").trim();
+var fold3 = (s) => String(s).replace(/[   \s]+/g, " ").replace(/[−–]/g, "-").trim();
 function parseFigure(figure2) {
-  if (typeof figure2 !== "string" || !fold2(figure2)) return { ok: false, why: "no figure was stated as read" };
-  const m = FIGURE.exec(fold2(figure2));
-  if (!m) return { ok: false, why: `"${fold2(figure2).slice(0, 80)}" is not a figure this module reads (digits, with thousands separators, a decimal point, a currency sign or a scale word)` };
+  if (typeof figure2 !== "string" || !fold3(figure2)) return { ok: false, why: "no figure was stated as read" };
+  const m = FIGURE.exec(fold3(figure2));
+  if (!m) return { ok: false, why: `"${fold3(figure2).slice(0, 80)}" is not a figure this module reads (digits, with thousands separators, a decimal point, a currency sign or a scale word)` };
   const [, lead, , minus, digits, word, close] = m;
   if (lead === "(" !== (close === ")")) return { ok: false, why: "an opening parenthesis is not closed, or the reverse" };
   if (lead === "-" && minus) return { ok: false, why: "the figure carries two minus signs" };
@@ -117157,8 +117559,8 @@ function parseFigure(figure2) {
 }
 function passageHolds(text5, figure2) {
   if (typeof text5 !== "string" || typeof figure2 !== "string") return false;
-  const f17 = fold2(figure2);
-  return f17 !== "" && fold2(text5).includes(f17);
+  const f17 = fold3(figure2);
+  return f17 !== "" && fold3(text5).includes(f17);
 }
 var toDecimals = (x, d) => Number(x.toFixed(Math.min(20, d)));
 var toPrecision = (x) => Number(x.toPrecision(15));
@@ -117322,7 +117724,7 @@ var str17 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
 var isObj15 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var q4 = (v) => JSON.stringify(v ?? null);
 var json2 = (v) => v == null ? null : JSON.stringify(v);
-var parse3 = (s) => {
+var parse4 = (s) => {
   if (s == null) return null;
   try {
     return JSON.parse(s);
@@ -117637,13 +118039,13 @@ var Consequences = class {
     const bad = reasonRefusal(reason);
     if (bad) return bad;
     const pick2 = (k, stored) => k in args ? args[k] : stored;
-    const oldBasis = old.op ? { op: old.op, operands: this.#operands(old.bundle_id).map((o) => ({ content: o.content_id, figure: o.figure })) } : old.state === "assessed" ? { rationale: old.rationale, rests_on: parse3(old.rests_on) || [] } : { why: old.undetermined_code };
+    const oldBasis = old.op ? { op: old.op, operands: this.#operands(old.bundle_id).map((o) => ({ content: o.content_id, figure: o.figure })) } : old.state === "assessed" ? { rationale: old.rationale, rests_on: parse4(old.rests_on) || [] } : { why: old.undetermined_code };
     return this.#record({
       determination: old.determination,
       standard: old.standard,
-      affected: pick2("affected", parse3(old.affected)),
-      measure: pick2("measure", parse3(old.measure)),
-      period: pick2("period", parse3(old.period)),
+      affected: pick2("affected", parse4(old.affected)),
+      measure: pick2("measure", parse4(old.measure)),
+      period: pick2("period", parse4(old.period)),
       basis: pick2("basis", oldBasis),
       causation: pick2("causation", old.causation),
       author,
@@ -117905,9 +118307,9 @@ var Consequences = class {
       determination: r.determination,
       standard: r.standard,
       project: r.project,
-      affected: parse3(r.affected),
-      measure: parse3(r.measure),
-      period: parse3(r.period),
+      affected: parse4(r.affected),
+      measure: parse4(r.measure),
+      period: parse4(r.period),
       state: r.state,
       author: r.author || null,
       at: r.at,
@@ -117940,7 +118342,7 @@ var Consequences = class {
       out.grade = { grade: r.grade, determined: r.grade !== null, why: gradeWhyFor(r, place) };
       out.label = r.machine ? { machine_work: true, says: `machine work: computed by ${r.author || "a machine"} from the operands shown` } : { machine_work: false, says: `computed from the operands shown; recorded by ${r.author}` };
     } else if (r.state === "assessed") {
-      const recorded = parse3(r.rests_on) || [];
+      const recorded = parse4(r.rests_on) || [];
       const rests = recorded.filter((x) => this.#resolvesEvidence(x, who2));
       if (rests.length < recorded.length) withheld = true;
       out.assessment = {
@@ -117982,7 +118384,7 @@ var Consequences = class {
     }
     const a = this.#addressedOf(r.bundle_id);
     if (a) {
-      const recorded = parse3(a.evidence) || [];
+      const recorded = parse4(a.evidence) || [];
       const evidence = recorded.filter((x) => this.#resolvesEvidence(x, who2));
       if (evidence.length < recorded.length) withheld = true;
       out.addressed = { state: a.state, evidence, reason: a.reason, by: a.author, at: a.at };
@@ -118566,7 +118968,7 @@ var MACHINE_READER = `${MACHINE_CLASS_PREFIX}admin`;
 var DRAFT_SAYS = "a draft prepared from the record: nobody has approved or sent it, and nothing is filed until a member approves it and files it by the venue's own means";
 var str18 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
 var json3 = (v) => JSON.stringify(v ?? null);
-var parse4 = (s) => {
+var parse5 = (s) => {
   try {
     return JSON.parse(s);
   } catch {
@@ -118871,7 +119273,7 @@ var Filings = class _Filings {
       out.act = str18(act.description) ? { value: str18(act.description), source: det.id } : none("the determination states no act");
       const period = isObj16(act.period) ? act.period : null;
       out.act_date = str18(act.at) ? { value: str18(act.at), source: det.id } : period && (str18(period.from) || str18(period.to)) ? { value: `${str18(period.from) || "undetermined"} to ${str18(period.to) || "undetermined"}`, source: det.id } : none("the determination states no date for the act, so it is undetermined");
-      const cut3 = "a finding or standard the determination rests on is not one you may see, so this list would not be whole";
+      const cut4 = "a finding or standard the determination rests on is not one you may see, so this list would not be whole";
       const cites = [], srcs = [];
       let withheld = false;
       for (const s of det.standards) {
@@ -118883,9 +119285,9 @@ var Filings = class _Filings {
         cites.push(str18(r.cite));
         srcs.push(s.id);
       }
-      out.standards = withheld ? none("a standard the determination names is not one you may see") : det.withheld ? none(cut3) : cites.length ? { value: cites.join("; "), source: srcs.join(", ") } : none("the determination names no standard");
+      out.standards = withheld ? none("a standard the determination names is not one you may see") : det.withheld ? none(cut4) : cites.length ? { value: cites.join("; "), source: srcs.join(", ") } : none("the determination names no standard");
       const fs = det.findings;
-      out.findings = det.withheld ? none(cut3) : fs.length ? {
+      out.findings = det.withheld ? none(cut4) : fs.length ? {
         value: fs.map((f17) => `${f17.id} (case ${f17.case ?? "undetermined"}, edition ${f17.edition ?? "undetermined"})`).join("; "),
         source: fs.map((f17) => `${f17.id}@${f17.case ?? "?"}/${f17.edition ?? "?"}`).join(", ")
       } : none("the determination names no finding");
@@ -119254,7 +119656,7 @@ ${text5}` : text5;
   /* R6: what changed since the draft, by name; [] when nothing did. Read as the plane reads it, so a change the
      approving member cannot see is still named. */
   #staleness(draft) {
-    const was = parse4(draft.basis) || {};
+    const was = parse5(draft.basis) || {};
     const a = this.#action(draft.action_id, MACHINE_READER);
     if (!a) return ["the action is no longer held"];
     const changed = [];
@@ -119276,7 +119678,7 @@ ${text5}` : text5;
     const f17 = str18(id);
     const filing2 = f17 ? this.#one(`SELECT * FROM filing_drafts WHERE filing_id=?`, f17) : null;
     const d = filing2 ? { ...filing2, form: "filing" } : f17 ? ((c) => c ? { ...c, form: "communication" } : null)(this.#one(`SELECT * FROM communication_drafts WHERE filing_id=?`, f17)) : null;
-    return d && this.#action(d.action_id, viewer) && this.#sees(parse4(d.basis), viewer) ? d : null;
+    return d && this.#action(d.action_id, viewer) && this.#sees(parse5(d.basis), viewer) ? d : null;
   }
   /* R6: a draft is approved at most once; asked before the approval and again as it is written, since computing the
      in-band quartet yields (R22). */
@@ -119336,7 +119738,7 @@ ${body}` : body;
       what: `the approved ${d.form === "communication" ? "communication" : "filing"} ${d.filing_id}`,
       date: at26,
       author: who2,
-      project: (parse4(d.basis) || {}).project ?? null
+      project: (parse5(d.basis) || {}).project ?? null
     });
     const again = this.#alreadyApproved(d.filing_id);
     if (again) return again;
@@ -119736,7 +120138,7 @@ ${body}` : body;
       candidate: true,
       theory: t.theory,
       remedy: t.remedy,
-      standards: parse4(t.standards) || [],
+      standards: parse5(t.standards) || [],
       why: t.why,
       label: proposalLabel(t.proposer, "theory"),
       at: t.at,
@@ -119971,7 +120373,7 @@ ${filled.text}` : filled.text,
     const p = str18(id);
     const rows2 = p ? this.#rows(`SELECT * FROM counsel_packets WHERE packet_id=? ORDER BY version`, p) : [];
     if (!rows2.length || !this.#action(rows2[0].action_id, viewer)) return null;
-    const seen = rows2.filter((r) => this.#sees(parse4(r.basis), viewer));
+    const seen = rows2.filter((r) => this.#sees(parse5(r.basis), viewer));
     return seen.length ? seen : null;
   }
   /* R29, R31: the template a draft or packet version recorded, shown with the version's state, approver and reviews as
@@ -120008,20 +120410,20 @@ ${filled.text}` : filled.text,
     };
   }
   #version(r, rows2, viewer) {
-    const counsel = parse4(r.counsel);
+    const counsel = parse5(r.counsel);
     const marking = counselMarking(counsel);
-    const causes = this.#basisChanged(parse4(r.basis) || {}, viewer);
+    const causes = this.#basisChanged(parse5(r.basis) || {}, viewer);
     return {
       ok: true,
       id: r.packet_id,
       version: Number(r.version),
       action: r.action_id,
       head: this.#head(r.packet_id, Number(r.version), r.action_id, counsel, r.author, r.at, marking, r.disclosure ?? null),
-      sections: parse4(r.sections),
+      sections: parse5(r.sections),
       marking,
       disclosure: r.disclosure ?? null,
       fileable: false,
-      template: this.#templateShown(parse4(r.template), viewer),
+      template: this.#templateShown(parse5(r.template), viewer),
       reason: r.reason ?? null,
       basis_changed: causes.length ? { causes } : null,
       versions: rows2.map((x) => Number(x.version))
@@ -120034,7 +120436,7 @@ ${filled.text}` : filled.text,
     const r = rows2 ? version == null || version === "" ? rows2[rows2.length - 1] : rows2.find((x) => Number(x.version) === Number(version)) : null;
     if (!r) return this.#noPacket(id);
     const exports = this.#rows(`SELECT author, at, counsel, sha FROM counsel_packet_exports WHERE packet_id=? AND version=?
-                                 ORDER BY export_id`, r.packet_id, r.version).map((e) => ({ exported_by: e.author, at: e.at, counsel: parse4(e.counsel), sha: e.sha }));
+                                 ORDER BY export_id`, r.packet_id, r.version).map((e) => ({ exported_by: e.author, at: e.at, counsel: parse5(e.counsel), sha: e.sha }));
     return { ...this.#version(r, rows2, viewer), exports };
   }
   /** R10: the packet's bytes: one Markdown document, the marking on its head, every section and its manifest. */
@@ -120097,7 +120499,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
     if (!read2.ok) return read2;
     const at26 = this.#when();
     const row2 = this.#one(`SELECT basis FROM counsel_packets WHERE packet_id=? AND version=?`, read2.id, read2.version);
-    const project = (parse4(row2 && row2.basis) || {}).project ?? null;
+    const project = (parse5(row2 && row2.basis) || {}).project ?? null;
     const { bytes: bytes2, inband } = await this.#stamped(
       _Filings.render(read2),
       { what: `counsel packet ${read2.id} version ${read2.version}`, date: at26, author: who2, project }
@@ -120130,7 +120532,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
     const out = [];
     for (let offset = 0; out.length < n; offset += FILINGS_FOR_MAX) {
       const page = this.#rows(`${q7} LIMIT ? OFFSET ?`, ...a, FILINGS_FOR_MAX, offset);
-      for (const r of page) if (out.length < n && this.#sees(parse4(r.basis), viewer)) out.push(r);
+      for (const r of page) if (out.length < n && this.#sees(parse5(r.basis), viewer)) out.push(r);
       if (page.length < FILINGS_FOR_MAX) break;
     }
     return out;
@@ -120169,7 +120571,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
       drafts: drafts.slice(0, FILINGS_FOR_MAX).map((d) => ({
         filing: d.filing_id,
         form: d.form,
-        ...d.form === "communication" ? { purpose: d.purpose } : { tier: d.tier, template: this.#templateShown(parse4(d.template), viewer) },
+        ...d.form === "communication" ? { purpose: d.purpose } : { tier: d.tier, template: this.#templateShown(parse5(d.template), viewer) },
         label: proposalLabel(d.preparer, d.form === "communication" ? "communication" : "filing_draft"),
         at: d.prepared_at,
         approval: d.approved_by ? { approved_by: d.approved_by, at: d.approved_at, sha: d.sha } : null,
@@ -120177,18 +120579,18 @@ ${inbandBlock(quartet)}`, inband: quartet };
       })),
       drafts_truncated: drafts.length > FILINGS_FOR_MAX,
       packets: versions.slice(0, FILINGS_FOR_MAX).map((r) => {
-        const causes = this.#basisChanged(parse4(r.basis) || {}, viewer);
+        const causes = this.#basisChanged(parse5(r.basis) || {}, viewer);
         return {
           packet: r.packet_id,
           version: Number(r.version),
-          counsel: parse4(r.counsel),
+          counsel: parse5(r.counsel),
           assembled_by: r.author,
           at: r.at,
           reason: r.reason ?? null,
-          template: this.#templateShown(parse4(r.template), viewer),
+          template: this.#templateShown(parse5(r.template), viewer),
           basis_changed: causes.length ? { causes } : null,
           exports: this.#rows(`SELECT author, at, counsel, sha FROM counsel_packet_exports WHERE packet_id=? AND version=?
-                                       ORDER BY export_id`, r.packet_id, r.version).map((e) => ({ exported_by: e.author, at: e.at, counsel: parse4(e.counsel), sha: e.sha }))
+                                       ORDER BY export_id`, r.packet_id, r.version).map((e) => ({ exported_by: e.author, at: e.at, counsel: parse5(e.counsel), sha: e.sha }))
         };
       }),
       packets_truncated: versions.length > FILINGS_FOR_MAX
@@ -120305,7 +120707,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
       const actionKind = d.kind || (this.#action(d.action_id, viewer) || {}).kind || null;
       const entry = v.view && Array.isArray(v.view.action_kinds) ? v.view.action_kinds.find((k) => k.kind === (kind ?? actionKind)) : null;
       const givers2 = entry ? [entry.profile, ...Array.isArray(entry.bases) ? entry.bases.map((b) => b.profile) : []].filter(Boolean) : [];
-      defaults.project = project ?? (parse4(d.basis) || {}).project ?? null;
+      defaults.project = project ?? (parse5(d.basis) || {}).project ?? null;
       defaults.kind = kind ?? actionKind;
       defaults.use = use ?? "file";
       defaults.profiles = profiles ?? (givers2.length ? [...new Set(givers2)] : "general");
@@ -122185,6 +122587,33 @@ CREATE TABLE IF NOT EXISTS monitor_gathering_run (
   landed       TEXT,               -- the Information bundle the new bytes landed as, when promoted
   detail       TEXT,               -- why nothing landed, when bytes were filed and nothing was promoted
   PRIMARY KEY (bundle_id, request_id, seq)
+);
+
+-- R56\u2013R61 (K1036): ONE ROW PER RUN OF A RATIFIED SWEEP ("<bundle>#<id>"), never edited: what it fetched and filed,
+-- and detail (JSON: each seed's outcome and capture, the candidates and matches, what was filed, the skips by reason,
+-- the excluded, failed and redirected fetches, the links cut, the budget) and the anomaly R60 noted, when one was.
+-- Derived; declared to purge by the bundle whose data/gathering.json carries the sweep.
+CREATE TABLE IF NOT EXISTS sweep_runs (
+  sweep      TEXT    NOT NULL,
+  seq        INTEGER NOT NULL,
+  bundle_id  TEXT    NOT NULL,
+  at         TEXT    NOT NULL,
+  filed      INTEGER NOT NULL,
+  fetched    INTEGER NOT NULL,
+  detail     TEXT    NOT NULL,
+  anomaly    TEXT,
+  PRIMARY KEY (sweep, seq)
+);
+
+-- R58 (already_swept): every address a sweep filed a document from, and the bundle it was filed as. Derived; declared
+-- to purge by the sweep's bundle.
+CREATE TABLE IF NOT EXISTS sweep_filed (
+  sweep         TEXT NOT NULL,
+  address_norm  TEXT NOT NULL,
+  bundle_id     TEXT NOT NULL,
+  filed         TEXT NOT NULL,
+  at            TEXT NOT NULL,
+  PRIMARY KEY (sweep, address_norm)
 );`;
 var ADDED_COLUMNS3 = Object.freeze([
   ["monitor_address_type", "unchanged_run", "INTEGER NOT NULL DEFAULT 0"],
@@ -122195,7 +122624,9 @@ var MONITORING_TABLES = Object.freeze([
   { name: "monitor_tick_epoch", keys: [] },
   { name: "monitor_address_type", keys: [] },
   { name: "monitor_address_frequency", keys: [] },
-  { name: "monitor_gathering_run", keys: ["bundle_id"] }
+  { name: "monitor_gathering_run", keys: ["bundle_id"] },
+  { name: "sweep_runs", keys: ["bundle_id"] },
+  { name: "sweep_filed", keys: ["bundle_id"] }
 ]);
 function migrateMonitoring(sql) {
   const bare2 = MONITORING_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -122205,6 +122636,714 @@ function migrateMonitoring(sql) {
     if (!has3) sql.exec(`ALTER TABLE ${table2} ADD COLUMN ${column} ${type}`);
   }
 }
+
+// src/monitoring/sweep.mjs
+var SWEEP_TICK_BATCH = 5;
+var SWEEP_RUNS_SHOWN = 20;
+var ANOMALY_MIN_RUNS = 4;
+var ANOMALY_WINDOW = 8;
+var ANOMALY_FACTOR = 3;
+var ANOMALY_FLOOR = 5;
+var ANOMALY_DRY_MEDIAN = 2;
+var SILENT_RUNS = 4;
+var SWEEP_ACTOR = "bio-monitor";
+var SWEEP_PURPOSE = "sweep";
+var SWEEP_CONDITION_KINDS = Object.freeze([
+  "sweep-held-backlog",
+  "sweep-yield-anomaly",
+  "sweep-seed-unreachable",
+  "sweep-redirect-out-of-scope",
+  "sweep-silent"
+]);
+var INTERVAL = Object.freeze({ daily: 864e5, weekly: 6048e5, monthly: 2592e6 });
+var GJ = "data/gathering.json";
+var parse6 = (t) => {
+  try {
+    const g = typeof t === "string" ? JSON.parse(t) : null;
+    return g && typeof g === "object" && !Array.isArray(g) ? g : null;
+  } catch {
+    return null;
+  }
+};
+var sweepsOf = (g) => g && Array.isArray(g.sweeps) ? g.sweeps.filter((s) => s && typeof s === "object" && typeof s.id === "string") : [];
+var canon3 = (v) => Array.isArray(v) ? `[${v.map(canon3).join(",")}]` : v && typeof v === "object" ? `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canon3(v[k])}`).join(",")}}` : JSON.stringify(v ?? null);
+var median = (xs) => {
+  if (!xs.length) return null;
+  const s = [...xs].sort((a, b) => a - b), h = s.length >> 1;
+  return s.length % 2 ? s[h] : (s[h - 1] + s[h]) / 2;
+};
+var runnable = (s) => Array.isArray(s.sources) && s.sources.length && Array.isArray(s.seeds) && SWEEP_CADENCES.includes(s.cadence) && s.budget && Number.isInteger(s.budget.per_run) && Number.isInteger(s.budget.backlog);
+var ENTITY2 = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " };
+var decode = (t) => String(t).replace(/&(#x[0-9a-f]{1,6}|#\d{1,7}|[a-z]{2,6});/gi, (m, e) => {
+  if (e[0] !== "#") return ENTITY2[e.toLowerCase()] ?? m;
+  const n = e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
+  try {
+    return String.fromCodePoint(n);
+  } catch {
+    return m;
+  }
+});
+var strip2 = (t) => decode(String(t).replace(/<[^>]*>/g, " ")).replace(/\s+/g, " ").trim();
+var decodedAddress = (u) => {
+  try {
+    return decodeURI(u);
+  } catch {
+    return u;
+  }
+};
+function linksOf(text5, base) {
+  const src = String(text5 || ""), low = src.toLowerCase(), out = [];
+  const abs = (h) => {
+    try {
+      const u = new URL(decode(h.trim()), base);
+      return u.protocol === "https:" || u.protocol === "http:" ? u.href : null;
+    } catch {
+      return null;
+    }
+  };
+  const between = (open, close2, from, limit) => {
+    const a = low.indexOf(open, from);
+    if (a < 0 || limit >= 0 && a > limit) return null;
+    const s = low.indexOf(">", a);
+    const b = s < 0 ? -1 : low.indexOf(close2, s);
+    return b < 0 ? null : { inner: src.slice(s + 1, b), tag: src.slice(a, s + 1), end: b + close2.length };
+  };
+  const attr2 = (tag2, name2) => {
+    const m = new RegExp(`\\s${name2}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`, "i").exec(tag2);
+    return m ? m[1] ?? m[2] ?? m[3] : null;
+  };
+  if (/<(urlset|sitemapindex)\b/.test(low)) {
+    for (let p = 0, x; x = between("<loc", "</loc>", p, -1); p = x.end) {
+      const a = abs(strip2(x.inner));
+      if (a) out.push({ address: a, text: "" });
+    }
+    return out;
+  }
+  if (/<(rss|feed|rdf:rdf)\b/.test(low)) {
+    const item = low.includes("<item") ? ["<item", "</item>"] : ["<entry", "</entry>"];
+    for (let p = 0, x; x = between(item[0], item[1], p, -1); p = x.end) {
+      const body = x.inner, bl = body.toLowerCase();
+      const t = /<title\b[^>]*>([\s\S]*?)<\/title>/i.exec(body.slice(0, 65536));
+      let href = null;
+      const l = bl.indexOf("<link");
+      if (l >= 0) {
+        const e = bl.indexOf(">", l);
+        const tag2 = body.slice(l, e + 1);
+        href = attr2(tag2, "href");
+        if (!href) {
+          const c = bl.indexOf("</link>", e);
+          href = c > e ? strip2(body.slice(e + 1, c)) : null;
+        }
+      }
+      const a = href ? abs(href) : null;
+      if (a) out.push({ address: a, text: t ? strip2(t[1].replace(/^<!\[CDATA\[|\]\]>$/g, "")) : "" });
+    }
+    return out;
+  }
+  let close = -1;
+  for (let p = 0; ; ) {
+    const a = low.indexOf("<a", p);
+    if (a < 0) break;
+    const s = low.indexOf(">", a);
+    if (s < 0) break;
+    p = s + 1;
+    if (!/[\s>]/.test(low[a + 2] || "")) continue;
+    const href = attr2(src.slice(a, s + 1), "href");
+    const target = href ? abs(href) : null;
+    if (!target) continue;
+    if (close !== -2 && close < s) {
+      close = low.indexOf("</a", s);
+      if (close < 0) close = -2;
+    }
+    const next = low.indexOf("<a", s);
+    let end2 = Math.min(close >= 0 ? close : src.length, s + 1 + 16384);
+    if (next >= 0 && next < end2) end2 = next;
+    out.push({ address: target, text: strip2(src.slice(s + 1, end2)) });
+  }
+  return out;
+}
+var Sweeps = class {
+  #m;
+  #k;
+  /** `m` is the Monitoring instance (its record, membership, capture, observation log, promotion, clock, pause and
+   *  dependencies); `k` its private helpers: `open`, `close`, `claim` (R21), `ranked` (R56's rank), `running` (R22),
+   *  `land` (R28's landing, R59). */
+  constructor(m, k) {
+    this.#m = m;
+    this.#k = k;
+  }
+  #rows(q7, ...a) {
+    return [...this.#m.sql.exec(q7, ...a)];
+  }
+  #one(q7, ...a) {
+    const r = this.#rows(q7, ...a);
+    return r.length ? r[0] : null;
+  }
+  /* ================================================================== *
+   * The fence (R55) and the ratifier
+   * ================================================================== */
+  /** R55: a non-replay promotion carrying `data/gathering.json`, fenced against the file it replaces. A non-member who
+   *  adds, removes or changes a sweep (other than setting `ratified` to `false`) is refused `SWEEP_NOT_A_MEMBER`; a
+   *  non-owner of the bundle's project who sets `ratified` to `true` or changes a sweep ratified before or after is
+   *  refused `SWEEP_RATIFY_NOT_AN_OWNER`. Null when admitted. */
+  sweepFence(c, nextText) {
+    const prev = parse6((() => {
+      const f17 = this.#m.record.readFile(c.bundleId, GJ);
+      return f17 && f17.text;
+    })());
+    const before = new Map(sweepsOf(prev).map((s) => [s.id, s])), after = new Map(sweepsOf(parse6(nextText)).map((s) => [s.id, s]));
+    const touched = [];
+    for (const id of /* @__PURE__ */ new Set([...before.keys(), ...after.keys()])) {
+      const p = before.get(id), n = after.get(id);
+      if (p && n && canon3(p) === canon3(n)) continue;
+      if (p && n && p.ratified === true && n.ratified === false && canon3({ ...p, ratified: false }) === canon3(n)) continue;
+      touched.push({ id, ratified: p?.ratified === true || n?.ratified === true });
+    }
+    if (!touched.length) return null;
+    const author = typeof c.author === "string" ? c.author.trim() : "";
+    const refuse8 = (code, detail, extra) => {
+      const row2 = SWEEP_CHECKS[code];
+      return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail, ...extra };
+    };
+    if (!author || isMachineIdentity(author))
+      return refuse8("SWEEP_NOT_A_MEMBER", `${author || "an unnamed writer"} is not a member, and only a member adds, removes or changes a sweep; any writer may unratify one. Nothing was written.`, { sweeps: touched.map((t) => t.id) });
+    const ratifying = touched.filter((t) => t.ratified);
+    if (!ratifying.length) return null;
+    const info = this.#m.record.bundleInfo(c.bundleId);
+    const project = info ? info.project : c.docFm && typeof c.docFm.project === "string" ? c.docFm.project : null;
+    const member = author.startsWith("member:") ? author.slice(7) : author;
+    let owns = false;
+    try {
+      owns = !!project && this.#m.membership.isProjectOwner(project, member) === true;
+    } catch {
+      owns = false;
+    }
+    if (!owns)
+      return refuse8(
+        "SWEEP_RATIFY_NOT_AN_OWNER",
+        project ? `${member} is not an owner of ${project}, and only an owner ratifies a sweep or changes a ratified one. Nothing was written.` : "this list belongs to no project, so it has no owner who could ratify a sweep. Nothing was written.",
+        { sweeps: ratifying.map((t) => t.id), project }
+      );
+    return null;
+  }
+  /** R55: who ratified sweep `id` of `bundle` and when: the promotion that last set `ratified` to `true` or changed the
+   *  sweep while ratified, read from the bundle's history (record-core R15–R17's image). Null when it is not ratified. */
+  ratifier(bundle, id) {
+    const img = this.#m.record.readImage(bundle);
+    if (!img) return null;
+    let man = null;
+    try {
+      man = JSON.parse(img["_history/manifest.json"] || "null");
+    } catch {
+      man = null;
+    }
+    const entries = (man && Array.isArray(man.entries) ? man.entries : []).slice().sort((a, b) => a.seq - b.seq);
+    const at26 = (t) => sweepsOf(parse6(t)).find((s) => s.id === id) || null;
+    const after = new Array(entries.length);
+    let cur = typeof img[GJ] === "string" ? img[GJ] : null;
+    for (let i = entries.length - 1; i >= 0; i--) {
+      after[i] = cur;
+      const e = entries[i];
+      if ((e.snapshotted || []).includes(GJ)) {
+        const v = img[`_history/data/gathering_${e.key}.json`];
+        cur = typeof v === "string" ? v : null;
+      } else if ((e.files || []).includes(GJ)) cur = null;
+    }
+    let found = null, prev = cur;
+    for (let i = 0; i < entries.length; i++) {
+      const p = at26(prev), n = at26(after[i]);
+      if (n && n.ratified === true && (!p || p.ratified !== true || canon3(p) !== canon3(n)))
+        found = { by: entries[i].author ?? null, at: entries[i].created ?? null };
+      if (!n || n.ratified !== true) found = null;
+      prev = after[i];
+    }
+    return found;
+  }
+  /* ================================================================== *
+   * What is held and due (R56, R60)
+   * ================================================================== */
+  /** Every sweep in every `data/gathering.json` the record holds (read as the daemon, R36), or only those the viewer's
+   *  gate admits; each `{name, bundle, sweep, daemon}`. */
+  #all(gate = null) {
+    const files = gate ? this.#rows(`SELECT f.bundle_id AS bundle_id, f.content AS content FROM files f JOIN bundles b ON b.bundle_id = f.bundle_id
+                     WHERE f.path = '${GJ}' AND (${gate.sql}) ORDER BY f.bundle_id`, ...gate.args) : this.#rows(`SELECT bundle_id, content FROM files WHERE path = '${GJ}' ORDER BY bundle_id`);
+    const out = [];
+    for (const f17 of files) {
+      const g = parse6(f17.content);
+      const daemon = g && g.daemon && typeof g.daemon === "object" && !Array.isArray(g.daemon) ? g.daemon : {};
+      for (const s of sweepsOf(g)) out.push({ name: `${f17.bundle_id}#${s.id}`, bundle: f17.bundle_id, sweep: s, daemon });
+    }
+    return out;
+  }
+  #runs(name2, limit = SWEEP_RUNS_SHOWN) {
+    return this.#rows(`SELECT * FROM sweep_runs WHERE sweep = ? ORDER BY seq DESC LIMIT ?`, name2, limit).map((r) => {
+      let d = {};
+      try {
+        d = JSON.parse(r.detail || "{}");
+      } catch {
+        d = {};
+      }
+      return {
+        ...d,
+        seq: Number(r.seq),
+        at: r.at,
+        filed: Number(r.filed),
+        fetched: Number(r.fetched),
+        anomaly: r.anomaly ? JSON.parse(r.anomaly) : null
+      };
+    });
+  }
+  /** R60: the backlog (capture R82) and whether it holds the sweep; null backlog (unreadable) holds it (K1129). */
+  #held(x) {
+    let n = null;
+    try {
+      n = this.#m.capture.heldCount({ sweep: x.name });
+    } catch {
+      n = null;
+    }
+    const limit = x.sweep.budget && Number.isInteger(x.sweep.budget.backlog) ? x.sweep.budget.backlog : null;
+    const held = n === null || n === void 0 || !Number.isFinite(Number(n)) || limit !== null && Number(n) >= limit;
+    return { backlog: n === void 0 ? null : n, limit, held };
+  }
+  /** R56: one sweep's standing: `due`, `next`, and when not due the reason. */
+  #standing(x, nowMs, paused) {
+    const s = x.sweep;
+    const last = this.#one(`SELECT at FROM sweep_runs WHERE sweep = ? ORDER BY seq DESC LIMIT 1`, x.name);
+    const lastMs = last ? Date.parse(last.at) : NaN;
+    const iv = INTERVAL[s.cadence] ?? null;
+    const dueAt = Number.isFinite(lastMs) && iv ? lastMs + iv : 0;
+    const h = this.#held(x);
+    const no2 = (why) => ({ due: false, why, due_at: dueAt, next: null, ...h });
+    if (s.ratified !== true) return no2("not ratified");
+    if (!runnable(s)) return no2("its definition is not one a run can read");
+    if (paused) return no2("the daemon is paused");
+    if (x.daemon.enabled === false) return no2("its bundle's daemon block says enabled: false");
+    if (this.#closed(x.bundle)) return no2("its project is closed");
+    if (h.held) return no2("held: backlog");
+    return dueAt <= nowMs ? { due: true, due_at: dueAt, next: null, ...h } : { due: false, due_at: dueAt, next: dueAt, ...h };
+  }
+  #closed(bundle) {
+    const info = this.#m.record.bundleInfo(bundle);
+    if (!info || !info.project) return false;
+    try {
+      const st = this.#m.projectStage.projectStage({ project: info.project, viewer: "class:daemon" });
+      return !!st && st.stage === "closed";
+    } catch {
+      return false;
+    }
+  }
+  /** R56: the plan: due sweeps longest-overdue first then by full name, the earliest `next`, and whether some sweep is
+   *  held or waiting on the pause (each re-read one archive interval on). */
+  plan(nowMs) {
+    const paused = this.#m.paused().paused;
+    const due = [];
+    let next = null, recheck = false;
+    for (const x of this.#all()) {
+      if (x.sweep.ratified !== true) continue;
+      const st = this.#standing(x, nowMs, paused);
+      if (st.due) due.push({ ...x, due_at: st.due_at });
+      else if (st.next !== null) next = next === null ? st.next : Math.min(next, st.next);
+      else if (st.why === "held: backlog" || st.why === "the daemon is paused") recheck = true;
+    }
+    due.sort((a, b) => a.due_at - b.due_at || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+    return { due, next, recheck };
+  }
+  sweepDue(now) {
+    this.#k.register();
+    return this.plan(now).due.length ? now : null;
+  }
+  sweepWake(now) {
+    this.#k.register();
+    const p = this.plan(now);
+    if (p.due.length) return now + 1e3;
+    const re = p.recheck ? now + this.#k.recheckMs() : null;
+    return p.next === null ? re : re === null ? p.next : Math.min(p.next, re);
+  }
+  /* ================================================================== *
+   * The run (R56–R60, R62)
+   * ================================================================== */
+  /** R56: the tick: at most SWEEP_TICK_BATCH due sweeps (ten times that read when the scheduler ranks), each claimed
+   *  under the consumer's epoch (R21), not re-entrant (R22). `daemon.sweep_budget` caps the fetches a bundle's sweeps
+   *  make in this tick together. */
+  async sweepTick(now, rank6 = null) {
+    this.#k.register();
+    const nowMs = Number.isFinite(now) ? now : this.#m.now();
+    const at26 = stampInstant("second", nowMs);
+    const pause = this.#m.paused();
+    if (pause.paused) return { paused: pause, at: at26, ran: [], skipped: [], failed: [] };
+    if (this.#k.running.has("gathering-sweep")) return { busy: true, paused: pause, at: at26, ran: [], skipped: [], failed: [] };
+    this.#k.running.add("gathering-sweep");
+    try {
+      const plan = this.plan(nowMs);
+      const read2 = typeof rank6 === "function" ? plan.due.slice(0, SWEEP_TICK_BATCH * 10) : plan.due;
+      const batch = this.#k.ranked(
+        read2,
+        (x) => ({ kind: "sweep", id: x.name, waitingSince: x.due_at > 0 ? x.due_at : null }),
+        rank6,
+        nowMs
+      ).slice(0, SWEEP_TICK_BATCH);
+      const epoch = this.#k.open("gathering-sweep", nowMs, INTERVAL.daily);
+      const ran = [], skipped = [], failed2 = [], spentBy = /* @__PURE__ */ new Map();
+      for (const x of batch) {
+        if (!this.#k.claim("gathering-sweep", x.name, epoch)) {
+          skipped.push({ sweep: x.name, reason: "claimed by a tick that did not finish" });
+          continue;
+        }
+        const cap = Number.isInteger(x.daemon.sweep_budget) && x.daemon.sweep_budget >= 0 ? x.daemon.sweep_budget - (spentBy.get(x.bundle) || 0) : null;
+        try {
+          const r = await this.#run(x, nowMs, cap);
+          spentBy.set(x.bundle, (spentBy.get(x.bundle) || 0) + r.fetched);
+          ran.push({
+            sweep: x.name,
+            seq: r.seq,
+            fetched: r.fetched,
+            filed: r.filed,
+            ...r.anomaly ? { anomaly: r.anomaly } : {},
+            ...r.note ? { note: r.note } : {}
+          });
+        } catch (e) {
+          failed2.push({ sweep: x.name, reason: String(e && e.message || e).slice(0, 160) });
+        }
+      }
+      if (!failed2.length && !skipped.length) this.#k.close("gathering-sweep", epoch);
+      return { paused: pause, at: at26, epoch, due: plan.due.length, ran, skipped, failed: failed2 };
+    } finally {
+      this.#k.running.delete("gathering-sweep");
+    }
+  }
+  /** R64: requests capture-requests filed under this sweep since its last run, read from the captures' `matched_sweep`
+   *  (the register documents' origin), not this module's own fetches. */
+  #requestsSince(name2, since) {
+    try {
+      const r = this.#one(`SELECT count(*) AS n FROM files f, json_each(CASE WHEN json_valid(f.content) THEN f.content ELSE '{}' END, '$.documents') d
+                            WHERE f.path = 'data/provenance.json' AND d.type = 'object'
+                              AND json_extract(d.value, '$.origin.matched_sweep') = ?
+                              AND COALESCE(json_extract(d.value, '$.origin.deeming_actor'), '') <> ?
+                              AND (? IS NULL OR json_extract(d.value, '$.retrieved') > ?)`, name2, SWEEP_ACTOR, since, since);
+      return Number(r && r.n) || 0;
+    } catch {
+      return 0;
+    }
+  }
+  async #acquire(x, locator, heldSha = null) {
+    const opts = { cls: "daemon", member: false, captureRequest: {
+      locator,
+      purpose: SWEEP_PURPOSE,
+      agent: null,
+      render: false,
+      origin: { kind: "sweep", matched_sweep: x.name, deeming_actor: SWEEP_ACTOR },
+      scope: [...x.sweep.sources],
+      ...heldSha ? { heldSha } : {}
+    } };
+    try {
+      const r = await this.#m.capture.acquire({}, opts);
+      return r && r.body || { ok: false, reason: "NO_ANSWER" };
+    } catch (e) {
+      return { ok: false, reason: String(e && e.message || e).slice(0, 160) };
+    }
+  }
+  #look(x, address, row2, at26) {
+    try {
+      this.#m.observationLog.observe({
+        actorClass: "plane",
+        actor: null,
+        authorityKind: "sweep",
+        authority: x.name,
+        level: "document",
+        subjectKind: "address",
+        subject: normalizeAddress(address),
+        state: row2.state,
+        governed: row2.governed === true,
+        condition: row2.governed ? "source-unreachable-governed" : null,
+        resultKind: row2.ref ? "capture" : null,
+        resultRef: row2.ref || null,
+        detail: String(row2.detail).slice(0, 300)
+      }, at26);
+    } catch {
+    }
+  }
+  async #bytes(sha) {
+    const store = typeof this.#m.record.evidenceStore === "function" ? this.#m.record.evidenceStore() : null;
+    if (!store || !/^[0-9a-f]{64}$/.test(String(sha))) return null;
+    try {
+      const o = await store.get(sha);
+      return o ? new Uint8Array(await o.arrayBuffer()) : null;
+    } catch {
+      return null;
+    }
+  }
+  /** One run of one sweep (R57–R60, R62), recorded as one `sweep_runs` row. `cap` is what is left of the bundle's
+   *  `daemon.sweep_budget` in this tick (null: no cap). */
+  async #run(x, nowMs, cap) {
+    const s = x.sweep, at26 = stampInstant("second", nowMs);
+    const prior = this.#runs(x.name, ANOMALY_WINDOW);
+    const lastSeeds = /* @__PURE__ */ new Map();
+    for (const r of [...prior].reverse()) for (const sd of r.seeds || []) if (sd.sha) lastSeeds.set(sd.seed, sd.sha);
+    const requests = this.#requestsSince(x.name, prior.length ? prior[0].at : null);
+    let left2 = Math.max(0, s.budget.per_run - requests);
+    if (cap !== null) left2 = Math.min(left2, Math.max(0, cap));
+    const note = cap !== null && cap <= 0 ? "its bundle's daemon sweep_budget allows no fetch in this tick, so the run made none" : null;
+    const d = {
+      seeds: [],
+      candidates: 0,
+      matched: 0,
+      documents: [],
+      skipped: { already_swept: 0, already_held: 0, budget_spent: 0 },
+      excluded: [],
+      failed: [],
+      redirected: [],
+      cut: 0,
+      budget: { per_run: s.budget.per_run, requests },
+      ...note ? { note } : {}
+    };
+    let fetched = 0;
+    const terms = (s.match && Array.isArray(s.match.terms) ? s.match.terms : []).map(compileTerm).filter((t) => t.ok);
+    const paths = s.match && Array.isArray(s.match.paths) && s.match.paths.length ? s.match.paths : null;
+    const formats = s.match && Array.isArray(s.match.formats) && s.match.formats.length ? s.match.formats : null;
+    const lists = [];
+    for (const seed of s.seeds) {
+      if (left2 <= 0) {
+        d.seeds.push({ seed, outcome: "budget_spent" });
+        continue;
+      }
+      const held = lastSeeds.get(seed) || null;
+      const a = await this.#acquire(x, seed, held);
+      if (a.reason === "HOST_COOLING_OFF") {
+        d.seeds.push({ seed, outcome: "governed" });
+        this.#look(x, seed, { state: "LOOKED_INDETERMINATE", governed: true, detail: "governed; the per-host governor held the seed's fetch" }, at26);
+        continue;
+      }
+      left2--;
+      fetched++;
+      const sha = a.ok ? a.document?.capture?.sha256 || a.capture?.sha256 || null : null;
+      if (a.ok && sha) {
+        const unchanged = a.unchanged === true || sha === held;
+        const entry = { seed, outcome: unchanged ? "unchanged" : "captured", sha };
+        if (!unchanged) {
+          const f17 = await this.#fileSeed(x, a.document, at26);
+          entry.file = f17.file;
+          if (f17.why) entry.why = f17.why;
+        }
+        d.seeds.push(entry);
+        this.#look(x, seed, { state: "PRESENT", ref: sha, detail: `seed ${entry.outcome} for the sweep ${x.name}` }, at26);
+        const bytes2 = await this.#bytes(sha);
+        if (bytes2) lists.push({ seed, sha, links: linksOf(new TextDecoder("utf-8", { fatal: false }).decode(bytes2), a.document?.locator || seed) });
+        else entry.unread = "the seed's bytes could not be read back from the capture store";
+        continue;
+      }
+      const reason = a.code === "SWEEP_REDIRECT_OUT_OF_SCOPE" ? "out_of_scope_redirect" : a.reason || a.code || "failed";
+      if (reason === "out_of_scope_redirect") {
+        d.seeds.push({ seed, outcome: reason, target: a.target ?? null });
+        d.redirected.push({ address: seed, target: a.target ?? null });
+      } else {
+        let reach2 = null;
+        try {
+          reach2 = this.#m.capture.sourceReachability({ addressNorm: normalizeAddress(seed), now: at26 });
+        } catch {
+          reach2 = null;
+        }
+        d.seeds.push({ seed, outcome: "failed", reason, reachability: reach2 });
+      }
+      this.#look(x, seed, { state: "LOOKED_INDETERMINATE", detail: `seed ${reason}${a.target ? ` to ${a.target}` : ""}` }, at26);
+    }
+    const seen = /* @__PURE__ */ new Set();
+    for (const l of lists) for (const link of l.links) {
+      let norm;
+      try {
+        norm = normalizeAddress(link.address);
+      } catch {
+        continue;
+      }
+      if (seen.has(norm)) continue;
+      seen.add(norm);
+      d.candidates++;
+      if (!inScope(link.address, s.sources) || paths && !inScope(link.address, paths)) continue;
+      const addr = decodedAddress(link.address);
+      if (isCut(link.text) || isCut(addr)) d.cut++;
+      if (terms.length && !terms.some((t) => t.test(link.text) || t.test(addr))) continue;
+      d.matched++;
+      if (this.#one(`SELECT 1 AS x FROM sweep_filed WHERE sweep = ? AND address_norm = ?`, x.name, norm)) {
+        d.skipped.already_swept++;
+        continue;
+      }
+      if (this.#one(`SELECT 1 AS x FROM captured_locators cl JOIN register r ON r.capture_sha = cl.capture_sha WHERE cl.address_norm = ? LIMIT 1`, norm)) {
+        d.skipped.already_held++;
+        continue;
+      }
+      if (left2 <= 0) {
+        d.skipped.budget_spent++;
+        continue;
+      }
+      const a = await this.#acquire(x, link.address);
+      if (a.reason === "HOST_COOLING_OFF") {
+        this.#look(x, link.address, { state: "LOOKED_INDETERMINATE", governed: true, detail: "governed; the per-host governor held the fetch" }, at26);
+        continue;
+      }
+      left2--;
+      fetched++;
+      if (a.code === "SWEEP_REDIRECT_OUT_OF_SCOPE") {
+        d.redirected.push({ address: link.address, target: a.target ?? null });
+        this.#look(x, link.address, { state: "LOOKED_INDETERMINATE", detail: `out_of_scope_redirect to ${a.target}` }, at26);
+        continue;
+      }
+      const doc = a.ok ? a.document : null, sha = doc?.capture?.sha256;
+      if (!doc || !sha) {
+        d.failed.push({ address: link.address, reason: a.reason || a.code || "failed" });
+        this.#look(x, link.address, { state: "LOOKED_INDETERMINATE", detail: `failed; ${a.reason || a.code || "no answer"}` }, at26);
+        continue;
+      }
+      const bytes2 = formats ? await this.#bytes(sha) : null;
+      const format = formats ? bytes2 ? detectFormat(bytes2, doc.capture.content_type ?? null).format : null : null;
+      if (formats && !formats.includes(format)) {
+        d.excluded.push({ address: link.address, format: format ?? "undetermined" });
+        this.#look(x, link.address, { state: "LOOKED_INDETERMINATE", detail: `format_excluded; ${format ?? "undetermined"}` }, at26);
+        continue;
+      }
+      this.#look(x, link.address, { state: "PRESENT", ref: sha, detail: `fetched for the sweep ${x.name}` }, at26);
+      if (a.existed === true) {
+        d.skipped.already_held++;
+        continue;
+      }
+      const landed = this.#k.land({ id: x.name, bundle: x.bundle, locators: [link.address], target: link.text || null }, { locator: link.address, doc }, at26, {
+        title: `Swept by ${x.name}: ${link.text || link.address}`,
+        notes: `Brought in by the ratified sweep ${x.name}, one hop from the seed ${l.seed}, whose capture ${l.sha} listed it. Collected ${at26}. Filed at collected and never higher: verifying it is a named member's decision.`,
+        trigger: `ratified sweep ${x.name}`,
+        summary: `The document served at ${link.address}, brought in by the sweep ${x.name}.`
+      });
+      if (landed && landed.ok) {
+        this.#m.sql.exec(
+          `INSERT OR IGNORE INTO sweep_filed (sweep, address_norm, bundle_id, filed, at) VALUES (?, ?, ?, ?, ?)`,
+          x.name,
+          norm,
+          x.bundle,
+          landed.bundle_id,
+          at26
+        );
+        d.documents.push({ address: link.address, bundle: landed.bundle_id });
+      } else d.failed.push({ address: link.address, reason: landed?.reason || "NOT_FILED", detail: landed?.detail ?? null });
+    }
+    const filed = d.documents.length;
+    const med = median(prior.map((r) => r.filed));
+    let anomaly = null;
+    if (prior.length + 1 >= ANOMALY_MIN_RUNS) {
+      if (filed > ANOMALY_FACTOR * med && filed > ANOMALY_FLOOR) anomaly = { kind: "surge", filed, median: med };
+      else if (filed === 0 && med >= ANOMALY_DRY_MEDIAN) anomaly = { kind: "dry", filed, median: med };
+    }
+    const seq = (this.#one(`SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM sweep_runs WHERE sweep = ?`, x.name) || { n: 1 }).n;
+    this.#m.sql.exec(
+      `INSERT INTO sweep_runs (sweep, seq, bundle_id, at, filed, fetched, detail, anomaly) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      x.name,
+      seq,
+      x.bundle,
+      at26,
+      filed,
+      fetched,
+      JSON.stringify(d),
+      anomaly ? JSON.stringify(anomaly) : null
+    );
+    return { seq, fetched, filed, anomaly, note };
+  }
+  /** R57: a seed's new capture filed in the sweep's own bundle as a monitor snapshot with its register row, in the way
+   *  R9 files a tick's bytes (a mechanical `sweep` promotion that changes no field). A refusal is kept as `why`. */
+  async #fileSeed(x, doc, at26) {
+    const sha = doc.capture.sha256, bytes2 = doc.capture.bytes;
+    const leaf = (String(doc.locator || "").split("?")[0].split("/").pop() || "seed").replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 80) || "seed";
+    const file = `snapshots/monitor-${sha.slice(0, 12)}-${leaf}`;
+    const img = this.#m.record.readImage(x.bundle);
+    if (!img || typeof img["bundle.md"] !== "string" || !Number.isSafeInteger(bytes2)) return { file: null, why: "the sweep's bundle or the capture's size could not be read" };
+    const hex6 = (t) => createSha256().update(new TextEncoder().encode(t)).hex();
+    const files = [];
+    let has3 = false;
+    for (const [path, v] of Object.entries(img)) {
+      if (path.startsWith("_history/")) continue;
+      if (typeof v === "string") files.push({ path, text: v, bytes: new TextEncoder().encode(v).length, sha256: hex6(v) });
+      else {
+        files.push({ path, blobSha: v.blobSha, sha256: v.sha256, bytes: v.bytes });
+        if (v.sha256 === sha) has3 = true;
+      }
+    }
+    if (has3) return { file: null, why: "the sweep's bundle already holds these bytes" };
+    const fm = this.#m.record.head(x.bundle);
+    const p = await this.#m.promotion.promote({
+      bundleId: x.bundle,
+      base: hex6(img["bundle.md"]),
+      author: SWEEP_ACTOR,
+      snapKey: `${at26.replace(/[-:]/g, "")}_${[...crypto.getRandomValues(new Uint8Array(4))].map((b) => b.toString(16).padStart(2, "0")).join("")}`,
+      writer: "mechanical",
+      operation: "sweep",
+      meta: { object_type: fm?.type, title: fm?.title, current_state: fm?.currentState },
+      files: [...files, { path: file, blobSha: sha, sha256: sha, bytes: bytes2 }],
+      register: [{ sha256: sha, path: file, encoding: "binary", bytes: bytes2 }]
+    });
+    return p && p.ok ? { file } : { file: null, why: `the promotion filing it was refused (${p?.reason || p?.code || "no reason given"})` };
+  }
+  /* ================================================================== *
+   * Reads (R61, R63, R30) and the scope check (R64)
+   * ================================================================== */
+  /** R61: every sweep in a `gathering.json` the viewer may see. */
+  sweeps({ viewer = null, now = null } = {}) {
+    this.#k.register();
+    const nowMs = Number.isFinite(Number(now)) && now !== null && now !== "" ? Number(now) : this.#m.now();
+    const paused = this.#m.paused().paused;
+    const items = this.#all(this.#k.gate(viewer)).map((x) => {
+      const st = this.#standing(x, nowMs, paused);
+      const runs = this.#runs(x.name);
+      const r = x.sweep.ratified === true ? this.ratifier(x.bundle, x.sweep.id) : null;
+      return {
+        sweep: x.name,
+        bundle: x.bundle,
+        id: x.sweep.id,
+        definition: JSON.stringify(x.sweep),
+        ratified: x.sweep.ratified === true,
+        ratified_by: r ? r.by : null,
+        ratified_at: r ? r.at : null,
+        due: st.due,
+        ...st.why ? { why: st.why } : {},
+        next: st.next !== null ? stampInstant("second", st.next) : null,
+        held: st.held ? "backlog" : null,
+        backlog: st.backlog,
+        backlog_limit: st.limit,
+        silent: this.#silent(runs, st.held),
+        runs
+      };
+    });
+    return { ok: true, as_of: stampInstant("second", nowMs), paused: this.#m.paused(), sweeps: items, formats: listFormats() };
+  }
+  #silent(runs, held) {
+    return !held && runs.length >= SILENT_RUNS && runs.slice(0, SILENT_RUNS).every((r) => r.filed === 0);
+  }
+  /** R63: each sweep's conditions that need a member's look, derived on read and writing nothing. */
+  sweepConditions({ viewer = null, now = null } = {}) {
+    const out = [];
+    for (const x of this.sweeps({ viewer, now }).sweeps) {
+      if (!x.ratified) continue;
+      const last = x.runs[0] || null;
+      const push = (kind, since, detail) => out.push({ sweep: x.sweep, kind, since, detail });
+      if (x.held) push("sweep-held-backlog", last ? last.at : null, { backlog: x.backlog, limit: x.backlog_limit });
+      if (last && last.anomaly) push("sweep-yield-anomaly", last.at, { filed: last.anomaly.filed, median: last.anomaly.median });
+      const failed2 = last ? (last.seeds || []).filter((s) => s.outcome === "failed") : [];
+      if (failed2.length) push("sweep-seed-unreachable", last.at, { seeds: failed2.map((s) => ({ seed: s.seed, reachability: s.reachability ?? null })) });
+      if (last && (last.redirected || []).length) push("sweep-redirect-out-of-scope", last.at, { redirects: last.redirected });
+      if (x.silent) push("sweep-silent", x.runs[SILENT_RUNS - 1].at, { runs: SILENT_RUNS });
+    }
+    return { ok: true, conditions: out };
+  }
+  /** R30: the due sweeps, for the slate, each with its definition as quoted data. */
+  dueForSlate(nowMs, sees) {
+    return this.plan(nowMs).due.filter((x) => sees(x.bundle)).map((x) => ({ kind: "ratified-sweep", bundle: x.bundle, id: x.sweep.id, definition: x.sweep }));
+  }
+  /** R64: capture-requests R45's scope check: the sweep ratified and not held, and every locator in its scope. */
+  scopeCheck({ sweep = null, locators = [] } = {}) {
+    const x = this.#all().find((y) => y.name === sweep);
+    if (!x) return { ok: false, reason: "unknown", detail: `no sweep is named ${String(sweep).slice(0, 80)}` };
+    if (x.sweep.ratified !== true || !runnable(x.sweep)) return { ok: false, reason: "unratified" };
+    if (this.#held(x).held) return { ok: false, reason: "held", detail: "the sweep's backlog is at or over its limit" };
+    const out = (Array.isArray(locators) ? locators : []).filter((l) => !inScope(l, x.sweep.sources));
+    if (!Array.isArray(locators) || !locators.length || out.length)
+      return { ok: false, reason: "out-of-scope", detail: out.length ? `${String(out[0]).slice(0, 120)} is outside the sweep's sources` : "no locator was named" };
+    return { ok: true, scope: [...x.sweep.sources] };
+  }
+};
 
 // src/monitoring/index.mjs
 var MONITOR_TICK_MS = 36e5;
@@ -122241,9 +123380,9 @@ var VOLATILITY_RUN = 10;
 var VOLATILITY_LADDER = Object.freeze(["daily", "weekly", "monthly"]);
 function lengthenedFrequency(contractDefault, unchangedChecks) {
   const from = VOLATILITY_LADDER.indexOf(contractDefault);
-  const run = Number.isInteger(unchangedChecks) && unchangedChecks > 0 ? unchangedChecks : 0;
+  const run2 = Number.isInteger(unchangedChecks) && unchangedChecks > 0 ? unchangedChecks : 0;
   if (from < 0) return { frequency: contractDefault, step: 0 };
-  const to = Math.min(VOLATILITY_LADDER.length - 1, from + Math.floor(run / VOLATILITY_RUN));
+  const to = Math.min(VOLATILITY_LADDER.length - 1, from + Math.floor(run2 / VOLATILITY_RUN));
   return { frequency: VOLATILITY_LADDER[to], step: to - from };
 }
 var MONITOR_CADENCE_BATCH = 50;
@@ -122424,8 +123563,8 @@ function withSessionEntry(text5, checked, line) {
   const at26 = text5.indexOf("## Session Log");
   if (at26 < 0) return text5 + "\n## Session Log\n\n" + entry;
   const nxt = text5.indexOf("\n## ", at26 + 1);
-  const cut3 = nxt === -1 ? text5.length : nxt + 1;
-  return text5.slice(0, cut3) + entry + "\n" + text5.slice(cut3);
+  const cut4 = nxt === -1 ? text5.length : nxt + 1;
+  return text5.slice(0, cut4) + entry + "\n" + text5.slice(cut4);
 }
 function settingView(x) {
   const custom = x.reason === CUSTOM_REASON;
@@ -122474,7 +123613,9 @@ var Monitoring = class {
     intent = null,
     actionClocks = null,
     escalation = null,
-    publication = null
+    publication = null,
+    projectStage = null,
+    captureRequests = null
   } = {}) {
     this.sql = storage.sql;
     this.record = record;
@@ -122482,7 +123623,31 @@ var Monitoring = class {
     this.promotion = promotion;
     this.env = env && typeof env === "object" ? env : {};
     this.now = typeof now === "function" ? now : () => Date.now();
-    this.#deps = { host, fetch: fetch2, governor, provenance, capture, observationLog, intent, actionClocks, escalation, publication };
+    this.#deps = {
+      host,
+      fetch: fetch2,
+      governor,
+      provenance,
+      capture,
+      observationLog,
+      intent,
+      actionClocks,
+      escalation,
+      publication,
+      projectStage,
+      captureRequests
+    };
+    this.sweep = new Sweeps(this, {
+      open: (c, now2, ms2) => this.#openTickEpoch(c, now2, ms2),
+      close: (c, e) => this.#closeTickEpoch(c, e),
+      claim: (c, s, e) => this.#claimFire(c, s, e),
+      ranked: (l, i, r, n) => this.#ranked(l, i, r, n),
+      running: this.#tickRunning,
+      land: (q7, f17, at26, say) => this.#land(q7, f17, at26, say),
+      gate: (v) => viewerPredicate(v),
+      recheckMs: () => this.#archiveTickMs(),
+      register: () => this.registerSweepScope()
+    });
   }
   get governor() {
     return this.#deps.governor ||= governorOf(this.#deps.host, { env: this.env });
@@ -122507,6 +123672,9 @@ var Monitoring = class {
   }
   get publication() {
     return this.#deps.publication === void 0 ? null : this.#deps.publication ||= publicationOf(this.#deps.host);
+  }
+  get projectStage() {
+    return this.#deps.projectStage ||= projectStageOf(this.#deps.host);
   }
   #fetch(u, init) {
     return (this.#deps.fetch || globalThis.fetch)(u, init);
@@ -123446,18 +124614,18 @@ var Monitoring = class {
           ...hist
         };
       if (c.frequency_source === "contract" && type && VOLATILITY_LADDER.includes(c.monitor_frequency)) {
-        const run = Number.isInteger(Number(type.unchanged_run)) ? Number(type.unchanged_run) : 0;
-        const l = lengthenedFrequency(c.monitor_frequency, run);
+        const run2 = Number.isInteger(Number(type.unchanged_run)) ? Number(type.unchanged_run) : 0;
+        const l = lengthenedFrequency(c.monitor_frequency, run2);
         return {
           ...c,
           monitor_frequency: l.frequency,
           volatility: {
-            unchanged_checks: run,
+            unchanged_checks: run2,
             since: type.run_since ?? null,
             step: l.step,
             contract_default: c.monitor_frequency,
             frequency: l.frequency,
-            basis: `${run} check${run === 1 ? "" : "s"} in a row found the substance unchanged; every ${VOLATILITY_RUN} move the contract's ${c.monitor_frequency} one step toward monthly, and any change or failed look returns it`
+            basis: `${run2} check${run2 === 1 ? "" : "s"} in a row found the substance unchanged; every ${VOLATILITY_RUN} move the contract's ${c.monitor_frequency} one step toward monthly, and any change or failed look returns it`
           },
           ...hist
         };
@@ -124189,7 +125357,7 @@ var Monitoring = class {
    *  promoted through `promotion.promote` at `collected` (never verified, a member's act), its origin the named request,
    *  the request's id and its bundle named as the authorisation, in the request's bundle's project. Answers `{ok,
    *  bundle_id}` or the promotion's refusal relayed. */
-  #land(q7, filed, at26) {
+  #land(q7, filed, at26, say = null) {
     try {
       const doc = filed.doc, cap = doc.capture;
       if (typeof doc.file !== "string" || !Number.isSafeInteger(cap.bytes))
@@ -124202,7 +125370,7 @@ var Monitoring = class {
       const project = home && typeof home.project === "string" && home.project ? home.project : null;
       return this.record.transact(() => {
         const id = `${this.record.allocId("INFO", at26.slice(0, 4)).id}-${GATHERING_BUNDLE_SLUG}`;
-        const title = `Gathered for ${q7.id}: ${q7.target || filed.locator}`.replace(/[\p{Cc}]+/gu, " ").slice(0, 200);
+        const title = (say ? say.title : `Gathered for ${q7.id}: ${q7.target || filed.locator}`).replace(/[\p{Cc}]+/gu, " ").slice(0, 200);
         const retrieved = typeof doc.retrieved === "string" && doc.retrieved ? doc.retrieved : at26;
         const md = [
           "---",
@@ -124238,16 +125406,16 @@ var Monitoring = class {
           "",
           "## Summary",
           "",
-          `The document served at ${filed.locator}, gathered by the daemon for the named request ${q7.id} of ${q7.bundle}. Its bytes are \`${doc.file}\`, exactly as served; nothing here summarises them.`,
+          (say ? say.summary : `The document served at ${filed.locator}, gathered by the daemon for the named request ${q7.id} of ${q7.bundle}.`) + ` Its bytes are \`${doc.file}\`, exactly as served; nothing here summarises them.`,
           "",
           "## Provenance Notes",
           "",
-          `Gathered for the named request ${q7.id}, carried by ${q7.bundle}'s data/gathering.json, which authorised the fetch; locator ${q7.locators.indexOf(filed.locator) + 1} of ${q7.locators.length} in the request's order. Collected ${at26}. Filed at ${GATHERING_LANDS_AT} and never higher: verifying it is a named member's decision.`,
+          say ? say.notes : `Gathered for the named request ${q7.id}, carried by ${q7.bundle}'s data/gathering.json, which authorised the fetch; locator ${q7.locators.indexOf(filed.locator) + 1} of ${q7.locators.length} in the request's order. Collected ${at26}. Filed at ${GATHERING_LANDS_AT} and never higher: verifying it is a named member's decision.`,
           "",
           "## Session Log",
           "",
           `### Session ${at26} | Collected | ${GATHERING_AUTHOR}`,
-          `Trigger: named request ${q7.id} (${q7.bundle})`,
+          `Trigger: ${say ? say.trigger : `named request ${q7.id} (${q7.bundle})`}`,
           "Changes: created from the daemon's capture for the named request.",
           "",
           "## Review Notes",
@@ -124467,6 +125635,17 @@ var Monitoring = class {
     const gf = [];
     checkGatheringGrammar({ files: /* @__PURE__ */ new Map([["data/gathering.json", gj.text]]) }, gf);
     const errs = gf.filter((x) => x.severity === "error");
+    const term = errs.filter((x) => x.code === "SWEEP_TERM_REFUSED");
+    if (term.length)
+      return {
+        ok: false,
+        reason: "SWEEP_TERM_REFUSED",
+        code: "SWEEP_TERM_REFUSED",
+        check: SWEEP_CHECKS.SWEEP_TERM_REFUSED.check,
+        translation: SWEEP_CHECKS.SWEEP_TERM_REFUSED.translation,
+        detail: term.map((x) => x.message).join("; "),
+        findings: errs.map((x) => ({ check: x.check, detail: x.message }))
+      };
     if (errs.length)
       return {
         ok: false,
@@ -124476,7 +125655,7 @@ var Monitoring = class {
         translation: GATHERING_CHECKS.GATHERING_REFUSED.translation,
         findings: errs.map((x) => ({ check: x.check, detail: x.message }))
       };
-    return null;
+    return this.sweep.sweepFence(c, gj.text);
   }
   /** R42: C-18.5 in the audit over one bundle image (record-core R59), as `checkBundle` ran it. */
   audit(image) {
@@ -124486,6 +125665,40 @@ var Monitoring = class {
     checkGatheringGrammar({ files }, findings);
     return findings;
   }
+  /* ================================================================== *
+   * The link sweep (R29, R53–R64): `sweep.mjs`
+   * ================================================================== */
+  /** R56: for `scheduler`'s `gathering-sweep` consumer. */
+  sweepDue(now) {
+    return this.sweep.sweepDue(now);
+  }
+  sweepWake(now) {
+    return this.sweep.sweepWake(now);
+  }
+  sweepTick(now, rank6 = null) {
+    return this.sweep.sweepTick(now, rank6);
+  }
+  /** R61, R63: the reads. */
+  sweeps(args) {
+    return this.sweep.sweeps(args);
+  }
+  sweepConditions(args) {
+    return this.sweep.sweepConditions(args);
+  }
+  /** R64 (K1122): register, once, with capture-requests (its R45) the scope check its drain asks. A registration that
+   *  is refused or throws is asked again on the next sweep service, never held as done. */
+  registerSweepScope() {
+    if (this.#scopeRegistered) return true;
+    try {
+      const cr = this.#deps.captureRequests || captureRequestsOf(this.#deps.host);
+      const r = cr && typeof cr.registerSweepScope === "function" ? cr.registerSweepScope("monitoring", (a) => this.sweep.scopeCheck(a || {})) : null;
+      this.#scopeRegistered = !!(r && (r.ok === true || r.reason === "LISTENER_DECLARED"));
+    } catch {
+      this.#scopeRegistered = false;
+    }
+    return this.#scopeRegistered;
+  }
+  #scopeRegistered = false;
   /* ================================================================== *
    * What reaches members (R31, R32)
    * ================================================================== */
@@ -124528,8 +125741,8 @@ var Monitoring = class {
   /** R30: the due slate, the manual path (Intake Doctrine §4): every monitored address now due (R16), every open named
    *  request and every ratified sweep in a `data/gathering.json` the viewer may see, exported as a prompt a member runs
    *  by hand. The store's fields are QUOTED DATA (each item one JSON line between fixed markers) inside fixed
-   *  instruction framing, so no field can be read as an instruction. No request or sweep has been run by the daemon
-   *  (R28, R29), so every open request and ratified sweep is due. At most MONITORING_READ_MAX items (`truncated`). */
+   *  instruction framing, so no field can be read as an instruction. Every open request is listed, and every sweep
+   *  R56 finds due with its definition (R61). At most MONITORING_READ_MAX items (`truncated`). */
   slate({ viewer = null, now = null, limit = null } = {}) {
     const at26 = Number.isFinite(Number(now)) && now !== null && now !== "" ? Number(now) : this.now();
     const cap = clampLimit3(limit, MONITORING_READ_MAX, MONITORING_READ_MAX);
@@ -124577,15 +125790,8 @@ var Monitoring = class {
             criticality: r.criticality ?? null,
             cadence: r.cadence ?? null
           });
-      for (const w of Array.isArray(g.sweeps) ? g.sweeps : [])
-        if (w && typeof w === "object" && w.ratified === true)
-          items.push({
-            kind: "ratified-sweep",
-            bundle: f17.bundle_id,
-            id: w.id ?? null,
-            sources: Array.isArray(w.sources) ? w.sources : []
-          });
     }
+    items.push(...this.sweep.dueForSlate(at26, sees));
     const shown2 = items.slice(0, cap);
     const prompt = [
       SLATE_FRAMING_OPEN,
@@ -125014,6 +126220,7 @@ function monitoringOf(host, deps) {
     promotion.registerStep("monitoring", { check: (c) => m.gatheringCheck(c) });
     record.registerAuditCheck("monitoring", (image) => m.audit(image));
     promotion.onCommitted("monitoring", (n) => m.actionCommitted(n));
+    if (d.captureRequests) m.registerSweepScope();
     const intent = d.intent === null ? null : m.intent;
     if (intent && typeof intent.registerSource === "function")
       intent.registerSource("monitoring", ({ project, viewer } = {}) => m.proposals({ project, viewer }));
@@ -125037,7 +126244,9 @@ function monitoringOps(m, url, body) {
     monitorpause: () => m.pause({ paused: typeof b.paused === "boolean" ? b.paused : null, by: q7("actor") || null }),
     monitorslate: () => m.slate({ viewer: q7("viewer"), now: q7("now"), limit: q7("limit") }),
     /* R52: the body's fields, then the control plane's `author` and `viewer` stamps, so a body never supplies them. */
-    addressfrequencyset: () => m.addressFrequencySet({ ...b, author: q7("author"), viewer: q7("viewer") })
+    addressfrequencyset: () => m.addressFrequencySet({ ...b, author: q7("author"), viewer: q7("viewer") }),
+    /* R61: the sweeps the viewer may see, read through the control plane's viewer stamp. */
+    sweeps: () => m.sweeps({ viewer: q7("viewer"), now: q7("now") })
   };
 }
 async function monitorOp(req, store, {
@@ -125093,6 +126302,7 @@ var SCHEDULER_ORDER = Object.freeze([
   "overdue-scan",
   "queue-renotify",
   "monitor-cadence",
+  "gathering-sweep",
   "ai-run-reap",
   "capture-request-drain",
   "ai-run-wake",
@@ -125101,7 +126311,9 @@ var SCHEDULER_ORDER = Object.freeze([
   "bias-debt",
   "intent-age",
   "notice-sweep",
-  "deadline-recheck"
+  "deadline-recheck",
+  "working-on-seal",
+  "working-on-attest"
 ]);
 var SCHEDULER_KEYS = Object.freeze({
   "selection-sweep": "swept",
@@ -125111,6 +126323,7 @@ var SCHEDULER_KEYS = Object.freeze({
   "overdue-scan": "overduescan",
   "queue-renotify": "queuerenotify",
   "monitor-cadence": "monitorcadence",
+  "gathering-sweep": "gatheringsweep",
   "ai-run-reap": "airunreap",
   "capture-request-drain": "capturerequests",
   "ai-run-wake": "airunwake",
@@ -125119,10 +126332,12 @@ var SCHEDULER_KEYS = Object.freeze({
   "bias-debt": "biasdebt",
   "intent-age": "intentage",
   "notice-sweep": "noticesweep",
-  "deadline-recheck": "deadlinerecheck"
+  "deadline-recheck": "deadlinerecheck",
+  "working-on-seal": "workingonseal",
+  "working-on-attest": "workingonattest"
 });
 var ALWAYS_DUE = Object.freeze(["selection-sweep", "task-drain", "archive-monitor", "connection-derive", "overdue-scan"]);
-var RANKED = Object.freeze(["monitor-cadence", "archive-monitor", "capture-request-drain", "bias-debt"]);
+var RANKED = Object.freeze(["monitor-cadence", "archive-monitor", "gathering-sweep", "capture-request-drain", "bias-debt"]);
 var ANSWER_FIELDS = /* @__PURE__ */ new Set([
   "swept",
   "drained",
@@ -125143,7 +126358,11 @@ function rankBy(serves, items, now) {
   const list2 = Array.isArray(items) ? items.filter((x) => x && typeof x === "object") : [];
   const named = { addresses: [], bundles: [], requests: [] };
   const bucket = { address: "addresses", bundle: "bundles", request: "requests" };
-  for (const x of list2) if (bucket[x.kind]) named[bucket[x.kind]].push(x.id);
+  const subject = (x) => x.kind === "sweep" && typeof x.id === "string" && x.id.includes("#") ? ["bundle", x.id.slice(0, x.id.indexOf("#"))] : [x.kind, x.id];
+  for (const x of list2) {
+    const [k, id] = subject(x);
+    if (bucket[k] && !named[bucket[k]].includes(id)) named[bucket[k]].push(id);
+  }
   let served = [];
   try {
     const a = serves ? serves(named) : null;
@@ -125154,7 +126373,8 @@ function rankBy(serves, items, now) {
   const of = new Map(served.map((s) => [`${s.kind}\0${s.id}`, s]));
   const t = Number.isFinite(now) ? now : Date.now();
   const ranked = list2.map((x, i) => {
-    const s = of.get(`${x.kind}\0${x.id}`) || {};
+    const [k, id] = subject(x);
+    const s = of.get(`${k}\0${id}`) || {};
     const waited = Number.isFinite(x.waitingSince) ? Math.max(0, t - x.waitingSince) : 0;
     const overdue = Number.isFinite(x.cadenceMs) && x.cadenceMs > 0 && waited > x.cadenceMs;
     return { x, i, rank: { overdue, gaps: (s.gaps || []).length > 0, aspirations: (s.aspirations || []).length > 0, waited_ms: waited } };
@@ -125173,7 +126393,7 @@ var Scheduler = class {
   #deadlineIdleAt = null;
   /** `storage` is the Durable Object's storage (its alarm, and the probe seam's one value); `owners` answers each
    *  consumer's owner (`retrieval`, `monitoring`, `connections`, `progressions`, `aiRuns`, `captureRequests`,
-   *  `calibration`, `bias`, `intent`, `reevaluation`), each a function returning the owner, so an owner is reached
+   *  `calibration`, `bias`, `intent`, `reevaluation`, `networkNotices`), each a function returning the owner, so an owner is reached
    *  only when the registry is built. */
   constructor({ storage, env = null, owners = {} } = {}) {
     this.#storage = storage;
@@ -125207,6 +126427,12 @@ var Scheduler = class {
         if (w === null || w === void 0 || !Number.isFinite(w)) return null;
         const idle = this.#deadlineIdleAt;
         return idle !== null && w <= idle ? Math.floor(idle / DAY_MS4) * DAY_MS4 + DAY_MS4 : w;
+      };
+      c["gathering-sweep"] = {
+        /* monitoring R56: the ratified sweeps (R29), batch-bounded, given the rank (R10) */
+        due: (now) => instant(o("monitoring").sweepDue(now), now),
+        wake: (now) => o("monitoring").sweepWake(now),
+        tick: async (now, rank6) => ({ gatheringsweep: await o("monitoring").sweepTick(now, rank6) })
       };
       c["deadline-recheck"] = {
         due: (now) => {
@@ -125284,6 +126510,20 @@ var Scheduler = class {
       wake: (now) => o("reevaluation").noticeSweepWake(now),
       tick: (now) => ({ noticesweep: o("reevaluation").noticeSweep(now) })
     };
+    if (this.#owners.networkNotices) {
+      c["working-on-seal"] = {
+        /* network-notices R14, R15: the weekly seal */
+        due: (now) => instant(o("networkNotices").sealDue(now), now),
+        wake: (now) => o("networkNotices").sealWake(now),
+        tick: async (now) => ({ workingonseal: await o("networkNotices").sealTick(now) })
+      };
+      c["working-on-attest"] = {
+        /* network-notices R12, R17: the monthly, closed and lapsed attestations, the retried openings */
+        due: (now) => instant(o("networkNotices").attestDue(now), now),
+        wake: (now) => o("networkNotices").attestWake(now),
+        tick: async (now) => ({ workingonattest: await o("networkNotices").attestTick(now) })
+      };
+    }
     return c;
   }
   /* ---- R8 ---- */
@@ -125500,10 +126740,11 @@ var Scheduler = class {
     };
     const configured = () => monitoring((m) => m.configured());
     const clockPending = () => monitoring((m) => m.deadlineRecheckWake(Date.now()) != null);
+    const sweepPending = () => monitoring((m) => typeof m.sweepWake === "function" && m.sweepWake(Date.now()) != null);
     const out = {};
     if (retrieval) out.retrieval = retrieval.onSelectionCreated("scheduler", arm);
     if (bias) out.bias = bias.onLensChange("scheduler", () => bias.biasDebtDue(Date.now()) === null ? null : arm());
-    if (promotion) out.promotion = promotion.onCommitted("scheduler", async () => configured() || clockPending() || bias && bias.biasDebtDue(Date.now()) !== null ? await arm() : null);
+    if (promotion) out.promotion = promotion.onCommitted("scheduler", async () => configured() || clockPending() || sweepPending() || bias && bias.biasDebtDue(Date.now()) !== null ? await arm() : null);
     if (capture) out.capture = capture.on(
       "source-outcome",
       "scheduler",
@@ -125545,7 +126786,8 @@ function schedulerOf(ctx, env = null, deps = {}) {
       calibration: () => calibrationOf(ctx),
       bias: () => biasOf(ctx),
       intent: () => intentOf(ctx),
-      reevaluation: () => reevaluationOf(ctx)
+      reevaluation: () => reevaluationOf(ctx),
+      networkNotices: () => networkNoticesOf(ctx, { env: e })
     };
     s = new Scheduler({ storage: deps.storage || ctx.storage, env: e, owners });
     instances39.set(ctx, s);
@@ -128026,46 +129268,46 @@ var InstanceSetup = class _InstanceSetup {
     };
   }
   /** R40: a probe run begins. Its steps are numbered and timed from this run's own start. */
-  recordCpuProbeStart({ run, iterations = null, budgetMs = null, at: at26 = null } = {}) {
-    if (typeof run !== "string" || !run) return { recorded: false };
+  recordCpuProbeStart({ run: run2, iterations = null, budgetMs = null, at: at26 = null } = {}) {
+    if (typeof run2 !== "string" || !run2) return { recorded: false };
     this.#sql.exec(`INSERT INTO cpu_probe_runs (run, started_at, iterations, budget_ms) VALUES (?, ?, ?, ?)
-                    ON CONFLICT(run) DO NOTHING`, run, at26 || stampInstant("second", this.#now()), iterations, budgetMs);
-    return { run, recorded: true };
+                    ON CONFLICT(run) DO NOTHING`, run2, at26 || stampInstant("second", this.#now()), iterations, budgetMs);
+    return { run: run2, recorded: true };
   }
   /** R35: one completed step of one run (`run`, R40): its number, its elapsed time from its run's start, its
    *  iterations and the instant. Never throws for a well-formed call. */
-  recordCpuProbeStep({ run = LEGACY_PROBE_RUN, step, elapsedMs, iterations, at: at26 = null } = {}) {
+  recordCpuProbeStep({ run: run2 = LEGACY_PROBE_RUN, step, elapsedMs, iterations, at: at26 = null } = {}) {
     const now = at26 || stampInstant("second", this.#now());
-    if (!this.#one(`SELECT run FROM cpu_probe_runs WHERE run = ?`, run))
+    if (!this.#one(`SELECT run FROM cpu_probe_runs WHERE run = ?`, run2))
       this.#sql.exec(
         `INSERT INTO cpu_probe_runs (run, started_at, iterations, reason) VALUES (?, ?, ?, 'unrecorded')`,
-        run,
+        run2,
         now,
         iterations
       );
     this.#sql.exec(
       `INSERT INTO cpu_probe_steps (run, step, elapsed_ms, iterations, at) VALUES (?, ?, ?, ?, ?)
        ON CONFLICT(run, step) DO UPDATE SET elapsed_ms = excluded.elapsed_ms, at = excluded.at`,
-      run,
+      run2,
       step,
       elapsedMs,
       iterations,
       now
     );
-    return { run, step, elapsed_ms: elapsedMs };
+    return { run: run2, step, elapsed_ms: elapsedMs };
   }
   /** R40: a probe run returned, with what it completed and why it stopped. A run with no end is one cut off. */
-  recordCpuProbeEnd({ run, completed = null, elapsedMs = null, reason = null, at: at26 = null } = {}) {
-    if (typeof run !== "string" || !run) return { recorded: false };
+  recordCpuProbeEnd({ run: run2, completed = null, elapsedMs = null, reason = null, at: at26 = null } = {}) {
+    if (typeof run2 !== "string" || !run2) return { recorded: false };
     this.#sql.exec(
       `UPDATE cpu_probe_runs SET ended_at = ?, completed = ?, elapsed_ms = ?, reason = ? WHERE run = ?`,
       at26 || stampInstant("second", this.#now()),
       completed,
       elapsedMs,
       reason,
-      run
+      run2
     );
-    return { run, recorded: true };
+    return { run: run2, recorded: true };
   }
   /** R36, R40: where the probe got to, and so what is known about the ceiling. Writes nothing. */
   cpuProbeState() {
@@ -128098,14 +129340,14 @@ var InstanceSetup = class _InstanceSetup {
         } } : {}
       };
     });
-    const cut3 = runOut.filter((r) => r.returned === false && r.steps.length);
+    const cut4 = runOut.filter((r) => r.returned === false && r.steps.length);
     return {
       steps: rows2.length,
       highest_completed: top2 ? top2.step : 0,
       elapsed_at_highest_ms: top2 ? top2.elapsed_ms : 0,
       rows: rows2,
       runs: runOut,
-      note: !rows2.length ? "the probe has never run, so nothing is known about the ceiling by measurement" : `a run completed a step ${top2.elapsed_ms} ms into its own isolate, so the ceiling lies above elapsed_at_highest_ms. ` + (cut3.length ? "A run with no recorded end was cut off: the ceiling lies within its bracket, above its last completed step's elapsed time and below what its next step would have cost." : "No run has been cut off yet, so the ceiling is above everything tried.")
+      note: !rows2.length ? "the probe has never run, so nothing is known about the ceiling by measurement" : `a run completed a step ${top2.elapsed_ms} ms into its own isolate, so the ceiling lies above elapsed_at_highest_ms. ` + (cut4.length ? "A run with no recorded end was cut off: the ceiling lies within its bracket, above its last completed step's elapsed time and below what its next step would have cost." : "No run has been cut off yet, so the ceiling is above everything tried.")
     };
   }
 };
@@ -128264,14 +129506,14 @@ async function runtimeOp(stub, io) {
     asymmetry: RUNTIME_ASYMMETRY
   });
 }
-async function cpuProbeOp(stub, { iterations = null, budget_ms = null, run = null, probe = cpuProbe } = {}, io) {
+async function cpuProbeOp(stub, { iterations = null, budget_ms = null, run: run2 = null, probe = cpuProbe } = {}, io) {
   const { json: json6, storeSilent: storeSilent2, doAnswer: doAnswer2 } = io;
   const beforeOut = await doAnswer2(stub.fetch("http://x/cpuprobestate"));
   if (!beforeOut.answered) return notAnswered(beforeOut, "cpuprobe", io);
   if (!beforeOut.result) return storeSilent2("cpuprobe");
   const iters = Math.max(1e5, Number(iterations) || 2e6);
   const budget = Math.max(50, Number(budget_ms) || 2e4);
-  const id = typeof run === "string" && run ? run : `${(/* @__PURE__ */ new Date()).toISOString().slice(0, 19)}Z~${crypto.randomUUID().slice(0, 8)}`;
+  const id = typeof run2 === "string" && run2 ? run2 : `${(/* @__PURE__ */ new Date()).toISOString().slice(0, 19)}Z~${crypto.randomUUID().slice(0, 8)}`;
   const post = (path, body) => doAnswer2(stub.fetch(`http://x/${path}`, {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -131844,7 +133086,7 @@ function unbranched(p, phases) {
 
 // src/action-plans/index.mjs
 var CLOSED_INQUIRY_STATES = Object.freeze(["concluded", "dismissed", "divided", "published"]);
-var DISCLOSURE = (run, skill) => `Suggested by the assistant (machine work) in run ${run}, under skill version ${skill ?? "undetermined"}. It is not the group's decision; it becomes an option only when a member adopts it.`;
+var DISCLOSURE = (run2, skill) => `Suggested by the assistant (machine work) in run ${run2}, under skill version ${skill ?? "undetermined"}. It is not the group's decision; it becomes an option only when a member adopts it.`;
 var PROPOSAL_SAYS5 = "this is a proposal, not an option: it is stored apart from the plan's options and becomes one only when a member adopts it, in their own words for any reason the plan asks.";
 var CHECK_SAYS = "a check informs; it never refuses or changes anything.";
 var DAY_MS6 = 864e5;
@@ -132608,7 +133850,7 @@ var ActionPlans = class {
    *  stamps, neither from the body: `proposer` names the caller for the label and says whether it is machine work;
    *  `principal` is the caller as a run's principal (`<principal>/<tokenId>`), compared with the run's own (N432). */
   async optionPropose(args = {}) {
-    const { plan, why, run, sources, proposer, principal, viewer } = args;
+    const { plan, why, run: run2, sources, proposer, principal, viewer } = args;
     const who2 = str20(proposer);
     if (!who2)
       return refusal18("PROPOSAL_NO_PROPOSER", "a proposal names who made it, and this one came with no stamped caller. Nothing was written.");
@@ -132618,7 +133860,7 @@ var ActionPlans = class {
     const machine3 = isMachineIdentity(who2);
     let gate = null;
     if (machine3) {
-      gate = this.#runGate(run, p, principal, viewer);
+      gate = this.#runGate(run2, p, principal, viewer);
       if (!gate.ok) return gate;
     }
     const f17 = this.#optionFields(args, p, viewer);
@@ -132647,7 +133889,7 @@ var ActionPlans = class {
     const at26 = this.now();
     const r = this.record.transact(() => {
       if (machine3) {
-        const again = this.#runGate(run, p, principal, viewer);
+        const again = this.#runGate(run2, p, principal, viewer);
         if (!again.ok) return again;
       }
       const n = (this.#one(`SELECT COUNT(*) AS n FROM plan_option_proposals WHERE plan_id=?`, p.id) || { n: 0 }).n + 1;
@@ -132680,10 +133922,10 @@ var ActionPlans = class {
   }
   /* R31: the run a machine's proposal names, in R31's order; `{ok, run}` or a refusal. `caller` is the `principal`
      stamp (R11), never the `proposer` label: an agent's label (`class:ai/<tokenId>`) is not its run's principal. */
-  #runGate(run, p, caller, viewer) {
-    const r = typeof run === "string" && run.trim() ? this.aiRuns.runFor(run.trim(), viewer) : null;
+  #runGate(run2, p, caller, viewer) {
+    const r = typeof run2 === "string" && run2.trim() ? this.aiRuns.runFor(run2.trim(), viewer) : null;
     if (!r)
-      return refusal18("PROPOSAL_NO_RUN", "a machine's proposal names the planning run it was made under, one this caller can see. Nothing was written.", { run: typeof run === "string" ? run : null });
+      return refusal18("PROPOSAL_NO_RUN", "a machine's proposal names the planning run it was made under, one this caller can see. Nothing was written.", { run: typeof run2 === "string" ? run2 : null });
     if (r.status !== "running")
       return refusal18(
         "PROPOSAL_RUN_NOT_RUNNING",
@@ -132761,8 +134003,8 @@ var ActionPlans = class {
       ...r.adopted_option ? { adopted_option: r.adopted_option, adopted_by: r.adopted_by, adopted_at: r.adopted_at } : {}
     };
   }
-  #runRow(run) {
-    return typeof run === "string" ? this.#one(`SELECT * FROM plan_runs WHERE run=?`, run) : null;
+  #runRow(run2) {
+    return typeof run2 === "string" ? this.#one(`SELECT * FROM plan_runs WHERE run=?`, run2) : null;
   }
   /** R11: a member adopts a proposal as an option, once. */
   optionAdopt(args = {}) {
@@ -133142,9 +134384,9 @@ var ActionPlans = class {
     const options = held.map((o) => this.#optionView(p, o, live, viewer, see));
     const scenarios = this.#scenarios(p.id).map((sc) => this.#scenarioView(p, sc, viewer, see));
     const proposals = this.#rows(`SELECT * FROM plan_option_proposals WHERE plan_id=? AND machine=0 ORDER BY n`, p.id).map((r) => this.#proposalView(r, see, viewer));
-    const runs = this.#planRuns(p.id).map((run) => {
-      const page = this.#trayPage(p.id, run, 0, see, viewer);
-      return { run, proposals: page.proposals, next: page.next };
+    const runs = this.#planRuns(p.id).map((run2) => {
+      const page = this.#trayPage(p.id, run2, 0, see, viewer);
+      return { run: run2, proposals: page.proposals, next: page.next };
     });
     const removed = all.filter((s) => s.removedSeq !== null && !inPlan.has(s.key) && see.subject(s.subject)).map((s) => ({ subject: s.subject, key: s.key }));
     const checks = this.#checks(p, options, scenarios, live, now, viewer, new Map(held.map((o) => [o.id, o.fields])));
@@ -133448,26 +134690,26 @@ var ActionPlans = class {
       if (!runs.some((x) => x.run === r.run)) runs.push({ run: r.run, at: r.at });
     return runs.sort((a, b) => instantOrder(a.at, b.at) || (a.run < b.run ? -1 : 1)).map((r) => r.run);
   }
-  #trayPage(planId2, run, from, see, viewer) {
+  #trayPage(planId2, run2, from, see, viewer) {
     const rows2 = this.#rows(
       `SELECT * FROM plan_option_proposals WHERE plan_id=? AND run=? AND run_ord > ? ORDER BY run_ord LIMIT ?`,
       planId2,
-      run,
+      run2,
       from,
       TRAY_PAGE + 1
     );
     const page = rows2.slice(0, TRAY_PAGE);
     return {
       proposals: page.map((r) => this.#proposalView(r, see, viewer)),
-      next: rows2.length > TRAY_PAGE ? `${run}#${page.at(-1).run_ord}` : null
+      next: rows2.length > TRAY_PAGE ? `${run2}#${page.at(-1).run_ord}` : null
     };
   }
   /** R34: the tray: five of a planning run's proposals at a time, in the run's order, strongest first. */
-  planProposals({ plan, run, after, viewer } = {}) {
+  planProposals({ plan, run: run2, after, viewer } = {}) {
     const p = this.#plan(plan, viewer);
     if (!p) return noSuchPlan(plan);
     const runs = this.#planRuns(p.id);
-    const named = typeof run === "string" && run.trim() ? run.trim() : null;
+    const named = typeof run2 === "string" && run2.trim() ? run2.trim() : null;
     if (named && !runs.includes(named)) return refuseRunOtherPlan(named);
     const r = named ?? runs.at(-1) ?? null;
     let from = 0;
@@ -133502,9 +134744,9 @@ var ActionPlans = class {
     return this.membership.projectAuthority(p.project, actor, "joined", "opening a planning run") || null;
   }
   /** R32: a planning run's opening, recorded with the project's `work_kinds` as they stood then (ai-runs R43). */
-  runOpened({ run } = {}) {
+  runOpened({ run: run2 } = {}) {
     try {
-      const r = this.aiRuns.runFor(run, null);
+      const r = this.aiRuns.runFor(run2, null);
       if (!r || r.mode !== "plan" || typeof r.plan !== "string") return;
       const p = this.#plan(r.plan, null);
       if (!p) return;
@@ -133627,8 +134869,8 @@ function refuseKeys(args) {
 function refuseNoSuchOption(option) {
   return refusal18("NO_SUCH_OPTION", `the plan holds no option ${option === null || option === void 0 ? "(none named)" : String(option).slice(0, 80)}. Nothing was written.`, { option: option ?? null });
 }
-function refuseRunOtherPlan(run) {
-  return refusal18("PROPOSAL_RUN_OTHER_PLAN", `run ${String(run ?? "").slice(0, 80)} is not a planning run of this plan. Nothing was written.`, { run: run ?? null });
+function refuseRunOtherPlan(run2) {
+  return refusal18("PROPOSAL_RUN_OTHER_PLAN", `run ${String(run2 ?? "").slice(0, 80)} is not a planning run of this plan. Nothing was written.`, { run: run2 ?? null });
 }
 function refuseProviderUnavailable2(provider) {
   return refusal18("PLAN_PROVIDER_UNAVAILABLE", `this answer reads the ${provider} module, which this instance does not have yet; nothing is answered in its place.`, { provider });
@@ -135111,8 +136353,8 @@ var QueueProducers = class _QueueProducers {
       }));
       const vtrunc = vrows.length > vcap || held.truncated === true;
       for (const v of vrows.slice(0, vcap)) {
-        const run = this.#aiRuns.runFor(v.run, viewer);
-        const from = run && run.context_type === "project" ? drawing.find((p) => p.id === run.context_id) : void 0;
+        const run2 = this.#aiRuns.runFor(v.run, viewer);
+        const from = run2 && run2.context_type === "project" ? drawing.find((p) => p.id === run2.context_id) : void 0;
         if (!from) {
           unattributed += 1;
           if (!unattributedIn.includes(inq)) unattributedIn.push(inq);
@@ -135872,12 +137114,12 @@ var QueueProducers = class _QueueProducers {
    *  of those projects it reaches, and homed under both sides. */
   #contradictionItems(scope, viewer, now) {
     const found = /* @__PURE__ */ new Map();
-    let cut3 = false;
+    let cut4 = false;
     for (const project of scope.projects) {
       let after = null;
       for (let page = 0; ; page += 1) {
         if (page === _QueueProducers.QUEUE_CONTRADICTION_PAGES) {
-          cut3 = true;
+          cut4 = true;
           break;
         }
         const r = this.#contradiction.candidatesFor({ on: { project }, after, viewer });
@@ -135933,7 +137175,7 @@ var QueueProducers = class _QueueProducers {
             projects_bound: scope.bound,
             projects_truncated: scope.truncated === true,
             pages_bound: _QueueProducers.QUEUE_CONTRADICTION_PAGES,
-            pages_truncated: cut3
+            pages_truncated: cut4
           },
           detail: "a candidate is contradiction's (its R24\u2013R26): its weight comes from the machine's label and its key, and its state from the members' acts, both read here and never restated. The machine's label and reason stay the machine's."
         },
@@ -135954,10 +137196,10 @@ var QueueProducers = class _QueueProducers {
    *  under the dependent and its ancestors. It leaves when the cause closes (a recorded re-evaluation, its R16). */
   #findingsSideCorrected(viewer, now) {
     const out = [];
-    let after = null, cut3 = false, read2 = true;
+    let after = null, cut4 = false, read2 = true;
     for (let page = 0; ; page += 1) {
       if (page === _QueueProducers.QUEUE_CONTRADICTION_PAGES) {
-        cut3 = true;
+        cut4 = true;
         break;
       }
       const r = this.#reevaluation.correctedDependents({ after, limit: _QueueProducers.QUEUE_CORRECTED_PAGE, viewer });
@@ -135991,7 +137233,7 @@ var QueueProducers = class _QueueProducers {
             bound: {
               limit: _QueueProducers.QUEUE_CORRECTED_PAGE,
               pages_bound: _QueueProducers.QUEUE_CONTRADICTION_PAGES,
-              truncated: cut3,
+              truncated: cut4,
               corrections_read: read2
             },
             detail: "the cause is reevaluation's (its R27): a live leg of this finding rests on a side contradiction marks stale. It is read here, never raised, and no strength, conclusion or case moved."
@@ -136048,12 +137290,12 @@ var QueueProducers = class _QueueProducers {
     const scope = this.#ownedProjects(me, viewer, _QueueProducers.QUEUE_TENSION_PROJECTS);
     const visible = this.#bundleRedactor(viewer);
     const found = /* @__PURE__ */ new Map();
-    let cut3 = false;
+    let cut4 = false;
     for (const project of scope.projects) {
       let after = null;
       for (let page = 0; ; page += 1) {
         if (page === _QueueProducers.QUEUE_CONTRADICTION_PAGES) {
-          cut3 = true;
+          cut4 = true;
           break;
         }
         const r = this.#publication.caseTensions({ project, after });
@@ -136105,7 +137347,7 @@ var QueueProducers = class _QueueProducers {
             projects_bound: scope.bound,
             projects_truncated: scope.truncated === true,
             pages_bound: _QueueProducers.QUEUE_CONTRADICTION_PAGES,
-            pages_truncated: cut3
+            pages_truncated: cut4
           },
           detail: "a tension after publication is publication's (its R50), read under the owning project's owners' sight: a side any owner may not see is answered unseen, with nothing of it. It is told to the project's owners and to nobody else, and it composes no strength."
         },
@@ -136300,10 +137542,10 @@ var QueueProducers = class _QueueProducers {
   /** A provider's paged read followed by its cursor, at most QUEUE_ACTION_PAGES pages; `truncated` when it was cut. */
   #actionPages(read2) {
     const items = [];
-    let after = null, cut3 = false;
+    let after = null, cut4 = false;
     for (let page = 0; ; page += 1) {
       if (page === _QueueProducers.QUEUE_ACTION_PAGES) {
-        cut3 = true;
+        cut4 = true;
         break;
       }
       const r = read2(after);
@@ -136312,7 +137554,7 @@ var QueueProducers = class _QueueProducers {
       if (!r.truncated || !r.cursor) break;
       after = r.cursor;
     }
-    return { items, truncated: cut3 };
+    return { items, truncated: cut4 };
   }
   /** The homes of an item about an action: its project at depth 0 (as `#homesAt`), and whatever the walk reaches from
    *  the action itself (queue R7). */
