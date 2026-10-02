@@ -88,3 +88,7 @@ I re-ran the last four on the branch without my change: each is red there too.
 - ownership: 4 files, 0 failures.
 
 Size (session_01RCSAiipg9P4tjeS3JTkyBJ): test runs 7, module lines 2471
+
+## J3 · COMPLETE
+
+op-declarations is complete: R10 is met, and B1–B4 are applied. After merging tranche/T23 (bfa752a847, with affordances), op-declarations and control-plane totality.test.mjs pass 31/31, so red 5 is cleared. The whole test/m has 5173 pass and 5 fail, all accepted reds: families.test.mjs:47 (K1150), inbox-door.test.mjs:81 (red 9), plane worker.test.mjs:39 (red 6), and queue catalogue.test.mjs:34 and :116 (red 13). Checks: format, architecture, coverage (10/10) and ownership (4 files) all show 0 failures. R9's last sentence becomes "None is declared for `doorbellrefused` (R6). R6 holds over them." (accepted in B3). The plane bundle is stale from src/op-declarations/index.mjs; I regenerated nothing. Details are under Completion in my record.
