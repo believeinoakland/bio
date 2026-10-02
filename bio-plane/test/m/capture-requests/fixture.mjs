@@ -123,9 +123,11 @@ export function world({ env = ENV, configured, credentials = true, group = "test
   const membership = membershipOf(host, { record });
   membership.migrate();
   const promotion = promotionOf(host, { record, membership, now: () => new Date(clock.ms).toISOString() });
-  promotion.registerFact("producingGroup", "legacy-store", () => group);
-  promotion.registerFact("citedBy", "legacy-store", () => []);
-  promotion.registerFact("caseMember", "legacy-store", () => false);
+  /* N497 (N469's rule): each fact under the module that provides it in the product (instance-setup, connections,
+     publication), never the retired `legacy-store`. */
+  promotion.registerFact("producingGroup", "instance-setup", () => group);
+  promotion.registerFact("citedBy", "connections", () => []);
+  promotion.registerFact("caseMember", "publication", () => false);
   const ex = { onReading: () => ({ ok: true }), readingOf: () => null, unitsOf: () => ({ units: [], state: null }),
                capturesReadFor: () => [] };
   const obs = observationLogOf(host, { record, membership, provenance: null, extraction: ex, now });

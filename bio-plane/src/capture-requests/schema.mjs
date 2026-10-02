@@ -2,7 +2,7 @@
  * legacy `schema.mjs` at this module's extraction, with the comments that record why it is shaped as it is:
  * `capture_requests` and its three indexes. Its three additive columns (`lead_inquiry`, `run_woken_at`, `render`)
  * are in the table as created and are added to a store that predates them by `migrateCaptureRequests`, with R40's
- * `source_reason`. The table is keyed to a bundle by `target` for purge (R35). */
+ * `source_reason` and R45's `sweep`. The table is keyed to a bundle by `target` for purge (R35). */
 
 export const CAPTURE_REQUESTS_SCHEMA = `
 -- PL-4 / IS-4 / SWEEP section 4b.1: THE CAPTURE-REQUEST DOOR.
@@ -129,7 +129,14 @@ CREATE TABLE IF NOT EXISTS capture_requests (
   -- it did: login, paywall, user-agent or other. NULL when nothing the source
   -- said decided the row (conduct, pacing, a render this instance could not do),
   -- so a reason is never invented for a refusal that was ours.
-  source_reason     TEXT
+  source_reason     TEXT,
+  -- R45 (T23; Intake Doctrine §4): THE SWEEP THIS REQUEST ASKS TO BE FILED
+  -- UNDER, as its full name "<bundle>#<id>", or NULL for an ordinary request.
+  -- NULL is the honest value on every row written before it: no door read a
+  -- sweep then, so none was asked. The drain files a request naming one under
+  -- that sweep only when monitoring's scope check admits it, and refuses it
+  -- C-28.19 otherwise; it is never quietly filed as an ordinary request.
+  sweep             TEXT
 );
 CREATE INDEX IF NOT EXISTS capture_requests_state ON capture_requests(state, requested_at);
 CREATE INDEX IF NOT EXISTS capture_requests_target ON capture_requests(target);
@@ -145,13 +152,14 @@ CREATE INDEX IF NOT EXISTS capture_requests_address ON capture_requests(address,
 `;
 
 /** The columns added after the table was first created, each added to a store that predates it. A legacy row's value
- *  is the honest one each comment gives: NULL for an unstated lead, wake or source reason, 0 for a render nobody
+ *  is the honest one each comment gives: NULL for an unstated lead, wake, source reason or sweep, 0 for a render nobody
  *  could have asked for. */
 export const CAPTURE_REQUESTS_ADDITIVE = Object.freeze([
   ["lead_inquiry", "TEXT"],
   ["run_woken_at", "TEXT"],
   ["render", "INTEGER NOT NULL DEFAULT 0"],
   ["source_reason", "TEXT"],
+  ["sweep", "TEXT"],
 ]);
 
 export function migrateCaptureRequests(sql) {
