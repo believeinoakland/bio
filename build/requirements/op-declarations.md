@@ -33,7 +33,7 @@ Terms. An **op** is a name the instance answers. An **op spec** is `{classes, ma
   R6 holds over them.
 
 **The specs of T22's ops** (K1019, K1023)
-- **R9** `OPS` holds a spec for each op T22 adds, each in `SESSION_OPS.member` and `SESSION_OPS.admin`, with `NEEDS` `contribute` for every mutating op, and the stamps the act lists name: *(not yet met: T22)*
+- **R9** `OPS` holds a spec for each op T22 adds, each in `SESSION_OPS.member` and `SESSION_OPS.admin`, with `NEEDS` `contribute` for every mutating op, and the stamps the act lists name:
   - `declinetoescalate` (`escalation` R27) as `escalationopen`: mutating, classes `admin`, `member`, `probe`, in escalation's act list, so `author` and `viewer` are query-stamped (`escalation` R25); `escalationstatus` (`escalation` R28) as `escalationsdue`: a read, classes `admin`, `member`, `probe`, `viewer` stamped;
   - `capture`'s `heldsetaside` and `heldrestore` (its R79, R81): mutating, classes `admin`, `member`, `probe` (capture refuses a machine author itself, `MACHINE_CANNOT_SET_ASIDE`), `by` and `viewer` stamped; `heldcaptures` and `gradenote` (its R77, R76): reads, classes `admin`, `member`, `probe`, `viewer` stamped; `doorbelltally` (its R80): a read for a member session only, classes `admin`, `member` and `machineClasses: []`, as `knocksof`, `viewer` stamped;
   - `monitoring`'s `addressfrequencyset` (its R52): mutating, classes `admin`, `member`, `probe`, `author` and `viewer` stamped.
