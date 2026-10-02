@@ -6,6 +6,7 @@ import { scene, V, MACHINE, F } from "./fixture.mjs";
 import { CONFORMANCE_CHECKS, CONFORMANCE_TABLES, PROPOSAL_SAYS, FLAG_SAYS, SIGNIFICANCE_KEYS,
          LIMITS } from "../../../src/conformance/index.mjs";
 import { proposalLabel } from "../../../src/record-grammar/index.mjs";
+import { corpusExportOf } from "../../../src/corpus-export/index.mjs";
 
 const refused = (r, code) => {
   assert.equal(r.ok, false, `expected ${code}, got ${JSON.stringify(r).slice(0, 300)}`);
@@ -161,8 +162,9 @@ test("R17: a determination is a record object of its own type, promoted through 
   /* audit: the catalogue and every registered check find it clean */
   const audit = await w.record.auditPass({ after: "", limit: 500, visible: () => true });
   assert.equal(audit.offenders.some((o) => JSON.stringify(o).includes(d.id)), false, JSON.stringify(audit.offenders).slice(0, 400));
-  /* export: it is in the working corpus with its promotion */
-  const ex = w.publication.exportManifest({ note: "test" });
+  /* export: it is in the working corpus with its promotion, through corpus-export's R1 on the host's one instance (the one
+     publication created at its creation, so it sees what the fixture promoted) */
+  const ex = corpusExportOf(w.host).exportManifest({ note: "test" });
   const row = (ex.bundles || []).find((b) => (b.bundle_id ?? b.id) === d.id);
   assert.ok(row, "exported");
   /* a correction is a new determination superseding it; the object itself never moves */
