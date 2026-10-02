@@ -25,6 +25,10 @@ import { liveToken } from "../tokens.mjs";
 import { SIGN_HTML } from "../signpage.mjs";
 import { setupPage, instanceGroupOp, groupIdentityOp } from "../setup.mjs";
 import { inbandQuartet } from "../inband.mjs";   /* REC-148: DEC-31's in-band quartet, one function */
+/* R45 (DEC-111): a registered public read is served by public-read's door (its R18); network-notices names its ops and
+   its public reads in its own maps, read here for their names alone. */
+import { publicReadDoorRead } from "../public-read/door.mjs";
+import { networkNoticesOps, networkNoticesPublicReads } from "../network-notices/index.mjs";
 /* R44 (K921): the template grant's one dead answer is filing-templates' (its R8), built from no argument. */
 import { noTemplateGrant } from "../filing-templates/index.mjs";
 import { normalizeAddress } from "../subresources.mjs";
@@ -629,6 +633,14 @@ const BODY_STAMPS = Object.freeze(["actorIdentity", "actorViewer", "actorMemberI
                                    "migrationReplay"]);
 /* R36, R23 (K1037): the ops whose refusals state their own HTTP status in `result.status`, which the forward answers. */
 const STATED_STATUS_OPS = Object.freeze(["inbox", "inboxpull", "inboxresolve", "heldsetaside", "heldrestore"]);
+/* R45 (N485, K1094, DEC-111; op-declarations R10): T23's ops, each routed by the generic forward to its owner's store
+   route of the same name (R26) with the stamps its owner reads, set here after every caller's stamp was deleted (R29).
+   network-notices' ops and public reads are the names of its own maps (its closures are never called here). Who may
+   call each is op-declarations' row and admission's gates: a notice op only a member's session (`machineClasses: []`). */
+const NOTICE_OPS = Object.freeze(Object.keys(networkNoticesOps(null, new URL("http://do/"), null)));
+const NOTICE_ACTS = Object.freeze(["noticeprepare", "noticepost"]);   /* network-notices R1, R4: they read `by` */
+const NOTICE_PUBLIC_READS = Object.freeze(Object.keys(networkNoticesPublicReads(null)));
+const R45_VIEWER_OPS = Object.freeze(["escalationreasondraft", "whatchangedpropose", "whatchangeddrafts", "sweeps", ...NOTICE_OPS]);
 export function makeFetch(hooks = {}) {
   /* R25: the door's one outermost catch. */
   const planeDoor = async function planeDoor(req, env) {
@@ -845,6 +857,11 @@ export function makeFetch(hooks = {}) {
       if (TEMPLATE_GRANT_DOORS.includes(op)) return templateGrantDoor({ req, url, env, op, spec, presentedAi, stub });
       if (op === "instancegroup" || op === "groupidentity") return groupRead(op, url, env, presentedAi);
       if (op === "knockerconsent") return knockerConsent(req, stub);
+      /* R45 (DEC-111; public-read R18, R10): network-notices' public reads, each asked by its own name, served by
+         public-read's door from the published store (`stub`, `bio`; a `store=scratch` was refused above), with no
+         credential and none of the caller's stamps; the read is handed only the parameters it declared. */
+      if (NOTICE_PUBLIC_READS.includes(op))
+        return publicReadDoorRead(op, url, env, stub, { json, requiredArgument, storeSilent, storeRefusal, doAnswer });
       /* The public ops whose handlers are their modules' (publication, public-read, instance-setup, capture). */
       return hooks.publicOp({ req, url, env, op, stub, invStub, fp, presentedAi });
     }
@@ -1329,6 +1346,9 @@ export function makeFetch(hooks = {}) {
            tally answer by the caller's sight (membership R43), and capture fails closed without the stamp: an unstamped
            call sees nothing. The acts' `by` is CAPTURE_MEMBER_ACTIONS' below. */
         || CAPTURE_VIEWER_ACTIONS.includes(op) || CAPTURE_READS.includes(op)
+        /* R45: T23's reads and acts each answer by the caller's sight (escalation R29, case-authoring R39, monitoring
+           R61, network-notices R1, R4, R22, R23), and each fails closed without the stamp. */
+        || R45_VIEWER_OPS.includes(op)
         || REC30_VIEWER_READS.includes(op)) {
       /* PL-11 / IS-5 / D-199 (4) — THE STATED VIEWER, AND IT IS THE RECORD'S
          ANSWER RATHER THAN THE CLASS'S.
@@ -1995,6 +2015,22 @@ export function makeFetch(hooks = {}) {
         viaSession ? sessIdentity
         : cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}`
         : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* R45 (case-authoring R39): WHO PROPOSED A DRAFT OF WHAT CHANGED. Any credential may propose (a machine's draft is
+       labelled machine work), so the stamp is the label, by `actionlawspropose`'s expression (a session its member, a
+       machine `class:<cls>`, an `ai` credential `class:ai/<tokenId>`); set as `proposedBy`, the stamp op-declarations
+       names, and as `author`, the key case-authoring's map reads it from. A caller's copy of either is overwritten. */
+    if (op === "whatchangedpropose") {
+      const proposer = viaSession ? sessMember
+        : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`
+        : `${MACHINE_CLASS_PREFIX}${cls}`;
+      inner.searchParams.set("proposedBy", proposer);
+      inner.searchParams.set("author", proposer);
+    }
+    /* R45 (network-notices R1, R4, R24): WHO PREPARES OR POSTS A NOTICE, the POSITIONAL identity (`member:<id>`, the
+       founder's `member:admin`), the form network-notices asks membership of; only a member's session reaches these
+       ops, and a machine stamp, were one to arrive, is refused there by name (C-127.1). */
+    if (NOTICE_ACTS.includes(op))
+      inner.searchParams.set("by", viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* PL-18 / DEC-63 — WHICH MEMBER IS ASKING, for the project-participation
        gate on the three run verbs. Bob ruled 2026-08-09 that an investigation
        can be started by ANY MEMBER OF THE PROJECT: the gate is participation in

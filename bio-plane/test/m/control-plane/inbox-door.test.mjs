@@ -78,12 +78,18 @@ test("R36 (capture R32, R65; DEC-88 (2), K1037): a reasoned `pulled` resolve is 
   assert.equal((await r.go(`inboxpullfile?${SESSION}`, "POST", { knockId: f.knockId })).json.result.ok, true);
 });
 
-test("R36 (capture R32; DEC-88 (2); accepted red by name, K1105, until capture's N499 merge in T23 L3): an admitted `pulled` resolve's reason is recorded on the knock's row with the pull", async () => {
+test("R36 (capture R32; DEC-88 (2); N499, K1117): an admitted `pulled` resolve's reason is recorded on the knock's row with the pull, through capture's `inboxResolve` (negative control: a direct pull records none)", async () => {
   const r = await record();
   const k = await r.knock("the reason's row");
   const a = await r.go(`inboxpullfile?${SESSION}&resolve=pulled`, "POST", { knockId: k.knockId, status: "pulled", reason: "worth a look" });
   assert.equal(a.json.result.ok, true);
   assert.deepEqual([r.held(k.knockId, k.sha256).status, r.held(k.knockId, k.sha256).resolve_reason], ["pulled", "worth a look"]);
+  /* the reason is the row's, written with the pull: the knock's bundle is the one filed in the same act */
+  assert.equal(r.held(k.knockId, k.sha256).home, a.json.result.bundle.bundleId);
+  /* negative control: a direct pull of another knock records no reason */
+  const e = await r.knock("pulled directly");
+  assert.equal((await r.go(`inboxpullfile?${SESSION}`, "POST", { knockId: e.knockId, reason: "not taken" })).json.result.ok, true);
+  assert.deepEqual([r.held(e.knockId, e.sha256).status, r.held(e.knockId, e.sha256).resolve_reason], ["pulled", null]);
 });
 
 test("R36 (capture R65's `within`; DEC-88 (2)): the reasoned `pulled` resolve and its promotion are one act — a promotion that refuses, or throws, leaves neither written: the knock new, no reason on its row, no receipt, no bundle", async () => {
