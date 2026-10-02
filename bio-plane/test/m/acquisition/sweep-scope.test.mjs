@@ -69,7 +69,7 @@ test("R31 R9 R13 R14: a redirect within the sweep's scope is followed hop by hop
                         { scope: ["https://s.example/news"] });
   assert.equal(r.status, 200);
   assert.deepEqual(r.net.seen.map((x) => x.url), [SEED, "https://s.example/news/2026/", final]);
-  assert.equal(w.gov.calls.filter((c) => c[0] === "admit").length, 3, "each hop admitted by the governor");
+  assert.equal(w.gov.calls.filter((c) => c[0] === "admit" && c[1] === "s.example").length, 3, "each hop admitted by the governor");
   const d = r.body.document;
   assert.deepEqual([d.capture.transport.requested, d.capture.transport.resolved, d.capture.transport.redirected], [SEED, final, true]);
   assert.equal(w.prov.receipts[0].address, final, "the receipt names where the bytes resolved");
