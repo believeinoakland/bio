@@ -7,10 +7,11 @@
  * exports and esbuild shook them out. Only the bundle MANIFEST changed.
  *
  * THIS SUITE IS THE OTHER HALF. text-chain's R102 test drives the RULE; this
- * one drives the WIRE — the two call sites in `index.mjs` CPDF-20's DELEGATION
- * names, through `op=pdfstructure` and `op=acquire`, with the REAL pdf-worker
- * running from its committed bundle under the same miniflare. A store-level
- * test and a passing battery are not evidence a caller can reach a feature
+ * one drives the WIRE — the two call sites CPDF-20's DELEGATION names (then in
+ * the plane's `index.mjs`; now `tier2Escalate` in `src/extraction/pipeline.mjs`,
+ * reached from both ops), through `op=pdfstructure` and `op=acquire`, with the
+ * REAL pdf-worker running from its committed bundle under the same miniflare. A
+ * store-level test and a passing test run are not evidence a caller can reach a feature
  * (`op=invitelook` shipped a ReferenceError while 1,276 assertions passed), and
  * a rule nothing imports is the strongest possible form of that.
  *
