@@ -9,7 +9,9 @@
  * SHAPE (K61). `captureOf(ctx, opts)` answers the one instance for a Durable Object's storage. It reaches
  * record-core by `recordOf(ctx)` on the same `ctx` (the evidence store, `transact`, `declarePurge`, settings) and
  * membership's `viewerPredicate` (R43) for what a viewer may see, credentials' `attestingKeys` (its R11) for R69, and
- * attestation's `attest` (its R1–R3) for R68's late co-attestation. It reads provenance's `register` and `captured_locators` only on their stated read contract (provenance R48). It
+ * attestation's `attest` (its R1–R3) for R68's late co-attestation, and holds attestation's instance for the storage
+ * (`attestationOf(ctx)`), which the acquisition act reaches as `cap.attestation` to sign an archive-sourced receipt
+ * (its R4; R73, K1224). It reads provenance's `register` and `captured_locators` only on their stated read contract (provenance R48). It
  * calls no later module: a later module registers a listener (R44, R55; `on`) or a reader (R32's litigation hold, R78's
  * batch examination; `registerReader`). At its first construction for a
  * storage it registers its grammar (R37) and its figures (R75) with record-core. */
@@ -26,7 +28,7 @@ import { ACQUIRE_GRADE_NOTE } from "../acquisition/index.mjs";
 import { recordOf, PER_ITEM_MAX } from "../record-core/index.mjs";
 import { governorOf } from "../host-governor/index.mjs";
 import { provenanceOf, DOORBELL_VIA } from "../provenance/index.mjs";
-import { attest } from "../attestation/index.mjs";
+import { attest, attestationOf } from "../attestation/index.mjs";
 import { viewerPredicate, GATE_MARK, listenerRefusal } from "../membership/index.mjs";
 import { credentialsOf } from "../credentials/index.mjs";
 import { CAPTURE_SCHEMA, CAPTURE_DERIVED_SCHEMA, CAPTURE_ADDITIVE_COLUMNS, CAPTURE_RESHAPE,
@@ -163,7 +165,7 @@ const sameEnv = (a, b) => {
 
 /** K61, R58: the one Capture for this object's storage. `opts`: `env` (the object's bindings: the evidence bucket
  *  for the inbox, the renderer, the instance's name), `governor` (host-governor's, `governorOf(ctx)` by default),
- *  `record` (`recordOf(ctx)`) and `provenance` (`provenanceOf(ctx)`). A later call's option is never silently
+ *  `record` (`recordOf(ctx)`), `provenance` (`provenanceOf(ctx)`) and `attestation` (`attestationOf(ctx)`, K1224). A later call's option is never silently
  *  dropped (N122: a first caller without `env` stripped the plane's renderer from every later one): an `env` or
  *  `governor` the instance took by default is adopted from the first later caller that supplies it, and one that
  *  differs from what an earlier caller supplied throws, naming the option. A test may pass its own. */
@@ -173,9 +175,10 @@ export function captureOf(ctx, opts = {}) {
   if (!c) {
     c = new Capture(storage, { ...opts, record: opts.record ?? recordOf(ctx),
                                governor: opts.governor ?? governorOf(ctx, { env: opts.env ?? null }),
-                               provenance: opts.provenance ?? provenanceOf(ctx) });
+                               provenance: opts.provenance ?? provenanceOf(ctx),
+                               attestation: opts.attestation ?? attestationOf(ctx) });
     instances.set(storage, c);
-    supplied.set(c, new Set(["env", "governor", "record", "provenance"].filter((k) => opts[k] != null)));
+    supplied.set(c, new Set(["env", "governor", "record", "provenance", "attestation"].filter((k) => opts[k] != null)));
     registerGrammar(c.core);
     registerFigures(c);
     return c;
@@ -188,7 +191,7 @@ export function captureOf(ctx, opts = {}) {
   /* Every option judged before any is adopted, so a refused call changes nothing. */
   if (opts.env != null && given.has("env") && !sameEnv(c.env, opts.env)) refuse("env");
   if (opts.governor != null && given.has("governor") && c.governor !== opts.governor) refuse("governor");
-  for (const [name, held] of [["record", c.core], ["provenance", c.provenance]])
+  for (const [name, held] of [["record", c.core], ["provenance", c.provenance], ["attestation", c.attestation]])
     if (opts[name] != null && opts[name] !== held) refuse(name);
   if (opts.env != null && !given.has("env")) { c.env = opts.env; given.add("env"); }
   if (opts.governor != null && !given.has("governor")) { c.governor = opts.governor; given.add("governor"); }
@@ -222,13 +225,16 @@ function registerFigures(c) {
 export class Capture {
   #sql; #storage; #listeners = new Map(); #readers = new Map(); #declared = false;
 
-  constructor(storage, { record, env = {}, governor = null, provenance = null, credentials = null } = {}) {
+  constructor(storage, { record, env = {}, governor = null, provenance = null, attestation = null, credentials = null } = {}) {
     this.#storage = storage;
     this.#sql = storage.sql;
     this.core = record;
     this.env = env || {};
     this.governor = governor;
     this.provenance = provenance;
+    /* R73 (K1224): attestation's instance, which the acquisition act reaches as `cap.attestation` (its R4's
+       `signReceipt`). */
+    this.attestation = attestation;
     this.credentials = credentials;
   }
 
