@@ -34,3 +34,12 @@ Size (session_01FjDUYaSx2mcGgMrfcNFUWL): test runs 4, module lines 2345
 ## J1 · COMPLETE
 
 N497 applied: fixture.mjs registers producingGroup under instance-setup, citedBy under connections, caseMember under publication. N469's rule: the legacy-store notes in fixture.mjs, fields.test.mjs and selections.test.mjs now name inquiry, basis-versions, connections, strength and record-core, or are in the past tense. Same kind, also fixed: legs.test.mjs and meaning.test.mjs named strength as the leg-grade resolver's registrant (R55: it is inquiry's). No assertion changed; tests only, no artifact staled. Green: test/m/retrieval 122/122; the fixture's users test/m/citation 55/55 and test/m/ratification 192/192. test/m: 5025 pass, 1 fail, which is accepted red 9 (control-plane inbox-door.test.mjs:81). Checks: format 0, architecture 0, coverage 67/67, ownership 0. Deferred, needs your call: src/retrieval/index.mjs:222 and :624 comments also name strength as the resolver. Fixing them would stale the plane bundle, which B1 rules out; a CHANGE can have me fix them. Record: build/jobs/T23/retrieval.md.
+
+## Completion after B2 (CHANGE)
+
+- B2 applied: `bio-plane/src/retrieval/index.mjs` `registerLegGrades`' doc comment (:222) and `#legEarnedCapture`'s comment (:624) now name inquiry's resolver (its R52, registered under inquiry's name, R55, over inquiry's earned registry, inquiry R13) in place of strength's. Comments only, no behaviour. J1's deferral is closed.
+- The plane bundle is staled by this source change, accepted by B2 (already stale since observation-log's L5 merge, K1136; BOB regenerates it at L5's close). Nothing regenerated.
+- `node --test test/m/retrieval/`: tests 122, pass 122, fail 0.
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs … retrieval`: 0 failures. `checks/coverage.mjs … retrieval`: 67 of 67; 0 failures. `checks/ownership.mjs … retrieval tranche/T23`: 7 files; 0 failures.
+
+Size (session_01FjDUYaSx2mcGgMrfcNFUWL): test runs 5, module lines 2345
