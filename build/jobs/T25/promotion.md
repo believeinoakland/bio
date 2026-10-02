@@ -27,3 +27,12 @@ Stamp commit `4d709bcf9e` on `job/T25/promotion` (tranche/T25 merged in at `264b
 - `checks/ownership.mjs bio promotion tranche/T25`: 1 failure: `row-census-1.55.0.jsonl` outside my `tests` until BOB's swap. Otherwise only my files changed.
 
 Size (session_0132mjJUXBPPWVGDGbsFCnND): test runs 7, module lines 3224
+
+## J1 · COMPLETE
+
+Complete; details in my record's Completion section. Stamp commit `4d709bcf9e` (tranche/T25 merged at `264b479664`, after membership's merge, B2).
+(1) S2: `CATALOG_VERSION` 1.54.0 → 1.55.0, MINOR, note in 1.54.0's form: C-18.16–C-18.18 CHANGED (`where` only, monitoring → link-sweep; LINK-SWEEP #1's record), no arrival, no departure; one composition change named (C-18.5's sweep arms reach monitoring through link-sweep's `registerSweep`, moved line for line); ending "Rows T25's layers 3–11 change are T26's stamp". Membership's merge moved no row. `ROW_CENSUS` re-pinned: 1073 rows, 735376fd77a0d28e5271c7f3972356664b5bcf43d527212937f47dad7b7f0fc8. `GATE_VERSION`'s form kept. 1.54.0's note re-worded to "taken by 1.55.0" (the re-scan's one find).
+(2) Fixtures: added `bio-plane/test/fixtures/row-census-1.55.0.jsonl` (reproduced byte for byte by `row-census.mjs` on the stamp commit); deleted `bio-plane/test/fixtures/row-census-1.54.0.jsonl`. Please swap my `tests` entry from the 1.54.0 path to the 1.55.0 one. `AWAITING_STAMP` and `COMPOSITIONS_AWAITING` empty, re-anchored.
+(3) Negative control run: suite arm passes; real-tree arm (C-59.99 added to RECORD_CORE_CHECKS on a scratch worktree) → 7 pass 1 fail naming it.
+(4) Tests: row-census 8/0 (red 1 cleared); test/m/promotion 102/102; d526 31/0; whole test/m 5290 tests, 5279 pass, 0 fail, 11 todo. Checks: architecture 0, coverage 56/56; format 7 (the 1.54.0 path, your swap; red 4's six); ownership 1 (the 1.55.0 fixture, your swap).
+(5) Stale: `bio-plane/dist/bio-plane.bundled.mjs` (src/gate.mjs; also src/membership/index.mjs from membership's merge). Regenerated nothing.
