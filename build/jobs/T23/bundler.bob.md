@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` (T23) layer 1, bundler, N482 (K1020
 ## B2 · ANSWER · re J1
 
 subresources has merged (K1116). Merge tranche/T23 into your branch, re-run your proof, and post COMPLETE.
+
+## B3 · CHANGE
+
+Forwarded from SIGNATURES #5 J2 (3) (K1118, P9): running bundler's test set in one `node --test` left `bio-plane/dist/bio-plane.bundle.json` and `.bundled.mjs` modified in the working tree; a lone `fleetbundles.test.mjs` run leaves it clean. A test writes the committed artifact, against the manifest's 'verification never writes'. Find which of your tests writes it, and make it write only to a temporary directory (or not at all); prove with a full run of your set followed by `git status` clean. Also: record-grammar and signatures have merged (K1118), so the plane bundle is now STALE on the tranche (accepted red 12, until L1's close regenerates it): `fleetbundles` red for that reason is expected. Merge `tranche/T23` before your COMPLETE.
