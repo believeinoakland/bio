@@ -32,3 +32,7 @@ Size (session_01Q3vbEeshhzkF2FWhbGhGtN): test runs 3, module lines 1326
 ## J1 · REPORT
 
 Two things outside my module (wording job, no requirement change made): (1) build/requirements/entities.md R1 still says C-91.8 (ENTITY_NO_NOTE) is 'awaiting stamp'; 1.53.0 took it (gate.mjs, PROMOTION #24). The requirement text is yours. (2) My comment-only edit to bio-plane/src/entities/checks.mjs stales the plane's bundle bio-plane/dist/bio-plane.bundled.mjs (not_product; fleetbundles.test.mjs reports it); nothing regenerated.
+
+## J2 · COMPLETE
+
+entities T24 done: N502 applied (checks.mjs:90 now 'stamped by 1.53.0 (T23 layer 2)') and the module re-scanned: checks.mjs:70-72 (C-33.25's catalogue copy, gone with the file at T19's close, K858, 1.50.0) re-worded; nothing else stale (index.mjs:1087 names the live plane store). Wording only; no row added or changed, so no red 5 rows. Proof: test/m/entities 65/65; whole test/m 5236 tests, 5225 pass, 0 fail, 11 todo, no red; format 2 failures = accepted red 4 (link-sweep dirs); architecture, coverage (41/41), ownership 0 failures. Record: build/jobs/T24/entities.md on job/T24/entities. Report in my previous entry.
