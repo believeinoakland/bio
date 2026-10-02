@@ -16,7 +16,7 @@
  *     engine build is not merged; a page answered to the wrong call is dropped.
  *
  * NEGATIVE CONTROL: RUN 2026-09-25, one arm, declared before arming. (1) STOP READING `deferred` — in
- * `askMemberPerPage` (then in the plane's `index.mjs`; now `bio-plane/src/extraction/pipeline.mjs`) `const deferred = (first && Array.isArray(first.deferred) ? … : [])`
+ * `askMemberPerPage` (then in the plane's `index.mjs`; now `bio-plane/src/reading-pipeline/index.mjs`) `const deferred = (first && Array.isArray(first.deferred) ? … : [])`
  * becomes `const deferred = ([])` (1 match, armed). DECLARED: MUST fail "agenda-p2 reads meeting_agenda through the op"
  * with the fixture reading `generic`, 1 transcribed / 1 unread (M-165's `shipped` row), and every §2/§3 arm that needs a
  * second call; MUST NOT fail "over-strictness: agenda-p1 … still reads meeting_agenda" (its agenda is page 0), the
