@@ -35,7 +35,7 @@ const POST = async (q, body) => rP(await (await mf.dispatchFetch(`http://x/api/?
   { method: "POST", body: JSON.stringify(body ?? {}) })).json());
 const store = async () => { const ns = await mf.getDurableObjectNamespace("STORE"); return ns.get(ns.idFromName("bio")); };
 
-test("R5, R8: the plane's registry is R5's consumers, the later ones registered by legacy-store in their R5 places", async () => {
+test("R5, R8: the plane's registry is R5's consumers, the later ones registered by their own modules (tasks, queue, instance-setup) in their R5 places", async () => {
   const obj = await store();
   const r = await obj.onAlarm(Date.now());
   assert.deepEqual(Object.keys(r).slice(0, 10),
@@ -84,7 +84,8 @@ async function promoteReading(id, captureSha, ref) {
 
 test("R9: a resolution that marks an entity leaves the alarm armed at the connection sweep's wake (entities R13, connections R18)", async () => {
   const obj = await store();
-  const ent = await POST("op=entitycreate&token=mem-sch", { kind: "ordinance", label: "A Rent Ordinance", aliases: ["ordinance:24680"] });
+  const ent = await POST("op=entitycreate&token=mem-sch", { kind: "ordinance", label: "A Rent Ordinance",
+    note: "The rent ordinance the fixture readings name, registered so a resolution can mark it.", aliases: ["ordinance:24680"] });
   assert.equal(ent.ok, true, JSON.stringify(ent));
   const capA = sha("sched-resolve-A"), capB = sha("sched-resolve-B");
   for (const [id, c] of [["INFO-2026-0001-sch", capA], ["INFO-2026-0002-sch", capB]]) {

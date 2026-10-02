@@ -73,9 +73,9 @@ test("R2: the answer's fields; the drain's counts, zero when it did not tick; ea
 
 test("R2: the drain's counts when the registered drain ticked, and each registered consumer's answer under its own key", async () => {
   const { s } = world();
-  s.register("legacy-store", consumer("task-drain", { key: "drain", due: (n) => n,
+  s.register("tasks", consumer("task-drain", { key: "drain", due: (n) => n,
     tick: { drain: { drained: 2, created: ["a", "b"], folded: ["c"], refused: [], waiting: ["d", "e", "f"], remaining: 4 } } }));
-  s.register("legacy-store", consumer("queue-renotify", { key: "queuerenotify", due: (n) => n, tick: { queuerenotify: { expired: 1, next: null } } }));
+  s.register("queue", consumer("queue-renotify", { key: "queuerenotify", due: (n) => n, tick: { queuerenotify: { expired: 1, next: null } } }));
   s.register("later", consumer("later-clock", { key: "laterclock", due: (n) => n, tick: { laterclock: { ok: true } } }));
   const r = await s.onAlarm(NOW);
   assert.deepEqual([r.drained, r.created, r.folded, r.refused, r.waiting, r.remaining], [2, 2, 1, 0, 3, 4]);
@@ -88,8 +88,8 @@ test("R2: every real consumer's key, when each ticks", async () => {
   const all = Object.fromEntries(SCHEDULER_ORDER.map((n) => [n, { due: 1, tick: { x: n } }]));
   for (const n of ["bias-debt", "intent-age", "notice-sweep", "archive-monitor", "monitor-cadence", "deadline-recheck"]) all[n].due = NOW;
   const { s } = world(all);
-  for (const [n, key] of [["task-drain", "drain"], ["queue-renotify", "queuerenotify"], ["group-domain-recheck", "groupdomain"]])
-    s.register("legacy-store", consumer(n, { key, due: (t) => t, tick: key === "drain" ? { drain: { drained: 0 } } : { [key]: { x: n } } }));
+  for (const [m, n, key] of [["tasks", "task-drain", "drain"], ["queue", "queue-renotify", "queuerenotify"], ["instance-setup", "group-domain-recheck", "groupdomain"]])
+    s.register(m, consumer(n, { key, due: (t) => t, tick: key === "drain" ? { drain: { drained: 0 } } : { [key]: { x: n } } }));
   const r = await s.onAlarm(NOW);
   for (const k of ["monitor", "connderive", "overduescan", "queuerenotify", "monitorcadence", "airunreap", "capturerequests",
                    "airunwake", "calibration", "groupdomain", "biasdebt", "intentage", "noticesweep", "deadlinerecheck"])
@@ -120,7 +120,7 @@ test("R3: a consumer whose due, wake or tick throws is answered under its key as
 
 test("R3: a drain that throws is answered under its key and its counts read zero", async () => {
   const { s } = world();
-  s.register("legacy-store", consumer("task-drain", { key: "drain", due: (n) => n, tick: () => { throw new Error("drain broke"); } }));
+  s.register("tasks", consumer("task-drain", { key: "drain", due: (n) => n, tick: () => { throw new Error("drain broke"); } }));
   const r = await s.onAlarm(NOW);
   assert.deepEqual(r.drain, { error: "drain broke" });
   assert.equal(r.drained, 0);
@@ -152,9 +152,9 @@ test("R6: the five always-due consumers are due at every firing; every other onl
   assert.deepEqual([...ALWAYS_DUE], ["selection-sweep", "task-drain", "archive-monitor", "connection-derive", "overdue-scan"]);
   const { s, calls } = world();
   const drain = consumer("task-drain", { key: "drain", due: (n) => n });
-  s.register("legacy-store", drain);
+  s.register("tasks", drain);
   const rq = consumer("queue-renotify", { key: "queuerenotify", due: null });
-  s.register("legacy-store", rq);
+  s.register("queue", rq);
   for (const t of [NOW, NOW + 1, NOW + 777]) await s.onAlarm(t);
   const n = (m) => calls.filter(([x]) => x === m).length;
   assert.deepEqual([n("retrieval.sweepSelections"), n("monitoring.archiveTick"), n("connections.sweep"), drain.ticks.length],

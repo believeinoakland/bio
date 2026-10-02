@@ -1,9 +1,12 @@
 /* scheduler: ordering by intent (R10). The rank is built here from intent's `servesOf` (its R28) and passed with `now`
-   to each batch-bounded tick; applying it to a batch is each owner's. */
+   to each batch-bounded tick; applying it to a batch is each owner's, and the last test composes it with monitoring's
+   real cadence tick. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { rankBy, RANKED, SCHEDULER_ORDER } from "../../../src/scheduler/index.mjs";
-import { world, NOW } from "./fixture.mjs";
+import { rankBy, RANKED, SCHEDULER_ORDER, Scheduler } from "../../../src/scheduler/index.mjs";
+import { MONITOR_CADENCE_BATCH } from "../../../src/monitoring/index.mjs";
+import { world, storage, NOW } from "./fixture.mjs";
+import { world as monitoringWorld } from "../monitoring/fixture.mjs";
 
 const H = 3600_000;
 const serves = (map) => (named) => ({ ok: true, truncated: false,
@@ -58,7 +61,7 @@ test("R10: each batch-bounded tick receives the rank with its now, reading inten
   for (const n of ["bias-debt", "archive-monitor", "monitor-cadence", "deadline-recheck"]) all[n].due = NOW;
   const { s, calls } = world({ ...all, serves: { tick: { serves: [{ kind: "address", id: "g", gaps: ["k"], aspirations: [] }] } } });
   const got = {};
-  s.register("legacy-store", { name: "queue-renotify", key: "queuerenotify", due: (t) => t, wake: () => null,
+  s.register("queue", { name: "queue-renotify", key: "queuerenotify", due: (t) => t, wake: () => null,
                                tick: (now, rank) => { got["queue-renotify"] = rank; return {}; } });
   await s.onAlarm(NOW);
   const drainRank = calls.find(([m]) => m === "captureRequests.drain")[1].rank;
@@ -77,4 +80,51 @@ test("R10: each batch-bounded tick receives the rank with its now, reading inten
   assert.ok(calls.some(([m]) => m === "intent.servesOf"));
 });
 
-test.todo("R10: each batch-bounded tick orders the work it takes by the rank when its due work exceeds its batch (not yet met: capture-requests R12 and bias R33 take it since T11 layers 6 and 4; monitoring R19/R20 take it in its own T11 job, N224, and the ordering is each owner's to test)");
+/* R10 composed with its first consumer: the real monitoring (its own test world, `test/m/monitoring/fixture.mjs`) holds
+   more due subjects than one cadence batch, and the scheduler's alarm hands its rank to monitoring's `cadenceTick`
+   (monitoring R19, N224). The subjects serving an objective's open gap sit at the tail of R16's order, past the batch,
+   so only the rank brings them in. */
+async function rankedCadence({ gapsServed = true } = {}) {
+  const w = monitoringWorld();
+  const iso = (ms) => new Date(ms).toISOString().replace(/\.\d+Z$/, "Z");
+  const N = MONITOR_CADENCE_BATCH + 12;
+  for (let i = 0; i < N; i++) {
+    const id = `INFO-2026-9${String(i).padStart(3, "0")}-ranked`;
+    w.st.sql.exec(`INSERT INTO bundles (bundle_id, object_type, group_id, current_state, created, last_updated, bundle_sha)
+      VALUES (?, 'information', 'test-group', 'collected', ?, ?, ?)`, id, iso(NOW), iso(NOW), "0".repeat(64));
+    w.st.sql.exec(`INSERT INTO bundle_projection (bundle_id, monitor_enabled, monitor_frequency, source_locator)
+      VALUES (?, 1, 'daily', ?)`, id, `https://ranked.example.org/${i}`);
+  }
+  const asked = [];
+  w.m.monitor = async ({ bundleId }) => { asked.push(bundleId); return { status: 200, body: { ok: true, status: "unchanged" } }; };
+  const due = w.m.plan(NOW).due;
+  const subject = (d) => ({ kind: d.address ? "address" : "bundle", id: d.address || d.bundle });
+  const gapped = due.slice(-10);
+  const intent = { servesOf: (named) => ({ ok: true, truncated: false,
+    serves: gapsServed ? gapped.map((d) => ({ ...subject(d), gaps: ["objective-open-gap"], aspirations: [] })) : [] }) };
+  const s = new Scheduler({ storage: storage(), owners: { monitoring: () => w.m, intent: () => intent } });
+  return { w, s, due, gapped, asked, plain: due.map((d) => d.bundle) };
+}
+
+test("R10: given the alarm's rank, monitoring's real cadence tick over more due subjects than one batch checks the rank's head, the gap-serving tail first; without the rank, R16's order", async () => {
+  const { s, due, gapped, asked, plain } = await rankedCadence();
+  assert.ok(due.length > MONITOR_CADENCE_BATCH, `more due than one batch: ${due.length}`);
+  const r = await s.onAlarm(NOW);
+  assert.equal(r.monitorcadence?.candidates, due.length, JSON.stringify(r.monitorcadence).slice(0, 300));
+  const head = [...gapped.map((d) => d.bundle), ...plain.filter((b) => !gapped.some((d) => d.bundle === b))]
+    .slice(0, MONITOR_CADENCE_BATCH);
+  assert.deepEqual(asked, head, "the batch checked is the rank's head: gap-serving work first, then the rest by wait");
+  assert.deepEqual(r.monitorcadence.ticked.map((t) => t.bundle), head);
+  /* negative controls, over the same due subjects: so the test sees the rank, not R16's order */
+  const bare = await rankedCadence();
+  await bare.w.m.cadenceTick(NOW);
+  assert.deepEqual(bare.asked, plain.slice(0, MONITOR_CADENCE_BATCH), "without the rank: R16's order");
+  assert.ok(gapped.every((d) => !bare.asked.includes(d.bundle)), "R16's order alone never reaches the gap-serving tail");
+  const none = await rankedCadence({ gapsServed: false });
+  await none.s.onAlarm(NOW);
+  assert.deepEqual(none.asked, plain.slice(0, MONITOR_CADENCE_BATCH), "intent naming no gap: the wait alone, R16's order kept");
+  const reversed = await rankedCadence();
+  await reversed.w.m.cadenceTick(NOW, (items) => [...items].reverse());
+  assert.deepEqual(reversed.asked, [...plain].reverse().slice(0, MONITOR_CADENCE_BATCH), "another rank: another batch");
+  assert.notDeepEqual(reversed.asked, asked);
+});
