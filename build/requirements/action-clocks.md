@@ -47,7 +47,7 @@ Terms. An **action**, its document and its **clock entry** (`{text, description,
 - `retrieval`: the projection's `action_clock_next` column (its R61), which R1's page seeks, as `actions` R31 did.
 - `record-grammar`: `parseFrontmatter`, `normalizeType`, `isMachineIdentity`.
 - `action-grammar`: `lawProposalLabel` (its R2), the label of R2's proposals, no longer through the catalogue.
-- `local-facts`: `factStatus` (its R2), `factPath` (its R6) (R10, R11).
+- `local-facts`: `factStatus` (its R2), `factPath` (its R6) (R10, R11), `LOCAL_FACT_STATUSES` (its R7) (R12).
 
 ### Invariants
 
