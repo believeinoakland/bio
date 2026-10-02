@@ -28,3 +28,7 @@
 **For COMPLETE:** R1 met (its `not yet met: T22` mark is BOB's to strike); C-91.8 `awaiting stamp`.
 
 Size (session_01Pubw4dXFVoBiqgMP4yH6nq): test runs 28, module lines 1326
+
+## J1 · REPORT
+
+Reds and stale artifacts from my change, for acceptance by name or routing (P4), before my merge (code at a059babb55). Each createEntity caller B1 named is now refused ENTITY_NO_NOTE (C-91.8): (1) connections: test/m/connections/converts-derivation.test.mjs:141 and :206 (creates at :143, :145, :208) and derive.test.mjs:217 (:219); connections' L5 job sends the note. (2) bias: test/m/bias/adopt-manifest.test.mjs:277 (:303); bias' L5 job. (3) actions: test/m/actions/t18.test.mjs:299 (:302); L9. (4) scheduler: test/m/scheduler/plane.test.mjs:85 (op=entitycreate at :87); L10. (5) UI entityDraft() (civicos-ui/app.html ~:17128, N487) sends no note; not run. (6) row-census.test.mjs (promotion's): C-91.8 ENTITY_NO_NOTE arrived with no record, awaiting stamp (accepted red 3). (7) bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (not_product) stale: src/entities/checks.mjs and index.mjs changed (behaviour); not regenerated. (8) Note for affordances (L11): entitycreate is in RUNG_ABSENT; its is-sentence does not mention the now-required note; nothing changed. No other red: test/m 4843 tests, 9 fail = (1)-(4) (6 tests) plus the accepted inquiry content-legs.test.mjs:395 (K1047) and control-plane doorbell.test.mjs:310 and catalogue-end.test.mjs:15 (K1037).
