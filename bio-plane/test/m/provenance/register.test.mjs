@@ -240,10 +240,17 @@ test("R38: an authored observation stays one: its flag is never cleared and its 
   assert.equal(doc.capture.actor_class, "member");
 });
 
-test("R41: the module owns its tables, declared to purge once; another declaration of one is refused", () => {
+test("R41: the module owns its tables, declared to purge once; another declaration of one is refused; the route marks and the instance key's tables are not its", () => {
   const w = world();
-  for (const t of ["register", "captured_locators", "provenance_route_marks"])
-    assert.equal(PROVENANCE_TABLES.includes(t), true);
+  assert.deepEqual(PROVENANCE_TABLES, ["register", "captured_locators", "origin_declarations"]);
+  /* N512: provenance_route_marks is provenance-routes' (its R12), receipt_keys and signed_receipts attestation's (its
+     R10): this module neither creates nor declares them, so each owner declares its own. */
+  const tables = w.rows(`SELECT name FROM sqlite_master WHERE type='table'`).map((r) => r.name);
+  const free = world();
+  for (const t of ["provenance_route_marks", "receipt_keys", "signed_receipts"]) {
+    assert.equal(tables.includes(t), false, `${t} is not created here`);
+    assert.equal(free.record.declarePurge(`owner-of-${t}`, [{ name: t, keys: [] }]).ok, true, `${t} is not declared here`);
+  }
   const again = w.record.declarePurge("someone-else", ["register"]);
   assert.equal(again.ok, false);
   assert.equal(again.reason, "TABLE_DECLARED");

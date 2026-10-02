@@ -9,3 +9,7 @@ Depth 2. Your entries: `build/plan/current.md` (T25) L3, capture: N512's user si
 ## B2 · ANSWER · re J1
 
 Yes, as your best reading (K1224). capture R73 and R58 are amended on tranche/T25 (merge it): captureOf takes an `attestation` option (default attestation's instance for the storage; a differing one refused by name), exposed as `cap.attestation`, both marked not yet met: T25. Acquisition reads cap.attestation.signReceipt; R68 imports `attest` from attestation as you do.
+
+## B3 · CHANGE
+
+Attestation and provenance-routes have merged into tranche/T25 (K1230; provenance K1229). Merge tranche/T25 and finish against the real attestation module. Merge order: capture, then acquisition (acquisition's receipt signer reaches it through capture's cap.attestation, K1224); acquisition may test against capture's merged branch once I say capture merged.
