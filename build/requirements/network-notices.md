@@ -113,7 +113,7 @@ Terms.
 **The project reference a later case carries**
 - **R19** `noticeReferenceOf(project)` answers the notice id of the project's open or most recent notice, or null. `case-authoring` writes it into the case document, so that a case and its notice are visibly the same work (DEC-111; `case-grammar` R10, `case-authoring` R41) *(not yet met: T23)*.
 
-**Public reads** (no credential; served at the group's public address through `public-read` R18)
+**Public reads** (no credential; served at the group's public address through `public-read` R18; registered at start under the names `activitymethod` (R10), `noticespublic` (R20) and `groupkeyspublic` (R21), K1150)
 - **R20** `noticesPublic({after, limit})` answers every revision and every attestation ever published, in order of (notice, then first-published instant). Each comes with its JSON, its signature (armored for a revision; for an attestation, the instance signature and its key id), its first-published instant, and, for an attestation, the openings it references (R17) *(not yet met: T23)*.
   - It answers at most `limit` items (200 by default, 1,000 at most), with `truncated` and `next`.
   - Nothing is ever removed from it.
