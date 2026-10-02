@@ -1,6 +1,6 @@
 # acquisition (T23)
 
-**Status** · session_01SPMymkWQC6QTzG6vcgjWn3 · depth 2 · WORKING · handled B2
+**Status** · session_01SPMymkWQC6QTzG6vcgjWn3 · depth 2 · RUNNING until 2026-10-02T07:36:53Z (node --test bio-plane/test/m (whole)) · handled B2
 
 ## J1 · QUESTION
 
