@@ -49,3 +49,17 @@ All three entries are applied, plus K1207, in 0b4bacf54a. **Merge me after op-de
 - **Checks.** format: 88 modules, 0 failures. architecture: 36 files, 0 failures. coverage: 29 of 29 ids. ownership: 7 files, 0 failures.
 
 Size (session_01WYCVoGouBeS6W17LzRHYia): test runs 9, module lines 3529
+
+## J2 · COMPLETE
+
+B2 (K1212) is applied. I merged `tranche/T24`, which already holds my J1 work (your K1213 merge), and re-ran everything.
+- **index.mjs:1343.** It already reads link-sweep's `sweeps` (its R9, N506), as of 0b4bacf54a. No further change.
+- **`test/m/control-plane/`:** 126 tests, all 126 pass, including both `option-preview.test.mjs` tests. Red 6 has cleared.
+- **Whole `test/m`:** 5,286 tests, 5,271 pass, 4 fail, no skips.
+  - plane `notices.test.mjs`:33 and :140: red 9, and red 7's op=queue through the plane, until plane merges.
+  - queue `signals.test.mjs`:44 and :89: the five `sweep-*` condition kinds do not reach the feed; the three notice kinds do. These are not mine: my branch and `tranche/T24` now differ only in my record, and the test does not reach the door. I read it as the sweep's composition (red 7), which waits on plane's and queue's L11 merges. (?: whether you accept it as red 7.)
+- **Checks:** format 0 failures; architecture 0; coverage 29 of 29; ownership 0.
+- **Rows:** none added or changed.
+- **Generated artifact:** the plane bundle stays stale; I regenerated nothing.
+
+Size (session_01WYCVoGouBeS6W17LzRHYia): test runs 12, module lines 3529
