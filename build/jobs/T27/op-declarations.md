@@ -28,4 +28,4 @@
 - coverage: 13 of 13 live requirement ids named by a test; 0 failures
 - ownership: 4 files changed by op-declarations between tranche/T27 and HEAD; 0 failures
 
-Size (session_01FsRcQFZFMkEu8cvL4g6tgh): test runs 6, module lines 2570
+Size (session_01FsRcQFZFMkEu8cvL4g6tgh): test runs 6, module lines 2553
