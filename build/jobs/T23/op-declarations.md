@@ -33,3 +33,30 @@ Also for the record: the three public reads (`activitymethod`, `noticespublic`, 
 **Proposed wording for R9's last sentence (K1122):** "None is declared for `doorbellrefused` (R6). R6 holds over them." The sentence drops `escalationreasondraft` and the "What changed" ops, which R10 now declares.
 
 **Deferred:** none.
+
+## J2 · REPORT
+
+R10 is built and pushed at 0467793d12, on my J1 reading. Details are in my record under "Work on B1".
+
+**Tests:** `test/m/op-declarations/` 30/30. Five R10 tests in the new `t23.test.mjs` have negative controls. `tables.test.mjs` is updated: the public list, R3's reach of a public read, `ACTION_LAYER_READS` with `MONITORING_READS`, and the stale `escalationreasondraft` negative check.
+
+**Whole `bio-plane/test/m`:** 5171 pass, 6 fail. All six are accepted reds:
+- `control-plane/totality.test.mjs`:13: red 5. It is green without my change and red with it, because the new ops are unpublished or unranked until affordances merges. It names `activitymethod`, `escalationreasondraft`, `groupkeyspublic`, `noticepost`, `noticeprepare`, `notices`, `noticespublic`, `sweeps`, `whatchangeddrafts` and `whatchangedpropose`.
+- `control-plane/families.test.mjs`:47, K1150, red until control-plane's merge.
+- `control-plane/inbox-door.test.mjs`:81, red 9.
+- `plane/worker.test.mjs`:39, red 6.
+- `queue/catalogue.test.mjs` R1 and R5, red 13.
+
+I re-ran the last four on the branch without my change: each is red there too.
+
+**Checks:** format, architecture, coverage (10/10) and ownership (4 files) all show 0 failures.
+
+**For control-plane (its L11 job):** the door must stamp four new lists by its own code. `WHAT_CHANGED_PROPOSAL_ACTIONS` gets the proposer label as `author`, which case-authoring reads as `proposedBy`, plus viewer. `WHAT_CHANGED_READS`, `NETWORK_NOTICES_ACTIONS` and `NETWORK_NOTICES_READS` get viewer. `NETWORK_NOTICES_BY` gets `by`.
+
+**For plane:** `NETWORK_NOTICES_PUBLIC_READS` is the list to hand `publicReadDoorOp` as `helpers.publicReads`.
+
+**Bundle:** the plane bundle is stale (`src/op-declarations/index.mjs`). I regenerated nothing.
+
+**R9's last sentence (K1122):** I propose "None is declared for `doorbellrefused` (R6). R6 holds over them."
+
+**Next:** I am waiting on J1's answer and on your CHANGE announcing affordances' merge. Then I merge `tranche/T23`, re-run and post COMPLETE.
