@@ -1,12 +1,12 @@
-/* queue-producers — the feed's producers (requirements: `build/requirements/queue-producers.md`, R1–R25).
+/* queue-producers — the feed's producers (requirements: `build/requirements/queue-producers.md`, R1–R27).
  * Split out of `queue` by N363 (Bob's K507; seams ruled K531, `build/plan/draft-N363-queue-split.md` §1, §3.2): each
  * producer derives, on read and writing nothing, the items one provider's facts earn for a viewer, naming each item's
  * subjects and home subjects, for `queue` to home, offer, mint and publish.
  *
- *   feedItems      queue's one read of this module (R8): every item R1–R7, R9, R14 and R15–R23 derive for a member and viewer, each
- *                  homed through queue's walk and carrying queue's options (both passed in), with the facts the answer
- *                  publishes beside them. No item carries `disposition` (queue's mint gives it) or `catalogue_id`
- *                  (queue stamps it from its R2).
+ *   feedItems      queue's one read of this module (R8): every item R1–R7, R9, R14, R15–R23, R26 and R27 derive for a
+ *                  member and viewer, each homed through queue's walk and carrying queue's options (both passed in),
+ *                  with the facts the answer publishes beside them. No item carries `disposition` (queue's mint gives
+ *                  it) or `catalogue_id` (queue stamps it from its R2).
  *   proposalFindingItems, CARDINALITY_EXCEEDED   the FINDING producer over `progressions.proposalsFeed` (R2, R10, R11),
  *                  pure, re-exported from `./proposals.mjs`.
  *
@@ -14,8 +14,8 @@
  * check row: it refuses nothing (draft §3.3).
  * `deps` (each defaults to its module's instance on the same `ctx`, reached lazily when first asked):
  *   record, membership, credentials, governor, provenance, capture, captureRequests, basisVersions, progressions, aiRuns, bias,
- *   publication, reevaluation, intent, monitoring, contradiction, actionClocks, escalation, actionPlans, actions,
- *   filingTemplates, localFacts   the providers.
+ *   publication, corpusExport, reevaluation, intent, monitoring, contradiction, actionClocks, escalation, actionPlans,
+ *   actions, filingTemplates, localFacts, networkNotices   the providers.
  *
  * R7 (queue's homes walk) and R12 (queue's options) stay in queue, one walk and one derivation: `feedItems` takes them
  * as `homesOf(subjectIds)` and `optionsOf(subjectIds)`, closed over the read's viewer and identity by queue, and holds
@@ -38,7 +38,8 @@ import { progressionsOf } from "../progressions/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
 import { biasOf } from "../bias/index.mjs";
 import { contradictionOf } from "../contradiction/index.mjs";
-import { publicationOf, EXPORT_LOG_LIMIT_DEFAULT } from "../publication/index.mjs";
+import { publicationOf } from "../publication/index.mjs";
+import { corpusExportOf, EXPORT_LOG_LIMIT_DEFAULT } from "../corpus-export/index.mjs";
 import { reevaluationOf } from "../reevaluation/index.mjs";
 import { intentOf } from "../intent/index.mjs";
 import { monitoringOf } from "../monitoring/index.mjs";
@@ -48,6 +49,7 @@ import { actionPlansOf } from "../action-plans/index.mjs";
 import { actionsOf } from "../actions/index.mjs";
 import { filingTemplatesOf } from "../filing-templates/index.mjs";
 import { localFactsOf } from "../local-facts/index.mjs";
+import { networkNoticesOf } from "../network-notices/index.mjs";
 import { proposalFindingItems } from "./proposals.mjs";
 
 export { proposalFindingItems, CARDINALITY_EXCEEDED } from "./proposals.mjs";
@@ -92,6 +94,9 @@ export class QueueProducers {
   get #actions() { return this.#dep("actions", () => actionsOf(this.#host)); }
   get #filingTemplates() { return this.#dep("filingTemplates", () => filingTemplatesOf(this.#host)); }
   get #localFacts() { return this.#dep("localFacts", () => localFactsOf(this.#host)); }
+  /* N483 (K1122): the export log is corpus-export's (its R2), read from the host's one instance. */
+  get #corpusExport() { return this.#dep("corpusExport", () => corpusExportOf(this.#host)); }
+  get #networkNotices() { return this.#dep("networkNotices", () => networkNoticesOf(this.#host)); }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
@@ -218,6 +223,9 @@ export class QueueProducers {
       items.push(...this.#obligationsLocalFactDue(me, viewer, at));
       /* R23 (DEC-102 item 3): an observation of the member's own a prepared case uses, its credit level unchosen. */
       items.push(...this.#obligationsAttributionUnchosen(me, viewer, at));
+      /* R26, R27 (K1036 (8); DEC-111): a sweep that needs a member's look; a working-on notice that needs its owners'. */
+      items.push(...this.#conditionsSweep(me, viewer, at));
+      items.push(...this.#conditionsNotice(me, viewer, at));
       return {
         items,
         facts: {
@@ -1489,8 +1497,8 @@ export class QueueProducers {
     const admin = me ? this.#isAdminMember(me) : viewer === `${MACHINE_CLASS_PREFIX}admin`;
     if (!admin) return [];
     const cap = EXPORT_LOG_LIMIT_DEFAULT;
-    /* The export log is `corpus-export`'s (its R1, R2; K1043), reached through publication's delegate until N483. */
-    const log = this.#publication.exportLog({ limit: cap });
+    /* The export log is `corpus-export`'s (its R1, R2; K1043), read from its own instance since N483 (K1122). */
+    const log = this.#corpusExport.exportLog({ limit: cap });
     const page = log && Array.isArray(log.exports) ? log.exports : [];
     if (page.length === 0) return [];
     const truncated = log.truncated === true;
@@ -2838,6 +2846,206 @@ export class QueueProducers {
           recipients: [me],
           options: [QueueProducers.ATTRIBUTE_CHOOSE],
         });
+      }
+    }
+    return out;
+  }
+
+  /* ======================================================================
+   * K1036 (8) · R26 — A SWEEP THAT NEEDS A MEMBER'S LOOK (monitoring R60, R63).
+   * DEC-111, K1031 · R27 — A WORKING-ON NOTICE THAT NEEDS ITS OWNERS' (network-notices R12, R13, R22).
+   * Each reads the one fact its owning module offers, derived on read and writing nothing, so an item leaves on the
+   * first read after the fact stops holding. The items' words are the UX design stream's to set (NOTIFICATIONS.md, the
+   * item contract; `ux-experience.json` UC-035): the sentences here say the fact plainly and claim nothing beyond it.
+   * ====================================================================== */
+
+  /** R26: the five kinds `monitoring.sweepConditions` answers (its R63). */
+  static SWEEP_CONDITION_KINDS = Object.freeze(["sweep-held-backlog", "sweep-yield-anomaly", "sweep-seed-unreachable",
+    "sweep-redirect-out-of-scope", "sweep-silent"]);
+  /** R27: how many owned projects one read asks `network-notices` about; the window `notice-lapse-near` opens in before
+   *  a lapse, and how long `notice-project-closed` stands after the closing. */
+  static QUEUE_NOTICE_PROJECTS = 50;
+  static NOTICE_LAPSE_NEAR_DAYS = 7;
+  static NOTICE_CLOSED_DAYS = 30;
+  /** R27: the act that answers a notice (network-notices R6, R11): a new revision, or a stop with an optional handoff. */
+  static NOTICE_REVISE = Object.freeze({ id: "noticeprepare", label: "Revise this notice, or stop it", weight: "single" });
+  static NOTICE_STOP = Object.freeze({ id: "noticeprepare", label: "Stop this notice, with a handoff if you want one", weight: "single" });
+
+  /** R26's sentences, one per kind, each saying what the condition's `detail` gives and nothing more. */
+  static #sweepWords(kind, d, title) {
+    const n = (v) => (Number.isFinite(Number(v)) ? Number(v) : "an undetermined number of");
+    const list = (xs, f) => (Array.isArray(xs) && xs.length ? xs.map(f).join("; ") : "none named");
+    switch (kind) {
+      case "sweep-held-backlog":
+        return { summary: `the sweep ${title} is held: its captures awaiting review have reached its limit`,
+                 detail: `${n(d.backlog)} of its captures are still awaiting review, at or over its backlog limit of `
+                       + `${n(d.limit)}. It runs again when members review or set aside enough of them.` };
+      case "sweep-yield-anomaly":
+        return { summary: `the sweep ${title} filed an unusual number of documents on its last run`,
+                 detail: `its last run filed ${n(d.filed)} against a median of ${n(d.median)} over its recent runs. `
+                       + "Nothing else changed: the run's note says only that the number was unusual." };
+      case "sweep-seed-unreachable":
+        return { summary: `a listing page the sweep ${title} reads failed on its last run`,
+                 detail: `on its last run these could not be fetched: ${list(d.seeds, (x) => String(x && x.seed))}. `
+                       + "The sweep's other pages were read; each one's reachability is on the basis." };
+      case "sweep-redirect-out-of-scope":
+        return { summary: `the sweep ${title} met a redirect outside its sources on its last run`,
+                 detail: `on its last run these addresses redirected outside the sweep's sources, and nothing at the target `
+                       + `was fetched: ${list(d.redirects, (x) => (x && typeof x === "object"
+                         ? `${x.address ?? "an address"} to ${x.target ?? "an undetermined target"}` : String(x)))}.` };
+      default:
+        return { summary: `the sweep ${title} has filed nothing on its last ${n(d.runs)} runs`,
+                 detail: `its last ${n(d.runs)} runs each filed nothing, and it is not held. Its seeds or its match may `
+                       + "no longer find what it was set up to find." };
+    }
+  }
+
+  /** `sweep-*` (R26; monitoring R63, K1036 (8)): one CONDITION per condition `monitoring.sweepConditions` answers the
+   *  viewer, keyed `CONDITION::<kind>::<bundle>#<id>`, to the members of the sweep's project (joined or leaving,
+   *  membership R74) who may see its bundle and to nobody else: a caller with no member is none of them, and a sweep in
+   *  no project has no members. Its subject the sweep's bundle, homed under the project at depth 0 and the bundle's own
+   *  walk; its `age` from the condition's `since`; its `detail` the condition's, carried whole on the basis and said in
+   *  the sentence. It leaves when the condition leaves (the read no longer answers it). */
+  #conditionsSweep(me, viewer, now) {
+    if (!me) return [];
+    const r = this.#monitoring.sweepConditions({ viewer, now });
+    const list = r && r.ok !== false && Array.isArray(r.conditions) ? r.conditions : [];
+    const visible = this.#bundleRedactor(viewer);
+    const joined = new Map();
+    const out = [];
+    for (const c of list) {
+      if (!c || typeof c.sweep !== "string" || !QueueProducers.SWEEP_CONDITION_KINDS.includes(c.kind)) continue;
+      const hash = c.sweep.indexOf("#");
+      if (hash <= 0 || hash === c.sweep.length - 1) continue;
+      const bundle = c.sweep.slice(0, hash), sweepId = c.sweep.slice(hash + 1);
+      if (visible(bundle) === null) continue;                    // R11: a bundle the viewer may not see is no item
+      const info = this.#record.bundleInfo(bundle);
+      const project = info ? (info.type === "project" ? info.id : info.project) : null;
+      if (!project) continue;
+      if (!joined.has(project)) {
+        const p = this.#membership.participation(project, me);
+        joined.set(project, !!(p && (p.state === "joined" || p.state === "leaving")));
+      }
+      if (!joined.get(project)) continue;
+      const d = c.detail && typeof c.detail === "object" ? c.detail : {};
+      const title = info && info.title ? `"${info.title}" (${sweepId})` : c.sweep;
+      const words = QueueProducers.#sweepWords(c.kind, d, title);
+      const sinceMs = Date.parse(c.since ?? "");
+      out.push({
+        id: `CONDITION::${c.kind}::${c.sweep}`,
+        class: "CONDITION",
+        kind: c.kind,
+        case: this.#homesAt([project], viewer, [bundle]),
+        subject: { kind: "bundle", id: bundle, sweep: c.sweep, sweep_id: sweepId, project },
+        summary: words.summary,
+        detail: words.detail,
+        basis: { source: "monitoring.sweepConditions", sweep: c.sweep, bundle, sweep_id: sweepId, project, kind: c.kind,
+                 since: c.since ?? null, condition: d, recipients_rule: "project_members_who_see_the_bundle",
+                 detail: "a sweep's signal is monitoring's (its R60, R63): derived on read from the sweep's own runs and "
+                       + "backlog, read here and never restated. It goes to the members of the sweep's project who may "
+                       + "see its record, and it leaves on the first read after it stops holding." },
+        age: Number.isFinite(sinceMs)
+          ? { state: "determined", since: c.since, ms: Math.max(0, now - sinceMs) }
+          : { state: "undetermined", reason: "no_condition_instant",
+              detail: "the sweep's signal carries no instant this producer can read" },
+        assignee: null,
+        assignee_role: null,
+        options: this.#optionsOf([bundle]),
+      });
+    }
+    return out;
+  }
+
+  /** `notice-attestation-missed`, `notice-lapse-near` and `notice-project-closed` (R27; network-notices R12, R13, R22;
+   *  DEC-111, K1031, K1100): for each project the member owns (membership R65), at most 50 in id order, the project's
+   *  notices as `network-notices.noticesOf` answers the viewer, and per notice:
+   *  - an open notice whose latest `monthly` missed for want of an instance key has had no `monthly` issued since;
+   *  - an open notice whose lapse date (a lapse running) is at most 7 days away;
+   *  - a notice whose project closed while it was open (status `closed`; an owner's stop makes it `stopped`), for 30
+   *    days from the closing.
+   *  Each keyed `CONDITION::<kind>::<notice>`, to the project's owners and to nobody else: a caller with no member, or
+   *  a member who owns none, is told nothing. Each leaves on the first read after its fact stops holding. */
+  #conditionsNotice(me, viewer, now) {
+    if (!me) return [];
+    const scope = this.#ownedProjects(me, viewer, QueueProducers.QUEUE_NOTICE_PROJECTS);
+    const DAY = QueueProducers.DAY_MS;
+    const out = [];
+    for (const project of scope.projects) {
+      const r = this.#networkNotices.noticesOf({ project, viewer });
+      if (!r || r.ok !== true || !Array.isArray(r.notices)) continue;
+      const owners = this.#membership.projectOwners(project) || [];
+      const title = (this.#record.bundleInfo(project) || {}).title || project;
+      const item = (kind, n, { since, summary, detail, facts, options }) => {
+        const sinceMs = Date.parse(since ?? "");
+        out.push({
+          id: `CONDITION::${kind}::${n.notice}`,
+          class: "CONDITION",
+          kind,
+          case: this.#homesAt([project], viewer),
+          subject: { kind: "notice", id: n.notice, project, status: n.status },
+          summary,
+          detail,
+          basis: { source: "network-notices.noticesOf", notice: n.notice, project, status: n.status, ...facts,
+                   recipients_rule: "project_owners",
+                   bound: { projects_bound: scope.bound, projects_truncated: scope.truncated === true },
+                   detail: "a working-on notice's state is network-notices' (its R12, R13, R22), read here and never "
+                         + "restated. It is told to the project's owners and to nobody else, and it leaves on the first "
+                         + "read after it stops holding." },
+          age: Number.isFinite(sinceMs)
+            ? { state: "determined", since, ms: Math.max(0, now - sinceMs) }
+            : { state: "undetermined", reason: "no_notice_instant",
+                detail: "the notice carries no instant this producer can read for when this began" },
+          assignee: null,
+          assignee_role: null,
+          recipients: [...owners],
+          options,
+        });
+      };
+      for (const n of r.notices) {
+        if (!n || typeof n.notice !== "string" || !n.notice) continue;
+        const atts = Array.isArray(n.attestations) ? n.attestations : [];
+        const instant = (a) => Date.parse(a && (a.published_at || (a.as_of ? `${a.as_of}T00:00:00Z` : "")) || "");
+        if (n.status === "open") {
+          const misses = Array.isArray(n.missed_monthlies) ? n.missed_monthlies.filter((m) => m && m.month) : [];
+          const miss = misses.at(-1);
+          if (miss) {
+            const missMs = Date.parse(miss.at ?? "");
+            const since = atts.some((a) => a.kind === "monthly" && (Number.isFinite(missMs)
+              ? instant(a) > missMs : String(a.as_of || "").slice(0, 7) > miss.month));
+            if (!since)
+              item("notice-attestation-missed", n, { since: miss.at ?? null,
+                summary: `the monthly attestation of ${title}'s working-on notice for ${miss.month} was not issued`,
+                detail: "no instance key was bound when it fell due, so this copy could not sign the notice's activity "
+                      + "level. The notice shows its last attested level with that level's date until an attestation "
+                      + "is issued; an administrator binds the key.",
+                facts: { month: miss.month, missed_at: miss.at ?? null, missed: misses.length },
+                options: this.#optionsOf([project]) });
+          }
+          const lapseMs = typeof n.lapse_date === "string" ? Date.parse(`${n.lapse_date.slice(0, 10)}T00:00:00Z`) : NaN;
+          if (Number.isFinite(lapseMs) && lapseMs - now <= QueueProducers.NOTICE_LAPSE_NEAR_DAYS * DAY) {
+            const opened = lapseMs - QueueProducers.NOTICE_LAPSE_NEAR_DAYS * DAY;
+            item("notice-lapse-near", n, { since: new Date(opened).toISOString().replace(/\.\d{3}Z$/, "Z"),
+              summary: `${title}'s working-on notice will lapse on ${n.lapse_date.slice(0, 10)}`,
+              detail: "the notice has been Dormant at its last monthly attestation, and a second Dormant month with no "
+                    + "revision lapses it. A revision or a stop answers this; so does the lapse itself.",
+              facts: { lapse_date: n.lapse_date.slice(0, 10), window_days: QueueProducers.NOTICE_LAPSE_NEAR_DAYS,
+                       level: n.level ?? null },
+              options: [QueueProducers.NOTICE_REVISE] });
+          }
+        } else if (n.status === "closed") {
+          const closed = atts.find((a) => a && a.kind === "closed");
+          const closedMs = instant(closed);
+          if (!Number.isFinite(closedMs) || now - closedMs < QueueProducers.NOTICE_CLOSED_DAYS * DAY) {
+            const since = closed ? closed.published_at || (closed.as_of ? `${closed.as_of}T00:00:00Z` : null) : null;
+            item("notice-project-closed", n, { since,
+              summary: `${title} closed while its working-on notice was open`,
+              detail: "this copy signed the closing into the notice's public record. An owner may still stop the notice "
+                    + "with a handoff naming another group or an open lead. This stands for 30 days from the closing, "
+                    + "or until an owner stops the notice.",
+              facts: { closed_at: since, window_days: QueueProducers.NOTICE_CLOSED_DAYS },
+              options: [QueueProducers.NOTICE_STOP] });
+          }
+        }
       }
     }
     return out;
