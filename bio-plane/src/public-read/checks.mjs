@@ -6,7 +6,7 @@
  * case-authoring's), C-68.5 (the published-store complaint; the rest of C-68 stays in the catalogue's
  * `INSTALLATION_CHECKS`, and `control-plane` reads this row from here, its layer-11 job) and the whole of C-98 (the
  * public door). Each family keeps the name it had there. C-98.10 (`PUBLIC_READ_NOT_REGISTERED`, R18; K1149) is a row minted
- * here in T23, `awaiting stamp`. `publication`'s job deletes its copies once this one merges,
+ * here in T23, stamped by 1.54.0. `publication`'s job deletes its copies once this one merges,
  * so no row id is held in two tables after it. */
 
 /* C-44.2 — D-309's read (R3). Its family, C-44, is the case identity: the act's half (C-44.1) is case-authoring's. */
@@ -143,8 +143,8 @@ export const PUBLISHED_READ_CHECKS = {
   },
   /* R18 (K1149): a name no module registered a public read under, at `op=publicread` or a read's own op. A STRANGER's
      refusal, so it has its row; the registration's own refusals (`PROVIDER_DECLARED`, `PROVIDER_MALFORMED`) are a
-     starting module's errors and have none. A new row minted in T23, `awaiting stamp` until T24's L2 moves
-     `CATALOG_VERSION` (`publication` R33). */
+     starting module's errors and have none. A new row minted in T23, stamped by 1.54.0 (T24's L2 moved
+     `CATALOG_VERSION`, `publication` R33). */
   PUBLIC_READ_NOT_REGISTERED: {
     check: 'C-98.10',
     where: 'src/public-read/index.mjs publicRead > is-public-read-not-registered',

@@ -1,9 +1,10 @@
 /* public-read over `publication` as it stands (K651: the copy runs against publication's R53–R55 and its tables under
    its R40), on `publication`'s own world: the real modules over a real SQLite database shaped as workerd's storage
    (`../publication/fixture.mjs`, reused rather than copied). `w.pr` is this module's instance on the world's host;
-   `w.read(op, query)` runs one of this module's ops as the legacy store's op map will run it (`publicReadOps`), and
-   `storeOps(w, url, body)` is that op map as it stands after `publication`'s merge: `publicationOps` with
-   `publicReadOps` spread beside it, which a Worker test's stub store answers from. */
+   `w.read(op, query)` runs one of this module's ops as the plane store's op map runs it (`publicReadOps`, spread in
+   `../../../src/plane/store.mjs`; control-plane's routes reach it), and `storeOps(w, url, body)` is that op map's part
+   these ops share: `publicationOps` with `publicReadOps` spread beside it, which a Worker test's stub store answers
+   from. */
 import { planeWorld, world as bareWorld } from "../publication/fixture.mjs";
 import { publicationOps } from "../../../src/publication/index.mjs";
 import { publicReadOf, publicReadOps } from "../../../src/public-read/index.mjs";
@@ -25,7 +26,7 @@ export const world = (opts = {}) => withRead(planeWorld(opts));
 /** The same over array-answering storage. */
 export const arrayWorld = (opts = {}) => withRead(bareWorld(opts));
 
-/** The legacy store's op map after `publication`'s merge: publication's ops, and this module's beside them. */
+/** The plane store's op map, its part here: publication's ops, and this module's beside them (`plane/store.mjs`). */
 export const storeOps = (w, url, body = null) => ({ ...publicationOps(w.p, url, body), ...publicReadOps(w.pr, url) });
 
 /** The published store's Durable Object: the op map over this world, in the envelope the plane reads. */

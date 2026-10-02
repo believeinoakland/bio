@@ -8,7 +8,7 @@
 
 ### Purpose
 
-Publication is the one irreversible act: what the group stands behind leaves the instance, content-addressed and signed, so a stranger can verify without this instance that the group said what it claims and rested it on what it says (Publication §1). This module is the published record: it holds every case document (unsigned and signed) and the published projection, answers which cases a finding serves, serves the published record to anybody without a credential, packages it (the container, the in-band quartet), and lets a member choose how their firsthand words are attributed; the verified working-corpus export is `corpus-export`'s (K1024), reached here through the ops `export` and `exportlog`. The two signing ceremonies (`ratification`) and preparing a case (`case-authoring`) write through it. Since K651 the case document's grammar is `case-grammar`'s (re-exported here), serving the published record to anybody without a credential and its packaging (the container, the in-band quartet) are `public-read`'s, and a project's stage is `project-stage`'s; each reads this module's tables only under R40, and every table and every write stays here, except `export_log`, `corpus-export`'s since K1024.
+Publication is the one irreversible act: what the group stands behind leaves the instance, content-addressed and signed, so a stranger can verify without this instance that the group said what it claims and rested it on what it says (Publication §1). This module is the published record: it holds every case document (unsigned and signed) and the published projection, answers which cases a finding serves, serves the published record to anybody without a credential, packages it (the container, the in-band quartet), and lets a member choose how their firsthand words are attributed; the verified working-corpus export is `corpus-export`'s (K1024), its ops `export` and `exportlog` spread by the plane (N483). The two signing ceremonies (`ratification`) and preparing a case (`case-authoring`) write through it. Since K651 the case document's grammar is `case-grammar`'s (re-exported here), serving the published record to anybody without a credential and its packaging (the container, the in-band quartet) are `public-read`'s, and a project's stage is `project-stage`'s; each reads this module's tables only under R40, and every table and every write stays here, except `export_log`, `corpus-export`'s since K1024.
 
 ### Provides
 
@@ -61,7 +61,7 @@ Terms. A **case** is a production of one project over one or more findings (inqu
 
 #### Registrations offered (K31)
 
-- **R23** A later module fills, once at start, one review provider: the draft door (a draft a member may read, its case identity and sentence), the grant door (whether a grant admits a case edition: R1, R2) and the dead answer and live grant. With no provider, no grant admits, and `reviewProvider()` answers so to `case-authoring` (its R9 is then C-44.3 and every grant door of its R19 answers dead). Today `legacy-store` fills it; `review` does when extracted.
+- **R23** A later module fills, once at start, one review provider: the draft door (a draft a member may read, its case identity and sentence), the grant door (whether a grant admits a case edition: R1, R2) and the dead answer and live grant. With no provider, no grant admits, and `reviewProvider()` answers so to `case-authoring` (its R9 is then C-44.3 and every grant door of its R19 answers dead). `review` fills it (`registerReviewProvider`, at its start).
 - **R36** *(retired: moved to `public-read` R8, K617)*
 
 #### A project's stage (`project-stage`'s since K651)
@@ -105,7 +105,7 @@ Terms. A **case** is a production of one project over one or more findings (inqu
 - `reevaluation`: `registerCaseParts` (its R26), with which R41 and R43 are registered (N210; K363).
 - `contradiction` (N345): `unresolvedRecordOn` (its R29), for R50.
 - `sources` (N364): `publishableAt` (its R8), for R51 and R52.
-- `corpus-export` (K1024): `corpusExportOf`, created by this module's factory, and `exportManifest` and `exportLog` (its R1, R2), to which the ops `export` and `exportlog` delegate until the plane's op map spreads its ops.
+- `corpus-export` (K1024): `corpusExportOf`, created by this module's factory so `export_log` exists at every boot (its R4); its ops are the plane's to spread (N483).
 
 ### Invariants
 

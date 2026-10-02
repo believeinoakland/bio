@@ -2,8 +2,8 @@
    in-band quartet (R7). Copied from `test/m/publication/worker.test.mjs` and renamed (publication R13, R15, R16 are this
    module's R5, R6, R7, K651). The files it drives (`publication/worker.mjs`, `container.mjs`, `inband.mjs`) join this
    module's paths at `publication`'s merge. The control plane's helpers are bound as the plane binds them, and the
-   published store's Durable Object is played by the store's op map as it stands after `publication`'s merge
-   (`publicationOps` with this module's `publicReadOps` beside it), over the real store side. */
+   published store's Durable Object is played by the plane store's op map, its part here (`publicationOps` with this
+   module's `publicReadOps` beside it, as `plane/store.mjs` spreads them), over the real store side. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, stubOf, bucket, V, SIG, NOW, sha } from "./fixture.mjs";
