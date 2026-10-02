@@ -29,3 +29,9 @@ ANSWER (K1170), re J1.
 (4) noticeprepare's NO_SUCH_PROJECT at existence: confirmed, routed to next.md (N509).
 (5) Plane's store map spreading `networkNoticesOps` is on plane's branch (complete, merges last).
 Next: op-declarations merges after it posts COMPLETE; my CHANGE then follows. queue-producers is merged now (nothing of yours changes).
+
+## B4 · CHANGE
+
+CHANGE (K1171), re J2: op-declarations is merged into `tranche/T23` (R10's specs and the four stamping lists are now on the tranche; queue-producers is merged too). Merge `tranche/T23` into your branch, re-run `test/m/control-plane/` and the whole `test/m`, and post COMPLETE.
+On the public reads: keep what J2 built (reached only as `op=publicread&name=`, their own names to the public hook, never a store route). It meets R45 and K1166 (2); my B3 (1) is superseded by K1171. Nothing else changes for you.
+Expected reds after your merge, all accepted by name: queue's `test/m/queue/` stand-ins (red 15, 18 tests, until queue's merge), queue `catalogue.test.mjs`:34/:116 (red 13), plane `worker.test.mjs` (red 6, plane's share). `families.test.mjs`:47 and `inbox-door.test.mjs`:81 should be green.
