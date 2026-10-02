@@ -117,7 +117,8 @@ export function infoMd(id, locator, { freq = null, enabled = true, lines = [] } 
 }
 
 export function world({ profiles = ["test-port-ellery"], env = null, evidence = true, refuse = [], intent = undefined,
-                        actionClocks = undefined, escalation = undefined, publication = undefined, extraColumns = [], realActions = false } = {}) {
+                        actionClocks = undefined, escalation = undefined, publication = undefined, extraColumns = [], realActions = false,
+                        captureRequests = undefined } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -174,13 +175,19 @@ export function world({ profiles = ["test-port-ellery"], env = null, evidence = 
   const net = network();
   const intentStub = intent === undefined ? stubIntent() : intent;
   const publicationStub = publication === undefined ? stubPublication() : publication;
-  const m = monitoringOf(host, { record, membership, promotion, provenance: prov, observationLog: obs, capture,
+  /* project-stage's R1 as the sweep's closed test reads it (`stages` maps a project to its stage), and capture-requests'
+     R45 registration slot, recording what registers (the link sweep, R56, R64) */
+  const stages = {};
+  const projectStage = { calls: [], projectStage(a) { this.calls.push(a); return { project: a.project, stage: stages[a.project] ?? "forming" }; } };
+  const crStub = captureRequests === undefined ? stubCaptureRequests() : captureRequests;
+  const m = monitoringOf(host, { record, membership, promotion, provenance: prov, observationLog: obs, capture, projectStage,
+    ...(crStub ? { captureRequests: crStub } : {}),
     governor: gov, env: env || {}, now: () => clock.ms, fetch: net.fetch, intent: intentStub, publication: publicationStub,
     ...(actionClocks !== undefined ? { actionClocks } : clocks ? { actionClocks: clocks } : {}), ...(escalation !== undefined ? { escalation } : {}) });
   let n = 0;
   const w = {
     st, host, record, membership, credentials, promotion, prov, obs, capture, gov, net, bkt, m, clock, intent: intentStub, act, clocks,
-    publication: publicationStub,
+    publication: publicationStub, stages, projectStage, captureRequests: crStub,
     rows: (q, ...x) => [...st.sql.exec(q, ...x)],
     row: (q, ...x) => [...st.sql.exec(q, ...x)][0] ?? null,
     text: (id) => { const f = record.readFile(id, "bundle.md"); return f ? (typeof f === "string" ? f : f.text ?? null) : null; },
@@ -225,6 +232,20 @@ export function world({ profiles = ["test-port-ellery"], env = null, evidence = 
     },
   };
   return w;
+}
+
+/** capture-requests' R45 slot as monitoring reaches it: `registerSweepScope(module, fn)`, once per module. */
+export function stubCaptureRequests() {
+  return { registered: [], registerSweepScope(module, fn) {
+    if (this.registered.some((r) => r.module === module)) return { ok: false, reason: "LISTENER_DECLARED" };
+    this.registered.push({ module, fn }); return { ok: true, module }; } };
+}
+
+/** A sweep as R53 states it, with `over` replacing any field. */
+export function sweepDef(over = {}) {
+  return { id: "minutes", title: "Council minutes", ratified: true, sources: ["https://records.example.org/council"],
+           seeds: ["https://records.example.org/council/index.html"], match: { terms: ["minutes"] }, cadence: "weekly",
+           budget: { per_run: 10, backlog: 20 }, ...over };
 }
 
 /** intent's R7 and R15 as monitoring reaches them. `watch` maps a project to the capture shas its condition reads. */

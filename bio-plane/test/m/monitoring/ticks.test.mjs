@@ -5,7 +5,7 @@
    archive arm (the archive's network is not this module's). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, serve, sha, infoMd, V, DAEMON, NOW_MS } from "./fixture.mjs";
+import { world, serve, sha, infoMd, V, DAEMON, NOW_MS, sweepDef } from "./fixture.mjs";
 import { monitoringOps, MONITOR_CADENCE_DELAY_MS, MONITOR_TICK_MS, MONITOR_CADENCE_BATCH, MONITOR_TICK_BATCH,
          MONITOR_RANK_READ, MONITOR_VIEWER, SLATE_DATA_BEGIN, SLATE_DATA_END, SLATE_FRAMING_OPEN, SLATE_FRAMING_CLOSE,
          MONITOR_PAUSE_SETTING, MONITOR_ROOT_OF_TRUST, MONITOR_PAUSE_ACT, MONITORING_COUNT_KEYS, monitoringOf }
@@ -388,7 +388,7 @@ test("R30 (N314, N324) a pause or resume asked by a member who is not an adminis
   assert.equal(u.m.pause({ paused: true, by: ADMIN }).ok, true);
 });
 
-test("R30 the due slate: every monitored address due, open named request and ratified sweep the viewer may see, as quoted data inside fixed instruction framing", () => {
+test("R30 R61 the due slate: every monitored address due, open named request and due ratified sweep the viewer may see, as quoted data inside fixed instruction framing", () => {
   const w = world();
   w.monitored("INFO-2026-0337-slate", "https://records.example.org/slate", "slate-v1", { freq: "daily" });
   w.monitored("INFO-2026-0338-later", "https://records.example.org/later", "later-v1", { freq: "weekly" });
@@ -399,15 +399,18 @@ test("R30 the due slate: every monitored address due, open named request and rat
         criticality: "crucial", cadence: "weekly", status: "open" },
       { id: "GATH-2026-0002-done", target: { text: "done" }, locators: ["https://records.example.org/d"], authority: "Town Clerk",
         criticality: "supporting", status: "captured" }],
-    sweeps: [{ id: "S1", ratified: true, sources: ["https://records.example.org/"] }, { id: "S2", ratified: false }] });
-  const md = infoMd("INFO-2026-0339-gath", "https://records.example.org/g", { enabled: false });
+    sweeps: [sweepDef({ id: "s1" }), sweepDef({ id: "s2", ratified: false })] });
+  w.inProject("PROJ-2026-0339-p", { owner: "alice" });
+  const md = infoMd("INFO-2026-0339-gath", "https://records.example.org/g", { enabled: false, lines: ["project: PROJ-2026-0339-p"] });
   assert.equal(w.promote("INFO-2026-0339-gath", md, { files: [{ path: "data/gathering.json", text: g, bytes: Buffer.byteLength(g), sha256: sha(g) }] }).ok, true);
   const s = w.m.slate({ viewer: DAEMON, now: NOW_MS });
   assert.equal(s.ok, true);
   assert.deepEqual(s.items.map((x) => [x.kind, x.bundle, x.id ?? x.address]), [
     ["monitored-address", "INFO-2026-0337-slate", null],
     ["named-request", "INFO-2026-0339-gath", "GATH-2026-0001-open"],
-    ["ratified-sweep", "INFO-2026-0339-gath", "S1"]]);
+    ["ratified-sweep", "INFO-2026-0339-gath", "s1"]]);
+  /* R61: a due sweep carries its definition, quoted data like every other field */
+  assert.deepEqual(s.items[2].definition, sweepDef({ id: "s1" }));
   assert.deepEqual(s.counts, { addresses: 1, requests: 1, sweeps: 1 });
   /* the framing is fixed, and every store field sits between the markers as one JSON line */
   const lines = s.prompt.split("\n");
