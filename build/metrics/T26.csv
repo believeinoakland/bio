@@ -2,3 +2,5 @@ session,role,module,cache_read,cache_write,input,output,turns,test_runs,module_l
 session_01ASMwQcRsk5CCBu3QMVhdiG,job,promotion,14194952,340722,6631,26136,,8,3246
 session_01SdzWp71ywfCMib8J3KaSnR,job,provenance,5959168,170239,82,17485,,10,2525
 session_0176zF6WAnondSUb8eCPL194,job,attestation,3409114,88614,62,13131,,605,558
+session_019EG7uFMTRzUH2vnxRBoDoW,BOB-final,,45970106,453238,10435,107574,,,
+session_01CCdj4Cyw8SixkZAnTPSXVf,ROOT-final,,14244274,3167544,189,16657,,,
