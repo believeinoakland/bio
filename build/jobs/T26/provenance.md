@@ -25,3 +25,7 @@
 **Checks:** format: 91 modules, 90 requirements files; 0 failures · architecture: 22 product files, 60 relative imports; 0 failures · coverage: 43 of 43 live requirement ids named by a test; 0 failures · ownership: 6 files changed by provenance between tranche/T26 and HEAD; 0 failures.
 
 Size (session_01SdzWp71ywfCMib8J3KaSnR): test runs 10, module lines 2525
+
+## J1 · COMPLETE
+
+N516 applied: routeFinding, instanceStatement, attest (index.mjs) and attestOp (ops.mjs) deleted with the tests that pinned them; no importer outside the module found on this tree. No R id describes the copies (none struck); for BOB to re-word: the header's option-B sentence, Suggestions' 'Held over until T26' bullet and the Uses parenthesis. signatures: no longer used by the module or its tests (tsa.mjs went with attest) — drop it from uses. N502/N508 re-scan: six stale store-member names re-pointed in index.mjs. provenance 88/0; retrieval, network-notices, plane, acquisition, capture all green; whole test/m 5329 pass, 0 fail. Checks all 0 failures. Plane bundle stale (not regenerated). Details in the record.
