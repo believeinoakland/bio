@@ -82,3 +82,16 @@ Tests: `bio-plane/test/m/monitoring/` tests 86, pass 85, fail 0, todo 1 (R29). U
 Checks: format 0 failures; architecture 0; coverage 51 of 51, 0 failures; ownership 0 failures.
 The plane bundle stays stale from `src/monitoring/index.mjs` (J2); regenerated at the layer's close.
 Size (session_012aZZuzQYRcs6YaJGFbyjdi): test runs 37, module lines 3119
+
+## J4 · COMPLETE
+
+B4 applied (K1102, tranche/T22 merged through af904a8873 and later): R28 honours the bundle's `daemon` block.
+- `daemon.enabled: false`: none of that bundle's requests is due or run; each is stated every tick in `gathered.skipped` as `{bundle, request, reason}` ("its bundle's daemon block says enabled: false, so the daemon runs none of its requests"), and `gathering()` lists them as `disabled`. An instance whose only requests are disabled holds no cadence wake for them.
+- `daemon.tick_budget` (a non-negative integer): bounds the locators tried for that bundle in one tick, within R19's 50; a request its budget cannot reach is stated in `gathered.skipped` with the reason and stays due.
+- `daemon.sweep_budget`: R29's, untouched.
+- `gathered.skipped` entries now all carry a `reason`; only a claim held by an unfinished tick ("claimed by a tick that did not finish") keeps the epoch open, as before.
+Test: `understanding.test.mjs`, "R28 (K1102) the bundle's daemon block governs its requests", with negative controls (an enabled bundle with no budget and a bundle with no daemon block try every locator as before). Mutation checked: disabling either rule turns it red.
+Tests: `bio-plane/test/m/monitoring/` tests 86, pass 85, fail 0, todo 1 (R29). Users: scheduler pass 50 fail 1 (plane:85), queue-producers pass 45 fail 4 (proposals), queue pass 80 fail 0, control-plane pass 100 fail 2 (doorbell:310, catalogue-end:15), all accepted. Whole `bio-plane/test/m`: pass 4931, fail 10, todo 13, the same 10 accepted reds as J3, no new red. No new catalogue row.
+Checks: format 0 failures; architecture 0; coverage 51 of 51, 0 failures; ownership 0 failures.
+The plane bundle stays stale from `src/monitoring/index.mjs` (J2); regenerated at the layer's close.
+Size (session_012aZZuzQYRcs6YaJGFbyjdi): test runs 37, module lines 3119
