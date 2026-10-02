@@ -15,3 +15,15 @@ Stamp commit `4d709bcf9e` on `job/T25/promotion` (tranche/T25 merged in at `264b
 
 **Other modules:**
 - Generated artifact made stale: `bio-plane/dist/bio-plane.bundled.mjs` (`src/gate.mjs` is an input; `fleetbundles.test.mjs` names it STALE BUNDLE, and also `src/membership/index.mjs` from membership's merge). Not regenerated (manifest, "Generated artifacts").
+
+**Tests and checks** (on the stamp commit):
+- `node bio-plane/test/system/row-census.test.mjs`: `row-census: 8 pass, 0 fail` (CENSUS 1073 rows, 735376fd…; PIN 1.55.0 matches). Accepted red 1 cleared.
+- Negative control: the suite's arm passes; on a scratch worktree of the stamp commit, a `C-59.99 CONTROL_ROW` added to record-core's `RECORD_CORE_CHECKS` → `row-census: 7 pass, 1 fail`, `CENSUS MOVED: arrived with no record: C-59.99 CONTROL_ROW`; worktree removed.
+- `node --test bio-plane/test/m/promotion/`: tests 102, pass 102, fail 0 (red 5 cleared by membership's merge). `node bio-plane/test/d526-refusal-order.test.mjs`: 31 passed, 0 failed.
+- `node --test bio-plane/test/m/`: tests 5290, pass 5279, fail 0, todo 11, skipped 0. No red.
+- `checks/format.mjs bio`: 7 failures: promotion's `tests` still names `row-census-1.54.0.jsonl` (BOB's swap); attestation's, provenance-routes' and reading-pipeline's `paths` and `tests` absent (accepted red 4).
+- `checks/architecture.mjs bio promotion`: 0 failures.
+- `checks/coverage.mjs bio promotion`: 56 of 56 live requirement ids named by a test; 0 failures.
+- `checks/ownership.mjs bio promotion tranche/T25`: 1 failure: `row-census-1.55.0.jsonl` outside my `tests` until BOB's swap. Otherwise only my files changed.
+
+Size (session_0132mjJUXBPPWVGDGbsFCnND): test runs 7, module lines 3214
