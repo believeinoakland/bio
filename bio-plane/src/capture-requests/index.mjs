@@ -157,6 +157,7 @@ const randomHex = (bytes) => [...crypto.getRandomValues(new Uint8Array(bytes))]
 export class CaptureRequests {
   #sql; #deps; #draining = false;
   #filed = [];     // R44: {module, fn, seq}
+  #sweepScope = null;   // R45: {module, fn}, monitoring's scope check
 
   /** `deps`: `record`, `observations`, `governor`, `capture`, `credentials` (each module's instance on this storage),
    *  `runs` (ai-runs' run sight, R28 of ai-runs: `runFor(run, viewer)` answering the run's `status`,
@@ -303,6 +304,12 @@ export class CaptureRequests {
     const purpose = text(args.purpose).trim();
     const uaMode = text(args.ua_mode ?? args.uaMode ?? "civicos").trim();
     const callerPlane = text(caller).trim();
+    /* R45: THE SWEEP the request asks to be filed under (`"<bundle>#<id>"`), recorded as sent and judged only at the
+       drain, with conduct (R9, R32): whether the sweep admits it can change while the row waits. Absent, null or blank
+       is an ordinary request. A value that is not text is recorded as what was sent, so the drain refuses it by name
+       rather than this door dropping it and filing an ordinary request nobody asked for. */
+    const sweepRaw = args.sweep ?? null;
+    const sweep = typeof sweepRaw === "string" ? (sweepRaw.trim() || null) : sweepRaw === null ? null : shown(sweepRaw);
 
     /* R6: IDEMPOTENT ON (run, address, render). A run that asks twice for the same document has asked once: the second
        ask returns the standing row, never this call's fields. `render` is in the key because the rendered page and
@@ -314,7 +321,7 @@ export class CaptureRequests {
       return { ok: true, request: standing.request, run, target: standing.target, address,
                host: standing.host, purpose: standing.purpose, ua_mode: standing.ua_mode,
                lead_inquiry: standing.lead_inquiry ?? null, render: standing.render === 1,
-               state: standing.state, requested: false, already: true,
+               sweep: standing.sweep ?? null, state: standing.state, requested: false, already: true,
                principals: { plane: standing.principal_plane, claude: standing.principal_claude } };
 
     /* R6, R7: THE TIME IS THE IN-PROCESS CALLER'S STATED INSTANT (`at`, a test or the scheduler's replay) OR THIS
@@ -331,10 +338,10 @@ export class CaptureRequests {
     }
     this.#sql.exec(
       `INSERT INTO capture_requests (request, run, target, address, host, purpose, ua_mode,
-         principal_plane, principal_claude, state, attempts, requested_at, updated, expires, lead_inquiry, render)
-       VALUES (?,?,?,?,?,?,?,?,?,'requested',0,?,?,?,?,?)`,
+         principal_plane, principal_claude, state, attempts, requested_at, updated, expires, lead_inquiry, render, sweep)
+       VALUES (?,?,?,?,?,?,?,?,?,'requested',0,?,?,?,?,?,?)`,
       request, run, target, address, host, purpose, uaMode, callerPlane, String(runRow.principal_claude ?? ""),
-      now, now, expires, lead || null, render);
+      now, now, expires, lead || null, render, sweep);
     const written = this.#one(`SELECT * FROM capture_requests WHERE request=?`, request);
     /* R44 (N223): every listener told once, after the write, in the modules' total order; none can change the row or
        the answer. A rejection is swallowed where it lands. */
@@ -347,7 +354,7 @@ export class CaptureRequests {
     return { ok: true, request, run: written.run, target: written.target, address: written.address,
              host: written.host, purpose: written.purpose, ua_mode: written.ua_mode,
              lead_inquiry: written.lead_inquiry ?? null, render: written.render === 1,
-             state: written.state, requested: true, already: false,
+             sweep: written.sweep ?? null, state: written.state, requested: true, already: false,
              requested_at: written.requested_at, expires: written.expires,
              principals: { plane: written.principal_plane, claude: written.principal_claude },
              detail: "requested. This instance does not fetch on a caller's timing: the daemon drains "
@@ -374,6 +381,22 @@ export class CaptureRequests {
     if (refused) return refused;
     this.#filed.push({ module, fn, seq: this.#filed.length });
     this.#filed.sort((a, b) => (this.#rank(a.module) - this.#rank(b.module)) || (a.seq - b.seq));
+    return { ok: true, module };
+  }
+
+  /** R45 (K1099; K31's pattern, this module being earlier than `monitoring`, P4): the one scope check, registered once
+   *  at start by `monitoring`. A second registration, whoever makes it, is refused `LISTENER_DECLARED` naming the
+   *  holder, and a malformed one `LISTENER_MALFORMED`, both through membership's `listenerRefusal` (its R81).
+   *
+   *  The check is `fn({sweep, locators, run, target})`, answered at once or as a promise: `{ok: true, scope}` when the
+   *  sweep is ratified and not held and every locator is in its scope, `scope` being its in-scope prefixes (the
+   *  sweep's `sources`, monitoring R53), which ride the fetch so `acquisition` judges each redirect against them (its
+   *  R31); anything else, a throw included, refuses the request (`reason`, one of `unknown`, `unratified`, `held` or
+   *  `out-of-scope`, and `detail` are carried into the refusal when given). */
+  registerSweepScope(module, fn) {
+    const refused = listenerRefusal(this.#sweepScope, module, fn);
+    if (refused) return refused;
+    this.#sweepScope = { module, fn };
     return { ok: true, module };
   }
 
@@ -524,7 +547,7 @@ export class CaptureRequests {
       };
 
       for (const q of queued) {
-        const verdict = this.#conduct(q, nowMs, hostsThisTick);
+        const verdict = await this.#conduct(q, nowMs, hostsThisTick);
         if (!verdict.ok) {
           const row = CAPTURE_REQUEST_CHECKS[verdict.code];
           settle(q, { terminal: verdict.terminal, code: verdict.code, check: row.check, translation: row.translation,
@@ -558,6 +581,11 @@ export class CaptureRequests {
           captured.push({ request: q.request, address: q.address, sha: r.sha || null, grade: r.grade ?? null,
                           attribution: verdict.attribution, already_held: r.existed === true,
                           ...(promoted ? { promoted } : {}) });
+        } else if (r.sweepRefused) {
+          /* R45: the fetch met a locator outside the sweep: refused, nothing filed; the redirect was fetched, so the
+             host's slot stays spent. */
+          settle(q, { ...sweepOutOfScope(`${q.sweep} does not reach every locator of this request: ${r.detail}`),
+                      governed: false, condition: null, countAttempt: false });
         } else if (r.renderCode) {
           const renderRow = RENDER_CAPTURE_CHECKS[r.renderCode];
           const why = String(r.detail || r.reason || "").slice(0, 400);
@@ -620,8 +648,9 @@ export class CaptureRequests {
     return order;
   }
 
-  /** R14: DEC-47's CONDUCT, and this is the ONE place it is applied. */
-  #conduct(q, nowMs, hostsThisTick) {
+  /** R14: DEC-47's CONDUCT, and this is the ONE place it is applied; R45's sweep scope is judged here too, among the
+   *  rules about what the request says and before rate. */
+  async #conduct(q, nowMs, hostsThisTick) {
     /* DEC-49 REGION is-capture-conduct
      *
      * THE SPAN `CAPTURE_REQUEST_CHECKS`' conduct and attribution rows name (REC-71). ORDER IS DELIBERATE. Attribution
@@ -673,6 +702,10 @@ export class CaptureRequests {
                        + `uniformly, so this is the component that decides whether the fetch happens at `
                        + `all — and being blocked honestly is a fact we can record.` };
     }
+    /* R45 — THE SWEEP, when the request names one: terminal like the rules above, because it is about what the request
+       says, and before rate, so a request its sweep does not admit is never reported as merely paced. */
+    const sweep = q.sweep == null ? null : await this.#sweepAdmits(q);
+    if (sweep && !sweep.ok) return sweep;
     /* CONDUCT 3 — RATE, and BOTH halves are NON-TERMINAL: a held request is still queued. The governor's read is
        NON-CONSUMING (host-governor R14): `capture`'s governed fetch spends the token on the way out. */
     if (this.#hostHeld(q.host, nowMs))
@@ -689,7 +722,29 @@ export class CaptureRequests {
                      + `and then reads; a loop opens forty, so the drain spreads requests across ticks `
                      + `rather than emptying the queue at one host's expense.` };
     /* END DEC-49 REGION is-capture-conduct */
-    return { ok: true, ua, attribution };
+    return { ok: true, ua, attribution, ...(sweep ? { sweep: q.sweep, scope: sweep.scope } : {}) };
+  }
+
+  /** R45: whether the sweep the row names admits it, as `monitoring`'s registered scope check answers: `{ok: true,
+   *  scope}`, or R45's refusal. A name not of the shape `"<bundle>#<id>"` names no sweep and is refused without asking;
+   *  with no check registered nothing can say the sweep admits the request, so it is refused; a check that throws, or
+   *  answers anything but `ok: true` with a non-empty list of prefixes, refuses it. Never throws. */
+  async #sweepAdmits(q) {
+    const name = String(q.sweep);
+    if (!SWEEP_NAME.test(name))
+      return sweepOutOfScope(`'${name.slice(0, 80)}' is not a sweep's name ("<bundle>#<id>"), so no sweep admits this `
+                             + `request`);
+    const check = this.#sweepScope;
+    if (!check)
+      return sweepOutOfScope(`no scope check is registered on this instance, so nothing can say that ${name} is `
+                             + `ratified, not held and reaches ${q.address}`);
+    let a = null;
+    try { a = await check.fn({ sweep: name, locators: [q.address], run: q.run, target: q.target }); } catch { a = null; }
+    const scope = a && a.ok === true && Array.isArray(a.scope) ? a.scope.filter((p) => typeof p === "string" && p !== "") : [];
+    if (a && a.ok === true && scope.length && scope.length === a.scope.length) return { ok: true, scope };
+    const why = a && SWEEP_REFUSALS[a.reason] ? SWEEP_REFUSALS[a.reason] : "does not admit this request";
+    const said = a && typeof a.detail === "string" && a.detail.trim() ? ` (${a.detail.trim().slice(0, 200)})` : "";
+    return sweepOutOfScope(`${name} ${why}${said}; ${q.address} was not fetched under it`);
   }
 
   #hostHeld(host, nowMs) {
@@ -735,7 +790,12 @@ export class CaptureRequests {
                           agent: q.ua_mode === "member-browser" ? verdict.ua : null, render: q.render === 1,
                           ...(credential ? { credential } : {}),
                           ...(held ? { heldSha: held.capture_sha } : {}),
-                          origin: { matched_sweep: q.target, deeming_actor: deemingActor(verdict.attribution) } } });
+                          /* R45: a request its sweep admitted is filed under that sweep, the run its deeming actor,
+                             and carries the sweep's scope, so every redirect is judged against it (acquisition R31). */
+                          ...(verdict.sweep
+                            ? { origin: { kind: "sweep", matched_sweep: verdict.sweep, deeming_actor: deemingActor(verdict.attribution) },
+                                scope: verdict.scope }
+                            : { origin: { matched_sweep: q.target, deeming_actor: deemingActor(verdict.attribution) } }) } });
       const out = res && res.body;
       const doc = out && out.ok && out.document;
       if (doc) return { ok: true, sha: doc.capture && doc.capture.sha256, grade: doc.capture && doc.capture.grade,
@@ -744,6 +804,11 @@ export class CaptureRequests {
       if (out && out.ok && out.unchanged === true && out.capture && out.capture.sha256)
         return { ok: true, sha: out.capture.sha256, grade: null, existed: true, document: null };
       const reason = (out && (out.reason || out.error)) || `http ${res && res.status}`;
+      /* R45: `acquisition` refused the sweep's fetch for its scope (a redirect out of it, C-128.2, or no scope, C-128.1):
+         a locator of this request is outside the sweep, and its detail says which. */
+      if (verdict.sweep && (reason === "SWEEP_REDIRECT_OUT_OF_SCOPE" || reason === "SWEEP_SCOPE_MISSING"))
+        return { ok: false, reason, sweepRefused: true, status: null,
+                 detail: String((out && out.detail) || reason).slice(0, 300) };
       const renderCode = q.render === 1 && typeof reason === "string"
         && Object.prototype.hasOwnProperty.call(RENDER_CAPTURE_CHECKS, reason) ? reason : null;
       return { ok: false, reason, status: out && Number.isFinite(Number(out.status)) ? Number(out.status) : null,
@@ -791,7 +856,7 @@ export class CaptureRequests {
           "monitoring:", "  enabled: false", "  frequency: none",
           "---", "", "## Summary", "",
           `The document served at ${q.address}, captured by the daemon at an investigative session's request `
-          + `under ${q.target}. Its bytes are \`${doc.file}\`, exactly as served; nothing here summarises them.`, "",
+          + `under ${q.target}${q.sweep ? `, filed under the sweep ${q.sweep}` : ""}. Its bytes are \`${doc.file}\`, exactly as served; nothing here summarises them.`, "",
           "## Provenance Notes", "",
           `${attribution.statement}. Requested ${q.requested_at} as ${q.request}; collected ${at}. Filed at collected `
           + `and never higher: releasing it is a named member's decision.`, "",
@@ -838,7 +903,7 @@ export class CaptureRequests {
       capture_sha: r.capture_sha, attempts: r.attempts, requested_at: r.requested_at,
       updated: r.updated, expires: r.expires, captured_at: r.captured_at,
       lead_inquiry: r.lead_inquiry ?? null, run_woken_at: r.run_woken_at ?? null,
-      render: r.render === 1, source_reason: r.source_reason ?? null,
+      render: r.render === 1, source_reason: r.source_reason ?? null, sweep: r.sweep ?? null,
       /* R25, D-523: what became of a render this instance could not do, in the drain's and op=queue's words. */
       render_deferral: (r.render === 1 && (r.state === "expired" || (r.state === "requested" && r.code)))
         ? (({ code, check, translation }) => ({ state: r.state === "expired" ? "expired" : "deferred",
@@ -1047,6 +1112,25 @@ export class CaptureRequests {
              detail: "back in the queue. The drain judges it again and fetches with what a member supplied for this "
                    + "request's scope, if anything." };
   }
+}
+
+/** R45: a sweep's full name, `"<bundle>#<id>"` (monitoring R53: the id `^[a-z0-9][a-z0-9-]{0,39}$`). */
+const SWEEP_NAME = /^[^\s#]{1,200}#[a-z0-9][a-z0-9-]{0,39}$/;
+/** R45: what the scope check's `reason` says, in the refusal's words. */
+const SWEEP_REFUSALS = Object.freeze({
+  unknown: "is not a sweep this instance holds", unratified: "is not ratified", held: "is held",
+  "out-of-scope": "does not reach this address",
+});
+
+/** R45: the one site of CAPTURE_SWEEP_OUT_OF_SCOPE (C-28.19), terminal; the drain's conduct and its fire both answer
+ *  through it. */
+function sweepOutOfScope(detail) {
+  /* DEC-49 REGION is-capture-sweep-scope */
+  const row = CAPTURE_REQUEST_CHECKS.CAPTURE_SWEEP_OUT_OF_SCOPE;
+  return { ok: false, terminal: true, code: "CAPTURE_SWEEP_OUT_OF_SCOPE", check: row.check, translation: row.translation,
+           detail: `${detail}. A request filed under a sweep answers to what members ratified for it; nothing was filed `
+                 + `under this one` };
+  /* END DEC-49 REGION is-capture-sweep-scope */
 }
 
 /** R38: the deeming actor of a requested capture's sweep origin: the run and both principals (R10), never a token. */

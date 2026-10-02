@@ -286,6 +286,21 @@ export const CAPTURE_REQUEST_CHECKS = Object.freeze({
       + 'question you can see, goes back into the queue; a request that is still waiting, was captured, has '
       + 'expired, or was refused for any other reason does not. Nothing was changed.',
   },
+  /* R45 (T23; Intake Doctrine §4, the AI's "relevant nearby" arm; K1036, K1099) — A RUN'S REQUEST NAMING A SWEEP IS
+     FILED UNDER THAT SWEEP ONLY WHEN THE SWEEP'S SCOPE ADMITS IT. A sweep names a query members ratified up front, and
+     a request filed under it inherits that ratification, so the fence is the sweep's own: ratified, not held, and every
+     locator of the request (the address, and any redirect the fetch meets) inside its scope. The scope check is
+     `monitoring`'s, registered at start; with none registered nothing can say the sweep admits the request, so it is
+     refused. Terminal: the request is not fetched under a sweep that does not admit it, and nothing is filed. Minted at
+     one region (`sweepOutOfScope`), which the drain's conduct and its fire both answer through. New at T23,
+     `awaiting stamp` until T24's L2. */
+  CAPTURE_SWEEP_OUT_OF_SCOPE: {
+    check: 'C-28.19',
+    where: 'src/capture-requests/index.mjs sweepOutOfScope > is-capture-sweep-scope',
+    translation: 'This request asked to be filed under a sweep, and that sweep does not take it: the sweep is not '
+      + 'ratified, is held, or does not reach this address. Nothing was fetched or filed under it. A request filed '
+      + 'under a sweep answers to what members ratified for that sweep, so it is never stretched to fit.',
+  },
 });
 
 for (const row of Object.values(CAPTURE_REQUEST_CHECKS)) Object.freeze(row);
