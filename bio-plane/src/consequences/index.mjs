@@ -853,7 +853,7 @@ export function consequencesOwns(t) {
   return CONSEQUENCES_TABLES.some((x) => (typeof x === "string" ? x : x.name) === name);
 }
 
-/** The module's ops (K3), as entries of the legacy store's op map. `viewer` and `author` are the control plane's stamps,
+/** The module's ops (K3), as entries of the plane's one route map (`plane/store.mjs`, plane R5). `viewer` and `author` are the control plane's stamps,
  *  read from the query after the body, so a caller's own copy never wins. */
 export function consequencesOps(c, url, body) {
   const qp = (k) => url.searchParams.get(k);
