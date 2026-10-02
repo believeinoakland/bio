@@ -14,7 +14,12 @@
       "Bash(git rm -q -- bio-plane/test/:*)",
       "Bash(git rm -q -- civicos-ui/test/:*)",
       "Bash(git rm -q -- agent-worker/test/:*)",
-      "Bash(git rm -q -- ocr-worker/test/:*)"
+      "Bash(git rm -q -- ocr-worker/test/:*)",
+      "mcp__github__merge_pull_request",
+      "mcp__claude-code-remote__archive_session",
+      "mcp__claude-code-remote__delete_trigger",
+      "Bash(node tools/mail.mjs xcheck:*)",
+      "Bash(node /home/user/civicos-process/tools/mail.mjs xcheck:*)"
     ],
     "deny": [
       "Bash(git push --force:*)",
