@@ -9,13 +9,13 @@
 - C-117.24 `HOLD_PROJECTS_REFUSED`, where `src/actions/index.mjs #holdProjects > is-hold-projects` (one helper, asked by `actionHold` and `projectHolds`)
 - C-117.25 `HOLD_ALREADY_RELEASED`, where `src/actions/index.mjs actionHoldRelease > is-hold-released`
 
-The `where`s name regions `actions`' job writes in this layer (REPORT J2). No other row, value, finding or reading changed.
+The `where`s name regions `actions`' job writes in this layer (REPORT J1). No other row, value, finding or reading changed.
 
 **Awaiting stamp** (accepted red 2, until T28's promotion stamp): C-117.23 `HOLD_RELEASE_IS_ITS_OWN_ACT`, C-117.24 `HOLD_PROJECTS_REFUSED`, C-117.25 `HOLD_ALREADY_RELEASED`.
 
 **Deferred.** None. **Re-scan (N502/N508 kind):** the module's member-facing text was re-read whole; the three new translations name no place, no op, no internal id; nothing else found.
 
-**Found in another module.** `actions` (REPORT J2): its regions must match the three `where`s above; C-117.20 and C-117.21 keep `where` `actionHold > is-hold` although R56's `actionHoldRelease` also raises both, so `actions` should mint them there through the same region (or BOB re-points those `where`s, a change to this module).
+**Found in another module.** `actions` (REPORT J1): its regions must match the three `where`s above; C-117.20 and C-117.21 keep `where` `actionHold > is-hold` although R56's `actionHoldRelease` also raises both, so `actions` should mint them there through the same region (or BOB re-points those `where`s, a change to this module).
 
 **Tests and checks.**
 - `node --test bio-plane/test/m/action-grammar/`: tests 25, pass 25, fail 0 (R9 named by the new test and by the census tests, now C-117.1–.4, .6–.25).
