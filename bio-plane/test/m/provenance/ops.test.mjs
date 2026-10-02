@@ -16,7 +16,6 @@ function helpers(calls = []) {
     doAnswer: async (p) => p,
     storeSilent: (op, correlation) => { calls.push(["silent", op, correlation ?? null]); return { silent: op }; },
     storeRefusal: (out) => { calls.push(["refused", out.reason]); return { refused: out.reason }; },
-    storageAbsent: (op, error) => { calls.push(["absent", op, error]); return { absent: op }; },
     captureKey: (store, s) => `${store}/captures/${s}`,
     storeName: "bio", cls: "admin",
   };
@@ -62,8 +61,9 @@ test("R53: six route arms, each a function of no arguments, keyed by op name; th
   assert.deepEqual(Object.keys(map).sort(), ["homecensus", "recordcapturedlocator", "registeraudit", "registerholds",
     "testify", "versionchain"]);
   /* N512: `provenancechain`, `provenanceroute` and `provenanceroutes` are provenance-routes' map, and op=attest's
-     Worker arm attestation's; this module's ops export the map, op=registeraudit's arm and the attestOp copy (N516). */
-  assert.deepEqual(Object.keys(OPS).sort(), ["attestOp", "provenanceOps", "registerAuditOp"]);
+     Worker arm attestation's; this module's ops export the map and op=registeraudit's arm (the attestOp copy was
+     deleted in T26, N516). */
+  assert.deepEqual(Object.keys(OPS).sort(), ["provenanceOps", "registerAuditOp"]);
   for (const [k, f] of Object.entries(map)) assert.deepEqual([typeof f, f.length], ["function", 0], k);
   /* Building the map runs nothing. */
   const before = w.snapshot();
@@ -148,21 +148,4 @@ test("R53: recordcapturedlocator takes the listeners' context out of the body an
   assert.deepEqual(ops(w, "", { captureSha: sha("x") }, { observer: "observation-log" }).recordcapturedlocator(), { recorded: false });
   assert.deepEqual(ops(w, "", null, { observer: "observation-log" }).recordcapturedlocator(), { recorded: false });
   assert.equal(w.count("captured_locators"), n);
-});
-
-test("N516: the attestOp copy for the plane's door is a POST over the working bucket, keeping attest's status, and writes no table", async () => {
-  const w = world();
-  const before = w.snapshot();
-  const post = (body) => ({ method: "POST", json: async () => body });
-  assert.deepEqual(await OPS.attestOp({ method: "GET" }, {}, storeAnswering(() => null), helpers()),
-                   { body: { ok: false, error: "attest is a POST" }, status: 405 });
-  assert.deepEqual(await OPS.attestOp(post({ sha256: sha("c") }), {}, storeAnswering(() => null), helpers()), { absent: "attest" });
-  const bucket = evidence({});
-  const bad = await OPS.attestOp(post({ sha256: "nope" }), { CAPTURES: bucket }, storeAnswering(() => null), helpers());
-  assert.deepEqual([bad.status, bad.body.reason, bad.body.store, bad.body.tokenClass], [400, "BAD_SHA", "bio", "admin"]);
-  const seen = [];
-  const parts = await OPS.attestOp(post({ sha256: sha("c") }), { CAPTURES: bucket },
-    storeAnswering(() => ({ answered: true, result: { acquired: false, registered: true } }), seen), helpers());
-  assert.deepEqual([parts.status, parts.body.check, seen], [409, "C-89.1", [`http://x/registerholds?sha256=${sha("c")}`]]);
-  assert.deepEqual(w.snapshot(), before);
 });

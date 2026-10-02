@@ -1,5 +1,5 @@
-/* provenance: the C-103 rows the split modules answer through (R58; N512, BOB's ruling on the seam), and the pure
-   copies this module holds until their importers re-point (N516; option B as K1220 reads it). */
+/* provenance: the C-103 rows the split modules answer through (R58; N512, BOB's ruling on the seam), and the absence
+   of the pure copies this module held through T25 for later importers (N516, deleted in T26). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
@@ -55,51 +55,20 @@ test("R58: each row's `where` names the site that raises it: the signed receipt'
     assert.equal(typeof w.prov[m], "undefined", `${m} is attestation's`);
 });
 
-test("N516: the copies held until their importers re-point: routeFinding, instanceStatement and attest read and write no table, and no C-34 or C-89 row is held here", async () => {
+test("R41, N516: the copies held through T25 are gone: no route marker, statement, attestation or C-34/C-89 row is this module's, and none of their state", () => {
   const w = world();
-  const before = w.snapshot();
-  /* routeFinding, as provenance-routes R5 answers it. */
-  assert.deepEqual(P.routeFinding("inquiry", null), { applies: false, assessed: false, marked: false, finding: null,
-    means: null, note: "a route is a fact about a captured document, and this record is not one" });
-  const never = P.routeFinding("information", null);
-  assert.deepEqual([never.applies, never.assessed, never.marked, never.finding, never.means],
-                   [true, false, false, "NEVER_LOOKED", "nobody looked at this level for this subject"]);
-  const mark = { finding: "LOOKED_INDETERMINATE", at: "2026-09-27T00:00:00Z", by: V("r"), state_at: "verified", seq: 2,
-                 register_state: "readable", undetermined: 1, documents_n: 2 };
-  const marked = P.routeFinding("information", mark);
-  assert.deepEqual([marked.marked, marked.means, marked.stateAt, marked.seq, marked.register, marked.undetermined, marked.documents],
-                   [true, "we looked and could not tell", "verified", 2, "readable", 1, 2]);
-  assert.match(marked.note, /corrects FORWARD rather than un-saying one \(DEC-19\)/);
-  const present = P.routeFinding("information", { ...mark, finding: "PRESENT" });
-  assert.deepEqual([present.marked, present.means], [false, "we looked and it is there"]);
-  /* instanceStatement, as attestation R5 states it: exact bytes, and never a receipt's kind or a malformed one. */
-  assert.equal(P.instanceStatement("bio-notice/1", "ab"), "bio-notice/1\nsha256: ab\n");
-  for (const bad of ["bio-receipt/1", "Bad/1", "nover", "", null])
-    assert.throws(() => P.instanceStatement(bad, "ab"), /instanceStatement: kind/, String(bad));
-  assert.deepEqual(w.snapshot(), before, "neither copy reads or writes the record");
-  /* attest (K1226): stateless, its evidence store, network and holds the caller's callbacks; the C-89.1 refusal carries
-     attestation's row, and a failed authority is recorded as an attempt. */
-  assert.deepEqual(await P.attest({ sha256: "nope" }, {}), { ok: false, reason: "BAD_SHA",
-    detail: "attest takes the sha256 of a capture already in the store" });
-  const s = "a".repeat(64);
-  const parts = await P.attest({ sha256: s }, { head: async () => null, holds: async () => ({ acquired: false, registered: true }) });
-  assert.deepEqual([parts.reason, parts.check, parts.sha256], ["CAPTURE_HELD_IN_PARTS", "C-89.1", s]);
-  assert.match(parts.translation, /^The record lists this document, but keeps it in parts/);
-  assert.equal((await P.attest({ sha256: s }, { head: async () => null, holds: async () => null })).reason, "NO_SUCH_CAPTURE");
-  const asked = [];
-  const tried = await P.attest({ sha256: s }, { head: async () => ({ size: 1 }), put: async () => null,
-    fetch: async (url) => { asked.push(url); return { ok: false, status: 503 }; }, now: () => "2026-09-27T00:00:00.123Z" });
-  assert.deepEqual([tried.ok, tried.reason, tried.attempts.length, asked.length], [false, "NO_ATTESTATION", asked.length, asked.length]);
-  assert.ok(asked.length > 0 && tried.attempts.every((a) => a.ok === false && a.attempted === "2026-09-27T00:00:00Z"));
+  /* The pure copies kept for later importers until each re-pointed (option B) were deleted in T26 (N516). */
+  for (const n of ["routeFinding", "instanceStatement", "attest", "attestStatus", "chainFromEvidence", "OBSERVATION_MEANS",
+                   "ROUTE_FINDING_KEY"])
+    assert.equal(Object.hasOwn(P, n), false, n);
   /* No copy of the C-34 or C-89 families is exported here (K1225): each is held once, by its owner. */
   for (const fam of ["ROUTE_MARK_CHECKS", "ATTEST_CHECKS"]) {
     assert.equal(Object.hasOwn(CHECKS, fam), false, fam);
     assert.equal(Object.hasOwn(P, fam), false, fam);
   }
-  assert.deepEqual(w.snapshot(), before, "no copy reads or writes the record");
   /* No stateful method of the moved sides is kept (one table, one writer). */
   for (const m of ["provenanceChainRebuild", "provenanceRouteAssess", "provenanceRoutesMarked", "routeOf", "routeTally"])
     assert.equal(typeof w.prov[m], "undefined", `${m} is provenance-routes'`);
-  for (const n of ["attestStatus", "chainFromEvidence", "OBSERVATION_MEANS", "ROUTE_FINDING_KEY"])
-    assert.equal(Object.hasOwn(P, n), false, n);
+  /* Nor are the moved tables this module's (R41). */
+  assert.deepEqual(P.PROVENANCE_TABLES, ["register", "captured_locators", "origin_declarations"]);
 });
