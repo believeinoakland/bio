@@ -35,6 +35,7 @@ The instance's composition root. It builds every module on one Durable Object's 
 - `scheduler`: `alarm`, `onAlarm`, `start` (R3, R4).
 - `record-core`: `recordOf` with the evidence bucket and prefix, `RECORD_SCHEMA` first (R2, R3).
 - `public-read`: `bindPublishedPlane` (R6).
+- `attestation`: `attestationOf` with `env.RECEIPT_SIGNING_KEY` and `INSTANCE_NAME`, its `migrate()`, and `attestOp` for the door (R2, R3, R5; N512, K1225); `provenance-routes`: `provenanceRoutesOf`, its `migrate()` and `provenanceRouteOps` (R2, R3, R5; N512, K1227).
 - `local-facts` and `filing-templates` (K921): their factories, `migrate()` and ops maps (R11).
 - `subresources`: `SUBRESOURCE_CAP` (its R35), and `bundler`: `deriveLimits` (its R15) and its JSONC reader (its R11), each read by R13's test only (N482, K1020).
 - Every module whose factory, `migrate()` or ops map the composition root (`src/plane/store.mjs`' constructor and `routes`, `src/plane/index.mjs`) reaches (R2, R3, R5), as `modules.json` lists them.

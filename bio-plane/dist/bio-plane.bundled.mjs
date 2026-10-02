@@ -24664,143 +24664,6 @@ var CAPTURE_HELD_IN_PARTS_ROW = Object.freeze({
   check: "C-89.1",
   translation: "The record lists this document, but keeps it in parts rather than as one file, and this instance has no record of fetching it itself. A timestamp is only requested for bytes this instance can vouch for, so none was requested. Nothing is missing: do not capture the document again. If the instance fetches it from its address, it can then be co-attested."
 });
-async function attest(body, { head, put: put2, fetch: fetchFn, holds, now = () => (/* @__PURE__ */ new Date()).toISOString() } = {}) {
-  const sha = typeof body?.sha256 === "string" ? body.sha256.toLowerCase() : "";
-  if (!/^[0-9a-f]{64}$/.test(sha))
-    return { ok: false, reason: "BAD_SHA", detail: "attest takes the sha256 of a capture already in the store" };
-  let held = null;
-  if (!await head(sha)) {
-    let holdsAnswer = null;
-    try {
-      holdsAnswer = typeof holds === "function" ? await holds(sha) : null;
-    } catch {
-      holdsAnswer = null;
-    }
-    if (holdsAnswer && holdsAnswer.acquired === true) {
-      held = {
-        form: "parts",
-        on: "acquisition_receipt",
-        detail: "no object is stored under this hash, because the document was captured in parts and only its parts are stored, each under its own hash. This plane hashed the whole document as it arrived and recorded that receipt, which is what this attestation rests on."
-      };
-    } else {
-      if (holdsAnswer && holdsAnswer.registered === true)
-        return {
-          ok: false,
-          reason: "CAPTURE_HELD_IN_PARTS",
-          code: "CAPTURE_HELD_IN_PARTS",
-          check: CAPTURE_HELD_IN_PARTS_ROW.check,
-          translation: CAPTURE_HELD_IN_PARTS_ROW.translation,
-          sha256: sha,
-          detail: "the record's register names these bytes, but no object is stored under this hash and this plane holds no receipt of having acquired them, which is the shape of a document kept only in parts. A register row is written from what the promoting caller named, so a timestamp is not rested on it alone. Nothing here says the bytes are missing."
-        };
-      return {
-        ok: false,
-        reason: "NO_SUCH_CAPTURE",
-        detail: holdsAnswer ? "no object is stored under that hash, the register holds no row for it under a record that exists, and this plane holds no receipt of having acquired it" : "no object is stored under that hash, and the store could not be asked whether its register or an acquisition receipt names it, so this is not a finding that the record lacks the bytes"
-      };
-    }
-  }
-  const stamp2 = () => secondOf(now());
-  const attempts = [];
-  let token = null, tokenSha = null, service = null;
-  for (const endpoint of TSA_ENDPOINTS) {
-    const attempted = stamp2();
-    try {
-      const { der } = timestampRequest(sha);
-      const res = await fetchFn(endpoint, {
-        method: "POST",
-        body: der,
-        headers: { "content-type": TSA_CONTENT_TYPE, accept: TSA_ACCEPT }
-      });
-      if (!res.ok) {
-        attempts.push({ service: endpoint, attempted, ok: false, note: `http ${res.status}` });
-        continue;
-      }
-      const parsed = parseTimestampResponse(new Uint8Array(await res.arrayBuffer()), sha);
-      if (!parsed.ok) {
-        attempts.push({ service: endpoint, attempted, ok: false, note: parsed.reason });
-        continue;
-      }
-      tokenSha = hexBytes(await crypto.subtle.digest("SHA-256", parsed.token));
-      await put2(tokenSha, parsed.token);
-      token = parsed.token;
-      service = endpoint;
-      attempts.push({
-        service: endpoint,
-        attempted,
-        ok: true,
-        kind: "rfc3161",
-        token_sha256: tokenSha,
-        token_bytes: parsed.token.length
-      });
-      break;
-    } catch (e) {
-      attempts.push({ service: endpoint, attempted, ok: false, note: String(e && e.message || e).slice(0, 120) });
-    }
-  }
-  let archive = null;
-  if (body.archive === true) {
-    const attempted = stamp2();
-    const locator = typeof body.locator === "string" ? body.locator : "";
-    if (!isPublicHttpsLocator(locator)) {
-      attempts.push({
-        service: ARCHIVE_SERVICE,
-        attempted,
-        ok: false,
-        note: "no public https locator to archive"
-      });
-    } else {
-      try {
-        const res = await fetchFn(ARCHIVE_SAVE_BASE + locator, { redirect: "follow" });
-        const archived = archiveLocatorFrom(res, locator);
-        if (res.ok && archived) {
-          archive = { service: ARCHIVE_SERVICE, locator: archived };
-          attempts.push({
-            service: ARCHIVE_SERVICE,
-            attempted,
-            ok: true,
-            kind: "co-archive",
-            archived_locator: archived
-          });
-        } else {
-          attempts.push({
-            service: ARCHIVE_SERVICE,
-            attempted,
-            ok: false,
-            note: res.ok ? "archived but returned no locator" : `http ${res.status}`
-          });
-        }
-      } catch (e) {
-        attempts.push({
-          service: ARCHIVE_SERVICE,
-          attempted,
-          ok: false,
-          note: String(e && e.message || e).slice(0, 120)
-        });
-      }
-    }
-  }
-  return {
-    ok: !!token,
-    attempts,
-    ...archive ? { archive } : {},
-    ...token ? {
-      attestation: {
-        file: `snapshots/timestamp-${tokenSha.slice(0, 12)}.tsr`,
-        kind: "rfc3161",
-        service,
-        sha256: tokenSha,
-        bytes: token.length,
-        over: sha
-      },
-      note: "A trusted timestamp over the capture hash. Anyone can check it with openssl ts -verify against the authority's certificate; this plane obtains and stores it, and does not claim to have verified the signature.",
-      ...held ? { held } : {}
-    } : {
-      reason: "NO_ATTESTATION",
-      note: "Every attempt was recorded. A register showing a failed attempt and one showing no attempt are different claims, so the failures above belong in the document rather than being dropped."
-    }
-  };
-}
 var VERSION_CHAIN_LIMIT_DEFAULT = 200;
 var VERSION_CHAIN_LIMIT_MAX = 1e3;
 var TESTIMONY_MAX_BYTES = 128 * 1024;
@@ -26141,6 +26004,10 @@ function provenanceOf(host, deps) {
 }
 
 // src/attestation/checks.mjs
+var checks_exports6 = {};
+__export(checks_exports6, {
+  ATTEST_CHECKS: () => ATTEST_CHECKS
+});
 var ATTEST_CHECKS = {
   CAPTURE_HELD_IN_PARTS: {
     check: "C-89.1",
@@ -26181,6 +26048,24 @@ function migrateAttestation(sql) {
   }
 }
 
+// src/attestation/ops.mjs
+async function attestOp(req, env, store, { json: json6, doAnswer: doAnswer2, storageAbsent: storageAbsent2, captureKey: captureKey2, storeName, cls }) {
+  if (req.method !== "POST") return json6({ ok: false, error: "attest is a POST" }, 405);
+  if (typeof env.CAPTURES?.put !== "function")
+    return storageAbsent2("attest", "this instance has no evidence storage configured");
+  const body = await req.json().catch(() => null);
+  const attested = await attest(body || {}, {
+    head: (sha) => env.CAPTURES.head(captureKey2(storeName, sha)),
+    put: (sha, bytes2) => env.CAPTURES.put(captureKey2(storeName, sha), bytes2, { sha256: sha }),
+    fetch: (...a) => fetch(...a),
+    holds: async (sha) => {
+      const hOut = await doAnswer2(store.fetch(`http://x/registerholds?sha256=${encodeURIComponent(sha)}`));
+      return hOut.answered ? hOut.result : null;
+    }
+  });
+  return json6({ ...attested, store: storeName, tokenClass: cls }, attestStatus(attested));
+}
+
 // src/attestation/index.mjs
 var ATTESTATION_MODULE = "attestation";
 var te4 = new TextEncoder();
@@ -26202,7 +26087,7 @@ var actRefusal2 = (code, detail, extra) => {
   const row2 = PROVENANCE_ACT_CHECKS[code];
   return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail, ...extra || {} };
 };
-async function attest2(body, { head, put: put2, fetch: fetchFn, holds, now = () => (/* @__PURE__ */ new Date()).toISOString() } = {}) {
+async function attest(body, { head, put: put2, fetch: fetchFn, holds, now = () => (/* @__PURE__ */ new Date()).toISOString() } = {}) {
   const sha = typeof body?.sha256 === "string" ? body.sha256.toLowerCase() : "";
   if (!/^[0-9a-f]{64}$/.test(sha))
     return { ok: false, reason: "BAD_SHA", detail: "attest takes the sha256 of a capture already in the store" };
@@ -26338,6 +26223,10 @@ async function attest2(body, { head, put: put2, fetch: fetchFn, holds, now = () 
       note: "Every attempt was recorded. A register showing a failed attempt and one showing no attempt are different claims, so the failures above belong in the document rather than being dropped."
     }
   };
+}
+function attestStatus(a) {
+  if (a && a.ok) return 200;
+  return { BAD_SHA: 400, CAPTURE_HELD_IN_PARTS: 409, NO_SUCH_CAPTURE: 404 }[a && a.reason] ?? 502;
 }
 var RECEIPT_KIND = "bio-receipt/1";
 var STATEMENT_KIND = /^[a-z][a-z0-9-]*\/[0-9]+$/;
@@ -27049,7 +26938,7 @@ async function coAttest(cap, { sha, locator, via, ev }) {
   });
   const notAsked = (why) => [{ service: "attest", attempted: false, ok: false, at: stampSecond(), note: why }];
   try {
-    const out = await attest2(
+    const out = await attest(
       { sha256: sha, archive: via !== "archive.org", locator },
       {
         head: (s) => ev.head(s),
@@ -28117,8 +28006,8 @@ async function continueCapture(cap, { body, session, cls, storeName, ev }) {
 }
 
 // src/control-plane/checks.mjs
-var checks_exports6 = {};
-__export(checks_exports6, {
+var checks_exports7 = {};
+__export(checks_exports7, {
   BOOTSTRAP_CHECKS: () => BOOTSTRAP_CHECKS,
   DISPATCH_CHECKS: () => DISPATCH_CHECKS,
   REPLAY_CHECKS: () => REPLAY_CHECKS,
@@ -29299,8 +29188,8 @@ function tier2Note(m) {
 }
 
 // src/content/checks.mjs
-var checks_exports7 = {};
-__export(checks_exports7, {
+var checks_exports8 = {};
+__export(checks_exports8, {
   CONTENT_EXTENT_CHECKS: () => CONTENT_EXTENT_CHECKS,
   TRANSCRIBE_CHECKS: () => TRANSCRIBE_CHECKS,
   VERSION_NOTICE_CHECKS: () => VERSION_NOTICE_CHECKS
@@ -29837,8 +29726,8 @@ function coversImagePlacement(e, container2) {
 }
 
 // src/connections/checks.mjs
-var checks_exports8 = {};
-__export(checks_exports8, {
+var checks_exports9 = {};
+__export(checks_exports9, {
   CONNECTION_CHOICE_CHECKS: () => CONNECTION_CHOICE_CHECKS,
   CONNECTION_PAIR_CHECKS: () => CONNECTION_PAIR_CHECKS,
   THEME_CHECKS: () => THEME_CHECKS,
@@ -30057,8 +29946,8 @@ function themeLegFindings(label, leg, findings) {
 }
 
 // src/observation-log/checks.mjs
-var checks_exports9 = {};
-__export(checks_exports9, {
+var checks_exports10 = {};
+__export(checks_exports10, {
   AI_RUN_CHECKS: () => AI_RUN_CHECKS,
   LEAD_CHECKS: () => LEAD_CHECKS,
   LEAD_ID_RE: () => LEAD_ID_RE,
@@ -30290,8 +30179,8 @@ var LEAD_CHECKS = {
 };
 
 // src/inquiry-grammar/checks.mjs
-var checks_exports10 = {};
-__export(checks_exports10, {
+var checks_exports11 = {};
+__export(checks_exports11, {
   INQUIRY_GRAMMAR_CHECKS: () => INQUIRY_GRAMMAR_CHECKS,
   LEAD_CHECKS: () => LEAD_CHECKS2
 });
@@ -35425,8 +35314,8 @@ async function cropImage(bytes2, extent) {
 }
 
 // src/calibration/checks.mjs
-var checks_exports11 = {};
-__export(checks_exports11, {
+var checks_exports12 = {};
+__export(checks_exports12, {
   CALIBRATION_CHECKS: () => CALIBRATION_CHECKS
 });
 var CALIBRATION_CHECKS = {
@@ -36701,8 +36590,8 @@ CREATE TABLE IF NOT EXISTS reading_migrations (
 `;
 
 // src/extraction/checks.mjs
-var checks_exports12 = {};
-__export(checks_exports12, {
+var checks_exports13 = {};
+__export(checks_exports13, {
   EXTRACTION_CHECKS: () => EXTRACTION_CHECKS,
   NO_SHA_DETAIL: () => NO_SHA_DETAIL,
   REEXTRACT_CHECKS: () => REEXTRACT_CHECKS,
@@ -36779,8 +36668,8 @@ function noSha(detail = null) {
 }
 
 // src/capture/checks.mjs
-var checks_exports13 = {};
-__export(checks_exports13, {
+var checks_exports14 = {};
+__export(checks_exports14, {
   CAPTURE_CHECKS: () => CAPTURE_CHECKS,
   KNOCK_CHECKS: () => KNOCK_CHECKS
 });
@@ -42869,8 +42758,8 @@ var CREDENTIALS_ADDITIVE_COLUMNS = [
 var CREDENTIALS_EXEMPT_TABLES = ["credentials", "sessions", "bootstrap", "signers", "ai_credentials"];
 
 // src/credentials/checks.mjs
-var checks_exports14 = {};
-__export(checks_exports14, {
+var checks_exports15 = {};
+__export(checks_exports15, {
   AI_CREDENTIAL_CHECKS: () => AI_CREDENTIAL_CHECKS,
   CREDENTIALS_CHECKS: () => CREDENTIALS_CHECKS,
   SIGNER_ENROLMENT_CHECKS: () => SIGNER_ENROLMENT_CHECKS
@@ -45374,7 +45263,7 @@ var Capture = class _Capture {
     const archive = typeof locator === "string" && isPublicHttpsLocator(locator);
     let out;
     try {
-      out = await attest2(
+      out = await attest(
         { sha256: sha, archive, locator: archive ? locator : null },
         { head: (s) => ev.head(s), put: (s, b) => ev.put(s, b), fetch: governedCall(this, "reattest"), holds }
       );
@@ -47599,8 +47488,8 @@ var WITHDRAWAL_COLUMNS = Object.freeze([
 ]);
 
 // src/entities/checks.mjs
-var checks_exports15 = {};
-__export(checks_exports15, {
+var checks_exports16 = {};
+__export(checks_exports16, {
   ENTITY_CHECKS: () => ENTITY_CHECKS,
   IDSPACE_CHECKS: () => IDSPACE_CHECKS,
   idspaceRefusal: () => idspaceRefusal
@@ -55341,8 +55230,184 @@ WHERE ${gate.sql}`,
   };
 }
 
+// src/provenance-routes/schema.mjs
+var PROVENANCE_ROUTES_SCHEMA = `
+-- REC-63 / DEC-56 / D-204: THE STANDING MARKER. When a document's provenance
+-- ROUTE cannot be shown, the record carries that fact BESIDE the state rather
+-- than un-saying the verification. Bob ruled the principle across DEC-56/57/58
+-- on 2026-08-06: ACT, AND SAY WHAT YOU COULD NOT ESTABLISH.
+--
+-- WHY A ROW HERE AND NOT A FIELD IN THE BUNDLE'S OWN BYTES, which is the first
+-- question a reader will ask. Writing the marker into data/provenance.json
+-- would change the bundle_sha of a VERIFIED document, so the doubt about the
+-- bytes would alter the bytes -- and it would be a second claim nobody made,
+-- which is the same reasoning provenanceChainRebuild already gives for leaving
+-- bundle.md alone. The marker is a statement by THIS INSTANCE about its own
+-- evidence, so it lives where the instance's other statements live.
+--
+-- APPEND-ONLY, AND THAT IS DEC-19. Correction moves FORWARD: a route later
+-- shown is a NEW row saying so, never a delete of the row that said it could
+-- not be. The current finding is the row with the highest 'seq' for a bundle,
+-- and the ones before it stay readable.
+--
+-- 'finding' IS D-129's VOCABULARY, observation-log's OBSERVATION_STATES (airun.mjs's then)
+-- rather than invented here, because this record already has words for which
+-- absence it met: NEVER_LOOKED is the ABSENCE OF A ROW and is never stored,
+-- LOOKED_INDETERMINATE is the marker itself (we looked and cannot tell), and
+-- PRESENT is an assessment that found the route showable. LOOKED_ABSENT is
+-- deliberately unreachable here: it would assert the bytes have no route, and
+-- every captured byte came from somewhere -- what we cannot show is OUR
+-- EVIDENCE of it, which is a statement about us.
+--
+-- 'state_at' RECORDS THE STATE THE DOCUMENT SAT IN WHEN THE MARKER WAS MADE,
+-- because the marker's whole point is that the state STANDS while the doubt is
+-- carried: a reader of the history has to be able to see that the two disagreed
+-- ON PURPOSE and that nothing moved the document.
+CREATE TABLE IF NOT EXISTS provenance_route_marks (
+  bundle_id      TEXT    NOT NULL,
+  seq            INTEGER NOT NULL, -- MAX+1 per bundle. The highest is the current finding
+  at             TEXT    NOT NULL,
+  by             TEXT    NOT NULL, -- the MEMBER who made the assessment. Never a machine
+  finding        TEXT    NOT NULL, -- LOOKED_INDETERMINATE (the marker) | PRESENT
+  state_at       TEXT    NOT NULL, -- current_state at the moment of marking
+  register_state TEXT    NOT NULL, -- readable | absent | unparsable | no_documents | empty
+  undetermined   INTEGER NOT NULL, -- documents whose route could not be shown
+  documents_n    INTEGER NOT NULL, -- documents the register named at all
+  documents      TEXT    NOT NULL, -- JSON per-document outcomes, so the marker says WHICH
+  PRIMARY KEY (bundle_id, seq)
+);
+-- =========================================================================
+-- REC-112, 2026-09-17 -- THIS INDEX HAD NO READER, AND IT WAS KEPT ON PURPOSE.
+-- Its reader has since landed (REC-116 / IC-120): provenanceRoutesMarked
+-- (op=provenanceroutes, R5) pages on (finding, bundle_id). What follows is
+-- the record of why it was kept, as written then.
+--
+-- WHAT IT WAITS FOR: a READ op answering the question no op asks --
+-- "which documents in this instance carry a standing LOOKED_INDETERMINATE
+-- marker". All four SQL readers of this table key on bundle_id and seq and
+-- classify in JS, so a group asking where its own record's provenance is
+-- doubted must page the whole store and count for itself. The route act is a
+-- WRITE (op-declarations declares provenanceroute mutating:true). There is no read.
+--
+-- IT IS NOT DEAD WEIGHT AND IT IS NOT MIS-SPECIFIED, and that is MEASURED
+-- rather than read off the SQL (EXPLAIN QUERY PLAN, sqlite3 3.51.0, no
+-- ANALYZE, which is this plane's live condition because nothing here ever
+-- runs one). The MEASUREMENTS ledger's M-41 carries the plans in full:
+--   the four existing readers     -- every one uses the PRIMARY KEY autoindex,
+--                                    none touches this index, and DROPPING it
+--                                    leaves all four plans IDENTICAL
+--   finding = ?                   -- SEARCH USING INDEX (finding=?)
+--   finding = ? AND bundle_id > ? -- SEARCH USING INDEX (finding=? AND
+--                                    bundle_id>?) -- BOTH columns, which is
+--                                    this plane's after-cursor paging shape
+--   COUNT over finding = ?        -- COVERING INDEX
+-- The second column is therefore not decoration: whoever declared this knew
+-- the intended reader's PAGING shape. That is evidence of a SPECIFIC reader
+-- rather than a speculative index, and it is why the act was to row the
+-- reader rather than to delete the declaration.
+--
+-- DELETING IT WAS CONSIDERED AND REFUSED. REC-92 withdrew a chain_kind index
+-- a few hundred lines down on REC-12's rule -- an index nobody seeks on is
+-- cost with no reader -- but that precedent governs ADDING one, not removing
+-- one a dated delegation has pointed at for 39 days. Removing this would take
+-- the airuns sweep's unread roster DOWN by one for a reason that is not the
+-- plane getting better, which is the one direction that ratchet must never
+-- move, and it would delete the very artifact that made the sweep find this
+-- owed act at all. The write cost is one row per member assessment, on an
+-- append-only table a member writes by hand.
+--
+-- THE INTENT SURVIVES IN THREE PLACES AND THIS IS THE THIRD, so the index is
+-- NOT the only evidence of it: CLAIMS.md carries REC-69's DELEGATION of
+-- 2026-08-09 naming the question verbatim and re-affirmed open by M0-37 on
+-- 2026-09-16, the legacy airuns.test.mjs carried it on the unread roster AND
+-- pinned it BY NAME (that suite was deleted at T20), and the declaration is here.
+--
+-- The legacy test/nc-rec69-selects.mjs patched the two lines below as exact
+-- string literals to arm two negative controls; it was deleted at T20, and no
+-- test reads these lines as text now.
+-- =========================================================================
+CREATE INDEX IF NOT EXISTS provenance_route_marks_finding
+  ON provenance_route_marks(finding, bundle_id);
+`;
+function migrateProvenanceRoutes(sql) {
+  const bare2 = PROVENANCE_ROUTES_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+  for (const s of bare2.split(";")) {
+    const t = s.trim();
+    if (t) sql.exec(t);
+  }
+}
+
+// src/provenance-routes/checks.mjs
+var checks_exports17 = {};
+__export(checks_exports17, {
+  ROUTE_MARK_CHECKS: () => ROUTE_MARK_CHECKS
+});
+var ROUTE_MARK_CHECKS = {
+  /* Marking is a NAMED ACT: a standing statement in the record with nobody's
+     name on it is not a statement. It refuses an act with NO principal, and,
+     since REC-158 (R4, as R3), a MACHINE principal too: a credential's
+     `token:<class>` stamp is nobody's name. `op=provenancechain` draws exactly
+     this line and no other (R3). (As first written, this row refused only the
+     absent principal; REC-158 widened it, and this note says so.) */
+  ROUTE_MARK_NO_AUTHOR: {
+    check: "C-34.1",
+    where: "src/provenance-routes/index.mjs provenanceRouteAssess > is-route-mark",
+    translation: "Recording that a document's route cannot be shown is an act the record has to be able to attribute, and nothing here said who is making it. Sign in and try again."
+  },
+  ROUTE_MARK_NO_BUNDLE: {
+    check: "C-34.2",
+    where: "src/provenance-routes/index.mjs provenanceRouteAssess > is-route-mark",
+    translation: "This did not say which document to look at, so nothing was assessed."
+  },
+  /* Absent and invisible answer IDENTICALLY, which is REC-25's posture rather
+     than this item's invention: a document the caller may not see must refuse
+     exactly as one that does not exist, or the refusal becomes a read. */
+  ROUTE_MARK_NO_SUCH_BUNDLE: {
+    check: "C-34.3",
+    where: "src/provenance-routes/index.mjs provenanceRouteAssess > is-route-mark",
+    translation: "The record holds no document by that name, so there was nothing to assess."
+  },
+  /* A ROUTE IS A FACT ABOUT A CAPTURED DOCUMENT. A question, a project or an
+     action was never fetched from anywhere, so asking whether its route can be
+     shown is a category error rather than a doubt — and answering it as
+     undetermined would put a marker on every inquiry in the store, which is the
+     over-strictness failure this item's third control arm exists to catch. */
+  ROUTE_MARK_NOT_A_DOCUMENT: {
+    check: "C-34.4",
+    where: "src/provenance-routes/index.mjs provenanceRouteAssess > is-route-mark",
+    translation: "Only a captured document travelled a route to get here, and this is not one. Questions, projects and actions were written in the record rather than fetched from anywhere, so there is no route to show or to doubt."
+  }
+};
+
+// src/provenance-routes/ops.mjs
+function provenanceRouteOps(routes, url, body) {
+  const q7 = (k) => url.searchParams.get(k);
+  return {
+    /* REC-54 / D-200: one bundle's chain rebuilt; `apply` is opt-in, the default a report (R2, R3). */
+    provenancechain: () => routes.provenanceChainRebuild({
+      bundleId: q7("bundleId"),
+      apply: q7("apply") === "1",
+      viewer: q7("viewer"),
+      author: q7("author")
+    }),
+    /* REC-63 / DEC-56 / D-204: the route assessed and its finding recorded; no state moves (R4). */
+    provenanceroute: () => routes.provenanceRouteAssess({
+      bundleId: q7("bundleId"),
+      viewer: q7("viewer"),
+      author: q7("author")
+    }),
+    /* REC-116 / IC-120: the bundles whose standing mark is LOOKED_INDETERMINATE (R5). */
+    provenanceroutes: () => routes.provenanceRoutesMarked({ after: q7("after"), limit: q7("limit"), viewer: q7("viewer") })
+  };
+}
+
 // src/provenance-routes/index.mjs
+var PROVENANCE_ROUTES_TABLES = ["provenance_route_marks"];
+var PROVENANCE_ROUTES_MODULE = "provenance-routes";
 var te6 = new TextEncoder();
+var rand3 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
+var isObj9 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+var secondOf3 = (iso5) => String(iso5).replace(/\.\d+Z$/, "Z");
 var OBSERVATION_MEANS = Object.freeze({
   NEVER_LOOKED: "nobody looked at this level for this subject",
   LOOKED_ABSENT: "we looked and it is positively not there",
@@ -55355,6 +55420,73 @@ var FINDING_MEANS2 = Object.freeze({
   LOOKED_INDETERMINATE: OBSERVATION_MEANS.LOOKED_INDETERMINATE,
   PRESENT: OBSERVATION_MEANS.PRESENT
 });
+function chainFromEvidence(doc, { instanceName = "unnamed", at: at27 = null } = {}) {
+  if (!doc || typeof doc !== "object")
+    return { ok: false, missing: ["the document entry is not an object"] };
+  const str21 = (v) => typeof v === "string" && v.trim() !== "" ? v.trim() : null;
+  const cap = doc.capture && typeof doc.capture === "object" ? doc.capture : {};
+  const method = str21(cap.method);
+  const sha = str21(cap.sha256);
+  const retrieved = str21(doc.retrieved);
+  const locator = str21(doc.locator);
+  const custody = doc.custody && typeof doc.custody === "object" ? doc.custody : null;
+  const holder = custody ? str21(custody.holder) : null;
+  const obtained = custody ? str21(custody.obtained) : null;
+  const tsr = doc.timestamp && typeof doc.timestamp === "object" ? doc.timestamp : null;
+  const tsrAuth = tsr ? str21(tsr.authority) : null;
+  const tsrFile = tsr ? str21(tsr.token_file) : null;
+  const tsrNote = tsrAuth && tsrFile ? `; RFC3161 token ${tsrFile} from ${tsrAuth} binds these bytes to their capture instant, not to the address` : "";
+  const stamp2 = (from) => ({
+    at: at27 || secondOf3((/* @__PURE__ */ new Date()).toISOString()),
+    by: "op=provenancechain (REC-54)",
+    basis: "derived from fields the capture record already held; no fact is asserted that the register did not carry",
+    from
+  });
+  if (doc.origin && typeof doc.origin === "object" && doc.origin.kind === DOORBELL_ORIGIN) {
+    const receipt = doc.source && typeof doc.source === "object" && doc.source.receipt && typeof doc.source.receipt === "object" ? doc.source.receipt : null;
+    const knockId = receipt ? str21(receipt.knock_id) : null;
+    const received = receipt ? str21(receipt.received) : null;
+    if (!knockId || !received)
+      return { ok: false, missing: ["the knock's receipt it was received under (`source.receipt`, with `knock_id` and `received`)"] };
+    const rsha = str21(receipt.sha256) || sha;
+    return { ok: true, hops: [{
+      who: `instance ${instanceName} (doorbell)`,
+      asserts: `these bytes were received for knock:${knockId} at ${received}`,
+      evidence: `the knock's receipt, sha256 ${rsha || "not recorded"} taken as the bytes arrived${tsrNote}`,
+      bound: false,
+      via: DOORBELL_ORIGIN,
+      reconstructed: stamp2(["origin.kind", "source.receipt.knock_id", "source.receipt.received", "source.receipt.sha256"])
+    }] };
+  }
+  if (method && retrieved && locator && locator !== "in hand") {
+    const actor = str21(cap.actor_class);
+    return { ok: true, hops: [{
+      who: `instance ${instanceName} (${actor ? `${actor} ` : ""}capture method ${method})`,
+      asserts: `these bytes were served for ${locator} at ${retrieved}`,
+      evidence: `${method}, sha256 ${sha || "not recorded"} recorded at receipt${tsrNote}`,
+      bound: false,
+      via: "direct",
+      reconstructed: stamp2(["locator", "retrieved", "capture.method", "capture.actor_class", "capture.sha256"])
+    }] };
+  }
+  if (holder && obtained) {
+    return { ok: true, hops: [{
+      who: `member ${holder}`,
+      asserts: `this member held these bytes and supplied them to the record at ${obtained}`,
+      evidence: `${str21(custody.setting) || "setting not recorded"}${str21(custody.attestation) ? `; ${str21(custody.attestation)}` : ""}; sha256 ${sha || "not recorded"} recorded at receipt${tsrNote}`,
+      bound: false,
+      via: "member",
+      reconstructed: stamp2(["custody.holder", "custody.obtained", "custody.setting", "custody.attestation", "capture.sha256"])
+    }] };
+  }
+  const missing = [];
+  if (!locator || locator === "in hand") missing.push("a fetched address (`locator`)");
+  if (!retrieved) missing.push("the instant it was retrieved (`retrieved`)");
+  if (!method) missing.push("how it was captured (`capture.method`)");
+  if (!holder) missing.push("a named custodian (`custody.holder`)");
+  if (!obtained) missing.push("when the custodian obtained it (`custody.obtained`)");
+  return { ok: false, missing };
+}
 var ROUTE_MARK_NOTE = "this document stays where the group put it: a verification was an attested act by people, and this record corrects FORWARD rather than un-saying one (DEC-19). What is recorded here is that its ROUTE cannot be shown from the evidence held \u2014 a statement about our evidence, not about the bytes. The state and this finding disagree deliberately, and neither is a defect in the other.";
 function routeFinding(objectType, mark) {
   if (objectType !== "information")
@@ -55392,15 +55524,576 @@ function routeFinding(objectType, mark) {
     note: marked ? ROUTE_MARK_NOTE : "this document's route was assessed and every document in its register can be shown"
   };
 }
+var ROUTE_FINDING_KEY = "route";
+var ROUTE_TALLY_MARKED_MAX = 20;
+var ROUTE_TALLY_NOTE = "these are STATED DOUBTS, not conformance errors, and they are deliberately not counted in `tally` or `withErrors`: each names a document whose route cannot be shown, standing where the group put it (DEC-56/DEC-19). `NEVER_LOOKED` is a different fact again \u2014 it means no assessment has run, not that anything is wrong.";
+var ROUTE_MARKED_FINDING = "LOOKED_INDETERMINATE";
+var ROUTE_MARKED_LIMIT_DEFAULT = 50;
+var ROUTE_MARKED_LIMIT_MAX = 200;
+var ROUTE_MARKED_CAUSES = {
+  no_documents_visible: "there is no captured document in this record that this viewer may see, so the question cannot be asked of them. This says NOTHING about whether any document carries a marker",
+  never_assessed: "no document in this record has EVER been assessed for its provenance route. This is NEVER_LOOKED \u2014 the absence of the question having been asked \u2014 and it is NOT a finding that every route can be shown. Nobody has looked",
+  none_standing: "documents in this record HAVE been assessed, and every assessment that still stands found the route showable. This is the earned statement that no document carries a marker: somebody looked",
+  page_exhausted: "there are no further marked documents after this cursor. Documents DO carry standing markers in this record \u2014 this page is past the last of them, which is a fact about the cursor and not about the record"
+};
+function rowUnlessStated(files, row2) {
+  const md = files.find((f17) => f17 && f17.path === "bundle.md");
+  const fm = md && typeof md.text === "string" ? parseFrontmatter(md.text).data : null;
+  const out = {};
+  for (const [k, v] of Object.entries(row2))
+    if (!(fm && typeof fm === "object" && Object.prototype.hasOwnProperty.call(fm, k))) out[k] = v;
+  return out;
+}
 var rowRefusal4 = (family) => (code, detail, extra) => {
   const row2 = family[code];
   return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail, ...extra || {} };
 };
 var actRefusal3 = rowRefusal4(PROVENANCE_ACT_CHECKS);
+var ProvenanceRoutes = class {
+  #sql;
+  #record;
+  #membership;
+  #promotion;
+  #now;
+  #instanceName;
+  constructor({ storage, record, membership, promotion, now, instanceName } = {}) {
+    this.#sql = storage.sql;
+    this.#record = record;
+    this.#membership = membership;
+    this.#promotion = promotion;
+    this.#now = typeof now === "function" ? now : () => (/* @__PURE__ */ new Date()).toISOString();
+    this.#instanceName = typeof instanceName === "string" && instanceName ? instanceName : "unnamed";
+  }
+  #rows(q7, ...a) {
+    return [...this.#sql.exec(q7, ...a)];
+  }
+  #one(q7, ...a) {
+    const r = this.#rows(q7, ...a);
+    return r.length ? r[0] : null;
+  }
+  /** This module's table (R12), created or brought up to shape. Called by the host at every boot; idempotent. */
+  migrate() {
+    migrateProvenanceRoutes(this.#sql);
+    return { ok: true };
+  }
+  /** REC-54 / D-200: rebuild the provenance chains of ONE bundle from the
+   *  evidence its own capture record holds, through the plane's own write path.
+   *
+   *  Reports before it writes and writes nothing unless `apply` is set, because
+   *  the dispositions this exists for are corrections to the REAL record and
+   *  each one is a decision that wants its evidence read first.
+   *
+   *  A document that ALREADY has a chain is never touched — overwriting a
+   *  recorded route with a derived one would destroy the better evidence and
+   *  replace a witnessed chain with a reconstructed one.
+   *
+   *  The bundle is refused WHOLE when any document cannot be derived, on
+   *  release()'s precedent: a register half-reconstructed is a record where the
+   *  reader cannot tell which documents were established and which were skipped.
+   */
+  provenanceChainRebuild({ bundleId = "", apply = false, author = null, viewer = null } = {}) {
+    const who2 = String(author ?? "").trim();
+    if (!who2 || isMachineIdentity(who2))
+      return {
+        ok: false,
+        reason: "NO_AUTHOR",
+        detail: who2 ? `'${who2.slice(0, 60)}' is a machine credential. Reconstructing a provenance chain is a named member's act: the record must show which person decided that the evidence supported this route` : "reconstructing a provenance chain is a named act: the record must show who decided that the evidence supported this route"
+      };
+    if (!bundleId)
+      return actRefusal3("NO_BUNDLE", "pass bundleId=<id>");
+    const head = this.#record.head(bundleId);
+    const seen = head && this.#membership.inSight(bundleId, viewer) ? {
+      bundle_sha: head.bundleSha,
+      object_type: head.type,
+      group_id: head.groupId,
+      title: head.title,
+      current_state: head.currentState,
+      prior_state: head.priorState,
+      ...this.#one(`SELECT created, last_updated, criticality FROM bundles WHERE bundle_id=?`, bundleId) || {}
+    } : null;
+    if (!seen)
+      return { ok: false, reason: "NO_SUCH_BUNDLE", bundleId };
+    const img = this.#record.readImage(bundleId) || {};
+    const raw = img["data/provenance.json"];
+    if (typeof raw !== "string")
+      return {
+        ok: false,
+        reason: "NO_REGISTER",
+        detail: "this record carries no readable data/provenance.json, so there is no capture record to derive from"
+      };
+    let reg;
+    try {
+      reg = JSON.parse(raw);
+    } catch {
+      return { ok: false, reason: "UNPARSABLE_REGISTER", detail: "data/provenance.json is not valid JSON" };
+    }
+    const docs = reg && Array.isArray(reg.documents) ? reg.documents : null;
+    if (!docs)
+      return { ok: false, reason: "NO_DOCUMENTS", detail: 'data/provenance.json must be {"documents": [...]}' };
+    const at27 = secondOf3(this.#now());
+    const instanceName = this.#instanceName;
+    const report = [], refused2 = [];
+    let changed = 0;
+    const next = docs.map((d, i) => {
+      const existing = d && typeof d === "object" ? d.provenance_chain : void 0;
+      if (Array.isArray(existing) && existing.length) {
+        report.push({ index: i, file: d.file ?? null, outcome: "already_recorded", hops: existing.length });
+        return d;
+      }
+      const built = chainFromEvidence(d, { instanceName, at: at27 });
+      if (!built.ok) {
+        report.push({ index: i, file: (d && d.file) ?? null, outcome: "undetermined", missing: built.missing });
+        refused2.push(i);
+        return d;
+      }
+      changed++;
+      report.push({
+        index: i,
+        file: (d && d.file) ?? null,
+        outcome: "reconstructed",
+        hops: built.hops.length,
+        who: built.hops.map((h) => h.who)
+      });
+      return { ...d, provenance_chain: built.hops };
+    });
+    if (refused2.length)
+      return {
+        ok: false,
+        reason: "EVIDENCE_INSUFFICIENT",
+        bundleId,
+        documents: report,
+        /* REC-63 / D-204: the honest route, named in the refusal that
+           needs it. Until now a bundle whose chain could not be
+           reconstructed had nowhere to go but `retire`, which asserts
+           something quite different — that the document is withdrawn.
+           It has somewhere to go now: the doubt is RECORDED at the state
+           the document already sits in, which is what DEC-56 settles. */
+        route: routeFinding("information", this.#latestRouteMark(bundleId)),
+        detail: "the capture record does not hold a route for every document in this register, and a chain that cannot be reconstructed is UNDETERMINED rather than assumed. Nothing was written. Stating the route these bytes took would be an invention, which is the one thing this path exists to refuse. What CAN be done is to say so in the record: op=provenanceroute records a standing marker on this document that its route cannot be shown, leaving the document where it is (DEC-56, DEC-19)."
+      };
+    if (!apply || !changed)
+      return {
+        ok: true,
+        bundleId,
+        applied: false,
+        changed,
+        documents: report,
+        /* REC-63: the marker travels with the report too, so an operator
+           deciding whether to rebuild sees whether this document already
+           carries a standing statement that its route cannot be shown. */
+        route: routeFinding("information", this.#latestRouteMark(bundleId)),
+        detail: changed ? "pass apply=1 to write these chains into the register" : "every document already records a chain"
+      };
+    const text5 = JSON.stringify({ ...reg, documents: next }, null, 2);
+    const bytes2 = new TextEncoder().encode(text5);
+    const carried = [];
+    for (const path of this.#record.livePaths(bundleId) || []) {
+      if (path === "data/provenance.json") continue;
+      const f17 = this.#record.readFile(bundleId, path);
+      if (!f17) continue;
+      carried.push(typeof f17.text === "string" ? { path, text: f17.text, bytes: te6.encode(f17.text).length, sha256: f17.sha256 } : { path, blobSha: f17.blobSha, sha256: f17.sha256, bytes: f17.bytes });
+    }
+    const promoted = this.#promotion.promote({
+      bundleId,
+      base: seen.bundle_sha,
+      snapKey: `${at27.replace(/[-:]/g, "")}_${rand3(4)}`,
+      author: who2,
+      files: [{
+        path: "data/provenance.json",
+        text: text5,
+        bytes: bytes2.length,
+        sha256: createSha256().update(bytes2).hex()
+      }, ...carried],
+      /* D-563: the row's title and state are sent ONLY where the held document states none. `promote` now derives
+         them from the document and refuses a label that contradicts it; relabelling from the ROW would refuse this
+         correction on every bundle whose row an envelope once wrote apart from its bytes — M-172 counted 11 in `bio`
+         (row `prior_state` null, document `collected`). Where the document states them the projection takes the
+         document's value, which is the value the bundle's own bytes have always carried. */
+      meta: {
+        object_type: seen.object_type,
+        group: seen.group_id,
+        ...rowUnlessStated(carried, {
+          title: seen.title,
+          current_state: seen.current_state,
+          prior_state: seen.prior_state ?? null
+        }),
+        created: seen.created,
+        last_updated: seen.last_updated,
+        criticality: seen.criticality ?? null
+      }
+    });
+    if (!promoted.ok) return { ...promoted, bundleId, documents: report };
+    return { ok: true, bundleId, applied: true, changed, documents: report, sha: promoted.bundleSha ?? null };
+  }
+  /** The current finding for one bundle, or null when no assessment ever ran.
+   *  Append-only: the highest `seq` is the current one and the ones before it
+   *  stay readable, which is how correction moves forward here. */
+  #latestRouteMark(bundleId) {
+    return this.#one(
+      `SELECT * FROM provenance_route_marks WHERE bundle_id=? ORDER BY seq DESC LIMIT 1`,
+      bundleId
+    ) || null;
+  }
+  /** R5's read for one bundle: the latest mark read through `routeFinding`, for the reads that publish `route`
+   *  beside a bundle (`op=list`, `op=audit`; once the retired legacy store's `#withRoute`). `objectType` is the bundle's. */
+  routeOf(bundleId, objectType) {
+    return routeFinding(objectType, this.#latestRouteMark(bundleId));
+  }
+  /** R6 — the route-marker tally over one audit page (record-core R68's `page`: `{bundles: [{bundleId, type, state}],
+   *  after, last}`), registered as the audit's `route` finding (see the block above `ROUTE_FINDING_KEY`). Reads the
+   *  standing mark of each bundle the page names, over the page's own id range, kept for the page's ids only. */
+  routeTally({ bundles = [], after = "", last = null } = {}) {
+    const page = Array.isArray(bundles) ? bundles.filter(isObj9) : [];
+    const ids = new Set(page.map((b) => b.bundleId));
+    const top2 = last ?? (page.length ? page[page.length - 1].bundleId : null);
+    const marks = /* @__PURE__ */ new Map();
+    if (page.length) {
+      for (const m of this.#rows(
+        `SELECT m.* FROM provenance_route_marks m
+          WHERE m.bundle_id > ? AND m.bundle_id <= ?
+            AND m.seq = (SELECT MAX(x.seq) FROM provenance_route_marks x WHERE x.bundle_id = m.bundle_id)`,
+        String(after ?? ""),
+        String(top2)
+      ))
+        if (ids.has(m.bundle_id)) marks.set(m.bundle_id, m);
+    }
+    const tally = { LOOKED_INDETERMINATE: 0, PRESENT: 0, NEVER_LOOKED: 0, notApplicable: 0 };
+    const marked = [];
+    let markedTotal = 0;
+    for (const b of page) {
+      const found = routeFinding(b.type, marks.get(b.bundleId) || null);
+      if (!found.applies) {
+        tally.notApplicable++;
+        continue;
+      }
+      tally[found.finding] = (tally[found.finding] || 0) + 1;
+      if (!found.marked) continue;
+      markedTotal++;
+      if (marked.length < ROUTE_TALLY_MARKED_MAX) marked.push({ bundleId: b.bundleId, state: b.state, ...found });
+    }
+    return { tally, marked, markedTotal, markedShown: marked.length, means: OBSERVATION_MEANS, note: ROUTE_TALLY_NOTE };
+  }
+  /** R10 — this module's figure for `op=stats` and purge's proof (record-core R63), as the retired legacy store's
+   *  `#counts` took it: `routeMarks`, keyed on `bundle_id`. `hid` (`{sql, args}`, the bundles the caller may not see,
+   *  or null for a whole count) drops the rows naming a hidden bundle; a row whose column is null names none and is
+   *  counted (`NULL NOT IN (…)` is NULL, so the column is read through COALESCE). Writes nothing. */
+  counts(hid = null) {
+    const hidden = isObj9(hid) && typeof hid.sql === "string";
+    const n = this.#one(
+      `SELECT count(*) AS c FROM provenance_route_marks${hidden ? ` WHERE COALESCE(bundle_id, '') NOT IN ${hid.sql}` : ""}`,
+      ...hidden && Array.isArray(hid.args) ? hid.args : []
+    ).c;
+    return { routeMarks: n };
+  }
+  /** REC-63 / DEC-56: ASSESS one document's provenance route and record what was
+   *  found — the act DEC-56's ruling licenses and D-204 said had nowhere to go.
+   *
+   *  IT RUNS THE SAME DERIVATION `op=provenancechain` RUNS, through the same
+   *  `Store.chainFromEvidence`, and that is the point rather than a convenience:
+   *  the marker must say the route cannot be shown for exactly the registers the
+   *  reconstruction path refuses to invent a chain for, or the two would disagree
+   *  about one fact and a member would have to know which to believe.
+   *
+   *  IT WRITES NOTHING INTO THE BUNDLE. No state moves, no file changes, no sha
+   *  changes — the whole shape of DEC-56(b) is that the document stays where the
+   *  group put it. `test/m/provenance-routes/chain-route.test.mjs` (R4) asserts the
+   *  head (bundle_sha, current_state) is identical across a marking.
+   *
+   *  A REPEAT THAT FOUND THE SAME THING APPENDS NOTHING. The record adds when
+   *  something changed; a second identical row would be the record repeating
+   *  itself rather than saying anything, and it would let a caller grow the log
+   *  without limit. */
+  provenanceRouteAssess({ bundleId = "", author = null, viewer = null } = {}) {
+    const refusal21 = rowRefusal4(ROUTE_MARK_CHECKS);
+    const who2 = String(author ?? "").trim();
+    if (!who2 || isMachineIdentity(who2))
+      return refusal21(
+        "ROUTE_MARK_NO_AUTHOR",
+        who2 ? `'${who2.slice(0, 60)}' is a machine credential. Recording that a route cannot be shown is a named member's act: the record must show which person assessed the evidence and found it did not support a route, and a credential's class is nobody's name.` : "recording that a route cannot be shown is a named act: the record must show who assessed the evidence and found it did not support a route. A standing statement with nobody's name on it is not a statement."
+      );
+    if (!bundleId)
+      return refusal21("ROUTE_MARK_NO_BUNDLE", "pass bundleId=<id>");
+    const gate = viewerPredicate(viewer);
+    const seen = this.#one(
+      `SELECT bundle_id, object_type, current_state FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
+      bundleId,
+      ...gate.args
+    );
+    if (!seen)
+      return refusal21(
+        "ROUTE_MARK_NO_SUCH_BUNDLE",
+        "no document of that name is in the record, or none this viewer may see \u2014 the two answer identically here, as they do on every read addressed to a record (REC-25/D-15).",
+        { bundleId }
+      );
+    if (seen.object_type !== "information")
+      return refusal21(
+        "ROUTE_MARK_NOT_A_DOCUMENT",
+        `this record is a ${String(seen.object_type).slice(0, 40)}, and only a captured document travelled a route to get into the record. Marking one would put a doubt on every question in the store, which says nothing about any of them.`,
+        { bundleId, objectType: seen.object_type }
+      );
+    const img = this.#record.readImage(bundleId) || {};
+    const raw = img["data/provenance.json"];
+    let registerState = "readable", docs = [];
+    if (typeof raw !== "string") registerState = "absent";
+    else {
+      let reg = null;
+      try {
+        reg = JSON.parse(raw);
+      } catch {
+        reg = void 0;
+      }
+      if (reg === void 0) registerState = "unparsable";
+      else if (!reg || !Array.isArray(reg.documents)) registerState = "no_documents";
+      else if (!reg.documents.length) registerState = "empty";
+      else docs = reg.documents;
+    }
+    const documents = [];
+    let undetermined = 0;
+    for (let i = 0; i < docs.length; i++) {
+      const d = docs[i];
+      const existing = d && typeof d === "object" ? d.provenance_chain : void 0;
+      if (Array.isArray(existing) && existing.length) {
+        documents.push({ index: i, file: (d && d.file) ?? null, outcome: "recorded", hops: existing.length });
+        continue;
+      }
+      const built = chainFromEvidence(d, { instanceName: "unassessed", at: "1970-01-01T00:00:00Z" });
+      if (built.ok) {
+        documents.push({ index: i, file: (d && d.file) ?? null, outcome: "derivable" });
+        continue;
+      }
+      undetermined++;
+      documents.push({ index: i, file: (d && d.file) ?? null, outcome: "undetermined", missing: built.missing });
+    }
+    const finding3 = registerState !== "readable" || undetermined > 0 ? "LOOKED_INDETERMINATE" : "PRESENT";
+    const at27 = secondOf3(this.#now());
+    const docsJson = JSON.stringify(documents);
+    const prev = this.#latestRouteMark(bundleId);
+    const same = prev && prev.finding === finding3 && prev.register_state === registerState && prev.undetermined === undetermined && prev.documents_n === docs.length && prev.documents === docsJson;
+    if (!same) {
+      const seq = (this.#one(
+        `SELECT COALESCE(MAX(seq), 0) AS m FROM provenance_route_marks WHERE bundle_id=?`,
+        bundleId
+      ).m || 0) + 1;
+      this.#sql.exec(
+        `INSERT INTO provenance_route_marks
+           (bundle_id, seq, at, by, finding, state_at, register_state, undetermined, documents_n, documents)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        bundleId,
+        seq,
+        at27,
+        who2,
+        finding3,
+        seen.current_state,
+        registerState,
+        undetermined,
+        docs.length,
+        docsJson
+      );
+    }
+    return {
+      ok: true,
+      bundleId,
+      appended: !same,
+      route: routeFinding("information", this.#latestRouteMark(bundleId)),
+      documents,
+      detail: same ? "this assessment found exactly what the last one found, so nothing was appended: the record adds when something changed rather than repeating itself" : finding3 === "LOOKED_INDETERMINATE" ? "recorded: this document's route cannot be shown from the evidence held. Its state has NOT moved and no byte of it was touched" : "recorded: every document in this register can show its route"
+    };
+  }
+  /* ===================================================================== *
+   * REC-116 / IC-120 — THE READ THE MARKER NEVER HAD.
+   * ===================================================================== *
+   *
+   * REC-69's DELEGATION of 2026-08-09 asked one question — *which documents in
+   * this instance carry a standing `LOOKED_INDETERMINATE` marker* — and the
+   * INDEX for it landed 2026-08-08, one day before the sweep that would have
+   * caught it. The reader never did. For 39 days `op=provenanceroute` was
+   * `mutating: true`, a WRITE, `query.mjs` named this table ZERO times, and a
+   * group wanting to know where its own record's provenance was doubted had to
+   * page the whole store and count for itself. This is that reader.
+   *
+   * IT ANSWERS THE DELEGATED QUESTION AND NOT A WIDER ONE, AND THAT IS A
+   * DECISION RATHER THAN AN OMISSION. `finding` is NOT a caller parameter: it is
+   * bound from the constant below. A caller-chosen finding would have needed a
+   * refusal for a value outside the stored vocabulary, and therefore a fifth
+   * DEC-49 code minted for a READ — but the stronger reason is the row's own
+   * warning. The cheapest wrong answer here is *an op that returns every
+   * document with any route row at all*: non-empty, plausible, and not the
+   * question. An op that cannot be ASKED for that cannot drift into it.
+   *
+   * ============ WHY THIS IS NOT `WHERE finding = 'LOOKED_INDETERMINATE'` =====
+   *
+   * THE TABLE IS APPEND-ONLY AND CORRECTION MOVES FORWARD (DEC-19, and the
+   * schema comment says so). A document marked at `seq` 1 and re-assessed
+   * showable at `seq` 2 has NO STANDING MARKER — the doubt was raised and then
+   * answered. A bare `finding = ?` returns every document that EVER carried the
+   * marker, which would publish a standing doubt over documents whose route the
+   * record can now show. That is the record claiming more than it can support,
+   * which `CLAUDE.md` ranks worse than a missing feature. So the predicate
+   * carries the same `MAX(seq)` clause `routeTally` and `#latestRouteMark`
+   * already use — three readers, one rule about what "current" means.
+   *
+   * ============ THE TWO FACTS THIS CONSTRUCT EXISTS TO SEPARATE =============
+   *
+   * *The op returned nothing* and *no document carries a marker* are DIFFERENT
+   * FACTS, and an empty list that cannot say which is the unearned absence this
+   * whole design was written against — D-129's vocabulary, `OBSERVATION-LOG-
+   * DESIGN.md` §5.1's three causes, and `Store.routeFinding`'s own NEVER_LOOKED
+   * branch are all the same rule. An empty page therefore always carries a
+   * CAUSE, taken in order, and each one is a different statement about the
+   * world:
+   *
+   *   `no_documents_visible`  this viewer can see no captured document at all,
+   *                           so the question is not askable of them. Covers a
+   *                           DENY stamp and an empty store, and those two are
+   *                           deliberately indistinguishable — REC-25/D-15.
+   *   `never_assessed`        documents exist and NOT ONE has ever been
+   *                           assessed. NEVER_LOOKED, at the level of the whole
+   *                           instance. This is the cause that is NOT "no
+   *                           document carries a marker".
+   *   `none_standing`         assessments exist and every one of them found the
+   *                           route showable. THIS, and only this, is the
+   *                           earned statement that no document carries a
+   *                           marker — earned because somebody looked.
+   *   `page_exhausted`        the caller paged past the last marked document.
+   *                           An artefact of the cursor, not a fact about the
+   *                           record, and saying so stops a reader banking it.
+   *
+   * AND `never_assessed` IS PUBLISHED EVEN WHEN THE PAGE IS FULL, because a
+   * roster of marked documents drawn over a corpus half of which nobody ever
+   * assessed is an answer whose COMPLETENESS is undetermined. `complete` says
+   * which of those two the caller is holding. Sparse is the normal condition at
+   * every level and absence at one level is not evidence of absence at the next.
+   *
+   * ============ THE FENCE =================================================
+   *
+   * A route mark names a DOCUMENT the group holds, so the page is resolved
+   * through the viewer gate and a row naming a bundle this viewer cannot see —
+   * or one that no longer exists — is WITHHELD WHOLE and counted nowhere. That
+   * is REC-103's row-whole withholding at the document level and `op=airuns`'
+   * rule for a collection read: absent, byte-identically to a row that never
+   * existed. Nothing here publishes how many rows were withheld, because that
+   * count is itself the disclosure.
+   *
+   * MEASURED RATHER THAN ASSUMED, because it changes what this fence is DOING:
+   * `viewerPredicate` filters PROJECT bundles and nothing else (`query.mjs`,
+   * and its own comment says the evidence corpus stays shared), and a route mark
+   * can only ever name an `information` bundle — the write refuses every other
+   * type with ROUTE_MARK_NOT_A_DOCUMENT. So for any RECOGNISED viewer this gate
+   * withholds nothing, and the case it is load-bearing for is the UNRECOGNISED
+   * one, where `viewerPredicate` returns `0=1` and the read fails closed. It is
+   * applied anyway rather than reasoned away: the gate is the only place that
+   * rule lives, and an op that skipped it would be correct today and wrong the
+   * day the predicate widens. */
+  provenanceRoutesMarked({ after = "", limit = null, viewer = null } = {}) {
+    const gate = viewerPredicate(viewer);
+    const asked = ROUTE_MARKED_FINDING;
+    const after0 = String(after ?? "");
+    const want = Number(limit);
+    const n = Number.isFinite(want) && want > 0 ? Math.min(Math.floor(want), ROUTE_MARKED_LIMIT_MAX) : ROUTE_MARKED_LIMIT_DEFAULT;
+    const raw = this.#rows(
+      `SELECT m.* FROM provenance_route_marks m
+        WHERE m.finding = ?
+          AND m.bundle_id > ?
+          AND m.seq = (SELECT MAX(x.seq) FROM provenance_route_marks x WHERE x.bundle_id = m.bundle_id)
+        ORDER BY m.bundle_id
+        LIMIT ?`,
+      asked,
+      after0,
+      n + 1
+    );
+    const truncated3 = raw.length > n;
+    const page = truncated3 ? raw.slice(0, n) : raw;
+    const seen = /* @__PURE__ */ new Map();
+    if (page.length)
+      for (const b of this.#rows(
+        `SELECT b.bundle_id, b.current_state, b.object_type FROM bundles b
+          WHERE b.bundle_id > ? AND b.bundle_id <= ? AND (${gate.sql})`,
+        after0,
+        page[page.length - 1].bundle_id,
+        ...gate.args
+      ))
+        seen.set(b.bundle_id, b);
+    const documents = [];
+    for (const m of page) {
+      const b = seen.get(m.bundle_id);
+      if (!b) continue;
+      documents.push({
+        bundleId: m.bundle_id,
+        state: b.current_state,
+        ...routeFinding(b.object_type, m)
+      });
+    }
+    const cursor = truncated3 && page.length ? page[page.length - 1].bundle_id : null;
+    const standing = {};
+    for (const r of this.#rows(
+      `SELECT m.finding AS f, COUNT(*) AS n FROM provenance_route_marks m
+         JOIN bundles b ON b.bundle_id = m.bundle_id
+        WHERE m.seq = (SELECT MAX(x.seq) FROM provenance_route_marks x WHERE x.bundle_id = m.bundle_id)
+          AND b.object_type = 'information'
+          AND (${gate.sql})
+        GROUP BY m.finding`,
+      ...gate.args
+    ))
+      standing[r.f] = r.n;
+    const documentsVisible = this.#one(
+      `SELECT COUNT(*) AS n FROM bundles b WHERE b.object_type = 'information' AND (${gate.sql})`,
+      ...gate.args
+    ).n;
+    const assessed = Object.values(standing).reduce((a, b) => a + b, 0);
+    const marked = standing[asked] || 0;
+    const neverAssessed = Math.max(0, documentsVisible - assessed);
+    let cause = null;
+    if (!documents.length) {
+      cause = documentsVisible === 0 ? "no_documents_visible" : assessed === 0 ? "never_assessed" : marked === 0 ? "none_standing" : "page_exhausted";
+    }
+    return {
+      ok: true,
+      finding: asked,
+      means: FINDING_MEANS2[asked],
+      documents,
+      returned: documents.length,
+      limit: n,
+      after: after0,
+      cursor,
+      truncated: truncated3,
+      /* `marked` is the TOTAL standing at this finding, beside a page bounded at
+         `limit` — the two are different numbers and publishing only the page's
+         would be REC-57's defect. */
+      census: {
+        documents_visible: documentsVisible,
+        assessed,
+        never_assessed: neverAssessed,
+        standing,
+        marked
+      },
+      /* WHY THE ANSWER LOOKS THE WAY IT DOES, IN WORDS, ALWAYS. */
+      cause,
+      complete: neverAssessed === 0,
+      says: !documents.length ? ROUTE_MARKED_CAUSES[cause] : `${marked} document${marked === 1 ? "" : "s"} in this record carry a standing marker saying their route cannot be shown from the evidence held`,
+      completeness: neverAssessed === 0 ? "every captured document this viewer can see has been assessed at least once, so this roster is complete over the corpus" : `${neverAssessed} of ${documentsVisible} captured documents have NEVER been assessed \u2014 NEVER_LOOKED, which is the ABSENCE OF THE QUESTION HAVING BEEN ASKED and not a finding that their routes can be shown. This roster is complete over what was assessed and says nothing about the rest`
+    };
+  }
+};
+var instances11 = /* @__PURE__ */ new WeakMap();
+function provenanceRoutesOf(host, deps) {
+  let p = instances11.get(host);
+  if (!p) {
+    const d = deps || {};
+    const record = d.record || recordOf(host);
+    const membership = d.membership || membershipOf(host, { record });
+    const promotion = d.promotion || promotionOf(host);
+    p = new ProvenanceRoutes({ ...d, storage: d.storage || host.storage, record, membership, promotion });
+    instances11.set(host, p);
+    record.declarePurge(PROVENANCE_ROUTES_MODULE, PROVENANCE_ROUTES_TABLES);
+    record.registerAuditFinding(PROVENANCE_ROUTES_MODULE, ROUTE_FINDING_KEY, (page) => p.routeTally(page));
+    record.registerCounts(PROVENANCE_ROUTES_MODULE, ["routeMarks"], (hid) => p.counts(hid));
+  }
+  return p;
+}
 
 // src/retrieval/checks.mjs
-var checks_exports16 = {};
-__export(checks_exports16, {
+var checks_exports18 = {};
+__export(checks_exports18, {
   MEANING_READ_CHECKS: () => MEANING_READ_CHECKS,
   SELECTION_CHECKS: () => SELECTION_CHECKS
 });
@@ -56351,7 +57044,7 @@ function digestOf(ids) {
   }
   return (h1 >>> 0).toString(16).padStart(8, "0") + (h2 >>> 0).toString(16).padStart(8, "0");
 }
-var rand3 = (n = 12) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
+var rand4 = (n = 12) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 function answerChanged(drift, moved) {
   if (moved === true) return true;
   try {
@@ -57292,7 +57985,7 @@ var Retrieval = class _Retrieval {
       const plan = compile4({ q: q7, viewer, sort, dir }, this.#via);
       members = this.runQuery(plan.statements.snapshot(), tally);
     }
-    const handle = "sel-" + rand3(12);
+    const handle = "sel-" + rand4(12);
     const now = new Date(this.#selNowMs());
     const rec = {
       handle,
@@ -57652,9 +58345,9 @@ function observationOf(o, sql) {
     leadReferentVisible: (kind, ref, viewer) => o.referentVisible(kind, ref, viewer)
   };
 }
-var instances11 = /* @__PURE__ */ new WeakMap();
+var instances12 = /* @__PURE__ */ new WeakMap();
 function retrievalOf(host, deps) {
-  let r = instances11.get(host);
+  let r = instances12.get(host);
   if (!r) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -57664,7 +58357,7 @@ function retrievalOf(host, deps) {
     const storage = d.storage || (host.storage ?? host);
     const observation = d.observation || observationOf(observationLogOf(host), storage.sql);
     r = new Retrieval({ ...d, storage, record, membership, promotion, extraction, observation });
-    instances11.set(host, r);
+    instances12.set(host, r);
     const answer = record.declarePurge("retrieval", RETRIEVAL_PURGE);
     if (answer && answer.ok === false)
       throw new Error(`retrieval: record-core refused its purge declaration: ${answer.reason} (${answer.table})`);
@@ -58041,8 +58734,8 @@ function migrateProgressions(sql) {
 }
 
 // src/progressions/checks.mjs
-var checks_exports17 = {};
-__export(checks_exports17, {
+var checks_exports19 = {};
+__export(checks_exports19, {
   DISPOSITIONS: () => DISPOSITIONS,
   GENERIC_CODES: () => GENERIC_CODES,
   PROGRESSION_CHECKS: () => PROGRESSION_CHECKS,
@@ -59351,7 +60044,7 @@ var Progressions = class _Progressions {
       const d = recorded.get(pk + "::" + sk);
       return !!(d && d.applies);
     };
-    const instances44 = [];
+    const instances45 = [];
     const groups = /* @__PURE__ */ new Map();
     for (const p of this.#pairs()) {
       const inst = this.#assemble(p.progression_key, p.entity_id);
@@ -59363,7 +60056,7 @@ var Progressions = class _Progressions {
       const findings = [...missing, ...overdueF, ...others];
       if (!findings.length) continue;
       const entityLabel = inst.entity ? inst.entity.label : null;
-      instances44.push({
+      instances45.push({
         progression_key: inst.progression_key,
         progression_label: inst.label,
         definition_version: inst.definition_version,
@@ -59441,10 +60134,10 @@ var Progressions = class _Progressions {
     })).sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
     return {
       ok: true,
-      instances: instances44,
+      instances: instances45,
       proposals,
       dispositions,
-      instance_count: instances44.length,
+      instance_count: instances45.length,
       proposal_count: proposals.length,
       disposition_count: dispositions.length
     };
@@ -59467,7 +60160,7 @@ var Progressions = class _Progressions {
       established: f17.grade_determined === true && isEstablished(f17.grade),
       needs_confirmation: f17.grade === "C"
     });
-    const instances44 = [];
+    const instances45 = [];
     for (const r of rows2) {
       const ck = r.progression_key + "\0" + r.entity_id;
       let a = assembled.get(ck);
@@ -59486,7 +60179,7 @@ var Progressions = class _Progressions {
       const missing = inst.findings.filter((f17) => f17.kind === "missing_predecessor");
       const others = inst.findings.filter((f17) => f17.kind !== "missing_predecessor");
       const findings = [...missing, ...a.overdue, ...others].map(project).map((f17) => ({ ...f17, disposition: a.decided.get(f17.stage_key) ?? null }));
-      instances44.push({
+      instances45.push({
         progression_key: inst.progression_key,
         progression_label: inst.label,
         definition_version: inst.definition_version,
@@ -59499,7 +60192,7 @@ var Progressions = class _Progressions {
         open_finding_count: findings.filter((f17) => !(f17.disposition && f17.disposition.applies)).length
       });
     }
-    return { ok: true, capture_sha: captureSha, count: instances44.length, instances: instances44 };
+    return { ok: true, capture_sha: captureSha, count: instances45.length, instances: instances45 };
   }
   /* ===================================================================== *
    * DECISIONS (R20–R22; REC-7, REC-184, REC-211).
@@ -59607,9 +60300,9 @@ function progressionOps(p, url, body) {
     captureprogressions: () => p.captureProgressions({ captureSha: q7("sha256"), nowMs: q7("now") })
   };
 }
-var instances12 = /* @__PURE__ */ new WeakMap();
+var instances13 = /* @__PURE__ */ new WeakMap();
 function progressionsOf(host, deps) {
-  let p = instances12.get(host);
+  let p = instances13.get(host);
   if (!p) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -59623,7 +60316,7 @@ function progressionsOf(host, deps) {
       entities: d.entities || entitiesOf(host, { record }),
       connections: d.connections || { weakerGrade }
     });
-    instances12.set(host, p);
+    instances13.set(host, p);
     record.declarePurge("progressions", PROGRESSIONS_TABLES);
     registerFigures5(p);
   }
@@ -60159,7 +60852,7 @@ function blockEntries(text5, key) {
 function fmSafe(s) {
   return String(s ?? "").replace(/[\r\n]+/g, " ").replace(/["\\]/g, "'").trim();
 }
-function rand4(n = 32) {
+function rand5(n = 32) {
   return [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
@@ -61429,7 +62122,7 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
         const promoted = this.#promote({
           bundleId: id,
           base: cur.bundle_sha,
-          snapKey: `${when.replace(/[-:]/g, "")}_${rand4(4)}`,
+          snapKey: `${when.replace(/[-:]/g, "")}_${rand5(4)}`,
           author: author || "member",
           files: [mdFile(text5), ...carriedFiles(this.sql, id)],
           meta: {
@@ -61982,7 +62675,7 @@ Apportioned: ${legs.length} leg(s), ${rows2.length} placement(s), ${legs.filter(
       promoted = this.#promote({
         bundleId: target,
         base: b.bundle_sha,
-        snapKey: `${when.replace(/[-:]/g, "")}_${rand4(4)}`,
+        snapKey: `${when.replace(/[-:]/g, "")}_${rand5(4)}`,
         author: who2,
         files: [mdFile(text5), ...carriedFiles(this.sql, target)],
         meta: {
@@ -62000,7 +62693,7 @@ Apportioned: ${legs.length} leg(s), ${rows2.length} placement(s), ${legs.filter(
         const cp = this.#promote({
           bundleId: pl.id,
           base: null,
-          snapKey: `${when.replace(/[-:]/g, "")}_${rand4(4)}`,
+          snapKey: `${when.replace(/[-:]/g, "")}_${rand5(4)}`,
           author: who2,
           files: [mdFile(pl.text)],
           meta: {
@@ -62411,7 +63104,7 @@ Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(
     const promoted = this.#promote({
       bundleId: target,
       base: b.bundle_sha,
-      snapKey: `${when.replace(/[-:]/g, "")}_${rand4(4)}`,
+      snapKey: `${when.replace(/[-:]/g, "")}_${rand5(4)}`,
       author: who2,
       files: [mdFile(text5), ...carriedFiles(this.sql, target)],
       /* NO STATE MOVES. The meta carries the document's own state forward
@@ -63036,9 +63729,9 @@ Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(
     };
   }
 };
-var instances13 = /* @__PURE__ */ new WeakMap();
+var instances14 = /* @__PURE__ */ new WeakMap();
 function inquiryOf(host, deps) {
-  let k = instances13.get(host);
+  let k = instances14.get(host);
   if (!k) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -63046,7 +63739,7 @@ function inquiryOf(host, deps) {
     const promotion = d.promotion || promotionOf(host, { record, membership });
     const content = d.content || contentOf(host, { record, membership });
     k = new Inquiry({ ...d, host, storage: d.storage || host.storage, record, membership, promotion, content });
-    instances13.set(host, k);
+    instances14.set(host, k);
     record.declarePurge("inquiry", INQUIRY_PURGE);
     if (typeof record.registerAuditContext === "function")
       record.registerAuditContext("inquiry", (id) => {
@@ -63235,8 +63928,8 @@ function appendConclusionEntry(text5, inquiryId, f17) {
 }
 
 // src/basis-versions/checks.mjs
-var checks_exports18 = {};
-__export(checks_exports18, {
+var checks_exports20 = {};
+__export(checks_exports20, {
   BASIS_VERSION_CHECKS: () => BASIS_VERSION_CHECKS,
   BOILERPLATE_FORMS: () => BOILERPLATE_FORMS,
   CONCLUDE_ACT_CHECKS: () => CONCLUDE_ACT_CHECKS,
@@ -66306,9 +66999,9 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     };
   }
 };
-var instances14 = /* @__PURE__ */ new WeakMap();
+var instances15 = /* @__PURE__ */ new WeakMap();
 function basisVersionsOf(host, deps) {
-  let bv = instances14.get(host);
+  let bv = instances15.get(host);
   if (!bv) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -66324,7 +67017,7 @@ function basisVersionsOf(host, deps) {
       basisFor: typeof given.basisFor === "function" ? given.basisFor : (id, o) => (own3 ||= inquiryOf(host, { record, membership, promotion, content })).basisFor(id, o)
     };
     bv = new BasisVersions({ ...d, inquiry, storage: d.storage || host.storage, record, membership, promotion, content });
-    instances14.set(host, bv);
+    instances15.set(host, bv);
     record.declarePurge("basis-versions", BASIS_VERSIONS_TABLES);
     registerBasisVersionGrammar(record);
     promotion.registerStep("basis-versions", { check: (c) => bv.check(c), project: (c) => bv.project(c) });
@@ -66406,8 +67099,8 @@ function basisVersionsOps(bv, url, body) {
 }
 
 // src/action-grammar/checks.mjs
-var checks_exports19 = {};
-__export(checks_exports19, {
+var checks_exports21 = {};
+__export(checks_exports21, {
   ACTION_ACT_CHECKS: () => ACTION_ACT_CHECKS,
   ACTION_BASIS_KINDS: () => ACTION_BASIS_KINDS,
   ACTION_CATALOGUE_CHECKS: () => ACTION_CATALOGUE_CHECKS,
@@ -67790,8 +68483,8 @@ function axisResult(axis, members, exhausted, depthBound = DEPTH_BOUND) {
 }
 
 // src/strength/checks.mjs
-var checks_exports20 = {};
-__export(checks_exports20, {
+var checks_exports22 = {};
+__export(checks_exports22, {
   PARTITION_INDEPENDENCE_CHECKS: () => PARTITION_INDEPENDENCE_CHECKS,
   STRENGTH_BAR_CHECKS: () => STRENGTH_BAR_CHECKS,
   VERSION_STRENGTH_CHECKS: () => VERSION_STRENGTH_CHECKS,
@@ -69245,9 +69938,9 @@ function strengthOps(s, url, body) {
     })
   };
 }
-var instances15 = /* @__PURE__ */ new WeakMap();
+var instances16 = /* @__PURE__ */ new WeakMap();
 function strengthOf(host, deps) {
-  let s = instances15.get(host);
+  let s = instances16.get(host);
   if (!s) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -69259,7 +69952,7 @@ function strengthOf(host, deps) {
       return f17 && f17.ok ? f17.value || null : null;
     });
     s = new Strength({ ...d, host, storage, record, membership, producingGroup });
-    instances15.set(host, s);
+    instances16.set(host, s);
     s.migrate();
     record.declarePurge("strength", [...STRENGTH_PURGED_TABLES], { exempt: STRENGTH_EXEMPT_TABLES });
     promotion.registerStep("strength", { project: (c) => s.project(c) });
@@ -69412,8 +70105,8 @@ var CONTRADICTION_COLUMNS = Object.freeze([
 ]);
 
 // src/contradiction/checks.mjs
-var checks_exports21 = {};
-__export(checks_exports21, {
+var checks_exports23 = {};
+__export(checks_exports23, {
   CONTRADICTION_CANDIDATE_CHECKS: () => CONTRADICTION_CANDIDATE_CHECKS,
   CONTRADICTION_PAIR_CHECKS: () => CONTRADICTION_PAIR_CHECKS
 });
@@ -69722,7 +70415,7 @@ function setOrAddScalar3(text5, key, value) {
     }
   return [...lines.slice(0, end2), `${key}: ${value}`, ...lines.slice(end2)].join("\n");
 }
-function rand5(n = 4) {
+function rand6(n = 4) {
   return [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
@@ -69837,10 +70530,10 @@ var STORED_ROW = `candidate, key, a_kind, a_ref, a_version, a_bundle_id, b_kind,
   proposed_by, label, reason, state, origin, at, a_side, b_side`;
 var RUN_GATE_DECLARED = "RUN_GATE_DECLARED";
 var RUN_GATE_MALFORMED = "RUN_GATE_MALFORMED";
-var instances16 = /* @__PURE__ */ new WeakMap();
+var instances17 = /* @__PURE__ */ new WeakMap();
 function contradictionOf(ctx, opts = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let c = instances16.get(storage);
+  let c = instances17.get(storage);
   if (!c) {
     const record = opts.record ?? recordOf(ctx);
     const lazy = (given, make) => given ?? make;
@@ -69854,7 +70547,7 @@ function contradictionOf(ctx, opts = {}) {
       basisVersions: lazy(opts.basisVersions, () => basisVersionsOf(ctx, { record })),
       inquiry: lazy(opts.inquiry, () => inquiryServices(ctx))
     });
-    instances16.set(storage, c);
+    instances17.set(storage, c);
     const promotion = typeof opts.promotion === "object" && opts.promotion ? opts.promotion : promotionOf(ctx, { record });
     if (promotion && typeof promotion.registerStep === "function")
       promotion.registerStep("contradiction", { check: (step) => c.promotionCheck(step) });
@@ -72090,7 +72783,7 @@ var Contradiction = class _Contradiction {
       const promoted = p.promote({
         bundleId: id,
         base: null,
-        snapKey: `takeup_${String(when).replace(/[-:.]/g, "")}_${rand5(4)}`,
+        snapKey: `takeup_${String(when).replace(/[-:.]/g, "")}_${rand6(4)}`,
         author: who2,
         actorIdentity: who2,
         actorViewer: viewer,
@@ -72197,7 +72890,7 @@ var Contradiction = class _Contradiction {
       const written = this.#p().promote({
         bundleId: id,
         base: head.bundleSha,
-        snapKey: `resolve_${String(when).replace(/[-:.]/g, "")}_${rand5(4)}`,
+        snapKey: `resolve_${String(when).replace(/[-:.]/g, "")}_${rand6(4)}`,
         author: who2,
         actorIdentity: who2,
         actorViewer: viewer,
@@ -72885,8 +73578,8 @@ function contradictionOps(c, url, body) {
 }
 
 // src/sources/checks.mjs
-var checks_exports22 = {};
-__export(checks_exports22, {
+var checks_exports24 = {};
+__export(checks_exports24, {
   SECRET_NOT_RECOGNISED_ANSWER: () => SECRET_NOT_RECOGNISED_ANSWER,
   SOURCES_CHECKS: () => SOURCES_CHECKS,
   badDisclosure: () => badDisclosure,
@@ -73101,7 +73794,7 @@ var claimSentence = (claimedBy, at27) => `named by ${claimedBy} on ${String(at27
 var HEX645 = /^[0-9a-f]{64}$/;
 var DATE = /^\d{4}-\d{2}-\d{2}$/;
 var str4 = (v) => typeof v === "string" ? v.trim() : "";
-var isObj9 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+var isObj10 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var rank4 = (a) => AUDIENCES.indexOf(a);
 var safeJson12 = (s) => {
   try {
@@ -73113,7 +73806,7 @@ var safeJson12 = (s) => {
 var hex4 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 function evidenceOf(v) {
   if (typeof v === "string" && v.trim() && v.length <= EVIDENCE_MAX) return { statement: v.trim() };
-  if (isObj9(v) && typeof v.cite === "string" && v.cite.trim() && v.cite.length <= EVIDENCE_MAX) {
+  if (isObj10(v) && typeof v.cite === "string" && v.cite.trim() && v.cite.length <= EVIDENCE_MAX) {
     const note = typeof v.note === "string" && v.note.trim() ? v.note.trim().slice(0, EVIDENCE_MAX) : null;
     return note ? { cite: v.cite.trim(), note } : { cite: v.cite.trim() };
   }
@@ -73258,7 +73951,7 @@ var Sources = class _Sources {
   /** R1: the source as it stood when the capture was received (the capture's own `source`, verbatim), and beside it the
    *  source's current history, each value read as R5 allows. */
   sourceOf(args = {}) {
-    const { captureSha, viewer } = isObj9(args) ? args : {};
+    const { captureSha, viewer } = isObj10(args) ? args : {};
     const reader = this.#memberOf(viewer);
     if (!reader || typeof captureSha !== "string" || !HEX645.test(captureSha)) return noSuchSource(null, { captureSha: HEX645.test(String(captureSha)) ? captureSha : null });
     const knocks = this.#pulledKnocks(captureSha);
@@ -73353,7 +74046,7 @@ var Sources = class _Sources {
   }
   /** R5: the read log, to the members listed on an entry (their entries' reads) and to administrators (every read). */
   readLog(args = {}) {
-    const { source, viewer } = isObj9(args) ? args : {};
+    const { source, viewer } = isObj10(args) ? args : {};
     const reader = this.#memberOf(viewer);
     if (!reader || !this.#source(source)) return noSuchSource(source);
     const all = this.#rows(`SELECT source_id AS source, entry_id AS entry, reader, at FROM source_reads WHERE source_id = ? ORDER BY seq`, source);
@@ -73397,7 +74090,7 @@ var Sources = class _Sources {
   }
   /** R9: the ladder for a viewer, with who knows and how; a withheld value stays withheld (R5). */
   rungOf(args = {}) {
-    const { source, viewer } = isObj9(args) ? args : {};
+    const { source, viewer } = isObj10(args) ? args : {};
     const reader = this.#memberOf(viewer);
     if (!reader || !this.#source(source)) return noSuchSource(source);
     const r = this.#rung(source);
@@ -73438,7 +74131,7 @@ var Sources = class _Sources {
   /* ---- recording a disclosure (R2–R5) ---- */
   /** R2–R5 (`op=sourcedisclose`). */
   recordDisclosure(args = {}) {
-    const a = isObj9(args) ? args : {};
+    const a = isObj10(args) ? args : {};
     const by = this.#memberOf(a.by);
     const src = this.#source(a.source);
     if (!by || !src) return noSuchSource(a.source);
@@ -73449,7 +74142,7 @@ var Sources = class _Sources {
   /** R2–R5, in order: the fields (BAD_DISCLOSURE, naming the field), the evidence (NO_EVIDENCE), the sight list
    *  (NO_SIGHT_LIST). Answers the entry to write, or the refusal. */
   #disclosureRefusal(a, src) {
-    const rv = isObj9(a.revealed) ? a.revealed : null;
+    const rv = isObj10(a.revealed) ? a.revealed : null;
     if (!rv || !KINDS.includes(rv.kind))
       return badDisclosure("revealed.kind", `what was revealed is one of ${KINDS.join(", ")}`);
     const kind = rv.kind;
@@ -73585,7 +74278,7 @@ var Sources = class _Sources {
   /** R6 (`op=sourcelink`). A presented `knockerSecret` whose digest is either source's knocker digest makes the claim's
    *  basis `same_secret`; the secret is never stored or answered. The claim merges nothing. */
   async linkClaim(args = {}) {
-    const a = isObj9(args) ? args : {};
+    const a = isObj10(args) ? args : {};
     const by = this.#memberOf(a.by);
     const src = this.#source(a.source), to = this.#source(a.to);
     if (!by || !src) return noSuchSource(a.source);
@@ -73684,7 +74377,7 @@ var Sources = class _Sources {
   }
   /** R7 (`op=sourceconsent`): a member records the source's consent, with its evidence. */
   recordConsent(args = {}) {
-    const a = isObj9(args) ? args : {};
+    const a = isObj10(args) ? args : {};
     const by = this.#memberOf(a.by);
     const src = this.#source(a.source);
     if (!by || !src) return noSuchSource(a.source);
@@ -73706,7 +74399,7 @@ var Sources = class _Sources {
   }
   /** R7 (`op=sourceconsentwithdraw`): binds only later publications. */
   withdrawConsent(args = {}) {
-    const a = isObj9(args) ? args : {};
+    const a = isObj10(args) ? args : {};
     const by = this.#memberOf(a.by);
     const src = this.#source(a.source);
     if (!by || !src) return noSuchSource(a.source);
@@ -73728,7 +74421,7 @@ var Sources = class _Sources {
    *  it answers only what consent or the public record already opens to that audience, so it logs nothing (R5, K539).
    *  It writes nothing and never throws. */
   publishableAt(args = {}) {
-    const { source, audience, at: at27 = null } = isObj9(args) ? args : {};
+    const { source, audience, at: at27 = null } = isObj10(args) ? args : {};
     try {
       if (!this.#source(source)) return noSuchSource(source);
       if (!AUDIENCES.includes(audience)) return badDisclosure("audience", `an audience is one of ${AUDIENCES.join(", ")}`);
@@ -73770,7 +74463,7 @@ var Sources = class _Sources {
    *  a rate refusal answers as the knock's does. Every other failure answers `SECRET_NOT_RECOGNISED`, byte for byte
    *  the same. `sourceAddress` and `now` are the control plane's, as for a knock. */
   async consentBySecret(args = {}) {
-    const a = isObj9(args) ? args : {};
+    const a = isObj10(args) ? args : {};
     const cap = this.#capture;
     let rate;
     try {
@@ -73818,7 +74511,7 @@ function sourcesOf(ctx, deps = {}) {
 }
 function sourcesOps(s, url, body) {
   const q7 = (k) => url.searchParams.get(k);
-  const b = isObj9(body) ? body : {};
+  const b = isObj10(body) ? body : {};
   return {
     sourceof: () => s.sourceOf({ captureSha: q7("capture") ?? b.captureSha, viewer: q7("viewer") }),
     sourcedisclose: () => s.recordDisclosure({ ...b, by: q7("by") }),
@@ -73837,8 +74530,8 @@ function sourcesOps(s, url, body) {
 }
 
 // src/reevaluation/checks.mjs
-var checks_exports23 = {};
-__export(checks_exports23, {
+var checks_exports25 = {};
+__export(checks_exports25, {
   REEVALUATION_ACT_CHECKS: () => REEVALUATION_ACT_CHECKS,
   REEVAL_POLICY_AGE_DAYS: () => REEVAL_POLICY_AGE_DAYS,
   REEVAL_SOURCES: () => REEVAL_SOURCES,
@@ -76242,9 +76935,9 @@ Why: ${line}
     return fm ? checkReevalPending(fm) : [];
   }
 };
-var instances17 = /* @__PURE__ */ new WeakMap();
+var instances18 = /* @__PURE__ */ new WeakMap();
 function reevaluationOf(host, deps) {
-  let r = instances17.get(host);
+  let r = instances18.get(host);
   if (!r) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -76252,7 +76945,7 @@ function reevaluationOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     r = new Reevaluation({ ...d, host, storage, record, membership, promotion });
-    instances17.set(host, r);
+    instances18.set(host, r);
     r.migrate();
     record.declarePurge("reevaluation", REEVALUATION_TABLES);
     r.inquiry.onRaised("reevaluation", ({ target, cause, since, viewer }) => r.raise({ target, source: cause, since, viewer }));
@@ -76330,8 +77023,8 @@ function delivererOf(stored) {
 }
 
 // src/publication/checks.mjs
-var checks_exports24 = {};
-__export(checks_exports24, {
+var checks_exports26 = {};
+__export(checks_exports26, {
   ATTRIBUTION_ACT_CHECKS: () => ATTRIBUTION_ACT_CHECKS,
   CASE_DOCUMENT_FORMAT: () => CASE_DOCUMENT_FORMAT,
   CASE_DOCUMENT_FORMATS_ACCEPTED: () => CASE_DOCUMENT_FORMATS_ACCEPTED,
@@ -77914,15 +78607,15 @@ function corpusExportOps(ce, q7) {
     exportlog: () => ce.exportLog({ limit: q7("limit") })
   };
 }
-var instances18 = /* @__PURE__ */ new WeakMap();
+var instances19 = /* @__PURE__ */ new WeakMap();
 function corpusExportOf(host, deps) {
-  let c = instances18.get(host);
+  let c = instances19.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     c = new CorpusExport({ ...d, storage, record });
-    instances18.set(host, c);
+    instances19.set(host, c);
     c.migrate();
     c.purgeDeclaration = record.declarePurge("corpus-export", [], { exempt: [...CORPUS_EXPORT_EXEMPT] });
   }
@@ -80409,9 +81102,9 @@ var Publication = class {
     return reg;
   }
 };
-var instances19 = /* @__PURE__ */ new WeakMap();
+var instances20 = /* @__PURE__ */ new WeakMap();
 function publicationOf(host, deps) {
-  let p = instances19.get(host);
+  let p = instances20.get(host);
   if (!p) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -80419,7 +81112,7 @@ function publicationOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     p = new Publication({ ...d, host, storage, record, membership, promotion });
-    instances19.set(host, p);
+    instances20.set(host, p);
     p.migrate();
     p.purgeDeclaration = record.declarePurge("publication", PUBLICATION_TABLES, { exempt: PUBLICATION_EXEMPT });
     void p.corpusExport;
@@ -80876,16 +81569,16 @@ case_project: ${pid}
     };
   }
 };
-var instances20 = /* @__PURE__ */ new WeakMap();
+var instances21 = /* @__PURE__ */ new WeakMap();
 function projectStageOf(host, deps) {
-  let s = instances20.get(host);
+  let s = instances21.get(host);
   if (!s) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     s = new ProjectStage({ ...d, host, storage, record, membership });
-    instances20.set(host, s);
+    instances21.set(host, s);
   }
   return s;
 }
@@ -80898,8 +81591,8 @@ function projectStageOps(s, url) {
 }
 
 // src/public-read/checks.mjs
-var checks_exports25 = {};
-__export(checks_exports25, {
+var checks_exports27 = {};
+__export(checks_exports27, {
   CASE_RESOLUTION_CHECKS: () => CASE_RESOLUTION_CHECKS,
   PUBLISHED_READ_CHECKS: () => PUBLISHED_READ_CHECKS,
   PUBLISHED_STORE_CHECKS: () => PUBLISHED_STORE_CHECKS,
@@ -81978,15 +82671,15 @@ var PublicRead = class {
     return legacy.map((r) => ({ case_id: r.case_id, edition: Number(r.edition) }));
   }
 };
-var instances21 = /* @__PURE__ */ new WeakMap();
+var instances22 = /* @__PURE__ */ new WeakMap();
 function publicReadOf(host, deps) {
-  let r = instances21.get(host);
+  let r = instances22.get(host);
   if (!r) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const publication = d.publication || publicationOf(host);
     r = new PublicRead({ storage, publication });
-    instances21.set(host, r);
+    instances22.set(host, r);
   }
   return r;
 }
@@ -82010,8 +82703,8 @@ function publicReadOps(r, url) {
 }
 
 // src/network-notices/checks.mjs
-var checks_exports26 = {};
-__export(checks_exports26, {
+var checks_exports28 = {};
+__export(checks_exports28, {
   NETWORK_NOTICE_CHECKS: () => NETWORK_NOTICE_CHECKS,
   rowOf: () => rowOf5
 });
@@ -83442,16 +84135,16 @@ for (const m of ["prepareNotice", "postNotice"]) {
     return withRow2(await fn.apply(this, a));
   };
 }
-var instances22 = /* @__PURE__ */ new WeakMap();
+var instances23 = /* @__PURE__ */ new WeakMap();
 function networkNoticesOf(host, deps) {
-  let n = instances22.get(host);
+  let n = instances23.get(host);
   if (!n) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     n = new NetworkNotices({ ...d, host, storage, record, membership, env: d.env ?? host.env ?? null });
-    instances22.set(host, n);
+    instances23.set(host, n);
     n.migrate();
     record.declarePurge("network-notices", NETWORK_NOTICES_TABLES.map((name2) => ({ name: name2, keys: [] })));
     const publicRead = d.publicRead || publicReadOf(host);
@@ -83499,8 +84192,8 @@ function networkNoticesPublicReads(m) {
 }
 
 // src/ratification/checks.mjs
-var checks_exports27 = {};
-__export(checks_exports27, {
+var checks_exports29 = {};
+__export(checks_exports29, {
   CASE_CITATION_VERSIONS: () => CASE_CITATION_VERSIONS,
   CASE_CONCLUSION_CHECKS: () => CASE_CONCLUSION_CHECKS,
   CASE_DOCUMENT_FAMILY: () => CASE_DOCUMENT_FAMILY,
@@ -84457,7 +85150,7 @@ function noAttestingKeyRefusal(signer) {
 var RELEASE_ACK_MAX2 = 500;
 var rows = (sql, q7, ...a) => [...sql.exec(q7, ...a)];
 var one = (sql, q7, ...a) => rows(sql, q7, ...a)[0] ?? null;
-var rand6 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
+var rand7 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 function release(deps, { handle, acknowledgment = "", mitigation = "", viewer = null, owner = null, author = null } = {}) {
   const { sql, promotion, retrieval } = deps;
   const who2 = String(author ?? "").trim();
@@ -84679,7 +85372,7 @@ function moveMember({ sql, promotion }, { id, when, author, to, blurb, sessionEn
   return { promoted: promotion.promote({
     bundleId: id,
     base: cur.bundle_sha,
-    snapKey: `${when.replace(/[-:]/g, "")}_${rand6(4)}`,
+    snapKey: `${when.replace(/[-:]/g, "")}_${rand7(4)}`,
     author,
     files: [{
       path: "bundle.md",
@@ -85961,13 +86654,13 @@ var Ratification = class _Ratification {
     }, a);
   }
 };
-var instances23 = /* @__PURE__ */ new WeakMap();
+var instances24 = /* @__PURE__ */ new WeakMap();
 var MINT_SEED = Object.freeze([
   Object.freeze(["CASE", "cases", "case_id"]),
   Object.freeze(["CASE", "case_documents", "case_id"])
 ]);
 function ratificationOf(host, deps) {
-  let r = instances23.get(host);
+  let r = instances24.get(host);
   if (!r) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -85975,7 +86668,7 @@ function ratificationOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     r = new Ratification({ ...d, host, storage, record, membership, promotion });
-    instances23.set(host, r);
+    instances24.set(host, r);
     promotion.registerCaseCatalogue("ratification", checkCaseDocument);
     (d.capture || captureOf(host)).registerReader("batch-examination", "ratification", (id) => r.examine(id));
     promotion.registerStep("ratification", { check: (c) => r.check(c) });
@@ -86021,8 +86714,8 @@ function ratificationOps(r, url, body) {
 }
 
 // src/bias/checks.mjs
-var checks_exports28 = {};
-__export(checks_exports28, {
+var checks_exports30 = {};
+__export(checks_exports30, {
   BIAS_BAR_PHRASING: () => BIAS_BAR_PHRASING,
   BIAS_CHECKS: () => BIAS_CHECKS,
   BIAS_STATEMENT_KINDS: () => BIAS_STATEMENT_KINDS,
@@ -86544,7 +87237,7 @@ var safeJson15 = (s) => {
     return null;
   }
 };
-var isObj10 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+var isObj11 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var str10 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
 var sha256Hex10 = (text5) => createSha256().update(enc.encode(String(text5))).hex();
 function statementRows(bundleId, fm) {
@@ -86617,7 +87310,7 @@ var Bias = class _Bias {
   /* The same gate from a predicate already compiled (`viewerPredicate`'s answer, R43's `gate`). A predicate that is
      not `{sql, args}` admits nothing (fail closed). */
   static #gateOver(col, gate) {
-    if (!isObj10(gate) || typeof gate.sql !== "string" || !Array.isArray(gate.args)) return { sql: `${GATE_MARK} 0=1`, args: [] };
+    if (!isObj11(gate) || typeof gate.sql !== "string" || !Array.isArray(gate.args)) return { sql: `${GATE_MARK} 0=1`, args: [] };
     if (gate.scope === "member") return { sql: `${GATE_MARK} 1=1`, args: [] };
     if (gate.scope === "DENY") return { sql: `${GATE_MARK} 0=1`, args: [] };
     return {
@@ -87318,7 +88011,7 @@ var Bias = class _Bias {
     for (const item of batch) read2.push({ ...item, wp: await item.source.read(item.key) });
     for (const { source, key, wp } of _Bias.#ranked(read2, rank6, Number(nowMs))) {
       out.read++;
-      const lens = wp && isObj10(wp.lens) ? wp.lens : null;
+      const lens = wp && isObj11(wp.lens) ? wp.lens : null;
       const now = wp && lens ? this.#lensNow(wp.context) : { undetermined: true };
       const then = lens && typeof lens.statements_sha === "string" ? lens.statements_sha : null;
       const moved = !lens || now.undetermined || lens.basis !== "at_open" && (then === null || now.sha === null) ? null : then !== now.sha;
@@ -87570,7 +88263,7 @@ var Bias = class _Bias {
    *  run-productions' `counts`) leaves out a row naming such a bundle: a statement by its bundle, an adoption by its
    *  bundle or its project. Synchronous; writes nothing; never throws (a count that cannot be read answers null). */
   counts(hid = null) {
-    const h = isObj10(hid) && typeof hid.sql === "string" && Array.isArray(hid.args) ? hid : null;
+    const h = isObj11(hid) && typeof hid.sql === "string" && Array.isArray(hid.args) ? hid : null;
     const c = (t, ...keys) => {
       try {
         const conds = h ? keys.map((k) => `COALESCE(${k}, '') NOT IN ${h.sql}`) : [];
@@ -87809,8 +88502,8 @@ function biasOps(b, url, body) {
 }
 
 // src/case-authoring/checks.mjs
-var checks_exports29 = {};
-__export(checks_exports29, {
+var checks_exports31 = {};
+__export(checks_exports31, {
   CASE_DERIVATION_CHECKS: () => CASE_DERIVATION_CHECKS,
   CASE_DISCLOSURE_CHECKS: () => CASE_DISCLOSURE_CHECKS,
   PUBLISH_ACT_CHECKS: () => PUBLISH_ACT_CHECKS,
@@ -90889,16 +91582,16 @@ case_project: ${project}
     };
   }
 };
-var instances24 = /* @__PURE__ */ new WeakMap();
+var instances25 = /* @__PURE__ */ new WeakMap();
 function caseAuthoringOf(host, deps) {
-  let c = instances24.get(host);
+  let c = instances25.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     c = new CaseAuthoring({ ...d, host, storage, record, membership });
-    instances24.set(host, c);
+    instances25.set(host, c);
     c.migrate();
     record.declarePurge("case-authoring", CASE_AUTHORING_TABLES);
   }
@@ -91008,8 +91701,8 @@ function blanksOf(text5) {
 }
 
 // src/filing-templates/checks.mjs
-var checks_exports30 = {};
-__export(checks_exports30, {
+var checks_exports32 = {};
+__export(checks_exports32, {
   FILING_TEMPLATE_CHECKS: () => FILING_TEMPLATE_CHECKS,
   rowOf: () => rowOf7
 });
@@ -92853,16 +93546,16 @@ for (const m of [
     return withRow3(fn.apply(this, a));
   };
 }
-var instances25 = /* @__PURE__ */ new WeakMap();
+var instances26 = /* @__PURE__ */ new WeakMap();
 function filingTemplatesOf(host, deps) {
-  let f17 = instances25.get(host);
+  let f17 = instances26.get(host);
   if (!f17) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     f17 = new FilingTemplates({ ...d, storage, record, membership, env: d.env ?? host.env ?? null });
-    instances25.set(host, f17);
+    instances26.set(host, f17);
     f17.migrate();
     record.declarePurge("filing-templates", [...FILING_TEMPLATES_TABLES]);
     record.registerMintSeed("filing-templates", FILING_TEMPLATES_MINT_SEED.map((x) => [...x]));
@@ -92969,8 +93662,8 @@ function filingTemplatesOps(m, url, body) {
 }
 
 // src/local-facts/checks.mjs
-var checks_exports31 = {};
-__export(checks_exports31, {
+var checks_exports33 = {};
+__export(checks_exports33, {
   LOCAL_FACTS_CHECKS: () => LOCAL_FACTS_CHECKS,
   refusal: () => refusal10
 });
@@ -93038,10 +93731,10 @@ var YEAR_RE = /^\d{4}$/;
 var PATH_MAX = 1e3;
 var enc2 = (s) => encodeURIComponent(s);
 var name = (s) => typeof s === "string" && s.trim() !== "" && s === s.trim();
-var isObj11 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+var isObj12 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 function officeToken(o) {
   if (name(o)) return `role=${enc2(o)}`;
-  if (isObj11(o) && Object.keys(o).length === 1 && name(o.venue)) return `venue=${enc2(o.venue)}`;
+  if (isObj12(o) && Object.keys(o).length === 1 && name(o.venue)) return `venue=${enc2(o.venue)}`;
   return null;
 }
 function officesToken(offices) {
@@ -93053,7 +93746,7 @@ function officesToken(offices) {
 }
 function factPath(parts) {
   try {
-    if (!isObj11(parts) || typeof parts.profile !== "string" || !PROFILE_RE.test(parts.profile)) return null;
+    if (!isObj12(parts) || typeof parts.profile !== "string" || !PROFILE_RE.test(parts.profile)) return null;
     const { profile, fact } = parts;
     let p = null;
     if (fact === "time_zone") p = `${profile}/time_zone`;
@@ -93065,7 +93758,7 @@ function factPath(parts) {
       p = `${profile}/holidays/${y}${o ? `/${o}` : ""}`;
     } else if (fact === "hours") {
       const of = parts.office;
-      if (!isObj11(of)) return null;
+      if (!isObj12(of)) return null;
       const keys = Object.keys(of).sort().join(",");
       if (keys === "body,role" && name(of.role) && name(of.body)) p = `${profile}/hours/role=${enc2(of.role)},body=${enc2(of.body)}`;
       else if (keys === "venue" && name(of.venue)) p = `${profile}/hours/venue=${enc2(of.venue)}`;
@@ -93132,7 +93825,7 @@ var LOCAL_FACT_HORIZONS = Object.freeze({
 var HOW_MAX = 500;
 var SOURCE_MAX = 500;
 var str13 = (v) => typeof v === "string" ? v.trim() : "";
-var isObj12 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+var isObj13 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var clone2 = (v) => v === void 0 ? void 0 : JSON.parse(JSON.stringify(v));
 var safeJson16 = (s) => {
   try {
@@ -93144,40 +93837,40 @@ var safeJson16 = (s) => {
 var addDays = (date, n) => new Date(Date.parse(`${date}T00:00:00Z`) + n * 864e5).toISOString().slice(0, 10);
 var givers = (x, own3) => own3 ? [own3] : [x.profile, ...(x.bases || []).map((b) => b.profile)].filter(Boolean);
 function factIn(p, parts, own3 = null) {
-  if (!isObj12(p)) return null;
+  if (!isObj13(p)) return null;
   const mine = (x) => givers(x, own3).includes(parts.profile);
   if (parts.fact === "time_zone") {
     const z = p.time_zone;
-    return isObj12(z) && mine(z) ? { value: z.value, status: z.status, basis: z.basis } : null;
+    return isObj13(z) && mine(z) ? { value: z.value, status: z.status, basis: z.basis } : null;
   }
   if (parts.fact === "holidays") {
     const key = officesToken(parts.offices);
-    const h = (Array.isArray(p.holidays) ? p.holidays : []).find((e) => isObj12(e) && Number(e.year) === parts.year && officesToken(e.offices) === key && mine(e));
+    const h = (Array.isArray(p.holidays) ? p.holidays : []).find((e) => isObj13(e) && Number(e.year) === parts.year && officesToken(e.offices) === key && mine(e));
     if (!h) return null;
     const days = (h.days || []).map((d) => ({ date: d.date, name: d.name })).sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
     return { value: days, status: h.status, basis: h.basis };
   }
   if (parts.fact === "hours") {
-    const hoursOf = (h) => isObj12(h) && mine(h) ? { value: { weekly: clone2(h.weekly) }, status: h.status, basis: h.basis } : null;
+    const hoursOf = (h) => isObj13(h) && mine(h) ? { value: { weekly: clone2(h.weekly) }, status: h.status, basis: h.basis } : null;
     if (parts.office.venue !== void 0) {
-      const k = (Array.isArray(p.action_kinds) ? p.action_kinds : []).find((e) => isObj12(e) && e.kind === parts.office.venue);
-      return k && isObj12(k.venue) ? hoursOf(k.venue.hours) : null;
+      const k = (Array.isArray(p.action_kinds) ? p.action_kinds : []).find((e) => isObj13(e) && e.kind === parts.office.venue);
+      return k && isObj13(k.venue) ? hoursOf(k.venue.hours) : null;
     }
-    const c = (Array.isArray(p.counterparties) ? p.counterparties : []).find((e) => isObj12(e) && e.role === parts.office.role && e.body === parts.office.body && isObj12(e.hours));
+    const c = (Array.isArray(p.counterparties) ? p.counterparties : []).find((e) => isObj13(e) && e.role === parts.office.role && e.body === parts.office.body && isObj13(e.hours));
     return c ? hoursOf(c.hours) : null;
   }
   return null;
 }
 function factsOf(p) {
   const out = [];
-  if (!isObj12(p)) return out;
-  if (isObj12(p.time_zone)) out.push({ profile: p.id, fact: "time_zone" });
+  if (!isObj13(p)) return out;
+  if (isObj13(p.time_zone)) out.push({ profile: p.id, fact: "time_zone" });
   for (const h of Array.isArray(p.holidays) ? p.holidays : [])
-    if (isObj12(h)) out.push({ profile: p.id, fact: "holidays", year: Number(h.year), ...h.offices ? { offices: h.offices } : {} });
+    if (isObj13(h)) out.push({ profile: p.id, fact: "holidays", year: Number(h.year), ...h.offices ? { offices: h.offices } : {} });
   for (const c of Array.isArray(p.counterparties) ? p.counterparties : [])
-    if (isObj12(c) && isObj12(c.hours)) out.push({ profile: p.id, fact: "hours", office: { role: c.role, body: c.body } });
+    if (isObj13(c) && isObj13(c.hours)) out.push({ profile: p.id, fact: "hours", office: { role: c.role, body: c.body } });
   for (const k of Array.isArray(p.action_kinds) ? p.action_kinds : [])
-    if (isObj12(k) && isObj12(k.venue) && isObj12(k.venue.hours)) out.push({ profile: p.id, fact: "hours", office: { venue: k.kind } });
+    if (isObj13(k) && isObj13(k.venue) && isObj13(k.venue.hours)) out.push({ profile: p.id, fact: "hours", office: { venue: k.kind } });
   return out;
 }
 function withValue(p, parts, value) {
@@ -93191,7 +93884,7 @@ function withValue(p, parts, value) {
     const h = q7.holidays.find((e) => Number(e.year) === parts.year && officesToken(e.offices) === key);
     h.days = clone2(value);
   } else {
-    if (!isObj12(value) || Object.keys(value).join() !== "weekly") return null;
+    if (!isObj13(value) || Object.keys(value).join() !== "weekly") return null;
     const target = parts.office.venue !== void 0 ? q7.action_kinds.find((k) => k.kind === parts.office.venue).venue : q7.counterparties.find((c) => c.role === parts.office.role && c.body === parts.office.body);
     target.hours.weekly = clone2(value.weekly);
   }
@@ -93235,7 +93928,7 @@ var LocalFacts = class _LocalFacts {
     if (Array.isArray(ids)) for (const id of ids) {
       if (typeof id !== "string" || held.has(id)) continue;
       const p = this.getProfile(id);
-      if (isObj12(p)) held.set(id, p);
+      if (isObj13(p)) held.set(id, p);
     }
     let view = null;
     if (held.size) {
@@ -93343,7 +94036,7 @@ var LocalFacts = class _LocalFacts {
   /** R1, R5: records a member's `confirm`, `correct` or `dispute` of the fact at `path`, appended and never replaced.
    *  Refusals in order: MACHINE_CANNOT_CONFIRM, NO_SUCH_FACT, FACT_ACT_REFUSED, FACT_HOW_REFUSED, FACT_VALUE_REFUSED. */
   factConfirm(a = {}) {
-    const b = isObj12(a) ? a : {};
+    const b = isObj13(a) ? a : {};
     const machine3 = machineRefusal(b.by);
     if (machine3) return machine3;
     const path = typeof b.path === "string" ? b.path : null;
@@ -93399,7 +94092,7 @@ var LocalFacts = class _LocalFacts {
    * ===================================================================== */
   /** R2, R3: one fact's status (with `path`), or every fact of the active profiles, corrections and disputes first. */
   factStatus(a = {}) {
-    const b = isObj12(a) ? a : {};
+    const b = isObj13(a) ? a : {};
     const active = this.#active();
     const blind = _LocalFacts.#blind(b.viewer);
     const today = this.#today();
@@ -93436,7 +94129,7 @@ var LocalFacts = class _LocalFacts {
    *  path that does not name a fact of an active profile is listed in `unknown`; one that names a fact the active
    *  profiles do not hold, in `absent`. Writes nothing. */
   factsDue(a = {}) {
-    const b = isObj12(a) ? a : {};
+    const b = isObj13(a) ? a : {};
     const active = this.#active();
     const blind = _LocalFacts.#blind(b.viewer);
     const today = this.#today();
@@ -93484,7 +94177,7 @@ function noSuchFact(path) {
 }
 function localFactsOps(s, url, body) {
   const qp = (k) => url.searchParams.get(k);
-  const b = isObj12(body) ? body : {};
+  const b = isObj13(body) ? body : {};
   const paths = () => Array.isArray(b.paths) ? b.paths : url.searchParams.getAll("path").length ? url.searchParams.getAll("path") : void 0;
   return {
     factconfirm: () => s.factConfirm({ ...b, viewer: qp("viewer") }),
@@ -93492,24 +94185,24 @@ function localFactsOps(s, url, body) {
     factsdue: () => s.factsDue({ paths: paths(), viewer: qp("viewer") })
   };
 }
-var instances26 = /* @__PURE__ */ new WeakMap();
+var instances27 = /* @__PURE__ */ new WeakMap();
 function localFactsOf(host, deps) {
-  let s = instances26.get(host);
+  let s = instances27.get(host);
   if (!s) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     s = new LocalFacts({ ...d, storage, record, membership });
-    instances26.set(host, s);
+    instances27.set(host, s);
     record.declarePurge("local-facts", LOCAL_FACTS_TABLES);
   }
   return s;
 }
 
 // src/citation/checks.mjs
-var checks_exports32 = {};
-__export(checks_exports32, {
+var checks_exports34 = {};
+__export(checks_exports34, {
   CITE_CHECKS: () => CITE_CHECKS,
   CITE_EXTENT_CHECKS: () => CITE_EXTENT_CHECKS
 });
@@ -93762,7 +94455,7 @@ var EXTENT_PARAMS = Object.freeze({
   content_id: "text"
 });
 var rowOf8 = (family, code) => ({ code, check: family[code].check, translation: family[code].translation });
-var rand7 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
+var rand8 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 var Citation = class {
   constructor({ record, membership, promotion, content, retrieval, inquiry = null, now } = {}) {
     this.record = record;
@@ -93830,7 +94523,7 @@ var Citation = class {
     return this.promotion.promote({
       bundleId: project,
       base: head.bundleSha,
-      snapKey: `${when.replace(/[-:]/g, "")}_${rand7(4)}`,
+      snapKey: `${when.replace(/[-:]/g, "")}_${rand8(4)}`,
       author: author || "member",
       files: [{ path: "bundle.md", text: text5, bytes: bytes2.length, sha256: createSha256().update(bytes2).hex() }, ...carried],
       meta: {
@@ -94438,12 +95131,12 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
     };
   }
 };
-var instances27 = /* @__PURE__ */ new WeakMap();
+var instances28 = /* @__PURE__ */ new WeakMap();
 function inquiryServices2(k) {
   return { earned: (subject, targets, contentIds) => k.earned(subject, targets, contentIds), checkLegExtentGrammar, BASIS_ROLES };
 }
 function citationOf(host, deps) {
-  let c = instances27.get(host);
+  let c = instances28.get(host);
   if (!c) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -94453,7 +95146,7 @@ function citationOf(host, deps) {
     const retrieval = d.retrieval || retrievalOf(host, { record, membership, promotion });
     const inquiry = d.inquiry || inquiryServices2(inquiryOf(host, { record, membership, promotion, content }));
     c = new Citation({ ...d, record, membership, promotion, content, retrieval, inquiry });
-    instances27.set(host, c);
+    instances28.set(host, c);
   }
   return c;
 }
@@ -94674,12 +95367,12 @@ var AffordanceFacts = class {
     };
   }
 };
-var instances28 = /* @__PURE__ */ new WeakMap();
+var instances29 = /* @__PURE__ */ new WeakMap();
 function affordancesOf(host, deps) {
-  let a = instances28.get(host);
+  let a = instances29.get(host);
   if (!a) {
     a = new AffordanceFacts(host, deps);
-    instances28.set(host, a);
+    instances29.set(host, a);
   }
   return a;
 }
@@ -95000,11 +95693,11 @@ var RUNGS2 = {
   caseratify: "attested",
   /* N364 (DEC-81 item 3): the two late acts on a capture whose co-attestation failed, each `attested` for `attest`'s own
      reason — an authority the group does not hold alone. `reattest` asks a timestamp authority for a fresh token over
-     the digest (capture R68, through provenance's `attest`; it proves the bytes existed by now, not at capture), and
+     the digest (capture R68, through attestation's `attest`, N512; it proves the bytes existed by now, not at capture), and
      `captureaccount` is refused unless a registered signer's key of the capturing member verifies the account
      (capture R69: `SIG_<reason>` otherwise). Neither is undone: each appends. */
   reattest: "attested",
-  // capture R68 · a timestamp authority's token (provenance.attest)
+  // capture R68 · a timestamp authority's token (attestation.attest)
   captureaccount: "attested",
   // capture R69 · SIG_* unless the capturing member's attesting key verifies it
   /* R32 (DEC-111, K1100): a working-on notice is published only by an owner's own signature over its revision
@@ -98670,8 +99363,8 @@ var UNATTENDED_BY_DECISION = Object.freeze({
 });
 
 // src/admission/checks.mjs
-var checks_exports33 = {};
-__export(checks_exports33, {
+var checks_exports35 = {};
+__export(checks_exports35, {
   ADMISSION_CHECKS: () => ADMISSION_CHECKS,
   AI_SCOPE_CHECKS: () => AI_SCOPE_CHECKS,
   GROUP_IDENTITY_FENCE_CHECKS: () => GROUP_IDENTITY_FENCE_CHECKS,
@@ -99743,8 +100436,8 @@ var CaptureCredentials = class _CaptureCredentials {
 };
 
 // src/run-rules/checks.mjs
-var checks_exports34 = {};
-__export(checks_exports34, {
+var checks_exports36 = {};
+__export(checks_exports36, {
   AI_RUNS_CHECKS: () => AI_RUNS_CHECKS,
   AI_RUNS_CONTEXT_CHECKS: () => AI_RUNS_CONTEXT_CHECKS,
   AI_RUN_ACT_SHAPE_CHECKS: () => AI_RUN_ACT_SHAPE_CHECKS,
@@ -100169,8 +100862,8 @@ var AI_RUNS_CHECKS = Object.freeze({
 });
 
 // src/run-productions/checks.mjs
-var checks_exports35 = {};
-__export(checks_exports35, {
+var checks_exports37 = {};
+__export(checks_exports37, {
   EXTRACT_PROPOSE_CHECKS: () => EXTRACT_PROPOSE_CHECKS,
   EXTRACT_PROPOSE_CHECK_KEYS: () => EXTRACT_PROPOSE_CHECK_KEYS,
   ROWLESS_CODES: () => ROWLESS_CODES,
@@ -100399,8 +101092,8 @@ var SUGGEST_CHECKS = pick(SUGGEST_ROWS, SUGGEST_CHECK_KEYS);
 var EXTRACT_PROPOSE_CHECKS = pick(EXTRACT_PROPOSE_ROWS, EXTRACT_PROPOSE_CHECK_KEYS);
 
 // src/capture-requests/checks.mjs
-var checks_exports36 = {};
-__export(checks_exports36, {
+var checks_exports38 = {};
+__export(checks_exports38, {
   CAPTURE_PURPOSES: () => CAPTURE_PURPOSES,
   CAPTURE_REQUEST_CHECKS: () => CAPTURE_REQUEST_CHECKS,
   CAPTURE_SOURCE_CHECKS: () => CAPTURE_SOURCE_CHECKS,
@@ -104634,9 +105327,9 @@ Changes: reading '${name2}' proposed as ${kind}, in state suggested, carrying ru
     return out;
   }
 };
-var instances29 = /* @__PURE__ */ new WeakMap();
+var instances30 = /* @__PURE__ */ new WeakMap();
 function runProductionsOf(host, deps) {
-  let p = instances29.get(host);
+  let p = instances30.get(host);
   if (!p) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -104655,7 +105348,7 @@ function runProductionsOf(host, deps) {
       basisVersions: d.basisVersions || basisVersionsOf(host, { record, membership, content }),
       now: d.now || null
     });
-    instances29.set(host, p);
+    instances30.set(host, p);
     record.declarePurge(RUN_PRODUCTIONS_MODULE, RUN_PRODUCTIONS_TABLES);
     p.basisVersions.onCandidates(RUN_PRODUCTIONS_MODULE, (a) => p.candidates(a));
   }
@@ -105363,8 +106056,8 @@ function judgementLayers() {
 var JUDGEMENT_VERSION = `${JUDGEMENT_ID}@${JUDGEMENT_EDITION}`;
 
 // src/intent/checks.mjs
-var checks_exports37 = {};
-__export(checks_exports37, {
+var checks_exports39 = {};
+__export(checks_exports39, {
   INTENT_CHECKS: () => INTENT_CHECKS,
   refusal: () => refusal14
 });
@@ -105507,8 +106200,8 @@ function refusal14(code, detail, extra) {
 }
 
 // src/review/checks.mjs
-var checks_exports38 = {};
-__export(checks_exports38, {
+var checks_exports40 = {};
+__export(checks_exports40, {
   REVIEW_COPY_CHECKS: () => REVIEW_COPY_CHECKS
 });
 var at16 = (fn, region) => `src/review/index.mjs ${fn} > ${region}`;
@@ -105581,8 +106274,8 @@ var REVIEW_COPY_CHECKS = Object.freeze({
 });
 
 // src/standards/checks.mjs
-var checks_exports39 = {};
-__export(checks_exports39, {
+var checks_exports41 = {};
+__export(checks_exports41, {
   STANDARDS_CHECKS: () => STANDARDS_CHECKS,
   refusal: () => refusal15
 });
@@ -105695,8 +106388,8 @@ function refusal15(code, detail, extra) {
 }
 
 // src/conformance/checks.mjs
-var checks_exports40 = {};
-__export(checks_exports40, {
+var checks_exports42 = {};
+__export(checks_exports42, {
   CONFORMANCE_CHECKS: () => CONFORMANCE_CHECKS,
   refusal: () => refusal16
 });
@@ -105834,8 +106527,8 @@ function refusal16(code, detail, extra = {}) {
 }
 
 // src/consequences/checks.mjs
-var checks_exports41 = {};
-__export(checks_exports41, {
+var checks_exports43 = {};
+__export(checks_exports43, {
   CONSEQUENCES_CHECKS: () => CONSEQUENCES_CHECKS
 });
 var at19 = (fn) => `src/consequences/index.mjs ${fn}`;
@@ -105863,8 +106556,8 @@ var CONSEQUENCES_CHECKS = Object.freeze({
 });
 
 // src/action-clocks/checks.mjs
-var checks_exports42 = {};
-__export(checks_exports42, {
+var checks_exports44 = {};
+__export(checks_exports44, {
   ACTION_CLOCK_CHECKS: () => ACTION_CLOCK_CHECKS
 });
 var ACTION_CLOCK_CHECKS = {
@@ -105895,8 +106588,8 @@ var ACTION_CLOCK_CHECKS = {
 };
 
 // src/filings/checks.mjs
-var checks_exports43 = {};
-__export(checks_exports43, {
+var checks_exports45 = {};
+__export(checks_exports45, {
   FILINGS_CHECKS: () => FILINGS_CHECKS,
   rowOf: () => rowOf10
 });
@@ -106082,8 +106775,8 @@ function rowOf10(code) {
 }
 
 // src/escalation/checks.mjs
-var checks_exports44 = {};
-__export(checks_exports44, {
+var checks_exports46 = {};
+__export(checks_exports46, {
   ESCALATION_CHECKS: () => ESCALATION_CHECKS,
   refusal: () => refusal17
 });
@@ -106311,8 +107004,8 @@ function refusal17(code, detail, extra) {
 }
 
 // src/action-plans/checks.mjs
-var checks_exports45 = {};
-__export(checks_exports45, {
+var checks_exports47 = {};
+__export(checks_exports47, {
   ACTION_PLAN_CHECKS: () => ACTION_PLAN_CHECKS,
   refusal: () => refusal18
 });
@@ -106619,8 +107312,8 @@ function refusal18(code, detail, extra) {
 }
 
 // src/monitoring/checks.mjs
-var checks_exports46 = {};
-__export(checks_exports46, {
+var checks_exports48 = {};
+__export(checks_exports48, {
   CADENCE_ENUM: () => CADENCE_ENUM,
   CRITICALITY_ENUM: () => CRITICALITY_ENUM,
   DRIVE_TICK_CHECKS: () => DRIVE_TICK_CHECKS,
@@ -106793,8 +107486,8 @@ function checkGatheringGrammar(ctx, findings, sweepArm = null) {
 }
 
 // src/link-sweep/checks.mjs
-var checks_exports47 = {};
-__export(checks_exports47, {
+var checks_exports49 = {};
+__export(checks_exports49, {
   SWEEP_BOUNDS: () => SWEEP_BOUNDS,
   SWEEP_CADENCES: () => SWEEP_CADENCES,
   SWEEP_CHECKS: () => SWEEP_CHECKS,
@@ -107215,8 +107908,8 @@ function sweepGrammar(s, ids) {
 }
 
 // src/tasks/checks.mjs
-var checks_exports48 = {};
-__export(checks_exports48, {
+var checks_exports50 = {};
+__export(checks_exports50, {
   QUEUE_INBOX_CHECKS: () => QUEUE_INBOX_CHECKS,
   QUEUE_MACHINE_CHECKS: () => QUEUE_MACHINE_CHECKS,
   TASK_ACTOR_CHECKS: () => TASK_ACTOR_CHECKS,
@@ -107363,8 +108056,8 @@ function checkInboxGrammar(ctx, findings) {
 }
 
 // src/queue/checks.mjs
-var checks_exports49 = {};
-__export(checks_exports49, {
+var checks_exports51 = {};
+__export(checks_exports51, {
   QUEUE_ACT_CHECKS: () => QUEUE_ACT_CHECKS,
   QUEUE_MINT_CHECKS: () => QUEUE_MINT_CHECKS,
   queueRefusal: () => queueRefusal
@@ -108933,10 +109626,10 @@ function deemingActor(attribution) {
 function lookAuthority(q7) {
   return q7 && q7.run ? { authorityKind: "run", authority: String(q7.run), actorClass: "machine" } : { authorityKind: "sweep", authority: q7 && q7.request ? String(q7.request) : null, actorClass: "plane" };
 }
-var instances30 = /* @__PURE__ */ new WeakMap();
+var instances31 = /* @__PURE__ */ new WeakMap();
 function captureRequestsOf(host, deps = {}) {
   const storage = host && host.storage ? host.storage : host;
-  let c = instances30.get(storage);
+  let c = instances31.get(storage);
   if (!c) {
     const env = deps.env || {};
     const record = deps.record || recordOf(host);
@@ -108957,7 +109650,7 @@ function captureRequestsOf(host, deps = {}) {
       inquiry: deps.inquiry || { memberUserAgent: (id) => inquiryOf(host).memberUserAgent(id) }
     };
     c = new CaptureRequests(storage, d);
-    instances30.set(storage, c);
+    instances31.set(storage, c);
     record.declarePurge(CAPTURE_REQUESTS_MODULE, [{ name: "capture_requests", keys: ["target"], clears: ["lead_inquiry"] }]);
     if (typeof record.registerCounts === "function") {
       const counted = record.registerCounts(CAPTURE_REQUESTS_MODULE, [...CAPTURE_REQUESTS_COUNT_KEYS], (hid) => c.counts(hid));
@@ -109312,8 +110005,8 @@ var GOALS_READ_MAX = 1e3;
 var AGEING_READ_MAX = 1e3;
 var AUTHORS_PAGE = 64;
 var str14 = (v) => typeof v === "string" ? v.trim() : "";
-var isObj13 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
-var rand8 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
+var isObj14 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+var rand9 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 var machine = (who2) => !str14(who2) || isMachineIdentity(str14(who2));
 var second = (iso5) => String(iso5).replace(/\.\d+Z$/, "Z");
 var reasonOf = (v) => typeof v === "string" && v.trim() !== "" ? v.trim() : null;
@@ -109419,7 +110112,7 @@ var Intent = class {
     return this.promotion.promote({
       bundleId: id,
       base: null,
-      snapKey: `${this.#when().replace(/[-:]/g, "")}_${rand8(4)}`,
+      snapKey: `${this.#when().replace(/[-:]/g, "")}_${rand9(4)}`,
       author,
       files: [{ path: "bundle.md", text: text5 }],
       meta: {
@@ -109442,7 +110135,7 @@ var Intent = class {
     return this.promotion.promote({
       bundleId: d.id,
       base: d.head.bundleSha,
-      snapKey: `${this.#when().replace(/[-:]/g, "")}_${rand8(4)}`,
+      snapKey: `${this.#when().replace(/[-:]/g, "")}_${rand9(4)}`,
       author,
       files: [{ path: "bundle.md", text: text5 }, ...carried],
       meta: {
@@ -109528,7 +110221,7 @@ var Intent = class {
   }
   /* R2: the condition's shape, then what it names, in R2's order; null when it is readable and names what exists. */
   #conditionRefusal(c) {
-    const shaped = isObj13(c) && TOKEN.test(str14(c.progression)) && TOKEN.test(str14(c.entity)) && (c.relation == null || typeof c.relation === "string" && this.entities.relationKinds().includes(c.relation)) && (c.filter == null || isObj13(c.filter) && Object.entries(c.filter).every(([k, v]) => /^[a-z][a-z0-9_]{0,39}$/.test(k) && TOKEN.test(String(v)))) && isObj13(c.required) && (c.required.stages == null || Array.isArray(c.required.stages) && c.required.stages.every((s) => TOKEN.test(String(s)))) && isObj13(c.satisfied);
+    const shaped = isObj14(c) && TOKEN.test(str14(c.progression)) && TOKEN.test(str14(c.entity)) && (c.relation == null || typeof c.relation === "string" && this.entities.relationKinds().includes(c.relation)) && (c.filter == null || isObj14(c.filter) && Object.entries(c.filter).every(([k, v]) => /^[a-z][a-z0-9_]{0,39}$/.test(k) && TOKEN.test(String(v)))) && isObj14(c.required) && (c.required.stages == null || Array.isArray(c.required.stages) && c.required.stages.every((s) => TOKEN.test(String(s)))) && isObj14(c.satisfied);
     if (!shaped)
       return refusal14("CONDITION_UNREADABLE", "a condition is {progression, entity, relation?, filter?, required: {grade?, stages?}, satisfied: {share}}, each name a bare key or id. Nothing was written.");
     const def = this.progressions.readProgression({ progressionKey: str14(c.progression) });
@@ -109585,7 +110278,7 @@ var Intent = class {
     if (!why) return refuseNoReason("setting, changing or removing an objective's measure records why, in your own words. Nothing was written.");
     const c = condition == null ? null : {
       ...condition,
-      required: isObj13(condition.required) ? {
+      required: isObj14(condition.required) ? {
         grade: condition.required.grade ?? null,
         stages: condition.required.stages ?? []
       } : condition.required,
@@ -109989,7 +110682,7 @@ Reason: ${bodyText(why)}`
     if (p.refused) return p.refused;
     const denied = this.membership.projectAuthority(project, author, "joined", "linkObjective");
     if (denied) return denied;
-    if ((Array.isArray(g.fm.objectives) ? g.fm.objectives : []).some((o) => isObj13(o) && o.project === project))
+    if ((Array.isArray(g.fm.objectives) ? g.fm.objectives : []).some((o) => isObj14(o) && o.project === project))
       return { ok: true, goal, project, already: true };
     const at27 = this.#when();
     let text5 = appendItem(g.text, "objectives", { project, by: TOKEN.test(str14(author)) ? str14(author) : q(author), at: q(at27) });
@@ -110031,7 +110724,7 @@ Reason: ${bodyText(why)}`
     return { ok: true, goal: this.#goalView(g, viewer) };
   }
   #goalView(g, viewer) {
-    const objectives = (Array.isArray(g.fm.objectives) ? g.fm.objectives : []).filter(isObj13).filter((o) => viewer == null || this.membership.inSight(o.project, viewer)).map((o) => ({ project: o.project, by: o.by ?? null, at: o.at ?? null }));
+    const objectives = (Array.isArray(g.fm.objectives) ? g.fm.objectives : []).filter(isObj14).filter((o) => viewer == null || this.membership.inSight(o.project, viewer)).map((o) => ({ project: o.project, by: o.by ?? null, at: o.at ?? null }));
     const asp = typeof g.fm.aspiration === "string" && g.fm.aspiration ? g.fm.aspiration : null;
     const aspiration = asp && (viewer == null || this.#pursuit(asp, ASPIRATION, viewer)) ? asp : null;
     return {
@@ -110413,7 +111106,7 @@ ${bodyText(note)}`
         got = [];
       }
       for (const p of Array.isArray(got) ? got : [])
-        if (isObj13(p) && typeof p.key === "string" && p.key)
+        if (isObj14(p) && typeof p.key === "string" && p.key)
           out.push({
             key: `${kind}::${p.key}`,
             source: kind,
@@ -110672,7 +111365,7 @@ ${bodyText(note)}`
     return this.promotion.promote({
       bundleId: id,
       base: null,
-      snapKey: `${at27.replace(/[-:]/g, "")}_${rand8(4)}`,
+      snapKey: `${at27.replace(/[-:]/g, "")}_${rand9(4)}`,
       author: who2,
       files: [{ path: "bundle.md", text: text5 }],
       meta: { object_type: "inquiry", current_state: "surfaced", created: at27, last_updated: at27 },
@@ -110806,7 +111499,7 @@ ${bodyText(note)}`
       reason: why
     };
     const opened = await this.#lazy(this.aiRunsRef).open({
-      ...isObj13(run2) ? run2 : {},
+      ...isObj14(run2) ? run2 : {},
       contextType: "project",
       contextId: project,
       label: why,
@@ -110814,7 +111507,7 @@ ${bodyText(note)}`
       actor: this.#memberOf(author),
       viewer: viewer ?? author
     });
-    return { ...isObj13(opened) ? opened : {}, project, reason: why, instructions };
+    return { ...isObj14(opened) ? opened : {}, project, reason: why, instructions };
   }
 };
 function refuseNoSuchGoal(detail, extra) {
@@ -110938,7 +111631,7 @@ function aspirationMachineRefusal(author, member = true) {
   };
 }
 function captureRequestsNamed(basis) {
-  if (!isObj13(basis)) return [];
+  if (!isObj14(basis)) return [];
   const out = [];
   for (const k of ["capture_request", "capture_requests", "requests"]) {
     const v = basis[k];
@@ -110954,7 +111647,7 @@ var safeJson19 = (s) => {
   }
 };
 function questionOf(p) {
-  const b = isObj13(p.basis) ? p.basis : {};
+  const b = isObj14(p.basis) ? p.basis : {};
   if (p.source === "progressions")
     return `Why is the '${b.stage_key}' stage of '${b.progression_key}' missing where the flow requires it?`;
   if (p.kind === GAP_KIND)
@@ -110984,9 +111677,9 @@ function intentOps(i, url, body) {
     workobjective: () => i.workObjective({ ...b, viewer: qp("viewer") })
   };
 }
-var instances31 = /* @__PURE__ */ new WeakMap();
+var instances32 = /* @__PURE__ */ new WeakMap();
 function intentOf(host, deps) {
-  let i = instances31.get(host);
+  let i = instances32.get(host);
   if (!i) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -111006,7 +111699,7 @@ function intentOf(host, deps) {
       retrieval: d.retrieval || (() => retrievalOf(host)),
       captureRequests: d.captureRequests || (() => captureRequestsOf(host))
     });
-    instances31.set(host, i);
+    instances32.set(host, i);
     record.declarePurge("intent", INTENT_TABLES);
     promotion.registerStep("intent", { check: (c) => i.check(c) });
     record.registerAuditCheck("intent", (image) => i.auditCheck(image));
@@ -111099,8 +111792,8 @@ var DECLARE_KEYS = Object.freeze([
 var PROPOSE_KEYS = Object.freeze(["cite", "kind", "issuer", "text", "why", "act", "proposer", "viewer"]);
 var ADOPT_KEYS = Object.freeze([...DECLARE_KEYS, "proposal"]);
 var str15 = (v) => typeof v === "string" ? v.trim() : "";
-var isObj14 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
-var rand9 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
+var isObj15 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+var rand10 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 var safeJson20 = (s) => {
   try {
     return s == null ? null : JSON.parse(s);
@@ -111256,7 +111949,7 @@ var Standards = class {
    * ===================================================================== */
   /** R1–R4, R6: record a standard. */
   standardDeclare(args = {}) {
-    const a = isObj14(args) ? args : {};
+    const a = isObj15(args) ? args : {};
     const byMachine = machineRefusal2(a.author);
     if (byMachine) return byMachine;
     const unknown = refuseFieldUnknown(a, DECLARE_KEYS);
@@ -111321,7 +112014,7 @@ var Standards = class {
         r = this.promotion.promote({
           bundleId: id,
           base: null,
-          snapKey: `${at27.replace(/[-:]/g, "")}_${rand9(4)}`,
+          snapKey: `${at27.replace(/[-:]/g, "")}_${rand10(4)}`,
           author,
           files: [{ path: "bundle.md", text: text5 }],
           meta: { object_type: STANDARD, title: titleOf2(f17.cite), current_state: "recorded", created: at27, last_updated: at27 },
@@ -111481,7 +112174,7 @@ var Standards = class {
    * ===================================================================== */
   /** R9: a proposal, stored apart from standards and labelled with who proposed it and whether it is machine work. */
   standardPropose(args = {}) {
-    const a = isObj14(args) ? args : {};
+    const a = isObj15(args) ? args : {};
     const unknown = refuseFieldUnknown(a, PROPOSE_KEYS);
     if (unknown) return unknown;
     const who2 = str15(a.proposer);
@@ -111555,7 +112248,7 @@ var Standards = class {
    *  reason is never taken from the proposal: the adopting member's own is R1's, and the proposal's `why` is the
    *  proposer's (DEC-88), answered beside it as theirs. */
   standardAdopt(args = {}) {
-    const a = isObj14(args) ? args : {};
+    const a = isObj15(args) ? args : {};
     const byMachine = machineRefusal2(a.author);
     if (byMachine) return byMachine;
     const unknown = refuseFieldUnknown(a, ADOPT_KEYS);
@@ -111670,7 +112363,7 @@ function textIds(v) {
 }
 function periodOf(p) {
   if (p === void 0 || p === null) return { from: null, to: null };
-  if (!isObj14(p) || Object.keys(p).some((k) => k !== "from" && k !== "to")) return null;
+  if (!isObj15(p) || Object.keys(p).some((k) => k !== "from" && k !== "to")) return null;
   const from = p.from ?? null, to = p.to ?? null;
   if (from !== null && !isDate2(from) || to !== null && !isDate2(to)) return null;
   if (from !== null && to !== null && to < from) return null;
@@ -111760,9 +112453,9 @@ function standardsOps(s, url, body) {
     standardadopt: () => s.standardAdopt({ ...b, viewer: qp("viewer") })
   };
 }
-var instances32 = /* @__PURE__ */ new WeakMap();
+var instances33 = /* @__PURE__ */ new WeakMap();
 function standardsOf(host, deps) {
-  let s = instances32.get(host);
+  let s = instances33.get(host);
   if (!s) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -111777,7 +112470,7 @@ function standardsOf(host, deps) {
       promotion,
       content: d.content || (() => contentOf(host, { record, membership }))
     });
-    instances32.set(host, s);
+    instances33.set(host, s);
     record.declarePurge("standards", STANDARDS_TABLES);
     promotion.registerStep("standards", { check: (c) => s.check(c) });
   }
@@ -111962,7 +112655,7 @@ var FACTS_SAY = "These are facts the record holds, as the two sides of the quest
 var OUTCOMES_DIFFER_SAYS = "The outcomes differ from one standard to another. Each is the member's, given per standard, and none is composed into one verdict.";
 var DATE_RE5 = /^\d{4}-\d{2}-\d{2}$/;
 var str16 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
-var isObj15 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+var isObj16 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var text4 = (v) => typeof v === "string" && v.trim() && v.length <= TEXT_MAX ? v.trim() : null;
 var isDate3 = (v) => typeof v === "string" && DATE_RE5.test(v) && !Number.isNaN(Date.parse(`${v}T00:00:00Z`)) && (/* @__PURE__ */ new Date(`${v}T00:00:00Z`)).toISOString().slice(0, 10) === v;
 var q3 = (s) => `"${String(s ?? "").replace(/[\r\n]+/g, " ").replace(/["\\]/g, "'")}"`;
@@ -111974,14 +112667,14 @@ var safeJson21 = (s, dflt = null) => {
     return dflt;
   }
 };
-var rand10 = (n) => Math.random().toString(36).slice(2, 2 + n).padEnd(n, "0");
+var rand11 = (n) => Math.random().toString(36).slice(2, 2 + n).padEnd(n, "0");
 function significanceKeys(v, found = /* @__PURE__ */ new Set(), depth = 0) {
   if (depth > 12 || found.size > 20) return found;
   if (Array.isArray(v)) {
     for (const x of v.slice(0, 500)) significanceKeys(x, found, depth + 1);
     return found;
   }
-  if (isObj15(v))
+  if (isObj16(v))
     for (const [k, x] of Object.entries(v).slice(0, 200)) {
       if (SIGNIFICANCE_KEYS.includes(String(k).toLowerCase())) found.add(k);
       significanceKeys(x, found, depth + 1);
@@ -111994,7 +112687,7 @@ function recommendationKeys(v, found = /* @__PURE__ */ new Set(), depth = 0) {
     for (const x of v.slice(0, 500)) recommendationKeys(x, found, depth + 1);
     return found;
   }
-  if (isObj15(v))
+  if (isObj16(v))
     for (const [k, x] of Object.entries(v).slice(0, 200)) {
       if (RECOMMENDATION_KEYS.includes(String(k).toLowerCase())) found.add(k);
       recommendationKeys(x, found, depth + 1);
@@ -112004,11 +112697,11 @@ function recommendationKeys(v, found = /* @__PURE__ */ new Set(), depth = 0) {
 function namesOutcome(v, depth = 0) {
   if (depth > 12) return false;
   if (Array.isArray(v)) return v.slice(0, 500).some((x) => namesOutcome(x, depth + 1));
-  if (isObj15(v))
+  if (isObj16(v))
     return Object.entries(v).slice(0, 200).some(([k, x]) => ["outcome", "outcomes", "verdict"].includes(String(k).toLowerCase()) || namesOutcome(x, depth + 1));
   return false;
 }
-var axisOf = (a) => isObj15(a) ? { state: a.state ?? null, grade: a.grade ?? null } : null;
+var axisOf = (a) => isObj16(a) ? { state: a.state ?? null, grade: a.grade ?? null } : null;
 var Conformance = class _Conformance {
   #deps;
   #writing = /* @__PURE__ */ new Set();
@@ -112126,7 +112819,7 @@ var Conformance = class _Conformance {
      Answers `{ok, cause}` (cause null when none) or the refusal, in R22's order. */
   #causeRefusal(cause, author) {
     if (cause === void 0 || cause === null) return { ok: true, cause: null };
-    const c = isObj15(cause) ? cause : {};
+    const c = isObj16(cause) ? cause : {};
     const statement = typeof c.statement === "string" ? c.statement.trim() : "";
     if (!statement || statement.length > CAUSE_MAX)
       return refusal16("CAUSE_UNSTATED", `a cause is stated as text of your own, of at most ${CAUSE_MAX} characters; this ${statement ? `is ${statement.length}` : "states none"}. Nothing was written.`, { max: CAUSE_MAX });
@@ -112176,13 +112869,13 @@ var Conformance = class _Conformance {
         link = null;
       }
     }
-    if (!seen || !isObj15(link) || !str16(link.candidate))
+    if (!seen || !isObj16(link) || !str16(link.candidate))
       return refusal16(
         "NO_SUCH_CONTRADICTION_INQUIRY",
         "no question you may see answers to that id as one taken up from a contradiction. One you may not see answers exactly as one that does not exist. Nothing was written.",
         { contradiction: iid }
       );
-    return { ok: true, inquiry: iid, candidate: str16(link.candidate), resolution: isObj15(link.resolution) ? link.resolution : null };
+    return { ok: true, inquiry: iid, candidate: str16(link.candidate), resolution: isObj16(link.resolution) ? link.resolution : null };
   }
   /* ===================================================================== *
    * THE PARTS OF A DETERMINATION (R1–R4, R6, R7)
@@ -112190,7 +112883,7 @@ var Conformance = class _Conformance {
   /* R1, K171 (6): the act. `{id}` names an act an earlier determination of this project minted, and answers it as
      recorded; otherwise every part is required. With `supersedes` and no act id, the act is the predecessor's (R7). */
   #actOf(act, project, supersedes) {
-    const a = isObj15(act) ? act : {};
+    const a = isObj16(act) ? act : {};
     let id = str16(a.id);
     if (!id && str16(supersedes)) {
       const prev = this.#one(
@@ -112219,12 +112912,12 @@ var Conformance = class _Conformance {
     }
     const description = text4(a.description);
     if (!description) return incomplete("description", "the act states no description of what the government did.");
-    const actor = isObj15(a.actor) ? a.actor : {};
+    const actor = isObj16(a.actor) ? a.actor : {};
     const role = text4(actor.role), body = text4(actor.body);
     if (!role || !body)
       return incomplete("actor", "the act names the office that did it by its official role and body, never by a person.");
     let at27 = null, from = null, to = null;
-    if (a.at != null || !isObj15(a.period)) {
+    if (a.at != null || !isObj16(a.period)) {
       if (!isDate3(a.at)) return incomplete("at", "the act states when it was done, as a date (YYYY-MM-DD), or a period.");
       at27 = a.at;
     } else {
@@ -112319,7 +113012,7 @@ var Conformance = class _Conformance {
       return refusal16("NO_FINDINGS", "a determination rests on at least one published finding (R14). Nothing was written.");
     const pins = [], seen = /* @__PURE__ */ new Set();
     for (const item of list2) {
-      const f17 = isObj15(item) ? {
+      const f17 = isObj16(item) ? {
         finding: str16(item.finding ?? item.id),
         version: str16(item.version),
         case: str16(item.case),
@@ -112360,8 +113053,8 @@ var Conformance = class _Conformance {
       return refusal16("NO_STANDARDS", "a determination measures the act against at least one standard the record holds (R14). Nothing was written.");
     const out = [], byId = /* @__PURE__ */ new Map();
     for (const item of list2) {
-      const id = isObj15(item) ? str16(item.standard ?? item.id) : str16(item);
-      const outcome = isObj15(item) ? item.outcome : void 0;
+      const id = isObj16(item) ? str16(item.standard ?? item.id) : str16(item);
+      const outcome = isObj16(item) ? item.outcome : void 0;
       let read2 = null;
       try {
         read2 = id ? this.standards.standardRead({ id, viewer }) : null;
@@ -112399,9 +113092,9 @@ var Conformance = class _Conformance {
     } catch {
       r = null;
     }
-    const ok2 = isObj15(r) && r.ok !== false;
+    const ok2 = isObj16(r) && r.ok !== false;
     const answer = ok2 && ["in_force", "not_in_force", "undetermined"].includes(r.state) ? r.state : "undetermined";
-    return { date, answer, why: ok2 ? r.why ?? null : isObj15(r) ? r.detail ?? r.reason ?? null : "standards did not answer" };
+    return { date, answer, why: ok2 ? r.why ?? null : isObj16(r) ? r.detail ?? r.reason ?? null : "standards did not answer" };
   }
   /* R1: every standard has a row, and every row states what the standard requires, what was done and its reading. */
   #readRows(rows2, standards) {
@@ -112413,7 +113106,7 @@ var Conformance = class _Conformance {
       return refusal16("ROWS_INCOMPLETE", `${detail} Each standard named has a row stating what it requires, what was done and its reading. Nothing was written.`, where);
     };
     for (const [i, r] of list2.entries()) {
-      const row2 = isObj15(r) ? r : {};
+      const row2 = isObj16(r) ? r : {};
       const standard = str16(row2.standard), requires = text4(row2.requires), did = text4(row2.did);
       const reading = READINGS.includes(row2.reading) ? row2.reading : null;
       if (!standard || !named.has(standard))
@@ -112440,7 +113133,7 @@ var Conformance = class _Conformance {
       return refusal16("UNCLEAR_NO_QUESTION", `${detail} Each question is sent back to an inquiry the author may see, or to a new one opened with this determination. Nothing was written.`, which);
     };
     for (const [i, x] of list2.entries()) {
-      const item = isObj15(x) ? x : { question: x };
+      const item = isObj16(x) ? x : { question: x };
       const question = text4(item.question);
       if (!question) return bad(`question ${i} states no question.`, { question: i });
       const inquiry = str16(item.inquiry);
@@ -112494,7 +113187,7 @@ var Conformance = class _Conformance {
       proposal = null,
       cause = null,
       author = null
-    } = isObj15(input) ? input : {};
+    } = isObj16(input) ? input : {};
     const viewer = input && input.viewer != null ? input.viewer : author;
     const byMachine = this.#refuseMachine(author);
     if (byMachine) return byMachine;
@@ -112508,8 +113201,8 @@ var Conformance = class _Conformance {
       standards,
       rows: rows2,
       questions,
-      evidence: isObj15(act) ? act.evidence : null
-    }) || this.#sizeRefusal({ evidence: isObj15(cause) && Array.isArray(cause.evidence) ? cause.evidence : null }, "cause");
+      evidence: isObj16(act) ? act.evidence : null
+    }) || this.#sizeRefusal({ evidence: isObj16(cause) && Array.isArray(cause.evidence) ? cause.evidence : null }, "cause");
     if (large) return large;
     const a = this.#actOf(act, pid, supersedes);
     if (!a.ok) return a;
@@ -112578,7 +113271,7 @@ var Conformance = class _Conformance {
         p = this.promotion.promote({
           bundleId: id,
           base: null,
-          snapKey: `${at27.replace(/[-:]/g, "")}_${rand10(4)}`,
+          snapKey: `${at27.replace(/[-:]/g, "")}_${rand11(4)}`,
           author,
           files: [{ path: "bundle.md", text: determinationDoc({
             id,
@@ -112735,7 +113428,7 @@ var Conformance = class _Conformance {
     return this.promotion.promote({
       bundleId: id,
       base: null,
-      snapKey: `${at27.replace(/[-:]/g, "")}_${rand10(4)}`,
+      snapKey: `${at27.replace(/[-:]/g, "")}_${rand11(4)}`,
       author,
       files: [{ path: "bundle.md", text: md }],
       meta: { object_type: "inquiry", current_state: "open", created: at27, last_updated: at27 },
@@ -112970,7 +113663,7 @@ var Conformance = class _Conformance {
         });
       for (const t of (Array.isArray(read2.text) ? read2.text : []).slice(0, LIMITS.evidence))
         if (typeof t === "string") passages.add(t);
-        else if (isObj15(t) && str16(t.content_id ?? t.id)) passages.add(str16(t.content_id ?? t.id));
+        else if (isObj16(t) && str16(t.content_id ?? t.id)) passages.add(str16(t.content_id ?? t.id));
     }
     for (const cid of [...passages].slice(0, 2 * LIMITS.evidence)) {
       if (!seen.seesContent(cid)) continue;
@@ -113087,12 +113780,12 @@ var Conformance = class _Conformance {
       questions = null,
       proposer = null,
       contradiction = null
-    } = isObj15(input) ? input : {};
+    } = isObj16(input) ? input : {};
     const viewer = input && input.viewer != null ? input.viewer : proposer;
     const pid = str16(project);
     const unseen = this.#projectRefusal(pid, viewer);
     if (unseen) return unseen;
-    const large = this.#sizeRefusal({ standards, rows: rows2, questions, evidence: isObj15(act) ? act.evidence : null });
+    const large = this.#sizeRefusal({ standards, rows: rows2, questions, evidence: isObj16(act) ? act.evidence : null });
     if (large) return large;
     if (namesOutcome(input))
       return refusal16("PROPOSAL_CANNOT_DETERMINE", "a comparison carries rows and questions and never an outcome: only a member's determination records whether the act complied. Nothing was written.");
@@ -113103,27 +113796,27 @@ var Conformance = class _Conformance {
       from = this.#contradictionInquiry(contradiction, viewer);
       if (!from.ok) return from;
     }
-    const a = isObj15(act) ? act : {};
+    const a = isObj16(act) ? act : {};
     const theAct = {
       id: str16(a.id),
       description: text4(a.description),
-      actor: isObj15(a.actor) ? { role: text4(a.actor.role), body: text4(a.actor.body) } : null,
+      actor: isObj16(a.actor) ? { role: text4(a.actor.role), body: text4(a.actor.body) } : null,
       at: isDate3(a.at) ? a.at : null,
-      period: isObj15(a.period) ? {
+      period: isObj16(a.period) ? {
         from: isDate3(a.period.from) ? a.period.from : null,
         to: isDate3(a.period.to) ? a.period.to : null
       } : null,
       evidence: Array.isArray(a.evidence) ? a.evidence.map(str16).filter(Boolean) : []
     };
-    const stds = (Array.isArray(standards) ? standards : []).map((x) => isObj15(x) ? str16(x.standard ?? x.id) : str16(x)).filter(Boolean);
-    const rs = (Array.isArray(rows2) ? rows2 : []).filter(isObj15).map((x) => ({
+    const stds = (Array.isArray(standards) ? standards : []).map((x) => isObj16(x) ? str16(x.standard ?? x.id) : str16(x)).filter(Boolean);
+    const rs = (Array.isArray(rows2) ? rows2 : []).filter(isObj16).map((x) => ({
       standard: str16(x.standard),
       requires: text4(x.requires),
       did: text4(x.did),
       reading: READINGS.includes(x.reading) ? x.reading : null,
       content: Array.isArray(x.content) ? x.content.map(str16).filter(Boolean).slice(0, LIMITS.evidence) : []
     }));
-    const qs = (Array.isArray(questions) ? questions : []).map((x) => isObj15(x) ? x : { question: x }).map((x) => ({ question: text4(x.question), inquiry: str16(x.inquiry) })).filter((x) => x.question);
+    const qs = (Array.isArray(questions) ? questions : []).map((x) => isObj16(x) ? x : { question: x }).map((x) => ({ question: text4(x.question), inquiry: str16(x.inquiry) })).filter((x) => x.question);
     const at27 = this.#when();
     const who2 = str16(proposer);
     let id = null;
@@ -113170,9 +113863,9 @@ var Conformance = class _Conformance {
     const seen = this.#sight(viewer);
     const act = safeJson21(r.act, null);
     const hidden = new Set(safeJson21(r.standards, []).filter((s) => !seen.sees(s)));
-    const rows2 = safeJson21(r.rows, []).filter((x) => !isObj15(x) || !x.standard || !hidden.has(x.standard) && seen.sees(x.standard)).map((x) => isObj15(x) && Array.isArray(x.content) ? { ...x, content: seen.contents(x.content) } : x);
+    const rows2 = safeJson21(r.rows, []).filter((x) => !isObj16(x) || !x.standard || !hidden.has(x.standard) && seen.sees(x.standard)).map((x) => isObj16(x) && Array.isArray(x.content) ? { ...x, content: seen.contents(x.content) } : x);
     const questions = safeJson21(r.questions, []).map((x) => {
-      if (!isObj15(x) || !x.inquiry || seen.sees(x.inquiry)) return x;
+      if (!isObj16(x) || !x.inquiry || seen.sees(x.inquiry)) return x;
       const { inquiry: _i, ...rest } = x;
       return rest;
     });
@@ -113180,7 +113873,7 @@ var Conformance = class _Conformance {
     return seen.mark({
       id: r.proposal_id,
       project: r.project_id,
-      act: isObj15(act) ? { ...act, evidence: seen.contents(act.evidence) } : act,
+      act: isObj16(act) ? { ...act, evidence: seen.contents(act.evidence) } : act,
       standards: safeJson21(r.standards, []).filter((s) => !hidden.has(s)),
       rows: rows2,
       questions,
@@ -113213,7 +113906,7 @@ var Conformance = class _Conformance {
       listed = null;
     }
     const cand = listed && Array.isArray(listed.candidates) ? listed.candidates.find((x) => x && x.candidate === from.candidate) : null;
-    if (!cand || !isObj15(cand.a) || !isObj15(cand.b)) return this.#contradictionInquiry(null, viewer);
+    if (!cand || !isObj16(cand.a) || !isObj16(cand.b)) return this.#contradictionInquiry(null, viewer);
     const fact = (x) => ({
       kind: x.kind ?? null,
       text: this.#sideText(x),
@@ -113260,7 +113953,7 @@ var Conformance = class _Conformance {
    *  newer capture (affected or undetermined) flags every determination whose act it evidences. Recorded once; the
    *  determination itself is not touched. */
   basisChanged(event2) {
-    if (!isObj15(event2) || !str16(event2.subject)) return { flagged: 0 };
+    if (!isObj16(event2) || !str16(event2.subject)) return { flagged: 0 };
     const kind = event2.kind === "passage" ? "passage" : "finding";
     if (kind === "passage" && !["affected", "undetermined"].includes(event2.affects)) return { flagged: 0 };
     const subject = str16(event2.subject);
@@ -113423,9 +114116,9 @@ function determinationDoc({
   ];
   return lines.join("\n");
 }
-var instances33 = /* @__PURE__ */ new WeakMap();
+var instances34 = /* @__PURE__ */ new WeakMap();
 function conformanceOf(host, deps) {
-  let c = instances33.get(host);
+  let c = instances34.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -113433,7 +114126,7 @@ function conformanceOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     c = new Conformance({ ...d, host, storage, record, membership, promotion });
-    instances33.set(host, c);
+    instances34.set(host, c);
     c.migrate();
     record.declarePurge("conformance", CONFORMANCE_TABLES);
     promotion.registerStep("conformance", { check: (x) => c.check(x) });
@@ -116361,9 +117054,9 @@ function proposalLabelFor(who2, subject) {
   const base = lawProposalLabel(who2);
   return { by: base.by, state: base.state, machine_work: base.machine_work, says: PROPOSAL_SAYS2[subject][base.state] };
 }
-var instances34 = /* @__PURE__ */ new WeakMap();
+var instances35 = /* @__PURE__ */ new WeakMap();
 function actionsOf(host, deps) {
-  let a = instances34.get(host);
+  let a = instances35.get(host);
   if (!a) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -116371,7 +117064,7 @@ function actionsOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     a = new Actions({ ...d, host, storage, record, membership, promotion });
-    instances34.set(host, a);
+    instances35.set(host, a);
     a.migrate();
     void a.conformance;
     record.declarePurge("actions", [...ACTIONS_TABLES]);
@@ -117375,16 +118068,16 @@ for (const m of ["pendingClocks", "clockPropose", "reminderSet", "reminderAnswer
     return withRow5(fn.apply(this, a));
   };
 }
-var instances35 = /* @__PURE__ */ new WeakMap();
+var instances36 = /* @__PURE__ */ new WeakMap();
 function actionClocksOf(host, deps) {
-  let a = instances35.get(host);
+  let a = instances36.get(host);
   if (!a) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     a = new ActionClocks({ ...d, host, storage, record, membership });
-    instances35.set(host, a);
+    instances36.set(host, a);
     a.migrate();
     void a.actions;
     record.declarePurge("action-clocks", ["action_reminders"]);
@@ -117616,7 +118309,7 @@ var PERSON_KEYS = ["name", "person", "individual", "personal_name", "full_name"]
 var CONCLUDED = /* @__PURE__ */ new Set(["concluded", "published"]);
 var INTERNAL2 = `${MACHINE_CLASS_PREFIX}admin`;
 var str17 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
-var isObj16 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+var isObj17 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var q4 = (v) => JSON.stringify(v ?? null);
 var json2 = (v) => v == null ? null : JSON.stringify(v);
 var parse4 = (s) => {
@@ -117629,7 +118322,7 @@ var parse4 = (s) => {
 };
 var machine2 = (who2) => !str17(who2) || isMachineIdentity(str17(who2));
 var second2 = (iso5) => String(iso5).replace(/\.\d+Z$/, "Z");
-var rand11 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
+var rand12 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 var HEX649 = /^[0-9a-f]{64}$/;
 var DATE2 = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2}))?$/;
 function refuse7(code, detail, extra = {}) {
@@ -117664,26 +118357,26 @@ function basisUnreadable(why, extra = {}) {
   return refuse7("BASIS_UNREADABLE", `${why}.${NOTHING}`, extra);
 }
 function checkAffected(a) {
-  const o = isObj16(a) ? a : {};
+  const o = isObj17(a) ? a : {};
   const kind = str17(o.kind) ? o.kind.trim().toLowerCase() : null;
-  const personKey = [o, isObj16(o.role) ? o.role : {}].flatMap((x) => PERSON_KEYS.filter((k) => x[k] != null && x[k] !== ""));
-  const halfRole = o.role != null && (!isObj16(o.role) || !str17(o.role.role) || !str17(o.role.body));
-  const unknown = !isObj16(a) || !kind || !AFFECTED_KINDS.includes(kind) || !str17(o.description);
-  const individual = isObj16(a) && (kind && PERSON_KINDS.has(kind) || personKey.length || halfRole && !unknown);
+  const personKey = [o, isObj17(o.role) ? o.role : {}].flatMap((x) => PERSON_KEYS.filter((k) => x[k] != null && x[k] !== ""));
+  const halfRole = o.role != null && (!isObj17(o.role) || !str17(o.role.role) || !str17(o.role.body));
+  const unknown = !isObj17(a) || !kind || !AFFECTED_KINDS.includes(kind) || !str17(o.description);
+  const individual = isObj17(a) && (kind && PERSON_KINDS.has(kind) || personKey.length || halfRole && !unknown);
   if (individual)
     return refuse7("AFFECTED_INDIVIDUAL", `people are counted as a class or named in their official role, never singled out${personKey.length ? ` (the affected carries ${personKey.join(", ")})` : ""}${halfRole && !personKey.length ? " (a role is an office, {role, body}: the office and the body it belongs to)" : ""}: record a class (kind "class") or an office (role {role, body}). Nothing was written.`, { kind: kind ?? null });
   if (unknown)
-    return refuse7("AFFECTED_UNKNOWN_KIND", `${!kind || !AFFECTED_KINDS.includes(kind) ? `${isObj16(a) ? `"${String(o.kind ?? "")}" is not a kind of affected` : "an affected is {kind, description, role?}"}` : "an affected is described"}: kind one of ${AFFECTED_KINDS.join(", ")}, with a description. Nothing was written.`, { kind: kind ?? null });
+    return refuse7("AFFECTED_UNKNOWN_KIND", `${!kind || !AFFECTED_KINDS.includes(kind) ? `${isObj17(a) ? `"${String(o.kind ?? "")}" is not a kind of affected` : "an affected is {kind, description, role?}"}` : "an affected is described"}: kind one of ${AFFECTED_KINDS.join(", ")}, with a description. Nothing was written.`, { kind: kind ?? null });
   const role = o.role != null ? { role: o.role.role.trim(), body: o.role.body.trim() } : null;
   return { ok: true, affected: { kind, description: o.description.trim(), ...role ? { role } : {} } };
 }
 function checkMeasure(m) {
   if (m == null) return { ok: true, measure: null };
-  if (!isObj16(m) || !str17(m.unit) || !UNITS.includes(m.unit.trim()))
+  if (!isObj17(m) || !str17(m.unit) || !UNITS.includes(m.unit.trim()))
     return refuse7(
       "MEASURE_UNKNOWN_UNIT",
       `a measure's unit is one of ${UNITS.join(", ")}. Nothing was written.`,
-      { unit: isObj16(m) ? m.unit ?? null : null }
+      { unit: isObj17(m) ? m.unit ?? null : null }
     );
   const unit = m.unit.trim();
   const bad = (why) => refuse7("MEASURE_INVALID", `${why}. Nothing was written.`, { unit });
@@ -117700,7 +118393,7 @@ function checkMeasure(m) {
     out.value = m.value;
   }
   if (hasRange) {
-    const [low, high] = Array.isArray(m.range) ? m.range : isObj16(m.range) ? [m.range.low, m.range.high] : [];
+    const [low, high] = Array.isArray(m.range) ? m.range : isObj17(m.range) ? [m.range.low, m.range.high] : [];
     if (typeof low !== "number" || !Number.isFinite(low) || typeof high !== "number" || !Number.isFinite(high))
       return bad("a range's bounds are two finite numbers, {low, high}");
     if (low > high) return bad("the range is reversed: its low bound is above its high bound");
@@ -117710,7 +118403,7 @@ function checkMeasure(m) {
 }
 function checkPeriod(p) {
   const bad = (why) => refuse7("PERIOD_INVALID", `${why}. Nothing was written.`);
-  if (!isObj16(p)) return bad("a period is {from, to}: the dates the consequence ran between");
+  if (!isObj17(p)) return bad("a period is {from, to}: the dates the consequence ran between");
   const from = str17(p.from);
   const to = str17(p.to);
   if (!from || !to || !DATE2.test(from) || !DATE2.test(to) || Number.isNaN(Date.parse(from)) || Number.isNaN(Date.parse(to)))
@@ -117719,9 +118412,9 @@ function checkPeriod(p) {
   return { ok: true, period: { from, to } };
 }
 function isZeroMeasure(m) {
-  if (!isObj16(m)) return false;
+  if (!isObj17(m)) return false;
   if (typeof m.value === "number") return m.value === 0;
-  return isObj16(m.range) && m.range.low === 0 && m.range.high === 0;
+  return isObj17(m.range) && m.range.low === 0 && m.range.high === 0;
 }
 function zeroCausation(inquiryId) {
   return {
@@ -117788,7 +118481,7 @@ var Consequences = class {
     try {
       const fn = this.#deps.passageText || (typeof this.content.passageText === "function" ? (id) => this.content.passageText(id) : null);
       const t = fn ? fn(contentId) : null;
-      return typeof t === "string" ? t : isObj16(t) && typeof t.text === "string" ? t.text : null;
+      return typeof t === "string" ? t : isObj17(t) && typeof t.text === "string" ? t.text : null;
     } catch {
       return null;
     }
@@ -117812,23 +118505,23 @@ var Consequences = class {
     } catch {
       return null;
     }
-    if (!isObj16(d) || d.ok === false) return null;
-    const body = isObj16(d.determination) ? { ...d, ...d.determination } : d;
+    if (!isObj17(d) || d.ok === false) return null;
+    const body = isObj17(d.determination) ? { ...d, ...d.determination } : d;
     const outcomes = body.outcomes ?? body.outcome_per_standard ?? body.standards ?? null;
     const outcome = (std) => {
       if (Array.isArray(outcomes)) {
-        const o = outcomes.find((x) => isObj16(x) && (x.standard === std || x.id === std || isObj16(x.standard) && x.standard.id === std));
+        const o = outcomes.find((x) => isObj17(x) && (x.standard === std || x.id === std || isObj17(x.standard) && x.standard.id === std));
         return o ? o.outcome ?? null : null;
       }
-      if (isObj16(outcomes)) {
+      if (isObj17(outcomes)) {
         const v = outcomes[std];
-        return isObj16(v) ? v.outcome ?? null : v ?? null;
+        return isObj17(v) ? v.outcome ?? null : v ?? null;
       }
       return null;
     };
     const sup = body.superseded_by ?? body.supersededBy ?? body.links?.superseded_by ?? null;
     const live = body.live === false ? false : !(Array.isArray(sup) ? sup.length : sup);
-    const supersededBy = (Array.isArray(sup) ? sup[0] : isObj16(sup) ? sup.id : sup) ?? null;
+    const supersededBy = (Array.isArray(sup) ? sup[0] : isObj17(sup) ? sup.id : sup) ?? null;
     return { id, project: body.project ?? null, outcome, live, supersededBy: str17(supersededBy) };
   }
   /* A part's row, or null when absent or in a project the viewer may not see (R13: one answer). */
@@ -118004,7 +118697,7 @@ var Consequences = class {
       const done = this.promotion.promote({
         bundleId: id,
         base: null,
-        snapKey: `${at27.replace(/[-:]/g, "")}_${rand11(4)}`,
+        snapKey: `${at27.replace(/[-:]/g, "")}_${rand12(4)}`,
         author: str17(author) ?? INTERNAL2,
         files: [{ path: "bundle.md", text: partDoc(id, part) }],
         meta: { object_type: "consequence", title: titleOf3(part), current_state: "recorded", created: at27, last_updated: at27 }
@@ -118059,13 +118752,13 @@ var Consequences = class {
   }
   /* R2–R4: what the basis makes of the part: its state, measure and the fields that state carries, or a refusal. */
   #basis(basis, measure, who2, byMachine) {
-    const computation = isObj16(basis) && ("op" in basis || "operands" in basis);
+    const computation = isObj17(basis) && ("op" in basis || "operands" in basis);
     if (computation) return this.#computation(basis, measure, who2);
     const hasFigure = measure && ("value" in measure || "range" in measure);
     if (byMachine)
       return refuse7("MACHINE_CANNOT_ASSESS", "a machine may prepare a computed part, from the record's own figures, and propose an assessment as text for a member; it never records an assessment or an undetermined judgment. Nothing was written.");
     if (hasFigure) {
-      const rationale = isObj16(basis) ? str17(basis.rationale) : null;
+      const rationale = isObj17(basis) ? str17(basis.rationale) : null;
       if (!rationale) return refuse7("NO_RATIONALE", `an assessed value says why: a rationale of at most ${RATIONALE_MAX} characters. Nothing was written.`);
       if (rationale.length > RATIONALE_MAX)
         return refuse7("BAD_RATIONALE", `a rationale is at most ${RATIONALE_MAX} characters. Nothing was written.`);
@@ -118083,7 +118776,7 @@ var Consequences = class {
         doc: { rationale, rests_on: rests.map(String) }
       };
     }
-    const code = isObj16(basis) && str17(basis.why) && UNDETERMINED_WHY[basis.why.trim()] ? basis.why.trim() : "not_assessed";
+    const code = isObj17(basis) && str17(basis.why) && UNDETERMINED_WHY[basis.why.trim()] ? basis.why.trim() : "not_assessed";
     return {
       ok: true,
       state: "undetermined",
@@ -118099,7 +118792,7 @@ var Consequences = class {
     const op = str17(basis.op);
     if (!op || !OPS2.includes(op))
       return basisUnreadable(`a computation names its op, one of ${OPS2.join(", ")}`, { op: basis.op ?? null });
-    if (!Array.isArray(basis.operands) || basis.operands.some((o) => !isObj16(o) || !str17(o.content)))
+    if (!Array.isArray(basis.operands) || basis.operands.some((o) => !isObj17(o) || !str17(o.content)))
       return basisUnreadable("a computation's operands are a list of {content, figure}: the content id whose passage holds the figure, and the figure as read");
     const operands = [];
     let lacking = null;
@@ -118534,9 +119227,9 @@ function partDoc(id, p) {
     ""
   ].join("\n");
 }
-var instances36 = /* @__PURE__ */ new WeakMap();
+var instances37 = /* @__PURE__ */ new WeakMap();
 function consequencesModule(host, deps) {
-  let c = instances36.get(host);
+  let c = instances37.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -118544,7 +119237,7 @@ function consequencesModule(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     c = new Consequences({ ...d, host, storage, record, membership, promotion });
-    instances36.set(host, c);
+    instances37.set(host, c);
     c.migrate();
     record.declarePurge("consequences", CONSEQUENCES_TABLES);
   }
@@ -118552,7 +119245,7 @@ function consequencesModule(host, deps) {
 }
 function consequencesOps(c, url, body) {
   const qp = (k) => url.searchParams.get(k);
-  const b = isObj16(body) ? body : {};
+  const b = isObj17(body) ? body : {};
   const stamps = { author: qp("author"), viewer: qp("viewer") };
   return {
     consequencerecord: () => c.consequenceRecord({ ...b, ...stamps }),
@@ -118870,7 +119563,7 @@ var parse5 = (s) => {
     return null;
   }
 };
-var isObj17 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+var isObj18 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var utf84 = (s) => new TextEncoder().encode(s).length;
 var WELL_FORMED3 = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/;
 var withRowNow = (r) => {
@@ -119015,18 +119708,18 @@ var Filings = class _Filings {
     if (!target || !this.actions || typeof this.actions.actionRead !== "function") return null;
     const a = this.#call(() => this.actions.actionRead({ id: target, viewer }));
     if (!a || a.ok === false) return null;
-    const cp = isObj17(a.counterparty) ? a.counterparty : null;
+    const cp = isObj18(a.counterparty) ? a.counterparty : null;
     return {
       id: str18(a.id) || target,
       kind: str18(a.kind),
       risk_tier: [1, 2, 3].includes(Number(a.risk_tier)) ? Number(a.risk_tier) : "undetermined",
       current_state: str18(a.current_state),
       counterparty: cp,
-      clock: Array.isArray(a.clock) ? a.clock.filter(isObj17) : [],
-      legs: Array.isArray(a.legs) ? a.legs.filter(isObj17) : [],
-      correspondence: Array.isArray(a.correspondence) ? a.correspondence.filter(isObj17) : Array.isArray(a.ledger) ? a.ledger.filter(isObj17) : [],
-      state_history: Array.isArray(a.state_history) ? a.state_history.filter(isObj17) : null,
-      governing_laws: isObj17(a.governing_laws) ? a.governing_laws : null,
+      clock: Array.isArray(a.clock) ? a.clock.filter(isObj18) : [],
+      legs: Array.isArray(a.legs) ? a.legs.filter(isObj18) : [],
+      correspondence: Array.isArray(a.correspondence) ? a.correspondence.filter(isObj18) : Array.isArray(a.ledger) ? a.ledger.filter(isObj18) : [],
+      state_history: Array.isArray(a.state_history) ? a.state_history.filter(isObj18) : null,
+      governing_laws: isObj18(a.governing_laws) ? a.governing_laws : null,
       law: str18(a.law),
       premise_override: _Filings.#override(a.premise_override)
     };
@@ -119034,7 +119727,7 @@ var Filings = class _Filings {
   /* R24: the premise override an action carries (actions R8, shown in its read, R25: `{reason, by, at}`); null when it
      carries none. */
   static #override(o) {
-    if (!isObj17(o) || !str18(o.reason)) return null;
+    if (!isObj18(o) || !str18(o.reason)) return null;
     return { reason: str18(o.reason), by: str18(o.by), at: str18(o.at) };
   }
   /* R1, R8, R13, R14: the one answer for an action that is absent, invisible, not an action, or unreadable because no
@@ -119068,7 +119761,7 @@ var Filings = class _Filings {
      or no membership module to ask, is not seen. membership's `inSight` is the sight conformance R15 and consequences
      R13 withhold by. */
   #sees(basis, viewer) {
-    const det = isObj17(basis) ? str18(basis.determination) : null;
+    const det = isObj18(basis) ? str18(basis.determination) : null;
     if (!det) return true;
     const project = str18(basis.project) || (this.#det(det, MACHINE_READER) || {}).project || null;
     return this.#inSight(project, viewer);
@@ -119084,19 +119777,19 @@ var Filings = class _Filings {
     if (!str18(id) || !this.conformance || typeof this.conformance.determinationRead !== "function") return null;
     const d = this.#call(() => this.conformance.determinationRead({ id: str18(id), viewer }));
     if (!d || d.ok === false) return null;
-    const named = (key) => (Array.isArray(d[key]) ? d[key] : []).map((x) => isObj17(x) ? { ...x, id: str18(key === "findings" ? x.finding : x.standard) || str18(x.id) } : null);
+    const named = (key) => (Array.isArray(d[key]) ? d[key] : []).map((x) => isObj18(x) ? { ...x, id: str18(key === "findings" ? x.finding : x.standard) || str18(x.id) } : null);
     const findings = named("findings"), standards = named("standards");
     const seen = (x) => !!(x && x.id);
     return {
       id: str18(d.id) || str18(id),
       project: str18(d.project),
-      act: isObj17(d.act) ? d.act : {},
+      act: isObj18(d.act) ? d.act : {},
       findings: findings.filter(seen),
       standards: standards.filter(seen),
       withheld: d.out_of_view === true || !findings.every(seen) || !standards.every(seen),
       live: d.live !== false && !str18(d.superseded_by),
       superseded_by: str18(d.superseded_by),
-      basis_changed: isObj17(d.basis_changed) ? d.basis_changed : d.basis_changed === true ? { causes: [] } : null
+      basis_changed: isObj18(d.basis_changed) ? d.basis_changed : d.basis_changed === true ? { causes: [] } : null
     };
   }
   /** R3, R8: the live determination the action rests on (its `rests_on` legs, in leg order), with `hidden` true when one
@@ -119127,7 +119820,7 @@ var Filings = class _Filings {
       return { state: "undetermined", why: "no module answers whether a standard was in force" };
     const r = this.#call(() => this.standards.inForce(id, date));
     if (typeof r === "string") return { state: r, why: null };
-    if (isObj17(r) && str18(r.state)) return { state: r.state, why: r.why ?? null };
+    if (isObj18(r) && str18(r.state)) return { state: r.state, why: r.why ?? null };
     return { state: "undetermined", why: "whether the standard was in force could not be read" };
   }
   /** The governing tier (Terms, R2; K102): the stricter of the kind's tier in the profile and the action's own;
@@ -119172,7 +119865,7 @@ var Filings = class _Filings {
     if (det) {
       const act = det.act || {};
       out.act = str18(act.description) ? { value: str18(act.description), source: det.id } : none("the determination states no act");
-      const period = isObj17(act.period) ? act.period : null;
+      const period = isObj18(act.period) ? act.period : null;
       out.act_date = str18(act.at) ? { value: str18(act.at), source: det.id } : period && (str18(period.from) || str18(period.to)) ? { value: `${str18(period.from) || "undetermined"} to ${str18(period.to) || "undetermined"}`, source: det.id } : none("the determination states no date for the act, so it is undetermined");
       const cut4 = "a finding or standard the determination rests on is not one you may see, so this list would not be whole";
       const cites = [], srcs = [];
@@ -119194,12 +119887,12 @@ var Filings = class _Filings {
       } : none("the determination names no finding");
     } else for (const k of ["act", "act_date", "standards", "findings"]) out[k] = none(detWhy);
     const gl = action.governing_laws;
-    const laws = gl && gl.state === "stated" && Array.isArray(gl.laws) ? gl.laws.map((l) => str18(isObj17(l) ? l.citation : l)).filter(Boolean) : [];
+    const laws = gl && gl.state === "stated" && Array.isArray(gl.laws) ? gl.laws.map((l) => str18(isObj18(l) ? l.citation : l)).filter(Boolean) : [];
     out.governing_laws = laws.length ? { value: laws.join("; "), source: action.id } : none("no member has stated the action's governing laws, so they are undetermined");
     out.law = action.law ? { value: action.law, source: action.id } : none("the action states no law it is made under, so it is undetermined");
     const clock = action.clock.filter((c) => str18(c.date) && str18(c.basis));
     out.clock = clock.length ? { value: clock.map((c) => `${c.date}: ${str18(c.text) || str18(c.description) || "a deadline"} (${c.basis})`).join("; "), source: action.id } : none("the action holds no clock entry with a date and a basis");
-    const venue = entry && isObj17(entry.venue) ? entry.venue : null;
+    const venue = entry && isObj18(entry.venue) ? entry.venue : null;
     const vsrc = venue ? `profile:${venue.profile || entry.profile}/action_kinds/${entry.kind}/venue` : null;
     out.venue = venue && str18(venue.name) ? { value: str18(venue.name), source: vsrc } : none("the profile gives this kind no venue (or its profiles disagree), so it is undetermined");
     out.venue_how = venue && str18(venue.how) ? { value: str18(venue.how), source: vsrc } : none("the profile gives no means of filing");
@@ -119220,7 +119913,7 @@ var Filings = class _Filings {
     } catch {
       return { why: "the producing group could not be read (its reader failed), so it is undetermined" };
     }
-    if (isObj17(g) && "ok" in g) {
+    if (isObj18(g) && "ok" in g) {
       if (g.ok !== true)
         return { why: `no module answers the fact producingGroup (${g.reason === "FACT_FAILED" ? "its provider failed" : "no provider is registered"}), so the producing group is undetermined` };
       g = g.value;
@@ -119261,8 +119954,8 @@ var Filings = class _Filings {
      its refusals passed through as that module's; `asked` is `{id, version?}` or a bare id. */
   #offered(asked, viewer) {
     const t = this.filingTemplates;
-    const id = isObj17(asked) ? str18(asked.id) : str18(asked);
-    const version = isObj17(asked) && asked.version != null && asked.version !== "" ? asked.version : null;
+    const id = isObj18(asked) ? str18(asked.id) : str18(asked);
+    const version = isObj18(asked) && asked.version != null && asked.version !== "" ? asked.version : null;
     if (!t || typeof t.offeredVersion !== "function")
       return withRow3({
         ok: false,
@@ -119338,7 +120031,7 @@ var Filings = class _Filings {
         governing: gov,
         detail: "the governing tier is 3: no filing is prepared; a member names counsel and assembles a counsel packet"
       };
-    const named = isObj17(template) ? !!str18(template.id) || Object.keys(template).length > 0 : template != null && template !== "";
+    const named = isObj18(template) ? !!str18(template.id) || Object.keys(template).length > 0 : template != null && template !== "";
     const own3 = text5 !== void 0 && text5 !== null;
     if (named && own3)
       return {
@@ -119361,7 +120054,7 @@ var Filings = class _Filings {
         detail: `{{${unknown}}} is not a blank filings fill`
       });
     } else {
-      const profileTpl = entry && isObj17(entry.template) && entry.template.use === "file" && str18(entry.template.id) ? entry.template : null;
+      const profileTpl = entry && isObj18(entry.template) && entry.template.use === "file" && str18(entry.template.id) ? entry.template : null;
       if (!named && !profileTpl) {
         const t = this.filingTemplates;
         const list2 = t && typeof t.templatesFor === "function" ? this.#call(() => t.templatesFor({ kind: a.kind, use: "file", viewer })) : null;
@@ -119420,7 +120113,7 @@ ${body}`;
     if (disclosure) body = `${disclosure}
 
 ${body}`;
-    const venue = entry && isObj17(entry.venue) ? {
+    const venue = entry && isObj18(entry.venue) ? {
       name: entry.venue.name ?? null,
       how: entry.venue.how ?? null,
       source: `profile:${entry.venue.profile || entry.profile}/action_kinds/${entry.kind}/venue`
@@ -119787,7 +120480,7 @@ ${body}` : body;
     }
     const m = /\n## Conclusion\s*\n([\s\S]*?)(?=\n## |\s*$)/.exec(text5);
     const conclusion = m && m[1].trim() ? m[1].trim() : null;
-    const legs = fm && Array.isArray(fm.basis) ? fm.basis.filter(isObj17) : [];
+    const legs = fm && Array.isArray(fm.basis) ? fm.basis.filter(isObj18) : [];
     return {
       ...base,
       claim: {
@@ -119863,7 +120556,7 @@ ${body}` : body;
   /* R25: the capture axis for one capture, as provenance answers it (its R24–R27, R51), never computed here. */
   #grade(sha) {
     const g = this.provenance && typeof this.provenance.captureGrade === "function" ? this.#call(() => this.provenance.captureGrade(sha)) : null;
-    if (!isObj17(g)) return { grade: null, determined: false, why: "the capture grade could not be read, so it is undetermined" };
+    if (!isObj18(g)) return { grade: null, determined: false, why: "the capture grade could not be read, so it is undetermined" };
     return {
       grade: g.grade ?? null,
       route: g.route ?? null,
@@ -119889,9 +120582,9 @@ ${body}` : body;
     if (!v.view) return none(v.why);
     if (v.conflicts.some((c) => c.at === `action_kinds[${kind}].evidence`)) return none("the active profiles give different evidence standards for this kind");
     const entry = Array.isArray(v.view.action_kinds) ? v.view.action_kinds.find((k) => k.kind === kind) : null;
-    if (!entry || !isObj17(entry.evidence)) return none("the profile states no standard of evidence for this kind's venue");
+    if (!entry || !isObj18(entry.evidence)) return none("the profile states no standard of evidence for this kind's venue");
     const ev = entry.evidence;
-    const list2 = (l) => Array.isArray(l) ? l.filter(isObj17).map((x) => ({ grade: x.grade, ...x.coattested ? { coattested: true } : {} })) : [];
+    const list2 = (l) => Array.isArray(l) ? l.filter(isObj18).map((x) => ({ grade: x.grade, ...x.coattested ? { coattested: true } : {} })) : [];
     return {
       state: "stated",
       standard: ev.standard,
@@ -119985,13 +120678,13 @@ ${body}` : body;
     const facts = det ? det.findings.map((f17) => this.#fact(f17)) : [];
     const events = [], undated = [];
     const act = det ? det.act || {} : {};
-    const actDay = realDate(act.at) || (isObj17(act.period) ? realDate(act.period.from) : null);
+    const actDay = realDate(act.at) || (isObj18(act.period) ? realDate(act.period.from) : null);
     const push = (day, e) => day ? events.push({ day, ...e }) : undated.push({ ...e, why: "the record states no date for it" });
     if (det)
       push(actDay, {
         event: `the act: ${str18(act.description) || "undescribed"}`,
         source: det.id,
-        ...isObj17(act.actor) ? { actor: { role: act.actor.role ?? null, body: act.actor.body ?? null } } : {}
+        ...isObj18(act.actor) ? { actor: { role: act.actor.role ?? null, body: act.actor.body ?? null } } : {}
       });
     for (const f17 of facts) {
       const r = f17.case != null ? this.#one(`SELECT ratified_at FROM published_cases WHERE case_id=? AND edition=?`, f17.case, Number(f17.edition)) : null;
@@ -120135,7 +120828,7 @@ ${body}` : body;
     return causes;
   }
   #counsel(c) {
-    if (!isObj17(c)) return null;
+    if (!isObj18(c)) return null;
     const ok2 = (v) => typeof v === "string" && v.trim() && v.trim().length <= COUNSEL_FIELD_MAX && !/[\n\r]/.test(v);
     if (!ok2(c.name) || !ok2(c.organisation)) return null;
     if (c.contact != null && !ok2(c.contact)) return null;
@@ -120290,7 +120983,7 @@ ${filled.text}` : filled.text,
      template retired. Nothing in the draft or packet changes, and no approval is refused for it. A draft filled from
      the member's own words recorded `template: null`; one stored before T21 recorded no version, and is shown as stored. */
   #templateShown(stored, viewer) {
-    if (!isObj17(stored) || !str18(stored.id) || stored.version == null) return stored ?? null;
+    if (!isObj18(stored) || !str18(stored.id) || stored.version == null) return stored ?? null;
     const t = this.filingTemplates;
     const r = t && typeof t.templateRead === "function" ? this.#call(() => t.templateRead({ template: stored.id, version: stored.version, viewer })) : null;
     if (!r || r.ok === false) return { ...stored, read: false, says: "the template is not readable here now" };
@@ -120379,7 +121072,7 @@ ${filled.text}` : filled.text,
   #bar(project) {
     if (!str18(project) || !this.strength || typeof this.strength.projectBar !== "function") return null;
     const b = this.#call(() => this.strength.projectBar(str18(project)));
-    return isObj17(b) ? b : null;
+    return isObj18(b) ? b : null;
   }
   /* R22: bytes leaving the instance: `face` (the text a member approved or the packet's rendering, R24's disclosure
      first where it applies), then the in-band block, its hash over `face` by the one hasher (`inbandQuartet`). */
@@ -120653,7 +121346,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
       kinds,
       metadata: { risk_classification: Object.fromEntries(kinds.map((k) => [k.kind, k.tier])) },
       determinations: dets.map((d) => {
-        const actor = isObj17(d.act && d.act.actor) ? d.act.actor : {};
+        const actor = isObj18(d.act && d.act.actor) ? d.act.actor : {};
         const match = offices.find((o) => o.role === actor.role && o.body === actor.body) || null;
         return {
           determination: d.id,
@@ -120699,7 +121392,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
       for (const f17 of Array.isArray(findings) ? findings : []) {
         const page = this.#call(() => this.conformance.determinationsFor({ finding: f17, live: true, viewer: MACHINE_READER }));
         for (const it of page && page.ok !== false && Array.isArray(page.items) ? page.items : []) {
-          const id = str18(isObj17(it) ? it.id : it);
+          const id = str18(isObj18(it) ? it.id : it);
           if (!id || seen.has(id)) continue;
           const d = this.#det(id, MACHINE_READER);
           if (!d || !d.live) continue;
@@ -120721,15 +121414,15 @@ ${inbandBlock(quartet)}`, inband: quartet };
     return { case: caseId, edition, ...b, determinations_read: true };
   }
 };
-var instances37 = /* @__PURE__ */ new WeakMap();
+var instances38 = /* @__PURE__ */ new WeakMap();
 function filingsOf(host, deps) {
-  let f17 = instances37.get(host);
+  let f17 = instances38.get(host);
   if (!f17) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     f17 = new Filings({ ...d, host, storage, record });
-    instances37.set(host, f17);
+    instances38.set(host, f17);
     f17.migrate();
     record.declarePurge("filings", FILINGS_TABLES);
     f17.publicRead.registerEvidenceBlock("filings", "available_actions", (arg) => f17.evidenceBlock(arg));
@@ -121126,7 +121819,7 @@ var evaluationId = (escalation, n) => `${escalation}/evaluation#${n}`;
 var declineId = (determination, n) => `${determination}/decline-to-escalate#${n}`;
 var OLD_EVALUATION_ID = /^(.+)\/evaluation\/(\d+)$/;
 var str19 = (v) => typeof v === "string" ? v.trim() : "";
-var isObj18 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+var isObj19 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var hex8 = () => {
   const b = new Uint8Array(4);
   crypto.getRandomValues(b);
@@ -121149,25 +121842,25 @@ var iso2 = (ms2) => stampInstant("second", ms2);
 var quoted4 = (v) => `"${String(v).trim().replace(/\s*\n\s*/g, " ")}"`;
 var DRAFTED_BY = "system";
 function consequenceSentence(p) {
-  const aff = isObj18(p.affected) ? p.affected : {};
+  const aff = isObj19(p.affected) ? p.affected : {};
   const who2 = str19(aff.description) ? `${quoted4(aff.description)}${str19(aff.kind) ? ` (${str19(aff.kind)})` : ""}` : "what the record does not state (undetermined)";
-  const m = isObj18(p.measure) ? p.measure : null;
-  const amount = !m || p.state === "undetermined" ? null : Number.isFinite(m.value) ? String(m.value) : isObj18(m.range) && Number.isFinite(m.range.low) && Number.isFinite(m.range.high) ? `${m.range.low} to ${m.range.high}` : null;
-  const measure = amount === null ? `its measure is undetermined${isObj18(p.undetermined) && str19(p.undetermined.why) ? ` (${str19(p.undetermined.why)})` : ""}` : `its measure is ${amount} ${str19(m.unit)}${str19(m.currency) ? ` (${str19(m.currency)})` : ""}`;
-  const per = isObj18(p.period) && str19(p.period.from) && str19(p.period.to) ? `from ${str19(p.period.from)} to ${str19(p.period.to)}` : "over a period the record does not state (undetermined)";
-  const cause = isObj18(p.causation) && str19(p.causation.state) ? str19(p.causation.state) : "undetermined";
+  const m = isObj19(p.measure) ? p.measure : null;
+  const amount = !m || p.state === "undetermined" ? null : Number.isFinite(m.value) ? String(m.value) : isObj19(m.range) && Number.isFinite(m.range.low) && Number.isFinite(m.range.high) ? `${m.range.low} to ${m.range.high}` : null;
+  const measure = amount === null ? `its measure is undetermined${isObj19(p.undetermined) && str19(p.undetermined.why) ? ` (${str19(p.undetermined.why)})` : ""}` : `its measure is ${amount} ${str19(m.unit)}${str19(m.currency) ? ` (${str19(m.currency)})` : ""}`;
+  const per = isObj19(p.period) && str19(p.period.from) && str19(p.period.to) ? `from ${str19(p.period.from)} to ${str19(p.period.to)}` : "over a period the record does not state (undetermined)";
+  const cause = isObj19(p.causation) && str19(p.causation.state) ? str19(p.causation.state) : "undetermined";
   return `Consequence ${p.id}${str19(p.standard) ? ` (standard ${str19(p.standard)})` : ""}: it affects ${who2}; ${measure}, ${per}; it is ${str19(p.state) || "of a state the record does not state (undetermined)"}, and its causation is ${cause}.`;
 }
-var outcomesOf = (d) => (Array.isArray(d.outcomes) ? d.outcomes : []).filter((o) => isObj18(o) && typeof o.standard === "string").map((o) => ({ standard: o.standard, outcome: o.outcome ?? null }));
+var outcomesOf = (d) => (Array.isArray(d.outcomes) ? d.outcomes : []).filter((o) => isObj19(o) && typeof o.standard === "string").map((o) => ({ standard: o.standard, outcome: o.outcome ?? null }));
 var liveOf = (d) => d.live === true;
-var actOf = (d) => isObj18(d.act) ? d.act : {};
+var actOf = (d) => isObj19(d.act) ? d.act : {};
 var actIdOf = (d) => actOf(d).id ?? null;
 var projectOf2 = (d) => d.project ?? null;
 var recordedAtOf = (d) => d.at ?? null;
 var overrideOf = (text5) => Actions.overrideOf(parseFm2(text5));
 function ledgerOf(block) {
   const raw = Array.isArray(block.correspondence) ? block.correspondence : [];
-  return raw.map((e, i) => isObj18(e) ? {
+  return raw.map((e, i) => isObj19(e) ? {
     ord: Number.isInteger(e.ord) ? e.ord : i,
     direction: e.direction ?? null,
     at: e.at ?? null,
@@ -121457,7 +122150,7 @@ var Escalation = class {
     const r = this.consequences.addressed({ determination: e.determination, viewer });
     if (!r || r.ok === false) return { state: "undetermined", ids: [], why: "the consequences could not be read" };
     const parts = Array.isArray(r.parts) ? r.parts : [];
-    const ids = parts.map((p) => isObj18(p) ? p.id ?? p.part ?? null : p).filter((x) => typeof x === "string");
+    const ids = parts.map((p) => isObj19(p) ? p.id ?? p.part ?? null : p).filter((x) => typeof x === "string");
     const state = r.state === "addressed" ? "met" : r.state === "not_addressed" ? "not_met" : "undetermined";
     const why = state === "met" ? "every live consequence part is addressed" : state === "not_met" ? "a consequence part is not addressed, or was never assessed" : parts.length ? "a consequence part is undetermined or its causation unproven" : "no consequence recorded";
     return { state, ids, parts, why };
@@ -121488,8 +122181,8 @@ var Escalation = class {
   }
   /* R12: an action's counterparty office in the view, `{elected?, oversight?}`; undefined where the profile is silent. */
   #office(cp, view) {
-    if (!isObj18(cp) || !str19(cp.role) || !str19(cp.body) || !view || !Array.isArray(view.counterparties)) return {};
-    const o = view.counterparties.find((c) => isObj18(c) && c.role === cp.role && c.body === cp.body);
+    if (!isObj19(cp) || !str19(cp.role) || !str19(cp.body) || !view || !Array.isArray(view.counterparties)) return {};
+    const o = view.counterparties.find((c) => isObj19(c) && c.role === cp.role && c.body === cp.body);
     if (!o) return {};
     return {
       elected: typeof o.elected === "boolean" ? o.elected : void 0,
@@ -121506,7 +122199,7 @@ var Escalation = class {
       const m = typeof t === "string" ? OLD_EVALUATION_ID.exec(t) : null;
       return m && m[1] === id && ordinal.has(Number(m[2])) ? evaluationId(id, ordinal.get(Number(m[2]))) : t;
     };
-    return log.map((x) => isObj18(x.trigger) && Array.isArray(x.trigger.ids) ? { ...x, trigger: { ...x.trigger, ids: x.trigger.ids.map(current) } } : x);
+    return log.map((x) => isObj19(x.trigger) && Array.isArray(x.trigger.ids) ? { ...x, trigger: { ...x.trigger, ids: x.trigger.ids.map(current) } } : x);
   }
   /** R26 (K903 (4), DEC-36): the read with every attached action the viewer may not see withheld whole, in the history
    *  and the evaluations as in `actions` and `notes` (withheld at their source): its attachment entry leaves the
@@ -121518,7 +122211,7 @@ var Escalation = class {
     if (!hidden.size) return answer;
     const names = (x) => typeof x === "string" && (hidden.has(x) || hidden.has(x.replace(/#\d+$/, "")));
     const response = (v) => {
-      if (!isObj18(v.response) || !hidden.has(v.response.action)) return v;
+      if (!isObj19(v.response) || !hidden.has(v.response.action)) return v;
       const { response: _, ...rest } = v;
       return rest;
     };
@@ -121528,7 +122221,7 @@ var Escalation = class {
     };
     const history = answer.history.filter((h) => !(h.kind === "attach" && hidden.has(h.action))).map((h) => {
       const x = unnumbered(response(h));
-      return isObj18(x.trigger) && Array.isArray(x.trigger.ids) ? { ...x, trigger: { ...x.trigger, ids: x.trigger.ids.filter((i) => !names(i)) } } : x;
+      return isObj19(x.trigger) && Array.isArray(x.trigger.ids) ? { ...x, trigger: { ...x.trigger, ids: x.trigger.ids.filter((i) => !names(i)) } } : x;
     });
     const proposed = answer.proposed.map((p) => ({ ...p, declines: p.declines.map(unnumbered) }));
     return {
@@ -121824,7 +122517,7 @@ var Escalation = class {
         { action, premise_override: override }
       );
     const legs = Array.isArray(a.legs) ? a.legs : [];
-    if (a.breach !== true || !legs.some((l) => isObj18(l) && l.kind === "rests_on" && l.target === e.determination))
+    if (a.breach !== true || !legs.some((l) => isObj19(l) && l.kind === "rests_on" && l.target === e.determination))
       return refusal17("NOT_A_BREACH_ACTION", "an escalation's act is an action whose document states breach: true and that rests on this escalation's determination. Nothing was written.", { determination: e.determination });
     if (!ATTACHING_STAGES.includes(e.stage))
       return refusal17("STAGE_TAKES_NO_ACTION", `stage ${e.stage} (${STAGES[e.stage]}) takes no attached action; stages 2, 5 and 7 do. Nothing was written.`, { stage: e.stage });
@@ -121887,7 +122580,7 @@ var Escalation = class {
       return refusal17("READING_UNKNOWN", `a reading is one of ${READINGS2.join(", ")}. Nothing was written.`, { readings: READINGS2 });
     let named = null;
     if (response !== void 0 && response !== null) {
-      const ok2 = isObj18(response) && typeof response.action === "string" && Number.isInteger(response.ord) && this.#attachments(e.id).some((a) => a.action === response.action) && (this.#ledger(response.action, viewer) || []).some((x) => x.ord === response.ord && x.direction === "received");
+      const ok2 = isObj19(response) && typeof response.action === "string" && Number.isInteger(response.ord) && this.#attachments(e.id).some((a) => a.action === response.action) && (this.#ledger(response.action, viewer) || []).some((x) => x.ord === response.ord && x.direction === "received");
       if (!ok2)
         return refuseNoSuchResponse("the response named is not a received entry of an action attached to this escalation.");
       named = { action: response.action, ord: response.ord };
@@ -122231,13 +122924,13 @@ var Escalation = class {
     const D = determination;
     say(D, `Determination ${D} finds the act noncompliant with ${pursued.length === 1 ? "one standard" : `${pursued.length} standards`}: ${pursued.join(", ")}.`);
     const act = actOf(d);
-    const actor = isObj18(act.actor) && str19(act.actor.role) && str19(act.actor.body) ? `${str19(act.actor.role)}, ${str19(act.actor.body)}` : "an office the record does not name (undetermined)";
-    const when = str19(act.at) ? `on ${str19(act.at)}` : isObj18(act.period) && str19(act.period.from) && str19(act.period.to) ? `from ${str19(act.period.from)} to ${str19(act.period.to)}` : "at a date the record does not state (undetermined)";
+    const actor = isObj19(act.actor) && str19(act.actor.role) && str19(act.actor.body) ? `${str19(act.actor.role)}, ${str19(act.actor.body)}` : "an office the record does not name (undetermined)";
+    const when = str19(act.at) ? `on ${str19(act.at)}` : isObj19(act.period) && str19(act.period.from) && str19(act.period.to) ? `from ${str19(act.period.from)} to ${str19(act.period.to)}` : "at a date the record does not state (undetermined)";
     say(actIdOf(d) ?? D, `The act determined${actIdOf(d) ? ` (${actIdOf(d)})` : ""}: ${str19(act.description) ? quoted4(act.description) : "its description could not be read (undetermined)"}, by ${actor}, ${when}.`);
-    const held = Array.isArray(d.standards) ? d.standards.filter(isObj18) : [];
+    const held = Array.isArray(d.standards) ? d.standards.filter(isObj19) : [];
     for (const standard of pursued) {
       const st = held.find((x) => x.standard === standard);
-      const rows2 = st && Array.isArray(st.rows) ? st.rows.filter(isObj18) : [];
+      const rows2 = st && Array.isArray(st.rows) ? st.rows.filter(isObj19) : [];
       if (!rows2.length) {
         say(standard, `Standard ${standard} is breached: its basis in the determination could not be read (undetermined).`);
         continue;
@@ -122255,9 +122948,9 @@ var Escalation = class {
         const a = this.actions.actionRead({ id, viewer, now: at27 });
         if (!a || a.ok === false) continue;
         shown2++;
-        const cp = isObj18(a.counterparty) && str19(a.counterparty.role) && str19(a.counterparty.body) ? `${str19(a.counterparty.role)}, ${str19(a.counterparty.body)}` : "an office the record does not name (undetermined)";
+        const cp = isObj19(a.counterparty) && str19(a.counterparty.role) && str19(a.counterparty.body) ? `${str19(a.counterparty.role)}, ${str19(a.counterparty.body)}` : "an office the record does not name (undetermined)";
         say(id, `Action ${id}${str19(a.kind) ? ` (${str19(a.kind)})` : ""} rests on the determination, addressed to ${cp}${str19(a.current_state) ? `; its state is ${str19(a.current_state)}` : ""}.`);
-        const clock = Array.isArray(a.clock) ? a.clock.filter(isObj18) : [];
+        const clock = Array.isArray(a.clock) ? a.clock.filter(isObj19) : [];
         if (!clock.length) say(id, `Action ${id} states no clock entry.`);
         for (const c of clock) {
           const what = str19(c.text) || str19(c.description);
@@ -122272,7 +122965,7 @@ var Escalation = class {
     const q7 = this.consequences.consequencesOf({ determination: D, viewer });
     if (!q7 || q7.ok === false) say(D, "The consequences of the breach could not be read (undetermined).");
     else {
-      const recorded = Array.isArray(q7.parts) ? q7.parts.filter(isObj18) : [];
+      const recorded = Array.isArray(q7.parts) ? q7.parts.filter(isObj19) : [];
       if (!recorded.length) say(D, "No consequence of the breach is recorded on the determination.");
       for (const p of recorded) say(p.id, consequenceSentence(p));
     }
@@ -122297,7 +122990,7 @@ var Escalation = class {
     for (let page = 0; page < 50; page++) {
       const r = this.actions.actionsFor({ determination, after, viewer });
       if (!r || r.ok === false || !Array.isArray(r.items)) return null;
-      for (const x of r.items) if (isObj18(x) && typeof x.id === "string") ids.push(x.id);
+      for (const x of r.items) if (isObj19(x) && typeof x.id === "string") ids.push(x.id);
       if (!r.truncated) return ids;
       after = r.cursor ?? ids.at(-1) ?? null;
       if (!after) return ids;
@@ -122321,7 +123014,7 @@ function refuseReason(reason) {
   return null;
 }
 function refuseJudgment(args) {
-  const found = isObj18(args) ? JUDGMENT_KEYS.filter((k) => k in args) : [];
+  const found = isObj19(args) ? JUDGMENT_KEYS.filter((k) => k in args) : [];
   if (found.length)
     return refusal17("ESCALATION_CARRIES_NO_JUDGMENT", "an escalation records no significance, severity, priority, urgency, rank or score: whether a breach warrants action, and how urgently, is a member's judgment, made with the consequences in front of them. Nothing was written.", { keys: found });
   return null;
@@ -122361,9 +123054,9 @@ for (const name2 of [
     }
   } });
 }
-var instances38 = /* @__PURE__ */ new WeakMap();
+var instances39 = /* @__PURE__ */ new WeakMap();
 function escalationOf(host, deps) {
-  let i = instances38.get(host);
+  let i = instances39.get(host);
   if (!i) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -122375,7 +123068,7 @@ function escalationOf(host, deps) {
     const filings = d.filings || (() => filingsOf(host, { record, membership, promotion }));
     const consequences = d.consequences || (() => consequencesModule(host, { record, membership, promotion, conformance: typeof conformance === "function" ? conformance() : conformance }));
     i = new Escalation({ ...d, storage, record, membership, promotion, conformance, consequences, actions, filings });
-    instances38.set(host, i);
+    instances39.set(host, i);
     i.migrate();
     record.declarePurge("escalation", ESCALATION_TABLES);
     promotion.registerStep("escalation", { check: (c) => i.check(c), project: (c) => i.project(c) });
@@ -125414,17 +126107,17 @@ var Monitoring = class {
     }
   }
 };
-var instances39 = /* @__PURE__ */ new WeakMap();
+var instances40 = /* @__PURE__ */ new WeakMap();
 function monitoringOf(host, deps) {
   const storage = host && host.storage ? host.storage : host;
-  let m = instances39.get(storage);
+  let m = instances40.get(storage);
   if (!m) {
     const d = deps || {};
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     m = new Monitoring({ ...d, host, storage: d.storage || storage, record, membership, promotion });
-    instances39.set(storage, m);
+    instances40.set(storage, m);
     m.migrate();
     record.declarePurge("monitoring", [...MONITORING_TABLES]);
     if (typeof record.registerCounts === "function")
@@ -126300,10 +126993,10 @@ var LinkSweep = class {
 };
 
 // src/link-sweep/index.mjs
-var instances40 = /* @__PURE__ */ new WeakMap();
+var instances41 = /* @__PURE__ */ new WeakMap();
 function linkSweepOf(host, deps) {
   const storage = host && host.storage ? host.storage : host;
-  let s = instances40.get(storage);
+  let s = instances41.get(storage);
   if (!s) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -126325,7 +127018,7 @@ function linkSweepOf(host, deps) {
       captureRequests: lazy(d.captureRequests, () => captureRequestsOf(host, { record })),
       monitoring: lazy(d.monitoring, () => monitoringOf(host, { record, membership, promotion }))
     });
-    instances40.set(storage, s);
+    instances41.set(storage, s);
     s.migrate();
     record.declarePurge(LINK_SWEEP_MODULE, LINK_SWEEP_TABLES.map((t) => ({ name: t.name, keys: [...t.keys] })));
     s.registration = s.registerWithMonitoring();
@@ -126827,9 +127520,9 @@ var Scheduler = class {
     return out;
   }
 };
-var instances41 = /* @__PURE__ */ new WeakMap();
+var instances42 = /* @__PURE__ */ new WeakMap();
 function schedulerOf(ctx, env = null, deps = {}) {
-  let s = instances41.get(ctx);
+  let s = instances42.get(ctx);
   if (!s) {
     const e = env || {};
     const owners = deps.owners || {
@@ -126847,7 +127540,7 @@ function schedulerOf(ctx, env = null, deps = {}) {
       linkSweep: () => linkSweepOf(ctx)
     };
     s = new Scheduler({ storage: deps.storage || ctx.storage, env: e, owners });
-    instances41.set(ctx, s);
+    instances42.set(ctx, s);
     if (!deps.owners)
       s.listenTo({
         retrieval: retrievalOf(ctx),
@@ -129653,59 +130346,61 @@ var CHECK_FAMILY_FILES = Object.freeze([
   ["src/textchain.mjs", textchain_exports],
   ["src/record-core/checks.mjs", checks_exports2],
   ["src/membership/checks.mjs", checks_exports3],
-  ["src/credentials/checks.mjs", checks_exports14],
+  ["src/credentials/checks.mjs", checks_exports15],
   ["src/promotion/checks.mjs", checks_exports4],
   ["src/provenance/checks.mjs", checks_exports5],
+  ["src/attestation/checks.mjs", checks_exports6],
+  ["src/provenance-routes/checks.mjs", checks_exports17],
   ["src/capture-sources/credentials.mjs", credentials_exports],
   ["src/acquisition/checks.mjs", checks_exports],
-  ["src/capture/checks.mjs", checks_exports13],
-  ["src/sources/checks.mjs", checks_exports22],
-  ["src/calibration/checks.mjs", checks_exports11],
-  ["src/extraction/checks.mjs", checks_exports12],
-  ["src/content/checks.mjs", checks_exports7],
+  ["src/capture/checks.mjs", checks_exports14],
+  ["src/sources/checks.mjs", checks_exports24],
+  ["src/calibration/checks.mjs", checks_exports12],
+  ["src/extraction/checks.mjs", checks_exports13],
+  ["src/content/checks.mjs", checks_exports8],
   ["src/content/extent.mjs", extent_exports],
-  ["src/entities/checks.mjs", checks_exports15],
-  ["src/connections/checks.mjs", checks_exports8],
+  ["src/entities/checks.mjs", checks_exports16],
+  ["src/connections/checks.mjs", checks_exports9],
   ["src/connections/themes.mjs", themes_exports],
-  ["src/progressions/checks.mjs", checks_exports17],
-  ["src/bias/checks.mjs", checks_exports28],
-  ["src/observation-log/checks.mjs", checks_exports9],
-  ["src/retrieval/checks.mjs", checks_exports16],
-  ["src/inquiry-grammar/checks.mjs", checks_exports10],
+  ["src/progressions/checks.mjs", checks_exports19],
+  ["src/bias/checks.mjs", checks_exports30],
+  ["src/observation-log/checks.mjs", checks_exports10],
+  ["src/retrieval/checks.mjs", checks_exports18],
+  ["src/inquiry-grammar/checks.mjs", checks_exports11],
   ["src/inquiry/index.mjs", inquiry_exports],
-  ["src/citation/checks.mjs", checks_exports32],
-  ["src/basis-versions/checks.mjs", checks_exports18],
-  ["src/strength/checks.mjs", checks_exports20],
-  ["src/contradiction/checks.mjs", checks_exports21],
-  ["src/run-rules/checks.mjs", checks_exports34],
-  ["src/run-productions/checks.mjs", checks_exports35],
-  ["src/capture-requests/checks.mjs", checks_exports36],
+  ["src/citation/checks.mjs", checks_exports34],
+  ["src/basis-versions/checks.mjs", checks_exports20],
+  ["src/strength/checks.mjs", checks_exports22],
+  ["src/contradiction/checks.mjs", checks_exports23],
+  ["src/run-rules/checks.mjs", checks_exports36],
+  ["src/run-productions/checks.mjs", checks_exports37],
+  ["src/capture-requests/checks.mjs", checks_exports38],
   ["src/skilldoctrine.mjs", skilldoctrine_exports],
-  ["src/intent/checks.mjs", checks_exports37],
-  ["src/reevaluation/checks.mjs", checks_exports23],
-  ["src/publication/checks.mjs", checks_exports24],
-  ["src/public-read/checks.mjs", checks_exports25],
-  ["src/network-notices/checks.mjs", checks_exports26],
-  ["src/ratification/checks.mjs", checks_exports27],
-  ["src/case-authoring/checks.mjs", checks_exports29],
-  ["src/review/checks.mjs", checks_exports38],
-  ["src/local-facts/checks.mjs", checks_exports31],
-  ["src/standards/checks.mjs", checks_exports39],
-  ["src/conformance/checks.mjs", checks_exports40],
-  ["src/consequences/checks.mjs", checks_exports41],
-  ["src/action-grammar/checks.mjs", checks_exports19],
-  ["src/action-clocks/checks.mjs", checks_exports42],
-  ["src/filing-templates/checks.mjs", checks_exports30],
-  ["src/filings/checks.mjs", checks_exports43],
-  ["src/escalation/checks.mjs", checks_exports44],
-  ["src/action-plans/checks.mjs", checks_exports45],
-  ["src/monitoring/checks.mjs", checks_exports46],
-  ["src/link-sweep/checks.mjs", checks_exports47],
-  ["src/tasks/checks.mjs", checks_exports48],
-  ["src/queue/checks.mjs", checks_exports49],
+  ["src/intent/checks.mjs", checks_exports39],
+  ["src/reevaluation/checks.mjs", checks_exports25],
+  ["src/publication/checks.mjs", checks_exports26],
+  ["src/public-read/checks.mjs", checks_exports27],
+  ["src/network-notices/checks.mjs", checks_exports28],
+  ["src/ratification/checks.mjs", checks_exports29],
+  ["src/case-authoring/checks.mjs", checks_exports31],
+  ["src/review/checks.mjs", checks_exports40],
+  ["src/local-facts/checks.mjs", checks_exports33],
+  ["src/standards/checks.mjs", checks_exports41],
+  ["src/conformance/checks.mjs", checks_exports42],
+  ["src/consequences/checks.mjs", checks_exports43],
+  ["src/action-grammar/checks.mjs", checks_exports21],
+  ["src/action-clocks/checks.mjs", checks_exports44],
+  ["src/filing-templates/checks.mjs", checks_exports32],
+  ["src/filings/checks.mjs", checks_exports45],
+  ["src/escalation/checks.mjs", checks_exports46],
+  ["src/action-plans/checks.mjs", checks_exports47],
+  ["src/monitoring/checks.mjs", checks_exports48],
+  ["src/link-sweep/checks.mjs", checks_exports49],
+  ["src/tasks/checks.mjs", checks_exports50],
+  ["src/queue/checks.mjs", checks_exports51],
   ["src/setup.mjs", setup_exports],
-  ["src/admission/checks.mjs", checks_exports33],
-  ["src/control-plane/checks.mjs", checks_exports6]
+  ["src/admission/checks.mjs", checks_exports35],
+  ["src/control-plane/checks.mjs", checks_exports7]
 ].map((e) => Object.freeze(e)));
 var translated = (row2) => !!row2 && typeof row2 === "object" && typeof row2.translation === "string" && row2.translation !== "";
 function compose2() {
@@ -132954,14 +133649,14 @@ var TRAY_PAGE = 5;
 var SOURCES_MAX = 50;
 var STAGE_MAX = 7;
 var DAY_MS5 = 864e5;
-var isObj19 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+var isObj20 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var str20 = (v) => typeof v === "string" ? v.trim() : "";
 var isDay2 = (v) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(`${v}T00:00:00Z`)) && (/* @__PURE__ */ new Date(`${v}T00:00:00Z`)).toISOString().slice(0, 10) === v;
 var isLine = (v, max) => typeof v === "string" && v.trim().length > 0 && v.length <= max && !/["\\\r\n]/.test(v);
 var TOKEN5 = /^[A-Za-z0-9][A-Za-z0-9_.:-]{0,79}$/;
 var isToken = (v) => typeof v === "string" && TOKEN5.test(v);
 function normSubject(s) {
-  if (!isObj19(s)) return null;
+  if (!isObj20(s)) return null;
   if (s.kind === "inquiry") {
     if (!isToken(s.inquiry)) return null;
     const out = { kind: "inquiry", inquiry: s.inquiry };
@@ -132983,7 +133678,7 @@ function normSubject(s) {
 }
 var subjectKey = (s) => s.kind === "inquiry" ? `inquiry:${s.inquiry}` : `outcome:${s.determination}#${s.standard}`;
 function addresseeArm(a) {
-  if (!isObj19(a)) return null;
+  if (!isObj20(a)) return null;
   const ok2 = (k, max = 500) => isLine(a[k], max);
   if (a.state === "named") {
     const kind = a.kind === void 0 || a.kind === null ? "office" : a.kind;
@@ -133009,7 +133704,7 @@ function checkPhases(phases, { chosen, subjects }) {
   for (let i = 0; i < phases.length; i++) {
     const p = phases[i];
     const bad = (detail) => ({ fault: "malformed", index: i, detail });
-    if (!isObj19(p)) return bad("a phase is an object");
+    if (!isObj20(p)) return bad("a phase is an object");
     if (!isToken(p.id) || ids.has(p.id)) return bad("a phase has an id of its own, a token used once in the scenario");
     ids.add(p.id);
     if (!isLine(p.name, TITLE_MAX)) return bad(`a phase has a name of 1 to ${TITLE_MAX} characters, with no quotation mark, backslash or line break`);
@@ -133017,10 +133712,10 @@ function checkPhases(phases, { chosen, subjects }) {
     const s = p.starts;
     let starts;
     if (s === "plan_start") starts = "plan_start";
-    else if (isObj19(s) && Object.keys(s).length === 1 && isToken(s.after)) starts = { after: s.after };
-    else if (isObj19(s) && isToken(s.branch_of) && JUDGEMENTS.includes(s.when) && Object.keys(s).length === 2)
+    else if (isObj20(s) && Object.keys(s).length === 1 && isToken(s.after)) starts = { after: s.after };
+    else if (isObj20(s) && isToken(s.branch_of) && JUDGEMENTS.includes(s.when) && Object.keys(s).length === 2)
       starts = { branch_of: s.branch_of, when: s.when };
-    else if (isObj19(s) && s.when_subject !== void 0 && (s.reaches === "resolved" || s.reaches === "stage")) {
+    else if (isObj20(s) && s.when_subject !== void 0 && (s.reaches === "resolved" || s.reaches === "stage")) {
       const subj = normSubject(s.when_subject);
       if (!subj) return bad("when_subject names a matter of the plan");
       if (s.reaches === "stage" && !(Number.isInteger(s.stage) && s.stage >= 1 && s.stage <= STAGE_MAX))
@@ -133030,7 +133725,7 @@ function checkPhases(phases, { chosen, subjects }) {
     } else return bad("starts is plan_start, {after}, {branch_of, when} or {when_subject, reaches, stage?}");
     let checkpoint = null;
     if (p.checkpoint !== void 0 && p.checkpoint !== null) {
-      const d = isObj19(p.checkpoint) ? p.checkpoint.after_days : void 0;
+      const d = isObj20(p.checkpoint) ? p.checkpoint.after_days : void 0;
       if (!Number.isInteger(d) || d < 1 || d > CHECKPOINT_DAYS_MAX || Object.keys(p.checkpoint).length !== 1)
         return bad(`a checkpoint is {after_days}, 1 to ${CHECKPOINT_DAYS_MAX}`);
       checkpoint = { after_days: d };
@@ -133043,7 +133738,7 @@ function checkPhases(phases, { chosen, subjects }) {
     }
     let branches = null;
     if (p.branches !== void 0 && p.branches !== null) {
-      if (!isObj19(p.branches) || !Object.keys(p.branches).length || !Object.entries(p.branches).every(([k, v]) => JUDGEMENTS.includes(k) && isToken(v)))
+      if (!isObj20(p.branches) || !Object.keys(p.branches).length || !Object.entries(p.branches).every(([k, v]) => JUDGEMENTS.includes(k) && isToken(v)))
         return bad("branches maps met and not_met to the phase each leads to");
       if (!checkpoint) return bad("a phase with branches has a checkpoint whose judgement they follow");
       branches = { ...p.branches };
@@ -133394,13 +134089,13 @@ var ActionPlans = class {
       action: (id) => ask2(`a:${id}`, () => ok(this.actions.actionRead({ id, viewer }))),
       subjects: (list2) => Array.isArray(list2) ? list2.filter((s) => v.subject(s)) : list2,
       fields: (f17) => {
-        if (!isObj19(f17)) return f17;
+        if (!isObj20(f17)) return f17;
         const out = { ...f17, subjects: v.subjects(f17.subjects) };
         if (out.enforces && out.enforces.subject && !v.subject(out.enforces.subject)) delete out.enforces;
         return out;
       },
       phases: (ps) => Array.isArray(ps) ? ps.map((ph) => {
-        if (!isObj19(ph) || !isObj19(ph.starts) || !ph.starts.when_subject || v.subject(ph.starts.when_subject)) return ph;
+        if (!isObj20(ph) || !isObj20(ph.starts) || !ph.starts.when_subject || v.subject(ph.starts.when_subject)) return ph;
         const { when_subject, ...starts } = ph.starts;
         return { ...ph, starts };
       }) : ps
@@ -133530,7 +134225,7 @@ var ActionPlans = class {
     const dates = [];
     if (a.dates !== void 0 && a.dates !== null) {
       const list2 = Array.isArray(a.dates) ? a.dates : null;
-      const bad = !list2 || list2.length > DATES_MAX || list2.some((d) => !isObj19(d) || !isDay2(d.date) || !isLine(d.basis, NOTE_MAX5));
+      const bad = !list2 || list2.length > DATES_MAX || list2.some((d) => !isObj20(d) || !isDay2(d.date) || !isLine(d.basis, NOTE_MAX5));
       if (bad)
         return refusal18("DATE_REFUSED", `regulated dates are a list of at most ${DATES_MAX} {date: YYYY-MM-DD, basis}, each basis naming the statute, order or commitment that sets it. Nothing was written.`);
       for (const d of list2) dates.push({ date: d.date, basis: d.basis });
@@ -133562,7 +134257,7 @@ var ActionPlans = class {
   /* R12: `enforces` names a standard the reader can read, or a determined subject of the plan; null otherwise. */
   #enforces(x, held, viewer) {
     if (typeof x === "string" && held.has(x)) return held.get(x).kind === "outcome" ? { subject: held.get(x) } : null;
-    if (isObj19(x)) {
+    if (isObj20(x)) {
       const s = normSubject(x);
       return s && s.kind === "outcome" && held.has(subjectKey(s)) ? { subject: s } : null;
     }
@@ -134181,8 +134876,8 @@ var ActionPlans = class {
       return refused2("entry", "reminders are a list of {date, on}, each naming a regulated date of the option and a day.");
     const one3 = new Set(ids).size === 1 ? ids[0] : null;
     for (const [i, r] of list2.entries()) {
-      const opt = isObj19(r) ? r.option ?? one3 : null;
-      if (!isObj19(r) || !opt || !by[opt])
+      const opt = isObj20(r) ? r.option ?? one3 : null;
+      if (!isObj20(r) || !opt || !by[opt])
         return refused2(
           "entry",
           `reminder ${i} names no option of this act; with several options, each names its option.`,
@@ -134374,7 +135069,7 @@ var ActionPlans = class {
       }
       if (!facts) return done(contactNotAMember());
     }
-    const reason = override === void 0 || override === null ? null : isObj19(override) ? override.reason : override;
+    const reason = override === void 0 || override === null ? null : isObj20(override) ? override.reason : override;
     const at27 = this.now();
     const doc = actionDocument({
       fields: opt.fields,
@@ -134420,7 +135115,7 @@ var ActionPlans = class {
     if (!p || !opt) return refused2;
     const see = this.#sight(viewer);
     const fields = see.fields(opt.fields);
-    const reason = override === void 0 || override === null ? null : isObj19(override) ? override.reason ?? null : override;
+    const reason = override === void 0 || override === null ? null : isObj20(override) ? override.reason ?? null : override;
     const legs = [];
     for (const s of fields.subjects || []) {
       const target = s.kind === "inquiry" ? s.inquiry : s.determination;
@@ -134988,7 +135683,7 @@ function refuseReason2(reason, needed) {
   return null;
 }
 function refuseKeys(args) {
-  const found = isObj19(args) ? REFUSED_KEYS.filter((k) => k in args) : [];
+  const found = isObj20(args) ? REFUSED_KEYS.filter((k) => k in args) : [];
   if (found.length)
     return refusal18("OPTION_KEY_REFUSED", `a plan holds no ${found.join(", ")}: no cost, budget, money to be spent, assignee, hours or significance score. Nothing was written.`, { keys: found });
   return null;
@@ -135048,9 +135743,9 @@ for (const name2 of [
     }
   } });
 }
-var instances42 = /* @__PURE__ */ new WeakMap();
+var instances43 = /* @__PURE__ */ new WeakMap();
 function actionPlansOf(host, deps) {
-  let i = instances42.get(host);
+  let i = instances43.get(host);
   if (!i) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -135075,7 +135770,7 @@ function actionPlansOf(host, deps) {
       filings: lazy("filings", () => filingsOf(host, base)),
       aiRuns: lazy("aiRuns", () => aiRunsOf(host))
     });
-    instances42.set(host, i);
+    instances43.set(host, i);
     i.migrate();
     record.declarePurge("action-plans", ACTION_PLANS_TABLES);
     promotion.registerStep("action-plans", { check: (c) => i.check(c), project: (c) => i.project(c) });
@@ -135205,8 +135900,8 @@ function cardinalityDetail(g) {
   return `${g.n} ${plural(g.n, "instance", "instances")} of this progression thread more than one document at '${stageName(g)}' (${g.document_count} in all), which is declared to hold ${held}: a finding, which decides nothing about which of them belongs (framework 8.2)`;
 }
 function proposalFindingItems(feed, { subjectsOf, homesOf, optionsOf, subjectsMax = 8 } = {}) {
-  const subjectsFor = (instances44, into = []) => {
-    for (const inst of instances44)
+  const subjectsFor = (instances45, into = []) => {
+    for (const inst of instances45)
       for (const b of subjectsOf(inst.progression_key, inst.entity_id) || [])
         if (!into.includes(b)) into.push(b);
     return into;
@@ -140683,23 +141378,6 @@ async function registerAuditOp(env, store, { json: json6, doAnswer: doAnswer2, s
   if (!aOut.result) return storeSilent2("registeraudit");
   return json6({ ok: true, result: await registerAuditReport(aOut.result, typeof env.CAPTURES?.head === "function" ? { head: (sha) => env.CAPTURES.head(captureKey2(storeName, sha)), get: (sha) => env.CAPTURES.get(captureKey2(storeName, sha)) } : null), store: storeName, tokenClass: cls }, 200);
 }
-var attestStatus2 = (a) => a && a.ok ? 200 : { BAD_SHA: 400, CAPTURE_HELD_IN_PARTS: 409, NO_SUCH_CAPTURE: 404 }[a && a.reason] ?? 502;
-async function attestOp2(req, env, store, { json: json6, doAnswer: doAnswer2, storageAbsent: storageAbsent2, captureKey: captureKey2, storeName, cls }) {
-  if (req.method !== "POST") return json6({ ok: false, error: "attest is a POST" }, 405);
-  if (typeof env.CAPTURES?.put !== "function")
-    return storageAbsent2("attest", "this instance has no evidence storage configured");
-  const body = await req.json().catch(() => null);
-  const attested = await attest(body || {}, {
-    head: (sha) => env.CAPTURES.head(captureKey2(storeName, sha)),
-    put: (sha, bytes2) => env.CAPTURES.put(captureKey2(storeName, sha), bytes2, { sha256: sha }),
-    fetch: (...a) => fetch(...a),
-    holds: async (sha) => {
-      const hOut = await doAnswer2(store.fetch(`http://x/registerholds?sha256=${encodeURIComponent(sha)}`));
-      return hOut.answered ? hOut.result : null;
-    }
-  });
-  return json6({ ...attested, store: storeName, tokenClass: cls }, attestStatus2(attested));
-}
 
 // src/extraction/ops.mjs
 var CORRELATION = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -141595,7 +142273,7 @@ async function gatedOp({
     author,
     storeName
   });
-  if (op === "attest") return attestOp2(req, env, store(), { json: json5, doAnswer, storageAbsent, captureKey, storeName, cls });
+  if (op === "attest") return attestOp(req, env, store(), { json: json5, doAnswer, storageAbsent, captureKey, storeName, cls });
   if (op === "monitor") return monitorOp(req, store(), {
     json: json5,
     storeSilent,
@@ -142406,16 +143084,16 @@ var Review = class {
     };
   }
 };
-var instances43 = /* @__PURE__ */ new WeakMap();
+var instances44 = /* @__PURE__ */ new WeakMap();
 function reviewOf(host, deps) {
-  let r = instances43.get(host);
+  let r = instances44.get(host);
   if (!r) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     r = new Review({ ...d, host, storage, record, membership });
-    instances43.set(host, r);
+    instances44.set(host, r);
     r.migrate();
     record.declarePurge("review", REVIEW_TABLES);
     r.seedLedger();
@@ -142873,10 +143551,11 @@ var Store = class extends DurableObject {
     registerOwnersCounts(ctx);
     registerStats(ctx);
     const promotion = promotionOf(ctx, { order: STEP_ORDER });
-    observationLogOf(ctx, {
-      extraction: null,
-      provenance: provenanceOf(ctx, { signingKey: env.RECEIPT_SIGNING_KEY ?? null, instanceName: env.INSTANCE_NAME || "unnamed" })
-    });
+    const provenance = provenanceOf(ctx);
+    const instanceName = env.INSTANCE_NAME || "unnamed";
+    const attestation = attestationOf(ctx, { provenance, signingKey: env.RECEIPT_SIGNING_KEY ?? null, instanceName });
+    provenanceRoutesOf(ctx, { instanceName });
+    observationLogOf(ctx, { extraction: null, provenance });
     observationLogOf(ctx).listenTo(contentOf(ctx, { extraction: extractionOf(ctx, { env, promotion, calibration: calibrationOf(ctx) }) }).extraction);
     observationLogOf(ctx).attachMeaning({ entities: entitiesOf(ctx) });
     const retrieval = retrievalOf(ctx, { now: () => this.#nowMs(null) });
@@ -142885,7 +143564,7 @@ var Store = class extends DurableObject {
     aiRunsOf(ctx, env);
     reevaluationOf(ctx, { env });
     publicationOf(ctx);
-    networkNoticesOf(ctx, { env });
+    networkNoticesOf(ctx, { env, attestation });
     actionsOf(ctx, { env });
     retrieval.registerLegGrades("inquiry", inquiryLegGrades(ctx));
     observationLogOf(ctx).attachMeaning({ connections: connectionsOf(ctx, { env }) });
@@ -142896,16 +143575,16 @@ var Store = class extends DurableObject {
     runProductionsOf(ctx, { aiRuns: aiRunsOf(ctx, env) });
     reviewOf(ctx);
     intentOf(ctx);
-    caseAuthoringOf(ctx);
+    caseAuthoringOf(ctx, { attestation });
     const localFacts = localFactsOf(ctx);
     const conformance = conformanceOf(ctx);
     const consequences = consequencesModule(ctx, { conformance });
     actionClocksOf(ctx);
     const filingTemplates = filingTemplatesOf(ctx);
-    filingsOf(ctx, { actions: actionsOf(ctx), conformance, standards: standardsOf(ctx), consequences });
+    filingsOf(ctx, { actions: actionsOf(ctx), conformance, standards: standardsOf(ctx), consequences, attestation });
     escalationOf(ctx);
     actionPlansOf(ctx);
-    const capture = captureOf(ctx, { env });
+    const capture = captureOf(ctx, { env, attestation });
     const captureRequests = captureRequestsOf(ctx, {
       env,
       storeName: () => this.#ownNamespace() || "bio",
@@ -142943,6 +143622,8 @@ var Store = class extends DurableObject {
     membershipOf(this.ctx).migrate();
     credentialsOf(this.ctx).migrate();
     provenanceOf(this.ctx).migrate();
+    attestationOf(this.ctx).migrate();
+    provenanceRoutesOf(this.ctx).migrate();
     contentOf(this.ctx).migrate();
     connectionsOf(this.ctx).migrate();
     basisVersionsOf(this.ctx).migrate();
@@ -143041,6 +143722,9 @@ var Store = class extends DurableObject {
       ...recordCoreOps(recordOf(ctx), url, body, { sight: viewerPredicate }),
       /* `recordcapturedlocator` reports observation-log's receipt listener. */
       ...provenanceOps(provenanceOf(ctx), url, body, { observer: OBSERVATION_LOG_MODULE }),
+      /* `provenancechain`, `provenanceroute`, `provenanceroutes`: provenance-routes' (its R9; N512), at the place
+         provenance's map held them. */
+      ...provenanceRouteOps(provenanceRoutesOf(ctx), url, body),
       ...contentOps(contentOf(ctx), url, body),
       ...captureRequestsOps(captureRequestsOf(ctx), url, body),
       ...governorRoutes(governorOf(ctx), url, body),
