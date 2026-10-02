@@ -1,3 +1,31 @@
 # op-declarations (T27)
 
 **Status** · session_01FsRcQFZFMkEu8cvL4g6tgh · depth 2 · WORKING · handled B1
+
+## Completion
+
+**Entries applied.** L11, N518 (R12) and N520 (R13), in `bio-plane/src/op-declarations/index.mjs`:
+- R12: `actionholdrelease` (mutating, `admin`/`member`/`probe`, `actionhold`'s spec) joins `ACTIONS_ACTIONS` beside `actionhold`, so `QUERY_AUTHOR_ACTIONS` gives it `author` and `ACTION_LAYER_ACTIONS` gives it `viewer`; NEEDS `contribute`. `actionholdpreview` and `projectholds` (reads, `admin`/`member`/`probe`) join `ACTIONS_READS`, so `viewer` through `ACTION_LAYER_READS`; NEEDS present `null`. All three in both session sets.
+- R13: the docket's seven member ops, each `{classes: [admin, member], machineClasses: []}` (`knocksof`'s fence), in both session sets: `docketfile`, `docketpressure`, `docketdecline`, `docketpost` mutating (NEEDS `contribute`); `docket`, `docketprepare`, `docketinvitation` reads (NEEDS present `null`). `docketpublic` and `docketfeed` are `classes: null`, not mutating, in no session set, NEEDS present `null` (affordances R34 names them in NON_ACTS). New exported lists, the network notices' shape: `DOCKET_ACTIONS` and `DOCKET_READS` (viewer), `DOCKET_AUTHOR` (`docketfile`, `docketpressure`: author), `DOCKET_BY` (`docketprepare`, `docketpost`, `docketdecline`: by), `DOCKET_PUBLIC_READS` (nothing stamped). control-plane R48 reads these to stamp.
+- Reading taken (J1 QUESTION): `viewer` is stamped on all seven docket member ops, `docketpost` and `docketdecline` included (docket's own map passes `viewer` to each). If BOB reads R13 as `by` only for those two, they come out of `DOCKET_ACTIONS` into a list of their own.
+- No `uses` edge to `docket`: nothing here imports docket's op names; the tests name them literally.
+
+**Deferred.** Nothing.
+
+**Found in other modules.**
+- `control-plane` test R2, R41 ("affordances' unaccounted over the door's op table") is red on this branch with exactly my 12 new ops (unpublished: all 12; unranked: the 5 new mutating ops). It goes green once affordances' L11 work (its R33, R34: RUNGS, RUNG_ABSENT, NON_ACTS) is on the tranche; affordances merges before this module, so it should clear at my merge. Conversely, affordances' own R12 totality (a NON_ACTS key NEEDS lacks reads as stale) may be red on its branch until this module merges.
+- Accepted reds seen, unchanged by this job: control-plane R22 (accepted red 4), affordances R19 `actionhold` (accepted red 5).
+
+**Catalogue rows added.** None (no `awaiting stamp` rows).
+
+**Tests.** New `t27.test.mjs` (8 tests naming R12 and R13 with R2, R3, R4, R6: whole-spec comparison, bearer fence, session sets, NEEDS rows, stamps through the lists, the served names, each with a negative control). `tables.test.mjs` updated to the amended lists (public surface gains `docketfeed`, `docketpublic`; `ACTIONS_ACTIONS`, `ACTIONS_READS` and their NEEDS rows).
+- `node --test test/m/op-declarations/`: tests 43, pass 43, fail 0.
+- Users: admission pass 19 fail 0; plane pass 55 fail 0; control-plane pass 126 fail 2 (R22, accepted red 4; R2/R41, above; base had pass 127 fail 1); affordances (checked for R12's totality) pass 147 fail 1 (R19, accepted red 5, same as base).
+
+**Checks** (process repository):
+- format: 92 modules, 91 requirements files; 0 failures
+- architecture: 6 product files, 10 relative imports (1 naming no tracked file, not judged); 0 failures
+- coverage: 13 of 13 live requirement ids named by a test; 0 failures
+- ownership: 4 files changed by op-declarations between tranche/T27 and HEAD; 0 failures
+
+Size (session_01FsRcQFZFMkEu8cvL4g6tgh): test runs 6, module lines 2570
