@@ -169,3 +169,17 @@ test("R22, R43 (K1150): the list reads network-notices' C-127 in its module's pl
   const missing = await unreached(M.CHECK_FAMILY_FILES.filter(([p]) => p !== path));
   assert.ok(missing.includes(`bio-plane/${path} NETWORK_NOTICE_CHECKS`), missing.join(", "));
 });
+
+test("R22, R43 (K1207; N506): the list reads link-sweep's C-18.16–C-18.18 (`SWEEP_CHECKS`) in its module's place (after monitoring, before tasks), and every one of its rows decorates with its own check and words; monitoring's file no longer holds them (negative control: the list without link-sweep's file misses its family)", async () => {
+  const paths = M.CHECK_FAMILY_FILES.map(([p]) => p);
+  const path = "src/link-sweep/checks.mjs";
+  assert.ok(paths.indexOf("src/monitoring/checks.mjs") < paths.indexOf(path) && paths.indexOf(path) < paths.indexOf("src/tasks/checks.mjs"));
+  const table = (await import(`../../../${path}`)).SWEEP_CHECKS;
+  assert.deepEqual(Object.values(table).map((r) => r.check).sort(), ["C-18.16", "C-18.17", "C-18.18"]);
+  for (const [code, row] of Object.entries(table)) assert.deepEqual(M.dec49Row(code), { check: row.check, translation: row.translation }, code);
+  const MON = await import("../../../src/monitoring/checks.mjs");
+  for (const code of Object.keys(table))
+    assert.equal(Object.entries(MON).some(([k, v]) => isFamily(k, v) && Object.hasOwn(v, code)), false, `${code} left monitoring's file`);
+  const missing = await unreached(M.CHECK_FAMILY_FILES.filter(([p]) => p !== path));
+  assert.ok(missing.includes(`bio-plane/${path} SWEEP_CHECKS`), missing.join(", "));
+});

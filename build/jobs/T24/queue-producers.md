@@ -1,0 +1,33 @@
+# queue-producers (T24)
+
+**Status** · session_01LL57hVTtupUsVm9pj8DaCy · depth 2 · COMPLETE · handled B2
+
+## Completion
+
+**Entries applied** (B1 START; `build/plan/current.md` T24 L11):
+- **N506** (R26, Uses): the five `sweep-*` signals are now read through `link-sweep.sweepConditions` (its R11), reached as the new `linkSweep` dep (`linkSweepOf(host)` by default, the host's one instance), and no longer through monitoring. `QueueProducers.SWEEP_CONDITION_KINDS` is link-sweep's own exported `SWEEP_CONDITION_KINDS`. The item's `basis.source` is `link-sweep.sweepConditions`, and its basis sentence cites link-sweep R8 and R11. Tests: the world's fake moved from `monitoring.sweepConditions` to `linkSweep.sweepConditions`. Two new tests in `sweeps.test.mjs`: one reads through link-sweep with a monitoring `sweepConditions` that throws if called (negative control); the other gives no `linkSweep` dep and checks that the host's `linkSweepOf` instance is the one read. This clears the `index.mjs`:2911 throw named in red 7: plane `compose.test.mjs`:101 and `door.test.mjs`:183 pass on this branch.
+- **N489** (R28, DEC-114): today no member-facing word of any item says "subject" (as the requirement's "Measured" line expected), so the code did not change. New test `R28 (DEC-114)` in `feeditems.test.mjs`. It covers all 32+ kinds this module produces (the plan's checkpoint item among them) and checks every summary, detail, option label and other member-facing sentence for "subject" or "subjects". It also checks that the item key `subject`, the class codes and the ids are unchanged. Negative control: the matcher catches the forbidden word in each form.
+- **N502/N508 re-scan** of `bio-plane/src/queue-producers/` and its tests: no `awaiting stamp` note, and no legacy store, op map, dispatcher or legacy-index named as live. Nothing to re-word.
+
+**Deferred:** none.
+
+**Found in other modules:**
+- **queue** (`test/m/queue/world.mjs`:136, `test/m/queue/signals.test.mjs`:26): queue's test world still fakes the sweep signals as `monitoring: { sweepConditions }`. After this re-point, queue-producers reads them from its `linkSweep` dep, so queue must pass that fake as `linkSweep: { sweepConditions }`. Until then, two tests in `signals.test.mjs` are red on this branch: "R1, R5, R11, R12: each sweep-* and notice-* signal is minted…" and "R14, R19, R30: a member mutes a sweep or notice kind…". This is a test-world change in queue's own files (L11, its job); queue's code needs no change.
+- **Plane bundle stale:** this change is under `bio-plane/src/`, so `bio-plane/dist/bio-plane.bundled.mjs` (owned by `not_product`) is stale. Nothing regenerated.
+- **Composition note:** when the plane composes link-sweep in L11, it should do so before op=queue's first read so that the composed instance is the one `linkSweepOf` returns to queue-producers (K61: one instance per storage, and the first call wins). This is the same note scheduler made.
+
+**Tests and checks:**
+- `node --test bio-plane/test/m/queue-producers/`: tests 70, pass 70, fail 0.
+- Whole `bio-plane/test/m`: tests 5278, pass 5259, fail 8, skipped 11. Six are the accepted reds that also fail on `tranche/T24` itself (run with my change stashed): affordances `catalogue.test.mjs` ×2 (red 6), control-plane `families.test.mjs` and `r45-routes.test.mjs` (red 7), plane `notices.test.mjs` construction (red 9) and its monitoring sweep scope check (red 7). The other two are queue's `signals.test.mjs` pair above. Two reds are cleared: plane `compose.test.mjs`:101 and `door.test.mjs`:183 (red 7's queue-producers share).
+- Checks: format, 88 modules, 87 requirements files, 0 failures. Architecture, 14 product files, 56 relative imports, 0 failures. Coverage, 28 of 28 live requirement ids named by a test, 0 failures. Ownership, 5 files changed, 0 failures.
+- Red 5: I added or changed no catalogue row, so there is no `awaiting stamp` row to list.
+
+Size (session_01LL57hVTtupUsVm9pj8DaCy): test runs 4, module lines 3211
+
+## J1 · COMPLETE
+
+COMPLETE. N506 (R26): the sweep-* signals are read through link-sweep.sweepConditions (its R11) via a new linkSweep dep (linkSweepOf by default), never monitoring; this clears red 7's queue-producers share (plane compose.test.mjs:101, door.test.mjs:183 pass). N489 (R28): no member-facing word says 'subject' today; a new R28 test covers all 32+ kinds, with a negative control. N502/N508 re-scan: nothing. Module suite 70/70. Whole test/m: 5259 pass, 8 fail. Six are the accepted reds 6, 7 and 9 (they also fail on tranche/T24). The other two are new and are queue's: test/m/queue/world.mjs:136 and signals.test.mjs:26 still fake monitoring.sweepConditions, and must pass linkSweep: { sweepConditions } instead (a test-world change in queue's files, for queue's L11 job). REPORT: the plane's bundle is stale (src change; nothing regenerated). The plane should compose link-sweep before op=queue's first read (K61, first call wins). All four checks have 0 failures. No catalogue row changed (red 5: none). Details in the record. Please merge job/T24/queue-producers.
+
+## J2 · COMPLETE · re B2
+
+B2 (K1211) is already met by J1's commit 34696b0f17: R26 reads sweepConditions from deps.linkSweep (get #linkSweep, dep name "linkSweep", default linkSweepOf(host)), never monitoring. Once queue's PRODUCER_DEPS passes linkSweep, queue's signals.test.mjs pair (reported in J1) clears with queue's test-world fake moved to linkSweep. No further change; the tests and checks in the record stand. Please merge job/T24/queue-producers.
