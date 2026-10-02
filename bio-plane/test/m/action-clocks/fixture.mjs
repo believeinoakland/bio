@@ -1,5 +1,5 @@
 /* action-clocks over the modules it uses, each the real one where it writes or reads the record (record-core,
-   membership, promotion, actions), on a real SQLite database (node:sqlite) standing in for a Durable Object's storage,
+   membership, promotion, provenance, actions), on a real SQLite database (node:sqlite) standing in for a Durable Object's storage,
    answering as workerd's does (a cursor, and its LIKE/GLOB cap; K313, K316). Copied from `actions`' fixture for the
    split (K624 (1)), the share the moved tests need: retrieval's projection table is made by retrieval's own `migrate()`
    (its R61, K354) and its clock column written after each promotion from `actions`' registered facts (its R12), as
@@ -11,6 +11,7 @@ import { promotionOf } from "../../../src/promotion/index.mjs";
 import { actionsOf } from "../../../src/actions/index.mjs";
 import { actionClocksOf } from "../../../src/action-clocks/index.mjs";
 import { localFactsOf } from "../../../src/local-facts/index.mjs";
+import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { Retrieval, PROJECTION_TABLE } from "../../../src/retrieval/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/frontmatter.mjs";
 import { DatabaseSync } from "node:sqlite";
@@ -78,8 +79,6 @@ export function world({ profiles = ["test-port-ellery"] } = {}) {
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const t of bare.split(";")) if (t.trim()) st.db.exec(t);
-  /* provenance's `register`, as far as actions' check joins it (no capture is registered here). */
-  st.db.exec(`CREATE TABLE register (capture_sha TEXT PRIMARY KEY, bundle_id TEXT)`);
   /* connections' `refs` projection, as far as actions' read (its R25) joins it. */
   st.db.exec(`CREATE TABLE refs (bundle_id TEXT, target_id TEXT, kind TEXT)`);
   const clock = { ms: NOW_MS };
@@ -90,7 +89,11 @@ export function world({ profiles = ["test-port-ellery"] } = {}) {
   membership.migrate();
   const promotion = promotionOf(host, { record, membership, now: () => new Date(clock.ms).toISOString() });
   new Retrieval({ storage: st, record, membership, promotion, extraction: {}, observation: {} }).migrate();
-  promotion.registerFact("producingGroup", "legacy-store", () => "test-group");
+  /* the group fact, registered as its owner instance-setup does (its R1; promotion R40). */
+  promotion.registerFact("producingGroup", "instance-setup", () => "test-group");
+  /* provenance, the real one, migrated before `actionsOf`: its `register` (actions' check joins it) and the tables of its
+     promotion step, which `actions` R55 joins at start through capture's litigation-hold reader (K1086). */
+  provenanceOf(host, { record, membership, promotion, now: () => new Date(clock.ms).toISOString() }).migrate();
   const reg = { facts: [] };
   const retrievalStub = {
     registerActionFacts: (m, fn) => { reg.facts.push({ m, fn }); return { ok: true }; },

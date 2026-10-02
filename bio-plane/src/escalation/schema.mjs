@@ -1,9 +1,11 @@
-/* escalation's tables (requirements: `build/requirements/escalation.md`, R18, R20, R21). An escalation is a record
- * document of its own type (R21): its bundle, history and manifest are record-core's, and its document's log is the
- * record of every act on it. These five tables are that document's projections, written by the module's registered
- * promotion projection in the promotion's own transaction, so a read never parses the log. Every row names the
- * escalation it is about (and an attachment the action it attaches) and is declared to record-core's purge (K23).
- * No row stores a significance, severity, priority, urgency or score (R19). */
+/* escalation's tables (requirements: `build/requirements/escalation.md`, R18, R20, R21, R27). An escalation is a
+ * record document of its own type (R21): its bundle, history and manifest are record-core's, and its document's log is
+ * the record of every act on it. Five tables are that document's projections, written by the module's registered
+ * promotion projection in the promotion's own transaction, so a read never parses the log. Every such row names the
+ * escalation it is about (and an attachment the action it attaches). The sixth, `escalation_declines_to_open`, holds
+ * R27's declines to escalate, which belong to a determination and to no escalation: written by the act alone, inserted
+ * and never updated (R18). Every table is declared to record-core's purge (K23). No row stores a significance,
+ * severity, priority, urgency or score (R19). */
 
 export const ESCALATION_SCHEMA = `
 -- One row per escalation: what it pursues and where it stands. Rewritten from the document at each promotion.
@@ -19,6 +21,7 @@ CREATE TABLE IF NOT EXISTS escalations (
   state_since      TEXT NOT NULL,
   opened_by        TEXT NOT NULL,
   opened_at        TEXT NOT NULL,
+  opened_reason    TEXT,
   log_len          INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS escalations_determination ON escalations(determination_id, state);
@@ -56,6 +59,7 @@ CREATE TABLE IF NOT EXISTS escalation_attachments (
   stage           INTEGER NOT NULL,
   purpose         TEXT,
   standards_json  TEXT,
+  reason          TEXT,
   author          TEXT NOT NULL,
   at              TEXT NOT NULL
 );
@@ -71,6 +75,19 @@ CREATE TABLE IF NOT EXISTS escalation_declines (
   at             TEXT NOT NULL,
   PRIMARY KEY (escalation_id, seq)
 );
+-- R27: a member's decline to escalate a determination, with a reason. Appended only; never updated. seq is its place
+-- among the determination's declines; escalations_before the number of the determination's escalations opened before
+-- it, which places it exactly among the openings (R28).
+CREATE TABLE IF NOT EXISTS escalation_declines_to_open (
+  determination_id   TEXT NOT NULL,
+  seq                INTEGER NOT NULL,
+  project_id         TEXT NOT NULL,
+  escalations_before INTEGER NOT NULL,
+  reason             TEXT NOT NULL,
+  author             TEXT NOT NULL,
+  at                 TEXT NOT NULL,
+  PRIMARY KEY (determination_id, seq)
+);
 `;
 
 /** R20 (K23): the tables, as record-core's `declarePurge` takes them. A single-bundle purge of an escalation clears its
@@ -81,9 +98,18 @@ export const ESCALATION_TABLES = Object.freeze([
   { name: "escalation_evaluations", keys: ["escalation_id"] },
   { name: "escalation_attachments", keys: ["escalation_id", "action_id"] },
   { name: "escalation_declines", keys: ["escalation_id"] },
+  { name: "escalation_declines_to_open", keys: ["determination_id"] },
 ]);
+
+/* The columns added after a store was first written (R1's opening reason, R9's attachment reason; DEC-88, DEC-89):
+   nullable, so a row written before them reads none. */
+const ADDITIVE_COLUMNS = Object.freeze([["escalations", "opened_reason", "TEXT"], ["escalation_attachments", "reason", "TEXT"]]);
 
 export function migrateEscalation(sql) {
   const bare = ESCALATION_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const s of bare.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
+  /* Guarded on what the table holds, so a second run changes nothing. */
+  for (const [table, column, type] of ADDITIVE_COLUMNS)
+    if (![...sql.exec(`PRAGMA table_info(${table})`)].some((c) => c.name === column))
+      sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
 }

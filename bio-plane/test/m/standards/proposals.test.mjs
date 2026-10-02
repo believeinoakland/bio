@@ -1,7 +1,7 @@
 /* standards: proposals and their adoption (R9, R10). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { seeded, V, MACHINE, BYLAW } from "./fixture.mjs";
+import { seeded, V, MACHINE, BYLAW, REASON } from "./fixture.mjs";
 import { STANDARDS_CHECKS, WHY_MAX } from "../../../src/standards/index.mjs";
 import { proposalLabel } from "../../../src/record-grammar/labels.mjs";
 
@@ -55,7 +55,8 @@ test("R10 standardAdopt is R1 by a member naming the proposal: the standard reco
                "a viewer the record admits to nothing is answered as for an absent proposal");
   /* R1 holds on an adoption: the member's own fields are checked */
   assert.equal(w.s.standardAdopt({ proposal: p.id, author: V("bob"), kind: "opinion" }).reason, "STANDARD_KIND_UNKNOWN");
-  const a = w.s.standardAdopt({ proposal: p.id, author: V("bob"), viewer: V("bob"), period: { from: "2019-01-01", to: null } });
+  const a = w.s.standardAdopt({ proposal: p.id, author: V("bob"), viewer: V("bob"), reason: REASON,
+                               period: { from: "2019-01-01", to: null } });
   assert.equal(a.ok, true);
   assert.equal(a.proposal, p.id, "the standard records the proposal it came from");
   assert.deepEqual([a.cite, a.kind, a.issuer, a.text, a.declared_by], [BYLAW, "ordinance", "Port Ellery Selectboard", [text], V("bob")]);
@@ -72,13 +73,13 @@ test("R10 standardAdopt is R1 by a member naming the proposal: the standard reco
   assert.deepEqual(w.snapshot(), snap);
   /* a member's own fields win over the proposal's, and the answer says none came from it */
   const q = w.s.standardPropose({ cite: "MCBC 2024-1", why: "A commitment.", proposer: V("carol") }).proposal;
-  const b = w.s.standardAdopt({ proposal: q.id, author: V("bob"), cite: "MCBC 2024-2", kind: "commitment",
+  const b = w.s.standardAdopt({ proposal: q.id, author: V("bob"), reason: REASON, cite: "MCBC 2024-2", kind: "commitment",
                                 issuer: "Marlow County Commission", text: [text] });
   assert.equal(b.ok, true);
   assert.equal(b.cite, "MCBC 2024-2");
   assert.deepEqual(b.adopted.from_proposal, []);
   /* a proposal naming no text: the adopting member must name it (R2) */
   const r = w.s.standardPropose({ cite: BYLAW, why: "Maybe.", proposer: MACHINE }).proposal;
-  assert.equal(w.s.standardAdopt({ proposal: r.id, author: V("bob"), kind: "ordinance", issuer: "Selectboard" }).reason,
+  assert.equal(w.s.standardAdopt({ proposal: r.id, author: V("bob"), kind: "ordinance", issuer: "Selectboard", reason: REASON }).reason,
                "STANDARD_NO_TEXT");
 });

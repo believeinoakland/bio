@@ -3,8 +3,9 @@
  * reached. A new module with nothing moved (its map, §1): the rows are its own family, C-112 (K174: a module holds its
  * new family; C-112 assigned by BOB, K248). R5's read naming no standard is refused `STANDARD_NO_ID` through its row,
  * C-112.11, never codeless (N269, D-495): standards' own condition, so its own code (K275), not the generic `NO_ID`
- * other modules mint for their own subjects. No translation names a place (R13, `layers.md` rule 1), and none
- * speaks of a standard's merit (R12). */
+ * other modules mint for their own subjects. C-112.20 (`STANDARD_NO_REASON`, R1 and R10; DEC-88, K1025) is minted in T22
+ * and awaits its stamp, as does C-112.17's re-wording (the record now holds the declarer's reason). No translation
+ * names a place (R13, `layers.md` rule 1), and none speaks of a standard's merit (R12). */
 
 const at = (fn, region) => `src/standards/index.mjs ${fn} > ${region}`;
 
@@ -87,7 +88,8 @@ export const STANDARDS_CHECKS = Object.freeze({
   STANDARD_FIELD_UNKNOWN: {
     check: 'C-112.17', where: at("refuseFieldUnknown", "is-standard-field"),
     translation: 'This act takes only the fields it names, and the ones listed are not among them. The record holds a '
-      + 'standard\'s citation, kind, issuer, text and period, and never a view of its merit. Nothing was written.',
+      + 'standard\'s citation, kind, issuer, text, period and reason, and never a view of its merit. Nothing was '
+      + 'written.',
   },
   STANDARD_WRITTEN_ELSEWHERE: {
     check: 'C-112.18', where: at("#checkStandard", "is-standard-written-here"),
@@ -98,6 +100,11 @@ export const STANDARDS_CHECKS = Object.freeze({
     check: 'C-112.19', where: at("standardPropose", "is-proposal-act"),
     translation: 'The government act a proposal names is given by its id, in at most 200 characters, and this one is '
       + 'not. Nothing was written.',
+  },
+  STANDARD_NO_REASON: {
+    check: 'C-112.20', where: at("#declareRefusal", "is-standard-reason"),
+    translation: 'A standard is recorded with your reason: in your own words, why the group holds its government to '
+      + 'it, in at most 2,000 characters. None was given, or it is not words, or it is too long. Nothing was written.',
   },
 });
 

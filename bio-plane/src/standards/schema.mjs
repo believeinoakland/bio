@@ -7,7 +7,8 @@
 
 export const STANDARDS_SCHEMA = `
 -- R1, R3, R4, R6, R10: one row per standard, as declared. source_json is R3's answer at the declaration; supersedes is
--- unique, so a standard is superseded by at most one (R6); proposal_id names the proposal it was adopted from (R10).
+-- unique, so a standard is superseded by at most one (R6); proposal_id names the proposal it was adopted from (R10);
+-- reason is the declarer's words (R1, DEC-88), NULL on a standard recorded before they were asked for.
 CREATE TABLE IF NOT EXISTS standards (
   standard_id   TEXT PRIMARY KEY,
   cite          TEXT NOT NULL,
@@ -19,7 +20,8 @@ CREATE TABLE IF NOT EXISTS standards (
   source_json   TEXT NOT NULL,
   proposal_id   TEXT,
   declared_by   TEXT NOT NULL,
-  declared_at   TEXT NOT NULL
+  declared_at   TEXT NOT NULL,
+  reason        TEXT
 );
 CREATE INDEX IF NOT EXISTS standards_kind ON standards(kind, standard_id);
 -- R2: the standard's own words, as one or more content ids, in the order declared.
@@ -59,7 +61,11 @@ export const STANDARDS_TABLES = Object.freeze([
   { name: "standard_adoptions", keys: ["standard_id"] },
 ]);
 
+/** Creates the tables where absent, and adds R1's `reason` column (DEC-88) to a `standards` table created before it,
+ *  never filling it: a standard recorded before the declarer's words were asked for carries none. Idempotent. */
 export function migrateStandards(sql) {
   const bare = STANDARDS_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const s of bare.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
+  const cols = [...sql.exec(`PRAGMA table_info(standards)`)].map((c) => c.name);
+  if (!cols.includes("reason")) sql.exec(`ALTER TABLE standards ADD COLUMN reason TEXT`);
 }
