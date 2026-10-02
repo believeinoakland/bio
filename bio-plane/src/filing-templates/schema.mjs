@@ -7,8 +7,9 @@
  * `filings` whose draft drew on no project, that draft's action. A comment on a profile's template carries none and
  * is cleared by the whole-store purge only.
  *
- * Named `tpl_*`: `filing_templates` is `filings`' own table today (its R26 library), read only by this module's
- * migration (`migrateFromFilings`, index.mjs). Every name in attribution is held by value beside the id (R16). */
+ * Named `tpl_*`: `filing_templates` is `filings`' table, its retired R26 library's, written by nothing since T21 (K986)
+ * and read only by this module's migration (`migrateFromFilings`, index.mjs). Every name in attribution is held by
+ * value beside the id (R16). */
 
 export const FILING_TEMPLATES_SCHEMA = `
 -- R1: A TEMPLATE. scope is its project; widened by a 'widened' event (R10).
