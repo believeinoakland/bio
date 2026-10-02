@@ -40,6 +40,8 @@ import { ratificationOf, ratificationOps } from "../../../src/ratification/index
 import { publicationOf, publicationOps } from "../../../src/publication/index.mjs";
 import { publicReadOf, publicReadOps } from "../../../src/public-read/index.mjs";
 import { projectStageOf, projectStageOps } from "../../../src/project-stage/index.mjs";
+import { networkNoticesOf, networkNoticesOps } from "../../../src/network-notices/index.mjs";
+import { corpusExportOf, corpusExportOps } from "../../../src/corpus-export/index.mjs";
 import { biasOf, biasOps } from "../../../src/bias/index.mjs";
 import { aiRunsOf, aiRunsOps } from "../../../src/ai-runs/index.mjs";
 import { contentOf, contentOps } from "../../../src/content/index.mjs";
@@ -68,9 +70,11 @@ export const MODULE_MAPS = [
   ["reevaluation", (c, u, b) => reevaluationOps(reevaluationOf(c), u, b)],
   ["case-authoring", (c, u, b) => caseAuthoringOps(caseAuthoringOf(c), u, b)],
   ["ratification", (c, u, b) => ratificationOps(ratificationOf(c), u, b)],
+  ["corpus-export", (c, u) => corpusExportOps(corpusExportOf(c), (k) => u.searchParams.get(k))],
   ["publication", (c, u, b) => publicationOps(publicationOf(c), u, b)],
   ["public-read", (c, u) => publicReadOps(publicReadOf(c), u)],
   ["project-stage", (c, u) => projectStageOps(projectStageOf(c), u)],
+  ["network-notices", (c, u, b) => networkNoticesOps(networkNoticesOf(c), u, b)],
   ["promotion", (c, u, b) => promotionOps(promotionOf(c), u, b)],
   ["record-core", (c, u, b) => recordCoreOps(recordOf(c), u, b, { sight: viewerPredicate })],
   ["provenance", (c, u, b) => provenanceOps(provenanceOf(c), u, b, { observer: OBSERVATION_LOG_MODULE })],
