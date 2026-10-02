@@ -15861,7 +15861,7 @@ CREATE TABLE IF NOT EXISTS seq (
 -- DERIVED table is named in purge does not reach it: nothing here is derived from
 -- the corpus, and clearing it is the defect it closes. record-core's R23 test
 -- (test/m/record-core) proves it exempt from both forms, beside seq.
--- Written in the minting act's own transaction, never one of its own, so an act that
+-- Written in the minting (or recording) act's own transaction, never one of its own, so an act that
 -- rolls back (the review copy's dry run of the publish gates) takes its row back with
 -- it. Seeded at every boot by record-core seedMintLedger from the live rows of each gated
 -- kind, and from the range seq says the counter issued for a prefix with no tail.
@@ -15870,6 +15870,7 @@ CREATE TABLE IF NOT EXISTS seq (
 --   source   'mint'     drawn and handed out by record-core mintOpaqueId
 --            'live'     learned at boot from a live row of its kind
 --            'counter'  learned at boot from seq, an id the counter issued before REC-151
+--            'chosen'   recorded by record-core recordOpaqueId, an id its caller chose (R75)
 CREATE TABLE IF NOT EXISTS minted_ids (
   id           TEXT PRIMARY KEY,
   recorded_at  TEXT NOT NULL,
@@ -15934,7 +15935,7 @@ var RECORD_CORE_CHECKS = Object.freeze({
     where: at2("auditPass", "is-audit-check-failed"),
     translation: "One of the checks the audit runs over this document stopped with an error instead of answering, so the document is counted as having an error rather than as clean. The error is in the check and says nothing yet about the document. The audit changes nothing in the record."
   }),
-  /* New (§1b): a type grammar registered for the catalogue's `checkBundle`. */
+  /* New (§1b): a type grammar registered for record-grammar's `checkBundle` (its R39). */
   GRAMMAR_DECLARED: Object.freeze({
     check: "C-102.15",
     where: at2("registerGrammar", "is-grammar-registration"),
@@ -15955,6 +15956,23 @@ var RECORD_CORE_CHECKS = Object.freeze({
     check: "C-102.18",
     where: at2("registerStatsSource", "is-stats-source-registration"),
     translation: "A part of this instance tried to supply the instance's figures without naming itself or without a function to count them, so nothing was registered. " + BUILD_FAULT
+  }),
+  /* New (T24, R75, N503): a chosen opaque id recorded in the ledger inside its caller's transaction. Beside C-59.5 and
+     C-59.6 in the id-allocation family; `awaiting stamp` for promotion's T24 layer-2 stamp. */
+  OPAQUE_ID_MALFORMED: Object.freeze({
+    check: "C-59.7",
+    where: at2("recordOpaqueId", "is-opaque-id-refused"),
+    translation: "A part of this instance tried to reserve an identifier without giving one, so nothing was reserved. " + BUILD_FAULT
+  }),
+  OPAQUE_ID_SPENT: Object.freeze({
+    check: "C-59.8",
+    where: at2("recordOpaqueId", "is-opaque-id-refused"),
+    translation: "That identifier has already been used, so it was not given out again and nothing was saved. An identifier names one thing only, even after what it named is gone. Trying again gives the thing a new one; if it keeps happening, tell whoever runs this instance."
+  }),
+  OPAQUE_ID_NO_TRANSACTION: Object.freeze({
+    check: "C-59.9",
+    where: at2("recordOpaqueId", "is-opaque-id-refused"),
+    translation: "A part of this instance tried to reserve an identifier outside the change that would use it, so nothing was reserved: a reservation is kept only with the change it belongs to. " + BUILD_FAULT
   }),
   /* New (T19, R70; `build/extraction/legacy-store.md` §4.2 (3)): a module's seed sources for the opaque-id ledger. */
   MINT_SEED_DECLARED: Object.freeze({
@@ -16354,6 +16372,27 @@ var RecordCore = class _RecordCore {
       return id;
     }
     return null;
+  }
+  /** R75 (N503, K1151): A CHOSEN OPAQUE ID, RECORDED AS A DRAWN ONE IS. A caller whose id is not drawn here (a notice id
+   *  another instance chose, network-notices R4) records it in the same ledger, in the caller's own transaction and
+   *  never one of its own, so the act that rolls back takes the id back with it (R7's rule) and, once it commits,
+   *  `mintOpaqueId` never draws it and no purge forgets it (R6, R8). Refused, recording nothing: an id that is not a
+   *  non-empty string (`OPAQUE_ID_MALFORMED`); one the ledger already holds, drawn, recorded or seeded (`OPAQUE_ID_SPENT`,
+   *  naming it); a call outside any `transact` (`OPAQUE_ID_NO_TRANSACTION`), where nothing could take the record back.
+   *  FAIL CLOSED: an INSERT the ledger refuses, by its primary key or because it cannot be written, is answered as spent,
+   *  so a caller never uses an id the ledger has not taken. Never throws. */
+  recordOpaqueId(id) {
+    if (typeof id !== "string" || id === "")
+      return rowRefusal2("OPAQUE_ID_MALFORMED", "an opaque id to record is a non-empty string; nothing was recorded.");
+    if (!this.#held.length)
+      return rowRefusal2("OPAQUE_ID_NO_TRANSACTION", `${id} was not recorded: an opaque id is recorded inside the transaction of the act that uses it, so a rollback takes it back, and no transaction is open. Nothing was recorded.`, { id });
+    const spent = () => rowRefusal2("OPAQUE_ID_SPENT", `${id} is already in the opaque-id ledger, or the ledger could not confirm it free; an id is recorded once and never handed out again. Nothing was recorded.`, { id });
+    try {
+      this.#sql.exec(`INSERT INTO minted_ids (id,recorded_at,source) VALUES (?,?,'chosen')`, id, (/* @__PURE__ */ new Date()).toISOString());
+    } catch {
+      return spent();
+    }
+    return { ok: true, id };
   }
   /** D-432: WHERE THE LEDGER LEARNS THE IDS NO MINT RECORDED, at every boot, idempotently.
    *  LIVE: every live row of a gated kind, from the `[prefix, table, column]` sources the caller names
@@ -18714,6 +18753,7 @@ var MODULE_ORDER = Object.freeze([
   "action-plans",
   /* 10 */
   "monitoring",
+  "link-sweep",
   "scheduler",
   /* 11 */
   "affordances",
@@ -22583,12 +22623,12 @@ function withProducingGroup(text5, slug) {
 }
 
 // src/gate.mjs
-var CATALOG_VERSION = "1.53.0";
+var CATALOG_VERSION = "1.54.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var ROW_CENSUS = Object.freeze({
   version: CATALOG_VERSION,
-  rows: 1046,
-  digest: "28dc9ebb47bf812a1268e50f885ade3ad245fd76b00a04089ce88a88edb3e7e4"
+  rows: 1073,
+  digest: "f1f0ad54195cd4b1b4df532eecf2377b4820e6589b9413053a9fcaeea8cc4fb7"
 });
 var hex2 = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var te3 = new TextEncoder();
@@ -43226,7 +43266,12 @@ CREATE TABLE IF NOT EXISTS signers (
   -- registered by R6, the only door there was, so a NULL origin reads 'admin'; NULL registered_by reads
   -- 'not recorded'. Neither is back-filled. attests never reads origin (R19).
   origin    TEXT,
-  registered_by TEXT
+  registered_by TEXT,
+  -- R21 (N505): the instant the key's status last changed: set at first registration (R6, R9) and at each act that
+  -- changes it (R6's re-activation, R7, R10, R16), never by one that leaves it as it was. A row written before this
+  -- column existed has NULL, read as not recorded: it may have changed status after it was registered, so 'added'
+  -- would state a false instant for it. Never back-filled.
+  status_at TEXT
 );
 CREATE INDEX IF NOT EXISTS signers_member ON signers(member_id);
 
@@ -43282,6 +43327,7 @@ var CREDENTIALS_ADDITIVE_COLUMNS = [
   ["signers", "status_by", "TEXT"],
   ["signers", "origin", "TEXT"],
   ["signers", "registered_by", "TEXT"],
+  ["signers", "status_at", "TEXT"],
   ["ai_credentials", "confined_to", "TEXT"]
 ];
 var CREDENTIALS_EXEMPT_TABLES = ["credentials", "sessions", "bootstrap", "signers", "ai_credentials"];
@@ -43403,10 +43449,16 @@ var Credentials = class _Credentials {
     const password = typeof this.membership.registerPasswordSetter === "function" ? this.membership.registerPasswordSetter(({ role, password: password2 } = {}) => this.setPassword({ role, password: password2 })) : null;
     return { revoked, claimed, password };
   }
-  #memberRevoked({ memberId, by = null } = {}) {
+  #memberRevoked({ memberId, by = null, at: at26 = null } = {}) {
     if (typeof memberId !== "string" || memberId === "") return;
     this.sql.exec(`DELETE FROM sessions WHERE role=?`, `member:${memberId}`);
-    this.sql.exec(`UPDATE signers SET status='revoked', status_by=? WHERE member_id=?`, by ?? null, memberId);
+    this.sql.exec(
+      `UPDATE signers SET status='revoked', status_by=?,
+         status_at=CASE WHEN status<>'revoked' THEN ? ELSE status_at END WHERE member_id=?`,
+      by ?? null,
+      _Credentials.#instant(at26),
+      memberId
+    );
   }
   /* R17: true exactly when the founder's credential is held, which R1's claim writes and a re-armed claim replaces.
      Writes nothing and never throws: a store that cannot be read answers not claimed. */
@@ -43628,6 +43680,11 @@ var Credentials = class _Credentials {
   static #statusBy(v) {
     return typeof v === "string" && v !== "" ? v : "not recorded";
   }
+  /* R21: the instant an act changes a key's status, in `added`'s spelling (ISO 8601 with milliseconds): the act's own
+     time when its caller states one (membership's revocation notice, R16), else now. */
+  static #instant(at26 = null) {
+    return typeof at26 === "string" && at26 !== "" ? at26 : (/* @__PURE__ */ new Date()).toISOString();
+  }
   /* R8, R11, R19 (D-158) — ONE PREDICATE, AND IT IS WHAT KEEPS THE ROSTER AND THE GATE FROM DISAGREEING. A key attests
    * exactly when the key is `active` and its member is `active`; `origin` is never read (R19). `signerList` projects it
    * as `attests` and `attestingKeys` filters by it, so the roster can never report a key `op=ratify` would refuse:
@@ -43678,7 +43735,8 @@ var Credentials = class _Credentials {
     return typeof keyB64 === "string" && /^AAAA[A-Za-z0-9+/=]+$/.test(keyB64);
   }
   /* R6: an administrator registers a key for a member. Registering a known key rebinds it and makes it `active`, never
-     a second row; `origin` 'admin' and `registered_by` the stamped actor (NULL reads `not recorded`). */
+     a second row; `origin` 'admin' and `registered_by` the stamped actor (NULL reads `not recorded`). R21: a new key's
+     `status_at` is its registration's instant; a known key's changes only when it was revoked and is re-activated. */
   signerAdd({ keyB64, memberId, comment, by = null } = {}) {
     const barCust = this.#custodialBar(by, "registering a signing key");
     if (barCust) return barCust;
@@ -43694,18 +43752,21 @@ var Credentials = class _Credentials {
       };
     const barAdd = this.#signerMemberBar(memberId);
     if (barAdd) return barAdd;
+    const now = _Credentials.#instant();
     this.sql.exec(
-      `INSERT INTO signers (key_b64,member_id,comment,status,added,status_by,origin,registered_by)
-       VALUES (?,?,?,'active',?,?,'admin',?)
+      `INSERT INTO signers (key_b64,member_id,comment,status,added,status_by,origin,registered_by,status_at)
+       VALUES (?,?,?,'active',?,?,'admin',?,?)
        ON CONFLICT(key_b64) DO UPDATE SET member_id=excluded.member_id,
          comment=excluded.comment, status='active', status_by=excluded.status_by,
-         origin='admin', registered_by=excluded.registered_by`,
+         origin='admin', registered_by=excluded.registered_by,
+         status_at=CASE WHEN signers.status<>'active' THEN excluded.status_at ELSE signers.status_at END`,
       keyB64,
       memberId,
       comment ?? null,
-      (/* @__PURE__ */ new Date()).toISOString(),
+      now,
       by || null,
-      by || null
+      by || null,
+      now
     );
     return { ok: true, keyB64, memberId, by: _Credentials.#statusBy(by) };
   }
@@ -43762,17 +43823,20 @@ var Credentials = class _Credentials {
         detail: "this key of yours was revoked, and a revoked key is re-activated only by an administrator (op=signerset), so that a revocation stands. Nothing was written."
       };
     }
-    if (!held)
+    if (!held) {
+      const now = _Credentials.#instant();
       this.sql.exec(
-        `INSERT INTO signers (key_b64,member_id,comment,status,added,status_by,origin,registered_by)
-         VALUES (?,?,?,'active',?,?,'self',?)`,
+        `INSERT INTO signers (key_b64,member_id,comment,status,added,status_by,origin,registered_by,status_at)
+         VALUES (?,?,?,'active',?,?,'self',?,?)`,
         keyB64,
         by,
         comment ?? null,
-        (/* @__PURE__ */ new Date()).toISOString(),
+        now,
         by,
-        by
+        by,
+        now
       );
+    }
     return {
       ok: true,
       keyB64,
@@ -43792,7 +43856,13 @@ var Credentials = class _Credentials {
     const row2 = typeof keyB64 === "string" && typeof by === "string" && by !== "" ? this.#one(`SELECT status FROM signers WHERE key_b64=? AND member_id=?`, keyB64, by) : null;
     if (!row2) return { ok: false, reason: "NO_SUCH_KEY" };
     const already = row2.status === "revoked";
-    if (!already) this.sql.exec(`UPDATE signers SET status='revoked', status_by=? WHERE key_b64=?`, by, keyB64);
+    if (!already)
+      this.sql.exec(
+        `UPDATE signers SET status='revoked', status_by=?, status_at=? WHERE key_b64=?`,
+        by,
+        _Credentials.#instant(),
+        keyB64
+      );
     return { ok: true, keyB64, status: "revoked", by, already };
   }
   /* R8 (D-158) — THE ROSTER SAYS WHICH STATE EACH KEY IS ACTUALLY IN. `status` is the administrator's own switch on
@@ -43807,7 +43877,7 @@ var Credentials = class _Credentials {
       return facts.get(id);
     };
     return { signers: this.#rows(
-      `SELECT key_b64, member_id, comment, status, added, status_by, origin, registered_by
+      `SELECT key_b64, member_id, comment, status, added, status_by, origin, registered_by, status_at
          FROM signers ORDER BY added, key_b64`
     ).map((r) => {
       const memberStatus = statusOf(r.member_id);
@@ -43820,6 +43890,8 @@ var Credentials = class _Credentials {
         added: r.added,
         status_by: _Credentials.#statusBy(r.status_by),
         /* REC-159 */
+        /* R21: when the status last changed; null for a key registered before the column (not recorded). */
+        status_at: typeof r.status_at === "string" && r.status_at !== "" ? r.status_at : null,
         /* R6 was the only door before R9, so a row with no recorded origin is an administrator's. */
         origin: r.origin === "self" ? "self" : "admin",
         registered_by: _Credentials.#statusBy(r.registered_by),
@@ -43831,7 +43903,7 @@ var Credentials = class _Credentials {
   }
   /* R7: an administrator sets a key's status. Only ACTIVATION is barred as R6 bars the owning member, because
      membership's revocation revokes the member's keys (R16) and this would otherwise undo it one call later; revoking
-     narrows a claim and is never refused. */
+     narrows a claim and is never refused. R21: `status_at` moves only when the status set differs from the key's. */
   signerSet({ keyB64, status, by = null } = {}) {
     const barCust = this.#custodialBar(by, "setting a signing key's status");
     if (barCust) return barCust;
@@ -43842,7 +43914,15 @@ var Credentials = class _Credentials {
       const barSet = this.#signerMemberBar(row2.member_id);
       if (barSet) return barSet;
     }
-    this.sql.exec(`UPDATE signers SET status=?, status_by=? WHERE key_b64=?`, status, by || null, keyB64);
+    this.sql.exec(
+      `UPDATE signers SET status=?, status_by=?, status_at=CASE WHEN status<>? THEN ? ELSE status_at END
+       WHERE key_b64=?`,
+      status,
+      by || null,
+      status,
+      _Credentials.#instant(),
+      keyB64
+    );
     return { ok: true, keyB64, status, by: _Credentials.#statusBy(by) };
   }
   /* R11: the signer keys that attest, by R8's one predicate: the set the ratification gate accepts, for every reader

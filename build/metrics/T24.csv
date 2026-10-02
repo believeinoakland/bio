@@ -1,2 +1,6 @@
 session,role,module,cache_read,cache_write,input,output,turns,test_runs,module_lines
 session_01MJZEvGTGHSBLGCua1Zuqbw,job,record-grammar,8082852,191262,96,16281,,2,2290
+session_01GDBx64mMFCCwSytRPN41WV,job,record-core,14395639,287067,120,34904,,15,1730
+session_012kvJP8Do5Px8VoiLziW6ao,job,credentials,8787901,179121,110,25438,,9,944
+session_01TsMiP8QXjZwgw1wxMGupxs,job,membership,3043639,73111,568,8077,,5,3342
+session_01SwJ6zqWV8DAK53y4TjpSJf,job,promotion,8724569,143993,117,21446,,7,3206
