@@ -27,3 +27,7 @@ None.
 - `format`: 86 modules, 85 requirements files; 0 failures. `architecture action-clocks`: 8 product files, 36 relative imports; 0 failures. `coverage action-clocks`: 12 of 12 live requirement ids named by a test; 0 failures. `ownership action-clocks tranche/T22`: 0 failures.
 
 Size (session_01Vhi9tLSEX7yiZfPiG1CwhD): test runs 14, module lines 884
+
+## J1 · REPORT
+
+Found in other modules (record, 'Found in other modules'): (1) Stale generated artifact: bio-plane/dist/bio-plane.bundled.mjs (not_product), from my change under bio-plane/src/action-clocks/index.mjs; regenerate at the layer close. (2) Requirements wording: factAnswer now reads local-facts' LOCAL_FACT_STATUSES (local-facts R7, which names action-clocks) to judge 'an answer local-facts cannot give'; my Uses names only factStatus (R2) and factPath (R6). The edge exists; only the Uses wording lacks R7. (3) Other modules' fixtures still register the producingGroup stand-in under the retired 'legacy-store' (action-plans, monitoring, case-authoring, capture-requests, actions, content, retrieval, standards fixture.mjs; tasks grammar.test.mjs:30): test-only, harmless, each owner's to re-word. I re-worded mine to instance-setup.
