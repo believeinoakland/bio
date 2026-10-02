@@ -4,15 +4,15 @@ import assert from "node:assert/strict";
 import { SCHEDULER_ORDER, SCHEDULER_KEYS, SCHED_GRACE_MS } from "../../../src/scheduler/index.mjs";
 import { world, consumer, writes, NOW } from "./fixture.mjs";
 
-const LATER = [["task-drain", "drain"], ["queue-renotify", "queuerenotify"], ["group-domain-recheck", "groupdomain"]];
+const LATER = [["tasks", "task-drain", "drain"], ["queue", "queue-renotify", "queuerenotify"], ["instance-setup", "group-domain-recheck", "groupdomain"]];
 
 test("R5: the consumers, in order, each calling its owning module; the three new ones appended after bias-debt", async () => {
   assert.deepEqual([...SCHEDULER_ORDER], ["selection-sweep", "task-drain", "archive-monitor", "connection-derive",
     "overdue-scan", "queue-renotify", "monitor-cadence", "ai-run-reap", "capture-request-drain", "ai-run-wake",
     "calibration-reprobe", "group-domain-recheck", "bias-debt", "intent-age", "notice-sweep", "deadline-recheck"]);
   const { s } = world();
-  /* registered by the later modules (legacy-store meanwhile), in an order other than R5's */
-  for (const [n, key] of [...LATER].reverse()) assert.equal(s.register("legacy-store", consumer(n, { key })).ok, true);
+  /* registered by the later modules that own them, in an order other than R5's */
+  for (const [m, n, key] of [...LATER].reverse()) assert.equal(s.register(m, consumer(n, { key })).ok, true);
   assert.deepEqual(s.consumers(), [...SCHEDULER_ORDER], "each takes its R5 place");
   assert.ok(s.consumers().indexOf("capture-request-drain") < s.consumers().indexOf("ai-run-wake"),
     "the drain ticks before the wake");
@@ -104,8 +104,8 @@ test("R8: a later module registers each consumer once; a name already registered
   const { s } = world();
   const a = s.register("queue", consumer("task-drain", { key: "drain" }));
   assert.deepEqual(a, { ok: true, module: "queue", name: "task-drain", key: "drain", placed: "R5" });
-  assert.deepEqual(s.register("legacy-store", consumer("task-drain", { key: "drain2" })),
-    { ok: false, reason: "CONSUMER_DECLARED", module: "legacy-store", name: "task-drain" });
+  assert.deepEqual(s.register("tasks", consumer("task-drain", { key: "drain2" })),
+    { ok: false, reason: "CONSUMER_DECLARED", module: "tasks", name: "task-drain" });
   for (const own of ["selection-sweep", "archive-monitor", "monitor-cadence", "bias-debt", "intent-age"])
     assert.equal(s.register("m", consumer(own, { key: `k-${own}` })).reason, "CONSUMER_DECLARED", own);
   assert.equal(s.register("m", consumer("x", { key: "x" })).ok, true);
