@@ -57,3 +57,7 @@ R31's two refusals take catalogue rows (DEC-49; current.md red 7 names acquisiti
 ## J3 · REPORT
 
 Users re-tested after merging tranche/T23 @ capture's merge (test/m/acquisition, capture, capture-requests, instance-setup, control-plane, monitoring): 537 tests, 535 pass, 1 fail: control-plane inbox-door.test.mjs:81 (accepted red 9). It is still red after capture's merge, so per K1117 it is now control-plane's L11. No other red. Stale: the plane bundle (bio-plane/dist/bio-plane.bundled.mjs) from bio-plane/src/acquisition/; I regenerated nothing. Requirement wording for you: (a) R29's enumeration of the table does not name R31's C-128.1–C-128.2; (b) Uses still lists parseCdx, replayLocator, cdxQuery and archiveHop, which the archive arm no longer calls (only selectCapture, plus EMPTY_BODY_DIGEST through mementoRow).
+
+## J4 · COMPLETE
+
+acquisition T23 complete; the record (build/jobs/T23/acquisition.md, Completion) is on job/T23/acquisition, merged with tranche/T23. R32: the archive arm and archiveLookup run over Memento, every refusal named and nothing filed. R31: the sweep's scope, with C-128.1 SWEEP_SCOPE_MISSING and C-128.2 SWEEP_REDIRECT_OUT_OF_SCOPE, both new and awaiting stamp (red 7). acquisition tests: 68/68. Whole test/m: 1 red, the accepted red 9. format, architecture, coverage (32/32) and ownership: 0 failures each. Merge order: none.
