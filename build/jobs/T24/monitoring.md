@@ -24,3 +24,35 @@ Tests and checks run, with summary lines:
 - `checks/format.mjs` → 2 failures (red 4). `checks/architecture.mjs monitoring` → 0 failures. `checks/coverage.mjs monitoring` → 57 of 65, 1 failure (the requirements file's retirement wording, J2). `checks/ownership.mjs monitoring tranche/T24` → 15 files, 0 failures.
 
 Size (session_01LubdwpQSMaaKPPQPfezUV3): test runs 30, module lines 3208
+
+## J2 · COMPLETE
+
+monitoring T24 L10 done on `job/T24/monitoring` (merged `tranche/T24` @ 20fe9ea18a; K1206 and B3 applied). Ready to merge first in L10.
+
+**Entries applied.**
+(1) N506's removal side: `src/monitoring/sweep.mjs`, `sweep-match.mjs` and `test/m/monitoring/sweep-{grammar,reads,run}.test.mjs` deleted; `new Sweeps(...)`, `this.sweep`, `sweepDue/Wake/Tick`, `sweeps`, `sweepConditions`, `registerSweepScope`, the `sweeps` route, every import and re-export of the moved files, the `sweep_runs`/`sweep_filed` tables and their purge declarations, the sweep half of `checks.mjs` (`sweepErrors`, `SWEEP_FIELDS`, `SWEEP_ID_RE`, `SWEEP_CADENCES`, `SWEEP_BOUNDS`) and all of `SWEEP_CHECKS` (C-18.16–.18, K1206). **Edges I no longer import: `project-stage`, `capture-requests`** (also `format-registry.listFormats`; `detectFormat` stays, so the `format-registry` edge stays).
+(2) R65 and R66 built (signatures below); R42's and R30's arms are the registered ones; C-18.5 stays one refusal; a throwing or malformed grammar or fence fails closed; nothing registered reads no `sweeps[]` entry at all, fences nothing, lists no sweep. R53–R64 named by no test of mine.
+(3) N506's tail: `fixture.mjs` creates, as `PLANE_TABLES`, the plane's `refs` and `inquiry_bundle_facts` **and four more a post-wake promotion reads in this world** (`inquiry_basis`, `inquiry_exclusions`, `inquiry_contradiction_links`, `content`), statements copied; `seam.test.mjs` proves a promotion after the wakes lands, and fails without them (negative control). `sweepDef` kept in the fixture only because scheduler's `consumers.test.mjs` imports it.
+(4) N502: `checks.mjs` :13, :14, :84 re-worded to 1.49.0 / 1.53.0; S1's :119 left with the rows (C-18.16–.18 gone). Re-scan: no other N502/N508 kind in my module.
+
+**R65, R66 as built (for link-sweep):**
+- `sweepHost()` → the same frozen object every call: `paused()`; `openEpoch(consumer, now, staleAfterMs)`; `claim(consumer, subject, epoch)` → boolean; `closeEpoch(consumer, epoch)` → undefined; `running` (a `Set`); `ranked(list, item, rank, now)`; `land(request, filed, at, say?)` with `request` `{id, bundle, locators, target}`, `filed` `{locator, doc}` (capture's `document`), `say` `{title, summary, notes, trigger}` → `{ok: true, bundle_id, state: "collected"}` | `{ok: false, reason, detail}`; `gate(viewer)` → `{sql, args}`; `recheckMs()`.
+- `registerSweep(module, {grammar, fence, dueForSlate})` → `{ok: true, module}` | `{ok: false, reason}` (words). Methods are bound to the object passed, so `this` works.
+  - `grammar(entry, ids)` → `[{check: "C-18.5", severity, field, message}]`, message beginning with its field (`field` null for none); monitoring prefixes `gathering.json sweeps[i]` + (`field` ? "." : " ") + message. A refused term's finding also carries `code: "SWEEP_TERM_REFUSED"` and `refusal: {code, check, translation}`; R27 answers `{ok: false, reason, code, check, translation, detail, findings}` from it. A term finding whose `refusal` is not whole falls to `GATHERING_REFUSED`. No `severity` reads as `error`.
+  - `fence(c, nextText)` → null/undefined admits; `{ok: false, …}` is returned as the promotion's answer; anything else, or a throw, is `GATHERING_REFUSED` with one C-18.5 finding.
+  - `dueForSlate(now, sees)` → `[{kind: "ratified-sweep", bundle, id, definition}]`; a throw or non-list lists none and the slate carries `sweeps_unread`.
+
+**Reds my merge makes in `bio-plane/test/m`** (baseline reds 6, 8, 9 unchanged: `affordances/catalogue.test.mjs`:524, `scheduler/consumers.test.mjs`:161, `plane/notices.test.mjs`:33), all red 7, the sweep's composition:
+- `scheduler/consumers.test.mjs`:226, :250, :260; `scheduler/plane.test.mjs`:206 (gathering-sweep through monitoring)
+- `plane/notices.test.mjs`:140 (monitoring R64's scope registration, now link-sweep R12)
+- `control-plane/r45-routes.test.mjs`:68 and `affordances/catalogue.test.mjs`:903 (`sweeps` in monitoring's op map)
+- `plane/compose.test.mjs`:101 and `plane/door.test.mjs`:183: **op=queue through the plane throws** (`this[#monitoring].sweepConditions is not a function`, queue-producers `index.mjs`:2911) until queue-producers' L11 re-point.
+Outside `test/m`: `test/system/row-census.test.mjs` 1070 rows against the 1073 pin (K1206: red 7).
+Intermittent, not mine: `review/doors.test.mjs`:51 failed once in the full run, passed 3/3 alone.
+
+**For BOB:**
+- **Coverage fails on your requirements file, not my tests:** `build/requirements/monitoring.md`:69–80 marks R53–R64 `**retired**`, but the checks' parser (`checks/lib.mjs` `requirementIds`) only reads `*(retired …)*`, so they count as live (R55–R60, R62, R63 unnamed; R53, R54, R61, R64 only pass by chance, matching other modules' ids in comments). Re-wording those 12 lines `*(retired: moved to link-sweep R1, N506, T24)*` clears it.
+- **Stale artifact:** `bio-plane/dist/bio-plane.bundled.mjs` (inputs `src/monitoring/{checks,index,schema}.mjs` changed, `sweep.mjs` and `sweep-match.mjs` gone); I regenerated nothing.
+- Rows: none added or changed; three removed (C-18.16–.18), none `awaiting stamp`.
+
+**Checks:** format 2 failures (red 4, link-sweep's directories); architecture 0 failures (15 files, 71 imports); coverage 57/65 (the retirement wording above); ownership 0 failures (15 files). Monitoring tests 99/99.
