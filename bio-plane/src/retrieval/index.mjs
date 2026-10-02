@@ -7,8 +7,10 @@
  * statement — and runs none that lacks the viewer's gate (R28). It mints nothing: a hit is an address (R32).
  *
  * K61: `retrievalOf(ctx, deps)` answers the one instance per Durable Object; it reaches record-core, membership,
- * promotion, extraction and observation-log through their factories on the same `ctx`; observation-log's services and
- * vocabulary (its R1, R9–R13, R18–R21) are read through `observationOf` below, which a test may replace. */
+ * promotion, extraction and observation-log through their factories on the same `ctx`; provenance-routes' standing
+ * route mark (its R8) is joined in `listBundles`' own statement and read through its `routeFinding` (its R5);
+ * observation-log's services and vocabulary (its R1, R9–R13, R18–R21) are read through `observationOf` below, which a
+ * test may replace. */
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, hiddenBundles, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { promotionOf, stepContext } from "../promotion/index.mjs";
@@ -21,7 +23,7 @@ import { observationLogOf, OBSERVATION_STATES, DEFINITIVE_STATES, CONTENT_AXIS_S
 import { compile, textOf, FTS_COLUMNS, GATE_MARK, FIELDS, DEFAULT_FACETS, IDS_MAX,
          meaningVocabulary, MEANING, cachedNotes, MEANING_AXIS_CAP } from "../query.mjs";
 import { normalizeType } from "../record-grammar/types.mjs";
-import { routeFinding } from "../provenance/index.mjs";
+import { routeFinding } from "../provenance-routes/index.mjs";
 import { MEANING_READ_CHECKS, SELECTION_CHECKS } from "./checks.mjs";
 import { projectionOf, PROJECTION_COLS, PROJECTION_LIMIT_DEFAULT, PROJECTION_LIMIT_MAX } from "./projection.mjs";
 import { meaningLevels } from "./levels.mjs";
@@ -824,13 +826,13 @@ export class Retrieval {
   /* ---- the bundle roster and the gated whole-bundle reads (R63–R65) ----
    *
    * `record-core` (layer 2) holds these reads ungated, for the in-process readers (the audit, a whole-image walk); it
-   * cannot gate them by membership's sight or provenance's marks. These are the member-facing doors, each through the
-   * one gate (membership R43, R80): an absent or unrecognised viewer sees nothing (fail closed), and a bundle the viewer
-   * may not see answers exactly as an absent one. */
+   * cannot gate them by membership's sight or provenance-routes' marks. These are the member-facing doors, each through
+   * the one gate (membership R43, R80): an absent or unrecognised viewer sees nothing (fail closed), and a bundle the
+   * viewer may not see answers exactly as an absent one. */
 
-  /** REC-63: the standing route mark's joined `route_*` columns folded into ONE published field, `route`, provenance's
-   *  `routeFinding` over it (its R23), and removed from the row, so a reader meets the composed finding rather than
-   *  loose columns it would have to interpret. */
+  /** REC-63: the standing route mark's joined `route_*` columns folded into ONE published field, `route`,
+   *  provenance-routes' `routeFinding` over it (its R5), and removed from the row, so a reader meets the composed
+   *  finding rather than loose columns it would have to interpret. */
   static #withRoute(r) {
     const mark = r.route_finding === null || r.route_finding === undefined ? null : {
       seq: r.route_seq, at: r.route_at, by: r.route_by, finding: r.route_finding,
@@ -843,8 +845,8 @@ export class Retrieval {
   }
 
   /** R63 (`op=list`): the bundles the viewer's gate passes, in id order, each with its standing route mark's finding.
-   *  ONE LEFT JOIN against the highest `seq` (provenance R48), never a read per row: the arm with no limit is unbounded
-   *  by contract. REC-60 / D-225 kept that arm: a bound applied must be published, and this arm applies none, so a bare
+   *  ONE LEFT JOIN against the highest `seq` (provenance-routes R8's read contract), never a read per row: the arm
+   *  with no limit is unbounded by contract. REC-60 / D-225 kept that arm: a bound applied must be published, and this arm applies none, so a bare
    *  array that is COMPLETE tells no lie; its named consumers (the browser, the audit, the migration verifier) need it
    *  whole, and `roster.test.mjs` (R63) holds it complete. Paging is opt-in: a positive `limit` answers the envelope
    *  `{bundles, limit, cursor, total}`, `limit` the bound applied after the 5,000 ceiling (REC-57) and `total` what the
