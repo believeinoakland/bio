@@ -31,3 +31,7 @@ Size (session_01HXBQRNxoQMo9TDAz7Fou7D): test runs 3, module lines 3938
 ## J1 · REPORT
 
 Generated artifact made stale by this job: the plane's bundle, bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (comments changed in src/provenance/checks.mjs, index.mjs, schema.mjs). Not regenerated (mechanics §14). Also requirement wording in build/requirements/provenance.md (BOB's file), no meaning changed, seen in the re-scan: R52 says the testimony slot runs 'at the place legacy-store's step runs it today' and 'While legacy-store's step exists'; since T19 it is control-plane's promotion step (its R42, src/control-plane/step.mjs, registered by plane R10). The Suggestions' 'Testify's later work' (Until T19's layers 4-5, legacy-store's promotion step ...), the last sentences of R53 and R55 (legacy-store's own job ...) and the Status line's 'Code today: inside the legacy modules' are history.
+
+## J2 · COMPLETE
+
+N471 and N480 applied (comments only; no line added; module 3,938 lines). Re-scan re-worded further stale notes: airun.mjs, the legacy store's step and auditPass, src/index.mjs and mk7-attribution.test.mjs no longer named as live (index.mjs, schema.mjs, mk6 suite, testimony-slot and fixture headers). Record: build/jobs/T22/provenance.md, Completion. Proof: test/m/provenance 113/113; mk6-bundle-names-no-author 10/0; whole bio-plane/test/m 4795 pass, 0 fail (20 todo). Four checks 0 failures (coverage 55/55; ownership 7 files). Stales the plane bundle (REPORT J1).
