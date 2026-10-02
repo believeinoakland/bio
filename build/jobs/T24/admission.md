@@ -22,3 +22,7 @@
 - `checks/format.mjs`: 88 modules, 87 requirements files; 0 failures. `checks/architecture.mjs … admission`: 9 product files, 16 relative imports; 0 failures. `checks/coverage.mjs … admission`: 16 of 16 live requirement ids named by a test; 0 failures. `checks/ownership.mjs … admission tranche/T24`: 4 files changed; 0 failures.
 
 Size (session_01T2xrt2MjMnyqB7bowkkKM1): test runs 9, module lines 848
+
+## J1 · COMPLETE
+
+N502 applied: `admission/checks.mjs`:6–9 re-worded to the stamp that took the rows (1.49.0, T19 L2; control-plane's copies deleted in T18). Re-scan: two notes of the same kind re-worded (`index.mjs`:9; `test/m/admission/reader.test.mjs`:2–3). Comments only; no row added or changed (nothing awaiting stamp). Module tests 19/19; whole `test/m` 5256 pass, 8 fail, all accepted reds 6, 7, 9 and identical with my change stashed. Four checks 0 failures. REPORT: the plane's bundle is stale for `src/admission/checks.mjs` and `index.mjs` (fleetbundles 97 pass, 1 fail); not regenerated. Details in my record.
