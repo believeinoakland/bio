@@ -103,7 +103,7 @@ test("R8 R11 R19 signerList's attests is the one predicate, attests_why names a 
     ["admin", "not recorded", "not recorded", "admin"]);
   for (const s of Object.values(list))
     assert.deepEqual(Object.keys(s).sort(), ["added", "attests", "attests_why", "comment", "key_b64", "member_id",
-      "member_status", "origin", "registered_by", "status", "status_by"], s.key_b64);
+      "member_status", "origin", "registered_by", "status", "status_at", "status_by"], s.key_b64);
   /* attests is exactly: key active and member active (membership R68's status), and nothing else */
   for (const s of Object.values(list))
     assert.equal(s.attests, s.status === "active" && w.m.memberFacts(s.member_id)?.status === "active", s.key_b64);

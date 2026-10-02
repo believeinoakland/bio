@@ -1,7 +1,7 @@
 /* credentials — the credentials a member or the instance acts by: the founder's password and claim, members' passwords
  * and sessions, the signer keys whose signatures the record accepts, and the credentials AI work runs under.
  *
- * Requirements: build/requirements/credentials.md (R1–R20). Split from `membership` (K617, K636 BOB-1, K637; T19 layer
+ * Requirements: build/requirements/credentials.md (R1–R21). Split from `membership` (K617, K636 BOB-1, K637; T19 layer
  * 2, CREDENTIALS #1): the code is copied from `membership/index.mjs` and `schema.mjs`, without change of meaning, and
  * reads `members` only through membership's services (`memberFacts`, `sessionRights`, `isAdministrator`,
  * `activeAdmins`, `notAnAdmin`), never by SQL. Who the members are, and what each may do, is membership's; this module
@@ -62,11 +62,15 @@ export class Credentials {
     return { revoked, claimed, password };
   }
 
-  #memberRevoked({ memberId, by = null } = {}) {
+  #memberRevoked({ memberId, by = null, at = null } = {}) {
     if (typeof memberId !== "string" || memberId === "") return;
     this.sql.exec(`DELETE FROM sessions WHERE role=?`, `member:${memberId}`);
-    /* REC-159: the cascade is the revoking act's, so the keys it revokes name its actor. */
-    this.sql.exec(`UPDATE signers SET status='revoked', status_by=? WHERE member_id=?`, by ?? null, memberId);
+    /* REC-159: the cascade is the revoking act's, so the keys it revokes name its actor. R21: a key it revokes takes
+       the act's own time (the notice's `at`) as `status_at`; a key already revoked keeps its own. */
+    this.sql.exec(
+      `UPDATE signers SET status='revoked', status_by=?,
+         status_at=CASE WHEN status<>'revoked' THEN ? ELSE status_at END WHERE member_id=?`,
+      by ?? null, Credentials.#instant(at), memberId);
   }
 
   /* R17: true exactly when the founder's credential is held, which R1's claim writes and a re-armed claim replaces.
@@ -280,6 +284,10 @@ export class Credentials {
   /* REC-159: the stored actor, or the stated absence of one. */
   static #statusBy(v) { return typeof v === "string" && v !== "" ? v : "not recorded"; }
 
+  /* R21: the instant an act changes a key's status, in `added`'s spelling (ISO 8601 with milliseconds): the act's own
+     time when its caller states one (membership's revocation notice, R16), else now. */
+  static #instant(at = null) { return typeof at === "string" && at !== "" ? at : new Date().toISOString(); }
+
   /* R8, R11, R19 (D-158) — ONE PREDICATE, AND IT IS WHAT KEEPS THE ROSTER AND THE GATE FROM DISAGREEING. A key attests
    * exactly when the key is `active` and its member is `active`; `origin` is never read (R19). `signerList` projects it
    * as `attests` and `attestingKeys` filters by it, so the roster can never report a key `op=ratify` would refuse:
@@ -321,7 +329,8 @@ export class Credentials {
   static #keyShaped(keyB64) { return typeof keyB64 === "string" && /^AAAA[A-Za-z0-9+/=]+$/.test(keyB64); }
 
   /* R6: an administrator registers a key for a member. Registering a known key rebinds it and makes it `active`, never
-     a second row; `origin` 'admin' and `registered_by` the stamped actor (NULL reads `not recorded`). */
+     a second row; `origin` 'admin' and `registered_by` the stamped actor (NULL reads `not recorded`). R21: a new key's
+     `status_at` is its registration's instant; a known key's changes only when it was revoked and is re-activated. */
   signerAdd({ keyB64, memberId, comment, by = null } = {}) {
     const barCust = this.#custodialBar(by, "registering a signing key");
     if (barCust) return barCust;
@@ -333,13 +342,15 @@ export class Credentials {
     /* END DEC-49 REGION is-signer-key-shape */
     const barAdd = this.#signerMemberBar(memberId);
     if (barAdd) return barAdd;
+    const now = Credentials.#instant();
     this.sql.exec(
-      `INSERT INTO signers (key_b64,member_id,comment,status,added,status_by,origin,registered_by)
-       VALUES (?,?,?,'active',?,?,'admin',?)
+      `INSERT INTO signers (key_b64,member_id,comment,status,added,status_by,origin,registered_by,status_at)
+       VALUES (?,?,?,'active',?,?,'admin',?,?)
        ON CONFLICT(key_b64) DO UPDATE SET member_id=excluded.member_id,
          comment=excluded.comment, status='active', status_by=excluded.status_by,
-         origin='admin', registered_by=excluded.registered_by`,
-      keyB64, memberId, comment ?? null, new Date().toISOString(), by || null, by || null);
+         origin='admin', registered_by=excluded.registered_by,
+         status_at=CASE WHEN signers.status<>'active' THEN excluded.status_at ELSE signers.status_at END`,
+      keyB64, memberId, comment ?? null, now, by || null, by || null, now);
     return { ok: true, keyB64, memberId, by: Credentials.#statusBy(by) };
   }
 
@@ -390,10 +401,12 @@ export class Credentials {
                      + "(op=signerset), so that a revocation stands. Nothing was written." };
     }
     /* END DEC-49 REGION is-signer-key-revoked */
-    if (!held)
+    if (!held) {
+      const now = Credentials.#instant();   /* R21: a new key's status_at is its registration's instant */
       this.sql.exec(
-        `INSERT INTO signers (key_b64,member_id,comment,status,added,status_by,origin,registered_by)
-         VALUES (?,?,?,'active',?,?,'self',?)`, keyB64, by, comment ?? null, new Date().toISOString(), by, by);
+        `INSERT INTO signers (key_b64,member_id,comment,status,added,status_by,origin,registered_by,status_at)
+         VALUES (?,?,?,'active',?,?,'self',?,?)`, keyB64, by, comment ?? null, now, by, by, now);
+    }
     return { ok: true, keyB64, memberId: by, status: "active",
              origin: held ? (held.origin === "self" ? "self" : "admin") : "self",
              registered_by: held ? Credentials.#statusBy(held.registered_by) : by, existed: !!held,
@@ -412,7 +425,9 @@ export class Credentials {
       ? this.#one(`SELECT status FROM signers WHERE key_b64=? AND member_id=?`, keyB64, by) : null;
     if (!row) return { ok: false, reason: "NO_SUCH_KEY" };
     const already = row.status === "revoked";
-    if (!already) this.sql.exec(`UPDATE signers SET status='revoked', status_by=? WHERE key_b64=?`, by, keyB64);
+    if (!already)   /* R21: a real change, so status_at moves; revoking twice leaves it */
+      this.sql.exec(`UPDATE signers SET status='revoked', status_by=?, status_at=? WHERE key_b64=?`,
+        by, Credentials.#instant(), keyB64);
     return { ok: true, keyB64, status: "revoked", by, already };
   }
 
@@ -428,13 +443,15 @@ export class Credentials {
       return facts.get(id);
     };
     return { signers: this.#rows(
-      `SELECT key_b64, member_id, comment, status, added, status_by, origin, registered_by
+      `SELECT key_b64, member_id, comment, status, added, status_by, origin, registered_by, status_at
          FROM signers ORDER BY added, key_b64`).map((r) => {
         const memberStatus = statusOf(r.member_id);
         const attests = Credentials.#attests(r.status, memberStatus);
         return {
           key_b64: r.key_b64, member_id: r.member_id, comment: r.comment, status: r.status, added: r.added,
           status_by: Credentials.#statusBy(r.status_by),   /* REC-159 */
+          /* R21: when the status last changed; null for a key registered before the column (not recorded). */
+          status_at: typeof r.status_at === "string" && r.status_at !== "" ? r.status_at : null,
           /* R6 was the only door before R9, so a row with no recorded origin is an administrator's. */
           origin: r.origin === "self" ? "self" : "admin",
           registered_by: Credentials.#statusBy(r.registered_by),
@@ -451,7 +468,7 @@ export class Credentials {
 
   /* R7: an administrator sets a key's status. Only ACTIVATION is barred as R6 bars the owning member, because
      membership's revocation revokes the member's keys (R16) and this would otherwise undo it one call later; revoking
-     narrows a claim and is never refused. */
+     narrows a claim and is never refused. R21: `status_at` moves only when the status set differs from the key's. */
   signerSet({ keyB64, status, by = null } = {}) {
     const barCust = this.#custodialBar(by, "setting a signing key's status");
     if (barCust) return barCust;
@@ -462,7 +479,9 @@ export class Credentials {
       const barSet = this.#signerMemberBar(row.member_id);
       if (barSet) return barSet;
     }
-    this.sql.exec(`UPDATE signers SET status=?, status_by=? WHERE key_b64=?`, status, by || null, keyB64);
+    this.sql.exec(
+      `UPDATE signers SET status=?, status_by=?, status_at=CASE WHEN status<>? THEN ? ELSE status_at END
+       WHERE key_b64=?`, status, by || null, status, Credentials.#instant(), keyB64);
     return { ok: true, keyB64, status, by: Credentials.#statusBy(by) };
   }
 
@@ -666,9 +685,10 @@ export function credentialsOf(ctx, { record = null, membership = null } = {}) {
   return c;
 }
 
-/* The ops this module answers, as entries of the legacy store's op map (its dispatcher spreads them in, after
-   membership's). `url` carries the control plane's stamps (`by`, `who`) in its query, read AFTER the body is spread,
-   so a caller's own copy never wins (D-136); `body` is the parsed body; `env` the store's environment. */
+/* The ops this module answers, as entries of the plane's one route map (plane R5: `routes` spreads them in, after
+   membership's, and control-plane's `dispatch` answers every store request over it). `url` carries the control
+   plane's stamps (`by`, `who`) in its query, read AFTER the body is spread, so a caller's own copy never wins (D-136);
+   `body` is the parsed body; `env` the store's environment. */
 export function credentialsOps(c, url, body, env) {
   return {
     /* D-199: `who` is the SERVER'S stamp, and `secretSha` never comes from a caller: the control plane generates the
