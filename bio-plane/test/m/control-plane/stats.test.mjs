@@ -1,6 +1,6 @@
 /* control-plane: op=stats' two stamps (N399, K573, K607; R40). Converted from the old battery's
-   `test/stats-disclosure.test.mjs`, the half this door answers. `op=stats` lives in legacy-store (`store.mjs`:2020, the
-   route at :3033, J1 (1)): which counts each class receives (no `leads`, no `observations`, `observationsNonLead` for all,
+   `test/stats-disclosure.test.mjs`, the half this door answers. `op=stats` is record-core's route (`record.stats`; it
+   lived in legacy-store's `store.mjs`, deleted at T20): which counts each class receives (no `leads`, no `observations`, `observationsNonLead` for all,
    `dbBytes` only with `capacity`) is decided there over record-core's counts. What decides it is two stamps set here from
    the credential: `viewer` (R17), whose sight the counts are taken through, and `capacity`, which is `1` for the `admin`
    class alone.
@@ -10,8 +10,8 @@
    capacity=0 still receives dbBytes" (the stamp is the server's in both directions); the member shape for the member
    binding, the probe and every member session, the admin shape for the admin binding and the founder's session (as the
    `capacity` each is stamped with). Not carried: A, C, E and F (what the counts are, and that no class's answer moves across
-   a colleague's lead) and B1's shape of the answer are the store's (legacy-store's `#counts`, record-core's counts, N342);
-   D (op=selftest and op=livefire relay the same rule) is legacy-index's hooks, not this door. */
+   a colleague's lead) and B1's shape of the answer are the store's (record-core's counts, N342);
+   D (op=selftest and op=livefire relay the same rule) is instance-setup's handlers behind plane's hooks, not this door. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, call, opCalls, hex64, member } from "./harness.mjs";

@@ -142,7 +142,7 @@ test("R23: an answer that is not JSON carrying a boolean ok is 502 STORE_DID_NOT
   const relays = [
     ["reviewcopy", (w) => ({ op: "reviewcopy", params: { secret: "s" } }), false],
     ["reviewcomment", (w) => ({ op: "reviewcomment", params: { secret: "s" }, method: "POST", body: { text: "x" } }), false],
-    ["statementack", (w) => ({ op: "statementack", params: { secret: "s" } }), false],
+    ["statementack", (w) => ({ op: "statementack", params: { secret: "s", reason: "read" } }), false],   /* DEC-88: with its reason */
     ["casedrafts", (w) => ({ op: "casedrafts", token: w.S.ann }), false],
     ["aicredentialmint", (w) => ({ op: "aicredentialmint", token: w.S.ann, method: "POST", body: { writes: [] } }), "member"],
     ["reviewgrant", (w) => ({ op: "reviewgrant", token: w.S.founder, method: "POST", body: {} }), "admin"],
@@ -338,7 +338,7 @@ test("R23, R25 (N349): every silence the door answers itself carries the correla
     ["aicredentiallook", "aicredentiallook", (w) => ({ op: "index", token: w.A.ann })],                              /* the front door */
     ["aicredentiallook", "aicredentiallook", (w) => ({ op: "reviewcopy", token: w.A.ann, params: { draft: "D1" } })],
     ["session", "session", (w) => ({ op: "reviewcopy", token: w.S.ann, params: { draft: "D1" } })],                  /* caseReader */
-    ["session", "session", (w) => ({ op: "statementack", token: w.S.ann, params: { draft: "D1" } })],
+    ["session", "session", (w) => ({ op: "statementack", token: w.S.ann, params: { draft: "D1", reason: "read" } })],
     ["session", "session", (w) => ({ op: "index", token: w.S.ann })],                                               /* admission */
     ["session", "session", (w) => ({ op: "cite", token: w.S.founder, method: "POST", body: {} })],
     ["aicredentialmint", "aicredentialmint", (w) => ({ op: "aicredentialmint", token: w.S.ann, method: "POST", body: { writes: [] } })],

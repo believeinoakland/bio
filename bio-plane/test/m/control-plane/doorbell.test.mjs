@@ -322,7 +322,8 @@ test("R36, R26 (N364, N381): the pull is a route of the record store's door, bes
     assert.deepEqual(heldOf(r, k.knockId, k.sha256), before);
   }
   const d = await r.knock("another");
-  captureOf(r.ctx).inboxResolve({ knockId: d.knockId, status: "discarded", by: "ann" });
+  /* capture R32 (DEC-88 (2)): every resolve takes the member's reason */
+  assert.equal(captureOf(r.ctx).inboxResolve({ knockId: d.knockId, status: "discarded", by: "ann", reason: "not for us" }).ok, true);
   const da = await r.go(`inboxpullfile?${SESSION}`, "POST", { knockId: d.knockId });
   assert.equal(da.json.result.reason, "KNOCK_DISCARDED");
   assert.equal(heldOf(r, d.knockId, d.sha256).receipt, false);

@@ -105,7 +105,7 @@ export function defaultHooks(log = []) {
     log,
     async publicOp(ctx) { log.push({ kind: "public", op: ctx.op }); return M.json({ ok: true, publicOp: ctx.op }); },
     async gatedOp(ctx) { log.push({ kind: "gated", op: ctx.op, cls: ctx.cls }); return undefined; },
-    /* instance-setup's public read, as legacy-index hands it over: the store's projection, opened through doAnswer */
+    /* instance-setup's public read, as plane's hooks hand it over: the store's projection, opened through doAnswer */
     async publicInstanceGroup(env, storeName, projection) {
       log.push({ kind: "group", ns: storeName, projection });
       return M.doAnswer(env.STORE.get(env.STORE.idFromName(storeName)).fetch(`http://do/${projection}`));
