@@ -211,29 +211,58 @@ const HOLD_ROWS = {
   },
 };
 
+/* R9 (DEC-113; K1251, K1252; N518): the three rows `actions` mints for the hold's release act (its R56), the projects a
+   hold names (R52) and the held-project read (R58); new in T27 layer 9, awaiting T28's stamp. */
+const DEC113_ROWS = {
+  HOLD_RELEASE_IS_ITS_OWN_ACT: {
+    check: "C-117.23",
+    where: "src/actions/index.mjs actionHold > is-hold-release-own-act",
+    translation: "Releasing a litigation hold is its own act, recorded with its own reason, so that a release is never a side effect of placing one. This asked to release a hold through the act that places one, so nothing was written. Use the release act.",
+  },
+  HOLD_PROJECTS_REFUSED: {
+    check: "C-117.24",
+    where: "src/actions/index.mjs #holdProjects > is-hold-projects",
+    translation: "Projects are named as a list of their ids, at most fifty different ones, and asking whether projects are held names at least one. The list given was not of that form, so it was refused and nothing was written.",
+  },
+  HOLD_ALREADY_RELEASED: {
+    check: "C-117.25",
+    where: "src/actions/index.mjs actionHold > is-hold-already-released",
+    translation: "That litigation hold is already released, and a release is stated once. Nothing was written. If the group is preserving again, place a new hold.",
+  },
+};
+
 test("R9: the litigation-hold rows C-117.20 MACHINE_CANNOT_SET_HOLD, C-117.21 HOLD_REFUSED, C-117.22 HOLD_NO_LEGAL_MARK are held in ACTION_CATALOGUE_CHECKS, each {check, where, translation} exactly, after PRESSURE_NO_ENTRY, their wheres naming actions' actionHold regions", () => {
   const C = AG.ACTION_CATALOGUE_CHECKS;
   for (const [code, row] of Object.entries(HOLD_ROWS)) assert.deepEqual(C[code], row, code);
   const keys = Object.keys(C);
-  assert.deepEqual(keys.slice(keys.indexOf("PRESSURE_NO_ENTRY")), ["PRESSURE_NO_ENTRY", ...Object.keys(HOLD_ROWS)]);
+  assert.deepEqual(keys.slice(keys.indexOf("PRESSURE_NO_ENTRY"), keys.indexOf("PRESSURE_NO_ENTRY") + 4), ["PRESSURE_NO_ENTRY", ...Object.keys(HOLD_ROWS)]);
   for (const n of ROW_NAMES) if (n !== "ACTION_CATALOGUE_CHECKS")
     for (const code of Object.keys(HOLD_ROWS)) assert.ok(!(code in AG[n]), `${code} in ${n}`);
 });
 
-test("R9: every row is held as before the move, number and translation unchanged; C-73.6's where names its new site, C-117.11's names contactNotAMember (K837); C-117.5 is action-clocks', not here; C-117.20–.22 are added", () => {
+test("R9: the hold rows C-117.23 HOLD_RELEASE_IS_ITS_OWN_ACT, C-117.24 HOLD_PROJECTS_REFUSED, C-117.25 HOLD_ALREADY_RELEASED (DEC-113) are held in ACTION_CATALOGUE_CHECKS, each {check, where, translation} exactly, last and in that order, their wheres naming actions' actionHold and #holdProjects regions (K1281); no other table holds them", () => {
+  const C = AG.ACTION_CATALOGUE_CHECKS;
+  for (const [code, row] of Object.entries(DEC113_ROWS)) assert.deepEqual(C[code], row, code);
+  assert.deepEqual(Object.keys(C).slice(-6), [...Object.keys(HOLD_ROWS), ...Object.keys(DEC113_ROWS)]);
+  for (const n of ROW_NAMES) if (n !== "ACTION_CATALOGUE_CHECKS")
+    for (const code of Object.keys(DEC113_ROWS)) assert.ok(!(code in AG[n]), `${code} in ${n}`);
+  for (const row of Object.values(DEC113_ROWS)) assert.doesNotMatch(row.translation, /\b(bundle|op=|DEC-|C-\d)/, row.check);
+});
+
+test("R9: every row is held as before the move, number and translation unchanged; C-73.6's where names its new site, C-117.11's names contactNotAMember (K837); C-117.5 is action-clocks', not here; C-117.20–.25 are added", () => {
   const expected = structuredClone(GOLDEN.rows);
   delete expected.ACTION_CATALOGUE_CHECKS.PENDING_CLOCKS_BAD_BEFORE;
-  Object.assign(expected.ACTION_CATALOGUE_CHECKS, structuredClone(HOLD_ROWS));
+  Object.assign(expected.ACTION_CATALOGUE_CHECKS, structuredClone(HOLD_ROWS), structuredClone(DEC113_ROWS));
   expected.GOVERNING_LAW_CHECKS.RECORDS_LAW_REFUSED.where = "src/action-grammar/checks.mjs recordsLawRefusal > is-records-law";
   expected.ACTION_CATALOGUE_CHECKS.CONTACT_NOT_A_MEMBER.where = "src/actions/index.mjs contactNotAMember > is-contact-member";
   assert.deepEqual(S.rows, expected);
   for (const n of ROW_NAMES) assert.ok(n in AG, n);
 });
 
-test("R9 by hand: the rows are exactly C-32.3, .4, .18, .19, .20; C-33.3–.9; C-72.1–.8; C-73.1–.6; C-90.1–.6; C-94.1–.12; C-101.1–.5; C-117.1–.4 and .6–.22, each {check, where, translation}", () => {
+test("R9 by hand: the rows are exactly C-32.3, .4, .18, .19, .20; C-33.3–.9; C-72.1–.8; C-73.1–.6; C-90.1–.6; C-94.1–.12; C-101.1–.5; C-117.1–.4 and .6–.25, each {check, where, translation}", () => {
   const range = (fam, a, b, skip = []) => Array.from({ length: b - a + 1 }, (_, i) => a + i).filter((n) => !skip.includes(n)).map((n) => `${fam}.${n}`);
   const want = ["C-32.3", "C-32.4", "C-32.18", "C-32.19", "C-32.20", ...range("C-33", 3, 9), ...range("C-72", 1, 8), ...range("C-73", 1, 6),
-    ...range("C-90", 1, 6), ...range("C-94", 1, 12), ...range("C-101", 1, 5), ...range("C-117", 1, 22, [5])].sort();
+    ...range("C-90", 1, 6), ...range("C-94", 1, 12), ...range("C-101", 1, 5), ...range("C-117", 1, 25, [5])].sort();
   const rows = ROW_NAMES.flatMap((n) => Object.values(AG[n]));
   assert.deepEqual(rows.map((r) => r.check).sort(), want);
   assert.equal(new Set(rows.map((r) => r.check)).size, rows.length, "no number twice");

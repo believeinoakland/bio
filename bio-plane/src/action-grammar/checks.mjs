@@ -9,6 +9,7 @@
  * (C-2.10's action arms and C-11.1), `RESOLUTIONS`, and the rows `actions`' acts mint: C-32.3, C-32.4, C-32.18–C-32.20,
  * C-33.3–C-33.9, C-72, C-73, C-90, C-94, C-101 and C-117 (C-117.5, `PENDING_CLOCKS_BAD_BEFORE`, is `action-clocks`'; N428).
  * Every value, finding and sentence is the copy's, unchanged; only C-73.6's `where` names its new site (stamped by 1.50.0).
+ * Since T27 layer 9: C-117.23–.25 (`actions` R52, R56, R58; DEC-113, N518; awaiting T28's stamp).
  * Since T20 layer 9: C-117.20–.22 (`actions` R52, K899 (7); stamped by 1.51.0), and a member reads "record" where the
  * copy said "bundle" (K899 (1): `respondsToEdgeFindings`' repair here, `actionBasisFindings`' target finding in
  * `./grammar.mjs`); identifiers keep their names.
@@ -1295,5 +1296,28 @@ export const ACTION_CATALOGUE_CHECKS = {
     where: 'src/actions/index.mjs actionHold > is-hold-legal-mark',
     translation: 'A litigation hold is recorded on something the group received and marked as legal pressure. The entry '
       + 'named carries no such mark, so nothing was written.',
+  },
+  /* R52, R56, R58 (DEC-113; K1251, K1252; N518): a hold's release is its own act (`actionHoldRelease`, rung terminal), a
+     hold names the projects it covers, and the "is this project held?" read names the projects it asks about. Minted
+     by `actions`: C-117.23 in `actionHold`, C-117.24 in the one helper `actionHold` and `projectHolds` both ask,
+     C-117.25 in `actionHold`'s body, which the release runs through (K1281). New in T27 layer 9; awaiting T28's stamp. */
+  HOLD_RELEASE_IS_ITS_OWN_ACT: {
+    check: 'C-117.23',
+    where: 'src/actions/index.mjs actionHold > is-hold-release-own-act',
+    translation: 'Releasing a litigation hold is its own act, recorded with its own reason, so that a release is never '
+      + 'a side effect of placing one. This asked to release a hold through the act that places one, so nothing was '
+      + 'written. Use the release act.',
+  },
+  HOLD_PROJECTS_REFUSED: {
+    check: 'C-117.24',
+    where: 'src/actions/index.mjs #holdProjects > is-hold-projects',
+    translation: 'Projects are named as a list of their ids, at most fifty different ones, and asking whether projects '
+      + 'are held names at least one. The list given was not of that form, so it was refused and nothing was written.',
+  },
+  HOLD_ALREADY_RELEASED: {
+    check: 'C-117.25',
+    where: 'src/actions/index.mjs actionHold > is-hold-already-released',
+    translation: 'That litigation hold is already released, and a release is stated once. Nothing was written. If the '
+      + 'group is preserving again, place a new hold.',
   },
 };
