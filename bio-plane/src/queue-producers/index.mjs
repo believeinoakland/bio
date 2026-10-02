@@ -1,9 +1,9 @@
-/* queue-producers — the feed's producers (requirements: `build/requirements/queue-producers.md`, R1–R21).
+/* queue-producers — the feed's producers (requirements: `build/requirements/queue-producers.md`, R1–R25).
  * Split out of `queue` by N363 (Bob's K507; seams ruled K531, `build/plan/draft-N363-queue-split.md` §1, §3.2): each
  * producer derives, on read and writing nothing, the items one provider's facts earn for a viewer, naming each item's
  * subjects and home subjects, for `queue` to home, offer, mint and publish.
  *
- *   feedItems      queue's one read of this module (R8): every item R1–R7, R9, R14 and R15–R21 derive for a member and viewer, each
+ *   feedItems      queue's one read of this module (R8): every item R1–R7, R9, R14 and R15–R23 derive for a member and viewer, each
  *                  homed through queue's walk and carrying queue's options (both passed in), with the facts the answer
  *                  publishes beside them. No item carries `disposition` (queue's mint gives it) or `catalogue_id`
  *                  (queue stamps it from its R2).
@@ -31,7 +31,7 @@ import { membershipOf, viewerPredicate, hiddenBundles, GATE_MARK } from "../memb
 import { credentialsOf } from "../credentials/index.mjs";
 import { governorOf } from "../host-governor/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
-import { captureOf } from "../capture/index.mjs";
+import { captureOf, ACQUIRE_GRADE_NOTE } from "../capture/index.mjs";
 import { captureRequestsOf, renderHoldReason } from "../capture-requests/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { progressionsOf } from "../progressions/index.mjs";
@@ -216,6 +216,8 @@ export class QueueProducers {
       /* R20, R21 (K921): a template version a member was asked to review; a local fact a live deadline reads, due. */
       items.push(...this.#obligationsTemplateReview(me, viewer, at));
       items.push(...this.#obligationsLocalFactDue(me, viewer, at));
+      /* R23 (DEC-102 item 3): an observation of the member's own a prepared case uses, its credit level unchosen. */
+      items.push(...this.#obligationsAttributionUnchosen(me, viewer, at));
       return {
         items,
         facts: {
@@ -461,6 +463,29 @@ export class QueueProducers {
     return out;
   }
 
+  /** R22 (DEC-95 (1); K1105): the grade note of each capture an unattended item names, the words `op=acquire`'s answer
+   *  carries (`ACQUIRE_GRADE_NOTE`, capture's export, as its R76 answers them), read synchronously. A capture is named,
+   *  and held, by its `register` row (provenance R48): those under the item's bundle, at most R2's option bound, or a
+   *  request's own digest. A capture the viewer may not see (its register row's bundle out of sight) carries none. */
+  #gradeNotes({ bundle = null, sha = null }, visible) {
+    const rows = bundle
+      ? this.#rows(`SELECT r.capture_sha, r.bundle_id FROM register r WHERE r.bundle_id=? ORDER BY r.capture_sha LIMIT ?`,
+          bundle, QueueProducers.QUEUE_OPTION_SUBJECTS_MAX)
+      : typeof sha === "string" && sha
+        ? this.#rows(`SELECT r.capture_sha, r.bundle_id FROM register r WHERE r.capture_sha=?`, sha.toLowerCase())
+        : [];
+    return rows.filter((r) => visible(r.bundle_id) !== null).map((r) => ({ capture_sha: r.capture_sha, note: ACQUIRE_GRADE_NOTE }));
+  }
+
+  /** R22: the detail's sentence carrying the notes, the same words for each capture, said once with the captures named. */
+  static #gradeNoteSentence(notes) {
+    if (!notes.length) return "";
+    const byNote = new Map();
+    for (const n of notes) byNote.set(n.note, [...(byNote.get(n.note) || []), n.capture_sha]);
+    return [...byNote].map(([note, shas]) => ` The grade note of ${shas.length === 1 ? "the capture" : "the captures"} it `
+      + `names (${shas.map((x) => x.slice(0, 12)).join(", ")}), as a member present would have read it: ${note}`).join("");
+  }
+
   /** `capture-completed-unattended` (D-61, closed by REC-2).
    *
    *  THE FACT IS THE MANIFEST'S OWN, and REC-2 is what made it exist. Before
@@ -514,6 +539,7 @@ export class QueueProducers {
       if (!started) continue;           // never a person's document: nobody walked away
       const createdMs = Date.parse(latest.created);
       const title = this.#record.bundleInfo(b.bundle_id);
+      const notes = this.#gradeNotes({ bundle: b.bundle_id }, visible);
       out.push({
         id: `CONDITION::capture-completed-unattended::${b.bundle_id}`,
         class: "CONDITION",
@@ -524,13 +550,14 @@ export class QueueProducers {
                + `writer after ${started.author} left it`,
         detail: `${started.author} authored this document and an unattended writer (${latest.author}) `
               + "wrote the most recent revision, which is the shape D-61 describes: a capture a member "
-              + "walked away from has completed. Nothing is claimed about whether the result is right.",
+              + "walked away from has completed. Nothing is claimed about whether the result is right."
+              + QueueProducers.#gradeNoteSentence(notes),
         basis: { source: "manifest", bundle_id: b.bundle_id,
                  completed_by: latest.author, completed_snap_key: latest.snap_key,
                  completed_created: latest.created, completed_kind: latest.kind,
                  writer: latest.writer ?? null, operation: latest.operation ?? null,
                  started_by: started.author, started_snap_key: started.snap_key,
-                 started_created: started.created,
+                 started_created: started.created, grade_notes: notes,
                  detail: "the machine writer is NAMED, never anonymous: the control plane deletes any "
                        + "caller-supplied author and stamps token:<class> for a machine credential "
                        + "(REC-2, closing D-61), so this is the record's own trace of an unattended "
@@ -581,6 +608,7 @@ export class QueueProducers {
    *  reported rather than silently absorbed. */
   #conditionsCaptureRequested(viewer, now) {
     const out = [];
+    const visible = this.#bundleRedactor(viewer);
     for (const r of this.#captureRequests.completed({ viewer }).requests) {
       const attribution = r.attribution;
       /* DEFENCE IN DEPTH, AND STATED AS SUCH RATHER THAN CLAIMED AS A CONTROL.
@@ -595,6 +623,7 @@ export class QueueProducers {
          floor. */
       if (!attribution.ok) continue;
       const capturedMs = Date.parse(r.captured_at);
+      const notes = this.#gradeNotes({ sha: r.capture_sha }, visible);
       out.push({
         id: `CONDITION::capture-completed-unattended::${r.request}`,
         class: "CONDITION",
@@ -604,10 +633,11 @@ export class QueueProducers {
         summary: `${r.address} was captured by the daemon at the investigative session's request`,
         detail: `${attribution.statement}. The capture is an entry of a document to the store and NOT `
               + "an entry of that document into the leg of a claim: it lands at 'collected' and never "
-              + "higher, and nothing about the record's conclusions has moved.",
+              + "higher, and nothing about the record's conclusions has moved."
+              + QueueProducers.#gradeNoteSentence(notes),
         basis: { source: "capture_requests", request: r.request, run: r.run, inquiry: r.target,
                  address: r.address, host: r.host, purpose: r.purpose, ua_mode: r.ua_mode,
-                 capture_sha: r.capture_sha, captured_at: r.captured_at,
+                 capture_sha: r.capture_sha, captured_at: r.captured_at, grade_notes: notes,
                  attribution,
                  detail: "BOTH PRINCIPALS ARE NAMED (DEC-27(b), DEC-55.4): the act is the daemon's, "
                        + "performed at the session's request, under the plane credential the run holds "
@@ -2731,6 +2761,88 @@ export class QueueProducers {
     }
     return out;
   }
+  /* ======================================================================
+   * DEC-102 item 3 · R23 — THE CREDIT LEVEL A MEMBER HAS NOT CHOSEN (publication R2, R17, R56; provenance R48; K1019, K1105).
+   * ====================================================================== */
+
+  /** R23: how many prepared, unsigned case editions one read asks about, and the act that answers the item (publication
+   *  R17, `op=attribute`: the observation's author chooses the level, with a reason). */
+  static QUEUE_PREPARED_EDITIONS_MAX = 200;
+  static ATTRIBUTE_CHOOSE = Object.freeze({ id: "attribute", label: "Choose how this case credits your observation", weight: "single" });
+
+  /** `attribution-unchosen` (R23; DEC-102 item 3): one OBLIGATION per (case edition, observation) where a prepared,
+   *  unsigned case edition reaches an observation the member authored and no credit level is in force for it, to that
+   *  member and to nobody else. The editions are listed from `case_documents` (publication R56's read contract:
+   *  `sig_armored` null is authored and unsigned), the latest unsigned edition of each case only, since a later edition
+   *  replaces an earlier preparation; each is asked of `publication.caseDocumentFacts` under the viewer, whose standing
+   *  fence (publication R1) answers nothing to a viewer without standing in the case. Its attribution facts (R17) name
+   *  each reached observation and the level in force, null when none can be published; the observation's author is
+   *  `register`'s (`authored = 1`, `author`; provenance R48), never publication's. Nothing names the author to anyone
+   *  else: the item is the author's alone and carries no count. It leaves when the member chooses a level, or the
+   *  edition no longer reaches the observation, or it is signed or replaced (the reads no longer answer it); raised
+   *  once (DEC-69, DEC-94). Its age runs from the edition's preparation (`authored_at`). */
+  #obligationsAttributionUnchosen(me, viewer, now) {
+    if (!me) return [];
+    const cap = QueueProducers.QUEUE_PREPARED_EDITIONS_MAX;
+    /* A store publication has not migrated holds no case document (the plane migrates it with every module; a caller's
+       test world may not), so it prepares none: asked, never thrown over. */
+    if (!this.#one(`SELECT 1 AS x FROM sqlite_master WHERE type='table' AND name='case_documents'`)) return [];
+    const rows = this.#rows(
+      `SELECT cd.case_id, cd.edition, cd.authored_at FROM case_documents cd
+        WHERE cd.sig_armored IS NULL
+          AND NOT EXISTS (SELECT 1 FROM case_documents later WHERE later.case_id = cd.case_id AND later.edition > cd.edition)
+        ORDER BY cd.case_id, cd.edition LIMIT ?`, cap + 1);
+    const truncated = rows.length > cap;
+    const authorOf = new Map();
+    const authored = (obs) => {
+      if (!authorOf.has(obs))
+        authorOf.set(obs, (this.#one(`SELECT r.author FROM register r WHERE r.bundle_id=? AND r.authored=1 LIMIT 1`, obs) || {}).author ?? null);
+      return authorOf.get(obs);
+    };
+    const out = [];
+    for (const e of rows.slice(0, cap)) {
+      const facts = this.#publication.caseDocumentFacts(e.case_id, Number(e.edition), viewer);
+      if (!facts || facts.ok !== true || !facts.doc || facts.doc.sig_armored) continue;
+      const current = facts.attribution && Array.isArray(facts.attribution.current) ? facts.attribution.current : [];
+      for (const row of current) {
+        const obs = row && typeof row.observation === "string" ? row.observation : "";
+        if (!obs || row.level || authored(obs) !== me) continue;
+        const preparedMs = Date.parse(e.authored_at ?? "");
+        const title = this.#record.bundleInfo(obs);
+        const name = title && title.title ? title.title : obs;
+        out.push({
+          id: `OBLIGATION::attribution-unchosen::${e.case_id}@${e.edition}::${obs}`,
+          class: "OBLIGATION",
+          kind: "attribution-unchosen",
+          case: this.#homesOf([obs]),
+          subject: { kind: "case_edition", id: `${e.case_id}@${e.edition}`, case: e.case_id, edition: Number(e.edition),
+                     observation: obs },
+          summary: `case ${e.case_id}, being prepared, uses your observation ${name}: choose how it credits you`,
+          detail: `edition ${e.edition} of this case reaches what you observed, and you have chosen no level for how it `
+                + "shows who said it: the group, the project, your cover or your name. Nothing is published until it is "
+                + "signed, and nobody else is told you are its author. This is told once; it leaves when you choose, "
+                + "or the edition no longer uses it, or it is signed or replaced.",
+          basis: { source: "publication.caseDocumentFacts + case_documents + register", case: e.case_id,
+                   edition: Number(e.edition), observation: obs, prepared_at: e.authored_at ?? null,
+                   level: null, why: row.why ?? null, recipients_rule: "author",
+                   bound: { editions_limit: cap, truncated },
+                   detail: "the edition is publication's prepared, unsigned case document (its R56), its attribution "
+                         + "facts its own (its R2, R17); the observation's author is the register's (provenance R48). "
+                         + "Only the author chooses the level (DEC-102 item 3), so only the author is told." },
+          age: Number.isFinite(preparedMs)
+            ? { state: "determined", since: e.authored_at, ms: Math.max(0, now - preparedMs) }
+            : { state: "undetermined", reason: "no_preparation_instant",
+                detail: "the case document carries no instant this producer can read" },
+          assignee: null,
+          assignee_role: null,
+          recipients: [me],
+          options: [QueueProducers.ATTRIBUTE_CHOOSE],
+        });
+      }
+    }
+    return out;
+  }
+
   static DAY_MS = 86400000;
 }
 

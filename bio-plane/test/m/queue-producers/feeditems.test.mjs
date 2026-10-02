@@ -260,8 +260,13 @@ function everyKind() {
     publication: { exportLog: () => ({ ok: true, limit: 200, truncated: false,
                      exports: [{ seq: 1, at: iso(NOW), scope: "working-corpus", bundles: 1, files: 1, note: null }] }),
                    caseTensions: () => ({ ok: true, cursor: null, cases: [{ case: "CASE-1", edition: 1, project: "PRJ-A",
-                     tensions: [{ candidate: "CC-D", member: "INF-1", state: "open", depth: 1 }] }] }) },
+                     tensions: [{ candidate: "CC-D", member: "INF-1", state: "open", depth: 1 }] }] }),
+                   caseDocumentFacts: (c, e) => ({ ok: true, doc: { case_id: c, edition: e, authored_at: iso(NOW), sig_armored: null },
+                     attribution: { current: [{ observation: "OBS-1", level: null }] } }) },
   });
+  w.bundle("OBS-1", "observation");
+  w.run(`INSERT INTO register (capture_sha, bundle_id, path, encoding, registered, bytes, authored, author) VALUES ('so','OBS-1','s','utf8',?,1,1,'alice')`, iso(NOW));
+  w.run(`INSERT INTO case_documents (case_id, edition, authored_at, sig_armored) VALUES ('CASE-1', 1, ?, NULL)`, iso(NOW));
   w.run(`UPDATE project_participants SET owner=1 WHERE project_id='PRJ-A' AND member_id='alice'`);
   return w;
 }
@@ -284,9 +289,10 @@ test("R24 (DEC-107; H15, H19): no member-facing sentence of any item kind says '
   const kinds = new Set(r.items.map((i) => i.kind));
   for (const k of ["contradiction-duty", "contradiction-lead", "contradiction-plurality", "contradiction-duty-unseen",
                    "contradiction-plurality-unseen", "side-corrected", "tension-after-publication", "bias-debt", "governor-holding-host",
-                   "render-deferred", "plan-checkpoint-due", "objective-gap", "template-review-requested", "local-fact-due"])
+                   "render-deferred", "plan-checkpoint-due", "objective-gap", "template-review-requested", "local-fact-due",
+                   "attribution-unchosen"])
     assert.ok(kinds.has(k), `the world produces ${k}`);
-  assert.ok(kinds.size >= 31, `every kind this module produces (${[...kinds].sort().join(", ")})`);
+  assert.ok(kinds.size >= 32, `every kind this module produces (${[...kinds].sort().join(", ")})`);
   for (const it of r.items) {
     for (const [key, s] of memberWords(it))
       assert.doesNotMatch(s, /\b(obligation|condition)s?\b/i, `${it.id} ${key}: "${s}"`);
@@ -316,4 +322,16 @@ test("R25 (DEC-110 (1)): `due` is carried by action-clock-overdue, action-remind
   assert.equal(m["CONDITION::action-clock-overdue::ACT-1::0"].due, "2026-08-20");
   assert.equal(m["OBLIGATION::action-reminder::ACT-1::0::2026-08-15"].due, "2026-08-20");
   assert.equal(m["OBLIGATION::plan-checkpoint-due::PLN-1::1::p"].due, "2026-08-30");
+});
+
+test("R8 (R22, R23; K1019): feedItems reads the unattended capture's grade note and the credit-level to-do into its one answer", () => {
+  const w = everyKind();
+  w.run(`INSERT INTO register (capture_sha, bundle_id, path, encoding, registered, bytes) VALUES ('z','INF-1','s','binary',?,1)`, iso(NOW));
+  const m = byId(w.read("alice"));
+  const unattended = m["CONDITION::capture-completed-unattended::CR-C"];
+  assert.deepEqual(unattended.basis.grade_notes.map((n) => n.capture_sha), ["z"], "R22: the request's capture, held and seen");
+  assert.ok(unattended.detail.includes(unattended.basis.grade_notes[0].note));
+  const credit = m["OBLIGATION::attribution-unchosen::CASE-1@1::OBS-1"];
+  assert.deepEqual([credit.class, credit.kind, credit.recipients], ["OBLIGATION", "attribution-unchosen", ["alice"]], "R23");
+  assert.ok(!("disposition" in credit) && !("catalogue_id" in credit), "the mint's and queue's, as every item");
 });
