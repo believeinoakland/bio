@@ -1,6 +1,6 @@
 # case-authoring (T23)
 
-**Status** · session_0115DsBvkWjRDrABc4Ccc2CR · depth 2 · WAITING ON BOB (J2) · handled B5
+**Status** · session_0115DsBvkWjRDrABc4Ccc2CR · depth 2 · COMPLETE · handled B5
 
 ## J1 · QUESTION
 
