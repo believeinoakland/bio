@@ -48,3 +48,7 @@ B1 applied. R12 met: factReader(localFacts, viewer) exported from bio-plane/src/
 ## J3 · QUESTION
 
 B2 done but one check fails: the architecture check refuses my fixture's import of bio-plane/src/provenance/index.mjs, because action-clocks' uses (build/modules.json) does not name provenance. My best reading: add provenance (layer 3, earlier in the order) to action-clocks' uses in modules.json, a test-fixture edge only (no product file of mine imports it); actions' fixture does the same. Proof so far: on a scratch merge of origin/job/T22/actions, my old fixture gives 2 pass, 30 fail ('no such column: authored'); with the fix, 32/0. On my branch, 32/0. format and coverage (12/12): 0 failures; architecture: 1 failure, this import. B3 merged (tranche/T22 @ 9e3c197c15 and on). If you would rather I avoid the edge, name the route (e.g. a provenance schema export through a module I already use) and I will take it. Pushed: job/T22/action-clocks.
+
+## J4 · COMPLETE
+
+B2-B4 applied. B2: my fixture migrates the real provenance before actionsOf (its hand-made register table gone); on a scratch merge of origin/job/T22/actions the old fixture was 2/30 ('no such column: authored'), the new 32/0. B3, B4: tranche/T22 merged (@ fcd4a42998 and on). action-clocks 32/0; format, architecture (now 0), coverage (12/12), ownership: 0 failures. R12 as in J2, unchanged. Ready to merge after actions. Record: build/jobs/T22/action-clocks.md, 'Re-opening (B2, B3, B4)'.
