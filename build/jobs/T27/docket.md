@@ -88,3 +88,7 @@ The shapes of the provided services, for public-read and network-notices (code o
 - `docketFeed({case})` is **async**. It answers the Atom XML as a string, or null. The media type is exported as `ATOM_MEDIA_TYPE` (`application/atom+xml`).
 - `docketSigners()` is synchronous. It answers `[{keyB64, first_signed}]`, in first-signed order.
 - `docketOps(m, url, body)` is the member ops map for L11. Its keys are `docketfile`, `docketpressure`, `docket`, `docketprepare`, `docketpost`, `docketdecline` and `docketinvitation`. `DOCKET_VOCABULARIES` is exported for affordances R34.
+
+## J3 · COMPLETE
+
+N520 applied: the new module docket (R1–R22) at bio-plane/src/docket/, tests at bio-plane/test/m/docket/ (37 pass, 0 fail; R1–R22 each named). Add both paths to docket's modules.json entry at the merge: with them, format, architecture, coverage (22/22) and ownership all report 0 failures; without them, ownership flags only 'outside docket's paths'. Correction to B2: C-128 is acquisition's (stamped by 1.54.0), so the rows are C-129.1–.26, awaiting stamp (accepted red 2). Arguments added by J1's readings, for the fold: takesBack, answers, candidate, grant, captures. Provided-service shapes as in J2. One flaw found and fixed: a prepare could place a lookalike record entry. Details in the record.
