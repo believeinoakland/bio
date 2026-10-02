@@ -1251,7 +1251,9 @@ export class Capture {
    *  register document is the bundle's `data/provenance.json` (State Rules §4.1), read on record-core's `files` read
    *  contract (its R37); a released document has left `collected` (`ratification` R24), so the state answers that
    *  clause. The whole store, no viewer: only the daemon's hold reads it (`monitoring` R60). Writes nothing and never
-   *  throws; an unknown sweep, or one that is not a non-empty string, answers 0. */
+   *  throws; an unknown sweep, or one that is not a non-empty string, answers 0. K1129: a store that cannot be read
+   *  answers null (not known), never 0, so the hold fails closed. A register document held only as a blob
+   *  (`files.content` NULL) is not counted. */
   heldCount(args) {
     const sweep = args && typeof args === "object" ? args.sweep : null;
     if (typeof sweep !== "string" || !sweep) return 0;
@@ -1265,8 +1267,8 @@ export class Capture {
                            AND (CASE WHEN d.type = 'object' THEN json_extract(d.value, '$.origin.matched_sweep') END) = ?)`,
         sweep);
       const n = Number(r && r.n);
-      return Number.isFinite(n) ? n : 0;
-    } catch { return 0; }
+      return r && Number.isFinite(n) ? n : null;
+    } catch { return null; }
   }
 
   /* ==================================================================== *

@@ -264,7 +264,7 @@ test("R82 (K1036): heldCount answers how many Information documents at collected
   assert.equal(c.heldCount({ sweep: "SWEEP-2026-0001#s2" }), 1, "SW-5 is the other sweep's");
 });
 
-test("R82: heldCount counts the whole store, with no viewer: a document in a project no member sees is counted; it reads only the register document", () => {
+test("R82: heldCount counts the whole store, with no viewer: a document in a project no member sees is counted; it reads only the register document, never one held only as a blob", () => {
   const { c, s, S } = sweepWorld();
   s.sql.exec(`UPDATE bundles SET project = 'PROJ-1' WHERE bundle_id = 'SW-1'`);
   assert.equal(c.heldCount({ sweep: S }), 3, "no sight applied");
@@ -278,7 +278,7 @@ test("R82: heldCount counts the whole store, with no viewer: a document in a pro
   assert.equal(c.heldCount({ sweep: S }), 2, "released, it leaves the count");
 });
 
-test("R82: an unknown sweep answers 0, as does a sweep that is no string; heldCount writes nothing and never throws, a store fault included", () => {
+test("R82 (K1129): an unknown sweep answers 0, as does a sweep that is no string; heldCount writes nothing and never throws: a store that cannot be read answers null, never 0", () => {
   const { c, rows, S } = sweepWorld();
   const before = everything(rows);
   for (const sweep of ["SWEEP-2026-0404#none", "", S.toLowerCase(), `${S} `, null, undefined, 7, { s: S }])
@@ -286,10 +286,17 @@ test("R82: an unknown sweep answers 0, as does a sweep that is no string; heldCo
   for (const args of [undefined, null, 7, "x", []]) assert.equal(c.heldCount(args), 0, JSON.stringify(args));
   assert.equal(c.heldCount({ sweep: S }), 3);
   assert.deepEqual(everything(rows), before, "nothing written");
-  /* a store that faults: 0, never a throw */
+  /* a store that cannot be read: null (not known), never 0 and never a throw, so the hold fails closed */
   const { c: broken, s } = sweepWorld();
   s.db.exec(`DROP TABLE held_acts`);
-  assert.equal(broken.heldCount({ sweep: S }), 0);
+  assert.equal(broken.heldCount({ sweep: S }), null, "a table gone");
+  const { c: thrower, s: s2 } = sweepWorld();
+  const exec = s2.sql.exec;
+  s2.sql.exec = () => { throw new Error("storage unavailable"); };
+  assert.equal(thrower.heldCount({ sweep: S }), null, "a store that throws on read");
+  assert.equal(thrower.heldCount({ sweep: "SWEEP-2026-0404#none" }), null, "not known, even for a sweep with nothing held");
+  s2.sql.exec = exec;
+  assert.equal(thrower.heldCount({ sweep: S }), 3, "negative control: the store readable again answers the count");
   /* negative control: the empty store */
   assert.equal(fresh().c.heldCount({ sweep: S }), 0);
 });
