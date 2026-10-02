@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #101 · session_012tU2hcJzJxi3Xab6BF5gej · depth 1
 
-**Jobs** · 
+**Jobs** · membership: MEMBERSHIP #19 session_01VygP3okwnSo5Wu6aPRkQw3
 
 **Opened** 2026-10-02 ~17:00 UTC by BOB #101 from `main` @ dfb82f85cc (T24 closed, K1216), from `draft-T25.md` with BOB #100's review, `draft-T25-req/REVIEW.md`, and T24's `next.md` (K1218). **Bob's weekly meter** · asked at the opening; 61% at T23's close, unanswered at T24's.
 
