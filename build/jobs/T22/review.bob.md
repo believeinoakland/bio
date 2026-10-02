@@ -10,3 +10,7 @@ Depth 2. Your entries: `build/plan/current.md` (T22) layer 8, review, which join
 ## B2 · CHANGE
 
 publication is merged into tranche/T22 @ 987f173e25 (K1076): the split's deletion (exports delegate to corpus-export), R17's `reason` (C-92.13), and R39 now names the `reason` `attributionInForce` answers (wording, null before DEC-88). Merge tranche/T22 into your branch before your merge.
+
+## B3 · CHANGE
+
+case-authoring is merged into tranche/T22 @ e523fd5788 (K1079; ratification too): R19/R29's `reason` and C-82.8 are on the tranche. Merge tranche/T22, re-run, run the checks and post COMPLETE. You merge last in L8.
