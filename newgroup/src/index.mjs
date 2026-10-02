@@ -29,8 +29,9 @@ import { ARMED_SIGNERS } from "./signers.mjs";
 /* One verifier, shared with the plane. The installer and the instance
    agree on what a valid signature is because they run the same code. */
 import { verifySshsig, NS_RELEASE, NS_FLEET, fleetStatement } from "../../bio-plane/src/sshsig.mjs";
-/* R30 (N234): the slug grammar and the member binding names are instance-setup's, imported, never copied. */
-import { GROUP_SLUG_RE, FLEET_BINDINGS } from "../../bio-plane/src/setup-fleet.mjs";
+/* R30 (N234): the slug grammar and the member binding names are instance-setup's, imported, never copied. R34 (DEC-109):
+   so is the block on who controls the copy, which the claim page shows in the same words (instance-setup R47). */
+import { GROUP_SLUG_RE, FLEET_BINDINGS, hostingControlBlock } from "../../bio-plane/src/setup-fleet.mjs";
 
 export const CFG = {
   CLIENT_ID: "1c2fdba3fc71cf88d26fcd7b90df95de",
@@ -247,12 +248,70 @@ async function establishPlan(token, acct) {
 /* Both buckets or neither: the fence is a pair. "Already exists" counts as
    created, so a re-run after a mid-flight failure converges instead of
    failing on its own earlier success. */
+const BUCKETS = ["bio-captures", "bio-published"];
 async function ensureBuckets(token, acct) {
-  for (const name of ["bio-captures", "bio-published"]) {
+  for (const name of BUCKETS) {
     try { await cf(token, `/accounts/${acct}/r2/buckets`, {
       method: "POST", body: JSON.stringify({ name }) }); }
     catch (e) { if (!/already exists/i.test(e.message)) throw e; }
   }
+}
+
+/* R32 (K102): until installs are isolated (R24), ONE COPY PER ACCOUNT. A copy is the plane with its two evidence buckets
+   and its fleet workers, and every one of them has a fixed name today, so a second install into an account that holds a
+   copy would share its buckets and overwrite its members. `copyHeld` reads, creating nothing, which of those parts the
+   account already holds, and names each. A lookup that fails for any reason other than "not found" THROWS: an absence
+   not established is not established, and the caller refuses (as R5 refuses a failed lookup). `members` are the fleet
+   workers to look for: instance-setup's FLEET_BINDINGS at `fresh`, and any further member the chosen release names. */
+async function bucketExists(token, acct, name) {
+  try { await cf(token, `/accounts/${acct}/r2/buckets/${name}`); return true; }
+  catch (e) { if (e.status === 404) return false; throw e; }
+}
+async function copyHeld(token, acct, { buckets = true, members = [] } = {}) {
+  const held = [];
+  if (buckets) for (const name of BUCKETS) if (await bucketExists(token, acct, name)) held.push(`the evidence bucket ${name}`);
+  for (const member of members) if (await scriptExists(token, acct, member)) held.push(`the capability worker ${member}`);
+  return held;
+}
+const ONE_COPY = "One copy per account is supported for now";
+
+/* R33 (Distribution §5, "byte-verified on read-back"): the plane's script as the account now holds it, read back and
+   hashed against the release's own bytes, never believed from the upload's answer. The account answers the script
+   either as the module itself or as a multipart body whose `index.mjs` part is the module (as `deploy.mjs` reads it).
+   `null` when nothing readable came back: an unread script is not a matching one. */
+async function scriptHash(token, acct, slug) {
+  let r;
+  try {
+    r = await fetch(`${CFG.API}/accounts/${acct}/workers/scripts/${slug}`,
+      { headers: { authorization: "Bearer " + token, accept: "application/javascript+module" } });
+  } catch { return null; }
+  if (!r.ok) return null;
+  const ct = r.headers.get("content-type") || "";
+  let bytes = new Uint8Array(await r.arrayBuffer());
+  if (/multipart/i.test(ct)) {
+    const m = /boundary="?([^";]+)"?/i.exec(ct);
+    if (!m) return null;
+    const text = new TextDecoder("latin1").decode(bytes);
+    const part = text.split("--" + m[1]).find((p) => /name="index\.mjs"/.test(p.slice(0, p.indexOf("\r\n\r\n"))));
+    if (!part) return null;
+    const body = part.slice(part.indexOf("\r\n\r\n") + 4).replace(/\r\n$/, "");
+    bytes = Uint8Array.from(body, (c) => c.charCodeAt(0));
+  }
+  return hex(await crypto.subtle.digest("SHA-256", bytes));
+}
+/* After a plane upload the account accepted: up to three reads, stopping at the first that matches. Answers null when the
+   bytes are the release's, else the lag to name (R15's list: no success is claimed while it stands). */
+async function readBack(token, acct, slug, release) {
+  const want = hex(await crypto.subtle.digest("SHA-256", enc.encode(release.source)));
+  let got = null;
+  for (let i = 0; i < 3; i++) {
+    got = await scriptHash(token, acct, slug);
+    if (got === want) return null;
+    if (i < 2) await new Promise((res) => setTimeout(res, 1500));
+  }
+  return got === null
+    ? `the software your Cloudflare account holds for your copy could not be read back, so it is not confirmed to be the ${release.version} release's own bytes`
+    : `the software your Cloudflare account holds for your copy is not the ${release.version} release's own bytes (read back, it hashes to ${got.slice(0, 16)}…; the release hashes to ${want.slice(0, 16)}…)`;
 }
 
 function uploadForm(meta, source) {
@@ -678,7 +737,7 @@ async function bindMembers(emit, token, acct, slug, release, already, fleet, opt
     await uploadUpdate(token, acct, slug, opts.withR2, release,
       { members: want, daemon: opts.daemon, noSelf: opts.noSelf, profiles: opts.profiles });
     emit.ok("bind", "Your copy is connected to " + added.join(", ") + ".");
-    return { bound: want, unbound: [] };
+    return { bound: want, unbound: [], put: true };
   } catch (e) {
     emit.no("bind", "The capability workers were installed, but connecting your copy to them was refused ("
       + added.join(", ") + "). Your copy works without them; running the updater on this copy connects them. "
@@ -796,6 +855,14 @@ async function verifyServing(base, want, installed, capable, failed = [], tries 
   return last;
 }
 
+/* R33 with R15: the read-back's lags join the serving verdict's, first; a verdict with any is never confirmed. With no
+   serving verdict (the address unread) the read-back's lags still make one, so a mismatch is always named. */
+function withByteLags(verdict, byteLags, capable) {
+  if (!byteLags.length) return verdict;
+  if (!verdict) return { confirmed: false, lags: [...byteLags], capable };
+  return { ...verdict, confirmed: false, lags: [...byteLags, ...verdict.lags] };
+}
+
 const lagList = (v) => `<ul>${v.lags.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>`;
 const UNDETERMINED_BUILDS = "This release cannot report which version your copy's record store or its capability "
   + "workers are running, so only your copy's address was checked; those parts are not confirmed either way.";
@@ -877,6 +944,15 @@ function instanceAiNotice(emit, mode, carried) {
       + "own. A member mints one on the copy; running the updater with it adds it. This installer never creates one.");
 }
 
+/* R32's refusal, before anything is created: what the account holds, by name, and the two ways on. */
+function oneCopyRefusal(emit, held) {
+  return emit.fail("Your Cloudflare account already holds a copy of CivicOS",
+    `${ONE_COPY}: this account already holds ${held.join(", ")}, and a second copy installed beside them would share or `
+    + "overwrite them. Nothing was created or changed, so there is nothing to clean up.",
+    "To continue: install your group's copy into a Cloudflare account that holds no copy, or, if this account's copy is "
+    + "your group's, bring it up to the current release with the update option instead.");
+}
+
 async function runInstall(emit, code, saved) {
   const slug = saved.slug;
   let token;
@@ -904,7 +980,7 @@ async function runInstall(emit, code, saved) {
       "Detail: " + e.message);
   }
 
-  emit.step("fresh", "Checking the name is free on your account");
+  emit.step("fresh", "Checking the name is free and your account holds no other copy");
   try {
     if (await scriptExists(token, acct.id, slug)) {
       emit.no("fresh");
@@ -912,6 +988,9 @@ async function runInstall(emit, code, saved) {
         "Nothing was changed. If you meant to update it to the current release, go back and choose the update option instead.",
         "");
     }
+    /* R32: the evidence buckets and the fleet workers the plane binds, read before anything is created. */
+    const held = await copyHeld(token, acct.id, { members: [...BINDING_OF.keys()] });
+    if (held.length) { emit.no("fresh"); return oneCopyRefusal(emit, held); }
     emit.ok("fresh");
   } catch (e) {
     emit.no("fresh");
@@ -927,6 +1006,20 @@ async function runInstall(emit, code, saved) {
     return emit.fail("This installer cannot say which limits your copy runs under",
       "Nothing was created, so there is nothing to clean up. " + release.refused,
       "This is for the publisher of CivicOS releases to fix with a release that states them; try again after the next release.");
+  }
+  /* R32, the rest of the fleet: a member the chosen release names beyond those `fresh` looked for is looked for now,
+     still before the plan probe creates anything. */
+  const further = (Array.isArray(release.man?.fleet) ? release.man.fleet : [])
+    .map((m) => m && m.member).filter((m) => typeof m === "string" && !BINDING_OF.has(m));
+  if (further.length) {
+    let held;
+    try { held = await copyHeld(token, acct.id, { buckets: false, members: [...new Set(further)] }); }
+    catch (e) {
+      emit.no("fresh");
+      return emit.fail("Could not check your account",
+        "The check for another copy's capability workers failed, so to be safe nothing was created.", "Detail: " + e.message);
+    }
+    if (held.length) { emit.no("fresh"); return oneCopyRefusal(emit, held); }
   }
 
   /* DIST-3 / DEC-42: the plan check comes BEFORE the first thing this flow
@@ -1021,14 +1114,21 @@ async function runInstall(emit, code, saved) {
       + e.message + ")");
   }
 
+  /* R33: the plane just uploaded, read back and hashed against the release; a mismatch is a lag the verdict names. */
+  const byteLags = [];
+  const readBackInto = async () => { const lag = await readBack(token, acct.id, slug, release);
+    if (lag && !byteLags.includes(lag)) byteLags.push(lag); };
+  await readBackInto();
+
   /* IC-82/D-297: the fleet rides the same act. Per-member degradation lives
      inside installFleet — it never fails the install. */
   const fleet = await installFleet(emit, token, acct.id, slug, release);
   /* DIST-6, step 3: the plane re-PUT bound to every member now present. The buckets exist (the r2 step refuses the
      install otherwise), the DAEMON_TOKEN restated is the one just generated, and SELF is restated only if the
      install kept it. */
-  await bindMembers(emit, token, acct.id, slug, release, present, fleet,
+  const bound = await bindMembers(emit, token, acct.id, slug, release, present, fleet,
     { withR2: true, daemon: secrets.daemon, noSelf: selfRefused, profiles });
+  if (bound.put) await readBackInto();
   /* DIST-9: told only AFTER the upload that carried it succeeded — never "stored" ahead of the act. */
   instanceAiNotice(emit, "install", !!secrets.instanceAi);
 
@@ -1058,11 +1158,12 @@ async function runInstall(emit, code, saved) {
      read, so the verdict is the selftest's plus the stated undetermined remainder — no new refusal is invented. */
   /* DIST-6: a bindable member whose upload failed is a lag on either branch, never a success over it. */
   const failed = fleet?.left || [];
-  const verdict = !st ? null
+  const served = !st ? null
     : capable ? await verifyServing(base, release.version, fleet?.done || [], capable, failed)
     : ((lags) => ({ confirmed: lags.length === 0, lags, capable: false }))(failedLags(failed));
+  const verdict = withByteLags(served, byteLags, capable);
   if (st && verdict.confirmed) emit.ok("verify", capable ? undefined : "Your copy answers. " + UNDETERMINED_BUILDS);
-  else if (st) emit.no("verify", "Your copy answers, but not every part is running " + release.version + " yet");
+  else if (st) emit.no("verify", "Your copy answers, but not every part is confirmed running " + release.version + " yet");
   else emit.no("verify");
 
   emit.done(successPanel(base, secrets, !!st, verdict));
@@ -1070,14 +1171,14 @@ async function runInstall(emit, code, saved) {
 
 const NO_KEY = "No one else holds a key to it, the publisher of CivicOS releases included.";
 function successPanel(base, secrets, verified, verdict = null) {
-  const lagging = verified && verdict && !verdict.confirmed;
+  const lagging = !!(verdict && !verdict.confirmed);
   const head = verified && !lagging
     ? `<b>Your copy is running.</b> It lives in your
 Cloudflare account, under your control. ${NO_KEY}`
       + (verdict && !verdict.capable ? ` ${esc(UNDETERMINED_BUILDS)}` : "")
     : lagging
-    ? `<b>Your copy is installed and answering, but not every part of it is confirmed running this release.</b>
-When it was last asked:${lagList(verdict)}Save the credentials below now either way. It lives in your Cloudflare
+    ? `<b>Your copy is installed${verified ? " and answering" : ""}, but not every part of it is confirmed running this release.</b>
+${verified ? "When it was last asked:" : "Its new address has not woken up yet, and:"}${lagList(verdict)}Save the credentials below now either way. It lives in your Cloudflare
 account, under your control. ${NO_KEY}`
     : `<b>Your copy is installed. Its new address has not woken up yet.</b> Brand-new
 addresses can take a few minutes to start answering; everything else finished. Save the
@@ -1093,9 +1194,8 @@ your control. ${NO_KEY}`;
 <p><b>Save the member and probe credentials in a password manager now.</b> This page is the
 only time they are shown. The one-time password is spent in the next step, where you choose
 a real password.</p>
-<p class="small">If you lose the password you choose next, you are not locked out: replacing
-the ADMIN_TOKEN value in your worker's Cloudflare settings starts the claim step over. Your
-Cloudflare sign-in is the way back in.</p>
+${/* R34 (DEC-109, K1038): before the hand-over to where the founder chooses a password, who really controls the copy, in
+   instance-setup's words; nothing asks for or records an acknowledgement of it. */ hostingControlBlock("notice")}
 <div class="actions"><button id="handover" data-url="${esc(base)}/">Go to my copy and finish setup</button></div>`;
 }
 
@@ -1110,7 +1210,7 @@ Cloudflare sign-in is the way back in.</p>
  *
  * WHY IT TELLS FROM THE RULE AND NOT FROM A READ (DIST #4, 2026-09-22, refining DIST #3's route of 2026-09-21
  * in CLAIMS.md). That route read op=instancegroup after the update. The op answers the admin, member and probe
- * classes only (bio-plane/src/index.mjs, its OPS row), and an update holds none of them: it holds the operator's
+ * classes only (its OPS row, today `op-declarations`' `bio-plane/src/op-declarations/index.mjs`), and an update holds none of them: it holds the operator's
  * Cloudflare permission, and a copy's secrets are write-only there. What an update CAN read, with no credential,
  * is op=bootstrap's version BEFORE the upload (`before` below) — and a copy that ran a release older than
  * FIRST_GROUP_RELEASE records no group after this update, by the rule itself: its store already held the schema,
@@ -1235,12 +1335,19 @@ async function runUpdate(emit, code, saved) {
       "Detail: " + e.message);
   }
 
+  /* R33: as on install, the uploaded plane is read back and hashed against the release. */
+  const byteLags = [];
+  const readBackInto = async () => { const lag = await readBack(token, acct.id, slug, release);
+    if (lag && !byteLags.includes(lag)) byteLags.push(lag); };
+  await readBackInto();
+
   /* The update path installs OR refreshes the members — the PUT is the same
      act, and this is what heals a copy installed before the fleet existed
      (the SELF-binding precedent, now for whole workers). */
   const fleet = await installFleet(emit, token, acct.id, slug, release);
   /* DIST-6, step 3: this is what gives a copy installed WITHOUT member bindings its bindings. */
-  await bindMembers(emit, token, acct.id, slug, release, present, fleet, { withR2 });
+  const bound = await bindMembers(emit, token, acct.id, slug, release, present, fleet, { withR2 });
+  if (bound.put) await readBackInto();
   instanceAiNotice(emit, "update", !!instanceAi);
 
   emit.step("addr", "Finding your copy's address");
@@ -1258,12 +1365,15 @@ async function runUpdate(emit, code, saved) {
   let verdict = null;
   if (base) {
     emit.step("verify", "Checking the new version answers");
-    verdict = await verifyServing(base, release.version, fleet?.done || [], capable, fleet?.left || []);
+    verdict = withByteLags(await verifyServing(base, release.version, fleet?.done || [], capable, fleet?.left || []),
+      byteLags, capable);
     if (verdict.confirmed) emit.ok("verify", capable ? undefined : "Your copy's address answers " + release.version
       + ". " + UNDETERMINED_BUILDS);
     else emit.no("verify", "Not every part of your copy is running " + release.version + " yet. That is normal for a "
       + "few minutes after an update; the list below names each part.");
   }
+  /* R33: with no address to ask, a read-back lag is still named, and no success is claimed over it. */
+  if (!verdict) verdict = withByteLags(null, byteLags, capable);
   const confirmed = !!(verdict && verdict.confirmed);
   const lagging = !!(verdict && !verdict.confirmed);
 
@@ -1276,12 +1386,11 @@ The upload succeeded, but it replaced that version with the same version, so thi
 If you expected something newer, the installer had nothing newer to give: it uses the newest release it can
 verify, and that is ${esc(release.version)}. Check that a newer release has actually been published before
 running this again.</p></div>`
-      + (lagging ? `<div class="notice"><p style="margin:0">Not every part of your copy is running ${esc(release.version)}.
-When it was last asked:</p>${lagList(verdict)}</div>` : "")
+      + (lagging ? `<div class="notice"><p style="margin:0">Not every part of your copy is confirmed running ${esc(release.version)}:</p>${lagList(verdict)}</div>` : "")
     : (lagging
     /* D-116: the upload happened, and is said; an UPDATE is not claimed while a named part runs another build. */
     ? `<div class="notice"><p style="margin:0"><b>Uploaded ${esc(release.version)}${before ? " over " + esc(before) : ""}; not yet confirmed running everywhere.</b>
-The upload finished, but when your copy was last asked, not every part of it was running the new version:</p>
+The upload finished, but not every part of your copy is confirmed running the new version:</p>
 ${lagList(verdict)}<p>A part of a copy can take a few minutes to start running a new version after an update, so
 open your copy a little later and check again; if the same part is still named, run this update again. Your
 passwords, your credentials, and everything in the record are exactly as they were. Updates never touch them.</p></div>`
