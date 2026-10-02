@@ -554,8 +554,27 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    (ratification's) runs C-41.16's arm, counted as that row's arrival; no registered step, grammar or listener changed
    its ids since 1.52.0. Membership's T23 job (`MODULE_ORDER`) and record-core's (tests only) changed no row.
    MINOR, rule 17 moving the stamp for arrivals and changed rows. ROW_CENSUS (R50) is re-pinned to this tree, module
-   tables only: 1046 rows. Rows T23's layers 3–11 change are T24's stamp (`awaiting stamp`). */
-export const CATALOG_VERSION = "1.53.0";
+   tables only: 1046 rows. Rows T23's layers 3–11 change were T24's stamp, taken by 1.54.0. */
+/* 1.54.0 (PROMOTION #25, T24 layer 2, 2026-10-02; K1185, K1186): EVERY ROW CHANGE SINCE 1.53.0, counted wherever the
+   rows live (R34, R47), read by diffing R50's census lines of `tranche/T24` after record-core, credentials and
+   membership merged against 1.53.0's own (`test/fixtures/row-census-1.53.0.jsonl`: 1046 rows, 28dc9ebb…): twenty-seven
+   arrivals, none changed, no departure. Each is one a job record names (T23's layers 3–11 `awaiting stamp`; T24's
+   layer 2, record-core's).
+   ARRIVED: C-127.1–C-127.16 in `NETWORK_NOTICE_CHECKS`, MACHINE_CANNOT_POST_NOTICE through NOTICE_UNCHANGED (the new
+   module network-notices, K1119, K1145); C-128.1 SWEEP_SCOPE_MISSING, C-128.2 SWEEP_REDIRECT_OUT_OF_SCOPE in
+   `SWEEP_SCOPE_CHECKS` (acquisition R31); C-18.16 SWEEP_TERM_REFUSED, C-18.17 SWEEP_NOT_A_MEMBER, C-18.18
+   SWEEP_RATIFY_NOT_AN_OWNER in `SWEEP_CHECKS` (monitoring); C-28.19 CAPTURE_SWEEP_OUT_OF_SCOPE (capture-requests R45);
+   C-41.17 WORKING_ON in `CASE_DOCUMENT_FAMILY` (ratification R38, K1144); C-98.10 PUBLIC_READ_NOT_REGISTERED
+   (public-read R18, K1149); C-59.7 OPAQUE_ID_MALFORMED, C-59.8 OPAQUE_ID_SPENT, C-59.9 OPAQUE_ID_NO_TRANSACTION
+   (record-core R75, N503).
+   CHANGED IN WHAT THE GATES RUN, no row moving: none beyond the rows above. The case gate's registered catalogue
+   (ratification's) runs C-41.17's arm, counted as that row's arrival; no registered step, grammar or listener changed
+   its ids since 1.53.0 (the new registrations, capture-requests' sweep scope, network-notices' mint seed and public
+   reads, are no gate's). Membership's T24 job (`MODULE_ORDER` gains `link-sweep`, which registers no step yet) and
+   credentials' (`status_at`) changed no row.
+   MINOR, rule 17 moving the stamp for arrivals. ROW_CENSUS (R50) is re-pinned to this tree, module tables only: 1073
+   rows. Rows T24's layers 3–11 change are T25's stamp (`awaiting stamp`). */
+export const CATALOG_VERSION = "1.54.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
@@ -647,8 +666,8 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
    this module's own census suite, `bio-plane/test/system/row-census.test.mjs` (legacy-tests' until T22's opening, K1006):
    a test may import every module's tables, which this module's source cannot (P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
-export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1046,
-  digest: "28dc9ebb47bf812a1268e50f885ade3ad245fd76b00a04089ce88a88edb3e7e4" });
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1073,
+  digest: "f1f0ad54195cd4b1b4df532eecf2377b4820e6589b9413053a9fcaeea8cc4fb7" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();
