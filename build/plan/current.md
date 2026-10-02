@@ -2,6 +2,53 @@
 
 **Status** · OPENING · BOB #98 · session_014dcsnHp9L1mo6H4mzBvdrR · depth 1
 
+**Opened** 2026-10-02 ~12:31 UTC by BOB #98 from `main` @ f193c1ac3b (T23 closed, K1178), from `draft-T24.md` and T23's `next.md` (K1180). **Bob's weekly meter** · asked at the opening; 61% at T23's close.
+
+## Legacy census (§5.2 (2))
+
+| legacy module (`modules.json`) | in T24 | entry or hard reason |
+|---|---|---|
+| **legacy-ui** (`civicos-ui/`) | stays | Bob's: UX (K633; manifest "Parallel work"). Its shares wait on the UX stream: N487, the left-out table's legacy-ui rows, three N508-kind notes. |
+
+No other module is marked `legacy`; no extraction is open.
+
+## Folds at the opening (BOB, on this branch, K1180)
+
+1. **N506**: `requirements/link-sweep.md` (R1–R12 = monitoring R53–R64, retired there, no change of meaning); monitoring provides the seam (the sweep host and the registration of the sweep's grammar arm and slate, R65 onward); `modules.json` gains `link-sweep` after monitoring in layer 10; scheduler, queue-producers, plane gain the edge; every reference re-pointed; `layers.md` lists it.
+2. **N503, N504, N505, N507, N509**: record-core R75 `recordOpaqueId`, provenance R57 `instanceKeyBound`, credentials R21 `status_at` (R8 answers it), network-notices R1, R4, R14, R17, R21, R22.
+3. **N489** (DEC-114): action-plans R36, queue-producers R28 ("matter" in member-facing words). **N490** (DEC-115): action-plans R37 `optionStartPreview`, op-declarations R11, the action-design HANDOFF line.
+4. **N502/N508's scan**: `plan/t24-stale-notes.md`; each START names its lines.
+
+Not folded: **N481, N488, N491** (DEC-112, DEC-113, DEC-116): Bob's, K1134's Q1–Q6 unanswered (asked again at the opening). N489 and N490 depend on none of the six, so they are carried (P19).
+
+## Rules at the opening
+
+T23's rules hold (merge early; one file, one editor; marks struck at the merge; no layer closes red except by name; owners export, the plane composes; the UX stream's DECs cited, never minted). A job re-scans its own module for the N502/N508 kind and re-words what it finds (N469's rule). A row a T24 job adds or changes after L2's stamp is `awaiting stamp` until T25's L2 (S2) and listed in its COMPLETE.
+
+**Accepted reds, by name, at the opening:**
+1. `row-census.test.mjs`: T23's L3–L11 rows `awaiting stamp` (T23's red 7), until promotion's L2 merge (S1).
+2. The UI's DEC-88 tests (N487, K1030): stay red, Bob's.
+3. Coverage: each id folded at the opening (record-core R75, provenance R57, credentials R21, action-plans R36, R37, queue-producers R28, op-declarations R11, link-sweep R1–R12, monitoring's seam ids), until its module's merge.
+4. Format: `link-sweep`'s `paths` and `tests` directories do not exist until link-sweep's L10 merge.
+5. Rows T24's L3–L11 jobs add or change: `awaiting stamp` until T25's L2 (S2).
+6. Totality of affordances and op-declarations over `optionstartpreview`, from action-plans' L9 merge until their L11 merges.
+7. The sweep's composition (plane's `sweeps` route, scheduler's `gathering-sweep`), from monitoring's L10 merge until link-sweep's and scheduler's (L10) and plane's and control-plane's (L11).
+
+## Roster (by layer; 41 jobs)
+
+**L1** · record-grammar: N502.
+**L2** (merge order: record-core, credentials, then promotion) · record-core: N503 (R75). · credentials: N505 (R21, R8), N508. · promotion: S1, the stamp 1.53.0 → 1.54.0 over T23's L3–L11 rows (each record's `awaiting stamp`, `t24-stale-notes.md` "S1's"), `ROW_CENSUS` re-pinned, its fixture; `gate.mjs`:557 re-worded.
+**L3** · host-governor: N508. · provenance: N504 (R57). · acquisition: N510, N502, S1's note. · capture: N508.
+**L4** · extraction: N508. · content: N502.
+**L5** · entities: N502.
+**L6** · inquiry-grammar, basis-versions, strength, run-rules: N502. · citation: N508. · capture-requests: N502, S1's note.
+**L7** · intent: N502.
+**L8** · publication: N501. · public-read: N508 (test fixture), S1's notes. · project-stage: N508. · network-notices: N503–N505's consumers (R4, R1, R21), N507 (R14, R17), N509 (R1, R22), S1's note. · ratification: N502 (test).
+**L9** · local-facts, standards, action-grammar, filing-templates: N502. · filings: N502, N508. · actions, action-clocks: N508. · action-plans: N489 (R36), N490 (R37), N502.
+**L10** (merge order: monitoring, link-sweep, scheduler) · monitoring: N506's removal side and the seam services, its test world's `refs` and `inquiry_bundle_facts` (N506's tail), N502, S1's note. · link-sweep: N506, the new module from the moved files and tests. · scheduler: N506, `gathering-sweep` through link-sweep.
+**L11** · affordances: `optionstartpreview` in its totality (R7's rule). · queue-producers: N489 (R28), `sweepConditions` through link-sweep. · queue: N508. · op-declarations: R11, `sweeps` declared through link-sweep. · admission: N502. · control-plane: N502, `sweeps` and `optionstartpreview` routed. · plane: link-sweep composed.
+
+
 ## Entries
 
 - N481 · 2026-10-01 · **publication**, **case-grammar**, **case-authoring**, **public-read**, and a case-file import home (the UX stream's U21, DEC-112, Bob's question 30): a published case in three forms (the page's first line per finding naming its role and the project's bar; the complete edition in every case file; the case-file format as an open specification with a standalone checker; the method version inside the signed case; publication refused while a relied-on finding rests on material that cannot travel whole; off-the-record attestations; import into a new read-only project with recreation, acceptance gated on it). **Hard reason:** DEC-112 is on the design session's branch, not `main`; folded as requirements once it lands (manifest "Parallel work"), then placed by BOB (publication's split, K617, and DEC-111's new module bear on its home). **Drafted** (K1134): `plan/draft-T24-dec112.md`; folds once PR #7 is on `main` and Bob answers K1134's questions.
@@ -20,9 +67,9 @@
 - N508 · 2026-10-02 · **credentials**, **host-governor**, **extraction**, **citation**, **actions** (K1167; TASKS #6's record): their op-map notes still say the ops are "entries of the legacy store's op map (its dispatcher spreads them in)" (`credentials/index.mjs`:669, `host-governor/index.mjs`:266, `extraction/index.mjs`:1474, `citation/index.mjs`:736, `actions/index.mjs`:2368); the legacy store is retired and control-plane's routes spread them: re-word (N469's rule), re-scanning each module for the same kind. **Hard reason:** those modules have no T23 job, their layers closed (P8, P10); wording only.
 - N509 · 2026-10-02 · **network-notices** (K1170; CONTROL-PLANE #14 J1): `#callerRefusal` (`index.mjs`:218) answers `NO_SUCH_PROJECT` to a caller whose sight of a discoverable project is `existence`; REC-149's ruling (a) (`BIO_Membership_Architecture_v2.md`:1235) answers an act on such a project positionally, C-70.1. Answer C-70.1 there for `noticeprepare` and `noticepost` (and `notices`, a read naming the project's own id), state it in R1/R22, test it. **Hard reason:** network-notices' one T23 job (L8) is closed (P8, P10).
 - N510 · 2026-10-02 · **acquisition** (K1178; ACQUISITION #5's deferral, `jobs/T23/acquisition.md`:25): an empty 200 memento met during a capture ends the archive arm with `NO_USABLE_CAPTURE` instead of trying an older candidate; emptiness is known only after the body is streamed, so trying another needs `acquire`'s single fetch restructured. Measured empties so far were redirects (skipped before any body is read). **Hard reason:** acquisition's one T23 job is closed (P8); the restructure is the job's own.
-- P1 · 2026-10-02 · **the process** (K1177; Bob's direction): research every approval a session has asked of Bob (§16), why the session reached that state, and what process change stops each cause recurring; bring the recommendation to Bob (a process change, P3, P16). **Owed by BOB #97 before T24's opening if it can finish it; T24 is not held for it.**
+- P1 · 2026-10-02 · **the process** (K1177; Bob's direction): research every approval a session has asked of Bob (§16), why the session reached that state, and what process change stops each cause recurring; bring the recommendation to Bob (a process change, P3, P16). Findings brought to Bob by BOB #97 ("Why Sessions Ask Bob"); the process revision is owed by BOB, alongside T24 (§5.9), certified by a dry run before use (P3).
 
-## Left out of T23, carried here (one hard reason each)
+## Left out of T24 (one hard reason each; carried to `next.md`)
 
 | row | item | hard reason | note |
 |---|---|---|---|
@@ -46,16 +93,13 @@
 | C5 | `PLN-` affordances, plan page, joint action | Bob's | K608 (4), K600 (c) |
 | H5 | DEC-100 | Bob's | awaits Bob; DEC-116 (N491) off `main` |
 | H3, H4, H9b, H11, H14, H16c, H18, H20, J6, J11 | DEC screens of the new interface | Bob's (UX) | K633, K899 (2) |
-| N481 | DEC-112 published case in three forms | Bob's | on the design branch, not `main` |
-| N488 | DEC-113 litigation hold of transcripts | Bob's | on PR #7, not `main` |
-| N489 | DEC-114 "Matters" | Bob's | on PR #7, not `main` |
-| N490 | DEC-115 action redesign | Bob's | on PR #7, not `main` |
-| N491 | DEC-116 withdrawal, docket | Bob's | on PR #7, not `main`; home BOB's once landed |
+| N481 | DEC-112 published case in three forms | Bob's | on `main` (PR #7); K1134 Q2, Q3, Q6 unanswered |
+| N488 | DEC-113 litigation hold of transcripts | Bob's | on `main` (PR #7); K1134 Q4, Q5 unanswered |
+| N491 | DEC-116 withdrawal, docket | Bob's | on `main` (PR #7); K1134 Q1 unanswered (its home) |
 | H1, H6b, J4 | DEC-96, DEC-101 (3), DEC-92 | dependency not yet built | nothing brings another group's edition into this copy |
 | A8 | bias R26 | dependency not yet built | K102's trigger |
 | A21 | inquiry R31 | dependency not yet built | no opinion element (MK-5) |
 | A22, A23 | installer R13, R24 | dependency not yet built | the new member surfaces |
 | A37 | progressions R32 | dependency not yet built | no amounts or funds as values |
 | A41 | publication R30 | dependency not yet built | nothing publishes a rendering (D-246) |
-| S1 | T23's L3–L11 new or changed rows stamped | one job per module (P8) | promotion's one job is L2; T24's L2 |
 | N493 (part) | member-facing translations of "noticed" (contradiction `checks.mjs`:136, :236; queue `checks.mjs`:63) | Bob's: UX (the design stream's DECs decide member-facing wording) | by BOB #93, K1099 |
