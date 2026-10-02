@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #98 · session_014dcsnHp9L1mo6H4mzBvdrR · depth 1
 
-**Jobs** · record-grammar: RECORD-GRAMMAR #6 session_01MJZEvGTGHSBLGCua1Zuqbw; record-core: RECORD-CORE #15 session_01GDBx64mMFCCwSytRPN41WV; credentials: CREDENTIALS #2 session_012kvJP8Do5Px8VoiLziW6ao; promotion: PROMOTION #25 session_01SwJ6zqWV8DAK53y4TjpSJf; membership: MEMBERSHIP #18 session_01TsMiP8QXjZwgw1wxMGupxs; host-governor: HOST-GOVERNOR #6 session_01WL11uZnbncFsdu25U9t5UL; provenance: PROVENANCE #13 session_01Tohc8CMuv7F1WY3Kqsr8dU; acquisition: ACQUISITION #6 session_01GsZuQ1S3yT7423mnGkM1qi; capture: CAPTURE #16 session_01Ev99X9H9nsfjJtVzKww84u
+**Jobs** · record-grammar: RECORD-GRAMMAR #6 session_01MJZEvGTGHSBLGCua1Zuqbw; record-core: RECORD-CORE #15 session_01GDBx64mMFCCwSytRPN41WV; credentials: CREDENTIALS #2 session_012kvJP8Do5Px8VoiLziW6ao; promotion: PROMOTION #25 session_01SwJ6zqWV8DAK53y4TjpSJf; membership: MEMBERSHIP #18 session_01TsMiP8QXjZwgw1wxMGupxs; host-governor: HOST-GOVERNOR #6 session_01WL11uZnbncFsdu25U9t5UL; provenance: PROVENANCE #13 session_01Tohc8CMuv7F1WY3Kqsr8dU; acquisition: ACQUISITION #6 session_01GsZuQ1S3yT7423mnGkM1qi; capture: CAPTURE #16 session_01Ev99X9H9nsfjJtVzKww84u; extraction: EXTRACTION #11 session_01AQZyjhWKrMBRZzo1DUJGjm; content: CONTENT #11 session_016WvxZ5ZiEqVj1hSGUB3iYd
 
 **Opened** 2026-10-02 ~12:31 UTC by BOB #98 from `main` @ f193c1ac3b (T23 closed, K1178), from `draft-T24.md` and T23's `next.md` (K1180). **Bob's weekly meter** · asked at the opening; 61% at T23's close.
 
