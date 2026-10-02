@@ -29,3 +29,7 @@ Progress, and waiting on link-sweep's merge for N506.
 - Red 5: I added or changed no catalogue row, so there is no `awaiting stamp` row to list.
 
 Size (session_01DLpPx4nFTBzCERM1X27oKi): test runs 9, module lines 429
+
+## J2 · COMPLETE
+
+COMPLETE. N506 applied: gathering-sweep and the R9 sweep arm go through link-sweep's `linkSweepOf(ctx)` (sweepDue, sweepWake, sweepTick(now, rank)); tests re-pointed to link-sweep's own test world; the reds at consumers.test.mjs :226, :250, :260 and plane.test.mjs:206 are cleared, and red 8 (N507's share) is cleared. Scheduler suite 66/66. Whole test/m: 5256 pass, 8 fail, the same 8 as on tranche/T24 itself (reds 6, 7 and 9; list in the record). All four checks have 0 failures. No catalogue row changed (red 5: none). Report: the plane's bundle is stale (src change; nothing regenerated). In L11 the plane should compose link-sweep before the scheduler first reads its registry, so the composed instance is the one `linkSweepOf` returns (details in the record). Please merge job/T24/scheduler.
