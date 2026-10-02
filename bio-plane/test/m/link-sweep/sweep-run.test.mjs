@@ -1,6 +1,6 @@
 /* link-sweep R4–R8, R10, R12: the link sweep's run, driven at the module's interface (`sweepDue`, `sweepWake`,
    `sweepTick`, `sweeps`, `sweepConditions`, the registered scope check) over the real record, promotion, provenance,
-   observation log and capture, under monitoring's seam (its R65; the stand-in until its T24 merge). Capture's
+   observation log and capture, under monitoring's seam (its R65). Capture's
    `acquire` is the real module's method replaced on the instance by a scripted site in its answer shape (the bytes held
    in the evidence bucket, the document carrying the origin the caller declared). Moved from monitoring's
    `sweep-run.test.mjs` (its R56–R60, R62, R64). */

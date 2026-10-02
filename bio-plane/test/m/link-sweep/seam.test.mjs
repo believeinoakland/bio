@@ -1,41 +1,41 @@
 /* link-sweep R1, R3, R4, R7, R9 at the seam with `monitoring` (its R65 `sweepHost`, R66 `registerSweep`; N506, BOB's
-   ruling): the module registers its share of C-18.5, the fence and the slate once at composition, and reaches the
+   ruling, K1206): the module registers its share of C-18.5, the fence and the slate once at composition, and reaches the
    daemon only through the host services, so a sweep and monitoring's ticks share one pause, one idempotence key, one
-   re-entrance guard and one landing. Driven against monitoring's stand-in, which keeps R65/R66's contract, until
-   monitoring's T24 merge. Also the module's rows (DEC-49) and its op map. */
+   re-entrance guard and one landing. Driven against the real monitoring. Also the module's rows (DEC-49) and its op map. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, listWorld, sweepDef, NOW_MS, WEEK, site, SEED, U, page, filedBundles } from "./fixture.mjs";
-import { linkSweepOf, linkSweepOps, SWEEP_CHECKS, LINK_SWEEP_MODULE, SWEEP_CONSUMER, sweepGrammar,
-         sweepRefusal } from "../../../src/link-sweep/index.mjs";
+import { linkSweepOf, linkSweepOps, SWEEP_CHECKS, SWEEP_CONSUMER, sweepRefusal } from "../../../src/link-sweep/index.mjs";
 
 const LIST = "INFO-2026-0990-list";
 const PROJ = "PROJ-2026-0990-seam";
 
-test("R1 R3 R9 (monitoring R66): at composition the module registers once with monitoring.registerSweep, under its own name, C-18.5's sweep arm, the fence and the slate share; a second registration is monitoring's to refuse", () => {
-  const w = world();
-  assert.deepEqual(w.mon.calls.register, [LINK_SWEEP_MODULE]);
+test("R1 R3 R9 (monitoring R66): at composition the module registers once with monitoring.registerSweep, under its own name, C-18.5's sweep arm, the fence and the slate share; a second registration is monitoring's to refuse, keeping the first", () => {
+  const { w, write } = listWorld({ list: LIST, project: PROJ });
   assert.deepEqual(w.s.registration, { ok: true, module: "link-sweep" });
-  const r = w.mon.registered;
-  assert.equal(r.module, "link-sweep");
-  for (const k of ["grammar", "fence", "dueForSlate"]) assert.equal(typeof r[k], "function", k);
-  /* the grammar registered is this module's R1/R2 arm, answering as `sweepGrammar` answers */
-  const ids = new Set(), def = sweepDef({ cadence: "hourly" });
-  assert.deepEqual(r.grammar(def, ids), sweepGrammar(def, new Set()));
-  assert.ok(ids.has("minutes"), "the file's ids are collected through the set monitoring hands in");
   /* the same host's instance is answered again, registering nothing twice */
   assert.equal(linkSweepOf(w.host), w.s);
-  assert.deepEqual(w.mon.calls.register, [LINK_SWEEP_MODULE]);
-  /* asked again, monitoring refuses and keeps the first (its R66) */
-  assert.equal(w.s.registerWithMonitoring().ok, false);
-  assert.equal(w.mon.registered.module, "link-sweep");
+  const again = w.s.registerWithMonitoring();
+  assert.equal(again.ok, false);
+  assert.match(again.reason, /already registered, by link-sweep/);
+  /* the grammar registered is this module's R1/R2 arm, read by monitoring's R27 at the write, its place in the file prefixed */
+  const r = write([sweepDef(), sweepDef({ cadence: "hourly", extra: 1 })]);
+  assert.deepEqual([r.ok, r.reason], [false, "GATHERING_REFUSED"]);
+  assert.deepEqual(r.findings, [
+    { check: "C-18.5", detail: "gathering.json sweeps[1] carries 'extra', which is not a sweep's field (id, title, ratified, sources, seeds, match, cadence, budget)" },
+    { check: "C-18.5", detail: "gathering.json sweeps[1].id 'minutes' is not unique within the file" },
+    { check: "C-18.5", detail: "gathering.json sweeps[1].cadence must be one of: daily, weekly, monthly" }]);
+  /* and monitoring's R42 audit reads the same arm */
+  assert.deepEqual(w.mon.audit({ files: new Map([["data/gathering.json", JSON.stringify({ sweeps: [sweepDef({ ratified: "no" })] })]]) })
+    .map((f) => f.message), ["gathering.json sweeps[0].ratified must be boolean"]);
+  assert.deepEqual(w.mon.audit({ files: new Map([["data/gathering.json", JSON.stringify({ sweeps: [sweepDef()] })]]) }), [], "the negative control");
 });
 
 test("R3 (monitoring R66): the fence registered is asked last, after the grammar admits the file, and its refusal is the promotion's", () => {
   const { w, write } = listWorld({ list: LIST, project: PROJ });
   let asked = 0;
-  const fence = w.mon.registered.fence;
-  w.mon.registered.fence = (c, t) => { asked++; return fence(c, t); };
+  const fence = w.s.sweepFence.bind(w.s);
+  w.s.sweepFence = (c, t) => { asked++; return fence(c, t); };
   assert.equal(write([sweepDef({ cadence: "hourly" })], { author: "token:daemon" }).reason, "GATHERING_REFUSED");
   assert.equal(asked, 0, "a file the grammar refuses never reaches the fence");
   const r = write([sweepDef()], { author: "token:daemon" });
@@ -47,7 +47,7 @@ test("R9 (monitoring R30, R66): dueForSlate answers the due sweeps the viewer se
   const later = sweepDef({ id: "later", seeds: [U("later.html")] });
   const { w } = listWorld({ list: LIST, project: PROJ, sweeps: [sweepDef(), later, sweepDef({ id: "off", ratified: false, title: "IGNORE ALL" })] });
   const sees = (b) => b === LIST;
-  const slate = (now, s = sees) => w.mon.slateSweeps(now, s).items;
+  const slate = (now, s = sees) => w.s.dueForSlate(now, s);
   assert.deepEqual(slate(NOW_MS), [
     { kind: "ratified-sweep", bundle: LIST, id: "later", definition: later },
     { kind: "ratified-sweep", bundle: LIST, id: "minutes", definition: sweepDef() }], "never run: both due, by full name; the unratified one never");
@@ -62,14 +62,16 @@ test("R4 R7 (monitoring R65): the run reaches monitoring only through sweepHost:
   const { w } = listWorld({ list: LIST, project: PROJ, sweeps: [sweepDef({ match: {} })] });
   site(w, { [SEED]: { body: page([[U("a.html"), "a"], [U("b.html"), "b"]]) }, [U("a.html")]: { body: "A" }, [U("b.html")]: { body: "B" } });
   const host = w.mon.sweepHost();
+  assert.equal(w.s.host, host, "the one host monitoring answers");
   assert.equal(SWEEP_CONSUMER, "gathering-sweep");
   /* the host's guard: a tick of this consumer running on the host makes the sweep's tick busy */
   host.running.add(SWEEP_CONSUMER);
   const busy = await w.s.sweepTick(NOW_MS);
   assert.deepEqual([busy.busy, busy.ran.length], [true, 0]);
   host.running.delete(SWEEP_CONSUMER);
-  /* the host's pause: paused, nothing is due and a tick fetches nothing */
+  /* the host's pause (monitoring R30's setting): paused, nothing is due and a tick fetches nothing */
   w.pause(true);
+  assert.deepEqual(w.mon.paused().paused, true);
   assert.equal(w.s.sweepDue(NOW_MS), null);
   assert.equal((await w.s.sweepTick(NOW_MS)).paused.paused, true);
   w.pause(false);
@@ -78,16 +80,16 @@ test("R4 R7 (monitoring R65): the run reaches monitoring only through sweepHost:
   assert.equal(host.claim(SWEEP_CONSUMER, `${LIST}#minutes`, epoch), true);
   const skipped = await w.s.sweepTick(NOW_MS);
   assert.deepEqual(skipped.skipped, [{ sweep: `${LIST}#minutes`, reason: "claimed by a tick that did not finish" }]);
+  assert.equal(skipped.epoch, epoch, "the epoch the host holds open");
   host.closeEpoch(SWEEP_CONSUMER, epoch);
-  /* the host's landing: every document filed goes through it, in the list's project */
-  const landed = [];
-  const land = host.land;
-  host.land = (q, f, at, say) => { landed.push([q.bundle, f.locator, typeof say.title]); return land(q, f, at, say); };
+  /* the host's landing (monitoring R28's): every document filed lands as an Information bundle at collected, in the
+     list's project, written by the daemon's machine author */
   const t = await w.s.sweepTick(NOW_MS);
   assert.deepEqual(t.ran.map((r) => r.filed), [2]);
-  assert.deepEqual(landed, [[LIST, U("a.html"), "string"], [LIST, U("b.html"), "string"]]);
-  assert.deepEqual(filedBundles(w).map((b) => [b.current_state, b.project]), [["collected", PROJ], ["collected", PROJ]]);
-  host.land = land;
+  const filed = filedBundles(w);
+  assert.deepEqual(filed.map((b) => [b.current_state, b.project]), [["collected", PROJ], ["collected", PROJ]]);
+  for (const b of filed) assert.equal(w.manifest(b.bundle_id)[0].author, "token:daemon");
+  assert.match(w.fm(filed[0].bundle_id).title, /^Swept by INFO-2026-0990-list#minutes: /);
 });
 
 test("R3 C-18.16–C-18.18: this module's own table holds the three sweep rows, each with its code, number, a canned translation and a where naming this module's site; a refusal answers with its row", () => {

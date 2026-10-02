@@ -2,7 +2,7 @@
    their linear-time matcher, and who may write a sweep, each arm with its negative control. Driven at the module's
    interface: `sweepGrammar` (the share monitoring R66 takes), `compileTerm`, `inScope`, and promotions through the real
    promotion module, whose registered step is monitoring's R27 composing this module's registered grammar and fence
-   (monitoring's stand-in until its T24 merge). Moved from monitoring's `sweep-grammar.test.mjs` (its R53–R55). */
+   (the real monitoring). Moved from monitoring's `sweep-grammar.test.mjs` (its R53–R55). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { listWorld, sha, infoMd, sweepDef, NOW_MS } from "./fixture.mjs";

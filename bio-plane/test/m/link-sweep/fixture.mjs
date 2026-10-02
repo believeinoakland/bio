@@ -1,7 +1,8 @@
 /* link-sweep over the modules it uses, each the real one where it writes or reads the record (record-core, membership,
    promotion, capture, observation-log, and provenance's tables through capture's own instance), on a real SQLite
-   database (node:sqlite) standing in for a Durable Object's storage. What stands in, and why: `monitoring`'s seam
-   (`./monitoring-stand-in.mjs`, its R65 and R66) until monitoring's T24 merge; project-stage's R1 (`stages` maps a
+   database (node:sqlite) standing in for a Durable Object's storage, under the real `monitoring` (its R65 `sweepHost`, R66
+   `registerSweep`). What stands in, and why: monitoring's own later readers it is handed (intent, publication) are
+   absent, since no sweep reads them; project-stage's R1 (`stages` maps a
    project to its stage, for R4's closed test); capture-requests' R45 registration slot, recording what registers
    (R12), unless a test passes the real one; the host governor, which records every call; the evidence bucket, an
    in-memory R2 stand-in. A test scripts capture's `acquire` on the instance where it says so. Every test drives
@@ -15,7 +16,7 @@ import { observationLogOf } from "../../../src/observation-log/index.mjs";
 import { captureOf } from "../../../src/capture/index.mjs";
 import { linkSweepOf } from "../../../src/link-sweep/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
-import { monitoringStandIn, PAUSE_SETTING } from "./monitoring-stand-in.mjs";
+import { monitoringOf, MONITOR_PAUSE_SETTING as PAUSE_SETTING } from "../../../src/monitoring/index.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 /** A Durable Object's storage over an in-memory SQLite database (the plane's cursor shape, K316, K313). */
@@ -99,7 +100,7 @@ export function sweepDef(over = {}) {
            budget: { per_run: 10, backlog: 20 }, ...over };
 }
 
-export function world({ evidence = true, captureRequests = undefined, monitoring = undefined } = {}) {
+export function world({ evidence = true, captureRequests = undefined } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -122,7 +123,8 @@ export function world({ evidence = true, captureRequests = undefined, monitoring
   const stages = {};
   const projectStage = { calls: [], projectStage(a) { this.calls.push(a); return { project: a.project, stage: stages[a.project] ?? "forming" }; } };
   const cr = captureRequests === undefined ? stubCaptureRequests() : captureRequests;
-  const mon = monitoring === undefined ? monitoringStandIn({ record, promotion }) : monitoring;
+  const mon = monitoringOf(host, { record, membership, promotion, capture, observationLog: obs, governor: gov, env: {},
+    now: () => clock.ms, intent: null, publication: null, projectStage });
   const s = linkSweepOf(host, { record, membership, promotion, capture, observationLog: obs, projectStage, monitoring: mon,
     ...(cr ? { captureRequests: cr } : {}), now: () => clock.ms });
   let n = 0;
