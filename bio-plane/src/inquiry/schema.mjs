@@ -234,11 +234,30 @@ CREATE TABLE IF NOT EXISTS inquiry_bundle_facts (
   inquiry_superseded_by  TEXT,
   inquiry_subject_entity TEXT
 );
+
+-- R53 (A9, bias R40): a question's FINDING, its conclusion, and the project lens in force when it was made, so a change
+-- of that lens raises a bias debt on it (bias R33-R38). Written by R12's projection when a document that states its
+-- project (promotion R53) enters 'concluded'; a re-conclusion replaces the row. lens_state is 'recorded' (lens_sha the
+-- lens's statements_sha), 'none' (no lens was in force for the project: the finding was not made under one), or
+-- 'unreadable' (the lens could not be read, or a replay wrote the conclusion): only 'recorded' offers a lens, the rest
+-- are undetermined and never filled in. principal is the concluding member's id, NULL for a machine or an unreadable
+-- author. Keyed by bundle_id and declared to purge with project_id (R36).
+CREATE TABLE IF NOT EXISTS inquiry_findings (
+  bundle_id   TEXT PRIMARY KEY,
+  project_id  TEXT NOT NULL,
+  lens_state  TEXT NOT NULL,
+  lens_sha    TEXT,
+  principal   TEXT,
+  at          TEXT NOT NULL
+);
 `;
 
 /** R36: the tables this module declares to purge, each keyed to a bundle by its `bundle_id`. */
 export const INQUIRY_TABLES = ["inquiry_basis", "inquiry_exclusions", "inquiry_migration_replays", "inquiry_member_agents",
-                              "inquiry_contradiction_links", "inquiry_bundle_facts"];
+                              "inquiry_contradiction_links", "inquiry_bundle_facts", "inquiry_findings"];
+/** R36, R53: the purge declaration, `inquiry_findings` also keyed by the project its lens was read for. */
+export const INQUIRY_PURGE = [...INQUIRY_TABLES.filter((t) => t !== "inquiry_findings"),
+                              { name: "inquiry_findings", keys: ["bundle_id", "project_id"] }];
 
 /** R36 (N136): the table holding the leg count and the superseded-by index, and the relation `legs` is read through
  *  (retrieval R62). */

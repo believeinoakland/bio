@@ -397,7 +397,7 @@ test("R13 a whole-document attestation of a chainless capture does not raise a m
   const DOC_N = "INFO-2026-1501-nochain", QN = "INQ-2026-1501-qn";
   const [capN] = w.doc(DOC_N, ["no chain was ever recorded"], { chain: null });
   const at = w.content.attestText({ captureSha: capN, member: "sam", at: "2026-09-27T00:00:00Z",
-                                    extent: { kind: "document" }, viewer: V("sam") });
+                                    extent: { kind: "document" }, viewer: V("sam"), note: "Checked against the original." });
   assert.deepEqual([at.ok, at.chain_at_attestation], [true, null], JSON.stringify(at).slice(0, 300));
   const tx = w.content.transcribe({ bundleId: DOC_N, extent: { kind: "pdf-page", page: 0 }, text: "Lot 7, Block 3.",
                                     transcriber: "ruth", viewer: V("ruth"), at: "2026-09-27T00:00:00Z" });
@@ -406,7 +406,8 @@ test("R13 a whole-document attestation of a chainless capture does not raise a m
   const ceil = (id) => { const s = w.k.earnedBasis({ id, viewer: "admin" }).earned.content?.[tx.content_id];
     return s ? [s.transcription.ceiling, s.transcription.determinant, s.transcription.by] : null; };
   assert.deepEqual(ceil(QN), [null, "derivation", []], "the capture attestation checked other text");
-  const sa = w.content.transcriptionAttest({ contentId: tx.content_id, attestor: "sam", viewer: V("sam"), at: "2026-09-27T01:00:00Z" });
+  const sa = w.content.transcriptionAttest({ contentId: tx.content_id, attestor: "sam", viewer: V("sam"), at: "2026-09-27T01:00:00Z",
+                                            note: "The typing matches the page." });
   assert.equal(sa.ok, true, JSON.stringify(sa).slice(0, 300));
   assert.deepEqual(ceil(QN), [EARNED_CAPTURE_CEILING, "attestation", ["sam"]], "the leg earns what the typing's attestation supports");
 });
