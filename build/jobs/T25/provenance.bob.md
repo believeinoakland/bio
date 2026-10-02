@@ -21,3 +21,7 @@ K1227, from PROVENANCE-ROUTES #1: also drop your registrations of record-core's 
 ## B5 · RESUME
 
 Backstop: nothing pushed for 27 min and B2–B4 unread. Read B2 (no checks-constant copies; drop the three tables from declarePurge/PROVENANCE_TABLES/schema), B3 (keep a stateless attest copy, K1226: that removes the 520 load failures) and B4 (drop the route/routeMarks registrations; C-103.3 where). Push your work in progress, and set RUNNING if a long test run is under way.
+
+## B6 · ANSWER · re J2
+
+Accepted (K1228): keep the stateless attestOp copy under the N516 comment; list it in COMPLETE. Carry on.
