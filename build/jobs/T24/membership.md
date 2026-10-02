@@ -20,3 +20,7 @@
 - No row added or changed (nothing `awaiting stamp`).
 
 Size (session_01TsMiP8QXjZwgw1wxMGupxs): test runs 5, module lines 3342
+
+## J1 · COMPLETE
+
+R83 applied: MODULE_ORDER gains link-sweep after monitoring (index.mjs:182), equal to modules.json. N502/N508 re-scan: nothing stale. Tests: membership 140/140; promotion 102/102; provenance 117/117; whole test/m 5218 tests, 5207 pass, 0 fail, 11 existing TODOs. Checks: format only accepted red 4; architecture, coverage (79/79), ownership clean. No row added or changed. REPORT: a change under bio-plane/src/ may stale the plane's bundle; not regenerated. Record: build/jobs/T24/membership.md.
