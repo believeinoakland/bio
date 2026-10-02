@@ -1,6 +1,6 @@
 # extraction (T24)
 
-**Status** · session_01AQZyjhWKrMBRZzo1DUJGjm · depth 2 · WORKING · handled B0
+**Status** · session_01AQZyjhWKrMBRZzo1DUJGjm · depth 2 · WORKING · handled B1
 
 ## J1 · REPORT
 
