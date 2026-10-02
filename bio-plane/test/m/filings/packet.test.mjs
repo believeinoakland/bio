@@ -141,7 +141,7 @@ test("R9 the six sections, each item naming its record source: facts, chronology
   assert.deepEqual(ex[evSha].cited_by, [x.D]);
   assert.equal(ex[evSha].locator, "https://example.org/snapshots/INFO-2026-0002-ledger.txt");
   assert.equal(ex[evSha].captured_at, "2026-09-27T00:00:00Z");
-  assert.deepEqual(ex[evSha].attestations.items, x.prov.attestationsOf(evSha).attestations, "provenance's attestationsOf, never the bundle document");
+  assert.deepEqual(ex[evSha].attestations.items, x.attestation.attestationsOf(evSha).attestations, "attestation's attestationsOf, never the bundle document");
   assert.deepEqual(ex[evSha].attestations.items.map((a) => a.kind), ["rfc3161", "co_archive"]);
   assert.deepEqual(ex[docSha].attestations.items, []);
   /* standards: citation, kind, issuer, text content ids, in force at the act's date */
@@ -162,6 +162,48 @@ test("R9 the six sections, each item naming its record source: facts, chronology
   assert.deepEqual(rec.parts.map((c) => [c.id, c.state]), [[assessed.id, "assessed"], [undetermined.id, "undetermined"]]);
   assert.deepEqual(rec.undetermined, [undetermined.id]);
   assert.ok(rec.totals.every((t) => t.state === "assessed"), "totals kept within one state");
+});
+
+test("R9 an exhibit's attestations are attestation.attestationsOf's answer (its R7), never read from the bundle document: as it answers them, its undetermined carried with why; unreadable or with no module to ask, undetermined, said so", async () => {
+  const x = tier3();
+  const evSha = sha("the text of INFO-2026-0002-ledger"), docSha = sha(`the text of ${DOC}`);
+  const real = x.attestation;
+  const exhibit = (attestation, s = evSha) => {
+    const f = x.filingsWith({ attestation, ...(attestation === null ? { host: null } : {}) });
+    const p = f.counselPacket({ reason: WHY, action: x.A, counsel: COUNSEL, author: V("olive"), viewer: V("olive") });
+    assert.equal(p.ok, true, JSON.stringify(p).slice(0, 300));
+    return p.sections.exhibits.items.find((e) => e.sha256 === s);
+  };
+  /* the real module: every attestation it answers, with its note, for each exhibit */
+  for (const s of [evSha, docSha]) {
+    const a = real.attestationsOf(s);
+    assert.deepEqual(exhibit(real, s).attestations, { items: a.attestations, note: a.note }, s);
+  }
+  /* a stand-in answering what the bundle document does not hold: the exhibit shows the module's answer, so nothing is
+     parsed beside it */
+  const asked = [];
+  const other = { kind: "co_archive", service: "elsewhere.example", locator: "https://elsewhere.example/y", bundle: "INFO-X", path: "data/provenance.json" };
+  const answering = (over) => ({ attestationsOf: (s) => { asked.push(s); return { ...real.attestationsOf(s), ...over(s) }; } });
+  const e = exhibit(answering((s) => (s === evSha ? { attestations: [other] } : {})));
+  assert.deepEqual(e.attestations.items, [other]);
+  assert.ok(asked.includes(evSha) && asked.includes(docSha), "asked for every exhibit");
+  assert.deepEqual([e.coattested, e.coattested_why], [false, "the record holds a co-archive but no trusted timestamp for it"]);
+  /* its undetermined, carried with why; co-attestation then undetermined too */
+  const u = exhibit(answering(() => ({ attestations: [], undetermined: "its home's register cannot be read" })));
+  assert.deepEqual([u.attestations.items, u.attestations.undetermined, u.coattested], [[], "its home's register cannot be read", null]);
+  assert.match(u.coattested_why, /undetermined: its home's register cannot be read/);
+  /* a read that fails or refuses, and no module to ask: undetermined, said so, never an empty "none recorded" */
+  for (const [att, why] of [[{ attestationsOf: () => { throw new Error("down"); } }, /could not be read/],
+                            [{ attestationsOf: () => ({ ok: false, reason: "BAD_SHA" }) }, /could not be read/],
+                            [null, /no module answers a capture's attestations/]]) {
+    const n = exhibit(att);
+    assert.deepEqual([n.attestations.items, n.coattested], [[], null]);
+    assert.match(n.attestations.undetermined, why);
+  }
+  /* a draft's exhibits read the same (R25) */
+  const d = x.filingsWith({ attestation: answering((s) => (s === evSha ? { attestations: [other] } : {})) })
+    .filingPrepare({ action: x.action(), preparer: V("bo"), viewer: V("bo") });
+  assert.deepEqual(d.exhibits.find((i) => i.sha256 === evSha).attestations.items, [other]);
 });
 
 test("R9 a claim deadline's date only from a recorded start event and its count: calendar, business on the holiday calendar, undetermined past the calendar's years", async () => {

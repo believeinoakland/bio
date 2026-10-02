@@ -21,8 +21,9 @@
  * creates its tables, declares them to record-core's purge (K23, R19) and registers the available-actions block with
  * `public-read` (its R8; R15 here). `deps` (each module is reached through its factory on the same host unless given):
  *   record, publication, provenance, content   `getSetting`, `allocId`, `transact`, `textAtSha`, `declarePurge`;
- *                                   `publishedEditionsOf`; `attestationsOf`, `captureGrade` (R25); `contentRow`,
- *                                   `captureFor`.
+ *                                   `publishedEditionsOf`; `captureGrade` (R25); `contentRow`, `captureFor`.
+ *   attestation    `attestationsOf` (its R7; R9's exhibits and R25's co-attestation), from `attestationOf` (N512: split
+ *                  from `provenance`, whose R49 it was).
  *   publicRead     `registerEvidenceBlock` (its R8; R15), from `publicReadOf` (K651).
  *   strength       `projectBar` (its R14): the floors of R22's quartet.
  *   membership     `inSight` (its R80): the sight of the project a draft, packet or template draws on (R11, R13, K316).
@@ -54,6 +55,7 @@
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf } from "../membership/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
+import { attestationOf } from "../attestation/index.mjs";
 import { contentOf } from "../content/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
 import { publicReadOf } from "../public-read/index.mjs";
@@ -165,13 +167,13 @@ export class Filings {
   #deps;
 
   constructor({ storage, record, host = null, membership = null, publication = null, publicRead = null, provenance = null,
-                content = null,
+                attestation = null, content = null,
                 actions = null, conformance = null, standards = null, consequences = null, promotion = null, strength = null, actionClocks = null,
                 localFacts = null, filingTemplates = null,
                 producingGroup = null, profiles = null, now = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
-    this.#deps = { host, membership, publication, publicRead, provenance, content, actions, conformance, standards, consequences, promotion, strength, actionClocks, localFacts, filingTemplates };
+    this.#deps = { host, membership, publication, publicRead, provenance, attestation, content, actions, conformance, standards, consequences, promotion, strength, actionClocks, localFacts, filingTemplates };
     /* R3 (N331): the producing group is promotion's fact `producingGroup` (its R40), read as `fact` answers it; a
        function handed in (as the retired legacy store's was) is kept and may answer a value, null, or the fact's answer.
        Absent, `#group` asks promotion itself, and says so when no promotion module is reachable (N355: no refusal code
@@ -187,6 +189,12 @@ export class Filings {
   get publication() { return this.#deps.publication ||= publicationOf(this.#deps.host); }
   get publicRead() { return this.#deps.publicRead ||= publicReadOf(this.#deps.host, { publication: this.publication }); }
   get provenance() { return this.#deps.provenance ||= provenanceOf(this.#deps.host); }
+  /* R9, R25: the attestations a capture holds (attestation R7); with no host and none given, absent, and every exhibit's
+     attestations are undetermined, said so. */
+  get attestation() {
+    return this.#deps.attestation ||= (this.#deps.host
+      ? attestationOf(this.#deps.host, { record: this.record, provenance: this.provenance }) : null);
+  }
   get content() { return this.#deps.content ||= contentOf(this.#deps.host); }
   get promotion() { return this.#deps.promotion ||= (this.#deps.host ? promotionOf(this.#deps.host) : null); }
   get strength() { return this.#deps.strength ||= (this.#deps.host ? strengthOf(this.#deps.host) : null); }
@@ -894,9 +902,7 @@ export class Filings {
       const reg = this.#one(`SELECT bundle_id, path, registered FROM register WHERE capture_sha=?`, sha);
       const loc = this.#one(`SELECT address, retrieval_locator, first_retrieved FROM captured_locators WHERE capture_sha=?
                               ORDER BY first_retrieved LIMIT 1`, sha);
-      const att = this.#call(() => this.provenance.attestationsOf(sha));
-      const attestations = att && att.ok ? { items: att.attestations, ...(att.undetermined ? { undetermined: att.undetermined } : {}), note: att.note }
-        : { items: [], undetermined: "the attestations could not be read" };
+      const attestations = this.#attestations(sha);
       const grade = this.#grade(sha);
       const co = Filings.#coattested(attestations);
       return { sha256: sha, cited_by: [...new Set(from)].sort(),
@@ -907,6 +913,17 @@ export class Filings {
                home: reg ? reg.bundle_id : null,
                attestations, grade, ...co, venue: Filings.#venueReading(grade, co.coattested, standard) };
     });
+  }
+
+  /* R9: every attestation the record holds for one capture, as `attestation.attestationsOf` answers it (its R7), never
+     read from the bundle document here; undetermined, with why, when no module answers it or its read fails. */
+  #attestations(sha) {
+    const a = this.attestation;
+    if (!a || typeof a.attestationsOf !== "function")
+      return { items: [], undetermined: "no module answers a capture's attestations here, so they are undetermined" };
+    const att = this.#call(() => a.attestationsOf(sha));
+    return att && att.ok ? { items: att.attestations, ...(att.undetermined ? { undetermined: att.undetermined } : {}), note: att.note }
+      : { items: [], undetermined: "the attestations could not be read" };
   }
 
   /* R25: the capture axis for one capture, as provenance answers it (its R24–R27, R51), never computed here. */
@@ -1542,7 +1559,7 @@ export class Filings {
     return { ok: true, determination: d.id, live: d.live, ...this.#block([d], this.#view()) };
   }
 
-  /** R15: the block `publication` carries beside a published case edition (its R36): the live determinations of the
+  /** R15: the block `public-read` carries beside a published case edition (its R8, was publication R36; K651): the live determinations of the
    *  case's own project resting on any of its findings, read by the plane. */
   evidenceBlock({ caseId = null, edition = null, findings = [] } = {}) {
     const owner = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, String(caseId ?? ""));
@@ -1573,7 +1590,7 @@ export class Filings {
 const instances = new WeakMap();
 
 /** K61: the one instance per host, created on the first call with `deps`. It creates its tables, declares them to purge
- *  (K23, R19) and registers the available-actions block with `publication` (its R36; R15). */
+ *  (K23, R19) and registers the available-actions block with `public-read` (its R8, was publication R36; K651; R15). */
 export function filingsOf(host, deps) {
   let f = instances.get(host);
   if (!f) {

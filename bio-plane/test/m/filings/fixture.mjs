@@ -1,5 +1,5 @@
 /* filings over the modules it uses, every one the real one (K253): record-core, membership, promotion, provenance,
-   content, inquiry and publication on publication's own test world, and the layer-9 modules standards, conformance,
+   attestation (split from provenance, N512), content, inquiry and publication on publication's own test world, and the layer-9 modules standards, conformance,
    consequences and actions, each through its own factory on the same host. A real SQLite database stands in for a
    Durable Object's storage. What only a later module or instance setup fills (the provider of promotion's fact
    `producingGroup`, publication's world registering it as instance-setup does; retrieval's registrations) is a stand-in
@@ -13,6 +13,7 @@ import { standardsOf } from "../../../src/standards/index.mjs";
 import { conformanceOf } from "../../../src/conformance/index.mjs";
 import { actionsOf } from "../../../src/actions/index.mjs";
 import { publicReadOf } from "../../../src/public-read/index.mjs";
+import { attestationOf } from "../../../src/attestation/index.mjs";
 import { LocalFacts } from "../../../src/local-facts/index.mjs";
 import { FilingTemplates, filingTemplatesOf } from "../../../src/filing-templates/index.mjs";
 import { get as profileOf, combine } from "../../../../jurisdictions/index.mjs";
@@ -124,7 +125,9 @@ export function world({ profiles = undefined, group = "test-group" } = {}) {
      entry's path name what they hold. */
   const filingTemplates = templatesOver(w, profiles);
   const localFacts = profiles === undefined ? undefined : localFactsOver(w, profiles, now);
-  const f = filingsOf(w.host, { record: w.record, publication: w.p, provenance: w.prov, content: w.content, now, filingTemplates,
+  /* attestation (layer 3, after provenance), the real one: every attestation a capture holds (its R7), R9's exhibits. */
+  const attestation = attestationOf(w.host, { record: w.record, provenance: w.prov });
+  const f = filingsOf(w.host, { record: w.record, publication: w.p, provenance: w.prov, attestation, content: w.content, now, filingTemplates,
                                 ...(profiles !== undefined ? { profiles: () => profiles, localFacts } : {}) });
   const evidenceCid = w.content.mint({ bundleId: EVID, captureSha: sha(`the text of ${EVID}`), extent: { kind: "document" },
                                        mintedBy: V("bo") }).content_id;
@@ -152,7 +155,7 @@ export function world({ profiles = undefined, group = "test-group" } = {}) {
   const D = determine();
   let n = 0;
   const x = {
-    ...w, w, f, localFacts: f.localFacts, pr: publicReadOf(w.host, { publication: w.p }), proj, pin, actions, conformance, standards, consequences, groupRef, evidenceCid, S1, S2, D, declare,
+    ...w, w, f, attestation, localFacts: f.localFacts, pr: publicReadOf(w.host, { publication: w.p }), proj, pin, actions, conformance, standards, consequences, groupRef, evidenceCid, S1, S2, D, declare,
     determine, publishEdition, act,
     /* the world's own reads, over the cursor */
     row: (sq, ...a) => [...w.st.sql.exec(sq, ...a)][0] ?? null,
@@ -209,7 +212,7 @@ export function world({ profiles = undefined, group = "test-group" } = {}) {
     filingsWith(over = {}) {
       const ps = typeof over.profiles === "function" ? over.profiles() : profiles;
       return new Filings({ storage: w.st, record: w.record, host: w.host, membership: w.membership, publication: w.p,
-                           provenance: w.prov, content: w.content, promotion: w.promotion, actions, conformance, standards,
+                           provenance: w.prov, attestation, content: w.content, promotion: w.promotion, actions, conformance, standards,
                            consequences, now, filingTemplates: templatesOver(w, ps),
                            ...(ps !== undefined ? { localFacts: localFactsOver(w, ps, now) } : {}), ...over });
     },
