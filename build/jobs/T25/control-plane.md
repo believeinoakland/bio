@@ -37,3 +37,7 @@ B1 says record.mjs 'composes attestation's attestOp'. My reading: attestOp is a 
 ## J2 · REPORT
 
 Two reds outside this module, both failing identically on origin/tranche/T25 without my change: (1) test/m/affordances/sources.test.mjs:117 'R2: reattest': the fixture stubs capture's provenance.attest, but reattest now reaches cap.attestation (K1224); TypeError at :129. (2) test/m/promotion/write-path.test.mjs:218 'R53 (N426)': /list answers no bundles (TypeError at :234), retrieval's op=list joining provenance_route_marks, which that fixture does not build. Both look like red 7 (the split's users and their fixtures); not named today. Also: families.mjs and dispatch.mjs (comment) changed, so bio-plane/dist/bio-plane.bundled.mjs may be stale; regenerated nothing.
+
+## J3 · COMPLETE
+
+L11 applied: CHECK_FAMILY_FILES gains attestation's C-89 and provenance-routes' C-34 files (module order), clearing red 8 here; record.mjs builds attestation and provenance-routes after provenance and spreads provenanceRouteOps beside provenanceOps (attestOp per J1's reading). Re-scan: nothing stale; one broken comment in dispatch.mjs re-worded. No row added or changed (red 6: none). Proof: test/m/control-plane 128/128; whole test/m 5322 pass, 2 fail, both red on the tranche base (J2). format, architecture, coverage (29/29), ownership: 0 failures. Record: build/jobs/T25/control-plane.md.
