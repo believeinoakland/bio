@@ -29,3 +29,7 @@
 - `checks/ownership.mjs bio basis-versions tranche/T24`: 4 files changed (three sources and this record); 0 failures.
 
 Size (session_01NkLoN8Ah4BKszfLxPWghva): test runs 4, module lines 3509
+
+## J1 · REPORT
+
+One thing outside my module (wording job, no requirement change): my comment-only edits to bio-plane/src/basis-versions/checks.mjs, index.mjs and text.mjs stale the plane's bundle bio-plane/dist/bio-plane.bundled.mjs (not_product; fleetbundles.test.mjs reports it). Nothing regenerated.
