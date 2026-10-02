@@ -371,12 +371,13 @@ export function projectStageOf(host, deps) {
   return s;
 }
 
-/** The module's op (K3), as an entry of the legacy store's op map. `viewer` is the control plane's stamp, read from
- *  the query, so a caller's own copy in a body never wins. */
+/** The module's op (K3), as an entry of the plane's one op map, which the plane composes and control-plane's routes
+ *  spread (`control-plane/dispatch.mjs`). `viewer` is the control plane's stamp, read from the query, so a caller's own
+ *  copy in a body never wins. */
 export function projectStageOps(s, url) {
   const q = (k) => url.searchParams.get(k);
   return {
-    /* R1 (N300): the viewer the control plane stamps; the route is legacy-index's (N321). */
+    /* R1 (N300): the viewer the control plane stamps; the route is control-plane's (N321). */
     projectstage: () => s.projectStage({ project: q("project"), viewer: q("viewer") }),
   };
 }
