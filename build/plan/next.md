@@ -1,23 +1,18 @@
-# Plan: next (T27)
+# Plan: next (T28)
 
-**Status** · Entries for the tranche after T26, written as T26 runs (P18). Started at T26's opening by BOB #102, 2026-10-02 (K1246). T26's left-out table (`current.md`) is carried here at T26's close, each row re-checked.
+**Status** · Entries for the tranche after T27, written as T27 runs (P18). Started at T27's opening by BOB #103, 2026-10-02 (K1262).
 
 ## Entries
 
-- N518 · 2026-10-02 · **DEC-113's server side** (K1251, K1134 Q4 decided by BOB): fold `plan/draft-T24-dec113-115.md` into the owning modules' requirements: the hold's project list, its release (`actionholdrelease`, rung `terminal`, K1134 (3)), the "is this project held?" answer, and the operator's wipe refused during a hold. The device side waits for a device-storage module, named when it is built (dependency not yet built); transcript retention is Bob's then (DEC-61). Q5 ruled by Bob (K1252): the hold also refuses every purge of held material, a single item included; an ordered removal goes through the hold's release. **Ready for T27.**
+- S4 · 2026-10-02 · **promotion**: stamp the catalogue rows T27's L8–L11 jobs add (C-117.23–.25, C-69.5, and `docket`'s, `public-read`'s and `signatures`' new rows, as their T27 records name them); `CATALOG_VERSION` MINOR; `ROW_CENSUS` re-pinned (R50). **Why next:** promotion is L2, before the rows exist (P8, P10). Clears T27's red 2.
 
 - N519 · 2026-10-02 · **DEC-112 (5) as K1254 amends it** (Bob): fold into the case's requirements (case-authoring's `publishCase`, case-grammar's `materials:` block, publication): no load-bearing member may rest on material whose only attestation is an off-the-record (anonymous) source; publishing such a case is refused, naming the member; off-the-record material never travels in the published case (it stays in the project as a lead); `draft-T24-dec112.md` R45's "the project's and the group's" attestations are dropped (K1134 Q6 withdrawn). **Hard reason:** two follow-ups are Bob's (K1254 (a), (b)), and the DEC-112 fold also waits on K1134 Q1–Q3 (P17).
 
-- N520 · 2026-10-02 · **DEC-112 and DEC-116's new modules** (K1256): fold `plan/draft-T24-dec112.md` and `draft-T24-dec116.md` into requirements, with K1134 (1)–(6)'s readings, K1254 (DEC-112 (5)) and the new modules in `modules.json` and `layers.md`: `docket` (L8, directly after publication: DEC-116's signed docket, shelves, To-dos, outside responses, standing, withdrawal), `case-checker` (L8, directly after ratification: the standalone open checker, built from the same check code), `case-import` (L8, directly after case-checker: import into a read-only project, recreation, acceptance per DEC-96). DEC-116's share can open in T27; DEC-112's waits on K1254 (a), (b) (Bob's).
+- N520 (DEC-112 share) · 2026-10-02 · **`case-checker` and `case-import`** (K1256): fold `plan/draft-T24-dec112.md` with K1134's readings and K1254 into requirements; add both modules to `modules.json` and `layers.md` (L8: case-checker directly after ratification, case-import directly after it). **Hard reason:** Bob's, K1254 (a) and (b). DEC-116's share is in T27.
 
-## Watched for size (P6, K617; measured by BOB #102 at T26's L3, code over each module's most specific paths, tests excluded)
+- N521 · 2026-10-02 · **DEC-113's device half** (N518's remainder): the device transcript store's check for a hold before either scheduled deletion, failing closed, reading `actions` R58; the time limit (DEC-61's TTL) is Bob's then. **Hard reason:** dependency not yet built (no device-storage module).
 
-ratification 3,979 and inquiry 3,888: at the ~4,000 mark; a seam is drafted (P18) before either's next job if that job would add code. publication 3,638 (T24's 4,354 counted a file another module owns, as K1024 found before), content 3,533, agent-worker 3,810, docprofile 3,170: under it.
-
-## Carried from T26 (re-checked at T26's close, K1249)
-
-Every row of T25's table re-checked at T25's close (K1245); none becomes an entry: no deployment, measurement, dependency or ruling of Bob's it waits on has arrived.
-
+## Carried from T27
 
 | row | item | hard reason | note |
 |---|---|---|---|
@@ -33,17 +28,13 @@ Every row of T25's table re-checked at T25's close (K1245); none becomes an entr
 | C8 | first profile's facts without a source | measurement | K925, K934, K941 |
 | B4, B5 | N144, N232 | Bob's (UX) | K899 (2) |
 | A54 | skills R10 | Bob's | N144 |
-| B13 | N470 | Bob's | K943; DEC-116 answers it, off `main` (N491) |
 | B6–B10, B12, B18, B20, C6, C7, D2, I2 | legacy-ui shares, UI fixtures, the module | Bob's (UX) | K633, K1006 |
 | N487 | legacy-ui DEC-88 reasons | Bob's (UX) | K633, K1030 |
 | J7 | DEC-81's Grade A | Bob's | K1019: "nothing new" |
 | H13 | DEC-105 audience guidance | Bob's | waits for its trigger |
 | C5 | `PLN-` affordances, plan page, joint action | Bob's | K608 (4), K600 (c) |
-| H5 | DEC-100 | Bob's | awaits Bob; DEC-116 (N491) off `main` |
 | H3, H4, H9b, H11, H14, H16c, H18, H20, J6, J11 | DEC screens of the new interface | Bob's (UX) | K633, K899 (2) |
 | N481 | DEC-112 published case in three forms | Bob's | on `main` (PR #7); K1134 Q2, Q3, Q6 unanswered |
-| N488 | DEC-113 litigation hold of transcripts | Bob's | on `main` (PR #7); K1134 Q4, Q5 unanswered |
-| N491 | DEC-116 withdrawal, docket | Bob's | on `main` (PR #7); K1134 Q1 unanswered (its home) |
 | H1, H6b, J4 | DEC-96, DEC-101 (3), DEC-92 | dependency not yet built | nothing brings another group's edition into this copy |
 | A8 | bias R26 | dependency not yet built | K102's trigger |
 | A21 | inquiry R31 | dependency not yet built | no opinion element (MK-5) |
@@ -51,3 +42,4 @@ Every row of T25's table re-checked at T25's close (K1245); none becomes an entr
 | A37 | progressions R32 | dependency not yet built | no amounts or funds as values |
 | A41 | publication R30 | dependency not yet built | nothing publishes a rendering (D-246) |
 | N493 (part) | member-facing translations of "noticed" (contradiction `checks.mjs`:136, :236; queue `checks.mjs`:63) | Bob's: UX (the design stream's DECs decide member-facing wording) | by BOB #93, K1099 |
+
