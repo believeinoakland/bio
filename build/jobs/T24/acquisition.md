@@ -43,3 +43,7 @@ Size (session_01GsZuQ1S3yT7423mnGkM1qi): test runs 6, module lines 1565
 ## J1 · REPORT
 
 Stale: the plane bundle (bio-plane/dist/bio-plane.bundled.mjs) from bio-plane/src/acquisition/; I regenerated nothing. Requirement wording for you: (a) acquisition R29's last sentence still says its rows are 'awaiting stamp for promotion's next job'; 1.49.0, 1.51.0 and 1.54.0 took them. (b) Uses still lists parseCdx, replayLocator, cdxQuery, archiveHop (T23's J3); only selectCapture of the CDX services is used.
+
+## J2 · COMPLETE
+
+N510 applied: an empty 200 memento is passed over for the next candidate on the archive arm (body read ahead unconsumed) and in archiveLookup; all empty is NO_USABLE_CAPTURE, nothing filed (memento.test.mjs 'R32 (N510)', with negative control). N502 applied: checks.mjs notes name stamps 1.49.0/1.50.0/1.51.0/1.54.0; re-scan also re-pointed monitoring R53/R57/R58 to link-sweep R1/R5/R6. Improvement: a body breaking off mid-stream is answered (FETCH_FAILED / ARCHIVE_UNREACHABLE), never thrown. No row changed (red 5: none). acquisition 70/70; users 576/576; whole test/m 5232 tests, 0 fail, 11 todo; format 2 fails = red 4; architecture, coverage 32/32, ownership 0 failures. Record: build/jobs/T24/acquisition.md on job/T24/acquisition.
