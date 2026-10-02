@@ -27,6 +27,6 @@
   - `control-plane/families.test.mjs`:47 and `r45-routes.test.mjs`:68 (`sweeps` not yet a route of control-plane's owner map): red 7.
   - `plane/compose.test.mjs`:101, `door.test.mjs`:183 and :209, the sweep's and queue's composition (K1208): red 7.
   - `plane/notices.test.mjs`:33, no mint seed: red 9.
-- Checks (civicos-process): `format`: 88 modules, 87 requirements files; 0 failures. `architecture`: 0 failures. `coverage`: 11 of 11 live requirement ids named by a test; 0 failures. `ownership` against `tranche/T24`: 0 failures. Both re-run after the commit; see below.
+- Checks (civicos-process): `format`: 88 modules, 87 requirements files; 0 failures. `architecture`: 0 failures. `coverage`: 11 of 11 live requirement ids named by a test; 0 failures. `ownership` against `tranche/T24`: 0 failures. Re-run after the commit: `architecture` 6 product files, 0 failures; `ownership` 5 files changed, 0 failures; `coverage` 11 of 11, 0 failures.
 
 Size (session_01XsBuA9qDhPPKm4AZfBVosV): test runs 8, module lines 2490
