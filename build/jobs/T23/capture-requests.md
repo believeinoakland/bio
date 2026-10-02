@@ -35,3 +35,7 @@
 - Module lines 1,708 (source); with tests, 3,564.
 
 Size (session_01KVQEDZowazz9Z9r2dVJ8To): test runs 6, module lines 1708
+
+## J1 · REPORT
+
+Outside capture-requests, after R45: (1) bio-plane/dist/bio-plane.bundled.mjs is stale (a change under src/capture-requests/). I regenerated nothing. (2) The whole test/m has only the accepted reds: control-plane inbox-door.test.mjs:81 (red 9), and queue catalogue.test.mjs R1 (:34) and R5 (:116). Tests 5048, pass 5033, fail 3, todo 12. (3) Requirement wording for you: the Terms do not list sweep as a request field (reads now answer it), and R45 does not state the scope check's shape. As built: registerSweepScope(module, fn); fn({sweep, locators:[address], run, target}), sync or async, admits only {ok: true, scope: [prefix...]}; anything else refuses, with optional reason (unknown|unratified|held|out-of-scope) and detail carried. scope rides the fetch as acquisition R31's scope, with origin {kind: 'sweep', matched_sweep, deeming_actor}. Monitoring's L10 job registers in that shape. (4) My reading is that R45's per_run sentence asks nothing of my code: captures carry matched_sweep in their register origin. If monitoring wants a count of requests by sweep from this module instead, that is one bounded read to add.
