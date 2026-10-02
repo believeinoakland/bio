@@ -120,3 +120,81 @@ test("R32 R9: every Memento request goes through the host governor; a cooling ar
   assert.deepEqual([l.status, l.body.reason, l.body.status, l.net.seen.length], [502, "ARCHIVE_REFUSED", 429, 1]);
   nothingFiled(rl, l, "rate-limited");
 });
+
+/* N510: a body as a stream of `chunks`, ending, or breaking off with `err` once they are sent; `memento` answers a fresh
+   one (made by `body()`) at each fetch, as a 200 memento of ADDR. */
+const streamOf = (chunks, err = null) => { let i = 0; return new ReadableStream({ pull(c) {
+  if (i < chunks.length) c.enqueue(new TextEncoder().encode(chunks[i++])); else if (err) c.error(err); else c.close(); } }); };
+const memento = (ts, body) => () => new Response(body(), { status: 200, headers: { "content-type": "text/plain", "memento-datetime": http1123(ts),
+  link: `<${ADDR}>; rel="original", <${TM}>; rel="timemap"` } });
+const RAW = (ts) => `${WB}${ts}id_/${ADDR}`;
+
+test("R32 (N510): an empty 200 memento is passed over for the next candidate, on the archive arm and in archiveLookup, with selectCapture's words; every memento empty is NO_USABLE_CAPTURE with nothing filed", async () => {
+  const routes = wayback([{ ts: "20250301000000", body: "" }, { ts: "20240101000000", body: "the older memento" }]);
+  const w = await fresh();
+  const r = await run(w, routes, ARCH, ADMIN);
+  assert.equal(r.status, 200, JSON.stringify(r.body).slice(0, 300));
+  assert.deepEqual(r.net.seen.map((x) => x.url), [TG, RAW("20250301000000"), TM, RAW("20240101000000")],
+                   "the TimeGate's empty memento, then the TimeMap, the empty one not fetched twice, then the older one");
+  const d = r.body.document;
+  assert.deepEqual([d.locator, d.capture.sha256, d.capture.bytes], [RAW("20240101000000"), sha("the older memento"), 17]);
+  assert.equal(d.provenance_chain[1].asserts, `these bytes were served for ${ADDR} at 2024-01-01T00:00:00Z, with HTTP status 200`);
+  assert.deepEqual(w.prov.receipts.map((x) => [x.captureSha, x.retrievalLocator]), [[sha("the older memento"), RAW("20240101000000")]]);
+  const puts = w.b.calls.filter((c) => c[0] === "put").map((c) => c[1]);
+  assert.deepEqual(puts, [`bio/captures/${sha("the older memento")}`], "only the chosen memento's bytes are stored; the empty one left nothing");
+  assert.deepEqual(w.store.state.outcomes.slice(3).map((o) => o.outcome), ["success"], "one success, for the memento chosen");
+  /* archiveLookup decides the same, and names the empty memento with selectCapture's own reason */
+  const look = await lookup(await fresh(), routes, { address: ADDR });
+  assert.deepEqual([look.status, look.body.chosen.timestamp, look.body.chosen.digest], [200, "20240101000000", sha("the older memento")]);
+  const empty = look.body.rejected.find((x) => x.timestamp === "20250301000000");
+  assert.ok(empty && /empty-body digest/.test(empty.refused), JSON.stringify(look.body.rejected));
+  /* negative control: every memento empty, so none may stand in; each is tried once and named, nothing filed */
+  for (const arm of ["acquire", "archiveLookup"]) {
+    const nw = await fresh();
+    const allEmpty = wayback([{ ts: "20250301000000", body: "" }, { ts: "20240101000000", body: "" }]);
+    const n = arm === "acquire" ? await run(nw, allEmpty, ARCH, ADMIN) : await lookup(nw, allEmpty, { address: ADDR });
+    assert.deepEqual([n.status, n.body.ok, n.body.reason], [404, false, "NO_USABLE_CAPTURE"], arm);
+    assert.deepEqual(n.net.seen.map((x) => x.url), [TG, RAW("20250301000000"), TM, RAW("20240101000000")], arm);
+    assert.deepEqual(n.body.considered.filter((c) => /empty-body digest/.test(c.refused)).map((c) => c.timestamp).sort(),
+                     ["20240101000000", "20250301000000"], `${arm}: both named with selectCapture's reason`);
+    nothingFiled(nw, n, arm);
+    assert.equal(nw.store.state.outcomes.length, 3, `${arm}: no success recorded for the document`);
+  }
+  /* over-strictness: a memento whose first chunk is empty and whose bytes follow is not empty; it is filed whole */
+  const late = await fresh();
+  const lr = await run(late, wayback([{ ts: "20250301000000" }], { over: { [RAW("20250301000000")]: memento("20250301000000", () => streamOf(["", "late ", "bytes"])) } }), ARCH, ADMIN);
+  assert.deepEqual([lr.status, lr.body.document.capture.sha256, lr.body.document.capture.bytes], [200, sha("late bytes"), 10]);
+  assert.ok(late.held(sha("late bytes")), "the bytes read ahead are stored with the rest");
+});
+
+test("R10 R32: a body that breaks off while it is read is answered by name, never thrown: FETCH_FAILED on a direct fetch, ARCHIVE_UNREACHABLE on the archive arm and in archiveLookup; nothing filed", async () => {
+  /* a direct fetch: the first bytes arrive, then the stream breaks */
+  const w = world();
+  const loc = "https://a.example/broken";
+  const d = await run(w, { [loc]: () => new Response(streamOf(["part of it"], new Error("connection reset"))) }, { locator: loc });
+  assert.deepEqual([d.status, d.body.ok, d.body.reason, d.body.locator], [502, false, "FETCH_FAILED", loc]);
+  assert.match(d.body.detail, /connection reset/);
+  nothingFiled(w, d, "direct");
+  assert.equal(w.store.state.outcomes.at(-1).outcome, "fetch_failed", "capture R8: the fetch did not complete");
+  /* with a credential riding it, the error's words are not carried */
+  const SECRET = "alice:s3cret";
+  const c = await run(world(), { [loc]: () => new Response(streamOf(["x"], new Error(`reset for ${SECRET}`))) }, {}, { cls: "daemon", member: false, sessMember: null,
+    captureRequest: { locator: loc, purpose: "p", agent: null, render: false, credential: { credential: "C-1", kind: "login", secret: SECRET } } });
+  assert.equal(c.body.reason, "FETCH_FAILED"); assert.ok(!JSON.stringify(c.body).includes(SECRET));
+  /* the archive arm and the lookup: a memento breaking off after its first bytes, and before any */
+  for (const chunks of [["some "], []]) {
+    const routes = wayback([{ ts: "20250301000000" }], { over: { [RAW("20250301000000")]: memento("20250301000000", () => streamOf(chunks, new Error("archive reset"))) } });
+    for (const arm of ["acquire", "archiveLookup"]) {
+      const aw = await fresh();
+      const a = arm === "acquire" ? await run(aw, routes, ARCH, ADMIN) : await lookup(aw, routes, { address: ADDR });
+      assert.deepEqual([a.status, a.body.ok, a.body.reason], [502, false, "ARCHIVE_UNREACHABLE"], `${arm} ${chunks.length}`);
+      assert.match(a.body.detail, /archive reset/);
+      nothingFiled(aw, a, arm);
+    }
+  }
+  /* negative control: the same bodies, unbroken, are filed */
+  const ok = await run(world(), { [loc]: () => new Response(streamOf(["part of it"])) }, { locator: loc });
+  assert.deepEqual([ok.status, ok.body.document.capture.sha256], [200, sha("part of it")]);
+  const aok = await run(await fresh(), wayback([{ ts: "20250301000000" }], { over: { [RAW("20250301000000")]: memento("20250301000000", () => streamOf(["some ", "bytes"])) } }), ARCH, ADMIN);
+  assert.deepEqual([aok.status, aok.body.document.capture.sha256], [200, sha("some bytes")]);
+});
