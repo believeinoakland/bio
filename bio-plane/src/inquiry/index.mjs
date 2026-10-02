@@ -3021,7 +3021,7 @@ export function inquiryOwns(t) {
   return INQUIRY_TABLES.includes(name);
 }
 
-/* The Durable Object routes this module answers (K3), as entries of the legacy store's op map. `url` carries the control
+/* The Durable Object routes this module answers (K3), as entries of plane's op map. `url` carries the control
    plane's stamps (`viewer`, `owner`, `author`); `body` the authored material. The stamps are spread AFTER the body, so a
    caller's `author` in the body is overwritten, never honoured, and a caller's `asserted_by`/`at` reach no act. */
 export function inquiryOps(k, url, body) {

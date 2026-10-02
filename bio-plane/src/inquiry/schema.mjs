@@ -114,7 +114,7 @@ CREATE INDEX IF NOT EXISTS inquiry_basis_bundle ON inquiry_basis(bundle_id);
 -- MEASURED 2026-08-07 (test/meaning-index-probe.mjs, node:sqlite, the statements DRIVEN
 -- out of compile() and the OTHER indexes DRIVEN out of schema.mjs AND store.mjs rather
 -- than typed -- the first version of that probe hand-wrote them, missed bundles_fts_id
--- because it is created in store.mjs's migration, and reported a 97% saving from an
+-- because it was created in store.mjs's migration, and reported a 97% saving from an
 -- index the product has had for months):
 --   leg:hunch  0.241 ms -> 0.145 ms at 20,000 bundles  (-39.8%)
 --              0.969 ms -> 0.440 ms at 100,000 bundles (-54.6%)
@@ -125,7 +125,7 @@ CREATE INDEX IF NOT EXISTS inquiry_basis_bundle ON inquiry_basis(bundle_id);
 -- is a write cost on every leg of every promote for a read saving inside the noise.
 -- role has two values, so the seek reads half the table and the scan reads all of it --
 -- an index is worth least exactly where the value is commonest. If a member's question
--- ever makes cuts_against legs the hot path, the probe is here to re-run.
+-- ever makes cuts_against legs the hot path, re-measure (that probe has since been deleted).
 CREATE INDEX IF NOT EXISTS inquiry_basis_grade_source ON inquiry_basis(grade_source, bundle_id);
 -- REC-90 -- THE content:cited PREDICATE'S OWN INDEX, AND THIS ONE IS NOT A TUNING
 -- CHOICE. content:cited and content:uncited ask whether ANY leg rests on a content

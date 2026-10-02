@@ -10,7 +10,7 @@
        R7 inheriting from an edition that froze no testimony axis.
      - test/audit-inheritance.test.mjs: R7 a correctly inherited leg reads clean, an own grade on a case published
        after the leg was written is C-21.2 with its detail, an ungraded leg is inert.
-   The shares of provenance, strength, ratification, extraction and legacy-store in those suites are not here. */
+   The shares of provenance, strength, ratification and extraction in those suites, and the one legacy-store held, are not here. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, inquiryMd, V } from "./fixture.mjs";

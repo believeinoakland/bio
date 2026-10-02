@@ -105,7 +105,7 @@ test("R11 R5 check: a shape the record cannot read is BASIS_REFUSED at C-2.8 wit
   assert.equal(refuse("INQ-2026-0197-ok", DECK, { extent_kind: "slide-shape", extent_slide: 1 }).ok, true);
 });
 
-test("R11 check: the store gate's own content refusals are relayed at their C-45 number (outside the page set, no chain, no capture at all), naming the extent", () => {
+test("R11 check: content's own refusals are relayed at their C-45 number (outside the page set, no chain, no capture at all), naming the extent", () => {
   const w = world(); w.doc(PAGED, ["paged"], { chain: scoped([0, 1, 2]) }); w.doc(BARE, ["bare"], { chain: null });
   w.doc(BOOK, ["book"], { chain: null });
   const r = (id, target, f) => w.promote(id, md(id, [{ target, f }]));

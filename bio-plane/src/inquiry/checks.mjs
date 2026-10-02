@@ -1,6 +1,6 @@
 /* inquiry's own rows (R38, R50; N345, DEC-49; K343's pattern in the C-2 family): C-2.11–C-2.18, the contradiction
  * inquiry's grammar arm (R47) and its one-candidate rule (R11), and C-66.5, the carried-forward `surfaced_by` (R50).
- * C-2.1–C-2.7, C-2.9 and C-2.10 stay the catalogue's until their owners take them; the rows the inquiry's grammar raises
+ * C-2.1–C-2.7, C-2.9 and C-2.10 are their owners', not the catalogue's; the rows the inquiry's grammar raises
  * (C-2.8, C-6.1, C-54.1) and its acts mint (C-33.13, C-33.22, C-33.23, C-32.7, C-32.8) are `inquiry-grammar`'s, read at
  * `./grammar.mjs`. Each row here is an invariant of this module with its test (`test/m/inquiry/contradiction.test.mjs`,
  * `surfaced.test.mjs`); promotion stamps them. */
@@ -57,7 +57,7 @@ export const INQUIRY_CONTRADICTION_CHECKS = {
     translation: 'That contradiction has already been taken up as another question, which is named. Work on it there, '
       + 'so that one conflict has one place where it is resolved. Nothing was written.',
   },
-  /* N369 (proposed in INQUIRY #5 J1; awaiting T17's stamp): the arm's own failure, which C-2.11's words are not true of. */
+  /* N369 (proposed in INQUIRY #5 J1; stamped 1.47.0, T17): the arm's own failure, which C-2.11's words are not true of. */
   CONTRADICTION_ARM_FAILED: {
     check: 'C-2.18',
     where: 'src/inquiry/contradiction.mjs contradictionFindings > is-contradiction-arm-judged',
@@ -69,7 +69,7 @@ export const INQUIRY_CONTRADICTION_CHECKS = {
 
 /* REC-179 / C-66.5 (INVESTIGATIVE-SESSION.md §11 item 5, "Rule 2's reach", BOB #30; D-78's stated intent that a revision
  * carries the value forward), moved here from the catalogue's `SURFACE_CHECKS` with its number and translation unchanged
- * (T19 layer 6, R50); its `where` now names this module's site, `awaiting stamp`. `surfaced_by` records the SURFACING
+ * (T19 layer 6, R50); its `where` names this module's site, stamped 1.50.0 (K884). `surfaced_by` records the SURFACING
  * ACT, and that act happens once, at the creation, decided there by the server (D-78's restamp, or REC-173's verified
  * replay). Measured before this existed (`0e7cc03e`): the restamp runs only on a creation and nothing compared a
  * revision's value with the current version's, so a revision relabelled an assistant's question `human` (or a member's
