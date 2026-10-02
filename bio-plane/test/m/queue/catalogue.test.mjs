@@ -23,12 +23,28 @@ const FINDING = ["missing_predecessor", "overdue_successor", "temporal-expectati
   "shared-inquiry-concluded-by-another-project", "cardinality_exceeded", "newer-capture-affects-reference",
   "contradiction-plurality-unseen", "contradiction-lead", "contradiction-plurality", "side-corrected",
   "tension-after-publication"];
-/* observation-log's twelve (R5), and the overdue action clock (K611). */
+/* observation-log's twenty (R5): its twelve, the five sweep kinds (monitoring R63, queue-producers R26) and the three
+   notice kinds (network-notices R12, R13, queue-producers R27) its R33 added in T23 (K1099); and the overdue action
+   clock (K611). */
+const SWEEP_CONDITION = ["sweep-held-backlog", "sweep-yield-anomaly", "sweep-seed-unreachable",
+  "sweep-redirect-out-of-scope", "sweep-silent"];
+const NOTICE_CONDITION = ["notice-attestation-missed", "notice-lapse-near", "notice-project-closed"];
 const LOOK_CONDITION = ["monitoring-recheck-due", "archive-fallback-eligible", "capture-session-ttl-expiring",
   "source-unreachable-governed", "capture-completed-unattended", "partial-capture-outstanding", "text-undetermined",
   "client-rendered-shell", "invitation-spent-or-expired", "governor-holding-host", "runtime-ceiling-reached",
-  "render-deferred"];
+  "render-deferred", ...SWEEP_CONDITION, ...NOTICE_CONDITION];
 const CONDITION = [...LOOK_CONDITION, "action-clock-overdue"];
+/* What each of the eight says, as R1 states it: the sentence is observation-log's, and it says this. */
+const NEW_CONDITION_SAYS = {
+  "sweep-held-backlog": /sweep is held: its backlog .* is at or over its ceiling, so it does not run/,
+  "sweep-yield-anomaly": /sweep's last run .* filed far more than, or nothing against, the median of its recent runs/,
+  "sweep-seed-unreachable": /seed of a monitoring sweep failed on the sweep's last run/,
+  "sweep-redirect-out-of-scope": /sweep's last run met a redirect to an address outside the sweep's scope/,
+  "sweep-silent": /sweep is silent: its last four runs each filed nothing/,
+  "notice-attestation-missed": /monthly attestation of a project's working-on notice was missed for want of an instance key/,
+  "notice-lapse-near": /working-on notice will lapse within 7 days/,
+  "notice-project-closed": /project closed while its working-on notice was open/,
+};
 const sorted = (a) => [...a].sort();
 
 test("R1: every catalogued kind answers its class, anything else null, and every kind has its sentence", () => {
@@ -58,6 +74,17 @@ test("R1: every catalogued kind answers its class, anything else null, and every
   // DEC-102 item 3: the unchosen credit level says what the edition reaches and what the member does
   assert.match(QUEUE_OBLIGATION_KINDS["attribution-unchosen"], /a case edition being prepared reaches an observation you authored and you have chosen no credit level for it; choose one/);
   assert.match(QUEUE_CONDITION_KINDS["action-clock-overdue"], /deadline on one of the group's actions passed while its entry is still pending/);
+  // T23 (K1099): the five sweep kinds and the three notice kinds are CONDITIONs, each with observation-log's sentence
+  for (const [k, says] of Object.entries(NEW_CONDITION_SAYS)) {
+    assert.equal(classOfKind(k), "CONDITION", k);
+    assert.equal(QUEUE_CONDITION_KINDS[k], CONDITION_KINDS[k], k);
+    assert.match(QUEUE_CONDITION_KINDS[k], says, k);
+  }
+  // negative control: near-misses of the new kinds are outside the vocabulary and classed null
+  for (const v of ["sweep-", "sweep-held", "sweep-backlog", "sweep-unknown", "notice-", "notice-posted",
+                   "notice-lapsed", " sweep-silent", "sweep-silent ", "SWEEP-SILENT", "notice_lapse_near",
+                   "CONDITION::sweep-silent"])
+    assert.equal(classOfKind(v), null, v);
   // the cardinality finding is worded as what it is: never "required and absent"
   assert.doesNotMatch(QUEUE_FINDING_KINDS.cardinality_exceeded, /absent/);
 });
@@ -118,7 +145,19 @@ test("R5: the condition kinds are observation-log's vocabulary with action-clock
   // every one of observation-log's, with its own sentence, and action-clock-overdue beside them; nothing else
   for (const [k, s] of Object.entries(CONDITION_KINDS)) assert.equal(QUEUE_CONDITION_KINDS[k], s, k);
   assert.deepEqual(sorted(Object.keys(QUEUE_CONDITION_KINDS)), sorted([...Object.keys(CONDITION_KINDS), "action-clock-overdue"]));
-  assert.equal(Object.keys(QUEUE_CONDITION_KINDS).length, 13);
+  assert.equal(Object.keys(QUEUE_CONDITION_KINDS).length, 21);
+  // T23 (K1099): the eight new kinds are among them, each with observation-log's own sentence
+  for (const k of [...SWEEP_CONDITION, ...NOTICE_CONDITION]) {
+    assert.ok(k in CONDITION_KINDS, k);
+    assert.equal(QUEUE_CONDITION_KINDS[k], CONDITION_KINDS[k], k);
+  }
+  // negative control: a kind outside observation-log's vocabulary, other than action-clock-overdue, is not carried
+  for (const k of Object.keys(QUEUE_CONDITION_KINDS))
+    assert.ok(k in CONDITION_KINDS || k === "action-clock-overdue", k);
+  for (const v of ["sweep-unknown", "notice-posted", "bias-debt", "export-performed"]) {
+    assert.ok(!(v in QUEUE_CONDITION_KINDS), v);
+    assert.notEqual(classOfKind(v), "CONDITION", v);
+  }
   assert.ok(!("action-clock-overdue" in CONDITION_KINDS), "observation-log's list is not changed: no look carries it");
   assert.ok(Object.isFrozen(QUEUE_CONDITION_KINDS));
   for (const k of Object.keys(QUEUE_CONDITION_KINDS)) assert.equal(classOfKind(k), "CONDITION", k);

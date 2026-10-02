@@ -58,8 +58,9 @@
  * the feed can emit (not every kind has a producer), which is the safe direction: the fence accepts a mute for
  * a kind whose generator is not built, and the mint refuses any CONDITION kind this list does not name. A surface
  * never keeps a copy of it; it reads it from the refusal or from op=queue's own answer. */
-/* R5 (K608, K611): beside observation-log's twelve, the one condition kind that is not a look's: a deadline on one of the
- * group's actions passed while its entry is still pending (`queue-producers` R15, from `action-clocks.overdueClocks`).
+/* R5 (K608, K611): beside observation-log's kinds (twenty since T23, K1099), the one condition kind that is not a
+ * look's: a deadline on one of the group's actions passed while its entry is still pending (`queue-producers` R15, from
+ * `action-clocks.overdueClocks`).
  * A CONDITION and not a FINDING (K611): it is said once, when the date passes, and a member quiets it for themselves;
  * the action's own record is where the overdue entry is met or waived. It is queue's to add and not observation-log's,
  * because no look ever carries it (C-22.4 checks a look's condition against observation-log's list alone). */
