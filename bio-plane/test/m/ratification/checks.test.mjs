@@ -161,13 +161,12 @@ test("R8: CASE_CITATION_VERSIONS and SEARCHED_SUBJECT_SOURCES are exported; C-41
   }
 });
 
-test("R38: C-41.17 refuses a present working_on that is not a notice id by case-grammar R10's rule, before any write; a notice id, an absent field and a null one pass", () => {
+test("R38: C-41.17 refuses a present working_on that is not a notice id by case-grammar R10's rule, null and empty included, before any write; a notice id and an absent field pass", () => {
   const with_ = (v) => { const d = doc(); d.working_on = v; return d; };
   for (const v of ["NOTICE-2026-0001", "NOTE-2026-0042-permits-late", "WO-2026-0003-a-b"])
     assert.deepEqual(checks(with_(v), { ...CTX, body: BODY }), [], `${v} is a notice id`);
   assert.deepEqual(checks(doc(), { ...CTX, body: BODY }), [], "absent: the case names no notice");
-  for (const v of [null, "null"]) assert.deepEqual(checks(with_(v)), [], `written ${JSON.stringify(v)}: names no notice`);
-  for (const v of ["", " ", "notice-2026-0001", "NOTICE-26-1", "NOTICE-2026-0001-", "NOTICE-2026-0001-Upper", "PROJ 2026 0001",
+  for (const v of [null, "null", undefined, "", " ", "notice-2026-0001", "NOTICE-26-1", "NOTICE-2026-0001-", "NOTICE-2026-0001-Upper", "PROJ 2026 0001",
                    "https://example.org/notice", 7, true, ["NOTICE-2026-0001"], { id: "NOTICE-2026-0001" }]) {
     const got = R.checkCaseDocument(with_(v), CTX);
     assert.deepEqual(got.map((x) => [x.check, x.severity]), [["C-41.17", "error"]], JSON.stringify(v));

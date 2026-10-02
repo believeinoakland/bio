@@ -16,7 +16,7 @@ import { STRENGTH_STATES } from "../strength/index.mjs";
 import { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V2, CASE_DOCUMENT_FORMAT_LEGACY, CASE_DOCUMENT_FORMATS_ACCEPTED,
          caseDocumentStatesMemberBlocks, caseDocumentRequiresDisclosures,
          caseDocumentRequiresV4Disclosures } from "../publication/index.mjs";
-import { whatChangedOf, isNoticeReference } from "../case-grammar/index.mjs";
+import { whatChangedOf, isNoticeReference, WORKING_ON_KEY } from "../case-grammar/index.mjs";
 
 /* The catalogue's finding shape (`{check, severity, message, repairable?, repairs?, code?}`), so a finding from here
    reads exactly as one from the record's grammars (`record-grammar` R11). */
@@ -931,12 +931,12 @@ export function checkCaseDocument(fm, ctx = {}) {
         ['write the "What changed in this edition, and why" statement on op=publish']));
   }
   /* DEC-111, R38 (K1119) — C-41.17: a `working_on` the document carries is a notice id by case-grammar's one rule (its
-     R10), so the published case never shows as its project reference a value no notice can have. Absent, or written
-     null (the string `null` the restricted grammar reads for an absent value, as C-41.2 and C-41.4 read it), names no
-     notice and is not asked: the field is optional in `/5`. */
-  if (fm && typeof fm === 'object' && Object.prototype.hasOwnProperty.call(fm, 'working_on')
-      && fm.working_on !== null && fm.working_on !== 'null' && !isNoticeReference(fm.working_on)) {
-    findings.push(f(C41.WORKING_ON, 'error', `a case document's working_on names the notice this case's project published, and '${String(fm.working_on)}' is not a notice id: the published case shows it as the project reference, so a value no notice can have would point a reader at nothing (DEC-111)`,
+     R10), so the published case never shows as its project reference a value no notice can have. An absent field names
+     no notice and is not asked (the field is optional in `/5`); a present one is asked whatever it holds, `null` and an
+     empty string included, since case-authoring writes no line for a project with no notice (K1144). */
+  if (fm && typeof fm === 'object' && Object.prototype.hasOwnProperty.call(fm, WORKING_ON_KEY)
+      && !isNoticeReference(fm[WORKING_ON_KEY])) {
+    findings.push(f(C41.WORKING_ON, 'error', `a case document's working_on names the notice this case's project published, and '${String(fm[WORKING_ON_KEY])}' is not a notice id: the published case shows it as the project reference, so a value no notice can have would point a reader at nothing (DEC-111)`,
       ['publish through op=publish, which writes the project\'s notice id, or leave working_on out']));
   }
   /* C-21.1 AT CASE ALTITUDE, and it is the arm that moved here WITHOUT its
