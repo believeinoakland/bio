@@ -232,3 +232,24 @@ test("R19: one OBLIGATION litigation-hold per legal mark actions.holdsDue answer
   assert.deepEqual(ids(w.read("ada")), ["OBLIGATION::litigation-hold::ACT-1::4", "OBLIGATION::litigation-hold::ACT-H::1"]);
   assert.deepEqual(ids(w.read("alice")), []);
 });
+
+test("R25 (DEC-110 (1)): action-clock-overdue and action-reminder carry the clock entry's date as due, plan-checkpoint-due the checkpoint's, YYYY-MM-DD; an unreadable date carries null", () => {
+  const w = people({
+    actionClocks: {
+      overdueClocks: () => page([
+        { action: "ACT-1", ord: 0, date: "2026-08-20", basis: "b", text: "t", status: "pending", past: true, project: "PRJ-1", created_by: "alice" },
+        { action: "ACT-1", ord: 1, date: null, basis: "b", text: "t", status: "overdue", past: false, project: "PRJ-1", created_by: "alice" }]),
+      remindersDue: () => page([
+        { action: "ACT-1", ord: 0, date: "2026-09-12", basis: "b", text: "t", on: "2026-08-30", set_by: "alice", project: "PRJ-1" }]) },
+    actionPlans: { checkpointsDue: () => ({ ok: true, limit: 500, truncated: false, items: [
+      { plan: "PLN-1", project: "PRJ-1", scenario: 1, version: 1, phase: "p", set_by: "alice", due: "2026-08-28", days_since_due: 4 },
+      { plan: "PLN-1", project: "PRJ-1", scenario: 2, version: 1, phase: "q", set_by: "alice", due: "2026-08-29T09:30:00Z", days_since_due: 3 }] }) } });
+  const m = byId(w.read("alice"));
+  assert.equal(m["CONDITION::action-clock-overdue::ACT-1::0"].due, "2026-08-20", "the clock entry's date");
+  assert.equal(m["CONDITION::action-clock-overdue::ACT-1::1"].due, null, "no date the producer can read: null, never invented");
+  assert.equal(m["OBLIGATION::action-reminder::ACT-1::0::2026-08-30"].due, "2026-09-12", "the entry's date, not the reminder's day");
+  assert.equal(m["OBLIGATION::plan-checkpoint-due::PLN-1::1::p"].due, "2026-08-28", "the checkpoint's day");
+  assert.equal(m["OBLIGATION::plan-checkpoint-due::PLN-1::2::q"].due, "2026-08-29", "spelled YYYY-MM-DD");
+  for (const it of Object.values(m))
+    if (it.due !== null) assert.match(it.due, /^\d{4}-\d{2}-\d{2}$/, it.id);
+});
