@@ -1,6 +1,6 @@
 # sources (T22)
 
-**Status** · session_017YEhAN64o2U9JwvDJtoKmG · depth 2 · WORKING · handled B1
+**Status** · session_017YEhAN64o2U9JwvDJtoKmG · depth 2 · COMPLETE · handled B1
 
 SOURCES #7, T22 layer 3. Entries from BOB's B1 START (`build/plan/current.md` L3 sources, K1037). Tests only: no module code, requirement or generated artifact changed (module 837 lines before and after).
 
