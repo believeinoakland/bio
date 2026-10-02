@@ -33,7 +33,7 @@ import { Membership } from "../membership/index.mjs";
 /* What each op is, and the act lists that drive the stamps (R17), are op-declarations'. */
 import { OPS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, STRUCTURE_ACTIONS, VERSION_ACTIONS,
          PROJECT_ACTIONS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS, ROSTER_SELF_ACTIONS,
-         OWN_KEY_ACTIONS, CAPTURE_MEMBER_ACTIONS, SOURCE_ACTIONS, SOURCE_READS, QUEUE_ACTIONS, RUN_VERB_ACTIONS,
+         OWN_KEY_ACTIONS, CAPTURE_MEMBER_ACTIONS, CAPTURE_VIEWER_ACTIONS, CAPTURE_READS, SOURCE_ACTIONS, SOURCE_READS, QUEUE_ACTIONS, RUN_VERB_ACTIONS,
          RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, INTENT_ACTIONS, INTENT_READS, REEVALUATION_ACTIONS,
          STANDARDS_ACTIONS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS,
          ACTION_LAYER_READS, PLAN_PROPOSAL_ACTIONS, TEMPLATE_PROPOSAL_ACTIONS, LOCAL_FACTS_ACTIONS, TEMPLATE_DOOR_ACTIONS,
@@ -1325,6 +1325,10 @@ export function makeFetch(hooks = {}) {
            stamp; (sources R1, R5, R9) a source's reads answer by the caller's sight, and a machine credential reads
            nothing there; (R36) the pull's promotion is asked of the puller's sight, op=promote's `actorViewer`. */
         || op === "publishpreflight" || SOURCE_READS.includes(op) || op === "inboxpull"
+        /* K1037, K1108 (capture R76, R77, R79–R81): the held documents' list and acts, the grade note and the doorbell's
+           tally answer by the caller's sight (membership R43), and capture fails closed without the stamp: an unstamped
+           call sees nothing. The acts' `by` is CAPTURE_MEMBER_ACTIONS' below. */
+        || CAPTURE_VIEWER_ACTIONS.includes(op) || CAPTURE_READS.includes(op)
         || REC30_VIEWER_READS.includes(op)) {
       /* PL-11 / IS-5 / D-199 (4) — THE STATED VIEWER, AND IT IS THE RECORD'S
          ANSWER RATHER THAN THE CLASS'S.
