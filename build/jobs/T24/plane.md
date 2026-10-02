@@ -45,3 +45,18 @@
 - `checks/ownership.mjs bio plane tranche/T24`: 5 files changed; 0 failures.
 
 Size (session_01WQbNSKUXRaMjDns2CiDwYU): test runs 9, module lines 494
+
+## J1 · COMPLETE
+
+Plane T24 complete (B1). It is pushed on `job/T24/plane`, and the details are in the record's Completion section.
+
+- **Link-sweep composed (N506).** `linkSweepOf(ctx, {monitoring, captureRequests, capture})` is built after monitoring and before the scheduler, so the scheduler reaches the same instance (K1210). It registers with monitoring R66 and capture-requests (R12, K1163). `sweeps` is spread right after monitoring's ops.
+- **Red 9 cleared.** The plane test now asserts that no seed is registered under network-notices.
+- **Tests.**
+  - The K1163 tests are re-pointed to link-sweep in the new `sweep.test.mjs`, with negative controls.
+  - `test/m/plane`: 48 of 50 pass. The 2 fails are red 7 (queue-producers `index.mjs`:2911).
+  - Whole `test/m`: 6 fails, all present with my change reverted: red 6 (affordances `catalogue.test.mjs`:524) and red 7's kind (control-plane `families.test.mjs`:47 and `r45-routes.test.mjs`:68, affordances `catalogue.test.mjs`:903, each still reading `sweeps` from monitoring's map).
+  - migrate-released: 1/1 pass.
+- **Checks:** all four pass.
+- **Stale bundle:** the plane bundle is stale from `src/plane/store.mjs`. I regenerated nothing.
+- **Red 5:** I added or changed no catalogue row.
