@@ -27,3 +27,7 @@
 - `ownership.mjs conformance tranche/T23`: 0 failures
 
 Size (session_01PKXj9m7YekEtka2YDGidnh): test runs 3, module lines 1539
+
+## J1 · COMPLETE
+
+N483 applied: record.test.mjs's R17 test exports through corpusExportOf(w.host).exportManifest (corpus-export R1), assertion unchanged in meaning; red 6's conformance share cleared. K1138: two stale comments re-worded (checks.mjs:17 now names CATALOG_VERSION 1.46.0; conformanceOps names the plane's op map). conformance/ 54/54; whole test/m 5123 pass, 5 fail, all accepted reds named in B1 (families :47, inbox-door :81, worker :39, queue catalogue R1/R5). format, architecture, coverage (24/24), ownership: 0 failures. Nothing regenerated, nothing deferred, nothing found in other modules. Record: build/jobs/T23/conformance.md.
