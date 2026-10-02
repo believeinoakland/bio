@@ -1,6 +1,6 @@
 # affordances (T23)
 
-**Status** · session_01BJL5mkZkgFmrfY1YKbQMsr · depth 2 · COMPLETE · handled B0
+**Status** · session_01BJL5mkZkgFmrfY1YKbQMsr · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
