@@ -172,11 +172,15 @@ export function world() {
       return typeof fn === "function" ? (...a) => { calls.push([k, ...a]); return fn(...a); } : fn;
     },
   });
+  /* capture's reader registration (its R78; R34 here), recorded as the test reads it; R34's own tests boot the real one */
+  const readers = [];
+  const capture = { registerReader: (slot, module, fn) => (readers.push({ slot, module, fn }), { ok: true, slot, module }) };
   const r = ratificationOf(host, { storage: st, record, membership, credentials, promotion, provenance, inquiry,
-                                   basisVersions, publication });
+                                   basisVersions, publication, capture });
   let n = 0;
   const w = {
     st, host, record, membership, credentials, promotion, r, bv, key, registers, holds, evidence, pub, publication, calls,
+    readers,
     ops: {},   /* stand-ins for other modules' Durable Object ops, by name (the Worker half's tests) */
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,

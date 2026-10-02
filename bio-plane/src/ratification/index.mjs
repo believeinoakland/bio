@@ -32,6 +32,8 @@
  *                  commits (its R2, R4, R7, R17, R22).
  *   retrieval      `selectionResolve` (R21, R29: the bulk release's and retirement's selection).
  *   connections    `citesInto` (its R22; R29: the retirement's live citers, `./retire.mjs`).
+ *   contradiction  `candidatesFor` (its R25, R26; R22's contested arm). capture: `registerReader` (its R78; R34).
+ *   strength       `testimonyCorroboration` (its R30; R35). reevaluation: `levelMoved` (its R29; R36).
  *
  * READ CONTRACTS it reads in its own SQL: publication's `case_documents` and `cases` (its R40), record-core's `manifest`
  * and `history` (`gateFacts`' manifest and history lists, as they were), inquiry's `inquiry_basis` (`bundle_id`,
@@ -48,12 +50,16 @@ import { publicationOf } from "../publication/index.mjs";
 import { retrievalOf } from "../retrieval/index.mjs";
 import { connectionsOf } from "../connections/index.mjs";
 import { credentialsOf } from "../credentials/index.mjs";
+import { contradictionOf } from "../contradiction/index.mjs";
+import { strengthOf } from "../strength/index.mjs";
+import { reevaluationOf } from "../reevaluation/index.mjs";
+import { captureOf } from "../capture/index.mjs";
 import { parseFrontmatter, normalizeType, isMachineIdentity, MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
 import { checkCaseDocument, caseMemberFindings, caseMemberImageFindings, completenessFields,
          RATIFY_SCOPE_CHECKS, rowOf } from "./checks.mjs";
 import { operatorCaseRefusal, machineCaseRefusal, testimonyCaseRefusal, attributionUnchosenRefusal,
          attributionStaleRefusal, conclusionMovedRefusal, noAttestingKeyRefusal } from "./refusals.mjs";
-import { release } from "./release.mjs";
+import { release, examineMember } from "./release.mjs";
 import { retire } from "./retire.mjs";
 
 export * from "./checks.mjs";
@@ -97,12 +103,13 @@ export class Ratification {
 
   constructor({ storage, record, membership, promotion, host = null, provenance = null, inquiry = null,
                 basisVersions = null, publication = null, retrieval = null, connections = null,
-                credentials = null } = {}) {
+                credentials = null, contradiction = null, strength = null, reevaluation = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
-    this.#deps = { host, provenance, inquiry, basisVersions, publication, retrieval, connections, credentials };
+    this.#deps = { host, provenance, inquiry, basisVersions, publication, retrieval, connections, credentials,
+                   contradiction, strength, reevaluation };
   }
 
   /* The modules reached lazily: each is created on the same host on first use, unless a test passed its own. */
@@ -112,6 +119,9 @@ export class Ratification {
   get publication() { return this.#deps.publication ||= publicationOf(this.#deps.host); }
   get retrieval() { return this.#deps.retrieval ||= retrievalOf(this.#deps.host); }
   get connections() { return this.#deps.connections ||= connectionsOf(this.#deps.host); }
+  get contradiction() { return this.#deps.contradiction ||= contradictionOf(this.#deps.host); }
+  get strength() { return this.#deps.strength ||= strengthOf(this.#deps.host); }
+  get reevaluation() { return this.#deps.reevaluation ||= reevaluationOf(this.#deps.host); }
   get credentials() {
     return this.#deps.credentials ||= credentialsOf(this.#deps.host, { record: this.record, membership: this.membership });
   }
@@ -1045,7 +1055,18 @@ export class Ratification {
   audit(image) { return caseMemberImageFindings(image, parseFrontmatter); }
 
   /** R20–R27: the bulk release of a selection from collected to verified (`./release.mjs`). */
-  release(a) { return release({ sql: this.sql, promotion: this.promotion, retrieval: this.retrieval }, a); }
+  release(a) {
+    const self = this;   /* contradiction is reached only when a member is examined that far (R22) */
+    return release({ sql: this.sql, promotion: this.promotion, retrieval: this.retrieval,
+                     get contradiction() { return self.contradiction; } }, a);
+  }
+
+  /** R34: R22's examination of one document, as `capture`'s `batch-examination` reader (its R78) reads it. */
+  examine(id) {
+    const self = this;
+    const x = examineMember({ sql: this.sql, get contradiction() { return self.contradiction; } }, id);
+    return x ? { eligible: false, class: x.class, reason: x.reason } : { eligible: true };
+  }
 
   /** R28–R31, R33: the bulk retirement of a selection from verified (`./retire.mjs`). */
   retire(a) {
@@ -1062,8 +1083,8 @@ const MINT_SEED = Object.freeze([Object.freeze(["CASE", "cases", "case_id"]),
                                  Object.freeze(["CASE", "case_documents", "case_id"])]);
 
 /** K61: the one instance per host, created on the first call with `deps`. It registers the case-document catalogue
- *  with promotion (its R47; R8 here), C-2.8's case-member arm as a promotion check and an audit check (R9), and its
- *  mint-ledger seed sources with record-core (its R70); a refused seed registration is a wiring fault and throws,
+ *  with promotion (its R47; R8 here), R22's examination as capture's `batch-examination` reader (its R78; R34 here),
+ *  C-2.8's case-member arm as a promotion check and an audit check (R9), and its mint-ledger seed sources with record-core (its R70); a refused seed registration is a wiring fault and throws,
  *  rather than leave the ledger blind to the case ids. */
 export function ratificationOf(host, deps) {
   let r = instances.get(host);
@@ -1076,6 +1097,8 @@ export function ratificationOf(host, deps) {
     r = new Ratification({ ...d, host, storage, record, membership, promotion });
     instances.set(host, r);
     promotion.registerCaseCatalogue("ratification", checkCaseDocument);
+    /* R34: R22's own examination, registered once as capture's `batch-examination` reader (its R78). */
+    (d.capture || captureOf(host)).registerReader("batch-examination", "ratification", (id) => r.examine(id));
     promotion.registerStep("ratification", { check: (c) => r.check(c) });
     record.registerAuditCheck("ratification", (image) => r.audit(image));
     const seeded = record.registerMintSeed("ratification", MINT_SEED.map((x) => [...x]));

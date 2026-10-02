@@ -11,6 +11,7 @@ import { world as retrievalWorld, V, sha, infoMd } from "../retrieval/fixture.mj
 import { Ratification, ratificationOf, ratificationOps, EDGE_REASON_MAX } from "../../../src/ratification/index.mjs";
 import { RETIRE_CITED_DETAIL } from "../../../src/promotion/index.mjs";
 import { parseFrontmatter, canonicalJson } from "../../../src/record-grammar/index.mjs";
+import { contradictionOf } from "../../../src/contradiction/index.mjs";
 
 const OWNER = "o";
 const WHO = V("ann");
@@ -28,6 +29,7 @@ const BODY = "\n## Summary\n\nA posting.\n\n## Session Log\n\n### Session 2026-0
    wrapped by a test. */
 function setup({ promotion, retrieval } = {}) {
   const w = retrievalWorld();
+  contradictionOf(w.host).migrate();   /* the plane's boot creates contradiction's tables (R22's contested arm reads them) */
   w.cites = new Map();
   w.citesAsked = [];
   const connections = { citesInto: (id) => { w.citesAsked.push(id); return w.cites.get(id) ?? { confirmed: [], severed: [] }; } };
@@ -36,7 +38,7 @@ function setup({ promotion, retrieval } = {}) {
   w.r = promotion || retrieval
     ? new Ratification({ storage: w.st, record: w.record, membership: w.membership,
                          promotion: promotion ? promotion(w.promotion) : w.promotion,
-                         retrieval: retrieval ? retrieval(w.retrieval) : w.retrieval, connections })
+                         retrieval: retrieval ? retrieval(w.retrieval) : w.retrieval, connections, host: w.host })
     : r;
   let k = 0;
   /** A collected Information document carrying every entry requirement unless `files` or `body` say otherwise. */

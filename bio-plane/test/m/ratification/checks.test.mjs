@@ -243,7 +243,7 @@ const familiesHolding = (code, check) => Object.entries(R)
   .filter(([, fam]) => Object.hasOwn(fam, code) || Object.values(fam).some((row) => row?.check === check))
   .map(([name]) => name);
 
-test("R14: C-32.12–C-32.15, C-53.10–C-53.12, C-58.1–C-58.3, C-65.1 and C-92.10–C-92.12 moved here with their codes, ids and translations, each row in one family of this module", () => {
+test("R14: C-32.12–C-32.15, C-53.10–C-53.12, C-58.1–C-58.5, C-65.1 and C-92.10–C-92.12 moved here with their codes, ids and translations, each row in one family of this module", () => {
   const want = {
     RATIFY_MACHINE_FENCE_CHECKS: { MACHINE_CANNOT_RATIFY: "C-32.12", MACHINE_CANNOT_RATIFY_CASE: "C-32.13",
                                    OPERATOR_TOKEN_CANNOT_RATIFY: "C-32.14", OPERATOR_TOKEN_CANNOT_RATIFY_CASE: "C-32.15" },
@@ -253,12 +253,13 @@ test("R14: C-32.12–C-32.15, C-53.10–C-53.12, C-58.1–C-58.3, C-65.1 and C-9
                                  ATTRIBUTION_UNSTATED: "C-92.12" },
     CASE_CONCLUSION_CHECKS: { CASE_CONCLUSION_MOVED: "C-65.1" },
     RATIFY_SCOPE_CHECKS: { RATIFY_PROJECT_BUNDLE: "C-58.1", RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE: "C-58.2",
-                           RATIFY_NOT_EVIDENCE_OF_A_RATIFIED_CASE: "C-58.3" },
+                           RATIFY_NOT_EVIDENCE_OF_A_RATIFIED_CASE: "C-58.3", CONTESTED_IN_BATCH: "C-58.4",
+                           ANONYMOUS_TESTIMONY_UNCORROBORATED: "C-58.5" },
   };
   for (const [fam, rows] of Object.entries(want)) {
     assert.deepEqual(Object.fromEntries(Object.entries(R[fam]).map(([k, v]) => [k, v.check])), rows, fam);
     for (const [code, v] of Object.entries(R[fam])) {
-      assert.match(v.where, /^src\/ratification\/(ops|index|refusals)\.mjs \w+ > is-[a-z-]+$/, code);
+      assert.match(v.where, /^src\/ratification\/(ops|index|refusals|release)\.mjs \w+ > is-[a-z-]+$/, code);
       assert.ok(typeof v.translation === "string" && v.translation.length > 60, code);
       assert.deepEqual(R.rowOf(code), { code, check: v.check, translation: v.translation });
       assert.deepEqual(familiesHolding(code, v.check), [fam], `${code}'s one home`);
@@ -267,6 +268,23 @@ test("R14: C-32.12–C-32.15, C-53.10–C-53.12, C-58.1–C-58.3, C-65.1 and C-9
   assert.deepEqual(familiesHolding("MACHINE_CANNOT_RELEASE", "C-32.1"), ["RELEASE_CHECKS"],
     "negative control: the walk finds a row this module holds outside the families above");
   assert.throws(() => R.rowOf("NOT_A_CODE"), /DEC-49/);
+});
+
+/* R14's two new rows (K1058), awaiting stamp: their translations are R14's, word for word. */
+test("R14, R22, R35: C-58.4 CONTESTED_IN_BATCH and C-58.5 ANONYMOUS_TESTIMONY_UNCORROBORATED carry R14's translations word for word, minted where R22 and R35 refuse", () => {
+  assert.deepEqual(R.rowOf("CONTESTED_IN_BATCH"), { code: "CONTESTED_IN_BATCH", check: "C-58.4",
+    translation: "Some of these documents are contested: a contradiction touching each is not yet resolved, and "
+      + "contested material is never released in a batch. They are named. Nothing was released." });
+  assert.deepEqual(R.rowOf("ANONYMOUS_TESTIMONY_UNCORROBORATED"), { code: "ANONYMOUS_TESTIMONY_UNCORROBORATED",
+    check: "C-58.5",
+    translation: "This edition rests on testimony credited only to the group or the project, with no independent "
+      + "leg corroborating it. Such testimony counts as an anonymous tip and supports a finding only beside an "
+      + "independent corroborating leg. Each such member and observation is named. Corroborate the claim with an "
+      + "independent leg, ask the observation's author to choose cover or name, or drop the finding that rests on "
+      + "it. Nothing was signed." });
+  assert.equal(R.RATIFY_SCOPE_CHECKS.CONTESTED_IN_BATCH.where, "src/ratification/release.mjs release > is-release-contested");
+  assert.equal(R.RATIFY_SCOPE_CHECKS.ANONYMOUS_TESTIMONY_UNCORROBORATED.where,
+               "src/ratification/refusals.mjs anonymousTestimonyRefusal > is-anonymous-testimony");
 });
 
 test("R15: no place is named in the catalogue's rows, vocabularies or findings", () => {
