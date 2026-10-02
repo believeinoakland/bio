@@ -30,3 +30,7 @@ Size (session_015L9BbqSsxb2Tm6Q2ZEY2di): test runs 7, module lines 2655
 ## J1 · REPORT
 
 Other modules (P9): (1) optionstartpreview is in actionPlansOps from my merge: affordances grades it, op-declarations declares it (a read stamped author and viewer; R11), control-plane routes it, all L11 (red 6: test/m/affordances/catalogue.test.mjs:524 fails on it, as accepted). (2) My change under bio-plane/src/action-plans/ stales bio-plane/dist/bio-plane.bundled.mjs (bundler, not_product); I regenerated nothing (manifest §14).
+
+## J2 · COMPLETE
+
+N489 R36, N490 R37, N502 applied; record build/jobs/T24/action-plans.md @ job/T24/action-plans. R36: two details in values.mjs and R4's Session Log blurbs re-worded; translations already said matter. R37: optionStartPreview runs optionStart's own path, rolled back in record-core's transact where it would land (no row, no id; control-plane R36's dry-run pattern, K559); unseen plan/option answered as R18. N502: checks.mjs:4 names stamp 1.49.0; nothing else stale. No row added or changed (red 5: none). Tests: module 53/0; test/m 5240 pass, 3 fail = reds 6, 8, 9. Checks: format 2 fails = red 4; architecture 0; coverage 37/37; ownership 0.
