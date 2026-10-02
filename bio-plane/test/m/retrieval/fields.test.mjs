@@ -1,8 +1,9 @@
 /* retrieval: a field whose column a later module holds in a table of its own (R62, N136, N137), at the interface.
  *
- * The two tables here are the tests' own, standing in for inquiry's (the leg count, `legs`) and strength's R23 cache
- * (`capture`, `connection`), each keyed by `bundle_id` as their owners' will be. The values are written as their owners
- * write them; the columns on `bundles` are legacy-store's until those owners' jobs move them. */
+ * The two tables here are the tests' own, standing in for inquiry's `inquiry_bundle_facts` (the leg count, `legs`; its
+ * R36) and strength's `strength_cache` (`capture`, `connection`; its R23), each keyed by `bundle_id` as their owners'
+ * are. The values are written as their owners write them; the same values on `bundles` are where those columns stood
+ * before their owners moved them, which a field with none registered still reads. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";

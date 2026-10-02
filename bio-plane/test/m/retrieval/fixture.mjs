@@ -3,9 +3,10 @@
    Object's storage; observation-log (its R9–R13, R18, R19) is the real one too, through `observationOf`. One provider is
    the test's own: extraction's drift obligations (its R38, `driftFor`). The tables other modules own that the compiler
    and the frontier read (capture's `links`, extraction's `readings`/`capture_text`, content's `content`, entities'
-   `entities`/`resolutions`, observation-log's `observation_log`/`leads`/`lead_shares`, and the legacy `inquiry_basis`)
-   are created from their owners' schemas, the legacy ones from the schema text here; the rows a test needs are written
-   into them as their owners write them. Every test drives `retrieval` at its interface. */
+   `entities`/`resolutions`, observation-log's `observation_log`/`leads`/`lead_shares`) are created from their owners'
+   schemas, and three more (inquiry's `inquiry_basis`, basis-versions' `inquiry_basis_version_legs`, connections'
+   `connections`) from the column text here; the rows a test needs are written into them as their owners write them.
+   Every test drives `retrieval` at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
@@ -73,8 +74,10 @@ const run = (db, text) => {
   db.exec(bare);
 };
 
-/* The legacy tables (legacy-store's `schema.mjs`, their owners not yet extracted), as that schema declares them. */
-const LEGACY_TABLES = `
+/* Three tables the compiler's arms and the frontier read, by the columns these tests use and under their owners' names:
+   inquiry's `inquiry_basis` (its R40), basis-versions' `inquiry_basis_version_legs` and connections' `connections` (its
+   R59). Until each owner's extraction they were legacy-store's, in its `schema.mjs`. */
+const STAND_IN_TABLES = `
 CREATE TABLE IF NOT EXISTS inquiry_basis (bundle_id TEXT NOT NULL, ord INTEGER NOT NULL, target_id TEXT NOT NULL,
   target_type TEXT NOT NULL, role TEXT NOT NULL, grade TEXT, grade_axis TEXT, grade_source TEXT, note TEXT, at TEXT,
   ground TEXT, content_id TEXT, PRIMARY KEY (bundle_id, ord));
@@ -134,9 +137,10 @@ export function world({ members = ["ann", "vera"], admins = [], now = Date.parse
   membership.migrate();
   const iso = () => new Date(clock.now).toISOString().replace(/\.\d+Z$/, "Z");
   const promotion = promotionOf(host, { record, membership, now: iso });
-  promotion.registerFact("producingGroup", "legacy-store", () => "test-group");
-  promotion.registerFact("citedBy", "legacy-store", () => []);
-  promotion.registerFact("caseMember", "legacy-store", () => false);
+  /* The facts promotion reads, each under the module that provides it. */
+  promotion.registerFact("producingGroup", "instance-setup", () => "test-group");
+  promotion.registerFact("citedBy", "connections", () => []);
+  promotion.registerFact("caseMember", "publication", () => false);
   const prov = provenanceOf(host, { record, membership, promotion, now: iso });
   prov.migrate();
   run(st.db, EXTRACTION_SCHEMA);
@@ -149,11 +153,12 @@ export function world({ members = ["ann", "vera"], admins = [], now = Date.parse
                 INSERT INTO capture_text_fts(capture_text_fts, rowid, text) VALUES ('delete', old.rowid, old.text); END`);
   run(st.db, CAPTURE_SCHEMA);
   run(st.db, CONTENT_SCHEMA);
-  run(st.db, LEGACY_TABLES);
+  run(st.db, STAND_IN_TABLES);
   run(st.db, ENTITIES_SCHEMA);
   run(st.db, OL.OBSERVATION_LOG_SCHEMA);
-  /* The strength and inquiry columns legacy-store adds to `bundles` (their owners, layer 6, not yet extracted), which
-     the compiler's fields read. */
+  /* The strength and inquiry columns as they stood on `bundles` before their owners moved them into tables of their own
+     (strength's `strength_cache`, its R23; inquiry's `inquiry_bundle_facts`, its R36). No owner registers them here
+     (R62), so the compiler's fields read them where they stand. */
   for (const [c, t] of [["inquiry_capture_strength", "TEXT"], ["inquiry_capture_state", "TEXT"],
                         ["inquiry_connection_strength", "TEXT"], ["inquiry_connection_state", "TEXT"],
                         ["inquiry_basis_count", "INTEGER"], ["inquiry_subject_entity", "TEXT"], ["inquiry_superseded_by", "TEXT"]])

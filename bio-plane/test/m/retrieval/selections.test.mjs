@@ -264,7 +264,8 @@ test("R59: answerChanged(drift, moved) is true exactly when moved is true or dri
   assert.deepEqual([answerChanged(c.drift, c.moved), c.ok], [false, true]);
 });
 
-/* The hidden set as every caller (legacy-store's #counts, queue) takes it: membership's `hiddenBundles` (its R88). */
+/* The hidden set as every caller (record-core's `counts`, R67, read by `op=stats`; queue) takes it: membership's
+   `hiddenBundles` (its R88). */
 const hidFor = (viewer) => hiddenBundles(viewer);
 
 test("R60: counts(hid) answers {indexed, selections, selectionItems}; hid leaves out the index rows a hidden bundle claims (an orphan stays), the items naming a hidden bundle and a selection holding one; synchronous, writes nothing, never throws", async () => {

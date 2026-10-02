@@ -66,13 +66,14 @@ test("R12, R55: a leg row carries grade resolved on the capture axis, grade_auth
   const bare = Object.fromEntries(read().map((r) => [key(r), r]));
   assert.deepEqual([bare["INQ-1/0"].grade, bare["INQ-1/0"].grade_authored, bare["INQ-1/0"].grade_why], ["A", "A", null],
     "with nothing registered the leg passes unchanged (R55)");
-  assert.equal(w.retrieval.registerLegGrades("strength", "not a function").reason, "RESOLVER_MALFORMED");
+  assert.equal(w.retrieval.registerLegGrades("inquiry", "not a function").reason, "RESOLVER_MALFORMED");
   assert.deepEqual([bare["INQ-1/1"].grade, bare["INQ-1/1"].grade_authored, bare["INQ-1/1"].grade_why], ["B", "B", null], "connection axis");
   assert.deepEqual([bare["INQ-1/2"].grade, bare["INQ-1/2"].grade_why], ["A", null], "an inquiry target");
   assert.deepEqual([bare["INQ-2/0"].grade, bare["INQ-2/0"].grade_authored, bare["INQ-2/0"].grade_why], [null, null, null], "a null grade");
-  /* The resolver strength registers: B is the most INFO-1 can earn; INFO-2's C stands. */
+  /* A resolver as inquiry's is registered (its R52, under inquiry's name, R55): B is the most INFO-1 can earn; INFO-2's
+     C stands. */
   const calls = [];
-  assert.equal(w.retrieval.registerLegGrades("strength", (ls) => {
+  assert.equal(w.retrieval.registerLegGrades("inquiry", (ls) => {
     calls.push(ls);
     return ls.map((l) => (l.target_id === "INFO-1" && l.grade === "A" ? { grade: "B", why: "the record can support no more than B" } : null));
   }).ok, true);
