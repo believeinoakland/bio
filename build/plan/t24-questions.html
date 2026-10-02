@@ -1,0 +1,99 @@
+<title>T24 Questions for Bob</title>
+<style>
+/* Layout: one reading column; each question a ruled block with its recommendation set off on the right edge of the block. */
+:root{
+  --bg:#f6f7f4; --surface:#ffffff; --fg:#1d2420; --muted:#5b665f; --rule:#d9ded7; --accent:#2f6b4f; --accent-soft:#e3efe8;
+  --display:"Fraunces", Georgia, serif; --body:"Source Sans 3", "Segoe UI", system-ui, sans-serif; --mono:"IBM Plex Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#151a17;--surface:#1c2320;--fg:#e6ebe7;--muted:#9aa69f;--rule:#2f3833;--accent:#7cc39f;--accent-soft:#22362c;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#151a17;--surface:#1c2320;--fg:#e6ebe7;--muted:#9aa69f;--rule:#2f3833;--accent:#7cc39f;--accent-soft:#22362c;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:16px/1.55 var(--body)}
+main{max-width:46rem;margin:0 auto;padding-inline:16px;padding-block:32px 56px;display:grid;gap:28px}
+h1{font:600 2rem/1.15 var(--display);margin:0;text-wrap:balance}
+h2{font:600 1.15rem/1.3 var(--display);margin:0;text-wrap:balance}
+p{margin:0}
+.lede{color:var(--muted);max-width:65ch}
+.eyebrow{font:500 .75rem/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.q{background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:20px;display:grid;gap:12px}
+.q .head{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
+.q .id{font:600 .8rem/1 var(--mono);color:var(--accent)}
+.q ul{margin:0;padding-left:1.2rem;display:grid;gap:4px}
+.rec{background:var(--accent-soft);border-radius:4px;padding:10px 12px}
+.rec b{color:var(--accent)}
+.say{font:500 .85rem/1.4 var(--mono);color:var(--muted)}
+section{display:grid;gap:12px}
+.done li{color:var(--fg)}
+.done{margin:0;padding-left:1.2rem;display:grid;gap:6px}
+code{font:.9em var(--mono)}
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Source+Sans+3:wght@400;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+
+<main>
+  <header style="display:grid;gap:10px">
+    <span class="eyebrow">BOB #95 · 2 Oct 2026 · ruling K1134</span>
+    <h1>T24 Questions for Bob</h1>
+    <p class="lede">Your UX rulings DEC-112 to DEC-116 (PR #7) owe new requirements. I have drafted them for the next tranche. Six points are yours: four about the architecture and two about what a ruling means. Each has my recommendation. Answer each with "agreed" or your own choice. Nothing is built until PR #7 is on <code>main</code>, which I merge at T23's close, as PR #6 was.</p>
+  </header>
+
+  <section>
+    <span class="eyebrow">New parts of the product (architecture)</span>
+
+    <div class="q">
+      <div class="head"><span class="id">Q1</span><h2>The docket gets its own module</h2></div>
+      <p>DEC-116's docket is the signed list beside each published case, with its shelves, the manager's To-dos, outside responses, standing and withdrawal. It is too large for any existing part. Publication would pass the size limit, and the others serve a different purpose.</p>
+      <div class="rec"><b>Recommend:</b> a new module, <code>docket</code>, in the Publication layer, right after publication, so the public case page can show a withdrawn edition's stamp and the docket's latest entry.</div>
+    </div>
+
+    <div class="q">
+      <div class="head"><span class="id">Q2</span><h2>The open case checker gets its own module</h2></div>
+      <p>DEC-112 asks for a checker anyone can run outside CivicOS to verify a case file. It has to run the same publication checks ratification runs.</p>
+      <div class="rec"><b>Recommend:</b> a new module, <code>case-checker</code>, in the Publication layer, right after ratification, built as a standalone program from the same code CivicOS uses. Then CivicOS and outsiders check a case the same way.</div>
+    </div>
+
+    <div class="q">
+      <div class="head"><span class="id">Q3</span><h2>Importing another group's case gets its own module</h2></div>
+      <p>DEC-112 covers importing a case into a read-only project and confirming each finding by recreating it. Accepting that work (DEC-96) is allowed only once it has been recreated.</p>
+      <div class="rec"><b>Recommend:</b> a new module, <code>case-import</code>, right after the checker, holding import, recreation and acceptance. If acceptance grows, I split it out later.</div>
+      <p class="say">Other choices: two modules now (import, then acceptance), or a new layer for work between groups.</p>
+    </div>
+
+    <div class="q">
+      <div class="head"><span class="id">Q4</span><h2>Where a device keeps assistant transcripts (DEC-113)</h2></div>
+      <p>The litigation hold stops a device from deleting transcripts of held projects. No part of the product stores transcripts on a device yet. The browser only reads one.</p>
+      <div class="rec"><b>Recommend:</b> build the server side now: the hold's project list, the heavier release, the "is this project held?" answer, and the wipe refused during a hold. The device side waits until device storage is built, in a new module named for it then. That is also when you set how long a transcript is kept (DEC-61 calls for a time limit but none is ruled yet).</div>
+    </div>
+  </section>
+
+  <section>
+    <span class="eyebrow">What a ruling means</span>
+
+    <div class="q">
+      <div class="head"><span class="id">Q5</span><h2>Does a hold also block removing a single item?</h2></div>
+      <p>DEC-113 refuses "the operator's wipe of the real record" while a hold stands. The operator can also purge one bundle, for example after a removal is ordered.</p>
+      <ul>
+        <li>Refusing it too is safer against destroying evidence.</li>
+        <li>But it would block an ordered removal until the hold is released.</li>
+      </ul>
+      <div class="rec"><b>Recommend:</b> refuse a single-item purge of material in a held project too. If a removal is ordered, the hold's release (the heavier act) is the path, and it is on the record.</div>
+    </div>
+
+    <div class="q">
+      <div class="head"><span class="id">Q6</span><h2>Whose attestation stands behind material that can't be published (DEC-112)</h2></div>
+      <p>For material that cannot go in the case file, DEC-112 lists "the attesting member's, the project's and the group's" attestations. The member's attestation exists today. No record holds a project's or a group's attestation of a source.</p>
+      <div class="rec"><b>Recommend:</b> the project's and the group's attestations are their signatures on the case itself: the owner's signature and the group's key. Those already exist and already cover everything the case contains.</div>
+      <p class="say">Other choice: a new attestation act at project and group level, which a new ruling would have to define.</p>
+    </div>
+  </section>
+
+  <section>
+    <span class="eyebrow">Already decided by me (recorded in K1134; no answer needed)</span>
+    <ul class="done">
+      <li>The case-file format's open specification lives with the case format's own requirements, with a readable version published beside each format version.</li>
+      <li>"Material that cannot travel whole" means bytes or text this copy does not hold. Copyright stays the group's judgement, in the warning, as DEC-112 says.</li>
+      <li>An imported case is judged against the importing group's default bar. Later editions of the same case sit beside the earlier ones in the same read-only project.</li>
+      <li>Releasing a hold is its own act, graded as the heaviest. A release form lists only the projects the releaser can see, so a hidden project is never revealed. A device that cannot check keeps the transcript.</li>
+      <li>"Matters" replaces "subject" in every member-facing text. The start-and-send sketch and the two filing panels bind the Action redesign.</li>
+      <li>The public case page and publication are measured before their jobs start, and split first if either would pass the size limit.</li>
+    </ul>
+  </section>
+</main>
