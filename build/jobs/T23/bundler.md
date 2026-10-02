@@ -44,3 +44,11 @@ Size (session_01NUc9jtCVoKc7BZNT8zXv6u): test runs 16, module lines 68
 ## J4 · COMPLETE
 
 B3 done. Cause: fleetbundles.control.mjs arms 5 and 8 ran a real npm run build (writeMember), rewriting the committed dist/ wherever stale. Fix: they rebuild in memory (buildMember write:false + manifestFrom) and compare byte for byte; nothing writes. Proof: the full set in one node --test, 49/50 (the one red is fleetbundles' four bio-plane staleness assertions, accepted red 12), then git status clean but for my edit. tranche/T23 merged; test/m 5002 pass, 4 fail (accepted by name); four checks 0 failures. Open, for you: the control's other arms edit real sources (restored), and its header says it must never run under node --test, yet modules.json lists it in bundler's tests, so a set run puts it beside fleetbundles.test.mjs. Proposal: drop it from bundler's tests (a hand-run driver naming no R id), or have it refuse under node --test. Record: build/jobs/T23/bundler.md.
+
+## B4 · CHANGE (K1120): the control refuses under the test runner
+
+`bio-plane/test/fleetbundles.control.mjs` stays in bundler's `tests`. Run by `node --test` (which sets `NODE_TEST_CONTEXT` in each file's process), it now exits 0 at once, after its imports and before making its pen or touching any file, printing one line: `fleetbundles.control.mjs: a hand-run negative control, not a test; run it alone: node test/fleetbundles.control.mjs [arm]`. The header says so too. `tranche/T23` merged first (f32dd9d74d).
+
+**Proof.** `node --test bio-plane/test/fleetbundles.control.mjs` prints that line, pass 1, fail 0. The full set in one `node --test`: tests 50, pass 49, fail 1, skipped 0. The one red is `fleetbundles.test.mjs` (94 pass, 4 fail, all four `bio-plane:` staleness assertions, accepted red 12). `git status` after it shows only my edit to the control file. A hand run of arm 10b (`node test/fleetbundles.control.mjs 10b` in `bio-plane/`) still runs: the arm fires as declared ("no (j) assertion fired: true"), its restore is verified by content and sha256, the pen is removed, and the tree is unchanged. Checks: format, architecture, coverage (`23 of 23`) and ownership each report 0 failures (lines above in B3's, unchanged in form).
+
+Size (session_01NUc9jtCVoKc7BZNT8zXv6u): test runs 20, module lines 77

@@ -36,6 +36,7 @@
  * DELIBERATELY NOT A `.test.mjs`: it EDITS REAL SOURCES and RENAMES a real
  * `node_modules`, and a file a `node --test` run discovers must never be one that
  * rewrites the tree underneath the suites running beside it (PL-3/PL-4/PL-11).
+ * Named to `node --test` explicitly, it refuses and touches nothing (T23, K1120).
  *
  * THE THREE RULES THIS PROJECT PAID FOR, obeyed here:
  *
@@ -71,6 +72,14 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { discoverMembers, planeMember, buildMember, manifestFrom } from "../scripts/fleet-bundle.mjs";
+
+/* REFUSES UNDER THE TEST RUNNER (T23, K1120): `node --test` runs its files in parallel, so this driver's armed source
+   edits would land under the suites beside it. Run by the runner (which sets NODE_TEST_CONTEXT in each file's
+   process), it exits at once, before the pen is made or any file is touched. */
+if (process.env.NODE_TEST_CONTEXT) {
+  console.log("fleetbundles.control.mjs: a hand-run negative control, not a test; run it alone: node test/fleetbundles.control.mjs [arm]");
+  process.exit(0);
+}
 
 const DIR = dirname(fileURLToPath(import.meta.url));
 const PLANE = join(DIR, "..");
