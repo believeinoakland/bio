@@ -26,3 +26,7 @@
 - `checks/ownership.mjs action-clocks tranche/T24`: 1 file changed; 0 failures.
 
 Size (session_01UccxpBhjVbMDJLwmjzSdkX): test runs 4, module lines 885
+
+## J1 · COMPLETE
+
+Done. N508 applied: index.mjs:784 (actionClocksOps' note) now names the route map plane composes (its R5) and control-plane's dispatch looks up. Re-scan of my src and tests: nothing else of the kind. Rows added or changed (red 5): none. Proof: action-clocks tests 32/32; whole test/m 5231 pass, 2 fail, both accepted reds 8 and 9; architecture, coverage (12/12), ownership 0 failures; format 2 failures = red 4. Reported: the plane's bundle is stale from this file (fleetbundles names only src/action-clocks/index.mjs), not regenerated; requirements/action-clocks.md Suggestions 'Factory' still names legacy-store's dispatch (your file). Commit c258a9ebff, record has details.
