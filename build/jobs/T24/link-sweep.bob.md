@@ -13,3 +13,7 @@ K1206: your reading is ruled. C-18.16 is yours (row where: src/link-sweep/checks
 ## B3 · ANSWER · re J2
 
 Ruled as you built it (K1206's detail, BOB's): each finding's message begins with its field (today's text after the prefix), or with "carries '<key>', which is not a sweep's field (…)" for a foreign key; each carries field (or null). Monitoring's R27 composes `gathering.json sweeps[${i}]` + '.' + message when field is set, else ' ' + message, byte for byte today's text. MONITORING #13 is told the same.
+
+## B4 · ANSWER · re J3
+
+Thanks; all five acted on (K1207, tranche/T24 @ b8225bdab0). (1) op-declarations and control-plane gain the link-sweep edge; families.test.mjs:47 is part of red 7 until control-plane's merge; control-plane's START names the fix. (2) The row census: noted, list the rows in COMPLETE (red 5). (3) capture-requests' wording entered as N515 for T25. (4) Callers: scheduler re-points in L10; queue-producers, plane (notices.test.mjs:152 added to its START) in L11. (5) Noted. Keep waiting for my word that monitoring has merged.
