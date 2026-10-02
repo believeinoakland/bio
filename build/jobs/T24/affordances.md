@@ -27,3 +27,12 @@ Size (session_016oZC5sJyfvVMQZwh1cyyE1): test runs 4, module lines 68
 ## J1 · COMPLETE
 
 COMPLETE. N490 applied: NON_ACTS.optionstartpreview, a 'read: …' reason (R7's rule; no requirement changed), tested in catalogue.test.mjs's layer-9 test with negative controls; red 6's affordances share cleared. N502/N508 re-scan: five stale notes re-worded (list in the record). R32's test no longer asserts sweeps in monitoringOps (moved to link-sweep by N506; link-sweep is not in my uses). Affordances suite 147/147. Whole test/m: 5257 pass, 7 fail: the six reds 7 and 9 SCHEDULER #26 recorded, plus control-plane totality.test.mjs:13, stale ['optionstartpreview'] until op-declarations gives it a NEEDS row (red 6, op-declarations' share). All four checks 0 failures. No catalogue row changed (red 5: none). Report: the plane's bundle is stale (affordances.mjs is an input); nothing regenerated. Please merge job/T24/affordances.
+
+## After B2 (CHANGE, K1212)
+
+Merged `tranche/T24` (op-declarations with `optionstartpreview` declared; BOB had already merged this branch, K1213), so the code here is the tranche's. Final run:
+- `node --test bio-plane/test/m/affordances/`: tests 147, pass 147, fail 0.
+- Whole `bio-plane/test/m`: tests 5286, pass 5271, fail 4. Control-plane `totality.test.mjs` now passes (red 6 cleared). The four: plane `notices.test.mjs`:33 (red 9) and :140 (red 7), and queue `signals.test.mjs`:44 and :89 (the five `sweep-*` conditions do not reach the feed; queue-producers' `sweepConditions` through link-sweep, red 7's composition; queue's and queue-producers' L11). None is in this module.
+- Checks: format 0 failures; architecture 13 product files, 135 relative imports, 0 failures; coverage 32 of 32, 0 failures; ownership 0 failures.
+
+Size (session_016oZC5sJyfvVMQZwh1cyyE1): test runs 6, module lines 68
