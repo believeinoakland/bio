@@ -32,6 +32,6 @@
 - `node checks/format.mjs`: 85 modules, 84 requirements files; 1 failure, the expected one: extraction's `tests` entry `bio-plane/test/fixtures/fw20/` names no file (BOB drops it at the merge, per B1)
 - `node checks/architecture.mjs … extraction`: 38 product files, 125 relative imports; 0 failures
 - `node checks/coverage.mjs … extraction`: 63 of 63 live requirement ids named by a test; 0 failures
-- `node checks/ownership.mjs … extraction tranche/T22`: see the commit; 0 failures (re-run after the commit)
+- `node checks/ownership.mjs … extraction tranche/T22`: 9 files changed by extraction; 0 failures
 
 Size (session_01MCwzkLcBBrXZmSHZiL39Zj): test runs 6, module lines 3997
