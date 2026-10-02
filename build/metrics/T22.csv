@@ -1,3 +1,5 @@
 session,role,module,cache_read,cache_write,input,output,turns,test_runs,module_lines
 session_017vtxc1g46pax3uvWUKZx2s,job,text-chain,4078539,123889,64,12429,,2,2032
 session_014EDtgA8oD3Eyhq1jai3Z7j,job,bundler,13368689,236360,6984,25435,,9,5570
+session_01LdQT1TKUB5SDgdFi5gE5ik,job,membership,15155534,313002,1130,23931,,7,3341
+session_01HWFND67AwBJQuXM4beadEA,job,promotion,20118108,353190,645,31079,,14,3164
