@@ -216,7 +216,8 @@ test("R17: many marks of one entity are one row, inside the caller's transaction
 
 test("R17: registered on entities' onResolved — an inserted or raised resolution marks its entity inside the resolving transaction; a kept one marks nothing", () => {
   const w = world();
-  const made = w.entities.createEntity({ kind: "ordinance", label: "Ord. 13,579", declaredBy: "member:alice" });
+  const made = w.entities.createEntity({ kind: "ordinance", label: "Ord. 13,579",
+                                         note: "Ordinance 13,579, registered as the subject the capture mentions.", declaredBy: "member:alice" });
   assert.equal(made.ok, true);
   const [a] = w.doc("INFO-2026-0001-a", ["a"]);
   w.read(a, "INFO-2026-0001-a", "Ord. 13,579", [1]);

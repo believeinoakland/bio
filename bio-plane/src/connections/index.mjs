@@ -1432,8 +1432,8 @@ export function connectionsOwns(t) {
   return CONNECTIONS_TABLE_NAMES.includes(name);
 }
 
-/* The Durable Object routes this module answers, as entries of the legacy store's op map (its dispatcher spreads them
-   in; K3). `url` carries the control plane's stamps — `viewer`, `author`, `identity`, `declarer`, `placer`,
+/* The Durable Object routes this module answers, as entries of the plane store's op map (`src/plane/store.mjs`, whose
+   dispatcher spreads them in; the legacy store's map until T19; K3). `url` carries the control plane's stamps — `viewer`, `author`, `identity`, `declarer`, `placer`,
    `proposer`, `actor`, `member`, `administer` — and `body` the parsed body; no stamp is read from the body. */
 export function connectionsOps(k, url, body, env) {
   const q = (key) => url.searchParams.get(key);
