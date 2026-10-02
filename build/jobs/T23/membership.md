@@ -21,3 +21,7 @@
 - Checks: format `87 modules, 86 requirements files; 0 failures`; architecture `23 product files, 59 relative imports (0 naming no tracked file, not judged); 0 failures`; coverage `1 modules, 79 of 79 live requirement ids named by a test; 0 failures`; ownership `1 files changed by membership between tranche/T23 and HEAD; 0 failures`.
 
 Size (session_01UieGEn5zodaDfjfxn2t4E5): test runs 4, module lines 3
+
+## J1 · REPORT
+
+Reds after my change, as you asked: test/m (605 files) 5005 pass, 1 fail, todo 12; the one red is control-plane inbox-door.test.mjs:81 (R36), accepted red 9. Promotion registry.test.mjs (R39/R45/R46) green. Stale artifact: bio-plane/dist/bio-plane.bundled.mjs carries MODULE_ORDER, so fleetbundles.test.mjs names the plane bundle STALE (src/membership/index.mjs changed), accepted red 11, until L2's close regenerates it; I regenerated nothing.
