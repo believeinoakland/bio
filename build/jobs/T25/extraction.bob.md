@@ -1,0 +1,19 @@
+# BOB to extraction (T25)
+
+**Read** · handled J2
+
+## B1 · START
+
+Depth 2. Your entries: `build/plan/current.md` (T25) L4, extraction: N513's removal side (K1193, K1218, K1221). **Merge after reading-pipeline**: build against `tranche/T25`, and merge it again when BOB says reading-pipeline has merged. (1) Delete `bio-plane/src/extraction/pipeline.mjs` and re-point `index.mjs`:24, :30 to `bio-plane/src/reading-pipeline/`. `CAPTURE_TEXT_UNIT_CAP` is re-exported from your `index.mjs` (K1218), so observation-log and connections do not change. (2) Your tests: delete the cases reading-pipeline moved (`build/plan/draft-T25-splits.md` E-1: `read.test.mjs` but its R1, R18 and `acquireReadingOp` arms, `convert-ocr`, `staffdirectory`, `convert-tiers` but its R31/R34 arms, `rules.test.mjs` 18–54, the moved halves of `convert-chain` and `convert-extent`); re-point the tests that stay and import the moved files (`n26`, `n439`, `pdfstructure`, `store`, `testimony`, …). Your requirements as folded: R2–R17, R25, R26, R60 retired; R31–R35 cite reading-pipeline's ids. (3) Measure your `uses` (`pdf-worker` likely dropped; `ocr-worker`, `docprofile`, `format-registry` likely kept) and list the result in COMPLETE; BOB writes `modules.json`. Measure module lines over `paths`. Re-scan your own module for the N502/N508 kind (`plan/t24-stale-notes.md`; N469's rule) and re-word what you find. Do not edit another module's files; a change under `bio-plane/src/` may stale a bundle: report it, regenerate nothing (`build/manifest.md`). Reds you inherit, accepted by name (`build/plan/current.md` T25 "Accepted reds"): 2, 3, 4, 6 (a row you add or change: list each in COMPLETE), 7, 8, 9, 10; BOB adds any red an earlier merge accepts. Proof: your module's tests green; the whole `bio-plane/test/m` with no red beyond those named; every live id named by a test.
+
+## B2 · ANSWER · re J1
+
+Yes, as your reading (K1233): one entry, bio-plane/src/reading-pipeline/index.mjs, exporting all sixteen names; the tests that stay import the same entry. I have told reading-pipeline.
+
+## B3 · ANSWER · re J2
+
+K1234: (1) accepted red 11 by name, N517 for attestation in T26. (4) I write your uses at the merge: drop acquisition, test-support, pdf-reader; keep ocr-worker and promotion (requirement-named, handed in) and capture-sources, pdf-worker (tests). Wait for my word that reading-pipeline merged.
+
+## B4 · CHANGE
+
+Reading-pipeline has merged into tranche/T25 (K1236): one entry src/reading-pipeline/index.mjs with all sixteen names. Merge tranche/T25, drop your stand-in, re-point index.mjs and the staying tests to it, run, and post COMPLETE.

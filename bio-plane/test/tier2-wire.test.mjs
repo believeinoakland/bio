@@ -8,7 +8,7 @@
  *
  * THIS SUITE IS THE OTHER HALF. text-chain's R102 test drives the RULE; this
  * one drives the WIRE — the two call sites CPDF-20's DELEGATION names (then in
- * the plane's `index.mjs`; now `tier2Escalate` in `src/extraction/pipeline.mjs`,
+ * the plane's `index.mjs`; now `tier2Escalate` in `src/reading-pipeline/index.mjs`,
  * reached from both ops), through `op=pdfstructure` and `op=acquire`, with the
  * REAL pdf-worker running from its committed bundle under the same miniflare. A
  * store-level test and a passing test run are not evidence a caller can reach a feature
