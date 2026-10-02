@@ -18,17 +18,17 @@
   - No assertion changed.
 - No requirement carries a `not yet met: T23` mark, and none was added.
 
-**Deferred** (J1, open)
-- Six source comments in `bio-plane/src/inquiry/` (all 3,882 lines read) are of N469's or N502's kind:
-  - `checks.mjs`:3 (C-2.1–.7, .9, .10 "stay the catalogue's")
-  - `checks.mjs`:60 ("awaiting T17's stamp")
-  - `checks.mjs`:72 (C-66.5 "`awaiting stamp`"; it was stamped at 1.50.0, T20 L2, K884)
-  - `index.mjs`:3024 ("the legacy store's op map"; the map is now plane's, `plane/store.mjs`:269)
-  - `schema.mjs`:117 ("created in store.mjs's migration")
-  - `schema.mjs`:128 ("the probe is here to re-run"; the probe was deleted)
-- All six are comments only. I left them because changing a source file stales the plane bundle, which B1 rules out. Each is a re-wording in place with no added line. A CHANGE can have me apply them, as B2 did for retrieval; otherwise they belong to N502.
-- Kept as provenance: `index.mjs`:473, :2316, :2453, :2680; `text.mjs`:2; the measured notes in `schema.mjs`. I found no `tools/` or `legacy-tests` mention as live, and no T20-deleted file named as live beyond the six above.
-- Left as is: `index.mjs`:2229 cites "CLAUDE.md's sparse rule", a rule that now lives only in the archived old instructions. It is a provenance citation, not a live claim.
+**Applied after B2** (J1 answered: re-word all six in this job)
+- `checks.mjs`:3: C-2.1–C-2.7, C-2.9 and C-2.10 "are their owners', not the catalogue's". The owners are record-grammar (C-2.2–C-2.7), promotion (C-2.1), intent (C-2.9), and actions and action-grammar (C-2.10).
+- `checks.mjs`:60: C-2.18 was "stamped 1.47.0, T17" (`gate.mjs`'s 1.47.0 note).
+- `checks.mjs`:72: C-66.5's `where` was "stamped 1.50.0 (K884)".
+- `index.mjs`:3024: "as entries of plane's op map".
+- `schema.mjs`:117: "because it was created in store.mjs's migration".
+- `schema.mjs`:128: "re-measure (that probe has since been deleted)".
+- Comments only. Each is re-worded in place, adding no line.
+- The plane bundle (`bio-plane/dist/bio-plane.bundled.mjs`) is staled by these source changes. B2 accepts this (red 12), and nothing was regenerated.
+- Kept as provenance: `index.mjs`:473, :2316, :2453, :2680; `text.mjs`:2; the measured notes in `schema.mjs`. No `tools/` or `legacy-tests` mention is live.
+- Left as is: `index.mjs`:2229 cites "CLAUDE.md's sparse rule". It is a citation of where the rule came from, not a live claim.
 
 **Other modules:** nothing found. No other module imports inquiry's fixture.
 
@@ -43,9 +43,10 @@
 - `checks/architecture.mjs … inquiry`: 27 product files, 90 relative imports; 0 failures.
 - `checks/coverage.mjs … inquiry`: 49 of 49 live requirement ids named by a test; 0 failures.
 - `checks/ownership.mjs … inquiry tranche/T23`: 7 files changed by inquiry; 0 failures.
-- No generated artifact was staled (test files only), and nothing was regenerated.
+- After B2: `node --test test/m/inquiry/`: tests 167, pass 166, fail 0, todo 1. Format 0, architecture 0, coverage 49/49, ownership 10 files with 0 failures.
+- The plane bundle is stale from B2's source re-wording (red 12), and nothing was regenerated.
 
-Size (session_01V24GWeyLsefZzy4edFhfnt): test runs 5, module lines 3882
+Size (session_01V24GWeyLsefZzy4edFhfnt): test runs 6, module lines 3882
 
 ## J1 · QUESTION
 
