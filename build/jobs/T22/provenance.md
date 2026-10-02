@@ -1,6 +1,6 @@
 # provenance (T22)
 
-**Status** · session_01HXBQRNxoQMo9TDAz7Fou7D · depth 2 · RUNNING until 2026-10-02T00:26:02Z (node --test bio-plane/test/m) · handled B1
+**Status** · session_01HXBQRNxoQMo9TDAz7Fou7D · depth 2 · COMPLETE · handled B1
 
 PROVENANCE #11, T22 layer 3. Entries from BOB's B1 START (`build/plan/current.md` L3 provenance). Comments only; no behaviour changed; no line added (module 3,938 lines before and after).
 
