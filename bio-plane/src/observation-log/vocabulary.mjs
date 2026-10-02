@@ -760,7 +760,8 @@ export const MEANING_EVIDENCE_IS_ONE_SIDED = {
  *  `readings`, which holds a row for every capture the extractor ran over
  *  whatever it produced. That is REC-94's own finding and it is TWO-SIDED.
  *
- *  IT IS A MAP AND NOT A BARE `false`, deliberately: `#frontierMeaning` publishes
+ *  IT IS A MAP AND NOT A BARE `false`, deliberately: the meaning frontier (`retrieval`'s
+ *  `src/retrieval/frontier.mjs`, once the legacy store's `#frontierMeaning`) publishes
  *  `evidence_one_sided` as a map keyed by subject kind, and one key name carrying
  *  a boolean at one level and a map at another is two shapes for one fact — the
  *  MAP RULE, and the exact drift this file already refuses for the content-axis
@@ -907,7 +908,8 @@ export function causesNotRuledOut(missingCause, { evidenceOneSided = undefined }
 /** D-500 — **§5.1's TOP-END BOUND, AT ONE PRECISION, IN ONE PLACE.** §5.1: *the
  *  window stops growing rather than closing, and it is bounded at its top end — a
  *  subject that entered the record after the log's first row at its level reaches
- *  cause (3) normally.* Both bundle-level readers ask exactly that question —
+ *  cause (3) normally.* Both bundle-level readers of the legacy store (since deleted; the rule is
+ *  `missingCause` in this module's `index.mjs`, read by `retrieval`) asked exactly that question —
  *  `#missingCauseFrom` for the content level, and through it `#contentAxisTally`
  *  for `op=contentaxis` and the search envelope; `#missingMeaningCause` for the
  *  meaning level — and until this item each spelled it for itself, which is the
@@ -1105,8 +1107,8 @@ export function enteredAfterFirstRow(enteredAt, firstAt) {
  *  `true`, `false` or `null`; this function holds the rule about what each
  *  LICENSES; this module's reading-notice writer passes `null` today and says why at
  *  its site (`observeReaderRun`). When one
- *  field carries the fact — beside `content_type`, where `index.mjs` already
- *  composes it, exactly as CAP-9 persisted `page_count` — the third outcome
+ *  field carries the fact — beside `content_type`, where extraction's pipeline
+ *  (`src/extraction/pipeline.mjs`) already composes it, exactly as CAP-9 persisted `page_count` — the third outcome
  *  arrives with no change here. `contentAxisFor`'s `unitIndex` seam is the
  *  precedent and it is deliberate: an item that must land into this gets a
  *  pinned contract rather than a sentence to interpret.
