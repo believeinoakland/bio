@@ -1,6 +1,6 @@
 # reading-pipeline (T25)
 
-**Status** · session_012Yr3gwtfrXrBoUUrtJgU8a · depth 2 · COMPLETE · handled B3
+**Status** · session_012Yr3gwtfrXrBoUUrtJgU8a · depth 2 · COMPLETE · handled B4
 
 ## Completion (T25 L4)
 
@@ -28,6 +28,14 @@
 
 Size (session_012Yr3gwtfrXrBoUUrtJgU8a): test runs 22, module lines 1331
 
+## Completion of B4 (CHANGE, K1237)
+
+- Merged `tranche/T25` (extraction merged, importing only `reading-pipeline/index.mjs`); deleted `bio-plane/src/readingprov.mjs`, the re-export K1235 kept. Nothing else imports that path (two comments name the file `readingprov.mjs` by name only: extraction's `rules.test.mjs` header and mine).
+- `node --test test/m/reading-pipeline/`: 74 pass, 0 fail. `d606-perpage-ocr`, `tier2-wire`, `system/pdf-worker-binding`: 3 pass, 0 fail. `test/m`: tests 5329, pass 5233, fail 85, the same 85 in the same files as the baseline (reds 7, 8, 9), none here.
+- `format`: 1 failure, `modules.json`'s `bio-plane/src/readingprov.mjs` path now naming no file, which BOB drops at the merge (B4). `architecture`: 20 files, 46 imports, 0. `coverage`: 24 of 24. `ownership` against `tranche/T25`: 2 files, 0.
+
+Size (session_012Yr3gwtfrXrBoUUrtJgU8a): test runs 26, module lines 1327
+
 ## J1 · QUESTION
 
 `readingprov.mjs`'s move, and the window until extraction's merge. B1 says move `bio-plane/src/readingprov.mjs` into `reading-pipeline/` and tell you in COMPLETE so you drop the path. Moved bare, `extraction/index.mjs`:24 (and the `pipeline.mjs` copy extraction deletes) no longer resolve, so the plane does not load: measured on this branch, the whole `bio-plane/test/m` goes from the tranche baseline's 85 failures (all red 7's: case-authoring, network-notices, filings, retrieval, …) to 493 failing tests, nearly every file that composes the plane, plus my three plane-booting legacy tests (`d606-perpage-ocr`, `tier2-wire`, `system/pdf-worker-binding`), all green on the baseline.
@@ -41,3 +49,7 @@ Generated artifact staled (manifest §14): `bio-plane/dist/bio-plane.bundled.mjs
 ## J3 · COMPLETE
 
 reading-pipeline T25 complete on job/T25/reading-pipeline (no merge of the tranche needed: B2/B3 changed no file I read). The module: `src/reading-pipeline/index.mjs` (extraction/pipeline.mjs copied, ids re-pointed to R1–R24; the one entry of K1233, all sixteen names) and `readingprov.mjs` moved beside it; `src/readingprov.mjs` keeps the one re-export line (K1235) until your CHANGE after extraction merges, then drop that path from modules.json. Tests moved to `test/m/reading-pipeline/` calling `read` directly, assertions unchanged, plus pieces.test.mjs (R20, R23, R2/R15 byte-for-byte pins measured over old and new read: equal). Uses measured: exactly the nine in modules.json (no record-grammar, no calibration). Rows added or changed: none. Tests: module 74/0; legacy-path d606, tier2-wire, pdf-worker-binding 3/0; test/m 5292 pass, 85 fail, the baseline's same 85 in the same files (reds 7, 8, 9), none here. Negative controls: 4 declared mutations, each failing its named tests. Checks: format 0, architecture 0, coverage 24/24, ownership 0. Stale bundle: bio-plane (REPORT J2). Record has the detail.
+
+## J4 · COMPLETE
+
+B4 done on job/T25/reading-pipeline (tranche/T25 @ extraction's merge merged in): `bio-plane/src/readingprov.mjs` deleted; nothing imports that path. Tests: module 74/0; d606, tier2-wire, pdf-worker-binding 3/0; test/m 5233 pass, 85 fail, the baseline's same 85 (reds 7, 8, 9). Checks: format 1 failure, the modules.json path you drop at the merge; architecture 0, coverage 24/24, ownership 0.
