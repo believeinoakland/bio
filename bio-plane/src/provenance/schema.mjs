@@ -102,7 +102,7 @@ CREATE INDEX IF NOT EXISTS captured_locators_sha ON captured_locators(capture_sh
 -- not be. The current finding is the row with the highest 'seq' for a bundle,
 -- and the ones before it stay readable.
 --
--- 'finding' IS D-129's VOCABULARY, taken from airun.mjs's OBSERVATION_STATES
+-- 'finding' IS D-129's VOCABULARY, observation-log's OBSERVATION_STATES (airun.mjs's then)
 -- rather than invented here, because this record already has words for which
 -- absence it met: NEVER_LOOKED is the ABSENCE OF A ROW and is never stored,
 -- LOOKED_INDETERMINATE is the marker itself (we looked and cannot tell), and
@@ -138,8 +138,8 @@ CREATE TABLE IF NOT EXISTS provenance_route_marks (
 -- "which documents in this instance carry a standing LOOKED_INDETERMINATE
 -- marker". All four SQL readers of this table key on bundle_id and seq and
 -- classify in JS, so a group asking where its own record's provenance is
--- doubted must page the whole store and count for itself. The route act is
--- registered mutating:true in index.mjs -- a WRITE. There is no read.
+-- doubted must page the whole store and count for itself. The route act is a
+-- WRITE (op-declarations declares provenanceroute mutating:true). There is no read.
 --
 -- IT IS NOT DEAD WEIGHT AND IT IS NOT MIS-SPECIFIED, and that is MEASURED
 -- rather than read off the SQL (EXPLAIN QUERY PLAN, sqlite3 3.51.0, no

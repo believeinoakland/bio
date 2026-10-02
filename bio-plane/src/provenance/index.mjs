@@ -302,7 +302,7 @@ export function chainFromEvidence(doc, { instanceName = "unnamed", at = null } =
  * "The route cannot be shown" and "nobody looked" are different facts and they
  * read alike if the field is simply absent when there is no marker. So `route`
  * is NEVER ABSENT and never null on these reads, and its `finding` is D-129's
- * vocabulary taken LIVE from `airun.mjs` rather than a fifth private spelling
+ * vocabulary (observation-log's `OBSERVATION_STATES`, `airun.mjs`'s then) rather than a fifth private spelling
  * of absence:
  *
  *   NEVER_LOOKED          no assessment has ever run. NOBODY LOOKED.
@@ -1028,9 +1028,9 @@ class Provenance {
              observedAt: t.observedAt, recordedAt: t.recordedAt };
   }
 
-  /** R52 — the registrations as one slot, which the composition root runs at the place the legacy store's promotion
-   *  step runs the testimony work today: `check(c)` at the end of that step's check, `project(c)` at the end of its
-   *  projection (`c` the promotion's step context). This module runs neither in its own step and calls no later
+  /** R52 — the registrations as one slot, which the composition root runs where the legacy store's promotion step ran
+   *  the testimony work (control-plane's promotion step since T19, its R42): `check(c)` at the end of that step's check,
+   *  `project(c)` at the end of its projection (`c` the promotion's step context). This module runs neither in its own step and calls no later
    *  module: what runs is what registered. On a promotion without the testimony path both answer null. */
   testimonySlot() {
     return {
@@ -2127,7 +2127,7 @@ class Provenance {
    * marker, which would publish a standing doubt over documents whose route the
    * record can now show. That is the record claiming more than it can support,
    * which `CLAUDE.md` ranks worse than a missing feature. So the predicate
-   * carries the same `MAX(seq)` clause `auditPass` and `#latestRouteMark`
+   * carries the same `MAX(seq)` clause `routeTally` and `#latestRouteMark`
    * already use — three readers, one rule about what "current" means.
    *
    * ============ THE TWO FACTS THIS CONSTRUCT EXISTS TO SEPARATE =============
@@ -2222,7 +2222,7 @@ class Provenance {
     const page = truncated ? raw.slice(0, n) : raw;
 
     /* The gate, over the PAGE'S OWN ID RANGE so this cannot become an unbounded
-       scan of the bundles table — `auditPass`' shape, and for the same reason. */
+       scan of the bundles table — `routeTally`'s shape, and for the same reason. */
     const seen = new Map();
     if (page.length)
       for (const b of this.#rows(
@@ -2594,8 +2594,8 @@ class Provenance {
       };
       /* The words' later work (the passage index, the content row over them and the extraction look) is not this
          module's: it is R52's testimony slot, which `extraction`, `content` and `observation-log` register on and the
-         composition root runs inside this same transaction, at the place the legacy store's promotion step runs that
-         work today (until they register, that step does it itself). The slot's `testimony: {content_id}` names the
+         composition root runs inside this same transaction (control-plane's promotion step since T19, its R42, where
+         the legacy store's step ran that work). The slot's `testimony: {content_id}` names the
          content row this answer reports; with none named, `content_id` is null. */
       const promoted = this.#promotion.promote({
           bundleId: id, base: null, snapKey: `${recorded.replace(/[-:]/g, "")}_${rand(4)}`,
