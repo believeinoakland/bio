@@ -1,3 +1,23 @@
 # record-grammar (T23)
 
 **Status** · session_01PA1sW8VidctbEdHbBtynvg · depth 2 · WORKING · handled B1
+
+## Completion (RECORD-GRAMMAR #5)
+
+**Entries applied** (B1, `build/plan/current.md` T23 L1):
+- N485 (K1025): R43 and R44. `PROPOSAL_STATES` gains `edition_statement` after `template` and `escalation_reason` after it, each a frozen table of `machine_proposed`, `member_proposed`, `unstated`. Each sentence says, in its state, what was proposed (a new edition's statement of what changed in it, and why; a reason for opening an escalation assembled from the determination's record) and that it is not the group's statement until a member adopts or rewrites it / not a member's reason until a member sends it, as offered or edited; `machine_proposed` says machine work, labelled as machine work, a draft. `proposalLabel` answers for both through the existing composer; its `RangeError` lists all ten subjects (it is composed from the table's keys). The other eight tables are untouched.
+- N495 (K1046): `labels.mjs`'s `CONTENT_MINTED_BY_PLANE` comment no longer says `mintContent`'s default reads it: it names today's readers (content's `mint` default, the stamps inquiry and basis-versions pass, query's `minted_by` filter, the classifier) and puts `mintContent` in the past tense. No behaviour change.
+
+**Tests** (`bio-plane/test/m/record-grammar/labels.test.mjs`): R38's key list and distinct-sentence count (10 × 3) updated; R42's test pins `template` at index 7 rather than last; new tests named R43 and R44 check each table whole (place, frozen, keys, every sentence's subject and its "not until" clause, machine work a draft, `proposalLabel` over every blank, machine and member identity) and a test named R38 R42 R44 checks the `RangeError` message exactly, all ten subjects in order.
+
+**Deferred:** nothing.
+
+**Found in another module:** none. The change touches the plane bundle's inputs (record-grammar is plane source): `bio-plane/dist/bio-plane.bundled.mjs` is stale until BOB regenerates it at the layer close; reported (REPORT), nothing regenerated.
+
+**Tests and checks run:**
+- `node --test bio-plane/test/m/record-grammar/`: tests 65, pass 65, fail 0.
+- Users of `PROPOSAL_STATES`/`proposalLabel` (`grep bio-plane/test/m/`): action-grammar `grammar.test.mjs` 24/0, conformance `record.test.mjs` 7/0, filing-templates `lifecycle.test.mjs` 15/0 and `review.test.mjs` 6/0, standards `proposals.test.mjs` 2/0; no other module's test reads `PROPOSAL_STATES`.
+- `node --test bio-plane/test/m/`: tests 5011, pass 4995, fail 4, todo 12, skipped 0. The four are accepted reds by name: membership `module-order.test.mjs`:12, `t9-notice-sight-bounds.test.mjs`:185, promotion `registry.test.mjs`:58 (red 2); control-plane `inbox-door.test.mjs`:81/86 (red 9, N499). row-census and test-support R2 were green in this session.
+- `checks/format.mjs`: 87 modules, 85 requirements files; 0 failures. `checks/architecture.mjs … record-grammar`: 25 product files, 45 relative imports; 0 failures. `checks/coverage.mjs … record-grammar`: 42 of 42 live requirement ids named by a test; 0 failures. `checks/ownership.mjs … record-grammar tranche/T23`: 0 failures.
+
+Size (session_01PA1sW8VidctbEdHbBtynvg): test runs 6, module lines 2288
