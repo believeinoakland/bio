@@ -52,7 +52,7 @@ import { ACTIONS_TABLES, migrateActions } from "./schema.mjs";
 
 export { ACTIONS_SCHEMA, ACTIONS_TABLES } from "./schema.mjs";
 
-/** R13, R15: the longest reason, account, medium or party (the legacy store's `RELEASE_ACK_MAX`). */
+/** R13, R15: the longest reason, account, medium or party (the value of the retired legacy store's `RELEASE_ACK_MAX`). */
 export const NOTE_MAX = 500;
 /* REC-24: how long op=actioncorrespond holds the courtesy lock while it rewrites one document. Short on purpose — the
    op is a single append with no human step inside it. It is a COURTESY: promote's CAS on `base` is what actually
@@ -289,7 +289,7 @@ export class Actions {
                      id, ...gate.args);
   }
 
-  /* K57's small helpers, copied from the legacy store (which keeps its own for its other writers). */
+  /* K57's small helpers, copied from the retired legacy store at the extraction; this module keeps its own copy. */
   static #appendStateHistory(text, e) {
     const lines = text.split("\n");
     if (lines[0] !== "---") return null;
@@ -2303,8 +2303,9 @@ for (const m of ["actionMove", "actionCorrespond", "actionLaws", "actionLawsProp
   Actions.prototype[m] = function (...a) { return withRow(fn.apply(this, a)); };
 }
 
-/* R19, R28: the label of a proposal stored apart. The governing-laws sentence is legacy-checks' (REC-195); the
-   tier's says, in each state, what the proposal is not. (The clock entry's moved to `action-clocks` with R32, K617.) */
+/* R19, R28: the label of a proposal stored apart. The governing-laws sentence is action-grammar's `lawProposalLabel`
+   (REC-195); the tier's says, in each state, what the proposal is not. (The clock entry's moved to `action-clocks` with
+   R32, K617.) */
 const PROPOSAL_SAYS = {
   risk_tier: {
     machine_proposed: "a machine credential proposed this risk tier. That is machine work, labelled as machine work: it "
@@ -2365,7 +2366,8 @@ export function actionsOwns(t) {
   return ACTIONS_TABLES.includes(name);
 }
 
-/** The module's ops (K3), as entries of the legacy store's op map. `viewer`, `author` and `proposer` are the control
+/** The module's ops (K3), as entries of the plane's one route map (plane R5: `routes` spreads them in, and
+ *  control-plane's `dispatch` answers every store request over it). `viewer`, `author` and `proposer` are the control
  *  plane's stamps, read from the query, so a caller's own copy never wins. */
 export function actionsOps(a, url, body) {
   const q = (k) => url.searchParams.get(k);
