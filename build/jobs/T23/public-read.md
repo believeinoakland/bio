@@ -1,6 +1,6 @@
 # public-read (T23)
 
-**Status** · session_013j3rKMqpomA79mCkzoNc9j · depth 2 · COMPLETE · handled B2
+**Status** · session_013j3rKMqpomA79mCkzoNc9j · depth 2 · COMPLETE · handled B3
 
 ## J1 · COMPLETE
 
@@ -45,3 +45,30 @@ Job complete (759c10fffc; tranche/T23 @ 34e366ce39 merged in at 97d8fdb5fc). B2 
 **Another module / generated artifact.** These changes stale the plane bundle (`bio-plane/dist/bio-plane.bundled.mjs`, red 12). I regenerated nothing. Nothing found in another module.
 
 Size (session_013j3rKMqpomA79mCkzoNc9j): test runs 9, module lines 2427
+
+## J2 · COMPLETE
+
+Job complete again (7786335903; tranche/T23 @ 8e220231b3 merged in first, no conflict). B3 (K1149) processed.
+
+**Entries applied.**
+- **C-98.10 (R17, R18).** `PUBLISHED_READ_CHECKS.PUBLIC_READ_NOT_REGISTERED` is added to `public-read/checks.mjs`: check `C-98.10`, where `src/public-read/index.mjs publicRead > is-public-read-not-registered`, and the translation exactly as R17 states it. Its comment marks it `awaiting stamp`. `publicRead`'s not-registered refusal now carries `code`, `check` and `translation` from `rowOf`, with the code a string literal inside its DEC-49 REGION. The door relays the same body at 404. `PROVIDER_DECLARED` and `PROVIDER_MALFORMED` have no row.
+- **`CATALOG_VERSION` not moved, and why.** It is `bio-plane/src/gate.mjs`:558, which is promotion's file. Its note says the rows T23's layers 3–11 change are T24's stamp (`awaiting stamp`, red 7). Moving it here would change another module's file, so I left it, as the other T23 rows were left. The move belongs to T24's L2 with the rest.
+- **R10's wording.** Nothing to build.
+
+**Tests.**
+- `checks.test.mjs`: the R17 table pin now holds C-98.10 (number, where, and the translation's sha256 `5bd5f9f10b3aa19b`). The site test meets C-98.10 at the `publicread` store op and through the door (404), and asserts the translation word for word.
+- `public-reads.test.mjs`: the not-registered arm, now named R18 and R17, checks the row's fields.
+
+**Runs.**
+- `test/m/public-read/`: 86 pass, 0 fail.
+- Whole `bio-plane/test/m`: 5071 tests, 5054 pass, 5 fail. All 5 are accepted:
+  - control-plane `inbox-door.test.mjs`:81 (red 9);
+  - queue `catalogue.test.mjs`:34 and :116;
+  - conformance `record.test.mjs`:144 (`exportManifest is not a function`) and plane `worker.test.mjs`:39 (queue-producers' `exportLog`). Both are red 6 from publication's merge, and both fail identically with my changes stashed, on tranche/T23 @ 8e220231b3.
+- Checks: format, 87 modules, 0 failures; architecture, 29 files, 82 imports, 0 failures; coverage, 19 of 19, 0 failures; ownership, 4 files, 0 failures.
+
+**Generated artifact.** The plane bundle is still stale (red 12). I regenerated nothing.
+
+**Correction to J1.** Its size line said module lines 2427. The count was 2395.
+
+Size (session_013j3rKMqpomA79mCkzoNc9j): test runs 13, module lines 2410

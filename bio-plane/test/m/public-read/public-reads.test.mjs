@@ -162,10 +162,11 @@ test("R18 a malformed registration is refused whole, naming what is wrong, and r
   for (const own of PUBLIC_READ_OWN_OPS) assert.equal(w.pr.registerPublicReads("m", { [own]: () => 1 }).reason, "PROVIDER_MALFORMED", own);
 });
 
-test("R18 an unregistered name says that it is not registered, at the store and through the door (404); a malformed name is the argument refusal (400)", async () => {
+test("R18 R17 an unregistered name says that it is not registered, with its row C-98.10, at the store and through the door (404); a malformed name is the argument refusal (400)", async () => {
   const { w, env } = served();
   const none = w.read("publicread", { name: "nosuchread" });
-  assert.deepEqual([none.ok, none.reason, none.name], [false, "PUBLIC_READ_NOT_REGISTERED", "nosuchread"]);
+  assert.deepEqual([none.ok, none.reason, none.code, none.check, none.name], [false, "PUBLIC_READ_NOT_REGISTERED", "PUBLIC_READ_NOT_REGISTERED", "C-98.10", "nosuchread"]);
+  assert.equal(none.translation, "This copy of the record offers no public read by that name. Nothing was changed.");
   assert.match(none.detail, /no public read named "nosuchread" is registered/);
   const r = await door(w, env, "publicread", { name: "nosuchread" });
   assert.equal(r.status, 404);
