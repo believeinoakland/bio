@@ -291,7 +291,7 @@ export const CAPTURE_REQUEST_CHECKS = Object.freeze({
      FILED UNDER THAT SWEEP ONLY WHEN THE SWEEP'S SCOPE ADMITS IT. A sweep names a query members ratified up front, and
      a request filed under it inherits that ratification, so the fence is the sweep's own: ratified, not held, and every
      locator of the request (the address, and any redirect the fetch meets) inside its scope. The scope check is
-     `monitoring`'s, registered at start; with none registered nothing can say the sweep admits the request, so it is
+     `link-sweep`'s (its R12), registered at start; with none registered nothing can say the sweep admits the request, so it is
      refused. Terminal: the request is not fetched under a sweep that does not admit it, and nothing is filed. Minted at
      one region (`sweepOutOfScope`), which the drain's conduct and its fire both answer through. New at T23,
      taken by 1.54.0 (promotion's T24 job). */

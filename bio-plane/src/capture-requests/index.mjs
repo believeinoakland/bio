@@ -157,7 +157,7 @@ const randomHex = (bytes) => [...crypto.getRandomValues(new Uint8Array(bytes))]
 export class CaptureRequests {
   #sql; #deps; #draining = false;
   #filed = [];     // R44: {module, fn, seq}
-  #sweepScope = null;   // R45: {module, fn}, monitoring's scope check
+  #sweepScope = null;   // R45: {module, fn}, link-sweep's scope check
 
   /** `deps`: `record`, `observations`, `governor`, `capture`, `credentials` (each module's instance on this storage),
    *  `runs` (ai-runs' run sight, R28 of ai-runs: `runFor(run, viewer)` answering the run's `status`,
@@ -384,13 +384,13 @@ export class CaptureRequests {
     return { ok: true, module };
   }
 
-  /** R45 (K1099; K31's pattern, this module being earlier than `monitoring`, P4): the one scope check, registered once
-   *  at start by `monitoring`. A second registration, whoever makes it, is refused `LISTENER_DECLARED` naming the
+  /** R45 (K1099; K31's pattern, this module being earlier than `link-sweep`, P4): the one scope check, registered once
+   *  at start by `link-sweep` (its R12). A second registration, whoever makes it, is refused `LISTENER_DECLARED` naming the
    *  holder, and a malformed one `LISTENER_MALFORMED`, both through membership's `listenerRefusal` (its R81).
    *
    *  The check is `fn({sweep, locators, run, target})`, answered at once or as a promise: `{ok: true, scope}` when the
    *  sweep is ratified and not held and every locator is in its scope, `scope` being its in-scope prefixes (the
-   *  sweep's `sources`, monitoring R53), which ride the fetch so `acquisition` judges each redirect against them (its
+   *  sweep's `sources`, link-sweep R1), which ride the fetch so `acquisition` judges each redirect against them (its
    *  R31); anything else, a throw included, refuses the request (`reason`, one of `unknown`, `unratified`, `held` or
    *  `out-of-scope`, and `detail` are carried into the refusal when given). */
   registerSweepScope(module, fn) {
@@ -725,7 +725,7 @@ export class CaptureRequests {
     return { ok: true, ua, attribution, ...(sweep ? { sweep: q.sweep, scope: sweep.scope } : {}) };
   }
 
-  /** R45: whether the sweep the row names admits it, as `monitoring`'s registered scope check answers: `{ok: true,
+  /** R45: whether the sweep the row names admits it, as `link-sweep`'s registered scope check answers: `{ok: true,
    *  scope}`, or R45's refusal. A name not of the shape `"<bundle>#<id>"` names no sweep and is refused without asking;
    *  with no check registered nothing can say the sweep admits the request, so it is refused; a check that throws, or
    *  answers anything but `ok: true` with a non-empty list of prefixes, refuses it. Never throws. */
@@ -1114,7 +1114,7 @@ export class CaptureRequests {
   }
 }
 
-/** R45: a sweep's full name, `"<bundle>#<id>"` (monitoring R53: the id `^[a-z0-9][a-z0-9-]{0,39}$`). */
+/** R45: a sweep's full name, `"<bundle>#<id>"` (link-sweep R1: the id `^[a-z0-9][a-z0-9-]{0,39}$`). */
 const SWEEP_NAME = /^[^\s#]{1,200}#[a-z0-9][a-z0-9-]{0,39}$/;
 /** R45: what the scope check's `reason` says, in the refusal's words. */
 const SWEEP_REFUSALS = Object.freeze({
