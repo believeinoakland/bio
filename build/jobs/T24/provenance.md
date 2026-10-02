@@ -26,3 +26,7 @@
 - `checks/format.mjs`: 88 modules, 87 requirements files; 2 failures, both `link-sweep`'s absent directories (accepted red 4). `checks/architecture.mjs provenance`: 24 product files, 0 failures. `checks/coverage.mjs provenance`: 57 of 57 live requirement ids named by a test, 0 failures. `checks/ownership.mjs provenance tranche/T24`: 4 files changed, 0 failures.
 
 Size (session_01Tohc8CMuv7F1WY3Kqsr8dU): test runs 4, module lines 4001
+
+## J1 · COMPLETE
+
+provenance T24 complete (record: Completion). N504/R57: instanceKeyBound() (async, Promise<boolean>; true exactly when R34's key can be read; false for none, blank or unreadable; signs and writes nothing, first_used unchanged; never rejects). Improvement in this module: an unreadable bound key is now no key, so instanceSign and signReceipt answer RECEIPT_NO_KEY instead of rejecting. Stale-note re-scan: 4 lines re-worded (index.mjs R54 block, routeOf, counts; ops.mjs header); no awaiting-stamp note. Tests: 4 R57 tests with bound/unbound/unreadable/first_used controls (all 4 fail on the old code); provenance 121/121; mk6 1/1; test/m 5234 tests, 5223 pass, 0 fail, 11 todo. format: only red 4 (link-sweep dirs); architecture, coverage (57/57), ownership 0 failures. Red 5: no row added or changed. REPORT: the plane's bundle bio-plane/dist/bio-plane.bundled.mjs is stale (not regenerated); R57's not-yet-met mark is yours to strike; bio-plane/src/provenance/ is now 4,001 lines (ruling 1's ~4,000 mark).
