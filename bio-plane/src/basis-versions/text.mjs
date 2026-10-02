@@ -1,9 +1,9 @@
 /* basis-versions — the line-oriented edits of a document's front matter that versions, CURRENT and conclusions need
  * (moved from `store.mjs`: `#setVersionField`, `#setCurrentVersionRow`, `#appendFmRows`, `#appendConclusionEntry`).
- * The repository has a front-matter PARSER (the catalogue's) and no serializer, so a field is rewritten in place and
- * every other byte is left alone. Each edit REFUSES rather than guesses, answering null for a block in a shape the
- * restricted grammar cannot extend: the grammar has no escapes, so a wrong guess would corrupt a document silently and
- * the promotion would then hold the corruption. A ROW is `  - ` and its continuation lines, the only shape the
+ * The repository has a front-matter PARSER (record-grammar's `parseFrontmatter`, once the catalogue's) and no
+ * serializer, so a field is rewritten in place and every other byte is left alone. Each edit REFUSES rather than
+ * guesses, answering null for a block in a shape the restricted grammar cannot extend: the grammar has no escapes, so a
+ * wrong guess would corrupt a document silently and the promotion would then hold the corruption. A ROW is `  - ` and its continuation lines, the only shape the
  * restricted parser reads and the only shape any writer in this tree emits. */
 
 /** Frontmatter-safe text: the restricted grammar has no escapes, so a derived string loses its line breaks, and a
