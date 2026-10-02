@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #103 · session_01BaZjVu3eHvWLLU4C5CdGA7 · depth 1
 
-**Jobs** · 
+**Jobs** · signatures: SIGNATURES #6 session_01N3t7Hfj37rLM9MSN2KgSNZ
 
 **Opened** 2026-10-02 ~22:30 UTC by BOB #103 from `main` @ 09fddd6535 (T26 closed, K1249; Bob's permission edits, K1261), from T26's `next.md` (K1262). **Bob's weekly meter** · 72% after T26's close (K1250); asked again at the opening.
 
