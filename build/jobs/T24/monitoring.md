@@ -11,3 +11,16 @@ Two readings I am building on; I carry on with the job on them, and none of them
 (2) R66 "With nothing registered, C-18.5 reads no sweep arm (a `sweeps[]` entry draws no finding of R27's)": I read it whole, so with nothing registered no `sweeps[]` entry draws any finding, not even "is not an object"; with a share registered, a non-object entry is monitoring's finding and an object entry is the grammar's.
 
 Also, for your planning: `sweep_runs` and `sweep_filed` leave my schema and purge declaration (link-sweep's, per its Size and Suggestions); `queue-producers` calls `monitoring.sweepConditions` (its index.mjs:2911), which leaves with N506, so its R26 sweep items go dark from my merge until its L11 re-point. I report every red my merge makes in `bio-plane/test/m`, by file and line, in COMPLETE.
+
+## Completion
+
+Entries applied, signatures, reds and reports: as in J2 below. Deferred: none.
+
+Tests and checks run, with summary lines:
+- `node --test bio-plane/test/m/monitoring/` → tests 99, pass 99, fail 0.
+- `node --test bio-plane/test/m/` → tests 5246, pass 5222, fail 13 (each named in J2; baseline before my change: fail 4).
+- `node --test bio-plane/test/system/fleetbundles.test.mjs` → the plane bundle STALE (reported, not regenerated).
+- `node --test bio-plane/test/system/row-census.test.mjs` → census 1070 rows against the pin's 1073 (red 7, K1206).
+- `checks/format.mjs` → 2 failures (red 4). `checks/architecture.mjs monitoring` → 0 failures. `checks/coverage.mjs monitoring` → 57 of 65, 1 failure (the requirements file's retirement wording, J2). `checks/ownership.mjs monitoring tranche/T24` → 15 files, 0 failures.
+
+Size (session_01LubdwpQSMaaKPPQPfezUV3): test runs 30, module lines 3208
