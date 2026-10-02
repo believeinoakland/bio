@@ -34,7 +34,6 @@
 | H13 | DEC-105 audience guidance | Bob's | waits for its trigger |
 | C5 | `PLN-` affordances, plan page, joint action | Bob's | K608 (4), K600 (c) |
 | H3, H4, H9b, H11, H14, H16c, H18, H20, J6, J11 | DEC screens of the new interface | Bob's (UX) | K633, K899 (2) |
-| N481 | DEC-112 published case in three forms | Bob's | on `main` (PR #7); K1134 Q2, Q3, Q6 unanswered |
 | H1, H6b, J4 | DEC-96, DEC-101 (3), DEC-92 | dependency not yet built | nothing brings another group's edition into this copy |
 | A8 | bias R26 | dependency not yet built | K102's trigger |
 | A21 | inquiry R31 | dependency not yet built | no opinion element (MK-5) |
