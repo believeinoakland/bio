@@ -3,9 +3,10 @@
  *
  * C-28, the capture-request family, less C-28.13 (the capture-request arm's row, `acquisition`'s: its R1, R29), COPIED
  * from the check catalogue (`bio-plane/checks/bio-checks.mjs`) in T18: each row's code, number and translation are
- * unchanged and its `where` names this module's site, `awaiting stamp` for promotion's T19 job. The catalogue's copy
- * was deleted by this module in T19 (rule 1, K816): this table is now the only one. `CAPTURE_PURPOSES`,
- * `CAPTURE_UA_MODES` and `userAgentIsLegible` MOVED here (K586 BOB-1: this module was their only product importer).
+ * unchanged and its `where` names this module's site, taken by 1.49.0 (promotion's T19 job). The catalogue's copy
+ * was deleted by this module in T19 (rule 1, K816; 1.50.0 records it): this table is now the only one.
+ * `CAPTURE_PURPOSES`, `CAPTURE_UA_MODES` and `userAgentIsLegible` MOVED here (K586 BOB-1: this module was their only
+ * product importer).
  * The CivicOS agent's one composer, `civicosUserAgent`, is `acquisition`'s (its R24), read from there so the drain
  * judges the string `acquisition` sends. C-108 is this module's own family (K181 (2); K174's pattern).
  *
@@ -293,7 +294,7 @@ export const CAPTURE_REQUEST_CHECKS = Object.freeze({
      `monitoring`'s, registered at start; with none registered nothing can say the sweep admits the request, so it is
      refused. Terminal: the request is not fetched under a sweep that does not admit it, and nothing is filed. Minted at
      one region (`sweepOutOfScope`), which the drain's conduct and its fire both answer through. New at T23,
-     `awaiting stamp` until T24's L2. */
+     taken by 1.54.0 (promotion's T24 job). */
   CAPTURE_SWEEP_OUT_OF_SCOPE: {
     check: 'C-28.19',
     where: 'src/capture-requests/index.mjs sweepOutOfScope > is-capture-sweep-scope',
