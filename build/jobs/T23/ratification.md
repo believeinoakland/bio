@@ -2,6 +2,33 @@
 
 **Status** · session_01XpAMPH8pBju7ehx6R7uD1T · depth 2 · RUNNING until 2026-10-02T09:38:30Z (node --test test/m/) · handled B3
 
+## Completion
+
+**Entries applied** (B1, `build/plan/current.md` T23 layer 8; B2–B4).
+- **R37** (DEC-111, K1031 (3), K1143, K1153). `ratifyCaseDocument` (`src/ratification/index.mjs`) holds `network-notices.openSeals({case, edition})` with record-core R66 `afterCommit`, registered after the commit succeeds inside the commit's transaction: it starts only after the outermost commit and is dropped with any refusal or rollback; a retry answering `existed` opens nothing. `openSeals` is async, so the commit is now `async` and answers once it settles (its ops arm and `caseRatifyOp` already awaited it); the answer carries `seals`, `openSeals`' own answer, or, when it refuses, throws, rejects or answers nothing, `{ok: false, opened: false, reason, detail}` saying the edition is committed, the answer stands and the `working-on-attest` consumer retries. `caseRatifyOp` relays it through its existing spread. `networkNotices` is a new dep (`networkNoticesOf(host, …)` by default). The "What becomes permanent" step is case-authoring's (its R42; K1119): no step of mine renders it, and I edited nothing of case-authoring.
+- **R38** (K1119, K1144). `CASE_DOCUMENT_FAMILY` gains `WORKING_ON`, C-41.17 (a gate finding, no refusal code), and `checkCaseDocument` refuses a document holding the key `WORKING_ON_KEY` whose value `isNoticeReference` (case-grammar R10) does not accept, `null` and `""` included; an absent key names no notice. It runs in the catalogue `runCaseGate` runs, so `op=caseratify` (GATE_REFUSED) and the pre-flight refuse before any write. C-41.17 is `awaiting stamp` until T24's L2 (accepted red 7). R8's and R14's range is BOB's to fold (B4).
+- **N497** (K1087, K1099). `test/m/ratification/fixture.mjs`:107 registers `producingGroup` as `instance-setup`; `retire.test.mjs`:5 stays a provenance note.
+- **Re-scan (K1138, N469/N502's kind)**, comment-only: C-58.4/C-58.5 now name the 1.53.0 stamp; the op-map notes in `index.mjs` (R32), `release.mjs`, `retire.mjs` name `plane/store.mjs`; `checks.mjs` header names record-grammar's copy of `isCaseMemberBytes` (N69) and case-grammar R1 for the formats, and the finding shape `record-grammar` R11; `index.mjs` header cites connections R58 for `refs`; `fmSafe` "once legacy-store's".
+- **Tests converted for the async commit** (no assertion weakened): `case-commit`, `converted-a`, `converted-d`, `preflight` now await `ratifyCaseDocument`; the one `assert.throws` on a rollback became `assert.rejects`. New: `seals.test.mjs` (R37: called once with the committed case and edition, outside the transaction and after the commit; refusal, throw, rejection, no answer each leave the answer and the commit unchanged and are stated; refused, rolled-back and `existed` commits call nothing; the real network-notices module; the Worker relay). R38: `checks.test.mjs` (the arm, every shape), `converted-c.test.mjs` and `caseratify-op.test.mjs` (GATE_REFUSED C-41.17, nothing committed; a notice id commits).
+
+**Deferred:** none.
+
+**Found in another module** (REPORT J2): `network-notices.openSeals` (its R17) finds the edition by `published_cases.ratified_at IS NOT NULL`, which publication stamps only when the edition completes (all members published; `src/publication/index.mjs`:2077, its R53), not at the case commit (`case_documents.ratified_at`, :842). So at the call R37 makes, an edition still awaiting members answers `NO_PUBLISHED_EDITION` and records no `nn_open_requests` row, and `working-on-attest` never retries it: against R17 ("called once an edition is committed") and R37's retry. `seals.test.mjs` drives both shapes with the real module. Generated artifact: the change under `src/ratification/` (and its new import of `network-notices`) stales the plane bundle `bio-plane/dist/bio-plane.bundled.mjs` (accepted red 12); nothing regenerated.
+
+**Tests and checks** (in `bio-plane/` unless said):
+- `node --test test/m/ratification/`: tests 199, pass 199, fail 0.
+- `node --test test/m/` (covers the users: case-authoring, affordances, plane, control-plane): tests 5130, pass 5112, fail 6, all red on `tranche/T23` without my changes too: control-plane `inbox-door.test.mjs`:81 R36 (red 9); queue `catalogue.test.mjs`:34 R1 and :116 R5 (red 13); conformance `record.test.mjs`:144 R17, `w.publication.exportManifest is not a function` (red 6, N483); control-plane `families.test.mjs`:47 R22, `CHECK_FAMILIES` misses network-notices' `NETWORK_NOTICE_CHECKS` (from network-notices' merge; the totality reds of red 5's kind, until L11); plane `worker.test.mjs`:39 R6, `op=queue` STORE_DID_NOT_ANSWER in the runtime (until L11's queue/plane merges). `test/caseceremony.mjs` is a helper of the miniflare suites (full regression), not run; it reads only `ok`, which is unchanged.
+- `node checks/format.mjs`: 87 modules, 86 requirements files; 0 failures
+- `node checks/architecture.mjs … ratification`: 24 product files, 115 relative imports; 0 failures
+- `node checks/coverage.mjs … ratification`: 38 of 38 live requirement ids named by a test; 0 failures
+- `node checks/ownership.mjs … ratification tranche/T23`: 14 files changed; 0 failures
+
+Final line count: `bio-plane/src/ratification/` 3,973 lines (was 3,936).
+
+Reading, said plainly: the public parts of 17 of my 21 uses (all but network-notices, case-grammar, publication and public-read, which I read whole) were read whole by a helper agent of this session, which reported what bore on the entries; and of my tests I read whole the fixture, `case-commit`, `checks`, `caseratify-op` and the arms I changed in `converted-*`/`preflight`, not every other test file whole.
+
+Size (session_01XpAMPH8pBju7ehx6R7uD1T): test runs 13, module lines 3973
+
 ## J1 · REPORT
 
 Progress, and what I am waiting on. (2) N497 done: `fixture.mjs`:107 registers `producingGroup` as `instance-setup`; `retire.test.mjs`:5 left as the provenance note. Re-scan (K1138): source comments of N469's/N502's kind re-worded, comment-only: C-58.4/C-58.5 "Awaiting stamp (T23)" now name the 1.53.0 stamp; "legacy store's op map" / "the store's op map" now `plane/store.mjs` (index.mjs R32 header, release.mjs, retire.mjs); `legacy-checks keeps its own copy` now record-grammar's (N69); "formats are publication's (its R20)" now case-grammar R1; connections' `refs` now cites its R58 read contract. `bio-plane/test/m/ratification/`: 192 pass, 0 fail. Pushed (job/T23/ratification).
