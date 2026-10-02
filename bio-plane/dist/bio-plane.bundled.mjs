@@ -31147,6 +31147,7 @@ __export(inquiry_exports, {
   checkLegExtentGrammar: () => checkLegExtentGrammar,
   deriveInquiryTitle: () => deriveInquiryTitle,
   divisionDisclosureFindings: () => divisionDisclosureFindings,
+  inquiryFindings: () => inquiryFindings,
   inquiryLegGrades: () => inquiryLegGrades,
   inquiryOf: () => inquiryOf,
   inquiryOps: () => inquiryOps,
@@ -59646,6 +59647,22 @@ CREATE TABLE IF NOT EXISTS inquiry_bundle_facts (
   inquiry_superseded_by  TEXT,
   inquiry_subject_entity TEXT
 );
+
+-- R53 (A9, bias R40): a question's FINDING, its conclusion, and the project lens in force when it was made, so a change
+-- of that lens raises a bias debt on it (bias R33-R38). Written by R12's projection when a document that states its
+-- project (promotion R53) enters 'concluded'; a re-conclusion replaces the row. lens_state is 'recorded' (lens_sha the
+-- lens's statements_sha), 'none' (no lens was in force for the project: the finding was not made under one), or
+-- 'unreadable' (the lens could not be read, or a replay wrote the conclusion): only 'recorded' offers a lens, the rest
+-- are undetermined and never filled in. principal is the concluding member's id, NULL for a machine or an unreadable
+-- author. Keyed by bundle_id and declared to purge with project_id (R36).
+CREATE TABLE IF NOT EXISTS inquiry_findings (
+  bundle_id   TEXT PRIMARY KEY,
+  project_id  TEXT NOT NULL,
+  lens_state  TEXT NOT NULL,
+  lens_sha    TEXT,
+  principal   TEXT,
+  at          TEXT NOT NULL
+);
 `;
 var INQUIRY_TABLES = [
   "inquiry_basis",
@@ -59653,7 +59670,12 @@ var INQUIRY_TABLES = [
   "inquiry_migration_replays",
   "inquiry_member_agents",
   "inquiry_contradiction_links",
-  "inquiry_bundle_facts"
+  "inquiry_bundle_facts",
+  "inquiry_findings"
+];
+var INQUIRY_PURGE = [
+  ...INQUIRY_TABLES.filter((t) => t !== "inquiry_findings"),
+  { name: "inquiry_findings", keys: ["bundle_id", "project_id"] }
 ];
 var BUNDLE_FACTS = "inquiry_bundle_facts";
 var LEGS_RELATION = Object.freeze({ table: BUNDLE_FACTS, key: "bundle_id", col: "inquiry_basis_count" });
@@ -60201,11 +60223,15 @@ function liveFailures(base, failed2) {
     }
   });
 }
+var MEMBER_AUTHOR = /^member:([A-Za-z0-9._:-]{1,128}?)(?:\/.*)?$/;
+var FINDING_KEY = "finding:";
 var Inquiry = class _Inquiry {
   #onRaised = null;
   // {module, fn}: reevaluation's obligation (R21, R25)
   #onGrounded = null;
   // {module, fn}: strength's pair (R28)
+  #bias = null;
+  // R53: the lens a finding is made under is read here
   #deps;
   constructor({
     storage,
@@ -60217,6 +60243,7 @@ var Inquiry = class _Inquiry {
     entities = null,
     retrieval = null,
     provenance = null,
+    bias = null,
     host = null,
     now
   } = {}) {
@@ -60227,6 +60254,7 @@ var Inquiry = class _Inquiry {
     this.promotion = promotion;
     this.content = content;
     this.#deps = { connections, entities, retrieval, provenance, host };
+    this.#bias = bias;
     this.now = typeof now === "function" ? now : () => stampInstant("second");
   }
   /* The modules reached lazily: each is created on the same host on first use, unless a test passed its own. */
@@ -60241,6 +60269,11 @@ var Inquiry = class _Inquiry {
   }
   get provenance() {
     return this.#deps.provenance ||= provenanceOf(this.#deps.host);
+  }
+  /** R53: the bias instance a finding's lens is read from, bound once (the first binding holds); null until bound. */
+  bindBias(bias) {
+    if (!this.#bias && bias && typeof bias.biasManifest === "function") this.#bias = bias;
+    return this.#bias;
   }
   #rows(q7, ...a) {
     return [...this.sql.exec(q7, ...a)];
@@ -60682,6 +60715,8 @@ var Inquiry = class _Inquiry {
       );
       migrated = { capture: pkg.migrationReplay.capture, promotion: promotionKey, at: ts };
     }
+    if (isInquiry && docFm && docFm.current_state === "concluded" && !(cur && cur.currentState === "concluded"))
+      this.#recordFinding(bundleId, docFm, c.author, !!pkg.replay);
     const agent = !cur && isInquiry && !pkg.replay ? agentOf(pkg.memberUserAgent) : null;
     if (agent)
       this.sql.exec(
@@ -60693,6 +60728,75 @@ var Inquiry = class _Inquiry {
     return {
       ...migrated ? { migration_replay: migrated } : {},
       ...contentProjected.length ? { content: contentProjected } : {}
+    };
+  }
+  /* R53: the question's finding and the project lens in force as it was made, read as bias reads every lens (the
+     administrator viewer, bias R33). A lens that cannot be read (no bias bound, or its read fails) and a replayed
+     conclusion (not made now) record no lens; none in force records that none was. Never throws into the promotion. */
+  #recordFinding(bundleId, fm, author, replay) {
+    const project = typeof fm.project === "string" ? fm.project.trim() : "";
+    if (!project) return;
+    let state = "unreadable", sha = null;
+    if (!replay && this.#bias)
+      try {
+        const m = this.#bias.biasManifest({ scope: "project", scopeId: project, viewer: "admin", limit: 1 });
+        if (m && m.in_force === true && typeof m.statements_sha === "string") {
+          state = "recorded";
+          sha = m.statements_sha;
+        } else if (m && m.in_force === false) state = "none";
+      } catch {
+      }
+    const who2 = MEMBER_AUTHOR.exec(typeof author === "string" ? author : "");
+    this.sql.exec(
+      `INSERT INTO inquiry_findings (bundle_id, project_id, lens_state, lens_sha, principal, at) VALUES (?,?,?,?,?,?)
+                   ON CONFLICT(bundle_id) DO UPDATE SET project_id=excluded.project_id, lens_state=excluded.lens_state,
+                     lens_sha=excluded.lens_sha, principal=excluded.principal, at=excluded.at`,
+      bundleId,
+      project,
+      state,
+      sha,
+      who2 ? who2[1] : null,
+      this.#when()
+    );
+  }
+  /** R53 (A9, bias R40): this module's findings as bias's work products (bias R33), offered under kind `finding`. A
+   *  finding is a question's conclusion, made under the lens of the project its document states: every question with
+   *  a recorded finding (R12's row), and every concluded question stating a project that has none (concluded before
+   *  findings were recorded), keyed `finding:<id>` and listed ascending. `read` answers its context (the project), its
+   *  member principal, the lens in force as it was made (`{basis: "at_open", statements_sha}`, bias's comparison of a
+   *  lens recorded in force, under which a lens since withdrawn has moved too), or null where no project lens was
+   *  recorded (undetermined, never filled in), no re-run link, and `registered` (when it was made, null when not
+   *  recorded); `visible` is the question's own sight (R33). */
+  workProducts() {
+    const idOf = (key) => typeof key === "string" && key.startsWith(FINDING_KEY) ? key.slice(FINDING_KEY.length) : "";
+    return {
+      list: (after, limit) => this.#rows(
+        `SELECT bundle_id FROM (SELECT bundle_id FROM inquiry_findings UNION SELECT bundle_id FROM bundles
+           WHERE object_type='inquiry' AND current_state='concluded' AND COALESCE(project, '') <> '')
+          WHERE bundle_id > ? ORDER BY bundle_id LIMIT ?`,
+        idOf(String(after ?? "")) || "",
+        Math.max(1, Math.floor(Number(limit) || 50))
+      ).map((r) => FINDING_KEY + r.bundle_id),
+      read: async (key) => {
+        const id = idOf(key);
+        const info = id ? this.record.bundleInfo(id) : null;
+        if (!info) return null;
+        const f17 = this.#one(`SELECT * FROM inquiry_findings WHERE bundle_id=?`, id);
+        const project = f17 ? f17.project_id : info.project;
+        if (!project) return null;
+        return {
+          context: { type: "project", id: project },
+          principal: f17 ? f17.principal ?? null : null,
+          lens: f17 && f17.lens_state === "recorded" && f17.lens_sha ? { basis: "at_open", statements_sha: f17.lens_sha } : null,
+          ranUnder: null,
+          rerunOf: null,
+          registered: f17 ? f17.at : null
+        };
+      },
+      visible: async (key, viewer) => {
+        const id = idOf(key);
+        return !!id && this.membership.inSight(id, viewer) === true;
+      }
     };
   }
   /** R12, R16: ONE bundle's superseded-by index from the `supersedes` edges pointing at it (connections' `refs`), the
@@ -61760,7 +61864,8 @@ Apportioned: ${legs.length} leg(s), ${rows2.length} placement(s), ${legs.filter(
    * (the op=promote `ownerMemberId` precedent, and the reason it is DELETE and
    * not OVERWRITE: overwriting is a property of the code path taken, deletion
    * is a property of the input, and only the second survives somebody later
-   * adding an arm). CLAUDE.md's rule is exactly this one — a provenance hop a
+   * adding an arm). The old process's CLAUDE.md rule (archived,
+   * `docs/archive/CLAUDE-2026-09-26-old-process.md`) was exactly this one — a provenance hop a
    * caller can hand us is one a caller can invent — and this is the last door
    * on the one field in the record that makes a finding STRONGER.
    *
@@ -62092,7 +62197,7 @@ Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(
       files: [mdFile(text5), ...carriedFiles(this.sql, target)],
       /* NO STATE MOVES. The meta carries the document's own state forward
          unchanged — this act authors what a question rests on, not where it
-         stands — which is why it is not in index.mjs's STATE_ACTIONS. */
+         stands — which is why it is not in op-declarations' STATE_ACTIONS (`op-declarations/index.mjs`). */
       meta: {
         object_type: fm.object_type ?? b.object_type,
         title: fm.title,
@@ -62255,13 +62360,13 @@ Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(
    * record. Both are computed HERE, server-side, and the write path refuses a
    * leg stating anything else (checkEarnedLeg). The rule is the recogniser's own,
    * moved up one layer: "the RECOGNISER never mints a D; the model holds it so a
-   * member can testify, never the machine" (schema.mjs:739-743).
+   * member can testify, never the machine" (the legacy `schema.mjs`, deleted since).
    *
    * ONE FUNCTION, THREE CONSUMERS, and that is deliberate: op=promote's write
    * path, the ratification gate, and op=earnedbasis (the read a surface uses to
    * fill a leg in BEFORE writing it) all call this. A member who cannot learn
    * what a leg earns is a member the refusal pressures into inventing one, which
-   * is the failure mode CLAUDE.md names about gates.
+   * is the failure mode the old process's CLAUDE.md named about gates.
    */
   /* R43: the inquiry's recorded subject, the column R12 writes from the document into this module's table (R40), or
      null; never throws. The bytes stay the authority: the write path and the gate read the document's own
@@ -62278,8 +62383,8 @@ Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(
      REC-43 / DEC-39 it is DECLARED IN THE RECORD'S GRAMMAR rather than here.
      `static EARNED_CAPTURE_CEILING = "B"` stood on this line until 2026-08-04
      and the value is unchanged; what moved is WHERE it is written, so that the
-     published co-attestation fence can be composed from it (affordances.mjs
-     cannot import this file — this file imports IT). The doctrine, the reason
+     published co-attestation fence could be composed from it (affordances.mjs
+     could not import the legacy store, which imported it). The doctrine, the reason
      for the direction and the derivation of the unreachable letter above it are
      all at the declaration in `record-grammar` (`grades.mjs`), and `checkEarnedLeg`
      is the arm that refuses a leg claiming more than this. This class
@@ -62723,7 +62828,7 @@ function inquiryOf(host, deps) {
     const content = d.content || contentOf(host, { record, membership });
     k = new Inquiry({ ...d, host, storage: d.storage || host.storage, record, membership, promotion, content });
     instances12.set(host, k);
-    record.declarePurge("inquiry", INQUIRY_TABLES);
+    record.declarePurge("inquiry", INQUIRY_PURGE);
     if (typeof record.registerAuditContext === "function")
       record.registerAuditContext("inquiry", (id) => {
         const targets = [...k.sql.exec(`SELECT target_id FROM inquiry_basis WHERE bundle_id=?`, id)].map((r) => r.target_id);
@@ -62744,6 +62849,15 @@ function inquiryOf(host, deps) {
 }
 function inquiryLegGrades(host) {
   return (legs) => inquiryOf(host).legGrades(legs);
+}
+function inquiryFindings(host, bias = null) {
+  if (bias) inquiryOf(host).bindBias(bias);
+  const src = () => inquiryOf(host).workProducts();
+  return {
+    list: (after, limit) => src().list(after, limit),
+    read: (key) => src().read(key),
+    visible: (key, viewer) => src().visible(key, viewer)
+  };
 }
 function inquiryOwns(t) {
   const name2 = typeof t === "string" ? t : t && t.name;
@@ -67606,6 +67720,13 @@ var STRENGTH_BAR_CHECKS = Object.freeze({
     check: "C-107.2",
     where: at7("strengthBarSet", "is-strength-bar-grade"),
     translation: "A standard of evidence is stated in the grades the record uses, A to D, one for how the documents were captured and one for how firmly they connect. One of the two given is not a grade. Nothing was changed."
+  },
+  /* DEC-88 (K1025): the administrator's own words on why the group sets this bar, recorded with it and answered beside
+     it, because a standard set for everyone's work with no reason given is one nobody can weigh or answer. */
+  BAR_NO_REASON: {
+    check: "C-107.3",
+    where: at7("strengthBarSet", "is-strength-bar-reason"),
+    translation: "A standard of evidence for the whole group is set with a reason: say in your own words why the group works to this standard, in at most 2,000 characters. The reason is kept with it and shown wherever it is read. Nothing was changed."
   }
 });
 
@@ -67623,12 +67744,16 @@ var STRENGTH_SCHEMA = `
 -- SAYS SO -- an absent bar is not a bar of zero and must never render as one.
 -- Governance, not corpus: like members and signers it survives a whole-store
 -- purge; test/m/strength/cache.test.mjs (R23) proves that exemption.
+-- reason (DEC-88, R15): the administrator's words on why the group sets
+-- this bar, recorded with it; NULL only on a row written before DEC-88, added
+-- to an older store by migrateStrength.
 CREATE TABLE IF NOT EXISTS group_strength_bar (
   group_id   TEXT PRIMARY KEY,
   capture    TEXT,
   connection TEXT,
   author     TEXT NOT NULL,
-  at         TEXT NOT NULL
+  at         TEXT NOT NULL,
+  reason     TEXT
 );
 
 -- REC-12, R13: the derived pair CACHED per axis for search, one row per
@@ -67667,6 +67792,8 @@ var LEGACY_CACHE_COLS = [
 function migrateStrength(sql) {
   const bare2 = STRENGTH_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const s of bare2.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
+  const barCols = new Set([...sql.exec(`PRAGMA table_info(group_strength_bar)`)].map((r) => r.name));
+  if (!barCols.has("reason")) sql.exec(`ALTER TABLE group_strength_bar ADD COLUMN reason TEXT`);
   const cols = new Set([...sql.exec(`PRAGMA table_info(bundles)`)].map((r) => r.name));
   if (!LEGACY_CACHE_COLS.every((c) => cols.has(c))) return;
   if ([...sql.exec(`SELECT 1 AS x FROM strength_cache LIMIT 1`)].length) return;
@@ -67685,8 +67812,19 @@ var MEMBER_ID_FIELDS = Object.freeze(["bundle_id", "target_id", "inherited_from"
 var OUT_OF_VIEW_WORDS = "Part of what this rests on is out of your view.";
 var ID_IN_PROSE = new RegExp(BUNDLE_ID_RE.source.replace(/^\^/, "").replace(/\$$/, ""), "g");
 var HUNCH_WHY = "this leg is marked as a hunch, so it is visible here and does not count as evidence";
+var CREDIT_LEVELS = Object.freeze(["group", "project", "cover", "name"]);
+var ANONYMOUS_LEVELS = Object.freeze(["group", "project"]);
+var NAMED_LEVELS = Object.freeze(["cover", "name"]);
+var UNCORROBORATED_WHY = "this leg is a member's observation credited anonymously, and nothing independent in what this rests on bears it out, so it is visible here and does not count as evidence";
+var BAR_REASON_MAX = 2e3;
+var BAR_HONEST_NOTE = "CivicOS has no guidance yet on what particular audiences expect. Readers see the bar you set in these words.";
 var isHunch = (source) => typeof source === "string" && VERSION_STRENGTH_INERT_SOURCES.includes(source);
 var str3 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
+var hunchCount = (legs) => legs.filter((l) => isHunch(l.grade_source)).length;
+function levelsGiven(levels) {
+  if (!levels || typeof levels !== "object" || Array.isArray(levels)) return null;
+  return Object.freeze(Object.fromEntries(Object.entries(levels).filter(([id, lv]) => id && CREDIT_LEVELS.includes(lv))));
+}
 var typeOfId = (id) => normalizeType(OBJECT_TYPES[String(id ?? "").split("-")[0]]) ?? "";
 function barAxisWords(bar) {
   return ["capture", "connection"].map((axis) => bar[axis] == null ? `no bar set on the ${axis} axis` : `${axis} ${bar[axis]}`).join(", ");
@@ -67740,7 +67878,7 @@ var Strength = class _Strength {
     if (!k || typeof k.onGrounded !== "function") return null;
     return k.onGrounded("strength", (id) => {
       const s = this.strengthOf(id);
-      return Object.fromEntries(STRENGTH_AXES.map((a) => [a, s[a]]));
+      return { ...Object.fromEntries(STRENGTH_AXES.map((a) => [a, s[a]])), hunches_left_out: s.hunches_left_out };
     });
   }
   migrate() {
@@ -67815,11 +67953,12 @@ var Strength = class _Strength {
        Each leg is a member of the axis its grade names (the axis is the leg's own fact, not its target's type); a leg
        graded elsewhere is inert on this axis and says so. A leg's role is carried and never composed: a leg that cuts
        against stays in the population. */
-  #walk(bundleId, depth, bound, legsOverride, captureBounds) {
+  #walk(bundleId, depth, bound, legsOverride, captureBounds, levels = null) {
     const legs = legsOverride ?? this.#legsOf(bundleId);
     const members = Object.fromEntries(STRENGTH_AXES.map((a) => [a, []]));
     const exhausted = Object.fromEntries(STRENGTH_AXES.map((a) => [a, []]));
-    for (const leg of legs) {
+    const anonymous = this.#anonymousOf(legs, levels, captureBounds);
+    for (const [i, leg] of legs.entries()) {
       const isInquiry = normalizeType(leg.target_type) === "inquiry";
       const site = {
         bundle_id: bundleId,
@@ -67836,6 +67975,10 @@ var Strength = class _Strength {
         if (noReferent && !onAxis) continue;
         if (hunch) {
           members[axis].push({ ...site, via: "leg", grade: null, why: HUNCH_WHY });
+          continue;
+        }
+        if (onAxis && anonymous.has(i) && !anonymous.get(i).corroborated) {
+          members[axis].push({ ...site, via: "leg", grade: null, why: UNCORROBORATED_WHY });
           continue;
         }
         const stated = onAxis && !noReferent ? leg.grade ?? null : null;
@@ -67861,7 +68004,7 @@ var Strength = class _Strength {
           });
         continue;
       }
-      const sub = this.#walk(leg.target_id, depth + 1, bound, null, captureBounds);
+      const sub = this.#walk(leg.target_id, depth + 1, bound, null, captureBounds, levels);
       for (const axis of STRENGTH_AXES) {
         const s = sub[axis];
         if (s.state === "undetermined") {
@@ -67886,23 +68029,96 @@ var Strength = class _Strength {
     }
     return Object.fromEntries(STRENGTH_AXES.map((axis) => [axis, axisResult(axis, members[axis], exhausted[axis], bound)]));
   }
-  /* One pair over the given top-level legs (or the inquiry's own), capture-bounded throughout (R1). */
-  #pairOver(bundleId, topLegs = null) {
-    return this.#walk(bundleId, 0, DEPTH_BOUND, topLegs, this.#captureBoundsFor(bundleId, DEPTH_BOUND, topLegs));
+  /* One pair over the given top-level legs (or the inquiry's own, read once), capture-bounded throughout (R1), with the
+     levels R29 applies; answers the pair and the top-level legs it was taken over. */
+  #pairOver(bundleId, topLegs = null, levels = null) {
+    const legs = topLegs ?? this.#legsOf(bundleId);
+    return {
+      pair: this.#walk(bundleId, 0, DEPTH_BOUND, legs, this.#captureBoundsFor(bundleId, DEPTH_BOUND, legs), levels),
+      legs
+    };
   }
-  /** R1–R5: the derived pair for one inquiry, computed on read. One answer per axis and no scalar: a case does not
+  /* R29, R30 (DEC-102): the register's author of an authored observation (provenance R48's `register.author`), read and
+     never answered; `observation` false for a bundle holding no authored capture. Memoised for one judgement. */
+  #observationReader() {
+    const memo = /* @__PURE__ */ new Map();
+    return (id) => {
+      if (!memo.has(id)) {
+        const r = this.#one(`SELECT author FROM register WHERE bundle_id=? AND authored=1 ORDER BY capture_sha LIMIT 1`, id);
+        memo.set(id, r ? { observation: true, author: str3(r.author) } : { observation: false, author: null });
+      }
+      return memo.get(id);
+    };
+  }
+  /* A leg's own grade as the walk would count it on its own axis (R1, R9): null when it would count nothing. */
+  #ownGrade(leg, captureBounds) {
+    if (isHunch(leg.grade_source) || leg.grade == null || !STRENGTH_AXES.includes(leg.grade_axis)) return null;
+    if (normalizeType(leg.target_type) === "inquiry") return null;
+    if (leg.grade_axis === "testimony") return TESTIMONY_GRADE;
+    if (leg.grade_axis === "capture" && captureBounds) {
+      const capped = this.inquiry.legCapped(leg.grade, captureBounds.get(leg.target_id), leg.target_id);
+      return capped ? capped.grade : leg.grade;
+    }
+    return leg.grade;
+  }
+  /* R29, R30 (DEC-102 items 1, 2): for each testimony leg of ONE basis on an observation `levels` states at `group` or
+     `project` (keyed by its position in `legs`), whether something independent in the same basis bears it out, and
+     what: a counted leg on a document (not an observation, not an inquiry), or a counted testimony leg on an observation
+     stated at `cover` or `name` that another member authored, in either case sharing no origin with it (R12's same
+     document, capture or captured address). An origin read cut at R12's limit does not rule a shared origin out, so that
+     leg does not bear it out; nor does an author the register does not hold. `seen` (R30) withholds a leg the viewer may
+     not see from bearing anything out. Empty when no levels were given. Writes nothing; names no author. */
+  #anonymousOf(legs, levels, captureBounds, seen = () => true) {
+    const out = /* @__PURE__ */ new Map();
+    if (!levels) return out;
+    const levelOf = (l) => typeof l.target_id === "string" && Object.hasOwn(levels, l.target_id) ? levels[l.target_id] : null;
+    const isDocument = (l) => typeof l.target_id === "string" && l.target_id && normalizeType(l.target_type) !== "inquiry";
+    const observed = this.#observationReader();
+    const origins = /* @__PURE__ */ new Map();
+    const originsOf = (id) => {
+      if (!origins.has(id)) origins.set(id, this.#originsOf([id]));
+      return origins.get(id);
+    };
+    const independent = (a, b) => {
+      const x = originsOf(a), y = originsOf(b);
+      return x.complete && y.complete && ![...x.set].some((o) => y.set.has(o));
+    };
+    legs.forEach((leg, i) => {
+      if (leg.grade_axis !== "testimony" || !isDocument(leg) || !ANONYMOUS_LEVELS.includes(levelOf(leg))) return;
+      const by = [];
+      legs.forEach((other, j) => {
+        if (j === i || !isDocument(other) || !seen(other.target_id)) return;
+        if (this.#ownGrade(other, captureBounds) == null) return;
+        let bears = false;
+        if (other.grade_axis === "testimony") {
+          const a = observed(leg.target_id).author, b = observed(other.target_id).author;
+          bears = NAMED_LEVELS.includes(levelOf(other)) && a != null && b != null && a !== b;
+        } else {
+          bears = !observed(other.target_id).observation;
+        }
+        if (bears && independent(leg.target_id, other.target_id)) by.push({ ord: other.ord, target_id: other.target_id });
+      });
+      out.set(i, { level: levelOf(leg), corroborated: by.length > 0, by });
+    });
+    return out;
+  }
+  /** R1–R5, R29: the derived pair for one inquiry, computed on read. One answer per axis and no scalar: a case does not
    *  have one strength. This is the authority every consumer that must be right goes through (the gated read, the
-   *  pair frozen into a signed case, the grouping act's before and after, re-evaluation, the cache). */
-  strengthOf(bundleId) {
+   *  pair frozen into a signed case, the grouping act's before and after, re-evaluation, the cache). It states how many
+   *  hunch legs it left out (R5), and, given `levels`, which levels it applied (R29). */
+  strengthOf(bundleId, { levels = null } = {}) {
     if (!bundleId) return { ok: false, reason: "NO_ID", detail: "strength requires ?id=" };
-    const pair = this.#pairOver(bundleId);
+    const lv = levelsGiven(levels);
+    const { pair, legs } = this.#pairOver(bundleId, null, lv);
     return {
       ok: true,
       bundleId,
       depth_bound: DEPTH_BOUND,
       capture: pair.capture,
       connection: pair.connection,
-      testimony: pair.testimony
+      testimony: pair.testimony,
+      hunches_left_out: hunchCount(legs),
+      ...lv ? { levels: lv } : {}
     };
   }
   /** R6 (REC-34, N303): `op=inquirystrength`, the pair gated. An inquiry the viewer may not see is withheld whole,
@@ -67930,10 +68146,19 @@ var Strength = class _Strength {
     const s = this.strengthOf(id);
     if (!s.ok) return s;
     const keep2 = this.#redactor(viewer);
-    const hidden = this.#legsOf(id).some((l) => l.target_id && keep2(l.target_id) === null);
+    const legs = this.#legsOf(id);
+    const hidden = legs.some((l) => l.target_id && keep2(l.target_id) === null);
     const axes = Object.fromEntries(STRENGTH_AXES.map((a) => [a, redactAxis(s[a], keep2, hidden)]));
     const withheld = STRENGTH_AXES.some((a) => axes[a].out_of_view === true);
-    return { ok: true, target: id, depth_bound: s.depth_bound, ...axes, ...withheld ? { out_of_view: true } : {} };
+    const seenHunches = hunchCount(legs.filter((l) => !(l.target_id && keep2(l.target_id) === null)));
+    return {
+      ok: true,
+      target: id,
+      depth_bound: s.depth_bound,
+      ...axes,
+      hunches_left_out: seenHunches,
+      ...withheld ? { out_of_view: true } : {}
+    };
   }
   /** R13: the pair the search cache holds for an inquiry, `{capture: {grade, state}, connection: {grade, state}}`, or
    *  null for any other bundle. A cache, marked so wherever it is read; nothing here answers strength from it. */
@@ -67988,14 +68213,15 @@ var Strength = class _Strength {
   /* R9: the version's legs as the walk's members, each grade resolved from what the record earns rather than read off
      the frozen row. One registry call for the whole version. `why` travels on every leg the arithmetic will find inert,
      and the three published lists (`ungraded`, `hunches`, `graded`) are this layer's facts: where a grade came from is
-     about the record, and is published beside the arithmetic's own explanation rather than overwriting it. */
-  #versionLegsAsMembers(rows2, subjectEntity) {
+     about the record, and is published beside the arithmetic's own explanation rather than overwriting it. With `levels`
+     (R29), an anonymous observation nothing independent in the version bears out is in `ungraded`, named so. */
+  #versionLegsAsMembers(rows2, subjectEntity, levels = null) {
     const targets = rows2.map((r) => r.target_id).filter((t) => typeof t === "string" && t);
     const reg = this.inquiry.earned(subjectEntity || null, targets);
     const earnedConn = reg && reg.earned && reg.earned.connection || {};
     const earnedCap = reg && reg.earned && reg.earned.capture || {};
     const earnedTest = reg && reg.earned && reg.earned.testimony || {};
-    const named = { ungraded: [], hunches: [], graded: [] };
+    const placed = [];
     const legs = rows2.map((r) => {
       const axis = STRENGTH_AXES.includes(r.grade_axis) ? r.grade_axis : null;
       const authored = typeof r.grade === "string" && r.grade ? r.grade : null;
@@ -68010,7 +68236,7 @@ var Strength = class _Strength {
         grade_source: source
       };
       const inert = (why, bucket) => {
-        named[bucket].push({
+        placed.push([bucket, {
           target_id: r.target_id,
           ord: r.ord,
           ground: r.ground,
@@ -68018,11 +68244,11 @@ var Strength = class _Strength {
           grade_axis: axis,
           grade_source: source,
           why
-        });
+        }]);
         return { ...base, grade: null, why };
       };
       const carries = (grade, why) => {
-        named.graded.push({
+        placed.push(["graded", {
           target_id: r.target_id,
           ord: r.ord,
           ground: r.ground,
@@ -68031,7 +68257,7 @@ var Strength = class _Strength {
           grade,
           authored,
           why
-        });
+        }]);
         return { ...base, grade };
       };
       if (isHunch(source)) return inert(HUNCH_WHY, "hunches");
@@ -68062,6 +68288,13 @@ var Strength = class _Strength {
       const capped = GRADE_RANK2[authored] > GRADE_RANK2[c.grade] ? c.grade : authored;
       return carries(capped, capped === authored ? c.why : `${c.why} This leg was authored at ${authored} and is reported at ${capped}, because the record cannot support the stronger claim.`);
     });
+    for (const [i, a] of this.#anonymousOf(legs, levels, null)) {
+      if (a.corroborated || placed[i][0] !== "graded") continue;
+      const { grade, authored: _authored, ...entry } = placed[i][1];
+      placed[i] = ["ungraded", { ...entry, role: rows2[i].role, why: UNCORROBORATED_WHY }];
+    }
+    const named = { ungraded: [], hunches: [], graded: [] };
+    for (const [bucket, entry] of placed) named[bucket].push(entry);
     return {
       legs,
       ...named,
@@ -68141,8 +68374,9 @@ var Strength = class _Strength {
         { inquiry: inq, version: name2, version_state: row2.state, state_set: stateSet }
       );
     const legRows = this.#versionLegs(inq, name2, true);
-    const resolved = this.#versionLegsAsMembers(legRows, this.inquiry.subjectEntityOf(inq));
-    const pair = this.#pairOver(inq, resolved.legs);
+    const lv = levelsGiven(args.levels);
+    const resolved = this.#versionLegsAsMembers(legRows, this.inquiry.subjectEntityOf(inq), lv);
+    const { pair } = this.#pairOver(inq, resolved.legs, lv);
     const whatIf = !(stateSet.length === VERSION_STRENGTH_DEFAULT_STATES.length && stateSet.every((s, i) => s === VERSION_STRENGTH_DEFAULT_STATES[i]));
     const filter = whatIf ? `WHAT-IF \u2014 a view you constructed, not what this record stands on. Computed over the reading '${name2}', counting readings that are: ${stateSet.join(", ")}.` : `Computed over the reading '${name2}', counting only readings a member has adopted (${stateSet.join(", ")}). This is the record's own answer for this question and is not filtered.`;
     const out = {
@@ -68160,6 +68394,9 @@ var Strength = class _Strength {
       ungraded: resolved.ungraded,
       hunches: resolved.hunches,
       graded: resolved.graded,
+      /* R5: every hunch this answer names, and no other. */
+      hunches_left_out: resolved.hunches.length,
+      ...lv ? { levels: lv } : {},
       grades_from: "earnedBasisRegistry",
       subject_entity: resolved.subject_entity,
       subject_known: resolved.subject_known,
@@ -68185,6 +68422,28 @@ var Strength = class _Strength {
     );
   }
   /* ============================================================ independence (R11, R12, R27; D-195) */
+  /* The upstream origins of some bundles (R12): each bundle, its captures and their captured addresses, each read one
+     past `ORIGIN_LIMIT`; `complete` false when a read reached it. */
+  #originsOf(bundleIds) {
+    let complete = true;
+    const set = /* @__PURE__ */ new Set();
+    for (const id of bundleIds) {
+      set.add(`bundle:${id}`);
+      const caps = this.#rows(`SELECT capture_sha FROM register WHERE bundle_id=? LIMIT ?`, id, ORIGIN_LIMIT + 1);
+      if (caps.length > ORIGIN_LIMIT) complete = false;
+      for (const r of caps.slice(0, ORIGIN_LIMIT)) {
+        set.add(`capture:${r.capture_sha}`);
+        const addrs = this.#rows(
+          `SELECT DISTINCT address_norm FROM captured_locators WHERE capture_sha=? ORDER BY address_norm LIMIT ?`,
+          r.capture_sha,
+          ORIGIN_LIMIT + 1
+        );
+        if (addrs.length > ORIGIN_LIMIT) complete = false;
+        for (const l of addrs.slice(0, ORIGIN_LIMIT)) set.add(`address:${l.address_norm}`);
+      }
+    }
+    return { set, complete };
+  }
   /* THE ONE IMPLEMENTATION (R12), for the pair over a version, a partition and a candidate alike, so the write gate
      and the ceremony's read cannot come to disagree about what "independent" means. Derived from content-addressed
      provenance: `register` maps a capture's sha to the bundle that holds it and `captured_locators` maps that sha to
@@ -68195,23 +68454,9 @@ var Strength = class _Strength {
   #independenceOf(legs, parts) {
     let complete = true;
     const originsOf = (bundleIds) => {
-      const out = /* @__PURE__ */ new Set();
-      for (const id of bundleIds) {
-        out.add(`bundle:${id}`);
-        const caps = this.#rows(`SELECT capture_sha FROM register WHERE bundle_id=? LIMIT ?`, id, ORIGIN_LIMIT + 1);
-        if (caps.length > ORIGIN_LIMIT) complete = false;
-        for (const r of caps.slice(0, ORIGIN_LIMIT)) {
-          out.add(`capture:${r.capture_sha}`);
-          const addrs = this.#rows(
-            `SELECT DISTINCT address_norm FROM captured_locators WHERE capture_sha=? ORDER BY address_norm LIMIT ?`,
-            r.capture_sha,
-            ORIGIN_LIMIT + 1
-          );
-          if (addrs.length > ORIGIN_LIMIT) complete = false;
-          for (const l of addrs.slice(0, ORIGIN_LIMIT)) out.add(`address:${l.address_norm}`);
-        }
-      }
-      return out;
+      const o = this.#originsOf(bundleIds);
+      if (!o.complete) complete = false;
+      return o.set;
     };
     const checked = parts > 1;
     const shared = [];
@@ -68392,13 +68637,15 @@ var Strength = class _Strength {
     };
   }
   /** R26: R1–R5's three axes over `legs` given in place of the inquiry's live basis, walking inquiry legs to the depth
-   *  bound exactly as `strengthOf` does. Writes nothing. A leg whose target cannot be read makes its axis undetermined
-   *  or leaves it inert, never an error; a failure of the arithmetic itself is answered `{pair: null, error}`, never
-   *  thrown. */
-  candidatePair({ inquiry = null, legs = [] } = {}) {
+   *  bound exactly as `strengthOf` does, with how many hunch legs it left out (R5) and, given `levels`, R29's rule and
+   *  the levels it applied. Writes nothing. A leg whose target cannot be read makes its axis undetermined or leaves it
+   *  inert, never an error; a failure of the arithmetic itself is answered `{pair: null, error}`, never thrown. */
+  candidatePair({ inquiry = null, legs = [], levels = null } = {}) {
     try {
       const walkLegs = (Array.isArray(legs) ? legs : []).map((l, k) => _Strength.#candidateLeg(l, k));
-      return { pair: this.#pairOver(String(inquiry ?? ""), walkLegs), error: null };
+      const lv = levelsGiven(levels);
+      const { pair } = this.#pairOver(String(inquiry ?? ""), walkLegs, lv);
+      return { pair, error: null, hunches_left_out: hunchCount(walkLegs), ...lv ? { levels: lv } : {} };
     } catch (e) {
       return { pair: null, error: String(e && e.message ? e.message : e).slice(0, CANDIDATE_ERROR_MAX) };
     }
@@ -68408,6 +68655,82 @@ var Strength = class _Strength {
   candidateIndependence({ legs = [], parts = 0 } = {}) {
     const walkLegs = (Array.isArray(legs) ? legs : []).map((l, k) => _Strength.#candidateLeg(l, k));
     return this.#independenceOf(walkLegs, Number.isInteger(parts) ? parts : distinctParts(walkLegs));
+  }
+  /* ============================================================ anonymous testimony (R29, R30; DEC-102) */
+  /** R30: for each testimony leg of the inquiry's live basis, or of the named version, on an observation `levels` states
+   *  at `group` or `project`, whether something independent in the same basis bears it out (`corroborated`, with the
+   *  legs that do) or not (`uncorroborated`), by the one judgement R29's pair makes. Refusals as R6's, and for a named
+   *  version R7's `VERSION_STRENGTH_NO_SUCH_VERSION`. A leg the viewer may not see is withheld whole and bears nothing
+   *  out; `out_of_view: true` says only that something was withheld. For `ratification` (its R35), the caller that
+   *  states the levels; this module reads none itself. Writes nothing; never names an author. */
+  testimonyCorroboration({ inquiry = null, version = null, levels = null, viewer = null } = {}) {
+    const id = str3(inquiry);
+    if (!id) return {
+      ok: false,
+      reason: "NO_ID",
+      detail: "this answers for one question: pass inquiry=<record id>."
+    };
+    if (!this.membership.inSight(id, viewer)) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
+    const ty = normalizeType(this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, id)?.object_type);
+    if (ty !== "inquiry")
+      return {
+        ok: false,
+        reason: "NOT_AN_INQUIRY",
+        target: id,
+        object_type: ty ?? null,
+        detail: `${id} is a ${ty ?? "record"}, not an inquiry. Only a question rests on testimony.`
+      };
+    const name2 = str3(version);
+    let legs, captureBounds;
+    if (name2) {
+      const row2 = this.#one(`SELECT name FROM inquiry_basis_versions WHERE bundle_id=? AND name=?`, id, name2);
+      if (!row2) {
+        const r = VERSION_STRENGTH_CHECKS.VERSION_STRENGTH_NO_SUCH_VERSION;
+        return {
+          ok: false,
+          reason: "VERSION_STRENGTH_NO_SUCH_VERSION",
+          code: "VERSION_STRENGTH_NO_SUCH_VERSION",
+          check: r.check,
+          translation: r.translation,
+          inquiry: id,
+          version: name2.slice(0, 200),
+          detail: `no reading named '${name2.slice(0, 60)}' belongs to ${id}.`
+        };
+      }
+      legs = this.#versionLegsAsMembers(this.#versionLegs(id, name2, true), this.inquiry.subjectEntityOf(id)).legs;
+      captureBounds = null;
+    } else {
+      legs = this.#legsOf(id);
+      captureBounds = this.#captureBoundsFor(id, 0, legs);
+    }
+    const lv = levelsGiven(levels) ?? Object.freeze({});
+    const keep2 = this.#redactor(viewer);
+    const seen = (t) => !(t && keep2(t) === null);
+    let withheld = false;
+    const answered = [];
+    for (const [i, a] of this.#anonymousOf(legs, lv, captureBounds, seen)) {
+      const leg = legs[i];
+      if (!seen(leg.target_id)) {
+        withheld = true;
+        continue;
+      }
+      answered.push({
+        ord: leg.ord,
+        target_id: leg.target_id,
+        level: a.level,
+        state: a.corroborated ? "corroborated" : "uncorroborated",
+        corroborated_by: a.by
+      });
+    }
+    return {
+      ok: true,
+      inquiry: id,
+      ...name2 ? { version: name2 } : {},
+      levels: lv,
+      legs: answered,
+      wrote: false,
+      ...withheld ? { out_of_view: true } : {}
+    };
   }
   /* ============================================================ the bar (R14–R16; DEC-17, DEC-72) */
   /** R14: the project's own declared bar, read from its bundle.md at act time (the caller freezes it). An authored,
@@ -68445,8 +68768,9 @@ var Strength = class _Strength {
     };
   }
   /** R15: the group's default bar, the one a new project starts from (DEC-17 as amended). A pair: a scalar would
-   *  re-collapse the two axes in the one field a reader is most likely to quote. */
-  strengthBarSet({ group = null, capture = null, connection = null, author = null } = {}) {
+   *  re-collapse the two axes in the one field a reader is most likely to quote. It is recorded with the administrator's
+   *  reason (DEC-88), and its answer carries DEC-105's honest note. */
+  strengthBarSet({ group = null, capture = null, connection = null, reason = void 0, author = null } = {}) {
     const who2 = String(author ?? "").trim();
     const refusal21 = (code, detail, extra) => {
       const row2 = STRENGTH_BAR_CHECKS[code];
@@ -68484,16 +68808,24 @@ var Strength = class _Strength {
         reason: "NO_BAR",
         detail: "declare at least one axis. Withdrawing a bar entirely is a different act from setting one, and an absent bar is stated as absent rather than written as a blank row."
       };
+    const why = typeof reason === "string" ? reason.trim() : "";
+    if (!why || why.length > BAR_REASON_MAX)
+      return refusal21(
+        "BAR_NO_REASON",
+        typeof reason !== "string" ? "give the reason the group sets this bar, as text in your own words (reason=\u2026). Nothing was declared." : !why ? "the reason given is blank; say in your own words why the group sets this bar. Nothing was declared." : `the reason given is ${why.length} characters, and a reason is at most ${BAR_REASON_MAX}. Nothing was declared.`,
+        { limit: BAR_REASON_MAX }
+      );
     const at25 = this.now();
     this.sql.exec(
-      `INSERT INTO group_strength_bar (group_id,capture,connection,author,at) VALUES (?,?,?,?,?)
+      `INSERT INTO group_strength_bar (group_id,capture,connection,author,at,reason) VALUES (?,?,?,?,?,?)
        ON CONFLICT(group_id) DO UPDATE SET capture=excluded.capture, connection=excluded.connection,
-         author=excluded.author, at=excluded.at`,
+         author=excluded.author, at=excluded.at, reason=excluded.reason`,
       gid,
       capture,
       connection,
       who2,
-      at25
+      at25,
+      why
     );
     return {
       ok: true,
@@ -68502,11 +68834,13 @@ var Strength = class _Strength {
       connection,
       author: who2,
       at: at25,
-      note: "this is the DEFAULT a project starts from; a project may declare its own in its bundle.md, which is an authored, dated, on-the-record act visible in every case it governs. It gates nothing."
+      reason: why,
+      note: `this is the DEFAULT a project starts from; a project may declare its own in its bundle.md, which is an authored, dated, on-the-record act visible in every case it governs. It gates nothing. ${BAR_HONEST_NOTE}`
     };
   }
   /** R16: the bar read. `project=` is the answer under DEC-72; `group=` is DEC-17's surviving half, the default that
-   *  seeds a new project; `target=` is refused by name, because no bar attaches to a finding. A project the viewer
+   *  seeds a new project, answered with its reason (R15; null on a default set before DEC-88); `target=` is refused by
+   *  name, because no bar attaches to a finding. A project the viewer
    *  may not see is answered as one that does not exist. Two members who can both see a project are told the same bar
    *  ("never set by who a reader is"). */
   strengthBarOf({ group = null, target = null, project = null, viewer = null } = {}) {
@@ -68545,7 +68879,10 @@ var Strength = class _Strength {
         seeds_new_projects: true,
         detail: "no group is named and this store records no producing group, so there is no group default to read. An absent bar gates nothing and is not a bar of zero."
       };
-    const g = this.#one(`SELECT group_id, capture, connection, author, at FROM group_strength_bar WHERE group_id=?`, gid);
+    const g = this.#one(
+      `SELECT group_id, capture, connection, author, at, reason FROM group_strength_bar WHERE group_id=?`,
+      gid
+    );
     return {
       ok: true,
       group: gid,
@@ -95211,7 +95548,7 @@ var AI_RUN_ACT_SHAPE_CHECKS = {
        context whose lens is a different lens entirely.
   
        A WHOLE-FUNCTION `where`, AND WHY. These three were first written inside a
-       narrowed REGION, which is what `kickoffs/WORKER.md` asks for — and
+       narrowed REGION, which is what the old process's `kickoffs/WORKER.md` (retired) asked for — and
        `check-refusal-codes.mjs` then FAILED all three by name: `aiRunOpen`'s three
        rows of the time carried a WHOLE-FUNCTION `where`, and the guard judged a
        region's refusals twice, once at the region and once at the enclosing
@@ -96004,7 +96341,7 @@ var PROJECT_GATE_GROUNDS = {
      NOT APPLIED, and the reason is that it CANNOT be: participation is a
      relationship between a PERSON and a project, and a token class is not a
      person. This keeps the gate's population identical to the capability
-     FLOOR's, which `index.mjs` already applies only `if (viaSession)` — a fence
+     FLOOR's, which the control plane (`control-plane/index.mjs`) applies only `if (viaSession)` — a fence
      wider than the floor beneath it would be an undeclared interface change
      wearing the costume of caution, and it would refuse the daemon outright.
      DEC-63 names the lever for this half explicitly and it is a different one:
@@ -96199,7 +96536,7 @@ var AI_RUNS_TABLES = Object.freeze(["ai_runs", "ai_run_bounds", "inquiry_run_sur
 var AI_RUNS_SCHEMA = `
 
 -- IS-6 / INVESTIGATIVE-SESSION.md \xA711: THE RUN IS AN OBJECT, and it is built on
--- the capture_sessions shape above rather than on a new one \u2014 "SCRATCH, not
+-- the capture_sessions shape (capture's table) rather than on a new one \u2014 "SCRATCH, not
 -- record\u2026 a work list with an expiry": ticks, an expiry, opaque state,
 -- resumable across invocations. Every column beyond that shape is one \xA711 or
 -- \xA714b.6 names, and each is here because a version is only interpretable
@@ -96213,7 +96550,9 @@ var AI_RUNS_SCHEMA = `
 -- TTL for tidiness.
 --
 -- TWO PRINCIPALS, NEVER ONE (\xA714a, DEC-27(b), DEC-55.4). 'principal_plane' is
--- the plane credential ('token:<class>' or a member id); 'principal_claude' is
+-- the plane credential as the control plane stamps it ('member:<id>' for a
+-- member, '/<tokenId>' added for a member's AI credential; 'class:<cls>' for a
+-- machine, '/<tokenId>' added for an AI credential); 'principal_claude' is
 -- WHICH LEVEL of the Claude-account cascade paid \u2014 member, then project, then
 -- instance. They are two different principals and an act must say both. NEITHER
 -- IS EVER A TOKEN VALUE: 'principal_claude_ref' is a label the operator
@@ -96222,7 +96561,8 @@ var AI_RUNS_SCHEMA = `
 -- NO TRANSCRIPT COLUMN, AND THAT IS DEC-61 (Bob, 2026-08-06). The model's
 -- reasoning is DEVICE-LOCAL, TTL'd and deleted at publication, and never in the
 -- record store. 'state' is the run's resumable SCRATCH \u2014 its work list \u2014 and
--- the observation log below is a structured account of where the search went.
+-- the observation log (observation-log's table, the run's rows under authority
+-- 'run') is a structured account of where the search went.
 -- Neither is a transcript, and there is no column here one could be put in.
 CREATE TABLE IF NOT EXISTS ai_runs (
   run                   TEXT PRIMARY KEY,
@@ -96756,8 +97096,8 @@ var AiRuns = class _AiRuns {
    * Bob, 2026-08-09: *"AN INVESTIGATION CAN BE STARTED BY ANY MEMBER OF A
    * PROJECT… the gate is PROJECT MEMBERSHIP, not a capability tier."* IS-6's
    * provisional gated the three run verbs on `contribute` alone. That token
-   * stays, as the FLOOR beneath this — it is still checked, in `index.mjs`'s
-   * `NEEDS`, and it still refuses in its own words.
+   * stays, as the FLOOR beneath this — it is still checked, in `op-declarations`'
+   * `NEEDS` (`src/op-declarations/index.mjs`), and it still refuses in its own words.
    *
    * THE DECISION IS NOT HERE. It is in `run-rules projectGate`, pure and shared
    * by all three verbs. What lives here is the two DATABASE questions the pure
@@ -96849,8 +97189,8 @@ var AiRuns = class _AiRuns {
    *  from the record. Null for an id no bundle holds AND for one the caller cannot see, through ONE return, so
    *  the decision downstream cannot tell absent from hidden (§7.9; `#noSuchProject`'s discipline). Sight is
    *  `#inSight`, the one predicate, and it FAILS CLOSED on an absent viewer — the run verbs' posture
-   *  (`RUN_VERB_ACTIONS` in `index.mjs`: "fails closed on an absent stamp"). The first draft did not ask a
-   *  viewer that was never sent, on `#rosterInSight`'s precedent; REC-145's `run-stamp-dropped` control
+   *  (`RUN_VERB_ACTIONS`, declared in `op-declarations` and stamped by `control-plane`: "fails closed on an
+   *  absent stamp"). The first draft did not ask a viewer that was never sent, on `#rosterInSight`'s precedent; REC-145's `run-stamp-dropped` control
    *  showed that with the control plane's stamp removed the check then SAW every project — sight failing
    *  open. No caller reaches the open without the stamp (measured: no suite drives the store directly).
    *  The type is normalised (`problem`/`focus` read `inquiry`). */
@@ -96934,7 +97274,7 @@ var AiRuns = class _AiRuns {
     /* R46 (K660): the plan a run in mode `plan` works on, stored verbatim; refused in any other mode. */
     plan = null,
     /* PL-18 / DEC-63: WHICH MEMBER IS ASKING, stamped server-side by
-       `index.mjs` and empty for a machine credential. Never a
+       `control-plane` and empty for a machine credential. Never a
        caller's word — a principal a caller can name is not one, which
        is the rule the two `principal*` fields above already follow. */
     actor = null,
@@ -97192,7 +97532,7 @@ var AiRuns = class _AiRuns {
     at: at25 = null,
     actor = null,
     viewer = null,
-    /* REC-152: the caller's PRINCIPAL, stamped server-side by `index.mjs` in the form the open
+    /* REC-152: the caller's PRINCIPAL, stamped server-side by `control-plane` in the form the open
        stamps `principal_plane` in — never a caller's word. */
     caller = null
   } = {}) {
@@ -97613,7 +97953,7 @@ var AiRuns = class _AiRuns {
    * `credential`, and dropped; what the tick answers, and what the wake entry says, name the credential by its
    * record identity (`tokenId`) and never by value. `agent-worker` retains nothing (fleet law, I8).
    * ================================================================== */
-  /** The namespace this Durable Object IS, asked of the runtime rather than remembered: `index.mjs`'s
+  /** The namespace this Durable Object IS, asked of the runtime rather than remembered: `admission`'s
    *  `scopeFor` routes every call to `idFromName("bio")` or `idFromName("scratch")`, and a DO's id equals the one
    *  it was named by. Null for any other object (a suite's private instance) — the dispatch then says it could
    *  not name the namespace, rather than guessing one: a default here would let a resumed run touch the real
@@ -97632,8 +97972,8 @@ var AiRuns = class _AiRuns {
   }
   /** WHO MAY RESUME, resolved once per tick: `{ ready: true, stamp, tokenId, token, store, account }` or
    *  `{ ready: false, withheld }`. `withheld` is a stated reason, never a secret. The credential is resolved the
-   *  way the control plane resolves one (`index.mjs`, `aicredentiallook` against the `bio` object, which alone
-   *  holds `ai_credentials`), so a key revoked by a member stops resuming anything the moment the row says so. */
+   *  way the control plane resolves one (`admission`'s `aiCredentialPresented`: `aicredentiallook` against the
+   *  `bio` object, which alone holds `ai_credentials`), so a key revoked by a member stops resuming anything the moment the row says so. */
   async #aiRunResumer() {
     const env = this.env || {};
     if (!env.AGENT_WORKER || typeof env.AGENT_WORKER.fetch !== "function")
@@ -97748,7 +98088,7 @@ var AiRuns = class _AiRuns {
    *  GATED. The run names an inquiry or a project bundle, and a run over a
    *  project the viewer may not see would disclose that the project exists —
    *  REC-25/REC-30's leak exactly. The gate is `#bundleGate` on `context_id`,
-   *  through query.mjs's one compilation point (D-15). */
+   *  through membership's `viewerPredicate`, the one compilation point (D-15). */
   /*  PL-12 / D-84 — AND THIS IS WHERE THE RUN STOPS CARRYING AN ABSENCE.
    *
    *  §3, RULED: *"the run carries the bias manifest in force when it ran … an
@@ -98438,7 +98778,7 @@ var AiRuns = class _AiRuns {
   }
   /* ---- R25, R26: THE SURFACING STEP, registered with promotion (K31) --------------------------------------------- */
   /** Whether this promotion is an assistant's creation of a question: a creation of an inquiry carrying the control
-   *  plane's `assistantPrincipal` stamp, which `index.mjs` sets for an `ai` credential only, deleting any caller's copy
+   *  plane's `assistantPrincipal` stamp, which `control-plane` sets for an `ai` credential only, deleting any caller's copy
    *  first. A member's creation, and every store-internal one, carries no stamp and is not asked. */
   static #surfacing(c) {
     const pkg = c && c.pkg || {};

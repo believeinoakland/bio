@@ -1135,7 +1135,7 @@ var AI_RUN_ACT_SHAPE_CHECKS = {
        context whose lens is a different lens entirely.
   
        A WHOLE-FUNCTION `where`, AND WHY. These three were first written inside a
-       narrowed REGION, which is what `kickoffs/WORKER.md` asks for — and
+       narrowed REGION, which is what the old process's `kickoffs/WORKER.md` (retired) asked for — and
        `check-refusal-codes.mjs` then FAILED all three by name: `aiRunOpen`'s three
        rows of the time carried a WHOLE-FUNCTION `where`, and the guard judged a
        region's refusals twice, once at the region and once at the enclosing
