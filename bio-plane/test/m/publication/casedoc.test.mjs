@@ -247,7 +247,8 @@ test("R40 the seven tables and their named columns are the stated read contract,
   assert.deepEqual(cols("published_bundles").sort(), ["attestor_key", "attestor_member", "bundle_id", "bundle_sha", "delivered_by",
     "edition", "gate_version", "parts", "ratified_at", "required", "sig_armored", "strength", "title"]);
   assert.ok(PUBLICATION_TABLES.some((t) => (t.name || t) === "case_documents"));
-  /* each read a later module makes under the contract (public-read R1–R5, project-stage R3) is answerable as written */
+  /* each read a later module makes under the contract (public-read R1–R5, project-stage R3, docket R1, R4, R9, R12, R14) is
+     answerable as written */
   for (const q of [`SELECT sha256, bundle_id, path, kind, bytes, published FROM published_shas`,
                    `SELECT from_bundle, to_bundle, kind, disclosure, published FROM published_edges`,
                    `SELECT case_id, edition, scope, bar, ratified_at, manifest, manifest_sha FROM published_cases`,
