@@ -13,3 +13,7 @@ subresources has merged (K1116). Merge tranche/T23 into your branch, re-run your
 ## B3 · CHANGE
 
 Forwarded from SIGNATURES #5 J2 (3) (K1118, P9): running bundler's test set in one `node --test` left `bio-plane/dist/bio-plane.bundle.json` and `.bundled.mjs` modified in the working tree; a lone `fleetbundles.test.mjs` run leaves it clean. A test writes the committed artifact, against the manifest's 'verification never writes'. Find which of your tests writes it, and make it write only to a temporary directory (or not at all); prove with a full run of your set followed by `git status` clean. Also: record-grammar and signatures have merged (K1118), so the plane bundle is now STALE on the tranche (accepted red 12, until L1's close regenerates it): `fleetbundles` red for that reason is expected. Merge `tranche/T23` before your COMPLETE.
+
+## B4 · CHANGE
+
+Your J3/J4 open point (K1120): keep `bio-plane/test/fleetbundles.control.mjs` in your `tests` (every product file needs exactly one owner, and as a hand-run driver it stays yours), and make it refuse under `node --test`: when it detects it is being run by the test runner (e.g. `process.env.NODE_TEST_CONTEXT` is set), it exits at once having touched nothing, with one line saying it is a hand-run negative control (`node test/fleetbundles.control.mjs [arm]`). Prove: the full set in one `node --test` leaves the tree clean and shows only accepted red 12; a hand run of one arm still works. Then COMPLETE.
