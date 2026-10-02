@@ -12,7 +12,7 @@
 
 - N521 · 2026-10-02 · **DEC-113's device half** (N518's remainder): the device transcript store's check for a hold before either scheduled deletion, failing closed, reading `actions` R58; the time limit (DEC-61's TTL) is Bob's then. **Hard reason:** dependency not yet built (no device-storage module).
 
-- N522 · 2026-10-02 · **DEC-96 item 4 and item 1's withdrawal notice** (K1268): the published case states each acceptance (who accepted which edition, and why) and discloses open flags on relied-on work; withdrawing an acceptance sends re-evaluation notices. **Hard reason:** the order (P4): `inquiry` (L7) cannot point a leg at a finding `case-import` (L8) holds; BOB drafts the seam (a reference type earlier in the order, or the statement owned by case-authoring reading case-import) during T28 (P18).
+- N522 · 2026-10-02 · **DEC-96 item 4 and item 1's withdrawal notice** (K1268, K1273): the published case states each acceptance and discloses open flags on relied-on work; withdrawing an acceptance sends re-evaluation notices. **Ready for T28**: `plan/draft-T28-n522.md` (the seam module `accepted-work`, L6, and changes in inquiry-grammar, inquiry, basis-versions, strength, reevaluation, case-import, case-grammar, case-checker, case-authoring, publication), applied after `draft-T28-dec112.md` (its indices shift by one).
 
 ## Carried from T27
 
