@@ -24,3 +24,7 @@ The `where`s name regions `actions`' job writes in this layer (REPORT J2). No ot
 - `format`: 92 modules, 91 requirements files; 0 failures. `architecture`: 7 product files, 13 relative imports; 0 failures. `coverage`: 11 of 11 live requirement ids named by a test; 0 failures. `ownership` (vs `tranche/T27`): 0 failures.
 
 Size (session_01U9Fumb6uphtpXWNehTqT13): test runs 3, module lines 1797
+
+## J1 · REPORT
+
+For actions (L9, N518): the three new rows' wheres name regions actions writes: C-117.23 HOLD_RELEASE_IS_ITS_OWN_ACT at `src/actions/index.mjs actionHold > is-hold-release-act`; C-117.24 HOLD_PROJECTS_REFUSED at `src/actions/index.mjs #holdProjects > is-hold-projects` (one private helper both actionHold and projectHolds ask, the C-73.2 #lawEntries precedent); C-117.25 HOLD_ALREADY_RELEASED at `src/actions/index.mjs actionHoldRelease > is-hold-released`. Also: C-117.20 MACHINE_CANNOT_SET_HOLD and C-117.21 HOLD_REFUSED keep where `actionHold > is-hold`, but R56's actionHoldRelease raises both too; actions should mint them there through that one region (a shared helper), or BOB re-points those wheres here.
