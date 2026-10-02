@@ -44,3 +44,15 @@ REPORT (status, a stale generated artifact, one row beyond those named).
 - `checks/format.mjs`: 0 failures · `architecture.mjs control-plane`: 0 failures · `coverage.mjs control-plane`: 28 of 28, 0 failures · `ownership.mjs control-plane tranche/T22`: 0 failures.
 
 Size (session_016ux7EiaYD1rDwE1Vhdqh9y): test runs 15, module lines 3504
+
+## J3 · COMPLETE
+
+COMPLETE. Every entry applied (B1; B2's reading; B3, B4), recorded under "Completion (CONTROL-PLANE #13)" in my record on `job/T22/control-plane`, `tranche/T22` @ K1109 merged.
+
+(6): the eight new ops route through the general path with their act lists' stamps; the viewer stamp names `CAPTURE_VIEWER_ACTIONS` and `CAPTURE_READS` (B3 (a)); `doorbelltally` is a session's alone; `doorbellrefused` answers `unknown op`. C-33.44 is re-pinned with the seven (eight rows in all), and no other row moved.
+
+The one red of mine is accepted by name (K1105): `bio-plane/test/m/control-plane/inbox-door.test.mjs`, "an admitted `pulled` resolve's reason is recorded on the knock's row with the pull", until capture's N499 (T23 L3).
+
+`test/m/control-plane/`: 116 tests, 115 pass, totality green. My J2 count of "116/117" was wrong: the suite then had 112 tests, 111 passing. The whole `bio-plane/test/m`: 5008 tests, 4992 pass, 4 fail (accepted red 4 ×3, K1105's), no new red. Checks: format, architecture, coverage 28/28, ownership 0 failures each. Module 3,504 lines.
+
+The plane bundle is stale (J2): I regenerated nothing.
