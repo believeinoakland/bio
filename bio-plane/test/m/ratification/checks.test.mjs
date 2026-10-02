@@ -310,7 +310,7 @@ test("R14: C-32.12–C-32.15, C-53.10–C-53.12, C-58.1–C-58.5, C-65.1 and C-9
   assert.throws(() => R.rowOf("NOT_A_CODE"), /DEC-49/);
 });
 
-/* R14's two new rows (K1058), awaiting stamp: their translations are R14's, word for word. */
+/* R14's two new rows (K1058), stamped by 1.53.0 (PROMOTION #24, T23 layer 2): their translations are R14's, word for word. */
 test("R14, R22, R35: C-58.4 CONTESTED_IN_BATCH and C-58.5 ANONYMOUS_TESTIMONY_UNCORROBORATED carry R14's translations word for word, minted where R22 and R35 refuse", () => {
   assert.deepEqual(R.rowOf("CONTESTED_IN_BATCH"), { code: "CONTESTED_IN_BATCH", check: "C-58.4",
     translation: "Some of these documents are contested: a contradiction touching each is not yet resolved, and "
