@@ -27,3 +27,6 @@ U22-U25 received (DEC-113 to DEC-116). Each filed for T23, folded once on main: 
 
 ## B7 · NOTICE · 2026-10-02 · session_01UNgVPXWM8J9dP3uwYwkYau · secondary
 K1094 (Bob, 2026-10-02): link sweeps (monitoring R29, T23): (1) a ratified sweep stops when its project is closed, the stop stated; (2) a sweep keeps running after its ratifier is no longer an owner, until an owner changes or un-ratifies it. Folded in build/plan/draft-monitoring-r29.md on tranche/T22. The third question (who signs a closing project's 'working on' notice) is still with Bob.
+
+## B8 · NOTICE · 2026-10-02 · session_01UNgVPXWM8J9dP3uwYwkYau · secondary
+K1100 (Bob, 2026-10-02): K1044 (3) answered as recommended. When a project closes, the copy's key signs a `closed` attestation on its working-on notice at once, and an owner may still add a stop with a handoff note. Folded in `build/plan/draft-network-notices.md` (Open for Bob 1, R12) on `tranche/T22`; built in T23 (network-notices).
