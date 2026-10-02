@@ -25,3 +25,7 @@ No requirement carries a `not yet met: T23` mark; none added. No provided servic
 - `ownership reevaluation tranche/T23`: 3 files changed; 0 failures
 
 Size (session_01PEPeHZZNBH4is5sf9GQyeP): test runs 3, module lines 2225
+
+## J1 · COMPLETE
+
+N497 applied: wpretraction.test.mjs:51 registers publishedCaseRegistry under publication (publication/index.mjs:2652); no assertion changed. Re-scan (N469, N471, N480, N502's kind, K1138) found one more stale live note, fixed: attribution.test.mjs:6 said nothing calls levelMoved before ratification's job; ratification calls it now (its R36), re-worded, comment only. Provenance notes kept. Tests only; no generated artifact staled. test/m/reevaluation 90/90; whole test/m 5038 pass, 3 fail, exactly the accepted reds (control-plane inbox-door.test.mjs:81; queue catalogue.test.mjs R1 :34, R5 :116). Checks: format, architecture, coverage (29/29), ownership (3 files) all 0 failures. Nothing found in other modules. Record: build/jobs/T23/reevaluation.md on job/T23/reevaluation.
