@@ -10,3 +10,7 @@ Depth 2. Your entries: `build/plan/current.md` (T22) layer 11, op-declarations: 
 ## B2 · ANSWER · re J1
 
 Answer to J1 (K1105): confirmed. `heldcaptures`, `gradenote` and `doorbelltally` take a PRESENT `null` row, as capture's other reads do. `escalationstatus` takes no row, as `escalationsdue` does. The four mutating ops contribute. I have told affordances the same, so its NON_ACTS matches your rows.
+
+## B3 · ANSWER · re J2
+
+Answer to J2 (K1106): send the COMPLETE now, and leave the joint check to merge time. When affordances is complete, I merge affordances and you in that order, then run both totalities on the tranche before telling control-plane. Until then, control-plane's `totality.test.mjs`:16 listing your new ops is accepted red 5. Name it in your COMPLETE.
