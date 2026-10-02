@@ -27,7 +27,7 @@
 - **(4) Callers.** Re-grep on my branch: no other module sends the act. provenance's miniflare test is N496 (B2); the UI sends none; control-plane relays the body.
 - **(6)** Notes naming the retired legacy-store or its op map as live re-worded (comments, and the fixture's stand-in names). No note names `tools/` or the deleted plane `index.mjs` as live. Provenance notes ("Moved from `src/index.mjs`") stay.
 - **R17 met; R33 met** (C-92.13 tested by R17's test and R33's row test). Their `(not yet met: T22)` marks are BOB's to strike. C-92.13 is `awaiting stamp`: row-census red, accepted red 3.
-- **(5) Size:** 3,643 lines (`index.mjs` 2,690, `schema.mjs` 668, `checks.mjs` 120, `door.mjs` 92, `deliverer.mjs` 55), under 4,000.
+- **(5) Size:** 3,643 lines (`index.mjs` 2,710, `schema.mjs` 666, `checks.mjs` 120, `door.mjs` 92, `deliverer.mjs` 55), under 4,000.
 
 **Deferred:** none.
 
