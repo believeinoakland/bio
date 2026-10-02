@@ -1282,6 +1282,22 @@ var PROPOSAL_STATES = Object.freeze({
     machine_proposed: "a machine credential proposed this wording for a filing template. That is machine work, labelled as machine work: it can propose wording and it can never draft, review or approve a template. It is not a template's text until a member adopts it into a draft",
     member_proposed: "a member proposed this wording for a filing template. It is a proposal and not a template's text: it is not that until a member adopts it into a draft, and the record holds who proposed it",
     unstated: "the record does not say who proposed this wording for a filing template, and it is not a template's text until a member adopts it into a draft"
+  }),
+  /* DEC-101 (1) (K1019; T23, R43): a draft of a new edition's statement of what changed in it, and why
+     (`BIO_Publication_v0_1.md` §5A; case-authoring R39), is not the group's statement until a member adopts or rewrites
+     it, and the record keeps that it began as a machine draft. */
+  edition_statement: Object.freeze({
+    machine_proposed: "a machine credential drafted this statement of what changed in this edition, and why. That is machine work, labelled as machine work: it is a draft, which can help members say what changed and can never sign a statement. It is not the group's statement until a member adopts or rewrites it",
+    member_proposed: "a member proposed this statement of what changed in this edition, and why. It is a proposal and not the group's statement until a member adopts or rewrites it, and the record holds who proposed it",
+    unstated: "the record does not say who proposed this statement of what changed in this edition, and why, and it is not the group's statement until a member adopts or rewrites it"
+  }),
+  /* DEC-89 with Bob's addition (K1019; T23, R44): an escalation's opening reason assembled from the determination's
+     record (escalation R29) is not a member's reason until a member sends it, as offered or edited; the reason then
+     recorded is the member's own. */
+  escalation_reason: Object.freeze({
+    machine_proposed: "a machine credential assembled this reason for opening an escalation from the determination's record. That is machine work, labelled as machine work: it is a draft, which can set out what the record holds and can never open an escalation. It is not a member's reason until a member sends it, as offered or edited",
+    member_proposed: "a member assembled this reason for opening an escalation from the determination's record. It is a proposal and not a member's reason until a member sends it, as offered or edited, and the record holds who proposed it",
+    unstated: "the record does not say who assembled this reason for opening an escalation from the determination's record, and it is not a member's reason until a member sends it, as offered or edited"
   })
 });
 
