@@ -1,6 +1,6 @@
 /* case-authoring over the modules it uses, each the real one (record-core, membership, credentials, promotion,
    provenance, extraction's tables, content, entities, connections, inquiry, basis-versions, strength, bias, observation-log,
-   reevaluation, publication, ratification, contradiction), on a real SQLite database (node:sqlite) standing in for a Durable Object's
+   reevaluation, publication, ratification, contradiction, network-notices), on a real SQLite database (node:sqlite) standing in for a Durable Object's
    storage. What a later module fills is a stand-in the test controls: the run gate `ai-runs` registers with
    contradiction (its R13; `runs` below), the review provider (publication R23, which
    `review` registers once extracted) and its `case_drafts` table (review R26's read contract). Every test drives
@@ -25,6 +25,7 @@ import { ratificationOf, completenessFields } from "../../../src/ratification/in
 import { contradictionOf } from "../../../src/contradiction/index.mjs";
 import { Capture } from "../../../src/capture/index.mjs";
 import { sourcesOf } from "../../../src/sources/index.mjs";
+import { networkNoticesOf } from "../../../src/network-notices/index.mjs";
 import { caseAuthoringOf } from "../../../src/case-authoring/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
@@ -159,7 +160,7 @@ export function world({ group = "test-group", provider = true, now = null, recor
   const inquiry = inquiryOf(host, { record, membership, content, retrieval, provenance: prov, now: () => clock.now });
   inquiry.migrate();
   const promotion = inquiry.promotion;
-  promotion.registerFact("producingGroup", "legacy-store", () => group);
+  promotion.registerFact("producingGroup", "instance-setup", () => group);
   const entities = inquiry.entities;
   entities.migrate();
   const connections = inquiry.connections;
@@ -211,9 +212,17 @@ export function world({ group = "test-group", provider = true, now = null, recor
     },
   };
   if (provider) publication.registerReviewProvider("review", reviewProvider(w));
+  /* network-notices (layer 8), the real one on this host; `notices` lets a test set what its `noticeReferenceOf` (its
+     R19) answers for a project, any value, where the real module would need a signed notice. A project not in it is
+     answered by the real module. */
+  w.networkNotices = networkNoticesOf(host, { record, membership, credentials, promotion, provenance: prov, capture,
+                                             publication });
+  w.notices = new Map();
+  const networkNotices = { noticeReferenceOf: (project) => (w.notices.has(project) ? w.notices.get(project)
+                                                                                  : w.networkNotices.noticeReferenceOf(project)) };
   w.ca = caseAuthoringOf(host, { record: recordWrap ? recordWrap(record) : record, membership, inquiry, basisVersions,
     strength, bias, observations, reevaluation, publication, ratification: ratWrap ? ratWrap(ratification) : ratification,
-    contradiction, provenance: prov, capture,
+    contradiction, provenance: prov, capture, networkNotices,
     sources, now: now || ((p) => (p === "millisecond" ? clock.ms : clock.now)), ...deps });
   let n = 0;
   Object.assign(w, {

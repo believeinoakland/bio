@@ -122,7 +122,7 @@ export const STATEMENT_ACK_CHECKS = Object.freeze({
       + 'be published either way.',
   },
   /* R19 (DEC-88; K1025, K1030): the acknowledger's own words, asked after C-82.6, the last refusal before anything is
-     read for the write. New in T22, awaiting promotion's stamp. */
+     read for the write. New in T22, stamped in `CATALOG_VERSION` 1.53.0 (T23 L2). */
   STATEMENT_ACK_NO_REASON: {
     check: 'C-82.8',
     where: at('acknowledgeStatement', 'is-statement-ack-reasoned'),

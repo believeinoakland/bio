@@ -16,7 +16,7 @@
 
 import { createSha256, EARNED_CAPTURE_CEILING } from "../record-grammar/index.mjs";
 import { fmSafe, whatChangedBlockLines, whatChangedSectionLines, lensBlockLines,
-         lensSectionLines } from "../case-grammar/index.mjs";
+         lensSectionLines, workingOnLines } from "../case-grammar/index.mjs";
 import { CASE_DOCUMENT_FORMAT, attributionFrontmatterLines, attributionBodyLines, captureBlockLines,
          sourceBlockLines } from "../publication/index.mjs";
 import { caseConclusionRowLines } from "../ratification/index.mjs";
@@ -349,8 +349,8 @@ export function withheldWriterStated(withheld, writerBy) {
  *  each `{candidate, finding, state, kind, unseen_other_side, a, b | side, explanation, words, acknowledged_by,
  *  acknowledged_at}` with its sides as `tensionSide` states them. `captures` are R35's rows (one per member and
  *  capture, with R36's acknowledgement and, on a capture's first row, its signed accounts), `sources` R37's
- *  `{capture, stated, basis}`. */
-export function caseDocumentText({ caseId, edition, project, scope, bias, bar, roster, roles, pins,
+ *  `{capture, stated, basis}`. `workingOn` is R41's reference as `noticeReferenceOf` answered it, null for none. */
+export function caseDocumentText({ caseId, edition, project, workingOn = null, scope, bias, bar, roster, roles, pins,
                                    statement, position, justification, excluded, author, at,
                                    statementBy = null, statementByStated = "",
                                    searched, conclusions = [], frozen, manifest = null,
@@ -379,6 +379,8 @@ export function caseDocumentText({ caseId, edition, project, scope, bias, bar, r
     `case_id: ${caseId}`,
     `case_edition: ${edition}`,
     `case_project: ${project}`,
+    /* R41 (DEC-111; case-grammar R10): the project reference, through case-grammar's one writer (K1144). */
+    ...workingOnLines(workingOn),
     `case_scope: "${fmSafe(scope)}"`,
     `bias_acknowledgement: "${fmSafe(bias)}"`,
     /* D-84 — THE BIAS MANIFEST, BESIDE THE ACKNOWLEDGEMENT AND NOT INSIDE IT (DEC-46). `in_force: false` carries "no

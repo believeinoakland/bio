@@ -11,7 +11,7 @@
  * `STATEMENT_ACK_MAX` … `#statementWriter`, `#draftLinkOf`, `COMPLETENESS_MAX`, `MEMBER_ROLES`, `SEARCHED_SUBJECT_MAX`,
  * the dispatch entries `publishcase` and `statementack`), `airun.mjs` (`searchedSection`, `SEARCHED_LEVEL_OUTCOMES`,
  * now `./searched.mjs`; N138) and the check catalogue (C-44.1, C-44.3–C-44.5, C-82.2–C-82.7, now `./checks.mjs`).
- * Its table is `./schema.mjs`. The legacy code's comments moved with it, shortened where they only restated the code.
+ * Its tables are `./schema.mjs`'s. The legacy code's comments moved with it, shortened where they only restated the code.
  * The record's grammar (front matter, object types, grades, the machine predicate, the hash) is `record-grammar`'s;
  * the acknowledgements' locator and the one front-matter spelling (`fmSafe`) are `case-grammar`'s (N424).
  *
@@ -45,6 +45,7 @@
  *   provenance           `captureGrade`, `attestationsOf` (its R24–R27, R49, R51; R35: N364).
  *   capture              `lateAttestationsOf`, `captureAccountsOf` (its R68, R69; R35, R36: N364).
  *   sources              `sourceOf` to find a capture's source, then `publishableAt` (its R1, R8; R37: N364).
+ *   networkNotices       `noticeReferenceOf` (its R19; R41, R42: DEC-111).
  *   now                  the clock for the instants it writes, `(precision) => ISO string` (default: the wall clock).
  *
  * READ CONTRACTS it joins in its own SQL, each named at its statement: record-core's `bundles` (R37); publication's
@@ -66,8 +67,9 @@ import { contradictionOf } from "../contradiction/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { captureOf } from "../capture/index.mjs";
 import { sourcesOf } from "../sources/index.mjs";
+import { networkNoticesOf } from "../network-notices/index.mjs";
 import { parseFrontmatter, normalizeType, isMachineIdentity, OBJECT_TYPES, BASIS_GRADES,
-         EARNED_CAPTURE_CEILING, isPublicHttpsLocator } from "../record-grammar/index.mjs";
+         EARNED_CAPTURE_CEILING, isPublicHttpsLocator, proposalLabel } from "../record-grammar/index.mjs";
 import { SECTIONS } from "../case-grammar/index.mjs";
 import { PUBLISH_ACT_CHECKS, CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS, CASE_DISCLOSURE_CHECKS } from "./checks.mjs";
 import { CASE_AUTHORING_TABLES, migrateCaseAuthoring } from "./schema.mjs";
@@ -95,10 +97,18 @@ export const MEMBER_ROLES = Object.freeze(["load_bearing", "supporting"]);
 export const SEARCHED_SUBJECT_MAX = 500;
 /** R20: the most acknowledgements one list names; a list that reaches it says so (`truncated`). */
 export const STATEMENT_ACK_MAX = 500;
-/** R38 (DEC-101; K1019): the longest statement of what changed in an edition, in code points. */
+/** R38, R39 (DEC-101; K1019): the longest statement of what changed in an edition, or draft of one, in code points. */
 export const WHAT_CHANGED_MAX = 8000;
+/** R39: the most drafts one list names; a list that reaches it says so (`truncated`), as R20's list does. */
+export const WHAT_CHANGED_DRAFTS_MAX = 500;
+/** R39: the prefix of a draft's opaque id (record-core R6), every one drawn through record-core's ledger. */
+export const WHAT_CHANGED_DRAFT_PREFIX = "WCD";
 /** R19 (DEC-88, K1030): the longest acknowledger's words, in code points. */
 export const STATEMENT_ACK_REASON_MAX = 2000;
+/** R42 (DEC-111; K1119): what step one adds when the project has a notice (R41), one plain sentence until the UX design
+ *  stream gives the words. */
+export const NOTICE_SEALS_SENTENCE = "This project has a public notice that the group is working on it, so publishing "
+  + "this edition also opens the notice's sealed weeks for the work this edition publishes.";
 /** R16: the id chunk for the citations' grouped read, this module's own copy of `retrieval`'s (K57). */
 export const SELECTION_ID_CHUNK = 64;
 /** R21: the most drafts the writer read scans, the bound `review` R26 states for `case_drafts` (`REVIEW_LIST_MAX`):
@@ -132,13 +142,14 @@ export class CaseAuthoring {
 
   constructor({ storage, record, membership, host = null, inquiry = null, basisVersions = null, strength = null,
                 bias = null, observations = null, reevaluation = null, publication = null, ratification = null,
-                contradiction = null, provenance = null, capture = null, sources = null, now = null } = {}) {
+                contradiction = null, provenance = null, capture = null, sources = null, networkNotices = null,
+                now = null } = {}) {
     this.sql = storage.sql;
     this.storage = storage;
     this.record = record;
     this.membership = membership;
     this.#deps = { host, inquiry, basisVersions, strength, bias, observations, reevaluation, publication, ratification,
-                   contradiction, provenance, capture, sources };
+                   contradiction, provenance, capture, sources, networkNotices };
     this.now = typeof now === "function" ? now : (precision) => stampInstant(precision);
   }
 
@@ -155,6 +166,7 @@ export class CaseAuthoring {
   get provenance() { return this.#deps.provenance ||= provenanceOf(this.#deps.host); }
   get capture() { return this.#deps.capture ||= captureOf(this.#deps.host); }
   get sources() { return this.#deps.sources ||= sourcesOf(this.#deps.host); }
+  get networkNotices() { return this.#deps.networkNotices ||= networkNoticesOf(this.#deps.host); }
 
   migrate() { migrateCaseAuthoring(this.sql); }
 
@@ -650,9 +662,11 @@ export class CaseAuthoring {
     /* MK-7 / §4.3: each observation this edition reaches (basis-versions R39), at the level its author chose, or
        UNCHOSEN (publication R17). */
     const reach = this.basisVersions.testimonyReach(members);
+    /* R41 (DEC-111): the project reference, read at this act from the project's notice. */
+    const workingOn = this.#workingOn(proj);
     const observations = [...new Set([...reach.self, ...reach.via.map((v) => v.observation)])];
     const docText = caseDocumentText({
-      caseId: theCase, edition, project: proj, scope: scp, bias: back, bar,
+      caseId: theCase, edition, project: proj, workingOn, scope: scp, bias: back, bar,
       roster: members, roles: memberRoles, pins: pinOf,
       statement: stmt, position: pos, justification: just, excluded: rows,
       author: who, at: when, searched, conclusions: conclusionRows,
@@ -664,8 +678,9 @@ export class CaseAuthoring {
                                            acknowledged_by: who, acknowledged_at: when })),
       tensionsUnread: read.unread,
       captures: captureRows, sources: sourceRows,
-      /* R38: the statement as the member wrote it (`began_as: member` until R39's drafts exist, K1025). */
-      whatChanged: changed ? { text: changed.text, began_as: changed.began_as, draft: changed.draft } : null,
+      /* R38: the statement as the member signs it, with the R39 draft it began as and whether its words were kept. */
+      whatChanged: changed ? { text: changed.text, began_as: changed.began_as, draft: changed.draft,
+                               adopted_as_drafted: changed.adopted_as_drafted } : null,
       /* R40: the frozen manifest's statements, every page, each citation printed or withheld. */
       lens: lensStatements,
     });
@@ -675,7 +690,7 @@ export class CaseAuthoring {
     const stored = this.publication.storeCaseDocument({ caseId: theCase, edition, text: docText, author: who, at: when,
                                                         draft: boundDraft });
     /* R34's steps read what this act read, from the same values (never a second reading). */
-    Object.assign(seen, { excluded: rows, searched, manifest, bias: back, captures: captureRows, sources: sourceRows,
+    Object.assign(seen, { workingOn, excluded: rows, searched, manifest, bias: back, captures: captureRows, sources: sourceRows,
                           tensions: read.entries, memberEditions: [...frozen].map(([target, z]) =>
                             ({ target, edition: z.edition, crossed: z.crossed })) });
 
@@ -736,9 +751,10 @@ export class CaseAuthoring {
 
   /** R38 (DEC-101 (1)(2); K1019, K1025): the "What changed" statement of an edition above 1, `{text, draft?}`. Absent, not
    *  a string or blank is `NO_WHAT_CHANGED`; over `WHAT_CHANGED_MAX` characters (code points) `BAD_WHAT_CHANGED`; a
-   *  named `draft` must be a machine draft of this case (R39), and with no draft store yet (R39 is T23's) every named
-   *  draft is one that is not, `NO_SUCH_WHAT_CHANGED_DRAFT` (BOB's reading until R39 exists). Codes without catalogue
-   *  rows (R29 names none). Answers the refusal or `{ok: true, text, began_as: "member", draft: null}`. */
+   *  named `draft` must be one of this case's R39 drafts, else `NO_SUCH_WHAT_CHANGED_DRAFT`. Codes without catalogue
+   *  rows (R29 names none). Answers the refusal or `{ok: true, text, began_as, draft, adopted_as_drafted}`: with a draft,
+   *  `machine_draft`, its id, and whether `text` is its words unchanged; without one, `member`, null, null
+   *  (`case-grammar` R8). */
   #whatChangedJudged(whatChanged, caseId, edition) {
     const wc = whatChanged && typeof whatChanged === "object" && !Array.isArray(whatChanged) ? whatChanged : null;
     const text = wc && typeof wc.text === "string" ? wc.text : null;
@@ -754,11 +770,80 @@ export class CaseAuthoring {
                detail: `what changed in this edition is at most ${WHAT_CHANGED_MAX} characters, and this statement is `
                      + `${length}. Say it shorter. Nothing was written.` };
     const named = wc.draft == null ? "" : String(wc.draft).trim();
-    if (named)
+    if (!named) return { ok: true, text, began_as: "member", draft: null, adopted_as_drafted: null };
+    const d = this.#one(`SELECT draft_id, text FROM what_changed_drafts WHERE draft_id=? AND case_id=?`, named, caseId);
+    if (!d)
       return { ok: false, reason: "NO_SUCH_WHAT_CHANGED_DRAFT", caseId, edition, draft: named,
-               detail: `no machine draft of this edition's statement of what changed answers to ${named}. Write the `
-                     + `statement in your own words (whatChanged: {text}) and publish again. Nothing was written.` };
-    return { ok: true, text, began_as: "member", draft: null };
+               detail: `no draft of ${caseId}'s statement of what changed answers to ${named} `
+                     + `(op=whatchangeddrafts&case=${caseId} lists them). Name one of them, or write the statement in `
+                     + `your own words (whatChanged: {text}) and publish again. Nothing was written.` };
+    return { ok: true, text, began_as: "machine_draft", draft: d.draft_id, adopted_as_drafted: text === d.text };
+  }
+
+  /* ==========================================================================================================
+   * op=whatchangedpropose, op=whatchangeddrafts: drafts of a new edition's statement (R39; DEC-101 (1), DEC-84 (14))
+   *
+   * A DRAFT IS NEVER A STATEMENT. Any credential may propose one, a machine's labelled machine work
+   * (`record-grammar`'s `proposalLabel(proposedBy, "edition_statement")`, its R43); it becomes the edition's statement
+   * only when a member adopts or rewrites it at op=publish (R38), which records the draft it began as and whether its
+   * words were kept. Drafts are append-only: nothing here updates or removes one.
+   * ========================================================================================================== */
+
+  /* R39: the published case `viewer` may see, or the one refusal for every other (R27: a case not published and one
+     whose project the viewer may not see answer alike). Published is a ratified edition (publication R40's `cases`,
+     written at the first ratification); sight is of the case's project, through membership's one rule (its R43). */
+  #caseInSight(caseId, viewer) {
+    const id = str(caseId);
+    const row = id ? this.#one(`SELECT project_id FROM cases WHERE case_id=?`, id) : null;
+    const gate = viewerPredicate(viewer);
+    const seen = row && gate.scope !== "DENY"
+      && !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, row.project_id, ...gate.args);
+    if (seen) return { ok: true, caseId: id };
+    return { ok: false, reason: "NO_SUCH_CASE",
+             detail: "no published case you can see answers to that id. A case not yet published, and one you cannot "
+                   + "see, are answered alike. Nothing was written." };
+  }
+
+  /** R39: store a draft of a new edition's statement of what changed in `case`, labelled by
+   *  `proposalLabel(proposedBy, "edition_statement")`. Refusals, in order: `NO_SUCH_CASE`; `text` not a string, empty
+   *  after trimming, or over `WHAT_CHANGED_MAX` code points `BAD_WHAT_CHANGED`. Each writes nothing. Answers
+   *  `{ok: true, draft: {id, case, text, label, at}}`. */
+  proposeWhatChanged({ case: caseId = null, text = undefined, proposedBy = null, viewer = null } = {}) {
+    const seen = this.#caseInSight(caseId, viewer);
+    if (seen.ok === false) return seen;
+    const length = typeof text === "string" ? [...text].length : null;
+    if (length === null || !text.trim() || length > WHAT_CHANGED_MAX)
+      return { ok: false, reason: "BAD_WHAT_CHANGED", case: seen.caseId, length, max: WHAT_CHANGED_MAX,
+               detail: `a draft of what changed in an edition is words, at most ${WHAT_CHANGED_MAX} characters: `
+                     + (length === null ? "none were given" : !text.trim() ? "the words given were blank"
+                       : `the words given are ${length} characters`) + `. Nothing was written.` };
+    const by = proposedBy == null || !String(proposedBy).trim() ? null : String(proposedBy).trim();
+    const label = proposalLabel(by, "edition_statement");
+    return this.record.transact(() => {
+      const at = this.#when("millisecond");
+      const id = this.record.mintOpaqueId(WHAT_CHANGED_DRAFT_PREFIX, at.slice(0, 4), "", (x) =>
+        !!this.#one(`SELECT 1 AS x FROM what_changed_drafts WHERE draft_id=?`, x));
+      if (!id) return mintExhausted(WHAT_CHANGED_DRAFT_PREFIX);
+      this.sql.exec(`INSERT INTO what_changed_drafts (draft_id, case_id, text, proposed_by, label, at)
+                     VALUES (?,?,?,?,?,?)`, id, seen.caseId, text, by, JSON.stringify(label), at);
+      return { ok: true, draft: { id, case: seen.caseId, text, label, at },
+               next: `a member adopts it as written, or rewrites it, at op=publish (whatChanged: {text, draft: "${id}"}); `
+                   + `until then it is a draft and never the group's statement` };
+    });
+  }
+
+  /** R39: the drafts of `case`'s statement of what changed, oldest first, each `{id, text, label, at}`, at most
+   *  `WHAT_CHANGED_DRAFTS_MAX` (`truncated` when there are more). `NO_SUCH_CASE` as R39's proposal answers it. Writes
+   *  nothing. */
+  whatChangedDrafts({ case: caseId = null, viewer = null } = {}) {
+    const seen = this.#caseInSight(caseId, viewer);
+    if (seen.ok === false) return seen;
+    const rows = this.#rows(`SELECT draft_id, text, label, at FROM what_changed_drafts WHERE case_id=?
+                             ORDER BY seq LIMIT ?`, seen.caseId, WHAT_CHANGED_DRAFTS_MAX + 1);
+    const truncated = rows.length > WHAT_CHANGED_DRAFTS_MAX;
+    return { ok: true, case: seen.caseId, truncated,
+             drafts: rows.slice(0, WHAT_CHANGED_DRAFTS_MAX).map((r) => ({ id: r.draft_id, text: r.text,
+                                                                         label: JSON.parse(r.label), at: r.at })) };
   }
 
   /** R2, asked by `op=publish` and by R32's read alike: the publishing project named, seen, a project, and owned by
@@ -1367,7 +1452,10 @@ export class CaseAuthoring {
     const same = (x, y) => JSON.stringify(x) === JSON.stringify(y);
     const blockers = [];
     for (const r of found) if (!(first && same(r, first)) && !blockers.some((b) => same(b, r))) blockers.push(r);
-    const steps = this.#preflightSteps(a, answer, seen, ratify);
+    /* R42: whether the project has a notice, asked only of a project the act's own authority fences let through. */
+    const notice = auth && auth.ok !== false ? this.#workingOn(auth.proj) : null;
+    /* R42 says so whenever the project has a notice: whatever reference R41 would write. */
+    const steps = this.#preflightSteps(a, answer, seen, ratify, notice);
     /* Ready only when nothing refuses AND ratification's list was read: a list not reached is not a list that is empty. */
     return { ok: true, wrote: false, ready: !first && !blockers.length && ratify.reached, first, blockers, steps };
   }
@@ -1390,7 +1478,7 @@ export class CaseAuthoring {
 
   /* R34: the five steps (DEC-80 item 2), each read from the rolled-back run when it published, and each part it could
      not reach stated as not reached, never filled. Step three carries R32's read as the ceremony shows it. */
-  #preflightSteps(a, answer, seen, ratify) {
+  #preflightSteps(a, answer, seen, ratify, notice = null) {
     const ok = !!(answer && answer.ok === true);
     const notReached = ok ? null : `not reached: op=publish refuses first (${answer ? answer.reason : "no answer"})`;
     const tensions = this.tensionsToDisclose({ project: a.project ?? null, targets: a.targets ?? null,
@@ -1398,7 +1486,10 @@ export class CaseAuthoring {
     return [
       { step: 1, name: "what becomes permanent",
         says: "Signing publishes this case edition, and each finding in it at the version pinned here. A published "
-            + "edition is never withdrawn or edited: it is corrected only by a later edition.",
+            + "edition is never withdrawn or edited: it is corrected only by a later edition."
+            /* R42 (DEC-111; K1031 (3)): the plain sentence until the UX design stream gives the words. */
+            + (notice !== null ? ` ${NOTICE_SEALS_SENTENCE}` : ""),
+        working_on: notice,
         ...(ok ? { case: answer.caseId, edition: answer.edition, document: answer.caseDocument,
                    pinned: answer.findings.map((f) => ({ target: f.target, bundleSha: f.bundleSha })) }
                : { stated: notReached }) },
@@ -1426,6 +1517,16 @@ export class CaseAuthoring {
         next: ok ? `op=caseratify over op=publish's document (case ${answer.caseId}, edition ${answer.edition})`
                  : "op=publish first" },
     ];
+  }
+
+  /** R41 (DEC-111; `case-grammar` R10): the project reference a case carries, `network-notices.noticeReferenceOf`
+   *  (its R19) exactly as it answers for `project`: the notice id of the project's open or most recent notice, or null
+   *  (undefined read as null). It is written only through case-grammar's `workingOnLines`, which writes no line for
+   *  null and writes any other value as handed, so a malformed one reaches ratification R38's refusal at signing and is
+   *  never corrected or dropped here (K1144). R42 reads the same answer. */
+  #workingOn(project) {
+    const ref = this.networkNotices.noticeReferenceOf(project);
+    return ref === undefined ? null : ref;
   }
 
   /* The project an unsigned preparation of a case names, or null (publication R40: `case_documents`). */
@@ -2128,7 +2229,7 @@ export function caseAuthoringOwns(t) {
   return CASE_AUTHORING_TABLES.some((x) => x.name === name);
 }
 
-/** The module's ops (K3), as entries of the legacy store's op map. `viewer` and `author` are the control plane's stamps,
+/** The module's ops (K3), as entries of the plane's op map (`plane/store.mjs`). `viewer` and `author` are the control plane's stamps,
  *  read from the query and spread AFTER the body, so a caller's own copy is overwritten, never honoured. */
 export function caseAuthoringOps(c, url, body) {
   const q = (k) => url.searchParams.get(k);
@@ -2173,6 +2274,13 @@ export function caseAuthoringOps(c, url, body) {
         try { const v = JSON.parse(q("aiCred")); return v && typeof v === "object" ? v : {}; } catch { return {}; }
       })() } : q("viewer"),
       author: q("author") }),
+    /* R39: a draft of a new edition's statement of what changed. The words come in the body (a statement of up to
+       8,000 characters is not a query parameter), the case from either; `proposedBy` is the `author` stamp. */
+    whatchangedpropose: () => c.proposeWhatChanged({ case: q("case") || b.case || null,
+      text: typeof b.text === "string" ? b.text : (q("text") ?? undefined),
+      viewer: q("viewer"), proposedBy: q("author") }),
+    /* R39: the case's drafts, oldest first. */
+    whatchangeddrafts: () => c.whatChangedDrafts({ case: q("case") || b.case || null, viewer: q("viewer") }),
     /* R19–R21: the review copy's two doors, and a member's third subject (an unsigned case document). */
     statementack: () => c.acknowledgeStatement({ draft: q("draft"), caseId: q("case"), edition: q("edition"),
       secretSha: q("secretSha"), viewer: q("viewer"), bySecret: q("bySecret") === "1",
