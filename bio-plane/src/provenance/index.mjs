@@ -4,7 +4,7 @@
  * and a member's firsthand observation, the one capture whose bytes are a person's own words. A hop attests bytes,
  * address and time, never the credibility of the content. Each document's chain of hops and the route marker are
  * `provenance-routes`', and trusted timestamps over capture hashes and the instance's key are `attestation`'s (N512,
- * T25); the two names a later layer still imports from here are pure copies until it re-points (N516, below).
+ * T25); the three names a later module still imports from here are copies until it re-points (N516, below).
  *
  * Extracted from the legacy modules (T4-2; K49, K59, K72): `store.mjs` (the register write and the testimony fence
  * that ran inside `promote`, `testify`, the register audit, census and holds, the receipts and the version chain),
@@ -26,8 +26,10 @@
  *   order         the modules' total order (ids) R47's listeners run in: membership's `MODULE_ORDER`, the one list
  *                 promotion's steps run in too, unless a test passes its own. */
 
-import { parseFrontmatter, isMachineIdentity, createSha256, EARNED_CAPTURE_CEILING, BASIS_GRADES,
+import { parseFrontmatter, isMachineIdentity, isPublicHttpsLocator, createSha256, EARNED_CAPTURE_CEILING, BASIS_GRADES,
          TESTIMONY_GRADE } from "../record-grammar/index.mjs";
+import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS, TSA_CONTENT_TYPE, TSA_ACCEPT, ARCHIVE_SAVE_BASE,
+         ARCHIVE_SERVICE, archiveLocatorFrom } from "../tsa.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
@@ -92,10 +94,11 @@ export const ARCHIVE_CAPTURE_GRADE = BASIS_GRADES[BASIS_GRADES.indexOf(EARNED_CA
 export const DOORBELL_VIA = "doorbell";
 
 /* ======================================================================= *
- * N516 (option B, K1218 as K1220 corrects it): PURE COPIES of two names a later layer imports by name from this
- * module, kept until each importer re-points in T25 and deleted by this module's T26 job. The route marker and its
+ * N516 (option B, K1218 as K1220 corrects it; K1226): COPIES of the three names a later module imports by name from
+ * this module, `routeFinding`, `instanceStatement` and `attest`, kept until each importer re-points in T25 and deleted
+ * by this module's T26 job. The route marker and its
  * table moved to `provenance-routes` (its R1-R13), and co-attestation and the instance key to `attestation` (its
- * R1-R10), with N512. Neither copy reads or writes a table, and this module answers neither as its own requirement.
+ * R1-R10), with N512. No copy reads or writes a table, and this module answers none as its own requirement.
  * ======================================================================= */
 
 /* N516 · `routeFinding` for `retrieval` (layer 5), word for word as `provenance-routes` R5 answers it: what one
@@ -141,6 +144,150 @@ export function instanceStatement(kind, sha) {
     throw new Error(`instanceStatement: kind ${JSON.stringify(kind)} is ${kind === RECEIPT_KIND ? "the receipt's own"
       : "not of the form <name>/<version>"}; a statement for a later module is never a receipt`);
   return `${kind}\nsha256: ${sha}\n`;
+}
+
+/* N516 · `attest` for `acquisition` and `capture` (layer 3, after `attestation`), as `attestation` R1–R3 state it
+   (K1226, BOB's answer to PROVENANCE #14 J1): a stateless copy, held because both import it by name and nearly every
+   module's tests load them. It reads and writes no table: the evidence store, the network and the record's
+   `registerHolds` reach it only as the caller's callbacks (`head`, `put`, `fetch`, `holds`), so the one-writer rule
+   holds. Its one refusal row, C-89.1, is `attestation`'s (`ATTEST_CHECKS`); the copy keeps that row's check and words
+   privately, so this module exports no second C-89 family. */
+const CAPTURE_HELD_IN_PARTS_ROW = Object.freeze({
+  check: "C-89.1",
+  translation: "The record lists this document, but keeps it in parts rather than as one file, and this "
+    + "instance has no record of fetching it itself. A timestamp is only requested for bytes this "
+    + "instance can vouch for, so none was requested. Nothing is missing: do not capture the document "
+    + "again. If the instance fetches it from its address, it can then be co-attested.",
+});
+export async function attest(body, { head, put, fetch: fetchFn, holds, now = () => new Date().toISOString() } = {}) {
+  const sha = typeof body?.sha256 === "string" ? body.sha256.toLowerCase() : "";
+  if (!/^[0-9a-f]{64}$/.test(sha))
+    return { ok: false, reason: "BAD_SHA", detail: "attest takes the sha256 of a capture already in the store" };
+  /* D-530: A MISS ON THE WHOLE-HASH KEY IS NOT ABSENCE. A document over one part
+     is stored ONLY as its parts, each under its own hash, and never under the
+     whole's (D-469, D-476), so this head misses for every such capture - and the
+     setup surface attests the whole hash straight after acquiring it. The
+     refusal it gave, "nothing in this store has that hash; capture the document
+     before attesting it", was false for bytes the record holds and sent a member
+     to capture them again. So a miss asks the store the whole-document question
+     (Intake Doctrine section 8, D-476's `registerholds`), and three answers are
+     kept apart:
+       - the plane's own ACQUISITION RECEIPT names the hash: the plane hashed
+         these bytes as they arrived and keeps them in parts, and no caller can
+         write that row. The hash is attested, and the answer says how it is held.
+       - only the REGISTER names it: a row `op=promote` wrote from what its caller
+         named, without reading R2 (D-45). A timestamp is not rested on that
+         alone, and the bytes are not called absent either: CAPTURE_HELD_IN_PARTS.
+       - neither, or the store did not answer: NO_SUCH_CAPTURE, saying what was
+         asked rather than that nothing anywhere holds the bytes. */
+  let held = null;
+  if (!(await head(sha))) {
+    let holdsAnswer = null;
+    try { holdsAnswer = typeof holds === "function" ? await holds(sha) : null; } catch { holdsAnswer = null; }
+    if (holdsAnswer && holdsAnswer.acquired === true) {
+      held = { form: "parts", on: "acquisition_receipt",
+               detail: "no object is stored under this hash, because the document was captured in parts "
+                     + "and only its parts are stored, each under its own hash. This plane hashed the "
+                     + "whole document as it arrived and recorded that receipt, which is what this "
+                     + "attestation rests on." };
+    } else {
+      /* DEC-49 REGION is-attest-parts */
+      if (holdsAnswer && holdsAnswer.registered === true)
+        return { ok: false, reason: "CAPTURE_HELD_IN_PARTS", code: "CAPTURE_HELD_IN_PARTS",
+          check: CAPTURE_HELD_IN_PARTS_ROW.check, translation: CAPTURE_HELD_IN_PARTS_ROW.translation,
+          sha256: sha,
+          detail: "the record's register names these bytes, but no object is stored under this hash and "
+                + "this plane holds no receipt of having acquired them, which is the shape of a document "
+                + "kept only in parts. A register row is written from what the promoting caller named, so "
+                + "a timestamp is not rested on it alone. Nothing here says the bytes are missing." };
+      /* END DEC-49 REGION is-attest-parts */
+      return { ok: false, reason: "NO_SUCH_CAPTURE",
+               detail: holdsAnswer
+                 ? "no object is stored under that hash, the register holds no row for it under a "
+                   + "record that exists, and this plane holds no receipt of having acquired it"
+                 : "no object is stored under that hash, and the store could not be asked whether "
+                   + "its register or an acquisition receipt names it, so this is not a finding that "
+                   + "the record lacks the bytes" };
+    }
+  }
+
+  const stamp = () => secondOf(now());
+  const attempts = [];
+  let token = null, tokenSha = null, service = null;
+  for (const endpoint of TSA_ENDPOINTS) {
+    const attempted = stamp();
+    try {
+      const { der } = timestampRequest(sha);
+      const res = await fetchFn(endpoint, {
+        method: "POST", body: der,
+        headers: { "content-type": TSA_CONTENT_TYPE, accept: TSA_ACCEPT },
+      });
+      if (!res.ok) {
+        attempts.push({ service: endpoint, attempted, ok: false, note: `http ${res.status}` });
+        continue;
+      }
+      const parsed = parseTimestampResponse(new Uint8Array(await res.arrayBuffer()), sha);
+      if (!parsed.ok) {
+        attempts.push({ service: endpoint, attempted, ok: false, note: parsed.reason });
+        continue;
+      }
+      tokenSha = hexBytes(await crypto.subtle.digest("SHA-256", parsed.token));
+      await put(tokenSha, parsed.token);
+      token = parsed.token; service = endpoint;
+      attempts.push({ service: endpoint, attempted, ok: true, kind: "rfc3161",
+                      token_sha256: tokenSha, token_bytes: parsed.token.length });
+      break;
+    } catch (e) {
+      attempts.push({ service: endpoint, attempted, ok: false, note: String(e && e.message || e).slice(0, 120) });
+    }
+  }
+
+  /* The opt-in second path. Off unless the caller asks, because asking a
+     public archive to fetch a URL publishes the fact of interest, and that
+     is a tactical judgement rather than a default. */
+  let archive = null;
+  if (body.archive === true) {
+    const attempted = stamp();
+    const locator = typeof body.locator === "string" ? body.locator : "";
+    if (!isPublicHttpsLocator(locator)) {
+      attempts.push({ service: ARCHIVE_SERVICE, attempted, ok: false,
+                      note: "no public https locator to archive" });
+    } else {
+      try {
+        const res = await fetchFn(ARCHIVE_SAVE_BASE + locator, { redirect: "follow" });
+        const archived = archiveLocatorFrom(res, locator);
+        if (res.ok && archived) {
+          archive = { service: ARCHIVE_SERVICE, locator: archived };
+          attempts.push({ service: ARCHIVE_SERVICE, attempted, ok: true,
+                          kind: "co-archive", archived_locator: archived });
+        } else {
+          attempts.push({ service: ARCHIVE_SERVICE, attempted, ok: false,
+                          note: res.ok ? "archived but returned no locator" : `http ${res.status}` });
+        }
+      } catch (e) {
+        attempts.push({ service: ARCHIVE_SERVICE, attempted, ok: false,
+                        note: String(e && e.message || e).slice(0, 120) });
+      }
+    }
+  }
+
+  return {
+    ok: !!token,
+    attempts,
+    ...(archive ? { archive } : {}),
+    ...(token ? {
+      attestation: {
+        file: `snapshots/timestamp-${tokenSha.slice(0, 12)}.tsr`,
+        kind: "rfc3161", service, sha256: tokenSha, bytes: token.length,
+        over: sha,
+      },
+      note: "A trusted timestamp over the capture hash. Anyone can check it with openssl ts -verify against the authority's certificate; this plane obtains and stores it, and does not claim to have verified the signature.",
+      ...(held ? { held } : {}),
+    } : {
+      reason: "NO_ATTESTATION",
+      note: "Every attempt was recorded. A register showing a failed attempt and one showing no attempt are different claims, so the failures above belong in the document rather than being dropped.",
+    }),
+  };
 }
 /* PL-10 / D-220. The chain's bound, in the pair every capped read in this
    file publishes: the default a caller gets by saying nothing, and the

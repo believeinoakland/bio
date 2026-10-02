@@ -3,7 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, V } from "./fixture.mjs";
 import { testimonyBytes, observerRef, TESTIMONY_FORMAT, TESTIMONY_MAX_BYTES, TESTIMONY_PATH, routeFinding,
-         instanceStatement } from "../../../src/provenance/index.mjs";
+         instanceStatement, attest } from "../../../src/provenance/index.mjs";
 import * as CHECKS from "../../../src/provenance/checks.mjs";
 import { TESTIMONY_GRADE } from "../../../src/record-grammar/index.mjs";
 
@@ -103,6 +103,7 @@ test("R40: no place is named in the module's behaviour or outward text", async (
   texts.push(w.prov.recordReceipt({ addressNorm: "e.org/a", captureSha: a.sha }), w.prov.receipts({}));
   /* The pure copies held until their importers re-point (N516), and every refusal row this module exports. */
   texts.push(routeFinding("information", null), routeFinding("inquiry", null), instanceStatement("bio-notice/1", a.sha));
+  texts.push(await attest({ sha256: "x" }, {}), await attest({ sha256: a.sha }, { head: async () => null, holds: async () => null }));
   texts.push(Object.values(CHECKS));
   for (const x of texts) assert.equal(place.test(JSON.stringify(x)), false, JSON.stringify(x).slice(0, 200));
 });

@@ -8,9 +8,8 @@
  * ratification's.
  *
  * N512 (T25): C-34 `ROUTE_MARK_CHECKS` is `provenance-routes`' and C-89 `ATTEST_CHECKS` is `attestation`'s, each in
- * its own `checks.mjs`. The copies of both below are held only until control-plane's and affordances' T25 jobs read
- * the new files, and are deleted by this module's T26 job (N516). C-103.3, C-103.6 and C-103.7 stay in
- * `PROVENANCE_ACT_CHECKS`, answered through it by those modules (R58).
+ * its own `checks.mjs`; no copy of either is held here, so no row is held twice (K1225). C-103.3, C-103.6 and
+ * C-103.7 stay in `PROVENANCE_ACT_CHECKS`, answered through it by those modules (R58).
  *
  * C-53.14 was minted in this module's own table, `REGISTER_ENTRY_CHECKS`, rather than in `TESTIMONY_CHECKS`: a row is
  * counted wherever it lives (promotion R34), and the table takes a name of its own so no two families share one. It is
@@ -75,48 +74,6 @@ export const VERSION_CHAIN_CHECKS = {
   },
 };
 
-/* N516: a copy of `provenance-routes`' C-34 (`ROUTE_MARK_CHECKS`, the route marker's door, REC-63 / DEC-56 / D-204),
- * row for row, each `where` naming the site that raises it, held until control-plane's and affordances' T25 jobs read
- * that module's file; deleted by this module's T26 job. */
-export const ROUTE_MARK_CHECKS = {
-  ROUTE_MARK_NO_AUTHOR: {
-    check: 'C-34.1',
-    where: 'src/provenance-routes/index.mjs provenanceRouteAssess > is-route-mark',
-    translation: 'Recording that a document\'s route cannot be shown is an act the record has to be '
-      + 'able to attribute, and nothing here said who is making it. Sign in and try again.',
-  },
-  ROUTE_MARK_NO_BUNDLE: {
-    check: 'C-34.2',
-    where: 'src/provenance-routes/index.mjs provenanceRouteAssess > is-route-mark',
-    translation: 'This did not say which document to look at, so nothing was assessed.',
-  },
-  ROUTE_MARK_NO_SUCH_BUNDLE: {
-    check: 'C-34.3',
-    where: 'src/provenance-routes/index.mjs provenanceRouteAssess > is-route-mark',
-    translation: 'The record holds no document by that name, so there was nothing to assess.',
-  },
-  ROUTE_MARK_NOT_A_DOCUMENT: {
-    check: 'C-34.4',
-    where: 'src/provenance-routes/index.mjs provenanceRouteAssess > is-route-mark',
-    translation: 'Only a captured document travelled a route to get here, and this is not one. '
-      + 'Questions, projects and actions were written in the record rather than fetched from anywhere, '
-      + 'so there is no route to show or to doubt.',
-  },
-};
-
-/* N516: a copy of `attestation`'s C-89 (`ATTEST_CHECKS`, co-attesting a capture held in parts, D-530), its `where`
- * naming the site that raises it, held and deleted on the same terms as the copy above. */
-export const ATTEST_CHECKS = {
-  CAPTURE_HELD_IN_PARTS: {
-    check: 'C-89.1',
-    where: 'src/attestation/index.mjs attest > is-attest-parts',
-    translation: 'The record lists this document, but keeps it in parts rather than as one file, and this '
-      + 'instance has no record of fetching it itself. A timestamp is only requested for bytes this '
-      + 'instance can vouch for, so none was requested. Nothing is missing: do not capture the document '
-      + 'again. If the instance fetches it from its address, it can then be co-attested.',
-  },
-};
-
 /* ===========================================================================
    C-103 — PROVENANCE'S OWN ACTS (T4's extraction, provenance R1, R29, R58; T6, legacy-checks, N81).
 
@@ -154,7 +111,7 @@ export const PROVENANCE_ACT_CHECKS = {
   },
   NO_BUNDLE: {
     check: 'C-103.3',
-    where: 'src/provenance/index.mjs declareOrigin > is-origin-act',
+    where: 'src/provenance/index.mjs declareOrigin > is-origin-act; src/provenance-routes/index.mjs provenanceChainRebuild',
     translation: 'This did not say which document it is about, so nothing was done.',
   },
   ORIGIN_NOT_A_DOCUMENT: {
