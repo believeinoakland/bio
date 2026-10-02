@@ -19,3 +19,7 @@
 - `node checks/format.mjs`: 91 modules, 0 failures. `architecture.mjs … capture-requests`: 10 product files, 0 failures. `coverage.mjs … capture-requests`: 45 of 45 live ids named, 0 failures. `ownership.mjs … capture-requests tranche/T25`: 5 files, 0 failures.
 
 Size (session_0113zrDaPdg9qvGBAGsWubQr): test runs 6, module lines 3565
+
+## J1 · COMPLETE
+
+Done (record "Completion"): N515 applied — R45's scope check named as link-sweep's (its R12; sources link-sweep R1) in index.mjs, checks.mjs C-28.19's comment and schema.mjs's sweep column; sweep.test.mjs registers under "link-sweep". No change of meaning. N502/N508 re-scan: nothing else stale. capture-requests 72/72; whole test/m 5330, 75 fail, none here, all reds 7/8/9 (the 4 non-provenance-user ones checked on the base too). Checks: format, architecture, coverage (45/45), ownership all 0. No row added or changed. Reported: bio-plane bundle staled by src/capture-requests/* (not regenerated); the requirements' Status line still says 'registered at start by monitoring' (yours).
