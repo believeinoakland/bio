@@ -23,3 +23,20 @@
 - `checks/format.mjs`: 91 modules, 90 requirements files; 0 failures. `checks/architecture.mjs … network-notices`: 10 product files, 54 relative imports; 0 failures. `checks/coverage.mjs … network-notices`: 30 of 30 live requirement ids named by a test; 0 failures. `checks/ownership.mjs … network-notices tranche/T25`: 0 failures.
 
 Size (session_01Xmknu5rGF5DJySuKiZEqtc): test runs 5, module lines 1376
+
+## J1 · COMPLETE
+
+network-notices T25 L8 is done and pushed on `job/T25/network-notices`.
+
+- N512's user side: `instanceStatement` is imported from `attestation`. `instanceSign`, `instanceKeys` and `instanceKeyBound` come from the attestation instance the composition hands in (`deps.attestation`). The module no longer reaches `provenance`.
+- R1, R13 and R21 pass against the real attestation module. A new R21 test checks three things: `copy` equals the `attestation.instanceKeys()` entries that signed an attestation, a replaced key stays listed, and a key that signed only a receipt is not listed.
+- Module tests: 62/62.
+- Whole `test/m`: 5331 tests, 20 fail. All 20 are inherited and fail the same way on `origin/tranche/T25` without this change:
+  - red 7: case-authoring `preflight` (13), filings `outward` and `packet` (3);
+  - red 8: control-plane `families` and `catalogue-end`;
+  - not named in START: affordances `sources.test.mjs`:117 (R2 reattest) and promotion `write-path.test.mjs`:218 (R53). I read them as red 7 or 9. Please name or route them.
+- Checks: format, architecture, coverage and ownership all report 0 failures.
+- Red 6: no row was added or changed. No bundle went stale.
+- Report: `modules.json` still lists `provenance` in network-notices' `uses`, but the code no longer reaches it.
+
+The details are in my record.
