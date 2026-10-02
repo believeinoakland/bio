@@ -36,7 +36,7 @@
 
 **L8**
 - **publication** · N501: retire the constant re-exports queue-producers no longer imports (after T23 L11's re-point). *(PR #7)* N491's publication share; N481 if landed.
-- **network-notices** · N503–N505's consumers (R4, R1, R21) and N507 (idle wakes null, R14/R15), after L2–L3's merges.
+- **network-notices** · N503–N505's consumers (R4, R1, R21), N507 (idle wakes null, R14/R15), N509 (C-70.1 at existence, REC-149 (a)), after L2–L3's merges.
 
 **L9**
 - **actions** · N508's note (`index.mjs`:2368). *(PR #7)* N488's actions share.
