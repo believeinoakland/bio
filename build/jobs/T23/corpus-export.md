@@ -26,3 +26,7 @@
 - `publication` can now retire its `export`/`exportlog` arms; the plane (L11) spreads `corpusExportOps(corpusExportOf(ctx), q)` (accepted red 14 until then).
 
 Size (session_018tg1ECR7JsNZhPSSSfBouG): test runs 2, module lines 359
+
+## J1 · COMPLETE
+
+R6 met: corpusExportOps(ce, q) published (export → exportManifest({note: q("note")}), exportlog → exportLog({limit: q("limit")})), tested at the interface in test/m/corpus-export/ops.test.mjs. corpus-export 13/13 green; whole test/m 5041 pass, 3 fail = accepted reds 9 and 13 only. format, architecture, coverage (6/6), ownership: 0 failures. Commit ece5c90def on job/T23/corpus-export. Plane bundle inputs changed, nothing regenerated. R6's not-yet-met mark can be struck. Ready to merge first in L8; details in my record.
