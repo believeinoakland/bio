@@ -65,6 +65,9 @@ import * as FILINGS from "../filings/checks.mjs";
 import * as ESCALATION from "../escalation/checks.mjs";
 import * as ACTION_PLANS from "../action-plans/checks.mjs";
 import * as MONITORING from "../monitoring/checks.mjs";
+/* K1207 (N506, R43): link-sweep's C-18.16–C-18.18 (`SWEEP_CHECKS`), moved from monitoring's file with the sweep, in its
+   place in the module order (after monitoring). */
+import * as LINK_SWEEP from "../link-sweep/checks.mjs";
 import * as TASKS from "../tasks/checks.mjs";
 import * as QUEUE from "../queue/checks.mjs";
 import * as ADMISSION from "../admission/checks.mjs";
@@ -124,6 +127,7 @@ export const CHECK_FAMILY_FILES = Object.freeze([
   ["src/escalation/checks.mjs", ESCALATION],
   ["src/action-plans/checks.mjs", ACTION_PLANS],
   ["src/monitoring/checks.mjs", MONITORING],
+  ["src/link-sweep/checks.mjs", LINK_SWEEP],
   ["src/tasks/checks.mjs", TASKS],
   ["src/queue/checks.mjs", QUEUE],
   ["src/setup.mjs", INSTANCE_SETUP],
