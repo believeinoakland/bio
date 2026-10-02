@@ -2,15 +2,15 @@
  * module answers carries its code, its row and the member's translation.
  *
  * `MINT_EXHAUSTED` is new with R62 (N322, N250, K275, K392): it names one condition, no free opaque id could be drawn
- * (`mintOpaqueId` answered null, R9), which promotion, case-authoring, review and queue each reach; record-core, the
- * earliest of them in the order and the owner of the minter, provides the one helper (`mintExhausted`) and holds the one
- * row. It takes the next free number of C-59, the id-allocation family C-59.5 belongs to (K107 (3); K174: a module holds
- * its new rows), and review's C-87.12 translation, unchanged; C-87.12 retires into it in review's job.
+ * (`mintOpaqueId` answered null, R9), which promotion, case-authoring, review, tasks and sources each reach; record-core,
+ * the earliest of them in the order and the owner of the minter, provides the one helper (`mintExhausted`) and holds the
+ * one row. It takes the next free number of C-59, the id-allocation family C-59.5 belongs to (K107 (3); K174: a module
+ * holds its new rows), and review's C-87.12 translation, unchanged; C-87.12 retired into it in T13 (K434), stamped 1.44.0.
  *
- * T18 (RECORD-CORE #10): C-59.5 `ALLOCID_PREFIX_GATED` and C-102.1–.3 (the audit check's registration and failure) are
- * COPIED here from the catalogue's `PROJECT_ID_CHECKS` and `REGISTRATION_CHECKS`, rows and translations unchanged; those
- * two tables are split between modules and leave the catalogue when promotion and ratification hold theirs (T19, K529's
- * lag). C-75, the set form's five rows, MOVED here whole as `PER_ITEM_CHECKS` (its family name kept for the guard's and
+ * T18 (RECORD-CORE #10): C-59.5 `ALLOCID_PREFIX_GATED` and C-102.1–.3 (the audit check's registration and failure) were
+ * COPIED here from the catalogue's `PROJECT_ID_CHECKS` and `REGISTRATION_CHECKS`, rows and translations unchanged; the
+ * catalogue's duplicates were removed in T19 (K783, stamped 1.49.0) and the catalogue itself deleted at T19's close
+ * (K855). C-75, the set form's five rows, MOVED here whole as `PER_ITEM_CHECKS` (its family name kept for the guard's and
  * `dec49Row`'s suffix harvest), the catalogue's copy deleted in the same job (K586 BOB-1: record-core was its one
  * importer). C-102.15–.18 are new: the grammar seam's two registration refusals (§1b) and the statistics source's two
  * (R64's source, K621), each met only by the instance's own build, as C-102.1, .2, .13 and .14 are.
@@ -66,7 +66,7 @@ export const RECORD_CORE_CHECKS = Object.freeze({
       + 'answering, so the document is counted as having an error rather than as clean. The error is in the '
       + 'check and says nothing yet about the document. The audit changes nothing in the record.',
   }),
-  /* New (§1b): a type grammar registered for the catalogue's `checkBundle`. */
+  /* New (§1b): a type grammar registered for record-grammar's `checkBundle` (its R39). */
   GRAMMAR_DECLARED: Object.freeze({
     check: 'C-102.15', where: at("registerGrammar", "is-grammar-registration"),
     translation: 'A part of this instance tried to register a document grammar a second time, or to claim a check '
@@ -89,6 +89,24 @@ export const RECORD_CORE_CHECKS = Object.freeze({
     check: 'C-102.18', where: at("registerStatsSource", "is-stats-source-registration"),
     translation: 'A part of this instance tried to supply the instance\'s figures without naming itself or without a '
       + 'function to count them, so nothing was registered. ' + BUILD_FAULT,
+  }),
+  /* New (T24, R75, N503): a chosen opaque id recorded in the ledger inside its caller's transaction. Beside C-59.5 and
+     C-59.6 in the id-allocation family; `awaiting stamp` for promotion's T24 layer-2 stamp. */
+  OPAQUE_ID_MALFORMED: Object.freeze({
+    check: 'C-59.7', where: at("recordOpaqueId", "is-opaque-id-refused"),
+    translation: 'A part of this instance tried to reserve an identifier without giving one, so nothing was reserved. '
+      + BUILD_FAULT,
+  }),
+  OPAQUE_ID_SPENT: Object.freeze({
+    check: 'C-59.8', where: at("recordOpaqueId", "is-opaque-id-refused"),
+    translation: 'That identifier has already been used, so it was not given out again and nothing was saved. An '
+      + 'identifier names one thing only, even after what it named is gone. Trying again gives the thing a new one; if it '
+      + 'keeps happening, tell whoever runs this instance.',
+  }),
+  OPAQUE_ID_NO_TRANSACTION: Object.freeze({
+    check: 'C-59.9', where: at("recordOpaqueId", "is-opaque-id-refused"),
+    translation: 'A part of this instance tried to reserve an identifier outside the change that would use it, so nothing '
+      + 'was reserved: a reservation is kept only with the change it belongs to. ' + BUILD_FAULT,
   }),
   /* New (T19, R70; `build/extraction/legacy-store.md` §4.2 (3)): a module's seed sources for the opaque-id ledger. */
   MINT_SEED_DECLARED: Object.freeze({
