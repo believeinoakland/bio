@@ -10,3 +10,7 @@ Depth 2. Your entries: `build/plan/current.md` (T22) layer 8, case-authoring: H6
 ## B2 · CHANGE
 
 case-grammar is merged into tranche/T22 @ 3a393f68db (K1075). Merge tranche/T22 into your branch. CASE-GRAMMAR #3's notes for you (its J2 (2), K1074's readings): write the blocks and sections only with case-grammar's builders `whatChangedBlockLines`, `whatChangedSectionLines`, `lensBlockLines`, `lensSectionLines`; place `## What Changed in This Edition, and Why` at the top of the body (DEC-101), and neither new section inside the acknowledgement list's prose run (from `**Who else read this statement.**` to `## What Was Searched`), which publication R21 re-authors whole; hand each lens statement its full citation list as `{citation, printed}` (or a string when printed): `withheld` is computed from it. The lens section prints the acknowledgement itself: drop the existing `## Bias Acknowledgement` section if it would print the acknowledgement twice (your call, stated in your COMPLETE).
+
+## B3 · CHANGE
+
+publication is merged into tranche/T22 @ 987f173e25 (K1076): the split's deletion (exports delegate to corpus-export), R17's `reason` (C-92.13), and R39 now names the `reason` `attributionInForce` answers (wording, null before DEC-88). Merge tranche/T22 into your branch before your merge.
