@@ -1,82 +1,50 @@
-# Plan: next (T23)
+# Plan: next (T24)
 
-**Status** · Entries for the tranche after T22, written as T22 runs (P18). Every T22 left-out row below waits here with its one hard reason (P19) and is re-checked when T23 is planned.
+**Status** · Entries for the tranche after T23, written as T23 runs (P18). Started at T23's opening by BOB #94, 2026-10-02 (K1113): the `next.md` entries T23 leaves out, with their full text, and every row T23 leaves out with its one hard reason (P19), re-checked when T24 is planned.
 
 ## Entries
 
-- N480 · 2026-10-01 · **membership**, **text-chain**, **provenance**, **inquiry**, **ai-runs**, **public-read**, **run-rules** (MEMBERSHIP #15 "seen, not changed", `jobs/T21/membership.md`:16; K1010): notes name the deleted plane `src/index.mjs` as the live home of a table, function or stamp; re-word to the module that holds it now or put in the past tense (N469's rule). Carried in T22 by each listed module's job (STARTs); public-read in L8.
 - N481 · 2026-10-01 · **publication**, **case-grammar**, **case-authoring**, **public-read**, and a case-file import home (the UX stream's U21, DEC-112, Bob's question 30): a published case in three forms (the page's first line per finding naming its role and the project's bar; the complete edition in every case file; the case-file format as an open specification with a standalone checker; the method version inside the signed case; publication refused while a relied-on finding rests on material that cannot travel whole; off-the-record attestations; import into a new read-only project with recreation, acceptance gated on it). **Hard reason:** DEC-112 is on the design session's branch, not `main`; folded as requirements once it lands (manifest "Parallel work"), then placed by BOB (publication's split, K617, and DEC-111's new module bear on its home).
-
-- N482 · 2026-10-01 · **bundler**, **subresources**, `not_product` (BUNDLER #5's J1 (2), K1020): `bio-plane/test/system/deploybindings.test.mjs`'s D-54 live arms read the text of `bio-plane/wrangler.jsonc`'s comment and `src/subresources.mjs`'s `SUBRESOURCE_CAP` source: ratchets on repository data no requirement states, and tests of source text (P7). State the guarded property as a requirement of its owner (subresources' cap; the deploy binding's), test it at that interface, then retire the source-text arms. **Hard reason:** a requirement must first say what is guarded (P5, P7); no current requirement does.
-
-- N483 · 2026-10-01 · **plane**, **conformance**, **queue-producers** (K1024, the split): after `corpus-export` lands, the plane's op map spreads `corpusExportOps` and publication's `export`/`exportlog` delegates and constant re-exports retire; conformance's `record.test.mjs`:165 and queue-producers (`EXPORT_LOG_LIMIT_DEFAULT`, `exportLog`) call `corpus-export` directly. **Hard reason:** the plane and conformance have no T22 job (P8); the delegates keep them green meanwhile.
-- N484 · 2026-10-01 · **record-core**, **provenance**, **corpus-export** (K1024): the export reads `bundles`' title and sha columns (beyond record-core R37), `register.bytes` (beyond provenance R48) and the `files`/`history`/`manifest` tables, which no requirement states; state each read contract in its owner's Provides. **Hard reason:** predates the split; a provider's requirement change is read by running jobs' users (P5), so it is written for T23.
-
-- N485 · 2026-10-01 · **record-grammar** (L1), then **escalation**, **case-authoring**, **skills** (K1025): record-grammar R43, R44 (the `edition_statement` and `escalation_reason` proposal subjects; `proposalLabel` throws on an unknown subject), then escalation R29 (the pre-assembled opening reason, Bob's DEC-89 addition), case-authoring R39 and R38's `draft` arm, skills R31. **Hard reason:** the order (P4, P10): they arose with K1019 after layer 1 closed, and each needs record-grammar's new subject.
-- N486 · 2026-10-01 · **network-notices** (new, L8; DEC-111, K1019) and **monitoring** R29 (the sweep): drafts `plan/draft-network-notices.md`, `plan/draft-monitoring-r29.md`, to Bob with their questions, each with a recommendation, then built in T23. **Hard reason:** Bob's (requirements and architecture, P17) and K1019 places the build in T23. Bob answered all three questions (K1094, K1100): both carried in T23.
-
 - N487 · 2026-10-02 · **legacy-ui** (K1030; `plan/t22-dec88-callers.md`): the UI sends DEC-88 acts without their new reason: `civicos-ui/app.html` `entityDraft` (~:17128), `progDefineDraft` (~:17767), `statementack` (:25792, :25802), and its tests `progression-revision.test.mjs`:208, `queue-recipients.test.mjs`:160, `statement-ack.test.mjs`:277, :342, `check-mock-envelope.mjs`:206. **Hard reason:** Bob's: UX (K633; manifest "Parallel work"). Those UI tests are red from each provider's merge, accepted by name (K1030).
-
 - N488 · 2026-10-02 · **actions**, **control-plane**, the assistant-transcript home (DEC-113, U22): a litigation hold stops both scheduled deletions of stored assistant transcripts on every member's device for the action's project and the projects the statement names; a device checks before deleting and deletes nothing if it cannot check; the heavier release (its form states what will be deleted, administrators and placer told once); a held-project strip for members who can see it; the control plane's wipe of a real record refused while any hold is in place (supersedes actions R52's "Nothing here suspends a purge"). **Hard reason:** DEC-113 is on the design session's PR #7, not `main` (manifest "Parallel work").
 - N489 · 2026-10-02 · **action-plans**, **queue-producers**, the glossary (DEC-114, U23): members see "Matters"/"matter" for what an action plan addresses; the internal term stays "subject". **Hard reason:** on PR #7, not `main`.
 - N490 · 2026-10-02 · the action redesign (DEC-115, U24): `build/plan/action-design/start-and-send.html` and `surfaces.html`'s tier 2 and tier 3 panels bind content, step order and wording; the HANDOFF's approval line extended to them (BOB's, in `build/`). **Hard reason:** on PR #7, not `main`.
 - N491 · 2026-10-02 · **publication**, **reevaluation**, **queue-producers**, a docket home (DEC-116 with DEC-100, U25; answers N470): withdrawal of a ratified edition (signed docket entry, published reason, stamp, never lifted, re-evaluation notices: reevaluation R16's missing trigger); the docket and its three shelves, the manager's core To-dos, the outside-response path, the private-name receipt, standing grants, the manager's signing step, the per-case feed. **Hard reason:** on PR #7, not `main`; its home is BOB's to place once it lands (publication's size, K1024).
 
-- N492 · 2026-10-02 · **acquisition** (K1032): call capture-sources R37's Memento services in the archive fallback (TimeGate with `Accept-Datetime`, or TimeMap, then the raw memento, `mementoRow`, `selectCapture`, `mementoHop`), so an archive other than Wayback's CDX can serve a lookup. **Hard reason:** R37's services are built in T22's L3; acquisition's job (L3) does not run in T22 and its requirement must first state the call (P5).
-
-- N493 · 2026-10-02 · **queue**, **queue-producers** and their users (DEC-110 (3)'s last sentence, K1038): the internal disposition "noticed" clashes with the member-facing class "Noticed"; rename the internal term (BOB's, a wording of no member-facing meaning). **Hard reason:** it touches every module that reads the disposition, more than T22's L11 jobs; placed when T23 is planned.
-
-- N494 · 2026-10-02 · **sources** (SOURCES #7's record, deferred; K1040): `test/m/sources/secret.test.mjs`'s two R11 rate tests still say "12 in the window, the thirteenth refused", from before capture's per-source bound became 5 (K1023); they pass but no longer state the edge they reach. Re-word them to what they assert (an attempt refused by capture's rate, never by `SECRET_NOT_RECOGNISED`), without pinning capture's constants. **Hard reason:** sources' one T22 job is merged (P8); a wording of tests only.
-
-- N495 · 2026-10-02 · **record-grammar** (CONTENT #9's J1 (4), K1046): `bio-plane/src/record-grammar/labels.mjs`:198 names content's `mintContent` default; `mintContent` (no caller) was removed in T22 L4. Re-word the comment to what the default is now, or past tense (N469's kind). **Hard reason:** record-grammar's T22 layer (L1) is closed (P8, P10); a comment only.
-
-- N496 · 2026-10-02 · **provenance** (the L8 STARTs worker, K1058): `bio-plane/test/mk6-bundle-names-no-author.test.mjs`:203 posts `op=attribute` with no `reason`, refused since publication's DEC-88 fold (R17, C-92.13) once publication merges in L8; a miniflare suite outside `npm test`, missed by `t22-dec88-callers.md`. Send the reason. **Hard reason:** provenance's T22 layer (L3) is closed (P10).
-
-## Left out of T22, carried here (62 rows, one hard reason each) (check)
+## Left out of T23, carried here (one hard reason each)
 
 | row | item | hard reason | note |
 |---|---|---|---|
-| B1 | DIST-14 (office-readers) | deployment | the CSV bound measured on a deployed plane |
-| B2 | N75 (image-codecs) | deployment | the 61.3 MB bound measured on a deployed plane |
-| B3 | N34 (pdf-worker) | deployment | the JPX bound measured; PPM/PPT JBIG2 also waits on a fixture encoder; pdf-worker is 4,277 lines (P6) |
-| B4, B5 | N144, N232 (affordances, legacy-ui, skills) | Bob's (UX) | K899 (2), Bob: "needed, but wait for the new interface" |
-| A54 | skills R10 (recipes published) | Bob's | N144 |
-| B13 | N470 (publication, reevaluation) | Bob's | K943 |
-| B6–B10, B12, B18, B20 | N68, N70, N241, N371, N437, N467, N475, N477 (legacy-ui shares) | Bob's (UX) | K633 |
-| C6, C7 | N389, N-A13 | Bob's (UX) | K633 |
-| D2 | `civicos-ui/test/fixtures/fw18-doctypes.json`, `fw20-staff-directory.json` | Bob's (UX) | K1006 |
-| I2 | legacy-ui (the module) | Bob's (UX) | ruling 4, K633 |
-| B11 | N461 release share | deployment | the next signed release build, Bob's act |
-| C9 | N471's release-embedded copies | deployment | with N461 |
-| B16 | N473 (filings' `filing_templates` table) | deployment | dropped once the migration has run at every instance |
-| C1 | office-readers R28/R29 retired | deployment | each migration runs at every instance |
+| B1 | DIST-14 (office-readers) | deployment | CSV bound measured on a deployed plane |
+| B2 | N75 (image-codecs) | deployment | 61.3 MB bound |
+| B3 | N34 (pdf-worker) | deployment | JPX bound; JBIG2 fixture encoder; 4,277 lines (P6) |
+| B11, C9 | N461 release share; N471's release copies | deployment | the next signed release, Bob's act |
+| B16 | N473 (`filing_templates` table) | deployment | migration run at every instance |
+| C1 | office-readers R28/R29 retired | deployment | migrations at every instance |
 | C2 | `MODES.plan` deployed | deployment | K660 (5) |
-| C3 | the newgroup installer deployed, with N336 | deployment | a signed release, Bob's act |
-| C4, A11–A17 | contradiction R24, R27, R32, R33/R36 K5 arms, R34, R41, R57's K5 run | measurement | a measured recommender run (K488); no model is reachable from a job |
-| J7 | DEC-81's Grade A | Bob's | "its three decisions … are with Bob" (DEC-81's owed line); then a measurement (check) |
-| C8 | the first profile's facts without a source | measurement | K925, K934, K941 |
-| H13 | DEC-105: audience guidance | Bob's | DEC-105: "the research waits for its trigger" (check) |
-| C5 | `PLN-` affordances, plan-page surface, joint action | Bob's | K608 (4), K600 (c) |
-| A27 | monitoring R17 (an address's own frequency) | Bob's | no act holds it (REC-191's design gap): who sets it, by what new member act, is requirements and UX (P5, P17); `t22-check.md` question 5 (check) |
-| A31 | monitoring R29 (sweeps) | Bob's | its own text: "Sweeps wait for a design of what a sweep's query is"; `t22-check.md` question 6 (check) |
-| H1, H6b, J4 | DEC-96 (accept, withdraw, flag, clear), DEC-101 (3) (watching other groups' editions), DEC-92 (the origin mark) | dependency not yet built | nothing brings another group's published edition into this copy: inquiry R7's `inherited` leg names "an edition the published registry holds" (publication R7, this copy's own); no fetch or verification of another copy's case is in the tree (check) |
-| H8 | DEC-102: identity levels and testimony weight | Bob's | open doctrine, its owed line: "how each identity level maps to the testimony grade … what counts as corroboration to journalistic and legal standards"; question 2 (check) |
-| H16b | DEC-108: the gatekeeper and the discard archive | Bob's | open: "how a litigation hold (question 31) affects the archive's clearing"; question 4 (check) |
-| H21 | DEC-111 'working on' notices | Bob's (architecture, P4) | a home: publication (4,408, P6) or a new product module; question 3 (check) |
-| H5 | DEC-100 | Bob's | "awaits Bob's ruling" |
-| H3, H4, H9b, H11, H14, H16c, H18, H20, J6, J11 | DEC-98, DEC-99, DEC-103's preview, DEC-104's list pages, DEC-106, DEC-108's inbox highlighting, DEC-109's settings card, DEC-110's item styles, DEC-95 (3)'s suggestion line, DEC-82/-86/-87/-90's surfaces | Bob's (UX) | screens of the new interface, not yet built (K633, K899 (2)); DEC-99's conformance is "checked as each screen is accepted" (check) |
-| A8 | bias R26 | dependency not yet built | K102's trigger: evaluation findings under a lens (none in strength or review) |
-| A21 | inquiry R31 | dependency not yet built | no module defines an opinion element (MK-5, K181) |
-| A22, A23 | installer R13, R24 | dependency not yet built | the member surfaces (the new interface, not in the tree), which canon sequences isolation after (System Design :253; Distribution §7); R32's interim refusal is carried (check) |
-| A37 | progressions R32 | dependency not yet built | the record holds no amounts or funds as values (K102's trigger) |
+| C3 | newgroup installer deployed, N336 | deployment | a signed release |
+| C4, A11–A17 | contradiction R24, R27, R32, R33/R36 K5 arms, R34, R41, R57 | measurement | a measured recommender run (K488) |
+| C8 | first profile's facts without a source | measurement | K925, K934, K941 |
+| B4, B5 | N144, N232 | Bob's (UX) | K899 (2) |
+| A54 | skills R10 | Bob's | N144 |
+| B13 | N470 | Bob's | K943; DEC-116 answers it, off `main` (N491) |
+| B6–B10, B12, B18, B20, C6, C7, D2, I2 | legacy-ui shares, UI fixtures, the module | Bob's (UX) | K633, K1006 |
+| N487 | legacy-ui DEC-88 reasons | Bob's (UX) | K633, K1030 |
+| J7 | DEC-81's Grade A | Bob's | K1019: "nothing new" |
+| H13 | DEC-105 audience guidance | Bob's | waits for its trigger |
+| C5 | `PLN-` affordances, plan page, joint action | Bob's | K608 (4), K600 (c) |
+| H5 | DEC-100 | Bob's | awaits Bob; DEC-116 (N491) off `main` |
+| H3, H4, H9b, H11, H14, H16c, H18, H20, J6, J11 | DEC screens of the new interface | Bob's (UX) | K633, K899 (2) |
+| N481 | DEC-112 published case in three forms | Bob's | on the design branch, not `main` |
+| N488 | DEC-113 litigation hold of transcripts | Bob's | on PR #7, not `main` |
+| N489 | DEC-114 "Matters" | Bob's | on PR #7, not `main` |
+| N490 | DEC-115 action redesign | Bob's | on PR #7, not `main` |
+| N491 | DEC-116 withdrawal, docket | Bob's | on PR #7, not `main`; home BOB's once landed |
+| H1, H6b, J4 | DEC-96, DEC-101 (3), DEC-92 | dependency not yet built | nothing brings another group's edition into this copy |
+| A8 | bias R26 | dependency not yet built | K102's trigger |
+| A21 | inquiry R31 | dependency not yet built | no opinion element (MK-5) |
+| A22, A23 | installer R13, R24 | dependency not yet built | the new member surfaces |
+| A37 | progressions R32 | dependency not yet built | no amounts or funds as values |
 | A41 | publication R30 | dependency not yet built | nothing publishes a rendering (D-246) |
-
-**Carried conditionally, so not in this table:** H2, H6, H9, H16, J3, J5 (Bob's approval of the fold before the layer) and A42 (the seam map); one that misses its condition is moved here at its layer's start, with that reason (check).
-
-**At the opening, the new `next.md`** holds each left-out `next.md` entry's full text (from `git show d9a73f24f3:build/plan/next.md`) with the reason above, and the folded DECs' Bob's shares as entries (§9).
-
-- N497 · 2026-10-02 · test fixtures of record-core, action-plans, monitoring, case-authoring, capture-requests, actions, content, retrieval, standards, connections, inquiry, ratification, basis-versions, scheduler, calibration, tasks, provenance, contradiction, escalation, reevaluation (CONSEQUENCES #7 J1, ACTION-CLOCKS #5 J1; K1087): promotion's facts registered under the retired `"legacy-store"`; name the providing module (`instance-setup` `producingGroup`, `publication` `caseMember`, `publishedRegistry`), N469's rule. Test-only, no behaviour. Carried by each module's next job; those with a T22 job not yet started (actions, standards, action-plans in L9) take it now; L10's monitoring and scheduler take it in T22 (K1098). **Hard reason** for the rest: one job per module, none open (P8). The rest carried in T23 (by BOB #93, K1099).
-
-- N498 · 2026-10-02 · **skills** (STANDARDS #5 J1 (6); K1089): `src/skilldoctrine.mjs`:854 says `standardadopt` is defined by standards R9; it is R10 (R9 is the proposal). Wording in a skill's doctrine. **Hard reason:** skills has no T22 job and its layer (L6) is closed (P8, P10).
-- N499 · 2026-10-02 · **capture** (T23 L3; CONTROL-PLANE #13 J1, K1105): `inboxResolve`'s `pulled` arm passes `at` and `within` to `#pull` (`capture/index.mjs`:707), so control-plane R36's reasoned resolve records the reason on the knock's row inside the pull's one act with its promotion. Clears control-plane's accepted red (the reason on the row). **Hard reason:** capture's layer (L3) closed in T22 (P10, §7).
-- N500 · 2026-10-02 · **publication** (T23 L8; K1105): test R56, the `case_documents` read contract stated for queue-producers R23 (N484's pattern). **Hard reason:** publication's layer (L8) closed in T22 (P10); coverage red publication R56 accepted by name until then.
+| S1 | T23's L3–L11 new or changed rows stamped | one job per module (P8) | promotion's one job is L2; T24's L2 |
+| N493 (part) | member-facing translations of "noticed" (contradiction `checks.mjs`:136, :236; queue `checks.mjs`:63) | Bob's: UX (the design stream's DECs decide member-facing wording) | by BOB #93, K1099 |
