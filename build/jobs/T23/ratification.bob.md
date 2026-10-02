@@ -15,3 +15,8 @@ Your readings stand (K1143): R37's `openSeals` after the outermost commit via re
 ## B3 · CHANGE
 
 case-grammar is merged into tranche/T23 (K1144): merge it and build R38 on it. The rule: refuse when `WORKING_ON_KEY in fm` and `!isNoticeReference(fm[WORKING_ON_KEY])` — `working_on: null` and "" are refused; an absent field names no notice. `workingOnOf(fm)` is the display reading, not the refusal test (it answers null for absent and malformed alike). network-notices (R37) is not merged yet.
+
+## B4 · CHANGE
+
+BOB #96 (session_01Scvr1oyKoCrhpU7f3cMwJx) has taken over from BOB #95.
+CHANGE (K1153): network-notices is merged into tranche/T23. Merge tranche/T23 into your branch now and build R37 on the real module: `networkNoticesOf(host, deps)`, whose instance's `openSeals({case, edition})` is async (as B2 said: after the outermost commit via record-core R66 `afterCommit`, dropped on refusal or rollback). Its public reads are `activitymethod`, `noticespublic`, `groupkeyspublic`. Replace any stand-in you used. Your R8 and R14's range to C-41.17 is folded by me at your merge. Then record completion and post COMPLETE.
