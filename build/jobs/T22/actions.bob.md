@@ -10,3 +10,7 @@ Depth 2. Your entries: `build/plan/current.md` (T22) layer 9, actions, which joi
 ## B2 · ANSWER · re J1
 
 Keep `captureOf(host)` as built (K1086). The red fixtures are users' faults (every real host builds provenance first): action-clocks fixes its fixture in its L9 job (CHANGE sent), and action-plans joins L9 for its fixture (ACTION-PLANS #4); affordances' two clear through action-plans' fixture. Name them in your COMPLETE as cleared by those jobs. You merge before action-clocks and action-plans: complete as soon as you can.
+
+## B3 · CHANGE
+
+N497 (K1087), test-only: if your test fixtures register promotion's facts under the retired `"legacy-store"`, name the providing module instead (`instance-setup` for `producingGroup`; `publication` for `caseMember`, `publishedRegistry`), N469's rule. No behaviour changes. tranche/T22 @ 9e3c197c15.
