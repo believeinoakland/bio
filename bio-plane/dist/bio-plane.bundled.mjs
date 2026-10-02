@@ -91340,6 +91340,32 @@ var RUNG_ABSENCE_GROUNDS = {
   observational: "the act records WHAT WAS OBSERVED, not what anybody decided. There is nothing to reverse: an observation is corrected by observing again, and the earlier observation stays true of the moment it was made.",
   undetermined: "THIS IS A REAL ACT ON THE RECORD AND IT HAS NO RUNG. No document assigns one and no refusal in the plane establishes one, so the honest answer is that it is UNDETERMINED \u2014 stated, never guessed (CLAUDE.md: undetermined is first-class and must be STATED). Do not read this as 'light'. Several of these are weighty, and the reason they are undetermined is that the ladder as it stands has no rung for an act that is CORRECTED FORWARD but is not signed."
 };
+var CONSEQUENCE_STATEMENTS = Object.freeze({
+  attribute: Object.freeze({
+    friction: "dialog",
+    statement: "The level you choose is what this case edition publishes about who said your observation. Once the edition is signed and published, it says so permanently: a later edition may choose differently, but this one never stops saying it. Your reason is kept with the choice."
+  }),
+  leadshare: Object.freeze({
+    friction: "dialog",
+    statement: "Sharing puts what you were told in front of every joined participant of that project. A disclosure cannot be un-read: the share stays in the record with your reason, and what they have read stays read."
+  }),
+  entitycreate: Object.freeze({
+    friction: "dialog",
+    statement: "This names a person or a body in the group's registry, in your name and with your note. Documents that mention them can then be resolved to the entry, and the entry is corrected by aliases and relations, never erased."
+  }),
+  strengthbar: Object.freeze({
+    friction: "dialog",
+    statement: "This sets the strength the whole group's work is held to by default: every new project starts from it. It stands as the group's bar, in your name and with your reason, until it is set again."
+  }),
+  filingapprove: Object.freeze({
+    friction: "dialog",
+    statement: "Approving makes this text yours, recorded with your name, the time and its digest. A filing is approved once, and the approval is not walked back: what is sent is the text you approved."
+  }),
+  workobjective: Object.freeze({
+    friction: "in-place",
+    statement: "An assistant will work this project's objective within the run's budget and scope, shown beside this field. Your reason is recorded on the run's opening; the run proposes and never concludes."
+  })
+});
 var VOCABULARIES = {
   /* R26 (N65 (3)): the kinds an action may be created with are `actions'` answer (its R10, R40): the product's own,
      then the active profiles' `action_kinds`. Which profiles are active is an instance's setting, so this module-level
@@ -91371,7 +91397,7 @@ var VOCABULARIES = {
      the same reason every set above is: a surface that had to keep its own copy
      would be the surface deciding what a `movement` or an `unless_exception` is
      called, and the write path would refuse a token the surface had just
-     offered. Each is the array store.mjs's own refusal validates against —
+     offered. Each is the array its owning module's refusal validates against —
      imported, never transcribed, so a kind added to the registry appears on
      every surface on its next load and cannot be added to one without the
      other. */
@@ -91454,6 +91480,8 @@ var VOCABULARIES = {
   rung_ladder: RUNG_LADDER,
   rung_correction_path: IRREVERSIBLE_CORRECTION_PATH,
   rung_absence_grounds: RUNG_ABSENCE_GROUNDS,
+  /* R31 (DEC-88 (4)): the six judgement calls' friction and consequence statement, by act id — this module's own. */
+  rung_consequences: CONSEQUENCE_STATEMENTS,
   /* PL-17 / DEC-65 — THE THIRD `asserted_by` STATE, PUBLISHED WITH ITS WORDS.
      Published for a reason this file can MEASURE rather than assert: today
      `civicos-ui/app.html`'s grounding receipt renders `Asserted by
@@ -91731,8 +91759,148 @@ var RUNGS2 = {
   // sourceconsent takes it back
   /* K727 (T18), on R27's rule (`actionlaws`' precedent): a scenario is replaced whole by a further scenarioset, the
      earlier version kept in history, and no reason is asked (action-plans R14). */
-  scenarioset: "reversible"
+  scenarioset: "reversible",
   // a further scenarioset replaces it
+  /* ---- DEC-88 (K1038, J1): THE 57 THAT WERE `undetermined`, BANDED BY BOB. The ladder's gap RUNG_ABSENT's
+     `undetermined` ground names (an act corrected forward but not signed) is closed by ruling, not by a new rung (R27):
+     each of these 57 is one of three bands, and RUNG_ABSENT keeps only the 21 the ruling left (R27). What DEC-88 banded
+     `reasoned` asks the member's authored reason, refused by the owning module in its own word for it (R19, each code
+     in JUSTIFICATION_REFUSALS); four take their own words as the reason (`testify`, `transcribe`, `lead`,
+     `goaldeclare`), and four their recorded grounds (K1025: `resolve`, `actioncorrespond`, `filingsent`,
+     `consequencerecord`), as R19 words them. Six are judgement calls that carry a consequence statement beside the
+     rung (R31, CONSEQUENCE_STATEMENTS below). */
+  /* reversible (DEC-88): a proposal, a draft, a member's own placement or link, or a run's opening and closing, each
+     superseded by a further act of its kind or set down by the member's own act. */
+  suggest: "reversible",
+  // DEC-88 · a run's proposed reading; the six version acts settle it
+  extractpropose: "reversible",
+  // DEC-88 · a run's proposed reading of held text; never a finding until cited
+  contradictionpropose: "reversible",
+  // DEC-88 · a run's proposed relation; a member's judgement settles it
+  themepropose: "reversible",
+  // DEC-88 · a hunch in a theme; a member confirms or rejects it (themewithdraw)
+  standardpropose: "reversible",
+  // DEC-88 · a proposed standard; never a standard until adopted
+  comparisonpropose: "reversible",
+  // DEC-88 · a proposed comparison; never a determination
+  theorypropose: "reversible",
+  // DEC-88 · a candidate theory; never the group's position
+  actionriskpropose: "reversible",
+  // DEC-88 · a proposed risk tier, restated by the same proposer
+  actionlawspropose: "reversible",
+  // DEC-88 · proposed governing laws, restated by the same proposer
+  filingprepare: "reversible",
+  // DEC-88 · a filing draft; never sent until approved
+  contentmint: "reversible",
+  // DEC-88 · a citable address, marked stale and re-marked, never deleted
+  casedraft: "reversible",
+  // DEC-88 · a review copy, edited in place and never published
+  reviewcomment: "reversible",
+  // DEC-88 · a comment on a draft, answered by another
+  taskforward: "reversible",
+  // DEC-88 · a task moved to another member, who may forward it again
+  taskresolve: "reversible",
+  // DEC-88 · how a task ended
+  thread: "reversible",
+  // DEC-88 · documents threaded into a progression instance
+  connectionchoose: "reversible",
+  // DEC-88 · a choice of mention, superseded by a re-choice
+  themedeclare: "reversible",
+  // DEC-88 · a member's theme, a lens and never evidence
+  themeplace: "reversible",
+  // DEC-88 · a placement in a theme; themewithdraw takes it back
+  entityalias: "reversible",
+  // DEC-88 · an alias; aliaswithdraw takes it back
+  goallink: "reversible",
+  // DEC-88 · a claim that an objective serves a goal
+  versionkeep: "reversible",
+  // DEC-88 · a reference kept on the earlier capture; versionadopt moves it on
+  airunopen: "reversible",
+  // DEC-88 · opens a run; airunclose ends it
+  airunclose: "reversible",
+  // DEC-88 · ends a run
+  projectfork: "reversible",
+  // DEC-88 · a new project; the source is unchanged
+  /* reasoned (DEC-88), each with the code its owning module refuses the absent reason with (R19). */
+  testify: "reasoned",
+  // TESTIMONY_NO_WORDS (provenance R28, C-53.3) · the observation's own words are its reason
+  transcribe: "reasoned",
+  // TRANSCRIBE_NO_TEXT (content R23, C-52.6) · the typed text is the member's claim
+  lead: "reasoned",
+  // LEAD_NO_WORDS (observation-log R14, C-54.3) · the lead's own words are its reason
+  goaldeclare: "reasoned",
+  // PURSUIT_UNSTATED (intent R8) · the goal's statement and bounds are its reason
+  leadlook: "reasoned",
+  // LEAD_LOOK_NO_DETAIL (observation-log R17, C-54.11) · where they looked and what they found
+  leadshare: "reasoned",
+  // LEAD_SHARE_NO_REASON (observation-log R16, C-54.12) · why this project is told (R31)
+  transcriptionattest: "reasoned",
+  // ATTEST_NO_NOTE (content R25, C-52.10) · what the attestor compared
+  attesttext: "reasoned",
+  // ATTEST_NO_NOTE (content R43, C-52.10) · what the attestor compared
+  resolve: "reasoned",
+  // K1025 · its grounds: each resolution records its `basis` and `method` (entities R9–R11)
+  resolvetestify: "reasoned",
+  // NO_BASIS (entities R12) · the testifier's stated basis
+  entitycreate: "reasoned",
+  // ENTITY_NO_NOTE (entities R1, C-91.8) · who or what this is and why (R31)
+  versionadopt: "reasoned",
+  // VERSION_ADOPT_NO_REASON (reevaluation R15) · why the newer version is adopted
+  progressiondefine: "reasoned",
+  // NO_BASIS (progressions R2) · a first declaration's basis statement
+  aspirationdeclare: "reasoned",
+  // PURSUIT_UNSTATED (intent R9) · the aspiration's statement
+  aspirationdeadend: "reasoned",
+  // NO_NOTE (intent R11, C-111.27) · what was tried and why it went nowhere
+  objectivecondition: "reasoned",
+  // INTENT_NO_REASON (intent R2, R30) · why progress is measured this way
+  biasadopt: "reasoned",
+  // BIAS_ADOPTION_NO_REASON (bias R11, C-26.21) · why this lens is adopted
+  strengthbar: "reasoned",
+  // BAR_NO_REASON (strength R15, C-107.3) · why the group sets this bar (R31)
+  standarddeclare: "reasoned",
+  // STANDARD_NO_REASON (standards R1) · why the group holds its government to it
+  standardadopt: "reasoned",
+  // STANDARD_NO_REASON (standards R10, through R1)
+  consequencerecord: "reasoned",
+  // K1025 · its grounds: operands, a rationale (NO_RATIONALE) or why (consequences R2–R4)
+  actioncorrespond: "reasoned",
+  // K1025 · its grounds: the bytes or the member's account (actions R15–R16)
+  filingsent: "reasoned",
+  // K1025 · its grounds: actioncorrespond's (filings R7)
+  escalationopen: "reasoned",
+  // ESCALATION_NO_REASON (escalation R1, R24)
+  escalationattach: "reasoned",
+  // ESCALATION_NO_REASON (escalation R9, R24)
+  counselpacket: "reasoned",
+  // PACKET_NO_REASON (filings R8)
+  attribute: "reasoned",
+  // ATTRIBUTION_NO_REASON (publication R17, C-92.13) · why this level (R31)
+  statementack: "reasoned",
+  // STATEMENT_ACK_NO_REASON (case-authoring R19)
+  workobjective: "reasoned",
+  // INTENT_NO_REASON (intent R18, R30) · why the run is opened (R31)
+  /* `inboxresolve`: DEC-88 banded it reversible while it only set a status; reasoned since DEC-78's pull is built
+     (capture R65) and capture R32 requires the member's reason on every arm. */
+  inboxresolve: "reasoned",
+  // RESOLVE_NO_REASON (capture R32)
+  /* terminal (DEC-88): the act cannot be walked back — an ended escalation is never reopened, and a filing is
+     approved at most once. */
+  escalationend: "terminal",
+  // escalation R14 · never reopened
+  filingapprove: "terminal",
+  // filings R6 · ALREADY_APPROVED: approved at most once (R31)
+  /* ---- T22's new reasoned acts (K1019, K1023; R2): each asks the member's reason, refused in its owner's word for it,
+     and is corrected forward — a later opening supersedes a decline, a set-aside is restored by a reasoned act and
+     restored ones may be set aside again, and a later frequency replaces the earlier. */
+  declinetoescalate: "reasoned",
+  // ESCALATION_NO_REASON (escalation R27, R24; DEC-89)
+  heldsetaside: "reasoned",
+  // SET_ASIDE_NO_REASON (capture R79; DEC-97 (2))
+  heldrestore: "reasoned",
+  // SET_ASIDE_NO_REASON (capture R81, as R79)
+  addressfrequencyset: "reasoned"
+  // FREQUENCY_NO_REASON (monitoring R52, C-18.15): a canned or custom reason
 };
 var RUNG_ABSENT = {
   /* ---- substrate: how a chosen act lands, or how the store maintains itself. */
@@ -91830,90 +91998,15 @@ var RUNG_ABSENT = {
   queuesnooze: { ground: "caller-owned", is: "one member's preference about their own feed" },
   /* ---- observational. */
   monitor: { ground: "observational", is: "one tick: what the source serves NOW against what was captured" },
-  /* ---- undetermined: REAL RECORD ACTS WITH NO RUNG. This is the list FW-14
-     exists to surface, and it is the list a later item should work from.
-     THE SHAPE THEY SHARE, and it is worth stating because it is a gap in the
-     LADDER rather than in this table: most of them are acts a member performs
-     ONCE, which the record keeps attributed and dated, and which are corrected
-     by a further act moving FORWARD rather than by anything moving back — and
-     they are not signed, so `attested` does not describe them either. DEC-19
-     named that property ("cannot be undone SILENTLY") and attached it to the
-     rung that requires a key. These acts have the property without the key.
-     Assigning them `attested` would claim a signature that does not exist;
-     assigning them `reversible` would promise a way back that does not exist;
-     so they are stated undetermined and the ladder's gap is named rather than
-     papered over. Raised as a provisional at the close of this item. */
-  inboxresolve: { ground: "undetermined", is: "a disposition of a knock, keyed by knock id; its `pulled` arm is the pull (inboxpull), which files the knock as a capture (capture R32, R65)" },
+  /* ---- undetermined: REAL RECORD ACTS WITH NO RUNG, STATED. FW-14 surfaced this list and named the ladder's gap it
+     shares: an act a member performs once, kept attributed and dated, corrected by a further act moving FORWARD, and
+     not signed — so neither `attested` (no key) nor `reversible` (no act takes it back) describes it. DEC-88 (K1038)
+     closed the gap by ruling for 57 of the 78 that stood here, banding each `reversible`, `reasoned` or `terminal`
+     (RUNGS); these 21 are what it left `undetermined` (R27), each on R27's rule: no authored reason is asked and no
+     published act takes it back. */
   /* N364 (capture R65), on R27's rule: pulling a knock files its bytes as a capture with a receipt, in the puller's
      name; no reason is asked and no published act takes it back (a pulled knock stays pulled, and the capture stands). */
   inboxpull: { ground: "undetermined", is: "a member pulls a knock into the record: its bytes held under their own digest, a doorbell receipt written and the knock marked pulled, in one act; never un-pulled (capture R65)" },
-  taskforward: { ground: "undetermined", is: "moves a task to another member; assignee-fenced by the store" },
-  taskresolve: { ground: "undetermined", is: "records how a task ended" },
-  actioncorrespond: { ground: "undetermined", is: "records what came back from outside the system \u2014 REC-23's counterparty, named or honestly undetermined" },
-  actionlawspropose: { ground: "undetermined", is: "a machine's or a member's PROPOSAL of the laws governing an action's request (D-149/REC-195), stored apart from the member's list and labelled machine work; restated by a further proposal from the same proposer, never cleared, and it never sets the list" },
-  projectfork: { ground: "undetermined", is: "creates a NEW project; the source object is unchanged, and nothing folds a fork back" },
-  biasadopt: { ground: "undetermined", is: "the authored, attributed adoption putting a declared-bias set in force for a scope (DEC-54 c/d)" },
-  strengthbar: { ground: "undetermined", is: "the GROUP's declared default required strength (DEC-17)" },
-  entitycreate: { ground: "undetermined", is: "a registry write introducing a SUBJECT (safeguard 4)" },
-  entityalias: { ground: "undetermined", is: "a registry write adding an alias to an entity" },
-  resolve: { ground: "undetermined", is: "a recogniser write: this reference means this entity, at this grade" },
-  resolvetestify: { ground: "undetermined", is: "recogniser TESTIMONY about a resolution" },
-  /* CPDF-10, AND IT IS A CORRECTION OF THIS ITEM'S OWN FIRST ANSWER, recorded
-     rather than quietly fixed because the mistake is instructive.
-     `attesttext` was first declared `attested`, reasoning from DEC-4's doctrine
-     that member attestation is the only route to the top of the transcription
-     axis. THE SUITE REFUSED IT — "`attested` is carried by exactly the two acts
-     Constructs:275 sources" — and the suite was right: this ladder's `attested`
-     is not "the word attest appears in the op name", it is the property stated
-     at the rung itself, that the act requires AN AUTHORITY THE GROUP DOES NOT
-     HOLD ALONE (a registered signer's key, a timestamp authority's token).
-     op=attesttext requires neither. It is a signed-in member saying they looked
-     at the image. Declaring it `attested` would have claimed a signature that
-     does not exist — and a rung tighter than its rule is not a safer rung, it
-     is an undeclared change to what the rung MEANS, wearing the costume of
-     caution.
-     So it lands in exactly the bucket this block describes: performed once,
-     kept attributed and dated, corrected by a further act moving FORWARD, and
-     NOT signed. `resolvetestify` directly above is the same shape one axis over
-     — recogniser testimony about a resolution — which is why the gap this
-     records is the LADDER's and not this table's. */
-  attesttext: { ground: "undetermined", is: "a member's TESTIMONY that a capture's transcribed text matches the page image, over a stated extent; superseded by further testimony, never withdrawn, and never signed" },
-  progressiondefine: { ground: "undetermined", is: "a member's claim about how an institution ought to behave (framework \xA78.1)" },
-  thread: { ground: "undetermined", is: "threads real documents into a progression instance" },
-  airunopen: { ground: "undetermined", is: "opens an AI run against the record" },
-  airunclose: { ground: "undetermined", is: "closes an AI run" },
-  suggest: { ground: "undetermined", is: "a machine PROPOSES a reading; \xA76 rule 4 makes it a proposal and never a settlement" },
-  /* SK-7, and it lands beside `suggest` directly above for the reason that one
-     does rather than beside `attesttext`: marking a passage citable PROPOSES an
-     address and settles nothing. The row is an offer — *this part of this
-     document is worth pointing at* — and it enters no case until a member's own
-     leg names it (framework Part II §14.4, Bob's 5.7). It is corrected FORWARD
-     by marking a different extent, never withdrawn: the row is first-class and
-     an edge may already depend on it, so `stale` marks and nothing deletes.
-     NOT `substrate`: a member (or an assistant on a member's objective) CHOOSES
-     to mark a passage, which is precisely what `substrate`'s ground says these
-     acts are not. NOT `observational`: nothing here records what was observed;
-     it records what somebody thought worth citing. So the honest ground is the
-     ladder's own gap — an act on the record, corrected forward, never signed. */
-  contentmint: { ground: "undetermined", is: "marks a PART of a document as citable \u2014 an address the record can hold, proposed by a member or by a machine credential and part of a finding only when a member cites it (\xA714.4)" },
-  /* SK-8 — `op=extractpropose`, and the ground is `contentmint`'s directly
-     above for its reason, which is the honest one rather than the convenient
-     one: no document assigns this act a rung, and the two that might are wrong
-     about it in opposite directions. NOT `substrate` — the whole of §7.3 (4) is
-     that a run works on a SUBJECT and an OBJECTIVE a member authored and then
-     CHOOSES what to propose, which is precisely what `substrate` says these
-     acts do not do. NOT `observational` — nothing here records what was
-     observed; the observation of where a run LOOKED is the run's log, and this
-     act records what the machine thought worth citing, which is a different
-     claim about the record. So the ground is the ladder's own gap, stated: an
-     act on the record, corrected forward (a proposal is never deleted — IC-83),
-     never signed by the thing that made it (C-35.10). */
-  extractpropose: { ground: "undetermined", is: "an EXTRACT run PROPOSES a reading \u2014 what the text this record already holds NAMES, carrying an ai(function, version) step, bounded by the run's `mints` allowance and part of a finding only when a member cites it (\xA77.3)" },
-  /* REC-147 — `op=contradictionpropose`, on `extractpropose`'s ground directly above and for its reason: a run CHOOSES
-     what to propose over pairs the plane formed, so not `substrate`; it records what a machine judged about two
-     things, not what was observed, so not `observational`. The ladder's own gap, stated: an act on the record,
-     corrected forward (a candidate is never updated), labelled machine work and never signed. */
-  contradictionpropose: { ground: "undetermined", is: "a run PROPOSES how two referents the pairing formed relate \u2014 one of \xA75's five labels and its reason, labelled machine work, state proposed, and never a finding until a member judges it (CONTRADICTION-IDENTIFY-DESIGN.md \xA78)" },
   /* N345 (K481), on R27's rule. `contradictionrecommend` is `contradictionpropose`'s ground for its reason: a run
      proposes, and it is machine work. The opt-in and the response (DEC-85) ask no authored reason (their words are
      optional, a response's text is what is relayed, not an account of a decision), and no published act takes either
@@ -91921,109 +92014,25 @@ var RUNG_ABSENT = {
   contradictionrecommend: { ground: "undetermined", is: "a run RECOMMENDS in which respects the sides of a shown contradiction may differ \u2014 never which side is wrong or a kind \u2014 labelled machine work and standing only while the candidate is open (contradiction R37)" },
   contradictionoptin: { ground: "undetermined", is: "a project, through one of its joined participants, asks to resolve a conflict with a record its members cannot see; never withdrawn, and when every project holding a side has asked, the projects are named to each other (contradiction R51, R52)" },
   contradictionrespond: { ground: "undetermined", is: "a member of an opted-in project responds to a conflict's notice, disclosing only what they choose; relayed as written to the other opted-in projects once they are named to each other (contradiction R53, R54)" },
-  /* REC-122 / IC-232 — CHOOSING A CONNECTION'S ON-POINT MENTION, ground `undetermined`: none of its refusals (C-74) is in
-     `JUSTIFICATION_REFUSALS`, and widening that class would be this item re-grading the ladder
-     to suit itself. NOT `reversible`: nothing takes a choice back; a re-choice SUPERSEDES it and
-     the old row is retained, which is corrected forward. Never signed, and never the machine's. */
-  connectionchoose: { ground: "undetermined", is: "a member records WHICH mention of a subject, on one end of one connection, is the one on point; the machine's strongest-graded pair is kept beside it, and a re-choice supersedes and retains the old (Bob's 5.4 second pass)" },
-  /* REC-87 / IC-128 — TRANSCRIBE and the attestation of a typing. Ground
-     `undetermined` on `attesttext`'s measurement: neither act's
-     refusals are in `JUSTIFICATION_REFUSALS` (an empty typing, C-52.6, is not a
-     missing justification), and widening that class to admit them would be this
-     item re-grading the ladder to suit itself. NOT `reversible`: nothing takes a
-     typing back — a member types again, which is a DIFFERENT content row, and an
-     attestation is superseded by the same attestor's later one, never withdrawn. */
-  transcribe: { ground: "undetermined", is: "a member types what a selected portion of a document says, in their own name; the typing is a content row whose chain is typed(member), its fidelity undetermined and stated until a DIFFERENT member attests it (Bob's 5.2)" },
-  transcriptionattest: { ground: "undetermined", is: "a member's TESTIMONY that ANOTHER member's typing of a portion matches the page; raises what a leg citing that typing may claim, and is refused to the typist themself (C-52.9)" },
-  /* MK-1 / IC-133 — TESTIFY. Ground `undetermined` on `transcribe`'s measurement:
-     none of its refusals is a missing justification (an empty observation, C-53.3,
-     is not one). NOT `reversible`: nothing takes an observation back — a member
-     records a new one, never a rewrite (MEMBER-KNOWLEDGE-DESIGN.md section 2). */
-  testify: { ground: "undetermined", is: "a member records a firsthand observation in their own words; it becomes an authored document standing on that member's trust, the author stamped from the session and the words kept exactly as written (D-184)" },
-  /* MK-4 / IC-136 — THE LEAD. Ground `undetermined` on `transcribe`'s measurement:
-     neither act's refusals are in `JUSTIFICATION_REFUSALS`. NOT `reversible`:
-     nothing takes a lead or a look back — a member writes another lead, and a
-     later look is a new row, never a rewrite of the earlier one. */
-  lead: { ground: "undetermined", is: "a member writes a LEAD in their own words \u2014 what they were told or suspect, and where it might be found; an authored row that is NEVER evidence and can never be a basis leg (C-54.1)" },
-  leadshare: { ground: "undetermined", is: "a lead's AUTHOR shares it to one project they have joined, an authored dated act; the project's joined participants can then read it and record looks against it (BOB #14, 2026-09-18)" },
-  /* MK-7 / IC-319 — THE ATTRIBUTION ACT. Ground `undetermined` on `testify`'s measurement: none of its refusals
-     (C-92.1–.9) are in `JUSTIFICATION_REFUSALS`. NOT `reversible` as a rung: a later act replaces the level for an
-     unsigned edition, and a signed edition's statement answers forever — nothing takes a published level back. */
-  attribute: { ground: "undetermined", is: "an observation's AUTHOR chooses what one case edition publishes of who said it \u2014 group, project, cover or name \u2014 never prefilled, and re-authors that edition's unsigned case document (MEMBER-KNOWLEDGE-DESIGN.md \xA74.2)" },
-  /* REC-126 / DEC-31 — THE REVIEW COPY. The GRANT and its withdrawal are
-     `credential`: their whole subject is WHO MAY READ one draft, and they write
-     nothing the record asserts. The DRAFT and the COMMENT are `undetermined` on
-     `transcribe`'s measurement: none of their refusals is a missing justification,
-     and they are NOT `reversible` — a draft is edited in place and a comment is
-     answered by another, but no act takes either back. Neither is ever published:
-     publication stays the one irreversible act (§6A.1). */
-  casedraft: { ground: "undetermined", is: "an editor of the project (an owner or a joined participant holding contribute, \xA76A.2) holds the arguments of a case publication under a draft id BEFORE any gate runs; mutable, never published, the review copy's production (BIO_Publication \xA76A.4)" },
+  /* REC-126 / DEC-31 — THE REVIEW COPY. The GRANT and its withdrawal are `credential`: their whole subject is WHO MAY
+     READ one draft, and they write nothing the record asserts. The draft and the comment are DEC-88's `reversible`
+     (RUNGS). */
   reviewgrant: { ground: "credential", is: "the owner grants one named recipient READ-AND-COMMENT on one draft at one case edition, by a per-grant read secret" },
   reviewrevoke: { ground: "credential", is: "the owner withdraws a review grant; the secret then answers as one never issued" },
-  reviewcomment: { ground: "undetermined", is: "a recipient (through a live grant) or a member with standing comments on a draft; attributed, and a recipient's comment is recorded as a recipient's" },
-  /* D-150 (BIO_Publication §3 rule 11), classified at integration by c19-unionfix (2026-09-24): D-150 landed this
-     mutating op and gated only its own suites, so the ladder's FORWARD arm first met it on the union. Ground
-     `undetermined` on `reviewcomment`'s measurement beside it: its refusals are positional (not a participant, the
-     author's own, a signed edition, IC-246's bound), never a missing justification, and no act takes an
-     acknowledgement back — an edited statement is a different sentence with none. It gates nothing (rule 11). */
-  statementack: { ground: "undetermined", is: "a joined participant other than the statement's author, or a review-copy recipient through their grant, acknowledges a case's exclusion statement as its second reader; attributed and dated, it re-authors the unsigned case documents of that exact statement to list it, and is never required to publish" },
-  leadlook: { ground: "undetermined", is: "a member records that they followed a lead and what the look found, as an observation under the lead's authority; a look that finds nothing is recorded as LOOKED_ABSENT, a finding with the lead behind it" },
-  /* D-162 / IC-241 — THE THEME. Ground `undetermined` on `lead`'s measurement: none of the three
-     acts' refusals is a missing justification (a theme with no test, C-81.3, is a missing CRITERION,
-     refused before anything is written). NOT `reversible`: nothing takes a theme or a placement back
-     — a changed idea is a new theme, because every placement was judged against the old test. */
-  themedeclare: { ground: "undetermined", is: "a member declares a THEME in their own name \u2014 an idea and the TEST a document or a passage passes or fails; a lens for gathering material, visibly theirs, and never the basis of a claim (C-81.1)" },
-  themeplace: { ground: "undetermined", is: "a member places a document or a passage in a theme, or confirms a proposal standing there, on their judgement that it passes the test: membership, graded D" },
-  themepropose: { ground: "undetermined", is: "a member or a machine PROPOSES a placement in a theme: a hunch, graded C, which is never membership until a member confirms it" },
-  /* INTENT #1 J4.3 (T7), on R27's rule: each is a member's act on the record, corrected forward by a further act of
-     its kind, that requires no authored reason and that no published act takes back. `triage` is graded
-     `reasoned` since K219 (RUNGS). */
-  objectivecondition: { ground: "undetermined", is: "sets, replaces or removes a project's satisfaction condition as a new revision of its document; the earlier revision stays in history (intent R2)" },
-  goaldeclare: { ground: "undetermined", is: "a member declares a goal, bounded, optionally under an aspiration (intent R8)" },
-  goallink: { ground: "undetermined", is: "the author's dated claim that a project's objective serves a goal (intent R8)" },
-  aspirationdeclare: { ground: "undetermined", is: "a member declares an aspiration of the group, a project or a member (intent R9)" },
-  aspirationdeadend: { ground: "undetermined", is: "a dead end appended to an aspiration's pursuit record, dated and authored, never removed (intent R11)" },
-  workobjective: { ground: "undetermined", is: "a member sets an assistant to work a project's objective: a run through ai-runs with the project as its context (intent R18)" },
-  /* K219 (T7): reevaluation's two version acts (R15), on R27's rule — a member's act on a reference they hold, corrected
-     forward by a further choice, asking no reason (KEEP's why is optional), and no published act takes either back. */
-  versionadopt: { ground: "undetermined", is: "a member adopts the newer capture a version notice names: a new version of the reference, the old staying readable (reevaluation R15)" },
-  versionkeep: { ground: "undetermined", is: "a member records that a reference stays on the earlier capture, with who, when and an optional why (reevaluation R15)" },
   /* K219 (T7): `capturerequestdrain`'s and `capturerequest`'s ground — the machinery a decided act rides on. */
   reevaluationraise: { ground: "substrate", is: "reevaluation's bounded sweep raising the version notices; the unattended path, stamping nothing (reevaluation R14)" },
   capturerequestretry: { ground: "substrate", is: "re-queues a capture request the source refused, once a member supplied what it asked; the capture is the act (capture-requests R42)" },
-  /* Layer 9's acts (K208 (2); held through T8 by K264 and restored in T9 with N216, now the durable object dispatches
-     them), keyed to layer 9's op maps (legacy-index's names for escalation's services), on R27's rule:
-     each is a member's act on the record, or a proposal stored apart that settles nothing, corrected forward, that asks
-     no authored reason, or asks one only as a proposal's why (`actionlawspropose` and `contradictionpropose`'s
-     precedent), and that no published act takes back. `determine` left this block for RUNGS (N310): since N233 its
-     supersession refuses an absent reason (CONFORMANCE_NO_REASON since K834). actions R28's proposal beside them, on
-     `actionlawspropose`'s ground. */
-  standarddeclare: { ground: "undetermined", is: "a member records a standard the record holds \u2014 citation, kind, issuer, its own words as captured and its period; never edited, corrected by a later standard that supersedes it (standards R1, R6)" },
-  standardpropose: { ground: "undetermined", is: "a member or a machine PROPOSES a standard with its why, stored apart and labelled; never a standard until a member adopts it (standards R9)" },
-  standardadopt: { ground: "undetermined", is: "a member adopts a proposal as a standard, the standard naming the proposal and the proposal its adoption, at most once (standards R10)" },
-  comparisonpropose: { ground: "undetermined", is: "a machine or a member PROPOSES a comparison of an act against standards, rows and questions and never an outcome, labelled, optionally started from a contradiction the proposer can see; never a determination (conformance R12, R21)" },
-  consequencerecord: { ground: "undetermined", is: "a member records what a breach did and to whom \u2014 a part computed from the record's figures, assessed with a rationale, or undetermined with why; never edited, revised by a successor (consequences R1\u2013R6)" },
-  filingprepare: { ground: "undetermined", is: "a machine or a member prepares a filing draft from the record, every filled blank naming its source and every unfilled one marked; never sent until a member approves it (filings R1\u2013R5)" },
-  filingapprove: { ground: "undetermined", is: "a member approves a filing draft's text, or their edit of it, at most once; the approved text is theirs (filings R6)" },
-  filingsent: { ground: "undetermined", is: "a member records that an approved filing was sent, as one `sent` correspondence entry on the action linked both ways, `actioncorrespond`'s ground (filings R7)" },
-  counselpacket: { ground: "undetermined", is: "a member names counsel and assembles a counsel packet from the record for a Tier 3 action, marked for counsel's review and never fileable; assembling again makes a new version (filings R8\u2013R12)" },
-  theorypropose: { ground: "undetermined", is: "a member or a machine PROPOSES a candidate legal theory and remedy against named standards with its why, stored apart and labelled; never the group's position (filings R14)" },
-  escalationopen: { ground: "undetermined", is: "a member opens an escalation of a live noncompliant determination at stage 1; one open or suspended escalation per determination (escalation R1)" },
-  escalationattach: { ground: "undetermined", is: "a member attaches a breach action to an escalation's current stage, 2, 5 or 7, a stage-7 act stating its accountability purpose; never detached (escalation R9, R12)" },
-  escalationend: { ground: "undetermined", is: "a member ends an escalation, only when compliance is restored for every standard pursued and the consequences are addressed; never reopened (escalation R14)" },
-  actionriskpropose: { ground: "undetermined", is: "a machine's or a member's PROPOSAL of an action's risk tier with its basis, stored apart and labelled; restated by the same proposer, and it never sets the tier (actions R28)" },
   /* K705, K709 (T18 layer 11), on R27's rule: filings' two new writes and actions' two. None asks an authored reason
      (a pressure mark's note describes what was received, and `PRESSURE_REFUSED` is a malformed mark, not a missing
      account), and no published act takes any of them back. `actioncreate` is a member's chosen act, not `promote`'s
-     substrate, though it rides the same write: `entitycreate`'s ground. */
-  communicationprepare: { ground: "undetermined", is: "a machine or a member prepares a draft message, briefing or statement for an action, stored apart and labelled as its preparer's; never sent until a member approves it, `filingprepare`'s ground (filings R23)" },
+     substrate, though it rides the same write. DEC-88 left all four `undetermined` (R27). */
+  communicationprepare: { ground: "undetermined", is: "a machine or a member prepares a draft message, briefing or statement for an action, stored apart and labelled as its preparer's; never sent until a member approves it (filings R23)" },
   templatesave: { ground: "undetermined", is: "a member starts a template draft (or a draft of a new version of a named template) from an approved filing draft, handed to the template library's draft act; no machine writes one (filings R32)" },
   actioncreate: { ground: "undetermined", is: "a member creates an action, the same write as promoting an action document (actions R47)" },
   actionpressure: { ground: "undetermined", is: "a member marks a received correspondence entry as pressure directed at the group, appended to a table of its own and never rewritten; an entry is marked once (actions R48)" },
   /* K727 (T18), on R27's rule: action-plans' acts that ask no authored reason and that no published act takes back —
-     opening a plan, adding, proposing and adopting an option (`goaldeclare`'s, `standardpropose`'s and `standardadopt`'s
-     grounds), a checkpoint's judgement (its note optional, never re-judged) and starting an option as an action
-     (`actioncreate`'s). */
+     opening a plan, adding, proposing and adopting an option, a checkpoint's judgement (its note optional, never
+     re-judged) and starting an option as an action (`actioncreate`'s ground). DEC-88 left all six `undetermined`. */
   planopen: { ground: "undetermined", is: "a member opens a plan for a project over named subjects, a suspected inquiry or a determined outcome (action-plans R1)" },
   optionadd: { ground: "undetermined", is: "a member adds an option to a plan \u2014 what could be done, its category, the subjects it serves (action-plans R9); revised forward with a reason, never deleted" },
   optionpropose: { ground: "undetermined", is: "a machine or a member PROPOSES an option with its why, stored apart and labelled; never an option until a member adopts it (action-plans R11)" },
@@ -92082,10 +92091,10 @@ var CAPTURE_ACTS = [
      actually looked at — and a leg citing outside that part does not inherit
      it. A label that hid the scope would invite exactly the over-reading the
      extent exists to prevent.
-     RUNG: NONE, on the ground `undetermined` (RUNG_ABSENT below), and the
-     reasoning — including why `attested` was tried first and REFUSED — is at
-     that entry rather than restated here. Not guessed at this site; no rung is
-     guessed anywhere in this file. */
+     RUNG `reasoned` (DEC-88, K1038): the attestor's note on what they compared is
+     required (content R43, ATTEST_NO_NOTE). It was `undetermined` until then, and
+     `attested` was tried first and REFUSED (CPDF-10): it requires no authority the
+     group does not hold alone. No rung is guessed anywhere in this file. */
   { id: "attesttext", label: "Attest that this text matches the page image" }
 ];
 var edgesFrom = (f17) => vocabFor(STATES, f17.declared_type ?? f17.object_type)?.edges?.[f17.current_state] || [];
@@ -92144,7 +92153,7 @@ var ACTS = [
      its `surfaced` alias, and nothing else. Weight `single`, the first act
      published that is NOT selection-backed: one conclusion answers one
      question, so there is no set to apply and no set-application weight to
-     report (store.mjs conclude() carries the reasoning; the suite cross-checks
+     report (basis-versions' conclude carries the reasoning; the suite cross-checks
      the word against what the op itself returns). RUNG `reasoned` (FW-14) —
      AND THE SENTENCE THIS REPLACES WAS RIGHT WHEN IT WAS WRITTEN, so it is
      corrected rather than deleted. It read: "NO RUNG: no document assigns one …
@@ -92555,8 +92564,8 @@ var ACTS = [
      precedent). A resolved action can still have a late reply recorded against
      it — the exchange happened, and the ledger is the record of it — and a
      planned one can record a first approach.
-     Weight `single`: the ledger is append-only, one entry at a time. NO RUNG,
-     for actionmove's reason. */
+     Weight `single`: the ledger is append-only, one entry at a time. RUNG
+     `reasoned` (DEC-88), backed by its grounds (K1025, R19): the bytes or the member's account (actions R15–R16). */
   {
     id: "actioncorrespond",
     label: "Record correspondence",
@@ -92599,7 +92608,7 @@ var ACTS = [
    * NO_SUCH_VERSION and a pre-flight offering a control the refusal it fronts
    * would decline is DEC-8's headline failure — the same reason `inquirydivide`
    * counts basis legs and `retire` counts live cites. The fact is
-   * `basis_version_states`, which store.mjs reads from the document; the RULE
+   * `basis_version_states`, which `affordanceFacts` (./affordances/facts.mjs) reads from the document; the RULE
    * over it is here, where every other act's rule lives, and `edgesFor` below is
    * the machine's OWN table so this file holds no state list of its own. Grep
    * it: no version-state word appears in any of the six entries.
@@ -92943,7 +92952,7 @@ var MACHINE_REFUSALS = {
 };
 var PER_ITEM_ACTS = [
   /* REC-205: `item_keys` is the act's three IDENTITY SHAPES and is now ENFORCED as well as published —
-     `store.mjs #perItem` reads this very array and refuses to let a shared value of ONE shape reach an
+     record-core's `perItem` is handed this very array by the acting module (tasks', queue's) and refuses to let a shared value of ONE shape reach an
      item that named another, which is what lets a project-scoped finding and a progression finding be
      handled in the same call. `definitionVersion` JOINS `shared_keys` (REC-211/IC-273): the act has
      taken it as a shared field since REC-211 — a set over one progression names the version once — and
@@ -93380,6 +93389,18 @@ var OPS = frozenTable({
   lateattestations: { classes: ["admin", "member", "probe"], mutating: false },
   captureaccount: { classes: ["admin", "member", "probe"], mutating: true },
   captureaccounts: { classes: ["admin", "member", "probe"], mutating: false },
+  /* T22 (K1023, K1037; capture R76, R77, R79–R81; R9): setting a held capture aside and restoring it are a member's
+     reasoned acts — a machine reaches each and capture refuses it by name (MACHINE_CANNOT_SET_ASIDE, C-118.8) — `by` and
+     `viewer` stamped; the held list and a capture's grade note are reads, viewer-stamped; the doorbell's tally is a read
+     for a member's own session only, `knocksof`'s fence (`machineClasses: []` refuses every bearer), viewer-stamped.
+     NOTHING IS DECLARED FOR `doorbellrefused`, capture's map's other R80 arm: it is the Worker's count of a knock it
+     refused before the store, a store-internal route the plane calls from within itself and never a public op (R6;
+     K1037), as `monitorlook` is. */
+  heldsetaside: { classes: ["admin", "member", "probe"], mutating: true },
+  heldrestore: { classes: ["admin", "member", "probe"], mutating: true },
+  heldcaptures: { classes: ["admin", "member", "probe"], mutating: false },
+  gradenote: { classes: ["admin", "member", "probe"], mutating: false },
+  doorbelltally: { classes: ["admin", "member"], machineClasses: [], mutating: false },
   /* N364 (sources R1–R9): a source's disclosures, links and consents, `by` stamped; the reads `viewer`-stamped (a
      machine credential reads nothing, the module's NO_SUCH_SOURCE); `sourcepublishable` writes nothing. */
   sourcedisclose: { classes: ["admin", "member", "probe"], mutating: true },
@@ -93567,6 +93588,11 @@ var OPS = frozenTable({
   escalationresume: { classes: ["admin", "member", "probe"], mutating: true },
   escalation: { classes: ["admin", "member", "probe"], mutating: false },
   escalationsdue: { classes: ["admin", "member", "probe"], mutating: false },
+  /* T22 (K1019, J3; escalation R27, R28; R9): declining to escalate, a member's reasoned act, `escalationopen`'s posture
+     (a machine reaches it and escalation refuses it by name), `author` and `viewer` query-stamped; the status read,
+     `escalationsdue`'s, viewer-stamped. */
+  declinetoescalate: { classes: ["admin", "member", "probe"], mutating: true },
+  escalationstatus: { classes: ["admin", "member", "probe"], mutating: false },
   /* T18 (N-A12, K608; K705): filings' drafted communication (R23). Any credential prepares a communication, labelled
      (`proposalLabel`). T21 (K922 (1)): `templatesave` is filings R32's, a member starting a template draft from an
      approved filing through `filing-templates.templateDraft` (a machine refused by that module, its R3); its spec and
@@ -93661,6 +93687,9 @@ var OPS = frozenTable({
   profiles: { classes: ["admin", "member"], mutating: false },
   profilesset: { classes: ["admin", "member"], machineClasses: [], mutating: true },
   monitorslate: { classes: ["admin", "member", "probe"], mutating: false },
+  /* T22 (K1019; monitoring R17, R52; R9): an address's own frequency, a source owner's reasoned act — a machine reaches
+     it and monitoring refuses it by name (MACHINE_CANNOT_SET_FREQUENCY) — `author` and `viewer` query-stamped. */
+  addressfrequencyset: { classes: ["admin", "member", "probe"], mutating: true },
   /* REC-94: a capture's content-axis state; frontier's classes and gate. */
   contentaxis: { classes: ["admin", "member", "probe"], mutating: false },
   /* REC-69: the context-keyed run read; the viewer stamp decides what a caller sees. */
@@ -93762,7 +93791,9 @@ var IDENTITY_ACTIONS = frozenList(["groupnameset", "groupdomainset"]);
 var CUSTODIAL_ACTIONS = frozenList(["memberadd", "memberset", "signeradd", "signerset"]);
 var ROSTER_SELF_ACTIONS = frozenList(["adminresign", "hostingaccessset", "memberpairingset"]);
 var OWN_KEY_ACTIONS = frozenList(["signerregister", "signerrevoke"]);
-var CAPTURE_MEMBER_ACTIONS = frozenList(["inboxpull", "reattest", "captureaccount"]);
+var CAPTURE_MEMBER_ACTIONS = frozenList(["inboxpull", "reattest", "captureaccount", "heldsetaside", "heldrestore"]);
+var CAPTURE_VIEWER_ACTIONS = frozenList(["heldsetaside", "heldrestore"]);
+var CAPTURE_READS = frozenList(["heldcaptures", "gradenote", "doorbelltally"]);
 var SOURCE_ACTIONS = frozenList(["sourcedisclose", "sourcelink", "sourceconsent", "sourceconsentwithdraw"]);
 var SOURCE_READS = frozenList(["sourceof", "sourcerung", "sourcereadlog"]);
 var PROVENANCE_JUDGEMENT_ACTIONS = frozenList(["provenancechain", "provenanceroute"]);
@@ -93887,9 +93918,10 @@ var ESCALATION_ACTIONS = frozenList([
   "escalationdecline",
   "escalationend",
   "escalationsuspend",
-  "escalationresume"
+  "escalationresume",
+  "declinetoescalate"
 ]);
-var ESCALATION_READS = frozenList(["escalation", "escalationsdue"]);
+var ESCALATION_READS = frozenList(["escalation", "escalationsdue", "escalationstatus"]);
 var ACTIONS_ACTIONS = frozenList(["actioncreate", "actionpressure", "actionhold"]);
 var ACTIONS_READS = frozenList(["action", "actions"]);
 var ACTION_CLOCKS_ACTIONS = frozenList(["reminderset", "reminderanswer"]);
@@ -93923,6 +93955,7 @@ var CONTRADICTION_READS = frozenList([
   "contradictionnotices",
   "contradictionresponses"
 ]);
+var MONITORING_ACTIONS = frozenList(["addressfrequencyset"]);
 var QUERY_AUTHOR_ACTIONS = frozenList([
   ...CONFORMANCE_ACTIONS,
   ...CONSEQUENCES_ACTIONS,
@@ -93931,7 +93964,8 @@ var QUERY_AUTHOR_ACTIONS = frozenList([
   ...ACTIONS_ACTIONS,
   ...ACTION_CLOCKS_ACTIONS,
   ...ACTION_PLANS_ACTIONS,
-  ...FILING_TEMPLATES_ACTIONS
+  ...FILING_TEMPLATES_ACTIONS,
+  ...MONITORING_ACTIONS
 ]);
 var ACTION_LAYER_ACTIONS = frozenList([
   ...STANDARDS_ACTIONS,
@@ -94177,6 +94211,12 @@ var SESSION_OPS = Object.freeze({
     ...TEMPLATE_DOOR_READS,
     ...LOCAL_FACTS_ACTIONS,
     ...LOCAL_FACTS_READS,
+    /* T22 (K1019, K1023; op-declarations R9): every op T22 adds, in BOTH sets — escalation's decline
+       (through `ESCALATION_ACTIONS` above) and its status read, capture's two held acts (through
+       `CAPTURE_MEMBER_ACTIONS` above) and its three reads, monitoring's frequency act. */
+    "escalationstatus",
+    ...CAPTURE_READS,
+    ...MONITORING_ACTIONS,
     /* N314 (T12, monitoring R30): the daemon's pause, every member session's to ask; monitoring refuses a
        non-administrator by name. */
     "monitorpause",
@@ -94291,6 +94331,9 @@ var SESSION_OPS = Object.freeze({
     ...TEMPLATE_DOOR_READS,
     ...LOCAL_FACTS_ACTIONS,
     ...LOCAL_FACTS_READS,
+    "escalationstatus",
+    ...CAPTURE_READS,
+    ...MONITORING_ACTIONS,
     ...IDENTITY_ACTIONS,
     ...GOVERNANCE_ACTIONS,
     ...CUSTODIAL_ACTIONS,
@@ -95056,7 +95099,22 @@ var NEEDS = Object.freeze({
   templatecomments: null,
   templates: null,
   factstatus: null,
-  factsdue: null
+  factsdue: null,
+  /* T22 (K1019, K1023; op-declarations R9): declining to escalate appends to the escalation's record in a member's
+     name, `escalationopen`'s capability and reason; setting a held capture aside or restoring it writes capture's row in
+     the member's name, `inboxresolve`'s; an address's own frequency is a source owner's setting written to the record,
+     the action layer's reason. Each `contribute`, NO fifth capability token (CAPABILITIES.md §4): who may act (a
+     project's owner, a member who may see the capture) is the owning module's, asked of the stamped author. */
+  declinetoescalate: "contribute",
+  heldsetaside: "contribute",
+  heldrestore: "contribute",
+  addressfrequencyset: "contribute",
+  /* NO CAPABILITY for capture's three reads, on `contradictionpairs`' reasoning (asking the record is reading it);
+     PRESENT, null, as capture's other reads (`knocksof`, `lateattestations`), so affordances names each in NON_ACTS
+     (its R7, R12). `escalationstatus` takes `escalationsdue`'s shape: no row. */
+  heldcaptures: null,
+  gradenote: null,
+  doorbelltally: null
 });
 var ACT_GATE = Object.freeze({
   needs: (id) => (Object.hasOwn(NEEDS, id) ? NEEDS[id] : null) ?? null,
@@ -103402,7 +103460,7 @@ var QUEUE_ACT_CHECKS = Object.freeze({
   CLASS_NOT_DISPOSED: Object.freeze({
     check: "C-33.44",
     where: at24("proposeDispose", "is-dispose-class"),
-    translation: "This is not something the record disposes of. Deferring and dismissing are decisions about something the record NOTICED \u2014 its own question \u2014 and this item is a different kind of thing: a CONDITION is a fact about our machinery that you silence for yourself, and an OBLIGATION is work a named person owes and leaves every list when it is resolved. Nothing about it was changed, and it is still in your list. The answer names the act that does reach it."
+    translation: "This is not something the record disposes of. Deferring and dismissing are decisions about something the record NOTICED \u2014 its own question \u2014 and this item is a different kind of thing: a signal is a fact about our machinery that you quiet for yourself, and a to-do is work a named person owes and leaves every list when it is done. Nothing about it was changed, and it is still in your list. The answer names the act that does reach it."
   }),
   /* R29 (D-623) / C-33.50: the project arm with no project, and the bridge's FINDING key (R27, R28). One code, one
      sentence at both sites: setting a noticed item aside is one team's decision, and the team was not named. */
@@ -103410,6 +103468,12 @@ var QUEUE_ACT_CHECKS = Object.freeze({
     check: "C-33.50",
     where: at24("#noProjectScope", "is-dispose-scope"),
     translation: "Setting this aside is a decision one project takes for its own list, and no project was named for it. Choose the project you are acting for (the item lists the ones it is filed under) and ask again. Nothing was written, and no team's list moved."
+  }),
+  /* R49 (DEC-110 (1)) / C-33.51: the feed asked for in an order it does not keep, refused before anything is read. */
+  QUEUE_SORT_UNKNOWN: Object.freeze({
+    check: "C-33.51",
+    where: at24("queueFeed", "is-queue-sort"),
+    translation: "Your list cannot be put in that order. It can be sorted by when each item was added, by when it is due, by case or by kind, or left in its usual order, grouped by case. Nothing was read or changed; ask again with one of those."
   })
 });
 function queueRefusal(code, row2, extra = {}) {
@@ -122714,6 +122778,20 @@ rev ${rev}
 // src/setup-fleet.mjs
 var GROUP_SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])$/;
 var FLEET_BINDINGS = [["agent-worker", "AGENT_WORKER"], ["pdf-worker", "PDF_WORKER"], ["ocr-worker", "OCR_WORKER"]];
+var HOSTING_CONTROL = Object.freeze({
+  heading: "Before you choose a password: who controls this copy",
+  sentences: Object.freeze([
+    "Whoever can sign in to the hosting account this copy runs in (its Cloudflare account) controls the copy. They can replace the one-time password, claim the copy again, read everything in it and lock everyone else out, and no vote of the group's administrators can stop them.",
+    "Use a group account for it, not anyone's personal login.",
+    "Add at least one other trusted person to that account.",
+    "Where possible, let someone other than the group's administrators hold it.",
+    "The same account is the way back in if the password you choose is lost: sign in to it, replace the ADMIN_TOKEN value in this worker's settings, and the copy can be claimed again."
+  ])
+});
+var escBlock = (x) => String(x).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+function hostingControlBlock(cls = "notice") {
+  return `<div class="${escBlock(cls)}" id="hosting-control"><p><b>${escBlock(HOSTING_CONTROL.heading)}</b></p>` + HOSTING_CONTROL.sentences.map((s, i, all) => `<p${i === all.length - 1 ? ' style="margin:0"' : ""}>${escBlock(s)}</p>`).join("") + "</div>";
+}
 
 // src/setup.mjs
 var FIRST_STATE_JSON = JSON.stringify(
@@ -122845,6 +122923,9 @@ ${GROUP_LINE_UNREAD}
     replaced in the Cloudflare dashboard, so the previous claim is retired and
     this copy can be claimed again. Nothing stored in the record is affected.</p>
   </div>
+  <!-- R47 (DEC-109, K1038): who really controls this copy, said before a password is chosen, in the words held once
+       in setup-fleet.mjs for this page and the installer's last screen. Nothing asks for or records an acknowledgement. -->
+  ${hostingControlBlock("notice")}
   <label for="boot">One-time password</label>
   <input id="boot" autocomplete="off" spellcheck="false">
   <p class="hint">From the installer's final screen, or the ADMIN_TOKEN value
@@ -122856,10 +122937,6 @@ ${GROUP_LINE_UNREAD}
   <input id="pw2" type="password" autocomplete="new-password">
   <button id="do-claim">Claim this copy</button>
   <p class="err" id="claim-err"></p>
-  <div class="card"><p class="small" style="margin:0"><b>If you ever lose the
-  password you choose here,</b> you are not locked out. Sign in to Cloudflare,
-  replace the ADMIN_TOKEN value in this worker's settings, and this claim step
-  starts over. Your Cloudflare sign-in is the way back in.</p></div>
 </section>
 
 <section id="s-login">
@@ -123945,7 +124022,7 @@ async function openInbox(){
   const r = await rec("inbox");
   const rows = (r.result && r.result.inbox) || [];
   if (!rows.length) { $("#inbox-body").innerHTML = '<p class="small">Nothing has been left at the door.</p>'; return; }
-  $("#inbox-body").innerHTML = rows.map(k=>
+  $("#inbox-body").innerHTML = rows.map((k,i)=>
     '<div class="card"><div class="kv"><span class="k mono">'+escH(k.knock_id)+'</span><span class="v">'
     + chip(k.status) + ' <span class="dim">' + fmtWhen(k.received) + "</span></span></div>"
     + '<div class="kv"><span class="k">Hash</span><span class="v mono">'+escH(k.sha256)+"</span></div>"
@@ -123955,15 +124032,34 @@ async function openInbox(){
     + (k.resolved_by ? '<div class="kv"><span class="k">Handled by</span><span class="v">'+escH(k.resolved_by)+"</span></div>" : "")
     /* Reading the inbox is not gated; ACTING on it is. A member with view
        rights sees what arrived and cannot disposition it. */
+    /* R48 (DEC-88 (2); capture R32): handling a knock either way is the member's
+       reasoned act, so each card asks for the reason beside its two buttons and
+       sends it with the knock and the status. */
     + (can("contribute")
-      ? '<div class="actions" style="margin-top:10px">'
-        + '<button class="ibtn" data-id="'+escH(k.knock_id)+'" data-to="pulled">Mark as taken up</button> '
-        + '<button class="ibtn" data-id="'+escH(k.knock_id)+'" data-to="discarded">Set aside</button></div>'
+      ? '<label for="ir-'+i+'">Your reason for handling it this way</label>'
+        + '<input id="ir-'+i+'" class="ireason">'
+        + '<div class="actions" style="margin-top:10px">'
+        + '<button class="ibtn" data-i="'+i+'" data-id="'+escH(k.knock_id)+'" data-to="pulled">Mark as taken up</button> '
+        + '<button class="ibtn" data-i="'+i+'" data-id="'+escH(k.knock_id)+'" data-to="discarded">Set aside</button></div>'
+        + '<p class="err" id="ierr-'+i+'"></p>'
       : "") + "</div>").join("");
-  document.querySelectorAll("#inbox-body .ibtn").forEach(b=>b.addEventListener("click", async ()=>{
-    await post("inboxresolve", { knockId: b.dataset.id, status: b.dataset.to });
-    openInbox();
-  }));
+  document.querySelectorAll("#inbox-body .ibtn").forEach(b=>b.addEventListener("click", ()=>inboxResolve(b.dataset)));
+}
+/* R48: nothing is posted without a reason; a refusal is shown in the plane's own
+   words (its translation, else its detail) and the knock is left as it was. */
+async function inboxResolve(d){
+  const e = $("#ierr-"+d.i); e.textContent = "";
+  const reason = $("#ir-"+d.i).value;
+  if (!reason.trim()) { e.textContent = "Write your reason first. Taking a knock up or setting it aside is recorded with the reason you give."; return; }
+  let r;
+  try { r = await post("inboxresolve", { knockId: d.id, status: d.to, reason }); }
+  catch(err){ e.textContent = "That did not go through: " + err.message; return; }
+  const res = r && r.result && typeof r.result === "object" ? r.result : r;
+  if (!r || r.ok === false || !res || res.ok === false) {
+    const why = (res && (res.translation || res.detail)) || (r && (r.translation || r.detail || r.error));
+    e.textContent = why || ("Refused: " + ((res && res.reason) || (r && r.reason) || "unknown"));
+    return; }
+  openInbox();
 }
 
 /* ---- members and keys ---- */
@@ -125951,6 +126047,7 @@ var BODY_STAMPS = Object.freeze([
   "assistantPrincipal",
   "migrationReplay"
 ]);
+var STATED_STATUS_OPS = Object.freeze(["inbox", "inboxpull", "inboxresolve", "heldsetaside", "heldrestore"]);
 function makeFetch(hooks = {}) {
   const planeDoor = async function planeDoor2(req, env) {
     try {
@@ -125988,6 +126085,7 @@ function makeFetch(hooks = {}) {
     const path = url.pathname.replace(/^\/api\/?/, "/");
     let op = url.searchParams.get("op") || path.slice(1) || "selftest";
     let spec = Object.hasOwn(OPS, op) ? OPS[op] : void 0;
+    let resolving = false;
     if (op === "inboxresolve" && req.method === "POST") {
       let b = null;
       try {
@@ -125998,6 +126096,7 @@ function makeFetch(hooks = {}) {
       if (b && typeof b === "object" && !Array.isArray(b) && b.status === "pulled") {
         op = "inboxpull";
         spec = OPS.inboxpull;
+        resolving = true;
       }
     }
     if (!spec) return json5({
@@ -126064,6 +126163,19 @@ function makeFetch(hooks = {}) {
           const reader = await caseReader(url, env, "bio", presentedAi.cred);
           if (reader.silent) return storeSilent(reader.silent, reader.correlation);
           q7.set("viewer", reader.viewer);
+        }
+        if (op === "statementack") {
+          let reason = url.searchParams.get("reason");
+          if (reason === null && req.method === "POST") {
+            let b = null;
+            try {
+              b = JSON.parse(await req.text() || "null");
+            } catch {
+              b = null;
+            }
+            if (b && typeof b === "object" && !Array.isArray(b) && typeof b.reason === "string") reason = b.reason;
+          }
+          if (reason !== null) q7.set("reason", reason);
         }
         let commentBody = null;
         if (op === "reviewcomment") {
@@ -126195,7 +126307,7 @@ function makeFetch(hooks = {}) {
          fails closed without the stamp. `lateattestations` names no bundle and takes none. */
       "captureaccounts"
     ];
-    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "contentcrop" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || RUN_VERB_ACTIONS.includes(op) || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "versionnotice" || op === "basisversions" || op === "versionstrength" || op === "partitionindependence" || op === "biasmanifest" || op === "biasdebt" || op === "biasdebtresolve" || op === "biasadopt" || op === "casedraft" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "capturerequestretry" || INTENT_ACTIONS.includes(op) || INTENT_READS.includes(op) || op === "reevaluationnotices" || op === "reevaluationchanges" || REEVALUATION_ACTIONS.includes(op) || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "contradictionpropose" || op === "narrow" || op === "narrowcandidates" || op === "connectionchoose" || op === "connectionassert" || op === "connectionsasserted" || op === "filemembershipstore" || op === "filemembership" || op === "filemembershipjudge" || op === "contradictionpairs" || op === "actionquotes" || op === "casedrafts" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "attesttext" || op === "leadlook" || op === "leadread" || op === "leadshare" || op === "leadlist" || op === "themeplace" || op === "themepropose" || op === "themeread" || op === "themewithdraw" || op === "idmatch" || op === "actionlawspropose" || op === "stats" || op === "selectionlist" || op === "driveshells" || PROJECT_ACTIONS.includes(op) || op === "memberpairings" || ACTION_LAYER_ACTIONS.includes(op) || ACTION_LAYER_READS.includes(op) || op === "actionriskpropose" || op === "monitoring" || op === "monitorslate" || CONTRADICTION_ACTIONS.includes(op) || CONTRADICTION_READS.includes(op) || op === "contradictionrecommend" || op === "entity" || op === "entitybyalias" || op === "publishtensions" || op === "publishpreflight" || SOURCE_READS.includes(op) || op === "inboxpull" || REC30_VIEWER_READS.includes(op)) {
+    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "contentcrop" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || RUN_VERB_ACTIONS.includes(op) || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "versionnotice" || op === "basisversions" || op === "versionstrength" || op === "partitionindependence" || op === "biasmanifest" || op === "biasdebt" || op === "biasdebtresolve" || op === "biasadopt" || op === "casedraft" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "capturerequestretry" || INTENT_ACTIONS.includes(op) || INTENT_READS.includes(op) || op === "reevaluationnotices" || op === "reevaluationchanges" || REEVALUATION_ACTIONS.includes(op) || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "contradictionpropose" || op === "narrow" || op === "narrowcandidates" || op === "connectionchoose" || op === "connectionassert" || op === "connectionsasserted" || op === "filemembershipstore" || op === "filemembership" || op === "filemembershipjudge" || op === "contradictionpairs" || op === "actionquotes" || op === "casedrafts" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "attesttext" || op === "leadlook" || op === "leadread" || op === "leadshare" || op === "leadlist" || op === "themeplace" || op === "themepropose" || op === "themeread" || op === "themewithdraw" || op === "idmatch" || op === "actionlawspropose" || op === "stats" || op === "selectionlist" || op === "driveshells" || PROJECT_ACTIONS.includes(op) || op === "memberpairings" || ACTION_LAYER_ACTIONS.includes(op) || ACTION_LAYER_READS.includes(op) || op === "actionriskpropose" || op === "monitoring" || op === "monitorslate" || CONTRADICTION_ACTIONS.includes(op) || CONTRADICTION_READS.includes(op) || op === "contradictionrecommend" || op === "entity" || op === "entitybyalias" || op === "publishtensions" || op === "publishpreflight" || SOURCE_READS.includes(op) || op === "inboxpull" || CAPTURE_VIEWER_ACTIONS.includes(op) || CAPTURE_READS.includes(op) || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set(
         "viewer",
         viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
@@ -126378,8 +126490,11 @@ function makeFetch(hooks = {}) {
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (OWN_KEY_ACTIONS.includes(op) || CAPTURE_MEMBER_ACTIONS.includes(op) || SOURCE_ACTIONS.includes(op))
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
-    if (op === "inboxpull")
+    if (op === "inboxpull") {
       inner.searchParams.set("identity", viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`);
+      inner.searchParams.delete("resolve");
+      if (resolving) inner.searchParams.set("resolve", "pulled");
+    }
     if (IDENTITY_ACTIONS.includes(op)) {
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
       inner.searchParams.set("origin", url.origin);
@@ -126690,7 +126805,7 @@ function makeFetch(hooks = {}) {
     if ((op === "inboxget" || op === "inboxresolve") && body.result?.ok === false && body.result.reason === "NO_SUCH_KNOCK")
       return json5({ ...body, store: storeName, tokenClass: cls }, 404);
     const hinted = body.result?.status;
-    if (op === "inboxpull" && body.result?.ok === false && Number.isInteger(hinted) && hinted >= 400 && hinted < 600)
+    if (STATED_STATUS_OPS.includes(op) && body.result?.ok === false && Number.isInteger(hinted) && hinted >= 400 && hinted < 600)
       return json5({ ...body, store: storeName, tokenClass: cls }, hinted);
     return json5({ ...body, store: storeName, tokenClass: cls }, status);
   }
@@ -131020,6 +131135,7 @@ var QueueProducers = class _QueueProducers {
       items.push(...this.#obligationsLitigationHold(me, viewer, at25));
       items.push(...this.#obligationsTemplateReview(me, viewer, at25));
       items.push(...this.#obligationsLocalFactDue(me, viewer, at25));
+      items.push(...this.#obligationsAttributionUnchosen(me, viewer, at25));
       return {
         items,
         facts: {
@@ -131137,8 +131253,8 @@ var QueueProducers = class _QueueProducers {
    *
    *  THE FACT IS THE GOVERNOR'S OWN, read at the same predicate the governor
    *  itself admits on: `cooloff_until > now` is the exact test `governorAdmit`
-   *  applies before refusing with `cooling_off`, and the one index.mjs applies
-   *  before stopping a page's remaining subresources. This derivation does not
+   *  applies before refusing with `cooling_off`, and the one the capture path
+   *  applies before stopping a page's remaining subresources. This derivation does not
    *  restate the rule, it asks it.
    *
    *  WHY IT EARNS AN ITEM AT ALL (NOTIFICATIONS.md rule 4 — a CONDITION is
@@ -131180,7 +131296,7 @@ var QueueProducers = class _QueueProducers {
           appetite_per_min: r.appetite_per_min ?? null,
           granted: r.granted,
           refused_total: r.refused_total,
-          detail: "a condition is a fact about OUR OWN machinery (D-103/D-95): this instance's governor is holding the host, which is distinguishable from the source being unreachable and must not be read as evidence about the publisher. It clears for every member when the hold expires; there is no act that ends it."
+          detail: "a signal is a fact about OUR OWN machinery (D-103/D-95): this instance's governor is holding the host, which is distinguishable from the source being unreachable and must not be read as evidence about the publisher. It clears for every member when the hold expires; there is no act that ends it."
         },
         age: Number.isFinite(refusedAt) && refusedAt > 0 ? {
           state: "determined",
@@ -131272,6 +131388,25 @@ var QueueProducers = class _QueueProducers {
     }
     return out;
   }
+  /** R22 (DEC-95 (1); K1105): the grade note of each capture an unattended item names, the words `op=acquire`'s answer
+   *  carries (`ACQUIRE_GRADE_NOTE`, capture's export, as its R76 answers them), read synchronously. A capture is named,
+   *  and held, by its `register` row (provenance R48): those under the item's bundle, at most R2's option bound, or a
+   *  request's own digest. A capture the viewer may not see (its register row's bundle out of sight) carries none. */
+  #gradeNotes({ bundle = null, sha = null }, visible) {
+    const rows2 = bundle ? this.#rows(
+      `SELECT r.capture_sha, r.bundle_id FROM register r WHERE r.bundle_id=? ORDER BY r.capture_sha LIMIT ?`,
+      bundle,
+      _QueueProducers.QUEUE_OPTION_SUBJECTS_MAX
+    ) : typeof sha === "string" && sha ? this.#rows(`SELECT r.capture_sha, r.bundle_id FROM register r WHERE r.capture_sha=?`, sha.toLowerCase()) : [];
+    return rows2.filter((r) => visible(r.bundle_id) !== null).map((r) => ({ capture_sha: r.capture_sha, note: ACQUIRE_GRADE_NOTE }));
+  }
+  /** R22: the detail's sentence carrying the notes, the same words for each capture, said once with the captures named. */
+  static #gradeNoteSentence(notes) {
+    if (!notes.length) return "";
+    const byNote = /* @__PURE__ */ new Map();
+    for (const n of notes) byNote.set(n.note, [...byNote.get(n.note) || [], n.capture_sha]);
+    return [...byNote].map(([note, shas]) => ` The grade note of ${shas.length === 1 ? "the capture" : "the captures"} it names (${shas.map((x) => x.slice(0, 12)).join(", ")}), as a member present would have read it: ${note}`).join("");
+  }
   /** `capture-completed-unattended` (D-61, closed by REC-2).
    *
    *  THE FACT IS THE MANIFEST'S OWN, and REC-2 is what made it exist. Before
@@ -131322,6 +131457,7 @@ var QueueProducers = class _QueueProducers {
       if (!started) continue;
       const createdMs = Date.parse(latest.created);
       const title = this.#record.bundleInfo(b.bundle_id);
+      const notes = this.#gradeNotes({ bundle: b.bundle_id }, visible);
       out.push({
         id: `CONDITION::capture-completed-unattended::${b.bundle_id}`,
         class: "CONDITION",
@@ -131329,7 +131465,7 @@ var QueueProducers = class _QueueProducers {
         case: this.#conditionHomes([b.bundle_id], viewer),
         subject: { kind: "bundle", id: b.bundle_id },
         summary: `${title && title.title ? title.title : b.bundle_id} was completed by an unattended writer after ${started.author} left it`,
-        detail: `${started.author} authored this document and an unattended writer (${latest.author}) wrote the most recent revision, which is the shape D-61 describes: a capture a member walked away from has completed. Nothing is claimed about whether the result is right.`,
+        detail: `${started.author} authored this document and an unattended writer (${latest.author}) wrote the most recent revision, which is the shape D-61 describes: a capture a member walked away from has completed. Nothing is claimed about whether the result is right.` + _QueueProducers.#gradeNoteSentence(notes),
         basis: {
           source: "manifest",
           bundle_id: b.bundle_id,
@@ -131342,7 +131478,8 @@ var QueueProducers = class _QueueProducers {
           started_by: started.author,
           started_snap_key: started.snap_key,
           started_created: started.created,
-          detail: "the machine writer is NAMED, never anonymous: index.mjs deletes any caller-supplied author and stamps token:<class> for a machine credential (REC-2, closing D-61), so this is the record's own trace of an unattended write and not an inference. It clears for every member when a person authors the document again."
+          grade_notes: notes,
+          detail: "the machine writer is NAMED, never anonymous: the control plane deletes any caller-supplied author and stamps token:<class> for a machine credential (REC-2, closing D-61), so this is the record's own trace of an unattended write and not an inference. It clears for every member when a person authors the document again."
         },
         age: Number.isFinite(createdMs) ? { state: "determined", since: latest.created, ms: Math.max(0, now - createdMs) } : {
           state: "undetermined",
@@ -131389,10 +131526,12 @@ var QueueProducers = class _QueueProducers {
    *  reported rather than silently absorbed. */
   #conditionsCaptureRequested(viewer, now) {
     const out = [];
+    const visible = this.#bundleRedactor(viewer);
     for (const r of this.#captureRequests.completed({ viewer }).requests) {
       const attribution = r.attribution;
       if (!attribution.ok) continue;
       const capturedMs = Date.parse(r.captured_at);
+      const notes = this.#gradeNotes({ sha: r.capture_sha }, visible);
       out.push({
         id: `CONDITION::capture-completed-unattended::${r.request}`,
         class: "CONDITION",
@@ -131400,7 +131539,7 @@ var QueueProducers = class _QueueProducers {
         case: this.#conditionHomes([r.target], viewer),
         subject: { kind: "capture_request", id: r.request },
         summary: `${r.address} was captured by the daemon at the investigative session's request`,
-        detail: `${attribution.statement}. The capture is an entry of a document to the store and NOT an entry of that document into the leg of a claim: it lands at 'collected' and never higher, and nothing about the record's conclusions has moved.`,
+        detail: `${attribution.statement}. The capture is an entry of a document to the store and NOT an entry of that document into the leg of a claim: it lands at 'collected' and never higher, and nothing about the record's conclusions has moved.` + _QueueProducers.#gradeNoteSentence(notes),
         basis: {
           source: "capture_requests",
           request: r.request,
@@ -131412,6 +131551,7 @@ var QueueProducers = class _QueueProducers {
           ua_mode: r.ua_mode,
           capture_sha: r.capture_sha,
           captured_at: r.captured_at,
+          grade_notes: notes,
           attribution,
           detail: "BOTH PRINCIPALS ARE NAMED (DEC-27(b), DEC-55.4): the act is the daemon's, performed at the session's request, under the plane credential the run holds and paid for by the level of the Claude-account cascade the run named. Never a token value, and never a person's name on the act itself."
         },
@@ -131783,7 +131923,7 @@ var QueueProducers = class _QueueProducers {
    *  about an act it has not taken.
    *
    *  FILED UNDER THE QUESTION'S ANCESTORS, WHICH IS EVERY PROJECT DRAWING ON
-   *  IT. `#queueAncestorEdges` walks `refs kind='cites'` upward, so the homes of
+   *  IT. queue R7's walk climbs `refs kind='cites'` upward, so the homes of
    *  an item about a shared question ARE the projects sharing it — both sides
    *  of the divergence, by the same walk every other producer uses. That is the
    *  point: an item only the diverging team could see would tell the one team
@@ -132377,7 +132517,7 @@ var QueueProducers = class _QueueProducers {
             instances: gap.instances ?? [],
             gap: b,
             surfaced_by: gap.surfaced_by ?? "machine",
-            detail: "a gap is DERIVED (intent R6): the objective's satisfaction condition read against the record, recomputed at every read. It leaves this project's list by a recorded decision."
+            detail: "a gap is DERIVED (intent R6): the objective's satisfaction test read against the record, recomputed at every read. It leaves this project's list by a recorded decision."
           },
           age: {
             state: "undetermined",
@@ -132609,7 +132749,7 @@ var QueueProducers = class _QueueProducers {
           expires: r.expires,
           updated: r.updated,
           plane_detail: r.detail ?? null,
-          detail: "a condition is a fact about OUR OWN machinery (D-491, BOB #32 item 3): this instance's renderer, render allowance or host pacing is what holds the render, which says nothing about the page. The served frame is never filed as the content, so while it waits and after it expires there is NO capture of what a visitor saw."
+          detail: "a signal is a fact about OUR OWN machinery (D-491, BOB #32 item 3): this instance's renderer, render allowance or host pacing is what holds the render, which says nothing about the page. The served frame is never filed as the content, so while it waits and after it expires there is NO capture of what a visitor saw."
         },
         age: Number.isFinite(sinceMs) ? { state: "determined", since: r.requested_at, ms: Math.max(0, now - sinceMs) } : {
           state: "undetermined",
@@ -132762,7 +132902,7 @@ var QueueProducers = class _QueueProducers {
           parties: (Array.isArray(c.between_projects) ? c.between_projects : []).map((b) => ({ project: b.project, opted_in: b.opted_in ?? null }))
         },
         summary: kind === "contradiction-duty" ? "two things the record holds conflict, and a member of this project must resolve it" : kind === "contradiction-plurality" ? "two projects' conclusions on one question may not both hold" : "the record noticed two things that may conflict",
-        detail: kind === "contradiction-duty" ? `the record holds a conflict here (${c.state === "taken_up" ? "taken up as a question" : c.state === "explained_not_shown" ? "explained, not yet shown" : "open"}). It leaves only when it is resolved; it is never muted, dismissed or set aside.` : kind === "contradiction-plurality" ? "two projects concluded one question on claims whose text differs. Naming the respect in which they differ clears it; neither project is made to adopt the other's answer." : "a machine judged these two may conflict. Its uncertainty creates no obligation: dismiss it or take it up.",
+        detail: kind === "contradiction-duty" ? `the record holds a conflict here (${c.state === "taken_up" ? "taken up as a question" : c.state === "explained_not_shown" ? "explained, not yet shown" : "open"}). It leaves only when it is resolved; it is never muted, dismissed or set aside.` : kind === "contradiction-plurality" ? "two projects concluded one question on claims whose text differs. Naming the respect in which they differ clears it; neither project is made to adopt the other's answer." : "a machine judged these two may conflict. Its uncertainty asks nothing of you: dismiss it or take it up.",
         basis: {
           source: "contradiction.candidatesFor",
           candidate: c.candidate,
@@ -133139,6 +133279,13 @@ var QueueProducers = class _QueueProducers {
     if (owners.length) return { rule: "project_owners", members: [...owners] };
     return { rule: "administrators", members: this.#activeAdmins() };
   }
+  /** R25 (DEC-110 (1)): the day an item's subject is due, `YYYY-MM-DD`, for queue R49's sort: the clock entry's date
+   *  (R15, R18) or the checkpoint's day (R16), read as the provider states it; null when it states none this producer
+   *  can read as a day. Only those three kinds carry `due`. */
+  static #dueDay(v) {
+    const d = typeof v === "string" ? v.trim().slice(0, 10) : "";
+    return /^\d{4}-\d{2}-\d{2}$/.test(d) && Number.isFinite(Date.parse(`${d}T00:00:00Z`)) ? d : null;
+  }
   /** A provider's paged read followed by its cursor, at most QUEUE_ACTION_PAGES pages; `truncated` when it was cut. */
   #actionPages(read2) {
     const items = [];
@@ -133182,6 +133329,7 @@ var QueueProducers = class _QueueProducers {
         class: "CONDITION",
         kind: "action-clock-overdue",
         case: this.#actionHomes(e.action, e.project, viewer),
+        due: _QueueProducers.#dueDay(e.date),
         subject: {
           kind: "action",
           id: e.action,
@@ -133247,6 +133395,7 @@ var QueueProducers = class _QueueProducers {
         class: "OBLIGATION",
         kind: "plan-checkpoint-due",
         case: this.#homesAt([c.project], viewer),
+        due: _QueueProducers.#dueDay(due),
         subject: {
           kind: "plan",
           id: c.plan,
@@ -133256,7 +133405,7 @@ var QueueProducers = class _QueueProducers {
           version: c.version ?? null
         },
         summary: `a checkpoint of plan ${c.plan} has come due: scenario ${c.scenario}, phase ${c.phase}`,
-        detail: "the day this plan's scenario set for judging a phase has come, and no member has judged it. A member records whether its condition was met; nothing here judges it, and a checkpoint passed unjudged says nothing about the government.",
+        detail: "the day this plan's scenario set for judging a phase has come, and no member has judged it. A member records whether what it set was met; nothing here judges it, and a checkpoint passed unjudged says nothing about the government.",
         basis: {
           source: "action-plans.checkpointsDue",
           plan: c.plan,
@@ -133357,6 +133506,7 @@ var QueueProducers = class _QueueProducers {
         class: "OBLIGATION",
         kind: "action-reminder",
         case: this.#actionHomes(x.action, x.project, viewer),
+        due: _QueueProducers.#dueDay(x.date),
         subject: {
           kind: "action",
           id: x.action,
@@ -133460,29 +133610,34 @@ var QueueProducers = class _QueueProducers {
   /** `template-review-requested` (R20; K921; filing-templates R7, R20): one OBLIGATION per (version, member)
    *  `filing-templates.reviewsRequested` answers the viewer, to that member and to nobody else, naming the version's
    *  name and kind and the member who asked, aged from the instant asked. It leaves when the member reviews the
-   *  version's present text or the version leaves `in_review` (the read no longer answers it). A template is not a
-   *  record of the case, so the item is homed under no case (as export-performed's). */
+   *  version's present text or the version leaves `in_review` (the read no longer answers it). Homed under the
+   *  template's project, the `project` the read answers (filing-templates R20; N476), at depth 0 and above it through
+   *  queue's walk (R7), as `#homesAt` homes any item about a case; a `group` template's item (project null) has no
+   *  project to be homed under and is ungrouped. */
   #obligationsTemplateReview(me, viewer, now) {
     if (!me) return [];
     const page = this.#actionPages((after) => this.#filingTemplates.reviewsRequested({ after, viewer }));
+    const visible = this.#bundleRedactor(viewer);
     const out = [];
     for (const x of page.items) {
       if (!x || typeof x.version !== "string" || !x.version || typeof x.member !== "string" || x.member !== me) continue;
       const askedMs = Date.parse(x.asked_at ?? "");
       const asker = x.asked_by && typeof x.asked_by === "object" ? { id: x.asked_by.id ?? null, name: x.asked_by.name ?? null } : null;
       const askerName = asker && (asker.name || asker.id) ? asker.name || asker.id : "a member";
+      const project = typeof x.project === "string" && x.project ? visible(x.project) : null;
       out.push({
         id: `OBLIGATION::template-review-requested::${x.version}::${x.member}`,
         class: "OBLIGATION",
         kind: "template-review-requested",
-        case: this.#homesOf([]),
+        case: project ? this.#homesAt([project], viewer) : this.#homesOf([]),
         subject: {
           kind: "template_version",
           id: x.version,
           template: x.template ?? null,
           name: x.name ?? null,
           template_kind: x.kind ?? null,
-          asked_by: asker
+          asked_by: asker,
+          project
         },
         summary: `${askerName} asked you to review the template ${x.name ? `"${x.name}"` : x.version} (${x.version})`,
         detail: "a draft of this filing template was sent for review and you are one of the members asked. Review its present text; this is told once, and it leaves when you have reviewed that text or the version leaves review.",
@@ -133492,6 +133647,7 @@ var QueueProducers = class _QueueProducers {
           version: x.version,
           name: x.name ?? null,
           template_kind: x.kind ?? null,
+          project,
           member: x.member,
           asked_by: asker,
           asked_at: x.asked_at ?? null,
@@ -133593,6 +133749,93 @@ var QueueProducers = class _QueueProducers {
     }
     return out;
   }
+  /* ======================================================================
+   * DEC-102 item 3 · R23 — THE CREDIT LEVEL A MEMBER HAS NOT CHOSEN (publication R2, R17, R56; provenance R48; K1019, K1105).
+   * ====================================================================== */
+  /** R23: how many prepared, unsigned case editions one read asks about, and the act that answers the item (publication
+   *  R17, `op=attribute`: the observation's author chooses the level, with a reason). */
+  static QUEUE_PREPARED_EDITIONS_MAX = 200;
+  static ATTRIBUTE_CHOOSE = Object.freeze({ id: "attribute", label: "Choose how this case credits your observation", weight: "single" });
+  /** `attribution-unchosen` (R23; DEC-102 item 3): one OBLIGATION per (case edition, observation) where a prepared,
+   *  unsigned case edition reaches an observation the member authored and no credit level is in force for it, to that
+   *  member and to nobody else. The editions are listed from `case_documents` (publication R56's read contract:
+   *  `sig_armored` null is authored and unsigned), the latest unsigned edition of each case only, since a later edition
+   *  replaces an earlier preparation; each is asked of `publication.caseDocumentFacts` under the viewer, whose standing
+   *  fence (publication R1) answers nothing to a viewer without standing in the case. Its attribution facts (R17) name
+   *  each reached observation and the level in force, null when none can be published; the observation's author is
+   *  `register`'s (`authored = 1`, `author`; provenance R48), never publication's. Nothing names the author to anyone
+   *  else: the item is the author's alone and carries no count. It leaves when the member chooses a level, or the
+   *  edition no longer reaches the observation, or it is signed or replaced (the reads no longer answer it); raised
+   *  once (DEC-69, DEC-94). Its age runs from the edition's preparation (`authored_at`). */
+  #obligationsAttributionUnchosen(me, viewer, now) {
+    if (!me) return [];
+    const cap = _QueueProducers.QUEUE_PREPARED_EDITIONS_MAX;
+    if (!this.#one(`SELECT 1 AS x FROM sqlite_master WHERE type='table' AND name='case_documents'`)) return [];
+    const rows2 = this.#rows(
+      `SELECT cd.case_id, cd.edition, cd.authored_at FROM case_documents cd
+        WHERE cd.sig_armored IS NULL
+          AND NOT EXISTS (SELECT 1 FROM case_documents later WHERE later.case_id = cd.case_id AND later.edition > cd.edition)
+        ORDER BY cd.case_id, cd.edition LIMIT ?`,
+      cap + 1
+    );
+    const truncated3 = rows2.length > cap;
+    const authorOf = /* @__PURE__ */ new Map();
+    const authored = (obs) => {
+      if (!authorOf.has(obs))
+        authorOf.set(obs, (this.#one(`SELECT r.author FROM register r WHERE r.bundle_id=? AND r.authored=1 LIMIT 1`, obs) || {}).author ?? null);
+      return authorOf.get(obs);
+    };
+    const out = [];
+    for (const e of rows2.slice(0, cap)) {
+      const facts = this.#publication.caseDocumentFacts(e.case_id, Number(e.edition), viewer);
+      if (!facts || facts.ok !== true || !facts.doc || facts.doc.sig_armored) continue;
+      const current = facts.attribution && Array.isArray(facts.attribution.current) ? facts.attribution.current : [];
+      for (const row2 of current) {
+        const obs = row2 && typeof row2.observation === "string" ? row2.observation : "";
+        if (!obs || row2.level || authored(obs) !== me) continue;
+        const preparedMs = Date.parse(e.authored_at ?? "");
+        const title = this.#record.bundleInfo(obs);
+        const name2 = title && title.title ? title.title : obs;
+        out.push({
+          id: `OBLIGATION::attribution-unchosen::${e.case_id}@${e.edition}::${obs}`,
+          class: "OBLIGATION",
+          kind: "attribution-unchosen",
+          case: this.#homesOf([obs]),
+          subject: {
+            kind: "case_edition",
+            id: `${e.case_id}@${e.edition}`,
+            case: e.case_id,
+            edition: Number(e.edition),
+            observation: obs
+          },
+          summary: `case ${e.case_id}, being prepared, uses your observation ${name2}: choose how it credits you`,
+          detail: `edition ${e.edition} of this case reaches what you observed, and you have chosen no level for how it shows who said it: the group, the project, your cover or your name. Nothing is published until it is signed, and nobody else is told you are its author. This is told once; it leaves when you choose, or the edition no longer uses it, or it is signed or replaced.`,
+          basis: {
+            source: "publication.caseDocumentFacts + case_documents + register",
+            case: e.case_id,
+            edition: Number(e.edition),
+            observation: obs,
+            prepared_at: e.authored_at ?? null,
+            level: null,
+            why: row2.why ?? null,
+            recipients_rule: "author",
+            bound: { editions_limit: cap, truncated: truncated3 },
+            detail: "the edition is publication's prepared, unsigned case document (its R56), its attribution facts its own (its R2, R17); the observation's author is the register's (provenance R48). Only the author chooses the level (DEC-102 item 3), so only the author is told."
+          },
+          age: Number.isFinite(preparedMs) ? { state: "determined", since: e.authored_at, ms: Math.max(0, now - preparedMs) } : {
+            state: "undetermined",
+            reason: "no_preparation_instant",
+            detail: "the case document carries no instant this producer can read"
+          },
+          assignee: null,
+          assignee_role: null,
+          recipients: [me],
+          options: [_QueueProducers.ATTRIBUTE_CHOOSE]
+        });
+      }
+    }
+    return out;
+  }
   static DAY_MS = 864e5;
 };
 var OF9 = /* @__PURE__ */ new WeakMap();
@@ -133650,7 +133893,11 @@ var QUEUE_OBLIGATION_KINDS = {
   /* K921 (R1; filing-templates R9, local-facts R1): two more OBLIGATIONs a named member owes, each leaving by its own act
      (R12's doors) and never by a mute. Their producers are `queue-producers`' (its R20, R21). */
   "template-review-requested": "a member asked you to review a filing template's version (op=templatereview) \u2014 LIVE: queue-producers R20",
-  "local-fact-due": "a holiday calendar or office hours one of the group's deadlines reads is unconfirmed or due for confirmation (op=factconfirm) \u2014 LIVE: queue-producers R21"
+  "local-fact-due": "a holiday calendar or office hours one of the group's deadlines reads is unconfirmed or due for confirmation (op=factconfirm) \u2014 LIVE: queue-producers R21",
+  /* DEC-102 item 3, K1019 (R1; publication R17): a case edition being prepared reaches an observation the member authored
+     and they have chosen no credit level for it. Theirs alone to answer, by choosing one (R12's door, op=attribute), and
+     never muted. Its producer is `queue-producers`' (its R23). */
+  "attribution-unchosen": "a case edition being prepared reaches an observation you authored and you have chosen no credit level for it; choose one (op=attribute) \u2014 LIVE: queue-producers R23"
 };
 var QUEUE_FINDING_KINDS = {
   "missing_predecessor": "a required predecessor stage is absent (D-73) \u2014 LIVE: queue-producers/proposals.mjs",
@@ -133748,7 +133995,7 @@ function classOfKind(kind) {
   return null;
 }
 var MUTE_REFUSAL_DETAIL = {
-  OBLIGATION: "an OBLIGATION is something a named person must do for the record to proceed, and it leaves every list only when it is RESOLVED (op=taskresolve, or the act its item names as `disposition.instead`) \u2014 record state, not a preference. Muting it would remove it from the only surface that routes it while `tasks` carries no per-member mute, so the record would go on believing the question reached a person."
+  OBLIGATION: "a to-do is something a named person must do for the record to proceed, and it leaves every list only when it is DONE (op=taskresolve, or the act its item names as `disposition.instead`): record state, not a preference. Quieting it would remove it from the only list that routes it while `tasks` keeps no per-member quiet, so the record would go on believing the question reached a person."
 };
 var PERSONALLY_MUTABLE_CLASSES = ["CONDITION", "FINDING"];
 function itemClassOf(id) {
@@ -133892,7 +134139,8 @@ CREATE TABLE IF NOT EXISTS finding_dispositions (
 `;
 
 // src/queue/index.mjs
-var QUEUE_CLASS_LABELS = Object.freeze({ OBLIGATION: "Obligation", FINDING: "Noticed", CONDITION: "Condition" });
+var QUEUE_CLASS_LABELS = Object.freeze({ OBLIGATION: "To do", FINDING: "Noticed", CONDITION: "Signal" });
+var QUEUE_SORTS = Object.freeze(["added", "due", "case", "kind"]);
 var clampLimit5 = (limit, dflt, max) => {
   const n = limit === null || limit === void 0 || limit === "" ? NaN : Math.floor(Number(limit));
   return Number.isFinite(n) ? Math.max(1, Math.min(max, n)) : dflt;
@@ -134064,6 +134312,53 @@ var Queue = class _Queue {
    *  fact about OUR OWN MACHINERY. CONDITION is therefore last and was
    *  appended rather than inserted (REC-32). */
   static QUEUE_CLASSES = ["OBLIGATION", "FINDING", "CONDITION"];
+  /** R6's order: something a named person must do outranks something the record noticed, which outranks a fact about
+   *  our own machinery, then stable on id so the feed does not shuffle. It is the order AMONG EQUALS of every sort R49
+   *  names (K1038). */
+  static r6Order(a, b) {
+    const rank6 = (c) => _Queue.QUEUE_CLASSES.indexOf(c);
+    return rank6(a.class) - rank6(b.class) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+  }
+  /** R49 (DEC-110): the comparator for `order` ("" the default, else one of QUEUE_SORTS) at the instant `now`. Each
+   *  sorts on one value of the item; an item without it goes after those with it, and items without it, and ties, keep
+   *  R6's order among themselves.
+   *    default, `case`  the item's nearest home ancestor (`case.ancestors`, the least depth, then id), ordered by that
+   *                     depth, then that id; within one case R6's order is to-dos, then noticed, then signals, then id.
+   *                     DEC-110 (3)'s default IS grouping by case; the two part when its collapsing (DEC-110 (2)) lands.
+   *    `added`          newest first, by when the item arose: its `age.since`, else `now` less `age.ms`.
+   *    `due`            soonest first, by its `due` (`YYYY-MM-DD`, queue-producers R25).
+   *    `kind`           by class in R6's order, then kind. */
+  static feedOrder(order, now) {
+    const r6 = _Queue.r6Order;
+    const rank6 = (c) => _Queue.QUEUE_CLASSES.indexOf(c);
+    const on = (key, cmp) => (a, b) => {
+      const ka = key(a), kb = key(b);
+      if (ka === null || kb === null) return ka === kb ? r6(a, b) : ka === null ? 1 : -1;
+      return cmp(ka, kb) || r6(a, b);
+    };
+    const str20 = (x, y) => x < y ? -1 : x > y ? 1 : 0;
+    const nearest = (it) => {
+      const anc = (it.case && Array.isArray(it.case.ancestors) ? it.case.ancestors : []).filter((x) => x && typeof x.id === "string" && Number.isFinite(x.depth));
+      return anc.length ? anc.reduce((m, x) => x.depth < m.depth || x.depth === m.depth && x.id < m.id ? x : m) : null;
+    };
+    const arose = (it) => {
+      const age = it.age && typeof it.age === "object" ? it.age : {};
+      const since = typeof age.since === "string" ? Date.parse(age.since) : NaN;
+      if (Number.isFinite(since)) return since;
+      return Number.isFinite(age.ms) ? now - age.ms : null;
+    };
+    const due = (it) => typeof it.due === "string" && /^\d{4}-\d{2}-\d{2}$/.test(it.due) && Number.isFinite(Date.parse(`${it.due}T00:00:00Z`)) ? it.due : null;
+    switch (order) {
+      case "added":
+        return on(arose, (x, y) => y - x);
+      case "due":
+        return on(due, str20);
+      case "kind":
+        return on((it) => it, (a, b) => rank6(a.class) - rank6(b.class) || str20(String(a.kind), String(b.kind)));
+      default:
+        return on(nearest, (x, y) => x.depth - y.depth || str20(x.id, y.id));
+    }
+  }
   /** Declared, not stubbed. A class with no producer is named with the reason
    *  it is absent, so "not built yet" is distinguishable from "forgotten".
    *
@@ -134346,8 +134641,8 @@ var Queue = class _Queue {
   /** R12, R28 (K607, K608): the door an OBLIGATION not held in `tasks` leaves by, by kind; every other obligation is a
    *  task (taskresolve). The Action layer's four: a checkpoint is judged (action-plans R16), a proposed stage advanced
    *  or declined (escalation R13), a reminder answered (action-clocks R6), a litigation hold stated (actions R52;
-   *  K899 (7)); and K921's two: a template version reviewed (filing-templates R9), a local fact confirmed
-   *  (local-facts R1). */
+   *  K899 (7)); K921's two: a template version reviewed (filing-templates R9), a local fact confirmed
+   *  (local-facts R1); and a credit level chosen (publication R17; queue-producers R23, DEC-102 item 3). */
   static OBLIGATION_DOORS = Object.freeze({
     "bias-debt": "biasdebtresolve",
     "signer-self-registered": "signerset",
@@ -134356,7 +134651,8 @@ var Queue = class _Queue {
     "action-reminder": "reminderanswer",
     "litigation-hold": "actionhold",
     "template-review-requested": "templatereview",
-    "local-fact-due": "factconfirm"
+    "local-fact-due": "factconfirm",
+    "attribution-unchosen": "attribute"
   });
   /** R12: what each of those doors is, said on the item's disposition after the general sentence. */
   static OBLIGATION_DOOR_DETAIL = Object.freeze({
@@ -134367,7 +134663,8 @@ var Queue = class _Queue {
     "action-reminder": " This one is a reminder you asked for on one of the group's action deadlines, keyed by the action, the entry and the day rather than by a task: you answer it with another reminder or with none (op=reminderanswer), and it also leaves when the entry is no longer pending or the action is closed.",
     "litigation-hold": " This one is a reply your group marked as legal pressure, keyed by the action and the entry rather than by a task: it leaves when a member records the hold in place or released, with a reason (op=actionhold).",
     "template-review-requested": " This one is a review a member asked of you on a filing template's version, keyed by the version and by you rather than by a task: it leaves when you review the version's present text (op=templatereview), or when the version is no longer in review.",
-    "local-fact-due": " This one is a holiday calendar or office hours one of the group's deadlines reads, keyed by the fact rather than by a task: it leaves when a member confirms or corrects the fact (op=factconfirm), or when no live action reads it."
+    "local-fact-due": " This one is a holiday calendar or office hours one of the group's deadlines reads, keyed by the fact rather than by a task: it leaves when a member confirms or corrects the fact (op=factconfirm), or when no live action reads it.",
+    "attribution-unchosen": " This one is a case edition being prepared that reaches an observation you authored, keyed by the edition and the observation rather than by a task: it leaves when you choose a credit level for it (op=attribute), or when the edition no longer reaches it, or is signed or replaced."
   });
   /** D-266 / IC-60 — THE SECOND IDENTITY, and the whole of what this item added.
    *
@@ -134420,7 +134717,7 @@ var Queue = class _Queue {
         key: null,
         reason: "an_obligation_is_resolved_not_disposed",
         instead: _Queue.OBLIGATION_DOORS[item.kind] || "taskresolve",
-        detail: "an OBLIGATION is something a named person must do for the record to proceed and it leaves every list when it is RESOLVED (D-125, DEC-16). Disposing of it is not a narrower version of that act, it is a different one." + (Object.prototype.hasOwnProperty.call(_Queue.OBLIGATION_DOOR_DETAIL, item.kind) ? _Queue.OBLIGATION_DOOR_DETAIL[item.kind] : "")
+        detail: "a to-do is something a named person must do for the record to proceed and it leaves every list when it is DONE (D-125, DEC-16). Setting it aside is not a narrower version of that act, it is a different one." + (Object.prototype.hasOwnProperty.call(_Queue.OBLIGATION_DOOR_DETAIL, item.kind) ? _Queue.OBLIGATION_DOOR_DETAIL[item.kind] : "")
       };
     if (item.class === "CONDITION")
       return {
@@ -134431,7 +134728,7 @@ var Queue = class _Queue {
         key: null,
         reason: "a_condition_is_acknowledged_or_muted",
         instead: "queuemute",
-        detail: "a CONDITION is a fact about our own machinery, and the only thing a member does to it is acknowledge or MUTE it \u2014 personally, with the condition persisting and every other member still seeing it."
+        detail: "a signal is a fact about our own machinery, and the only thing a member does to it is acknowledge or QUIET it \u2014 personally, with the signal persisting and every other member still seeing it."
       };
     if (item.kind === "newer-capture-affects-reference") {
       const notice = item.subject && typeof item.subject.id === "string" ? item.subject.id : null;
@@ -134444,7 +134741,7 @@ var Queue = class _Queue {
         notice,
         acts: ["versionadopt", "versionkeep"],
         requires: ["notice"],
-        detail: "a newer capture of what your reference is pinned to was graded as affecting it or as undetermined, and the choice is yours: adopt the newer version (op=versionadopt, which writes a new version of your reference and keeps the old one readable) or keep the earlier one (op=versionkeep, with an optional why). Either closes this notice."
+        detail: "a newer capture of what your reference is pinned to was graded as affecting it or as undetermined, and the choice is yours: adopt the newer version (op=versionadopt, which writes a new version of your reference and keeps the old one readable, and takes a why of up to 2,000 characters) or keep the earlier one (op=versionkeep, where a why is optional). Either closes this notice."
       };
     }
     if (pk && sk)
@@ -134560,7 +134857,7 @@ var Queue = class _Queue {
           candidate,
           acts: ["contradictiondismiss", "contradictiontakeup"],
           requires: ["candidate"],
-          detail: "a lead is the record's uncertainty, not an obligation: a member dismisses it with a reason or takes it up as a question (DEC-84 item 1)."
+          detail: "a lead is the record's uncertainty, not a to-do: a member dismisses it with a reason or takes it up as a question (DEC-84 item 1)."
         };
       case "contradiction-plurality":
         return notSetAside(
@@ -134605,7 +134902,14 @@ var Queue = class _Queue {
    *  columns and the contract carries both: `subject` is what the item is
    *  about, `case` is where it is filed. Collapsing them is how a queue
    *  invents a home. */
-  queueFeed({ member = null, viewer = null, nowMs = null, limit = 200 } = {}) {
+  queueFeed({ member = null, viewer = null, nowMs = null, limit = 200, sort = null } = {}) {
+    const order = typeof sort === "string" ? sort.trim() : sort === null || sort === void 0 ? "" : null;
+    if (order === null || order !== "" && !QUEUE_SORTS.includes(order))
+      return queueRefusal("QUEUE_SORT_UNKNOWN", QUEUE_ACT_CHECKS.QUEUE_SORT_UNKNOWN, {
+        sort: typeof sort === "string" ? sort.slice(0, 40) : null,
+        sorts: [...QUEUE_SORTS],
+        detail: `the feed keeps four orders besides its default (grouped by case): ${QUEUE_SORTS.join(", ")}. Send one of them as \`sort\`, or none for the default. Nothing was read.`
+      });
     const cap = clampLimit5(limit, 200, 500);
     const now = this.#nowMs(nowMs);
     const me = typeof member === "string" && member.trim() ? member.trim() : null;
@@ -134635,7 +134939,7 @@ var Queue = class _Queue {
           refers_to: subject,
           routed_role: row2.assignee_role,
           status: row2.status,
-          detail: "an obligation is a routed task: a named person must act for the record to proceed (D-98). refers_to points at the SUBJECT; case is derived."
+          detail: "a to-do is a routed task: a named person must act for the record to proceed (D-98). refers_to points at the SUBJECT; case is derived."
         },
         age: Number.isFinite(createdMs) ? { state: "determined", since: row2.created, ms: Math.max(0, now - createdMs) } : {
           state: "undetermined",
@@ -134662,7 +134966,7 @@ var Queue = class _Queue {
       if (!_Queue.QUEUE_CLASSES.includes(it.class))
         return refusal21(
           "NO_CLASS",
-          `every queue item carries a class from ${_Queue.QUEUE_CLASSES.join(" | ")}, and this one carries ${it.class === void 0 ? "none" : JSON.stringify(String(it.class).slice(0, 40))}. The feed is DERIVED rather than stored, so the constraint a column would have carried is enforced at the one place an item is minted.`,
+          `every queue item says which of ${_Queue.QUEUE_CLASSES.map((c) => `"${QUEUE_CLASS_LABELS[c]}"`).join(", ")} it is, and this one carries ${it.class === void 0 ? "none" : JSON.stringify(String(it.class).slice(0, 40))}. The feed is DERIVED rather than stored, so the constraint a column would have carried is enforced at the one place an item is minted.`,
           { id: it.id ?? null }
         );
       if (classOfKind(it.kind) === null)
@@ -134674,7 +134978,7 @@ var Queue = class _Queue {
       if (classOfKind(it.kind) !== it.class)
         return refusal21(
           "KIND_MISCLASSED",
-          `'${String(it.kind).slice(0, 60)}' is catalogued as a ${classOfKind(it.kind)} and this item mints it as a ${it.class}. That is not a spelling mistake, it is a change of doctrine at a producer: the class decides whether leaving a member's list is a PERSONAL MUTE or an AUTHORED RECORD ACT (D-125, DEC-16), so minting an obligation's kind as a condition would let one member silence a task the record believes reached a person, and minting a condition's kind as a finding would make a fact about our own machinery undismissable.`,
+          `'${String(it.kind).slice(0, 60)}' is catalogued as "${QUEUE_CLASS_LABELS[classOfKind(it.kind)]}" and this item mints it as "${QUEUE_CLASS_LABELS[it.class]}". That is not a spelling mistake, it is a change of doctrine at a producer: the class decides whether leaving a member's list is a PERSONAL QUIET or an AUTHORED RECORD ACT (D-125, DEC-16), so minting a to-do's kind as a signal would let one member silence a task the record believes reached a person, and minting a signal's kind as something noticed would make a fact about our own machinery undismissable.`,
           {
             id: it.id ?? null,
             kind: it.kind ?? null,
@@ -134785,8 +135089,7 @@ var Queue = class _Queue {
         if (on.length > 0)
           it.snoozed = { until: on.map((x) => x.until).sort().at(-1), cases: on };
       }
-    const rank6 = (c) => _Queue.QUEUE_CLASSES.indexOf(c);
-    items.sort((a, b) => rank6(a.class) - rank6(b.class) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+    items.sort(_Queue.feedOrder(order, now));
     const out = items.slice(0, cap);
     const dispCap = _Queue.QUEUE_DISPOSED_MAX;
     const dispAll = [
@@ -134826,6 +135129,8 @@ var Queue = class _Queue {
          applied, so a caller that sees `truncated:true` knows what to ask for
          next. `limit` is the cap after clamping, matching `op=search`. */
       limit: cap,
+      /* R49: the order this answer is in; null is the default (grouped by case), which no `sort` was sent for. */
+      sort: order === "" ? null : order,
       item_count: out.length,
       truncated: items.length > out.length,
       classes: _Queue.QUEUE_CLASSES,
@@ -134859,7 +135164,7 @@ var Queue = class _Queue {
         snoozed_until: Object.fromEntries([...snoozes.entries()].sort()),
         suppressed,
         suppressed_count: suppressed.length,
-        detail: "muting is PERSONAL and dismissing is a RECORD ACT (D-125). Nothing here was removed from the record and nothing here left another member's queue. A CONDITION or a FINDING can be here, muted by case over the kinds you named or by its own id (`scope`); an OBLIGATION never can, because it leaves every list only when it is RESOLVED. A muted FINDING is still open for the team and in op=proposals: it leaves the team's list only when it is adopted, deferred or dismissed, an act the record keeps."
+        detail: "muting is PERSONAL and dismissing is a RECORD ACT (D-125). Nothing here was removed from the record and nothing here left another member's queue. A signal or a noticed item can be here, quieted by case over the kinds you named or by its own id (`scope`); a to-do never can, because it leaves every list only when it is DONE. A quieted noticed item is still open for the team and in op=proposals: it leaves the team's list only when it is adopted, deferred or dismissed, an act the record keeps."
       },
       /* D-266. The other half of the sentence `mute` has just finished — a
          FINDING leaves this list when it is dismissed, and here is every one
@@ -135029,7 +135334,7 @@ var Queue = class _Queue {
         ...settled.undetermined === true || settled.stated ? { stated: settled.stated ?? null } : {},
         detail: "bias debts settled in the window on runs this viewer may read (bias R44), each with the member who settled it. `resolved_by` is null when no member settled it (the lens moved back, or a re-run under the lens now in force discharged it), and `settled_kind` says which; null never means nobody acted."
       },
-      detail: "obligations that LEFT the list by being resolved, with who resolved each and when (DEC-16): one member's resolution clears the item for everyone, and this is where everyone else reads that it happened."
+      detail: "to-dos that LEFT the list by being done, with who resolved each and when (DEC-16): one member's resolution clears the item for everyone, and this is where everyone else reads that it happened."
     };
   }
   /** The case a personal preference may be attached to, resolved through the
@@ -135172,7 +135477,7 @@ var Queue = class _Queue {
           reason: "UNKNOWN_KIND",
           ...sb.item ? { item: sb.item } : { kind: sb.kind },
           case: c ? c.id : null,
-          detail: sb.item ? "no queue item by that id is one this plane can classify: a FINDING's or CONDITION's id begins with its class (as op=queue publishes it), and it names no obligation. Unknown is not the same as forbidden, and this refusal is the first rather than the second." : "the notification catalogue does not name that kind. Unknown is not the same as forbidden, and this refusal is the first rather than the second.",
+          detail: sb.item ? "no queue item by that id is one this plane can classify: a noticed item's or a signal's id begins with its class code (as op=queue publishes it), and it names no to-do. Unknown is not the same as forbidden, and this refusal is the first rather than the second." : "the notification catalogue does not name that kind. Unknown is not the same as forbidden, and this refusal is the first rather than the second.",
           available: mutableKinds
         };
       if (!PERSONALLY_MUTABLE_CLASSES.includes(sb.cls))
@@ -135257,7 +135562,7 @@ var Queue = class _Queue {
          so the suite can assert the boundary from the op's own answer as well as
          from the tables. */
       wrote: { queue_state: 1, tasks: 0, proposal_dispositions: 0, bundles: 0 },
-      detail: "a mute is PERSONAL and reaches CONDITION and FINDING kinds, never an OBLIGATION. Nothing left the record, nothing left another member's queue, no disposition was written, and an OBLIGATION on this case still reaches you: an obligation leaves every list only when it is RESOLVED, which is record state."
+      detail: "a mute is PERSONAL and reaches the kinds of signals and noticed items, never a to-do. Nothing left the record, nothing left another member's queue, no disposition was written, and a to-do on this case still reaches you: a to-do leaves every list only when it is DONE, which is record state."
     };
   }
   /** op=queuesnooze — defer a case's re-notification, for one member, until an
@@ -135488,7 +135793,7 @@ var Queue = class _Queue {
         kind: keyKind,
         /* R28 (K607): the same per-kind door R12 publishes on the item. */
         instead: keyClass === "CONDITION" ? "queuemute" : _Queue.OBLIGATION_DOORS[keyKind] || "taskresolve",
-        detail: `this names ${keyClass === "CONDITION" ? "a CONDITION" : "an OBLIGATION"} and ${keyClass === "CONDITION" ? "a" : "an"} ${keyClass} is not DISPOSED: a disposition is an authored record act on a FINDING, and op=queue publishes the act that does reach this item as its \`disposition.instead\`. Nothing was written. The rest of a selection is unaffected \u2014 under the per-item weight this item alone is kept, carrying this reason.`
+        detail: `this names ${keyClass === "CONDITION" ? "a signal" : "a to-do"}, and ${keyClass === "CONDITION" ? "a signal" : "a to-do"} is not DISPOSED: a disposition is an authored record act on something the record noticed, and op=queue publishes the act that does reach this item as its \`disposition.instead\`. Nothing was written. The rest of a selection is unaffected \u2014 under the per-item weight this item alone is kept, carrying this reason.`
       };
     }
     if (keyClass === "FINDING")
@@ -135651,7 +135956,13 @@ function queueOf(ctx, deps = {}) {
 function queueOps(q7, url, body) {
   const s = (k) => url.searchParams.get(k);
   return {
-    queue: () => q7.queueFeed({ member: s("member"), viewer: s("viewer"), nowMs: s("now"), limit: s("limit") }),
+    queue: () => q7.queueFeed({
+      member: s("member"),
+      viewer: s("viewer"),
+      nowMs: s("now"),
+      limit: s("limit"),
+      sort: s("sort")
+    }),
     queuemute: () => q7.queueMute({ ...body || {}, member: s("member"), viewer: s("viewer") }),
     queuesnooze: () => q7.queueSnooze({ ...body || {}, member: s("member"), viewer: s("viewer") }),
     proposedispose: () => q7.proposeDispose({ ...body || {}, viewer: s("viewer"), identity: s("identity") })
@@ -135682,7 +135993,7 @@ async function queueFeedOp(url, store, {
   const inner = new URL("http://do/queue");
   inner.searchParams.set("viewer", viewer);
   inner.searchParams.set("member", member);
-  for (const k of ["now", "limit"]) {
+  for (const k of ["now", "limit", "sort"]) {
     const v = url.searchParams.get(k);
     if (v !== null) inner.searchParams.set(k, v);
   }
@@ -138063,8 +138374,27 @@ function promoteOrFault(deps, doc, who2) {
   }
 }
 var bundleOf = (p) => ({ bundleId: p.bundleId, bundleSha: p.bundleSha ?? null });
-async function pullAndFile(deps, { knockId, by, identity, viewer, now = Date.now } = {}) {
+var reasonGiven2 = (r) => typeof r === "string" && r.trim() !== "" && [...r].length <= REASON_MAX;
+function resolveNoReason(knockId) {
+  const row2 = CAPTURE_CHECKS.RESOLVE_NO_REASON;
+  return {
+    ok: false,
+    reason: "RESOLVE_NO_REASON",
+    code: "RESOLVE_NO_REASON",
+    check: row2.check,
+    translation: row2.translation,
+    knockId,
+    status: 400,
+    maxChars: REASON_MAX
+  };
+}
+async function pullAndFile(deps, { knockId, by, identity, viewer, resolve = false, reason, now = Date.now } = {}) {
   const { capture, provenance } = deps;
+  if (resolve) {
+    const asked = capture.inboxGet(knockId);
+    if (!asked || asked.ok !== true) return asked;
+    if (!reasonGiven2(reason)) return resolveNoReason(knockId);
+  }
   const at25 = stampInstant("second", +now());
   const who2 = { knockId, by, identity, viewer, at: at25 };
   const pulled = await capture.pullKnock({ knockId, by, at: at25, within: (doc) => promoteOrFault(deps, doc, who2) });
@@ -138292,7 +138622,10 @@ function controlPlaneRoutes(ctx, url, body) {
         knockId: typeof b.knockId === "string" && b.knockId || q7("id"),
         by: q7("by"),
         identity: q7("identity"),
-        viewer: q7("viewer")
+        viewer: q7("viewer"),
+        /* R36 (capture R32; DEC-88 (2)): the `pulled` resolve, marked by the Worker's
+           own stamp, carries the body's reason; a direct pull carries none */
+        ...q7("resolve") === "pulled" ? { resolve: true, reason: b.reason } : {}
       }
     )
   };
@@ -138387,6 +138720,7 @@ var Store = class extends DurableObject {
     ratificationOf(ctx);
     strengthOf(ctx, { retrieval });
     biasOf(ctx, { env });
+    biasOf(ctx).registerWorkProducts("finding", inquiryFindings(ctx, biasOf(ctx)));
     runProductionsOf(ctx, { aiRuns: aiRunsOf(ctx, env) });
     reviewOf(ctx);
     intentOf(ctx);
