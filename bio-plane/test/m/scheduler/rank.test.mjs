@@ -56,7 +56,7 @@ test("R10: intent is asked once, naming every subject by kind; one that throws o
 });
 
 test("R10: each batch-bounded tick receives the rank with its now, reading intent's servesOf; no other tick does", async () => {
-  assert.deepEqual([...RANKED].sort(), ["archive-monitor", "bias-debt", "capture-request-drain", "monitor-cadence"]);
+  assert.deepEqual([...RANKED].sort(), ["archive-monitor", "bias-debt", "capture-request-drain", "gathering-sweep", "monitor-cadence"]);
   const all = Object.fromEntries(SCHEDULER_ORDER.map((n) => [n, { due: 1 }]));
   for (const n of ["bias-debt", "archive-monitor", "monitor-cadence", "deadline-recheck"]) all[n].due = NOW;
   const { s, calls } = world({ ...all, serves: { tick: { serves: [{ kind: "address", id: "g", gaps: ["k"], aspirations: [] }] } } });

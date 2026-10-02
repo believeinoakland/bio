@@ -45,6 +45,9 @@ export function owners(set = {}) {
       deadlineRecheckWake: (now) => rec("monitoring.deadlineRecheckWake", [now], v("deadline-recheck", "wake", now)),
       deadlineRecheck: async (now) => rec("monitoring.deadlineRecheck", [now], v("deadline-recheck", "tick", now,
         { ok: true, at: null, marked: [], failed: [], truncated: false, escalations: null })),   /* R34, R35 */
+      sweepDue: (now) => rec("monitoring.sweepDue", [now], v("gathering-sweep", "due", now)),   /* R56 */
+      sweepWake: (now) => rec("monitoring.sweepWake", [now], v("gathering-sweep", "wake", now)),
+      sweepTick: async (now, rank) => rec("monitoring.sweepTick", [now, rank], v("gathering-sweep", "tick", now, { ran: [] })),
     },
     connections: { wake: (now) => rec("connections.wake", [now], v("connection-derive", "wake", now)),
                    sweep: () => rec("connections.sweep", [], v("connection-derive", "tick", null, { entities: 0, remaining: 0, swept: [] })) },
@@ -83,6 +86,15 @@ export function owners(set = {}) {
       noticeSweepDue: (now) => rec("reevaluation.noticeSweepDue", [now], v("notice-sweep", "due", now)),
       noticeSweepWake: (now) => rec("reevaluation.noticeSweepWake", [now], v("notice-sweep", "wake", now)),
       noticeSweep: (now) => rec("reevaluation.noticeSweep", [now], v("notice-sweep", "tick", now, { pending: false })),
+    },
+    networkNotices: {   /* network-notices R12, R14, R15, R17 */
+      sealDue: (now) => rec("networkNotices.sealDue", [now], v("working-on-seal", "due", now)),
+      sealWake: (now) => rec("networkNotices.sealWake", [now], v("working-on-seal", "wake", now)),
+      sealTick: async (now) => rec("networkNotices.sealTick", [now], v("working-on-seal", "tick", now, { ok: true, sealed: [] })),
+      attestDue: (now) => rec("networkNotices.attestDue", [now], v("working-on-attest", "due", now)),
+      attestWake: (now) => rec("networkNotices.attestWake", [now], v("working-on-attest", "wake", now)),
+      attestTick: async (now) => rec("networkNotices.attestTick", [now], v("working-on-attest", "tick", now,
+        { ok: true, monthly: [], missed: [], closed: [], lapsed: [], openings: [] })),
     },
   };
   return { calls, o, of: Object.fromEntries(Object.entries(o).map(([k, x]) => [k, () => x])) };
