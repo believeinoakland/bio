@@ -8,8 +8,8 @@
  * `responds_to` arm), the records-request lifecycle's reader, `consequenceState` (DEC-14), `checkActionExtension`
  * (C-2.10's action arms and C-11.1), `RESOLUTIONS`, and the rows `actions`' acts mint: C-32.3, C-32.4, C-32.18–C-32.20,
  * C-33.3–C-33.9, C-72, C-73, C-90, C-94, C-101 and C-117 (C-117.5, `PENDING_CLOCKS_BAD_BEFORE`, is `action-clocks`'; N428).
- * Every value, finding and sentence is the copy's, unchanged; only C-73.6's `where` names its new site (awaiting stamp).
- * Since T20 layer 9: C-117.20–.22 (`actions` R52, K899 (7); awaiting stamp), and a member reads "record" where the
+ * Every value, finding and sentence is the copy's, unchanged; only C-73.6's `where` names its new site (stamped by 1.50.0).
+ * Since T20 layer 9: C-117.20–.22 (`actions` R52, K899 (7); stamped by 1.51.0), and a member reads "record" where the
  * copy said "bundle" (K899 (1): `respondsToEdgeFindings`' repair here, `actionBasisFindings`' target finding in
  * `./grammar.mjs`); identifiers keep their names.
  *
