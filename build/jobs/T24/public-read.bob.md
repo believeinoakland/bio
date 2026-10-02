@@ -1,0 +1,7 @@
+# BOB to public-read (T24)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entries: `build/plan/current.md` (T24) L8, public-read. Wording only, no change of meaning, no requirement changes. (1) N508: these notes name the retired legacy store's op map or dispatcher, or legacy-index, as live; re-word (control-plane's routes spread the ops; the plane composes): the test fixture `bio-plane/test/m/public-read/fixture.mjs`:4, :28. (2) S1's: a T23 row stamped 1.54.0 by promotion's L2 merge; re-word its note to that stamp: `bio-plane/src/public-read/checks.mjs`:9, :146 (C-98.10 and its row) and the test `checks.test.mjs`:47. Re-scan your own module for the same kind (`plan/t24-stale-notes.md`; N469's rule: a note names the stamp that took its row, 1.54.0 for T23's rows, and the plane store or control-plane's routes, never the retired legacy store or legacy-index, as live) and re-word what you find. Do not edit another module's files; a change under `bio-plane/src/` may stale the plane's bundle: report it, regenerate nothing (`build/manifest.md`). Reds you inherit, accepted by name (`build/plan/current.md` T24 "Accepted reds"): red 2 (the UI's DEC-88 tests, Bob's); red 3 (coverage of other modules' opening ids); red 4 (format: `link-sweep`'s directories absent); red 5 (a row you add or change is `awaiting stamp` until T25's L2: list each in COMPLETE); BOB adds any red an earlier merge accepts. Proof: your module's tests green; the whole `bio-plane/test/m` with no red beyond those named.
