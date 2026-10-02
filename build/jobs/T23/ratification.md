@@ -1,6 +1,6 @@
 # ratification (T23)
 
-**Status** · session_01XpAMPH8pBju7ehx6R7uD1T · depth 2 · WORKING · handled B2
+**Status** · session_01XpAMPH8pBju7ehx6R7uD1T · depth 2 · WORKING · handled B3
 
 ## J1 · REPORT
 
