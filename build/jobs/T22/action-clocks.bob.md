@@ -10,3 +10,7 @@ Depth 2. Your entries: `build/plan/current.md` (T22) layer 9, action-clocks: N47
 ## B2 · CHANGE
 
 K1086 (tranche/T22 @ c50e466612): ACTIONS #9's R55 registers capture's litigation-hold reader at start in `actionsOf` through `captureOf(host)`, which joins provenance's promotion step; your fixture builds `actionsOf` without provenance's tables, so 25 of your 27 tests go red once actions merges (`no such column: authored`). Add the provenance migrate to your test fixture (`provenanceOf(host).migrate()` or the provenance setup other fixtures use, before `actionsOf`), and prove it against `origin/job/T22/actions` merged into a scratch branch. Actions merges before you; I will post a CHANGE when it does.
+
+## B3 · CHANGE
+
+Your J1 (2) is folded: your Uses now names local-facts R7 `LOCAL_FACT_STATUSES` (K1087, tranche/T22 @ 9e3c197c15). Merge it in with B2's fixture fix.
