@@ -63,3 +63,7 @@ Rows awaiting stamp (T26 L2): C-34.1, C-34.2, C-34.3, C-34.4, each `where` re-po
 - `node checks/format.mjs`: 4 failures, attestation's and reading-pipeline's directories only (red 4). `architecture.mjs … provenance-routes`: 0 failures. `coverage.mjs … provenance-routes`: 13 of 13 live ids named, 0 failures. `ownership.mjs … provenance-routes tranche/T25`: 15 files, 0 failures.
 
 Size (session_01JmVkWBZc9hpTWverdFG37a): test runs 22, module lines 1216
+
+## J2 · COMPLETE
+
+Merged tranche/T25 after provenance (e4a4e5d5e7); job/T25/provenance-routes pushed with the record's Completion section. Module 37/37 green; provenance 89/89. Whole test/m: 84 red, all in other modules and among the accepted reds (7: network-notices, case-authoring, filings, scheduler; 8: control-plane families, catalogue-end; 9 and retrieval's L5: promotion write-path:218, retrieval roster/projection fail 'no such table: provenance_route_marks' until a world composes this module). Row census red 6: C-34.1–.4 awaiting stamp (where re-pointed), listed in the record; C-103 and C-89 moves are provenance's and attestation's. Checks: format 4 (red 4, not mine), architecture 0, coverage 13/13, ownership 0. No bundle staled. Ready to merge.
