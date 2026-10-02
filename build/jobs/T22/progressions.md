@@ -1,3 +1,30 @@
 # progressions (T22)
 
 **Status** · session_019cGtav9K1yD7gcZz8bmw36 · depth 2 · WORKING · handled B1
+
+## Completion
+
+**Entries applied** (B1, `build/plan/current.md` T22 layer 5; code at 89c6acad5e).
+- **(1) DEC-88: R2 met.** `defineProgression` (`src/progressions/index.mjs`) refuses a first declaration (no definition standing at the `#current` read) without a basis statement `NO_BASIS`, judged as R4 judges a revision's (`str(basis)` empty: absent, not a string, blank or only whitespace), after every stage check and the `#current` read, before the transaction: nothing is written. The refusal is record-grammar's shared row C-33.40 through `refusal`, unchanged (no row changed); its fields `progression_key` and `version: null`, its sentence saying a first declaration states its basis and a citation may name where it is published or held. A citation stays optional at version 1; the bounds are unchanged (`BASIS_MAX` 4,000, `CITATION_MAX` 2,000, `NOTE_MAX` 1,000). `basisView`'s `stated: false` stays, for a version written before versions were kept or a first version declared before DEC-88 (comment re-worded to say both; `schema.mjs`' basis note likewise). The dispatch (`progressiondefine`) is unchanged. My own tests: the fixture's `define()` states a basis on a first declaration (a revision still sends its own, so R4's tests are unchanged); the five direct first declarations in `dispose`, `feeds`, `figures`, `instance` and `define` send one; R1's negative control sends one; R5's read now shows `stated: true`.
+- **(2) Callers in other modules**: re-grepped (`defineProgression(`, `progressiondefine` over `bio-plane/`, `agent-worker/`, `civicos-ui/`); exactly the ones B1 names, none new (`control-plane`:2409 only stamps `declaredBy` and passes the body whole; `affordances`, `op-declarations` and `catalogue.test.mjs` name the op). Each red is named in REPORT J1.
+- **Re-scan (N469, N471, N480).** No note in my paths names a T20-deleted file, `tools/` or the plane's deleted `index.mjs` as live. Three notes named `legacy-store` (deleted at T19) as live, the same kind, re-worded: `index.mjs` header (`proposeDispose`'s project arm and class bridge went to `queue`), `progressionOps`' note (`op=proposedispose` is `queue`'s, routing the progression shape here), `checks.mjs` header (`notADisposition` is called by `inquiry` and `queue`). `schema.mjs` named `#assembleInstance`, the legacy name: now `#assemble` (./index.mjs). Provenance notes stay.
+
+**Deferred:** none. R32 stays deferred by K102 (A37, its `todo`).
+
+**Other modules (REPORT J1):** intent's `test/m/intent/fixture.mjs`:203 and `invariants.test.mjs`:207 (29 tests red, and affordances' `backing.test.mjs` R19 through that fixture); queue-producers' `test/m/queue-producers/proposals.test.mjs`:39 (4 tests); `civicos-ui/test/progression-revision.test.mjs` (18 of 30 assertions, N487); the plane bundle stale.
+
+**Tests and checks** (in `bio-plane/` unless said):
+- `node --test test/m/progressions/`: tests 48, pass 47, fail 0, todo 1 (R32, deferred). New: "R2: a first declaration without a basis statement is refused NO_BASIS (C-33.40), after every stage check, writing nothing" (eleven shapes of absence, each refused C-33.40 with the shared row's translation; every stage refusal and the label and stages refusals heard first; the whole database unchanged, no definition, stage or version; negative control: the same declaration with a basis is version 1; an identical redeclaration needs none, R3). "R2 R26" now proves a basis without a citation written as version 1 and read back (answer, read, every version, the stored row). R27's drive now reaches a first declaration's `NO_BASIS` too. Negative control run by hand: the old `index.mjs` fails R2 and R27.
+- Users' suites, against the unchanged tree: inquiry 163/1 (content-legs R13, accepted, same before); intent 31/29 (all new: fixture :203, invariants :207); scheduler 51/0; affordances 137/1 (new: `backing.test.mjs` R19, intent's fixture); queue-producers 45/4 (new: proposals.test.mjs:39); queue 80/0; control-plane 100/2 (`doorbell.test.mjs`:310, `catalogue-end.test.mjs`:15, accepted K1037, same before). With a basis sent from those three call sites (a local trial, reverted, not committed) intent, affordances and queue-producers each fail 0: every new red is the missing basis.
+- `node --test test/m/`: tests 4842, pass 4786, fail 37, todo 19. Before my change: 4841, pass 4819, fail 3 (the three accepted reds). The 34 new reds are exactly those named above, none other.
+- `civicos-ui/test/progression-revision.test.mjs`: red (18 of 30 assertions; green before): the UI declares a first version without a basis (N487, Bob's: UX).
+- `test/system/row-census.test.mjs`: red as before (capture's C-118 and C-85 rows, content's C-52.10; accepted red 3); no progressions row moved.
+- `test/system/fleetbundles.test.mjs`: bio-plane's member stale (my change stales it too); every other member passes.
+- `node checks/format.mjs`: 85 modules, 84 requirements files; 0 failures
+- `node checks/architecture.mjs … progressions`: 11 product files, 38 relative imports; 0 failures
+- `node checks/coverage.mjs … progressions`: 36 of 36 live requirement ids named by a test; 0 failures
+- `node checks/ownership.mjs … progressions tranche/T22`: 10 files changed; 0 failures
+
+**For COMPLETE:** R2 met (its `not yet met: T22` mark is BOB's to strike).
+
+Size (session_019cGtav9K1yD7gcZz8bmw36): test runs 14, module lines 1669
