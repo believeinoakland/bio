@@ -94,7 +94,10 @@ export function world({ now = NOW, injectClock = true } = {}) {
       const listed = rows.filter((r) => !(r.kind === "participant" && (writer.by === null || r.by === writer.by)));
       return { statementSha: sha(statement), truncated: false, byWriter, withheldWriterUndetermined: undetermined,
                withheld_stated: `withheld ${byWriter + undetermined} by ${writer && writer.by ? writer.by : "UNDETERMINED"}`,
-               rows: listed.map((r) => ({ kind: r.kind, by: r.by, recipient: r.recipient ?? null, at: r.at })) };
+               /* case-authoring R19, R20 (DEC-88): each row carries the acknowledger's `reason` as stored, null for a
+                  reading recorded before the reason was required. */
+               rows: listed.map((r) => ({ kind: r.kind, by: r.by, recipient: r.recipient ?? null, at: r.at,
+                                          reason: r.reason ?? null })) };
     },
   };
   /* publication's side: the attribution level in force (its R17). */
