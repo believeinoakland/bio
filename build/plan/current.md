@@ -1,6 +1,6 @@
-# Plan: next (T24)
+# Plan T24
 
-**Status** · Entries for the tranche after T23, written as T23 runs (P18). Started at T23's opening by BOB #94, 2026-10-02 (K1113): the `next.md` entries T23 leaves out, with their full text, and every row T23 leaves out with its one hard reason (P19), re-checked when T24 is planned.
+**Status** · OPENING · BOB #98 · session_014dcsnHp9L1mo6H4mzBvdrR · depth 1
 
 ## Entries
 
