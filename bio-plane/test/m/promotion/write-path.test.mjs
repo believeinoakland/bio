@@ -147,7 +147,7 @@ test("R18: every refusal sited at the promote write is enforced there — each r
     for (const [code, row] of Object.entries(table))
       if (/promote\b/.test(row.where)) rows.push({ family, code, ...row });
   /* The rows later modules hold and enforce at this write through the steps they register (R39), stated here: this
-     module cannot import a later one's table (P4), and the catalogue that held them leaves in T19 (K785). The version
+     module cannot import a later one's table (P4), and the catalogue that held them left at T19's close (K785). The version
      grammar's document findings (C-25, C-27.15) are relayed whole (RELAYED, below). */
   const LATER = [["SELF_BASIS", "C-33.22", "inquiry"], ["BASIS_CYCLE", "C-33.23", "inquiry"],
                  ["VERSION_FROZEN", "C-25.11", "basis-versions"], ["VERSION_LEG_UNRESOLVED", "C-25.16", "basis-versions"],

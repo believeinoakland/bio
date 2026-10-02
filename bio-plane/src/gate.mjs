@@ -591,8 +591,30 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    listener of either gate changed its ids since 1.54.0. Membership's T25 job (`MODULE_ORDER` gains `attestation`,
    `provenance-routes` and `reading-pipeline`, none of which registers a gate step yet) changed no row.
    MINOR, rule 17 moving the stamp for changed rows and a changed composition. ROW_CENSUS (R50) is re-pinned to this tree, module tables only:
-   1073 rows. Rows T25's layers 3–11 change are T26's stamp. */
-export const CATALOG_VERSION = "1.55.0";
+   1073 rows. Rows T25's layers 3–11 change were T26's stamp, taken by 1.56.0. */
+/* 1.56.0 (PROMOTION #27, T26 layer 2, 2026-10-02; N512, K1225, K1227, K1246): EVERY ROW CHANGE SINCE 1.55.0, counted
+   wherever the rows live (R34, R47), read by diffing R50's census lines of `tranche/T26` at its opening against 1.55.0's
+   own (`test/fixtures/row-census-1.55.0.jsonl`: 1073 rows, 735376fd…): eight changed, no arrival, no departure. Each is
+   one a job record names (T25's layers 3–11 `awaiting stamp`: PROVENANCE #14's, PROVENANCE-ROUTES #1's and ATTESTATION
+   #1's records; T26's layer 2 changed no row).
+   CHANGED, `where` only, code, number, condition and translation unmoved, each re-pointed by the provenance split (N512)
+   to the site that now mints it: C-34.1 ROUTE_MARK_NO_AUTHOR, C-34.2 ROUTE_MARK_NO_BUNDLE, C-34.3 ROUTE_MARK_NO_SUCH_BUNDLE
+   and C-34.4 ROUTE_MARK_NOT_A_DOCUMENT, moved from provenance's table into provenance-routes' `ROUTE_MARK_CHECKS`
+   (`src/provenance-routes/index.mjs provenanceRouteAssess > is-route-mark`); C-89.1 CAPTURE_HELD_IN_PARTS, moved into
+   attestation's `ATTEST_CHECKS` (`src/attestation/index.mjs attest > is-attest-parts`); C-103.6 RECEIPT_MALFORMED and
+   C-103.7 RECEIPT_NO_KEY, still provenance's `PROVENANCE_ACT_CHECKS` rows, minted now at attestation's `signReceipt`
+   (`src/attestation/index.mjs signReceipt`); C-103.3 NO_BUNDLE, provenance's, now naming its second site
+   (`src/provenance/index.mjs declareOrigin > is-origin-act; src/provenance-routes/index.mjs provenanceChainRebuild`,
+   K1227). Provenance keeps no copy of the moved rows (K1225), so each is held once, as before.
+   DEPARTED: none. ARRIVED: none.
+   CHANGED IN WHAT THE GATES RUN: nothing. No registered step, grammar or listener of either gate changed its ids since
+   1.55.0, and the case gate's registered catalogue is unmoved. Outside the gates, the audit's `route` finding and the
+   `routeMarks` count are registered with record-core by provenance-routes where provenance registered them, the same
+   tally moved line for line (PROVENANCE-ROUTES #1's record), so what the audit counts is unmoved. Membership's T26 job
+   is none; T26's layer 2 is this stamp alone.
+   MINOR, rule 17 moving the stamp for changed rows. ROW_CENSUS (R50) is re-pinned to this tree, module tables only:
+   1073 rows. Rows T26's layers 3–11 change are T27's stamp. */
+export const CATALOG_VERSION = "1.56.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
@@ -685,7 +707,7 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
    a test may import every module's tables, which this module's source cannot (P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
 export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1073,
-  digest: "735376fd77a0d28e5271c7f3972356664b5bcf43d527212937f47dad7b7f0fc8" });
+  digest: "3371a04bcec276dbc1a1ecc62623d326b70a25a7ca151ed7c1fffd8652be094a" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();
@@ -753,8 +775,8 @@ export function runCaseGate({ caseId, edition, fm, priorCase, body = null, membe
 /* R27 (§1b, K585 (2), K785): `grammars` are the type grammars later modules registered with record-core
    (`record.grammars()`, `[{module, ids, arm}]` in module order), passed to record-grammar's `checkBundle` as its
    `opts.grammars`: each fills its slot, so a grammar judges the bundle at the gate exactly as at the audit. Promotion's
-   instance passes its record's (`Promotion#runGate`), which carry the catalogue's legacy registration while it lasts;
-   a caller of this function with none passes none, and only the structural arms run. */
+   instance passes its record's (`Promotion#runGate`), each registered by the module that owns it (the catalogue's legacy
+   registration left in T20); a caller of this function with none passes none, and only the structural arms run. */
 export async function runGate({ bundleId, image, knownIds, hasCapture, registers, releaseRegistry,
                                 publishedRegistry, publishedCaseRegistry, earnedRegistry, grammars = null }) {
   const files = new Map(), elided = new Set();
