@@ -36,10 +36,10 @@ T23's rules hold (merge early; one file, one editor; marks struck at the merge; 
 6. Totality of affordances and op-declarations over `optionstartpreview`, from action-plans' L9 merge until their L11 merges.
 7. The sweep's composition (plane's `sweeps` route, scheduler's `gathering-sweep`), from monitoring's L10 merge until link-sweep's and scheduler's (L10) and plane's and control-plane's (L11).
 
-## Roster (by layer; 41 jobs)
+## Roster (by layer; 42 jobs)
 
 **L1** · record-grammar: N502.
-**L2** (merge order: record-core, credentials, then promotion) · record-core: N503 (R75). · credentials: N505 (R21, R8), N508. · promotion: S1, the stamp 1.53.0 → 1.54.0 over T23's L3–L11 rows (each record's `awaiting stamp`, `t24-stale-notes.md` "S1's"), `ROW_CENSUS` re-pinned, its fixture; `gate.mjs`:557 re-worded.
+**L2** (merge order: record-core, credentials, membership, then promotion) · record-core: N503 (R75). · credentials: N505 (R21, R8), N508. · membership: R83, `MODULE_ORDER` equal to `modules.json` after the opening's N506 fold (added in L2, K1185). · promotion: S1, the stamp 1.53.0 → 1.54.0 over T23's L3–L11 rows (each record's `awaiting stamp`, `t24-stale-notes.md` "S1's"), `ROW_CENSUS` re-pinned, its fixture; `gate.mjs`:557 re-worded.
 **L3** · host-governor: N508. · provenance: N504 (R57). · acquisition: N510, N502, S1's note. · capture: N508.
 **L4** · extraction: N508. · content: N502.
 **L5** · entities: N502.
