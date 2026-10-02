@@ -24660,15 +24660,6 @@ var FINDING_MEANS = Object.freeze({
   LOOKED_INDETERMINATE: "we looked and could not tell",
   PRESENT: "we looked and it is there"
 });
-var RECEIPT_KIND = "bio-receipt/1";
-var STATEMENT_KIND = /^[a-z][a-z0-9-]*\/[0-9]+$/;
-function instanceStatement(kind, sha) {
-  if (typeof kind !== "string" || !STATEMENT_KIND.test(kind) || kind === RECEIPT_KIND)
-    throw new Error(`instanceStatement: kind ${JSON.stringify(kind)} is ${kind === RECEIPT_KIND ? "the receipt's own" : "not of the form <name>/<version>"}; a statement for a later module is never a receipt`);
-  return `${kind}
-sha256: ${sha}
-`;
-}
 var CAPTURE_HELD_IN_PARTS_ROW = Object.freeze({
   check: "C-89.1",
   translation: "The record lists this document, but keeps it in parts rather than as one file, and this instance has no record of fetching it itself. A timestamp is only requested for bytes this instance can vouch for, so none was requested. Nothing is missing: do not capture the document again. If the instance fetches it from its address, it can then be co-attested."
@@ -26348,17 +26339,17 @@ async function attest2(body, { head, put: put2, fetch: fetchFn, holds, now = () 
     }
   };
 }
-var RECEIPT_KIND2 = "bio-receipt/1";
-var STATEMENT_KIND2 = /^[a-z][a-z0-9-]*\/[0-9]+$/;
-function instanceStatement2(kind, sha) {
-  if (typeof kind !== "string" || !STATEMENT_KIND2.test(kind) || kind === RECEIPT_KIND2)
-    throw new Error(`instanceStatement: kind ${JSON.stringify(kind)} is ${kind === RECEIPT_KIND2 ? "the receipt's own" : "not of the form <name>/<version>"}; a statement for a later module is never a receipt`);
+var RECEIPT_KIND = "bio-receipt/1";
+var STATEMENT_KIND = /^[a-z][a-z0-9-]*\/[0-9]+$/;
+function instanceStatement(kind, sha) {
+  if (typeof kind !== "string" || !STATEMENT_KIND.test(kind) || kind === RECEIPT_KIND)
+    throw new Error(`instanceStatement: kind ${JSON.stringify(kind)} is ${kind === RECEIPT_KIND ? "the receipt's own" : "not of the form <name>/<version>"}; a statement for a later module is never a receipt`);
   return `${kind}
 sha256: ${sha}
 `;
 }
 function receiptStatement({ instance, retrieved, retrievalLocator, captureSha }) {
-  return `${RECEIPT_KIND2}
+  return `${RECEIPT_KIND}
 instance: ${instance}
 fetched: ${retrieved}
 locator: ${retrievalLocator}
@@ -26533,14 +26524,14 @@ var Attestation = class {
   }
   /** R5 · DEC-111: the statement the instance key signs for a later module (`instanceStatement`, above). */
   instanceStatement(kind, sha) {
-    return instanceStatement2(kind, sha);
+    return instanceStatement(kind, sha);
   }
   /** R5 — signs a statement `instanceStatement` makes with the instance key of R4, recording the key in
    *  `receipt_keys`: `{ok, signature, key_id, public_key}`, or `RECEIPT_NO_KEY` when no key is bound. Any other text
    *  throws, as `instanceStatement` does, before the key is asked: this door never signs a receipt (R4's statement). */
   async instanceSign(statement) {
     const m = typeof statement === "string" ? /^([^\n]*)\nsha256: ([^\n]*)\n$/.exec(statement) : null;
-    if (!m || instanceStatement2(m[1], m[2]) !== statement)
+    if (!m || instanceStatement(m[1], m[2]) !== statement)
       throw new Error("instanceSign: the statement is not one instanceStatement makes");
     const signed = await this.#signWith(statement);
     if (!signed) return noKey();
@@ -82472,8 +82463,8 @@ var NetworkNotices = class {
   get promotion() {
     return this.#deps.promotion ||= promotionOf(this.#deps.host, { record: this.record, membership: this.membership });
   }
-  get provenance() {
-    return this.#deps.provenance ||= provenanceOf(this.#deps.host, { record: this.record, membership: this.membership });
+  get attestation() {
+    return this.#deps.attestation ||= attestationOf(this.#deps.host, { record: this.record });
   }
   get stage() {
     return this.#deps.projectStage ||= projectStageOf(this.#deps.host, { record: this.record, membership: this.membership });
@@ -82541,11 +82532,11 @@ var NetworkNotices = class {
     const ms2 = r && r.c ? Date.parse(r.c) : NaN;
     return Number.isFinite(ms2) ? dateOf(ms2) : null;
   }
-  /* R1: whether the instance key is bound, asked of provenance R57, which signs nothing, so no key's `first_used` is
+  /* R1: whether the instance key is bound, asked of attestation R6, which signs nothing, so no key's `first_used` is
      set before its first real statement. */
   async #keyBound() {
     try {
-      return await this.provenance.instanceKeyBound() === true;
+      return await this.attestation.instanceKeyBound() === true;
     } catch {
       return false;
     }
@@ -82868,10 +82859,10 @@ var NetworkNotices = class {
     };
     return { json: json6, digest: sha256HexSync(canonicalJson(json6)) };
   }
-  /* R13: signed with the instance key over provenance's statement; null when no key is bound. */
+  /* R13: signed with the instance key over attestation's statement (its R5); null when no key is bound. */
   async #sign(digest2) {
     try {
-      const r = await this.provenance.instanceSign(instanceStatement(ATTESTATION_FORMAT, digest2));
+      const r = await this.attestation.instanceSign(instanceStatement(ATTESTATION_FORMAT, digest2));
       return r && r.ok ? { signature: r.signature, key_id: r.key_id } : null;
     } catch {
       return null;
@@ -83356,7 +83347,7 @@ var NetworkNotices = class {
       });
     }
     const used = new Set(this.#rows(`SELECT DISTINCT key_id FROM nn_attestations`).map((r) => r.key_id));
-    const copy = (this.#call(() => this.provenance.instanceKeys(), []) || []).filter((k) => used.has(k.key_id)).map((k) => ({ key_id: k.key_id, public_key: k.public_key, first_used: k.first_used, label: COPY_KEY_LABEL }));
+    const copy = (this.#call(() => this.attestation.instanceKeys(), []) || []).filter((k) => used.has(k.key_id)).map((k) => ({ key_id: k.key_id, public_key: k.public_key, first_used: k.first_used, label: COPY_KEY_LABEL }));
     return { ok: true, group: this.#slug(), owners, copy };
   }
   /* ================================================================ member reads (R22, R23) */
@@ -88704,6 +88695,7 @@ var CaseAuthoring = class _CaseAuthoring {
     ratification = null,
     contradiction = null,
     provenance = null,
+    attestation = null,
     capture = null,
     sources = null,
     networkNotices = null,
@@ -88725,6 +88717,7 @@ var CaseAuthoring = class _CaseAuthoring {
       ratification,
       contradiction,
       provenance,
+      attestation,
       capture,
       sources,
       networkNotices
@@ -88761,6 +88754,9 @@ var CaseAuthoring = class _CaseAuthoring {
   }
   get provenance() {
     return this.#deps.provenance ||= provenanceOf(this.#deps.host);
+  }
+  get attestation() {
+    return this.#deps.attestation ||= attestationOf(this.#deps.host);
   }
   get capture() {
     return this.#deps.capture ||= captureOf(this.#deps.host);
@@ -89747,7 +89743,7 @@ var CaseAuthoring = class _CaseAuthoring {
     return out;
   }
   /** R35, R36: one capture's grade (`provenance.captureGrade`) and co-attestation, read at the act. It is co-attested
-   *  only when it holds both a timestamp and a co-archive: first as recorded at capture (`provenance.attestationsOf`),
+   *  only when it holds both a timestamp and a co-archive: first as recorded at capture (`attestation.attestationsOf`),
    *  else a late one that succeeded (`capture.lateAttestationsOf`; a late co-archive whose replay holds other bytes
    *  corroborates nothing and is not counted), a late one stated as late. The capturing member's signed accounts
    *  (`capture.captureAccountsOf`) travel with it, their exact text and signature (publication R20 writes them as
@@ -89761,7 +89757,7 @@ var CaseAuthoring = class _CaseAuthoring {
       }
     };
     const g = safe(() => this.provenance.captureGrade(sha)) || {};
-    const att = safe(() => this.provenance.attestationsOf(sha));
+    const att = safe(() => this.attestation.attestationsOf(sha));
     const late = safe(() => this.capture.lateAttestationsOf(sha));
     const acc = safe(() => this.capture.captureAccountsOf(sha));
     const held = att && att.ok !== false && Array.isArray(att.attestations) ? att.attestations : [];

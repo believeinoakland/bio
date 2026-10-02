@@ -25,7 +25,7 @@ Terms.
 - The **project reference** is the notice id, carried by the notice and by every later case of the project (R19).
 
 **prepareNotice({project, wording, body?, matter?, since, collaborate, handoff?, final?, viewer, by}) → `{ok, revision, statement, digest, warning, caution, expires}`** (`op=noticeprepare`; member session; writes nothing)
-- **R1** *(not yet met: T25)* Refusals, in order. Each writes nothing and carries a catalogue row (DEC-49):
+- **R1** Refusals, in order. Each writes nothing and carries a catalogue row (DEC-49):
   - no `project` is the required-argument refusal;
   - a project that is absent, or invisible to `by`, is `membership`'s `noSuchProject`, the same answer either way. A discoverable project `by` sees only at `existence` (`membership.sight`, its R44) is instead `membership.existenceAct`'s refusal (its R77, C-70.1), never `noSuchProject`;
   - a machine or AI credential, or an operator token, is `MACHINE_CANNOT_POST_NOTICE`;
@@ -126,7 +126,7 @@ Terms.
   - It answers at most `limit` items (200 by default, 1,000 at most), with `truncated` and `next`.
   - Nothing is ever removed from it.
   - A revision that is only prepared (R2) never appears in it.
-- **R21** *(not yet met: T25)* `groupKeysPublic()` answers the group slug and two lists:
+- **R21** `groupKeysPublic()` answers the group slug and two lists:
   - `owners`: every key `credentials.signerList` (its R8) shows registered to a member who owns a project now, or who signed a published edition or a revision. Each comes with `status` (`attests`, or `revoked` with the date its status changed, `credentials.signerList`'s `status_at` (its R8, R21), never the date this copy first saw it; null when `status_at` is null, a revocation recorded before the date was kept) and the date it was first listed, never the member's name, handle or id;
   - `copy`: every instance key that has signed an attestation (`attestation.instanceKeys`, its R5), with the date it was first used. Each is labelled as this copy's key.
 
@@ -151,7 +151,7 @@ Terms.
 - `credentials`: `attestingKeys` (its R11) and `signerList` (its R8, with `status_at`, its R21, for R21).
 - `promotion`: the `producingGroup` fact (its R40, registered by `instance-setup` R1).
 - `host-governor`: `governedFetch`, for the timestamp authorities.
-- `attestation`: `instanceStatement`, `instanceSign` and `instanceKeys` (its R5), which use the instance key of its R4, and `instanceKeyBound` (its R6, for R1); `provenance` R56, R34 and R57 before N512's split. *(not yet met: T25)*
+- `attestation`: `instanceStatement`, `instanceSign` and `instanceKeys` (its R5), which use the instance key of its R4, and `instanceKeyBound` (its R6, for R1); `provenance` R56, R34 and R57 before N512's split.
 - `capture`: the doorbell's public path (its R32).
 - `publication`: `cases` and `published_cases` under its R40; `publishedEditionsOf` (its R37) and `caseCitedParts` (its R41).
 - `public-read`: the new public-read registration (its R18).
