@@ -129,7 +129,7 @@ Terms. An **extent** is `{kind, …}`; its kinds are `document`, `pdf-page` `{pa
 - **R35** Two graded facts, never one: the capture grade is the document's (`provenance`) and the derivation cap is the row's; nothing here raises a capture grade, and a leg may claim no more than the weaker.
 - **R36** A machine credential may mark a passage citable, labelled (R16), and never attests (C-35.10) or types (C-52.1); every authorship field is the control plane's stamp, never a body's.
 - **R37** Every act and read naming a document or row answers one the viewer may not see exactly as an absent one.
-- **R38** Each check moves here as an invariant with its test (K6): C-45.1–C-45.6, C-45.11, C-45.12, C-52.1–C-52.10, C-80.3. C-52.10 (`ATTEST_NO_NOTE`, R25 and R43) is a new row of C-52, `awaiting stamp` (DEC-88; K1025).
+- **R38** Each check moves here as an invariant with its test (K6): C-45.1–C-45.6, C-45.11, C-45.12, C-52.1–C-52.10, C-80.3. C-52.10 (`ATTEST_NO_NOTE`, R25 and R43) is a row of C-52, stamped by 1.53.0 (DEC-88; K1025).
 - **R39** `content`, `transcriptions` and `transcription_attestations` carry `bundle_id` and are declared to record-core's purge (K23).
 - **R40** No place is named in this module's behaviour or outward text.
 
