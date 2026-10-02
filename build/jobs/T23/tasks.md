@@ -25,3 +25,7 @@
 - `checks/ownership.mjs tasks tranche/T23`: 0 failures (re-run after the commit, below).
 
 Size (session_01VqVrXMfs3gGwxaoiG2Vk4Z): test runs 2, module lines 955
+
+## J1 · COMPLETE
+
+N497 applied (grammar.test.mjs:30 now registers producingGroup under instance-setup; index.mjs:22 and :695 name control-plane's routes). Re-scan (K1138) re-worded three more stale notes in index.mjs (queue 'still holds' the table, :15 and :663; D-109's alarm). tasks 71/71; test/m 5167 pass, 5 fail, all accepted by name (families:47, inbox-door:81, worker:39, catalogue:34/:116). format, architecture, coverage (11/11), ownership: 0 failures. The plane bundle is stale (red 12). Possible N469 notes in credentials, host-governor, extraction, citation, actions: listed in my record.
