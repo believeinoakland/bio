@@ -45,3 +45,11 @@ REPORT (findings in other modules; nothing of theirs edited). The module is buil
 - `node checks/format.mjs`: 88 modules, 87 requirements files; 0 failures. `node checks/architecture.mjs … link-sweep`: 10 product files, 47 relative imports; 0 failures. `node checks/coverage.mjs … link-sweep`: 12 of 12 live requirement ids named by a test; 0 failures. `node checks/ownership.mjs … link-sweep tranche/T24`: 11 files; 0 failures.
 
 Size (session_01CB47oKg96hYW5eGnbZtNP7): test runs 16, module lines 1108
+
+## J4 · COMPLETE
+
+COMPLETE (B5). link-sweep built, run against the real monitoring after K1208's merge (tranche/T24 @ 9ab66154b9 merged into job/T24/link-sweep); the record's "Completion" section has the whole account.
+- Tests: `test/m/link-sweep/` 29 pass, 0 fail (the moved tests, R1–R12, plus `seam.test.mjs`). Whole `test/m`: 5275 tests, 5251 pass, 13 fail, every one a named red (6; 7, the sweep's composition, incl. families.test.mjs:47 per K1207; 8; 9); none imports this module.
+- Checks: format, architecture (10 files, 47 imports), coverage (12/12), ownership (11 files): 0 failures each.
+- Rows `awaiting stamp` (red 5): C-18.16 SWEEP_TERM_REFUSED, C-18.17 SWEEP_NOT_A_MEMBER, C-18.18 SWEEP_RATIFY_NOT_AN_OWNER, each `where` re-pointed to src/link-sweep (row-census.test.mjs reads them "changed with no record", nothing else).
+- The monitoring stand-in is retired; the seam is exactly K1206/B3's. Deferred: none.
