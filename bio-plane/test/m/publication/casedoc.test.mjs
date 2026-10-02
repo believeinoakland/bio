@@ -48,7 +48,7 @@ test("R1 hasCaseStanding is the standing test, exported, and a live review grant
   assert.equal(w.p.hasCaseStanding(doc, "nobody"), false);
   const secret = "a".repeat(64);
   assert.equal(w.p.caseDocument("CASE-2026-0001", 1, V("bo"), secret).ok, false, "no provider: no grant admits");
-  w.p.registerReviewProvider("legacy-store", {
+  w.p.registerReviewProvider("review", {
     draftForMember: () => null, draftIdentity: () => null, caseIdentitySentence: () => null, statedEdition: () => null,
     liveGrant: () => null, deadAnswer: () => null,
     grantAdmitsCaseEdition: (s, c, e) => s === secret && c === "CASE-2026-0001" && e === 1 });
@@ -211,11 +211,11 @@ test("R23 one review provider, once; with none, no grant admits and every door r
   assert.deepEqual(dead, { ok: false, reason: "NO_REVIEW_COPY", code: "NO_REVIEW_COPY" }, "a bare refusal: C-87 is review's");
   const doors = { draftForMember: () => "d", draftIdentity: () => "i", caseIdentitySentence: () => "s",
                   statedEdition: () => 2, liveGrant: () => "g", grantAdmitsCaseEdition: () => true, deadAnswer: () => "x" };
-  assert.equal(w.p.registerReviewProvider("legacy-store", { ...doors, deadAnswer: 3 }).reason, "PROVIDER_MALFORMED");
-  assert.deepEqual(w.p.registerReviewProvider("legacy-store", doors), { ok: true, module: "legacy-store" });
+  assert.equal(w.p.registerReviewProvider("review", { ...doors, deadAnswer: 3 }).reason, "PROVIDER_MALFORMED");
+  assert.deepEqual(w.p.registerReviewProvider("review", doors), { ok: true, module: "review" });
   assert.equal(w.p.registerReviewProvider("review", doors).reason, "PROVIDER_DECLARED");
   const got = w.p.reviewProvider();
-  assert.deepEqual([got.registered, got.module, got.draftForMember(), got.statedEdition()], [true, "legacy-store", "d", 2]);
+  assert.deepEqual([got.registered, got.module, got.draftForMember(), got.statedEdition()], [true, "review", "d", 2]);
 });
 
 test("R29 working material answers an outsider exactly as something that does not exist: the unsigned document, its facts and its exclusions", () => {
