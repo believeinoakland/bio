@@ -99,7 +99,7 @@ test("R2: the rung ladder, low to high, and RUNGS' assignment — DEC-88's three
   assert.deepEqual([DEC88.reversible.length, DEC88.reasoned.length, DEC88.terminal.length], [25, 30, 2]);
   const want = {
     irreversible: ["publish"],
-    attested: ["attest", "caseratify", "ratify", "reattest", "captureaccount" /* N364 */],
+    attested: ["attest", "caseratify", "ratify", "reattest", "captureaccount" /* N364 */, "noticepost" /* R32 */],
     terminal: ["retire"],
     reversible: ["actionlaws", "cite", "escalationresume", "projectvisibilityset", "versionaccept", "versioncurrent",
       "versionhide", "versionrevert", "sourceconsentwithdraw" /* N364, K558 */, "scenarioset" /* K727 */],
@@ -429,12 +429,14 @@ const R27_LEFT = ["inboxpull", "contradictionrecommend", "contradictionoptin", "
   "checkpointrecord", "optionstart", "templatedraft", "templaterevise", "templatepropose", "templatesubmit",
   "templatereview", "templatecomment", "templateapprove"];
 const undeterminedOf = (absent) => Object.keys(absent).filter((op) => absent[op].ground === "undetermined").sort();
-test("R27: no op is graded `undetermined` that the rulings moved (K211, DEC-88), and exactly the 21 R27 names remain "
-   + "`undetermined`; one of DEC-88's 57 left there is seen", () => {
+test("R27 R32: no op is graded `undetermined` that the rulings moved (K211, DEC-88), and exactly the 21 R27 names remain "
+   + "`undetermined`, with R32's whatchangedpropose beside them; one of DEC-88's 57 left there is seen", () => {
   const moved = { biasdebtresolve: "reasoned", actionrisktier: "reasoned", narrow: "reasoned", versionaccept: "reversible",
     versioncurrent: "reversible", actionlaws: "reversible", projectvisibilityset: "reversible" };
   for (const [op, r] of Object.entries(moved)) { assert.equal(RUNGS[op], r, op); assert.ok(!Object.hasOwn(RUNG_ABSENT, op), op); }
-  const undetermined = undeterminedOf(RUNG_ABSENT);
+  /* R32 (T23) grades one more op `undetermined` on R27's rule, after R27's count */
+  const undetermined = undeterminedOf(RUNG_ABSENT).filter((op) => op !== "whatchangedpropose");
+  assert.equal(RUNG_ABSENT.whatchangedpropose?.ground, "undetermined");
   assert.deepEqual(undetermined, [...R27_LEFT].sort());
   assert.equal(undetermined.length, 21, "R27's count: DEC-88 moved 57 of the 78 into RUNGS");
   /* the 78 held before DEC-88: the 21 and the 57 together, each of the 57 now ranked in RUNGS */
@@ -846,8 +848,8 @@ test("R31 R4 R11: CONSEQUENCE_STATEMENTS holds exactly the six with their fricti
 /* K1019, K1023, K1037 (T22; plan layer 11): the ops escalation, capture and monitoring added, keyed to their op maps.
    The four writes are `reasoned` (R2) with a NON_ACTS reason; capture's three reads carry a NON_ACTS reason (each has
    a present `NEEDS` row in op-declarations, as capture's other reads); escalation's status read has no `NEEDS` row
-   (`escalationsdue`'s shape), so no registry names it; `doorbellrefused` is store-internal and named nowhere; T23's
-   three (escalationreasondraft, whatchangedpropose, whatchangeddrafts) are not here yet. */
+   (`escalationsdue`'s shape), so no registry names it; `doorbellrefused` is store-internal and named nowhere. T23's
+   ops (escalationreasondraft, whatchangedpropose, whatchangeddrafts among them) are R32's, in the test after this one. */
 import { escalationOps } from "../../../src/escalation/index.mjs";
 import { monitoringOps } from "../../../src/monitoring/index.mjs";
 test("R2 R3 R7 R12: T22's new ops — declinetoescalate, heldsetaside, heldrestore and addressfrequencyset `reasoned`, "
@@ -872,8 +874,7 @@ test("R2 R3 R7 R12: T22's new ops — declinetoescalate, heldsetaside, heldresto
     assert.ok(NON_ACTS[op]?.startsWith("read: "), op);
     assert.ok(!Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
   }
-  for (const op of ["escalationstatus", "doorbellrefused", "escalationreasondraft", "whatchangedpropose", "whatchangeddrafts"])
-    assert.equal(named(op), false, op);
+  for (const op of ["escalationstatus", "doorbellrefused"]) assert.equal(named(op), false, op);
   const table = [...WRITES.map((op) => ({ op, mutating: true, gated: true })),
     ...READS.map((op) => ({ op, mutating: false, gated: true })), { op: "escalationstatus", mutating: false, gated: false }];
   const r = A.unaccounted(table);
@@ -882,6 +883,74 @@ test("R2 R3 R7 R12: T22's new ops — declinetoescalate, heldsetaside, heldresto
   /* carried gated, escalationstatus would read unpublished; carried by no row, each named op reads stale */
   assert.deepEqual(A.unaccounted([{ op: "escalationstatus", mutating: false, gated: true }]).unpublished, ["escalationstatus"]);
   assert.deepEqual([...WRITES, ...READS].filter((op) => !A.unaccounted([]).stale.includes(op)), []);
+});
+
+/* R32 (N485: K1025, K1035; K1094; DEC-111, K1100; T23): the ops T23 adds, by R7 and R27, and R12's totality with them.
+   case-authoring's, escalation's and monitoring's are read from their op maps; network-notices is not in this module's
+   uses, so its four ops (its op map: `noticeprepare`, `noticepost`, `notices`, `directorysubmission`) and its three
+   public reads (registered through public-read R18) are named as its record states them (build/jobs/T23/network-notices.md;
+   K1150). R32 names no grade or reason for `directorysubmission`, so it is not asserted here either way. */
+const R32_GRADES = { whatchangedpropose: ["absent", "undetermined"], noticepost: ["rung", "attested"] };
+const R32_WRITE_REASONS = {
+  whatchangedpropose: "case-directed: keyed by a published case, reached from its next edition; a draft, never a "
+    + "statement until a member adopts it",
+  noticepost: "project-directed: keyed by a project, reached from the project; an owner's signed notice",
+};
+const R32_READS = ["escalationreasondraft", "whatchangeddrafts", "sweeps", "noticeprepare", "notices"];
+const R32_PUBLIC = ["activitymethod", "noticespublic", "groupkeyspublic"];
+const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? ["rung", RUNGS[op]]
+  : Object.hasOwn(RUNG_ABSENT, op) ? ["absent", RUNG_ABSENT[op].ground] : null;
+test("R32 R2 R3 R7 R12: T23's ops — whatchangedpropose `undetermined` as templatepropose, noticepost `attested` as "
+   + "caseratify, each with R32's NON_ACTS reason, the five reads `read:` and network-notices' public reads `read: public, "
+   + "no credential` — and with the control plane's rows for them nothing is unaccounted; a misgraded op, an ungated "
+   + "read and an op left out are each seen", () => {
+  const url = new URL("http://x/");
+  const ca = Object.keys(caseAuthoringOps({}, url, {})), esc = Object.keys(escalationOps({}, url, {})),
+        mon = Object.keys(monitoringOps({}, url, {}));
+  for (const op of ["whatchangedpropose", "whatchangeddrafts"]) assert.ok(ca.includes(op), op);
+  assert.ok(esc.includes("escalationreasondraft"));
+  assert.ok(mon.includes("sweeps"));
+  /* each write's grade, on R27's rule and beside the op R32 names as its precedent */
+  const grades = Object.fromEntries(Object.keys(R32_GRADES).map((op) => [op, gradeOf(op)]));
+  assert.deepEqual(grades, R32_GRADES);
+  assert.equal(RUNG_ABSENT.whatchangedpropose.ground, RUNG_ABSENT.templatepropose.ground);
+  assert.ok(RUNG_ABSENT.whatchangedpropose.is.length > 40);
+  assert.equal(RUNGS.noticepost, RUNGS.caseratify);
+  for (const op of Object.keys(R32_GRADES)) assert.ok(!(Object.hasOwn(RUNGS, op) && Object.hasOwn(RUNG_ABSENT, op)), op);
+  /* negative control: the same comparison sees noticepost graded otherwise, or whatchangedpropose given a rung */
+  assert.notDeepEqual({ ...grades, noticepost: ["rung", "reasoned"] }, R32_GRADES);
+  assert.notDeepEqual({ ...grades, whatchangedpropose: ["rung", "reversible"] }, R32_GRADES);
+  /* R24: each write decorates with a rung or a stated absence, never both and never neither */
+  for (const op of Object.keys(R32_GRADES)) {
+    const d = A.decorate({ id: op, label: "x" }, null);
+    assert.equal((d.rung === null) !== (d.rung_absence === null), true, op);
+  }
+  /* each NON_ACTS reason as R32 words it; the reads write no rung; none is an act or a capture act */
+  for (const [op, r] of Object.entries(R32_WRITE_REASONS)) assert.equal(NON_ACTS[op], r, op);
+  for (const op of R32_READS) {
+    assert.ok(NON_ACTS[op]?.startsWith("read: ") && NON_ACTS[op].length > 40, op);
+    assert.ok(!Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
+  }
+  for (const op of R32_PUBLIC) {
+    assert.equal(NON_ACTS[op], "read: public, no credential", op);
+    assert.ok(!Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
+  }
+  const ALL = [...Object.keys(R32_GRADES), ...R32_READS, ...R32_PUBLIC];
+  assert.ok(![...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => ALL.includes(a.id)));
+  for (const op of ALL) assert.ok(!NON_ACTS[op].startsWith("capture-directed:"), op);
+  /* the control plane's rows (op-declarations R10): the two writes mutating, every op gated (each has a NON_ACTS reason) */
+  const table = [...Object.keys(R32_GRADES).map((op) => ({ op, mutating: true, gated: true })),
+    ...[...R32_READS, ...R32_PUBLIC].map((op) => ({ op, mutating: false, gated: true }))];
+  const r = A.unaccounted(table);
+  assert.deepEqual([r.unpublished, r.unranked], [[], []]);
+  assert.deepEqual(r.stale.filter((op) => ALL.includes(op)), []);
+  /* negative controls: carried by no row (the real table before op-declarations' merge), each reads stale; a read
+     carried ungated reads stale; a new op the catalogue leaves out reads unpublished and unranked */
+  assert.deepEqual(ALL.filter((op) => !A.unaccounted([]).stale.includes(op)), []);
+  for (const op of [...R32_READS, ...R32_PUBLIC])
+    assert.ok(A.unaccounted([{ op, mutating: false, gated: false }]).stale.includes(op), op);
+  const left = A.unaccounted([...table, { op: "noticeunnamed", mutating: true, gated: true }]);
+  assert.deepEqual([left.unpublished, left.unranked], [["noticeunnamed"], ["noticeunnamed"]]);
 });
 
 /* R19 (DEC-88, K1025): the justification family gains each newly reasoned op's code, read from the owner's own checks

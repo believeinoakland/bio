@@ -830,6 +830,10 @@ export const RUNGS = {
      (capture R69: `SIG_<reason>` otherwise). Neither is undone: each appends. */
   reattest:           "attested",   // capture R68 · a timestamp authority's token (provenance.attest)
   captureaccount:     "attested",   // capture R69 · SIG_* unless the capturing member's attesting key verifies it
+  /* R32 (DEC-111, K1100): a working-on notice is published only by an owner's own signature over its revision
+     (network-notices R4, R24), `caseratify`'s reason — a key the group does not hold by having decided something. A
+     change or a stop is a new revision (its R6, R11), and nothing published is altered (its R26). */
+  noticepost:         "attested",   // network-notices R4, R24 · an owner's own signature publishes the revision
 
   /* ---- terminal: the target state has no outgoing edge. See the ladder note.
      `op=retire` ALSO raises NO_REASON, so it is `reasoned` at minimum; it is
@@ -1160,7 +1164,7 @@ export const RUNG_ABSENT = {
      not signed — so neither `attested` (no key) nor `reversible` (no act takes it back) describes it. DEC-88 (K1038)
      closed the gap by ruling for 57 of the 78 that stood here, banding each `reversible`, `reasoned` or `terminal`
      (RUNGS); these 21 are what it left `undetermined` (R27), each on R27's rule: no authored reason is asked and no
-     published act takes it back. */
+     published act takes it back. R32 adds T23's `whatchangedpropose` on the same rule, at the foot of this table. */
   /* N364 (capture R65), on R27's rule: pulling a knock files its bytes as a capture with a receipt, in the puller's
      name; no reason is asked and no published act takes it back (a pulled knock stays pulled, and the capture stands). */
   inboxpull:            { ground: "undetermined", is: "a member pulls a knock into the record: its bytes held under their own digest, a doorbell receipt written and the knock marked pulled, in one act; never un-pulled (capture R65)" },
@@ -1215,6 +1219,9 @@ export const RUNG_ABSENT = {
   templatereview:       { ground: "undetermined", is: "a member, or a professional through a live grant, records one review of a version's present text: no concerns, concerns, or changes requested; a later review of the same text stands in its place, the earlier kept (filing-templates R9)" },
   templatecomment:      { ground: "undetermined", is: "a member, a grant's recipient or a labelled run comments on a version, or a member adds a note; attributed, never edited (filing-templates R12, R13)" },
   templateapprove:      { ground: "undetermined", is: "an approver who is not the version's sole author approves a reviewed version, the earlier approved version marked updated and still offered; or an administrator widens an approved template to the group (filing-templates R10)" },
+  /* R32 (N485: K1025, K1035), on R27's rule, as `templatepropose`: a draft of a new edition's statement, machine or
+     member, append-only; it asks no authored reason and no published act takes it back. */
+  whatchangedpropose:   { ground: "undetermined", is: "a machine or a member PROPOSES a draft of a published case's next edition statement, labelled machine work when a machine proposed it and kept append-only; never a statement until a member adopts or rewrites it (case-authoring R39)" },
 };
 
 /* REC-38, UI-22's delegation: THE CAPTURE-DIRECTED ACTS' METADATA, and the
@@ -2706,6 +2713,20 @@ export const NON_ACTS = {
   /* K1019 (T22; monitoring R17, R52): an address's own checking frequency, keyed by the address, reached from the
      monitored documents' view; no bundle state `affordanceFacts` describes. */
   addressfrequencyset: "address-directed: a source owner sets how often an address is checked, with a canned or custom reason, keyed by address; a later setting replaces it",
+  /* R32 (N485: K1025, K1035; K1094; DEC-111, K1100): T23's ops. A draft of an edition's statement is keyed by the
+     published case, and a working-on notice by the project; neither is a bundle state `affordanceFacts` describes. The
+     reads write nothing (`noticeprepare` composes a revision to sign and stores none); network-notices' three public
+     reads answer with no credential (its R10, R20, R21), registered through public-read (its R18). */
+  whatchangedpropose: "case-directed: keyed by a published case, reached from its next edition; a draft, never a statement until a member adopts it",
+  noticepost: "project-directed: keyed by a project, reached from the project; an owner's signed notice",
+  escalationreasondraft: "read: an escalation's opening reason pre-assembled from a live noncompliant determination's record, keyed by determination, each sentence naming the record it came from and labelled machine work; never a reason until a member sends it, and writes nothing",
+  whatchangeddrafts: "read: a published case's drafts of its next edition statement, keyed by case, oldest first, each with its label; writes nothing",
+  sweeps: "read: the link sweeps the viewer may see, each with its definition as quoted data, its ratification, its schedule and its last runs; writes nothing",
+  noticeprepare: "read: a working-on notice's next revision composed for its owner to sign, keyed by project, with its statement and digest; stores nothing and writes nothing",
+  notices: "read: a project's working-on notices, their revisions and attestations, and its sealed weeks without their salts, keyed by project; writes nothing",
+  activitymethod: "read: public, no credential",
+  noticespublic: "read: public, no credential",
+  groupkeyspublic: "read: public, no credential",
 };
 
 /* D-126 — THE FOURTH WEIGHT, `per-item`, AND THE THREE ACTS THAT TAKE A SET.
