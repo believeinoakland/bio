@@ -26,4 +26,4 @@ Stamp commit `4d709bcf9e` on `job/T25/promotion` (tranche/T25 merged in at `264b
 - `checks/coverage.mjs bio promotion`: 56 of 56 live requirement ids named by a test; 0 failures.
 - `checks/ownership.mjs bio promotion tranche/T25`: 1 failure: `row-census-1.55.0.jsonl` outside my `tests` until BOB's swap. Otherwise only my files changed.
 
-Size (session_0132mjJUXBPPWVGDGbsFCnND): test runs 7, module lines 3214
+Size (session_0132mjJUXBPPWVGDGbsFCnND): test runs 7, module lines 3224
