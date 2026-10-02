@@ -74,6 +74,9 @@ export const NOW = "2026-09-28T01:00:00.000Z";
 export const TEST_PROFILE = "test-port-ellery";
 /** A citation the test profile's first source (the bylaws, `ordinance`, `city`) recognises, and one none does. */
 export const BYLAW = "PEBL § 12", UNKNOWN_CITE = "Some Code § 4";
+/** A declarer's reason (R1, DEC-88): every declaration and adoption in these tests sends one, except where a test proves
+ *  its refusal. */
+export const REASON = "The selectboard issues permits under it, so the group holds it to its own bylaw.";
 const LAYER = [{ step: "layer", tier: 1, container: "pdf", cap: null, measured_by: null, calibration: null }];
 
 /** A profile object of the test's own, valid under `jurisdictions.validate`, with the given standard sources. */
@@ -97,9 +100,10 @@ export function world({ now = NOW, profiles = [TEST_PROFILE], written = [], cons
   const membership = membershipOf(host, { record });
   membership.migrate();
   const promotion = promotionOf(host, { record, membership, now: () => clock.now });
-  promotion.registerFact("producingGroup", "legacy-store", () => "test-group");
-  promotion.registerFact("citedBy", "legacy-store", () => []);
-  promotion.registerFact("caseMember", "legacy-store", () => false);
+  /* the facts promotion reads from later modules, each under the module that registers it in the plane */
+  promotion.registerFact("producingGroup", "instance-setup", () => "test-group");
+  promotion.registerFact("citedBy", "connections", () => []);
+  promotion.registerFact("caseMember", "publication", () => false);
   const ex = { readings: {}, units: {} };
   const extraction = {
     readingOf: (s) => (ex.readings[s] ? { reading: { page_boxes: null }, chain: LAYER, pageCount: 3, textContainer: null,
@@ -162,7 +166,7 @@ export function world({ now = NOW, profiles = [TEST_PROFILE], written = [], cons
     /** A standard declared by bob over a fresh passage, with the given fields over the defaults. */
     declare(fields = {}) {
       const text = fields.text ?? w.passage().contentId;
-      return s.standardDeclare({ cite: BYLAW, kind: "ordinance", issuer: "Port Ellery Selectboard", text,
+      return s.standardDeclare({ cite: BYLAW, kind: "ordinance", issuer: "Port Ellery Selectboard", reason: REASON, text,
                                  period: { from: "2020-01-01", to: "2030-12-31" }, author: V("bob"), viewer: V("bob"),
                                  ...fields });
     },
