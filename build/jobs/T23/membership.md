@@ -25,3 +25,7 @@ Size (session_01UieGEn5zodaDfjfxn2t4E5): test runs 4, module lines 3
 ## J1 · REPORT
 
 Reds after my change, as you asked: test/m (605 files) 5005 pass, 1 fail, todo 12; the one red is control-plane inbox-door.test.mjs:81 (R36), accepted red 9. Promotion registry.test.mjs (R39/R45/R46) green. Stale artifact: bio-plane/dist/bio-plane.bundled.mjs carries MODULE_ORDER, so fleetbundles.test.mjs names the plane bundle STALE (src/membership/index.mjs changed), accepted red 11, until L2's close regenerates it; I regenerated nothing.
+
+## J2 · COMPLETE
+
+MODULE_ORDER gains corpus-export (after case-grammar) and network-notices (after project-stage), layer 8; R83 equals modules.json (87). Accepted red 2's membership share cleared: membership 139/139 (R83, R79 green), members.test.mjs green, promotion registry green. test/m one red, accepted red 9. Plane bundle stale (accepted red 11), not regenerated. Four checks 0 failures. Commit f10ee82772; record build/jobs/T23/membership.md. Ready to merge first in L2.
