@@ -3,9 +3,9 @@
  * leaves the instance, content-addressed and signed, so a stranger can verify without this instance that the group
  * said what it claims and rested it on what it says. This module holds every case document (unsigned and signed) and
  * the published projection, answers which cases a finding serves, and lets a member choose how their firsthand words
- * are attributed; the verified working-corpus export is `corpus-export`'s (K1024), reached here through the ops
- * `export` and `exportlog`. The two signing ceremonies (`ratification`) and preparing a
- * case (`case-authoring`) write through it (R21, R22), so one module keeps R24: nothing updates or deletes a published
+ * are attributed; the verified working-corpus export is `corpus-export`'s (K1024), which this module creates and no
+ * longer answers for (N483: its ops are corpus-export's `corpusExportOps`). The two signing ceremonies (`ratification`)
+ * and preparing a case (`case-authoring`) write through it (R21, R22), so one module keeps R24: nothing updates or deletes a published
  * row, a signed document or a published object.
  *
  * Extracted from the legacy modules (T8, layer 8; K3, K31, K57, K94, K102): `store.mjs` (the case relation and the
@@ -41,8 +41,8 @@
  *   sources        `publishableAt` (its R8), for R51 (N364); its `source_knocks` read contract (its R15) joined in
  *                  this module's own SQL, the sources behind a capture.
  *   reevaluation   `registerCaseParts` (its R26), at creation only (R41, R43).
- *   corpusExport   `exportManifest`, `exportLog` (its R1, R2), created at creation with this module's clock, so
- *                  `export_log` exists and is declared at every boot; the ops `export` and `exportlog` delegate to it.
+ *   corpusExport   created at creation with this module's clock, so `export_log` exists and is declared at every boot
+ *                  until the plane's op map spreads corpus-export's ops (its Suggestions); nothing here calls it (N483).
  *   now            the clock for the instants it writes, an ISO string (default: the wall clock).
  *
  * READ CONTRACTS it joins in its own SQL: record-core's `bundles` (R21's type column, the standing test) and
@@ -90,9 +90,9 @@ export { PUBLICATION_SCHEMA, PUBLICATION_TABLES, PUBLICATION_EXEMPT, caseDocumen
    and `truncated` beside its answer rather than scanning whatever is there. 500 is deliberately generous: the common
    ask is one case or one finding, where the real answer is a handful of rows. */
 export const CASE_FLAGS_LIMIT = 500;
-/* The export's bounds are `corpus-export`'s (its R1, R2; K1024), re-exported unchanged for the importers that read them
-   here (queue-producers; K649 (1)). */
-export { EXPORT_LOG_LIMIT_DEFAULT, EXPORT_LOG_LIMIT_MAX, EXPORT_NOTE_MAX } from "../corpus-export/index.mjs";
+/* The export log's default page is `corpus-export`'s (its R2; K1024), re-exported unchanged for the one importer that
+   still reads it here (queue-producers; its removal is N501, K1119). */
+export { EXPORT_LOG_LIMIT_DEFAULT } from "../corpus-export/index.mjs";
 /** R17 (DEC-88, K1030): the longest reason an attribution choice keeps, in code points; a longer one is refused. */
 export const ATTRIBUTION_REASON_MAX = 2000;
 /** R37: the ratified editions one `publishedEditionsOf` read answers. */
@@ -1945,11 +1945,6 @@ export class Publication {
              stated: `edition ${ed} of ${cid} now states ${obs} at level '${lv}'. The case document was re-authored; `
                    + `its owner signs the new bytes. A later edition inherits this choice until you change it.` };
   }
-  /* The verified export and its log are `corpus-export`'s (its R1, R2; K1024): these delegate to it, unchanged, for
-     the ops `export` and `exportlog` and the callers that reach them here, until the plane's op map spreads its ops and
-     queue-producers imports it directly (N483, N484). */
-  exportManifest(a) { return this.corpusExport.exportManifest(a); }
-  exportLog(a) { return this.corpusExport.exportLog(a); }
 
   /* D-442 / BIO_Publication_v0_1.md §3 rule 12: a member's edition and frozen pair as the RATIFIED
      case documents pinning exactly these bytes state them. Null when every pinning document is
@@ -2545,8 +2540,8 @@ export class Publication {
     if (!ids.length) return {};
     /* D-390 (2026-09-23): THE LIST IS BOUND AS ONE JSON VALUE, not one variable per id. `publishedTargets`
        hands this a list cut at 200 and a finding's basis is unbounded, and one statement binding more than
-       ~100 variables is refused by workerd (D-36) — reproduced through `/publishedtargets` by
-       `test/frontier-chunk.test.mjs`. `json_each(?)` is this file's own precedent (the authored-capture read)
+       ~100 variables is refused by workerd (D-36) — reproduced through `/publishedtargets` by the system suite
+       `frontier-chunk.test.mjs` (deleted in T20). `json_each(?)` is this file's own precedent (the authored-capture read)
        and binds ONE variable whatever the list's length. Not chunked: one statement reads the whole bounded
        list, and a loop around it would add statements while the per-row work is unchanged. */
     /* D-598 (BOB #34, 2026-09-25 03:00Z; BIO_Publication_v0_1.md §3 rule 5): EACH ENTRY IS KEYED ON ITS
@@ -2628,7 +2623,7 @@ export class Publication {
 const instances = new WeakMap();
 
 /** The one instance for a host (K61). The first call creates it with `deps` (a test passes its own), creates its
- *  tables, declares them to purge (R31), creates corpus-export (K1024), and registers with promotion what this module provides (K206, N152): the
+ *  tables, declares them to purge (R31), creates corpus-export (K1024; its tables and declaration only), and registers with promotion what this module provides (K206, N152): the
  *  facts `caseMember` (R4), `publishedRegistry` and `publishedCaseRegistry` (R7), and the revision flag (R5) as its
  *  step's projection, raised in the promotion's transaction after the new version is written; and with reevaluation
  *  its cited parts and ratified cases (R41, R43). */
@@ -2699,8 +2694,6 @@ export function publicationOps(p, url, body) {
     recordcasemanifest: () => p.recordCaseManifest(b),
     publishedtargets: () => p.publishedTargets(q("ids")),
     excludedby: () => p.excludedBy(q("id"), q("viewer")),
-    export: () => p.exportManifest({ note: q("note") }),
-    exportlog: () => p.exportLog({ limit: q("limit") }),
     /* REC-130: both carry the viewer the control plane STAMPS, and fail closed on its absence. */
     casedocfacts: () => p.caseDocumentFacts(q("case"), q("edition"), q("viewer")),
     casedocument: () => p.caseDocument(q("case"), q("edition"), q("viewer"), q("secretSha")),
