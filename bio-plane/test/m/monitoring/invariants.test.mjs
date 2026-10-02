@@ -2,8 +2,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, serve, sha, DAEMON, NOW_MS, infoMd } from "./fixture.mjs";
-import { monitoringOps, MONITORING_TABLES, MONITORING_CHECKS, DRIVE_TICK_CHECKS, GATHERING_CHECKS, FREQUENCY_CHECKS,
-         SWEEP_TERM_CHECKS } from "../../../src/monitoring/index.mjs";
+import { monitoringOps, MONITORING_TABLES, MONITORING_CHECKS, DRIVE_TICK_CHECKS, GATHERING_CHECKS, FREQUENCY_CHECKS }
+  from "../../../src/monitoring/index.mjs";
 import { MECHANICAL_FIELD_SETS } from "../../../src/promotion/index.mjs";
 import { ACQUISITION_CHECKS } from "../../../src/acquisition/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
@@ -136,10 +136,10 @@ test("R41 the tables are this module's and declared to purge: monitor_fired by s
   assert.deepEqual(all(), [0, 0, 0, 0, 0]);
 });
 
-test("R42 this module's own table holds C-48.8 and C-48.9, each with its code, number, translation and a where naming this module's site; the rest of C-48 is acquisition's; C-18.10 is the gathering refusal's row; C-18.11 to C-18.15 are R52's; C-18.16 the sweep term's refusal R66 keeps here; the fence's C-18.17 and C-18.18 left with the sweep (N506)", () => {
+test("R42 this module's own table holds C-48.8 and C-48.9, each with its code, number, translation and a where naming this module's site; the rest of C-48 is acquisition's; C-18.10 is the gathering refusal's row; C-18.11 to C-18.15 are R52's; C-18.16 to C-18.18 left with the link sweep, whose grammar and fence mint them (N506, K1206)", () => {
   assert.deepEqual(Object.keys(MONITORING_CHECKS).sort(),
     ["BAD_FREQUENCY", "DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL", "DRIVE_TICK_EXPORT_IS_THE_SHELL", "FREQUENCY_NO_REASON",
-     "GATHERING_REFUSED", "MACHINE_CANNOT_SET_FREQUENCY", "NOT_A_SOURCE_OWNER", "NO_SUCH_ADDRESS", "SWEEP_TERM_REFUSED"]);
+     "GATHERING_REFUSED", "MACHINE_CANNOT_SET_FREQUENCY", "NOT_A_SOURCE_OWNER", "NO_SUCH_ADDRESS"]);
   assert.deepEqual(Object.fromEntries(Object.entries(MONITORING_CHECKS).map(([k, r]) => [k, [r.check, r.where]])), {
     DRIVE_TICK_EXPORT_IS_THE_SHELL: ["C-48.8", "src/monitoring/index.mjs monitor > is-drive-tick-export"],
     DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL: ["C-48.9", "src/monitoring/index.mjs monitor > is-drive-tick-bytes"],
@@ -149,14 +149,13 @@ test("R42 this module's own table holds C-48.8 and C-48.9, each with its code, n
     BAD_FREQUENCY: ["C-18.13", "src/monitoring/index.mjs addressFrequencySet > is-frequency-word"],
     NOT_A_SOURCE_OWNER: ["C-18.14", "src/monitoring/index.mjs addressFrequencySet > is-frequency-owner"],
     FREQUENCY_NO_REASON: ["C-18.15", "src/monitoring/index.mjs addressFrequencySet > is-frequency-reason"],
-    SWEEP_TERM_REFUSED: ["C-18.16", "src/monitoring/index.mjs gatheringCheck > is-sweep-term"],
   });
   for (const r of Object.values(MONITORING_CHECKS)) {
     assert.equal(typeof r.translation, "string");
     assert.ok(r.translation.length > 40, "a canned sentence (DEC-49)");
     assert.ok(Object.isFrozen(r));
   }
-  assert.deepEqual(MONITORING_CHECKS, { ...DRIVE_TICK_CHECKS, ...GATHERING_CHECKS, ...FREQUENCY_CHECKS, ...SWEEP_TERM_CHECKS });
+  assert.deepEqual(MONITORING_CHECKS, { ...DRIVE_TICK_CHECKS, ...GATHERING_CHECKS, ...FREQUENCY_CHECKS });
   /* no code is held twice: none of this module's rows is acquisition's, and no C-48 row of acquisition's is this module's */
   for (const code of Object.keys(MONITORING_CHECKS)) assert.equal(code in ACQUISITION_CHECKS, false, code);
   assert.deepEqual(Object.values(ACQUISITION_CHECKS).map((r) => r.check).filter((c) => c === "C-48.8" || c === "C-48.9"), []);

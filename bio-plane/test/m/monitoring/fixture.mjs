@@ -264,9 +264,12 @@ export function sweepDef(over = {}) {
            budget: { per_run: 10, backlog: 20 }, ...over };
 }
 
-/** A sweep share as R66 takes it (link-sweep's shape, stood in): `grammar` finds a sweep with no `id`, a duplicate id,
- *  and a `terms` entry "/(?=x)/" (marked SWEEP_TERM_REFUSED); `fence` refuses a sweep whose `title` is "fenced";
- *  `dueForSlate` lists every ratified sweep of a bundle `sees` admits. Every call is recorded in `calls`. */
+/** A sweep share as R66 takes it (link-sweep's shape, stood in; K1206): `grammar` answers `{check, severity, field,
+ *  message}` findings, the message beginning with its field, for a sweep with no `id`, a duplicate id, a key that is no
+ *  sweep's field (`field` null) and a `terms` entry "/(?=x)/" (with `code` and the row as `refusal`, `TERM_ROW`); `fence`
+ *  refuses a sweep whose `title` is "fenced"; `dueForSlate` lists `due` through `sees`. Every call is recorded in `calls`. */
+export const TERM_ROW = Object.freeze({ code: "SWEEP_TERM_REFUSED", check: "C-18.16",
+  translation: "This was not saved: a search term of a sweep is a pattern the record cannot match safely. Nothing was changed." });
 export function sweepShare() {
   const calls = [];
   const sweepsOf = (t) => { try { const g = JSON.parse(t); return Array.isArray(g.sweeps) ? g.sweeps : []; } catch { return []; } };
@@ -275,11 +278,13 @@ export function sweepShare() {
     grammar(entry, ids) {
       calls.push(["grammar", entry.id ?? null]);
       const out = [];
-      if (typeof entry.id !== "string") out.push({ field: "id", message: "is missing" });
-      else if (ids.has(entry.id)) out.push({ field: "id", message: `'${entry.id}' is not unique within the file` });
+      const bad = (field, message, extra) => out.push({ check: "C-18.5", severity: "error", field, message, ...extra });
+      for (const k of Object.keys(entry)) if (!["id", "title", "terms"].includes(k)) bad(null, `carries '${k}', which is not a sweep's field (id, title, terms)`);
+      if (typeof entry.id !== "string") bad("id", "id is missing");
+      else if (ids.has(entry.id)) bad("id", `id '${entry.id}' is not unique within the file`);
       else ids.add(entry.id);
       for (const [j, t] of (Array.isArray(entry.terms) ? entry.terms : []).entries())
-        if (t === "/(?=x)/") out.push({ field: `terms[${j}]`, message: "SWEEP_TERM_REFUSED: a lookahead", code: "SWEEP_TERM_REFUSED" });
+        if (t === "/(?=x)/") bad(`terms[${j}]`, `terms[${j}] SWEEP_TERM_REFUSED: a lookahead`, { code: "SWEEP_TERM_REFUSED", refusal: this.row });
       return out;
     },
     fence(c, nextText) {
@@ -288,7 +293,7 @@ export function sweepShare() {
         ? { ok: false, reason: "SWEEP_NOT_A_MEMBER", code: "SWEEP_NOT_A_MEMBER", detail: "fenced by the stand-in" } : null;
     },
     dueForSlate(now, sees) { calls.push(["dueForSlate", now]); return this.due.filter((x) => sees(x.bundle)); },
-    due: [],
+    due: [], row: TERM_ROW,
   };
 }
 

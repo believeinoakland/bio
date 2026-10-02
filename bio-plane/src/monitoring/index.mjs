@@ -68,7 +68,7 @@ import { identify, doctypeFor, assess, CONTRACT } from "../../../docprofile/regi
 import { combine } from "../../../jurisdictions/index.mjs";
 import { parseFrontmatter, isPublicHttpsLocator, createSha256, MACHINE_CLASS_PREFIX, MACHINE_AUTHOR_PREFIX,
          isMachineIdentity } from "../record-grammar/index.mjs";
-import { checkGatheringGrammar, DRIVE_TICK_CHECKS, GATHERING_CHECKS, SWEEP_TERM_CHECKS, frequencyRefusal } from "./checks.mjs";
+import { checkGatheringGrammar, DRIVE_TICK_CHECKS, GATHERING_CHECKS, frequencyRefusal } from "./checks.mjs";
 import { MONITORING_TABLES, migrateMonitoring } from "./schema.mjs";
 
 export * from "./checks.mjs";
@@ -2210,13 +2210,15 @@ export class Monitoring {
     const gf = [];
     checkGatheringGrammar({ files: new Map([["data/gathering.json", gj.text]]) }, gf, this.#sweepShare);
     const errs = gf.filter((x) => x.severity === "error");
-    /* DEC-49 REGION is-sweep-term */
+    /* R66 (K1206): a refused sweep term is the one refusal before GATHERING_REFUSED, answered with the row its finding
+       carries (`refusal`, the registering module's, which mints the code; DEC-49). A term finding whose row is not whole
+       cannot be answered as that code, so the file is refused GATHERING_REFUSED below, never admitted. */
     const term = errs.filter((x) => x.code === "SWEEP_TERM_REFUSED");
-    if (term.length)
-      return { ok: false, reason: "SWEEP_TERM_REFUSED", code: "SWEEP_TERM_REFUSED", check: SWEEP_TERM_CHECKS.SWEEP_TERM_REFUSED.check,
-               translation: SWEEP_TERM_CHECKS.SWEEP_TERM_REFUSED.translation, detail: term.map((x) => x.message).join("; "),
-               findings: errs.map((x) => ({ check: x.check, detail: x.message })) };
-    /* END DEC-49 REGION is-sweep-term */
+    const row = term.map((x) => x.refusal).find((r) => r && typeof r === "object" && r.code === "SWEEP_TERM_REFUSED"
+      && typeof r.check === "string" && r.check && typeof r.translation === "string" && r.translation);
+    if (row)
+      return { ok: false, reason: row.code, code: row.code, check: row.check, translation: row.translation,
+               detail: term.map((x) => x.message).join("; "), findings: errs.map((x) => ({ check: x.check, detail: x.message })) };
     /* DEC-49 REGION is-gathering-refused */
     if (errs.length)
       return { ok: false, reason: "GATHERING_REFUSED", code: "GATHERING_REFUSED",
@@ -2287,9 +2289,10 @@ export class Monitoring {
   #host = null;
 
   /** R66: takes, once, at composition, a later module's share of the gathering grammar and of the slate: `grammar(entry,
-   *  ids)` answers the C-18.5 findings of one `sweeps[]` entry that is an object, `[{field, message, code?}]` (`ids`
-   *  collects the file's ids, for uniqueness; a finding marked `code: "SWEEP_TERM_REFUSED"` makes R27's refusal that
-   *  code's); `fence(c, nextText)` is asked last at the write (`c` the promotion step's argument, `nextText` the file
+   *  ids)` answers the C-18.5 findings of one `sweeps[]` entry that is an object, `[{check: "C-18.5", severity, field,
+   *  message}]`, the message beginning with its field (`field` null for none); a refused term's also carries `code:
+   *  "SWEEP_TERM_REFUSED"` and `refusal: {code, check, translation}`, which R27 answers as given (`ids` collects the
+   *  file's ids, for uniqueness); `fence(c, nextText)` is asked last at the write (`c` the promotion step's argument, `nextText` the file
    *  promoted) and answers null to admit or a refusal (`ok: false`) the promotion answers; `dueForSlate(now, sees)`
    *  answers the due sweeps R30's slate lists, `[{kind: "ratified-sweep", bundle, id, definition}]` (`sees(bundleId)`
    *  the viewer's sight). Answers `{ok: true, module}`; a second registration, or one that is not three functions, is

@@ -15,9 +15,9 @@
  *
  * T24 (N506, K1159): the link sweep's arms of C-18.5 (`sweepErrors`, its fields, cadences and bounds, the term matcher)
  * left with the sweep for `link-sweep`, a later module, which hands them back at composition through R66's registration
- * (`checkGatheringGrammar`'s `sweepArm`); with nothing registered, C-18.5 reads no `sweeps[]` entry. C-18.17 and C-18.18
- * (the fence's refusals) left with the fence. C-18.16 `SWEEP_TERM_REFUSED` stays: R66 keeps that refusal one of this
- * module's `gatheringCheck`, which mints it. */
+ * (`checkGatheringGrammar`'s `sweepArm`); with nothing registered, C-18.5 reads no `sweeps[]` entry. C-18.16–C-18.18 left
+ * with it (K1206): their codes are minted in link-sweep's registered grammar and fence, so their rows are its table's;
+ * R27 answers a refused term with the row its finding carries. */
 
 import { isPublicHttpsLocator } from "../record-grammar/locator.mjs";
 import { ISO_TS_RE } from "../record-grammar/ids.mjs";
@@ -119,21 +119,8 @@ export const FREQUENCY_CHECKS = Object.freeze({
   }),
 });
 
-/* C-18.16 — a sweep term refused at the write (link-sweep R2 through R66; K1036 (7)), with nothing written: the one
-   refusal R27 answers before `GATHERING_REFUSED` when a registered sweep grammar marks a finding with this code. Taken by
-   the stamp 1.54.0 (T24's L2). C-18.17 and C-18.18, the fence's refusals, left with the fence for `link-sweep` (N506). */
-export const SWEEP_TERM_CHECKS = Object.freeze({
-  SWEEP_TERM_REFUSED: Object.freeze({
-    check: 'C-18.16',
-    where: at('gatheringCheck', 'is-sweep-term'),
-    translation: 'This was not saved: a search term of a sweep is a pattern the record cannot match safely. A term may '
-      + 'be plain words or a simple pattern between slashes, without references back to an earlier part, look-aheads '
-      + 'or look-behinds. The findings beside this name the term and what in it was refused. Nothing was changed.',
-  }),
-});
-
 /** R42: every row this module holds, keyed by code, for a reader that looks one up by the code an answer carries. */
-export const MONITORING_CHECKS = Object.freeze({ ...DRIVE_TICK_CHECKS, ...GATHERING_CHECKS, ...FREQUENCY_CHECKS, ...SWEEP_TERM_CHECKS });
+export const MONITORING_CHECKS = Object.freeze({ ...DRIVE_TICK_CHECKS, ...GATHERING_CHECKS, ...FREQUENCY_CHECKS });
 
 /** A refusal answer naming one of this module's rows (DEC-49): its code, row and member's sentence, and the detail. */
 export function frequencyRefusal(code, detail, extra) {
@@ -206,10 +193,12 @@ export function checkGatheringGrammar(ctx, findings, sweepArm = null) {
     if (!GATH_STATUS_ENUM.includes(r.status)) findings.push(f('C-18.5', 'error', `gathering.json requests[${i}].status must be one of: ${GATH_STATUS_ENUM.join(', ')}`));
     if (r.planted !== undefined && !ISO_TS_RE.test(r.planted)) findings.push(f('C-18.5', 'error', `gathering.json requests[${i}].planted must be an ISO 8601 UTC instant`));
   }
-  /* R66 (N506): the sweep arms are the ones a later module registers; with none registered no `sweeps[]` entry is read.
-     A non-object entry is this module's finding; an object entry is the registered grammar's, one finding per field,
-     each `{field, message, code?}` placed here at its index. A grammar that throws, or answers no list, fails closed: the
-     entry draws a C-18.5 error saying so, so the file is refused, never admitted. */
+  /* R66 (N506, K1206): the sweep arms are the ones a later module registers; with none registered no `sweeps[]` entry is
+     read. A non-object entry is this module's finding; an object entry is the registered grammar's, one finding per
+     field, each `{check: "C-18.5", severity, field, message}` (a refused term's also `code` and `refusal: {code, check,
+     translation}`, carried as given), placed here at its index: `sweeps[i]`, then `.` and the message when it names a
+     field, else a space and the message. A finding naming no severity is an error. A grammar that throws, or answers no
+     list, fails closed: the entry draws a C-18.5 error saying so, so the file is refused, never admitted. */
   if (!sweepArm || typeof sweepArm.grammar !== 'function') return;
   const sweeps = Array.isArray(g.sweeps) ? g.sweeps : [];
   const ids = new Set();
@@ -226,9 +215,11 @@ export function checkGatheringGrammar(ctx, findings, sweepArm = null) {
     }
     for (const err of errs) {
       const e = err && typeof err === 'object' ? err : { message: String(err) };
-      const field = typeof e.field === 'string' && e.field ? `.${e.field}` : '';
-      findings.push(f('C-18.5', 'error', `gathering.json sweeps[${i}]${field} ${String(e.message ?? 'is refused')}`,
-        typeof e.code === 'string' && e.code ? { code: e.code } : undefined));
+      const at = typeof e.field === 'string' && e.field ? '.' : ' ';
+      findings.push(f('C-18.5', typeof e.severity === 'string' && e.severity ? e.severity : 'error',
+        `gathering.json sweeps[${i}]${at}${String(e.message ?? 'is refused')}`,
+        { ...(typeof e.code === 'string' && e.code ? { code: e.code } : {}),
+          ...(e.refusal && typeof e.refusal === 'object' ? { refusal: e.refusal } : {}) }));
     }
   }
 }

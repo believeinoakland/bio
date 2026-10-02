@@ -4,8 +4,8 @@
    `sweepShare`); every test drives `monitoring` at its interface, each arm with its negative control. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, sha, infoMd, serve, NOW_MS, DAEMON, V, sweepShare } from "./fixture.mjs";
-import { checkGatheringGrammar, monitoringOps, GATHERING_CHECKS, SWEEP_TERM_CHECKS, MONITOR_TICK_MS, GATHERING_LANDS_AT }
+import { world, sha, infoMd, serve, NOW_MS, DAEMON, V, sweepShare, TERM_ROW } from "./fixture.mjs";
+import { checkGatheringGrammar, monitoringOps, GATHERING_CHECKS, MONITOR_TICK_MS, GATHERING_LANDS_AT }
   from "../../../src/monitoring/index.mjs";
 import { viewerPredicate } from "../../../src/membership/index.mjs";
 
@@ -217,27 +217,40 @@ test("R66 with nothing registered, C-18.5 reads no sweep arm: no sweeps[] entry 
   assert.ok(findingsOf(g, null).length === 0 && carry(w, "INFO-2026-0991-some", g).ok === false);
 });
 
-test("R66 with a share registered, R27's check and R42's audit add its findings for each object entry (one per field, the file's ids shared for uniqueness), a non-object entry staying this module's finding; a file still has one refusal, SWEEP_TERM_REFUSED before GATHERING_REFUSED", async () => {
+test("R66 with a share registered, R27's check and R42's audit add its findings for each object entry (one per field, placed at its index with its field, the file's ids shared for uniqueness), a non-object entry staying this module's finding; a file still has one refusal, SWEEP_TERM_REFUSED (with the row its finding carries) before GATHERING_REFUSED", async () => {
   const w = world();
   const s = sweepShare();
   w.m.registerSweep("link-sweep", s);
   const arm = { module: "link-sweep", grammar: s.grammar.bind(s) };
   /* each finding at its entry's index and field, C-18.5 errors, a code carried */
-  const f = findingsOf({ sweeps: [{ id: "a" }, 7, {}, { id: "a", terms: ["ok", "/(?=x)/"] }] }, arm);
-  assert.deepEqual(f.map((x) => [x.check, x.severity, x.message, x.code ?? null]), [
-    ["C-18.5", "error", "gathering.json sweeps[1] is not an object", null],
-    ["C-18.5", "error", "gathering.json sweeps[2].id is missing", null],
-    ["C-18.5", "error", "gathering.json sweeps[3].id 'a' is not unique within the file", null],
-    ["C-18.5", "error", "gathering.json sweeps[3].terms[1] SWEEP_TERM_REFUSED: a lookahead", "SWEEP_TERM_REFUSED"]]);
+  const f = findingsOf({ sweeps: [{ id: "a" }, 7, { x: 1 }, { id: "a", terms: ["ok", "/(?=x)/"] }] }, arm);
+  assert.deepEqual(f.map((x) => [x.check, x.severity, x.message, x.code ?? null, x.refusal ?? null]), [
+    ["C-18.5", "error", "gathering.json sweeps[1] is not an object", null, null],
+    ["C-18.5", "error", "gathering.json sweeps[2] carries 'x', which is not a sweep's field (id, title, terms)", null, null],
+    ["C-18.5", "error", "gathering.json sweeps[2].id is missing", null, null],
+    ["C-18.5", "error", "gathering.json sweeps[3].id 'a' is not unique within the file", null, null],
+    ["C-18.5", "error", "gathering.json sweeps[3].terms[1] SWEEP_TERM_REFUSED: a lookahead", "SWEEP_TERM_REFUSED", TERM_ROW]]);
   assert.deepEqual(s.calls.filter((c) => c[0] === "grammar").map((c) => c[1]), ["a", null, "a"], "asked of each object entry only");
+  /* a finding naming no severity is an error; one naming another severity keeps it (and refuses nothing) */
+  const sev = findingsOf({ sweeps: [{}] }, { module: "m", grammar: () => [{ field: "id", message: "id one" }, { field: null, message: "note", severity: "warning" }] });
+  assert.deepEqual(sev.map((x) => [x.severity, x.message]), [["error", "gathering.json sweeps[0].id one"], ["warning", "gathering.json sweeps[0] note"]]);
   /* at the write: a term refused is SWEEP_TERM_REFUSED with C-18.16's row, and every finding beside it */
   const t = carry(w, "INFO-2026-1000-term", { requests: [], sweeps: [{ id: "a", terms: ["/(?=x)/"] }, {}] });
-  assert.deepEqual([t.ok, t.reason, t.code, t.check, t.translation],
-    [false, "SWEEP_TERM_REFUSED", "SWEEP_TERM_REFUSED", "C-18.16", SWEEP_TERM_CHECKS.SWEEP_TERM_REFUSED.translation]);
-  assert.equal(t.detail, "gathering.json sweeps[0].terms[0] SWEEP_TERM_REFUSED: a lookahead");
-  assert.deepEqual(t.findings.map((x) => x.detail), ["gathering.json sweeps[0].terms[0] SWEEP_TERM_REFUSED: a lookahead",
-                                                      "gathering.json sweeps[1].id is missing"]);
+  assert.deepEqual(t, { ok: false, reason: "SWEEP_TERM_REFUSED", code: "SWEEP_TERM_REFUSED", check: TERM_ROW.check,
+    translation: TERM_ROW.translation, detail: "gathering.json sweeps[0].terms[0] SWEEP_TERM_REFUSED: a lookahead",
+    findings: [{ check: "C-18.5", detail: "gathering.json sweeps[0].terms[0] SWEEP_TERM_REFUSED: a lookahead" },
+               { check: "C-18.5", detail: "gathering.json sweeps[1].id is missing" }] }, "the registering module's row, as given");
   assert.equal(w.record.head("INFO-2026-1000-term"), null, "nothing written");
+  /* two refused terms: the details joined with "; " */
+  const two = carry(w, "INFO-2026-1000-two", { sweeps: [{ id: "a", terms: ["/(?=x)/", "/(?=x)/"] }] });
+  assert.equal(two.detail, "gathering.json sweeps[0].terms[0] SWEEP_TERM_REFUSED: a lookahead; gathering.json sweeps[0].terms[1] SWEEP_TERM_REFUSED: a lookahead");
+  /* a term finding whose row is not whole cannot be answered as that code: refused GATHERING_REFUSED, never admitted */
+  for (const refusal of [undefined, { code: "SWEEP_TERM_REFUSED", check: "C-18.16" }, { code: "OTHER", check: "C-1", translation: "t" }]) {
+    const v = world();
+    v.m.registerSweep("link-sweep", { ...sweepShare(), row: refusal });
+    const x = carry(v, "INFO-2026-1000-norow", { sweeps: [{ id: "a", terms: ["/(?=x)/"] }] });
+    assert.deepEqual([x.ok, x.reason, x.check], [false, "GATHERING_REFUSED", "C-18.10"], JSON.stringify(refusal));
+  }
   /* any other finding, the grammar's or this module's own, is GATHERING_REFUSED */
   for (const g of [{ sweeps: [{}] }, { sweeps: [7] }, { sweeps: [{ id: "a" }], requests: [null] }]) {
     const r = carry(w, "INFO-2026-1001-gath", g);
