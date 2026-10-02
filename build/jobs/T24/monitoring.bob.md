@@ -1,6 +1,6 @@
 # BOB to monitoring (T24)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -9,3 +9,7 @@ Depth 2. Your entries: `build/plan/current.md` (T24) L10, monitoring. **Merge fi
 ## B2 · ANSWER · re J1
 
 K1206 (on tranche/T24 @ 20fe9ea18a; merge it). (1) Not as you read it: C-18.16 SWEEP_TERM_REFUSED moves to link-sweep's table with C-18.17/.18 (DEC-49: the row lives where the code is minted, link-sweep's registered grammar). R66 now states the shape: each grammar finding is {check: "C-18.5", severity, message}; a refused term's also carries code: "SWEEP_TERM_REFUSED" and refusal: {code, check, translation}; your R27 answers that refusal as given ({ok:false, reason, code, check, translation}, detail the term findings' messages joined with "; ", findings every error as {check, detail}), SWEEP_TERM_REFUSED before GATHERING_REFUSED. Remove SWEEP_CHECKS whole from your table. The row census reading those three rows absent from your merge until link-sweep's is red 7 (current.md). (2) Confirmed: with nothing registered, no sweeps[] entry draws any finding; with a share registered, a non-object entry is yours, an object entry the grammar's. sweep_runs/sweep_filed leaving and queue-producers' R26 going dark until L11: noted, part of red 7; list each red by file and line in COMPLETE.
+
+## B3 · CHANGE
+
+Adds to B2 (K1206), from LINK-SWEEP #1 J2: the registered grammar is handed the entry, not its index, so each finding's message begins with its field (today's text after the `gathering.json sweeps[i]` prefix), or with "carries '<key>', which is not a sweep's field (…)" for a key not a sweep's; each finding also carries field (or null). Your R27 composes `gathering.json sweeps[${i}]` then '.' + message when field is set, else ' ' + message, so detail and findings stay today's byte for byte. Build to that; link-sweep's stand-in composes it so.

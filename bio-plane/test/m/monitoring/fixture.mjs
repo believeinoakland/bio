@@ -6,8 +6,11 @@
    (`bundle_projection`, created by retrieval's `PROJECTION_SCHEMA`, the statements its `migrate()` runs; R61, N283); the host governor records every call and
    refuses the hosts a test names; the network is a scripted `fetch` the test controls; the evidence bucket is an
    in-memory R2 stand-in; credentials is the real module, made after membership as the composition root makes it; intent, action-clocks, escalation and publication are stand-ins in their Provides' shapes unless
-   a test passes the real one (`realActions`: the real actions and action-clocks modules). Every test drives `monitoring`
-   at its interface. */
+   a test passes the real one (`realActions`: the real actions and action-clocks modules); the tables other modules'
+   promotion steps read once a wake has reached them on this host (`refs`, connections'; `inquiry_bundle_facts`,
+   inquiry's) are created as the plane creates them (N506's tail, K1164: SCHEDULER #25 found a promotion after a wake
+   failing on them here), their statements copied, since this module uses neither. Every test drives `monitoring` at its
+   interface. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
@@ -116,15 +119,40 @@ export function infoMd(id, locator, { freq = null, enabled = true, lines = [] } 
   ].join("\n");
 }
 
+/* The plane's statements for the tables of modules this one does not use that their promotion steps read once a wake
+   has built them on the host (K1164): connections' `refs`; inquiry's `inquiry_bundle_facts`, `inquiry_basis`,
+   `inquiry_exclusions` and `inquiry_contradiction_links`; content's `content`. Copied from their schemas, comments left
+   out; `seam.test.mjs`'s N506-tail test fails by name if one goes missing. */
+export const PLANE_TABLES = Object.freeze([
+  `CREATE TABLE IF NOT EXISTS refs (bundle_id TEXT NOT NULL, target_id TEXT NOT NULL, kind TEXT NOT NULL DEFAULT '',
+     PRIMARY KEY (bundle_id, target_id, kind))`,
+  `CREATE INDEX IF NOT EXISTS refs_target ON refs(target_id)`,
+  `CREATE TABLE IF NOT EXISTS inquiry_bundle_facts (bundle_id TEXT PRIMARY KEY, inquiry_basis_count INTEGER,
+     inquiry_superseded_by TEXT, inquiry_subject_entity TEXT)`,
+  `CREATE TABLE IF NOT EXISTS inquiry_basis (bundle_id TEXT NOT NULL, ord INTEGER NOT NULL, target_id TEXT NOT NULL,
+     target_type TEXT NOT NULL, role TEXT NOT NULL, grade TEXT, grade_axis TEXT, grade_source TEXT, note TEXT, at TEXT,
+     ground TEXT, content_id TEXT, PRIMARY KEY (bundle_id, ord))`,
+  `CREATE TABLE IF NOT EXISTS inquiry_exclusions (bundle_id TEXT NOT NULL, ord INTEGER NOT NULL, edition INTEGER,
+     target_id TEXT, description TEXT NOT NULL, reason TEXT NOT NULL, author TEXT NOT NULL, at TEXT NOT NULL,
+     PRIMARY KEY (bundle_id, ord))`,
+  `CREATE TABLE IF NOT EXISTS inquiry_contradiction_links (bundle_id TEXT PRIMARY KEY, candidate TEXT, resolution TEXT,
+     explores TEXT, at TEXT NOT NULL)`,
+  `CREATE TABLE IF NOT EXISTS content (content_id TEXT PRIMARY KEY, capture_sha TEXT NOT NULL, bundle_id TEXT NOT NULL,
+     extent_kind TEXT NOT NULL, extent TEXT NOT NULL, ref TEXT NOT NULL, chain TEXT, derivation_cap TEXT,
+     page_count INTEGER, minted_by TEXT NOT NULL, at TEXT NOT NULL, stale INTEGER NOT NULL DEFAULT 0,
+     cited_as TEXT NOT NULL DEFAULT 'text', chain_kind TEXT)`,
+]);
+
 export function world({ profiles = ["test-port-ellery"], env = null, evidence = true, refuse = [], intent = undefined,
                         actionClocks = undefined, escalation = undefined, publication = undefined, extraColumns = [], realActions = false,
-                        captureRequests = undefined } = {}) {
+                        planeTables = true } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const t of bare.split(";")) if (t.trim()) st.db.exec(t);
   /* retrieval's projection table (R61), as its `migrate()` creates it; after it none of those columns is on `bundles`. */
   for (const s of PROJECTION_SCHEMA) st.db.exec(s);
+  if (planeTables) for (const s of PLANE_TABLES) st.db.exec(s);
   for (const c of extraColumns) st.db.exec(`ALTER TABLE bundles ADD COLUMN ${c}`);
   const clock = { ms: NOW_MS };
   const bkt = evidence ? bucket() : null;
@@ -175,19 +203,13 @@ export function world({ profiles = ["test-port-ellery"], env = null, evidence = 
   const net = network();
   const intentStub = intent === undefined ? stubIntent() : intent;
   const publicationStub = publication === undefined ? stubPublication() : publication;
-  /* project-stage's R1 as the sweep's closed test reads it (`stages` maps a project to its stage), and capture-requests'
-     R45 registration slot, recording what registers (the link sweep, R56, R64) */
-  const stages = {};
-  const projectStage = { calls: [], projectStage(a) { this.calls.push(a); return { project: a.project, stage: stages[a.project] ?? "forming" }; } };
-  const crStub = captureRequests === undefined ? stubCaptureRequests() : captureRequests;
-  const m = monitoringOf(host, { record, membership, promotion, provenance: prov, observationLog: obs, capture, projectStage,
-    ...(crStub ? { captureRequests: crStub } : {}),
+  const m = monitoringOf(host, { record, membership, promotion, provenance: prov, observationLog: obs, capture,
     governor: gov, env: env || {}, now: () => clock.ms, fetch: net.fetch, intent: intentStub, publication: publicationStub,
     ...(actionClocks !== undefined ? { actionClocks } : clocks ? { actionClocks: clocks } : {}), ...(escalation !== undefined ? { escalation } : {}) });
   let n = 0;
   const w = {
     st, host, record, membership, credentials, promotion, prov, obs, capture, gov, net, bkt, m, clock, intent: intentStub, act, clocks,
-    publication: publicationStub, stages, projectStage, captureRequests: crStub,
+    publication: publicationStub,
     rows: (q, ...x) => [...st.sql.exec(q, ...x)],
     row: (q, ...x) => [...st.sql.exec(q, ...x)][0] ?? null,
     text: (id) => { const f = record.readFile(id, "bundle.md"); return f ? (typeof f === "string" ? f : f.text ?? null) : null; },
@@ -234,18 +256,45 @@ export function world({ profiles = ["test-port-ellery"], env = null, evidence = 
   return w;
 }
 
-/** capture-requests' R45 slot as monitoring reaches it: `registerSweepScope(module, fn)`, once per module. */
-export function stubCaptureRequests() {
-  return { registered: [], registerSweepScope(module, fn) {
-    if (this.registered.some((r) => r.module === module)) return { ok: false, reason: "LISTENER_DECLARED" };
-    this.registered.push({ module, fn }); return { ok: true, module }; } };
-}
-
-/** A sweep as R53 states it, with `over` replacing any field. */
+/** A sweep definition in link-sweep R1's shape, with `over` replacing any field: kept here for the readers of this
+ *  world that still build one (scheduler's `consumers.test.mjs`) until their own jobs re-point to link-sweep's (N506). */
 export function sweepDef(over = {}) {
   return { id: "minutes", title: "Council minutes", ratified: true, sources: ["https://records.example.org/council"],
            seeds: ["https://records.example.org/council/index.html"], match: { terms: ["minutes"] }, cadence: "weekly",
            budget: { per_run: 10, backlog: 20 }, ...over };
+}
+
+/** A sweep share as R66 takes it (link-sweep's shape, stood in; K1206): `grammar` answers `{check, severity, field,
+ *  message}` findings, the message beginning with its field, for a sweep with no `id`, a duplicate id, a key that is no
+ *  sweep's field (`field` null) and a `terms` entry "/(?=x)/" (with `code` and the row as `refusal`, `TERM_ROW`); `fence`
+ *  refuses a sweep whose `title` is "fenced"; `dueForSlate` lists `due` through `sees`. Every call is recorded in `calls`. */
+export const TERM_ROW = Object.freeze({ code: "SWEEP_TERM_REFUSED", check: "C-18.16",
+  translation: "This was not saved: a search term of a sweep is a pattern the record cannot match safely. Nothing was changed." });
+export function sweepShare() {
+  const calls = [];
+  const sweepsOf = (t) => { try { const g = JSON.parse(t); return Array.isArray(g.sweeps) ? g.sweeps : []; } catch { return []; } };
+  return {
+    calls,
+    grammar(entry, ids) {
+      calls.push(["grammar", entry.id ?? null]);
+      const out = [];
+      const bad = (field, message, extra) => out.push({ check: "C-18.5", severity: "error", field, message, ...extra });
+      for (const k of Object.keys(entry)) if (!["id", "title", "terms"].includes(k)) bad(null, `carries '${k}', which is not a sweep's field (id, title, terms)`);
+      if (typeof entry.id !== "string") bad("id", "id is missing");
+      else if (ids.has(entry.id)) bad("id", `id '${entry.id}' is not unique within the file`);
+      else ids.add(entry.id);
+      for (const [j, t] of (Array.isArray(entry.terms) ? entry.terms : []).entries())
+        if (t === "/(?=x)/") bad(`terms[${j}]`, `terms[${j}] SWEEP_TERM_REFUSED: a lookahead`, { code: "SWEEP_TERM_REFUSED", refusal: this.row });
+      return out;
+    },
+    fence(c, nextText) {
+      calls.push(["fence", c.bundleId]);
+      return sweepsOf(nextText).some((x) => x && x.title === "fenced")
+        ? { ok: false, reason: "SWEEP_NOT_A_MEMBER", code: "SWEEP_NOT_A_MEMBER", detail: "fenced by the stand-in" } : null;
+    },
+    dueForSlate(now, sees) { calls.push(["dueForSlate", now]); return this.due.filter((x) => sees(x.bundle)); },
+    due: [], row: TERM_ROW,
+  };
 }
 
 /** intent's R7 and R15 as monitoring reaches them. `watch` maps a project to the capture shas its condition reads. */

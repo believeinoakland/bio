@@ -65,21 +65,21 @@ Terms. A **tick** is one check of one monitored document. A **look** is the obse
 - **R30** The daemon is pausable by an administrator (monitoring's and the fallback's fetches stop; a paused tick says so); a pause or resume asked by a member who is not an administrator (`membership` R64's `isAdministrator`, read of the stamped `actor`) is refused `NOT_AN_ADMIN` through `membership.notAnAdmin` (its R84), with nothing written, and the root of trust is an administrator here (N314, K380); this module mints no `NOT_AN_ADMIN` of its own and reads no C-96.1 row (K403's local site retires; N324); and its due slate (every named request, sweep (the due sweeps R66's registration answers) and monitored address now due) is exported as quoted data inside fixed instruction framing.
 
 **The link sweep** (moved to `link-sweep` by N506, K1159, T24; the ids are never reused)
-- **R53** **retired** (moved to link-sweep R1, N506, T24)
-- **R54** **retired** (moved to link-sweep R2, N506, T24)
-- **R55** **retired** (moved to link-sweep R3, N506, T24)
-- **R56** **retired** (moved to link-sweep R4, N506, T24)
-- **R57** **retired** (moved to link-sweep R5, N506, T24)
-- **R58** **retired** (moved to link-sweep R6, N506, T24)
-- **R59** **retired** (moved to link-sweep R7, N506, T24)
-- **R60** **retired** (moved to link-sweep R8, N506, T24)
-- **R61** **retired** (moved to link-sweep R9, N506, T24)
-- **R62** **retired** (moved to link-sweep R10, N506, T24)
-- **R63** **retired** (moved to link-sweep R11, N506, T24)
-- **R64** **retired** (moved to link-sweep R12, N506, T24)
+- **R53** *(retired: moved to link-sweep R1, N506, T24)*
+- **R54** *(retired: moved to link-sweep R2, N506, T24)*
+- **R55** *(retired: moved to link-sweep R3, N506, T24)*
+- **R56** *(retired: moved to link-sweep R4, N506, T24)*
+- **R57** *(retired: moved to link-sweep R5, N506, T24)*
+- **R58** *(retired: moved to link-sweep R6, N506, T24)*
+- **R59** *(retired: moved to link-sweep R7, N506, T24)*
+- **R60** *(retired: moved to link-sweep R8, N506, T24)*
+- **R61** *(retired: moved to link-sweep R9, N506, T24)*
+- **R62** *(retired: moved to link-sweep R10, N506, T24)*
+- **R63** *(retired: moved to link-sweep R11, N506, T24)*
+- **R64** *(retired: moved to link-sweep R12, N506, T24)*
 
 **The sweep's seam** (for `link-sweep`, a later module that registers with this one at composition; N506, K1159, BOB's ruling on the seam)
-- **R65** *(not yet met: T24)* `sweepHost()` answers the services `link-sweep` runs its sweeps under, each the one this module's own ticks use, so a sweep and a tick share one pause, one idempotence key and one landing. It writes nothing and never throws; each service it answers behaves as follows:
+- **R65** `sweepHost()` answers the services `link-sweep` runs its sweeps under, each the one this module's own ticks use, so a sweep and a tick share one pause, one idempotence key and one landing. It writes nothing and never throws; each service it answers behaves as follows:
   - `paused()` answers R30's held pause, `{paused: true, by, at}`, or `{paused: false}` when never set or resumed. It writes nothing.
   - `openEpoch(consumer, now, staleAfterMs)` answers R21's open epoch for `consumer`: the one held, while `now` is less than `staleAfterMs` from it; else a fresh epoch (`now`, truncated to the millisecond), held, which drops every claim of `consumer` under any other epoch.
   - `claim(consumer, subject, epoch)` answers `true` and records the claim when `subject` is not yet claimed by `consumer` under `epoch`, else `false`, writing nothing (R21). The read and the record admit nothing between them.
@@ -89,7 +89,7 @@ Terms. A **tick** is one check of one monitored document. A **look** is the obse
   - `land(request, filed, at, say?)` lands what a fetch brought in by R28's landing: a new Information bundle at `collected`, never verified, in the project of `request.bundle`, promoted through `promotion.promote` with the register origin `filed` carries; `say`, when given, supplies its `title` and `summary`. It answers `{ok: true, bundle_id, state}`, or `{ok: false, reason, detail}` when it could not land, and never throws.
   - `gate(viewer)` answers `membership`'s viewer predicate for `viewer`, the sight R32's reads use.
   - `recheckMs()` answers the archive tick's interval (R20: 1 h, or the binding's).
-- **R66** *(not yet met: T24)* `registerSweep(module, {grammar, fence, dueForSlate})` takes, once, at composition, a later module's share of the gathering grammar and of the slate (`link-sweep`, its R1–R3 and R9; K31's pattern). `grammar(entry, ids)` answers the C-18.5 findings for one entry of a file's `sweeps[]` that is an object (one per field, as `link-sweep` R1, R2 state; `ids` collects the file's ids, for uniqueness), which R27's check and R42's audit add to the others (an entry that is not an object stays this module's finding), so a file still has one refusal, `SWEEP_TERM_REFUSED` before `GATHERING_REFUSED`: each finding is `{check: "C-18.5", severity, message}`, and a refused term's also carries `code: "SWEEP_TERM_REFUSED"` and `refusal: {code, check, translation}` (the registering module's row, DEC-49), which R27 answers as given, `detail` the term findings' messages joined with "; " and `findings` every error as `{check, detail}`; `fence(c, nextText)` is asked last, after the grammar admits the file, and its refusal is the promotion's; `dueForSlate(now, sees)` answers the due sweeps R30's slate lists, each inside its fixed framing. A second registration, or one that is not three functions, is refused (`{ok: false, reason}`), keeping the first. With nothing registered, C-18.5 reads no sweep arm (no `sweeps[]` entry, object or not, draws a finding of R27's), nothing fences a sweep, and the slate lists no sweep. A registered `grammar` or `fence` that throws fails closed: the gathering is refused as by a finding of C-18.5, never admitted; a `dueForSlate` that throws lists no sweep and the slate says so.
+- **R66** `registerSweep(module, {grammar, fence, dueForSlate})` takes, once, at composition, a later module's share of the gathering grammar and of the slate (`link-sweep`, its R1–R3 and R9; K31's pattern). `grammar(entry, ids)` answers the C-18.5 findings for one entry of a file's `sweeps[]` that is an object (one per field, as `link-sweep` R1, R2 state; `ids` collects the file's ids, for uniqueness), which R27's check and R42's audit add to the others (an entry that is not an object stays this module's finding), so a file still has one refusal, `SWEEP_TERM_REFUSED` before `GATHERING_REFUSED`: each finding is `{check: "C-18.5", severity, message}`, and a refused term's also carries `code: "SWEEP_TERM_REFUSED"` and `refusal: {code, check, translation}` (the registering module's row, DEC-49), which R27 answers as given, `detail` the term findings' messages joined with "; " and `findings` every error as `{check, detail}`; `fence(c, nextText)` is asked last, after the grammar admits the file, and its refusal is the promotion's; `dueForSlate(now, sees)` answers the due sweeps R30's slate lists, each inside its fixed framing. A second registration, or one that is not three functions, is refused (`{ok: false, reason}`), keeping the first. With nothing registered, C-18.5 reads no sweep arm (no `sweeps[]` entry, object or not, draws a finding of R27's), nothing fences a sweep, and the slate lists no sweep. A registered `grammar` or `fence` that throws fails closed: the gathering is refused as by a finding of C-18.5, never admitted; a `dueForSlate` that throws lists no sweep and the slate says so.
 
 **What reaches members** (NOTIFICATIONS.md, the catalogue and the item contract)
 - **R31** Its reads give the items `queue-producers` publishes in the item contract, with their options:
