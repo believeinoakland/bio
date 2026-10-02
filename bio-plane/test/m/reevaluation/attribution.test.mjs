@@ -3,7 +3,7 @@
    previous ratified edition, keeps one row per call with no author and no text (R18); a dependent carries the cause
    `attribution` when a live leg rests on that observation and the move came after the dependent's last write; each move
    is told to R8's listeners once as `kind: "attribution"`, after the row is written; the leg's grade is never changed; a
-   recorded re-evaluation closes it (R16). Nothing calls `levelMoved` before ratification's job, so these tests drive it
+   recorded re-evaluation closes it (R16). Its caller, ratification, is a later layer, so these tests drive `levelMoved`
    directly. */
 import { test } from "node:test";
 import assert from "node:assert/strict";

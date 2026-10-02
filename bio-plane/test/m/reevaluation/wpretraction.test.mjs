@@ -48,7 +48,7 @@ function setup({ editions = {}, register = true, fact = true, project = "Work" }
           : { ok: false, reason: "NO_SUCH_CASE_EDITION", case: c };
       } }), { ok: true, module: "publication" });
   if (fact)
-    w.promotion.registerFact("publishedCaseRegistry", "legacy-store", (ids) => {
+    w.promotion.registerFact("publishedCaseRegistry", "publication", (ids) => {
       const out = {};
       for (const id of ids) {
         const list = pub.editions[id];
