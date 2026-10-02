@@ -53,3 +53,11 @@ Found in other modules, each for you or a later job:
 4. **scheduler** (L10, after me): `sweepDue(now)`, `sweepWake(now)`, `sweepTick(now, rank)` on `Monitoring`. Rank items are `{kind: "sweep", id: "<bundle>#<id>", waitingSince}`. The tick answers `{paused, at, epoch, due, ran, skipped, failed}`, or `busy: true`.
 5. **queue-producers** R26 (L11): `sweepConditions({viewer})` answers `{ok, conditions: [{sweep, kind, since, detail}]}` with the five kinds in `SWEEP_CONDITION_KINDS`.
 6. **Re-tests:** scheduler, queue-producers, affordances and capture-requests are green. The only reds are accepted by name: control-plane `families.test.mjs`:47 and `inbox-door.test.mjs`:81, plane `worker.test.mjs`:39, queue `catalogue.test.mjs`:34 and :116.
+
+## J3 · COMPLETE
+
+The link sweep is built: R29, R31 (the sweep items), R36 (the sweep arm) and R53–R64 are met, each named by a test with negative controls. It sits in `monitoring/sweep.mjs` and `monitoring/sweep-match.mjs` as B2 asked. Final count: **4,062 lines** (`index.mjs` 2,782, `checks.mjs` 299, `schema.mjs` 180, `sweep.mjs` 537, `sweep-match.mjs` 264). I passed 4,000 before reading B2, contrary to what J1 said I would do; the record says so.
+
+New rows, each `awaiting stamp` until T24's L2 (red 7): C-18.16 `SWEEP_TERM_REFUSED`, C-18.17 `SWEEP_NOT_A_MEMBER`, C-18.18 `SWEEP_RATIFY_NOT_AN_OWNER`.
+
+Monitoring's suite: 107 pass, 0 fail. The whole `test/m`: 5,153 pass, 5 fail, every fail an accepted red by name. format, architecture, coverage (63/63) and ownership: 0 failures. Readings, the found items (REPORT J2) and the size line are in my record's Completion.
