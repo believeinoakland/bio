@@ -26,7 +26,7 @@ A group that cannot leave can be held. This module exports the working corpus ve
 ### Uses
 
 - `record-grammar`: `createSha256`, for R3's re-derivation.
-- `record-core`: `recordOf(ctx)` and `declarePurge` (R4); the `bundles`, `files`, `history` and `manifest` read contracts (R1). *(not yet provided: T8's record-core entry)*
+- `record-core`: `recordOf(ctx)` and `declarePurge` (R4); the `bundles`, `files`, `history` and `manifest` read contracts (R1). (record-core R37; `register.bytes`, provenance R48)
 - `provenance`: the `register` read contract (R1).
 - `connections`: the `refs` read (R1).
 
@@ -38,7 +38,7 @@ A group that cannot leave can be held. This module exports the working corpus ve
   - byte-compares every registered capture;
   - trusts nothing the manifest asserts (Membership v2 §8, "What verified must mean").
 
-  The verifying import belongs to this module; the tranche that carries it is BOB's to choose (K102). *(not yet met: T22)*
+  The verifying import belongs to this module: `verifyCorpusExport({manifest, bytes})`, which writes nothing, never throws and has no op (K1058).
 - **R4** (was `publication` R31, its `export_log` clause) `export_log` is exempt from purge.
 - **R5** (was `publication` R34, copied) No place is named in this module's behaviour or outward text.
 
