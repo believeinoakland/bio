@@ -21,3 +21,7 @@
 - `checks/ownership.mjs … sources tranche/T23`: 3 files changed; 0 failures.
 
 Size (session_01U2EDRt7UjAm5Dgn5EKqRuZ): test runs 3, module lines 837
+
+## J1 · COMPLETE
+
+N494 applied (tests only): secret.test.mjs's two R11 rate tests loop until the window refuses and assert the first refusal from one source is RATE_IP, never SECRET_NOT_RECOGNISED, then the right secret is RATE_IP and records nothing; the one-clock test also asserts the earlier-counted attempts stand (two guesses sooner than a fresh store's baseline). No 5, 10, 12 or 13 stated; source.test.mjs's comment pinning R31's instance limit re-worded too. Negative control: both fail with RATE_IP stubbed away. sources 24/24; test/m 5008 pass, 1 fail = accepted red 9 (inbox-door.test.mjs:81). Four checks 0 failures. Re-scan clean. No tranche merge made: capture not merged yet. Record: build/jobs/T23/sources.md on job/T23/sources.
