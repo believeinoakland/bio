@@ -25,6 +25,8 @@ import { liveToken } from "../tokens.mjs";
 import { SIGN_HTML } from "../signpage.mjs";
 import { setupPage, instanceGroupOp, groupIdentityOp } from "../setup.mjs";
 import { inbandQuartet } from "../inband.mjs";   /* REC-148: DEC-31's in-band quartet, one function */
+/* R45 (DEC-111, K1170): a registered public read is served by public-read's door read (its R18). */
+import { publicReadDoorRead } from "../public-read/door.mjs";
 /* R44 (K921): the template grant's one dead answer is filing-templates' (its R8), built from no argument. */
 import { noTemplateGrant } from "../filing-templates/index.mjs";
 import { normalizeAddress } from "../subresources.mjs";
@@ -38,7 +40,7 @@ import { OPS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, 
          STANDARDS_ACTIONS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS,
          ACTION_LAYER_READS, PLAN_PROPOSAL_ACTIONS, TEMPLATE_PROPOSAL_ACTIONS, LOCAL_FACTS_ACTIONS, TEMPLATE_DOOR_ACTIONS,
          TEMPLATE_DOOR_READS, WHAT_CHANGED_PROPOSAL_ACTIONS, WHAT_CHANGED_READS, NETWORK_NOTICES_ACTIONS,
-         NETWORK_NOTICES_READS, NETWORK_NOTICES_BY } from "../op-declarations/index.mjs";
+         NETWORK_NOTICES_READS, NETWORK_NOTICES_BY, NETWORK_NOTICES_PUBLIC_READS } from "../op-declarations/index.mjs";
 
 /* REC-22: the ONE namespace the public read path answers from. An instance has
    one published record, so op=publishedcase and op=publishedbytes are pinned
@@ -846,6 +848,12 @@ export function makeFetch(hooks = {}) {
       if (TEMPLATE_GRANT_DOORS.includes(op)) return templateGrantDoor({ req, url, env, op, spec, presentedAi, stub });
       if (op === "instancegroup" || op === "groupidentity") return groupRead(op, url, env, presentedAi);
       if (op === "knockerconsent") return knockerConsent(req, stub);
+      /* R45 (DEC-111, K1170; public-read R18, R10): network-notices' public reads, each asked by its own name, served by
+         public-read's door read from the published store (`stub`, `bio`; a `store=scratch` was refused above), with no
+         credential and none of the caller's stamps; the read is handed only the parameters it declared. Asked as
+         `op=publicread&name=<name>`, the same read is the public hook's (plane's, through `publicReadDoorOp`). */
+      if (NETWORK_NOTICES_PUBLIC_READS.includes(op))
+        return publicReadDoorRead(op, url, env, stub, { json, requiredArgument, storeSilent, storeRefusal, doAnswer });
       /* The public ops whose handlers are their modules' (publication, public-read, instance-setup, capture). */
       return hooks.publicOp({ req, url, env, op, stub, invStub, fp, presentedAi });
     }
