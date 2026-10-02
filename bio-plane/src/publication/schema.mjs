@@ -352,9 +352,9 @@ CREATE INDEX IF NOT EXISTS published_case_members_bundle ON published_case_membe
 -- reason -- their rows already exist and honestly lack the fact.
 --
 -- WHO WRITES IT: CASE-2, which is where publishCase() first takes a publishing
--- project and an owner-only fence. CASE-1 builds the object and writes no row,
--- so op=export answers project_id NULL for every case in the store today and
--- says so. That is a stated state of the record, not a gap in the answer.
+-- project and an owner-only fence. CASE-1 built the object and wrote no row,
+-- so until CASE-2 the export answered project_id NULL for every case in the store
+-- and said so. That was a stated state of the record, not a gap in the answer.
 --
 -- THERE IS DELIBERATELY NO opened_by. The act's author belongs to the ACT, and
 -- the act that mints this identity is the publication of an edition, which

@@ -97,7 +97,7 @@ test("R31 (K1024) on one host publication's purge declaration and corpus-export'
   assert.deepEqual([refused.ok, refused.reason, refused.table, refused.declaredBy], [false, "TABLE_DECLARED", "export_log", "publication"]);
 });
 
-test("N483 (K1119) this module answers no export: no op `export` or `exportlog`, no delegate; corpus-export is still created at boot, and the one bound queue-producers imports here is corpus-export's, re-exported unchanged", async () => {
+test("N483 N501 (K1119) this module answers no export: no op `export` or `exportlog`, no delegate, and no corpus-export constant re-exported; corpus-export is still created at boot", async () => {
   const w = world();
   const ops = Object.keys(publicationOps(w.p, new URL("http://do/x"), null));
   assert.deepEqual(ops.filter((k) => /export/i.test(k)), [], "no export op is this module's");
@@ -107,8 +107,10 @@ test("N483 (K1119) this module answers no export: no op `export` or `exportlog`,
   assert.equal(w.count("export_log"), 0, "export_log exists at boot");
   const pub = await import("../../../src/publication/index.mjs");
   const ce = await import("../../../src/corpus-export/index.mjs");
-  assert.equal(pub.EXPORT_LOG_LIMIT_DEFAULT, ce.EXPORT_LOG_LIMIT_DEFAULT);
-  for (const name of ["EXPORT_LOG_LIMIT_MAX", "EXPORT_NOTE_MAX"]) assert.equal(name in pub, false, `${name} is corpus-export's alone`);
+  /* every constant corpus-export exports is its alone (N501: the last re-export, its log's default page, retired) */
+  const constants = Object.keys(ce).filter((k) => /^[A-Z][A-Z0-9_]*$/.test(k));
+  assert.ok(constants.includes("EXPORT_LOG_LIMIT_DEFAULT") && constants.length >= 3, "the control: corpus-export's own constants");
+  for (const name of constants) assert.equal(name in pub, false, `${name} is corpus-export's alone`);
 });
 
 test("R33 this module's table holds exactly C-92.1–.9, C-92.13 and C-122.1, each with its code, sentence and its raiser's site here; C-44.2, C-68.5 and C-98 left it for public-read's (its R17)", () => {
