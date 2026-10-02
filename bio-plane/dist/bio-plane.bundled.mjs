@@ -100589,7 +100589,7 @@ var CAPTURE_REQUEST_CHECKS = Object.freeze({
      FILED UNDER THAT SWEEP ONLY WHEN THE SWEEP'S SCOPE ADMITS IT. A sweep names a query members ratified up front, and
      a request filed under it inherits that ratification, so the fence is the sweep's own: ratified, not held, and every
      locator of the request (the address, and any redirect the fetch meets) inside its scope. The scope check is
-     `monitoring`'s, registered at start; with none registered nothing can say the sweep admits the request, so it is
+     `link-sweep`'s (its R12), registered at start; with none registered nothing can say the sweep admits the request, so it is
      refused. Terminal: the request is not fetched under a sweep that does not admit it, and nothing is filed. Minted at
      one region (`sweepOutOfScope`), which the drain's conduct and its fire both answer through. New at T23,
      taken by 1.54.0 (promotion's T24 job). */
@@ -107591,7 +107591,7 @@ CREATE TABLE IF NOT EXISTS capture_requests (
   -- UNDER, as its full name "<bundle>#<id>", or NULL for an ordinary request.
   -- NULL is the honest value on every row written before it: no door read a
   -- sweep then, so none was asked. The drain files a request naming one under
-  -- that sweep only when monitoring's scope check admits it, and refuses it
+  -- that sweep only when link-sweep's scope check admits it, and refuses it
   -- C-28.19 otherwise; it is never quietly filed as an ordinary request.
   sweep             TEXT
 );
@@ -107703,7 +107703,7 @@ var CaptureRequests = class _CaptureRequests {
   #filed = [];
   // R44: {module, fn, seq}
   #sweepScope = null;
-  // R45: {module, fn}, monitoring's scope check
+  // R45: {module, fn}, link-sweep's scope check
   /** `deps`: `record`, `observations`, `governor`, `capture`, `credentials` (each module's instance on this storage),
    *  `runs` (ai-runs' run sight, R28 of ai-runs: `runFor(run, viewer)` answering the run's `status`,
    *  `principal_plane` and `principal_claude`, or null), `env`, `now()` (milliseconds; a test may inject its clock),
@@ -107953,13 +107953,13 @@ var CaptureRequests = class _CaptureRequests {
     this.#filed.sort((a, b) => this.#rank(a.module) - this.#rank(b.module) || a.seq - b.seq);
     return { ok: true, module };
   }
-  /** R45 (K1099; K31's pattern, this module being earlier than `monitoring`, P4): the one scope check, registered once
-   *  at start by `monitoring`. A second registration, whoever makes it, is refused `LISTENER_DECLARED` naming the
+  /** R45 (K1099; K31's pattern, this module being earlier than `link-sweep`, P4): the one scope check, registered once
+   *  at start by `link-sweep` (its R12). A second registration, whoever makes it, is refused `LISTENER_DECLARED` naming the
    *  holder, and a malformed one `LISTENER_MALFORMED`, both through membership's `listenerRefusal` (its R81).
    *
    *  The check is `fn({sweep, locators, run, target})`, answered at once or as a promise: `{ok: true, scope}` when the
    *  sweep is ratified and not held and every locator is in its scope, `scope` being its in-scope prefixes (the
-   *  sweep's `sources`, monitoring R53), which ride the fetch so `acquisition` judges each redirect against them (its
+   *  sweep's `sources`, link-sweep R1), which ride the fetch so `acquisition` judges each redirect against them (its
    *  R31); anything else, a throw included, refuses the request (`reason`, one of `unknown`, `unratified`, `held` or
    *  `out-of-scope`, and `detail` are carried into the refusal when given). */
   registerSweepScope(module, fn) {
@@ -108385,7 +108385,7 @@ var CaptureRequests = class _CaptureRequests {
       };
     return { ok: true, ua, attribution, ...sweep ? { sweep: q7.sweep, scope: sweep.scope } : {} };
   }
-  /** R45: whether the sweep the row names admits it, as `monitoring`'s registered scope check answers: `{ok: true,
+  /** R45: whether the sweep the row names admits it, as `link-sweep`'s registered scope check answers: `{ok: true,
    *  scope}`, or R45's refusal. A name not of the shape `"<bundle>#<id>"` names no sweep and is refused without asking;
    *  with no check registered nothing can say the sweep admits the request, so it is refused; a check that throws, or
    *  answers anything but `ok: true` with a non-empty list of prefixes, refuses it. Never throws. */
