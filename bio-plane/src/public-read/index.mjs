@@ -8,7 +8,7 @@
  * below are `publication/index.mjs`' `registerEvidenceBlock`, `#evidencePackage`, `publishedManifest`,
  * `#frozenPairsByCase`, `verifySha`, `publishedList`, `publishedEditions`, `publishedCase`, `#deliveredBy`,
  * `#looseEditionState`, `#resolveOneCase` and `#casesOfSha`, with their comments; `publication`'s job, after this one
- * merges, deletes its copies and spreads `publicReadOps` in the legacy store's op map. The legacy code's comments
+ * merged, deleted its copies, and `publicReadOps` is spread in `plane`'s store op map (`../plane/store.mjs`). The legacy code's comments
  * moved with it and keep their old ids (REC-, CASE-, D-); a `publication` R id in them is named as such. The Worker
  * half (`../publication/worker.mjs`, `../container.mjs`, `../inband.mjs`: R5–R7, R9) is this module's by `paths` and
  * stays at those paths (K697, K702); the door's routes reach it through `./door.mjs`. Its refusal rows are its own,
@@ -24,13 +24,40 @@
  * `published_case_members`, `cases`, `published_edges` and `published_shas`. */
 
 import { publicationOf } from "../publication/index.mjs";
-import { caseTensionsOf, caseDocumentBlocks } from "../case-grammar/index.mjs";
+import { caseTensionsOf, caseDocumentBlocks, whatChangedOf, lensOf, LENS_HEAD,
+         LENS_CLOSING_SENTENCES } from "../case-grammar/index.mjs";
+import { parseFrontmatter } from "../record-grammar/index.mjs";
 import { rowOf } from "./checks.mjs";
 import { delivererOf } from "../deliverer.mjs";
 
 /* CPDF-10: a column `publication` WROTE as JSON, read back; null rather than a throw on a malformed value. */
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
 const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : "");
+
+/* R3 (DEC-101, DEC-103): a signed document's front matter and body, parsed once (record-grammar); null for no text or
+   no front matter, so every reader below answers its own null. */
+const signedParts = (doc) => {
+  if (!doc || typeof doc.text !== "string") return null;
+  try { const p = parseFrontmatter(doc.text); return p.data ? { fm: p.data, body: p.body } : null; }
+  catch { return null; }
+};
+/* R3 (DEC-103): the lens section of a signed body, from its head to the next `## ` heading, whole and as signed. */
+const lensSection = (body) => {
+  const lines = String(body ?? "").split(/\r\n|\n/);
+  const at = lines.indexOf(LENS_HEAD);
+  if (at < 0) return null;
+  let end = at + 1;
+  while (end < lines.length && !lines[end].startsWith("## ")) end++;
+  return lines.slice(at, end).join("\n").replace(/\s+$/, "");
+};
+/* R3 (DEC-103): what a document without the lens blocks says instead (R13: stated, never filled). */
+export const LENS_FINGERPRINT_SENTENCE = "this edition carries only the lens's fingerprint, not its statements: the "
+  + "statements_sha of the bias manifest it froze, which anyone holding that manifest can check it against";
+export const LENS_NONE_IN_FORCE_SENTENCE = "this edition carries only the lens's fingerprint, and its bias manifest "
+  + "states that no manifest was in force, so there is no fingerprint to give";
+export const LENS_FINGERPRINT_UNDETERMINED_SENTENCE = "this edition carries only the lens's fingerprint, and its bias "
+  + "manifest states none that can be read, so the fingerprint is undetermined, not absent";
+export const LENS_NO_DOCUMENT_SENTENCE = "no signed case document is held for this edition, so it states no lens here";
 
 export class PublicRead {
   #evidenceBlock = null; // R8: {module, name, fn}, filled once
@@ -123,7 +150,7 @@ export class PublicRead {
              (`ON CONFLICT … DO NOTHING`), so on b5ce975a this row told a stranger one of two false
              things: a BARE NULL where the documents already disagreed at that ratification (the
              committer's `strengthUndetermined`, which reached op=ratify's answer and nothing
-             else), or — measured by rec170-manifest-pair.test.mjs, and worse — THE FIRST CASE'S
+             else), or — measured by rec170-manifest-pair.test.mjs (since retired), and worse — THE FIRST CASE'S
              PAIR where a later case froze another, one case's reading served as THE pair (IC-74:
              a finding in several cases answers every case, never one). Rule 12 (b) makes the pair
              a fact about ONE case's reading of the finding at that sha, so where two readings
@@ -604,7 +631,12 @@ export class PublicRead {
     const cRow = theCase
       ? this.#one(`SELECT manifest FROM published_cases WHERE case_id=? AND edition=?`, theCase, ed) : null;
     const manifest = cRow && cRow.manifest ? JSON.parse(cRow.manifest) : null;
-    return { ok: true, caseId: theCase, edition: ed, scope: state.scope,
+    const said = this.#editionStatements(state, theCase, ed, editions);
+    return { ok: true, caseId: theCase, edition: ed,
+             /* R3 (DEC-101; Publication §5A): what changed in this edition, at the top, and the successor's statement
+                beside the pointer to it; both read from signed documents, never live. */
+             what_changed: said.what_changed, successor: said.successor,
+             scope: state.scope,
              /* CASE-5 / DEC-72 clause 2, ON THE ANONYMOUS PUBLIC READ, which is
                 the surface the whole ruling is FOR. Clause 4's design sentence
                 is *"each claim's own derived strength displayed beside the case's
@@ -626,6 +658,8 @@ export class PublicRead {
                + "which case the case claims no cleared standard and says so, because undetermined is "
                + "first-class here and is never rounded to a number nobody chose.",
              bias_acknowledgement: state.bias_acknowledgement ?? null,
+             /* R3 (DEC-103): the lens this edition was produced under, read from its signed document, never live. */
+             lens: said.lens, lens_fingerprint: said.lens_fingerprint, lens_detail: said.lens_detail,
              /* D-712: THE SIGNED CASE DOCUMENT, SERVED. `caseEditionState` builds `document` for exactly this read (the
                 ratify path and the public read must not be able to disagree), and this return picks its fields by
                 name (IC-22), so it names it. NULL UNTIL RATIFIED, never a partial; null on the loose branch. */
@@ -658,7 +692,7 @@ export class PublicRead {
                 CORRECTED AGAIN 2026-08-08 (M0-12), AND THE SECOND CORRECTION IS
                 WHY THAT ITEM EXISTS. Both sentences above named the op as
                 `publishcase`. THERE IS NO SUCH OP. `publishcase` is the STORE'S
-                DO PATH; `DO_PATH` in index.mjs aliases `op=publish` onto it, so
+                DO PATH; `DO_PATH` (then in the plane's index.mjs, now `control-plane`'s) aliases `op=publish` onto it, so
                 the op whose name matches the method is routed AWAY from it and
                 a caller sending the path name as `op=` gets `unknown op`. The
                 routing chain, in full: **`op=publish` -> DO path `publishcase`
@@ -718,6 +752,49 @@ export class PublicRead {
                          + "published edition. names[] is what it may only NAME. unresolved[] is an edge "
                          + "classified servable at publication with no published edition behind it now, stated "
                          + "rather than dropped; it should be empty." };
+  }
+
+  /* R3 (DEC-101, DEC-103; K1019): THE EDITION'S OWN STATEMENTS, from its signed document through `case-grammar`'s
+     readers (its R8, R9) and never live, so a bias manifest or a statement changed after signing changes nothing here.
+     `what_changed` is answered for an edition above 1 only (edition 1 has nothing it changed); a document without the
+     block answers null and nothing is filled in (R13). `successor` is the next edition's statement, quoted beside this
+     edition's pointer to it; null on the latest edition. `lens` is the signed section whole (`print`, the print form)
+     and its parts: the acknowledgement, each statement with its justification, printed citations and withheld count
+     in the document's order, and the closing sentences the document prints. A withheld citation is a count; nothing
+     names it. Without the blocks, `lens` is null and `lens_fingerprint` is the frozen manifest's `statements_sha`. */
+  #editionStatements(state, theCase, ed, editions) {
+    const doc = signedParts(state.document);
+    const wc = doc && Number(ed) > 1 ? whatChangedOf(doc.fm, doc.body) : null;
+    const what_changed = wc ? { statement: wc.statement, began_as: wc.began_as, draft: wc.draft,
+                                adopted_as_drafted: wc.adopted_as_drafted } : null;
+    let successor = null;
+    const next = theCase ? editions.map((e) => Number(e.edition)).filter((n) => n > Number(ed)).sort((a, b) => a - b)[0]
+                         : undefined;
+    if (next !== undefined) {
+      const nd = signedParts((this.publication.caseEditionState(theCase, next) || {}).document);
+      const nwc = nd ? whatChangedOf(nd.fm, nd.body) : null;
+      successor = { edition: next, statement: nwc ? nwc.statement : null };
+    }
+    const l = doc ? lensOf(doc.fm) : null;
+    if (l) {
+      const print = lensSection(doc.body);
+      const ack = doc.fm.bias_acknowledgement;
+      return { what_changed, successor, lens_fingerprint: null, lens_detail: null,
+               lens: { bias_acknowledgement: typeof ack === "string" ? ack : null,
+                       statements: l.statements.map((x) => ({ bundle: x.bundle, id: x.id, kind: x.kind,
+                         subject: x.subject, text: x.text, justification: x.justification,
+                         citations: x.citations, withheld: x.withheld })),
+                       closing: print ? LENS_CLOSING_SENTENCES.filter((c) => print.includes(c)) : [],
+                       print } };
+    }
+    if (!doc) return { what_changed, successor, lens: null, lens_fingerprint: null, lens_detail: LENS_NO_DOCUMENT_SENTENCE };
+    const bm = doc.fm.bias_manifest && typeof doc.fm.bias_manifest === "object" ? doc.fm.bias_manifest : null;
+    const sha = bm && typeof bm.statements_sha === "string" && /^[0-9a-f]{64}$/.test(bm.statements_sha)
+      ? bm.statements_sha : null;
+    const noneInForce = bm && (bm.in_force === false || bm.in_force === "false");
+    return { what_changed, successor, lens: null, lens_fingerprint: sha,
+             lens_detail: sha ? LENS_FINGERPRINT_SENTENCE
+               : noneInForce ? LENS_NONE_IN_FORCE_SENTENCE : LENS_FINGERPRINT_UNDETERMINED_SENTENCE };
   }
 
   /* REC-128 — THE ONE READ CHOKEPOINT FOR WHO DELIVERED A RATIFICATION. Every
@@ -931,7 +1008,7 @@ export function publicReadOf(host, deps) {
   return r;
 }
 
-/** The module's ops (K3), as entries of the legacy store's op map, every one unstamped: each reads the published
+/** The module's ops (K3), as entries of `plane`'s store op map (`../plane/store.mjs`), every one unstamped: each reads the published
  *  projection only (R10), so it answers without a credential. */
 export function publicReadOps(r, url) {
   const q = (k) => url.searchParams.get(k);
