@@ -1,4 +1,4 @@
-/* acquisition — THE ACQUISITION ACT (R1–R30; `build/requirements/acquisition.md`), split from `capture` (K617, K649 (1))
+/* acquisition — THE ACQUISITION ACT (R1–R32; `build/requirements/acquisition.md`), split from `capture` (K617, K649 (1))
  * by copy of `capture/acquire.mjs` (K624 (1)), whose Rs it implements with their meaning unchanged: capture R1–R7, R9–R14,
  * R16–R20, R33–R36, R41, R42 and R60–R62 are this module's R1–R23 and R25–R28. It is reached in process (K72 (11)):
  * `capture`'s `acquire` and `archiveLookup` hand their own store in as `cap`, and the capture-request drain calls it
@@ -27,7 +27,8 @@ import { WAYBACK_MEMENTO, mementoEndpoints, acceptDatetime, parseTimeMap, timeMa
 import { RENDER_DEFAULTS, RENDERED_METHOD, completenessReading, keepRenderBodies, renderAllowanceMs, renderConcurrencyCap,
          renderReserveMs, renderBlock, renderedAuthority, rendererFor, renderLocaleFor } from "../render.mjs";
 import { governedFetch as hostGovernedFetch, retryAfterMs } from "../host-governor/index.mjs";
-import { attest as provenanceAttest, ARCHIVE_CAPTURE_GRADE } from "../provenance/index.mjs";
+import { ARCHIVE_CAPTURE_GRADE } from "../provenance/index.mjs";
+import { attest } from "../attestation/index.mjs";
 
 /* R24, R29: the one user agent and this module's rows, for every module that sends or judges them. */
 export { CIVICOS_CONTACT_URL, civicosUserAgent, CAPTURE_REQUEST_ARM_CHECKS, DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS,
@@ -443,20 +444,20 @@ export function governedCall(cap, purpose) {
   };
 }
 
-/** R20 (K60, K72 (10)): co-attestation at every capture, through provenance's `attest` (R31–R33): a trusted
+/** R20 (K60, K72 (10)): co-attestation at every capture, through `attestation`'s `attest` (its R1–R3): a trusted
  *  timestamp over the capture digest and, wherever the source permits, a co-archive of the locator at capture time.
  *  Every attempt and its outcome is recorded; a failure is an attempt, never a failed capture. The archive arm's
- *  locator is itself an archive replay, so no co-archive is asked of it. */
+ *  locator is itself an archive replay, so no co-archive is asked of it. `holds` asks `provenance`'s register (its R5)
+ *  through the store handed in. */
 async function coAttest(cap, { sha, locator, via, ev }) {
   const p = cap.provenance;
-  const attestFn = p && typeof p.attest === "function" ? (a, io) => p.attest(a, io) : provenanceAttest;
   /* The register's shape (C-18.1): each attempt `{service, attempted, ok}`, `attempted` whether the service was
-     asked, `ok` whether it answered; provenance's instant and words are kept beside them. */
+     asked, `ok` whether it answered; attestation's instant and words are kept beside them. */
   const recorded = (a) => ({ ...a, service: String(a.service || a.kind || "attest"), attempted: true, ok: a.ok === true,
                              ...(typeof a.attempted === "string" ? { at: a.attempted } : {}) });
   const notAsked = (why) => [{ service: "attest", attempted: false, ok: false, at: stampSecond(), note: why }];
   try {
-    const out = await attestFn({ sha256: sha, archive: via !== "archive.org", locator },
+    const out = await attest({ sha256: sha, archive: via !== "archive.org", locator },
       { head: (s) => ev.head(s), put: (s, b) => ev.put(s, b), fetch: governedCall(cap, "attest"),
         holds: async (s) => (p && typeof p.registerHolds === "function" ? p.registerHolds({ sha: s }) : null) });
     const attempts = Array.isArray(out && out.attempts) ? out.attempts.filter((a) => a && typeof a === "object") : [];
@@ -1012,17 +1013,18 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     try { cap.recordCaptureActor({ captureSha: sha, actor, at: retrieved }); }
     catch { /* an unrecorded actor costs that member their account (capture R69), never this capture */ }
   }
-  /* provenance R34 (K59): an archive-sourced capture's receipt is signed with the instance's own key. A signing that
-     cannot be made (no key bound) is stated on the answer, never a failed capture. */
   /* R22: what the source said about these bytes, kept for a later conditional fetch of the same document. */
   if (via === "direct" && !renderRecorded) {
     try { cap.recordValidators({ addressNorm: addrNorm, captureSha: sha, etag: res.headers.get("etag"),
                                  lastModified: res.headers.get("last-modified"), at: retrieved }); }
     catch { /* an unrecorded validator costs a later request its condition, never this capture */ }
   }
+  /* attestation R4 (K59): an archive-sourced capture's receipt is signed with the instance's own key, by the
+     attestation instance the composition hands in (`cap.attestation`). A signing that cannot be made (no key bound,
+     or no instance) is stated on the answer, never a failed capture. */
   let receiptSignature = null;
   if (via === "archive.org") {
-    try { receiptSignature = await cap.provenance?.signReceipt?.({ captureSha: sha, retrievalLocator: locator, retrieved }) ?? null; }
+    try { receiptSignature = await cap.attestation?.signReceipt?.({ captureSha: sha, retrievalLocator: locator, retrieved }) ?? null; }
     catch (e) { receiptSignature = { ok: false, reason: "RECEIPT_NOT_SIGNED", detail: String(e && e.message || e).slice(0, 200) }; }
   }
 

@@ -116,7 +116,7 @@ test("R29 (C-68.1, K794): acquire with no evidence storage is refused 503 with i
 });
 
 /* K850: the door's answer as control-plane's `storageAbsent` gives it through its `json` today, for each op it hands the
-   raiser to, with the error each site passes byte-identical (capture/ops.mjs, extraction/ops.mjs, provenance/ops.mjs). */
+   raiser to, with the error each site passes byte-identical (capture/ops.mjs, extraction/ops.mjs, attestation/ops.mjs; provenance/ops.mjs before N512). */
 const C681 = INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED;
 const doorBody = (op, error) => ({ ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED", code: "EVIDENCE_STORAGE_NOT_CONFIGURED",
                                    check: C681.check, translation: C681.translation, error, op });

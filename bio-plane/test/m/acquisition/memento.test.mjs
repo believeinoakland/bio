@@ -12,10 +12,11 @@ const ARCH = { via: "archive.org", address: ADDR };
 const ADMIN = { cls: "admin", member: false, sessMember: null };
 const TG = `${WB}${ADDR}`, TM = `${WB}timemap/link/${ADDR}`;
 
-/* Nothing filed: no document, no receipt, no signature, no object put in the evidence store. */
+/* Nothing filed: no document, no receipt, no signed receipt (attestation's `signed_receipts`), no object put in the
+   evidence store. */
 const nothingFiled = (w, r, what) => {
   assert.equal(r.body.document, undefined, `${what}: no document`);
-  assert.deepEqual([w.prov.receipts.length, w.prov.signed.length, w.b.calls.filter((c) => c[0] === "put").length], [0, 0, 0], `${what}: nothing filed or stored`);
+  assert.deepEqual([w.prov.receipts.length, w.signed().length, w.b.calls.filter((c) => c[0] === "put").length], [0, 0, 0], `${what}: nothing filed or stored`);
 };
 const fresh = async () => { const w = world(); await eligible(w); return w; };
 
@@ -104,8 +105,9 @@ test("R32: archiveLookup answers each Memento refusal by name, and a usable meme
 test("R32 R9: every Memento request goes through the host governor; a cooling archive answers HOST_COOLING_OFF with nothing fetched or filed", async () => {
   const w = await fresh();
   const r = await run(w, wayback([{ ts: "20250101000000" }], { over: { [TG]: new Response("none", { status: 404 }) } }), ARCH, ADMIN);
-  const admits = w.gov.calls.filter((c) => c[0] === "admit").map((c) => c[1]);
-  const reports = w.gov.calls.filter((c) => c[0] === "report").map((c) => [c[1], c[2]]);
+  /* the archive's own requests; co-attestation's go through the governor too, to their own hosts (R20, R28) */
+  const admits = w.gov.calls.filter((c) => c[0] === "admit" && c[1] === "web.archive.org").map((c) => c[1]);
+  const reports = w.gov.calls.filter((c) => c[0] === "report" && c[1] === "web.archive.org").map((c) => [c[1], c[2]]);
   assert.equal(r.status, 200);
   assert.deepEqual(admits, ["web.archive.org", "web.archive.org", "web.archive.org"], "TimeGate, TimeMap and memento each admitted");
   assert.deepEqual(reports, [["web.archive.org", 404], ["web.archive.org", 200], ["web.archive.org", 200]], "each outcome reported");

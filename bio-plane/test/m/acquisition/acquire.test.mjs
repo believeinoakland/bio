@@ -101,8 +101,21 @@ test("R3 R32: the archive arm needs an eligible address, finds a memento through
   assert.equal(chain[1].document_address, addr);
   assert.match(chain[1].evidence, new RegExp(`SHA-256 ${sha("archived bytes")}, computed by this instance`));
   assert.equal(r.body.document.capture.authority, "Internet Archive");
-  assert.deepEqual(w.prov.signed.map((x) => [x.captureSha, x.retrievalLocator]), [[sha("archived bytes"), replay]], "provenance R34: the receipt is signed");
-  assert.deepEqual(r.body.receipt_signature, { ok: true, signed: true });
+  /* attestation R4 (K59, K1224): the instance signs its receipt through the attestation instance handed in */
+  assert.deepEqual(w.signed().map((x) => [x.capture_sha, x.retrieval_locator]), [[sha("archived bytes"), replay]], "the receipt is signed");
+  const sig = r.body.receipt_signature;
+  assert.deepEqual([sig.ok, sig.key_id, sig.statement], [true, w.signed()[0].key_id,
+    `bio-receipt/1\ninstance: inst\nfetched: ${r.body.document.retrieved}\nlocator: ${replay}\nsha256: ${sha("archived bytes")}\n`]);
+  assert.deepEqual((await w.att.signedReceipts(sha("archived bytes"))).map((x) => x.verified), [true], "verifiable against the key it was signed with");
+  /* no key bound: the capture is filed and the answer says the receipt was not signed */
+  const nk = world({ signingKey: null }); await eligible(nk);
+  const unsigned = await run(nk, routes, { via: "archive.org", address: addr }, { cls: "admin", member: false });
+  assert.deepEqual([unsigned.status, unsigned.body.receipt_signature.ok, unsigned.body.receipt_signature.reason, nk.signed().length],
+                   [200, false, "RECEIPT_NO_KEY", 0]);
+  assert.equal(unsigned.body.document.capture.sha256, sha("archived bytes"));
+  /* over-strictness: a direct capture signs no receipt and answers no signature */
+  const direct = await run(w, { "https://a.example/x": text("x") }, { locator: "https://a.example/x" });
+  assert.deepEqual([direct.status, "receipt_signature" in direct.body, w.signed().length], [200, false, 1]);
   /* the named failures */
   await eligible(w);
   const thrown = await run(w, () => new Error("dns"), { via: "archive.org", address: addr }, { cls: "admin" });
@@ -603,40 +616,65 @@ test("R19: the walk of a single HTML page's supporting files, its bookkeeping th
   assert.deepEqual([plain.body.subresources, plain.body.snapshot, plain.net.seen.length], [undefined, undefined, 1]);
 });
 
-test("R20: every capture requests a timestamp and, wherever the source permits, a co-archive, recording each attempt; a failure is an attempt", async () => {
+/* A granted RFC 3161 TimeStampResp whose token carries the digest's raw bytes (what attestation's `attest` binds a
+   token on, its R2); the bytes are this file's. */
+function granted(digestHex) {
+  const der = (tag, body) => {
+    const n = body.length;
+    return Buffer.concat([Buffer.from([tag, ...(n < 128 ? [n] : n < 256 ? [0x81, n] : [0x82, n >> 8, n & 255])]), body]);
+  };
+  const status = der(0x30, der(0x02, Buffer.from([0])));
+  const token = der(0x30, Buffer.concat([der(0x06, Buffer.from([0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x02])),
+                                          der(0x04, Buffer.from(digestHex, "hex"))]));
+  return der(0x30, Buffer.concat([status, token]));
+}
+
+test("R20 R28: every capture asks attestation's attest for a timestamp and, wherever the source permits, a co-archive, each through the governor under the attest agent, recording every attempt in the register's shape; a failure is an attempt, never a failed capture", async () => {
+  /* no authority answers: every authority is asked, then the co-archive of the document's own address */
   const w = world();
   const d = await run(w, { "https://a.example/x": text("x") }, { locator: "https://a.example/x" });
-  assert.deepEqual(w.prov.attests[0], { sha256: sha("x"), archive: true, locator: "https://a.example/x" });
-  assert.deepEqual(d.body.document.attestation_attempts.map((a) => [a.service, a.attempted, a.ok, a.at]),
-                   [["tsa.test", true, true, "2026-09-27T00:00:00Z"], ["archive.test (anonymous)", true, false, "2026-09-27T00:00:00Z"]],
-                   "each attempt in the register's shape (C-18.1): {service, attempted, ok}, the instant kept");
-  await eligible(w);
-  await run(w, wayback([{ ts: "20250101000000", body: "a" }]), { via: "archive.org", address: "https://gone.example/doc" }, { cls: "admin" });
-  assert.deepEqual([w.prov.attests.at(-1).archive, w.prov.attests.at(-1).locator], [false, "https://gone.example/doc"], "the archive arm's locator is itself an archive replay");
-  const failing = world();
-  failing.prov.attest = async () => { throw new Error("tsa down"); };
-  const f = await run(failing, { "https://a.example/x": text("x") }, { locator: "https://a.example/x" });
-  assert.equal(f.status, 200);
-  assert.deepEqual([f.body.document.attestation_attempts[0].attempted, f.body.document.attestation_attempts[0].ok,
-                    f.body.document.attestation_attempts[0].note], [false, false, "tsa down"]);
-  const empty = world({ provOpts: { attestAnswer: { ok: false, reason: "NO_ATTESTATION", attempts: [] } } });
-  const e = await run(empty, { "https://a.example/x": text("x") }, { locator: "https://a.example/x" });
-  assert.deepEqual([e.body.document.attestation_attempts.length, e.body.document.attestation_attempts[0].note], [1, "NO_ATTESTATION"]);
-  /* provenance's own attest, over a network where no authority answers: every attempt recorded, the capture filed,
-     and each authority asked through the governor under this instance's agent (R28) */
-  const real = world({ prov: { recordReceipt() {}, registerHolds: () => ({ registered: false, acquired: true }) } });
-  const u = await run(real, (url) => url === "https://a.example/x" ? text("x") : new Response("no", { status: 503 }),
-                      { locator: "https://a.example/x" });
-  assert.equal(u.status, 200);
-  assert.ok(u.body.document.attestation_attempts.length >= 1);
-  assert.ok(u.body.document.attestation_attempts.every((a) => a.service && typeof a.attempted === "boolean" && typeof a.ok === "boolean"),
-            "provenance's own attempts recorded in the register's shape");
-  const others = u.net.seen.filter((x) => x.url !== "https://a.example/x");
-  assert.ok(others.length >= 1, "the authorities were asked");
-  for (const o of others) {
-    assert.equal(o.init.headers["user-agent"], civicosUserAgent("9.9.9", "inst", "attest"));
-    assert.ok(real.gov.calls.some((c) => c[0] === "admit" && c[1] === new URL(o.url).host), `${o.url} through the governor`);
+  assert.equal(d.status, 200);
+  const asked = d.net.attest;
+  const posts = asked.filter((x) => x.init.method === "POST"), gets = asked.filter((x) => x.init.method !== "POST");
+  assert.ok(posts.length >= 1, "the timestamp authorities were asked");
+  assert.deepEqual(gets.map((x) => x.url.endsWith("https://a.example/x")), [true], "one co-archive, of the locator");
+  for (const x of asked) {
+    assert.equal(x.init.headers["user-agent"], civicosUserAgent("9.9.9", "inst", "attest"));
+    assert.ok(w.gov.calls.some((c) => c[0] === "admit" && c[1] === new URL(x.url).host), `${x.url} through the governor`);
   }
+  const at = d.body.document.attestation_attempts;
+  assert.equal(at.length, asked.length, "every request is an attempt, recorded");
+  assert.ok(at.every((a) => typeof a.service === "string" && a.service && a.attempted === true && a.ok === false && /^http 404$/.test(a.note)
+                          && /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/.test(a.at)), JSON.stringify(at));
+  /* the first authority grants: its token is kept under its own digest and no later authority is asked */
+  const g = world();
+  const ok = await run(g, (u, init) => u === "https://a.example/x" ? text("x")
+    : init.method === "POST" ? new Response(granted(sha("x"))) : new Response("archived", { status: 200 }), { locator: "https://a.example/x" });
+  const first = ok.body.document.attestation_attempts[0];
+  assert.deepEqual([first.ok, first.kind, first.attempted, ok.net.attest.filter((x) => x.init.method === "POST").length], [true, "rfc3161", true, 1]);
+  assert.ok(g.held(first.token_sha256), "the token is held under its own digest");
+  /* the archive arm's locator is itself an archive replay, so no co-archive is asked of it */
+  const a = world(); await eligible(a);
+  const arch = await run(a, wayback([{ ts: "20250101000000", body: "a" }]), { via: "archive.org", address: "https://gone.example/doc" }, { cls: "admin" });
+  assert.equal(arch.status, 200);
+  assert.ok(arch.net.attest.length >= 1 && arch.net.attest.every((x) => x.init.method === "POST"), "timestamps only");
+  /* a capture in parts: no object under the whole's hash, so attest asks the register, and this plane's receipt lets it proceed */
+  const mp = world();
+  const big = new Uint8Array(8 * 1024 * 1024 + 1).fill(3);
+  const m = await run(mp, { "https://a.example/big": () => new Response(big) }, { locator: "https://a.example/big" });
+  assert.deepEqual([m.status, mp.prov.holds.includes(sha(big))], [200, true]);
+  assert.ok(m.body.document.attestation_attempts.every((x) => x.attempted === true), "asked, on the receipt's strength");
+  /* the register cannot be asked: attest names what it could not do, recorded as an attempt not made; the capture stands */
+  const silent = world({ prov: { recordReceipt() {}, registerHolds() { throw new Error("down"); } } });
+  const s = await run(silent, { "https://a.example/big": () => new Response(big) }, { locator: "https://a.example/big" });
+  assert.equal(s.status, 200);
+  assert.deepEqual(s.body.document.attestation_attempts.map((x) => [x.service, x.attempted, x.ok, x.note]), [["attest", false, false, "NO_SUCH_CAPTURE"]]);
+  assert.equal(s.net.attest.length, 0, "no authority asked over bytes it could not find");
+  /* an authority that throws is an attempt too */
+  const t = world();
+  const th = await run(t, (u) => (u === "https://a.example/x" ? text("x") : new Error("tsa down")), { locator: "https://a.example/x" });
+  assert.equal(th.status, 200);
+  assert.ok(th.body.document.attestation_attempts.every((x) => x.ok === false && /tsa down/.test(x.note)));
 });
 
 test("R8 R25 R26: acquire writes no bundle or register row, keeps the raw bytes under their own digest beside separate derived artifacts, and answers no reading", async () => {

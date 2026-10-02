@@ -4,10 +4,13 @@
    reaches (R8 outcomes and reachability, R15 enqueue, R22 sessions, R23 ceiling, R24–R25 site assets, R27 links, R39–R40
    render allowance, R55 measurement, R61 validators, R69 actor), recording every call so a test reads what the act handed
    in. Beside it: record-core's real instance over a node:sqlite stand-in for Durable Object storage (settings and the
-   evidence store), an evidence bucket, and stand-ins for host-governor and provenance as their Provides state them. */
+   evidence store), an evidence bucket, attestation's real instance over the same storage (R20's `attest`, R3's
+   `signReceipt`, handed in as `cap.attestation`, K1224), and stand-ins for host-governor and provenance as their
+   Provides state them. */
 import { DatabaseSync } from "node:sqlite";
-import { createHash } from "node:crypto";
+import { createHash, generateKeyPairSync } from "node:crypto";
 import { RECORD_SCHEMA, recordOf } from "../../../src/record-core/index.mjs";
+import { attestationOf } from "../../../src/attestation/index.mjs";
 import { acquire, archiveLookup } from "../../../src/acquisition/index.mjs";
 import { acceptDatetime } from "../../../src/capture-sources/memento.mjs";
 
@@ -61,19 +64,19 @@ export function governor({ refuse = [], held = [] } = {}) {
   };
 }
 
-/* provenance's R5, R13, R31–R34 as the store reaches them. */
-export function provenance({ registered = [], attestAnswer = null } = {}) {
-  const receipts = [], attests = [], signed = [];
+/* provenance's R5 and R13 as the store reaches them (`registerHolds` is also what attestation's `attest` asks, R1). */
+export function provenance({ registered = [], acquired = [] } = {}) {
+  const receipts = [], holds = [];
   return {
-    receipts, attests, signed,
+    receipts, holds,
     recordReceipt(r) { receipts.push(r); return { recorded: true }; },
-    async signReceipt(r) { signed.push(r); return { ok: true, signed: true }; },
-    registerHolds({ sha: s }) { return { ok: true, sha: s, asked: true, registered: registered.includes(s), acquired: false }; },
-    async attest(args) { attests.push(args); return attestAnswer ?? { ok: true, attempts: [
-      { service: "tsa.test", attempted: "2026-09-27T00:00:00Z", ok: true },
-      ...(args.archive ? [{ service: "archive.test (anonymous)", attempted: "2026-09-27T00:00:00Z", ok: false, note: "http 500" }] : [])] }; },
+    registerHolds({ sha: s }) { holds.push(s); return { ok: true, sha: s, asked: true, registered: registered.includes(s),
+      acquired: acquired.includes(s) || receipts.some((r) => r.captureSha === s) }; },
   };
 }
+
+/** A fresh Ed25519 private key, PKCS#8, base64: what an operator binds as the instance's secret (attestation R4). */
+export const pkcs8 = () => generateKeyPairSync("ed25519").privateKey.export({ type: "pkcs8", format: "der" }).toString("base64");
 
 /* The capture store handed in: each service as capture's Provides state it, in memory, every call recorded in `state`.
    `failures` is capture R8's consecutive-failure threshold for the fallback. */
@@ -165,32 +168,41 @@ export function captureStore({ core, env = {}, gov = null, prov = null, failures
   };
 }
 
-/* A fresh world: record-core over a fresh store, an evidence bucket, the governor, provenance and the capture store. */
-export function world({ env = {}, gov = {}, provOpts = {}, prov = undefined, failures = 3, evidence = true } = {}) {
+/* A fresh world: record-core over a fresh store, an evidence bucket, the governor, provenance, attestation's real
+   instance (its instance key `signingKey`, a fresh one unless a test binds none with `null`) and the capture store
+   carrying it as `attestation`, as capture R73 hands it in. */
+export function world({ env = {}, gov = {}, provOpts = {}, prov = undefined, failures = 3, evidence = true, signingKey = pkcs8() } = {}) {
   const s = storage();
+  const host = { storage: s };
   const b = bucket();
-  const core = recordOf({ storage: s }, { evidence: evidence ? b : null, evidencePrefix: "bio/captures/" });
+  const core = recordOf(host, { evidence: evidence ? b : null, evidencePrefix: "bio/captures/" });
   core.migrate();
   const g = governor(gov);
   const p = prov === undefined ? provenance(provOpts) : prov;
+  const att = attestationOf(host, { record: core, provenance: p, signingKey, instanceName: "inst" });
   const store = captureStore({ core, env: { INSTANCE_NAME: "inst", VERSION: "9.9.9", ...env }, gov: g, prov: p, failures });
-  return { s, b, core, gov: g, prov: p, store, rows: (q, ...a) => s.sql.exec(q, ...a),
+  store.attestation = att;
+  return { s, b, core, gov: g, prov: p, att, store, rows: (q, ...a) => s.sql.exec(q, ...a),
+           signed: () => s.sql.exec("SELECT * FROM signed_receipts"),
            held: (digest) => b.held.has(`bio/captures/${digest}`), bytesOf: (digest) => b.held.get(`bio/captures/${digest}`) };
 }
 
-/* A scripted network: `routes` maps a URL (or a function of it) to a Response or a thrower; every fetch is recorded. */
+/* A scripted network: `routes` maps a URL (or a function of it) to a Response or a thrower; every fetch is recorded.
+   Co-attestation's requests (R20: the timestamp authorities and the co-archive, sent under the agent naming the
+   purpose `attest`, R9) are recorded in `attest`, apart from the act's own fetches in `seen`. */
+const attestPurpose = (init) => /; attest\)$/.test(String((init && init.headers && init.headers["user-agent"]) || ""));
 export function network(routes) {
-  const seen = [];
+  const seen = [], attest = [];
   const orig = globalThis.fetch;
   globalThis.fetch = async (u, init = {}) => {
     const url = String(u && u.url ? u.url : u);
-    seen.push({ url, init });
+    (attestPurpose(init) ? attest : seen).push({ url, init });
     const r = typeof routes === "function" ? routes(url, init) : routes[url];
     if (r instanceof Error) throw r;
     if (!r) return new Response("not found", { status: 404 });
     return typeof r === "function" ? r(url, init) : r.clone();
   };
-  return { seen, restore() { globalThis.fetch = orig; } };
+  return { seen, attest, restore() { globalThis.fetch = orig; } };
 }
 
 /* One acquisition over a scripted network; a member session unless `o` says otherwise. */
