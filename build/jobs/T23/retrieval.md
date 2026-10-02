@@ -30,3 +30,7 @@
 - No generated artifact staled (test files only); nothing regenerated.
 
 Size (session_01FjDUYaSx2mcGgMrfcNFUWL): test runs 4, module lines 2345
+
+## J1 · COMPLETE
+
+N497 applied: fixture.mjs registers producingGroup under instance-setup, citedBy under connections, caseMember under publication. N469's rule: the legacy-store notes in fixture.mjs, fields.test.mjs and selections.test.mjs now name inquiry, basis-versions, connections, strength and record-core, or are in the past tense. Same kind, also fixed: legs.test.mjs and meaning.test.mjs named strength as the leg-grade resolver's registrant (R55: it is inquiry's). No assertion changed; tests only, no artifact staled. Green: test/m/retrieval 122/122; the fixture's users test/m/citation 55/55 and test/m/ratification 192/192. test/m: 5025 pass, 1 fail, which is accepted red 9 (control-plane inbox-door.test.mjs:81). Checks: format 0, architecture 0, coverage 67/67, ownership 0. Deferred, needs your call: src/retrieval/index.mjs:222 and :624 comments also name strength as the resolver. Fixing them would stale the plane bundle, which B1 rules out; a CHANGE can have me fix them. Record: build/jobs/T23/retrieval.md.
