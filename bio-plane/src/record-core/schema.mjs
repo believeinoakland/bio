@@ -100,7 +100,7 @@ CREATE TABLE IF NOT EXISTS seq (
 -- DERIVED table is named in purge does not reach it: nothing here is derived from
 -- the corpus, and clearing it is the defect it closes. record-core's R23 test
 -- (test/m/record-core) proves it exempt from both forms, beside seq.
--- Written in the minting act's own transaction, never one of its own, so an act that
+-- Written in the minting (or recording) act's own transaction, never one of its own, so an act that
 -- rolls back (the review copy's dry run of the publish gates) takes its row back with
 -- it. Seeded at every boot by record-core seedMintLedger from the live rows of each gated
 -- kind, and from the range seq says the counter issued for a prefix with no tail.
@@ -109,6 +109,7 @@ CREATE TABLE IF NOT EXISTS seq (
 --   source   'mint'     drawn and handed out by record-core mintOpaqueId
 --            'live'     learned at boot from a live row of its kind
 --            'counter'  learned at boot from seq, an id the counter issued before REC-151
+--            'chosen'   recorded by record-core recordOpaqueId, an id its caller chose (R75)
 CREATE TABLE IF NOT EXISTS minted_ids (
   id           TEXT PRIMARY KEY,
   recorded_at  TEXT NOT NULL,
