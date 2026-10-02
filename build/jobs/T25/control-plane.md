@@ -29,3 +29,7 @@
 - `node checks/ownership.mjs … control-plane tranche/T25`: 6 files changed; 0 failures.
 
 Size (session_01E6cJNG8QgJmfxSy1h3JDEj): test runs 7, module lines 3535
+
+## J1 · QUESTION
+
+B1 says record.mjs 'composes attestation's attestOp'. My reading: attestOp is a Worker arm (req, env, store, helpers) and record.mjs is the record store's door (dispatch), which holds no Worker arms; attestation has no store route map. So the fixture builds attestationOf after provenance (tables made, purge declared) and routes no attestOp; plane/door.mjs' op=attest is plane's (red 9). Applied on this reading; nothing waits on the answer.
