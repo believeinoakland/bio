@@ -57,7 +57,7 @@ a:focus-visible, input:focus-visible { outline:2px solid var(--accent); outline-
 <h1>CivicOS design principles</h1>
 <p class="lede">Every principle you have already ruled about how CivicOS should look, feel and behave, stated once, in plain words. Nothing here is new except the three gaps at the end, which are yours to rule. Once approved, this page is the yardstick every screen in steps 2 to 5 is checked against.</p>
 <div class="meta">
-<div><b>How to read it</b>Nine families, 53 principles. Each has a one-line statement and what it looks like in practice. Turn on “Show sources” to see the ruling behind each.</div>
+<div><b>How to read it</b>Nine families, 54 principles. Each has a one-line statement and what it looks like in practice. Turn on “Show sources” to see the ruling behind each.</div>
 <div><b>What comes next</b>Step 2, brand and voice (you ruled that the group leads). Step 3, journeys. Step 4, the visual language. Step 5, layouts and key screens.</div>
 <div><b>How to answer</b>“Principles: approved”, or name a principle to change. Then the gaps: for example “G1: A, G2: yes, G3: yes”.</div>
 </div>
@@ -143,6 +143,7 @@ a:focus-visible, input:focus-visible { outline:2px solid var(--accent); outline-
 <li data-n="6.3"><span class="name">Docked beside what it serves</span><span class="say">The assistant is a panel docked beside the screen it serves, which a member can widen; some of the work always stays visible. It never floats over the work.</span><span class="eg">It docks at the side on wide screens and at the bottom on phones, and shrinks back by itself when a guided step needs the member to press something.</span><span class="src">DEC-90; DEC-99</span></li>
 <li data-n="6.4"><span class="name">A wizard points; the member presses</span><span class="say">A guided step highlights the real control and never fills it in or presses it.</span><span class="eg">"Press 'Start the action' when you're ready" with the real button outlined.</span><span class="src">DEC-90</span></li>
 <li data-n="6.5"><span class="name">No shortcut past an act's safeguards</span><span class="say">Anything the assistant starts still goes through the act's own checks, reason and receipt.</span><span class="eg">An assistant-started records request still opens the outward-act warning.</span><span class="src">Interaction Constructs §P</span></li>
+<li data-n="6.6"><span class="name">Any multi-step journey can be walked as a guided flow</span><span class="say">A guided flow takes the member through the real screens, one step at a time: it opens each screen, says what to do there and why, checks the step is done, and moves on. It runs from a wizard script for every group, with no AI needed; the assistant can also plan one on the fly. A step may place a labelled draft in a field for the member to adopt; only the member presses the act's button. Abandoning a flow is a non-event.</span><span class="eg">"Guided: first records request · step 2 of 6 · Choose the office. Why: the request goes to the office that holds the records." The real form is open beside it.</span><span class="src">DEC-120 (G4, G5); DEC-27; DEC-90; ASSISTANT-PILOT §3</span></li>
 </ol>
 </section>
 
@@ -185,7 +186,7 @@ a:focus-visible, input:focus-visible { outline:2px solid var(--accent); outline-
 
 <section id="gaps">
 <h2>Gaps for you to rule</h2>
-<p class="fam-intro">Three things no ruling covers yet. Each shapes every screen that follows, so they are best settled now. How CivicOS speaks (its voice) comes in step 2.</p>
+<p class="fam-intro">G4 and G5 are ruled (2 October, yes and yes). Three things no ruling covers yet remain. Each shapes every screen that follows, so they are best settled now. How CivicOS speaks (its voice) comes in step 2.</p>
 
 <div class="gap" id="g1">
 <h3>G1. What a phone can do</h3>
@@ -212,6 +213,12 @@ a:focus-visible, input:focus-visible { outline:2px solid var(--accent); outline-
 <p class="rec"><b>Recommendation: yes.</b> Everything the interface needs (typefaces, icons, scripts) ships inside the group's own copy. No outside fonts, analytics or trackers on member screens or the public case. This follows your rules that nothing non-public leaves by a system path and that no outside platform is essential.</p>
 <p class="answer">Answer: “G3: yes” or “G3: allow well-known services”.</p>
 </div>
+</section>
+
+<section id="ruled-gaps">
+<h2>Gaps already ruled</h2>
+<div class="gap" style="border-left-color:var(--accent)"><h3>G4. Guided flows without the AI: yes</h3><p>Wizard scripts run for every group with no AI and no key; the assistant adds free-form planning where a key is set. (2 October)</p></div>
+<div class="gap" style="border-left-color:var(--accent)"><h3>G5. Labelled drafts in fields: yes</h3><p>A step may place a labelled draft in a field for the member to edit and adopt; only the member presses the act's button. (2 October)</p></div>
 </section>
 
 <p class="foot">Gathered from your stated principles of 28 July, the interface brief's standing constraints, and the design rulings to 2 October 2026 (DEC-24 to DEC-118, K1). Sources for each line are behind “Show sources”. Kept in the repository at docs/development/ux-substrate/design-principles.html.</p>

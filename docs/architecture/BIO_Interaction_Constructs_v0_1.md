@@ -551,6 +551,13 @@ step** (never a copy of it inside the dialog, which would fork the interface) an
 step is, why it is needed, and how it serves what was asked for. The member does it and presses
 next; the assistant checks and advances.
 
+**RULED 2026-10-02 by Bob (DEC-120): guided flows, wizard scripts, and drafts in fields.** Any multi-step journey can be
+walked as a guided flow. A guided flow runs from a **wizard script** (the authored step list this design first called a
+recipe) for every group, with no AI and no key; where a group has set a key, the assistant may also plan a flow on the fly.
+Either way the member works on the real screens, the guide sitting in the docked panel (DEC-90). A step may place a
+**labelled draft** in a field for the member to edit and adopt (as DEC-101 and K1019 allow); the member alone presses the
+act's button, and the act still runs its four beats. Who authors and approves wizard scripts is open with Bob.
+
 **THE ASSISTANT HOLDS NO COPY OF THE RULES -- it asks the plane, and DEC-8 already governs
 this.** *A surface may render a refusal it received from the plane; it may never compute one*,
 because a copy of a rule is drift waiting to happen. So the wizard MAY be definite: when it says
