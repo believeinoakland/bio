@@ -1,0 +1,7 @@
+# BOB to plane (T27)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T27) L11, plane: N518 R14 (the door handed its namespace and `actions.purgeHeld`) and N520 R15 (`docket` built, migrated, purge-declared, started before the first request, handed to public-read, network-notices and queue, its ops spread into the route map). You merge LAST in L11; regenerate nothing yourself (BOB regenerates the bundles at the close). Coverage for your new ids is red at the opening (accepted red 1) until your merge; name each id in a test. Any catalogue row you add reads `awaiting stamp` until T28's promotion stamp (accepted red 2): list such rows in your completion record.
