@@ -44,7 +44,7 @@ const MOVED = {
     CONTAINER_TOO_LARGE: ["C-98.7", "src/container.mjs serialiseContainer > is-container-too-large", "e299ef045e0a0d8b"],
     NOT_PUBLISHED: ["C-98.8", "src/public-read/index.mjs publishedCase > is-not-published", "bf79ad45a8e581b6"],
     CASE_DOCUMENT_UNSERVABLE: ["C-98.9", "src/publication/worker.mjs publishedRoutes > is-case-document-unservable", "0a10cff464f2574e"],
-    /* C-98.10 (R18; K1149): a row minted here in T23, awaiting stamp; its translation as R17 states it, word for word. */
+    /* C-98.10 (R18; K1149): a row minted here in T23, stamped by 1.54.0; its translation as R17 states it, word for word. */
     PUBLIC_READ_NOT_REGISTERED: ["C-98.10", "src/public-read/index.mjs publicRead > is-public-read-not-registered", "5bd5f9f10b3aa19b"] },
 };
 const digest = (s) => createHash("sha256").update(s).digest("hex").slice(0, 16);
