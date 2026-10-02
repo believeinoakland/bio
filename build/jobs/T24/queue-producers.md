@@ -22,4 +22,4 @@
 - Checks: format, 88 modules, 87 requirements files, 0 failures. Architecture, 14 product files, 56 relative imports, 0 failures. Coverage, 28 of 28 live requirement ids named by a test, 0 failures. Ownership, 5 files changed, 0 failures.
 - Red 5: I added or changed no catalogue row, so there is no `awaiting stamp` row to list.
 
-Size (session_01LL57hVTtupUsVm9pj8DaCy): test runs 4, module lines 3210
+Size (session_01LL57hVTtupUsVm9pj8DaCy): test runs 4, module lines 3211
