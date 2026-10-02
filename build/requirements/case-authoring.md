@@ -133,7 +133,7 @@ Rows C-120.4–C-120.7 (R29; N364), with their translations:
 | C-120.6 | `SELF_ATTESTATION_NOT_STANDING` | "A document acknowledged as self-attested only is either co-attested already or not one this case rests on, so it needs no acknowledgement. Remove it from the list. Nothing was written." |
 | C-120.7 | `UNCLEARED_HUNCH` | "A finding in this case rests on a hunch. A hunch is temporary declared bias, and it is the one bias that must be cleared before publication: the case must still hold with the hunch removed. Give each leg a grade the record earns, or take the hunch out of the basis, and publish again. Nothing was written." |
 
-Row C-82.8 (R19, R29; DEC-88, K1025), with its translation; `awaiting stamp`:
+Row C-82.8 (R19, R29; DEC-88, K1025), with its translation; stamped by 1.53.0:
 
 | row | code | translation |
 |---|---|---|
