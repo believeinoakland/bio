@@ -111,7 +111,7 @@ Terms are `publication`'s. A **preparation** is an unsigned case document; a **s
 - **R25** Every authorship field (`author`, an acknowledger, the draft link's namer) is a stamp; `statement_by` is read from the record (R21), never a body's.
 - **R26** Undetermined is stated and never filled: a statement writer, an undeclared bar axis, a bias manifest not established, a citation's version.
 - **R27** Working material (an unsigned document, a draft, a hidden project) answers an outsider exactly as something that does not exist; R19's dead answer is byte-identical for every door refused.
-- **R28** `statement_acknowledgements` is declared whole to `record-core`'s purge, as today (K23).
+- **R28** `statement_acknowledgements` and `what_changed_drafts` (R39) are each declared whole to `record-core`'s purge (K23, K1147).
 - **R29** Each check moves here as an invariant with its test (K6): C-44.1, C-44.3–C-44.5, C-82.2–C-82.8 (C-82.8 new, below; DEC-88, K1025), C-32.6 and C-33.14 (R3's `NO_STATEMENT`); and C-120.1–C-120.3 (N345) and C-120.4–C-120.7 (N364), a family, "a case's disclosures and its pre-flight", held in this module's own table (K343's pattern), with the translations below. A change to any moves `CATALOG_VERSION` (rule 17).
 - **R30** No place is named in this module's behaviour or outward text.
 - **R33** (DEC-85) No case document this module writes, and no answer it gives, names the project, members, content, kind or source of a side the publisher could not see at the act. A reveal (`contradiction` R52) never widens what a case names: sight at the act, by `membership` R43, governs.
@@ -142,7 +142,7 @@ Row C-82.8 (R19, R29; DEC-88, K1025), with its translation; `awaiting stamp`:
 #### What changed in this edition, and why (DEC-101 (1)(2); K1019)
 
 - **R38** `publishCase` takes `whatChanged: {text, draft?}`. For an edition above 1, an absent `whatChanged` or a blank `text` is refused `NO_WHAT_CHANGED`, and a `text` over 8,000 characters `BAD_WHAT_CHANGED`, after R3's refusals and before anything is written. `draft` names a machine draft (R39) of this case; a `draft` that is not one is refused `NO_SUCH_WHAT_CHANGED_DRAFT`. When one is named the document records `began_as: machine_draft` and whether `text` is the draft's words unchanged; without one, `began_as: member` (`case-grammar` R8). The statement is written into the document's block and printed in its body section (`case-grammar` R8). A first edition carries none. (DEC-101 (1)(2); K1019) The `draft` arm (`began_as: machine_draft`) is met with R39 (K1025); until then `began_as` is `member`.
-- **R39** `proposeWhatChanged({case, text, proposedBy, viewer})` (`op=whatchangedpropose`) stores a draft of a new edition's statement, labelled machine work when its proposer is a machine (`record-grammar`'s `proposalLabel(proposedBy, "edition_statement")`, its R43). It is never a statement until a member adopts or rewrites it through R38. Any credential may propose. `whatChangedDrafts({case, viewer})` (`op=whatchangeddrafts`) lists the case's drafts, oldest first, each with its id, text, label and when. Refusals: `NO_SUCH_CASE` (a case not published, or one the viewer may not see, answered alike); an empty `text`, or one over 8,000 characters, `BAD_WHAT_CHANGED`. Drafts are append-only. (DEC-101 (1); DEC-84 (14); K1019) *(not yet met: T23)*
+- **R39** `proposeWhatChanged({case, text, proposedBy, viewer})` (`op=whatchangedpropose`) stores a draft of a new edition's statement, labelled machine work when its proposer is a machine (`record-grammar`'s `proposalLabel(proposedBy, "edition_statement")`, its R43). It is never a statement until a member adopts or rewrites it through R38. Any credential may propose. `whatChangedDrafts({case, viewer})` (`op=whatchangeddrafts`) lists the case's drafts, oldest first, each with its id, text, label and when. Refusals: `NO_SUCH_CASE` (a case not published, or one the viewer may not see, answered alike); an empty `text`, or one over 8,000 characters, `BAD_WHAT_CHANGED`. Drafts are append-only. (DEC-101 (1); DEC-84 (14); K1019)
 
 #### The lens printed into the signed case (DEC-103; K1019)
 
@@ -150,8 +150,8 @@ Row C-82.8 (R19, R29; DEC-88, K1025), with its translation; `awaiting stamp`:
 
 #### The project reference (DEC-111; K1019, K1031)
 
-- **R41** (DEC-111; `case-grammar` R10) `publishCase` writes `working_on` as `network-notices.noticeReferenceOf(project)` answers it (its R19), and omits it when that answer is null. *(not yet met: T23)*
-- **R42** (DEC-111; K1031 (3); K1119) `publishPreflight`'s "What becomes permanent" step states, when the project has a notice (R41), that publishing opens its sealed weeks (`ratification` R37); the words are the UX design stream's, and until it gives them, one plain sentence saying so. *(not yet met: T23)*
+- **R41** (DEC-111; `case-grammar` R10) `publishCase` writes `working_on` as `network-notices.noticeReferenceOf(project)` answers it (its R19), and omits it when that answer is null.
+- **R42** (DEC-111; K1031 (3); K1119) `publishPreflight`'s "What becomes permanent" step states, when the project has a notice (R41), that publishing opens its sealed weeks (`ratification` R37); the words are the UX design stream's, and until it gives them, one plain sentence saying so.
 
 ### Satisfies
 
