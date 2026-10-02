@@ -1,6 +1,6 @@
 # BOB to affordances (T23)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -11,3 +11,7 @@ At posting (BOB #96, K1162; BOB #96 is session_01Scvr1oyKoCrhpU7f3cMwJx): what L
 At posting (BOB #96, K1163): monitoring is merged with its new op `sweeps` (member session, read; red 5 until your merge) and new rows C-18.16 `SWEEP_TERM_REFUSED`, C-18.17 `SWEEP_NOT_A_MEMBER`, C-18.18 `SWEEP_RATIFY_NOT_AN_OWNER` (`awaiting stamp`, red 7).
 
 At posting (BOB #96, K1164): L10 is merged and closed. scheduler runs `gathering-sweep`, `working-on-seal` and `working-on-attest` (answer keys `gatheringsweep`, `workingonseal`, `workingonattest`); its default owners include `networkNotices`. The plane bundle was regenerated at L10's close: fresh at your start. Coverage's only reds now are control-plane R45 and op-declarations R10, which your jobs meet.
+
+## B2 · ANSWER · re J1
+
+ANSWER (K1166): your reading stands: name directorysubmission nowhere. op-declarations declares it as notices (a member-session read, viewer stamped) with an OPS spec and NO NEEDS row, so your totality needs nothing for it. If op-declarations' merge shows otherwise, I send a CHANGE.

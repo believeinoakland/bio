@@ -35,7 +35,7 @@ Terms. An **act** is `{id, label, weight, types, applies(facts, type), prompt?}`
 
   R12's totality holds with them.
 
-- **R32** (N485: K1025, K1035; K1094; DEC-111, K1100) The ops T23 adds (`op-declarations` R10), by R7 and R27, R12's totality holding with them *(not yet met: T23)*:
+- **R32** (N485: K1025, K1035; K1094; DEC-111, K1100) The ops T23 adds (`op-declarations` R10), by R7 and R27, R12's totality holding with them:
   - `RUNG_ABSENT` holds `whatchangedpropose`, ground `undetermined`, on R27's rule, as `templatepropose` (a draft, machine or member, append-only: it asks no authored reason and no published act takes it back; `case-authoring` R39).
   - `RUNGS` assigns `attested` to `noticepost` (an owner's own signature publishes it, `network-notices` R4, R24, as `caseratify`; a change or a stop is a new revision, R6, R11, and nothing published is altered, R26).
   - `NON_ACTS` gives each its reason: `whatchangedpropose` "case-directed: keyed by a published case, reached from its next edition; a draft, never a statement until a member adopts it"; `noticepost` "project-directed: keyed by a project, reached from the project; an owner's signed notice"; the reads `escalationreasondraft`, `whatchangeddrafts`, `sweeps`, `noticeprepare` (it writes nothing) and `notices` "read: …"; and the public reads of `network-notices` (its R10, R20, R21) "read: public, no credential".
