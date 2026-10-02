@@ -31,3 +31,7 @@ Size (session_01RQeoV3bSk9w1uyvNraCojZ): test runs 20, module lines 2408
 ## J1 · REPORT
 
 Two findings outside public-read. (1) Bundle: bio-plane/src/public-read/checks.mjs changed (comments only), so the plane's bundle may be stale by input hash; regenerated nothing. (2) network-notices: test/m/network-notices/reads.test.mjs:143 (R25) failed once in the whole test/m run ('bob named') and passed 17 runs of its file alone (5 on the tranche's tree without my change). It searches the JSON of every answer for the bare substring 'bob' (and alice, carol, dave), which random encoded material (salts, roots, keys) can contain by chance: intermittent, not a leak. It should match member names as whole values or tokens (network-notices R25).
+
+## J2 · COMPLETE
+
+public-read T24 done (record's Completion). N508 (fixture.mjs:4, :28) and S1's (checks.mjs:9, :146; checks.test.mjs:47, C-98.10 stamped by 1.54.0) re-worded; re-scan found one more, worker.test.mjs:5, re-worded. Comments only: no row added or changed, nothing awaiting stamp. Module tests 86/86; whole test/m 5224 pass, 1 fail (network-notices R25, intermittent, see REPORT; not this change); format 2 failures = red 4; architecture, coverage (19/19), ownership: 0 failures.
