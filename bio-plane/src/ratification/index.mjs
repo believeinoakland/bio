@@ -34,11 +34,11 @@
  *   connections    `citesInto` (its R22; R29: the retirement's live citers, `./retire.mjs`).
  *   contradiction  `candidatesFor` (its R25, R26; R22's contested arm). capture: `registerReader` (its R78; R34).
  *   strength       `testimonyCorroboration` (its R30; R35). reevaluation: `levelMoved` (its R29; R36).
+ *   networkNotices `openSeals` (its R17; R37), after the case commit.
  *
  * READ CONTRACTS it reads in its own SQL: publication's `case_documents` and `cases` (its R40), record-core's `manifest`
  * and `history` (`gateFacts`' manifest and history lists, as they were), inquiry's `inquiry_basis` (`bundle_id`,
- * `target_id`, its R40), and connections' `refs` (`gateFacts`' `dangling` list, kept as it was; reported, since
- * connections states no read contract yet). */
+ * `target_id`, its R40), and connections' `refs` (`gateFacts`' `dangling` list, kept as it was; its R58). */
 
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf } from "../membership/index.mjs";
@@ -54,6 +54,7 @@ import { contradictionOf } from "../contradiction/index.mjs";
 import { strengthOf } from "../strength/index.mjs";
 import { reevaluationOf } from "../reevaluation/index.mjs";
 import { captureOf } from "../capture/index.mjs";
+import { networkNoticesOf } from "../network-notices/index.mjs";
 import { parseFrontmatter, normalizeType, isMachineIdentity, MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
 import { checkCaseDocument, caseMemberFindings, caseMemberImageFindings, completenessFields,
          RATIFY_SCOPE_CHECKS, rowOf } from "./checks.mjs";
@@ -70,7 +71,7 @@ export { EDGE_REASON_MAX } from "./retire.mjs";
 /* The viewer stamp membership mints for an organisation-scoped agent credential (`aiCredentialMint`'s principal). */
 const AGENT_ORGANISATION_STAMP = `${MACHINE_CLASS_PREFIX}ai`;
 
-/* Frontmatter-safe (legacy-store's `#fmSafe`, the rule `caseConclusionRowLines` writes under): the restricted grammar
+/* Frontmatter-safe (once legacy-store's `#fmSafe`, the rule `caseConclusionRowLines` writes under): the restricted grammar
    has no escapes, and these strings are DERIVED rather than authored, so they are sanitised rather than refused. */
 export function fmSafe(s) {
   return String(s ?? "").replace(/[\r\n]+/g, " ").replace(/["\\]/g, "'").trim();
@@ -104,13 +105,14 @@ export class Ratification {
 
   constructor({ storage, record, membership, promotion, host = null, provenance = null, inquiry = null,
                 basisVersions = null, publication = null, retrieval = null, connections = null,
-                credentials = null, contradiction = null, strength = null, reevaluation = null } = {}) {
+                credentials = null, contradiction = null, strength = null, reevaluation = null,
+                networkNotices = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
     this.#deps = { host, provenance, inquiry, basisVersions, publication, retrieval, connections, credentials,
-                   contradiction, strength, reevaluation };
+                   contradiction, strength, reevaluation, networkNotices };
   }
 
   /* The modules reached lazily: each is created on the same host on first use, unless a test passed its own. */
@@ -123,6 +125,9 @@ export class Ratification {
   get contradiction() { return this.#deps.contradiction ||= contradictionOf(this.#deps.host); }
   get strength() { return this.#deps.strength ||= strengthOf(this.#deps.host); }
   get reevaluation() { return this.#deps.reevaluation ||= reevaluationOf(this.#deps.host); }
+  get networkNotices() {
+    return this.#deps.networkNotices ||= networkNoticesOf(this.#deps.host, { record: this.record, membership: this.membership });
+  }
   get credentials() {
     return this.#deps.credentials ||= credentialsOf(this.#deps.host, { record: this.record, membership: this.membership });
   }
@@ -701,9 +706,15 @@ export class Ratification {
      `publish()` does: a retry is not a revision. A DIFFERENT signature over the
      same edition is refused, because an edition answers forever and two
      attestations of one edition would leave a reader unable to say who stood
-     behind it. */
-  ratifyCaseDocument({ caseId, edition, docSha, sigArmored, attestorKey, attestorMember,
-                       gateVersion, deliveredBy = null } = {}) {
+     behind it.
+
+     R37 (DEC-111): ONCE THE EDITION IS COMMITTED its project's sealed weeks are opened (`network-notices.openSeals`, its
+     R17), outside the commit's transaction: held with record-core's `afterCommit` (its R66), so it starts only after the
+     outermost commit and is dropped with any refusal or rollback; a retry answering `existed` opens nothing. It is
+     async, so the act answers once it settles: its answer is `seals`, and a failure never changes the ceremony's
+     answer. It is stated there, and the `working-on-attest` consumer retries the opening. */
+  async ratifyCaseDocument({ caseId, edition, docSha, sigArmored, attestorKey, attestorMember,
+                             gateVersion, deliveredBy = null } = {}) {
     const id = String(caseId ?? "").trim();
     const ed = Number(edition);
     if (!id || !Number.isInteger(ed) || ed < 1 || !docSha) return { ok: false, reason: "MALFORMED" };
@@ -715,7 +726,8 @@ export class Ratification {
                      + `request carries no signature over case ${id} edition ${ed}, so committing it would `
                      + `mean this plane asserting a group's case on their behalf. Review the case document `
                      + `(op=casedocument) and ratify it (op=caseratify).` };
-    return this.record.transact(() => {
+    let seals = null;
+    const out = this.record.transact(() => {
       const doc = this.#caseDocumentRow(id, ed);
       if (!doc) return { ok: false, reason: "NO_CASE_DOCUMENT", caseId: id, edition: ed };
       if (doc.doc_sha !== docSha)
@@ -921,6 +933,7 @@ export class Ratification {
           this.reevaluation.levelMoved({ observation, from: was.get(observation), to, case: id, edition: ed, at: now });
       const completedCase = committed.state && committed.state.complete && !committed.state.manifest_sha
         ? committed.state : null;
+      this.record.afterCommit(() => { seals = this.#openSeals(id, ed); });   /* R37 */
       return { ok: true, caseId: id, edition: ed, project, roster,
                /* REC-212 / §3 rule 13: BOTH NAMES IN THIS ACT'S ANSWER — who wrote the statement and who prepared and
                   published the case — from the one read above, so the answer and the committed row are one fact. */
@@ -938,6 +951,19 @@ export class Ratification {
                   less what is published at its pin. */
                awaiting: Array.isArray(committed.awaiting) ? committed.awaiting : [] };
     });
+    return seals ? { ...out, seals: await seals } : out;
+  }
+
+  /* R37: `openSeals`' answer, or, when it refuses, throws or rejects, the failure stated; never a throw. */
+  #openSeals(caseId, edition) {
+    const unopened = (reason, detail) => ({ ok: false, opened: false, reason,
+      detail: `the sealed weeks of case ${caseId} edition ${edition} were not opened at this act (${detail}). The edition `
+            + `is committed and this answer stands; the working-on-attest consumer retries the opening.` });
+    let p;
+    try { p = Promise.resolve(this.networkNotices.openSeals({ case: caseId, edition })); } catch (e) { p = Promise.reject(e); }
+    return p.then((r) => (r && typeof r === "object" && r.ok !== false ? r
+                          : unopened(r && r.reason ? r.reason : "OPEN_SEALS_FAILED", r && r.detail ? r.detail : "no answer")),
+                  (e) => unopened("OPEN_SEALS_FAILED", String((e && e.message) || e).slice(0, 200)));
   }
 
 
@@ -1155,7 +1181,7 @@ export function ratificationOf(host, deps) {
   return r;
 }
 
-/** R32: the module's store-half ops (K3), as entries of the legacy store's op map: `gatefacts` (R7), `ratifygate` (R4's
+/** R32: the module's store-half ops (K3), spread into the plane's op map (`plane/store.mjs`): `gatefacts` (R7), `ratifygate` (R4's
  *  gate, N417), `casegate` (R2's gate), `caseratify` (R3) and `publish` (R5), the internal hops of the two ceremonies,
  *  `release` (R20–R27) and `retire` (R28–R31). `viewer`, and release's and retire's `owner` and `author`, are the
  *  control plane's stamps, read from the query, never from the body. */

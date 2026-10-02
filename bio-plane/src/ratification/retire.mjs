@@ -2,8 +2,8 @@
  * documents at once, over a selection, at weight `refuse` (State Rules v1.5 §4.1: a retired item is not citable, and
  * `retired` is terminal). Extracted from `legacy-store` in T19 layer 8 (`Store.retire`, `#retirementCitedBy`,
  * `EDGE_REASON_MAX`; its `CITED` detail is `promotion`'s `RETIRE_CITED_DETAIL`, the words `promotion` R16 answers),
- * as the bulk release was in T18 (`./release.mjs`, whose `moveMember` writes each member here too); the store's op
- * map reaches it through `ratificationOps` (§12.2). The legacy code's comments moved with it.
+ * as the bulk release was in T18 (`./release.mjs`, whose `moveMember` writes each member here too); the plane's op
+ * map (`plane/store.mjs`) reaches it through `ratificationOps` (§12.2). The legacy code's comments moved with it.
  *
  * S-11 step 4: bulk RETIREMENT of Information, weight `refuse`.
  *

@@ -10,6 +10,7 @@ import assert from "node:assert/strict";
 import * as R from "../../../src/ratification/checks.mjs";
 import * as RG from "../../../src/record-grammar/index.mjs";
 import { world } from "./fixture.mjs";
+import { isNoticeReference } from "../../../src/case-grammar/index.mjs";
 
 const PIN = "a".repeat(64);
 const M1 = "INQ-2026-0001-first", M2 = "INQ-2026-0002-second";
@@ -48,7 +49,7 @@ const NO_WC = "# Case\n\n## What This Excludes\n\nthe 2019 permits\n";
 const checks = (fm, ctx = CTX) => R.checkCaseDocument(fm, ctx).map((x) => x.check);
 const fires = (mutate, check, ctx = CTX) => R.checkCaseDocument(mutate(doc()), ctx).some((x) => x.check === check);
 
-/* The sixteen arms of C-41, each with the one mutation that fires it (casesign's list, extended to every arm). */
+/* The seventeen arms of C-41, each with the one mutation that fires it (casesign's list, extended to every arm). */
 const ARMS = [
   ["FORMAT", "C-41.1", (d) => { d.format = "bio-case-document/9"; return d; }],
   ["IDENTITY", "C-41.2", (d) => { d.case_id = "CASE-2026-9999"; return d; }],
@@ -67,6 +68,7 @@ const ARMS = [
   ["CITATIONS", "C-41.15", (d) => { d.case_citations[0].capture = null; return d; }],
   /* asked only over a body: edition 2 with no "What changed" section */
   ["WHAT_CHANGED", "C-41.16", (d) => d, [], { ...CTX, body: NO_WC }],
+  ["WORKING_ON", "C-41.17", (d) => { d.working_on = "not a notice"; return d; }],
 ];
 
 test("R8: the baseline /5 case document draws no finding, with its body, member basis and a fresh prior edition; a /4 one, read as written, neither but C-41.16 (its format carries no What-changed statement)", () => {
@@ -78,7 +80,7 @@ test("R8: the baseline /5 case document draws no finding, with its body, member 
   assert.deepEqual(checks({ ...v4, case_edition: 1 }, { ...CTX, edition: 1, body: BODY }), [], "edition 1 is not asked");
 });
 
-test("R8: each of C-41.1–C-41.16 is declared in CASE_DOCUMENT_FAMILY and fires on its own mutation, and the arms cover the family exactly", () => {
+test("R8, R38: each of C-41.1–C-41.17 is declared in CASE_DOCUMENT_FAMILY and fires on its own mutation, and the arms cover the family exactly", () => {
   for (const [key, num, mutate, also = [], ctx = CTX] of ARMS) {
     assert.equal(R.CASE_DOCUMENT_FAMILY[key].check, num);
     assert.equal(fires(mutate, num, ctx), true, `${num} fires`);
@@ -87,7 +89,7 @@ test("R8: each of C-41.1–C-41.16 is declared in CASE_DOCUMENT_FAMILY and fires
   }
   assert.deepEqual(ARMS.map(([k]) => k).sort(), Object.keys(R.CASE_DOCUMENT_FAMILY).sort());
   assert.deepEqual(Object.values(R.CASE_DOCUMENT_FAMILY).map((v) => v.check),
-    Array.from({ length: 16 }, (_, i) => `C-41.${i + 1}`));
+    Array.from({ length: 17 }, (_, i) => `C-41.${i + 1}`));
 });
 
 test("R8: the case arms of C-2.8 (each member's frozen blocks, as the document states them), C-3.1 (the section) and C-21.1 (a statement or acknowledgement reprinted from the previous edition)", () => {
@@ -157,6 +159,21 @@ test("R8: CASE_CITATION_VERSIONS and SEARCHED_SUBJECT_SOURCES are exported; C-41
     const d = doc(); d.searched.subject_source = src;
     assert.deepEqual(checks(d), ["C-41.10"]);
   }
+});
+
+test("R38: C-41.17 refuses a present working_on that is not a notice id by case-grammar R10's rule, null and empty included, before any write; a notice id and an absent field pass", () => {
+  const with_ = (v) => { const d = doc(); d.working_on = v; return d; };
+  for (const v of ["NOTICE-2026-0001", "NOTE-2026-0042-permits-late", "WO-2026-0003-a-b"])
+    assert.deepEqual(checks(with_(v), { ...CTX, body: BODY }), [], `${v} is a notice id`);
+  assert.deepEqual(checks(doc(), { ...CTX, body: BODY }), [], "absent: the case names no notice");
+  for (const v of [null, "null", undefined, "", " ", "notice-2026-0001", "NOTICE-26-1", "NOTICE-2026-0001-", "NOTICE-2026-0001-Upper", "PROJ 2026 0001",
+                   "https://example.org/notice", 7, true, ["NOTICE-2026-0001"], { id: "NOTICE-2026-0001" }]) {
+    const got = R.checkCaseDocument(with_(v), CTX);
+    assert.deepEqual(got.map((x) => [x.check, x.severity]), [["C-41.17", "error"]], JSON.stringify(v));
+    assert.match(got[0].message, /is not a notice id/);
+  }
+  /* the arm and case-grammar's predicate agree over every value asked above */
+  for (const v of ["NOTICE-2026-0001", "x", 3]) assert.equal(fires((d) => { d.working_on = v; return d; }, "C-41.17"), !isNoticeReference(v));
 });
 
 /* N211 (T18): the catalogue's copies of `SUBJECT_POSITIONS` and `caseEditionClaimed` were deleted, every importer reading

@@ -151,3 +151,14 @@ test("R2, R4: the ceremonies' dispatch answers op=caseratify and op=ratify throu
   for (const op of ["publish", "gatefacts", "release", "", undefined]) assert.equal(ratificationOp(op, p.request({}), p.stub, p.ctx), null, String(op));
   assert.deepEqual(p.fetched, [], "nothing was asked of the store");
 });
+
+test("R38: a case document carrying a malformed working_on is refused GATE_REFUSED with C-41.17 before any write; a notice id commits", async () => {
+  const bad = await setup({ mutate: (d) => ({ ...d, working_on: "not-a-notice" }) });
+  const r = await bad.run();
+  assert.deepEqual([r.status, r.body.reason, r.body.findings.map((x) => x.check)], [409, "GATE_REFUSED", ["C-41.17"]]);
+  assert.equal(bad.w.pub.committed.length, 0);
+  assert.equal(bad.w.row(`SELECT ratified_at FROM case_documents WHERE case_id=?`, CASE).ratified_at, null, "nothing written");
+  const good = await setup({ mutate: (d) => ({ ...d, working_on: "NOTICE-2026-0001" }) });
+  const ok = await good.run();
+  assert.deepEqual([ok.status, ok.body.ok], [200, true], JSON.stringify(ok.body).slice(0, 300));
+});

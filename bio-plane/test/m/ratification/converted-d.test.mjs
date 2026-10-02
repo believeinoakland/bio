@@ -322,7 +322,7 @@ test("R4, R12 (deliverer): iris SIGNS and GUS's session DELIVERS at op=ratify, o
 
 test("R3, R5, R12, R13 (deliverer, legacy): the store's committers called as a plane before REC-128 called them — a signer and no deliverer — commit the deliverer null, never the signer", async () => {
   const { w, P, iris, docSha, sig } = await caseWorld();
-  const c = w.r.ratifyCaseDocument({ caseId: CASE, edition: 1, docSha, sigArmored: sig, attestorKey: iris.keyB64,
+  const c = await w.r.ratifyCaseDocument({ caseId: CASE, edition: 1, docSha, sigArmored: sig, attestorKey: iris.keyB64,
                                      attestorMember: "iris", gateVersion: "legacy" });
   assert.equal(c.ok, true, JSON.stringify(c).slice(0, 400));
   assert.deepEqual([w.pub.committed[0].attestorMember, w.pub.committed[0].deliveredBy], ["iris", null]);
@@ -370,13 +370,13 @@ function groundsDoc() {
 const GCTX = { caseId: CASE, edition: 1, body: CASE_BODY, memberBasis: { [GQ]: GROUNDED, [PLAIN]: FLAT } };
 const errors = (fm, ctx = GCTX) => checkCaseDocument(fm, ctx).filter((x) => x.severity === "error");
 
-test("R8 (grounds): a case document stating a grouped member's per-ground rows passes the case gate over the member's grounded basis; an unstructured member needs no row", () => {
+test("R8 (grounds): a case document stating a grouped member's per-ground rows passes the case gate over the member's grounded basis; an unstructured member needs no row", async () => {
   assert.deepEqual(errors(groundsDoc()).map((x) => `${x.check}: ${x.message}`), []);
   assert.equal(groundsDoc().case_strength_grounds.filter((r) => r.target === PLAIN).length, 0,
     "the unstructured member states no branch row, and the document audits clean without one");
 });
 
-test("R8 (grounds): stripped of the grouped member's rows the case document draws C-2.8 naming published_strength_grounds, for that member; a missing ground's row is named; with no member basis the arm is unasked", () => {
+test("R8 (grounds): stripped of the grouped member's rows the case document draws C-2.8 naming published_strength_grounds, for that member; a missing ground's row is named; with no member basis the arm is unasked", async () => {
   const stripped = { ...groundsDoc(), case_strength_grounds: [] };
   const errs = errors(stripped);
   assert.deepEqual(errs.map((x) => x.check), ["C-2.8"]);
@@ -436,7 +436,7 @@ async function twoFindingCase() {
   const rows = members.map((m) => [m.id, w.r.caseConclusionFor(P, m.id, V("iris"), "open")]);
   const text = caseMd({ caseId: CASE, edition: 1, project: P, members, conclusions: rows, rowLines: caseConclusionRowLines });
   const docSha = w.caseDoc(CASE, 1, text);
-  const c = w.r.ratifyCaseDocument({ caseId: CASE, edition: 1, docSha, sigArmored: await signCase(iris, CASE, 1, docSha),
+  const c = await w.r.ratifyCaseDocument({ caseId: CASE, edition: 1, docSha, sigArmored: await signCase(iris, CASE, 1, docSha),
                                      attestorKey: iris.keyB64, attestorMember: "iris", gateVersion: GATE_VERSION,
                                      deliveredBy: V("iris") });
   assert.deepEqual([c.ok, c.awaiting], [true, [FIND_A, FIND_B]], JSON.stringify(c).slice(0, 300));

@@ -1,9 +1,9 @@
 /* ratification — the bulk release (R20–R27; N400, K583, K636): the collected-to-verified transition of many Information
  * documents at once, over a selection (Intake Doctrine §4, "What verification asserts, and batch ratification").
  * Extracted from `legacy-store` in T18 (`Store.release`, `RELEASE_ACK_MAX` and the two front-matter helpers it calls,
- * `#appendStateHistory` and `#setScalar`); the store's op map reaches it through `ratificationOps` (§12.2). The legacy
- * code's comments moved with it. Since T19 layer 8 the bulk retirement (`./retire.mjs`, R28–R31) writes each member
- * through the same `moveMember` below, so the two transitions splice a document one way.
+ * `#appendStateHistory` and `#setScalar`); the plane's op map (`plane/store.mjs`) reaches it through `ratificationOps`
+ * (§12.2). The legacy code's comments moved with it. Since T19 layer 8 the bulk retirement (`./retire.mjs`, R28–R31)
+ * writes each member through the same `moveMember` below, so the two transitions splice a document one way.
  *
  * S-11 step 5, the last rung of the ladder: bulk RELEASE of Information, collected -> verified over a selection, weight
  * `refuse`, whole set or nothing. Decided by Bob 2026-07-27 and specified in Intake Doctrine v1.2: what legitimizes a

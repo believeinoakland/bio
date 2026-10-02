@@ -3,23 +3,23 @@
  * answers carries its code, its catalogue row and the member's translation.
  *
  * Moved here from the check catalogue (`legacy-checks`, K6, K94) with their ids, texts and translations unchanged:
- * `caseEditionClaimed`, `isCaseMemberBytes` (legacy-checks keeps its own copy for C-3.1's heading rule, Decided 6),
+ * `caseEditionClaimed`, `isCaseMemberBytes` (record-grammar keeps its own copy for C-3.1's heading rule, N69; Decided 6),
  * `SUBJECT_POSITIONS`, `CASE_MEMBER_ROLES`, `biasAcknowledgementOf`, `completenessFields`, `checkPublishedExtension`
- * (C-2.8's case-member arm), `SEARCHED_SUBJECT_SOURCES`, `CASE_DOCUMENT_FAMILY` (C-41.1–C-41.16),
+ * (C-2.8's case-member arm), `SEARCHED_SUBJECT_SOURCES`, `CASE_DOCUMENT_FAMILY` (C-41.1–C-41.16, and C-41.17 new for R38),
  * `CASE_CITATION_VERSIONS`, `checkCaseDocument`; the rows C-32.12–C-32.15, C-53.10–C-53.12, C-58.1–C-58.5, C-65.1 and
  * C-92.10–C-92.12; and, copied in T18 (split tables), C-32.1, C-33.10–C-33.12 (the bulk release) and C-102.10. A
  * row's `where` names the region in this module that mints it. The case-document formats and their three predicates
- * are `publication`'s (its R20). The legacy code's comments moved with it. */
+ * are `case-grammar`'s (its R1), read through `publication`'s re-export. The legacy code's comments moved with it. */
 
 import { ISO_TS_RE, BUNDLE_ID_RE, BASIS_GRADES, GRADE_AXES } from "../record-grammar/index.mjs";
 import { STRENGTH_STATES } from "../strength/index.mjs";
 import { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V2, CASE_DOCUMENT_FORMAT_LEGACY, CASE_DOCUMENT_FORMATS_ACCEPTED,
          caseDocumentStatesMemberBlocks, caseDocumentRequiresDisclosures,
          caseDocumentRequiresV4Disclosures } from "../publication/index.mjs";
-import { whatChangedOf } from "../case-grammar/index.mjs";
+import { whatChangedOf, isNoticeReference, WORKING_ON_KEY } from "../case-grammar/index.mjs";
 
 /* The catalogue's finding shape (`{check, severity, message, repairable?, repairs?, code?}`), so a finding from here
-   reads exactly as one from `legacy-checks`. */
+   reads exactly as one from the record's grammars (`record-grammar` R11). */
 function f(check, severity, message, repairs, code) {
   const out = { check, severity, message };
   if (repairs) { out.repairable = true; out.repairs = repairs; }
@@ -498,6 +498,8 @@ export const CASE_DOCUMENT_FAMILY = {
   CITATIONS:    { check: 'C-41.15', what: 'case_citations — each citation edge with the version it rests on, a pinned one naming its capture, required of a bio-case-document/4 (REC-219, D-579(a))' },
   /* DEC-101 (2), K1019: a new edition says what changed in it, read through case-grammar's `whatChangedOf` (its R8). */
   WHAT_CHANGED: { check: 'C-41.16', what: 'the "What changed" statement, required of every edition above 1 (DEC-101 (2))' },
+  /* DEC-111, R38 (K1119): the project reference a case may carry, read by case-grammar's `isNoticeReference` (its R10). */
+  WORKING_ON:   { check: 'C-41.17', what: 'working_on, when present, a notice id (DEC-111; case-grammar R10)' },
 };
 /* REC-219 / D-579(a): the states a case document's citation edge may carry, and which name a capture. */
 export const CASE_CITATION_VERSIONS = ['pinned', 'only_capture', 'undetermined', 'no_capture', 'no_bytes'];
@@ -928,6 +930,15 @@ export function checkCaseDocument(fm, ctx = {}) {
       findings.push(f(C41.WHAT_CHANGED, 'error', 'A new edition of a case says what changed in it, and why, before it is signed. This one does not. Write the statement, then sign. Nothing was signed.',
         ['write the "What changed in this edition, and why" statement on op=publish']));
   }
+  /* DEC-111, R38 (K1119) — C-41.17: a `working_on` the document carries is a notice id by case-grammar's one rule (its
+     R10), so the published case never shows as its project reference a value no notice can have. An absent field names
+     no notice and is not asked (the field is optional in `/5`); a present one is asked whatever it holds, `null` and an
+     empty string included, since case-authoring writes no line for a project with no notice (K1144). */
+  if (fm && typeof fm === 'object' && Object.prototype.hasOwnProperty.call(fm, WORKING_ON_KEY)
+      && !isNoticeReference(fm[WORKING_ON_KEY])) {
+    findings.push(f(C41.WORKING_ON, 'error', `a case document's working_on names the notice this case's project published, and '${String(fm[WORKING_ON_KEY])}' is not a notice id: the published case shows it as the project reference, so a value no notice can have would point a reader at nothing (DEC-111)`,
+      ['publish through op=publish, which writes the project\'s notice id, or leave working_on out']));
+  }
   /* C-21.1 AT CASE ALTITUDE, and it is the arm that moved here WITHOUT its
      wording changing at all, because it was always a comparison between two
      CASE EDITIONS and never between two findings. A completeness claim carried
@@ -1141,14 +1152,14 @@ export const RATIFY_SCOPE_CHECKS = {
       + 'project sign the case document; an owner of that project can then sign this. Nothing was '
       + 'published.',
   },
-  /* DEC-97 (3), K1058: R22's contested arm. Awaiting stamp (T23). */
+  /* DEC-97 (3), K1058: R22's contested arm. Stamped in `CATALOG_VERSION` 1.53.0 (promotion, T23 layer 2). */
   CONTESTED_IN_BATCH: {
     check: 'C-58.4',
     where: 'src/ratification/release.mjs release > is-release-contested',
     translation: 'Some of these documents are contested: a contradiction touching each is not yet resolved, and '
       + 'contested material is never released in a batch. They are named. Nothing was released.',
   },
-  /* DEC-102 items 1 and 2, K1058: R35, testimony credited only to the group or the project. Awaiting stamp (T23). */
+  /* DEC-102 items 1 and 2, K1058: R35, testimony credited only to the group or the project. Stamped in 1.53.0. */
   ANONYMOUS_TESTIMONY_UNCORROBORATED: {
     check: 'C-58.5',
     where: 'src/ratification/refusals.mjs anonymousTestimonyRefusal > is-anonymous-testimony',

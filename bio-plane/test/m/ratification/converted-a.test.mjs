@@ -57,7 +57,7 @@ async function caseWorld({ mutate = (d) => d, body = CASE_BODY } = {}) {
 const ONE_AXIS = { declared: true, capture: "B", connection: null };
 const c4112 = (fm) => checkCaseDocument(fm, { caseId: CASE, edition: 1 }).filter((x) => x.check === "C-41.12").length;
 
-test("R8 (caseproduction §10, D-450): C-41.12 admits a bar declared on one axis with the other null, and still fires on an omitted key, a non-grade and a bar on neither axis", () => {
+test("R8 (caseproduction §10, D-450): C-41.12 admits a bar declared on one axis with the other null, and still fires on an omitted key, a non-grade and a bar on neither axis", async () => {
   const doc = cleanCase({ caseId: CASE, edition: 1, project: "PROJ-2026-0001-team", members: [{ id: Q1, pin: PIN }] });
   doc.required_strength = { ...ONE_AXIS };
   /* read back from the bytes, as a signer's gate reads it: the unset axis is written `null` and parses as null */
@@ -110,11 +110,11 @@ function commitWorld() {
   return { w, P, P2, members, store, commit };
 }
 
-test("R3, R13 (caseproduction §8): the `cases` row names the project the signed case document names, and each member row carries the role the document designates — from the signed bytes, never the request", () => {
+test("R3, R13 (caseproduction §8): the `cases` row names the project the signed case document names, and each member row carries the role the document designates — from the signed bytes, never the request", async () => {
   for (const which of ["P", "P2"]) {
     const { w, P, P2, members, store, commit } = commitWorld();
     const project = which === "P" ? P : P2;
-    const r = commit(1, store(1, project));
+    const r = await commit(1, store(1, project));
     assert.equal(r.ok, true, JSON.stringify(r).slice(0, 400));
     assert.deepEqual(w.row(`SELECT project_id FROM cases WHERE case_id=?`, CASE), { project_id: project }, which);
     assert.deepEqual(w.st.sql.exec(`SELECT bundle_id, role FROM published_case_members WHERE case_id=? ORDER BY ord`, CASE),
@@ -124,29 +124,29 @@ test("R3, R13 (caseproduction §8): the `cases` row names the project the signed
   /* the partition follows the bytes: the same members, the roles swapped in the document, commit swapped */
   const { w, P, store, commit } = commitWorld();
   const swapped = [{ id: Q1, pin: w.sha(Q1), role: "supporting" }, { id: Q2, pin: w.sha(Q2), role: "load_bearing" }];
-  assert.equal(commit(1, store(1, P, swapped)).ok, true);
+  assert.equal((await commit(1, store(1, P, swapped))).ok, true);
   assert.deepEqual(w.st.sql.exec(`SELECT bundle_id, role FROM published_case_members WHERE case_id=? ORDER BY ord`, CASE),
     [{ bundle_id: Q1, role: "supporting" }, { bundle_id: Q2, role: "load_bearing" }]);
 });
 
-test("R3 (caseproduction §8): a later edition naming another producing project is CASE_PRODUCTION_DIVERGED and commits nothing — a case does not change hands; the same project's next edition commits", () => {
+test("R3 (caseproduction §8): a later edition naming another producing project is CASE_PRODUCTION_DIVERGED and commits nothing — a case does not change hands; the same project's next edition commits", async () => {
   const { w, P, P2, store, commit } = commitWorld();
-  assert.equal(commit(1, store(1, P)).ok, true);
+  assert.equal((await commit(1, store(1, P))).ok, true);
   const n = w.pub.committed.length;
-  const moved = commit(2, store(2, P2));
+  const moved = await commit(2, store(2, P2));
   assert.deepEqual([moved.ok, moved.reason, moved.declared, moved.signed], [false, "CASE_PRODUCTION_DIVERGED", P, P2]);
   assert.equal(w.pub.committed.length, n, "nothing was handed to publication");
   assert.equal(w.row(`SELECT ratified_at FROM case_documents WHERE case_id=? AND edition=2`, CASE).ratified_at, null);
   assert.deepEqual(w.row(`SELECT project_id FROM cases WHERE case_id=?`, CASE), { project_id: P });
   const { w: w2, P: Q, store: s2, commit: c2 } = commitWorld();
-  assert.equal(c2(1, s2(1, Q)).ok, true);
-  assert.equal(c2(2, s2(2, Q)).ok, true, "negative control: the same project's next edition is not refused");
+  assert.equal((await c2(1, s2(1, Q))).ok, true);
+  assert.equal((await c2(2, s2(2, Q))).ok, true, "negative control: the same project's next edition is not refused");
   assert.equal(w2.pub.committed.length, 2);
 });
 
-test("R5 (caseproduction §8): once the case document is committed, a member at the pinned sha crosses by op=ratify's commit under an owner's signature, and a joined non-owner's signature is refused", () => {
+test("R5 (caseproduction §8): once the case document is committed, a member at the pinned sha crosses by op=ratify's commit under an owner's signature, and a joined non-owner's signature is refused", async () => {
   const { w, P, store, commit } = commitWorld();
-  assert.equal(commit(1, store(1, P)).ok, true);
+  assert.equal((await commit(1, store(1, P))).ok, true);
   const args = (o = {}) => ({ bundleId: Q1, bundleSha: w.sha(Q1), attestorKey: "K", attestorMember: "alice",
     gateVersion: "g", sigArmored: "s", shas: [{ sha256: w.sha(Q1), path: "bundle.md", kind: "bundle", bytes: 1 }],
     edges: [], deliveredBy: V("alice"), ...o });
@@ -159,7 +159,7 @@ test("R5 (caseproduction §8): once the case document is committed, a member at 
     { bundle_id: Q1, attestor_member: "alice" });
 });
 
-test("R8, R9 (caseproduction §9): CASE_MEMBER_ROLES is the two terms; C-41.8 admits each and refuses any other, and the commit stores the designation as signed", () => {
+test("R8, R9 (caseproduction §9): CASE_MEMBER_ROLES is the two terms; C-41.8 admits each and refuses any other, and the commit stores the designation as signed", async () => {
   assert.deepEqual(CASE_MEMBER_ROLES, ["load_bearing", "supporting"]);
   const base = cleanCase({ caseId: CASE, edition: 1, project: "PROJ-2026-0001-team",
                            members: [{ id: Q1, pin: PIN }, { id: Q2, pin: HEX("b") }] });
@@ -169,7 +169,7 @@ test("R8, R9 (caseproduction §9): CASE_MEMBER_ROLES is the two terms; C-41.8 ad
   for (const role of ["critical", "", "Load_Bearing"])
     assert.ok(checkCaseDocument(roled(role), { caseId: CASE, edition: 1 }).some((x) => x.check === "C-41.8"), role);
   const { w, P, store, commit } = commitWorld();
-  assert.equal(commit(1, store(1, P)).ok, true);
+  assert.equal((await commit(1, store(1, P))).ok, true);
   assert.deepEqual([...new Set(w.st.sql.exec(`SELECT role FROM published_case_members`).map((r) => r.role))].sort(),
     [...CASE_MEMBER_ROLES].sort(), "both terms are stored as the document designates them");
 });
@@ -196,7 +196,7 @@ const d84Docs = () => {
   return { FA: read(plain, CASE_BODY), FB: read(lensed(plain), LENS_BODY) };
 };
 
-test("R8 (d84 §1, §2): the case gate promotion runs with this module's catalogue accepts a /5 document with no lens in force and one naming each pair and the hash", () => {
+test("R8 (d84 §1, §2): the case gate promotion runs with this module's catalogue accepts a /5 document with no lens in force and one naming each pair and the hash", async () => {
   const w = world();
   const { FA, FB } = d84Docs();
   assert.deepEqual([FA.format, FA.bias_manifest.in_force, FA.bias_manifest.stated, FA.bias_manifest_bundles],
@@ -217,7 +217,7 @@ test("R2, R8 (d84 §2): a /5 case document stamped with a lens in force is signe
   assert.notEqual(w.row(`SELECT ratified_at FROM case_documents WHERE case_id=?`, CASE).ratified_at, null);
 });
 
-test("R8 (d84 §5, REC-188): C-41.13 refuses a /3-or-later document silent about the lens or its second readers, by C-41.13 alone; a /2 document without them passes; a real acknowledgement passes", () => {
+test("R8 (d84 §5, REC-188): C-41.13 refuses a /3-or-later document silent about the lens or its second readers, by C-41.13 alone; a /2 document without them passes; a real acknowledgement passes", async () => {
   const w = world();
   const { FA, FB } = d84Docs();
   const gate = (fm, body = null) => w.promotion.runCaseGate({ caseId: CASE, edition: 1, fm, priorCase: null, body });
