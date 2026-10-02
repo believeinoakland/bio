@@ -1,6 +1,6 @@
 # BOB to network-notices (T23)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
