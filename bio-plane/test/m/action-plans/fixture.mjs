@@ -6,12 +6,15 @@
    standards (`standardRead` R5), escalation (`escalationsFor` R22, `escalationRead` R2), filings (`availableActions`
    R21) and ai-runs (`registerOpenCheck` R47, `onRunOpened` R43, `runFor` R28, `read` R19, `boundOf`/`consumeBound`
    R29). An inquiry and a determination are real bundles in the record (so an action's legs resolve); their facts are
-   the stand-ins'. Every test drives `action-plans` at its interface, under the jurisdictions test profile. */
+   the stand-ins'. Provenance is real and migrated before `actions`, as every real host builds it: actions joins its
+   promotion step (through capture's reader, its R55), which reads provenance's tables. Every test drives
+   `action-plans` at its interface, under the jurisdictions test profile. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
+import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { actionsOf } from "../../../src/actions/index.mjs";
 import { actionClocksOf } from "../../../src/action-clocks/index.mjs";
 import { actionPlansOf } from "../../../src/action-plans/index.mjs";
@@ -69,6 +72,7 @@ export function world({ profiles = ["test-port-ellery"], omit = [] } = {}) {
   membership.migrate();
   const promotion = promotionOf(host, { record, membership, now: () => clock.now });
   promotion.registerFact("producingGroup", "legacy-store", () => "test-group");
+  provenanceOf(host, { record, membership, promotion, now: () => clock.now }).migrate();
   if (profiles) record.setSetting("jurisdiction_profiles", profiles, "test");
   /* connections' `refs` projection, as far as actions' read joins it (its R25). */
   st.db.exec(`CREATE TABLE refs (bundle_id TEXT, target_id TEXT, kind TEXT)`);
