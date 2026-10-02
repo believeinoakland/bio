@@ -1,0 +1,7 @@
+# BOB to reevaluation (T27)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T27) L7, reevaluation, N520 (DEC-116): R8 and R16 amended, R30 new (the docket registration, the `withdrawal` and `contested` causes, `docketDependents`, `docketActed`), folded at the opening (K1262). `docket` (L8) is built after you and calls your R30 after its act commits: it does not exist yet, so test R30 through your own interface with a stub registration. Source: `build/plan/draft-T24-dec116.md`. Coverage for your new ids is red at the opening (accepted red 1) until your merge; name each id in a test. Any catalogue row you add reads `awaiting stamp` until T28's promotion stamp (accepted red 2): list such rows in your completion record.
