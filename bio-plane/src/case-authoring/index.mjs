@@ -121,9 +121,6 @@ const LENS_PAGE = 2000;
 const PUBLISHED_TARGETS_CHUNK = 200;
 
 const str = (v) => String(v ?? "").trim();
-/* case-grammar R10's notice-id shape (record-core R6's opaque id). TODO(T23 L8): import `isNoticeReference` from
-   case-grammar once its job merges (B2, K1143). */
-const isNoticeReference = (v) => typeof v === "string" && /^[A-Z]+-\d{4}-\d{4}(?:-[a-z0-9]+(?:-[a-z0-9]+)*)?$/.test(v);
 /** R34: what the pre-flight throws to roll back its run of op=publish (record-core R32). */
 const PREFLIGHT_ROLLBACK = Symbol("case-authoring pre-flight rollback");
 
@@ -1456,6 +1453,7 @@ export class CaseAuthoring {
     for (const r of found) if (!(first && same(r, first)) && !blockers.some((b) => same(b, r))) blockers.push(r);
     /* R42: whether the project has a notice, asked only of a project the act's own authority fences let through. */
     const notice = auth && auth.ok !== false ? this.#workingOn(auth.proj) : null;
+    /* R42 says so whenever the project has a notice: whatever reference R41 would write. */
     const steps = this.#preflightSteps(a, answer, seen, ratify, notice);
     /* Ready only when nothing refuses AND ratification's list was read: a list not reached is not a list that is empty. */
     return { ok: true, wrote: false, ready: !first && !blockers.length && ratify.reached, first, blockers, steps };
@@ -1489,7 +1487,7 @@ export class CaseAuthoring {
         says: "Signing publishes this case edition, and each finding in it at the version pinned here. A published "
             + "edition is never withdrawn or edited: it is corrected only by a later edition."
             /* R42 (DEC-111; K1031 (3)): the plain sentence until the UX design stream gives the words. */
-            + (notice ? ` ${NOTICE_SEALS_SENTENCE}` : ""),
+            + (notice !== null ? ` ${NOTICE_SEALS_SENTENCE}` : ""),
         working_on: notice,
         ...(ok ? { case: answer.caseId, edition: answer.edition, document: answer.caseDocument,
                    pinned: answer.findings.map((f) => ({ target: f.target, bundleSha: f.bundleSha })) }
@@ -1521,12 +1519,13 @@ export class CaseAuthoring {
   }
 
   /** R41 (DEC-111; `case-grammar` R10): the project reference a case carries, `network-notices.noticeReferenceOf`
-   *  (its R19) as it answers for `project`: the notice id of the project's open or most recent notice, or null. Only an
-   *  answer `isNoticeReference` holds is carried; null, or anything malformed, is no reference and writes nothing
-   *  (ratification R38 would refuse a malformed one at signing). R42 reads the same answer. */
+   *  (its R19) exactly as it answers for `project`: the notice id of the project's open or most recent notice, or null
+   *  (undefined read as null). It is written only through case-grammar's `workingOnLines`, which writes no line for
+   *  null and writes any other value as handed, so a malformed one reaches ratification R38's refusal at signing and is
+   *  never corrected or dropped here (K1144). R42 reads the same answer. */
   #workingOn(project) {
     const ref = this.networkNotices.noticeReferenceOf(project);
-    return isNoticeReference(ref) ? ref : null;
+    return ref === undefined ? null : ref;
   }
 
   /* The project an unsigned preparation of a case names, or null (publication R40: `case_documents`). */

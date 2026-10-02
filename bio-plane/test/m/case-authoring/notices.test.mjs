@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { world, V, AUTHORED } from "./fixture.mjs";
 import { NOTICE_SEALS_SENTENCE } from "../../../src/case-authoring/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
+import { workingOnLines, workingOnOf } from "../../../src/case-grammar/index.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q";
 const NOTICE = "WON-2026-0412";
@@ -20,7 +21,7 @@ function setup() {
 const docText = (w, r) => w.row(`SELECT text FROM case_documents WHERE case_id=? AND edition=?`, r.caseId, r.edition).text;
 const head = (text) => text.slice(0, text.indexOf("\n---\n", 4));
 
-test("R41: publishCase writes working_on as noticeReferenceOf(project) answers it, directly after case_project, asked of the publishing project", () => {
+test("R41: publishCase writes working_on as noticeReferenceOf(project) answers it, through case-grammar's workingOnLines, directly after case_project, asked of the publishing project", () => {
   for (const ref of [NOTICE, "WON-2026-0412-team-notice"]) {
     const { w, P } = setup();
     const asked = [];
@@ -30,9 +31,9 @@ test("R41: publishCase writes working_on as noticeReferenceOf(project) answers i
     const r = w.publish(P, "alice", [Q]);
     assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
     const text = docText(w, r);
-    assert.equal(parseFrontmatter(text).data.working_on, ref);
+    assert.equal(workingOnOf(parseFrontmatter(text).data), ref);
     const lines = head(text).split("\n");
-    assert.equal(lines[lines.indexOf(`case_project: ${P}`) + 1], `working_on: ${ref}`);
+    assert.deepEqual([lines[lines.indexOf(`case_project: ${P}`) + 1]], workingOnLines(ref));
     assert.equal(lines.filter((l) => l.startsWith("working_on:")).length, 1, "one line");
     assert.ok(asked.length >= 1 && asked.every((p) => p === P), "asked of the publishing project only");
     /* the answer's document is the stored one */
@@ -40,20 +41,21 @@ test("R41: publishCase writes working_on as noticeReferenceOf(project) answers i
   }
 });
 
-test("R41: no working_on when noticeReferenceOf answers null, and none for an answer that is not a notice id (never a malformed reference); the document is otherwise byte-identical", () => {
+test("R41: no working_on when noticeReferenceOf answers null (or undefined); any other answer is written as handed, through workingOnLines, never corrected or dropped, for ratification R38 to refuse; the document is otherwise byte-identical", () => {
   const texts = [];
-  for (const ref of [null, undefined, "", "won-2026-0412", "WON-2026-41", "WON-2026-0412\ncase_id: X", 7, { id: NOTICE },
-                     NOTICE]) {
+  for (const ref of [null, undefined, NOTICE, "won-2026-0412", "WON-2026-41", "", 7, "WON-2026-0412\ncase_id: X"]) {
     const { w, P } = setup();
     if (ref !== undefined) w.notices.set(P, ref);
     const r = w.publish(P, "alice", [Q]);
     assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
     const text = docText(w, r);
-    const has = Object.prototype.hasOwnProperty.call(parseFrontmatter(text).data, "working_on");
-    assert.equal(has, ref === NOTICE, `ref ${JSON.stringify(ref)}`);
-    assert.equal(text.includes("working_on"), ref === NOTICE);
+    const lines = head(text).split("\n");
+    const written = lines.filter((l) => l.startsWith("working_on:"));
+    assert.deepEqual(written, workingOnLines(ref), `ref ${JSON.stringify(ref)}`);
+    assert.equal(written.length, ref == null ? 0 : 1);
+    assert.equal(parseFrontmatter(text).data.case_id, r.caseId, "a line break in the answer begins no key");
     /* the case id and the project id are minted per world: compare the rest */
-    texts.push(text.replaceAll(r.caseId, "CASE").replaceAll(P, "PROJ").replace(`working_on: ${NOTICE}\n`, ""));
+    texts.push(text.replaceAll(r.caseId, "CASE").replaceAll(P, "PROJ").replace(`${written[0]}\n`, ""));
   }
   assert.equal(new Set(texts).size, 1, "only the one line differs");
 });
