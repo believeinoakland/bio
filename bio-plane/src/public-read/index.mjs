@@ -22,13 +22,15 @@
  *                  storage, whose tables it reads under its R40 (default: `publicationOf(host)`).
  *   docket         `withdrawalOf` (its R12), `lastEntryOf`, `docketPublic` (its R14) and `docketFeed` (its R15), for
  *                  R20 and R21:
- *                  the docket's public answers, which this module serves and never composes (N520).
+ *                  the docket's public answers, which this module serves and never composes (N520; default:
+ *                  `docketOf(host)`).
  *   storage        the Durable Object's storage (default: the host's).
  *
  * READ CONTRACT it reads in its own SQL, and never writes: `publication` R40's `published_bundles`, `published_cases`,
  * `published_case_members`, `cases`, `published_edges` and `published_shas`. */
 
 import { publicationOf } from "../publication/index.mjs";
+import { docketOf } from "../docket/index.mjs";
 import { caseTensionsOf, caseDocumentBlocks, whatChangedOf, lensOf, LENS_HEAD,
          LENS_CLOSING_SENTENCES, workingOnOf } from "../case-grammar/index.mjs";
 import { parseFrontmatter } from "../record-grammar/index.mjs";
@@ -1153,7 +1155,7 @@ export function publicReadOf(host, deps) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const publication = d.publication || publicationOf(host);
-    const docket = d.docket ?? null;
+    const docket = d.docket || docketOf(host);
     r = new PublicRead({ storage, publication, docket });
     instances.set(host, r);
   }

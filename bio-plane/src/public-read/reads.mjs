@@ -27,5 +27,5 @@ export const PUBLIC_READ_RESERVED_PARAMS = Object.freeze(["name", "token", "op",
 /* The refusal an unregistered name answers, at the store and through the door. */
 export const PUBLIC_READ_NOT_REGISTERED = "PUBLIC_READ_NOT_REGISTERED";
 
-/* R21: the media type the docket's feed is served under (`op=docketfeed`). */
-export const DOCKET_FEED_MEDIA_TYPE = "application/atom+xml";
+/* R21: the media type the docket's feed is served under (`op=docketfeed`): `docket`'s own (`application/atom+xml`). */
+export { ATOM_MEDIA_TYPE as DOCKET_FEED_MEDIA_TYPE } from "../docket/feed.mjs";
