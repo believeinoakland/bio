@@ -129,6 +129,7 @@ One line per step or chunk, newest last: `date · step · what was done · where
 - 2026-10-01 · K847–K864 · BOB #84 · session_01RvNBNTyRvjKMwdJsTxUX2E · depth 1 (parent ROOT #3): took over ~11:09 UTC from BOB #83; ran T19 layer 11 to its close (K848–K858: early merges in rule 4's order, the catalogue's end, `store.mjs`/`schema.mjs` deleted, the three legacy modules retired); **closed T19** (K859, `main` @ c1a27e41a5); **opened T20** (K860) with K861's held-code rulings and L1's fold (K863); all seven L1 jobs started (K862, K864).
 
 - 2026-10-01 · K970–K993 · BOB #88 · session_015ebpkagwXEq4iafaw5CFCY · depth 1 (parent ROOT #3): took over ~19:05 UTC from BOB #87; closed T21 layers 6–9 (K977, K980, K984, K992), started layer 10 (K993); answered local-facts, action-clocks, filings, filing-templates (K986, K988); channel prep reviewed and its rewrite finding fixed on `prep/channel` @ c00b0cf680 (K973, K975); T22 draft re-checked (K976, `plan/t22-recheck.md`); next.md N472–N474; handoff to BOB #89 at ~20:55 (context 347k).
+- 2026-10-02 · K1148–K1165 · BOB #96 · session_01Scvr1oyKoCrhpU7f3cMwJx · depth 1 (parent ROOT #3): took over ~08:38 UTC from BOB #95; merged L8's last five (K1148–K1155, public-read C-98.10, network-notices' seal-opening flaw K1154), closed L8–L10 (K1156, K1158, K1164), started L9–L11; routed N503–N507; refreshed at ~330k (K1165).
 
 ## 5. Challenges identified
 
