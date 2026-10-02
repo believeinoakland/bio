@@ -1,10 +1,11 @@
 /* control-plane R45: the ops T23 adds (N485: K1025, K1051; K1094; DEC-111, K1100; op-declarations R10) — escalation's
    `escalationreasondraft`, case-authoring's `whatchangedpropose` and `whatchangeddrafts`, monitoring's `sweeps`,
-   network-notices' `noticeprepare`, `noticepost` and `notices` — each routed through the door's general path to its
+   network-notices' `noticeprepare`, `noticepost`, `notices` and `directorysubmission` — each routed through the door's general path to its
    owner's store route of the same name (R26), with the stamps its owner reads set by the server and none taken from the
-   caller (R29); the notice ops a member's session's alone; and network-notices' public reads, registered through
-   public-read R18, answered by their own names with no credential. Driven through `makeFetch(hooks)`, T22's form
-   (`new-ops.test.mjs`, `doorbell.test.mjs`). */
+   caller (R29), by op-declarations' lists (K1168); the notice ops a member's session's alone; and network-notices'
+   public reads, registered through public-read R18, reached with no credential on the public path as
+   `op=publicread&name=<name>` (K1166 (2)). Driven through `makeFetch(hooks)`, T22's form (`new-ops.test.mjs`,
+   `doorbell.test.mjs`). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { O, world, call, opCalls, aik, cred, hex64, member, refused, FORGED, QUERY_STAMPS, BODY_STAMPS } from "./harness.mjs";
@@ -12,6 +13,7 @@ const { escalationOps } = await import("../../../src/escalation/ops.mjs");
 const { caseAuthoringOps } = await import("../../../src/case-authoring/index.mjs");
 const { monitoringOps } = await import("../../../src/monitoring/index.mjs");
 const { networkNoticesOps, networkNoticesPublicReads } = await import("../../../src/network-notices/index.mjs");
+const { publicReadDoorOp } = await import("../../../src/public-read/door.mjs");
 
 const { OPS } = O;
 const U = new URL("http://do/");
@@ -25,6 +27,7 @@ const OWNER = {
   noticeprepare: Object.keys(networkNoticesOps(null, U, null)),
   noticepost: Object.keys(networkNoticesOps(null, U, null)),
   notices: Object.keys(networkNoticesOps(null, U, null)),
+  directorysubmission: Object.keys(networkNoticesOps(null, U, null)),
 };
 const PUBLIC_READS = Object.keys(networkNoticesPublicReads(null));
 
@@ -54,8 +57,9 @@ const R45 = {
   noticeprepare:         (c) => ({ by: c.identity, viewer: c.viewer }),              /* network-notices R1, R2 */
   noticepost:            (c) => ({ by: c.identity, viewer: c.viewer }),              /* network-notices R4, R5 */
   notices:               viewer,                                                     /* network-notices R22 */
+  directorysubmission:   viewer,                                                     /* network-notices R23 */
 };
-const NOTICE = ["noticeprepare", "noticepost", "notices"];
+const NOTICE = ["noticeprepare", "noticepost", "notices", "directorysubmission"];
 const admits = (spec, c) => (c.session ? true
   : c.name === "agent" ? !Array.isArray(spec.machineClasses)
   : (Array.isArray(spec.machineClasses) ? spec.machineClasses : spec.classes).includes(c.name));
@@ -161,40 +165,54 @@ test("R45, R28 (case-authoring R39): `whatchangedpropose` is open to any credent
   }
 });
 
-test("R45 (DEC-111; public-read R18, R10): network-notices' public reads are declared public and answered by their own names with no credential, from `bio`, through public-read's door — the store's `publicread` asked with the name and the caller's parameters, never a credential or a stamp; `store=scratch` is refused, nothing read (negative controls: a name the module does not register is `unknown op`; a held credential changes nothing)", async () => {
+test("R45 (DEC-111, K1166 (2); public-read R18, R10): network-notices' public reads are reached credential-free on the public path as `op=publicread&name=<name>` — the door hands it to the public hook, and public-read's door asks the store's `publicread` with the name and the read's parameters, never a credential or a stamp; `store=scratch` is refused with nothing read (negative controls: each read's own name is declared public and goes to the public hook, not to a store route; a name the module does not register is `unknown op`)", async () => {
   assert.deepEqual([...PUBLIC_READS].sort(), ["activitymethod", "groupkeyspublic", "noticespublic"]);
-  const answered = [];
+  assert.deepEqual(OPS.publicread, { classes: null, mutating: false });
+  const answered = [], handed = [];
+  /* the public hook as plane composes it: public-read's door over the door's own helpers */
+  const { M } = await import("./harness.mjs");
+  const hooks = { async publicOp({ op, url, env, stub, ...rest }) {
+    handed.push({ op, keys: Object.keys(rest).sort() });
+    return (await publicReadDoorOp(op, url, env, stub, { json: M.json, requiredArgument: M.requiredArgument, storeSilent: M.storeSilent,
+                                                  storeRefusal: M.storeRefusal, doAnswer: M.doAnswer }))
+      ?? M.json({ ok: true, publicOp: op });
+  } };
   const { env, S } = world({ answer: (c) => {
     if (c.route !== "publicread") return null;
     answered.push(c);
     return new Response(JSON.stringify({ ok: true, result: { ok: true, read: c.params.name, module: "network-notices", result: { n: 1 } } }));
   } });
-  for (const op of PUBLIC_READS) {
-    assert.deepEqual(OPS[op], { classes: null, mutating: false }, op);
+  for (const name of PUBLIC_READS) {
+    assert.deepEqual(OPS[name], { classes: null, mutating: false }, name);
     for (const token of [undefined, S.ann, env.ADMIN_TOKEN, "junk"]) {
       env.calls.length = 0; answered.length = 0;
-      const params = { after: "2026-01-01", limit: "5", viewer: FORGED, by: FORGED, author: FORGED, secret: "s" };
-      const r = await call(env, { op, token, params });
-      assert.equal(r.status, 200, `${op}: ${r.text.slice(0, 200)}`);
-      assert.deepEqual([r.json.ok, r.json.read, r.json.module, r.json.result], [true, op, "network-notices", { n: 1 }]);
-      assert.deepEqual(env.calls.map((c) => [c.route, c.ns]), [["publicread", "bio"]], `${op}: one read of bio's store, no credential looked up`);
+      const params = { name, after: "2026-01-01", limit: "5", viewer: FORGED, by: FORGED, author: FORGED, secret: "s" };
+      const r = await call(env, { op: "publicread", token, params, hooks });
+      assert.equal(r.status, 200, `${name}: ${r.text.slice(0, 200)}`);
+      assert.deepEqual([r.json.ok, r.json.read, r.json.module, r.json.result], [true, name, "network-notices", { n: 1 }]);
+      assert.deepEqual(env.calls.map((c) => [c.route, c.ns]), [["publicread", "bio"]], `${name}: one read of bio's store, no credential looked up`);
       const q = answered[0].params;
-      assert.deepEqual([q.name, q.after, q.limit], [op, "2026-01-01", "5"]);
-      for (const k of ["token", "viewer", "by", "author", "secret", "op", "store"]) assert.equal(Object.hasOwn(q, k), false, `${op}: ?${k} reached the store`);
+      assert.deepEqual([q.name, q.after, q.limit], [name, "2026-01-01", "5"]);
+      for (const k of ["token", "viewer", "by", "author", "secret", "op", "store"]) assert.equal(Object.hasOwn(q, k), false, `${name}: ?${k} reached the store`);
     }
     env.calls.length = 0;
-    refused(await call(env, { op, params: { store: "scratch" } }), 400, "NAMESPACE_PINNED", "C-78.2");
+    refused(await call(env, { op: "publicread", params: { name, store: "scratch" }, hooks }), 400, "NAMESPACE_PINNED", "C-78.2");
     assert.equal(env.calls.length, 0);
+    /* its own name is a public op the door hands the public hook, never a store route of its own */
+    env.calls.length = 0; handed.length = 0;
+    await call(env, { op: name, hooks });
+    assert.deepEqual(handed.map((h) => h.op), [name]);
+    assert.equal(env.calls.some((c) => c.route === name), false, `${name}: forwarded as a store route`);
   }
   /* the store's not-registered answer is relayed at 404, and a silence is a silence */
   const nr = world({ answer: (c) => (c.route === "publicread"
     ? new Response(JSON.stringify({ ok: true, result: { ok: false, reason: "PUBLIC_READ_NOT_REGISTERED", read: c.params.name } })) : null) });
-  assert.equal((await call(nr.env, { op: PUBLIC_READS[0] })).status, 404);
+  assert.equal((await call(nr.env, { op: "publicread", params: { name: PUBLIC_READS[0] }, hooks })).status, 404);
   const silent = world({ answer: (c) => (c.route === "publicread" ? new Response("not json", { status: 200 }) : null) });
-  refused(await call(silent.env, { op: PUBLIC_READS[0] }), 502, "STORE_DID_NOT_ANSWER", "C-69.2");
+  refused(await call(silent.env, { op: "publicread", params: { name: PUBLIC_READS[0] }, hooks }), 502, "STORE_DID_NOT_ANSWER", "C-69.2");
   /* negative control: a public-looking name the module does not register is no op */
   env.calls.length = 0;
-  refused(await call(env, { op: "noticesprivate" }), 400, "UNKNOWN_OP", "C-69.1");
+  refused(await call(env, { op: "noticesprivate", hooks }), 400, "UNKNOWN_OP", "C-69.1");
   assert.equal(env.calls.length, 0);
 });
 
