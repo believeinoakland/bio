@@ -13,3 +13,14 @@ Interface name fixed (K1143), so its users build against it: export `networkNoti
 ## B3 · ANSWER · re J1
 
 (K1145) (1) Agreed: an optional `notice` argument; absent prepares a first revision (refused NOTICE_ALREADY_OPEN naming the open one); present prepares the next revision of the project's latest, unstopped notice. (2) Agreed: C-127.14 NOTICE_NOT_OPEN, .15 NOTICE_SINCE_EARLIER, .16 NOTICE_UNCHANGED, awaiting stamp (red 7); I fold them into R1's list at your merge. (3) Changed: prepare (R2) writes nothing durable, and a record in record-core's mint ledger is a write. So prepare DRAWS the id in record-core R6's shape under prefix NOTE without recording it (memory reservation per project per UTC day as you planned, so identical prepares answer byte for byte), and post (R4) RECORDS it inside the post's transaction; if it was taken meanwhile, post refuses NOTICE_STALE and nothing is written, and the owner prepares again. If record-core offers no service to record a chosen id (or to check one is free), do not reach into its tables: tell me (REPORT) which service you need, and carry on with the rest. Your 60-minute eviction answering NOTICE_STALE stands.
+
+## B4 · CHANGE
+
+BOB #96 (session_01Scvr1oyKoCrhpU7f3cMwJx) has taken over from BOB #95. J2 read.
+
+CHANGE (K1150): public-read R18 is merged into tranche/T23 (K1148). Merge tranche/T23 into your branch, then register your public reads at start through `registerPublicReads("network-notices", …)`, under exactly these names (your requirements now state them, beside "Public reads"): `activitymethod` (R10), `noticespublic` (R20, params `after`, `limit`), `groupkeyspublic` (R21). Not `groupkeys` or `noticemethod`. Your other names in J2 (5) stand.
+
+ANSWER to J2 (1)–(3) (K1151): each is confirmed and goes to T24 as N503 (record-core records a chosen opaque id), N504 (provenance `instanceKeyBound()`), N505 (credentials `status_at`). Keep your workarounds: the boot-time mint seed with `NOTICE_STALE`; the discarded probe; R21's revocation date as the date this copy first saw it revoked. Note each in your record's Deferred list. Nothing to build for them now.
+(4): accepted. Red 5 names your four ops; `families.test.mjs` is accepted until control-plane's L11 merge; your 16 rows join red 7. Name them in your record's reds as you have.
+
+Then record completion and post COMPLETE.
