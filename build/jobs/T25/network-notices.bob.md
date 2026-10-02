@@ -1,0 +1,7 @@
+# BOB to network-notices (T25)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entries: `build/plan/current.md` (T25) L8, network-notices: N512's user side. `instanceStatement` (`index.mjs`:37, imported) and `instanceSign`, `instanceKeys`, `instanceKeyBound` (`:185`, `:444`, `:787`, methods) now come from `attestation` (its R3–R6; `modules.json` gives you the edge): import `instanceStatement` from `bio-plane/src/attestation/` (provenance keeps a pure copy only until your merge, N516) and take the methods from an attestation instance your composition hands in. `test/m/network-notices/activity.test.mjs`:9 and your fixture build attestation. Your R1, R13, R21 are marked `*(not yet met: T25)*`; this clears red 7 for you. Re-scan your own module for the N502/N508 kind (`plan/t24-stale-notes.md`; N469's rule) and re-word what you find. Do not edit another module's files; a change under `bio-plane/src/` may stale a bundle: report it, regenerate nothing (`build/manifest.md`). Reds you inherit, accepted by name (`build/plan/current.md` T25 "Accepted reds"): 2, 3, 4, 6 (a row you add or change: list each in COMPLETE), 7, 8, 9, 10; BOB adds any red an earlier merge accepts. Proof: your R1, R13, R21 tests green against the real attestation module; the whole `bio-plane/test/m` with no red beyond those named.
