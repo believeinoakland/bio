@@ -11,7 +11,7 @@
  * now `./schema.mjs`) and the check catalogue, `legacy-checks` (C-33.26, C-33.42, C-33.43, now `./checks.mjs`; the
  * shared act rows `NO_BASIS` and `NO_CITATION` are read from `record-grammar`, T19). The legacy code's comments
  * moved with it, shortened where they only restated the code. `proposeDispose`'s project-scoped arm and its class
- * bridge stay in `legacy-store` until `queue` takes them (map §5.1).
+ * bridge went to `queue` (map §5.1), which routes the progression shape of `op=proposedispose` here.
  *
  * REACHED as `progressionsOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the first
  * call with `deps`, returned to every later caller. At creation it declares its tables to record-core's purge (R29)
@@ -63,8 +63,9 @@ const DISPOSE_SHARED_KEYS = ["to", "reason", "definitionVersion"];
 
 const str = (v) => (typeof v === "string" ? v.trim() : "");
 
-/* R10: a definition's basis as it reads back. `stated: false` is a first version declared without one, or one declared
-   before versions were kept: the record says it holds none rather than inventing one. */
+/* R5: a definition's basis as it reads back. `stated: false` is a version written before versions were kept, or a first
+   version declared before a first declaration had to state its basis (DEC-88, T22): the record says it holds none
+   rather than inventing one. */
 const basisView = (statement, citation) => ({ statement: statement ?? null, citation: citation ?? null, stated: statement != null });
 
 /* R20: does a recorded decision GOVERN the definition in force? It applies to the version it judged and to no later one.
@@ -313,8 +314,9 @@ export class Progressions {
   }
 
   /** R1–R4 (`op=progressiondefine`): declare a flow as data: ordered stages with what each presupposes, how many
-   *  documents it may hold, how soon it must follow and whether it is required. A definition is APPEND-ONLY (D-128): a
-   *  declaration that changes anything is a revision, version N+1 with its basis; one identical to the current version
+   *  documents it may hold, how soon it must follow and whether it is required. A first declaration is version 1 with
+   *  its basis statement, its citation optional (R2, DEC-88). A definition is APPEND-ONLY (D-128): a declaration that
+   *  changes anything is a revision, version N+1 with its basis and citation; one identical to the current version
    *  writes nothing. The declarer is the control plane's stamp (R26). */
   defineProgression({ progressionKey, label, note = null, stages, declaredBy = null, basis = null, citation = null } = {}) {
     if (!str(progressionKey))
@@ -381,10 +383,15 @@ export class Progressions {
     const nt = note == null ? null : String(note).slice(0, NOTE_MAX);
     const stmt = str(basis) ? str(basis).slice(0, BASIS_MAX) : null;
     const cite = str(citation) ? str(citation).slice(0, CITATION_MAX) : null;
-    /* R3, R4: what stands now. Identical is no revision; a different one must carry its basis, judged AFTER every stage
-       so a caller learns of a bad stage before a missing basis. */
+    /* R2, R3, R4: what stands now. Identical is no revision; a different one must carry its basis, and so must a first
+       declaration (DEC-88), each judged AFTER every stage so a caller learns of a bad stage before a missing basis. */
     const cur = this.#current(key);
-    if (cur) {
+    if (!cur) {
+      if (!stmt) return refusal("NO_BASIS", `'${key}' is declared for the first time; a first declaration states its basis -- why `
+                                 + `the group expects this flow -- and a citation may name where that is published or held `
+                                 + `(framework 8.2). Nothing was written.`,
+                                { progression_key: key, version: null });
+    } else {
       const same = cur.label === lbl && (cur.note ?? null) === nt && cur.stages.length === norm.length
         && norm.every((s, i) => { const c = cur.stages[i];
              return c.stage_key === s.stage_key && (c.label ?? null) === s.label && (c.after_stage ?? null) === s.after_stage
@@ -1132,7 +1139,7 @@ export class Progressions {
 
 /** The ops whose handlers moved here (K3): the control plane routes, authenticates and stamps them (`declaredBy`,
  *  `threadedBy` in the body; `viewer` in the URL, read after the body so a body cannot set it). `op=proposedispose`
- *  stays with `legacy-store`, whose project-scoped arm routes the progression shape here, until `queue` is extracted. */
+ *  is `queue`'s, whose project-scoped arm routes the progression shape here (`disposeProposal`). */
 export function progressionOps(p, url, body) {
   const q = (k) => url.searchParams.get(k);
   return {
