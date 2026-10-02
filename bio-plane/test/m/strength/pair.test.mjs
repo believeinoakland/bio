@@ -274,3 +274,77 @@ test("R26: a leg whose target cannot be read leaves its axis undetermined or ine
   assert.equal(f.pair, null);
   assert.equal(f.error.length, 200);
 });
+
+/* R5's count, as a reader checks it: the answer's `hunches_left_out` is the number of distinct hunch legs it names. */
+function countHolds(count, namedHunches) {
+  assert.equal(typeof count, "number", "the answer states a count");
+  assert.equal(count, new Set(namedHunches).size, "the count is the hunch legs it names");
+}
+const hunchLegsNamed = (pair) => STRENGTH_AXES.flatMap((a) => pair[a].not_load_bearing)
+  .filter((m) => m.grade_source === "hunch" && m.via === "leg").map((m) => `${m.bundle_id}#${m.ord}`);
+
+test("R5: every strength answer states how many hunch legs it left out, zero when none: the live pair, the registered pair, the pair over a version and a candidate's (negative control: a wrong count fails)", () => {
+  const w = world();
+  w.inquiry("INQ-2026-0002-a", [{ target: "INFO-2026-0009-a", grade: "B", axis: "connection", source: "hunch" }]);
+  const legs = [
+    { target: "INFO-2026-0001-a", grade: "A", axis: "connection", source: "hunch" },
+    { target: "INFO-2026-0002-a", grade: "C", axis: "connection", source: "resolution" },
+    { target: "INQ-2026-0002-a", grade: "A", axis: "connection", source: "hunch" },
+  ];
+  w.inquiry("INQ-2026-0001-a", legs);
+  const p = w.s.strengthOf("INQ-2026-0001-a");
+  assert.equal(p.hunches_left_out, 2, "its own two hunch legs, not the one inside the inquiry it rests on");
+  countHolds(p.hunches_left_out, hunchLegsNamed(p));
+  /* The negative control: the same answer with its count stated wrong is caught. */
+  for (const wrong of [0, 1, 3, undefined])
+    assert.throws(() => countHolds(wrong, hunchLegsNamed(p)), assert.AssertionError, String(wrong));
+  /* The pair R17 registers. */
+  let grounded = null;
+  w.s.inquiry = { ...w.s.inquiry, onGrounded: (module, fn) => { grounded = fn; return { ok: true, module }; } };
+  w.s.registerGrounded();
+  assert.equal(grounded("INQ-2026-0001-a").hunches_left_out, 2);
+  /* The pair over a version: its count is its `hunches` list. */
+  w.version("INQ-2026-0001-a", "v1", "accepted", legs.map((l) => ({ ...l, ground: "" })));
+  const v = w.s.versionStrength({ id: "INQ-2026-0001-a", version: "v1", viewer: "class:member" });
+  assert.equal(v.ok, true, JSON.stringify(v).slice(0, 300));
+  assert.equal(v.hunches_left_out, 2);
+  countHolds(v.hunches_left_out, v.hunches.map((h) => h.ord));
+  assert.throws(() => countHolds(v.hunches_left_out + 1, v.hunches.map((h) => h.ord)), assert.AssertionError);
+  /* A candidate's legs. */
+  const c = w.s.candidatePair({ inquiry: "INQ-2026-0001-a", legs: legs.map((l) => ({ target: l.target, grade: l.grade,
+    grade_axis: l.axis, grade_source: l.source })) });
+  assert.equal(c.error, null);
+  assert.equal(c.hunches_left_out, 2);
+  countHolds(c.hunches_left_out, hunchLegsNamed(c.pair));
+  /* Zero when none, on every answer. */
+  w.inquiry("INQ-2026-0003-a", [{ target: "INFO-2026-0002-a", grade: "C", axis: "connection", source: "resolution" }]);
+  w.version("INQ-2026-0003-a", "v1", "accepted", [{ target: "INFO-2026-0002-a", grade: "C", axis: "connection", source: "resolution", ground: "" }]);
+  assert.equal(w.s.strengthOf("INQ-2026-0003-a").hunches_left_out, 0);
+  assert.equal(grounded("INQ-2026-0003-a").hunches_left_out, 0);
+  assert.equal(w.s.versionStrength({ id: "INQ-2026-0003-a", version: "v1", viewer: "class:member" }).hunches_left_out, 0);
+  assert.equal(w.s.candidatePair({ inquiry: "INQ-2026-0003-a", legs: [] }).hunches_left_out, 0);
+  assert.equal(w.s.strengthOf("INQ-2026-0003-a").hunches_left_out, 0);
+});
+
+test("R5, R6: inquiryStrength counts only the hunches it names: a hunch on a record the viewer may not see is neither named nor counted", () => {
+  const w = world();
+  w.member("alice");
+  w.member("carol");
+  w.bundle("INFO-2026-0001-a");
+  w.bundle("INFO-2026-0002-a");
+  w.project("PROJ-2026-0042-hid", ["alice"]);
+  w.inquiry("INQ-2026-0001-a", [
+    { target: "INFO-2026-0001-a", grade: "A", axis: "connection", source: "hunch" },
+    { target: "PROJ-2026-0042-hid", grade: "A", axis: "connection", source: "hunch" },
+    { target: "INFO-2026-0002-a", grade: "C", axis: "connection", source: "resolution" },
+  ]);
+  const alice = w.s.inquiryStrength({ id: "INQ-2026-0001-a", viewer: "member:alice" });
+  assert.equal(alice.hunches_left_out, 2);
+  countHolds(alice.hunches_left_out, hunchLegsNamed(alice));
+  const carol = w.s.inquiryStrength({ id: "INQ-2026-0001-a", viewer: "member:carol" });
+  assert.equal(carol.hunches_left_out, 1);
+  countHolds(carol.hunches_left_out, hunchLegsNamed(carol));
+  assert.ok(!JSON.stringify(carol).includes("PROJ-2026-0042-hid"), "the withheld hunch is named nowhere");
+  assert.equal(carol.connection.grade, alice.connection.grade, "the grade does not change with the reader");
+  assert.equal(w.s.strengthOf("INQ-2026-0001-a").hunches_left_out, 2, "the record's own answer counts both");
+});
