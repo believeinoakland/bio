@@ -45,6 +45,7 @@
  *   provenance           `captureGrade`, `attestationsOf` (its R24–R27, R49, R51; R35: N364).
  *   capture              `lateAttestationsOf`, `captureAccountsOf` (its R68, R69; R35, R36: N364).
  *   sources              `sourceOf` to find a capture's source, then `publishableAt` (its R1, R8; R37: N364).
+ *   networkNotices       `noticeReferenceOf` (its R19; R41, R42: DEC-111).
  *   now                  the clock for the instants it writes, `(precision) => ISO string` (default: the wall clock).
  *
  * READ CONTRACTS it joins in its own SQL, each named at its statement: record-core's `bundles` (R37); publication's
@@ -103,6 +104,10 @@ export const WHAT_CHANGED_DRAFTS_MAX = 500;
 export const WHAT_CHANGED_DRAFT_PREFIX = "WCD";
 /** R19 (DEC-88, K1030): the longest acknowledger's words, in code points. */
 export const STATEMENT_ACK_REASON_MAX = 2000;
+/** R42 (DEC-111; K1119): what step one adds when the project has a notice (R41), one plain sentence until the UX design
+ *  stream gives the words. */
+export const NOTICE_SEALS_SENTENCE = "This project has a public notice that the group is working on it, so publishing "
+  + "this edition also opens the notice's sealed weeks for the work this edition publishes.";
 /** R16: the id chunk for the citations' grouped read, this module's own copy of `retrieval`'s (K57). */
 export const SELECTION_ID_CHUNK = 64;
 /** R21: the most drafts the writer read scans, the bound `review` R26 states for `case_drafts` (`REVIEW_LIST_MAX`):
@@ -116,6 +121,9 @@ const LENS_PAGE = 2000;
 const PUBLISHED_TARGETS_CHUNK = 200;
 
 const str = (v) => String(v ?? "").trim();
+/* case-grammar R10's notice-id shape (record-core R6's opaque id). TODO(T23 L8): import `isNoticeReference` from
+   case-grammar once its job merges (B2, K1143). */
+const isNoticeReference = (v) => typeof v === "string" && /^[A-Z]+-\d{4}-\d{4}(?:-[a-z0-9]+(?:-[a-z0-9]+)*)?$/.test(v);
 /** R34: what the pre-flight throws to roll back its run of op=publish (record-core R32). */
 const PREFLIGHT_ROLLBACK = Symbol("case-authoring pre-flight rollback");
 
@@ -136,13 +144,14 @@ export class CaseAuthoring {
 
   constructor({ storage, record, membership, host = null, inquiry = null, basisVersions = null, strength = null,
                 bias = null, observations = null, reevaluation = null, publication = null, ratification = null,
-                contradiction = null, provenance = null, capture = null, sources = null, now = null } = {}) {
+                contradiction = null, provenance = null, capture = null, sources = null, networkNotices = null,
+                now = null } = {}) {
     this.sql = storage.sql;
     this.storage = storage;
     this.record = record;
     this.membership = membership;
     this.#deps = { host, inquiry, basisVersions, strength, bias, observations, reevaluation, publication, ratification,
-                   contradiction, provenance, capture, sources };
+                   contradiction, provenance, capture, sources, networkNotices };
     this.now = typeof now === "function" ? now : (precision) => stampInstant(precision);
   }
 
@@ -159,6 +168,7 @@ export class CaseAuthoring {
   get provenance() { return this.#deps.provenance ||= provenanceOf(this.#deps.host); }
   get capture() { return this.#deps.capture ||= captureOf(this.#deps.host); }
   get sources() { return this.#deps.sources ||= sourcesOf(this.#deps.host); }
+  get networkNotices() { return this.#deps.networkNotices; }
 
   migrate() { migrateCaseAuthoring(this.sql); }
 
@@ -654,9 +664,11 @@ export class CaseAuthoring {
     /* MK-7 / §4.3: each observation this edition reaches (basis-versions R39), at the level its author chose, or
        UNCHOSEN (publication R17). */
     const reach = this.basisVersions.testimonyReach(members);
+    /* R41 (DEC-111): the project reference, read at this act from the project's notice. */
+    const workingOn = this.#workingOn(proj);
     const observations = [...new Set([...reach.self, ...reach.via.map((v) => v.observation)])];
     const docText = caseDocumentText({
-      caseId: theCase, edition, project: proj, scope: scp, bias: back, bar,
+      caseId: theCase, edition, project: proj, workingOn, scope: scp, bias: back, bar,
       roster: members, roles: memberRoles, pins: pinOf,
       statement: stmt, position: pos, justification: just, excluded: rows,
       author: who, at: when, searched, conclusions: conclusionRows,
@@ -680,7 +692,7 @@ export class CaseAuthoring {
     const stored = this.publication.storeCaseDocument({ caseId: theCase, edition, text: docText, author: who, at: when,
                                                         draft: boundDraft });
     /* R34's steps read what this act read, from the same values (never a second reading). */
-    Object.assign(seen, { excluded: rows, searched, manifest, bias: back, captures: captureRows, sources: sourceRows,
+    Object.assign(seen, { workingOn, excluded: rows, searched, manifest, bias: back, captures: captureRows, sources: sourceRows,
                           tensions: read.entries, memberEditions: [...frozen].map(([target, z]) =>
                             ({ target, edition: z.edition, crossed: z.crossed })) });
 
@@ -1442,7 +1454,9 @@ export class CaseAuthoring {
     const same = (x, y) => JSON.stringify(x) === JSON.stringify(y);
     const blockers = [];
     for (const r of found) if (!(first && same(r, first)) && !blockers.some((b) => same(b, r))) blockers.push(r);
-    const steps = this.#preflightSteps(a, answer, seen, ratify);
+    /* R42: whether the project has a notice, asked only of a project the act's own authority fences let through. */
+    const notice = auth && auth.ok !== false ? this.#workingOn(auth.proj) : null;
+    const steps = this.#preflightSteps(a, answer, seen, ratify, notice);
     /* Ready only when nothing refuses AND ratification's list was read: a list not reached is not a list that is empty. */
     return { ok: true, wrote: false, ready: !first && !blockers.length && ratify.reached, first, blockers, steps };
   }
@@ -1465,7 +1479,7 @@ export class CaseAuthoring {
 
   /* R34: the five steps (DEC-80 item 2), each read from the rolled-back run when it published, and each part it could
      not reach stated as not reached, never filled. Step three carries R32's read as the ceremony shows it. */
-  #preflightSteps(a, answer, seen, ratify) {
+  #preflightSteps(a, answer, seen, ratify, notice = null) {
     const ok = !!(answer && answer.ok === true);
     const notReached = ok ? null : `not reached: op=publish refuses first (${answer ? answer.reason : "no answer"})`;
     const tensions = this.tensionsToDisclose({ project: a.project ?? null, targets: a.targets ?? null,
@@ -1473,7 +1487,10 @@ export class CaseAuthoring {
     return [
       { step: 1, name: "what becomes permanent",
         says: "Signing publishes this case edition, and each finding in it at the version pinned here. A published "
-            + "edition is never withdrawn or edited: it is corrected only by a later edition.",
+            + "edition is never withdrawn or edited: it is corrected only by a later edition."
+            /* R42 (DEC-111; K1031 (3)): the plain sentence until the UX design stream gives the words. */
+            + (notice ? ` ${NOTICE_SEALS_SENTENCE}` : ""),
+        working_on: notice,
         ...(ok ? { case: answer.caseId, edition: answer.edition, document: answer.caseDocument,
                    pinned: answer.findings.map((f) => ({ target: f.target, bundleSha: f.bundleSha })) }
                : { stated: notReached }) },
@@ -1501,6 +1518,15 @@ export class CaseAuthoring {
         next: ok ? `op=caseratify over op=publish's document (case ${answer.caseId}, edition ${answer.edition})`
                  : "op=publish first" },
     ];
+  }
+
+  /** R41 (DEC-111; `case-grammar` R10): the project reference a case carries, `network-notices.noticeReferenceOf`
+   *  (its R19) as it answers for `project`: the notice id of the project's open or most recent notice, or null. Only an
+   *  answer `isNoticeReference` holds is carried; null, or anything malformed, is no reference and writes nothing
+   *  (ratification R38 would refuse a malformed one at signing). R42 reads the same answer. */
+  #workingOn(project) {
+    const ref = this.networkNotices.noticeReferenceOf(project);
+    return isNoticeReference(ref) ? ref : null;
   }
 
   /* The project an unsigned preparation of a case names, or null (publication R40: `case_documents`). */
@@ -2205,7 +2231,7 @@ export function caseAuthoringOwns(t) {
   return CASE_AUTHORING_TABLES.some((x) => x.name === name);
 }
 
-/** The module's ops (K3), as entries of the legacy store's op map. `viewer` and `author` are the control plane's stamps,
+/** The module's ops (K3), as entries of the plane's op map (`plane/store.mjs`). `viewer` and `author` are the control plane's stamps,
  *  read from the query and spread AFTER the body, so a caller's own copy is overwritten, never honoured. */
 export function caseAuthoringOps(c, url, body) {
   const q = (k) => url.searchParams.get(k);

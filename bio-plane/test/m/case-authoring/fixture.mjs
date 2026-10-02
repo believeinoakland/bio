@@ -1,7 +1,7 @@
 /* case-authoring over the modules it uses, each the real one (record-core, membership, credentials, promotion,
    provenance, extraction's tables, content, entities, connections, inquiry, basis-versions, strength, bias, observation-log,
    reevaluation, publication, ratification, contradiction), on a real SQLite database (node:sqlite) standing in for a Durable Object's
-   storage. What a later module fills is a stand-in the test controls: the run gate `ai-runs` registers with
+   storage. What a later module fills, and network-notices' project reference (its R19), is a stand-in the test controls: the run gate `ai-runs` registers with
    contradiction (its R13; `runs` below), the review provider (publication R23, which
    `review` registers once extracted) and its `case_drafts` table (review R26's read contract). Every test drives
    `case-authoring` at its interface: `publishCase`, `acknowledgeStatement`, `statementAcknowledgements`, its ops, its
@@ -211,9 +211,13 @@ export function world({ group = "test-group", provider = true, now = null, recor
     },
   };
   if (provider) publication.registerReviewProvider("review", reviewProvider(w));
+  /* network-notices' project reference (its R19), a stand-in the test controls: `notices` maps a project to what
+     `noticeReferenceOf` answers for it, null for none. */
+  w.notices = new Map();
+  const networkNotices = { noticeReferenceOf: (project) => (w.notices.has(project) ? w.notices.get(project) : null) };
   w.ca = caseAuthoringOf(host, { record: recordWrap ? recordWrap(record) : record, membership, inquiry, basisVersions,
     strength, bias, observations, reevaluation, publication, ratification: ratWrap ? ratWrap(ratification) : ratification,
-    contradiction, provenance: prov, capture,
+    contradiction, provenance: prov, capture, networkNotices,
     sources, now: now || ((p) => (p === "millisecond" ? clock.ms : clock.now)), ...deps });
   let n = 0;
   Object.assign(w, {
