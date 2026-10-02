@@ -31,3 +31,7 @@ Size (session_013WoUArmhh78ngbjAEuCSMa): test runs 4, module lines 3345
 ## J1 · REPORT
 
 Generated artifact staled (§14): the plane bundle bio-plane/dist/bio-plane.bundled.mjs (and .bundle.json); src/membership/index.mjs is one of its inputs. test/system/fleetbundles.test.mjs names it STALE (bio-plane arm). Not regenerated: yours at the layer close.
+
+## J2 · COMPLETE
+
+Complete. N520 R83: MODULE_ORDER re-pinned with docket directly after publication (layer 8), nothing else, on job/T27/membership. Membership tests 140/140; every MODULE_ORDER user's tests plus promotion 412/412; fleetbundles red = plane bundle staled (J1). format, architecture, coverage (79/79) and ownership: 0 failures. No catalogue rows added. Details in my record.
