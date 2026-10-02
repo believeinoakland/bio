@@ -1,6 +1,6 @@
 # monitoring — requirements
 
-**Status** · APPROVED by Bob 2026-09-26 (K102). DRAFT by a drafting worker for BOB #43, 2026-09-26 (P18), from a reading of the code, reviewed by BOB #43; for Bob's approval (a product module, P17). Layer 10. Code today (measured on `tranche/T3` @ `edbd39bb`; `store.mjs` 49,817 lines; `build/extraction/monitoring.md` has the table): `bio-plane/src/store.mjs` 16935–17009 (`driveShells`), 46072–46214 (`monitorObservationFor`, `recordMonitorLook`, `#recordMonitorAddressType`), 47030–47700 (the archive-monitor tick `#monitorTickMs` … `#monitorTick`, the idempotence key `#tickRunning`, `#openTickEpoch`, `#closeTickEpoch`, `#claimFire`, the cadence `MONITOR_CADENCE_MS`, `CONTRACT_FREQUENCY`, `monitorIntervalMs`, `#monitorSubjects`, `#monitorCadencePlan`, `#monitorCadenceWake`, `#monitorCadenceTick`, `#fireMonitorTick`, `#fireArchiveFallback`), the store routes `driveshells` and `monitorlook`. `bio-plane/src/index.mjs` 3044–3136 (`monitorCadence`, `monitorAssess`, `monitorRecordLook`) and 10304–10914 (`op=monitor`). `bio-plane/checks/bio-checks.mjs` 5277–5280 and 5664–5733 (C-18.5, `checkGatheringGrammar`; K49) and the rows C-48.8, C-48.9 (11254–11286). `schema.mjs`: `monitor_fired`, `monitor_tick_epoch` (1860–1901), `monitor_address_type` (3885–3905). `from`: `legacy-store`, and (proposed, map §5.1) `legacy-index` and `legacy-checks`. Not yet met: R17, R18 (K102), R23 (K102), R25, R28–R34 (R29 and R33 K102), R45 (K102). No old-plan row is carried to `monitoring`. Action layer folded 2026-09-30 (K608, K611): R50 added, not yet met; R34's mark re-worded, R35's struck (met); `actions.pendingClocks` (its R31) re-pointed to `action-clocks.pendingClocks` (its R1) by K617's split, no meaning changed. N63 and N65 (2) folded by a drafting worker for BOB #43, 2026-09-26: R44, not yet met; the credential named as `runtime-limits.unattendedCredential`. Uses' `capture` line gains the `source_reachability` read contract (N166, K206's P4) by a worker for BOB #53 (K214). N324 folded by a drafting worker for BOB #64, 2026-09-29 (K408): R30 answers through `membership.notAnAdmin`, not yet met. folded by a worker for BOB #66, 2026-09-29 (T14 opening; `build/plan/draft-T14-wordings.md`, K444, K445): N330 R47 (`archiveEligible`) and R48 (`flagged`) for `queue`; N339 (with N349) R49, a relayed store refusal keeps its status; met in T14 (MONITORING #6, K474). Folded by a worker for BOB #80, 2026-10-01 (T19 layer-10 fold; K719, `build/extraction/legacy-store.md` §4.2 (2)): R50 gains N429 (the wake leaves out an entry whose last mark failed, until the next day); R51 registers R46's `counts()` with record-core. Monitoring R17 folded by a worker for BOB #90 on `tranche/T22`, 2026-10-01, as Bob agreed it (K1019: a reasoned act by a member owning the source's project, the reason canned or custom, corrected forward, shown on the plan row): R17 re-worded, R52 (the act) added; Uses gain `membership.isProjectOwner` (no new module); not yet met (T22 layer 10). A32, A35, by a worker for BOB #90 on `tranche/T22`, 2026-10-02 (K1038): R31 and R34 worded as built (`queue-producers` publishes the items and tells the members); their todos are monitoring's T22 layer-10 job.
+**Status** · APPROVED by Bob 2026-09-26 (K102). DRAFT by a drafting worker for BOB #43, 2026-09-26 (P18), from a reading of the code, reviewed by BOB #43; for Bob's approval (a product module, P17). Layer 10. Code today (measured on `tranche/T3` @ `edbd39bb`; `store.mjs` 49,817 lines; `build/extraction/monitoring.md` has the table): `bio-plane/src/store.mjs` 16935–17009 (`driveShells`), 46072–46214 (`monitorObservationFor`, `recordMonitorLook`, `#recordMonitorAddressType`), 47030–47700 (the archive-monitor tick `#monitorTickMs` … `#monitorTick`, the idempotence key `#tickRunning`, `#openTickEpoch`, `#closeTickEpoch`, `#claimFire`, the cadence `MONITOR_CADENCE_MS`, `CONTRACT_FREQUENCY`, `monitorIntervalMs`, `#monitorSubjects`, `#monitorCadencePlan`, `#monitorCadenceWake`, `#monitorCadenceTick`, `#fireMonitorTick`, `#fireArchiveFallback`), the store routes `driveshells` and `monitorlook`. `bio-plane/src/index.mjs` 3044–3136 (`monitorCadence`, `monitorAssess`, `monitorRecordLook`) and 10304–10914 (`op=monitor`). `bio-plane/checks/bio-checks.mjs` 5277–5280 and 5664–5733 (C-18.5, `checkGatheringGrammar`; K49) and the rows C-48.8, C-48.9 (11254–11286). `schema.mjs`: `monitor_fired`, `monitor_tick_epoch` (1860–1901), `monitor_address_type` (3885–3905). `from`: `legacy-store`, and (proposed, map §5.1) `legacy-index` and `legacy-checks`. Not yet met: R17, R18 (K102), R23 (K102), R25, R28–R34 (R29 and R33 K102), R45 (K102). No old-plan row is carried to `monitoring`. Action layer folded 2026-09-30 (K608, K611): R50 added, not yet met; R34's mark re-worded, R35's struck (met); `actions.pendingClocks` (its R31) re-pointed to `action-clocks.pendingClocks` (its R1) by K617's split, no meaning changed. N63 and N65 (2) folded by a drafting worker for BOB #43, 2026-09-26: R44, not yet met; the credential named as `runtime-limits.unattendedCredential`. Uses' `capture` line gains the `source_reachability` read contract (N166, K206's P4) by a worker for BOB #53 (K214). N324 folded by a drafting worker for BOB #64, 2026-09-29 (K408): R30 answers through `membership.notAnAdmin`, not yet met. folded by a worker for BOB #66, 2026-09-29 (T14 opening; `build/plan/draft-T14-wordings.md`, K444, K445): N330 R47 (`archiveEligible`) and R48 (`flagged`) for `queue`; N339 (with N349) R49, a relayed store refusal keeps its status; met in T14 (MONITORING #6, K474). Folded by a worker for BOB #80, 2026-10-01 (T19 layer-10 fold; K719, `build/extraction/legacy-store.md` §4.2 (2)): R50 gains N429 (the wake leaves out an entry whose last mark failed, until the next day); R51 registers R46's `counts()` with record-core. Monitoring R17 folded by a worker for BOB #90 on `tranche/T22`, 2026-10-01, as Bob agreed it (K1019: a reasoned act by a member owning the source's project, the reason canned or custom, corrected forward, shown on the plan row): R17 re-worded, R52 (the act) added; Uses gain `membership.isProjectOwner` (no new module); not yet met (T22 layer 10). A32, A35, by a worker for BOB #90 on `tranche/T22`, 2026-10-02 (K1038): R31 and R34 worded as built (`queue-producers` publishes the items and tells the members); their todos are monitoring's T22 layer-10 job. T23 (the link sweep), by a fold worker for BOB #94 at T23's opening, on `fold/T23-b` from `tranche/T23`, 2026-10-02, from `build/plan/draft-monitoring-r29.md` (K1019, K1036, K1044, K1094): R29, R31 and R36 amended, R53–R63 added, not yet met (T23 L10); Uses gain `format-registry.listFormats`, `capture.heldCount` (its R82), `record-core.bundleInfo` and `project-stage.projectStage` (the `modules.json` edge to `project-stage` is the other fold worker's).
 
 **Size (P6).** About 1,760 lines move (about 970 without comment-only and blank lines): `store.mjs` 889 (464), `index.mjs` 704 (423), `bio-checks.mjs` 74 (64), `schema.mjs` 63 (23). R28–R35 are new work on top. Well under 4,000.
 
@@ -61,11 +61,111 @@ Terms. A **tick** is one check of one monitored document. A **look** is the obse
 
 **Standing intent** (Intake Doctrine §4)
 - **R28** Each open named request in a bundle's `data/gathering.json` whose cadence is due is captured through `capture.acquire` from its locators in order, the authoritative publisher first, with the request named as authority; what it brings lands no higher than its verification earns Wording (K1096, Intake Doctrine §2, §4): one locator at a time through `acquire`'s capture-request arm, stopping at the first that files; the request is the look's authority (one observation per attempt, R11's mapping), never asserted onto the bytes. New bytes land as §2 says, a gated Information bundle promoted through `promotion.promote` (`origin: named_request`, the request's id and its bundle as the authorisation), at the state its grade earns for a mechanical writer and never verified (a member's act, §4); bytes the record already holds land nothing new. A request is due by R14's intervals from its last attempt (never attempted: due; no cadence: once; `none`: never); only `open` requests. The cadence tick runs due requests after its batch's addresses, within R19's budget of 50, and answers them as `gathered`; paused (R30), nothing is gathered, stated. The bundle's own `daemon` block governs its requests (K1102; LINK-FIDELITY "The budget mechanism already exists"): `daemon.enabled: false` runs none of them, stated; `daemon.tick_budget`, when set, bounds the locators tried for that bundle in one tick, within R19's 50; `daemon.sweep_budget` is R29's.
-- **R29** A ratified sweep is run within its scope and breadth budget (per-tick fetch cap, backlog ceiling, an anomaly note when yield departs its history); what it brings lands at `collected`. Sweeps wait for a design of what a sweep's query is; until then only named requests (R28) are run. *(not yet met: Intake Doctrine §4; K102)*
+- **R29** A ratified sweep is named standing intent. It is run by R56–R61, within its scope (R53) and its budget, and each document it brings in is filed as its own Information bundle at `collected`, never higher. *(not yet met: T23)*
 - **R30** The daemon is pausable by an administrator (monitoring's and the fallback's fetches stop; a paused tick says so); a pause or resume asked by a member who is not an administrator (`membership` R64's `isAdministrator`, read of the stamped `actor`) is refused `NOT_AN_ADMIN` through `membership.notAnAdmin` (its R84), with nothing written, and the root of trust is an administrator here (N314, K380); this module mints no `NOT_AN_ADMIN` of its own and reads no C-96.1 row (K403's local site retires; N324); and its due slate (every named request, sweep and monitored address now due) is exported as quoted data inside fixed instruction framing.
 
+**The sweep's definition** (an entry of `data/gathering.json` `sweeps[]`, refused by C-18.5 through R27)
+- **R53** A sweep is `{id, title, ratified, sources, seeds, match, cadence, budget}` and nothing else. C-18.5 refuses an entry that breaks any of the following, with one finding per field *(not yet met: T23)*:
+  - `id`: `^[a-z0-9][a-z0-9-]{0,39}$`, unique within the file. A sweep's full name is `"<bundle>#<id>"`.
+  - `title`: a non-empty single line of at most 200 characters.
+  - `ratified`: a boolean.
+  - `sources`: the origin allowlist. It holds 1–20 public https prefixes (`isPublicHttpsLocator`). Each is a scheme and a host with an optional path prefix, and has no query or fragment. An address is **in scope** when its normalised form (`subresources.normalizeAddress`) equals a prefix, or continues one at a `/`.
+  - `seeds`: 1–10 public https locators, each in scope. These are the listing pages read on every run.
+  - `match`: `{terms?, paths?, formats?}`.
+    - `terms`: 0–20 terms, each as R54 states.
+    - `paths`: 0–20 prefixes, each in scope.
+    - `formats`: 0–10 format names, each one that `format-registry.listFormats()` (its R8) answers at the gate.
+  - `cadence`: `daily`, `weekly` or `monthly` (R14's intervals).
+  - `budget`: `{per_run, backlog}`. `per_run` is an integer 1–100 and `backlog` an integer 1–1,000.
+
+  `title` and `terms` are only ever shown as quoted data. `daemon.sweep_budget`, when set, caps the fetches all of a bundle's sweeps make in one tick together. When it is 0, they make none, and the run says so.
+- **R54** A **term** is a single-line string of 1–200 characters. It is a regular expression when it is written between slashes (`/…/`), and a literal otherwise. Both match without regard to case *(not yet met: T23)*.
+  - C-18.5 refuses a regular expression that does not compile, or that uses a backreference, a lookahead or a lookbehind (`SWEEP_TERM_REFUSED`, naming the term and the construct).
+  - A term's matching time is linear in the length of the text it is matched against, whatever the term is. No term can make a run take longer than its text's length bounds.
+  - A term is matched against at most 2,048 characters of a link's text and 2,048 of its decoded address. The rest is not read, and the run says how many links it cut.
+
+**Who may write a sweep** (K1036 (7))
+- **R55** A non-replay promotion carrying `data/gathering.json` is refused before anything is written, as follows *(not yet met: T23)*:
+  - `SWEEP_NOT_A_MEMBER` (C-18.5) when its author is not a member (an identity in `record-grammar`'s non-member set) and it adds a sweep, removes one, or changes any field of one. The one exception is setting `ratified` to `false`.
+  - `SWEEP_RATIFY_NOT_AN_OWNER` (C-18.5) when its author is not an owner of the bundle's project (`record-core.bundleInfo`, its R34; `membership.isProjectOwner`, its R54) and the promotion does either of these:
+    - sets a sweep's `ratified` to `true`;
+    - changes any field of a sweep that is ratified before or after the write.
+
+    A bundle in no project has no owner, so every such promotion on it is refused.
+
+  Any member who may write the bundle may add or change an unratified sweep. An owner's change to a ratified sweep re-ratifies it. Any writer, the daemon included, may set `ratified` to `false`, because stopping breadth is never refused. The ratifying member and the instant are those of the promotion that last set `ratified` to `true` or changed a ratified sweep, read from the bundle's history.
+
+**The run** (`sweepDue(now)`, `sweepWake(now)` and `sweepTick(now, rank?)`, for `scheduler`'s `gathering-sweep` consumer)
+- **R56** A sweep is due when all of the following hold *(not yet met: T23)*:
+  - it is ratified;
+  - the daemon is not paused (R30);
+  - its bundle's `daemon.enabled` is not `false`;
+  - its project is not at stage `closed` (Bob, K1094 (1));
+  - it is not held (R60);
+  - it has never run, or its last run plus its cadence's interval is at or before `now`.
+
+  `sweepWake` answers now + 1 s while one is due, else the earliest next run, else null. A tick runs at most 5 due sweeps, longest-overdue first and then by full name. Given the scheduler's rank, it reads at most ten times that number in that order and runs its batch in the rank's order. Each sweep is offered as `{kind: "sweep", id: "<bundle>#<id>", waitingSince}`. Claims and epochs are R21's, and the tick is not re-entrant (R22).
+- **R57** **Seeds.** Each seed is fetched through `capture.acquire`, paced by `host-governor`, with `origin: {kind: "sweep", matched_sweep: "<bundle>#<id>", deeming_actor: "bio-monitor"}` and the sweep's `sources` as the redirect scope (`acquisition` R31). Its capture is filed in the sweep's own bundle as a monitor snapshot, in the way R9 files a tick's bytes *(not yet met: T23)*.
+  - A seed whose bytes equal its last capture is recorded as `unchanged`, and its candidates are read again from that capture.
+  - A seed that fails is recorded with `capture`'s reachability (its R8), and the run goes on with the other seeds.
+  - A seed redirected out of scope is not fetched beyond the redirect, and is recorded as `out_of_scope_redirect` with its target.
+- **R58** **Candidates and the match.** The candidates are the links in this run's seed captures, read from the seed's own bytes: HTML anchors with their text, feed items with their titles, and sitemap entries (address only). A candidate matches when all of these hold *(not yet met: T23)*:
+  - its normalised address is in scope;
+  - it lies under one of `match.paths`, when any are given;
+  - one of `match.terms` (R54) matches its text or its decoded address, when any are given.
+
+  Only one hop is followed. A matching candidate is skipped, with the reason stated, in each of these cases:
+  - this sweep has already filed a capture at that address (`already_swept`);
+  - the record already holds a capture at that address (`already_held`);
+  - the run's budget is spent (`budget_spent`). Seed fetches count toward `per_run` and toward `daemon.sweep_budget`.
+
+  The rest are fetched in seed order and then in link order, each through `capture.acquire` with R57's origin and redirect scope. A redirect out of scope is recorded as `out_of_scope_redirect` with its target, and nothing at the target is fetched.
+- **R59** **Filing.** Each fetched candidate whose detected format (`format-registry.detectFormat`) is in `match.formats` (any format when none are given) is filed as a new Information bundle at `collected` *(not yet met: T23)*:
+  - in the project of the sweep's bundle;
+  - with the register entry's `origin` as R57 states it;
+  - with the seed capture that listed it named in the bundle's Provenance Notes.
+
+  A fetched document of another format is not filed (`format_excluded`), and its fetch still counts toward the budget.
+- **R60** **Backlog, hold, anomaly and silence.** *(not yet met: T23)*
+  - **Backlog** is `capture.heldCount({sweep: "<bundle>#<id>"})` (`capture` R82): this sweep's documents still at `collected`, neither released nor set aside.
+  - **Held:** while the backlog is at or over `budget.backlog`, the sweep does not run, and every read of it (R61) states `held: backlog`.
+  - **Anomaly:** once at least 4 runs exist, a run notes an anomaly in either of these cases:
+    - it filed more than three times the median of the last 8 runs, and more than 5;
+    - it filed 0 while that median is at least 2.
+
+    The note is kept on the run and changes nothing else.
+  - **Silent:** a sweep whose last 4 runs each filed nothing, and which is not held, is `silent`.
+- **R61** **Reads.** *(not yet met: T23)*
+  - `sweeps({viewer})` (`op=sweeps`; read; member session) answers every sweep in a `gathering.json` the viewer may see. Each comes with:
+    - its definition, as quoted data;
+    - `ratified`, with the ratifying member and instant (R55);
+    - `due`, `next`, `held` and the backlog;
+    - its last 20 runs, each with the seeds fetched, unchanged, failed or redirected, the candidates, the number filed, the skipped by reason, the links cut (R54) and any anomaly.
+
+    It also answers `formats`, which is `format-registry.listFormats()`, the list the member chooses `match.formats` from (K1036 (6)).
+  - R30's due slate carries each due sweep's definition as quoted data inside the fixed framing.
+- **R62** **Looks.** Each seed fetch and each candidate fetch writes one observation row (`observation-log`), with these fields *(not yet met: T23)*:
+  - authority kind `sweep`, authority `"<bundle>#<id>"`, level `document`, subject the address;
+  - state `PRESENT`, referring to the capture, or `LOOKED_INDETERMINATE` with the reason (a failed fetch, `out_of_scope_redirect`, `format_excluded`, or a governed refusal marked `governed`).
+
+  A skipped candidate writes nothing, because nothing was looked at.
+
 **What reaches members** (NOTIFICATIONS.md, the catalogue and the item contract)
-- **R31** Its reads give the items `queue-producers` publishes in the item contract, with their options: `source-modified` and `source-removed` (FINDING) for each flagged tick, from R48 (`queue-producers` R2); `archive-fallback-eligible` (CONDITION) for an eligible address, from R47; `monitoring-recheck-due` (CONDITION) for a monitored address overdue by more than its interval or unscheduled, from R16 and R32 (`queue-producers` R3). This module publishes no item itself. `queue` reads them. (A32; K1038, wording of what is built)
+- **R63** `sweepConditions({viewer})` answers, for each sweep the viewer may see, every condition that needs a member's look, derived on read and writing nothing. Each condition is `{sweep, kind, since, detail}` *(not yet met: T23)*:
+  - `sweep-held-backlog`: the sweep is held (R60). `detail` gives the backlog and the limit.
+  - `sweep-yield-anomaly`: the last run noted an anomaly (R60). `detail` gives the count filed and the median.
+  - `sweep-seed-unreachable`: a seed failed on the last run (R57). `detail` names each such seed and its reachability.
+  - `sweep-redirect-out-of-scope`: the last run met a redirect out of scope (R57, R58). `detail` names each address and its target.
+  - `sweep-silent`: the sweep is silent (R60).
+
+  A condition leaves on the first read after it stops holding.
+- **R31** Its reads give the items `queue-producers` publishes in the item contract, with their options *(not yet met: T23, the sweep items)*:
+  - `source-modified` and `source-removed` (FINDING), one for each flagged tick, from R48 (`queue-producers` R2);
+  - `archive-fallback-eligible` (CONDITION), one for each eligible address, from R47;
+  - `monitoring-recheck-due` (CONDITION), one for each monitored address overdue by more than its interval or unscheduled, from R16 and R32 (`queue-producers` R3);
+  - the five sweep conditions of R63 (CONDITION; `queue-producers` R26).
+
+  This module publishes no item itself, and `queue` reads them. (A32; K1038; K1036 (8))
 - **R32** `monitoring({viewer})` answers every monitored address the viewer may see with its R15–R16 row, the unscheduled among them, so a document that is not being checked is visible without waiting for a tick.
 
 **archiveEligible(now), flagged({viewer, limit})** (N330, K406; for `queue`)
@@ -93,7 +193,8 @@ Terms. A **tick** is one check of one monitored document. A **look** is the obse
 - `capture`: `acquire`'s archive arm (R20), `sourceReachability`, `reachabilityThresholds` (R43), the outcome record (R8, for R25), the capture key; and `source_reachability` (the pending count and the failing addresses R20 reads), through the read contract `capture` states in its Provides (N166; capture R59, K235).
 - `acquisition`: `substanceDigests`, `profilesAsText`, `ODF_DIGEST_MAX` (its R17), `civicosUserAgent` (its R24); the acquisition act itself through `capture`'s `acquire` (capture R73). *(K649 (1): moved from `capture`; this module's T18 job re-points its imports)*
 - `docprofile`: `identify`, `doctypeFor`, `assess`, `CONTRACT`; `format-registry`: `detectFormat`.
-- `observation-log`: its one append (R11).
+- `observation-log`: its one append (R11; the sweep's looks, R62).
+- `format-registry`'s `listFormats` (its R8; `detectFormat` is already used); `capture`'s `heldCount` (its R82); `record-core`'s `bundleInfo` (its R34); `project-stage`'s `projectStage` (its R1, R2), for R56's closed test.
 - `retrieval`: the projection's monitoring columns and `source_locator` (K75 (3)).
 - `intent` (its R7), `publication` (its R42, `restingCapturesOf`; N230), `reevaluation` (R33); `action-clocks`: `pendingClocks` (its R1; R34, R44, R50); `actions`: the bound of its R33 (R34, R44); `escalation` (R35). `publication` is.
 - `runtime-limits`: `unattendedCredential(env)` (its R26: `bound` for R24's configured test, `token()` for the credential a fire spends), until R23.
@@ -102,7 +203,12 @@ Terms. A **tick** is one check of one monitored document. A **look** is the obse
 
 ### Invariants
 
-- **R36** The daemon fetches only what store state authorizes: a bundle that asks, a named request, a ratified sweep. No caller names what is fetched; `op=monitor` takes a bundle id, and the fallback names only the document address (Intake Doctrine §4).
+- **R36** The daemon fetches only what store state authorizes *(not yet met: T23, the sweep arm)*:
+  - a bundle that asks to be monitored;
+  - a named request's locators;
+  - a ratified sweep's seeds, and the candidates that R58 admits.
+
+  No caller names what is fetched. `op=monitor` takes a bundle id, the fallback names only the document address, and no sweep fetch reaches an address out of its scope (Intake Doctrine §4).
 - **R37** Detecting change is mechanical; what a change means is not. A tick writes only `monitor-tick`'s field set, never the document's hash as current, and a change raises a flag for a member (Intake Doctrine §6; State Rules §8).
 - **R38** An equality that costs nothing is not evidence: a shell's match never reads `unchanged`, and a rendered capture's content is undetermined on every tick.
 - **R39** A governed refusal is a fact about the instance: its look is marked governed and it never counts as the source failing (D-104).
@@ -121,6 +227,7 @@ Terms. A **tick** is one check of one monitored document. A **look** is the obse
 - `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` §4.4 (the clock), §6 I-11, §8 (mechanical field sets); `docs/architecture/BIO_Design_Requirements_v2.md` §7; Roadmap v5 principle 3 ("the clock runs").
 - `docs/architecture/BIO_System_Design.md` §3, construct 10. DEC-37, DEC-43 (the daemon credential, R24).
 - K1019 (Bob's answer to `t22-check.md` question 5, with his addition of the canned or custom reason): R17, R52.
+- The link sweep (R29, R31, R36, R53–R63): Intake Doctrine §4 (the ratified sweep, the ratification fence, constraints as security controls), §6 (bounded breadth), §9 (named standing intent); State Rules §4.1 (the register's sweep origin) and §6 I-18; `docs/development/NOTIFICATIONS.md` (the CONDITION items); K1036.
 
 ### Suggestions
 
@@ -129,6 +236,21 @@ Terms. A **tick** is one check of one monitored document. A **look** is the obse
 - **Removed addresses.** R25 records `removed` as `source_refused`, so a withdrawn document can reach the archive. If BOB prefers a removed address never to trigger the fallback, R25 names that exception.
 - **The items.** R31's can be derived on read from the looks and the plan, as `queue`'s other conditions are; nothing new needs storing.
 - Tests: each R1 and R4 refusal and each C-18.5 arm gets a negative control; R21 gets the retry arm (observations counted once, D-518's skipped-only tick keeps its epoch); R38 an over-strictness arm (a plain document still reads `unchanged`).
+- **The link sweep** (R53–R63):
+  - Tables: `sweep_runs` (one row per run, with its counts and anomaly) and `sweep_filed` (the addresses each sweep filed, for `already_swept`). Both are this module's, declared to purge and derived, as R41's are.
+  - A linear-time matcher (R54) is a Thompson-NFA or RE2-class engine, never JavaScript's backtracking `RegExp`. Banning backreferences and lookaround alone does not make a backtracking engine linear, because `(a|a)*` and `(a+)+` still blow up.
+  - Codes `SWEEP_TERM_REFUSED`, `SWEEP_NOT_A_MEMBER` and `SWEEP_RATIFY_NOT_AN_OWNER` each take a catalogue row in this module's table (DEC-49). `op=sweeps` takes an `op-declarations` spec (member session, read) in L11.
+  - Tests:
+    - each C-18.5 arm, with a negative control;
+    - a regular expression with a backreference, and one with a lookbehind;
+    - a pathological term over a 2,048-character text, finishing within a fixed bound;
+    - an owner who ratifies against a member who ratifies;
+    - a non-owner who changes a ratified sweep, and one who sets `ratified` to `false`;
+    - the budget counted with seeds;
+    - a redirect out of scope that fetches nothing at its target;
+    - an `already_held` skip;
+    - the held, anomaly and silent edges at 3/4 runs and at the median;
+    - every R63 kind arriving and leaving.
 
 ## Open for Bob
 
