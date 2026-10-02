@@ -100,7 +100,7 @@ export const STATEMENT_ACK_MAX = 500;
 export const WHAT_CHANGED_MAX = 8000;
 /** R39: the most drafts one list names; a list that reaches it says so (`truncated`), as R20's list does. */
 export const WHAT_CHANGED_DRAFTS_MAX = 500;
-/** R39: the prefix of a draft's opaque id (record-core R6), minted by record-core and seeded into its ledger. */
+/** R39: the prefix of a draft's opaque id (record-core R6), every one drawn through record-core's ledger. */
 export const WHAT_CHANGED_DRAFT_PREFIX = "WCD";
 /** R19 (DEC-88, K1030): the longest acknowledger's words, in code points. */
 export const STATEMENT_ACK_REASON_MAX = 2000;
@@ -2218,8 +2218,6 @@ export function caseAuthoringOf(host, deps) {
     c = new CaseAuthoring({ ...d, host, storage, record, membership });
     instances.set(host, c);
     c.migrate();
-    /* R39: the drafts' ids, so an id once minted is never minted again, even after a purge (record-core R6). */
-    record.seedMintLedger([[WHAT_CHANGED_DRAFT_PREFIX, "what_changed_drafts", "draft_id"]]);
     record.declarePurge("case-authoring", CASE_AUTHORING_TABLES);
   }
   return c;
