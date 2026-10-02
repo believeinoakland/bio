@@ -58,3 +58,7 @@ Why not "registers itself when the factory first builds", as B1 says: inquiry ca
 What needs you: (a) the R53 re-wording, and (b) a plane entry: one line in store.mjs after :120, in plane's L11 job or wherever you place it. Bias R40's mark would then be struck at plane's registration, or at my merge if you take my test's registration on a real bias as the proof.
 
 Until a host binds bias, a finding records lens_state `unreadable`: undetermined, never filled in. Everything else proceeds on this reading (the record, the source, my test). If you prefer the alternative (the six fixtures migrate bias and inquiry registers at `migrate()`), that is six other jobs' changes, and it still leaves (1).
+
+## J2 · REPORT
+
+(1) The plane's bundle (bio-plane/dist/bio-plane.bundled.mjs) is stale: my change is under bio-plane/src/inquiry/. I regenerated nothing. (2) plane R12 is owed: after store.mjs:120, biasOf(ctx).registerWorkProducts("finding", inquiryFindings(ctx, biasOf(ctx))). (3) inquiry R36 lists this module's purged tables one by one; inquiry_findings (new, R53) should join that list. It is declared to purge on bundle_id and project_id (wording only). (4) Six modules' test worlds (actions, consequences, contradiction, publication, conformance, reevaluation) build inquiry and never build or migrate bias. That is why inquiry cannot reach bias itself (J1); it is noted for whoever next wires bias there.
