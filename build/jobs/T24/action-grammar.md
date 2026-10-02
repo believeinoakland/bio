@@ -23,6 +23,6 @@
 - `node checks/format.mjs`: 88 modules, 87 requirements files; 2 failures, both `link-sweep`'s absent `paths`/`tests` (accepted red 4).
 - `node checks/architecture.mjs … action-grammar`: 7 product files, 13 relative imports; 0 failures.
 - `node checks/coverage.mjs … action-grammar`: 11 of 11 live requirement ids named by a test; 0 failures.
-- `node checks/ownership.mjs … action-grammar tranche/T24`: 0 failures (run after the commit; summary in COMPLETE).
+- `node checks/ownership.mjs … action-grammar tranche/T24`: 3 files changed by action-grammar; 0 failures.
 
-Size (session_01KswGokoCpfjTh9SsAcvrPk): test runs 4, module lines 3 (changed: 3 lines of comment; module 1,773 source lines)
+Size (session_01KswGokoCpfjTh9SsAcvrPk): test runs 6, module lines 3
