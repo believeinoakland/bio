@@ -3,7 +3,8 @@
  * comment names `Store.publish` or `op=ratify` it names the act as it stands today (ratification's), not this module.
  *
  * The published projection (`published_bundles`, `published_shas`, `published_cases`, `published_case_members`,
- * `cases`) and `export_log` are append-only and exempt from purge (R24, R31): an edition answers forever. The derived
+ * `cases`) is append-only and exempt from purge (R24, R31): an edition answers forever. `export_log` is
+ * `corpus-export`'s since K1024. The derived
  * and working tables (`published_edges`, `published_held_references`, unsigned `case_documents` and their
  * `case_exclusions`, `case_revision_flags`, `observation_attributions`) are declared to record-core's purge as the
  * store declared them (K23); the held references (N256) as `published_edges` is. */
@@ -566,19 +567,6 @@ CREATE TABLE IF NOT EXISTS observation_attributions (
   PRIMARY KEY (case_id, edition, bundle_id)
 );
 CREATE INDEX IF NOT EXISTS observation_attributions_bundle ON observation_attributions(bundle_id);
-
--- Section 8.1: an export is recorded so it can never happen SILENTLY.
--- Append-only, like everything else here. In-app administrators cannot RUN
--- an export and must be able to SEE that one happened, because an export a
--- captured root of trust could take unnoticed would defeat the recording.
-CREATE TABLE IF NOT EXISTS export_log (
-  seq     INTEGER PRIMARY KEY AUTOINCREMENT,
-  at      TEXT NOT NULL,
-  scope   TEXT NOT NULL,
-  bundles INTEGER NOT NULL,
-  files   INTEGER NOT NULL,
-  note    TEXT
-);
 `;
 
 /** R31 (K23): what purge clears, as the store declared it — `published_edges` keyed by either end, the unsigned case
@@ -592,7 +580,7 @@ export const PUBLICATION_TABLES = Object.freeze([
 ]);
 /** R24, R31: the published bytes, never cleared by any purge. */
 export const PUBLICATION_EXEMPT = Object.freeze([
-  "published_bundles", "published_shas", "published_cases", "published_case_members", "cases", "export_log",
+  "published_bundles", "published_shas", "published_cases", "published_case_members", "cases",
 ]);
 
 /* Columns added after a store was first written, added by hand because CREATE TABLE IF NOT EXISTS does nothing to a

@@ -2,14 +2,15 @@
  * §1–§4, §6A.2, §6A.3, §7; Membership v2 §8). Publication is the one irreversible act: what the group stands behind
  * leaves the instance, content-addressed and signed, so a stranger can verify without this instance that the group
  * said what it claims and rested it on what it says. This module holds every case document (unsigned and signed) and
- * the published projection, answers which cases a finding serves, lets a member choose how their firsthand words are
- * attributed, and exports the working corpus verifiably. The two signing ceremonies (`ratification`) and preparing a
+ * the published projection, answers which cases a finding serves, and lets a member choose how their firsthand words
+ * are attributed; the verified working-corpus export is `corpus-export`'s (K1024), reached here through the ops
+ * `export` and `exportlog`. The two signing ceremonies (`ratification`) and preparing a
  * case (`case-authoring`) write through it (R21, R22), so one module keeps R24: nothing updates or deletes a published
  * row, a signed document or a published object.
  *
  * Extracted from the legacy modules (T8, layer 8; K3, K31, K57, K94, K102): `store.mjs` (the case relation and the
- * revision flags, the case document reads, the MK-7 attribution act, the verified export and its log, the pinning
- * helpers and the commits, and the dispatch entries), `index.mjs` (the door's `caseflags` and `casedocument` arms,
+ * revision flags, the case document reads, the MK-7 attribution act, the verified export and its log (moved on to
+ * `corpus-export` by the second split, K1024), the pinning helpers and the commits, and the dispatch entries), `index.mjs` (the door's `caseflags` and `casedocument` arms,
  * `./door.mjs`) and the check catalogue (C-92.1–.9, now `./checks.mjs`, with C-122.1 new there). Its tables are
  * `./schema.mjs`. It reads the record's shared grammar (the front-matter parser, actor identity, the one SHA-256, the
  * section locator) from `record-grammar`, never from the catalogue (T19, rule 1). The legacy code's comments moved with it; where one names a store
@@ -30,7 +31,7 @@
  * registers a case's cited parts and the ratified cases (R41, R43) with reevaluation (its R26, K359).
  * `deps` (each reached through its factory on the same host unless given; a test passes its own):
  *   record, membership, promotion   layer 2: `transact`, `head`, `readFile`, `textAtSha` (R60), `declarePurge`, the
- *                                   `bundles`, `files`, `history` and `manifest` tables (R18's export);
+ *                                   `bundles` table (R21's type column, the standing test);
  *                                   `viewerPredicate`, `memberFacts`; `registerStep`, `registerFact`, the fact
  *                                   `producingGroup`.
  *   credentials    `attestingKeys` (its R11; R2's signers), reached lazily (K757).
@@ -40,10 +41,12 @@
  *   sources        `publishableAt` (its R8), for R51 (N364); its `source_knocks` read contract (its R15) joined in
  *                  this module's own SQL, the sources behind a capture.
  *   reevaluation   `registerCaseParts` (its R26), at creation only (R41, R43).
+ *   corpusExport   `exportManifest`, `exportLog` (its R1, R2), created at creation with this module's clock, so
+ *                  `export_log` exists and is declared at every boot; the ops `export` and `exportlog` delegate to it.
  *   now            the clock for the instants it writes, an ISO string (default: the wall clock).
  *
- * READ CONTRACTS it joins in its own SQL: record-core's `bundles`, `files`, `history` and `manifest` (R18, R21's
- * type column), provenance's `register` (R17's author, R18's register) and connections' `refs` (R18). */
+ * READ CONTRACTS it joins in its own SQL: record-core's `bundles` (R21's type column, the standing test) and
+ * provenance's `register` (R17's author, R42's captures). */
 
 import { recordOf, stampInstant, instantOrder } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate } from "../membership/index.mjs";
@@ -60,6 +63,7 @@ import { PUBLICATION_TABLES, PUBLICATION_EXEMPT, migratePublication, registerCas
          caseDocumentPath } from "./schema.mjs";
 import { contradictionOf } from "../contradiction/index.mjs";
 import { sourcesOf } from "../sources/index.mjs";
+import { corpusExportOf } from "../corpus-export/index.mjs";
 /* The case document's grammar is `case-grammar`'s (K651): the formats and predicates, the /5 blocks and tension
    section, the attribution run's text, the section locators, the signed citations and the edge set a finding rests on.
    This module reads them from there and re-exports, unchanged, every name it exported before the split, so its
@@ -86,12 +90,9 @@ export { PUBLICATION_SCHEMA, PUBLICATION_TABLES, PUBLICATION_EXEMPT, caseDocumen
    and `truncated` beside its answer rather than scanning whatever is there. 500 is deliberately generous: the common
    ask is one case or one finding, where the real answer is a handful of rows. */
 export const CASE_FLAGS_LIMIT = 500;
-/* REC-57: `op=exportlog` read the append-only export log at a literal `LIMIT 200` with no parameter and no published
-   bound — on the one op whose whole sentence is a completeness claim to administrators (R19). */
-export const EXPORT_LOG_LIMIT_DEFAULT = 200;
-export const EXPORT_LOG_LIMIT_MAX = 1000;
-/** R18: the longest note an export's log row keeps. */
-export const EXPORT_NOTE_MAX = 280;
+/* The export's bounds are `corpus-export`'s (its R1, R2; K1024), re-exported unchanged for the importers that read them
+   here (queue-producers; K649 (1)). */
+export { EXPORT_LOG_LIMIT_DEFAULT, EXPORT_LOG_LIMIT_MAX, EXPORT_NOTE_MAX } from "../corpus-export/index.mjs";
 /** R17 (DEC-88, K1030): the longest reason an attribution choice keeps, in code points; a longer one is refused. */
 export const ATTRIBUTION_REASON_MAX = 2000;
 /** R37: the ratified editions one `publishedEditionsOf` read answers. */
@@ -154,14 +155,15 @@ function noCaseDocument(id, ed) {
 export class Publication {
   #deps;
   #review = null;        // R23: {module, ...doors}, filled once
+  purgeDeclaration = null;   // R31: record-core's answer to this module's purge declaration, set at creation
 
   constructor({ storage, record, membership, promotion, host = null, inquiry = null, basisVersions = null,
-                contradiction = null, sources = null, credentials = null, now = null } = {}) {
+                contradiction = null, sources = null, credentials = null, corpusExport = null, now = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
-    this.#deps = { host, inquiry, basisVersions, contradiction, sources, credentials };
+    this.#deps = { host, storage, inquiry, basisVersions, contradiction, sources, credentials, corpusExport };
     this.now = typeof now === "function" ? now : () => new Date().toISOString();
   }
 
@@ -173,6 +175,10 @@ export class Publication {
     return this.#deps.credentials ||= credentialsOf(this.#deps.host, { record: this.record, membership: this.membership });
   }
   get sources() { return this.#deps.sources ||= sourcesOf(this.#deps.host, { record: this.record, membership: this.membership }); }
+  get corpusExport() {
+    return this.#deps.corpusExport ||= corpusExportOf(this.#deps.host, { storage: this.#deps.storage, record: this.record,
+                                                                        now: this.now });
+  }
 
   migrate() { migratePublication(this.sql); }
 
@@ -1939,95 +1945,11 @@ export class Publication {
              stated: `edition ${ed} of ${cid} now states ${obs} at level '${lv}'. The case document was re-authored; `
                    + `its owner signs the new bytes. A later edition inherits this choice until you change it.` };
   }
-  /* ---- section 8: secure verified export ----
-   *
-   * Export is the only real answer to a captured root of trust, because a group
-   * that cannot leave is a group that can be held. It is also exactly the
-   * capability an attacker wants most: a full working-corpus export is the
-   * group's entire unpublished position, so if ANY administrator could take it,
-   * one captured administrator exfiltrates everything and the feature becomes
-   * the most efficient attack in the system.
-   *
-   * WHO MAY RUN IT is enforced in the control plane, not here, because that is
-   * where the credential class is known. The rule is sharper than "an
-   * administrator": section 8.1 says the ADMIN_TOKEN-class credential, which a
-   * SESSION belonging to an administrator does not satisfy. A session is
-   * password-derived; the root of trust is the token set in the hosting
-   * dashboard. A stolen password must not reach this, and neither does the
-   * founder's own signed-in browser.
-   *
-   * WHAT "VERIFIED" MEANS: the export carries its own manifest, every file
-   * hashed on the way out, so the receiving side can re-derive everything and
-   * trust nothing the sender asserts. */
-  exportManifest({ note = null } = {}) {
-    const bundles = this.#rows(
-      `SELECT bundle_id, object_type, title, current_state, bundle_sha, row_version, created, last_updated
-       FROM bundles ORDER BY bundle_id`);
-    let fileCount = 0;
-    const out = bundles.map((b) => {
-      const files = this.#rows(
-        `SELECT path, sha256, bytes, blob_sha, (content IS NOT NULL) AS inline
-         FROM files WHERE bundle_id=? ORDER BY path`, b.bundle_id);
-      fileCount += files.length;
-      return { ...b,
-        files: files.map((f) => ({ path: f.path, sha256: f.sha256, bytes: f.bytes,
-                                   blobSha: f.blob_sha ?? null, inline: !!f.inline })),
-        /* The manifest chain and the base links, so the receiving side can
-           re-derive the chain rather than believe it. `history` holds the
-           snapshotted FILES; `manifest` holds the promotion records that link
-           them, which is what a chain check actually walks. */
-        /* REC-182: `created` is the document's own time and two promotions can tie on it; a tie is
-           broken by `rowid`, the store's write order (D-171's precedent), never by the scan. */
-        promotions: this.#rows(
-          `SELECT snap_key, kind, base, author, created, writer, operation
-           FROM manifest WHERE bundle_id=? ORDER BY created, rowid`, b.bundle_id),
-        snapshots: this.#rows(
-          `SELECT snap_key, path, sha256, created FROM history WHERE bundle_id=? ORDER BY snap_key, path`,
-          b.bundle_id),
-        refs: this.#rows(`SELECT target_id, kind FROM refs WHERE bundle_id=?`, b.bundle_id),
-      };
-    });
-    /* The module's clock (`now`), as every instant it writes, so the log row and the answer carry one instant. */
-    const at = this.#when();
-    this.sql.exec(
-      `INSERT INTO export_log (at,scope,bundles,files,note) VALUES (?,'working-corpus',?,?,?)`,
-      at, bundles.length, fileCount, note ? String(note).slice(0, 280) : null);
-    return { ok: true, at, scope: "working-corpus",
-      bundles: out,
-      counts: { bundles: bundles.length, files: fileCount },
-      register: this.#rows(`SELECT bundle_id, path, capture_sha, bytes FROM register ORDER BY bundle_id`),
-      recorded: "this export is in the append-only export log and is visible to every administrator",
-      verify: "every file carries its sha256 and every record its history chain and base links. Re-derive "
-            + "them on the way in and byte-compare every registered capture; trust nothing this manifest "
-            + "asserts about itself." };
-  }
-
-  /** The log, readable by in-app administrators who cannot run an export.
-   *
-   *  REC-57 — NOT NAMED IN THE ITEM, and the worst instance of its class on the
-   *  roster. This op read the log at a literal `LIMIT 200` with no parameter at
-   *  all, and published neither the bound nor a truncation flag: an
-   *  administrator reading `exports` saw the newest 200 entries of an
-   *  APPEND-ONLY log and had no way to tell that from the whole of it. The
-   *  sentence the export manifest tells them is "this export is in the
-   *  append-only export log and is visible to every administrator" — a
-   *  completeness claim, which is exactly what UI-25 says an unstated bound
-   *  reads as. On a store past 200 exports, the export that is being looked for
-   *  is the one that has fallen off.
-   *
-   *  `limit` is now accepted (default 200, clamped to 1..1000) so a truncated
-   *  reader can ask for more, and the answer carries the bound it applied and
-   *  whether it bit. Ordering, columns and the `exports` key are unchanged, and
-   *  a caller that passes nothing gets byte-identical rows. */
-  exportLog({ limit = null } = {}) {
-    const cap = Math.max(1, Math.min(Math.floor(Number(limit) || EXPORT_LOG_LIMIT_DEFAULT),
-                                     EXPORT_LOG_LIMIT_MAX));
-    /* cap + 1 asked for, cap delivered: the extra row is the whole difference
-       between "there are 200 exports" and "here are the first 200". */
-    const page = this.#rows(
-      `SELECT seq, at, scope, bundles, files, note FROM export_log ORDER BY seq DESC LIMIT ?`, cap + 1);
-    return { ok: true, exports: page.slice(0, cap), limit: cap, truncated: page.length > cap };
-  }
+  /* The verified export and its log are `corpus-export`'s (its R1, R2; K1024): these delegate to it, unchanged, for
+     the ops `export` and `exportlog` and the callers that reach them here, until the plane's op map spreads its ops and
+     queue-producers imports it directly (N483, N484). */
+  exportManifest(a) { return this.corpusExport.exportManifest(a); }
+  exportLog(a) { return this.corpusExport.exportLog(a); }
 
   /* D-442 / BIO_Publication_v0_1.md §3 rule 12: a member's edition and frozen pair as the RATIFIED
      case documents pinning exactly these bytes state them. Null when every pinning document is
@@ -2706,7 +2628,7 @@ export class Publication {
 const instances = new WeakMap();
 
 /** The one instance for a host (K61). The first call creates it with `deps` (a test passes its own), creates its
- *  tables, declares them to purge (R31), and registers with promotion what this module provides (K206, N152): the
+ *  tables, declares them to purge (R31), creates corpus-export (K1024), and registers with promotion what this module provides (K206, N152): the
  *  facts `caseMember` (R4), `publishedRegistry` and `publishedCaseRegistry` (R7), and the revision flag (R5) as its
  *  step's projection, raised in the promotion's transaction after the new version is written; and with reevaluation
  *  its cited parts and ratified cases (R41, R43). */
@@ -2721,7 +2643,10 @@ export function publicationOf(host, deps) {
     p = new Publication({ ...d, host, storage, record, membership, promotion });
     instances.set(host, p);
     p.migrate();
-    record.declarePurge("publication", PUBLICATION_TABLES, { exempt: PUBLICATION_EXEMPT });
+    /* R31: the declaration's answer is kept, so a refused one (TABLE_DECLARED: nothing declared) is seen. */
+    p.purgeDeclaration = record.declarePurge("publication", PUBLICATION_TABLES, { exempt: PUBLICATION_EXEMPT });
+    /* K1024: corpus-export created here, eagerly, so `export_log` exists and is declared exempt at every boot (its R4). */
+    void p.corpusExport;
     promotion.registerFact("caseMember", "publication", (id) => !!p.caseRelation(id).member);
     promotion.registerFact("publishedRegistry", "publication", (id, targets) => p.publishedRegistryFor(id, targets));
     promotion.registerFact("publishedCaseRegistry", "publication", (ids) => p.publishedCaseRegistryFor(ids));
