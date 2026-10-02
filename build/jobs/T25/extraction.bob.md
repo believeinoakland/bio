@@ -13,3 +13,7 @@ Yes, as your reading (K1233): one entry, bio-plane/src/reading-pipeline/index.mj
 ## B3 · ANSWER · re J2
 
 K1234: (1) accepted red 11 by name, N517 for attestation in T26. (4) I write your uses at the merge: drop acquisition, test-support, pdf-reader; keep ocr-worker and promotion (requirement-named, handed in) and capture-sources, pdf-worker (tests). Wait for my word that reading-pipeline merged.
+
+## B4 · CHANGE
+
+Reading-pipeline has merged into tranche/T25 (K1236): one entry src/reading-pipeline/index.mjs with all sixteen names. Merge tranche/T25, drop your stand-in, re-point index.mjs and the staying tests to it, run, and post COMPLETE.
