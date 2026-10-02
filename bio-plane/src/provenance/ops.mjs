@@ -5,9 +5,10 @@
  * answered before the move, byte for byte. And the store's route arms as one ops map (`provenanceOps`, R53), written
  * at T19 from the legacy store's explicit arms (K671), now spread by the plane store (`src/plane/store.mjs`); the
  * legacy store is retired. `op=attest`'s Worker arm is `attestation`'s, and the three route arms
- * (`provenancechain`, `provenanceroute`, `provenanceroutes`) are `provenance-routes`' `provenanceRouteOps` (N512). */
+ * (`provenancechain`, `provenanceroute`, `provenanceroutes`) are `provenance-routes`' `provenanceRouteOps` (N512);
+ * `attestOp` below is a copy held until the plane re-points (N516). */
 
-import { registerAuditReport } from "./index.mjs";
+import { registerAuditReport, attest } from "./index.mjs";
 
 /* The body's spellings of an author a caller might send to op=testify, every one collected so that naming the person
    under a synonym is no way round C-53.2's refusal (R28, R53). */
@@ -72,4 +73,29 @@ export async function registerAuditOp(env, store, { json, doAnswer, storeSilent,
   return json({ ok: true, result: await registerAuditReport(aOut.result, typeof env.CAPTURES?.head === "function"
     ? { head: (sha) => env.CAPTURES.head(captureKey(storeName, sha)), get: (sha) => env.CAPTURES.get(captureKey(storeName, sha)) }
     : null), store: storeName, tokenClass: cls }, 200);
+}
+
+/* The HTTP status op=attest answers each outcome with (the control plane's envelope keeps it); the copy's own. */
+const attestStatus = (a) => (a && a.ok ? 200 : { BAD_SHA: 400, CAPTURE_HELD_IN_PARTS: 409, NO_SUCH_CAPTURE: 404 }[a && a.reason] ?? 502);
+
+/** N516 · op=attest's Worker arm for the plane's door (`src/plane/door.mjs`, layer 11), as `attestation` states it
+ *  (its R1–R3): a stateless copy over this module's `attest` copy, held because the door imports it by name and a
+ *  Worker that cannot load hangs every test that starts one. It reads and writes no table: the working bucket, the
+ *  network and the store's `registerholds` reach it as the control plane's helpers. Deleted by this module's T26 job
+ *  once the plane composes `attestation` (its L11 job). */
+export async function attestOp(req, env, store, { json, doAnswer, storageAbsent, captureKey, storeName, cls }) {
+  if (req.method !== "POST") return json({ ok: false, error: "attest is a POST" }, 405);
+  if (typeof env.CAPTURES?.put !== "function")
+    return storageAbsent("attest", "this instance has no evidence storage configured");
+  const body = await req.json().catch(() => null);
+  const attested = await attest(body || {}, {
+    head: (sha) => env.CAPTURES.head(captureKey(storeName, sha)),
+    put: (sha, bytes) => env.CAPTURES.put(captureKey(storeName, sha), bytes, { sha256: sha }),
+    fetch: (...a) => fetch(...a),
+    holds: async (sha) => {
+      const hOut = await doAnswer(store.fetch(`http://x/registerholds?sha256=${encodeURIComponent(sha)}`));
+      return hOut.answered ? hOut.result : null;
+    },
+  });
+  return json({ ...attested, store: storeName, tokenClass: cls }, attestStatus(attested));
 }
