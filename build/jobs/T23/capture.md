@@ -24,3 +24,7 @@
 - Module lines: 3,446 (under 4,000).
 
 Size (session_01HagLZhkXbK2oz2jacVWoU7): test runs 7, module lines 3446
+
+## J1 · REPORT
+
+Three things outside capture, after R82 and N499: (1) Accepted red 9 is still red: control-plane inbox-door.test.mjs:81 (R36). The door's resolve calls capture.pullKnock, not capture.inboxResolve (control-plane/pull.mjs:121), so no reason reaches the row. Capture's side is in place: inboxResolve({knockId, status: "pulled", by, reason, at, within}) records the reason inside the pull's one act. This is control-plane's L11 change (K1117). Whole test/m: 5025 tests, 5012 pass, 1 fail (this one), 12 todo. (2) bio-plane/dist/bio-plane.bundled.mjs is stale (a change under src/capture/). I regenerated nothing. (3) A possible gap in R82's wording, for monitoring R60: 'never throws' with a numeric answer means a store fault reads 0 (no backlog), which lets the hold run. Also, a register document held as a blob (files.content NULL) cannot be read in SQL and is not counted; acquired and pulled register documents are inline today. A wording that answers null on a fault would fail closed. Your call.
