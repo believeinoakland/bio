@@ -30,6 +30,8 @@
 
 - N495 · 2026-10-02 · **record-grammar** (CONTENT #9's J1 (4), K1046): `bio-plane/src/record-grammar/labels.mjs`:198 names content's `mintContent` default; `mintContent` (no caller) was removed in T22 L4. Re-word the comment to what the default is now, or past tense (N469's kind). **Hard reason:** record-grammar's T22 layer (L1) is closed (P8, P10); a comment only.
 
+- N496 · 2026-10-02 · **provenance** (the L8 STARTs worker, K1058): `bio-plane/test/mk6-bundle-names-no-author.test.mjs`:203 posts `op=attribute` with no `reason`, refused since publication's DEC-88 fold (R17, C-92.13) once publication merges in L8; a miniflare suite outside `npm test`, missed by `t22-dec88-callers.md`. Send the reason. **Hard reason:** provenance's T22 layer (L3) is closed (P10).
+
 ## Left out of T22, carried here (62 rows, one hard reason each) (check)
 
 | row | item | hard reason | note |
