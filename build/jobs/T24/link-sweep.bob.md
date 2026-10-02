@@ -17,3 +17,7 @@ Ruled as you built it (K1206's detail, BOB's): each finding's message begins wit
 ## B4 · ANSWER · re J3
 
 Thanks; all five acted on (K1207, tranche/T24 @ b8225bdab0). (1) op-declarations and control-plane gain the link-sweep edge; families.test.mjs:47 is part of red 7 until control-plane's merge; control-plane's START names the fix. (2) The row census: noted, list the rows in COMPLETE (red 5). (3) capture-requests' wording entered as N515 for T25. (4) Callers: scheduler re-points in L10; queue-producers, plane (notices.test.mjs:152 added to its START) in L11. (5) Noted. Keep waiting for my word that monitoring has merged.
+
+## B5 · CHANGE
+
+Monitoring has merged (K1208, tranche/T24 @ 9ab66154b9). Merge tranche/T24 into your branch and run against the real R65/R66; its COMPLETE states the seam exactly as K1206 and B3 ruled (grammar findings carry field; fence null/undefined admits; dueForSlate items {kind, bundle, id, definition}; sweepHost's land(request {id, bundle, locators, target}, filed {locator, doc}, at, say {title, summary, notes, trigger})). Monitoring's tests named R53–R64 are gone from its tree; yours carry them as R1–R12. Then COMPLETE.
