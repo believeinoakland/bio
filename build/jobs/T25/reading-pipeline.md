@@ -28,6 +28,14 @@
 
 Size (session_012Yr3gwtfrXrBoUUrtJgU8a): test runs 22, module lines 1331
 
+## Completion of B4 (CHANGE, K1237)
+
+- Merged `tranche/T25` (extraction merged, importing only `reading-pipeline/index.mjs`); deleted `bio-plane/src/readingprov.mjs`, the re-export K1235 kept. Nothing else imports that path (two comments name the file `readingprov.mjs` by name only: extraction's `rules.test.mjs` header and mine).
+- `node --test test/m/reading-pipeline/`: 74 pass, 0 fail. `d606-perpage-ocr`, `tier2-wire`, `system/pdf-worker-binding`: 3 pass, 0 fail. `test/m`: tests 5329, pass 5233, fail 85, the same 85 in the same files as the baseline (reds 7, 8, 9), none here.
+- `format`: 1 failure, `modules.json`'s `bio-plane/src/readingprov.mjs` path now naming no file, which BOB drops at the merge (B4). `architecture`: 20 files, 46 imports, 0. `coverage`: 24 of 24. `ownership` against `tranche/T25`: 2 files, 0.
+
+Size (session_012Yr3gwtfrXrBoUUrtJgU8a): test runs 26, module lines 1327
+
 ## J1 · QUESTION
 
 `readingprov.mjs`'s move, and the window until extraction's merge. B1 says move `bio-plane/src/readingprov.mjs` into `reading-pipeline/` and tell you in COMPLETE so you drop the path. Moved bare, `extraction/index.mjs`:24 (and the `pipeline.mjs` copy extraction deletes) no longer resolve, so the plane does not load: measured on this branch, the whole `bio-plane/test/m` goes from the tranche baseline's 85 failures (all red 7's: case-authoring, network-notices, filings, retrieval, …) to 493 failing tests, nearly every file that composes the plane, plus my three plane-booting legacy tests (`d606-perpage-ocr`, `tier2-wire`, `system/pdf-worker-binding`), all green on the baseline.
