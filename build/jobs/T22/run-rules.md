@@ -12,7 +12,7 @@
 
 **Deferred:** none.
 
-**Found in other modules:** none. Generated artifacts made stale (REPORT J2): `bio-plane/dist/bio-plane.bundled.mjs` and `agent-worker/dist/agent-worker.bundled.mjs`. Not regenerated.
+**Found in other modules:** none. Generated artifacts made stale (REPORT J1): `bio-plane/dist/bio-plane.bundled.mjs` and `agent-worker/dist/agent-worker.bundled.mjs`. Not regenerated.
 
 **Tests and checks** (on `job/T22/run-rules` @ the code commit):
 - `node --test bio-plane/test/m/run-rules/`: tests 16, pass 16, fail 0.
