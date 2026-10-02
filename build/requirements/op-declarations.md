@@ -38,14 +38,14 @@ Terms. An **op** is a name the instance answers. An **op spec** is `{classes, ma
   - `capture`'s `heldsetaside` and `heldrestore` (its R79, R81): mutating, classes `admin`, `member`, `probe` (capture refuses a machine author itself, `MACHINE_CANNOT_SET_ASIDE`), `by` and `viewer` stamped; `heldcaptures` and `gradenote` (its R77, R76): reads, classes `admin`, `member`, `probe`, `viewer` stamped; `doorbelltally` (its R80): a read for a member session only, classes `admin`, `member` and `machineClasses: []`, as `knocksof`, `viewer` stamped;
   - `monitoring`'s `addressfrequencyset` (its R52): mutating, classes `admin`, `member`, `probe`, `author` and `viewer` stamped.
 
-  None is declared for `escalationreasondraft` (`escalation` R29) or the skills' "What changed" ops, which are T23's (K1025, K1035), or for `doorbellrefused` (R6). R6 holds over them.
+  None is declared for `doorbellrefused` (R6). R6 holds over them.
 
 **The specs of T23's ops** (N485: K1025, K1035, K1051; the link sweep: K1094; network-notices: DEC-111, K1031, K1100)
-- **R10** `OPS` holds a spec for each op T23 adds, each in `SESSION_OPS.member` and `SESSION_OPS.admin` unless it is public, with `NEEDS` `contribute` for every mutating op a member's session reaches, and the stamps the act lists name *(not yet met: T23)*:
+- **R10** `OPS` holds a spec for each op T23 adds, each in `SESSION_OPS.member` and `SESSION_OPS.admin` unless it is public, with `NEEDS` `contribute` for every mutating op a member's session reaches, and the stamps the act lists name:
   - `escalationreasondraft` (`escalation` R29, R25) as `escalationstatus`: a read, classes `admin`, `member`, `probe`, `viewer` stamped;
   - `whatchangedpropose` (`case-authoring` R39): mutating, any credential (an `ai` credential by its scope), as `templatepropose`, `proposedBy` and `viewer` stamped; `whatchangeddrafts` (`case-authoring` R39): a read, classes `admin`, `member`, `probe`, `viewer` stamped;
   - `sweeps` (`monitoring` R61): a read for a member session, classes `admin`, `member`, `probe`, `viewer` stamped;
-  - `noticeprepare` (`network-notices` R1, R2; it writes nothing) and `notices` (its R22): reads, and `noticepost` (its R4, R5): mutating; each for a member session only, classes `admin`, `member` and `machineClasses: []` (no machine, AI credential or operator token posts a notice, `network-notices` R1, R24), `by` (or `viewer`) stamped;
+  - `noticeprepare` (`network-notices` R1, R2; it writes nothing), `notices` (its R22) and `directorysubmission` (its R23; as `notices`, no `NEEDS` row; K1166 (1)): reads, and `noticepost` (its R4, R5): mutating; each for a member session only, classes `admin`, `member` and `machineClasses: []` (no machine, AI credential or operator token posts a notice, `network-notices` R1, R24), `by` (or `viewer`) stamped;
   - the public reads `network-notices` registers through `public-read` R18 (its R10 `activityMethod`, R20 `noticesPublic`, R21 `groupKeysPublic`): `classes: null`, not mutating, nothing stamped.
 
   R6 holds over them.
