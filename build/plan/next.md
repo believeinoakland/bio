@@ -5,7 +5,7 @@
 ## Entries
 
 - S3 · 2026-10-02 · **promotion**: stamp the rows T25's L3–L11 jobs add or change (C-34.*, C-89.* `where` re-pointed to provenance-routes and attestation; each COMPLETE lists them), `ROW_CENSUS` re-pinned. **Hard reason:** promotion's one T25 job is L2 (P8, P10).
-- N516 · 2026-10-02 · **provenance**, **provenance-routes** (K1218, option B): provenance deletes every name it kept for a later importer in T25 once each importer has re-pointed, and hands the `provenance_route_marks` writes (its R37, R41, R48, R53, R55 route clauses) to provenance-routes, which meets its R8–R12; provenance's route clauses retired there. **Hard reason:** provenance's one T25 job is L3, before its importers (P8, P10).
+- N516 · 2026-10-02 · **provenance** (K1218, K1220, option B): delete the pure copies of names it kept in T25 for later importers (`routeFinding`, `instanceStatement`, any checks constants), once each importer has re-pointed; drop `signatures` from its `uses` if nothing else needs it. **Hard reason:** provenance's one T25 job is L3, before its importers (P8, P10).
 
 ## Carried from T25's left-out table (re-checked at T25's close)
 
