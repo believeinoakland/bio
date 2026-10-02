@@ -59,7 +59,7 @@ test("R2: stance-changed, new-version-from-another-team and shared-inquiry-concl
 });
 
 test("R2: export-performed, one per export, to an administrator member or the admin credential and to nobody else", () => {
-  const w = world({ publication: { exportLog: (a) => ({ ok: true, limit: a.limit, truncated: false,
+  const w = world({ corpusExport: { exportLog: (a) => ({ ok: true, limit: a.limit, truncated: false,
     exports: [{ seq: 2, at: iso(NOW), scope: "working-corpus", bundles: 3, files: 4, note: null },
               { seq: 1, at: iso(NOW - 1), scope: "working-corpus", bundles: 1, files: 1, note: "n" }] }) } });
   w.member("ada", { role: "admin" }); w.member("alice");
