@@ -28,3 +28,7 @@ Size (session_015eX5NoPCBpnBZAoA4ASL2u): test runs 12, module lines 1896
 ## J1 · REPORT
 
 Users re-tested: control-plane affordances-pack, catalogue-end; affordances plane; ai-runs converts; run-rules rules: 49/49 pass. agent-worker/test: 8/8 pass. Whole bio-plane/test/m: 5044 tests, 5029 pass, 3 fail, all accepted by name: control-plane inbox-door.test.mjs:81 (red 9); queue catalogue.test.mjs:34 R1 and :116 R5 (red 13). No other red. Generated artifacts: fleetbundles.test.mjs finds the plane bundle bio-plane/dist/bio-plane.bundled.mjs STALE by this job (skilldoctrine.mjs, skillpack.mjs; it matched HEAD before); agent-worker, ocr-worker and pdf-worker bundles PASS. Regenerated nothing. Requirements: skills R28 still names standardadopt as (standards R9); N498 makes the code standards R10, so R28's text wants the same change (yours).
+
+## J2 · COMPLETE
+
+N485 and N498 applied: the edition_statement layer (R31, R5, R1) and standardadopt citing standards R10. skills 49/49; coverage 31/31; format, architecture, ownership 0 failures; whole test/m red only by name (reds 9, 13); plane bundle stale (REPORT J1). Record: build/jobs/T23/skills.md on job/T23/skills.
