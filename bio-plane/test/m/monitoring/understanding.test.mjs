@@ -133,6 +133,48 @@ test("R28 a request not open, one whose cadence is none, and a request not due c
   assert.deepEqual(w.m.gathering(NOW_MS + 2 * 3600000 + 2 * DAY).due.map((x) => x.id), [OPEN]);
 });
 
+test("R28 (K1102) the bundle's daemon block governs its requests: enabled false runs none, each stated as skipped with the reason; tick_budget bounds the locators tried for that bundle in one tick; an enabled bundle with no budget, and one with no daemon block, run as before", async () => {
+  const w = world();
+  const loc = (b, n, k) => `https://${k}-${b}${n}.example.org/a`;
+  const r2 = (b, n) => req(`GATH-2026-065${n}-${b}`, { locators: [loc(b, n, "p"), loc(b, n, "m")] });
+  const carry = (id, g) => {
+    const t = JSON.stringify(g);
+    assert.equal(w.promote(id, infoMd(id, `https://records.example.org/${id}`, { enabled: false }),
+      { files: [{ path: "data/gathering.json", text: t, bytes: Buffer.byteLength(t), sha256: sha(t) }] }).ok, true, id);
+  };
+  carry("INFO-2026-0651-off", { daemon: { enabled: false }, requests: [r2("off", 1)] });
+  carry("INFO-2026-0652-budget", { daemon: { enabled: true, tick_budget: 1 }, requests: [r2("bud", 2), r2("bud", 3)] });
+  carry("INFO-2026-0653-on", { daemon: { enabled: true }, requests: [r2("on", 4)] });
+  carry("INFO-2026-0654-plain", { requests: [r2("pl", 5)] });
+  /* every locator refuses, so each request tries all it is allowed */
+  const asked = [];
+  w.capture.acquire = async (body, opts) => { asked.push(opts.captureRequest.locator); return { status: 502, body: { ok: false, reason: "SOURCE_REFUSED", status: 503 } }; };
+  const g = w.m.gathering(NOW_MS);
+  assert.deepEqual(g.disabled.map((x) => x.id), ["GATH-2026-0651-off"]);
+  assert.equal(g.due.some((x) => x.bundle === "INFO-2026-0651-off"), false, "a disabled bundle's request is never due");
+  const t = await w.m.cadenceTick(NOW_MS);
+  /* disabled: never fetched, stated */
+  assert.equal(asked.some((u) => u.includes("off1")), false);
+  assert.deepEqual(t.gathered.skipped.filter((x) => x.bundle === "INFO-2026-0651-off"),
+    [{ bundle: "INFO-2026-0651-off", request: "GATH-2026-0651-off", reason: "its bundle's daemon block says enabled: false, so the daemon runs none of its requests" }]);
+  /* tick_budget 1: one locator for the bundle in this tick; its second request waits, stated */
+  assert.deepEqual(asked.filter((u) => u.includes("-bud")), [loc("bud", 2, "p")]);
+  assert.deepEqual(t.gathered.failed.find((x) => x.bundle === "INFO-2026-0652-budget").tried.map((x) => x.locator), [loc("bud", 2, "p")]);
+  assert.deepEqual(t.gathered.skipped.filter((x) => x.bundle === "INFO-2026-0652-budget"),
+    [{ bundle: "INFO-2026-0652-budget", request: "GATH-2026-0653-bud", reason: "its bundle's daemon tick_budget (1) is spent in this tick" }]);
+  /* negative controls: enabled with no budget, and no daemon block, try every locator as before */
+  assert.deepEqual(asked.filter((u) => u.includes("-on") || u.includes("-pl")),
+    [loc("on", 4, "p"), loc("on", 4, "m"), loc("pl", 5, "p"), loc("pl", 5, "m")]);
+  /* the statement holds no epoch open: the next tick is fresh */
+  assert.notEqual((await w.m.cadenceTick(NOW_MS + 1000)).epoch, t.epoch);
+  /* only a disabled bundle's requests: nothing is due */
+  const x = world();
+  const t1 = JSON.stringify({ daemon: { enabled: false }, requests: [r2("x", 6)] });
+  x.promote("INFO-2026-0655-x", infoMd("INFO-2026-0655-x", "https://records.example.org/x", { enabled: false }),
+    { files: [{ path: "data/gathering.json", text: t1, bytes: Buffer.byteLength(t1), sha256: sha(t1) }] });
+  assert.equal(x.m.cadenceDue(NOW_MS), null);
+});
+
 test("R28 the cadence tick runs due requests after its batch's addresses, within R19's budget of 50, each locator a request tries spending one", async () => {
   const many = [];
   for (let i = 0; i < 3; i++) many.push(req(`GATH-2026-062${i}-n`, { locators: [`https://p${i}.example.org/a`, `https://m${i}.example.org/a`] }));
