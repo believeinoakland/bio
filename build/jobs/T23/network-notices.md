@@ -97,3 +97,7 @@ The module is built and its 52 tests pass (R1–R30 each named; module 1,311 lin
 - `node checks/ownership.mjs … network-notices tranche/T23`: 10 failures, my own files "outside network-notices's paths" (the entry is empty). With the paths filled: 0 failures.
 
 Size (session_01XftQvd4G9DgVwWXFazJx1b): test runs 24, module lines 1326
+
+## J3 · COMPLETE
+
+network-notices is complete: R1–R30 met. All 52 tests pass, every id named. B2–B4 applied. Public reads are registered as activitymethod, noticespublic and groupkeyspublic. For my modules.json entry: paths ["bio-plane/src/network-notices/"], tests ["bio-plane/test/m/network-notices/"]; with them filled, architecture, coverage (30/30) and ownership show 0 failures. My 16 C-127 rows await the stamp (red 7), and N503–N505 are deferred as you ruled. After the B4 merge, three things are red that are not mine: the plane bundle is stale from earlier L8 merges (case-grammar, corpus-export, public-read, publication), so fleetbundles fails; plane worker.test.mjs:39 follows from that; and conformance record.test.mjs:144 calls the retired publication.exportManifest (N483). Details are in build/jobs/T23/network-notices.md, under Completion.
