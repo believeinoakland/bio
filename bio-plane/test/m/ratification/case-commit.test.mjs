@@ -231,3 +231,34 @@ test("R2: casegate runs this module's catalogue over the document at the signed 
   assert.deepEqual(w.calls.filter((c) => c[0] === "caseDocumentFacts").map((c) => c.slice(1, 4)),
     [[CASE, 1, V("alice")], [CASE, 1, null], [CASE, 2, null]], "the facts are read for the stamped viewer");
 });
+
+/* ---- R36 (DEC-102 item 2) ---- */
+
+const attributions = (rows) => ["observation_attributions:",
+  ...rows.flatMap(([observation, level]) => [`  - observation: ${observation}`, `    level: ${level}`, `    shown: "x"`])];
+
+test("R36: a level that moved between two ratified editions is told to reevaluation once per observation, with both levels, the case, the edition and the commit's instant; a first edition, an observation the previous edition did not reach, an unchanged level, a retry and a refused commit tell nothing", () => {
+  const OA = "INFO-2026-0091-observation", OB = "INFO-2026-0092-observation", OC = "INFO-2026-0093-observation";
+  const s = setup({ extra: attributions([[OA, "group"], [OB, "cover"]]) });
+  const first = s.commit();
+  assert.equal(first.ok, true, JSON.stringify(first).slice(0, 300));
+  assert.deepEqual(s.w.levelMoves, [], "a first edition tells nothing");
+  assert.equal(s.commit().existed, true);
+  assert.deepEqual(s.w.levelMoves, [], "a retry answering existed tells nothing");
+  /* edition 2: OA moved group -> name, OB unchanged, OC newly reached */
+  const rows = s.members.map((m) => [m.id, s.w.r.caseConclusionFor(s.P, m.id, V("alice"), "open")]);
+  const text2 = caseMd({ caseId: CASE, edition: 2, project: s.P, members: s.members, conclusions: rows,
+                         extra: attributions([[OA, "name"], [OB, "cover"], [OC, "project"]]), rowLines: caseConclusionRowLines });
+  const sha2 = s.w.caseDoc(CASE, 2, text2);
+  /* a refused commit tells nothing: the conclusion moved */
+  s.w.bv.conc.set(s.w.key(s.P, Q1), { ...OWN, version: "second" });
+  assert.equal(s.commit({ edition: 2, docSha: sha2 }).reason, "CASE_CONCLUSION_MOVED");
+  assert.deepEqual(s.w.levelMoves, []);
+  s.w.bv.conc.set(s.w.key(s.P, Q1), OWN);
+  const second = s.commit({ edition: 2, docSha: sha2 });
+  assert.equal(second.ok, true, JSON.stringify(second).slice(0, 300));
+  assert.deepEqual(s.w.levelMoves, [{ observation: OA, from: "group", to: "name", case: CASE, edition: 2,
+                                      at: second.ratified_at }], "exactly once, for the observation that moved");
+  assert.equal(s.commit({ edition: 2, docSha: sha2 }).existed, true);
+  assert.equal(s.w.levelMoves.length, 1, "its retry tells nothing again");
+});

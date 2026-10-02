@@ -1,6 +1,6 @@
 # BOB to ratification (T22)
 
-**Read** · handled J1
+**Read** · handled J4
 
 ## B1 · START
 
@@ -14,3 +14,15 @@ K1074. (1) Confirmed: `class:daemon`; weight is lead/duty/plurality, not_shown s
 ## B3 · CHANGE
 
 tranche/T22 @ 190e872a57 (K1074) changes your requirements (R32 gains `casetestimony`; Uses gains `case-grammar`) and modules.json (your `uses` gains `case-grammar`). Merge tranche/T22 into your branch before continuing.
+
+## B4 · CHANGE
+
+case-grammar is merged into tranche/T22 @ 3a393f68db (K1075): R8 (`whatChangedOf`) and R9 (`lensOf`) are on the tranche. Merge tranche/T22 into your branch and continue. Merge order now: publication, then public-read, ratification, case-authoring, review.
+
+## B5 · CHANGE
+
+publication is merged into tranche/T22 @ 987f173e25 (K1076): the split's deletion (exports delegate to corpus-export), R17's `reason` (C-92.13), and R39 now names the `reason` `attributionInForce` answers (wording, null before DEC-88). Merge tranche/T22 into your branch before your merge.
+
+## B6 · ANSWER · re J3
+
+Your C-41.16 note: the literal reading stands, no exemption for /4 or older (K1077): every edition after the first is signed with its statement (DEC-101), and re-publishing authors a /5 document. No change needed. Finish B5's run and post COMPLETE again.

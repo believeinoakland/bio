@@ -1,11 +1,12 @@
-/* publication — MK-7 attribution: the act and its refusals (R17), the level in force at an edition (R39), and the
+/* publication — MK-7 attribution: the act and its refusals (R17, with DEC-88's reason, C-92.13), the level in force at an edition (R39), and the
    reads the gates and the author use (R17). Driven at the module's interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { planeWorld as world, V, NOW, sha } from "./fixture.mjs";
+import { planeWorld as world, V, NOW, sha, storage } from "./fixture.mjs";
 import { ATTRIBUTION_ACT_CHECKS } from "../../../src/publication/checks.mjs";
-import { ATTRIBUTION_LEVELS, ATTRIBUTION_PROSE_HEAD, attributionFrontmatterLines,
+import { ATTRIBUTION_LEVELS, ATTRIBUTION_PROSE_HEAD, ATTRIBUTION_REASON_MAX, attributionFrontmatterLines,
          attributionBodyLines } from "../../../src/publication/index.mjs";
+import { migratePublication } from "../../../src/publication/schema.mjs";
 
 const F = "INQ-2026-0001";
 const roster = (roles) => roles.map((r) => ({ bundle_id: r.target, version_sha: r.version_sha, role: "load_bearing" }));
@@ -21,7 +22,9 @@ function reached() {
   w.prepare("CASE-2026-0001", 1, { project: proj, roles, attributions: [{ observation: obs }] });
   return { w, proj, obs, roles };
 }
-const attribute = (w, o) => w.op("attribute", { by: o.by }, { caseId: "CASE-2026-0001", edition: 1, observation: o.obs, level: o.level, ...o.body });
+const REASON = "I would rather the group speak for these words.";
+const attribute = (w, o) => w.op("attribute", { by: o.by }, { caseId: "CASE-2026-0001", edition: 1, observation: o.obs,
+                                                             level: o.level, reason: REASON, ...o.body });
 
 test("R17 every refusal of the act, in order, carries its code, its check and its translation", () => {
   const { w, obs, proj, roles } = reached();
@@ -32,19 +35,74 @@ test("R17 every refusal of the act, in order, carries its code, its check and it
   expect(attribute(w, { obs, level: "group", by: "" }), "ATTRIBUTION_NOT_A_MEMBER");
   expect(attribute(w, { obs, level: "group", by: "class:ai" }), "ATTRIBUTION_NOT_A_MEMBER");
   expect(attribute(w, { obs, level: "", by: "ann" }), "ATTRIBUTION_NO_LEVEL");
+  expect(attribute(w, { obs, level: "group", by: "ann", body: { reason: " " } }), "ATTRIBUTION_NO_REASON");
   expect(attribute(w, { obs, level: "legal", by: "ann" }), "ATTRIBUTION_LEVEL_UNKNOWN");
   expect(attribute(w, { obs: F, level: "group", by: "ann" }), "ATTRIBUTION_NOT_AN_OBSERVATION");
   expect(attribute(w, { obs, level: "group", by: "bo" }), "ATTRIBUTION_NOT_THE_AUTHOR");
   expect(attribute(w, { obs, level: "group", by: "ann", body: { edition: 7 } }), "ATTRIBUTION_NOT_REACHED");
   expect(attribute(w, { obs, level: "group", by: "ann", body: { caseId: "CASE-NONE" } }), "ATTRIBUTION_NOT_REACHED");
   assert.deepEqual(Object.values(ATTRIBUTION_ACT_CHECKS).map((r) => r.check),
-                   ["C-92.1", "C-92.2", "C-92.3", "C-92.4", "C-92.5", "C-92.6", "C-92.7", "C-92.8", "C-92.9"]);
+                   ["C-92.1", "C-92.2", "C-92.3", "C-92.4", "C-92.5", "C-92.6", "C-92.7", "C-92.8", "C-92.9", "C-92.13"]);
   /* an author no longer active; a signed edition */
   w.st.sql.exec(`UPDATE members SET status='revoked' WHERE member_id='ann'`);
   expect(attribute(w, { obs, level: "group", by: "ann" }), "ATTRIBUTION_AUTHOR_NOT_ACTIVE");
   w.st.sql.exec(`UPDATE members SET status='active' WHERE member_id='ann'`);
   w.signCase("CASE-2026-0001", 1, { project: proj, roster: roster(roles) });
   expect(attribute(w, { obs, level: "group", by: "ann" }), "ATTRIBUTION_EDITION_RATIFIED");
+});
+
+test("R17 C-92.13: a reason absent, not a string, blank or over 2,000 code points is refused ATTRIBUTION_NO_REASON with nothing written, asked after the level is given and before it is judged", () => {
+  const { w, obs } = reached();
+  const row = ATTRIBUTION_ACT_CHECKS.ATTRIBUTION_NO_REASON;
+  assert.deepEqual([row.check, row.translation], ["C-92.13", "Choosing how a published case shows who said your observation "
+    + "records why, in your own words, and no reason was given, or it is longer than 2,000 characters. Write one. Nothing was written."]);
+  assert.equal(ATTRIBUTION_REASON_MAX, 2000);
+  const docSha = () => w.row(`SELECT doc_sha FROM case_documents WHERE case_id='CASE-2026-0001' AND edition=1`).doc_sha;
+  const held = docSha();
+  for (const [label, reason] of [["absent", undefined], ["null", null], ["a number", 7], ["an object", { why: "x" }],
+                                 ["blank", ""], ["only whitespace", " \t\n "], ["2,001 characters", "r".repeat(2001)],
+                                 ["2,001 code points", "\u{1F600}".repeat(2001)]]) {
+    const r = attribute(w, { obs, level: "group", by: "ann", body: { reason } });
+    assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation], [false, "ATTRIBUTION_NO_REASON", "ATTRIBUTION_NO_REASON",
+                                                                         "C-92.13", row.translation], label);
+    assert.equal(w.count("observation_attributions"), 0, `${label}: nothing written`);
+    assert.equal(docSha(), held, `${label}: the unsigned document is unchanged`);
+  }
+  /* the order: no level before no reason, and no reason before an unknown level */
+  assert.equal(attribute(w, { obs, level: "", by: "ann", body: { reason: undefined } }).reason, "ATTRIBUTION_NO_LEVEL");
+  assert.equal(attribute(w, { obs, level: "legal", by: "ann", body: { reason: undefined } }).reason, "ATTRIBUTION_NO_REASON");
+  assert.equal(attribute(w, { obs, level: "legal", by: "ann" }).reason, "ATTRIBUTION_LEVEL_UNKNOWN", "with a reason, the level is judged");
+  assert.equal(attribute(w, { obs, level: "group", by: "class:ai", body: { reason: undefined } }).reason, "ATTRIBUTION_NOT_A_MEMBER");
+  /* negative control: exactly 2,000, counted in code points (4,000 UTF-16 units here), is accepted and read back with the choice */
+  const words = "\u{1F600}".repeat(2000);
+  const ok = attribute(w, { obs, level: "group", by: "ann", body: { reason: words } });
+  assert.deepEqual([ok.ok, ok.level, ok.reason], [true, "group", words]);
+  assert.deepEqual(w.rows(`SELECT level, reason FROM observation_attributions`), [{ level: "group", reason: words }]);
+  assert.equal(w.p.attributionInForce("CASE-2026-0001", 1, obs).reason, words);
+  assert.notEqual(docSha(), held, "the accepted choice re-authors the document");
+  const { w: w2, obs: o2 } = reached();
+  const plain = "p".repeat(2000);
+  assert.equal(attribute(w2, { obs: o2, level: "cover", by: "ann", body: { reason: plain } }).reason, plain);
+  assert.equal(w2.p.attributionInForce("CASE-2026-0001", 1, o2).reason, plain, "stored as written");
+});
+
+test("R17 the reason is recorded with the choice: the same level again keeps the first reason, another level records its own, and a choice made before DEC-88 reads null", () => {
+  const { w, obs } = reached();
+  attribute(w, { obs, level: "cover", by: "ann", body: { reason: "first words" } });
+  const same = attribute(w, { obs, level: "cover", by: "ann", body: { reason: "second words" } });
+  assert.deepEqual([same.existed, same.reason], [true, "first words"]);
+  assert.equal(w.row(`SELECT reason FROM observation_attributions`).reason, "first words", "the first reason stands");
+  const other = attribute(w, { obs, level: "group", by: "ann", body: { reason: "changed my mind" } });
+  assert.deepEqual([other.existed, other.reason], [false, "changed my mind"]);
+  assert.deepEqual(w.rows(`SELECT level, reason FROM observation_attributions`), [{ level: "group", reason: "changed my mind" }]);
+  /* a store written before DEC-88: the column is added by hand, and every earlier choice reads null, never back-filled */
+  const st = storage({ workerd: true });
+  st.db.exec(`CREATE TABLE observation_attributions (case_id TEXT NOT NULL, edition INTEGER NOT NULL, bundle_id TEXT NOT NULL,
+    level TEXT NOT NULL, chosen_by TEXT NOT NULL, chosen_at TEXT NOT NULL, PRIMARY KEY (case_id, edition, bundle_id))`);
+  st.sql.exec(`INSERT INTO observation_attributions VALUES ('CASE-2026-0001', 1, 'OBS-1', 'group', 'ann', ?)`, NOW);
+  migratePublication(st.sql);
+  migratePublication(st.sql);
+  assert.deepEqual(st.sql.exec(`SELECT level, reason FROM observation_attributions`).toArray(), [{ level: "group", reason: null }]);
 });
 
 test("R17 name with no handle is refused C-92.9, and every refusal writes nothing", () => {

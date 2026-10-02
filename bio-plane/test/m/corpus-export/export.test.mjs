@@ -1,17 +1,18 @@
-/* publication — the verified export (R18) and its append-only log (R19), Membership v2 §8. Driven at the module's
-   interface. */
+/* corpus-export — the verified export (R1) and its append-only log (R2), Membership v2 §8. Moved from
+   `test/m/publication/export.test.mjs` (R18 → R1, R19 → R2) with every assertion; this module has no op, so its
+   methods are driven directly. Driven at the module's interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { planeWorld as world, NOW } from "./fixture.mjs";
-import { EXPORT_LOG_LIMIT_DEFAULT, EXPORT_LOG_LIMIT_MAX, EXPORT_NOTE_MAX } from "../../../src/publication/index.mjs";
+import { world, NOW } from "./fixture.mjs";
+import { EXPORT_LOG_LIMIT_DEFAULT, EXPORT_LOG_LIMIT_MAX, EXPORT_NOTE_MAX } from "../../../src/corpus-export/index.mjs";
 
-test("R18 exportManifest answers every bundle with its files, promotions in write order, snapshots and references, and the register, with counts, and logs itself in the same act", () => {
+test("R1 exportManifest answers every bundle with its files, promotions in write order, snapshots and references, and the register, with counts, and logs itself in the same act", () => {
   const w = world();
   w.member("olive");
-  w.doc("INFO-2026-0001-minutes");
-  w.inquiry("INQ-2026-0001", { legs: [{ target: "INFO-2026-0001-minutes" }] });
-  w.inquiry("INQ-2026-0001", { question: "Revised?", legs: [{ target: "INFO-2026-0001-minutes" }] });
-  const x = w.op("export", { note: "n".repeat(400) });
+  w.doc("INFO-2026-0001-minutes", ["the text of INFO-2026-0001-minutes"]);
+  w.inquiry("INQ-2026-0001", { cites: ["INFO-2026-0001-minutes"] });
+  w.inquiry("INQ-2026-0001", { question: "Revised?", cites: ["INFO-2026-0001-minutes"] });
+  const x = w.ce.exportManifest({ note: "n".repeat(400) });
   assert.equal(x.ok, true);
   assert.equal(x.scope, "working-corpus");
   const ids = w.rows(`SELECT bundle_id FROM bundles ORDER BY bundle_id`).map((r) => r.bundle_id);
@@ -36,21 +37,21 @@ test("R18 exportManifest answers every bundle with its files, promotions in writ
   assert.match(x.verify, /Re-derive/);
   assert.match(x.verify, /every record its history chain and base links/, "K899 (1): the text a member reads says record");
   for (const said of [x.recorded, x.verify]) assert.doesNotMatch(said, /bundle/i, "no member-read sentence says bundle");
-  w.op("export", {});
+  w.ce.exportManifest({});
   assert.equal(w.rows(`SELECT note FROM export_log ORDER BY seq`)[1].note, null, "no note is stored as none");
 });
 
-test("R19 exportLog answers the newest rows first, limit clamped to [1, 1000] and 200 by default, with truncated", () => {
+test("R2 exportLog answers the newest rows first, limit clamped to [1, 1000] and 200 by default, with truncated", () => {
   const w = world();
   for (let i = 0; i < 3; i++)
     w.st.sql.exec(`INSERT INTO export_log (at, scope, bundles, files, note) VALUES (?, 'working-corpus', ?, 0, NULL)`, NOW, i);
-  const all = w.op("exportlog", {});
+  const all = w.ce.exportLog({});
   assert.deepEqual(all.exports.map((e) => e.bundles), [2, 1, 0]);
   assert.deepEqual([all.limit, all.truncated], [EXPORT_LOG_LIMIT_DEFAULT, false]);
   assert.deepEqual([EXPORT_LOG_LIMIT_DEFAULT, EXPORT_LOG_LIMIT_MAX], [200, 1000]);
-  const two = w.op("exportlog", { limit: 2 });
+  const two = w.ce.exportLog({ limit: 2 });
   assert.deepEqual([two.exports.map((e) => e.bundles), two.limit, two.truncated], [[2, 1], 2, true]);
   for (const [asked, got] of [[0, 200], [-5, 1], [5000, 1000], ["x", 200], [2.9, 2]])
-    assert.equal(w.p.exportLog({ limit: asked }).limit, got, `limit ${asked}`);
+    assert.equal(w.ce.exportLog({ limit: asked }).limit, got, `limit ${asked}`);
   assert.deepEqual(Object.keys(all.exports[0]).sort(), ["at", "bundles", "files", "note", "scope", "seq"]);
 });

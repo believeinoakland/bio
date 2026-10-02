@@ -1,6 +1,6 @@
 /* publication over the modules it uses, each the real one (record-core, membership, credentials, promotion, provenance,
    content, connections, inquiry, basis-versions, reevaluation; content reached through connections), on a real SQLite database (node:sqlite) standing in for a Durable Object's
-   storage. What a later module registers (legacy-store's fact `producingGroup`, the review provider) is a stand-in the
+   storage. What a later module registers (instance-setup's fact `producingGroup`, review's provider) is a stand-in the
    test controls. The ceremonies that write through this module (`ratification`, `case-authoring`) are played by the
    test through R21 and R22, exactly as those modules call them. Every test drives `publication` at its interface. */
 import { DatabaseSync } from "node:sqlite";
@@ -116,7 +116,7 @@ export function world({ group = "test-group", workerd = false, contradiction = n
   credentials.migrate();
   const promotion = promotionOf(host, { record, membership, now: () => clock.now });
   const groupRef = { value: group };
-  promotion.registerFact("producingGroup", "legacy-store", () => groupRef.value);
+  promotion.registerFact("producingGroup", "instance-setup", () => groupRef.value);
   const prov = provenanceOf(host, { record, membership, promotion, now: () => clock.now });
   prov.migrate();
   for (const t of EXTRACTION_JOINED) st.db.exec(t);
@@ -139,7 +139,7 @@ export function world({ group = "test-group", workerd = false, contradiction = n
   const knocks = [];
   const src = sourcesOf(host, { record, membership, now: () => Date.parse(clock.now),
     capture: { pulledKnocksOf: (captureSha) => knocks.filter((k) => k.sha256 === captureSha) } });
-  /* reevaluation before publication, as legacy-store builds them: publication registers its cited parts with it (R41, R43). */
+  /* reevaluation before publication, as the plane's store builds them: publication registers its cited parts with it (R41, R43). */
   const r = reevaluationOf(host, { record, membership, promotion, inquiry: k, content, connections, provenance: prov,
                                    basisVersions, now: () => clock.now });
   const p = publicationOf(host, { record, membership, credentials, promotion, inquiry: k, basisVersions, reevaluation: r,
@@ -163,7 +163,7 @@ export function world({ group = "test-group", workerd = false, contradiction = n
         if (!tables || tables.includes(name)) out[name] = JSON.stringify(all(st.sql.exec(`SELECT * FROM "${name}"`)));
       return out;
     },
-    /** An op, as the legacy store's op map runs it: `query` the control plane's search params, `body` its JSON. */
+    /** An op, as the plane's op map runs it: `query` the control plane's search params, `body` its JSON. */
     op(name, query = {}, body = null) {
       const url = new URL(`http://do/${name}`);
       for (const [key, v] of Object.entries(query)) if (v != null) url.searchParams.set(key, String(v));
