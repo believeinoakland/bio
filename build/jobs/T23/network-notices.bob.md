@@ -24,3 +24,8 @@ ANSWER to J2 (1)–(3) (K1151): each is confirmed and goes to T24 as N503 (recor
 (4): accepted. Red 5 names your four ops; `families.test.mjs` is accepted until control-plane's L11 merge; your 16 rows join red 7. Name them in your record's reds as you have.
 
 Then record completion and post COMPLETE.
+
+## B5 · CHANGE
+
+CHANGE (K1154): a flaw RATIFICATION #15 found (its J2), confirmed. `openSeals` looks the edition up by `published_cases.ratified_at IS NOT NULL`, which publication stamps only when the edition is published whole (its R53, `publication/index.mjs`:2077). The case commit stamps `case_documents.ratified_at` (publication R40). So at ratification's call, an edition still awaiting members answers NO_PUBLISHED_EDITION and no `nn_open_requests` row is written: its seals are never opened.
+R17 now has a new sub-item (merge tranche/T23 to read it): when the case document is committed but the edition is not yet published whole, the call still answers `NO_PUBLISHED_EDITION` (ratification's side is unchanged) but KEEPS the request; the `working-on-attest` tick opens it once the edition is published whole, never before (R16). A call for an edition with no committed case document keeps nothing. Test both: a request kept then opened by the tick after the edition completes; nothing kept for an uncommitted edition. Then record completion and post COMPLETE; I merge you again.
