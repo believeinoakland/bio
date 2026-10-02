@@ -17,3 +17,7 @@
 | `standardDeclare` (standards, L9) | `reason`, C-112.20 | `test/m/conformance/fixture.mjs`:320 (conformance, no job); `test/m/filings/fixture.mjs`:130 (L9) | filings; conformance: N487 |
 | `counselpacket` (filings, L9), `escalationattach` (escalation, L9) | `reason`, C-115.44 / C-116.24 | none | — |
 | all 17 ops | the `reasoned` rung | `bio-plane/src/affordances.mjs` (each `RUNG_ABSENT`); `test/m/affordances/catalogue.test.mjs` | affordances (L11, J1) |
+
+**Added (K1035, from the L4–L7 STARTs worker):**
+- `test/m/affordances/backing.test.mjs`:30 calls intent's `fixture.mjs` `define()`: red from progressions' L5 merge until intent's L7 merge (intent's job fixes the fixture); accepted by name.
+- `src/queue/index.mjs`:602–606 lists `versionadopt` with `requires: ["notice"]` and says only the keep takes a why: queue's L11 START re-words it to reevaluation R15's `why`.
