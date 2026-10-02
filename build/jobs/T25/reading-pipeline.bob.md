@@ -13,3 +13,7 @@ K1233: export everything extraction and the legacy-path tests import (read, tier
 ## B3 · ANSWER · re J1
 
 Accepted (K1235): keep the one re-export line in src/readingprov.mjs (why and until when); I send a CHANGE after extraction merges to delete it. Also read B2 (K1233): one entry, src/reading-pipeline/index.mjs, exporting all sixteen names extraction imports.
+
+## B4 · CHANGE
+
+Extraction has merged into tranche/T25 (K1237) and imports only reading-pipeline/index.mjs. Merge tranche/T25, delete bio-plane/src/readingprov.mjs (its re-export line, K1235), check nothing else imports that path, run your tests and the whole test/m, and post COMPLETE; I drop the path from modules.json at the merge.
