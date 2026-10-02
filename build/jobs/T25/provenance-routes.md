@@ -22,3 +22,18 @@
 **Tests** (`bio-plane/test/m/provenance-routes/`, renamed to this module's ids, with a fixture of its own that composes provenance only when asked): `chain` (R1, R7), `rebuild` (R1, R2, R3, R4), `assess` (R4, R5, R11), `marked` (R5), `audit` (R6), `table` (R8, R10, R12), `ops` (R9), `invariants` (R13), `composition` (R6, R10, R12 with provenance composed first). Added beyond the moved assertions: a promotion's refusal returned as it came (a registered refusing step, with its negative control); R3 reads nothing for a refused author; R5's incomplete census and a project-fenced bundle withheld from page and census, cursor advancing past a withheld page; R12's one-writer instrument and the other module's declaration refused; R9's body never read.
 
 **Deferred.** None in this module.
+
+## J1 · REPORT
+
+Built and pushed (`job/T25/provenance-routes` @ 180be8bd95; record "Work" section): the module at its paths (index, checks C-34 with `where` re-pointed, schema `provenance_route_marks`, ops `provenanceRouteOps`), factory `provenanceRoutesOf(host, deps)` registering `route`, `routeMarks` and the table's purge under `provenance-routes`; tests R1–R13 under `test/m/provenance-routes/` (37). Coverage 13/13, architecture 0, ownership 0, format: only attestation's and reading-pipeline's dirs (red 4).
+
+**Waiting on provenance's merge.** 36/37 green; the one red is `composition.test.mjs` (R6, R10, R12 with provenance composed first): today's provenance still registers `route`, `routeMarks` and declares `provenance_route_marks`, so mine are refused. It goes green when provenance's L3 job drops those three registrations (K1220). Then I merge `tranche/T25`, re-run and post COMPLETE.
+
+Found elsewhere (each against its owner):
+- provenance: drop the three registrations above; its pure copy of `ROUTE_MARK_CHECKS` (option B) makes C-34.1–.4 held twice in the row census with different `where` (red 6); C-103.3's `where` should name `provenanceChainRebuild` in `src/provenance-routes/index.mjs` too (its R58).
+- control-plane (red 8): `CHECK_FAMILIES` lacks `bio-plane/src/provenance-routes/checks.mjs` (and `index.mjs`, which re-exports `ROUTE_MARK_CHECKS`).
+- plane (red 9): build `provenanceRoutesOf(ctx, { instanceName: env.INSTANCE_NAME || "unnamed" })` after provenance, migrate it, spread `provenanceRouteOps(provenanceRoutesOf(ctx), url, body)`.
+- requirements (wording): provenance-routes Uses names record-core `getSetting` for R1's instance name; the code takes it as `deps.instanceName` from the composition root, as provenance did. No change of meaning; I left the code as it was.
+- Bundles: none staled (`fleetbundles.test.mjs` 0 fail).
+
+Rows awaiting stamp (T26 L2): C-34.1, C-34.2, C-34.3, C-34.4, each `where` re-pointed to `src/provenance-routes/index.mjs provenanceRouteAssess > is-route-mark`.
