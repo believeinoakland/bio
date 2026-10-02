@@ -117,3 +117,6 @@ network-notices is complete: R1–R30 met. All 52 tests pass, every id named. B2
 
 Size (session_01XftQvd4G9DgVwWXFazJx1b): test runs 27, module lines 1339
 
+## J4 · COMPLETE
+
+B5 (K1154) applied: an edition whose case document is committed but which is not yet published whole answers NO_PUBLISHED_EDITION with kept: true. Its request is kept, and the working-on-attest tick opens it only once the edition is whole. An uncommitted edition keeps nothing. Both are tested (seals.test.mjs). Tests 53/53. format, architecture, coverage (30/30) and ownership all show 0 failures against my filled modules.json entry. Recorded under 'Re-opened by B5' in my record.
