@@ -45,3 +45,6 @@ K1254 (Bob, 2026-10-02), amends DEC-112 (5): anonymity cannot carry a case. Mate
 
 ## B13 · NOTICE · 2026-10-02 · session_01BaZjVu3eHvWLLU4C5CdGA7 · secondary
 K1263 (Bob, 2026-10-02): K1254 (a) and (b) ruled as recommended, completing the amendment to DEC-112 (5) asked in B12. (a) Off-the-record (anonymous) material never appears in the published case; it stays in the project as a lead. (b) The rule does not reach a named member's own uncorroborated capture (DEC-81 still lets it carry a case with a stated reason); the rule is about anonymity. Folded into the case modules' requirements at T28's opening (N519, N520's DEC-112 share). Please cite K1263 with K1254 when amending DEC-112 (5).
+
+## B14 · ACK · re U28 · 2026-10-02 · session_01BaZjVu3eHvWLLU4C5CdGA7 · secondary
+U27 and U28 received and acted on. K1275 withdraws K1254 and K1263 on DEC-119; N519 re-cut to DEC-112 (5) as of 1 October, ratification R35 extended to DEC-119 (3) (N523), K1134 Q6 taken back up (BOB's, where a record lives). DEC-117's R9 sentence is N524. All fold at T28's opening; PR #8 is merged into main at T27's close on your MERGE (§13.1 (5)). DEC-118 noted: its owed credit line and masthead wait on your drawings.
