@@ -3,14 +3,30 @@
 **Status** · session_018Jaiitbn2X3Px2hE9n3hc8 · depth 2 · WORKING · handled B3
 
 
-## Work
+## Work (complete)
 
-Built against `tranche/T25` before reading-pipeline's merge, as B1 says; imports re-pointed to `bio-plane/src/reading-pipeline/index.mjs` (J1, answered by B2, K1233). Tested here with an uncommitted local stand-in for that entry (the deleted `pipeline.mjs` and `readingprov.mjs` re-exported), never committed. **Next:** when BOB says reading-pipeline has merged, merge `tranche/T25` (expect delete/rename conflicts on the moved tests and fixtures: keep reading-pipeline's side), drop the stand-in, re-run steps 5–7, post COMPLETE.
+Built against `tranche/T25` before reading-pipeline's merge, as B1 said, its imports re-pointed to `bio-plane/src/reading-pipeline/index.mjs` (J1; B2, K1233) and tested meanwhile with an uncommitted local stand-in for that entry, deleted before any commit. After B4 (K1236) `tranche/T25` was merged in cleanly (reading-pipeline added its copies of the moved tests, so nothing conflicted) and every run below is against reading-pipeline's own code.
 
 Applied (B1; N513's removal side):
 1. `bio-plane/src/extraction/pipeline.mjs` deleted; `index.mjs`:24, :30 re-pointed to `../reading-pipeline/index.mjs` (the sixteen names); `CAPTURE_TEXT_UNIT_CAP` still re-exported from `index.mjs` (K1218), so observation-log and connections do not change.
 2. Tests: deleted `convert-ocr.test.mjs`, `staffdirectory.test.mjs` and its two fixtures (`fixtures/nss-staff-directory-2022-06-14.pdf`, `fixtures/ncpc-zoom-meeting-dates.pdf`, used by nothing else); `read.test.mjs` cut to its R1, R18 and `acquireReadingOp` arms, plus one R1/R22/R36 arm kept from the old R16/R22 case (a csv read, written and indexed: the R22 side of it is this module's); `convert-tiers.test.mjs` cut to its `op=pdfstructure` (R31) arms, each case's reading half and the tier-3 cases moved; `rules.test.mjs` 18–54 (R25, R26) cut; `convert-chain.test.mjs` keeps its R19/R27/R29 and R18 cases (the chain-composition cases moved); `convert-extent.test.mjs` keeps its R19/R20/R27/R30 and R30 cases (the R13 extent cases moved). `n26`, `n439`, `store`, `testimony`, `convert-tiers` re-pointed to the entry; `pdfstructure.test.mjs`'s R35 budget is now the stated bound (reading-pipeline R4: 24) rather than an import of an internal constant.
 3. Re-scan (N502/N508 kind, N469's rule), re-worded: every comment and test title naming a retired id (R3, R4, R6, R8, R9, R12, R13, R16, R25, R26, R60) now names reading-pipeline's id (`index.mjs` header, :133, :138, :250, :253, :544, :702, :971, :1126, :1131, :1300, :1339–1340, :1359; `ops.mjs`:94; `schema.mjs`:323, :344; `pdfstructure.test.mjs` four titles; `store.test.mjs`:199); `filemembership.mjs`:1's "R52, proposed" (R52 is live); `index.mjs`'s `#counts` note names the store as retired. The N508 lines named in `t24-stale-notes.md` (`index.mjs`:1474, `ops.mjs`:10, :32, :82) already read as retired; left.
+
+4. `uses` (B3, K1234; BOB writes `modules.json` at the merge): measured over src and tests, extraction imports calibration, capture, capture-sources (tests), docprofile, format-registry, jurisdictions, membership, office-readers, pdf-worker (tests), provenance, reading-pipeline, record-core, record-grammar, text-chain. Drop acquisition, test-support, pdf-reader; keep ocr-worker and promotion (requirement-named, handed in, not imported).
+
+Deferred: nothing.
+
+Found in other modules (J2): attestation's `invariants.test.mjs` R9 is flaky (its place probe's `\bca\b` matches inside a random base64 signature); BOB accepted it as red 11, N517 for attestation in T26 (K1234). Generated artifact staled: `bio-plane/dist/bio-plane.bundled.mjs` (not_product), by deleting `extraction/pipeline.mjs` and changing `extraction/index.mjs`; regenerated nothing. Seen, not mine: `bio-plane/src/readingprov.mjs` is still in the tree beside `reading-pipeline/readingprov.mjs` (reading-pipeline's paths list both; extraction imports neither).
+
+Tests and checks, on the merged branch (`tranche/T25` @ B4's merge):
+- `node --test bio-plane/test/m/extraction/`: tests 112, pass 112, fail 0 (171 before; 59 moved to reading-pipeline).
+- `node --test bio-plane/test/m/`: tests 5,329, pass 5,233, fail 85; the 85 are, test for test, the reds `tranche/T25` holds without this job (accepted reds 1, 7, 8, 9 by name; compared by name against a run on `tranche/T25`); none in extraction, reading-pipeline or extraction's users.
+- `checks/format.mjs`: 91 modules, 90 requirements files; 0 failures.
+- `checks/architecture.mjs extraction`: 25 product files, 93 relative imports; 0 failures.
+- `checks/coverage.mjs extraction`: 44 of 44 live requirement ids named by a test; 0 failures.
+- `checks/ownership.mjs extraction tranche/T25`: 20 files changed; 0 failures.
+
+Size (session_018Jaiitbn2X3Px2hE9n3hc8): test runs 21, module lines 2,679
 
 ## J1 · QUESTION
 
