@@ -34,3 +34,7 @@
 - `node checks/format.mjs`: 2 failures, reading-pipeline's absent directories (red 4). `architecture.mjs … capture`: 23 files, 95 relative imports; 0 failures. `coverage.mjs … capture`: 55 of 55; 0 failures. `ownership.mjs … capture tranche/T25`: 7 files; 0 failures.
 
 Size (session_01DBaNZTnhW4WpM4Cc51PGKx): test runs 10, module lines 3459
+
+## J2 · REPORT
+
+REPORT: a red outside the opening's names, caused by R68's re-point. `test/m/affordances/sources.test.mjs`:117 ("R2: reattest … through provenance's attest") stubs `provenance.attest` through capture's fixture and asserts it was asked; since N512 R68 asks attestation's `attest`, so it fails on job/T25/capture (TypeError reading `attests`). It is red 7's kind (a user of a moved name, through a fixture), not named. Fix is affordances' (L11): drive reattest through a scripted network as capture's R68 tests do (`authorities` in knocker.test.mjs, `granted` in capture's fixture), or assert on the late outcome alone. Please name it or rule it under red 7.
