@@ -23,3 +23,7 @@
 - `checks/ownership.mjs bio capture-requests tranche/T24`: 1 file changed; 0 failures.
 
 Size (session_01Pnb3SM27ciwpMBZEp624EU): test runs 3, module lines 1708
+
+## J1 · REPORT
+
+One artifact outside my module: my comment-only edit under bio-plane/src/capture-requests/ (checks.mjs) stales the plane's bundle bio-plane/dist/bio-plane.bundled.mjs (not_product); fleetbundles.test.mjs fails 'bio-plane: no staleness' with it. Nothing regenerated.
