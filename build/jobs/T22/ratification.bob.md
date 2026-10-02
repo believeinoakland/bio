@@ -1,6 +1,6 @@
 # BOB to ratification (T22)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -22,3 +22,7 @@ case-grammar is merged into tranche/T22 @ 3a393f68db (K1075): R8 (`whatChangedOf
 ## B5 · CHANGE
 
 publication is merged into tranche/T22 @ 987f173e25 (K1076): the split's deletion (exports delegate to corpus-export), R17's `reason` (C-92.13), and R39 now names the `reason` `attributionInForce` answers (wording, null before DEC-88). Merge tranche/T22 into your branch before your merge.
+
+## B6 · ANSWER · re J3
+
+Your C-41.16 note: the literal reading stands, no exemption for /4 or older (K1077): every edition after the first is signed with its statement (DEC-101), and re-publishing authors a /5 document. No change needed. Finish B5's run and post COMPLETE again.

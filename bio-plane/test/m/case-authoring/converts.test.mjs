@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 import { world, V, AUTHORED } from "./fixture.mjs";
 import { searchedSection } from "../../../src/case-authoring/index.mjs";
 import { CASE_DOCUMENT_FORMAT } from "../../../src/publication/index.mjs";
+import { LENS_HEAD } from "../../../src/case-grammar/index.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", DOC3 = "INFO-2026-0003-c", DOC4 = "INFO-2026-0004-d";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
@@ -23,7 +24,7 @@ function setup() {
   return w;
 }
 
-test("R14 (casesign): the document a person reviews states every authored sentence under its canonical headings — Scope, Findings In This Case with each member's role and pin, What This Excludes, Bias Acknowledgement, Standard Of Evidence, What Was Searched — says which half of the roster claims what, and prints an undeclared bar as absent, never zero", () => {
+test("R14 (casesign): the document a person reviews states every authored sentence under its canonical headings — Scope, Findings In This Case with each member's role and pin, What This Excludes, the lens with the bias acknowledgement (R40), Standard Of Evidence, What Was Searched — says which half of the roster claims what, and prints an undeclared bar as absent, never zero", () => {
   const w = setup();
   w.finding(Q, [{ target: DOC, grade: "D", grade_axis: "connection", grade_source: "testimony" }]);
   w.finding(Q2, [{ target: DOC, grade: "D", grade_axis: "connection", grade_source: "testimony" }]);
@@ -40,9 +41,12 @@ test("R14 (casesign): the document a person reviews states every authored senten
   for (const s of [AUTHORED.scope, AUTHORED.statement, AUTHORED.subjectJustification, AUTHORED.biasAcknowledgement,
                    "the comparison memo", "a records request is outstanding"])
     assert.ok(body.includes(s), `the body prints: ${s}`);
-  for (const h of ["## Scope", "## Findings In This Case", "## What This Excludes", "## Bias Acknowledgement",
+  for (const h of ["## Scope", "## Findings In This Case", "## What This Excludes", LENS_HEAD,
                    "## Standard Of Evidence", "## What Was Searched"])
     assert.match(body, new RegExp(`^${h}$`, "m"), h);
+  /* R40: the lens section prints the acknowledgement, once, where its own section stood */
+  assert.equal(body.split(AUTHORED.biasAcknowledgement).length - 1, 1, "the acknowledgement is printed once");
+  assert.equal(/^## Bias Acknowledgement$/m.test(body), false);
   assert.match(body, /A LOAD-BEARING finding is one this case rests on/);
   assert.match(body, /A SUPPORTING finding travels with the case and is not presented as carrying it/);
   assert.deepEqual([/NO STANDARD OF EVIDENCE WAS DECLARED/.test(body), /An absent bar is not a bar of zero/.test(body),
@@ -119,7 +123,7 @@ test("R14, R15 (d84-case-manifest): with no lens adopted the manifest is stated 
   assert.match(text, /^## Bias Manifest$/m);
   assert.ok(text.includes(`NO MANIFEST WAS IN FORCE for ${P}`));
   assert.deepEqual([r.bias_manifest.in_force, r.bias_manifest.stated], [false, "no manifest was in force"]);
-  assert.deepEqual([typeof fm.bias_acknowledgement, /^## Bias Acknowledgement$/m.test(text), fm.completeness.acknowledged,
+  assert.deepEqual([typeof fm.bias_acknowledgement, new RegExp(`^${LENS_HEAD}$`, "m").test(text), fm.completeness.acknowledged,
                     fm.completeness_acknowledgements], ["string", true, 0, []]);
   /* in force: each pair and the hash, as the lens stood at the act */
   const lens = { in_force: true, statements_sha: "f".repeat(64), lock_violations: [], pins_proposed: [],

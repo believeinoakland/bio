@@ -22,7 +22,8 @@ CREATE TABLE IF NOT EXISTS statement_acknowledgements (
   acknowledger_kind TEXT NOT NULL CHECK (acknowledger_kind IN ('participant','recipient')),
   acknowledger      TEXT NOT NULL,
   recipient         TEXT,               -- the grant's addressee label, for a recipient
-  at                TEXT NOT NULL
+  at                TEXT NOT NULL,
+  reason            TEXT                -- R19 (DEC-88): the acknowledger's words, NULL on a row recorded before them
 );
 CREATE INDEX IF NOT EXISTS statement_acknowledgements_statement
   ON statement_acknowledgements(project_id, statement_sha, edition);
@@ -31,7 +32,11 @@ CREATE INDEX IF NOT EXISTS statement_acknowledgements_statement
 /** R28: declared whole to record-core's purge (K23): a whole-store purge clears it, and no bundle keys it. */
 export const CASE_AUTHORING_TABLES = Object.freeze([{ name: "statement_acknowledgements", keys: [] }]);
 
+/** Creates the table where absent, and adds R19's `reason` column (DEC-88) to a table created before it, never filling
+ *  it: an acknowledgement recorded before the acknowledger's words were asked for carries none (K1050). Idempotent. */
 export function migrateCaseAuthoring(sql) {
   const bare = CASE_AUTHORING_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const s of bare.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
+  const cols = [...sql.exec(`PRAGMA table_info(statement_acknowledgements)`)].map((c) => c.name);
+  if (!cols.includes("reason")) sql.exec(`ALTER TABLE statement_acknowledgements ADD COLUMN reason TEXT`);
 }

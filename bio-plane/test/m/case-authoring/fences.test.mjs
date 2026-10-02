@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { world, V, MACHINE, AUTHORED } from "./fixture.mjs";
 import { COMPLETENESS_MAX, MEMBER_ROLES, PUBLISH_ACT_CHECKS } from "../../../src/case-authoring/index.mjs";
 import { noSuchProject, PROJECT_VISIBILITY_CHECKS } from "../../../src/membership/index.mjs";
+import { CASE_MEMBER_ROLES } from "../../../src/ratification/checks.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
 
@@ -140,4 +141,14 @@ test("R5: roles is a map from member id to load_bearing or supporting, with no d
   assert.deepEqual(w.snapshot(), before, "nothing written by any of them");
   const ok = w.publish(P, "alice", [Q, Q2], { roles: { [Q]: "load_bearing", [Q2]: "supporting" } });
   assert.deepEqual([ok.ok, ok.roles], [true, [{ target: Q, role: "load_bearing" }, { target: Q2, role: "supporting" }]]);
+});
+
+test("R5 (N472, K998): MEMBER_ROLES, this module's own constant, deep-equals ratification's CASE_MEMBER_ROLES, the vocabulary its C-41.8 admits; a role list differing by one entry is seen", () => {
+  /* the comparison this test makes, with its negative controls: a list one entry off in any way is not the same */
+  const same = (a, b) => { try { assert.deepEqual([...a], [...b]); return true; } catch { return false; } };
+  assert.equal(same(MEMBER_ROLES, CASE_MEMBER_ROLES), true, "case-authoring and ratification spell the roles alike");
+  for (const off of [["load_bearing"], ["load_bearing", "supporting", "critical"], ["load_bearing", "supportive"],
+                     ["supporting", "load_bearing"]])
+    assert.equal(same(MEMBER_ROLES, off), false, `a list differing by one entry is seen: ${off.join(", ")}`);
+  assert.ok(Object.isFrozen(MEMBER_ROLES), "this module's constant is its own, and fixed");
 });

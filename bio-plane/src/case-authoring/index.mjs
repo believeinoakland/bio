@@ -67,7 +67,7 @@ import { provenanceOf } from "../provenance/index.mjs";
 import { captureOf } from "../capture/index.mjs";
 import { sourcesOf } from "../sources/index.mjs";
 import { parseFrontmatter, normalizeType, isMachineIdentity, OBJECT_TYPES, BASIS_GRADES,
-         EARNED_CAPTURE_CEILING } from "../record-grammar/index.mjs";
+         EARNED_CAPTURE_CEILING, isPublicHttpsLocator } from "../record-grammar/index.mjs";
 import { SECTIONS } from "../case-grammar/index.mjs";
 import { PUBLISH_ACT_CHECKS, CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS, CASE_DISCLOSURE_CHECKS } from "./checks.mjs";
 import { CASE_AUTHORING_TABLES, migrateCaseAuthoring } from "./schema.mjs";
@@ -95,6 +95,10 @@ export const MEMBER_ROLES = Object.freeze(["load_bearing", "supporting"]);
 export const SEARCHED_SUBJECT_MAX = 500;
 /** R20: the most acknowledgements one list names; a list that reaches it says so (`truncated`). */
 export const STATEMENT_ACK_MAX = 500;
+/** R38 (DEC-101; K1019): the longest statement of what changed in an edition, in code points. */
+export const WHAT_CHANGED_MAX = 8000;
+/** R19 (DEC-88, K1030): the longest acknowledger's words, in code points. */
+export const STATEMENT_ACK_REASON_MAX = 2000;
 /** R16: the id chunk for the citations' grouped read, this module's own copy of `retrieval`'s (K57). */
 export const SELECTION_ID_CHUNK = 64;
 /** R21: the most drafts the writer read scans, the bound `review` R26 states for `case_drafts` (`REVIEW_LIST_MAX`):
@@ -102,6 +106,10 @@ export const SELECTION_ID_CHUNK = 64;
 export const DRAFTS_READ_MAX = 500;
 /** R17: the IN lists of the searched section's reads are chunked at 50, under D-36's 100-bound-parameter ceiling. */
 const SEARCHED_CHUNK = 50;
+/** R40: the manifest's page, bias R18's largest, so a lens is read in as few pages as the bound allows. */
+const LENS_PAGE = 2000;
+/** R40: publication R12's `publishedTargets` reads at most 200 ids a call. */
+const PUBLISHED_TARGETS_CHUNK = 200;
 
 const str = (v) => String(v ?? "").trim();
 /** R34: what the pre-flight throws to roll back its run of op=publish (record-core R32). */
@@ -185,7 +193,7 @@ export class CaseAuthoring {
                  statement = "", excluded = null, subjectPosition = "",
                  subjectJustification = "", biasAcknowledgement = "",
                  project = null, roles = null, draft = null, tensionsDisclosed = null, selfAttested = null,
-                 viewer = null, author = null } = {}, run = {}) {
+                 whatChanged = undefined, viewer = null, author = null } = {}, run = {}) {
     const seen = run.seen || {};
     const who = str(author);
     /* DEC-49 REGION is-machine-publish — R1 / C-32.6. The fence alone, before anything else is read. */
@@ -478,6 +486,10 @@ export class CaseAuthoring {
     /* R13 — DEC-12 as DEC-44 rehomes it: the CASE's edition is its highest published edition plus one; each member's
        own edition is its own (CASE-5: the next on its own published chain, unless R13's crossed arm below). */
     const edition = this.#highestEdition(theCase) + 1;
+    /* R38 (DEC-101 (1)(2)): an edition above 1 says what changed in it and why, judged once the edition is known and
+       before anything is written (`#whatChangedJudged`). A first edition carries none. */
+    const changed = edition > 1 ? this.#whatChangedJudged(whatChanged, theCase, edition) : null;
+    if (changed && changed.ok === false) return changed;
     const memberEditions = new Map();
     for (const id of members) {
       const mt = this.#one(`SELECT MAX(edition) AS m FROM published_bundles WHERE bundle_id=?`, id);
@@ -623,6 +635,8 @@ export class CaseAuthoring {
         .map((x) => ({ bundle_id: x.bundle_id, revision: x.revision, scope: x.scope,
                        pinned_state: x.pinned_state ?? null })),
     };
+    /* R40 — DEC-103: the lens it was produced under, every statement of the manifest frozen above, read at this act. */
+    const lensStatements = this.#lensStatements(proj);
     /* R16 — REC-219 / D-579(a): the project's citation edges, with the version each was made against. */
     const citations = this.#caseCitations(proj);
     /* R21 — REC-212 / §3 rule 13: WHO WROTE THE SENTENCE, established before the list is read, because it decides what
@@ -650,6 +664,10 @@ export class CaseAuthoring {
                                            acknowledged_by: who, acknowledged_at: when })),
       tensionsUnread: read.unread,
       captures: captureRows, sources: sourceRows,
+      /* R38: the statement as the member wrote it (`began_as: member` until R39's drafts exist, K1025). */
+      whatChanged: changed ? { text: changed.text, began_as: changed.began_as, draft: changed.draft } : null,
+      /* R40: the frozen manifest's statements, every page, each citation printed or withheld. */
+      lens: lensStatements,
     });
     const docBytes = new TextEncoder().encode(docText);
     /* publication R21: stored unsigned, replacing an unsigned document of this case edition and never a signed one; the
@@ -714,6 +732,33 @@ export class CaseAuthoring {
                  : `Then ratify EACH of these ${written.length} findings (op=ratify): every finding is signed `
                  + `on its own bytes because the finding is the unit of truth, and this case edition becomes `
                  + `servable as a container when the last of them lands.`) };
+  }
+
+  /** R38 (DEC-101 (1)(2); K1019, K1025): the "What changed" statement of an edition above 1, `{text, draft?}`. Absent, not
+   *  a string or blank is `NO_WHAT_CHANGED`; over `WHAT_CHANGED_MAX` characters (code points) `BAD_WHAT_CHANGED`; a
+   *  named `draft` must be a machine draft of this case (R39), and with no draft store yet (R39 is T23's) every named
+   *  draft is one that is not, `NO_SUCH_WHAT_CHANGED_DRAFT` (BOB's reading until R39 exists). Codes without catalogue
+   *  rows (R29 names none). Answers the refusal or `{ok: true, text, began_as: "member", draft: null}`. */
+  #whatChangedJudged(whatChanged, caseId, edition) {
+    const wc = whatChanged && typeof whatChanged === "object" && !Array.isArray(whatChanged) ? whatChanged : null;
+    const text = wc && typeof wc.text === "string" ? wc.text : null;
+    if (text === null || !text.trim())
+      return { ok: false, reason: "NO_WHAT_CHANGED", caseId, edition,
+               detail: `edition ${edition} of ${caseId} must say what changed in it since the edition before, and why `
+                     + `(whatChanged: {text}): a reader of a later edition is owed the difference in the group's own `
+                     + `words, not left to compare two documents (DEC-101). A first edition carries none. Nothing was `
+                     + `written.` };
+    const length = [...text].length;
+    if (length > WHAT_CHANGED_MAX)
+      return { ok: false, reason: "BAD_WHAT_CHANGED", caseId, edition, length, max: WHAT_CHANGED_MAX,
+               detail: `what changed in this edition is at most ${WHAT_CHANGED_MAX} characters, and this statement is `
+                     + `${length}. Say it shorter. Nothing was written.` };
+    const named = wc.draft == null ? "" : String(wc.draft).trim();
+    if (named)
+      return { ok: false, reason: "NO_SUCH_WHAT_CHANGED_DRAFT", caseId, edition, draft: named,
+               detail: `no machine draft of this edition's statement of what changed answers to ${named}. Write the `
+                     + `statement in your own words (whatChanged: {text}) and publish again. Nothing was written.` };
+    return { ok: true, text, began_as: "member", draft: null };
   }
 
   /** R2, asked by `op=publish` and by R32's read alike: the publishing project named, seen, a project, and owned by
@@ -1434,6 +1479,53 @@ export class CaseAuthoring {
     });
   }
 
+  /** R40 — DEC-103: THE LENS THIS CASE WAS PRODUCED UNDER, READ WHOLE. Every statement in the effective set of the
+   *  manifest frozen at this act (bias R13–R18, every page, read as the plane like the stamp beside it), each with each
+   *  of its citations marked whether it may be printed: public material only, being a public web address
+   *  (record-grammar's public-locator test, its R19) or a bundle or hash this copy has published (publication's
+   *  registries: R12's `publishedTargets` for a bundle id; R40's `published_shas` and `published_bundles.bundle_sha` for
+   *  a hash). Every other citation is handed on as withheld, so case-grammar R9 counts it and never writes it. Answers
+   *  `{in_force, stated, statements: [{bundle, id, kind, subject, text, justification, citations: [{citation,
+   *  printed}]}]}`; with no manifest in force, or one undetermined, no statement. */
+  #lensStatements(project) {
+    const read = (offset) => this.bias.biasManifest({ scope: "project", scopeId: project, viewer: "admin",
+                                                      limit: LENS_PAGE, offset });
+    let page = read(0);
+    if (!page || page.in_force !== true)
+      return { in_force: page && page.in_force === null ? null : false,
+               stated: page && page.in_force === null ? String(page.stated ?? "") : "no manifest was in force",
+               statements: [] };
+    const all = [...(Array.isArray(page.statements) ? page.statements : [])];
+    while (page.truncated && Array.isArray(page.statements) && page.statements.length) {
+      page = read(all.length);
+      all.push(...(Array.isArray(page.statements) ? page.statements : []));
+    }
+    const cited = (s) => (Array.isArray(s.citations) ? s.citations : [])
+      .map((c) => (c == null ? "" : String(c).trim())).filter(Boolean);
+    const asked = [...new Set(all.flatMap(cited).filter((c) => !isPublicHttpsLocator(c)))];
+    const hashes = asked.filter((c) => /^[0-9a-f]{64}$/i.test(c)).map((c) => c.toLowerCase());
+    const published = new Set();
+    /* Each hash is bound twice, so half a chunk keeps the statement under D-36's ceiling. */
+    const half = Math.floor(SEARCHED_CHUNK / 2);
+    for (let i = 0; i < hashes.length; i += half) {
+      const part = hashes.slice(i, i + half), marks = part.map(() => "?").join(",");
+      for (const r of this.#rows(`SELECT sha256 AS h FROM published_shas WHERE sha256 IN (${marks})
+                                  UNION SELECT bundle_sha AS h FROM published_bundles WHERE bundle_sha IN (${marks})`,
+                                 ...part, ...part)) published.add(String(r.h).toLowerCase());
+    }
+    const ids = asked.filter((c) => !/^[0-9a-f]{64}$/i.test(c));
+    for (let i = 0; i < ids.length; i += PUBLISHED_TARGETS_CHUNK) {
+      const t = this.publication.publishedTargets(ids.slice(i, i + PUBLISHED_TARGETS_CHUNK));
+      for (const [id, e] of Object.entries((t && t.registry) || {}))
+        if (e && e.editions && Object.keys(e.editions).length) published.add(id);
+    }
+    const isPublic = (c) => isPublicHttpsLocator(c) || published.has(/^[0-9a-f]{64}$/i.test(c) ? c.toLowerCase() : c);
+    return { in_force: true, stated: null,
+             statements: all.map((s) => ({ bundle: s.bundle_id, id: s.statement_id, kind: s.kind, subject: s.subject,
+                                           text: s.text, justification: s.justification,
+                                           citations: cited(s).map((c) => ({ citation: c, printed: isPublic(c) })) })) };
+  }
+
   /** R17 — THE CASE'S OWN SUBJECTS, GATHERED DOWNWARD (`OBSERVATION-LOG-DESIGN.md` §8 row 4). `searchedSection` decides
    *  what the answers MEAN; this decides WHAT IS ASKED ABOUT, which is the half a dishonest section gets wrong. The
    *  direction is one-way: subjects come DOWN from the members (inquiry R40's `inquiry_basis.content_id` → content R45's
@@ -1561,7 +1653,7 @@ export class CaseAuthoring {
   }
 
   /* ==========================================================================================================
-   * op=statementack: acknowledgeStatement (R19–R21)
+   * op=statementack: acknowledgeStatement (R19–R21), with the acknowledger's own words (`reason`, DEC-88)
    *
    * D-150 / §3 rule 11: a SECOND person's reading of the case's exclusion statement, before it is signed. The act is
    * keyed on the statement's SHA-256 (as the document prints it), the project and the case identity it stood at, so
@@ -1573,7 +1665,7 @@ export class CaseAuthoring {
    * admits gets the one dead answer. POSITION is membership's `isJoinedParticipant`: sight is not a place.
    * ========================================================================================================== */
   acknowledgeStatement({ draft = null, caseId = null, edition = null, secretSha = null, viewer = null,
-                         bySecret = false } = {}) {
+                         bySecret = false, reason = undefined } = {}) {
     const review = this.#review();
     let project, ident, statement, statementAuthor, kind, by, grantId = null, recipient = null, draftId = null;
     /* D-568: whether the draft asked for a new case; the answer states the edition through the provider's rule. */
@@ -1703,6 +1795,18 @@ export class CaseAuthoring {
                    + `says so.`,
                  { author: statementAuthor && by === statementAuthor ? statementAuthor : blockAuthor });
     /* END DEC-49 REGION is-statement-ack-by-its-author */
+    /* R19 — DEC-88 (K1025, K1030): THE ACKNOWLEDGER'S OWN WORDS, kept with the acknowledgement and shown in R20's list.
+       Asked after C-82.6, the last refusal before anything is read for the write, so nothing is written. Counted in code
+       points (K1050's reading); blank is empty after trimming. */
+    /* DEC-49 REGION is-statement-ack-reasoned */
+    if (typeof reason !== "string" || !reason.trim() || [...reason].length > STATEMENT_ACK_REASON_MAX)
+      return ack("STATEMENT_ACK_NO_REASON",
+                 `an acknowledgement of a case's exclusion statement is recorded with the acknowledger's own words on `
+               + `it (reason=), at most ${STATEMENT_ACK_REASON_MAX} characters: say what you read and what you make of `
+               + `what the case leaves out. ` + (typeof reason !== "string" ? "None were given." : !reason.trim()
+                 ? "The words given were blank." : `The words given are ${[...reason].length} characters.`)
+               + ` Nothing was written.`);
+    /* END DEC-49 REGION is-statement-ack-reasoned */
     const sha = statementSha(text);
     /* THE UNSIGNED DOCUMENTS OF THIS STATEMENT, AT THIS CASE IDENTITY, IN THIS PROJECT, read before anything is written
        (publication R40): the case door's own document, or the one a publisher named this draft for (REC-217). At most
@@ -1723,24 +1827,26 @@ export class CaseAuthoring {
       .sort((a, b) => (a.case_id < b.case_id ? -1 : a.case_id > b.case_id ? 1 : 0));
     /* R20: keyed by the statement, the project, the identity it was given at and the acknowledger; at no case identity
        the draft is part of what was read (REC-217). A repeat answers `existed: true`. */
-    const same = this.#one(`SELECT ack_id, at FROM statement_acknowledgements
+    const same = this.#one(`SELECT ack_id, at, reason FROM statement_acknowledgements
                             WHERE project_id=? AND statement_sha=? AND case_id IS ? AND edition=?
                               AND acknowledger_kind=? AND acknowledger=?
                               AND (? IS NOT NULL OR draft_id IS ?)`,
                            project, sha, ident.caseId ?? null, ident.edition, kind, by,
                            ident.caseId ?? null, draftId);
     const when = same ? same.at : this.#when("millisecond");
+    /* A repeat keeps the first reason (R20: `existed: true`, nothing rewritten). */
     if (!same)
       this.sql.exec(`INSERT INTO statement_acknowledgements (project_id,case_id,edition,statement_sha,draft_id,
-                     acknowledger_kind,acknowledger,recipient,at) VALUES (?,?,?,?,?,?,?,?,?)`,
-                    project, ident.caseId ?? null, ident.edition, sha, draftId, kind, by, recipient, when);
+                     acknowledger_kind,acknowledger,recipient,at,reason) VALUES (?,?,?,?,?,?,?,?,?,?)`,
+                    project, ident.caseId ?? null, ident.edition, sha, draftId, kind, by, recipient, when, reason);
     /* The parse is the authority on the project, the SQL match its index. */
     const docs = found.filter((d) => str((parseFrontmatter(d.text).data || {}).case_project) === project);
     const reauthored = docs.map((d) => this.#reauthorAcknowledgements(d));
     /* REC-217: which case edition, if any, a publisher named this draft for (signed or not). */
     const linkedTo = ident.caseId == null && draftId ? this.#draftLinkOf(draftId) : null;
     return { ok: true, existed: !!same,
-             acknowledgement: { kind, by, recipient, grant_id: grantId, at: when, project,
+             acknowledgement: { kind, by, recipient, grant_id: grantId, at: when,
+                                reason: same ? same.reason ?? null : reason, project,
                                 case_id: ident.caseId ?? null, edition: review.statedEdition(ident, draftNewCase),
                                 draft_id: draftId, statement_sha: sha },
              /* Each unsigned document of this statement, re-authored to list it: its NEW hash is what the owner signs. */
@@ -1846,7 +1952,7 @@ export class CaseAuthoring {
        draft named asks for `draft_id = ''`, which no row carries. */
     const draftMatch = unallocated ? String(draftId ?? "") : "*";
     const rows = this.#rows(
-      `SELECT acknowledger_kind, acknowledger, recipient, at, case_id, draft_id
+      `SELECT acknowledger_kind, acknowledger, recipient, at, case_id, draft_id, reason
          FROM statement_acknowledgements
         WHERE project_id=? AND statement_sha=? AND edition=?
           AND ((case_id IS ? AND (? = '*' OR draft_id = ?))
@@ -1897,8 +2003,11 @@ export class CaseAuthoring {
              unboundWriterUndetermined: unboundRow ? Number(unboundRow.u) : 0,
              withheld: byWriter + withheldWriterUndetermined,
              withheld_stated: writer ? withheldWriterStated(byWriter + withheldWriterUndetermined, writerBy) : null,
+             /* R19: each row carries its acknowledger's words, null on one recorded before DEC-88. The document's
+                lines (`ackFrontmatterLines`, `ackBodyLines`) print the fields they always printed, so the signed
+                acknowledgement lines are unchanged. */
              rows: listed.map((r) => ({ kind: r.acknowledger_kind, by: r.acknowledger,
-                                        recipient: r.recipient ?? null, at: r.at,
+                                        recipient: r.recipient ?? null, at: r.at, reason: r.reason ?? null,
                                         ...(linked && r.case_id == null ? { draft: r.draft_id } : {}) })) };
   }
 
@@ -2066,6 +2175,8 @@ export function caseAuthoringOps(c, url, body) {
       author: q("author") }),
     /* R19–R21: the review copy's two doors, and a member's third subject (an unsigned case document). */
     statementack: () => c.acknowledgeStatement({ draft: q("draft"), caseId: q("case"), edition: q("edition"),
-      secretSha: q("secretSha"), viewer: q("viewer"), bySecret: q("bySecret") === "1" }),
+      secretSha: q("secretSha"), viewer: q("viewer"), bySecret: q("bySecret") === "1",
+      /* R19 (DEC-88): the acknowledger's words, from the query as the subject is; absent stays absent. */
+      reason: q("reason") ?? undefined }),
   };
 }

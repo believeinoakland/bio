@@ -5,8 +5,8 @@
  * Moved here from the check catalogue (`legacy-checks`, K6, K94) with their ids, texts and translations unchanged:
  * `caseEditionClaimed`, `isCaseMemberBytes` (legacy-checks keeps its own copy for C-3.1's heading rule, Decided 6),
  * `SUBJECT_POSITIONS`, `CASE_MEMBER_ROLES`, `biasAcknowledgementOf`, `completenessFields`, `checkPublishedExtension`
- * (C-2.8's case-member arm), `SEARCHED_SUBJECT_SOURCES`, `CASE_DOCUMENT_FAMILY` (C-41.1–C-41.15),
- * `CASE_CITATION_VERSIONS`, `checkCaseDocument`; the rows C-32.12–C-32.15, C-53.10–C-53.12, C-58.1–C-58.3, C-65.1 and
+ * (C-2.8's case-member arm), `SEARCHED_SUBJECT_SOURCES`, `CASE_DOCUMENT_FAMILY` (C-41.1–C-41.16),
+ * `CASE_CITATION_VERSIONS`, `checkCaseDocument`; the rows C-32.12–C-32.15, C-53.10–C-53.12, C-58.1–C-58.5, C-65.1 and
  * C-92.10–C-92.12; and, copied in T18 (split tables), C-32.1, C-33.10–C-33.12 (the bulk release) and C-102.10. A
  * row's `where` names the region in this module that mints it. The case-document formats and their three predicates
  * are `publication`'s (its R20). The legacy code's comments moved with it. */
@@ -16,6 +16,7 @@ import { STRENGTH_STATES } from "../strength/index.mjs";
 import { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V2, CASE_DOCUMENT_FORMAT_LEGACY, CASE_DOCUMENT_FORMATS_ACCEPTED,
          caseDocumentStatesMemberBlocks, caseDocumentRequiresDisclosures,
          caseDocumentRequiresV4Disclosures } from "../publication/index.mjs";
+import { whatChangedOf } from "../case-grammar/index.mjs";
 
 /* The catalogue's finding shape (`{check, severity, message, repairable?, repairs?, code?}`), so a finding from here
    reads exactly as one from `legacy-checks`. */
@@ -41,8 +42,8 @@ function f(check, severity, message, repairs, code) {
  * used to be, and nothing here reads a table.
  *
  * The `'null'` guard is not decoration: `#setOrAddScalar` writes the STRING
- * "null" for an absent value, and publishCase()'s own case-identity resolution
- * already excludes it by name at store.mjs. Two readers of one convention that
+ * "null" for an absent value, and `case-authoring`'s `publishCase` excludes it
+ * by name in its own case-identity resolution. Two readers of one convention that
  * disagreed about it would be the drift this file exists to prevent.
  *
  * IT IS THE PAIR AND NOT `case_id` ALONE, AND THAT WAS MEASURED RATHER THAN
@@ -495,6 +496,8 @@ export const CASE_DOCUMENT_FAMILY = {
   /* REC-219 / D-579(a) (BOB #34, 2026-09-25 02:30Z): the case's citation edges, each pinned to the
      version it was made against — one more /4 obligation, riding the same bump. */
   CITATIONS:    { check: 'C-41.15', what: 'case_citations — each citation edge with the version it rests on, a pinned one naming its capture, required of a bio-case-document/4 (REC-219, D-579(a))' },
+  /* DEC-101 (2), K1019: a new edition says what changed in it, read through case-grammar's `whatChangedOf` (its R8). */
+  WHAT_CHANGED: { check: 'C-41.16', what: 'the "What changed" statement, required of every edition above 1 (DEC-101 (2))' },
 };
 /* REC-219 / D-579(a): the states a case document's citation edge may carry, and which name a capture. */
 export const CASE_CITATION_VERSIONS = ['pinned', 'only_capture', 'undetermined', 'no_capture', 'no_bytes'];
@@ -916,6 +919,15 @@ export function checkCaseDocument(fm, ctx = {}) {
         ["re-publish through op=publish, which writes the section into the case document"]));
     }
   }
+  /* DEC-101 (2) — C-41.16: an edition above 1 carries a non-blank "What changed" statement, as case-grammar reads it
+     (its R8: the section's text, null where the block's hash disowns it or the format carries none). Asked only when
+     the caller supplies the body, as C-3.1's section is. Its message is R8's translation, word for word. */
+  if (typeof body === 'string' && Number.isInteger(fm?.case_edition) && fm.case_edition > 1) {
+    const wc = whatChangedOf(fm, body);
+    if (!wc || typeof wc.statement !== 'string' || !wc.statement.trim())
+      findings.push(f(C41.WHAT_CHANGED, 'error', 'A new edition of a case says what changed in it, and why, before it is signed. This one does not. Write the statement, then sign. Nothing was signed.',
+        ['write the "What changed in this edition, and why" statement on op=publish']));
+  }
   /* C-21.1 AT CASE ALTITUDE, and it is the arm that moved here WITHOUT its
      wording changing at all, because it was always a comparison between two
      CASE EDITIONS and never between two findings. A completeness claim carried
@@ -1109,7 +1121,7 @@ export const RATIFY_SCOPE_CHECKS = {
    * (BIO_Publication_v0_1.md §3 rule 2, the second note, BOB #16). REC-140 measured three
    * publications outside a case and pinned them as measured: an information bundle in no case, a
    * concluded inquiry in no case, and a finding prepared into a case whose document was not yet
-   * ratified. Both codes are refused in `Store#publish`, in its transaction, before the edition
+   * ratified. Both codes are refused in this module's `publish` (R5), in its transaction, before the edition
    * refusals and the retry, and ONE region carries both, because the one condition — no ratified
    * case pins this sha and none of their pinned findings rests on this bundle — is split only by
    * what the bundle IS. */
@@ -1128,6 +1140,23 @@ export const RATIFY_SCOPE_CHECKS = {
       + 'rests on it. Cite it from a finding, publish that finding\'s case and have an owner of the '
       + 'project sign the case document; an owner of that project can then sign this. Nothing was '
       + 'published.',
+  },
+  /* DEC-97 (3), K1058: R22's contested arm. Awaiting stamp (T23). */
+  CONTESTED_IN_BATCH: {
+    check: 'C-58.4',
+    where: 'src/ratification/release.mjs release > is-release-contested',
+    translation: 'Some of these documents are contested: a contradiction touching each is not yet resolved, and '
+      + 'contested material is never released in a batch. They are named. Nothing was released.',
+  },
+  /* DEC-102 items 1 and 2, K1058: R35, testimony credited only to the group or the project. Awaiting stamp (T23). */
+  ANONYMOUS_TESTIMONY_UNCORROBORATED: {
+    check: 'C-58.5',
+    where: 'src/ratification/refusals.mjs anonymousTestimonyRefusal > is-anonymous-testimony',
+    translation: 'This edition rests on testimony credited only to the group or the project, with no independent '
+      + 'leg corroborating it. Such testimony counts as an anonymous tip and supports a finding only beside an '
+      + 'independent corroborating leg. Each such member and observation is named. Corroborate the claim with an '
+      + 'independent leg, ask the observation\'s author to choose cover or name, or drop the finding that rests on '
+      + 'it. Nothing was signed.',
   },
 };
 

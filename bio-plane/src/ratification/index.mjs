@@ -32,6 +32,8 @@
  *                  commits (its R2, R4, R7, R17, R22).
  *   retrieval      `selectionResolve` (R21, R29: the bulk release's and retirement's selection).
  *   connections    `citesInto` (its R22; R29: the retirement's live citers, `./retire.mjs`).
+ *   contradiction  `candidatesFor` (its R25, R26; R22's contested arm). capture: `registerReader` (its R78; R34).
+ *   strength       `testimonyCorroboration` (its R30; R35). reevaluation: `levelMoved` (its R29; R36).
  *
  * READ CONTRACTS it reads in its own SQL: publication's `case_documents` and `cases` (its R40), record-core's `manifest`
  * and `history` (`gateFacts`' manifest and history lists, as they were), inquiry's `inquiry_basis` (`bundle_id`,
@@ -48,16 +50,21 @@ import { publicationOf } from "../publication/index.mjs";
 import { retrievalOf } from "../retrieval/index.mjs";
 import { connectionsOf } from "../connections/index.mjs";
 import { credentialsOf } from "../credentials/index.mjs";
+import { contradictionOf } from "../contradiction/index.mjs";
+import { strengthOf } from "../strength/index.mjs";
+import { reevaluationOf } from "../reevaluation/index.mjs";
+import { captureOf } from "../capture/index.mjs";
 import { parseFrontmatter, normalizeType, isMachineIdentity, MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
 import { checkCaseDocument, caseMemberFindings, caseMemberImageFindings, completenessFields,
          RATIFY_SCOPE_CHECKS, rowOf } from "./checks.mjs";
 import { operatorCaseRefusal, machineCaseRefusal, testimonyCaseRefusal, attributionUnchosenRefusal,
-         attributionStaleRefusal, conclusionMovedRefusal, noAttestingKeyRefusal } from "./refusals.mjs";
-import { release } from "./release.mjs";
+         attributionStaleRefusal, conclusionMovedRefusal, noAttestingKeyRefusal,
+         anonymousTestimonyRefusal } from "./refusals.mjs";
+import { release, examineMember, PLANE_VIEWER } from "./release.mjs";
 import { retire } from "./retire.mjs";
 
 export * from "./checks.mjs";
-export { RELEASE_ACK_MAX } from "./release.mjs";
+export { RELEASE_ACK_MAX, CLASS_REASONS } from "./release.mjs";
 export { EDGE_REASON_MAX } from "./retire.mjs";
 
 /* The viewer stamp membership mints for an organisation-scoped agent credential (`aiCredentialMint`'s principal). */
@@ -97,12 +104,13 @@ export class Ratification {
 
   constructor({ storage, record, membership, promotion, host = null, provenance = null, inquiry = null,
                 basisVersions = null, publication = null, retrieval = null, connections = null,
-                credentials = null } = {}) {
+                credentials = null, contradiction = null, strength = null, reevaluation = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
-    this.#deps = { host, provenance, inquiry, basisVersions, publication, retrieval, connections, credentials };
+    this.#deps = { host, provenance, inquiry, basisVersions, publication, retrieval, connections, credentials,
+                   contradiction, strength, reevaluation };
   }
 
   /* The modules reached lazily: each is created on the same host on first use, unless a test passed its own. */
@@ -112,6 +120,9 @@ export class Ratification {
   get publication() { return this.#deps.publication ||= publicationOf(this.#deps.host); }
   get retrieval() { return this.#deps.retrieval ||= retrievalOf(this.#deps.host); }
   get connections() { return this.#deps.connections ||= connectionsOf(this.#deps.host); }
+  get contradiction() { return this.#deps.contradiction ||= contradictionOf(this.#deps.host); }
+  get strength() { return this.#deps.strength ||= strengthOf(this.#deps.host); }
+  get reevaluation() { return this.#deps.reevaluation ||= reevaluationOf(this.#deps.host); }
   get credentials() {
     return this.#deps.credentials ||= credentialsOf(this.#deps.host, { record: this.record, membership: this.membership });
   }
@@ -253,8 +264,8 @@ export class Ratification {
 
   /* ===== REC-157 / INVESTIGATIVE-SESSION.md §7.1 item 9 (BOB #19, 2026-09-21) —
    * WHICH CASE EDITIONS PINNING THESE BYTES ALREADY RECORD THE CONCLUSION THIS ACT
-   * WOULD RECORD? THE ONE COMPARISON `publishCase()`'s ALREADY_A_CASE_MEMBER AND THE
-   * `publish` AFFORDANCE (`#editionWarrantedForJoinedProjectOf`) BOTH ASK.
+   * WOULD RECORD? THE ONE COMPARISON `case-authoring`'s `publishCase` (ALREADY_A_CASE_MEMBER) AND THE
+   * `publish` AFFORDANCE (affordances' `#editionWarrantedForJoinedProjectOf`) BOTH ASK.
    *
    * WHY IT EXISTS. `ALREADY_A_CASE_MEMBER` used to compare the finding's BYTES alone
    * (publication's `caseRelation` pin), which answered "would a new edition say anything
@@ -267,7 +278,7 @@ export class Ratification {
    * the RELATIONSHIP, exactly as `NOT_CONCLUDED` does."*
    *
    * WHAT IS ASKED. `rel` is publication's `caseRelation(bundleId)` as the caller holds it; `conc`
-   * is `caseConclusionFor`'s CONCLUDED answer — in publishCase() the very object the
+   * is `caseConclusionFor`'s CONCLUDED answer — in `publishCase` the very object the
    * case document will record, carried on `prepared` and never re-read. The editions
    * are every RATIFIED edition whose roster pins this finding at its CURRENT sha
    * (`rel.pinned`, across every case: DEC-72 clause 6 lets a finding serve many) and
@@ -575,7 +586,8 @@ export class Ratification {
       const attr = this.publication.attributionFacts({ text: src, case_id: caseId, edition });
       for (const r of [testimonyCaseRefusal(caseId, edition, attr.legacy),
                        attributionUnchosenRefusal(caseId, edition, attr),
-                       attributionStaleRefusal(caseId, edition, attr)])
+                       attributionStaleRefusal(caseId, edition, attr),
+                       anonymousTestimonyRefusal(caseId, edition, this.#uncorroborated(src, attr))])
         if (r) refusals.push(r);
 
       const signerMember = signer === null || signer === undefined || isMachineIdentity(signer) ? null
@@ -607,6 +619,37 @@ export class Ratification {
                detail: "part of what signing would be refused for could not be read, so whether this document can be "
                      + "signed is undetermined; nothing is claimed either way, and nothing was written. Ask again." };
     }
+  }
+
+  /* R35 (DEC-102 items 1, 2; K1074): each roster member's testimony legs on an observation whose level in force for
+     this edition (publication's attribution facts) is `group` or `project` that strength answers uncorroborated (its
+     R30), as `{member, observation}`, judged at its pinned bytes: the reading the document records for it
+     (`case_conclusions[].version`), its live basis only where it records none. Read as the plane: the pre-flight runs
+     before a signer exists and must answer as the act does. No such level asks nothing. */
+  #uncorroborated(text, attr) {
+    const fm = parseFrontmatter(String(text ?? "")).data || {};
+    const levels = Object.fromEntries((attr && Array.isArray(attr.current) ? attr.current : [])
+      .filter((x) => x.level).map((x) => [x.observation, x.level]));
+    if (!Object.values(levels).some((l) => l === "group" || l === "project")) return [];
+    const out = [];
+    for (const m of (Array.isArray(fm.case_findings) ? fm.case_findings : []).map((x) => String(x ?? "").trim())) {
+      const version = Ratification.#recordedRowIn(text, m)?.version;
+      const a = this.strength.testimonyCorroboration({ inquiry: m, levels, viewer: PLANE_VIEWER,
+        version: version === undefined || version === null || version === "null" ? null : String(version) });
+      for (const l of a && a.ok && Array.isArray(a.legs) ? a.legs : [])
+        if (l.state === "uncorroborated") out.push({ member: m, observation: l.target_id });
+    }
+    return out;
+  }
+
+  /** R35 in R2: the act's store half, asked by the Worker after C-92.11 (`./ops.mjs`): C-58.5 over the stored case
+   *  document, the pre-flight's own refusal, or null. */
+  caseTestimony({ caseId = null, edition = null } = {}) {
+    const doc = this.#caseDocumentRow(String(caseId ?? ""), edition);
+    if (!doc) return { ok: true, refusal: null };
+    const attr = this.publication.attributionFacts({ text: doc.text, case_id: caseId, edition: Number(edition) });
+    return { ok: true, refusal: anonymousTestimonyRefusal(caseId, Number(edition),
+                                                          this.#uncorroborated(doc.text, attr)) };
   }
 
   /* Each roster member's `basis` at the bytes its `case_roles` row pins (record-core R60), for the case gate's C-2.8
@@ -862,6 +905,20 @@ export class Ratification {
       /* R3, publication R5: a ratified newer edition discharges the case's outstanding revision flags, stamped with
          who ratified it and when; never deleted (set-but-never-clear). */
       this.publication.dischargeCaseFlags(id, ed, attestorMember ?? null, now);
+      /* R36 (DEC-102 item 2): each observation this edition reaches whose level in force (stated in the signed bytes,
+         C-92.11) differs from its level at the case's previous ratified edition is told to reevaluation (its R29), in
+         this transaction, once. A first edition, or an observation the previous edition did not reach, tells nothing. */
+      const prior = this.#one(`SELECT text FROM case_documents WHERE case_id=? AND edition<? AND ratified_at IS NOT NULL
+                                ORDER BY edition DESC LIMIT 1`, id, ed);
+      const levelsIn = (text) => {
+        const rows = (parseFrontmatter(text).data || {}).observation_attributions;
+        return new Map((Array.isArray(rows) ? rows : []).filter((x) => x && x.observation && x.level && x.level !== "null")
+          .map((x) => [String(x.observation), String(x.level)]));
+      };
+      const was = prior ? levelsIn(prior.text) : new Map();
+      for (const [observation, to] of prior ? levelsIn(doc.text) : [])
+        if (was.has(observation) && was.get(observation) !== to)
+          this.reevaluation.levelMoved({ observation, from: was.get(observation), to, case: id, edition: ed, at: now });
       const completedCase = committed.state && committed.state.complete && !committed.state.manifest_sha
         ? committed.state : null;
       return { ok: true, caseId: id, edition: ed, project, roster,
@@ -1045,7 +1102,18 @@ export class Ratification {
   audit(image) { return caseMemberImageFindings(image, parseFrontmatter); }
 
   /** R20–R27: the bulk release of a selection from collected to verified (`./release.mjs`). */
-  release(a) { return release({ sql: this.sql, promotion: this.promotion, retrieval: this.retrieval }, a); }
+  release(a) {
+    const self = this;   /* contradiction is reached only when a member is examined that far (R22) */
+    return release({ sql: this.sql, promotion: this.promotion, retrieval: this.retrieval,
+                     get contradiction() { return self.contradiction; } }, a);
+  }
+
+  /** R34: R22's examination of one document, as `capture`'s `batch-examination` reader (its R78) reads it. */
+  examine(id) {
+    const self = this;
+    const x = examineMember({ sql: this.sql, get contradiction() { return self.contradiction; } }, id);
+    return x ? { eligible: false, class: x.class, reason: x.reason } : { eligible: true };
+  }
 
   /** R28–R31, R33: the bulk retirement of a selection from verified (`./retire.mjs`). */
   retire(a) {
@@ -1062,8 +1130,8 @@ const MINT_SEED = Object.freeze([Object.freeze(["CASE", "cases", "case_id"]),
                                  Object.freeze(["CASE", "case_documents", "case_id"])]);
 
 /** K61: the one instance per host, created on the first call with `deps`. It registers the case-document catalogue
- *  with promotion (its R47; R8 here), C-2.8's case-member arm as a promotion check and an audit check (R9), and its
- *  mint-ledger seed sources with record-core (its R70); a refused seed registration is a wiring fault and throws,
+ *  with promotion (its R47; R8 here), R22's examination as capture's `batch-examination` reader (its R78; R34 here),
+ *  C-2.8's case-member arm as a promotion check and an audit check (R9), and its mint-ledger seed sources with record-core (its R70); a refused seed registration is a wiring fault and throws,
  *  rather than leave the ledger blind to the case ids. */
 export function ratificationOf(host, deps) {
   let r = instances.get(host);
@@ -1076,6 +1144,8 @@ export function ratificationOf(host, deps) {
     r = new Ratification({ ...d, host, storage, record, membership, promotion });
     instances.set(host, r);
     promotion.registerCaseCatalogue("ratification", checkCaseDocument);
+    /* R34: R22's own examination, registered once as capture's `batch-examination` reader (its R78). */
+    (d.capture || captureOf(host)).registerReader("batch-examination", "ratification", (id) => r.examine(id));
     promotion.registerStep("ratification", { check: (c) => r.check(c) });
     record.registerAuditCheck("ratification", (image) => r.audit(image));
     const seeded = record.registerMintSeed("ratification", MINT_SEED.map((x) => [...x]));
@@ -1099,6 +1169,7 @@ export function ratificationOps(r, url, body) {
                                  docSha: b.docSha ?? q("docSha"), viewer: q("viewer") ?? null,
                                  secretSha: q("secretSha") ?? null }),
     caseratify: () => r.ratifyCaseDocument(b),
+    casetestimony: () => r.caseTestimony(b),
     publish: () => r.publish(b),
     release: () => r.release({ handle: q("handle"), acknowledgment: q("acknowledgment"), mitigation: q("mitigation"),
                                viewer: q("viewer"), owner: q("owner"), author: q("author") }),

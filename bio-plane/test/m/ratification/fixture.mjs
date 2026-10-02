@@ -172,11 +172,23 @@ export function world() {
       return typeof fn === "function" ? (...a) => { calls.push([k, ...a]); return fn(...a); } : fn;
     },
   });
+  /* capture's reader registration (its R78; R34 here), recorded as the test reads it; R34's own tests boot the real one */
+  const readers = [];
+  /* strength R30's corroboration read (R35), answered from `corroboration` (inquiry id -> its answered legs; none by
+     default), each call kept in `corroborationAsked` */
+  const corroboration = new Map(), corroborationAsked = [];
+  /* reevaluation R29's `levelMoved` (R36), each call kept in `levelMoves` */
+  const levelMoves = [];
+  const reevaluation = { levelMoved: (a) => (levelMoves.push(a), { ok: true, moved: true }) };
+  const strength = { testimonyCorroboration: (a) => (corroborationAsked.push(a),
+    { ok: true, inquiry: a.inquiry, levels: a.levels, legs: corroboration.get(a.inquiry) ?? [], wrote: false }) };
+  const capture = { registerReader: (slot, module, fn) => (readers.push({ slot, module, fn }), { ok: true, slot, module }) };
   const r = ratificationOf(host, { storage: st, record, membership, credentials, promotion, provenance, inquiry,
-                                   basisVersions, publication });
+                                   basisVersions, publication, capture, strength, reevaluation });
   let n = 0;
   const w = {
     st, host, record, membership, credentials, promotion, r, bv, key, registers, holds, evidence, pub, publication, calls,
+    readers, corroboration, corroborationAsked, levelMoves,
     ops: {},   /* stand-ins for other modules' Durable Object ops, by name (the Worker half's tests) */
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
@@ -259,7 +271,8 @@ export function caseMd({ caseId, edition, project, members, conclusions = [], ex
     "case_roles:", ...members.flatMap((m) => [`  - target: ${m.id}`, `    role: ${m.role || "load_bearing"}`,
                                               `    version_sha: ${m.pin}`, `    edition: 1`]),
     ...(conclusions.length ? ["case_conclusions:", ...conclusions.flatMap(([m, c]) => rowLines(m, c))] : []),
-    ...extra, "---", "", "# Case", "", "## What This Excludes", "", "Nothing named.", ""].join("\n");
+    ...extra, "---", "", "# Case", "", "## What This Excludes", "", "Nothing named.", "",
+    "## What Changed in This Edition, and Why", "", "The roster was revised.", ""].join("\n");
 }
 
 /** A frontmatter document from an object, in the catalogue's restricted grammar (scalars, lists of scalars, maps of
@@ -316,7 +329,7 @@ export function cleanCase({ caseId, edition, project, members }) {
     case_strength_grounds: [], case_tensions: [], case_tension_sentences: [], case_tensions_unread: [],
   };
 }
-export const CASE_BODY = "# Case\n\n## What This Excludes\n\nNothing named.\n";
+export const CASE_BODY = "# Case\n\n## What This Excludes\n\nNothing named.\n\n## What Changed in This Edition, and Why\n\nThe roster was revised.\n";
 
 /* ---------------------------------------------------------------- the Worker half's control plane */
 
