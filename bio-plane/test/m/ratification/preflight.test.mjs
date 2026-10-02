@@ -23,7 +23,7 @@ const TIP = { ord: 0, target_id: OBS2, level: "group", state: "uncorroborated", 
 /* alice owns P and holds an administrator-registered key; bo joined P and holds none; eve is in no project. The case
    document is stored unsigned, and the act's facts are publication's for it, the attribution facts being whatever
    `publication.attributionFacts` answers (the same read the pre-flight makes). */
-async function setup({ mutate = (d) => d, edition = 1, conclusions = true } = {}) {
+async function setup({ mutate = (d) => d, edition = 1, conclusions = true, body = CASE_BODY } = {}) {
   const w = world();
   const key = await newKey();
   w.member("alice", { signer: key }); w.member("bo"); w.member("eve");
@@ -32,7 +32,7 @@ async function setup({ mutate = (d) => d, edition = 1, conclusions = true } = {}
   w.bv.conc.set(w.key(P, Q1), OWN);
   const conc = w.r.caseConclusionFor(P, Q1, V("alice"), "open");
   const text = fmText(mutate(cleanCase({ caseId: CASE, edition, project: P, members: [{ id: Q1, pin: w.sha(Q1) }] })),
-                      { raw: conclusions ? ["case_conclusions:", ...caseConclusionRowLines(Q1, conc)] : [], body: CASE_BODY });
+                      { raw: conclusions ? ["case_conclusions:", ...caseConclusionRowLines(Q1, conc)] : [], body });
   const docSha = w.caseDoc(CASE, edition, text);
   const facts = () => ({ ok: true, doc: { case_id: CASE, edition, doc_sha: docSha, text },
                          attribution: w.publication.attributionFacts({ text, case_id: CASE, edition }),
@@ -277,6 +277,26 @@ test("R35, R2, R18: a member resting on group- or project-level testimony streng
     s.w.corroboration.set(Q1, [TIP]);
     assert.deepEqual(s.preflight().refusals, [], level);
     assert.equal(s.w.corroborationAsked.length, 0, `a leg at ${level} is not asked`);
+  }
+});
+
+test("R8, R2, R18: C-41.16 — edition 2 with no \"What changed\" statement, or a blank one, is refused GATE_REFUSED naming C-41.16 by the act and the pre-flight, byte for byte; edition 1 without one, and edition 2 with one, pass", async () => {
+  const NO_WC = "# Case\n\n## What This Excludes\n\nNothing named.\n";
+  for (const body of [NO_WC, `${NO_WC}\n## What Changed in This Edition, and Why\n\n \n`]) {
+    const s = await setup({ edition: 2, body });
+    const pf = s.preflight();
+    assert.deepEqual(reasons(pf), ["GATE_REFUSED"]);
+    assert.deepEqual(entry(pf, "GATE_REFUSED").findings.map((x) => x.check), ["C-41.16"]);
+    const r = await s.act();
+    assert.deepEqual([r.status, r.body.reason], [409, "GATE_REFUSED"]);
+    assert.deepEqual(entry(pf, "GATE_REFUSED"), envelopeless(r.body), "the act's refusal, less its envelope");
+    assert.equal(s.w.row(`SELECT ratified_at FROM case_documents WHERE case_id=? AND edition=2`, CASE).ratified_at, null,
+                 "nothing was signed");
+  }
+  for (const [edition, body] of [[1, NO_WC], [2, CASE_BODY]]) {
+    const s = await setup({ edition, body });
+    assert.deepEqual(s.preflight().refusals, [], `edition ${edition}`);
+    assert.equal((await s.act()).status, 200, `edition ${edition}`);
   }
 });
 

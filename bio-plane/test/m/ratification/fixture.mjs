@@ -271,7 +271,8 @@ export function caseMd({ caseId, edition, project, members, conclusions = [], ex
     "case_roles:", ...members.flatMap((m) => [`  - target: ${m.id}`, `    role: ${m.role || "load_bearing"}`,
                                               `    version_sha: ${m.pin}`, `    edition: 1`]),
     ...(conclusions.length ? ["case_conclusions:", ...conclusions.flatMap(([m, c]) => rowLines(m, c))] : []),
-    ...extra, "---", "", "# Case", "", "## What This Excludes", "", "Nothing named.", ""].join("\n");
+    ...extra, "---", "", "# Case", "", "## What This Excludes", "", "Nothing named.", "",
+    "## What Changed in This Edition, and Why", "", "The roster was revised.", ""].join("\n");
 }
 
 /** A frontmatter document from an object, in the catalogue's restricted grammar (scalars, lists of scalars, maps of
@@ -328,7 +329,7 @@ export function cleanCase({ caseId, edition, project, members }) {
     case_strength_grounds: [], case_tensions: [], case_tension_sentences: [], case_tensions_unread: [],
   };
 }
-export const CASE_BODY = "# Case\n\n## What This Excludes\n\nNothing named.\n";
+export const CASE_BODY = "# Case\n\n## What This Excludes\n\nNothing named.\n\n## What Changed in This Edition, and Why\n\nThe roster was revised.\n";
 
 /* ---------------------------------------------------------------- the Worker half's control plane */
 

@@ -5,7 +5,7 @@
  * Moved here from the check catalogue (`legacy-checks`, K6, K94) with their ids, texts and translations unchanged:
  * `caseEditionClaimed`, `isCaseMemberBytes` (legacy-checks keeps its own copy for C-3.1's heading rule, Decided 6),
  * `SUBJECT_POSITIONS`, `CASE_MEMBER_ROLES`, `biasAcknowledgementOf`, `completenessFields`, `checkPublishedExtension`
- * (C-2.8's case-member arm), `SEARCHED_SUBJECT_SOURCES`, `CASE_DOCUMENT_FAMILY` (C-41.1–C-41.15),
+ * (C-2.8's case-member arm), `SEARCHED_SUBJECT_SOURCES`, `CASE_DOCUMENT_FAMILY` (C-41.1–C-41.16),
  * `CASE_CITATION_VERSIONS`, `checkCaseDocument`; the rows C-32.12–C-32.15, C-53.10–C-53.12, C-58.1–C-58.5, C-65.1 and
  * C-92.10–C-92.12; and, copied in T18 (split tables), C-32.1, C-33.10–C-33.12 (the bulk release) and C-102.10. A
  * row's `where` names the region in this module that mints it. The case-document formats and their three predicates
@@ -16,6 +16,7 @@ import { STRENGTH_STATES } from "../strength/index.mjs";
 import { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V2, CASE_DOCUMENT_FORMAT_LEGACY, CASE_DOCUMENT_FORMATS_ACCEPTED,
          caseDocumentStatesMemberBlocks, caseDocumentRequiresDisclosures,
          caseDocumentRequiresV4Disclosures } from "../publication/index.mjs";
+import { whatChangedOf } from "../case-grammar/index.mjs";
 
 /* The catalogue's finding shape (`{check, severity, message, repairable?, repairs?, code?}`), so a finding from here
    reads exactly as one from `legacy-checks`. */
@@ -495,6 +496,8 @@ export const CASE_DOCUMENT_FAMILY = {
   /* REC-219 / D-579(a) (BOB #34, 2026-09-25 02:30Z): the case's citation edges, each pinned to the
      version it was made against — one more /4 obligation, riding the same bump. */
   CITATIONS:    { check: 'C-41.15', what: 'case_citations — each citation edge with the version it rests on, a pinned one naming its capture, required of a bio-case-document/4 (REC-219, D-579(a))' },
+  /* DEC-101 (2), K1019: a new edition says what changed in it, read through case-grammar's `whatChangedOf` (its R8). */
+  WHAT_CHANGED: { check: 'C-41.16', what: 'the "What changed" statement, required of every edition above 1 (DEC-101 (2))' },
 };
 /* REC-219 / D-579(a): the states a case document's citation edge may carry, and which name a capture. */
 export const CASE_CITATION_VERSIONS = ['pinned', 'only_capture', 'undetermined', 'no_capture', 'no_bytes'];
@@ -915,6 +918,15 @@ export function checkCaseDocument(fm, ctx = {}) {
       findings.push(f('C-3.1', 'error', "required heading '## What This Excludes' is missing from the case document: since BIO_Publication_v0_1.md §3 rule 12 the case states what it excludes once, here, and not in any member's bytes",
         ["re-publish through op=publish, which writes the section into the case document"]));
     }
+  }
+  /* DEC-101 (2) — C-41.16: an edition above 1 carries a non-blank "What changed" statement, as case-grammar reads it
+     (its R8: the section's text, null where the block's hash disowns it or the format carries none). Asked only when
+     the caller supplies the body, as C-3.1's section is. Its message is R8's translation, word for word. */
+  if (typeof body === 'string' && Number.isInteger(fm?.case_edition) && fm.case_edition > 1) {
+    const wc = whatChangedOf(fm, body);
+    if (!wc || typeof wc.statement !== 'string' || !wc.statement.trim())
+      findings.push(f(C41.WHAT_CHANGED, 'error', 'A new edition of a case says what changed in it, and why, before it is signed. This one does not. Write the statement, then sign. Nothing was signed.',
+        ['write the "What changed in this edition, and why" statement on op=publish']));
   }
   /* C-21.1 AT CASE ALTITUDE, and it is the arm that moved here WITHOUT its
      wording changing at all, because it was always a comparison between two

@@ -43,11 +43,12 @@ function doc() {
   };
 }
 const CTX = { caseId: "CASE-2026-0001", edition: 2 };
-const BODY = "# Case\n\n## What This Excludes\n\nthe 2019 permits\n";
+const BODY = "# Case\n\n## What This Excludes\n\nthe 2019 permits\n\n## What Changed in This Edition, and Why\n\nThe 2019 permits were added.\n";
+const NO_WC = "# Case\n\n## What This Excludes\n\nthe 2019 permits\n";
 const checks = (fm, ctx = CTX) => R.checkCaseDocument(fm, ctx).map((x) => x.check);
 const fires = (mutate, check, ctx = CTX) => R.checkCaseDocument(mutate(doc()), ctx).some((x) => x.check === check);
 
-/* The fifteen arms of C-41, each with the one mutation that fires it (casesign's list, extended to every arm). */
+/* The sixteen arms of C-41, each with the one mutation that fires it (casesign's list, extended to every arm). */
 const ARMS = [
   ["FORMAT", "C-41.1", (d) => { d.format = "bio-case-document/9"; return d; }],
   ["IDENTITY", "C-41.2", (d) => { d.case_id = "CASE-2026-9999"; return d; }],
@@ -64,26 +65,29 @@ const ARMS = [
   ["DISCLOSURES", "C-41.13", (d) => { delete d.completeness.statement_by; return d; }],
   ["PENDING", "C-41.14", (d) => { d.bias_manifest.pins_proposed = 1; return d; }],
   ["CITATIONS", "C-41.15", (d) => { d.case_citations[0].capture = null; return d; }],
+  /* asked only over a body: edition 2 with no "What changed" section */
+  ["WHAT_CHANGED", "C-41.16", (d) => d, [], { ...CTX, body: NO_WC }],
 ];
 
-test("R8: the baseline /5 case document draws no finding, with its body, member basis and a fresh prior edition; a /4 one, read as written, neither", () => {
+test("R8: the baseline /5 case document draws no finding, with its body, member basis and a fresh prior edition; a /4 one, read as written, neither but C-41.16 (its format carries no What-changed statement)", () => {
   assert.deepEqual(checks(doc(), { ...CTX, body: BODY, memberBasis: { [M1]: [], [M2]: [] },
                                    priorCase: { edition: 1, statement: "older", bias_acknowledgement: "older" } }), []);
   const v4 = doc(); v4.format = "bio-case-document/4";
   for (const k of ["case_tensions", "case_tension_sentences", "case_tensions_unread"]) delete v4[k];
-  assert.deepEqual(checks(v4, { ...CTX, body: BODY }), []);
+  assert.deepEqual(checks(v4, { ...CTX, body: BODY }), ["C-41.16"], "case-grammar reads no statement in a /4 edition 2");
+  assert.deepEqual(checks({ ...v4, case_edition: 1 }, { ...CTX, edition: 1, body: BODY }), [], "edition 1 is not asked");
 });
 
-test("R8: each of C-41.1–C-41.15 is declared in CASE_DOCUMENT_FAMILY and fires on its own mutation, and the arms cover the family exactly", () => {
-  for (const [key, num, mutate, also = []] of ARMS) {
+test("R8: each of C-41.1–C-41.16 is declared in CASE_DOCUMENT_FAMILY and fires on its own mutation, and the arms cover the family exactly", () => {
+  for (const [key, num, mutate, also = [], ctx = CTX] of ARMS) {
     assert.equal(R.CASE_DOCUMENT_FAMILY[key].check, num);
-    assert.equal(fires(mutate, num), true, `${num} fires`);
-    assert.deepEqual(R.checkCaseDocument(mutate(doc()), CTX).filter((x) => x.check !== num && !also.includes(x.check)), [],
+    assert.equal(fires(mutate, num, ctx), true, `${num} fires`);
+    assert.deepEqual(R.checkCaseDocument(mutate(doc()), ctx).filter((x) => x.check !== num && !also.includes(x.check)), [],
       `${num}'s mutation draws no other finding`);
   }
   assert.deepEqual(ARMS.map(([k]) => k).sort(), Object.keys(R.CASE_DOCUMENT_FAMILY).sort());
   assert.deepEqual(Object.values(R.CASE_DOCUMENT_FAMILY).map((v) => v.check),
-    Array.from({ length: 15 }, (_, i) => `C-41.${i + 1}`));
+    Array.from({ length: 16 }, (_, i) => `C-41.${i + 1}`));
 });
 
 test("R8: the case arms of C-2.8 (each member's frozen blocks, as the document states them), C-3.1 (the section) and C-21.1 (a statement or acknowledgement reprinted from the previous edition)", () => {
@@ -93,14 +97,33 @@ test("R8: the case arms of C-2.8 (each member's frozen blocks, as the document s
   assert.match(c28[0].message, new RegExp(`^case document, member ${M2}: `), "prefixed with the member it is about");
   assert.ok(checks((() => { const d = doc(); delete d.case_strength; return d; })()).includes("C-2.8"), "the field itself");
   assert.ok(checks((() => { const d = doc(); d.case_roles[1].edition = 0; return d; })()).includes("C-2.8"), "a member's edition");
-  assert.deepEqual(checks(doc(), { ...CTX, body: "# Case\n\nno section\n" }), ["C-3.1"]);
+  assert.deepEqual(checks(doc(), { ...CTX, body: "# Case\n\nno section\n\n## What Changed in This Edition, and Why\n\nx\n" }), ["C-3.1"]);
   assert.deepEqual(checks(doc(), { ...CTX, body: null }), [], "C-3.1 is asked only when the body is supplied");
   assert.deepEqual(checks(doc(), { ...CTX, priorCase: { edition: 1, statement: doc().completeness.statement,
                                                         bias_acknowledgement: doc().bias_acknowledgement } }),
     ["C-21.1", "C-21.1"]);
   const legacy = doc(); legacy.format = "bio-case-document/1"; delete legacy.case_strength;
   delete legacy.bias_manifest; delete legacy.case_citations; delete legacy.bias_manifest_pins_proposed;
-  assert.deepEqual(checks(legacy, { ...CTX, body: "no section" }), [], "a /1 document states no member blocks and is not asked them");
+  assert.deepEqual(checks(legacy, { ...CTX, body: "no section" }), ["C-41.16"],
+    "a /1 document states no member blocks and is not asked them; as an edition 2 it states no change either");
+});
+
+test("R8, R14: C-41.16 — an edition above 1 with no \"What changed\" statement, a blank one, or one its block's hash disowns is refused with R8's translation word for word; edition 1 without one, and edition 2 with one, pass", () => {
+  const msg = "A new edition of a case says what changed in it, and why, before it is signed. This one does not. Write the "
+            + "statement, then sign. Nothing was signed.";
+  const wc = (body) => R.checkCaseDocument(doc(), { ...CTX, body }).filter((x) => x.check === "C-41.16");
+  for (const body of [NO_WC, `${NO_WC}\n## What Changed in This Edition, and Why\n\n   \n`]) {
+    const got = wc(body);
+    assert.equal(got.length, 1);
+    assert.deepEqual([got[0].severity, got[0].message], ["error", msg]);
+  }
+  const block = doc(); block.what_changed = { statement_sha: "0".repeat(64), began_as: "member", draft: null, adopted_as_drafted: null };
+  assert.equal(R.checkCaseDocument(block, { ...CTX, body: BODY }).filter((x) => x.check === "C-41.16").length, 1,
+    "a statement its block's hash disowns is no statement (case-grammar R8)");
+  assert.deepEqual(wc(BODY), [], "edition 2 with a statement passes");
+  const first = doc(); first.case_edition = 1;
+  assert.deepEqual(R.checkCaseDocument(first, { ...CTX, edition: 1, body: NO_WC }).map((x) => x.check), [], "edition 1 is not asked");
+  assert.deepEqual(wc(null), [], "asked only when the body is supplied");
 });
 
 test("R8: an absent member basis leaves the basis arms unasked; a present one asks them (the testimony row)", () => {
