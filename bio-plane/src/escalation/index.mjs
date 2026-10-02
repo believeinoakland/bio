@@ -10,7 +10,8 @@
  * `filings`, what was done about the consequences through `consequences`). The read derives, at the moment of reading,
  * which edges out of the current stage have their trigger met, with the instant each was first met and its age (R2);
  * nothing derived is stored, so the same record read later can propose more. A proposal is the protocol's derivation,
- * stated as such (R17): only a member advances, declines, attaches, evaluates, suspends, resumes or ends. An escalation
+ * stated as such (R17): only a member opens, declines to escalate, advances, declines, attaches, evaluates, suspends,
+ * resumes or ends, each act but resuming and ending with the member's reason (R24). An escalation
  * ends only when compliance is restored and the consequences are addressed (R14, Operational Principle 6); suspension
  * never ends it (R15). Nothing here carries a significance, severity, priority, urgency or score (R19), and no place,
  * office or law is named in this module's behaviour or text (R20): offices come from the record and the profile.
@@ -21,6 +22,11 @@
  * log's projections, written by the module's registered projection inside the promotion's transaction. The module's
  * registered check refuses any other promotion of an escalation document (only a replay restores one), so an act and a
  * raw promotion cannot disagree about what happened.
+ *
+ * THE DECISION NOT TO ESCALATE (R27, R28; DEC-89). A member may record, in their own words, why the group is not
+ * pursuing a live noncompliant determination now: refused as an opening is (R1's order, one shared gate), appended to
+ * its own table and never edited. `escalationStatus` answers, from the openings and declines in their order, whether
+ * the determination was escalated, declined or neither. Neither is an escalation, so neither is a record object.
  *
  * REACHED as `escalationOf(host, deps)` (K61): one instance per host, created on the first call with `deps`, returned
  * to every later caller. At creation it migrates its tables (idempotent), declares them to purge (R20, K23) and
@@ -69,7 +75,7 @@ export const READINGS = Object.freeze(["complied", "partial", "denied", "none"])
 /** R12: the five accountability purposes of a stage-7 act. */
 export const ACCOUNTABILITY_PURPOSES = Object.freeze(["official_request", "oversight_request", "audit_request",
   "testimony", "enforcing_legislation"]);
-/** R10, R13, R15: a reason's bound. */
+/** R24: a reason's bound (R1, R9, R10, R13, R15, R27). */
 export const REASON_MAX = 2000;
 /** R16: the most items `escalationsDue` answers. */
 export const DUE_MAX = 500;
@@ -85,6 +91,8 @@ const COMPLETED_READINGS = new Set(["denied", "partial", "none"]);
 /** R7 (N462; DEC-36, K913): an evaluation's trigger id, `n` its place (1, 2, …) among this escalation's evaluations,
  *  so it counts no other entry of the log. */
 const evaluationId = (escalation, n) => `${escalation}/evaluation#${n}`;
+/** R27: a decline to escalate's id, `n` its place (1, 2, …) among the determination's declines. */
+const declineId = (determination, n) => `${determination}/decline-to-escalate#${n}`;
 /* R13's compatibility (N462): the form recorded before R7's id, `<id>/evaluation/<seq>`, `seq` the log's number. */
 const OLD_EVALUATION_ID = /^(.+)\/evaluation\/(\d+)$/;
 
@@ -175,13 +183,13 @@ export class Escalation {
     if (viewer !== null && viewer !== undefined && !this.membership.inSight(r.project_id, viewer)) return null;
     return { id: r.escalation_id, project: r.project_id, determination: r.determination_id, act: r.act_id,
              standards: unjson(r.standards_json, []), state: r.state, stage: r.stage, stageSince: r.stage_since,
-             stateSince: r.state_since, openedBy: r.opened_by, openedAt: r.opened_at };
+             stateSince: r.state_since, openedBy: r.opened_by, openedAt: r.opened_at, openedReason: r.opened_reason ?? null };
   }
 
   #attachments(id) {
     return this.#rows(`SELECT * FROM escalation_attachments WHERE escalation_id=? ORDER BY seq`, id).map((a) => ({
       action: a.action_id, stage: a.stage, purpose: a.purpose ?? null, standards: unjson(a.standards_json, null),
-      author: a.author, at: a.at, seq: a.seq }));
+      reason: a.reason ?? null, author: a.author, at: a.at, seq: a.seq }));
   }
 
   #evaluations(id) {
@@ -406,7 +414,7 @@ export class Escalation {
     return this.#attachments(e.id).flatMap((a) => {
       const visible = seen.get(a.action);
       if (!visible) return [];
-      const item = { action: a.action, stage: a.stage, attached_by: a.author, at: a.at };
+      const item = { action: a.action, stage: a.stage, reason: a.reason, attached_by: a.author, at: a.at };
       if (a.stage === 7) {
         item.purpose = a.purpose;
         item.standards = a.standards;
@@ -486,6 +494,7 @@ export class Escalation {
     let answer = {
       ok: true, id: e.id, project: e.project, determination: e.determination, act: e.act, state: e.state,
       stage: e.stage, stage_name: STAGES[e.stage], stage_since: e.stageSince, opened_by: e.openedBy, opened_at: e.openedAt,
+      opened_reason: e.openedReason,
       as_of: iso(at), history: this.#history(e.id), standards: e.standards, actions: this.#actionsOf(e, viewer, seen),
       evaluations: this.#evaluations(e.id), triggers, notes, proposed, exit: this.#exit(e, viewer),
     };
@@ -574,12 +583,13 @@ export class Escalation {
     const stageAt = log.filter((x) => x.kind === "open" || x.kind === "advance").at(-1) || open;
     const stateAt = log.filter((x) => ["open", "suspend", "resume", "end"].includes(x.kind)).at(-1) || open;
     this.#rows(`INSERT OR REPLACE INTO escalations (escalation_id, project_id, determination_id, act_id, standards_json,
-                state, stage, stage_since, state_since, opened_by, opened_at, log_len) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+                state, stage, stage_since, state_since, opened_by, opened_at, opened_reason, log_len)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       id, String(fm.project ?? open.project ?? ""), String(fm.determination ?? open.determination ?? ""),
       fm.act === null || fm.act === undefined || fm.act === "null" ? null : String(fm.act),
       JSON.stringify(Array.isArray(fm.standards) ? fm.standards.map(String) : (open.standards || [])),
       String(fm.current_state ?? "open"), Number(fm.stage ?? 1), stageAt.at ?? "", stateAt.at ?? "",
-      open.author ?? "", open.at ?? "", log.length);
+      open.author ?? "", open.at ?? "", typeof open.reason === "string" ? open.reason : null, log.length);
     for (const x of log.filter((y) => y.seq > from)) {
       if (["open", "advance", "suspend", "resume", "end"].includes(x.kind))
         this.#rows(`INSERT OR REPLACE INTO escalation_moves (escalation_id, seq, kind, from_stage, to_stage, reason,
@@ -592,8 +602,9 @@ export class Escalation {
           x.author, x.at);
       else if (x.kind === "attach")
         this.#rows(`INSERT OR REPLACE INTO escalation_attachments (action_id, escalation_id, seq, stage, purpose,
-                    standards_json, author, at) VALUES (?,?,?,?,?,?,?,?)`,
-          x.action, id, x.seq, x.stage, x.purpose ?? null, json(x.standards), x.author, x.at);
+                    standards_json, reason, author, at) VALUES (?,?,?,?,?,?,?,?,?)`,
+          x.action, id, x.seq, x.stage, x.purpose ?? null, json(x.standards),
+          typeof x.reason === "string" ? x.reason : null, x.author, x.at);
       else if (x.kind === "decline")
         this.#rows(`INSERT OR REPLACE INTO escalation_declines (escalation_id, seq, from_stage, to_stage, reason, author, at)
                     VALUES (?,?,?,?,?,?,?)`, id, x.seq, x.from, x.to, x.reason, x.author, x.at);
@@ -606,15 +617,17 @@ export class Escalation {
    * ===================================================================== */
 
 
-  /** R1: open an escalation of a live noncompliant determination, at stage 1. */
-  escalationOpen(args = {}) {
-    const { determination, author, viewer } = args;
-    /* DEC-49 REGION is-open-member */
-    if (isMachine(author))
-      return refusal("MACHINE_CANNOT_OPEN", "an escalation is opened by a named member; a machine prepares and never acts. Nothing was written.");
-    /* END DEC-49 REGION is-open-member */
+  /** R1, R27: what an opening and a decline to escalate both ask, in R1's order after the machine's refusal (each
+   *  act mints its own): R19's judged input, the author's reason (R24), the determination absent or unseen
+   *  (conformance R19), superseded (conformance R20), not noncompliant, the author not joined in its project, and an
+   *  escalation of it open or suspended. Answers `{ok: true, d, pursued, project, reason}` or the refusal; writes
+   *  nothing. */
+  #pursuable(args, act) {
+    const { determination, reason, author, viewer } = args;
     const judged = refuseJudgment(args);
     if (judged) return judged;
+    const bad = refuseReason(reason);
+    if (bad) return bad;
     const d = typeof determination === "string" && determination
       ? this.conformance.determinationRead({ id: determination, viewer }) : null;
     /* conformance R19: absent and unseen are one answer, the id as asked. */
@@ -632,24 +645,38 @@ export class Escalation {
                      + "breach to pursue. Nothing was written.");
     /* END DEC-49 REGION is-determination-noncompliant */
     const project = projectOf(d);
-    const fence = this.membership.projectAuthority(project, author, "joined", "escalationOpen");
+    const fence = this.membership.projectAuthority(project, author, "joined", act);
     /* DEC-49 REGION is-open-joined */
     if (fence)
-      return refusal("ESCALATION_NOT_A_PARTICIPANT", "an escalation is opened by a member who has joined the determination's "
-                     + "project. Nothing was written.", { project, membership: fence.reason });
+      return refusal("ESCALATION_NOT_A_PARTICIPANT", "an escalation is opened, or declined, by a member who has joined the "
+                     + "determination's project. Nothing was written.", { project, membership: fence.reason });
     /* END DEC-49 REGION is-open-joined */
     const held = this.#one(`SELECT escalation_id FROM escalations WHERE determination_id=? AND state IN ('open','suspended')
                             ORDER BY escalation_id LIMIT 1`, determination);
     /* DEC-49 REGION is-one-escalation */
     if (held)
       return refusal("ALREADY_OPEN", `the escalation ${held.escalation_id} of this determination is not ended; there is `
-                     + "one open or suspended escalation per determination. Nothing was written.", { escalation: held.escalation_id });
+                     + "one open or suspended escalation per determination, and no decline to escalate is recorded while "
+                     + "it stands. Nothing was written.", { escalation: held.escalation_id });
     /* END DEC-49 REGION is-one-escalation */
+    return { ok: true, d, pursued, project, reason: str(reason) };
+  }
+
+  /** R1: open an escalation of a live noncompliant determination, at stage 1, with the author's reason. */
+  escalationOpen(args = {}) {
+    const { determination, author, viewer } = args;
+    /* DEC-49 REGION is-open-member */
+    if (isMachine(author))
+      return refusal("MACHINE_CANNOT_OPEN", "an escalation is opened by a named member; a machine prepares and never acts. Nothing was written.");
+    /* END DEC-49 REGION is-open-member */
+    const g = this.#pursuable(args, "escalationOpen");
+    if (!g.ok) return g;
+    const { d, pursued, project, reason } = g;
     const at = this.now();
     const actId = actIdOf(d);
     const r = this.record.transact(() => {
       const id = escalationId(this.record.allocId("ESC", at.slice(0, 4)).id);
-      const entry = { kind: "open", to: 1, determination, project, standards: pursued, author, at };
+      const entry = { kind: "open", to: 1, determination, project, standards: pursued, reason, author, at };
       const text = escalationDoc({ id, project, determination, act: actId, standards: pursued, author, at, entry });
       const fm = parseFm(text) || {};
       const p = this.promotion.promote({ bundleId: id, base: null, snapKey: this.#snap(), author,
@@ -660,19 +687,22 @@ export class Escalation {
     });
     if (!r.ok) return r;
     const read = this.escalationRead({ id: r.id, viewer });
-    return { ok: true, id: r.id, stage: 1, stage_name: STAGES[1], standards: pursued, determination, project,
+    return { ok: true, id: r.id, stage: 1, stage_name: STAGES[1], standards: pursued, determination, project, reason,
              opened_by: author, at, proposed: read.proposed };
   }
 
   /** R9, R12: attach a breach action to the current stage (2, 5 or 7). */
   escalationAttach(args = {}) {
-    const { id, action, purpose, standards, author, viewer } = args;
+    const { id, action, purpose, standards, reason, author, viewer } = args;
     /* DEC-49 REGION is-attach-member */
     if (isMachine(author))
       return refusal("MACHINE_CANNOT_ATTACH", "an action is attached to an escalation by a named member. Nothing was written.");
     /* END DEC-49 REGION is-attach-member */
     const judged = refuseJudgment(args);
     if (judged) return judged;
+    /* R9, R24 (DEC-88): the attacher's reason for attaching this action, asked before the escalation is read. */
+    const bad = refuseReason(reason);
+    if (bad) return bad;
     const e = this.#row(id, viewer);
     if (!e) return refuseNoSuchEscalation();
     if (e.state === "ended") return refuseEnded();
@@ -703,7 +733,7 @@ export class Escalation {
       return refusal("ALREADY_ATTACHED", "that action is already attached to an escalation, at one stage. Nothing was written.",
                      held.escalation_id === e.id ? { escalation: e.id, stage: held.stage } : {});
     /* END DEC-49 REGION is-attached-once */
-    const entry = { kind: "attach", action, stage: e.stage, author, at: this.now() };
+    const entry = { kind: "attach", action, stage: e.stage, reason: str(reason), author, at: this.now() };
     if (e.stage === 7) {
       /* DEC-49 REGION is-accountability-purpose */
       if (!ACCOUNTABILITY_PURPOSES.includes(purpose))
@@ -735,7 +765,7 @@ export class Escalation {
     const w = this.#append(e, entry, { blurb: "Action attached" });
     if (!w.ok) return w;
     return { ok: true, id: e.id, action, stage: e.stage, ...(e.stage === 7 ? { purpose, standards: entry.standards } : {}),
-             author, at: entry.at };
+             reason: entry.reason, author, at: entry.at };
   }
 
   /** R10: a member's reading of a response, at stage 4. */
@@ -961,18 +991,85 @@ export class Escalation {
   /** R22: every escalation of a determination the viewer may see, oldest first, each with its id, state and stage.
    *  Writes nothing. */
   escalationsFor({ determination, viewer } = {}) {
+    const asked = this.#seenDetermination(determination, viewer);
+    if (!asked.ok) return asked;
+    return { ok: true, determination: asked.id, items: this.#escalationsOf(asked.id, viewer) };
+  }
+
+  /* R22, R28: the determination named, when this viewer may read it, `{ok: true, id}`; else conformance R19's one
+     answer for absent and unseen, the id as asked. */
+  #seenDetermination(determination, viewer) {
     const asked = typeof determination === "string" && determination ? determination : null;
     const d = asked ? this.conformance.determinationRead({ id: asked, viewer }) : null;
-    /* conformance R19: absent and unseen are one answer, the id as asked. */
-    if (!d || d.ok === false) return noSuchDetermination(asked);
+    return !d || d.ok === false ? noSuchDetermination(asked) : { ok: true, id: asked };
+  }
+
+  /* R22, R28: the determination's escalations this viewer may see, oldest first, each with its opening reason. */
+  #escalationsOf(determination, viewer) {
     const items = [];
     for (const r of this.#rows(`SELECT escalation_id FROM escalations WHERE determination_id=?
-                                ORDER BY opened_at, escalation_id`, asked)) {
+                                ORDER BY opened_at, escalation_id`, determination)) {
       const e = this.#row(r.escalation_id, viewer);
       if (e) items.push({ id: e.id, state: e.state, stage: e.stage, stage_name: STAGES[e.stage], opened_by: e.openedBy,
-                          opened_at: e.openedAt });
+                          opened_at: e.openedAt, reason: e.openedReason });
     }
-    return { ok: true, determination: asked, items };
+    return items;
+  }
+
+  /* R27, R28: the determination's declines to escalate, oldest first, as recorded. */
+  #declinesToOpen(determination) {
+    return this.#rows(`SELECT * FROM escalation_declines_to_open WHERE determination_id=? ORDER BY seq`, determination)
+      .map((x) => ({ id: declineId(determination, x.seq), seq: x.seq, before: x.escalations_before, reason: x.reason,
+                     author: x.author, at: x.at }));
+  }
+
+  /** R27 (DEC-89 (2)): a member records, in their own words, why the group is not pursuing a live noncompliant
+   *  determination now. Refused as R1 refuses an opening, in R1's order, the machine's refusal its own; so none is
+   *  recorded while an escalation of the determination is open or suspended. Appended, never edited: a later decline,
+   *  or a later opening, supersedes it, and every decline stays readable (R28). */
+  declineToEscalate(args = {}) {
+    const { determination, author } = args;
+    /* DEC-49 REGION is-decline-member */
+    if (isMachine(author))
+      return refusal("MACHINE_CANNOT_DECLINE_TO_ESCALATE", "a decline to escalate is recorded by a named member, in their "
+                     + "own words; a machine prepares and never acts. Nothing was written.");
+    /* END DEC-49 REGION is-decline-member */
+    const g = this.#pursuable(args, "declineToEscalate");
+    if (!g.ok) return g;
+    const at = this.now();
+    const seq = this.record.transact(() => {
+      const n = this.#one(`SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM escalation_declines_to_open WHERE determination_id=?`,
+                          determination).n;
+      const before = this.#one(`SELECT COUNT(*) AS n FROM escalations WHERE determination_id=?`, determination).n;
+      this.#rows(`INSERT INTO escalation_declines_to_open (determination_id, seq, project_id, escalations_before, reason,
+                  author, at) VALUES (?,?,?,?,?,?,?)`, determination, n, String(g.project ?? ""), before, g.reason, author, at);
+      return n;
+    });
+    return { ok: true, id: declineId(determination, seq), determination, reason: g.reason, author, at,
+             says: "recorded as the group's decline to escalate now; a later decline or an escalation opened later "
+                 + "supersedes it, and it stays readable" };
+  }
+
+  /** R28 (DEC-89): whether the determination was escalated, declined or neither, by the latest of its openings and
+   *  declines to escalate, with every escalation (as R22) and every decline, each naming what superseded it, oldest
+   *  first. Writes nothing. */
+  escalationStatus({ determination, viewer } = {}) {
+    const asked = this.#seenDetermination(determination, viewer);
+    if (!asked.ok) return asked;
+    const escalations = this.#escalationsOf(asked.id, viewer);
+    const declines = this.#declinesToOpen(asked.id);
+    /* One timeline, exact: a decline recorded after `before` openings follows the `before`th escalation and precedes
+       the next (openings in their order, R22's). */
+    const timeline = [];
+    let i = 0;
+    for (const x of declines) {
+      while (i < x.before && i < escalations.length) timeline.push({ kind: "escalated", id: escalations[i++].id });
+      timeline.push({ kind: "declined", id: x.id });
+    }
+    while (i < escalations.length) timeline.push({ kind: "escalated", id: escalations[i++].id });
+    const next = new Map(timeline.map((t, k) => [t.id, timeline[k + 1]?.id ?? null]));
+    return { ok: true, determination: asked.id, status: timeline.at(-1)?.kind ?? "neither", escalations,
+             declines: declines.map(({ seq: _, before: __, ...x }) => ({ ...x, superseded_by: next.get(x.id) })) };
   }
 }
 
@@ -1004,7 +1101,7 @@ export function refuseNoSuchResponse(why) {
   /* END DEC-49 REGION is-named-response */
 }
 
-/** R10, R13, R15: a reason of 1 to 2,000 characters; null when it is one. */
+/** R24 (R1, R9, R10, R13, R15, R27): a reason of 1 to 2,000 characters, counted trimmed; null when it is one. */
 export function refuseReason(reason) {
   const r = str(reason);
   /* DEC-49 REGION is-reason-given */
@@ -1043,7 +1140,7 @@ class ProviderAbsent extends Error {
    absent (K248). */
 for (const name of ["escalationOpen", "escalationRead", "escalationAttach", "escalationEvaluate", "escalationAdvance",
                     "escalationDecline", "escalationEnd", "escalationSuspend", "escalationResume", "escalationsDue",
-                    "escalationsFor"]) {
+                    "escalationsFor", "declineToEscalate", "escalationStatus"]) {
   const f = Escalation.prototype[name];
   Object.defineProperty(Escalation.prototype, name, { configurable: true, writable: true, value: function (...a) {
     try { return f.apply(this, a); }

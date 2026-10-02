@@ -15,14 +15,15 @@ import { seeded, opened, toStage, storage, V, MACHINE, ms } from "./fixture.mjs"
 function acts(w) {
   const base = { id: w.E, viewer: V("bob"), author: V("bob") };
   return {
-    escalationOpen: (x) => w.esc.escalationOpen({ determination: w.D2, viewer: V("bob"), author: V("bob"), ...x }),
-    escalationAttach: (x) => w.esc.escalationAttach({ ...base, id: w.E2, action: w.A2, ...x }),
+    escalationOpen: (x) => w.esc.escalationOpen({ reason: "Worth pursuing.", determination: w.D2, viewer: V("bob"), author: V("bob"), ...x }),
+    escalationAttach: (x) => w.esc.escalationAttach({ reason: "This act serves the stage.", ...base, id: w.E2, action: w.A2, ...x }),
     escalationEvaluate: (x) => w.esc.escalationEvaluate({ ...base, response: { action: w.N, ord: w.R }, reading: "denied", reason: "No.", ...x }),
     escalationAdvance: (x) => w.esc.escalationAdvance({ ...base, to: 5, reason: "Go.", ...x }),
     escalationDecline: (x) => w.esc.escalationDecline({ ...base, to: 5, reason: "Not now.", ...x }),
     escalationSuspend: (x) => w.esc.escalationSuspend({ ...base, reason: "Hold.", ...x }),
     escalationResume: (x) => w.esc.escalationResume({ ...base, ...x }),
     escalationEnd: (x) => w.esc.escalationEnd({ ...base, ...x }),
+    declineToEscalate: (x) => w.esc.declineToEscalate({ determination: w.D2, reason: "Not now.", viewer: V("bob"), author: V("bob"), ...x }),
   };
 }
 
@@ -31,30 +32,37 @@ function stage4() {
   toStage(w, 4);
   w.D2 = w.determine({ project: w.P, outcomes: [{ standard: "STD-2026-0001-a", outcome: "noncompliant" }] });
   const D3 = w.determine({ project: w.P, outcomes: [{ standard: "STD-2026-0001-a", outcome: "noncompliant" }] });
-  w.E2 = w.esc.escalationOpen({ determination: D3, author: V("bob"), viewer: V("bob") }).id;
+  w.E2 = w.esc.escalationOpen({ reason: "Worth pursuing.", determination: D3, author: V("bob"), viewer: V("bob") }).id;
   w.esc.escalationAdvance({ id: w.E2, to: 2, reason: "Go.", author: V("bob"), viewer: V("bob") });
   w.A2 = w.action({ project: w.P, restsOn: [D3] });
   return w;
 }
 
-test("R17 nothing a machine writes opens, attaches to, evaluates, advances, declines, suspends or ends an escalation, nor promotes its document; a proposal is the protocol's derivation, stated as such, never an act", () => {
+test("R17 nothing a machine writes opens, declines to open, attaches to, evaluates, advances, declines, suspends or ends an escalation, nor promotes its document; a proposal is the protocol's derivation, stated as such, never an act", () => {
   const w = stage4();
   const codes = { escalationOpen: "MACHINE_CANNOT_OPEN", escalationAttach: "MACHINE_CANNOT_ATTACH",
     escalationEvaluate: "MACHINE_CANNOT_EVALUATE", escalationAdvance: "MACHINE_CANNOT_ADVANCE",
     escalationDecline: "MACHINE_CANNOT_DECLINE", escalationSuspend: "MACHINE_CANNOT_SUSPEND",
-    escalationResume: "MACHINE_CANNOT_RESUME", escalationEnd: "MACHINE_CANNOT_END" };
+    escalationResume: "MACHINE_CANNOT_RESUME", escalationEnd: "MACHINE_CANNOT_END",
+    declineToEscalate: "MACHINE_CANNOT_DECLINE_TO_ESCALATE" };
   const before = w.snapshot();
   for (const [name, call] of Object.entries(acts(w)))
     for (const author of [MACHINE, "token:run-7", "", undefined])
       assert.equal(call({ author }).reason, codes[name], `${name} ${author}`);
   assert.deepEqual(w.snapshot(), before);
+  /* negative control: the same calls by a member land (the decline to escalate and the opening, each of its own
+     determination) */
+  assert.equal(acts(w).declineToEscalate({}).ok, true);
+  assert.equal(acts(w).escalationOpen({}).ok, true);
+  w.D2 = w.determine({ project: w.P, outcomes: [{ standard: "STD-2026-0001-a", outcome: "noncompliant" }] });
+  const before2 = w.snapshot();
   /* the document itself, promoted by a machine: refused before anything is written */
   const head = w.record.head(w.E);
   const text = w.text(w.E).replace("stage: 4", "stage: 5");
   const raw = w.promotion.promote({ bundleId: w.E, base: head.bundleSha, snapKey: "20260928T010000Z_0000aaaa", author: MACHINE,
                                     files: [{ path: "bundle.md", text }], meta: {} });
   assert.equal(raw.reason, "MACHINE_CANNOT_WRITE_ESCALATION");
-  assert.deepEqual(w.snapshot(), before);
+  assert.deepEqual(w.snapshot(), before2);
   /* a proposal says what it is */
   w.esc.escalationEvaluate({ id: w.E, response: { action: w.N, ord: w.R }, reading: "denied", reason: "No.", author: V("bob"), viewer: V("bob") });
   const p = w.esc.escalationRead({ id: w.E, viewer: V("bob") }).proposed;
@@ -66,7 +74,7 @@ test("R17 nothing a machine writes opens, attaches to, evaluates, advances, decl
   }
 });
 
-test("R18 every stage move, evaluation, decline, suspension and end is appended with who, when and why; the history is never edited, by an act or a raw promotion", () => {
+test("R18 every opening reason, decline to escalate, attachment reason, stage move, evaluation, decline, suspension and end is appended with who, when and why; the history is never edited, by an act or a raw promotion", () => {
   const w = seeded();
   const texts = [];
   const snap = () => texts.push(w.text(w.E));
@@ -81,7 +89,7 @@ test("R18 every stage move, evaluation, decline, suspension and end is appended 
   w.esc.escalationAdvance({ id: w.E, to: 2, reason: "Notify now.", author: V("bob"), viewer: V("bob") }); snap();
   const n = w.action({ project: w.P, restsOn: [w.D] });
   w.clock.now = "2026-09-28T06:00:00Z";
-  w.esc.escalationAttach({ id: w.E, action: n, author: V("bob"), viewer: V("bob") }); snap();
+  w.esc.escalationAttach({ reason: "This act serves the stage.", id: w.E, action: n, author: V("bob"), viewer: V("bob") }); snap();
   w.correspond(n, "sent", "2026-09-02");
   w.clock.now = "2026-09-28T07:00:00Z";
   w.esc.escalationAdvance({ id: w.E, to: 3, reason: "Sent.", author: V("bob"), viewer: V("bob") }); snap();
@@ -92,12 +100,12 @@ test("R18 every stage move, evaluation, decline, suspension and end is appended 
   w.esc.escalationEvaluate({ id: w.E, response: { action: n, ord: R }, reading: "partial", reason: "Half.", author: V("alice"), viewer: V("alice") }); snap();
   const h = w.esc.escalationRead({ id: w.E, viewer: V("bob") }).history;
   assert.deepEqual(h.map((x) => [x.seq, x.kind, x.author, x.at, x.reason ?? null]), [
-    [1, "open", V("bob"), "2026-09-28T01:00:00Z", null],
+    [1, "open", V("bob"), "2026-09-28T01:00:00Z", "Worth pursuing."],
     [2, "decline", V("alice"), "2026-09-28T02:00:00Z", "Wait a day."],
     [3, "suspend", V("bob"), "2026-09-28T03:00:00Z", "Counsel first."],
     [4, "resume", V("alice"), "2026-09-28T04:00:00Z", "Counsel done."],
     [5, "advance", V("bob"), "2026-09-28T05:00:00Z", "Notify now."],
-    [6, "attach", V("bob"), "2026-09-28T06:00:00Z", null],
+    [6, "attach", V("bob"), "2026-09-28T06:00:00Z", "This act serves the stage."],
     [7, "advance", V("bob"), "2026-09-28T07:00:00Z", "Sent."],
     [8, "advance", V("bob"), "2026-09-28T08:00:00Z", "Replied."],
     [9, "evaluate", V("alice"), "2026-09-28T09:00:00Z", "Half."]]);
@@ -119,6 +127,26 @@ test("R18 every stage move, evaluation, decline, suspension and end is appended 
                                    files: [{ path: "bundle.md", text: edited }], meta: {} });
   assert.equal(r1.reason, "ESCALATION_BY_ACT_ONLY");
   assert.equal(w.text(w.E), texts.at(-1));
+  /* the opening reason and the attachment reason are kept in their projections, with who and when */
+  assert.deepEqual(w.rows(`SELECT opened_reason, opened_by, opened_at FROM escalations WHERE escalation_id=?`, w.E),
+                   [{ opened_reason: "Worth pursuing.", opened_by: V("bob"), opened_at: "2026-09-28T01:00:00Z" }]);
+  assert.deepEqual(w.rows(`SELECT reason, author, at FROM escalation_attachments WHERE action_id=?`, n),
+                   [{ reason: "This act serves the stage.", author: V("bob"), at: "2026-09-28T06:00:00Z" }]);
+  /* declines to escalate (R27): each appended with its reason, who and when; an earlier one is never changed by a
+     later decline or a later opening */
+  const D = w.determine({ project: w.P, outcomes: [{ standard: "STD-2026-0001-a", outcome: "noncompliant" }] });
+  const declines = () => w.rows(`SELECT * FROM escalation_declines_to_open WHERE determination_id=? ORDER BY seq`, D);
+  w.clock.now = "2026-09-28T10:00:00Z";
+  assert.equal(w.esc.declineToEscalate({ determination: D, reason: "Too early.", author: V("alice"), viewer: V("alice") }).ok, true);
+  const first = declines();
+  w.clock.now = "2026-09-28T11:00:00Z";
+  assert.equal(w.esc.declineToEscalate({ determination: D, reason: "Still too early.", author: V("bob"), viewer: V("bob") }).ok, true);
+  w.clock.now = "2026-09-28T12:00:00Z";
+  assert.equal(w.esc.escalationOpen({ determination: D, reason: "Now it is time.", author: V("bob"), viewer: V("bob") }).ok, true);
+  const all = declines();
+  assert.deepEqual(all.slice(0, 1), first, "the first decline is unchanged by what came after");
+  assert.deepEqual(all.map((x) => [x.seq, x.reason, x.author, x.at]),
+    [[1, "Too early.", V("alice"), "2026-09-28T10:00:00Z"], [2, "Still too early.", V("bob"), "2026-09-28T11:00:00Z"]]);
 });
 
 test("R19 no input or answer carries a significance, severity, priority, urgency, rank or score; a stage act's purpose is only enforcing a pursued standard", () => {
@@ -146,8 +174,8 @@ test("R19 no input or answer carries a significance, severity, priority, urgency
   answers.forEach((a, i) => walk(a, `answer${i}`));
   /* stage 7's purposes are the five, each aimed at a pursued standard (R12's refusals) */
   const a = w.action({ project: w.P, restsOn: [w.D] });
-  assert.equal(w.esc.escalationAttach({ id: w.E, action: a, purpose: "candidate_support", standards: ["STD-2026-0001-a"], author: V("bob"), viewer: V("bob") }).reason, "NOT_ACCOUNTABILITY");
-  assert.equal(w.esc.escalationAttach({ id: w.E, action: a, purpose: "testimony", standards: ["STD-2026-0003-c"], author: V("bob"), viewer: V("bob") }).reason, "NOT_THE_BREACH");
+  assert.equal(w.esc.escalationAttach({ reason: "This act serves the stage.", id: w.E, action: a, purpose: "candidate_support", standards: ["STD-2026-0001-a"], author: V("bob"), viewer: V("bob") }).reason, "NOT_ACCOUNTABILITY");
+  assert.equal(w.esc.escalationAttach({ reason: "This act serves the stage.", id: w.E, action: a, purpose: "testimony", standards: ["STD-2026-0003-c"], author: V("bob"), viewer: V("bob") }).reason, "NOT_THE_BREACH");
 });
 
 test("R20 every read and act answers an escalation in a project the viewer may not see as absent; the tables are declared to purge; no place, office or law is named in the module's outward text", () => {
@@ -156,23 +184,36 @@ test("R20 every read and act answers an escalation in a project the viewer may n
   const absent = w.esc.escalationRead({ id: "ESC-2026-0999-escalation", viewer: V("bob") });
   assert.deepEqual(w.esc.escalationRead({ id: w.E, viewer: V("carol") }), absent);
   for (const [name, call] of Object.entries(acts(w))) {
-    if (name === "escalationOpen") continue;
+    if (name === "escalationOpen" || name === "declineToEscalate") continue;
     const r = call({ author: V("carol"), viewer: V("carol") });
     assert.equal(r.reason, "NO_SUCH_ESCALATION", name);
     const r2 = call({ author: V("carol"), viewer: V("carol"), id: "ESC-2026-0999-escalation" });
     assert.deepEqual({ ...r, id: null }, { ...r2, id: null }, `${name}: absent and unseen are one answer`);
   }
   assert.deepEqual(w.esc.escalationsDue({ nowMs: ms("2026-12-01T00:00:00Z"), viewer: V("carol") }).items, []);
+  /* a determination in a project carol may not see: her decline to escalate and status read answer it as absent */
+  const unseenD = acts(w).declineToEscalate({ author: V("carol"), viewer: V("carol") });
+  assert.deepEqual(unseenD, { ...acts(w).declineToEscalate({ author: V("carol"), viewer: V("carol"), determination: "CONF-2026-0999-none" }),
+                              determination: w.D2 });
+  assert.equal(unseenD.reason, "NO_SUCH_DETERMINATION");
+  assert.equal(w.esc.escalationStatus({ determination: w.D, viewer: V("carol") }).reason, "NO_SUCH_DETERMINATION");
+  /* the declines to escalate are declared to purge, keyed by their determination */
+  assert.equal(acts(w).declineToEscalate({}).ok, true);
+  assert.equal(w.rows(`SELECT COUNT(*) AS n FROM escalation_declines_to_open WHERE determination_id=?`, w.D2)[0].n, 1);
+  const byD = w.record.purge({ bundleId: w.D2 });
+  assert.equal(byD.removed.escalation_declines_to_open, 1);
+  assert.equal(acts(w).declineToEscalate({}).ok, true);
   /* purge: a single-bundle purge of one escalation clears its rows only; the whole-store form clears every row */
   const tables = ["escalations", "escalation_moves", "escalation_evaluations", "escalation_attachments", "escalation_declines"];
   const count = (id) => tables.map((t) => w.rows(`SELECT COUNT(*) AS n FROM ${t} WHERE escalation_id=?`, id)[0].n);
   assert.ok(count(w.E).every((n, i) => n > 0 || tables[i] === "escalation_evaluations" || tables[i] === "escalation_declines"));
   const one = w.record.purge({ bundleId: w.E2 });
-  for (const t of tables) assert.ok(t in one.removed, `${t} is declared`);
+  for (const t of [...tables, "escalation_declines_to_open"]) assert.ok(t in one.removed, `${t} is declared`);
+  assert.equal(one.removed.escalation_declines_to_open, 0, "a decline to escalate is no escalation's");
   assert.deepEqual(count(w.E2), [0, 0, 0, 0, 0]);
   assert.ok(count(w.E)[0] === 1);
   w.record.purge({});
-  for (const t of tables) assert.equal(w.count(t), 0, t);
+  for (const t of [...tables, "escalation_declines_to_open"]) assert.equal(w.count(t), 0, t);
   /* no place named: every sentence the module answers, with no profile and with the test profile, names none of the
      places any held profile covers */
   const places = list().flatMap((p) => [...(get(p.id).covers || []), p.name]).filter(Boolean);
@@ -193,7 +234,8 @@ test("R20 every read and act answers an escalation in a project the viewer may n
 });
 
 test("R20 the factory migrates its tables at construction (K267): after escalationOf(host) with no explicit migrate(), a whole-store purge and a bundle purge answer ok and clear the declared tables, and constructing again changes nothing", () => {
-  const tables = ["escalations", "escalation_moves", "escalation_evaluations", "escalation_attachments", "escalation_declines"];
+  const tables = ["escalations", "escalation_moves", "escalation_evaluations", "escalation_attachments", "escalation_declines",
+                  "escalation_declines_to_open"];
   /* a bare host, as a caller that only constructs the module (monitoring, R35) leaves it: no migrate() of escalation */
   const st = storage();
   const host = { storage: st };
@@ -306,7 +348,7 @@ function withheldWorld(hide) {
   const H = w.action({ project: w.P, restsOn: [w.D] });
   const N = w.action({ project: w.P, restsOn: [w.D] });
   if (hide) w.actionHidden.add(H);
-  for (const a of [H, N]) assert.equal(w.esc.escalationAttach({ id: w.E, action: a, ...by("alice") }).ok, true);
+  for (const a of [H, N]) assert.equal(w.esc.escalationAttach({ reason: "This act serves the stage.", id: w.E, action: a, ...by("alice") }).ok, true);
   const nowMs = ms("2026-09-28T01:00:00Z");
   const reads = { H, N, P: w.P };
   const read = (stage) => { for (const v of ["alice", "bob"]) reads[`${v}${stage}`] = w.esc.escalationRead({ id: w.E, nowMs, viewer: V(v) }); };
@@ -403,7 +445,7 @@ test("R26 R7 R8 a withheld action meets no trigger for the viewer who may not se
   assert.equal(w.esc.escalationAdvance({ id: w.E, to: 5, reason: "Legal tools.", ...by("alice") }).ok, true);
   const H = w.action({ project: w.P, restsOn: [w.D] });
   w.actionHidden.add(H);
-  assert.equal(w.esc.escalationAttach({ id: w.E, action: H, ...by("alice") }).ok, true);
+  assert.equal(w.esc.escalationAttach({ reason: "This act serves the stage.", id: w.E, action: H, ...by("alice") }).ok, true);
   w.correspond(H, "sent", "2026-09-16");
   const nowMs = ms("2026-09-30T00:00:00Z");
   const as = (who) => w.esc.escalationRead({ id: w.E, nowMs, viewer: V(who) });
