@@ -1,5 +1,5 @@
 /* Small, line-oriented edits of a document's front matter, used by `reopen`, `forkProject` and a creation's producing
- * group (R13). The repository has a front-matter PARSER (the catalogue's) and no serializer, so a field is rewritten in
+ * group (R13). The repository has a front-matter PARSER (record-grammar's, the catalogue's until T18) and no serializer, so a field is rewritten in
  * place and every other byte is left alone. `withProducingGroup` moved here whole from the catalogue in T18 (K636). */
 
 import { parseFrontmatter } from "../record-grammar/index.mjs";

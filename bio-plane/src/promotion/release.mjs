@@ -5,7 +5,7 @@
  * Every SSHSIG and Ed25519 verification here, the registry root's included, goes through `signatures.verifySshsig`;
  * this module holds no second verifier. What stays in the check is what a signature cannot say: which keys the
  * registry holds for a principal at an instant (OpenSSH `allowed_signers`, with its `valid-after`/`valid-before`
- * windows), and the canonical release message (the catalogue's `releaseMessage`). */
+ * windows), and the canonical release message (`releaseMessage`, below, the catalogue's until K64). */
 
 import { verifySshsig } from "../sshsig.mjs";
 import { canonicalJson, isMachineIdentity } from "../record-grammar/index.mjs";
