@@ -127,7 +127,7 @@ Terms.
   - Nothing is ever removed from it.
   - A revision that is only prepared (R2) never appears in it.
 - **R21** `groupKeysPublic()` answers the group slug and two lists: *(not yet met: T24)*
-  - `owners`: every key `credentials.signerList` (its R8) shows registered to a member who owns a project now, or who signed a published edition or a revision. Each comes with `status` (`attests`, or `revoked` with the date its status changed, `credentials.signerList`'s `status_at` (its R8, R21), never the date this copy first saw it) and the date it was first listed, never the member's name, handle or id;
+  - `owners`: every key `credentials.signerList` (its R8) shows registered to a member who owns a project now, or who signed a published edition or a revision. Each comes with `status` (`attests`, or `revoked` with the date its status changed, `credentials.signerList`'s `status_at` (its R8, R21), never the date this copy first saw it; null when `status_at` is null, a revocation recorded before the date was kept) and the date it was first listed, never the member's name, handle or id;
   - `copy`: every instance key that has signed an attestation (`provenance.instanceKeys`, R56), with the date it was first used. Each is labelled as this copy's key.
 
   A revoked or replaced key stays listed, so older signatures can still be checked.
