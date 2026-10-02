@@ -9,6 +9,7 @@ import { world as retrievalWorld, V, sha, infoMd } from "../retrieval/fixture.mj
 import { Ratification, ratificationOf, ratificationOps, RELEASE_ACK_MAX,
          RELEASE_CHECKS } from "../../../src/ratification/index.mjs";
 import { parseFrontmatter, canonicalJson } from "../../../src/record-grammar/index.mjs";
+import { contradictionOf } from "../../../src/contradiction/index.mjs";
 
 const OWNER = "o";
 const WHO = V("ann");
@@ -20,15 +21,18 @@ const FULL = [{ path: "data/dataset.json", text: DATASET }, { path: "snapshots/c
 const BODY = "\n## Summary\n\nA posting.\n\n## Session Log\n\n### Session 2026-07-02T00:00:00Z | Formation | assisted\n"
   + "Trigger: intake\nChanges: created.\n\n## Review Notes\n";
 
-/* A world: retrieval's, with this module over its record, membership, promotion and retrieval. `promotion` may be
-   wrapped by a test (R25's arms). */
-function setup({ promotion } = {}) {
+/* A world: retrieval's, with this module over its record, membership, promotion and retrieval, and contradiction's
+   tables created as the plane's boot creates them (R22's contested arm reads `candidatesFor`). `promotion` may be
+   wrapped by a test (R25's arms); `contradiction` may be a test's own (R22's contested arm, R34). */
+function setup({ promotion, contradiction } = {}) {
   const w = retrievalWorld();
+  contradictionOf(w.host).migrate();
   const r = ratificationOf(w.host, { storage: w.st, record: w.record, membership: w.membership,
                                      promotion: w.promotion, retrieval: w.retrieval });
-  w.r = promotion
-    ? new Ratification({ storage: w.st, record: w.record, membership: w.membership, promotion: promotion(w.promotion),
-                         retrieval: w.retrieval })
+  w.r = promotion || contradiction
+    ? new Ratification({ storage: w.st, record: w.record, membership: w.membership,
+                         promotion: promotion ? promotion(w.promotion) : w.promotion, retrieval: w.retrieval,
+                         host: w.host, ...(contradiction ? { contradiction } : {}) })
     : r;
   /** A collected Information document carrying every entry requirement unless `files`, `fields` or `body` say
    *  otherwise, promoted as the control plane promotes one: the envelope's criticality is the document's unless
@@ -62,7 +66,7 @@ test("R20: an absent, blank or machine author is MACHINE_CANNOT_RELEASE (C-32.1)
   const h = await w.select(["INFO-2026-0500"]);
   const asked = [];
   const spy = new Ratification({ storage: w.st, record: w.record, membership: w.membership, promotion: w.promotion,
-    retrieval: { selectionResolve: (a) => { asked.push(a); return w.retrieval.selectionResolve(a); } } });
+    host: w.host, retrieval: { selectionResolve: (a) => { asked.push(a); return w.retrieval.selectionResolve(a); } } });
   for (const author of [undefined, null, "", "   ", "member", "token:member", "class:member", "class:ai/t1", "agent"]) {
     const r = spy.release({ handle: "no-such-handle", acknowledgment: "", mitigation: "", viewer: WHO, owner: OWNER, author });
     assert.deepEqual([r.ok, r.reason], [false, "MACHINE_CANNOT_RELEASE"], String(author));
