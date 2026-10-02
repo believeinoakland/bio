@@ -28,3 +28,7 @@
 - `bio-plane/test/system/fleetbundles.test.mjs`: fails (bio-plane STALE, the report above); passes with `checks.mjs` at the tranche's text.
 
 Size (session_01EiWceaitg5TS7zKu7vUTrg): test runs 6, module lines 1439
+
+## J1 · REPORT
+
+Two things outside my module (wording job, no requirement change made): (1) build/requirements/inquiry-grammar.md R7 still says 'A changed where is awaiting stamp for promotion's next job'; the one changed where (C-54.1) was stamped by 1.50.0 (PROMOTION #21, T20 L2). The requirement text is yours. (2) My comment-only edit to bio-plane/src/inquiry-grammar/checks.mjs stales the plane's bundle bio-plane/dist/bio-plane.bundled.mjs (not_product): fleetbundles.test.mjs fails its bio-plane arm with the edit and passes without it; nothing regenerated.
