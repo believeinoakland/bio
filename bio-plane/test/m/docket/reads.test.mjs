@@ -326,7 +326,7 @@ test("R22 each refusal code is a row of this module's own table, one new family;
     "PRESSURE_MARKED", "PRESSURE_REFUSED"].sort());
   const checks = Object.values(DOCKET_CHECKS).map((r) => r.check);
   assert.equal(new Set(checks).size, checks.length, "one row per code");
-  for (const c of checks) assert.match(c, /^C-128\.\d+$/, "one family");
+  for (const c of checks) assert.match(c, /^C-129\.\d+$/, "one family");
   assert.deepEqual(checks.map((c) => Number(c.split(".")[1])).sort((a, b) => a - b), codes.map((_, i) => i + 1));
   for (const r of Object.values(DOCKET_CHECKS)) {
     assert.match(r.where, /^src\/docket\/index\.mjs [#\w]+ > is-docket-[a-z]+$/);
