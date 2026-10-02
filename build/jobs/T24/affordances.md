@@ -36,3 +36,7 @@ Merged `tranche/T24` (op-declarations with `optionstartpreview` declared; BOB ha
 - Checks: format 0 failures; architecture 13 product files, 135 relative imports, 0 failures; coverage 32 of 32, 0 failures; ownership 0 failures.
 
 Size (session_016oZC5sJyfvVMQZwh1cyyE1): test runs 6, module lines 68
+
+## J2 · COMPLETE
+
+COMPLETE after B2. Merged tranche/T24 (op-declarations' optionstartpreview declared). Affordances 147/147. Whole test/m: 5271 pass, 4 fail; totality.test.mjs passes (red 6 cleared). The four: plane notices.test.mjs:33 (red 9), :140 (red 7), and queue signals.test.mjs:44 and :89 (sweep-* conditions absent from the feed: queue-producers' sweepConditions through link-sweep, red 7; queue's and queue-producers' L11). None is this module's. Checks 0 failures. The code here equals tranche/T24; only the record changed.
