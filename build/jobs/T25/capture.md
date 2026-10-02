@@ -38,3 +38,11 @@ Size (session_01DBaNZTnhW4WpM4Cc51PGKx): test runs 10, module lines 3459
 ## J2 · REPORT
 
 REPORT: a red outside the opening's names, caused by R68's re-point. `test/m/affordances/sources.test.mjs`:117 ("R2: reattest … through provenance's attest") stubs `provenance.attest` through capture's fixture and asserts it was asked; since N512 R68 asks attestation's `attest`, so it fails on job/T25/capture (TypeError reading `attests`). It is red 7's kind (a user of a moved name, through a fixture), not named. Fix is affordances' (L11): drive reattest through a scripted network as capture's R68 tests do (`authorities` in knocker.test.mjs, `granted` in capture's fixture), or assert on the late outcome alone. Please name it or rule it under red 7.
+
+## J3 · COMPLETE
+
+COMPLETE (B3). capture merged with tranche/T25 after attestation's merge; the record's "Completion (CAPTURE #17)" has the whole account.
+- R68 through attestation's attest; R58/R73: captureOf holds attestationOf(ctx, {record, provenance}) as cap.attestation (K1224), a different one refused by name. Acquisition can read cap.attestation.signReceipt.
+- Tests: test/m/capture 116/116 against the real attestation module (plane.test.mjs included); cap13 22/22; d57 24/24. Whole test/m: 5314 tests, 85 fail: 84 identical on tranche/T25 without this branch (reds 7, 8), and affordances sources.test.mjs:117 (J3, unnamed; red 7's kind).
+- Checks: format 2 failures (red 4, reading-pipeline), architecture, coverage 55/55, ownership: 0 failures.
+- Stale note re-worded: knock_rate's "fixed-window" comment. Bundle: bio-plane.bundled.mjs staled (capture source); regenerated nothing. No rows awaiting stamp. Deferred: none.
