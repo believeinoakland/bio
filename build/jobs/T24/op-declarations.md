@@ -30,3 +30,7 @@
 - Checks (civicos-process): `format`: 88 modules, 87 requirements files; 0 failures. `architecture`: 0 failures. `coverage`: 11 of 11 live requirement ids named by a test; 0 failures. `ownership` against `tranche/T24`: 0 failures. Re-run after the commit: `architecture` 6 product files, 0 failures; `ownership` 5 files changed, 0 failures; `coverage` 11 of 11, 0 failures.
 
 Size (session_01XsBuA9qDhPPKm4AZfBVosV): test runs 8, module lines 2490
+
+## J1 · COMPLETE
+
+R11 applied: optionstartpreview declared (a read; admin, member, probe; both session sets; NEEDS null; author and viewer stamped through ACTION_PLANS_PREVIEWS, joined into QUERY_AUTHOR_ACTIONS). N506: sweeps declared for link-sweep's map (MONITORING_READS renamed LINK_SWEEP_READS; test reads linkSweepOps). N508 re-word: Store#custodialBar. My tests 35/35; test/m 5260 pass, 9 fail, all accepted reds (6, 7, 9); the one my change adds is control-plane totality.test.mjs:16 (unpublished optionstartpreview until affordances merges, red 6). Checks clean. No awaiting-stamp rows. Report: plane bundle likely stale; control-plane index.mjs:1343 comment names monitoring's sweeps. Details in my record.
