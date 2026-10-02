@@ -1,184 +1,273 @@
 # network-notices — requirements (DRAFT for T23)
 
-**Status** · DRAFT by a read-only worker for BOB #90, 2026-10-01, on `tranche/T22`, for BOB's review and then Bob's approval as requirements (P5; a new product module, P4, P17). Source: DEC-111 (`docs/development/DECISIONS.md`:1791–1809, its owed line :1809), folded into `BIO_Publication_v0_1.md` §5B (:315–333); K1019 (`build/rulings.md`:1021: "DEC-111 agreed (a new layer-8 module after public-read, drafted during T22, built in T23)"); `build/plan/t22-check.md`:53 (H21: "it needs a home, and the only existing one is publication (4,408 lines, P6); a new product module is Bob's to add") and :120. Nothing in the tree implements any of it. Every Provides line is new work.
+**Status** · DRAFT, revised by a worker for BOB #91, 2026-10-02, on `draft/T23-monitoring-notices` from `tranche/T22`, with Bob's answers of K1031 (DEC-111, questions 2–5) folded in. First drafted by a read-only worker for BOB #90, 2026-10-01. For BOB's review, then for Bob's approval as a new product module (P4, P5, P17), and for pasting as `build/requirements/network-notices.md` at T23's opening (P18). Sources:
+- DEC-111 (`docs/development/DECISIONS.md`, "DEC-111"), folded into `BIO_Publication_v0_1.md` §5B;
+- K1019 ("DEC-111 agreed: a new layer-8 module after public-read, drafted during T22, built in T23");
+- K1031 (2)–(5);
+- `plan/t22-check.md` H21;
+- the T22 handoff item (5) (`docs/development/TRANSITION.md` §6).
 
-**Placement.** Layer 8, Publication (`build/layers.md`:14, contract "What the group stands behind leaves one way"). A notice is an outward act of the group, signed as a case is, and served on the public read path, so it belongs in layer 8.
-- **Position in the total order:** directly after `project-stage` and before `ratification`. Layer 8 becomes `case-grammar, publication, public-read, project-stage, network-notices, ratification, case-authoring, review`. In `modules.json` it is the new entry between `project-stage` (line 62) and `ratification` (line 63), so 0-based index 58, and every later index moves down one.
-- **Why after `project-stage`, not directly after `public-read`:** "while the project is open" and "closing its project says so" (§5B) need the project's `closed` stage, and `project-stage` R1/R2 is the one reader of it. K1019's "after public-read" still holds.
-- **Why before `ratification` and `case-authoring`:** the publish act has to open the seals (R14) and write the notice reference into the case (R16). Those modules come later in the order, so they can use this one (P4).
-- **`uses`** (all earlier): `record-grammar`, `record-core`, `signatures`, `membership`, `credentials`, `promotion`, `host-governor`, `publication`, `public-read`, `project-stage`.
-- **Size (P6):** an estimate of 1,200–1,800 lines, well under 4,000.
+Nothing in the tree implements any of this. Every Provides line is new work.
+
+**Bob's answers (K1031)** · (2) The copy re-signs the monthly activity level with its instance key, and an owner signs the notice itself. (3) The seals are opened automatically at publication, and this is stated on the ceremony's "What becomes permanent" step. (4) A third notice from a group with no published work warns, and is never refused. (5) The screens and their wording go to the UX design stream. They are cited here and never decided: `docs/development/ux-substrate/ux-experience.json`, open question 29 (ruled DEC-111), and `docs/development/ux-substrate/HANDOFF.md` §5.
+
+**Size (P6).** About 1,300–1,900 lines, well under 4,000.
 
 ## Public
 
 ### Purpose
 
-This module lets a project's owner tell the network that the group is working on something, and keeps that notice honest. It holds the "working on" notices: each is prepared from a real project, signed by one of the project's owners as a published case is signed, and published at the group's own public address. It computes the notice's activity level from members' own work and re-signs that level monthly. It seals each week of a project's work under an independent timestamp, and opens the related seals when the project publishes. It also serves the group's public signing keys without names. It sends nothing anywhere. Directories read what it publishes.
+This module lets a project's owner tell the network that the group is working on something, and it keeps that notice honest. A notice is prepared from a real project and signed in the browser by one of the project's owners, as a published case is signed. It is published at the group's own public address.
+
+The copy computes what the owner cannot honestly assert alone, and signs those facts with its own instance key: the activity level, re-signed monthly, the cases the project has published, the seals opened, and the closing or lapse of the notice. The module seals each week of a project's work under an independent timestamp, and opens the seals that relate to a case when the case is published. It serves the group's public signing keys without names. It sends nothing anywhere. Directories read what it publishes.
 
 ### Provides
 
 Terms.
-- A **notice** is one "working on" statement of one project, in the format `civicos-working-on/1`.
-- A **revision** is one signed version of a notice.
-- A **week** is a UTC ISO week, Monday 00:00Z to Sunday 24:00Z.
-- A **counted week** is a week with at least one **member act** on the project (R7).
-- The **activity window** is the 13 complete weeks before a revision's `as_of`.
-- A **seal** is the digest that commits to one week's member acts on one project (R12).
+- A **notice** is one "working on" statement about one project. It has an opaque **notice id** that is never the project's id.
+- A **revision** is one owner-signed version of a notice, in the format `civicos-working-on/1`.
+- An **attestation** is one statement about a notice signed with the copy's instance key (R13), in the format `civicos-working-on-attestation/1`.
+- A **week** is a UTC ISO week, from Monday 00:00Z to the next Monday 00:00Z.
+- A **member act** is defined in R8. A **counted week** is a week with at least one member act on the project.
+- The **activity window** is the 13 complete weeks before an attestation's `as_of`.
+- A **seal** is the digest that commits to one week's member acts on one project (R15).
+- The **project reference** is the notice id, carried by the notice and by every later case of the project (R19).
 
-**prepareNotice({project, wording, body?, matter?, since, collaborate, by, viewer}) → `{ok, notice, statement, digest, warning, expires}`** (`op=noticeprepare`; member session; writes nothing)
-- **R1** Refusals, in order, each writing nothing *(not yet met: T23)*:
-  - no `project` gives the required-argument refusal;
-  - a project absent or invisible to `by` gives `membership`'s `noSuchProject`, identically;
-  - a machine or AI credential, or an operator token, gives `MACHINE_CANNOT_POST_NOTICE`;
-  - `by` not an owner (`membership.isProjectOwner`, its R54) gives `NOTICE_NOT_THE_OWNER`;
-  - a project at stage `closed` (`project-stage` R2) gives `NOTICE_PROJECT_CLOSED`;
-  - no producing-group slug recorded gives `NOTICE_NO_GROUP_SLUG`, since there are no anonymous notices;
-  - `wording` empty, multi-line or over 280 characters, or `body` or `matter` multi-line or over 120 characters, gives `NOTICE_WORDING_MALFORMED`;
-  - `since` not a date gives `NOTICE_SINCE_MALFORMED`;
-  - `since` earlier than the project's creation date (the UTC date of the first entry of its history) gives `NOTICE_SINCE_BEFORE_PROJECT`, naming that date;
-  - `since` later than today (UTC) gives `NOTICE_SINCE_IN_FUTURE`;
-  - while the project already has an open notice, `NOTICE_ALREADY_OPEN` names it (a change is a new revision, R5).
+**prepareNotice({project, wording, body?, matter?, since, collaborate, handoff?, final?, viewer, by}) → `{ok, revision, statement, digest, warning, caution, expires}`** (`op=noticeprepare`; member session; writes nothing)
+- **R1** Refusals, in order. Each writes nothing and carries a catalogue row (DEC-49) *(not yet met: T23)*:
+  - no `project` is the required-argument refusal;
+  - a project that is absent, or invisible to `by`, is `membership`'s `noSuchProject`, the same answer either way;
+  - a machine or AI credential, or an operator token, is `MACHINE_CANNOT_POST_NOTICE`;
+  - `by` not an owner of the project (`membership.isProjectOwner`, its R54) is `NOTICE_NOT_THE_OWNER`;
+  - a project at stage `closed` (`project-stage` R2) is `NOTICE_PROJECT_CLOSED`, unless `final` is `stopped` on an open notice (R11);
+  - no group slug recorded (`promotion`'s fact `producingGroup`) is `NOTICE_NO_GROUP_SLUG`, because there are no anonymous notices;
+  - no instance key bound (`provenance` R56) is `NOTICE_NO_INSTANCE_KEY`, because a notice is never published without its signed level;
+  - `wording` that is empty, more than one line or over 280 characters is `NOTICE_WORDING_MALFORMED`. So is `body` or `matter` of more than one line or over 120 characters, and `handoff` of more than one line or over 280 characters;
+  - `since` that is not a date is `NOTICE_SINCE_MALFORMED`;
+  - `since` earlier than the project's creation (the UTC date of the first entry in its history) is `NOTICE_SINCE_BEFORE_PROJECT`, naming that date;
+  - `since` later than today (UTC) is `NOTICE_SINCE_IN_FUTURE`;
+  - a first revision while the project already has an open notice is `NOTICE_ALREADY_OPEN`, naming that notice. A change is a new revision of it (R6).
+- **R2** Otherwise it answers the revision that would be published, and changes nothing *(not yet met: T23)*:
+  - `revision` is canonical JSON (`record-grammar`'s) with exactly R3's fields;
+  - `digest` is its SHA-256;
+  - `statement` is `signatures.noticeStatement(noticeId, revision number, digest)`;
+  - `warning` is the outward-act warning. Its meaning is that the public, including anyone being examined, will see it, and that stopping later will not unsay it. Its words are the UX design stream's (K1031 (5));
+  - `caution` is `two_open_without_published_work` when the group has published no case edition (`publication` R40) and already has two or more open notices, and null otherwise. It never refuses (K1031 (4)), and its words are the UX design stream's;
+  - `expires` is 60 minutes later.
 
-  Each refusal carries a catalogue row (DEC-49).
-- **R2** Otherwise it answers the notice that would be published and changes nothing *(not yet met: T23)*:
-  - `notice` is canonical JSON (`record-grammar`'s) with exactly the fields R3 names;
-  - `statement` is `signatures.noticeStatement(noticeId, revision, sha256(notice))`;
-  - `digest` is that SHA-256;
-  - `warning` is the fixed outward-act sentence: the public, including anyone being examined, will see it, and stopping later will not unsay it;
-  - `expires` is 60 minutes on.
-
-  The answer is identical, byte for byte, for the same inputs within the same `as_of` day.
-- **R3** A notice carries these fields and nothing else *(not yet met: T23)*:
-  - `format` (`civicos-working-on/1`);
-  - `group` (the producing group's slug);
-  - `notice` (an opaque id minted for the notice, never the project's id);
+  For the same inputs on the same UTC day, the answer is identical byte for byte.
+- **R3** A revision carries these fields and nothing else *(not yet met: T23)*:
+  - `format` (`civicos-working-on/1`), `group` (the slug), and `notice` (the notice id, minted at the first revision);
   - `revision` (1, 2, …) and `previous` (the prior revision's digest, or null);
-  - `wording`, `body` and `matter` as the owner gave them (absent ones omitted), never filled in from the project's contents;
+  - `wording`, `body` and `matter` as the owner gave them, with absent ones omitted. They are never filled in from the project's contents;
   - `since` and `posted` (dates);
-  - `activity` (R8);
-  - `collaborate` (true only if the owner chose it), and with it the group's doorbell address;
-  - `cases`, the public reference (case id and edition) of every case edition the project has published (`publication`'s `cases.project_id` and `published_cases`, under its R40);
-  - `seals`, each counted week's `{week, seal, timestamp_sha}` (R12);
-  - `status` (`open`, `stopped`, `closed`, `lapsed`) and `handoff` (R10);
+  - `collaborate` (true only when the owner chose it) and, with it, `doorbell`: the path of the group's doorbell relative to the group's public address (`capture`'s knock, its R32);
+  - `status`, which is `open` or `stopped` (R11), and `handoff` (with `stopped` only);
   - `others_welcome`, a fixed sentence.
 
-  No member's name, handle or id appears in a notice.
+  No member's name, handle or id appears in a revision. The level, the cases, the seals, `closed` and `lapsed` are the copy's facts and appear only in attestations (R12).
 
-**postNotice({digest, signature, acknowledged, by}) → `{ok, notice, revision, published_at}`** (`op=noticepost`; member session; mutating)
-- **R4** Refusals, in order, each writing nothing *(not yet met: T23)*:
-  - R1's caller refusals, re-checked at this instant;
-  - `acknowledged` not exactly `true` gives `NOTICE_WARNING_NOT_ACKNOWLEDGED`;
-  - no prepared answer with this `digest` from `by`, or one past `expires`, gives `NOTICE_STALE` (prepare again);
-  - a signature that `signatures.verifySshsig` rejects in namespace `NS_NOTICE` over exactly `statement`, against `credentials.attestingKeys()` (its R11) restricted to the keys registered to `by`, gives `NOTICE_SIGNATURE_REFUSED` with the verifier's reason.
+**postNotice({digest, signature, acknowledged, by}) → `{ok, notice, revision, published_at, attestation}`** (`op=noticepost`; member session; mutating)
+- **R4** Refusals, in order. Each writes nothing *(not yet met: T23)*:
+  - R1's caller refusals, checked again at this instant;
+  - `acknowledged` other than exactly `true` is `NOTICE_WARNING_NOT_ACKNOWLEDGED`;
+  - no prepared answer from `by` with this `digest`, or one past `expires`, is `NOTICE_STALE` (prepare again);
+  - a signature that `signatures.verifySshsig` rejects is `NOTICE_SIGNATURE_REFUSED`, with the verifier's reason. The check is in namespace `NS_NOTICE`, over exactly `statement`, against `credentials.attestingKeys()` (its R11) restricted to the keys registered to `by`.
+- **R5** Otherwise the revision is stored with its armored signature and the instant it was first published. In the same transaction, an attestation (R12) is issued over it. Both are served by R20 from that instant on *(not yet met: T23)*.
+- **R6** A change to an open notice is a new revision through R1–R5. A change is a new wording, body or matter, a change to `collaborate`, or a later `since` within R1's bounds. The new revision names the prior one in `previous`, and the prior one stays served. A revision never changes `group` or `notice` *(not yet met: T23)*.
 
-  Otherwise the revision is stored with its armored signature and its first-published instant, and it is served by R17 from that instant on.
-- **R5** A change to an open notice (wording, body, matter, `collaborate`, or a later `since` within R1's bounds) is a new revision through R1–R4. It names the prior revision in `previous`, and the prior revision stays served. A revision never changes `group` or `notice` *(not yet met: T23)*.
+**The activity level** (§5B "The activity level")
+- **R7** The level is one of five words, decided by the number of counted weeks in the activity window: `Very active` (10–13), `Active` (7–9), `Some work` (4–6), `Quiet` (1–3) and `Dormant` (0). The cut-offs are this module's constants *(not yet met: T23)*.
+- **R8** A **member act** is a write to one of the project's bundles (`record-core.listBundles({project})`, its R35) whose history entry has a member author. That is an identity outside `record-grammar`'s non-member set, with a writer that is neither `mechanical` nor an AI run *(not yet met: T23)*.
+  - A member's adoption of a machine draft counts. The draft does not.
+  - How many acts a week holds never changes the level. Only whether it has one does.
+- **R9** `activity` is `{level, weeks_counted, window: 13, as_of, method}`. `as_of` is the date it was computed, and `method` is the version of R10's method *(not yet met: T23)*.
+- **R10** `activityMethod()` answers, with no credential, the method as fixed text with its version: the window, the cut-offs, R8's definition and what is never counted. A change to the method is a new version. An earlier attestation keeps naming the version it was computed under *(not yet met: T23)*.
 
-**The activity level** (§5B "The activity level"; the method published as R9)
-- **R6** The level is one of five words, decided by the number of counted weeks in the activity window: `Very active` (10–13), `Active` (7–9), `Some work` (4–6), `Quiet` (1–3), `Dormant` (0). The cut-offs are this module's constants *(not yet met: T23)*.
-- **R7** A **member act** is a write to one of the project's bundles (`record-core.listBundles({project})`) whose history entry names a member author: an identity outside `record-grammar`'s non-member set, and a writer that is neither `mechanical` nor an AI run *(not yet met: T23)*.
-  - A member's adoption of a machine draft counts; the draft does not.
-  - The number of acts in a week never changes the level; only whether the week has one.
-- **R8** `activity` is `{level, weeks_counted, window: 13, as_of, method}`. `as_of` is the date it was computed, and `method` is the version of R9's published method *(not yet met: T23)*.
-- **R9** `activityMethod()` answers, without a credential, the method as fixed text with its version: the window, the cut-offs, R7's definition of a member act, and what is never counted. A change to the method is a new version, and an older revision keeps naming the version it was computed under *(not yet met: T23)*.
+**Stopping, closing and lapse** (§5B "Ending")
+- **R11** An owner stops a notice with a final revision through R1–R5, with `final: stopped`. It carries `status: stopped` and the optional `handoff` (one line, at most 280 characters, which may name another group or an open lead). A stopped notice takes no further revision *(not yet met: T23)*.
+- **R12** An **attestation** carries these fields and nothing else *(not yet met: T23)*:
+  - `format` (`civicos-working-on-attestation/1`), `group`, `notice`, `as_of` and `kind`;
+  - `revision`: the digest of the latest revision;
+  - `status`: `open`, `stopped`, `closed` or `lapsed`;
+  - `activity` (R9), computed at `as_of`;
+  - `cases`: the public reference (case id and edition) of every case edition the project has published (`publication`'s `cases.project_id` and `published_cases`, under its R40);
+  - `seals`: each counted week's `{week, seal, timestamp_sha, untimestamped}` (R15);
+  - `openings`: references to the openings published so far (R17).
 
-**Keeping a notice current, stopping it, and lapse**
-- **R10** `stopNotice({notice, handoff?, by})` (`op=noticestop`; owner only, R1's caller refusals) and the project's close (`project-stage` stage `closed`) each end the notice with a final revision. That revision has `status` `stopped` or `closed`, and `handoff` is the owner's optional note (single line, at most 280 characters; it may name another group or an open lead). It is signed as R4 signs. A close whose final revision no owner has yet signed is served as R17 states, with `pending_final: closed`. A stopped or closed notice stays served and is never deleted *(not yet met: T23)*.
-- **R11** While a notice is open, its activity is re-computed and re-signed once each calendar month (see "Open for Bob", question 1, for whose key). A notice whose level has been `Dormant` for a full month after a monthly revision lapses: a final revision with `status` `lapsed` is published and served, unless an owner renewed it (a new revision, R5) or stopped it first. The lapse also goes into the group's record *(not yet met: T23)*.
+  `kind` is one of these, each issued once:
+  - `posted`, issued with each revision (R5);
+  - `monthly`, issued on the first day (UTC) of each month while the notice is open;
+  - `published`, issued when a case edition of the project is published (R17);
+  - `closed`, issued when the project reaches stage `closed` while the notice is open (see "Open for Bob" 1);
+  - `lapsed`, issued when a notice has been `Dormant` at two consecutive `monthly` attestations with no revision between them. The lapse also goes into the group's record.
+
+  A stopped, closed or lapsed notice takes no further `monthly` attestation. It stays served and is never deleted.
+- **R13** An attestation is signed with the copy's instance key (`provenance` R56) over the statement `provenance.instanceStatement("civicos-working-on-attestation/1", sha256(attestation))`. When no key is bound at the moment a `monthly` attestation falls due, the attestation is not issued. The miss is stated in R22 and becomes a condition for the project's owners (`queue-producers` R27). The notice then shows its last attested level with that level's date *(not yet met: T23)*.
 
 **Seals: proof of activity** (§5B "Proof of activity")
-- **R12** After each week ends, for every project not `closed`, this module commits to that week's member acts (R7) *(not yet met: T23)*:
-  - each act is a leaf: the bundle id, the bundle digest after the act, the act's operation and its instant, never the author, each with its own random 256-bit salt;
-  - the project's week **seal** is the SHA-256 Merkle root over those leaves, padded to a fixed size with salted dummy leaves, so the root reveals neither the acts nor their number;
-  - one RFC 3161 timestamp per instance per week is requested (`signatures.timestampRequest`, `TSA_ENDPOINTS` in order, through `host-governor`) over the root of all the week's project seals, and the token is kept;
-  - a week with no member act has no seal;
-  - a week whose timestamp failed after every authority keeps its seal, marked `untimestamped`, and is still counted.
-- **R13** Salts and leaves are never served, exported or put in any answer until opened (R14). A seal reveals nothing to anyone holding candidate documents *(not yet met: T23)*.
-- **R14** `openSeals({case, edition})` (called by the publish act of `case-authoring` or `ratification`; see "Open for Bob", question 2) publishes, for each sealed week of the case's project, the leaves for acts on bundles the edition publishes, with their salts, their Merkle paths to the project seal and on to the week root, and the timestamp token. Nothing else of any week is revealed. The opening is idempotent per (case, edition, week), and it is listed on the notice's next revision and in R17 *(not yet met: T23)*.
-- **R15** `verifyOpening(opening)` is pure and answers whether the leaves hash to the sealed root and the token is bound to it (`signatures.parseTimestampResponse`). So a stranger, or this module's own tests, can check an opening without this instance *(not yet met: T23)*.
+- **R14** After each week ends, this module seals that week's member acts (R8) for every project that is not `closed`, whether or not the project has a notice *(not yet met: T23)*:
+  - each act is a leaf made of the bundle id, the bundle digest after the act, the act's operation and its instant, never its author, with its own random 256-bit salt;
+  - the project's week **seal** is the SHA-256 Merkle root over those leaves, padded to a fixed size with salted dummy leaves, so the root reveals neither the acts nor how many there were;
+  - a week with no member act has no seal.
+- **R15** One RFC 3161 timestamp is requested per instance per week (`signatures.timestampRequest`, through `host-governor`, trying `TSA_ENDPOINTS` in order). It is requested over the root of all of that week's project seals, and its token is kept. When every authority fails, the week's seals are kept and marked `untimestamped`, and their weeks still count *(not yet met: T23)*.
+- **R16** Salts and leaves are never served, exported or put in any answer until they are opened (R17). A seal reveals nothing, even to someone who holds candidate documents to test against it *(not yet met: T23)*.
+- **R17** `openSeals({case, edition})` is called by `ratification`'s case ceremony once an edition is committed (`ratification` R37), with no choice offered (K1031 (3)) *(not yet met: T23)*.
+  - For each sealed week of the case's project, it publishes the leaves for acts on bundles that the edition publishes (`publication.caseCitedParts`, its R41, and the edition's members). Each leaf comes with its salt, its Merkle path to the project seal and on to the week root, and the timestamp token.
+  - Nothing else of any week is revealed.
+  - An opening is idempotent per (case, edition, week).
+  - A `published` attestation (R12) follows.
+- **R18** `verifyOpening(opening)` is pure. It answers whether the leaves hash to the sealed root and whether the token is bound to that root (`signatures.parseTimestampResponse`). A stranger, or this module's own tests, can check an opening without this instance *(not yet met: T23)*.
 
 **The project reference a later case carries**
-- **R16** `noticeReferenceOf(project)` answers the open or most recent notice id of a project, or null. `case-authoring` writes it into the case document so that a case and the notice are visibly the same work (owed by DEC-111; a fold to `case-grammar` and `case-authoring`) *(not yet met: T23)*.
+- **R19** `noticeReferenceOf(project)` answers the notice id of the project's open or most recent notice, or null. `case-authoring` writes it into the case document, so that a case and its notice are visibly the same work (DEC-111; `case-grammar` R10, `case-authoring` R41) *(not yet met: T23)*.
 
-**Public reads** (no credential; served on the group's public address through `public-read`'s registration, R18 of the public-read fold below)
-- **R17** `noticesPublic({after, limit})` answers every revision of every notice ever published, in (notice, revision) order. Each comes with its notice JSON, its armored signature, its first-published instant and any openings (R14). It answers at most `limit` (200 by default, 1,000 at most), with `truncated` and `next`. Nothing is ever removed from it. A notice still at R1's prepared stage is never in it *(not yet met: T23)*.
-- **R18** `groupKeysPublic()` answers the group slug and the public signing keys that can sign a notice or a case: every key that `credentials.signerList` (its R8) shows registered to a member who owns a project now, or who signed a published edition or a notice. Each comes with `status` (`attests`, or `revoked` with its date) and the date it was first listed, never the member's name, handle or id. A revoked key stays listed, so older signatures can still be checked *(not yet met: T23)*.
+**Public reads** (no credential; served at the group's public address through `public-read` R18)
+- **R20** `noticesPublic({after, limit})` answers every revision and every attestation ever published, in order of (notice, then first-published instant). Each comes with its JSON, its signature (armored for a revision; for an attestation, the instance signature and its key id), its first-published instant, and, for an attestation, the openings it references (R17) *(not yet met: T23)*.
+  - It answers at most `limit` items (200 by default, 1,000 at most), with `truncated` and `next`.
+  - Nothing is ever removed from it.
+  - A revision that is only prepared (R2) never appears in it.
+- **R21** `groupKeysPublic()` answers the group slug and two lists *(not yet met: T23)*:
+  - `owners`: every key `credentials.signerList` (its R8) shows registered to a member who owns a project now, or who signed a published edition or a revision. Each comes with `status` (`attests`, or `revoked` with its date) and the date it was first listed, never the member's name, handle or id;
+  - `copy`: every instance key that has signed an attestation (`provenance.instanceKeys`, R56), with the date it was first used. Each is labelled as this copy's key.
+
+  A revoked or replaced key stays listed, so older signatures can still be checked.
 
 **Member reads**
-- **R19** `noticesOf({project, viewer})` (`op=notices`) answers, to a viewer who can see the project, its notices and revisions, the next monthly re-sign date, the lapse date when one is running, and its sealed weeks (week, seal, timestamped or not), never the salts *(not yet met: T23)*.
-- **R20** `directorySubmission({case, edition, viewer})` answers prefilled fields for the network directory after publication (the case's public link, title and summary, and the group slug), for a member to copy or open. It sends nothing *(not yet met: T23)*.
+- **R22** `noticesOf({project, viewer})` (`op=notices`) answers a viewer who can see the project (`membership.sight`, its R44) *(not yet met: T23)*:
+  - the project's notices, their revisions and their attestations;
+  - the next `monthly` date, and the lapse date when one is running;
+  - any `monthly` attestation missed for want of a key (R13);
+  - its sealed weeks (week, seal, and whether timestamped), never the salts;
+  - `methodVersion` (R10).
+- **R23** `directorySubmission({case, edition, viewer})` answers the fields of a directory submission after publication, prefilled: the case's public link, title and summary, and the group slug. A member copies them or opens them. It sends nothing *(not yet met: T23)*.
 
 ## Private
 
 ### Uses
-- `record-grammar`: canonical JSON, `createSha256`, the non-member author set (R7), the id grammar.
-- `record-core`: `transact`, `listBundles({project})` (its R35), the history and manifest read (its R15, R16, R42; R7, the creation date in R1), `mintOpaqueId` (its R6; notice ids), `stampInstant` and `instantOrder` (its R47, R48), `declarePurge` (its R21), `registerCounts` (its R63).
-- `signatures`: `verifySshsig` (its R2), `timestampRequest` (R15), `parseTimestampResponse` (R17), `TSA_ENDPOINTS`, `TSA_CONTENT_TYPE`, `TSA_ACCEPT` (R20, R21), and **new**: `NS_NOTICE` and `noticeStatement(noticeId, revision, sha)` (fold below).
-- `membership`: `isProjectOwner` (its R54), `projectOwners` (its R65), `sight` (its R44), `noSuchProject`.
-- `credentials`: `attestingKeys` (its R11), `signerList` (its R8).
-- `promotion`: the `producingGroup` fact (its R40, registered by `instance-setup` R1). If that fact cannot be read from layer 8, BOB places the slug reader earlier (Suggestions).
-- `host-governor`: `governedFetch` (the timestamp authorities).
-- `publication`: `cases` and `published_cases` under its R40; `publishedEditionsOf` (its R37) and `caseCitedParts` (its R41), for R3 and R14.
-- `public-read`: `publishedCase` (its R3), and its new public-read registration (fold below).
-- `project-stage`: `projectStage` (its R1, R2: `closed` and its `since`).
+- `record-grammar`: canonical JSON, `createSha256`, the non-member author set (R8) and the id grammar.
+- `signatures`: `verifySshsig` (its R2), `timestampRequest` (its R15), `parseTimestampResponse` (its R17), `TSA_ENDPOINTS`, `TSA_CONTENT_TYPE` and `TSA_ACCEPT` (its R20, R21); and the new `NS_NOTICE` and `noticeStatement` (its R37, R38).
+- `record-core`: `transact`; `listBundles({project})` (its R35); the history and manifest reads (its R15, R16, R42), for R8 and the creation date; `mintOpaqueId` (its R6), for notice ids; `stampInstant` and `instantOrder` (its R47, R48); `declarePurge` (its R21); `registerCounts` (its R63).
+- `membership`: `isProjectOwner` (its R54), `projectOwners` (its R65), `sight` (its R44) and `noSuchProject`.
+- `credentials`: `attestingKeys` (its R11) and `signerList` (its R8).
+- `promotion`: the `producingGroup` fact (its R40, registered by `instance-setup` R1).
+- `host-governor`: `governedFetch`, for the timestamp authorities.
+- `provenance`: the new `instanceStatement`, `instanceSign` and `instanceKeys` (its R56), which use the instance key of its R34.
+- `capture`: the doorbell's public path (its R32).
+- `publication`: `cases` and `published_cases` under its R40; `publishedEditionsOf` (its R37) and `caseCitedParts` (its R41).
+- `public-read`: the new public-read registration (its R18).
+- `project-stage`: `projectStage` (its R1, R2), for `closed` and its date.
 
 ### Invariants
-- **R21** Only an owner's own signature publishes a revision. No machine, AI run or administrator can post, re-word or back-date a notice for a project they do not own *(not yet met: T23)*.
-- **R22** No answer of this module names a member: there are no names in notices, keys, leaves or openings *(not yet met: T23)*.
-- **R23** A published revision is never altered or deleted. Purge clears this module's tables only in a whole-store purge; a bundle purge leaves a published notice standing *(not yet met: T23)*.
-- **R24** `since` is never earlier than the project's creation and never later than the day it was signed, in every revision *(not yet met: T23)*.
-- **R25** The assistant's work never counts toward activity, and volume never moves the level *(not yet met: T23)*.
-- **R26** No place is named in this module's behaviour or outward text (`layers.md`, "No jurisdiction in the product") *(not yet met: T23)*.
-- **R27** This module makes no outbound call except to the timestamp authorities, and it pushes nothing to any directory *(not yet met: T23)*.
+- **R24** Only an owner's own signature publishes a revision. No machine, AI run or administrator can post, re-word or back-date a revision for a project they do not own. An attestation states only facts the copy computes (R12) *(not yet met: T23)*.
+- **R25** No answer of this module names a member. There are no names in revisions, attestations, keys, leaves or openings *(not yet met: T23)*.
+- **R26** A published revision, attestation or opening is never altered or deleted. Only a whole-store purge clears this module's tables. A bundle purge leaves a published notice standing *(not yet met: T23)*.
+- **R27** In every revision, `since` is never earlier than the project's creation and never later than the day the revision was signed *(not yet met: T23)*.
+- **R28** The assistant's work never counts toward activity, and volume never moves the level *(not yet met: T23)*.
+- **R29** No place is named in this module's behaviour or outward text (`layers.md`, "No jurisdiction in the product") *(not yet met: T23)*.
+- **R30** This module makes no outbound call except to the timestamp authorities, and it pushes nothing to any directory *(not yet met: T23)*.
 
 ### Satisfies
-- `docs/architecture/BIO_Publication_v0_1.md` §5B (all of it, the CivicOS half), §3 rule 10 (the credential-free public read), §5 (DEC-80: an owner signs in the browser), §7 (the slug is the group's public identity).
-- `docs/architecture/BIO_Complete_Roadmap_v5.md` §11 "Inter-group awareness".
-- `docs/architecture/BIO_Design_Requirements_v2.md` §3, §9, §10, §13, §14.
-- DEC-111; DEC-49 (catalogue rows); DEC-80.
+- `docs/architecture/BIO_Publication_v0_1.md`:
+  - §5B, the CivicOS half: only from a project and only by its owner; what a notice carries; the activity level; proof of activity; signing at the group's own address; ending; the honest limit;
+  - §3 rule 10, the credential-free public read;
+  - §5, an owner signs in the browser (DEC-80);
+  - §7, the slug as the group's public identity.
+- `docs/architecture/BIO_Complete_Roadmap_v5.md` §11, "Inter-group awareness".
+- `docs/architecture/BIO_Design_Requirements_v2.md`, requirements 9 and 10.
+- `docs/development/NOTIFICATIONS.md`: the item contract (`queue-producers` R27).
+- DEC-111; DEC-49 (catalogue rows); DEC-80; K1019; K1031.
 
 ### Suggestions
-- **Folds in other modules** (each a requirement change, cited to DEC-111 and K1019):
-  - `signatures` (layer 1): R37 `NS_NOTICE = "bio-working-on"`, distinct from the other namespaces (R1's rule); R38 `noticeStatement` giving exactly `` `bio-working-on ${noticeId} ${revision} ${sha}\n` ``. The offline signer page and the browser signer sign it.
-  - `public-read`: R18, a later module registers once at start named credential-free reads served on the public path (K31 pattern, like its R8); it is unregistered, it says so.
-  - `case-grammar` and `case-authoring`: the notice reference in the case document (R16); the publish act calls R14.
-  - `scheduler`: weekly `notice-seal` and monthly `notice-resign` consumers.
-  - `queue-producers`: to-dos for a re-sign due (if Bob chooses option B in question 1), a lapse a week away, and a close awaiting its final revision.
-  - `control-plane` and `op-declarations`: `op=noticeprepare`, `op=noticepost`, `op=noticestop`, `op=notices`, and the public reads.
-- **Two-step signing:** the same pattern as case ratification: prepare, sign in the browser, post.
-- **Tables:** `notices`, `notice_revisions`, `week_seals` (leaves and salts held privately), `week_roots` (token), `seal_openings`. All are declared to purge, whole-store only (R23).
-- **Weeks before T23 ships cannot be proven.** A notice's `seals` begins at the first sealed week, and its first revisions show fewer timestamped weeks than counted ones. That is honest and needs nothing more.
+- **Tables:** `notices`, `notice_revisions`, `notice_attestations`, `week_seals` (with the leaves and salts held privately), `week_roots` (with the token) and `seal_openings`. Each is declared to purge, whole store only (R26).
+- **Two-step signing:** the pattern of case ratification, which is prepare, sign in the browser, then post.
+- **Weeks before T23 ships cannot be proven.** A notice's `seals` begin at the first sealed week, so early attestations show fewer timestamped weeks than counted ones. That is honest, and needs nothing more.
+- **The ceremony's words.** The sentence on "What becomes permanent" (K1031 (3)), the warning and the caution (R2), the five levels, "Others welcome", the stop-and-handoff form, and the links out after publication (R23) are the UX design stream's. They are cited here, never decided.
 - **Tests:**
   - each R1 and R4 refusal, with a negative control;
   - a back-dated `since` and a future `since`;
   - the cut-offs at 0/1, 3/4, 6/7 and 9/10;
-  - an AI-only week counting zero;
+  - a week with only AI work, which counts zero;
+  - a lapse, and a lapse avoided by a revision;
+  - a `monthly` attestation missed with no key;
   - a Merkle opening that verifies, and a tampered leaf that fails;
-  - that no member id appears in any public answer (a sweep over every answer).
+  - the caution at two open notices with no published work, posting anyway;
+  - no member id in any public answer, checked over every answer.
 
-## Open for Bob (meaning and UX; each with a recommendation)
+## Folds in other modules (each a requirement, ready to paste; cited to DEC-111, K1019 and K1031)
 
-1. **Whose key re-signs the monthly activity level.** DEC-111 says both "signed by a project owner as a published case is signed" and "re-signed monthly". The owners' keys are browser-held (DEC-80), so the copy cannot sign with them unattended.
-   - *Option A:* the owner signs the notice (who, what, since). Each month the copy signs a short activity statement that names the notice's digest, using the instance's own signing key (`provenance` R34 already holds one per instance), and that key is listed on the public page as "this copy's key".
-   - *Option B:* the copy prepares the monthly revision, and an owner signs it from a to-do. A notice nobody re-signs shows its last level with its date.
-   - **Recommended: A.** The level is the copy's computation, not the owner's statement, so the copy's key says truthfully who computed it. An active group's notice also never goes stale through a missed chore. A false level is no easier than the honest limit already admits. Under A, R11's re-sign uses the instance key and R18 also lists the copy's key.
-2. **Opening the seals at publication.** Either automatic, or the owner's choice at signing.
-   - **Recommended: automatic.** It is stated on the ceremony's "What becomes permanent" step: "The sealed weeks of work on the material this case publishes will be opened, so anyone can confirm they were real." Only the acts on published material are revealed (R14). Declining would leave a notice at "Reported" for no gain.
-3. **Third and later notices with no published work.** The network site shows at most two (§5B, network half). The copy can refuse a third, or warn and post it.
-   - **Recommended: warn, not refuse.** The cap is the directory's policy, not CivicOS's. The copy says before signing: "Directories may show only two open notices from a group that has not yet published."
-4. **The act's screens and words** (UX):
-   - where "Tell the network" sits on the project;
-   - the warning's exact wording (R2);
-   - how the five levels and "Others welcome" read;
-   - the stop and handoff form;
-   - the after-publication links out and the prefilled submission (R20).
+**`signatures`** (layer 1)
+- **R37** `NS_NOTICE` is `"bio-working-on"`, a compiled constant distinct from every other namespace (R1's rule). The offline signer page and the browser signer sign in it. *(not yet met: T23)*
+- **R38** `noticeStatement(noticeId, revision, sha)` returns exactly `` `bio-working-on ${noticeId} ${revision} ${sha}\n` ``. It throws when `noticeId` is not an opaque id, `revision` is not a whole number of at least 1, or `sha` is not 64 lowercase hex characters. *(not yet met: T23)*
+- **R1** (amended) "Three" reads "Four": `NS_RELEASE`, `NS_RATIFY`, `NS_FLEET` and `NS_NOTICE`.
 
-   **Recommended:** offer "Tell the network" only on the project page to owners. Show the notice exactly as a directory will show it before signing. The warning reads: "Anyone, including whoever you are examining, will see this. Stopping later will not unsay it."
+**`provenance`** (layer 3)
+- **R56** The instance key of R34 also signs statements for later modules. *(not yet met: T23)*
+  - `instanceStatement(kind, sha)` returns exactly `` `${kind}\nsha256: ${sha}\n` ``. It throws when `kind` is `bio-receipt/1`, or is not of the form `^[a-z][a-z0-9-]*/[0-9]+$`, so no statement can be read as a receipt.
+  - `instanceSign(statement)` answers `{ok, signature, key_id, public_key}`, or `RECEIPT_NO_KEY` when no key is bound. It records the key in `receipt_keys`.
+  - `instanceKeys()` answers every key that has signed anything, each with its `first_used`, never the private part.
+
+**`public-read`** (layer 8)
+- **R18** A later module registers once at start a set of named, credential-free reads that are served on the public path (K31's pattern, as in R8). Each is served under R10's terms. A second registration of one name is refused. An unregistered name says that it is not registered. *(not yet met: T23)*
+
+**`case-grammar`** (layer 8)
+- **R10** A case document may carry `working_on`, a notice id (the opaque-id grammar), and nothing else about the notice. When it is present, the published case shows it as the project reference. A malformed value is refused under the case-document catalogue. Whether this needs a new document version is BOB's to decide at T23's opening. *(not yet met: T23)*
+
+**`case-authoring`** (layer 8)
+- **R41** `publishCase` writes `working_on` as `network-notices.noticeReferenceOf(project)` answers it (its R19), and omits it when that answer is null. *(not yet met: T23)*
+
+**`ratification`** (layer 8)
+- **R37** Once a case edition's commit (R3) is accepted, the case ceremony calls `network-notices.openSeals({case, edition})` (its R17) outside the commit's transaction. A failure there never changes the ceremony's answer. It is stated, and retried by the `working-on-attest` consumer. The ceremony's "What becomes permanent" step states that the sealed weeks are opened (K1031 (3); the words are the UX design stream's). *(not yet met: T23)*
+
+**`scheduler`** (layer 10)
+- **R5** (amended) Add, after `deadline-recheck`, the consumers `working-on-seal` (`network-notices`' weekly seal, R14 and R15) and `working-on-attest` (its `monthly`, `closed` and `lapsed` attestations, R12, and its retried openings, R17), each with its own due and wake. The rest of R5 is unchanged.
+
+**`queue-producers`** (layer 11)
+- **R27** CONDITIONs for the owners of a project with an open notice *(not yet met: T23)*:
+  - `notice-attestation-missed`: a `monthly` attestation was missed for want of an instance key (R13). It leaves when one is issued;
+  - `notice-lapse-near`: a lapse is due within 7 days. It leaves on a revision, a stop or the lapse;
+  - `notice-project-closed`: the project closed while the notice was open. It leaves after 30 days, or on an owner's stop, which may add a handoff.
+
+  Each is keyed `CONDITION::<kind>::<notice>`.
+
+**`control-plane`** and **`op-declarations`** (layer 11): the ops `noticeprepare`, `noticepost` and `notices` (member session), and the public reads of R20, R21 and R10.
+
+## Proposed `modules.json` entry (not written into `modules.json`)
+
+```json
+{
+  "id": "network-notices",
+  "layer": 8,
+  "paths": ["bio-plane/src/network-notices/"],
+  "tests": ["bio-plane/test/m/network-notices/"],
+  "uses": ["record-grammar", "signatures", "record-core", "membership", "credentials", "promotion",
+           "host-governor", "provenance", "capture", "publication", "public-read", "project-stage"]
+}
+```
+
+- **Position:** directly after `project-stage` (index 57 on `tranche/T22`) and before `ratification`, so it becomes index 58 and every later entry moves down one. Layer 8 becomes `case-grammar, publication, public-read, project-stage, network-notices, ratification, case-authoring, review`.
+- **Every use is earlier**, by index on `tranche/T22`: record-grammar 0, signatures 4, record-core 20, membership 21, credentials 22, promotion 23, host-governor 24, provenance 25, capture 28, publication 55, public-read 56, project-stage 57.
+- **Why after `project-stage`:** closing and the closed test need `projectStage` (R1, R12). K1019's "after public-read" still holds.
+- **Why before `ratification` and `case-authoring`:** they call `openSeals` and `noticeReferenceOf` (P4).
+- **Edges added to later modules:** `network-notices` joins the `uses` of `ratification`, `case-authoring`, `scheduler`, `queue-producers`, `control-plane` and `plane`.
+- **The `status` line** gains: "AMENDED for T23 by BOB #91: network-notices (layer 8, after project-stage), K1019, K1031."
+
+## Open for Bob (meaning; one line, with a recommendation)
+
+1. **Who signs a notice's closing.** A notice must say when its project closes (§5B "Ending"), and no owner may be present to sign. **Recommended:** the copy's key signs a `closed` attestation at once, and an owner may still add a stop with a handoff note. This extends K1031 (2): the copy signs the facts it computes, and the owner signs what the group says.
 
 Decided by BOB (P17; for the rulings, reported to Bob):
-- **The module:** id `network-notices`, its position and its `uses`.
-- **Weeks and cut-offs:** UTC ISO weeks; the cut-offs as DEC-111 proposed them.
-- **Member acts:** R7's definition (member-authored writes on the project's bundles, with machine-draft adoption counting).
-- **Notice id:** an opaque notice id as the public project reference, never the internal project id.
-- **Seals:** padded Merkle seals and one instance-wide timestamp per week, sealing every open project whether or not it has a notice, so proof exists for weeks before a notice is posted. The timestamp authority sees only a digest.
-- **Keys:** revoked keys stay listed.
+- the module's id, position and `uses`;
+- revisions and attestations as two signed objects: the owner signs what the group says, and the copy signs the level, the cases, the seals, the openings and the lapse (K1031 (2));
+- the instance key reused from `provenance` R34, with statements kept distinct from receipts (R56);
+- a notice refused with no instance key bound (R1);
+- the `monthly` attestation on the first day of each month (UTC);
+- a lapse after two consecutive `Dormant` `monthly` attestations;
+- the caution counted over the whole instance's open notices (K1031 (4));
+- UTC ISO weeks, and DEC-111's cut-offs;
+- R8's definition of a member act;
+- an opaque notice id as the project reference;
+- padded Merkle seals and one timestamp per instance per week, sealing every project that is not closed;
+- `ratification` as the caller of `openSeals`, after its commit;
+- revoked and replaced keys kept listed;
+- the scheduler consumers named `working-on-*`, distinct from `reevaluation`'s `notice-sweep`.
