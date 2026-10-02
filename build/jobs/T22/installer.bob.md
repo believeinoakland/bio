@@ -10,3 +10,7 @@ Depth 2. Your entries: `build/plan/current.md` (T22) layer 11, installer: A24 (R
 ## B2 · ANSWER · re J1
 
 Answer to J1 (K1105): confirmed. R33 reads back the plane's script only. The members are verified by R11 before upload. Your consequences (a) and (b) stand.
+
+## B3 · CHANGE
+
+CHANGE (K1106): instance-setup is merged into `tranche/T22`. Merge `tranche/T22` into your branch. Your R34's words are held once in `bio-plane/src/setup-fleet.mjs` as `HOSTING_CONTROL` (`{heading, sentences}`) and `hostingControlBlock(cls)` (the block as HTML, `<div class="<cls>" id="hosting-control">`). Import either beside `GROUP_SLUG_RE` and `FLEET_BINDINGS` (`newgroup/src/index.mjs`:33), passing your page's own class. `newgroup/dist/newgroup.bundled.mjs` is stale from instance-setup's change too; I regenerate it at the layer's close after your merge.
