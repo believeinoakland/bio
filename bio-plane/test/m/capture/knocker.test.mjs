@@ -1,16 +1,17 @@
 /* capture: bringing a knock in and the knocker's pseudonym (R65–R67, R70), the capturing member and late
    co-attestation (R16's actor, R68, R69), and the amended doorbell (R32, R37, R53, R54), N364, at the module's
    interface: the doorbell's op handler over a Durable Object stub answering through the module's own routes, the
-   store-side services, and provenance's and host-governor's services as their Provides state them (fixture.mjs). */
+   store-side services, provenance's and host-governor's services as their Provides state them, and attestation's
+   real `attest` over a scripted network (fixture.mjs). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bucket, governor, provenance, network, sha, register, newKey, sshsign, signer, H } from "./fixture.mjs";
+import { fresh, bucket, governor, provenance, network, granted, sha, register, newKey, sshsign, signer, H } from "./fixture.mjs";
 import { captureOps, captureAccountStatement, CAPTURE_ACCOUNT_TOKEN, pseudonymOf, READ_LIMIT, PULL_WITHIN_FAILED_DETAIL } from "../../../src/capture/index.mjs";
 import { knockOp, KNOCK, KNOCKER_SECRET_MIN } from "../../../src/capture/doorbell.mjs";
 import { evidenceAbsent } from "../../../src/capture/ops.mjs";
 import { CAPTURE_CHECKS } from "../../../src/capture/checks.mjs";
 import { NS_RATIFY, NS_RELEASE } from "../../../src/sshsig.mjs";
-import { ARCHIVE_SERVICE } from "../../../src/tsa.mjs";
+import { ARCHIVE_SERVICE, ARCHIVE_SAVE_BASE, TSA_ENDPOINTS } from "../../../src/tsa.mjs";
 import { DOORBELL_VIA } from "../../../src/provenance/index.mjs";
 import { INSTALLATION_CHECKS } from "../../../src/acquisition/index.mjs";
 
@@ -375,75 +376,106 @@ test("R69: the puller of a knock is its capture's actor and may give a signed ac
   assert.equal(out.ok, true);
 });
 
-/* A world for R68: a held capture, provenance's attest as its Provides state it (answered here), the network scripted. */
-function reWorld({ attestAnswer = null, held = true, registered = null } = {}) {
+/* A world for R68: a held capture (or one held in parts, an acquisition receipt naming it), attestation's real `attest`
+   (its R1–R3), and the network scripted: the timestamp authorities, the archive's save and its raw replay. */
+function reWorld({ held = true, acquired = false } = {}) {
   const b = bucket();
   const gov = governor();
   const f = fresh({ evidence: b, gov, env: { INSTANCE_NAME: "i" } });
   const bytes = new TextEncoder().encode("the captured page");
   const d = sha(bytes);
   if (held) b.held.set(`bio/captures/${d}`, bytes);
-  f.c.provenance = provenance(f.s, { attestAnswer });
-  if (registered) f.c.provenance.registerHolds = () => registered;
+  if (acquired) f.c.provenance = provenance(f.s, { acquired: [d] });
   return { ...f, b, gov, d, bytes };
 }
-const ts = (ok) => ({ service: "https://tsa.test/", attempted: "2026-09-30T11:00:00Z", ok, ...(ok ? { kind: "rfc3161", token_sha256: H("7"), token_bytes: 900 } : { note: "http 500" }) });
-const coa = (archived) => (archived ? { service: ARCHIVE_SERVICE, attempted: "2026-09-30T11:00:01Z", ok: true, kind: "co-archive", archived_locator: archived }
-                                     : { service: ARCHIVE_SERVICE, attempted: "2026-09-30T11:00:01Z", ok: false, note: "http 523" });
+const LOCATOR = "https://a.example/page";
+const ARCHIVED = "https://web.archive.org/web/20260930110001/https://a.example/page";
+const REPLAY = "https://web.archive.org/web/20260930110001id_/https://a.example/page";
+const ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
+/* `tsa`: each authority's answer in TSA_ENDPOINTS order (a status, or "granted": a token bound to `d`); `save`: the
+   archived locator the archive's save answers, or null for a 523; `replay`: the raw replay's bytes, or null (a 404). */
+const authorities = (d, { tsa = [], save = ARCHIVED, replay = null } = {}) => network((url) => {
+  const i = TSA_ENDPOINTS.indexOf(url);
+  if (i >= 0) return tsa[i] === "granted" ? new Response(granted(d)) : new Response("", { status: tsa[i] ?? 500 });
+  if (url === ARCHIVE_SAVE_BASE + LOCATOR)
+    return save ? new Response("", { headers: { "content-location": save.replace("https://web.archive.org", "") } }) : new Response("", { status: 523 });
+  if (url === REPLAY && replay) return new Response(replay);
+  return null;
+});
+const run = async (n, fn) => { try { return await fn(); } finally { n.restore(); } };
 
-test("R68: reattest asks for a fresh timestamp and co-archive, compares the co-archive's raw replay with the digest through the governor, and appends each outcome late, dated, with what it proves", async () => {
-  const archived = "https://web.archive.org/web/20260930110001/https://a.example/page";
-  const w = reWorld({ attestAnswer: { ok: true, attempts: [ts(false), ts(true), coa(archived)] } });
-  const net = network({ "https://web.archive.org/web/20260930110001id_/https://a.example/page": () => new Response(w.bytes) });
-  let r;
-  try { r = await w.c.reattest({ captureSha: w.d, locator: "https://a.example/page", by: "m1" }); } finally { net.restore(); }
-  assert.equal(r.ok, true);
-  assert.deepEqual(w.c.provenance.attests, [{ sha256: w.d, archive: true, locator: "https://a.example/page" }], "a fresh timestamp and co-archive asked of provenance.attest");
-  assert.deepEqual(net.seen.map((x) => x.url), ["https://web.archive.org/web/20260930110001id_/https://a.example/page"], "the raw replay");
-  assert.ok(w.gov.calls.some((c) => c[0] === "admit" && c[1] === "web.archive.org"), "through the host governor");
-  assert.deepEqual(r.late_attestations.map((o) => [o.kind, o.ok, o.late, o.at, o.proves]), [
-    ["timestamp", false, true, "2026-09-30T11:00:00Z", "proves the bytes existed by 2026-09-30T11:00:00Z, not at capture"],
-    ["timestamp", true, true, "2026-09-30T11:00:00Z", "proves the bytes existed by 2026-09-30T11:00:00Z, not at capture"],
-    ["co_archive", true, true, "2026-09-30T11:00:01Z", "proves the bytes existed by 2026-09-30T11:00:01Z, not at capture"]]);
-  const co = r.late_attestations[2];
-  assert.deepEqual([co.matches, co.archived_locator, co.replay_sha256], [true, archived, w.d]);
+test("R68: reattest asks attestation's attest for a fresh timestamp over the digest and a fresh co-archive, through the governor; compares the co-archive's raw replay with the digest; appends each outcome late, dated, with what it proves", async () => {
+  const w = reWorld();
+  const net = authorities(w.d, { tsa: [500, "granted"], replay: w.bytes });
+  const r = await run(net, () => w.c.reattest({ captureSha: w.d, locator: LOCATOR, by: "m1" }));
+  assert.deepEqual([r.ok, r.attested], [true, true]);
+  /* the authorities in order, stopping at the first bound token; then the co-archive; then its raw replay */
+  assert.deepEqual(net.seen.map((x) => x.url), [TSA_ENDPOINTS[0], TSA_ENDPOINTS[1], ARCHIVE_SAVE_BASE + LOCATOR, REPLAY]);
+  for (const x of net.seen.slice(0, 2)) assert.ok(Buffer.from(x.init.body).includes(Buffer.from(w.d, "hex")), "a fresh request over the capture digest");
+  for (const u of [TSA_ENDPOINTS[0], TSA_ENDPOINTS[1], ARCHIVE_SAVE_BASE + LOCATOR, REPLAY])
+    assert.ok(w.gov.calls.some((c) => c[0] === "admit" && c[1] === new URL(u).host), `through the host governor: ${u}`);
+  const outs = r.late_attestations;
+  assert.deepEqual(outs.map((o) => [o.kind, o.service, o.ok, o.late]),
+                   [["timestamp", TSA_ENDPOINTS[0], false, true], ["timestamp", TSA_ENDPOINTS[1], true, true], ["co_archive", ARCHIVE_SERVICE, true, true]]);
+  for (const o of outs) {
+    assert.match(o.at, ISO, "dated by its own attempt");
+    assert.equal(o.proves, `proves the bytes existed by ${o.at}, not at capture`);
+  }
+  assert.equal(outs[0].note, "http 500", "a failed attempt is kept with its reason");
+  /* the token, stored under its own digest, is the attestation over this capture */
+  const tok = outs[1];
+  assert.match(tok.token_sha256, /^[0-9a-f]{64}$/);
+  assert.equal(sha(w.b.held.get(`bio/captures/${tok.token_sha256}`)), tok.token_sha256);
+  assert.deepEqual([r.attestation.over, r.attestation.sha256, r.attestation.kind], [w.d, tok.token_sha256, "rfc3161"]);
+  const co = outs[2];
+  assert.deepEqual([co.matches, co.archived_locator, co.replay, co.replay_sha256], [true, ARCHIVED, REPLAY, w.d]);
   assert.deepEqual(w.c.lateAttestationsOf(w.d).late_attestations.map((o) => [o.seq, o.by, o.kind, o.matches ?? null]),
                    [[1, "m1", "timestamp", null], [2, "m1", "timestamp", null], [3, "m1", "co_archive", true]], "appended in order");
-  /* a replay of other bytes: false; no archived locator or no replay: undetermined */
-  const w2 = reWorld({ attestAnswer: { ok: true, attempts: [ts(true), coa(archived)] } });
-  const n2 = network({ "https://web.archive.org/web/20260930110001id_/https://a.example/page": () => new Response("something else") });
-  try { assert.equal((await w2.c.reattest({ captureSha: w2.d, locator: "https://a.example/page" })).late_attestations[1].matches, false); } finally { n2.restore(); }
-  const w3 = reWorld({ attestAnswer: { ok: true, attempts: [ts(true), coa(null)] } });
-  const r3 = await w3.c.reattest({ captureSha: w3.d, locator: "https://a.example/page" });
-  assert.deepEqual([r3.late_attestations[1].kind, r3.late_attestations[1].ok, r3.late_attestations[1].matches], ["co_archive", false, "undetermined"]);
-  const w4 = reWorld({ attestAnswer: { ok: true, attempts: [ts(true), coa(archived)] } });
-  const n4 = network({});
-  try { assert.equal((await w4.c.reattest({ captureSha: w4.d, locator: "https://a.example/page" })).late_attestations[1].matches, "undetermined"); } finally { n4.restore(); }
-  /* appended, never replaced: a second reattest adds after the first */
-  const w5 = reWorld({ attestAnswer: { ok: false, reason: "NO_ATTESTATION", attempts: [ts(false)] } });
-  await w5.c.reattest({ captureSha: w5.d });
-  await w5.c.reattest({ captureSha: w5.d });
-  assert.deepEqual(w5.c.lateAttestationsOf(w5.d).late_attestations.map((o) => o.seq), [1, 2]);
-  assert.deepEqual(w5.c.provenance.attests.map((a) => a.archive), [false, false], "with no public locator, no co-archive is asked");
+  /* a replay of other bytes: false; no archived locator, or no replay: undetermined, with the reason */
+  const w2 = reWorld();
+  const r2 = await run(authorities(w2.d, { tsa: ["granted"], replay: "something else" }), () => w2.c.reattest({ captureSha: w2.d, locator: LOCATOR }));
+  assert.deepEqual([r2.late_attestations[1].matches, r2.late_attestations[1].match_basis], [false, "the co-archive's replay holds other bytes than the capture"]);
+  const w3 = reWorld();
+  const n3 = authorities(w3.d, { tsa: ["granted"], save: null });
+  const r3 = await run(n3, () => w3.c.reattest({ captureSha: w3.d, locator: LOCATOR }));
+  assert.deepEqual([r3.late_attestations[1].kind, r3.late_attestations[1].ok, r3.late_attestations[1].note, r3.late_attestations[1].matches],
+                   ["co_archive", false, "http 523", "undetermined"]);
+  assert.ok(!n3.seen.some((x) => x.url.includes("id_/")), "no replay is fetched without an archived locator");
+  const w4 = reWorld();
+  const r4 = await run(authorities(w4.d, { tsa: ["granted"] }), () => w4.c.reattest({ captureSha: w4.d, locator: LOCATOR }));
+  assert.deepEqual([r4.late_attestations[1].matches, r4.late_attestations[1].match_basis], ["undetermined", "the replay answered 404"]);
+  /* no token from any authority: every failed attempt is still appended late; a second reattest appends after the first */
+  const w5 = reWorld();
+  const n5 = authorities(w5.d, { tsa: [500, 503, 502] });
+  const r5 = await run(n5, async () => [await w5.c.reattest({ captureSha: w5.d }), await w5.c.reattest({ captureSha: w5.d, locator: "http://a.example/plain" })]);
+  assert.deepEqual(r5.map((x) => [x.ok, x.attested]), [[true, false], [true, false]]);
+  assert.deepEqual(r5[0].late_attestations.map((o) => [o.service, o.ok, o.note]),
+                   TSA_ENDPOINTS.map((u, i) => [u, false, `http ${[500, 503, 502][i]}`]));
+  assert.deepEqual(w5.c.lateAttestationsOf(w5.d).late_attestations.map((o) => o.seq), [1, 2, 3, 4, 5, 6]);
+  assert.ok(!n5.seen.some((x) => x.url.startsWith(ARCHIVE_SAVE_BASE)), "with no public locator, no co-archive is asked");
 });
 
 test("R68 (R63): reattest refuses BAD_SHA, and R63's absence when no bytes are held; a capture held in parts counts when provenance holds its receipt", async () => {
   const w = reWorld();
   for (const bad of ["abc", "", null, 42]) assert.equal((await w.c.reattest({ captureSha: bad })).reason, "BAD_SHA");
   const gone = reWorld({ held: false });
-  const r = await gone.c.reattest({ captureSha: gone.d });
+  const ng = authorities(gone.d, { tsa: ["granted"] });
+  const r = await run(ng, () => gone.c.reattest({ captureSha: gone.d }));
   const want = evidenceAbsent(gone.d, "bio").body;
   assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation, r.sha256], [false, want.reason, want.code, want.check, want.translation, gone.d]);
-  assert.deepEqual([gone.c.provenance.attests, gone.c.lateAttestationsOf(gone.d).late_attestations], [[], []], "nothing asked, nothing written");
-  const parts = reWorld({ held: false, registered: { ok: true, registered: false, acquired: true } });
-  const p = await parts.c.reattest({ captureSha: parts.d });
-  assert.equal(p.ok, true);
-  assert.equal(parts.c.provenance.attests.length, 1);
+  assert.deepEqual([ng.seen, gone.c.lateAttestationsOf(gone.d).late_attestations], [[], []], "nothing asked, nothing written");
+  /* held in parts: no object under the digest, an acquisition receipt naming it; attestation's attest proceeds on it */
+  const parts = reWorld({ held: false, acquired: true });
+  const np = authorities(parts.d, { tsa: ["granted"] });
+  const p = await run(np, () => parts.c.reattest({ captureSha: parts.d }));
+  assert.deepEqual([p.ok, p.attested, p.late_attestations.length], [true, true, 1]);
+  assert.deepEqual(np.seen.map((x) => x.url), [TSA_ENDPOINTS[0]]);
   const noStore = fresh({});
   assert.equal((await noStore.c.reattest({ captureSha: H("a") })).reason, "EVIDENCE_NOT_HELD", "with no evidence store no bytes are held");
-  /* the routes */
-  const rw = reWorld({ attestAnswer: { ok: true, attempts: [ts(true)] } });
-  const via = await captureOps(rw.c, new URL("http://x/reattest?by=m9"), { captureSha: rw.d, by: "forged" }, rw.c.env).reattest();
+  /* the routes: the stamp in the query names who asked */
+  const rw = reWorld();
+  const via = await run(authorities(rw.d, { tsa: ["granted"] }),
+                        () => captureOps(rw.c, new URL("http://x/reattest?by=m9"), { captureSha: rw.d, by: "forged" }, rw.c.env).reattest());
   assert.equal(via.ok, true);
   assert.equal(captureOps(rw.c, new URL(`http://x/lateattestations?capture=${rw.d}`), null, rw.c.env).lateattestations().late_attestations[0].by, "m9");
 });
@@ -635,11 +667,15 @@ test("R68 (N388, REC-30): lateAttestationsOf takes no viewer: it names no bundle
 });
 
 test("R68 (N388): a machine may reattest, as it may attest: the authority vouches, not the caller; the attempt is appended late with the machine's stamp as who asked, and no refusal names a fence", async () => {
-  const w = reWorld({ attestAnswer: { ok: true, attempts: [ts(true)] } });
-  for (const by of ["class:ai", "class:probe", "class:admin"]) {
-    const r = await captureOps(w.c, new URL(`http://x/reattest?by=${encodeURIComponent(by)}`), { captureSha: w.d }, w.c.env).reattest();
-    assert.deepEqual([r.ok, r.late_attestations.every((o) => o.late === true)], [true, true], by);
-  }
+  const w = reWorld();
+  const net = authorities(w.d, { tsa: ["granted"] });
+  await run(net, async () => {
+    for (const by of ["class:ai", "class:probe", "class:admin"]) {
+      const r = await captureOps(w.c, new URL(`http://x/reattest?by=${encodeURIComponent(by)}`), { captureSha: w.d }, w.c.env).reattest();
+      assert.deepEqual([r.ok, r.attested, r.late_attestations.every((o) => o.late === true)], [true, true, true], by);
+    }
+  });
   assert.deepEqual(w.c.lateAttestationsOf(w.d).late_attestations.map((o) => o.by), ["class:ai", "class:probe", "class:admin"]);
-  assert.equal(w.c.provenance.attests.length, 3, "each asked of provenance.attest");
+  assert.deepEqual(net.seen.map((x) => x.url), TSA_ENDPOINTS.slice(0, 1).concat(TSA_ENDPOINTS.slice(0, 1), TSA_ENDPOINTS.slice(0, 1)),
+                   "each asked attestation's attest afresh");
 });

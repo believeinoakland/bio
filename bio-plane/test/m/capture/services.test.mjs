@@ -3,7 +3,7 @@
    test; no network. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, receipt, register, H, bucket, newKey, sshsign, signer } from "./fixture.mjs";
+import { fresh, receipt, register, H, bucket, newKey, sshsign, signer, network } from "./fixture.mjs";
 import { captureOf, captureAccountStatement, REACHABILITY_DEFAULTS, REACHABILITY_SETTINGS, TASK_KINDS } from "../../../src/capture/index.mjs";
 import { NS_RATIFY } from "../../../src/sshsig.mjs";
 import { listenerRefusal } from "../../../src/membership/index.mjs";
@@ -450,7 +450,9 @@ test("R74 (N418): every statement that changes the store, from every writer this
     assert.equal(r.ok, true);
   });
   b.held.set(`bio/captures/${D}`, new Uint8Array([1]));
-  await as("reattest", () => c.reattest({ captureSha: D, by: "m1" }));
+  /* attestation's attest asks the timestamp authorities: a scripted network that answers none */
+  const quiet = network(() => null);
+  try { await as("reattest", () => c.reattest({ captureSha: D, by: "m1" })); } finally { quiet.restore(); }
   await as("renderAdmit", () => c.renderAdmit({ allowanceMs: 1000, reserveMs: 10, cap: 2 }));
   await as("renderSpend", () => c.renderSpend({ ms: 5, releaseMs: 10 }));
   await as("recordLinks", () => c.recordLinks({ sourceCapture: A, capturedAt: "2026-01-01T00:00:00Z", links: [nav("https://h.example/n")] }));

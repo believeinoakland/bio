@@ -8,8 +8,8 @@
  *
  * SHAPE (K61). `captureOf(ctx, opts)` answers the one instance for a Durable Object's storage. It reaches
  * record-core by `recordOf(ctx)` on the same `ctx` (the evidence store, `transact`, `declarePurge`, settings) and
- * membership's `viewerPredicate` (R43) for what a viewer may see, and credentials' `attestingKeys` (its R11) for R69.
- * It reads provenance's `register` and `captured_locators` only on their stated read contract (provenance R48). It
+ * membership's `viewerPredicate` (R43) for what a viewer may see, credentials' `attestingKeys` (its R11) for R69, and
+ * attestation's `attest` (its R1–R3) for R68's late co-attestation. It reads provenance's `register` and `captured_locators` only on their stated read contract (provenance R48). It
  * calls no later module: a later module registers a listener (R44, R55; `on`) or a reader (R32's litigation hold, R78's
  * batch examination; `registerReader`). At its first construction for a
  * storage it registers its grammar (R37) and its figures (R75) with record-core. */
@@ -25,7 +25,8 @@ export { acquireGradeNote, ACQUIRE_GRADE_NOTE } from "../acquisition/index.mjs";
 import { ACQUIRE_GRADE_NOTE } from "../acquisition/index.mjs";
 import { recordOf, PER_ITEM_MAX } from "../record-core/index.mjs";
 import { governorOf } from "../host-governor/index.mjs";
-import { provenanceOf, attest as provenanceAttest, DOORBELL_VIA } from "../provenance/index.mjs";
+import { provenanceOf, DOORBELL_VIA } from "../provenance/index.mjs";
+import { attest } from "../attestation/index.mjs";
 import { viewerPredicate, GATE_MARK, listenerRefusal } from "../membership/index.mjs";
 import { credentialsOf } from "../credentials/index.mjs";
 import { CAPTURE_SCHEMA, CAPTURE_DERIVED_SCHEMA, CAPTURE_ADDITIVE_COLUMNS, CAPTURE_RESHAPE,
@@ -958,11 +959,12 @@ export class Capture {
 
   /** R68 (DEC-81 item 3(a)): a late co-attestation. N388: any caller the control plane admits may ask, a machine
    *  included, as for `attest`: the timestamp authority and the archive vouch, never the caller (Intake Doctrine §3),
-   *  a late attestation proves existence only by its own instant, and `by` records who asked. It asks `provenance.attest` for a fresh timestamp over the digest
-   *  and, with a public `locator`, a fresh co-archive, then fetches the co-archive's raw replay through the host
-   *  governor and compares its digest (`matches` true, false or undetermined). Each attempt's outcome is appended,
-   *  dated, `late: true`, with the sentence "proves the bytes existed by <at>, not at capture". Refused `BAD_SHA`, and
-   *  R63's absence when no bytes are held (a capture held in parts counts when provenance holds its receipt). */
+   *  a late attestation proves existence only by its own instant, and `by` records who asked. It asks attestation's
+   *  `attest` (its R2, R3) for a fresh timestamp over the digest and, with a public `locator`, a fresh co-archive, both
+   *  through the host governor, then fetches the co-archive's raw replay through the governor too and compares its
+   *  digest (`matches` true, false or undetermined). Each attempt's outcome is appended, dated, `late: true`, with the
+   *  sentence "proves the bytes existed by <at>, not at capture". Refused `BAD_SHA`, and R63's absence when no bytes
+   *  are held (a capture held in parts counts when provenance holds its receipt, provenance R5). */
   async reattest({ captureSha, locator = null, by = null } = {}) {
     const sha = typeof captureSha === "string" ? captureSha.toLowerCase() : "";
     if (!HEX64.test(sha)) return { ok: false, reason: "BAD_SHA", status: 400, detail: "reattest takes the sha256 of a capture the record holds" };
@@ -976,10 +978,9 @@ export class Capture {
     }
     if (!held) { const a = evidenceAbsent(sha, "bio", { status: 404 }); return a.body; }
     const archive = typeof locator === "string" && isPublicHttpsLocator(locator);
-    const attestFn = p && typeof p.attest === "function" ? (a, io) => p.attest(a, io) : provenanceAttest;
     let out;
     try {
-      out = await attestFn({ sha256: sha, archive, locator: archive ? locator : null },
+      out = await attest({ sha256: sha, archive, locator: archive ? locator : null },
         { head: (s) => ev.head(s), put: (s, b) => ev.put(s, b), fetch: governedCall(this, "reattest"), holds });
     } catch (e) {
       out = { ok: false, attempts: [], reason: "ATTEST_FAILED", note: String(e && e.message || e).slice(0, 200) };
