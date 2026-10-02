@@ -17971,130 +17971,6 @@ async function governorOpResponse(op, url, store, { json: json6, doAnswer: doAns
   return g.refused ? g.response : g.silent ? storeSilent2(op, g.correlation) : json6(g.body, g.status);
 }
 
-// src/tsa.mjs
-var cat = (...parts) => {
-  let n = 0;
-  for (const p of parts) n += p.length;
-  const out = new Uint8Array(n);
-  let i = 0;
-  for (const p of parts) {
-    out.set(p, i);
-    i += p.length;
-  }
-  return out;
-};
-function derLen(n) {
-  if (n < 128) return new Uint8Array([n]);
-  const bytes2 = [];
-  for (let v = n; v > 0; v = Math.floor(v / 256)) bytes2.unshift(v % 256);
-  return new Uint8Array([128 | bytes2.length, ...bytes2]);
-}
-var tlv = (tag2, body) => cat(new Uint8Array([tag2]), derLen(body.length), body);
-var derSequence = (...items) => tlv(48, cat(...items));
-var derOctetString = (bytes2) => tlv(4, bytes2);
-var derNull = () => new Uint8Array([5, 0]);
-var derBoolean = (v) => new Uint8Array([1, 1, v ? 255 : 0]);
-function derInteger(bytes2) {
-  let i = 0;
-  while (i < bytes2.length - 1 && bytes2[i] === 0 && (bytes2[i + 1] & 128) === 0) i++;
-  const trimmed = bytes2.slice(i);
-  return tlv(2, trimmed[0] & 128 ? cat(new Uint8Array([0]), trimmed) : trimmed);
-}
-var derIntegerSmall = (n) => derInteger(new Uint8Array([n]));
-var OID_SHA256 = new Uint8Array([6, 9, 96, 134, 72, 1, 101, 3, 4, 2, 1]);
-var hexToBytes = (hex6) => {
-  const out = new Uint8Array(hex6.length / 2);
-  for (let i = 0; i < out.length; i++) out[i] = parseInt(hex6.substr(i * 2, 2), 16);
-  return out;
-};
-function timestampRequest(sha256Hex13, nonceBytes) {
-  const nonce = nonceBytes || crypto.getRandomValues(new Uint8Array(8));
-  return {
-    der: derSequence(
-      derIntegerSmall(1),
-      derSequence(derSequence(OID_SHA256, derNull()), derOctetString(hexToBytes(sha256Hex13))),
-      derInteger(nonce),
-      derBoolean(true)
-    ),
-    nonce
-  };
-}
-function readTlv(bytes2, at27) {
-  if (at27 + 2 > bytes2.length) return null;
-  const tag2 = bytes2[at27];
-  let i = at27 + 1, length = bytes2[i++];
-  if (length & 128) {
-    const count = length & 127;
-    if (count === 0 || i + count > bytes2.length) return null;
-    length = 0;
-    for (let k = 0; k < count; k++) length = length * 256 + bytes2[i++];
-  }
-  if (i + length > bytes2.length) return null;
-  return { tag: tag2, value: bytes2.subarray(i, i + length), end: i + length, headerEnd: i };
-}
-function parseTimestampResponse(bytes2, expectDigestHex) {
-  try {
-    return parseResponse(bytes2, expectDigestHex);
-  } catch {
-    return { ok: false, reason: "MALFORMED" };
-  }
-}
-function parseResponse(bytes2, expectDigestHex) {
-  if (!(bytes2 instanceof Uint8Array)) return { ok: false, reason: "MALFORMED" };
-  const outer = readTlv(bytes2, 0);
-  if (!outer || outer.tag !== 48) return { ok: false, reason: "MALFORMED" };
-  const info = readTlv(outer.value, 0);
-  if (!info || info.tag !== 48) return { ok: false, reason: "MALFORMED" };
-  const statusTlv = readTlv(info.value, 0);
-  if (!statusTlv || statusTlv.tag !== 2) return { ok: false, reason: "MALFORMED" };
-  let status = 0;
-  for (const b of statusTlv.value) status = status * 256 + b;
-  if (status !== 0 && status !== 1) return { ok: false, reason: "REJECTED", status };
-  const token = readTlv(outer.value, info.end);
-  if (!token || token.tag !== 48) return { ok: false, reason: "NO_TOKEN", status };
-  const tokenBytes = outer.value.subarray(info.end, token.end);
-  if (typeof expectDigestHex !== "string" || !/^(?:[0-9a-fA-F]{2})+$/.test(expectDigestHex))
-    return { ok: false, reason: "NOT_BOUND", status };
-  const want = hexToBytes(expectDigestHex);
-  let found = false;
-  outer: for (let i = 0; i + want.length <= tokenBytes.length; i++) {
-    for (let k = 0; k < want.length; k++) if (tokenBytes[i + k] !== want[k]) continue outer;
-    found = true;
-    break;
-  }
-  if (!found) return { ok: false, reason: "NOT_BOUND", status };
-  return { ok: true, status, token: tokenBytes };
-}
-var TSA_ENDPOINTS = Object.freeze([
-  "http://timestamp.digicert.com",
-  "http://timestamp.sectigo.com",
-  "http://rfc3161.ai.moda"
-]);
-var TSA_CONTENT_TYPE = "application/timestamp-query";
-var TSA_ACCEPT = "application/timestamp-reply";
-var ARCHIVE_SAVE_BASE = "https://web.archive.org/save/";
-var ARCHIVE_SERVICE = "web.archive.org/save (anonymous)";
-function archiveLocatorFrom(res, requested) {
-  const header2 = (name2) => {
-    try {
-      return res.headers.get(name2) || "";
-    } catch {
-      return "";
-    }
-  };
-  let url = "";
-  try {
-    url = typeof res.url === "string" ? res.url : "";
-  } catch {
-  }
-  for (const loc of [header2("content-location"), header2("location"), url]) {
-    if (typeof loc !== "string") continue;
-    if (/^\/web\/\d+/.test(loc)) return "https://web.archive.org" + loc;
-    if (/^https?:\/\/web\.archive\.org\/web\/\d+/.test(loc)) return loc;
-  }
-  return null;
-}
-
 // src/membership/schema.mjs
 var MEMBERSHIP_SCHEMA = `
 -- Members. Each member signs in with their own password, which is the credentials module's
@@ -22077,7 +21953,7 @@ var wStr = (bytes2) => {
   out.set(bytes2, 4);
   return out;
 };
-var cat2 = (...parts) => {
+var cat = (...parts) => {
   const n = parts.reduce((a, p) => a + p.length, 0);
   const out = new Uint8Array(n);
   let o = 0;
@@ -22101,7 +21977,7 @@ function parsePubkeyLine(line) {
   return { keyType, raw, b64: b645, comment: m.slice(2).join(" ") };
 }
 function wirePubkey(raw) {
-  return cat2(wStr(te2.encode("ssh-ed25519")), wStr(raw));
+  return cat(wStr(te2.encode("ssh-ed25519")), wStr(raw));
 }
 function normalizeKey(entry) {
   const toks = String(entry || "").trim().split(/\s+/);
@@ -22179,7 +22055,7 @@ async function verify(armored, message2, expectNamespace, allowedKeys) {
   if (!allowed.includes(p.pubB64))
     return { ok: false, reason: "UNKNOWN_KEY", keyB64: p.pubB64 };
   const hash = await crypto.subtle.digest(p.hashAlg === "sha512" ? "SHA-512" : "SHA-256", message2);
-  const signed = cat2(
+  const signed = cat(
     te2.encode("SSHSIG"),
     wStr(te2.encode(p.namespace)),
     wStr(p.reserved),
@@ -24655,15 +24531,6 @@ function bundleGate(col, viewer) {
 var ARCHIVE_VIA = "archive.org";
 var ARCHIVE_CAPTURE_GRADE = BASIS_GRADES[BASIS_GRADES.indexOf(EARNED_CAPTURE_CEILING) + 1] ?? null;
 var DOORBELL_VIA = "doorbell";
-var FINDING_MEANS = Object.freeze({
-  NEVER_LOOKED: "nobody looked at this level for this subject",
-  LOOKED_INDETERMINATE: "we looked and could not tell",
-  PRESENT: "we looked and it is there"
-});
-var CAPTURE_HELD_IN_PARTS_ROW = Object.freeze({
-  check: "C-89.1",
-  translation: "The record lists this document, but keeps it in parts rather than as one file, and this instance has no record of fetching it itself. A timestamp is only requested for bytes this instance can vouch for, so none was requested. Nothing is missing: do not capture the document again. If the instance fetches it from its address, it can then be co-attested."
-});
 var VERSION_CHAIN_LIMIT_DEFAULT = 200;
 var VERSION_CHAIN_LIMIT_MAX = 1e3;
 var TESTIMONY_MAX_BYTES = 128 * 1024;
@@ -25086,14 +24953,13 @@ var Provenance = class {
     } catch {
       return { state: "unreadable", why: "the record's data/provenance.json does not parse" };
     }
-    const bare2 = (v) => typeof v === "string" ? v.trim().replace(/^sha256:/, "").toLowerCase() : null;
-    const doc = (Array.isArray(reg?.documents) ? reg.documents : []).find((d) => d && bare2(d.capture?.sha256) === bareSha(sha) && d.parts !== void 0);
+    const doc = (Array.isArray(reg?.documents) ? reg.documents : []).find((d) => d && bareSha(d.capture?.sha256) === bareSha(sha) && d.parts !== void 0);
     if (!doc) return { state: "none" };
-    const ok2 = Array.isArray(doc.parts) && doc.parts.length && doc.parts.every((p) => p && /^[0-9a-f]{64}$/.test(bare2(p.sha256) || "") && Number.isInteger(p.bytes) && p.bytes >= 0);
+    const ok2 = Array.isArray(doc.parts) && doc.parts.length && doc.parts.every((p) => p && /^[0-9a-f]{64}$/.test(bareSha(p.sha256) || "") && Number.isInteger(p.bytes) && p.bytes >= 0);
     if (!ok2) return { state: "unreadable", why: "the register document names parts for this capture without a digest and size for each" };
     return { state: "named", parts: doc.parts.map((p) => ({
       file: typeof p.file === "string" ? p.file : null,
-      sha256: bare2(p.sha256),
+      sha256: bareSha(p.sha256),
       bytes: p.bytes
     })) };
   }
@@ -25199,12 +25065,12 @@ var Provenance = class {
    *  `captured_locators_sha` index, and like `registered` it names no bundle.
    */
   /*  D-556 (BOB #34, 2026-09-25 00:00Z) - AND, when the caller names the BUNDLE whose row it is gating, the
-   *  PARTS that bundle's record names for the hash (`#partsNamedFor`, D-533's reader, not a second one). The
+   *  PARTS that bundle's record names for the hash (`partsNamed`, D-533's reader, not a second one). The
    *  ratify gate asks it on a whole-hash miss: a row held in parts is admitted when every part the record names
    *  is present and verifies, and publication copies exactly those parts. The bundle's own register document is
    *  read, so it names nothing the ratifier has not already been handed in the image. */
   registerHolds({ sha = null, bundle = null } = {}) {
-    const s = typeof sha === "string" && sha.trim() ? sha.trim().replace(/^sha256:/, "").toLowerCase() : null;
+    const s = bareSha(sha) || null;
     if (!s) return { ok: true, sha: null, asked: false, registered: null, acquired: null };
     const b = typeof bundle === "string" && bundle.trim() ? bundle.trim() : null;
     return {
@@ -25543,7 +25409,7 @@ var Provenance = class {
    *  "these are the first bytes we held", not a degenerate failure, and
    *  `test/m/provenance/convert-versionchain.test.mjs` pins it as its own arm.
    *
-   *  GATED at `register.bundle_id` through `#bundleGate`, the same predicate
+   *  GATED at `register.bundle_id` through `bundleGate`, the same predicate
    *  every other read in this file compiles, and `total` is counted through the
    *  SAME join and the SAME predicate as the rows — so a viewer cannot learn
    *  from a total that something was withheld. Nothing publishes how many rows
@@ -26001,6 +25867,130 @@ function provenanceOf(host, deps) {
     record.registerCounts("provenance", ["register"], (hid) => p.counts(hid));
   }
   return p;
+}
+
+// src/tsa.mjs
+var cat2 = (...parts) => {
+  let n = 0;
+  for (const p of parts) n += p.length;
+  const out = new Uint8Array(n);
+  let i = 0;
+  for (const p of parts) {
+    out.set(p, i);
+    i += p.length;
+  }
+  return out;
+};
+function derLen(n) {
+  if (n < 128) return new Uint8Array([n]);
+  const bytes2 = [];
+  for (let v = n; v > 0; v = Math.floor(v / 256)) bytes2.unshift(v % 256);
+  return new Uint8Array([128 | bytes2.length, ...bytes2]);
+}
+var tlv = (tag2, body) => cat2(new Uint8Array([tag2]), derLen(body.length), body);
+var derSequence = (...items) => tlv(48, cat2(...items));
+var derOctetString = (bytes2) => tlv(4, bytes2);
+var derNull = () => new Uint8Array([5, 0]);
+var derBoolean = (v) => new Uint8Array([1, 1, v ? 255 : 0]);
+function derInteger(bytes2) {
+  let i = 0;
+  while (i < bytes2.length - 1 && bytes2[i] === 0 && (bytes2[i + 1] & 128) === 0) i++;
+  const trimmed = bytes2.slice(i);
+  return tlv(2, trimmed[0] & 128 ? cat2(new Uint8Array([0]), trimmed) : trimmed);
+}
+var derIntegerSmall = (n) => derInteger(new Uint8Array([n]));
+var OID_SHA256 = new Uint8Array([6, 9, 96, 134, 72, 1, 101, 3, 4, 2, 1]);
+var hexToBytes = (hex6) => {
+  const out = new Uint8Array(hex6.length / 2);
+  for (let i = 0; i < out.length; i++) out[i] = parseInt(hex6.substr(i * 2, 2), 16);
+  return out;
+};
+function timestampRequest(sha256Hex13, nonceBytes) {
+  const nonce = nonceBytes || crypto.getRandomValues(new Uint8Array(8));
+  return {
+    der: derSequence(
+      derIntegerSmall(1),
+      derSequence(derSequence(OID_SHA256, derNull()), derOctetString(hexToBytes(sha256Hex13))),
+      derInteger(nonce),
+      derBoolean(true)
+    ),
+    nonce
+  };
+}
+function readTlv(bytes2, at27) {
+  if (at27 + 2 > bytes2.length) return null;
+  const tag2 = bytes2[at27];
+  let i = at27 + 1, length = bytes2[i++];
+  if (length & 128) {
+    const count = length & 127;
+    if (count === 0 || i + count > bytes2.length) return null;
+    length = 0;
+    for (let k = 0; k < count; k++) length = length * 256 + bytes2[i++];
+  }
+  if (i + length > bytes2.length) return null;
+  return { tag: tag2, value: bytes2.subarray(i, i + length), end: i + length, headerEnd: i };
+}
+function parseTimestampResponse(bytes2, expectDigestHex) {
+  try {
+    return parseResponse(bytes2, expectDigestHex);
+  } catch {
+    return { ok: false, reason: "MALFORMED" };
+  }
+}
+function parseResponse(bytes2, expectDigestHex) {
+  if (!(bytes2 instanceof Uint8Array)) return { ok: false, reason: "MALFORMED" };
+  const outer = readTlv(bytes2, 0);
+  if (!outer || outer.tag !== 48) return { ok: false, reason: "MALFORMED" };
+  const info = readTlv(outer.value, 0);
+  if (!info || info.tag !== 48) return { ok: false, reason: "MALFORMED" };
+  const statusTlv = readTlv(info.value, 0);
+  if (!statusTlv || statusTlv.tag !== 2) return { ok: false, reason: "MALFORMED" };
+  let status = 0;
+  for (const b of statusTlv.value) status = status * 256 + b;
+  if (status !== 0 && status !== 1) return { ok: false, reason: "REJECTED", status };
+  const token = readTlv(outer.value, info.end);
+  if (!token || token.tag !== 48) return { ok: false, reason: "NO_TOKEN", status };
+  const tokenBytes = outer.value.subarray(info.end, token.end);
+  if (typeof expectDigestHex !== "string" || !/^(?:[0-9a-fA-F]{2})+$/.test(expectDigestHex))
+    return { ok: false, reason: "NOT_BOUND", status };
+  const want = hexToBytes(expectDigestHex);
+  let found = false;
+  outer: for (let i = 0; i + want.length <= tokenBytes.length; i++) {
+    for (let k = 0; k < want.length; k++) if (tokenBytes[i + k] !== want[k]) continue outer;
+    found = true;
+    break;
+  }
+  if (!found) return { ok: false, reason: "NOT_BOUND", status };
+  return { ok: true, status, token: tokenBytes };
+}
+var TSA_ENDPOINTS = Object.freeze([
+  "http://timestamp.digicert.com",
+  "http://timestamp.sectigo.com",
+  "http://rfc3161.ai.moda"
+]);
+var TSA_CONTENT_TYPE = "application/timestamp-query";
+var TSA_ACCEPT = "application/timestamp-reply";
+var ARCHIVE_SAVE_BASE = "https://web.archive.org/save/";
+var ARCHIVE_SERVICE = "web.archive.org/save (anonymous)";
+function archiveLocatorFrom(res, requested) {
+  const header2 = (name2) => {
+    try {
+      return res.headers.get(name2) || "";
+    } catch {
+      return "";
+    }
+  };
+  let url = "";
+  try {
+    url = typeof res.url === "string" ? res.url : "";
+  } catch {
+  }
+  for (const loc of [header2("content-location"), header2("location"), url]) {
+    if (typeof loc !== "string") continue;
+    if (/^\/web\/\d+/.test(loc)) return "https://web.archive.org" + loc;
+    if (/^https?:\/\/web\.archive\.org\/web\/\d+/.test(loc)) return loc;
+  }
+  return null;
 }
 
 // src/attestation/checks.mjs
@@ -55415,7 +55405,7 @@ var OBSERVATION_MEANS = Object.freeze({
   PRESENT: "we looked and it is there",
   partial: "we looked and got part of it (SWH's crawl status; CPDF-5's measured 88% case)"
 });
-var FINDING_MEANS2 = Object.freeze({
+var FINDING_MEANS = Object.freeze({
   NEVER_LOOKED: OBSERVATION_MEANS.NEVER_LOOKED,
   LOOKED_INDETERMINATE: OBSERVATION_MEANS.LOOKED_INDETERMINATE,
   PRESENT: OBSERVATION_MEANS.PRESENT
@@ -55504,7 +55494,7 @@ function routeFinding(objectType, mark) {
       assessed: false,
       marked: false,
       finding: "NEVER_LOOKED",
-      means: FINDING_MEANS2.NEVER_LOOKED,
+      means: FINDING_MEANS.NEVER_LOOKED,
       note: "no assessment of this document's route has ever been recorded. This is NOT a finding that the route cannot be shown; it is the absence of the question having been asked."
     };
   const marked = mark.finding === "LOOKED_INDETERMINATE";
@@ -55513,7 +55503,7 @@ function routeFinding(objectType, mark) {
     assessed: true,
     marked,
     finding: mark.finding,
-    means: FINDING_MEANS2[mark.finding] ?? null,
+    means: FINDING_MEANS[mark.finding] ?? null,
     at: mark.at,
     by: mark.by,
     stateAt: mark.state_at,
@@ -56049,7 +56039,7 @@ var ProvenanceRoutes = class {
     return {
       ok: true,
       finding: asked,
-      means: FINDING_MEANS2[asked],
+      means: FINDING_MEANS[asked],
       documents,
       returned: documents.length,
       limit: n,
