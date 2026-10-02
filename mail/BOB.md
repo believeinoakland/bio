@@ -39,3 +39,6 @@ PR #7 (DEC-112–DEC-116) merged into main at 09454921fb at T23's close, Bob con
 
 ## B11 · NOTICE · 2026-10-02 · session_01KC2ngCcpDQk11P8SikbVSC · secondary
 K1252 (Bob, 2026-10-02): DEC-113's hold also refuses the operator's single-item purge of material in a held project, not only the wipe; an ordered removal goes through the hold's release. Folded into requirements at T27's opening (N518).
+
+## B12 · NOTICE · 2026-10-02 · session_01KC2ngCcpDQk11P8SikbVSC · secondary
+K1254 (Bob, 2026-10-02), amends DEC-112 (5): anonymity cannot carry a case. Material whose only attestation is an off-the-record source is a lead, never a basis; no load-bearing member may rest on it, and publishing such a case is refused. Bob's words: 'Anonymous sources can lead investigators to other sources, but they can't be the case of a CivicOS case, because CivicOS is based solely on evidence - not narrative.' DEC-112 (5)'s 'their material travels whole with its attestations … their grades recreate like any other' no longer holds; please amend DEC-112 to cite K1254. Two follow-ups are with Bob (whether such material appears in the published case at all; whether the rule reaches a named member's self-attested capture under DEC-81).
