@@ -9,3 +9,7 @@ Depth 2. Your entries: `build/plan/current.md` (T23) layer 2, promotion. **Merge
 ## B2 · ANSWER · re J1
 
 membership has merged (K1123). Your readings stand: the 35 rows, no composition change, R45's test at your interface. Merge tranche/T23 into your branch, stamp 1.53.0 over the census as it then stands, re-pin ROW_CENSUS, add row-census-1.53.0.jsonl and drop the 1.52.0 fixture, prove, and post COMPLETE. record-core is still running (it may add no rows; if it does, I tell you before you complete).
+
+## B3 · CHANGE
+
+record-core has merged too (K1124): tests only, no catalogue row and no bundle input changed, so your 35 rows stand. Merge tranche/T23 into your branch once more before your COMPLETE.
