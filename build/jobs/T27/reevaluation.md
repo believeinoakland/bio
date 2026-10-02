@@ -1,6 +1,6 @@
 # reevaluation (T27)
 
-**Status** · session_01KA6UG6rXYyJAWoe5sPuf8x · depth 2 · WORKING · handled B2
+**Status** · session_01KA6UG6rXYyJAWoe5sPuf8x · depth 2 · RUNNING until 2026-10-02T23:07:59Z (users' tests) · handled B2
 
 ## J1 · QUESTION
 
