@@ -15,17 +15,17 @@ async function measured() {
   w.define();
   await w.thread("ENT-1", { need: "A", award: "B" });
   await w.thread("ENT-2", { award: "C" });
-  assert.equal(w.i.setCondition({ project: w.P, condition: { ...COND, relation: "member_of" }, author: V("bob"), viewer: V("bob") }).ok, true);
+  assert.equal(w.i.setCondition({ reason: "Measured by the record.", project: w.P, condition: { ...COND, relation: "member_of" }, author: V("bob"), viewer: V("bob") }).ok, true);
   return w;
 }
 
 test("R18 workObjective is a member's act only (MACHINE_CANNOT_CHOOSE_THE_QUESTION): it opens a run through ai-runs with the project as its context and the objective and its current gaps as its instructions, the looks named under authority kind objective", async () => {
   const w = await measured();
-  for (const who of [MACHINE, "", null]) assert.equal((await w.i.workObjective({ project: w.P, author: who, run: { run: "R-1" } })).reason,
+  for (const who of [MACHINE, "", null]) assert.equal((await w.i.workObjective({ reason: "Work the gaps.", project: w.P, author: who, run: { run: "R-1" } })).reason,
                                                       "MACHINE_CANNOT_CHOOSE_THE_QUESTION");
   assert.equal(w.calls.open.length, 0);
-  assert.equal((await w.i.workObjective({ project: w.P, author: V("dave"), run: { run: "R-1" } })).reason, "NO_SUCH_PROJECT");
-  const r = await w.i.workObjective({ project: w.P, author: V("bob"), viewer: V("bob"),
+  assert.equal((await w.i.workObjective({ reason: "Work the gaps.", project: w.P, author: V("dave"), run: { run: "R-1" } })).reason, "NO_SUCH_PROJECT");
+  const r = await w.i.workObjective({ reason: "Work the gaps.", project: w.P, author: V("bob"), viewer: V("bob"),
     run: { run: "R-1", principalPlane: "member:bob/tok", principalClaude: "acct", skillVersion: "bio-pack@3",
            bounds: [{ bound: "fetches", allowed: 10 }], contextType: "inquiry", contextId: "INQ-X" } });
   assert.equal(r.started, true);
@@ -51,7 +51,7 @@ test("R19 progress is derived, never reported: no service accepts a progress fig
     assert.ok(!cols.some((c) => /progress|share|percent|complet|matched|meeting|satisf/.test(c)), `${t.name}: ${cols}`);
   }
   /* a figure sent with a condition or a goal is not taken */
-  assert.equal(w.i.setCondition({ project: w.P, condition: { ...COND, relation: "member_of", progress: 90, satisfied: { share: 50, reached: 45 }, meeting: 3 },
+  assert.equal(w.i.setCondition({ reason: "Measured by the record.", project: w.P, condition: { ...COND, relation: "member_of", progress: 90, satisfied: { share: 50, reached: 45 }, meeting: 3 },
                                    author: V("bob"), viewer: V("bob") }).ok, true);
   const oc = w.fm(w.P).objective_condition;
   assert.deepEqual(Object.keys(oc).sort(), ["entity", "progression", "relation", "required_grade", "required_stages", "set_at", "set_by", "share"]);
@@ -100,7 +100,7 @@ test("R23 every read and act naming a project, goal or aspiration the viewer may
   const absent = "PROJ-2026-9999-none";
   const pairs = (fn) => [fn(hidden), fn(absent)].map(strip);
   const same = (fn, label) => { const [a, b] = pairs(fn); assert.equal(b.reason, "NO_SUCH_PROJECT", label); assert.deepEqual(a, b, label); };
-  same((p) => w.i.setCondition({ project: p, condition: COND, author: V("bob"), viewer: V("bob") }), "setCondition");
+  same((p) => w.i.setCondition({ reason: "Measured by the record.", project: p, condition: COND, author: V("bob"), viewer: V("bob") }), "setCondition");
   same((p) => w.i.progress({ project: p, viewer: V("bob") }), "progress");
   same((p) => w.i.gaps({ project: p, viewer: V("bob") }), "gaps");
   same((p) => w.i.aspirationsFor({ project: p, viewer: V("bob") }), "aspirationsFor");
@@ -110,7 +110,7 @@ test("R23 every read and act naming a project, goal or aspiration the viewer may
   same((p) => w.i.linkObjective({ goal: g, project: p, author: V("bob"), viewer: V("bob") }), "linkObjective");
   same((p) => w.i.departFrom({ project: p, aspiration: a, reason: "r", author: V("bob"), viewer: V("bob") }), "departFrom");
   same((p) => w.i.declareAspiration({ scope: "project", owner: p, statement: "s", author: V("bob"), viewer: V("bob") }), "declareAspiration");
-  assert.deepEqual(strip(await w.i.workObjective({ project: hidden, author: V("bob") })), strip(await w.i.workObjective({ project: absent, author: V("bob") })));
+  assert.deepEqual(strip(await w.i.workObjective({ reason: "Work the gaps.", project: hidden, author: V("bob") })), strip(await w.i.workObjective({ reason: "Work the gaps.", project: absent, author: V("bob") })));
   /* a goal or aspiration a viewer may not see (a viewer admitted to nothing) answers as an absent one */
   const nobody = "nobody";
   assert.deepEqual(strip(w.i.readGoal({ goal: g, viewer: nobody })), strip(w.i.readGoal({ goal: "GOAL-2026-0099", viewer: nobody })));
@@ -120,7 +120,7 @@ test("R23 every read and act naming a project, goal or aspiration the viewer may
   assert.equal(w.i.aspirationsFor({ viewer: nobody }).aspirations.length, 0);
   /* N199 (1): a gap of a project the viewer may not see, set aside without naming its project, is still that project's:
      it is listed in `set_aside` to those who see the project and to no one else */
-  assert.equal(w.i.setCondition({ project: hidden, condition: { ...COND, relation: "member_of" }, author: V("carol"),
+  assert.equal(w.i.setCondition({ reason: "Measured by the record.", project: hidden, condition: { ...COND, relation: "member_of" }, author: V("carol"),
                                    viewer: V("carol") }).ok, true);
   const gap = w.i.gaps({ project: hidden, viewer: V("carol") }).gaps[0];
   assert.ok(gap, "the hidden project has a gap");
@@ -188,10 +188,10 @@ test("R25 no place is named in this module's behaviour or outward text: its rows
     a, g, w.i.progress({ project: w.P, viewer: V("bob") }), w.i.gaps({ project: w.P, viewer: V("bob") }),
     w.i.proposals({ viewer: V("bob") }), w.i.aspirationsFor({ project: w.P, viewer: V("bob") }), w.i.contacts({ viewer: V("bob") }),
     w.i.pursuitOf({ aspiration: a.aspiration, viewer: V("bob") }), w.i.readGoal({ goal: g.goal, viewer: V("bob") }),
-    w.i.setCondition({ project: w.P, condition: {}, author: V("bob") }), w.i.declareGoal({ statement: "", bounds: "", author: V("bob") }),
+    w.i.setCondition({ reason: "Measured by the record.", project: w.P, condition: {}, author: V("bob") }), w.i.declareGoal({ statement: "", bounds: "", author: V("bob") }),
     w.i.triage({ proposal: "x", act: "adopt", author: MACHINE }), w.i.departFrom({ project: w.P, aspiration: a.aspiration, reason: "", author: V("bob") }),
     w.i.closeGoal({ goal: g.goal, reason: "", author: V("bob") }), await w.i.ageSurfaced(Date.now()),
-    await w.i.workObjective({ project: w.P, author: MACHINE }),
+    await w.i.workObjective({ reason: "Work the gaps.", project: w.P, author: MACHINE }),
   ];
   for (const r of answers) assert.doesNotMatch(JSON.stringify(r), PLACES);
   for (const id of [w.P, a.aspiration, g.goal]) assert.doesNotMatch(w.text(id).replace(/title: .*/, ""), PLACES);
@@ -204,7 +204,8 @@ test("R15 R16 (N179) built as the plane builds it, intent first and progressions
     w.member("alice", { role: "admin" });
     w.member("bob");
     w.entity("ENT-1");
-    assert.equal(w.progressions.defineProgression({ progressionKey: "proc", label: "Procurement", declaredBy: V("alice"), stages: [
+    assert.equal(w.progressions.defineProgression({ progressionKey: "proc", label: "Procurement", declaredBy: V("alice"),
+      basis: "an award follows a need within ten days", stages: [
       { key: "need", cardinality: "1", required: "always" },
       { key: "award", after: "need", cardinality: "1", required: "always", within: "10 days" }] }).ok, true);
     await w.thread("ENT-1", { need: "A" });

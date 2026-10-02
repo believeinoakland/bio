@@ -22,7 +22,7 @@ async function served() {
   file("INFO-ENT-2-need", w.P);
   file("INFO-ENT-1-award", w.P);
   file("INFO-ENT-1-need", Q);
-  assert.equal(w.i.setCondition({ project: w.P, condition: { ...COND, relation: "member_of", required: { grade: "B", stages: ["need", "award"] } },
+  assert.equal(w.i.setCondition({ reason: "Measured by the record.", project: w.P, condition: { ...COND, relation: "member_of", required: { grade: "B", stages: ["need", "award"] } },
                                    author: V("bob"), viewer: V("bob") }).ok, true);
   const gap = w.i.gaps({ project: w.P, viewer: V("bob") }).gaps;
   assert.deepEqual(gap.map((g) => g.basis.entity), ["ENT-2"]);

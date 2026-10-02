@@ -84,7 +84,7 @@ test("R4 progress measures at most 1,000 matched instances (MEASURE_MAX): at the
   /* 999 related instances and the anchor's own: 1,000 matched, every one meeting */
   await w.thread("ENT-0", { need: "A", award: "A" });
   for (const e of others.slice(0, 999)) await w.thread(e, { need: "A", award: "A" });
-  assert.equal(w.i.setCondition({ project: w.P, author: V("bob"), viewer: V("bob"), condition: { progression: "proc", entity: "ENT-0",
+  assert.equal(w.i.setCondition({ reason: "Measured by the record.", project: w.P, author: V("bob"), viewer: V("bob"), condition: { progression: "proc", entity: "ENT-0",
     relation: "member_of", required: { grade: "B", stages: ["need", "award"] }, satisfied: { share: 100 } } }).ok, true);
   let p = w.i.progress({ project: w.P, viewer: V("bob") });
   assert.deepEqual([p.matched, p.meeting, p.satisfied, p.limit, p.truncated], [1000, 1000, true, 1000, false]);
@@ -147,7 +147,7 @@ test("R28 (N305, K391) servesOf walks at most the first 1,000 projects in id ord
   w.define();
   await w.thread("ENT-2", { need: "A" });                             // short (award missing) wherever it is measured
   const condition = { ...COND, relation: "member_of", required: { grade: "B", stages: ["need", "award"] } };
-  const condition_ = (pid) => assert.equal(w.i.setCondition({ project: pid, condition, author: V("bob"), viewer: V("bob") }).ok, true);
+  const condition_ = (pid) => assert.equal(w.i.setCondition({ reason: "Measured by the record.", project: pid, condition, author: V("bob"), viewer: V("bob") }).ok, true);
   const gapOf = (pid) => `intent::${pid}::proc::ENT-2`;
   /* 1,000 projects, three of them conditioned: the first, the middle and the last in id order (ids are not in
      creation order, so they are chosen by sorting) */
@@ -185,7 +185,7 @@ test("R15 R16 (N305) proposals with no project named reads at most the first 1,0
   const seen = [w.P, ...mine, w.project("One more", "bob")].sort();
   const [inside, past] = [seen[999], seen[1000]];
   for (const pid of [inside, past])
-    assert.equal(w.i.setCondition({ project: pid, condition: { ...COND, required: { grade: null, stages: ["need"] } },
+    assert.equal(w.i.setCondition({ reason: "Measured by the record.", project: pid, condition: { ...COND, required: { grade: null, stages: ["need"] } },
                                      author: V("bob"), viewer: V("bob") }).ok, true);
   await w.thread("ENT-1", { award: "A" });                            // need missing: one gap in each
   const gapOf = (pid) => w.i.proposals({ project: pid, viewer: V("bob") }).proposals.filter((p) => p.kind === "objective-gap");
