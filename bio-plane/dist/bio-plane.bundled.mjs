@@ -18480,9 +18480,11 @@ var MODULE_ORDER = Object.freeze([
   "reevaluation",
   /* 8 */
   "case-grammar",
+  "corpus-export",
   "publication",
   "public-read",
   "project-stage",
+  "network-notices",
   "ratification",
   "case-authoring",
   "review",
@@ -22356,12 +22358,12 @@ function withProducingGroup(text5, slug) {
 }
 
 // src/gate.mjs
-var CATALOG_VERSION = "1.52.0";
+var CATALOG_VERSION = "1.53.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var ROW_CENSUS = Object.freeze({
   version: CATALOG_VERSION,
-  rows: 1022,
-  digest: "de396d62fe1e159f5b7ee5e8c360e119226674fe097e3d4e51a79ff68be11bd1"
+  rows: 1046,
+  digest: "28dc9ebb47bf812a1268e50f885ade3ad245fd76b00a04089ce88a88edb3e7e4"
 });
 var hex2 = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var te3 = new TextEncoder();

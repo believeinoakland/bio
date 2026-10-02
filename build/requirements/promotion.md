@@ -91,7 +91,7 @@ The one write path by which a bundle enters or changes in the record. It holds t
 - Errors: never throws.
 
 **onCommitted(module, fn) → void** (the post-commit notice beside R39's in-transaction projections, K90 (6))
-- **R45** *(not yet met: T23, the ratified-sweep arm of its last sentence)* A later module registers once at start (a second registration by one module is refused
+- **R45** A later module registers once at start (a second registration by one module is refused
   `LISTENER_DECLARED`). After an accepted promotion's transaction has committed, and never for a refused
   one or one answered `wrote: false` (R4), every registered listener is called once, in the modules'
   total order, with `{bundleId, bundleSha, type, replay}`. A listener runs outside the transaction and writes no row of the promotion; one that throws or rejects
