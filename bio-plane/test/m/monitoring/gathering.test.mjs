@@ -2,18 +2,18 @@
    (registered with record-core); every arm with its negative control. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, sha, infoMd } from "./fixture.mjs";
+import { world, sha, infoMd, sweepDef } from "./fixture.mjs";
 import { checkGatheringGrammar, GATHERING_CHECKS } from "../../../src/monitoring/index.mjs";
 
 const REQ = { id: "GATH-2026-0001-minutes", target: { text: "the council minutes", description: "every meeting's minutes" },
               locators: ["https://records.example.org/minutes"], authority: "Town Clerk", criticality: "crucial",
               cadence: "weekly", status: "open", planted: "2026-09-01T00:00:00Z" };
 const OK = { daemon: { enabled: true, tick_budget: 5, sweep_budget: 0 }, requests: [REQ],
-             sweeps: [{ id: "S1", ratified: true, sources: ["https://records.example.org/"] }] };
+             sweeps: [sweepDef({ ratified: false })] };
 const findingsOf = (g) => { const f = []; checkGatheringGrammar({ files: new Map([["data/gathering.json", typeof g === "string" ? g : JSON.stringify(g)]]) }, f); return f; };
 const gj = (g) => { const t = typeof g === "string" ? g : JSON.stringify(g); return { path: "data/gathering.json", text: t, bytes: Buffer.byteLength(t), sha256: sha(t) }; };
 
-test("R42 C-18.5: every arm of checkGatheringGrammar finds its violation, and a well-formed queue finds none", () => {
+test("R42 C-18.5: every arm of checkGatheringGrammar finds its violation, and a well-formed queue finds none (the sweep arms: sweep-grammar.test.mjs, R53)", () => {
   assert.deepEqual(findingsOf(OK), []);
   assert.deepEqual(findingsOf("{not json"), [], "unparsable JSON is C-14.3's to report");
   assert.deepEqual((() => { const f = []; checkGatheringGrammar({ files: new Map() }, f); return f; })(), [], "no file, not asked");
@@ -38,10 +38,6 @@ test("R42 C-18.5: every arm of checkGatheringGrammar finds its violation, and a 
     [{ requests: [{ ...REQ, status: "done" }] }, /status must be one of: open, captured, retired/],
     [{ requests: [{ ...REQ, planted: "yesterday" }] }, /planted must be an ISO 8601 UTC instant/],
     [{ sweeps: [7] }, /sweeps\[0\] is not an object/],
-    [{ sweeps: [{ id: " " }] }, /sweeps\[0\].id must be a nonempty string/],
-    [{ sweeps: [{ id: "S", ratified: "yes" }] }, /sweeps\[0\].ratified must be boolean/],
-    [{ sweeps: [{ id: "S", sources: "https://x.example.org/" }] }, /sweeps\[0\].sources must be an array/],
-    [{ sweeps: [{ id: "S", sources: ["ftp://x.example.org/"] }] }, /sweeps\[0\].sources\[0\] is not an https public-host locator/],
   ];
   for (const [g, re] of arms) {
     const f = findingsOf(g);

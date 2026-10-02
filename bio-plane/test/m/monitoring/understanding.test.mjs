@@ -195,7 +195,8 @@ test("R28 the cadence tick runs due requests after its batch's addresses, within
   assert.equal(t.gathered.due, 3);
   assert.ok(realMonitor && calls.length === 3);
 });
-test.todo("R29 a ratified sweep runs within its scope and breadth budget and lands at collected (not yet met: K102; sweeps wait for a design of what a sweep's query is)");
+/* R29 (a ratified sweep runs within its scope and budget and files each document at collected) is met in T23 and tested in
+   `sweep-run.test.mjs`; R31's five sweep conditions in `sweep-reads.test.mjs`. */
 test("R31 the reads answer what queue-producers publishes: flagged (R48) names each flagged tick's document with its source_status and since (source-modified, source-removed); archiveEligible (R47) each eligible address with its first failure (archive-fallback-eligible); monitoring({viewer}) each address overdue by more than its interval, with due_at and interval_ms, and each unscheduled one with its reason (monitoring-recheck-due); this module publishes no item", async () => {
   const w = world();
   const iso = (ms) => new Date(ms).toISOString().replace(/\.\d+Z$/, "Z");

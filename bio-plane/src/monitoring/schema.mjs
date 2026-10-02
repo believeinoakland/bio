@@ -3,7 +3,8 @@
  * `monitor_fired` by `subject`; `monitor_tick_epoch` and `monitor_address_type` only by a whole-store purge, an
  * address outliving any one version. `monitor_address_frequency` (R52, K1019) holds members' acts, append-only, and is
  * declared to purge only by a whole-store purge for the same reason. `monitor_gathering_run` (R28, K1096), the record of
- * every attempt at a named request, is declared to purge by the bundle that carries the request. */
+ * every attempt at a named request, is declared to purge by the bundle that carries the request, as `sweep_runs` and
+ * `sweep_filed` (R56–R61, the link sweep's runs and what it filed) are by the bundle that carries the sweep. */
 
 export const MONITORING_SCHEMA = `
 -- REC-26 / MACHINE-PROCESSES.md risk 2: the IDEMPOTENCE KEY for the two periodic
@@ -117,6 +118,33 @@ CREATE TABLE IF NOT EXISTS monitor_gathering_run (
   landed       TEXT,               -- the Information bundle the new bytes landed as, when promoted
   detail       TEXT,               -- why nothing landed, when bytes were filed and nothing was promoted
   PRIMARY KEY (bundle_id, request_id, seq)
+);
+
+-- R56–R61 (K1036): ONE ROW PER RUN OF A RATIFIED SWEEP ("<bundle>#<id>"), never edited: what it fetched and filed,
+-- and detail (JSON: each seed's outcome and capture, the candidates and matches, what was filed, the skips by reason,
+-- the excluded, failed and redirected fetches, the links cut, the budget) and the anomaly R60 noted, when one was.
+-- Derived; declared to purge by the bundle whose data/gathering.json carries the sweep.
+CREATE TABLE IF NOT EXISTS sweep_runs (
+  sweep      TEXT    NOT NULL,
+  seq        INTEGER NOT NULL,
+  bundle_id  TEXT    NOT NULL,
+  at         TEXT    NOT NULL,
+  filed      INTEGER NOT NULL,
+  fetched    INTEGER NOT NULL,
+  detail     TEXT    NOT NULL,
+  anomaly    TEXT,
+  PRIMARY KEY (sweep, seq)
+);
+
+-- R58 (already_swept): every address a sweep filed a document from, and the bundle it was filed as. Derived; declared
+-- to purge by the sweep's bundle.
+CREATE TABLE IF NOT EXISTS sweep_filed (
+  sweep         TEXT NOT NULL,
+  address_norm  TEXT NOT NULL,
+  bundle_id     TEXT NOT NULL,
+  filed         TEXT NOT NULL,
+  at            TEXT NOT NULL,
+  PRIMARY KEY (sweep, address_norm)
 );`;
 
 /* R18: the columns `monitor_address_type` gained after it was first created, added to a table that predates them. */
@@ -132,6 +160,8 @@ export const MONITORING_TABLES = Object.freeze([
   { name: "monitor_address_type", keys: [] },
   { name: "monitor_address_frequency", keys: [] },
   { name: "monitor_gathering_run", keys: ["bundle_id"] },
+  { name: "sweep_runs", keys: ["bundle_id"] },
+  { name: "sweep_filed", keys: ["bundle_id"] },
 ]);
 
 /** Which purge declaration names one of this module's tables (record-core R21). */

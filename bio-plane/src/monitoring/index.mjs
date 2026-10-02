@@ -30,6 +30,10 @@
  *                                   `pendingClocks`, its R1; `actions` R31 before K617's split), R35
  *                                   (`escalationsDue`).
  *   publication                     R33's published-finding half (`restingCapturesOf`, its R42; N230).
+ *   projectStage, captureRequests   the link sweep: R56's closed test (`projectStage`, its R1, R2), and R64's scope
+ *                                   check, registered with `registerSweepScope` (its R45) at creation when given, else
+ *                                   on the first sweep service asked (so the composition root's own capture-requests,
+ *                                   built with its deps, is the one reached).
  *   env      the instance bindings (`MONITOR_TICK_MS`). No binding or credential is a condition of monitoring (R45):
  *            both ticks call `monitor` and capture's `acquire` in process, from the scheduler's alarm (R23, N222).
  *   now      the instance clock in milliseconds (default: the wall clock).
@@ -55,6 +59,8 @@ import { actionClocksOf } from "../action-clocks/index.mjs";
 import { escalationOf } from "../escalation/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
 import { PROJECTION_TABLE } from "../retrieval/index.mjs";
+import { projectStageOf } from "../project-stage/index.mjs";
+import { captureRequestsOf } from "../capture-requests/index.mjs";
 import { readDriveAddress, driveBaselineRow, classifyDriveBaseline } from "../drive.mjs";
 import { RENDERED_METHOD, RENDER_TICK_UNDETERMINED } from "../render.mjs";
 import { detectFormat } from "../formats.mjs";
@@ -63,10 +69,14 @@ import { identify, doctypeFor, assess, CONTRACT } from "../../../docprofile/regi
 import { combine } from "../../../jurisdictions/index.mjs";
 import { parseFrontmatter, isPublicHttpsLocator, createSha256, MACHINE_CLASS_PREFIX, MACHINE_AUTHOR_PREFIX,
          isMachineIdentity } from "../record-grammar/index.mjs";
-import { checkGatheringGrammar, DRIVE_TICK_CHECKS, GATHERING_CHECKS, frequencyRefusal } from "./checks.mjs";
+import { checkGatheringGrammar, DRIVE_TICK_CHECKS, GATHERING_CHECKS, SWEEP_CHECKS, frequencyRefusal } from "./checks.mjs";
 import { MONITORING_TABLES, migrateMonitoring } from "./schema.mjs";
+import { Sweeps } from "./sweep.mjs";
 
 export * from "./checks.mjs";
+export { compileTerm, inScope, TERM_MAX, MATCH_TEXT_MAX, TERM_PROGRAM_MAX, TERM_REPEAT_MAX } from "./sweep-match.mjs";
+export { linksOf, SWEEP_TICK_BATCH, SWEEP_RUNS_SHOWN, SWEEP_CONDITION_KINDS, SWEEP_ACTOR, SWEEP_PURPOSE, ANOMALY_MIN_RUNS,
+         ANOMALY_WINDOW, SILENT_RUNS } from "./sweep.mjs";
 export { MONITORING_SCHEMA, MONITORING_TABLES, monitoringOwns } from "./schema.mjs";
 
 /* ===========================================================   *  CAP-3: the ARCHIVE-MONITOR consumer (R20).
@@ -401,14 +411,21 @@ export class Monitoring {
 
   constructor({ storage, record, membership, promotion, host = null, env = null, now = null, fetch = null,
                 governor = null, provenance = null, capture = null, observationLog = null, intent = null,
-                actionClocks = null, escalation = null, publication = null } = {}) {
+                actionClocks = null, escalation = null, publication = null, projectStage = null, captureRequests = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
     this.env = env && typeof env === "object" ? env : {};
     this.now = typeof now === "function" ? now : () => Date.now();
-    this.#deps = { host, fetch, governor, provenance, capture, observationLog, intent, actionClocks, escalation, publication };
+    this.#deps = { host, fetch, governor, provenance, capture, observationLog, intent, actionClocks, escalation, publication,
+                   projectStage, captureRequests };
+    /* R53–R64: the link sweep, handed this instance's idempotence key, rank, re-entrance guard and landing. */
+    this.sweep = new Sweeps(this, {
+      open: (c, now, ms) => this.#openTickEpoch(c, now, ms), close: (c, e) => this.#closeTickEpoch(c, e),
+      claim: (c, s, e) => this.#claimFire(c, s, e), ranked: (l, i, r, n) => this.#ranked(l, i, r, n),
+      running: this.#tickRunning, land: (q, f, at, say) => this.#land(q, f, at, say), gate: (v) => viewerPredicate(v),
+      recheckMs: () => this.#archiveTickMs(), register: () => this.registerSweepScope() });
   }
 
   get governor() { return this.#deps.governor ||= governorOf(this.#deps.host, { env: this.env }); }
@@ -419,6 +436,7 @@ export class Monitoring {
   get actionClocks() { return this.#deps.actionClocks ||= actionClocksOf(this.#deps.host); }
   get escalation() { return this.#deps.escalation ||= escalationOf(this.#deps.host); }
   get publication() { return this.#deps.publication === undefined ? null : (this.#deps.publication ||= publicationOf(this.#deps.host)); }
+  get projectStage() { return this.#deps.projectStage ||= projectStageOf(this.#deps.host); }
   #fetch(u, init) { return (this.#deps.fetch || globalThis.fetch)(u, init); }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -2008,7 +2026,7 @@ export class Monitoring {
    *  promoted through `promotion.promote` at `collected` (never verified, a member's act), its origin the named request,
    *  the request's id and its bundle named as the authorisation, in the request's bundle's project. Answers `{ok,
    *  bundle_id}` or the promotion's refusal relayed. */
-  #land(q, filed, at) {
+  #land(q, filed, at, say = null) {
     try {
       const doc = filed.doc, cap = doc.capture;
       if (typeof doc.file !== "string" || !Number.isSafeInteger(cap.bytes))
@@ -2018,7 +2036,7 @@ export class Monitoring {
       const project = home && typeof home.project === "string" && home.project ? home.project : null;
       return this.record.transact(() => {
         const id = `${this.record.allocId("INFO", at.slice(0, 4)).id}-${GATHERING_BUNDLE_SLUG}`;
-        const title = `Gathered for ${q.id}: ${q.target || filed.locator}`.replace(/[\p{Cc}]+/gu, " ").slice(0, 200);
+        const title = (say ? say.title : `Gathered for ${q.id}: ${q.target || filed.locator}`).replace(/[\p{Cc}]+/gu, " ").slice(0, 200);
         const retrieved = typeof doc.retrieved === "string" && doc.retrieved ? doc.retrieved : at;
         const md = ["---", `id: ${id}`, "object_type: information", "schema: information@2",
           `title: ${JSON.stringify(title)}`, `current_state: ${GATHERING_LANDS_AT}`, "prior_state: null",
@@ -2031,15 +2049,15 @@ export class Monitoring {
           "source:", `  locator: ${JSON.stringify(filed.locator)}`, `  retrieved: ${retrieved}`,
           "monitoring:", "  enabled: false", "  frequency: none",
           "---", "", "## Summary", "",
-          `The document served at ${filed.locator}, gathered by the daemon for the named request ${q.id} of ${q.bundle}. `
-          + `Its bytes are \`${doc.file}\`, exactly as served; nothing here summarises them.`, "",
+          (say ? say.summary : `The document served at ${filed.locator}, gathered by the daemon for the named request ${q.id} `
+            + `of ${q.bundle}.`) + ` Its bytes are \`${doc.file}\`, exactly as served; nothing here summarises them.`, "",
           "## Provenance Notes", "",
-          `Gathered for the named request ${q.id}, carried by ${q.bundle}'s data/gathering.json, which authorised the `
-          + `fetch; locator ${q.locators.indexOf(filed.locator) + 1} of ${q.locators.length} in the request's order. `
-          + `Collected ${at}. Filed at ${GATHERING_LANDS_AT} and never higher: verifying it is a named member's decision.`, "",
+          say ? say.notes : `Gathered for the named request ${q.id}, carried by ${q.bundle}'s data/gathering.json, which `
+          + `authorised the fetch; locator ${q.locators.indexOf(filed.locator) + 1} of ${q.locators.length} in the request's `
+          + `order. Collected ${at}. Filed at ${GATHERING_LANDS_AT} and never higher: verifying it is a named member's decision.`, "",
           "## Session Log", "",
           `### Session ${at} | Collected | ${GATHERING_AUTHOR}`,
-          `Trigger: named request ${q.id} (${q.bundle})`,
+          `Trigger: ${say ? say.trigger : `named request ${q.id} (${q.bundle})`}`,
           "Changes: created from the daemon's capture for the named request.", "",
           "## Review Notes", ""].join("\n");
         const blob = (f) => (f && typeof f.file === "string" && /^[0-9a-f]{64}$/.test(String(f.sha256 || ""))
@@ -2203,13 +2221,21 @@ export class Monitoring {
     const gf = [];
     checkGatheringGrammar({ files: new Map([["data/gathering.json", gj.text]]) }, gf);
     const errs = gf.filter((x) => x.severity === "error");
+    /* DEC-49 REGION is-sweep-term */
+    const term = errs.filter((x) => x.code === "SWEEP_TERM_REFUSED");
+    if (term.length)
+      return { ok: false, reason: "SWEEP_TERM_REFUSED", code: "SWEEP_TERM_REFUSED", check: SWEEP_CHECKS.SWEEP_TERM_REFUSED.check,
+               translation: SWEEP_CHECKS.SWEEP_TERM_REFUSED.translation, detail: term.map((x) => x.message).join("; "),
+               findings: errs.map((x) => ({ check: x.check, detail: x.message })) };
+    /* END DEC-49 REGION is-sweep-term */
     /* DEC-49 REGION is-gathering-refused */
     if (errs.length)
       return { ok: false, reason: "GATHERING_REFUSED", code: "GATHERING_REFUSED",
                check: GATHERING_CHECKS.GATHERING_REFUSED.check, translation: GATHERING_CHECKS.GATHERING_REFUSED.translation,
                findings: errs.map((x) => ({ check: x.check, detail: x.message })) };
     /* END DEC-49 REGION is-gathering-refused */
-    return null;
+    /* R55: who may write a sweep, against the file this one replaces. */
+    return this.sweep.sweepFence(c, gj.text);
   }
 
   /** R42: C-18.5 in the audit over one bundle image (record-core R59), as `checkBundle` ran it. */
@@ -2220,6 +2246,32 @@ export class Monitoring {
     checkGatheringGrammar({ files }, findings);
     return findings;
   }
+
+  /* ================================================================== *
+   * The link sweep (R29, R53–R64): `sweep.mjs`
+   * ================================================================== */
+
+  /** R56: for `scheduler`'s `gathering-sweep` consumer. */
+  sweepDue(now) { return this.sweep.sweepDue(now); }
+  sweepWake(now) { return this.sweep.sweepWake(now); }
+  sweepTick(now, rank = null) { return this.sweep.sweepTick(now, rank); }
+  /** R61, R63: the reads. */
+  sweeps(args) { return this.sweep.sweeps(args); }
+  sweepConditions(args) { return this.sweep.sweepConditions(args); }
+
+  /** R64 (K1122): register, once, with capture-requests (its R45) the scope check its drain asks. A registration that
+   *  is refused or throws is asked again on the next sweep service, never held as done. */
+  registerSweepScope() {
+    if (this.#scopeRegistered) return true;
+    try {
+      const cr = this.#deps.captureRequests || captureRequestsOf(this.#deps.host);
+      const r = cr && typeof cr.registerSweepScope === "function"
+        ? cr.registerSweepScope("monitoring", (a) => this.sweep.scopeCheck(a || {})) : null;
+      this.#scopeRegistered = !!(r && (r.ok === true || r.reason === "LISTENER_DECLARED"));
+    } catch { this.#scopeRegistered = false; }
+    return this.#scopeRegistered;
+  }
+  #scopeRegistered = false;
 
   /* ================================================================== *
    * What reaches members (R31, R32)
@@ -2253,8 +2305,8 @@ export class Monitoring {
   /** R30: the due slate, the manual path (Intake Doctrine §4): every monitored address now due (R16), every open named
    *  request and every ratified sweep in a `data/gathering.json` the viewer may see, exported as a prompt a member runs
    *  by hand. The store's fields are QUOTED DATA (each item one JSON line between fixed markers) inside fixed
-   *  instruction framing, so no field can be read as an instruction. No request or sweep has been run by the daemon
-   *  (R28, R29), so every open request and ratified sweep is due. At most MONITORING_READ_MAX items (`truncated`). */
+   *  instruction framing, so no field can be read as an instruction. Every open request is listed, and every sweep
+   *  R56 finds due with its definition (R61). At most MONITORING_READ_MAX items (`truncated`). */
   slate({ viewer = null, now = null, limit = null } = {}) {
     const at = Number.isFinite(Number(now)) && now !== null && now !== "" ? Number(now) : this.now();
     const cap = clampLimit(limit, MONITORING_READ_MAX, MONITORING_READ_MAX);
@@ -2281,11 +2333,9 @@ export class Monitoring {
           items.push({ kind: "named-request", bundle: f.bundle_id, id: r.id ?? null, target: r.target?.text ?? null,
                        locators: Array.isArray(r.locators) ? r.locators : [], authority: r.authority ?? null,
                        criticality: r.criticality ?? null, cadence: r.cadence ?? null });
-      for (const w of Array.isArray(g.sweeps) ? g.sweeps : [])
-        if (w && typeof w === "object" && w.ratified === true)
-          items.push({ kind: "ratified-sweep", bundle: f.bundle_id, id: w.id ?? null,
-                       sources: Array.isArray(w.sources) ? w.sources : [] });
     }
+    /* R61: each due sweep (R56), its definition quoted data like every other field. */
+    items.push(...this.sweep.dueForSlate(at, sees));
     const shown = items.slice(0, cap);
     const prompt = [SLATE_FRAMING_OPEN, SLATE_DATA_BEGIN, ...shown.map((x) => JSON.stringify(x)), SLATE_DATA_END,
                     SLATE_FRAMING_CLOSE].join("\n");
@@ -2657,6 +2707,8 @@ export function monitoringOf(host, deps) {
     promotion.registerStep("monitoring", { check: (c) => m.gatheringCheck(c) });
     record.registerAuditCheck("monitoring", (image) => m.audit(image));
     promotion.onCommitted("monitoring", (n) => m.actionCommitted(n));
+    /* R64: the sweep scope check capture-requests R45 calls, at creation when it was handed in. */
+    if (d.captureRequests) m.registerSweepScope();
     const intent = d.intent === null ? null : m.intent;
     if (intent && typeof intent.registerSource === "function")
       intent.registerSource("monitoring", ({ project, viewer } = {}) => m.proposals({ project, viewer }));
@@ -2680,6 +2732,8 @@ export function monitoringOps(m, url, body) {
     monitorslate: () => m.slate({ viewer: q("viewer"), now: q("now"), limit: q("limit") }),
     /* R52: the body's fields, then the control plane's `author` and `viewer` stamps, so a body never supplies them. */
     addressfrequencyset: () => m.addressFrequencySet({ ...b, author: q("author"), viewer: q("viewer") }),
+    /* R61: the sweeps the viewer may see, read through the control plane's viewer stamp. */
+    sweeps: () => m.sweeps({ viewer: q("viewer"), now: q("now") }),
   };
 }
 
