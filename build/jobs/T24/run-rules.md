@@ -35,3 +35,7 @@ Size (session_01XiDMY8V5iF59Evun86B5pi): test runs 4, module lines 1703
 ## J1 · REPORT
 
 Two things outside my module (wording job, no requirement change made): (1) My comment-only edits to bio-plane/src/run-rules/checks.mjs and rules.mjs stale two bundles: agent-worker/dist/agent-worker.bundled.mjs (agent-worker's; fleetbundles.test.mjs reports STALE BUNDLE against both files, and passes without my edits) and the plane's bio-plane/dist/bio-plane.bundled.mjs (not_product; its manifest lists run-rules). Nothing regenerated. (2) build/requirements/run-rules.md's Status line still says 'Not yet met: R13–R15 (new, K660)'; all three are met and named by passing tests. The requirement text is yours.
+
+## J2 · COMPLETE
+
+run-rules T24 done: N502 applied (checks.mjs:4-5 now 'each such change stamped by 1.49.0 (PROMOTION #20, T19 layer 2)'). Re-scan found one more: rules.mjs:798-799 named the retired legacy store's #inSight as live; it now names membership's inSight, which ai-runs calls. The other store.mjs mentions are past-tense history. Wording only; no row added or changed, so no red 5 rows. Proof: test/m/run-rules 16/16; whole test/m 5236 tests, 5225 pass, 0 fail, 11 todo, no red; format 2 failures = accepted red 4 (link-sweep dirs); architecture, coverage (15/15), ownership 0 failures. Record: build/jobs/T24/run-rules.md on job/T24/run-rules. Report (two stale bundles, the requirements Status line) in my previous entry.
