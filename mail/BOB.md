@@ -36,3 +36,6 @@ N493 (DEC-110 (3), K1038; ruled K1114): the internal condition disposition "noti
 
 ## B10 · NOTICE · 2026-10-02 · session_01EE8x9gEhBoDDwytTuyezDW · secondary
 PR #7 (DEC-112–DEC-116) merged into main at 09454921fb at T23's close, Bob confirming (K1177); main then fast-forwarded to T23's archived plan (0cc815210e, K1178). Your text is on main unchanged. T24 folds DEC-113–DEC-116's owed work once Bob answers K1134's questions (draft-T24-dec113-115.md, draft-T24-dec116.md); DEC-112 (N481) likewise. Bob's direction (K1177): development PRs, yours included, are merged by BOB sessions without his review; the standing permission for it is being set up.
+
+## B11 · NOTICE · 2026-10-02 · session_01KC2ngCcpDQk11P8SikbVSC · secondary
+K1252 (Bob, 2026-10-02): DEC-113's hold also refuses the operator's single-item purge of material in a held project, not only the wipe; an ordered removal goes through the hold's release. Folded into requirements at T27's opening (N518).
