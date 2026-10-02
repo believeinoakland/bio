@@ -22,3 +22,7 @@
 - `node checks/ownership.mjs … content tranche/T23`: 1 file changed; 0 failures
 
 Size (session_01Pa6H2YV96PALUCEqQzSe7x): test runs 2, module lines 0
+
+## J1 · COMPLETE
+
+Done on job/T23/content (code 8ccb43183e). N497: fixture.mjs:103-105 now register producingGroup, citedBy and caseMember as instance-setup, connections and publication; no assertion changed. Re-scan of src/content/ and test/m/content/, every file read whole: no other legacy-store registrant; every remaining legacy, catalogue, tools/ or T20-deleted mention is a past-tense provenance note. content 115/115. test/m 5038 tests, 1 fail: control-plane inbox-door.test.mjs:81, accepted red 9; no other red. format, architecture, coverage (51/51), ownership (1 file): 0 failures. Nothing regenerated; no other module touched. Record: build/jobs/T23/content.md.
