@@ -1,8 +1,8 @@
 /* run-rules' DEC-49 table (R11, R15; K6, K64's pattern): every refusal the pure rules mint carries its row here, and so
  * do the rows of `ai-runs`' acts, which that module mints and reads here by key (its R35). Copied from `ai-runs/checks.mjs`
  * at the ai-runs split (K617, K649 (1), K624 (1)) with each row's code, number, translation and reasons unchanged; the
- * `where` of each row the pure rules mint now names this module's site (`rules.mjs`, `skill-version.mjs`), and each such
- * row is `awaiting stamp` for promotion's next job (T19). `ai-runs`' own job deleted its copy after this module merged.
+ * `where` of each row the pure rules mint now names this module's site (`rules.mjs`, `skill-version.mjs`), each such
+ * change stamped by 1.49.0 (PROMOTION #20, T19 layer 2). `ai-runs`' own job deleted its copy after this module merged.
  * observation-log's C-22 rows (C-22.1–.4, .6, .9, .10, .17) are that module's; `./rules.mjs` answers `AI_RUN_CHECKS` as
  * those rows and this table's, one map. C-33's and C-66's other rows stay with their own families' owners (C-66.5
  * `inquiry`'s, C-66.6 `control-plane`'s). Tested in `test/m/run-rules/`. */

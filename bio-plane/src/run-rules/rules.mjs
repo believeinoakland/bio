@@ -795,8 +795,8 @@ export function projectGate({ actor = null, contextType = null, contextId = null
  *  it says it is.
  *
  *  PURE, like `projectGate`: the STORE supplies the one fact and this makes the decision.
- *    `found` — the named bundle's type (normalised) IF THE CALLER CAN SEE IT, else null. The store asks sight
- *              through `#inSight` in the caller's OWN sight, so an absent id and a hidden one arrive here as the
+ *    `found` — the named bundle's type (normalised) IF THE CALLER CAN SEE IT, else null. `ai-runs` asks sight
+ *              through membership's `inSight` in the caller's OWN sight, so an absent id and a hidden one arrive here as the
  *              SAME null and this function cannot tell them apart — which is the §7.9 half, made structural.
  *
  *  THE RULE, in four lines, in this order (CORRECTED 2026-09-19 on BOB #16's ruling at `7d03e852`, which
