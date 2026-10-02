@@ -13,7 +13,7 @@ The link sweep: a ratified sweep is the group's named standing intent to watch a
 ### Provides
 
 **The sweep's definition** (an entry of `data/gathering.json` `sweeps[]`, refused by C-18.5 through `monitoring` R27)
-- **R1** *(not yet met: T24)* A sweep is `{id, title, ratified, sources, seeds, match, cadence, budget}` and nothing else. C-18.5 refuses an entry that breaks any of the following, with one finding per field:
+- **R1** A sweep is `{id, title, ratified, sources, seeds, match, cadence, budget}` and nothing else. C-18.5 refuses an entry that breaks any of the following, with one finding per field:
   - `id`: `^[a-z0-9][a-z0-9-]{0,39}$`, unique within the file. A sweep's full name is `"<bundle>#<id>"`.
   - `title`: a non-empty single line of at most 200 characters.
   - `ratified`: a boolean.
@@ -29,13 +29,13 @@ The link sweep: a ratified sweep is the group's named standing intent to watch a
   `title` and `terms` are only ever shown as quoted data. `daemon.sweep_budget`, when set, caps the fetches all of a bundle's sweeps make in one tick together. When it is 0, they make none, and the run says so.
 
   At composition this module registers R1's and R2's rules (as C-18.5's sweep arm), R3's fence and R9's slate share with `monitoring.registerSweep` (monitoring R66, N506), so `monitoring` R27 keeps one refusal and R30 one slate.
-- **R2** *(not yet met: T24)* A **term** is a single-line string of 1–200 characters. It is a regular expression when it is written between slashes (`/…/`), and a literal otherwise. Both match without regard to case.
+- **R2** A **term** is a single-line string of 1–200 characters. It is a regular expression when it is written between slashes (`/…/`), and a literal otherwise. Both match without regard to case.
   - C-18.5 refuses a regular expression that does not compile, or that uses a backreference, a lookahead or a lookbehind (`SWEEP_TERM_REFUSED`, naming the term and the construct).
   - A term's matching time is linear in the length of the text it is matched against, whatever the term is. No term can make a run take longer than its text's length bounds.
   - A term is matched against at most 2,048 characters of a link's text and 2,048 of its decoded address. The rest is not read, and the run says how many links it cut.
 
 **Who may write a sweep** (K1036 (7))
-- **R3** *(not yet met: T24)* A non-replay promotion carrying `data/gathering.json` is refused before anything is written, as follows:
+- **R3** A non-replay promotion carrying `data/gathering.json` is refused before anything is written, as follows:
   - `SWEEP_NOT_A_MEMBER` (C-18.5) when its author is not a member (an identity in `record-grammar`'s non-member set) and it adds a sweep, removes one, or changes any field of one. The one exception is setting `ratified` to `false`.
   - `SWEEP_RATIFY_NOT_AN_OWNER` (C-18.5) when its author is not an owner of the bundle's project (`record-core.bundleInfo`, its R34; `membership.isProjectOwner`, its R54) and the promotion does either of these:
     - sets a sweep's `ratified` to `true`;
@@ -46,7 +46,7 @@ The link sweep: a ratified sweep is the group's named standing intent to watch a
   Any member who may write the bundle may add or change an unratified sweep. An owner's change to a ratified sweep re-ratifies it. Any writer, the daemon included, may set `ratified` to `false`, because stopping breadth is never refused. The ratifying member and the instant are those of the promotion that last set `ratified` to `true` or changed a ratified sweep, read from the bundle's history.
 
 **The run** (`sweepDue(now)`, `sweepWake(now)` and `sweepTick(now, rank?)`, for `scheduler`'s `gathering-sweep` consumer)
-- **R4** *(not yet met: T24)* A sweep is due when all of the following hold:
+- **R4** A sweep is due when all of the following hold:
   - it is ratified;
   - the daemon is not paused (monitoring R30);
   - its bundle's `daemon.enabled` is not `false`;
@@ -55,11 +55,11 @@ The link sweep: a ratified sweep is the group's named standing intent to watch a
   - it has never run, or its last run plus its cadence's interval is at or before `now`.
 
   `sweepWake` answers now + 1 s while one is due, else the earliest next run, else null. A tick runs at most 5 due sweeps, longest-overdue first and then by full name. Given the scheduler's rank, it reads at most ten times that number in that order and runs its batch in the rank's order. Each sweep is offered as `{kind: "sweep", id: "<bundle>#<id>", waitingSince}`. Claims and epochs are monitoring R21's, and the tick is not re-entrant (monitoring R22), each through `monitoring.sweepHost` (monitoring R65), as are the pause and the rank.
-- **R5** *(not yet met: T24)* **Seeds.** Each seed is fetched through `capture.acquire`, paced by `host-governor`, with `origin: {kind: "sweep", matched_sweep: "<bundle>#<id>", deeming_actor: "bio-monitor"}` and the sweep's `sources` as the redirect scope (`acquisition` R31). Its capture is filed in the sweep's own bundle as a monitor snapshot, in the way monitoring R9 files a tick's bytes.
+- **R5** **Seeds.** Each seed is fetched through `capture.acquire`, paced by `host-governor`, with `origin: {kind: "sweep", matched_sweep: "<bundle>#<id>", deeming_actor: "bio-monitor"}` and the sweep's `sources` as the redirect scope (`acquisition` R31). Its capture is filed in the sweep's own bundle as a monitor snapshot, in the way monitoring R9 files a tick's bytes.
   - A seed whose bytes equal its last capture is recorded as `unchanged`, and its candidates are read again from that capture.
   - A seed that fails is recorded with `capture`'s reachability (its R8), and the run goes on with the other seeds.
   - A seed redirected out of scope is not fetched beyond the redirect, and is recorded as `out_of_scope_redirect` with its target.
-- **R6** *(not yet met: T24)* **Candidates and the match.** The candidates are the links in this run's seed captures, read from the seed's own bytes: HTML anchors with their text, feed items with their titles, and sitemap entries (address only). A candidate matches when all of these hold:
+- **R6** **Candidates and the match.** The candidates are the links in this run's seed captures, read from the seed's own bytes: HTML anchors with their text, feed items with their titles, and sitemap entries (address only). A candidate matches when all of these hold:
   - its normalised address is in scope;
   - it lies under one of `match.paths`, when any are given;
   - one of `match.terms` (R2) matches its text or its decoded address, when any are given.
@@ -70,13 +70,13 @@ The link sweep: a ratified sweep is the group's named standing intent to watch a
   - the run's budget is spent (`budget_spent`). Seed fetches count toward `per_run` and toward `daemon.sweep_budget`.
 
   The rest are fetched in seed order and then in link order, each through `capture.acquire` with R5's origin and redirect scope. A redirect out of scope is recorded as `out_of_scope_redirect` with its target, and nothing at the target is fetched.
-- **R7** *(not yet met: T24)* **Filing.** Each fetched candidate whose detected format (`format-registry.detectFormat`) is in `match.formats` (any format when none are given) is filed as a new Information bundle at `collected`:
+- **R7** **Filing.** Each fetched candidate whose detected format (`format-registry.detectFormat`) is in `match.formats` (any format when none are given) is filed as a new Information bundle at `collected`:
   - in the project of the sweep's bundle;
   - with the register entry's `origin` as R5 states it;
   - with the seed capture that listed it named in the bundle's Provenance Notes.
 
   A fetched document of another format is not filed (`format_excluded`), and its fetch still counts toward the budget.
-- **R8** *(not yet met: T24)* **Backlog, hold, anomaly and silence.**
+- **R8** **Backlog, hold, anomaly and silence.**
   - **Backlog** is `capture.heldCount({sweep: "<bundle>#<id>"})` (`capture` R82): this sweep's documents still at `collected`, neither released nor set aside. When it answers `null` (the store could not be read), the sweep is held as if over its ceiling (K1129).
   - **Held:** while the backlog is at or over `budget.backlog`, the sweep does not run, and every read of it (R9) states `held: backlog`.
   - **Anomaly:** once at least 4 runs exist, a run notes an anomaly in either of these cases:
@@ -85,7 +85,7 @@ The link sweep: a ratified sweep is the group's named standing intent to watch a
 
     The note is kept on the run and changes nothing else.
   - **Silent:** a sweep whose last 4 runs each filed nothing, and which is not held, is `silent`.
-- **R9** *(not yet met: T24)* **Reads.**
+- **R9** **Reads.**
   - `sweeps({viewer})` (`op=sweeps`; read; member session) answers every sweep in a `gathering.json` the viewer may see. Each comes with:
     - its definition, as quoted data;
     - `ratified`, with the ratifying member and instant (R3);
@@ -94,14 +94,14 @@ The link sweep: a ratified sweep is the group's named standing intent to watch a
 
     It also answers `formats`, which is `format-registry.listFormats()`, the list the member chooses `match.formats` from (K1036 (6)).
   - Monitoring R30's due slate carries each due sweep's definition as quoted data inside the fixed framing, through the `dueForSlate` this module registers (monitoring R66).
-- **R10** *(not yet met: T24)* **Looks.** Each seed fetch and each candidate fetch writes one observation row (`observation-log`), with these fields:
+- **R10** **Looks.** Each seed fetch and each candidate fetch writes one observation row (`observation-log`), with these fields:
   - authority kind `sweep`, authority `"<bundle>#<id>"`, level `document`, subject the address;
   - state `PRESENT`, referring to the capture, or `LOOKED_INDETERMINATE` with the reason (a failed fetch, `out_of_scope_redirect`, `format_excluded`, or a governed refusal marked `governed`).
 
   A skipped candidate writes nothing, because nothing was looked at.
 
 **What reaches members** (NOTIFICATIONS.md, the catalogue and the item contract)
-- **R11** *(not yet met: T24)* `sweepConditions({viewer})` answers, for each sweep the viewer may see, every condition that needs a member's look, derived on read and writing nothing. Each condition is `{sweep, kind, since, detail}`:
+- **R11** `sweepConditions({viewer})` answers, for each sweep the viewer may see, every condition that needs a member's look, derived on read and writing nothing. Each condition is `{sweep, kind, since, detail}`:
   - `sweep-held-backlog`: the sweep is held (R8). `detail` gives the backlog and the limit.
   - `sweep-yield-anomaly`: the last run noted an anomaly (R8). `detail` gives the count filed and the median.
   - `sweep-seed-unreachable`: a seed failed on the last run (R5). `detail` names each such seed and its reachability.
@@ -111,7 +111,7 @@ The link sweep: a ratified sweep is the group's named standing intent to watch a
   A condition leaves on the first read after it stops holding.
 
 **The scope check for `capture-requests`**
-- **R12** *(not yet met: T24)* (K1099, K1122; `capture-requests` R45) At its construction the module registers with `capture-requests` the sweep scope check that module's R45 calls (K31's pattern): given a sweep `<bundle>#<id>` and a request's locators, it answers whether the sweep is ratified and not held (R1 onward) and whether every locator is within the sweep's scope, by the same matcher a sweep's run uses. A request filed under a sweep this way counts toward that sweep's `per_run` on its next run.
+- **R12** (K1099, K1122; `capture-requests` R45) At its construction the module registers with `capture-requests` the sweep scope check that module's R45 calls (K31's pattern): given a sweep `<bundle>#<id>` and a request's locators, it answers whether the sweep is ratified and not held (R1 onward) and whether every locator is within the sweep's scope, by the same matcher a sweep's run uses. A request filed under a sweep this way counts toward that sweep's `per_run` on its next run.
 
 ## Private
 
