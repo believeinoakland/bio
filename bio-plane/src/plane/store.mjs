@@ -47,6 +47,8 @@ import { ratificationOf, ratificationOps } from "../ratification/index.mjs";
 import { publicationOf, publicationOps } from "../publication/index.mjs";
 import { publicReadOf, publicReadOps } from "../public-read/index.mjs";
 import { projectStageOf, projectStageOps } from "../project-stage/index.mjs";
+import { networkNoticesOf, networkNoticesOps } from "../network-notices/index.mjs";
+import { corpusExportOf, corpusExportOps } from "../corpus-export/index.mjs";
 import { biasOf, biasOps } from "../bias/index.mjs";
 import { aiRunsOf, aiRunsOps } from "../ai-runs/index.mjs";
 import { contentOf, contentOps } from "../content/index.mjs";
@@ -112,6 +114,10 @@ export class Store extends DurableObject {
     /* publication (K365): built here, after reevaluation, so its case reads are registered with reevaluation (its R41,
        R43; reevaluation R26) before anything runs. Built lazily, a sweep an alarm reached before any op found none. */
     publicationOf(ctx);
+    /* network-notices (DEC-111, K1100), at its place after project-stage: at creation it creates and declares its tables,
+       registers its notice ids' mint seed and its three public reads (public-read R18), all before the first request;
+       the scheduler reaches it for `working-on-seal` and `working-on-attest` (scheduler R5), with this environment. */
+    networkNoticesOf(ctx, { env });
     actionsOf(ctx, { env });
     retrieval.registerLegGrades("inquiry", inquiryLegGrades(ctx));   /* R10 (K861): inquiry's leg grades (its R52, retrieval R55) */
     observationLogOf(ctx).attachMeaning({ connections: connectionsOf(ctx, { env }) });
@@ -144,13 +150,15 @@ export class Store extends DurableObject {
     /* action-plans (K711): built before any route can run, so ai-runs holds its plan-mode open check (its R30) when the
        first `airunopen` arrives; built lazily, that open is refused AI_RUN_MODE_UNCHECKED. */
     actionPlansOf(ctx);
-    monitoringOf(ctx, { env });
-    promotion.registerStep(STEP, promotionStep(ctx));   /* R10 (K861): control-plane's step (its R42), the testimony slot and the sight index */
     const capture = captureOf(ctx, { env });
     /* capture-requests: its table, its `sweep` resolver and its drain; the run sight it reads is ai-runs' (its R28),
-       and it registers its wait source with ai-runs (ai-runs R41). */
-    captureRequestsOf(ctx, { env, storeName: () => this.#ownNamespace() || "bio", now: () => this.#nowMs(null),
-      runs: aiRunsOf(ctx, env), aiRuns: aiRunsOf(ctx, env) });
+       and it registers its wait source with ai-runs (ai-runs R41). Built before monitoring and handed to it, so
+       monitoring's sweep scope check (its R64) is registered at construction and a sweep-named request drained before
+       the first sweep service is judged, never refused for want of a check (K1163). */
+    const captureRequests = captureRequestsOf(ctx, { env, storeName: () => this.#ownNamespace() || "bio",
+      now: () => this.#nowMs(null), runs: aiRunsOf(ctx, env), aiRuns: aiRunsOf(ctx, env) });
+    monitoringOf(ctx, { env, captureRequests });
+    promotion.registerStep(STEP, promotionStep(ctx));   /* R10 (K861): control-plane's step (its R42), the testimony slot and the sight index */
     observationLogOf(ctx).listenToCapture(capture);
     schedulerOf(ctx, env);
     /* R3: the migration pass, then scheduler's start. */
@@ -207,6 +215,7 @@ export class Store extends DurableObject {
     progressionsOf(this.ctx).migrate();
     biasOf(this.ctx).migrate();
     intentOf(this.ctx).migrate();
+    networkNoticesOf(this.ctx).migrate();   /* its tables, in the modules' order (after project-stage) */
     /* R11 (K921): layer 9's two new modules, in the modules' order: local-facts' table, then filing-templates' tables
        and its take of the library `filings` R26 kept (a template already taken is passed over). */
     localFactsOf(this.ctx).migrate();
@@ -279,9 +288,12 @@ export class Store extends DurableObject {
       ...reevaluationOps(reevaluationOf(ctx), url, body),
       ...caseAuthoringOps(caseAuthoringOf(ctx), url, body),
       ...ratificationOps(ratificationOf(ctx), url, body),
+      /* N483 (K1122): `export` and `exportlog` are corpus-export's (its R6), on the one instance publication created. */
+      ...corpusExportOps(corpusExportOf(ctx), (k) => url.searchParams.get(k)),
       ...publicationOps(publicationOf(ctx), url, body),
       ...publicReadOps(publicReadOf(ctx), url),
       ...projectStageOps(projectStageOf(ctx), url),
+      ...networkNoticesOps(networkNoticesOf(ctx), url, body),   /* noticeprepare, noticepost, notices, directorysubmission */
       ...promotionOps(promotionOf(ctx), url, body),
       /* record-core's audit gated by membership's sight (record-core R73). */
       ...recordCoreOps(recordOf(ctx), url, body, { sight: viewerPredicate }),
