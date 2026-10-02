@@ -32,3 +32,7 @@
 **For COMPLETE:** R25, R43 and R38 met (their `not yet met: T22` marks are BOB's to strike); C-52.10 `awaiting stamp`.
 
 Size (session_01GDJYyoNJjSDAFBJbwSiC7V): test runs 16, module lines 3523
+
+## J1 · REPORT
+
+Reds and stale artifacts from my change, for acceptance by name or routing (P4), before my merge. (1) inquiry: test/m/inquiry/content-legs.test.mjs:395 (R13) red: :399 attestText and :409 transcriptionAttest send no note, now refused C-52.10 ATTEST_NO_NOTE (inquiry's L6 job sends it, as B1 says). (2) row-census.test.mjs (promotion's): C-52.10 ATTEST_NO_NOTE arrived with no record, awaiting stamp (accepted red 3). (3) bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (not_product) stale: src/content/ changed (behaviour); not regenerated. (4) Finding, record-grammar: src/record-grammar/labels.mjs:198 names `mintContent`'s default; content's mintContent (the legacy store's alias, no caller left) is removed, so that comment names a method that no longer exists (N469's kind). (5) Note for affordances (L11): attesttext and transcriptionattest's `is` sentences do not mention the now-required note; nothing changed there. No other red: test/m 4841 tests, 3 fail = control-plane catalogue-end.test.mjs:15 and doorbell.test.mjs:310 (accepted, K1037) and (1).
