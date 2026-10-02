@@ -28,3 +28,7 @@
 - Red 6: no catalogue row added or changed, so none is `awaiting stamp`.
 
 Size (session_01X8od5dcSEoHd7paZCEK1Jv): test runs 5, module lines 4
+
+## J1 · COMPLETE
+
+COMPLETE. N512's test side applied. sources.test.mjs R2 reattest now drives attestation's real attest through a scripted network (capture's network/granted), as capture's R68 tests do; red 7's affordances share cleared. New catalogue.test.mjs test (R1 R2 R3 R5 R7 R12, N512): provenance-routes' three ops keyed to provenanceRouteOps, attest to attestation's attestOp, grades and reasons unchanged, totality with negative controls. START's catalogue :958 / backing world, as found: no affordances test reads C-34/C-89 rows or the new tables (both were green at the start); red 8's remaining share is control-plane's. Re-scan: the reattest rung note re-worded to attestation's attest. Affordances 148/148. Whole test/m: 5319 pass, 3 fail, all accepted reds: control-plane catalogue-end.test.mjs:15 and families.test.mjs:47 (red 8), promotion write-path.test.mjs:218 (no provenance_route_marks table: red 9, plane). Checks 0 failures. No catalogue row changed (red 6: none). Plane bundle stale (affordances.mjs comment only); nothing regenerated. Please merge job/T25/affordances.
