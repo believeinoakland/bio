@@ -3,8 +3,8 @@
  * reached. A new module with nothing moved (its map, §1): the rows are its own family, C-112 (K174: a module holds its
  * new family; C-112 assigned by BOB, K248). R5's read naming no standard is refused `STANDARD_NO_ID` through its row,
  * C-112.11, never codeless (N269, D-495): standards' own condition, so its own code (K275), not the generic `NO_ID`
- * other modules mint for their own subjects. C-112.20 (`STANDARD_NO_REASON`, R1 and R10; DEC-88, K1025) is minted in T22
- * and awaits its stamp, as does C-112.17's re-wording (the record now holds the declarer's reason). No translation
+ * other modules mint for their own subjects. C-112.20 (`STANDARD_NO_REASON`, R1 and R10; DEC-88, K1025) was minted in T22
+ * and stamped by 1.53.0, as was C-112.17's re-wording (the record now holds the declarer's reason). No translation
  * names a place (R13, `layers.md` rule 1), and none speaks of a standard's merit (R12). */
 
 const at = (fn, region) => `src/standards/index.mjs ${fn} > ${region}`;
