@@ -2,7 +2,7 @@
    jurisdictions' `combine` over its test profile), on a real SQLite database (node:sqlite) standing in for a Durable
    Object's storage; and stand-ins, in the shape of their Provides, for the four layer-9 modules built beside it,
    which the test controls and records: conformance (`determinationRead` R9, `determinationsFor` R11), consequences
-   (`addressed` R9), actions (`actionRead` R29 with its ledger, `actionFacts` R12's clock rule) and filings (`filingsFor`
+   (`addressed` R9), actions (`actionRead` with its ledger, `actionFacts` R12's clock rule) and filings (`filingsFor`
    R13, `availableActions` R21). An action is a real `ACTN-` bundle whose document carries `breach`, `action_basis`,
    `counterparty` and, when asked, `premise_override` (actions' Terms and R8), committed through record-core; its
    ledger is the stand-in's. Every test drives `escalation` at its interface. */

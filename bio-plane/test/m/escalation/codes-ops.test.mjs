@@ -74,7 +74,7 @@ function recorder() {
 }
 const URL_OF = (q) => new URL(`https://plane.test/op?${new URLSearchParams(q)}`);
 
-test("R25 escalationOps(escalation, url, body) holds exactly the twelve arms (no escalationreasondraft until R29, T23), each a function of no arguments answering what its service answers: the nine acts (declinetoescalate among them) with the body's fields and the query's author and viewer set after them; escalation (the read) with the query's id, now as nowMs and viewer; escalationsdue with now as nowMs, limit and viewer; escalationstatus with the query's determination and viewer; now and limit numbers when stated and absent when not or empty", () => {
+test("R25 escalationOps(escalation, url, body) holds exactly the twelve arms (no escalationreasondraft arm: that is T23's), each a function of no arguments answering what its service answers: the nine acts (declinetoescalate among them) with the body's fields and the query's author and viewer set after them; escalation (the read) with the query's id, now as nowMs and viewer; escalationsdue with now as nowMs, limit and viewer; escalationstatus with the query's determination and viewer; now and limit numbers when stated and absent when not or empty", () => {
   const ACTS = { escalationopen: "escalationOpen", escalationattach: "escalationAttach", escalationevaluate: "escalationEvaluate",
     escalationadvance: "escalationAdvance", escalationdecline: "escalationDecline", escalationend: "escalationEnd",
     escalationsuspend: "escalationSuspend", escalationresume: "escalationResume", declinetoescalate: "declineToEscalate" };
@@ -86,7 +86,7 @@ test("R25 escalationOps(escalation, url, body) holds exactly the twelve arms (no
                  determination: "CONF-2026-0002-determination" };
   const ops = escalationOps(esc, url, body);
   assert.deepEqual(Object.keys(ops).sort(), [...Object.keys(ACTS), "escalation", "escalationsdue", "escalationstatus"].sort());
-  assert.equal("escalationreasondraft" in ops, false, "R29's arm is T23's");
+  assert.equal("escalationreasondraft" in ops, false, "the draft arm is T23's");
   for (const [op, f] of Object.entries(ops)) assert.deepEqual([typeof f, f.length], ["function", 0], op);
   assert.equal(calls.length, 0, "building the map calls nothing");
   for (const [op, name] of Object.entries(ACTS)) {
