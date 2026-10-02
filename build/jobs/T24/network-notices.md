@@ -49,3 +49,10 @@ No catalogue row was added or changed (no red 5 rows).
 - `ownership network-notices tranche/T24`: 8 files changed; 0 failures.
 
 Size (session_01B5YxsxHcGCqJ2SrKiS63S6): test runs 17, module lines 1375
+
+## J1 · REPORT
+
+My change turns three things red that were green on `tranche/T24`. None is mine to change; each follows from N503 or N507 as B1 states them.
+1. **plane**: `test/m/plane/notices.test.mjs`:39 asserts that network-notices' mint seed is held under its name (`registerMintSeed("network-notices", []).ok === false`). N503 removes the seed: the notice id is recorded by the post, through record-core R75. Plane's test should assert instead that no seed is registered under that name.
+2. **scheduler**: `test/m/scheduler/consumers.test.mjs`:161 expects, after the only act is sealed, an alarm at or before the next week's start, and a seal tick at the next week's end. Under N507, `sealWake` is null once nothing is left to seal (scheduler R15), so the alarm is deleted and nothing runs. The test needs a member act in the week under way (then the wake is that week's end), or should assert the null wake.
+3. **The plane's bundle**: `bio-plane/dist/bio-plane.bundled.mjs` (`not_product`) is stale, from `src/network-notices/checks.mjs`, `index.mjs` and `schema.mjs` (`fleetbundles.test.mjs`: 94 pass, 4 fail, all of them this). I regenerated nothing.
