@@ -78,8 +78,8 @@ export function evidence(objects = {}, { checksum = true } = {}) {
   };
 }
 
-/** A record: the five modules on one storage, the producing group registered as promotion's fact (as legacy-store
- *  does until instance-setup's extraction, K69), and a clock the test controls. Credentials is built after
+/** A record: the five modules on one storage, the producing group registered as promotion's fact (instance-setup's,
+ *  K69; here under a stand-in module name), and a clock the test controls. Credentials is built after
  *  membership, as the composition root builds it (K789): the founder's claim and a member's password are its (its R1,
  *  R16, R17; membership R94, R95). */
 export function world({ group = "test-group", now = "2026-09-27T03:00:00.000Z", signingKey = null,

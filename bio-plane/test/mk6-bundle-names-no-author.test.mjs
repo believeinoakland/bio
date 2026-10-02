@@ -13,7 +13,7 @@
  * is still inside the population.
  *
  * CORRECTED 2026-09-25 by MK-7, never exempted: THE FIXTURE NO LONGER CUTS ANYTHING. MK-7 lifted MK-1's fence in
- * `src/` for an observation in §4.1's form, so the plane below is the real plane, booted from `src/index.mjs`
+ * `src/` for an observation in §4.1's form, so the plane below is the real plane, booted from `src/plane/index.mjs`
  * unchanged, and the observation's author takes the real `group`-level act (op=attribute). The cut this paragraph
  * described would now remove MK-7's narrowed fence and leave its attribution gate reading an undefined binding
  * (measured: a ReferenceError at op=caseratify). The paragraph is kept for the record:
@@ -27,7 +27,7 @@
  *
  * THE LEVEL. The fixture case is the `group`-level case of the acceptance, now CHOSEN BY ITS AUTHOR through
  * op=attribute (MK-7), and §4.1's point is that the bundle's bytes do not depend on the level. Every other level's
- * round trip is `mk7-attribution.test.mjs`'s.
+ * round trip was `mk7-attribution.test.mjs`'s (deleted in T17); MK-7's act is `test/m/publication/attribution.test.mjs`'s.
  *
  * WHAT THIS CANNOT SEE. (0) Section 1 reads the files a ratification can carry, not `_history/`, which names the
  * promoting member and is never published; section 2 would see it if it were. (1) The register's private resolution of `observer:<id>`: no op reads
@@ -115,7 +115,7 @@ t("op=testify lands, and its answer TO ITS AUTHOR still names the stamped member
   [tx && tx.ok, tx && tx.author, tx && tx.authored], [true, OBS_ID, true]);
 const img = await GET(`op=image&token=${OBSERVER}&id=${encodeURIComponent(OBS)}`);
 /* THE FILES THE BUNDLE CAN PUBLISH. `_history/` is the working record's promotion audit: op=ratify skips it
-   (`if (path.startsWith("_history/")) continue;` in src/index.mjs), so it is never a published part, and it
+   (`if (path.startsWith("_history/")) continue;` in src/ratification/ops.mjs), so it is never a published part, and it
    DOES name the promoting member (measured on this suite's first run: `_history/promotion_*.json` and
    `_history/manifest.json`). §4 governs the published projection only; the record always knows the author.
    Section 2's population is what holds the line if `_history/` ever starts to cross. */
