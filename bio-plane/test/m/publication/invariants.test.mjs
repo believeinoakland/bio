@@ -1,16 +1,15 @@
-/* publication — the invariants not driven elsewhere: purge (R31) beside corpus-export's declaration (K1024), the
-   delegated export ops (corpus-export R1, R2), the check rows that moved here (R33), no place named (R34), and the id
-   that does not hold yet (R30). Driven at the module's interface. */
+/* publication — the invariants not driven elsewhere: purge (R31) beside corpus-export's declaration (K1024), the check
+   rows that moved here (R33), no place named (R34), and the id that does not hold yet (R30). The export and its log are
+   corpus-export's, written here through it (its R1), never through this module (N483). Driven at the module's
+   interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { planeWorld as world, V, SIG, NOW } from "./fixture.mjs";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
-import { corpusExportOf, EXPORT_LOG_LIMIT_DEFAULT as CE_DEFAULT, EXPORT_LOG_LIMIT_MAX as CE_MAX,
-         EXPORT_NOTE_MAX as CE_NOTE } from "../../../src/corpus-export/index.mjs";
-import { EXPORT_LOG_LIMIT_DEFAULT, EXPORT_LOG_LIMIT_MAX, EXPORT_NOTE_MAX } from "../../../src/publication/index.mjs";
+import { corpusExportOf } from "../../../src/corpus-export/index.mjs";
 import * as CHECKS from "../../../src/publication/checks.mjs";
 import { ATTRIBUTION_ACT_CHECKS, CASE_SOURCES_CHECKS, rowOf } from "../../../src/publication/checks.mjs";
-import { PUBLICATION_TABLES, PUBLICATION_EXEMPT, publicationOwns } from "../../../src/publication/index.mjs";
+import { PUBLICATION_TABLES, PUBLICATION_EXEMPT, publicationOwns, publicationOps } from "../../../src/publication/index.mjs";
 import { migratePublication } from "../../../src/publication/schema.mjs";
 import { storage } from "./fixture.mjs";
 
@@ -32,7 +31,7 @@ test("R31 published bytes are exempt from purge; the derived and working tables 
   w.st.sql.exec(`INSERT INTO observation_attributions (case_id, edition, bundle_id, level, chosen_by, chosen_at)
                  VALUES ('CASE-2026-0001', 2, ?, 'group', 'ann', ?)`, obs, NOW);
   w.inquiry(F, { question: "Revised?", legs: [{ target: obs }] });
-  w.op("export", {});
+  corpusExportOf(w.host).exportManifest({});
   assert.equal(w.count("case_revision_flags"), 1);
   const KEPT = [...PUBLICATION_EXEMPT, "export_log"];
   assert.equal(w.count("export_log"), 1);
@@ -80,7 +79,7 @@ test("R31 (K1024) on one host publication's purge declaration and corpus-export'
   assert.equal(w.p.corpusExport, corpusExportOf(w.host), "created eagerly at this module's creation, one per host");
   assert.deepEqual(w.p.corpusExport.purgeDeclaration, { ok: true });
   assert.equal(w.count("export_log"), 0, "export_log exists at boot, before any export");
-  w.op("export", { note: "kept" });
+  corpusExportOf(w.host).exportManifest({ note: "kept" });
   w.st.sql.exec(`INSERT INTO cases (case_id, project_id, opened) VALUES ('CASE-2026-0009', 'PROJ-1', ?)`, NOW);
   const kept = w.snapshot(["export_log", ...PUBLICATION_EXEMPT]);
   w.record.purge({});
@@ -98,21 +97,18 @@ test("R31 (K1024) on one host publication's purge declaration and corpus-export'
   assert.deepEqual([refused.ok, refused.reason, refused.table, refused.declaredBy], [false, "TABLE_DECLARED", "export_log", "publication"]);
 });
 
-test("corpus-export R1 R2: op=export and op=exportlog still answer through this module's delegates, and the export's bounds are re-exported unchanged", () => {
+test("N483 (K1119) this module answers no export: no op `export` or `exportlog`, no delegate; corpus-export is still created at boot, and the one bound queue-producers imports here is corpus-export's, re-exported unchanged", async () => {
   const w = world();
-  w.doc("INFO-2026-0001-minutes");
-  const x = w.op("export", { note: "n".repeat(400) });
-  assert.deepEqual([x.ok, x.scope, x.counts.bundles], [true, "working-corpus", 1]);
-  assert.deepEqual(x.bundles.map((b) => b.bundle_id), ["INFO-2026-0001-minutes"]);
-  assert.deepEqual(x.register.map((r) => r.bundle_id), ["INFO-2026-0001-minutes"]);
-  assert.equal(x.at, NOW, "this module's clock, handed to corpus-export");
-  const log = w.op("exportlog", { limit: 5 });
-  assert.deepEqual([log.ok, log.limit, log.truncated, log.exports.length], [true, 5, false, 1]);
-  assert.deepEqual([log.exports[0].at, log.exports[0].note.length], [NOW, 280]);
-  assert.deepEqual(w.p.exportLog({ limit: 5 }), w.p.corpusExport.exportLog({ limit: 5 }), "the delegate answers corpus-export's answer");
-  assert.equal(w.p.exportLog({}).limit, 200);
-  assert.deepEqual([EXPORT_LOG_LIMIT_DEFAULT, EXPORT_LOG_LIMIT_MAX, EXPORT_NOTE_MAX], [CE_DEFAULT, CE_MAX, CE_NOTE]);
-  assert.deepEqual([EXPORT_LOG_LIMIT_DEFAULT, EXPORT_LOG_LIMIT_MAX, EXPORT_NOTE_MAX], [200, 1000, 280]);
+  const ops = Object.keys(publicationOps(w.p, new URL("http://do/x"), null));
+  assert.deepEqual(ops.filter((k) => /export/i.test(k)), [], "no export op is this module's");
+  assert.ok(ops.includes("caseflags") && ops.includes("casedocument"), "the map itself is still answered");
+  for (const name of ["exportManifest", "exportLog"]) assert.equal(name in w.p, false, `${name}: no delegate`);
+  assert.equal(w.p.corpusExport, corpusExportOf(w.host), "created at this module's creation, one per host");
+  assert.equal(w.count("export_log"), 0, "export_log exists at boot");
+  const pub = await import("../../../src/publication/index.mjs");
+  const ce = await import("../../../src/corpus-export/index.mjs");
+  assert.equal(pub.EXPORT_LOG_LIMIT_DEFAULT, ce.EXPORT_LOG_LIMIT_DEFAULT);
+  for (const name of ["EXPORT_LOG_LIMIT_MAX", "EXPORT_NOTE_MAX"]) assert.equal(name in pub, false, `${name} is corpus-export's alone`);
 });
 
 test("R33 this module's table holds exactly C-92.1–.9, C-92.13 and C-122.1, each with its code, sentence and its raiser's site here; C-44.2, C-68.5 and C-98 left it for public-read's (its R17)", () => {
@@ -147,7 +143,7 @@ test("R34 no place is named in this module's behaviour or outward text", () => {
   w.signCase("CASE-2026-0001", 1, { project: proj, roster: [{ bundle_id: F, version_sha: pin }] });
   w.signFinding(F);
   const outward = JSON.stringify([MINE, w.p.caseEditionState("CASE-2026-0001", 1), w.op("publishedtargets", { ids: F }),
-    w.op("caseflags", {}), w.op("export", {}), w.op("exportlog", {}), w.op("excludedby", { id: F, viewer: V("olive") }),
+    w.op("caseflags", {}), w.op("excludedby", { id: F, viewer: V("olive") }),
     w.op("casedocument", { case: "CASE-2026-0001", edition: 1 }), w.op("casedocument", { case: "CASE-2026-0002", edition: 1 }),
     w.p.reviewProvider().deadAnswer(), w.p.publishedEditionsOf({ finding: F }), w.p.caseTensions({}),
     w.p.caseFlags({}).doctrine, w.op("attribute", {}, {}), w.op("attribute", { by: "olive" }, { level: "group" })]);

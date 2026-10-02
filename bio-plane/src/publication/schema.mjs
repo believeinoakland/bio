@@ -447,7 +447,7 @@ CREATE TABLE IF NOT EXISTS case_documents (
 -- ONE ROW PER (case edition, MEMBER, exclusion row): an excluded document is reported on each member
 -- finding of the case, as inquiry_exclusions always reported it, and the member, its own edition
 -- and the publishing project are columns so op=excludedby answers in ONE indexed, gated statement
--- with no read per row (derivation-bounds' class).
+-- with no read per row (the class the system suite derivation-bounds.test.mjs, deleted in T20, guarded).
 CREATE TABLE IF NOT EXISTS case_exclusions (
   case_id        TEXT NOT NULL,
   edition        INTEGER NOT NULL,
