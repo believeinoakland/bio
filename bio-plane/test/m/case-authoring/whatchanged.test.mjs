@@ -44,7 +44,7 @@ test("R38: an edition above 1 with no whatChanged, a blank text, or a text over 
     const r = second(w, P, e1, { whatChanged: { text } });
     assert.deepEqual([r.ok, r.reason, r.length, r.max], [false, "BAD_WHAT_CHANGED", 8001, 8000]);
   }
-  /* no draft store yet (R39 is T23's): a named draft is one that is not */
+  /* a named draft that is none of this case's (R39 holds none here) */
   for (const draft of ["WCD-2026-0001", 7]) {
     const r = second(w, P, e1, { whatChanged: { ...WHAT_CHANGED, draft } });
     assert.deepEqual([r.ok, r.reason, r.draft], [false, "NO_SUCH_WHAT_CHANGED_DRAFT", String(draft)]);

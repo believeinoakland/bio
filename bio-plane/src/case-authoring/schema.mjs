@@ -1,5 +1,6 @@
-/* case-authoring's one table (requirements: `build/requirements/case-authoring.md`, R20, R28). Every other table this
- * module writes is `publication`'s, through its R21. Moved from `schema.mjs` unchanged (K4). */
+/* case-authoring's two tables (requirements: `build/requirements/case-authoring.md`, R20, R28, R39): the statement's
+ * acknowledgements, moved from `schema.mjs` unchanged (K4), and the drafts of an edition's statement of what changed
+ * (R39, T23). Every other table this module writes is `publication`'s, through its R21. */
 
 export const CASE_AUTHORING_SCHEMA = `
 -- D-150 / BIO_Publication_v0_1.md section 3 rule 11: THE EXCLUSION STATEMENT'S ACKNOWLEDGEMENTS.
@@ -27,10 +28,28 @@ CREATE TABLE IF NOT EXISTS statement_acknowledgements (
 );
 CREATE INDEX IF NOT EXISTS statement_acknowledgements_statement
   ON statement_acknowledgements(project_id, statement_sha, edition);
+
+-- R39 (DEC-101 (1)): DRAFTS OF A NEW EDITION'S STATEMENT OF WHAT CHANGED, AND WHY. One row per proposal,
+-- append-only: nothing updates or deletes a row but the whole-store purge. A draft is never a statement;
+-- it becomes one only when a member adopts or rewrites it at op=publish (R38), which records the draft it
+-- began as and whether its words were kept. label is record-grammar's proposalLabel(proposed_by,
+-- "edition_statement") as it answered at the proposal, as JSON, so a machine's draft is labelled machine
+-- work wherever it is listed.
+CREATE TABLE IF NOT EXISTS what_changed_drafts (
+  seq         INTEGER PRIMARY KEY AUTOINCREMENT,
+  draft_id    TEXT NOT NULL UNIQUE,
+  case_id     TEXT NOT NULL,
+  text        TEXT NOT NULL,
+  proposed_by TEXT,
+  label       TEXT NOT NULL,
+  at          TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS what_changed_drafts_case ON what_changed_drafts(case_id, seq);
 `;
 
-/** R28: declared whole to record-core's purge (K23): a whole-store purge clears it, and no bundle keys it. */
-export const CASE_AUTHORING_TABLES = Object.freeze([{ name: "statement_acknowledgements", keys: [] }]);
+/** R28: declared whole to record-core's purge (K23): a whole-store purge clears them, and no bundle keys them. */
+export const CASE_AUTHORING_TABLES = Object.freeze([{ name: "statement_acknowledgements", keys: [] },
+                                                    { name: "what_changed_drafts", keys: [] }]);
 
 /** Creates the table where absent, and adds R19's `reason` column (DEC-88) to a table created before it, never filling
  *  it: an acknowledgement recorded before the acknowledger's words were asked for carries none (K1050). Idempotent. */

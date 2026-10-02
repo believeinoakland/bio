@@ -56,9 +56,10 @@ test("R25: every authorship field is a stamp — the author, an acknowledger, th
   assert.deepEqual([a.ok, a.acknowledgement.by], [true, "cy"]);
 });
 
-test("R28: statement_acknowledgements is declared whole to record-core's purge: a whole-store purge clears it, a bundle's purge does not", () => {
+test("R28: statement_acknowledgements is declared whole to record-core's purge, with R39's what_changed_drafts beside it: a whole-store purge clears it, a bundle's purge does not", () => {
   const { w, P } = setup();
-  assert.deepEqual(CASE_AUTHORING_TABLES, [{ name: "statement_acknowledgements", keys: [] }]);
+  assert.deepEqual(CASE_AUTHORING_TABLES, [{ name: "statement_acknowledgements", keys: [] },
+                                           { name: "what_changed_drafts", keys: [] }]);
   assert.deepEqual([caseAuthoringOwns("statement_acknowledgements"), caseAuthoringOwns({ name: "statement_acknowledgements" }),
                     caseAuthoringOwns("case_documents")], [true, true, false]);
   const pub = w.publish(P, "alice", [Q]);

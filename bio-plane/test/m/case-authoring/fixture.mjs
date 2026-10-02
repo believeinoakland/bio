@@ -159,7 +159,7 @@ export function world({ group = "test-group", provider = true, now = null, recor
   const inquiry = inquiryOf(host, { record, membership, content, retrieval, provenance: prov, now: () => clock.now });
   inquiry.migrate();
   const promotion = inquiry.promotion;
-  promotion.registerFact("producingGroup", "legacy-store", () => group);
+  promotion.registerFact("producingGroup", "instance-setup", () => group);
   const entities = inquiry.entities;
   entities.migrate();
   const connections = inquiry.connections;

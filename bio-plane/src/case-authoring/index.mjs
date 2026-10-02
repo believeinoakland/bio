@@ -11,7 +11,7 @@
  * `STATEMENT_ACK_MAX` … `#statementWriter`, `#draftLinkOf`, `COMPLETENESS_MAX`, `MEMBER_ROLES`, `SEARCHED_SUBJECT_MAX`,
  * the dispatch entries `publishcase` and `statementack`), `airun.mjs` (`searchedSection`, `SEARCHED_LEVEL_OUTCOMES`,
  * now `./searched.mjs`; N138) and the check catalogue (C-44.1, C-44.3–C-44.5, C-82.2–C-82.7, now `./checks.mjs`).
- * Its table is `./schema.mjs`. The legacy code's comments moved with it, shortened where they only restated the code.
+ * Its tables are `./schema.mjs`'s. The legacy code's comments moved with it, shortened where they only restated the code.
  * The record's grammar (front matter, object types, grades, the machine predicate, the hash) is `record-grammar`'s;
  * the acknowledgements' locator and the one front-matter spelling (`fmSafe`) are `case-grammar`'s (N424).
  *
@@ -67,7 +67,7 @@ import { provenanceOf } from "../provenance/index.mjs";
 import { captureOf } from "../capture/index.mjs";
 import { sourcesOf } from "../sources/index.mjs";
 import { parseFrontmatter, normalizeType, isMachineIdentity, OBJECT_TYPES, BASIS_GRADES,
-         EARNED_CAPTURE_CEILING, isPublicHttpsLocator } from "../record-grammar/index.mjs";
+         EARNED_CAPTURE_CEILING, isPublicHttpsLocator, proposalLabel } from "../record-grammar/index.mjs";
 import { SECTIONS } from "../case-grammar/index.mjs";
 import { PUBLISH_ACT_CHECKS, CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS, CASE_DISCLOSURE_CHECKS } from "./checks.mjs";
 import { CASE_AUTHORING_TABLES, migrateCaseAuthoring } from "./schema.mjs";
@@ -95,8 +95,12 @@ export const MEMBER_ROLES = Object.freeze(["load_bearing", "supporting"]);
 export const SEARCHED_SUBJECT_MAX = 500;
 /** R20: the most acknowledgements one list names; a list that reaches it says so (`truncated`). */
 export const STATEMENT_ACK_MAX = 500;
-/** R38 (DEC-101; K1019): the longest statement of what changed in an edition, in code points. */
+/** R38, R39 (DEC-101; K1019): the longest statement of what changed in an edition, or draft of one, in code points. */
 export const WHAT_CHANGED_MAX = 8000;
+/** R39: the most drafts one list names; a list that reaches it says so (`truncated`), as R20's list does. */
+export const WHAT_CHANGED_DRAFTS_MAX = 500;
+/** R39: the prefix of a draft's opaque id (record-core R6), minted by record-core and seeded into its ledger. */
+export const WHAT_CHANGED_DRAFT_PREFIX = "WCD";
 /** R19 (DEC-88, K1030): the longest acknowledger's words, in code points. */
 export const STATEMENT_ACK_REASON_MAX = 2000;
 /** R16: the id chunk for the citations' grouped read, this module's own copy of `retrieval`'s (K57). */
@@ -664,8 +668,9 @@ export class CaseAuthoring {
                                            acknowledged_by: who, acknowledged_at: when })),
       tensionsUnread: read.unread,
       captures: captureRows, sources: sourceRows,
-      /* R38: the statement as the member wrote it (`began_as: member` until R39's drafts exist, K1025). */
-      whatChanged: changed ? { text: changed.text, began_as: changed.began_as, draft: changed.draft } : null,
+      /* R38: the statement as the member signs it, with the R39 draft it began as and whether its words were kept. */
+      whatChanged: changed ? { text: changed.text, began_as: changed.began_as, draft: changed.draft,
+                               adopted_as_drafted: changed.adopted_as_drafted } : null,
       /* R40: the frozen manifest's statements, every page, each citation printed or withheld. */
       lens: lensStatements,
     });
@@ -736,9 +741,10 @@ export class CaseAuthoring {
 
   /** R38 (DEC-101 (1)(2); K1019, K1025): the "What changed" statement of an edition above 1, `{text, draft?}`. Absent, not
    *  a string or blank is `NO_WHAT_CHANGED`; over `WHAT_CHANGED_MAX` characters (code points) `BAD_WHAT_CHANGED`; a
-   *  named `draft` must be a machine draft of this case (R39), and with no draft store yet (R39 is T23's) every named
-   *  draft is one that is not, `NO_SUCH_WHAT_CHANGED_DRAFT` (BOB's reading until R39 exists). Codes without catalogue
-   *  rows (R29 names none). Answers the refusal or `{ok: true, text, began_as: "member", draft: null}`. */
+   *  named `draft` must be one of this case's R39 drafts, else `NO_SUCH_WHAT_CHANGED_DRAFT`. Codes without catalogue
+   *  rows (R29 names none). Answers the refusal or `{ok: true, text, began_as, draft, adopted_as_drafted}`: with a draft,
+   *  `machine_draft`, its id, and whether `text` is its words unchanged; without one, `member`, null, null
+   *  (`case-grammar` R8). */
   #whatChangedJudged(whatChanged, caseId, edition) {
     const wc = whatChanged && typeof whatChanged === "object" && !Array.isArray(whatChanged) ? whatChanged : null;
     const text = wc && typeof wc.text === "string" ? wc.text : null;
@@ -754,11 +760,80 @@ export class CaseAuthoring {
                detail: `what changed in this edition is at most ${WHAT_CHANGED_MAX} characters, and this statement is `
                      + `${length}. Say it shorter. Nothing was written.` };
     const named = wc.draft == null ? "" : String(wc.draft).trim();
-    if (named)
+    if (!named) return { ok: true, text, began_as: "member", draft: null, adopted_as_drafted: null };
+    const d = this.#one(`SELECT draft_id, text FROM what_changed_drafts WHERE draft_id=? AND case_id=?`, named, caseId);
+    if (!d)
       return { ok: false, reason: "NO_SUCH_WHAT_CHANGED_DRAFT", caseId, edition, draft: named,
-               detail: `no machine draft of this edition's statement of what changed answers to ${named}. Write the `
-                     + `statement in your own words (whatChanged: {text}) and publish again. Nothing was written.` };
-    return { ok: true, text, began_as: "member", draft: null };
+               detail: `no draft of ${caseId}'s statement of what changed answers to ${named} `
+                     + `(op=whatchangeddrafts&case=${caseId} lists them). Name one of them, or write the statement in `
+                     + `your own words (whatChanged: {text}) and publish again. Nothing was written.` };
+    return { ok: true, text, began_as: "machine_draft", draft: d.draft_id, adopted_as_drafted: text === d.text };
+  }
+
+  /* ==========================================================================================================
+   * op=whatchangedpropose, op=whatchangeddrafts: drafts of a new edition's statement (R39; DEC-101 (1), DEC-84 (14))
+   *
+   * A DRAFT IS NEVER A STATEMENT. Any credential may propose one, a machine's labelled machine work
+   * (`record-grammar`'s `proposalLabel(proposedBy, "edition_statement")`, its R43); it becomes the edition's statement
+   * only when a member adopts or rewrites it at op=publish (R38), which records the draft it began as and whether its
+   * words were kept. Drafts are append-only: nothing here updates or removes one.
+   * ========================================================================================================== */
+
+  /* R39: the published case `viewer` may see, or the one refusal for every other (R27: a case not published and one
+     whose project the viewer may not see answer alike). Published is a ratified edition (publication R40's `cases`,
+     written at the first ratification); sight is of the case's project, through membership's one rule (its R43). */
+  #caseInSight(caseId, viewer) {
+    const id = str(caseId);
+    const row = id ? this.#one(`SELECT project_id FROM cases WHERE case_id=?`, id) : null;
+    const gate = viewerPredicate(viewer);
+    const seen = row && gate.scope !== "DENY"
+      && !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, row.project_id, ...gate.args);
+    if (seen) return { ok: true, caseId: id };
+    return { ok: false, reason: "NO_SUCH_CASE",
+             detail: "no published case you can see answers to that id. A case not yet published, and one you cannot "
+                   + "see, are answered alike. Nothing was written." };
+  }
+
+  /** R39: store a draft of a new edition's statement of what changed in `case`, labelled by
+   *  `proposalLabel(proposedBy, "edition_statement")`. Refusals, in order: `NO_SUCH_CASE`; `text` not a string, empty
+   *  after trimming, or over `WHAT_CHANGED_MAX` code points `BAD_WHAT_CHANGED`. Each writes nothing. Answers
+   *  `{ok: true, draft: {id, case, text, label, at}}`. */
+  proposeWhatChanged({ case: caseId = null, text = undefined, proposedBy = null, viewer = null } = {}) {
+    const seen = this.#caseInSight(caseId, viewer);
+    if (seen.ok === false) return seen;
+    const length = typeof text === "string" ? [...text].length : null;
+    if (length === null || !text.trim() || length > WHAT_CHANGED_MAX)
+      return { ok: false, reason: "BAD_WHAT_CHANGED", case: seen.caseId, length, max: WHAT_CHANGED_MAX,
+               detail: `a draft of what changed in an edition is words, at most ${WHAT_CHANGED_MAX} characters: `
+                     + (length === null ? "none were given" : !text.trim() ? "the words given were blank"
+                       : `the words given are ${length} characters`) + `. Nothing was written.` };
+    const by = proposedBy == null || !String(proposedBy).trim() ? null : String(proposedBy).trim();
+    const label = proposalLabel(by, "edition_statement");
+    return this.record.transact(() => {
+      const at = this.#when("millisecond");
+      const id = this.record.mintOpaqueId(WHAT_CHANGED_DRAFT_PREFIX, at.slice(0, 4), "", (x) =>
+        !!this.#one(`SELECT 1 AS x FROM what_changed_drafts WHERE draft_id=?`, x));
+      if (!id) return mintExhausted(WHAT_CHANGED_DRAFT_PREFIX);
+      this.sql.exec(`INSERT INTO what_changed_drafts (draft_id, case_id, text, proposed_by, label, at)
+                     VALUES (?,?,?,?,?,?)`, id, seen.caseId, text, by, JSON.stringify(label), at);
+      return { ok: true, draft: { id, case: seen.caseId, text, label, at },
+               next: `a member adopts it as written, or rewrites it, at op=publish (whatChanged: {text, draft: "${id}"}); `
+                   + `until then it is a draft and never the group's statement` };
+    });
+  }
+
+  /** R39: the drafts of `case`'s statement of what changed, oldest first, each `{id, text, label, at}`, at most
+   *  `WHAT_CHANGED_DRAFTS_MAX` (`truncated` when there are more). `NO_SUCH_CASE` as R39's proposal answers it. Writes
+   *  nothing. */
+  whatChangedDrafts({ case: caseId = null, viewer = null } = {}) {
+    const seen = this.#caseInSight(caseId, viewer);
+    if (seen.ok === false) return seen;
+    const rows = this.#rows(`SELECT draft_id, text, label, at FROM what_changed_drafts WHERE case_id=?
+                             ORDER BY seq LIMIT ?`, seen.caseId, WHAT_CHANGED_DRAFTS_MAX + 1);
+    const truncated = rows.length > WHAT_CHANGED_DRAFTS_MAX;
+    return { ok: true, case: seen.caseId, truncated,
+             drafts: rows.slice(0, WHAT_CHANGED_DRAFTS_MAX).map((r) => ({ id: r.draft_id, text: r.text,
+                                                                         label: JSON.parse(r.label), at: r.at })) };
   }
 
   /** R2, asked by `op=publish` and by R32's read alike: the publishing project named, seen, a project, and owned by
@@ -2117,6 +2192,8 @@ export function caseAuthoringOf(host, deps) {
     c = new CaseAuthoring({ ...d, host, storage, record, membership });
     instances.set(host, c);
     c.migrate();
+    /* R39: the drafts' ids, so an id once minted is never minted again, even after a purge (record-core R6). */
+    record.seedMintLedger([[WHAT_CHANGED_DRAFT_PREFIX, "what_changed_drafts", "draft_id"]]);
     record.declarePurge("case-authoring", CASE_AUTHORING_TABLES);
   }
   return c;
@@ -2173,6 +2250,13 @@ export function caseAuthoringOps(c, url, body) {
         try { const v = JSON.parse(q("aiCred")); return v && typeof v === "object" ? v : {}; } catch { return {}; }
       })() } : q("viewer"),
       author: q("author") }),
+    /* R39: a draft of a new edition's statement of what changed. The words come in the body (a statement of up to
+       8,000 characters is not a query parameter), the case from either; `proposedBy` is the `author` stamp. */
+    whatchangedpropose: () => c.proposeWhatChanged({ case: q("case") || b.case || null,
+      text: typeof b.text === "string" ? b.text : (q("text") ?? undefined),
+      viewer: q("viewer"), proposedBy: q("author") }),
+    /* R39: the case's drafts, oldest first. */
+    whatchangeddrafts: () => c.whatChangedDrafts({ case: q("case") || b.case || null, viewer: q("viewer") }),
     /* R19–R21: the review copy's two doors, and a member's third subject (an unsigned case document). */
     statementack: () => c.acknowledgeStatement({ draft: q("draft"), caseId: q("case"), edition: q("edition"),
       secretSha: q("secretSha"), viewer: q("viewer"), bySecret: q("bySecret") === "1",
