@@ -3,7 +3,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE, sha } from "./fixture.mjs";
 import { observationLogOps, LEAD_VOCABULARY, OBSERVATION_STATE_WORDS, LEAD_LOOK_OUTCOMES, LEAD_READ_LIMIT_MAX,
-         LEAD_LIST_LIMIT_MAX, LEAD_ID_RE } from "../../../src/observation-log/index.mjs";
+         LEAD_LIST_LIMIT_MAX, LEAD_ID_RE, LEAD_SHARE_REASON_MAX } from "../../../src/observation-log/index.mjs";
+import { storage } from "./fixture.mjs";
+import { migrateObservationLog } from "../../../src/observation-log/schema.mjs";
 import { CAPTURE_TEXT_UNIT_CAP } from "../../../src/extraction/index.mjs";
 import { BUNDLE_ID_RE } from "../../../src/record-grammar/ids.mjs";
 
@@ -57,7 +59,7 @@ test("R15 R19 a lead is readable by its author and by a joined or leaving partic
     assert.deepEqual([code(r), check(r)], ["LEAD_NOT_FOUND", "C-54.5"], String(v));
     assert.equal(r.translation, absent.translation);
   }
-  assert.equal(w.obs.leadShare({ lead: L, project: "PROJ-A", sharer: "alice", viewer: V("alice") }).ok, true);
+  assert.equal(w.obs.leadShare({ reason: "the project is following this up", lead: L, project: "PROJ-A", sharer: "alice", viewer: V("alice") }).ok, true);
   assert.equal(reads(V("bob")).ok, true, "joined");
   assert.equal(reads(V("carol")).ok, true, "leaving");
   for (const v of [V("dan"), V("eve"), V("admin-ann"), "admin", MACHINE, "class:ai"]) assert.equal(code(reads(v)), "LEAD_NOT_FOUND", String(v));
@@ -75,10 +77,11 @@ test("R15 R19 a lead is readable by its author and by a joined or leaving partic
   assert.equal(w.obs.leadReach(null), null);
 });
 
-test("R16 leadShare: C-54.5; C-54.10 the sharer is not the author; C-54.9 one answer for a project absent, invisible or not joined; recorded once, a repeat answers already with the first sharer and instant", () => {
+test("R16 leadShare: C-54.5; C-54.10 the sharer is not the author; C-54.9 one answer for a project absent, invisible or not joined; C-54.12 a reason absent, not a string, blank or over 2,000 characters, each writing nothing; recorded once with its reason, a repeat answers already with the first sharer, instant and reason", () => {
   const w = group();
   const L = w.obs.lead({ words: "w", author: "alice" }).lead_id;
-  const share = (o) => w.obs.leadShare({ lead: L, project: "PROJ-A", sharer: "alice", viewer: V("alice"), ...o });
+  const WHY = "PROJ-A is reviewing the same contract";
+  const share = (o) => w.obs.leadShare({ reason: WHY, lead: L, project: "PROJ-A", sharer: "alice", viewer: V("alice"), ...o });
   assert.equal(check(share({ lead: "LEAD-2026-0101-000000000000" })), "C-54.5");
   assert.equal(check(share({ viewer: V("eve") })), "C-54.5", "the lead is asked through the viewer's reach");
   assert.equal(check(share({ sharer: "bob" })), "C-54.10");
@@ -88,27 +91,77 @@ test("R16 leadShare: C-54.5; C-54.10 the sharer is not the author; C-54.9 one an
   assert.equal(nots[0].translation, nots[1].translation);
   w.participant("PROJ-B", "alice", "invited");
   assert.equal(check(share({ project: "PROJ-B" })), "C-54.9", "invited is not joined");
-  assert.equal(w.count("lead_shares"), 0);
+  // the earlier refusals come first: a reasonless share is answered by them, not by C-54.12
+  assert.equal(check(share({ reason: undefined, lead: "nope" })), "C-54.5");
+  assert.equal(check(share({ reason: undefined, sharer: "bob" })), "C-54.10");
+  assert.equal(check(share({ reason: undefined, project: "PROJ-NONE" })), "C-54.9");
+  // C-54.12: absent, not a string, blank, over 2,000 characters; each writes nothing
+  assert.equal(LEAD_SHARE_REASON_MAX, 2000);
+  const noReason = [undefined, null, 7, true, ["why"], { why: "x" }, "", "   ", "\n\t ", "x".repeat(2001), "é".repeat(2001), "😀".repeat(2001)];
+  for (const reason of noReason) {
+    const r = share({ reason });
+    assert.deepEqual([r.ok, code(r), check(r)], [false, "LEAD_SHARE_NO_REASON", "C-54.12"], JSON.stringify(reason));
+    assert.ok(typeof r.translation === "string" && r.translation.length > 40);
+    assert.ok(typeof r.detail === "string" && r.detail.length > 0);
+  }
+  assert.match(share({ reason: "x".repeat(2001) }).detail, /2001 characters, over the 2000/);
+  assert.equal(w.count("lead_shares"), 0, "every refusal writes nothing");
+  assert.equal(w.count("observation_log"), 0);
   w.clock.now = "2026-09-27T05:00:00Z";
   const first = share();
-  assert.deepEqual([first.ok, first.already, first.shared_by, first.at, first.evidence], [true, false, "alice", "2026-09-27T05:00:00Z", false]);
-  const again = share();
-  assert.deepEqual([again.ok, again.already, again.shared_by, again.at], [true, true, "alice", "2026-09-27T05:00:00Z"], "same second");
+  assert.deepEqual([first.ok, first.already, first.shared_by, first.at, first.reason, first.evidence],
+    [true, false, "alice", "2026-09-27T05:00:00Z", WHY, false]);
+  assert.deepEqual(w.row(`SELECT lead_id, bundle_id, sharer, at, reason FROM lead_shares`),
+    { lead_id: L, bundle_id: "PROJ-A", sharer: "alice", at: "2026-09-27T05:00:00Z", reason: WHY }, "recorded with the share");
+  const again = share({ reason: "a different reason" });
+  assert.deepEqual([again.ok, again.already, again.shared_by, again.at, again.reason], [true, true, "alice", "2026-09-27T05:00:00Z", WHY],
+    "same second: the first reason kept");
   w.clock.now = "2026-09-28T00:00:00Z";
-  assert.deepEqual([share().already, share().at], [true, "2026-09-27T05:00:00Z"]);
+  const later = share({ reason: "yet another" });
+  assert.deepEqual([later.already, later.at, later.reason], [true, "2026-09-27T05:00:00Z", WHY]);
+  assert.equal(check(share({ reason: " " })), "C-54.12", "a repeat is still asked for its words");
   assert.equal(w.count("lead_shares"), 1);
+  assert.equal(w.row(`SELECT reason FROM lead_shares`).reason, WHY, "never rewritten");
+  // the reason is kept as written, and exactly 2,000 characters (code points, not bytes or UTF-16 units) is accepted
   w.st.sql.exec(`UPDATE project_participants SET state='leaving' WHERE project_id='PROJ-B' AND member_id='alice'`);
-  assert.equal(share({ project: "PROJ-B" }).ok, true, "a leaving participant may share");
+  const edge = "😀".repeat(2000);
+  const b = share({ project: "PROJ-B", reason: edge });
+  assert.equal(b.ok, true, "a leaving participant may share; 2,000 characters is within the cap");
+  assert.equal(w.row(`SELECT reason FROM lead_shares WHERE bundle_id = 'PROJ-B'`).reason, edge);
+  w.project("PROJ-C"); w.participant("PROJ-C", "alice");
+  assert.equal(share({ project: "PROJ-C", reason: "  spaced, as written \n" }).reason, "  spaced, as written \n");
+  // the reason is read back with the share
+  assert.deepEqual(w.obs.leadRead({ id: L, viewer: V("alice") }).shared_to.map((x) => [x.project, x.reason]),
+    [["PROJ-A", WHY], ["PROJ-B", edge], ["PROJ-C", "  spaced, as written \n"]]);
 });
 
-test("R17 leadLook: C-54.8; C-54.5; C-54.6 (NEVER_LOOKED answered with why); C-54.7 in each of its arms; C-54.4; then R2's refusals; success appends §4.5's row and answers its seq, at and a sentence", () => {
+test("R16 R29 a lead_shares table made before DEC-88 gains its reason column at migration, its shares kept with a null reason; a repeat of one answers already with reason null and rewrites nothing", () => {
+  const st = storage();
+  st.db.exec(`CREATE TABLE lead_shares (lead_id TEXT NOT NULL, bundle_id TEXT NOT NULL, sharer TEXT NOT NULL, at TEXT NOT NULL,
+              PRIMARY KEY (lead_id, bundle_id))`);
+  st.db.exec(`INSERT INTO lead_shares VALUES ('LEAD-2026-0901-aaaaaaaaaaaa', 'PROJ-A', 'alice', '2026-09-01T00:00:00Z')`);
+  migrateObservationLog(st.sql);
+  migrateObservationLog(st.sql);   // a second boot changes nothing
+  assert.deepEqual(st.sql.exec(`PRAGMA table_info(lead_shares)`).toArray().map((c) => c.name), ["lead_id", "bundle_id", "sharer", "at", "reason"]);
+  assert.deepEqual(st.sql.exec(`SELECT * FROM lead_shares`).toArray(),
+    [{ lead_id: "LEAD-2026-0901-aaaaaaaaaaaa", bundle_id: "PROJ-A", sharer: "alice", at: "2026-09-01T00:00:00Z", reason: null }]);
+  // through the module: an old share's repeat keeps its null reason
+  const w = group();
+  const L = w.obs.lead({ words: "w", author: "alice" }).lead_id;
+  w.st.sql.exec(`INSERT INTO lead_shares (lead_id, bundle_id, sharer, at) VALUES (?, 'PROJ-A', 'alice', '2026-09-01T00:00:00Z')`, L);
+  const r = w.obs.leadShare({ lead: L, project: "PROJ-A", reason: "now with a reason", sharer: "alice", viewer: V("alice") });
+  assert.deepEqual([r.ok, r.already, r.at, r.reason], [true, true, "2026-09-01T00:00:00Z", null]);
+  assert.equal(w.row(`SELECT reason FROM lead_shares`).reason, null);
+});
+
+test("R17 leadLook: C-54.8; C-54.5; C-54.6 (NEVER_LOOKED answered with why); C-54.7 in each of its arms; C-54.11 no detail (absent, not a string or blank), never kept null; C-54.4; then R2's refusals; success appends §4.5's row and answers its seq, at and a sentence", () => {
   const w = group();
   const [open] = w.doc("INFO-2026-0001", ["open"]);
   const hidden = w.projectDoc("PROJ-H", "hidden");
   const openContent = w.contentRow("c".repeat(64), open, "INFO-2026-0001");
   const hiddenContent = w.contentRow("d".repeat(64), hidden, "PROJ-H");
   const L = w.obs.lead({ words: "the words", author: "alice" }).lead_id;
-  const look = (o) => w.obs.leadLook({ lead: L, state: "LOOKED_ABSENT", looker: "alice", viewer: V("alice"), ...o });
+  const look = (o) => w.obs.leadLook({ detail: "searched the clerk's archive", lead: L, state: "LOOKED_ABSENT", looker: "alice", viewer: V("alice"), ...o });
   for (const l of [null, "", MACHINE]) assert.equal(check(look({ looker: l, lead: "nope" })), "C-54.8", "asked before the lead");
   assert.equal(check(look({ lead: "nope" })), "C-54.5");
   assert.equal(check(look({ viewer: V("eve") })), "C-54.5");
@@ -124,7 +177,19 @@ test("R17 leadLook: C-54.8; C-54.5; C-54.6 (NEVER_LOOKED answered with why); C-5
   assert.equal(check(look({ state: "PRESENT", resultKind: "capture", resultRef: hidden })), "C-54.7", "not held where the viewer can read it");
   assert.equal(check(look({ state: "PRESENT", resultKind: "content", resultRef: hiddenContent })), "C-54.7");
   assert.equal(check(look({ state: "PRESENT", resultKind: "capture", resultRef: "e".repeat(64) })), "C-54.7");
-  assert.equal(check(look({ detail: "x".repeat(CAPTURE_TEXT_UNIT_CAP + 1) })), "C-54.4");
+  // C-54.11: absent, not a string or blank; after C-54.7 and before C-54.4
+  for (const detail of [undefined, null, 5, false, ["x"], { x: 1 }, "", "   ", "\n\t"]) {
+    const r = look({ detail });
+    assert.deepEqual([r.ok, code(r), check(r)], [false, "LEAD_LOOK_NO_DETAIL", "C-54.11"], JSON.stringify(detail));
+    assert.ok(typeof r.translation === "string" && r.translation.length > 40);
+    assert.ok(typeof r.detail === "string" && r.detail.length > 0);
+  }
+  assert.equal(check(look({ detail: null, state: "NEVER_LOOKED" })), "C-54.6", "C-54.6 first");
+  assert.equal(check(look({ detail: null, state: "PRESENT", resultKind: "capture", resultRef: hidden })), "C-54.7", "C-54.7 first");
+  assert.equal(check(look({ detail: null, lead: "nope" })), "C-54.5");
+  assert.equal(check(look({ detail: undefined, looker: MACHINE })), "C-54.8");
+  assert.equal(check(look({ detail: "x".repeat(CAPTURE_TEXT_UNIT_CAP + 1) })), "C-54.4", "the over-cap refusal stays C-54.4");
+  assert.equal(check(look({ detail: null, state: "PRESENT" })), "C-54.11", "asked before R2's C-22.10");
   // then R2's refusals: a PRESENT naming nothing is C-22.10, a condition outside the vocabulary C-22.4
   assert.equal(check(look({ state: "PRESENT" })), "C-22.10");
   assert.equal(check(look({ state: "LOOKED_INDETERMINATE", condition: "nope" })), "C-22.4");
@@ -138,10 +203,15 @@ test("R17 leadLook: C-54.8; C-54.5; C-54.6 (NEVER_LOOKED answered with why); C-5
     ["member", "alice", "lead", L, "internet", "description", "the words", "PRESENT", "found it"]);
   assert.equal(look({ state: "partial", resultKind: "content", resultRef: openContent }).ok, true);
   assert.equal(look({ state: "LOOKED_INDETERMINATE", condition: "governor-holding-host" }).ok, true);
-  const absent = look();
+  const absent = look({ detail: "  asked the clerk; no such item  " });
   assert.equal(absent.ok, true); assert.match(absent.says, /not there/);
+  assert.equal(w.log().at(-1).detail, "  asked the clerk; no such item  ", "the words kept as written");
+  // the words are read back with the look, and no look in the log has a null detail
+  assert.deepEqual(w.obs.leadRead({ id: L, viewer: V("alice") }).looks.map((l) => l.detail),
+    ["found it", "searched the clerk's archive", "searched the clerk's archive", "  asked the clerk; no such item  "]);
+  assert.equal(w.row(`SELECT COUNT(*) AS n FROM observation_log WHERE authority_kind = 'lead' AND detail IS NULL`).n, 0);
   // a joined participant of a project it was shared to may look too
-  w.obs.leadShare({ lead: L, project: "PROJ-A", sharer: "alice", viewer: V("alice") });
+  w.obs.leadShare({ reason: "the project is following this up", lead: L, project: "PROJ-A", sharer: "alice", viewer: V("alice") });
   assert.equal(look({ looker: "bob", viewer: V("bob") }).ok, true);
 });
 
@@ -159,8 +229,8 @@ test("R18 R21 leadRead: C-54.5; the looks in seq order bounded (200 by default, 
   assert.deepEqual([...r.vocabulary.outcomes], ["LOOKED_ABSENT", "LOOKED_INDETERMINATE", "partial", "PRESENT"]);
   for (const s of Object.values(OBSERVATION_STATE_WORDS)) assert.doesNotMatch(s, /\(/);
   // a capture look whose document later becomes hidden
-  w.obs.leadLook({ lead: L, state: "PRESENT", resultKind: "capture", resultRef: open, looker: "alice", viewer: V("alice") });
-  w.obs.leadLook({ lead: L, state: "LOOKED_ABSENT", looker: "alice", viewer: V("alice") });
+  w.obs.leadLook({ detail: "searched the clerk's archive", lead: L, state: "PRESENT", resultKind: "capture", resultRef: open, looker: "alice", viewer: V("alice") });
+  w.obs.leadLook({ detail: "searched the clerk's archive", lead: L, state: "LOOKED_ABSENT", looker: "alice", viewer: V("alice") });
   w.st.sql.exec(`UPDATE bundles SET object_type = 'project' WHERE bundle_id = 'INFO-2026-0001'`);
   w.membership.reindexProjectSight("INFO-2026-0001");
   r = read();
@@ -168,7 +238,7 @@ test("R18 R21 leadRead: C-54.5; the looks in seq order bounded (200 by default, 
     [[1, "PRESENT", null, null, "backed", "alice", "internet", "description"], [2, "LOOKED_ABSENT", null, null, "none_owed", "alice", "internet", "description"]]);
   assert.equal(r.state, "LOOKED_ABSENT", "the latest look's state");
   // the bound
-  for (let i = 0; i < 3; i++) w.obs.leadLook({ lead: L, state: "LOOKED_INDETERMINATE", looker: "alice", viewer: V("alice") });
+  for (let i = 0; i < 3; i++) w.obs.leadLook({ detail: "searched the clerk's archive", lead: L, state: "LOOKED_INDETERMINATE", looker: "alice", viewer: V("alice") });
   r = read({ limit: 2 });
   assert.deepEqual([r.limit, r.truncated, r.looks.map((l) => l.seq)], [2, true, [1, 2]]);
   assert.equal(read({ limit: 5 }).truncated, false);
@@ -178,13 +248,13 @@ test("R18 R21 leadRead: C-54.5; the looks in seq order bounded (200 by default, 
   // shared_to: the author sees every share, a participant only the projects they have joined
   w.participant("PROJ-B", "alice");
   w.project("PROJ-C"); w.participant("PROJ-C", "alice");
-  for (const p of ["PROJ-A", "PROJ-B", "PROJ-C"]) w.obs.leadShare({ lead: L, project: p, sharer: "alice", viewer: V("alice") });
+  for (const p of ["PROJ-A", "PROJ-B", "PROJ-C"]) w.obs.leadShare({ reason: "the project is following this up", lead: L, project: p, sharer: "alice", viewer: V("alice") });
   assert.deepEqual(read().shared_to.map((s) => s.project), ["PROJ-A", "PROJ-B", "PROJ-C"]);
   assert.deepEqual(w.obs.leadRead({ id: L, viewer: V("bob") }).shared_to.map((s) => s.project), ["PROJ-A", "PROJ-B"]);
   assert.deepEqual(w.obs.leadRead({ id: L, viewer: V("carol") }).shared_to.map((s) => s.project), ["PROJ-A"]);
   const cut = read({ limit: 2 });
   assert.deepEqual([cut.shared_to.length, cut.shared_to_truncated], [2, true]);
-  assert.deepEqual(Object.keys(read().shared_to[0]).sort(), ["at", "project", "shared_by"]);
+  assert.deepEqual(Object.keys(read().shared_to[0]).sort(), ["at", "project", "reason", "shared_by"]);
 });
 
 test("R20 R21 leadList: every lead this viewer may read, each once with its own latest state, newest first, bounded and saying so, with the vocabulary; a viewer who reaches none is answered as one whose reach holds none", () => {
@@ -195,9 +265,9 @@ test("R20 R21 leadList: every lead this viewer may read, each once with its own 
   w.clock.now = "2026-09-27T02:00:00Z";
   const b1 = w.obs.lead({ words: "bob's", author: "bob" }).lead_id;
   const e1 = w.obs.lead({ words: "eve's", author: "eve" }).lead_id;
-  w.obs.leadLook({ lead: a2, state: "LOOKED_ABSENT", looker: "alice", viewer: V("alice") });
-  w.obs.leadLook({ lead: a2, state: "partial", looker: "alice", viewer: V("alice") });
-  w.obs.leadShare({ lead: b1, project: "PROJ-A", sharer: "bob", viewer: V("bob") });
+  w.obs.leadLook({ detail: "searched the clerk's archive", lead: a2, state: "LOOKED_ABSENT", looker: "alice", viewer: V("alice") });
+  w.obs.leadLook({ detail: "searched the clerk's archive", lead: a2, state: "partial", looker: "alice", viewer: V("alice") });
+  w.obs.leadShare({ reason: "the project is following this up", lead: b1, project: "PROJ-A", sharer: "bob", viewer: V("bob") });
   const list = w.obs.leadList({ viewer: V("alice") });
   assert.deepEqual(list.leads.map((l) => [l.lead_id, l.state, l.looks]), [[b1, "NEVER_LOOKED", 0], [a2, "partial", 2], [a1, "NEVER_LOOKED", 0]],
     "two leads with the same words are two leads; within one second, the order received");
@@ -220,10 +290,10 @@ test("R25 a lead is never evidence: its id has no bundle shape, every act answer
   const w = group();
   const bundles = w.count("bundles"), content = w.count("content");
   const L = w.obs.lead({ words: "w", author: "alice" }).lead_id;
-  w.obs.leadShare({ lead: L, project: "PROJ-A", sharer: "alice", viewer: V("alice") });
+  w.obs.leadShare({ reason: "the project is following this up", lead: L, project: "PROJ-A", sharer: "alice", viewer: V("alice") });
   const [open] = w.doc("INFO-2026-0001", ["open"]);
   const afterDoc = [w.count("bundles"), w.count("content")];
-  w.obs.leadLook({ lead: L, state: "PRESENT", resultKind: "capture", resultRef: open, looker: "alice", viewer: V("alice") });
+  w.obs.leadLook({ detail: "searched the clerk's archive", lead: L, state: "PRESENT", resultKind: "capture", resultRef: open, looker: "alice", viewer: V("alice") });
   w.obs.leadRead({ id: L, viewer: V("alice") }); w.obs.leadList({ viewer: V("alice") });
   assert.deepEqual([w.count("bundles"), w.count("content")], afterDoc);
   assert.equal(afterDoc[1], content);
@@ -235,7 +305,7 @@ test("R25 a lead is never evidence: its id has no bundle shape, every act answer
   for (const id of ["INFO-2026-0001", "PROJ-A", "PROJ-2026-0001", "LEAD-2026-09-27-abc", "lead-2026-0927-abc", "LEAD-2026-0927-", ""])
     assert.equal(LEAD_ID_RE.test(id), false, id);
   for (const r of [w.obs.lead({ words: "x", author: "alice" }), w.obs.leadRead({ id: L, viewer: V("alice") }),
-                   w.obs.leadLook({ lead: L, state: "LOOKED_ABSENT", looker: "alice", viewer: V("alice") })])
+                   w.obs.leadLook({ detail: "searched the clerk's archive", lead: L, state: "LOOKED_ABSENT", looker: "alice", viewer: V("alice") })])
     assert.equal(r.evidence, false);
 });
 
@@ -246,9 +316,20 @@ test("R14 R16 R17 R18 R20 the lead's ops read the control plane's stamps from th
   assert.deepEqual([made.ok, made.author], [true, "alice"]);
   assert.equal(check(run("lead", "", { words: "w", author: "alice" })), "C-54.2", "a body author is never read");
   const L = made.lead_id;
-  assert.equal(run("leadshare", `sharer=alice&viewer=${V("alice")}`, { lead: L, project: "PROJ-A", sharer: "bob" }).ok, true);
-  const look = run("leadlook", `looker=bob&viewer=${V("bob")}`, { lead: L, state: "LOOKED_ABSENT", looker: "alice" });
+  // leadshare carries the reason from the body, else the query, as it carries the lead and the project
+  assert.equal(check(run("leadshare", `sharer=alice&viewer=${V("alice")}`, { lead: L, project: "PROJ-A" })), "C-54.12");
+  assert.equal(check(run("leadshare", `sharer=alice&viewer=${V("alice")}&reason=%20`, { lead: L, project: "PROJ-A" })), "C-54.12");
+  assert.equal(check(run("leadshare", `sharer=alice&viewer=${V("alice")}&reason=from%20query`, { lead: L, project: "PROJ-A", reason: "" })),
+    "C-54.12", "a body reason, even blank, is the one read");
+  const sh = run("leadshare", `sharer=alice&viewer=${V("alice")}&reason=from%20query`, { lead: L, project: "PROJ-A", sharer: "bob", reason: "from the body" });
+  assert.deepEqual([sh.ok, sh.shared_by, sh.reason], [true, "alice", "from the body"]);
+  w.project("PROJ-Q"); w.participant("PROJ-Q", "alice");
+  assert.equal(run("leadshare", `sharer=alice&viewer=${V("alice")}&lead=${L}&project=PROJ-Q&reason=from%20query`, null).reason, "from query");
+  // leadlook carries the detail from the body
+  assert.equal(check(run("leadlook", `looker=bob&viewer=${V("bob")}`, { lead: L, state: "LOOKED_ABSENT" })), "C-54.11");
+  const look = run("leadlook", `looker=bob&viewer=${V("bob")}`, { lead: L, state: "LOOKED_ABSENT", looker: "alice", detail: "searched the index" });
   assert.deepEqual([look.ok, look.looked_by], [true, "bob"]);
+  assert.equal(w.log().at(-1).detail, "searched the index");
   assert.equal(run("leadread", `id=${L}&viewer=${V("bob")}&limit=5`).limit, 5);
   assert.equal(run("leadread", `id=${L}&viewer=admin&identity=${V("alice")}`).ok, true);
   assert.deepEqual(run("leadlist", `viewer=${V("bob")}`).leads.map((l) => l.lead_id), [L]);
