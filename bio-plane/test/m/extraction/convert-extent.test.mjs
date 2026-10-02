@@ -1,6 +1,7 @@
-/* extraction: the container's own extent (R13) over REAL office bytes, read by the REAL registered entries (docx,
-   xlsx, pptx, odt, ods, pdf) through `Extraction#read`, and its persistence through the promotion projection and the
-   writer (R19, R20) to `readingOf` and `readingFor` (R27, R30). Converts extraction's share of two legacy suites, rows
+/* extraction: the persistence of a reading's container extent through the promotion projection and the writer (R19,
+   R20) to `readingOf` and `readingFor` (R27, R30), over REAL office bytes read by the REAL registered entries (docx,
+   xlsx, pptx, ods) through `Extraction#read`. The extent itself (reading-pipeline R12) is `reading-pipeline`'s since
+   N513, and its cases moved there. Converts extraction's share of two legacy suites, rows
    of `build/jobs/T17/legacy-tests.md`: `test/fw19-extent-arms.test.mjs` ("acquire persists docx tables/images and
    xlsx levels on container_extent") and `test/capture-container-extent.test.mjs` ("extraction R13: docx paragraph
    count, levels per container and absent levels null, empty list null"). The old suites were deleted in T20 (K931). The
@@ -10,7 +11,6 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { deflateRawSync } from "node:zlib";
 import { fresh, bundle, hold, doc, sha } from "./fixture.mjs";
-import { getFormat } from "../../../src/formats.mjs";
 
 /* ---- independent crc32 and zip assembler (the old suites' own; nothing here imports the container reader) ---- */
 function crc32(buf) {
@@ -40,7 +40,6 @@ function zip(files) {
   return new Uint8Array(Buffer.concat([...locals, cd,
     u32(0x06054b50), u16(0), u16(0), u16(files.length), u16(files.length), u32(cd.length), u32(offset), u16(0)]));
 }
-const hash = (b) => sha(b);
 const TYPES = (over) => `<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>${over}</Types>`;
 const RELS = (inner = "") => `<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${inner}</Relationships>`;
 const REL = (id, type, target) => `<Relationship Id="${id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/${type}" Target="${target}"/>`;
@@ -62,8 +61,6 @@ const workbook = (sheets) => zip([
 const SHEETS = [["Summary", [["Department", "FY26 Adopted"], ["Police", "2200000"], ["Fire", "2000000"]]],
                 ["Detail", [["Fund 1010", "General Purpose Fund"]]], ["Reconciliation", [["Reconciliation notes"]]]];
 const XLSX = workbook(SHEETS);
-/* a workbook declaring no sheet: the entry itemises an empty list */
-const EMPTY_BOOK = workbook([]);
 
 /* ---- word-processing documents (docx) ---- */
 const DOCX_CT = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
@@ -84,7 +81,6 @@ const DOCX = document(PARAS.map(wp).join(""));
 /* fw19-extent-arms' document: two top-level tables, one nested in the first (ordinal 0, 1 nested, 2), one image
    member and a non-image media member beside it */
 const PNG = Buffer.from("\x89PNG\r\n\x1a\nFW-19 fixture: the budget map of Council District 3", "latin1");
-const JPG = Buffer.from("\xff\xd8\xff\xe0FW-19 fixture: the signed page of the agreement", "latin1");
 const tc = (inner) => `<w:tc>${inner}</w:tc>`;
 const NESTED = `<w:tbl><w:tblGrid><w:gridCol/></w:tblGrid><w:tr>${tc(wp("nested"))}</w:tr></w:tbl>`;
 const TABLE0 = `<w:tbl><w:tblGrid><w:gridCol/><w:gridCol/><w:gridCol/></w:tblGrid>`
@@ -94,8 +90,6 @@ const TABLE2 = `<w:tbl><w:tblGrid><w:gridCol/><w:gridCol/></w:tblGrid>`
 const DOCX_TABLES = [{ rows: 2, cols: 3 }, { rows: 1, cols: 1 }, { rows: 4, cols: 2 }];
 const TABLED = document(wp("AGENDA REPORT") + TABLE0 + wp("Between the tables.") + TABLE2 + wp("End."),
   [{ name: "word/media/image1.png", data: PNG }, { name: "word/media/briefing.wav", data: "RIFF not an image" }]);
-/* fw19-extent-arms' workbook: two sheets and no media directory */
-const XLSX_NOMEDIA = workbook([["Summary", [["Department", "FY26"], ["Police", "2.2M"], ["Fire", "2.0M"]]], ["Detail", [["Fund 1010"]]]]);
 
 /* ---- decks (pptx) ---- */
 const PPTX_CT = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
@@ -118,11 +112,8 @@ const deck = (titles, shapes, { missing = 0, declare = {} } = {}) => zip([
 ]);
 const PPTX = deck(["FY 2026-27 PROPOSED MIDCYCLE BUDGET", "GENERAL PURPOSE FUND OUTLOOK", "FISCAL IMPACT"], [2, 2, 2]);
 const PPTX_GAPPED = deck(["MIDCYCLE OVERVIEW", "THE SLIDE THIS CAPTURE CANNOT READ", "GENERAL PURPOSE FUND RECONCILIATION"], [2, null, 4], { missing: 2 });
-const TRAILING = ["AGENDA", "PROPOSED CUTS", "THE SLIDE THIS CAPTURE CANNOT READ"];
-const PPTX_TRAILING = deck(TRAILING, [3, 1, null], { missing: 3 });
-const PPTX_OVERBOUND = deck(TRAILING, [3, 1, 2], { declare: { 1: 64 * 1024 * 1024 } });
 
-/* ---- OpenDocument (odt, ods) ---- */
+/* ---- OpenDocument (ods) ---- */
 const ODF_NS = ['xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"', 'xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"',
   'xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0"', 'xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"'].join(" ");
 const manifest = (ct) => `<?xml version="1.0" encoding="UTF-8"?><manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0" manifest:version="1.2"><manifest:file-entry manifest:full-path="/" manifest:version="1.2" manifest:media-type="${ct}"/><manifest:file-entry manifest:full-path="content.xml" manifest:media-type="text/xml"/></manifest:manifest>`;
@@ -133,22 +124,11 @@ const odf = (ct, body, extra = []) => zip([
   { name: "styles.xml", data: `<?xml version="1.0"?><office:document-styles ${ODF_NS}/>` },
   ...extra,
 ]);
-const ODS_CT = "application/vnd.oasis.opendocument.spreadsheet", ODT_CT = "application/vnd.oasis.opendocument.text";
+const ODS_CT = "application/vnd.oasis.opendocument.spreadsheet";
 const odsCell = (v) => `<table:table-cell office:value-type="string"><text:p>${v}</text:p></table:table-cell>`;
 /* capture-container-extent's .ods: one sheet, used range two rows of two cells */
 const ODS = odf(ODS_CT, `<office:spreadsheet><table:table table:name="Appropriations"><table:table-row>${odsCell("Department")}${odsCell("FY26 Adopted")}</table:table-row>`
   + `<table:table-row>${odsCell("Police")}${odsCell("2200000")}</table:table-row></table:table></office:spreadsheet>`);
-/* fw19-extent-arms' .odt: one table of 3 columns (two by repeat) and 2 rows, one image */
-const odtCell = (v) => `<table:table-cell><text:p>${v}</text:p></table:table-cell>`;
-const ODT = odf(ODT_CT, `<office:text><text:p>Staff report.</text:p><table:table table:name="T1"><table:table-column/><table:table-column table:number-columns-repeated="2"/>`
-  + `<table:table-row>${odtCell("a")}${odtCell("b")}${odtCell("c")}</table:table-row><table:table-row>${odtCell("d")}${odtCell("e")}${odtCell("f")}</table:table-row></table:table></office:text>`,
-  [{ name: "Pictures/1000000000.jpg", data: JPG }]);
-
-/* ---- a one-page text-free PDF and an HTML page (capture-container-extent's section 5) ---- */
-const PDF = new Uint8Array(Buffer.from("%PDF-1.7\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n"
-  + "3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>\nendobj\n%%EOF\n", "latin1"));
-const HTML = `<!doctype html><html><head><title>Council Calendar</title></head>`
-  + `<body><h1>Meetings</h1><p>A web page has no sheets, no paragraph count and no slides.</p></body></html>`;
 
 /* Holds the bytes and reads them through the registered entry for `format`, as capture's acquire answer names it. */
 async function readAs(w, bytes, format, ct, extra = {}) {
@@ -156,79 +136,6 @@ async function readAs(w, bytes, format, ct, extra = {}) {
   const out = await w.x.read(doc({ digest: d, bytes: bytes.length, ct, format, headers: [["content-type", ct]], ...extra }));
   return { digest: d, ...out };
 }
-const produced = async (entry, bytes) => entry.text(await entry.parts(bytes));
-const XLSX_GRID = { rows: 1048576, cols: 16384 };
-
-test("R13 R45 (capture-container-extent §1): a real xlsx, docx and pptx each carry the extent their entry itemised: the sheet list with the producer's own grid and used range, the paragraph count, one slot per slide; the levels a container has no notion of are null", async () => {
-  const w = fresh();
-  const book = (await readAs(w, XLSX, "xlsx", XLSX_CT)).reading;
-  const text = (await readAs(w, DOCX, "docx", DOCX_CT)).reading;
-  const slides = (await readAs(w, PPTX, "pptx", PPTX_CT)).reading;
-  for (const r of [book, text, slides]) assert.equal(r.text_tier, 1);
-  const used = SHEETS.map(([, rows]) => [rows.length, Math.max(...rows.map((c) => c.length))]);
-  assert.deepEqual(book.container_extent, {
-    container: "xlsx", levels: ["sheets", "images"],
-    sheets: SHEETS.map(([name], i) => ({ name, ...XLSX_GRID, usedRows: used[i][0], usedCols: used[i][1] })),
-    paragraphs: null, slides: null, images: [] });
-  assert.deepEqual(text.container_extent, {
-    container: "docx", levels: ["paragraphs", "tables", "images"], sheets: null, paragraphs: PARAS.length, slides: null, tables: [], images: [] });
-  assert.deepEqual(slides.container_extent, {
-    container: "pptx", levels: ["slides", "images"], sheets: null, paragraphs: null,
-    slides: [{ shapes: 2 }, { shapes: 2 }, { shapes: 2 }], deckLength: 3, images: [] });
-  /* the record holds the producer's own figures: the entry called directly over the same bytes */
-  const ps = (await produced(getFormat("xlsx"), XLSX)).sheets, pd = (await produced(getFormat("pptx"), PPTX)).slides;
-  assert.deepEqual(book.container_extent.sheets.map((s) => [s.rows, s.cols, s.usedRows, s.usedCols]), ps.map((s) => [s.rows, s.cols, s.usedRows, s.usedCols]));
-  assert.deepEqual(slides.container_extent.slides.map((s) => s.shapes), pd.map((s) => s.shapes));
-});
-
-test("R13 R45 (capture-container-extent §4b, §4b'): the slide map is keyed on the slide number and as long as the deck: an unreadable slide keeps its own slot with a null count, the deck length beside it; an over-the-bound deck holds one null slot per declared slide", async () => {
-  const w = fresh();
-  const gapped = (await readAs(w, PPTX_GAPPED, "pptx", PPTX_CT)).reading.container_extent;
-  assert.deepEqual([gapped.slides, gapped.deckLength], [[{ shapes: 2 }, { shapes: null }, { shapes: 4 }], 3]);
-  const trailing = (await readAs(w, PPTX_TRAILING, "pptx", PPTX_CT)).reading.container_extent;
-  assert.deepEqual([trailing.slides, trailing.deckLength], [[{ shapes: 3 }, { shapes: 1 }, { shapes: null }], TRAILING.length]);
-  /* the fixture arms: the entry's readable list is one short of the deck it declares */
-  const tp = await produced(getFormat("pptx"), PPTX_TRAILING);
-  assert.deepEqual([tp.slides.map((s) => s.slide), tp.deckLength], [[1, 2], TRAILING.length]);
-  const over = (await readAs(w, PPTX_OVERBOUND, "pptx", PPTX_CT)).reading.container_extent;
-  assert.deepEqual([over.levels, over.slides, over.deckLength], [["slides", "images"], TRAILING.map(() => ({ shapes: null })), TRAILING.length]);
-});
-
-test("R13 R45 (capture-container-extent §4c): an .ods sheet's grid is null, present and never borrowed, beside its measured used range", async () => {
-  const w = fresh();
-  const r = (await readAs(w, ODS, "ods", ODS_CT)).reading;
-  assert.deepEqual(r.container_extent, { container: "ods", levels: ["sheets", "images"],
-    sheets: [{ name: "Appropriations", rows: null, cols: null, usedRows: 2, usedCols: 2 }], paragraphs: null, slides: null, images: [] });
-  assert.ok("rows" in r.container_extent.sheets[0] && "cols" in r.container_extent.sheets[0]);
-});
-
-test("R13 R45 (capture-container-extent §7): a workbook whose entry itemised no sheet records the sheet level null, never an empty list, the level still declared", async () => {
-  const w = fresh();
-  const r = (await readAs(w, EMPTY_BOOK, "xlsx", XLSX_CT)).reading;
-  assert.deepEqual([r.container_extent.sheets, r.container_extent.levels], [null, ["sheets", "images"]]);
-});
-
-test("R13 R45 R60 (capture-container-extent §5): an HTML page no entry itemised has no container_extent key; a PDF the real entry read carries its one level, images, a measured empty list; its page count and box; the text counts T9 pinned", async () => {
-  const w = fresh();
-  const html = (await readAs(w, HTML, "html", "text/html; charset=utf-8", { fromText: true })).reading;
-  assert.equal("container_extent" in html, false);
-  assert.deepEqual([html.text_chars, html.text_glyphs, html.text_undetermined], [168, 155, null]);
-  const pdf = (await readAs(w, PDF, "pdf", "application/pdf")).reading;
-  assert.deepEqual(pdf.container_extent, { container: "pdf", levels: ["images"], images: [] });
-  assert.equal(pdf.page_count, 1);
-  assert.deepEqual(pdf.page_boxes, { boxes: [{ media_box: [0, 0, 612, 792], w: 612, h: 792, rotate: 0 }], of_page: [0] });
-  assert.deepEqual([pdf.text_chars, pdf.text_glyphs, pdf.text_undetermined], [0, 0, 0]);
-});
-
-test("R13 (fw19-extent-arms §1): a docx carries its table grids in document order, the nested one numbered as it opens, and its one image member by content hash (a non-image media member not listed); an xlsx with no media carries images as a measured empty list and no table level; an odt its table through the column repeat and its image", async () => {
-  const w = fresh();
-  const d = (await readAs(w, TABLED, "docx", DOCX_CT)).reading.container_extent;
-  assert.deepEqual([d.levels, d.tables, d.images], [["paragraphs", "tables", "images"], DOCX_TABLES, [{ part: hash(PNG), mime: "image/png" }]]);
-  const b = (await readAs(w, XLSX_NOMEDIA, "xlsx", XLSX_CT)).reading.container_extent;
-  assert.deepEqual([b.levels, b.images, "tables" in b], [["sheets", "images"], [], false]);
-  const o = (await readAs(w, ODT, "odt", ODT_CT)).reading.container_extent;
-  assert.deepEqual([o.container, o.levels, o.tables, o.images], ["odt", ["paragraphs", "tables", "images"], [{ rows: 2, cols: 3 }], [{ part: hash(JPG), mime: "image/jpeg" }]]);
-});
 
 test("R19 R20 R27 R30 (capture-container-extent §2, fw19-extent-arms §1): a reading promoted through the projection is persisted with its container extent whole: readingOf and readingFor answer exactly the extent read, the capture format with it", async () => {
   const w = fresh();

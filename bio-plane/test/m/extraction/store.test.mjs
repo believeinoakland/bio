@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bundle, sha } from "./fixture.mjs";
-import { compareProvenance, readingProvenance } from "../../../src/readingprov.mjs";
+import { compareProvenance, readingProvenance } from "../../../src/reading-pipeline/index.mjs";
 import { canonicalExtent } from "../../../src/textchain.mjs";
 import { CAPTURE_TEXT_UNIT_CAP, CAPTURE_TEXT_CAPTURE_UNIT_BOUND, CAPTURE_TEXT_CAPTURE_BOUND, OCCURRENCES_PER_REF,
          TEXT_SOURCE_LIMIT_MAX, labelTerms, extractionOps, noSha } from "../../../src/extraction/index.mjs";
@@ -196,7 +196,7 @@ test("R22: the chain kind is text-chain's chainKindFor per page, the document's 
   assert.equal(w.one(`SELECT chain_kind FROM capture_text WHERE capture_sha=?`, S3).chain_kind, "undetermined");
 });
 
-test("R23 R26: every distinct reading is kept in arrival order before the row is replaced; an equal one is not kept again; a pre-history reading is kept first; each stores compareProvenance against the one before", async () => {
+test("R23 (reading-pipeline R19): every distinct reading is kept in arrival order before the row is replaced; an equal one is not kept again; a pre-history reading is kept first; each stores compareProvenance against the one before", async () => {
   const w = fresh();
   bundle(w.s, "B-1");
   const legacy = { content_type: "t", entities: [], at: "a", found: false };
