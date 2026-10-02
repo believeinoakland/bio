@@ -1,0 +1,7 @@
+# BOB to publication (T27)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T27) L8, publication, N520: R40's reader list gains `docket` (wording; one test re-worded at most). You are at ~3,633 lines: add no code you do not need. Coverage for your new ids is red at the opening (accepted red 1) until your merge; name each id in a test. Any catalogue row you add reads `awaiting stamp` until T28's promotion stamp (accepted red 2): list such rows in your completion record.
