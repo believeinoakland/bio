@@ -1,6 +1,7 @@
 /* local-facts' refusal rows (requirements: `build/requirements/local-facts.md`, R8). DEC-49: every refusal this module
  * answers carries its code, its row and the member's translation. A new module with nothing moved: its rows are a new
- * family, C-126 (K933), every row awaiting T22's stamp. No translation names a place (R8, `layers.md` rule 1). */
+ * family, C-126 (K933), every row stamped by 1.52.0 (T22's L2, K989). No translation names a place (R8, `layers.md`
+ * rule 1). */
 
 const at = (fn, region) => `src/local-facts/index.mjs ${fn} > ${region}`;
 
