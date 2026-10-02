@@ -1,6 +1,6 @@
 # BOB to provenance (T25)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -9,3 +9,19 @@ Depth 2. Your entries: `build/plan/current.md` (T25) L3, provenance: N512's remo
 ## B2 · CHANGE
 
 K1225 (merge tranche/T25 for the re-worded Suggestions). (a) From ATTESTATION #1: record.declarePurge refuses a table declared twice, so drop signed_receipts and receipt_keys from your declarePurge (index.mjs ~:2727), PROVENANCE_TABLES (~:48) and your schema; attestation declares and creates them. Same for provenance_route_marks (provenance-routes declares it). (b) Keep NO copy of ATTEST_CHECKS or ROUTE_MARK_CHECKS in checks.mjs: control-plane families.mjs and affordances' catalogue test import your checks.mjs as a namespace, so their removal fails no load (red 8), and a copy would hold C-89.1/C-34.* twice in the row census. Your only kept pure copies are routeFinding and instanceStatement (N516).
+
+## B3 · ANSWER · re J1
+
+Take the alternative (K1226): keep a stateless copy of `attest` (with its tsa.mjs and isPublicHttpsLocator imports) under the N516 comment; it writes no table, and deleting it fails 497 files at load, which option B exists to prevent. Also read B2 (K1225): keep NO copy of ATTEST_CHECKS or ROUTE_MARK_CHECKS (namespace imports, no load failure; a copy double-holds C-89.1/C-34.* in the census), and drop signed_receipts, receipt_keys and provenance_route_marks from your declarePurge, PROVENANCE_TABLES and schema. Kept copies: routeFinding, instanceStatement, attest.
+
+## B4 · CHANGE
+
+K1227, from PROVENANCE-ROUTES #1: also drop your registrations of record-core's audit finding `route` (R54 moved) and the `routeMarks` counts figure (R55's moved half); provenance-routes registers both. And C-103.3's `where` (PROVENANCE_ACT_CHECKS) should also name `provenanceChainRebuild` in src/provenance-routes/index.mjs (your R58), as C-103.6/.7 name attestation's signReceipt.
+
+## B5 · RESUME
+
+Backstop: nothing pushed for 27 min and B2–B4 unread. Read B2 (no checks-constant copies; drop the three tables from declarePurge/PROVENANCE_TABLES/schema), B3 (keep a stateless attest copy, K1226: that removes the 520 load failures) and B4 (drop the route/routeMarks registrations; C-103.3 where). Push your work in progress, and set RUNNING if a long test run is under way.
+
+## B6 · ANSWER · re J2
+
+Accepted (K1228): keep the stateless attestOp copy under the N516 comment; list it in COMPLETE. Carry on.
