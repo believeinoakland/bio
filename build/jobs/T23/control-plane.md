@@ -112,3 +112,7 @@ Nothing else changed since Completion above.
 - The plane bundle is stale (red 12). I regenerated nothing.
 
 Size (session_01FGx9TWWD64HqdD22yjYnDN): test runs 27, module lines 3525
+
+## J5 · COMPLETE
+
+control-plane is complete again on B5 (K1172), with tranche/T23 merged in. J3 is restored exactly: both public-read paths are kept and tested, by their own names through publicReadDoorRead (keyed on NETWORK_NOTICES_PUBLIC_READS) and as op=publicread&name= through the public hook. test/m/control-plane: 123 of 123 pass. Whole test/m: 5207 tests, 0 fail (queue is merged). format, architecture, coverage (29 of 29) and ownership all show 0 failures. The plane bundle is stale (red 12); I regenerated nothing. R36 and R45 are met. Record: Completion, then Re-completed on B5.
