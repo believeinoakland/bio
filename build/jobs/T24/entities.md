@@ -28,3 +28,7 @@
 - `checks/ownership.mjs bio entities tranche/T24`: 1 file changed; 0 failures.
 
 Size (session_01Q3vbEeshhzkF2FWhbGhGtN): test runs 3, module lines 1326
+
+## J1 · REPORT
+
+Two things outside my module (wording job, no requirement change made): (1) build/requirements/entities.md R1 still says C-91.8 (ENTITY_NO_NOTE) is 'awaiting stamp'; 1.53.0 took it (gate.mjs, PROMOTION #24). The requirement text is yours. (2) My comment-only edit to bio-plane/src/entities/checks.mjs stales the plane's bundle bio-plane/dist/bio-plane.bundled.mjs (not_product; fleetbundles.test.mjs reports it); nothing regenerated.
