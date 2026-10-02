@@ -1,9 +1,9 @@
-/* queue-producers — the feed's producers (requirements: `build/requirements/queue-producers.md`, R1–R28).
+/* queue-producers — the feed's producers (requirements: `build/requirements/queue-producers.md`, R1–R31).
  * Split out of `queue` by N363 (Bob's K507; seams ruled K531, `build/plan/draft-N363-queue-split.md` §1, §3.2): each
  * producer derives, on read and writing nothing, the items one provider's facts earn for a viewer, naming each item's
  * subjects and home subjects, for `queue` to home, offer, mint and publish.
  *
- *   feedItems      queue's one read of this module (R8): every item R1–R7, R9, R14, R15–R23, R26 and R27 derive for a
+ *   feedItems      queue's one read of this module (R8): every item R1–R7, R9, R14, R15–R23, R26, R27, R29–R31 derive for a
  *                  member and viewer, each homed through queue's walk and carrying queue's options (both passed in),
  *                  with the facts the answer publishes beside them. No item carries `disposition` (queue's mint gives
  *                  it) or `catalogue_id` (queue stamps it from its R2).
@@ -15,7 +15,7 @@
  * `deps` (each defaults to its module's instance on the same `ctx`, reached lazily when first asked):
  *   record, membership, credentials, governor, provenance, capture, captureRequests, basisVersions, progressions, aiRuns, bias,
  *   publication, corpusExport, reevaluation, intent, monitoring, contradiction, actionClocks, escalation, actionPlans,
- *   actions, filingTemplates, localFacts, networkNotices, linkSweep   the providers.
+ *   actions, filingTemplates, localFacts, networkNotices, linkSweep, docket   the providers.
  *
  * R7 (queue's homes walk) and R12 (queue's options) stay in queue, one walk and one derivation: `feedItems` takes them
  * as `homesOf(subjectIds)` and `optionsOf(subjectIds)`, closed over the read's viewer and identity by queue, and holds
@@ -51,6 +51,7 @@ import { actionsOf } from "../actions/index.mjs";
 import { filingTemplatesOf } from "../filing-templates/index.mjs";
 import { localFactsOf } from "../local-facts/index.mjs";
 import { networkNoticesOf } from "../network-notices/index.mjs";
+import { docketOf } from "../docket/index.mjs";
 import { proposalFindingItems } from "./proposals.mjs";
 
 export { proposalFindingItems, CARDINALITY_EXCEEDED } from "./proposals.mjs";
@@ -100,6 +101,8 @@ export class QueueProducers {
   get #networkNotices() { return this.#dep("networkNotices", () => networkNoticesOf(this.#host)); }
   /* N506: a sweep's signals are link-sweep's (its R11), split from monitoring. */
   get #linkSweep() { return this.#dep("linkSweep", () => linkSweepOf(this.#host)); }
+  /* N520: a case's required core is docket's (its R9). */
+  get #docket() { return this.#dep("docket", () => docketOf(this.#host)); }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
@@ -221,6 +224,8 @@ export class QueueProducers {
       items.push(...this.#obligationsEscalationStageProposed(me, viewer, at));
       items.push(...this.#obligationsActionReminder(me, viewer, at));
       items.push(...this.#obligationsLitigationHold(me, viewer, at));
+      /* R29 (DEC-113): a hold in place released, told once to the administrators and its placers. */
+      items.push(...this.#findingsHoldReleased(me, viewer, at));
       /* R20, R21 (K921): a template version a member was asked to review; a local fact a live deadline reads, due. */
       items.push(...this.#obligationsTemplateReview(me, viewer, at));
       items.push(...this.#obligationsLocalFactDue(me, viewer, at));
@@ -229,6 +234,10 @@ export class QueueProducers {
       /* R26, R27 (K1036 (8); DEC-111): a sweep that needs a member's look; a working-on notice that needs its owners'. */
       items.push(...this.#conditionsSweep(me, viewer, at));
       items.push(...this.#conditionsNotice(me, viewer, at));
+      /* R30, R31 (N520; DEC-116): a case's required core still due, to its manager; a finding resting on an edition
+         withdrawn or contested on its docket. */
+      items.push(...this.#obligationsDocketCoreDue(me, viewer, at));
+      items.push(...this.#findingsDocketDependents(viewer, at));
       return {
         items,
         facts: {
@@ -2363,8 +2372,10 @@ export class QueueProducers {
   static STAGE_ADVANCE = Object.freeze({ id: "escalationadvance", label: "Advance to the proposed stage", weight: "single" });
   static STAGE_DECLINE = Object.freeze({ id: "escalationdecline", label: "Decline to advance now, with a reason", weight: "single" });
   static REMINDER_ANSWER = Object.freeze({ id: "reminderanswer", label: "Remind me again on a later day, or not again", weight: "single" });
-  /** R19: the item's door, a member's statement of the hold (actions R52, `op=actionhold`). */
-  static HOLD_STATE = Object.freeze({ id: "actionhold", label: "Record whether a litigation hold is in place", weight: "single" });
+  /** R19: the item's two doors (DEC-113): a member's statement that a hold is in place (actions R52, `op=actionhold`), or
+   *  its release, its own act (actions R56, `op=actionholdrelease`). */
+  static HOLD_STATE = Object.freeze({ id: "actionhold", label: "Record that a litigation hold is in place", weight: "single" });
+  static HOLD_RELEASE = Object.freeze({ id: "actionholdrelease", label: "Record that no hold is needed, with a reason", weight: "single" });
 
   /** Who an Action-layer item goes to (R15–R17): the member who authored the thing, when that is a member (a machine
    *  credential is not), else the project's owners, else the administrators; with the rule that chose them. */
@@ -2594,8 +2605,9 @@ export class QueueProducers {
   /** `litigation-hold` (R19; K899 (7), DEC-61, N-A19; actions R52, R54): one OBLIGATION per `legal` pressure mark
    *  `actions.holdsDue` answers the viewer (no hold stated on it, whatever the action's state), to every administrator
    *  member, or the `admin` machine credential as R14's, and to the member who marked it; to nobody else. Homed as R15's,
-   *  aged from the mark's instant, offering the hold statement (`actionhold`), which is its door: once any hold is
-   *  stated, `in_place` or `released`, the read no longer answers the mark. Raised once; nothing here repeats it. */
+   *  aged from the mark's instant, offering both its doors: the hold in place (`actionhold`, actions R52) and its release
+   *  (`actionholdrelease`, actions R56). Once either is stated the read no longer answers the mark. Raised once; nothing
+   *  here repeats it. */
   #obligationsLitigationHold(me, viewer, now) {
     const admin = me ? this.#isAdminMember(me) : viewer === `${MACHINE_CLASS_PREFIX}admin`;
     if (!me && !admin) return [];
@@ -2620,14 +2632,16 @@ export class QueueProducers {
         subject: { kind: "action", id: m.action, entry: m.ord, note: m.note ?? null, project },
         summary: `a legal threat was recorded on ${m.action} and no litigation hold is stated for it`,
         detail: `a received entry of this action (position ${m.ord}) was marked as a legal threat`
-              + (m.note ? ` ("${m.note}")` : "") + ". Record whether the group is preserving what the matter may reach "
-              + "(a hold in place) or not (released), with a reason. This is told once; it leaves when a member states it.",
+              + (m.note ? ` ("${m.note}")` : "") + ". Record that the group is preserving what the matter may reach "
+              + "(a hold in place), or that it need not (a release), with a reason. This is told once; it leaves when a "
+              + "member records either.",
         basis: { source: "actions.holdsDue", action: m.action, entry: m.ord, note: m.note ?? null,
                  marked_by: marker, marked_at: m.marked_at ?? null, project, recipients_rule: "administrators_and_marker",
                  bound: { pages_bound: QueueProducers.QUEUE_ACTION_PAGES, truncated: page.truncated },
                  detail: "a legal pressure mark with no hold stated is actions' fact (its R52, R54), read here and never "
                        + "stored. It goes to every administrator and to the member who marked it (DEC-61), is raised once "
-                       + "(DEC-69, DEC-70), and leaves when any member states a hold on that mark, in place or released." },
+                       + "(DEC-69, DEC-70), and leaves when any member states a hold on that mark: in place (its R52) or "
+                       + "released (its R56)." },
         age: Number.isFinite(markedMs)
           ? { state: "determined", since: m.marked_at, ms: Math.max(0, now - markedMs) }
           : { state: "undetermined", reason: "no_mark_instant",
@@ -2635,7 +2649,71 @@ export class QueueProducers {
         assignee: null,
         assignee_role: null,
         recipients,
-        options: [QueueProducers.HOLD_STATE, ...this.#optionsOf([m.action])],
+        options: [QueueProducers.HOLD_STATE, QueueProducers.HOLD_RELEASE, ...this.#optionsOf([m.action])],
+      });
+    }
+    return out;
+  }
+
+  /** `litigation-hold-released` (R29; DEC-113: "the administrators and whoever placed the hold are told once"; actions
+   *  R56, R59): one FINDING per release `actions.holdsReleased` answers the viewer (a `released` statement that ended a
+   *  hold in place), keyed by the action, the entry's position and the statement's sequence, to every administrator
+   *  member, or the `admin` machine credential as R14's, and to each member among the release's `placers`; to nobody
+   *  else. Its subject the action, naming who released the hold, the reason, and the restarted projects this viewer may
+   *  see; homed as R15's (the action's project, as record-core's `bundleInfo` answers it), aged from the release. Raised once and never repeated: it leaves when its recipient disposes of
+   *  it (queue's disposition), never by anything here. */
+  #findingsHoldReleased(me, viewer, now) {
+    const admin = me ? this.#isAdminMember(me) : viewer === `${MACHINE_CLASS_PREFIX}admin`;
+    if (!me && !admin) return [];
+    const page = this.#actionPages((after) => this.#actions.holdsReleased({ after, viewer }));
+    const visible = this.#bundleRedactor(viewer);
+    const person = (x) => typeof x === "string" && x.trim() && !x.startsWith(MACHINE_AUTHOR_PREFIX)
+      && !x.startsWith(MACHINE_CLASS_PREFIX);
+    const out = [];
+    let admins = null;
+    for (const x of page.items) {
+      if (!x || typeof x.action !== "string" || !x.action || !Number.isInteger(x.ord) || !Number.isInteger(x.seq)) continue;
+      if (visible(x.action) === null) continue;      // R11: a release on an action this viewer may not see is no item
+      const placers = [...new Set((Array.isArray(x.placers) ? x.placers : []).filter(person))];
+      if (!admin && !placers.includes(me)) continue;
+      if (admins === null) admins = this.#activeAdmins();
+      const restarted = (Array.isArray(x.restarted) ? x.restarted : [])
+        .filter((p) => typeof p === "string" && p && visible(p) !== null);
+      const by = typeof x.released_by === "string" && x.released_by ? x.released_by : null;
+      /* the action's project (record-core's `bundleInfo`), for R15's homes; withheld when this viewer may not see it */
+      const info = this.#record.bundleInfo(x.action);
+      const project = info && typeof info.project === "string" && info.project && visible(info.project) !== null
+        ? info.project : null;
+      const atMs = Date.parse(x.released_at ?? "");
+      out.push({
+        id: `FINDING::litigation-hold-released::${x.action}::${x.ord}::${x.seq}`,
+        class: "FINDING",
+        kind: "litigation-hold-released",
+        case: this.#actionHomes(x.action, project, viewer),
+        subject: { kind: "action", id: x.action, entry: x.ord, sequence: x.seq, released_by: by,
+                   reason: x.reason ?? null, restarted },
+        summary: `${by || "a member"} released the litigation hold on ${x.action}`,
+        detail: `the hold on a legal threat recorded on this action (position ${x.ord}) was released`
+              + (x.reason ? `, because "${x.reason}"` : "") + ". "
+              + (restarted.length
+                ? `Ordinary deletion restarts for ${restarted.join(", ")}.`
+                : "No project you can see restarts its ordinary deletion.")
+              + " This is told once, to the administrators and to whoever placed the hold.",
+        basis: { source: "actions.holdsReleased", action: x.action, entry: x.ord, sequence: x.seq, released_by: by,
+                 released_at: x.released_at ?? null, reason: x.reason ?? null, placers, restarted,
+                 raised_to: [...new Set([...admins, ...placers])], recipients_rule: "administrators_and_placers",
+                 bound: { pages_bound: QueueProducers.QUEUE_ACTION_PAGES, truncated: page.truncated },
+                 detail: "a release that ended a hold in place is actions' fact (its R56, R59), read here and never "
+                       + "stored. It is told to every administrator and to each member who placed the hold (DEC-113), "
+                       + "once (DEC-69, DEC-70), and leaves when its recipient disposes of it." },
+        age: Number.isFinite(atMs)
+          ? { state: "determined", since: x.released_at, ms: Math.max(0, now - atMs) }
+          : { state: "undetermined", reason: "no_release_instant",
+              detail: "the release carries no instant this producer can read" },
+        assignee: null,
+        assignee_role: null,
+        recipients: [...new Set([...admins, ...placers])],
+        options: this.#optionsOf([x.action]),
       });
     }
     return out;
@@ -3050,6 +3128,154 @@ export class QueueProducers {
         }
       }
     }
+    return out;
+  }
+
+  /* ======================================================================
+   * N520 · R30, R31 — THE DOCKET (docket R9; reevaluation R30; DEC-116 items 2, 3, 7).
+   * Each reads the one fact its owning module offers, derived on read and writing nothing, so an item leaves on the
+   * first read after the fact stops holding.
+   * ====================================================================== */
+
+  /** R30: the acts that answer a core item (docket R4, R7): placing it, and, for a submission, declining it. */
+  static DOCKET_PREPARE = Object.freeze({ id: "docketprepare", label: "Place this on the case's docket", weight: "single" });
+  static DOCKET_DECLINE = Object.freeze({ id: "docketdecline", label: "Decline it for containing redactions, with a reason", weight: "single" });
+  /** R30: how each core item is named to the manager (docket R9 (a)–(c)). */
+  static DOCKET_CORE_WORDS = Object.freeze({ response: "a response", statement: "a statement",
+                                              edition: "a newer edition", tension: "an undisclosed tension" });
+  /** R31: the item kind of each docket cause (reevaluation R30 (a), (b)). */
+  static DOCKET_CAUSE_KINDS = Object.freeze({ withdrawal: "edition-withdrawn", contested: "edition-contested" });
+  /** R31: the page `reevaluation.docketDependents` is read in (its R30's largest). */
+  static QUEUE_DOCKET_PAGE = 200;
+
+  /** The project a case belongs to, from publication's `cases` (its R40, a stated read contract); null when none. */
+  #caseProject(caseId) {
+    if (!this.#one(`SELECT 1 AS x FROM sqlite_master WHERE type='table' AND name='cases'`)) return null;
+    const r = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, caseId);
+    return r && typeof r.project_id === "string" && r.project_id ? r.project_id : null;
+  }
+
+  /** `docket-core-due` (R30; docket R9; DEC-116 item 2): one OBLIGATION per core item `docket.coreDue` answers the viewer,
+   *  keyed by the case, the item's kind and its reference, to the case's manager (its project's owners, membership R65)
+   *  and to nobody else: a caller with no member is none of them. Its subject the case, naming the item and its edition;
+   *  offering placement and, for a submission (a response or a statement), the decline; aged from the item's `since`.
+   *  It leaves when the item is done (the read no longer answers it); raised once (DEC-69, DEC-94). */
+  #obligationsDocketCoreDue(me, viewer, now) {
+    if (!me) return [];
+    const r = this.#docket.coreDue({ viewer });
+    const list = r && r.ok !== false && Array.isArray(r.items) ? r.items : [];
+    const visible = this.#bundleRedactor(viewer);
+    const owners = new Map();
+    const out = [];
+    for (const x of list) {
+      if (!x || typeof x.case !== "string" || !x.case || typeof x.kind !== "string" || !x.kind
+          || x.ref === undefined || x.ref === null || x.ref === "") continue;
+      const project = this.#caseProject(x.case);
+      if (!project || visible(project) === null) continue;
+      if (!owners.has(project)) owners.set(project, this.#membership.projectOwners(project) || []);
+      const managers = owners.get(project);
+      if (!managers.includes(me)) continue;
+      const what = QueueProducers.DOCKET_CORE_WORDS[x.kind] || `an item (${x.kind})`;
+      const submission = x.kind === "response" || x.kind === "statement";
+      const edition = Number.isInteger(Number(x.edition)) && x.edition !== null ? Number(x.edition) : null;
+      const sinceMs = Date.parse(x.since ?? "");
+      out.push({
+        id: `OBLIGATION::docket-core-due::${x.case}::${x.kind}::${x.ref}`,
+        class: "OBLIGATION",
+        kind: "docket-core-due",
+        case: this.#homesAt([project], viewer),
+        subject: { kind: "case", id: x.case, project, item: x.kind, ref: String(x.ref), edition },
+        summary: `case ${x.case}'s docket is missing ${what}${edition !== null ? ` on edition ${edition}` : ""}`,
+        detail: (submission
+          ? `${what[0].toUpperCase()}${what.slice(1)} filed on this case is not yet listed. List it whole, or decline it `
+            + "for containing redactions, with a reason."
+          : x.kind === "edition"
+            ? `edition ${edition ?? ""} of this case was ratified with no entry on its docket quoting what changed. `
+              + "Place that entry."
+            : "a conflict found on a load-bearing finding of this case's latest edition is not disclosed on its docket. "
+              + "Place the disclosure.")
+          + " This is a to do for the case's managers; it is told once, and it leaves when the item is placed, declined, "
+          + "receipted or disclosed.",
+        basis: { source: "docket.coreDue", case: x.case, project, item: x.kind, ref: String(x.ref), edition,
+                 since: x.since ?? null, ...(x.what_changed !== undefined ? { what_changed: x.what_changed } : {}),
+                 ...(x.state !== undefined ? { state: x.state } : {}), recipients_rule: "case_managers",
+                 detail: "a core item still due is docket's fact (its R9), read here and never stored; the case's project "
+                       + "is publication's (its R40). It goes to the case's managers, its project's owners, and to nobody "
+                       + "else (DEC-116 item 2), and is raised once (DEC-69, DEC-94)." },
+        age: Number.isFinite(sinceMs)
+          ? { state: "determined", since: x.since, ms: Math.max(0, now - sinceMs) }
+          : { state: "undetermined", reason: "no_due_instant",
+              detail: "the item carries no instant this producer can read for when it fell due" },
+        assignee: null,
+        assignee_role: null,
+        recipients: [...managers],
+        options: submission ? [QueueProducers.DOCKET_PREPARE, QueueProducers.DOCKET_DECLINE] : [QueueProducers.DOCKET_PREPARE],
+      });
+    }
+    return out;
+  }
+
+  /** `edition-withdrawn` and `edition-contested` (R31; reevaluation R30; DEC-116 items 3, 7): one FINDING per
+   *  (dependent, entry) `reevaluation.docketDependents` answers the viewer (which withholds a hidden dependent and does
+   *  not count it), keyed by the kind, the dependent and the entry the listing names (`<case>#<seq>` for a withdrawal;
+   *  for a contesting entry, its record entry id), homed under the dependent and its ancestors. It leaves when the cause
+   *  closes (a recorded re-evaluation, reevaluation R16), as R5's. */
+  #findingsDocketDependents(viewer, now) {
+    const out = [];
+    let after = null, cut = false, flags = {};
+    for (let page = 0; ; page += 1) {
+      if (page === QueueProducers.QUEUE_CONTRADICTION_PAGES) { cut = true; break; }
+      const r = this.#reevaluation.docketDependents({ after, limit: QueueProducers.QUEUE_DOCKET_PAGE, viewer });
+      if (!r || r.ok !== true || !Array.isArray(r.entries)) break;
+      if (r.docket_absent) flags = { ...flags, docket_absent: true };
+      if (r.docket_read === false) flags = { ...flags, docket_read: false };
+      for (const e of r.entries) {
+        const kind = e ? QueueProducers.DOCKET_CAUSE_KINDS[e.kind] : null;
+        if (!kind || typeof e.dependent !== "string" || !e.dependent || typeof e.entry !== "string" || !e.entry) continue;
+        const title = this.#record.bundleInfo(e.dependent);
+        const name = title && title.title ? title.title : e.dependent;
+        const withdrawn = kind === "edition-withdrawn";
+        const editions = withdrawn
+          ? (Array.isArray(e.withdrawn_editions) ? e.withdrawn_editions : [])
+          : (e.edition !== undefined && e.edition !== null ? [e.edition] : []);
+        const cs = typeof e.case === "string" && e.case ? `case ${e.case}` : "a case";
+        const sinceMs = Date.parse(e.since ?? "");
+        out.push({
+          id: `FINDING::${kind}::${e.dependent}::${e.entry}`,
+          class: "FINDING",
+          kind,
+          case: this.#homesAt([e.dependent], viewer),
+          subject: { kind: "bundle", id: e.dependent, case: e.case ?? null, entry: e.entry, editions },
+          summary: withdrawn
+            ? `something ${name} rests on is in a case edition its authors withdrew`
+            : `a response on the docket of ${cs} contests an edition ${name} is part of`,
+          detail: (withdrawn
+            ? `${cs}${editions.length ? ` (${editions.length === 1 ? "edition" : "editions"} ${editions.join(", ")})` : ""} `
+              + "was withdrawn on its docket. The edition keeps answering as it was signed, and nothing resting on it moved."
+            : `a response filed on the docket of ${cs} contests ${editions.length ? `edition ${editions[0]}` : "an edition"}, `
+              + "of which this is a finding. Nothing moved, and no docket entry is evidence.")
+            + " Whether this still stands is the members' to decide; a recorded re-evaluation closes this.",
+          basis: { source: "reevaluation.docketDependents", dependent: e.dependent, entry: e.entry, cause: e.kind,
+                   case: e.case ?? null, editions, since: e.since ?? null, legs: Array.isArray(e.legs) ? e.legs : [],
+                   cause_detail: e.detail ?? null, ...flags,
+                   bound: { limit: QueueProducers.QUEUE_DOCKET_PAGE, pages_bound: QueueProducers.QUEUE_CONTRADICTION_PAGES,
+                            truncated: cut },
+                   detail: "the cause is reevaluation's (its R30): a live leg of this finding rests on a member finding "
+                         + "of a withdrawn case edition, or this finding is a member of an edition a filed response "
+                         + "contests. It is read here, never raised, and nothing was regraded." },
+          age: Number.isFinite(sinceMs)
+            ? { state: "determined", since: e.since, ms: Math.max(0, now - sinceMs) }
+            : { state: "undetermined", reason: "no_cause_instant",
+                detail: "the cause carries no instant this producer can read" },
+          assignee: null,
+          assignee_role: null,
+          options: this.#optionsOf([e.dependent]),
+        });
+      }
+      if (!r.truncated || !r.cursor) break;
+      after = r.cursor;
+    }
+    if (cut) for (const it of out) it.basis.bound.truncated = true;
     return out;
   }
 
