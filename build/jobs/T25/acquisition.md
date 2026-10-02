@@ -25,3 +25,7 @@
 - `format`: 2 failures, reading-pipeline's absent paths and tests (red 4). `architecture`: 11 product files, 45 imports, 0 failures. `coverage`: 32 of 32 live ids named, 0 failures. `ownership` against `tranche/T25`: 7 files, 0 failures.
 
 Size (session_01VQnDAX596bDF5ZMb1jr9kL): test runs 14, module lines 1567
+
+## J1 · COMPLETE
+
+acquisition T25 complete on job/T25/acquisition (tranche/T25 @ capture's merge merged in): attest from attestation, the receipt signed by cap.attestation.signReceipt (K1224); R20 and the Uses attestation line met, marks yours to strike. Tests: acquisition 70/0, its users (capture, capture-requests, monitoring, ratification, extraction, instance-setup, link-sweep) all green; test/m 5218 pass, 85 fail, all accepted reds (7, 8, 9), incl. affordances sources.test.mjs:117 stubbing provenance.attest since capture's merge (red 7). Checks: format 2 (red 4), architecture, coverage 32/32, ownership 0. No rows added or changed; no bundle staled. Record has the detail.
