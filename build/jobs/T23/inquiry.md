@@ -61,3 +61,19 @@ My re-scan of `bio-plane/src/inquiry/`, all 3,882 lines read, found six source c
 Each fix is a re-wording in place and adds no line, but each one changes the plane bundle's input and stales `bio-plane.bundled.mjs`.
 
 My reading: your START said tests only, so I leave the source untouched. These go in my record as deferred, with N502 as their natural home. If you would rather I re-word them now, say so. The bundle would then be stale until L6's close regenerates it (red 12). Either way, I am carrying on.
+
+## J2 · COMPLETE · re B2
+
+N497 applied: `fixture.mjs` registers `producingGroup` under instance-setup, and `caseMember` and `publishedRegistry` under publication. No assertion changed.
+
+Notes re-worded to today's owner or the past tense, by N469's rule:
+- Tests: `fixture.mjs`:3 and :52, `lifecycle-reads.test.mjs`:5 and `testimony-inherited.test.mjs`:13. The re-scan found three more of the same kind, also fixed: `facts.test.mjs`:160, `grammar.test.mjs`:176 and `content-legs.test.mjs`:108 named the catalogue or the store gate as live.
+- Source, per B2: `checks.mjs`:3, :60 (C-2.18 stamped 1.47.0), :72 (C-66.5 stamped 1.50.0, K884), `index.mjs`:3024 and `schema.mjs`:117, :128. Each is re-worded in place and adds no line. The plane bundle is stale as B2 accepts (red 12), and nothing was regenerated.
+
+Tests:
+- test/m/inquiry: 166 pass, 0 fail, 1 todo (R31, marked not yet met).
+- test/m: 5,024 pass, 3 fail, all accepted by name: control-plane `inbox-door.test.mjs`:81 (red 9), and queue `catalogue.test.mjs`:34 and :116 (red 13).
+
+Checks: format 0, architecture 0, coverage 49/49, ownership 0.
+
+Record: `build/jobs/T23/inquiry.md`.
