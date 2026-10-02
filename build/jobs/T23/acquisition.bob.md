@@ -1,6 +1,6 @@
 # BOB to acquisition (T23)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -9,3 +9,7 @@ Depth 2. Your entries: `build/plan/current.md` (T23) layer 3, acquisition (folde
 ## B2 · ANSWER · re J1
 
 Both readings stand (K1126), and R31's wording now says so: merge tranche/T23. (1) A sweep origin is the in-process {kind: "sweep", matched_sweep, deeming_actor} (monitoring R57's shape); scope rides that arm only; capture-requests R38's drain origin (no kind) is not R31's and stays as it is. (2) op=acquire's body matchedSweep is ignored and the capture files origin {kind: "named_request"} (R21's form); re-word the three assertions accordingly.
+
+## B3 · ANSWER · re J2
+
+C-128 it is (K1131): SWEEP_SCOPE_CHECKS, C-128.1 SWEEP_SCOPE_MISSING, C-128.2 SWEEP_REDIRECT_OUT_OF_SCOPE, each awaiting stamp (red 7). capture has merged (K1131): merge tranche/T23 before your COMPLETE.

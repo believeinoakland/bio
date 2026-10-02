@@ -90,6 +90,54 @@ test("R32 R65: inboxResolve to pulled is the pull once its reason is admitted, t
   assert.equal(rows(`SELECT resolve_reason FROM inbox WHERE knock_id = ?`, k2.knockId)[0].resolve_reason, null);
 });
 
+/* N499 (K1105): the `pulled` arm passes `at` and `within` to the pull, so control-plane R36's reasoned resolve is one act
+   with its promotion and the reason lands on the knock's row inside it. A table of the test's own stands for the
+   promotion. */
+test("R32 R65 (N499): a reasoned pulled resolve given at and within records the reason on the knock's row inside the pull's one act; within's refusal or throw rolls the pull back, reason and all", async () => {
+  const { c, rows, s, prov } = setup();
+  s.db.exec(`CREATE TABLE promoted (knock TEXT, sha TEXT)`);
+  const everything = () => rows(`SELECT name FROM sqlite_master WHERE type='table'`).map((r) => r.name)
+    .map((t) => [t, JSON.stringify(rows(`SELECT * FROM ${t}`))]);
+  const k = await c.knock({ content: "the minutes", sourceAddress: "1.2.3.4" });
+  const seen = [];
+  const p = await c.inboxResolve({ knockId: k.knockId, status: "pulled", by: "m1", reason: "minutes the clerk withheld",
+    at: "2026-10-02T08:00:00Z", within: (doc) => {
+      /* inside the act: the reason is on the row already, beside the pull */
+      seen.push({ ...rows(`SELECT status, resolve_reason, pulled_at FROM inbox WHERE knock_id = ?`, k.knockId)[0] });
+      s.sql.exec(`INSERT INTO promoted VALUES (?, ?)`, k.knockId, doc.capture.sha256);
+      return { ok: true, bundleId: "INFO-2026-0009" };
+    } });
+  assert.deepEqual([p.ok, p.existed, p.pulled_at, p.within], [true, false, "2026-10-02T08:00:00Z", { ok: true, bundleId: "INFO-2026-0009" }]);
+  assert.deepEqual(seen, [{ status: "pulled", resolve_reason: "minutes the clerk withheld", pulled_at: "2026-10-02T08:00:00Z" }],
+                   "within called once, inside the act, with the reason on the row");
+  assert.deepEqual({ ...rows(`SELECT status, resolved, resolved_by, resolve_reason FROM inbox WHERE knock_id = ?`, k.knockId)[0] },
+                   { status: "pulled", resolved: "2026-10-02T08:00:00Z", resolved_by: "m1", resolve_reason: "minutes the clerk withheld" });
+  assert.deepEqual(rows(`SELECT * FROM promoted`).map((x) => ({ ...x })), [{ knock: k.knockId, sha: sha("the minutes") }]);
+  /* a refusal of within, or its throw: the whole pull rolls back, the reason with it */
+  const k2 = await c.knock({ content: "the agenda", sourceAddress: "1.2.3.5" });
+  const before = everything();
+  const receipts = prov.receipts.length;
+  const refused = await c.inboxResolve({ knockId: k2.knockId, status: "pulled", by: "m1", reason: "the agenda", within: () => {
+    s.sql.exec(`INSERT INTO promoted VALUES (?, 'x')`, k2.knockId); return { ok: false, reason: "NO_GROUP_RECORDED", status: 409 }; } });
+  assert.deepEqual([refused.ok, refused.reason, refused.knockId], [false, "NO_GROUP_RECORDED", k2.knockId]);
+  const thrown = await c.inboxResolve({ knockId: k2.knockId, status: "pulled", by: "m1", reason: "the agenda", within: () => { throw new Error("down"); } });
+  assert.deepEqual([thrown.ok, thrown.reason], [false, "PULL_WITHIN_FAILED"]);
+  assert.deepEqual(everything(), before, "nothing written: the knock at new, no reason, no receipt row, nothing of within's");
+  assert.equal(c.inboxGet(k2.knockId).item.resolve_reason, null);
+  assert.equal(prov.receipts.length, receipts + 2, "the receipt was asked inside the act and rolled back with it");
+  /* negative control: the other arms take neither; the route takes neither from a body */
+  const k3 = await c.knock({ content: "the budget", sourceAddress: "1.2.3.6" });
+  let called = 0;
+  const d = await c.inboxResolve({ knockId: k3.knockId, status: "discarded", by: "m1", reason: "spam", at: "2000-01-01T00:00:00Z", within: () => { called++; } });
+  assert.deepEqual([d.ok, d.status, called], [true, "discarded", 0]);
+  assert.notEqual(c.inboxGet(k3.knockId).item.resolved, "2000-01-01T00:00:00Z");
+  const k4 = await c.knock({ content: "the audit", sourceAddress: "1.2.3.7" });
+  const via = await captureOps(c, new URL("http://x/inboxresolve"), { knockId: k4.knockId, status: "pulled", by: "m1", reason: "audit",
+                                                                    at: "2000-01-01T00:00:00Z" }, c.env).inboxresolve();
+  assert.equal(via.ok, true);
+  assert.notEqual(via.pulled_at, "2000-01-01T00:00:00Z", "a body's `at` is not the pull's instant");
+});
+
 /* ---- R32: the inbox's sort (DEC-108 (2)) ---- */
 
 /* Six knocks: two with a secret; three pulled into documents of projects B, A and none, one more pulled with its home
