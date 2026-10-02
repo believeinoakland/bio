@@ -27,12 +27,12 @@
 | C4, A11–A17 | contradiction R24, R27, R32, R33/R36 K5 arms, R34, R41, R57 | measurement | a measured recommender run (K488) |
 | C8 | first profile's facts without a source | measurement | K925, K934, K941 |
 | B4, B5 | N144, N232 | Bob's (UX) | K899 (2) |
-| A54 | skills R10 | Bob's | N144 |
+| A54 | skills R10 | Bob's (UX): ruled, waits on the new interface | K899 (2), with N144 |
 | B6–B10, B12, B18, B20, C6, C7, D2, I2 | legacy-ui shares, UI fixtures, the module | Bob's (UX) | K633, K1006 |
 | N487 | legacy-ui DEC-88 reasons | Bob's (UX) | K633, K1030 |
 | J7 | DEC-81's Grade A | Bob's | K1019: "nothing new" |
-| H13 | DEC-105 audience guidance | Bob's | waits for its trigger |
-| C5 | `PLN-` affordances, plan page, joint action | Bob's | K608 (4), K600 (c) |
+| H13 | DEC-105 audience guidance | trigger (a group asks, or a case is challenged) | DEC-105 defers it; nothing to ask Bob (K1266) |
+| C5 | `PLN-` affordances, plan page, joint action | Bob's (UX) for the plan page (approved, K608 (4)); trigger for joint action (a coalition asks, K600 (c)) | nothing to ask Bob (K1266) |
 | H3, H4, H9b, H11, H14, H16c, H18, H20, J6, J11 | DEC screens of the new interface | Bob's (UX) | K633, K899 (2) |
 | H1, H6b, J4 | DEC-96, DEC-101 (3), DEC-92 | dependency not yet built | nothing brings another group's edition into this copy |
 | A8 | bias R26 | dependency not yet built | K102's trigger |
