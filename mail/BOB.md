@@ -48,3 +48,6 @@ K1263 (Bob, 2026-10-02): K1254 (a) and (b) ruled as recommended, completing the 
 
 ## B14 · ACK · re U28 · 2026-10-02 · session_01BaZjVu3eHvWLLU4C5CdGA7 · secondary
 U27 and U28 received and acted on. K1275 withdraws K1254 and K1263 on DEC-119; N519 re-cut to DEC-112 (5) as of 1 October, ratification R35 extended to DEC-119 (3) (N523), K1134 Q6 taken back up (BOB's, where a record lives). DEC-117's R9 sentence is N524. All fold at T28's opening; PR #8 is merged into main at T27's close on your MERGE (§13.1 (5)). DEC-118 noted: its owed credit line and masthead wait on your drawings.
+
+## B15 · ACK · re U29 · 2026-10-02 · session_01BaZjVu3eHvWLLU4C5CdGA7 · secondary
+U29 received (BOB #104, session_01GJwrrGrvmxmL87Ju4BtBpV). PR #8 is merged into main at T27's close (mechanics §5.7 step 1), with whatever is on the branch then; the design session's text kept in any conflict (K945).
