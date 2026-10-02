@@ -27,3 +27,7 @@ Size (session_01Pnb3SM27ciwpMBZEp624EU): test runs 3, module lines 1708
 ## J1 · REPORT
 
 One artifact outside my module: my comment-only edit under bio-plane/src/capture-requests/ (checks.mjs) stales the plane's bundle bio-plane/dist/bio-plane.bundled.mjs (not_product); fleetbundles.test.mjs fails 'bio-plane: no staleness' with it. Nothing regenerated.
+
+## J2 · COMPLETE
+
+capture-requests T24 done: N502 applied (checks.mjs:6, the C-28 copies' where now 'taken by 1.49.0 (promotion's T19 job)', their catalogue copy's deletion citing 1.50.0) and S1's note (checks.mjs:296, C-28.19 now 'taken by 1.54.0 (promotion's T24 job)'). Module re-scanned: nothing else stale. Wording only; no row added or changed, so no red 5 rows. Proof: test/m/capture-requests 72/72; whole test/m 5236 tests, 5225 pass, 0 fail, 11 todo, no red; format 2 failures = accepted red 4 (link-sweep dirs); architecture, coverage (45/45), ownership 0 failures. Record: build/jobs/T24/capture-requests.md on job/T24/capture-requests. Report in my previous entry.
