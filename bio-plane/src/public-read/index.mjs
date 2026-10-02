@@ -1,8 +1,9 @@
 /* public-read — the published record served to anybody without a credential (requirements:
  * `build/requirements/public-read.md`; BIO_Publication_v0_1.md §1, §2, §3 rules 9–12 and 16). The public reads by hash,
  * by finding and by case, and the whole projection (R1–R4), and the evidence-package block beside a published case
- * (R8). It writes nothing (R16): every table it reads is `publication`'s, read under `publication` R40, and it reaches
- * `publication` only through the services named below.
+ * (R8), and the named credential-free reads a later module registers (R18). It writes nothing (R16): every table it
+ * reads is `publication`'s, read under `publication` R40, and it reaches `publication` only through the services named
+ * below.
  *
  * Split from `publication` by copy (K617, K651; seam read `build/extraction/publication-split.md` §3.2): the methods
  * below are `publication/index.mjs`' `registerEvidenceBlock`, `#evidencePackage`, `publishedManifest`,
@@ -29,6 +30,8 @@ import { caseTensionsOf, caseDocumentBlocks, whatChangedOf, lensOf, LENS_HEAD,
 import { parseFrontmatter } from "../record-grammar/index.mjs";
 import { rowOf } from "./checks.mjs";
 import { delivererOf } from "../deliverer.mjs";
+import { PUBLIC_READ_NAME, PUBLIC_READ_PARAM, PUBLIC_READ_OWN_OPS, PUBLIC_READ_RESERVED_PARAMS,
+         PUBLIC_READ_NOT_REGISTERED } from "./reads.mjs";
 
 /* CPDF-10: a column `publication` WROTE as JSON, read back; null rather than a throw on a malformed value. */
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
@@ -61,6 +64,7 @@ export const LENS_NO_DOCUMENT_SENTENCE = "no signed case document is held for th
 
 export class PublicRead {
   #evidenceBlock = null; // R8: {module, name, fn}, filled once
+  #publicReads = new Map(); // R18: name -> {module, params, read}, each name registered once
 
   constructor({ storage, publication } = {}) {
     this.sql = storage.sql;
@@ -100,6 +104,85 @@ export class PublicRead {
     return { blocks: { [name]: value ?? null },
              detail: `each block is computed at this read by the module that provides it (${module}); it is not in the `
                    + "case's signed bytes, and nothing of it is a claim the case makes" };
+  }
+
+
+  /* ---------------------------------------------------------------- R18: the registered public reads */
+
+  /** R18: a later module registers once at start a set of named, credential-free reads, served on the public path
+   *  (`op=publicread&name=<name>`, or `op=<name>` where the door is told the name; `./door.mjs`). `reads` maps each
+   *  name to its read, `fn(args)` or `{params, read}`: `params` are the query parameters it takes (none by default), and
+   *  `args` holds exactly those the caller sent, as strings, so a read is handed nothing else. The registration is
+   *  checked whole and is all or nothing: a malformed one is refused `PROVIDER_MALFORMED` naming what is wrong (a name
+   *  that is not an op's spelling or is this module's own op, a read that is no function, a parameter that is
+   *  malformed or carries a credential or a stamp, R10); a name already registered, by any module, is refused
+   *  `PROVIDER_DECLARED` naming who holds it, and the first stands. */
+  registerPublicReads(module, reads) {
+    const mod = str(module);
+    const entries = reads && typeof reads === "object" && !Array.isArray(reads) ? Object.entries(reads) : [];
+    const wrong = [];
+    if (!mod) wrong.push("the registration names no module");
+    if (!entries.length) wrong.push("it names no read");
+    const specs = [];
+    for (const [name, spec] of entries) {
+      const read = typeof spec === "function" ? spec : spec && typeof spec.read === "function" ? spec.read : null;
+      const params = typeof spec === "function" || (spec && spec.params === undefined) ? []
+        : spec && Array.isArray(spec.params) ? spec.params : null;
+      if (!PUBLIC_READ_NAME.test(name)) wrong.push(`${JSON.stringify(name)} is not a read's name (lowercase letters and digits)`);
+      else if (PUBLIC_READ_OWN_OPS.includes(name)) wrong.push(`${name} is this module's own op`);
+      if (!read) wrong.push(`${name} has no read function`);
+      if (!params) { wrong.push(`${name}'s params is not a list`); continue; }
+      for (const p of params) {
+        if (typeof p !== "string" || !PUBLIC_READ_PARAM.test(p)) wrong.push(`${name} declares a malformed parameter`);
+        else if (PUBLIC_READ_RESERVED_PARAMS.includes(p))
+          wrong.push(`${name} declares ${p}, which carries a credential or a stamp and is never handed to a public read`);
+      }
+      if (new Set(params).size !== params.length) wrong.push(`${name} declares a parameter twice`);
+      specs.push({ name, read, params: [...params] });
+    }
+    if (wrong.length)
+      return { ok: false, reason: "PROVIDER_MALFORMED", module: mod || null, problems: wrong,
+               detail: "a public-read registration names its module and each read's name, its function and the "
+                     + "parameters it takes; nothing of this one was registered" };
+    const taken = specs.filter((s) => this.#publicReads.has(s.name))
+      .map((s) => ({ name: s.name, module: this.#publicReads.get(s.name).module }));
+    if (taken.length)
+      return { ok: false, reason: "PROVIDER_DECLARED", module: mod, taken,
+               detail: `${taken.map((t) => `${t.name} is already registered by ${t.module}`).join("; ")}; `
+                     + "the first registration stands, and nothing of this one was registered" };
+    for (const s of specs) this.#publicReads.set(s.name, { module: mod, params: Object.freeze(s.params), read: s.read });
+    return { ok: true, module: mod, names: specs.map((s) => s.name) };
+  }
+
+  /** R18: every registered read, `{name, module, params}`, in name order. */
+  publicReads() {
+    return [...this.#publicReads.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+      .map(([name, r]) => ({ name, module: r.module, params: [...r.params] }));
+  }
+
+  /** R18 (R10's terms): one registered read, served. `query` is the caller's parameters; the read is handed only those
+   *  it declared, frozen, and nothing else: no credential and no stamp can be among them. It answers
+   *  `{ok: true, read, module, result}` with the read's answer as `result`; a read that refuses (`ok: false`) is
+   *  relayed as its own refusal, naming the read. An unregistered name answers `PUBLIC_READ_NOT_REGISTERED`, saying so.
+   *  A read that answers a promise is answered as one; one that throws is not caught here, so the store's own internal
+   *  error answers it and nothing is dressed as an absence. */
+  publicRead(name, query = {}) {
+    const n = String(name ?? "");
+    const r = this.#publicReads.get(n);
+    if (!r)
+      return { ok: false, reason: PUBLIC_READ_NOT_REGISTERED, name: n,
+               detail: `no public read named ${JSON.stringify(n)} is registered on this copy of the record, so there `
+                     + "is nothing to serve under that name" };
+    const args = {};
+    for (const p of r.params) {
+      const v = query && Object.hasOwn(query, p) ? query[p] : undefined;
+      if (typeof v === "string") args[p] = v;
+    }
+    const shape = (v) => (v && typeof v === "object" && v.ok === false
+      ? { ...v, ok: false, read: n, module: r.module }
+      : { ok: true, read: n, module: r.module, result: v === undefined ? null : v });
+    const out = r.read(Object.freeze(args));
+    return out && typeof out.then === "function" ? out.then(shape) : shape(out);
   }
 
 
@@ -1009,7 +1092,8 @@ export function publicReadOf(host, deps) {
 }
 
 /** The module's ops (K3), as entries of `plane`'s store op map (`../plane/store.mjs`), every one unstamped: each reads the published
- *  projection only (R10), so it answers without a credential. */
+ *  projection only (R10), so it answers without a credential; `publicread` serves a registered read under the same terms
+ *  (R18). */
 export function publicReadOps(r, url) {
   const q = (k) => url.searchParams.get(k);
   return {
@@ -1020,5 +1104,7 @@ export function publicReadOps(r, url) {
     publishedmanifest: () => r.publishedManifest(),
     verify: () => r.verifySha((q("sha256") || "").toLowerCase()),
     publishedlist: () => r.publishedList(),
+    /* R18: a registered read by its name, handed only the parameters it declared (R10). */
+    publicread: () => r.publicRead(q("name"), Object.fromEntries(url.searchParams)),
   };
 }
