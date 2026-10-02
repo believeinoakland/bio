@@ -49,3 +49,7 @@ Size (session_01R4DSxDGK9N7KSXBYEsNfhH): test runs 9, module lines 1717
 ## J1 · REPORT
 
 A change under bio-plane/src/filing-templates/ (R20's reviewsRequested) stales the plane's bundle bio-plane/dist/bio-plane.bundled.mjs. I regenerated nothing (build/manifest.md, Generated artifacts).
+
+## J2 · COMPLETE
+
+R20 met (N476): reviewsRequested answers each item's project, its scope's (null for a group template, null once widened). Its order, page bound, cursor and truncated are unchanged, and it writes nothing. Three notes in my paths re-worded to the past tense (filings deleted its copies in T21); no row changed. Proof: R20 test extended with the field, plus a new R20 test covering a scoped template, a group template, and a template widened after the request (negative control; it fails on a mutant reading the project field), and a hidden viewer who gets no item and no project named. filing-templates 47/47. Users' suites: filings 58/58, queue 80/80, affordances 138/138; queue-producers 4 accepted reds (proposals.test.mjs); control-plane 2 accepted reds (doorbell:310, catalogue-end:15). Whole test/m: 4927 tests, 11 fail, all accepted by name (listed in the record). format, architecture, coverage (25/25) and ownership: 0 failures. Bundle stale: J1.
