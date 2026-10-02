@@ -10,3 +10,6 @@
 **Working with Bob (principle P17, always):** Bob decides only policy and doctrine, requirements, architecture and UX. What goes into a tranche and when it opens are BOB's. Every lower-level technical or detailed decision is BOB's, made without asking him, recorded once in `build/rulings.md` and reported to him as done. Bob does not edit files or enter commands; when only he can act, name the one act and walk him through it in plain steps. Show him documents rendered, never as Markdown source.
 
 **Standing safety rules:** never force-push; never rewrite `main`'s history; never delete the restore point, branch `snapshot/pre-refactor-2026-09-25`; never print a secret; Cloudflare account `20b533579290b9b93168345edd3b7f72` only (stop and say so if wrangler reports another).
+
+
+**Standing direction from Bob (2026-10-02).** Development pull requests, including the UX design stream's, are merged into `main` by BOB sessions with the GitHub merge tool, at a tranche boundary, without my review. I have authorized this as policy; no session asks me to approve such a merge. Sessions also archive finished sessions, delete their own timers, and read the design channel without asking me.
