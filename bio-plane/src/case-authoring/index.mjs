@@ -635,6 +635,8 @@ export class CaseAuthoring {
         .map((x) => ({ bundle_id: x.bundle_id, revision: x.revision, scope: x.scope,
                        pinned_state: x.pinned_state ?? null })),
     };
+    /* R40 — DEC-103: the lens it was produced under, every statement of the manifest frozen above, read at this act. */
+    const lensStatements = this.#lensStatements(proj);
     /* R16 — REC-219 / D-579(a): the project's citation edges, with the version each was made against. */
     const citations = this.#caseCitations(proj);
     /* R21 — REC-212 / §3 rule 13: WHO WROTE THE SENTENCE, established before the list is read, because it decides what
@@ -662,6 +664,10 @@ export class CaseAuthoring {
                                            acknowledged_by: who, acknowledged_at: when })),
       tensionsUnread: read.unread,
       captures: captureRows, sources: sourceRows,
+      /* R38: the statement as the member wrote it (`began_as: member` until R39's drafts exist, K1025). */
+      whatChanged: changed ? { text: changed.text, began_as: changed.began_as, draft: changed.draft } : null,
+      /* R40: the frozen manifest's statements, every page, each citation printed or withheld. */
+      lens: lensStatements,
     });
     const docBytes = new TextEncoder().encode(docText);
     /* publication R21: stored unsigned, replacing an unsigned document of this case edition and never a signed one; the
