@@ -48192,8 +48192,8 @@ var ENTITY_CHECKS = Object.freeze({
     translation: "A subject is registered under a name a person can read, such as 'City Clerk', and this one has none. Nothing was written."
   }),
   /* R2 (REC-64; T18, ENTITIES #5): C-33.25 COPIED here from the catalogue's `ACT_SHAPE_CHECKS`, row and translation
-     unchanged. That table is split between modules and its copy leaves the catalogue when the last owner holds its
-     rows (T19, K529's lag); until then the code is held twice, the catalogue's copy unread by this module. */
+     unchanged. The catalogue's copy left with the file at T19's close (K858), stamped by 1.50.0, so the row is held
+     here once. */
   NO_ALIAS: Object.freeze({
     check: "C-33.25",
     where: "src/entities/index.mjs addAlias > is-alias-named",
@@ -48208,7 +48208,7 @@ var ENTITY_CHECKS = Object.freeze({
   }),
   /* R1 (DEC-88, K1025): a subject registered with no note, the declarer's own words on who or what it is and why it
      belongs in the registry (absent, not a string, or blank). Asked after `ENTITY_NO_LABEL`, before anything is
-     written. The next of C-91; awaiting the catalogue's stamp (T23). */
+     written. The next of C-91; stamped by 1.53.0 (T23 layer 2). */
   ENTITY_NO_NOTE: Object.freeze({
     check: "C-91.8",
     where: "src/entities/index.mjs createEntity > is-entity-noted",
