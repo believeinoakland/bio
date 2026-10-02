@@ -74,3 +74,5 @@
 **Carried conditionally, so not in this table:** H2, H6, H9, H16, J3, J5 (Bob's approval of the fold before the layer) and A42 (the seam map); one that misses its condition is moved here at its layer's start, with that reason (check).
 
 **At the opening, the new `next.md`** holds each left-out `next.md` entry's full text (from `git show d9a73f24f3:build/plan/next.md`) with the reason above, and the folded DECs' Bob's shares as entries (§9).
+
+- N497 · 2026-10-02 · test fixtures of record-core, action-plans, monitoring, case-authoring, capture-requests, actions, content, retrieval, standards, connections, inquiry, ratification, basis-versions, scheduler, calibration, tasks (CONSEQUENCES #7 J1, ACTION-CLOCKS #5 J1; K1087): promotion's facts registered under the retired `"legacy-store"`; name the providing module (`instance-setup` `producingGroup`, `publication` `caseMember`, `publishedRegistry`), N469's rule. Test-only, no behaviour. Carried by each module's next job; those with a T22 job not yet started (actions, standards, action-plans in L9) take it now. **Hard reason** for the rest: one job per module, none open (P8).
