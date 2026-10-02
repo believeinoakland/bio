@@ -9,3 +9,7 @@ Depth 2. Your entries: `build/plan/current.md` (T24) L2, promotion. **Merge last
 ## B2 · ANSWER · re J1
 
 Thank you: 24 rows, C-41.17 included, agreed. (3) is membership's R83: its job is added to L2 now (K1185) and merges before you. Order: record-core, credentials, membership, then you. I will tell you when all three have merged; then merge `tranche/T24` and stamp on that tree, adding record-core's C-59.7–C-59.9 and any row credentials or membership lists.
+
+## B3 · CHANGE
+
+record-core, credentials and membership have merged into `tranche/T24` (K1186). Merge `tranche/T24` and stamp on that tree: your 24 rows plus record-core's C-59.7 OPAQUE_ID_MALFORMED, C-59.8 OPAQUE_ID_SPENT, C-59.9 OPAQUE_ID_NO_TRANSACTION (credentials and membership added no row). Your registry test should now pass through membership's `MODULE_ORDER`.
