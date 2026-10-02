@@ -14,3 +14,7 @@ K1074. (1) Confirmed: `class:daemon`; weight is lead/duty/plurality, not_shown s
 ## B3 · CHANGE
 
 tranche/T22 @ 190e872a57 (K1074) changes your requirements (R32 gains `casetestimony`; Uses gains `case-grammar`) and modules.json (your `uses` gains `case-grammar`). Merge tranche/T22 into your branch before continuing.
+
+## B4 · CHANGE
+
+case-grammar is merged into tranche/T22 @ 3a393f68db (K1075): R8 (`whatChangedOf`) and R9 (`lensOf`) are on the tranche. Merge tranche/T22 into your branch and continue. Merge order now: publication, then public-read, ratification, case-authoring, review.
