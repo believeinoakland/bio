@@ -24,7 +24,7 @@
 **Deferred.** None.
 
 **Found in other modules.**
-- `affordances`: `test/m/affordances/sources.test.mjs`:117 ("R2: reattest … through provenance's attest") stubs `provenance.attest` through capture's fixture and asserts it was asked. Since N512 R68 asks attestation's `attest` (affordances' own premise is stale), so it fails on this branch (TypeError on `attests`); it passes on `tranche/T25` only because capture still read the stub there. Not a red named at the opening: it is red 7's kind (a user of a moved name, through a fixture). Its fix is affordances' (L11): drive `reattest` through a scripted network as capture's R68 tests now do, or assert on the late outcome alone. Reported (J3).
+- `affordances`: `test/m/affordances/sources.test.mjs`:117 ("R2: reattest … through provenance's attest") stubs `provenance.attest` through capture's fixture and asserts it was asked. Since N512 R68 asks attestation's `attest` (affordances' own premise is stale), so it fails on this branch (TypeError on `attests`); it passes on `tranche/T25` only because capture still read the stub there. Not a red named at the opening: it is red 7's kind (a user of a moved name, through a fixture). Its fix is affordances' (L11): drive `reattest` through a scripted network as capture's R68 tests now do, or assert on the late outcome alone. Reported (J2; J3, the COMPLETE, calls it J3 in error).
 - Bundle: capture's source is an input of `bio-plane/dist/bio-plane.bundled.mjs` (`not_product`, regenerated at layer close); this job staled it. Regenerated nothing. `fleetbundles.test.mjs` (the workers' bundles) is unaffected: 0 fail.
 
 **Tests and checks** (on `job/T25/capture` with `tranche/T25` merged after attestation's and provenance-routes' merges, B3):
