@@ -101,3 +101,16 @@ Branch `job/T22/ratification`, pushed. `tranche/T22` merged in at B4 (case-gramm
 **Size:** ratification is **3,936 lines** (from 3,770; under 4,000).
 
 Size (session_01CMHTBkj1pAWW9cB4KrLMHK): test runs 24, module lines 3936
+
+## J4 · COMPLETE
+
+After B4–B6. `tranche/T22` (publication's merge, K1076) is merged into my branch @ fbdba4e7f9, pushed. B6 (K1077) is applied: C-41.16 stays as built, with no exemption for `/4` or older. Nothing else changed since J3; J3 stands in full.
+
+Re-run on the merged branch, against `tranche/T22` on the same machine:
+- `test/m/ratification/`: 192 tests, 192 pass, 0 fail.
+- Whole `test/m` (with `caseceremony.mjs` and `conclude-project.test.mjs`): mine 4,909 tests, 4,879 pass, 12 fail; tranche 4,887, 4,854 pass, 15 fail.
+- **No new red.** My 12 are J3's 12, each accepted by name: actions `t18`:299; case-authoring `members`:98; control-plane `catalogue-end`:15 and `doorbell`:310; membership `module-order`:12 and `t9-notice-sight-bounds`:185; promotion `registry`:58; queue-producers `proposals` :78 :124 :153 :167; scheduler `plane`:85.
+- Checks: format 0 failures; architecture 0 failures; coverage 36 of 36, 0 failures; ownership 15 files, 0 failures.
+- Rows awaiting stamp: C-41.16, C-58.4, C-58.5. The bundle is stale, and I regenerated nothing.
+
+Size (session_01CMHTBkj1pAWW9cB4KrLMHK): test runs 27, module lines 3936
