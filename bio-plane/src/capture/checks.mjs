@@ -18,7 +18,10 @@
  * its translation.
  *
  * C-118.3–C-118.6 are new with N364 (K509): the knocker's secret (R66), bringing a knock in (R65), and the capturing
- * member's signed account (R69), each minted at the one site its `where` names. */
+ * member's signed account (R69), each minted at the one site its `where` names.
+ *
+ * C-118.7 is new with DEC-88 (R32: a resolve records the member's reason), C-118.8 and C-118.9 with DEC-97 (R79, R81:
+ * setting held material aside and bringing it back); C-118.3 and C-85's sentences gained DEC-108's (R52) (K1019). */
 
 const at = (fn, region) => `src/capture/ops.mjs ${fn} > ${region}`;
 const inIndex = (fn, region) => `src/capture/index.mjs ${fn} > ${region}`;
@@ -35,7 +38,7 @@ export const CAPTURE_CHECKS = Object.freeze({
   KNOCKER_SECRET_WEAK: Object.freeze({
     check: 'C-118.3', where: "src/capture/doorbell.mjs knockerSecretWeak > is-knocker-secret-strong",
     translation: 'A knocker secret this short could be guessed, letting someone else continue your pseudonym. Use a '
-               + 'longer one, or ask the doorbell to make one. Nothing was received.',
+               + 'longer one, or ask the doorbell to make one. Nothing was received. The group can see how often its doorbell turns people away.',
   }),
   KNOCK_DISCARDED: Object.freeze({
     check: 'C-118.4', where: inIndex("pullKnock", "is-knock-pullable"),
@@ -50,6 +53,21 @@ export const CAPTURE_CHECKS = Object.freeze({
     check: 'C-118.6', where: inIndex("recordCaptureAccount", "is-account-worded"),
     translation: 'An account of how you captured a document says what happened in your own words, and this one is '
                + 'empty. Write it. Nothing was written.',
+  }),
+  RESOLVE_NO_REASON: Object.freeze({
+    check: 'C-118.7', where: inIndex("inboxResolve", "is-resolve-reasoned"),
+    translation: 'Changing a knock\'s status records why, in your own words, and no reason was given, or it is longer '
+               + 'than 2,000 characters. Write one. Nothing was written.',
+  }),
+  MACHINE_CANNOT_SET_ASIDE: Object.freeze({
+    check: 'C-118.8', where: inIndex("#heldActRefusal", "is-held-act-by-member"),
+    translation: 'Setting held material aside, or bringing it back, is a member\'s own act, and no member made this '
+               + 'request. Nothing was written.',
+  }),
+  SET_ASIDE_NO_REASON: Object.freeze({
+    check: 'C-118.9', where: inIndex("#heldActRefusal", "is-held-act-reasoned"),
+    translation: 'Setting held material aside, or bringing it back, records why, in your own words, and no reason was '
+               + 'given, or it is longer than 2,000 characters. Write one. Nothing was written.',
   }),
 });
 
@@ -83,20 +101,22 @@ export const KNOCK_CHECKS = {
   RATE_IP: {
     check: 'C-85.1',
     where: 'src/capture/index.mjs #knockRateRefusal > is-knock-rate',
-    translation: 'This group\'s inbox is not taking any more material from where you are sending it '
+    translation: 'Your material was not received. This group\'s inbox is not taking any more material from where '
+      + 'you are sending it '
       + 'just now. It is a limit on how fast one sender may knock, not a judgement about you or '
       + 'about what you sent, and it lifts on its own shortly — the bound is published beside this '
       + 'message. Nothing was stored and nothing was read, so send the same material again a little '
-      + 'later and it will arrive.',
+      + 'later and it will arrive. The group can see how often its doorbell turns people away.',
   },
   RATE_GLOBAL: {
     check: 'C-85.2',
     where: 'src/capture/index.mjs #knockRateRefusal > is-knock-rate',
-    translation: 'This group\'s inbox is not taking any more material from anyone just now. The whole '
+    translation: 'Your material was not received. This group\'s inbox is not taking any more material from anyone '
+      + 'just now. The whole '
       + 'instance is at its limit rather than you — the cap exists so that no one sender can fill '
       + 'the inbox — and it lifts on its own shortly; the bound is published beside this message. '
       + 'Nothing was stored and nothing was read, so send the same material again a little later. '
-      + 'If it keeps happening, the group\'s members can be told the doorbell is saturated.',
+      + 'The group can see how often its doorbell turns people away.',
   },
   /* D-513 — THE THREE REFUSALS THIS DOOR MAKES BEFORE THE STORE IS CALLED. Each
      `where` names a module-scope helper (capture's `doorbell.mjs` since T4) and
@@ -110,7 +130,7 @@ export const KNOCK_CHECKS = {
       + 'than this door accepts. Nothing was stored, nothing was opened, and nothing about your '
       + 'material was judged — its size was read off the request and it stopped there. The size this '
       + 'instance will read is published beside this message. Send the material again smaller, or as '
-      + 'more than one knock, and it will be read.',
+      + 'more than one knock, and it will be read. The group can see how often its doorbell turns people away.',
   },
   KNOCK_PAYLOAD_TOO_LARGE: {
     check: 'C-85.4',
@@ -119,7 +139,7 @@ export const KNOCK_CHECKS = {
       + 'this instance stores. That is a fact about how this group has set its instance up rather '
       + 'than a judgement about what you sent — a group that has configured evidence storage can keep '
       + 'far more — and the size this one can keep is published beside this message. Nothing was '
-      + 'stored. Send something smaller, or ask the group\'s members how to get the whole of it to them.',
+      + 'stored. Send something smaller, or ask the group\'s members how to get the whole of it to them. The group can see how often its doorbell turns people away.',
   },
   KNOCK_EMPTY: {
     check: 'C-85.5',
@@ -127,6 +147,6 @@ export const KNOCK_CHECKS = {
     translation: 'This group\'s inbox has nothing to keep, because what you sent decoded to no bytes at '
       + 'all. The request itself was well formed and named its content, so this is most likely an '
       + 'empty file or an empty box rather than anything wrong with how you sent it. Nothing was '
-      + 'stored. Check what you attached and knock again.',
+      + 'stored. Check what you attached and knock again. The group can see how often its doorbell turns people away.',
   },
 };
