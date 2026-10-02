@@ -1,7 +1,7 @@
 /* conformance over the modules it uses, each the real one (record-core, membership, promotion, content, inquiry,
    strength, reevaluation, publication, standards, contradiction), on a real SQLite database (node:sqlite) standing in for a Durable
    Object's storage. The modules those reach in turn are created by their own factories on the same host. What a later
-   module or the legacy store fills (the producing group) and the readings content reads through extraction are
+   module fills (the producing group, `instance-setup`'s fact) and the readings content reads through extraction are
    stand-ins the test controls. The ceremonies that publish a case (`case-authoring`, `ratification`) are played through
    publication's R21 and R22, exactly as those modules call them. A contradiction candidate is formed by contradiction's
    own pairing and proposed through its door, a run gate standing in for `ai-runs`; `basis-versions`, which it reaches
@@ -124,7 +124,7 @@ export function world({ group = "test-group" } = {}) {
   const membership = membershipOf(host, { record });
   membership.migrate();
   const promotion = promotionOf(host, { record, membership, now });
-  promotion.registerFact("producingGroup", "legacy-store", () => group);
+  promotion.registerFact("producingGroup", "instance-setup", () => group);
   const ex = readings();
   const content = contentOf(host, { record, membership, extraction: ex.provider, now });
   content.provenance.migrate();
@@ -313,11 +313,13 @@ export function world({ group = "test-group" } = {}) {
         throw new Error(`fixture publish: ${finding} is not in ${caseId} edition ${edition}: ${JSON.stringify(items)}`);
       return pin;
     },
-    /** A standard held by `standards`, declared by a member through its R1, its text a passage of its own document. */
+    /** A standard held by `standards`, declared by a member through its R1 with the declarer's `reason` (DEC-88), its
+     *  text a passage of its own document. */
     standard(cite, { kind = "ordinance", issuer = "The Council", period = { from: "2020-01-01", to: null },
-                     supersedes = undefined, author = V("olive"), text = null } = {}) {
+                     supersedes = undefined, author = V("olive"), text = null,
+                     reason = "The group holds the parks department to this rule." } = {}) {
       const t = text || w.evidence(`INFO-2026-${String(900 + ++n).padStart(4, "0")}-text`).content;
-      const r = standards.standardDeclare({ cite, kind, issuer, text: [t], period,
+      const r = standards.standardDeclare({ cite, kind, issuer, text: [t], period, reason,
                                             ...(supersedes ? { supersedes } : {}), author, viewer: author });
       if (!r.ok) throw new Error(`fixture standard refused: ${JSON.stringify(r).slice(0, 400)}`);
       return r.id;
