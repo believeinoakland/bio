@@ -43,3 +43,13 @@
 - `node checks/format.mjs`: 87 modules, 86 requirements files; 0 failures. `node checks/architecture.mjs … monitoring`: 14 product files, 75 relative imports; 0 failures. `node checks/coverage.mjs … monitoring`: 63 of 63 live ids named; 0 failures. `node checks/ownership.mjs … monitoring tranche/T23`: 14 files; 0 failures.
 
 Size (session_01YcGTGLceU7FuKo6wgFMjYL): test runs 19, module lines 4062
+
+## J2 · REPORT
+
+Found in other modules, each for you or a later job:
+1. **plane** (`src/plane/store.mjs`:147–:152): it builds monitoring before capture-requests, so R64's scope check cannot register at construction without building capture-requests with no deps. Monitoring registers at construction when given `captureRequests`, else on the first sweep service asked. Until plane hands `captureRequests: captureRequestsOf(ctx, …)` to `monitoringOf` (or builds capture-requests first), a sweep-named request drained before the first sweep service runs is refused (fails closed).
+2. **Red 5** for the new op `sweeps` (member session, read): op-declarations R10, affordances R32, control-plane R45 (L11). Affordances' suite is still green today.
+3. **The plane bundle** is stale from my changes under `src/monitoring/` (two new files, `sweep.mjs` and `sweep-match.mjs`). I regenerated nothing.
+4. **scheduler** (L10, after me): `sweepDue(now)`, `sweepWake(now)`, `sweepTick(now, rank)` on `Monitoring`. Rank items are `{kind: "sweep", id: "<bundle>#<id>", waitingSince}`. The tick answers `{paused, at, epoch, due, ran, skipped, failed}`, or `busy: true`.
+5. **queue-producers** R26 (L11): `sweepConditions({viewer})` answers `{ok, conditions: [{sweep, kind, since, detail}]}` with the five kinds in `SWEEP_CONDITION_KINDS`.
+6. **Re-tests:** scheduler, queue-producers, affordances and capture-requests are green. The only reds are accepted by name: control-plane `families.test.mjs`:47 and `inbox-door.test.mjs`:81, plane `worker.test.mjs`:39, queue `catalogue.test.mjs`:34 and :116.
