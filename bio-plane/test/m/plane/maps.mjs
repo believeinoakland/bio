@@ -22,6 +22,7 @@ import { recordOf, recordCoreOps } from "../../../src/record-core/index.mjs";
 import { governorOf, governorRoutes } from "../../../src/host-governor/index.mjs";
 import { captureOf, captureOps } from "../../../src/capture/index.mjs";
 import { monitoringOf, monitoringOps } from "../../../src/monitoring/index.mjs";
+import { linkSweepOf, linkSweepOps } from "../../../src/link-sweep/index.mjs";
 import { connectionsOf, connectionsOps } from "../../../src/connections/index.mjs";
 import { inquiryOf, inquiryOps } from "../../../src/inquiry/index.mjs";
 import { citationOf, citationOps } from "../../../src/citation/index.mjs";
@@ -94,6 +95,7 @@ export const MODULE_MAPS = [
   ["action-plans", (c, u, b) => actionPlansOps(actionPlansOf(c), u, b)],
   ["escalation", (c, u, b) => escalationOps(escalationOf(c), u, b)],
   ["monitoring", (c, u, b) => monitoringOps(monitoringOf(c), u, b)],
+  ["link-sweep", (c, u) => linkSweepOps(linkSweepOf(c), u)],
   ["review", (c, u, b) => reviewOps(reviewOf(c), u, b)],
   ["instance-setup", (c, u, b, e) => instanceSetupOps(instanceSetupOf(c, e), u, b)],
   ["control-plane", (c, u, b) => controlPlaneRoutes(c, u, b)],

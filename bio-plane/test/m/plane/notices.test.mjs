@@ -1,8 +1,8 @@
 /* plane R2, R3, R5 over the modules T23 composes: `network-notices` built at its place (after project-stage),
    migrated in R3's pass, its start registrations held (public-read R18, scheduler R5) and its ops map spread into the
-   route map; `corpus-export`'s ops map (its R6; N483, K1122) spread, so `op=export` and `op=exportlog` reach it
-   through control-plane's door; and `monitoring` handed the composed `capture-requests`, so its sweep scope check
-   (its R64) is held before the first sweep service (K1163). Each driven on the Durable Object class itself. */
+   route map; and `corpus-export`'s ops map (its R6; N483, K1122) spread, so `op=export` and `op=exportlog` reach it
+   through control-plane's door. Each driven on the Durable Object class itself. The sweep's composition (K1163, N506)
+   is `sweep.test.mjs`'. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
@@ -12,8 +12,6 @@ import { publicReadOf } from "../../../src/public-read/index.mjs";
 import { schedulerOf } from "../../../src/scheduler/index.mjs";
 import { networkNoticesOf, networkNoticesOps, NETWORK_NOTICES_TABLES } from "../../../src/network-notices/index.mjs";
 import { corpusExportOf, corpusExportOps } from "../../../src/corpus-export/index.mjs";
-import { captureRequestsOf } from "../../../src/capture-requests/index.mjs";
-import { monitoringOf } from "../../../src/monitoring/index.mjs";
 
 const tableNames = (x) => [...x.ctx.storage.sql.exec(`SELECT name FROM sqlite_master WHERE type='table'`)].map((r) => r.name);
 const json = async (res) => ({ status: res.status, body: await res.json() });
@@ -30,13 +28,16 @@ function declarers(x) {
   return out;
 }
 
-test("R2: construction builds network-notices before the first request: its tables made and declared to purge under its name, its mint seed held, its three public reads registered with public-read, and the scheduler holding its two consumers", async () => {
+test("R2: construction builds network-notices before the first request: its tables made and declared to purge under its name, no mint seed registered under its name (its notice ids are recorded through record-core R75, N503), its three public reads registered with public-read, and the scheduler holding its two consumers", async () => {
   const x = await store();
   const names = tableNames(x);
   for (const t of NETWORK_NOTICES_TABLES) assert.ok(names.includes(t), `table ${t}`);
   const rc = recordOf(x.ctx);
   for (const t of NETWORK_NOTICES_TABLES) assert.equal(rc.declarePurge("zz-probe", [t]).declaredBy, "network-notices", t);
-  assert.equal(rc.registerMintSeed("network-notices", []).ok, false, "its notice ids' seed is held under its name");
+  /* negative control: the probe tells a held seed from a free name, since ratification's seed (record-core R70) is held */
+  assert.equal(rc.registerMintSeed("ratification", []).reason, "MINT_SEED_DECLARED", "a module that holds a seed is refused");
+  const probe = rc.registerMintSeed("network-notices", []);
+  assert.equal(probe.ok, true, "no seed is registered under network-notices' name (N503, record-core R75)");
   /* The instance the plane built is the one every later caller reaches, and its registration was accepted. */
   const n = networkNoticesOf(x.ctx);
   assert.deepEqual(n.publicReadsRegistration, { ok: true, module: "network-notices",
@@ -136,58 +137,3 @@ test("R5 (N483, K1122): `op=export` and `op=exportlog` reach corpus-export throu
   const one = await json(await x.fetch("/exportlog?limit=1"));
   assert.deepEqual([one.body.result.exports.length, one.body.result.truncated], [1, true]);
 });
-
-test("R2 (K1163; monitoring R64): monitoring is handed the composed capture-requests, so its sweep scope check is held on a fresh instance before any sweep service runs, and a sweep-named request is judged by it at the drain", async () => {
-  /* No sweep service is asked before the drain: a scheduler with no owners, so its start reaches no monitoring and the
-     registration can come only from the construction. */
-  const st = storage();
-  const env = { STORE: { idFromName: (n) => n }, ...DAEMON };
-  schedulerOf(st.ctx, env, { owners: {} });
-  new Store(st.ctx, env);
-  for (const p of st.blocked) await p;
-  const x = { ctx: st.ctx };
-  /* the slot is taken, by monitoring, at construction */
-  const probe = captureRequestsOf(x.ctx).registerSweepScope("zz-probe", () => ({ ok: true, scope: ["https://x/"] }));
-  assert.deepEqual([probe.ok, probe.reason, probe.module], [false, "LISTENER_DECLARED", "monitoring"]);
-  assert.equal(monitoringOf(x.ctx).registerSweepScope(), true, "monitoring holds its registration as done");
-  /* a sweep-named request drained on the fresh instance is judged by monitoring's check (no such sweep), never refused
-     for want of one */
-  const refusal = await drainedSweepRefusal(x.ctx);
-  assert.match(refusal, /no sweep is named INQ-2026-0001-zz#agendas/);
-  assert.doesNotMatch(refusal, /no scope check is registered/);
-});
-
-test("R2 negative control (K1163): monitoring built before capture-requests without it, as the plane built them before, holds no scope check until a sweep service runs, so the same request is refused for want of one", async () => {
-  const st = storage();
-  monitoringOf(st.ctx);   /* the old order: monitoring first, handed nothing */
-  /* and no sweep service asked before the drain: a scheduler with no owners, so its start reaches no monitoring */
-  schedulerOf(st.ctx, { STORE: { idFromName: (n) => n }, ...DAEMON }, { owners: {} });
-  new Store(st.ctx, { STORE: { idFromName: (n) => n }, ...DAEMON });
-  for (const p of st.blocked) await p;
-  const refusal = await drainedSweepRefusal(st.ctx);
-  assert.match(refusal, /no scope check is registered/);
-});
-
-/* A daemon credential bound, so capture-requests drains (its R38). */
-const DAEMON = { DAEMON_TOKEN: "dmn-plane" };
-
-/* One sweep-named capture request by an open run on an inquiry the admin sees, drained once; the row's refusal detail. */
-async function drainedSweepRefusal(ctx) {
-  const sql = ctx.storage.sql;
-  const INQ = "INQ-2026-0001-zz";
-  sql.exec(`INSERT INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha)
-            VALUES (?, 'inquiry', 'g', ?, 'open', 't', 't', 'sha')`, INQ, INQ);
-  const t = new Date().toISOString(), later = new Date(Date.now() + 3600e3).toISOString();
-  sql.exec(`INSERT INTO ai_runs (run, status, context_type, context_id, principal_plane, principal_claude, created, updated,
-                                 expires, state) VALUES ('R-zz', 'running', 'inquiry', ?, 'class:admin', 'instance', ?, ?, ?, '{}')`,
-           INQ, t, t, later);
-  const cr = captureRequestsOf(ctx);
-  const a = await cr.captureRequest({ run: "R-zz", address: "https://council.example.org/agendas/1", target: INQ,
-                                      purpose: "investigate", sweep: `${INQ}#agendas` }, { viewer: "class:admin", caller: "class:admin" });
-  assert.equal(a.ok, true, JSON.stringify(a).slice(0, 400));
-  const d = await cr.drain({});
-  assert.equal(d.configured, true, d.detail);
-  const row = [...sql.exec(`SELECT state, code, detail FROM capture_requests WHERE request = ?`, a.request)][0];
-  assert.deepEqual([row.state, row.code], ["refused", "CAPTURE_SWEEP_OUT_OF_SCOPE"], JSON.stringify(row));
-  return row.detail;
-}
