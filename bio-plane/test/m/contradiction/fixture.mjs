@@ -62,9 +62,9 @@ export function world({ gate = true, now = null } = {}) {
   const membership = membershipOf(host, { record });
   membership.migrate();
   const promotion = promotionOf(host, { record, membership, now: tick });
-  promotion.registerFact("producingGroup", "legacy-store", () => "test-group");
-  promotion.registerFact("caseMember", "legacy-store", () => false);
-  promotion.registerFact("publishedRegistry", "legacy-store", () => null);
+  promotion.registerFact("producingGroup", "instance-setup", () => "test-group");
+  promotion.registerFact("caseMember", "publication", () => false);
+  promotion.registerFact("publishedRegistry", "publication", () => null);
   /* provenance and connections are not contradiction's uses: inquiry, content and entities receive stand-ins answering
      that the record holds no capture history and no theme or severed edge, which none of these tests exercises. */
   /* provenance's `register` and connections' `refs`, as inquiry reads them (empty: no capture registered, no edge) */

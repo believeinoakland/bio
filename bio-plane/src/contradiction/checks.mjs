@@ -44,8 +44,9 @@ export const CONTRADICTION_PAIR_CHECKS = {
  * every refusal here is asked of the WHOLE batch before anything is written, so a refused batch leaves nothing.
  *
  * WHY THE PAIR IS CHECKED AGAINST THE PAIRING AND NOT TAKEN FROM THE CALLER: a candidate says the record put these
- * two side by side for this key. A pair a caller can hand us is a provenance hop a caller can invent (CLAUDE.md
- * section 5), so the plane re-forms the pairs for THIS viewer and writes only a proposal naming one of them, with
+ * two side by side for this key. A pair a caller can hand us is a provenance hop a caller can invent (the old
+ * `CLAUDE.md` section 5, archived at `docs/archive/CLAUDE-2026-09-26-old-process.md`), so the plane re-forms the
+ * pairs for THIS viewer and writes only a proposal naming one of them, with
  * the referents and versions the PLANE read, never the ones the body sent. The run's principal is REC-152's gate,
  * relayed with its own code, and is not restated here. */
 export const CONTRADICTION_CANDIDATE_CHECKS = {

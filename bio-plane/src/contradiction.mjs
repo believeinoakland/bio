@@ -19,7 +19,8 @@
  * fixture). It carries Bob's own §7 example ("reduced a little" / "dropped a lot") because §7 quotes it as the
  * definition of precision, and the corpus carries that example too, so that one pair is NOT blind (M-162).
  *
- * A SKILL MAY NEVER HOLD A GATE (kickoffs/SKILL.md). Nothing in the prompt is a fence: the label vocabulary is
+ * A SKILL MAY NEVER HOLD A GATE (the retired process's `docs/development/kickoffs/SKILL.md`). Nothing in the prompt
+ * is a fence: the label vocabulary is
  * refused at op=contradictionpropose (C-93), the pair must be one the plane FORMED for that viewer (C-93), and a
  * re-run over unchanged referents writes nothing (the table's key). A model that ignored every word here could
  * propose a wrong label and nothing else. */

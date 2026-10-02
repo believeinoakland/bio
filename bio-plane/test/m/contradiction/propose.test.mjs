@@ -268,7 +268,7 @@ test("R21: the run gate is registered once; with none registered the run checks 
                    { found: true, running: true, refusal: null }];
   let n = 0;
   assert.deepEqual(w.c.registerRunGate("ai-runs", (...args) => { calls.push(args); return answers[n++]; }), { ok: true, module: "ai-runs" });
-  const second = w.c.registerRunGate("legacy-store", () => answers[3]);
+  const second = w.c.registerRunGate("run-rules", () => answers[3]);
   assert.deepEqual([second.ok, second.reason, second.module], [false, "RUN_GATE_DECLARED", "ai-runs"]);
   refused(propose(w, [good], { run: " RUN-X " }), "CANDIDATE_NO_RUN");
   assert.equal(propose(w, [good]).code, "AI_RUN_NOT_PRINCIPAL");
