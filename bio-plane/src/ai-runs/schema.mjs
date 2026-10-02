@@ -6,7 +6,7 @@ export const AI_RUNS_TABLES = Object.freeze(["ai_runs", "ai_run_bounds", "inquir
 export const AI_RUNS_SCHEMA = `
 
 -- IS-6 / INVESTIGATIVE-SESSION.md §11: THE RUN IS AN OBJECT, and it is built on
--- the capture_sessions shape above rather than on a new one — "SCRATCH, not
+-- the capture_sessions shape (capture's table) rather than on a new one — "SCRATCH, not
 -- record… a work list with an expiry": ticks, an expiry, opaque state,
 -- resumable across invocations. Every column beyond that shape is one §11 or
 -- §14b.6 names, and each is here because a version is only interpretable
@@ -20,7 +20,9 @@ export const AI_RUNS_SCHEMA = `
 -- TTL for tidiness.
 --
 -- TWO PRINCIPALS, NEVER ONE (§14a, DEC-27(b), DEC-55.4). 'principal_plane' is
--- the plane credential ('token:<class>' or a member id); 'principal_claude' is
+-- the plane credential as the control plane stamps it ('member:<id>' for a
+-- member, '/<tokenId>' added for a member's AI credential; 'class:<cls>' for a
+-- machine, '/<tokenId>' added for an AI credential); 'principal_claude' is
 -- WHICH LEVEL of the Claude-account cascade paid — member, then project, then
 -- instance. They are two different principals and an act must say both. NEITHER
 -- IS EVER A TOKEN VALUE: 'principal_claude_ref' is a label the operator
@@ -29,7 +31,8 @@ export const AI_RUNS_SCHEMA = `
 -- NO TRANSCRIPT COLUMN, AND THAT IS DEC-61 (Bob, 2026-08-06). The model's
 -- reasoning is DEVICE-LOCAL, TTL'd and deleted at publication, and never in the
 -- record store. 'state' is the run's resumable SCRATCH — its work list — and
--- the observation log below is a structured account of where the search went.
+-- the observation log (observation-log's table, the run's rows under authority
+-- 'run') is a structured account of where the search went.
 -- Neither is a transcript, and there is no column here one could be put in.
 CREATE TABLE IF NOT EXISTS ai_runs (
   run                   TEXT PRIMARY KEY,
