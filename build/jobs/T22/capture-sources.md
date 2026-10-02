@@ -1,6 +1,6 @@
 # capture-sources (T22)
 
-**Status** · session_01JxNV4GvVR6ZVqJhsquLGcC · depth 2 · WORKING · handled B1
+**Status** · session_01JxNV4GvVR6ZVqJhsquLGcC · depth 2 · WORKING · handled B2
 
 ## J1 · QUESTION
 
