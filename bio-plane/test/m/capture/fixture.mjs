@@ -2,7 +2,9 @@
    as savepoints), record-core's tables, membership's and credentials' (K789: the signer keys R69 reads are credentials',
    its R11, built after membership as the host builds them), the two tables of provenance's stated read contract that
    capture joins (`register`, `captured_locators`: provenance R48, only the contract's columns), an evidence bucket,
-   and stand-ins for the providers capture reaches (host-governor, provenance), each behaving as its Provides state. */
+   and stand-ins for the providers capture reaches (host-governor, provenance), each behaving as its Provides state.
+   Attestation is never stood in for: R68 reaches its real `attest` (attestation R1–R3), whose authorities and archive
+   answer through a scripted network (`network`, `granted`). */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
@@ -63,11 +65,12 @@ export function governor({ refuse = [], held = [] } = {}) {
   };
 }
 
-/* provenance's R5, R13, R25, R31–R33 as capture reaches them. */
-export function provenance(s, { registered = [], attestAnswer = null } = {}) {
-  const receipts = [], attests = [];
+/* provenance's R5 and R13 as capture reaches them (`registerHolds`, `recordReceipt`). `registered` names the digests the
+   register holds; `acquired` those an acquisition receipt names (a capture held in parts). */
+export function provenance(s, { registered = [], acquired = [] } = {}) {
+  const receipts = [];
   return {
-    receipts, attests,
+    receipts,
     recordReceipt(r) {
       receipts.push(r);
       s.sql.exec(`INSERT INTO captured_locators (address_norm, address, capture_sha, via, first_retrieved, last_retrieved, retrieval_locator)
@@ -77,11 +80,22 @@ export function provenance(s, { registered = [], attestAnswer = null } = {}) {
     },
     signed: [],
     async signReceipt(r) { this.signed.push(r); return { ok: true, signed: true }; },
-    registerHolds({ sha }) { return { ok: true, sha, asked: true, registered: registered.includes(sha), acquired: false }; },
-    async attest(args, io) { attests.push(args); return attestAnswer ?? { ok: true, attempts: [
-      { service: "tsa.test", attempted: "2026-09-27T00:00:00Z", ok: true },
-      ...(args.archive ? [{ service: "archive.test (anonymous)", attempted: "2026-09-27T00:00:00Z", ok: false, note: "http 500" }] : [])] }; },
+    registerHolds({ sha }) { return { ok: true, sha, asked: true, registered: registered.includes(sha), acquired: acquired.includes(sha) }; },
   };
+}
+
+/* A granted RFC 3161 TimeStampResp whose token carries the digest's raw bytes, which is what `signatures`'
+   `parseTimestampResponse` binds a token on (the shape attestation's own tests answer with). */
+export function granted(digestHex) {
+  const der = (tag, body) => {
+    const n = body.length;
+    const len = n < 128 ? [n] : n < 256 ? [0x81, n] : [0x82, n >> 8, n & 255];
+    return Buffer.concat([Buffer.from([tag, ...len]), body]);
+  };
+  const status = der(0x30, der(0x02, Buffer.from([0])));
+  const token = der(0x30, Buffer.concat([der(0x06, Buffer.from([0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x02])),
+                                          der(0x04, Buffer.from(digestHex, "hex"))]));
+  return der(0x30, Buffer.concat([status, token]));
 }
 
 /* A fresh capture over a fresh store. `opts` goes to the Capture (env, governor, provenance). */
