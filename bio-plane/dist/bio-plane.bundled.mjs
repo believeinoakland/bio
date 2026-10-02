@@ -1298,9 +1298,9 @@ function checkAppendOnly(ctx, findings) {
     findings.push(f2("C-5.1", "error", "Review Notes content from the prior version is missing or altered (verbatim-immutable)", ["restore from _history and re-append new material", "record a tamper finding if history lacks the original"]));
   }
   const priorLog = sectionText(snap.body, "## Session Log") || "";
-  for (const header of priorLog.match(/^### Session .*$/gm) || []) {
-    if (!ctx.body.includes(header)) {
-      findings.push(f2("C-5.1", "error", `Session Log entry '${header.slice(0, 60)}' from the prior version is missing (append-only surface)`, ["restore from _history and re-append new material"]));
+  for (const header2 of priorLog.match(/^### Session .*$/gm) || []) {
+    if (!ctx.body.includes(header2)) {
+      findings.push(f2("C-5.1", "error", `Session Log entry '${header2.slice(0, 60)}' from the prior version is missing (append-only surface)`, ["restore from _history and re-append new material"]));
     }
   }
   const chSnaps = [...ctx.files.keys()].filter((p) => /^_history\/data\/changes_.*\.json$/.test(p)).sort();
@@ -1612,6 +1612,7 @@ __export(checks_exports, {
   DRIVE_CAPTURE_CHECKS: () => DRIVE_CAPTURE_CHECKS,
   INSTALLATION_CHECKS: () => INSTALLATION_CHECKS,
   RENDER_CAPTURE_CHECKS: () => RENDER_CAPTURE_CHECKS,
+  SWEEP_SCOPE_CHECKS: () => SWEEP_SCOPE_CHECKS,
   civicosUserAgent: () => civicosUserAgent
 });
 var at = (region) => `src/acquisition/index.mjs acquire > ${region}`;
@@ -1745,11 +1746,27 @@ var INSTALLATION_CHECKS = Object.freeze({
     translation: "This copy was installed without the storage it keeps captured documents in, so it cannot keep or read the bytes of a captured document. That is a fact about how the copy was set up, not about this request: whoever installed it can connect that storage in the hosting account. Nothing was changed."
   })
 });
+var SWEEP_SCOPE_CHECKS = Object.freeze({
+  /* A sweep-origin acquire that names no scope: refused before anything is fetched, never run unfenced. */
+  SWEEP_SCOPE_MISSING: Object.freeze({
+    check: "C-128.1",
+    where: at("is-sweep-scope"),
+    translation: "A sweep asked this instance to fetch a document without saying which sites the sweep may reach, so nothing was fetched. A sweep only ever fetches within the scope members ratified for it."
+  }),
+  /* The source redirected the sweep to an address outside its scope: the redirect is not followed, nothing at its
+     target is fetched and nothing is filed. */
+  SWEEP_REDIRECT_OUT_OF_SCOPE: Object.freeze({
+    check: "C-128.2",
+    where: at("is-sweep-redirect"),
+    translation: "The page this sweep fetched sent it on to an address outside the sweep's ratified scope. The sweep did not follow it: nothing there was fetched and nothing was filed. Members can widen the scope if that address belongs in it."
+  })
+});
 var ACQUISITION_CHECKS = Object.freeze({
   ...CAPTURE_REQUEST_ARM_CHECKS,
   ...RENDER_CAPTURE_CHECKS,
   ...DRIVE_CAPTURE_CHECKS,
-  ...INSTALLATION_CHECKS
+  ...INSTALLATION_CHECKS,
+  ...SWEEP_SCOPE_CHECKS
 });
 
 // src/cpu.mjs
@@ -3320,10 +3337,10 @@ var PdfDoc = class {
       const n = numberVal(this.resolve(st.dict.N));
       const first = numberVal(this.resolve(st.dict.First));
       if (n == null || first == null) continue;
-      const header = inner.slice(0, first).trim().split(/\s+/).map(Number);
+      const header2 = inner.slice(0, first).trim().split(/\s+/).map(Number);
       for (let i = 0; i < n; i++) {
-        const objNum = header[i * 2];
-        const off = header[i * 2 + 1];
+        const objNum = header2[i * 2];
+        const off = header2[i * 2 + 1];
         if (!Number.isFinite(objNum) || !Number.isFinite(off)) continue;
         if (this.objects.has(objNum)) continue;
         const r = parseValueSafe(inner, first + off);
@@ -4945,8 +4962,8 @@ async function extractPdfStructure(bytes2) {
   if (!(bytes2 instanceof Uint8Array)) {
     return { ok: false, container: "pdf", reason: "NOT_BYTES" };
   }
-  const header = LATIN1.decode(bytes2.subarray(0, 1024));
-  const sig = /%PDF-(\d+\.\d+)/.exec(header);
+  const header2 = LATIN1.decode(bytes2.subarray(0, 1024));
+  const sig = /%PDF-(\d+\.\d+)/.exec(header2);
   if (!sig) {
     return { ok: false, container: "pdf", reason: "NOT_A_PDF" };
   }
@@ -5140,9 +5157,9 @@ function readContainer(bytes2) {
   if (b.length < 22) return { ok: false, why: "too_short_for_zip" };
   const scanFloor = Math.max(0, b.length - 22 - 65535);
   let eocd = -1;
-  for (let p2 = b.length - 22; p2 >= scanFloor; p2--) {
-    if (u32(b, p2) === SIG_EOCD) {
-      eocd = p2;
+  for (let p3 = b.length - 22; p3 >= scanFloor; p3--) {
+    if (u32(b, p3) === SIG_EOCD) {
+      eocd = p3;
       break;
     }
   }
@@ -11411,7 +11428,7 @@ function validateInto(p, errors) {
         }
         if (!day) return;
         const prior = spans.get(day) || [];
-        const clash = prior.find((p2) => o < p2.c && p2.o < c);
+        const clash = prior.find((p3) => o < p3.c && p3.o < c);
         if (clash) err(at25, "HOURS_INVALID", `${day} ${s.open}\u2013${s.close} overlaps ${clash.at}`);
         spans.set(day, [...prior, { o, c, at: at25 }]);
       });
@@ -14646,29 +14663,6 @@ function classifyDriveBaseline({ drive, locator, rows: rows2, retrievals = [] })
 
 // src/cdx.mjs
 var EMPTY_BODY_DIGEST = "3I42H3S6NNFQ2MSVX7XZKYAYSCX5QBYJ";
-function parseCdx(text5) {
-  let raw;
-  try {
-    raw = JSON.parse(text5);
-  } catch (e) {
-    return { ok: false, reason: "CDX_UNPARSEABLE", detail: String(e && e.message || e) };
-  }
-  if (!Array.isArray(raw)) return { ok: false, reason: "CDX_NOT_AN_ARRAY" };
-  if (raw.length === 0) return { ok: true, rows: [] };
-  const header = raw[0];
-  if (!Array.isArray(header) || !header.includes("timestamp") || !header.includes("original")) {
-    return { ok: false, reason: "CDX_NO_HEADER", detail: "the first row does not name timestamp and original" };
-  }
-  const rows2 = [];
-  for (let i = 1; i < raw.length; i++) {
-    const r = raw[i];
-    if (!Array.isArray(r)) continue;
-    const o = {};
-    for (let c = 0; c < header.length; c++) o[header[c]] = r[c];
-    rows2.push(o);
-  }
-  return { ok: true, rows: rows2 };
-}
 var TS_RE = /^\d{14}$/;
 function cdxTimestampToIso(ts) {
   if (!TS_RE.test(String(ts || ""))) return null;
@@ -14729,42 +14723,257 @@ function selectCapture(rows2, { notAfter = null } = {}) {
     usable_count: usable.length
   };
 }
-function replayLocator(chosen) {
-  if (!chosen || !TS_RE.test(String(chosen.timestamp || ""))) return null;
-  return `https://web.archive.org/web/${chosen.timestamp}id_/${chosen.original}`;
+
+// src/capture-sources/memento.mjs
+var WAYBACK_MEMENTO = Object.freeze({
+  name: "Internet Archive Wayback Machine",
+  via: "archive.org",
+  timegate: "https://web.archive.org/web/",
+  timemap: "https://web.archive.org/web/timemap/link/",
+  raw: (uri) => String(uri).replace(/^(https:\/\/web\.archive\.org\/web\/\d{14})(?:[a-z]{2}_)?\//, "$1id_/")
+});
+var isHttpsUrl = (s) => {
+  try {
+    return new URL(String(s)).protocol === "https:";
+  } catch {
+    return false;
+  }
+};
+var isHttpUrl = (s) => {
+  try {
+    return /^https?:$/.test(new URL(String(s)).protocol);
+  } catch {
+    return false;
+  }
+};
+function mementoEndpoints(archive, address) {
+  if (!archive || typeof archive !== "object" || !isHttpsUrl(archive.timegate) || !isHttpsUrl(archive.timemap)) return null;
+  if (typeof address !== "string" || !isHttpUrl(address)) return null;
+  return { timegate: `${archive.timegate}${address}`, timemap: `${archive.timemap}${address}` };
 }
-function cdxQuery(address, { limit = 40 } = {}) {
-  const u = new URL("https://web.archive.org/cdx/search/cdx");
-  u.searchParams.set("url", String(address).replace(/^https?:\/\//, ""));
-  u.searchParams.set("output", "json");
-  const n = Math.abs(Math.trunc(Number(limit)));
-  u.searchParams.set("limit", String(-(Number.isFinite(n) && n > 0 ? n : 40)));
-  u.searchParams.set("fl", "urlkey,timestamp,original,mimetype,statuscode,digest,length");
-  return u.toString();
+var DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+var MONTHS2 = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+var RFC1123 = /^(Sun|Mon|Tue|Wed|Thu|Fri|Sat), (\d{2}) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) (\d{4}) (\d{2}):(\d{2}):(\d{2}) GMT$/;
+var p2 = (n) => String(n).padStart(2, "0");
+function readHttpDate(s) {
+  const m = RFC1123.exec(typeof s === "string" ? s.trim() : "");
+  if (!m) return null;
+  const [, wd, dd, mon, yyyy, hh, mi, ss] = m;
+  const ms2 = Date.UTC(Number(yyyy), MONTHS2.indexOf(mon), Number(dd), Number(hh), Number(mi), Number(ss));
+  const d = new Date(ms2);
+  if (d.getUTCDate() !== Number(dd) || d.getUTCHours() !== Number(hh) || d.getUTCMinutes() !== Number(mi) || d.getUTCSeconds() !== Number(ss) || DAYS[d.getUTCDay()] !== wd) return null;
+  const timestamp = `${yyyy}${p2(MONTHS2.indexOf(mon) + 1)}${dd}${hh}${mi}${ss}`;
+  return { timestamp, archived_at: cdxTimestampToIso(timestamp) };
 }
-function archiveHop(chosen, replay, { mementoDatetime = null, warcSource = null } = {}) {
+function acceptDatetime(at25) {
+  let ms2 = NaN;
+  if (typeof at25 === "number") ms2 = at25;
+  else if (typeof at25 === "string" && /^\d{14}$/.test(at25)) ms2 = Date.parse(cdxTimestampToIso(at25));
+  else if (typeof at25 === "string" && /^\d{4}-\d{2}-\d{2}T/.test(at25)) ms2 = Date.parse(at25);
+  if (!Number.isFinite(ms2)) return null;
+  const d = new Date(ms2);
+  if (Number.isNaN(d.getTime())) return null;
+  return `${DAYS[d.getUTCDay()]}, ${p2(d.getUTCDate())} ${MONTHS2[d.getUTCMonth()]} ${d.getUTCFullYear()} ${p2(d.getUTCHours())}:${p2(d.getUTCMinutes())}:${p2(d.getUTCSeconds())} GMT`;
+}
+function parseLinkFormat(text5) {
+  if (typeof text5 !== "string") return { ok: false, reason: "MEMENTO_LINK_MALFORMED", entry: 0, detail: "the link-format text is not a string" };
+  const links = [];
+  let i = 0;
+  const n = text5.length;
+  const ws = () => {
+    while (i < n && /\s/.test(text5[i])) i++;
+  };
+  const bad = (detail, entry = links.length) => ({ ok: false, reason: "MEMENTO_LINK_MALFORMED", entry, detail });
+  ws();
+  if (i === n) return { ok: true, links };
+  for (; ; ) {
+    ws();
+    if (text5[i] !== "<") return bad(`entry ${links.length} does not begin with "<" at character ${i}`);
+    const close = text5.indexOf(">", i + 1);
+    if (close < 0) return bad(`entry ${links.length} has no closing ">"`);
+    const link = { uri: text5.slice(i + 1, close).trim(), rel: [] };
+    if (!link.uri) return bad(`entry ${links.length} has an empty URI`);
+    i = close + 1;
+    ws();
+    while (text5[i] === ";") {
+      i++;
+      ws();
+      const nm = /^[A-Za-z0-9!#$&+\-.^_`|~*]+/.exec(text5.slice(i));
+      if (!nm) return bad(`entry ${links.length} has a parameter with no name at character ${i}`);
+      const name2 = nm[0].toLowerCase();
+      i += nm[0].length;
+      ws();
+      let value = "";
+      if (text5[i] === "=") {
+        i++;
+        ws();
+        if (text5[i] === '"') {
+          let j = i + 1, v = "";
+          while (j < n && text5[j] !== '"') {
+            if (text5[j] === "\\" && j + 1 < n) j++;
+            v += text5[j];
+            j++;
+          }
+          if (j >= n) return bad(`entry ${links.length} has an unterminated quoted value for ${name2}`);
+          value = v;
+          i = j + 1;
+        } else {
+          const tv = /^[^\s;,"]+/.exec(text5.slice(i));
+          if (!tv) return bad(`entry ${links.length} has an empty value for ${name2}`);
+          value = tv[0];
+          i += tv[0].length;
+        }
+      }
+      if (name2 === "rel") link.rel = value.split(/\s+/).filter(Boolean).map((r) => r.toLowerCase());
+      else if (!(name2 in link)) link[name2] = value;
+      ws();
+    }
+    links.push(link);
+    if (i >= n) return { ok: true, links };
+    if (text5[i] !== ",") return bad(`entry ${links.length - 1} is followed by "${text5[i]}", not "," or ";", at character ${i}`, links.length - 1);
+    i++;
+    ws();
+    if (i >= n) return { ok: true, links };
+  }
+}
+function relations(links) {
+  const first = (r) => {
+    const l = links.find((x) => x.rel.includes(r));
+    return l ? l.uri : null;
+  };
   return {
-    who: "Internet Archive Wayback Machine",
+    original: first("original"),
+    timegate: first("timegate"),
+    timemap: first("timemap"),
+    mementos: links.filter((x) => x.rel.includes("memento"))
+  };
+}
+function parseTimeMap(text5) {
+  const p = parseLinkFormat(text5);
+  if (!p.ok) return p;
+  const r = relations(p.links);
+  if (!r.original) return { ok: false, reason: "MEMENTO_NO_ORIGINAL", detail: 'the TimeMap names no rel="original" link, so it does not say which resource its mementos are of' };
+  const mementos = [], refused2 = [];
+  for (const l of r.mementos) {
+    const t = readHttpDate(l.datetime);
+    if (!t) {
+      refused2.push({ uri: l.uri, refused: l.datetime === void 0 ? "no datetime" : `datetime ${JSON.stringify(l.datetime)} is not an RFC 1123 date` });
+      continue;
+    }
+    mementos.push({ uri: l.uri, datetime: l.datetime, timestamp: t.timestamp, archived_at: t.archived_at });
+  }
+  mementos.sort((a, b) => a.timestamp < b.timestamp ? 1 : a.timestamp > b.timestamp ? -1 : 0);
+  return { ok: true, original: r.original, timegate: r.timegate, timemap: r.timemap, mementos, refused: refused2 };
+}
+function timeMapCandidates(timemap, { notAfter = null } = {}) {
+  const considered = [];
+  for (const x of timemap && Array.isArray(timemap.refused) ? timemap.refused : []) considered.push({ timestamp: null, uri: x.uri, refused: x.refused });
+  const candidates = [];
+  for (const m of timemap && Array.isArray(timemap.mementos) ? timemap.mementos : []) {
+    if (notAfter && String(m.timestamp) > String(notAfter)) {
+      considered.push({ timestamp: m.timestamp, uri: m.uri, refused: `later than the requested bound ${notAfter}` });
+      continue;
+    }
+    candidates.push(m);
+  }
+  if (!candidates.length) {
+    return { ok: false, reason: "NO_USABLE_CAPTURE", detail: "the TimeMap holds no memento at or before the bound", considered };
+  }
+  return { ok: true, candidates, considered };
+}
+function header(headers, name2) {
+  if (!headers) return null;
+  if (typeof headers.get === "function") {
+    const v = headers.get(name2);
+    return v == null ? null : String(v);
+  }
+  const want = name2.toLowerCase();
+  const pairs = Array.isArray(headers) ? headers : Object.entries(headers);
+  for (const [k, v] of pairs) if (String(k).toLowerCase() === want && v != null) return String(v);
+  return null;
+}
+function readMementoAnswer({ url, status, headers } = {}) {
+  const st = Number(status);
+  const md = header(headers, "memento-datetime");
+  const linkText = header(headers, "link");
+  const parsed = linkText == null ? { ok: true, links: [] } : parseLinkFormat(linkText);
+  if (!parsed.ok) return { ...parsed, detail: `the Link header: ${parsed.detail}` };
+  const r = relations(parsed.links);
+  if (md == null) {
+    if (st >= 300 && st < 400) {
+      const location = header(headers, "location");
+      if (!location) return { ok: false, reason: "MEMENTO_NOT_NEGOTIATED", detail: `the TimeGate answered ${st} with no Location` };
+      let resolved;
+      try {
+        resolved = new URL(location, url).toString();
+      } catch {
+        return { ok: false, reason: "MEMENTO_NOT_NEGOTIATED", detail: "the TimeGate's Location is not an address" };
+      }
+      const vary = header(headers, "vary");
+      return {
+        ok: true,
+        kind: "redirect",
+        status: st,
+        location: resolved,
+        vary_accept_datetime: vary != null && /(^|,)\s*accept-datetime\s*(,|$)/i.test(vary),
+        original: r.original,
+        timegate: r.timegate,
+        timemap: r.timemap
+      };
+    }
+    return { ok: false, reason: "MEMENTO_NO_DATETIME", detail: `the answer (HTTP ${Number.isFinite(st) ? st : "status unstated"}) carries no Memento-Datetime, so it is not a memento` };
+  }
+  const t = readHttpDate(md);
+  if (!t) return { ok: false, reason: "MEMENTO_BAD_DATETIME", detail: `Memento-Datetime ${JSON.stringify(md)} is not an RFC 1123 date` };
+  if (!r.original) return { ok: false, reason: "MEMENTO_NO_ORIGINAL", detail: `the memento's Link header names no rel="original", so it does not say which resource it is a memento of` };
+  const ct = header(headers, "content-type");
+  return {
+    ok: true,
+    kind: "memento",
+    status: Number.isFinite(st) ? st : null,
+    memento_uri: typeof url === "string" ? url : null,
+    memento_datetime: md,
+    timestamp: t.timestamp,
+    archived_at: t.archived_at,
+    mimetype: ct ? ct.split(";")[0].trim().toLowerCase() || null : null,
+    original: r.original,
+    timegate: r.timegate,
+    timemap: r.timemap
+  };
+}
+var HEX642 = /^[0-9a-f]{64}$/;
+function mementoRow(answer, { sha256: sha2562, bytes: bytes2 } = {}) {
+  if (!answer || answer.ok !== true || answer.kind !== "memento") return null;
+  const hex6 = typeof sha2562 === "string" ? sha2562.toLowerCase() : "";
+  if (!HEX642.test(hex6)) return null;
+  return {
+    urlkey: null,
+    timestamp: answer.timestamp,
+    original: answer.original,
+    mimetype: answer.mimetype || void 0,
+    statuscode: answer.status == null ? "unstated" : String(answer.status),
+    digest: bytes2 === 0 ? EMPTY_BODY_DIGEST : hex6
+  };
+}
+function mementoHop(chosen, mementoUri, { archive = WAYBACK_MEMENTO, answer = null } = {}) {
+  const name2 = archive && typeof archive.name === "string" && archive.name ? archive.name : "an unnamed Memento archive";
+  const via = archive && typeof archive.via === "string" && archive.via ? archive.via : null;
+  const a = answer && answer.ok === true && answer.kind === "memento" ? answer : null;
+  return {
+    who: name2,
     asserts: `these bytes were served for ${chosen.original} at ${chosen.archived_at}, with HTTP status ${chosen.statuscode}`,
     evidence: [
-      chosen.urlkey ? `CDX urlkey ${chosen.urlkey}` : "the CDX record carried no urlkey",
-      `CDX record: timestamp ${chosen.timestamp}, digest ${chosen.digest} (base32 SHA-1, over the body as they stored it)`,
+      a ? `Memento-Datetime: ${a.memento_datetime}` : "no Memento-Datetime was recorded with this hop",
+      `memento ${mementoUri}`,
+      `rel="original" ${chosen.original}`,
+      a && a.timegate ? `rel="timegate" ${a.timegate}` : null,
+      a && a.timemap ? `rel="timemap" ${a.timemap}` : null,
       chosen.mimetype ? `mimetype ${chosen.mimetype}` : null,
-      chosen.warc_record_length ? `WARC record length ${chosen.warc_record_length}, which is THEIR compressed record size and not the length of what we received` : null,
-      mementoDatetime ? `Memento-Datetime: ${mementoDatetime}` : null,
-      warcSource ? `x-archive-src: ${warcSource}` : null,
-      `replayed from ${replay}`
+      chosen.digest === EMPTY_BODY_DIGEST ? null : `SHA-256 ${chosen.digest}, computed by this instance over the bytes it received, not a digest the archive stated`
     ].filter(Boolean).join("; "),
-    /* Not cryptographic, and said plainly. This is delegated attestation. */
     bound: false,
-    unsigned_reason: "no cryptographic attestation exists over a Wayback capture; this is a dated third-party claim we are trusting, not verifying",
-    via: "archive.org",
-    /* D-524: the document these bytes are a capture OF, as a named key, as
-       `driveHop` carries it. The capture is FILED under the CDX original while
-       `op=acquire` answers `locator` as the replay address it fetched, so a
-       register row built from that answer names the replay; this key is what
-       lets op=monitor find the row for the bundle's own address. Taken from the
-       CDX record this instance fetched, never from the request (D-112). */
+    unsigned_reason: `no cryptographic attestation exists over a ${name2} memento; this is a dated third-party claim we are trusting, not verifying`,
+    via,
     document_address: chosen.original
   };
 }
@@ -15289,7 +15498,7 @@ var NON_DATA_TYPES = Object.freeze({
 });
 var isStr2 = (s) => typeof s === "string" && s.length > 0;
 var num = (n) => typeof n === "number" && Number.isFinite(n) ? n : null;
-var HEX642 = /^[0-9a-f]{64}$/;
+var HEX643 = /^[0-9a-f]{64}$/;
 function b64bytes(s) {
   if (typeof s !== "string" || !/^[A-Za-z0-9+/]*={0,2}$/.test(s) || s.length % 4 !== 0) return null;
   try {
@@ -15310,7 +15519,7 @@ async function keepRenderBodies(answer, { put: put2, sha256: sha2562 }) {
       out.push(null);
       continue;
     }
-    const claim = HEX642.test(String(r.sha256 || "")) ? { renderer_sha256: r.sha256 } : {};
+    const claim = HEX643.test(String(r.sha256 || "")) ? { renderer_sha256: r.sha256 } : {};
     const undet = (why) => ({ sha256: "undetermined", digest_reason: why, ...claim });
     let bytes2 = null, as = null;
     if (typeof r.body_base64 === "string") {
@@ -15367,25 +15576,25 @@ function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS, at: a
   if (typeof answer.html !== "string" || answer.html.length === 0)
     return { ok: false, problem: "the renderer answered with no rendered document" };
   const undetermined = [];
-  const hostOf2 = (u) => {
+  const hostOf3 = (u) => {
     try {
       return isStr2(u) ? new URL(u).hostname.toLowerCase() : null;
     } catch {
       return null;
     }
   };
-  const pageHost = hostOf2(answer.navigated_to) || hostOf2(pageUrl);
+  const pageHost = hostOf3(answer.navigated_to) || hostOf3(pageUrl);
   let requests = null, data = null, subresources = null;
   if (Array.isArray(answer.requests)) {
     const at26 = new Map(answer.requests.map((r, i) => [r, i]));
     const digestOf2 = (r) => {
       const i = at26.get(r);
       const d = Array.isArray(digests2) ? digests2[i] : null;
-      if (d && (HEX642.test(String(d.sha256)) || d.sha256 === "undetermined")) return d;
+      if (d && (HEX643.test(String(d.sha256)) || d.sha256 === "undetermined")) return d;
       return {
         sha256: "undetermined",
         digest_reason: "the plane did not keep this render's subresource bytes",
-        ...HEX642.test(String(r.sha256 || "")) ? { renderer_sha256: r.sha256 } : {}
+        ...HEX643.test(String(r.sha256 || "")) ? { renderer_sha256: r.sha256 } : {}
       };
     };
     const rq = answer.requests.filter((r) => r && typeof r === "object" && isStr2(r.url));
@@ -17824,7 +18033,7 @@ var TSA_ACCEPT = "application/timestamp-reply";
 var ARCHIVE_SAVE_BASE = "https://web.archive.org/save/";
 var ARCHIVE_SERVICE = "web.archive.org/save (anonymous)";
 function archiveLocatorFrom(res, requested) {
-  const header = (name2) => {
+  const header2 = (name2) => {
     try {
       return res.headers.get(name2) || "";
     } catch {
@@ -17836,7 +18045,7 @@ function archiveLocatorFrom(res, requested) {
     url = typeof res.url === "string" ? res.url : "";
   } catch {
   }
-  for (const loc of [header("content-location"), header("location"), url]) {
+  for (const loc of [header2("content-location"), header2("location"), url]) {
     if (typeof loc !== "string") continue;
     if (/^\/web\/\d+/.test(loc)) return "https://web.archive.org" + loc;
     if (/^https?:\/\/web\.archive\.org\/web\/\d+/.test(loc)) return loc;
@@ -24959,6 +25168,19 @@ function withRegisterChecks(image, gate) {
     warnings: (gate.warnings || 0) + found.length - errors.length
   };
 }
+var RECEIPT_KIND = "bio-receipt/1";
+var STATEMENT_KIND = /^[a-z][a-z0-9-]*\/[0-9]+$/;
+function instanceStatement(kind, sha) {
+  if (typeof kind !== "string" || !STATEMENT_KIND.test(kind) || kind === RECEIPT_KIND)
+    throw new Error(`instanceStatement: kind ${JSON.stringify(kind)} is ${kind === RECEIPT_KIND ? "the receipt's own" : "not of the form <name>/<version>"}; a statement for a later module is never a receipt`);
+  return `${kind}
+sha256: ${sha}
+`;
+}
+var noKey = () => actRefusal(
+  "RECEIPT_NO_KEY",
+  "this instance holds no receipt-signing key, so nothing is signed. The operator binds one as a secret; nothing is claimed signed until then"
+);
 var Provenance = class _Provenance {
   #storage;
   #sql;
@@ -25742,7 +25964,7 @@ var Provenance = class _Provenance {
    * ===================================================================== */
   /** The exact statement a receipt signs, UTF-8. */
   static receiptStatement({ instance, retrieved, retrievalLocator, captureSha }) {
-    return `bio-receipt/1
+    return `${RECEIPT_KIND}
 instance: ${instance}
 fetched: ${retrieved}
 locator: ${retrievalLocator}
@@ -25756,6 +25978,21 @@ sha256: ${captureSha}
     const pub = Uint8Array.from(atob(jwk.x.replace(/-/g, "+").replace(/_/g, "/") + "==".slice(0, (4 - jwk.x.length % 4) % 4)), (c) => c.charCodeAt(0));
     return { priv, pub: b64(pub), keyId: hexOf(pub) };
   }
+  /* The instance key's one signing site (R34, R56): signs `statement`, UTF-8, and records the key in `receipt_keys`
+     the first time it signs anything; null when no key is bound. */
+  async #signWith(statement) {
+    const key = await this.#key();
+    if (!key) return null;
+    const signature = b64(await crypto.subtle.sign({ name: "Ed25519" }, key.priv, te4.encode(statement)));
+    const at25 = this.#now();
+    this.#sql.exec(
+      `INSERT OR IGNORE INTO receipt_keys (key_id, public_key, first_used) VALUES (?, ?, ?)`,
+      key.keyId,
+      key.pub,
+      at25
+    );
+    return { signature, key_id: key.keyId, public_key: key.pub, at: at25 };
+  }
   /** Signs and keeps the receipt for an archive-sourced capture. Answers `{ok, statement, signature, key_id,
    *  public_key}`, or `RECEIPT_NO_KEY` when no key is bound (stated, never a silent skip), or `RECEIPT_MALFORMED`. */
   async signReceipt({ captureSha, retrievalLocator, retrieved } = {}) {
@@ -25765,28 +26002,42 @@ sha256: ${captureSha}
         "RECEIPT_MALFORMED",
         "a receipt names the capture's sha256, the retrieval locator and the instant it was fetched"
       );
-    const key = await this.#key();
-    if (!key)
-      return actRefusal(
-        "RECEIPT_NO_KEY",
-        "this instance holds no receipt-signing key, so the receipt is not signed. The operator binds one as a secret; nothing is claimed signed until then"
-      );
     const statement = _Provenance.receiptStatement({ instance: this.#instanceName, retrieved, retrievalLocator, captureSha: s });
-    const signature = b64(await crypto.subtle.sign({ name: "Ed25519" }, key.priv, te4.encode(statement)));
-    const at25 = this.#now();
-    this.#record.transact(() => {
-      this.#sql.exec(
-        `INSERT OR IGNORE INTO receipt_keys (key_id, public_key, first_used) VALUES (?, ?, ?)`,
-        key.keyId,
-        key.pub,
-        at25
-      );
-      this.#sql.exec(`INSERT OR REPLACE INTO signed_receipts
-                        (capture_sha, retrieval_locator, retrieved, statement, signature, key_id, signed_at)
-                      VALUES (?, ?, ?, ?, ?, ?, ?)`, s, retrievalLocator, retrieved, statement, signature, key.keyId, at25);
-      return { ok: true };
-    });
-    return { ok: true, statement, signature, key_id: key.keyId, public_key: key.pub };
+    const signed = await this.#signWith(statement);
+    if (!signed) return noKey();
+    this.#sql.exec(
+      `INSERT OR REPLACE INTO signed_receipts
+                      (capture_sha, retrieval_locator, retrieved, statement, signature, key_id, signed_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      s,
+      retrievalLocator,
+      retrieved,
+      statement,
+      signed.signature,
+      signed.key_id,
+      signed.at
+    );
+    return { ok: true, statement, signature: signed.signature, key_id: signed.key_id, public_key: signed.public_key };
+  }
+  /** R56 · DEC-111: the statement the instance key signs for a later module (`instanceStatement`, below). */
+  instanceStatement(kind, sha) {
+    return instanceStatement(kind, sha);
+  }
+  /** R56 — signs a statement `instanceStatement` makes with the instance key of R34, recording the key in
+   *  `receipt_keys`: `{ok, signature, key_id, public_key}`, or `RECEIPT_NO_KEY` when no key is bound. Any other text
+   *  throws, as `instanceStatement` does, before the key is asked: this door never signs a receipt (R34's statement). */
+  async instanceSign(statement) {
+    const m = typeof statement === "string" ? /^([^\n]*)\nsha256: ([^\n]*)\n$/.exec(statement) : null;
+    if (!m || instanceStatement(m[1], m[2]) !== statement)
+      throw new Error("instanceSign: the statement is not one instanceStatement makes");
+    const signed = await this.#signWith(statement);
+    if (!signed) return noKey();
+    return { ok: true, signature: signed.signature, key_id: signed.key_id, public_key: signed.public_key };
+  }
+  /** R56 — every key that has signed anything, `[{key_id, public_key, first_used}]` in the order first used; the
+   *  private part is never stored, so never answered. */
+  instanceKeys() {
+    return this.#rows(`SELECT key_id, public_key, first_used FROM receipt_keys ORDER BY first_used, key_id`).map((r) => ({ key_id: r.key_id, public_key: r.public_key, first_used: r.first_used }));
   }
   /** The receipts signed for a capture, each verified against the public key it was signed with (kept, R34). */
   async signedReceipts(captureSha) {
@@ -26921,11 +27172,12 @@ function profileView(core) {
   return c.ok ? { view: c.view, ids, basis: `the combined view of ${ids.length ? ids.join(", ") : "no profile"}` } : { view: void 0, ids, basis: `the active profiles did not combine (${(c.errors || []).map((e) => e.code).join(", ")})` };
 }
 var renderLocale = (view) => renderLocaleFor(view);
-async function governedFetch2(cap, target, purpose, delegated = null, { headers = null, credential = null } = {}) {
+async function governedFetch2(cap, target, purpose, delegated = null, { headers = null, credential = null, manual = false } = {}) {
   const g = cap.governor;
+  const doFetch = headers || credential ? scopedFetch(target, { headers, credential, env: cap.env, purpose, follow: !manual }) : (u, i) => fetch(u, i);
   return governedFetch(target, {
     userAgent: userAgent(cap.env, purpose, delegated),
-    fetch: headers || credential ? scopedFetch(target, { headers, credential, env: cap.env, purpose }) : (u, i) => fetch(u, i),
+    fetch: manual ? (u, i) => doFetch(u, { ...i, redirect: "manual" }) : doFetch,
     governor: g ? { admit: (q7) => g.governorAdmit(q7), report: (q7) => g.governorReport(q7) } : null
   });
 }
@@ -26937,7 +27189,7 @@ function withCredential(headers, credential, env, purpose) {
   if (credential.kind === "login") return { ...headers, authorization: `Basic ${base64Of(credential.secret)}` };
   return { ...headers, authorization: credential.secret };
 }
-function scopedFetch(target, { headers, credential, env, purpose }) {
+function scopedFetch(target, { headers, credential, env, purpose, follow = true }) {
   let home = null;
   try {
     home = new URL(target).hostname.toLowerCase();
@@ -26957,7 +27209,7 @@ function scopedFetch(target, { headers, credential, env, purpose }) {
       }
       const res = await fetch(url, { ...init, redirect: "manual", headers: host && host === home ? withCredential(plain, credential, env, purpose) : plain });
       const loc = res.status >= 300 && res.status < 400 && res.status !== 304 ? res.headers.get("location") : null;
-      if (!loc || hop >= REDIRECT_MAX) return res;
+      if (!loc || hop >= REDIRECT_MAX || !follow) return res;
       let next = null;
       try {
         next = new URL(loc, url).href;
@@ -26973,7 +27225,17 @@ function scopedFetch(target, { headers, credential, env, purpose }) {
     }
   };
 }
-async function archiveSelect(cap, address) {
+var CAPTURE_MAX = 256 * 1024 * 1024;
+function inSweepScope(address, scope) {
+  if (typeof address !== "string" || !Array.isArray(scope)) return false;
+  const a = normalizeAddress(address);
+  return scope.some((p) => {
+    if (typeof p !== "string" || !p) return false;
+    const n = normalizeAddress(p);
+    return a === n || a.startsWith(n) && (n.endsWith("/") || a[n.length] === "/");
+  });
+}
+async function archiveEligibility(cap, address) {
   const reach2 = cap.sourceReachability({ addressNorm: normalizeAddress(address) });
   if (!reach2.fallback_eligible)
     return { ok: false, status: 409, payload: {
@@ -26986,60 +27248,190 @@ async function archiveSelect(cap, address) {
     await cap.governor?.governorConfig({ host: "web.archive.org", appetite_per_min: 24 });
   } catch {
   }
-  let res;
+  return { ok: true, reach: reach2 };
+}
+var ARCHIVE = WAYBACK_MEMENTO;
+var MEMENTO_TRIES = 4;
+var MEMENTO_HOPS = 5;
+var cancelBody = (res) => {
   try {
-    const g = await governedFetch2(cap, cdxQuery(address), "archive-lookup");
+    res?.body?.cancel?.()?.catch?.(() => {
+    });
+  } catch {
+  }
+};
+var hostOf2 = (u) => {
+  try {
+    return new URL(u).host;
+  } catch {
+    return String(u);
+  }
+};
+async function hashBody(res, max = CAPTURE_MAX) {
+  const h = createSha256();
+  let bytes2 = 0;
+  const reader = res && res.body && res.body.getReader ? res.body.getReader() : null;
+  if (reader) for (; ; ) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    bytes2 += value.length;
+    if (bytes2 > max) {
+      try {
+        await reader.cancel();
+      } catch {
+      }
+      return { oversize: true, bytes: bytes2 };
+    }
+    h.update(value);
+  }
+  return { sha: h.hex(), bytes: bytes2 };
+}
+async function mementoLookup(cap, address, { indexPurpose = "archive-lookup", fetchPurpose = "archive-lookup" } = {}) {
+  const ends = mementoEndpoints(ARCHIVE, address);
+  if (!ends) return { ok: false, status: 400, payload: { ok: false, reason: "BAD_ADDRESS", detail: "the archive has no endpoint for this address" } };
+  const considered = [], rows2 = [], tried = /* @__PURE__ */ new Set();
+  const call = async (url, purpose, headers = null) => {
+    let g;
+    try {
+      g = await governedFetch2(cap, url, purpose, null, { headers, manual: true });
+    } catch (e) {
+      return { fail: { ok: false, status: 502, payload: { ok: false, reason: "ARCHIVE_UNREACHABLE", detail: String(e && e.message || e) } } };
+    }
     if (g.refusedByGovernor)
-      return { ok: false, status: 429, payload: {
+      return { fail: { ok: false, status: 429, payload: {
         ok: false,
         reason: "HOST_COOLING_OFF",
-        detail: `the governor is holding requests to web.archive.org (${g.reason})`,
+        detail: `the governor is holding requests to ${hostOf2(url)} (${g.reason})`,
         retry_in_ms: g.retry_in_ms || 0
-      } };
-    res = g.res;
-  } catch (e) {
-    return { ok: false, status: 502, payload: { ok: false, reason: "ARCHIVE_UNREACHABLE", detail: String(e && e.message || e) } };
+      } } };
+    return { res: g.res };
+  };
+  const archiveRefused = (res, what) => ({ ok: false, status: 502, payload: {
+    ok: false,
+    reason: "ARCHIVE_REFUSED",
+    status: res.status,
+    detail: res.status === 429 ? "the archive is rate-limiting us; the governor will hold this host" : `the archive's ${what} answered ${res.status}`,
+    considered
+  } });
+  const tryMemento = async (uri) => {
+    let url = typeof ARCHIVE.raw === "function" ? ARCHIVE.raw(uri) : uri;
+    if (tried.has(url)) return { next: true };
+    tried.add(url);
+    for (let hop = 0; ; hop++) {
+      if (!isPublicHttpsLocator(url)) {
+        considered.push({ uri: url, refused: "not a public https address", reason: "BAD_LOCATOR" });
+        return { next: true };
+      }
+      const c = await call(url, fetchPurpose);
+      if (c.fail) return c;
+      const res = c.res;
+      const ans = readMementoAnswer({ url, status: res.status, headers: res.headers });
+      if (!ans.ok && (res.status === 429 || res.status >= 500)) {
+        cancelBody(res);
+        return { fail: archiveRefused(res, "memento") };
+      }
+      if (ans.ok && ans.kind === "redirect" && hop < MEMENTO_HOPS) {
+        cancelBody(res);
+        url = ans.location;
+        continue;
+      }
+      if (!ans.ok || ans.kind !== "memento") {
+        cancelBody(res);
+        considered.push({
+          uri: url,
+          reason: ans.ok ? "MEMENTO_NOT_NEGOTIATED" : ans.reason,
+          refused: ans.ok ? `the archive was still redirecting after ${MEMENTO_HOPS} hops` : ans.detail
+        });
+        return { next: true };
+      }
+      if (ans.status === 200) return { ok: true, res, answer: ans, locator: url, rows: rows2, considered };
+      const h = await hashBody(res);
+      rows2.push(mementoRow(ans, h.oversize ? { sha256: null } : { sha256: h.sha, bytes: h.bytes }) || { timestamp: ans.timestamp });
+      return { next: true };
+    }
+  };
+  const tg = await call(ends.timegate, indexPurpose, { "accept-datetime": acceptDatetime(Date.now()) });
+  if (tg.fail) return tg.fail;
+  if (tg.res.status === 429 || tg.res.status >= 500) {
+    cancelBody(tg.res);
+    return archiveRefused(tg.res, "TimeGate");
   }
-  if (!res.ok)
-    return { ok: false, status: 502, payload: {
-      ok: false,
-      reason: "ARCHIVE_REFUSED",
-      status: res.status,
-      detail: res.status === 429 ? "the Internet Archive is rate-limiting us; the governor will hold this host" : "the CDX endpoint did not answer with a record"
-    } };
-  const parsed = parseCdx(await res.text());
-  if (!parsed.ok) return { ok: false, status: 502, payload: { ok: false, ...parsed } };
-  const sel = selectCapture(parsed.rows);
-  if (!sel.ok)
-    return { ok: false, status: 404, payload: { ok: false, reason: sel.reason, detail: sel.detail, considered: sel.considered, address } };
-  const replay = replayLocator(sel.chosen);
+  const ga = readMementoAnswer({ url: ends.timegate, status: tg.res.status, headers: tg.res.headers });
+  cancelBody(tg.res);
+  if (ga.ok) {
+    const m = await tryMemento(ga.kind === "redirect" ? ga.location : ga.memento_uri);
+    if (!m.next) return m.fail || m;
+  } else if (tg.res.status === 404) considered.push({ uri: ends.timegate, refused: "the TimeGate holds no memento of this address (404)" });
+  else considered.push({ uri: ends.timegate, reason: ga.reason, refused: ga.detail });
+  const tm = await call(ends.timemap, indexPurpose);
+  if (tm.fail) return tm.fail;
+  if (!tm.res.ok && tm.res.status !== 404) {
+    cancelBody(tm.res);
+    return archiveRefused(tm.res, "TimeMap");
+  }
+  const mapText = tm.res.status === 404 ? (cancelBody(tm.res), "") : await tm.res.text();
+  const map = mapText.trim() ? parseTimeMap(mapText) : { ok: true, mementos: [], refused: [] };
+  if (!map.ok) return { ok: false, status: 502, payload: { ok: false, reason: map.reason, detail: map.detail, considered, address } };
+  const cands = timeMapCandidates(map);
+  considered.push(...cands.considered);
+  for (const cand of cands.ok ? cands.candidates.slice(0, MEMENTO_TRIES) : []) {
+    const m = await tryMemento(cand.uri);
+    if (!m.next) return m.fail || m;
+  }
+  return nothingUsable(selectCapture(rows2), considered, address);
+}
+function nothingUsable(sel, considered, address) {
+  const named = sel.considered.length ? null : considered.find((c) => c.reason);
+  return { ok: false, status: named ? 502 : 404, payload: {
+    ok: false,
+    reason: named ? named.reason : sel.reason,
+    detail: named ? named.refused : sel.detail,
+    considered: [...sel.considered, ...considered],
+    address
+  } };
+}
+function chooseMemento(m, sha, bytes2, address) {
+  const sel = selectCapture([mementoRow(m.answer, { sha256: sha, bytes: bytes2 }), ...m.rows]);
+  if (!sel.ok) return nothingUsable(sel, m.considered, address);
   return {
     ok: true,
-    reach: reach2,
     chosen: sel.chosen,
-    rejected: sel.rejected,
+    rejected: [...sel.rejected, ...m.considered],
     usable_count: sel.usable_count,
-    replay,
-    hop: archiveHop(sel.chosen, replay)
+    hop: mementoHop(sel.chosen, m.locator, { archive: ARCHIVE, answer: m.answer })
   };
 }
 async function archiveLookup(cap, { address } = {}) {
   if (typeof address !== "string" || !isPublicHttpsLocator(address))
     return { status: 400, body: { ok: false, reason: "BAD_ADDRESS", detail: "the document address must be https on a public host" } };
-  const sel = await archiveSelect(cap, address);
-  if (!sel.ok) return { status: sel.status, body: sel.payload };
+  const el = await archiveEligibility(cap, address);
+  if (!el.ok) return { status: el.status, body: el.payload };
+  const m = await mementoLookup(cap, address);
+  if (!m.ok) return { status: m.status, body: m.payload };
+  const h = await hashBody(m.res);
+  if (h.oversize)
+    return { status: 413, body: {
+      ok: false,
+      reason: "TOO_LARGE",
+      bytes: h.bytes,
+      maxBytes: CAPTURE_MAX,
+      retrieval_locator: m.locator,
+      detail: "the memento exceeds what this surface will capture even in parts"
+    } };
+  const c = chooseMemento(m, h.sha, h.bytes, address);
+  if (!c.ok) return { status: c.status, body: c.payload };
   return { status: 200, body: {
     ok: true,
     address,
-    eligible_because: sel.reach.basis,
-    chosen: sel.chosen,
-    /* Every row the index offered and why it was not used: "nothing suitable" alone is unauditable. */
-    rejected: sel.rejected,
-    usable_count: sel.usable_count,
-    retrieval_locator: sel.replay,
-    provenance_hop: sel.hop,
+    eligible_because: el.reach.basis,
+    chosen: c.chosen,
+    /* Every memento considered and why it was not used: "nothing suitable" alone is unauditable. */
+    rejected: c.rejected,
+    usable_count: c.usable_count,
+    retrieval_locator: m.locator,
+    provenance_hop: c.hop,
     capture_with: { op: "acquire", via: "archive.org", address },
-    note: "this op decides and reports; op=acquire with via=archive.org decides AGAIN and captures, because the hop that reaches the record must be built by the same call that fetched the CDX record"
+    note: "this op decides and reports; op=acquire with via=archive.org decides AGAIN and captures, because the hop that reaches the record must be built by the same call that fetched the memento"
   } };
 }
 function governedCall(cap, purpose) {
@@ -27138,7 +27530,7 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
       cls,
       detail: `the daemon class reaches op=acquire through the archive fallback (via: "archive.org") and through the capture-request drain (via: "capture-request"). Direct acquisition is a member's or an operator's act, and the unattended credential is scoped to the verbs the unattended paths need.`
     });
-  let archiveHopRecorded = null, archiveAddress = null;
+  let archiveHopRecorded = null, archiveAddress = null, archiveAsked = null;
   if (body.via === "archive.org") {
     if (cls !== "admin" && cls !== "probe" && cls !== "daemon")
       return answer(403, {
@@ -27155,13 +27547,12 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
         reason: "BAD_ADDRESS",
         detail: "an archive-sourced capture names the document address, not a replay locator"
       });
-    const sel = await archiveSelect(cap, addr);
-    if (!sel.ok) return answer(sel.status, sel.payload);
-    archiveHopRecorded = sel.hop;
-    archiveAddress = sel.chosen.original;
-    body.locator = sel.replay;
+    const el = await archiveEligibility(cap, addr);
+    if (!el.ok) return answer(el.status, el.payload);
+    archiveAsked = addr;
+    delete body.locator;
   }
-  let crPurpose = null, crAgent = null, crOrigin = null, crHeldSha = null, crCredential = null;
+  let crPurpose = null, crAgent = null, crOrigin = null, crHeldSha = null, crCredential = null, sweepScope = null;
   if (captureRequest) {
     body.locator = captureRequest.locator;
     crPurpose = captureRequest.purpose || null;
@@ -27171,6 +27562,23 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
     const o = captureRequest.origin;
     if (o && typeof o === "object" && o.matched_sweep != null && o.matched_sweep !== "")
       crOrigin = { kind: "sweep", matched_sweep: o.matched_sweep, deeming_actor: o.deeming_actor ?? null };
+    if (crOrigin && o.kind === "sweep") {
+      const sc = captureRequest.scope;
+      if (!Array.isArray(sc) || !sc.length || !sc.every((p) => typeof p === "string" && p !== "")) {
+        const row2 = SWEEP_SCOPE_CHECKS.SWEEP_SCOPE_MISSING;
+        return answer(400, {
+          ok: false,
+          reason: "SWEEP_SCOPE_MISSING",
+          code: "SWEEP_SCOPE_MISSING",
+          check: row2.check,
+          translation: row2.translation,
+          op,
+          matched_sweep: crOrigin.matched_sweep,
+          detail: "a sweep-origin acquire names the in-scope prefixes it may reach (monitoring R53's `sources`); this one named none, so nothing was fetched"
+        });
+      }
+      sweepScope = sc;
+    }
     if (typeof captureRequest.heldSha === "string" && /^[0-9a-f]{64}$/.test(captureRequest.heldSha)) crHeldSha = captureRequest.heldSha;
     const cr = captureRequest.credential;
     if (cr && typeof cr === "object" && CREDENTIAL_KINDS.includes(cr.kind) && typeof cr.secret === "string" && cr.secret !== "")
@@ -27232,8 +27640,8 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
     if (ld && ld.found) session = ld;
     else sessionSkip = { reason: "NO_SUCH_SESSION", detail: ld && ld.note };
   }
-  const locator = session ? session.locator : body.locator;
-  if (typeof locator !== "string" || !isPublicHttpsLocator(locator))
+  let locator = session ? session.locator : body.locator;
+  if (!(archiveAsked && !session) && (typeof locator !== "string" || !isPublicHttpsLocator(locator)))
     return answer(400, {
       ok: false,
       reason: "BAD_LOCATOR",
@@ -27330,6 +27738,14 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
         detail: adm ? `today's render allowance (${adm.allowance_ms} ms, day ${adm.day}) is committed (${adm.spent_ms} ms spent, ${adm.reserved_ms} ms reserved by renders in flight), and this render reserves ${adm.reserve_ms} ms; it is recorded as deferred (${adm.deferred} today).` : "the render allowance could not be read, so the render is deferred rather than run unmetered."
       });
   }
+  let archiveMemento = null;
+  if (archiveAsked) {
+    const m = await mementoLookup(cap, archiveAsked, { fetchPurpose: "acquire" });
+    if (!m.ok) return answer(m.status, m.payload);
+    archiveMemento = m;
+    locator = m.locator;
+    archiveAddress = m.answer.original;
+  }
   const via = body.via === "archive.org" ? "archive.org" : "direct";
   const documentAddress = via === "archive.org" && archiveAddress ? archiveAddress : driveCapture ? driveCapture.address : locator;
   const addressIsDerived = via === "archive.org" && !!archiveAddress || !!driveCapture;
@@ -27345,20 +27761,59 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
     ...validators.etag ? { "if-none-match": validators.etag } : {},
     ...validators.lastModified ? { "if-modified-since": validators.lastModified } : {}
   } : null;
-  let res;
-  try {
-    const g = await governedFetch2(cap, locator, crPurpose || "acquire", crAgent, { headers: conditional, credential: crCredential });
-    if (g.refusedByGovernor) {
-      await noteOutcome("governed", null);
-      return answer(429, {
-        ok: false,
-        reason: "HOST_COOLING_OFF",
-        detail: `the per-host governor is holding requests to this host (${g.reason}); retry in about ${Math.ceil((g.retry_in_ms || 0) / 1e3)}s`,
-        retry_in_ms: g.retry_in_ms || 0,
-        locator
+  let res = archiveMemento ? archiveMemento.res : null, resolvedUrl = null;
+  if (!res) try {
+    let url = locator;
+    const home = hostOf2(locator);
+    for (let hop = 0; ; hop++) {
+      const g = await governedFetch2(cap, url, crPurpose || "acquire", crAgent, {
+        headers: conditional,
+        credential: sweepScope && hostOf2(url) !== home ? null : crCredential,
+        manual: !!sweepScope
       });
+      if (g.refusedByGovernor) {
+        await noteOutcome("governed", null);
+        return answer(429, {
+          ok: false,
+          reason: "HOST_COOLING_OFF",
+          detail: `the per-host governor is holding requests to this host (${g.reason}); retry in about ${Math.ceil((g.retry_in_ms || 0) / 1e3)}s`,
+          retry_in_ms: g.retry_in_ms || 0,
+          locator
+        });
+      }
+      res = g.res;
+      if (!sweepScope) break;
+      const loc = res.status >= 300 && res.status < 400 && res.status !== 304 ? res.headers.get("location") : null;
+      if (!loc || hop >= REDIRECT_MAX) break;
+      let next = null;
+      try {
+        next = new URL(loc, url).href;
+      } catch {
+        next = null;
+      }
+      if (!next || !inSweepScope(next, sweepScope)) {
+        cancelBody(res);
+        const row2 = SWEEP_SCOPE_CHECKS.SWEEP_REDIRECT_OUT_OF_SCOPE;
+        return answer(422, {
+          ok: false,
+          reason: "SWEEP_REDIRECT_OUT_OF_SCOPE",
+          code: "SWEEP_REDIRECT_OUT_OF_SCOPE",
+          check: row2.check,
+          translation: row2.translation,
+          op,
+          target: next || loc,
+          locator,
+          redirected_from: url,
+          status: res.status,
+          matched_sweep: crOrigin.matched_sweep,
+          detail: `${url} redirected (${res.status}) to ${next || loc}, which is outside the sweep's scope; the redirect was not followed, nothing at its target was fetched, and nothing was filed`
+        });
+      }
+      if (!isPublicHttpsLocator(next)) break;
+      cancelBody(res);
+      url = next;
+      resolvedUrl = next;
     }
-    res = g.res;
   } catch (e) {
     await noteOutcome("fetch_failed", null);
     return answer(502, {
@@ -27368,6 +27823,7 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
       detail: crCredential ? "the fetch did not complete; its error is not carried because a supplied credential rode it" : String(e && e.message || e)
     });
   }
+  resolvedUrl = resolvedUrl || res.url || null;
   if (conditional && res.status === 304) {
     await noteOutcome("success", 304);
     try {
@@ -27433,9 +27889,9 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
     await noteOutcome("source_refused", res.status);
     return answer(502, { ok: false, reason: "SOURCE_REFUSED", status: res.status, locator });
   }
-  await noteOutcome("success", res.status);
+  if (!archiveMemento) await noteOutcome("success", res.status);
   const PART = 8 * 1024 * 1024;
-  const MAX = 256 * 1024 * 1024;
+  const MAX = CAPTURE_MAX;
   const whole = createSha256();
   const parts = [];
   const partHeldBefore = [];
@@ -27524,8 +27980,14 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
     });
   }
   await flush();
-  if (total === 0) return answer(502, { ok: false, reason: "EMPTY", locator });
   let sha = whole.hex();
+  if (archiveMemento) {
+    const c = chooseMemento(archiveMemento, sha, total, archiveAsked);
+    if (!c.ok) return answer(c.status, c.payload);
+    archiveHopRecorded = c.hop;
+    await noteOutcome("success", res.status);
+  }
+  if (total === 0) return answer(502, { ok: false, reason: "EMPTY", locator });
   let existed = false, existedUndetermined = null;
   const multipart = parts.length > 1;
   if (!multipart) {
@@ -27551,8 +28013,8 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
   for (const [k, v] of res.headers) responseHeaders.push([k, v]);
   const transport = {
     requested: locator,
-    resolved: res.url || locator,
-    redirected: !!(res.url && res.url !== locator),
+    resolved: resolvedUrl || locator,
+    redirected: !!(resolvedUrl && resolvedUrl !== locator),
     status: res.status,
     http_headers: responseHeaders,
     peer_address: null,
@@ -27561,7 +28023,7 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
   const name2 = (body.file || locator.split("/").pop() || "capture").replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 100) || "capture";
   let renderRecorded = null, shellRecorded = null, renderedAuth = null;
   if (renderAsked) {
-    const pageUrl = res.url || locator;
+    const pageUrl = resolvedUrl || locator;
     let answerR = null, rbytes = null, rb = null;
     if (multipart || detectFormat(null, ct || null).format !== "html") {
       try {
@@ -27634,8 +28096,8 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
   }
   try {
     await cap.provenance?.recordReceipt?.({
-      address: addressIsDerived ? documentAddress : res.url || locator,
-      addressNorm: addressIsDerived ? addrNorm : normalizeAddress(res.url || locator),
+      address: addressIsDerived ? documentAddress : resolvedUrl || locator,
+      addressNorm: addressIsDerived ? addrNorm : normalizeAddress(resolvedUrl || locator),
       captureSha: sha,
       retrieved,
       via,
@@ -27692,7 +28154,7 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
       ct,
       name: name2,
       locator,
-      base: res.url || locator,
+      base: resolvedUrl || locator,
       retrieved,
       resume: null,
       sessionId: null
@@ -27727,7 +28189,7 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
         detected = null;
       }
     }
-    driveHopRecorded = driveHop(driveCapture, { retrieved, resolved: res.url || null, detected });
+    driveHopRecorded = driveHop(driveCapture, { retrieved, resolved: resolvedUrl, detected });
   }
   const attestations = await coAttest(cap, { sha, locator: documentAddress, via, ev });
   const document = {
@@ -27789,10 +28251,8 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
     /* Derived artifacts are named on the SAME register document, never as documents of their own (C-18.3). */
     ...subs ? { renditions: subs.renditions } : {},
     /* R21: on the capture-request arm the origin is the drain's row's, never the body's. */
-    origin: captureRequest ? crOrigin || { kind: "named_request" } : {
-      kind: body.matchedSweep ? "sweep" : "named_request",
-      ...body.matchedSweep ? { matched_sweep: body.matchedSweep, deeming_actor: sessMember || cls } : {}
-    },
+    /* R31 (K1126): only monitoring and capture-requests set a sweep origin; a body's `matchedSweep` is ignored. */
+    origin: captureRequest ? crOrigin || { kind: "named_request" } : { kind: "named_request" },
     attestation_attempts: attestations
   };
   return answer(200, {
@@ -29159,11 +29619,11 @@ function glyphCount(s) {
   return n;
 }
 var decodedChars = (page) => page && typeof page.text === "string" ? glyphCount(page.text) : 0;
-function perPageTierWinner(p1, p2) {
-  if (!p2) return "tier1";
+function perPageTierWinner(p1, p22) {
+  if (!p22) return "tier1";
   if (!p1) return "tier2";
-  const u1 = undeterminedChars(p1), u2 = undeterminedChars(p2);
-  const c1 = decodedChars(p1), c2 = decodedChars(p2);
+  const u1 = undeterminedChars(p1), u2 = undeterminedChars(p22);
+  const c1 = decodedChars(p1), c2 = decodedChars(p22);
   return u2 < u1 && c2 > c1 ? "tier2" : "tier1";
 }
 function mergeTier2Text(base, t2) {
@@ -32404,17 +32864,17 @@ function decodeGenericArith(mq, ctx, w, h, template, tpgdon, at25, skip = null) 
     const r0 = y * w, r1 = r0 - w, r2 = r1 - w;
     const has1 = y >= 1, has22 = y >= 2;
     const p1 = (x) => has1 && x >= 0 && x < w ? D[r1 + x] : 0;
-    const p2 = (x) => has22 && x >= 0 && x < w ? D[r2 + x] : 0;
+    const p22 = (x) => has22 && x >= 0 && x < w ? D[r2 + x] : 0;
     let c0 = 0, c1, c2;
     if (template === 0) {
       c1 = p1(-2) << 4 | p1(-1) << 3 | p1(0) << 2 | p1(1) << 1 | p1(2);
-      c2 = p2(-1) << 2 | p2(0) << 1 | p2(1);
+      c2 = p22(-1) << 2 | p22(0) << 1 | p22(1);
     } else if (template === 1) {
       c1 = p1(-2) << 4 | p1(-1) << 3 | p1(0) << 2 | p1(1) << 1 | p1(2);
-      c2 = p2(-1) << 3 | p2(0) << 2 | p2(1) << 1 | p2(2);
+      c2 = p22(-1) << 3 | p22(0) << 2 | p22(1) << 1 | p22(2);
     } else if (template === 2) {
       c1 = p1(-2) << 3 | p1(-1) << 2 | p1(0) << 1 | p1(1);
-      c2 = p2(-1) << 2 | p2(0) << 1 | p2(1);
+      c2 = p22(-1) << 2 | p22(0) << 1 | p22(1);
     } else {
       c1 = p1(-3) << 4 | p1(-2) << 3 | p1(-1) << 2 | p1(0) << 1 | p1(1);
       c2 = 0;
@@ -32438,13 +32898,13 @@ function decodeGenericArith(mq, ctx, w, h, template, tpgdon, at25, skip = null) 
       c0 = (c0 << 1 | bit) & 15;
       if (template === 0) {
         c1 = c1 << 1 & 31 | p1(x + 3);
-        c2 = c2 << 1 & 7 | p2(x + 2);
+        c2 = c2 << 1 & 7 | p22(x + 2);
       } else if (template === 1) {
         c1 = c1 << 1 & 31 | p1(x + 3);
-        c2 = c2 << 1 & 15 | p2(x + 3);
+        c2 = c2 << 1 & 15 | p22(x + 3);
       } else if (template === 2) {
         c1 = c1 << 1 & 15 | p1(x + 2);
-        c2 = c2 << 1 & 7 | p2(x + 2);
+        c2 = c2 << 1 & 7 | p22(x + 2);
       } else {
         c1 = c1 << 1 & 31 | p1(x + 2);
       }
@@ -44177,7 +44637,7 @@ var CAPTURE_EXEMPT_TABLES = [
 // src/capture/index.mjs
 var stampSecond3 = (when = Date.now()) => new Date(when).toISOString().replace(/\.\d+Z$/, "Z");
 var ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
-var HEX643 = /^[0-9a-f]{64}$/;
+var HEX644 = /^[0-9a-f]{64}$/;
 var te5 = new TextEncoder();
 var hexOf2 = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var b64Of = (bytes2) => {
@@ -44831,8 +45291,11 @@ var Capture = class _Capture {
   /** R32: a member moves a knock to `discarded` or back to `new`, recorded with who, when and the member's own reason
    *  (DEC-88 (2)). `pulled` is R65's act for that knock and answers as `pullKnock` does (a promise), once its reason is
    *  admitted, the reason recorded on the row with the pull: a knock becomes `pulled` only by being brought in. Refused
-   *  in order: `BAD_STATUS`, `NO_SUCH_KNOCK`, `RESOLVE_NO_REASON` (C-118.7), each before anything is written. */
-  inboxResolve({ knockId, status, by, reason } = {}) {
+   *  in order: `BAD_STATUS`, `NO_SUCH_KNOCK`, `RESOLVE_NO_REASON` (C-118.7), each before anything is written. N499
+   *  (K1105): the `pulled` arm takes `at` and `within` as `pullKnock` does, so the control plane's reasoned resolve is
+   *  one act with its promotion (control-plane R36) and the reason lands on the row inside it; the other arms ignore
+   *  them. */
+  inboxResolve({ knockId, status, by, reason, at: at25 = null, within = null } = {}) {
     if (!["pulled", "discarded", "new"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
     if (typeof knockId !== "string" || !knockId || !this.#one(`SELECT knock_id FROM inbox WHERE knock_id=?`, knockId))
       return this.#noSuchKnock(knockId);
@@ -44849,7 +45312,7 @@ var Capture = class _Capture {
         maxChars: REASON_MAX
       };
     }
-    if (status === "pulled") return this.#pull({ knockId, by }, reason);
+    if (status === "pulled") return this.#pull({ knockId, by, at: at25, within }, reason);
     this.#tx(() => this.#sql.exec(
       `UPDATE inbox SET status=?, resolved=?, resolved_by=?, resolve_reason=? WHERE knock_id=?`,
       status,
@@ -45128,7 +45591,7 @@ var Capture = class _Capture {
   pulledKnocksOf(captureSha) {
     try {
       const sha = typeof captureSha === "string" ? captureSha.toLowerCase() : "";
-      if (!HEX643.test(sha)) return [];
+      if (!HEX644.test(sha)) return [];
       return this.#rows(`SELECT knock_id, sha256, bytes, received, pseudonym, knocker_digest FROM inbox
                           WHERE capture_sha = ? ORDER BY received, knock_id`, sha).map((r) => ({ ...r }));
     } catch {
@@ -45141,7 +45604,7 @@ var Capture = class _Capture {
   /** R16, R69: record `actor` as one who captured `captureSha` (a member session's acquire, a knock's pull). Kept once
    *  per pair, at the first instant. */
   recordCaptureActor({ captureSha, actor, at: at25 = null } = {}) {
-    if (typeof captureSha !== "string" || !HEX643.test(captureSha) || typeof actor !== "string" || !actor) return { recorded: false };
+    if (typeof captureSha !== "string" || !HEX644.test(captureSha) || typeof actor !== "string" || !actor) return { recorded: false };
     this.#tx(() => this.#sql.exec(
       `INSERT OR IGNORE INTO capture_actors (capture_sha, actor, at) VALUES (?, ?, ?)`,
       captureSha,
@@ -45158,7 +45621,7 @@ var Capture = class _Capture {
   async recordCaptureAccount({ captureSha, text: text5, signature, by, at: at25 = null } = {}) {
     const sha = typeof captureSha === "string" ? captureSha.toLowerCase() : "";
     const who2 = memberIdOf(by);
-    const actors = HEX643.test(sha) ? this.#rows(`SELECT actor FROM capture_actors WHERE capture_sha = ?`, sha).map((r) => memberIdOf(r.actor)) : [];
+    const actors = HEX644.test(sha) ? this.#rows(`SELECT actor FROM capture_actors WHERE capture_sha = ?`, sha).map((r) => memberIdOf(r.actor)) : [];
     if (!who2 || !actors.includes(who2)) {
       const row2 = CAPTURE_CHECKS.NOT_THE_CAPTURING_ACTOR;
       return {
@@ -45226,7 +45689,7 @@ var Capture = class _Capture {
   captureAccountsOf(captureSha, { viewer = void 0 } = {}) {
     try {
       const sha = typeof captureSha === "string" ? captureSha.toLowerCase() : "";
-      if (!HEX643.test(sha)) return { captureSha: sha || null, actors: [], accounts: [] };
+      if (!HEX644.test(sha)) return { captureSha: sha || null, actors: [], accounts: [] };
       if (!this.#captureSeen(sha, viewer)) return { captureSha: sha, actors: [], accounts: [] };
       return {
         captureSha: sha,
@@ -45246,7 +45709,7 @@ var Capture = class _Capture {
    *  R63's absence when no bytes are held (a capture held in parts counts when provenance holds its receipt). */
   async reattest({ captureSha, locator = null, by = null } = {}) {
     const sha = typeof captureSha === "string" ? captureSha.toLowerCase() : "";
-    if (!HEX643.test(sha)) return { ok: false, reason: "BAD_SHA", status: 400, detail: "reattest takes the sha256 of a capture the record holds" };
+    if (!HEX644.test(sha)) return { ok: false, reason: "BAD_SHA", status: 400, detail: "reattest takes the sha256 of a capture the record holds" };
     const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
     const p = this.provenance;
     const holds = async (s) => p && typeof p.registerHolds === "function" ? p.registerHolds({ sha: s }) : null;
@@ -45368,7 +45831,7 @@ var Capture = class _Capture {
   lateAttestationsOf(captureSha) {
     try {
       const sha = typeof captureSha === "string" ? captureSha.toLowerCase() : "";
-      if (!HEX643.test(sha)) return { captureSha: sha || null, late_attestations: [] };
+      if (!HEX644.test(sha)) return { captureSha: sha || null, late_attestations: [] };
       return { captureSha: sha, late_attestations: this.#rows(`SELECT seq, by, outcome FROM late_attestations WHERE capture_sha = ? ORDER BY seq`, sha).map((r) => ({ seq: r.seq, by: r.by, ...JSON.parse(r.outcome) })) };
     } catch {
       return { captureSha: null, late_attestations: [] };
@@ -45383,7 +45846,7 @@ var Capture = class _Capture {
     const sha = typeof captureSha === "string" ? captureSha.toLowerCase() : "";
     const none = { captureSha: sha || null, note: null };
     try {
-      if (!HEX643.test(sha) || !this.#captureSeen(sha, viewer)) return none;
+      if (!HEX644.test(sha) || !this.#captureSeen(sha, viewer)) return none;
       const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
       let held = false;
       if (ev) {
@@ -45626,6 +46089,33 @@ var Capture = class _Capture {
     };
     const at25 = this.#appendHeld([...standing.keys()], "restore", reason, author);
     return { ok: true, act: "restore", ids: [...standing.keys()], reason, author, at: at25 };
+  }
+  /** R82 (K1036; Intake Doctrine §4, the backlog ceiling): how many Information documents at `collected`, not set aside
+   *  (R79, R81) and not released, have a register document whose `origin` names `matched_sweep` equal to `sweep`. The
+   *  register document is the bundle's `data/provenance.json` (State Rules §4.1), read on record-core's `files` read
+   *  contract (its R37); a released document has left `collected` (`ratification` R24), so the state answers that
+   *  clause. The whole store, no viewer: only the daemon's hold reads it (`monitoring` R60). Writes nothing and never
+   *  throws; an unknown sweep, or one that is not a non-empty string, answers 0. K1129: a store that cannot be read
+   *  answers null (not known), never 0, so the hold fails closed. A register document held only as a blob
+   *  (`files.content` NULL) is not counted. */
+  heldCount(args) {
+    const sweep = args && typeof args === "object" ? args.sweep : null;
+    if (typeof sweep !== "string" || !sweep) return 0;
+    try {
+      const r = this.#one(
+        `SELECT count(*) AS n FROM bundles b
+          WHERE b.object_type = 'information' AND b.current_state = 'collected' AND ${_Capture.#NOT_SET_ASIDE}
+            AND EXISTS (SELECT 1 FROM files f,
+                                json_each(CASE WHEN json_valid(f.content) THEN f.content ELSE '{}' END, '$.documents') d
+                         WHERE f.bundle_id = b.bundle_id AND f.path = 'data/provenance.json'
+                           AND (CASE WHEN d.type = 'object' THEN json_extract(d.value, '$.origin.matched_sweep') END) = ?)`,
+        sweep
+      );
+      const n = Number(r && r.n);
+      return r && Number.isFinite(n) ? n : null;
+    } catch {
+      return null;
+    }
   }
   /* ==================================================================== *
    * D-64: the daily render allowance (R39, R40)
@@ -46421,7 +46911,7 @@ var Capture = class _Capture {
       let truncated3 = false;
       let added = 0, changedCount = 0;
       const changed = [];
-      const fromObs = (o) => typeof o.reused_from === "string" && HEX643.test(o.reused_from) ? o.reused_from : null;
+      const fromObs = (o) => typeof o.reused_from === "string" && HEX644.test(o.reused_from) ? o.reused_from : null;
       for (const o of observations) {
         if (!o || !o.address_norm || !o.sha256) continue;
         const cur = this.#one(`SELECT * FROM site_assets WHERE host = ? AND address_norm = ?`, host, o.address_norm);
@@ -46690,7 +47180,7 @@ var Capture = class _Capture {
    *  included, since the consumer still owes it a drain) calls the `task` listeners (R44), which arm the drain. */
   async taskEnqueue({ kind = "authority-undetermined", captureSha = null, subject = "", locator = null, at: at25 = null } = {}) {
     if (!TASK_KINDS.includes(kind)) return { ok: false, reason: "BAD_KIND", detail: `kind must be one of: ${TASK_KINDS.join(", ")}` };
-    if (typeof captureSha !== "string" || !HEX643.test(captureSha))
+    if (typeof captureSha !== "string" || !HEX644.test(captureSha))
       return { ok: false, reason: "BAD_CAPTURE_SHA", detail: "a capture sha256 identifies the event; a record does not exist yet at capture time" };
     const text5 = boundedSubject(subject) || "a capture whose authority could not be determined";
     const loc = typeof locator === "string" && locator.length <= 2e3 ? locator : null;
@@ -46775,7 +47265,7 @@ var Capture = class _Capture {
    *  replaces it. Never throws. */
   recordValidators({ addressNorm, captureSha, etag = null, lastModified = null, at: at25 = null } = {}) {
     try {
-      if (typeof addressNorm !== "string" || !addressNorm || typeof captureSha !== "string" || !HEX643.test(captureSha))
+      if (typeof addressNorm !== "string" || !addressNorm || typeof captureSha !== "string" || !HEX644.test(captureSha))
         return { recorded: false };
       this.#tx(() => this.#sql.exec(
         `INSERT INTO capture_validators (address_norm, capture_sha, etag, last_modified, at) VALUES (?, ?, ?, ?, ?)
@@ -46975,7 +47465,11 @@ function captureOps(c, url, body, env) {
     knock: () => c.knock({ ...body || {}, sourceAddress: q7("source") }),
     inboxlist: () => c.inboxList(q7("status") || null, { ...page, sort: q7("sort"), dir: q7("dir") }),
     inboxget: () => c.inboxGet(q7("id")),
-    inboxresolve: () => c.inboxResolve(body || {}),
+    /* N499: a body names no `at` or `within`: the pull's instant and its joined act are an in-process caller's. */
+    inboxresolve: () => {
+      const b = body || {};
+      return c.inboxResolve({ knockId: b.knockId, status: b.status, by: b.by, reason: b.reason });
+    },
     /* R80: the Worker's count of a knock it refused before the store; the tally read by the stamped viewer. */
     doorbellrefused: () => c.doorbellRefused(body || {}),
     doorbelltally: () => c.doorbellTally({ viewer: q7("viewer") ?? "" }),
@@ -48110,7 +48604,7 @@ var Entities = class _Entities {
       e.entity_id,
       e.entity_id
     );
-    const relations = rel.rows.map((r) => this.#relationView(r, e.entity_id));
+    const relations2 = rel.rows.map((r) => this.#relationView(r, e.entity_id));
     const def = this.#bounded(
       ENTITY_COLLECTION_LIMIT,
       `SELECT capture_sha, bundle_id, ref, reason, source_module, source_id, reported_by, at FROM resolution_defects
@@ -48126,7 +48620,7 @@ var Entities = class _Entities {
       declared_by: e.declared_by,
       at: e.at,
       aliases,
-      relations,
+      relations: relations2,
       defects,
       defect_count: defects.length,
       limit: ENTITY_COLLECTION_LIMIT,
@@ -72897,7 +73391,7 @@ var CONSENT_STATEMENT = "This consent is permanent for anything published under 
 var WITHDRAWAL_STATEMENT = "This withdrawal binds only later publications: what was published under the consent stays published.";
 var NOT_RECORDED = "known to the group, not recorded";
 var claimSentence = (claimedBy, at25) => `named by ${claimedBy} on ${String(at25).slice(0, 10)}; not confirmed by the group`;
-var HEX644 = /^[0-9a-f]{64}$/;
+var HEX645 = /^[0-9a-f]{64}$/;
 var DATE = /^\d{4}-\d{2}-\d{2}$/;
 var str4 = (v) => typeof v === "string" ? v.trim() : "";
 var isObj8 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
@@ -73048,7 +73542,7 @@ var Sources = class _Sources {
       }
       if (!page || page.ok === false || !Array.isArray(page.knocks)) return;
       for (const k of page.knocks)
-        if (k && k.status === "pulled" && typeof k.knock_id === "string" && HEX644.test(String(k.sha256)) && k.capture_sha === k.sha256)
+        if (k && k.status === "pulled" && typeof k.knock_id === "string" && HEX645.test(String(k.sha256)) && k.capture_sha === k.sha256)
           this.#bindKnock(k, src.source_id);
       if (!page.truncated || !page.next) return;
       after = page.next;
@@ -73059,7 +73553,7 @@ var Sources = class _Sources {
   sourceOf(args = {}) {
     const { captureSha, viewer } = isObj8(args) ? args : {};
     const reader = this.#memberOf(viewer);
-    if (!reader || typeof captureSha !== "string" || !HEX644.test(captureSha)) return noSuchSource(null, { captureSha: HEX644.test(String(captureSha)) ? captureSha : null });
+    if (!reader || typeof captureSha !== "string" || !HEX645.test(captureSha)) return noSuchSource(null, { captureSha: HEX645.test(String(captureSha)) ? captureSha : null });
     const knocks = this.#pulledKnocks(captureSha);
     if (!knocks.length) return noSuchSource(null, { captureSha });
     const ids = this.#record.transact(() => {
@@ -76295,13 +76789,13 @@ function sourceRowsStanding(rows2, publishable) {
   for (const r of Array.isArray(rows2) ? rows2 : []) {
     const capture = r && typeof r.capture === "string" ? r.capture : null;
     if (!cache.has(capture)) {
-      let p2 = null;
+      let p3 = null;
       try {
-        p2 = capture ? publishable(capture) : null;
+        p3 = capture ? publishable(capture) : null;
       } catch {
-        p2 = null;
+        p3 = null;
       }
-      cache.set(capture, p2);
+      cache.set(capture, p3);
     }
     const p = cache.get(capture);
     const stated = r && typeof r.stated === "string" ? oneLine(r.stated) : null;
@@ -77387,7 +77881,7 @@ var EXPORT_LOG_LIMIT_DEFAULT = 200;
 var EXPORT_LOG_LIMIT_MAX = 1e3;
 var EXPORT_NOTE_MAX = 280;
 var CREATION_BASE = sha256HexSync("");
-var HEX645 = /^[0-9a-f]{64}$/;
+var HEX646 = /^[0-9a-f]{64}$/;
 var te6 = new TextEncoder();
 var CorpusExport = class {
   constructor({ storage, record, now = null } = {}) {
@@ -77541,7 +78035,7 @@ function verifyCorpusExport(input) {
     };
     const part = (where, sha, size, hashReason, sizeReason) => {
       const want = lower(sha);
-      if (!HEX645.test(want)) {
+      if (!HEX646.test(want)) {
         failures.push({ reason: hashReason, ...where, expected: "a SHA-256 digest", found: describe(sha) });
         return false;
       }
@@ -100226,7 +100720,7 @@ var safeJson16 = (s) => {
     return null;
   }
 };
-var HEX646 = /^[0-9a-f]{64}$/;
+var HEX647 = /^[0-9a-f]{64}$/;
 function posFields2(pos) {
   const { kind, ref, ...rest } = pos;
   return rest;
@@ -100560,7 +101054,7 @@ var RunProductions = class _RunProductions {
       const named = legsIn[i]?.extent_capture;
       const isDoc = normalizeType(row2.object_type) === "information";
       if (named !== void 0 && named !== null && named !== "") {
-        const held2 = isDoc && typeof named === "string" && HEX646.test(named) ? this.content.captureFor(t, named) : null;
+        const held2 = isDoc && typeof named === "string" && HEX647.test(named) ? this.content.captureFor(t, named) : null;
         if (!held2) {
           unreachable.push({ ord: i, target: t, why: "the capture it names is not one this record holds for it" });
           continue;
@@ -113614,7 +114108,7 @@ var parse2 = (s) => {
 var machine2 = (who2) => !str14(who2) || isMachineIdentity(str14(who2));
 var second2 = (iso5) => String(iso5).replace(/\.\d+Z$/, "Z");
 var rand11 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
-var HEX647 = /^[0-9a-f]{64}$/;
+var HEX648 = /^[0-9a-f]{64}$/;
 var DATE2 = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2}))?$/;
 function refuse6(code, detail, extra = {}) {
   const row2 = CONSEQUENCES_CHECKS[code];
@@ -113874,7 +114368,7 @@ var Consequences = class {
   /* R9, R3: an evidence or rests-on id resolves to a content row, or a finding (an inquiry), the author may see. */
   #resolvesEvidence(id, who2) {
     if (!str14(id)) return false;
-    if (HEX647.test(id)) {
+    if (HEX648.test(id)) {
       const row2 = this.content.contentRow(id);
       return !!row2 && this.membership.inSight(row2.bundle_id, who2);
     }
