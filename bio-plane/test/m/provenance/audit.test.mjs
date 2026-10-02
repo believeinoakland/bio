@@ -213,15 +213,8 @@ test("R37: undetermined is stated, never counted as sound, present or absent", a
   assert.equal(rep.held_in_parts + rep.captured, 0, "not counted as present");
   assert.match(u.why, /could not be verified/);
   assert.equal(w.prov.homeCensus({}).first_holder, "UNDETERMINED");
-  /* A register that cannot be read is a route that cannot be shown, recorded as such. */
-  const w2 = world();
-  const a = w2.cap("a");
-  w2.promoteInfo("INFO-2026-0002-a", { captures: [a] });
-  w2.promotion.promote({ bundleId: "INFO-2026-0002-a", base: w2.head("INFO-2026-0002-a").bundleSha, snapKey: "u",
-    author: "member:alice", meta: { object_type: "information" }, replay: true,
-    files: [{ path: "bundle.md", text: w2.record.readFile("INFO-2026-0002-a", "bundle.md").text }, { path: a.path, text: a.text },
-            { path: "data/provenance.json", text: "{broken" }] });
-  const m = w2.prov.provenanceRouteAssess({ bundleId: "INFO-2026-0002-a", author: "member:alice", viewer: "member:alice" });
-  assert.equal(m.route.finding, "LOOKED_INDETERMINATE");
-  assert.equal(m.route.register, "unparsable");
+  /* A part's undetermined digest is reported in the sample with its reason, never as missing; the route that cannot be
+     shown is provenance-routes' (its R11; N512). */
+  assert.equal(rep.unbacked, 0, "not counted as absent");
+  assert.equal(rep.sound, true, "sound speaks for the other rows only");
 });
