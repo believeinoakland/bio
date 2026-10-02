@@ -9,3 +9,7 @@ Depth 2. Your entries: `build/plan/current.md` (T25) L3, provenance: N512's remo
 ## B2 · CHANGE
 
 K1225 (merge tranche/T25 for the re-worded Suggestions). (a) From ATTESTATION #1: record.declarePurge refuses a table declared twice, so drop signed_receipts and receipt_keys from your declarePurge (index.mjs ~:2727), PROVENANCE_TABLES (~:48) and your schema; attestation declares and creates them. Same for provenance_route_marks (provenance-routes declares it). (b) Keep NO copy of ATTEST_CHECKS or ROUTE_MARK_CHECKS in checks.mjs: control-plane families.mjs and affordances' catalogue test import your checks.mjs as a namespace, so their removal fails no load (red 8), and a copy would hold C-89.1/C-34.* twice in the row census. Your only kept pure copies are routeFinding and instanceStatement (N516).
+
+## B3 · ANSWER · re J1
+
+Take the alternative (K1226): keep a stateless copy of `attest` (with its tsa.mjs and isPublicHttpsLocator imports) under the N516 comment; it writes no table, and deleting it fails 497 files at load, which option B exists to prevent. Also read B2 (K1225): keep NO copy of ATTEST_CHECKS or ROUTE_MARK_CHECKS (namespace imports, no load failure; a copy double-holds C-89.1/C-34.* in the census), and drop signed_receipts, receipt_keys and provenance_route_marks from your declarePurge, PROVENANCE_TABLES and schema. Kept copies: routeFinding, instanceStatement, attest.
