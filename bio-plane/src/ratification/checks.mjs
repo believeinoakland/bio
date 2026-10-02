@@ -5,7 +5,7 @@
  * Moved here from the check catalogue (`legacy-checks`, K6, K94) with their ids, texts and translations unchanged:
  * `caseEditionClaimed`, `isCaseMemberBytes` (record-grammar keeps its own copy for C-3.1's heading rule, N69; Decided 6),
  * `SUBJECT_POSITIONS`, `CASE_MEMBER_ROLES`, `biasAcknowledgementOf`, `completenessFields`, `checkPublishedExtension`
- * (C-2.8's case-member arm), `SEARCHED_SUBJECT_SOURCES`, `CASE_DOCUMENT_FAMILY` (C-41.1–C-41.16),
+ * (C-2.8's case-member arm), `SEARCHED_SUBJECT_SOURCES`, `CASE_DOCUMENT_FAMILY` (C-41.1–C-41.16, and C-41.17 new for R38),
  * `CASE_CITATION_VERSIONS`, `checkCaseDocument`; the rows C-32.12–C-32.15, C-53.10–C-53.12, C-58.1–C-58.5, C-65.1 and
  * C-92.10–C-92.12; and, copied in T18 (split tables), C-32.1, C-33.10–C-33.12 (the bulk release) and C-102.10. A
  * row's `where` names the region in this module that mints it. The case-document formats and their three predicates
@@ -16,7 +16,7 @@ import { STRENGTH_STATES } from "../strength/index.mjs";
 import { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V2, CASE_DOCUMENT_FORMAT_LEGACY, CASE_DOCUMENT_FORMATS_ACCEPTED,
          caseDocumentStatesMemberBlocks, caseDocumentRequiresDisclosures,
          caseDocumentRequiresV4Disclosures } from "../publication/index.mjs";
-import { whatChangedOf } from "../case-grammar/index.mjs";
+import { whatChangedOf, isNoticeReference } from "../case-grammar/index.mjs";
 
 /* The catalogue's finding shape (`{check, severity, message, repairable?, repairs?, code?}`), so a finding from here
    reads exactly as one from the record's grammars (`record-grammar` R11). */
@@ -498,6 +498,8 @@ export const CASE_DOCUMENT_FAMILY = {
   CITATIONS:    { check: 'C-41.15', what: 'case_citations — each citation edge with the version it rests on, a pinned one naming its capture, required of a bio-case-document/4 (REC-219, D-579(a))' },
   /* DEC-101 (2), K1019: a new edition says what changed in it, read through case-grammar's `whatChangedOf` (its R8). */
   WHAT_CHANGED: { check: 'C-41.16', what: 'the "What changed" statement, required of every edition above 1 (DEC-101 (2))' },
+  /* DEC-111, R38 (K1119): the project reference a case may carry, read by case-grammar's `isNoticeReference` (its R10). */
+  WORKING_ON:   { check: 'C-41.17', what: 'working_on, when present, a notice id (DEC-111; case-grammar R10)' },
 };
 /* REC-219 / D-579(a): the states a case document's citation edge may carry, and which name a capture. */
 export const CASE_CITATION_VERSIONS = ['pinned', 'only_capture', 'undetermined', 'no_capture', 'no_bytes'];
@@ -927,6 +929,15 @@ export function checkCaseDocument(fm, ctx = {}) {
     if (!wc || typeof wc.statement !== 'string' || !wc.statement.trim())
       findings.push(f(C41.WHAT_CHANGED, 'error', 'A new edition of a case says what changed in it, and why, before it is signed. This one does not. Write the statement, then sign. Nothing was signed.',
         ['write the "What changed in this edition, and why" statement on op=publish']));
+  }
+  /* DEC-111, R38 (K1119) — C-41.17: a `working_on` the document carries is a notice id by case-grammar's one rule (its
+     R10), so the published case never shows as its project reference a value no notice can have. Absent, or written
+     null (the string `null` the restricted grammar reads for an absent value, as C-41.2 and C-41.4 read it), names no
+     notice and is not asked: the field is optional in `/5`. */
+  if (fm && typeof fm === 'object' && Object.prototype.hasOwnProperty.call(fm, 'working_on')
+      && fm.working_on !== null && fm.working_on !== 'null' && !isNoticeReference(fm.working_on)) {
+    findings.push(f(C41.WORKING_ON, 'error', `a case document's working_on names the notice this case's project published, and '${String(fm.working_on)}' is not a notice id: the published case shows it as the project reference, so a value no notice can have would point a reader at nothing (DEC-111)`,
+      ['publish through op=publish, which writes the project\'s notice id, or leave working_on out']));
   }
   /* C-21.1 AT CASE ALTITUDE, and it is the arm that moved here WITHOUT its
      wording changing at all, because it was always a comparison between two

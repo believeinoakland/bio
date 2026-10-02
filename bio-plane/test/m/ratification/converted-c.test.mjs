@@ -117,9 +117,10 @@ const CASESIGN_ARMS = [
   ["PENDING", "C-41.14", (d) => { delete d.bias_manifest_pins_proposed; return d; }],
   ["CITATIONS", "C-41.15", (d) => { delete d.case_citations; return d; }],
   ["WHAT_CHANGED", "C-41.16", (d) => { d.case_edition = 2; return d; }],   /* over the body, which states no change */
+  ["WORKING_ON", "C-41.17", (d) => { d.working_on = "PROJ 2026"; return d; }],   /* R38 */
 ];
 
-test("R8 (casesign §7): the case gate draws no finding over a /5 document in op=publish's shape, and each of C-41.1–C-41.16 is what CASE_DOCUMENT_FAMILY declares and fires on its own mutation; the arms cover the family exactly", () => {
+test("R8, R38 (casesign §7): the case gate draws no finding over a /5 document in op=publish's shape, and each of C-41.1–C-41.17 is what CASE_DOCUMENT_FAMILY declares and fires on its own mutation; the arms cover the family exactly", () => {
   const { data: fm, body } = parsed();
   const ctx = { caseId: CASE, edition: 1 };
   assert.equal(fm.format, "bio-case-document/5");
