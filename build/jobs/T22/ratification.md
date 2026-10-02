@@ -1,6 +1,6 @@
 # ratification (T22)
 
-**Status** · session_01CMHTBkj1pAWW9cB4KrLMHK · depth 2 · WORKING · handled B3
+**Status** · session_01CMHTBkj1pAWW9cB4KrLMHK · depth 2 · RUNNING until 2026-10-02T03:41:19Z (whole test/m after merging B5) · handled B3
 
 ## J1 · QUESTION
 
