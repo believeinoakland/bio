@@ -6,7 +6,7 @@ import { createPublicKey, verify } from "node:crypto";
 import { seeded, post, prepare, V, MACHINE, NOW, DAY, WEEK, monday, day } from "./fixture.mjs";
 import { ACTIVITY_LEVELS, ACTIVITY_METHOD, ACTIVITY_METHOD_VERSION, ACTIVITY_WINDOW, ATTESTATION_FORMAT, levelOf }
   from "../../../src/network-notices/index.mjs";
-import { instanceStatement } from "../../../src/provenance/index.mjs";
+import { instanceStatement } from "../../../src/attestation/index.mjs";
 import { canonicalJson } from "../../../src/record-grammar/json.mjs";
 import { createHash } from "node:crypto";
 
@@ -81,7 +81,7 @@ test("R10 activityMethod answers the method as fixed text with its version, with
   assert.equal(JSON.parse(stored).activity.method, ACTIVITY_METHOD_VERSION);
 });
 
-test("R12 an attestation carries exactly its fields, and is signed (R13) with the instance key over provenance's statement", async () => {
+test("R12 an attestation carries exactly its fields, and is signed (R13) with the instance key over attestation's statement", async () => {
   const w = seeded();
   w.weeksOfWork(w.P, 2);
   w.publish(w.P, "CASE-2026-0001-budget");
@@ -97,7 +97,7 @@ test("R12 an attestation carries exactly its fields, and is signed (R13) with th
   assert.deepEqual(json.openings, []);
   const row = w.rows(`SELECT * FROM nn_attestations`)[0];
   assert.equal(row.digest, sha(canonicalJson(json)));
-  const key = w.provenance.instanceKeys().find((k) => k.key_id === row.key_id);
+  const key = w.attestation.instanceKeys().find((k) => k.key_id === row.key_id);
   const pub = createPublicKey({ key: { kty: "OKP", crv: "Ed25519", x: Buffer.from(key.public_key, "base64").toString("base64url") }, format: "jwk" });
   assert.equal(verify(null, Buffer.from(instanceStatement(ATTESTATION_FORMAT, row.digest)), pub, Buffer.from(row.signature, "base64")), true);
 });
@@ -172,8 +172,8 @@ test("R13 a monthly falling due with no key bound is not issued; the miss is sta
   const w = seeded();
   w.weeksOfWork(w.P, 4);
   await post(w);
-  const sign = w.provenance.instanceSign;
-  w.provenance.instanceSign = async () => ({ ok: false, reason: "RECEIPT_NO_KEY" });
+  const sign = w.attestation.instanceSign;
+  w.attestation.instanceSign = async () => ({ ok: false, reason: "RECEIPT_NO_KEY" });
   w.clock.now = at("2026-11-01T00:10:00Z");
   const t = await w.nn.attestTick();
   assert.equal(t.monthly.length, 0);
@@ -183,7 +183,7 @@ test("R13 a monthly falling due with no key bound is not issued; the miss is sta
   assert.deepEqual(n.level, { level: "Some work", as_of: "2026-10-01" });
   assert.equal(n.attestations.length, 1);
   /* the key bound again later: the month stays missed, never issued late */
-  w.provenance.instanceSign = sign;
+  w.attestation.instanceSign = sign;
   w.clock.now += DAY;
   assert.equal((await w.nn.attestTick()).monthly.length, 0);
 });

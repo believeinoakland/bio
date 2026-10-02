@@ -231,24 +231,24 @@ test("R1 a discoverable project `by` sees only at existence is membership.existe
   assert.equal((await prepare(w, { project: w.Q })).ok, true);
 });
 
-test("R1 the instance-key refusal asks provenance.instanceKeyBound and signs nothing: no key's first_used is set by preparing", async () => {
+test("R1 the instance-key refusal asks attestation.instanceKeyBound and signs nothing: no key's first_used is set by preparing", async () => {
   const w = seeded();
   const signs = [];
-  const sign = w.provenance.instanceSign.bind(w.provenance);
-  w.provenance.instanceSign = async (s) => { signs.push(s); return sign(s); };
+  const sign = w.attestation.instanceSign.bind(w.attestation);
+  w.attestation.instanceSign = async (s) => { signs.push(s); return sign(s); };
   assert.equal((await prepare(w)).ok, true);
   rowOk(await prepare(w, {}, "carol"), "NOTICE_NOT_THE_OWNER");
   assert.equal((await prepare(w, { project: w.Q }, "dave")).ok, true);
   assert.deepEqual(signs, [], "nothing signed");
-  assert.deepEqual(w.provenance.instanceKeys(), [], "receipt_keys untouched: no first_used");
+  assert.deepEqual(w.attestation.instanceKeys(), [], "receipt_keys untouched: no first_used");
   /* the answer is instanceKeyBound's, even when signing would work */
-  const bound = w.provenance.instanceKeyBound.bind(w.provenance);
-  w.provenance.instanceKeyBound = async () => false;
+  const bound = w.attestation.instanceKeyBound.bind(w.attestation);
+  w.attestation.instanceKeyBound = async () => false;
   rowOk(await prepare(w), "NOTICE_NO_INSTANCE_KEY");
   /* negative control: bound again, accepted; the key's first use is the post's attestation */
-  w.provenance.instanceKeyBound = bound;
+  w.attestation.instanceKeyBound = bound;
   await post(w);
   assert.equal(signs.length, 1, "the posted attestation, the first real statement");
-  assert.equal(w.provenance.instanceKeys().length, 1);
-  assert.equal(w.provenance.instanceKeys()[0].first_used.slice(0, 10), day(NOW));
+  assert.equal(w.attestation.instanceKeys().length, 1);
+  assert.equal(w.attestation.instanceKeys()[0].first_used.slice(0, 10), day(NOW));
 });
