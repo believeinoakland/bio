@@ -18,13 +18,13 @@
   "inputs": [
     {
       "path": "../bio-plane/src/observation-log/checks.mjs",
-      "bytes": 19187,
-      "sha256": "d99d071d9c599233ce1b36b17774cddae196dd21661d6a2051e11798b6d543d4"
+      "bytes": 20616,
+      "sha256": "6579745d1a44390bd1dab6c6b514f5fd4ce7e1f7f5c887ab22ceb32ed0102445"
     },
     {
       "path": "../bio-plane/src/observation-log/vocabulary.mjs",
-      "bytes": 110736,
-      "sha256": "39685d60e1d014da9c920d364113feda48466e021b7618bdab7e75c303f37a9b"
+      "bytes": 110993,
+      "sha256": "5a15ac92aa033080f25753fff08f7f37c1a66c82eee3698e0dae0a187db5dce2"
     },
     {
       "path": "../bio-plane/src/run-rules/checks.mjs",

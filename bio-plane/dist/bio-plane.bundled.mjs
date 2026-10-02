@@ -30202,6 +30202,21 @@ var LEAD_CHECKS = {
     check: "C-54.10",
     where: "src/observation-log/index.mjs leadShare > is-lead-share",
     translation: "Only the member who wrote a lead can share it. A lead is what one person was told; passing someone else's on is theirs to decide."
+  },
+  /* DEC-88 (K1025, R17): a look is the looker's account of where they looked and what they found, and a look with no
+     words is a state with nobody's account behind it. Asked after C-54.7 and before C-54.4, which stays the over-cap
+     refusal of the same words. */
+  LEAD_LOOK_NO_DETAIL: {
+    check: "C-54.11",
+    where: "src/observation-log/index.mjs leadLook > is-lead-look",
+    translation: "Say in your own words where you looked and what you found. A look is recorded with the account of the member who made it, and a look with no account is a result nobody can check or follow up."
+  },
+  /* DEC-88 (K1025, R16): a share discloses one member's lead to a project, and the disclosure carries its reason, in
+     the sharer's words, recorded with the share. Asked after C-54.9, before the repeat check and the insert. */
+  LEAD_SHARE_NO_REASON: {
+    check: "C-54.12",
+    where: "src/observation-log/index.mjs leadShare > is-lead-share",
+    translation: "Say why you are sharing this lead with that project, in no more than 2,000 characters. Sharing puts what you were told in front of the project's participants, and the reason is kept with the share."
   }
 };
 
@@ -47497,6 +47512,14 @@ var ENTITY_CHECKS = Object.freeze({
     check: "C-91.7",
     where: "src/entities/index.mjs reportResolutionDefect > is-resolution-held",
     translation: "The record holds no resolution of that reference to that subject, so there is nothing to report as wrong. Read the capture's resolutions and name one of them. Nothing was written."
+  }),
+  /* R1 (DEC-88, K1025): a subject registered with no note, the declarer's own words on who or what it is and why it
+     belongs in the registry (absent, not a string, or blank). Asked after `ENTITY_NO_LABEL`, before anything is
+     written. The next of C-91; awaiting the catalogue's stamp (T23). */
+  ENTITY_NO_NOTE: Object.freeze({
+    check: "C-91.8",
+    where: "src/entities/index.mjs createEntity > is-entity-noted",
+    translation: "A subject is registered with a note in your own words saying who or what it is and why it belongs in the registry, and this one has none. Nothing was written."
   })
 });
 
@@ -47753,8 +47776,9 @@ var Entities = class _Entities {
    * and a citation like a pattern statement and NO grade — there is no field to carry one (R26).
    * ===================================================================== */
   /** R1: a registry entry, its canonical label seeded as an alias and every other distinct folded alias attached
-   *  in the SAME transaction, so an entity is never nameless-but-for-its-id even for an instant. R4: `declaredBy` is
-   *  the control plane's stamp. */
+   *  in the SAME transaction, so an entity is never nameless-but-for-its-id even for an instant. It carries the
+   *  declarer's note (DEC-88): who or what it is and why it is registered. R4: `declaredBy` is the control plane's
+   *  stamp. */
   createEntity({ kind, label, note = null, aliases = [], declaredBy = null } = {}) {
     const k = typeof kind === "string" ? kind.trim().toLowerCase() : "";
     if (!k) return { ok: false, reason: "NO_KIND", detail: "an entity needs a kind: one of " + ENTITY_KINDS.join(", ") };
@@ -47777,6 +47801,17 @@ var Entities = class _Entities {
         detail: "an entity needs a canonical label, such as 'City Clerk'"
       };
     }
+    if (typeof note !== "string" || !note.trim()) {
+      const row2 = ENTITY_CHECKS.ENTITY_NO_NOTE;
+      return {
+        ok: false,
+        reason: "ENTITY_NO_NOTE",
+        code: "ENTITY_NO_NOTE",
+        check: row2.check,
+        translation: row2.translation,
+        detail: "an entity needs a note in the declarer's own words saying who or what it is and why it is registered"
+      };
+    }
     const extra = Array.isArray(aliases) ? aliases : [];
     const at25 = this.#now();
     const by = declaredBy == null ? null : String(declaredBy);
@@ -47787,7 +47822,7 @@ var Entities = class _Entities {
         id,
         k,
         lab,
-        note == null ? null : String(note).slice(0, 2e3),
+        note.slice(0, 2e3),
         by,
         at25
       );
@@ -51603,11 +51638,16 @@ CREATE INDEX IF NOT EXISTS leads_author ON leads(author, at);
 -- bundle_id IS THE PROJECT, named so it rides op=purge TABLES list and clears in
 -- BOTH arms (D-113) -- a share outliving its project would admit whoever holds that
 -- id next.
+-- reason (DEC-88, K1025, R16): the sharer's words on why this lead is disclosed
+-- to that project, as written. Every share since T22 carries one (C-54.12 refuses
+-- a share without); a share recorded before it reads NULL, and a store made
+-- before it gains the column at migration (migrateObservationLog).
 CREATE TABLE IF NOT EXISTS lead_shares (
   lead_id    TEXT NOT NULL,
   bundle_id  TEXT NOT NULL,     -- the PROJECT the lead is shared to
   sharer     TEXT NOT NULL,     -- the lead author, server-stamped (C-54.10)
   at         TEXT NOT NULL,
+  reason     TEXT,              -- the sharer's reason (C-54.12), NULL only on a share recorded before DEC-88
   PRIMARY KEY (lead_id, bundle_id)
 );
 CREATE INDEX IF NOT EXISTS lead_shares_bundle ON lead_shares(bundle_id);
@@ -51620,6 +51660,8 @@ var OBSERVATION_LOG_TABLES = Object.freeze([
 function migrateObservationLog(sql) {
   const bare2 = OBSERVATION_LOG_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const stmt of bare2.split(";")) if (stmt.trim()) sql.exec(stmt);
+  const cols = [...sql.exec(`PRAGMA table_info(lead_shares)`)].map((c) => c.name);
+  if (!cols.includes("reason")) sql.exec(`ALTER TABLE lead_shares ADD COLUMN reason TEXT`);
 }
 
 // src/observation-log/vocabulary.mjs
@@ -52229,6 +52271,7 @@ var LEAD_READ_LIMIT_DEFAULT = 200;
 var LEAD_READ_LIMIT_MAX = 2e3;
 var LEAD_LIST_LIMIT_DEFAULT = 200;
 var LEAD_LIST_LIMIT_MAX = 2e3;
+var LEAD_SHARE_REASON_MAX = 2e3;
 var LEAD_LIST_EMPTY = "there is no lead here you may read. A lead is readable by its author and by the joined participants of a project its author shared it to; whether any other lead exists is not said to anyone outside it";
 var LEAD_LIST_NOTE = "the leads THIS VIEWER MAY READ, each once, newest first, with the latest state recorded against it (NEVER_LOOKED when nobody has followed it). Two leads with the same words are two leads and both are listed. A lead is never evidence";
 var RESOLVED_AUTHORITY_KINDS = Object.freeze(["sweep", "run"]);
@@ -53047,8 +53090,9 @@ var ObservationLog = class _ObservationLog {
       says: `${who2}'s lead is recorded. It is somewhere to look and never evidence: no leg can rest on it. Following it is recorded with op=leadlook, and a look that finds nothing is itself a finding with this lead behind it`
     };
   }
-  /** R16 — op=leadshare: THE AUTHOR SHARES ONE LEAD TO ONE PROJECT, authored, dated, never rewritten. */
-  leadShare({ lead = null, project = null, sharer = null, viewer = null, identity = null } = {}) {
+  /** R16 — op=leadshare: THE AUTHOR SHARES ONE LEAD TO ONE PROJECT, authored, dated, never rewritten, and with the
+   *  sharer's reason (DEC-88), kept as written. */
+  leadShare({ lead = null, project = null, reason, sharer = null, viewer = null, identity = null } = {}) {
     const refusal21 = _ObservationLog.leadRefusal;
     const who2 = typeof sharer === "string" ? sharer.trim() : "";
     const pid = typeof project === "string" ? project.trim() : "";
@@ -53074,22 +53118,32 @@ var ObservationLog = class _ObservationLog {
         pid ? `you are not a joined participant of a project addressed by ${pid.slice(0, 60)}` : `pass project=<PROJ-\u2026>: the project to share this lead to`,
         { lead: L2.lead_id, project: pid || null }
       );
-    const prior = this.#one(`SELECT sharer, at FROM lead_shares WHERE lead_id = ? AND bundle_id = ?`, L2.lead_id, pid);
+    const why = typeof reason === "string" ? reason : null;
+    const chars = why == null ? 0 : [...why].length;
+    if (why == null || !why.trim() || chars > LEAD_SHARE_REASON_MAX)
+      return refusal21(
+        "LEAD_SHARE_NO_REASON",
+        why == null ? reason === void 0 || reason === null ? `pass reason=<your words>: why this lead is disclosed to ${pid.slice(0, 60)}` : `the reason must be your words, as text; a ${typeof reason} was sent` : !why.trim() ? `the reason is blank. Say why this lead is disclosed to ${pid.slice(0, 60)}` : `the reason is ${chars} characters, over the ${LEAD_SHARE_REASON_MAX} a share's reason is kept to. Refused rather than cut`,
+        { lead: L2.lead_id, project: pid, limit: LEAD_SHARE_REASON_MAX }
+      );
+    const prior = this.#one(`SELECT sharer, at, reason FROM lead_shares WHERE lead_id = ? AND bundle_id = ?`, L2.lead_id, pid);
     if (!prior)
       this.sql.exec(
-        `INSERT INTO lead_shares (lead_id, bundle_id, sharer, at) VALUES (?, ?, ?, ?)`,
+        `INSERT INTO lead_shares (lead_id, bundle_id, sharer, at, reason) VALUES (?, ?, ?, ?, ?)`,
         L2.lead_id,
         pid,
         who2,
-        stampInstant("second", this.now())
+        stampInstant("second", this.now()),
+        why
       );
-    const r = prior || this.#one(`SELECT sharer, at FROM lead_shares WHERE lead_id = ? AND bundle_id = ?`, L2.lead_id, pid);
+    const r = prior || this.#one(`SELECT sharer, at, reason FROM lead_shares WHERE lead_id = ? AND bundle_id = ?`, L2.lead_id, pid);
     return {
       ok: true,
       lead_id: L2.lead_id,
       project: pid,
       shared_by: r.sharer,
       at: r.at,
+      reason: r.reason ?? null,
       already: !!prior,
       evidence: false,
       says: `${L2.lead_id} is shared to ${pid}: its joined participants can now read it and record looks against it. It is still never evidence`
@@ -53157,7 +53211,13 @@ var ObservationLog = class _ObservationLog {
         `no ${rk} ${rr.slice(0, 64)} is held in this record where you can read it. Capture what the look found first, then record the look against it`,
         { lead: L2.lead_id }
       );
-    if (note && new TextEncoder().encode(note).length > CAPTURE_TEXT_UNIT_CAP)
+    if (note == null)
+      return refusal21(
+        "LEAD_LOOK_NO_DETAIL",
+        detail === void 0 || detail === null ? `pass detail=<your words>: where you looked and what you found` : typeof detail !== "string" ? `the detail must be your words, as text; a ${typeof detail} was sent` : `the detail is blank. Say where you looked and what you found`,
+        { lead: L2.lead_id }
+      );
+    if (new TextEncoder().encode(note).length > CAPTURE_TEXT_UNIT_CAP)
       return refusal21(
         "LEAD_TOO_LONG",
         `the look's detail is over the ${CAPTURE_TEXT_UNIT_CAP} B one passage is stored to`,
@@ -53232,7 +53292,7 @@ var ObservationLog = class _ObservationLog {
     });
     const me = this.membership.positionalMember(viewer, identity);
     const sharesRaw = this.#rows(
-      `SELECT s.bundle_id AS project, s.sharer AS shared_by, s.at FROM lead_shares s
+      `SELECT s.bundle_id AS project, s.sharer AS shared_by, s.at, s.reason FROM lead_shares s
         WHERE s.lead_id = ? AND (? = 1 OR EXISTS (SELECT 1 FROM project_participants pp
           WHERE pp.project_id = s.bundle_id AND pp.member_id = ? AND pp.state IN ('joined', 'leaving')))
         ORDER BY s.at, s.bundle_id LIMIT ?`,
@@ -53364,6 +53424,7 @@ function observationLogOps(o, url, body) {
     leadshare: () => o.leadShare({
       lead: body && body.lead || q7("lead"),
       project: body && body.project || q7("project"),
+      reason: body && body.reason !== void 0 && body.reason !== null ? body.reason : q7("reason"),
       sharer: q7("sharer"),
       viewer: q7("viewer"),
       identity: q7("identity")
@@ -57532,8 +57593,10 @@ CREATE INDEX IF NOT EXISTS progression_stages_key ON progression_stages(progress
 -- prior version stands and reads back through op=progression with version=N. A definition
 -- declared before D-128 has no rows here -- the store reads it as version 1 with its basis NOT
 -- RECORDED, and its first revision writes that version here first, verbatim from the tables above.
--- basis_statement and basis_citation are NULL when the declaring member stated none, which only a
--- FIRST version may do; a revision is refused without both.
+-- basis_statement is NULL only in a version written before versions were kept, or a first version
+-- declared before a first declaration had to state its basis (DEC-88, T22): a first declaration is
+-- refused without a statement, its citation optional (NULL when none); a revision is refused without
+-- both.
 CREATE TABLE IF NOT EXISTS progression_def_versions (
   progression_key TEXT NOT NULL,
   version         INTEGER NOT NULL,
@@ -57612,7 +57675,7 @@ CREATE INDEX IF NOT EXISTS progression_instances_capture ON progression_instance
 -- bare assertion (an equality a caller can hand us is one a caller can invent): the document
 -- must ACTUALLY resolve to the threading entity (FW-7) -- refused NOT_CONCERNED otherwise, the
 -- same gate op=thread uses -- and must name a REAL stage of the definition (BAD_STAGE
--- otherwise). Whether the discharge APPLIES is derived ON READ in #assembleInstance: only a
+-- otherwise). Whether the discharge APPLIES is derived ON READ in #assemble (./index.mjs): only a
 -- REQUIRED stage that is actually MISSING is discharged (rendered a distinct "discharged"
 -- state carrying this reason/citation, never a gap and never silently absent); an exception
 -- naming a stage that is not missing discharges nothing (the stage is present, so there is no
@@ -58197,8 +58260,9 @@ var Progressions = class _Progressions {
       );
   }
   /** R1–R4 (`op=progressiondefine`): declare a flow as data: ordered stages with what each presupposes, how many
-   *  documents it may hold, how soon it must follow and whether it is required. A definition is APPEND-ONLY (D-128): a
-   *  declaration that changes anything is a revision, version N+1 with its basis; one identical to the current version
+   *  documents it may hold, how soon it must follow and whether it is required. A first declaration is version 1 with
+   *  its basis statement, its citation optional (R2, DEC-88). A definition is APPEND-ONLY (D-128): a declaration that
+   *  changes anything is a revision, version N+1 with its basis and citation; one identical to the current version
    *  writes nothing. The declarer is the control plane's stamp (R26). */
   defineProgression({ progressionKey, label, note = null, stages, declaredBy = null, basis = null, citation = null } = {}) {
     if (!str2(progressionKey))
@@ -58268,7 +58332,13 @@ var Progressions = class _Progressions {
     const stmt = str2(basis) ? str2(basis).slice(0, BASIS_MAX) : null;
     const cite = str2(citation) ? str2(citation).slice(0, CITATION_MAX) : null;
     const cur = this.#current(key);
-    if (cur) {
+    if (!cur) {
+      if (!stmt) return refusal8(
+        "NO_BASIS",
+        `'${key}' is declared for the first time; a first declaration states its basis -- why the group expects this flow -- and a citation may name where that is published or held (framework 8.2). Nothing was written.`,
+        { progression_key: key, version: null }
+      );
+    } else {
       const same = cur.label === lbl && (cur.note ?? null) === nt && cur.stages.length === norm.length && norm.every((s, i) => {
         const c = cur.stages[i];
         return c.stage_key === s.stage_key && (c.label ?? null) === s.label && (c.after_stage ?? null) === s.after_stage && c.cardinality === s.cardinality && (c.within_interval ?? null) === s.within_interval && c.required === s.required;
@@ -81903,6 +81973,14 @@ var BIAS_CHECKS = {
   /* C-26.20 (BIAS_ADOPTION_NOT_AN_ADMINISTRATOR) is RETIRED and its number is not reused (N327, DEC-83): an
      instance-scope adoption by a non-administrator is membership's one condition, answered `NOT_AN_ADMIN` through
      `membership.notAnAdmin` (its R84, C-96.1), this row's next step riding as its `remedy` (R11). */
+  /* DEC-88 (K1025): adopting a lens is an act that changes how the group reads evidence, and the record keeps the
+     adopter's own words on why. Asked last, after authorship, the set's state and the scope's authority, so a caller
+     who may not adopt learns that first; and on a re-adoption too, which replaces the reason with the row (R11). */
+  BIAS_ADOPTION_NO_REASON: {
+    check: "C-26.21",
+    where: "src/bias/index.mjs biasAdopt, reached from op=biasadopt",
+    translation: "Nothing was adopted, because no reason was given. Adopting a lens changes how this group reads evidence, so the record keeps, beside your name, why you are adopting it. Say why in a sentence or a short paragraph (at most 2,000 characters) and adopt it again."
+  },
   BIAS_ILLEGAL_TRANSITION: PROMOTION_ROW_CHECKS.BIAS_ILLEGAL_TRANSITION
 };
 
@@ -81914,7 +81992,10 @@ var BIAS_TABLES = Object.freeze([
   "bias_debt_sweeps",
   "bias_debt_settlements"
 ]);
-var BIAS_ADDITIVE_COLUMNS = Object.freeze([Object.freeze(["bias_debts", "settled_kind", "TEXT"])]);
+var BIAS_ADDITIVE_COLUMNS = Object.freeze([
+  Object.freeze(["bias_debts", "settled_kind", "TEXT"]),
+  Object.freeze(["bias_adoptions", "reason", "TEXT"])
+]);
 var BIAS_SCHEMA = `-- PL-12 / D-84: THE BIAS SET'S STATEMENTS, a PROJECTION of the bundle's own
 -- statements[] frontmatter and never a second authority. Exactly the sense
 -- inquiry_basis is a projection of basis[] (D-21: one place to state a fact),
@@ -81976,6 +82057,10 @@ CREATE INDEX IF NOT EXISTS bias_statements_id ON bias_statements(bundle_id, stat
 -- because there is one instance; a project row carries the project's bundle id,
 -- which is why the per-bundle purge arm clears by scope_id as well as by
 -- bundle_id (the project_participants precedent).
+--
+-- 'reason' is DEC-88's: the adopter's own words on why this lens is adopted,
+-- required at the act (C-26.21) and replaced with the row on a re-adoption.
+-- NULL only on an adoption made before it was required (migrated forward, R45).
 CREATE TABLE IF NOT EXISTS bias_adoptions (
   scope_type    TEXT NOT NULL,   -- 'instance' | 'project'
   scope_id      TEXT NOT NULL,   -- empty for instance, the project bundle id otherwise
@@ -81986,6 +82071,7 @@ CREATE TABLE IF NOT EXISTS bias_adoptions (
   source_url    TEXT,            -- DEC-54 (d), for an inhaled policy
   retrieved     TEXT,
   source_sha256 TEXT,
+  reason        TEXT,            -- DEC-88: the adopter's reason, required at the act (C-26.21)
   PRIMARY KEY (scope_type, scope_id, bundle_id)
 );
 CREATE INDEX IF NOT EXISTS bias_adoptions_scope ON bias_adoptions(scope_type, scope_id);
@@ -82067,6 +82153,7 @@ var BIAS_DEBT_DELAY_MS = 1e3;
 var BIAS_DEBT_BATCH = 50;
 var BIAS_DEBT_OWNERS_MAX = 50;
 var BIAS_DEBT_REASON_MAX = 4e3;
+var BIAS_ADOPTION_REASON_MAX = 2e3;
 var BIAS_DEBT_SETTLEMENTS_MAX = 50;
 var BIAS_DEBT_UNCLEARED_DEFAULT = 200;
 var BIAS_DEBT_UNCLEARED_MAX = 1e3;
@@ -82305,6 +82392,7 @@ var Bias = class _Bias {
     bundleId = null,
     scope = "instance",
     scopeId = "",
+    reason = null,
     author = null,
     at: at25 = null,
     identity = null,
@@ -82344,13 +82432,25 @@ var Bias = class _Bias {
       if (!member || !this.#membership.isAdministrator(member))
         return notAnAdmin(member, INSTANCE_ADOPTION_ACT, { remedy: INSTANCE_ADOPTION_REMEDY, scope: "instance" });
     }
+    const why = typeof reason === "string" ? reason.trim() : "";
+    if (!why)
+      return this.#refuse(
+        "BIAS_ADOPTION_NO_REASON",
+        "op=biasadopt carries the adopter's reason for adopting this lens: pass reason=<why>. Nothing was adopted."
+      );
+    if (why.length > BIAS_ADOPTION_REASON_MAX)
+      return this.#refuse(
+        "BIAS_ADOPTION_NO_REASON",
+        `the reason is ${why.length} characters and an adoption keeps at most ${BIAS_ADOPTION_REASON_MAX}. Nothing was adopted.`,
+        { limit: BIAS_ADOPTION_REASON_MAX, length: why.length }
+      );
     const md = this.#record.readFile(String(bundleId), "bundle.md");
     const fm = md && typeof md.text === "string" ? parseFrontmatter(md.text).data || {} : {};
     const now = at25 ? String(at25) : stampInstant("second");
     this.#sql.exec(
       `INSERT OR REPLACE INTO bias_adoptions
-         (scope_type, scope_id, bundle_id, bundle_sha, author, at, source_url, retrieved, source_sha256)
-       VALUES (?,?,?,?,?,?,?,?,?)`,
+         (scope_type, scope_id, bundle_id, bundle_sha, author, at, source_url, retrieved, source_sha256, reason)
+       VALUES (?,?,?,?,?,?,?,?,?,?)`,
       st,
       sid,
       String(bundleId),
@@ -82359,7 +82459,8 @@ var Bias = class _Bias {
       now,
       str7(fm.policy_source),
       str7(fm.policy_retrieved),
-      str7(fm.policy_sha256) ? str7(fm.policy_sha256).toLowerCase() : null
+      str7(fm.policy_sha256) ? str7(fm.policy_sha256).toLowerCase() : null,
+      why
     );
     this.#notify();
     return {
@@ -82370,6 +82471,7 @@ var Bias = class _Bias {
       scope_id: sid,
       author: who2,
       at: now,
+      reason: why,
       pinned: {
         bundle_sha: h.bundleSha,
         source_url: str7(fm.policy_source),
@@ -83314,6 +83416,7 @@ function biasOps(b, url, body) {
         bundleId: q7("bundleId"),
         scope: q7("scope"),
         scopeId: q7("scopeId"),
+        reason: body && body.reason != null ? body.reason : q7("reason"),
         author: q7("author"),
         identity: q7("identity"),
         viewer: q7("viewer")
