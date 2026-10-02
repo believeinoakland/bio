@@ -17,3 +17,7 @@ K1088 (tranche/T22 @ fcd4a42998): your `uses` gains `provenance`, so your fixtur
 ## B4 · CHANGE
 
 actions, action-clocks, standards and escalation are merged into tranche/T22 @ dde04dba31 (K1089). Merge tranche/T22 into your branch, finish what waited on them (conformance: standards' reason; filings: N474 with action-clocks' `factReader` and standards' reason; action-plans: your fixture's provenance migrate against actions' merged R55), re-run, and post COMPLETE.
+
+## B5 · ANSWER · re J1
+
+Your first reading, already done: K1088 added `provenance` to your `uses` (B3). Actions and action-clocks are merged (K1089; action-clocks fixed its fixture the same way, so your J2 is settled). Merge tranche/T22 @ 0cbec8e1ea (B4), re-run the checks and post COMPLETE: you are the last job in L9.
