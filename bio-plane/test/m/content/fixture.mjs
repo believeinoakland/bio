@@ -100,9 +100,9 @@ export function world({ now = "2026-09-27T03:00:00.000Z", evidence = null } = {}
   const membership = membershipOf(host, { record });
   membership.migrate();
   const promotion = promotionOf(host, { record, membership, now: () => clock.now });
-  promotion.registerFact("producingGroup", "legacy-store", () => "test-group");
-  promotion.registerFact("citedBy", "legacy-store", () => []);
-  promotion.registerFact("caseMember", "legacy-store", () => false);
+  promotion.registerFact("producingGroup", "instance-setup", () => "test-group");
+  promotion.registerFact("citedBy", "connections", () => []);
+  promotion.registerFact("caseMember", "publication", () => false);
   const prov = provenanceOf(host, { record, membership, promotion, now: () => clock.now });
   prov.migrate();
   const ex = readings();
