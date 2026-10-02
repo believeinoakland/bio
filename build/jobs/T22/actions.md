@@ -1,6 +1,6 @@
 # actions (T22)
 
-**Status** · session_017xH4dbRvV6QifghDnUGAVp · depth 2 · WAITING ON BOB (J1) · handled B2
+**Status** · session_017xH4dbRvV6QifghDnUGAVp · depth 2 · WORKING · handled B2
 
 ## J1 · QUESTION
 
