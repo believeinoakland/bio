@@ -25,7 +25,7 @@ Terms.
 - The **project reference** is the notice id, carried by the notice and by every later case of the project (R19).
 
 **prepareNotice({project, wording, body?, matter?, since, collaborate, handoff?, final?, viewer, by}) → `{ok, revision, statement, digest, warning, caution, expires}`** (`op=noticeprepare`; member session; writes nothing)
-- **R1** Refusals, in order. Each writes nothing and carries a catalogue row (DEC-49) *(not yet met: T23)*:
+- **R1** Refusals, in order. Each writes nothing and carries a catalogue row (DEC-49):
   - no `project` is the required-argument refusal;
   - a project that is absent, or invisible to `by`, is `membership`'s `noSuchProject`, the same answer either way;
   - a machine or AI credential, or an operator token, is `MACHINE_CANNOT_POST_NOTICE`;
@@ -38,7 +38,10 @@ Terms.
   - `since` earlier than the project's creation (the UTC date of the first entry in its history) is `NOTICE_SINCE_BEFORE_PROJECT`, naming that date;
   - `since` later than today (UTC) is `NOTICE_SINCE_IN_FUTURE`;
   - a first revision while the project already has an open notice is `NOTICE_ALREADY_OPEN`, naming that notice. A change is a new revision of it (R6).
-- **R2** Otherwise it answers the revision that would be published, and changes nothing *(not yet met: T23)*:
+  - a `notice` named that is not the project's latest unstopped notice, or a stop that names none, is `NOTICE_NOT_OPEN` (C-127.14);
+  - `since` earlier than the notice's current `since` is `NOTICE_SINCE_EARLIER` (C-127.15);
+  - a revision, other than a stop, whose `wording`, `body`, `matter`, `since` and `collaborate` equal the current ones is `NOTICE_UNCHANGED` (C-127.16).
+- **R2** Otherwise it answers the revision that would be published, and changes nothing:
   - `revision` is canonical JSON (`record-grammar`'s) with exactly R3's fields;
   - `digest` is its SHA-256;
   - `statement` is `signatures.noticeStatement(noticeId, revision number, digest)`;
@@ -47,7 +50,7 @@ Terms.
   - `expires` is 60 minutes later.
 
   For the same inputs on the same UTC day, the answer is identical byte for byte.
-- **R3** A revision carries these fields and nothing else *(not yet met: T23)*:
+- **R3** A revision carries these fields and nothing else:
   - `format` (`civicos-working-on/1`), `group` (the slug), and `notice` (the notice id, minted at the first revision);
   - `revision` (1, 2, …) and `previous` (the prior revision's digest, or null);
   - `wording`, `body` and `matter` as the owner gave them, with absent ones omitted. They are never filled in from the project's contents;
@@ -59,25 +62,25 @@ Terms.
   No member's name, handle or id appears in a revision. The level, the cases, the seals, `closed` and `lapsed` are the copy's facts and appear only in attestations (R12).
 
 **postNotice({digest, signature, acknowledged, by}) → `{ok, notice, revision, published_at, attestation}`** (`op=noticepost`; member session; mutating)
-- **R4** Refusals, in order. Each writes nothing *(not yet met: T23)*:
+- **R4** Refusals, in order. Each writes nothing:
   - R1's caller refusals, checked again at this instant;
   - `acknowledged` other than exactly `true` is `NOTICE_WARNING_NOT_ACKNOWLEDGED`;
   - no prepared answer from `by` with this `digest`, or one past `expires`, is `NOTICE_STALE` (prepare again);
   - a signature that `signatures.verifySshsig` rejects is `NOTICE_SIGNATURE_REFUSED`, with the verifier's reason. The check is in namespace `NS_NOTICE`, over exactly `statement`, against `credentials.attestingKeys()` (its R11) restricted to the keys registered to `by`.
-- **R5** Otherwise the revision is stored with its armored signature and the instant it was first published. In the same transaction, an attestation (R12) is issued over it. Both are served by R20 from that instant on *(not yet met: T23)*.
-- **R6** A change to an open notice is a new revision through R1–R5. A change is a new wording, body or matter, a change to `collaborate`, or a later `since` within R1's bounds. The new revision names the prior one in `previous`, and the prior one stays served. A revision never changes `group` or `notice` *(not yet met: T23)*.
+- **R5** Otherwise the revision is stored with its armored signature and the instant it was first published. In the same transaction, an attestation (R12) is issued over it. Both are served by R20 from that instant on.
+- **R6** A change to an open notice is a new revision through R1–R5. A change is a new wording, body or matter, a change to `collaborate`, or a later `since` within R1's bounds. The new revision names the prior one in `previous`, and the prior one stays served. A revision never changes `group` or `notice`.
 
 **The activity level** (§5B "The activity level")
-- **R7** The level is one of five words, decided by the number of counted weeks in the activity window: `Very active` (10–13), `Active` (7–9), `Some work` (4–6), `Quiet` (1–3) and `Dormant` (0). The cut-offs are this module's constants *(not yet met: T23)*.
-- **R8** A **member act** is a write to one of the project's bundles (`record-core.listBundles({project})`, its R35) whose history entry has a member author. That is an identity outside `record-grammar`'s non-member set, with a writer that is neither `mechanical` nor an AI run *(not yet met: T23)*.
+- **R7** The level is one of five words, decided by the number of counted weeks in the activity window: `Very active` (10–13), `Active` (7–9), `Some work` (4–6), `Quiet` (1–3) and `Dormant` (0). The cut-offs are this module's constants.
+- **R8** A **member act** is a write to one of the project's bundles (`record-core.listBundles({project})`, its R35) whose history entry has a member author. That is an identity outside `record-grammar`'s non-member set, with a writer that is neither `mechanical` nor an AI run.
   - A member's adoption of a machine draft counts. The draft does not.
   - How many acts a week holds never changes the level. Only whether it has one does.
-- **R9** `activity` is `{level, weeks_counted, window: 13, as_of, method}`. `as_of` is the date it was computed, and `method` is the version of R10's method *(not yet met: T23)*.
-- **R10** `activityMethod()` answers, with no credential, the method as fixed text with its version: the window, the cut-offs, R8's definition and what is never counted. A change to the method is a new version. An earlier attestation keeps naming the version it was computed under *(not yet met: T23)*.
+- **R9** `activity` is `{level, weeks_counted, window: 13, as_of, method}`. `as_of` is the date it was computed, and `method` is the version of R10's method.
+- **R10** `activityMethod()` answers, with no credential, the method as fixed text with its version: the window, the cut-offs, R8's definition and what is never counted. A change to the method is a new version. An earlier attestation keeps naming the version it was computed under.
 
 **Stopping, closing and lapse** (§5B "Ending")
-- **R11** An owner stops a notice with a final revision through R1–R5, with `final: stopped`. It carries `status: stopped` and the optional `handoff` (one line, at most 280 characters, which may name another group or an open lead). A stopped notice takes no further revision *(not yet met: T23)*.
-- **R12** An **attestation** carries these fields and nothing else *(not yet met: T23)*:
+- **R11** An owner stops a notice with a final revision through R1–R5, with `final: stopped`. It carries `status: stopped` and the optional `handoff` (one line, at most 280 characters, which may name another group or an open lead). A stopped notice takes no further revision.
+- **R12** An **attestation** carries these fields and nothing else:
   - `format` (`civicos-working-on-attestation/1`), `group`, `notice`, `as_of` and `kind`;
   - `revision`: the digest of the latest revision;
   - `status`: `open`, `stopped`, `closed` or `lapsed`;
@@ -94,44 +97,44 @@ Terms.
   - `lapsed`, issued when a notice has been `Dormant` at two consecutive `monthly` attestations with no revision between them. The lapse also goes into the group's record.
 
   A stopped, closed or lapsed notice takes no further `monthly` attestation. It stays served and is never deleted.
-- **R13** An attestation is signed with the copy's instance key (`provenance` R56) over the statement `provenance.instanceStatement("civicos-working-on-attestation/1", sha256(attestation))`. When no key is bound at the moment a `monthly` attestation falls due, the attestation is not issued. The miss is stated in R22 and becomes a condition for the project's owners (`queue-producers` R27). The notice then shows its last attested level with that level's date *(not yet met: T23)*.
+- **R13** An attestation is signed with the copy's instance key (`provenance` R56) over the statement `provenance.instanceStatement("civicos-working-on-attestation/1", sha256(attestation))`. When no key is bound at the moment a `monthly` attestation falls due, the attestation is not issued. The miss is stated in R22 and becomes a condition for the project's owners (`queue-producers` R27). The notice then shows its last attested level with that level's date.
 
 **Seals: proof of activity** (§5B "Proof of activity")
-- **R14** After each week ends, this module seals that week's member acts (R8) for every project that is not `closed`, whether or not the project has a notice *(not yet met: T23)*:
+- **R14** After each week ends, this module seals that week's member acts (R8) for every project that is not `closed`, whether or not the project has a notice:
   - each act is a leaf made of the bundle id, the bundle digest after the act, the act's operation and its instant, never its author, with its own random 256-bit salt;
   - the project's week **seal** is the SHA-256 Merkle root over those leaves, padded to a fixed size with salted dummy leaves, so the root reveals neither the acts nor how many there were;
   - a week with no member act has no seal.
-- **R15** One RFC 3161 timestamp is requested per instance per week (`signatures.timestampRequest`, through `host-governor`, trying `TSA_ENDPOINTS` in order). It is requested over the root of all of that week's project seals, and its token is kept. When every authority fails, the week's seals are kept and marked `untimestamped`, and their weeks still count *(not yet met: T23)*.
-- **R16** Salts and leaves are never served, exported or put in any answer until they are opened (R17). A seal reveals nothing, even to someone who holds candidate documents to test against it *(not yet met: T23)*.
-- **R17** `openSeals({case, edition})` is called by `ratification`'s case ceremony once an edition is committed (`ratification` R37), with no choice offered (K1031 (3)) *(not yet met: T23)*.
+- **R15** One RFC 3161 timestamp is requested per instance per week (`signatures.timestampRequest`, through `host-governor`, trying `TSA_ENDPOINTS` in order). It is requested over the root of all of that week's project seals, and its token is kept. When every authority fails, the week's seals are kept and marked `untimestamped`, and their weeks still count.
+- **R16** Salts and leaves are never served, exported or put in any answer until they are opened (R17). A seal reveals nothing, even to someone who holds candidate documents to test against it.
+- **R17** `openSeals({case, edition})` is called by `ratification`'s case ceremony once an edition is committed (`ratification` R37), with no choice offered (K1031 (3)).
   - For each sealed week of the case's project, it publishes the leaves for acts on bundles that the edition publishes (`publication.caseCitedParts`, its R41, and the edition's members). Each leaf comes with its salt, its Merkle path to the project seal and on to the week root, and the timestamp token.
   - Nothing else of any week is revealed.
   - An opening is idempotent per (case, edition, week).
   - A `published` attestation (R12) follows.
-- **R18** `verifyOpening(opening)` is pure. It answers whether the leaves hash to the sealed root and whether the token is bound to that root (`signatures.parseTimestampResponse`). A stranger, or this module's own tests, can check an opening without this instance *(not yet met: T23)*.
+- **R18** `verifyOpening(opening)` is pure. It answers whether the leaves hash to the sealed root and whether the token is bound to that root (`signatures.parseTimestampResponse`). A stranger, or this module's own tests, can check an opening without this instance.
 
 **The project reference a later case carries**
-- **R19** `noticeReferenceOf(project)` answers the notice id of the project's open or most recent notice, or null. `case-authoring` writes it into the case document, so that a case and its notice are visibly the same work (DEC-111; `case-grammar` R10, `case-authoring` R41) *(not yet met: T23)*.
+- **R19** `noticeReferenceOf(project)` answers the notice id of the project's open or most recent notice, or null. `case-authoring` writes it into the case document, so that a case and its notice are visibly the same work (DEC-111; `case-grammar` R10, `case-authoring` R41).
 
-**Public reads** (no credential; served at the group's public address through `public-read` R18)
-- **R20** `noticesPublic({after, limit})` answers every revision and every attestation ever published, in order of (notice, then first-published instant). Each comes with its JSON, its signature (armored for a revision; for an attestation, the instance signature and its key id), its first-published instant, and, for an attestation, the openings it references (R17) *(not yet met: T23)*.
+**Public reads** (no credential; served at the group's public address through `public-read` R18; registered at start under the names `activitymethod` (R10), `noticespublic` (R20) and `groupkeyspublic` (R21), K1150)
+- **R20** `noticesPublic({after, limit})` answers every revision and every attestation ever published, in order of (notice, then first-published instant). Each comes with its JSON, its signature (armored for a revision; for an attestation, the instance signature and its key id), its first-published instant, and, for an attestation, the openings it references (R17).
   - It answers at most `limit` items (200 by default, 1,000 at most), with `truncated` and `next`.
   - Nothing is ever removed from it.
   - A revision that is only prepared (R2) never appears in it.
-- **R21** `groupKeysPublic()` answers the group slug and two lists *(not yet met: T23)*:
+- **R21** `groupKeysPublic()` answers the group slug and two lists:
   - `owners`: every key `credentials.signerList` (its R8) shows registered to a member who owns a project now, or who signed a published edition or a revision. Each comes with `status` (`attests`, or `revoked` with its date) and the date it was first listed, never the member's name, handle or id;
   - `copy`: every instance key that has signed an attestation (`provenance.instanceKeys`, R56), with the date it was first used. Each is labelled as this copy's key.
 
   A revoked or replaced key stays listed, so older signatures can still be checked.
 
 **Member reads**
-- **R22** `noticesOf({project, viewer})` (`op=notices`) answers a viewer who can see the project (`membership.sight`, its R44) *(not yet met: T23)*:
+- **R22** `noticesOf({project, viewer})` (`op=notices`) answers a viewer who can see the project (`membership.sight`, its R44):
   - the project's notices, their revisions and their attestations;
   - the next `monthly` date, and the lapse date when one is running;
   - any `monthly` attestation missed for want of a key (R13);
   - its sealed weeks (week, seal, and whether timestamped), never the salts;
   - `methodVersion` (R10).
-- **R23** `directorySubmission({case, edition, viewer})` answers the fields of a directory submission after publication, prefilled: the case's public link, title and summary, and the group slug. A member copies them or opens them. It sends nothing *(not yet met: T23)*.
+- **R23** `directorySubmission({case, edition, viewer})` answers the fields of a directory submission after publication, prefilled: the case's public link, title and summary, and the group slug. A member copies them or opens them. It sends nothing.
 
 ## Private
 
@@ -150,13 +153,13 @@ Terms.
 - `project-stage`: `projectStage` (its R1, R2), for `closed` and its date.
 
 ### Invariants
-- **R24** Only an owner's own signature publishes a revision. No machine, AI run or administrator can post, re-word or back-date a revision for a project they do not own. An attestation states only facts the copy computes (R12) *(not yet met: T23)*.
-- **R25** No answer of this module names a member. There are no names in revisions, attestations, keys, leaves or openings *(not yet met: T23)*.
-- **R26** A published revision, attestation or opening is never altered or deleted. Only a whole-store purge clears this module's tables. A bundle purge leaves a published notice standing *(not yet met: T23)*.
-- **R27** In every revision, `since` is never earlier than the project's creation and never later than the day the revision was signed *(not yet met: T23)*.
-- **R28** The assistant's work never counts toward activity, and volume never moves the level *(not yet met: T23)*.
-- **R29** No place is named in this module's behaviour or outward text (`layers.md`, "No jurisdiction in the product") *(not yet met: T23)*.
-- **R30** This module makes no outbound call except to the timestamp authorities, and it pushes nothing to any directory *(not yet met: T23)*.
+- **R24** Only an owner's own signature publishes a revision. No machine, AI run or administrator can post, re-word or back-date a revision for a project they do not own. An attestation states only facts the copy computes (R12).
+- **R25** No answer of this module names a member. There are no names in revisions, attestations, keys, leaves or openings.
+- **R26** A published revision, attestation or opening is never altered or deleted. Only a whole-store purge clears this module's tables. A bundle purge leaves a published notice standing.
+- **R27** In every revision, `since` is never earlier than the project's creation and never later than the day the revision was signed.
+- **R28** The assistant's work never counts toward activity, and volume never moves the level.
+- **R29** No place is named in this module's behaviour or outward text (`layers.md`, "No jurisdiction in the product").
+- **R30** This module makes no outbound call except to the timestamp authorities, and it pushes nothing to any directory.
 
 ### Satisfies
 - `docs/architecture/BIO_Publication_v0_1.md`:
