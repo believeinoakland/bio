@@ -1,6 +1,6 @@
 # record-grammar (T23)
 
-**Status** · session_01PA1sW8VidctbEdHbBtynvg · depth 2 · WORKING · handled B1
+**Status** · session_01PA1sW8VidctbEdHbBtynvg · depth 2 · COMPLETE · handled B1
 
 ## Completion (RECORD-GRAMMAR #5)
 
