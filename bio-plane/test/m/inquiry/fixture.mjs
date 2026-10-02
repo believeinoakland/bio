@@ -1,6 +1,6 @@
 /* inquiry over the modules it uses, each the real one (record-core, membership, promotion, provenance, content,
    extraction, entities, connections), on a real SQLite database (node:sqlite) standing in for a Durable
-   Object's storage. What later modules register with it (legacy-store's facts `caseMember` and `publishedRegistry`,
+   Object's storage. What later modules register with it (publication's facts `caseMember` and `publishedRegistry`,
    reevaluation's `onRaised`, strength's `onGrounded`) and retrieval's selections are stand-ins the test controls. Every
    test drives `inquiry` at its interface. */
 import { DatabaseSync } from "node:sqlite";
@@ -49,7 +49,8 @@ export const NOW = "2026-09-28T01:00:00Z";
    written before T18 also held the leg count and the superseded-by index there (`legacyColumns`, R36's move). */
 const BUNDLE_COLUMNS = ["inquiry_subject_entity TEXT"];
 export const LEGACY_BUNDLE_COLUMNS = ["inquiry_basis_count INTEGER", "inquiry_superseded_by TEXT"];
-/* The strength columns legacy-store adds to `bundles` (strength's), which the real retrieval's search reads. */
+/* The strength columns as they stood on `bundles` before strength moved them to `strength_cache` (its R23; legacy-store
+   added them). No strength module is registered here, so the real retrieval's search reads them where they stand. */
 const STRENGTH_COLUMNS = ["inquiry_capture_strength TEXT", "inquiry_capture_state TEXT", "inquiry_connection_strength TEXT",
                           "inquiry_connection_state TEXT"];
 
@@ -72,9 +73,9 @@ export function world({ caseMembers = new Set(), published = null, group = "test
   membership.migrate();
   const promotion = promotionOf(host, { record, membership, now: () => clock.now });
   const groupRef = { value: group };
-  promotion.registerFact("producingGroup", "legacy-store", () => groupRef.value);
-  promotion.registerFact("caseMember", "legacy-store", (id) => caseMembers.has(id));
-  promotion.registerFact("publishedRegistry", "legacy-store", () => published);
+  promotion.registerFact("producingGroup", "instance-setup", () => groupRef.value);
+  promotion.registerFact("caseMember", "publication", (id) => caseMembers.has(id));
+  promotion.registerFact("publishedRegistry", "publication", () => published);
   const prov = provenanceOf(host, { record, membership, promotion, now: () => clock.now });
   prov.migrate();
   const extraction = extractionOf(host, { record, membership, calibration: { onCalibration() { return { ok: true }; } } });

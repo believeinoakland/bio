@@ -2,8 +2,8 @@
    - `test/inquiry.test.mjs`: the entry requirements over inquiry@1 and over legacy PROB/focus documents, each judged by
      the vocabulary it was written under (R2, Terms); a legacy `surfaced` problem treated as an inquiry by this module's
      acts and projection (R1, R20, R21, R12); the title rule over the question (R10). The catalogue's `checkBundle`
-     rows, promotion's `bundles.title`, retrieval's type filter and facet, instance-setup's page and legacy-store's boot
-     normaliser are not inquiry's and are not here.
+     rows, promotion's `bundles.title`, retrieval's type filter and facet, instance-setup's page and the boot normaliser
+     legacy-store held were not inquiry's and are not here.
    - `test/rec173-migration-replay.test.mjs`: the migration-replay row a creation admitted as a replay records, and none
      for a surfacing or a revision (R12), read back as the migrated arm of `surfaced_in` (R49). The replay verification
      is control-plane's; the surfacing row is ai-runs'.
