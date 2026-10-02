@@ -173,7 +173,7 @@ test("R15 R26: an owner keeps the earlier version of a case's cited part; adopti
   assert.deepEqual([ann.code, ann.check], ["VERSION_NOTICE_NOT_FOUND", "C-110.3"], "not an owner: absent");
   const m = w.r.keepVersion({ notice: n.notice, author: "class:daemon", viewer: ADMIN });
   assert.equal(m.code, "MACHINE_CANNOT_KEEP_VERSION");
-  const ad = w.r.adoptVersion({ notice: n.notice, author: "owen", viewer: V("owen") });
+  const ad = w.r.adoptVersion({ notice: n.notice, why: "the newer text is the one in force", author: "owen", viewer: V("owen") });
   assert.deepEqual([ad.ok, ad.code, ad.check, ad.translation, ad.notice], [false, "VERSION_ADOPT_UNWRITABLE", "C-110.9",
     REEVALUATION_ACT_CHECKS.VERSION_ADOPT_UNWRITABLE.translation, n.notice]);
   assert.match(ad.detail, /new edition/);
