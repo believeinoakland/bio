@@ -127,7 +127,7 @@ Terms. A **tick** is one check of one monitored document. A **look** is the obse
 
   A fetched document of another format is not filed (`format_excluded`), and its fetch still counts toward the budget.
 - **R60** **Backlog, hold, anomaly and silence.** *(not yet met: T23)*
-  - **Backlog** is `capture.heldCount({sweep: "<bundle>#<id>"})` (`capture` R82): this sweep's documents still at `collected`, neither released nor set aside.
+  - **Backlog** is `capture.heldCount({sweep: "<bundle>#<id>"})` (`capture` R82): this sweep's documents still at `collected`, neither released nor set aside. When it answers `null` (the store could not be read), the sweep is held as if over its ceiling (K1129).
   - **Held:** while the backlog is at or over `budget.backlog`, the sweep does not run, and every read of it (R61) states `held: backlog`.
   - **Anomaly:** once at least 4 runs exist, a run notes an anomaly in either of these cases:
     - it filed more than three times the median of the last 8 runs, and more than 5;

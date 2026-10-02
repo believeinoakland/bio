@@ -81,6 +81,8 @@ const POST = async (q, body) => rP(await (await mf.dispatchFetch(`http://x/api/?
 const GET = async (q) => rP(await (await mf.dispatchFetch(`http://x/api/?${q}`)).json());
 const codeOf = (r) => (r && typeof r.code === "string") ? r.code : (r && r.reason) || null;
 const okOf = (r) => [r && r.ok, codeOf(r)];
+/* A successful attribution answers the reason it keeps (publication R17, DEC-88), which is no refusal code. */
+const attributedOf = (r) => [r && r.ok, r && r.ok === true ? null : codeOf(r)];
 const NOW = "2026-09-18T00:00:00Z";
 
 try {
@@ -201,7 +203,8 @@ const pub = await POST(`op=publish&token=${IRIS}`, { project: PROJECT, targets: 
 /* MK-7: THE AUTHOR CHOOSES `group` for this edition (§4.2); the act re-authors the unsigned case document, and its
    new hash is what the publisher signs. */
 const at = pub && pub.caseDocument ? await POST(`op=attribute&token=${OBSERVER}`, { caseId: pub.caseDocument.case_id,
-  edition: pub.caseDocument.edition, observation: OBS, level: "group" }) : null;
+  edition: pub.caseDocument.edition, observation: OBS, level: "group",
+  reason: "The group stands behind this observation for this edition." }) : null;
 const D = pub && pub.caseDocument
   ? { ...pub.caseDocument, doc_sha: at && at.case_document && at.case_document.doc_sha || pub.caseDocument.doc_sha } : null;
 const cr = D ? await POST(`op=caseratify&token=${IRIS}`, { caseId: D.case_id, edition: D.edition, expectedSha: D.doc_sha,
@@ -210,7 +213,7 @@ const cr = D ? await POST(`op=caseratify&token=${IRIS}`, { caseId: D.case_id, ed
 const rf = await ratify(F1);
 const ro = await ratify(OBS);
 t("THE PUBLICATION WAS DRIVEN, every act answering ok: signer, capture, finding, conclusion, case, the author's group-level act, case ratified, finding ratified, OBSERVATION RATIFIED",
-  [okOf(sr), put && put.ok !== false, okOf(pf), okOf(cc), !!D, okOf(at), okOf(cr), okOf(rf), okOf(ro)],
+  [okOf(sr), put && put.ok !== false, okOf(pf), okOf(cc), !!D, attributedOf(at), okOf(cr), okOf(rf), okOf(ro)],
   [[true, null], true, [true, null], [true, null], true, [true, null], [true, null], [true, null], [true, null]]);
 
 /* THE POPULATION: every object in the PUBLISHED bucket (key and bytes), and every public manifest record. */
