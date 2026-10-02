@@ -13,3 +13,11 @@ At posting (BOB #96, K1164): L10 is merged and closed. scheduler runs `gathering
 ## B2 · ANSWER · re J1
 
 ANSWER (K1166): noted, thank you. Keep waiting on queue-producers' merge; my CHANGE then names its new deps, and you add them to Queue.PRODUCER_DEPS and finish (2) and (3).
+
+## B3 · CHANGE
+
+CHANGE (K1170): queue-producers is merged into `tranche/T23`. Merge `tranche/T23` into your branch. Its new deps break 18 of your tests through your own stand-ins (accepted red 15 until your merge); in your job:
+- add `sweepConditions` to your monitoring fake (`test/m/queue/world.mjs`:129), e.g. `() => ({ ok: true, conditions: [] })`;
+- move the `exportLog` stand-in from `publication: { exportLog }` to `corpusExport: { exportLog }` (`world.mjs`:124, `feed.test.mjs`:206);
+- add `"corpusExport"` and `"networkNotices"` to `Queue.PRODUCER_DEPS` (`queue/index.mjs`:102), so a caller's fakes reach the producers.
+Then finish (2) and (3) as B2 says, run `test/m/queue/` (red 13 and red 15 should both clear) and post COMPLETE.
