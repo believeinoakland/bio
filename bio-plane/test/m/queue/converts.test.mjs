@@ -236,7 +236,8 @@ test("R4, R14 (queue-state): a mute is keyed (member, case): an item under a mut
   w.leg("INQ-1", "DOC-BOTH"); w.leg("INQ-2", "DOC-BOTH"); w.leg("INQ-2", "DOC-2");
   w.q.queueMute({ member: "carol", viewer: "member:carol", case: "INQ-1", kinds: ["render-deferred"] });
   const f = w.feed("carol");
-  assert.deepEqual(ids(f), ["CONDITION::render-deferred::lone", "CONDITION::render-deferred::other"]);
+  // R49's default groups by case, an item with none last
+  assert.deepEqual(ids(f), ["CONDITION::render-deferred::other", "CONDITION::render-deferred::lone"]);
   assert.deepEqual(f.mute.suppressed.map((s) => [s.id, s.case]), [["CONDITION::render-deferred::both", "INQ-1"]]);
   assert.equal(byId(f)["CONDITION::render-deferred::lone"].case.ungrouped, true);
   assert.equal(w.feed("dave").items.length, 3, "another member's feed is unchanged by carol's mute");

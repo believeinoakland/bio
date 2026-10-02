@@ -29,8 +29,9 @@
  * The ops are `queueOps`' entries, which the legacy store's dispatcher spreads in; `op=queue`'s door half (the store's
  * answer decorated for the caller, R17) is `door.mjs`' `queueOp`, which the control plane routes to (T19).
  *
- * N301 (K356): the class FINDING keeps its code and its meaning and is shown to members as **Noticed**: the answer
- * publishes `class_labels`, and no member-facing sentence this module owns calls a queue item a finding.
+ * N301 (K356), R48 (DEC-107): the classes keep their codes and meanings and are shown to members as **To do**,
+ * **Noticed** and **Signal**: the answer publishes `class_labels`, and no member-facing sentence this module owns calls
+ * a to-do an obligation or a signal a condition.
  */
 
 import { normalizeType, STATES, vocabFor, isMachineIdentity } from "../record-grammar/index.mjs";
@@ -52,8 +53,13 @@ import { QUEUE_MINT_CHECKS, QUEUE_ACT_CHECKS, queueRefusal } from "./checks.mjs"
 export { QUEUE_SCHEMA, QUEUE_TABLES, queueOwns } from "./schema.mjs";
 export { QUEUE_MINT_CHECKS, QUEUE_ACT_CHECKS } from "./checks.mjs";
 
-/* N301 (K356): how each class is shown to members. The codes are unchanged; the words are these. */
-export const QUEUE_CLASS_LABELS = Object.freeze({ OBLIGATION: "Obligation", FINDING: "Noticed", CONDITION: "Condition" });
+/* R48 (N301, K356; DEC-107, DEC-110; K1038): how each class is shown to members. The codes are unchanged; the words are
+   these, and no member-facing sentence this module answers calls a to-do an "obligation" or a signal a "condition"
+   ("obligation" names only a public body's duty, DEC-107). */
+export const QUEUE_CLASS_LABELS = Object.freeze({ OBLIGATION: "To do", FINDING: "Noticed", CONDITION: "Signal" });
+
+/* R49 (DEC-110 (1); K1038): the orders the feed's `sort` names; absent or blank is DEC-110 (3)'s default. */
+export const QUEUE_SORTS = Object.freeze(["added", "due", "case", "kind"]);
 
 /* R6: a limit is clamped to 1–max; absent, blank or not a number, it is the default. */
 const clampLimit = (limit, dflt, max) => {
@@ -185,6 +191,53 @@ export class Queue {
    *  fact about OUR OWN MACHINERY. CONDITION is therefore last and was
    *  appended rather than inserted (REC-32). */
   static QUEUE_CLASSES = ["OBLIGATION", "FINDING", "CONDITION"];
+
+  /** R6's order: something a named person must do outranks something the record noticed, which outranks a fact about
+   *  our own machinery, then stable on id so the feed does not shuffle. It is the order AMONG EQUALS of every sort R49
+   *  names (K1038). */
+  static r6Order(a, b) {
+    const rank = (c) => Queue.QUEUE_CLASSES.indexOf(c);
+    return rank(a.class) - rank(b.class) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+  }
+
+  /** R49 (DEC-110): the comparator for `order` ("" the default, else one of QUEUE_SORTS) at the instant `now`. Each
+   *  sorts on one value of the item; an item without it goes after those with it, and items without it, and ties, keep
+   *  R6's order among themselves.
+   *    default, `case`  the item's nearest home ancestor (`case.ancestors`, the least depth, then id), ordered by that
+   *                     depth, then that id; within one case R6's order is to-dos, then noticed, then signals, then id.
+   *                     DEC-110 (3)'s default IS grouping by case; the two part when its collapsing (DEC-110 (2)) lands.
+   *    `added`          newest first, by when the item arose: its `age.since`, else `now` less `age.ms`.
+   *    `due`            soonest first, by its `due` (`YYYY-MM-DD`, queue-producers R25).
+   *    `kind`           by class in R6's order, then kind. */
+  static feedOrder(order, now) {
+    const r6 = Queue.r6Order;
+    const rank = (c) => Queue.QUEUE_CLASSES.indexOf(c);
+    const on = (key, cmp) => (a, b) => {
+      const ka = key(a), kb = key(b);
+      if (ka === null || kb === null) return ka === kb ? r6(a, b) : (ka === null ? 1 : -1);
+      return cmp(ka, kb) || r6(a, b);
+    };
+    const str = (x, y) => (x < y ? -1 : x > y ? 1 : 0);
+    const nearest = (it) => {
+      const anc = (it.case && Array.isArray(it.case.ancestors) ? it.case.ancestors : [])
+        .filter((x) => x && typeof x.id === "string" && Number.isFinite(x.depth));
+      return anc.length ? anc.reduce((m, x) => (x.depth < m.depth || (x.depth === m.depth && x.id < m.id) ? x : m)) : null;
+    };
+    const arose = (it) => {
+      const age = it.age && typeof it.age === "object" ? it.age : {};
+      const since = typeof age.since === "string" ? Date.parse(age.since) : NaN;
+      if (Number.isFinite(since)) return since;
+      return Number.isFinite(age.ms) ? now - age.ms : null;
+    };
+    const due = (it) => (typeof it.due === "string" && /^\d{4}-\d{2}-\d{2}$/.test(it.due)
+                         && Number.isFinite(Date.parse(`${it.due}T00:00:00Z`)) ? it.due : null);
+    switch (order) {
+      case "added": return on(arose, (x, y) => y - x);
+      case "due":   return on(due, str);
+      case "kind":  return on((it) => it, (a, b) => rank(a.class) - rank(b.class) || str(String(a.kind), String(b.kind)));
+      default:      return on(nearest, (x, y) => x.depth - y.depth || str(x.id, y.id));
+    }
+  }
   /** Declared, not stubbed. A class with no producer is named with the reason
    *  it is absent, so "not built yet" is distinguishable from "forgotten".
    *
@@ -487,12 +540,13 @@ export class Queue {
   /** R12, R28 (K607, K608): the door an OBLIGATION not held in `tasks` leaves by, by kind; every other obligation is a
    *  task (taskresolve). The Action layer's four: a checkpoint is judged (action-plans R16), a proposed stage advanced
    *  or declined (escalation R13), a reminder answered (action-clocks R6), a litigation hold stated (actions R52;
-   *  K899 (7)); and K921's two: a template version reviewed (filing-templates R9), a local fact confirmed
-   *  (local-facts R1). */
+   *  K899 (7)); K921's two: a template version reviewed (filing-templates R9), a local fact confirmed
+   *  (local-facts R1); and a credit level chosen (publication R17; queue-producers R23, DEC-102 item 3). */
   static OBLIGATION_DOORS = Object.freeze({ "bias-debt": "biasdebtresolve", "signer-self-registered": "signerset",
     "plan-checkpoint-due": "checkpointrecord", "escalation-stage-proposed": "escalationadvance",
     "action-reminder": "reminderanswer", "litigation-hold": "actionhold",
-    "template-review-requested": "templatereview", "local-fact-due": "factconfirm" });
+    "template-review-requested": "templatereview", "local-fact-due": "factconfirm",
+    "attribution-unchosen": "attribute" });
   /** R12: what each of those doors is, said on the item's disposition after the general sentence. */
   static OBLIGATION_DOOR_DETAIL = Object.freeze({
     "bias-debt": " This one is a bias debt, which is keyed by the RUN it is about rather than by "
@@ -520,6 +574,9 @@ export class Queue {
     "local-fact-due": " This one is a holiday calendar or office hours one of the group's deadlines reads, keyed by the "
       + "fact rather than by a task: it leaves when a member confirms or corrects the fact (op=factconfirm), or when no "
       + "live action reads it.",
+    "attribution-unchosen": " This one is a case edition being prepared that reaches an observation you authored, keyed "
+      + "by the edition and the observation rather than by a task: it leaves when you choose a credit level for it "
+      + "(op=attribute), or when the edition no longer reaches it, or is signed or replaced.",
   });
 
   /** D-266 / IC-60 — THE SECOND IDENTITY, and the whole of what this item added.
@@ -582,8 +639,8 @@ export class Queue {
       return { available: false, op: null, scope: null, keyed_on: KEYED_ON, key: null,
                reason: "an_obligation_is_resolved_not_disposed",
                instead: Queue.OBLIGATION_DOORS[item.kind] || "taskresolve",
-               detail: "an OBLIGATION is something a named person must do for the record to proceed "
-                     + "and it leaves every list when it is RESOLVED (D-125, DEC-16). Disposing of it "
+               detail: "a to-do is something a named person must do for the record to proceed "
+                     + "and it leaves every list when it is DONE (D-125, DEC-16). Setting it aside "
                      + "is not a narrower version of that act, it is a different one."
                      + (Object.prototype.hasOwnProperty.call(Queue.OBLIGATION_DOOR_DETAIL, item.kind)
                         ? Queue.OBLIGATION_DOOR_DETAIL[item.kind] : "") };
@@ -591,19 +648,22 @@ export class Queue {
       return { available: false, op: null, scope: null, keyed_on: KEYED_ON, key: null,
                reason: "a_condition_is_acknowledged_or_muted",
                instead: "queuemute",
-               detail: "a CONDITION is a fact about our own machinery, and the only thing a member "
-                     + "does to it is acknowledge or MUTE it — personally, with the condition "
+               detail: "a signal is a fact about our own machinery, and the only thing a member "
+                     + "does to it is acknowledge or QUIET it — personally, with the signal "
                      + "persisting and every other member still seeing it." };
     /* R12 (N172): a newer capture affecting a member's reference is decided by that member through reevaluation's
-       door (its R15): adopt the newer version, or keep the earlier one. Keyed on the notice, never on a project. */
+       door (its R15): adopt the newer version, or keep the earlier one. Keyed on the notice, never on a project.
+       K1035 (reevaluation R15, C-110.29 VERSION_ADOPT_NO_REASON): adopting takes a why and keeping's stays optional;
+       the detail says so, and `requires` stays the notice R12 states. */
     if (item.kind === "newer-capture-affects-reference") {
       const notice = item.subject && typeof item.subject.id === "string" ? item.subject.id : null;
       return { available: notice !== null, op: null, scope: "notice", keyed_on: ["notice"], key: notice,
                notice, acts: ["versionadopt", "versionkeep"], requires: ["notice"],
                detail: "a newer capture of what your reference is pinned to was graded as affecting it or as "
                      + "undetermined, and the choice is yours: adopt the newer version (op=versionadopt, which "
-                     + "writes a new version of your reference and keeps the old one readable) or keep the earlier "
-                     + "one (op=versionkeep, with an optional why). Either closes this notice." };
+                     + "writes a new version of your reference and keeps the old one readable, and takes a why of "
+                     + "up to 2,000 characters) or keep the earlier one (op=versionkeep, where a why is optional). "
+                     + "Either closes this notice." };
     }
     if (pk && sk)
       return { available: true, op: "proposedispose", scope: "instance", keyed_on: KEYED_ON,
@@ -728,7 +788,7 @@ export class Queue {
       case "contradiction-lead":
         return { available: true, op: null, scope: "candidate", keyed_on: ["candidate"], key: candidate, candidate,
                  acts: ["contradictiondismiss", "contradictiontakeup"], requires: ["candidate"],
-                 detail: "a lead is the record's uncertainty, not an obligation: a member dismisses it with a reason or "
+                 detail: "a lead is the record's uncertainty, not a to-do: a member dismisses it with a reason or "
                        + "takes it up as a question (DEC-84 item 1)." };
       case "contradiction-plurality":
         return notSetAside(["contradictionclarify", "contradictiontakeup", ...relay],
@@ -771,7 +831,18 @@ export class Queue {
    *  columns and the contract carries both: `subject` is what the item is
    *  about, `case` is where it is filed. Collapsing them is how a queue
    *  invents a home. */
-  queueFeed({ member = null, viewer = null, nowMs = null, limit = 200 } = {}) {
+  queueFeed({ member = null, viewer = null, nowMs = null, limit = 200, sort = null } = {}) {
+    /* R49 (DEC-110 (1)): the order asked for is checked FIRST, before anything is read, so a refusal costs no read and
+       a caller learns the four orders this feed keeps. Absent or blank is DEC-110 (3)'s default. */
+    const order = typeof sort === "string" ? sort.trim() : (sort === null || sort === undefined ? "" : null);
+    /* DEC-49 REGION is-queue-sort — R49/C-33.51. The code is a STRING LITERAL at its site; the check and the translation
+       come off its row (R49's test compares them). */
+    if (order === null || (order !== "" && !QUEUE_SORTS.includes(order)))
+      return queueRefusal("QUEUE_SORT_UNKNOWN", QUEUE_ACT_CHECKS.QUEUE_SORT_UNKNOWN, {
+        sort: typeof sort === "string" ? sort.slice(0, 40) : null, sorts: [...QUEUE_SORTS],
+        detail: `the feed keeps four orders besides its default (grouped by case): ${QUEUE_SORTS.join(", ")}. `
+              + "Send one of them as `sort`, or none for the default. Nothing was read." });
+    /* END DEC-49 REGION is-queue-sort */
     const cap = clampLimit(limit, 200, 500);
     const now = this.#nowMs(nowMs);
     const me = typeof member === "string" && member.trim() ? member.trim() : null;
@@ -822,7 +893,7 @@ export class Queue {
         detail: row.subject && row.subject.description !== undefined ? row.subject.description : null,
         basis: { source: "tasks", refers_to: subject, routed_role: row.assignee_role,
                  status: row.status,
-                 detail: "an obligation is a routed task: a named person must act for the record "
+                 detail: "a to-do is a routed task: a named person must act for the record "
                        + "to proceed (D-98). refers_to points at the SUBJECT; case is derived." },
         age: Number.isFinite(createdMs)
           ? { state: "determined", since: row.created, ms: Math.max(0, now - createdMs) }
@@ -905,7 +976,8 @@ export class Queue {
        * measurement); the R11 tests compare code, check and translation now. */
       if (!Queue.QUEUE_CLASSES.includes(it.class))
         return refusal("NO_CLASS",
-          `every queue item carries a class from ${Queue.QUEUE_CLASSES.join(" | ")}, and this one `
+          `every queue item says which of ${Queue.QUEUE_CLASSES.map((c) => `"${QUEUE_CLASS_LABELS[c]}"`).join(", ")} `
+          + `it is, and this one `
           + `carries ${it.class === undefined ? "none" : JSON.stringify(String(it.class).slice(0, 40))}. `
           + `The feed is DERIVED rather than stored, so the constraint a column would have carried is `
           + `enforced at the one place an item is minted.`,
@@ -923,12 +995,12 @@ export class Queue {
           { id: it.id ?? null, kind: it.kind ?? null });
       if (classOfKind(it.kind) !== it.class)
         return refusal("KIND_MISCLASSED",
-          `'${String(it.kind).slice(0, 60)}' is catalogued as a ${classOfKind(it.kind)} and this item `
-          + `mints it as a ${it.class}. That is not a spelling mistake, it is a change of doctrine at a `
-          + `producer: the class decides whether leaving a member's list is a PERSONAL MUTE or an `
-          + `AUTHORED RECORD ACT (D-125, DEC-16), so minting an obligation's kind as a condition would `
+          `'${String(it.kind).slice(0, 60)}' is catalogued as "${QUEUE_CLASS_LABELS[classOfKind(it.kind)]}" and this `
+          + `item mints it as "${QUEUE_CLASS_LABELS[it.class]}". That is not a spelling mistake, it is a change of `
+          + `doctrine at a producer: the class decides whether leaving a member's list is a PERSONAL QUIET or an `
+          + `AUTHORED RECORD ACT (D-125, DEC-16), so minting a to-do's kind as a signal would `
           + `let one member silence a task the record believes reached a person, and minting a `
-          + `condition's kind as a finding would make a fact about our own machinery undismissable.`,
+          + `signal's kind as something noticed would make a fact about our own machinery undismissable.`,
           { id: it.id ?? null, kind: it.kind ?? null,
             catalogued_as: classOfKind(it.kind), minted_as: it.class });
       /* END DEC-49 REGION is-queue-mint */
@@ -1089,11 +1161,9 @@ export class Queue {
           it.snoozed = { until: on.map((x) => x.until).sort().at(-1), cases: on };
       }
 
-    /* Obligations first — something a named person must do outranks something
-       the record noticed — then stable on id so the feed does not shuffle. */
-    const rank = (c) => Queue.QUEUE_CLASSES.indexOf(c);
-    items.sort((a, b) => rank(a.class) - rank(b.class)
-      || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+    /* R49, then R6's cut: the feed in the order asked for (DEC-110 (3)'s default when none was), applied BEFORE the
+       limit, so a small limit takes the head of that order and not of another. */
+    items.sort(Queue.feedOrder(order, now));
     const out = items.slice(0, cap);
 
     /* ============ D-266 · AN AGED FINDING MUST NOT READ LIKE AN ABSENT ONE
@@ -1181,6 +1251,8 @@ export class Queue {
          applied, so a caller that sees `truncated:true` knows what to ask for
          next. `limit` is the cap after clamping, matching `op=search`. */
       limit: cap,
+      /* R49: the order this answer is in; null is the default (grouped by case), which no `sort` was sent for. */
+      sort: order === "" ? null : order,
       item_count: out.length, truncated: items.length > out.length,
       classes: Queue.QUEUE_CLASSES,
       /* N301 (K356): how each class is shown to members; FINDING reads Noticed, its code unchanged. */
@@ -1215,10 +1287,10 @@ export class Queue {
         suppressed,
         suppressed_count: suppressed.length,
         detail: "muting is PERSONAL and dismissing is a RECORD ACT (D-125). Nothing here was removed "
-              + "from the record and nothing here left another member's queue. A CONDITION or a FINDING "
-              + "can be here, muted by case over the kinds you named or by its own id (`scope`); an "
-              + "OBLIGATION never can, because it leaves every list only when it is RESOLVED. A muted "
-              + "FINDING is still open for the team and in op=proposals: it leaves the team's list only "
+              + "from the record and nothing here left another member's queue. A signal or a noticed item "
+              + "can be here, quieted by case over the kinds you named or by its own id (`scope`); a "
+              + "to-do never can, because it leaves every list only when it is DONE. A quieted "
+              + "noticed item is still open for the team and in op=proposals: it leaves the team's list only "
               + "when it is adopted, deferred or dismissed, an act the record keeps.",
       },
       /* D-266. The other half of the sentence `mute` has just finished — a
@@ -1394,7 +1466,7 @@ export class Queue {
                                  + "the member who settled it. `resolved_by` is null when no member settled it (the lens "
                                  + "moved back, or a re-run under the lens now in force discharged it), and "
                                  + "`settled_kind` says which; null never means nobody acted." },
-             detail: "obligations that LEFT the list by being resolved, with who resolved each and when (DEC-16): one "
+             detail: "to-dos that LEFT the list by being done, with who resolved each and when (DEC-16): one "
                    + "member's resolution clears the item for everyone, and this is where everyone else reads that "
                    + "it happened." };
   }
@@ -1516,8 +1588,8 @@ export class Queue {
         return { ok: false, reason: "UNKNOWN_KIND", ...(sb.item ? { item: sb.item } : { kind: sb.kind }),
           case: c ? c.id : null,
           detail: sb.item
-            ? "no queue item by that id is one this plane can classify: a FINDING's or CONDITION's id "
-              + "begins with its class (as op=queue publishes it), and it names no obligation. Unknown is "
+            ? "no queue item by that id is one this plane can classify: a noticed item's or a signal's id "
+              + "begins with its class code (as op=queue publishes it), and it names no to-do. Unknown is "
               + "not the same as forbidden, and this refusal is the first rather than the second."
             : "the notification catalogue does not name that kind. Unknown is not the same as "
               + "forbidden, and this refusal is the first rather than the second.",
@@ -1579,10 +1651,10 @@ export class Queue {
          so the suite can assert the boundary from the op's own answer as well as
          from the tables. */
       wrote: { queue_state: 1, tasks: 0, proposal_dispositions: 0, bundles: 0 },
-      detail: "a mute is PERSONAL and reaches CONDITION and FINDING kinds, never an OBLIGATION. Nothing "
-            + "left the record, nothing left another member's queue, no disposition was written, and an "
-            + "OBLIGATION on this case still reaches you: an obligation leaves every list only when it is "
-            + "RESOLVED, which is record state.",
+      detail: "a mute is PERSONAL and reaches the kinds of signals and noticed items, never a to-do. Nothing "
+            + "left the record, nothing left another member's queue, no disposition was written, and a "
+            + "to-do on this case still reaches you: a to-do leaves every list only when it is "
+            + "DONE, which is record state.",
     };
   }
 
@@ -1797,9 +1869,9 @@ export class Queue {
                class: keyClass, kind: keyKind,
                /* R28 (K607): the same per-kind door R12 publishes on the item. */
                instead: keyClass === "CONDITION" ? "queuemute" : (Queue.OBLIGATION_DOORS[keyKind] || "taskresolve"),
-               detail: `this names ${keyClass === "CONDITION" ? "a CONDITION" : "an OBLIGATION"} and `
-                     + `${keyClass === "CONDITION" ? "a" : "an"} ${keyClass} is not DISPOSED: a disposition is `
-                     + "an authored record act on a FINDING, and op=queue publishes the act that does "
+               detail: `this names ${keyClass === "CONDITION" ? "a signal" : "a to-do"}, and `
+                     + `${keyClass === "CONDITION" ? "a signal" : "a to-do"} is not DISPOSED: a disposition is `
+                     + "an authored record act on something the record noticed, and op=queue publishes the act that does "
                      + "reach this item as its `disposition.instead`. Nothing was written. The rest of "
                      + "a selection is unaffected — under the per-item weight this item alone is kept, "
                      + "carrying this reason." };
@@ -1963,7 +2035,8 @@ export function queueOf(ctx, deps = {}) {
 export function queueOps(q, url, body) {
   const s = (k) => url.searchParams.get(k);
   return {
-    queue: () => q.queueFeed({ member: s("member"), viewer: s("viewer"), nowMs: s("now"), limit: s("limit") }),
+    queue: () => q.queueFeed({ member: s("member"), viewer: s("viewer"), nowMs: s("now"), limit: s("limit"),
+                               sort: s("sort") }),
     queuemute: () => q.queueMute({ ...(body || {}), member: s("member"), viewer: s("viewer") }),
     queuesnooze: () => q.queueSnooze({ ...(body || {}), member: s("member"), viewer: s("viewer") }),
     proposedispose: () => q.proposeDispose({ ...(body || {}), viewer: s("viewer"), identity: s("identity") }),

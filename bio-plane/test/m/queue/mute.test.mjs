@@ -42,7 +42,7 @@ test("R19: then per kind or item: a comma BAD_KIND; unclassifiable UNKNOWN_KIND 
   for (const r of [mute(w, { case: "INQ-1", kinds: ["authority-undetermined"] }), mute(w, { item: "TASK-2026-0001-a" })]) {
     assert.equal(r.reason, "KIND_NOT_PERSONAL"); assert.equal(r.kind_class, "OBLIGATION");
     assert.equal(r.check, "C-33.27"); assert.equal(r.translation, QUEUE_ACT_CHECKS.KIND_NOT_PERSONAL.translation);
-    assert.match(r.detail, /OBLIGATION/);
+    assert.match(r.detail, /^a to-do is something a named person must do/);
   }
   assert.equal(w.all(`SELECT count(*) c FROM queue_state`)[0].c + w.all(`SELECT count(*) c FROM queue_item_mutes`)[0].c, 0, "nothing written");
 });

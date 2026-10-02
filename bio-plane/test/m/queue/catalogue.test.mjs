@@ -7,12 +7,13 @@ import {
 } from "../../../src/queuestate.mjs";
 import { CONDITION_KINDS } from "../../../src/observation-log/vocabulary.mjs";
 
-/* R1's fifteen, N345's two duties among them (DEC-85's unseen one included), N375's self-registered key, the Action
-   layer's three (K608, K614), the litigation hold (K899 (7)) and K921's review request and local fact. */
+/* R1's sixteen, N345's two duties among them (DEC-85's unseen one included), N375's self-registered key, the Action
+   layer's three (K608, K614), the litigation hold (K899 (7)), K921's review request and local fact, and the unchosen
+   credit level (queue-producers R23, DEC-102 item 3). */
 const OBLIGATION = ["authority-undetermined", "bias-debt", "endorsement-owed", "expertise-confirmation-owed",
   "membership-request", "project-owners-inactive", "contradiction-duty", "contradiction-duty-unseen",
   "signer-self-registered", "plan-checkpoint-due", "escalation-stage-proposed", "action-reminder", "litigation-hold",
-  "template-review-requested", "local-fact-due"];
+  "template-review-requested", "local-fact-due", "attribution-unchosen"];
 /* R1's twenty-six, `cardinality_exceeded` (N107, K209), `newer-capture-affects-reference` (N172) and N345's five among
    them. */
 const FINDING = ["missing_predecessor", "overdue_successor", "temporal-expectation-due", "source-modified",
@@ -54,6 +55,8 @@ test("R1: every catalogued kind answers its class, anything else null, and every
   // K921: the review request and the local fact say what is owed, each with its own door
   assert.match(QUEUE_OBLIGATION_KINDS["template-review-requested"], /a member asked you to review a filing template's version/);
   assert.match(QUEUE_OBLIGATION_KINDS["local-fact-due"], /a holiday calendar or office hours one of the group's deadlines reads is unconfirmed or due for confirmation/);
+  // DEC-102 item 3: the unchosen credit level says what the edition reaches and what the member does
+  assert.match(QUEUE_OBLIGATION_KINDS["attribution-unchosen"], /a case edition being prepared reaches an observation you authored and you have chosen no credit level for it; choose one/);
   assert.match(QUEUE_CONDITION_KINDS["action-clock-overdue"], /deadline on one of the group's actions passed while its entry is still pending/);
   // the cardinality finding is worded as what it is: never "required and absent"
   assert.doesNotMatch(QUEUE_FINDING_KINDS.cardinality_exceeded, /absent/);
