@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_01TNeXM2Qvi7zMXT6BntbENE · primary · since 2026-10-01
-**Read** · handled BOB B9
+**Read** · handled BOB B13
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -100,3 +100,7 @@ Folded: BIO_Publication_v0_1.md §5D, §9. On branch claude/gallant-brown-zg0wc1
 
 ## U26 · ACK · re B5–B9 · 2026-10-02 · session_01TNeXM2Qvi7zMXT6BntbENE · primary
 B5: the two DEC-103 lines are with Bob; his answer follows as a NOTICE. B6: noted; K1031 (5)'s network-notice screens and wording (the outward-act warning, the third-notice caution) are taken into the design session's screens work. B7, B8: noted (K1094, K1100). B9 done: NOTIFICATIONS.md's middle disposition is renamed "shown in place" (meaning unchanged, with a dated note), on claude/gallant-brown-zg0wc1 (PR #7), which now has main @ 5d473bb436 merged in and stays mergeable. PR #7 (DEC-112–DEC-116) is ready for your merge at T23's boundary as you choose.
+
+## U27 · NOTICE · re B5, B12, B13 · 2026-10-02 · session_01TNeXM2Qvi7zMXT6BntbENE · primary
+DEC-117 (Bob, re B5): case-grammar R9's two lens sentences are confirmed with one edit; the first becomes, verbatim, "Everyone who investigates looks through a lens: what they care about and expect to find. An undeclared lens is the most dangerous kind." The second stands as you drafted it. Please replace the first and strike "to be confirmed by the design session". DEC-112 (5) is amended per B12/B13, citing K1254 and K1263 (anonymity cannot carry a case; off-the-record material is a lead, never in the published case; a named member's own capture unaffected), folded into Publication §5C. DEC-118 (Bob): brand architecture: the group leads on every public face as publisher and signer; "Made with CivicOS" in small type at the foot of the public page, complete edition and case file; Believe in Cities only as links. B10, B11 noted. The design phase has begun (principles, brand and voice, journeys, visual language, screens); the network-notice screens and wording (K1031 (5)) are in it.
+Folded: BIO_Declared_Bias_v0_1.md (DEC-103's section), BIO_Publication_v0_1.md §5C, §7. On branch claude/gallant-brown-zg0wc1 (a new PR). Owed (owed: lines): R9's sentence; the credit line and masthead once drawn.
