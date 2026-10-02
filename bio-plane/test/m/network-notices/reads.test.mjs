@@ -89,6 +89,32 @@ test("R21 groupKeysPublic: the slug, the owners' keys with status and first-list
   assert.equal(w.nn.groupKeysPublic().owners.find((o) => o.key.includes(keyFor("alice").b64)).status, "revoked");
 });
 
+test("R21 owners: every key that signed a public docket entry (docket.docketSigners, its R5; N520) is listed, owner or not, and stays listed when revoked", async () => {
+  const w = seeded();
+  w.member("erin");
+  w.member("frank");
+  const listed = () => new Set(w.nn.groupKeysPublic().owners.map((o) => o.key));
+  const line = (who) => `ssh-ed25519 ${keyFor(who).b64}`;
+  /* negative control: carol, erin and frank own nothing and have signed nothing */
+  for (const m of ["carol", "erin", "frank"]) assert.ok(!listed().has(line(m)), `${m} is not listed before signing`);
+  w.publish(w.P, "CASE-2026-0001");
+  w.docketEntry("CASE-2026-0001", "carol", { seq: 1 });
+  w.docketEntry("CASE-2026-0001", "erin", { seq: 2, at: w.clock.now + 1000 });
+  w.docketEntry("CASE-2026-0001", "carol", { seq: 3, at: w.clock.now + 2000 });
+  /* every docket signer is listed, each once, and nobody else who owns nothing and signed nothing */
+  const signers = w.docket.docketSigners().map((s) => s.keyB64);
+  assert.deepEqual(signers, [keyFor("carol").b64, keyFor("erin").b64]);
+  for (const k of signers) assert.equal(w.nn.groupKeysPublic().owners.filter((o) => o.key === `ssh-ed25519 ${k}`).length, 1);
+  assert.ok(!listed().has(line("frank")), "frank signed nothing");
+  const erin = w.nn.groupKeysPublic().owners.find((o) => o.key === line("erin"));
+  assert.deepEqual([erin.status, erin.first_listed], ["attests", "2026-09-01"]);
+  for (const v of ["erin", "Cover erin", "h_erin"]) assert.ok(!JSON.stringify(w.nn.groupKeysPublic()).includes(v), `no member named: ${v}`);
+  /* a revoked docket signer stays listed, with its own date */
+  w.st.sql.exec(`UPDATE signers SET status='revoked', status_at='2026-09-25T08:00:00Z' WHERE member_id='erin'`);
+  const gone = w.nn.groupKeysPublic().owners.find((o) => o.key === line("erin"));
+  assert.deepEqual([gone.status, gone.revoked_on], ["revoked", "2026-09-25"]);
+});
+
 test("R21 a revoked key's date is its own status_at (credentials R8, R21), never the date this copy saw it; null when status_at was never recorded", async () => {
   const w = seeded();
   await post(w);

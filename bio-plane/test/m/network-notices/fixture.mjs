@@ -19,6 +19,7 @@ import { attestationOf } from "../../../src/attestation/index.mjs";
 import { publicationOf } from "../../../src/publication/index.mjs";
 import { projectStageOf } from "../../../src/project-stage/index.mjs";
 import { publicReadOf } from "../../../src/public-read/index.mjs";
+import { docketOf } from "../../../src/docket/index.mjs";
 import { networkNoticesOf } from "../../../src/network-notices/index.mjs";
 import { signSshsig, signerPublicLine } from "../../../scripts/sign-sshsig.mjs";
 import { NS_NOTICE } from "../../../src/sshsig.mjs";
@@ -116,12 +117,15 @@ export function world({ key = true, slug = SLUG, before = null } = {}) {
     basisVersions: { projectQuestions: () => ({ items: [], cursor: null }), conclusionOf: () => null },
     inquiry: { basisFor: () => null } });
   const publicRead = publicReadOf(host, { publication });
+  /* docket (N520), the real module: R21 reads its signers (its R5). Its reevaluation registration (its R13) is a recorder. */
+  const docket = docketOf(host, { record, membership, credentials, promotion, provenance, attestation, publication,
+                                  reevaluation: { registerDocket: () => ({ ok: true }), docketActed: () => ({ ok: true }) } });
   const authorities = tsa();
   const governed = [];
   const governor = { admit: async (q) => { governed.push(q.host); return { admitted: true, wait_ms: 0 }; }, report: async () => ({ recorded: true }) };
   let n = 0;
   const w = {
-    st, host, record, membership, credentials, promotion, provenance, attestation, publication, projectStage, publicRead, clock, tsa: authorities, governed,
+    st, host, record, membership, credentials, promotion, provenance, attestation, publication, projectStage, publicRead, docket, clock, tsa: authorities, governed,
     rows: (q, ...a) => [...st.sql.exec(q, ...a)],
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`).one().n,
     snapshot() {
@@ -185,6 +189,12 @@ export function world({ key = true, slug = SLUG, before = null } = {}) {
     weeksOfWork(pid, k, asOf = clock.now, opts = {}) {
       for (let i = 1; i <= k; i++) w.act(pid, monday(asOf) - i * WEEK + DAY, opts);
     },
+    /** A public docket entry of `caseId`, signed by `who`'s key, as docket's post (its R5) leaves it. */
+    docketEntry(caseId, who, { seq = 1, at = clock.now } = {}) {
+      const json = JSON.stringify({ format: "civicos-docket-entry/1", group: SLUG, case: caseId, seq, kind: "outcome" });
+      st.sql.exec(`INSERT INTO docket_entries (case_id, seq, digest, json, kind, shelf, edition, signature, signer_key, published_at)
+                   VALUES (?, ?, ?, ?, 'outcome', 'listed', '1', 'sig', ?, ?)`, caseId, seq, sha(json), json, keyFor(who).b64, iso(at));
+    },
     /** A ratified case edition of `pid`, its members `members` (written as publication's commit would leave them). */
     publish(pid, caseId, edition = 1, members = []) {
       st.sql.exec(`INSERT OR IGNORE INTO cases (case_id, project_id, opened) VALUES (?, ?, ?)`, caseId, pid, iso(clock.now));
@@ -196,7 +206,7 @@ export function world({ key = true, slug = SLUG, before = null } = {}) {
   };
   if (typeof before === "function") before(w);
   w.nn = networkNoticesOf(host, { record, membership, credentials, promotion, attestation, publication, projectStage,
-                                  publicRead, governor, fetch: authorities.fetch, now: () => clock.now });
+                                  publicRead, docket, governor, fetch: authorities.fetch, now: () => clock.now });
   return w;
 }
 
