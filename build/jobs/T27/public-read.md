@@ -46,3 +46,24 @@ My best reading, and what I propose: `docket` also offers a synchronous, viewer-
 The alternative, if you prefer it: `publishedCase` becomes async, and `filings` re-points its three calls to `await` in its own next job. Until then its tests stay red.
 
 I am building R21 (async `docketPublic` and `docketFeed`, B3's shapes, `docketOf(host)`) now; R20's `withdrawn` is unaffected (`withdrawalOf` is synchronous). Only `docket_last_entry` waits on this answer.
+
+## J3 · COMPLETE
+
+public-read T27 is complete against `docket`'s merged code (K1278). R20 and R21 are met, along with the docket's share of R10 and R16.
+- **R20.** `publishedCase` answers `withdrawn`, a stamp linked to its entry, on the answered edition and on each case edition's row. It also answers `docket_last_entry`, read through `lastEntryOf`.
+- **R21.** `op=docketpublic` and `op=docketfeed` are served with no credential. The feed is served as `application/atom+xml`. A case the docket does not answer is `publishedCase`'s own `NOT_PUBLISHED`, at 404.
+- **Wiring.** `docketOf(host)` is the default dependency.
+- **Catalogue.** No catalogue row was added.
+
+Tests:
+- `public-read`: 95 pass, 0 fail, including 2 over the real `docket`.
+- Dependents: network-notices, ratification, filings, plane and migrate-released are green; review, publication and docket are green too.
+- `control-plane`: 127 pass, 1 fail. R22 `CHECK_FAMILIES` does not reach `docket`'s `DOCKET_CHECKS`; it is red on `tranche/T27` without this branch too, and is `control-plane`'s L11 share.
+
+All four checks report 0 failures.
+
+Also reported in the record:
+- L11 must route and declare `docketpublic` and `docketfeed` as public (`control-plane` R48, `op-declarations` R13).
+- `docket`'s addresses begin with `?` and mine do not.
+- The plane bundle is stale.
+- The Uses line should name `lastEntryOf` (B4).
