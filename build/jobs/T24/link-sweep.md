@@ -1,6 +1,6 @@
 # link-sweep (T24)
 
-**Status** · session_01CB47oKg96hYW5eGnbZtNP7 · depth 2 · WAITING ON BOB (J3) · handled B4
+**Status** · session_01CB47oKg96hYW5eGnbZtNP7 · depth 2 · WORKING · handled B4
 
 ## J1 · QUESTION
 
