@@ -21,3 +21,7 @@
 - `checks/ownership.mjs … subresources tranche/T23`: 1 file changed; 0 failures.
 
 Size (session_01KN7hP9aoKoxenKuTv1wa7b): test runs 3, module lines 2069
+
+## J1 · COMPLETE
+
+N482 applied: R35 met. The code already had SUBRESOURCE_CAP = 400 as captureSubresources' default cap; a new interface test (R35, bio-plane/test/m/subresources/subresources.test.mjs) calls it without cap on 457 distinct references and asserts exactly 400 fetchOne calls, 57 CAP_REACHED records with cap 400, manifest.truncated true. No source change, no bundle input touched. Bundler may now retire deploybindings.test.mjs's source-text arm. Strike R35's 'not yet met' mark at the merge. subresources tests 36/36 pass; bio-plane/test/m 4993 pass, 4 fail, all accepted (MODULE_ORDER x3, control-plane R36 per K1105). format, architecture, coverage (35/35), ownership: 0 failures. Record: build/jobs/T23/subresources.md.
