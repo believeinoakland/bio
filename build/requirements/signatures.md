@@ -1,6 +1,6 @@
 # signatures — requirements
 
-**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code today: `bio-plane/src/sshsig.mjs`, `bio-plane/src/tsa.mjs`, `bio-plane/src/signpage.mjs`. All requirements below are met by the code as it stands; none is outstanding. No old-plan row and no `build/plan/next.md` entry targets this module. The module holds no local (jurisdiction) fact today: its namespace strings, endpoints and the signer page are the same for every instance, so the "No jurisdiction in the product" rule (`build/layers.md`) raises nothing here. AMENDED at T19's fold (BOB-5, K648, K653) by a worker for BOB #80, 2026-10-01: the operator-side release signer `tools/sign-sshsig.mjs` joins the module (live: the release assembler, bundler R23, imports it); R33–R36 state its behaviour today, tested by signatures' T19 job (layer 1). `tools/sign-release.html` is not taken: it is an older copy of `bio-plane/src/sign-release.html` differing only in the product name (R32), read by nothing, and legacy-index deletes it.
+**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code today: `bio-plane/src/sshsig.mjs`, `bio-plane/src/tsa.mjs`, `bio-plane/src/signpage.mjs`. All requirements below are met by the code as it stands; none is outstanding. No old-plan row and no `build/plan/next.md` entry targets this module. The module holds no local (jurisdiction) fact today: its namespace strings, endpoints and the signer page are the same for every instance, so the "No jurisdiction in the product" rule (`build/layers.md`) raises nothing here. AMENDED at T19's fold (BOB-5, K648, K653) by a worker for BOB #80, 2026-10-01: the operator-side release signer `tools/sign-sshsig.mjs` joins the module (live: the release assembler, bundler R23, imports it); R33–R36 state its behaviour today, tested by signatures' T19 job (layer 1). `tools/sign-release.html` is not taken: it is an older copy of `bio-plane/src/sign-release.html` differing only in the product name (R32), read by nothing, and legacy-index deletes it. AMENDED at T23's opening (fold 1b) by a worker for BOB #94, 2026-10-02, from `build/plan/draft-network-notices.md` (DEC-111, K1019, K1031, K1100): R37 `NS_NOTICE` and R38 `noticeStatement` added, R1 amended "Three" to "Four", for `network-notices`.
 
 ## Public
 
@@ -12,8 +12,9 @@ Builds and verifies the signed and timestamped statements the plane and the inst
 
 **Signatures (`sshsig.mjs`)**
 
-`NS_RELEASE`, `NS_RATIFY`, `NS_FLEET` → strings (`"bio-release"`, `"bio-ratify"`, `"bio-release-fleet"`).
-- **R1** Three distinct compiled constants. No two are equal, so a signature that verifies in one namespace never verifies in another.
+`NS_RELEASE`, `NS_RATIFY`, `NS_FLEET`, `NS_NOTICE` → strings (`"bio-release"`, `"bio-ratify"`, `"bio-release-fleet"`, `"bio-working-on"`).
+- **R1** *(not yet met: T23)* Four distinct compiled constants: `NS_RELEASE`, `NS_RATIFY`, `NS_FLEET` and `NS_NOTICE`. No two are equal, so a signature that verifies in one namespace never verifies in another. (Amended at T23's opening from "Three": DEC-111, K1019, K1031.)
+- **R37** *(not yet met: T23)* `NS_NOTICE` is `"bio-working-on"`, a compiled constant distinct from every other namespace (R1's rule). The offline signer page and the browser signer sign in it (DEC-111, K1019, K1031).
 
 `verifySshsig(armored, message, expectNamespace, allowedKeys) → Promise<{ok:true, keyB64, namespace} | {ok:false, reason, ...}>`
 - **R2** `ok:true` only when: `armored` dearmors to a version-1 SSHSIG blob whose key and signature are both `ssh-ed25519` (32-byte key, 64-byte signature); its `namespace` equals `expectNamespace`; its signing key's wire base64 (`keyB64`) is in `allowedKeys`, after normalising each entry (a bare base64 field, a full `"ssh-ed25519 AAAA… comment"` line, or a principal-prefixed allowed_signers line all name the same key); and the signature verifies over `SSHSIG | namespace | reserved | hashAlg | H(message)`, hashed with the blob's own declared `hashAlg` (`sha256` or `sha512`), against the exact bytes of `message`.
@@ -26,6 +27,9 @@ Builds and verifies the signed and timestamped statements the plane and the inst
 `caseRatifyStatement(caseId, edition, docSha) → Uint8Array`
 - **R6** Returns the ASCII bytes `` `bio-ratify-case ${caseId} ${edition} ${docSha}\n` ``, exactly.
 - **R7** Its leading token (`bio-ratify-case`) differs from `ratifyStatement`'s (`bio-ratify`), so no bundle ratification and no case ratification can ever be the same signed bytes.
+
+`noticeStatement(noticeId, revision, sha) → Uint8Array`
+- **R38** *(not yet met: T23)* Returns exactly `` `bio-working-on ${noticeId} ${revision} ${sha}\n` ``. It throws when `noticeId` is not an opaque id, `revision` is not a whole number of at least 1, or `sha` is not 64 lowercase hex characters (DEC-111, K1019, K1031).
 
 `fleetStatement({version, plane, members}) → string`
 - **R8** Renders `` `bio-release-fleet/2\nversion ${version}\nplane ${plane.sha256} ${plane.bytes} ${plane.asset}\n` ``, then one line per entry of `members`, then a trailing `\n`.
