@@ -37,8 +37,7 @@
  *
  * READ CONTRACTS it reads in its own SQL: publication's `case_documents` and `cases` (its R40), record-core's `manifest`
  * and `history` (`gateFacts`' manifest and history lists, as they were), inquiry's `inquiry_basis` (`bundle_id`,
- * `target_id`, its R40), and connections' `refs` (`gateFacts`' `dangling` list, kept as it was; reported, since
- * connections states no read contract yet). */
+ * `target_id`, its R40), and connections' `refs` (`gateFacts`' `dangling` list, kept as it was; its R58). */
 
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf } from "../membership/index.mjs";
@@ -70,7 +69,7 @@ export { EDGE_REASON_MAX } from "./retire.mjs";
 /* The viewer stamp membership mints for an organisation-scoped agent credential (`aiCredentialMint`'s principal). */
 const AGENT_ORGANISATION_STAMP = `${MACHINE_CLASS_PREFIX}ai`;
 
-/* Frontmatter-safe (legacy-store's `#fmSafe`, the rule `caseConclusionRowLines` writes under): the restricted grammar
+/* Frontmatter-safe (once legacy-store's `#fmSafe`, the rule `caseConclusionRowLines` writes under): the restricted grammar
    has no escapes, and these strings are DERIVED rather than authored, so they are sanitised rather than refused. */
 export function fmSafe(s) {
   return String(s ?? "").replace(/[\r\n]+/g, " ").replace(/["\\]/g, "'").trim();
@@ -1155,7 +1154,7 @@ export function ratificationOf(host, deps) {
   return r;
 }
 
-/** R32: the module's store-half ops (K3), as entries of the legacy store's op map: `gatefacts` (R7), `ratifygate` (R4's
+/** R32: the module's store-half ops (K3), spread into the plane's op map (`plane/store.mjs`): `gatefacts` (R7), `ratifygate` (R4's
  *  gate, N417), `casegate` (R2's gate), `caseratify` (R3) and `publish` (R5), the internal hops of the two ceremonies,
  *  `release` (R20–R27) and `retire` (R28–R31). `viewer`, and release's and retire's `owner` and `author`, are the
  *  control plane's stamps, read from the query, never from the body. */

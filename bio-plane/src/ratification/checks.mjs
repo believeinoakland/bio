@@ -3,13 +3,13 @@
  * answers carries its code, its catalogue row and the member's translation.
  *
  * Moved here from the check catalogue (`legacy-checks`, K6, K94) with their ids, texts and translations unchanged:
- * `caseEditionClaimed`, `isCaseMemberBytes` (legacy-checks keeps its own copy for C-3.1's heading rule, Decided 6),
+ * `caseEditionClaimed`, `isCaseMemberBytes` (record-grammar keeps its own copy for C-3.1's heading rule, N69; Decided 6),
  * `SUBJECT_POSITIONS`, `CASE_MEMBER_ROLES`, `biasAcknowledgementOf`, `completenessFields`, `checkPublishedExtension`
  * (C-2.8's case-member arm), `SEARCHED_SUBJECT_SOURCES`, `CASE_DOCUMENT_FAMILY` (C-41.1–C-41.16),
  * `CASE_CITATION_VERSIONS`, `checkCaseDocument`; the rows C-32.12–C-32.15, C-53.10–C-53.12, C-58.1–C-58.5, C-65.1 and
  * C-92.10–C-92.12; and, copied in T18 (split tables), C-32.1, C-33.10–C-33.12 (the bulk release) and C-102.10. A
  * row's `where` names the region in this module that mints it. The case-document formats and their three predicates
- * are `publication`'s (its R20). The legacy code's comments moved with it. */
+ * are `case-grammar`'s (its R1), read through `publication`'s re-export. The legacy code's comments moved with it. */
 
 import { ISO_TS_RE, BUNDLE_ID_RE, BASIS_GRADES, GRADE_AXES } from "../record-grammar/index.mjs";
 import { STRENGTH_STATES } from "../strength/index.mjs";
@@ -19,7 +19,7 @@ import { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V2, CASE_DOCUMENT_FORMAT_LEG
 import { whatChangedOf } from "../case-grammar/index.mjs";
 
 /* The catalogue's finding shape (`{check, severity, message, repairable?, repairs?, code?}`), so a finding from here
-   reads exactly as one from `legacy-checks`. */
+   reads exactly as one from the record's grammars (`record-grammar` R11). */
 function f(check, severity, message, repairs, code) {
   const out = { check, severity, message };
   if (repairs) { out.repairable = true; out.repairs = repairs; }
@@ -1141,14 +1141,14 @@ export const RATIFY_SCOPE_CHECKS = {
       + 'project sign the case document; an owner of that project can then sign this. Nothing was '
       + 'published.',
   },
-  /* DEC-97 (3), K1058: R22's contested arm. Awaiting stamp (T23). */
+  /* DEC-97 (3), K1058: R22's contested arm. Stamped in `CATALOG_VERSION` 1.53.0 (promotion, T23 layer 2). */
   CONTESTED_IN_BATCH: {
     check: 'C-58.4',
     where: 'src/ratification/release.mjs release > is-release-contested',
     translation: 'Some of these documents are contested: a contradiction touching each is not yet resolved, and '
       + 'contested material is never released in a batch. They are named. Nothing was released.',
   },
-  /* DEC-102 items 1 and 2, K1058: R35, testimony credited only to the group or the project. Awaiting stamp (T23). */
+  /* DEC-102 items 1 and 2, K1058: R35, testimony credited only to the group or the project. Stamped in 1.53.0. */
   ANONYMOUS_TESTIMONY_UNCORROBORATED: {
     check: 'C-58.5',
     where: 'src/ratification/refusals.mjs anonymousTestimonyRefusal > is-anonymous-testimony',

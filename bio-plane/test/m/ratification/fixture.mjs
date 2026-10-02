@@ -104,7 +104,7 @@ export function world() {
   credentials.migrate();
   registerInquiryGrammar(record);
   const promotion = promotionOf(host, { record, membership, now: () => NOW });
-  promotion.registerFact("producingGroup", "legacy-store", () => "test-group");
+  promotion.registerFact("producingGroup", "instance-setup", () => "test-group");
   /* the columns of inquiry's `inquiry_basis` and connections' `refs` that R7's facts join, as their writers fill them */
   st.db.exec(`CREATE TABLE inquiry_basis (bundle_id TEXT NOT NULL, ord INTEGER NOT NULL, target_id TEXT NOT NULL)`);
   st.db.exec(`CREATE TABLE refs (bundle_id TEXT NOT NULL, target_id TEXT NOT NULL, kind TEXT NOT NULL DEFAULT '',
