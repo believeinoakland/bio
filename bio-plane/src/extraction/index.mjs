@@ -1415,7 +1415,7 @@ export class Extraction {
 
   /** R39's derivation, unfiltered by viewer: calibration's worse supersessions (its R11) against the text-source rows
    *  naming a calibration, read at most TEXT_SOURCE_LIMIT_MAX with `truncated`. `supersededId` narrows it (R40). The
-   *  legacy store's content-axis frontier reads it whole, and gates its own rows. */
+   *  content-axis frontier (`retrieval`'s `frontier.mjs`) reads it whole, and gates its own rows. */
   driftFor(supersededId = null) {
     const c = this.calibration;
     if (!c || typeof c.worseSupersessions !== "function")
@@ -1471,8 +1471,9 @@ export class Extraction {
   }
 }
 
-/* The Durable Object routes this module answers, as entries of the legacy store's op map (its dispatcher spreads
-   them in). `url` carries the control plane's stamps; `body` the parsed body. */
+/* The Durable Object routes this module answers, as entries of the plane's one route map (plane R5: `routes` spreads
+   them in, and control-plane's `dispatch` answers every store request over it). `url` carries the control plane's
+   stamps; `body` the parsed body. */
 export function extractionOps(x, url, body, env) {
   const q = (k) => url.searchParams.get(k);
   return {

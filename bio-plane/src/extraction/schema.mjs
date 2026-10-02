@@ -68,7 +68,7 @@ CREATE INDEX IF NOT EXISTS readings_bundle ON readings(bundle_id);
 -- citation, not a reader's silence -- collapsing the two would let a reader's
 -- shortcoming read as a member's choice. The reading's own basis says WHOSE
 -- absence it is, so the null is never bare.
--- The column arrives WITH its writer (schema.mjs's own standing rule): the
+-- The column arrives WITH its writer (the retired schema.mjs's standing rule): the
 -- agenda reader emits a position and op=promote projects it in the same landing.
 -- D-454: ONE ROW PER OCCURRENCE, keyed (capture_sha, ref, occurrence). Until this
 -- the key was (capture_sha, ref), so a reference string read on three pages was
@@ -80,7 +80,8 @@ CREATE INDEX IF NOT EXISTS readings_bundle ON readings(bundle_id);
 -- which is exactly the one row every store held before this: a read asking about the
 -- REFERENCE (resolve, the name index, the frontier) reads seq 0, and a read asking
 -- about its MENTIONS reads every row. The re-key keeps every existing row (the
--- migration renames, recreates and copies forward, store.mjs #migrate).
+-- migration renames, recreates and copies forward, this module's migrate(),
+-- index.mjs).
 CREATE TABLE IF NOT EXISTS reading_refs (
   capture_sha  TEXT NOT NULL,
   bundle_id    TEXT NOT NULL,
@@ -117,8 +118,8 @@ CREATE INDEX IF NOT EXISTS reading_refs_bundle ON reading_refs(bundle_id);
 -- 305 rows for that whole document.
 --
 -- term is the case-folded, whitespace-collapsed, punctuation-split form produced
--- by the SAME normaliser entity_aliases.alias_norm keys on (Store labelTerms over
--- normAlias). One function, so the two sides of the join cannot drift; a term
+-- by the SAME normaliser entity_aliases.alias_norm keys on (this module's
+-- labelTerms over normAlias, index.mjs; R59). One function, so the two sides of the join cannot drift; a term
 -- projection that folded differently from the alias index would silently stop
 -- matching and nothing would fail.
 --
@@ -133,7 +134,7 @@ CREATE INDEX IF NOT EXISTS reading_refs_bundle ON reading_refs(bundle_id);
 -- whose reference KEY, is spelled like a subject's registered name) were
 -- proposable only by a caller who already knew the exact string to ask for, and
 -- after UI-26 traded away the per-name loop they were proposable from no surface
--- at all. #recognise reads THREE strings and grades them A (ref), B (ref_key)
+-- at all. The recogniser (entities' recogniseTier) reads THREE strings and grades them A (ref), B (ref_key)
 -- and C (label); an index carrying one of the three answers one of the three.
 --
 -- WHY THE SAME TABLE AND NOT A SIBLING, by this project's own test (D4 as REC-42
@@ -159,7 +160,7 @@ CREATE INDEX IF NOT EXISTS reading_refs_bundle ON reading_refs(bundle_id);
 --
 -- src is label, ref or key, and key is written only when the reference
 -- key normalises to something different from the whole reference -- the same
--- guard #recognise applies before it considers the B tier, so the index and
+-- guard the recogniser applies before it considers the B tier, so the index and
 -- the recogniser cannot disagree about whether a B tier exists.
 CREATE TABLE IF NOT EXISTS reading_ref_terms (
   capture_sha  TEXT NOT NULL,
@@ -299,7 +300,7 @@ CREATE INDEX IF NOT EXISTS capture_text_bundle ON capture_text(bundle_id);
 -- if such an index exists -- so one was written here. The airuns suite sweep
 -- then named it on the roster of ACCESS PATHS NO OP ASKS FOR, correctly: the op
 -- that would read it is REC-92's passage: arm and it does not exist. REC-12's
--- rule is already recorded a few hundred lines up in store.mjs for three
+-- rule was recorded in the retired store's schema for three
 -- other columns -- *an index nobody seeks on is cost with no reader* -- and the
 -- index's cost here is per UNIT rather than per bundle, which is the grain that
 -- made this whole table worth measuring.
