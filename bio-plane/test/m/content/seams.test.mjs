@@ -221,7 +221,8 @@ test("R50: each arm reads its parameters as store.mjs' arm did: the stamps from 
 
   /* attesttext: the attestor is the query's stamp; the body's member is never read */
   const att = run("attesttext", { attestor: V("di"), viewer: V("di") },
-                  { captureSha: a.sha, member: V("mallory"), extent: { kind: "page", page: 1 }, at: "2026-09-02T00:00:00Z" });
+                  { captureSha: a.sha, member: V("mallory"), extent: { kind: "page", page: 1 }, at: "2026-09-02T00:00:00Z",
+                    note: "page 1 against the scan" });
   assert.deepEqual([att.ok, att.attestor], [true, V("di")]);
   assert.equal(run("attesttext", { viewer: V("di") }, { captureSha: a.sha, member: V("di"), extent: { kind: "document" } }).code,
     "TEXT_ATTEST_MACHINE", "an absent stamp is not filled from the body");
@@ -246,7 +247,7 @@ test("R50: each arm reads its parameters as store.mjs' arm did: the stamps from 
   /* transcriptionattest: the content id from the body, else the query; the attestor the query's stamp */
   const ta = run("transcriptionattest", { attestor: V("zo"), viewer: V("zo") }, { contentId: t.content_id, note: "checked", attestor: V("ty") });
   assert.deepEqual([ta.ok, ta.attestor], [true, V("zo")]);
-  const tq = run("transcriptionattest", { attestor: V("xi"), viewer: V("xi"), contentId: t.content_id }, null);
+  const tq = run("transcriptionattest", { attestor: V("xi"), viewer: V("xi"), contentId: t.content_id }, { note: "checked" });
   assert.deepEqual([tq.ok, tq.attestor], [true, V("xi")]);
   assert.equal(run("transcriptionattest", { attestor: V("ty"), viewer: V("ty"), contentId: t.content_id }, {}).code, "TRANSCRIPTION_SELF_ATTEST");
 

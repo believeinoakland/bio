@@ -4,19 +4,22 @@
  *
  * C-52, the transcription's nine refusals (R23, R25, R26), moved here from the catalogue in T18 (`TRANSCRIBE_CHECKS`;
  * K585 (3)), the catalogue's copy deleted in the same job (✱, K586): no product module but this one reads it. Rows,
- * codes, `where`s and translations unchanged.
+ * codes, `where`s and translations unchanged. C-52.10 (`ATTEST_NO_NOTE`, R25 and R43; DEC-88, K1025), the attestor's
+ * note, is a new row minted here in T22, awaiting stamp; it is the one row of this family both attestations answer.
  *
  * C-80.3, the passage notice's one refusal (R29), was COPIED here in T18 (`VERSION_NOTICE_CHECKS`); this module was the
  * catalogue's last importer of its copy, which T19's content job deleted (K750 (1), K769). This is now the one row.
  *
  * C-45 (the extent grammar's rows, `CONTENT_EXTENT_CHECKS`) is COPIED here in T19 (R48; K585 (5)) with the extent
  * core (`./extent-core.mjs`): codes, numbers and translations unchanged, each `where` naming the site in this module
- * that answers it. The catalogue keeps its own copy for its own leg grammar (C-2.8, C-25.10) until `inquiry-grammar`
- * deletes it (layer 6). C-45.13, which the catalogue never carried, is `./extent.mjs`' `CONTENT_EXTENT_OWN_CHECKS`. */
+ * that answers it. The catalogue kept its own copy for its own leg grammar (C-2.8, C-25.10) until the catalogue was
+ * deleted (T19, control-plane R43); that leg grammar is now `inquiry-grammar`'s and reads this module's core. C-45.13,
+ * which the catalogue never carried, is `./extent.mjs`' `CONTENT_EXTENT_OWN_CHECKS`. */
 
 /* =====================================================================
  * REC-87 / IC-128 — TRANSCRIBE (Bob's 5.2): a member selects a portion of a
- * document and types its text. C-52, minted with `node tools/mintid.mjs C`.
+ * document and types its text. C-52, minted with the old process's
+ * `node tools/mintid.mjs C` (that tool was retired in T19).
  *
  * ITS OWN FAMILY, because the subject is its own: the ways a member's typing of
  * a page could come to claim more than one person's word supports. C-35 is the
@@ -32,7 +35,10 @@
  *   is-transcription-attest      THE REFUSAL THE ITEM EXISTS FOR — the transcriber
  *                                attesting their own transcription (the equality
  *                                that costs nothing, one altitude up from two
- *                                empty-body digests agreeing)
+ *                                empty-body digests agreeing) — and, after it,
+ *                                an attestation that does not say what was compared
+ *   is-text-attest               the same note, on an attestation of the capture's
+ *                                own text (C-52.10, DEC-88: one row for both acts)
  * ===================================================================== */
 export const TRANSCRIBE_CHECKS = {
   TRANSCRIBE_NOT_A_MEMBER: {
@@ -95,6 +101,16 @@ export const TRANSCRIBE_CHECKS = {
       + 'attestation is a SECOND person checking the text against the page; your own agreement with '
       + 'your own typing costs nothing and proves nothing. Ask another member to check it.',
   },
+  /* DEC-88 (K1025): an attestation is a member's word that text matches the page, and the word is only checkable if it
+     says what was compared. One row for BOTH attestations, a typing's (R25) and the capture's own text (R43), because
+     the missing fact is the same fact; a sub-number of this allocated family, minted in T22 and awaiting stamp. */
+  ATTEST_NO_NOTE: {
+    check: 'C-52.10',
+    where: 'src/content/index.mjs transcriptionAttest > is-transcription-attest, and attestText > is-text-attest',
+    translation: 'An attestation needs a note in your own words saying what you compared — which page or passage you '
+      + 'read, and against what. Without it a later reader sees only that somebody agreed, not what they checked, and '
+      + 'cannot weigh the attestation or check it again. Write the note (at most 2,000 characters) and attest again.',
+  },
 };
 
 /* D-394 / C-80 — THE CROSS-VERSION NOTICE'S REFUSALS
@@ -112,9 +128,9 @@ export const TRANSCRIBE_CHECKS = {
  * invited to refuses byte-identically to one that does not exist. */
 export const VERSION_NOTICE_CHECKS = {
   /* The passage named is not a content row this caller may read. Its `where` names content's `passageNotice`
-     (content R29–R31, T5; N97, T6): the passage arm is content's. The store's `versionNotice` still answers the
-     same condition inside `is-version-notice-subject`, one sentence true at both, until legacy-store's passage arm
-     delegates to content (reported by T6's legacy-checks job). */
+     (content R29–R31, T5; N97, T6): the passage arm is content's. The legacy store's `versionNotice` answered the
+     same condition inside `is-version-notice-subject`, one sentence true at both, until that store was deleted (T19);
+     `reevaluation`'s `versionNotice` now returns this module's answer as it comes, so this is the one site. */
   VERSION_NOTICE_NO_CONTENT: {
     check: 'C-80.3',
     where: 'src/content/index.mjs passageNotice > is-passage-notice',

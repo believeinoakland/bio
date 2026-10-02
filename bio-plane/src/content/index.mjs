@@ -61,6 +61,8 @@ export { contentOps } from "./ops.mjs";
 /** The one bound on a typing (R23, C-52.7): the per-unit cap one passage of the text index is stored to
  *  (`CAPTURE_TEXT_UNIT_CAP`, M-20's 131,072 B). Refused over it, never truncated. */
 export const TRANSCRIPTION_MAX_BYTES = 128 * 1024;
+/** C-52.10 (R25, R43; DEC-88): the longest note an attestation keeps, in characters (code points). */
+export const ATTEST_NOTE_MAX = 2000;
 /** The attestation reads' page bound (CPDF-10): enough to work with on a screen, far short of a dump. */
 export const TEXT_SOURCE_LIMIT_DEFAULT = 200;
 export const TEXT_SOURCE_LIMIT_MAX = 5000;
@@ -76,6 +78,14 @@ export const STALE_GRADED_MAX = 200;
 export const CONTENT_COUNT_KEYS = Object.freeze(["content", "contentStale"]);
 
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+/** C-52.10: what is wrong with an attestor's note, or null when it is one: a string with something other than white
+ *  space in it, at most `ATTEST_NOTE_MAX` characters. */
+const noteFault = (note) =>
+  note === undefined || note === null ? "carries no note"
+  : typeof note !== "string" ? `carries a note that is not text (${Array.isArray(note) ? "a list" : typeof note})`
+  : !note.trim() ? "carries a note with nothing in it"
+  : [...note].length > ATTEST_NOTE_MAX ? `carries a note of ${[...note].length} characters, over the ${ATTEST_NOTE_MAX} kept`
+  : null;
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
 const ROW_COLS = `content_id, capture_sha, bundle_id, extent_kind, extent, ref, chain, derivation_cap, page_count,
                   minted_by, at, stale, cited_as`;
@@ -326,8 +336,8 @@ export class Content {
 
   /* ===================================================================== *
    * THE CAPTURE'S TEXT ATTESTATIONS (CPDF-10; K73 (1)). A member's testimony that a document's text matches the image
-   * of the page over a stated extent. Every refusal is `text-chain.checkAttestation`'s (C-35.10, C-35.11). The chain is
-   * SNAPSHOTTED: an attestation is testimony about text AS IT STOOD, so a later re-read makes it `stale`, never
+   * of the page over a stated extent. Its refusals are `text-chain.checkAttestation`'s (C-35.10, C-35.11), `NO_READING`,
+   * then the attestor's note (C-52.10, R43; DEC-88), all before anything is written. The chain is SNAPSHOTTED: an attestation is testimony about text AS IT STOOD, so a later re-read makes it `stale`, never
    * deleted — a member's testimony is not ours to remove.
    * ===================================================================== */
 
@@ -348,17 +358,32 @@ export class Content {
       return { ok: false, reason: "NO_READING",
                detail: `nothing in this store has been read at that capture hash, so there is no text to attest to. `
                      + `Attesting is about what a document SAYS, and this record does not yet hold what this one says` };
+    /* DEC-49 REGION is-text-attest */
+    const fault = noteFault(pkg.note);
+    if (fault)
+      return this.#transcribeRefusal("ATTEST_NO_NOTE",
+        `this attestation ${fault}. The note is the attestor's own words on what they compared — the page or passage `
+        + `read, and against what — and it is kept with the attestation, so a later reader can weigh it`,
+        { capture_sha: sha, max_chars: ATTEST_NOTE_MAX });
+    /* END DEC-49 REGION is-text-attest */
     const chain = r.chain ?? null;
     const e = att.extent;
+    const page = e.kind === "page" ? e.page : (e.kind === "region" ? e.source.page : null);
+    const rect = e.kind === "region" ? JSON.stringify(e.source.rect) : null;
     return this.record.transact(() => {
+      /* ONE PER (capture, attestor, extent), A REPEAT REPLACING IT (R43). The table's key holds the page and rect, which
+         are NULL for a document or page extent, and SQLite keys every NULL apart, so `INSERT OR REPLACE` alone would
+         keep both: the held one is removed first, matched with `IS`. */
       this.sql.exec(
-        `INSERT OR REPLACE INTO text_attestations
+        `DELETE FROM text_attestations
+          WHERE capture_sha=? AND attestor=? AND extent_kind=? AND extent_page IS ? AND extent_rect IS ?`,
+        sha, att.member, e.kind, page, rect);
+      this.sql.exec(
+        `INSERT INTO text_attestations
            (capture_sha,bundle_id,attestor,at,extent_kind,extent_page,extent_rect,note,chain)
          VALUES (?,?,?,?,?,?,?,?,?)`,
-        sha, bundleId, att.member, att.at, e.kind,
-        e.kind === "page" ? e.page : (e.kind === "region" ? e.source.page : null),
-        e.kind === "region" ? JSON.stringify(e.source.rect) : null,
-        typeof pkg.note === "string" ? pkg.note : null,
+        sha, bundleId, att.member, att.at, e.kind, page, rect,
+        pkg.note,
         chain == null ? null : JSON.stringify(chain));
       return { ok: true, capture_sha: sha, attestor: att.member, at: att.at, extent: e,
                chain_at_attestation: chain,
@@ -435,9 +460,6 @@ export class Content {
     const undetermined = mintUndetermined(extent, c);
     return { ok: true, content_id: id, minted: !before, ...(undetermined ? { undetermined } : {}) };
   }
-
-  /** The legacy store's name for `mint`, kept for its callers. */
-  mintContent(args) { return this.mint(args); }
 
   /** R15 — SK-7 (Bob's 5.7): MARKING A PASSAGE AS CITABLE, as an act a credential performs. It writes no edge and
    *  grants nothing about the text (attesting stays C-35.10's). `mintedBy` is the control plane's stamp and an absent
@@ -567,7 +589,8 @@ export class Content {
     return errs;
   }
 
-  /** The legacy store's order of the same pass (`#contentLegRefusals(legs, plan, label)`), kept for its callers. */
+  /** The retired legacy store's order of the same pass (`#contentLegRefusals(legs, plan, label)`), kept for
+   *  `basis-versions`, which calls it so. */
   legRefusals(legs, plan, label) { return this.citationRefusals(legs, label, plan); }
 
   /** R28: the row a citation resolves to. A named content id is used as it is; otherwise the plane mints R5's extent
@@ -712,7 +735,7 @@ export class Content {
   /** ONE ROW'S STANDING: its ceiling on the transcription axis (R21) and the sentence that says which. The capture's
    *  attestations are judged against the ROW's own chain (an attestation made against a transcription the citation
    *  never saw did not check the text it points at); a TYPING is raised only by attestations of that typing, by
-   *  members other than the typist (REC-87). `connectionByBundle`, when a caller hands it, adds the legacy registry's
+   *  members other than the typist (REC-87). `connectionByBundle`, when a caller hands it, adds the earned read's
    *  connection axis (see `standings`). */
   #standing(r, atts, txs = null, connectionByBundle = null) {
     const extent = { kind: r.extent_kind, ...(safeJson(r.extent) || {}) };
@@ -758,8 +781,8 @@ export class Content {
 
   /** R20: what each row earns, for at most 200 ids, in a fixed number of set-based reads (the rows, the attestations
    *  over their captures, the typings among them), each without a connection axis. A caller that still owns the
-   *  connection axis (the legacy store's earned registry, until `connections` takes it) hands its per-bundle map as
-   *  `connectionByBundle` and gets that axis back beside each standing. */
+   *  connection axis (`inquiry`'s earned read, the legacy store's earned registry until T19, until `connections` takes
+   *  it) hands its per-bundle map as `connectionByBundle` and gets that axis back beside each standing. */
   standings(contentIds, connectionByBundle = null) {
     const ids = [...new Set((Array.isArray(contentIds) ? contentIds : [])
       .filter((c) => typeof c === "string" && c))].slice(0, CONTENT_EARNED_MAX);
@@ -1022,8 +1045,9 @@ export class Content {
   }
 
   /** R25: A SECOND MEMBER ATTESTS A TYPING. `checkAttestation` (C-35.10, C-35.11) unchanged, the scope DERIVED from the
-   *  typed portion and never taken from the caller; the typist is refused BY NAME (C-52.9). One attestation per (row,
-   *  attestor), a repeat replacing it; the typing itself is unchanged. */
+   *  typed portion and never taken from the caller; the typist is refused BY NAME (C-52.9); then the attestor's note,
+   *  their words on what they compared (C-52.10; DEC-88), before anything is written. One attestation per (row,
+   *  attestor), a repeat replacing it and kept with its note; the typing itself is unchanged. */
   transcriptionAttest({ contentId = null, attestor = null, viewer = null, at = null, note = null } = {}) {
     const src = this.#transcriptionOf(contentId, viewer);
     if (!src.ok) return src;
@@ -1040,10 +1064,16 @@ export class Content {
         `${who} typed this transcription (${t.at}). An attestation is a SECOND member checking it against the page; the `
         + `typist's own is not evidence and would raise the ceiling on one member's word`,
         { content_id: t.content_id, transcriber: t.transcriber });
+    const fault = noteFault(note);
+    if (fault)
+      return this.#transcribeRefusal("ATTEST_NO_NOTE",
+        `this attestation of ${t.transcriber}'s typing ${fault}. The note is the attestor's own words on what they `
+        + `compared — the typed text against which page or region — and it is kept with the attestation`,
+        { content_id: t.content_id, max_chars: ATTEST_NOTE_MAX });
     /* END DEC-49 REGION is-transcription-attest */
     const before = this.#transcriptionStanding(t.content_id);
     this.sql.exec(`INSERT OR REPLACE INTO transcription_attestations (content_id,bundle_id,attestor,at,note) VALUES (?,?,?,?,?)`,
-      t.content_id, t.bundle_id, who, att.at, typeof note === "string" && note.trim() ? note : null);
+      t.content_id, t.bundle_id, who, att.at, note);
     const after = this.#transcriptionStanding(t.content_id);
     return {
       ok: true, content_id: t.content_id, transcriber: t.transcriber, attestor: who, at: att.at, extent: scope,

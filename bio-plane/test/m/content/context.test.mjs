@@ -5,6 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
 import { noSha } from "../../../src/extraction/index.mjs";
+import { ATTEST_NOTE_MAX, TRANSCRIBE_CHECKS, contentOps } from "../../../src/content/index.mjs";
 
 const DOC = "INFO-2026-0001-a";
 
@@ -21,7 +22,7 @@ test("R42: contentContextFor: the chain, the page set (stored count first, else 
   const b = w.cap("b"); w.doc("INFO-2026-0002-b", [b]);
   w.read(b.sha, { pageCount: null, chain: [{ step: "layer", tier: 1, extent: { kind: "pages", pages: [0, 3] } }] });
   assert.equal(w.content.contentContextFor(b.sha).pageCount, 4);
-  w.content.attestText({ captureSha: b.sha, viewer: V("bo"), member: V("cy"), extent: { kind: "page", page: 6 } });
+  w.content.attestText({ note: "compared with the page", captureSha: b.sha, viewer: V("bo"), member: V("cy"), extent: { kind: "page", page: 6 } });
   assert.equal(w.content.contentContextFor(b.sha).pageCount, 7);
   /* an office container, by the format registry, never a list of slugs */
   const d = w.cap("d"); w.doc("INFO-2026-0003-d", [d]);
@@ -37,30 +38,96 @@ test("R42: contentContextFor: the chain, the page set (stored count first, else 
 test("R43: attestText: a member's attestation over a stated extent, the chain snapshotted; refusals are text-chain's; no reading is NO_READING", () => {
   const w = world();
   const a = w.cap("a"); w.doc(DOC, [a]); w.read(a.sha, { pageCount: 3 });
-  assert.equal(w.content.attestText({ captureSha: a.sha, viewer: V("bo"), member: "class:ai", extent: { kind: "document" } }).code, "TEXT_ATTEST_MACHINE");
-  assert.equal(w.content.attestText({ captureSha: a.sha, viewer: V("bo"), member: V("cy"), extent: { kind: "page" } }).code, "TEXT_ATTEST_EXTENT");
+  assert.equal(w.content.attestText({ note: "compared with the page", captureSha: a.sha, viewer: V("bo"), member: "class:ai", extent: { kind: "document" } }).code, "TEXT_ATTEST_MACHINE");
+  assert.equal(w.content.attestText({ note: "compared with the page", captureSha: a.sha, viewer: V("bo"), member: V("cy"), extent: { kind: "page" } }).code, "TEXT_ATTEST_EXTENT");
   assert.equal(w.content.attestText({ captureSha: "0".repeat(64), viewer: V("bo"), member: V("cy"), extent: { kind: "document" } }).reason, "NO_READING");
   const r = w.content.attestText({ captureSha: a.sha, viewer: V("bo"), member: V("cy"), extent: { kind: "region", source: { kind: "pdf-page", page: 1, rect: [0, 0, 5, 5] } }, at: "2026-09-02T00:00:00Z", note: "ok" });
   assert.deepEqual([r.ok, r.attestor, r.at], [true, V("cy"), "2026-09-02T00:00:00Z"]);
   assert.deepEqual(r.chain_at_attestation, w.ex.readings[a.sha].chain);
   /* the viewer is the stamp and is asked: a bundle the viewer may not see, or no stamp, answers as a capture never read */
-  const unread = w.content.attestText({ captureSha: "0".repeat(64), viewer: V("bo"), member: V("cy"), extent: { kind: "document" } });
+  const unread = w.content.attestText({ note: "compared with the page", captureSha: "0".repeat(64), viewer: V("bo"), member: V("cy"), extent: { kind: "document" } });
   for (const viewer of ["nobody", null, undefined])
-    assert.deepEqual(w.content.attestText({ captureSha: a.sha, viewer, member: V("cy"), extent: { kind: "document" } }), unread);
+    assert.deepEqual(w.content.attestText({ note: "compared with the page", captureSha: a.sha, viewer, member: V("cy"), extent: { kind: "document" } }), unread);
   /* a repeat by the same attestor over the same extent replaces it */
   w.content.attestText({ captureSha: a.sha, viewer: V("bo"), member: V("cy"), extent: { kind: "region", source: { kind: "pdf-page", page: 1, rect: [0, 0, 5, 5] } }, at: "2026-09-02T00:00:00Z", note: "ok" });
   assert.equal(w.count("text_attestations"), 1);
   const row = w.row(`SELECT * FROM text_attestations`);
   assert.deepEqual([row.bundle_id, row.extent_kind, row.extent_page, JSON.parse(row.extent_rect), row.note], [DOC, "region", 1, [0, 0, 5, 5], "ok"]);
+  /* and over a page or the whole document, whose key holds a NULL page or rect: still one, the repeat replacing it */
+  for (const extent of [{ kind: "page", page: 2 }, { kind: "document" }]) {
+    w.content.attestText({ captureSha: a.sha, viewer: V("bo"), member: V("cy"), extent, at: "2026-09-04T00:00:00Z", note: "first" });
+    w.content.attestText({ captureSha: a.sha, viewer: V("bo"), member: V("cy"), extent, at: "2026-09-05T00:00:00Z", note: "second" });
+    const held = w.rows(`SELECT at, note FROM text_attestations WHERE extent_kind=?`, extent.kind).map((x) => ({ ...x }));
+    assert.deepEqual(held, [{ at: "2026-09-05T00:00:00Z", note: "second" }], extent.kind);
+  }
+  assert.equal(w.count("text_attestations"), 3);
+});
+
+test("R43: attestText: ATTEST_NO_NOTE (C-52.10) after NO_READING: a note absent, not a string, blank or over 2,000 characters is refused with nothing written; at 2,000 it is kept and read back", () => {
+  const w = world();
+  const a = w.cap("a"); w.doc(DOC, [a]);
+  w.read(a.sha, { pageCount: 3, chain: [{ step: "layer", tier: 1 }, { step: "ocr", engine: "t", version: "1", cap: "C", measured_by: "m" }] });
+  const att = (o) => w.content.attestText({ captureSha: a.sha, viewer: V("bo"), member: V("cy"), extent: { kind: "page", page: 1 }, ...o });
+  /* the earlier refusals are asked first, note or none: text-chain's, then NO_READING (unread, invisible, no viewer) */
+  for (const note of [undefined, ""]) {
+    assert.equal(att({ member: "class:ai", note }).code, "TEXT_ATTEST_MACHINE");
+    assert.equal(att({ extent: { kind: "page" }, note }).code, "TEXT_ATTEST_EXTENT");
+    assert.equal(att({ captureSha: "0".repeat(64), note }).reason, "NO_READING");
+    assert.equal(att({ viewer: "nobody", note }).reason, "NO_READING");
+    assert.equal(att({ viewer: null, note }).reason, "NO_READING");
+  }
+  /* every way a note can fail, each refused by C-52.10's row, with nothing written: no attestation row, the ceiling and
+     the attestations unchanged */
+  const before = w.snapshot();
+  const list0 = w.content.attestationsFor(a.sha, { page: 1 }, V("bo"));
+  const ctx0 = w.content.contentContextFor(a.sha);
+  const row = TRANSCRIBE_CHECKS.ATTEST_NO_NOTE;
+  const bad = [["absent", {}], ["null", { note: null }], ["a number", { note: 7 }], ["true", { note: true }],
+               ["an object", { note: { said: "ok" } }], ["empty", { note: "" }], ["white space", { note: "\u00a0 \n" }],
+               ["2,001 characters", { note: "n".repeat(ATTEST_NOTE_MAX + 1) }],
+               ["2,001 astral characters", { note: "\u{1D538}".repeat(ATTEST_NOTE_MAX + 1) }]];
+  for (const [label, o] of bad) {
+    const r = att(o);
+    assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation, r.max_chars],
+                     [false, "ATTEST_NO_NOTE", "ATTEST_NO_NOTE", "C-52.10", row.translation, ATTEST_NOTE_MAX], label);
+    assert.equal(r.capture_sha, a.sha, label);
+  }
+  assert.equal(w.count("text_attestations"), 0, "no refusal writes");
+  assert.deepEqual(w.snapshot(), before, "nothing written anywhere");
+  assert.deepEqual(w.content.attestationsFor(a.sha, { page: 1 }, V("bo")), list0, "the attestations and the ceiling unchanged");
+  assert.deepEqual([list0.count, list0.ceiling.determinant], [0, "derivation"]);
+  assert.deepEqual(w.content.contentContextFor(a.sha), ctx0);
+  /* through the route arm: the note is the body's, and a body without one is refused the same way */
+  const run = (body) => contentOps(w.content, new URL(`https://plane.invalid/?${new URLSearchParams({ attestor: V("cy"), viewer: V("bo") })}`), body).attesttext();
+  assert.equal(run({ captureSha: a.sha, extent: { kind: "document" } }).code, "ATTEST_NO_NOTE");
+  assert.equal(run({ captureSha: a.sha, extent: { kind: "document" }, note: " " }).code, "ATTEST_NO_NOTE");
+  assert.deepEqual(w.snapshot(), before);
+  /* the bound: exactly 2,000 characters (an astral one counts once) is admitted, kept byte for byte, read back */
+  const at2000 = "\u{1D538}".repeat(ATTEST_NOTE_MAX - 1) + ".";
+  const ok = att({ note: at2000, at: "2026-09-02T00:00:00Z" });
+  assert.equal(ok.ok, true);
+  assert.equal(w.row(`SELECT note FROM text_attestations`).note, at2000);
+  const list1 = w.content.attestationsFor(a.sha, { page: 1 }, V("bo"));
+  assert.deepEqual(list1.attestations.map((x) => [x.attestor, x.note]), [[V("cy"), at2000]], "read back with its note");
+  assert.deepEqual([list1.ceiling.determinant, list1.ceiling.by], ["attestation", [V("cy")]]);
+  assert.equal(att({ member: V("di"), note: "n".repeat(ATTEST_NOTE_MAX) }).ok, true, "2,000 plain characters admitted");
+  /* a refused repeat leaves the held attestation as it was; an accepted one replaces it, with its note */
+  const held = w.snapshot();
+  assert.equal(att({ note: "" }).code, "ATTEST_NO_NOTE");
+  assert.deepEqual(w.snapshot(), held);
+  assert.equal(att({ note: "page 1 against the scan, line by line", at: "2026-09-03T00:00:00Z" }).ok, true);
+  assert.deepEqual({ ...w.row(`SELECT at, note FROM text_attestations WHERE attestor=?`, V("cy")) },
+                   { at: "2026-09-03T00:00:00Z", note: "page 1 against the scan, line by line" });
+  assert.equal(w.count("text_attestations"), 2);
 });
 
 test("R44: attestationsFor: every attestation over a capture, bounded, stale against the live chain (never on a null), with the ceiling for a target", () => {
   const w = world();
   const a = w.cap("a"); w.doc(DOC, [a]);
   w.read(a.sha, { pageCount: 3, chain: [{ step: "layer", tier: 1 }, { step: "ocr", engine: "t", version: "1", cap: "C", measured_by: "m" }] });
-  w.content.attestText({ captureSha: a.sha, viewer: V("bo"), member: V("cy"), extent: { kind: "page", page: 1 }, at: "2026-09-01T00:00:00Z" });
+  w.content.attestText({ note: "compared with the page", captureSha: a.sha, viewer: V("bo"), member: V("cy"), extent: { kind: "page", page: 1 }, at: "2026-09-01T00:00:00Z" });
   w.read(a.sha, { pageCount: 3, chain: [{ step: "layer", tier: 1 }, { step: "ocr", engine: "t", version: "2", cap: "B", measured_by: "m" }] });
-  w.content.attestText({ captureSha: a.sha, viewer: V("bo"), member: V("di"), extent: { kind: "page", page: 2 }, at: "2026-09-02T00:00:00Z" });
+  w.content.attestText({ note: "compared with the page", captureSha: a.sha, viewer: V("bo"), member: V("di"), extent: { kind: "page", page: 2 }, at: "2026-09-02T00:00:00Z" });
   const r = w.content.attestationsFor(a.sha, { page: 1 }, V("bo"));
   assert.deepEqual(r.attestations.map((x) => [x.attestor, x.stale]), [[V("cy"), true], [V("di"), false]]);
   assert.deepEqual([r.count, r.truncated, r.limit], [2, false, 200]);
@@ -74,7 +141,7 @@ test("R44: attestationsFor: every attestation over a capture, bounded, stale aga
 test("R44 (N285): no digest (absent, not a string, or empty) is extraction's one NO_SHA answer (its R63), field for field, and reads and writes nothing", () => {
   const w = world();
   const a = w.cap("a"); w.doc(DOC, [a]); w.read(a.sha, { pageCount: 1 });
-  w.content.attestText({ captureSha: a.sha, viewer: V("bo"), member: V("cy"), extent: { kind: "document" } });
+  w.content.attestText({ note: "compared with the page", captureSha: a.sha, viewer: V("bo"), member: V("cy"), extent: { kind: "document" } });
   let asked = 0;
   const orig = w.content.extraction.readingOf;
   w.content.extraction.readingOf = (s) => { asked++; return orig(s); };

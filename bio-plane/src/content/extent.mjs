@@ -179,8 +179,9 @@ export function citationContentId(citation) {
   return CONTENT_ID_RE.test(t) ? t : null;
 }
 
-/** The content id a leg NAMES, or null where it names none: trimmed, and otherwise as written (the catalogue's C-2.8
- *  refuses a malformed one; C-45.5 answers one this record does not hold). Moved from the catalogue (REC-84). */
+/** The content id a leg NAMES, or null where it names none: trimmed, and otherwise as written (the leg grammar's C-2.8,
+ *  the catalogue's until T19 and `inquiry-grammar`'s since, refuses a malformed one; C-45.5 answers one this record
+ *  does not hold). Moved from the catalogue (REC-84). */
 export function legContentId(leg) {
   const v = isObj(leg) ? leg.content_id : undefined;
   if (typeof v !== "string") return null;
@@ -302,7 +303,7 @@ export function mintUndetermined(extent, ctx = {}) {
  *  shape on a slide whose shape count is not held (`shape_count`); a table with no table list (`table_list`) or a
  *  table cell whose grid is not held (`table_grid`); an envelope item, whose anchor is asked first and whose own
  *  existence the record holds no list to bound (`envelope_items`). Null for a document, for a bound held, and for the
- *  catalogue's document-only pass. The image forms and a rect's page box are the arms above and below. */
+ *  leg grammar's document-only pass. The image forms and a rect's page box are the arms above and below. */
 export function containerBoundUndetermined(extent, ctx = {}) {
   const e = isObj(extent) ? extent : null;
   if (!e || !ctx || ctx.known === false) return null;
