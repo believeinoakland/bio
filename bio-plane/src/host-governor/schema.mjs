@@ -1,6 +1,6 @@
-/* host-governor's one table (R24), moved from the legacy schema text (T4-1, K72 (3)). The legacy schema interpolates
- * it where the DDL stood, as it does record-core's; `HostGovernor#migrate` runs it too, so the module stands up on
- * its own storage. SQL comments are `--` lines, dropped before the statements run. */
+/* host-governor's one table (R24), moved from the legacy schema text (T4-1, K72 (3)). `HostGovernor#migrate` runs it,
+ * so the module stands up on its own storage; the plane store calls that `migrate` at every boot. SQL comments are
+ * `--` lines, dropped before the statements run. */
 export const HOST_GOVERNOR_SCHEMA = `
 -- D-95: the per-host request governor. Our APPETITE is a configured constant
 -- because it is ours; their CAPACITY is discovered by being refused and

@@ -263,8 +263,9 @@ export function governorOf(ctx, { env = null, now = null, random = null, record 
   return g;
 }
 
-/** The Durable Object's routes for this module, as entries of the legacy store's op map (its dispatcher spreads
- *  them in): the four paths a Worker reaches the governor by. */
+/** The Durable Object's routes for this module, as entries of the plane's one route map (plane R5: `routes` spreads
+ *  them in, and control-plane's `dispatch` answers every store request over it): the four paths a Worker reaches the
+ *  governor by. */
 export function governorRoutes(g, url, body) {
   return {
     governoradmit: () => g.governorAdmit(body || { host: url.searchParams.get("host") }),
