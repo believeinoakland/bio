@@ -1,8 +1,8 @@
 /* queue's tables (requirements: `build/requirements/queue.md`, R36): the personal half (`queue_state`,
- * `queue_item_mutes`) and the project-scoped dispositions (`finding_dispositions`). Moved from `schema.mjs` at the
- * module's extraction (T12; K4, "each module owns its tables"); `schema.mjs` interpolates this text where the first of
- * them stood, so the store's schema pass creates them as before, and `queueOf(ctx).migrate()` runs it on its own for a
- * storage the store never reached. The inbox's `tasks` is `tasks`' (its R8; N363). */
+ * `queue_item_mutes`) and the project-scoped dispositions (`finding_dispositions`). Moved from the legacy store's
+ * `schema.mjs` at the module's extraction (T12; K4, "each module owns its tables"), which interpolated this text until
+ * it was retired (T19); `queueOf(ctx).migrate()` creates them, run by the plane's migration pass (plane R3). The
+ * inbox's `tasks` is `tasks`' (its R8; N363). */
 export const QUEUE_TABLES = Object.freeze(["queue_state", "queue_item_mutes", "finding_dispositions"]);
 
 /** A table in a purge list (a name, or `{name, …}`) that is one of queue's. */

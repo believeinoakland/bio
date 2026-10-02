@@ -23,7 +23,7 @@ const FINDING = ["missing_predecessor", "overdue_successor", "temporal-expectati
   "shared-inquiry-concluded-by-another-project", "cardinality_exceeded", "newer-capture-affects-reference",
   "contradiction-plurality-unseen", "contradiction-lead", "contradiction-plurality", "side-corrected",
   "tension-after-publication"];
-/* observation-log's twenty (R5): its twelve, the five sweep kinds (monitoring R63, queue-producers R26) and the three
+/* observation-log's twenty (R5): its twelve, the five sweep kinds (link-sweep R11, queue-producers R26) and the three
    notice kinds (network-notices R12, R13, queue-producers R27) its R33 added in T23 (K1099); and the overdue action
    clock (K611). */
 const SWEEP_CONDITION = ["sweep-held-backlog", "sweep-yield-anomaly", "sweep-seed-unreachable",
