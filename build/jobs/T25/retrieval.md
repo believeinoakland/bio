@@ -19,3 +19,7 @@
 - `node checks/format.mjs`: 91 modules, 0 failures. `architecture.mjs … retrieval`: 0 failures. `coverage.mjs … retrieval`: 67 of 67 live ids named, 0 failures. `ownership.mjs … retrieval tranche/T25`: 4 files, 0 failures.
 
 Size (session_01Rg1wTDnZPBLyb87zvpKsZk): test runs 14, module lines 2347
+
+## J1 · COMPLETE
+
+Done (record "Completion"): routeFinding imported from provenance-routes (R5); R63's join reads provenance_route_marks under provenance-routes R8; fixture migrates provenance-routes; R63 test against the real provenanceRouteAssess with negative controls (and a mutation control, both red then reverted). retrieval tests 123/123; whole test/m 5330, 75 fail, none in retrieval, all reds 7/8/9 and all red on the base too. Checks: format, architecture, coverage (67/67), ownership all 0. No row added. Reported: plane store composes no provenance-routes, so op=list through the plane fails 'no such table' (red 9, promotion write-path:218); bio-plane bundle staled by src/retrieval/index.mjs (not regenerated). R63's 'not yet met: T25' mark is yours to strike at the merge.
