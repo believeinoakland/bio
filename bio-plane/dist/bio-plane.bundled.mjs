@@ -18612,6 +18612,7 @@ var MODULE_ORDER = Object.freeze([
   "case-grammar",
   "corpus-export",
   "publication",
+  "docket",
   "public-read",
   "project-stage",
   "network-notices",
