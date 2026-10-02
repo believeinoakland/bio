@@ -17,9 +17,9 @@
 - `node --test bio-plane/test/m/`: tests 5008, pass 4992, fail 4, todo 12. The four are accepted by name: control-plane R36 `inbox-door` (red 9), membership R83 `module-order.test.mjs`, R79 `t9-notice-sight-bounds.test.mjs`, promotion R39/R45/R46 `registry.test.mjs` (red 2).
 - Checks: format `87 modules, 85 requirements files; 0 failures`; architecture `19 product files, 45 relative imports (8 naming no tracked file, not judged); 0 failures`; coverage `1 modules, 23 of 23 live requirement ids named by a test; 0 failures`; ownership `1 files changed by bundler between tranche/T23 and HEAD; 0 failures`.
 
-Next: on BOB's word that subresources has merged, merge `tranche/T23`, re-run the proof and checks, post COMPLETE.
+**After B2 (subresources merged, K1116), `tranche/T23` merged (c0aa0ef99e), re-run:** proof tests 2, pass 2, fail 0, skipped 0 (deploybindings 37/0); `test/m/bundler/` 45/45; `test/m/subresources/` 36/36 (R35's interface test present); `test/m/` tests 5009, pass 4993, fail 4 (the same four, accepted by name), todo 12. Checks: format `87 modules, 86 requirements files; 0 failures`; architecture `0 failures`; coverage `23 of 23 live requirement ids named by a test; 0 failures`; ownership `2 files changed by bundler between tranche/T23 and HEAD; 0 failures`.
 
-Size (session_01NUc9jtCVoKc7BZNT8zXv6u): test runs 5, module lines 13
+Size (session_01NUc9jtCVoKc7BZNT8zXv6u): test runs 10, module lines 13
 
 ## J1 · REPORT
 
