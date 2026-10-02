@@ -17,6 +17,7 @@ import { promotionOf } from "../../../src/promotion/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { publicationOf } from "../../../src/publication/index.mjs";
 import { projectStageOf } from "../../../src/project-stage/index.mjs";
+import { publicReadOf } from "../../../src/public-read/index.mjs";
 import { networkNoticesOf } from "../../../src/network-notices/index.mjs";
 import { signSshsig, signerPublicLine } from "../../../scripts/sign-sshsig.mjs";
 import { NS_NOTICE } from "../../../src/sshsig.mjs";
@@ -111,12 +112,13 @@ export function world({ key = true, slug = SLUG, before = null } = {}) {
   const projectStage = projectStageOf(host, { record, membership,
     basisVersions: { projectQuestions: () => ({ items: [], cursor: null }), conclusionOf: () => null },
     inquiry: { basisFor: () => null } });
+  const publicRead = publicReadOf(host, { publication });
   const authorities = tsa();
   const governed = [];
   const governor = { admit: async (q) => { governed.push(q.host); return { admitted: true, wait_ms: 0 }; }, report: async () => ({ recorded: true }) };
   let n = 0;
   const w = {
-    st, host, record, membership, credentials, promotion, provenance, publication, projectStage, clock, tsa: authorities, governed,
+    st, host, record, membership, credentials, promotion, provenance, publication, projectStage, publicRead, clock, tsa: authorities, governed,
     rows: (q, ...a) => [...st.sql.exec(q, ...a)],
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`).one().n,
     snapshot() {
@@ -191,7 +193,7 @@ export function world({ key = true, slug = SLUG, before = null } = {}) {
   };
   if (typeof before === "function") before(w);
   w.nn = networkNoticesOf(host, { record, membership, credentials, promotion, provenance, publication, projectStage,
-                                  governor, fetch: authorities.fetch, now: () => clock.now });
+                                  publicRead, governor, fetch: authorities.fetch, now: () => clock.now });
   return w;
 }
 

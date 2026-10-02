@@ -185,7 +185,7 @@ test("R29 no place is named in this module's outward text or answers", async () 
   for (const p of places) assert.ok(!outward.toLowerCase().includes(p.toLowerCase()), `names ${p}`);
 });
 
-test("the ops map reads the control plane's stamps from the query, never the body; the public reads and scheduler consumers answer through the module", async () => {
+test("R10 R20 R21 the ops map reads the control plane's stamps from the query, never the body; the public reads and scheduler consumers answer through the module", async () => {
   const w = seeded();
   const url = (q) => new URL(`http://x/?${new URLSearchParams(q)}`);
   const ops = nn.networkNoticesOps(w.nn, url({ by: A, viewer: A }), { project: w.P, wording: "Via the op", since: "2026-02-01", by: V("carol") });
@@ -196,11 +196,18 @@ test("the ops map reads the control plane's stamps from the query, never the bod
   const posted = await nn.networkNoticesOps(w.nn, url({ by: A, viewer: A }), { digest: p.digest, signature: sign(p), acknowledged: true }).noticepost();
   assert.equal(posted.ok, true);
   assert.equal((await nn.networkNoticesOps(w.nn, url({ by: A, viewer: A, project: w.P }), {}).notices()).notices.length, 1);
-  const reads = nn.networkNoticesPublicReads(w.nn);
-  assert.deepEqual(Object.keys(reads), ["noticespublic", "groupkeys", "noticemethod"]);
-  assert.equal(reads.noticespublic(url({ limit: "1" })).items.length, 1);
-  assert.equal(reads.groupkeys().group, "test-group");
-  assert.equal(reads.noticemethod().version, nn.ACTIVITY_METHOD_VERSION);
+  /* R10 R20 R21: registered at start with public-read (its R18) under the names K1150 fixed, served with no credential */
+  assert.deepEqual(w.nn.publicReadsRegistration, { ok: true, module: "network-notices", names: ["activitymethod", "noticespublic", "groupkeyspublic"] });
+  assert.deepEqual(w.publicRead.publicReads().filter((r) => r.module === "network-notices"),
+    [{ name: "activitymethod", module: "network-notices", params: [] }, { name: "groupkeyspublic", module: "network-notices", params: [] },
+     { name: "noticespublic", module: "network-notices", params: ["after", "limit"] }]);
+  const served = w.publicRead.publicRead("noticespublic", { limit: "1", viewer: A, by: A });
+  assert.equal(served.ok, true);
+  assert.equal(served.result.items.length, 1);
+  assert.equal(w.publicRead.publicRead("groupkeyspublic", {}).result.group, "test-group");
+  assert.equal(w.publicRead.publicRead("activitymethod", {}).result.version, nn.ACTIVITY_METHOD_VERSION);
+  assert.equal(w.publicRead.publicRead("groupkeys", {}).ok, false, "only the names K1150 fixed");
+  assert.equal(w.publicRead.registerPublicReads("network-notices", nn.networkNoticesPublicReads(w.nn)).reason, "PROVIDER_DECLARED");
   const c = nn.networkNoticesConsumers(w.nn);
   assert.deepEqual(Object.keys(c), ["working-on-seal", "working-on-attest"]);
   w.act(w.P, LAST + DAY);

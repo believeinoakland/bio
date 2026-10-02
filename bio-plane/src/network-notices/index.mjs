@@ -21,6 +21,7 @@
  *   projectStage  `projectStage` (its R1, R2), for `closed`.
  *   publication   `caseCitedParts` (R41); its tables `cases`, `published_cases`, `published_case_members`,
  *                 `published_bundles`, `case_documents` under its R40.
+ *   publicRead    `registerPublicReads` (its R18): this module's three credential-free reads, registered at start.
  *   governor      `{admit, report}` for `governedFetch` (host-governor R15), the timestamp authorities' pacing.
  *   fetch         the outbound fetch, used for the timestamp authorities alone (R30).
  *   now           the clock, milliseconds (default `env.BIO_NOW_MS`, else the wall clock).
@@ -36,6 +37,7 @@ import { promotionOf } from "../promotion/index.mjs";
 import { provenanceOf, instanceStatement } from "../provenance/index.mjs";
 import { projectStageOf } from "../project-stage/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
+import { publicReadOf } from "../public-read/index.mjs";
 import { governorOf, governedFetch } from "../host-governor/index.mjs";
 import { verifySshsig, NS_NOTICE, noticeStatement } from "../sshsig.mjs";
 import { timestampRequest, parseTimestampResponse, TSA_ENDPOINTS, TSA_CONTENT_TYPE, TSA_ACCEPT } from "../tsa.mjs";
@@ -858,6 +860,10 @@ export function networkNoticesOf(host, deps) {
     n.migrate();
     record.declarePurge("network-notices", NETWORK_NOTICES_TABLES.map((name) => ({ name, keys: [] })));
     record.registerMintSeed("network-notices", NETWORK_NOTICES_MINT_SEED.map((x) => [...x]));
+    /* public-read R18 (K1150): the reads served at the group's public address; the answer is kept, so a refused
+       registration is seen. */
+    const publicRead = d.publicRead || publicReadOf(host);
+    n.publicReadsRegistration = publicRead.registerPublicReads("network-notices", networkNoticesPublicReads(n));
   }
   return n;
 }
@@ -886,12 +892,13 @@ export function networkNoticesOps(m, url, body) {
   };
 }
 
-/** The credential-free reads served at the group's public address (`public-read` R18): name → `(url) => answer`. */
+/** The credential-free reads served at the group's public address (`public-read` R18), under the names K1150 fixed:
+ *  name → `{read(params), params}`; a read is handed only the parameters it declares. */
 export function networkNoticesPublicReads(m) {
   return {
-    noticespublic: (url) => m.noticesPublic({ after: url.searchParams.get("after"), limit: url.searchParams.get("limit") }),
-    groupkeys: () => m.groupKeysPublic(),
-    noticemethod: () => m.activityMethod(),
+    activitymethod: { read: () => m.activityMethod(), params: [] },                                          /* R10 */
+    noticespublic: { read: (a) => m.noticesPublic({ after: a.after ?? null, limit: a.limit ?? null }), params: ["after", "limit"] },  /* R20 */
+    groupkeyspublic: { read: () => m.groupKeysPublic(), params: [] },                                       /* R21 */
   };
 }
 
