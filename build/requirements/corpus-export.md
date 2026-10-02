@@ -1,6 +1,6 @@
 # corpus-export — requirements
 
-**Status** · APPROVED under K102 (carved from `publication`'s requirements, approved by Bob 2026-09-26) by K617 and K1024; written by BOB #91, 2026-10-02, on `tranche/T22` before layer 8, from `build/plan/draft-corpus-export.md` (J10, A42; seam map `build/extraction/corpus-export.md`). No requirement changes meaning: R1–R4 are `publication` R18, R19, R32 and R31's `export_log` clause, moved (the old id is named on each; `publication` retires each as moved), and R5 is a copy of `publication` R34, which holds here as there. Layer 8, immediately before `publication`. No `from`: it is taken by copy from a product module (K624 (1)). The code today is in `bio-plane/src/publication/index.mjs` 89–94 (`EXPORT_LOG_LIMIT_DEFAULT`, `EXPORT_LOG_LIMIT_MAX`, `EXPORT_NOTE_MAX`) and 1919–2007 (`exportManifest`, `exportLog`), and `schema.mjs` 566–578 (`export_log`) with its exemption at 592; its tests today are `test/m/publication/export.test.mjs` and `invariants.test.mjs`:30, :48–50, :55, with the R32 todo at :117. Not yet met: R3 (was `publication` R32; K102), carried by T22 layer 8 (A42). Old ids are listed at the end.
+**Status** · APPROVED under K102 (carved from `publication`'s requirements, approved by Bob 2026-09-26) by K617 and K1024; written by BOB #91, 2026-10-02, on `tranche/T22` before layer 8, from `build/plan/draft-corpus-export.md` (J10, A42; seam map `build/extraction/corpus-export.md`). No requirement changes meaning: R1–R4 are `publication` R18, R19, R32 and R31's `export_log` clause, moved (the old id is named on each; `publication` retires each as moved), and R5 is a copy of `publication` R34, which holds here as there. Layer 8, immediately before `publication`. No `from`: it is taken by copy from a product module (K624 (1)). The code today is in `bio-plane/src/publication/index.mjs` 89–94 (`EXPORT_LOG_LIMIT_DEFAULT`, `EXPORT_LOG_LIMIT_MAX`, `EXPORT_NOTE_MAX`) and 1919–2007 (`exportManifest`, `exportLog`), and `schema.mjs` 566–578 (`export_log`) with its exemption at 592; its tests today are `test/m/publication/export.test.mjs` and `invariants.test.mjs`:30, :48–50, :55, with the R32 todo at :117. Not yet met: R3 (was `publication` R32; K102), carried by T22 layer 8 (A42). Old ids are listed at the end. T23, by a fold worker for BOB #94 at T23's opening, on `fold/T23-b` from `tranche/T23`, 2026-10-02: Uses cite the read contracts by their owners' requirements (record-core R37, provenance R48; N484, K1024); no change of meaning, no job.
 
 ## Public
 
@@ -26,8 +26,8 @@ A group that cannot leave can be held. This module exports the working corpus ve
 ### Uses
 
 - `record-grammar`: `createSha256`, for R3's re-derivation.
-- `record-core`: `recordOf(ctx)` and `declarePurge` (R4); the `bundles`, `files`, `history` and `manifest` read contracts (R1). (record-core R37; `register.bytes`, provenance R48)
-- `provenance`: the `register` read contract (R1).
+- `record-core`: `recordOf(ctx)` and `declarePurge` (R4); its R37 read contract (R1; N484): `bundles`' `bundle_id`, `object_type`, `title`, `current_state`, `bundle_sha`, `row_version`, `created` and `last_updated`; `files`' `path`, `sha256`, `bytes`, `blob_sha` and `content` (whether set); `manifest`'s `snap_key`, `kind`, `base`, `author`, `created`, `writer`, `operation` and `rowid`; `history`'s `snap_key`, `path`, `sha256` and `created`.
+- `provenance`: its R48 read contract (R1; N484): `register`'s `bundle_id`, `path`, `capture_sha` and `bytes`.
 - `connections`: the `refs` read (R1).
 
 ### Invariants
