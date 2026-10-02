@@ -2,7 +2,7 @@
    source behind `op=stats` and purge's proof: the caller's sight over hidden bundles and hidden runs, the three figures
    no owner reports (`refs`, read from `connections`' export, its R61; `textIndexOk`, `extraction`'s boolean;
    `observationsNonLead`), and the spread of every module's registered figures (record-core R63). Each owner's figures are
-   its own, registered under its name by the composition root (`store.mjs`, `registerOwnersCounts`). It writes nothing. */
+   its own, registered under its name by the composition root (`src/plane/store.mjs`, `registerOwnersCounts`). It writes nothing. */
 import { recordOf, RecordCore } from "../record-core/index.mjs";
 import { hiddenBundles, membershipOf, Membership } from "../membership/index.mjs";
 import { hiddenRuns } from "../ai-runs/index.mjs";
