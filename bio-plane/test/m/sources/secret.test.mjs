@@ -5,6 +5,19 @@ import { seeded, V, SECRET, OTHER_SECRET, T0 } from "./fixture.mjs";
 import { SOURCES_CHECKS, SECRET_NOT_RECOGNISED_ANSWER, CONSENT_STATEMENT, WITHDRAWAL_STATEMENT } from "../../../src/sources/index.mjs";
 
 const KNOCK_WINDOW = 10 * 60 * 1000;
+/* A ceiling on guesses, far above any bound capture's rate could state; reaching it means the rate never refused. */
+const GUESS_CEILING = 100;
+
+/** Wrong guesses from one source, at the module's clock, until an attempt is refused: every attempt before it must be
+ *  answered SECRET_NOT_RECOGNISED. Answers the refusal, with `admitted`, how many guesses the window let through first.
+ *  Fails if no attempt is refused under the ceiling. */
+async function guessUntilRefused(w, entry, sourceAddress) {
+  for (let i = 0; i < GUESS_CEILING; i++) {
+    const r = await w.s.consentBySecret({ knockerSecret: "a wrong guess of sufficient length " + i, entry, audience: "public", sourceAddress });
+    if (r.reason !== "SECRET_NOT_RECOGNISED") return { ...r, admitted: i };
+  }
+  assert.fail(`${GUESS_CEILING} attempts from one source in one window, and the knock's rate never refused one`);
+}
 
 test("R11 a source proves who they are by presenting their knocker secret and consents to, or withdraws from, one entry for one audience, as R7 records a consent", async () => {
   const w = seeded();
@@ -83,12 +96,14 @@ test("R11 the act is rate-bound as a knock is, in the same windows as knocks: a 
   assert.equal(w.spy.attempts.length, n0 + 3);
   assert.equal(counted(), c0 + 3, "each attempt is counted in the instance's knock window, as a knock is");
   assert.deepEqual(w.spy.attempts.slice(n0, n0 + 2).map((x) => x.sourceAddress), ["203.0.113.9", "203.0.113.9"]);
-  /* past the per-source bound the window refuses, answered as the knock's rate refusal, and nothing is recorded */
-  for (let i = 0; i < 12; i++)
-    await w.s.consentBySecret({ knockerSecret: "a guess of sufficient length " + i, entry: e.entry, audience: "public", sourceAddress: "192.0.2.1" });
+  /* guesses from one source, in one window, until the window refuses: each guess the window admits is not recognised,
+     and the first refusal is the knock's per-source rate refusal (capture's bound, whatever it is, never stated here) */
+  const refused = await guessUntilRefused(w, e.entry, "192.0.2.1");
+  assert.equal(refused.reason, "RATE_IP", "the first refusal from one source is the knock's per-source rate, never SECRET_NOT_RECOGNISED");
+  /* once refused, even the right secret from that source is refused by the rate, and nothing is recorded */
   const n = w.count("source_consents");
   const r = await w.s.consentBySecret({ knockerSecret: SECRET, entry: e.entry, audience: "public", sourceAddress: "192.0.2.1" });
-  assert.equal(r.reason, "RATE_IP");
+  assert.equal(r.reason, "RATE_IP", "the right secret past the source's bound is refused by the rate");
   assert.equal(w.count("source_consents"), n, "a rate refusal records nothing");
   /* another source is not bound by that one's count */
   assert.equal((await w.s.consentBySecret({ knockerSecret: SECRET, entry: e.entry, audience: "public", sourceAddress: "192.0.2.2" })).ok, true);
@@ -118,11 +133,20 @@ test("R11 the rate is counted on one clock: an attempt the control plane sends n
     await w.s.consentBySecret({ knockerSecret: SECRET, entry: e.entry, audience: "group", sourceAddress: "x1", now: String(w.clock.now) });
     assert.equal(all(), before + 3, `offset ${offset}: three attempts, counted in the window, the earlier bucket kept`);
     assert.ok(w.spy.attempts.slice(-3).every((a) => Number(a.now) === w.clock.now), `offset ${offset}: every attempt at the module's clock`);
-    /* the per-source bound holds across the edge: 12 in the window, the thirteenth refused */
-    for (let i = 0; i < 11; i++)
-      await w.s.consentBySecret({ knockerSecret: "another wrong guess, long enough " + i, entry: e.entry, audience: "public", sourceAddress: "x1" });
+    /* the per-source bound holds at the edge: the two attempts already counted from this source stand in its window,
+       so it is refused two guesses sooner than a source with none counted (the same clock, a fresh store), and the
+       refusal is the knock's per-source rate, never SECRET_NOT_RECOGNISED in its place */
+    const fresh = seeded();
+    fresh.clock.now = edge - 2000;
+    const f = fresh.disclose((await fresh.pulled({ secret: SECRET })).sourceId);
+    fresh.clock.now = edge + offset;
+    const baseline = await guessUntilRefused(fresh, f.entry, "x1");
+    assert.equal(baseline.reason, "RATE_IP", `offset ${offset}: a source with nothing counted is refused by the rate too`);
+    const refused = await guessUntilRefused(w, e.entry, "x1");
+    assert.equal(refused.reason, "RATE_IP", `offset ${offset}: the first refusal from one source is the knock's per-source rate`);
+    assert.equal(refused.admitted, baseline.admitted - 2, `offset ${offset}: the attempts counted before stand in the window`);
     assert.equal((await w.s.consentBySecret({ knockerSecret: SECRET, entry: e.entry, audience: "public", sourceAddress: "x1" })).reason, "RATE_IP",
-                 `offset ${offset}: the thirteenth attempt from one source`);
+                 `offset ${offset}: the right secret from that source, past its bound, is refused by the rate`);
   }
 });
 
