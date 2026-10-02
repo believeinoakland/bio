@@ -9,3 +9,7 @@ Depth 2. You join T22's layer 9 by K1086 (P19, as plane joined L11 by K1061): AC
 ## B2 · CHANGE
 
 N497 (K1087), test-only: if your test fixtures register promotion's facts under the retired `"legacy-store"`, name the providing module instead (`instance-setup` for `producingGroup`; `publication` for `caseMember`, `publishedRegistry`), N469's rule. No behaviour changes. tranche/T22 @ 9e3c197c15.
+
+## B3 · CHANGE
+
+K1088 (tranche/T22 @ fcd4a42998): your `uses` gains `provenance`, so your fixture may import provenance for the migrate (K1086). Merge tranche/T22 in.
