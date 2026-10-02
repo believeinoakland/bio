@@ -102,7 +102,7 @@ T22's rules hold (merge early; one file, one editor; marks struck at the merge; 
 - **tasks** · N497.
 - **queue-producers** · N483: `EXPORT_LOG_LIMIT_DEFAULT`, `exportLog` from corpus-export. N493: the internal "noticed" renamed. R26 sweep CONDITIONs. *R27 notice CONDITIONs.*
 - **queue** · N493: the internal "noticed" renamed (DEC-110 (3)). Fold 8: R1/R5 over the `sweep-*` kinds; *the `notice-*` kinds*.
-- **plane** · N483: the op map spreads `corpusExportOps` (K1024). *Composes `network-notices`.*
+- **plane** · N483: the op map spreads `corpusExportOps` (K1024). *Composes `network-notices`.* N482: R13's test, parsing `wrangler.jsonc` and importing `SUBRESOURCE_CAP` (fold 2, K1113); an unrelated `stats.test.mjs` already names "R13", so the coverage check does not flag it: the START says so.
 
 **Generated artifacts** · the plane bundle after each layer whose plane modules change; `agent-worker` bundle after skills (L6).
 
