@@ -60,3 +60,16 @@ Plane T24 complete (B1). It is pushed on `job/T24/plane`, and the details are in
 - **Checks:** all four pass.
 - **Stale bundle:** the plane bundle is stale from `src/plane/store.mjs`. I regenerated nothing.
 - **Red 5:** I added or changed no catalogue row.
+
+## Completion after B2, B3 (K1212, K1213)
+
+- I merged `tranche/T24`, which brings queue-producers, op-declarations, admission, affordances and control-plane. My code needed no change. Link-sweep is composed in the constructor, before the scheduler and before any request, so `op=queue`'s first read reaches the same instance through queue-producers' default `linkSweepOf(host)`, as K1212 asks.
+- `node --test test/m/plane/*.test.mjs`: tests 50, pass 50, fail 0. Red 7's plane share and red 9 are cleared.
+- `node --test "test/m/**/*.test.mjs"`: tests 5289, pass 5276, fail 2, todo 11.
+  - Both failures are in `queue/signals.test.mjs` (:44 and :89). Queue's own test hands queue-producers a `monitoring` fake with `sweepConditions`, but queue-producers now reads link-sweep, so the sweep-* conditions never reach the feed.
+  - They fail the same way with `tranche/T24`'s `store.mjs`, so they are queue's, for its L11 merge (red 7's kind).
+- `node --test test/system/migrate-released.test.mjs`: pass 1, fail 0.
+- The four checks: format, architecture, coverage (13 of 13) and ownership (5 files) each report 0 failures.
+- The plane bundle is still stale from `src/plane/store.mjs`. I regenerated nothing.
+
+Size (session_01WQbNSKUXRaMjDns2CiDwYU): test runs 13, module lines 494
