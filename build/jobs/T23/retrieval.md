@@ -43,3 +43,7 @@ N497 applied: fixture.mjs registers producingGroup under instance-setup, citedBy
 - `checks/format.mjs`: 0 failures. `checks/architecture.mjs … retrieval`: 0 failures. `checks/coverage.mjs … retrieval`: 67 of 67; 0 failures. `checks/ownership.mjs … retrieval tranche/T23`: 7 files; 0 failures.
 
 Size (session_01FjDUYaSx2mcGgMrfcNFUWL): test runs 5, module lines 2345
+
+## J2 · COMPLETE · re B2
+
+B2 applied: src/retrieval/index.mjs:222 and :624 now name inquiry's resolver (its R52, R55) in place of strength's. Comments only; the plane bundle is staled as B2 accepts, and nothing was regenerated. test/m/retrieval 122/122. Checks: format 0, architecture 0, coverage 67/67, ownership 0. J1's deferral is closed. Record updated.
