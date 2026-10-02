@@ -61,6 +61,12 @@
    f1f0ad54…); the 1.53.0 snapshot (no stamp reads it) deleted; T23's layers 3–11 rows (24, none declared here,
    accepted red 1) and record-core's T24 rows (C-59.7–C-59.9) stamped in 1.54.0. A row a T24 job in layers 3–11 changes
    turns this suite red, accepted by name until T25's layer-2 stamp (`build/plan/current.md` red 5), so none is
+   declared. Negative control re-run on the stamp commit: its arms in the suite pass.
+   RE-PINNED 2026-10-02 (PROMOTION #26, T25, K1218): over 1.55.0, the stamp's own lines (`fixtures/row-census-1.55.0.jsonl`,
+   1073 lines) reproduced by this reader on the stamp commit (named in `build/jobs/T25/promotion.md`: 1073 rows,
+   @DIGEST8@…); the 1.54.0 snapshot (no stamp reads it) deleted; T24's layers 3–11 rows (C-18.16–C-18.18, `where`
+   re-pointed to link-sweep, none declared here, accepted red 1) stamped in 1.55.0. A row a T25 job in layers 3–11 changes
+   turns this suite red, accepted by name until T26's layer-2 stamp (`build/plan/current.md` red 6), so none is
    declared. Negative control re-run on the stamp commit: its arms in the suite pass. */
 import "../stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import assert from "node:assert/strict";
@@ -79,9 +85,9 @@ const FIXTURE = (v) => fileURLToPath(new URL(`./fixtures/row-census-${v}.jsonl`,
    carries the line as the stamp read it (so the stamp's census can be rebuilt); `arrived` names the row by check and
    code (its line is the tree's). */
 const AWAITING_STAMP = [
-  /* RE-ANCHORED 2026-10-02 (PROMOTION #25, T24; K1186): over 1.54.0, the stamp's own lines (`fixtures/row-census-1.54.0.jsonl`,
-     1073 lines, f1f0ad54…). T23's layers 3–11 rows were never declared (accepted red 1) and are stamped in 1.54.0. None
-     is open (see the header). */
+  /* RE-ANCHORED 2026-10-02 (PROMOTION #26, T25; K1218): over 1.55.0, the stamp's own lines (`fixtures/row-census-1.55.0.jsonl`,
+     1073 lines, @DIGEST8@…). T24's layers 3–11 rows (C-18.16–C-18.18) were never declared (accepted red 1) and are
+     stamped in 1.55.0. None is open (see the header). */
 ];
 /* COMPOSITIONS AWAITING STAMP: a change to which checks a gate runs moves no row, so the census cannot see it; each is
    declared here by name, verified against its record like a row, and listed (R50, K408, K464). Queue's registered step
@@ -91,8 +97,9 @@ const AWAITING_STAMP = [
    retired; no T17 job names a composition change. LEGACY-TESTS #19 (T21, 2026-10-01): intent's registration changed its
    ids after the 1.51.0 stamp (INTENT #9, no row), declared for T22. */
 const COMPOSITIONS_AWAITING = [
-  /* PROMOTION #25 (T24, 2026-10-02): re-anchored at 1.54.0; no T23 job and no T24 layer-2 job named a composition
-     change, and none is open. */
+  /* PROMOTION #26 (T25, 2026-10-02): re-anchored at 1.55.0; the one composition change since 1.54.0 (C-18.5's sweep arms
+     reaching monitoring through link-sweep's registration, LINK-SWEEP #1's record) is stamped in 1.55.0's note, and no
+     T25 layer-2 job named one, so none is open. */
 ];
 /* The plane's suite shape: every arm printed PASS or FAIL with its reason, the tally last, the exit its verdict. */
 let pass = 0, fail = 0;
