@@ -196,7 +196,7 @@ export class Publication {
     return h && typeof h.bundleSha === "string" ? h.bundleSha : null;
   }
 
-  /* The instance's producing group, promotion's fact (legacy-store provides it until instance-setup does); null when
+  /* The instance's producing group, promotion's fact (instance-setup provides it); null when
      no module provides it, which the attribution prose states rather than filling. */
   #producingGroup() {
     const f = this.promotion.fact("producingGroup");
@@ -210,8 +210,8 @@ export class Publication {
    *  `caseIdentitySentence(caseId, edition, newCase)` and `statedEdition(identity, newCase)` (the sentence and edition a
    *  draft states), `liveGrant(secretSha)`, `grantAdmitsCaseEdition(secretSha, caseId, edition)` and `deadAnswer()`.
    *  Called as `registerReviewProvider(provider)` or `registerReviewProvider(module, provider)`. A second
-   *  registration is refused `PROVIDER_DECLARED`; one missing a door `PROVIDER_MALFORMED`. Today `legacy-store`
-   *  fills it; `review` does when extracted. */
+   *  registration is refused `PROVIDER_DECLARED`; one missing a door `PROVIDER_MALFORMED`. `review` fills
+   *  it (legacy-store did until its retirement). */
   registerReviewProvider(moduleOrProvider, maybeProvider = undefined) {
     const provider = typeof moduleOrProvider === "string" ? maybeProvider : moduleOrProvider;
     const module = typeof moduleOrProvider === "string" ? str(moduleOrProvider)
@@ -2741,7 +2741,7 @@ export function publicationOf(host, deps) {
     promotion.registerStep("publication", {
       project: (c) => { p.flagCasesOnRevision(c.bundleId, c.base ?? null, stampInstant("second")); return null; } });
     /* R41, R43 (N210; K359): reevaluation's R14 case half reads a case's cited parts and pages the ratified cases through
-       this one registration (its R26). legacy-store builds reevaluation first, with its `env` (its R25). */
+       this one registration (its R26). the plane's store (`plane/store.mjs`) builds reevaluation first, with its `env` (its R25). */
     (d.reevaluation || reevaluationOf(host)).registerCaseParts("publication", {
       parts: (a) => p.caseCitedParts(a || {}), cases: (a) => p.ratifiedCases(a || {}) });
   }
@@ -2754,10 +2754,10 @@ export function publicationOwns(t) {
   return PUBLICATION_TABLES.some((x) => (typeof x === "string" ? x : x.name) === name) || PUBLICATION_EXEMPT.includes(name);
 }
 
-/** The module's ops (K3), as entries of the legacy store's op map. `viewer`, `by` and `secretSha` are the control
+/** The module's ops (K3), as entries of the plane's op map (`plane/store.mjs`). `viewer`, `by` and `secretSha` are the control
  *  plane's stamps, read from the query, so a caller's own copy in a body never wins. The public reads
  *  (`publishededitions`, `publishedcase`, `publishedmanifest`, `verify`, `publishedlist`) are `public-read`'s
- *  `publicReadOps` and `projectstage` is `project-stage`'s `projectStageOps` since K651; the legacy store's op map
+ *  `publicReadOps` and `projectstage` is `project-stage`'s `projectStageOps` since K651; the plane's op map
  *  spreads them beside these (K671). */
 export function publicationOps(p, url, body) {
   const q = (k) => url.searchParams.get(k);
