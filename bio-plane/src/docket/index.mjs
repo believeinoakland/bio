@@ -928,6 +928,15 @@ export class Docket {
              last_entry: last ? (parse(last.json) || {}).date ?? null : null, feed: feedAddress(c.case) };
   }
 
+  /** R14 (K1276): the date of the case's latest public entry, the `last_entry` `docketPublic` answers, or null; synchronous,
+   *  viewer-free, reading no capture's bytes. For `public-read` R20's `docket_last_entry`. */
+  lastEntryOf({ case: caseId = null } = {}) {
+    const id = str(caseId);
+    if (!id) return null;
+    const last = this.#one(`SELECT json FROM docket_entries WHERE case_id=? ORDER BY seq DESC LIMIT 1`, id);
+    return last ? (parse(last.json) || {}).date ?? null : null;
+  }
+
   /** R15: the same entries as an Atom 1.0 feed, newest first; null for a case with no ratified edition. Reading it
    *  writes nothing and records nothing about the reader. */
   async docketFeed({ case: caseId = null } = {}) {

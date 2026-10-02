@@ -156,7 +156,7 @@ test("R5 docketSigners: each key that signed a public entry, with the instant it
   assert.deepEqual(w.snapshot(), before);
 });
 
-test("R14 docketPublic: public entries oldest first, each with its JSON, signature and instant, taken-back marked, listed bytes by hash, last_entry; null for no ratified edition; never the record shelf", async () => {
+test("R14 docketPublic and lastEntryOf: public entries oldest first, each with its JSON, signature and instant, taken-back marked, listed bytes by hash, last_entry; null for no ratified edition; never the record shelf", async () => {
   const w = seeded();
   assert.equal(await w.docket.docketPublic({ case: "CASE-2026-9999" }), null);
   w.st.sql.exec(`INSERT INTO cases (case_id, project_id, opened) VALUES ('CASE-2026-0202', ?, 't')`, w.P);
@@ -186,6 +186,17 @@ test("R14 docketPublic: public entries oldest first, each with its JSON, signatu
   assert.equal(pub.last_entry, "2026-10-03");
   const text = JSON.stringify(pub);
   assert.ok(!text.includes(rec.entry) && !text.includes("for us only") && !text.includes('"record"'), "the record shelf never appears");
+  /* R14 (K1276): lastEntryOf is the same date, answered synchronously, viewer-free, with no capture's bytes read */
+  const gets = w.evidence.gets.length;
+  const snap = w.snapshot();
+  const last = w.docket.lastEntryOf({ case: CASE });
+  assert.equal(typeof last, "string", "synchronous: a value, not a promise");
+  assert.equal(last, pub.last_entry);
+  assert.equal(w.evidence.gets.length, gets, "no capture's bytes read");
+  assert.deepEqual(w.snapshot(), snap, "writes nothing");
+  assert.equal(w.docket.lastEntryOf({ case: "CASE-2026-9999" }), null);
+  assert.equal(w.docket.lastEntryOf({ case: null }), null);
+  assert.equal(seeded().docket.lastEntryOf({ case: CASE }), null, "a case with no public entry");
   /* bytes the evidence store cannot answer are named, never invented */
   w.evidence.m.clear();
   const unread = await w.docket.docketPublic({ case: CASE });
