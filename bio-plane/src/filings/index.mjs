@@ -1595,8 +1595,9 @@ export function filingsOwns(t) {
   return FILINGS_TABLES.some((x) => x.name === name);
 }
 
-/** The module's ops (K3), as entries of the legacy store's op map, for legacy-index to route. `viewer` and `author` are
- *  the control plane's stamps, read from the query after the body, so a caller's own copy never wins. */
+/** The module's ops (K3), as entries of the plane's one op map, which the plane composes and control-plane's routes
+ *  spread (`control-plane/dispatch.mjs`). `viewer` and `author` are the control plane's stamps, read from the query after
+ *  the body, so a caller's own copy never wins. */
 export function filingsOps(f, url, body) {
   const q = (k) => url.searchParams.get(k);
   const b = body && typeof body === "object" ? body : {};

@@ -157,7 +157,7 @@ export const FILINGS_CHECKS = Object.freeze({
     check: "C-115.43", where: at("filingPrepare", "is-filing-prepare"),
     translation: "Name a template or write the words, not both.",
   },
-  /* T22 (DEC-88, K1025): R8's reason, a new row, awaiting stamp. */
+  /* T22 (DEC-88, K1025): R8's reason, a new row, taken by 1.53.0. */
   PACKET_NO_REASON: {
     check: "C-115.44", where: at("counselPacket", "is-counsel-packet"),
     translation: "Assembling a counsel packet records why, in your own words, and no reason was given, or it is longer "
