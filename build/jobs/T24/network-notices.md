@@ -48,7 +48,15 @@ No catalogue row was added or changed (no red 5 rows).
 - `coverage network-notices`: 30 of 30 live requirement ids named by a test; 0 failures.
 - `ownership network-notices tranche/T24`: 8 files changed; 0 failures.
 
-Size (session_01B5YxsxHcGCqJ2SrKiS63S6): test runs 17, module lines 1375
+**B2 (CHANGE, from PUBLIC-READ #7's J1).** The R25 test (`reads.test.mjs`) searched the answers' JSON for bare substrings, so a member's letters inside random encoded material could fail it. It now flags a member only when the member's id or handle is a whole maximal run of identifier or encoding characters (`[A-Za-z0-9_+/=-]`), in keys, values and JSON nested in strings. A display name (`Cover <id>`) and a viewer stamp (`member:<id>`) contain the id as such a run, so both are still caught. R25's meaning is unchanged.
+- Negative controls: five planted leaks (a stamp, a display name, a handle, a bare id, a name in nested JSON) are each caught, and a key, a salt and a signature that contain the letters are not flagged.
+- Re-run after merging `tranche/T24`:
+  - module: 61 of 61 pass, three runs in a row;
+  - whole `test/m`: 5231 pass, 2 fail (J1's two), todo 11;
+  - format: red 4 only;
+  - architecture, coverage (30 of 30) and ownership: 0 failures each.
+
+Size (session_01B5YxsxHcGCqJ2SrKiS63S6): test runs 22, module lines 1375
 
 ## J1 · REPORT
 
