@@ -646,8 +646,21 @@ export class NetworkNotices {
     const owner = id && Number.isInteger(ed) ? this.#call(() => this.#one(
       `SELECT c.project_id FROM cases c JOIN published_cases p ON p.case_id = c.case_id
         WHERE c.case_id=? AND p.edition=? AND p.ratified_at IS NOT NULL`, id, ed)) : null;
-    if (!owner) return { ok: false, reason: "NO_PUBLISHED_EDITION", case: id, edition: Number.isInteger(ed) ? ed : null,
-                         detail: "no ratified edition of that case is held, so there is nothing to open" };
+    if (!owner) {
+      /* K1154: an edition whose case document is committed (publication R40's `case_documents.ratified_at`) but which
+         is not yet published whole (its R53) is opened by no call; the request is kept, and the attestation tick opens
+         it once the edition is whole, so nothing of an unpublished member is revealed (R16). An edition with no
+         committed case document keeps nothing. */
+      const committed = id && Number.isInteger(ed) ? this.#call(() => this.#one(
+        `SELECT c.project_id FROM case_documents d JOIN cases c ON c.case_id = d.case_id
+          WHERE d.case_id=? AND d.edition=? AND d.ratified_at IS NOT NULL`, id, ed)) : null;
+      if (committed)
+        this.sql.exec(`INSERT OR IGNORE INTO nn_open_requests (case_id, edition, project, requested_at) VALUES (?,?,?,?)`,
+                      id, ed, committed.project_id, this.#stamp(nowMs));
+      return { ok: false, reason: "NO_PUBLISHED_EDITION", case: id, edition: Number.isInteger(ed) ? ed : null, kept: !!committed,
+               detail: committed ? "the edition's case document is committed and the edition is not yet published whole; it is "
+                 + "opened once it is" : "no ratified edition of that case is held, so there is nothing to open" };
+    }
     const pid = owner.project_id;
     this.sql.exec(`INSERT OR IGNORE INTO nn_open_requests (case_id, edition, project, requested_at) VALUES (?,?,?,?)`,
                   id, ed, pid, this.#stamp(nowMs));

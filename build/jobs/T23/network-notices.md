@@ -101,3 +101,19 @@ Size (session_01XftQvd4G9DgVwWXFazJx1b): test runs 24, module lines 1326
 ## J3 · COMPLETE
 
 network-notices is complete: R1–R30 met. All 52 tests pass, every id named. B2–B4 applied. Public reads are registered as activitymethod, noticespublic and groupkeyspublic. For my modules.json entry: paths ["bio-plane/src/network-notices/"], tests ["bio-plane/test/m/network-notices/"]; with them filled, architecture, coverage (30/30) and ownership show 0 failures. My 16 C-127 rows await the stamp (red 7), and N503–N505 are deferred as you ruled. After the B4 merge, three things are red that are not mine: the plane bundle is stale from earlier L8 merges (case-grammar, corpus-export, public-read, publication), so fleetbundles fails; plane worker.test.mjs:39 follows from that; and conformance record.test.mjs:144 calls the retired publication.exportManifest (N483). Details are in build/jobs/T23/network-notices.md, under Completion.
+
+## Re-opened by B5 (K1154)
+
+**Applied:** R17's new sub-item. When the edition's case document is committed (publication R40's `case_documents.ratified_at`) but the edition is not yet published whole (`published_cases.ratified_at`, its R53), `openSeals` still answers `NO_PUBLISHED_EDITION`, now with `kept: true`, and keeps the request in `nn_open_requests`. The `working-on-attest` tick retries it and opens it only once the edition is published whole, so nothing about an unpublished member is revealed (R16). A call for an edition with no committed case document, an unsigned one included, keeps nothing (`kept: false`). Ratification's side is unchanged.
+
+**Test:** `seals.test.mjs`, "R17 R16 an edition committed but not yet published whole…". It shows the request kept with nothing opened; a tick before the edition is whole opening nothing; the tick after it is whole opening the week, with an opening that verifies and a `published` attestation; and nothing kept for an absent case or an unsigned case document.
+
+**Tests and checks after merging `tranche/T23`** (my `modules.json` entry is now filled):
+- `node --test test/m/network-notices/`: tests 53, pass 53, fail 0.
+- `node checks/format.mjs`: 87 modules, 86 requirements files; 0 failures.
+- `node checks/architecture.mjs … network-notices`: 10 product files, 52 relative imports; 0 failures.
+- `node checks/coverage.mjs … network-notices`: 30 of 30 live ids named by a test; 0 failures.
+- `node checks/ownership.mjs … network-notices tranche/T23`: 0 failures.
+
+Size (session_01XftQvd4G9DgVwWXFazJx1b): test runs 27, module lines 1339
+

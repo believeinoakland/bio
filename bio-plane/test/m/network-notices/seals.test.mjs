@@ -220,3 +220,37 @@ test("R30 no outbound call but the timestamp authorities, and nothing is pushed 
   assert.ok(w.tsa.calls.length >= 1);
   for (const c of w.tsa.calls) assert.ok(TSA_ENDPOINTS.includes(c.url), c.url);
 });
+
+test("R17 R16 an edition committed but not yet published whole is opened by no call: the request is kept, and the tick opens it once the edition is whole; an uncommitted edition keeps nothing", async () => {
+  const w = seeded();
+  await post(w);
+  const x = w.act(w.P, LAST + DAY);
+  await w.nn.sealTick();
+  /* the case commit (publication R40): a case row and a ratified case document, the edition still awaiting a member */
+  w.st.sql.exec(`INSERT INTO cases (case_id, project_id, opened) VALUES ('CASE-2026-0001-budget', ?, 't')`, w.P);
+  w.st.sql.exec(`INSERT INTO case_documents (case_id, edition, doc_sha, text, authored_at, sig_armored, ratified_at)
+                 VALUES ('CASE-2026-0001-budget', 1, 'd', 'doc', 't', 'sig', 't')`);
+  w.st.sql.exec(`INSERT INTO published_cases (case_id, edition, opened, ratified_at) VALUES ('CASE-2026-0001-budget', 1, 't', NULL)`);
+  w.st.sql.exec(`INSERT INTO published_case_members (case_id, edition, ord, bundle_id, version_sha, role) VALUES ('CASE-2026-0001-budget', 1, 0, ?, NULL, 'supporting')`, x);
+  const r = await w.nn.openSeals({ case: "CASE-2026-0001-budget", edition: 1 });
+  assert.deepEqual([r.ok, r.reason, r.kept], [false, "NO_PUBLISHED_EDITION", true]);
+  assert.equal(w.count("nn_openings"), 0, "nothing opened before the edition is whole");
+  assert.equal(w.rows(`SELECT 1 FROM nn_open_requests WHERE case_id='CASE-2026-0001-budget' AND settled_at IS NULL`).length, 1);
+  w.clock.now += DAY;
+  assert.equal(w.nn.attestDue(), w.clock.now);
+  assert.deepEqual((await w.nn.attestTick()).openings, [], "still not whole: the tick opens nothing");
+  assert.equal(w.count("nn_openings"), 0);
+  /* the edition is published whole (publication R53 stamps ratified_at) */
+  w.st.sql.exec(`UPDATE published_cases SET ratified_at='t2' WHERE case_id='CASE-2026-0001-budget' AND edition=1`);
+  const t = await w.nn.attestTick();
+  assert.deepEqual(t.openings, [{ case: "CASE-2026-0001-budget", edition: 1, weeks: [W] }]);
+  assert.equal(verifyOpening(JSON.parse(w.rows(`SELECT json FROM nn_openings`)[0].json)).ok, true);
+  assert.equal(w.rows(`SELECT 1 FROM nn_attestations WHERE kind='published'`).length, 1);
+  /* an edition with no committed case document keeps nothing */
+  const r2 = await w.nn.openSeals({ case: "CASE-2026-0002-none", edition: 1 });
+  assert.deepEqual([r2.reason, r2.kept], ["NO_PUBLISHED_EDITION", false]);
+  w.st.sql.exec(`INSERT INTO cases (case_id, project_id, opened) VALUES ('CASE-2026-0003-draft', ?, 't')`, w.P);
+  w.st.sql.exec(`INSERT INTO case_documents (case_id, edition, doc_sha, text, authored_at) VALUES ('CASE-2026-0003-draft', 1, 'd', 'doc', 't')`);
+  assert.equal((await w.nn.openSeals({ case: "CASE-2026-0003-draft", edition: 1 })).kept, false, "an unsigned document is not committed");
+  assert.equal(w.rows(`SELECT 1 FROM nn_open_requests WHERE case_id IN ('CASE-2026-0002-none','CASE-2026-0003-draft')`).length, 0);
+});
