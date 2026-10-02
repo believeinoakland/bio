@@ -39,3 +39,7 @@
 - `ownership` acquisition `tranche/T24`: 5 files changed; 0 failures.
 
 Size (session_01GsZuQ1S3yT7423mnGkM1qi): test runs 6, module lines 1565
+
+## J1 · REPORT
+
+Stale: the plane bundle (bio-plane/dist/bio-plane.bundled.mjs) from bio-plane/src/acquisition/; I regenerated nothing. Requirement wording for you: (a) acquisition R29's last sentence still says its rows are 'awaiting stamp for promotion's next job'; 1.49.0, 1.51.0 and 1.54.0 took them. (b) Uses still lists parseCdx, replayLocator, cdxQuery, archiveHop (T23's J3); only selectCapture of the CDX services is used.
