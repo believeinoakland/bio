@@ -129,15 +129,16 @@ export function defaultFakes() {
     progressions: { proposalsFeed: () => ({ instances: [], proposals: [], dispositions: [] }) },
     aiRuns: { runFor: () => null },
     bias: { uncleared: () => ({ debts: [], limit: 200, truncated: false }) },
-    publication: { exportLog: () => ({ ok: true, exports: [], limit: 200, truncated: false }),
-                   caseTensions: () => ({ ok: true, cases: [], limit: 200, cursor: null }),
+    publication: { caseTensions: () => ({ ok: true, cases: [], limit: 200, cursor: null }),
                    caseDocumentFacts: (c, e) => ({ ok: false, reason: "NO_CASE_DOCUMENT", case: c, edition: e }) },
+    corpusExport: { exportLog: () => ({ ok: true, exports: [], limit: 200, truncated: false }) },
     reevaluation: { notices: () => ({ ok: true, notices: [], limit: 1000, truncated: false }),
                     correctedDependents: () => ({ ok: true, entries: [], limit: 200, truncated: false, cursor: null }) },
     intent: { gaps: () => ({ ok: true, gaps: [] }) },
     monitoring: { monitoring: () => ({ ok: true, items: [], truncated: false }),
                   flagged: () => ({ ok: true, items: [], limit: 200, truncated: false }),
-                  archiveEligible: () => ({ ok: true, eligible: [], limit: 50, truncated: false, paused: { paused: false } }) },
+                  archiveEligible: () => ({ ok: true, eligible: [], limit: 50, truncated: false, paused: { paused: false } }),
+                  sweepConditions: () => ({ ok: true, conditions: [] }) },
     contradiction: { candidatesFor: () => ({ ok: true, candidates: [], truncated: false, cursor: null }),
                      conflictNotices: () => ({ ok: true, notices: [], truncated: false, cursor: null }) },
     actionClocks: { overdueClocks: () => ({ ok: true, items: [], limit: 500, truncated: false, cursor: null }),
@@ -148,6 +149,7 @@ export function defaultFakes() {
     actions: { holdsDue: () => ({ ok: true, items: [], limit: 500, truncated: false, cursor: null }) },
     filingTemplates: { reviewsRequested: () => ({ ok: true, items: [], limit: 500, truncated: false, cursor: null }) },
     localFacts: { factsDue: () => ({ ok: true, due: [], unknown: [], absent: [] }) },
+    networkNotices: { noticesOf: ({ project }) => ({ ok: true, project, notices: [], sealed_weeks: [], methodVersion: 1 }) },
   };
 }
 
