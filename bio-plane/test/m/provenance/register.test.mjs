@@ -483,3 +483,32 @@ test("R48: the whole-second respelling runs at every boot under workerd's 50-byt
   assert.deepEqual(refused, []);
   assert.equal(at("e.org/new").last_retrieved, "2026-09-27T06:00:00Z");
 });
+
+test("R48 (N484): register.bytes, read with plain SQL as corpus-export reads it, holds each registered capture's size as its entry states it", () => {
+  const w = world();
+  const a = w.cap("a", "twelve bytes"), b = w.cap("b", "");
+  assert.equal(w.promoteInfo("INFO-2026-0001-a", { captures: [a] }).ok, true);
+  assert.equal(w.promoteInfo("INFO-2026-0002-b", { captures: [b] }).ok, true);
+  /* corpus-export's own statement (its R1, `src/corpus-export/index.mjs`), over this module's table. */
+  const read = () => w.rows(`SELECT bundle_id, path, capture_sha, bytes FROM register ORDER BY bundle_id`);
+  assert.deepEqual(read(), [
+    { bundle_id: "INFO-2026-0001-a", path: a.path, capture_sha: a.sha, bytes: 12 },
+    { bundle_id: "INFO-2026-0002-b", path: b.path, capture_sha: b.sha, bytes: 0 },
+  ]);
+  /* Every row the reader sees carries a whole number of bytes, the stated one, never a null or a recount. */
+  const stated = 5_000_000_000;
+  const r = w.promotion.promote({ bundleId: "INFO-2026-0003-w", base: null, snapKey: "w", author: "member:alice", replay: true,
+    files: [{ path: "bundle.md", text: w.record.readFile("INFO-2026-0001-a", "bundle.md").text.replace("INFO-2026-0001-a", "INFO-2026-0003-w") }],
+    meta: { object_type: "information" }, register: [{ sha256: sha("a large whole"), path: "snapshots/whole", bytes: stated }] });
+  assert.equal(r.ok, true, JSON.stringify(r));
+  const rows = read();
+  assert.equal(rows.length, 3);
+  assert.equal(rows.every((x) => Number.isSafeInteger(x.bytes) && x.bytes >= 0), true);
+  assert.equal(rows.find((x) => x.bundle_id === "INFO-2026-0003-w").bytes, stated);
+  /* Negative control: an entry that states no size is refused (R50), so no row without one reaches the reader. */
+  const bad = w.promotion.promote({ bundleId: "INFO-2026-0004-n", base: null, snapKey: "n", author: "member:alice", replay: true,
+    files: [{ path: "bundle.md", text: w.record.readFile("INFO-2026-0001-a", "bundle.md").text.replace("INFO-2026-0001-a", "INFO-2026-0004-n") }],
+    meta: { object_type: "information" }, register: [{ sha256: sha("unstated"), path: "snapshots/u" }] });
+  assert.equal(bad.ok, false);
+  assert.equal(read().length, 3);
+});

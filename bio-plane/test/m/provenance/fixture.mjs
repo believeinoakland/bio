@@ -79,7 +79,7 @@ export function evidence(objects = {}, { checksum = true } = {}) {
 }
 
 /** A record: the five modules on one storage, the producing group registered as promotion's fact (instance-setup's,
- *  K69; here under a stand-in module name), and a clock the test controls. Credentials is built after
+ *  K69; each fact under the module that provides it, N497), and a clock the test controls. Credentials is built after
  *  membership, as the composition root builds it (K789): the founder's claim and a member's password are its (its R1,
  *  R16, R17; membership R94, R95). */
 export function world({ group = "test-group", now = "2026-09-27T03:00:00.000Z", signingKey = null,
@@ -97,9 +97,9 @@ export function world({ group = "test-group", now = "2026-09-27T03:00:00.000Z", 
   credentials.migrate();
   const promotion = promotionOf(host, { record, membership, now: () => clock.now });
   const facts = { group };
-  promotion.registerFact("producingGroup", "legacy-store", () => facts.group);
-  promotion.registerFact("citedBy", "legacy-store", () => []);
-  promotion.registerFact("caseMember", "legacy-store", () => false);
+  promotion.registerFact("producingGroup", "instance-setup", () => facts.group);
+  promotion.registerFact("citedBy", "connections", () => []);
+  promotion.registerFact("caseMember", "publication", () => false);
   const prov = provenanceOf(host, { record, membership, promotion, now: () => clock.now, signingKey, instanceName,
                                     ...(order ? { order } : {}) });
   prov.migrate();
