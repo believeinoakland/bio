@@ -15,7 +15,7 @@ The feed's producers: each derives, on read and writing nothing, the items one p
 Terms. An **item** is `queue`'s item (its Provides) without `disposition` (`queue`'s mint gives it) and without `catalogue_id` (`queue` stamps it from its R2). A **home set**, the **depth bound** and a **case** are `queue`'s.
 
 **feedItems({member, viewer, now, identity, homesOf, optionsOf}) → {items, facts}** (`queue`'s one read of this module)
-- **R8** Answers every item R1–R7, R9, R14, R15–R23, R26 and R27 derive for this member and viewer, each homed through `homesOf(subjectIds)` (`queue` R7's walk, passed in) and carrying `options` from `optionsOf(subjectIds)` (`queue` R12's options, passed in), and `facts`: `objective_gap` `{bound, truncated}` (R2), `unattributed`, `contradiction` `{bound, truncated}` (R4), and the proposals feed's `dispositions` (one `proposalsFeed` read, so R2 and `queue` R15 cannot disagree). A contradiction-duty, -lead or -plurality item's `subject` is `{kind: "contradiction_candidate", id, state, inquiry?, between_projects, parties: [{project, opted_in}]}` (the member's party projects only), and a -duty-unseen or -plurality-unseen item's is `{kind: "contradiction_notice", id, parties: [{project, opted_in}]}`, which `queue` R46's dispositions read (K558). Writes nothing. (R22, R23: DEC-95 (1), DEC-102 item 3; K1019) *(not yet met: T23, the R26 and R27 items)*
+- **R8** Answers every item R1–R7, R9, R14, R15–R23, R26 and R27 derive for this member and viewer, each homed through `homesOf(subjectIds)` (`queue` R7's walk, passed in) and carrying `options` from `optionsOf(subjectIds)` (`queue` R12's options, passed in), and `facts`: `objective_gap` `{bound, truncated}` (R2), `unattributed`, `contradiction` `{bound, truncated}` (R4), and the proposals feed's `dispositions` (one `proposalsFeed` read, so R2 and `queue` R15 cannot disagree). A contradiction-duty, -lead or -plurality item's `subject` is `{kind: "contradiction_candidate", id, state, inquiry?, between_projects, parties: [{project, opted_in}]}` (the member's party projects only), and a -duty-unseen or -plurality-unseen item's is `{kind: "contradiction_notice", id, parties: [{project, opted_in}]}`, which `queue` R46's dispositions read (K558). Writes nothing. (R22, R23: DEC-95 (1), DEC-102 item 3; K1019)
 
 **The producers**
 - **R1** Each uncleared bias debt (from `bias`) inside the viewer's gate whose recipients include the member or name nobody, at most 200, keyed `OBLIGATION::bias-debt::<run>`.
@@ -44,7 +44,7 @@ Terms. An **item** is `queue`'s item (its Provides) without `disposition` (`queu
 - **R25** An item whose subject is due on a date carries it as `due` (`YYYY-MM-DD`), for `queue` R49's sort: the clock entry's date (R15, R18), the checkpoint's (R16). No other item carries one. (DEC-110 (1); H19; K1038)
 
 **Sweeps and working-on notices** (K1036 (8); DEC-111, K1031)
-- **R26** (monitoring R63; K1036 (8)) CONDITIONs, one for each condition that `monitoring.sweepConditions` answers the viewer *(not yet met: T23)*:
+- **R26** (monitoring R63; K1036 (8)) CONDITIONs, one for each condition that `monitoring.sweepConditions` answers the viewer:
   - the kinds are `sweep-held-backlog`, `sweep-yield-anomaly`, `sweep-seed-unreachable`, `sweep-redirect-out-of-scope` and `sweep-silent`;
   - each is keyed `CONDITION::<kind>::<bundle>#<id>`;
   - each goes to the members of the sweep's project who may see its bundle;
@@ -52,7 +52,7 @@ Terms. An **item** is `queue`'s item (its Provides) without `disposition` (`queu
   - it leaves when the condition leaves.
 
   The items' words are the UX design stream's (NOTIFICATIONS.md item contract; `docs/development/ux-substrate/ux-experience.json` UC-035).
-- **R27** (`network-notices` R12, R13; DEC-111, K1031) CONDITIONs for the owners of a project with an open notice (`membership` R65) *(not yet met: T23)*:
+- **R27** (`network-notices` R12, R13; DEC-111, K1031) CONDITIONs for the owners of a project with an open notice (`membership` R65):
   - `notice-attestation-missed`: a `monthly` attestation was missed for want of an instance key (`network-notices` R13). It leaves when one is issued;
   - `notice-lapse-near`: a lapse is due within 7 days. It leaves on a revision, a stop or the lapse;
   - `notice-project-closed`: the project closed while the notice was open. It leaves after 30 days, or on an owner's stop, which may add a handoff.
@@ -100,7 +100,8 @@ Terms. An **item** is `queue`'s item (its Provides) without `disposition` (`queu
 - `capture-requests`: `completed`, `leads`, `rendersHeld` (its R26), `captureRequestAttribution` (its R10) (R2, R3).
 - `intent`: `gaps` (its R6; R2).
 - `reevaluation`: `notices` (its R14; R2), `correctedDependents` (its R27; R5).
-- `publication`: the export log (R2; `corpus-export` R2 since K1043, reached through publication's `exportlog` delegate until N483), `caseTensions` (its R50; R6); `caseDocumentFacts` (its R2, with R17's attribution facts; R23; K1019).
+- `corpus-export`: `exportLog` (its R2) and `EXPORT_LOG_LIMIT_DEFAULT` (R2; N483).
+- `publication`: `caseTensions` (its R50; R6); `caseDocumentFacts` (its R2, with R17's attribution facts; R23; K1019).
 - `monitoring`: `archiveEligible` (its R47), `flagged` (its R48), `monitoring()` (its R32: the due and unscheduled rows), `escalationsSeen()` (its R35) (R2, R3).
 - `action-clocks`: `overdueClocks` (its R3; R15), `remindersDue` (its R5; R18), `calendarFactsRead` (its R11; R21).
 - `filing-templates`: `reviewsRequested` (its R20; R20).
