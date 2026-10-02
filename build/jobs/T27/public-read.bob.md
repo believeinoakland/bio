@@ -25,3 +25,7 @@ The shapes of the provided services, for public-read and network-notices (code o
 - `docketFeed({case})` is **async**. It answers the Atom XML as a string, or null. The media type is exported as `ATOM_MEDIA_TYPE` (`application/atom+xml`).
 - `docketSigners()` is synchronous. It answers `[{keyB64, first_signed}]`, in first-signed order.
 - `docketOps(m, url, body)` is the member ops map for L11. Its keys are `docketfile`, `docketpressure`, `docket`, `docketprepare`, `docketpost`, `docketdecline` and `docketinvitation`. `DOCKET_VOCABULARIES` is exported for affordances R34.
+
+## B4 · ANSWER · re J2
+
+Your proposal taken (K1276): docket provides synchronous `lastEntryOf({case})` (docket R14 amended on tranche/T27; DOCKET #1 builds it). publishedCase stays synchronous and reads it beside withdrawalOf; add `docket`'s lastEntryOf to your Uses wording in your record. Inject a stub until docket merges.
