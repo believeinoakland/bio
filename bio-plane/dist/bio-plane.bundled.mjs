@@ -28700,7 +28700,7 @@ var DISPATCH_CHECKS = {
   },
   /* D-629 (R25, C-69.4) — THE STORE'S DOOR THREW. Its outermost catch answered `String(e.stack)` for any throw on any op
      (file paths, line numbers and constraint text, public ops included). It came with the store's door (N333, K412);
-     C-69.3 being PLANE_INTERNAL_ERROR's since T12, it takes the next free number (awaiting stamp, N318). Same posture:
+     C-69.3 being PLANE_INTERNAL_ERROR's since T12, it takes the next free number (stamped by 1.44.0, N318). Same posture:
      the stack is logged under a CORRELATION id, the caller receives the code, this sentence and the id. */
   STORE_INTERNAL_ERROR: {
     check: "C-69.4",
@@ -95632,7 +95632,7 @@ var RUNGS2 = {
   /* The version pair whose target state is in VERSION_REASON_REQUIRED. The
      OTHER FOUR version acts route through the SAME `#moveVersionState` and the
      SAME `VERSION_NO_REASON` refusal, and the branch DOES NOT FIRE for them —
-     `versionNeedsReason(to)` gates it, and `Store.VERSION_ACT_TO` maps accept →
+     `versionNeedsReason(to)` gates it, and `basis-versions`' `VERSION_ACT_TO` maps accept →
      accepted, revert → suggested, current → null, hide → null, none of which is
      in the array. A classifier that graded these six by finding the code in the
      shared helper would have promoted four ops to a rung the store does not
@@ -97595,6 +97595,10 @@ var OPS = frozenTable({
   scenarioset: { classes: ["admin", "member", "probe"], mutating: true },
   checkpointrecord: { classes: ["admin", "member", "probe"], mutating: true },
   optionstart: { classes: ["admin", "member", "probe"], mutating: true },
+  /* T24 (N490, DEC-115, K1134; action-plans R37; R11): what `optionstart` would do with the same arguments, answered
+     at that instant and writing nothing, so a read; `optionstart`'s classes, and its stamps (`author` from the query, so
+     the preview is asked as the very caller the start would be, and `viewer`) through `ACTION_PLANS_PREVIEWS` below. */
+  optionstartpreview: { classes: ["admin", "member", "probe"], mutating: false },
   planclose: { classes: ["admin", "member", "probe"], mutating: true },
   plan: { classes: ["admin", "member", "probe"], mutating: false },
   plans: { classes: ["admin", "member", "probe"], mutating: false },
@@ -97627,8 +97631,8 @@ var OPS = frozenTable({
   /* T22 (K1019; monitoring R17, R52; R9): an address's own frequency, a source owner's reasoned act — a machine reaches
      it and monitoring refuses it by name (MACHINE_CANNOT_SET_FREQUENCY) — `author` and `viewer` query-stamped. */
   addressfrequencyset: { classes: ["admin", "member", "probe"], mutating: true },
-  /* T23 (the link sweep, K1094; monitoring R61; R10): the sweeps a member may see, a read for a member session,
-     viewer-stamped; monitoring answers a bearer's call as it answers its other reads. */
+  /* T23 (the link sweep, K1094; R10), served since T24 by `link-sweep` (its R9; N506): the sweeps a member may see, a
+     read for a member session, viewer-stamped; link-sweep answers a bearer's call as monitoring answers its reads. */
   sweeps: { classes: ["admin", "member", "probe"], mutating: false },
   /* T23 (DEC-111, K1031, K1100; network-notices R1, R2, R4, R5, R22, R23, R24; R10): a project's notice is prepared
      (writing nothing) and posted by an owner signed in as themselves, and read by a member who sees the project — each a
@@ -97895,6 +97899,7 @@ var ACTION_PLANS_ACTIONS = frozenList([
   "planclose"
 ]);
 var ACTION_PLANS_READS = frozenList(["plan", "plans", "planproposals"]);
+var ACTION_PLANS_PREVIEWS = frozenList(["optionstartpreview"]);
 var PLAN_PROPOSAL_ACTIONS = frozenList(["optionpropose"]);
 var CONTRADICTION_ACTIONS = frozenList([
   "contradictiondismiss",
@@ -97912,7 +97917,7 @@ var CONTRADICTION_READS = frozenList([
   "contradictionresponses"
 ]);
 var MONITORING_ACTIONS = frozenList(["addressfrequencyset"]);
-var MONITORING_READS = frozenList(["sweeps"]);
+var LINK_SWEEP_READS = frozenList(["sweeps"]);
 var WHAT_CHANGED_PROPOSAL_ACTIONS = frozenList(["whatchangedpropose"]);
 var WHAT_CHANGED_READS = frozenList(["whatchangeddrafts"]);
 var NETWORK_NOTICES_ACTIONS = frozenList(["noticepost"]);
@@ -97928,7 +97933,8 @@ var QUERY_AUTHOR_ACTIONS = frozenList([
   ...ACTION_CLOCKS_ACTIONS,
   ...ACTION_PLANS_ACTIONS,
   ...FILING_TEMPLATES_ACTIONS,
-  ...MONITORING_ACTIONS
+  ...MONITORING_ACTIONS,
+  ...ACTION_PLANS_PREVIEWS
 ]);
 var ACTION_LAYER_ACTIONS = frozenList([
   ...STANDARDS_ACTIONS,
@@ -97947,7 +97953,7 @@ var ACTION_LAYER_READS = frozenList([
   ...ACTION_PLANS_READS,
   ...FILING_TEMPLATES_READS,
   ...LOCAL_FACTS_READS,
-  ...MONITORING_READS
+  ...LINK_SWEEP_READS
 ]);
 var PLAN_RUN_SCOPE = Object.freeze({
   reads: frozenList([
@@ -98182,15 +98188,17 @@ var SESSION_OPS = Object.freeze({
     ...CAPTURE_READS,
     ...MONITORING_ACTIONS,
     /* T23 (op-declarations R10): every op T23 adds that a session reaches, in BOTH sets — escalation's
-       pre-assembled reason, case-authoring's draft of what changed and its read, monitoring's sweeps and
+       pre-assembled reason, case-authoring's draft of what changed and its read, link-sweep's sweeps and
        network-notices' act and reads (a bearer refused them by `machineClasses: []`). The public reads
        are in neither: every caller reaches them. */
     "escalationreasondraft",
     ...WHAT_CHANGED_PROPOSAL_ACTIONS,
     ...WHAT_CHANGED_READS,
-    ...MONITORING_READS,
+    ...LINK_SWEEP_READS,
     ...NETWORK_NOTICES_ACTIONS,
     ...NETWORK_NOTICES_READS,
+    /* T24 (op-declarations R11): action-plans' start preview, in BOTH sets, as the start it previews. */
+    ...ACTION_PLANS_PREVIEWS,
     /* N314 (T12, monitoring R30): the daemon's pause, every member session's to ask; monitoring refuses a
        non-administrator by name. */
     "monitorpause",
@@ -98311,9 +98319,10 @@ var SESSION_OPS = Object.freeze({
     "escalationreasondraft",
     ...WHAT_CHANGED_PROPOSAL_ACTIONS,
     ...WHAT_CHANGED_READS,
-    ...MONITORING_READS,
+    ...LINK_SWEEP_READS,
     ...NETWORK_NOTICES_ACTIONS,
     ...NETWORK_NOTICES_READS,
+    ...ACTION_PLANS_PREVIEWS,
     ...IDENTITY_ACTIONS,
     ...GOVERNANCE_ACTIONS,
     ...CUSTODIAL_ACTIONS,
@@ -99113,7 +99122,12 @@ var NEEDS = Object.freeze({
   notices: null,
   activitymethod: null,
   noticespublic: null,
-  groupkeyspublic: null
+  groupkeyspublic: null,
+  /* T24 (op-declarations R11): NO CAPABILITY for the start preview, `publishpreflight`'s posture: it tells a member what
+     starting would do and writes nothing, and `contribute` gates the start itself. PRESENT, null, because affordances
+     names it in NON_ACTS (its R7) and its totality reads a NON_ACTS key this table does not carry as stale (its R12),
+     K516's precedent. */
+  optionstartpreview: null
 });
 var ACT_GATE = Object.freeze({
   needs: (id) => (Object.hasOwn(NEEDS, id) ? NEEDS[id] : null) ?? null,
@@ -107258,38 +107272,460 @@ function checkGatheringGrammar(ctx, findings, sweepArm = null) {
   }
 }
 
-// src/tasks/checks.mjs
+// src/link-sweep/checks.mjs
 var checks_exports47 = {};
 __export(checks_exports47, {
+  SWEEP_BOUNDS: () => SWEEP_BOUNDS,
+  SWEEP_CADENCES: () => SWEEP_CADENCES,
+  SWEEP_CHECKS: () => SWEEP_CHECKS,
+  SWEEP_FIELDS: () => SWEEP_FIELDS,
+  SWEEP_ID_RE: () => SWEEP_ID_RE,
+  sweepGrammar: () => sweepGrammar,
+  sweepRefusal: () => sweepRefusal
+});
+
+// src/link-sweep/sweep-match.mjs
+function inScope(address, sources) {
+  if (typeof address !== "string" || !Array.isArray(sources)) return false;
+  let a;
+  try {
+    a = normalizeAddress(address);
+  } catch {
+    return false;
+  }
+  return sources.some((p) => {
+    if (typeof p !== "string" || !p) return false;
+    let n;
+    try {
+      n = normalizeAddress(p);
+    } catch {
+      return false;
+    }
+    return a === n || a.startsWith(n) && (n.endsWith("/") || a[n.length] === "/");
+  });
+}
+var TERM_MAX = 200;
+var MATCH_TEXT_MAX = 2048;
+var TERM_PROGRAM_MAX = 4e3;
+var TERM_REPEAT_MAX = 100;
+var fold2 = (c) => {
+  const l = c.toLowerCase();
+  return l.length === 1 ? l : c;
+};
+var unfold = (c) => {
+  const u = c.toUpperCase();
+  return u.length === 1 ? u : c;
+};
+var isWord = (c) => c !== void 0 && /^[A-Za-z0-9_]$/.test(c);
+var CLASS = { d: (c) => c >= "0" && c <= "9", w: isWord, s: (c) => /^\s$/u.test(c) };
+var Refused = class extends Error {
+  constructor(construct, detail) {
+    super(detail);
+    this.construct = construct;
+  }
+};
+function parse3(src) {
+  const cs = Array.from(src);
+  let i = 0;
+  const peek = () => cs[i], eat = () => cs[i++];
+  const escape = (inClass) => {
+    const c = eat();
+    if (c === void 0) throw new Refused("a trailing backslash", "the expression ends with a backslash");
+    if (/[1-9]/.test(c) || c === "k") throw new Refused("a backreference", `\\${c} refers back to a group, and a backreference cannot be matched in linear time`);
+    const low = c.toLowerCase();
+    if (CLASS[low]) {
+      const f17 = CLASS[low];
+      return c === low ? f17 : (x) => !f17(x);
+    }
+    if (!inClass && (c === "b" || c === "B")) return { assert: c };
+    const ctl = { n: "\n", r: "\r", t: "	", f: "\f", v: "\v", 0: "\0" }[c];
+    if (ctl !== void 0) return ctl;
+    if (c === "x" || c === "u") {
+      const n = c === "x" ? 2 : 4, h = cs.slice(i, i + n).join("");
+      if (!new RegExp(`^[0-9a-fA-F]{${n}}$`).test(h)) throw new Refused(`\\${c} without ${n} hex digits`, `\\${c} needs ${n} hex digits`);
+      i += n;
+      return String.fromCharCode(parseInt(h, 16));
+    }
+    if (/[A-Za-z]/.test(c)) throw new Refused(`the escape \\${c}`, `\\${c} is not an escape a term reads`);
+    return c;
+  };
+  const klass = () => {
+    const neg = peek() === "^" && !!eat();
+    const items = [];
+    let first = true;
+    for (; ; ) {
+      let c = eat();
+      if (c === void 0) throw new Refused("an unclosed class", "a [ has no closing ]");
+      if (c === "]" && !first) break;
+      first = false;
+      let lo = c === "\\" ? escape(true) : c;
+      if (typeof lo === "string" && peek() === "-" && cs[i + 1] !== void 0 && cs[i + 1] !== "]") {
+        eat();
+        c = eat();
+        const hi = c === "\\" ? escape(true) : c;
+        if (typeof hi !== "string" || hi < lo) throw new Refused("a reversed or open range", "a range in a class runs backwards or ends in a class");
+        items.push([lo, hi]);
+        continue;
+      }
+      items.push(lo);
+    }
+    const hit = (c) => items.some((x) => typeof x === "function" ? x(c) : Array.isArray(x) ? c >= x[0] && c <= x[1] : c === x);
+    return { t: "char", test: (c) => (hit(c) || hit(unfold(c)) || hit(fold2(c))) !== neg };
+  };
+  const atom = () => {
+    const c = eat();
+    if (c === "(") {
+      if (peek() === "?") {
+        eat();
+        const k = eat();
+        if (k === "=" || k === "!") throw new Refused("a lookahead", `(?${k} looks ahead, which a term may not`);
+        if (k === "<" && (peek() === "=" || peek() === "!")) throw new Refused("a lookbehind", `(?<${peek()} looks behind, which a term may not`);
+        if (k === "<") {
+          while (peek() !== void 0 && peek() !== ">") eat();
+          if (eat() !== ">") throw new Refused("an unclosed group name", "a named group's name has no closing >");
+        } else if (k !== ":") throw new Refused(`the group (?${k ?? ""}`, `(?${k ?? ""} is not a group a term reads`);
+      }
+      const x = alt();
+      if (eat() !== ")") throw new Refused("an unclosed group", "a ( has no closing )");
+      return x;
+    }
+    if (c === "[") return klass();
+    if (c === ".") return { t: "char", test: (x) => x !== "\n" && x !== "\r" };
+    if (c === "^" || c === "$") return { t: "assert", k: c };
+    if (c === "\\") {
+      const e = escape(false);
+      if (e && e.assert) return { t: "assert", k: e.assert };
+      return typeof e === "function" ? { t: "char", test: e } : lit(e);
+    }
+    if ("*+?{".includes(c)) throw new Refused("a quantifier with nothing to repeat", `${c} repeats nothing`);
+    if (c === ")") throw new Refused("an unopened group", "a ) closes no group");
+    return lit(c);
+  };
+  const lit = (ch) => {
+    const f17 = fold2(ch);
+    return { t: "char", test: (x) => fold2(x) === f17 };
+  };
+  const quant = (x) => {
+    let min, max;
+    const c = peek();
+    if (c === "*") {
+      min = 0;
+      max = Infinity;
+    } else if (c === "+") {
+      min = 1;
+      max = Infinity;
+    } else if (c === "?") {
+      min = 0;
+      max = 1;
+    } else if (c === "{") {
+      const m = /^\{(\d+)(,(\d*))?\}/.exec(cs.slice(i, i + 12).join(""));
+      if (!m) return x;
+      min = Number(m[1]);
+      max = m[2] ? m[3] === "" ? Infinity : Number(m[3]) : min;
+      if (min > TERM_REPEAT_MAX || max !== Infinity && max > TERM_REPEAT_MAX || max < min)
+        throw new Refused("a count past the bound", `a count is at most ${TERM_REPEAT_MAX} and never runs backwards`);
+      i += m[0].length - 1;
+    } else return x;
+    eat();
+    if (peek() === "?") eat();
+    if (x.t === "assert") throw new Refused("a repeated assertion", "an anchor or word boundary cannot be repeated");
+    return quant({ t: "rep", x, min, max });
+  };
+  const seq = () => {
+    const xs = [];
+    while (peek() !== void 0 && peek() !== "|" && peek() !== ")") xs.push(quant(atom()));
+    return { t: "seq", xs };
+  };
+  const alt = () => {
+    const xs = [seq()];
+    while (peek() === "|") {
+      eat();
+      xs.push(seq());
+    }
+    return xs.length === 1 ? xs[0] : { t: "alt", xs };
+  };
+  const tree = alt();
+  if (i < cs.length) throw new Refused("an unopened group", "a ) closes no group");
+  return tree;
+}
+function compile5(tree) {
+  const prog = [];
+  const add = (s) => {
+    if (prog.length >= TERM_PROGRAM_MAX) throw new Refused("an expression past the bound", `the term compiles to more than ${TERM_PROGRAM_MAX} states`);
+    prog.push(s);
+    return prog.length - 1;
+  };
+  const patch = (holes2, to) => {
+    for (const [s, k] of holes2) prog[s][k] = to;
+  };
+  const emit = (n) => {
+    if (n.t === "char") {
+      const s = add({ op: "char", test: n.test, next: -1 });
+      return [s, [[s, "next"]]];
+    }
+    if (n.t === "assert") {
+      const s = add({ op: "assert", k: n.k, next: -1 });
+      return [s, [[s, "next"]]];
+    }
+    if (n.t === "seq") {
+      if (!n.xs.length) {
+        const s = add({ op: "split", a: -1, b: -1 });
+        return [s, [[s, "a"], [s, "b"]]];
+      }
+      let [entry2, holes3] = emit(n.xs[0]);
+      for (const x of n.xs.slice(1)) {
+        const [e, h] = emit(x);
+        patch(holes3, e);
+        holes3 = h;
+      }
+      return [entry2, holes3];
+    }
+    if (n.t === "alt") {
+      let [entry2, holes3] = emit(n.xs[0]);
+      for (const x of n.xs.slice(1)) {
+        const [e, h] = emit(x);
+        entry2 = add({ op: "split", a: entry2, b: e });
+        holes3 = [...holes3, ...h];
+      }
+      return [entry2, holes3];
+    }
+    const parts = [];
+    for (let k = 0; k < n.min; k++) parts.push(emit(n.x));
+    if (n.max === Infinity) {
+      const [e, h] = emit(n.x);
+      const s = add({ op: "split", a: e, b: -1 });
+      patch(h, s);
+      parts.push([s, [[s, "b"]]]);
+    } else for (let k = n.min; k < n.max; k++) {
+      const [e, h] = emit(n.x);
+      const s = add({ op: "split", a: e, b: -1 });
+      parts.push([s, [...h, [s, "b"]]]);
+    }
+    if (!parts.length) {
+      const s = add({ op: "split", a: -1, b: -1 });
+      return [s, [[s, "a"], [s, "b"]]];
+    }
+    let [entry, holes2] = parts[0];
+    for (const [e, h] of parts.slice(1)) {
+      patch(holes2, e);
+      holes2 = h;
+    }
+    return [entry, holes2];
+  };
+  const [start, holes] = emit(tree);
+  patch(holes, add({ op: "match" }));
+  return { prog, start };
+}
+function run({ prog, start }, chars) {
+  const mark = new Int32Array(prog.length).fill(-1);
+  let gen = 0;
+  const closure = (list2, s, pos) => {
+    const stack = [s];
+    while (stack.length) {
+      const x = stack.pop();
+      if (x < 0 || mark[x] === gen) continue;
+      mark[x] = gen;
+      const st = prog[x];
+      if (st.op === "split") {
+        stack.push(st.b, st.a);
+        continue;
+      }
+      if (st.op === "assert") {
+        const before = chars[pos - 1], after = chars[pos];
+        const ok2 = st.k === "^" ? pos === 0 : st.k === "$" ? pos === chars.length : isWord(before) !== isWord(after) === (st.k === "b");
+        if (ok2) stack.push(st.next);
+        continue;
+      }
+      if (st.op === "match") return true;
+      list2.push(x);
+    }
+    return false;
+  };
+  let live = [];
+  for (let pos = 0; ; pos++) {
+    gen++;
+    const next = [];
+    for (const s of live) if (closure(next, prog[s].next, pos)) return true;
+    if (closure(next, start, pos)) return true;
+    if (pos >= chars.length) return false;
+    const c = chars[pos];
+    live = next.filter((s) => prog[s].test(c));
+  }
+}
+function compileTerm(term) {
+  if (typeof term !== "string" || !term.length || term.length > TERM_MAX || /[\r\n]/.test(term))
+    return { ok: false, construct: "not a term", detail: `a term is a single line of 1 to ${TERM_MAX} characters` };
+  const regex = term.length >= 2 && term.startsWith("/") && term.endsWith("/");
+  if (!regex) {
+    const needle = Array.from(term, fold2).join("");
+    return { ok: true, kind: "literal", test: (text5) => Array.from(cut3(text5), fold2).join("").includes(needle) };
+  }
+  try {
+    const m = compile5(parse3(term.slice(1, -1)));
+    return { ok: true, kind: "regex", test: (text5) => run(m, Array.from(cut3(text5))) };
+  } catch (e) {
+    if (e instanceof Refused) return { ok: false, construct: e.construct, detail: e.message };
+    return { ok: false, construct: "an expression that does not compile", detail: String(e && e.message || e).slice(0, 160) };
+  }
+}
+function cut3(text5) {
+  const s = typeof text5 === "string" ? text5 : "";
+  if (s.length <= MATCH_TEXT_MAX) return s;
+  return Array.from(s).slice(0, MATCH_TEXT_MAX).join("");
+}
+var isCut = (text5) => typeof text5 === "string" && text5.length > MATCH_TEXT_MAX && Array.from(text5).length > MATCH_TEXT_MAX;
+
+// src/link-sweep/checks.mjs
+var at24 = (fn, region, file) => `src/link-sweep/${file}.mjs ${fn} > ${region}`;
+var SWEEP_CHECKS = Object.freeze({
+  SWEEP_TERM_REFUSED: Object.freeze({
+    check: "C-18.16",
+    where: at24("sweepGrammar", "is-sweep-term", "checks"),
+    translation: "This was not saved: a search term of a sweep is a pattern the record cannot match safely. A term may be plain words or a simple pattern between slashes, without references back to an earlier part, look-aheads or look-behinds. The findings beside this name the term and what in it was refused. Nothing was changed."
+  }),
+  SWEEP_NOT_A_MEMBER: Object.freeze({
+    check: "C-18.17",
+    where: at24("sweepFence", "is-sweep-member", "sweep"),
+    translation: "This was not saved: a sweep is added, removed or changed only by a named member. An assistant or a machine may stop a sweep by unratifying it, and nothing more. Nothing was changed."
+  }),
+  SWEEP_RATIFY_NOT_AN_OWNER: Object.freeze({
+    check: "C-18.18",
+    where: at24("sweepFence", "is-sweep-owner", "sweep"),
+    translation: "This was not saved: a sweep is ratified, and a ratified sweep is changed, only by an owner of the project its list belongs to. Ask an owner of that project; anyone may still stop the sweep by unratifying it. Nothing was changed."
+  })
+});
+function sweepRefusal(code, detail, extra) {
+  const row2 = SWEEP_CHECKS[code];
+  return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail, ...extra || {} };
+}
+var SWEEP_FIELDS = Object.freeze(["id", "title", "ratified", "sources", "seeds", "match", "cadence", "budget"]);
+var SWEEP_ID_RE = /^[a-z0-9][a-z0-9-]{0,39}$/;
+var SWEEP_CADENCES = Object.freeze(["daily", "weekly", "monthly"]);
+var SWEEP_BOUNDS = Object.freeze({
+  sources: [1, 20],
+  seeds: [1, 10],
+  terms: [0, 20],
+  paths: [0, 20],
+  formats: [0, 10],
+  per_run: [1, 100],
+  backlog: [1, 1e3],
+  title: 200
+});
+function sweepGrammar(s, ids) {
+  const out = [];
+  const bad = (field, text5, extra) => out.push({
+    check: "C-18.5",
+    severity: "error",
+    field,
+    message: field ? `${field} ${text5}` : text5,
+    ...extra || {}
+  });
+  if (!s || typeof s !== "object" || Array.isArray(s)) return out;
+  const seen = ids instanceof Set ? ids : /* @__PURE__ */ new Set();
+  for (const k of Object.keys(s)) if (!SWEEP_FIELDS.includes(k)) bad(null, `carries '${String(k).slice(0, 40)}', which is not a sweep's field (${SWEEP_FIELDS.join(", ")})`);
+  for (const k of SWEEP_FIELDS) if (!(k in s)) bad(k, "is missing");
+  if ("id" in s) {
+    if (typeof s.id !== "string" || !SWEEP_ID_RE.test(s.id)) bad("id", "must be 1 to 40 lowercase letters, digits or hyphens, starting with a letter or digit");
+    else if (seen.has(s.id)) bad("id", `'${s.id}' is not unique within the file`);
+    else seen.add(s.id);
+  }
+  if ("title" in s && (typeof s.title !== "string" || !s.title.trim() || s.title.length > SWEEP_BOUNDS.title || /[\r\n]/.test(s.title)))
+    bad("title", `must be a nonempty single line of at most ${SWEEP_BOUNDS.title} characters`);
+  if ("ratified" in s && typeof s.ratified !== "boolean") bad("ratified", "must be boolean");
+  const list2 = (v, [lo, hi]) => Array.isArray(v) && v.length >= lo && v.length <= hi;
+  let sources = null;
+  if ("sources" in s) {
+    if (!list2(s.sources, SWEEP_BOUNDS.sources)) bad("sources", `must be an array of ${SWEEP_BOUNDS.sources.join(" to ")} prefixes`);
+    else {
+      const wrong = s.sources.findIndex((p) => !isPublicHttpsLocator(p) || /[?#]/.test(p));
+      if (wrong >= 0) bad("sources", `[${wrong}] is not a public https prefix without a query or fragment`);
+      else sources = s.sources;
+    }
+  }
+  const scoped = (field, v) => {
+    const wrong = v.findIndex((u) => !isPublicHttpsLocator(u) || sources && !inScope(u, sources));
+    if (wrong >= 0) bad(field, `[${wrong}] is not a public https locator within the sweep's sources`);
+  };
+  if ("seeds" in s) {
+    if (!list2(s.seeds, SWEEP_BOUNDS.seeds)) bad("seeds", `must be an array of ${SWEEP_BOUNDS.seeds.join(" to ")} locators`);
+    else scoped("seeds", s.seeds);
+  }
+  if ("match" in s) {
+    const m = s.match;
+    if (typeof m !== "object" || m === null || Array.isArray(m)) bad("match", "must be an object");
+    else {
+      for (const k of Object.keys(m)) if (!["terms", "paths", "formats"].includes(k)) bad("match", `carries '${String(k).slice(0, 40)}', which is not terms, paths or formats`);
+      if (m.terms !== void 0) {
+        if (!list2(m.terms, SWEEP_BOUNDS.terms)) bad("match.terms", `must be an array of at most ${SWEEP_BOUNDS.terms[1]} terms`);
+        else m.terms.forEach((t, j) => {
+          const c = compileTerm(t);
+          if (!c.ok) bad(
+            `match.terms[${j}]`,
+            `SWEEP_TERM_REFUSED: the term ${JSON.stringify(String(t).slice(0, 80))} is refused for ${c.construct} (${c.detail})`,
+            { code: "SWEEP_TERM_REFUSED", refusal: {
+              code: "SWEEP_TERM_REFUSED",
+              check: SWEEP_CHECKS.SWEEP_TERM_REFUSED.check,
+              translation: SWEEP_CHECKS.SWEEP_TERM_REFUSED.translation
+            } }
+          );
+        });
+      }
+      if (m.paths !== void 0) {
+        if (!list2(m.paths, SWEEP_BOUNDS.paths)) bad("match.paths", `must be an array of at most ${SWEEP_BOUNDS.paths[1]} prefixes`);
+        else scoped("match.paths", m.paths);
+      }
+      if (m.formats !== void 0) {
+        const known = listFormats();
+        if (!list2(m.formats, SWEEP_BOUNDS.formats)) bad("match.formats", `must be an array of at most ${SWEEP_BOUNDS.formats[1]} format names`);
+        else {
+          const wrong = m.formats.findIndex((x) => !known.includes(x));
+          if (wrong >= 0) bad("match.formats", `[${wrong}] is not a format this instance reads (${known.join(", ")})`);
+        }
+      }
+    }
+  }
+  if ("cadence" in s && !SWEEP_CADENCES.includes(s.cadence)) bad("cadence", `must be one of: ${SWEEP_CADENCES.join(", ")}`);
+  if ("budget" in s) {
+    const b = s.budget;
+    const n = (v, [lo, hi]) => Number.isInteger(v) && v >= lo && v <= hi;
+    if (typeof b !== "object" || b === null || Array.isArray(b) || Object.keys(b).some((k) => k !== "per_run" && k !== "backlog") || !n(b.per_run, SWEEP_BOUNDS.per_run) || !n(b.backlog, SWEEP_BOUNDS.backlog))
+      bad("budget", `must be {per_run, backlog}: per_run an integer ${SWEEP_BOUNDS.per_run.join(" to ")}, backlog an integer ${SWEEP_BOUNDS.backlog.join(" to ")}`);
+  }
+  return out;
+}
+
+// src/tasks/checks.mjs
+var checks_exports48 = {};
+__export(checks_exports48, {
   QUEUE_INBOX_CHECKS: () => QUEUE_INBOX_CHECKS,
   QUEUE_MACHINE_CHECKS: () => QUEUE_MACHINE_CHECKS,
   TASK_ACTOR_CHECKS: () => TASK_ACTOR_CHECKS,
   checkInboxGrammar: () => checkInboxGrammar
 });
-var at24 = (fn, region) => `src/tasks/index.mjs ${fn} > ${region}`;
+var at25 = (fn, region) => `src/tasks/index.mjs ${fn} > ${region}`;
 var QUEUE_MACHINE_CHECKS = Object.freeze({
   MACHINE_CANNOT_FORWARD: Object.freeze({
     check: "C-32.10",
-    where: at24("taskForward", "is-machine-forward"),
+    where: at25("taskForward", "is-machine-forward"),
     translation: "Forwarding hands an obligation to a named person, and deciding who is better placed to answer it is a judgement about people rather than about records. The credential that asked here is an automated one: it can surface the work and route it as it arrives, and cannot re-address it. Sign in to forward it."
   }),
   MACHINE_CANNOT_RESOLVE: Object.freeze({
     check: "C-32.11",
-    where: at24("taskResolve", "is-machine-resolve"),
+    where: at25("taskResolve", "is-machine-resolve"),
     translation: "Closing an obligation says the thing the record asked for has been answered, and somebody has to be willing to say that. The credential that asked here is an automated one \u2014 it may surface the work and prepare what it needs, and closing work that is nobody's is still closing it. Sign in to resolve it."
   })
 });
 var TASK_ACTOR_CHECKS = Object.freeze({
   TASK_NOT_YOURS: Object.freeze({
     check: "C-76.1",
-    where: at24("#refuseNotYours", "is-task-actor-fence"),
+    where: at25("#refuseNotYours", "is-task-actor-fence"),
     translation: "This task is not yours to act on: it is with another member now, so nothing was done to it. The record says below who holds it. Ask them, or an administrator, if it still needs you."
   })
 });
 var QUEUE_INBOX_CHECKS = Object.freeze({
   INBOX_REFUSED: Object.freeze({
     check: "C-19.2",
-    where: at24("inboxCheck", "is-inbox-refused"),
+    where: at25("inboxCheck", "is-inbox-refused"),
     translation: "This was not saved: the list of tasks it carries is not written the way the record writes tasks, so a member could be shown something in it that the record cannot vouch for. The findings beside this say which entries and what is wrong with each. Nothing was changed."
   })
 });
@@ -107407,27 +107843,27 @@ function checkInboxGrammar(ctx, findings) {
 }
 
 // src/queue/checks.mjs
-var checks_exports48 = {};
-__export(checks_exports48, {
+var checks_exports49 = {};
+__export(checks_exports49, {
   QUEUE_ACT_CHECKS: () => QUEUE_ACT_CHECKS,
   QUEUE_MINT_CHECKS: () => QUEUE_MINT_CHECKS,
   queueRefusal: () => queueRefusal
 });
-var at25 = (fn, region) => `src/queue/index.mjs ${fn} > ${region}`;
+var at26 = (fn, region) => `src/queue/index.mjs ${fn} > ${region}`;
 var QUEUE_MINT_CHECKS = Object.freeze({
   NO_CLASS: Object.freeze({
     check: "C-31.1",
-    where: at25("queueFeed", "is-queue-mint"),
+    where: at26("queueFeed", "is-queue-mint"),
     translation: "Your list could not be assembled: something on it does not say what sort of item it is, and showing it without that would put an entry in front of you that nobody can act on. Nothing has been lost and nothing about the record has changed \u2014 this is a fault on our side, not something you did."
   }),
   NO_SUCH_KIND: Object.freeze({
     check: "C-31.2",
-    where: at25("queueFeed", "is-queue-mint"),
+    where: at26("queueFeed", "is-queue-mint"),
     translation: "Your list could not be assembled: something on it is described in a word this record does not know, so there is no sentence to show you in place of it. Rather than showing you a line you could not read, the list refuses whole. Nothing has been lost."
   }),
   KIND_MISCLASSED: Object.freeze({
     check: "C-31.3",
-    where: at25("queueFeed", "is-queue-mint"),
+    where: at26("queueFeed", "is-queue-mint"),
     translation: "Your list could not be assembled: something on it is filed one way and described another, and the difference decides whether setting it aside is a private choice of yours or a change to the record everyone shares. That is not a difference to guess at, so the list refuses until it is right. Nothing has been lost."
   })
 });
@@ -107435,27 +107871,27 @@ var QUEUE_ACT_CHECKS = Object.freeze({
   /* REC-64 / C-33.27: an OBLIGATION is never muted (R19, R31). */
   KIND_NOT_PERSONAL: Object.freeze({
     check: "C-33.27",
-    where: at25("queueMute", "is-mute-class"),
+    where: at26("queueMute", "is-mute-class"),
     translation: "Setting this aside would be a change everybody sees rather than a private choice of yours, and that is a decision the group takes together rather than one this control makes. The kinds you can quiet for yourself are listed beside the refusal."
   }),
   /* REC-205 / C-33.44: a CONDITION or an OBLIGATION named to the dispose act (R28). The translation names the act that
      does reach the item, since a member holding a selection needs the next move. N301: what the record NOTICED. */
   CLASS_NOT_DISPOSED: Object.freeze({
     check: "C-33.44",
-    where: at25("proposeDispose", "is-dispose-class"),
+    where: at26("proposeDispose", "is-dispose-class"),
     translation: "This is not something the record disposes of. Deferring and dismissing are decisions about something the record NOTICED \u2014 its own question \u2014 and this item is a different kind of thing: a signal is a fact about our machinery that you quiet for yourself, and a to-do is work a named person owes and leaves every list when it is done. Nothing about it was changed, and it is still in your list. The answer names the act that does reach it."
   }),
   /* R29 (D-623) / C-33.50: the project arm with no project, and the bridge's FINDING key (R27, R28). One code, one
      sentence at both sites: setting a noticed item aside is one team's decision, and the team was not named. */
   NO_PROJECT_SCOPE: Object.freeze({
     check: "C-33.50",
-    where: at25("#noProjectScope", "is-dispose-scope"),
+    where: at26("#noProjectScope", "is-dispose-scope"),
     translation: "Setting this aside is a decision one project takes for its own list, and no project was named for it. Choose the project you are acting for (the item lists the ones it is filed under) and ask again. Nothing was written, and no team's list moved."
   }),
   /* R49 (DEC-110 (1)) / C-33.51: the feed asked for in an order it does not keep, refused before anything is read. */
   QUEUE_SORT_UNKNOWN: Object.freeze({
     check: "C-33.51",
-    where: at25("queueFeed", "is-queue-sort"),
+    where: at26("queueFeed", "is-queue-sort"),
     translation: "Your list cannot be put in that order. It can be sorted by when each item was added, by when it is due, by case or by kind, or left in its usual order, grouped by case. Nothing was read or changed; ask again with one of those."
   })
 });
@@ -117476,11 +117912,11 @@ var SCALES = Object.freeze({
   tn: 12
 });
 var FIGURE = /^(-|\()?\s*([$€£¥])?\s*(-)?\s*(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?|\.\d+)\s*([a-z]+)?\s*(\))?$/i;
-var fold2 = (s) => String(s).replace(/[   \s]+/g, " ").replace(/[−–]/g, "-").trim();
+var fold3 = (s) => String(s).replace(/[   \s]+/g, " ").replace(/[−–]/g, "-").trim();
 function parseFigure(figure2) {
-  if (typeof figure2 !== "string" || !fold2(figure2)) return { ok: false, why: "no figure was stated as read" };
-  const m = FIGURE.exec(fold2(figure2));
-  if (!m) return { ok: false, why: `"${fold2(figure2).slice(0, 80)}" is not a figure this module reads (digits, with thousands separators, a decimal point, a currency sign or a scale word)` };
+  if (typeof figure2 !== "string" || !fold3(figure2)) return { ok: false, why: "no figure was stated as read" };
+  const m = FIGURE.exec(fold3(figure2));
+  if (!m) return { ok: false, why: `"${fold3(figure2).slice(0, 80)}" is not a figure this module reads (digits, with thousands separators, a decimal point, a currency sign or a scale word)` };
   const [, lead, , minus, digits, word, close] = m;
   if (lead === "(" !== (close === ")")) return { ok: false, why: "an opening parenthesis is not closed, or the reverse" };
   if (lead === "-" && minus) return { ok: false, why: "the figure carries two minus signs" };
@@ -117498,8 +117934,8 @@ function parseFigure(figure2) {
 }
 function passageHolds(text5, figure2) {
   if (typeof text5 !== "string" || typeof figure2 !== "string") return false;
-  const f17 = fold2(figure2);
-  return f17 !== "" && fold2(text5).includes(f17);
+  const f17 = fold3(figure2);
+  return f17 !== "" && fold3(text5).includes(f17);
 }
 var toDecimals = (x, d) => Number(x.toFixed(Math.min(20, d)));
 var toPrecision = (x) => Number(x.toPrecision(15));
@@ -117663,7 +118099,7 @@ var str17 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
 var isObj15 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var q4 = (v) => JSON.stringify(v ?? null);
 var json2 = (v) => v == null ? null : JSON.stringify(v);
-var parse3 = (s) => {
+var parse4 = (s) => {
   if (s == null) return null;
   try {
     return JSON.parse(s);
@@ -117978,13 +118414,13 @@ var Consequences = class {
     const bad = reasonRefusal(reason);
     if (bad) return bad;
     const pick2 = (k, stored) => k in args ? args[k] : stored;
-    const oldBasis = old.op ? { op: old.op, operands: this.#operands(old.bundle_id).map((o) => ({ content: o.content_id, figure: o.figure })) } : old.state === "assessed" ? { rationale: old.rationale, rests_on: parse3(old.rests_on) || [] } : { why: old.undetermined_code };
+    const oldBasis = old.op ? { op: old.op, operands: this.#operands(old.bundle_id).map((o) => ({ content: o.content_id, figure: o.figure })) } : old.state === "assessed" ? { rationale: old.rationale, rests_on: parse4(old.rests_on) || [] } : { why: old.undetermined_code };
     return this.#record({
       determination: old.determination,
       standard: old.standard,
-      affected: pick2("affected", parse3(old.affected)),
-      measure: pick2("measure", parse3(old.measure)),
-      period: pick2("period", parse3(old.period)),
+      affected: pick2("affected", parse4(old.affected)),
+      measure: pick2("measure", parse4(old.measure)),
+      period: pick2("period", parse4(old.period)),
       basis: pick2("basis", oldBasis),
       causation: pick2("causation", old.causation),
       author,
@@ -118246,9 +118682,9 @@ var Consequences = class {
       determination: r.determination,
       standard: r.standard,
       project: r.project,
-      affected: parse3(r.affected),
-      measure: parse3(r.measure),
-      period: parse3(r.period),
+      affected: parse4(r.affected),
+      measure: parse4(r.measure),
+      period: parse4(r.period),
       state: r.state,
       author: r.author || null,
       at: r.at,
@@ -118281,7 +118717,7 @@ var Consequences = class {
       out.grade = { grade: r.grade, determined: r.grade !== null, why: gradeWhyFor(r, place) };
       out.label = r.machine ? { machine_work: true, says: `machine work: computed by ${r.author || "a machine"} from the operands shown` } : { machine_work: false, says: `computed from the operands shown; recorded by ${r.author}` };
     } else if (r.state === "assessed") {
-      const recorded = parse3(r.rests_on) || [];
+      const recorded = parse4(r.rests_on) || [];
       const rests = recorded.filter((x) => this.#resolvesEvidence(x, who2));
       if (rests.length < recorded.length) withheld = true;
       out.assessment = {
@@ -118323,7 +118759,7 @@ var Consequences = class {
     }
     const a = this.#addressedOf(r.bundle_id);
     if (a) {
-      const recorded = parse3(a.evidence) || [];
+      const recorded = parse4(a.evidence) || [];
       const evidence = recorded.filter((x) => this.#resolvesEvidence(x, who2));
       if (evidence.length < recorded.length) withheld = true;
       out.addressed = { state: a.state, evidence, reason: a.reason, by: a.author, at: a.at };
@@ -118907,7 +119343,7 @@ var MACHINE_READER = `${MACHINE_CLASS_PREFIX}admin`;
 var DRAFT_SAYS = "a draft prepared from the record: nobody has approved or sent it, and nothing is filed until a member approves it and files it by the venue's own means";
 var str18 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
 var json3 = (v) => JSON.stringify(v ?? null);
-var parse4 = (s) => {
+var parse5 = (s) => {
   try {
     return JSON.parse(s);
   } catch {
@@ -119595,7 +120031,7 @@ ${text5}` : text5;
   /* R6: what changed since the draft, by name; [] when nothing did. Read as the plane reads it, so a change the
      approving member cannot see is still named. */
   #staleness(draft) {
-    const was = parse4(draft.basis) || {};
+    const was = parse5(draft.basis) || {};
     const a = this.#action(draft.action_id, MACHINE_READER);
     if (!a) return ["the action is no longer held"];
     const changed = [];
@@ -119617,7 +120053,7 @@ ${text5}` : text5;
     const f17 = str18(id);
     const filing2 = f17 ? this.#one(`SELECT * FROM filing_drafts WHERE filing_id=?`, f17) : null;
     const d = filing2 ? { ...filing2, form: "filing" } : f17 ? ((c) => c ? { ...c, form: "communication" } : null)(this.#one(`SELECT * FROM communication_drafts WHERE filing_id=?`, f17)) : null;
-    return d && this.#action(d.action_id, viewer) && this.#sees(parse4(d.basis), viewer) ? d : null;
+    return d && this.#action(d.action_id, viewer) && this.#sees(parse5(d.basis), viewer) ? d : null;
   }
   /* R6: a draft is approved at most once; asked before the approval and again as it is written, since computing the
      in-band quartet yields (R22). */
@@ -119677,7 +120113,7 @@ ${body}` : body;
       what: `the approved ${d.form === "communication" ? "communication" : "filing"} ${d.filing_id}`,
       date: at27,
       author: who2,
-      project: (parse4(d.basis) || {}).project ?? null
+      project: (parse5(d.basis) || {}).project ?? null
     });
     const again = this.#alreadyApproved(d.filing_id);
     if (again) return again;
@@ -120077,7 +120513,7 @@ ${body}` : body;
       candidate: true,
       theory: t.theory,
       remedy: t.remedy,
-      standards: parse4(t.standards) || [],
+      standards: parse5(t.standards) || [],
       why: t.why,
       label: proposalLabel(t.proposer, "theory"),
       at: t.at,
@@ -120312,7 +120748,7 @@ ${filled.text}` : filled.text,
     const p = str18(id);
     const rows2 = p ? this.#rows(`SELECT * FROM counsel_packets WHERE packet_id=? ORDER BY version`, p) : [];
     if (!rows2.length || !this.#action(rows2[0].action_id, viewer)) return null;
-    const seen = rows2.filter((r) => this.#sees(parse4(r.basis), viewer));
+    const seen = rows2.filter((r) => this.#sees(parse5(r.basis), viewer));
     return seen.length ? seen : null;
   }
   /* R29, R31: the template a draft or packet version recorded, shown with the version's state, approver and reviews as
@@ -120349,20 +120785,20 @@ ${filled.text}` : filled.text,
     };
   }
   #version(r, rows2, viewer) {
-    const counsel = parse4(r.counsel);
+    const counsel = parse5(r.counsel);
     const marking = counselMarking(counsel);
-    const causes = this.#basisChanged(parse4(r.basis) || {}, viewer);
+    const causes = this.#basisChanged(parse5(r.basis) || {}, viewer);
     return {
       ok: true,
       id: r.packet_id,
       version: Number(r.version),
       action: r.action_id,
       head: this.#head(r.packet_id, Number(r.version), r.action_id, counsel, r.author, r.at, marking, r.disclosure ?? null),
-      sections: parse4(r.sections),
+      sections: parse5(r.sections),
       marking,
       disclosure: r.disclosure ?? null,
       fileable: false,
-      template: this.#templateShown(parse4(r.template), viewer),
+      template: this.#templateShown(parse5(r.template), viewer),
       reason: r.reason ?? null,
       basis_changed: causes.length ? { causes } : null,
       versions: rows2.map((x) => Number(x.version))
@@ -120375,7 +120811,7 @@ ${filled.text}` : filled.text,
     const r = rows2 ? version == null || version === "" ? rows2[rows2.length - 1] : rows2.find((x) => Number(x.version) === Number(version)) : null;
     if (!r) return this.#noPacket(id);
     const exports = this.#rows(`SELECT author, at, counsel, sha FROM counsel_packet_exports WHERE packet_id=? AND version=?
-                                 ORDER BY export_id`, r.packet_id, r.version).map((e) => ({ exported_by: e.author, at: e.at, counsel: parse4(e.counsel), sha: e.sha }));
+                                 ORDER BY export_id`, r.packet_id, r.version).map((e) => ({ exported_by: e.author, at: e.at, counsel: parse5(e.counsel), sha: e.sha }));
     return { ...this.#version(r, rows2, viewer), exports };
   }
   /** R10: the packet's bytes: one Markdown document, the marking on its head, every section and its manifest. */
@@ -120438,7 +120874,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
     if (!read2.ok) return read2;
     const at27 = this.#when();
     const row2 = this.#one(`SELECT basis FROM counsel_packets WHERE packet_id=? AND version=?`, read2.id, read2.version);
-    const project = (parse4(row2 && row2.basis) || {}).project ?? null;
+    const project = (parse5(row2 && row2.basis) || {}).project ?? null;
     const { bytes: bytes2, inband } = await this.#stamped(
       _Filings.render(read2),
       { what: `counsel packet ${read2.id} version ${read2.version}`, date: at27, author: who2, project }
@@ -120471,7 +120907,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
     const out = [];
     for (let offset = 0; out.length < n; offset += FILINGS_FOR_MAX) {
       const page = this.#rows(`${q7} LIMIT ? OFFSET ?`, ...a, FILINGS_FOR_MAX, offset);
-      for (const r of page) if (out.length < n && this.#sees(parse4(r.basis), viewer)) out.push(r);
+      for (const r of page) if (out.length < n && this.#sees(parse5(r.basis), viewer)) out.push(r);
       if (page.length < FILINGS_FOR_MAX) break;
     }
     return out;
@@ -120510,7 +120946,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
       drafts: drafts.slice(0, FILINGS_FOR_MAX).map((d) => ({
         filing: d.filing_id,
         form: d.form,
-        ...d.form === "communication" ? { purpose: d.purpose } : { tier: d.tier, template: this.#templateShown(parse4(d.template), viewer) },
+        ...d.form === "communication" ? { purpose: d.purpose } : { tier: d.tier, template: this.#templateShown(parse5(d.template), viewer) },
         label: proposalLabel(d.preparer, d.form === "communication" ? "communication" : "filing_draft"),
         at: d.prepared_at,
         approval: d.approved_by ? { approved_by: d.approved_by, at: d.approved_at, sha: d.sha } : null,
@@ -120518,18 +120954,18 @@ ${inbandBlock(quartet)}`, inband: quartet };
       })),
       drafts_truncated: drafts.length > FILINGS_FOR_MAX,
       packets: versions.slice(0, FILINGS_FOR_MAX).map((r) => {
-        const causes = this.#basisChanged(parse4(r.basis) || {}, viewer);
+        const causes = this.#basisChanged(parse5(r.basis) || {}, viewer);
         return {
           packet: r.packet_id,
           version: Number(r.version),
-          counsel: parse4(r.counsel),
+          counsel: parse5(r.counsel),
           assembled_by: r.author,
           at: r.at,
           reason: r.reason ?? null,
-          template: this.#templateShown(parse4(r.template), viewer),
+          template: this.#templateShown(parse5(r.template), viewer),
           basis_changed: causes.length ? { causes } : null,
           exports: this.#rows(`SELECT author, at, counsel, sha FROM counsel_packet_exports WHERE packet_id=? AND version=?
-                                       ORDER BY export_id`, r.packet_id, r.version).map((e) => ({ exported_by: e.author, at: e.at, counsel: parse4(e.counsel), sha: e.sha }))
+                                       ORDER BY export_id`, r.packet_id, r.version).map((e) => ({ exported_by: e.author, at: e.at, counsel: parse5(e.counsel), sha: e.sha }))
         };
       }),
       packets_truncated: versions.length > FILINGS_FOR_MAX
@@ -120646,7 +121082,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
       const actionKind = d.kind || (this.#action(d.action_id, viewer) || {}).kind || null;
       const entry = v.view && Array.isArray(v.view.action_kinds) ? v.view.action_kinds.find((k) => k.kind === (kind ?? actionKind)) : null;
       const givers2 = entry ? [entry.profile, ...Array.isArray(entry.bases) ? entry.bases.map((b) => b.profile) : []].filter(Boolean) : [];
-      defaults.project = project ?? (parse4(d.basis) || {}).project ?? null;
+      defaults.project = project ?? (parse5(d.basis) || {}).project ?? null;
       defaults.kind = kind ?? actionKind;
       defaults.use = use ?? "file";
       defaults.profiles = profiles ?? (givers2.length ? [...new Set(givers2)] : "general");
@@ -125531,416 +125967,6 @@ async function monitorOp(req, store, {
   return json6({ ok: false, ...r.body, store: storeName, tokenClass: cls }, r.status);
 }
 
-// src/link-sweep/sweep-match.mjs
-function inScope(address, sources) {
-  if (typeof address !== "string" || !Array.isArray(sources)) return false;
-  let a;
-  try {
-    a = normalizeAddress(address);
-  } catch {
-    return false;
-  }
-  return sources.some((p) => {
-    if (typeof p !== "string" || !p) return false;
-    let n;
-    try {
-      n = normalizeAddress(p);
-    } catch {
-      return false;
-    }
-    return a === n || a.startsWith(n) && (n.endsWith("/") || a[n.length] === "/");
-  });
-}
-var TERM_MAX = 200;
-var MATCH_TEXT_MAX = 2048;
-var TERM_PROGRAM_MAX = 4e3;
-var TERM_REPEAT_MAX = 100;
-var fold3 = (c) => {
-  const l = c.toLowerCase();
-  return l.length === 1 ? l : c;
-};
-var unfold = (c) => {
-  const u = c.toUpperCase();
-  return u.length === 1 ? u : c;
-};
-var isWord = (c) => c !== void 0 && /^[A-Za-z0-9_]$/.test(c);
-var CLASS = { d: (c) => c >= "0" && c <= "9", w: isWord, s: (c) => /^\s$/u.test(c) };
-var Refused = class extends Error {
-  constructor(construct, detail) {
-    super(detail);
-    this.construct = construct;
-  }
-};
-function parse5(src) {
-  const cs = Array.from(src);
-  let i = 0;
-  const peek = () => cs[i], eat = () => cs[i++];
-  const escape = (inClass) => {
-    const c = eat();
-    if (c === void 0) throw new Refused("a trailing backslash", "the expression ends with a backslash");
-    if (/[1-9]/.test(c) || c === "k") throw new Refused("a backreference", `\\${c} refers back to a group, and a backreference cannot be matched in linear time`);
-    const low = c.toLowerCase();
-    if (CLASS[low]) {
-      const f17 = CLASS[low];
-      return c === low ? f17 : (x) => !f17(x);
-    }
-    if (!inClass && (c === "b" || c === "B")) return { assert: c };
-    const ctl = { n: "\n", r: "\r", t: "	", f: "\f", v: "\v", 0: "\0" }[c];
-    if (ctl !== void 0) return ctl;
-    if (c === "x" || c === "u") {
-      const n = c === "x" ? 2 : 4, h = cs.slice(i, i + n).join("");
-      if (!new RegExp(`^[0-9a-fA-F]{${n}}$`).test(h)) throw new Refused(`\\${c} without ${n} hex digits`, `\\${c} needs ${n} hex digits`);
-      i += n;
-      return String.fromCharCode(parseInt(h, 16));
-    }
-    if (/[A-Za-z]/.test(c)) throw new Refused(`the escape \\${c}`, `\\${c} is not an escape a term reads`);
-    return c;
-  };
-  const klass = () => {
-    const neg = peek() === "^" && !!eat();
-    const items = [];
-    let first = true;
-    for (; ; ) {
-      let c = eat();
-      if (c === void 0) throw new Refused("an unclosed class", "a [ has no closing ]");
-      if (c === "]" && !first) break;
-      first = false;
-      let lo = c === "\\" ? escape(true) : c;
-      if (typeof lo === "string" && peek() === "-" && cs[i + 1] !== void 0 && cs[i + 1] !== "]") {
-        eat();
-        c = eat();
-        const hi = c === "\\" ? escape(true) : c;
-        if (typeof hi !== "string" || hi < lo) throw new Refused("a reversed or open range", "a range in a class runs backwards or ends in a class");
-        items.push([lo, hi]);
-        continue;
-      }
-      items.push(lo);
-    }
-    const hit = (c) => items.some((x) => typeof x === "function" ? x(c) : Array.isArray(x) ? c >= x[0] && c <= x[1] : c === x);
-    return { t: "char", test: (c) => (hit(c) || hit(unfold(c)) || hit(fold3(c))) !== neg };
-  };
-  const atom = () => {
-    const c = eat();
-    if (c === "(") {
-      if (peek() === "?") {
-        eat();
-        const k = eat();
-        if (k === "=" || k === "!") throw new Refused("a lookahead", `(?${k} looks ahead, which a term may not`);
-        if (k === "<" && (peek() === "=" || peek() === "!")) throw new Refused("a lookbehind", `(?<${peek()} looks behind, which a term may not`);
-        if (k === "<") {
-          while (peek() !== void 0 && peek() !== ">") eat();
-          if (eat() !== ">") throw new Refused("an unclosed group name", "a named group's name has no closing >");
-        } else if (k !== ":") throw new Refused(`the group (?${k ?? ""}`, `(?${k ?? ""} is not a group a term reads`);
-      }
-      const x = alt();
-      if (eat() !== ")") throw new Refused("an unclosed group", "a ( has no closing )");
-      return x;
-    }
-    if (c === "[") return klass();
-    if (c === ".") return { t: "char", test: (x) => x !== "\n" && x !== "\r" };
-    if (c === "^" || c === "$") return { t: "assert", k: c };
-    if (c === "\\") {
-      const e = escape(false);
-      if (e && e.assert) return { t: "assert", k: e.assert };
-      return typeof e === "function" ? { t: "char", test: e } : lit(e);
-    }
-    if ("*+?{".includes(c)) throw new Refused("a quantifier with nothing to repeat", `${c} repeats nothing`);
-    if (c === ")") throw new Refused("an unopened group", "a ) closes no group");
-    return lit(c);
-  };
-  const lit = (ch) => {
-    const f17 = fold3(ch);
-    return { t: "char", test: (x) => fold3(x) === f17 };
-  };
-  const quant = (x) => {
-    let min, max;
-    const c = peek();
-    if (c === "*") {
-      min = 0;
-      max = Infinity;
-    } else if (c === "+") {
-      min = 1;
-      max = Infinity;
-    } else if (c === "?") {
-      min = 0;
-      max = 1;
-    } else if (c === "{") {
-      const m = /^\{(\d+)(,(\d*))?\}/.exec(cs.slice(i, i + 12).join(""));
-      if (!m) return x;
-      min = Number(m[1]);
-      max = m[2] ? m[3] === "" ? Infinity : Number(m[3]) : min;
-      if (min > TERM_REPEAT_MAX || max !== Infinity && max > TERM_REPEAT_MAX || max < min)
-        throw new Refused("a count past the bound", `a count is at most ${TERM_REPEAT_MAX} and never runs backwards`);
-      i += m[0].length - 1;
-    } else return x;
-    eat();
-    if (peek() === "?") eat();
-    if (x.t === "assert") throw new Refused("a repeated assertion", "an anchor or word boundary cannot be repeated");
-    return quant({ t: "rep", x, min, max });
-  };
-  const seq = () => {
-    const xs = [];
-    while (peek() !== void 0 && peek() !== "|" && peek() !== ")") xs.push(quant(atom()));
-    return { t: "seq", xs };
-  };
-  const alt = () => {
-    const xs = [seq()];
-    while (peek() === "|") {
-      eat();
-      xs.push(seq());
-    }
-    return xs.length === 1 ? xs[0] : { t: "alt", xs };
-  };
-  const tree = alt();
-  if (i < cs.length) throw new Refused("an unopened group", "a ) closes no group");
-  return tree;
-}
-function compile5(tree) {
-  const prog = [];
-  const add = (s) => {
-    if (prog.length >= TERM_PROGRAM_MAX) throw new Refused("an expression past the bound", `the term compiles to more than ${TERM_PROGRAM_MAX} states`);
-    prog.push(s);
-    return prog.length - 1;
-  };
-  const patch = (holes2, to) => {
-    for (const [s, k] of holes2) prog[s][k] = to;
-  };
-  const emit = (n) => {
-    if (n.t === "char") {
-      const s = add({ op: "char", test: n.test, next: -1 });
-      return [s, [[s, "next"]]];
-    }
-    if (n.t === "assert") {
-      const s = add({ op: "assert", k: n.k, next: -1 });
-      return [s, [[s, "next"]]];
-    }
-    if (n.t === "seq") {
-      if (!n.xs.length) {
-        const s = add({ op: "split", a: -1, b: -1 });
-        return [s, [[s, "a"], [s, "b"]]];
-      }
-      let [entry2, holes3] = emit(n.xs[0]);
-      for (const x of n.xs.slice(1)) {
-        const [e, h] = emit(x);
-        patch(holes3, e);
-        holes3 = h;
-      }
-      return [entry2, holes3];
-    }
-    if (n.t === "alt") {
-      let [entry2, holes3] = emit(n.xs[0]);
-      for (const x of n.xs.slice(1)) {
-        const [e, h] = emit(x);
-        entry2 = add({ op: "split", a: entry2, b: e });
-        holes3 = [...holes3, ...h];
-      }
-      return [entry2, holes3];
-    }
-    const parts = [];
-    for (let k = 0; k < n.min; k++) parts.push(emit(n.x));
-    if (n.max === Infinity) {
-      const [e, h] = emit(n.x);
-      const s = add({ op: "split", a: e, b: -1 });
-      patch(h, s);
-      parts.push([s, [[s, "b"]]]);
-    } else for (let k = n.min; k < n.max; k++) {
-      const [e, h] = emit(n.x);
-      const s = add({ op: "split", a: e, b: -1 });
-      parts.push([s, [...h, [s, "b"]]]);
-    }
-    if (!parts.length) {
-      const s = add({ op: "split", a: -1, b: -1 });
-      return [s, [[s, "a"], [s, "b"]]];
-    }
-    let [entry, holes2] = parts[0];
-    for (const [e, h] of parts.slice(1)) {
-      patch(holes2, e);
-      holes2 = h;
-    }
-    return [entry, holes2];
-  };
-  const [start, holes] = emit(tree);
-  patch(holes, add({ op: "match" }));
-  return { prog, start };
-}
-function run({ prog, start }, chars) {
-  const mark = new Int32Array(prog.length).fill(-1);
-  let gen = 0;
-  const closure = (list2, s, pos) => {
-    const stack = [s];
-    while (stack.length) {
-      const x = stack.pop();
-      if (x < 0 || mark[x] === gen) continue;
-      mark[x] = gen;
-      const st = prog[x];
-      if (st.op === "split") {
-        stack.push(st.b, st.a);
-        continue;
-      }
-      if (st.op === "assert") {
-        const before = chars[pos - 1], after = chars[pos];
-        const ok2 = st.k === "^" ? pos === 0 : st.k === "$" ? pos === chars.length : isWord(before) !== isWord(after) === (st.k === "b");
-        if (ok2) stack.push(st.next);
-        continue;
-      }
-      if (st.op === "match") return true;
-      list2.push(x);
-    }
-    return false;
-  };
-  let live = [];
-  for (let pos = 0; ; pos++) {
-    gen++;
-    const next = [];
-    for (const s of live) if (closure(next, prog[s].next, pos)) return true;
-    if (closure(next, start, pos)) return true;
-    if (pos >= chars.length) return false;
-    const c = chars[pos];
-    live = next.filter((s) => prog[s].test(c));
-  }
-}
-function compileTerm(term) {
-  if (typeof term !== "string" || !term.length || term.length > TERM_MAX || /[\r\n]/.test(term))
-    return { ok: false, construct: "not a term", detail: `a term is a single line of 1 to ${TERM_MAX} characters` };
-  const regex = term.length >= 2 && term.startsWith("/") && term.endsWith("/");
-  if (!regex) {
-    const needle = Array.from(term, fold3).join("");
-    return { ok: true, kind: "literal", test: (text5) => Array.from(cut3(text5), fold3).join("").includes(needle) };
-  }
-  try {
-    const m = compile5(parse5(term.slice(1, -1)));
-    return { ok: true, kind: "regex", test: (text5) => run(m, Array.from(cut3(text5))) };
-  } catch (e) {
-    if (e instanceof Refused) return { ok: false, construct: e.construct, detail: e.message };
-    return { ok: false, construct: "an expression that does not compile", detail: String(e && e.message || e).slice(0, 160) };
-  }
-}
-function cut3(text5) {
-  const s = typeof text5 === "string" ? text5 : "";
-  if (s.length <= MATCH_TEXT_MAX) return s;
-  return Array.from(s).slice(0, MATCH_TEXT_MAX).join("");
-}
-var isCut = (text5) => typeof text5 === "string" && text5.length > MATCH_TEXT_MAX && Array.from(text5).length > MATCH_TEXT_MAX;
-
-// src/link-sweep/checks.mjs
-var at26 = (fn, region, file) => `src/link-sweep/${file}.mjs ${fn} > ${region}`;
-var SWEEP_CHECKS = Object.freeze({
-  SWEEP_TERM_REFUSED: Object.freeze({
-    check: "C-18.16",
-    where: at26("sweepGrammar", "is-sweep-term", "checks"),
-    translation: "This was not saved: a search term of a sweep is a pattern the record cannot match safely. A term may be plain words or a simple pattern between slashes, without references back to an earlier part, look-aheads or look-behinds. The findings beside this name the term and what in it was refused. Nothing was changed."
-  }),
-  SWEEP_NOT_A_MEMBER: Object.freeze({
-    check: "C-18.17",
-    where: at26("sweepFence", "is-sweep-member", "sweep"),
-    translation: "This was not saved: a sweep is added, removed or changed only by a named member. An assistant or a machine may stop a sweep by unratifying it, and nothing more. Nothing was changed."
-  }),
-  SWEEP_RATIFY_NOT_AN_OWNER: Object.freeze({
-    check: "C-18.18",
-    where: at26("sweepFence", "is-sweep-owner", "sweep"),
-    translation: "This was not saved: a sweep is ratified, and a ratified sweep is changed, only by an owner of the project its list belongs to. Ask an owner of that project; anyone may still stop the sweep by unratifying it. Nothing was changed."
-  })
-});
-function sweepRefusal(code, detail, extra) {
-  const row2 = SWEEP_CHECKS[code];
-  return { ok: false, reason: code, code, check: row2.check, translation: row2.translation, detail, ...extra || {} };
-}
-var SWEEP_FIELDS = Object.freeze(["id", "title", "ratified", "sources", "seeds", "match", "cadence", "budget"]);
-var SWEEP_ID_RE = /^[a-z0-9][a-z0-9-]{0,39}$/;
-var SWEEP_CADENCES = Object.freeze(["daily", "weekly", "monthly"]);
-var SWEEP_BOUNDS = Object.freeze({
-  sources: [1, 20],
-  seeds: [1, 10],
-  terms: [0, 20],
-  paths: [0, 20],
-  formats: [0, 10],
-  per_run: [1, 100],
-  backlog: [1, 1e3],
-  title: 200
-});
-function sweepGrammar(s, ids) {
-  const out = [];
-  const bad = (field, text5, extra) => out.push({
-    check: "C-18.5",
-    severity: "error",
-    field,
-    message: field ? `${field} ${text5}` : text5,
-    ...extra || {}
-  });
-  if (!s || typeof s !== "object" || Array.isArray(s)) return out;
-  const seen = ids instanceof Set ? ids : /* @__PURE__ */ new Set();
-  for (const k of Object.keys(s)) if (!SWEEP_FIELDS.includes(k)) bad(null, `carries '${String(k).slice(0, 40)}', which is not a sweep's field (${SWEEP_FIELDS.join(", ")})`);
-  for (const k of SWEEP_FIELDS) if (!(k in s)) bad(k, "is missing");
-  if ("id" in s) {
-    if (typeof s.id !== "string" || !SWEEP_ID_RE.test(s.id)) bad("id", "must be 1 to 40 lowercase letters, digits or hyphens, starting with a letter or digit");
-    else if (seen.has(s.id)) bad("id", `'${s.id}' is not unique within the file`);
-    else seen.add(s.id);
-  }
-  if ("title" in s && (typeof s.title !== "string" || !s.title.trim() || s.title.length > SWEEP_BOUNDS.title || /[\r\n]/.test(s.title)))
-    bad("title", `must be a nonempty single line of at most ${SWEEP_BOUNDS.title} characters`);
-  if ("ratified" in s && typeof s.ratified !== "boolean") bad("ratified", "must be boolean");
-  const list2 = (v, [lo, hi]) => Array.isArray(v) && v.length >= lo && v.length <= hi;
-  let sources = null;
-  if ("sources" in s) {
-    if (!list2(s.sources, SWEEP_BOUNDS.sources)) bad("sources", `must be an array of ${SWEEP_BOUNDS.sources.join(" to ")} prefixes`);
-    else {
-      const wrong = s.sources.findIndex((p) => !isPublicHttpsLocator(p) || /[?#]/.test(p));
-      if (wrong >= 0) bad("sources", `[${wrong}] is not a public https prefix without a query or fragment`);
-      else sources = s.sources;
-    }
-  }
-  const scoped = (field, v) => {
-    const wrong = v.findIndex((u) => !isPublicHttpsLocator(u) || sources && !inScope(u, sources));
-    if (wrong >= 0) bad(field, `[${wrong}] is not a public https locator within the sweep's sources`);
-  };
-  if ("seeds" in s) {
-    if (!list2(s.seeds, SWEEP_BOUNDS.seeds)) bad("seeds", `must be an array of ${SWEEP_BOUNDS.seeds.join(" to ")} locators`);
-    else scoped("seeds", s.seeds);
-  }
-  if ("match" in s) {
-    const m = s.match;
-    if (typeof m !== "object" || m === null || Array.isArray(m)) bad("match", "must be an object");
-    else {
-      for (const k of Object.keys(m)) if (!["terms", "paths", "formats"].includes(k)) bad("match", `carries '${String(k).slice(0, 40)}', which is not terms, paths or formats`);
-      if (m.terms !== void 0) {
-        if (!list2(m.terms, SWEEP_BOUNDS.terms)) bad("match.terms", `must be an array of at most ${SWEEP_BOUNDS.terms[1]} terms`);
-        else m.terms.forEach((t, j) => {
-          const c = compileTerm(t);
-          if (!c.ok) bad(
-            `match.terms[${j}]`,
-            `SWEEP_TERM_REFUSED: the term ${JSON.stringify(String(t).slice(0, 80))} is refused for ${c.construct} (${c.detail})`,
-            { code: "SWEEP_TERM_REFUSED", refusal: {
-              code: "SWEEP_TERM_REFUSED",
-              check: SWEEP_CHECKS.SWEEP_TERM_REFUSED.check,
-              translation: SWEEP_CHECKS.SWEEP_TERM_REFUSED.translation
-            } }
-          );
-        });
-      }
-      if (m.paths !== void 0) {
-        if (!list2(m.paths, SWEEP_BOUNDS.paths)) bad("match.paths", `must be an array of at most ${SWEEP_BOUNDS.paths[1]} prefixes`);
-        else scoped("match.paths", m.paths);
-      }
-      if (m.formats !== void 0) {
-        const known = listFormats();
-        if (!list2(m.formats, SWEEP_BOUNDS.formats)) bad("match.formats", `must be an array of at most ${SWEEP_BOUNDS.formats[1]} format names`);
-        else {
-          const wrong = m.formats.findIndex((x) => !known.includes(x));
-          if (wrong >= 0) bad("match.formats", `[${wrong}] is not a format this instance reads (${known.join(", ")})`);
-        }
-      }
-    }
-  }
-  if ("cadence" in s && !SWEEP_CADENCES.includes(s.cadence)) bad("cadence", `must be one of: ${SWEEP_CADENCES.join(", ")}`);
-  if ("budget" in s) {
-    const b = s.budget;
-    const n = (v, [lo, hi]) => Number.isInteger(v) && v >= lo && v <= hi;
-    if (typeof b !== "object" || b === null || Array.isArray(b) || Object.keys(b).some((k) => k !== "per_run" && k !== "backlog") || !n(b.per_run, SWEEP_BOUNDS.per_run) || !n(b.backlog, SWEEP_BOUNDS.backlog))
-      bad("budget", `must be {per_run, backlog}: per_run an integer ${SWEEP_BOUNDS.per_run.join(" to ")}, backlog an integer ${SWEEP_BOUNDS.backlog.join(" to ")}`);
-  }
-  return out;
-}
-
 // src/link-sweep/schema.mjs
 var LINK_SWEEP_SCHEMA = `
 -- R4\u2013R9 (K1036): ONE ROW PER RUN OF A RATIFIED SWEEP ("<bundle>#<id>"), never edited: what it fetched and filed,
@@ -126772,6 +126798,12 @@ function linkSweepOf(host, deps) {
     if (d.captureRequests) s.registerSweepScope();
   }
   return s;
+}
+function linkSweepOps(s, url) {
+  const q7 = (k) => url.searchParams.get(k);
+  return {
+    sweeps: () => s.sweeps({ viewer: q7("viewer"), now: q7("now") })
+  };
 }
 
 // src/scheduler/index.mjs
@@ -130134,8 +130166,9 @@ var CHECK_FAMILY_FILES = Object.freeze([
   ["src/escalation/checks.mjs", checks_exports44],
   ["src/action-plans/checks.mjs", checks_exports45],
   ["src/monitoring/checks.mjs", checks_exports46],
-  ["src/tasks/checks.mjs", checks_exports47],
-  ["src/queue/checks.mjs", checks_exports48],
+  ["src/link-sweep/checks.mjs", checks_exports47],
+  ["src/tasks/checks.mjs", checks_exports48],
+  ["src/queue/checks.mjs", checks_exports49],
   ["src/setup.mjs", setup_exports],
   ["src/admission/checks.mjs", checks_exports33],
   ["src/control-plane/checks.mjs", checks_exports6]
@@ -135826,6 +135859,10 @@ var QueueProducers = class _QueueProducers {
   get #networkNotices() {
     return this.#dep("networkNotices", () => networkNoticesOf(this.#host));
   }
+  /* N506: a sweep's signals are link-sweep's (its R11), split from monitoring. */
+  get #linkSweep() {
+    return this.#dep("linkSweep", () => linkSweepOf(this.#host));
+  }
   #rows(q7, ...a) {
     return [...this.sql.exec(q7, ...a)];
   }
@@ -138661,20 +138698,14 @@ var QueueProducers = class _QueueProducers {
     return out;
   }
   /* ======================================================================
-   * K1036 (8) · R26 — A SWEEP THAT NEEDS A MEMBER'S LOOK (monitoring R60, R63).
+   * K1036 (8) · R26 — A SWEEP THAT NEEDS A MEMBER'S LOOK (link-sweep R8, R11; monitoring R60, R63 before N506).
    * DEC-111, K1031 · R27 — A WORKING-ON NOTICE THAT NEEDS ITS OWNERS' (network-notices R12, R13, R22).
    * Each reads the one fact its owning module offers, derived on read and writing nothing, so an item leaves on the
    * first read after the fact stops holding. The items' words are the UX design stream's to set (NOTIFICATIONS.md, the
    * item contract; `ux-experience.json` UC-035): the sentences here say the fact plainly and claim nothing beyond it.
    * ====================================================================== */
-  /** R26: the five kinds `monitoring.sweepConditions` answers (its R63). */
-  static SWEEP_CONDITION_KINDS = Object.freeze([
-    "sweep-held-backlog",
-    "sweep-yield-anomaly",
-    "sweep-seed-unreachable",
-    "sweep-redirect-out-of-scope",
-    "sweep-silent"
-  ]);
+  /** R26: the five kinds `link-sweep.sweepConditions` answers (its R11), as link-sweep exports them. */
+  static SWEEP_CONDITION_KINDS = SWEEP_CONDITION_KINDS;
   /** R27: how many owned projects one read asks `network-notices` about; the window `notice-lapse-near` opens in before
    *  a lapse, and how long `notice-project-closed` stands after the closing. */
   static QUEUE_NOTICE_PROJECTS = 50;
@@ -138715,7 +138746,7 @@ var QueueProducers = class _QueueProducers {
         };
     }
   }
-  /** `sweep-*` (R26; monitoring R63, K1036 (8)): one CONDITION per condition `monitoring.sweepConditions` answers the
+  /** `sweep-*` (R26; link-sweep R11, K1036 (8), N506): one CONDITION per condition `link-sweep.sweepConditions` answers the
    *  viewer, keyed `CONDITION::<kind>::<bundle>#<id>`, to the members of the sweep's project (joined or leaving,
    *  membership R74) who may see its bundle and to nobody else: a caller with no member is none of them, and a sweep in
    *  no project has no members. Its subject the sweep's bundle, homed under the project at depth 0 and the bundle's own
@@ -138723,7 +138754,7 @@ var QueueProducers = class _QueueProducers {
    *  the sentence. It leaves when the condition leaves (the read no longer answers it). */
   #conditionsSweep(me, viewer, now) {
     if (!me) return [];
-    const r = this.#monitoring.sweepConditions({ viewer, now });
+    const r = this.#linkSweep.sweepConditions({ viewer, now });
     const list2 = r && r.ok !== false && Array.isArray(r.conditions) ? r.conditions : [];
     const visible = this.#bundleRedactor(viewer);
     const joined = /* @__PURE__ */ new Map();
@@ -138755,7 +138786,7 @@ var QueueProducers = class _QueueProducers {
         summary: words.summary,
         detail: words.detail,
         basis: {
-          source: "monitoring.sweepConditions",
+          source: "link-sweep.sweepConditions",
           sweep: c.sweep,
           bundle,
           sweep_id: sweepId,
@@ -138764,7 +138795,7 @@ var QueueProducers = class _QueueProducers {
           since: c.since ?? null,
           condition: d,
           recipients_rule: "project_members_who_see_the_bundle",
-          detail: "a sweep's signal is monitoring's (its R60, R63): derived on read from the sweep's own runs and backlog, read here and never restated. It goes to the members of the sweep's project who may see its record, and it leaves on the first read after it stops holding."
+          detail: "a sweep's signal is link-sweep's (its R8, R11): derived on read from the sweep's own runs and backlog, read here and never restated. It goes to the members of the sweep's project who may see its record, and it leaves on the first read after it stops holding."
         },
         age: Number.isFinite(sinceMs) ? { state: "determined", since: c.since, ms: Math.max(0, now - sinceMs) } : {
           state: "undetermined",
@@ -139264,7 +139295,9 @@ var Queue = class _Queue {
     "filingTemplates",
     "localFacts",
     /* queue-producers R2 (N483) and R27 (DEC-111): corpus-export's export log; network-notices' notices of a project. */
-    "networkNotices"
+    "networkNotices",
+    /* queue-producers R26 (N506, K1181): link-sweep's sweep conditions (its R11), since the sweep left monitoring. */
+    "linkSweep"
   ]);
   get #scheduler() {
     return this.#dep("scheduler", () => schedulerOf(this.#host, this.#env));
@@ -139333,7 +139366,8 @@ var Queue = class _Queue {
    * different doctrine: muting is personal, resolving is a record act.)
    *
    * THE VIEWER POSTURE. This is a read that names bundle ids, so it takes the
-   * D-15 gate through query.mjs's ONE compilation point exactly as REC-25
+   * D-15 gate through membership's `viewerPredicate`, the ONE compilation
+   * point (membership R43), exactly as REC-25
    * stamped the other reads. An ancestor the caller may not see is NOT named,
    * and its absence is STATED rather than silently shortening the set — the
    * same honesty DEC-16 requires of an exhausted walk, for the same reason: a
@@ -143359,7 +143393,8 @@ var Store = class extends DurableObject {
       runs: aiRunsOf(ctx, env),
       aiRuns: aiRunsOf(ctx, env)
     });
-    monitoringOf(ctx, { env, captureRequests });
+    const monitoring = monitoringOf(ctx, { env });
+    linkSweepOf(ctx, { monitoring, captureRequests, capture });
     promotion.registerStep(STEP, promotionStep(ctx));
     observationLogOf(ctx).listenToCapture(capture);
     schedulerOf(ctx, env);
@@ -143505,6 +143540,8 @@ var Store = class extends DurableObject {
       /* `optionpropose` answers a promise, which the frame awaits */
       ...escalationOps(escalationOf(ctx), url, body),
       ...monitoringOps(monitoringOf(ctx), url, body),
+      ...linkSweepOps(linkSweepOf(ctx), url),
+      /* `sweeps` (link-sweep R9), at the place monitoring's map held it (N506) */
       ...reviewOps(reviewOf(ctx), url, body),
       ...instanceSetupOps(instanceSetupOf(ctx, env), url, body),
       ...controlPlaneRoutes(ctx, url, body)
