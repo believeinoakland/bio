@@ -4,7 +4,8 @@
  *
  * Copied from the check catalogue (`bio-plane/checks/bio-checks.mjs`) with the acquisition act (K617, K649 (1)): C-48.1–
  * C-48.7 (the Drive arm, R4), C-83.1–C-83.8 (the render arm, R5), C-28.13 (the capture-request arm, R1), and the user
- * agent with its contact address (R24); and C-68.1 (no evidence storage, K794, K850), below. Each row's code, number, translation and reasons are unchanged; its `where` names
+ * agent with its contact address (R24); and C-68.1 (no evidence storage, K794, K850), below. C-128 (R31, the sweep's
+ * scope) is this module's own, new at T23. Each row's code, number, translation and reasons are unchanged; its `where` names
  * this module's site (R29), `awaiting stamp` for promotion's next job. These are the only copies: T19's layer 1 deleted
  * the catalogue's (legacy-checks, K717, K769). C-48.8 and C-48.9 are `monitoring`'s;
  * the rest of C-28 is `capture-requests`'. The comments carried from the catalogue keep each row's reasoning beside it. */
@@ -221,6 +222,29 @@ export const INSTALLATION_CHECKS = Object.freeze({
   }),
 });
 
+/* R31 (monitoring R53, R57, R58; K1036, K1126) — A SWEEP FETCHES ONLY WITHIN ITS RATIFIED SCOPE. A sweep names a query,
+   not a document, so the one fence on what it may reach is the scope members ratified up front; a source's redirect is
+   the one way a sweep could be led out of it, and so a redirect is followed only to an address in scope (Intake
+   Doctrine §4, "Constraints as security controls"). Both rows are new at T23 (`awaiting stamp` until T24's L2). */
+export const SWEEP_SCOPE_CHECKS = Object.freeze({
+  /* A sweep-origin acquire that names no scope: refused before anything is fetched, never run unfenced. */
+  SWEEP_SCOPE_MISSING: Object.freeze({
+    check: 'C-128.1',
+    where: at('is-sweep-scope'),
+    translation: 'A sweep asked this instance to fetch a document without saying which sites the sweep '
+      + 'may reach, so nothing was fetched. A sweep only ever fetches within the scope members ratified for it.',
+  }),
+  /* The source redirected the sweep to an address outside its scope: the redirect is not followed, nothing at its
+     target is fetched and nothing is filed. */
+  SWEEP_REDIRECT_OUT_OF_SCOPE: Object.freeze({
+    check: 'C-128.2',
+    where: at('is-sweep-redirect'),
+    translation: 'The page this sweep fetched sent it on to an address outside the sweep\'s ratified scope. '
+      + 'The sweep did not follow it: nothing there was fetched and nothing was filed. Members can widen the '
+      + 'scope if that address belongs in it.',
+  }),
+});
+
 /** R29: every row this module holds, keyed by code, for a reader that looks one up by the code an answer carries. */
 export const ACQUISITION_CHECKS = Object.freeze({ ...CAPTURE_REQUEST_ARM_CHECKS, ...RENDER_CAPTURE_CHECKS, ...DRIVE_CAPTURE_CHECKS,
-                                                  ...INSTALLATION_CHECKS });
+                                                  ...INSTALLATION_CHECKS, ...SWEEP_SCOPE_CHECKS });

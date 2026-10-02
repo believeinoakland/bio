@@ -5,7 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, run, text, rendererEnv } from "./fixture.mjs";
 import { readFileSync, readdirSync } from "node:fs";
-import { ACQUISITION_CHECKS, CAPTURE_REQUEST_ARM_CHECKS, DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, INSTALLATION_CHECKS, CIVICOS_CONTACT_URL,
+import { ACQUISITION_CHECKS, CAPTURE_REQUEST_ARM_CHECKS, DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, INSTALLATION_CHECKS, SWEEP_SCOPE_CHECKS, CIVICOS_CONTACT_URL,
          civicosUserAgent, userAgent, evidenceStorageAbsent } from "../../../src/acquisition/index.mjs";
 
 const EXPECTED = {
@@ -15,21 +15,23 @@ const EXPECTED = {
   DRIVE_HOP_FACT_SUPPLIED: "C-48.1", DRIVE_FOLDER_NOT_A_DOCUMENT: "C-48.2", DRIVE_KIND_UNDETERMINED: "C-48.3", DRIVE_SHAPE_UNRECOGNISED: "C-48.4",
   DRIVE_EXPORT_IS_THE_SHELL: "C-48.5", DRIVE_EXPORT_UNREACHABLE: "C-48.6", DRIVE_EXPORT_BYTES_ARE_THE_SHELL: "C-48.7",
   EVIDENCE_STORAGE_NOT_CONFIGURED: "C-68.1",
+  SWEEP_SCOPE_MISSING: "C-128.1", SWEEP_REDIRECT_OUT_OF_SCOPE: "C-128.2",
 };
 
-test("R29: this module's table holds exactly C-48.1–C-48.7, C-83.1–C-83.8, C-28.13 and C-68.1, each with its code, number, a translation and a where naming this module's site (C-68.1's its one raiser's, K850)", () => {
+test("R29 R31: this module's table holds exactly C-48.1–C-48.7, C-83.1–C-83.8, C-28.13, C-68.1 and R31's C-128.1–C-128.2, each with its code, number, a translation and a where naming this module's site (C-68.1's its one raiser's, K850)", () => {
   assert.deepEqual(Object.fromEntries(Object.entries(ACQUISITION_CHECKS).map(([k, v]) => [k, v.check])), EXPECTED);
   assert.deepEqual(Object.keys(DRIVE_CAPTURE_CHECKS).sort(), Object.keys(EXPECTED).filter((k) => k.startsWith("DRIVE_")).sort(), "C-48.8 and C-48.9 are monitoring's");
   assert.deepEqual(Object.keys(RENDER_CAPTURE_CHECKS).sort(), Object.keys(EXPECTED).filter((k) => k.startsWith("RENDER_")).sort());
   assert.deepEqual(Object.keys(CAPTURE_REQUEST_ARM_CHECKS), ["CAPTURE_NOT_DRAINING"], "the rest of C-28 is capture-requests'");
   assert.deepEqual(Object.keys(INSTALLATION_CHECKS), ["EVIDENCE_STORAGE_NOT_CONFIGURED"], "the rest of C-68 is control-plane's and publication's");
+  assert.deepEqual(Object.keys(SWEEP_SCOPE_CHECKS), ["SWEEP_SCOPE_MISSING", "SWEEP_REDIRECT_OUT_OF_SCOPE"], "R31's two rows");
   for (const [code, row] of Object.entries(ACQUISITION_CHECKS)) {
     assert.ok(typeof row.translation === "string" && row.translation.length > 40, code);
     assert.match(row.where, /^src\/acquisition\/index\.mjs (acquire|evidenceStorageAbsent) > is-[a-z-]+/, code);
     assert.ok(Object.isFrozen(row), `${code} is frozen`);
     assert.ok(!/oakland|alameda/i.test(row.translation), `${code}: R30, no place in outward text`);
   }
-  assert.ok(Object.isFrozen(ACQUISITION_CHECKS) && Object.isFrozen(DRIVE_CAPTURE_CHECKS) && Object.isFrozen(RENDER_CAPTURE_CHECKS) && Object.isFrozen(INSTALLATION_CHECKS));
+  assert.ok(Object.isFrozen(ACQUISITION_CHECKS) && Object.isFrozen(DRIVE_CAPTURE_CHECKS) && Object.isFrozen(RENDER_CAPTURE_CHECKS) && Object.isFrozen(INSTALLATION_CHECKS) && Object.isFrozen(SWEEP_SCOPE_CHECKS));
   /* K794, K850: C-68.1 is the catalogue's row with its number and translation unchanged, its where the one raiser's region */
   assert.deepEqual({ ...INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED }, {
     check: "C-68.1", where: "src/acquisition/index.mjs evidenceStorageAbsent > is-storage-absent",
@@ -39,7 +41,7 @@ test("R29: this module's table holds exactly C-48.1–C-48.7, C-83.1–C-83.8, C
       + "was changed." });
 });
 
-test("R29: every refusal carrying a row answers that row's check and translation, and each has a negative control", async () => {
+test("R29 R31: every refusal carrying a row answers that row's check and translation, and each has a negative control", async () => {
   const env = rendererEnv({ ok: false, error: "crashed" });
   const exp = "https://docs.google.com/document/d/1AbCdEfGhIjKlMnOp/export?format=odt";
   const link = "https://docs.google.com/document/d/1AbCdEfGhIjKlMnOp/edit";
@@ -65,6 +67,12 @@ test("R29: every refusal carrying a row answers that row's check and translation
     ["DRIVE_EXPORT_UNREACHABLE", world(), { [exp]: new Response("no", { status: 404 }) }, { locator: link }, {}, [{ [exp]: new Response(new Uint8Array([0x50, 0x4b, 3, 4])) }, { locator: link }]],
     ["DRIVE_EXPORT_BYTES_ARE_THE_SHELL", world(), { [exp]: () => new Response("<html><body>app</body></html>", { headers: { "content-type": "application/vnd.oasis.opendocument.text" } }) },
      { locator: link }, {}, [{ [exp]: () => new Response(new Uint8Array([0x50, 0x4b, 3, 4]), { headers: { "content-type": "application/vnd.oasis.opendocument.text" } }) }, { locator: link }]],
+    /* R31's two, on the in-process arm (their negative controls are sweep-scope.test.mjs's) */
+    ["SWEEP_SCOPE_MISSING", world(), { "https://s.example/a": text("x") }, {}, { cls: "daemon", member: false, captureRequest: { locator: "https://s.example/a",
+      origin: { kind: "sweep", matched_sweep: "INFO-2026-0001-l#s", deeming_actor: "bio-monitor" } } }, null],
+    ["SWEEP_REDIRECT_OUT_OF_SCOPE", world(), { "https://s.example/a": () => new Response("", { status: 302, headers: { location: "https://t.example/" } }) }, {},
+     { cls: "daemon", member: false, captureRequest: { locator: "https://s.example/a", scope: ["https://s.example/"],
+      origin: { kind: "sweep", matched_sweep: "INFO-2026-0001-l#s", deeming_actor: "bio-monitor" } } }, null],
   ];
   assert.deepEqual(cases.map((c) => c[0]).sort(), Object.keys(EXPECTED).sort(), "every row is driven");
   for (const [code, w, routes, body, opts, control] of cases) {
