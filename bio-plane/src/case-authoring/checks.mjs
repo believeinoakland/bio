@@ -4,7 +4,8 @@
  * Moved here from the check catalogue with their ids, codes and translations unchanged (K6, R29): C-44.1 and C-44.3–C-44.5
  * (the case-identity family, `CASE_DERIVATION_CHECKS`; C-44.2 is `publication`'s and stays in the catalogue's family of
  * that name until publication takes it, so the family is one across the two, as `BIAS_CHECKS` is) and C-82.2–C-82.7
- * (`STATEMENT_ACK_CHECKS`, whole; C-82.1 is retired, D-521, and its number is not reused). Each `where` names the
+ * (`STATEMENT_ACK_CHECKS`, whole; C-82.1 is retired, D-521, and its number is not reused); C-82.8 is new in T22 (R19,
+ * DEC-88). Each `where` names the
  * region of this module that enforces it. C-32.6 (`MACHINE_CANNOT_PUBLISH`) and C-33.14 (`NO_STATEMENT`) were copied
  * into `PUBLISH_ACT_CHECKS` (T18; R1, R3, R29; K695), ids, codes, `where`s and translations unchanged, and stamped by
  * promotion in T19; the catalogue's copies go with its own table deletions (K529). No file of this module reads the
@@ -121,6 +122,14 @@ export const STATEMENT_ACK_CHECKS = Object.freeze({
       + 'For a draft, ask an editor of the project to save the statement again; for a published case, it can be '
       + 'published again from a draft that records who wrote it. You can acknowledge it after that. The case can '
       + 'be published either way.',
+  },
+  /* R19 (DEC-88; K1025, K1030): the acknowledger's own words, asked after C-82.6, the last refusal before anything is
+     read for the write. New in T22, awaiting promotion's stamp. */
+  STATEMENT_ACK_NO_REASON: {
+    check: 'C-82.8',
+    where: at('acknowledgeStatement', 'is-statement-ack-reasoned'),
+    translation: 'An acknowledgement of a statement is recorded with your own words on it, and none were given, or '
+      + 'they are longer than 2,000 characters. Write them. Nothing was written.',
   },
 });
 

@@ -126,7 +126,8 @@ test("R6: the project's bar is read once; on each axis it declares each load-bea
   w3.finding(Q2, [{ target: DOC2 }]);
   const P3 = w3.project("Team", "alice", [Q2]);
   w3.member("root", { role: "admin" });
-  assert.equal(w3.strength.strengthBarSet({ capture: "A", connection: "A", author: "root" }).ok, true);
+  assert.equal(w3.strength.strengthBarSet({ capture: "A", connection: "A", author: "root",
+                                             reason: "The group's default for new projects." }).ok, true);
   const noBar = w3.publish(P3, "alice", [Q2]);
   assert.deepEqual([noBar.ok, noBar.required.declared], [true, false]);
 });

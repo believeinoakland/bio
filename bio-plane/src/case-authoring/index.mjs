@@ -95,6 +95,8 @@ export const MEMBER_ROLES = Object.freeze(["load_bearing", "supporting"]);
 export const SEARCHED_SUBJECT_MAX = 500;
 /** R20: the most acknowledgements one list names; a list that reaches it says so (`truncated`). */
 export const STATEMENT_ACK_MAX = 500;
+/** R19 (DEC-88, K1030): the longest acknowledger's words, in code points. */
+export const STATEMENT_ACK_REASON_MAX = 2000;
 /** R16: the id chunk for the citations' grouped read, this module's own copy of `retrieval`'s (K57). */
 export const SELECTION_ID_CHUNK = 64;
 /** R21: the most drafts the writer read scans, the bound `review` R26 states for `case_drafts` (`REVIEW_LIST_MAX`):
@@ -1561,7 +1563,7 @@ export class CaseAuthoring {
   }
 
   /* ==========================================================================================================
-   * op=statementack: acknowledgeStatement (R19–R21)
+   * op=statementack: acknowledgeStatement (R19–R21), with the acknowledger's own words (`reason`, DEC-88)
    *
    * D-150 / §3 rule 11: a SECOND person's reading of the case's exclusion statement, before it is signed. The act is
    * keyed on the statement's SHA-256 (as the document prints it), the project and the case identity it stood at, so
@@ -1573,7 +1575,7 @@ export class CaseAuthoring {
    * admits gets the one dead answer. POSITION is membership's `isJoinedParticipant`: sight is not a place.
    * ========================================================================================================== */
   acknowledgeStatement({ draft = null, caseId = null, edition = null, secretSha = null, viewer = null,
-                         bySecret = false } = {}) {
+                         bySecret = false, reason = undefined } = {}) {
     const review = this.#review();
     let project, ident, statement, statementAuthor, kind, by, grantId = null, recipient = null, draftId = null;
     /* D-568: whether the draft asked for a new case; the answer states the edition through the provider's rule. */
@@ -1703,6 +1705,18 @@ export class CaseAuthoring {
                    + `says so.`,
                  { author: statementAuthor && by === statementAuthor ? statementAuthor : blockAuthor });
     /* END DEC-49 REGION is-statement-ack-by-its-author */
+    /* R19 — DEC-88 (K1025, K1030): THE ACKNOWLEDGER'S OWN WORDS, kept with the acknowledgement and shown in R20's list.
+       Asked after C-82.6, the last refusal before anything is read for the write, so nothing is written. Counted in code
+       points (K1050's reading); blank is empty after trimming. */
+    /* DEC-49 REGION is-statement-ack-reasoned */
+    if (typeof reason !== "string" || !reason.trim() || [...reason].length > STATEMENT_ACK_REASON_MAX)
+      return ack("STATEMENT_ACK_NO_REASON",
+                 `an acknowledgement of a case's exclusion statement is recorded with the acknowledger's own words on `
+               + `it (reason=), at most ${STATEMENT_ACK_REASON_MAX} characters: say what you read and what you make of `
+               + `what the case leaves out. ` + (typeof reason !== "string" ? "None were given." : !reason.trim()
+                 ? "The words given were blank." : `The words given are ${[...reason].length} characters.`)
+               + ` Nothing was written.`);
+    /* END DEC-49 REGION is-statement-ack-reasoned */
     const sha = statementSha(text);
     /* THE UNSIGNED DOCUMENTS OF THIS STATEMENT, AT THIS CASE IDENTITY, IN THIS PROJECT, read before anything is written
        (publication R40): the case door's own document, or the one a publisher named this draft for (REC-217). At most
@@ -1723,24 +1737,26 @@ export class CaseAuthoring {
       .sort((a, b) => (a.case_id < b.case_id ? -1 : a.case_id > b.case_id ? 1 : 0));
     /* R20: keyed by the statement, the project, the identity it was given at and the acknowledger; at no case identity
        the draft is part of what was read (REC-217). A repeat answers `existed: true`. */
-    const same = this.#one(`SELECT ack_id, at FROM statement_acknowledgements
+    const same = this.#one(`SELECT ack_id, at, reason FROM statement_acknowledgements
                             WHERE project_id=? AND statement_sha=? AND case_id IS ? AND edition=?
                               AND acknowledger_kind=? AND acknowledger=?
                               AND (? IS NOT NULL OR draft_id IS ?)`,
                            project, sha, ident.caseId ?? null, ident.edition, kind, by,
                            ident.caseId ?? null, draftId);
     const when = same ? same.at : this.#when("millisecond");
+    /* A repeat keeps the first reason (R20: `existed: true`, nothing rewritten). */
     if (!same)
       this.sql.exec(`INSERT INTO statement_acknowledgements (project_id,case_id,edition,statement_sha,draft_id,
-                     acknowledger_kind,acknowledger,recipient,at) VALUES (?,?,?,?,?,?,?,?,?)`,
-                    project, ident.caseId ?? null, ident.edition, sha, draftId, kind, by, recipient, when);
+                     acknowledger_kind,acknowledger,recipient,at,reason) VALUES (?,?,?,?,?,?,?,?,?,?)`,
+                    project, ident.caseId ?? null, ident.edition, sha, draftId, kind, by, recipient, when, reason);
     /* The parse is the authority on the project, the SQL match its index. */
     const docs = found.filter((d) => str((parseFrontmatter(d.text).data || {}).case_project) === project);
     const reauthored = docs.map((d) => this.#reauthorAcknowledgements(d));
     /* REC-217: which case edition, if any, a publisher named this draft for (signed or not). */
     const linkedTo = ident.caseId == null && draftId ? this.#draftLinkOf(draftId) : null;
     return { ok: true, existed: !!same,
-             acknowledgement: { kind, by, recipient, grant_id: grantId, at: when, project,
+             acknowledgement: { kind, by, recipient, grant_id: grantId, at: when,
+                                reason: same ? same.reason ?? null : reason, project,
                                 case_id: ident.caseId ?? null, edition: review.statedEdition(ident, draftNewCase),
                                 draft_id: draftId, statement_sha: sha },
              /* Each unsigned document of this statement, re-authored to list it: its NEW hash is what the owner signs. */
@@ -1846,7 +1862,7 @@ export class CaseAuthoring {
        draft named asks for `draft_id = ''`, which no row carries. */
     const draftMatch = unallocated ? String(draftId ?? "") : "*";
     const rows = this.#rows(
-      `SELECT acknowledger_kind, acknowledger, recipient, at, case_id, draft_id
+      `SELECT acknowledger_kind, acknowledger, recipient, at, case_id, draft_id, reason
          FROM statement_acknowledgements
         WHERE project_id=? AND statement_sha=? AND edition=?
           AND ((case_id IS ? AND (? = '*' OR draft_id = ?))
@@ -1897,8 +1913,11 @@ export class CaseAuthoring {
              unboundWriterUndetermined: unboundRow ? Number(unboundRow.u) : 0,
              withheld: byWriter + withheldWriterUndetermined,
              withheld_stated: writer ? withheldWriterStated(byWriter + withheldWriterUndetermined, writerBy) : null,
+             /* R19: each row carries its acknowledger's words, null on one recorded before DEC-88. The document's
+                lines (`ackFrontmatterLines`, `ackBodyLines`) print the fields they always printed, so the signed
+                acknowledgement lines are unchanged. */
              rows: listed.map((r) => ({ kind: r.acknowledger_kind, by: r.acknowledger,
-                                        recipient: r.recipient ?? null, at: r.at,
+                                        recipient: r.recipient ?? null, at: r.at, reason: r.reason ?? null,
                                         ...(linked && r.case_id == null ? { draft: r.draft_id } : {}) })) };
   }
 
@@ -2066,6 +2085,8 @@ export function caseAuthoringOps(c, url, body) {
       author: q("author") }),
     /* R19–R21: the review copy's two doors, and a member's third subject (an unsigned case document). */
     statementack: () => c.acknowledgeStatement({ draft: q("draft"), caseId: q("case"), edition: q("edition"),
-      secretSha: q("secretSha"), viewer: q("viewer"), bySecret: q("bySecret") === "1" }),
+      secretSha: q("secretSha"), viewer: q("viewer"), bySecret: q("bySecret") === "1",
+      /* R19 (DEC-88): the acknowledger's words, from the query as the subject is; absent stays absent. */
+      reason: q("reason") ?? undefined }),
   };
 }

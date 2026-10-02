@@ -51,7 +51,7 @@ test("R25: every authorship field is a stamp — the author, an acknowledger, th
   const fm = w.fm(w.row(`SELECT text FROM case_documents WHERE case_id=?`, r.caseId).text);
   assert.deepEqual([fm.completeness.author, fm.completeness.statement_by, fm.completeness.draft_named_by], ["alice", "bo", "alice"]);
   /* the acknowledger is the viewer the control plane stamped; a body names nobody */
-  const au = new URL(`http://do/statementack?case=${r.caseId}&edition=1&viewer=${encodeURIComponent(V("cy"))}`);
+  const au = new URL(`http://do/statementack?case=${r.caseId}&edition=1&viewer=${encodeURIComponent(V("cy"))}&reason=read`);
   const a = caseAuthoringOps(w.ca, au, { viewer: V("mallory"), by: "mallory" }).statementack();
   assert.deepEqual([a.ok, a.acknowledgement.by], [true, "cy"]);
 });
@@ -62,7 +62,7 @@ test("R28: statement_acknowledgements is declared whole to record-core's purge: 
   assert.deepEqual([caseAuthoringOwns("statement_acknowledgements"), caseAuthoringOwns({ name: "statement_acknowledgements" }),
                     caseAuthoringOwns("case_documents")], [true, true, false]);
   const pub = w.publish(P, "alice", [Q]);
-  assert.equal(w.ca.acknowledgeStatement({ viewer: V("bo"), caseId: pub.caseId, edition: 1 }).ok, true);
+  assert.equal(w.ca.acknowledgeStatement({ viewer: V("bo"), caseId: pub.caseId, edition: 1, reason: "read" }).ok, true);
   const one = w.record.purge({ bundleId: Q });
   assert.equal(w.count("statement_acknowledgements"), 1, "keyed to no bundle");
   assert.ok("statement_acknowledgements" in (one.removed || one.tables || one.counts || one), "named in the report");
@@ -70,14 +70,21 @@ test("R28: statement_acknowledgements is declared whole to record-core's purge: 
   assert.equal(w.count("statement_acknowledgements"), 0);
 });
 
-test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3–C-44.5, C-82.2–C-82.7, C-32.6 (and R3's C-33.14) — and the family C-120.1–C-120.7 is held here, every refusal carrying its check, code and translation", () => {
+test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3–C-44.5, C-82.2–C-82.8 (C-82.8 new, DEC-88), C-32.6 (and R3's C-33.14) — and the family C-120.1–C-120.7 is held here, every refusal carrying its check, code and translation", () => {
   assert.deepEqual(Object.entries(CASE_DERIVATION_CHECKS).map(([k, v]) => [k, v.check]),
     [["CASE_IDENTITY_AMBIGUOUS", "C-44.1"], ["PUBLISH_DRAFT_NOT_FOUND", "C-44.3"], ["PUBLISH_DRAFT_NOT_THIS_CASE", "C-44.4"],
      ["PUBLISH_DRAFT_ALREADY_BOUND", "C-44.5"]]);
   assert.deepEqual(Object.entries(STATEMENT_ACK_CHECKS).map(([k, v]) => [k, v.check]),
     [["STATEMENT_ACK_NO_SUBJECT", "C-82.2"], ["STATEMENT_ACK_ALREADY_SIGNED", "C-82.3"],
      ["STATEMENT_ACK_NOT_A_PARTICIPANT", "C-82.4"], ["STATEMENT_ACK_NO_STATEMENT", "C-82.5"],
-     ["STATEMENT_ACK_BY_ITS_AUTHOR", "C-82.6"], ["STATEMENT_ACK_AUTHOR_UNDETERMINED", "C-82.7"]]);
+     ["STATEMENT_ACK_BY_ITS_AUTHOR", "C-82.6"], ["STATEMENT_ACK_AUTHOR_UNDETERMINED", "C-82.7"],
+     ["STATEMENT_ACK_NO_REASON", "C-82.8"]]);
+  /* C-82.8's translation is the requirements' own, word for word (case-authoring.md, "Row C-82.8") */
+  assert.equal(STATEMENT_ACK_CHECKS.STATEMENT_ACK_NO_REASON.translation, "An acknowledgement of a statement is recorded "
+    + "with your own words on it, and none were given, or they are longer than 2,000 characters. Write them. Nothing was "
+    + "written.");
+  assert.equal(STATEMENT_ACK_CHECKS.STATEMENT_ACK_NO_REASON.where,
+    "src/case-authoring/index.mjs acknowledgeStatement > is-statement-ack-reasoned");
   assert.deepEqual(Object.values(CASE_DISCLOSURE_CHECKS).map((v) => v.check),
     ["C-120.1", "C-120.2", "C-120.3", "C-120.4", "C-120.5", "C-120.6", "C-120.7"]);
   assert.deepEqual(Object.entries(PUBLISH_ACT_CHECKS).map(([k, v]) => [k, v.check]),
@@ -123,8 +130,8 @@ test("R30: no place is named in this module's behaviour or outward text — ever
   const pub = w.publish(P, "alice", [Q], { draft: "DRAFT-2026-0001", excluded: [{ description: "d", reason: "r" }] });
   say(pub);
   say(w.row(`SELECT text FROM case_documents WHERE case_id=?`, pub.caseId).text);
-  say(w.ca.acknowledgeStatement({ viewer: V("bo"), caseId: pub.caseId, edition: 1 }));
-  say(w.ca.acknowledgeStatement({ viewer: V("bo"), draft: "DRAFT-2026-0001" }));
+  say(w.ca.acknowledgeStatement({ viewer: V("bo"), caseId: pub.caseId, edition: 1, reason: "read" }));
+  say(w.ca.acknowledgeStatement({ viewer: V("bo"), draft: "DRAFT-2026-0001", reason: "read" }));
   for (const over of [{ author: "" }, { project: null }, { project: "PROJ-2026-0000-x" }, { targets: [] }, { statement: "" },
                       { subjectPosition: "x" }, { subjectJustification: "" }, { excluded: null }, { scope: "" },
                       { biasAcknowledgement: "" }, { excluded: [{}] }, { statement: 'a "q"' }, { roles: [] },
@@ -151,6 +158,8 @@ test("K3: the ops route the stamps from the query after the body — publishcase
   }
   const b = caseAuthoringOps(w2.ca, q(""), { ...base, targets: [Q], project: P2, newCase: true, caseId: "CASE-2026-0001" }).publishcase();
   assert.equal(b.reason, "CASE_IDENTITY_AMBIGUOUS", "the body's own newCase and caseId when the query has none");
-  const ack = caseAuthoringOps(w.ca, new URL(`http://do/statementack?case=${viaQuery.caseId}&edition=1&viewer=${encodeURIComponent(V("bo"))}`), null).statementack();
-  assert.equal(ack.ok, true);
+  const ack = caseAuthoringOps(w.ca, new URL(`http://do/statementack?case=${viaQuery.caseId}&edition=1&viewer=${encodeURIComponent(V("bo"))}&reason=${encodeURIComponent("I read it whole.")}`), null).statementack();
+  assert.deepEqual([ack.ok, ack.acknowledgement.reason], [true, "I read it whole."], "the reason from the query (R19)");
+  const none = caseAuthoringOps(w.ca, new URL(`http://do/statementack?case=${viaQuery.caseId}&edition=1&viewer=${encodeURIComponent(V("cy"))}`), { reason: "a body's words" }).statementack();
+  assert.equal(none.reason, "STATEMENT_ACK_NO_REASON", "a body's reason is not read: the arm reads the query (R19)");
 });
