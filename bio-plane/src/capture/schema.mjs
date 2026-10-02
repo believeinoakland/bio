@@ -35,7 +35,9 @@ CREATE TABLE IF NOT EXISTS inbox (
 );
 CREATE INDEX IF NOT EXISTS inbox_status ON inbox(status);
 
--- Fixed-window knock rate accounting. Rows are pruned as windows pass.
+-- The doorbell's rate account (R31): one count per window bucket, the source's (a keyed fingerprint, R56) and the
+-- instance's. The estimate weights the previous window's bucket by how much of it is still inside the trailing
+-- window, so each accepted knock prunes every bucket but the current and the previous one.
 CREATE TABLE IF NOT EXISTS knock_rate (
   bucket TEXT PRIMARY KEY,
   count  INTEGER NOT NULL

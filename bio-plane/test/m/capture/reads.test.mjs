@@ -7,6 +7,7 @@ import { fresh, receipt, register, bucket, governor, provenance, storage, H } fr
 import { captureOf, captureOps, READ_LIMIT } from "../../../src/capture/index.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { governorOf } from "../../../src/host-governor/index.mjs";
+import { attestationOf } from "../../../src/attestation/index.mjs";
 /* The control plane's envelope reader (index.mjs `doAnswer`), as it is handed to the ops (N247). */
 const doAnswer = async (res) => { let out = null; try { out = await (await res).json(); } catch { out = null; }
   return out && out.ok === true ? { answered: true, result: out.result } : { answered: false, result: undefined }; };
@@ -198,7 +199,7 @@ test("R57 (N109): links is a read contract: source_capture, address_norm, partit
   assert.notEqual(again.n, "2025-01-01T00:00:00Z");
 });
 
-test("R58 (N122): captureOf answers one instance per storage; an env or governor it took by default is adopted from a later caller; one differing from what a caller gave throws naming it; the same one is accepted", () => {
+test("R58 R73 (N122, K1224): captureOf answers one instance per storage, holding attestation's; an env or governor it took by default is adopted from a later caller; one differing from what a caller gave throws naming it; the same one is accepted", () => {
   const ctx = { storage: storage() };
   const record = recordOf(ctx);
   record.migrate();
@@ -222,6 +223,18 @@ test("R58 (N122): captureOf answers one instance per storage; an env or governor
   assert.throws(() => captureOf(ctx, { provenance: provenance(ctx.storage) }), /different `provenance`/);
   assert.throws(() => captureOf(ctx, { record: {} }), /different `record`/);
   assert.equal(captureOf(ctx), first, "a caller supplying nothing is answered the instance");
+  /* R58 R73 (K1224): attestation's instance for the storage by default, held as `attestation` for the acquisition act;
+     the same one is accepted, another refused by name */
+  assert.equal(first.attestation, attestationOf(ctx), "attestation's own instance for this storage");
+  assert.equal(captureOf(ctx, { attestation: attestationOf(ctx) }), first);
+  assert.throws(() => captureOf(ctx, { attestation: {} }), /different `attestation`/);
+  assert.equal(first.attestation, attestationOf(ctx), "a refused attestation changes nothing");
+  const ctx4 = { storage: storage() };
+  recordOf(ctx4).migrate();
+  const att = { signReceipt: async () => ({ ok: true }) };
+  const c4 = captureOf(ctx4, { provenance: provenance(ctx4.storage), attestation: att });
+  assert.equal(c4.attestation, att, "the one captureOf was given");
+  assert.throws(() => captureOf(ctx4, { attestation: attestationOf(ctx4) }), /different `attestation`/);
   /* a first caller that supplied env: a later different env throws at once */
   const ctx2 = { storage: storage() };
   recordOf(ctx2).migrate();

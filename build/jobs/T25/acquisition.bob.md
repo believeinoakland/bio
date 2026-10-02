@@ -13,3 +13,7 @@ K1224: capture R58/R73 now carry attestation's instance as `cap.attestation` (me
 ## B3 · CHANGE
 
 Attestation and provenance-routes have merged into tranche/T25 (K1230; provenance K1229). Merge tranche/T25 and finish against the real attestation module. Merge order: capture, then acquisition (acquisition's receipt signer reaches it through capture's cap.attestation, K1224); acquisition may test against capture's merged branch once I say capture merged.
+
+## B4 · CHANGE
+
+Capture has merged into tranche/T25 (K1231): captureOf now holds attestation's instance as cap.attestation. Merge tranche/T25, read the signer as cap.attestation.signReceipt, finish, and post COMPLETE.

@@ -8,8 +8,10 @@
  *
  * SHAPE (K61). `captureOf(ctx, opts)` answers the one instance for a Durable Object's storage. It reaches
  * record-core by `recordOf(ctx)` on the same `ctx` (the evidence store, `transact`, `declarePurge`, settings) and
- * membership's `viewerPredicate` (R43) for what a viewer may see, and credentials' `attestingKeys` (its R11) for R69.
- * It reads provenance's `register` and `captured_locators` only on their stated read contract (provenance R48). It
+ * membership's `viewerPredicate` (R43) for what a viewer may see, credentials' `attestingKeys` (its R11) for R69, and
+ * attestation's `attest` (its R1–R3) for R68's late co-attestation, and holds attestation's instance for the storage
+ * (`attestationOf(ctx)`), which the acquisition act reaches as `cap.attestation` to sign an archive-sourced receipt
+ * (its R4; R73, K1224). It reads provenance's `register` and `captured_locators` only on their stated read contract (provenance R48). It
  * calls no later module: a later module registers a listener (R44, R55; `on`) or a reader (R32's litigation hold, R78's
  * batch examination; `registerReader`). At its first construction for a
  * storage it registers its grammar (R37) and its figures (R75) with record-core. */
@@ -25,7 +27,8 @@ export { acquireGradeNote, ACQUIRE_GRADE_NOTE } from "../acquisition/index.mjs";
 import { ACQUIRE_GRADE_NOTE } from "../acquisition/index.mjs";
 import { recordOf, PER_ITEM_MAX } from "../record-core/index.mjs";
 import { governorOf } from "../host-governor/index.mjs";
-import { provenanceOf, attest as provenanceAttest, DOORBELL_VIA } from "../provenance/index.mjs";
+import { provenanceOf, DOORBELL_VIA } from "../provenance/index.mjs";
+import { attest, attestationOf } from "../attestation/index.mjs";
 import { viewerPredicate, GATE_MARK, listenerRefusal } from "../membership/index.mjs";
 import { credentialsOf } from "../credentials/index.mjs";
 import { CAPTURE_SCHEMA, CAPTURE_DERIVED_SCHEMA, CAPTURE_ADDITIVE_COLUMNS, CAPTURE_RESHAPE,
@@ -162,7 +165,7 @@ const sameEnv = (a, b) => {
 
 /** K61, R58: the one Capture for this object's storage. `opts`: `env` (the object's bindings: the evidence bucket
  *  for the inbox, the renderer, the instance's name), `governor` (host-governor's, `governorOf(ctx)` by default),
- *  `record` (`recordOf(ctx)`) and `provenance` (`provenanceOf(ctx)`). A later call's option is never silently
+ *  `record` (`recordOf(ctx)`), `provenance` (`provenanceOf(ctx)`) and `attestation` (`attestationOf(ctx)`, K1224). A later call's option is never silently
  *  dropped (N122: a first caller without `env` stripped the plane's renderer from every later one): an `env` or
  *  `governor` the instance took by default is adopted from the first later caller that supplies it, and one that
  *  differs from what an earlier caller supplied throws, naming the option. A test may pass its own. */
@@ -170,11 +173,13 @@ export function captureOf(ctx, opts = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
   let c = instances.get(storage);
   if (!c) {
-    c = new Capture(storage, { ...opts, record: opts.record ?? recordOf(ctx),
+    const record = opts.record ?? recordOf(ctx), provenance = opts.provenance ?? provenanceOf(ctx);
+    c = new Capture(storage, { ...opts, record, provenance,
                                governor: opts.governor ?? governorOf(ctx, { env: opts.env ?? null }),
-                               provenance: opts.provenance ?? provenanceOf(ctx) });
+                               /* attestation's own instance for this host, over the record and provenance capture holds */
+                               attestation: opts.attestation ?? attestationOf(ctx, { record, provenance }) });
     instances.set(storage, c);
-    supplied.set(c, new Set(["env", "governor", "record", "provenance"].filter((k) => opts[k] != null)));
+    supplied.set(c, new Set(["env", "governor", "record", "provenance", "attestation"].filter((k) => opts[k] != null)));
     registerGrammar(c.core);
     registerFigures(c);
     return c;
@@ -187,7 +192,7 @@ export function captureOf(ctx, opts = {}) {
   /* Every option judged before any is adopted, so a refused call changes nothing. */
   if (opts.env != null && given.has("env") && !sameEnv(c.env, opts.env)) refuse("env");
   if (opts.governor != null && given.has("governor") && c.governor !== opts.governor) refuse("governor");
-  for (const [name, held] of [["record", c.core], ["provenance", c.provenance]])
+  for (const [name, held] of [["record", c.core], ["provenance", c.provenance], ["attestation", c.attestation]])
     if (opts[name] != null && opts[name] !== held) refuse(name);
   if (opts.env != null && !given.has("env")) { c.env = opts.env; given.add("env"); }
   if (opts.governor != null && !given.has("governor")) { c.governor = opts.governor; given.add("governor"); }
@@ -221,13 +226,16 @@ function registerFigures(c) {
 export class Capture {
   #sql; #storage; #listeners = new Map(); #readers = new Map(); #declared = false;
 
-  constructor(storage, { record, env = {}, governor = null, provenance = null, credentials = null } = {}) {
+  constructor(storage, { record, env = {}, governor = null, provenance = null, attestation = null, credentials = null } = {}) {
     this.#storage = storage;
     this.#sql = storage.sql;
     this.core = record;
     this.env = env || {};
     this.governor = governor;
     this.provenance = provenance;
+    /* R73 (K1224): attestation's instance, which the acquisition act reaches as `cap.attestation` (its R4's
+       `signReceipt`). */
+    this.attestation = attestation;
     this.credentials = credentials;
   }
 
@@ -958,11 +966,12 @@ export class Capture {
 
   /** R68 (DEC-81 item 3(a)): a late co-attestation. N388: any caller the control plane admits may ask, a machine
    *  included, as for `attest`: the timestamp authority and the archive vouch, never the caller (Intake Doctrine §3),
-   *  a late attestation proves existence only by its own instant, and `by` records who asked. It asks `provenance.attest` for a fresh timestamp over the digest
-   *  and, with a public `locator`, a fresh co-archive, then fetches the co-archive's raw replay through the host
-   *  governor and compares its digest (`matches` true, false or undetermined). Each attempt's outcome is appended,
-   *  dated, `late: true`, with the sentence "proves the bytes existed by <at>, not at capture". Refused `BAD_SHA`, and
-   *  R63's absence when no bytes are held (a capture held in parts counts when provenance holds its receipt). */
+   *  a late attestation proves existence only by its own instant, and `by` records who asked. It asks attestation's
+   *  `attest` (its R2, R3) for a fresh timestamp over the digest and, with a public `locator`, a fresh co-archive, both
+   *  through the host governor, then fetches the co-archive's raw replay through the governor too and compares its
+   *  digest (`matches` true, false or undetermined). Each attempt's outcome is appended, dated, `late: true`, with the
+   *  sentence "proves the bytes existed by <at>, not at capture". Refused `BAD_SHA`, and R63's absence when no bytes
+   *  are held (a capture held in parts counts when provenance holds its receipt, provenance R5). */
   async reattest({ captureSha, locator = null, by = null } = {}) {
     const sha = typeof captureSha === "string" ? captureSha.toLowerCase() : "";
     if (!HEX64.test(sha)) return { ok: false, reason: "BAD_SHA", status: 400, detail: "reattest takes the sha256 of a capture the record holds" };
@@ -976,10 +985,9 @@ export class Capture {
     }
     if (!held) { const a = evidenceAbsent(sha, "bio", { status: 404 }); return a.body; }
     const archive = typeof locator === "string" && isPublicHttpsLocator(locator);
-    const attestFn = p && typeof p.attest === "function" ? (a, io) => p.attest(a, io) : provenanceAttest;
     let out;
     try {
-      out = await attestFn({ sha256: sha, archive, locator: archive ? locator : null },
+      out = await attest({ sha256: sha, archive, locator: archive ? locator : null },
         { head: (s) => ev.head(s), put: (s, b) => ev.put(s, b), fetch: governedCall(this, "reattest"), holds });
     } catch (e) {
       out = { ok: false, attempts: [], reason: "ATTEST_FAILED", note: String(e && e.message || e).slice(0, 200) };
