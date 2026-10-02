@@ -69,7 +69,7 @@ The verified-to-retired transition of many Information documents at once, over a
 
 #### The ops map: ratificationOps(r, url, body) (`build/extraction/legacy-store.md` §4.2; `build/plan/current.md` rule 5; K760's pattern)
 
-- **R32** The module publishes `ratificationOps(r, url, body)`, an object of route arms keyed by op name, each a function of no arguments that answers what the named service answers, with today's behaviour: `gatefacts` (R7: the query's `id` and `viewer`), `ratifygate` (the body), `casegate` (the body's `caseId`, `edition` as a number and `docSha`, else the query's `case`, `edition`, `docSha`; the query's `viewer` and `secretSha`), `caseratify` (R3, the body), `publish` (R5, the body), `release` (R20–R26: the query's `handle`, `acknowledgment`, `mitigation`, `viewer`, `owner`, `author`), and `retire` (R28–R31: the query's `handle`, `reason`, `viewer`, `owner`, `author`), each stamp read from the query, never from the body. `legacy-store`'s explicit `retire` arm leaves its op map, the spread of this map answering it (K671).
+- **R32** The module publishes `ratificationOps(r, url, body)`, an object of route arms keyed by op name, each a function of no arguments that answers what the named service answers, with today's behaviour: `gatefacts` (R7: the query's `id` and `viewer`), `ratifygate` (the body), `casegate` (the body's `caseId`, `edition` as a number and `docSha`, else the query's `case`, `edition`, `docSha`; the query's `viewer` and `secretSha`), `caseratify` (R3, the body), `publish` (R5, the body), `release` (R20–R26: the query's `handle`, `acknowledgment`, `mitigation`, `viewer`, `owner`, `author`), `retire` (R28–R31: the query's `handle`, `reason`, `viewer`, `owner`, `author`), and the internal `casetestimony` (R35: the body's `caseId` and `edition`; answers `{ok: true, refusal}`, `refusal` null or the object R18's pre-flight builds, which `caseratify`'s Worker half relays as it relays C-92.11; K1074), each stamp read from the query, never from the body. `legacy-store`'s explicit `retire` arm leaves its op map, the spread of this map answering it (K671).
 
 ## Private
 
@@ -93,6 +93,7 @@ The verified-to-retired transition of many Information documents at once, over a
 - `reevaluation` (DEC-102, K1019): `levelMoved` (its R29), for R36.
 - `publication`: `caseDocumentFacts`, `caseRelation`, the registries and pinning reads, `attributionFacts`, `attributionStatedFor`, `observationsNamingAuthor`, `commitEdition`, `commitCaseEdition`, `dischargeCaseFlags`, `delivererOf`, `deliveringPrincipal`; and, through its re-export, `case-grammar`'s format grammar and `publishedGraphEdges` (`case-grammar` R1, R5; K651).
 - `public-read` (K651): `assembleCaseContainer` (its R6), and the public reads R6's tests read (`publishedManifest`, `publishedList`, `publishedEditions`: its R4, R2).
+- `case-grammar` (K1074): `whatChangedOf` (its R8), for C-41.16 (R8, R14).
 
 ### Invariants
 
