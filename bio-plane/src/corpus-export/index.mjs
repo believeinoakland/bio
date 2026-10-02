@@ -5,8 +5,9 @@
  *
  * Split from `publication` by copy (K617, K624 (1), K1024; seam map `build/extraction/corpus-export.md`): the export's
  * constants, the "section 8" comment with `exportManifest` and `exportLog`, and the `export_log` table (`./schema.mjs`),
- * with their comments. `publication`'s job deletes its copy, creates this module, and keeps its ops `export` and
- * `exportlog` as delegates; this module has no op map of its own (seam map §4). The verifying import (R3) is new here.
+ * with their comments. `publication`'s job deletes its copy and creates this module. The verifying import (R3) is new
+ * here. Its route arms `export` and `exportlog` are `corpusExportOps` (R6; N483, K1122), moved from publication's ops
+ * map; which credential reaches each op is op-declarations' and control-plane's, never this map's.
  *
  * REACHED as `corpusExportOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the
  * first call with `deps`, returned to every later caller. At creation it creates `export_log` and declares it to
@@ -298,6 +299,16 @@ function bytesOf(given) {
     if (v instanceof ArrayBuffer) return new Uint8Array(v);
     if (typeof v === "string") return te.encode(v);
     return null;
+  };
+}
+
+/** R6: the route arms, keyed by op name, each a function of no arguments (escalation's `escalationOps` form): `export`
+ *  answers R1 with the query's `note`, `exportlog` answers R2 with its `limit`, as publication's arms did. `ce` is the
+ *  host's instance (`corpusExportOf`), `q` reads one query parameter. The plane spreads the map into its own. */
+export function corpusExportOps(ce, q) {
+  return {
+    export: () => ce.exportManifest({ note: q("note") }),
+    exportlog: () => ce.exportLog({ limit: q("limit") }),
   };
 }
 
