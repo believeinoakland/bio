@@ -1,6 +1,6 @@
 # network-notices — requirements
 
-**Status** · Requirements for T23, folded at the opening by BOB #94, K1113, DEC-111, K1019, K1031, K1100.
+**Status** · Requirements for T23, folded at the opening by BOB #94, K1113, DEC-111, K1019, K1031, K1100. Folded by a worker for BOB #98 at T24's opening, 2026-10-02, entries N503 (R4 records the notice id through `record-core.recordOpaqueId`), N504 (R1 asks `provenance.instanceKeyBound`, no probe signature), N505 (R21 gives a revoked key's own `status_at`), N507 (R14's `sealWake` and R17's `attestWake` answer null when idle) and N509 (R1 and R22 answer C-70.1 at `existence`); each not yet met (T24).
 
 **Size (P6).** About 1,300–1,900 lines, well under 4,000.
 
@@ -25,14 +25,14 @@ Terms.
 - The **project reference** is the notice id, carried by the notice and by every later case of the project (R19).
 
 **prepareNotice({project, wording, body?, matter?, since, collaborate, handoff?, final?, viewer, by}) → `{ok, revision, statement, digest, warning, caution, expires}`** (`op=noticeprepare`; member session; writes nothing)
-- **R1** Refusals, in order. Each writes nothing and carries a catalogue row (DEC-49):
+- **R1** Refusals, in order. Each writes nothing and carries a catalogue row (DEC-49): *(not yet met: T24)*
   - no `project` is the required-argument refusal;
-  - a project that is absent, or invisible to `by`, is `membership`'s `noSuchProject`, the same answer either way;
+  - a project that is absent, or invisible to `by`, is `membership`'s `noSuchProject`, the same answer either way. A discoverable project `by` sees only at `existence` (`membership.sight`, its R44) is instead `membership.existenceAct`'s refusal (its R77, C-70.1), never `noSuchProject`; *(not yet met: T24)*
   - a machine or AI credential, or an operator token, is `MACHINE_CANNOT_POST_NOTICE`;
   - `by` not an owner of the project (`membership.isProjectOwner`, its R54) is `NOTICE_NOT_THE_OWNER`;
   - a project at stage `closed` (`project-stage` R2) is `NOTICE_PROJECT_CLOSED`, unless `final` is `stopped` on an open notice (R11);
   - no group slug recorded (`promotion`'s fact `producingGroup`) is `NOTICE_NO_GROUP_SLUG`, because there are no anonymous notices;
-  - no instance key bound (`provenance` R56) is `NOTICE_NO_INSTANCE_KEY`, because a notice is never published without its signed level;
+  - no instance key bound (`provenance.instanceKeyBound`, its R57) is `NOTICE_NO_INSTANCE_KEY`, because a notice is never published without its signed level. The check signs nothing, so it never sets a key's `first_used`; *(not yet met: T24)*
   - `wording` that is empty, more than one line or over 280 characters is `NOTICE_WORDING_MALFORMED`. So is `body` or `matter` of more than one line or over 120 characters, and `handoff` of more than one line or over 280 characters;
   - `since` that is not a date is `NOTICE_SINCE_MALFORMED`;
   - `since` earlier than the project's creation (the UTC date of the first entry in its history) is `NOTICE_SINCE_BEFORE_PROJECT`, naming that date;
@@ -62,11 +62,12 @@ Terms.
   No member's name, handle or id appears in a revision. The level, the cases, the seals, `closed` and `lapsed` are the copy's facts and appear only in attestations (R12).
 
 **postNotice({digest, signature, acknowledged, by}) → `{ok, notice, revision, published_at, attestation}`** (`op=noticepost`; member session; mutating)
-- **R4** Refusals, in order. Each writes nothing:
+- **R4** Refusals, in order. Each writes nothing: *(not yet met: T24)*
   - R1's caller refusals, checked again at this instant;
   - `acknowledged` other than exactly `true` is `NOTICE_WARNING_NOT_ACKNOWLEDGED`;
   - no prepared answer from `by` with this `digest`, or one past `expires`, is `NOTICE_STALE` (prepare again);
   - a signature that `signatures.verifySshsig` rejects is `NOTICE_SIGNATURE_REFUSED`, with the verifier's reason. The check is in namespace `NS_NOTICE`, over exactly `statement`, against `credentials.attestingKeys()` (its R11) restricted to the keys registered to `by`.
+  - a first revision whose notice id is already spent is `NOTICE_STALE`. The post records the notice id through `record-core.recordOpaqueId` (its R75) inside its own transaction, so the ledger holds it from that instant, never only from a later start's mint seed. *(not yet met: T24)*
 - **R5** Otherwise the revision is stored with its armored signature and the instant it was first published. In the same transaction, an attestation (R12) is issued over it. Both are served by R20 from that instant on.
 - **R6** A change to an open notice is a new revision through R1–R5. A change is a new wording, body or matter, a change to `collaborate`, or a later `since` within R1's bounds. The new revision names the prior one in `previous`, and the prior one stays served. A revision never changes `group` or `notice`.
 
@@ -100,18 +101,21 @@ Terms.
 - **R13** An attestation is signed with the copy's instance key (`provenance` R56) over the statement `provenance.instanceStatement("civicos-working-on-attestation/1", sha256(attestation))`. When no key is bound at the moment a `monthly` attestation falls due, the attestation is not issued. The miss is stated in R22 and becomes a condition for the project's owners (`queue-producers` R27). The notice then shows its last attested level with that level's date.
 
 **Seals: proof of activity** (§5B "Proof of activity")
-- **R14** After each week ends, this module seals that week's member acts (R8) for every project that is not `closed`, whether or not the project has a notice:
+- **R14** After each week ends, this module seals that week's member acts (R8) for every project that is not `closed`, whether or not the project has a notice: *(not yet met: T24)*
   - each act is a leaf made of the bundle id, the bundle digest after the act, the act's operation and its instant, never its author, with its own random 256-bit salt;
   - the project's week **seal** is the SHA-256 Merkle root over those leaves, padded to a fixed size with salted dummy leaves, so the root reveals neither the acts nor how many there were;
   - a week with no member act has no seal.
+
+  `sealWake(now)` answers null when the instance has nothing to seal (no project that is not `closed` has a member act not yet sealed), so an idle instance holds no timer (`scheduler` R15); otherwise the instant the next seal falls due. *(not yet met: T24)*
 - **R15** One RFC 3161 timestamp is requested per instance per week (`signatures.timestampRequest`, through `host-governor`, trying `TSA_ENDPOINTS` in order). It is requested over the root of all of that week's project seals, and its token is kept. When every authority fails, the week's seals are kept and marked `untimestamped`, and their weeks still count.
 - **R16** Salts and leaves are never served, exported or put in any answer until they are opened (R17). A seal reveals nothing, even to someone who holds candidate documents to test against it.
-- **R17** `openSeals({case, edition})` is called by `ratification`'s case ceremony once an edition is committed (`ratification` R37), with no choice offered (K1031 (3)).
+- **R17** `openSeals({case, edition})` is called by `ratification`'s case ceremony once an edition is committed (`ratification` R37), with no choice offered (K1031 (3)). *(not yet met: T24)*
   - For each sealed week of the case's project, it publishes the leaves for acts on bundles that the edition publishes (`publication.caseCitedParts`, its R41, and the edition's members). Each leaf comes with its salt, its Merkle path to the project seal and on to the week root, and the timestamp token.
   - Nothing else of any week is revealed.
   - An opening is idempotent per (case, edition, week).
   - An edition whose case document is committed (`publication` R40) but which is not yet published whole (its R53) is opened by no call: the call answers `NO_PUBLISHED_EDITION` and keeps the request, and the scheduled `working-on-attest` tick opens it once the edition is published whole, so nothing about an unpublished member is revealed (R16). A call for an edition with no committed case document keeps nothing.
   - A `published` attestation (R12) follows.
+  - `attestWake(now)` answers null when no notice is open and no opening is kept, so an idle instance holds no timer (`scheduler` R15); otherwise the instant its next attestation or retried opening falls due. *(not yet met: T24)*
 - **R18** `verifyOpening(opening)` is pure. It answers whether the leaves hash to the sealed root and whether the token is bound to that root (`signatures.parseTimestampResponse`). A stranger, or this module's own tests, can check an opening without this instance.
 
 **The project reference a later case carries**
@@ -122,14 +126,14 @@ Terms.
   - It answers at most `limit` items (200 by default, 1,000 at most), with `truncated` and `next`.
   - Nothing is ever removed from it.
   - A revision that is only prepared (R2) never appears in it.
-- **R21** `groupKeysPublic()` answers the group slug and two lists:
-  - `owners`: every key `credentials.signerList` (its R8) shows registered to a member who owns a project now, or who signed a published edition or a revision. Each comes with `status` (`attests`, or `revoked` with its date) and the date it was first listed, never the member's name, handle or id;
+- **R21** `groupKeysPublic()` answers the group slug and two lists: *(not yet met: T24)*
+  - `owners`: every key `credentials.signerList` (its R8) shows registered to a member who owns a project now, or who signed a published edition or a revision. Each comes with `status` (`attests`, or `revoked` with the date its status changed, `credentials.signerList`'s `status_at` (its R8, R21), never the date this copy first saw it) and the date it was first listed, never the member's name, handle or id;
   - `copy`: every instance key that has signed an attestation (`provenance.instanceKeys`, R56), with the date it was first used. Each is labelled as this copy's key.
 
   A revoked or replaced key stays listed, so older signatures can still be checked.
 
 **Member reads**
-- **R22** `noticesOf({project, viewer})` (`op=notices`) answers a viewer who can see the project (`membership.sight`, its R44):
+- **R22** `noticesOf({project, viewer})` (`op=notices`) answers a viewer who can see the project (`membership.sight`, its R44). A project absent or invisible to `viewer` is `noSuchProject`; a discoverable project `viewer` sees only at `existence` is `membership.existenceAct`'s refusal (its R77, C-70.1). Otherwise it answers: *(not yet met: T24)*
   - the project's notices, their revisions and their attestations;
   - the next `monthly` date, and the lapse date when one is running;
   - any `monthly` attestation missed for want of a key (R13);
@@ -142,12 +146,12 @@ Terms.
 ### Uses
 - `record-grammar`: canonical JSON, `createSha256`, the non-member author set (R8) and the id grammar.
 - `signatures`: `verifySshsig` (its R2), `timestampRequest` (its R15), `parseTimestampResponse` (its R17), `TSA_ENDPOINTS`, `TSA_CONTENT_TYPE` and `TSA_ACCEPT` (its R20, R21); and the new `NS_NOTICE` and `noticeStatement` (its R37, R38).
-- `record-core`: `transact`; `listBundles({project})` (its R35); the history and manifest reads (its R15, R16, R42), for R8 and the creation date; `mintOpaqueId` (its R6), for notice ids; `stampInstant` and `instantOrder` (its R47, R48); `declarePurge` (its R21); `registerCounts` (its R63).
-- `membership`: `isProjectOwner` (its R54), `projectOwners` (its R65), `sight` (its R44) and `noSuchProject`.
-- `credentials`: `attestingKeys` (its R11) and `signerList` (its R8).
+- `record-core`: `transact`; `listBundles({project})` (its R35); the history and manifest reads (its R15, R16, R42), for R8 and the creation date; `mintOpaqueId` (its R6), for notice ids; `recordOpaqueId` (its R75), for R4; `stampInstant` and `instantOrder` (its R47, R48); `declarePurge` (its R21); `registerCounts` (its R63).
+- `membership`: `isProjectOwner` (its R54), `projectOwners` (its R65), `sight` (its R44), `noSuchProject` and `existenceAct` (its R77, for R1 and R22).
+- `credentials`: `attestingKeys` (its R11) and `signerList` (its R8, with `status_at`, its R21, for R21).
 - `promotion`: the `producingGroup` fact (its R40, registered by `instance-setup` R1).
 - `host-governor`: `governedFetch`, for the timestamp authorities.
-- `provenance`: the new `instanceStatement`, `instanceSign` and `instanceKeys` (its R56), which use the instance key of its R34.
+- `provenance`: the new `instanceStatement`, `instanceSign` and `instanceKeys` (its R56), which use the instance key of its R34, and `instanceKeyBound` (its R57, for R1).
 - `capture`: the doorbell's public path (its R32).
 - `publication`: `cases` and `published_cases` under its R40; `publishedEditionsOf` (its R37) and `caseCitedParts` (its R41).
 - `public-read`: the new public-read registration (its R18).
