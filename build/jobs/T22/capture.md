@@ -26,3 +26,28 @@ Not reds, but other modules' work my change makes due (the requirements say they
 - op-declarations and affordances (L11, accepted red 5): new routes `doorbelltally` (viewer-stamped, member session), `gradenote` (viewer-stamped), `heldcaptures` (viewer-stamped), `heldsetaside` and `heldrestore` (mutating; `by` and `viewer` stamped; body `{ids, reason}`), and `doorbellrefused` (store-internal only: the Worker's count of a refusal it made before the store; it must not be a public op).
 - instance-setup (L11, accepted red 6): `setup.mjs`:1338 posts `inboxresolve` with no reason; no instance-setup test drives it, so no red today.
 - actions (L9): registers the litigation-hold reader with `capture.registerReader("litigation-hold", "actions", () => <boolean, synchronous>)`; ratification registers R78's examination with `registerReader("batch-examination", "ratification", (bundleId) => ({eligible: true} | {eligible: false, class, reason}))`, sync or async.
+
+## J3 · COMPLETE
+
+capture's T22 L3 job is done on `job/T22/capture` @ 0a1fd5e6a6 (its record commits after). Every entry applied; nothing deferred.
+
+**Entries applied** (START B1; readings confirmed B2, K1032)
+- (1) J1 (4), J2, DEC-88: `inboxResolve({knockId, status, by, reason})` refuses a reason that is absent, not a string, blank or over 2,000 characters `RESOLVE_NO_REASON` (C-118.7, 400), after `BAD_STATUS` and `NO_SUCH_KNOCK` and before any write; an admitted resolve records `resolve_reason` beside `resolved_by` and `resolved` (new `inbox.resolve_reason`, an additive column migrated forward); `pulled` runs the pull once the reason is admitted and records the reason with it; `pullKnock` asked directly takes none. The folded mark *(not yet met: T22)* on R32 is met.
+- (2) DEC-108: R31's limits 5 per source and 10 in all in any 10 minutes, the stated sentences composed from them; R47–R52's words (C-85.1–C-85.5 and C-118.3 say the group can see how often its doorbell turns people away; C-85.1/.2 begin "Your material was not received."; the saturation sentence replaced; no figure); R53's order unchanged; R80's count-only tally (`doorbell_tally`, one row per UTC day with `refused` and `limit_reached`, 30 days kept; `doorbell_limit_last`, a date), counted for every R53 refusal (the Worker's own through the store route `doorbellrefused`, its failure ignored) and every R71 refusal, read by `doorbellTally({viewer})` / `op=doorbelltally` for a member session only; `inboxList`'s `sort` (`received` default, `status`, `secret`, `project`) and `dir`, paged, the required-argument refusal for an unknown one; R32's litigation hold: `registerReader("litigation-hold", …)` and `mayClearDiscarded()`, which allows clearing only when the registered reader answers `false`.
+- (3) DEC-95 (1): R76 `gradeNoteOf({captureSha, viewer})` / `op=gradenote`.
+- (4) DEC-97: R77 `heldCaptures` / `op=heldcaptures`; R78 `registerReader("batch-examination", …)`; R79 `setAside` / `op=heldsetaside`; R81 `restoreHeld` / `op=heldrestore`, over the append-only `held_acts` (purged whole-store); rows C-118.8, C-118.9. Readers' slots refuse a second registration through membership's `listenerRefusal`.
+- (5) K1020: R56's test is deterministic: it asserts the fingerprint is exactly HMAC-SHA-256 under a bound key, with another key as its negative control, in place of the chance `!f1.includes("198")`.
+- Re-scan: two notes in `schema.mjs` named `store.mjs` as live (CAP-13's join, D-492's additive pass); re-pointed to this module. The notes in `cap13-reuse-pages.test.mjs` and `d57selflink.test.mjs` naming `store.mjs` are dated provenance (negative-control runs), kept.
+- Size: 3,419 lines (from 3,002), under 4,000.
+
+**Rows awaiting stamp** (row census, accepted red 3): changed C-118.3, C-85.1, C-85.2, C-85.3, C-85.4, C-85.5; new C-118.7, C-118.8, C-118.9.
+
+**Found in other modules**: in J2 (REPORT): six reds in sources' and control-plane's tests, each by name with its cause; the plane bundle stale; control-plane's routing of `inboxresolve` `pulled` to `inboxpull` bypasses the reason; the new ops for op-declarations/affordances; `doorbellrefused` must stay internal.
+
+**Tests and checks**
+- `node --test bio-plane/test/m/capture/ bio-plane/test/cap13-reuse-pages.test.mjs bio-plane/test/d57selflink.test.mjs`: tests 114, pass 114, fail 0. New suites `inbox.test.mjs` (R32, R37, R53, R71, R80) and `held.test.mjs` (R76–R79, R81), each with negative controls (a sixth knock refused, a reasonless resolve refused and nothing written, an admitted knock not counted, a 2,000-character reason admitted).
+- Users' suites: `test/m/extraction` 171 pass 0 fail; `test/m/monitoring` 73 pass 0 fail; `test/m/sources` 20 pass 4 fail; `test/m/control-plane` 100 pass 2 fail (the six reds named in J2).
+- Whole `bio-plane/test/m`: 4832 tests, 4806 pass, 6 fail (only J2's six), 20 todo; base 4822, 1 fail (test-support R2, environment).
+- `node checks/format.mjs`: 0 failures; `architecture.mjs … capture`: 0 failures; `coverage.mjs … capture`: 54 of 54 live ids named, 0 failures; `ownership.mjs … capture tranche/T22`: 12 files, 0 failures.
+
+Size (session_01WP7uNR1V8GPqjyrKhjKhiS): test runs 24, module lines 3419
