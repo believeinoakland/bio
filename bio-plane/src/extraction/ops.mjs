@@ -7,8 +7,9 @@
 import { withReading } from "../capture/ops.mjs";
 
 /* R64 (N339, N349, K445): the store's answer is read through the plane's `doAnswer` when the caller hands it, as
-   capture's handlers take it. Until legacy-index hands it (layer 11) this reads the envelope by control-plane R23's and
-   R25's rule, so the answer is the same either way: `{answered, result, reply}` for the store's `{ok: true, result}`;
+   capture's handlers take it; the plane's door (`src/plane/door.mjs`) hands it. A caller that hands none (as
+   legacy-index did, before it retired) has the envelope read here by control-plane R23's and R25's rule, so the
+   answer is the same either way: `{answered, result, reply}` for the store's `{ok: true, result}`;
    `{answered: false, refused: true, reply}` for the store's own refusal (`ok: false` below 500); otherwise no answer
    (a silence is never read as an empty result, REC-52), carrying the correlation id of the store's own
    `STORE_INTERNAL_ERROR` when it gave one, and nothing else of the store's envelope (its `error` is a stack, R30). */
@@ -29,8 +30,8 @@ async function ask(store, path, init, doAnswer) {
   return typeof doAnswer === "function" ? doAnswer(res) : readAnswer(res);
 }
 
-/* R64: the answer composed for a caller that hands no `json` (legacy-index's call of `acquireReadingOp`, until it hands
-   the plane's own at layer 11): the store's envelope as the plane's `json` spells it, without the plane's catalogue
+/* R64: the answer composed for a caller that hands no `json` (as legacy-index's call of `acquireReadingOp` did, before
+   it retired; the plane's door hands its own): the store's envelope as the plane's `json` spells it, without the plane's catalogue
    decoration, which only the plane holds. */
 const jsonAnswer = (o, status = 200) => new Response(JSON.stringify(o, null, 1), {
   status, headers: { "content-type": "application/json", "access-control-allow-origin": "*" } });
@@ -79,7 +80,8 @@ export async function extractionOp(op, url, env, getStore, stamps) {
 /** R1 (K72 (8)): the acquire op's reading. `answer` is capture's acquire answer; the Durable Object reads the
  *  document it filed (`read`) and the answer carries the reading and its text units on the document, as it always
  *  did. Answers `{response}` (the store's refusal relayed, or a silence, R64) or `{body}`. `json` defaults to the
- *  plane's JSON answer for a caller that hands none (legacy-index until layer 11). */
+ *  plane's JSON answer for a caller that hands none (as legacy-index did, before it retired; the plane's door hands
+ *  its own). */
 export async function acquireReadingOp(answer, store, { json = jsonAnswer, storeSilent, storeRefusal, doAnswer, storeName }) {
   const r = await ask(store, `http://x/extractread?store=${encodeURIComponent(storeName || "bio")}`, {
     method: "POST", headers: { "content-type": "application/json" },
