@@ -1300,10 +1300,10 @@ export const ACTION_CATALOGUE_CHECKS = {
   /* R52, R56, R58 (DEC-113; K1251, K1252; N518): a hold's release is its own act (`actionHoldRelease`, rung terminal), a
      hold names the projects it covers, and the "is this project held?" read names the projects it asks about. Minted
      by `actions`: C-117.23 in `actionHold`, C-117.24 in the one helper `actionHold` and `projectHolds` both ask,
-     C-117.25 in `actionHoldRelease`. New in T27 layer 9; awaiting T28's stamp. */
+     C-117.25 in `actionHold`'s body, which the release runs through (K1281). New in T27 layer 9; awaiting T28's stamp. */
   HOLD_RELEASE_IS_ITS_OWN_ACT: {
     check: 'C-117.23',
-    where: 'src/actions/index.mjs actionHold > is-hold-release-act',
+    where: 'src/actions/index.mjs actionHold > is-hold-release-own-act',
     translation: 'Releasing a litigation hold is its own act, recorded with its own reason, so that a release is never '
       + 'a side effect of placing one. This asked to release a hold through the act that places one, so nothing was '
       + 'written. Use the release act.',
@@ -1316,7 +1316,7 @@ export const ACTION_CATALOGUE_CHECKS = {
   },
   HOLD_ALREADY_RELEASED: {
     check: 'C-117.25',
-    where: 'src/actions/index.mjs actionHoldRelease > is-hold-released',
+    where: 'src/actions/index.mjs actionHold > is-hold-already-released',
     translation: 'That litigation hold is already released, and a release is stated once. Nothing was written. If the '
       + 'group is preserving again, place a new hold.',
   },

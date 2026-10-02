@@ -5,11 +5,11 @@
 ## Completion (ACTION-GRAMMAR #5)
 
 **Entry applied.** N518 (DEC-113; K1251, K1252), R9: `ACTION_CATALOGUE_CHECKS` holds three new rows, last and in this order, each `{check, where, translation}`; translations drafted plainly in C-117's style (the design stream may reword):
-- C-117.23 `HOLD_RELEASE_IS_ITS_OWN_ACT`, where `src/actions/index.mjs actionHold > is-hold-release-act`
+- C-117.23 `HOLD_RELEASE_IS_ITS_OWN_ACT`, where `src/actions/index.mjs actionHold > is-hold-release-own-act`
 - C-117.24 `HOLD_PROJECTS_REFUSED`, where `src/actions/index.mjs #holdProjects > is-hold-projects` (one helper, asked by `actionHold` and `projectHolds`)
-- C-117.25 `HOLD_ALREADY_RELEASED`, where `src/actions/index.mjs actionHoldRelease > is-hold-released`
+- C-117.25 `HOLD_ALREADY_RELEASED`, where `src/actions/index.mjs actionHold > is-hold-already-released`
 
-The `where`s name regions `actions`' job writes in this layer (REPORT J1). No other row, value, finding or reading changed.
+The `where`s name the regions `actions`' job built in this layer (REPORT J1; re-pointed by B2, K1281). No other row, value, finding or reading changed.
 
 **Awaiting stamp** (accepted red 2, until T28's promotion stamp): C-117.23 `HOLD_RELEASE_IS_ITS_OWN_ACT`, C-117.24 `HOLD_PROJECTS_REFUSED`, C-117.25 `HOLD_ALREADY_RELEASED`.
 
@@ -32,3 +32,9 @@ For actions (L9, N518): the three new rows' wheres name regions actions writes: 
 ## J2 · COMPLETE
 
 N518 applied: R9 holds C-117.23-.25, merged-first ready on job/T27/action-grammar. Module tests 25/25, actions 66/66, format/architecture/coverage/ownership 0 failures. Awaiting stamp (red 2): C-117.23, C-117.24, C-117.25. Record has the details; REPORT J1 names the regions actions must write.
+
+## Re-opened by B2 (CHANGE, K1281)
+
+C-117.23's `where` is now `actionHold > is-hold-release-own-act` and C-117.25's `actionHold > is-hold-already-released`, matching the regions `actions` built; C-117.24 unchanged. C-117.20–.22 keep their `where` (K1281), so J1's second point is settled. Re-run: action-grammar tests 25 pass, 0 fail; `format`, `architecture`, `coverage`, `ownership` 0 failures each.
+
+Size (session_01U9Fumb6uphtpXWNehTqT13): test runs 4, module lines 1797

@@ -216,7 +216,7 @@ const HOLD_ROWS = {
 const DEC113_ROWS = {
   HOLD_RELEASE_IS_ITS_OWN_ACT: {
     check: "C-117.23",
-    where: "src/actions/index.mjs actionHold > is-hold-release-act",
+    where: "src/actions/index.mjs actionHold > is-hold-release-own-act",
     translation: "Releasing a litigation hold is its own act, recorded with its own reason, so that a release is never a side effect of placing one. This asked to release a hold through the act that places one, so nothing was written. Use the release act.",
   },
   HOLD_PROJECTS_REFUSED: {
@@ -226,7 +226,7 @@ const DEC113_ROWS = {
   },
   HOLD_ALREADY_RELEASED: {
     check: "C-117.25",
-    where: "src/actions/index.mjs actionHoldRelease > is-hold-released",
+    where: "src/actions/index.mjs actionHold > is-hold-already-released",
     translation: "That litigation hold is already released, and a release is stated once. Nothing was written. If the group is preserving again, place a new hold.",
   },
 };
@@ -240,7 +240,7 @@ test("R9: the litigation-hold rows C-117.20 MACHINE_CANNOT_SET_HOLD, C-117.21 HO
     for (const code of Object.keys(HOLD_ROWS)) assert.ok(!(code in AG[n]), `${code} in ${n}`);
 });
 
-test("R9: the hold rows C-117.23 HOLD_RELEASE_IS_ITS_OWN_ACT, C-117.24 HOLD_PROJECTS_REFUSED, C-117.25 HOLD_ALREADY_RELEASED (DEC-113) are held in ACTION_CATALOGUE_CHECKS, each {check, where, translation} exactly, last and in that order, their wheres naming actions' actionHold, #holdProjects and actionHoldRelease regions; no other table holds them", () => {
+test("R9: the hold rows C-117.23 HOLD_RELEASE_IS_ITS_OWN_ACT, C-117.24 HOLD_PROJECTS_REFUSED, C-117.25 HOLD_ALREADY_RELEASED (DEC-113) are held in ACTION_CATALOGUE_CHECKS, each {check, where, translation} exactly, last and in that order, their wheres naming actions' actionHold and #holdProjects regions (K1281); no other table holds them", () => {
   const C = AG.ACTION_CATALOGUE_CHECKS;
   for (const [code, row] of Object.entries(DEC113_ROWS)) assert.deepEqual(C[code], row, code);
   assert.deepEqual(Object.keys(C).slice(-6), [...Object.keys(HOLD_ROWS), ...Object.keys(DEC113_ROWS)]);
