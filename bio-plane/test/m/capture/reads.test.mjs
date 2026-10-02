@@ -166,7 +166,7 @@ test("R32 (N90): inboxList lists at most `limit` knocks newest first, paged by `
   const received = [...first.inbox, ...rest.inbox].map((k) => k.received);
   assert.deepEqual(received, [...received].sort().reverse(), "newest first");
   const k0 = c.inboxList(null, { limit: 205 }).inbox.at(-1);
-  await c.inboxResolve({ knockId: k0.knock_id, status: "pulled", by: "member:m" });
+  await c.inboxResolve({ knockId: k0.knock_id, status: "pulled", by: "member:m", reason: "brought in" });
   const pulled = pages((p) => c.inboxList("pulled", p), 1);
   assert.deepEqual(pulled.flatMap((p) => p.inbox.map((k) => k.knock_id)), [k0.knock_id]);
   assert.equal(c.inboxList("new", { limit: 1000 }).inbox.length, 204);

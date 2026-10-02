@@ -92,6 +92,9 @@ const rand = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.
 /* An empty author is a machine's: nothing a person did (R2's "an empty or machine author"). */
 const machine = (who) => !str(who) || isMachineIdentity(str(who));
 const second = (iso) => String(iso).replace(/\.\d+Z$/, "Z");
+/* R2, R18 (DEC-88): a member's reason, their own words, trimmed; null when absent, not a string or blank. Unbounded, as
+   R8's is (K1030). */
+const reasonOf = (v) => (typeof v === "string" && v.trim() !== "" ? v.trim() : null);
 /* A member's own words kept whole in a body section: a line that would open a heading is set in by one space. */
 const bodyText = (s) => String(s).trim().replace(/^#/gm, " #");
 
@@ -343,8 +346,9 @@ export class Intent {
    * ===================================================================== */
 
   /** R2: set, replace or (with a null condition) remove a project's satisfaction condition, as a new revision of the
-   *  project's document through `promotion`; the earlier revision stays in history. */
-  setCondition({ project, condition, author, viewer = null } = {}) {
+   *  project's document through `promotion`, with the author's reason (DEC-88) carried on that revision's log entry;
+   *  the earlier revision stays in history. */
+  setCondition({ project, condition, reason, author, viewer = null } = {}) {
     /* DEC-49 REGION is-condition-member */
     if (machine(author))
       return refusal("MACHINE_CANNOT_SET_OBJECTIVE", "setting or changing an objective's measure is a named member's act "
@@ -354,6 +358,11 @@ export class Intent {
     if (p.refused) return p.refused;
     const denied = this.membership.projectAuthority(project, author, "joined", "setCondition");
     if (denied) return denied;
+    /* R2 (DEC-88): why progress is measured this way, in the author's words; a removal too. Asked before the
+       condition's shape, so nothing is written. */
+    const why = reasonOf(reason);
+    if (!why) return refuseNoReason("setting, changing or removing an objective's measure records why, in your own words. "
+                                    + "Nothing was written.");
     const c = condition == null ? null
       : { ...condition, required: isObj(condition.required) ? { grade: condition.required.grade ?? null,
                                                                stages: condition.required.stages ?? [] } : condition.required,
@@ -364,10 +373,11 @@ export class Intent {
     if (c) text = setBlock(text, CONDITION_KEY, conditionLines(c, str(author), at));
     text = setField(text, "last_updated", q(at));
     text = logEntry(text, at, c ? "Objective condition set" : "Objective condition removed", str(author),
-                    c ? `the objective's satisfaction condition is ${JSON.stringify(c)}.` : "the objective states no condition.");
+                    `${c ? `the objective's satisfaction condition is ${JSON.stringify(c)}.` : "the objective states no condition."}`
+                    + `\nReason: ${bodyText(why)}`);
     const r = this.#revise(p.doc, text, str(author), viewer);
     if (!r.ok) return r;
-    return { ok: true, project, condition: c, set_by: str(author), at, bundleSha: r.bundleSha };
+    return { ok: true, project, condition: c, reason: why, set_by: str(author), at, bundleSha: r.bundleSha };
   }
 
   /* The matched instances of a condition (R4), each assembled by progressions and judged; derived, never stored. */
@@ -1281,21 +1291,27 @@ export class Intent {
 
   /** R18: a member sets an assistant to work a project's objective: a run through `ai-runs` with the project as its
    *  context, the objective and its current gaps as its instructions, its looks named under authority kind
-   *  `objective`. `run` carries what `ai-runs.open` takes (its id, principals, skill version, bounds, …). */
-  async workObjective({ project, author, viewer = null, run = {} } = {}) {
+   *  `objective`. `run` carries what `ai-runs.open` takes (its id, principals, skill version, bounds, …). The member's
+   *  reason (DEC-88 (4)) is recorded on the run's opening as its `label`, which ai-runs stores at the open, never
+   *  changes, and answers with the run's budget and context (its R10, R19), and is carried in the instructions. */
+  async workObjective({ project, reason, author, viewer = null, run = {} } = {}) {
     /* DEC-49 REGION is-objective-member */
     if (machine(author))
       return refusal("MACHINE_CANNOT_CHOOSE_THE_QUESTION", "setting an assistant to work an objective is a member's act "
                      + "(DEC-24 rule 2). No run was opened.");
     /* END DEC-49 REGION is-objective-member */
+    /* R18 (DEC-88 (4)): why the run is opened, in the member's words, asked before the project is read; no run opened. */
+    const why = reasonOf(reason);
+    if (!why) return refuseNoReason("setting an assistant to work an objective records why, in your own words. No run "
+                                    + "was opened.");
     const p = this.#project(project, viewer ?? author);
     if (p.refused) return p.refused;
     const g = this.gaps({ project, viewer: viewer ?? author });
     const instructions = { objective: p.doc.fm.objective ?? null, condition: g.condition ?? null, gaps: g.gaps || [],
-                           authority: { kind: "objective", ref: project } };
+                           authority: { kind: "objective", ref: project }, reason: why };
     const opened = await this.#lazy(this.aiRunsRef).open({ ...(isObj(run) ? run : {}), contextType: "project",
-      contextId: project, state: { instructions }, actor: this.#memberOf(author), viewer: viewer ?? author });
-    return { ...(isObj(opened) ? opened : {}), project, instructions };
+      contextId: project, label: why, state: { instructions }, actor: this.#memberOf(author), viewer: viewer ?? author });
+    return { ...(isObj(opened) ? opened : {}), project, reason: why, instructions };
   }
 }
 

@@ -3,16 +3,17 @@
  * allowance), the event queue an undetermined capture raises, the doorbell (`doorbell.mjs`) and the information
  * grammar (`grammar.mjs`, C-2.7). The acquisition act is `acquisition`'s since T18 (K617): `acquire` and
  * `archiveLookup` hand it this module's store (R73). It writes no bundle: no intake path writes live state.
- * Requirements: build/requirements/capture.md (R8, R15, R21–R32, R37–R40, R43–R59, R63–R75). Extracted from `legacy-store` and
+ * Requirements: build/requirements/capture.md (R8, R15, R21–R32, R37–R40, R43–R59, R63–R81). Extracted from `legacy-store` and
  * `legacy-index` in T4 (T4-4); the reasoning the legacy comments carried is kept beside the code it explains.
  *
  * SHAPE (K61). `captureOf(ctx, opts)` answers the one instance for a Durable Object's storage. It reaches
  * record-core by `recordOf(ctx)` on the same `ctx` (the evidence store, `transact`, `declarePurge`, settings) and
  * membership's `viewerPredicate` (R43) for what a viewer may see, and credentials' `attestingKeys` (its R11) for R69.
  * It reads provenance's `register` and `captured_locators` only on their stated read contract (provenance R48). It
- * calls no later module: a later module registers a listener (R44, R55; `on`). At its first construction for a
+ * calls no later module: a later module registers a listener (R44, R55; `on`) or a reader (R32's litigation hold, R78's
+ * batch examination; `registerReader`). At its first construction for a
  * storage it registers its grammar (R37) and its figures (R75) with record-core. */
-import { isPublicHttpsLocator, createSha256 } from "../record-grammar/index.mjs";
+import { isPublicHttpsLocator, createSha256, isMachineIdentity } from "../record-grammar/index.mjs";
 import { KNOCK, isWeakKnockerSecret, knockerSecretWeak } from "./doorbell.mjs";
 import { CAPTURE_CHECKS, KNOCK_CHECKS } from "./checks.mjs";
 import { INFORMATION_GRAMMAR } from "./grammar.mjs";
@@ -21,7 +22,8 @@ import { acquire, archiveLookup, profileOf, profileView, governedFetch, governed
 import { verifySshsig, NS_RATIFY } from "../sshsig.mjs";
 import { ARCHIVE_SERVICE } from "../tsa.mjs";
 export { acquireGradeNote, ACQUIRE_GRADE_NOTE } from "../acquisition/index.mjs";
-import { recordOf } from "../record-core/index.mjs";
+import { ACQUIRE_GRADE_NOTE } from "../acquisition/index.mjs";
+import { recordOf, PER_ITEM_MAX } from "../record-core/index.mjs";
 import { governorOf } from "../host-governor/index.mjs";
 import { provenanceOf, attest as provenanceAttest, DOORBELL_VIA } from "../provenance/index.mjs";
 import { viewerPredicate, GATE_MARK, listenerRefusal } from "../membership/index.mjs";
@@ -127,6 +129,25 @@ const badCursor = () => ({ ok: false, reason: "BAD_CURSOR", detail: "`after` is 
    observation log's, its Suggestion). */
 export const CAPTURE_EVENTS = Object.freeze(["source-outcome", "task", "compute", "observation"]);
 
+/* The readers a later module may register, once at start, each taking one registration whoever makes it: whether any
+   litigation hold is in place (R32; `actions` R52) and the batch-release examination of one document (R78;
+   `ratification` R34). */
+export const CAPTURE_READERS = Object.freeze(["litigation-hold", "batch-examination"]);
+
+/* R32, R79, R81: the longest reason a member may give, in characters. */
+export const REASON_MAX = 2000;
+/* R32, R79, R81: a reason is a string with something other than white space in it, at most REASON_MAX characters. */
+const reasonGiven = (r) => typeof r === "string" && r.trim() !== "" && [...r].length <= REASON_MAX;
+
+/* R80 (BOB's privacy ruling): how many UTC days the tally keeps. */
+export const TALLY_DAYS = 30;
+
+/* R32 (DEC-108 (2)): the orders `inboxList` sorts by, and the directions. */
+export const INBOX_SORTS = Object.freeze(["received", "status", "secret", "project"]);
+export const SORT_DIRS = Object.freeze(["asc", "desc"]);
+/* R77: the orders `heldCaptures` sorts by. */
+export const HELD_SORTS = Object.freeze(["age", "source", "project"]);
+
 const instances = new WeakMap();
 /* R58 (N122, K155): for each instance, which of its options a caller supplied, so a later caller's option is judged
    against the right thing: one taken by default is adopted, one a caller gave must be the same. */
@@ -198,7 +219,7 @@ function registerFigures(c) {
 }
 
 export class Capture {
-  #sql; #storage; #listeners = new Map(); #declared = false;
+  #sql; #storage; #listeners = new Map(); #readers = new Map(); #declared = false;
 
   constructor(storage, { record, env = {}, governor = null, provenance = null, credentials = null } = {}) {
     this.#storage = storage;
@@ -287,6 +308,30 @@ export class Capture {
 
   /** Hands `payload` to the listeners of `event` (the acquisition act calls it for R55's measurement). */
   emit(event, payload) { return this.#emit(event, payload); }
+
+  /** R32, R78: a later module registers, once at start, the reader of one of `CAPTURE_READERS`. Each slot takes one
+   *  registration whoever makes it; a second, or a malformed one, is membership's `listenerRefusal` (its R81). */
+  registerReader(slot, module, fn) {
+    if (!CAPTURE_READERS.includes(slot)) return { ok: false, reason: "UNKNOWN_READER", slot };
+    const refused = listenerRefusal(this.#readers.get(slot) || null, module, fn, { slot });
+    if (refused) return refused;
+    this.#readers.set(slot, { module, fn });
+    return { ok: true, slot, module };
+  }
+
+  /** R32 (DEC-108 (5)): whether a discarded knock's row or bytes may be cleared now. Only when the registered
+   *  litigation-hold reader answers, synchronously, that no hold is in place (`false`); with none registered, or one
+   *  that fails or answers anything else, nothing discarded is cleared. Writes nothing and never throws. */
+  mayClearDiscarded() {
+    const reader = this.#readers.get("litigation-hold");
+    if (!reader) return { may: false, basis: "no reader of litigation holds is registered, so a hold cannot be ruled out" };
+    let held;
+    try { held = reader.fn(); } catch { held = undefined; }
+    if (held === false) return { may: true, basis: `${reader.module} reports no litigation hold in place` };
+    if (held === true) return { may: false, basis: `${reader.module} reports a litigation hold in place` };
+    if (held && typeof held.then === "function") Promise.resolve(held).catch(() => {});
+    return { may: false, basis: `${reader.module} did not answer whether a litigation hold is in place` };
+  }
 
   /* ---- the acquisition act, `acquisition`'s (K617) ---- */
 
@@ -417,12 +462,68 @@ export class Capture {
     const cnt = (b) => (b ? this.#one(`SELECT count FROM knock_rate WHERE bucket=?`, b)?.count || 0 : 0);
     const decay = 1 - Math.min(1, Math.max(0, Number(elapsedFrac) || 0));
     const est = (cur, prev) => cnt(prev) * decay + cnt(cur);
+    /* R80: whether this knock found the whole doorbell at its limit, whichever refusal answers it. */
+    const full = est(globalBucket, globalPrevBucket) >= globalLimit;
+    const tag = (r) => Object.defineProperty(r, Capture.#LIMIT_REACHED, { value: full, enumerable: false });
     /* DEC-49 REGION is-knock-rate — D-508 / C-85.1, C-85.2. The SMALLEST SPAN in which either rate refusal is
        enforced. The instance's published bound (`stated`) is added by the op, never the translation. */
-    if (est(ipBucket, ipPrevBucket) >= perIpLimit) return Capture.#rateRefusal("RATE_IP");
-    if (est(globalBucket, globalPrevBucket) >= globalLimit) return Capture.#rateRefusal("RATE_GLOBAL");
+    if (est(ipBucket, ipPrevBucket) >= perIpLimit) return tag(Capture.#rateRefusal("RATE_IP"));
+    if (full) return tag(Capture.#rateRefusal("RATE_GLOBAL"));
     /* END DEC-49 REGION is-knock-rate */
     return null;
+  }
+
+  /* R80: the mark a rate refusal carries, unseen in its answer, saying whether the whole doorbell was full. */
+  static #LIMIT_REACHED = Symbol("the whole-doorbell limit was reached");
+
+  /** R80: count one knock the doorbell turned away in the day's tally, and whether it found the whole-doorbell limit
+   *  reached (R48), dropping any day older than the last `TALLY_DAYS`. Two counters and a date: no address, fingerprint,
+   *  time, digest, pseudonym, note, contact or content. A count that cannot be written is ignored: it never changes a
+   *  refusal's answer, and it decides nothing. */
+  #tallyRefusal(nowMs, limitReached = false) {
+    try {
+      const at = Number.isFinite(Number(nowMs)) ? Number(nowMs) : Date.now();
+      const day = new Date(at).toISOString().slice(0, 10);
+      const oldest = new Date(Date.parse(`${day}T00:00:00Z`) - (TALLY_DAYS - 1) * 86400000).toISOString().slice(0, 10);
+      const reached = limitReached === true ? 1 : 0;
+      this.#tx(() => {
+        this.#sql.exec(`INSERT INTO doorbell_tally (day, refused, limit_reached) VALUES (?, 1, ?)
+                        ON CONFLICT(day) DO UPDATE SET refused = refused + 1, limit_reached = limit_reached + excluded.limit_reached`,
+                       day, reached);
+        if (reached) this.#sql.exec(`INSERT INTO doorbell_limit_last (id, day) VALUES (1, ?)
+                                     ON CONFLICT(id) DO UPDATE SET day = MAX(day, excluded.day)`, day);
+        this.#sql.exec(`DELETE FROM doorbell_tally WHERE day < ?`, oldest);
+      });
+    } catch { /* the tally is status: a count that cannot be written changes nothing */ }
+  }
+
+  /* R80: a refusal answered, counted first. */
+  #refusedKnock(answer, nowMs) {
+    this.#tallyRefusal(nowMs, answer && answer[Capture.#LIMIT_REACHED] === true);
+    return answer;
+  }
+
+  /** R80: a knock the Worker refused before the store was asked to keep anything (R49–R51, the required-argument
+   *  refusals, R66's weak secret), counted in the tally and nowhere else. Answers `{counted: true}` and never throws. */
+  doorbellRefused({ now = null } = {}) {
+    this.#tallyRefusal(now != null && now !== "" && Number.isFinite(Number(now)) ? Number(now) : Date.now(), false);
+    return { counted: true };
+  }
+
+  /** R80: the tally, to a member session only: the kept days with at least one refusal, newest first, and the day the
+   *  whole-doorbell limit was last reached, or null. It is status, read where the inbox is read; it writes nothing and
+   *  never notifies. */
+  doorbellTally({ viewer = null, now = null } = {}) {
+    if (!viewerPredicate(viewer).member || !/^member:/.test(String(viewer)))
+      return { ok: false, reason: "MEMBER_SESSION_REQUIRED", status: 403,
+               detail: "the doorbell's tally is read by a signed-in member; nothing was read" };
+    const at = now != null && now !== "" && Number.isFinite(Number(now)) ? Number(now) : Date.now();
+    const today = new Date(at).toISOString().slice(0, 10);
+    const oldest = new Date(Date.parse(`${today}T00:00:00Z`) - (TALLY_DAYS - 1) * 86400000).toISOString().slice(0, 10);
+    const days = this.#rows(`SELECT day, refused, limit_reached FROM doorbell_tally WHERE day >= ? AND refused > 0 ORDER BY day DESC`, oldest)
+      .map((r) => ({ day: r.day, refused: Number(r.refused), limit_reached: Number(r.limit_reached) }));
+    const last = this.#one(`SELECT day FROM doorbell_limit_last WHERE id = 1`);
+    return { ok: true, days, last_limit_reached: last ? last.day : null };
   }
 
   /* R31: the two windows one knock is asked against: the source's (a keyed fingerprint, R56) and the instance's, the
@@ -457,6 +558,8 @@ export class Capture {
     const rate = await this.#rateWindows({ sourceAddress, nowMs });
     const refusal = this.#knockRateRefusal(rate) || this.#tx(() => this.#countKnock(rate));
     if (!refusal) return null;
+    /* R80: every refusal R71 answers is counted in the tally. */
+    this.#refusedKnock(refusal, nowMs);
     return { ...refusal, stated: refusal.reason === "RATE_IP" ? KNOCK.statedPerIp : KNOCK.statedGlobal };
   }
 
@@ -473,13 +576,13 @@ export class Capture {
     let bytes;
     try {
       bytes = contentB64 != null ? Uint8Array.from(atob(contentB64), (c) => c.charCodeAt(0)) : te.encode(String(content ?? ""));
-    } catch { return { ok: false, reason: "BAD_CONTENT", detail: "the content did not decode" }; }
-    /* R53, R66: a weak secret before the rate: nothing is stored and nothing is counted. */
-    if (isWeakKnockerSecret(knockerSecret)) return knockerSecretWeak();
+    } catch { return this.#refusedKnock({ ok: false, reason: "BAD_CONTENT", detail: "the content did not decode" }, nowMs); }
+    /* R53, R66: a weak secret before the rate: nothing is stored, and nothing counted but R80's tally. */
+    if (isWeakKnockerSecret(knockerSecret)) return this.#refusedKnock(knockerSecretWeak(), nowMs);
     const sha = hexOf(await crypto.subtle.digest("SHA-256", bytes));
     const rate = await this.#rateWindows({ sourceAddress, nowMs, windowMs, perIpLimit, globalLimit });
     const early = this.#knockRateRefusal(rate);
-    if (early) return early;
+    if (early) return this.#refusedKnock(early, nowMs);
     const bucket = this.env && typeof this.env.CAPTURES?.put === "function" ? this.env.CAPTURES : null;
     const key = `bio/inbox/${sha}`;
     let stored = false;
@@ -518,23 +621,55 @@ export class Capture {
     if (!answer.ok && stored && !this.#one(`SELECT 1 AS x FROM inbox WHERE sha256 = ?`, sha)) {
       try { await bucket.delete?.(key); } catch { /* an orphaned content-addressed object is harmless */ }
     }
-    return answer;
+    /* R80: a knock refused on the second ask is counted, outside the refused transaction, which rolled back. */
+    return answer.ok ? answer : this.#refusedKnock(answer, nowMs);
   }
 
-  /** R32: only a signed-in member reaches these (the op's fence). N90: at most `limit` knocks, newest first, paged by
-   *  `after`: a doorbell anyone may ring must not answer a member with everything it was ever handed. Each row names
-   *  its knocker's pseudonym and digest (R66, null without a secret) and, once pulled, its capture (R65). */
-  inboxList(status, { limit = null, after = null } = {}) {
+  /** R32: only a signed-in member reaches these (the op's fence). N90: at most `limit` knocks, paged by `after`: a
+   *  doorbell anyone may ring must not answer a member with everything it was ever handed. Each row names its knocker's
+   *  pseudonym and digest (R66, null without a secret), once pulled its capture (R65), the reason, who and when of its
+   *  last status change, and `project`: the project of the document a pulled knock was brought into (its capture's home,
+   *  provenance R4 over the register's read contract, R48, and that bundle's `project`, record-core R37), null until
+   *  then. DEC-108 (2): sorted by `sort` (`received`, the default, newest first; `status`; `secret`, whether a knocker
+   *  secret was presented; `project`, a knock with none last in either direction) in `dir`, ties by received time,
+   *  newest first. An unknown `sort` or `dir` is the required-argument refusal naming it, with nothing read. */
+  inboxList(status, { limit = null, after = null, sort = null, dir = null } = {}) {
+    const by = sort == null || sort === "" ? "received" : sort;
+    if (!INBOX_SORTS.includes(by)) return Capture.#badArgument("inbox", "sort", INBOX_SORTS.join(" | "), by);
+    const way = dir == null || dir === "" ? (by === "received" ? "desc" : "asc") : dir;
+    if (!SORT_DIRS.includes(way)) return Capture.#badArgument("inbox", "dir", SORT_DIRS.join(" | "), way);
     const cap = limitOf(limit);
-    const from = after ? keyOf(after, 2) : null;
+    const from = after ? keyOf(after, 4) : null;
     if (after && !from) return badCursor();
+    /* k0 puts a knock with no project last in either direction; k1 is the order asked; received time, newest first,
+       then the id break every tie. Every key is text, so the cursor is the four of the last row listed. */
+    const k1 = { received: "i.received", status: "i.status",
+                 secret: "CASE WHEN i.knocker_digest IS NULL THEN '0' ELSE '1' END", project: "COALESCE(b.project, '')" }[by];
+    const k0 = by === "project" ? "CASE WHEN b.project IS NULL OR b.project = '' THEN '1' ELSE '0' END" : "'0'";
+    const op = way === "asc" ? ">" : "<";
     const found = this.#rows(
-      `SELECT knock_id, sha256, bytes, in_r2, note, contact, received, status, resolved, resolved_by, knocker_digest,
-              pseudonym, capture_sha, pulled_by, pulled_at FROM inbox
-        WHERE ${status ? "status = ?" : "1=1"} AND ${from ? "(received, knock_id) < (?, ?)" : "1=1"}
-        ORDER BY received DESC, knock_id DESC LIMIT ?`, ...(status ? [status] : []), ...(from || []), cap + 1);
-    const inbox = found.slice(0, cap), truncated = found.length > cap, last = inbox[inbox.length - 1];
-    return { inbox, limit: cap, truncated, next: truncated ? cursorOf([last.received, last.knock_id]) : null };
+      `SELECT * FROM (SELECT i.knock_id, i.sha256, i.bytes, i.in_r2, i.note, i.contact, i.received, i.status, i.resolved,
+                             i.resolved_by, i.resolve_reason, i.knocker_digest, i.pseudonym, i.capture_sha, i.pulled_by,
+                             i.pulled_at, b.project AS project, ${k0} AS k0, ${k1} AS k1
+                        FROM inbox i LEFT JOIN register r ON r.capture_sha = i.capture_sha
+                        LEFT JOIN bundles b ON b.bundle_id = r.bundle_id
+                       WHERE ${status ? "i.status = ?" : "1=1"}) q
+        WHERE ${from ? `(k0 > ? OR (k0 = ? AND (k1 ${op} ? OR (k1 = ? AND (received, knock_id) < (?, ?)))))` : "1=1"}
+        ORDER BY k0 ASC, k1 ${way.toUpperCase()}, received DESC, knock_id DESC LIMIT ?`,
+      ...(status ? [status] : []), ...(from ? [from[0], from[0], from[1], from[1], from[2], from[3]] : []), cap + 1);
+    const rows = found.slice(0, cap), truncated = found.length > cap, last = rows[rows.length - 1];
+    const inbox = rows.map(({ k0: _k0, k1: _k1, ...r }) => ({ ...r, project: r.project || null }));
+    return { inbox, sort: by, dir: way, limit: cap, truncated,
+             next: truncated ? cursorOf([String(last.k0), String(last.k1), last.received, last.knock_id]) : null };
+  }
+
+  /* R32 (DEC-108 (2)): the required-argument refusal for an argument this module reads that names nothing it knows
+     (the control plane's C-61 shape, answered from the store as `monitoring`'s store-side refusals are). */
+  static #badArgument(op, argument, shape, given) {
+    return { ok: false, reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, status: 400,
+             error: `${argument} must be one of ${shape}; ${JSON.stringify(String(given)).slice(0, 80)} is not`,
+             detail: `op=${op} needs '${argument}' in the shape ${shape}, and this request carried none the operation `
+                   + "could use. Nothing was read." };
   }
 
   /* R32 (K383, K275): a knock id no knock answers to, read or resolved, is one condition with its own code and row
@@ -549,21 +684,30 @@ export class Capture {
 
   inboxGet(knockId) {
     if (typeof knockId !== "string" || !knockId) return this.#noSuchKnock(knockId);
-    const r = this.#one(`SELECT knock_id, sha256, bytes, content, in_r2, note, contact, received, status, knocker_digest,
-                                pseudonym, capture_sha, pulled_by, pulled_at FROM inbox WHERE knock_id=?`, knockId);
+    const r = this.#one(`SELECT knock_id, sha256, bytes, content, in_r2, note, contact, received, status, resolved, resolved_by,
+                                resolve_reason, knocker_digest, pseudonym, capture_sha, pulled_by, pulled_at FROM inbox WHERE knock_id=?`, knockId);
     return r ? { ok: true, item: r } : this.#noSuchKnock(knockId);
   }
 
-  /** R32: a member moves a knock to `discarded` or back to `new`, recorded with who and when. `pulled` is R65's act for
-   *  that knock and answers as `pullKnock` does (a promise): a knock becomes `pulled` only by being brought in. */
-  inboxResolve({ knockId, status, by } = {}) {
+  /** R32: a member moves a knock to `discarded` or back to `new`, recorded with who, when and the member's own reason
+   *  (DEC-88 (2)). `pulled` is R65's act for that knock and answers as `pullKnock` does (a promise), once its reason is
+   *  admitted, the reason recorded on the row with the pull: a knock becomes `pulled` only by being brought in. Refused
+   *  in order: `BAD_STATUS`, `NO_SUCH_KNOCK`, `RESOLVE_NO_REASON` (C-118.7), each before anything is written. */
+  inboxResolve({ knockId, status, by, reason } = {}) {
     if (!["pulled", "discarded", "new"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
     if (typeof knockId !== "string" || !knockId || !this.#one(`SELECT knock_id FROM inbox WHERE knock_id=?`, knockId))
       return this.#noSuchKnock(knockId);
-    if (status === "pulled") return this.pullKnock({ knockId, by });
-    this.#tx(() => this.#sql.exec(`UPDATE inbox SET status=?, resolved=?, resolved_by=? WHERE knock_id=?`,
-                                  status, new Date().toISOString(), by ?? null, knockId));
-    return { ok: true, knockId, status };
+    /* DEC-49 REGION is-resolve-reasoned */
+    if (!reasonGiven(reason)) {
+      const row = CAPTURE_CHECKS.RESOLVE_NO_REASON;
+      return { ok: false, reason: "RESOLVE_NO_REASON", code: "RESOLVE_NO_REASON", check: row.check, translation: row.translation,
+               knockId, status: 400, maxChars: REASON_MAX };
+    }
+    /* END DEC-49 REGION is-resolve-reasoned */
+    if (status === "pulled") return this.#pull({ knockId, by }, reason);
+    this.#tx(() => this.#sql.exec(`UPDATE inbox SET status=?, resolved=?, resolved_by=?, resolve_reason=? WHERE knock_id=?`,
+                                  status, new Date().toISOString(), by ?? null, reason, knockId));
+    return { ok: true, knockId, status, resolve_reason: reason };
   }
 
   /** R65 (N364; DEC-78 item 1): bring a knock into the record as a capture. The member-session fence is the op's; `by`
@@ -581,7 +725,11 @@ export class Capture {
    *  an answer that is not synchronous (a promise would outlive the transaction), rolls it back as `PULL_WITHIN_FAILED`.
    *  Any other answer is carried as `within`. A knock already pulled does not call it: its pull is not being made. The
    *  bytes put under their own digest before the transaction stay, content-addressed and already held as the knock's. */
-  async pullKnock({ knockId, by, at = null, within = null } = {}) {
+  pullKnock({ knockId, by, at = null, within = null } = {}) { return this.#pull({ knockId, by, at, within }, null); }
+
+  /* R65, and R32's `pulled` arm: the pull, with the resolve's admitted reason recorded on the row beside it (null for a
+     pull asked directly, which takes no reason). */
+  async #pull({ knockId, by, at = null, within = null } = {}, reason) {
     if (typeof by !== "string" || !by.trim())
       return { ok: false, reason: "NO_PULLER", status: 400,
                detail: "a knock is brought in by a member, whose stamp names them; none was given, so nothing was written" };
@@ -650,7 +798,8 @@ export class Capture {
           return { ok: false, reason: "RECEIPT_NOT_WRITTEN", status: 502, knockId,
                    detail: "the acquisition receipt could not be written, so the knock stays as it was and nothing was filed" };
         this.#sql.exec(`UPDATE inbox SET status = 'pulled', resolved = ?, resolved_by = ?, capture_sha = ?, pulled_by = ?, pulled_at = ?,
-                          pulled_document = ? WHERE knock_id = ?`, when, by, sha, by, when, JSON.stringify(document), knockId);
+                          pulled_document = ?, resolve_reason = ? WHERE knock_id = ?`,
+                       when, by, sha, by, when, JSON.stringify(document), reason, knockId);
         this.recordCaptureActor({ captureSha: sha, actor: by, at: when });
         if (typeof within !== "function") return { ok: true, receipt };
         /* N380: the caller's act, in this transaction. Its throw is tagged so a fault of the pull's own still throws. */
@@ -896,6 +1045,202 @@ export class Capture {
       return { captureSha: sha, late_attestations: this.#rows(`SELECT seq, by, outcome FROM late_attestations WHERE capture_sha = ? ORDER BY seq`, sha)
         .map((r) => ({ seq: r.seq, by: r.by, ...JSON.parse(r.outcome) })) };
     } catch { return { captureSha: null, late_attestations: [] }; }
+  }
+
+  /** R76 (DEC-95 (1)): the grade note of a capture this record holds (its bytes in the evidence store, or provenance's
+   *  register or receipt naming it, provenance R5), so a capture completed with no member present carries it
+   *  afterwards: `acquisition`'s `ACQUIRE_GRADE_NOTE`, the words `op=acquire`'s answer carries. By the viewer, as
+   *  `captureAccountsOf`: a capture the viewer may not see, or one not held, answers `note: null`. Writes nothing and
+   *  never throws. */
+  async gradeNoteOf({ captureSha, viewer = undefined } = {}) {
+    const sha = typeof captureSha === "string" ? captureSha.toLowerCase() : "";
+    const none = { captureSha: sha || null, note: null };
+    try {
+      if (!HEX64.test(sha) || !this.#captureSeen(sha, viewer)) return none;
+      const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
+      let held = false;
+      if (ev) { try { held = !!(await ev.head(sha)); } catch { held = false; } }
+      if (!held && this.provenance && typeof this.provenance.registerHolds === "function") {
+        try { const h = await this.provenance.registerHolds({ sha }); held = h?.registered === true || h?.acquired === true; }
+        catch { held = false; }
+      }
+      return held ? { captureSha: sha, note: ACQUIRE_GRADE_NOTE } : none;
+    } catch { return none; }
+  }
+
+  /* ==================================================================== *
+   * Held captures (R77–R79, R81; DEC-97)
+   * ==================================================================== */
+
+  /* R77: the SQL of a document's standing: an Information document at `collected` whose latest held act is not a
+     set-aside, seen by the viewer (membership R43 over record-core's `bundles`, R37). */
+  static #NOT_SET_ASIDE = `COALESCE((SELECT h.act FROM held_acts h WHERE h.bundle_id = b.bundle_id ORDER BY h.seq DESC LIMIT 1), '') <> 'set_aside'`;
+  /* R77: when it was collected: `created` while it has never left `collected` (no prior state), else the instant its
+     state last moved, `last_updated` (record-core keeps no other per-state instant). */
+  static #SINCE = `CASE WHEN b.prior_state IS NULL THEN b.created ELSE b.last_updated END`;
+  /* R77: its source as provenance records it: the earliest acquisition receipt (provenance R48) of a capture the
+     document's register rows name. */
+  static #SOURCE = (col) => `(SELECT cl.${col} FROM register r JOIN captured_locators cl ON cl.capture_sha = r.capture_sha
+                               WHERE r.bundle_id = b.bundle_id ORDER BY cl.first_retrieved, cl.address, cl.via LIMIT 1)`;
+
+  #sightOf(viewer) {
+    if (viewer === undefined) return { sql: "1=1", args: [] };
+    const g = viewerPredicate(viewer);
+    return { sql: g.sql, args: g.args };
+  }
+
+  /** R77 (DEC-97 (1)): the Information documents at `collected` not set aside, as the viewer may see them, at most
+   *  `limit` (N90), with `truncated` and `next`. `member` keeps the documents that member captured (`capture_actors`
+   *  over the register); `project` that project's (the document's `project`). Each row: the document, its source, its
+   *  project, its age since collected and its batch eligibility (R78). Sorted by `age` (the default, oldest first),
+   *  `source` or `project`, either way, a row with none last; ties by id. Writes nothing; nothing is notified. */
+  async heldCaptures({ member = null, project = null, sort = null, dir = null, limit = null, after = null, viewer = undefined,
+                       now = null } = {}) {
+    const by = sort == null || sort === "" ? "age" : sort;
+    if (!HELD_SORTS.includes(by)) return Capture.#badArgument("heldcaptures", "sort", HELD_SORTS.join(" | "), by);
+    const way = dir == null || dir === "" ? (by === "age" ? "desc" : "asc") : dir;
+    if (!SORT_DIRS.includes(way)) return Capture.#badArgument("heldcaptures", "dir", SORT_DIRS.join(" | "), way);
+    const cap = limitOf(limit);
+    const from = after ? keyOf(after, 3) : null;
+    if (after && !from) return badCursor();
+    /* Age descending is `since` ascending: the longest held first. */
+    const k1 = { age: "since", source: "COALESCE(src_address, '')", project: "COALESCE(project, '')" }[by];
+    const k0 = by === "age" ? "'0'" : by === "source" ? "CASE WHEN src_address IS NULL THEN '1' ELSE '0' END"
+                                                    : "CASE WHEN project IS NULL OR project = '' THEN '1' ELSE '0' END";
+    const asc = by === "age" ? way === "desc" : way === "asc";
+    const sight = this.#sightOf(viewer);
+    const who = typeof member === "string" && member ? memberIdOf(member) : null;
+    const found = this.#rows(
+      `SELECT * FROM (SELECT bundle_id, title, project, since, src_address, src_via, src_retrieved, ${k0} AS k0, ${k1} AS k1 FROM (
+         SELECT b.bundle_id, b.title, b.project, ${Capture.#SINCE} AS since, ${Capture.#SOURCE("address")} AS src_address,
+                ${Capture.#SOURCE("via")} AS src_via, ${Capture.#SOURCE("first_retrieved")} AS src_retrieved
+           FROM bundles b
+          WHERE b.object_type = 'information' AND b.current_state = 'collected' AND ${Capture.#NOT_SET_ASIDE} AND (${sight.sql})
+            AND ${who ? `EXISTS (SELECT 1 FROM register r JOIN capture_actors ca ON ca.capture_sha = r.capture_sha
+                                  WHERE r.bundle_id = b.bundle_id
+                                    AND (CASE WHEN ca.actor LIKE 'member:%' THEN substr(ca.actor, 8) ELSE ca.actor END) = ?)` : "1=1"}
+            AND ${project != null && project !== "" ? "b.project = ?" : "1=1"})) q
+        WHERE ${from ? `(k0 > ? OR (k0 = ? AND (k1 ${asc ? ">" : "<"} ? OR (k1 = ? AND bundle_id > ?))))` : "1=1"}
+        ORDER BY k0 ASC, k1 ${asc ? "ASC" : "DESC"}, bundle_id ASC LIMIT ?`,
+      ...sight.args, ...(who ? [who] : []), ...(project != null && project !== "" ? [String(project)] : []),
+      ...(from ? [from[0], from[0], from[1], from[1], from[2]] : []), cap + 1);
+    const page = found.slice(0, cap), truncated = found.length > cap, last = page[page.length - 1];
+    const at = now != null && Number.isFinite(Date.parse(now)) ? Date.parse(now) : Date.now();
+    const rows = [];
+    for (const r of page) {
+      const since = Date.parse(r.since);
+      rows.push({ bundle_id: r.bundle_id, title: r.title ?? null, project: r.project || null,
+                  source: r.src_address ? { address: r.src_address, via: r.src_via, retrieved: r.src_retrieved } : null,
+                  collected_since: r.since, age_days: Number.isFinite(since) ? Math.max(0, Math.floor((at - since) / 86400000)) : null,
+                  ...(await this.#eligibility(r.bundle_id)) });
+    }
+    return { ok: true, held: rows, sort: by, dir: way, limit: cap, truncated,
+             next: truncated ? cursorOf([String(last.k0), String(last.k1), last.bundle_id]) : null };
+  }
+
+  /* R78: one document's batch eligibility, by the registered examination (`ratification` R34): `eligible: true`, or
+     false with the class it fails first and that class's reason; with none registered, or one that fails or answers
+     neither, `eligible: null`, stated undetermined. */
+  async #eligibility(bundleId) {
+    const reader = this.#readers.get("batch-examination");
+    const undetermined = (basis) => ({ eligible: null, eligibility_basis: basis });
+    if (!reader) return undetermined("no batch-release examination is registered, so eligibility is undetermined");
+    let v;
+    try { v = await reader.fn(bundleId); } catch { v = null; }
+    if (v && v.eligible === true) return { eligible: true };
+    if (v && v.eligible === false && typeof v.class === "string" && v.class)
+      return { eligible: false, class: v.class, reason: typeof v.reason === "string" ? v.reason : null };
+    return undetermined(`${reader.module}'s examination did not answer for this document, so eligibility is undetermined`);
+  }
+
+  /* R79, R81: the refusals the two held acts share, in order: a member's own act (C-118.8), with a reason (C-118.9),
+     over one to PER_ITEM_MAX ids. */
+  #heldActRefusal(ids, reason, author) {
+    /* DEC-49 REGION is-held-act-by-member */
+    /* A machine: record-grammar's whole question, and the bare founder's viewer `admin`, which names no member
+       (membership R43; K1032). */
+    if (typeof author !== "string" || !author.trim() || isMachineIdentity(author) || author.trim().toLowerCase() === "admin") {
+      const row = CAPTURE_CHECKS.MACHINE_CANNOT_SET_ASIDE;
+      return { ok: false, reason: "MACHINE_CANNOT_SET_ASIDE", code: "MACHINE_CANNOT_SET_ASIDE", check: row.check,
+               translation: row.translation, status: 403 };
+    }
+    /* END DEC-49 REGION is-held-act-by-member */
+    /* DEC-49 REGION is-held-act-reasoned */
+    if (!reasonGiven(reason)) {
+      const row = CAPTURE_CHECKS.SET_ASIDE_NO_REASON;
+      return { ok: false, reason: "SET_ASIDE_NO_REASON", code: "SET_ASIDE_NO_REASON", check: row.check,
+               translation: row.translation, status: 400, maxChars: REASON_MAX };
+    }
+    /* END DEC-49 REGION is-held-act-reasoned */
+    if (!Array.isArray(ids) || ids.length === 0)
+      return { ok: false, reason: "NO_IDS", status: 400, detail: "name at least one document; nothing was written" };
+    if (ids.length > PER_ITEM_MAX)
+      return { ok: false, reason: "TOO_MANY_IDS", status: 400, max: PER_ITEM_MAX, count: ids.length,
+               detail: `at most ${PER_ITEM_MAX} documents in one act; the set was refused whole and nothing was written` };
+    return null;
+  }
+
+  /* R79, R81: each id's document as the viewer may see it, with whether it is set aside now; an id absent or unseen
+     answers alike (null). */
+  #heldStanding(ids, viewer) {
+    const sight = this.#sightOf(viewer);
+    const out = new Map();
+    for (const id of new Set(ids.map((x) => (typeof x === "string" ? x : "")))) {
+      out.set(id, id ? this.#one(
+        `SELECT b.bundle_id, b.object_type, b.current_state, ${Capture.#NOT_SET_ASIDE} AS standing FROM bundles b
+          WHERE b.bundle_id = ? AND (${sight.sql})`, id, ...sight.args) : null);
+    }
+    return out;
+  }
+
+  /* R79, R81: append one act per document, in one transaction. */
+  #appendHeld(ids, act, reason, author) {
+    const at = stampSecond();
+    this.#tx(() => {
+      for (const id of new Set(ids)) {
+        const n = Number(this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM held_acts WHERE bundle_id = ?`, id).n) + 1;
+        this.#sql.exec(`INSERT INTO held_acts (bundle_id, seq, act, reason, author, at) VALUES (?, ?, ?, ?, ?, ?)`,
+                       id, n, act, reason, author, at);
+      }
+    });
+    return at;
+  }
+
+  /** R79 (DEC-97 (2)): set several held documents aside with one reason. Refused whole, never narrowed: C-118.8,
+   *  C-118.9, the id count, then any id absent or unseen (one answer), not `information`, not at `collected`, or
+   *  already set aside, named. The document is unchanged and stays at `collected`; append-only. */
+  setAside({ ids, reason, author, viewer = undefined } = {}) {
+    const refused = this.#heldActRefusal(ids, reason, author);
+    if (refused) return refused;
+    const standing = this.#heldStanding(ids, viewer);
+    const named = (code, test, detail) => {
+      const hit = [...standing].filter(([, r]) => test(r)).map(([id]) => id);
+      return hit.length ? { ok: false, reason: code, ids: hit, status: code === "NO_SUCH_DOCUMENT" ? 404 : 409, detail } : null;
+    };
+    const no = named("NO_SUCH_DOCUMENT", (r) => !r, "no document you may see answers to these ids; nothing was written")
+      || named("NOT_INFORMATION", (r) => r.object_type !== "information", "only Information documents are held; nothing was written")
+      || named("NOT_COLLECTED", (r) => r.current_state !== "collected", "only documents at collected are held; nothing was written")
+      || named("ALREADY_SET_ASIDE", (r) => !r.standing, "these documents are already set aside; nothing was written");
+    if (no) return no;
+    const at = this.#appendHeld([...standing.keys()], "set_aside", reason, author);
+    return { ok: true, act: "set_aside", ids: [...standing.keys()], reason, author, at };
+  }
+
+  /** R81 (DEC-97 (2)): undo a set-aside by a reasoned act, for several documents with one reason. Refused whole: R79's
+   *  first three, then any id absent or unseen (one answer), or not set aside now, named. The restore is appended
+   *  beside the set-aside, which is never rewritten or removed; a document's latest act decides. */
+  restoreHeld({ ids, reason, author, viewer = undefined } = {}) {
+    const refused = this.#heldActRefusal(ids, reason, author);
+    if (refused) return refused;
+    const standing = this.#heldStanding(ids, viewer);
+    const absent = [...standing].filter(([, r]) => !r).map(([id]) => id);
+    if (absent.length) return { ok: false, reason: "NO_SUCH_DOCUMENT", ids: absent, status: 404,
+                                detail: "no document you may see answers to these ids; nothing was written" };
+    const notAside = [...standing].filter(([, r]) => r.standing).map(([id]) => id);
+    if (notAside.length) return { ok: false, reason: "NOT_SET_ASIDE", ids: notAside, status: 409,
+                                  detail: "these documents are not set aside; nothing was written" };
+    const at = this.#appendHeld([...standing.keys()], "restore", reason, author);
+    return { ok: true, act: "restore", ids: [...standing.keys()], reason, author, at };
   }
 
   /* ==================================================================== *
@@ -1917,9 +2262,20 @@ export function captureOps(c, url, body, env) {
     sitechrome: () => c.siteChrome({ host: q("host"), threshold: Number(q("threshold")) || 0.6, limit: page.limit }),
     recordcapturelimit: () => c.recordCaptureLimit(body || {}),
     knock: () => c.knock({ ...(body || {}), sourceAddress: q("source") }),
-    inboxlist: () => c.inboxList(q("status") || null, page),
+    inboxlist: () => c.inboxList(q("status") || null, { ...page, sort: q("sort"), dir: q("dir") }),
     inboxget: () => c.inboxGet(q("id")),
     inboxresolve: () => c.inboxResolve(body || {}),
+    /* R80: the Worker's count of a knock it refused before the store; the tally read by the stamped viewer. */
+    doorbellrefused: () => c.doorbellRefused(body || {}),
+    doorbelltally: () => c.doorbellTally({ viewer: q("viewer") ?? "" }),
+    /* R76, R77, R79, R81: by the caller's stamped viewer; an unstamped call sees nothing. The author is the stamp. */
+    gradenote: () => c.gradeNoteOf({ captureSha: q("capture") ?? (body && body.captureSha), viewer: q("viewer") ?? "" }),
+    heldcaptures: () => c.heldCaptures({ member: q("member"), project: q("project"), sort: q("sort"), dir: q("dir"), ...page,
+                                         viewer: q("viewer") ?? "" }),
+    heldsetaside: () => c.setAside({ ids: body && body.ids, reason: body && body.reason, author: q("by") ?? q("author"),
+                                     viewer: q("viewer") ?? "" }),
+    heldrestore: () => c.restoreHeld({ ids: body && body.ids, reason: body && body.reason, author: q("by") ?? q("author"),
+                                       viewer: q("viewer") ?? "" }),
     /* N364: the control plane stamps `by` (the member session); a stamp in the query wins over a body's copy. */
     inboxpull: () => c.pullKnock({ knockId: (body && body.knockId) || q("id"), by: q("by") ?? (body && body.by) }),
     knocksof: () => c.knocksOf({ pseudonym: q("pseudonym") ?? (body && body.pseudonym), ...page }),

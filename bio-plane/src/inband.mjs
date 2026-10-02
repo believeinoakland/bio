@@ -14,7 +14,7 @@
  * to the quartet's, and the review copy's call is its own module's to prove.
  *
  * THE CANONICAL FORM IS THE WIRE FORM: `JSON.stringify(value, null, 1)`, UTF-8 — the bytes the container
- * manifest has always been hashed over, and the bytes `json()` in `index.mjs` serves an answer as. So a
+ * manifest has always been hashed over, and the bytes `control-plane`'s `json()` serves an answer as. So a
  * reader holding the answer can re-hash it: parse it, remove `inband`, serialise it the same way.
  */
 

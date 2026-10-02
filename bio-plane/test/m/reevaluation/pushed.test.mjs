@@ -5,12 +5,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, U, MACHINE } from "./fixture.mjs";
-import { REEVALUATION_ACT_CHECKS, NOTE_MAX } from "../../../src/reevaluation/index.mjs";
+import { REEVALUATION_ACT_CHECKS, NOTE_MAX, ADOPT_WHY_MAX, reevaluationOps } from "../../../src/reevaluation/index.mjs";
 
 const OLD = "INFO-2026-0001-old", NEW = "INFO-2026-0002-new", NEWER = "INFO-2026-0003-newer";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q2";
 const ADMIN = "class:admin";
 const CUT = "the budget was cut";
+/* R15 (DEC-88): an adoption's required why. */
+const WHY = "the newer version restates the same cut";
 
 /** A question resting (leg 0) on page 2 of an older capture; a newer capture of the same address whose page 2 reads
  *  `newText` (null: the newer capture is unread). */
@@ -110,9 +112,9 @@ test("R15: a machine may take neither act (C-110.1, C-110.2); an unknown or clos
       const r = w.r[act]({ notice: n.notice, author, viewer: ADMIN });
       assert.deepEqual([r.ok, r.code, r.check, r.translation], [false, code, check, REEVALUATION_ACT_CHECKS[code].translation]);
     }
-    const nf = w.r[act]({ notice: "RN-nope", author: "alice", viewer: ADMIN });
+    const nf = w.r[act]({ notice: "RN-nope", why: WHY, author: "alice", viewer: ADMIN });
     assert.deepEqual([nf.code, nf.check], ["VERSION_NOTICE_NOT_FOUND", "C-110.3"]);
-    assert.equal(w.r[act]({ notice: n.notice, author: "alice", viewer: "nobody" }).code, "VERSION_NOTICE_NOT_FOUND",
+    assert.equal(w.r[act]({ notice: n.notice, why: WHY, author: "alice", viewer: "nobody" }).code, "VERSION_NOTICE_NOT_FOUND",
       "a notice on a question the viewer may not see answers as absent");
   }
   const bad = w.r.keepVersion({ notice: n.notice, why: "x".repeat(NOTE_MAX + 1), author: "alice", viewer: ADMIN });
@@ -120,7 +122,7 @@ test("R15: a machine may take neither act (C-110.1, C-110.2); an unknown or clos
   assert.equal(w.r.keepVersion({ notice: n.notice, why: "a\nb", author: "alice", viewer: ADMIN }).code, "VERSION_CHOICE_WHY_MALFORMED");
   assert.deepEqual(w.snapshot(), before);
   assert.equal(w.r.keepVersion({ notice: n.notice, author: "alice", viewer: ADMIN }).ok, true);
-  const closed = w.r.adoptVersion({ notice: n.notice, author: "bo", viewer: ADMIN });
+  const closed = w.r.adoptVersion({ notice: n.notice, why: WHY, author: "bo", viewer: ADMIN });
   assert.deepEqual([closed.code, closed.check, closed.state], ["VERSION_NOTICE_CLOSED", "C-110.4", "kept"]);
 });
 
@@ -143,7 +145,7 @@ test("R15 R19: ADOPT writes a new basis version with the leg pinned to the newer
   const [n] = w.r.raiseNotices({}).raised;
   const liveBefore = JSON.stringify(w.fm(Q).basis);
   const legsBefore = JSON.stringify(w.rows(`SELECT * FROM inquiry_basis ORDER BY bundle_id, ord`));
-  const r = w.r.adoptVersion({ notice: n.notice, author: "alice", viewer: ADMIN });
+  const r = w.r.adoptVersion({ notice: n.notice, why: WHY, author: "alice", viewer: ADMIN });
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 600));
   assert.deepEqual([r.act, r.version, r.state, r.capture_sha, r.newer_capture], ["adopted", `adopt-${b.sha.slice(0, 8)}-0`,
     "suggested", a.sha, b.sha]);
@@ -172,7 +174,7 @@ test("R15: ADOPT names the newer capture's held row at the same extent; a leg no
   const { w, b } = setup();
   const there = w.passage(NEW, b.sha);
   const [n] = w.r.raiseNotices({}).raised;
-  const r = w.r.adoptVersion({ notice: n.notice, author: "alice", viewer: ADMIN });
+  const r = w.r.adoptVersion({ notice: n.notice, why: WHY, author: "alice", viewer: ADMIN });
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 400));
   const [leg] = w.fm(Q).basis_version_legs.filter((l) => l.version === r.version);
   assert.deepEqual([leg.content_id, leg.extent_capture, leg.extent_kind], [there, undefined, undefined]);
@@ -181,8 +183,64 @@ test("R15: ADOPT names the newer capture's held row at the same extent; a leg no
   const [n2] = s2.w.r.raiseNotices({}).raised;
   s2.w.promote(Q, s2.w.text(Q).replace(/  - target: INFO-2026-0001-old\n    role: supports\n    content_id: [0-9a-f]+\n/, ""));
   const before = s2.w.snapshot();
-  const gone = s2.w.r.adoptVersion({ notice: n2.notice, author: "alice", viewer: ADMIN });
+  const gone = s2.w.r.adoptVersion({ notice: n2.notice, why: WHY, author: "alice", viewer: ADMIN });
   assert.deepEqual([gone.ok, gone.code, gone.check], [false, "VERSION_ADOPT_UNWRITABLE", "C-110.9"]);
   assert.deepEqual(s2.w.snapshot(), before);
   assert.equal(s2.w.r.notices({ viewer: ADMIN }).count, 1, "the notice stays open");
+});
+
+test("R15 (DEC-88): ADOPT requires the member's why (C-110.29): absent, not a string, blank or over 2,000 characters is refused after the machine refusal with nothing written; a reasoned adoption records it with the version and on the notice; KEEP still takes none", () => {
+  const { w, b } = setup();
+  const [n] = w.r.raiseNotices({}).raised;
+  const before = w.snapshot();
+  const fmBefore = JSON.stringify(w.fm(Q));
+  const row = REEVALUATION_ACT_CHECKS.VERSION_ADOPT_NO_REASON;
+  for (const why of [undefined, null, 42, ["a reason"], { why: "a reason" }, "", "   \n ", "x".repeat(ADOPT_WHY_MAX + 1)]) {
+    const r = w.r.adoptVersion({ notice: n.notice, ...(why === undefined ? {} : { why }), author: "alice", viewer: ADMIN });
+    assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation, r.notice, r.limit],
+      [false, "VERSION_ADOPT_NO_REASON", "VERSION_ADOPT_NO_REASON", "C-110.29", row.translation, n.notice, ADOPT_WHY_MAX],
+      `refused: ${JSON.stringify(why)?.slice(0, 40)}`);
+  }
+  /* the machine refusal is asked first, reason or none */
+  for (const why of [undefined, "a reason"])
+    assert.equal(w.r.adoptVersion({ notice: n.notice, why, author: MACHINE, viewer: ADMIN }).code, "MACHINE_CANNOT_ADOPT_VERSION");
+  assert.deepEqual(w.snapshot(), before, "nothing written by any refusal");
+  assert.equal(JSON.stringify(w.fm(Q)), fmBefore, "no new version");
+  assert.deepEqual(w.r.notices({ viewer: ADMIN }).notices.map((x) => [x.notice, x.state]), [[n.notice, "open"]], "the notice still open");
+  /* exactly 2,000 characters, padded with blanks, is a why */
+  const long = `  ${"y".repeat(ADOPT_WHY_MAX)}  `;
+  const ok = w.r.adoptVersion({ notice: n.notice, why: long, author: "alice", viewer: ADMIN });
+  assert.equal(ok.ok, true, JSON.stringify(ok).slice(0, 400));
+  assert.equal(ok.why, long.trim());
+  const fm = w.fm(Q);
+  const v = fm.basis_versions.find((x) => x.name === ok.version);
+  assert.ok(v.description.endsWith(`Why: ${long.trim()}`), "the why is recorded with the new version");
+  assert.ok(w.text(Q).includes(`Trigger: adoptVersion on ${n.notice}`) && w.text(Q).includes(`Why: ${long.trim()}\n`),
+    "and in its Session Log entry");
+  const [closed] = w.r.notices({ state: "adopted", viewer: ADMIN }).notices;
+  assert.deepEqual([closed.notice, closed.state, closed.closed_by, closed.why, closed.adopted_version, closed.newer_capture],
+    [n.notice, "adopted", "alice", long.trim(), ok.version, b.sha], "and on the notice's closure");
+  /* a why on several lines keeps its words: the closure holds it as given, the log on one line */
+  const s2 = setup();
+  const [n2] = s2.w.r.raiseNotices({}).raised;
+  const multi = "the newer version is the adopted budget;\nthe earlier one was a draft \"as circulated\"";
+  const ok2 = s2.w.r.adoptVersion({ notice: n2.notice, why: multi, author: "alice", viewer: ADMIN });
+  assert.equal(ok2.ok, true, JSON.stringify(ok2).slice(0, 400));
+  assert.equal(s2.w.r.notices({ state: "adopted", viewer: ADMIN }).notices[0].why, multi);
+  assert.ok(s2.w.text(Q).includes(`Why: the newer version is the adopted budget; the earlier one was a draft "as circulated"\n`));
+  assert.equal(s2.w.fm(Q).basis_versions.filter((x) => x.name === ok2.version).length, 1, "one version, the document intact");
+  /* KEEP is unchanged: its why stays optional */
+  const s3 = setup();
+  const [n3] = s3.w.r.raiseNotices({}).raised;
+  const k = s3.w.r.keepVersion({ notice: n3.notice, author: "alice", viewer: ADMIN });
+  assert.deepEqual([k.ok, k.act, k.why], [true, "kept", null]);
+});
+
+test("R15 (DEC-88): the versionadopt op carries why from the body, as versionkeep does", () => {
+  const { w } = setup();
+  const [n] = w.r.raiseNotices({}).raised;
+  const op = (body, qs = "") => reevaluationOps(w.r, new URL(`https://plane/x?author=alice&viewer=${ADMIN}${qs}`), body).versionadopt();
+  assert.equal(op({ notice: n.notice }).code, "VERSION_ADOPT_NO_REASON");
+  const r = op({ notice: n.notice, why: "the newer text is the one in force" });
+  assert.deepEqual([r.ok, r.why], [true, "the newer text is the one in force"]);
 });

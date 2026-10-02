@@ -4,7 +4,8 @@
  * Moved here from the check catalogue with their ids and translations unchanged (K6, R24): C-30 (the pair over a
  * version, with its default state set and the hunch roster), C-71 (independence over a partition) and C-32.9
  * (`MACHINE_CANNOT_DECLARE`, from `MACHINE_FENCE_CHECKS`). R15's new refusal, `STRENGTH_BAR_NOT_ADMIN`, is this
- * module's own family, C-107, allocated at the extraction (K107 (3), K181), and so is R15's `BAD_GRADE` (N208, K275). */
+ * module's own family, C-107, allocated at the extraction (K107 (3), K181), and so is R15's `BAD_GRADE` (N208, K275),
+ * and R15's `BAR_NO_REASON` (DEC-88; K1025, C-107.3, `awaiting stamp`). */
 
 import { VERSION_STATES } from "../basis-versions/index.mjs";
 
@@ -245,5 +246,14 @@ export const STRENGTH_BAR_CHECKS = Object.freeze({
     where: at('strengthBarSet', 'is-strength-bar-grade'),
     translation: 'A standard of evidence is stated in the grades the record uses, A to D, one for how the documents '
       + 'were captured and one for how firmly they connect. One of the two given is not a grade. Nothing was changed.',
+  },
+  /* DEC-88 (K1025): the administrator's own words on why the group sets this bar, recorded with it and answered beside
+     it, because a standard set for everyone's work with no reason given is one nobody can weigh or answer. */
+  BAR_NO_REASON: {
+    check: 'C-107.3',
+    where: at('strengthBarSet', 'is-strength-bar-reason'),
+    translation: 'A standard of evidence for the whole group is set with a reason: say in your own words why the group '
+      + 'works to this standard, in at most 2,000 characters. The reason is kept with it and shown wherever it is read. '
+      + 'Nothing was changed.',
   },
 });

@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS inbox (
   status      TEXT NOT NULL DEFAULT 'new',
   resolved    TEXT,
   resolved_by TEXT,
+  -- R32 (DEC-88 (2)): the member's own reason for the last status change, beside who (resolved_by) and when (resolved).
+  resolve_reason TEXT,
   -- R66: the knocker's continuity, never the secret: a keyed digest of it and the pseudonym derived from that
   -- digest, each NULL for a knock sent without a secret.
   knocker_digest TEXT,
@@ -107,7 +109,7 @@ CREATE INDEX IF NOT EXISTS site_assets_sha ON site_assets(sha256);
 -- reused=1. primary_sha is the content hash of a CAPTURE, not a page: a page
 -- whose bytes changed between two captures has two rows. So the distinct-document
 -- count joins primary_sha to captured_locators and counts document ADDRESSES
--- (siteAssets and siteChrome in store.mjs, CAP-13), and a primary with no locator
+-- (siteAssets and siteChrome in capture/index.mjs, CAP-13), and a primary with no locator
 -- row is counted apart as undetermined rather than as a page.
 --
 -- CAP-14 (CAPTURE-SCALING.md, Job one, RULED 2026-09-21 by BOB #21): a reused
@@ -344,7 +346,7 @@ CREATE INDEX IF NOT EXISTS reuse_verdicts_pair ON reuse_verdicts(source_capture,
 -- admission test reads is spent_ms + reserved_ms. A render that never reports
 -- stays charged for the day: the allowance is then UNDER-used, which is the
 -- direction that cannot overrun. Added to an existing store by the additive
--- pass in store.mjs #migrate, so a store written before D-492 reads 0.
+-- pass (CAPTURE_ADDITIVE_COLUMNS, Capture#migrate), so a store written before D-492 reads 0.
 CREATE TABLE IF NOT EXISTS render_allowance (
   day        TEXT PRIMARY KEY,
   spent_ms   INTEGER NOT NULL DEFAULT 0,
@@ -458,6 +460,30 @@ CREATE TABLE IF NOT EXISTS late_attestations (
   outcome     TEXT NOT NULL,
   PRIMARY KEY (capture_sha, seq)
 );
+-- R80 (DEC-108 (6), BOB's privacy ruling): the doorbell's count-only tally of the knocks it turned away. One row per
+-- UTC day, the last 30 kept: how many were refused, and how many of those found the whole-doorbell limit reached.
+-- No address, fingerprint, time of a knock, digest, pseudonym, note, contact or content: two counters and a date.
+CREATE TABLE IF NOT EXISTS doorbell_tally (
+  day           TEXT PRIMARY KEY,
+  refused       INTEGER NOT NULL DEFAULT 0,
+  limit_reached INTEGER NOT NULL DEFAULT 0
+);
+-- R80: the day the whole-doorbell limit was last reached, a date only. One row.
+CREATE TABLE IF NOT EXISTS doorbell_limit_last (
+  id  INTEGER PRIMARY KEY CHECK (id = 1),
+  day TEXT NOT NULL
+);
+-- R79, R81 (DEC-97 (2)): setting held material aside and bringing it back, each act appended with its reason, who and
+-- when, never rewritten or removed; a document's latest act decides whether it is set aside.
+CREATE TABLE IF NOT EXISTS held_acts (
+  bundle_id TEXT NOT NULL,
+  seq       INTEGER NOT NULL,
+  act       TEXT NOT NULL,
+  reason    TEXT NOT NULL,
+  author    TEXT NOT NULL,
+  at        TEXT NOT NULL,
+  PRIMARY KEY (bundle_id, seq)
+);
 -- R56: the key the doorbell's source fingerprint is computed under when the operator binds none
 -- (KNOCK_FINGERPRINT_KEY). One row, generated at first use, never answered by any op.
 CREATE TABLE IF NOT EXISTS knock_key (
@@ -480,6 +506,7 @@ export const CAPTURE_ADDITIVE_COLUMNS = [
   ["inbox", "pulled_at", "TEXT"],                    // R65
   ["inbox", "pulled_document", "TEXT"],              // R65: the document a pull answered, answered again to a repeat
   ["inbox", "content_b64", "TEXT"],                  // R65: an inline knock's bytes as received
+  ["inbox", "resolve_reason", "TEXT"],               // R32 (DEC-88): the member's reason for a status change
 ];
 
 /* A derived table whose KEY changed shape is dropped and rebuilt rather than altered: `links` gained
@@ -488,11 +515,11 @@ export const CAPTURE_ADDITIVE_COLUMNS = [
 export const CAPTURE_RESHAPE = [["links", "citation_norm"]];
 
 /* record-core R21/R46: what purge clears (whole-store only: none is keyed to a bundle) and what it never clears.
-   The exempt tables are operational facts (the inbox, the doorbell's rate and its two keys among them) about this
+   The exempt tables are operational facts (the inbox, the doorbell's rate, its tally (R80) and its two keys among them) about this
    instance, not corpus-derived; that the inbox and both keys outlive a whole-store purge is R56's and R66's test
    (`test/m/capture/figures.test.mjs`). */
 export const CAPTURE_PURGED_TABLES = ["task_queue", "source_reachability", "link_verdicts", "links", "site_asset_refs",
   "site_assets", "reuse_verdicts", "capture_sessions", "site_chrome_refs", "site_chrome", "link_chrome", "capture_validators",
-  "capture_actors", "capture_accounts", "late_attestations"];
+  "capture_actors", "capture_accounts", "late_attestations", "held_acts"];
 export const CAPTURE_EXEMPT_TABLES = ["inbox", "knock_rate", "capture_limits", "render_allowance", "render_slots", "knock_key",
-  "knocker_key"];
+  "knocker_key", "doorbell_tally", "doorbell_limit_last"];

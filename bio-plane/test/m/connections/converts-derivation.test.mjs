@@ -141,8 +141,10 @@ test("R5, R51 (converts d241-derivation-stated A1–A5, A8, A9): with an entity 
 test("R17, R18 (converts connection-derive-sweep part 1): resolves only mark — nothing is derived before the sweep; the sweep derives the marked entities as the system and clears them; an empty sweep is a no-op; a raised grade re-marks and the sweep re-derives in place", () => {
   const w = world();
   const ord = w.entities.createEntity({ kind: "ordinance", label: "Rent Adjustment Ordinance",
+                                        note: "The city's rent adjustment ordinance, registered as the subject both filings cite.",
                                         aliases: ["ordinance:13579"], declaredBy: "member:alice" }).entity_id;
   const con = w.entities.createEntity({ kind: "contract", label: "Recology Waste Contract",
+                                        note: "The city's waste hauling contract, registered as the subject the third filing cites.",
                                         aliases: ["contract:C-2024-88"], declaredBy: "member:alice" }).entity_id;
   const [A, B, C] = ["INFO-2026-0001-a", "INFO-2026-0002-b", "INFO-2026-0003-c"];
   const [shaA] = w.doc(A, ["r5-doc-A"]);
@@ -206,6 +208,7 @@ test("R17, R18 (converts connection-derive-sweep part 1): resolves only mark —
 test("R18 (converts connection-derive-sweep part 2): with the batch bound to 1, three marked entities drain one per sweep, remaining counted down and wake set until caught up, each entity derived", () => {
   const w = world({ env: { CONNECTION_DERIVE_BATCH: "1" } });
   const ids = [1, 2, 3].map((i) => w.entities.createEntity({ kind: "ordinance", label: `Ordinance ${i}`,
+                                                             note: `Ordinance ${i}, registered as a subject the bounded sweep derives.`,
                                                              aliases: [`ordinance:${i}00`], declaredBy: "member:alice" }).entity_id);
   const refs = [1, 2, 3].map((i) => ({ ref: `ordinance:${i}00`, kind: "ordinance", key: `${i}00`, label: `Ordinance ${i}` }));
   for (const id of ["INFO-2026-0001-p", "INFO-2026-0002-q"]) {

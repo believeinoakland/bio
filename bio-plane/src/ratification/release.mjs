@@ -25,8 +25,9 @@
  *    member BEFORE any state moves, offenders named, set refused whole (R27).
  *
  * It reads record-core's `bundles` and `files` (its R37 read contract) and writes only through `promotion`'s `promote`
- * (R24, and R30 for the retirement). `deps` is `{sql, promotion, retrieval}`. A refusal with a catalogue row (C-32.1, C-33.10–C-33.12, copied into
- * `./checks.mjs`' `RELEASE_CHECKS`) carries its `code`, `check` and `translation` (DEC-49). */
+ * (R24, and R30 for the retirement). `deps` is `{sql, promotion, retrieval, contradiction}` (R22's contested arm
+ * reads `candidatesFor`). A refusal with a catalogue row (C-32.1, C-33.10–C-33.12, copied into `./checks.mjs`'
+ * `RELEASE_CHECKS`; C-58.4, in `RATIFY_SCOPE_CHECKS`) carries its `code`, `check` and `translation` (DEC-49). */
 
 import { parseFrontmatter, isMachineIdentity, createSha256 } from "../record-grammar/index.mjs";
 import { stampInstant } from "../record-core/index.mjs";
@@ -43,8 +44,9 @@ const rand = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.
 
 /** R20–R27: release the selection `handle` from collected to verified, whole set or nothing. `author`, `viewer` and
  *  `owner` are the control plane's stamps, never the caller's. */
-export function release({ sql, promotion, retrieval },
+export function release(deps,
                         { handle, acknowledgment = "", mitigation = "", viewer = null, owner = null, author = null } = {}) {
+  const { sql, promotion, retrieval } = deps;
   const who = String(author ?? "").trim();
   /* DEC-49 REGION is-machine-release — REC-64/C-32.1. The FENCE and only the
      fence: everything below in this method is a payload complaint and not this
@@ -86,67 +88,31 @@ export function release({ sql, promotion, retrieval },
              detail: "this selection resolves to no members, so there is nothing to release" };
 
   /* R22, R23: every member examined before any document changes, each counted under the first class it fails. */
-  const notInfo = [], illegal = [], crucial = [], entry = [];
+  const failed = { NOT_INFORMATION: [], ILLEGAL_TRANSITION: [], CRUCIAL_IN_BATCH: [], CONTESTED_IN_BATCH: [],
+                   ENTRY_REQUIREMENTS: [] };
   for (const id of sel.members) {
-    const b = one(sql, `SELECT object_type, current_state, criticality FROM bundles WHERE bundle_id=?`, id);
-    if (!b || b.object_type !== "information") { notInfo.push(id); continue; }
-    if (b.current_state !== "collected") { illegal.push({ id, from: b.current_state }); continue; }
-    const md = one(sql, `SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
-    const fm = md && md.content !== null ? (parseFrontmatter(md.content).data || {}) : {};
-    /* R22, R27: crucial by the record's column OR by the document's own front matter, whichever says so. The column
-       is what the promotion's envelope gave (promotion does not read it from the bytes), so a document declaring
-       itself crucial under an envelope that did not would otherwise ride a batch; R24 writes the document's value. */
-    if (b.criticality === "crucial" || fm.criticality === "crucial") { crucial.push(id); continue; }
-    const missing = [];
-    const ch = fm.content_hash;
-    if (!(typeof ch === "string" && /^sha256:[0-9a-f]{64}$/.test(ch))) missing.push("well-formed content_hash");
-    if (!one(sql, `SELECT 1 AS x FROM files WHERE bundle_id=? AND path='data/dataset.json'`, id))
-      missing.push("data/dataset.json");
-    if (!one(sql, `SELECT 1 AS x FROM files WHERE bundle_id=? AND path LIKE 'snapshots/%' LIMIT 1`, id))
-      missing.push("a file in snapshots/");
-    /* REC-54 / D-200: THE CHAIN IS AN ENTRY REQUIREMENT OF `verified`. The catalog runs at op=ratify and NOWHERE ELSE,
-       so this batch path, which is the OTHER way an Information document reaches `verified`, asks C-18.9's question
-       here, in the refusal shape (`ENTRY_REQUIREMENTS`, the offenders named, the set refused whole) a caller of this op
-       already gets: a chain missing at release is the same KIND of fact as a missing content_hash. VERIFICATION.md 3a:
-       a rule enforced in N places carries an assertion at EACH place. */
-    const provRow = one(sql, `SELECT content FROM files WHERE bundle_id=? AND path='data/provenance.json'`, id);
-    if (provRow && provRow.content !== null) {
-      let preg = null;
-      try { preg = JSON.parse(provRow.content); } catch { preg = null; }
-      const pdocs = preg && Array.isArray(preg.documents) ? preg.documents : [];
-      const noChain = [];
-      pdocs.forEach((d, di) => {
-        const chain = d && typeof d === "object" ? d.provenance_chain : undefined;
-        if (!Array.isArray(chain) || chain.length === 0) noChain.push(di);
-      });
-      if (noChain.length)
-        missing.push(`a provenance_chain for documents[${noChain.join("], documents[")}] (C-18.9)`);
-    }
-    if (missing.length) entry.push({ id, missing });
+    const x = examineMember(deps, id);
+    if (x) failed[x.class].push(x.offender);
   }
-  if (notInfo.length)
-    return { ok: false, reason: "NOT_INFORMATION", offenders: notInfo.sort(),
-             detail: "release moves an Information state, and this selection carries something else. "
-                   + "The set is refused whole rather than narrowed." };
-  if (illegal.length)
+  const byId = (a, b) => (a.id < b.id ? -1 : 1);
+  if (failed.NOT_INFORMATION.length)
+    return { ok: false, reason: "NOT_INFORMATION", offenders: failed.NOT_INFORMATION.sort(),
+             detail: CLASS_REASONS.NOT_INFORMATION };
+  if (failed.ILLEGAL_TRANSITION.length)
     return { ok: false, reason: "ILLEGAL_TRANSITION", to: "verified",
-             offenders: illegal.sort((a, b) => a.id < b.id ? -1 : 1),
-             detail: "only collected Information may be released. Something already verified has been "
-                   + "released once and release is not repeatable; something retired is terminal." };
-  if (crucial.length)
-    return { ok: false, reason: "CRUCIAL_IN_BATCH", offenders: crucial.sort(),
-             detail: "crucial-criticality material is never batch-released (Intake Doctrine v1.2): "
-                   + "ratifying it requires verifying its co-attestations, which is per-document work, "
-                   + "and a batch containing crucial material is not a low-variance collection. Release "
-                   + "these individually, or re-select without them." };
+             offenders: failed.ILLEGAL_TRANSITION.sort(byId), detail: CLASS_REASONS.ILLEGAL_TRANSITION };
+  if (failed.CRUCIAL_IN_BATCH.length)
+    return { ok: false, reason: "CRUCIAL_IN_BATCH", offenders: failed.CRUCIAL_IN_BATCH.sort(),
+             detail: CLASS_REASONS.CRUCIAL_IN_BATCH };
+  /* DEC-49 REGION is-release-contested — R22's contested arm, C-58.4 (DEC-97 (3)). */
+  if (failed.CONTESTED_IN_BATCH.length)
+    return { ok: false, reason: "CONTESTED_IN_BATCH", ...rowOf("CONTESTED_IN_BATCH"),
+             offenders: failed.CONTESTED_IN_BATCH.sort(), detail: CLASS_REASONS.CONTESTED_IN_BATCH };
+  /* END DEC-49 REGION is-release-contested */
   /* DEC-49 REGION is-release-entry — REC-64/C-33.12. */
-  if (entry.length)
+  if (failed.ENTRY_REQUIREMENTS.length)
     return { ok: false, reason: "ENTRY_REQUIREMENTS", ...rowOf("ENTRY_REQUIREMENTS"),
-             offenders: entry.sort((a, b) => a.id < b.id ? -1 : 1),
-             detail: "verified state has entry requirements: a well-formed content_hash, data/dataset.json, "
-                   + "and at least one file in snapshots/ (C-2.7), and a provenance_chain naming the route "
-                   + "for every document in the register (C-18.9). Releasing these as they stand would mint "
-                   + "records the catalog immediately rejects." };
+             offenders: failed.ENTRY_REQUIREMENTS.sort(byId), detail: CLASS_REASONS.ENTRY_REQUIREMENTS };
   /* END DEC-49 REGION is-release-entry */
 
   /* R24, R25: each member released in the selection's order, at one instant for the batch; the writes are per member. */
@@ -173,6 +139,81 @@ export function release({ sql, promotion, retrieval },
   }
   return { ok: true, handle, released: released.sort(), acknowledgment: ack, mitigation: mit,
            weight: "refuse", drift: sel.drift };
+}
+
+/* R22, R34: each class's reason, the one sentence the release's refusal and capture's held list (its R78) both give. */
+export const CLASS_REASONS = Object.freeze({
+  NOT_INFORMATION: "release moves an Information state, and this selection carries something else. "
+                 + "The set is refused whole rather than narrowed.",
+  ILLEGAL_TRANSITION: "only collected Information may be released. Something already verified has been "
+                    + "released once and release is not repeatable; something retired is terminal.",
+  CRUCIAL_IN_BATCH: "crucial-criticality material is never batch-released (Intake Doctrine v1.2): "
+                  + "ratifying it requires verifying its co-attestations, which is per-document work, "
+                  + "and a batch containing crucial material is not a low-variance collection. Release "
+                  + "these individually, or re-select without them.",
+  CONTESTED_IN_BATCH: "contested material is never batch-released (Intake Doctrine section 4; DEC-97): a "
+                    + "contradiction touching each of these documents is not yet resolved, or whether one is could "
+                    + "not be read. Resolve it, or release these individually, or re-select without them.",
+  ENTRY_REQUIREMENTS: "verified state has entry requirements: a well-formed content_hash, data/dataset.json, "
+                    + "and at least one file in snapshots/ (C-2.7), and a provenance_chain naming the route "
+                    + "for every document in the register (C-18.9). Releasing these as they stand would mint "
+                    + "records the catalog immediately rejects.",
+});
+
+/* R22 (K1025): the viewer the contested arm reads as. The plane's own, which sees every bundle (membership R43), so a
+   side no member may see still bars the batch; nothing of any side is answered. */
+export const PLANE_VIEWER = "class:daemon";
+const CONTESTED_STATES = ["open", "explained_not_shown", "taken_up"];
+
+/** R22, R34: THE ONE EXAMINATION of one document, which the release counts every member by and `capture` reads as its
+ *  `batch-examination` reader: null when it passes every class, else `{class, offender, reason}`, the first class it
+ *  fails in R22's order (the refusal's code), its offender as the refusal lists it, and that class's reason. */
+export function examineMember(deps, id) {
+  const { sql } = deps;
+  const fail = (cls, offender) => ({ class: cls, offender, reason: CLASS_REASONS[cls] });
+  const b = one(sql, `SELECT object_type, current_state, criticality FROM bundles WHERE bundle_id=?`, id);
+  if (!b || b.object_type !== "information") return fail("NOT_INFORMATION", id);
+  if (b.current_state !== "collected") return fail("ILLEGAL_TRANSITION", { id, from: b.current_state });
+  const md = one(sql, `SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
+  const fm = md && md.content !== null ? (parseFrontmatter(md.content).data || {}) : {};
+  /* R22, R27: crucial by the record's column OR by the document's own front matter, whichever says so. The column
+     is what the promotion's envelope gave (promotion does not read it from the bytes), so a document declaring
+     itself crucial under an envelope that did not would otherwise ride a batch; R24 writes the document's value. */
+  if (b.criticality === "crucial" || fm.criticality === "crucial") return fail("CRUCIAL_IN_BATCH", id);
+  /* R22's contested arm (DEC-97 (3)): a standing candidate of any shown weight with a side on the document. A read
+     that fails, or is cut short with none found, is counted contested: an unread contradiction is not a resolved one. */
+  for (const state of CONTESTED_STATES) {
+    let r = null;
+    try { r = deps.contradiction.candidatesFor({ on: { bundle: id }, state, limit: 1, viewer: PLANE_VIEWER }); } catch { r = null; }
+    if (!r || r.ok === false || r.undetermined || r.truncated || (r.candidates || []).length)
+      return fail("CONTESTED_IN_BATCH", id);
+  }
+  const missing = [];
+  const ch = fm.content_hash;
+  if (!(typeof ch === "string" && /^sha256:[0-9a-f]{64}$/.test(ch))) missing.push("well-formed content_hash");
+  if (!one(sql, `SELECT 1 AS x FROM files WHERE bundle_id=? AND path='data/dataset.json'`, id))
+    missing.push("data/dataset.json");
+  if (!one(sql, `SELECT 1 AS x FROM files WHERE bundle_id=? AND path LIKE 'snapshots/%' LIMIT 1`, id))
+    missing.push("a file in snapshots/");
+  /* REC-54 / D-200: THE CHAIN IS AN ENTRY REQUIREMENT OF `verified`. The catalog runs at op=ratify and NOWHERE ELSE,
+     so this batch path, which is the OTHER way an Information document reaches `verified`, asks C-18.9's question
+     here, in the refusal shape (`ENTRY_REQUIREMENTS`, the offenders named, the set refused whole) a caller of this op
+     already gets: a chain missing at release is the same KIND of fact as a missing content_hash. VERIFICATION.md 3a:
+     a rule enforced in N places carries an assertion at EACH place. */
+  const provRow = one(sql, `SELECT content FROM files WHERE bundle_id=? AND path='data/provenance.json'`, id);
+  if (provRow && provRow.content !== null) {
+    let preg = null;
+    try { preg = JSON.parse(provRow.content); } catch { preg = null; }
+    const pdocs = preg && Array.isArray(preg.documents) ? preg.documents : [];
+    const noChain = [];
+    pdocs.forEach((d, di) => {
+      const chain = d && typeof d === "object" ? d.provenance_chain : undefined;
+      if (!Array.isArray(chain) || chain.length === 0) noChain.push(di);
+    });
+    if (noChain.length)
+      missing.push(`a provenance_chain for documents[${noChain.join("], documents[")}] (C-18.9)`);
+  }
+  return missing.length ? fail("ENTRY_REQUIREMENTS", { id, missing }) : null;
 }
 
 /** R24, R30: one member's transition, written as a new version through `promotion`'s `promote` on its held

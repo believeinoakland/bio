@@ -617,7 +617,12 @@ export class Review {
                               ? { acknowledgements_withheld_writer_undetermined: acks.withheldWriterUndetermined }
                               : {}),
                             withheld_stated: acks.withheld_stated,
-                            act: "op=statementack&draft=" + d.draft_id };
+                            /* R28 (DEC-88): the act's LINK names the act and the draft and nothing of the reader's,
+                               so it never carries or pre-fills a member's words; beside it, in the `requires` form of
+                               queue's act descriptors, that the act takes the acknowledger's own reason
+                               (case-authoring R19, C-82.8). Both doors answer it alike. */
+                            act: "op=statementack&draft=" + d.draft_id,
+                            act_requires: ["reason"] };
     return {
       ok: true, kind: "review-copy", marking: REVIEW_MARKING, published: false,
       signature: { signed: false, detail: "a review copy is never signed. A signature is given only over a case "
@@ -750,9 +755,9 @@ export function reviewOwns(t) {
   return REVIEW_TABLES.some((x) => x.name === name);
 }
 
-/** The module's ops (K3), as entries of the legacy store's op map. Every identity (`author`, `viewer`, `secretSha`,
- *  `bySecret`) is the control plane's stamp, read from the query and spread after the body, so a body naming one is
- *  overwritten, never honoured (R22). */
+/** The module's ops (K3), as entries of the plane store's op map (`plane/store.mjs`). Every identity (`author`,
+ *  `viewer`, `secretSha`, `bySecret`) is the control plane's stamp, read from the query and spread after the body, so a
+ *  body naming one is overwritten, never honoured (R22). */
 export function reviewOps(r, url, body) {
   const q = (k) => url.searchParams.get(k);
   const b = body && typeof body === "object" ? body : {};

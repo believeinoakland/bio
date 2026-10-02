@@ -27,7 +27,7 @@ test("R15 source_knocks is a read contract: exactly the columns (knock_id, sourc
   const p1 = await w.knock({ secret: SECRET }), p2 = await w.knock({ secret: SECRET });
   const pNew = await w.knock({ secret: SECRET }), pGone = await w.knock({ secret: SECRET });
   await w.pull(p1); await w.pull(p2);
-  assert.equal(w.cap.inboxResolve({ knockId: pGone.knock_id, status: "discarded", by: "bob" }).ok, true);
+  assert.equal(w.cap.inboxResolve({ knockId: pGone.knock_id, status: "discarded", by: "bob", reason: "not material for the group" }).ok, true);
   /* knocks without a secret: one pulled and read, one pulled and never read */
   const b1 = await w.knock(), b2 = await w.knock();
   await w.pull(b1); await w.pull(b2);

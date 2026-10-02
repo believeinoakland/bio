@@ -139,8 +139,10 @@ const all = [plane, ...members];
 
 function committedArtifact(m) {
   const p = join(m.abs, m.bundle.outfile);
+  /* The fleet's one rebuild command (N31, bundler R21), as every staleness finding names it: it builds
+     each member by its own `npm run build`, pre-steps included, and says which it rebuilt. */
   if (!existsSync(p)) die("NO_ARTIFACT", `${m.name} has no committed ${m.bundle.outfile}.`,
-    `Run \`npm run build\` in ${m.dir}/ and commit the artifact.`);
+    "Run `node bio-plane/scripts/bundles.mjs` from the repository root, and commit the artifacts.");
   return readFileSync(p);                      // read BEFORE any build runs
 }
 

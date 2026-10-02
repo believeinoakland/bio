@@ -1,8 +1,13 @@
-/* publication — the invariants not driven elsewhere: purge (R31), the check rows that moved here (R33), no place named
-   (R34), and the two ids that do not hold yet (R30, R32). Driven at the module's interface. */
+/* publication — the invariants not driven elsewhere: purge (R31) beside corpus-export's declaration (K1024), the
+   delegated export ops (corpus-export R1, R2), the check rows that moved here (R33), no place named (R34), and the id
+   that does not hold yet (R30). Driven at the module's interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { planeWorld as world, V, SIG, NOW } from "./fixture.mjs";
+import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
+import { corpusExportOf, EXPORT_LOG_LIMIT_DEFAULT as CE_DEFAULT, EXPORT_LOG_LIMIT_MAX as CE_MAX,
+         EXPORT_NOTE_MAX as CE_NOTE } from "../../../src/corpus-export/index.mjs";
+import { EXPORT_LOG_LIMIT_DEFAULT, EXPORT_LOG_LIMIT_MAX, EXPORT_NOTE_MAX } from "../../../src/publication/index.mjs";
 import * as CHECKS from "../../../src/publication/checks.mjs";
 import { ATTRIBUTION_ACT_CHECKS, CASE_SOURCES_CHECKS, rowOf } from "../../../src/publication/checks.mjs";
 import { PUBLICATION_TABLES, PUBLICATION_EXEMPT, publicationOwns } from "../../../src/publication/index.mjs";
@@ -29,7 +34,9 @@ test("R31 published bytes are exempt from purge; the derived and working tables 
   w.inquiry(F, { question: "Revised?", legs: [{ target: obs }] });
   w.op("export", {});
   assert.equal(w.count("case_revision_flags"), 1);
-  const exempt = w.snapshot(PUBLICATION_EXEMPT);
+  const KEPT = [...PUBLICATION_EXEMPT, "export_log"];
+  assert.equal(w.count("export_log"), 1);
+  const exempt = w.snapshot(KEPT);
   /* one bundle's rows: its flags, its attributions and the published graph's edges touching it */
   /* a reference F holds privately to evidence not yet published (N256) is working material, purged with either end */
   w.doc("INFO-2026-0003-annex");
@@ -45,24 +52,77 @@ test("R31 published bytes are exempt from purge; the derived and working tables 
   w.record.purge({});
   assert.deepEqual(w.rows(`SELECT edition FROM case_documents`), [{ edition: 1 }]);
   assert.deepEqual(w.rows(`SELECT DISTINCT edition FROM case_exclusions`), [{ edition: 1 }]);
-  assert.deepEqual(w.snapshot(PUBLICATION_EXEMPT), exempt, "published_* , cases and export_log are never cleared");
-  assert.deepEqual([...PUBLICATION_EXEMPT].sort(), ["cases", "export_log", "published_bundles", "published_case_members",
+  assert.deepEqual(w.snapshot(KEPT), exempt, "published_*, cases and corpus-export's export_log are never cleared");
+  assert.deepEqual([...PUBLICATION_EXEMPT].sort(), ["cases", "published_bundles", "published_case_members",
                                                     "published_cases", "published_shas"]);
   assert.deepEqual(PUBLICATION_TABLES.map((t) => t.name || t).sort(),
                    ["case_documents", "case_exclusions", "case_revision_flags", "observation_attributions", "published_edges",
                     "published_held_references"]);
   assert.equal(publicationOwns("published_edges"), true);
-  assert.equal(publicationOwns({ name: "export_log" }), true);
+  assert.equal(publicationOwns({ name: "export_log" }), false, "corpus-export's since K1024");
   assert.equal(publicationOwns("statement_acknowledgements"), false, "case-authoring's");
 });
 
-test("R33 this module's table holds exactly C-92.1–.9 and C-122.1, each with its code, sentence and its raiser's site here; C-44.2, C-68.5 and C-98 left it for public-read's (its R17)", () => {
-  /* every table this file exports, not a sample: two, and every row in them is one of the eleven */
+/* A bare host: record-core alone, so a declaration can be made before corpus-export's on it. */
+function bareHost() {
+  const st = storage({ workerd: true });
+  const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+  for (const t of bare.split(";")) if (t.trim()) st.db.exec(t);
+  const host = { storage: st };
+  const record = recordOf(host, { evidence: null, evidencePrefix: "bio/captures/" });
+  record.migrate();
+  return { host, st, record };
+}
+
+test("R31 (K1024) on one host publication's purge declaration and corpus-export's both answer ok: export_log is declared once, by corpus-export, and a whole-store purge leaves it and this module's exempt tables byte-identical", () => {
+  const w = world();
+  assert.deepEqual(w.p.purgeDeclaration, { ok: true });
+  assert.equal(w.p.corpusExport, corpusExportOf(w.host), "created eagerly at this module's creation, one per host");
+  assert.deepEqual(w.p.corpusExport.purgeDeclaration, { ok: true });
+  assert.equal(w.count("export_log"), 0, "export_log exists at boot, before any export");
+  w.op("export", { note: "kept" });
+  w.st.sql.exec(`INSERT INTO cases (case_id, project_id, opened) VALUES ('CASE-2026-0009', 'PROJ-1', ?)`, NOW);
+  const kept = w.snapshot(["export_log", ...PUBLICATION_EXEMPT]);
+  w.record.purge({});
+  assert.deepEqual(w.snapshot(["export_log", ...PUBLICATION_EXEMPT]), kept);
+  assert.equal(w.count("export_log"), 1);
+  /* the same order on a bare host, with this module's exempt list as it is: both declarations answer ok */
+  const ok = bareHost();
+  assert.deepEqual(ok.record.declarePurge("publication", PUBLICATION_TABLES, { exempt: PUBLICATION_EXEMPT }), { ok: true });
+  assert.deepEqual(corpusExportOf(ok.host, { record: ok.record }).purgeDeclaration, { ok: true });
+  /* negative control: export_log restored to this module's exempt list, corpus-export's declaration is refused */
+  const bad = bareHost();
+  assert.deepEqual(bad.record.declarePurge("publication", PUBLICATION_TABLES, { exempt: [...PUBLICATION_EXEMPT, "export_log"] }),
+                   { ok: true });
+  const refused = corpusExportOf(bad.host, { record: bad.record }).purgeDeclaration;
+  assert.deepEqual([refused.ok, refused.reason, refused.table, refused.declaredBy], [false, "TABLE_DECLARED", "export_log", "publication"]);
+});
+
+test("corpus-export R1 R2: op=export and op=exportlog still answer through this module's delegates, and the export's bounds are re-exported unchanged", () => {
+  const w = world();
+  w.doc("INFO-2026-0001-minutes");
+  const x = w.op("export", { note: "n".repeat(400) });
+  assert.deepEqual([x.ok, x.scope, x.counts.bundles], [true, "working-corpus", 1]);
+  assert.deepEqual(x.bundles.map((b) => b.bundle_id), ["INFO-2026-0001-minutes"]);
+  assert.deepEqual(x.register.map((r) => r.bundle_id), ["INFO-2026-0001-minutes"]);
+  assert.equal(x.at, NOW, "this module's clock, handed to corpus-export");
+  const log = w.op("exportlog", { limit: 5 });
+  assert.deepEqual([log.ok, log.limit, log.truncated, log.exports.length], [true, 5, false, 1]);
+  assert.deepEqual([log.exports[0].at, log.exports[0].note.length], [NOW, 280]);
+  assert.deepEqual(w.p.exportLog({ limit: 5 }), w.p.corpusExport.exportLog({ limit: 5 }), "the delegate answers corpus-export's answer");
+  assert.equal(w.p.exportLog({}).limit, 200);
+  assert.deepEqual([EXPORT_LOG_LIMIT_DEFAULT, EXPORT_LOG_LIMIT_MAX, EXPORT_NOTE_MAX], [CE_DEFAULT, CE_MAX, CE_NOTE]);
+  assert.deepEqual([EXPORT_LOG_LIMIT_DEFAULT, EXPORT_LOG_LIMIT_MAX, EXPORT_NOTE_MAX], [200, 1000, 280]);
+});
+
+test("R33 this module's table holds exactly C-92.1–.9, C-92.13 and C-122.1, each with its code, sentence and its raiser's site here; C-44.2, C-68.5 and C-98 left it for public-read's (its R17)", () => {
+  /* every table this file exports, not a sample: two, and every row in them is one of the twelve */
   const tables = Object.entries(CHECKS).filter(([, v]) => v && typeof v === "object" && !Array.isArray(v)
     && Object.values(v).some((r) => r && typeof r.check === "string"));
   assert.deepEqual(tables.map(([k]) => k).sort(), ["ATTRIBUTION_ACT_CHECKS", "CASE_SOURCES_CHECKS"]);
   const ids = Object.values(MINE).map((r) => r.check).sort((a, b) => a.localeCompare(b, "en", { numeric: true }));
-  assert.deepEqual(ids, ["C-92.1", "C-92.2", "C-92.3", "C-92.4", "C-92.5", "C-92.6", "C-92.7", "C-92.8", "C-92.9", "C-122.1"]);
+  assert.deepEqual(ids, ["C-92.1", "C-92.2", "C-92.3", "C-92.4", "C-92.5", "C-92.6", "C-92.7", "C-92.8", "C-92.9", "C-92.13",
+                         "C-122.1"]);
   for (const [code, row] of Object.entries(MINE)) {
     assert.ok(typeof row.translation === "string" && row.translation.length > 40, `${code} has its sentence`);
     assert.match(row.where, /^src\/publication\/index\.mjs \w+ > is-[a-z-]+$/, `${code}'s site is this module's`);
@@ -90,7 +150,7 @@ test("R34 no place is named in this module's behaviour or outward text", () => {
     w.op("caseflags", {}), w.op("export", {}), w.op("exportlog", {}), w.op("excludedby", { id: F, viewer: V("olive") }),
     w.op("casedocument", { case: "CASE-2026-0001", edition: 1 }), w.op("casedocument", { case: "CASE-2026-0002", edition: 1 }),
     w.p.reviewProvider().deadAnswer(), w.p.publishedEditionsOf({ finding: F }), w.p.caseTensions({}),
-    w.p.caseFlags({}).doctrine, w.op("attribute", {}, {})]);
+    w.p.caseFlags({}).doctrine, w.op("attribute", {}, {}), w.op("attribute", { by: "olive" }, { level: "group" })]);
   for (const place of ["Oakland", "California", "Alameda", "Berkeley", "San Francisco", "Sacramento", "Brown Act", "CPRA",
                        "United States", "County", "City of"])
     assert.equal(outward.includes(place), false, `names ${place}`);
@@ -114,4 +174,3 @@ test("R24 an existing store migrates: every ratified row of the old, edition-les
 
 test.todo("R30 a published rendering is verified by pixels_sha256 over its normalised samples — NOT YET MET (D-246): nothing in the plane publishes a rendering yet (no `kind: rendering` part is written to published_shas or a container), so there is no rendering to carry the pixel hash; it joins when the rendering path does");
 
-test.todo("R32 an import of an export re-derives every hash, history chain and base link and byte-compares every capture — NOT YET MET (K102): the verifying import has no tranche yet; BOB chooses it");

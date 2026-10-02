@@ -1,16 +1,16 @@
 /* provenance: the testimony path's later work as one slot (R52), and the observation's `content_id` as the slot names
-   it (R28). The composition root runs the slot at the place the legacy store's promotion step runs that work today;
-   here a step registered with the real promotion stands in for that step, its check and projection calling the
-   slot's two functions, as the store's will when extraction, content and observation-log have registered (T19
-   layers 4–5). Those three modules are later in the order, so their registrations are stood in for. */
+   it (R28). The composition root runs the slot where the legacy store's promotion step ran that work (control-plane's
+   promotion step since T19, its R42); here a step registered with the real promotion stands in for that step, its
+   check and projection calling the slot's two functions, as control-plane's do. Extraction, content and
+   observation-log are later in the order, so their registrations are stood in for. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
 import { TESTIMONY_PATH } from "../../../src/provenance/index.mjs";
 import { listenerRefusal, MODULE_ORDER } from "../../../src/membership/index.mjs";
 
-/* A world whose promotion runs the slot from a step at the legacy store's rank (layer 10, after every step of layers
-   1–9), as the composition root holds it. */
+/* A world whose promotion runs the slot from a step at the legacy store's old rank (after every step of layers 1–9),
+   as the composition root holds it; the stand-in step keeps that module's name. */
 function slotted(opts) {
   const w = world(opts);
   const slot = w.prov.testimonySlot();

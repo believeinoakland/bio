@@ -1735,8 +1735,8 @@ export function actionPlansOwns(t) {
   return ACTION_PLANS_TABLES.some((x) => x.name === name);
 }
 
-/** The module's ops (K3, K671), as entries of the legacy store's op map; `legacy-store`'s own job adds the one spread
- *  line to its dispatch. `viewer`, `author`, `proposer` and `principal` are the control plane's stamps, read from the
+/** The module's ops (K3, K671), as entries of the plane's op map; `plane`'s store (`src/plane/store.mjs`) spreads them
+ *  into its dispatch. `viewer`, `author`, `proposer` and `principal` are the control plane's stamps, read from the
  *  query and set after the body, so a caller's own copy never wins. */
 export function actionPlansOps(m, url, body) {
   const qp = (k) => url.searchParams.get(k);

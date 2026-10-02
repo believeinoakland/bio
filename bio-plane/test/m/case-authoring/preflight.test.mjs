@@ -5,7 +5,7 @@
    must control its answer. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, T0, sha } from "./fixture.mjs";
+import { world, V, T0, sha, WHAT_CHANGED } from "./fixture.mjs";
 import { caseAuthoringOps, CASE_DISCLOSURE_CHECKS, SELF_ATTESTED_SENTENCE } from "../../../src/case-authoring/index.mjs";
 import { caseDocumentBlocks, unnamedSourceStatement, sourceStatement } from "../../../src/publication/index.mjs";
 import { ARCHIVE_VIA, ARCHIVE_CAPTURE_GRADE } from "../../../src/provenance/index.mjs";
@@ -386,7 +386,7 @@ test("R34: it raises no re-evaluation for a member's new edition (R15's listener
   assert.equal(w.reevaluation.onBasisChanged("monitoring", (e) => { told.push(e); }).ok, true);
   w.finding(Q, [{ target: DOC }, { target: DOC2 }, { target: Q2 }]);
   const fresh = { statement: "A second edition's limits.", subjectJustification: "Fresh.", biasAcknowledgement: "Ours, now.",
-                  excluded: [{ description: "x", reason: "y" }] };
+                  excluded: [{ description: "x", reason: "y" }], whatChanged: WHAT_CHANGED };
   const before = w.snapshot();
   const pre = w.ca.publishPreflight(args(P, [Q], { caseId: a1.caseId, ...fresh, ...sa }));
   assert.equal(pre.ready, true, JSON.stringify(pre.blockers).slice(0, 300));

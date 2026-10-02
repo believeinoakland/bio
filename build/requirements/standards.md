@@ -4,7 +4,7 @@
 - D-149's governing laws of an action: `bio-plane/checks/bio-checks.mjs` 643–657 (`LAW_LEVELS`, `GOVERNING_LAWS_MAX`, `CITATION_MAX`), `governingLawsOf` (676), the proposal label (`lawProposalState`, `lawProposalLabel`, 770–800); `bio-plane/src/store.mjs` `actionLaws` 7180–7263, `#lawEntries` 7264, `actionLawsPropose` 7520–7576, `#lawProposalsFor` 7577. These are the laws the group's own request is made under, not the standard a government act is measured against: they stay `actions`' (REC-201 is carried there). Their member-states, machine-proposes, stored-apart pattern (REC-195) is the model for R9–R10.
 - `docprofile/doctypes/regulation.mjs` 255–260 and `staff-report.mjs` 301 emit `code_section` and `instrument` references from a document's text, keyed by the profile's `vocabulary.codes` and enactment kinds: the place a citation to a standard is first read. `id-spaces` normalises enactment numbers.
 - `jurisdictions` R23 (`standard_sources`), built in T2 with both profiles (`jurisdictions/profiles/*.mjs`).
-No old-plan row is carried to `standards`; no check in `bio-checks.mjs` belongs to it. N309 wordings folded by BOB #62, 2026-09-29 (K380).
+No old-plan row is carried to `standards`; no check in `bio-checks.mjs` belongs to it. N309 wordings folded by BOB #62, 2026-09-29 (K380). DEC-88's reason, by a worker for BOB #90 on `tranche/T22`, 2026-10-01 (`build/plan/t22-dec88-audit.md`; K1025): R1 (the declarer's reason, `STANDARD_NO_REASON`, C-112.20) and R10 (an adoption takes it as R1's); not yet met (T22).
 
 **Size (P6).** New. Estimated 500–800 lines of code with its tables; one session reads it with the public parts of `jurisdictions`, `record-core`, `membership`, `promotion` and `content`.
 
@@ -18,8 +18,8 @@ A standard is what a government act is measured against: a statute, regulation, 
 
 Terms. A **period** is `{from, to}`, each a `YYYY-MM-DD` date or null; null is "not stated in the record", never "always". A **source** answer is `{state: "matched", source, kind, issuer, level, profile, basis}` or `{state: "undetermined", why}`; `level` is the source's level (`jurisdictions` R23, R31), or `undetermined` when the entry states none.
 
-**standardDeclare({cite, kind, issuer, text, period, supersedes?, author, viewer}) → `{ok: true, id, source, ...}` or refusal**
-- **R1** Refusals in order: `MACHINE_CANNOT_DECLARE_STANDARD` (K251; an empty author or a machine identity: a machine proposes, R9); `STANDARD_NO_CITE` (an empty citation, or over 200 characters); `STANDARD_KIND_UNKNOWN` (outside `statute`, `regulation`, `ordinance`, `court`, `policy`, `commitment`, the set of `jurisdictions` R23); `STANDARD_NO_ISSUER`; `STANDARD_NO_TEXT` (no content id); `STANDARD_TEXT_UNRESOLVED` (a content id `content.contentRow` does not hold, naming it); `STANDARD_PERIOD_INVALID` (a date not `YYYY-MM-DD`, or `to` before `from`); `STANDARD_SUPERSEDES_UNKNOWN` (R6).
+**standardDeclare({cite, kind, issuer, text, period, supersedes?, reason, author, viewer}) → `{ok: true, id, source, ...}` or refusal**
+- **R1** Refusals in order: `MACHINE_CANNOT_DECLARE_STANDARD` (K251; an empty author or a machine identity: a machine proposes, R9); `STANDARD_NO_CITE` (an empty citation, or over 200 characters); `STANDARD_KIND_UNKNOWN` (outside `statute`, `regulation`, `ordinance`, `court`, `policy`, `commitment`, the set of `jurisdictions` R23); `STANDARD_NO_ISSUER`; `STANDARD_NO_REASON` (C-112.20, a new row, `awaiting stamp`: the `reason`, the declarer's words on why the group holds its government to this standard, absent, not a string, blank or over 2,000 characters; DEC-88, K1025); `STANDARD_NO_TEXT` (no content id); `STANDARD_TEXT_UNRESOLVED` (a content id `content.contentRow` does not hold, naming it); `STANDARD_PERIOD_INVALID` (a date not `YYYY-MM-DD`, or `to` before `from`); `STANDARD_SUPERSEDES_UNKNOWN` (R6). The reason is read back with the declaration (R4, R5).
 - **R2** `text` is one or more content ids: the standard's own words as captured. A standard is never held without a capture of its text (Intake Doctrine: material enters only with provenance).
 - **R3** The citation is matched against the `cite` pattern of every `standard_sources` entry in the active profiles' combined view (`jurisdictions.combine` over the list `record-core` holds). The first match gives `source: matched` with that entry's `source`, `kind`, `issuer`, `level`, `profile` and `basis`; a matched entry with no level answers `level: undetermined` beside the match (K108 (5), K171). No match, no active profile, or a withheld fact (`jurisdictions` R15) gives `source: undetermined` with why; the standard is still held (K102): the profile describes local sources and does not decide what law a group may hold its government to. A declared `kind` or `issuer` that differs from the matched entry's is kept as declared and the difference is stated beside it, never corrected.
 - **R4** The answer and every later read carry who declared it and when (this module's clock), and the declaration is never edited: a correction is a new standard that supersedes it (R6).
@@ -35,7 +35,7 @@ Terms. A **period** is `{from, to}`, each a `YYYY-MM-DD` date or null; null is "
 
 **standardPropose({cite, kind?, issuer?, text?, why, act?, proposer, viewer}) → `{ok, proposal}`**; **standardAdopt({proposal, author, viewer, ...R1's fields})**
 - **R9** A proposal (the Legal/Policy Lookup skill's work, or a member's suggestion) is stored apart from standards, labelled with who proposed it and whether it is machine work (`record-grammar`'s `proposalLabel(proposer, "standard")`: `lawProposalState`'s three states, one composer, K171), with a `why` of at most 240 characters. It is never a standard, never read by `standardsIn`, and is answered with a sentence saying so.
-- **R10** `standardAdopt` is R1 by a member, naming the proposal; the new standard records the proposal it came from, and the proposal records its adoption. A proposal is adopted at most once.
+- **R10** `standardAdopt` is R1 by a member, naming the proposal; the new standard records the proposal it came from, and the proposal records its adoption. A proposal is adopted at most once. The adopting member's own `reason` is R1's (`STANDARD_NO_REASON`); the proposal's `why` (R9) is the proposer's and does not serve as it (DEC-88; K1025).
 
 **standardsOf(host) → the module's instance**
 - **R16** Constructing the instance creates every table this module declares to purge (R14), as the other factories do, so every service here and `record-core`'s purge succeed after construction with no caller calling `migrate()` (N220, N267, K267).
@@ -44,7 +44,7 @@ Terms. A **period** is `{from, to}`, each a `YYYY-MM-DD` date or null; null is "
 
 ### Uses
 
-- `jurisdictions`: `combine` (R3); the kinds of R23; a source's `level` (R23, R31: not yet met there, built by the `jurisdictions` job before layer 9, K171).
+- `jurisdictions`: `combine` (R3); the kinds of R23; a source's `level` (R23, R31).
 - `record-core`: `getSetting` (the active profiles), `allocId`, `transact`, `stampInstant`.
 - `record-grammar`: `isMachineIdentity`, `proposalLabel` (R1, R9); the `STD-` type registration (R15).
 - `membership`: `viewerPredicate` (R5; a member sees every standard).

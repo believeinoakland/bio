@@ -1835,6 +1835,20 @@ plane ${plane.sha256} ${plane.bytes} ${plane.asset}
 // ../bio-plane/src/setup-fleet.mjs
 var GROUP_SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])$/;
 var FLEET_BINDINGS = [["agent-worker", "AGENT_WORKER"], ["pdf-worker", "PDF_WORKER"], ["ocr-worker", "OCR_WORKER"]];
+var HOSTING_CONTROL = Object.freeze({
+  heading: "Before you choose a password: who controls this copy",
+  sentences: Object.freeze([
+    "Whoever can sign in to the hosting account this copy runs in (its Cloudflare account) controls the copy. They can replace the one-time password, claim the copy again, read everything in it and lock everyone else out, and no vote of the group's administrators can stop them.",
+    "Use a group account for it, not anyone's personal login.",
+    "Add at least one other trusted person to that account.",
+    "Where possible, let someone other than the group's administrators hold it.",
+    "The same account is the way back in if the password you choose is lost: sign in to it, replace the ADMIN_TOKEN value in this worker's settings, and the copy can be claimed again."
+  ])
+});
+var escBlock = (x) => String(x).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+function hostingControlBlock(cls = "notice") {
+  return `<div class="${escBlock(cls)}" id="hosting-control"><p><b>${escBlock(HOSTING_CONTROL.heading)}</b></p>` + HOSTING_CONTROL.sentences.map((s, i, all) => `<p${i === all.length - 1 ? ' style="margin:0"' : ""}>${escBlock(s)}</p>`).join("") + "</div>";
+}
 
 // src/index.mjs
 var CFG = {
@@ -2013,8 +2027,9 @@ async function establishPlan(token, acct) {
   }
   return { plan: "paid", leftover };
 }
+var BUCKETS = ["bio-captures", "bio-published"];
 async function ensureBuckets(token, acct) {
-  for (const name of ["bio-captures", "bio-published"]) {
+  for (const name of BUCKETS) {
     try {
       await cf(token, `/accounts/${acct}/r2/buckets`, {
         method: "POST",
@@ -2024,6 +2039,58 @@ async function ensureBuckets(token, acct) {
       if (!/already exists/i.test(e.message)) throw e;
     }
   }
+}
+async function bucketExists(token, acct, name) {
+  try {
+    await cf(token, `/accounts/${acct}/r2/buckets/${name}`);
+    return true;
+  } catch (e) {
+    if (e.status === 404) return false;
+    throw e;
+  }
+}
+async function copyHeld(token, acct, { buckets = true, members = [] } = {}) {
+  const held = [];
+  if (buckets) {
+    for (const name of BUCKETS) if (await bucketExists(token, acct, name)) held.push(`the evidence bucket ${name}`);
+  }
+  for (const member of members) if (await scriptExists(token, acct, member)) held.push(`the capability worker ${member}`);
+  return held;
+}
+var ONE_COPY = "One copy per account is supported for now";
+async function scriptHash(token, acct, slug) {
+  let r;
+  try {
+    r = await fetch(
+      `${CFG.API}/accounts/${acct}/workers/scripts/${slug}`,
+      { headers: { authorization: "Bearer " + token, accept: "application/javascript+module" } }
+    );
+  } catch {
+    return null;
+  }
+  if (!r.ok) return null;
+  const ct = r.headers.get("content-type") || "";
+  let bytes = new Uint8Array(await r.arrayBuffer());
+  if (/multipart/i.test(ct)) {
+    const m = /boundary="?([^";]+)"?/i.exec(ct);
+    if (!m) return null;
+    const text = new TextDecoder("latin1").decode(bytes);
+    const part = text.split("--" + m[1]).find((p) => /name="index\.mjs"/.test(p.slice(0, p.indexOf("\r\n\r\n"))));
+    if (!part) return null;
+    const body = part.slice(part.indexOf("\r\n\r\n") + 4).replace(/\r\n$/, "");
+    bytes = Uint8Array.from(body, (c) => c.charCodeAt(0));
+  }
+  return hex(await crypto.subtle.digest("SHA-256", bytes));
+}
+async function readBack(token, acct, slug, release) {
+  const want = hex(await crypto.subtle.digest("SHA-256", enc.encode(release.source)));
+  let got = null;
+  for (let i = 0; i < 3; i++) {
+    got = await scriptHash(token, acct, slug);
+    if (got === want) return null;
+    if (i < 2) await new Promise((res) => setTimeout(res, 1500));
+  }
+  return got === null ? `the software your Cloudflare account holds for your copy could not be read back, so it is not confirmed to be the ${release.version} release's own bytes` : `the software your Cloudflare account holds for your copy is not the ${release.version} release's own bytes (read back, it hashes to ${got.slice(0, 16)}\u2026; the release hashes to ${want.slice(0, 16)}\u2026)`;
 }
 function uploadForm(meta, source) {
   const fd = new FormData();
@@ -2324,7 +2391,7 @@ async function bindMembers(emit, token, acct, slug, release, already, fleet, opt
       { members: want, daemon: opts.daemon, noSelf: opts.noSelf, profiles: opts.profiles }
     );
     emit.ok("bind", "Your copy is connected to " + added.join(", ") + ".");
-    return { bound: want, unbound: [] };
+    return { bound: want, unbound: [], put: true };
   } catch (e) {
     emit.no("bind", "The capability workers were installed, but connecting your copy to them was refused (" + added.join(", ") + "). Your copy works without them; running the updater on this copy connects them. (Cloudflare said: " + e.message + ")");
     return { bound: already, unbound: added };
@@ -2423,6 +2490,11 @@ async function verifyServing(base, want, installed, capable, failed = [], tries 
   }
   return last;
 }
+function withByteLags(verdict, byteLags, capable) {
+  if (!byteLags.length) return verdict;
+  if (!verdict) return { confirmed: false, lags: [...byteLags], capable };
+  return { ...verdict, confirmed: false, lags: [...byteLags, ...verdict.lags] };
+}
 var lagList = (v) => `<ul>${v.lags.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>`;
 var UNDETERMINED_BUILDS = "This release cannot report which version your copy's record store or its capability workers are running, so only your copy's address was checked; those parts are not confirmed either way.";
 function progressShell(title, slug) {
@@ -2492,6 +2564,13 @@ function instanceAiNotice(emit, mode, carried) {
   if (carried) return emit.ok("ai", "The organisation AI credential you gave was stored in your copy as a secret (it is not shown here). Your copy uses it to resume assistant runs that credential opened.");
   emit.ok("ai", mode === "update" ? "No organisation AI credential was given, so none was sent. One your copy already holds is kept unchanged; this installer never creates one." : "No organisation AI credential was given, so your copy has none: it will not resume paused assistant runs on its own. A member mints one on the copy; running the updater with it adds it. This installer never creates one.");
 }
+function oneCopyRefusal(emit, held) {
+  return emit.fail(
+    "Your Cloudflare account already holds a copy of CivicOS",
+    `${ONE_COPY}: this account already holds ${held.join(", ")}, and a second copy installed beside them would share or overwrite them. Nothing was created or changed, so there is nothing to clean up.`,
+    "To continue: install your group's copy into a Cloudflare account that holds no copy, or, if this account's copy is your group's, bring it up to the current release with the update option instead."
+  );
+}
 async function runInstall(emit, code, saved) {
   const slug = saved.slug;
   let token;
@@ -2522,7 +2601,7 @@ async function runInstall(emit, code, saved) {
       "Detail: " + e.message
     );
   }
-  emit.step("fresh", "Checking the name is free on your account");
+  emit.step("fresh", "Checking the name is free and your account holds no other copy");
   try {
     if (await scriptExists(token, acct.id, slug)) {
       emit.no("fresh");
@@ -2531,6 +2610,11 @@ async function runInstall(emit, code, saved) {
         "Nothing was changed. If you meant to update it to the current release, go back and choose the update option instead.",
         ""
       );
+    }
+    const held = await copyHeld(token, acct.id, { members: [...BINDING_OF.keys()] });
+    if (held.length) {
+      emit.no("fresh");
+      return oneCopyRefusal(emit, held);
     }
     emit.ok("fresh");
   } catch (e) {
@@ -2548,6 +2632,24 @@ async function runInstall(emit, code, saved) {
       "Nothing was created, so there is nothing to clean up. " + release.refused,
       "This is for the publisher of CivicOS releases to fix with a release that states them; try again after the next release."
     );
+  }
+  const further = (Array.isArray(release.man?.fleet) ? release.man.fleet : []).map((m) => m && m.member).filter((m) => typeof m === "string" && !BINDING_OF.has(m));
+  if (further.length) {
+    let held;
+    try {
+      held = await copyHeld(token, acct.id, { buckets: false, members: [...new Set(further)] });
+    } catch (e) {
+      emit.no("fresh");
+      return emit.fail(
+        "Could not check your account",
+        "The check for another copy's capability workers failed, so to be safe nothing was created.",
+        "Detail: " + e.message
+      );
+    }
+    if (held.length) {
+      emit.no("fresh");
+      return oneCopyRefusal(emit, held);
+    }
   }
   emit.step("plan", "Checking your account's Workers plan");
   let planAnswer;
@@ -2619,8 +2721,14 @@ async function runInstall(emit, code, saved) {
     }
     emit.ok("install", "Your copy is installed. One optional part \u2014 the part that lets it re-check documents on its own schedule \u2014 was refused by Cloudflare and was left out, so nothing else was held up. Running the updater on this copy later turns it on. (Cloudflare said: " + e.message + ")");
   }
+  const byteLags = [];
+  const readBackInto = async () => {
+    const lag = await readBack(token, acct.id, slug, release);
+    if (lag && !byteLags.includes(lag)) byteLags.push(lag);
+  };
+  await readBackInto();
   const fleet = await installFleet(emit, token, acct.id, slug, release);
-  await bindMembers(
+  const bound = await bindMembers(
     emit,
     token,
     acct.id,
@@ -2630,6 +2738,7 @@ async function runInstall(emit, code, saved) {
     fleet,
     { withR2: true, daemon: secrets.daemon, noSelf: selfRefused, profiles }
   );
+  if (bound.put) await readBackInto();
   instanceAiNotice(emit, "install", !!secrets.instanceAi);
   emit.step("addr", "Turning on your web address");
   let base;
@@ -2649,18 +2758,19 @@ async function runInstall(emit, code, saved) {
   const st = await verifyInstall(base, secrets.probe);
   const capable = reportsBuilds(release.source);
   const failed = fleet?.left || [];
-  const verdict = !st ? null : capable ? await verifyServing(base, release.version, fleet?.done || [], capable, failed) : ((lags) => ({ confirmed: lags.length === 0, lags, capable: false }))(failedLags(failed));
+  const served = !st ? null : capable ? await verifyServing(base, release.version, fleet?.done || [], capable, failed) : ((lags) => ({ confirmed: lags.length === 0, lags, capable: false }))(failedLags(failed));
+  const verdict = withByteLags(served, byteLags, capable);
   if (st && verdict.confirmed) emit.ok("verify", capable ? void 0 : "Your copy answers. " + UNDETERMINED_BUILDS);
-  else if (st) emit.no("verify", "Your copy answers, but not every part is running " + release.version + " yet");
+  else if (st) emit.no("verify", "Your copy answers, but not every part is confirmed running " + release.version + " yet");
   else emit.no("verify");
   emit.done(successPanel(base, secrets, !!st, verdict));
 }
 var NO_KEY = "No one else holds a key to it, the publisher of CivicOS releases included.";
 function successPanel(base, secrets, verified, verdict = null) {
-  const lagging = verified && verdict && !verdict.confirmed;
+  const lagging = !!(verdict && !verdict.confirmed);
   const head = verified && !lagging ? `<b>Your copy is running.</b> It lives in your
-Cloudflare account, under your control. ${NO_KEY}` + (verdict && !verdict.capable ? ` ${esc(UNDETERMINED_BUILDS)}` : "") : lagging ? `<b>Your copy is installed and answering, but not every part of it is confirmed running this release.</b>
-When it was last asked:${lagList(verdict)}Save the credentials below now either way. It lives in your Cloudflare
+Cloudflare account, under your control. ${NO_KEY}` + (verdict && !verdict.capable ? ` ${esc(UNDETERMINED_BUILDS)}` : "") : lagging ? `<b>Your copy is installed${verified ? " and answering" : ""}, but not every part of it is confirmed running this release.</b>
+${verified ? "When it was last asked:" : "Its new address has not woken up yet, and:"}${lagList(verdict)}Save the credentials below now either way. It lives in your Cloudflare
 account, under your control. ${NO_KEY}` : `<b>Your copy is installed. Its new address has not woken up yet.</b> Brand-new
 addresses can take a few minutes to start answering; everything else finished. Save the
 credentials below now, then open your address. It lives in your Cloudflare account, under
@@ -2675,9 +2785,9 @@ your control. ${NO_KEY}`;
 <p><b>Save the member and probe credentials in a password manager now.</b> This page is the
 only time they are shown. The one-time password is spent in the next step, where you choose
 a real password.</p>
-<p class="small">If you lose the password you choose next, you are not locked out: replacing
-the ADMIN_TOKEN value in your worker's Cloudflare settings starts the claim step over. Your
-Cloudflare sign-in is the way back in.</p>
+${/* R34 (DEC-109, K1038): before the hand-over to where the founder chooses a password, who really controls the copy, in
+   instance-setup's words; nothing asks for or records an acknowledgement of it. */
+  hostingControlBlock("notice")}
 <div class="actions"><button id="handover" data-url="${esc(base)}/">Go to my copy and finish setup</button></div>`;
 }
 var FIRST_GROUP_RELEASE = "0.71.0";
@@ -2797,8 +2907,15 @@ async function runUpdate(emit, code, saved) {
       "Detail: " + e.message
     );
   }
+  const byteLags = [];
+  const readBackInto = async () => {
+    const lag = await readBack(token, acct.id, slug, release);
+    if (lag && !byteLags.includes(lag)) byteLags.push(lag);
+  };
+  await readBackInto();
   const fleet = await installFleet(emit, token, acct.id, slug, release);
-  await bindMembers(emit, token, acct.id, slug, release, present, fleet, { withR2 });
+  const bound = await bindMembers(emit, token, acct.id, slug, release, present, fleet, { withR2 });
+  if (bound.put) await readBackInto();
   instanceAiNotice(emit, "update", !!instanceAi);
   emit.step("addr", "Finding your copy's address");
   let base = null;
@@ -2813,10 +2930,15 @@ async function runUpdate(emit, code, saved) {
   let verdict = null;
   if (base) {
     emit.step("verify", "Checking the new version answers");
-    verdict = await verifyServing(base, release.version, fleet?.done || [], capable, fleet?.left || []);
+    verdict = withByteLags(
+      await verifyServing(base, release.version, fleet?.done || [], capable, fleet?.left || []),
+      byteLags,
+      capable
+    );
     if (verdict.confirmed) emit.ok("verify", capable ? void 0 : "Your copy's address answers " + release.version + ". " + UNDETERMINED_BUILDS);
     else emit.no("verify", "Not every part of your copy is running " + release.version + " yet. That is normal for a few minutes after an update; the list below names each part.");
   }
+  if (!verdict) verdict = withByteLags(null, byteLags, capable);
   const confirmed = !!(verdict && verdict.confirmed);
   const lagging = !!(verdict && !verdict.confirmed);
   const told = groupNotice(groupUnrecorded(before, release.version, noop), slug, before, base);
@@ -2824,9 +2946,8 @@ async function runUpdate(emit, code, saved) {
 The upload succeeded, but it replaced that version with the same version, so this update moved nothing.
 If you expected something newer, the installer had nothing newer to give: it uses the newest release it can
 verify, and that is ${esc(release.version)}. Check that a newer release has actually been published before
-running this again.</p></div>` + (lagging ? `<div class="notice"><p style="margin:0">Not every part of your copy is running ${esc(release.version)}.
-When it was last asked:</p>${lagList(verdict)}</div>` : "") : (lagging ? `<div class="notice"><p style="margin:0"><b>Uploaded ${esc(release.version)}${before ? " over " + esc(before) : ""}; not yet confirmed running everywhere.</b>
-The upload finished, but when your copy was last asked, not every part of it was running the new version:</p>
+running this again.</p></div>` + (lagging ? `<div class="notice"><p style="margin:0">Not every part of your copy is confirmed running ${esc(release.version)}:</p>${lagList(verdict)}</div>` : "") : (lagging ? `<div class="notice"><p style="margin:0"><b>Uploaded ${esc(release.version)}${before ? " over " + esc(before) : ""}; not yet confirmed running everywhere.</b>
+The upload finished, but not every part of your copy is confirmed running the new version:</p>
 ${lagList(verdict)}<p>A part of a copy can take a few minutes to start running a new version after an update, so
 open your copy a little later and check again; if the same part is still named, run this update again. Your
 passwords, your credentials, and everything in the record are exactly as they were. Updates never touch them.</p></div>` : `<div class="okbox"><p style="margin:0"><b>Updated ${before ? "from " + esc(before) + " " : ""}to ${esc(release.version)}.</b>

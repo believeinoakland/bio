@@ -8,7 +8,7 @@ import { queueAnswer, QUEUE_MINT_CHECKS, QUEUE_CLASS_LABELS } from "../../../src
 import { deriveActs, decorate } from "../../../src/affordances.mjs";
 import { viewerPredicate } from "../../../src/membership/index.mjs";
 
-test("R6: limit clamped to 1–500 (default 200); items ordered OBLIGATION, FINDING, CONDITION then id, cut at the limit; the answer's fields", () => {
+test("R6: limit clamped to 1–500 (default 200); among equals (here every item, none homed) R6's order, OBLIGATION, FINDING, CONDITION then id, in R49's default and cut at the limit; the answer's fields", () => {
   const w = world({ governor: { governorHolding: () => [{ host: "h.example", cooloff_until: NOW + 5000, refusals: 1, granted: 0, refused_total: 1 }] },
                     progressions: { proposalsFeed: () => ({ instances: [], dispositions: [], proposals: [
                       { key: "p::s", progression_key: "p", progression_label: "P", stage_key: "s", stage_label: "S", required: "always",
@@ -19,8 +19,12 @@ test("R6: limit clamped to 1–500 (default 200); items ordered OBLIGATION, FIND
   assert.equal(f.ok, true);
   assert.deepEqual(f.items.map((i) => i.class), ["OBLIGATION", "OBLIGATION", "FINDING", "CONDITION"]);
   assert.deepEqual(f.items.slice(0, 2).map((i) => i.id), ["TASK-2026-0001-a", "TASK-2026-0002-b"]);
-  for (const k of ["member", "items", "limit", "item_count", "truncated", "classes", "classes_deferred", "ancestor_depth_bound", "mute", "disposed"])
+  for (const k of ["member", "items", "limit", "item_count", "truncated", "classes", "classes_deferred", "ancestor_depth_bound", "mute", "disposed",
+                   "class_labels", "sort"])
     assert.ok(k in f, k);
+  // every item is ungrouped, so R49's default (grouped by case, none last) leaves them all equal: R6 decides
+  assert.ok(f.items.every((i) => i.case.ancestors.length === 0));
+  assert.equal(f.sort, null);
   assert.deepEqual(f.classes, ["OBLIGATION", "FINDING", "CONDITION"]);
   assert.deepEqual(f.classes_deferred, {});
   assert.equal(f.ancestor_depth_bound, 6);
@@ -363,9 +367,17 @@ test("R40: a snoozed case's lapse is published in mute and each of its items is 
   assert.equal(byId(w.feed(null, "class:admin"))["TASK-2026-0001-a"].snoozed, undefined);
 });
 
-test("N301: the answer shows the FINDING class to members as Noticed; codes unchanged", () => {
-  const f = world().feed(null, "class:admin");
+test("R48 (N301; DEC-107): class_labels are exactly To do, Noticed and Signal; the codes are unchanged", () => {
+  const w = world();
+  w.bundle("INF-1"); w.task("TASK-2026-0001-a", "INF-1");
+  const f = w.feed(null, "class:admin");
+  assert.deepEqual(f.class_labels, { OBLIGATION: "To do", FINDING: "Noticed", CONDITION: "Signal" });
   assert.deepEqual(f.class_labels, QUEUE_CLASS_LABELS);
-  assert.equal(f.class_labels.FINDING, "Noticed");
+  assert.ok(Object.isFrozen(QUEUE_CLASS_LABELS));
+  // the codes: the classes, an item's class and the counts keep their names
   assert.deepEqual(f.classes, ["OBLIGATION", "FINDING", "CONDITION"]);
+  assert.equal(f.items[0].class, "OBLIGATION");
+  assert.deepEqual(Object.keys(f.counts).slice(0, 3), ["obligation", "finding", "condition"]);
+  // negative control: the labels are the members' words, never the codes
+  for (const [code, label] of Object.entries(f.class_labels)) assert.notEqual(label.toUpperCase(), code);
 });

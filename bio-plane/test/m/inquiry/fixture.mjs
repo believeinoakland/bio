@@ -14,7 +14,8 @@ import { extractionOf } from "../../../src/extraction/index.mjs";
 import { entitiesOf } from "../../../src/entities/index.mjs";
 import { connectionsOf } from "../../../src/connections/index.mjs";
 import { retrievalOf } from "../../../src/retrieval/index.mjs";
-import { inquiryOf } from "../../../src/inquiry/index.mjs";
+import { biasOf } from "../../../src/bias/index.mjs";
+import { inquiryOf, inquiryFindings } from "../../../src/inquiry/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -54,9 +55,10 @@ const STRENGTH_COLUMNS = ["inquiry_capture_strength TEXT", "inquiry_capture_stat
 
 /** `realRetrieval`: the real retrieval module over the same storage (its selections, its projection's decorations,
  *  its search), instead of the stand-in whose selections the test controls. `legacyColumns`: `bundles` as a store
- *  written before T18 holds it (R36's move). */
+ *  written before T18 holds it (R36's move). `bias`: the real bias module over the same storage, migrated, with this
+ *  module's findings registered with it as `plane` registers them (R53, `inquiryFindings`). */
 export function world({ caseMembers = new Set(), published = null, group = "test-group", realRetrieval = false,
-                        legacyColumns = false } = {}) {
+                        legacyColumns = false, bias: withBias = false } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -97,13 +99,16 @@ export function world({ caseMembers = new Set(), published = null, group = "test
     },
   };
   if (realRetrieval) retrieval.migrate();
+  const bias = withBias ? biasOf(host, { record, membership, promotion, entities: null }) : null;
+  if (bias) bias.migrate();
   const k = inquiryOf(host, { record, membership, promotion, content, connections, entities, retrieval, provenance: prov,
                               now: () => clock.now });
   k.migrate();
+  if (bias) bias.registerWorkProducts("finding", inquiryFindings(host, bias));
   const raisedCalls = [];
   let n = 0;
   const w = {
-    st, host, record, membership, promotion, prov, extraction, content, entities, connections, retrieval, k, clock, selections, raisedCalls,
+    st, host, record, membership, promotion, prov, bias, extraction, content, entities, connections, retrieval, k, clock, selections, raisedCalls,
     caseMembers, groupRef,
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a),

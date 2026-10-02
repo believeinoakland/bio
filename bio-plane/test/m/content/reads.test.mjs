@@ -40,8 +40,8 @@ test("R18: the plane's own store parameter is accepted", () => {
 test("R19: the answer carries the row, its label, says, the transcription axis, the attestations that bear on it, the document's capture axis and no connection", () => {
   const { w, a, mint } = setup();
   const id = mint({ kind: "pdf-page", page: 1 });
-  w.content.attestText({ captureSha: a.sha, viewer: V("bo"), member: V("cy"), extent: { kind: "page", page: 1 }, at: "2026-09-02T00:00:00Z" });
-  w.content.attestText({ captureSha: a.sha, viewer: V("bo"), member: V("di"), extent: { kind: "page", page: 2 }, at: "2026-09-03T00:00:00Z" });
+  w.content.attestText({ note: "compared with the page", captureSha: a.sha, viewer: V("bo"), member: V("cy"), extent: { kind: "page", page: 1 }, at: "2026-09-02T00:00:00Z" });
+  w.content.attestText({ note: "compared with the page", captureSha: a.sha, viewer: V("bo"), member: V("di"), extent: { kind: "page", page: 2 }, at: "2026-09-03T00:00:00Z" });
   const r = w.content.contentRead({ id, viewer: V("bo"), extras: ["id", "viewer"] });
   assert.equal(r.ok, true);
   for (const k of ["content_id", "capture_sha", "bundle_id", "extent_kind", "extent", "ref", "chain", "derivation_cap",
@@ -89,7 +89,7 @@ test("R21: the transcription axis: not applicable for bytes, undetermined for an
   assert.match(s[para].transcription.why, /cannot yet evaluate/);
   assert.deepEqual([s[page].transcription.ceiling, s[page].transcription.determinant], ["C", "derivation"]);
   /* a page attestation raises the page and not the whole document */
-  w.content.attestText({ captureSha: a.sha, viewer: V("bo"), member: V("cy"), extent: { kind: "page", page: 1 } });
+  w.content.attestText({ note: "compared with the page", captureSha: a.sha, viewer: V("bo"), member: V("cy"), extent: { kind: "page", page: 1 } });
   const s2 = w.content.standings([page, doc]);
   assert.equal(s2[page].transcription.determinant, "attestation");
   assert.equal(s2[doc].transcription.determinant, "derivation");
@@ -98,13 +98,13 @@ test("R21: the transcription axis: not applicable for bytes, undetermined for an
   assert.equal(w.content.standings([t.content_id])[t.content_id].transcription.ceiling, null);
   w.st.sql.exec(`INSERT INTO transcription_attestations (content_id,bundle_id,attestor,at) VALUES (?,?,?,?)`, t.content_id, DOC, V("ty"), "2026-09-01T00:00:00Z");
   assert.equal(w.content.standings([t.content_id])[t.content_id].transcription.ceiling, null, "the typist's own raises nothing");
-  w.content.transcriptionAttest({ contentId: t.content_id, attestor: V("zo"), viewer: V("zo") });
+  w.content.transcriptionAttest({ note: "compared with the page", contentId: t.content_id, attestor: V("zo"), viewer: V("zo") });
   assert.equal(w.content.standings([t.content_id])[t.content_id].transcription.determinant, "attestation");
   /* ... and a typing's attestations never raise the capture's text */
   assert.equal(w.content.standings([doc])[doc].transcription.determinant, "derivation");
   /* an attestation made against another chain does not raise a row */
   w.read(a.sha, { chain: LAYER, pageCount: 3 });
-  w.content.attestText({ captureSha: a.sha, viewer: V("bo"), member: V("xx"), extent: { kind: "document" } });
+  w.content.attestText({ note: "compared with the page", captureSha: a.sha, viewer: V("bo"), member: V("xx"), extent: { kind: "document" } });
   assert.equal(w.content.standings([doc])[doc].transcription.determinant, "derivation");
 });
 
@@ -222,7 +222,7 @@ test("R37: every act and read naming a document or row answers one the viewer ma
   same((x) => w.content.contentMint({ bundleId: x, mintedBy: V("bo"), viewer: x === DOC ? "nobody" : V("bo") }), DOC, "INFO-2026-0404-x");
   same((x) => w.content.transcribe({ bundleId: x, extent: { kind: "document" }, text: "x", transcriber: V("bo"), viewer: x === DOC ? "nobody" : V("bo") }), DOC, "INFO-2026-0404-x");
   same((x) => w.content.transcriptionRead({ id: x, viewer: x === t.content_id ? "nobody" : V("bo") }), t.content_id, "e".repeat(64));
-  same((x) => w.content.transcriptionAttest({ contentId: x, attestor: V("zo"), viewer: x === t.content_id ? "nobody" : V("zo") }), t.content_id, "e".repeat(64));
+  same((x) => w.content.transcriptionAttest({ note: "compared with the page", contentId: x, attestor: V("zo"), viewer: x === t.content_id ? "nobody" : V("zo") }), t.content_id, "e".repeat(64));
   same((x) => w.content.passageNotice({ contentId: x, viewer: x === id ? "nobody" : V("bo") }), id, "d".repeat(64));
   assert.equal(w.content.sees(DOC, V("bo")), true);
   assert.equal(w.content.sees(DOC, null), false, "no stamp sees nothing");

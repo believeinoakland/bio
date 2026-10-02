@@ -127,7 +127,8 @@ test("R4: every act list is a list of distinct op names, each with a spec; the c
   }
   const eqSet = (a, b, what) => assert.deepEqual([...new Set(a)].sort(), [...new Set(b)].sort(), what);
   eqSet(O.QUERY_AUTHOR_ACTIONS, [...O.CONFORMANCE_ACTIONS, ...O.CONSEQUENCES_ACTIONS, ...O.FILINGS_ACTIONS, ...O.ESCALATION_ACTIONS,
-    ...O.ACTIONS_ACTIONS, ...O.ACTION_CLOCKS_ACTIONS, ...O.ACTION_PLANS_ACTIONS, ...O.FILING_TEMPLATES_ACTIONS], "QUERY_AUTHOR_ACTIONS");
+    ...O.ACTIONS_ACTIONS, ...O.ACTION_CLOCKS_ACTIONS, ...O.ACTION_PLANS_ACTIONS, ...O.FILING_TEMPLATES_ACTIONS, ...O.MONITORING_ACTIONS],
+    "QUERY_AUTHOR_ACTIONS");
   eqSet(O.ACTION_LAYER_ACTIONS, [...O.STANDARDS_ACTIONS, ...O.QUERY_AUTHOR_ACTIONS, ...O.PLAN_PROPOSAL_ACTIONS,
     ...O.TEMPLATE_PROPOSAL_ACTIONS, ...O.LOCAL_FACTS_ACTIONS], "ACTION_LAYER_ACTIONS");
   eqSet(O.ACTION_LAYER_READS, [...O.STANDARDS_READS, ...O.CONFORMANCE_READS, ...O.CONSEQUENCES_READS, ...O.FILINGS_READS,
@@ -333,4 +334,100 @@ test("R8, R6: the sixteen ops filing-templates and local-facts serve (filing-tem
     assert.ok(Object.hasOwn(NEEDS, op), `${op} has no NEEDS row`);
     assert.ok(listsHolding(op).length > 0, `${op} is in no act list`);
   }
+});
+
+/* R9: T22's ops (K1019, K1023), as R9 lists them, each with the spec, the stamps (through the lists that name them),
+   both session sets and the NEEDS row. A spec is compared whole, so a class, a `machineClasses` or `mutating` that
+   drifts fails here. */
+const MEMBER_PROBE = ["admin", "member", "probe"];
+const R9 = {
+  declinetoescalate:   { spec: { classes: MEMBER_PROBE, mutating: true },  needs: "contribute", like: "escalationopen",
+                         lists: ["ACTION_LAYER_ACTIONS", "ESCALATION_ACTIONS", "QUERY_AUTHOR_ACTIONS"] },
+  escalationstatus:    { spec: { classes: MEMBER_PROBE, mutating: false }, needs: undefined, like: "escalationsdue",
+                         lists: ["ACTION_LAYER_READS", "ESCALATION_READS"] },
+  heldsetaside:        { spec: { classes: MEMBER_PROBE, mutating: true },  needs: "contribute",
+                         lists: ["CAPTURE_MEMBER_ACTIONS", "CAPTURE_VIEWER_ACTIONS"] },
+  heldrestore:         { spec: { classes: MEMBER_PROBE, mutating: true },  needs: "contribute",
+                         lists: ["CAPTURE_MEMBER_ACTIONS", "CAPTURE_VIEWER_ACTIONS"] },
+  heldcaptures:        { spec: { classes: MEMBER_PROBE, mutating: false }, needs: null, lists: ["CAPTURE_READS"] },
+  gradenote:           { spec: { classes: MEMBER_PROBE, mutating: false }, needs: null, lists: ["CAPTURE_READS"] },
+  doorbelltally:       { spec: { classes: ["admin", "member"], machineClasses: [], mutating: false }, needs: null,
+                         like: "knocksof", lists: ["CAPTURE_READS"] },
+  addressfrequencyset: { spec: { classes: MEMBER_PROBE, mutating: true },  needs: "contribute",
+                         lists: ["ACTION_LAYER_ACTIONS", "MONITORING_ACTIONS", "QUERY_AUTHOR_ACTIONS"] },
+};
+const plainSpec = (spec) => ({ ...spec, classes: [...spec.classes],
+                               ...(Array.isArray(spec.machineClasses) ? { machineClasses: [...spec.machineClasses] } : {}) });
+/* The stamps each list confers at the door (control-plane reads them): `by` for CAPTURE_MEMBER_ACTIONS, `author` for
+   QUERY_AUTHOR_ACTIONS, `viewer` for the action layer's lists and capture's sight lists. */
+const STAMPS = { CAPTURE_MEMBER_ACTIONS: ["by"], CAPTURE_VIEWER_ACTIONS: ["viewer"], CAPTURE_READS: ["viewer"],
+                 QUERY_AUTHOR_ACTIONS: ["author"], ACTION_LAYER_ACTIONS: ["viewer"], ACTION_LAYER_READS: ["viewer"] };
+const stampsOf = (op) => [...new Set(listsHolding(op).flatMap((l) => STAMPS[l] ?? []))].sort();
+const R9_STAMPS = { declinetoescalate: ["author", "viewer"], escalationstatus: ["viewer"], heldsetaside: ["by", "viewer"],
+                    heldrestore: ["by", "viewer"], heldcaptures: ["viewer"], gradenote: ["viewer"], doorbelltally: ["viewer"],
+                    addressfrequencyset: ["author", "viewer"] };
+
+test("R9, R2: OPS holds a spec for each op T22 adds — declinetoescalate as escalationopen and escalationstatus as escalationsdue, capture's heldsetaside and heldrestore mutating and heldcaptures and gradenote reads (admin, member, probe), doorbelltally a member session's read (admin, member, machineClasses []) as knocksof, monitoring's addressfrequencyset mutating — none naming ai", () => {
+  assert.equal(Object.keys(R9).length, 8);
+  for (const [op, want] of Object.entries(R9)) {
+    assert.ok(Object.hasOwn(OPS, op), `${op} has no spec`);
+    assert.deepEqual(plainSpec(OPS[op]), want.spec, op);
+    if (want.like) assert.deepEqual(plainSpec(OPS[op]), plainSpec(OPS[want.like]), `${op} as ${want.like}`);
+    assert.ok(!JSON.stringify(OPS[op]).includes('"ai"'), op);
+  }
+  /* doorbelltally refuses every bearer: no machine class is admitted, so only a session reaches it. */
+  assert.deepEqual([...OPS.doorbelltally.machineClasses], []);
+  /* Negative control: the comparison sees a drifted spec. */
+  assert.notDeepEqual(plainSpec({ ...OPS.doorbelltally, machineClasses: ["admin"] }), R9.doorbelltally.spec);
+  assert.notDeepEqual(plainSpec({ ...OPS.heldsetaside, mutating: false }), R9.heldsetaside.spec);
+});
+
+test("R9, R3: each of T22's ops is in SESSION_OPS.member and SESSION_OPS.admin (the act gate answers session); NEEDS is contribute for each mutating one, a present null for capture's three reads and no row for escalationstatus, as escalationsdue; none is unattended", () => {
+  for (const [op, want] of Object.entries(R9)) {
+    assert.ok(SESSION_OPS.member.has(op) && SESSION_OPS.admin.has(op), `${op} is not in both session sets`);
+    assert.equal(O.ACT_GATE.mode(op), "session", op);
+    if (want.needs === undefined) assert.ok(!Object.hasOwn(NEEDS, op), `${op} has a NEEDS row`);
+    else {
+      assert.ok(Object.hasOwn(NEEDS, op), `${op} has no NEEDS row`);
+      assert.equal(NEEDS[op], want.needs, op);
+    }
+    assert.equal(O.ACT_GATE.needs(op), want.needs ?? null, op);
+    assert.equal(NEEDS[op] === "contribute", OPS[op].mutating, op);
+    assert.ok(!Object.hasOwn(UNATTENDED_BY_DECISION, op), op);
+  }
+  assert.equal(Object.hasOwn(NEEDS, "escalationsdue"), false);
+});
+
+test("R9, R4: the act lists name each of T22's ops, so its stamps are named — author and viewer for declinetoescalate (escalation's acts, query-stamped) and addressfrequencyset, viewer for escalationstatus, by and viewer for heldsetaside and heldrestore, viewer for heldcaptures, gradenote and doorbelltally", () => {
+  for (const [op, want] of Object.entries(R9)) {
+    assert.deepEqual(listsHolding(op), [...want.lists].sort(), op);
+    assert.deepEqual(stampsOf(op), R9_STAMPS[op], op);
+  }
+  /* declinetoescalate and escalationstatus take the very places of escalationopen and escalationsdue. */
+  assert.deepEqual(listsHolding("declinetoescalate"), listsHolding("escalationopen"));
+  assert.deepEqual(listsHolding("escalationstatus"), listsHolding("escalationsdue"));
+  assert.deepEqual([...O.CAPTURE_VIEWER_ACTIONS], ["heldsetaside", "heldrestore"]);
+  assert.deepEqual([...O.CAPTURE_READS], ["heldcaptures", "gradenote", "doorbelltally"]);
+  assert.deepEqual([...O.MONITORING_ACTIONS], ["addressfrequencyset"]);
+  /* Negative control: an op in no list is stamped nothing. */
+  assert.deepEqual(stampsOf("nosuchop"), []);
+});
+
+/* R6's store-internal routes: served to no caller, so in no table. */
+const STORE_INTERNAL = ["monitorlook", "doorbellrefused"];
+const tablesNaming = (op, t = { OPS, NEEDS, UNATTENDED_BY_DECISION, member: SESSION_OPS.member, admin: SESSION_OPS.admin }) => [
+  ...Object.entries({ OPS: t.OPS, NEEDS: t.NEEDS, UNATTENDED_BY_DECISION: t.UNATTENDED_BY_DECISION })
+    .filter(([, v]) => Object.hasOwn(v, op)).map(([k]) => k),
+  ...(t.member.has(op) ? ["SESSION_OPS.member"] : []), ...(t.admin.has(op) ? ["SESSION_OPS.admin"] : []),
+  ...LISTS.filter(([, list]) => list.includes(op)).map(([name]) => name),
+  ...(PLAN_RUN_SCOPE.reads.includes(op) || PLAN_RUN_SCOPE.writes.includes(op) ? ["PLAN_RUN_SCOPE"] : [])];
+
+test("R6, R9: the store-internal routes monitorlook and doorbellrefused have no spec and are in no table, and nothing is declared for T23's escalationreasondraft (negative control: a table that adds one is seen)", () => {
+  for (const op of [...STORE_INTERNAL, "escalationreasondraft"]) assert.deepEqual(tablesNaming(op), [], op);
+  /* Negative control: doorbellrefused added to OPS (as a careless hand would, beside doorbelltally) is found. */
+  const added = { ...OPS, doorbellrefused: { classes: ["admin", "member"], machineClasses: [], mutating: true } };
+  assert.deepEqual(tablesNaming("doorbellrefused", { OPS: added, NEEDS, UNATTENDED_BY_DECISION,
+                                                     member: SESSION_OPS.member, admin: SESSION_OPS.admin }), ["OPS"]);
+  /* ...and every T22 op is named by the tables, the totality R6 asks over the new specs. */
+  for (const op of Object.keys(R9)) assert.ok(tablesNaming(op).includes("OPS") && tablesNaming(op).length >= 4, op);
 });

@@ -72,7 +72,7 @@ CREATE INDEX IF NOT EXISTS action_basis_bundle ON action_basis(bundle_id);
 -- A no_response entry is testimony by construction — there are no bytes to
 -- hash when nothing arrived — and takes the account/author arm.
 --
--- author is SERVER-STAMPED at index.mjs from the authenticated session, like
+-- author is SERVER-STAMPED by the control plane from the authenticated session, like
 -- every other authorship in this plane: who put a testimonial account on the
 -- record is part of the record, and a caller naming it would be a caller
 -- signing as somebody else. recorded_at is when the entry was written; at is

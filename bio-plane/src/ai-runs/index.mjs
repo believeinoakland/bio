@@ -447,8 +447,8 @@ export class AiRuns {
        without saying what stopped it. */
     const badBound = checkBound(bound);
     if (badBound) return { run, found: true, terminated: false, ...badBound };
-    /* C-22.4 — and it is checked against the LIVE vocabulary in queuestate.mjs,
-       never a copy, so a kind that file removes cannot keep being emitted here. */
+    /* C-22.4 — and it is checked against the LIVE vocabulary, observation-log's `CONDITION_KINDS`
+       (`src/observation-log/vocabulary.mjs`), never a copy, so a kind that file removes cannot keep being emitted here. */
     const badCondition = checkCondition(condition, CONDITION_KINDS);
     if (badCondition) return { run, found: true, terminated: false, ...badCondition };
 
@@ -508,8 +508,8 @@ export class AiRuns {
    * Bob, 2026-08-09: *"AN INVESTIGATION CAN BE STARTED BY ANY MEMBER OF A
    * PROJECT… the gate is PROJECT MEMBERSHIP, not a capability tier."* IS-6's
    * provisional gated the three run verbs on `contribute` alone. That token
-   * stays, as the FLOOR beneath this — it is still checked, in `index.mjs`'s
-   * `NEEDS`, and it still refuses in its own words.
+   * stays, as the FLOOR beneath this — it is still checked, in `op-declarations`'
+   * `NEEDS` (`src/op-declarations/index.mjs`), and it still refuses in its own words.
    *
    * THE DECISION IS NOT HERE. It is in `run-rules projectGate`, pure and shared
    * by all three verbs. What lives here is the two DATABASE questions the pure
@@ -604,8 +604,8 @@ export class AiRuns {
    *  from the record. Null for an id no bundle holds AND for one the caller cannot see, through ONE return, so
    *  the decision downstream cannot tell absent from hidden (§7.9; `#noSuchProject`'s discipline). Sight is
    *  `#inSight`, the one predicate, and it FAILS CLOSED on an absent viewer — the run verbs' posture
-   *  (`RUN_VERB_ACTIONS` in `index.mjs`: "fails closed on an absent stamp"). The first draft did not ask a
-   *  viewer that was never sent, on `#rosterInSight`'s precedent; REC-145's `run-stamp-dropped` control
+   *  (`RUN_VERB_ACTIONS`, declared in `op-declarations` and stamped by `control-plane`: "fails closed on an
+   *  absent stamp"). The first draft did not ask a viewer that was never sent, on `#rosterInSight`'s precedent; REC-145's `run-stamp-dropped` control
    *  showed that with the control plane's stamp removed the check then SAW every project — sight failing
    *  open. No caller reaches the open without the stamp (measured: no suite drives the store directly).
    *  The type is normalised (`problem`/`focus` read `inquiry`). */
@@ -699,7 +699,7 @@ export class AiRuns {
               /* R46 (K660): the plan a run in mode `plan` works on, stored verbatim; refused in any other mode. */
               plan = null,
               /* PL-18 / DEC-63: WHICH MEMBER IS ASKING, stamped server-side by
-                 `index.mjs` and empty for a machine credential. Never a
+                 `control-plane` and empty for a machine credential. Never a
                  caller's word — a principal a caller can name is not one, which
                  is the rule the two `principal*` fields above already follow. */
               actor = null,
@@ -1057,7 +1057,7 @@ export class AiRuns {
    *  sub-session must not resurrect a run whose log is already closed. */
   tick({ run, state = null, consume = null, log = null, leaseMs = null, at = null,
               actor = null, viewer = null,
-              /* REC-152: the caller's PRINCIPAL, stamped server-side by `index.mjs` in the form the open
+              /* REC-152: the caller's PRINCIPAL, stamped server-side by `control-plane` in the form the open
                  stamps `principal_plane` in — never a caller's word. */
               caller = null } = {}) {
     const nowMs = at ? Date.parse(at) : Date.now();
@@ -1524,7 +1524,7 @@ export class AiRuns {
    * record identity (`tokenId`) and never by value. `agent-worker` retains nothing (fleet law, I8).
    * ================================================================== */
 
-  /** The namespace this Durable Object IS, asked of the runtime rather than remembered: `index.mjs`'s
+  /** The namespace this Durable Object IS, asked of the runtime rather than remembered: `admission`'s
    *  `scopeFor` routes every call to `idFromName("bio")` or `idFromName("scratch")`, and a DO's id equals the one
    *  it was named by. Null for any other object (a suite's private instance) — the dispatch then says it could
    *  not name the namespace, rather than guessing one: a default here would let a resumed run touch the real
@@ -1545,8 +1545,8 @@ export class AiRuns {
 
   /** WHO MAY RESUME, resolved once per tick: `{ ready: true, stamp, tokenId, token, store, account }` or
    *  `{ ready: false, withheld }`. `withheld` is a stated reason, never a secret. The credential is resolved the
-   *  way the control plane resolves one (`index.mjs`, `aicredentiallook` against the `bio` object, which alone
-   *  holds `ai_credentials`), so a key revoked by a member stops resuming anything the moment the row says so. */
+   *  way the control plane resolves one (`admission`'s `aiCredentialPresented`: `aicredentiallook` against the
+   *  `bio` object, which alone holds `ai_credentials`), so a key revoked by a member stops resuming anything the moment the row says so. */
   async #aiRunResumer() {
     const env = this.env || {};
     if (!env.AGENT_WORKER || typeof env.AGENT_WORKER.fetch !== "function")
@@ -1662,7 +1662,7 @@ export class AiRuns {
    *  GATED. The run names an inquiry or a project bundle, and a run over a
    *  project the viewer may not see would disclose that the project exists —
    *  REC-25/REC-30's leak exactly. The gate is `#bundleGate` on `context_id`,
-   *  through query.mjs's one compilation point (D-15). */
+   *  through membership's `viewerPredicate`, the one compilation point (D-15). */
   /*  PL-12 / D-84 — AND THIS IS WHERE THE RUN STOPS CARRYING AN ABSENCE.
    *
    *  §3, RULED: *"the run carries the bias manifest in force when it ran … an
@@ -2055,7 +2055,7 @@ export class AiRuns {
                       hand against now), and `moved_basis` says which of the two a `moved` is. */
     /* READ THROUGH `safeJson`, and an unreadable record is kept APART from an absent one: a lens recorded at the
        open that cannot be read back is not `not recorded`, and saying so would be the swallowed-read class
-       (`provenance-marker.test.mjs`). It reads `unreadable`, with `hand` and `moved` undetermined. */
+       (`provenance-marker.test.mjs`, deleted in T20). It reads `unreadable`, with `hand` and `moved` undetermined. */
     const atOpenHeld = row.lens_at_open != null && String(row.lens_at_open).trim() !== "";
     const atOpenParsed = atOpenHeld ? safeJson(String(row.lens_at_open)) : null;
     const atOpen = atOpenParsed && typeof atOpenParsed === "object" && !Array.isArray(atOpenParsed) ? atOpenParsed : null;
@@ -2454,7 +2454,7 @@ export class AiRuns {
   /* ---- R25, R26: THE SURFACING STEP, registered with promotion (K31) --------------------------------------------- */
 
   /** Whether this promotion is an assistant's creation of a question: a creation of an inquiry carrying the control
-   *  plane's `assistantPrincipal` stamp, which `index.mjs` sets for an `ai` credential only, deleting any caller's copy
+   *  plane's `assistantPrincipal` stamp, which `control-plane` sets for an `ai` credential only, deleting any caller's copy
    *  first. A member's creation, and every store-internal one, carries no stamp and is not asked. */
   static #surfacing(c) {
     const pkg = (c && c.pkg) || {};

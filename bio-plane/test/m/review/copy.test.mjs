@@ -182,7 +182,7 @@ test("R15: the acknowledgement list is case-authoring's list at this draft's ide
                                           exceptAuthor: null, writer: { by: "ed" }, draftId: d.draftId });
   const s = c.statement_acknowledgements;
   assert.deepEqual(Object.keys(s).sort(), ["acknowledgements", "acknowledgements_by_statement_writer_not_listed", "act",
-    "statement_sha", "truncated", "withheld", "withheld_stated"].sort());
+    "act_requires", "statement_sha", "truncated", "withheld", "withheld_stated"].sort());
   assert.deepEqual(s.acknowledgements.map((a) => a.by), ["ann", "RVG-1"], "the writer's own row is never listed");
   assert.deepEqual([s.withheld, s.acknowledgements_by_statement_writer_not_listed, s.withheld_stated, s.act],
     [1, 1, "withheld 1 by ed", `op=statementack&draft=${d.draftId}`]);
@@ -202,6 +202,78 @@ test("R15: the acknowledgement list is case-authoring's list at this draft's ide
   const n = draft(w);
   w.r.copy({ draft: n.draftId, viewer: V("ann") });
   assert.deepEqual([w.calls.acks.at(-1).caseId, w.calls.acks.at(-1).edition, w.calls.acks.at(-1).draftId], [null, 1, n.draftId]);
+});
+
+/* R28's whole claim over one copy: the link is `op=statementack&draft=<id>` and nothing else (no reader, no words),
+   and `act_requires` beside it is exactly ["reason"]. Answers the first breach, or null. */
+function r28Breach(c, draftId) {
+  const s = c.statement_acknowledgements;
+  if (typeof s.act !== "string") return "no link";
+  const q = new URLSearchParams(s.act);
+  if (JSON.stringify([...q.keys()]) !== JSON.stringify(["op", "draft"])) return `the link carries ${[...q.keys()]}`;
+  if (q.get("op") !== "statementack" || q.get("draft") !== draftId) return "the link names another act or draft";
+  if (!("act_requires" in s)) return "no act_requires";
+  if (JSON.stringify(s.act_requires) !== JSON.stringify(["reason"])) return `act_requires ${JSON.stringify(s.act_requires)}`;
+  return null;
+}
+
+test("R28: the acknowledgement act stays its link, naming nothing of the reader's, with act_requires [reason] beside it, on both doors", () => {
+  const w = standard();
+  w.publishedCase("CASE-2026-0001", P, 1);
+  const d = draft(w, { caseId: "CASE-2026-0001", statement: "the statement" }, "ed");
+  grant(w, d, 1);
+  w.ca.acks = [{ project: P, statement: "the statement", kind: "participant", by: "ann", at: "2026-09-28T01:00:01.000Z",
+                 reason: "I checked every excluded record" }];
+  const copies = [["member ann", w.r.copy({ draft: d.draftId, viewer: V("ann") })],
+                  ["member ivy", w.r.copy({ draft: d.draftId, viewer: V("ivy") })],
+                  ["recipient", w.r.copy({ secretSha: SECRET(1), bySecret: true })],
+                  ["recipient naming the draft", w.r.copy({ draft: d.draftId, secretSha: SECRET(1), bySecret: true })]];
+  for (const [who, c] of copies) {
+    assert.equal(c.ok, true, who);
+    assert.equal(r28Breach(c, d.draftId), null, who);
+    assert.equal(c.statement_acknowledgements.act, `op=statementack&draft=${d.draftId}`, `${who}: act unchanged`);
+    assert.deepEqual(c.statement_acknowledgements.act_requires, ["reason"], who);
+  }
+  assert.equal(new Set(copies.map(([, c]) => JSON.stringify([c.statement_acknowledgements.act,
+    c.statement_acknowledgements.act_requires]))).size, 1, "both doors answer it alike");
+  /* each copy is its own: a caller mutating one answer's array does not reach the next */
+  copies[0][1].statement_acknowledgements.act_requires.push("x");
+  assert.deepEqual(w.r.copy({ draft: d.draftId, viewer: V("ann") }).statement_acknowledgements.act_requires, ["reason"]);
+  /* negative controls: a copy without the key, with a reason pre-filled or the reader in the link, or with another
+     requirement, is seen */
+  const base = copies[0][1];
+  const bent = (f) => { const c = structuredClone(base); f(c.statement_acknowledgements); return c; };
+  for (const [what, c] of [
+    ["no key", bent((s) => { delete s.act_requires; })],
+    ["a reason pre-filled", bent((s) => { s.act += "&reason=I%20agree"; })],
+    ["the reader in the link", bent((s) => { s.act += "&viewer=member%3Aann"; })],
+    ["another draft", bent((s) => { s.act = "op=statementack&draft=DRAFT-2026-0000"; })],
+    ["another act", bent((s) => { s.act = `op=reviewcomment&draft=${d.draftId}`; })],
+    ["empty requires", bent((s) => { s.act_requires = []; })],
+    ["a requirement more", bent((s) => { s.act_requires = ["reason", "viewer"]; })]])
+    assert.notEqual(r28Breach(c, d.draftId), null, what);
+});
+
+test("R15, R28: each acknowledgement row carries its reason as case-authoring stored it; a row from before DEC-88 carries null, not filled", () => {
+  const w = standard();
+  const d = draft(w, { statement: "the statement" }, "ed");
+  w.ca.acks = [{ project: P, statement: "the statement", kind: "participant", by: "ann", at: "2026-09-28T01:00:01.000Z",
+                 reason: "  I read the excluded records  " },
+               { project: P, statement: "the statement", kind: "participant", by: "bea", at: "2026-09-28T01:00:02.000Z" },
+               { project: P, statement: "the statement", kind: "recipient", by: "RVG-1", recipient: "R",
+                 at: "2026-09-28T01:00:03.000Z", reason: "seen from outside" }];
+  const answered = w.ca.acks.map((r) => ({ kind: r.kind, by: r.by, recipient: r.recipient ?? null, at: r.at,
+                                           reason: r.reason ?? null }));
+  for (const c of [w.r.copy({ draft: d.draftId, viewer: V("ann") }),
+                   (grant(w, d, 1), w.r.copy({ secretSha: SECRET(1), bySecret: true }))]) {
+    const rows = c.statement_acknowledgements.acknowledgements;
+    assert.deepEqual(rows, answered, "the rows as case-authoring answers them, byte for byte");
+    assert.equal(rows[0].reason, "  I read the excluded records  ", "the words as stored, not trimmed or rewritten");
+    assert.equal(rows[1].reason, null, "a row recorded before DEC-88: null, stated");
+    assert.ok("reason" in rows[1]);
+    /* negative control: a filled-in reason would be seen */
+    assert.notDeepEqual(rows.map((r) => (r.reason === null ? "" : r.reason)), answered.map((r) => r.reason));
+  }
 });
 
 test("R16: every observation the edition would reach, each with whether its author chose a level for this case edition", () => {

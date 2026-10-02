@@ -108,7 +108,7 @@ test("R22 the log is append-only: no service updates or deletes a row; a whole-s
   w.obs.latest("document"); w.obs.byAuthority("acquire", "INFO-2026-0001"); w.obs.verification("document", "address", "x");
   w.obs.observe(entry({ state: "NEVER_LOOKED" }));
   const l = w.obs.lead({ words: "w", author: "alice" });
-  w.obs.leadLook({ lead: l.lead_id, state: "LOOKED_ABSENT", looker: "alice", viewer: "member:alice" });
+  w.obs.leadLook({ detail: "searched the clerk's archive", lead: l.lead_id, state: "LOOKED_ABSENT", looker: "alice", viewer: "member:alice" });
   assert.equal(JSON.stringify(w.log().slice(0, 2)), before);
   w.record.purge({ bundleId: "INFO-2026-0001" });
   assert.equal(w.count("observation_log"), 3, "a per-bundle purge leaves the log");
@@ -125,7 +125,7 @@ test("R23 nothing is written into a bundle (C-22.6); observation_log and leads c
   assert.ok(cols("lead_shares").includes("bundle_id"));
   w.project("PROJ-A"); w.participant("PROJ-A", "alice");
   const l = w.obs.lead({ words: "w", author: "alice" });
-  assert.equal(w.obs.leadShare({ lead: l.lead_id, project: "PROJ-A", sharer: "alice", viewer: "member:alice" }).ok, true);
+  assert.equal(w.obs.leadShare({ reason: "the project is following this up", lead: l.lead_id, project: "PROJ-A", sharer: "alice", viewer: "member:alice" }).ok, true);
   w.obs.observe(entry());
   const one = w.record.purge({ bundleId: "PROJ-A" });
   assert.deepEqual([one.removed.lead_shares, one.removed.observation_log, one.removed.leads], [1, 0, 0],

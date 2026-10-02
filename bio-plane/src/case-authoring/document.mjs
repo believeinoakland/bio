@@ -15,7 +15,8 @@
  * `bias_manifest` beside `bias_manifest_bundles`. */
 
 import { createSha256, EARNED_CAPTURE_CEILING } from "../record-grammar/index.mjs";
-import { fmSafe } from "../case-grammar/index.mjs";
+import { fmSafe, whatChangedBlockLines, whatChangedSectionLines, lensBlockLines,
+         lensSectionLines } from "../case-grammar/index.mjs";
 import { CASE_DOCUMENT_FORMAT, attributionFrontmatterLines, attributionBodyLines, captureBlockLines,
          sourceBlockLines } from "../publication/index.mjs";
 import { caseConclusionRowLines } from "../ratification/index.mjs";
@@ -355,7 +356,8 @@ export function caseDocumentText({ caseId, edition, project, scope, bias, bar, r
                                    searched, conclusions = [], frozen, manifest = null,
                                    acks = { statementSha: null, truncated: false, rows: [] },
                                    citations = [], attributions = [], tensions = [],
-                                   tensionsUnread = [], captures = [], sources = [] }) {
+                                   tensionsUnread = [], captures = [], sources = [], whatChanged = null,
+                                   lens: lensRead = null }) {
   const roleOf = new Map((roles || []).map((r) => [r.target, r.role]));
   const lens = manifest && manifest.in_force === true ? manifest
     : { in_force: manifest && manifest.in_force === null ? null : false,
@@ -402,6 +404,13 @@ export function caseDocumentText({ caseId, edition, project, scope, bias, bar, r
       `    revision: ${x.revision}`,
       `    scope: ${x.scope}`,
       `    pinned_state: ${x.pinned_state ?? "null"}`]),
+    /* R40 (DEC-103): THE LENS, PRINTED WHOLE, in case-grammar R9's blocks: each statement in force and each citation
+       that is public material, the rest only counted. Always present, empty with no manifest in force. */
+    ...lensBlockLines(lensRead && lensRead.in_force === true ? lensRead.statements : []),
+    /* R38 (DEC-101): an edition above 1 says what changed, in case-grammar R8's block; a first edition carries none. */
+    ...(whatChanged ? whatChangedBlockLines({ statement: whatChanged.text, began_as: whatChanged.began_as,
+                                              draft: whatChanged.draft ?? null,
+                                              adopted_as_drafted: whatChanged.adopted_as_drafted ?? null }) : []),
     /* R16 (REC-219 / D-579(a) / §3 rule 18, C-41.15): THE CASE'S CITATION EDGES, EACH WITH THE VERSION IT RESTS ON.
        `capture` is a sha exactly where `pinned` or `only_capture` says one. */
     "case_citations:",
@@ -515,6 +524,8 @@ export function caseDocumentText({ caseId, edition, project, scope, bias, bar, r
   const body = [
     `# Case ${caseId} — edition ${edition}`,
     "",
+    /* R38 (DEC-101): what changed in this edition, and why, at the top of the edition, in case-grammar R8's section. */
+    ...(whatChanged ? whatChangedSectionLines(whatChanged.text) : []),
     "## Scope",
     "",
     scope,
@@ -681,10 +692,12 @@ export function caseDocumentText({ caseId, edition, project, scope, bias, bar, r
            + (x.capture ? ` ${x.capture}` : ""))]
       : ["This case's project cited nothing when it was published."]),
     "",
-    "## Bias Acknowledgement",
-    "",
-    bias,
-    "",
+    /* R40 (DEC-103): case-grammar R9's section, which prints the bias acknowledgement first and then the lens; it
+       stands where the acknowledgement's own section stood, so the acknowledgement is printed once. */
+    ...lensSectionLines({ acknowledgement: bias,
+                          statements: lensRead && lensRead.in_force === true ? lensRead.statements : [],
+                          inForce: lensRead ? lensRead.in_force : false,
+                          stated: lensRead ? lensRead.stated : null }),
     "## Standard Of Evidence",
     "",
     /* THE ABSENT BAR IS PRINTED AS ABSENT, IN A SENTENCE (R26): an absent bar is not a bar of zero. */

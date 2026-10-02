@@ -331,7 +331,8 @@ export const CONNECTIONS_TABLES = Object.freeze([
   { name: "file_membership_pending", keys: ["agenda_bundle"] },
 ]);
 
-/** The names of the tables above, for the legacy store's purge list and census. */
+/** The names of the tables above, read by `connectionsOwns` (`./index.mjs`); the legacy store's purge list and census
+ *  read them until T19. */
 export const CONNECTIONS_TABLE_NAMES = Object.freeze(CONNECTIONS_TABLES.map((t) => (typeof t === "string" ? t : t.name)));
 
 /* The columns earlier shapes lacked, added in place (nullable, never back-filled: each one's NULL is a true state of

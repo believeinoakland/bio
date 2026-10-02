@@ -116,3 +116,32 @@ test("R3, R8: the conditions report and never mutate: two reads answer the same 
   assert.deepEqual(b, a); assert.equal(a.filter((x) => x.startsWith("CONDITION::")).length, 3);
   assert.ok(!w.statements.slice(before).some((q) => /^\s*(INSERT|UPDATE|DELETE|CREATE|DROP|ALTER)\b/i.test(q)));
 });
+
+test("R22 (DEC-95 (1); K1105): each capture-completed-unattended item carries in its detail the grade note of each capture it names, capture's own words; a capture the viewer may not see carries none", async () => {
+  const { ACQUIRE_GRADE_NOTE } = await import("../../../src/capture/index.mjs");
+  const { w, manifest } = corpus();
+  /* the first producer: a person's document completed by a machine; the capture it names is the one registered under it */
+  manifest("k1", "carol", "2026-07-31T12:00:00Z"); manifest("k2", `${MACHINE_AUTHOR_PREFIX}member`, "2026-07-31T18:00:00Z");
+  const u = byId(w.read("dave"))["CONDITION::capture-completed-unattended::INFO-88"];
+  assert.ok(u.detail.endsWith(ACQUIRE_GRADE_NOTE), "the same words a member present at the capture read");
+  assert.ok(u.detail.includes("(cap88)"), "naming the capture the note is of");
+  assert.deepEqual(u.basis.grade_notes, [{ capture_sha: "cap88", note: ACQUIRE_GRADE_NOTE }]);
+  /* the second producer: a capture request, its own digest; one registered under a document dave may not see carries none */
+  w.run(`INSERT INTO register (capture_sha, bundle_id, path, encoding, registered, bytes) VALUES ('caph','PRJ-1','snapshots/h','binary',?,1)`, iso(NOW));
+  const req = (request, sha) => ({ request, run: "r", target: "INQ-1", address: `https://${HOST}/${request}`, host: HOST,
+    purpose: "investigate", ua_mode: "civicos", capture_sha: sha, captured_at: iso(NOW), attribution: { ok: true, statement: "the daemon captured this" } });
+  w.fakes.captureRequests.completed = () => ({ requests: [req("CR-1", "cap88"), req("CR-2", "caph"), req("CR-3", "capnone")] });
+  const carol = byId(w.read("carol")), dave = byId(w.read("dave"));
+  assert.deepEqual(carol["CONDITION::capture-completed-unattended::CR-1"].basis.grade_notes, [{ capture_sha: "cap88", note: ACQUIRE_GRADE_NOTE }]);
+  assert.ok(carol["CONDITION::capture-completed-unattended::CR-1"].detail.endsWith(ACQUIRE_GRADE_NOTE));
+  assert.deepEqual(carol["CONDITION::capture-completed-unattended::CR-2"].basis.grade_notes, [{ capture_sha: "caph", note: ACQUIRE_GRADE_NOTE }],
+    "carol sees the project the capture is registered under");
+  const hidden = dave["CONDITION::capture-completed-unattended::CR-2"];
+  assert.ok(hidden, "the item stands: it is about the request, under a question dave sees");
+  assert.deepEqual(hidden.basis.grade_notes, [], "a capture dave may not see carries no note");
+  assert.ok(!hidden.detail.includes(ACQUIRE_GRADE_NOTE) && !hidden.detail.includes("caph)"));
+  assert.deepEqual(dave["CONDITION::capture-completed-unattended::CR-3"].basis.grade_notes, [], "a capture no register row holds carries none");
+  assert.ok(dave["CONDITION::capture-completed-unattended::CR-1"].detail.endsWith(ACQUIRE_GRADE_NOTE));
+  /* the note is capture's: what op=gradenote answers for a held, seen capture (its R76) */
+  assert.equal(typeof ACQUIRE_GRADE_NOTE, "string"); assert.ok(ACQUIRE_GRADE_NOTE.length > 20);
+});

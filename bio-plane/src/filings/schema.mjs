@@ -129,8 +129,9 @@ CREATE TABLE IF NOT EXISTS filing_templates (
 CREATE INDEX IF NOT EXISTS filing_templates_kind ON filing_templates (kind, template_id);
 `;
 
-/* Columns added after a table was first created (T18: R22, R24, R25, R26): each is added to a table that lacks it, so
-   an instance whose tables predate it keeps its rows. A row written before reads the column null. */
+/* Columns added after a table was first created (T18: R22, R24, R25, R26; T21: R29, R31; T22: R8's reason): each is
+   added to a table that lacks it, so an instance whose tables predate it keeps its rows. A row written before reads
+   the column null. */
 export const FILINGS_COLUMNS = Object.freeze([
   ["filing_drafts", "exhibits", "TEXT"],     // R25: each exhibit with its grade, co-attestation and the venue's reading
   ["filing_drafts", "venue_standard", "TEXT"], // R25: the kind's evidence standard, or undetermined with why
@@ -140,6 +141,7 @@ export const FILINGS_COLUMNS = Object.freeze([
   ["counsel_packets", "disclosure", "TEXT"], // R24
   ["counsel_packet_exports", "inband", "TEXT"], // R22
   ["counsel_packets", "template", "TEXT"],   // R31: the brief template a version's briefing was filled from, as R29 records it
+  ["counsel_packets", "reason", "TEXT"],     // R8 (DEC-88): the author's words on why this version was assembled, as written
 ]);
 
 /** K23, R19: each table keyed to the action it is about, so a single-bundle purge of that action clears its rows. */

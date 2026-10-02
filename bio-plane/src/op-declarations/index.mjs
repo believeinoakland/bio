@@ -1,4 +1,4 @@
-/* op-declarations: WHAT EACH OP IS (R1–R8). Every op's spec, the act lists that drive the stamps and the fences, the
+/* op-declarations: WHAT EACH OP IS (R1–R9). Every op's spec, the act lists that drive the stamps and the fences, the
    session sets, the capability table, the recorded decisions that a verb is not a person's, and the act gate read
    from those tables. It declares; it judges no caller and routes nothing (`admission` and `control-plane` read it).
    Copied from `control-plane/ops.mjs` at the control-plane split (T18, K617, K624 (1), (2)), which control-plane's own
@@ -403,6 +403,18 @@ const OPS = frozenTable({
   lateattestations: { classes: ["admin", "member", "probe"],       mutating: false },
   captureaccount:   { classes: ["admin", "member", "probe"],       mutating: true  },
   captureaccounts:  { classes: ["admin", "member", "probe"],       mutating: false },
+  /* T22 (K1023, K1037; capture R76, R77, R79–R81; R9): setting a held capture aside and restoring it are a member's
+     reasoned acts — a machine reaches each and capture refuses it by name (MACHINE_CANNOT_SET_ASIDE, C-118.8) — `by` and
+     `viewer` stamped; the held list and a capture's grade note are reads, viewer-stamped; the doorbell's tally is a read
+     for a member's own session only, `knocksof`'s fence (`machineClasses: []` refuses every bearer), viewer-stamped.
+     NOTHING IS DECLARED FOR `doorbellrefused`, capture's map's other R80 arm: it is the Worker's count of a knock it
+     refused before the store, a store-internal route the plane calls from within itself and never a public op (R6;
+     K1037), as `monitorlook` is. */
+  heldsetaside:     { classes: ["admin", "member", "probe"],       mutating: true  },
+  heldrestore:      { classes: ["admin", "member", "probe"],       mutating: true  },
+  heldcaptures:     { classes: ["admin", "member", "probe"],       mutating: false },
+  gradenote:        { classes: ["admin", "member", "probe"],       mutating: false },
+  doorbelltally:    { classes: ["admin", "member"], machineClasses: [], mutating: false },
   /* N364 (sources R1–R9): a source's disclosures, links and consents, `by` stamped; the reads `viewer`-stamped (a
      machine credential reads nothing, the module's NO_SUCH_SOURCE); `sourcepublishable` writes nothing. */
   sourcedisclose:        { classes: ["admin", "member", "probe"], mutating: true  },
@@ -590,6 +602,11 @@ const OPS = frozenTable({
   escalationresume:    { classes: ["admin", "member", "probe"],      mutating: true  },
   escalation:          { classes: ["admin", "member", "probe"],      mutating: false },
   escalationsdue:      { classes: ["admin", "member", "probe"],      mutating: false },
+  /* T22 (K1019, J3; escalation R27, R28; R9): declining to escalate, a member's reasoned act, `escalationopen`'s posture
+     (a machine reaches it and escalation refuses it by name), `author` and `viewer` query-stamped; the status read,
+     `escalationsdue`'s, viewer-stamped. */
+  declinetoescalate:   { classes: ["admin", "member", "probe"],      mutating: true  },
+  escalationstatus:    { classes: ["admin", "member", "probe"],      mutating: false },
   /* T18 (N-A12, K608; K705): filings' drafted communication (R23). Any credential prepares a communication, labelled
      (`proposalLabel`). T21 (K922 (1)): `templatesave` is filings R32's, a member starting a template draft from an
      approved filing through `filing-templates.templateDraft` (a machine refused by that module, its R3); its spec and
@@ -684,6 +701,9 @@ const OPS = frozenTable({
   profiles:           { classes: ["admin", "member"],               mutating: false },
   profilesset:        { classes: ["admin", "member"], machineClasses: [], mutating: true  },
   monitorslate:       { classes: ["admin", "member", "probe"],      mutating: false },
+  /* T22 (K1019; monitoring R17, R52; R9): an address's own frequency, a source owner's reasoned act — a machine reaches
+     it and monitoring refuses it by name (MACHINE_CANNOT_SET_FREQUENCY) — `author` and `viewer` query-stamped. */
+  addressfrequencyset: { classes: ["admin", "member", "probe"],     mutating: true  },
   /* REC-94: a capture's content-axis state; frontier's classes and gate. */
   contentaxis:        { classes: ["admin", "member", "probe"],      mutating: false },
   /* REC-69: the context-keyed run read; the viewer stamp decides what a caller sees. */
@@ -971,8 +991,15 @@ const ROSTER_SELF_ACTIONS = frozenList(["adminresign", "hostingaccessset", "memb
    `machineClasses`), and THE STAMP, `by` from the session, read by membership from the query after the body. */
 const OWN_KEY_ACTIONS = frozenList(["signerregister", "signerrevoke"]);
 /* N364 (capture R65, R68, R69): the pull, a late co-attestation and a capture's signed account, each a member's act in
-   their own name, `by` stamped and read by capture from the query first; in both session sets. */
-const CAPTURE_MEMBER_ACTIONS = frozenList(["inboxpull", "reattest", "captureaccount"]);
+   their own name, `by` stamped and read by capture from the query first; in both session sets. T22 (K1023; capture
+   R79, R81; R9): setting a held capture aside and restoring it join them, `by` stamped for the same reason (capture
+   reads `by` from the query before `author`). */
+const CAPTURE_MEMBER_ACTIONS = frozenList(["inboxpull", "reattest", "captureaccount", "heldsetaside", "heldrestore"]);
+/* T22 (K1023, K1037; capture R76, R77, R79–R81; R9): the capture ops that answer by the caller's sight, so `viewer` is
+   stamped on each (capture reads it from the query; an unstamped call sees nothing): the two held acts, and the held
+   list, the grade note and the doorbell's tally. In both session sets. */
+const CAPTURE_VIEWER_ACTIONS = frozenList(["heldsetaside", "heldrestore"]);
+const CAPTURE_READS = frozenList(["heldcaptures", "gradenote", "doorbelltally"]);
 /* N364 (sources R2, R6, R7): a member's record of a source's disclosure, link claim, consent and its withdrawal, `by`
    stamped and read by sources from the query after the body; in both session sets. */
 const SOURCE_ACTIONS = frozenList(["sourcedisclose", "sourcelink", "sourceconsent", "sourceconsentwithdraw"]);
@@ -1176,9 +1203,12 @@ const GRANT_SECRET_ACTIONS = frozenList(["reviewgrant", "templatereviewgrant"]);
    body, so the door overwrites a caller's copy there), and the two reads, viewer-stamped. */
 const LOCAL_FACTS_ACTIONS = frozenList(["factconfirm"]);
 const LOCAL_FACTS_READS = frozenList(["factstatus", "factsdue"]);
+/* T22 (K1019, J3; escalation R27, R28; R9): `declinetoescalate` joins escalation's acts, `escalationopen`'s place, so its
+   `author` is query-stamped and its `viewer` stamped; `escalationstatus` joins the reads, `escalationsdue`'s place. */
 const ESCALATION_ACTIONS = frozenList(["escalationopen", "escalationattach", "escalationevaluate", "escalationadvance",
-                            "escalationdecline", "escalationend", "escalationsuspend", "escalationresume"]);
-const ESCALATION_READS = frozenList(["escalation", "escalationsdue"]);
+                            "escalationdecline", "escalationend", "escalationsuspend", "escalationresume",
+                            "declinetoescalate"]);
+const ESCALATION_READS = frozenList(["escalation", "escalationsdue", "escalationstatus"]);
 /* T18 (N-A12, K704, K709, K711): the action layer's new modules, one array each, for the reason every array here is
    one. Each act reads `author` from the QUERY after the body and asks membership of it (a joined member's act, or the
    member whose reminder it is), so each joins `QUERY_AUTHOR_ACTIONS` and takes that stamp's positional identity; every
@@ -1203,10 +1233,17 @@ const CONTRADICTION_ACTIONS = frozenList(["contradictiondismiss", "contradiction
                                "contradictionoptin", "contradictionrespond"]);
 const CONTRADICTION_READS = frozenList(["contradictioncandidates", "contradictiontensions", "contradictionfacts", "contradictionnotices",
                              "contradictionresponses"]);
-/* The modules whose acts read `author` from the query: the four of T8, T18's three, and T21's filing-templates. */
+/* T22 (K1019; monitoring R52; R9): an address's own frequency, a source owner's act; monitoring reads `author` (bare or
+   positional) and `viewer` from the query, so it joins `QUERY_AUTHOR_ACTIONS` below, and with it the action layer's
+   viewer stamp. Its own array, one per module, for the reason every array here is one. */
+const MONITORING_ACTIONS = frozenList(["addressfrequencyset"]);
+/* The modules whose acts read `author` from the query: the four of T8, T18's three, T21's filing-templates and T22's
+   monitoring act. */
 const QUERY_AUTHOR_ACTIONS = frozenList([...CONFORMANCE_ACTIONS, ...CONSEQUENCES_ACTIONS, ...FILINGS_ACTIONS, ...ESCALATION_ACTIONS,
-                              ...ACTIONS_ACTIONS, ...ACTION_CLOCKS_ACTIONS, ...ACTION_PLANS_ACTIONS, ...FILING_TEMPLATES_ACTIONS]);
-/* The action layer's acts and reads, each viewer-stamped (fail closed). T21 adds the template proposal and the fact
+                              ...ACTIONS_ACTIONS, ...ACTION_CLOCKS_ACTIONS, ...ACTION_PLANS_ACTIONS, ...FILING_TEMPLATES_ACTIONS,
+                              ...MONITORING_ACTIONS]);
+/* The action layer's acts and reads, each viewer-stamped (fail closed); T22's monitoring act rides in through
+   `QUERY_AUTHOR_ACTIONS`, viewer-stamped as they are. T21 adds the template proposal and the fact
    confirmation, whose stamps are their own (`proposer`, `by`), and the two modules' reads. The grant's doors are not
    here: a recipient arrives with no session, so no viewer. */
 const ACTION_LAYER_ACTIONS = frozenList([...STANDARDS_ACTIONS, ...QUERY_AUTHOR_ACTIONS, ...PLAN_PROPOSAL_ACTIONS,
@@ -1422,6 +1459,10 @@ const SESSION_OPS = Object.freeze({
                       too) and the reads — in BOTH sets, because an administrator is a member too. */
                    ...FILING_TEMPLATES_ACTIONS, ...FILING_TEMPLATES_READS, ...TEMPLATE_PROPOSAL_ACTIONS,
                    ...TEMPLATE_DOOR_ACTIONS, ...TEMPLATE_DOOR_READS, ...LOCAL_FACTS_ACTIONS, ...LOCAL_FACTS_READS,
+                   /* T22 (K1019, K1023; op-declarations R9): every op T22 adds, in BOTH sets — escalation's decline
+                      (through `ESCALATION_ACTIONS` above) and its status read, capture's two held acts (through
+                      `CAPTURE_MEMBER_ACTIONS` above) and its three reads, monitoring's frequency act. */
+                   "escalationstatus", ...CAPTURE_READS, ...MONITORING_ACTIONS,
                    /* N314 (T12, monitoring R30): the daemon's pause, every member session's to ask; monitoring refuses a
                       non-administrator by name. */
                    "monitorpause",
@@ -1485,6 +1526,7 @@ const SESSION_OPS = Object.freeze({
                    ...CONTRADICTION_ACTIONS,
                    ...FILING_TEMPLATES_ACTIONS, ...FILING_TEMPLATES_READS, ...TEMPLATE_PROPOSAL_ACTIONS,
                    ...TEMPLATE_DOOR_ACTIONS, ...TEMPLATE_DOOR_READS, ...LOCAL_FACTS_ACTIONS, ...LOCAL_FACTS_READS,
+                   "escalationstatus", ...CAPTURE_READS, ...MONITORING_ACTIONS,
                    ...IDENTITY_ACTIONS,
                    ...GOVERNANCE_ACTIONS,
                    ...CUSTODIAL_ACTIONS,
@@ -2266,6 +2308,21 @@ const NEEDS = Object.freeze({
   templates:           null,
   factstatus:          null,
   factsdue:            null,
+  /* T22 (K1019, K1023; op-declarations R9): declining to escalate appends to the escalation's record in a member's
+     name, `escalationopen`'s capability and reason; setting a held capture aside or restoring it writes capture's row in
+     the member's name, `inboxresolve`'s; an address's own frequency is a source owner's setting written to the record,
+     the action layer's reason. Each `contribute`, NO fifth capability token (CAPABILITIES.md §4): who may act (a
+     project's owner, a member who may see the capture) is the owning module's, asked of the stamped author. */
+  declinetoescalate:   "contribute",
+  heldsetaside:        "contribute",
+  heldrestore:         "contribute",
+  addressfrequencyset: "contribute",
+  /* NO CAPABILITY for capture's three reads, on `contradictionpairs`' reasoning (asking the record is reading it);
+     PRESENT, null, as capture's other reads (`knocksof`, `lateattestations`), so affordances names each in NON_ACTS
+     (its R7, R12). `escalationstatus` takes `escalationsdue`'s shape: no row. */
+  heldcaptures:        null,
+  gradenote:           null,
+  doorbelltally:       null,
 });
 
 /* REC-19's act decoration, shared by op=affordances and op=queue (REC-20) so a queue item's options[] and an
@@ -2339,4 +2396,4 @@ const UNATTENDED_BY_DECISION = Object.freeze({
            + "one' — a deploy's maintenance pass, addressed to the operator's credential.",
 });
 
-export { OPS, RETRIEVAL_READS, READING_READS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, STRUCTURE_ACTIONS, VERSION_ACTIONS, PROJECT_ACTIONS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS, ROSTER_SELF_ACTIONS, OWN_KEY_ACTIONS, CAPTURE_MEMBER_ACTIONS, SOURCE_ACTIONS, SOURCE_READS, PROVENANCE_JUDGEMENT_ACTIONS, CALIBRATION_WRITE_ACTIONS, EXPERTISE_ACTIONS, REGISTRY_ACTIONS, TASK_ACTIONS, QUEUE_ACTIONS, AI_RUN_ACTIONS, RUN_VERB_ACTIONS, RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, BIAS_ACTIONS, BIAS_DEBT_ACTIONS, INTENT_ACTIONS, INTENT_READS, REEVALUATION_ACTIONS, STANDARDS_ACTIONS, STANDARDS_READS, CONFORMANCE_ACTIONS, CONFORMANCE_READS, CONSEQUENCES_ACTIONS, CONSEQUENCES_READS, FILINGS_ACTIONS, FILINGS_READS, FILING_TEMPLATES_ACTIONS, FILING_TEMPLATES_READS, TEMPLATE_PROPOSAL_ACTIONS, TEMPLATE_DOOR_ACTIONS, TEMPLATE_DOOR_READS, GRANT_SECRET_ACTIONS, LOCAL_FACTS_ACTIONS, LOCAL_FACTS_READS, ESCALATION_ACTIONS, ESCALATION_READS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, ACTIONS_ACTIONS, ACTIONS_READS, ACTION_CLOCKS_ACTIONS, ACTION_PLANS_ACTIONS, ACTION_PLANS_READS, PLAN_PROPOSAL_ACTIONS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS, ACTION_LAYER_READS, PLAN_RUN_SCOPE, RECOGNISER_ACTIONS, PROGRESSION_ACTIONS, SESSION_OPS, NEEDS, decorateAct, ACT_GATE, UNATTENDED_BY_DECISION };
+export { OPS, RETRIEVAL_READS, READING_READS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, STRUCTURE_ACTIONS, VERSION_ACTIONS, PROJECT_ACTIONS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS, ROSTER_SELF_ACTIONS, OWN_KEY_ACTIONS, CAPTURE_MEMBER_ACTIONS, CAPTURE_VIEWER_ACTIONS, CAPTURE_READS, SOURCE_ACTIONS, SOURCE_READS, PROVENANCE_JUDGEMENT_ACTIONS, CALIBRATION_WRITE_ACTIONS, EXPERTISE_ACTIONS, REGISTRY_ACTIONS, TASK_ACTIONS, QUEUE_ACTIONS, AI_RUN_ACTIONS, RUN_VERB_ACTIONS, RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, BIAS_ACTIONS, BIAS_DEBT_ACTIONS, INTENT_ACTIONS, INTENT_READS, REEVALUATION_ACTIONS, STANDARDS_ACTIONS, STANDARDS_READS, CONFORMANCE_ACTIONS, CONFORMANCE_READS, CONSEQUENCES_ACTIONS, CONSEQUENCES_READS, FILINGS_ACTIONS, FILINGS_READS, FILING_TEMPLATES_ACTIONS, FILING_TEMPLATES_READS, TEMPLATE_PROPOSAL_ACTIONS, TEMPLATE_DOOR_ACTIONS, TEMPLATE_DOOR_READS, GRANT_SECRET_ACTIONS, LOCAL_FACTS_ACTIONS, LOCAL_FACTS_READS, ESCALATION_ACTIONS, ESCALATION_READS, MONITORING_ACTIONS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, ACTIONS_ACTIONS, ACTIONS_READS, ACTION_CLOCKS_ACTIONS, ACTION_PLANS_ACTIONS, ACTION_PLANS_READS, PLAN_PROPOSAL_ACTIONS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS, ACTION_LAYER_READS, PLAN_RUN_SCOPE, RECOGNISER_ACTIONS, PROGRESSION_ACTIONS, SESSION_OPS, NEEDS, decorateAct, ACT_GATE, UNATTENDED_BY_DECISION };

@@ -1,0 +1,9 @@
+{
+  "url": "https://web.archive.org/web/20260310093000id_/https://records.example.gov/minutes/2026-03.pdf",
+  "status": 301,
+  "headers": {
+    "Location": "https://records.example.gov/minutes/2026-03-final.pdf",
+    "Memento-Datetime": "Tue, 10 Mar 2026 09:30:00 GMT",
+    "Link": "<https://records.example.gov/minutes/2026-03.pdf>; rel=\"original\", <https://web.archive.org/web/https://records.example.gov/minutes/2026-03.pdf>; rel=\"timegate\""
+  }
+}

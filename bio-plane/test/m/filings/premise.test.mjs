@@ -4,7 +4,7 @@
    module's interface, over the real modules: each action is written through actions' own write (its R8, R9). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, PROFILE, attributed } from "./fixture.mjs";
+import { world, V, PROFILE, attributed, WHY } from "./fixture.mjs";
 import { FILING_BLANKS, OVERRIDE_HEAD, INBAND_RULE, unfilledMarker } from "../../../src/filings/index.mjs";
 
 const COUNSEL = { name: "A. Counsel", organisation: "Test Chambers" };
@@ -56,11 +56,11 @@ test("R3 the addressee's blanks follow its arm (actions R9): an office fills rol
 test("R8 an action stating a premise override and no live determination gets a counsel packet: assembled with R24's disclosure, its facts section saying in words that no determination is held; without the override it is refused NO_DETERMINATION", async () => {
   const x = world();
   const bare = x.action({ kind: "commitment_claim", legs: [] });
-  assert.equal(x.f.counselPacket({ action: bare, counsel: COUNSEL, author: V("olive"), viewer: V("olive") }).reason, "NO_DETERMINATION");
+  assert.equal(x.f.counselPacket({ reason: WHY, action: bare, counsel: COUNSEL, author: V("olive"), viewer: V("olive") }).reason, "NO_DETERMINATION");
   const O = x.action({ kind: "commitment_claim", legs: [], breach: true, override: REASON });
   const o = x.read(O).premise_override;
   assert.equal(o.reason, REASON, "actions holds the override");
-  const p = x.f.counselPacket({ action: O, counsel: COUNSEL, author: V("olive"), viewer: V("olive") });
+  const p = x.f.counselPacket({ reason: WHY, action: O, counsel: COUNSEL, author: V("olive"), viewer: V("olive") });
   assert.equal(p.ok, true, JSON.stringify(p).slice(0, 300));
   const line = `${OVERRIDE_HEAD} ${REASON} (stated by ${o.by} at ${o.at})`;
   assert.deepEqual([p.disclosure, p.head.disclosure], [line, line]);
@@ -106,7 +106,7 @@ test("R24 a draft, packet or communication prepared from an action carrying a pr
   assert.ok(ca.bytes.startsWith(`${line}\n\nA statement.\n${INBAND_RULE}`));
   /* a packet on a determined action that also carries one: the disclosure beside the facts */
   const T3 = x.action({ kind: "commitment_claim", breach: true, override: REASON });
-  const p = x.f.counselPacket({ action: T3, counsel: COUNSEL, author: V("olive"), viewer: V("olive") });
+  const p = x.f.counselPacket({ reason: WHY, action: T3, counsel: COUNSEL, author: V("olive"), viewer: V("olive") });
   assert.ok(p.disclosure.startsWith(`${OVERRIDE_HEAD} ${REASON}`));
   assert.equal(p.sections.facts.items.length, 1, "the live determination's facts are still set out");
   /* none without an override */
@@ -116,7 +116,7 @@ test("R24 a draft, packet or communication prepared from an action carrying a pr
   assert.equal(n.text.includes(OVERRIDE_HEAD), false);
   const nc = x.f.communicationPrepare({ action: N, text: "Words.", purpose: "p", preparer: V("bo"), viewer: V("bo") });
   assert.deepEqual([nc.disclosure, nc.text], [null, "Words."]);
-  const np = x.f.counselPacket({ action: x.action({ kind: "commitment_claim" }), counsel: COUNSEL, author: V("olive"), viewer: V("olive") });
+  const np = x.f.counselPacket({ reason: WHY, action: x.action({ kind: "commitment_claim" }), counsel: COUNSEL, author: V("olive"), viewer: V("olive") });
   assert.equal(np.disclosure, null);
   assert.equal((await x.f.counselPacketExport({ id: np.id, author: V("olive"), viewer: V("olive") })).bytes.includes(OVERRIDE_HEAD), false);
 });

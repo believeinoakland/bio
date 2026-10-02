@@ -2,7 +2,8 @@
  *
  * C-54.2–C-54.10, the lead's own family, moved from the check catalogue with their reasons unchanged; C-54.1
  * (`LEAD_NOT_EVIDENCE`) and `leadLegFindings` stay with the leg grammars (K78). `where` names the site this module now
- * holds.
+ * holds. C-54.11 and C-54.12 are DEC-88's (K1025), minted here in T22: a look carries the looker's words, a share the
+ * sharer's reason.
  *
  * C-22, `AI_RUN_CHECKS`, moved here WHOLE in T18 (K586 BOB-2, R26 as K587): the eight rows the catalogue's table still
  * held (C-22.1–C-22.4, C-22.6, C-22.9, C-22.10 and C-22.17), every one the log's own refusal and every `where` already
@@ -208,8 +209,8 @@ export const LEAD_ID_RE = /^LEAD-\d{4}-\d{4}-[a-z0-9]+$/;
 
 /* =====================================================================
  * MK-4 / IC-135 / IC-136 — THE LEAD (D-194, `MEMBER-KNOWLEDGE-DESIGN.md` §5):
- * the same member knowledge BEFORE the search. C-54, minted with
- * `node tools/mintid.mjs C`.
+ * the same member knowledge BEFORE the search. C-54, minted with the old
+ * process's `node tools/mintid.mjs C` (that tool was retired in T19).
  *
  * ITS OWN FAMILY because its subject is its own: the ways a member's LEAD could
  * come to claim more than it is. §5 rules a lead is an authored row and NEVER
@@ -223,7 +224,8 @@ export const LEAD_ID_RE = /^LEAD-\d{4}-\d{4}-[a-z0-9]+$/;
  *   is-lead-look           who looked, what state, and what the look points at
  *   is-lead-share          who may share it, and where to
  *
- * (`is-lead-not-evidence`, C-54.1, stays in the catalogue with every leg grammar.)
+ * (`is-lead-not-evidence`, C-54.1, stays with the leg grammars, in `inquiry-grammar`: the catalogue that
+ * held it was deleted, K858.)
  * ===================================================================== */
 export const LEAD_CHECKS = {
   LEAD_NOT_A_MEMBER: {
@@ -286,5 +288,22 @@ export const LEAD_CHECKS = {
     where: 'src/observation-log/index.mjs leadShare > is-lead-share',
     translation: 'Only the member who wrote a lead can share it. A lead is what one person was told; '
       + 'passing someone else\'s on is theirs to decide.',
+  },
+  /* DEC-88 (K1025, R17): a look is the looker's account of where they looked and what they found, and a look with no
+     words is a state with nobody's account behind it. Asked after C-54.7 and before C-54.4, which stays the over-cap
+     refusal of the same words. */
+  LEAD_LOOK_NO_DETAIL: {
+    check: 'C-54.11',
+    where: 'src/observation-log/index.mjs leadLook > is-lead-look',
+    translation: 'Say in your own words where you looked and what you found. A look is recorded with the account '
+      + 'of the member who made it, and a look with no account is a result nobody can check or follow up.',
+  },
+  /* DEC-88 (K1025, R16): a share discloses one member's lead to a project, and the disclosure carries its reason, in
+     the sharer's words, recorded with the share. Asked after C-54.9, before the repeat check and the insert. */
+  LEAD_SHARE_NO_REASON: {
+    check: 'C-54.12',
+    where: 'src/observation-log/index.mjs leadShare > is-lead-share',
+    translation: 'Say why you are sharing this lead with that project, in no more than 2,000 characters. Sharing '
+      + 'puts what you were told in front of the project\'s participants, and the reason is kept with the share.',
   },
 };

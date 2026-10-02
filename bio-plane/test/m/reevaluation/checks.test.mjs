@@ -60,7 +60,7 @@ test("R23: C-10.1, C-80.1 and C-80.2 moved here with their numbers and translati
     assert.ok(row.translation.length > 60);
   }
   assert.deepEqual(Object.values(REEVALUATION_ACT_CHECKS).map((v) => v.check),
-    ["C-110.1", "C-110.2", "C-110.3", "C-110.4", "C-110.5", "C-110.6", "C-110.7", "C-110.8", "C-110.9"]);
+    ["C-110.1", "C-110.2", "C-110.3", "C-110.4", "C-110.5", "C-110.6", "C-110.7", "C-110.8", "C-110.9", "C-110.29"]);
   /* the catalogue's own frontmatter check no longer runs C-10.1: its one home is this module */
   const md = infoMd("INFO-2026-0001-x", ["reeval_pending: nope", "group: g", "schema: information@1"]);
   const { findings } = await checkBundle({ folderName: "INFO-2026-0001-x", files: new Map([["bundle.md", md]]),
@@ -86,4 +86,19 @@ test("R24: no place is named in this module's behaviour or outward text", () => 
     w.r.keepVersion({ notice: "x", author: MACHINE }), w.r.recordReevaluation({ author: V("a"), note: "n" }),
   ]);
   assert.doesNotMatch(said, /oakland|alameda|california|berkeley/i);
+});
+
+test("R15 (DEC-88): C-110.29, VERSION_ADOPT_NO_REASON, is a new row after C-110.9 (C-110.10–.28 not reused), in the choice's region, with its translation; it is the code an unreasoned adoption answers", () => {
+  const rows = Object.entries(REEVALUATION_ACT_CHECKS);
+  assert.deepEqual(rows[rows.length - 1][0], "VERSION_ADOPT_NO_REASON");
+  const row = REEVALUATION_ACT_CHECKS.VERSION_ADOPT_NO_REASON;
+  assert.deepEqual([row.check, row.where], ["C-110.29", "src/reevaluation/index.mjs #choiceSubject > is-version-choice"]);
+  assert.match(row.translation, /reason/);
+  assert.match(row.translation, /2,000 characters/);
+  assert.match(row.translation, /Nothing was written/);
+  const used = rows.map(([, v]) => v.check);
+  for (let k = 10; k <= 28; k++) assert.ok(!used.includes(`C-110.${k}`), `C-110.${k} is not reused`);
+  const w = world();
+  const r = w.r.adoptVersion({ notice: "RN-any", author: "alice", viewer: "class:admin" });
+  assert.deepEqual([r.ok, r.code, r.check, r.translation], [false, "VERSION_ADOPT_NO_REASON", "C-110.29", row.translation]);
 });

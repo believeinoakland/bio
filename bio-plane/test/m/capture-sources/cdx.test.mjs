@@ -1,5 +1,5 @@
 /* capture-sources: the web archive (`cdx.mjs`), tested at the module's interface
- * (build/requirements/capture-sources.md R27–R37, R51, R52). Each test names the
+ * (build/requirements/capture-sources.md R27–R36, R51, R52; R37 in `memento.test.mjs`). Each test names the
  * requirement id it checks in its title. The CDX answers below are this file's, in the
  * shape measured 2026-07-31 (an array of arrays whose first row is the header). */
 import { test } from "node:test";
@@ -156,10 +156,8 @@ test("R36: the chosen capture keeps the CDX urlkey and the hop's evidence names 
   assert.ok(archiveHop(none, REPLAY).evidence.includes("the CDX record carried no urlkey"));
 });
 
-/* R37 (Memento, RFC 7089) is not yet met and unscheduled (K48): the lookup speaks the
-   Wayback CDX only. It is named here so the coverage check sees it, and left as a todo
-   rather than a test of the current state, which would pin the gap. */
-test.todo("R37: the archive lookup speaks Memento (RFC 7089); not yet met, unscheduled (K48)");
+/* R37 (Memento, RFC 7089): the Wayback CDX above is one source; the Memento lookup is
+   tested in `memento.test.mjs`. */
 
 test("R52: equality that costs nothing is not evidence: length never compared, empty digest and non-200 never chosen", () => {
   /* Two rows that differ only in length: the newer wins whatever the lengths say. */

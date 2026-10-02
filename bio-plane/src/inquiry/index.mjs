@@ -16,11 +16,14 @@
  * REACHED as `inquiryOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the first call
  * with `deps`, returned to every later caller. At creation it declares its tables to purge (R36), joins every promotion
  * (R11's check, R12's projection) and every re-read that stales content (content R41's `onStale`), and registers with
- * retrieval the `legs` field's relation (R36, its R62) and the migrated arm of `surfaced_in` (N405, its R56).
+ * retrieval the `legs` field's relation (R36, its R62) and the migrated arm of `surfaced_in` (N405, its R56). Its
+ * questions' findings are bias's work products (R53, bias R40) through `inquiryFindings`, which `plane` registers.
  * `deps`:
  *   record, membership, promotion, content, connections, entities, retrieval, provenance   the modules it uses,
  *                through their factories on the same host unless a test passes its own (connections, entities,
  *                retrieval and provenance are reached lazily, on first use).
+ *   bias         the host's bias instance the lens of a finding is read from (R53); else the one `inquiryFindings` binds,
+ *                and with neither a finding records no lens. Never created here: the host builds bias with its `env`.
  *   now          the module's clock, an ISO instant at second precision (default: the wall clock). */
 
 import { parseFrontmatter, normalizeType, OBJECT_TYPES, STATES, vocabFor, deriveInquiryTitle, BUNDLE_ID_RE,
@@ -40,7 +43,7 @@ import { entitiesOf, gradeRank } from "../entities/index.mjs";
 import { retrievalOf } from "../retrieval/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { notADisposition, DISPOSITIONS } from "../progressions/index.mjs";
-import { INQUIRY_TABLES, migrateInquiry, BUNDLE_FACTS, LEGS_RELATION } from "./schema.mjs";
+import { INQUIRY_TABLES, INQUIRY_PURGE, migrateInquiry, BUNDLE_FACTS, LEGS_RELATION } from "./schema.mjs";
 import { INQUIRY_CONTRADICTION_CHECKS, INQUIRY_SURFACE_CHECKS } from "./checks.mjs";
 import { checkInquiryEntry } from "./grammar.mjs";
 import { contradictionFindings, candidateOf, readResolution, exploresOf, CANDIDATE_RE } from "./contradiction.mjs";
@@ -189,15 +192,23 @@ function liveFailures(base, failed) {
   });
 }
 
+/** R53: a promotion's author as a member id (`member:<id>`, as the control plane stamps it), else null: a machine or
+ *  an unreadable author is no principal a bias debt names. */
+const MEMBER_AUTHOR = /^member:([A-Za-z0-9._:-]{1,128}?)(?:\/.*)?$/;
+/** R53: the key a finding is offered to bias under, its question's id behind a prefix no run id shares (bias keys every
+ *  debt by its work product's key alone). */
+const FINDING_KEY = "finding:";
+
 /* ------------------------------------------------------------------ the module */
 
 export class Inquiry {
   #onRaised = null;      // {module, fn}: reevaluation's obligation (R21, R25)
   #onGrounded = null;    // {module, fn}: strength's pair (R28)
+  #bias = null;          // R53: the lens a finding is made under is read here
   #deps;
 
   constructor({ storage, record, membership, promotion, content, connections = null, entities = null, retrieval = null,
-                provenance = null, host = null, now } = {}) {
+                provenance = null, bias = null, host = null, now } = {}) {
     this.storage = storage;
     this.sql = storage.sql;
     this.record = record;
@@ -205,6 +216,7 @@ export class Inquiry {
     this.promotion = promotion;
     this.content = content;
     this.#deps = { connections, entities, retrieval, provenance, host };
+    this.#bias = bias;
     this.now = typeof now === "function" ? now : () => stampInstant("second");
   }
 
@@ -213,6 +225,8 @@ export class Inquiry {
   get entities() { return this.#deps.entities ||= entitiesOf(this.#deps.host); }
   get retrieval() { return this.#deps.retrieval ||= retrievalOf(this.#deps.host); }
   get provenance() { return this.#deps.provenance ||= provenanceOf(this.#deps.host); }
+  /** R53: the bias instance a finding's lens is read from, bound once (the first binding holds); null until bound. */
+  bindBias(bias) { if (!this.#bias && bias && typeof bias.biasManifest === "function") this.#bias = bias; return this.#bias; }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { for (const r of this.sql.exec(q, ...a)) return r; return null; }
@@ -615,6 +629,9 @@ export class Inquiry {
         bundleId, pkg.migrationReplay.capture, promotionKey, ts);
       migrated = { capture: pkg.migrationReplay.capture, promotion: promotionKey, at: ts };
     }
+    /* R53 (A9, bias R40): a finding, when the document enters `concluded` stating its project. */
+    if (isInquiry && docFm && docFm.current_state === "concluded" && !(cur && cur.currentState === "concluded"))
+      this.#recordFinding(bundleId, docFm, c.author, !!pkg.replay);
     /* R44 (N149): the member-browser agent, recorded at the creation from the control plane's stamp, never after. */
     const agent = !cur && isInquiry && !pkg.replay ? agentOf(pkg.memberUserAgent) : null;
     if (agent)
@@ -622,6 +639,57 @@ export class Inquiry {
         bundleId, agent, this.#when());
     return { ...(migrated ? { migration_replay: migrated } : {}),
              ...(contentProjected.length ? { content: contentProjected } : {}) };
+  }
+
+  /* R53: the question's finding and the project lens in force as it was made, read as bias reads every lens (the
+     administrator viewer, bias R33). A lens that cannot be read (no bias bound, or its read fails) and a replayed
+     conclusion (not made now) record no lens; none in force records that none was. Never throws into the promotion. */
+  #recordFinding(bundleId, fm, author, replay) {
+    const project = typeof fm.project === "string" ? fm.project.trim() : "";
+    if (!project) return;
+    let state = "unreadable", sha = null;
+    if (!replay && this.#bias)
+      try {
+        const m = this.#bias.biasManifest({ scope: "project", scopeId: project, viewer: "admin", limit: 1 });
+        if (m && m.in_force === true && typeof m.statements_sha === "string") { state = "recorded"; sha = m.statements_sha; }
+        else if (m && m.in_force === false) state = "none";
+      } catch { /* unreadable: no lens recorded */ }
+    const who = MEMBER_AUTHOR.exec(typeof author === "string" ? author : "");
+    this.sql.exec(`INSERT INTO inquiry_findings (bundle_id, project_id, lens_state, lens_sha, principal, at) VALUES (?,?,?,?,?,?)
+                   ON CONFLICT(bundle_id) DO UPDATE SET project_id=excluded.project_id, lens_state=excluded.lens_state,
+                     lens_sha=excluded.lens_sha, principal=excluded.principal, at=excluded.at`,
+      bundleId, project, state, sha, who ? who[1] : null, this.#when());
+  }
+
+  /** R53 (A9, bias R40): this module's findings as bias's work products (bias R33), offered under kind `finding`. A
+   *  finding is a question's conclusion, made under the lens of the project its document states: every question with
+   *  a recorded finding (R12's row), and every concluded question stating a project that has none (concluded before
+   *  findings were recorded), keyed `finding:<id>` and listed ascending. `read` answers its context (the project), its
+   *  member principal, the lens in force as it was made (`{basis: "at_open", statements_sha}`, bias's comparison of a
+   *  lens recorded in force, under which a lens since withdrawn has moved too), or null where no project lens was
+   *  recorded (undetermined, never filled in), no re-run link, and `registered` (when it was made, null when not
+   *  recorded); `visible` is the question's own sight (R33). */
+  workProducts() {
+    const idOf = (key) => (typeof key === "string" && key.startsWith(FINDING_KEY) ? key.slice(FINDING_KEY.length) : "");
+    return {
+      list: (after, limit) => this.#rows(
+        `SELECT bundle_id FROM (SELECT bundle_id FROM inquiry_findings UNION SELECT bundle_id FROM bundles
+           WHERE object_type='inquiry' AND current_state='concluded' AND COALESCE(project, '') <> '')
+          WHERE bundle_id > ? ORDER BY bundle_id LIMIT ?`,
+        idOf(String(after ?? "")) || "", Math.max(1, Math.floor(Number(limit) || 50))).map((r) => FINDING_KEY + r.bundle_id),
+      read: async (key) => {
+        const id = idOf(key);
+        const info = id ? this.record.bundleInfo(id) : null;
+        if (!info) return null;
+        const f = this.#one(`SELECT * FROM inquiry_findings WHERE bundle_id=?`, id);
+        const project = f ? f.project_id : info.project;
+        if (!project) return null;
+        return { context: { type: "project", id: project }, principal: f ? f.principal ?? null : null,
+                 lens: f && f.lens_state === "recorded" && f.lens_sha ? { basis: "at_open", statements_sha: f.lens_sha } : null,
+                 ranUnder: null, rerunOf: null, registered: f ? f.at : null };
+      },
+      visible: async (key, viewer) => { const id = idOf(key); return !!id && this.membership.inSight(id, viewer) === true; },
+    };
   }
 
   /** R12, R16: ONE bundle's superseded-by index from the `supersedes` edges pointing at it (connections' `refs`), the
@@ -1742,7 +1810,8 @@ export class Inquiry {
    * (the op=promote `ownerMemberId` precedent, and the reason it is DELETE and
    * not OVERWRITE: overwriting is a property of the code path taken, deletion
    * is a property of the input, and only the second survives somebody later
-   * adding an arm). CLAUDE.md's rule is exactly this one — a provenance hop a
+   * adding an arm). The old process's CLAUDE.md rule (archived,
+   * `docs/archive/CLAUDE-2026-09-26-old-process.md`) was exactly this one — a provenance hop a
    * caller can hand us is one a caller can invent — and this is the last door
    * on the one field in the record that makes a finding STRONGER.
    *
@@ -2073,7 +2142,7 @@ export class Inquiry {
       files: [mdFile(text), ...carriedFiles(this.sql, target)],
       /* NO STATE MOVES. The meta carries the document's own state forward
          unchanged — this act authors what a question rests on, not where it
-         stands — which is why it is not in index.mjs's STATE_ACTIONS. */
+         stands — which is why it is not in op-declarations' STATE_ACTIONS (`op-declarations/index.mjs`). */
       meta: { object_type: fm.object_type ?? b.object_type,
               title: fm.title, current_state: b.current_state, prior_state: fm.prior_state ?? null,
               created: fm.created, last_updated: when,
@@ -2220,13 +2289,13 @@ export class Inquiry {
    * record. Both are computed HERE, server-side, and the write path refuses a
    * leg stating anything else (checkEarnedLeg). The rule is the recogniser's own,
    * moved up one layer: "the RECOGNISER never mints a D; the model holds it so a
-   * member can testify, never the machine" (schema.mjs:739-743).
+   * member can testify, never the machine" (the legacy `schema.mjs`, deleted since).
    *
    * ONE FUNCTION, THREE CONSUMERS, and that is deliberate: op=promote's write
    * path, the ratification gate, and op=earnedbasis (the read a surface uses to
    * fill a leg in BEFORE writing it) all call this. A member who cannot learn
    * what a leg earns is a member the refusal pressures into inventing one, which
-   * is the failure mode CLAUDE.md names about gates.
+   * is the failure mode the old process's CLAUDE.md named about gates.
    */
 
   /* R43: the inquiry's recorded subject, the column R12 writes from the document into this module's table (R40), or
@@ -2243,8 +2312,8 @@ export class Inquiry {
      REC-43 / DEC-39 it is DECLARED IN THE RECORD'S GRAMMAR rather than here.
      `static EARNED_CAPTURE_CEILING = "B"` stood on this line until 2026-08-04
      and the value is unchanged; what moved is WHERE it is written, so that the
-     published co-attestation fence can be composed from it (affordances.mjs
-     cannot import this file — this file imports IT). The doctrine, the reason
+     published co-attestation fence could be composed from it (affordances.mjs
+     could not import the legacy store, which imported it). The doctrine, the reason
      for the direction and the derivation of the unreachable letter above it are
      all at the declaration in `record-grammar` (`grades.mjs`), and `checkEarnedLeg`
      is the arm that refuses a leg claiming more than this. This class
@@ -2828,10 +2897,10 @@ export class Inquiry {
     /* IC-84 (4): THE BACKFILL, WIRED HERE AND NOWHERE ELSE.
      *
      * A READ THAT WRITES, DELIBERATELY AND DECLARED. `op=earnedbasis` is
-     * `mutating: false` in the OPS table and stays so, and the reason is not
-     * convenience — index.mjs's own doctrine is that *"a mutating arm hiding
-     * inside a non-mutating op would pass the gate that exists to stop exactly
-     * that"*. This is not that arm. Nothing here is an ACT: the row minted is
+     * `mutating: false` in op-declarations' table of ops and stays so, and the reason is not
+     * convenience — the old plane `index.mjs`'s doctrine was that *"a mutating
+     * arm hiding inside a non-mutating op would pass the gate that exists to stop
+     * exactly that"*, and op-declarations holds that gate now. This is not that arm. Nothing here is an ACT: the row minted is
      * `hash(capture, canonical extent, chain)` over rows the record already
      * holds, so its value is fixed before this call and running it twice, in
      * two sessions, or after a replay produces the same id. It changes no state
@@ -2839,7 +2908,7 @@ export class Inquiry {
      * which is why IC-83 could rule *"a legacy leg is backfilled to its
      * `document` row on first read"* in the first place. Flipping the op to
      * `mutating: true` would be the alternative and it is WORSE than the
-     * problem: SESSION_OPS would then gate a read the shipped composer already
+     * problem: SESSION_OPS (op-declarations') would then gate a read the shipped composer already
      * calls, an undeclared interface change on I3 wearing the costume of
      * caution. THE REVERSAL, if this reading is rejected, is one line — delete
      * this call and let `op=promote`'s projection mint the row at the leg's
@@ -2903,7 +2972,7 @@ export function inquiryOf(host, deps) {
     const content = d.content || contentOf(host, { record, membership });
     k = new Inquiry({ ...d, host, storage: d.storage || host.storage, record, membership, promotion, content });
     instances.set(host, k);
-    record.declarePurge("inquiry", INQUIRY_TABLES);
+    record.declarePurge("inquiry", INQUIRY_PURGE);
     /* K783 (record-core R69, R45): the audit's context for each bundle's checks, the earned registry over the legs its
        basis projects (R13), null for a bundle resting on nothing. */
     if (typeof record.registerAuditContext === "function")
@@ -2933,6 +3002,17 @@ export function inquiryOf(host, deps) {
  *  module's name, `inquiry`; this module registers it nowhere itself. */
 export function inquiryLegGrades(host) {
   return (legs) => inquiryOf(host).legGrades(legs);
+}
+
+/** R53 (A9, bias R40): this module's findings as bias's work products, for `plane` to register at start with the host's
+ *  bias under this module's kind, `finding` (`registerWorkProducts("finding", inquiryFindings(host, bias))`, bias R33),
+ *  as it registers R52's shares; the module registers nothing itself. Binds `bias` as the instance a finding's lens is
+ *  read from (`bindBias`). The source reaches the one instance for `host` when it is asked. */
+export function inquiryFindings(host, bias = null) {
+  if (bias) inquiryOf(host).bindBias(bias);
+  const src = () => inquiryOf(host).workProducts();
+  return { list: (after, limit) => src().list(after, limit), read: (key) => src().read(key),
+           visible: (key, viewer) => src().visible(key, viewer) };
 }
 
 /** Which purge declaration names one of this module's tables (record-core R21: each owner declares its own). */

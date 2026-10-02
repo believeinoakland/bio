@@ -5,7 +5,7 @@
    template is made by `filing-templates`' own acts (drafted, submitted, reviewed and approved by members). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, MACHINE, STRANGER, PROFILE, WORDS, LAW, sha } from "./fixture.mjs";
+import { world, V, MACHINE, STRANGER, PROFILE, WORDS, LAW, sha, WHY } from "./fixture.mjs";
 import { filingsOps, counselMarking, TEMPLATES_NAMED_MAX } from "../../../src/filings/index.mjs";
 
 const COUNSEL = { name: "A. Counsel", organisation: "Test Chambers" };
@@ -205,7 +205,7 @@ test("R31 counselPacket takes a brief template at every tier: its text filled fr
   const x = world();
   const A = x.action();   /* Tier 1, no counsel named */
   const B = approved(x, { name: "brief to counsel", use: "brief", text: "For counsel: {{act}} ({{act_date}}) breaches {{standards}}, under {{law}}." });
-  const p = x.f.counselPacket({ action: A, template: { id: B }, author: V("olive"), viewer: V("olive") });
+  const p = x.f.counselPacket({ reason: WHY, action: A, template: { id: B }, author: V("olive"), viewer: V("olive") });
   assert.equal(p.ok, true, JSON.stringify(p).slice(0, 300));
   assert.deepEqual(Object.keys(p.sections), ["facts", "chronology", "exhibits", "standards", "theories", "deadlines", "consequences", "briefing"]);
   const b = p.sections.briefing;
@@ -229,12 +229,12 @@ test("R31 counselPacket takes a brief template at every tier: its text filled fr
   assert.deepEqual(x.f.filingsFor({ action: A, viewer: V("bo") }).packets[0].template.flags.map((f) => f.flag), ["updated"]);
   /* at Tier 3: counsel required; the profile's brief template; its refusals as R28's */
   const T3 = x.action({ kind: "commitment_claim" });
-  assert.equal(x.f.counselPacket({ action: T3, template: { id: BRIEF_TPL }, author: V("olive"), viewer: V("olive") }).reason, "NO_COUNSEL",
+  assert.equal(x.f.counselPacket({ reason: WHY, action: T3, template: { id: BRIEF_TPL }, author: V("olive"), viewer: V("olive") }).reason, "NO_COUNSEL",
                "refused without counsel at Tier 3, before the template");
-  const t3 = x.f.counselPacket({ action: T3, counsel: COUNSEL, template: { id: BRIEF_TPL }, author: V("olive"), viewer: V("olive") });
+  const t3 = x.f.counselPacket({ reason: WHY, action: T3, counsel: COUNSEL, template: { id: BRIEF_TPL }, author: V("olive"), viewer: V("olive") });
   assert.deepEqual([t3.ok, t3.template.origin, t3.sections.briefing.marking], [true, "profile", counselMarking(COUNSEL)]);
   assert.match(t3.sections.briefing.text, /^For counsel: test-group asks whether the works order/);
-  const pk = (action, template) => x.f.counselPacket({ action, counsel: COUNSEL, template, author: V("olive"), viewer: V("olive") });
+  const pk = (action, template) => x.f.counselPacket({ reason: WHY, action, counsel: COUNSEL, template, author: V("olive"), viewer: V("olive") });
   assert.equal(pk(A, { id: PROFILE_TPL }).reason, "TEMPLATE_USE_FILE", "a file template is no briefing");
   assert.equal(pk(A, { id: BRIEF_TPL }).reason, "TEMPLATE_KIND_MISMATCH", "the commitment claim's brief on a bylaw complaint");
   assert.equal(pk(A, { id: "TPL-none" }).reason, "NO_SUCH_TEMPLATE");
@@ -245,7 +245,7 @@ test("R31 counselPacket takes a brief template at every tier: its text filled fr
   const none = pk(A, null);
   assert.deepEqual([none.ok, "briefing" in none.sections, none.template], [true, false, null]);
   /* through the op */
-  assert.equal(x.op("counselpacket", { author: V("olive"), viewer: V("olive") }, { action: T3, counsel: COUNSEL, template: { id: BRIEF_TPL } })
+  assert.equal(x.op("counselpacket", { author: V("olive"), viewer: V("olive") }, { action: T3, counsel: COUNSEL, template: { id: BRIEF_TPL }, reason: WHY })
     .sections.briefing.template.id, BRIEF_TPL);
 });
 

@@ -5,11 +5,13 @@ import { readFileSync } from "node:fs";
 import { GROUP_SLUG_RE, FLEET_BINDINGS, memberVersions } from "../../../src/setup.mjs";
 import * as leaf from "../../../src/setup-fleet.mjs";
 
-test("N234 (K405): the installer's two names come from a leaf that loads alone, importing nothing, and setup.mjs re-exports the same values", async () => {
+test("N234 (K405): the installer's names come from a leaf that loads alone, importing nothing, and setup.mjs re-exports the same values; R47's block is held there too", async () => {
   /* Loaded as a data: module, where no import can resolve: a leaf that imported anything would fail to load here. */
   const text = readFileSync(new URL("../../../src/setup-fleet.mjs", import.meta.url), "utf8");
   const alone = await import("data:text/javascript;base64," + Buffer.from(text).toString("base64"));
-  assert.deepEqual(Object.keys(alone).sort(), ["FLEET_BINDINGS", "GROUP_SLUG_RE"]);
+  assert.deepEqual(Object.keys(alone).sort(), ["FLEET_BINDINGS", "GROUP_SLUG_RE", "HOSTING_CONTROL", "hostingControlBlock"]);
+  assert.deepEqual(alone.HOSTING_CONTROL, leaf.HOSTING_CONTROL);
+  assert.equal(alone.hostingControlBlock("notice"), leaf.hostingControlBlock("notice"));
   assert.ok(alone.GROUP_SLUG_RE instanceof RegExp);
   assert.equal(alone.GROUP_SLUG_RE.source, GROUP_SLUG_RE.source);
   assert.deepEqual(alone.FLEET_BINDINGS, FLEET_BINDINGS);

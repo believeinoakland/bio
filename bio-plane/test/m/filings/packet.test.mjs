@@ -2,13 +2,13 @@
    modules. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, MACHINE, STRANGER, F, CASE, PROFILE, DOC, sha } from "./fixture.mjs";
-import { counselMarking, deadlineDate, Filings, INBAND_RULE } from "../../../src/filings/index.mjs";
+import { world, V, MACHINE, STRANGER, F, CASE, PROFILE, DOC, sha, WHY } from "./fixture.mjs";
+import { counselMarking, deadlineDate, Filings, INBAND_RULE, FILINGS_CHECKS, PACKET_REASON_MAX } from "../../../src/filings/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 
 const COUNSEL = { name: "A. Counsel", organisation: "Test Chambers" };
 const MARK = counselMarking(COUNSEL);
-const pack = (x, over = {}) => x.f.counselPacket({ action: x.A, counsel: COUNSEL, author: V("olive"), viewer: V("olive"), ...over });
+const pack = (x, over = {}) => x.f.counselPacket({ reason: WHY, action: x.A, counsel: COUNSEL, author: V("olive"), viewer: V("olive"), ...over });
 /* A world whose action `x.A` is of a Tier 3 kind (`o` over it). */
 function tier3(o = {}, opts = {}) {
   const x = world(opts);
@@ -60,6 +60,51 @@ test("R8 refusals in order: MACHINE_CANNOT_NAME_COUNSEL, NO_SUCH_ACTION, NO_COUN
   const y = tier3();
   supersede(y, y.D);
   assert.equal(pack(y).reason, "NO_DETERMINATION", "a superseded determination is not live");
+});
+
+test("R8 PACKET_NO_REASON (C-115.44): a reason absent, not a string, blank or only whitespace, or over 2,000 characters is refused with nothing written, asked after MACHINE_CANNOT_NAME_COUNSEL and before NO_SUCH_ACTION; a reasoned packet at Tier 1 and at Tier 3 reads its reason back with its version through counselPacketRead, filingsFor and the op", async () => {
+  const x = tier3();
+  const T1 = x.action();
+  const tables = ["counsel_packets", "counsel_packet_exports", "theory_proposals"];
+  const before = x.snapshot(tables);
+  const ids = JSON.stringify(x.rows(`SELECT scope, next FROM seq ORDER BY scope`));
+  for (const [why, over] of [["absent", { reason: undefined }], ["null", { reason: null }], ["a number", { reason: 42 }],
+                             ["an object", { reason: { text: "why" } }], ["empty", { reason: "" }], ["blank", { reason: "   \n\t " }],
+                             ["2,001 characters", { reason: "x".repeat(PACKET_REASON_MAX + 1) }],
+                             ["2,001 code points", { reason: "\u{1F4DC}".repeat(PACKET_REASON_MAX + 1) }]]) {
+    for (const action of [x.A, T1]) {
+      const r = pack(x, { action, ...over });
+      assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation],
+                       [false, "PACKET_NO_REASON", "PACKET_NO_REASON", "C-115.44", FILINGS_CHECKS.PACKET_NO_REASON.translation], why);
+    }
+  }
+  assert.deepEqual(x.snapshot(tables), before, "nothing written: no packet, no version");
+  assert.equal(x.count("counsel_packets"), 0, "the packet count unchanged");
+  assert.equal(JSON.stringify(x.rows(`SELECT scope, next FROM seq ORDER BY scope`)), ids, "no id spent");
+  /* asked after the machine fence and before the action */
+  assert.equal(pack(x, { author: MACHINE, reason: undefined }).reason, "MACHINE_CANNOT_NAME_COUNSEL", "a machine still refused first");
+  assert.equal(pack(x, { author: "", reason: "" }).reason, "MACHINE_CANNOT_NAME_COUNSEL");
+  assert.equal(pack(x, { action: "ACTION-NONE", reason: undefined }).reason, "PACKET_NO_REASON", "before NO_SUCH_ACTION");
+  assert.equal(pack(x, { action: "ACTION-NONE" }).reason, "NO_SUCH_ACTION", "negative control: reasoned, the action is asked");
+  assert.equal(pack(x, { counsel: null, reason: undefined }).reason, "PACKET_NO_REASON", "before NO_COUNSEL");
+  /* reasoned: at Tier 3 and at Tier 1, each version with its own reason, read back as written */
+  const long = "y".repeat(PACKET_REASON_MAX), wide = "\u{1F4DC}".repeat(PACKET_REASON_MAX);
+  const v1 = pack(x, { reason: `  ${WHY}  ` });
+  const v2 = pack(x, { reason: long });
+  const t1 = pack(x, { action: T1, counsel: null, reason: wide });
+  assert.deepEqual([v1.ok, v1.version, v1.reason, v2.version, v2.reason, t1.ok, t1.reason], [true, 1, `  ${WHY}  `, 2, long, true, wide],
+                   "2,000 characters is allowed, counted in code points, and kept as written");
+  const read = (id, version) => x.f.counselPacketRead({ id, version, viewer: V("bo") });
+  assert.deepEqual([read(v1.id, 1).reason, read(v1.id, 2).reason, read(v1.id).reason, read(t1.id).reason],
+                   [`  ${WHY}  `, long, long, wide], "each version reads back its own reason");
+  assert.deepEqual(x.rows(`SELECT version, reason FROM counsel_packets WHERE packet_id=? ORDER BY version`, v1.id),
+                   [{ version: 1, reason: `  ${WHY}  ` }, { version: 2, reason: long }], "recorded with the version");
+  assert.deepEqual(x.f.filingsFor({ action: x.A, viewer: V("bo") }).packets.map((p) => [p.version, p.reason]), [[1, `  ${WHY}  `], [2, long]]);
+  /* through the op: the reason from the body, never the query */
+  const op = (query, body) => x.op("counselpacket", { author: V("olive"), viewer: V("olive"), ...query }, { action: x.A, counsel: COUNSEL, ...body });
+  assert.equal(op({ reason: WHY }, {}).reason, "PACKET_NO_REASON", "a reason in the query is not read");
+  const o = op({}, { reason: "asked through the op" });
+  assert.deepEqual([o.ok, o.version, read(o.id, 3).reason], [true, 3, "asked through the op"]);
 });
 
 test("R9 the six sections, each item naming its record source: facts, chronology in date order (ties by source id), exhibits with provenance and attestations, standards with in-force, candidate theories, deadlines; consequences as recorded", async () => {
@@ -163,7 +208,7 @@ test("R30 a packet's business-day deadline states the calendar's status as actio
   const clerk = { state: "named", role: "Town Clerk", body: "City of Port Ellery", level: "city" };
   const A = x.action({ kind: "commitment_claim", legs: [{ target: D, kind: "rests_on" }], counterparty: clerk });
   const B = x.action({ kind: "commitment_claim", legs: [{ target: D, kind: "rests_on" }] });
-  const dl = (id) => Object.fromEntries(x.f.counselPacket({ action: id, counsel: COUNSEL, author: V("olive"), viewer: V("olive") })
+  const dl = (id) => Object.fromEntries(x.f.counselPacket({ reason: WHY, action: id, counsel: COUNSEL, author: V("olive"), viewer: V("olive") })
     .sections.deadlines.items.map((i) => [i.rule, i]));
   const all = `${PID}/holidays/2026`, office = `${PID}/holidays/2026/role=Town%20Clerk`;
   /* unconfirmed: counted, and said so */
@@ -220,7 +265,7 @@ test("R10 every section, the head and every export carry the marking; no caption
 test("R10 with no counsel named (Tier 1 or 2) every section, the head and every export carry the group's own marking, and the packet names no counsel", async () => {
   const x = world();
   const A = x.action();
-  const p = x.f.counselPacket({ action: A, author: V("olive"), viewer: V("olive") });
+  const p = x.f.counselPacket({ reason: WHY, action: A, author: V("olive"), viewer: V("olive") });
   const OWN = "Prepared for the group's own review. Not legal advice. Not for filing.";
   assert.deepEqual([p.ok, p.marking, p.head.marking, p.head.counsel, p.fileable], [true, OWN, OWN, null, false]);
   assert.equal(counselMarking(null), OWN);
@@ -234,7 +279,7 @@ test("R10 with no counsel named (Tier 1 or 2) every section, the head and every 
   assert.equal(x.f.counselPacketRead({ id: p.id, viewer: V("bo") }).marking, OWN, "read back the same");
   assert.equal(x.f.filingsFor({ action: A, viewer: V("bo") }).packets[0].counsel, null);
   /* negative control: counsel named at Tier 1 carries counsel's marking */
-  assert.equal(x.f.counselPacket({ action: A, counsel: COUNSEL, author: V("olive"), viewer: V("olive") }).marking, MARK);
+  assert.equal(x.f.counselPacket({ reason: WHY, action: A, counsel: COUNSEL, author: V("olive"), viewer: V("olive") }).marking, MARK);
 });
 
 test("R11 the packet is never published and has no path to publication; it is read only by a member who may see the action (NO_SUCH_PACKET otherwise); an export records who, which version, when and for which counsel; a machine is refused", async () => {

@@ -7,8 +7,8 @@ test("R17 namingDocuments: NO_ENTITY, NO_SUCH_ENTITY; every term of an alias in 
   const { e, read, rows } = world();
   assert.equal(e.namingDocuments({}).reason, "NO_ENTITY");
   assert.equal(e.namingDocuments({ entityId: "ENT-2026-0404" }).reason, "NO_SUCH_ENTITY");
-  const ent = e.createEntity({ kind: "office", label: "Harbour Master", aliases: ["hm:7", "7", "!!!"] }).entity_id;
-  e.createEntity({ kind: "office", label: "Other", aliases: ["x:1"] });
+  const ent = e.createEntity({ note: "a subject the test registers", kind: "office", label: "Harbour Master", aliases: ["hm:7", "7", "!!!"] }).entity_id;
+  e.createEntity({ note: "a subject the test registers", kind: "office", label: "Other", aliases: ["x:1"] });
   read("INFO-1", sha("n1"), [
     { ref: "hm:7", kind: "hm", key: "7", label: "Harbour Master" },          /* reference (whole ref) */
     { kind: "k", key: "7", label: "unrelated" },                              /* reference_key */
@@ -41,7 +41,7 @@ test("R17 namingDocuments: NO_ENTITY, NO_SUCH_ENTITY; every term of an alias in 
 
 test("R17 partial candidates are ordered by selectivity over the references the viewer can see; a partial alias reaching every one is not offered and is reported with its arithmetic; limit clamped 1–500 (default 100), truncated", () => {
   const { e, read } = world();
-  const ent = e.createEntity({ kind: "office", label: "Board Office", aliases: ["legislation", "notice 99"] }).entity_id;
+  const ent = e.createEntity({ note: "a subject the test registers", kind: "office", label: "Board Office", aliases: ["legislation", "notice 99"] }).entity_id;
   read("INFO-1", sha("s1"), [
     { kind: "a", key: "1", label: "legislation one" }, { kind: "b", key: "2", label: "legislation two" },
     { kind: "c", key: "3", label: "legislation notice 99 three" },
@@ -55,13 +55,13 @@ test("R17 partial candidates are ordered by selectivity over the references the 
   assert.match(d.detail, /reaches 1 of the 3/);
   /* a corpus of one: selectivity undefined, and offered */
   const w1 = world();
-  const e1 = w1.e.createEntity({ kind: "office", label: "Solo", aliases: ["alpha beta"] }).entity_id;
+  const e1 = w1.e.createEntity({ note: "a subject the test registers", kind: "office", label: "Solo", aliases: ["alpha beta"] }).entity_id;
   w1.read("INFO-1", sha("solo"), [{ kind: "a", key: "1", label: "alpha beta gamma" }]);
   const one = w1.e.namingDocuments({ entityId: e1, viewer: MACHINE });
   assert.deepEqual([one.count, one.documents[0].selectivity.value], [1, null]);
   /* bounds */
   const w2 = world();
-  const e2 = w2.e.createEntity({ kind: "office", label: "Gamma" }).entity_id;
+  const e2 = w2.e.createEntity({ note: "a subject the test registers", kind: "office", label: "Gamma" }).entity_id;
   w2.read("INFO-1", sha("many"), Array.from({ length: 5 }, (_, i) => ({ kind: "g", key: String(i), label: "Gamma" })));
   const cut = w2.e.namingDocuments({ entityId: e2, limit: 2, viewer: MACHINE });
   assert.deepEqual([cut.count, cut.limit, cut.truncated], [2, 2, true]);
@@ -74,14 +74,14 @@ test("R17 partial candidates are ordered by selectivity over the references the 
   /* terms: at most 24, split on anything not a letter or digit */
   const w3 = world();
   const long = Array.from({ length: 30 }, (_, i) => `w${i}`).join("-");
-  const e3 = w3.e.createEntity({ kind: "office", label: long }).entity_id;
+  const e3 = w3.e.createEntity({ note: "a subject the test registers", kind: "office", label: long }).entity_id;
   w3.read("INFO-1", sha("long"), [{ kind: "t", key: "1", label: Array.from({ length: 24 }, (_, i) => `w${i}`).join(" ") }]);
   assert.equal(w3.e.namingDocuments({ entityId: e3, viewer: MACHINE }).count, 1, "the first 24 terms are the alias's terms");
 });
 
 test("R18 a candidate in a bundle the viewer may not see is not offered, and nothing counts what was withheld", () => {
   const w = world();
-  const ent = w.e.createEntity({ kind: "office", label: "Delta Office", aliases: ["delta"] }).entity_id;
+  const ent = w.e.createEntity({ note: "a subject the test registers", kind: "office", label: "Delta Office", aliases: ["delta"] }).entity_id;
   w.project("PROJ-2026-0002-y", "insider");
   w.read("PROJ-2026-0002-y", sha("hidden"), [{ kind: "d", key: "1", label: "Delta Office" }, { kind: "d", key: "2", label: "delta two" }]);
   w.read("INFO-1", sha("open"), [{ kind: "d", key: "3", label: "Delta Office" }, { kind: "d", key: "4", label: "unrelated" }]);

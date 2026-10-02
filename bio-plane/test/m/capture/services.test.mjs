@@ -441,8 +441,8 @@ test("R74 (N418): every statement that changes the store, from every writer this
   await as("knock", () => c.knock({ content: "k1", sourceAddress: "1.1.1.1", knockerSecret: "a knocker secret of twenty-plus" }));
   await as("knockAttempt", () => c.knockAttempt({ sourceAddress: "1.1.1.2" }));
   const kid = c.inboxList(null).inbox[0].knock_id;
-  await as("inboxResolve", () => c.inboxResolve({ knockId: kid, status: "discarded", by: "m1" }));
-  await as("inboxResolve", () => c.inboxResolve({ knockId: kid, status: "new", by: "m1" }));
+  await as("inboxResolve", () => c.inboxResolve({ knockId: kid, status: "discarded", by: "m1", reason: "not for us" }));
+  await as("inboxResolve", () => c.inboxResolve({ knockId: kid, status: "new", by: "m1", reason: "after all" }));
   await as("pullKnock", () => c.pullKnock({ knockId: kid, by: "m1" }));
   await as("recordCaptureActor", () => c.recordCaptureActor({ captureSha: C, actor: "m1" }));
   await as("recordCaptureAccount", async () => {
@@ -470,12 +470,17 @@ test("R74 (N418): every statement that changes the store, from every writer this
   await as("taskEventRemove", () => c.taskEventRemove({ kind: "authority-undetermined", captureSha: A }));
   await as("recordValidators", () => c.recordValidators({ addressNorm: "https://h.example/p", captureSha: A, etag: "e" }));
   await as("recordSourceOutcome", () => c.recordSourceOutcome({ addressNorm: "https://h.example/p", outcome: "fetch_failed" }));
+  await as("doorbellRefused", () => c.doorbellRefused({}));
+  s.db.exec(`INSERT INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha, row_version)
+             VALUES ('INFO-9', 'information', 'g', 't', 'collected', '2026-01-01', '2026-01-01', 'x', 1)`);
+  await as("setAside", () => assert.equal(c.setAside({ ids: ["INFO-9"], reason: "r", author: "member:m1" }).ok, true));
+  await as("restoreHeld", () => assert.equal(c.restoreHeld({ ids: ["INFO-9"], reason: "r", author: "member:m1" }).ok, true));
   s.sql.exec = exec;
   assert.deepEqual(outside, [], "no statement changed the store outside a transaction");
   for (const w of ["knock", "knockAttempt", "inboxResolve", "pullKnock", "recordCaptureActor", "recordCaptureAccount", "reattest", "renderAdmit",
                    "renderSpend", "recordLinks", "recordLinkVerdict", "deriveSiteChrome", "saveCaptureSession", "loadCaptureSession",
                    "dropCaptureSession", "recordSiteAssets", "recordReuseVerdicts", "recordCaptureLimit", "taskEnqueue", "taskEventAttempt",
-                   "taskEventRemove", "recordValidators", "recordSourceOutcome"])
+                   "taskEventRemove", "recordValidators", "recordSourceOutcome", "doorbellRefused", "setAside", "restoreHeld"])
     assert.ok(inside.has(w), `${w} wrote, through transact`);
 });
 

@@ -1,16 +1,248 @@
 /* monitoring R28–R35, R44 and R50 (with N429): standing intent, what reaches members, and what the understanding and action layers
-   rest on. R34, R44 and R50 run over the real actions module (its clock rule and its R33 bound) and the real
-   action-clocks module (`pendingClocks`, its R1). */
+   rest on. R28 runs over capture's real `acquire` (the capture-request arm) with the network scripted. R34, R44 and R50
+   run over the real actions module (its clock rule and its R33 bound) and the real action-clocks module (`pendingClocks`,
+   its R1). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, stubIntent, sha, V, NOW_MS } from "./fixture.mjs";
-import { markOverdue, MONITOR_AUTHOR, MONITOR_VIEWER, DEADLINE_RECHECK_MAX } from "../../../src/monitoring/index.mjs";
+import { world, stubIntent, sha, V, NOW_MS, infoMd, serve, DAEMON } from "./fixture.mjs";
+import { markOverdue, MONITOR_AUTHOR, MONITOR_VIEWER, DEADLINE_RECHECK_MAX, GATHERING_PURPOSE, GATHERING_LANDS_AT,
+         MONITOR_CADENCE_BATCH } from "../../../src/monitoring/index.mjs";
 import { MECHANICAL_FIELD_SETS } from "../../../src/promotion/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
-test.todo("R28 each open named request in data/gathering.json whose cadence is due is captured through capture.acquire from its locators in order, the request named as authority (not yet met: Intake Doctrine §4; nothing executes a gathering request, and T8 plans no build of it)");
+/* R28: a bundle carrying named requests, in project P. */
+const GB = "INFO-2026-0600-gathering", GP = "PROJ-2026-0600-g";
+const PUB = "https://publisher.example.org/minutes.txt", MIRROR = "https://mirror.example.org/minutes.txt";
+const req = (id, o) => ({ id, target: { text: `the ${id}` }, locators: [PUB], authority: "Town Clerk", criticality: "crucial",
+                          status: "open", ...o });
+function gatheringWorld(requests) {
+  const w = world();
+  const g = JSON.stringify({ requests });
+  const r = w.promote(GB, infoMd(GB, "https://records.example.org/gathering", { enabled: false, lines: [`project: ${GP}`] }),
+    { files: [{ path: "data/gathering.json", text: g, bytes: Buffer.byteLength(g), sha256: sha(g) }] });
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+  /* capture's real acquire, every call recorded */
+  const calls = [];
+  const real = w.capture.acquire.bind(w.capture);
+  w.capture.acquire = (body, opts) => { calls.push({ body, opts: JSON.parse(JSON.stringify(opts)) }); return real(body, opts); };
+  return { w, calls };
+}
+/* The scripted network as the global fetch capture's acquire reads. */
+async function online(w, fn) {
+  const was = globalThis.fetch;
+  globalThis.fetch = w.net.fetch;
+  try { return await fn(); } finally { globalThis.fetch = was; }
+}
+/* What the requests fetched: the network less acquire's own attestation requests (timestamps, the archive's save). */
+const fetched = (w) => w.net.seen.filter((u) => !/^http:\/\/(timestamp|rfc3161)\.|^https:\/\/web\.archive\.org\//.test(u));
+const landedOf = (w) => w.rows(`SELECT bundle_id, current_state, project FROM bundles WHERE bundle_id LIKE '%-gathered' ORDER BY bundle_id`);
+const looksOf = (w, id) => w.looks().filter((l) => l.authority === id);
+const runsOf = (w) => w.rows(`SELECT request_id, seq, outcome, locator, capture_sha, landed FROM monitor_gathering_run ORDER BY request_id, seq`);
+
+test("R28 each open named request whose cadence is due is captured through capture.acquire from its locators in order, the publisher first, through the capture-request arm as the daemon; the request is each look's authority, never asserted onto the bytes; new bytes land as an Information bundle at collected, never verified", async () => {
+  const A = "GATH-2026-0601-minutes", B = "GATH-2026-0602-agenda";
+  const { w, calls } = gatheringWorld([req(A, { cadence: "weekly", locators: [PUB, MIRROR] }),
+                                       req(B, { locators: ["https://publisher.example.org/agenda.txt"] })]);
+  w.net.routes[PUB] = serve("down", "text/plain", 503);
+  w.net.routes[MIRROR] = serve("the minutes, as the mirror holds them");
+  w.net.routes["https://publisher.example.org/agenda.txt"] = serve("the agenda");
+  assert.equal(w.m.cadenceDue(NOW_MS), NOW_MS, "due: never attempted");
+  assert.equal(w.m.cadenceWake(NOW_MS), NOW_MS + 1000);
+  const t = await online(w, () => w.m.cadenceTick(NOW_MS));
+  assert.deepEqual([t.gathered.due, t.gathered.captured.map((x) => x.request), t.gathered.failed], [2, [A, B], []]);
+  /* the locators in order, the publisher first; the mirror only after it failed; the arm and the class */
+  assert.deepEqual(fetched(w), [PUB, MIRROR, "https://publisher.example.org/agenda.txt"]);
+  for (const c of calls) {
+    assert.deepEqual(c.body, {}, "nothing in the body: no authority asserted, no locator a caller could name");
+    assert.deepEqual([c.opts.cls, c.opts.member, c.opts.captureRequest.purpose, c.opts.captureRequest.render],
+                     ["daemon", false, GATHERING_PURPOSE, false]);
+  }
+  assert.deepEqual(calls.map((c) => c.opts.captureRequest.locator), [PUB, MIRROR, "https://publisher.example.org/agenda.txt"]);
+  const a = t.gathered.captured[0];
+  assert.deepEqual([a.locator, a.sha, a.existed, a.outcome], [MIRROR, sha("the minutes, as the mirror holds them"), false, "captured"]);
+  assert.deepEqual(a.tried.map((x) => [x.locator, x.outcome, x.status]), [[PUB, "failed", 503], [MIRROR, "captured", null]]);
+  /* one look per locator tried, the request its authority */
+  assert.deepEqual(looksOf(w, A).map((l) => [l.authority_kind, l.level, l.subject, l.state, l.result_ref]),
+    [["sweep", "document", PUB, "LOOKED_INDETERMINATE", null], ["sweep", "document", MIRROR, "PRESENT", a.sha]]);
+  assert.equal(looksOf(w, B).length, 1);
+  /* landed: an Information bundle at collected, in the request's bundle's project, naming the request and its bundle */
+  const landed = landedOf(w);
+  assert.equal(landed.length, 2);
+  for (const l of landed) assert.deepEqual([l.current_state, l.project], [GATHERING_LANDS_AT, GP]);
+  assert.equal(GATHERING_LANDS_AT, "collected");
+  const ida = a.landed.bundle_id;
+  assert.equal(a.landed.ok, true);
+  const text = w.text(ida);
+  assert.match(text, new RegExp(`named request ${A}, carried by ${GB}'s data/gathering.json, which authorised the fetch; locator 2 of 2`));
+  const reg = JSON.parse(w.record.readFile(ida, "data/provenance.json").text).documents[0];
+  assert.deepEqual([reg.origin.kind, reg.capture.sha256, reg.authority_state ?? reg.capture.authority_state ?? null],
+                   ["named_request", a.sha, "undetermined"], "the request's own authority is never asserted onto the bytes");
+  assert.equal(w.row(`SELECT bundle_id FROM register WHERE capture_sha=?`, a.sha).bundle_id, ida, "registered under the landed bundle");
+  /* the record of attempts */
+  assert.deepEqual(runsOf(w).map((r) => [r.request_id, r.seq, r.outcome, r.locator, r.landed]),
+    [[A, 1, "captured", MIRROR, ida], [B, 1, "captured", "https://publisher.example.org/agenda.txt", t.gathered.captured[1].landed.bundle_id]]);
+  /* not due again until its cadence: A weekly from now; B, with no cadence, ran once */
+  const g = w.m.gathering(NOW_MS + DAY);
+  assert.deepEqual([g.due, g.next], [[], NOW_MS + 7 * DAY]);
+  const n = calls.length;
+  await online(w, () => w.m.cadenceTick(NOW_MS + DAY));
+  assert.equal(calls.length, n, "a request not yet due captures nothing");
+  assert.deepEqual(w.m.gathering(NOW_MS + 7 * DAY).due.map((x) => x.id), [A], "due again a week on; the one-shot is not");
+  /* nothing ever lands verified */
+  assert.deepEqual(w.rows(`SELECT count(*) c FROM bundles WHERE current_state='verified'`)[0].c, 0);
+});
+
+test("R28 a request not open, one whose cadence is none, and a request not due capture nothing; bytes the record already holds land nothing new and are recorded as held; a governed refusal leaves the request due and tries no mirror; paused, nothing is gathered", async () => {
+  const OPEN = "GATH-2026-0611-open", DONE = "GATH-2026-0612-done", RETIRED = "GATH-2026-0613-retired", NEVER = "GATH-2026-0614-none";
+  const HELD = "https://publisher.example.org/held.txt";
+  const { w, calls } = gatheringWorld([req(OPEN, { locators: [HELD, MIRROR], cadence: "daily" }), req(DONE, { status: "captured" }),
+                                       req(RETIRED, { status: "retired" }), req(NEVER, { cadence: "none" })]);
+  const g = w.m.gathering(NOW_MS);
+  assert.deepEqual([g.due.map((x) => x.id), g.unscheduled.map((x) => [x.id, x.reason])],
+                   [[OPEN], [[NEVER, "its cadence is none: the daemon does not run it"]]]);
+  /* paused: nothing gathered, what is due stated */
+  assert.equal(w.m.pause({ paused: true, by: "class:admin" }).ok, true);
+  const p = await online(w, () => w.m.cadenceTick(NOW_MS));
+  assert.deepEqual([p.gathered, calls.length, w.m.cadenceDue(NOW_MS)], [{ due: 1, captured: [], failed: [], skipped: [] }, 0, null]);
+  assert.equal(w.m.pause({ paused: false, by: "class:admin" }).ok, true);
+  /* governed: our pacing; the request stays due and its mirror is not tried in the publisher's place */
+  w.gov.refuse.push("publisher.example.org");
+  const gv = await online(w, () => w.m.cadenceTick(NOW_MS));
+  assert.deepEqual([gv.gathered.failed.map((x) => [x.request, x.outcome]), fetched(w)], [[[OPEN, "governed"]], []]);
+  assert.deepEqual(looksOf(w, OPEN).map((l) => [l.state, l.governed, l.condition]), [["LOOKED_INDETERMINATE", 1, "source-unreachable-governed"]]);
+  assert.deepEqual(w.m.gathering(NOW_MS + 2 * 3600000).due.map((x) => x.id), [OPEN], "still due");
+  w.gov.refuse.length = 0;
+  /* held: the bytes are already a capture the record holds */
+  const held = w.monitored("INFO-2026-0615-has", "https://records.example.org/has", "bytes already held", { enabled: false });
+  w.net.routes[HELD] = serve("bytes already held");
+  const before = landedOf(w).length;
+  const h = await online(w, () => w.m.cadenceTick(NOW_MS + 2 * 3600000));
+  assert.deepEqual(h.gathered.captured.map((x) => [x.request, x.outcome, x.existed, x.sha, "landed" in x]),
+                   [[OPEN, "held", true, held.cap, false]]);
+  assert.equal(landedOf(w).length, before, "a held capture promotes nothing");
+  assert.deepEqual(runsOf(w).map((r) => [r.outcome, r.landed]), [["governed", null], ["held", null]]);
+  assert.deepEqual(fetched(w), [HELD], "the closed, retired and none requests were never fetched");
+  assert.deepEqual(calls.map((c) => c.opts.captureRequest.locator), [HELD, HELD], "the governed attempt and the held one; never the mirror");
+  /* a request whose every locator fails is recorded failed, and is due again at its cadence */
+  w.net.routes[HELD] = serve("gone", "text/plain", 404);
+  w.net.routes[MIRROR] = new Error("reset");
+  const f = await online(w, () => w.m.cadenceTick(NOW_MS + 2 * 3600000 + DAY));
+  assert.deepEqual(f.gathered.failed.map((x) => [x.outcome, x.tried.map((y) => [y.locator, y.status])]),
+                   [["failed", [[HELD, 404], [MIRROR, null]]]]);
+  assert.deepEqual(looksOf(w, OPEN).slice(-2).map((l) => l.state), ["LOOKED_ABSENT", "LOOKED_INDETERMINATE"]);
+  assert.deepEqual(w.m.gathering(NOW_MS + 2 * 3600000 + 2 * DAY).due.map((x) => x.id), [OPEN]);
+});
+
+test("R28 (K1102) the bundle's daemon block governs its requests: enabled false runs none, each stated as skipped with the reason; tick_budget bounds the locators tried for that bundle in one tick; an enabled bundle with no budget, and one with no daemon block, run as before", async () => {
+  const w = world();
+  const loc = (b, n, k) => `https://${k}-${b}${n}.example.org/a`;
+  const r2 = (b, n) => req(`GATH-2026-065${n}-${b}`, { locators: [loc(b, n, "p"), loc(b, n, "m")] });
+  const carry = (id, g) => {
+    const t = JSON.stringify(g);
+    assert.equal(w.promote(id, infoMd(id, `https://records.example.org/${id}`, { enabled: false }),
+      { files: [{ path: "data/gathering.json", text: t, bytes: Buffer.byteLength(t), sha256: sha(t) }] }).ok, true, id);
+  };
+  carry("INFO-2026-0651-off", { daemon: { enabled: false }, requests: [r2("off", 1)] });
+  carry("INFO-2026-0652-budget", { daemon: { enabled: true, tick_budget: 1 }, requests: [r2("bud", 2), r2("bud", 3)] });
+  carry("INFO-2026-0653-on", { daemon: { enabled: true }, requests: [r2("on", 4)] });
+  carry("INFO-2026-0654-plain", { requests: [r2("pl", 5)] });
+  /* every locator refuses, so each request tries all it is allowed */
+  const asked = [];
+  w.capture.acquire = async (body, opts) => { asked.push(opts.captureRequest.locator); return { status: 502, body: { ok: false, reason: "SOURCE_REFUSED", status: 503 } }; };
+  const g = w.m.gathering(NOW_MS);
+  assert.deepEqual(g.disabled.map((x) => x.id), ["GATH-2026-0651-off"]);
+  assert.equal(g.due.some((x) => x.bundle === "INFO-2026-0651-off"), false, "a disabled bundle's request is never due");
+  const t = await w.m.cadenceTick(NOW_MS);
+  /* disabled: never fetched, stated */
+  assert.equal(asked.some((u) => u.includes("off1")), false);
+  assert.deepEqual(t.gathered.skipped.filter((x) => x.bundle === "INFO-2026-0651-off"),
+    [{ bundle: "INFO-2026-0651-off", request: "GATH-2026-0651-off", reason: "its bundle's daemon block says enabled: false, so the daemon runs none of its requests" }]);
+  /* tick_budget 1: one locator for the bundle in this tick; its second request waits, stated */
+  assert.deepEqual(asked.filter((u) => u.includes("-bud")), [loc("bud", 2, "p")]);
+  assert.deepEqual(t.gathered.failed.find((x) => x.bundle === "INFO-2026-0652-budget").tried.map((x) => x.locator), [loc("bud", 2, "p")]);
+  assert.deepEqual(t.gathered.skipped.filter((x) => x.bundle === "INFO-2026-0652-budget"),
+    [{ bundle: "INFO-2026-0652-budget", request: "GATH-2026-0653-bud", reason: "its bundle's daemon tick_budget (1) is spent in this tick" }]);
+  /* negative controls: enabled with no budget, and no daemon block, try every locator as before */
+  assert.deepEqual(asked.filter((u) => u.includes("-on") || u.includes("-pl")),
+    [loc("on", 4, "p"), loc("on", 4, "m"), loc("pl", 5, "p"), loc("pl", 5, "m")]);
+  /* the statement holds no epoch open: the next tick is fresh */
+  assert.notEqual((await w.m.cadenceTick(NOW_MS + 1000)).epoch, t.epoch);
+  /* only a disabled bundle's requests: nothing is due */
+  const x = world();
+  const t1 = JSON.stringify({ daemon: { enabled: false }, requests: [r2("x", 6)] });
+  x.promote("INFO-2026-0655-x", infoMd("INFO-2026-0655-x", "https://records.example.org/x", { enabled: false }),
+    { files: [{ path: "data/gathering.json", text: t1, bytes: Buffer.byteLength(t1), sha256: sha(t1) }] });
+  assert.equal(x.m.cadenceDue(NOW_MS), null);
+});
+
+test("R28 the cadence tick runs due requests after its batch's addresses, within R19's budget of 50, each locator a request tries spending one", async () => {
+  const many = [];
+  for (let i = 0; i < 3; i++) many.push(req(`GATH-2026-062${i}-n`, { locators: [`https://p${i}.example.org/a`, `https://m${i}.example.org/a`] }));
+  const { w, calls } = gatheringWorld(many);
+  for (let i = 0; i < MONITOR_CADENCE_BATCH - 3; i++) w.monitored(`INFO-2026-${7000 + i}-addr`, `https://addr.example.org/${i}`, `addr ${i}`, { freq: "daily" });
+  const order = [];
+  const realMonitor = w.m.monitor.bind(w.m);
+  w.m.monitor = async (q) => { order.push(["address", q.bundleId]); return { status: 200, body: { ok: true, status: "unchanged" } }; };
+  const realAcquire = w.capture.acquire;
+  w.capture.acquire = (body, opts) => { order.push(["request", opts.captureRequest.locator]); return realAcquire(body, opts); };
+  const t = await online(w, () => w.m.cadenceTick(NOW_MS));
+  /* 47 addresses, then 3 fetches: the first request's two locators (its publisher fails) and the second's first */
+  assert.equal(t.ticked.length, MONITOR_CADENCE_BATCH - 3);
+  assert.deepEqual(order.slice(0, MONITOR_CADENCE_BATCH - 3).every(([k]) => k === "address"), true, "addresses first");
+  assert.deepEqual(order.slice(MONITOR_CADENCE_BATCH - 3), [["request", "https://p0.example.org/a"], ["request", "https://m0.example.org/a"],
+                                                            ["request", "https://p1.example.org/a"]]);
+  assert.equal(order.length, MONITOR_CADENCE_BATCH, "the budget is 50 fetches");
+  assert.equal(t.gathered.due, 3);
+  assert.ok(realMonitor && calls.length === 3);
+});
 test.todo("R29 a ratified sweep runs within its scope and breadth budget and lands at collected (not yet met: K102; sweeps wait for a design of what a sweep's query is)");
-test.todo("R31 items in the item contract with their options: source-modified, source-removed, archive-fallback-eligible, monitoring-recheck-due, read by queue (not yet met: the item contract's catalogue ids and options are composed by legacy-store and affordances today (queue, layer 11); this module offers the facts through R8's flag, R20's eligible addresses and R32's rows, and publishes no item yet)");
+test("R31 the reads answer what queue-producers publishes: flagged (R48) names each flagged tick's document with its source_status and since (source-modified, source-removed); archiveEligible (R47) each eligible address with its first failure (archive-fallback-eligible); monitoring({viewer}) each address overdue by more than its interval, with due_at and interval_ms, and each unscheduled one with its reason (monitoring-recheck-due); this module publishes no item", async () => {
+  const w = world();
+  const iso = (ms) => new Date(ms).toISOString().replace(/\.\d+Z$/, "Z");
+  const tick = (id) => w.m.monitor({ bundleId: id, viewer: DAEMON, actorClass: "machine", actor: DAEMON });
+  /* source-modified, source-removed: R8's flag, read by R48; an unchanged tick is the negative control */
+  const L = (n) => `https://records.example.org/r31-${n}.txt`;
+  w.monitored("INFO-2026-0801-mod", L(1), "r31 v1 1", { freq: "weekly" });
+  w.monitored("INFO-2026-0802-gone", L(2), "r31 v1 2", { freq: "weekly" });
+  w.monitored("INFO-2026-0803-same", L(3), "r31 v1 3", { freq: "weekly" });
+  w.net.routes[L(1)] = serve("v2");
+  w.net.routes[L(2)] = serve("gone", "text/plain", 404);
+  w.net.routes[L(3)] = serve("r31 v1 3");
+  const ticks = {};
+  for (const id of ["INFO-2026-0801-mod", "INFO-2026-0802-gone", "INFO-2026-0803-same"]) ticks[id] = (await tick(id)).body;
+  const f = w.m.flagged({ viewer: DAEMON });
+  assert.deepEqual(f.items, [
+    { bundleId: "INFO-2026-0801-mod", source_status: "modified", since: ticks["INFO-2026-0801-mod"].checked },
+    { bundleId: "INFO-2026-0802-gone", source_status: "removed", since: ticks["INFO-2026-0802-gone"].checked }]);
+  assert.deepEqual([f.limit, f.truncated], [200, false], "the bound queue-producers publishes on each item");
+  /* archive-fallback-eligible: R47, with the first failure of the run */
+  for (let i = 0; i < 3; i++) await w.capture.recordSourceOutcome({ addressNorm: "https://gone.example.org/r31", outcome: "fetch_failed", at: "2026-09-10T00:00:00Z" });
+  const e = w.m.archiveEligible(NOW_MS);
+  assert.deepEqual(e.eligible.map((x) => [x.address, x.first_failure_since, x.reachability.fallback_eligible]),
+                   [["https://gone.example.org/r31", "2026-09-10T00:00:00Z", true]]);
+  assert.deepEqual([e.limit, e.truncated, e.paused], [50, false, { paused: false }]);
+  /* monitoring-recheck-due: overdue by more than its interval, or unscheduled; due but within its interval, and never
+     checked, are not overdue (the negative controls) */
+  const at = (id, ms) => w.st.sql.exec(`UPDATE bundle_projection SET monitor_last_checked=? WHERE bundle_id=?`, iso(ms), id);
+  w.monitored("INFO-2026-0804-late", L(4), "r31 v1 4", { freq: "daily" });
+  w.monitored("INFO-2026-0805-just", L(5), "r31 v1 5", { freq: "daily" });
+  w.monitored("INFO-2026-0806-never", L(6), "r31 v1 6", { freq: "daily" });
+  w.monitored("INFO-2026-0807-meet", L(7), "r31 v1 7", { freq: "per_meeting" });
+  at("INFO-2026-0804-late", NOW_MS - 3 * DAY);
+  at("INFO-2026-0805-just", NOW_MS - DAY - DAY / 2);
+  const items = Object.fromEntries(w.m.monitoring({ viewer: DAEMON, now: NOW_MS }).items.map((r) => [r.bundle, r]));
+  const overdue = (r) => r.state === "due" && Number.isFinite(Date.parse(r.due_at)) && NOW_MS - Date.parse(r.due_at) > r.interval_ms;
+  assert.deepEqual([items["INFO-2026-0804-late"].due_at, items["INFO-2026-0804-late"].interval_ms], [iso(NOW_MS - 2 * DAY), DAY]);
+  assert.equal(overdue(items["INFO-2026-0804-late"]), true, "two days past a daily check");
+  assert.equal(overdue(items["INFO-2026-0805-just"]), false, "half a day past: due, not overdue");
+  assert.deepEqual([items["INFO-2026-0806-never"].state, items["INFO-2026-0806-never"].due_at], ["due", null], "never checked: due now, not overdue");
+  assert.deepEqual([items["INFO-2026-0807-meet"].state, items["INFO-2026-0807-meet"].reason],
+                   ["unscheduled", "cadence is a meeting schedule this plane does not hold"]);
+  /* this module publishes no item: none of its reads answers an item of the item contract */
+  for (const read of [f, e, w.m.monitoring({ viewer: DAEMON, now: NOW_MS })])
+    assert.equal(/"class":"(FINDING|CONDITION)"|"kind":"(source-modified|source-removed|archive-fallback-eligible|monitoring-recheck-due)"/
+      .test(JSON.stringify(read)), false);
+});
 
 /* An action with two clock entries, one past and one not, by a member. */
 const ACT = "ACTN-2026-0700-req";
@@ -123,7 +355,18 @@ test("R34 a pending clock entry whose date has passed is marked overdue by a mec
   const again = await w.m.deadlineRecheck(NOW_MS);
   assert.deepEqual([again.marked, w.manifest(ACT).length], [[], n]);
 });
-test.todo("R34 the action's members are told of an overdue mark (not yet met: needs R31's items, which this module does not yet publish)");
+test("R34 the overdue mark R44 writes is what action-clocks.overdueClocks reads for queue-producers' telling: a pending entry past its date is read pending before the mark and overdue after it; an entry not yet past is not read", async () => {
+  const w = world({ realActions: true, escalation: { escalationsDue: () => ({ ok: true, items: [] }) } });
+  const id = "ACTN-2026-0705-told";
+  createAction(w, id, [["answer", "2026-09-01", "pending"], ["appeal", "2099-12-01", "pending"]]);
+  const read = () => w.clocks.overdueClocks({ viewer: MONITOR_VIEWER, now: NOW_MS }).items.filter((x) => x.action === id)
+    .map((x) => [x.ord, x.date, x.status]);
+  assert.deepEqual(read(), [[0, "2026-09-01", "pending"]], "before the mark: past and still pending");
+  const r = await w.m.deadlineRecheck(NOW_MS);
+  assert.deepEqual(r.marked.map((m) => [m.action, m.ords]), [[id, [0]]]);
+  assert.deepEqual(read(), [[0, "2026-09-01", "overdue"]], "after it: the mark, as monitoring wrote it");
+  assert.equal(w.fm(id).clock[0].status, "overdue");
+});
 
 test("R44 the mark reads action-clocks.pendingClocks and moves an entry only from pending to overdue; met, waived and overdue entries are left; nothing is added, removed or re-dated", async () => {
   const w = world({ realActions: true, escalation: { escalationsDue: () => ({ ok: true, items: [] }) } });

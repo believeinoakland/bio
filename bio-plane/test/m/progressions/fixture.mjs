@@ -69,6 +69,8 @@ export function meaning() {
 
 export const MEMBER = "class:member", BOB = "member:bob";
 export const DAY = 86400000;
+/** The basis statement a test's first declaration states (R2). */
+export const FIRST_BASIS = "the group's reading of how this body works";
 
 export function world({ now = "2026-09-01T00:00:00.000Z", nowMs = null } = {}) {
   const st = storage();
@@ -109,14 +111,16 @@ export function world({ now = "2026-09-01T00:00:00.000Z", nowMs = null } = {}) {
       if (!mean.resolutions.has(entityId)) mean.resolutions.set(entityId, new Map());
       mean.resolutions.get(entityId).set(captureSha, { capture_sha: captureSha, bundle_id: bundleId, grade });
     },
-    /** The three-stage flow most tests use. */
+    /** The three-stage flow most tests use. A first declaration states its basis (R2, DEC-88); a revision sends its
+     *  own through `extra`, so one sent without is refused as R4 says. */
     define(key = "proc", overrides = {}, extra = {}) {
       const stages = [
         { key: "need", cardinality: "1", required: "always" },
         { key: "award", after: "need", cardinality: "1", required: "always", within: "30 days" },
         { key: "contract", after: "award", cardinality: "0..n", required: "usually", within: "2 weeks" },
       ].map((s) => ({ ...s, ...(overrides[s.key] || {}) }));
-      return p.defineProgression({ progressionKey: key, label: "Procurement", stages, declaredBy: "member:alice", ...extra });
+      const first = p.readProgression({ progressionKey: key }).found ? {} : { basis: FIRST_BASIS };
+      return p.defineProgression({ progressionKey: key, label: "Procurement", stages, declaredBy: "member:alice", ...first, ...extra });
     },
   };
   return w;

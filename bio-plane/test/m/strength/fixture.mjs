@@ -47,6 +47,8 @@ CREATE TABLE inquiry_basis_version_legs (bundle_id TEXT NOT NULL, name TEXT NOT 
 
 export const MACHINE = "class:member";
 export const ADMIN = "admin-ann", MEMBER = "mem-bo";
+/** R15 (DEC-88): an administrator's reason for the group's default bar. */
+export const REASON = "Our readers check every claim against the documents themselves.";
 
 /** One world: the store, the controlled providers, and helpers that write what they read. */
 export function world({ group = "grp-one", now = "2026-09-28T00:00:00.000Z" } = {}) {
@@ -163,6 +165,16 @@ export function world({ group = "grp-one", now = "2026-09-28T00:00:00.000Z" } = 
     capture(sha, bundleId, address = null) {
       st.sql.exec(`INSERT INTO register (capture_sha,bundle_id,path,encoding,bytes,registered) VALUES (?,?,?,?,?,?)`,
                   sha, bundleId, "data/x.pdf", "binary", 1, now);
+      if (address)
+        st.sql.exec(`INSERT INTO captured_locators (address_norm,address,capture_sha,first_retrieved,last_retrieved)
+                     VALUES (?,?,?,?,?)`, address, address, sha, now, now);
+    },
+    /** A member's firsthand observation (provenance R28): an information bundle holding one authored capture, its
+     *  register row naming the author (provenance R48), optionally retrieved from an address. */
+    observation(id, author, sha = `obs-${id}`, address = null) {
+      w.bundle(id);
+      st.sql.exec(`INSERT INTO register (capture_sha,bundle_id,path,encoding,bytes,registered,authored,author,observed_at)
+                   VALUES (?,?,?,?,?,?,?,?,?)`, sha, id, "words.txt", "utf8", 1, now, 1, author, now);
       if (address)
         st.sql.exec(`INSERT INTO captured_locators (address_norm,address,capture_sha,first_retrieved,last_retrieved)
                      VALUES (?,?,?,?,?)`, address, address, sha, now, now);

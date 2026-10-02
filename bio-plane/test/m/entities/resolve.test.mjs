@@ -5,11 +5,11 @@ import { world, sha, MACHINE } from "./fixture.mjs";
 
 test("R9 the cascade: A on the reference's fold, else B on the key's (differing from the reference's), else C on the label's, else unresolved; every matching entity at that tier; it stops at the first tier for every entity", () => {
   const { e, read } = world();
-  const byRef = e.createEntity({ kind: "ordinance", label: "Ord One", aliases: ["ord:26-1"] }).entity_id;
-  const byKey = e.createEntity({ kind: "ordinance", label: "Ord Two", aliases: ["26-2"] }).entity_id;
-  const byKey2 = e.createEntity({ kind: "fund", label: "Other", aliases: ["26-2"] }).entity_id;
-  const byName = e.createEntity({ kind: "office", label: "Harbour Office" }).entity_id;
-  const loser = e.createEntity({ kind: "office", label: "Clerk" }).entity_id;
+  const byRef = e.createEntity({ note: "a subject the test registers", kind: "ordinance", label: "Ord One", aliases: ["ord:26-1"] }).entity_id;
+  const byKey = e.createEntity({ note: "a subject the test registers", kind: "ordinance", label: "Ord Two", aliases: ["26-2"] }).entity_id;
+  const byKey2 = e.createEntity({ note: "a subject the test registers", kind: "fund", label: "Other", aliases: ["26-2"] }).entity_id;
+  const byName = e.createEntity({ note: "a subject the test registers", kind: "office", label: "Harbour Office" }).entity_id;
+  const loser = e.createEntity({ note: "a subject the test registers", kind: "office", label: "Clerk" }).entity_id;
   read("INFO-1", sha("r9"), [
     { kind: "ORD", key: "26-1", label: "Clerk" },          /* A on byRef; the label's C for `loser` is never minted */
     { kind: "ord", key: "26-2", label: "Harbour Office" },  /* B on both key holders; no C for byName */
@@ -36,7 +36,7 @@ test("R9 the cascade: A on the reference's fold, else B on the key's (differing 
 
 test("R10 a resolution is keyed (capture, reference, entity): a stronger grade raises in place with raised_from, an equal or weaker one is kept; established only for A and B, needs_confirmation for C", () => {
   const { e, read, rows } = world();
-  const ent = e.createEntity({ kind: "office", label: "Port Office" }).entity_id;
+  const ent = e.createEntity({ note: "a subject the test registers", kind: "office", label: "Port Office" }).entity_id;
   read("INFO-1", sha("r10"), [{ kind: "po", key: "1", label: "Port Office" }]);
   const c = e.resolve({ captureSha: sha("r10") }).resolved[0];
   assert.deepEqual([c.grade, c.established, c.needs_confirmation, c.raised], ["C", false, true, false]);
@@ -49,7 +49,7 @@ test("R10 a resolution is keyed (capture, reference, entity): a stronger grade r
   assert.deepEqual([t.grade, t.kept], ["A", true], "testimony after an A keeps the A");
   assert.equal(rows(`SELECT grade, established FROM resolutions`)[0].grade, "A");
   /* B is established */
-  const k = e.createEntity({ kind: "office", label: "K", aliases: ["77"] }).entity_id;
+  const k = e.createEntity({ note: "a subject the test registers", kind: "office", label: "K", aliases: ["77"] }).entity_id;
   read("INFO-2", sha("r10b"), [{ kind: "k", key: "77", label: "x" }]);
   const bb = e.resolve({ captureSha: sha("r10b") }).resolved.find((m) => m.entity_id === k);
   assert.deepEqual([bb.grade, bb.established, bb.needs_confirmation], ["B", true, false]);
@@ -57,7 +57,7 @@ test("R10 a resolution is keyed (capture, reference, entity): a stronger grade r
 
 test("R11 resolve refuses NO_SHA, NO_REF, then NO_SUCH_REFERENCE; without ref every reference in one transaction; the counts; the per-item set form (C-75)", () => {
   const { e, read } = world();
-  e.createEntity({ kind: "office", label: "Alpha" });
+  e.createEntity({ note: "a subject the test registers", kind: "office", label: "Alpha" });
   read("INFO-1", sha("r11"), [{ kind: "a", key: "1", label: "Alpha" }, { kind: "b", key: "2", label: "Nobody" }]);
   read("INFO-2", sha("r11b"), [{ kind: "c", key: "3", label: "Alpha" }]);
   assert.equal(e.resolve({}).reason, "NO_SHA");
@@ -82,7 +82,7 @@ test("R11 resolve refuses NO_SHA, NO_REF, then NO_SUCH_REFERENCE; without ref ev
 
 test("R12 testify refuses NO_SHA, NO_REF, NO_ENTITY, the act-shape NO_BASIS, NO_SUCH_REFERENCE, then NO_SUCH_ENTITY; records D, never established, a method naming the testifier and basis; never lowers", () => {
   const { e, read } = world();
-  const ent = e.createEntity({ kind: "person", label: "Pat" }).entity_id;
+  const ent = e.createEntity({ note: "a subject the test registers", kind: "person", label: "Pat" }).entity_id;
   read("INFO-1", sha("r12"), [{ kind: "x", key: "1", label: "unrelated" }]);
   const base = { captureSha: sha("r12"), ref: "x:1", entityId: ent, basis: "I saw it", resolvedBy: "member:ann" };
   assert.equal(e.testify({ ...base, captureSha: "" }).reason, "NO_SHA");
@@ -104,7 +104,7 @@ test("R12 testify refuses NO_SHA, NO_REF, NO_ENTITY, the act-shape NO_BASIS, NO_
 
 test("R13 onResolved and onResolveAttempt: one registration per module (LISTENER_DECLARED); resolved listeners per insert or raise, none for a kept one; attempt listeners per reference tried; a throwing listener fails the resolve and rolls it back", () => {
   const { e, read, rows } = world();
-  const ent = e.createEntity({ kind: "office", label: "Alpha" }).entity_id;
+  const ent = e.createEntity({ note: "a subject the test registers", kind: "office", label: "Alpha" }).entity_id;
   read("INFO-1", sha("r13"), [{ kind: "a", key: "1", label: "Alpha" }, { kind: "b", key: "2", label: "nobody" }]);
   const resolved = [], attempts = [];
   assert.equal(e.onResolved("connections", (x) => resolved.push(x)).ok, true);
@@ -127,7 +127,7 @@ test("R13 onResolved and onResolveAttempt: one registration per module (LISTENER
   assert.equal(resolved.at(-1).grade, "D");
   /* a listener that throws fails the resolve */
   const { e: e2, read: read2, rows: rows2 } = world();
-  e2.createEntity({ kind: "office", label: "Alpha" });
+  e2.createEntity({ note: "a subject the test registers", kind: "office", label: "Alpha" });
   read2("INFO-1", sha("r13x"), [{ kind: "a", key: "1", label: "Alpha" }]);
   e2.onResolved("connections", () => { throw new Error("listener down"); });
   assert.throws(() => e2.resolve({ captureSha: sha("r13x") }), /listener down/);
@@ -137,7 +137,7 @@ test("R13 onResolved and onResolveAttempt: one registration per module (LISTENER
 
 test("R27 grade states how a reference was matched and nothing else: a C never reads as established, the recogniser never mints D, a held grade only rises", () => {
   const { e, read } = world();
-  const ent = e.createEntity({ kind: "office", label: "Beta" }).entity_id;
+  const ent = e.createEntity({ note: "a subject the test registers", kind: "office", label: "Beta" }).entity_id;
   read("INFO-1", sha("r27"), [{ kind: "b", key: "1", label: "Beta" }]);
   e.testify({ captureSha: sha("r27"), ref: "b:1", entityId: ent, basis: "said so" });
   const c = e.resolve({ captureSha: sha("r27") }).resolved[0];
@@ -162,7 +162,7 @@ test("R33 gradeRank ranks the catalogue's grades in its own order, strongest hig
   assert.ok(Object.isFrozen(gradeRank));
   /* the rank R10 raises by: D < C < B < A */
   const { e, read } = world();
-  const ent = e.createEntity({ kind: "office", label: "Rank" }).entity_id;
+  const ent = e.createEntity({ note: "a subject the test registers", kind: "office", label: "Rank" }).entity_id;
   read("INFO-1", sha("r33"), [{ kind: "k", key: "1", label: "Rank" }]);
   e.testify({ captureSha: sha("r33"), ref: "k:1", entityId: ent, basis: "b" });
   assert.equal(e.resolve({ captureSha: sha("r33") }).resolved[0].raised_from, "D");
@@ -177,7 +177,7 @@ test("R34 isEstablished(grade) is true exactly for A and B", async () => {
 test("R13 (N202) registrations are refused through membership's listenerRefusal (LISTENER_MALFORMED, LISTENER_DECLARED) and the listeners run in the modules' total order, whatever order they registered in", async () => {
   const { listenerRefusal, MODULE_ORDER } = await import("../../../src/membership/index.mjs");
   const { e, read } = world();
-  e.createEntity({ kind: "office", label: "Alpha" });
+  e.createEntity({ note: "a subject the test registers", kind: "office", label: "Alpha" });
   read("INFO-1", sha("r13o"), [{ kind: "a", key: "1", label: "Alpha" }]);
   const f = () => {};
   for (const reg of ["onResolved", "onResolveAttempt"]) {

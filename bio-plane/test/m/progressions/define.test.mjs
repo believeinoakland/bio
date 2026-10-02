@@ -36,10 +36,10 @@ test("R1: refusals in order, each writing nothing; a bad stage refuses the whole
   assert.equal(ua.after, "zz");
   assert.deepEqual(w.snapshot(), before);
   // negative control: every stage good is written
-  assert.equal(d({ progressionKey: "k", label: "L", stages: [S(), S({ key: "b", after: "a" })] }).ok, true);
+  assert.equal(d({ progressionKey: "k", label: "L", stages: [S(), S({ key: "b", after: "a" })], basis: "b" }).ok, true);
 });
 
-test("R2 R26: a first declaration is version 1 with its basis or stated:false; the declarer is the stamp; bounds", () => {
+test("R2 R26: a first declaration is version 1 with its basis, its citation optional; the declarer is the stamp; bounds", () => {
   const w = world();
   const r = w.p.defineProgression({ progressionKey: "m", label: "Meeting", note: "n".repeat(1500), declaredBy: "member:alice",
     stages: [S({ key: "meeting" }), S({ key: "minutes", after: "meeting", within: "7 days" })],
@@ -54,9 +54,60 @@ test("R2 R26: a first declaration is version 1 with its basis or stated:false; t
   const read = w.p.readProgression({ progressionKey: "m" });
   assert.equal(read.note.length, 1000);
   assert.equal(read.declared_by, "member:alice");
-  const bare = w.p.defineProgression({ progressionKey: "n", label: "N", stages: [S()], declaredBy: "class:member" });
-  assert.deepEqual(bare.basis, { statement: null, citation: null, stated: false });
-  assert.equal(w.p.readProgression({ progressionKey: "n" }).declared_by, "class:member");
+  assert.equal(read.basis.statement.length, 4000);
+  // a citation stays optional at version 1: the basis alone writes it, and reads back, in the answer and every version
+  const plain = w.p.defineProgression({ progressionKey: "n", label: "N", stages: [S()], declaredBy: "class:member",
+                                       basis: "  the clerk's published calendar  " });
+  assert.equal(plain.ok, true);
+  assert.equal(plain.version, 1);
+  assert.deepEqual(plain.basis, { statement: "the clerk's published calendar", citation: null, stated: true });
+  const back = w.p.readProgression({ progressionKey: "n" });
+  assert.equal(back.declared_by, "class:member");
+  assert.deepEqual(back.basis, plain.basis);
+  assert.deepEqual(back.versions.map((v) => [v.version, v.basis]), [[1, plain.basis]]);
+  assert.deepEqual(w.rows(`SELECT version, basis_statement, basis_citation FROM progression_def_versions WHERE progression_key='n'`),
+                   [{ version: 1, basis_statement: "the clerk's published calendar", basis_citation: null }]);
+});
+
+test("R2: a first declaration without a basis statement is refused NO_BASIS (C-33.40), after every stage check, writing nothing", () => {
+  const w = world();
+  const before = w.snapshot();
+  const d = (extra, stages = [S(), S({ key: "b", after: "a" })]) =>
+    w.p.defineProgression({ progressionKey: "k", label: "L", stages, declaredBy: "member:alice", citation: "Ord. 1", ...extra });
+  // absent, not a string, blank, only whitespace: each judged as R4 judges a revision's, with a citation sent or not
+  const absences = [{}, { basis: undefined }, { basis: null }, { basis: 7 }, { basis: true }, { basis: {} }, { basis: ["why"] },
+                    { basis: "" }, { basis: "   " }, { basis: "\t\n " }, { basis: "", citation: undefined }];
+  for (const extra of absences) {
+    const r = d(extra);
+    const shown = JSON.stringify(extra);
+    assert.equal(r.ok, false, shown);
+    assert.deepEqual([r.reason, r.code, r.check, r.translation],
+                     ["NO_BASIS", "NO_BASIS", SHARED_ACT_CHECKS.NO_BASIS.check, SHARED_ACT_CHECKS.NO_BASIS.translation], shown);
+    assert.equal(r.check, "C-33.40");
+    assert.equal(r.progression_key, "k");
+    assert.equal(r.version, null);
+    assert.ok(typeof r.detail === "string" && /first/.test(r.detail), shown);
+  }
+  // every stage check is heard before the missing basis
+  const stageFirst = [
+    [[S(), S({ key: "" })], "NO_STAGE_KEY"], [[S(), S()], "DUPLICATE_STAGE"], [[S(), S({ key: "b", cardinality: "" })], "NO_CARDINALITY"],
+    [[S(), S({ key: "b", required: "often" })], "BAD_REQUIRED"], [[S(), S({ key: "b", after: "zz" })], "UNKNOWN_AFTER"],
+  ];
+  for (const [stages, code] of stageFirst) assert.equal(d({}, stages).reason, code);
+  assert.equal(w.p.defineProgression({ progressionKey: "k", stages: [S()] }).reason, "PROGRESSION_NO_LABEL");
+  assert.equal(w.p.defineProgression({ progressionKey: "k", label: "L" }).reason, "NO_STAGES");
+  // nothing written: no definition, no stage, no version
+  assert.deepEqual(w.snapshot(), before);
+  for (const t of ["progression_defs", "progression_stages", "progression_def_versions", "progression_stage_versions"])
+    assert.equal(w.count(t), 0, t);
+  assert.equal(w.p.readProgression({ progressionKey: "k" }).found, false);
+  // negative control: the same declaration with a basis is written as version 1
+  const ok = d({ basis: "why" });
+  assert.equal(ok.ok, true);
+  assert.equal(ok.version, 1);
+  assert.equal(w.count("progression_def_versions"), 1);
+  // and a declaration of a key already standing is no first declaration: identical is unchanged with no basis (R3)
+  assert.equal(d({}).unchanged, true);
 });
 
 test("R3: a declaration identical to the current version writes nothing and answers unchanged", () => {
@@ -134,7 +185,7 @@ test("R5: NO_KEY; an undeclared key is found:false; a read names versions, curre
   assert.equal(r.current_version, 1);
   assert.deepEqual(r.stages.map((s) => s.stage_key), ["need", "award", "contract"]);
   assert.deepEqual(Object.keys(r.stages[0]).sort(), ["after_stage", "cardinality", "label", "required", "stage_key", "stage_no", "within_interval"]);
-  assert.deepEqual(r.versions.map((v) => [v.version, v.declared_by, typeof v.at, v.basis.stated]), [[1, "member:alice", "string", false]]);
+  assert.deepEqual(r.versions.map((v) => [v.version, v.declared_by, typeof v.at, v.basis.stated]), [[1, "member:alice", "string", true]]);
   for (const bad of [7, "x", 0]) {
     const nf = w.p.readProgression({ progressionKey: "proc", version: bad });
     assert.equal(nf.reason, "PROGRESSION_VERSION_NOT_HELD");
@@ -192,7 +243,7 @@ test("R27 R28: every refusal this module answers carries its code with its row a
   const answered = [
     w.p.defineProgression({}), w.p.defineProgression({ progressionKey: "k" }), w.p.defineProgression({ progressionKey: "k", label: "L" }),
     w.p.defineProgression(S2({ key: "" })), w.p.defineProgression(S2({ key: "a" })), w.p.defineProgression(S2({ cardinality: "" })),
-    w.p.defineProgression(S2({ required: "x" })), w.p.defineProgression(S2({ after: "q" })),
+    w.p.defineProgression(S2({ required: "x" })), w.p.defineProgression(S2({ after: "q" })), w.p.defineProgression(S2({ after: "a" })),
     w.define("proc", { need: { required: "usually" } }), w.define("proc", { need: { required: "usually" } }, { basis: "b" }),
     w.p.readProgression({}), w.p.readProgression({ progressionKey: "proc", version: 9 }),
     await w.p.threadInstance({}), await w.p.threadInstance({ progressionKey: "proc" }), await w.p.threadInstance({ progressionKey: "proc", entityId: "ENT-1" }),

@@ -326,7 +326,7 @@ export const AI_RUN_ACT_SHAPE_CHECKS = {
      context whose lens is a different lens entirely.
 
      A WHOLE-FUNCTION `where`, AND WHY. These three were first written inside a
-     narrowed REGION, which is what `kickoffs/WORKER.md` asks for — and
+     narrowed REGION, which is what the old process's `kickoffs/WORKER.md` (retired) asked for — and
      `check-refusal-codes.mjs` then FAILED all three by name: `aiRunOpen`'s three
      rows of the time carried a WHOLE-FUNCTION `where`, and the guard judged a
      region's refusals twice, once at the region and once at the enclosing
@@ -366,13 +366,14 @@ export const AI_RUN_ACT_SHAPE_CHECKS = {
 /* ===========================================================================
  * REC-69 — THE CONTEXT-KEYED RUN LIST'S REFUSALS. C-36, THREE NUMBERS.
  *
- * RENUMBERED C-34 -> C-36 on 2026-08-09 at this item's replay onto `main`, with
- * `node tools/mintid.mjs C` (floor C-35) rather than by reading this file and
- * adding one. REC-63's `ROUTE_MARK_CHECKS` took C-34.1-4 the same day and is
+ * RENUMBERED C-34 -> C-36 on 2026-08-09 at this item's replay onto `main`, minted
+ * with the old process's `node tools/mintid.mjs C` (floor C-35; that tool was
+ * retired in T19) rather than by reading this file and adding one. REC-63's `ROUTE_MARK_CHECKS` took C-34.1-4 the same day and is
  * already on `main`, so it keeps the number. **REC-69 measured C-34 free when it
  * looked and was right when it looked** — which is exactly the finding D-243
  * recorded when seven items collided on an id in one day: the convention was the
- * defect, not the vigilance. **AND THE COLLISION WAS INVISIBLE TO THE BATTERY.**
+ * defect, not the vigilance. **AND THE COLLISION WAS INVISIBLE TO THE BATTERY**
+ * (the old suite runner, `battery.mjs`, deleted since).
  * 139/139 suites green at 8,887 assertions with two families both claiming
  * C-34.1-3; only `node civicos-ui/test/run.mjs` caught it (through
  * `check-refusal-codes.mjs`, deleted in T20), with *"Two conditions behind one
@@ -395,8 +396,8 @@ export const AI_RUN_ACT_SHAPE_CHECKS = {
  * match no run at all — MEANING_READ_CHECKS' shape one construct over, and that
  * family is the precedent this one follows rather than C-22's (it was a family of
  * this file; since T5 it lives in `src/retrieval/checks.mjs`, retrieval's). The floor in
- * `civicos-ui/check-refusal-codes.mjs` is moved in the same turn, from the
- * figure the guard PRINTED.
+ * `civicos-ui/check-refusal-codes.mjs` (deleted in T20) was moved in the same
+ * turn, from the figure the guard PRINTED.
  *
  * WHY THEY ARE REFUSALS AND NOT AN EMPTY ANSWER, which is the whole judgement
  * here. An unrecognised context kind that answered `runs: []` would tell a

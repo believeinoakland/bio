@@ -40,6 +40,10 @@ function setup({ evidence = true, env = {} } = {}) {
 }
 const everything = (rows) => rows(`SELECT name FROM sqlite_master WHERE type='table'`).map((r) => r.name)
   .map((t) => [t, JSON.stringify(rows(`SELECT * FROM ${t}`))]);
+/* Everything but R80's tally, where every refused knock is counted. */
+const TALLY = ["doorbell_tally", "doorbell_limit_last"];
+const untallied = (rows) => everything(rows).filter(([t]) => !TALLY.includes(t));
+const tallied = (rows) => rows(`SELECT coalesce(sum(refused),0) n FROM doorbell_tally`)[0].n;
 const inboxRows = (rows) => rows(`SELECT count(*) n FROM inbox`)[0].n;
 const rateRows = (rows) => rows(`SELECT coalesce(sum(count),0) n FROM knock_rate`)[0].n;
 const SECRET = "correct horse battery staple, twenty+";
@@ -56,21 +60,22 @@ test("R66 R53 R37 (C-118.3): a knocker secret under 20 characters, or not a stri
   /* 19 characters counted as characters, not bytes: twenty emoji are twenty characters */
   assert.equal((await send({ contentText: "tip", knockerSecret: "😀".repeat(20) })).status, 200);
   assert.equal((await send({ contentText: "tip", knockerSecret: "😀".repeat(19) })).body.reason, "KNOCKER_SECRET_WEAK");
-  assert.deepEqual(st.calls.length, 1, "only the strong knock reached the store");
+  assert.deepEqual(st.calls.filter((p) => p === "/knock").length, 1, "only the strong knock reached the store's knock; each weak one was only counted (R80)");
   /* R53's order: oversize content before the weak secret */
   assert.equal((await send({ contentText: "x".repeat(KNOCK.maxBytes + 1), knockerSecret: "short" })).body.reason, "KNOCK_PAYLOAD_TOO_LARGE");
   /* the weak secret before the rate: a source at its limit still hears about its secret, and nothing is counted */
   const t = setup();
-  for (let i = 0; i < 12; i++) await t.send({ contentText: `k${i}` });
+  for (let i = 0; i < 5; i++) await t.send({ contentText: `k${i}` });
   const [n, counted] = [inboxRows(t.rows), rateRows(t.rows)];
-  assert.equal((await t.send({ contentText: "k13", knockerSecret: "short" })).body.reason, "KNOCKER_SECRET_WEAK");
-  assert.equal((await t.send({ contentText: "k13", knockerSecret: SECRET })).body.reason, "RATE_IP");
+  assert.equal((await t.send({ contentText: "k6", knockerSecret: "short" })).body.reason, "KNOCKER_SECRET_WEAK");
+  assert.equal((await t.send({ contentText: "k6", knockerSecret: SECRET })).body.reason, "RATE_IP");
   assert.deepEqual([inboxRows(t.rows), rateRows(t.rows)], [n, counted]);
-  /* the store side refuses the same, before its rate, writing nothing */
-  const before = everything(rows);
+  /* the store side refuses the same, before its rate, writing nothing but the tally */
+  const before = untallied(rows), was = tallied(rows);
   const s = await c.knock({ content: "x", knockerSecret: "short", sourceAddress: "9.9.9.9" });
   assert.deepEqual([s.reason, s.check], ["KNOCKER_SECRET_WEAK", "C-118.3"]);
-  assert.deepEqual(everything(rows), before, "nothing stored or counted");
+  assert.deepEqual(untallied(rows), before, "nothing stored or counted");
+  assert.equal(tallied(rows), was + 1, "but R80's tally");
   assert.equal(b.held.size, 1, "the one strong knock's bytes");
 });
 
@@ -211,7 +216,7 @@ test("R65 R69 R70 R32: a pull holds the bytes under their own digest, writes one
   assert.equal(prov.receipts.length, 1);
   /* R32: inboxResolve to `pulled` is R65's act and answers as it does */
   const k2 = await c.knock({ content: "second memo", sourceAddress: "5.5.5.6" });
-  const viaResolve = await c.inboxResolve({ knockId: k2.knockId, status: "pulled", by: "m1" });
+  const viaResolve = await c.inboxResolve({ knockId: k2.knockId, status: "pulled", by: "m1", reason: "a memo worth keeping" });
   assert.deepEqual([viaResolve.ok, viaResolve.existed, viaResolve.capture.sha256, viaResolve.document.source.pseudonym],
                    [true, false, sha("second memo"), null]);
   assert.equal(prov.receipts.length, 2);
@@ -227,7 +232,7 @@ test("R65 R37 (C-118.2, C-118.4, R63): refusals in order, NO_SUCH_KNOCK, KNOCK_D
   assert.deepEqual(none, c.inboxGet("KNOCK-none"), "C-118.2, the same answer the read gives");
   assert.equal(none.check, "C-118.2");
   assert.equal((await c.pullKnock({ knockId: k.knockId })).reason, "NO_PULLER", "a pull names who brings it in");
-  c.inboxResolve({ knockId: k.knockId, status: "discarded", by: "m1" });
+  c.inboxResolve({ knockId: k.knockId, status: "discarded", by: "m1", reason: "spam" });
   before = snap();
   b.held.delete(`bio/inbox/${sha("memo")}`);
   const disc = await c.pullKnock({ knockId: k.knockId, by: "m1" });
@@ -235,7 +240,7 @@ test("R65 R37 (C-118.2, C-118.4, R63): refusals in order, NO_SUCH_KNOCK, KNOCK_D
   assert.deepEqual([disc.ok, disc.reason, disc.code, disc.check, disc.translation], [false, "KNOCK_DISCARDED", "KNOCK_DISCARDED", "C-118.4", row.translation],
                    "discarded is answered before the bytes are looked at");
   assert.deepEqual(snap(), before);
-  c.inboxResolve({ knockId: k.knockId, status: "new", by: "m1" });
+  c.inboxResolve({ knockId: k.knockId, status: "new", by: "m1", reason: "on second thought" });
   before = snap();
   const gone = await c.pullKnock({ knockId: k.knockId, by: "m1" });
   const want = evidenceAbsent(sha("memo"), "bio").body;
@@ -443,12 +448,15 @@ test("R68 (R63): reattest refuses BAD_SHA, and R63's absence when no bytes are h
   assert.equal(captureOps(rw.c, new URL(`http://x/lateattestations?capture=${rw.d}`), null, rw.c.env).lateattestations().late_attestations[0].by, "m9");
 });
 
-test("R37: rows C-118.3–C-118.6 are in capture's own table with the translations the requirements state", () => {
+test("R37: rows C-118.3–C-118.9 are in capture's own table with the translations the requirements state", () => {
   const want = {
-    KNOCKER_SECRET_WEAK: ["C-118.3", "A knocker secret this short could be guessed, letting someone else continue your pseudonym. Use a longer one, or ask the doorbell to make one. Nothing was received."],
+    KNOCKER_SECRET_WEAK: ["C-118.3", "A knocker secret this short could be guessed, letting someone else continue your pseudonym. Use a longer one, or ask the doorbell to make one. Nothing was received. The group can see how often its doorbell turns people away."],
     KNOCK_DISCARDED: ["C-118.4", "This knock was set aside. Move it back to new before bringing it in. Nothing was written."],
     NOT_THE_CAPTURING_ACTOR: ["C-118.5", "An account of how a document was captured is added only by the member who captured it, and that is not you, or no member captured it. Nothing was written."],
     ACCOUNT_NO_TEXT: ["C-118.6", "An account of how you captured a document says what happened in your own words, and this one is empty. Write it. Nothing was written."],
+    RESOLVE_NO_REASON: ["C-118.7", "Changing a knock's status records why, in your own words, and no reason was given, or it is longer than 2,000 characters. Write one. Nothing was written."],
+    MACHINE_CANNOT_SET_ASIDE: ["C-118.8", "Setting held material aside, or bringing it back, is a member's own act, and no member made this request. Nothing was written."],
+    SET_ASIDE_NO_REASON: ["C-118.9", "Setting held material aside, or bringing it back, records why, in your own words, and no reason was given, or it is longer than 2,000 characters. Write one. Nothing was written."],
   };
   for (const [code, [check, translation]] of Object.entries(want)) {
     const row = CAPTURE_CHECKS[code];
@@ -462,22 +470,23 @@ test("R37: rows C-118.3–C-118.6 are in capture's own table with the translatio
 test("R71 R31: knockAttempt asks the knock's two windows exactly as a knock does: RATE_IP or RATE_GLOBAL with the stated bound, an admitted attempt counted in both, nothing else written", async () => {
   const { c, rows } = setup();
   const W = KNOCK.windowMs, t0 = 3000 * W;
-  const others = () => everything(rows).filter(([t]) => !["knock_rate", "knock_key"].includes(t));
+  const others = () => everything(rows).filter(([t]) => !["knock_rate", "knock_key", ...TALLY].includes(t));
   const before = others();
-  for (let i = 0; i < 11; i++) assert.equal(await c.knockAttempt({ sourceAddress: "6.6.6.6", now: t0 + i }), null);
-  assert.equal(rateRows(rows), 22, "each admitted attempt counted in the source's window and the instance's");
-  /* attempts and knocks share the windows: the twelfth from this source is a knock, the thirteenth anything is refused */
+  for (let i = 0; i < 4; i++) assert.equal(await c.knockAttempt({ sourceAddress: "6.6.6.6", now: t0 + i }), null);
+  assert.equal(rateRows(rows), 8, "each admitted attempt counted in the source's window and the instance's");
+  /* attempts and knocks share the windows: the fifth from this source is a knock, the sixth anything is refused */
   assert.equal((await c.knock({ content: "k", sourceAddress: "6.6.6.6", now: t0 + 20 })).ok, true);
   const counted = rateRows(rows);
   const r = await c.knockAttempt({ sourceAddress: "6.6.6.6", now: t0 + 30 });
   const row = (await import("../../../src/capture/checks.mjs")).KNOCK_CHECKS.RATE_IP;
   assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation, r.stated], [false, "RATE_IP", "RATE_IP", row.check, row.translation, KNOCK.statedPerIp]);
-  assert.equal(rateRows(rows), counted, "a refused attempt counts nothing");
+  assert.equal(rateRows(rows), counted, "a refused attempt counts in no window");
+  assert.equal(tallied(rows), 1, "R80: every refusal R71 answers is counted in the tally");
   assert.equal((await c.knock({ content: "k2", sourceAddress: "6.6.6.6", now: t0 + 40 })).reason, "RATE_IP", "and the knock after it is refused alike");
   assert.equal(await c.knockAttempt({ sourceAddress: "6.6.6.7", now: t0 + 50 }), null, "another source is unaffected");
   /* the instance's window */
   const g = setup();
-  for (let i = 0; i < 300; i++) await g.c.knockAttempt({ sourceAddress: `10.1.${i >> 8}.${i & 255}`, now: t0 });
+  for (let i = 0; i < 10; i++) await g.c.knockAttempt({ sourceAddress: `10.1.0.${i}`, now: t0 });
   const rg = await g.c.knockAttempt({ sourceAddress: "10.9.9.9", now: t0 });
   assert.deepEqual([rg.reason, rg.stated], ["RATE_GLOBAL", KNOCK.statedGlobal]);
   assert.equal((await g.c.knock({ content: "late", sourceAddress: "10.9.9.8", now: t0 })).reason, "RATE_GLOBAL");

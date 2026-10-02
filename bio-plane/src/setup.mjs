@@ -35,7 +35,7 @@ import { captureOf } from "./capture/index.mjs";
 import { cpuProbe } from "./cpu.mjs";
 import { liveToken } from "./tokens.mjs";
 import { livefire } from "./livefire.mjs";
-import { GROUP_SLUG_RE, FLEET_BINDINGS } from "./setup-fleet.mjs";
+import { GROUP_SLUG_RE, FLEET_BINDINGS, hostingControlBlock } from "./setup-fleet.mjs";
 
 /* The intake form obeys the record grammar's own tables (record-grammar R32, R35) rather than a copy of
    them. Injected at module load, so a grammar change moves the UI with it and
@@ -68,7 +68,7 @@ const COUNTERPARTY_LEVELS_OPTIONS = COUNTERPARTY_LEVELS
  * slug, or says that none is recorded, and invents nothing beside it. A display name and a verified domain are later
  * rows (§7 points 2 and 3), and nothing here may stand in for either — not even a slug dressed up in capitals.
  *
- * THE MECHANISM. The control plane reads the group when it SERVES the page (index.mjs's `GET /` route hands
+ * THE MECHANISM. The control plane reads the group when it SERVES the page (control-plane's `GET /` route hands
  * `setupPage` the public read's answer), so the statement is in the served BYTES, signed in or out: the line sits
  * above every section the script switches between, and the script never touches it. THREE states, and the difference
  * between the last two is the one that matters most:
@@ -80,7 +80,7 @@ const escGroup = (x) => String(x).replace(/&/g, "&amp;").replace(/</g, "&lt;").r
 const GROUP_LINE_UNREAD = '<p class="eyebrow" id="instance-group" data-group="unread">'
   + "This copy could not read its group just now</p>";
 /* D-596 — THE DISPLAY NAME AND THE VERIFIED DOMAIN, ON THE SAME LINE AND UNDER THE SAME RULES AS THE PLANE'S.
- * The read is now op=groupidentity's PUBLIC projection (index.mjs names `groupidentitypublic` for this page), so the
+ * The read is now op=groupidentity's PUBLIC projection (control-plane names `groupidentitypublic` for this page), so the
  * recorded state can carry `display_name`, `domain` and `domain_verified_at` beside the slug. `BIO_Publication_v0_1.md`
  * §7 points 2 and 3, rendered as UI-78 renders them in the member UI's header:
  *   - a display name is shown WITH the slug, never instead of it — "name · slug" — and only where a slug is shown;
@@ -219,6 +219,9 @@ ${GROUP_LINE_UNREAD}
     replaced in the Cloudflare dashboard, so the previous claim is retired and
     this copy can be claimed again. Nothing stored in the record is affected.</p>
   </div>
+  <!-- R47 (DEC-109, K1038): who really controls this copy, said before a password is chosen, in the words held once
+       in setup-fleet.mjs for this page and the installer's last screen. Nothing asks for or records an acknowledgement. -->
+  ${hostingControlBlock("notice")}
   <label for="boot">One-time password</label>
   <input id="boot" autocomplete="off" spellcheck="false">
   <p class="hint">From the installer's final screen, or the ADMIN_TOKEN value
@@ -230,10 +233,6 @@ ${GROUP_LINE_UNREAD}
   <input id="pw2" type="password" autocomplete="new-password">
   <button id="do-claim">Claim this copy</button>
   <p class="err" id="claim-err"></p>
-  <div class="card"><p class="small" style="margin:0"><b>If you ever lose the
-  password you choose here,</b> you are not locked out. Sign in to Cloudflare,
-  replace the ADMIN_TOKEN value in this worker's settings, and this claim step
-  starts over. Your Cloudflare sign-in is the way back in.</p></div>
 </section>
 
 <section id="s-login">
@@ -1319,7 +1318,7 @@ async function openInbox(){
   const r = await rec("inbox");
   const rows = (r.result && r.result.inbox) || [];
   if (!rows.length) { $("#inbox-body").innerHTML = '<p class="small">Nothing has been left at the door.</p>'; return; }
-  $("#inbox-body").innerHTML = rows.map(k=>
+  $("#inbox-body").innerHTML = rows.map((k,i)=>
     '<div class="card"><div class="kv"><span class="k mono">'+escH(k.knock_id)+'</span><span class="v">'
     + chip(k.status) + ' <span class="dim">' + fmtWhen(k.received) + "</span></span></div>"
     + '<div class="kv"><span class="k">Hash</span><span class="v mono">'+escH(k.sha256)+"</span></div>"
@@ -1329,15 +1328,34 @@ async function openInbox(){
     + (k.resolved_by ? '<div class="kv"><span class="k">Handled by</span><span class="v">'+escH(k.resolved_by)+"</span></div>" : "")
     /* Reading the inbox is not gated; ACTING on it is. A member with view
        rights sees what arrived and cannot disposition it. */
+    /* R48 (DEC-88 (2); capture R32): handling a knock either way is the member's
+       reasoned act, so each card asks for the reason beside its two buttons and
+       sends it with the knock and the status. */
     + (can("contribute")
-      ? '<div class="actions" style="margin-top:10px">'
-        + '<button class="ibtn" data-id="'+escH(k.knock_id)+'" data-to="pulled">Mark as taken up</button> '
-        + '<button class="ibtn" data-id="'+escH(k.knock_id)+'" data-to="discarded">Set aside</button></div>'
+      ? '<label for="ir-'+i+'">Your reason for handling it this way</label>'
+        + '<input id="ir-'+i+'" class="ireason">'
+        + '<div class="actions" style="margin-top:10px">'
+        + '<button class="ibtn" data-i="'+i+'" data-id="'+escH(k.knock_id)+'" data-to="pulled">Mark as taken up</button> '
+        + '<button class="ibtn" data-i="'+i+'" data-id="'+escH(k.knock_id)+'" data-to="discarded">Set aside</button></div>'
+        + '<p class="err" id="ierr-'+i+'"></p>'
       : "") + "</div>").join("");
-  document.querySelectorAll("#inbox-body .ibtn").forEach(b=>b.addEventListener("click", async ()=>{
-    await post("inboxresolve", { knockId: b.dataset.id, status: b.dataset.to });
-    openInbox();
-  }));
+  document.querySelectorAll("#inbox-body .ibtn").forEach(b=>b.addEventListener("click", ()=>inboxResolve(b.dataset)));
+}
+/* R48: nothing is posted without a reason; a refusal is shown in the plane's own
+   words (its translation, else its detail) and the knock is left as it was. */
+async function inboxResolve(d){
+  const e = $("#ierr-"+d.i); e.textContent = "";
+  const reason = $("#ir-"+d.i).value;
+  if (!reason.trim()) { e.textContent = "Write your reason first. Taking a knock up or setting it aside is recorded with the reason you give."; return; }
+  let r;
+  try { r = await post("inboxresolve", { knockId: d.id, status: d.to, reason }); }
+  catch(err){ e.textContent = "That did not go through: " + err.message; return; }
+  const res = r && r.result && typeof r.result === "object" ? r.result : r;
+  if (!r || r.ok === false || !res || res.ok === false) {
+    const why = (res && (res.translation || res.detail)) || (r && (r.translation || r.detail || r.error));
+    e.textContent = why || ("Refused: " + ((res && res.reason) || (r && r.reason) || "unknown"));
+    return; }
+  openInbox();
 }
 
 /* ---- members and keys ---- */

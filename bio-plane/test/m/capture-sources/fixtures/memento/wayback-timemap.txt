@@ -1,0 +1,7 @@
+<https://records.example.gov/minutes/2026-03.pdf>; rel="original",
+<https://web.archive.org/web/timemap/link/https://records.example.gov/minutes/2026-03.pdf>; rel="self"; type="application/link-format"; from="Sun, 01 Mar 2026 12:00:00 GMT",
+<https://web.archive.org>; rel="timegate",
+<https://web.archive.org/web/20260301120000/https://records.example.gov/minutes/2026-03.pdf>; rel="first memento"; datetime="Sun, 01 Mar 2026 12:00:00 GMT",
+<https://web.archive.org/web/20260303120000/https://records.example.gov/minutes/2026-03.pdf>; rel="memento"; datetime="Tue, 03 Mar 2026 12:00:00 GMT",
+<https://web.archive.org/web/20260305000000/https://records.example.gov/minutes/2026-03.pdf>; rel="memento",
+<https://web.archive.org/web/20260310093000/https://records.example.gov/minutes/2026-03.pdf>; rel="last memento"; datetime="Tue, 10 Mar 2026 09:30:00 GMT"

@@ -6,7 +6,7 @@
    instrument and §4a, over the rendered answers instead of lifted source (P7). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, MACHINE, ADMIN } from "./fixture.mjs";
+import { world, MACHINE, ADMIN, REASON } from "./fixture.mjs";
 import { analystHits, ATOMS, CONNECTIVES, NOUNS, RESIDUE, residueAnchored, DEC32_ENTRY } from "./vocabulary.mjs";
 import { STRENGTH_AXES, VERSION_STRENGTH_CHECKS, PARTITION_INDEPENDENCE_CHECKS,
          STRENGTH_BAR_CHECKS } from "../../../src/strength/index.mjs";
@@ -228,7 +228,7 @@ test("R28: the bar's sentences (R14–R16) carry no analyst's word", () => {
   w.project("PROJ-2026-0002-abc");
   w.file("PROJ-2026-0001-abc", "bundle.md", "---\nrequired_strength:\n  capture: B\n---\n");
   const none = w.s.strengthBarOf({ viewer: MACHINE });
-  const set = w.s.strengthBarSet({ capture: "B", author: ADMIN });
+  const set = w.s.strengthBarSet({ reason: REASON, capture: "B", author: ADMIN });
   const corpus = [
     ...sentences(w.s.projectBar("PROJ-2026-0001-abc"), "declared"), ...sentences(w.s.projectBar("PROJ-2026-0002-abc"), "absent"),
     ...sentences(none, "no default"), ...sentences(set, "set"), ...sentences(w.s.strengthBarOf({ viewer: MACHINE }), "default"),
@@ -242,7 +242,27 @@ test("R28: the bar's sentences (R14–R16) carry no analyst's word", () => {
 test("R28: every refusal row's translation (C-30, C-71, C-32.9, C-107) carries no analyst's word", () => {
   const rows = [VERSION_STRENGTH_CHECKS, PARTITION_INDEPENDENCE_CHECKS, STRENGTH_BAR_CHECKS]
     .flatMap((t) => Object.entries(t).map(([code, row]) => [`${row.check} ${code}.translation`, row.translation]));
-  assert.equal(rows.length, 9 + 9 + 3);
+  assert.equal(rows.length, 9 + 9 + 4);
   for (const [where, t] of rows) assert.ok(typeof t === "string" && t.length > 20, where);
   clean(rows);
+});
+
+test("R28: the sentences R29 and R5 added (an uncorroborated anonymous observation's why, on the live pair, a version and a candidate) carry no analyst's word", () => {
+  const w = real();
+  w.observation("INFO-2026-0001-observation", "member-ann");
+  w.testimony.set("INFO-2026-0001-observation", "D");
+  const leg = { target: "INFO-2026-0001-observation", grade: "D", axis: "testimony", source: "testimony" };
+  const levels = { "INFO-2026-0001-observation": "group" };
+  w.inquiry("INQ-2026-0001-a", [leg], "ENT-1");
+  w.version("INQ-2026-0001-a", "v1", "accepted", [{ ...leg, ground: "" }]);
+  const answers = [
+    w.s.strengthOf("INQ-2026-0001-a", { levels }),
+    w.s.versionStrength({ id: "INQ-2026-0001-a", version: "v1", viewer: MACHINE, levels }),
+    w.s.candidatePair({ inquiry: "INQ-2026-0001-a", levels,
+      legs: [{ target: leg.target, grade: "D", grade_axis: "testimony", grade_source: "testimony" }] }),
+  ];
+  const corpus = answers.flatMap((a, i) => sentences(a, `answer ${i}`));
+  const anon = corpus.filter(([, s]) => /credited anonymously/.test(s));
+  assert.ok(anon.length >= 3, "the sentence was reached on every path");
+  clean(corpus);
 });

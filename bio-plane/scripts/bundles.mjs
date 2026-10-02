@@ -202,8 +202,9 @@ export async function run({ repoRoot = null, check = false, plane = true, log = 
 }
 
 /* Run as a command, never when IMPORTED — compared as RESOLVED PATHS rather than
-   by a filename suffix, which `bundles.test.mjs` would satisfy on some spellings
-   and which is how a module that exits the importing process gets written. */
+   by a filename suffix, which an importing test file (`bundles.test.mjs`, retired)
+   satisfied on some spellings, and which is how a module that exits the importing
+   process gets written. */
 const INVOKED = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (INVOKED) {
   const check = process.argv.includes("--check");

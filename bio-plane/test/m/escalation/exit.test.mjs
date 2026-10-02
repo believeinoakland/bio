@@ -92,7 +92,7 @@ test("R15 escalationSuspend (a member, with a reason) stops proposals being repo
   assert.equal(read.exit.compliance.state, "not_met", "suspension answers nothing about the exit");
   assert.deepEqual(w.esc.escalationsDue({ nowMs: ms("2026-09-29T00:00:00Z"), viewer: V("bob") }).items, []);
   /* the determination is still the one escalation's */
-  assert.equal(w.esc.escalationOpen({ determination: w.D, author: V("bob"), viewer: V("bob") }).reason, "ALREADY_OPEN");
+  assert.equal(w.esc.escalationOpen({ reason: "Worth pursuing.", determination: w.D, author: V("bob"), viewer: V("bob") }).reason, "ALREADY_OPEN");
   const res = (extra) => w.esc.escalationResume({ id: w.E, author: V("bob"), viewer: V("bob"), ...extra });
   assert.equal(res({ author: MACHINE }).reason, "MACHINE_CANNOT_RESUME");
   assert.equal(res({ author: V("carol"), viewer: V("carol") }).reason, "NO_SUCH_ESCALATION");
@@ -114,11 +114,11 @@ test("R16 escalationsDue lists every open escalation with a proposed edge not ad
   const ids = [];
   for (const [i, when] of [["2026-09-10T00:00:00Z"], ["2026-09-05T00:00:00Z"], ["2026-09-07T00:00:00Z"]].entries()) {
     const D = w.determine({ project: w.P, at: when[0], outcomes: [{ standard: `STD-2026-000${i}-s`, outcome: "noncompliant" }] });
-    ids.push(w.esc.escalationOpen({ determination: D, author: V("bob"), viewer: V("bob") }).id);
+    ids.push(w.esc.escalationOpen({ reason: "Worth pursuing.", determination: D, author: V("bob"), viewer: V("bob") }).id);
   }
   /* one with no proposal (no office) */
   const Dq = w.determine({ project: w.P, actor: {}, outcomes: [{ standard: "STD-2026-0001-a", outcome: "noncompliant" }] });
-  w.esc.escalationOpen({ determination: Dq, author: V("bob"), viewer: V("bob") });
+  w.esc.escalationOpen({ reason: "Worth pursuing.", determination: Dq, author: V("bob"), viewer: V("bob") });
   let due = w.esc.escalationsDue({ nowMs: at, viewer: V("bob") });
   assert.deepEqual(due.items.map((x) => [x.id, x.from, x.to, x.instant]),
     [[ids[1], 1, 2, "2026-09-05T00:00:00Z"], [ids[2], 1, 2, "2026-09-07T00:00:00Z"], [ids[0], 1, 2, "2026-09-10T00:00:00Z"]]);
@@ -128,7 +128,7 @@ test("R16 escalationsDue lists every open escalation with a proposed edge not ad
   /* each item names the escalation's project and the member who opened it */
   assert.deepEqual(due.items.map((x) => [x.project, x.opened_by]), [[w.P, V("bob")], [w.P, V("bob")], [w.P, V("bob")]]);
   const Da = w.determine({ project: w.P, at: "2026-09-01T00:00:00Z", outcomes: [{ standard: "STD-2026-0009-c", outcome: "noncompliant" }] });
-  const byAlice = w.esc.escalationOpen({ determination: Da, author: V("alice"), viewer: V("alice") }).id;
+  const byAlice = w.esc.escalationOpen({ reason: "Worth pursuing.", determination: Da, author: V("alice"), viewer: V("alice") }).id;
   const first = w.esc.escalationsDue({ nowMs: at, viewer: V("bob") }).items[0];
   assert.deepEqual([first.id, first.project, first.opened_by], [byAlice, w.P, V("alice")]);
   w.esc.escalationSuspend({ id: byAlice, reason: "Not ours to chase now.", author: V("alice"), viewer: V("alice") });
@@ -146,7 +146,7 @@ test("R16 escalationsDue lists every open escalation with a proposed edge not ad
   /* a limit, and the 500 bound */
   for (let i = 0; i < 3; i++) {
     const D = w.determine({ project: w.P, outcomes: [{ standard: `STD-2026-01${i}0-s`, outcome: "noncompliant" }] });
-    w.esc.escalationOpen({ determination: D, author: V("bob"), viewer: V("bob") });
+    w.esc.escalationOpen({ reason: "Worth pursuing.", determination: D, author: V("bob"), viewer: V("bob") });
   }
   const two = w.esc.escalationsDue({ nowMs: at, limit: 2, viewer: V("bob") });
   assert.deepEqual([two.items.length, two.truncated, two.limit], [2, true, 2]);
@@ -154,7 +154,7 @@ test("R16 escalationsDue lists every open escalation with a proposed edge not ad
   const big = seeded();
   for (let i = 0; i < 501; i++) {
     const D = big.determine({ project: big.P, outcomes: [{ standard: `STD-2026-${String(i).padStart(4, "0")}-s`, outcome: "noncompliant" }] });
-    big.esc.escalationOpen({ determination: D, author: V("bob"), viewer: V("bob") });
+    big.esc.escalationOpen({ reason: "Worth pursuing.", determination: D, author: V("bob"), viewer: V("bob") });
   }
   const all = big.esc.escalationsDue({ nowMs: at, viewer: V("bob") });
   assert.deepEqual([all.items.length, all.truncated], [500, true]);
@@ -167,8 +167,8 @@ test("R3 R14 a provider this host does not have is never read as met or empty: t
     delete w.esc.deps[missing];
     const before = w.snapshot();
     const answers = [w.esc.escalationRead({ id: w.E, viewer: V("bob") }),
-      missing === "actions" ? w.esc.escalationAttach({ id: w.E, action: w.N, author: V("bob"), viewer: V("bob") })
-        : missing === "conformance" ? w.esc.escalationOpen({ determination: w.D, author: V("alice"), viewer: V("alice") })
+      missing === "actions" ? w.esc.escalationAttach({ reason: "This act serves the stage.", id: w.E, action: w.N, author: V("bob"), viewer: V("bob") })
+        : missing === "conformance" ? w.esc.escalationOpen({ reason: "Worth pursuing.", determination: w.D, author: V("alice"), viewer: V("alice") })
         : missing === "consequences" ? w.esc.escalationEnd({ id: w.E, author: V("bob"), viewer: V("bob") }) : null].filter(Boolean);
     /* escalationEnd asks compliance before consequences, so with consequences absent only the read is asked */
     for (const r of answers.slice(0, missing === "consequences" ? 1 : 2))
@@ -215,7 +215,7 @@ test("R22 escalationsFor answers every escalation of a determination the viewer 
   w.clock.now = "2026-09-22T00:00:00Z";
   assert.equal(end(w).ok, true);
   w.clock.now = "2026-09-23T00:00:00Z";
-  const second = w.esc.escalationOpen({ determination: w.D, author: V("alice"), viewer: V("alice") }).id;
+  const second = w.esc.escalationOpen({ reason: "Worth pursuing.", determination: w.D, author: V("alice"), viewer: V("alice") }).id;
   const before = w.snapshot();
   r = forD();
   assert.deepEqual(r.items.map((x) => [x.id, x.state, x.stage]), [[first, "ended", 2], [second, "open", 1]]);
@@ -225,7 +225,7 @@ test("R22 escalationsFor answers every escalation of a determination the viewer 
   assert.deepEqual(forD().items.map((x) => x.id), [first, second]);
   /* another determination's escalations are not among them */
   const D2 = w.determine({ project: w.P, outcomes: [{ standard: "STD-2026-0001-a", outcome: "noncompliant" }] });
-  const o2 = w.esc.escalationOpen({ determination: D2, author: V("bob"), viewer: V("bob") }).id;
+  const o2 = w.esc.escalationOpen({ reason: "Worth pursuing.", determination: D2, author: V("bob"), viewer: V("bob") }).id;
   assert.deepEqual(w.esc.escalationsFor({ determination: D2, viewer: V("bob") }).items.map((x) => x.id), [o2]);
   /* no read writes anything (the open of D2 aside) */
   const after = w.snapshot();

@@ -237,9 +237,9 @@ test("R30 R2 R8 R10 R22 intent's own codes: a progression the record has not dec
   };
   const snap = w.snapshot();
   /* R2: a condition naming an undeclared progression, or a stage its progression does not declare */
-  answered(w.i.setCondition({ project: w.P, condition: { ...COND, progression: "nope" }, author: V("bob"), viewer: V("bob") }),
+  answered(w.i.setCondition({ reason: "Measured by the record.", project: w.P, condition: { ...COND, progression: "nope" }, author: V("bob"), viewer: V("bob") }),
            "INTENT_NO_SUCH_PROGRESSION", "setCondition progression");
-  answered(w.i.setCondition({ project: w.P, condition: { ...COND, required: { grade: "B", stages: ["signoff"] } }, author: V("bob"),
+  answered(w.i.setCondition({ reason: "Measured by the record.", project: w.P, condition: { ...COND, required: { grade: "B", stages: ["signoff"] } }, author: V("bob"),
                               viewer: V("bob") }), "INTENT_BAD_STAGE", "setCondition stage");
   /* R30: declareAspiration naming an undeclared progression */
   answered(w.i.declareAspiration({ scope: "group", statement: "s", progressions: ["proc", "nope"], author: V("alice") }),

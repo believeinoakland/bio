@@ -89,11 +89,13 @@ CREATE INDEX IF NOT EXISTS text_attestations_bundle ON text_attestations(bundle_
 -- that landing is a writer and not a migration.
 --
 -- page_count IS THE STORED PAGE SET, AND IT IS WHY THE OUT-OF-RANGE REFUSAL CAN
--- FIRE AT ALL. IC-83 requires the page count be stored on mint. Nothing in this
--- plane persists a capture page count today (the design study says so in its
--- own words: "needs a stored page count -- absent today"), so this column holds
--- what the record COULD see when the row was minted: the page set D-252's
--- scoped derivation steps name, unioned with the pages any attestation covers.
+-- FIRE AT ALL. IC-83 requires the page count be stored on mint. When this
+-- column was written nothing in this plane persisted a capture page count (the
+-- design study said so in its own words: "needs a stored page count -- absent
+-- today"), so it holds what the record COULD see when the row was minted: the
+-- reading's own page count where one is stored (D-345, since), else the page
+-- set D-252's scoped derivation steps name, unioned with the pages any
+-- attestation covers (./index.mjs' #pageSetFor).
 -- NULL means the record held no page set for that capture at mint -- which is
 -- UNDETERMINED and STATED, never a permission and never a refusal: refusing
 -- every page citation on a document whose page set the record does not know

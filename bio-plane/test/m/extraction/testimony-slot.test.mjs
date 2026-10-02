@@ -1,6 +1,7 @@
 /* extraction, the testimony path's index (R65): registered once in `provenance`'s testimony slot (provenance R52) as
    a projection that runs R61's `indexTestimony` over the path's own fields, inside the promotion's transaction. The
-   slot is the real provenance's, run as the composition root runs it (where legacy-store's step runs it today). */
+   slot is the real provenance's, run as the composition root runs it (where legacy-store's step ran it before that
+   module retired). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, storage } from "./fixture.mjs";

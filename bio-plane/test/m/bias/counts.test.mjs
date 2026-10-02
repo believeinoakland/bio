@@ -1,7 +1,7 @@
 /* bias R46: R42's figures registered with record-core (its R63), whose counts op=stats and purge's proof read. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { world, S } from "./world.mjs";
+import { world, S, WHY } from "./world.mjs";
 import { biasOf, BIAS_COUNT_KEYS } from "../../../src/bias/index.mjs";
 
 const A = "BIAS-2026-0001-a", B = "BIAS-2026-0002-b", P = "PROJ-2026-0001-p";
@@ -13,8 +13,8 @@ test("R46: counts(hid) is registered once at start under biasStatements and bias
   w.project(P, "owner");
   w.set(A, [S("s1")], "adopted");
   w.set(B, [S("t1"), S("t2")], "adopted");
-  w.bias.biasAdopt({ bundleId: A, author: "admin", identity: "member:admin", viewer: "admin" });
-  w.bias.biasAdopt({ bundleId: B, scope: "project", scopeId: P, author: "owner", identity: "member:owner", viewer: "member:owner" });
+  w.bias.biasAdopt({ reason: WHY, bundleId: A, author: "admin", identity: "member:admin", viewer: "admin" });
+  w.bias.biasAdopt({ reason: WHY, bundleId: B, scope: "project", scopeId: P, author: "owner", identity: "member:owner", viewer: "member:owner" });
   assert.deepEqual(BIAS_COUNT_KEYS, ["biasStatements", "biasAdoptions"]);
   /* record-core's counts answer exactly this module's, with and without the caller's hidden bundles */
   assert.deepEqual(w.bias.counts(), { biasStatements: 3, biasAdoptions: 2 });

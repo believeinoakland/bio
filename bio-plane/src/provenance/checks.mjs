@@ -231,8 +231,8 @@ export const PROVENANCE_ACT_CHECKS = {
 /* =====================================================================
  * MK-1 / D-184 / IC-133 / IC-134 — THE AUTHORED BUNDLE (`MEMBER-KNOWLEDGE-
  * DESIGN.md` §2 and §7): a member's firsthand observation IS a document — an
- * INFO bundle whose bytes are a canonical header then the member's words, registered like any
- * capture and flagged `authored`. C-53, minted with `node tools/mintid.mjs C`.
+ * INFO bundle whose bytes are a canonical header then the member's words, registered like any capture and
+ * flagged `authored`. C-53, minted with the old process's `node tools/mintid.mjs C` (retired in T19).
  *
  * ITS OWN FAMILY, because the subject is its own: the ways a member's own
  * statement could be made to pass for a captured document (or a captured

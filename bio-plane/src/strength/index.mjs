@@ -2,9 +2,9 @@
  * DEC-32, DEC-44). A PAIR of independent measurements, the weakest capture among the documents a conclusion reaches
  * and the weakest connection among the edges it rests on, with testimony beside them, never composed into one value.
  * This module derives the pair over an inquiry's live basis (R1–R6), over one version of it (R7–R10) and over a
- * candidate's legs (R26); says whether the parts of a reading share an upstream origin (R11, R12, R27); answers the
- * pair the search cache holds (R13); and holds the bar, the standard of evidence a project declares and the group's
- * default for new projects (R14–R16).
+ * candidate's legs (R26); says whether the parts of a reading share an upstream origin (R11, R12, R27); judges an
+ * observation credited anonymously by what bears it out (R29, R30); answers the pair the search cache holds (R13); and
+ * holds the bar, the standard of evidence a project declares and the group's default for new projects (R14–R16).
  *
  * Extracted from the legacy modules (T7, layer 6; K3, K86, K102, N60): `store.mjs` (the bar, DEC-72; the axes and the
  * walk, REC-12, REC-42, MK-2, REC-105; `op=inquirystrength`, REC-34; the pair over a version, PL-14; independence,
@@ -15,6 +15,11 @@
  * R5 (K102) is new with the extraction: a hunch leg is inert in every pair, so the live pair and the pair over a
  * version agree. Every walk now bounds a capture grade by what the record earns for its target (R1), the pair over a
  * version and over a candidate included, so an inquiry leg contributes the target's own answer (R2) on every path.
+ *
+ * T22 (layer 6): every pair answer states how many hunch legs it left out (R5; DEC-104, H10); the group's default bar
+ * is set with the administrator's reason and answered with it, its note carrying DEC-105's words (R15, R16; DEC-88,
+ * H12); and a caller may state each observation's credit level, under which an anonymous observation counts only
+ * beside something independent that bears it out (R29, R30; DEC-102).
  *
  * REACHED as `strengthOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the first
  * call with `deps`, returned to every later caller. At creation it declares its tables to record-core's purge
@@ -39,7 +44,7 @@
  *   now          the clock for the instants it writes, an ISO string (default: the wall clock).
  *
  * READ CONTRACTS it joins in its own SQL: record-core's `bundles` (`bundle_id`, `object_type`, its R37) and
- * provenance's `register` and `captured_locators` (its R48). */
+ * provenance's `register` (with `authored` and `author`, R29, R30) and `captured_locators` (its R48). */
 
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, noSuchProject } from "../membership/index.mjs";
@@ -86,9 +91,31 @@ const OUT_OF_VIEW_WORDS = "Part of what this rests on is out of your view.";
 const ID_IN_PROSE = new RegExp(BUNDLE_ID_RE.source.replace(/^\^/, "").replace(/\$$/, ""), "g");
 /* R5: the sentence a hunch leg is named with, on every path. */
 const HUNCH_WHY = "this leg is marked as a hunch, so it is visible here and does not count as evidence";
+/* R29 (DEC-102): the credit levels a caller may state for an observation; the first two credit it anonymously. */
+export const CREDIT_LEVELS = Object.freeze(["group", "project", "cover", "name"]);
+const ANONYMOUS_LEVELS = Object.freeze(["group", "project"]);
+const NAMED_LEVELS = Object.freeze(["cover", "name"]);
+/* R29: the sentence an anonymous observation nothing independent stands beside is named with. It names no author. */
+const UNCORROBORATED_WHY = "this leg is a member's observation credited anonymously, and nothing independent in what "
+  + "this rests on bears it out, so it is visible here and does not count as evidence";
+/** R15 (DEC-88): the longest reason an administrator may give for the group's default bar. */
+export const BAR_REASON_MAX = 2000;
+/* R15 (DEC-105, H12): the bar's honest note, in the ruling's words. */
+const BAR_HONEST_NOTE = "CivicOS has no guidance yet on what particular audiences expect. Readers see the bar you set "
+  + "in these words.";
 
 const isHunch = (source) => typeof source === "string" && VERSION_STRENGTH_INERT_SOURCES.includes(source);
 const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
+/* R5: how many of these legs are hunches, each left out of the pair. */
+const hunchCount = (legs) => legs.filter((l) => isHunch(l.grade_source)).length;
+
+/* R29: the levels a caller gave, as a frozen map of observation id → level, keeping only the entries naming a level of
+   `CREDIT_LEVELS`; null when none was given (not an object), which is today's answer. */
+function levelsGiven(levels) {
+  if (!levels || typeof levels !== "object" || Array.isArray(levels)) return null;
+  return Object.freeze(Object.fromEntries(Object.entries(levels)
+    .filter(([id, lv]) => id && CREDIT_LEVELS.includes(lv))));
+}
 const typeOfId = (id) => normalizeType(OBJECT_TYPES[String(id ?? "").split("-")[0]]) ?? "";
 
 /* D-450: an axis nobody set is stated in words, never as a grade, a dash or "null". */
@@ -137,7 +164,7 @@ export class Strength {
     if (!k || typeof k.onGrounded !== "function") return null;
     return k.onGrounded("strength", (id) => {
       const s = this.strengthOf(id);
-      return Object.fromEntries(STRENGTH_AXES.map((a) => [a, s[a]]));
+      return { ...Object.fromEntries(STRENGTH_AXES.map((a) => [a, s[a]])), hunches_left_out: s.hunches_left_out };
     });
   }
 
@@ -214,11 +241,14 @@ export class Strength {
      Each leg is a member of the axis its grade names (the axis is the leg's own fact, not its target's type); a leg
      graded elsewhere is inert on this axis and says so. A leg's role is carried and never composed: a leg that cuts
      against stays in the population. */
-  #walk(bundleId, depth, bound, legsOverride, captureBounds) {
+  #walk(bundleId, depth, bound, legsOverride, captureBounds, levels = null) {
     const legs = legsOverride ?? this.#legsOf(bundleId);
     const members = Object.fromEntries(STRENGTH_AXES.map((a) => [a, []]));
     const exhausted = Object.fromEntries(STRENGTH_AXES.map((a) => [a, []]));
-    for (const leg of legs) {
+    /* R29: which testimony legs of THIS basis are credited anonymously, and which of them something independent in the
+       same basis bears out. The pair is a record fact, so no viewer narrows it (R6). */
+    const anonymous = this.#anonymousOf(legs, levels, captureBounds);
+    for (const [i, leg] of legs.entries()) {
       const isInquiry = normalizeType(leg.target_type) === "inquiry";
       /* REC-42: the leg's ground travels on every member it produces, its own and the pair it inherits. Null is the
          implicit ground a leg written before DEC-32 reads. */
@@ -236,6 +266,12 @@ export class Strength {
         if (noReferent && !onAxis) continue;
         if (hunch) {
           members[axis].push({ ...site, via: "leg", grade: null, why: HUNCH_WHY });
+          continue;
+        }
+        /* R29: an anonymous observation nothing independent bears out is inert on its own axis, as R3's ungraded
+           member, and named so; borne out, it is read as any testimony leg. */
+        if (onAxis && anonymous.has(i) && !anonymous.get(i).corroborated) {
+          members[axis].push({ ...site, via: "leg", grade: null, why: UNCORROBORATED_WHY });
           continue;
         }
         const stated = onAxis && !noReferent ? (leg.grade ?? null) : null;
@@ -276,7 +312,7 @@ export class Strength {
             why: `the walk reached its depth bound of ${bound} here` });
         continue;
       }
-      const sub = this.#walk(leg.target_id, depth + 1, bound, null, captureBounds);
+      const sub = this.#walk(leg.target_id, depth + 1, bound, null, captureBounds, levels);
       for (const axis of STRENGTH_AXES) {
         const s = sub[axis];
         if (s.state === "undetermined") {
@@ -295,19 +331,92 @@ export class Strength {
       [axis, axisResult(axis, members[axis], exhausted[axis], bound)]));
   }
 
-  /* One pair over the given top-level legs (or the inquiry's own), capture-bounded throughout (R1). */
-  #pairOver(bundleId, topLegs = null) {
-    return this.#walk(bundleId, 0, DEPTH_BOUND, topLegs, this.#captureBoundsFor(bundleId, DEPTH_BOUND, topLegs));
+  /* One pair over the given top-level legs (or the inquiry's own, read once), capture-bounded throughout (R1), with the
+     levels R29 applies; answers the pair and the top-level legs it was taken over. */
+  #pairOver(bundleId, topLegs = null, levels = null) {
+    const legs = topLegs ?? this.#legsOf(bundleId);
+    return { pair: this.#walk(bundleId, 0, DEPTH_BOUND, legs, this.#captureBoundsFor(bundleId, DEPTH_BOUND, legs), levels),
+             legs };
   }
 
-  /** R1–R5: the derived pair for one inquiry, computed on read. One answer per axis and no scalar: a case does not
+  /* R29, R30 (DEC-102): the register's author of an authored observation (provenance R48's `register.author`), read and
+     never answered; `observation` false for a bundle holding no authored capture. Memoised for one judgement. */
+  #observationReader() {
+    const memo = new Map();
+    return (id) => {
+      if (!memo.has(id)) {
+        const r = this.#one(`SELECT author FROM register WHERE bundle_id=? AND authored=1 ORDER BY capture_sha LIMIT 1`, id);
+        memo.set(id, r ? { observation: true, author: str(r.author) } : { observation: false, author: null });
+      }
+      return memo.get(id);
+    };
+  }
+
+  /* A leg's own grade as the walk would count it on its own axis (R1, R9): null when it would count nothing. */
+  #ownGrade(leg, captureBounds) {
+    if (isHunch(leg.grade_source) || leg.grade == null || !STRENGTH_AXES.includes(leg.grade_axis)) return null;
+    if (normalizeType(leg.target_type) === "inquiry") return null;
+    if (leg.grade_axis === "testimony") return TESTIMONY_GRADE;
+    if (leg.grade_axis === "capture" && captureBounds) {
+      const capped = this.inquiry.legCapped(leg.grade, captureBounds.get(leg.target_id), leg.target_id);
+      return capped ? capped.grade : leg.grade;
+    }
+    return leg.grade;
+  }
+
+  /* R29, R30 (DEC-102 items 1, 2): for each testimony leg of ONE basis on an observation `levels` states at `group` or
+     `project` (keyed by its position in `legs`), whether something independent in the same basis bears it out, and
+     what: a counted leg on a document (not an observation, not an inquiry), or a counted testimony leg on an observation
+     stated at `cover` or `name` that another member authored, in either case sharing no origin with it (R12's same
+     document, capture or captured address). An origin read cut at R12's limit does not rule a shared origin out, so that
+     leg does not bear it out; nor does an author the register does not hold. `seen` (R30) withholds a leg the viewer may
+     not see from bearing anything out. Empty when no levels were given. Writes nothing; names no author. */
+  #anonymousOf(legs, levels, captureBounds, seen = () => true) {
+    const out = new Map();
+    if (!levels) return out;
+    const levelOf = (l) => (typeof l.target_id === "string" && Object.hasOwn(levels, l.target_id) ? levels[l.target_id] : null);
+    const isDocument = (l) => typeof l.target_id === "string" && l.target_id && normalizeType(l.target_type) !== "inquiry";
+    const observed = this.#observationReader();
+    const origins = new Map();
+    const originsOf = (id) => {
+      if (!origins.has(id)) origins.set(id, this.#originsOf([id]));
+      return origins.get(id);
+    };
+    const independent = (a, b) => {
+      const x = originsOf(a), y = originsOf(b);
+      return x.complete && y.complete && ![...x.set].some((o) => y.set.has(o));
+    };
+    legs.forEach((leg, i) => {
+      if (leg.grade_axis !== "testimony" || !isDocument(leg) || !ANONYMOUS_LEVELS.includes(levelOf(leg))) return;
+      const by = [];
+      legs.forEach((other, j) => {
+        if (j === i || !isDocument(other) || !seen(other.target_id)) return;
+        if (this.#ownGrade(other, captureBounds) == null) return;
+        let bears = false;
+        if (other.grade_axis === "testimony") {
+          const a = observed(leg.target_id).author, b = observed(other.target_id).author;
+          bears = NAMED_LEVELS.includes(levelOf(other)) && a != null && b != null && a !== b;
+        } else {
+          bears = !observed(other.target_id).observation;
+        }
+        if (bears && independent(leg.target_id, other.target_id)) by.push({ ord: other.ord, target_id: other.target_id });
+      });
+      out.set(i, { level: levelOf(leg), corroborated: by.length > 0, by });
+    });
+    return out;
+  }
+
+  /** R1–R5, R29: the derived pair for one inquiry, computed on read. One answer per axis and no scalar: a case does not
    *  have one strength. This is the authority every consumer that must be right goes through (the gated read, the
-   *  pair frozen into a signed case, the grouping act's before and after, re-evaluation, the cache). */
-  strengthOf(bundleId) {
+   *  pair frozen into a signed case, the grouping act's before and after, re-evaluation, the cache). It states how many
+   *  hunch legs it left out (R5), and, given `levels`, which levels it applied (R29). */
+  strengthOf(bundleId, { levels = null } = {}) {
     if (!bundleId) return { ok: false, reason: "NO_ID", detail: "strength requires ?id=" };
-    const pair = this.#pairOver(bundleId);
+    const lv = levelsGiven(levels);
+    const { pair, legs } = this.#pairOver(bundleId, null, lv);
     return { ok: true, bundleId, depth_bound: DEPTH_BOUND,
-             capture: pair.capture, connection: pair.connection, testimony: pair.testimony };
+             capture: pair.capture, connection: pair.connection, testimony: pair.testimony,
+             hunches_left_out: hunchCount(legs), ...(lv ? { levels: lv } : {}) };
   }
 
   /** R6 (REC-34, N303): `op=inquirystrength`, the pair gated. An inquiry the viewer may not see is withheld whole,
@@ -331,10 +440,14 @@ export class Strength {
     if (!s.ok) return s;
     const keep = this.#redactor(viewer);
     /* A top-level leg to an unseen target is a member of every axis's population, named in a list or not. */
-    const hidden = this.#legsOf(id).some((l) => l.target_id && keep(l.target_id) === null);
+    const legs = this.#legsOf(id);
+    const hidden = legs.some((l) => l.target_id && keep(l.target_id) === null);
     const axes = Object.fromEntries(STRENGTH_AXES.map((a) => [a, redactAxis(s[a], keep, hidden)]));
     const withheld = STRENGTH_AXES.some((a) => axes[a].out_of_view === true);
-    return { ok: true, target: id, depth_bound: s.depth_bound, ...axes, ...(withheld ? { out_of_view: true } : {}) };
+    /* R5: the hunch legs this answer names, so a hunch on a target the viewer may not see is neither named nor counted. */
+    const seenHunches = hunchCount(legs.filter((l) => !(l.target_id && keep(l.target_id) === null)));
+    return { ok: true, target: id, depth_bound: s.depth_bound, ...axes, hunches_left_out: seenHunches,
+             ...(withheld ? { out_of_view: true } : {}) };
   }
 
   /** R13: the pair the search cache holds for an inquiry, `{capture: {grade, state}, connection: {grade, state}}`, or
@@ -387,14 +500,15 @@ export class Strength {
   /* R9: the version's legs as the walk's members, each grade resolved from what the record earns rather than read off
      the frozen row. One registry call for the whole version. `why` travels on every leg the arithmetic will find inert,
      and the three published lists (`ungraded`, `hunches`, `graded`) are this layer's facts: where a grade came from is
-     about the record, and is published beside the arithmetic's own explanation rather than overwriting it. */
-  #versionLegsAsMembers(rows, subjectEntity) {
+     about the record, and is published beside the arithmetic's own explanation rather than overwriting it. With `levels`
+     (R29), an anonymous observation nothing independent in the version bears out is in `ungraded`, named so. */
+  #versionLegsAsMembers(rows, subjectEntity, levels = null) {
     const targets = rows.map((r) => r.target_id).filter((t) => typeof t === "string" && t);
     const reg = this.inquiry.earned(subjectEntity || null, targets);
     const earnedConn = (reg && reg.earned && reg.earned.connection) || {};
     const earnedCap = (reg && reg.earned && reg.earned.capture) || {};
     const earnedTest = (reg && reg.earned && reg.earned.testimony) || {};
-    const named = { ungraded: [], hunches: [], graded: [] };
+    const placed = [];
     const legs = rows.map((r) => {
       const axis = STRENGTH_AXES.includes(r.grade_axis) ? r.grade_axis : null;
       const authored = typeof r.grade === "string" && r.grade ? r.grade : null;
@@ -402,13 +516,13 @@ export class Strength {
       const base = { ord: r.ord, target_id: r.target_id, target_type: r.target_type,
                      role: r.role, ground: r.ground, grade_axis: axis, grade_source: source };
       const inert = (why, bucket) => {
-        named[bucket].push({ target_id: r.target_id, ord: r.ord, ground: r.ground,
-                             role: r.role, grade_axis: axis, grade_source: source, why });
+        placed.push([bucket, { target_id: r.target_id, ord: r.ord, ground: r.ground,
+                               role: r.role, grade_axis: axis, grade_source: source, why }]);
         return { ...base, grade: null, why };
       };
       const carries = (grade, why) => {
-        named.graded.push({ target_id: r.target_id, ord: r.ord, ground: r.ground,
-                            grade_axis: axis, grade_source: source, grade, authored, why });
+        placed.push(["graded", { target_id: r.target_id, ord: r.ord, ground: r.ground,
+                                 grade_axis: axis, grade_source: source, grade, authored, why }]);
         return { ...base, grade };
       };
       if (isHunch(source)) return inert(HUNCH_WHY, "hunches");
@@ -451,6 +565,15 @@ export class Strength {
         : `${c.why} This leg was authored at ${authored} and is reported at ${capped}, because the `
         + `record cannot support the stronger claim.`);
     });
+    /* R29: the grades above are already the record's, so the judgement needs no capture bound of its own; the walk makes
+       the same judgement over the same legs. */
+    for (const [i, a] of this.#anonymousOf(legs, levels, null)) {
+      if (a.corroborated || placed[i][0] !== "graded") continue;
+      const { grade, authored: _authored, ...entry } = placed[i][1];
+      placed[i] = ["ungraded", { ...entry, role: rows[i].role, why: UNCORROBORATED_WHY }];
+    }
+    const named = { ungraded: [], hunches: [], graded: [] };
+    for (const [bucket, entry] of placed) named[bucket].push(entry);
     return { legs, ...named, subject_entity: reg ? reg.subject_entity : null,
              subject_known: reg ? reg.subject_known : false };
   }
@@ -537,8 +660,9 @@ export class Strength {
     /* END DEC-49 REGION is-version-strength */
 
     const legRows = this.#versionLegs(inq, name, true);
-    const resolved = this.#versionLegsAsMembers(legRows, this.inquiry.subjectEntityOf(inq));
-    const pair = this.#pairOver(inq, resolved.legs);
+    const lv = levelsGiven(args.levels);
+    const resolved = this.#versionLegsAsMembers(legRows, this.inquiry.subjectEntityOf(inq), lv);
+    const { pair } = this.#pairOver(inq, resolved.legs, lv);
     const whatIf = !(stateSet.length === VERSION_STRENGTH_DEFAULT_STATES.length
                      && stateSet.every((s, i) => s === VERSION_STRENGTH_DEFAULT_STATES[i]));
     /* DEC-40's line, in band, on every answer: the what-if says whose view it is, the default says it is not filtered,
@@ -555,6 +679,9 @@ export class Strength {
       /* One measurement per axis, over its own population; nothing beside the axes stands for all of them. */
       pair: Object.fromEntries(STRENGTH_AXES.map((ax) => [ax, pair[ax]])),
       ungraded: resolved.ungraded, hunches: resolved.hunches, graded: resolved.graded,
+      /* R5: every hunch this answer names, and no other. */
+      hunches_left_out: resolved.hunches.length,
+      ...(lv ? { levels: lv } : {}),
       grades_from: "earnedBasisRegistry",
       subject_entity: resolved.subject_entity, subject_known: resolved.subject_known,
       legs_read: legRows.length, legs_complete: legRows.length === row.leg_count,
@@ -578,6 +705,27 @@ export class Strength {
 
   /* ============================================================ independence (R11, R12, R27; D-195) */
 
+  /* The upstream origins of some bundles (R12): each bundle, its captures and their captured addresses, each read one
+     past `ORIGIN_LIMIT`; `complete` false when a read reached it. */
+  #originsOf(bundleIds) {
+    let complete = true;
+    const set = new Set();
+    for (const id of bundleIds) {
+      set.add(`bundle:${id}`);
+      const caps = this.#rows(`SELECT capture_sha FROM register WHERE bundle_id=? LIMIT ?`, id, ORIGIN_LIMIT + 1);
+      if (caps.length > ORIGIN_LIMIT) complete = false;
+      for (const r of caps.slice(0, ORIGIN_LIMIT)) {
+        set.add(`capture:${r.capture_sha}`);
+        const addrs = this.#rows(
+          `SELECT DISTINCT address_norm FROM captured_locators WHERE capture_sha=? ORDER BY address_norm LIMIT ?`,
+          r.capture_sha, ORIGIN_LIMIT + 1);
+        if (addrs.length > ORIGIN_LIMIT) complete = false;
+        for (const l of addrs.slice(0, ORIGIN_LIMIT)) set.add(`address:${l.address_norm}`);
+      }
+    }
+    return { set, complete };
+  }
+
   /* THE ONE IMPLEMENTATION (R12), for the pair over a version, a partition and a candidate alike, so the write gate
      and the ceremony's read cannot come to disagree about what "independent" means. Derived from content-addressed
      provenance: `register` maps a capture's sha to the bundle that holds it and `captured_locators` maps that sha to
@@ -588,21 +736,9 @@ export class Strength {
   #independenceOf(legs, parts) {
     let complete = true;
     const originsOf = (bundleIds) => {
-      const out = new Set();
-      for (const id of bundleIds) {
-        out.add(`bundle:${id}`);
-        const caps = this.#rows(`SELECT capture_sha FROM register WHERE bundle_id=? LIMIT ?`, id, ORIGIN_LIMIT + 1);
-        if (caps.length > ORIGIN_LIMIT) complete = false;
-        for (const r of caps.slice(0, ORIGIN_LIMIT)) {
-          out.add(`capture:${r.capture_sha}`);
-          const addrs = this.#rows(
-            `SELECT DISTINCT address_norm FROM captured_locators WHERE capture_sha=? ORDER BY address_norm LIMIT ?`,
-            r.capture_sha, ORIGIN_LIMIT + 1);
-          if (addrs.length > ORIGIN_LIMIT) complete = false;
-          for (const l of addrs.slice(0, ORIGIN_LIMIT)) out.add(`address:${l.address_norm}`);
-        }
-      }
-      return out;
+      const o = this.#originsOf(bundleIds);
+      if (!o.complete) complete = false;
+      return o.set;
     };
     const checked = parts > 1;
     const shared = [];
@@ -753,13 +889,15 @@ export class Strength {
   }
 
   /** R26: R1–R5's three axes over `legs` given in place of the inquiry's live basis, walking inquiry legs to the depth
-   *  bound exactly as `strengthOf` does. Writes nothing. A leg whose target cannot be read makes its axis undetermined
-   *  or leaves it inert, never an error; a failure of the arithmetic itself is answered `{pair: null, error}`, never
-   *  thrown. */
-  candidatePair({ inquiry = null, legs = [] } = {}) {
+   *  bound exactly as `strengthOf` does, with how many hunch legs it left out (R5) and, given `levels`, R29's rule and
+   *  the levels it applied. Writes nothing. A leg whose target cannot be read makes its axis undetermined or leaves it
+   *  inert, never an error; a failure of the arithmetic itself is answered `{pair: null, error}`, never thrown. */
+  candidatePair({ inquiry = null, legs = [], levels = null } = {}) {
     try {
       const walkLegs = (Array.isArray(legs) ? legs : []).map((l, k) => Strength.#candidateLeg(l, k));
-      return { pair: this.#pairOver(String(inquiry ?? ""), walkLegs), error: null };
+      const lv = levelsGiven(levels);
+      const { pair } = this.#pairOver(String(inquiry ?? ""), walkLegs, lv);
+      return { pair, error: null, hunches_left_out: hunchCount(walkLegs), ...(lv ? { levels: lv } : {}) };
     } catch (e) {
       return { pair: null, error: String(e && e.message ? e.message : e).slice(0, CANDIDATE_ERROR_MAX) };
     }
@@ -770,6 +908,54 @@ export class Strength {
   candidateIndependence({ legs = [], parts = 0 } = {}) {
     const walkLegs = (Array.isArray(legs) ? legs : []).map((l, k) => Strength.#candidateLeg(l, k));
     return this.#independenceOf(walkLegs, Number.isInteger(parts) ? parts : distinctParts(walkLegs));
+  }
+
+  /* ============================================================ anonymous testimony (R29, R30; DEC-102) */
+
+  /** R30: for each testimony leg of the inquiry's live basis, or of the named version, on an observation `levels` states
+   *  at `group` or `project`, whether something independent in the same basis bears it out (`corroborated`, with the
+   *  legs that do) or not (`uncorroborated`), by the one judgement R29's pair makes. Refusals as R6's, and for a named
+   *  version R7's `VERSION_STRENGTH_NO_SUCH_VERSION`. A leg the viewer may not see is withheld whole and bears nothing
+   *  out; `out_of_view: true` says only that something was withheld. For `ratification` (its R35), the caller that
+   *  states the levels; this module reads none itself. Writes nothing; never names an author. */
+  testimonyCorroboration({ inquiry = null, version = null, levels = null, viewer = null } = {}) {
+    const id = str(inquiry);
+    if (!id) return { ok: false, reason: "NO_ID",
+      detail: "this answers for one question: pass inquiry=<record id>." };
+    if (!this.membership.inSight(id, viewer)) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
+    const ty = normalizeType(this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, id)?.object_type);
+    if (ty !== "inquiry")
+      return { ok: false, reason: "NOT_AN_INQUIRY", target: id, object_type: ty ?? null,
+        detail: `${id} is a ${ty ?? "record"}, not an inquiry. Only a question rests on testimony.` };
+    const name = str(version);
+    let legs, captureBounds;
+    if (name) {
+      const row = this.#one(`SELECT name FROM inquiry_basis_versions WHERE bundle_id=? AND name=?`, id, name);
+      if (!row) {
+        const r = VERSION_STRENGTH_CHECKS.VERSION_STRENGTH_NO_SUCH_VERSION;
+        return { ok: false, reason: "VERSION_STRENGTH_NO_SUCH_VERSION", code: "VERSION_STRENGTH_NO_SUCH_VERSION",
+                 check: r.check, translation: r.translation, inquiry: id, version: name.slice(0, 200),
+                 detail: `no reading named '${name.slice(0, 60)}' belongs to ${id}.` };
+      }
+      legs = this.#versionLegsAsMembers(this.#versionLegs(id, name, true), this.inquiry.subjectEntityOf(id)).legs;
+      captureBounds = null;
+    } else {
+      legs = this.#legsOf(id);
+      captureBounds = this.#captureBoundsFor(id, 0, legs);
+    }
+    const lv = levelsGiven(levels) ?? Object.freeze({});
+    const keep = this.#redactor(viewer);
+    const seen = (t) => !(t && keep(t) === null);
+    let withheld = false;
+    const answered = [];
+    for (const [i, a] of this.#anonymousOf(legs, lv, captureBounds, seen)) {
+      const leg = legs[i];
+      if (!seen(leg.target_id)) { withheld = true; continue; }
+      answered.push({ ord: leg.ord, target_id: leg.target_id, level: a.level,
+                      state: a.corroborated ? "corroborated" : "uncorroborated", corroborated_by: a.by });
+    }
+    return { ok: true, inquiry: id, ...(name ? { version: name } : {}), levels: lv, legs: answered, wrote: false,
+             ...(withheld ? { out_of_view: true } : {}) };
   }
 
   /* ============================================================ the bar (R14–R16; DEC-17, DEC-72) */
@@ -805,8 +991,9 @@ export class Strength {
   }
 
   /** R15: the group's default bar, the one a new project starts from (DEC-17 as amended). A pair: a scalar would
-   *  re-collapse the two axes in the one field a reader is most likely to quote. */
-  strengthBarSet({ group = null, capture = null, connection = null, author = null } = {}) {
+   *  re-collapse the two axes in the one field a reader is most likely to quote. It is recorded with the administrator's
+   *  reason (DEC-88), and its answer carries DEC-105's honest note. */
+  strengthBarSet({ group = null, capture = null, connection = null, reason = undefined, author = null } = {}) {
     const who = String(author ?? "").trim();
     const refusal = (code, detail, extra) => {
       const row = STRENGTH_BAR_CHECKS[code];
@@ -844,20 +1031,34 @@ export class Strength {
       return { ok: false, reason: "NO_BAR",
                detail: "declare at least one axis. Withdrawing a bar entirely is a different act from setting "
                      + "one, and an absent bar is stated as absent rather than written as a blank row." };
+    /* DEC-49 REGION is-strength-bar-reason */
+    /* DEC-88: the administrator's words, judged trimmed and recorded as judged. Asked last, so nothing is written. */
+    const why = typeof reason === "string" ? reason.trim() : "";
+    if (!why || why.length > BAR_REASON_MAX)
+      return refusal("BAR_NO_REASON",
+        typeof reason !== "string"
+          ? "give the reason the group sets this bar, as text in your own words (reason=…). Nothing was declared."
+          : !why
+          ? "the reason given is blank; say in your own words why the group sets this bar. Nothing was declared."
+          : `the reason given is ${why.length} characters, and a reason is at most ${BAR_REASON_MAX}. `
+            + "Nothing was declared.",
+        { limit: BAR_REASON_MAX });
+    /* END DEC-49 REGION is-strength-bar-reason */
     const at = this.now();
     this.sql.exec(
-      `INSERT INTO group_strength_bar (group_id,capture,connection,author,at) VALUES (?,?,?,?,?)
+      `INSERT INTO group_strength_bar (group_id,capture,connection,author,at,reason) VALUES (?,?,?,?,?,?)
        ON CONFLICT(group_id) DO UPDATE SET capture=excluded.capture, connection=excluded.connection,
-         author=excluded.author, at=excluded.at`,
-      gid, capture, connection, who, at);
-    return { ok: true, group: gid, capture, connection, author: who, at,
+         author=excluded.author, at=excluded.at, reason=excluded.reason`,
+      gid, capture, connection, who, at, why);
+    return { ok: true, group: gid, capture, connection, author: who, at, reason: why,
              note: "this is the DEFAULT a project starts from; a project may declare its own in its bundle.md, "
                  + "which is an authored, dated, on-the-record act visible in every case it governs. "
-                 + "It gates nothing." };
+                 + `It gates nothing. ${BAR_HONEST_NOTE}` };
   }
 
   /** R16: the bar read. `project=` is the answer under DEC-72; `group=` is DEC-17's surviving half, the default that
-   *  seeds a new project; `target=` is refused by name, because no bar attaches to a finding. A project the viewer
+   *  seeds a new project, answered with its reason (R15; null on a default set before DEC-88); `target=` is refused by
+   *  name, because no bar attaches to a finding. A project the viewer
    *  may not see is answered as one that does not exist. Two members who can both see a project are told the same bar
    *  ("never set by who a reader is"). */
   strengthBarOf({ group = null, target = null, project = null, viewer = null } = {}) {
@@ -886,7 +1087,8 @@ export class Strength {
       return { ok: true, group: null, bar: null, seeds_new_projects: true,
                detail: "no group is named and this store records no producing group, so there is no group default to "
                      + "read. An absent bar gates nothing and is not a bar of zero." };
-    const g = this.#one(`SELECT group_id, capture, connection, author, at FROM group_strength_bar WHERE group_id=?`, gid);
+    const g = this.#one(`SELECT group_id, capture, connection, author, at, reason FROM group_strength_bar WHERE group_id=?`,
+                        gid);
     return { ok: true, group: gid, bar: g || null, seeds_new_projects: true,
              detail: g ? null : "no group default is declared. An absent bar gates nothing and is not a bar of zero." };
   }

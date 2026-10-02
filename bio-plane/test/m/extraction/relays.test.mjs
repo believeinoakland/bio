@@ -2,8 +2,9 @@
    (`pdfStructureOp`, `acquireReadingOp`) answer the store's own refusal with its status, code and sentence, and only a
    reply that is no answer as the silence, carrying the store's correlation id when it gave one. The control plane's
    helpers are stand-ins that behave as its R23, R25 and R30 state them (`doAnswer`, `storeSilent`, `storeRefusal`).
-   Each relay is exercised as the plane will call it (every helper handed) and as legacy-index calls it today (no
-   `doAnswer`, no `storeRefusal`; `acquireReadingOp` handed no `json` either), and the answers must be the same. Each
+   Each relay is exercised as the plane calls it (every helper handed, `src/plane/door.mjs`) and as legacy-index called
+   it before the plane's split (no `doAnswer`, no `storeRefusal`; `acquireReadingOp` handed no `json` either), and the
+   answers must be the same. Each
    test names the requirement ids it checks in its title. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -46,12 +47,12 @@ const RELAYS = {
     return out.response;
   },
 };
-/* What each relay is handed: by the plane at layer 11, and by legacy-index today (`src/index.mjs`). */
+/* What each relay may be handed: every helper, as the plane hands it; and less, as legacy-index once handed it. */
 const HANDED = {
   pdfstructure: { "every helper": { json, storeSilent, storeRefusal, doAnswer }, "doAnswer without storeRefusal": { json, storeSilent, doAnswer },
-                  "as legacy-index hands it today": { json, storeSilent } },
+                  "as legacy-index handed it": { json, storeSilent } },
   acquire: { "every helper": { json, storeSilent, storeRefusal, doAnswer }, "doAnswer without storeRefusal": { json, storeSilent, doAnswer },
-             "as legacy-index hands it today": { storeSilent } },
+             "as legacy-index handed it": { storeSilent } },
 };
 const cases = function* () {
   for (const [name, relay] of Object.entries(RELAYS))
@@ -83,7 +84,7 @@ test("R64: a relay handed storeRefusal and doAnswer answers through them, once e
     const spyAnswer = (res) => { read1.push(1); return doAnswer(res); };
     const body = { ok: false, reason: "BAD_JSON", error: "the body is not JSON" };
     const via = await read(await relay(stub(body, 400), { json, storeSilent, storeRefusal: spyRefusal, doAnswer: spyAnswer }));
-    const own = await read(await relay(stub(body, 400), HANDED[name]["as legacy-index hands it today"]));
+    const own = await read(await relay(stub(body, 400), HANDED[name]["as legacy-index handed it"]));
     assert.deepEqual(refused, [400], `${name}: the refusal went through storeRefusal once`);
     assert.deepEqual(read1, [1], `${name}: the reply was read through the plane's doAnswer`);
     assert.deepEqual(via, own, `${name}: the same answer either way`);

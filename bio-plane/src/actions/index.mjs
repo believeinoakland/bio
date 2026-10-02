@@ -10,8 +10,8 @@
  *
  * REACHED as `actionsOf(host, deps)` (K61): one instance per host, created on the first call. At creation it creates
  * its tables and declares them to record-core's purge (R36), registers its check and projection with promotion (R1–R3,
- * R7, R11, R33), action-grammar's audit arm with record-core (R51), and its facts and projection decoration with retrieval (R12,
- * R25; retrieval R53, R56).
+ * R7, R11, R33), action-grammar's audit arm with record-core (R51), its facts and projection decoration with retrieval (R12,
+ * R25; retrieval R53, R56), and its litigation-hold reader with capture (R55; capture R32).
  * `deps` (each reached through its factory on the same host unless given; a test passes its own):
  *   record, membership, promotion   layer 2: `transact`, `acquireLease`, `releaseLease`, `head`, `readFile`, `livePaths`,
  *                                   `declarePurge`, `registerAuditCheck`, `getSetting`; `viewerPredicate`;
@@ -21,6 +21,7 @@
  *   conformance    `determinationRead` (R8, R30), when provided (see R8 below); its module-level
  *                  `determinationSuperseded` (its R20), through which R8 answers a superseded determination (N312).
  *   entities       `readEntity` (its R5): whether an addressee's `entity_id` names a person (R9).
+ *   capture        `registerReader` (its R32): the litigation-hold reader (R55); `null` registers none.
  *   now            the instance clock, milliseconds (default: `env.BIO_NOW_MS`, else the wall clock).
  *   env            the instance bindings.
  *
@@ -35,6 +36,7 @@ import { contentOf } from "../content/index.mjs";
 import { retrievalOf } from "../retrieval/index.mjs";
 import { conformanceOf, determinationSuperseded } from "../conformance/index.mjs";
 import { entitiesOf } from "../entities/index.mjs";
+import { captureOf } from "../capture/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { parseFrontmatter, normalizeType, vocabFor, STATES, OBJECT_TYPES, isMachineIdentity,
          createSha256 } from "../record-grammar/index.mjs";
@@ -2114,6 +2116,17 @@ export class Actions {
     return { ok: true, items, limit: max, truncated, cursor: truncated && tail ? `${tail.action}#${tail.ord}` : null };
   }
 
+  /** R55 (DEC-108; capture R32): whether any litigation hold is in place in the group: whether any entry of any action
+   *  the instance holds has `in_place` as its latest statement (R52), whatever the viewer. Synchronous; writes nothing
+   *  and never throws: a read that fails answers `true`, so capture clears nothing it cannot rule a hold out for. */
+  holdInPlace() {
+    try {
+      const r = this.#one(`SELECT 1 AS held FROM action_holds h WHERE h.hold='in_place'
+        AND h.seq = (SELECT MAX(s.seq) FROM action_holds s WHERE s.bundle_id = h.bundle_id AND s.ord = h.ord) LIMIT 1`);
+      return r !== null;
+    } catch { return true; }
+  }
+
   /* R54: the action's project, as `action-clocks` answers it: the project of the first determination among its
      `rests_on` legs the viewer may read (conformance's `determinationRead`), null when it rests on none. */
   #projectOf(fm, viewer) {
@@ -2310,7 +2323,7 @@ function proposalLabelFor(who, subject) {
 const instances = new WeakMap();
 
 /** K61: the one instance per host; at creation it declares its tables, registers its step, audit, facts and
- *  decoration (R3, R12, R25, R36, R51; retrieval R53, R56). */
+ *  decoration (R3, R12, R25, R36, R51; retrieval R53, R56) and its litigation-hold reader (R55; capture R32). */
 export function actionsOf(host, deps) {
   let a = instances.get(host);
   if (!a) {
@@ -2331,6 +2344,16 @@ export function actionsOf(host, deps) {
       retrieval.registerActionFacts("actions", (md, nowMs) => actionFacts(md, nowMs));
       retrieval.registerProjectionDecoration("actions", (row, { nowMs } = {}) =>
         (normalizeType(row && row.object_type) === "action" ? { action: a.derived(row, nowMs) } : {}));
+    }
+    /* R55: once per host, as the registrations above. Capture's slot takes one registration (membership's
+       `listenerRefusal`); one already held by this module (another host over the same storage) stands, and one held by
+       any other module is a defect of the wiring, thrown as the purge declaration's is. Capture is handed the `env`
+       this module was given, so a capture made here first holds the plane's bindings (capture R58). */
+    const capture = d.capture === null ? null : (d.capture || captureOf(host, d.env ? { env: d.env } : {}));
+    if (capture) {
+      const r = capture.registerReader("litigation-hold", "actions", () => a.holdInPlace());
+      if (r && r.ok === false && r.module !== "actions")
+        throw new Error(`actions: capture refused the litigation-hold reader: ${r.reason}${r.module ? ` (held by ${r.module})` : ""}`);
     }
   }
   return a;

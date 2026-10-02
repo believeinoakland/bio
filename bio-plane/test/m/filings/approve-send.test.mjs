@@ -2,7 +2,7 @@
    the module's interface, over the real modules. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, MACHINE, STRANGER, WORDS, LAW } from "./fixture.mjs";
+import { world, V, MACHINE, STRANGER, WORDS, LAW, WHY } from "./fixture.mjs";
 import { FILING_TEXT_MAX } from "../../../src/filings/index.mjs";
 import { createHash } from "node:crypto";
 
@@ -148,8 +148,8 @@ test("R16 nothing a machine writes approves, sends, names counsel or exports; a 
                "MACHINE_CANNOT_FILE");
   const T3 = x.action({ kind: "commitment_claim" });
   const counsel = { name: "A. Counsel", organisation: "Test Chambers" };
-  assert.equal(x.f.counselPacket({ action: T3, counsel, author: MACHINE, viewer: MACHINE }).reason, "MACHINE_CANNOT_NAME_COUNSEL");
-  const p = x.f.counselPacket({ action: T3, counsel, author: V("olive"), viewer: V("olive") });
+  assert.equal(x.f.counselPacket({ reason: WHY, action: T3, counsel, author: MACHINE, viewer: MACHINE }).reason, "MACHINE_CANNOT_NAME_COUNSEL");
+  const p = x.f.counselPacket({ reason: WHY, action: T3, counsel, author: V("olive"), viewer: V("olive") });
   assert.equal((await x.f.counselPacketExport({ id: p.id, version: 1, author: MACHINE, viewer: MACHINE })).reason, "MACHINE_CANNOT_EXPORT");
   const t = x.f.theoryPropose({ action: T3, theory: "A breach of the bylaw.", standards: [x.S1],
                                 why: "the determination names it", proposer: MACHINE, viewer: MACHINE });

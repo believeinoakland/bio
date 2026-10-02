@@ -1,7 +1,7 @@
 /* bias R8–R10 (its share of a promotion) and R23 (the notice a promotion sends), through the real promotion. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { world, FM, S, sha, biasMd } from "./world.mjs";
+import { world, FM, S, sha, biasMd, WHY } from "./world.mjs";
 
 const A = "BIAS-2026-0001-a";
 
@@ -80,8 +80,8 @@ test("R10: the statement rows are replaced by the promoted document's, removed f
   w.set(A, [S("s1"), S("s2")], "proposed", { policy_source: "https://example.org/policy-v1", policy_sha256: "AA" });
   assert.deepEqual(w.rows(`SELECT statement_id, ord FROM bias_statements WHERE bundle_id=? ORDER BY ord`, A),
     [{ statement_id: "s1", ord: 0 }, { statement_id: "s2", ord: 1 }]);
-  const inst = w.bias.biasAdopt({ bundleId: A, author: "admin", identity: "member:admin", at: "2026-07-05T00:00:00Z" });
-  const proj = w.bias.biasAdopt({ bundleId: A, scope: "project", scopeId: P, author: "admin", identity: "member:admin",
+  const inst = w.bias.biasAdopt({ reason: WHY, bundleId: A, author: "admin", identity: "member:admin", at: "2026-07-05T00:00:00Z" });
+  const proj = w.bias.biasAdopt({ reason: WHY, bundleId: A, scope: "project", scopeId: P, author: "admin", identity: "member:admin",
                                   viewer: "member:admin", at: "2026-07-06T00:00:00Z" });
   assert.equal(inst.ok && proj.ok, true);
   const proposedSha = w.record.head(A).bundleSha;
