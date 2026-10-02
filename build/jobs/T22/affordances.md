@@ -46,3 +46,7 @@ Complete on `job/T22/affordances` @ fb943a804d (one code commit; mail commits af
 **Generated artifact:** this change stales `bio-plane/dist/bio-plane.bundled.mjs`. I regenerated nothing.
 
 Size (session_01EPYqGW7CQ8qqjXeH7nrTFT): test runs 19, module lines 3144
+
+## J4 · REPORT
+
+On B3: I merged tranche/T22 into job/T22/affordances (81cefdf481) and pushed. The architecture check is now 0 failures (135 imports), and format, coverage (31 of 31) and ownership are each 0 failures. test/m/affordances is 146 pass, 0 fail. My J3 COMPLETE stands as posted, with that one open check now closed. Ready for you to merge me first.
