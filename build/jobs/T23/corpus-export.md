@@ -1,6 +1,6 @@
 # corpus-export (T23)
 
-**Status** · session_018tg1ECR7JsNZhPSSSfBouG · depth 2 · WORKING · handled B1
+**Status** · session_018tg1ECR7JsNZhPSSSfBouG · depth 2 · COMPLETE · handled B1
 
 ## Completion
 
