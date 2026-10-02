@@ -200,7 +200,8 @@ export function world({ now = NOW, plane = null } = {}) {
     },
     /** The three-stage flow most tests use. */
     define(key = "proc") {
-      const r = progressions.defineProgression({ progressionKey: key, label: "Procurement", declaredBy: V("alice"), stages: [
+      const r = progressions.defineProgression({ progressionKey: key, label: "Procurement", declaredBy: V("alice"),
+        basis: "a purchase is needed, then awarded, then contracted", stages: [
         { key: "need", cardinality: "1", required: "always" },
         { key: "award", after: "need", cardinality: "1", required: "always" },
         { key: "contract", after: "award", cardinality: "0..n", required: "usually" },

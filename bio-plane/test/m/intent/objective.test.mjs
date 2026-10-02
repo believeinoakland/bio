@@ -93,7 +93,7 @@ test("R22 R2 R3 NO_SUCH_PROJECT is membership's one row (its R78, C-70.5): inten
   const a = w.i.declareAspiration({ scope: "group", statement: "s", author: V("alice") }).aspiration;
   w.i.registerSource("monitoring", () => [{ key: "c-1", kind: "k", basis: null }]);
   const acts = (p) => [
-    ["setCondition", w.i.setCondition({ project: p, condition: COND, author: V("bob"), viewer: V("bob") })],
+    ["setCondition", w.i.setCondition({ reason: "Measured by the record.", project: p, condition: COND, author: V("bob"), viewer: V("bob") })],
     ["progress", w.i.progress({ project: p, viewer: V("bob") })],
     ["gaps", w.i.gaps({ project: p, viewer: V("bob") })],
     ["aspirationsFor", w.i.aspirationsFor({ project: p, viewer: V("bob") })],
@@ -105,7 +105,7 @@ test("R22 R2 R3 NO_SUCH_PROJECT is membership's one row (its R78, C-70.5): inten
   ];
   for (const p of [hidden, "PROJ-2026-9999-nothing"])
     for (const [name, r] of acts(p)) assert.deepEqual(r, noSuchProject(p), `${name} ${p}`);
-  assert.deepEqual(await w.i.workObjective({ project: hidden, author: V("bob") }), noSuchProject(hidden));
+  assert.deepEqual(await w.i.workObjective({ reason: "Work the gaps.", project: hidden, author: V("bob") }), noSuchProject(hidden));
   /* adopting with no project named is the same condition: no project answers */
   assert.deepEqual(w.i.triage({ proposal: "monitoring::c-1", act: "adopt", author: V("bob") }), noSuchProject(null));
   assert.equal(noSuchProject(hidden).check, MEMBERSHIP_CHECKS.NO_SUCH_PROJECT.check);
@@ -119,7 +119,7 @@ test("R22 R2 R9 NO_SUCH_ENTITY is entities' one row (its R36, C-91.4): intent ho
   w.define();
   const snap = w.snapshot();
   for (const id of ["ENT-9", "ENT-2026-0001", "x"]) {
-    assert.deepEqual(w.i.setCondition({ project: w.P, condition: { ...COND, entity: id }, author: V("bob"), viewer: V("bob") }),
+    assert.deepEqual(w.i.setCondition({ reason: "Measured by the record.", project: w.P, condition: { ...COND, entity: id }, author: V("bob"), viewer: V("bob") }),
                      noSuchEntity(id), `setCondition ${id}`);
     assert.deepEqual(w.i.declareAspiration({ scope: "group", statement: "s", entities: ["ENT-1", id], author: V("alice") }),
                      noSuchEntity(id), `declareAspiration ${id}`);
@@ -134,7 +134,7 @@ test("R2 setCondition's refusals, in order: machine, absent or unseen project (o
   w.define();
   const P = w.P;
   const hidden = w.project("Hidden one", "carol");
-  const set = (condition, author = V("bob"), project = P, viewer = author) => w.i.setCondition({ project, condition, author, viewer });
+  const set = (condition, author = V("bob"), project = P, viewer = author) => w.i.setCondition({ reason: "Measured by the record.", project, condition, author, viewer });
   for (const who of ["", null, MACHINE, "class:daemon"]) assert.equal(set(COND, who).reason, "MACHINE_CANNOT_SET_OBJECTIVE");
   const absent = set(COND, V("bob"), "PROJ-2026-9999-nothing");
   const unseen = set(COND, V("bob"), hidden);
@@ -162,7 +162,7 @@ test("R2 success writes a new revision of the project document through promotion
   w.define();
   const P = w.P;
   const before = w.record.head(P);
-  const r = w.i.setCondition({ project: P, condition: COND, author: V("bob"), viewer: V("bob") });
+  const r = w.i.setCondition({ reason: "Measured by the record.", project: P, condition: COND, author: V("bob"), viewer: V("bob") });
   assert.equal(r.ok, true);
   assert.equal(r.project, P);
   assert.equal(r.at, w.clock.now);
@@ -183,7 +183,7 @@ test("R2 success writes a new revision of the project document through promotion
   /* read back through progress */
   assert.deepEqual(w.i.progress({ project: P, viewer: V("bob") }).condition.required, COND.required);
   /* null removes it, as another revision */
-  const off = w.i.setCondition({ project: P, condition: null, author: V("bob"), viewer: V("bob") });
+  const off = w.i.setCondition({ reason: "Measured by the record.", project: P, condition: null, author: V("bob"), viewer: V("bob") });
   assert.equal(off.ok, true);
   assert.equal(off.condition, null);
   assert.equal(w.fm(P).objective_condition, undefined);
@@ -235,7 +235,7 @@ test("R4 matched instances are the entity's own and those standing in its relati
   const w = await measured();
   const P = w.P;
   const at = (share, extra) => {
-    assert.equal(w.i.setCondition({ project: P, condition: condOf(share, extra), author: V("bob"), viewer: V("bob") }).ok, true);
+    assert.equal(w.i.setCondition({ reason: "Measured by the record.", project: P, condition: condOf(share, extra), author: V("bob"), viewer: V("bob") }).ok, true);
     return w.i.progress({ project: P, viewer: V("bob") });
   };
   /* 4 matched: 1 meeting, 2 short, 1 undetermined */
@@ -260,7 +260,7 @@ test("R4 the filter: what the record evaluates narrows (entity_kind), what it ca
   const w = await measured();
   const P = w.P;
   const run = (c) => {
-    assert.equal(w.i.setCondition({ project: P, condition: c, author: V("bob"), viewer: V("bob") }).ok, true);
+    assert.equal(w.i.setCondition({ reason: "Measured by the record.", project: P, condition: c, author: V("bob"), viewer: V("bob") }).ok, true);
     return w.i.progress({ project: P, viewer: V("bob") });
   };
   const kinds = run(condOf(25, { filter: { entity_kind: "body" } }));
@@ -298,7 +298,7 @@ test("R5 each short instance names why: the stages missing, or the grade reached
   assert.equal((await w.progressions.threadInstance({ progressionKey: "proc", entityId: "ENT-2", threadedBy: V("alice"),
     placements: [{ stage: "need", captureSha: "ent-2-need" }, { stage: "award", captureSha: "ent-2-award" }] })).ok, true);
   w.join(P, "dave");
-  assert.equal(w.i.setCondition({ project: P, condition: { ...condOf(25), required: { grade: "B", stages: ["need"] } },
+  assert.equal(w.i.setCondition({ reason: "Measured by the record.", project: P, condition: { ...condOf(25), required: { grade: "B", stages: ["need"] } },
                                    author: V("bob"), viewer: V("bob") }).ok, true);
   const bob = w.i.progress({ project: P, viewer: V("bob") });
   const alice = w.i.progress({ project: P, viewer: V("alice") });
@@ -320,7 +320,7 @@ test("R6 one gap per short instance: a missing stage names the progression, enti
   const w = await measured();
   const P = w.P;
   assert.deepEqual(w.i.gaps({ project: P, viewer: V("bob") }).gaps, [], "no condition, no gaps");
-  assert.equal(w.i.setCondition({ project: P, condition: condOf(25), author: V("bob"), viewer: V("bob") }).ok, true);
+  assert.equal(w.i.setCondition({ reason: "Measured by the record.", project: P, condition: condOf(25), author: V("bob"), viewer: V("bob") }).ok, true);
   const g = w.i.gaps({ project: P, viewer: V("bob") });
   const pr = w.i.progress({ project: P, viewer: V("bob") });
   assert.equal(g.gaps.length, pr.short.length);
@@ -346,7 +346,7 @@ test("R7 watchSet answers what the condition reads: its entity and related entit
   const P = w.P;
   const none = w.i.watchSet({ project: P });
   assert.deepEqual([none.entities, none.progressions, none.captures, none.truncated], [[], [], [], false]);
-  assert.equal(w.i.setCondition({ project: P, condition: condOf(25), author: V("bob"), viewer: V("bob") }).ok, true);
+  assert.equal(w.i.setCondition({ reason: "Measured by the record.", project: P, condition: condOf(25), author: V("bob"), viewer: V("bob") }).ok, true);
   const s = w.i.watchSet({ project: P });
   assert.deepEqual(s.entities, ["ENT-1", "ENT-2", "ENT-4", "ENT-5"]);
   assert.deepEqual(s.progressions, ["proc"]);

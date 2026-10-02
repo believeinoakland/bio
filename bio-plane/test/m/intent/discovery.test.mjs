@@ -150,7 +150,7 @@ test("R20 an assistant proposes at any point and adopts at none: every act that 
   const cond = { progression: "proc", entity: "ENT-1", required: { grade: "B", stages: [] }, satisfied: { share: 50 } };
   for (const m of [MACHINE, "class:daemon", "", null]) {
     const acts = [
-      ["setCondition", w.i.setCondition({ project: w.P, condition: cond, author: m })],
+      ["setCondition", w.i.setCondition({ reason: "Measured by the record.", project: w.P, condition: cond, author: m })],
       ["declareGoal", w.i.declareGoal({ statement: "s", bounds: "b", author: m })],
       ["linkObjective", w.i.linkObjective({ goal: g, project: w.P, author: m })],
       ["closeGoal", w.i.closeGoal({ goal: g, reason: "r", author: m })],
@@ -161,7 +161,7 @@ test("R20 an assistant proposes at any point and adopts at none: every act that 
       ["adopt", w.i.triage({ proposal: "progressions::proc::award", act: "adopt", project: w.P, author: m })],
       ["defer", w.i.triage({ proposal: "progressions::proc::award", act: "defer", reason: "r", author: m })],
       ["dismiss", w.i.triage({ proposal: "progressions::proc::award", act: "dismiss", reason: "r", author: m })],
-      ["workObjective", await w.i.workObjective({ project: w.P, author: m, run: { run: "R" } })],
+      ["workObjective", await w.i.workObjective({ reason: "Work the gaps.", project: w.P, author: m, run: { run: "R" } })],
     ];
     for (const [name, r] of acts) {
       assert.equal(r.ok, false, `${name} by ${m}`);
