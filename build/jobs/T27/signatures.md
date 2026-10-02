@@ -30,3 +30,7 @@
 - `node checks/ownership.mjs … signatures tranche/T27`: 5 files changed; 0 failures.
 
 Size (session_01N3t7Hfj37rLM9MSN2KgSNZ): test runs 4, module lines 1308
+
+## J1 · REPORT
+
+Generated artifact staled (§14): the plane bundle bio-plane/dist/bio-plane.bundled.mjs (and .bundle.json). My change edits two of its inputs, src/sshsig.mjs and src/signpage.mjs (R39 needed the signer page to change); test/system/fleetbundles.test.mjs names both STALE. Not regenerated: yours at the layer close. The installer bundle newgroup/dist/newgroup.bundled.mjs also takes sshsig.mjs; newgroup-bundle-fresh.test.mjs still passes (1/1). Also, as at T23: R39's 'browser signer' has no in-app counterpart in code (civicos-ui signs nothing); the signer page served as SIGN_HTML now signs docket entries. A docket-signing step in the member UI is legacy-ui's and the UX stream's (Bob's: UX).
