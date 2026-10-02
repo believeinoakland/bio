@@ -18,7 +18,7 @@ import * as actionGrammar from "../../../src/action-grammar/index.mjs";
 import { list as listProfiles, combine as combineProfiles } from "../../../../jurisdictions/index.mjs";
 
 const SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "src");
-/* N463 (plane R8): the Worker entry is the plane's own `src/plane/index.mjs`, not the one-line re-export at `src/index.mjs`. */
+/* N463 (plane R8): the Worker entry is the plane's own `src/plane/index.mjs`. */
 const ENTRY = join(SRC, "plane", "index.mjs");
 const ADM = "adm-aff", MEM = "mem-aff";
 const mf = new Miniflare({
@@ -558,8 +558,8 @@ test("R19: every `reasoned` op this fixture can reach, called well-formed but wi
   assert.deepEqual(Object.keys(DRIVE).filter((op) => RUNGS[op] !== "reasoned" && op !== "release"), []);
 });
 
-test("R19: the reasoned registry, progression and theme acts, and intent's three (through the store's dispatch, "
-   + "which routes intent's ops until the control plane admits them), refuse without the authored account", async () => {
+test("R19: the reasoned registry, progression and theme acts, and intent's three (at the durable object's route map, "
+   + "the plane's), refuse without the authored account", async () => {
   const theme = await POST(`op=themedeclare&token=${W.IRIS}`, { name: "Transfers", test: "the document concerns a transfer" });
   must("themedeclare", theme);
   const themeId = theme.theme?.id ?? theme.theme_id ?? theme.id ?? theme.theme;
