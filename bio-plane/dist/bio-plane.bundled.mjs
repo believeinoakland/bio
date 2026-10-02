@@ -18697,12 +18697,15 @@ var MODULE_ORDER = Object.freeze([
   /* 3 */
   "host-governor",
   "provenance",
+  "attestation",
+  "provenance-routes",
   "capture-sources",
   "acquisition",
   "capture",
   "sources",
   /* 4 */
   "calibration",
+  "reading-pipeline",
   "extraction",
   "content",
   /* 5 */
@@ -20881,7 +20884,7 @@ var Membership = class _Membership {
    * implied otherwise would be lying. */
   static ROOT_ADMIN = "admin";
   /* R86 (N329): the administrators in a stated order: the founder first once the instance is claimed, then every active
-     member with role `admin` in the order their member rows were created, ties broken by member id (queue R23's
+     member with role `admin` in the order their member rows were created, ties broken by member id (`tasks` R1's
      "earliest active administrator" is the first after the founder). Writes nothing and never throws. */
   activeAdmins() {
     const rows2 = this.#rows(`SELECT member_id FROM members WHERE role='admin' AND status='active'
@@ -22623,12 +22626,12 @@ function withProducingGroup(text5, slug) {
 }
 
 // src/gate.mjs
-var CATALOG_VERSION = "1.54.0";
+var CATALOG_VERSION = "1.55.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var ROW_CENSUS = Object.freeze({
   version: CATALOG_VERSION,
   rows: 1073,
-  digest: "f1f0ad54195cd4b1b4df532eecf2377b4820e6589b9413053a9fcaeea8cc4fb7"
+  digest: "735376fd77a0d28e5271c7f3972356664b5bcf43d527212937f47dad7b7f0fc8"
 });
 var hex2 = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var te3 = new TextEncoder();
