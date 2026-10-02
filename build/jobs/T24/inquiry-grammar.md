@@ -32,3 +32,7 @@ Size (session_01EiWceaitg5TS7zKu7vUTrg): test runs 6, module lines 1439
 ## J1 · REPORT
 
 Two things outside my module (wording job, no requirement change made): (1) build/requirements/inquiry-grammar.md R7 still says 'A changed where is awaiting stamp for promotion's next job'; the one changed where (C-54.1) was stamped by 1.50.0 (PROMOTION #21, T20 L2). The requirement text is yours. (2) My comment-only edit to bio-plane/src/inquiry-grammar/checks.mjs stales the plane's bundle bio-plane/dist/bio-plane.bundled.mjs (not_product): fleetbundles.test.mjs fails its bio-plane arm with the edit and passes without it; nothing regenerated.
+
+## J2 · COMPLETE
+
+inquiry-grammar T24 done: N502 applied (checks.mjs:5 and the R7 test title grammar.test.mjs:220 now 'stamped by 1.50.0'; 1.50.0 took C-54.1's where). Module re-scanned: nothing else stale ('the store' in grammar.mjs names the plane store; catalogue notes are past-tense provenance). Wording only; no row added or changed, so no red 5 rows. Proof: test/m/inquiry-grammar 24/24; whole test/m 5236 tests, 5225 pass, 0 fail, 11 todo, no red; format 2 failures = accepted red 4 (link-sweep dirs); architecture, coverage (10/10), ownership 0 failures. Record: build/jobs/T24/inquiry-grammar.md on job/T24/inquiry-grammar. Report in my previous entry.
