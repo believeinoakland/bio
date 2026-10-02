@@ -77,6 +77,10 @@ export const DISCLOSURE = (run, skill) => `Suggested by the assistant (machine w
 const PROPOSAL_SAYS = "this is a proposal, not an option: it is stored apart from the plan's options and becomes one only "
   + "when a member adopts it, in their own words for any reason the plan asks.";
 const CHECK_SAYS = "a check informs; it never refuses or changes anything.";
+/* R37: the preview's own mode of R18's path, and what it says. */
+const PREVIEW = Symbol("action-plans start preview");
+const PREVIEW_SAYS = "a preview of starting this option: what the action would be, the matters it would rest on and the "
+  + "reminders it would set. Nothing was written: no action, no id, no reminder.";
 const DAY_MS = 86400000;
 const ACT = Symbol("action-plans act");
 /* R35: marks a liveness whose successor was withheld; never answered. */
@@ -689,7 +693,7 @@ export class ActionPlans {
       entry = { kind: "subject_remove", key, subject: held.find((x) => x.key === key).subject };
     }
     Object.assign(entry, { reason: reason.trim(), author, at: this.now() });
-    const w = this.#append(p, entry, { blurb: kind === "add" ? "Subject added" : "Subject removed" });
+    const w = this.#append(p, entry, { blurb: kind === "add" ? "Matter added" : "Matter removed" });
     if (!w.ok) return w;
     const served = kind === "remove" ? this.#options(p.id).filter((x) => (x.fields.subjects || []).some((y) => subjectKey(y) === entry.key))
       .map((x) => x.id) : [];
@@ -1133,34 +1137,37 @@ export class ActionPlans {
   }
 
   /** R18, R29: start a chosen option: compose its action, promote it, set the reminders asked with the choice, and link
-   *  them, in one act; a refusal of either leaves neither. */
-  optionStart(args = {}) {
+   *  them, in one act; a refusal of either leaves neither. `mode` is this module's own: R37's preview runs this same
+   *  path in a transaction it rolls back. */
+  optionStart(args = {}, mode = null) {
     const { plan, option, kind, contact, breach, premise_override: override, author, viewer } = args;
+    const preview = mode === PREVIEW;
+    const done = (r) => (preview ? this.#previewOf(args, r) : r);
     /* DEC-49 REGION is-start-member */
     if (isMachine(author))
-      return refusal("MACHINE_CANNOT_START", "an option is started by a named member; a machine never creates an action "
-        + "from a plan. Nothing was written.");
+      return done(refusal("MACHINE_CANNOT_START", "an option is started by a named member; a machine never creates an action "
+        + "from a plan. Nothing was written."));
     /* END DEC-49 REGION is-start-member */
     const o = this.#openPlan(plan, author, viewer, "optionStart");
-    if (o.r) return o.r;
+    if (o.r) return done(o.r);
     const p = o.p;
     const opt = this.#option(p.id, option);
-    if (!opt) return refuseNoSuchOption(option);
+    if (!opt) return done(refuseNoSuchOption(option));
     /* DEC-49 REGION is-start-chosen */
     if (opt.disposition !== "chosen")
-      return refusal("OPTION_NOT_CHOSEN", `${opt.id} is ${opt.disposition}, not chosen. Nothing was written.`,
-        { disposition: opt.disposition });
+      return done(refusal("OPTION_NOT_CHOSEN", `${opt.id} is ${opt.disposition}, not chosen. Nothing was written.`,
+        { disposition: opt.disposition }));
     /* END DEC-49 REGION is-start-chosen */
     /* DEC-49 REGION is-start-once */
     if (opt.action)
-      return refusal("OPTION_STARTED", `${opt.id} was started as ${opt.action}. Nothing was written.`, { action: opt.action });
+      return done(refusal("OPTION_STARTED", `${opt.id} was started as ${opt.action}. Nothing was written.`, { action: opt.action }));
     /* END DEC-49 REGION is-start-once */
     /* R18: asked before any write, as actions' write asks it (its R45), and answered through its one site. */
     const member = contactId(contact);
     if (contact !== undefined && contact !== null) {
       let facts = null;
       if (member) { try { facts = this.membership.memberFacts(member); } catch { facts = null; } }
-      if (!facts) return contactNotAMember();
+      if (!facts) return done(contactNotAMember());
     }
     const reason = override === undefined || override === null ? null : isObj(override) ? override.reason : override;
     const at = this.now();
@@ -1178,10 +1185,48 @@ export class ActionPlans {
       }
       const w = this.#append(p, { kind: "start", option: opt.id, action: a.id, author, at }, { blurb: "Option started" });
       if (!w.ok) return w;
+      /* R37: the act went through whole; the preview rolls every row of it back, so no id is spent. */
+      if (preview) return { ok: false, [PREVIEW]: true };
       return { ok: true, action: a.id, reminders: set };
     });
+    if (preview) return done(r && r[PREVIEW] ? null : r);
     if (!ok(r)) return r;
     return { ok: true, plan: p.id, option: opt.id, action: r.action, reminders: r.reminders, author, at };
+  }
+
+  /** R37: what `optionStart` (R18) would do with the same arguments, at this instant, writing nothing: R18's own path,
+   *  run in a transaction that is rolled back, so no id is allocated, no reminder set and nothing promoted. */
+  optionStartPreview(args = {}) { return this.optionStart(args, PREVIEW); }
+
+  /* R37: the preview's answer. `refused` is R18's refusal, or null when the start would land. A plan or option the
+     viewer may not see is answered exactly as R18 answers it; otherwise the action R18 would compose, the reminders
+     R29 would set, and `would_start` or the refusal. A matter the viewer may not see is withheld whole (R35). */
+  #previewOf(args, refused) {
+    const { plan, option, kind, contact, breach, premise_override: override, author, viewer } = args;
+    const p = this.#plan(plan, viewer);
+    const opt = p ? this.#option(p.id, option) : null;
+    if (!p || !opt) return refused;
+    const see = this.#sight(viewer);
+    const fields = see.fields(opt.fields);
+    const reason = override === undefined || override === null ? null : isObj(override) ? override.reason ?? null : override;
+    const legs = [];
+    for (const s of fields.subjects || []) {
+      const target = s.kind === "inquiry" ? s.inquiry : s.determination;
+      let leg = legs.find((l) => l.target === target);
+      if (!leg) legs.push(leg = { target, kind: "rests_on", subjects: [] });
+      leg.subjects.push({ subject: s, ...this.#support(s, p.project, viewer) });
+    }
+    const reminders = (opt.reminders || []).map((rem) => ({ entry: (opt.fields.dates || []).findIndex((d) => d.date === rem.date),
+      date: rem.date, on: rem.on, set_by: opt.chosenBy || author }));
+    return {
+      ok: true, plan: p.id, option: opt.id, preview: true,
+      action: { kind: typeof kind === "string" ? kind : null, addressee: fields.addressee ?? null,
+                clock: (fields.dates || []).map((d) => ({ date: d.date, basis: d.basis, status: "pending" })), legs,
+                plan: p.id, option: opt.id, contact: contact === undefined || contact === null ? null : contactId(contact) || null,
+                breach: breach === true, premise_override: reason === null ? null : { reason } },
+      reminders, would_start: refused === null, ...(refused === null ? {} : { refusal: refused }),
+      says: PREVIEW_SAYS, ...(see.withheld ? { out_of_view: true } : {}),
+    };
   }
 
   /** R20: a member closes a plan, with a reason. */
@@ -1674,7 +1719,7 @@ class ProviderAbsent extends Error {
 /* Every service answers PROVIDER_UNAVAILABLE, rather than throwing or answering in part, when a provider it reads is
    absent (K248). */
 for (const name of ["planOpen", "planSubjectAdd", "planSubjectRemove", "planRead", "plansFor", "optionAdd", "optionRevise",
-                    "optionAdopt", "optionDispose", "scenarioSet", "checkpointRecord", "optionStart", "planClose",
+                    "optionAdopt", "optionDispose", "scenarioSet", "checkpointRecord", "optionStart", "optionStartPreview", "planClose",
                     "checkpointsDue", "planProposals", "planRunCheck"]) {
   const f = ActionPlans.prototype[name];
   Object.defineProperty(ActionPlans.prototype, name, { configurable: true, writable: true, value: function (...a) {
@@ -1761,6 +1806,7 @@ export function actionPlansOps(m, url, body) {
     checkpointrecord: () => m.checkpointRecord(stamped({ plan: pick("plan"), scenario: pick("scenario"), phase: pick("phase"),
                                                          judged: pick("judged") })),
     optionstart: () => m.optionStart(stamped({ plan: pick("plan"), option: pick("option"), kind: pick("kind") })),
+    optionstartpreview: () => m.optionStartPreview(stamped({ plan: pick("plan"), option: pick("option"), kind: pick("kind") })),
     planclose: () => m.planClose(stamped({ id: pick("id") ?? pick("plan"), reason: pick("reason") })),
     planproposals: () => m.planProposals({ plan: pick("plan"), run: pick("run"), after: pick("after"), viewer: qp("viewer") }),
   };

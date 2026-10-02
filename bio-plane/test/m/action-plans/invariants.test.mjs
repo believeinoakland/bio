@@ -74,7 +74,7 @@ test("R1 R6 R7 R9 R11 R13 R14 R16 R18 R20 R31 R34: actionPlansOps reaches each s
   const w = seeded();
   const ops = (q, body) => actionPlansOps(w.ap, url(q), body);
   assert.deepEqual(Object.keys(ops({}, {})).sort(), ["checkpointrecord", "optionadd", "optionadopt", "optiondispose", "optionpropose",
-    "optionrevise", "optionstart", "plan", "planclose", "planopen", "planproposals", "plans", "plansubjectadd", "plansubjectremove", "scenarioset"]);
+    "optionrevise", "optionstart", "optionstartpreview", "plan", "planclose", "planopen", "planproposals", "plans", "plansubjectadd", "plansubjectremove", "scenarioset"]);
   const stamp = { author: V("bob"), viewer: V("bob") };
   const forged = { author: V("alice"), viewer: V("alice") };
   const o = op(ops({ ...stamp }, { project: w.P, subjects: [w.SI, w.S1], title: "Via op", ...forged }), "planopen");
