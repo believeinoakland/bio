@@ -9,7 +9,7 @@
  * through record-core's purge and this module's read (R34); the empty and absent inquiry answers (R8, R9); the per-code
  * C-25 map driven through real promotions and reads, a floor and a ceiling (R1–R3, R6, R8, R35); the catalogue's
  * checkBundle finding VERSION_NO_RELATIONSHIP, carried at this module's `basisVersionFindings` over the same bytes the
- * promotion refuses (checkBundle is the catalogue's, `legacy-checks`, not this module's interface); the over-strictness
+ * promotion refuses (checkBundle is the catalogue's, `record-grammar`'s, not this module's interface); the over-strictness
  * round trip (a correct version written unlike any fixture lands and reads back whole, in authored order).
  *
  * Not carried as it stood: the old pin "D-164 unlanded: a leg carries no extent" is stale; what R3 and R5 now require
@@ -19,7 +19,7 @@
  * Not carried: every pin reading source text (one write site, no second table, no hidden filter, no ai_runs join, the
  * D-227 LIMIT count, the viewer-gate spelling, the op table, no claim table, the catalogue's literal count, no second
  * translation copy) — tests check behaviour at the interface; the parseFrontmatter nested-array measurement
- * (`legacy-checks`' grammar); op=stats' counts (control-plane's; R34 is proved through record-core's purge here);
+ * (`record-grammar`'s grammar); op=stats' counts (control-plane's; R34 is proved through record-core's purge here);
  * op=airunopen / op=airun and killing a run (`ai-runs`; this module's half — the run reported, never resolved — is
  * carried as a version naming a run the store never held); the second member reading through the worker (sight is
  * membership's; R33 is proved in reads.test.mjs); the translations' vocabulary (no requirement of this module states

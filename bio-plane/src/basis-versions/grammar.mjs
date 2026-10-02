@@ -76,8 +76,10 @@ function f(check, severity, message, repairs, code) {
  *  about one document, but a leg naming an inquiry that transitively rests on
  *  this one is a cycle only the STORE can see, and it is refused at `basis[]` by
  *  `#basisCyclePath` at the moment a version's legs become the basis. That is
- *  IS-2's accept path and it is not built; PL-1 records the edge rather than
- *  half-building a second cycle walk that would drift from the first.
+ *  IS-2's accept path and it was not built; PL-1 records the edge rather than
+ *  half-building a second cycle walk that would drift from the first. Built
+ *  since: the accept refuses it through `inquiry`'s one walk, `cyclePath`
+ *  (`VERSION_BASIS_CYCLE`, C-25.27, R12).
  *
  *  VERSION LEGS ARE DELIBERATELY *NOT* REQUIRED IN `references[]`, which is the
  *  one place this diverges from `basis[]`'s rules (C-6.3). `references[]` is what

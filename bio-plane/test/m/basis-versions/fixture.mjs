@@ -57,8 +57,8 @@ export function world({ now = "2026-09-28T01:00:00Z", caseMemberFact = true, wit
   membership.migrate();
   const promotion = promotionOf(host, { record, membership, now: () => clock.now });
   const facts = { caseMember: new Set() };
-  promotion.registerFact("producingGroup", "legacy-store", () => "test-group");
-  if (caseMemberFact) promotion.registerFact("caseMember", "legacy-store", (id) => facts.caseMember.has(id));
+  promotion.registerFact("producingGroup", "instance-setup", () => "test-group");
+  if (caseMemberFact) promotion.registerFact("caseMember", "publication", (id) => facts.caseMember.has(id));
   const prov = provenanceOf(host, { record, membership, promotion, now: () => clock.now });
   prov.migrate();
   const realEx = extractionOf(host, { record, membership, calibration: { onCalibration() { return { ok: true }; } } });

@@ -9,8 +9,8 @@
  * module's rows of the catalogue's `MACHINE_FENCE_CHECKS` and `ACT_SHAPE_CHECKS`), C-50 (`NARROW_CHECKS`); the
  * version machine and its vocabularies; section 9's kinds and the boilerplate roster; and the third `asserted_by`
  * state. Each `where` names the site in this module that answers it; the C-25 and C-27.15 rows the grammar raises now
- * name `./grammar.mjs` (awaiting promotion's stamp). The catalogue keeps its copies until their last importer
- * re-points (rule 1); this module reads only its own. */
+ * name `./grammar.mjs` (awaiting promotion's stamp). The catalogue kept its copies until their last importer
+ * re-pointed (rule 1) and was deleted with `legacy-checks`; this module reads only its own. */
 
 import { isMachineIdentity } from "../record-grammar/index.mjs";
 
@@ -419,11 +419,12 @@ export const VERSION_STATES = ['suggested', 'considering', 'accepted', 'rejected
  * PL-2 / IS-2 — **THIS IS THE SIXTH STATE MACHINE IN THIS PLANE**, and
  * INVESTIGATIVE-SESSION.md §6 rule 4 says so in those words: *"This is a SIXTH
  * state machine and the design says so."* The five that already exist are the
- * five keys of `STATES` above (information, inquiry and its two legacy
+ * five keys of `STATES` (record-grammar's: information, inquiry and its two legacy
  * spellings, action, project); task states and proposal dispositions are
  * DIFFERENT vocabularies belonging to different objects, and nothing existing is
- * this machine (SWEEP §1.4). It is stated here, in the file that defines the
- * other five, so a reader counting state machines counts six.
+ * this machine (SWEEP §1.4). It was stated in the catalogue that defined the
+ * other five and moved here with this machine, so a reader counting state
+ * machines counts six.
  *
  * IT IS DELIBERATELY NOT A SIXTH KEY OF `STATES`. `STATES` is keyed by
  * OBJECT_TYPE and consulted through `vocabFor` over a document's DECLARED type;
@@ -565,8 +566,8 @@ export const VERSION_ACT_CHECKS = {
      not perform, refusing an act that requires no reason whatsoever.
      THE DISTINCTION IS NOT NEW HERE AND THAT IS THE POINT. This plane already
      splits absent from malformed everywhere else it asks for authored prose —
-     `NO_REASON` against `BAD_REASON`, twelve sites against eight in
-     `store.mjs` (#moveAction, #divide, #ground and their siblings). PL-2 did not
+     `NO_REASON` against `BAD_REASON`, twelve sites against eight in the
+     old `store.mjs` (#moveAction, #divide, #ground and their siblings). PL-2 did not
      invent a worse rule; it collapsed a distinction the rest of the plane keeps.
      The DEC-49 layer is exactly where that collapse becomes visible to a member,
      because a surface may RENDER a refusal and may never compute one (DEC-8), so

@@ -18,7 +18,7 @@
  *   and its behavioural arm) and the TOTALITY read of NEEDS: `control-plane` (the six version ops are in its NEEDS).
  * - `op=affordances` publishing the machine and deriving the six acts: `affordances` / `control-plane`.
  * - D-78's `surfaced_by: agent` restamp of a machine credential's write: the control plane's stamp, not this module.
- * - `STATES` holding no `version` key: the catalogue's object machines (`legacy-checks`), not this module's.
+ * - `STATES` holding no `version` key: the catalogue's object machines (`record-grammar`), not this module's.
  * - `op=publish` / `op=conclude` driven to reach C-25.34: here the case-member fact is the test's (fixture), as
  *   `acts.test.mjs` drives it.
  * Already proven elsewhere (not repeated): the machine's states, edges and reason set (grammar R4); the four-state walk,

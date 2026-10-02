@@ -12,7 +12,7 @@
  *
  * Not carried: op=affordances (who is OFFERED `conclude`, its weight/rung/mode decoration, the offer on an open question,
  * the machine token withheld) is `affordances`' (its R14, R15, R23; concludes_for_project); the structural arm reading
- * the catalogue's inquiry machine for a `concluded -> concluded` edge reads `legacy-checks`' table, not this module's
+ * the catalogue's inquiry machine for a `concluded -> concluded` edge reads `record-grammar`'s table, not this module's
  * interface — its behaviour here is the ILLEGAL_TRANSITION arm below. The Miniflare/HTTP harness, tokens, enrolment and
  * the negative-control driver are the old harness's, not a requirement. */
 import { test } from "node:test";
