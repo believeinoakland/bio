@@ -39,7 +39,8 @@
  * FAIL "the real config states an explicit subrequest ceiling the release path
  * derives" (NO_SUBREQUEST_LIMIT) and "the ceiling's site carries its reason" (the
  * reason arm anchors on the `"limits"` key, so it goes with it — declared the
- * first, observed both). (B) drop `limits: deriveLimits(wranglerCfg),` from
+ * first, observed both; the reason arm, a source-text pin, retired in T23: plane
+ * R13 now carries arm (A) at the interface). (B) drop `limits: deriveLimits(wranglerCfg),` from
  * deploy.mjs's metadata -> 35/36, FAIL "deploy.mjs's upload metadata carries the
  * derived limits" (that source pin retired in T22; bundler R18's command-level
  * tests in `test/m/bundler/release.test.mjs` now carry the arm). (C) make limitsReadBack read ABSENT limits as MATCH -> 35/36,
@@ -216,29 +217,27 @@ console.log("\n--- D-54: limits.subrequests is a decision, not the platform's de
     limitsReadBack(null, want).verdict, "UNDETERMINED");
 }
 
-/* ---- D-54's live arms: the real config, its reason, and the release path -- */
+/* ---- D-54's live arm: the real config's ceiling, and the release path ------ */
 {
   const src = readFileSync(new URL("../../wrangler.jsonc", import.meta.url), "utf8");
   const real = JSON.parse(stripJsonc(src));
   let got; try { got = deriveLimits(real); } catch (e) { got = { REFUSED: String(e.message).slice(0, 80) }; }
   t("the real config states an explicit subrequest ceiling the release path derives",
     got, { subrequests: 10000 });
-  /* How a liar passes: a value equal to today's default with no reason. So the
-     site must cite D-54 and the plane's own sizing, and the sizing it cites
-     must still be the code's. */
-  const at = src.indexOf('"limits"');
-  const reason = at < 0 ? "" : src.slice(Math.max(0, at - 3000), at);
-  t("the ceiling's site carries its reason: D-54, the vendor's figure as THEIR claim, and the plane's sizing",
-    ["D-54", "Cloudflare", "THEIR claim", "SUBRESOURCE_CAP (400"].map((w) => reason.includes(w)), [true, true, true, true]);
-  const subres = readFileSync(new URL("../../src/subresources.mjs", import.meta.url), "utf8");
-  t("the sizing the site cites is the code's: SUBRESOURCE_CAP is 400 in subresources.mjs",
-    /export const SUBRESOURCE_CAP = (\d+);/.exec(subres)?.[1], "400");
+  /* RETIRED 2026-10-02 (BUNDLER #6, T23; N482, K1020, K1113): two assertions here pinned SOURCE TEXT (P7): the
+     comment before `"limits"` in wrangler.jsonc citing "D-54", "Cloudflare", "THEIR claim" and "SUBRESOURCE_CAP (400",
+     and `export const SUBRESOURCE_CAP = 400;` read out of subresources.mjs. Their properties are now requirements of
+     their owners, tested at the interface: subresources R35 (the cap is 400 and is `captureSubresources`' default,
+     tested by calling the service) and plane R13 (the parsed config's ceiling is 10000, derived by `deriveLimits`, and
+     covers ten times `2 × (1 + SUBRESOURCE_CAP)` from the imported constant; its test lands in plane's L11 job, K1113).
+     The comment that explains the figure binds nothing. The arm above, the ceiling derived from the real config,
+     stays. */
   /* RETIRED 2026-10-01 (BUNDLER #5, T22): two assertions here pinned deploy.mjs's SOURCE TEXT (the upload metadata
      carrying `deriveLimits`, and the read-back refusing success on a MISMATCH), from when deploy.mjs could not be driven
      without deploying. It is driven now, as the command an operator runs, against a stubbed account
      (`test/m/bundler/release.test.mjs`): R18's tests assert the uploaded metadata's `limits` equal `deriveLimits` of
      the config, that a read-back MISMATCH exits 1 with [LIMITS_MISMATCH] and no rollout wait, and that UNDETERMINED is
-     never stated as verified. Behaviour at the interface replaces the source pins (D-54 arm (B) below was run
+     never stated as verified. Behaviour at the interface replaces the source pins (the header's D-54 arm (B) was run
      against the pins). */
 }
 
