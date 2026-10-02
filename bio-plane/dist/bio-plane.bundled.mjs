@@ -6352,19 +6352,19 @@ function rangeUnitFor(sheetName, a, b, sheets, grid = null) {
 }
 function splitTopLevel(s, sep) {
   const out = [];
-  let depth = 0, quoted4 = false, cur = "";
+  let depth = 0, quoted5 = false, cur = "";
   for (let i = 0; i < s.length; i++) {
     const ch = s[i];
     if (ch === "'") {
-      if (quoted4 && s[i + 1] === "'") {
+      if (quoted5 && s[i + 1] === "'") {
         cur += "''";
         i++;
         continue;
       }
-      quoted4 = !quoted4;
-    } else if (!quoted4 && ch === "(") depth++;
-    else if (!quoted4 && ch === ")") depth--;
-    else if (!quoted4 && depth === 0 && ch === sep) {
+      quoted5 = !quoted5;
+    } else if (!quoted5 && ch === "(") depth++;
+    else if (!quoted5 && ch === ")") depth--;
+    else if (!quoted5 && depth === 0 && ch === sep) {
       out.push(cur);
       cur = "";
       continue;
@@ -8520,17 +8520,17 @@ function odsStructure(parts) {
 }
 function splitUnquoted(s, sepRe) {
   const out = [];
-  let quoted4 = false, cur = "";
+  let quoted5 = false, cur = "";
   for (let i = 0; i < s.length; i++) {
     const ch = s[i];
     if (ch === "'") {
-      if (quoted4 && s[i + 1] === "'") {
+      if (quoted5 && s[i + 1] === "'") {
         cur += "''";
         i++;
         continue;
       }
-      quoted4 = !quoted4;
-    } else if (!quoted4 && sepRe.test(ch)) {
+      quoted5 = !quoted5;
+    } else if (!quoted5 && sepRe.test(ch)) {
       out.push(cur);
       cur = "";
       continue;
@@ -51377,15 +51377,15 @@ var Connections = class _Connections {
     const add = edges.filter((e) => !held.has(e.to));
     if (!add.length) return { ok: true, promoted: false, added: 0 };
     const when = this.now();
-    const quoted4 = (v) => cut2(String(v || "").replace(/["\\\n\r]/g, ""), 400);
+    const quoted5 = (v) => cut2(String(v || "").replace(/["\\\n\r]/g, ""), 400);
     let text5 = spliceReferences2(md.text, add.map((e) => ({
       rel: "links_to",
       target: e.to,
       status: "confirmed",
       asserted_by: "source",
-      address: quoted4(e.address),
+      address: quoted5(e.address),
       verdict: LINK_VERDICTS.includes(e.verdict) ? e.verdict : "undetermined",
-      note: quoted4(e.address)
+      note: quoted5(e.address)
     })));
     if (!text5) return {
       ok: false,
@@ -54969,10 +54969,10 @@ function parseTokens(tokens2, implicitOp, ctx) {
   const ast = orExpr();
   return ast;
 }
-function textAtom(column, value, quoted4, ctx) {
+function textAtom(column, value, quoted5, ctx) {
   let v = value;
   let prefix = false;
-  if (!quoted4 && v.endsWith("*") && v.length > 1) {
+  if (!quoted5 && v.endsWith("*") && v.length > 1) {
     prefix = true;
     v = v.slice(0, -1);
   }
@@ -120775,7 +120775,12 @@ function escalationOps(escalation, url, body) {
       viewer: q7("viewer")
     }),
     declinetoescalate: act("declineToEscalate"),
-    escalationstatus: () => escalation.escalationStatus({ determination: q7("determination"), viewer: q7("viewer") })
+    escalationstatus: () => escalation.escalationStatus({ determination: q7("determination"), viewer: q7("viewer") }),
+    escalationreasondraft: () => escalation.escalationReasonDraft({
+      determination: q7("determination"),
+      nowMs: numberParam(url, "now"),
+      viewer: q7("viewer")
+    })
   };
 }
 
@@ -120830,6 +120835,18 @@ var instantMs2 = (v) => {
   return /^\d{4}-\d{2}-\d{2}$/.test(v) ? Date.parse(`${v}T00:00:00Z`) : Date.parse(v);
 };
 var iso2 = (ms2) => stampInstant("second", ms2);
+var quoted4 = (v) => `"${String(v).trim().replace(/\s*\n\s*/g, " ")}"`;
+var DRAFTED_BY = "system";
+function consequenceSentence(p) {
+  const aff = isObj17(p.affected) ? p.affected : {};
+  const who2 = str19(aff.description) ? `${quoted4(aff.description)}${str19(aff.kind) ? ` (${str19(aff.kind)})` : ""}` : "what the record does not state (undetermined)";
+  const m = isObj17(p.measure) ? p.measure : null;
+  const amount = !m || p.state === "undetermined" ? null : Number.isFinite(m.value) ? String(m.value) : isObj17(m.range) && Number.isFinite(m.range.low) && Number.isFinite(m.range.high) ? `${m.range.low} to ${m.range.high}` : null;
+  const measure = amount === null ? `its measure is undetermined${isObj17(p.undetermined) && str19(p.undetermined.why) ? ` (${str19(p.undetermined.why)})` : ""}` : `its measure is ${amount} ${str19(m.unit)}${str19(m.currency) ? ` (${str19(m.currency)})` : ""}`;
+  const per = isObj17(p.period) && str19(p.period.from) && str19(p.period.to) ? `from ${str19(p.period.from)} to ${str19(p.period.to)}` : "over a period the record does not state (undetermined)";
+  const cause = isObj17(p.causation) && str19(p.causation.state) ? str19(p.causation.state) : "undetermined";
+  return `Consequence ${p.id}${str19(p.standard) ? ` (standard ${str19(p.standard)})` : ""}: it affects ${who2}; ${measure}, ${per}; it is ${str19(p.state) || "of a state the record does not state (undetermined)"}, and its causation is ${cause}.`;
+}
 var outcomesOf = (d) => (Array.isArray(d.outcomes) ? d.outcomes : []).filter((o) => isObj17(o) && typeof o.standard === "string").map((o) => ({ standard: o.standard, outcome: o.outcome ?? null }));
 var liveOf = (d) => d.live === true;
 var actOf = (d) => isObj17(d.act) ? d.act : {};
@@ -121390,17 +121407,21 @@ var Escalation = class {
   /* ===================================================================== *
    * THE ACTS
    * ===================================================================== */
-  /** R1, R27: what an opening and a decline to escalate both ask, in R1's order after the machine's refusal (each
+  /** R1, R27, R29: what an opening and a decline to escalate both ask, in R1's order after the machine's refusal (each
    *  act mints its own): R19's judged input, the author's reason (R24), the determination absent or unseen
    *  (conformance R19), superseded (conformance R20), not noncompliant, the author not joined in its project, and an
    *  escalation of it open or suspended. Answers `{ok: true, d, pursued, project, reason}` or the refusal; writes
-   *  nothing. */
+   *  nothing. R29's draft (`act` "escalationReasonDraft") is asked the three conditions on the determination only, so
+   *  each code is still minted at one site (DEC-49), and is answered `{ok: true, d, pursued, project}`. */
   #pursuable(args, act) {
     const { determination, reason, author, viewer } = args;
-    const judged = refuseJudgment(args);
-    if (judged) return judged;
-    const bad = refuseReason(reason);
-    if (bad) return bad;
+    const draft = act === "escalationReasonDraft";
+    if (!draft) {
+      const judged = refuseJudgment(args);
+      if (judged) return judged;
+      const bad = refuseReason(reason);
+      if (bad) return bad;
+    }
     const d = typeof determination === "string" && determination ? this.conformance.determinationRead({ id: determination, viewer }) : null;
     if (!d || d.ok === false) return noSuchDetermination(typeof determination === "string" && determination ? determination : null);
     if (!liveOf(d)) {
@@ -121412,6 +121433,7 @@ var Escalation = class {
     if (!pursued.length)
       return refusal17("NOT_NONCOMPLIANT", "no standard's outcome in that determination is noncompliant, so there is no breach to pursue. Nothing was written.");
     const project = projectOf2(d);
+    if (draft) return { ok: true, d, pursued, project };
     const fence4 = this.membership.projectAuthority(project, author, "joined", act);
     if (fence4)
       return refusal17("ESCALATION_NOT_A_PARTICIPANT", "an escalation is opened, or declined, by a member who has joined the determination's project. Nothing was written.", { project, membership: fence4.reason });
@@ -121877,6 +121899,100 @@ var Escalation = class {
       declines: declines.map(({ seq: _, before: __, ...x }) => ({ ...x, superseded_by: next.get(x.id) }))
     };
   }
+  /** R29 (DEC-89 with Bob's addition; K1019): the opening reason (R1) pre-assembled from the determination's record and
+   *  offered to a member, writing nothing. Each sentence is one part, naming the record id it was assembled from: the
+   *  determination and the noncompliant standards it pursues, each with its basis as the determination holds it
+   *  (`conformance.determinationRead`); the act determined; each action resting on the determination that the viewer
+   *  may see (`actions.actionsFor`, each read through `actionRead`), with its clock entries and every date passed
+   *  without a response at `nowMs` (the caller's, else the instance clock; `actions` R12's rule); and the consequences
+   *  recorded on it (`consequences.consequencesOf`). What could not be read is stated undetermined, never filled; the
+   *  text states only what the record holds and carries no significance, severity, priority, urgency or score (R19).
+   *  It is labelled machine work (`proposalLabel` for `escalation_reason`, in the state `machine_proposed`) and is
+   *  never a reason until a member sends it, as offered or edited, as R1's `reason` (R17). Refusals, as R1 asks them:
+   *  `NO_SUCH_DETERMINATION`, `DETERMINATION_SUPERSEDED`, `NOT_NONCOMPLIANT`. */
+  escalationReasonDraft({ determination, nowMs, viewer } = {}) {
+    const g = this.#pursuable({ determination, viewer }, "escalationReasonDraft");
+    if (!g.ok) return g;
+    const { d, pursued } = g;
+    const at26 = Number.isFinite(nowMs) ? nowMs : instantMs2(this.now());
+    const parts = [];
+    const say = (id, text6) => parts.push({ id, text: text6 });
+    const D = determination;
+    say(D, `Determination ${D} finds the act noncompliant with ${pursued.length === 1 ? "one standard" : `${pursued.length} standards`}: ${pursued.join(", ")}.`);
+    const act = actOf(d);
+    const actor = isObj17(act.actor) && str19(act.actor.role) && str19(act.actor.body) ? `${str19(act.actor.role)}, ${str19(act.actor.body)}` : "an office the record does not name (undetermined)";
+    const when = str19(act.at) ? `on ${str19(act.at)}` : isObj17(act.period) && str19(act.period.from) && str19(act.period.to) ? `from ${str19(act.period.from)} to ${str19(act.period.to)}` : "at a date the record does not state (undetermined)";
+    say(actIdOf(d) ?? D, `The act determined${actIdOf(d) ? ` (${actIdOf(d)})` : ""}: ${str19(act.description) ? quoted4(act.description) : "its description could not be read (undetermined)"}, by ${actor}, ${when}.`);
+    const held = Array.isArray(d.standards) ? d.standards.filter(isObj17) : [];
+    for (const standard of pursued) {
+      const st = held.find((x) => x.standard === standard);
+      const rows2 = st && Array.isArray(st.rows) ? st.rows.filter(isObj17) : [];
+      if (!rows2.length) {
+        say(standard, `Standard ${standard} is breached: its basis in the determination could not be read (undetermined).`);
+        continue;
+      }
+      const basis = rows2.map((r) => `it requires ${str19(r.requires) ? quoted4(r.requires) : "what the record does not state (undetermined)"}; the act did ${str19(r.did) ? quoted4(r.did) : "what the record does not state (undetermined)"} (reading: ${str19(r.reading) || "undetermined"}${Array.isArray(r.content) && r.content.length ? `; content ${r.content.join(", ")}` : ""})`).join("; and ");
+      const force = st.in_force === "in_force" ? "It was in force at the act's date." : `Whether it was in force at the act's date is undetermined${str19(st.in_force_why) ? ` (${str19(st.in_force_why)})` : ""}.`;
+      say(standard, `Standard ${standard} is breached: ${basis}. ${force}${str19(st.disagreement) ? ` The determination states: ${str19(st.disagreement)}.` : ""}`);
+    }
+    const listed = this.#actionsResting(D, viewer);
+    if (!listed) say(D, "The actions resting on the determination could not be read (undetermined).");
+    else {
+      const today = new Date(at26).toISOString().slice(0, 10);
+      let shown2 = 0;
+      for (const id of listed) {
+        const a = this.actions.actionRead({ id, viewer, now: at26 });
+        if (!a || a.ok === false) continue;
+        shown2++;
+        const cp = isObj17(a.counterparty) && str19(a.counterparty.role) && str19(a.counterparty.body) ? `${str19(a.counterparty.role)}, ${str19(a.counterparty.body)}` : "an office the record does not name (undetermined)";
+        say(id, `Action ${id}${str19(a.kind) ? ` (${str19(a.kind)})` : ""} rests on the determination, addressed to ${cp}${str19(a.current_state) ? `; its state is ${str19(a.current_state)}` : ""}.`);
+        const clock = Array.isArray(a.clock) ? a.clock.filter(isObj17) : [];
+        if (!clock.length) say(id, `Action ${id} states no clock entry.`);
+        for (const c of clock) {
+          const what = str19(c.text) || str19(c.description);
+          const date = typeof c.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(c.date) ? c.date : null;
+          say(id, `Action ${id}'s clock entry ${what ? quoted4(what) : "(its text undetermined)"} is due ${date ?? "on a date the record does not state (undetermined)"}, on the basis ${str19(c.basis) ? quoted4(c.basis) : "the record does not state (undetermined)"}, ${str19(c.status) || "its status undetermined"}.`);
+          if (c.status === "pending" && date && date < today)
+            say(id, `The date ${date} on action ${id} passed without a response: the entry is still pending on ${today}.`);
+        }
+      }
+      if (!shown2) say(D, "No action resting on the determination is recorded.");
+    }
+    const q7 = this.consequences.consequencesOf({ determination: D, viewer });
+    if (!q7 || q7.ok === false) say(D, "The consequences of the breach could not be read (undetermined).");
+    else {
+      const recorded = Array.isArray(q7.parts) ? q7.parts.filter(isObj17) : [];
+      if (!recorded.length) say(D, "No consequence of the breach is recorded on the determination.");
+      for (const p of recorded) say(p.id, consequenceSentence(p));
+    }
+    const text5 = parts.map((p) => p.text).join("\n");
+    return {
+      ok: true,
+      determination: D,
+      as_of: iso2(at26),
+      text: text5,
+      label: proposalLabel(DRAFTED_BY, "escalation_reason"),
+      parts,
+      length: [...text5].length,
+      reason_max: REASON_MAX6,
+      next: "a member sends it, as offered or edited, as the reason of an opening (op=escalationopen); the reason then recorded is the member's own. Nothing was written."
+    };
+  }
+  /* R29: the ids of the actions resting on the determination that `viewer` may see (`actions.actionsFor`, its R30),
+     every page in id order; null when they could not be read. */
+  #actionsResting(determination, viewer) {
+    const ids = [];
+    let after = null;
+    for (let page = 0; page < 50; page++) {
+      const r = this.actions.actionsFor({ determination, after, viewer });
+      if (!r || r.ok === false || !Array.isArray(r.items)) return null;
+      for (const x of r.items) if (isObj17(x) && typeof x.id === "string") ids.push(x.id);
+      if (!r.truncated) return ids;
+      after = r.cursor ?? ids.at(-1) ?? null;
+      if (!after) return ids;
+    }
+    return null;
+  }
 };
 function refuseNoSuchEscalation() {
   return refusal17("NO_SUCH_ESCALATION", "no escalation answers to that id here; one in a project you may not see is answered exactly as one that does not exist.");
@@ -121921,7 +122037,8 @@ for (const name2 of [
   "escalationsDue",
   "escalationsFor",
   "declineToEscalate",
-  "escalationStatus"
+  "escalationStatus",
+  "escalationReasonDraft"
 ]) {
   const f17 = Escalation.prototype[name2];
   Object.defineProperty(Escalation.prototype, name2, { configurable: true, writable: true, value: function(...a) {
