@@ -1,7 +1,7 @@
 /* standards: its invariants (R11–R15). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { seeded, world, V, MACHINE, BYLAW } from "./fixture.mjs";
+import { seeded, world, V, MACHINE, BYLAW, REASON } from "./fixture.mjs";
 import { STANDARDS_CHECKS, STANDARD_KINDS, STANDARDS_TABLES } from "../../../src/standards/index.mjs";
 import { get as profileOf } from "../../../../jurisdictions/index.mjs";
 
@@ -10,10 +10,10 @@ const TABLES = ["standards", "standard_texts", "standard_proposals", "standard_a
 test("R11 nothing a machine writes is a standard: R1 and R10 by a member are its only writers; a raw promotion of a standard, by a member or a machine, and any revision of one are refused STANDARD_WRITTEN_ELSEWHERE; a replay is admitted", () => {
   const w = seeded();
   const text = w.passage().contentId;
-  assert.equal(w.s.standardDeclare({ cite: BYLAW, kind: "ordinance", issuer: "S", text, author: MACHINE }).reason, "MACHINE_CANNOT_DECLARE_STANDARD");
+  assert.equal(w.s.standardDeclare({ cite: BYLAW, kind: "ordinance", issuer: "S", reason: REASON, text, author: MACHINE }).reason, "MACHINE_CANNOT_DECLARE_STANDARD");
   const p = w.s.standardPropose({ cite: BYLAW, why: "w", proposer: MACHINE });
   assert.equal(p.ok, true, "a machine proposes");
-  assert.equal(w.s.standardAdopt({ proposal: p.proposal.id, author: MACHINE }).reason, "MACHINE_CANNOT_DECLARE_STANDARD");
+  assert.equal(w.s.standardAdopt({ proposal: p.proposal.id, reason: REASON, author: MACHINE }).reason, "MACHINE_CANNOT_DECLARE_STANDARD");
   assert.equal(w.count("standards"), 0);
   const r = w.declare();
   const doc = w.record.readFile(r.id, "bundle.md").text;
@@ -42,7 +42,7 @@ test("R11 nothing a machine writes is a standard: R1 and R10 by a member are its
 test("R12 no service accepts or answers a judgment of a standard's merit: a field outside each act's own is refused STANDARD_FIELD_UNKNOWN by name, the six kinds are the whole vocabulary, and no answer carries a judgment", () => {
   const w = seeded();
   const text = w.passage().contentId;
-  const good = { cite: BYLAW, kind: "ordinance", issuer: "S", text, author: V("bob") };
+  const good = { cite: BYLAW, kind: "ordinance", issuer: "S", reason: REASON, text, author: V("bob") };
   for (const extra of [{ merit: "strong" }, { desirable: true }, { rating: 3 }, { weight: 1 }]) {
     const r = w.s.standardDeclare({ ...good, ...extra });
     assert.equal(r.reason, "STANDARD_FIELD_UNKNOWN", Object.keys(extra)[0]);
@@ -50,10 +50,10 @@ test("R12 no service accepts or answers a judgment of a standard's merit: a fiel
     assert.equal(r.check, STANDARDS_CHECKS.STANDARD_FIELD_UNKNOWN.check);
   }
   const p = w.s.standardPropose({ cite: BYLAW, why: "w", proposer: V("carol") }).proposal;
-  assert.equal(w.s.standardAdopt({ proposal: p.id, author: V("bob"), merit: "high" }).reason, "STANDARD_FIELD_UNKNOWN");
+  assert.equal(w.s.standardAdopt({ proposal: p.id, author: V("bob"), reason: REASON, merit: "high" }).reason, "STANDARD_FIELD_UNKNOWN");
   assert.deepEqual(STANDARD_KINDS, ["statute", "regulation", "ordinance", "court", "policy", "commitment"]);
   const r = w.s.standardDeclare(good);
-  const keys = new Set(["ok", "id", "cite", "kind", "issuer", "text", "period", "source", "declared_by", "declared_at",
+  const keys = new Set(["ok", "id", "cite", "kind", "issuer", "reason", "text", "period", "source", "declared_by", "declared_at",
                         "supersedes", "superseded_by", "proposal", "bundleSha", "texts", "says"]);
   for (const answer of [r, w.s.standardRead({ id: r.id, viewer: V("carol") }), w.s.standardsIn({ viewer: V("carol") }).items[0]])
     for (const k of Object.keys(answer)) assert.ok(keys.has(k), `an answer carries only what the record holds: ${k}`);
@@ -90,7 +90,7 @@ test("R14 declarations, supersessions, proposals and adoptions are append-only, 
     () => w.declare({ text, supersedes: w.rows("SELECT standard_id FROM standards")[0].standard_id }),
     () => w.s.standardPropose({ cite: BYLAW, why: "w", proposer: MACHINE }),
     () => w.s.standardAdopt({ proposal: w.rows("SELECT proposal_id FROM standard_proposals")[0].proposal_id, author: V("bob"),
-                              kind: "ordinance", issuer: "S", text }),
+                              kind: "ordinance", issuer: "S", reason: REASON, text }),
     () => w.s.standardRead({ id: w.rows("SELECT standard_id FROM standards")[0].standard_id, viewer: V("carol") }),
     () => w.s.standardsIn({ viewer: V("carol"), at: "2021-01-01" }),
   ];
@@ -151,14 +151,14 @@ test("R16 constructing the instance creates every table it declares to purge, so
   assert.notEqual(empty.ok, false, JSON.stringify(empty).slice(0, 300));
   for (const t of TABLES) assert.ok(t in empty.removed, `${t} is purged`);
   const text = w.passage().contentId;
-  const r = s.standardDeclare({ cite: BYLAW, kind: "ordinance", issuer: "S", text, author: V("bob"), viewer: V("bob") });
+  const r = s.standardDeclare({ cite: BYLAW, kind: "ordinance", issuer: "S", reason: REASON, text, author: V("bob"), viewer: V("bob") });
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
   assert.equal(s.standardRead({ id: r.id, viewer: V("carol") }).ok, true);
   assert.equal(s.inForce(r.id, "2021-01-01").ok, true);
   assert.equal(s.standardsIn({ viewer: V("carol") }).count, 1);
   const p = s.standardPropose({ cite: BYLAW, why: "w", proposer: MACHINE });
   assert.equal(p.ok, true);
-  assert.equal(s.standardAdopt({ proposal: p.proposal.id, author: V("bob"), kind: "ordinance", issuer: "S", text }).ok, true);
+  assert.equal(s.standardAdopt({ proposal: p.proposal.id, author: V("bob"), kind: "ordinance", issuer: "S", reason: REASON, text }).ok, true);
   const one = w.record.purge({ bundleId: r.id });
   assert.notEqual(one.ok, false);
   assert.equal(one.removed.standards, 1);

@@ -1,7 +1,7 @@
 /* standards: reading standards (R5, R7, R8). Reads write nothing. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { seeded, V, MACHINE, UNKNOWN_CITE } from "./fixture.mjs";
+import { seeded, V, MACHINE, UNKNOWN_CITE, REASON } from "./fixture.mjs";
 import { STANDARDS_CHECKS, PAGE_MAX, IN_FORCE_STATES, noSuchStandard } from "../../../src/standards/index.mjs";
 
 test("R5 standardRead answers R1's fields, R3's source, the declarer and time, both ends of a supersession, and for each text passage its standing and whether a newer capture of its document holds it, moving nothing; STANDARD_NO_ID (N269: coded, R5's NO_ID); an absent id and any id for a viewer naming no member are NO_SUCH_STANDARD, one answer", () => {
@@ -89,7 +89,7 @@ test("R8 standardsIn lists what its filters admit, in id order, at most 200 a pa
   const text = w.passage().contentId;
   const ids = [];
   for (let i = 0; i < PAGE_MAX + 3; i++)
-    ids.push(w.s.standardDeclare({ cite: `PEBL § ${i}`, kind: i % 2 ? "ordinance" : "statute", issuer: "Selectboard", text,
+    ids.push(w.s.standardDeclare({ cite: `PEBL § ${i}`, kind: i % 2 ? "ordinance" : "statute", issuer: "Selectboard", reason: REASON, text,
                                    period: { from: "2020-01-01", to: i % 3 === 0 ? "2020-12-31" : null }, author: V("bob") }).id);
   const before = w.snapshot();
   const all = w.s.standardsIn({ viewer: V("carol") });
@@ -111,7 +111,7 @@ test("R8 standardsIn lists what its filters admit, in id order, at most 200 a pa
   assert.deepEqual(w.s.standardsIn({ viewer: V("carol"), cite: "pebl § 20" }).items.map((x) => x.cite),
                    ["PEBL § 20", "PEBL § 200", "PEBL § 201", "PEBL § 202"], "cite, case-insensitive, a part of the citation");
   assert.equal(w.s.standardsIn({ viewer: V("carol"), source: "Port Ellery Bylaws" }).count, 200);
-  const u = w.s.standardDeclare({ cite: UNKNOWN_CITE, kind: "statute", issuer: "X", text, author: V("bob") });
+  const u = w.s.standardDeclare({ cite: UNKNOWN_CITE, kind: "statute", issuer: "X", reason: REASON, text, author: V("bob") });
   assert.deepEqual(w.s.standardsIn({ viewer: V("carol"), source: "undetermined" }).items.map((x) => x.id), [u.id]);
   assert.equal(w.s.standardsIn({ viewer: V("carol"), source: "No Such Source" }).count, 0);
   /* at: R7's answer on each; not_in_force left out, undetermined kept and stated */
