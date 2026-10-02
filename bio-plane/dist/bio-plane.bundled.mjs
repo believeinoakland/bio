@@ -73749,6 +73749,13 @@ var REEVALUATION_ACT_CHECKS = Object.freeze({
     check: "C-110.9",
     where: at9("adoptVersion", "is-version-adoptable"),
     translation: "The reference could not be moved: the question's document no longer holds the leg this notice was about, or the newer version could not be written into it. Nothing was written, and the notice stays open."
+  },
+  /* DEC-88 (K1025): adopting is the act that moves what a finding rests on, so it carries the member's own words on
+     why. C-110.10–.28 were intent's before K238 and are not reused. */
+  VERSION_ADOPT_NO_REASON: {
+    check: "C-110.29",
+    where: at9("#choiceSubject", "is-version-choice"),
+    translation: "Moving a reference to a newer version of a document needs your reason: say, in your own words and in at most 2,000 characters, why the finding should rest on the newer version. Nothing was written, and the notice stays open."
   }
 });
 function rowOf2(code) {
@@ -73849,6 +73856,22 @@ CREATE TABLE IF NOT EXISTS reevaluation_source_moves (
   at           TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS reevaluation_source_moves_source ON reevaluation_source_moves (source_id, at);
+-- R29 (DEC-102 item 2, K1019): A TESTIMONY'S CREDIT LEVEL MOVED, told by
+-- ratification (its R36) when a ratified case edition states a level for an
+-- observation other than the one in force at the case's previous ratified
+-- edition: one row per call, the observation, the level before and after, the
+-- case and edition, and the move's instant. It names no author and holds no
+-- text. The attribution cause is derived on read from these rows. Append-only.
+CREATE TABLE IF NOT EXISTS reevaluation_level_moves (
+  move_id      INTEGER PRIMARY KEY AUTOINCREMENT,
+  observation  TEXT NOT NULL,
+  level_before TEXT NOT NULL,
+  level_after  TEXT NOT NULL,
+  case_id      TEXT,
+  edition      INTEGER,
+  at           TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS reevaluation_level_moves_observation ON reevaluation_level_moves (observation, at);
 -- R25 (N178): WHERE THE NOTICE SWEEP'S PASS STANDS. One row (id 1): the cursor
 -- of the pass part-way (after the last leg a batch read), when that pass began
 -- and when the last complete one began, and the receipt mark: receipt_seq is
@@ -73874,6 +73897,8 @@ var REEVALUATION_TABLES = Object.freeze([
   { name: "reevaluation_case_notices", keys: [] },
   /* R28: a source is no bundle, so a single-bundle purge never names one; a whole-store purge clears these. */
   { name: "reevaluation_source_moves", keys: [] },
+  /* R29: a level move is about the observation it names, a bundle, so a purge of that bundle clears its rows. */
+  { name: "reevaluation_level_moves", keys: ["observation"] },
   /* R25: the sweep's one position row is about no bundle, so only a whole-store purge clears it. */
   { name: "reevaluation_sweep", keys: [] }
 ]);
@@ -73894,6 +73919,7 @@ var NOTICES_LIMIT_DEFAULT = 200;
 var NOTICES_LIMIT_MAX = 1e3;
 var REEVAL_NOTICE_DELAY_MS = 1e3;
 var NOTE_MAX2 = 500;
+var ADOPT_WHY_MAX = 2e3;
 var CAUSE_SOURCES = Object.freeze([
   "supersession",
   "edition",
@@ -73902,6 +73928,7 @@ var CAUSE_SOURCES = Object.freeze([
   "dismissed",
   "corrected",
   "source",
+  "attribution",
   ...REEVAL_SOURCES,
   "weakened"
 ]);
@@ -73933,6 +73960,14 @@ function notLater(since, recorded) {
   if (since == null || recorded == null) return since == null && recorded == null;
   const o = instantOrder(since, recorded);
   return Number.isNaN(o) ? String(since) <= String(recorded) : o <= 0;
+}
+function laterThan(at25, written) {
+  if (written == null) return true;
+  const o = instantOrder(at25, written);
+  return Number.isNaN(o) ? String(at25) > String(written) : o > 0;
+}
+function attributionDetail(m) {
+  return `the credit level of the observation ${m.observation} moved from ${m.level_before} to ${m.level_after}${m.case_id ? ` in case ${m.case_id}` : ""}${m.edition != null ? ` at edition ${m.edition}` : ""}, at ${m.at}: how the member who gave it is identified has changed.`;
 }
 var Reevaluation = class {
   #deps;
@@ -74510,17 +74545,12 @@ var Reevaluation = class {
       JSON.stringify(deps),
       deps.length
     ).map((r) => [r.bundle_id, r.last_updated]));
-    const after = (at25, w) => {
-      if (w == null) return true;
-      const o = instantOrder(at25, w);
-      return Number.isNaN(o) ? String(at25) > String(w) : o > 0;
-    };
     const hits = [];
     for (const l of rows2)
       for (const cap of caps.get(`${l.bundle_id}\0${l.ord}`) || [])
         for (const src of sourcesOn.get(cap) || [])
           for (const m of movesOf.get(src) || [])
-            if (after(m.at, written.get(l.bundle_id))) hits.push({ l, cap, m });
+            if (laterThan(m.at, written.get(l.bundle_id))) hits.push({ l, cap, m });
     if (!hits.length) return { byPair };
     const live = this.#liveOn(hits.map((h) => h.l.target_id));
     for (const { l, cap, m } of hits) {
@@ -74603,6 +74633,91 @@ var Reevaluation = class {
     }, out);
     return out;
   }
+  /** R29: the `attribution` causes on `legs` (`inquiry_basis` rows), for a viewer's visible dependents. A live leg
+   *  carries one per kept level move of the observation it names as its target, when the move came after the
+   *  dependent's last write (`bundles.last_updated`). Answers `{byPair}` keyed `<dependent>\0<target>`, each list latest
+   *  move first, then ord. Reads only; it names no author and regrades nothing. */
+  #levelMoves(legs, visible) {
+    const byPair = /* @__PURE__ */ new Map();
+    if (!this.#one(`SELECT 1 AS x FROM reevaluation_level_moves LIMIT 1`)) return { byPair };
+    const rows2 = legs.filter((l) => l && l.bundle_id && l.target_id && visible(l.bundle_id) !== null);
+    if (!rows2.length) return { byPair };
+    const obs = [...new Set(rows2.map((l) => l.target_id))];
+    const movesOf = /* @__PURE__ */ new Map();
+    for (const m of this.#rows(`SELECT move_id, observation, level_before, level_after, case_id, edition, at
+                                  FROM reevaluation_level_moves WHERE observation IN (SELECT value FROM json_each(?))
+                                 ORDER BY observation, move_id`, JSON.stringify(obs))) {
+      if (!movesOf.has(m.observation)) movesOf.set(m.observation, []);
+      movesOf.get(m.observation).push(m);
+    }
+    if (!movesOf.size) return { byPair };
+    const deps = [...new Set(rows2.filter((l) => movesOf.has(l.target_id)).map((l) => l.bundle_id))];
+    const written = new Map(this.#rows(
+      `SELECT bundle_id, last_updated FROM bundles WHERE bundle_id IN (SELECT value FROM json_each(?)) LIMIT ?`,
+      JSON.stringify(deps),
+      deps.length
+    ).map((r) => [r.bundle_id, r.last_updated]));
+    const hits = [];
+    for (const l of rows2)
+      for (const m of movesOf.get(l.target_id) || [])
+        if (laterThan(m.at, written.get(l.bundle_id))) hits.push({ l, m });
+    if (!hits.length) return { byPair };
+    const live = this.#liveOn(hits.map((h) => h.l.target_id));
+    for (const { l, m } of hits) {
+      if (!live.get(l.target_id).has(`${l.bundle_id}\0${l.ord}`)) continue;
+      const pk = `${l.bundle_id}\0${l.target_id}`;
+      if (!byPair.has(pk)) byPair.set(pk, []);
+      byPair.get(pk).push({
+        source: "attribution",
+        since: m.at,
+        ord: l.ord,
+        observation: m.observation,
+        level_before: m.level_before,
+        level_after: m.level_after,
+        case: m.case_id ?? null,
+        edition: m.edition ?? null,
+        detail: attributionDetail(m) + ` This leg rests on it. The leg's grade is unchanged and the weight the new level gives is strength's to judge; whether this finding still stands is the members' to decide.`
+      });
+    }
+    for (const list2 of byPair.values())
+      list2.sort((a, b) => (a.since < b.since ? 1 : a.since > b.since ? -1 : 0) || a.ord - b.ord);
+    return { byPair };
+  }
+  /** R29, R8: told by ratification (its R36), in its commit's transaction, when a ratified case edition states a credit
+   *  level for an observation other than the one in force at the case's previous ratified edition. Keeps one row per
+   *  call (R18: no author, no text), then tells R8's listeners `kind: "attribution"` once, after the act commits. A call
+   *  naming no observation, a level missing on either side or the same level twice writes nothing. `at` is the move's
+   *  instant (the commit's); one that does not read as an instant is replaced by now. It regrades nothing. */
+  levelMoved({ observation = null, from = null, to = null, case: caseId = null, edition = null, at: at25 = null } = {}) {
+    const id = str5(observation), before = str5(from), after = str5(to);
+    if (!id || !before || !after || before === after) return { ok: true, moved: false };
+    const when = typeof at25 === "string" && at25.trim() && Number.isFinite(Date.parse(at25.trim())) ? at25.trim() : this.#when();
+    const ed = Number.isInteger(edition) ? edition : typeof edition === "string" && /^\d+$/.test(edition.trim()) ? Number(edition.trim()) : null;
+    const m = { observation: id, level_before: before, level_after: after, case_id: str5(caseId), edition: ed, at: when };
+    this.sql.exec(`INSERT INTO reevaluation_level_moves (observation, level_before, level_after, case_id, edition, at)
+                   VALUES (?,?,?,?,?,?)`, id, before, after, m.case_id, ed, when);
+    let live = null;
+    try {
+      live = this.inquiry.restsOnLive(id);
+    } catch {
+      live = null;
+    }
+    const dependents = (live && Array.isArray(live.all) ? live.all : []).map((l) => ({ bundle_id: l.bundle_id, ord: l.ord, role: l.role ?? null, state: l.state ?? null }));
+    const out = { ok: true, moved: true, at: when, dependents: dependents.length };
+    this.#tellAfterCommit({
+      kind: "attribution",
+      subject: id,
+      source: "attribution",
+      since: when,
+      detail: `${attributionDetail(m)} ${dependents.length ? "What rests on it is named." : "Nothing here rests on it."}`,
+      level_before: before,
+      level_after: after,
+      case: m.case_id,
+      edition: ed,
+      dependents
+    }, out);
+    return out;
+  }
   /* ---------------------------------------------------------------- R1–R6, R16, R17: the obligation */
   /** R1–R6: the re-evaluation obligation, derived on read. With `target`, the dependents of one moved thing (and, R17,
    *  that thing itself if its derivation weakened under a published edition); with none, every id a basis leg names. */
@@ -74622,7 +74737,8 @@ var Reevaluation = class {
                    WHERE target_id IN (SELECT value FROM json_each(?)) ORDER BY bundle_id, ord`, JSON.stringify(targets));
     const corr = this.#corrected(onTargets, viewer, visible);
     const srcm = this.#sourceMoves(onTargets, visible);
-    const correctedOn = new Set([...corr.byPair.keys(), ...srcm.byPair.keys()].map((k) => k.slice(k.indexOf("\0") + 1)));
+    const lvlm = this.#levelMoves(onTargets, visible);
+    const correctedOn = new Set([...corr.byPair.keys(), ...srcm.byPair.keys(), ...lvlm.byPair.keys()].map((k) => k.slice(k.indexOf("\0") + 1)));
     for (const t of targets) {
       const moved = this.#moved(t, visible, reg, wp);
       if (!moved && !correctedOn.has(t)) continue;
@@ -74661,7 +74777,11 @@ var Reevaluation = class {
               });
           }
         }
-        causes.push(...corr.byPair.get(`${bundleId}\0${t}`) || [], ...srcm.byPair.get(`${bundleId}\0${t}`) || []);
+        causes.push(
+          ...corr.byPair.get(`${bundleId}\0${t}`) || [],
+          ...srcm.byPair.get(`${bundleId}\0${t}`) || [],
+          ...lvlm.byPair.get(`${bundleId}\0${t}`) || []
+        );
         if (!causes.length) continue;
         place({
           bundle_id: bundleId,
@@ -74852,7 +74972,7 @@ var Reevaluation = class {
   }
   /* ---------------------------------------------------------------- R9: the recovery read */
   /** R9: now, the causes standing on each named finding (R2's arms and §5.4's, the finding as target, R17's, and R27's
-   *  `corrected` and R28's `source` causes the finding carries on its own legs, each naming its target, less those a recorded
+   *  `corrected`, R28's `source` and R29's `attribution` causes the finding carries on its own legs, each naming its target, less those a recorded
    *  re-evaluation closed) and each named passage's `affects` (`content.passageNotice`). Ids the viewer may not see
    *  answer as absent. Writes nothing. */
   changesOf({ findings = null, contents = null, viewer = null } = {}) {
@@ -74921,9 +75041,10 @@ var Reevaluation = class {
       ...wp.flags()
     };
   }
-  /* R9, R27 (and R28 `withSource`): the corrected (and source) causes the named dependents carry on their own legs,
-     each with its `target`, less those a recorded re-evaluation closed (R16). `byDependent` keyed by dependent, in
-     (target, ord, candidate) order, each target's source causes after its corrected ones. */
+  /* R9, R27 (and R28, R29 `withSource`): the corrected (and source and attribution) causes the named dependents carry on
+     their own legs, each with its `target`, less those a recorded re-evaluation closed (R16). `byDependent` keyed by
+     dependent, in (target, ord, candidate) order, each target's source causes after its corrected ones and its
+     attribution causes after those. */
   #standingCorrected(dependents, viewer, visible, { withSource = false } = {}) {
     const byDependent = /* @__PURE__ */ new Map();
     if (!dependents.length) return { byDependent, read: true };
@@ -74934,8 +75055,8 @@ var Reevaluation = class {
     );
     const corr = this.#corrected(legs, viewer, visible);
     if (withSource)
-      for (const [k, list2] of this.#sourceMoves(legs, visible).byPair)
-        corr.byPair.set(k, [...corr.byPair.get(k) || [], ...list2]);
+      for (const moves of [this.#sourceMoves(legs, visible), this.#levelMoves(legs, visible)])
+        for (const [k, list2] of moves.byPair) corr.byPair.set(k, [...corr.byPair.get(k) || [], ...list2]);
     const pairs = [...corr.byPair.keys()].sort().map((k) => k.split("\0"));
     const records = this.#records(pairs);
     for (const [d, t] of pairs) {
@@ -75601,12 +75722,18 @@ var Reevaluation = class {
   }
   /* R15: the notice an act names, seen through its holder; a machine is refused first. Answers the refusal itself, or
      `{ok: true, who, r}`, so every outcome carries its verdict (DEC-49; N242). */
-  #choiceSubject(machineCode, notice, author, viewer) {
+  #choiceSubject(machineCode, notice, author, viewer, why = void 0) {
     const who2 = String(author ?? "").trim();
     if (!who2 || isMachineIdentity(who2))
       return this.#refuse(
         machineCode,
         who2 ? `'${who2.slice(0, 60)}' is a machine identity.` : "no member is named as the one choosing."
+      );
+    if (machineCode === "MACHINE_CANNOT_ADOPT_VERSION" && (typeof why !== "string" || !why.trim() || why.trim().length > ADOPT_WHY_MAX))
+      return this.#refuse(
+        "VERSION_ADOPT_NO_REASON",
+        typeof why !== "string" || !why.trim() ? "pass why=<your words on why the finding should rest on the newer version>." : `the reason is ${why.trim().length} characters; at most ${ADOPT_WHY_MAX}.`,
+        { notice: String(notice ?? "").trim() || null, limit: ADOPT_WHY_MAX }
       );
     const id = String(notice ?? "").trim();
     const r = !id ? null : this.#noticeRows(viewerPredicate(viewer), `notice_id = ?`, [id], `LIMIT 1`, [])[0] ?? null;
@@ -75627,11 +75754,14 @@ var Reevaluation = class {
   /** R15: ADOPT writes a new version of the reference pinned to the newer capture, the old staying readable: for a
    *  basis leg, a new basis version through `basis-versions` (its R28), holding the question's live legs as written with
    *  this one re-pinned (its grade is not carried: it was given to the earlier passage). The live basis is untouched.
-   *  The version and the notice's closing land together or neither does. */
-  adoptVersion({ notice = null, author = null, viewer = null } = {}) {
-    const s = this.#choiceSubject("MACHINE_CANNOT_ADOPT_VERSION", notice, author, viewer);
+   *  The version and the notice's closing land together or neither does. It requires `why`, the member's words on why
+   *  the newer version is adopted (DEC-88), asked after the machine refusal and before anything is read for writing;
+   *  the why is recorded with the new version (its description and Session Log entry) and on the notice's closure. */
+  adoptVersion({ notice = null, why = null, author = null, viewer = null } = {}) {
+    const s = this.#choiceSubject("MACHINE_CANNOT_ADOPT_VERSION", notice, author, viewer, why);
     if (!s.ok) return s;
     const { who: who2, r } = s;
+    const text5 = why.trim();
     if (r.kind === "case")
       return this.#refuse(
         "VERSION_ADOPT_UNWRITABLE",
@@ -75720,7 +75850,8 @@ var Reevaluation = class {
     for (let k = 2; names.has(name2.toLowerCase()); k++) name2 = `adopt-${r.newer_capture.slice(0, 8)}-${r.ord}-${k}`;
     if (!VERSION_NAME_RE.test(name2))
       return this.#refuse("VERSION_ADOPT_UNWRITABLE", `no version name could be formed for ${r.holder}.`, { notice: r.notice_id });
-    const description = `Adopts a newer version of ${r.target_id}${home !== r.target_id ? ` (held as ${home})` : ""}: leg ${r.ord} rests on capture ${r.newer_capture.slice(0, 12)} in place of ${r.capture_sha.slice(0, 12)} (notice ${r.notice_id}). Every other leg is as the live basis holds it.`;
+    const line = text5.replace(/\s*[\r\n]+\s*/g, " ");
+    const description = `Adopts a newer version of ${r.target_id}${home !== r.target_id ? ` (held as ${home})` : ""}: leg ${r.ord} rests on capture ${r.newer_capture.slice(0, 12)} in place of ${r.capture_sha.slice(0, 12)} (notice ${r.notice_id}). Every other leg is as the live basis holds it. Why: ${line}`;
     const answer = this.record.transact(() => {
       const w = this.basisVersions.appendVersion({
         target: r.holder,
@@ -75732,12 +75863,13 @@ var Reevaluation = class {
         log: `### Session ${when} | Newer version adopted | ${who2}
 Trigger: adoptVersion on ${r.notice_id}
 Changes: reading '${name2}' added, in state suggested: leg ${r.ord} pinned to capture ${r.newer_capture}; the live basis is unchanged.
+Why: ${line}
 `
       });
       if (w && !w.ok) return { ...w, ok: false, notice: r.notice_id };
       if (!w) return this.#refuse("VERSION_ADOPT_UNWRITABLE", `the newer version of ${r.holder} could not be written. Nothing was written.`, { notice: r.notice_id });
-      this.sql.exec(`UPDATE reevaluation_notices SET state='adopted', closed_by=?, closed_at=?, adopted_version=?
-                      WHERE notice_id=? AND state='open'`, who2, when, name2, r.notice_id);
+      this.sql.exec(`UPDATE reevaluation_notices SET state='adopted', closed_by=?, closed_at=?, why=?, adopted_version=?
+                      WHERE notice_id=? AND state='open'`, who2, when, text5, name2, r.notice_id);
       return { ok: true, bundleSha: w.bundleSha ?? null };
     });
     if (!answer.ok) return answer;
@@ -75749,6 +75881,7 @@ Changes: reading '${name2}' added, in state suggested: leg ${r.ord} pinned to ca
       act: "adopted",
       author: who2,
       at: when,
+      why: text5,
       capture_sha: r.capture_sha,
       newer_capture: r.newer_capture,
       version: name2,
@@ -75937,7 +76070,12 @@ function reevaluationOps(r, url, body) {
       limit: q7("limit"),
       viewer: q7("viewer")
     }),
-    versionadopt: () => r.adoptVersion({ notice: b.notice ?? q7("notice"), author: q7("author"), viewer: q7("viewer") }),
+    versionadopt: () => r.adoptVersion({
+      notice: b.notice ?? q7("notice"),
+      why: b.why ?? q7("why"),
+      author: q7("author"),
+      viewer: q7("viewer")
+    }),
     versionkeep: () => r.keepVersion({
       notice: b.notice ?? q7("notice"),
       why: b.why ?? q7("why"),
@@ -104272,6 +104410,7 @@ var isObj12 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var rand8 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 var machine = (who2) => !str11(who2) || isMachineIdentity(str11(who2));
 var second = (iso5) => String(iso5).replace(/\.\d+Z$/, "Z");
+var reasonOf = (v) => typeof v === "string" && v.trim() !== "" ? v.trim() : null;
 var bodyText = (s) => String(s).trim().replace(/^#/gm, " #");
 var Intent = class {
   #sources = /* @__PURE__ */ new Map();
@@ -104527,14 +104666,17 @@ var Intent = class {
    * THE OBJECTIVE (R2–R7)
    * ===================================================================== */
   /** R2: set, replace or (with a null condition) remove a project's satisfaction condition, as a new revision of the
-   *  project's document through `promotion`; the earlier revision stays in history. */
-  setCondition({ project, condition, author, viewer = null } = {}) {
+   *  project's document through `promotion`, with the author's reason (DEC-88) carried on that revision's log entry;
+   *  the earlier revision stays in history. */
+  setCondition({ project, condition, reason, author, viewer = null } = {}) {
     if (machine(author))
       return refusal14("MACHINE_CANNOT_SET_OBJECTIVE", "setting or changing an objective's measure is a named member's act (DEC-24 rule 2). Nothing was written.");
     const p = this.#project(project, viewer);
     if (p.refused) return p.refused;
     const denied = this.membership.projectAuthority(project, author, "joined", "setCondition");
     if (denied) return denied;
+    const why = reasonOf(reason);
+    if (!why) return refuseNoReason("setting, changing or removing an objective's measure records why, in your own words. Nothing was written.");
     const c = condition == null ? null : {
       ...condition,
       required: isObj12(condition.required) ? {
@@ -104557,11 +104699,12 @@ var Intent = class {
       at25,
       c ? "Objective condition set" : "Objective condition removed",
       str11(author),
-      c ? `the objective's satisfaction condition is ${JSON.stringify(c)}.` : "the objective states no condition."
+      `${c ? `the objective's satisfaction condition is ${JSON.stringify(c)}.` : "the objective states no condition."}
+Reason: ${bodyText(why)}`
     );
     const r = this.#revise(p.doc, text5, str11(author), viewer);
     if (!r.ok) return r;
-    return { ok: true, project, condition: c, set_by: str11(author), at: at25, bundleSha: r.bundleSha };
+    return { ok: true, project, condition: c, reason: why, set_by: str11(author), at: at25, bundleSha: r.bundleSha };
   }
   /* The matched instances of a condition (R4), each assembled by progressions and judged; derived, never stored. */
   #measure(cond, viewer) {
@@ -105738,10 +105881,14 @@ ${bodyText(note)}`
    * ===================================================================== */
   /** R18: a member sets an assistant to work a project's objective: a run through `ai-runs` with the project as its
    *  context, the objective and its current gaps as its instructions, its looks named under authority kind
-   *  `objective`. `run` carries what `ai-runs.open` takes (its id, principals, skill version, bounds, …). */
-  async workObjective({ project, author, viewer = null, run = {} } = {}) {
+   *  `objective`. `run` carries what `ai-runs.open` takes (its id, principals, skill version, bounds, …). The member's
+   *  reason (DEC-88 (4)) is recorded on the run's opening as its `label`, which ai-runs stores at the open, never
+   *  changes, and answers with the run's budget and context (its R10, R19), and is carried in the instructions. */
+  async workObjective({ project, reason, author, viewer = null, run = {} } = {}) {
     if (machine(author))
       return refusal14("MACHINE_CANNOT_CHOOSE_THE_QUESTION", "setting an assistant to work an objective is a member's act (DEC-24 rule 2). No run was opened.");
+    const why = reasonOf(reason);
+    if (!why) return refuseNoReason("setting an assistant to work an objective records why, in your own words. No run was opened.");
     const p = this.#project(project, viewer ?? author);
     if (p.refused) return p.refused;
     const g = this.gaps({ project, viewer: viewer ?? author });
@@ -105749,17 +105896,19 @@ ${bodyText(note)}`
       objective: p.doc.fm.objective ?? null,
       condition: g.condition ?? null,
       gaps: g.gaps || [],
-      authority: { kind: "objective", ref: project }
+      authority: { kind: "objective", ref: project },
+      reason: why
     };
     const opened = await this.#lazy(this.aiRunsRef).open({
       ...isObj12(run) ? run : {},
       contextType: "project",
       contextId: project,
+      label: why,
       state: { instructions },
       actor: this.#memberOf(author),
       viewer: viewer ?? author
     });
-    return { ...isObj12(opened) ? opened : {}, project, instructions };
+    return { ...isObj12(opened) ? opened : {}, project, reason: why, instructions };
   }
 };
 function refuseNoSuchGoal(detail, extra) {
