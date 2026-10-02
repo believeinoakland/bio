@@ -204,7 +204,7 @@ async function verify(armored, message, expectNamespace, allowedKeys) {
 
 /* The canonical statements this system signs. Centralised so the plane, the
    wizard, the signer page, and any future client all sign the same bytes.
-   Both are single-line ASCII, so there is no canonicalisation to get wrong. */
+   Each is single-line ASCII, so there is no canonicalisation to get wrong. */
 export const NS_RELEASE = "bio-release";
 export const NS_RATIFY = "bio-ratify";
 
@@ -340,3 +340,34 @@ export const fleetStatement = ({ version, plane, members }) =>
    perform. The separation is in the message, which is where a verifier looks. */
 export const caseRatifyStatement = (caseId, edition, docSha) =>
   te.encode(`bio-ratify-case ${caseId} ${edition} ${docSha}\n`);
+
+/* ------------------------------------------------------------- the notice */
+
+/* DEC-111 (K1019, K1031): A "WORKING ON" NOTICE IS SIGNED IN ITS OWN NAMESPACE.
+   A project's owner signs each revision of a notice with the same browser-held
+   key that ratifies records, so the separation from a ratification has to be
+   in the namespace, not only in the message: a notice is a statement to the
+   whole network, and a signature gathered for it must never verify as consent
+   to publish, nor the reverse, whatever the identifiers turn out to be. */
+export const NS_NOTICE = "bio-working-on";
+
+/* An opaque id, as record-core's minter draws it (its R6): `<PREFIX>-<year>-<4
+   random digits>`, with an optional `-<slug>` tail. One token, ASCII, no space
+   and no newline, so the statement below always has exactly its four fields. */
+const OPAQUE_ID_RE = /^[A-Z]+-\d{4}-\d{4}(?:-[a-z0-9]+(?:-[a-z0-9]+)*)?$/;
+const SHA256_HEX_RE = /^[0-9a-f]{64}$/;
+
+/* R38: the bytes an owner signs for one revision of a notice. Unlike the
+   ratification statements it REFUSES what it cannot state exactly: a notice id
+   that is not an opaque id, a revision that is not a whole number from 1, or a
+   digest that is not 64 lowercase hex characters throws, so no signature can be
+   asked for over a statement whose fields could be read two ways. */
+export const noticeStatement = (noticeId, revision, sha) => {
+  if (typeof noticeId !== "string" || !OPAQUE_ID_RE.test(noticeId))
+    throw new Error("noticeStatement: the notice id is not an opaque id");
+  if (!Number.isSafeInteger(revision) || revision < 1)
+    throw new Error("noticeStatement: the revision is not a whole number of at least 1");
+  if (typeof sha !== "string" || !SHA256_HEX_RE.test(sha))
+    throw new Error("noticeStatement: the digest is not 64 lowercase hex characters");
+  return te.encode(`${NS_NOTICE} ${noticeId} ${revision} ${sha}\n`);
+};

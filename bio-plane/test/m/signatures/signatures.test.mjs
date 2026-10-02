@@ -23,7 +23,8 @@ import * as signpage from "../../../src/signpage.mjs";
 import { renderSignpage, SIGNPAGE_SRC, SIGNPAGE_OUT } from "../../../scripts/embed-signpage.mjs";
 
 const {
-  NS_RELEASE, NS_RATIFY, NS_FLEET, verifySshsig, ratifyStatement, caseRatifyStatement, fleetStatement,
+  NS_RELEASE, NS_RATIFY, NS_FLEET, NS_NOTICE, verifySshsig, ratifyStatement, caseRatifyStatement, fleetStatement,
+  noticeStatement,
 } = sshsig;
 const {
   timestampRequest, parseTimestampResponse, TSA_ENDPOINTS, TSA_CONTENT_TYPE, TSA_ACCEPT,
@@ -142,15 +143,24 @@ const parseAndLog = (...a) => {
 
 /* ======================================================================= R1 */
 
-test("R1 the three namespaces are the compiled strings, pairwise distinct, and a signature in one never verifies in another", async () => {
+const NAMESPACES = ["NS_RELEASE", "NS_RATIFY", "NS_FLEET", "NS_NOTICE"];
+
+test("R1 the four namespaces are the compiled strings, pairwise distinct, and a signature in one never verifies in another", async () => {
   assert.equal(NS_RELEASE, "bio-release");
   assert.equal(NS_RATIFY, "bio-ratify");
   assert.equal(NS_FLEET, "bio-release-fleet");
-  assert.equal(new Set([NS_RELEASE, NS_RATIFY, NS_FLEET]).size, 3);
+  assert.equal(NS_NOTICE, "bio-working-on");
+  /* Exactly four: every NS_ export of the module is one of them. */
+  assert.deepEqual(Object.keys(sshsig).filter((k) => k.startsWith("NS_")).sort(), [...NAMESPACES].sort());
+  const all = NAMESPACES.map((k) => sshsig[k]);
+  assert.ok(all.every((v) => typeof v === "string" && v.length > 0));
+  assert.equal(new Set(all).size, 4);
+  /* Compiled: a caller cannot rebind one. */
+  for (const k of NAMESPACES) assert.throws(() => { sshsig[k] = "x"; });
   const msg = enc("one message\n");
-  for (const signedIn of [NS_RELEASE, NS_RATIFY, NS_FLEET]) {
+  for (const signedIn of all) {
     const sig = await sign(KEY, signedIn, msg);
-    for (const checkedIn of [NS_RELEASE, NS_RATIFY, NS_FLEET]) {
+    for (const checkedIn of all) {
       const r = await verifyAndLog(sig, msg, checkedIn, [KEY.line]);
       if (signedIn === checkedIn) assert.equal(r.ok, true);
       else assert.deepEqual(r, { ok: false, reason: "NAMESPACE", expected: checkedIn, got: signedIn });
@@ -331,6 +341,76 @@ test("R7 a bundle ratification and a case ratification are never the same bytes,
   const sig = await sign(KEY, NS_RATIFY, ratifyStatement("CASE-1", "0".repeat(64)));
   assert.equal((await verifyAndLog(sig, caseRatifyStatement("CASE-1", 1, "0".repeat(64)), NS_RATIFY, [KEY.line])).reason,
     "BAD_SIGNATURE");
+});
+
+/* ================================================================= R37–R38 */
+
+const NOTICE_SHA = "0123456789abcdef".repeat(4);
+
+test("R38 noticeStatement is exactly the ASCII line, the same bytes every time", () => {
+  for (const [id, rev] of [["NOTE-2026-4817", 1], ["NOTE-2026-0000", 2], ["WON-2027-9999", 12345],
+    ["N-2026-0001-a-slug-tail", 1], ["NOTE-2026-4817-x", Number.MAX_SAFE_INTEGER]]) {
+    const out = noticeStatement(id, rev, NOTICE_SHA);
+    assert.ok(out instanceof Uint8Array);
+    assert.deepEqual([...out], [...Buffer.from(`bio-working-on ${id} ${rev} ${NOTICE_SHA}\n`, "ascii")]);
+    assert.deepEqual(noticeStatement(id, rev, NOTICE_SHA), out);
+  }
+  /* Each field is in the bytes: change one and the statement changes. */
+  const base = td.decode(noticeStatement("NOTE-2026-4817", 1, NOTICE_SHA));
+  assert.notEqual(td.decode(noticeStatement("NOTE-2026-4818", 1, NOTICE_SHA)), base);
+  assert.notEqual(td.decode(noticeStatement("NOTE-2026-4817", 2, NOTICE_SHA)), base);
+  assert.notEqual(td.decode(noticeStatement("NOTE-2026-4817", 1, "f".repeat(64))), base);
+});
+
+test("R38 noticeStatement throws on a notice id that is not an opaque id, a revision below 1 or not whole, or a sha not 64 lowercase hex", () => {
+  const ok = ["NOTE-2026-4817", 1, NOTICE_SHA];
+  const badIds = [undefined, null, 0, 20264817, {}, [], "", "NOTE", "NOTE-2026", "NOTE-2026-481", "NOTE-2026-48170",
+    "NOTE-26-4817", "note-2026-4817", "Note-2026-4817", "NOTE-2026-4817 ", " NOTE-2026-4817", "NOTE-2026-4817\n",
+    "NOTE 2026-4817", "NOTE-2026-4817-", "NOTE-2026-4817-Slug", "NOTE-2026-4817--x", "NOTE-2026-4817-a b",
+    "NOTE-2026-4817-a_b", "-2026-4817", "NOTE1-2026-4817", "NOTE-2026-4817\u0000", "ＮＯＴＥ-2026-4817",
+    "NOTE-٢٠٢٦-4817", "INFO-2026-5460-sewer fund"];
+  const badRevs = [undefined, null, 0, -1, 1.5, 0.999, NaN, Infinity, -Infinity, "1", "01", [1], {}, true,
+    Number.MAX_SAFE_INTEGER + 1, 1n];
+  const badShas = [undefined, null, 0, "", "0".repeat(63), "0".repeat(65), NOTICE_SHA.toUpperCase(),
+    "A" + NOTICE_SHA.slice(1), "g" + NOTICE_SHA.slice(1), ` ${NOTICE_SHA}`, `${NOTICE_SHA}\n`, ["0".repeat(64)],
+    Buffer.from(NOTICE_SHA, "hex")];
+  const refuses = (args, why) => assert.throws(() => noticeStatement(...args),
+    (e) => e instanceof Error && e.message.startsWith("noticeStatement: "), why);
+  for (const id of badIds) refuses([id, ok[1], ok[2]], `id ${JSON.stringify(String(id))}`);
+  for (const rev of badRevs) refuses([ok[0], rev, ok[2]], `revision ${String(rev)}`);
+  for (const sha of badShas) refuses([ok[0], ok[1], sha], `sha ${String(sha)}`);
+  /* And nothing well-formed is refused. */
+  assert.doesNotThrow(() => noticeStatement(...ok));
+});
+
+test("R38 a notice statement is never the bytes of a ratification, a case ratification or a fleet statement", async () => {
+  const notice = td.decode(noticeStatement("NOTE-2026-4817", 1, NOTICE_SHA));
+  assert.ok(notice.startsWith("bio-working-on "));
+  for (const other of [ratifyStatement("NOTE-2026-4817", NOTICE_SHA), caseRatifyStatement("NOTE-2026-4817", 1, NOTICE_SHA)]) {
+    assert.notEqual(td.decode(other), notice);
+  }
+  assert.notEqual(fleetStatement({ version: "1", plane: PLANE, members: [] }), notice);
+  /* A ratification signature over the same fields does not verify as a notice, in either namespace. */
+  const rsig = await sign(KEY, NS_RATIFY, ratifyStatement("NOTE-2026-4817", NOTICE_SHA));
+  assert.equal((await verifyAndLog(rsig, noticeStatement("NOTE-2026-4817", 1, NOTICE_SHA), NS_NOTICE, [KEY.line])).reason,
+    "NAMESPACE");
+  assert.equal((await verifyAndLog(rsig, noticeStatement("NOTE-2026-4817", 1, NOTICE_SHA), NS_RATIFY, [KEY.line])).reason,
+    "BAD_SIGNATURE");
+});
+
+test("R37 NS_NOTICE is bio-working-on, distinct from every other namespace, and a notice signature verifies only in it", async () => {
+  assert.equal(NS_NOTICE, "bio-working-on");
+  for (const k of NAMESPACES.filter((n) => n !== "NS_NOTICE")) assert.notEqual(sshsig[k], NS_NOTICE);
+  assert.throws(() => { sshsig.NS_NOTICE = "bio-ratify"; });
+  const stmt = noticeStatement("NOTE-2026-4817", 3, NOTICE_SHA);
+  const sig = await sign(KEY, NS_NOTICE, stmt);
+  assert.deepEqual(await verifyAndLog(sig, stmt, NS_NOTICE, [KEY.line]), { ok: true, keyB64: KEY.keyB64, namespace: NS_NOTICE });
+  for (const ns of [NS_RELEASE, NS_RATIFY, NS_FLEET]) {
+    assert.deepEqual(await verifyAndLog(sig, stmt, ns, [KEY.line]), { ok: false, reason: "NAMESPACE", expected: ns, got: NS_NOTICE });
+  }
+  /* The same statement signed as a ratification is not a notice signature. */
+  const asRatify = await sign(KEY, NS_RATIFY, stmt);
+  assert.equal((await verifyAndLog(asRatify, stmt, NS_NOTICE, [KEY.line])).reason, "NAMESPACE");
 });
 
 /* ================================================================== R8–R14 */
@@ -746,6 +826,74 @@ test("R31 the served page's signatures are accepted by stock ssh-keygen -Y verif
   assert.equal(keygenVerifies(pub, NS_RATIFY, ratSig, ratifyStatement("BUNDLE-2", "1".repeat(64))), false);
 });
 
+/* The signature the page's notice button wrote, or null with the page's words. */
+async function pageSignsNotice(page, id, rev, sha) {
+  page.el("not-id").value = id;
+  page.el("not-rev").value = rev;
+  page.el("not-sha").value = sha;
+  await page.el("not-sign").onclick();
+  const out = page.el("not-out").innerHTML;
+  const m = out.match(/-----BEGIN SSH SIGNATURE-----[\s\S]*?-----END SSH SIGNATURE-----\n?/);
+  return { sig: m ? m[0] : null, out };
+}
+
+test("R37 the served page signs a notice in NS_NOTICE over exactly noticeStatement's bytes, with the ratification key", async () => {
+  const page = loadPage(SIGN_HTML);
+  const made = await page.generateAll();
+  const ratPub = made["bio-ratify"].pub, relPub = made["bio-release"].pub;
+  assert.equal(page.el("not-sign").disabled, false, "armed by the ratification key");
+  for (const [id, rev] of [["NOTE-2026-4817", 1], ["NOTE-2026-0042-a-tail", 17]]) {
+    const stmt = noticeStatement(id, rev, NOTICE_SHA);
+    /* Whitespace around a pasted field, and a hash pasted in capitals, sign the same statement. */
+    for (const [i, r, h] of [[id, String(rev), NOTICE_SHA], [` ${id}\n`, ` ${rev} `, NOTICE_SHA.toUpperCase()]]) {
+      const { sig } = await pageSignsNotice(page, i, r, h);
+      assert.ok(sig, "a signature was written");
+      assert.deepEqual(await verifyAndLog(sig, stmt, NS_NOTICE, [ratPub]),
+        { ok: true, keyB64: ratPub.split(" ")[1], namespace: NS_NOTICE });
+      assert.equal((await verifyAndLog(sig, stmt, NS_RATIFY, [ratPub])).reason, "NAMESPACE");
+      assert.equal((await verifyAndLog(sig, stmt, NS_NOTICE, [relPub])).reason, "UNKNOWN_KEY");
+      assert.equal((await verifyAndLog(sig, noticeStatement(id, rev + 1, NOTICE_SHA), NS_NOTICE, [ratPub])).reason,
+        "BAD_SIGNATURE");
+    }
+  }
+  /* The page refuses, and signs nothing, wherever noticeStatement would throw on the same fields. */
+  const cases = [["", "1", NOTICE_SHA], ["note-2026-4817", "1", NOTICE_SHA], ["NOTE-2026-481", "1", NOTICE_SHA],
+    ["NOTE 2026-4817", "1", NOTICE_SHA], ["NOTE-2026-4817-A", "1", NOTICE_SHA],
+    ["NOTE-2026-4817", "", NOTICE_SHA], ["NOTE-2026-4817", "0", NOTICE_SHA], ["NOTE-2026-4817", "-1", NOTICE_SHA],
+    ["NOTE-2026-4817", "01", NOTICE_SHA], ["NOTE-2026-4817", "1.5", NOTICE_SHA], ["NOTE-2026-4817", "1e3", NOTICE_SHA],
+    ["NOTE-2026-4817", "x", NOTICE_SHA], ["NOTE-2026-4817", String(Number.MAX_SAFE_INTEGER + 2), NOTICE_SHA],
+    ["NOTE-2026-4817", "1", ""], ["NOTE-2026-4817", "1", "0".repeat(63)], ["NOTE-2026-4817", "1", "g".repeat(64)]];
+  for (const [id, rev, sha] of cases) {
+    const { sig, out } = await pageSignsNotice(page, id, rev, sha);
+    assert.equal(sig, null, JSON.stringify([id, rev, sha]));
+    assert.match(out, /class="warn"/);
+    /* The revision as a person types it: canonical digits are a number, anything else is not one. */
+    assert.throws(() => noticeStatement(id.trim(), /^[1-9]\d*$/.test(rev) ? Number(rev) : rev, sha.trim().toLowerCase()));
+  }
+  /* With no ratification key the button is not armed. */
+  page.el("forget").onclick();
+  assert.equal(page.el("not-sign").disabled, true);
+  assert.equal(page.el("not-out").innerHTML, "");
+});
+
+test("R37 the served page's notice signatures are accepted by stock ssh-keygen -Y verify in bio-working-on only", { skip: NO_SSH_KEYGEN }, async () => {
+  const page = loadPage(SIGN_HTML);
+  const seed = new Uint8Array(32).map((_, i) => (i * 53 + 5) % 256);
+  const { priv, raw32 } = await page.keysFromSeed(seed);
+  const pub = page.pubLine(raw32, "notice-test");
+  const stmt = noticeStatement("NOTE-2026-4817", 2, NOTICE_SHA);
+  const sig = await page.sshsig(priv, raw32, NS_NOTICE, stmt);
+  assert.equal(keygenVerifies(pub, NS_NOTICE, sig, stmt), true);
+  assert.equal(keygenVerifies(pub, NS_RATIFY, sig, stmt), false);
+  assert.equal(keygenVerifies(pub, NS_NOTICE, sig, noticeStatement("NOTE-2026-4817", 3, NOTICE_SHA)), false);
+  /* And the page's own button, loaded with that key. */
+  await page.parseKeyString(`BIOKEY-RAW1.bio-ratify.${Buffer.from(seed).toString("base64")}`);
+  page.el("load-blob").value = `BIOKEY-RAW1.bio-ratify.${Buffer.from(seed).toString("base64")}`;
+  await page.el("load").onclick();
+  const fromButton = (await pageSignsNotice(page, "NOTE-2026-4817", "2", NOTICE_SHA)).sig;
+  assert.equal(keygenVerifies(pub, NS_NOTICE, fromButton, stmt), true);
+});
+
 test("R32 the page's visible text names CivicOS, never BIO, and its wire formats are unchanged", async () => {
   /* Everything a person can read: the text between tags, attribute values, and
      the strings the script writes into the page. BIO survives only as the
@@ -793,7 +941,13 @@ test("R32 the page calls what a member ratifies a record, never a bundle (K899 (
   assert.match(said[0], /Paste the record id\./);
   assert.match(said[1], /The record hash is 64 hex characters\./);
   assert.match(said[2], /If the record changes before/);
-  for (const s of said) assert.doesNotMatch(s, /bundle/i);
+  /* And for each answer the notice button gives. */
+  for (const [id, rev, sha] of [["", "1", NOTICE_SHA], ["NOTE-2026-4817", "0", NOTICE_SHA],
+    ["NOTE-2026-4817", "1", "x"], ["NOTE-2026-4817", "1", NOTICE_SHA]]) {
+    said.push((await pageSignsNotice(page, id, rev, sha)).out);
+  }
+  assert.match(said.at(-1), /If the notice changes before/);
+  for (const s of said) { assert.doesNotMatch(s, /bundle/i); assert.doesNotMatch(s, /\bBIO\b/); }
   /* The rest of what the script writes: generate, load, forget, and the key status lines. */
   await page.el("gen").onclick();
   const generated = page.el("gen-out").innerHTML;
@@ -802,7 +956,7 @@ test("R32 the page calls what a member ratifies a record, never a bundle (K899 (
   const loadErr = page.el("load-out").innerHTML;
   page.el("forget").onclick();
   for (const s of [generated, loadErr, page.el("load-out").innerHTML,
-    page.el("rel-key").innerHTML, page.el("rat-key").innerHTML]) {
+    page.el("rel-key").innerHTML, page.el("rat-key").innerHTML, page.el("not-key").innerHTML]) {
     assert.ok(s.length > 0);
     assert.doesNotMatch(s, /bundle/i);
   }
@@ -837,6 +991,8 @@ test("R26 pure and offline: no service fetches or reads a clock, and the endpoin
       "bio-release", [${JSON.stringify(PINNED.pub)}]);
     out.bad = await s.verifySshsig("x", new Uint8Array(1), "bio-release", []);
     s.ratifyStatement("a", "b"); s.caseRatifyStatement("a", 1, "b");
+    s.noticeStatement("NOTE-2026-0001", 1, "0".repeat(64));
+    try { s.noticeStatement("bad", 0, "x"); } catch {}
     s.fleetStatement({ version: "v", plane: { sha256: "p", bytes: 1, asset: "a" },
       members: [{ member: "m", sha256: "s", bytes: 1, asset: "a", compat: { date: "d", flags: [] }, services: [], parts: [] }] });
     const req = t.timestampRequest("${DIGEST}", new Uint8Array(8).fill(3));
@@ -871,6 +1027,7 @@ test("R27 no place is named in any string the module exports", () => {
     }
   }
   strings.push(td.decode(ratifyStatement("a", "b")), td.decode(caseRatifyStatement("a", 1, "b")),
+    td.decode(noticeStatement("NOTE-2026-0001", 1, "0".repeat(64))),
     fleetStatement({ version: "v", plane: PLANE, members: [] }));
   assert.ok(strings.includes(SIGN_HTML));
   for (const s of strings) assert.doesNotMatch(s, PLACE);
@@ -880,6 +1037,7 @@ test("R27 no place is named in any string the module exports", () => {
 
 test("R28 a signature never verifies for another namespace or message; every tampered signature is BAD_SIGNATURE", async () => {
   const messages = [enc("m1\n"), ratifyStatement("B", "0".repeat(64)), caseRatifyStatement("B", 1, "0".repeat(64)),
+    noticeStatement("NOTE-2026-0001", 1, "0".repeat(64)),
     enc(fleetStatement({ version: "v", plane: PLANE, members: [member("m")] }))];
   for (const [i, m] of messages.entries()) {
     const sig = await sign(KEY, NS_RATIFY, m);
@@ -888,7 +1046,7 @@ test("R28 a signature never verifies for another namespace or message; every tam
       assert.equal(r.ok, i === j);
       if (i !== j) assert.equal(r.reason, "BAD_SIGNATURE");
     }
-    for (const ns of [NS_RELEASE, NS_FLEET, "", "bio-ratify ", "BIO-RATIFY"]) {
+    for (const ns of [NS_RELEASE, NS_FLEET, NS_NOTICE, "", "bio-ratify ", "BIO-RATIFY"]) {
       assert.equal((await verifyAndLog(sig, m, ns, [KEY.line])).reason, "NAMESPACE");
     }
     /* Every single-bit change to the message is refused. */
