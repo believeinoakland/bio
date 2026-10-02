@@ -41,3 +41,7 @@ Two reads R22 and R23 need that the providers do not offer synchronously, and `f
 ## J2 · REPORT
 
 Found in other modules (my record, Completion): (1) queue owes R23's kind `attribution-unchosen` in its catalogue (queue R1, R11) and its door `op=attribute` (queue R12) before a feed holding one is minted; until then a member with an unchosen credit level on a prepared case gets the whole feed refused NO_SUCH_KIND. queue R49 reads `due` (R25: action-clock-overdue, action-reminder, plan-checkpoint-due). (2) The plane bundle `bio-plane/dist/bio-plane.bundled.mjs` is stale from my change under `bio-plane/src/queue-producers/`; I regenerated nothing.
+
+## J3 · COMPLETE
+
+R8, R20, R22, R23, R24, R25 met (entries (1)–(8) of B1, R22/R23 per B2/K1105). queue-producers 59/59; queue 80/80; whole test/m 4947 pass, 5 fail, all accepted by name (control-plane catalogue-end :15, doorbell :310; accepted red 4's three); proposals.test.mjs red cleared; coverage red R23 and R24 cleared (25 of 25). format, architecture, coverage, ownership: 0 failures. Nothing deferred. Record: build/jobs/T22/queue-producers.md, Completion.
