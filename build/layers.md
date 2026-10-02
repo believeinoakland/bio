@@ -11,7 +11,7 @@
 | 5 | Meaning, bias and retrieval | 6, 7, 9 | Everything derived over content, with its grade; the four-level search, which says at which level absence was found. | entities, connections, progressions, bias, observation-log, query-language, retrieval |
 | 6 | Inquiry and the assistant | 8, 11 | The inquiry and its legs, findings, basis versions and strength; the AI finds, pursues, extracts and checks, and never attests or concludes. | inquiry-grammar, inquiry, citation, basis-versions, strength, contradiction, run-rules, ai-runs, run-productions, capture-requests, skills, agent-worker |
 | 7 | Understanding | Content Framework §12, and 8 | What the investigation below has established: the group's intent, with progress computed against the record, and which findings still stand when their basis changes. | intent, reevaluation |
-| 8 | Publication | 13 | What the group stands behind leaves one way. | case-grammar, corpus-export, publication, public-read, project-stage, ratification, case-authoring, review |
+| 8 | Publication | 13 | What the group stands behind leaves one way. | case-grammar, corpus-export, publication, public-read, project-stage, network-notices, ratification, case-authoring, review |
 | 9 | Action | 16 (`BIO_Action_v0_1.md`); Functional Architecture "Layer 3: Action"; Design Requirements §7–§8 | An action rests on the record, and one asserting a breach rests on a published finding and a standard held in the record; the group plans and decides every act, the AI proposes and prepares and never files or sends; compliance is recorded as carefully as noncompliance; every deadline names its basis. | local-facts, standards, conformance, consequences, action-grammar, actions, action-clocks, filing-templates, filings, escalation, action-plans |
 | 10 | Operations | 10, 14 | The instance keeps itself current unattended, and watches the actions' clocks and the government's response. | monitoring, scheduler |
 | 11 | Interface and distribution | 12, 15 | The ops, the member surfaces and the installer. Nothing below depends on them. | affordances, tasks, queue-producers, queue, instance-setup, op-declarations, admission, control-plane, plane, legacy-ui, installer |
@@ -155,6 +155,16 @@ Uses: `case-grammar` uses legacy-checks; `publication` gains it (and drops signa
 | corpus-export | The verified working-corpus export, its append-only log, and the verifying import (R3, not yet met). | `publication/index.mjs` 89–94, 1919–2007, `schema.mjs` 566–578, 592; `publication` R18, R19, R32, R31 (part) |
 
 Uses: `corpus-export` uses record-grammar, record-core, provenance and connections; `publication` gains it.
+
+## Layer 8: network-notices (DEC-111, K1019, K1031, K1100; T23's opening, K1113)
+
+A new product module, not a split: a project's owner tells the network that the group is working on something, and the copy keeps the notice honest (`build/requirements/network-notices.md`, from `plan/draft-network-notices.md`). It has no `from` and is created by its own T23 job at `bio-plane/src/network-notices/`; its paths and tests are added to its `modules.json` entry by that job (K1043's form). It sits directly after `project-stage` (closing needs `projectStage`) and before `ratification` and `case-authoring` (they call `openSeals` and `noticeReferenceOf`).
+
+| module | what it does | source |
+| --- | --- | --- |
+| network-notices | "Working on" notices: owner-signed revisions, instance-signed attestations (activity level, cases, seals, closing or lapse), weekly timestamped seals opened at publication, and the group's public signing keys, served on the public path. | new (DEC-111; `BIO_Publication_v0_1.md` §5B) |
+
+Uses: `network-notices` uses record-grammar, signatures, record-core, membership, credentials, promotion, host-governor, provenance, capture, publication, public-read and project-stage; `ratification`, `case-authoring`, `scheduler`, `queue-producers`, `control-plane` and `plane` gain it. (Fold 1a, K1094, N486: `monitoring` gains `project-stage`.)
 
 ## Layer 1: the docprofile split (K617, K653 BOB-2; T19's opening)
 
