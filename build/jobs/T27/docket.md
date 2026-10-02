@@ -56,7 +56,12 @@ With the paths added, `test/system/row-census.test.mjs` names exactly these 26 a
 - ownership, with the paths added: 9 files changed by docket between tranche/T27 and HEAD; 0 failures.
 - Without the paths: architecture judges 0 files, coverage reports 0 of 22, and ownership fails only on "outside docket's paths". Each closes when BOB adds the paths.
 
-Size (session_01PJ5cMH43RbHxx4SXkb3E7X): test runs 12, module lines 1278
+**CHANGE B3 (K1276), applied after merging `tranche/T27`.** R14 gains `lastEntryOf({case})`. It is synchronous and viewer-free, reads no capture's bytes, writes nothing, and answers the date of the latest public entry (the same as `docketPublic`'s `last_entry`) or null. It is tested in `reads.test.mjs` (R14). After the change:
+- Tests: 37 pass, 0 fail.
+- format: 0 failures.
+- With the paths added: architecture 0 failures, coverage 22 of 22, ownership 9 files and 0 failures.
+
+Size (session_01PJ5cMH43RbHxx4SXkb3E7X): test runs 14, module lines 1287
 
 ## J1 · QUESTION
 
