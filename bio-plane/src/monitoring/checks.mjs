@@ -1,7 +1,7 @@
 /* monitoring — its checks (requirements: `build/requirements/monitoring.md`, R27, R42; K6, K49).
  *
  * Moved from `legacy-checks` (the legacy check catalogue) in T8 with their comments: C-18.5, `checkGatheringGrammar` and
- * its four vocabularies. The grammar it reads (`isPublicHttpsLocator`, `ISO_TS_RE`) is `record-grammar`'s (T19). `legacy-checks` cannot import this module, so its `checkBundle` no longer runs C-18.5: this
+ * its four vocabularies. The grammar it reads (`isPublicHttpsLocator`, `ISO_TS_RE`) is `record-grammar`'s (T19). `legacy-checks` (since deleted) could not import this module, so its `checkBundle` stopped running C-18.5: this
  * module registers it with promotion (at the write, R27) and with record-core's audit (R42).
  *
  * T18 (R42 as worded, K649 (6)): the C-48.8 and C-48.9 rows (`DRIVE_TICK_EXPORT_IS_THE_SHELL`,

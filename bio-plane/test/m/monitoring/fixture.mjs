@@ -137,7 +137,7 @@ export function world({ profiles = ["test-port-ellery"], env = null, evidence = 
   const credentials = credentialsOf(host, { record, membership });
   credentials.migrate();
   const promotion = promotionOf(host, { record, membership, now: () => new Date(clock.ms).toISOString() });
-  promotion.registerFact("producingGroup", "legacy-store", () => "test-group");
+  promotion.registerFact("producingGroup", "instance-setup", () => "test-group");
   const prov = provenanceOf(host, { record, membership, promotion, now: () => new Date(clock.ms).toISOString() });
   prov.migrate();
   const obs = observationLogOf(host, { record, membership, provenance: prov, extraction: null });

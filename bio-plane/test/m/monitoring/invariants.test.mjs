@@ -99,10 +99,11 @@ test("R40 bias never shapes what is monitored: no service takes a lens, and a le
   assert.equal(JSON.stringify(routed), a);
 });
 
-test("R41 the tables are this module's and declared to purge: monitor_fired by subject; monitor_address_type, monitor_tick_epoch and R52's monitor_address_frequency only by a whole-store purge", async () => {
+test("R41 the tables are this module's and declared to purge: monitor_fired by subject; R28's monitor_gathering_run by the bundle carrying the request; monitor_address_type, monitor_tick_epoch and R52's monitor_address_frequency only by a whole-store purge", async () => {
   const w = world();
   assert.deepEqual(MONITORING_TABLES.map((t) => [t.name, t.keys]),
-    [["monitor_fired", ["subject"]], ["monitor_tick_epoch", []], ["monitor_address_type", []], ["monitor_address_frequency", []]]);
+    [["monitor_fired", ["subject"]], ["monitor_tick_epoch", []], ["monitor_address_type", []], ["monitor_address_frequency", []],
+     ["monitor_gathering_run", ["bundle_id"]]]);
   const id = "INFO-2026-0850-purge";
   w.monitored(id, LOC, "purge-v1", { freq: "hourly", lines: ["project: PROJ-2026-0850-p"] });
   w.inProject("PROJ-2026-0850-p");
@@ -110,17 +111,26 @@ test("R41 the tables are this module's and declared to purge: monitor_fired by s
   await tick(w, id);                /* reads the address's type */
   assert.equal(w.m.addressFrequencySet({ address: LOC, frequency: "daily", reason: "source_changes_rarely", author: "carol",
                                          viewer: "member:carol" }).ok, true);   /* an address's own frequency (R52) */
+  /* a named request of another bundle, attempted once (R28) */
+  const gid = "INFO-2026-0851-gath";
+  const g = JSON.stringify({ requests: [{ id: "GATH-2026-0851-x", target: { text: "x" }, locators: ["https://records.example.org/g"],
+                                          authority: "Town Clerk", criticality: "crucial", status: "open" }] });
+  assert.equal(w.promote(gid, infoMd(gid, "https://records.example.org/h", { enabled: false }),
+    { files: [{ path: "data/gathering.json", text: g, bytes: Buffer.byteLength(g), sha256: sha(g) }] }).ok, true);
+  w.capture.acquire = async () => ({ status: 502, body: { ok: false, reason: "SOURCE_REFUSED", status: 503 } });
   const real = w.m.monitor;
   w.m.monitor = async () => { throw new Error("down"); };
-  await w.m.cadenceTick(NOW_MS + 2 * 86400000);   /* fails: its claim and epoch stay */
+  await w.m.cadenceTick(NOW_MS + 2 * 86400000);   /* fails: its claim and epoch stay; the request is attempted */
   w.m.monitor = real;
   const count = (t) => w.rows(`SELECT count(*) c FROM ${t}`)[0].c;
-  const all = () => ["monitor_fired", "monitor_tick_epoch", "monitor_address_type", "monitor_address_frequency"].map(count);
-  assert.deepEqual(all(), [1, 1, 1, 1]);
+  const all = () => ["monitor_fired", "monitor_tick_epoch", "monitor_address_type", "monitor_address_frequency", "monitor_gathering_run"].map(count);
+  assert.deepEqual(all(), [2, 1, 1, 1, 1]);
   w.record.purge({ bundleId: id });
-  assert.deepEqual(all(), [0, 1, 1, 1], "the bundle's claims go; the epoch, the address's reading and its settings outlive it");
+  assert.deepEqual(all(), [1, 1, 1, 1, 1], "the bundle's claims go; the epoch, the address's reading and its settings outlive it");
+  w.record.purge({ bundleId: gid });
+  assert.deepEqual(all(), [1, 1, 1, 1, 0], "the request's attempts go with the bundle carrying it; its claim is the tick's, spent with the epoch");
   w.record.purge({});
-  assert.deepEqual(all(), [0, 0, 0, 0]);
+  assert.deepEqual(all(), [0, 0, 0, 0, 0]);
 });
 
 test("R42 this module's own table holds C-48.8 and C-48.9, each with its code, number, translation and a where naming this module's site; the rest of C-48 is acquisition's; C-18.10 is the gathering refusal's row; C-18.11 to C-18.15 are R52's", () => {

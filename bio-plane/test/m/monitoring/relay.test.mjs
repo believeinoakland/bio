@@ -39,7 +39,7 @@ test("R49 a store refusal (ok false below 500) behind the monitor relay is answe
   /* any status below 500, relayed as the store gave it */
   const u = await monitorOp(req(), store(404, { ok: false, error: "unknown op: monitor" }), H());
   assert.deepEqual([u.s, u.b.error], [404, "unknown op: monitor"]);
-  /* a caller that hands no storeRefusal (legacy-index today) gets the same answer */
+  /* a caller that hands no storeRefusal gets the same answer */
   const bare = await monitorOp(req(), store(400, refusal), H({ storeRefusal: undefined }));
   assert.deepEqual(bare, { s: 400, b: refusal });
   assert.equal(refusals, 2);
