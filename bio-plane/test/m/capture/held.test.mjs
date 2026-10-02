@@ -223,3 +223,73 @@ test("R79 R81 R77 (DEC-97 (2)): a set-aside is recorded with its reason, who and
   assert.equal(route(w.c, "heldrestore", "by=class:ai&viewer=class:ai", { ids: ["INFO-1"], reason: "r" }).reason, "MACHINE_CANNOT_SET_ASIDE");
   assert.equal(route(w.c, "heldrestore", "by=member:m1&viewer=member:m1", { ids: ["INFO-1"], reason: "back" }).ok, true);
 });
+
+/* ---- R82: the backlog of one sweep (K1036; monitoring R60's hold) ---- */
+
+/* Documents filed by sweeps: each an Information document at `collected` unless said, with its register document
+   (`data/provenance.json`, record-core's `files` read contract) naming each of its documents' `origin`. */
+function sweepWorld() {
+  const f = heldWorld();
+  const s = f.s;
+  const S = "SWEEP-2026-0001#s1";
+  const doc = (id, origins, { type = "information", state = "collected", content = undefined } = {}) => {
+    s.sql.exec(`INSERT INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha, row_version)
+                VALUES (?, ?, 'g', 't', ?, '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z', 'x', 1)`, id, type, state);
+    const text = content !== undefined ? content : JSON.stringify({ documents: origins.map((origin) => ({ file: "snapshots/x", origin })) });
+    s.sql.exec(`INSERT INTO files (bundle_id, path, content, blob_sha, bytes, sha256) VALUES (?, 'data/provenance.json', ?, NULL, ?, 'x')`,
+               id, text, text == null ? 0 : text.length);
+  };
+  const sweep = (m) => ({ kind: "sweep", matched_sweep: m, deeming_actor: "bio-monitor" });
+  doc("SW-1", [sweep(S)]);
+  doc("SW-2", [{ kind: "named_request" }, sweep(S)]);       /* a sweep's document beside another's in one register */
+  doc("SW-3", [sweep(S)]);                                    /* set aside below */
+  doc("SW-4", [sweep(S)], { state: "verified" });             /* released (ratification R24) */
+  doc("SW-5", [sweep("SWEEP-2026-0001#s2")]);                 /* another sweep */
+  doc("SW-6", [sweep(S)], { type: "case" });                  /* not information */
+  doc("SW-7", [sweep(S)]);                                    /* set aside, then restored: counted */
+  doc("SW-8", [sweep(S)], { state: "archived" });
+  doc("SW-9", null, { content: "{not json" });                /* a register that is not JSON */
+  doc("SW-10", null, { content: JSON.stringify({ documents: ["a string", 7, null, { origin: "sweep" }] }) });
+  doc("SW-11", null, { content: null });                      /* blob-backed: no inline text */
+  s.sql.exec(`INSERT INTO files (bundle_id, path, content, blob_sha, bytes, sha256) VALUES ('INFO-1', 'notes.md', ?, NULL, 1, 'x')`,
+             JSON.stringify({ documents: [{ origin: sweep(S) }] }));   /* not the register document */
+  assert.equal(f.c.setAside({ ids: ["SW-3", "SW-7"], reason: "dup", author: "member:m1" }).ok, true);
+  assert.equal(f.c.restoreHeld({ ids: ["SW-7"], reason: "not a dup", author: "member:m1" }).ok, true);
+  return { ...f, S };
+}
+
+test("R82 (K1036): heldCount answers how many Information documents at collected, not set aside and not released, have a register origin naming that sweep; a set-aside, a released, another sweep's, a non-information and a document not at collected are not counted", () => {
+  const { c, S } = sweepWorld();
+  assert.equal(c.heldCount({ sweep: S }), 3, "SW-1, SW-2 and SW-7 (restored)");
+  assert.equal(c.heldCount({ sweep: "SWEEP-2026-0001#s2" }), 1, "SW-5 is the other sweep's");
+});
+
+test("R82: heldCount counts the whole store, with no viewer: a document in a project no member sees is counted; it reads only the register document", () => {
+  const { c, s, S } = sweepWorld();
+  s.sql.exec(`UPDATE bundles SET project = 'PROJ-1' WHERE bundle_id = 'SW-1'`);
+  assert.equal(c.heldCount({ sweep: S }), 3, "no sight applied");
+  assert.equal(c.heldCount({ sweep: S, viewer: "member:m2" }), 3, "a viewer passed is not a viewer read");
+  /* each change of standing moves the count: set aside, restored, released */
+  assert.equal(c.setAside({ ids: ["SW-1"], reason: "r", author: "member:m1" }).ok, true);
+  assert.equal(c.heldCount({ sweep: S }), 2);
+  assert.equal(c.restoreHeld({ ids: ["SW-1"], reason: "r", author: "member:m1" }).ok, true);
+  assert.equal(c.heldCount({ sweep: S }), 3);
+  s.sql.exec(`UPDATE bundles SET current_state = 'verified', prior_state = 'collected' WHERE bundle_id = 'SW-2'`);
+  assert.equal(c.heldCount({ sweep: S }), 2, "released, it leaves the count");
+});
+
+test("R82: an unknown sweep answers 0, as does a sweep that is no string; heldCount writes nothing and never throws, a store fault included", () => {
+  const { c, rows, S } = sweepWorld();
+  const before = everything(rows);
+  for (const sweep of ["SWEEP-2026-0404#none", "", S.toLowerCase(), `${S} `, null, undefined, 7, { s: S }])
+    assert.equal(c.heldCount({ sweep }), 0, JSON.stringify(sweep));
+  for (const args of [undefined, null, 7, "x", []]) assert.equal(c.heldCount(args), 0, JSON.stringify(args));
+  assert.equal(c.heldCount({ sweep: S }), 3);
+  assert.deepEqual(everything(rows), before, "nothing written");
+  /* a store that faults: 0, never a throw */
+  const { c: broken, s } = sweepWorld();
+  s.db.exec(`DROP TABLE held_acts`);
+  assert.equal(broken.heldCount({ sweep: S }), 0);
+  /* negative control: the empty store */
+  assert.equal(fresh().c.heldCount({ sweep: S }), 0);
+});

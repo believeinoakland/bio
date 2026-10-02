@@ -3,7 +3,7 @@
  * allowance), the event queue an undetermined capture raises, the doorbell (`doorbell.mjs`) and the information
  * grammar (`grammar.mjs`, C-2.7). The acquisition act is `acquisition`'s since T18 (K617): `acquire` and
  * `archiveLookup` hand it this module's store (R73). It writes no bundle: no intake path writes live state.
- * Requirements: build/requirements/capture.md (R8, R15, R21–R32, R37–R40, R43–R59, R63–R81). Extracted from `legacy-store` and
+ * Requirements: build/requirements/capture.md (R8, R15, R21–R32, R37–R40, R43–R59, R63–R82). Extracted from `legacy-store` and
  * `legacy-index` in T4 (T4-4); the reasoning the legacy comments carried is kept beside the code it explains.
  *
  * SHAPE (K61). `captureOf(ctx, opts)` answers the one instance for a Durable Object's storage. It reaches
@@ -692,8 +692,11 @@ export class Capture {
   /** R32: a member moves a knock to `discarded` or back to `new`, recorded with who, when and the member's own reason
    *  (DEC-88 (2)). `pulled` is R65's act for that knock and answers as `pullKnock` does (a promise), once its reason is
    *  admitted, the reason recorded on the row with the pull: a knock becomes `pulled` only by being brought in. Refused
-   *  in order: `BAD_STATUS`, `NO_SUCH_KNOCK`, `RESOLVE_NO_REASON` (C-118.7), each before anything is written. */
-  inboxResolve({ knockId, status, by, reason } = {}) {
+   *  in order: `BAD_STATUS`, `NO_SUCH_KNOCK`, `RESOLVE_NO_REASON` (C-118.7), each before anything is written. N499
+   *  (K1105): the `pulled` arm takes `at` and `within` as `pullKnock` does, so the control plane's reasoned resolve is
+   *  one act with its promotion (control-plane R36) and the reason lands on the row inside it; the other arms ignore
+   *  them. */
+  inboxResolve({ knockId, status, by, reason, at = null, within = null } = {}) {
     if (!["pulled", "discarded", "new"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
     if (typeof knockId !== "string" || !knockId || !this.#one(`SELECT knock_id FROM inbox WHERE knock_id=?`, knockId))
       return this.#noSuchKnock(knockId);
@@ -704,7 +707,7 @@ export class Capture {
                knockId, status: 400, maxChars: REASON_MAX };
     }
     /* END DEC-49 REGION is-resolve-reasoned */
-    if (status === "pulled") return this.#pull({ knockId, by }, reason);
+    if (status === "pulled") return this.#pull({ knockId, by, at, within }, reason);
     this.#tx(() => this.#sql.exec(`UPDATE inbox SET status=?, resolved=?, resolved_by=?, resolve_reason=? WHERE knock_id=?`,
                                   status, new Date().toISOString(), by ?? null, reason, knockId));
     return { ok: true, knockId, status, resolve_reason: reason };
@@ -1241,6 +1244,29 @@ export class Capture {
                                   detail: "these documents are not set aside; nothing was written" };
     const at = this.#appendHeld([...standing.keys()], "restore", reason, author);
     return { ok: true, act: "restore", ids: [...standing.keys()], reason, author, at };
+  }
+
+  /** R82 (K1036; Intake Doctrine §4, the backlog ceiling): how many Information documents at `collected`, not set aside
+   *  (R79, R81) and not released, have a register document whose `origin` names `matched_sweep` equal to `sweep`. The
+   *  register document is the bundle's `data/provenance.json` (State Rules §4.1), read on record-core's `files` read
+   *  contract (its R37); a released document has left `collected` (`ratification` R24), so the state answers that
+   *  clause. The whole store, no viewer: only the daemon's hold reads it (`monitoring` R60). Writes nothing and never
+   *  throws; an unknown sweep, or one that is not a non-empty string, answers 0. */
+  heldCount(args) {
+    const sweep = args && typeof args === "object" ? args.sweep : null;
+    if (typeof sweep !== "string" || !sweep) return 0;
+    try {
+      const r = this.#one(
+        `SELECT count(*) AS n FROM bundles b
+          WHERE b.object_type = 'information' AND b.current_state = 'collected' AND ${Capture.#NOT_SET_ASIDE}
+            AND EXISTS (SELECT 1 FROM files f,
+                                json_each(CASE WHEN json_valid(f.content) THEN f.content ELSE '{}' END, '$.documents') d
+                         WHERE f.bundle_id = b.bundle_id AND f.path = 'data/provenance.json'
+                           AND (CASE WHEN d.type = 'object' THEN json_extract(d.value, '$.origin.matched_sweep') END) = ?)`,
+        sweep);
+      const n = Number(r && r.n);
+      return Number.isFinite(n) ? n : 0;
+    } catch { return 0; }
   }
 
   /* ==================================================================== *
@@ -2264,7 +2290,8 @@ export function captureOps(c, url, body, env) {
     knock: () => c.knock({ ...(body || {}), sourceAddress: q("source") }),
     inboxlist: () => c.inboxList(q("status") || null, { ...page, sort: q("sort"), dir: q("dir") }),
     inboxget: () => c.inboxGet(q("id")),
-    inboxresolve: () => c.inboxResolve(body || {}),
+    /* N499: a body names no `at` or `within`: the pull's instant and its joined act are an in-process caller's. */
+    inboxresolve: () => { const b = body || {}; return c.inboxResolve({ knockId: b.knockId, status: b.status, by: b.by, reason: b.reason }); },
     /* R80: the Worker's count of a knock it refused before the store; the tally read by the stamped viewer. */
     doorbellrefused: () => c.doorbellRefused(body || {}),
     doorbelltally: () => c.doorbellTally({ viewer: q("viewer") ?? "" }),
