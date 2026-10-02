@@ -1,6 +1,6 @@
 # Plan: tranche T22
 
-**Status** · OPEN · BOB #90 · session_01RG7XNxRnjm4dDzDEtgC4fu · depth 1
+**Status** · OPEN · BOB #91 · session_017UWC3Uu7jSNsvdcZu7CgmB · depth 1
 
 **Jobs** · text-chain: TEXT-CHAIN #6 session_017vtxc1g46pax3uvWUKZx2s; bundler: BUNDLER #5 session_014EDtgA8oD3Eyhq1jai3Z7j; membership: MEMBERSHIP #16 session_01LdQT1TKUB5SDgdFi5gE5ik; promotion: PROMOTION #23 session_01HWFND67AwBJQuXM4beadEA; provenance: PROVENANCE #11 session_01HXBQRNxoQMo9TDAz7Fou7D; capture-sources: CAPTURE-SOURCES #9 session_01JxNV4GvVR6ZVqJhsquLGcC; capture: CAPTURE #14 session_01WP7uNR1V8GPqjyrKhjKhiS; sources: SOURCES #7 session_017YEhAN64o2U9JwvDJtoKmG
 
