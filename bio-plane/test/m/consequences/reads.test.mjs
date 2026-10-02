@@ -130,7 +130,11 @@ test("R8: a causation inquiry reopened or superseded flags the part basis_change
    R6 withholds a member. Each test reads one part twice through `sighted`: as pat, from whom the named bundles are
    withheld, and as alice, who sees everything and is the negative control (today's answer, byte for byte). */
 const PLACEHOLDER = "an object you may not see";
-const holds = (v, s) => JSON.stringify(v).includes(s);
+/* Whether an answer holds `s` anywhere but its `project`, whose id record-core mints with four digits drawn per run (its
+   counter is hidden): a short figure such as "900" would otherwise be found there by chance (K1055). Nothing withheld
+   can reach the project id, which is the determination's, so every other field, text and figure is still searched. */
+const PER_RUN = "the project's id, minted per run";
+const holds = (v, s) => JSON.stringify(v, (k, x) => (k === "project" && typeof x === "string" ? PER_RUN : x)).includes(s);
 
 function r15() {
   const w = setup();
@@ -194,6 +198,11 @@ test("R15: an undetermined computation keeps its why without a withheld operand'
   assert.equal(alice.undetermined.why, 'the figure is not in the record: operand 1\'s passage does not hold the figure "900"');
   assert.deepEqual([pat.state, pat.undetermined.code, pat.undetermined.why], ["undetermined", "not_in_record", "the figure is not in the record"]);
   assert.deepEqual([pat.computation.operands.length, pat.out_of_view, holds(pat, "900"), holds(pat, h)], [1, true, false, false]);
+  /* Negative controls: the withheld figure is found wherever the answer carries it, as alice's why does, or as an
+     operand would; and a project id whose drawn digits hold it finds nothing (the chance collision, K1055). */
+  assert.equal(holds(alice, "900"), true);
+  assert.equal(holds({ ...pat, computation: { ...pat.computation, operands: [...pat.computation.operands, { figure: "900" }] } }, "900"), true);
+  assert.equal(holds({ ...pat, project: "PROJ-2026-9001-budget-watch" }, "900"), false);
   assert.deepEqual(alice, w.today(lacking));
   assert.equal("out_of_view" in alice, false);
   /* A seen operand lacks its figure behind a withheld one: renumbered to its place among the operands answered. */
