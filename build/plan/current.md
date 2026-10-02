@@ -20,7 +20,7 @@ No other module is marked `legacy`; no module names a `from`, so no extraction i
 3. **N484** (K1024): state the export's read contracts in the owners' Provides: record-core (`bundles` title and sha columns, beyond R37), provenance (`register.bytes`, beyond R48), and the owners of `files`/`history`/`manifest` (owners to be named by BOB); corpus-export's Uses cites them.
 4. **N492** (K1032): acquisition's requirement states the archive fallback's call of capture-sources R37's Memento services.
 5. **N485's ops** (K1025, K1035, K1051; `op-declarations.md`:41): op-declarations and control-plane requirements name `escalationreasondraft`, `whatchangedpropose`, `whatchangeddrafts` (declared and routed); affordances' NON_ACTS by R7's rule (?: whether affordances needs a job or R7 already covers them).
-6. **N493** (DEC-110 (3), K1038): BOB picks the new internal name for the "noticed" disposition and lists every module that reads it (queue, queue-producers at least); the requirements re-worded.
+6. **N493** (DEC-110 (3), K1038; done at the opening, K1114: no code or requirement reads the word; its rename handed to the UX stream): BOB picks the new internal name for the "noticed" disposition and lists every module that reads it (queue, queue-producers at least); the requirements re-worded.
 7. **Wording** (BOB's, no change of meaning): acquisition's Status still says "Carried not yet met: R7 …", struck at T22's opening (`t22-check.md` A1); admission's Status "R13: its last sentence not yet met (D-586)" has no inline mark (?: re-check whether met or a lost mark).
 8. **CONDITION kinds** (by BOB #93, K1099): observation-log's condition vocabulary gains the five `sweep-*` kinds (`draft-monitoring-r29.md`, queue-producers R26) and, with fold 1b, the three `notice-*` kinds (`draft-network-notices.md`, queue-producers R27); queue R1 (`classOfKind`) and R5 (`QUEUE_CONDITION_KINDS`) give each a class, so R26/R27's items have one.
 
@@ -102,8 +102,8 @@ T22's rules hold (merge early; one file, one editor; marks struck at the merge; 
 - **op-declarations** · N485: specs for `escalationreasondraft`, `whatchangedpropose`, `whatchangeddrafts` (`op-declarations.md`:41); `sweeps` (member session, read; `draft-monitoring-r29.md`:159). *`noticeprepare`, `noticepost`, `notices`.*
 - **control-plane** · routes the same ops (fold 5) and `sweeps` (?: if it routes monitoring's ops); *the notice ops and public reads R20, R21, R10*. (?: CONTROL-PLANE's T22 question on capture's `pulled` arm without `within`, K1051, may add a capture entry.)
 - **tasks** · N497.
-- **queue-producers** · N483: `EXPORT_LOG_LIMIT_DEFAULT`, `exportLog` from corpus-export. N493: the internal "noticed" renamed. R26 sweep CONDITIONs. *R27 notice CONDITIONs.*
-- **queue** · N493: the internal "noticed" renamed (DEC-110 (3)). Fold 8: R1/R5 over the `sweep-*` kinds; *the `notice-*` kinds*.
+- **queue-producers** · N483: `EXPORT_LOG_LIMIT_DEFAULT`, `exportLog` from corpus-export. R26 sweep CONDITIONs. *R27 notice CONDITIONs.*
+- **queue** · Fold 8: R1/R5 over the `sweep-*` kinds; *the `notice-*` kinds*.
 - **plane** · N483: the op map spreads `corpusExportOps` (K1024). *Composes `network-notices`.* N482: R13's test, parsing `wrangler.jsonc` and importing `SUBRESOURCE_CAP` (fold 2, K1113); an unrelated `stats.test.mjs` already names "R13", so the coverage check does not flag it: the START says so.
 
 **Generated artifacts** · the plane bundle after each layer whose plane modules change; `agent-worker` bundle after skills (L6).
