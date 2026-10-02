@@ -1838,14 +1838,30 @@ export class Monitoring {
     /* R28 (K1096): the due named requests, after the batch's addresses, within the same budget of 50 fetches; each
        locator a request tries spends one. A request claimed by an unfinished tick is skipped as an address is. */
     const g = this.gathering(nowMs);
-    const gathered = { due: g.due.length, captured: [], failed: [], skipped: [] };
+    /* K1102: a bundle whose daemon block says enabled: false runs none of its requests, each stated as skipped with the
+       reason; a bundle's tick_budget bounds the locators tried for it in this tick, within the 50. */
+    const gathered = { due: g.due.length, captured: [], failed: [],
+                       skipped: g.disabled.map((q) => ({ bundle: q.bundle, request: q.id, reason: q.reason })) };
+    let claimSkipped = 0;
+    const spentBy = new Map();
     let budget = MONITOR_CADENCE_BATCH - batch.length;
     for (const q of g.due) {
       if (budget <= 0) break;
+      const left = q.tick_budget === undefined ? budget : Math.min(budget, q.tick_budget - (spentBy.get(q.bundle) || 0));
+      if (left <= 0) {
+        gathered.skipped.push({ bundle: q.bundle, request: q.id,
+          reason: `its bundle's daemon tick_budget (${q.tick_budget}) is spent in this tick` });
+        continue;
+      }
       const subject = `${q.bundle}#${q.id}`;
-      if (!this.#claimFire("monitor-cadence", subject, epoch)) { gathered.skipped.push({ bundle: q.bundle, request: q.id }); continue; }
-      const r = await this.#gather(q, budget, nowMs);
+      if (!this.#claimFire("monitor-cadence", subject, epoch)) {
+        claimSkipped++;
+        gathered.skipped.push({ bundle: q.bundle, request: q.id, reason: "claimed by a tick that did not finish" });
+        continue;
+      }
+      const r = await this.#gather(q, left, nowMs);
       budget -= r.spent;
+      spentBy.set(q.bundle, (spentBy.get(q.bundle) || 0) + r.spent);
       if (r.entry) (r.entry.outcome === "captured" || r.entry.outcome === "held" ? gathered.captured : gathered.failed).push(r.entry);
     }
     /* D-518: the same correction as the archive tick's, made for the same reason and
@@ -1855,7 +1871,7 @@ export class Monitoring {
        monitor-tick promotion record and a second monitoring.last_checked for one
        check. The epoch is released by the spent-epoch rule at the shortest
        cadence instead. */
-    if (!failed.length && !skipped.length && !gathered.skipped.length) this.#closeTickEpoch("monitor-cadence", epoch);
+    if (!failed.length && !skipped.length && !claimSkipped) this.#closeTickEpoch("monitor-cadence", epoch);
     return { configured: true, paused: pause, at, epoch, monitored: plan.monitored, addresses: plan.addresses,
              candidates: plan.due.length, next: plan.next, ticked, skipped, failed, unscheduled: plan.unscheduled, gathered };
     } finally { this.#tickRunning.delete("monitor-cadence"); }
@@ -1869,7 +1885,10 @@ export class Monitoring {
    *  leaves unfiltered: the daemon fetches what store state authorizes, R36), each with when it is due by R14's interval
    *  from its last attempt: never attempted, due now; no cadence, once; `none`, never (stated in `unscheduled`).
    *  `due` is never-attempted first, then longest-overdue, then by bundle and id; `next` the earliest instant a request
-   *  not yet due falls due; `open` how many open requests were read. Writes nothing. */
+   *  not yet due falls due; `open` how many open requests were read. The bundle's own `daemon` block governs its
+   *  requests (K1102): `enabled: false` runs none of them (each in `disabled`, never due); `tick_budget`, a
+   *  non-negative integer, is carried on each request as `tick_budget`, the locators the tick may try for that bundle.
+   *  Writes nothing. */
   gathering(now = null) {
     const nowMs = Number.isFinite(Number(now)) && now !== null && now !== "" ? Number(now) : this.now();
     const files = this.#rows(`SELECT f.bundle_id AS bundle_id, f.content AS content FROM files f
@@ -1878,12 +1897,15 @@ export class Monitoring {
     for (const r of this.#rows(`SELECT bundle_id, request_id, MAX(at) AS at FROM monitor_gathering_run
                                  WHERE outcome <> 'governed' GROUP BY bundle_id, request_id`))
       last.set(`${r.bundle_id}#${r.request_id}`, r.at);
-    const due = [], unscheduled = [];
+    const due = [], unscheduled = [], disabled = [];
     let next = null, open = 0;
     for (const f of files) {
       let g = null;
       try { g = typeof f.content === "string" ? JSON.parse(f.content) : null; } catch { g = null; }
       if (!g || typeof g !== "object") continue;
+      const daemon = g.daemon && typeof g.daemon === "object" && !Array.isArray(g.daemon) ? g.daemon : null;
+      const off = !!daemon && daemon.enabled === false;
+      const tickBudget = daemon && Number.isInteger(daemon.tick_budget) && daemon.tick_budget >= 0 ? daemon.tick_budget : null;
       for (const r of Array.isArray(g.requests) ? g.requests : []) {
         if (!r || typeof r !== "object" || r.status !== "open" || typeof r.id !== "string" || !r.id) continue;
         const locators = (Array.isArray(r.locators) ? r.locators : []).filter((l) => typeof l === "string" && isPublicHttpsLocator(l));
@@ -1891,7 +1913,9 @@ export class Monitoring {
         open++;
         const at = last.get(`${f.bundle_id}#${r.id}`) ?? null;
         const q = { bundle: f.bundle_id, id: r.id, locators, cadence: r.cadence ?? null, last_attempt: at,
-                    target: r.target && typeof r.target.text === "string" ? r.target.text : null };
+                    target: r.target && typeof r.target.text === "string" ? r.target.text : null,
+                    ...(tickBudget !== null ? { tick_budget: tickBudget } : {}) };
+        if (off) { disabled.push({ ...q, reason: "its bundle's daemon block says enabled: false, so the daemon runs none of its requests" }); continue; }
         if (r.cadence === "none") { unscheduled.push({ ...q, reason: "its cadence is none: the daemon does not run it" }); continue; }
         if (at === null) { due.push({ ...q, due_at: 0 }); continue; }
         const iv = r.cadence == null ? null : monitorIntervalMs(r.cadence);
@@ -1906,7 +1930,7 @@ export class Monitoring {
     }
     due.sort((a, b) => a.due_at - b.due_at || (a.bundle < b.bundle ? -1 : a.bundle > b.bundle ? 1 : 0)
                        || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
-    return { due, next, unscheduled, open };
+    return { due, next, unscheduled, disabled, open };
   }
 
   /** R28: one attempt at a due request: its locators in order through `acquire`'s capture-request arm as the daemon,
