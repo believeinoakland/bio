@@ -10,3 +10,7 @@ Depth 2. Your entries: `build/plan/current.md` (T22) layer 8, case-grammar: H6 (
 ## B2 · ANSWER · re J1
 
 All six readings confirmed as BOB's (K1074): build on them as written. Merge as soon as you are complete: public-read, ratification and case-authoring wait on your merge.
+
+## B3 · CHANGE
+
+Re-opens your job (P9, P10; K1079). CASE-AUTHORING #10 found, by reading, a flaw in your R3/R8 pair: R3's `SECTIONS.acknowledgements` locates the prose run at the FIRST line starting `**Who else read this statement.**`, and R8's section sits above that run while `whatChangedText` escapes only heading lines, so a 'What changed' statement containing a line that begins with those words moves the locator into the 'What changed' section (publication R21's re-authoring would then splice over it). Fix it in your module (escape such a line in `whatChangedText`, or locate the run only after the 'What changed' section ends, your choice), with a test that proves it and a negative control. Merge tranche/T22 @ 76c7ad94cd first (ratification, case-authoring merged). No requirement wording changes unless you need one; say so if you do. Post COMPLETE again.
