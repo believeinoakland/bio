@@ -42,7 +42,7 @@
  *                  this module's own SQL, the sources behind a capture.
  *   reevaluation   `registerCaseParts` (its R26), at creation only (R41, R43).
  *   corpusExport   created at creation with this module's clock, so `export_log` exists and is declared at every boot
- *                  until the plane's op map spreads corpus-export's ops (its Suggestions); nothing here calls it (N483).
+ *                  (its R4); its ops are spread by the plane's op map (`corpusExportOps`, N483), and nothing here calls it.
  *   now            the clock for the instants it writes, an ISO string (default: the wall clock).
  *
  * READ CONTRACTS it joins in its own SQL: record-core's `bundles` (R21's type column, the standing test) and
@@ -90,9 +90,6 @@ export { PUBLICATION_SCHEMA, PUBLICATION_TABLES, PUBLICATION_EXEMPT, caseDocumen
    and `truncated` beside its answer rather than scanning whatever is there. 500 is deliberately generous: the common
    ask is one case or one finding, where the real answer is a handful of rows. */
 export const CASE_FLAGS_LIMIT = 500;
-/* The export log's default page is `corpus-export`'s (its R2; K1024), re-exported unchanged for the one importer that
-   still reads it here (queue-producers; its removal is N501, K1119). */
-export { EXPORT_LOG_LIMIT_DEFAULT } from "../corpus-export/index.mjs";
 /** R17 (DEC-88, K1030): the longest reason an attribution choice keeps, in code points; a longer one is refused. */
 export const ATTRIBUTION_REASON_MAX = 2000;
 /** R37: the ratified editions one `publishedEditionsOf` read answers. */
