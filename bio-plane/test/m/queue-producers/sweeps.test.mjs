@@ -1,5 +1,5 @@
 /* The sweep and working-on-notice signals (R26, R27; K1036 (8), DEC-111, K1031) at feedItems' interface (R8), and the
-   export log read from corpus-export (R2's export-performed; N483, K1122). `monitoring.sweepConditions` (its R63) and
+   export log read from corpus-export (R2's export-performed; N483, K1122). `link-sweep.sweepConditions` (its R11; N506) and
    `network-notices.noticesOf` (its R22) are fakes answering in the shapes their requirements publish, filled per test;
    membership and record-core are real, so who is a project's member or owner (membership R65, R74) and who may see a
    sweep's bundle (its R43) are their own. */
@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 import { world, byId, NOW, iso } from "./world.mjs";
 import { corpusExportOf, EXPORT_LOG_LIMIT_DEFAULT } from "../../../src/corpus-export/index.mjs";
 import { QueueProducers } from "../../../src/queue-producers/index.mjs";
+import { linkSweepOf, SWEEP_CONDITION_KINDS } from "../../../src/link-sweep/index.mjs";
 
 const DAY = 86400000;
 const ofKind = (r, re) => r.items.filter((i) => re.test(i.kind));
@@ -18,7 +19,7 @@ const SWEEP_KINDS = ["sweep-held-backlog", "sweep-yield-anomaly", "sweep-seed-un
    GATH-0 in no project; carl a member of nothing. */
 function sweepWorld(conditions) {
   const asked = [];
-  const w = world({ monitoring: { sweepConditions: (a) => { asked.push(a); return { ok: true, conditions: conditions() }; } } });
+  const w = world({ linkSweep: { sweepConditions: (a) => { asked.push(a); return { ok: true, conditions: conditions() }; } } });
   for (const m of ["alice", "bob", "olga", "carl", "hana"]) w.member(m);
   w.bundle("PRJ-1", "project"); w.bundle("PRJ-H", "project");
   w.bundle("GATH-1", "information", { title: "Council agendas" }); w.bundle("GATH-H"); w.bundle("GATH-0");
@@ -40,7 +41,7 @@ test("R26: one CONDITION for each condition sweepConditions answers the viewer, 
   let conds = allFive("GATH-1#agendas");
   const { w, asked } = sweepWorld(() => conds);
   const r = w.read("alice");
-  assert.deepEqual(asked.at(-1), { viewer: "member:alice", now: NOW }, "the viewer and the read's instant are monitoring's to read by");
+  assert.deepEqual(asked.at(-1), { viewer: "member:alice", now: NOW }, "the viewer and the read's instant are link-sweep's to read by");
   assert.deepEqual(ids(r, /^sweep-/), SWEEP_KINDS.map((k) => `CONDITION::${k}::GATH-1#agendas`).sort(), "each key as stated");
   const m = byId(r);
   for (const c of conds) {
@@ -50,7 +51,7 @@ test("R26: one CONDITION for each condition sweepConditions answers the viewer, 
       "its subject the sweep's bundle");
     assert.deepEqual(it.age, { state: "determined", since: c.since, ms: NOW - Date.parse(c.since) }, "its age runs from since");
     assert.deepEqual(it.basis.condition, c.detail, "its detail comes from the condition, whole");
-    assert.equal(it.basis.source, "monitoring.sweepConditions");
+    assert.equal(it.basis.source, "link-sweep.sweepConditions");
     assert.equal(typeof it.summary, "string"); assert.equal(typeof it.detail, "string");
     assert.deepEqual(it.case.ancestors.map((a) => [a.id, a.depth]), [["PRJ-1", 0]], "homed under the sweep's project");
     assert.deepEqual(it.options, [{ id: "opt", on: ["GATH-1"] }], "R12: the acts on the sweep's record, which a member's change answers");
@@ -71,15 +72,15 @@ test("R26: one CONDITION for each condition sweepConditions answers the viewer, 
     assert.equal(now.length, 4);
   }
   conds = [];
-  assert.deepEqual(ids(w.read("alice"), /^sweep-/), [], "nothing stands once monitoring answers nothing");
-  /* a since monitoring could not date is undetermined, never this read's clock */
+  assert.deepEqual(ids(w.read("alice"), /^sweep-/), [], "nothing stands once link-sweep answers nothing");
+  /* a since link-sweep could not date is undetermined, never this read's clock */
   conds = [{ sweep: "GATH-1#agendas", kind: "sweep-held-backlog", since: null, detail: { backlog: 1, limit: 1 } }];
   assert.equal(byId(w.read("alice"))["CONDITION::sweep-held-backlog::GATH-1#agendas"].age.state, "undetermined");
 });
 
 test("R26: it goes to the members of the sweep's project who may see its bundle, and to nobody else", () => {
   const conds = [...allFive("GATH-1#agendas"), ...allFive("GATH-H#hidden"), ...allFive("GATH-0#orphan")];
-  /* monitoring gates by sight (its R63); a fake that answers every sweep to every viewer still yields only the right items */
+  /* link-sweep gates by sight (its R11); a fake that answers every sweep to every viewer still yields only the right items */
   const { w } = sweepWorld(() => conds);
   const one = SWEEP_KINDS.map((k) => `CONDITION::${k}::GATH-1#agendas`).sort();
   assert.deepEqual(ids(w.read("alice"), /^sweep-/), one, "a joined member");
@@ -94,12 +95,38 @@ test("R26: it goes to the members of the sweep's project who may see its bundle,
   /* a member who joins the project but may not see the bundle: alice loses sight of GATH-1 when it moves to PRJ-H */
   w.run(`UPDATE bundles SET project='PRJ-H' WHERE bundle_id='GATH-1'`);
   assert.deepEqual(ids(w.read("alice"), /^sweep-/), [], "a member who may not see the sweep's bundle is given nothing");
-  /* a kind monitoring does not publish, or a malformed name, mints nothing */
+  /* a kind link-sweep does not publish, or a malformed name, mints nothing */
   conds.length = 0;
   conds.push({ sweep: "GATH-H#hidden", kind: "sweep-other", since: iso(NOW), detail: {} },
              { sweep: "GATH-H", kind: "sweep-silent", since: iso(NOW), detail: {} },
              { sweep: "GATH-H#", kind: "sweep-silent", since: iso(NOW), detail: {} });
   assert.deepEqual(ids(w.read("hana"), /^sweep-/), []);
+});
+
+test("R26 (N506): the sweep signals are read through link-sweep.sweepConditions (its R11), never monitoring's, and the five kinds are link-sweep's own", () => {
+  const conds = allFive("GATH-1#agendas");
+  const { w, asked } = sweepWorld(() => conds);
+  /* negative control: a monitoring that still answered sweep signals is never asked */
+  w.fakes.monitoring.sweepConditions = () => { throw new Error("monitoring.sweepConditions was read"); };
+  const r = w.read("alice");
+  assert.equal(asked.length, 1, "link-sweep is asked once per read");
+  assert.deepEqual(ids(r, /^sweep-/), SWEEP_KINDS.map((k) => `CONDITION::${k}::GATH-1#agendas`).sort());
+  assert.deepEqual([...QueueProducers.SWEEP_CONDITION_KINDS], [...SWEEP_CONDITION_KINDS], "the kinds link-sweep exports");
+  assert.deepEqual([...SWEEP_CONDITION_KINDS].sort(), [...SWEEP_KINDS].sort());
+});
+
+test("R26 (N506): handed no link-sweep dep, the producers read the host's one link-sweep instance (linkSweepOf)", () => {
+  const { w } = sweepWorld(() => []);
+  const { linkSweep, ...rest } = w.fakes;
+  void linkSweep;
+  const p = new QueueProducers({ host: w.host, storage: w.host.storage,
+    deps: { record: w.record, membership: w.membership, credentials: w.credentials, ...rest } });
+  const ls = linkSweepOf(w.host, { record: w.record, membership: w.membership });
+  let asked = null;
+  ls.sweepConditions = (a) => { asked = a; return { ok: true, conditions: allFive("GATH-1#agendas").slice(0, 1) }; };
+  const r = p.feedItems({ member: "alice", viewer: "member:alice", now: NOW });
+  assert.deepEqual(asked, { viewer: "member:alice", now: NOW });
+  assert.deepEqual(ids(r, /^sweep-/), ["CONDITION::sweep-held-backlog::GATH-1#agendas"]);
 });
 
 /* PRJ-1 owned by olga and ada, alice a member and not an owner; each notice answered as network-notices R22 answers it. */
@@ -193,7 +220,7 @@ test("R27: notice-project-closed, for the owners when the project closed while t
 
 test("R8 (R26, R27): feedItems answers the sweep and notice signals homed through homesOf and optioned through optionsOf, as every other condition", () => {
   const w = world({
-    monitoring: { sweepConditions: () => ({ ok: true, conditions: allFive("GATH-1#agendas") }) },
+    linkSweep: { sweepConditions: () => ({ ok: true, conditions: allFive("GATH-1#agendas") }) },
     networkNotices: { noticesOf: ({ project }) => ({ ok: true, project, sealed_weeks: [], methodVersion: 1, notices: project !== "PRJ-1" ? [] : [
       notice("WO-1", "open", { missed_monthlies: [{ month: "2026-08", at: "2026-08-01T00:00:00Z" }], lapse_date: "2026-09-05" }),
       notice("WO-3", "closed", { attestations: [{ kind: "closed", as_of: "2026-08-20", published_at: "2026-08-20T00:00:00Z" }] })] }) } });
