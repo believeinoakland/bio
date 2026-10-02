@@ -18,3 +18,17 @@ Readings I am building on (docket R1–R22); none changes a provided service's s
 10. **Ids.** A record entry id is an opaque id `DKT-YYYY-NNNN` minted in the filing's transaction. A public entry's id is `<case>#<seq>`, which `reevaluation` R30 already defaults to.
 11. **`contested` (R13)** leaves out a contesting record entry that has been taken back.
 12. **R14's bytes** are answered base64 under `captures: {<sha256>: <base64>}`, read from the evidence store through `provenance`.
+
+## J2 · REPORT
+
+The shapes of the provided services, for public-read and network-notices (code on `job/T27/docket` within the hour; COMPLETE follows). Reach docket as `docketOf(host, deps)` from `bio-plane/src/docket/index.mjs`.
+
+- `withdrawalOf({case, edition})` is synchronous and viewer-free. It answers `{seq, entry, date, reason, digest}` (`entry` is `<case>#<seq>`), or null.
+- `docketPublic({case})` is **async**. It answers null for a case with no ratified edition. Otherwise it answers `{ok: true, case, group, entries, captures, last_entry, feed}`, with `captures_unread` added when bytes could not be read.
+  - Each item of `entries` is `{seq, entry, digest, json, fields, signature, published_at, taken_back}`. `json` is the exact canonical text that was signed, `fields` is that text parsed, and `taken_back` is `{seq, date}` or null.
+  - `captures` is `{<sha256>: <base64 or null>}`.
+  - `last_entry` is the latest entry's `date`, or null.
+  - `feed` is the feed's relative address.
+- `docketFeed({case})` is **async**. It answers the Atom XML as a string, or null. The media type is exported as `ATOM_MEDIA_TYPE` (`application/atom+xml`).
+- `docketSigners()` is synchronous. It answers `[{keyB64, first_signed}]`, in first-signed order.
+- `docketOps(m, url, body)` is the member ops map for L11. Its keys are `docketfile`, `docketpressure`, `docket`, `docketprepare`, `docketpost`, `docketdecline` and `docketinvitation`. `DOCKET_VOCABULARIES` is exported for affordances R34.
