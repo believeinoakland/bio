@@ -28,3 +28,7 @@ Size (session_01U9Fumb6uphtpXWNehTqT13): test runs 3, module lines 1797
 ## J1 · REPORT
 
 For actions (L9, N518): the three new rows' wheres name regions actions writes: C-117.23 HOLD_RELEASE_IS_ITS_OWN_ACT at `src/actions/index.mjs actionHold > is-hold-release-act`; C-117.24 HOLD_PROJECTS_REFUSED at `src/actions/index.mjs #holdProjects > is-hold-projects` (one private helper both actionHold and projectHolds ask, the C-73.2 #lawEntries precedent); C-117.25 HOLD_ALREADY_RELEASED at `src/actions/index.mjs actionHoldRelease > is-hold-released`. Also: C-117.20 MACHINE_CANNOT_SET_HOLD and C-117.21 HOLD_REFUSED keep where `actionHold > is-hold`, but R56's actionHoldRelease raises both too; actions should mint them there through that one region (a shared helper), or BOB re-points those wheres here.
+
+## J2 · COMPLETE
+
+N518 applied: R9 holds C-117.23-.25, merged-first ready on job/T27/action-grammar. Module tests 25/25, actions 66/66, format/architecture/coverage/ownership 0 failures. Awaiting stamp (red 2): C-117.23, C-117.24, C-117.25. Record has the details; REPORT J1 names the regions actions must write.
