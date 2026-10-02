@@ -1,6 +1,6 @@
 # op-declarations (T22)
 
-**Status** · session_01Vis1UcRpppUp59WfiJjKP4 · depth 2 · WAITING ON BOB (J2) · handled B2
+**Status** · session_01Vis1UcRpppUp59WfiJjKP4 · depth 2 · WAITING ON BOB (J2) · handled B3
 
 ## J1 · QUESTION
 
