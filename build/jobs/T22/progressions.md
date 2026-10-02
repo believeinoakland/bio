@@ -1,6 +1,6 @@
 # progressions (T22)
 
-**Status** · session_019cGtav9K1yD7gcZz8bmw36 · depth 2 · WORKING · handled B1
+**Status** · session_019cGtav9K1yD7gcZz8bmw36 · depth 2 · COMPLETE · handled B1
 
 ## Completion
 
