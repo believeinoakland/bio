@@ -1,6 +1,6 @@
 /* capture-requests: a run's request naming a sweep (R45, the AI's "relevant nearby" arm; Intake Doctrine §4), driven at
-   `captureRequest`, `registerSweepScope` and `drain`. `monitoring` registers the real scope check in its own job
-   (K1099); here a stand-in answers as that check does, from a table of sweeps the test writes, and records each ask. */
+   `captureRequest`, `registerSweepScope` and `drain`. `link-sweep` registers the real scope check in its own job
+   (its R12; K1099); here a stand-in answers as that check does, from a table of sweeps the test writes, and records each ask. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
@@ -10,7 +10,7 @@ const ROW = CAPTURE_REQUEST_CHECKS.CAPTURE_SWEEP_OUT_OF_SCOPE;
 const DEEMING = "run R-1 under member:ann/tok1, paid by instance";
 
 /** The stand-in scope check: a sweep is `{ratified, held, sources}`; an address is in scope when it equals a source or
- *  continues one at a `/` (monitoring R53's rule, in its plainest form). */
+ *  continues one at a `/` (link-sweep R1's rule, in its plainest form). */
 function scopeCheck(sweeps) {
   const asked = [];
   const inScope = (a, p) => a === p || (a.startsWith(p) && (p.endsWith("/") || a[p.length] === "/"));
@@ -36,7 +36,7 @@ const SWEEPS = {
 function sweepWorld({ register = true, sweeps = SWEEPS } = {}) {
   const w = world().scene();
   const check = scopeCheck(sweeps);
-  if (register) assert.deepEqual(w.cr.registerSweepScope("monitoring", check.fn), { ok: true, module: "monitoring" });
+  if (register) assert.deepEqual(w.cr.registerSweepScope("link-sweep", check.fn), { ok: true, module: "link-sweep" });
   return { w, check };
 }
 const daemonBundles = (w) => w.row(`SELECT count(*) AS n FROM manifest WHERE author='token:daemon'`).n;
@@ -146,7 +146,7 @@ test("R45 a check that throws, rejects, or admits without a list of in-scope pre
                    () => ({ ok: true, scope: "https://a.example.org/" }), () => null, () => "yes", () => ({ ok: "true", scope: ["https://a.example.org/"] })];
   for (const [i, fn] of answers.entries()) {
     const w = world().scene();
-    w.cr.registerSweepScope("monitoring", fn);
+    w.cr.registerSweepScope("link-sweep", fn);
     const id = w.ask({ address: "https://a.example.org/doc", sweep: "INQ-1#s" }).request;
     const d = await w.cr.drain({});
     refusedOutOfScope(w, d, id, `answer ${i}`);
@@ -154,7 +154,7 @@ test("R45 a check that throws, rejects, or admits without a list of in-scope pre
     assert.equal(w.capture.calls.length, 0, `answer ${i}`);
   }
   const w = world().scene();
-  w.cr.registerSweepScope("monitoring", async () => ({ ok: true, scope: ["https://a.example.org/"] }));
+  w.cr.registerSweepScope("link-sweep", async () => ({ ok: true, scope: ["https://a.example.org/"] }));
   const id = w.ask({ address: "https://a.example.org/doc", sweep: "INQ-1#s" }).request;
   await w.cr.drain({});
   assert.equal(w.req(id).state, "captured");
@@ -163,15 +163,15 @@ test("R45 a check that throws, rejects, or admits without a list of in-scope pre
 
 test("R45 the scope check is registered once: a second registration, by any module, is refused LISTENER_DECLARED naming the holder, a malformed one LISTENER_MALFORMED, and the first stands", async () => {
   const w = world().scene();
-  for (const [m, fn] of [["", () => {}], [null, () => {}], ["monitoring", null], ["monitoring", "fn"]]) {
+  for (const [m, fn] of [["", () => {}], [null, () => {}], ["link-sweep", null], ["link-sweep", "fn"]]) {
     const r = w.cr.registerSweepScope(m, fn);
     assert.deepEqual([r.ok, r.reason, r.code, r.check], [false, "LISTENER_MALFORMED", "LISTENER_MALFORMED", "C-102.11"]);
   }
   const first = scopeCheck(SWEEPS);
-  assert.deepEqual(w.cr.registerSweepScope("monitoring", first.fn), { ok: true, module: "monitoring" });
-  for (const m of ["monitoring", "other"]) {
+  assert.deepEqual(w.cr.registerSweepScope("link-sweep", first.fn), { ok: true, module: "link-sweep" });
+  for (const m of ["link-sweep", "other"]) {
     const r = w.cr.registerSweepScope(m, () => ({ ok: true, scope: ["https://elsewhere.example.org/"] }));
-    assert.deepEqual([r.ok, r.reason, r.code, r.check, r.module], [false, "LISTENER_DECLARED", "LISTENER_DECLARED", "C-102.12", "monitoring"], m);
+    assert.deepEqual([r.ok, r.reason, r.code, r.check, r.module], [false, "LISTENER_DECLARED", "LISTENER_DECLARED", "C-102.12", "link-sweep"], m);
   }
   const id = w.ask({ address: "https://elsewhere.example.org/x", sweep: "INQ-1#agendas" }).request;
   await w.cr.drain({});

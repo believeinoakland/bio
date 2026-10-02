@@ -134,7 +134,7 @@ CREATE TABLE IF NOT EXISTS capture_requests (
   -- UNDER, as its full name "<bundle>#<id>", or NULL for an ordinary request.
   -- NULL is the honest value on every row written before it: no door read a
   -- sweep then, so none was asked. The drain files a request naming one under
-  -- that sweep only when monitoring's scope check admits it, and refuses it
+  -- that sweep only when link-sweep's scope check admits it, and refuses it
   -- C-28.19 otherwise; it is never quietly filed as an ordinary request.
   sweep             TEXT
 );
