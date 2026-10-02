@@ -20,7 +20,8 @@
  * to every later caller. `deps`:
  *   publication    `caseEditionState` (its R53), `soleCase` (its R54), `caseDocMemberFrozen` (its R55), and its
  *                  storage, whose tables it reads under its R40 (default: `publicationOf(host)`).
- *   docket         `withdrawalOf` (its R12), `docketPublic` (its R14) and `docketFeed` (its R15), for R20 and R21:
+ *   docket         `withdrawalOf` (its R12), `lastEntryOf`, `docketPublic` (its R14) and `docketFeed` (its R15), for
+ *                  R20 and R21:
  *                  the docket's public answers, which this module serves and never composes (N520).
  *   storage        the Durable Object's storage (default: the host's).
  *
@@ -767,15 +768,15 @@ export class PublicRead {
     const signed = signedParts(state.document);
     const said = this.#editionStatements(signed, theCase, ed, editions);
     /* R20 (DEC-116 items 7, 8): each edition a docket withdrawal names carries its stamp; the edition is answered whole
-       as before. The docket's last date is `docket` R14's `last_entry`, null when the case has no public entry. */
+       as before. The docket's last date is `docket` R14's `last_entry`, read synchronously and without any capture's
+       bytes through its `lastEntryOf` (K1276), null when the case has no public entry. */
     const withdrawn = theCase ? new Map(editions.map((e) => [Number(e.edition), this.#withdrawnStamp(theCase, e.edition)]))
                               : new Map();
-    const docketNow = theCase ? this.docket.docketPublic({ case: theCase }) : null;
     return { ok: true, caseId: theCase, edition: ed,
              /* R20: the withdrawal stamp at the top of the answer, linked to its entry; null when no withdrawal names
                 this edition. */
              withdrawn: withdrawn.get(Number(ed)) ?? null,
-             docket_last_entry: docketNow && docketNow.last_entry != null ? docketNow.last_entry : null,
+             docket_last_entry: theCase ? (this.docket.lastEntryOf({ case: theCase }) ?? null) : null,
              /* R3 (DEC-101; Publication §5A): what changed in this edition, at the top, and the successor's statement
                 beside the pointer to it; both read from signed documents, never live. */
              what_changed: said.what_changed, successor: said.successor,

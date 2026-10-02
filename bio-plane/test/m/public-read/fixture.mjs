@@ -11,7 +11,7 @@ import { publicReadOf, publicReadOps } from "../../../src/public-read/index.mjs"
 
 export { cursor, V, SIG, NOW, KEY, sha, caseDoc, inquiryMd } from "../publication/fixture.mjs";
 
-/** A docket on its public interface (`docket` R12, R14, R15): `withdrawalOf`, `docketPublic`, `docketFeed`, over cases
+/** A docket on its public interface (`docket` R12, R14, R15): `withdrawalOf`, `lastEntryOf`, `docketPublic`, `docketFeed`, over cases
  *  a test declares (`cases`) and the public entries and withdrawals it places (`place`). A case it does not hold answers
  *  null, as an absent one; `calls` records every read, so a test can see what was asked and that nothing was written. */
 export function docketOn({ cases = [] } = {}) {
@@ -27,6 +27,12 @@ export function docketOn({ cases = [] } = {}) {
       const w = (held.get(c) || []).find((e) => e.kind === "withdrawal"
         && (e.edition === edition || (e.edition === "all" && (e.covers || []).includes(edition))));
       return w ? { seq: w.seq, entry: `${c}#${w.seq}`, date: w.date, reason: w.reason, digest: w.digest } : null;
+    },
+    /* synchronous, without any capture's bytes (`docket` R14, K1276): the latest public entry's date, or null */
+    lastEntryOf({ case: c }) {
+      calls.push(["lastEntryOf", c]);
+      const es = held.get(c) || [];
+      return es.length ? es[es.length - 1].date : null;
     },
     /* async, as `docket` answers it (B3): `{ok, case, group, entries, captures, last_entry, feed}` */
     async docketPublic({ case: c }) {

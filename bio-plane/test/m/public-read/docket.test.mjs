@@ -121,6 +121,12 @@ test("R20 `docket_last_entry` is the docket's `last_entry` (its R14), null when 
   docket.place(CASE, { seq: 2, date: D3, kind: "reaction", shelf: "reactions", edition: 2 });
   assert.equal(w.read("publishedcase", { id: CASE, edition: 1 }).docket_last_entry, D3, "the case's docket, whichever edition is read");
   assert.equal((await (await door(w, env, "publishedcase", { id: CASE })).json()).docket_last_entry, D3, "through the Worker");
+  /* the same date the docket's public read answers (its R14), read synchronously and without any capture's bytes */
+  assert.equal(w.read("publishedcase", { id: CASE }).docket_last_entry, (await docket.docketPublic({ case: CASE })).last_entry);
+  assert.equal(typeof w.pr.publishedCase({ caseId: CASE }).then, "undefined", "publishedCase stays synchronous");
+  const reads = docket.calls.length;
+  w.read("publishedcase", { id: CASE });
+  assert.equal(docket.calls.slice(reads).some(([m]) => m === "docketPublic"), false, "the case read never reads the docket's bytes");
   /* a docket that answers nothing for the case states no date */
   docket.held.delete(CASE);
   assert.equal(w.read("publishedcase", { id: CASE }).docket_last_entry, null);
@@ -242,6 +248,6 @@ test("R16 R10 the docket reads write nothing, and reach the docket only through 
   await door(w, env, "docketfeed", { case: "CASE-2099-0404" });
   assert.equal(JSON.stringify(w.snapshot()), before, "no read writes the record");
   assert.equal(JSON.stringify([...docket.held]), held, "nor the docket");
-  assert.deepEqual([...new Set(docket.calls.map(([m]) => m))].sort(), ["docketFeed", "docketPublic", "withdrawalOf"],
+  assert.deepEqual([...new Set(docket.calls.map(([m]) => m))].sort(), ["docketFeed", "docketPublic", "lastEntryOf", "withdrawalOf"],
                    "only the docket's public answers are read (its R12, R14, R15)");
 });

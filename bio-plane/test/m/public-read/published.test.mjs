@@ -296,6 +296,6 @@ test("R16 it owns no table and writes nothing: every read leaves the database by
   assert.deepEqual([...new Set(seen)].sort().filter((m) => !["caseDocMemberFrozen", "caseEditionState", "soleCase"].includes(m)), [],
                    "it reaches publication only through R53–R55");
   /* N520: and `docket` only through the services named in Uses (its R12, R14, R15) */
-  assert.deepEqual([...new Set(askedDocket)].sort(), ["docketFeed", "docketPublic", "withdrawalOf"],
-                   "it reaches docket only through withdrawalOf, docketPublic and docketFeed");
+  assert.deepEqual([...new Set(askedDocket)].sort(), ["docketFeed", "docketPublic", "lastEntryOf", "withdrawalOf"],
+                   "it reaches docket only through withdrawalOf, lastEntryOf, docketPublic and docketFeed");
 });
