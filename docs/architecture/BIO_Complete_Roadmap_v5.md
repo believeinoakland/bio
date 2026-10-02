@@ -1,6 +1,6 @@
 # Believe in Oakland
 
-**Status** · The mission of record: values, operational principles, the fifteen design requirements, the seven-category UX, the trust hierarchy and the original implementation roadmap. Self-described as "Working Document — April 2026 (v5, July 20, 2026: status annotation layer against the P2 development ladder; the plan text of v4 is unchanged)"; no approval or ratification is stated in the document — its authority is that every later document derives its constraints from it. Completeness is split by its own 2026-08-10 banner: **§§1–12 are current doctrine; §§13–15 are history**, and the v5 status annotation measures against the retired substrate. Read it first if you are new, and read the banner before the roadmap sections. **§11 GAINED DEC-92 (Bob, 2026-09-29): the five trust levels are shown as an origin mark, with more to decide later.** **§11 "Inter-group awareness" GAINED DEC-111 (Bob, 2026-10-01): project-backed, signed "working on" signals; no anonymous signals.** as of 2026-10-01.
+**Status** · The mission of record: values, operational principles, the fifteen design requirements, the seven-category UX, the trust hierarchy and the original implementation roadmap. Self-described as "Working Document — April 2026 (v5, July 20, 2026: status annotation layer against the P2 development ladder; the plan text of v4 is unchanged)"; no approval or ratification is stated in the document — its authority is that every later document derives its constraints from it. Completeness is split by its own 2026-08-10 banner: **§§1–12 are current doctrine; §§13–15 are history**, and the v5 status annotation measures against the retired substrate. Read it first if you are new, and read the banner before the roadmap sections. **§11 GAINED DEC-92 (Bob, 2026-09-29): the five trust levels are shown as an origin mark, with more to decide later.** **§11 "Inter-group awareness" GAINED DEC-111 (Bob, 2026-10-01): project-backed, signed "working on" signals; no anonymous signals.** **§11 GAINED DEC-112 (Bob, 2026-10-01): another group's case is imported read-only and confirmed by recreation before acceptance.** as of 2026-10-01.
 
 **Place in the system** · The top of the mission level (`BIO_System_Design.md` §2): the Design Requirements govern it on conflict, the Technical Architecture Decisions govern it on technology, the State Rules govern it on the data store, and the Functional Architecture extends its §9. It owns no construct; it owns the values and the stance every construct serves.
 
@@ -706,6 +706,12 @@ re-evaluation notices. A flag names the specific issue, stays inside the group, 
 standards" stays deferred until an evaluator of incoming work exists, and if it returns it is labelled machine work. When a
 group's published case relies on another group's work, the case states the acceptance and discloses any open flag on it,
 disclosed, never blocked. A public list of acceptances and flags follows when a second group asks to see it.
+
+**Ruled 2026-10-01 by Bob (DEC-112).** Another group's case enters a group's copy by importing its case file into a new,
+read-only project. The system confirms each finding by recreating it from the case file (Recreated, Recreated in part, or Did
+not recreate, each naming what is missing or differs) and shows it against the importing group's own bar. Recreating is not
+endorsing. Acceptance is offered only on findings recreated, or recreated in part with the gaps stated. Anybody can recreate a
+case without CivicOS from its complete edition and case file (`BIO_Publication_v0_1.md` §5C).
 
 ## Inter-group awareness
 

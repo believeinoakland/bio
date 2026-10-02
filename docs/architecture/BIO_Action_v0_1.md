@@ -81,6 +81,8 @@ How they connect: an inquiry opens a plan (suspected); publication and a determi
 4. **Certification by a licensed professional:** deferred until a group needs a licensed name on an output; meanwhile the attribution levels serve (Publication §3 rule 7). Agreed.
 5. **Confidential referral:** an action addressed to the oversight office, prepared as a filing or communication, sent by the member's own hand and recorded; nothing non-public leaves by a system path (DEC-31). Agreed.
 6. **Joint action with another group:** recorded and deferred (Bob, 2026-09-30). The design for when it is taken up is in §8.
+7. **The member word for what a plan addresses: "Matters"** (RULED 2026-10-01 by Bob, DEC-114). Every member-facing use reads "matter" / "Matters": the plan page's heading and add button, the options' tags, the start preview, queue items and the glossary; the approved plan-page sketch changes in that one word. "Subject" keeps its one member-facing meaning, an entity on the Subjects screen. The internal term in the requirements stays "subject".
+8. **Which Action sketches bind the redesign** (RULED 2026-10-01 by Bob, DEC-115). Besides the approved plan page, the start-and-send sketch binds the redesign's content, step order and wording (the refusal shown before anything runs, the reason asked in place, approving kept separate from recording the sending), and so do the tier 2 filing draft and tier 3 counsel packet panels of the third sheet; look and layout stay Design's. The matter page, the standards list and the queue items stay examples, designed within the requirements and the later rulings on the queue, the hold and "Matters". Where a bound sketch predates a later ruling, the ruling wins.
 
 ## 8. The reasoning behind points 2 and 6
 
