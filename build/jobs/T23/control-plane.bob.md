@@ -1,6 +1,6 @@
 # BOB to control-plane (T23)
 
-**Read** · handled J0
+**Read** · handled J5
 
 ## B1 · START
 
@@ -11,3 +11,32 @@ At posting (BOB #96, K1162; BOB #96 is session_01Scvr1oyKoCrhpU7f3cMwJx): what L
 At posting (BOB #96, K1163): monitoring is merged with its new op `sweeps` (member session, read; red 5 until your merge) and new rows C-18.16 `SWEEP_TERM_REFUSED`, C-18.17 `SWEEP_NOT_A_MEMBER`, C-18.18 `SWEEP_RATIFY_NOT_AN_OWNER` (`awaiting stamp`, red 7).
 
 At posting (BOB #96, K1164): L10 is merged and closed. scheduler runs `gathering-sweep`, `working-on-seal` and `working-on-attest` (answer keys `gatheringsweep`, `workingonseal`, `workingonattest`); its default owners include `networkNotices`. The plane bundle was regenerated at L10's close: fresh at your start. Coverage's only reds now are control-plane R45 and op-declarations R10, which your jobs meet.
+
+## B2 · CHANGE
+
+CHANGE (K1168), forwarded from OP-DECLARATIONS #5 J2 (its branch @ 0467793d12; it merges after affordances, before you). For R45: op-declarations exports four new lists, and your door stamps their ops by its own code, never from the caller (R29):
+- `WHAT_CHANGED_PROPOSAL_ACTIONS` (`whatchangedpropose`): `author` from the proposer's label (case-authoring reads it as `proposedBy`), plus `viewer`;
+- `WHAT_CHANGED_READS`, `NETWORK_NOTICES_ACTIONS`, `NETWORK_NOTICES_READS`: `viewer`;
+- `NETWORK_NOTICES_BY` (`noticeprepare`, `noticepost`): `by`.
+`NETWORK_NOTICES_PUBLIC_READS` is not routed by name in T23: the three public reads are reached as `op=publicread&name=<name>` (K1166 (2)). When op-declarations merges I send a CHANGE; then merge `tranche/T23` into your branch. Until then, build against its branch's names.
+
+## B3 · ANSWER · re J1
+
+ANSWER (K1170), re J1.
+(1) Your reading of R45 stands: the door serves `activitymethod`, `noticespublic` and `groupkeyspublic` by their own names through public-read's door read, credential-free, from `bio`. My B2's sentence that they are "not routed by name in T23" is withdrawn; K1166 (2) holds only that plane passes no `helpers.publicReads`.
+(2) R36: met; I strike its mark at your merge.
+(3) `directorysubmission`: op-declarations declares it as `notices` (member-session read, `viewer` stamped, no NEEDS row; K1166 (1)), so your door's stamping is right. I add it to R45's notice line and op-declarations R10 at the merges; no change for you beyond a test that names it if you have none.
+(4) noticeprepare's NO_SUCH_PROJECT at existence: confirmed, routed to next.md (N509).
+(5) Plane's store map spreading `networkNoticesOps` is on plane's branch (complete, merges last).
+Next: op-declarations merges after it posts COMPLETE; my CHANGE then follows. queue-producers is merged now (nothing of yours changes).
+
+## B4 · CHANGE
+
+CHANGE (K1171), re J2: op-declarations is merged into `tranche/T23` (R10's specs and the four stamping lists are now on the tranche; queue-producers is merged too). Merge `tranche/T23` into your branch, re-run `test/m/control-plane/` and the whole `test/m`, and post COMPLETE.
+On the public reads: keep what J2 built (reached only as `op=publicread&name=`, their own names to the public hook, never a store route). It meets R45 and K1166 (2); my B3 (1) is superseded by K1171. Nothing else changes for you.
+Expected reds after your merge, all accepted by name: queue's `test/m/queue/` stand-ins (red 15, 18 tests, until queue's merge), queue `catalogue.test.mjs`:34/:116 (red 13), plane `worker.test.mjs` (red 6, plane's share). `families.test.mjs`:47 and `inbox-door.test.mjs`:81 should be green.
+
+## B5 · ANSWER · re J3
+
+ANSWER (K1172), re J3. This supersedes B4's paragraph "On the public reads": KEEP J3 EXACTLY AS BUILT (both paths: by own name through `publicReadDoorRead`, keyed on `NETWORK_NOTICES_PUBLIC_READS`, and `op=publicread&name=` through the public hook; both tested). Do not remove either arm. That is the final word on the public reads in T23.
+B4's first paragraph stands: op-declarations IS merged into `tranche/T23`. Merge `tranche/T23` into your branch now, re-run `test/m/control-plane/` and the whole `test/m`, and post COMPLETE. Expected reds after your merge, all accepted: queue's stand-ins (red 15) and `catalogue.test.mjs`:34/:116 (red 13) until queue's merge, plane `worker.test.mjs` (red 6) until plane's.

@@ -25,6 +25,8 @@ import { liveToken } from "../tokens.mjs";
 import { SIGN_HTML } from "../signpage.mjs";
 import { setupPage, instanceGroupOp, groupIdentityOp } from "../setup.mjs";
 import { inbandQuartet } from "../inband.mjs";   /* REC-148: DEC-31's in-band quartet, one function */
+/* R45 (DEC-111, K1170): a registered public read is served by public-read's door read (its R18). */
+import { publicReadDoorRead } from "../public-read/door.mjs";
 /* R44 (K921): the template grant's one dead answer is filing-templates' (its R8), built from no argument. */
 import { noTemplateGrant } from "../filing-templates/index.mjs";
 import { normalizeAddress } from "../subresources.mjs";
@@ -37,7 +39,8 @@ import { OPS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, 
          RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, INTENT_ACTIONS, INTENT_READS, REEVALUATION_ACTIONS,
          STANDARDS_ACTIONS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS,
          ACTION_LAYER_READS, PLAN_PROPOSAL_ACTIONS, TEMPLATE_PROPOSAL_ACTIONS, LOCAL_FACTS_ACTIONS, TEMPLATE_DOOR_ACTIONS,
-         TEMPLATE_DOOR_READS } from "../op-declarations/index.mjs";
+         TEMPLATE_DOOR_READS, WHAT_CHANGED_PROPOSAL_ACTIONS, WHAT_CHANGED_READS, NETWORK_NOTICES_ACTIONS,
+         NETWORK_NOTICES_READS, NETWORK_NOTICES_BY, NETWORK_NOTICES_PUBLIC_READS } from "../op-declarations/index.mjs";
 
 /* REC-22: the ONE namespace the public read path answers from. An instance has
    one published record, so op=publishedcase and op=publishedbytes are pinned
@@ -845,6 +848,12 @@ export function makeFetch(hooks = {}) {
       if (TEMPLATE_GRANT_DOORS.includes(op)) return templateGrantDoor({ req, url, env, op, spec, presentedAi, stub });
       if (op === "instancegroup" || op === "groupidentity") return groupRead(op, url, env, presentedAi);
       if (op === "knockerconsent") return knockerConsent(req, stub);
+      /* R45 (DEC-111, K1170; public-read R18, R10): network-notices' public reads, each asked by its own name, served by
+         public-read's door read from the published store (`stub`, `bio`; a `store=scratch` was refused above), with no
+         credential and none of the caller's stamps; the read is handed only the parameters it declared. Asked as
+         `op=publicread&name=<name>`, the same read is the public hook's (plane's, through `publicReadDoorOp`). */
+      if (NETWORK_NOTICES_PUBLIC_READS.includes(op))
+        return publicReadDoorRead(op, url, env, stub, { json, requiredArgument, storeSilent, storeRefusal, doAnswer });
       /* The public ops whose handlers are their modules' (publication, public-read, instance-setup, capture). */
       return hooks.publicOp({ req, url, env, op, stub, invStub, fp, presentedAi });
     }
@@ -1329,6 +1338,11 @@ export function makeFetch(hooks = {}) {
            tally answer by the caller's sight (membership R43), and capture fails closed without the stamp: an unstamped
            call sees nothing. The acts' `by` is CAPTURE_MEMBER_ACTIONS' below. */
         || CAPTURE_VIEWER_ACTIONS.includes(op) || CAPTURE_READS.includes(op)
+        /* R45 (K1168; op-declarations R10): case-authoring's draft of what changed and its read (R39) and network-notices'
+           act and reads (R1, R4, R22, R23) each answer by the caller's sight, and fail closed without the stamp
+           (escalation's `escalationreasondraft` and monitoring's `sweeps` take it as `ACTION_LAYER_READS`). */
+        || WHAT_CHANGED_PROPOSAL_ACTIONS.includes(op) || WHAT_CHANGED_READS.includes(op)
+        || NETWORK_NOTICES_ACTIONS.includes(op) || NETWORK_NOTICES_READS.includes(op)
         || REC30_VIEWER_READS.includes(op)) {
       /* PL-11 / IS-5 / D-199 (4) — THE STATED VIEWER, AND IT IS THE RECORD'S
          ANSWER RATHER THAN THE CLASS'S.
@@ -1995,6 +2009,22 @@ export function makeFetch(hooks = {}) {
         viaSession ? sessIdentity
         : cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}`
         : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* R45 (case-authoring R39): WHO PROPOSED A DRAFT OF WHAT CHANGED. Any credential may propose (a machine's draft is
+       labelled machine work), so the stamp is the label, by `actionlawspropose`'s expression (a session its member, a
+       machine `class:<cls>`, an `ai` credential `class:ai/<tokenId>`); set as `proposedBy`, the stamp op-declarations
+       names, and as `author`, the key case-authoring's map reads it from. A caller's copy of either is overwritten. */
+    if (WHAT_CHANGED_PROPOSAL_ACTIONS.includes(op)) {
+      const proposer = viaSession ? sessMember
+        : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`
+        : `${MACHINE_CLASS_PREFIX}${cls}`;
+      inner.searchParams.set("proposedBy", proposer);
+      inner.searchParams.set("author", proposer);
+    }
+    /* R45 (network-notices R1, R4, R24): WHO PREPARES OR POSTS A NOTICE, the POSITIONAL identity (`member:<id>`, the
+       founder's `member:admin`), the form network-notices asks membership of; only a member's session reaches these
+       ops, and a machine stamp, were one to arrive, is refused there by name (C-127.1). */
+    if (NETWORK_NOTICES_BY.includes(op))
+      inner.searchParams.set("by", viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* PL-18 / DEC-63 — WHICH MEMBER IS ASKING, for the project-participation
        gate on the three run verbs. Bob ruled 2026-08-09 that an investigation
        can be started by ANY MEMBER OF THE PROJECT: the gate is participation in

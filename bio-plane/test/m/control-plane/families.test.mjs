@@ -155,3 +155,17 @@ test("R22, R43 (K921): the list reads local-facts' C-126 and filing-templates' C
   for (const code of ["MACHINE_CANNOT_DRAFT_TEMPLATE", "TEMPLATE_TIER3_FILE", "NO_SUCH_TEMPLATE", "NO_TEMPLATE_GRANT"])
     assert.ok(M.dec49Row(code), code);
 });
+
+test("R22, R43 (K1150): the list reads network-notices' C-127 in its module's place (after public-read, before ratification), and every one of its rows decorates with its own check and words (negative control: the list without it misses its family)", async () => {
+  const paths = M.CHECK_FAMILY_FILES.map(([p]) => p);
+  const path = "src/network-notices/checks.mjs";
+  assert.ok(paths.indexOf("src/public-read/checks.mjs") < paths.indexOf(path) && paths.indexOf(path) < paths.indexOf("src/ratification/checks.mjs"));
+  const table = (await import(`../../../${path}`)).NETWORK_NOTICE_CHECKS;
+  assert.equal(Object.keys(table).length, 16);
+  for (const [code, row] of Object.entries(table)) {
+    assert.match(row.check, /^C-127\.\d+$/, code);
+    assert.deepEqual(M.dec49Row(code), { check: row.check, translation: row.translation }, code);
+  }
+  const missing = await unreached(M.CHECK_FAMILY_FILES.filter(([p]) => p !== path));
+  assert.ok(missing.includes(`bio-plane/${path} NETWORK_NOTICE_CHECKS`), missing.join(", "));
+});

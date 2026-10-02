@@ -66,6 +66,8 @@ export const PROJECT_NAMING_READS = Object.freeze({
   /* N364: case-authoring's pre-flight names the publishing project, as its ceremony read does, and its first refusal is
      op=publish's own existence answer (its R34 runs op=publish). */
   publishpreflight: ["project"],
+  /* R45 (network-notices R22): a project's notices name the project by its own id and answer by the caller's sight. */
+  notices: ["project"],
 });
 export const PROJECT_NAMING_READS_NOT = Object.freeze({
   content: "`id` is a content row's fixed key, hash(capture, extent, chain) — never a bundle id",
@@ -114,6 +116,9 @@ export const PROJECT_NAMING_READS_NOT = Object.freeze({
   templatecomments: "`template` is a TEMPLATE id (`TPL-`) and `version` one of its versions, never a bundle id",
   factstatus: "`path` is a local FACT's path in a profile, never a bundle id",
   factsdue: "`paths` are local FACTs' paths in a profile, never a bundle id",
+  /* R45's reads naming a published case (case-authoring R39, network-notices R23), never a bundle id. */
+  whatchangeddrafts: "`case` is a CASE id, answered by the case's own fence",
+  directorysubmission: "`case` is a CASE id and `edition` one of its editions, never a bundle id",
 });
 
 /* R27 (REC-196): the answer for a read naming a discoverable project's own id, asked by a caller at EXISTENCE: C-70.1

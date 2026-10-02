@@ -12,14 +12,14 @@
  * call it seeds its TASK ledger row (R5) and declares its table to record-core's purge (R8). When the declaration holds,
  * it registers its figure with record-core's counts (R5), the task grammar with promotion and with record-core's audit
  * (R4), and, unless `deps.start` is false, its `task-drain` consumer with the scheduler and capture's task notice (R1).
- * When another module already holds the table (queue, until its job removes its copy of this code: N363), this module
- * registers none of those, so each consumer, listener, step, audit check and figure has one live registration.
+ * When another module already holds the table (as queue did until its job removed its copy of this code: N363), this
+ * module registers none of those, so each consumer, listener, step, audit check and figure has one live registration.
  * `deps` (each defaults to its module's instance on the same `ctx`, reached lazily when first asked):
  *   record, membership, promotion, provenance, capture, connections, scheduler   the providers;
  *   env       the instance bindings: `BIO_NOW_MS` (the clock) and `TASK_DRAIN_DELAY_MS` (R1);
  *   now       a clock, `() => ms`, in place of `env`'s;
  *   start     false to skip the scheduler and capture registrations (a test that drives the consumer itself).
- * The ops are `tasksOps`' entries, which the legacy store's dispatcher spreads in.
+ * The ops are `tasksOps`' entries, which control-plane's routes spread into the plane's one map.
  */
 
 import { isMachineStamp, isPublicHttpsLocator } from "../record-grammar/index.mjs";
@@ -112,10 +112,10 @@ export class Tasks {
     };
   }
 
-  /* D-109. The task queue drains on the SAME Durable Object alarm the selection
-     sweep uses: armed on enqueue, re-armed by the alarm while the queue is
-     non-empty, self-terminating when it drains — the mechanism #armSweep proved
-     for selections. DELAY is short so a burst of captures coalesces into one
+  /* D-109. The task queue drains on the scheduler's one Durable Object alarm, as
+     the selection sweep does: armed on enqueue, re-armed by the alarm while the
+     queue is non-empty, self-terminating when it drains — the mechanism the
+     selection sweep's `#armSweep` proved before the scheduler took the alarm. DELAY is short so a burst of captures coalesces into one
      drain rather than one alarm apiece. BACKSTOP is longer and used when a tick
      drained nothing: every remaining event is then a capture not yet filed in a
      bundle (taskDrain keeps those, it does not drop them), and retrying that at
@@ -664,8 +664,8 @@ const OF = new WeakMap();
  *  its TASK ledger is seeded (R5) and its table declared to record-core's purge (R8). When that declaration holds, its
  *  figure is registered with record-core's counts (R5), C-19.1 with promotion and with record-core's audit (R4), and,
  *  unless `deps.start` is false, its scheduler consumer and capture's task notice (R1; capture R44). A table another
- *  module already declared means that module still holds the inbox (queue, until N363's removal), so this module then
- *  registers nothing further: one live registration each, and this module's become live once the other's are gone. */
+ *  module already declared means that module holds the inbox (as queue did until N363's removal), so this module then
+ *  registers nothing further: one live registration each. */
 export function tasksOf(ctx, deps = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
   let t = OF.get(storage);
@@ -692,9 +692,9 @@ export function tasksOf(ctx, deps = {}) {
   return t;
 }
 
-/* The ops this module answers, as entries of the legacy store's op map (its dispatcher spreads them in; K3). `viewer`
-   is the control plane's stamp, read from the URL so a body never supplies one (R10); the actor rides in the body,
-   stamped there by the control plane. */
+/* The ops this module answers, as entries of the plane's one op map (K3), which control-plane's routes spread in
+   (`control-plane/dispatch.mjs`). `viewer` is the control plane's stamp, read from the URL so a body never supplies one
+   (R10); the actor rides in the body, stamped there by the control plane. */
 export function tasksOps(t, url, body) {
   const s = (k) => url.searchParams.get(k);
   return {

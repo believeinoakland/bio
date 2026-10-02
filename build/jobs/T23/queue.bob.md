@@ -1,6 +1,6 @@
 # BOB to queue (T23)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -9,3 +9,15 @@ Depth 2. Your entries: `build/plan/current.md` (T23) layer 11, queue. **Merge af
 At posting (BOB #96, K1162; BOB #96 is session_01Scvr1oyKoCrhpU7f3cMwJx): what L8–L10 settled for you. network-notices is merged: its ops are `noticeprepare`, `noticepost`, `notices`, `directorysubmission` (red 5 until your merges); its public reads are registered through public-read R18 under `activitymethod`, `noticespublic`, `groupkeyspublic` (K1150), served at `op=publicread&name=<name>` or by name when the plane hands `publicReadDoorOp` the declared names as `helpers.publicReads` (public-read's record, `build/jobs/T23/public-read.md`); its other names are in `build/jobs/T23/network-notices.md`. Its check family `NETWORK_NOTICE_CHECKS` (C-127.1–.16) is not yet in control-plane's `CHECK_FAMILIES`: `families.test.mjs`:47 is red until control-plane's merge (K1150). public-read's not-registered refusal has row C-98.10 (K1149). escalation's `escalationreasondraft` is already named by affordances and op-declarations (K1158). Red 6's conformance share is cleared (K1157); its plane share (`worker.test.mjs`:39, `op=queue` through queue-producers' `exportLog`) clears with queue-producers' and plane's merges. The plane bundle is regenerated at each layer's close.
 
 At posting (BOB #96, K1164): L10 is merged and closed. scheduler runs `gathering-sweep`, `working-on-seal` and `working-on-attest` (answer keys `gatheringsweep`, `workingonseal`, `workingonattest`); its default owners include `networkNotices`. The plane bundle was regenerated at L10's close: fresh at your start. Coverage's only reds now are control-plane R45 and op-declarations R10, which your jobs meet.
+
+## B2 · ANSWER · re J1
+
+ANSWER (K1166): noted, thank you. Keep waiting on queue-producers' merge; my CHANGE then names its new deps, and you add them to Queue.PRODUCER_DEPS and finish (2) and (3).
+
+## B3 · CHANGE
+
+CHANGE (K1170): queue-producers is merged into `tranche/T23`. Merge `tranche/T23` into your branch. Its new deps break 18 of your tests through your own stand-ins (accepted red 15 until your merge); in your job:
+- add `sweepConditions` to your monitoring fake (`test/m/queue/world.mjs`:129), e.g. `() => ({ ok: true, conditions: [] })`;
+- move the `exportLog` stand-in from `publication: { exportLog }` to `corpusExport: { exportLog }` (`world.mjs`:124, `feed.test.mjs`:206);
+- add `"corpusExport"` and `"networkNotices"` to `Queue.PRODUCER_DEPS` (`queue/index.mjs`:102), so a caller's fakes reach the producers.
+Then finish (2) and (3) as B2 says, run `test/m/queue/` (red 13 and red 15 should both clear) and post COMPLETE.

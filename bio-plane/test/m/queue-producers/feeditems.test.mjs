@@ -30,7 +30,7 @@ function busy(extra = {}) {
       basisVersions: () => ({ ok: true, truncated: false, versions: [{ name: "v3", state: "suggested", run: "RUN-A", at: iso(NOW) }] }),
       conclusionOf: (p) => (p === "PRJ-A" ? { version: "v1", claim: "c", by: "alice", at: iso(NOW) } : null) },
     aiRuns: { runFor: (run) => (run === "RUN-A" ? { run, context_type: "project", context_id: "PRJ-A" } : null) },
-    publication: { exportLog: () => ({ ok: true, limit: 200, truncated: false,
+    corpusExport: { exportLog: () => ({ ok: true, limit: 200, truncated: false,
       exports: [{ seq: 1, at: iso(NOW), scope: "working-corpus", bundles: 1, files: 1, note: null }] }) },
     reevaluation: { notices: () => ({ ok: true, limit: 1000, truncated: false, notices: [
       { notice: "RN-1", holder: "INQ-S", target: "INF-1", grade: "affected", raised_at: iso(NOW), state: "open" }] }) },
@@ -257,9 +257,9 @@ function everyKind() {
         { notice: "RN-1", holder: "INQ-S", target: "INF-1", grade: "affected", raised_at: iso(NOW), state: "open" }] }),
       correctedDependents: () => ({ ok: true, truncated: false, cursor: null, entries: [
         { dependent: "INQ-S", candidate: "CC-D", reason: "named wrong", since: iso(NOW) }] }) },
-    publication: { exportLog: () => ({ ok: true, limit: 200, truncated: false,
-                     exports: [{ seq: 1, at: iso(NOW), scope: "working-corpus", bundles: 1, files: 1, note: null }] }),
-                   caseTensions: () => ({ ok: true, cursor: null, cases: [{ case: "CASE-1", edition: 1, project: "PRJ-A",
+    corpusExport: { exportLog: () => ({ ok: true, limit: 200, truncated: false,
+                     exports: [{ seq: 1, at: iso(NOW), scope: "working-corpus", bundles: 1, files: 1, note: null }] }) },
+    publication: { caseTensions: () => ({ ok: true, cursor: null, cases: [{ case: "CASE-1", edition: 1, project: "PRJ-A",
                      tensions: [{ candidate: "CC-D", member: "INF-1", state: "open", depth: 1 }] }] }),
                    caseDocumentFacts: (c, e) => ({ ok: true, doc: { case_id: c, edition: e, authored_at: iso(NOW), sig_armored: null },
                      attribution: { current: [{ observation: "OBS-1", level: null }] } }) },

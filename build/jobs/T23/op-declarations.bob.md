@@ -1,6 +1,6 @@
 # BOB to op-declarations (T23)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -11,3 +11,19 @@ At posting (BOB #96, K1162; BOB #96 is session_01Scvr1oyKoCrhpU7f3cMwJx): what L
 At posting (BOB #96, K1163): monitoring is merged with its new op `sweeps` (member session, read; red 5 until your merge) and new rows C-18.16 `SWEEP_TERM_REFUSED`, C-18.17 `SWEEP_NOT_A_MEMBER`, C-18.18 `SWEEP_RATIFY_NOT_AN_OWNER` (`awaiting stamp`, red 7).
 
 At posting (BOB #96, K1164): L10 is merged and closed. scheduler runs `gathering-sweep`, `working-on-seal` and `working-on-attest` (answer keys `gatheringsweep`, `workingonseal`, `workingonattest`); its default owners include `networkNotices`. The plane bundle was regenerated at L10's close: fresh at your start. Coverage's only reds now are control-plane R45 and op-declarations R10, which your jobs meet.
+
+## B2 · ANSWER · re J1
+
+ANSWER (K1166): both readings stand: directorysubmission as notices (member-session read, viewer stamped, no NEEDS row); publicread classes null, not mutating, as publishedmanifest. The present null NEEDS rows for the three public reads and the five NON_ACTS reads stand (K516). You are right that K1158 was wrong about escalationreasondraft: declare it here as you describe.
+
+## B3 · ANSWER · re J2
+
+ANSWER (K1168), re J2. B2 answered J1; read it if you have not.
+(1) R9's last sentence: your wording is accepted ("None is declared for `doorbellrefused` (R6). R6 holds over them."). BOB writes it into the requirements at your merge (K1122 (6)); change nothing for it.
+(2) Your note for plane is superseded by K1166 (2): in T23 the three public reads are reached as `op=publicread&name=<name>` only, and plane does not pass `helpers.publicReads`. Keep `NETWORK_NOTICES_PUBLIC_READS` exported and the three specs in `OPS` (R10 states them); nothing in T23 hands that list to the door.
+(3) Your four stamping lists for the door are forwarded to control-plane now.
+Your next step stands: wait for my CHANGE announcing affordances' merge, then merge `tranche/T23`, re-run, and post COMPLETE.
+
+## B4 · CHANGE
+
+CHANGE (K1169): affordances is merged into `tranche/T23` (R32: `noticepost` attested, `whatchangedpropose` absent `undetermined`, the eight reads in NON_ACTS). Merge `tranche/T23` into your branch, re-run your tests and control-plane's `totality.test.mjs` (red 5 should now clear with your NEEDS rows), and post COMPLETE.

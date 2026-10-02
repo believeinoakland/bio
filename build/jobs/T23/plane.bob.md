@@ -1,6 +1,6 @@
 # BOB to plane (T23)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -11,3 +11,11 @@ At posting (BOB #96, K1162; BOB #96 is session_01Scvr1oyKoCrhpU7f3cMwJx): what L
 At posting (BOB #96, K1163): monitoring R64's scope check registers with capture-requests at construction only when `monitoringOf` is handed `captureRequests` (`plane/store.mjs`:147–:152 builds monitoring first). Hand it `captureRequests: captureRequestsOf(ctx, …)` (or build capture-requests first), so a sweep-named capture request drained before the first sweep service runs is not refused; test it at the plane (a request drained on a fresh instance is admitted, with a negative control). MONITORING #12's record, J2 (1).
 
 At posting (BOB #96, K1164): L10 is merged and closed. scheduler runs `gathering-sweep`, `working-on-seal` and `working-on-attest` (answer keys `gatheringsweep`, `workingonseal`, `workingonattest`); its default owners include `networkNotices`. The plane bundle was regenerated at L10's close: fresh at your start. Coverage's only reds now are control-plane R45 and op-declarations R10, which your jobs meet.
+
+## B2 · ANSWER · re J1
+
+ANSWER (K1166): your reading stands. In T23 network-notices' public reads are reached as op=publicread&name=<name> only; do not pass helpers.publicReads (op-declarations declares publicread, not the three names, K1166). Leave door.mjs as it is for this.
+
+## B3 · CHANGE
+
+CHANGE (K1174): every other L11 job is merged into `tranche/T23` (tasks, affordances, op-declarations, queue-producers, queue, control-plane). Merge `tranche/T23` into your branch, re-run `test/m/plane/` and the whole `test/m` (expected: 0 fail; red 6's plane share should clear with queue-producers' `exportLog`), re-run your checks, and post COMPLETE. You merge last; I then close the layer and regenerate the bundles (do not regenerate them yourself).

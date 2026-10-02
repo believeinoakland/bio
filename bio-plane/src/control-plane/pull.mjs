@@ -12,9 +12,6 @@
    whose capture no bundle holds (pulled through capture's own route) is promoted by this door's next pull. */
 import { createSha256 } from "../record-grammar/index.mjs";
 import { stampInstant } from "../record-core/index.mjs";
-/* R36 (capture R32, C-118.7; K1105): the resolve's reason is refused by capture's own row and bound, read, never copied. */
-import { CAPTURE_CHECKS } from "../capture/checks.mjs";
-import { REASON_MAX } from "../capture/index.mjs";
 
 /* The id's stem is record-core's `INFO-<year>-NNNN`; the slug says where the material came from. */
 export const PULL_BUNDLE_SLUG = "doorbell-knock";
@@ -90,37 +87,23 @@ function promoteOrFault(deps, doc, who) {
 
 const bundleOf = (p) => ({ bundleId: p.bundleId, bundleSha: p.bundleSha ?? null });
 
-/* R36 (capture R32; DEC-88 (2), K1105): a reason is a string with something other than white space in it, at most
-   capture's `REASON_MAX` code points, as capture R32 counts it. */
-const reasonGiven = (r) => typeof r === "string" && r.trim() !== "" && [...r].length <= REASON_MAX;
-
-/* R36 (K1105): the `pulled` resolve's refusal, capture's row and shape, minted from capture's table. */
-function resolveNoReason(knockId) {
-  const row = CAPTURE_CHECKS.RESOLVE_NO_REASON;
-  return { ok: false, reason: "RESOLVE_NO_REASON", code: "RESOLVE_NO_REASON", check: row.check, translation: row.translation,
-           knockId, status: 400, maxChars: REASON_MAX };
-}
-
 /** R36: `op=inboxpull`. `deps` is `{capture, promotion, record, provenance}` of one record; `by`, `identity` and `viewer`
  *  are the control plane's stamps. Answers capture's pull answer with `bundle: {bundleId, bundleSha}` beside it, or the
  *  first refusal, with nothing written. `resolve` marks `op=inboxresolve` at `pulled` (capture R32, DEC-88 (2)): the
- *  same pull reached as capture's resolve, which takes the member's `reason`. In capture's order and before anything is
- *  written, a knock no knock answers to is `NO_SUCH_KNOCK` (asked through `inboxGet`) and a reason absent, not a string,
- *  blank or over `REASON_MAX` characters `RESOLVE_NO_REASON` (C-118.7, 400). An admitted resolve is the pull, one act with
- *  its promotion through `pullKnock`'s `within`; recording the reason on the knock's row needs capture's resolve to take
- *  `within` (N499, T23 L3; K1105), so until then it is not recorded. A direct pull takes no reason (capture R65). */
+ *  same pull reached as capture's resolve, which takes the member's `reason`, so it is asked of capture's `inboxResolve`
+ *  (N499, K1117), whose refusals come first and in its order (`NO_SUCH_KNOCK`; a reason absent, not a string, blank or
+ *  over its bound `RESOLVE_NO_REASON`, C-118.7, 400), each before anything is written, and which records the reason on
+ *  the knock's row inside the pull, one act with the promotion through the same `within`. A direct pull is
+ *  `pullKnock`'s and takes no reason (capture R65). */
 export async function pullAndFile(deps, { knockId, by, identity, viewer, resolve = false, reason, now = Date.now } = {}) {
   const { capture, provenance } = deps;
-  if (resolve) {
-    const asked = capture.inboxGet(knockId);
-    if (!asked || asked.ok !== true) return asked;
-    if (!reasonGiven(reason)) return resolveNoReason(knockId);
-  }
   /* N386: the pull's instant, to the second, through record-core's one stamping helper (its R47). */
   const at = stampInstant("second", +now());
   const who = { knockId, by, identity, viewer, at };
   /* The pull and its promotion, one transaction (capture R65's `within`): a refusal of either writes nothing. */
-  const pulled = await capture.pullKnock({ knockId, by, at, within: (doc) => promoteOrFault(deps, doc, who) });
+  const within = (doc) => promoteOrFault(deps, doc, who);
+  const pulled = await (resolve ? capture.inboxResolve({ knockId, status: "pulled", by, reason, at, within })
+                                : capture.pullKnock({ knockId, by, at, within }));
   if (!pulled || pulled.ok !== true) return pulled;
   const { within: filed, ...answer } = pulled;
   if (!pulled.existed) return { ...answer, bundle: bundleOf(filed) };
