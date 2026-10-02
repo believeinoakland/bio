@@ -1,6 +1,6 @@
 # scheduler (T23)
 
-**Status** · session_01YcT6Cp42KzY2bvkiQ13zJU · depth 2 · WAITING ON BOB (J2) · handled B2
+**Status** · session_01YcT6Cp42KzY2bvkiQ13zJU · depth 2 · WAITING ON BOB (J2) · handled B3
 
 ## J1 · QUESTION
 
