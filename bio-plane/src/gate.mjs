@@ -573,8 +573,26 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    reads, are no gate's). Membership's T24 job (`MODULE_ORDER` gains `link-sweep`, which registers no step yet) and
    credentials' (`status_at`) changed no row.
    MINOR, rule 17 moving the stamp for arrivals. ROW_CENSUS (R50) is re-pinned to this tree, module tables only: 1073
-   rows. Rows T24's layers 3–11 change are T25's stamp (`awaiting stamp`). */
-export const CATALOG_VERSION = "1.54.0";
+   rows. Rows T24's layers 3–11 change were T25's stamp, taken by 1.55.0. */
+/* 1.55.0 (PROMOTION #26, T25 layer 2, 2026-10-02; K1209, K1216, K1218): EVERY ROW CHANGE SINCE 1.54.0, counted wherever
+   the rows live (R34, R47), read by diffing R50's census lines of `tranche/T25` after membership merged against 1.54.0's
+   own (`test/fixtures/row-census-1.54.0.jsonl`: 1073 rows, f1f0ad54…): three changed, no arrival, no departure. Each is
+   one a job record names (T24's layers 3–11 `awaiting stamp`: LINK-SWEEP #1's record; T25's layer 2 changed no row).
+   CHANGED, `where` only, code, number, condition and translation unmoved: C-18.16 SWEEP_TERM_REFUSED, C-18.17
+   SWEEP_NOT_A_MEMBER and C-18.18 SWEEP_RATIFY_NOT_AN_OWNER, moved with the link sweep from monitoring's `SWEEP_CHECKS`
+   into link-sweep's (`src/link-sweep/checks.mjs`; N506), each `where` re-pointed to the site that now mints it:
+   `src/link-sweep/checks.mjs sweepGrammar > is-sweep-term`, `src/link-sweep/sweep.mjs sweepFence > is-sweep-member`
+   and `> is-sweep-owner`. Monitoring's copies left with the move, so each row is held once, as before.
+   DEPARTED: none. ARRIVED: none.
+   CHANGED IN WHAT THE GATES RUN, no row moving: C-18.5's sweep arms, which monitoring's registered promote step
+   (monitoring R27) and its audit (R42) run, reach monitoring through link-sweep's registration (`registerSweep`,
+   monitoring R66; link-sweep R1–R3) where monitoring held them, moved line for line (`sweepGrammar`, LINK-SWEEP #1's
+   record), so what judges a bundle is unmoved, as 1.50.0's owner registrations were. No registered step, grammar or
+   listener of either gate changed its ids since 1.54.0. Membership's T25 job (`MODULE_ORDER` gains `attestation`,
+   `provenance-routes` and `reading-pipeline`, none of which registers a gate step yet) changed no row.
+   MINOR, rule 17 moving the stamp for changed rows and a changed composition. ROW_CENSUS (R50) is re-pinned to this tree, module tables only:
+   1073 rows. Rows T25's layers 3–11 change are T26's stamp. */
+export const CATALOG_VERSION = "1.55.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
@@ -667,7 +685,7 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
    a test may import every module's tables, which this module's source cannot (P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
 export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1073,
-  digest: "f1f0ad54195cd4b1b4df532eecf2377b4820e6589b9413053a9fcaeea8cc4fb7" });
+  digest: "735376fd77a0d28e5271c7f3972356664b5bcf43d527212937f47dad7b7f0fc8" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();
