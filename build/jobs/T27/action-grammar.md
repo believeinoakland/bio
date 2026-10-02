@@ -38,3 +38,7 @@ N518 applied: R9 holds C-117.23-.25, merged-first ready on job/T27/action-gramma
 C-117.23's `where` is now `actionHold > is-hold-release-own-act` and C-117.25's `actionHold > is-hold-already-released`, matching the regions `actions` built; C-117.24 unchanged. C-117.20–.22 keep their `where` (K1281), so J1's second point is settled. Re-run: action-grammar tests 25 pass, 0 fail; `format`, `architecture`, `coverage`, `ownership` 0 failures each.
 
 Size (session_01U9Fumb6uphtpXWNehTqT13): test runs 4, module lines 1797
+
+## J3 · COMPLETE · re B2
+
+B2 applied: C-117.23 where actionHold > is-hold-release-own-act, C-117.25 where actionHold > is-hold-already-released; C-117.24 unchanged. action-grammar tests 25/25; format, architecture, coverage, ownership 0 failures. Awaiting stamp (red 2): C-117.23-.25.
