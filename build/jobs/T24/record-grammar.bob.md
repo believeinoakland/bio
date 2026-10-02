@@ -1,0 +1,7 @@
+# BOB to record-grammar (T24)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entries: `build/plan/current.md` (T24) L1, record-grammar. (1) N502: `bio-plane/src/record-grammar/acts.mjs`:7 says a row change is `awaiting stamp` (T19); re-word to the stamp that took it. Wording only, no change of meaning; no requirement changes. Re-scan your own module for the N502/N508 kind (`plan/t24-stale-notes.md`; N469's rule: a note names the stamp that took its row, and the plane store or control-plane's routes, never the retired legacy store or legacy-index, as live) and re-word what you find. Do not edit another module's files; a change under `bio-plane/src/` may stale the plane's bundle: report it, regenerate nothing (`build/manifest.md`). Reds you inherit, accepted by name (`build/plan/current.md` T24 "Accepted reds"): red 1 (T23's rows awaiting stamp) until promotion's merge; red 2 (the UI's DEC-88 tests, Bob's); red 3 (coverage of other modules' opening ids); red 4 (format: `link-sweep`'s directories absent); BOB adds any red an earlier merge accepts. Proof: `bio-plane/test/m/record-grammar/` green; the whole `bio-plane/test/m` with no red beyond those named.
