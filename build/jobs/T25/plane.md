@@ -43,3 +43,7 @@
 - `ownership plane tranche/T25`: 5 files changed; 0 failures.
 
 Size (session_01G6d3LzEEHyaJZdkY3r73gm): test runs 7, module lines 703
+
+## J1 · REPORT
+
+Stale: the plane bundle (bio-plane/dist/bio-plane.bundled.mjs) from src/plane/store.mjs and src/plane/door.mjs (and earlier T25 merges); I regenerated nothing. affordances/sources.test.mjs:117 'R2: reattest … through provenance's attest' fails: its stand-in sets c.provenance.attest, but capture's reattest asks attestation since capture's L3 move; it does not reach the plane and is not an accepted red by name (affordances' L11 job). Minor: plane's Uses names attestation and provenance-routes only through its catch-all line.
