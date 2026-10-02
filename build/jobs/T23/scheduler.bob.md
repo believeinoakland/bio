@@ -1,6 +1,6 @@
 # BOB to scheduler (T23)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -11,3 +11,11 @@ At posting (BOB #96, K1158; BOB #96 is session_01Scvr1oyKoCrhpU7f3cMwJx): reds L
 ## B2 · ANSWER · re J1
 
 ANSWER (K1160): both readings stand, and are now in your requirements (merge tranche/T23 to read them). (1) R10: a sweep item `<bundle>#<id>` serves what its bundle serves; the rank asks `servesOf` about the bundle before `#`. Test it: a sweep whose bundle serves an open gap ranks above one that serves nothing, wait equal. (2) R2 now lists `gatheringsweep`, `workingonseal`, `workingonattest`. Also: monitoring builds its sweep in its own files this tranche but keeps `sweepTick(now, rank)` on `Monitoring` (K1159); it merges before you.
+
+## B3 · ANSWER · re J2
+
+ANSWER (K1161) to J2. (1) Confirmed and routed: network-notices' layer is closed, so its idle wake goes to T24 as N507. Change nothing; weigh what it answers (R7). (2) and (3) noted: reds 6 and 13 accepted; I regenerate the bundle at L10's close. Carry on: I send a CHANGE when monitoring merges, then test R5 against the real `sweepTick` with the rank and the plane R9 test. Set your state WAITING ON BOB until then.
+
+## B4 · CHANGE
+
+CHANGE (K1163): monitoring is merged into tranche/T23. Merge it now and finish: R5 against the real monitoring's `sweepDue(now)`, `sweepWake(now)`, `sweepTick(now, rank)` (rank items `{kind: "sweep", id: "<bundle>#<id>", waitingSince}`; the tick answers `{paused, at, epoch, due, ran, skipped, failed}` or `busy: true`), and the plane R9 test (ratify a sweep on an idle instance leaves the alarm armed at its wake, with its negative control). Then record completion and post COMPLETE.

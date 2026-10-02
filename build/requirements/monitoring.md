@@ -61,11 +61,11 @@ Terms. A **tick** is one check of one monitored document. A **look** is the obse
 
 **Standing intent** (Intake Doctrine §4)
 - **R28** Each open named request in a bundle's `data/gathering.json` whose cadence is due is captured through `capture.acquire` from its locators in order, the authoritative publisher first, with the request named as authority; what it brings lands no higher than its verification earns Wording (K1096, Intake Doctrine §2, §4): one locator at a time through `acquire`'s capture-request arm, stopping at the first that files; the request is the look's authority (one observation per attempt, R11's mapping), never asserted onto the bytes. New bytes land as §2 says, a gated Information bundle promoted through `promotion.promote` (`origin: named_request`, the request's id and its bundle as the authorisation), at the state its grade earns for a mechanical writer and never verified (a member's act, §4); bytes the record already holds land nothing new. A request is due by R14's intervals from its last attempt (never attempted: due; no cadence: once; `none`: never); only `open` requests. The cadence tick runs due requests after its batch's addresses, within R19's budget of 50, and answers them as `gathered`; paused (R30), nothing is gathered, stated. The bundle's own `daemon` block governs its requests (K1102; LINK-FIDELITY "The budget mechanism already exists"): `daemon.enabled: false` runs none of them, stated; `daemon.tick_budget`, when set, bounds the locators tried for that bundle in one tick, within R19's 50; `daemon.sweep_budget` is R29's.
-- **R29** A ratified sweep is named standing intent. It is run by R56–R61, within its scope (R53) and its budget, and each document it brings in is filed as its own Information bundle at `collected`, never higher. *(not yet met: T23)*
+- **R29** A ratified sweep is named standing intent. It is run by R56–R61, within its scope (R53) and its budget, and each document it brings in is filed as its own Information bundle at `collected`, never higher.
 - **R30** The daemon is pausable by an administrator (monitoring's and the fallback's fetches stop; a paused tick says so); a pause or resume asked by a member who is not an administrator (`membership` R64's `isAdministrator`, read of the stamped `actor`) is refused `NOT_AN_ADMIN` through `membership.notAnAdmin` (its R84), with nothing written, and the root of trust is an administrator here (N314, K380); this module mints no `NOT_AN_ADMIN` of its own and reads no C-96.1 row (K403's local site retires; N324); and its due slate (every named request, sweep and monitored address now due) is exported as quoted data inside fixed instruction framing.
 
 **The sweep's definition** (an entry of `data/gathering.json` `sweeps[]`, refused by C-18.5 through R27)
-- **R53** A sweep is `{id, title, ratified, sources, seeds, match, cadence, budget}` and nothing else. C-18.5 refuses an entry that breaks any of the following, with one finding per field *(not yet met: T23)*:
+- **R53** A sweep is `{id, title, ratified, sources, seeds, match, cadence, budget}` and nothing else. C-18.5 refuses an entry that breaks any of the following, with one finding per field:
   - `id`: `^[a-z0-9][a-z0-9-]{0,39}$`, unique within the file. A sweep's full name is `"<bundle>#<id>"`.
   - `title`: a non-empty single line of at most 200 characters.
   - `ratified`: a boolean.
@@ -79,13 +79,13 @@ Terms. A **tick** is one check of one monitored document. A **look** is the obse
   - `budget`: `{per_run, backlog}`. `per_run` is an integer 1–100 and `backlog` an integer 1–1,000.
 
   `title` and `terms` are only ever shown as quoted data. `daemon.sweep_budget`, when set, caps the fetches all of a bundle's sweeps make in one tick together. When it is 0, they make none, and the run says so.
-- **R54** A **term** is a single-line string of 1–200 characters. It is a regular expression when it is written between slashes (`/…/`), and a literal otherwise. Both match without regard to case *(not yet met: T23)*.
+- **R54** A **term** is a single-line string of 1–200 characters. It is a regular expression when it is written between slashes (`/…/`), and a literal otherwise. Both match without regard to case.
   - C-18.5 refuses a regular expression that does not compile, or that uses a backreference, a lookahead or a lookbehind (`SWEEP_TERM_REFUSED`, naming the term and the construct).
   - A term's matching time is linear in the length of the text it is matched against, whatever the term is. No term can make a run take longer than its text's length bounds.
   - A term is matched against at most 2,048 characters of a link's text and 2,048 of its decoded address. The rest is not read, and the run says how many links it cut.
 
 **Who may write a sweep** (K1036 (7))
-- **R55** A non-replay promotion carrying `data/gathering.json` is refused before anything is written, as follows *(not yet met: T23)*:
+- **R55** A non-replay promotion carrying `data/gathering.json` is refused before anything is written, as follows:
   - `SWEEP_NOT_A_MEMBER` (C-18.5) when its author is not a member (an identity in `record-grammar`'s non-member set) and it adds a sweep, removes one, or changes any field of one. The one exception is setting `ratified` to `false`.
   - `SWEEP_RATIFY_NOT_AN_OWNER` (C-18.5) when its author is not an owner of the bundle's project (`record-core.bundleInfo`, its R34; `membership.isProjectOwner`, its R54) and the promotion does either of these:
     - sets a sweep's `ratified` to `true`;
@@ -96,7 +96,7 @@ Terms. A **tick** is one check of one monitored document. A **look** is the obse
   Any member who may write the bundle may add or change an unratified sweep. An owner's change to a ratified sweep re-ratifies it. Any writer, the daemon included, may set `ratified` to `false`, because stopping breadth is never refused. The ratifying member and the instant are those of the promotion that last set `ratified` to `true` or changed a ratified sweep, read from the bundle's history.
 
 **The run** (`sweepDue(now)`, `sweepWake(now)` and `sweepTick(now, rank?)`, for `scheduler`'s `gathering-sweep` consumer)
-- **R56** A sweep is due when all of the following hold *(not yet met: T23)*:
+- **R56** A sweep is due when all of the following hold:
   - it is ratified;
   - the daemon is not paused (R30);
   - its bundle's `daemon.enabled` is not `false`;
@@ -105,11 +105,11 @@ Terms. A **tick** is one check of one monitored document. A **look** is the obse
   - it has never run, or its last run plus its cadence's interval is at or before `now`.
 
   `sweepWake` answers now + 1 s while one is due, else the earliest next run, else null. A tick runs at most 5 due sweeps, longest-overdue first and then by full name. Given the scheduler's rank, it reads at most ten times that number in that order and runs its batch in the rank's order. Each sweep is offered as `{kind: "sweep", id: "<bundle>#<id>", waitingSince}`. Claims and epochs are R21's, and the tick is not re-entrant (R22).
-- **R57** **Seeds.** Each seed is fetched through `capture.acquire`, paced by `host-governor`, with `origin: {kind: "sweep", matched_sweep: "<bundle>#<id>", deeming_actor: "bio-monitor"}` and the sweep's `sources` as the redirect scope (`acquisition` R31). Its capture is filed in the sweep's own bundle as a monitor snapshot, in the way R9 files a tick's bytes *(not yet met: T23)*.
+- **R57** **Seeds.** Each seed is fetched through `capture.acquire`, paced by `host-governor`, with `origin: {kind: "sweep", matched_sweep: "<bundle>#<id>", deeming_actor: "bio-monitor"}` and the sweep's `sources` as the redirect scope (`acquisition` R31). Its capture is filed in the sweep's own bundle as a monitor snapshot, in the way R9 files a tick's bytes.
   - A seed whose bytes equal its last capture is recorded as `unchanged`, and its candidates are read again from that capture.
   - A seed that fails is recorded with `capture`'s reachability (its R8), and the run goes on with the other seeds.
   - A seed redirected out of scope is not fetched beyond the redirect, and is recorded as `out_of_scope_redirect` with its target.
-- **R58** **Candidates and the match.** The candidates are the links in this run's seed captures, read from the seed's own bytes: HTML anchors with their text, feed items with their titles, and sitemap entries (address only). A candidate matches when all of these hold *(not yet met: T23)*:
+- **R58** **Candidates and the match.** The candidates are the links in this run's seed captures, read from the seed's own bytes: HTML anchors with their text, feed items with their titles, and sitemap entries (address only). A candidate matches when all of these hold:
   - its normalised address is in scope;
   - it lies under one of `match.paths`, when any are given;
   - one of `match.terms` (R54) matches its text or its decoded address, when any are given.
@@ -120,13 +120,13 @@ Terms. A **tick** is one check of one monitored document. A **look** is the obse
   - the run's budget is spent (`budget_spent`). Seed fetches count toward `per_run` and toward `daemon.sweep_budget`.
 
   The rest are fetched in seed order and then in link order, each through `capture.acquire` with R57's origin and redirect scope. A redirect out of scope is recorded as `out_of_scope_redirect` with its target, and nothing at the target is fetched.
-- **R59** **Filing.** Each fetched candidate whose detected format (`format-registry.detectFormat`) is in `match.formats` (any format when none are given) is filed as a new Information bundle at `collected` *(not yet met: T23)*:
+- **R59** **Filing.** Each fetched candidate whose detected format (`format-registry.detectFormat`) is in `match.formats` (any format when none are given) is filed as a new Information bundle at `collected`:
   - in the project of the sweep's bundle;
   - with the register entry's `origin` as R57 states it;
   - with the seed capture that listed it named in the bundle's Provenance Notes.
 
   A fetched document of another format is not filed (`format_excluded`), and its fetch still counts toward the budget.
-- **R60** **Backlog, hold, anomaly and silence.** *(not yet met: T23)*
+- **R60** **Backlog, hold, anomaly and silence.**
   - **Backlog** is `capture.heldCount({sweep: "<bundle>#<id>"})` (`capture` R82): this sweep's documents still at `collected`, neither released nor set aside. When it answers `null` (the store could not be read), the sweep is held as if over its ceiling (K1129).
   - **Held:** while the backlog is at or over `budget.backlog`, the sweep does not run, and every read of it (R61) states `held: backlog`.
   - **Anomaly:** once at least 4 runs exist, a run notes an anomaly in either of these cases:
@@ -135,7 +135,7 @@ Terms. A **tick** is one check of one monitored document. A **look** is the obse
 
     The note is kept on the run and changes nothing else.
   - **Silent:** a sweep whose last 4 runs each filed nothing, and which is not held, is `silent`.
-- **R61** **Reads.** *(not yet met: T23)*
+- **R61** **Reads.**
   - `sweeps({viewer})` (`op=sweeps`; read; member session) answers every sweep in a `gathering.json` the viewer may see. Each comes with:
     - its definition, as quoted data;
     - `ratified`, with the ratifying member and instant (R55);
@@ -144,14 +144,14 @@ Terms. A **tick** is one check of one monitored document. A **look** is the obse
 
     It also answers `formats`, which is `format-registry.listFormats()`, the list the member chooses `match.formats` from (K1036 (6)).
   - R30's due slate carries each due sweep's definition as quoted data inside the fixed framing.
-- **R62** **Looks.** Each seed fetch and each candidate fetch writes one observation row (`observation-log`), with these fields *(not yet met: T23)*:
+- **R62** **Looks.** Each seed fetch and each candidate fetch writes one observation row (`observation-log`), with these fields:
   - authority kind `sweep`, authority `"<bundle>#<id>"`, level `document`, subject the address;
   - state `PRESENT`, referring to the capture, or `LOOKED_INDETERMINATE` with the reason (a failed fetch, `out_of_scope_redirect`, `format_excluded`, or a governed refusal marked `governed`).
 
   A skipped candidate writes nothing, because nothing was looked at.
 
 **What reaches members** (NOTIFICATIONS.md, the catalogue and the item contract)
-- **R63** `sweepConditions({viewer})` answers, for each sweep the viewer may see, every condition that needs a member's look, derived on read and writing nothing. Each condition is `{sweep, kind, since, detail}` *(not yet met: T23)*:
+- **R63** `sweepConditions({viewer})` answers, for each sweep the viewer may see, every condition that needs a member's look, derived on read and writing nothing. Each condition is `{sweep, kind, since, detail}`:
   - `sweep-held-backlog`: the sweep is held (R60). `detail` gives the backlog and the limit.
   - `sweep-yield-anomaly`: the last run noted an anomaly (R60). `detail` gives the count filed and the median.
   - `sweep-seed-unreachable`: a seed failed on the last run (R57). `detail` names each such seed and its reachability.
@@ -159,7 +159,7 @@ Terms. A **tick** is one check of one monitored document. A **look** is the obse
   - `sweep-silent`: the sweep is silent (R60).
 
   A condition leaves on the first read after it stops holding.
-- **R31** Its reads give the items `queue-producers` publishes in the item contract, with their options *(not yet met: T23, the sweep items)*:
+- **R31** Its reads give the items `queue-producers` publishes in the item contract, with their options:
   - `source-modified` and `source-removed` (FINDING), one for each flagged tick, from R48 (`queue-producers` R2);
   - `archive-fallback-eligible` (CONDITION), one for each eligible address, from R47;
   - `monitoring-recheck-due` (CONDITION), one for each monitored address overdue by more than its interval or unscheduled, from R16 and R32 (`queue-producers` R3);
@@ -179,7 +179,7 @@ Terms. A **tick** is one check of one monitored document. A **look** is the obse
 - **R35** When a clock is marked overdue or a response is recorded against an action, monitoring asks `escalation` whether a stage's trigger is met, so the next stage is proposed; monitoring never advances a stage.
 - **R50** `deadlineRecheckWake(now)` answers the start of the UTC day after the earliest date among `pending` clock entries of visible-to-this-module actions (`action-clocks.pendingClocks`, read as this module's machine viewer), or null when none is pending; `deadlineRecheckDue(now)` answers that instant when it is at or before `now`, else null. So `scheduler`'s `deadline-recheck` consumer (its R5) runs R34 on the first alarm of the day an entry passes, and an instance with no pending entry holds no wake for it (scheduler R15). (N429, K719) An entry of an action whose last R34 mark failed (`deadlineRecheck`'s `failed`) is left out of that earliest date until the start of the UTC day after the failure, so a mark that keeps failing is asked again once a day (the bound `scheduler`'s `deadline-recheck` consumer keeps today by holding a past wake, K719) and never holds the wake in the past for the entries that can be marked.
 
-- **R64** (K1099, K1122; `capture-requests` R45) At its construction the module registers with `capture-requests` the sweep scope check that module's R45 calls (K31's pattern): given a sweep `<bundle>#<id>` and a request's locators, it answers whether the sweep is ratified and not held (R53 onward) and whether every locator is within the sweep's scope, by the same matcher a sweep's run uses. A request filed under a sweep this way counts toward that sweep's `per_run` on its next run. *(not yet met: T23)*
+- **R64** (K1099, K1122; `capture-requests` R45) At its construction the module registers with `capture-requests` the sweep scope check that module's R45 calls (K31's pattern): given a sweep `<bundle>#<id>` and a request's locators, it answers whether the sweep is ratified and not held (R53 onward) and whether every locator is within the sweep's scope, by the same matcher a sweep's run uses. A request filed under a sweep this way counts toward that sweep's `per_run` on its next run.
 
 ## Private
 
@@ -207,7 +207,7 @@ Terms. A **tick** is one check of one monitored document. A **look** is the obse
 
 ### Invariants
 
-- **R36** The daemon fetches only what store state authorizes *(not yet met: T23, the sweep arm)*:
+- **R36** The daemon fetches only what store state authorizes:
   - a bundle that asks to be monitored;
   - a named request's locators;
   - a ratified sweep's seeds, and the candidates that R58 admits.
