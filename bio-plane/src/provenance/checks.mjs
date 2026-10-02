@@ -2,10 +2,15 @@
  * refusal this module answers carries its code, its catalogue row and the member's translation.
  *
  * T18 (K585 (3)): the families this module mints moved here whole from the check catalogue (`checks/bio-checks.mjs`,
- * legacy-checks), each with its header, its ids and its rows unchanged: C-24 `VERSION_CHAIN_CHECKS`, C-34
- * `ROUTE_MARK_CHECKS`, C-89 `ATTEST_CHECKS`, C-103 `PROVENANCE_ACT_CHECKS` and C-53 `TESTIMONY_CHECKS`
- * (C-53.1–C-53.9, C-53.13). Where a header below says "this catalogue" or "this file", it was written in the
- * catalogue; the rows it names are these. C-53.10–C-53.12 stay ratification's.
+ * legacy-checks), each with its header, its ids and its rows unchanged: C-24 `VERSION_CHAIN_CHECKS`, C-103
+ * `PROVENANCE_ACT_CHECKS` and C-53 `TESTIMONY_CHECKS` (C-53.1–C-53.9, C-53.13). Where a header below says "this
+ * catalogue" or "this file", it was written in the catalogue; the rows it names are these. C-53.10–C-53.12 stay
+ * ratification's.
+ *
+ * N512 (T25): C-34 `ROUTE_MARK_CHECKS` is `provenance-routes`' and C-89 `ATTEST_CHECKS` is `attestation`'s, each in
+ * its own `checks.mjs`. The copies of both below are held only until control-plane's and affordances' T25 jobs read
+ * the new files, and are deleted by this module's T26 job (N516). C-103.3, C-103.6 and C-103.7 stay in
+ * `PROVENANCE_ACT_CHECKS`, answered through it by those modules (R58).
  *
  * C-53.14 was minted in this module's own table, `REGISTER_ENTRY_CHECKS`, rather than in `TESTIMONY_CHECKS`: a row is
  * counted wherever it lives (promotion R34), and the table takes a name of its own so no two families share one. It is
@@ -70,95 +75,41 @@ export const VERSION_CHAIN_CHECKS = {
   },
 };
 
-/* =========================================================================
- * REC-63 / DEC-56 / D-204 — THE ROUTE MARKER'S OWN REFUSALS.
- *
- * DEC-56 asked whether the record may UN-SAY a verification when a provenance
- * chain cannot be reconstructed. Bob ruled the principle across DEC-56/57/58
- * together, 2026-08-06: ACT, AND SAY WHAT YOU COULD NOT ESTABLISH. So the plane
- * does not retract the verification and it does not go silent — it records a
- * standing MARKER at 'verified' saying the route cannot be shown.
- *
- * WHAT IS DELIBERATELY *NOT* IN THIS FAMILY, and it is the item's shape rather
- * than an omission. A register the plane cannot read — absent, unparsable, or
- * holding no documents array — is NOT refused here. Those are exactly the
- * conditions under which the route cannot be shown, so they produce the MARKER.
- * Refusing them would be the silence the ruling names: the caller would learn
- * that we would not answer, and the record would learn nothing at all. Compare
- * provenanceChainRebuild, which refuses those same conditions and is RIGHT to —
- * it is being asked to WRITE A CHAIN, and a chain that cannot be derived must
- * never be invented. Marking is the other half of that refusal, not a softening
- * of it: the two ops meet the same fact and carry opposite obligations.
- *
- * SO THE FOUR BELOW ARE ALL DOOR CONDITIONS — who is asking, and about what.
- * They share ONE region (is-route-mark) because they are one gate: the arm that
- * establishes there is a named member and a captured document to assess. Every
- * code is a STRING LITERAL at its site through the local refusal helper, which
- * is what let the DEC-49 guard's arm C COMPARE them rather than read past them
- * (PL-3's convention, REC-71's measurement, REC-64's thirty; that guard, the
- * legacy `check-refusal-codes.mjs`, was deleted at T20).
- *
- * C-34 IS THIS FAMILY. Measured free before allocating: C-25 is PL-1/PL-2's,
- * C-26 PL-12's, C-27 PL-3's, C-28 PL-4's, C-29 PL-11's, C-30 PL-14's, C-31
- * PL-15's, C-32/C-33 REC-64's. Four parallel items collided on an id in one day,
- * so a renumber at integration is expected rather than an error.
- * ========================================================================= */
+/* N516: a copy of `provenance-routes`' C-34 (`ROUTE_MARK_CHECKS`, the route marker's door, REC-63 / DEC-56 / D-204),
+ * row for row, each `where` naming the site that raises it, held until control-plane's and affordances' T25 jobs read
+ * that module's file; deleted by this module's T26 job. */
 export const ROUTE_MARK_CHECKS = {
-  /* Marking is a NAMED ACT: a standing statement in the record with nobody's
-     name on it is not a statement. WHAT THIS DOES *NOT* DO, stated so the next
-     reader does not read a fence that is not here — it does not refuse a MACHINE
-     principal. It refuses an act with NO principal at all. `op=provenancechain`
-     draws exactly this line and no other, and inventing a stricter one here
-     would be this item ruling on DEC-52's ground (REC-65) as a side effect. */
   ROUTE_MARK_NO_AUTHOR: {
     check: 'C-34.1',
-    where: 'src/provenance/index.mjs provenanceRouteAssess > is-route-mark',
+    where: 'src/provenance-routes/index.mjs provenanceRouteAssess > is-route-mark',
     translation: 'Recording that a document\'s route cannot be shown is an act the record has to be '
       + 'able to attribute, and nothing here said who is making it. Sign in and try again.',
   },
   ROUTE_MARK_NO_BUNDLE: {
     check: 'C-34.2',
-    where: 'src/provenance/index.mjs provenanceRouteAssess > is-route-mark',
+    where: 'src/provenance-routes/index.mjs provenanceRouteAssess > is-route-mark',
     translation: 'This did not say which document to look at, so nothing was assessed.',
   },
-  /* Absent and invisible answer IDENTICALLY, which is REC-25's posture rather
-     than this item's invention: a document the caller may not see must refuse
-     exactly as one that does not exist, or the refusal becomes a read. */
   ROUTE_MARK_NO_SUCH_BUNDLE: {
     check: 'C-34.3',
-    where: 'src/provenance/index.mjs provenanceRouteAssess > is-route-mark',
+    where: 'src/provenance-routes/index.mjs provenanceRouteAssess > is-route-mark',
     translation: 'The record holds no document by that name, so there was nothing to assess.',
   },
-  /* A ROUTE IS A FACT ABOUT A CAPTURED DOCUMENT. A question, a project or an
-     action was never fetched from anywhere, so asking whether its route can be
-     shown is a category error rather than a doubt — and answering it as
-     undetermined would put a marker on every inquiry in the store, which is the
-     over-strictness failure this item's third control arm exists to catch. */
   ROUTE_MARK_NOT_A_DOCUMENT: {
     check: 'C-34.4',
-    where: 'src/provenance/index.mjs provenanceRouteAssess > is-route-mark',
+    where: 'src/provenance-routes/index.mjs provenanceRouteAssess > is-route-mark',
     translation: 'Only a captured document travelled a route to get here, and this is not one. '
       + 'Questions, projects and actions were written in the record rather than fetched from anywhere, '
       + 'so there is no route to show or to doubt.',
   },
 };
 
-/* ===========================================================================
-   D-530 — CO-ATTESTING A CAPTURE HELD IN PARTS (C-89; Intake Doctrine §8, D-476).
-
-   A document over one part is stored ONLY as its parts, each under its own hash,
-   and never under the whole's. `op=attest` asked only for the whole-hash object
-   and answered a miss NO_SUCH_CAPTURE, telling a member to capture again a
-   document the record holds. It now asks the store the whole-document question.
-   On the plane's own acquisition receipt it attests. On the register ALONE, a row
-   written from what a promoting caller named (D-45), it refuses by THIS code:
-   the bytes are not called absent, and a timestamp is not rested on a caller's
-   word. NO_SUCH_CAPTURE stays for a hash nothing names at all.
-   =========================================================================== */
+/* N516: a copy of `attestation`'s C-89 (`ATTEST_CHECKS`, co-attesting a capture held in parts, D-530), its `where`
+ * naming the site that raises it, held and deleted on the same terms as the copy above. */
 export const ATTEST_CHECKS = {
   CAPTURE_HELD_IN_PARTS: {
     check: 'C-89.1',
-    where: 'src/provenance/index.mjs attest > is-attest-parts',
+    where: 'src/attestation/index.mjs attest > is-attest-parts',
     translation: 'The record lists this document, but keeps it in parts rather than as one file, and this '
       + 'instance has no record of fetching it itself. A timestamp is only requested for bytes this '
       + 'instance can vouch for, so none was requested. Nothing is missing: do not capture the document '
@@ -167,19 +118,23 @@ export const ATTEST_CHECKS = {
 };
 
 /* ===========================================================================
-   C-103 — PROVENANCE'S OWN ACTS (T4's extraction, provenance R1, R29, R34; T6, legacy-checks, N81).
+   C-103 — PROVENANCE'S OWN ACTS (T4's extraction, provenance R1, R29, R58; T6, legacy-checks, N81).
 
    PROVENANCE #1 (T4) minted these in `src/provenance/index.mjs` and reported that none had a row: the write-time
    register refusal, a member's declared origin for a document (REC-225) and the instance's signed receipt for an
-   archive-sourced capture (K59). They are one family because they are one module's acts and none fits a family
-   already here: ROUTE_MARK_CHECKS is the route marker's door, TESTIMONY_CHECKS a member's testimony,
-   ATTEST_CHECKS a co-attestation.
+   archive-sourced capture (K59). They are one family because they were one module's acts and none fits a family
+   already here: TESTIMONY_CHECKS is a member's testimony.
+
+   THE SEAM (R58; N512, T25): the signed receipt is `attestation`'s since N512, and `provenanceChainRebuild` is
+   `provenance-routes`'; both answer through this family rather than splitting it between files, so each row's `where`
+   names the site that raises it, in whichever module that is.
 
    THE `where`s: `#registerArms` and `signReceipt` refuse only with these rows, so each names its function whole.
    `declareOrigin` also answers NO_SUCH_BUNDLE, a code minted at 26 sites and given no row (ACT_SHAPE_CHECKS'
    REC-64 rule), so its rows name two regions that exclude it, `is-origin-act` (ORIGIN_NOT_A_MEMBER, NO_BUNDLE)
    and `is-origin-statement` (ORIGIN_NOT_A_DOCUMENT, ORIGIN_NO_SYSTEM); marking them is provenance's. NO_BUNDLE
-   is also answered by `provenanceChainRebuild` for the same condition, and its sentence is true at both.
+   is also answered by `provenance-routes`' `provenanceChainRebuild` for the same condition, and its sentence is true
+   at both.
    =========================================================================== */
 export const PROVENANCE_ACT_CHECKS = {
   /* R1: the C-18 register rules at the write. The findings carry each rule's own C-18 id; this row is the act's. */
@@ -216,13 +171,13 @@ export const PROVENANCE_ACT_CHECKS = {
   },
   RECEIPT_MALFORMED: {
     check: 'C-103.6',
-    where: 'src/provenance/index.mjs signReceipt',
+    where: 'src/attestation/index.mjs signReceipt',
     translation: 'A receipt names the captured document\'s fingerprint, the address it was fetched from and when, '
       + 'and one of those was missing or not in its form, so no receipt was signed.',
   },
   RECEIPT_NO_KEY: {
     check: 'C-103.7',
-    where: 'src/provenance/index.mjs signReceipt',
+    where: 'src/attestation/index.mjs signReceipt',
     translation: 'This instance holds no key to sign its receipts with, so this receipt was not signed, and '
       + 'nothing claims that it was. Whoever runs the instance can add one.',
   },

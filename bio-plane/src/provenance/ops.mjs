@@ -1,21 +1,22 @@
-/* provenance's ops (requirements: `build/requirements/provenance.md`). Two at the Worker (R8, R9, R31–R33), moved out of
+/* provenance's ops (requirements: `build/requirements/provenance.md`). One at the Worker (R8, R9), moved out of
  * `legacy-index`' `src/index.mjs` at T18 (the legacy-index map's §4.4 plain move, K649 (7); PROCESS-MECHANICS §12.2):
- * the control plane routes to them and hands in its envelope helpers (`json`, `doAnswer`, `storeSilent`,
- * `storeRefusal`, `storageAbsent`), the evidence store's key for a digest (`captureKey`) and its stamps; each answers
- * the Response the arm answered before the move, byte for byte. And the store's nine route arms as one ops map
- * (`provenanceOps`, R53), written at T19 from the legacy store's explicit arms (K671), now spread by the plane store
- * (`src/plane/store.mjs`); the legacy store is retired. */
+ * the control plane routes to it and hands in its envelope helpers (`json`, `doAnswer`, `storeSilent`,
+ * `storeRefusal`), the evidence store's key for a digest (`captureKey`) and its stamps; it answers the Response the arm
+ * answered before the move, byte for byte. And the store's route arms as one ops map (`provenanceOps`, R53), written
+ * at T19 from the legacy store's explicit arms (K671), now spread by the plane store (`src/plane/store.mjs`); the
+ * legacy store is retired. `op=attest`'s Worker arm is `attestation`'s, and the three route arms
+ * (`provenancechain`, `provenanceroute`, `provenanceroutes`) are `provenance-routes`' `provenanceRouteOps` (N512). */
 
-import { attest, attestStatus, registerAuditReport } from "./index.mjs";
+import { registerAuditReport } from "./index.mjs";
 
 /* The body's spellings of an author a caller might send to op=testify, every one collected so that naming the person
    under a synonym is no way round C-53.2's refusal (R28, R53). */
 const CLAIMED_AUTHOR_KEYS = ["author", "observer", "authoredBy", "authored_by", "by", "member", "memberId"];
 
-/** R53 (`build/extraction/legacy-store.md` §4.2 (6); the `membershipOps` pattern): the module's route arms, keyed by
- *  op name, each a function of no arguments answering what its service answers, its parameters read from `url`'s
+/** R53 (`build/extraction/legacy-store.md` §4.2 (6); the `membershipOps` pattern): the module's six route arms, keyed
+ *  by op name, each a function of no arguments answering what its service answers, its parameters read from `url`'s
  *  query, where the control plane stamps `viewer` and `author` (never from the body), today's behaviour of the legacy
- *  store's nine explicit arms. `observer` is the module whose receipt listener's outcome `recordcapturedlocator`
+ *  store's explicit arms. `observer` is the module whose receipt listener's outcome `recordcapturedlocator`
  *  reports (the composition root names it; this module names no later module, R47). Which credential reaches each op
  *  is `op-declarations`' and `control-plane`'s, never this map's. */
 export function provenanceOps(provenance, url, body, { observer = null } = {}) {
@@ -51,14 +52,6 @@ export function provenanceOps(provenance, url, body, { observer = null } = {}) {
     registerholds: () => provenance.registerHolds({ sha: q("sha256"), bundle: q("bundle") }),
     /* D-9, D-533: every register row classified; the Worker's op=registeraudit probes the rest (R8, R9). */
     registeraudit: () => provenance.registerRows(),
-    /* REC-54 / D-200: one bundle's chain rebuilt; `apply` is opt-in, the default a report. */
-    provenancechain: () => provenance.provenanceChainRebuild({ bundleId: q("bundleId"), apply: q("apply") === "1",
-                                                               viewer: q("viewer"), author: q("author") }),
-    /* REC-63 / DEC-56 / D-204: the route assessed and its finding recorded; no state moves. */
-    provenanceroute: () => provenance.provenanceRouteAssess({ bundleId: q("bundleId"), viewer: q("viewer"),
-                                                              author: q("author") }),
-    /* REC-116 / IC-120: the bundles whose standing mark is LOOKED_INDETERMINATE. */
-    provenanceroutes: () => provenance.provenanceRoutesMarked({ after: q("after"), limit: q("limit"), viewer: q("viewer") }),
   };
 }
 
@@ -79,37 +72,4 @@ export async function registerAuditOp(env, store, { json, doAnswer, storeSilent,
   return json({ ok: true, result: await registerAuditReport(aOut.result, typeof env.CAPTURES?.head === "function"
     ? { head: (sha) => env.CAPTURES.head(captureKey(storeName, sha)), get: (sha) => env.CAPTURES.get(captureKey(storeName, sha)) }
     : null), store: storeName, tokenClass: cls }, 200);
-}
-
-/* Co-attestation over a capture hash.
- *
- * The doctrine's asymmetry: a self-recorded hash proves integrity since
- * capture and nothing about origin, because it is the group attesting to
- * itself. A timestamp token is issued by somebody the group does not
- * control, so it proves the capture EXISTED at the claimed instant, which
- * is the part an attacker holding a write token cannot forge.
- *
- * Every attempt is recorded, successes and failures alike, in the shape
- * C-18.1 requires. The doctrine is explicit that a failed attempt is
- * recorded with its reason and never omitted: a provenance register showing
- * no attempt and one showing an attempt that failed are different claims,
- * and collapsing them would let an absence read as a success.
- */
-/** op=attest (R31–R33): provenance's `attest` over the working bucket by digest, the network, and the store's register
- *  and receipts (D-476's `registerholds`, which answers whether a receipt or the register names the hash). */
-export async function attestOp(req, env, store, { json, doAnswer, storageAbsent, captureKey, storeName, cls }) {
-  if (req.method !== "POST") return json({ ok: false, error: "attest is a POST" }, 405);
-  if (typeof env.CAPTURES?.put !== "function")
-    return storageAbsent("attest", "this instance has no evidence storage configured");
-  const body = await req.json().catch(() => null);
-  const attested = await attest(body || {}, {
-    head: (sha) => env.CAPTURES.head(captureKey(storeName, sha)),
-    put: (sha, bytes) => env.CAPTURES.put(captureKey(storeName, sha), bytes, { sha256: sha }),
-    fetch: (...a) => fetch(...a),
-    holds: async (sha) => {
-      const hOut = await doAnswer(store.fetch(`http://x/registerholds?sha256=${encodeURIComponent(sha)}`));
-      return hOut.answered ? hOut.result : null;
-    },
-  });
-  return json({ ...attested, store: storeName, tokenClass: cls }, attestStatus(attested));
 }

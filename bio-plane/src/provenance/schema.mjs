@@ -1,10 +1,11 @@
 /* provenance's tables (requirements: `build/requirements/provenance.md`, R41, R48). Moved out of the legacy
  * `schema.mjs` at this module's extraction (layers.md ruling 3, "each module owns its tables"; K72 (3)'s pattern):
- * the register, the acquisition receipts (`captured_locators`) and the route marks, with the comments that record
- * why each is shaped as it is; and the two tables this module added, the declared origins (R29) and the signed
- * receipts with the instance keys that signed them (R34). `register` and `captured_locators` are a stated read
- * contract (R48): later modules may join their capture digest, `bundle_id`, path, locator columns; every write
- * to them is this module's (R41). */
+ * the register and the acquisition receipts (`captured_locators`), with the comments that record why each is shaped
+ * as it is; and the table this module added, the declared origins (R29). `register` and `captured_locators` are a
+ * stated read contract (R48): later modules may join their capture digest, `bundle_id`, path, locator columns; every
+ * write to them is this module's (R41). `provenance_route_marks` is `provenance-routes`' (its R12), and
+ * `receipt_keys` and `signed_receipts` are `attestation`'s (its R10), each created and written by that module alone
+ * under the same name (N512), so a deployed instance keeps their rows. */
 
 export const PROVENANCE_SCHEMA = `
 -- The register: the trust root. capture_sha is the only thing that proves bytes.
@@ -84,103 +85,6 @@ CREATE INDEX IF NOT EXISTS captured_locators_addr ON captured_locators(address_n
 -- CAP-13: the page count in siteAssets and siteChrome joins on capture_sha.
 CREATE INDEX IF NOT EXISTS captured_locators_sha ON captured_locators(capture_sha);
 
--- REC-63 / DEC-56 / D-204: THE STANDING MARKER. When a document's provenance
--- ROUTE cannot be shown, the record carries that fact BESIDE the state rather
--- than un-saying the verification. Bob ruled the principle across DEC-56/57/58
--- on 2026-08-06: ACT, AND SAY WHAT YOU COULD NOT ESTABLISH.
---
--- WHY A ROW HERE AND NOT A FIELD IN THE BUNDLE'S OWN BYTES, which is the first
--- question a reader will ask. Writing the marker into data/provenance.json
--- would change the bundle_sha of a VERIFIED document, so the doubt about the
--- bytes would alter the bytes -- and it would be a second claim nobody made,
--- which is the same reasoning provenanceChainRebuild already gives for leaving
--- bundle.md alone. The marker is a statement by THIS INSTANCE about its own
--- evidence, so it lives where the instance's other statements live.
---
--- APPEND-ONLY, AND THAT IS DEC-19. Correction moves FORWARD: a route later
--- shown is a NEW row saying so, never a delete of the row that said it could
--- not be. The current finding is the row with the highest 'seq' for a bundle,
--- and the ones before it stay readable.
---
--- 'finding' IS D-129's VOCABULARY, observation-log's OBSERVATION_STATES (airun.mjs's then)
--- rather than invented here, because this record already has words for which
--- absence it met: NEVER_LOOKED is the ABSENCE OF A ROW and is never stored,
--- LOOKED_INDETERMINATE is the marker itself (we looked and cannot tell), and
--- PRESENT is an assessment that found the route showable. LOOKED_ABSENT is
--- deliberately unreachable here: it would assert the bytes have no route, and
--- every captured byte came from somewhere -- what we cannot show is OUR
--- EVIDENCE of it, which is a statement about us.
---
--- 'state_at' RECORDS THE STATE THE DOCUMENT SAT IN WHEN THE MARKER WAS MADE,
--- because the marker's whole point is that the state STANDS while the doubt is
--- carried: a reader of the history has to be able to see that the two disagreed
--- ON PURPOSE and that nothing moved the document.
-CREATE TABLE IF NOT EXISTS provenance_route_marks (
-  bundle_id      TEXT    NOT NULL,
-  seq            INTEGER NOT NULL, -- MAX+1 per bundle. The highest is the current finding
-  at             TEXT    NOT NULL,
-  by             TEXT    NOT NULL, -- the MEMBER who made the assessment. Never a machine
-  finding        TEXT    NOT NULL, -- LOOKED_INDETERMINATE (the marker) | PRESENT
-  state_at       TEXT    NOT NULL, -- current_state at the moment of marking
-  register_state TEXT    NOT NULL, -- readable | absent | unparsable | no_documents | empty
-  undetermined   INTEGER NOT NULL, -- documents whose route could not be shown
-  documents_n    INTEGER NOT NULL, -- documents the register named at all
-  documents      TEXT    NOT NULL, -- JSON per-document outcomes, so the marker says WHICH
-  PRIMARY KEY (bundle_id, seq)
-);
--- =========================================================================
--- REC-112, 2026-09-17 -- THIS INDEX HAD NO READER, AND IT WAS KEPT ON PURPOSE.
--- Its reader has since landed (REC-116 / IC-120): provenanceRoutesMarked
--- (op=provenanceroutes, R23) pages on (finding, bundle_id). What follows is
--- the record of why it was kept, as written then.
---
--- WHAT IT WAITS FOR: a READ op answering the question no op asks --
--- "which documents in this instance carry a standing LOOKED_INDETERMINATE
--- marker". All four SQL readers of this table key on bundle_id and seq and
--- classify in JS, so a group asking where its own record's provenance is
--- doubted must page the whole store and count for itself. The route act is a
--- WRITE (op-declarations declares provenanceroute mutating:true). There is no read.
---
--- IT IS NOT DEAD WEIGHT AND IT IS NOT MIS-SPECIFIED, and that is MEASURED
--- rather than read off the SQL (EXPLAIN QUERY PLAN, sqlite3 3.51.0, no
--- ANALYZE, which is this plane's live condition because nothing here ever
--- runs one). The MEASUREMENTS ledger's M-41 carries the plans in full:
---   the four existing readers     -- every one uses the PRIMARY KEY autoindex,
---                                    none touches this index, and DROPPING it
---                                    leaves all four plans IDENTICAL
---   finding = ?                   -- SEARCH USING INDEX (finding=?)
---   finding = ? AND bundle_id > ? -- SEARCH USING INDEX (finding=? AND
---                                    bundle_id>?) -- BOTH columns, which is
---                                    this plane's after-cursor paging shape
---   COUNT over finding = ?        -- COVERING INDEX
--- The second column is therefore not decoration: whoever declared this knew
--- the intended reader's PAGING shape. That is evidence of a SPECIFIC reader
--- rather than a speculative index, and it is why the act was to row the
--- reader rather than to delete the declaration.
---
--- DELETING IT WAS CONSIDERED AND REFUSED. REC-92 withdrew a chain_kind index
--- a few hundred lines down on REC-12's rule -- an index nobody seeks on is
--- cost with no reader -- but that precedent governs ADDING one, not removing
--- one a dated delegation has pointed at for 39 days. Removing this would take
--- the airuns sweep's unread roster DOWN by one for a reason that is not the
--- plane getting better, which is the one direction that ratchet must never
--- move, and it would delete the very artifact that made the sweep find this
--- owed act at all. The write cost is one row per member assessment, on an
--- append-only table a member writes by hand.
---
--- THE INTENT SURVIVES IN THREE PLACES AND THIS IS THE THIRD, so the index is
--- NOT the only evidence of it: CLAIMS.md carries REC-69's DELEGATION of
--- 2026-08-09 naming the question verbatim and re-affirmed open by M0-37 on
--- 2026-09-16, the legacy airuns.test.mjs carried it on the unread roster AND
--- pinned it BY NAME (that suite was deleted at T20), and the declaration is here.
---
--- The legacy test/nc-rec69-selects.mjs patched the two lines below as exact
--- string literals to arm two negative controls; it was deleted at T20, and no
--- test reads these lines as text now.
--- =========================================================================
-CREATE INDEX IF NOT EXISTS provenance_route_marks_finding
-  ON provenance_route_marks(finding, bundle_id);
-
 -- REC-225 (Content Framework v0.10 section 8.3; R29, R30): A MEMBER'S DECLARATION OF THE SYSTEM A
 -- DOCUMENT CAME FROM. A host serves many offices, so a host is not an origin: the office a document
 -- came from is a member's attributed statement, per document, dated, append-only; the row with the
@@ -192,26 +96,6 @@ CREATE TABLE IF NOT EXISTS origin_declarations (
   by        TEXT    NOT NULL, -- the member who declared it. Never a machine
   at        TEXT    NOT NULL, -- this module's clock at the declaration
   PRIMARY KEY (bundle_id, seq)
-);
-
--- K59 (R34): THE INSTANCE'S OWN SIGNED RECEIPTS FOR ARCHIVE-SOURCED CAPTURES, and the public keys that
--- signed them. One signing key per instance, held as a secret and replaceable by the operator; each
--- public key the instance ever signed with is kept here, so a receipt signed before a replacement
--- stays verifiable against the key it was signed with. key_id is the SHA-256 of the raw public key.
-CREATE TABLE IF NOT EXISTS receipt_keys (
-  key_id     TEXT PRIMARY KEY,
-  public_key TEXT NOT NULL, -- the raw Ed25519 public key, base64
-  first_used TEXT NOT NULL
-);
-CREATE TABLE IF NOT EXISTS signed_receipts (
-  capture_sha       TEXT NOT NULL,
-  retrieval_locator TEXT NOT NULL,
-  retrieved         TEXT NOT NULL,
-  statement         TEXT NOT NULL, -- the exact bytes signed (UTF-8)
-  signature         TEXT NOT NULL, -- Ed25519 over the statement, base64
-  key_id            TEXT NOT NULL,
-  signed_at         TEXT NOT NULL,
-  PRIMARY KEY (capture_sha, retrieval_locator, retrieved)
 );
 `;
 

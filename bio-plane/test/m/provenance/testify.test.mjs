@@ -2,8 +2,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, V } from "./fixture.mjs";
-import { testimonyBytes, observerRef, TESTIMONY_FORMAT, TESTIMONY_MAX_BYTES, TESTIMONY_PATH, attest, routeFinding,
-         chainFromEvidence } from "../../../src/provenance/index.mjs";
+import { testimonyBytes, observerRef, TESTIMONY_FORMAT, TESTIMONY_MAX_BYTES, TESTIMONY_PATH, routeFinding,
+         instanceStatement } from "../../../src/provenance/index.mjs";
+import * as CHECKS from "../../../src/provenance/checks.mjs";
 import { TESTIMONY_GRADE } from "../../../src/record-grammar/index.mjs";
 
 test("R28: testify writes an authored information bundle whose bytes are the header and the words", () => {
@@ -96,14 +97,12 @@ test("R40: no place is named in the module's behaviour or outward text", async (
   const a = w.cap("a");
   w.promoteInfo("INFO-2026-0001-a", { captures: [a] });
   texts.push(w.promoteInfo("INFO-2026-0002-b", { captures: [a] }));
-  texts.push(w.prov.provenanceRouteAssess({ bundleId: "INFO-2026-0001-a", author: V("r"), viewer: V("r") }));
-  texts.push(w.prov.provenanceRoutesMarked({ viewer: V("r") }), w.prov.provenanceRoutesMarked({ viewer: "x" }));
-  texts.push(w.prov.provenanceChainRebuild({ bundleId: "INFO-2026-0001-a", author: V("r"), viewer: V("r") }));
   texts.push(w.prov.versionChain({ addressNorm: "", viewer: V("r") }), w.prov.homeCensus({}), await w.prov.registerAudit(null));
-  texts.push(w.prov.captureGrade(a.sha), w.prov.declareOrigin({ bundleId: "x", by: "" }), routeFinding("information", null));
-  texts.push(w.prov.attestationsOf(a.sha), w.prov.attestationsOf(sha("none")), w.prov.attestationsOf("x"));
-  texts.push(chainFromEvidence({}), await attest({ sha256: "x" }, {}),
-             await attest({ sha256: sha("n") }, { head: async () => null, holds: async () => null }));
-  texts.push(await w.prov.signReceipt({}), await w.prov.signReceipt({ captureSha: sha("x"), retrievalLocator: "https://e.org", retrieved: "t" }));
+  texts.push(w.prov.captureGrade(a.sha), w.prov.captureGrade(sha("none")), w.prov.declareOrigin({ bundleId: "x", by: "" }));
+  texts.push(w.prov.registerHolds({ sha: a.sha, bundle: "INFO-2026-0001-a" }), w.prov.registeredFor("INFO-2026-0001-a"));
+  texts.push(w.prov.recordReceipt({ addressNorm: "e.org/a", captureSha: a.sha }), w.prov.receipts({}));
+  /* The pure copies held until their importers re-point (N516), and every refusal row this module exports. */
+  texts.push(routeFinding("information", null), routeFinding("inquiry", null), instanceStatement("bio-notice/1", a.sha));
+  texts.push(Object.values(CHECKS));
   for (const x of texts) assert.equal(place.test(JSON.stringify(x)), false, JSON.stringify(x).slice(0, 200));
 });
