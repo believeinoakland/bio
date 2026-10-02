@@ -10,12 +10,12 @@ import { TESTIMONY_PATH } from "../../../src/provenance/index.mjs";
 import { listenerRefusal, MODULE_ORDER } from "../../../src/membership/index.mjs";
 
 /* A world whose promotion runs the slot from a step at the legacy store's old rank (after every step of layers 1–9),
-   as the composition root holds it; the stand-in step keeps that module's name. */
+   as the composition root holds it, under the name it is registered with today, control-plane's (its R42; N497). */
 function slotted(opts) {
   const w = world(opts);
   const slot = w.prov.testimonySlot();
   const ran = [];
-  w.promotion.registerStep("legacy-store", { check: (c) => { ran.push("check"); return slot.check(c); },
+  w.promotion.registerStep("control-plane", { check: (c) => { ran.push("check"); return slot.check(c); },
                                              project: (c) => { ran.push("project"); return slot.project(c); } });
   return { w, slot, ran };
 }
