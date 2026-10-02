@@ -1,8 +1,8 @@
 /* membership — who the members are and what each may do; projects as working groups, sight, and the fence.
  *
- * Requirements: build/requirements/membership.md (R4–R96; T25's R83 order (attestation, provenance-routes,
- * reading-pipeline; N512, N513, K1219); T24's R83 order (link-sweep, K1185); T23's R83 order (corpus-export,
- * network-notices); T21's N453 deletions (the signer-key copies, K910); T20's N445
+ * Requirements: build/requirements/membership.md (R4–R96; T27's R83 order (docket, N520, K1256); T25's R83 order
+ * (attestation, provenance-routes, reading-pipeline; N512, N513, K1219); T24's R83 order (link-sweep, K1185); T23's
+ * R83 order (corpus-export, network-notices); T21's N453 deletions (the signer-key copies, K910); T20's N445
  * deletions and R96's figure source, K861; T19's split, K637: sessions and passwords, signer keys and AI credentials
  * are `credentials`', reached only through R79's `onRevoked`, R94's `registerClaimed` and R95's `registerPasswordSetter`; N426's project fence (R43); T17's N387; T16's
  * N357 and N364; T15's N352 (R88); T14's N128 (R81), N327 (R84), N329 (R86) and N335 (R87); T13's N324 (R84) and N332
@@ -178,7 +178,7 @@ export const MODULE_ORDER = Object.freeze([
   /* 6 */ "inquiry-grammar", "inquiry", "citation", "basis-versions", "strength", "contradiction", "run-rules",
           "ai-runs", "run-productions", "capture-requests", "skills", "agent-worker",
   /* 7 */ "intent", "reevaluation",
-  /* 8 */ "case-grammar", "corpus-export", "publication", "public-read", "project-stage", "network-notices",
+  /* 8 */ "case-grammar", "corpus-export", "publication", "docket", "public-read", "project-stage", "network-notices",
           "ratification", "case-authoring", "review",
   /* 9 */ "local-facts", "standards", "conformance", "consequences", "action-grammar", "actions", "action-clocks",
           "filing-templates", "filings", "escalation", "action-plans",
