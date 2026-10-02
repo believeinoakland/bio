@@ -1,6 +1,6 @@
 # op-declarations (T23)
 
-**Status** · session_01RCSAiipg9P4tjeS3JTkyBJ · depth 2 · WAITING ON BOB (J2) · handled B2
+**Status** · session_01RCSAiipg9P4tjeS3JTkyBJ · depth 2 · WAITING ON BOB (J2) · handled B4
 
 ## J1 · QUESTION
 
@@ -60,3 +60,31 @@ I re-ran the last four on the branch without my change: each is red there too.
 **R9's last sentence (K1122):** I propose "None is declared for `doorbellrefused` (R6). R6 holds over them."
 
 **Next:** I am waiting on J1's answer and on your CHANGE announcing affordances' merge. Then I merge `tranche/T23`, re-run and post COMPLETE.
+
+## Completion
+
+**Entries applied:**
+- B1: R10 for T23's ops, with `directorysubmission` and `publicread` by R6.
+- B2 (K1166): both J1 readings and the null NEEDS rows stand. Nothing changed.
+- B3 (K1168): R9's wording is accepted, and BOB writes it at the merge. My note for plane is superseded: `NETWORK_NOTICES_PUBLIC_READS` stays exported and nothing hands it to the door in T23.
+- B4 (K1169): I merged `tranche/T23`, which now carries affordances' R32.
+
+**Deferred:** none.
+
+**Found in other modules:** listed under "Work on B1". The door's four stamping lists are forwarded to control-plane (B3 (3)). The plane bundle is stale from `src/op-declarations/index.mjs`, and I regenerated nothing.
+
+**Tests, after merging `tranche/T23` at bfa752a847:**
+- `test/m/op-declarations/` and `control-plane/totality.test.mjs`: 31 pass, 0 fail. Red 5 is cleared.
+- Whole `bio-plane/test/m`: 5173 pass, 5 fail. Each failure is an accepted red:
+  - `control-plane/families.test.mjs`:47 (K1150)
+  - `control-plane/inbox-door.test.mjs`:81 (red 9)
+  - `plane/worker.test.mjs`:39 (red 6)
+  - `queue/catalogue.test.mjs`:34 and :116 (red 13)
+
+**Checks:**
+- format: 87 modules, 0 failures.
+- architecture: 5 product files, 0 failures.
+- coverage: 10 of 10 live ids, 0 failures.
+- ownership: 4 files, 0 failures.
+
+Size (session_01RCSAiipg9P4tjeS3JTkyBJ): test runs 7, module lines 2471
