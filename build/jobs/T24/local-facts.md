@@ -24,3 +24,7 @@ No catalogue row was added or changed, so there are no red 5 rows.
 - `node checks/ownership.mjs … local-facts tranche/T24`: 1 file changed; 0 failures.
 
 Size (session_01ATMXx59tM5rnPagFzWPRyT): test runs 3, module lines 2
+
+## J1 · COMPLETE
+
+local-facts done (record: Completion). N502: checks.mjs:3 re-worded; C-126.1–.5 were stamped by 1.52.0 (T22 L2, K989). Nothing else stale on a re-scan of the module and its tests. No row added or changed (no red 5 rows). Proof: test/m/local-facts 22/22; whole test/m 5231 pass, 2 fail, only accepted reds 8 and 9; format fails only on red 4; architecture, coverage (8/8) and ownership 0 failures. Stale artifact, not regenerated: bio-plane/dist/bio-plane.bundled.mjs from src/local-facts/checks.mjs (BOB regenerates at layer close).
