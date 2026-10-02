@@ -37,3 +37,5 @@ Found elsewhere (each against its owner):
 - Bundles: none staled (`fleetbundles.test.mjs` 0 fail).
 
 Rows awaiting stamp (T26 L2): C-34.1, C-34.2, C-34.3, C-34.4, each `where` re-pointed to `src/provenance-routes/index.mjs provenanceRouteAssess > is-route-mark`.
+
+**B2 CHANGE (K1225), handled.** `tranche/T25` merged (requirement text only: provenance keeps no copy of `ROUTE_MARK_CHECKS`, and drops `provenance_route_marks` from its tables and its purge declaration). No change to this module's code or tests: none relied on a copy. **Red until provenance's merge, by name:** `test/m/provenance-routes/composition.test.mjs` "R6, R10, R12: composed with provenance…", because today's provenance still declares `provenance_route_marks` (so this module's `declarePurge` is refused, `TABLE_DECLARED`) and still registers `route` and `routeMarks`. Module tests otherwise 36/37 green after the merge. With no copy kept, the row census will hold C-34.1–.4 once (this module's, `where` re-pointed, awaiting stamp) rather than twice.
