@@ -25235,7 +25235,7 @@ sha256: ${sha}
 }
 var noKey = () => actRefusal(
   "RECEIPT_NO_KEY",
-  "this instance holds no receipt-signing key, so nothing is signed. The operator binds one as a secret; nothing is claimed signed until then"
+  "this instance holds no receipt-signing key it can read, so nothing is signed. The operator binds one as a secret; nothing is claimed signed until then"
 );
 var Provenance = class _Provenance {
   #storage;
@@ -26027,12 +26027,18 @@ locator: ${retrievalLocator}
 sha256: ${captureSha}
 `;
   }
+  /* The bound key, or null when none is bound or the one bound cannot be read (not base64, not an Ed25519 PKCS#8
+     key): an unreadable key is no key (R57), so every door that asks answers `RECEIPT_NO_KEY` rather than throwing. */
   async #key() {
     if (!this.#signingKey) return null;
-    const priv = await crypto.subtle.importKey("pkcs8", unb64(this.#signingKey), { name: "Ed25519" }, true, ["sign"]);
-    const jwk = await crypto.subtle.exportKey("jwk", priv);
-    const pub = Uint8Array.from(atob(jwk.x.replace(/-/g, "+").replace(/_/g, "/") + "==".slice(0, (4 - jwk.x.length % 4) % 4)), (c) => c.charCodeAt(0));
-    return { priv, pub: b64(pub), keyId: hexOf(pub) };
+    try {
+      const priv = await crypto.subtle.importKey("pkcs8", unb64(this.#signingKey), { name: "Ed25519" }, true, ["sign"]);
+      const jwk = await crypto.subtle.exportKey("jwk", priv);
+      const pub = Uint8Array.from(atob(jwk.x.replace(/-/g, "+").replace(/_/g, "/") + "==".slice(0, (4 - jwk.x.length % 4) % 4)), (c) => c.charCodeAt(0));
+      return { priv, pub: b64(pub), keyId: hexOf(pub) };
+    } catch {
+      return null;
+    }
   }
   /* The instance key's one signing site (R34, R56): signs `statement`, UTF-8, and records the key in `receipt_keys`
      the first time it signs anything; null when no key is bound. */
@@ -26089,6 +26095,17 @@ sha256: ${captureSha}
     const signed = await this.#signWith(statement);
     if (!signed) return noKey();
     return { ok: true, signature: signed.signature, key_id: signed.key_id, public_key: signed.public_key };
+  }
+  /** R57 · N504 — whether an instance key is bound, so that `instanceSign` would sign: `true` or `false`, a key that
+   *  cannot be read answering `false`. It signs nothing and writes nothing (`receipt_keys` and every `first_used` stay
+   *  as they were), so a later module can ask before its first real statement. Asynchronous, as reading the key is;
+   *  never rejects. */
+  async instanceKeyBound() {
+    try {
+      return !!await this.#key();
+    } catch {
+      return false;
+    }
   }
   /** R56 — every key that has signed anything, `[{key_id, public_key, first_used}]` in the order first used; the
    *  private part is never stored, so never answered. */
@@ -26452,7 +26469,7 @@ sha256: ${captureSha}
     ) || null;
   }
   /** R23's read for one bundle: the latest mark read through `routeFinding`, for the reads that publish `route`
-   *  beside a bundle (`op=list`, `op=audit`; the legacy store's `#withRoute`). `objectType` is the bundle's. */
+   *  beside a bundle (`op=list`, `op=audit`; once the retired legacy store's `#withRoute`). `objectType` is the bundle's. */
   routeOf(bundleId, objectType) {
     return routeFinding(objectType, this.#latestRouteMark(bundleId));
   }
@@ -26490,8 +26507,8 @@ sha256: ${captureSha}
     }
     return { tally, marked, markedTotal, markedShown: marked.length, means: OBSERVATION_MEANS, note: ROUTE_TALLY_NOTE };
   }
-  /** R55 — this module's figures for `op=stats` and purge's proof (record-core R63), as the legacy store's `#counts`
-   *  takes them: `register` and `routeMarks`, each keyed on `bundle_id`. `hid` (`{sql, args}`, the bundles the caller
+  /** R55 — this module's figures for `op=stats` and purge's proof (record-core R63), as the retired legacy store's
+   *  `#counts` took them: `register` and `routeMarks`, each keyed on `bundle_id`. `hid` (`{sql, args}`, the bundles the caller
    *  may not see, or null for a whole count) drops the rows naming a hidden bundle; a row whose column is null names
    *  none and is counted (`NULL NOT IN (…)` is NULL, so the column is read through COALESCE). Writes nothing. */
   counts(hid = null) {
@@ -27327,22 +27344,60 @@ async function hashBody(res, max = CAPTURE_MAX) {
   const h = createSha256();
   let bytes2 = 0;
   const reader = res && res.body && res.body.getReader ? res.body.getReader() : null;
-  if (reader) for (; ; ) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    bytes2 += value.length;
-    if (bytes2 > max) {
-      try {
-        await reader.cancel();
-      } catch {
+  try {
+    if (reader) for (; ; ) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      bytes2 += value.length;
+      if (bytes2 > max) {
+        try {
+          await reader.cancel();
+        } catch {
+        }
+        return { oversize: true, bytes: bytes2 };
       }
-      return { oversize: true, bytes: bytes2 };
+      h.update(value);
     }
-    h.update(value);
+  } catch (e) {
+    return { failed: String(e && e.message || e), bytes: bytes2 };
   }
   return { sha: h.hex(), bytes: bytes2 };
 }
-async function mementoLookup(cap, address, { indexPurpose = "archive-lookup", fetchPurpose = "archive-lookup" } = {}) {
+var archiveBroke = (detail) => ({ ok: false, status: 502, payload: {
+  ok: false,
+  reason: "ARCHIVE_UNREACHABLE",
+  detail: `the memento's body broke off while it was read (${detail})`
+} });
+var EMPTY_SHA256 = createSha256().hex();
+async function peekBody(res) {
+  const reader = res && res.body && res.body.getReader ? res.body.getReader() : null;
+  if (!reader) return { res };
+  const ahead = [];
+  try {
+    for (; ; ) {
+      const { done, value } = await reader.read();
+      if (done) return { empty: true };
+      if (value && value.length) {
+        ahead.push(value);
+        return { res: replayed(res, ahead, reader) };
+      }
+    }
+  } catch (e) {
+    return { failed: String(e && e.message || e) };
+  }
+}
+function replayed(res, ahead, reader) {
+  const read2 = async () => ahead.length ? { done: false, value: ahead.shift() } : reader.read();
+  const cancel = async (why) => {
+    ahead.length = 0;
+    try {
+      await reader.cancel(why);
+    } catch {
+    }
+  };
+  return { status: res.status, ok: res.ok, url: res.url, headers: res.headers, body: { getReader: () => ({ read: read2, cancel }), cancel } };
+}
+async function mementoLookup(cap, address, { indexPurpose = "archive-lookup", fetchPurpose = "archive-lookup", take } = {}) {
   const ends = mementoEndpoints(ARCHIVE, address);
   if (!ends) return { ok: false, status: 400, payload: { ok: false, reason: "BAD_ADDRESS", detail: "the archive has no endpoint for this address" } };
   const considered = [], rows2 = [], tried = /* @__PURE__ */ new Set();
@@ -27400,8 +27455,15 @@ async function mementoLookup(cap, address, { indexPurpose = "archive-lookup", fe
         });
         return { next: true };
       }
-      if (ans.status === 200) return { ok: true, res, answer: ans, locator: url, rows: rows2, considered };
+      if (ans.status === 200) {
+        const t = await take({ res, answer: ans, locator: url });
+        if (t.fail) return { fail: t.fail };
+        if (!t.row) return { ...t, ok: true, answer: ans, locator: url, rows: rows2, considered };
+        rows2.push(t.row);
+        return { next: true };
+      }
       const h = await hashBody(res);
+      if (h.failed) return { fail: archiveBroke(h.failed) };
       rows2.push(mementoRow(ans, h.oversize ? { sha256: null } : { sha256: h.sha, bytes: h.bytes }) || { timestamp: ans.timestamp });
       return { next: true };
     }
@@ -27462,19 +27524,23 @@ async function archiveLookup(cap, { address } = {}) {
     return { status: 400, body: { ok: false, reason: "BAD_ADDRESS", detail: "the document address must be https on a public host" } };
   const el = await archiveEligibility(cap, address);
   if (!el.ok) return { status: el.status, body: el.payload };
-  const m = await mementoLookup(cap, address);
+  const m = await mementoLookup(cap, address, { take: async ({ res, answer, locator }) => {
+    const h = await hashBody(res);
+    if (h.failed) return { fail: archiveBroke(h.failed) };
+    if (h.oversize)
+      return { fail: { ok: false, status: 413, payload: {
+        ok: false,
+        reason: "TOO_LARGE",
+        bytes: h.bytes,
+        maxBytes: CAPTURE_MAX,
+        retrieval_locator: locator,
+        detail: "the memento exceeds what this surface will capture even in parts"
+      } } };
+    const row2 = mementoRow(answer, { sha256: h.sha, bytes: h.bytes });
+    return selectCapture([row2]).ok ? { sha: h.sha, bytes: h.bytes } : { row: row2 };
+  } });
   if (!m.ok) return { status: m.status, body: m.payload };
-  const h = await hashBody(m.res);
-  if (h.oversize)
-    return { status: 413, body: {
-      ok: false,
-      reason: "TOO_LARGE",
-      bytes: h.bytes,
-      maxBytes: CAPTURE_MAX,
-      retrieval_locator: m.locator,
-      detail: "the memento exceeds what this surface will capture even in parts"
-    } };
-  const c = chooseMemento(m, h.sha, h.bytes, address);
+  const c = chooseMemento(m, m.sha, m.bytes, address);
   if (!c.ok) return { status: c.status, body: c.payload };
   return { status: 200, body: {
     ok: true,
@@ -27630,7 +27696,7 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
           translation: row2.translation,
           op,
           matched_sweep: crOrigin.matched_sweep,
-          detail: "a sweep-origin acquire names the in-scope prefixes it may reach (monitoring R53's `sources`); this one named none, so nothing was fetched"
+          detail: "a sweep-origin acquire names the in-scope prefixes it may reach (link-sweep R1's `sources`); this one named none, so nothing was fetched"
         });
       }
       sweepScope = sc;
@@ -27796,7 +27862,11 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
   }
   let archiveMemento = null;
   if (archiveAsked) {
-    const m = await mementoLookup(cap, archiveAsked, { fetchPurpose: "acquire" });
+    const m = await mementoLookup(cap, archiveAsked, { fetchPurpose: "acquire", take: async ({ res: res2, answer: answer2 }) => {
+      const p = await peekBody(res2);
+      if (p.failed) return { fail: archiveBroke(p.failed) };
+      return p.empty ? { row: mementoRow(answer2, { sha256: EMPTY_SHA256, bytes: 0 }) } : { res: p.res };
+    } });
     if (!m.ok) return answer(m.status, m.payload);
     archiveMemento = m;
     locator = m.locator;
@@ -27980,7 +28050,20 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
   const reader = res.body && res.body.getReader ? res.body.getReader() : null;
   if (!reader) return answer(502, { ok: false, reason: "NO_BODY", locator });
   for (; ; ) {
-    const { done, value } = await reader.read();
+    let chunk2;
+    try {
+      chunk2 = await reader.read();
+    } catch (e) {
+      if (archiveMemento) return answer(502, archiveBroke(String(e && e.message || e)).payload);
+      await noteOutcome("fetch_failed", null);
+      return answer(502, {
+        ok: false,
+        reason: "FETCH_FAILED",
+        locator,
+        detail: crCredential ? "the body broke off while it was read; its error is not carried because a supplied credential rode it" : `the body broke off while it was read (${String(e && e.message || e)})`
+      });
+    }
+    const { done, value } = chunk2;
     if (done) break;
     total += value.length;
     if (total > MAX) {
@@ -28307,7 +28390,7 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
     /* Derived artifacts are named on the SAME register document, never as documents of their own (C-18.3). */
     ...subs ? { renditions: subs.renditions } : {},
     /* R21: on the capture-request arm the origin is the drain's row's, never the body's. */
-    /* R31 (K1126): only monitoring and capture-requests set a sweep origin; a body's `matchedSweep` is ignored. */
+    /* R31 (K1126): only link-sweep and capture-requests' sweep arm set a sweep origin; a body's `matchedSweep` is ignored. */
     origin: captureRequest ? crOrigin || { kind: "named_request" } : { kind: "named_request" },
     attestation_attempts: attestations
   };
@@ -131716,8 +131799,8 @@ function makeFetch(hooks = {}) {
         const creatingInquiry = b.base === null && !!b.meta && promotedType === "inquiry";
         const proven = replay?.proven ?? null;
         if (proven) b.replay = true;
-        const replayed = creatingInquiry ? proven : null;
-        if (replayed) b.migrationReplay = replayed;
+        const replayed2 = creatingInquiry ? proven : null;
+        if (replayed2) b.migrationReplay = replayed2;
         delete b.memberUserAgent;
         if (viaSession && b.base === null) {
           const agent = (req.headers.get("User-Agent") || "").trim().slice(0, 512).trimEnd();
@@ -131726,13 +131809,13 @@ function makeFetch(hooks = {}) {
         delete b.assistantPrincipal;
         if (!viaSession)
           b.assistantPrincipal = cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;
-        if (replayed) delete b.assistantPrincipal;
+        if (replayed2) delete b.assistantPrincipal;
         if (b.base === null && b.meta && promotedType === "project" && viaSession) {
           const creation = projectCreationGate(sessCaps);
           if (creation) return refused2(creation);
           b.ownerMemberId = sessMember;
         }
-        if (b.base === null && b.meta && !replayed && promotedType === "inquiry" && Array.isArray(b.files)) {
+        if (b.base === null && b.meta && !replayed2 && promotedType === "inquiry" && Array.isArray(b.files)) {
           const bm = b.files.find((f17) => f17 && f17.path === "bundle.md" && typeof f17.text === "string");
           if (bm) {
             const want = viaSession ? "human" : "agent";
