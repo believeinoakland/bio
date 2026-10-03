@@ -90,3 +90,33 @@ Job complete again at d0966ea35a on `job/T28/ratification`. B4 and B5 are applie
 - `row-census`: red, as in J2 (the two rows above, plus C-21.3–C-21.5, which are not mine).
 
 Size (session_01KY9hTGfankh8NKom3Z2q59): test runs 9, module lines 3,982
+
+## J5 · COMPLETE
+
+Job complete again at 42fbad0e5b on `job/T28/ratification`. B6 (K1321) is applied, and tranche/T28 is merged through 2f3bfe535c. The change is to tests only; the module's code is unchanged at 3,982 lines.
+
+**Applied:** every case document my tests sign is now `/6`, which publication R58 requires.
+- The fixture's `cleanCase` and `caseMd` write `format: bio-case-document/6`. They carry the `method:` block (`{grading: GRADING_METHOD_VERSION, checks: CATALOG_VERSION}`) and empty `materials:` and `material_attestations:` blocks.
+- converted-c's hand-written document "in op=publish's shape" gets the same blocks. Both use case-grammar's own writers (`methodBlockLines`, `materialBlockLines`; its R11, R12).
+- Titles and comments that named `/5` for these documents now say `/6`.
+- Nothing was weakened. The catalogue's acceptance of a `/5` document as written (case-grammar R1) is still tested, now beside `/6` (converted-a, R8 d84). `checks.test.mjs` keeps its own `/5` baseline for the pure catalogue.
+
+**Verified against publication's R58 before it merges:**
+- I merged `origin/job/T28/publication` (856ef4f6e7, which has `CASE_FORMAT_SUPERSEDED`) onto my branch in a scratch worktree, uncommitted.
+- Before the fix: pass 159, fail 44. That is your count of 39, plus the new tests from J2 and J4 that sign through the commit.
+- After: pass 203, fail 0. Without publication's branch: also pass 203, fail 0. The scratch worktree is removed.
+
+**Rows awaiting stamp:** unchanged.
+- C-58.5 ANONYMOUS_TESTIMONY_UNCORROBORATED: translation re-worded, awaiting stamp (T29).
+- C-92.10 ATTRIBUTION_UNCHOSEN: translation re-worded, awaiting stamp (T29).
+
+**Deferred:** none.
+
+**Tests and checks:**
+- `node --test bio-plane/test/m/ratification/`: pass 203, fail 0.
+- `format`: 95 modules, 94 requirements files, 0 failures.
+- `architecture` (ratification): 24 product files, 118 relative imports, 0 failures.
+- `coverage` (ratification): 39 of 39 live requirement ids named by a test, 0 failures.
+- `ownership` (ratification, tranche/T28): 14 files changed, 0 failures.
+
+Size (session_01KY9hTGfankh8NKom3Z2q59): test runs 15, module lines 3,982
