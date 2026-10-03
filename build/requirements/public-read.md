@@ -57,11 +57,11 @@ Terms are `publication`'s (a case, an edition, the case document, a pin, the pub
 
 ### Uses
 
-- `record-grammar`: `parseFrontmatter`, `normalizeType`, `sectionText` (the Worker's reads).
+- `record-grammar`: `parseFrontmatter`, `normalizeType`, `sectionText` (the Worker's reads); `canonicalJson` (R23; K1324).
 - `signatures`: `verifySshsig`, `NS_RATIFY`, `ratifyStatement`, `caseRatifyStatement` (a published case's signature, R3; the Worker).
 - `ooxml`: `crc32` (R6).
-- `case-grammar`: the format predicates (R1 there), for R3 and the Worker; `caseTensionsOf` and `caseDocumentBlocks` (R3's `tensions`, `captures:` and `sources:` blocks), read from `case-grammar` itself, not through `publication`'s re-export; `whatChangedOf` and `lensOf` (its R8, R9; R3's `what_changed` and `lens`; K1019).
-- `publication`: `caseEditionState` (its R53), `soleCase` (its R54), `caseDocMemberFrozen` (its R55), `recordCaseManifest` (its R15), `delivererOf` (its R14), and its tables under its R40. The rows this module's refusals carry are its own (R17).
+- `case-grammar`: the format predicates (R1 there), for R3 and the Worker; `caseTensionsOf` and `caseDocumentBlocks` (R3's `tensions`, `captures:` and `sources:` blocks), read from `case-grammar` itself, not through `publication`'s re-export; `whatChangedOf` and `lensOf` (its R8, R9; R3's `what_changed` and `lens`; K1019). For the case file (T28; K1324): `methodOf`, `materialsOf`, `standingOf`, `gradingFactsOf`, `passagesOf`, `caseFilePath`, `casePartDigest`, `completeEditionOf`, `CASE_FILE_FORMAT`, `CASE_FILE_MANIFEST_PATH`, `caseDocumentRequiresMaterials` (its R1, R11–R15, R17).
+- `publication`: `publishedMaterialText` (its R57, for R23; K1316), `caseEditionState` (its R53), `soleCase` (its R54), `caseDocMemberFrozen` (its R55), `recordCaseManifest` (its R15), `delivererOf` (its R14), and its tables under its R40. The rows this module's refusals carry are its own (R17).
 - `docket` (N520): `withdrawalOf` (its R12), `lastEntryOf`, `docketPublic` (its R14) and `docketFeed` (its R15), for R20 and R21 (K1276).
 
 ### Invariants

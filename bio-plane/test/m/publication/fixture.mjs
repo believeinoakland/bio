@@ -16,6 +16,8 @@ import { basisVersionsOf } from "../../../src/basis-versions/index.mjs";
 import { reevaluationOf } from "../../../src/reevaluation/index.mjs";
 import { sourcesOf } from "../../../src/sources/index.mjs";
 import { publicationOf, publicationOps, captureBlockLines, sourceBlockLines } from "../../../src/publication/index.mjs";
+import { acceptedWorkOf } from "../../../src/accepted-work/index.mjs";
+import { materialsLines, materialAttestationLines, acceptedWorkBlockLines } from "../../../src/case-grammar/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
@@ -142,11 +144,22 @@ export function world({ group = "test-group", workerd = false, contradiction = n
   /* reevaluation before publication, as the plane's store builds them: publication registers its cited parts with it (R41, R43). */
   const r = reevaluationOf(host, { record, membership, promotion, inquiry: k, content, connections, provenance: prov,
                                    basisVersions, now: () => clock.now });
+  /* accepted-work (layer 6), the real module; what case-import registers with it is a stand-in each test controls. */
+  const acceptedWork = acceptedWorkOf(host, { record, promotion });
+  /* R57: extraction's indexed units of a capture, and R60: the actors capture recorded for one, as stand-ins the test
+     sets (`w.units`, `w.actors`), each answering exactly the shape of the module's own read. */
+  const units = new Map(), actors = new Map();
+  const extraction = { unitsOf: (sha) => (units.has(sha) ? { capture_sha: sha, ...units.get(sha) }
+                                                          : { capture_sha: sha, units: [], state: null }) };
+  const capture = { captureAccountsOf: (sha) => ({ captureSha: sha, actors: (actors.get(sha) || []).map((a) => ({ actor: a, at: NOW })),
+                                                   accounts: [] }) };
   const p = publicationOf(host, { record, membership, credentials, promotion, inquiry: k, basisVersions, reevaluation: r,
-                                  ...(contradiction ? { contradiction } : {}), sources: src, now: () => clock.now });
+                                  ...(contradiction ? { contradiction } : {}), sources: src, acceptedWork, extraction,
+                                  capture, provenance: prov, now: () => clock.now });
   let n = 0;
   const w = {
     st, host, record, membership, credentials, promotion, prov, content, connections, k, basisVersions, r, p, clock, groupRef, src,
+    acceptedWork, units, actors,
     /** A knock pulled into the capture `captureSha` (capture R65), and its source minted as `sources` R1 mints it. */
     knock(captureSha, { knockId = `KNOCK-${knocks.length + 1}`, pseudonym = null, received = NOW, viewer = V("olive") } = {}) {
       knocks.push({ knock_id: knockId, sha256: captureSha, bytes: 10, received, pseudonym, knocker_digest: pseudonym ? `d-${pseudonym}` : null });
@@ -226,6 +239,26 @@ export function world({ group = "test-group", workerd = false, contradiction = n
         completeness, biasAcknowledgement: "none declared", bar, roster, sigArmored: sig, attestorKey: KEY,
         attestorMember: signer, gateVersion: "plane-gate/test", deliveredBy: V(signer), at }));
     },
+    /** A case edition signed BEFORE T28 (R58 refuses committing one now): its rows as the commit wrote them then, over
+     *  a document stored through R21, so the reads of an older signed document can still be driven. */
+    signLegacy(caseId, edition, { project = "PROJ-1", roster = [], signer = "olive", sig = SIG(edition), at = NOW,
+                                  completeness = { statement: "It leaves out the minutes.", author: V("olive") }, bar = null,
+                                  deliveredBy = V(signer) } = {}) {
+      const doc = w.row(`SELECT doc_sha, text FROM case_documents WHERE case_id=? AND edition=?`, caseId, edition);
+      if (!doc) throw new Error("fixture signLegacy: prepare the document first");
+      st.sql.exec(`INSERT INTO cases (case_id,project_id,opened) VALUES (?,?,?) ON CONFLICT(case_id) DO NOTHING`, caseId, project, at);
+      st.sql.exec(`INSERT INTO published_cases (case_id,edition,scope,completeness,bias_acknowledgement,bar,opened)
+                   VALUES (?,?,?,?,?,?,?)`, caseId, edition, "The question.", JSON.stringify(completeness), "none declared",
+                  bar ? JSON.stringify(bar) : null, at);
+      roster.forEach((m, i) => st.sql.exec(`INSERT INTO published_case_members (case_id,edition,ord,bundle_id,version_sha,role)
+                                            VALUES (?,?,?,?,?,?)`, caseId, edition, i, m.bundle_id, m.version_sha ?? null, m.role ?? null));
+      st.sql.exec(`UPDATE case_documents SET sig_armored=?, attestor_key=?, attestor_member=?, gate_version=?, delivered_by=?,
+                   ratified_at=? WHERE case_id=? AND edition=?`, sig, KEY, signer, "plane-gate/test", deliveredBy ?? null, at,
+                  caseId, edition);
+      st.sql.exec(`INSERT INTO published_shas (sha256,bundle_id,path,kind,bytes,published) VALUES (?,?,?,?,?,?)`,
+                  doc.doc_sha, caseId, `case-document-edition-${edition}.md`, "case_document", Buffer.byteLength(doc.text), at);
+      return { ok: true, caseId, edition };
+    },
     /** Ratification's commit of one published edition (R22). */
     signFinding(bundleId, { edition = undefined, title = `Finding ${bundleId}`, edges = [], shas = null, signer = "olive",
                              sig = SIG(9), strength = null, memberCarriesBlocks = false, at = NOW } = {}) {
@@ -240,18 +273,22 @@ export function world({ group = "test-group", workerd = false, contradiction = n
   return w;
 }
 
-/** A case document (`bio-case-document/4` unless `format`): the facts this module reads from it. `roles`:
+/** A case document (`bio-case-document/6` unless `format`, with its `method:` and `materials:` blocks; R58): the facts this module reads from it. `roles`:
  *  [{target, version_sha, edition?, role?}]; `strength`: [{target, axis, state, grade}]; `excluded`: [{target,
  *  description, reason}]; `attributions`: [{observation, level, shown, chosen_at_edition}] (a run is written only when
  *  given); `citations`: rows for /4's `case_citations` ({target, version, capture?}; `capture` written when given);
  *  `tensions`: the /5 section as case-authoring writes it (case-authoring J1's shape): `{rows, sentences, depth?}`, each
- *  row's and sentence's fields written as given (a string quoted), `unread` ({target, legs}, K499) when given; with it
- *  the format defaults to /5. `blocks`: `{captures?, sources?}`, R20's /5 blocks through `captureBlockLines` and
- *  `sourceBlockLines`; with it, too, the format defaults to /5. */
+ *  row's and sentence's fields written as given (a string quoted), `unread` ({target, legs}, K499) when given.
+ *  `blocks`: `{captures?, sources?}`, R20's /5 blocks through `captureBlockLines` and
+ *  `sourceBlockLines`. `materials`, `attestations`: /6's rows (case-grammar R12); `acceptedWork`, `acceptedWorkFlags`: its
+ *  R16 rows, written when given. */
 export function caseDoc(caseId, edition, { project = "PROJ-1", roles = [], findings = null, strength = [], excluded = [],
                                            attributions = null, citations = [], tensions = null, format = null,
-                                           excludes = "Nothing else.", ack = false, blocks = null } = {}) {
-  format ??= tensions || blocks ? "bio-case-document/5" : "bio-case-document/4";
+                                           excludes = "Nothing else.", ack = false, blocks = null,
+                                           method = { grading: "grading/1", checks: "1.0.0" }, materials = [],
+                                           attestations = [], acceptedWork = null, acceptedWorkFlags = null } = {}) {
+  format ??= "bio-case-document/6";
+  const v6 = format === "bio-case-document/6";
   const scalar = (v) => (v === null || v === undefined ? "null" : typeof v === "string" ? `"${v}"` : String(v));
   const rowsOf = (key, list) => (list.length ? [`${key}:`, ...list.flatMap((r) => Object.entries(r)
     .map(([k, v], i) => `${i ? "   " : "  -"} ${k}: ${scalar(v)}`))] : [`${key}: []`]);
@@ -280,6 +317,12 @@ export function caseDoc(caseId, edition, { project = "PROJ-1", roles = [], findi
     /* R20 (N364): the /5 blocks, written with this module's own line builders, as case-authoring writes them. */
     ...(blocks && blocks.captures ? captureBlockLines(blocks.captures) : []),
     ...(blocks && blocks.sources ? sourceBlockLines(blocks.sources) : []),
+    /* case-grammar R11, R12, R16 (DEC-112, N522): /6's method and materials, and another group's work it rests on. */
+    ...(v6 && method ? ["method:", `  grading: ${scalar(method.grading)}`, `  checks: ${scalar(method.checks)}`] : []),
+    /* written with case-grammar's own line builders (its R12, R16), as case-authoring writes them */
+    ...(v6 ? materialsLines(materials) : []),
+    ...(v6 ? materialAttestationLines(attestations) : []),
+    ...(acceptedWork || acceptedWorkFlags ? acceptedWorkBlockLines({ rows: acceptedWork || [], flags: acceptedWorkFlags || [] }) : []),
     "---"];
   const body = ["", "## Scope", "", "The question.", "",
     ...(ack ? ["**Who else read this statement.** Nobody yet.", ""] : []),
