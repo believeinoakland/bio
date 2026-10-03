@@ -13,6 +13,8 @@ import { caseFile, keyFor, GROUP, CASE } from "../case-checker/fixture.mjs";
 import { caseImportOf, docketAddressOf, DOCKET_ENTRY_FORMATS } from "../../../src/case-import/index.mjs";
 import { monitoringOf } from "../../../src/monitoring/index.mjs";
 import { acceptedWorkOf } from "../../../src/accepted-work/index.mjs";
+import { queueOf } from "../../../src/queue/index.mjs";
+import { queueProducersOf } from "../../../src/queue-producers/index.mjs";
 import { canonicalJson } from "../../../src/record-grammar/json.mjs";
 import { NS_DOCKET, docketStatement } from "../../../src/sshsig.mjs";
 import { signSshsig } from "../../../scripts/sign-sshsig.mjs";
@@ -99,4 +101,22 @@ test("R20: case-import's accepted-work registration carries moves, filled before
   const moves = aw.publisherMoves({}).moves;
   assert.deepEqual(moves.map((m) => [m.import, m.group, m.case, m.kind, m.edition, m.seq, m.what_changed, m.key_listed]),
                    [[a.import, GROUP, CASE, "edition", 2, 2, "the lease's second year added", true]]);
+});
+
+test("R20: queue is handed the plane's case-import, so the producers it reads answer the watch's items to the member who set it and nobody else", async () => {
+  const { x, a } = await imported();
+  x.ctx.storage.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
+                          VALUES (?, ?, ?, 'member', 'active', '["contribute"]', 't', 't')`, "bob", "Cover bob", "h_bob");
+  /* the queue's producers: one per storage, the instance the plane's queue builds and reads (queue-producers R8) */
+  queueOf(x.ctx);
+  const items = (who) => queueProducersOf(x.ctx).feedItems({ member: who, viewer: `member:${who}`, now: NOW,
+    homesOf: () => new Map(), optionsOf: () => [] }).items.filter((i) => String(i.id).includes(a.import)).map((i) => [i.id, i.kind]).sort();
+  /* negative control: before a watch is read, nothing of the import reaches anyone */
+  assert.deepEqual(items("alice"), []);
+  await x.fetch(`/importwatch?by=${ALICE}&viewer=${ALICE}&import=${a.import}&publisher=${encodeURIComponent(PUB)}`,
+                { method: "POST", body: "{}" });
+  await withDocket(DOCKET, () => monitoringOf(x.ctx).cadenceTick(NOW));
+  assert.deepEqual(items("alice"), [[`FINDING::followed-case-entry::${a.import}#1`, "followed-case-entry"],
+                                    [`FINDING::followed-case-entry::${a.import}#2`, "followed-case-entry"]]);
+  assert.deepEqual(items("bob"), [], "the watch's items go to its setter only");
 });

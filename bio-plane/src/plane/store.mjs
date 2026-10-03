@@ -63,10 +63,12 @@ import { contentOf, contentOps } from "../content/index.mjs";
 import { retrievalOf, retrievalRoutes } from "../retrieval/index.mjs";
 import { queueOf } from "../queue/index.mjs";
 import { tasksOf } from "../tasks/index.mjs";
+import { wizardScriptsOf, wizardScriptsOps } from "../wizard-scripts/index.mjs";
 import { instanceSetupOf, instanceSetupOps } from "../setup.mjs";
 import { dispatch, controlPlaneRoutes } from "../control-plane/dispatch.mjs";
 import { promotionStep } from "../control-plane/step.mjs";
 import { registerOwnersCounts, registerStats } from "./stats.mjs";
+import { wizardRegistration } from "./wizards.mjs";
 
 /* The name control-plane's promotion step (its R42) is registered under. */
 const STEP = "control-plane";
@@ -209,6 +211,11 @@ export class Store extends DurableObject {
        Built before the scheduler, whose `gathering-sweep` owner (`linkSweepOf(ctx)`, scheduler R5) then reaches this
        instance, the one per storage (K1210). */
     linkSweepOf(ctx, { monitoring, captureRequests, capture });
+    /* R19 (N528; DEC-120, DEC-121): wizard-scripts, first in layer 11, built here before every layer-11 reader
+       (affordances, queue-producers, control-plane). At creation it creates its tables, declares them to purge (K23) and
+       registers its ids' seed; it is then registered, once and before the first request, with the bundle's screens and
+       library, the member op table, the acts a machine is refused and the labelled machine drafts (its R13). */
+    wizardScriptsOf(ctx, { env }).wizardRegister(wizardRegistration());
     promotion.registerStep(STEP, promotionStep(ctx));   /* R10 (K861): control-plane's step (its R42), the testimony slot and the sight index */
     observationLogOf(ctx).listenToCapture(capture);
     schedulerOf(ctx, env);
@@ -277,6 +284,7 @@ export class Store extends DurableObject {
     localFactsOf(this.ctx).migrate();
     filingTemplatesOf(this.ctx).migrate();
     filingTemplatesOf(this.ctx).migrateFromFilings();
+    wizardScriptsOf(this.ctx).migrate();   /* R19: its tables, in the modules' order (first in layer 11) */
 
     addColumns();   /* REC-143: the second pass */
     retrievalOf(this.ctx).migrate();   /* retrieval's projection columns, text index and selections, and its backfill */
@@ -385,6 +393,7 @@ export class Store extends DurableObject {
       ...monitoringOps(monitoringOf(ctx), url, body),
       ...linkSweepOps(linkSweepOf(ctx), url),   /* `sweeps` (link-sweep R9), at the place monitoring's map held it (N506) */
       ...reviewOps(reviewOf(ctx), url, body),
+      ...wizardScriptsOps(wizardScriptsOf(ctx), url, body),   /* R19 (N528): the wizard scripts' ops, layer 11 */
       ...instanceSetupOps(instanceSetupOf(ctx, env), url, body),
       ...controlPlaneRoutes(ctx, url, body),
     };
