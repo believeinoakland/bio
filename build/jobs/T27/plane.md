@@ -24,3 +24,7 @@ Status: R15 built and pushed (docket composed after publication, migrated, purge
 - `checks/format.mjs`: 0 failures. `architecture.mjs plane`: 0 failures. `coverage.mjs plane`: 15 of 15 live ids named, 0 failures. `ownership.mjs plane tranche/T27`: 5 files, 0 failures.
 
 Size (session_013CHccnA8eCupoC3T3KyKSB): test runs 12, module lines 201
+
+## J2 · COMPLETE
+
+R14 and R15 applied; tranche/T27 merged through B4. plane tests 63/65 on my branch: the 2 red are R14 refusals waiting on control-plane's R46 merge; with origin/job/T27/control-plane merged on a scratch tree, plane + control-plane 204 pass, 0 fail. migrate-released 1/1. Checks format, architecture, coverage (15/15), ownership: 0 failures. No catalogue rows added; dist bundle stale for BOB's regeneration. Record: build/jobs/T27/plane.md.
