@@ -1,3 +1,8 @@
 session,role,module,cache_read,cache_write,input,output,turns,test_runs,module_lines
 session_014t8ory3KuXTmiZLiSDLmaB,job,membership,4698980,163506,64,11190,,7,3346
 session_01JXCfBLEWnwDJYd7wTMihga,job,promotion,14615560,343571,126,23150,,11,3262
+session_01PnLhSoHMj7KMjQmdKaYkP6,job,inquiry-grammar,12518197,255124,116,35177,,9,1561
+session_01Ny1sjsJ9vEJz7rxs28vcCh,job,accepted-work,13990656,167537,184,53187,,7,240
+session_01QNQaUggEEA2eXfwiByRD2P,job,inquiry,10285103,212541,109,25555,,4,3897
+session_01EC1CbcpHTUynmhmiinbKPz,job,basis-versions,16643377,242755,160,39666,,12,3594
+session_01Q7AodKmzj5rYSu6PxmkvRb,job,strength,25144616,319838,194,89452,,34,2209

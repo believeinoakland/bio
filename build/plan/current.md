@@ -26,6 +26,7 @@ T27's rules hold (merge early; one file, one editor; marks struck at the merge; 
 3. The UI's DEC-88 tests (N487, K1030): stay red, Bob's.
 4. The new ops' L11 arms (control-plane totality, affordances R12) for `case-import`'s eight ops, from case-import's L8 merge until L11's.
 5. `bio-plane/test/m/inquiry/grammar.test.mjs` (inquiry R38): pins `INQUIRY_GRAMMAR_CHECKS` to six rows; C-21.3 is a seventh. Red from inquiry-grammar's L6 merge until inquiry's (K1306).
+6. `bio-plane/test/m/control-plane/families.test.mjs` R22: `CHECK_FAMILIES` misses accepted-work's family (and, from L8, case-checker's and case-import's), red until control-plane's L11 merge (K1310).
 
 ## Roster (by layer; 21 jobs)
 
@@ -33,7 +34,7 @@ T27's rules hold (merge early; one file, one editor; marks struck at the merge; 
 **L6** · inquiry-grammar: R7, R8, R11 (N522). accepted-work (new): R1–R7 (N522). inquiry: R4, R12 wording, a ref's projection (N522). basis-versions: R3 (N522). strength: R31–R35 (N519, N522; R35 `gradingFacts`, K1305).
 **L7** · reevaluation: R1, R8, R31, R32 (N519, N522).
 **L8** · case-grammar: R1, R9 (N524), R11–R16 (N519, N520, N522). publication: R33, R57–R60 (N519, N522). docket: R2's own code (N526), R23 (N525). public-read: R3, R5, R6, R22–R24 (N520). ratification: R2, R14, R35, R36 and two translations (N519, N523); 3,979 lines at the opening: measured at its START, split first if past 4,000 (K617, K1277). case-checker (new): R1–R18 (N520, N522). case-import (new): R1–R16 (N520, N522). case-authoring: R14, R29, R34, R37, R43–R53 (N519, N520, N522); writes a finding's grading facts from `strength` R35 (K1305).
-**L11** · affordances: the eight `case-import` ops graded (the four DEC-96 acts `reasoned`). queue: R28 (N527). op-declarations: specs for `caseimport`, `importedcases`, `importedcase`, `caseimportdocument`, `importaccept`, `importacceptwithdraw`, `importflag`, `importflagclear`; `publish` and `publishpreflight` gain `flagsDisclosed`. control-plane: routes for the eight ops (`case-checker`'s two public reads ride `public-read` R18), and docket's family at its module-order place in `CHECK_FAMILY_FILES` once docket's own code is merged (N526). plane: composition (`accepted-work`'s factory before `inquiry`'s; `case-checker`'s and `case-import`'s registrations).
+**L11** · affordances: the eight `case-import` ops graded (the four DEC-96 acts `reasoned`). queue: R28 (N527). op-declarations: specs for `caseimport`, `importedcases`, `importedcase`, `caseimportdocument`, `importaccept`, `importacceptwithdraw`, `importflag`, `importflagclear`; `publish` and `publishpreflight` gain `flagsDisclosed`. control-plane: routes for the eight ops (`case-checker`'s two public reads ride `public-read` R18), and docket's family at its module-order place in `CHECK_FAMILY_FILES` once docket's own code is merged (N526); accepted-work's, case-checker's and case-import's families in `CHECK_FAMILIES` (red 6, K1310). plane: composition (`accepted-work`'s factory before `inquiry`'s; `case-checker`'s and `case-import`'s registrations).
 
 ## Entries
 
