@@ -1,6 +1,6 @@
 # promotion (T30)
 
-**Status** · session_011zouuDt37KpxHQBHzQxiy3 · depth 2 · WORKING · handled B1
+**Status** · session_011zouuDt37KpxHQBHzQxiy3 · depth 2 · COMPLETE · handled B1
 
 ## Completion
 
