@@ -1,6 +1,6 @@
 # BOB to case-checker (T31)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
