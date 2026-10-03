@@ -182,7 +182,8 @@ export class CaseAuthoring {
   get networkNotices() { return this.#deps.networkNotices ||= networkNoticesOf(this.#deps.host); }
   get extraction() { return this.#deps.extraction ||= extractionOf(this.#deps.host); }
   get promotion() { return this.#deps.promotion ||= promotionOf(this.#deps.host); }
-  /* TODO(T28, until case-import merges): `caseImportOf(this.#deps.host)`. */
+  /* R51, R52: `case-import` (its R4, R9), handed in by the composition. With none, its reads throw, and every read of it
+     here fails closed: a leg on another group's finding is not in force (C-120.10), its flags undetermined (C-120.12). */
   get caseImport() {
     if (!this.#deps.caseImport) throw new Error("case-import is not composed on this host");
     return this.#deps.caseImport;

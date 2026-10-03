@@ -96,6 +96,16 @@ test("R37, R46, R47, R48: a load-bearing document from a knocker with no publish
     "the account's text travels; the member's handle and signature do not");
   assert.equal(row.grade, w.prov.captureGrade(k).grade, "the grade as recorded");
   for (const leak of ["SIG-of-alice-7f3", "AAAA", "h_alice", "by alice"]) assert.equal(text.includes(leak), false, `names ${leak}`);
+  /* K1316: the attribution section carries the capture's row, written though the case reaches no observation */
+  assert.deepEqual((fm.observation_attributions || []).map((x) => [x.capture, x.level === "null" ? null : x.level]), [[k, null]]);
+  assert.match(blocks.sources[0].stated, /^Withheld: /, "R37's label and reason");
+  /* R48, publication R60: the attesting member chooses `name`, and their row is re-authored at that level */
+  w.st.sql.exec(`INSERT OR IGNORE INTO capture_actors (capture_sha, actor, at) VALUES (?, 'member:alice', ?)`, k, T0);
+  const chose = w.publication.attributeObservation({ caseId: r.caseId, edition: 1, capture: k, level: "name",
+                                                     reason: "I stand behind it by name.", by: "alice" });
+  assert.equal(chose.ok, true, JSON.stringify(chose).slice(0, 300));
+  const after = materialsOf(w.fm(docOf(w, r))).attestations.filter((x) => x.by_kind === "member");
+  assert.deepEqual(after.map((x) => x.level), ["name"]);
 });
 
 test("R49: a named member's capture, a load-bearing self-attested Grade B one included, is governed by R35 and R36 unchanged: its account names its member and carries the signature", () => {

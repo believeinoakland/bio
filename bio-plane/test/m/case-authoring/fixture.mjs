@@ -28,7 +28,6 @@ import { Capture } from "../../../src/capture/index.mjs";
 import { sourcesOf } from "../../../src/sources/index.mjs";
 import { networkNoticesOf } from "../../../src/network-notices/index.mjs";
 import { caseAuthoringOf } from "../../../src/case-authoring/index.mjs";
-import { acceptedWorkOf } from "../../../src/accepted-work/index.mjs";
 import { parseImportedFindingRef, importedFindingRef } from "../../../src/inquiry-grammar/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
@@ -203,7 +202,8 @@ export function world({ group = "test-group", provider = true, now = null, recor
   });
   st.db.exec(CASE_DRAFTS);
   const imports = importsStandIn();
-  acceptedWorkOf(host).registerAcceptedWork("case-import", imports.registration);
+  /* accepted-work's one instance on this host (K1307), reached through strength, which reads it (its R33). */
+  strength.acceptedWork.registerAcceptedWork("case-import", imports.registration);
   const w = {
     imports,
     st, host, record, membership, credentials, promotion, prov, content, entities, connections, inquiry, basisVersions, strength,

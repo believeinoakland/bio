@@ -137,8 +137,11 @@ export const STATEMENT_ACK_CHECKS = Object.freeze({
    exists; it discloses each document's grade and co-attestation, and is never refused because a document is not
    co-attested. What refuses is an undisclosed conflict, a disclosure of something that is not one, a read that could not
    be made whole, a load-bearing Grade B document published as self-attested without its owner saying so and why, an
-   acknowledgement that stands on nothing, and an uncleared hunch. Promotion stamps these rows (N318); C-120.4–C-120.7
-   were stamped in `CATALOG_VERSION` 1.47.0 (T17). */
+   acknowledgement that stands on nothing, and an uncleared hunch; and (T28; DEC-112 (4), DEC-96 item 4) material a
+   load-bearing finding relies on that this copy does not hold whole, another group's work with no acceptance in force,
+   and an open flag on it left undisclosed, a disclosure standing on nothing, or a flags read not made whole. Promotion
+   stamps these rows (N318); C-120.4–C-120.7 were stamped in `CATALOG_VERSION` 1.47.0 (T17); C-120.8 and
+   C-120.10–C-120.13 await T29's stamp (C-120.9 was withdrawn unstamped, K1275). */
 export const CASE_DISCLOSURE_CHECKS = Object.freeze({
   TENSION_NOT_DISCLOSED: {
     check: 'C-120.1',
