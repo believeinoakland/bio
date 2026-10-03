@@ -842,7 +842,9 @@ export class Capture {
       authority_state: "undetermined",
       authority_basis: `material handed to the group through its doorbell by an unnamed knocker; no authority is asserted; recorded ${at} for resolution through the task list`,
       provenance_chain: [{
-        who: `instance ${this.env.INSTANCE_NAME || "unnamed"} (CivicOS/${this.env.VERSION || "0.0.0"})`,
+        /* `acquisition` R16 (DEC-124): the product is named Civicsmith; a document pulled before T31 keeps its `who`,
+           answered again as stored (`pulled_document`). */
+        who: `instance ${this.env.INSTANCE_NAME || "unnamed"} (Civicsmith/${this.env.VERSION || "0.0.0"})`,
         asserts: `these bytes were received at this instance's doorbell as knock ${row.knock_id} at ${row.received}, `
                + `and brought into the record by ${by} at ${at}; they were received, not fetched from any address`,
         evidence: "the knock's receipt: its digest, taken as the bytes arrived, and its instant",
