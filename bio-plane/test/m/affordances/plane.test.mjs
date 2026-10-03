@@ -308,12 +308,12 @@ test("R14 R9 R18: on an inquiry target, sever and reinstate track the case citat
 });
 
 /* ============================================================ R17, R21: op=affordances */
-test("R17: with no target, the catalogue — each act decorated with appliesTo, the vocabularies, the capture acts and "
-   + "the set acts with set_key, item_keys, shared_keys and max_items", async () => {
+test("R17 R37: with no target, the catalogue — each act decorated with appliesTo, the vocabularies, the capture acts, "
+   + "the set acts with set_key, item_keys, shared_keys and max_items, and the screens and offered wizard scripts", async () => {
   const r = await GET(`op=affordances&token=${W.IRIS}`);
   /* R17's six keys, all present; the control plane's door may add its own decoration beside them (`fences`, `pack`:
      control-plane R41, K585 (1), K730) and nothing else */
-  const SIX = ["capture_acts", "catalog", "detail", "set_acts", "target", "vocabularies"];
+  const SIX = ["capture_acts", "catalog", "detail", "set_acts", "target", "vocabularies", "screens", "wizard_scripts" /* R37 */];
   assert.deepEqual(SIX.filter((k) => !Object.hasOwn(r, k)), []);
   assert.deepEqual(Object.keys(r).filter((k) => !SIX.includes(k) && !["fences", "pack"].includes(k)), []);
   assert.equal(r.target, null);
@@ -328,6 +328,14 @@ test("R17: with no target, the catalogue — each act decorated with appliesTo, 
   assert.deepEqual(r.set_acts.map((a) => [a.id, a.set_key, a.item_keys, a.shared_keys, a.max_items]),
     PER_ITEM_ACTS.map((a) => [a.id, a.set_key, a.item_keys, a.shared_keys, PER_ITEM_MAX]));
   assert.deepEqual(r.vocabularies, JSON.parse(JSON.stringify(VOCABULARIES)));
+  /* R37: the plane registers the bundled screen registry (plane R19); each is a list, and every script offered starts on
+     a registered screen */
+  assert.ok(Array.isArray(r.screens) && Array.isArray(r.wizard_scripts));
+  const ids = new Set(r.screens.map((s) => s.id));
+  assert.deepEqual(r.wizard_scripts.filter((s) => !ids.has(s.steps?.[0]?.screen)).map((s) => s.id), []);
+  assert.deepEqual(r.wizard_scripts.filter((s) => s.draft === true).map((s) => s.id), []);
+  const t = await GET(`op=affordances&token=${W.IRIS}&target=${E(W.INFO)}`);
+  assert.ok(!("screens" in t) && !("wizard_scripts" in t), "a targeted answer carries neither");
 });
 
 /* skillpack's share (T18 convert): what the doctrine pack reads as the machine/member boundary (INVESTIGATIVE-SESSION
@@ -588,7 +596,7 @@ test("R19: the reasoned registry, progression and theme acts, and intent's three
   assert.deepEqual(Object.entries(got).filter(([, c]) => !JUSTIFICATION_REFUSALS.includes(c)), []);
 });
 
-test("R19 R35: together the two drives reach every op RUNGS grades `reasoned`", () => {
+test("R19 R35 R37: together the two drives reach every op RUNGS grades `reasoned`", () => {
   const driven = ["release", "dispose", "sever", "reinstate", "conclude", "reopen", "inquirydivide", "inquiryground",
     "actionmove", "versionreject", "versionconsider", "withdrawconclusion", "projectownerremove", "projectownerrescue",
     "adminremove", "connectionassert", "filemembershipjudge", "relationdeclare", "aliaswithdraw", "relationwithdraw",
@@ -618,7 +626,9 @@ test("R19 R35: together the two drives reach every op RUNGS grades `reasoned`", 
     /* R34: at docket's interface over its fixture, backing.test.mjs */
     "docketfile", "docketdecline",
     /* R35: at case-import's interface over its fixture, backing.test.mjs */
-    "importaccept", "importacceptwithdraw", "importflag", "importflagclear"];
+    "importaccept", "importacceptwithdraw", "importflag", "importflagclear",
+    /* R37: at wizard-scripts' interface over its fixture, t31.test.mjs */
+    "wizardretire"];
   assert.deepEqual(Object.keys(RUNGS).filter((op) => RUNGS[op] === "reasoned" && !driven.includes(op)), []);
 });
 

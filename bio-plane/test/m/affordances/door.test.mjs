@@ -14,10 +14,12 @@ const FACTS = { ok: true, target: "INQ-2026-0001-q", object_type: "inquiry", dec
   case_member: false, basis_legs: 1, rested_on: { working: 0, frozen: 0, severed: 0 }, basis_version_states: ["suggested"],
   basis_versions: 1, actor_is_machine: false, contradiction_inquiry: false };
 
-test("R17: with no target, the catalogue — every act decorated through the gate with appliesTo, the vocabularies for "
+test("R17 R37: with no target, the catalogue — every act decorated through the gate with appliesTo, the vocabularies for "
    + "the kinds handed in, the capture acts and the set acts with set_key, item_keys, shared_keys and max_items", () => {
   const r = affordancesAnswer({ kinds: KINDS, gate: GATE });
-  assert.deepEqual(Object.keys(r).sort(), ["capture_acts", "catalog", "detail", "set_acts", "target", "vocabularies"]);
+  assert.deepEqual(Object.keys(r).sort(), ["capture_acts", "catalog", "detail", "screens", "set_acts", "target", "vocabularies",
+                                           "wizard_scripts"]);
+  assert.deepEqual([r.screens, r.wizard_scripts], [[], []], "nothing handed in: two lists, empty");
   assert.equal(r.target, null);
   assert.deepEqual(r.catalog, ACTS.map((a) => ({ ...decorate(a, GATE), appliesTo: a.types })));
   assert.deepEqual(r.capture_acts, CAPTURE_ACTS.map((a) => decorate(a, GATE)));
@@ -53,9 +55,13 @@ test("R17 R13: with a target, R13's refusal is answered as given, stated not ok"
 });
 
 /* ---- the door's arm, with a store stand-in ---- */
-const door = ({ kinds = { answered: true, result: { kinds: KINDS } }, facts = { answered: true, result: FACTS } } = {}) => {
+const SCREENS = { answered: true, result: { ok: true, screens: [{ id: "case-home", acts: ["casenote"] }],
+  wizard_scripts: [{ id: "WIZ-1", version: "WIZ-1@1", name: "Note", steps: [], approver: "member:alice", finished: 2 }] } };
+const door = ({ kinds = { answered: true, result: { kinds: KINDS } }, facts = { answered: true, result: FACTS },
+                screens = SCREENS } = {}) => {
   const asked = [];
-  const stub = { fetch: (u) => { asked.push(String(u)); return String(u).startsWith("http://do/actionkinds") ? kinds : facts; } };
+  const stub = { fetch: (u) => { asked.push(String(u)); const s = String(u);
+    return s.startsWith("http://do/actionkinds") ? kinds : s.startsWith("http://do/affordancescreens") ? screens : facts; } };
   const deps = {
     json: (body, status) => ({ body, status }),
     doAnswer: async (r) => r,
@@ -67,12 +73,31 @@ const door = ({ kinds = { answered: true, result: { kinds: KINDS } }, facts = { 
 };
 const at = (q) => new URL(`http://x/api/?op=affordances${q}`);
 
-test("R17: the door answers the catalogue in the control plane's envelope, having asked the store only the kinds", async () => {
+test("R17 R37: the door answers the catalogue in the control plane's envelope, having asked the store the kinds and, "
+   + "for the stamped viewer, the screens and offered scripts, which it passes in unchanged", async () => {
   const { stub, deps, asked } = door();
   const r = await affordancesOp(at(""), stub, deps);
-  assert.deepEqual(r, { status: 200, body: { ok: true, result: affordancesAnswer({ kinds: KINDS, gate: GATE }), store: "bio",
-                                            tokenClass: "session" } });
-  assert.deepEqual(asked, ["http://do/actionkinds"]);
+  assert.deepEqual(r, { status: 200, body: { ok: true, result: affordancesAnswer({ kinds: KINDS, gate: GATE,
+    screens: SCREENS.result.screens, wizard_scripts: SCREENS.result.wizard_scripts }), store: "bio", tokenClass: "session" } });
+  assert.equal(r.body.result.screens, SCREENS.result.screens);
+  assert.equal(r.body.result.wizard_scripts, SCREENS.result.wizard_scripts);
+  assert.deepEqual(asked, ["http://do/actionkinds", "http://do/affordancescreens?viewer=member%3Airis"]);
+  /* a targeted answer asks no screens and carries neither key */
+  const t = door();
+  const tr = await affordancesOp(at(`&target=${FACTS.target}`), t.stub, t.deps);
+  assert.ok(!("screens" in tr.body.result) && !("wizard_scripts" in tr.body.result));
+  assert.ok(!t.asked.some((u) => u.includes("affordancescreens")));
+});
+
+test("R37: a store silence or refusal on the screens is answered by the control plane's own answers, never as no "
+   + "screens (REC-52)", async () => {
+  let d = door({ screens: { answered: false, correlation: "c-2" } });
+  assert.deepEqual(await affordancesOp(at(""), d.stub, d.deps), { silent: "affordances", correlation: "c-2" });
+  const refused = { refused: true, reason: "STORE_REFUSED" };
+  d = door({ screens: refused });
+  assert.deepEqual(await affordancesOp(at(""), d.stub, d.deps), { refusal: refused });
+  d = door({ screens: { answered: true, result: null } });
+  assert.deepEqual(await affordancesOp(at(""), d.stub, d.deps), { silent: "affordances", correlation: null });
 });
 
 test("R17 R15: with a target, the door asks the facts with the four stamps exactly as handed in, and answers the "
@@ -117,11 +142,11 @@ test("R17: a store silence or refusal on either question is answered by the cont
   assert.deepEqual(await affordancesOp(at("&target=X"), d.stub, d.deps), { silent: "affordances", correlation: null });
 });
 
-test("R22: the door only reads — it asks the store's two read routes and nothing else, and changes nothing it is handed", async () => {
+test("R22: the door only reads — it asks the store's three read routes and nothing else, and changes nothing it is handed", async () => {
   const { stub, deps, asked } = door();
   const before = JSON.stringify(FACTS);
   await affordancesOp(at(""), stub, deps);
   await affordancesOp(at(`&target=${FACTS.target}`), stub, deps);
-  assert.deepEqual(asked.map((u) => new URL(u).pathname), ["/actionkinds", "/actionkinds", "/affordancefacts"]);
+  assert.deepEqual(asked.map((u) => new URL(u).pathname), ["/actionkinds", "/affordancescreens", "/actionkinds", "/affordancefacts"]);
   assert.equal(JSON.stringify(FACTS), before);
 });

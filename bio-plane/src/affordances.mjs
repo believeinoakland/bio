@@ -561,6 +561,9 @@ export const JUSTIFICATION_REFUSALS = [
      member checked and why (case-import R6, R7), and a flag raised or cleared without the issue or the reason (its R8),
      each refused absent, blank or over its bound. */
   "IMPORT_ACCEPT_NO_REASON", "IMPORT_FLAG_NO_ISSUE",
+  /* R37 (DEC-121; N528): retiring a wizard script, or withdrawing a version, says why (wizard-scripts R9, as
+     filing-templates R11), refused absent as well as malformed. */
+  "WIZARD_REASON_REFUSED",
 ];
 
 /* THE GROUNDS ON WHICH A MUTATING OP HAS NO RUNG. Written ONCE here and pointed
@@ -638,6 +641,13 @@ export const CONSEQUENCE_STATEMENTS = Object.freeze({
       + "again, and assistant transcripts for them past the time limit will be deleted on each member's device when it "
       + "is next opened. This cannot be undone." }),
 });
+
+/* R36 (DEC-122 (1); K1363 B5): THE ACTS KEPT FOR A LARGER SCREEN BEYOND WHAT THE LADDER ALREADY SAYS. Every decorated act
+ * carries an advisory `phone` flag (`phoneOf` below): false at the heavy rungs and for a credential act, and false for
+ * the acts named here, whose rung alone would leave them on the phone — `filingsent`, DEC-122's "sending", is `reasoned`.
+ * Advisory only: nothing refuses by device and the plane cannot know one. Published as
+ * `VOCABULARIES.larger_screen_acts`, the same frozen array, so a change of the phone set is a change here only. */
+export const LARGER_SCREEN_ACTS = Object.freeze(["filingsent"]);
 
 /* The object vocabularies, published the way op=searchfields publishes the
  * query language, so a surface never keeps a copy. Each is the object its
@@ -817,6 +827,8 @@ export const VOCABULARIES = {
   docket_entry_kinds: DOCKET_ENTRY_KINDS,
   docket_proposals: DOCKET_PROPOSALS,
   docket_pressure_kinds: DOCKET_PRESSURE_KINDS,
+  /* R36 (DEC-122 (1)): the acts a phone surface leaves for a larger screen beyond the ladder's own — this module's own. */
+  larger_screen_acts: LARGER_SCREEN_ACTS,
 };
 
 /* R26 (N65 (3)): the vocabularies an instance publishes, with `action_kind` the kinds its `actions` accepts at the
@@ -1100,6 +1112,15 @@ export const RUNGS = {
   importacceptwithdraw:  "reasoned",   // IMPORT_ACCEPT_NO_REASON (case-import R7): why the acceptance is withdrawn
   importflag:            "reasoned",   // IMPORT_FLAG_NO_ISSUE (case-import R8): the specific issue
   importflagclear:       "reasoned",   // IMPORT_FLAG_NO_ISSUE (case-import R8): why the flag is cleared
+
+  /* ---- R37 (DEC-121; N528): a wizard script's retirement (or a draft's withdrawal) asks its reason and stands, as
+     `templateretire` (R30). */
+  wizardretire:          "reasoned",   // WIZARD_REASON_REFUSED (wizard-scripts R9)
+
+  /* ---- R38 (DEC-101 (3); N534): watching an imported case's docket and ending the watch, on R27's rule — neither asks a
+     reason, and each takes the other back (case-import R17: an end leaves no watch in force; a new watch puts one back). */
+  importwatch:           "reversible", // importunwatch takes it back
+  importunwatch:         "reversible", // importwatch takes it back
 };
 
 
@@ -1283,6 +1304,19 @@ export const RUNG_ABSENT = {
      and a completion stores only bytes the edition already names by fingerprint (its R5). */
   caseimport:           { ground: "undetermined", is: "a member imports another group's case file into a read-only project, one per source group, case and lens, each edition held beside the others and never replaced; every finding is recreated and its result recorded (case-import R1–R3)" },
   caseimportdocument:   { ground: "undetermined", is: "a member completes an imported edition with a document whose fingerprint the edition records as missing, and every finding of that edition is checked again; nothing else about the edition changes (case-import R5)" },
+  /* R37 (DEC-120, DEC-121; N528): the wizard library's acts, on the template library's grounds (R30). The five drafting
+     and approving acts are R27's rule, as the template acts: none asks an authored reason that the act revises what
+     stands, and no published act takes one back (a later version updates, never undoes). The editor grant and its
+     revocation are `credential`: their subject is WHO MAY write a blank start or add steps. A progress call is an
+     unattributed tally of what happened, `observational`. */
+  wizarddraft:          { ground: "undetermined", is: "a member creates a wizard script and its first draft from a recording of screens and acts (never values), a proposal or an approved version, or a new draft version of one (wizard-scripts R3)" },
+  wizardrevise:         { ground: "undetermined", is: "the draft's author replaces its steps by a new revision, every earlier revision kept with its author and time, or adopts a proposal's steps (wizard-scripts R4)" },
+  wizardpropose:        { ground: "undetermined", is: "a machine or a member PROPOSES steps for a project or a script with its why, stored apart and labelled; a draft only when a member takes it up (wizard-scripts R5)" },
+  wizardsubmit:         { ground: "undetermined", is: "the author moves a draft to submitted, fixing its steps and digest, once it passes the checks against the registered screens (wizard-scripts R6)" },
+  wizardapprove:        { ground: "undetermined", is: "a project owner who is not the version's sole author approves a submitted version, the earlier approved version marked updated; or an administrator widens an approved script to the group (wizard-scripts R7)" },
+  wizardeditorgrant:    { ground: "credential", is: "an administrator grants a member the advanced editor: a blank start and adding steps (wizard-scripts R8)" },
+  wizardeditorrevoke:   { ground: "credential", is: "an administrator revokes an advanced-editor grant, appended and never deleted (wizard-scripts R8)" },
+  wizardprogress:       { ground: "observational", is: "adds one to an unattributed daily tally of a script version's start, step reached or finish; names no member, case or project, and stopping is no event (wizard-scripts R15)" },
 };
 
 /* REC-38, UI-22's delegation: THE CAPTURE-DIRECTED ACTS' METADATA, and the
@@ -2825,6 +2859,27 @@ export const NON_ACTS = {
   importedcase: "read: one imported case's editions, each finding's recreation and its standing against this group's own bar, the source's bar labelled as the source's, and the acceptance in force and the open flags; writes nothing",
   casechecker: "read: public, no credential",
   casefilespec: "read: public, no credential",
+  /* R38 (DEC-101 (3); N534): the watch of an imported case's docket is keyed by the import, as R35's acts are. */
+  importwatch: "import-directed: keyed by an imported case (an import, an edition, a finding or a flag), reached from the imported cases; writes this module's rows and moves no bundle",
+  importunwatch: "import-directed: keyed by an imported case (an import, an edition, a finding or a flag), reached from the imported cases; writes this module's rows and moves no bundle",
+  /* R37 (DEC-120, DEC-121; N528): `wizard-scripts`' ops. A script and its versions are rows of that module's own, never a
+     bundle state `affordanceFacts` describes; each act is reached from the library or a screen's mark. The reads write
+     nothing; `wizardcheck` answers any credential, an assistant planning a wizard included (its R12). */
+  wizarddraft: "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
+  wizardrevise: "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
+  wizardpropose: "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
+  wizardsubmit: "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
+  wizardapprove: "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
+  wizardretire: "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
+  wizardeditorgrant: "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
+  wizardeditorrevoke: "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
+  wizardprogress: "tally: unattributed, keyed by a script's version; names no member",
+  wizards: "read: the wizard scripts the viewer may see, offered versions by default or those in a named state, each with its state, attribution, breaks and use; writes nothing",
+  wizardread: "read: one wizard script version with its steps and its whole attribution; writes nothing",
+  wizardsat: "read: the offered wizard scripts that start on one screen, with the caller's own drafts marked; needs no machine credential and no key, and writes nothing",
+  wizarduse: "read: a script's unattributed daily use tallies by version and day, to its project's owners and its version's author; writes nothing",
+  wizardcandidates: "read: where offered scripts' step counts drop most and which acts are refused most, never a member, case, target or project; writes nothing",
+  wizardcheck: "read: the checks every wizard script passes, run over a list of steps against the registered screens, naming each refusal's step; reached by any credential, and writes nothing",
 };
 
 /* D-126 — THE FOURTH WEIGHT, `per-item`, AND THE THREE ACTS THAT TAKE A SET.
@@ -2879,11 +2934,22 @@ export function deriveActs(facts) {
   return ACTS.filter((a) => a.applies(facts, ty) && !(machine && a.id in MACHINE_REFUSALS));
 }
 
+/* R36 (DEC-122 (1); K1363 B5): the advisory phone flag — false at the rungs `terminal`, `attested` and `irreversible`,
+ * for an absence on the `credential` ground, and for `LARGER_SCREEN_ACTS`; true otherwise, so reads, captures and
+ * everyday acts are phone acts. Nothing refuses by it. */
+const NOT_ON_PHONE_RUNGS = new Set(["terminal", "attested", "irreversible"]);
+export function phoneOf(id) {
+  if (Object.hasOwn(RUNGS, id) && NOT_ON_PHONE_RUNGS.has(RUNGS[id])) return false;
+  if (Object.hasOwn(RUNG_ABSENT, id) && RUNG_ABSENT[id].ground === "credential") return false;
+  return !LARGER_SCREEN_ACTS.includes(id);
+}
+
 /* R11: one act, decorated for a caller. `gate` is the control plane's, built from the tables that actually gate the
  * call (`NEEDS`, `SESSION_OPS`): `{needs(op), mode(op)}`, `mode` one of `session`, `admin-session`, `machine`. Every
  * key is present and a value the record does not hold is a STATED null, never an omitted key — so a queue item's
  * option and an `op=affordances` act for the same subject are one shape from one function. `rung_absence` is the
- * ground of a classified absence (FW-14): a null rung beside a stated ground is undetermined STATED (R24). */
+ * ground of a classified absence (FW-14): a null rung beside a stated ground is undetermined STATED (R24). `phone` is
+ * R36's, always a boolean. */
 export function decorate(act, gate) {
   const id = act.id;
   return {
@@ -2893,6 +2959,7 @@ export function decorate(act, gate) {
     rung: Object.hasOwn(RUNGS, id) ? RUNGS[id] : null,
     rung_absence: Object.hasOwn(RUNG_ABSENT, id) ? RUNG_ABSENT[id].ground : null,
     prompt: act.prompt ?? null,
+    phone: phoneOf(id),
   };
 }
 

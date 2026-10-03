@@ -26,7 +26,10 @@
  * REACHED as `affordancesOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`). The modules it
  * asks are reached through their factories on the same host at the moment of the call, when the Durable Object has
  * already made each of them with its own options; `deps` (a test's) replaces any of `record`, `membership`,
- * `connections`, `citation`, `inquiry`, `publication`, `basisVersions`, `ratification`, `contradiction`. */
+ * `connections`, `citation`, `inquiry`, `publication`, `basisVersions`, `ratification`, `contradiction`, `wizardScripts`.
+ *
+ * R37 (N528): the second route, `op=affordancescreens`, answers what the untargeted `op=affordances` publishes of
+ * `wizard-scripts`: the registered screens and, for each, the offered scripts that start there for this viewer. */
 
 import { normalizeType, parseFrontmatter, isMachineIdentity } from "../record-grammar/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
@@ -38,6 +41,7 @@ import { publicationOf } from "../publication/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { ratificationOf } from "../ratification/index.mjs";
 import { contradictionOf } from "../contradiction/index.mjs";
+import { wizardScriptsOf } from "../wizard-scripts/index.mjs";
 
 class AffordanceFacts {
   constructor(host, deps) {
@@ -53,6 +57,7 @@ class AffordanceFacts {
     this.basisVersions = of("basisVersions", basisVersionsOf);
     this.ratification = of("ratification", ratificationOf);
     this.contradiction = of("contradiction", contradictionOf);
+    this.wizardScripts = of("wizardScripts", wizardScriptsOf);
     const storage = host && host.storage ? host.storage : host;
     this.sql = d.sql || (storage && storage.sql);
   }
@@ -230,6 +235,20 @@ class AffordanceFacts {
              cites_in: { confirmed: citesIn.confirmed.length, severed: citesIn.severed.length },
              cites_out: citesOut, cited_by_case: citedByCase };
   }
+
+  /** R37 (DEC-120, DEC-121; N528): the screen registry as `wizard-scripts` registered it (its R13, `[]` before
+   *  registration) and the offered scripts for `viewer`: for each registered screen in registry order, its R11 answer
+   *  passed in unchanged, the caller's own drafts (`draft: true`) left out — R37 publishes the offered scripts. A read. */
+  screens({ viewer = null } = {}) {
+    const w = this.wizardScripts();
+    const screens = w.registeredScreens();
+    const wizard_scripts = [];
+    for (const { id } of screens) {
+      const at = w.wizardsAt({ screen: id, viewer });
+      for (const s of (at && Array.isArray(at.scripts) ? at.scripts : [])) if (s.draft !== true) wizard_scripts.push(s);
+    }
+    return { ok: true, screens, wizard_scripts };
+  }
 }
 
 const instances = new WeakMap();
@@ -248,5 +267,7 @@ export function affordancesOps(a, url) {
   return {
     affordancefacts: () => a.affordanceFacts({ target: q("target"), viewer: q("viewer"), identity: q("identity"),
                                                author: q("author"), by: q("by") }),
+    /* R37: the screens and the offered wizard scripts the untargeted answer publishes, for the stamped viewer. */
+    affordancescreens: () => a.screens({ viewer: q("viewer") }),
   };
 }
