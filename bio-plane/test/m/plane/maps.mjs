@@ -40,6 +40,7 @@ import { reviewOf, reviewOps } from "../../../src/review/index.mjs";
 import { caseAuthoringOf, caseAuthoringOps } from "../../../src/case-authoring/index.mjs";
 import { ratificationOf, ratificationOps } from "../../../src/ratification/index.mjs";
 import { publicationOf, publicationOps } from "../../../src/publication/index.mjs";
+import { docketOf, docketOps } from "../../../src/docket/index.mjs";
 import { publicReadOf, publicReadOps } from "../../../src/public-read/index.mjs";
 import { projectStageOf, projectStageOps } from "../../../src/project-stage/index.mjs";
 import { networkNoticesOf, networkNoticesOps } from "../../../src/network-notices/index.mjs";
@@ -74,6 +75,7 @@ export const MODULE_MAPS = [
   ["ratification", (c, u, b) => ratificationOps(ratificationOf(c), u, b)],
   ["corpus-export", (c, u) => corpusExportOps(corpusExportOf(c), (k) => u.searchParams.get(k))],
   ["publication", (c, u, b) => publicationOps(publicationOf(c), u, b)],
+  ["docket", (c, u, b) => docketOps(docketOf(c), u, b)],
   ["public-read", (c, u) => publicReadOps(publicReadOf(c), u)],
   ["project-stage", (c, u) => projectStageOps(projectStageOf(c), u)],
   ["network-notices", (c, u, b) => networkNoticesOps(networkNoticesOf(c), u, b)],
