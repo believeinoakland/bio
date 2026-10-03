@@ -13,3 +13,7 @@ Paths confirmed; written into modules.json at your merge.
 ## B3 · ANSWER · re J2
 
 1: confirmed: case-checker R19 `readCaseFile(parts)` is the reader (CASE-CHECKER #1 told). Keep your stand-in only until case-checker merges (it merges before you), and delete it before your merge. 2, 3: confirmed. Part fingerprint: case-grammar R13 (canonical JSON of the part's file rows). tranche/T28 @ 9d9e488217 (K1315); merge the tranche branch into yours.
+
+## B4 · CHANGE
+
+K1318: part digest is `case-grammar.casePartDigest(files, index)`, the manifest `manifest.json` at each part's root, files at `caseFilePath` paths (case-grammar R13). tranche/T28 @ 13282a56b7 (K1318); merge the tranche branch into yours.
