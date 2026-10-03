@@ -41,3 +41,7 @@ For basis-versions (re B2): R3 is reached per host as `acceptedWorkOf(host, deps
 - `bio-plane/test/system/row-census.test.mjs`: C-21.4 and C-21.5 listed awaiting stamp by this record (C-21.3 is inquiry-grammar's record's).
 
 Size (session_01Ny1sjsJ9vEJz7rxs28vcCh): test runs 7, module lines 240
+
+## J5 · REPORT
+
+Correction to J4's census line: with my paths in modules.json, `bio-plane/test/system/row-census.test.mjs` fails R50 with "arrived with no record: C-21.3 IMPORTED_LEG_MALFORMED; C-21.4 IMPORTED_NOT_ACCEPTED; C-21.5 ACCEPTED_WORK_UNREADABLE" (1106 rows against the pin 1103). That suite counts a row as awaiting stamp only when its own `AWAITING_STAMP` list declares it, and that list is in promotion's test file, not mine. This is accepted red 2 (B1). My record names C-21.4 and C-21.5 awaiting stamp (J4), so a declaration added there will verify against it. C-21.3 is inquiry-grammar's.
