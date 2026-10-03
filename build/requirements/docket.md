@@ -50,7 +50,7 @@ Terms.
 
   Otherwise it answers the entry that would be published (R6) as canonical JSON (`record-grammar`'s), its SHA-256 `digest`, `statement` = `signatures.docketStatement(case, seq, digest)`, the outward-act warning (its meaning: the public will see it, and a later entry can take it back but never unsay it; its words the UX design stream's) and `expires` 60 minutes later. For the same inputs on the same UTC day, the answer is identical byte for byte. (DEC-116 items 1, 6)
 - **R5** `docketPost` refuses, in order, each writing nothing: R4's caller refusals again at this instant; `acknowledged` other than exactly `true` `DOCKET_WARNING_NOT_ACKNOWLEDGED`; no prepared answer from `by` with this `digest`, or one past `expires`, or one whose `seq` another entry has taken since, `DOCKET_STALE` (prepare again); a signature `signatures.verifySshsig` rejects, in namespace `NS_DOCKET`, over exactly `statement`, against `credentials.attestingKeys()` (its R11) restricted to keys registered to `by`, `DOCKET_SIGNATURE_REFUSED` with the verifier's reason. Otherwise the entry is stored with its armored signature and its first-published instant and is answered by R14 and R15 from that instant on; a record entry it places reads `placed`; a withdrawal is reported to `reevaluation` (R13). `docketSigners()` answers each key (`keyB64`) that has signed a public entry, with the instant it first did; viewer-free, it writes nothing and names no member (for `network-notices` R21). (DEC-116 item 6)
-- **R6** *(not yet met: T31)* A public entry carries these fields and nothing else:
+- **R6** A public entry carries these fields and nothing else:
   - `format` (`civicsmith-docket-entry/1`; an entry published before T31 keeps its bytes and `civicos-docket-entry/1`, every reader accepts both labels forever as the same format, and a case's chain may hold both, `previous` being the prior entry's digest over its own stored bytes; DEC-124, K1365), `group` (the slug), `case`, `seq` (1, 2, … per case) and `previous` (the prior public entry's digest, or null);
   - `shelf`; `kind`, one of `response`, `statement`, `reaction`, `outcome`, `edition`, `disclosure`, `withdrawal`, `standing-granted`, `standing-withdrawn`, `receipt`, `take-back`;
   - `edition` (a number, or `all` for a withdrawal of every edition, R12);
@@ -88,14 +88,14 @@ Terms.
   `lastEntryOf({case})` answers, synchronously, whatever the viewer and without reading any capture's bytes, the `date` of the case's latest public entry (the `last_entry` `docketPublic` answers), or null; `public-read` R20 reads it for `docket_last_entry`. (K1276)
   Interface details settled at the build (K1274, K1278): `docketFile` takes an optional `takesBack` (a record entry id of the case) with `reason`, taking that entry back (R11); `docketPrepare` takes `candidate` (a disclosure, R9 (c)) or `grant` (a standing withdrawal, R10), published as the entry's `answers`; `docketPublic` answers each listed capture's bytes base64 under `captures: {<sha256>: <base64 or null>}`. Codes are family C-129.
 - **R15** `docketFeed({case})` answers the same entries as an Atom 1.0 feed (RFC 4287), newest first, its `updated` the last entry's date, each entry linking to the case's docket; null for a case with no ratified edition. The feed's and each entry's Atom `id` (`urn:civicos:docket:<group>:<case>`, and `…:<seq>` for an entry) never change, whatever the entry's `format` label: they keep `urn:civicos:` permanently, because a changed id makes every reader show every entry again as new (DEC-124; K1365 (3)). Reading it writes nothing and records nothing about the reader. The module exports `DOCKET_UNREADABLE`, the sentence "Could not read the publisher's docket", for a citing copy to say when a docket cannot be read (DEC-101 (3)'s citing side: `case-import` R18, R19). (DEC-116 item 8)
-- **R24** The public answer has this exact form. A citing copy depends on it (DEC-101 (3); `case-import` R18). *(not yet met: T31; the code answers it today, so the job writes its test)*
+- **R24** The public answer has this exact form. A citing copy depends on it (DEC-101 (3); `case-import` R18).
   - `docketPublic({case, captures?})` answers `{ok: true, case, group, entries, captures, last_entry, feed}`.
   - Each entry is `{seq, entry, digest, json, fields, signature, published_at, taken_back}`:
     - `json` is the exact canonical JSON (R4) whose SHA-256 is `digest`;
     - `signature` is the armored SSHSIG made over `signatures.docketStatement(case, seq, digest)` in `NS_DOCKET` (R5);
     - `fields` is `json` parsed;
     - `taken_back` is `{seq, date}` or null.
-  - With `captures: "omit"`, `captures` is `{}` and the answer adds `captures_omitted: true`. No capture's bytes are read. *(not yet met: T31)*
+  - With `captures: "omit"`, `captures` is `{}` and the answer adds `captures_omitted: true`. No capture's bytes are read.
   - Everything else is as R14 says.
 
 ## Private

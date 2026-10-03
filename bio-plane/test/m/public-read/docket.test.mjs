@@ -251,3 +251,99 @@ test("R16 R10 the docket reads write nothing, and reach the docket only through 
   assert.deepEqual([...new Set(docket.calls.map(([m]) => m))].sort(), ["docketFeed", "docketPublic", "lastEntryOf", "withdrawalOf"],
                    "only the docket's public answers are read (its R12, R14, R15)");
 });
+
+/* R25 (DEC-101 (3); N534): a citing copy's daily read of the docket without its captures' bytes. */
+const CAP = (n) => ({ sha256: String(n).repeat(64).slice(0, 64) });
+function withCaptures() {
+  const t = twoEditions();
+  t.docket.place(CASE, { seq: 1, date: D1, kind: "response", shelf: "listed", edition: 1, capture: CAP(7) });
+  t.docket.place(CASE, { seq: 2, date: D2, kind: "outcome", shelf: "listed", edition: 2, capture: CAP(8) });
+  return t;
+}
+const askedOf = (docket, from) => docket.publicAsked.slice(from);
+
+test("R25 op=docketpublic&captures=omit passes captures: \"omit\" to docket.docketPublic, at the store op and through the door; the answer is the docket's own", async () => {
+  const { w, docket, env } = withCaptures();
+  const full = await docket.docketPublic({ case: CASE });
+  assert.equal(Object.keys(full.captures).length, 2, "negative control: asked plainly, the docket answers its captures' bytes");
+  const omitted = await docket.docketPublic({ case: CASE, captures: "omit" });
+  assert.deepEqual([omitted.captures, omitted.captures_omitted], [{}, true]);
+  const expected = { ...omitted, ok: true, case: CASE };
+  /* the store op: the docket is handed exactly `{case, captures: "omit"}` */
+  let from = docket.publicAsked.length;
+  assert.deepEqual(await w.read("docketpublic", { case: CASE, captures: "omit" }), expected);
+  assert.deepEqual(askedOf(docket, from), [{ case: CASE, captures: "omit" }]);
+  /* through the door: `case` and `captures=omit` reach the store, and nothing else (R10), with no header */
+  const asked = [];
+  const spy = { async fetch(req) { asked.push(req); return stubOf(w).fetch(req); } };
+  from = docket.publicAsked.length;
+  const r = await door(w, env, "docketpublic", { case: CASE, captures: "omit", other: "x", ...CREDENTIALED }, spy);
+  assert.deepEqual([r.status, await r.json()], [200, expected]);
+  const sent = new URL(asked[0].url);
+  assert.deepEqual([sent.pathname, [...sent.searchParams]], ["/docketpublic", [["case", CASE], ["captures", "omit"]]]);
+  assert.deepEqual([...asked[0].headers], []);
+  assert.deepEqual(askedOf(docket, from), [{ case: CASE, captures: "omit" }]);
+  const handedValues = docket.publicAsked.flatMap((a) => Object.values(a));
+  for (const v of Object.values(CREDENTIALED)) assert.equal(handedValues.includes(v), false, `${v} reached the docket`);
+});
+
+test("R25 any other value of captures, or none, passes nothing: the docket is asked with the case alone and answers its captures' bytes", async () => {
+  const { w, docket, env } = withCaptures();
+  const expected = { ...(await docket.docketPublic({ case: CASE })), ok: true, case: CASE };
+  assert.equal(Object.keys(expected.captures).length, 2);
+  for (const q of [{}, { captures: "" }, { captures: "OMIT" }, { captures: "Omit" }, { captures: " omit" }, { captures: "omit " },
+                   { captures: "omitted" }, { captures: "none" }, { captures: "true" }, { captures: "1" }, { captures: "keep" },
+                   { captures: "include" }, { captures: "\"omit\"" }]) {
+    const label = JSON.stringify(q);
+    let from = docket.publicAsked.length;
+    const s = await w.read("docketpublic", { case: CASE, ...q });
+    assert.deepEqual(s, expected, `store ${label}`);
+    assert.equal("captures_omitted" in s, false, label);
+    const handed = askedOf(docket, from);
+    assert.deepEqual(handed, [{ case: CASE }], `store ${label}: the case alone`);
+    assert.deepEqual(Object.keys(handed[0]), ["case"], `store ${label}: no captures key at all`);
+    const asked = [];
+    const spy = { async fetch(req) { asked.push(req); return stubOf(w).fetch(req); } };
+    from = docket.publicAsked.length;
+    const r = await door(w, env, "docketpublic", { case: CASE, ...q }, spy);
+    assert.deepEqual([r.status, await r.json()], [200, expected], `door ${label}`);
+    assert.deepEqual([...new URL(asked[0].url).searchParams], [["case", CASE]], `door ${label}: only case is forwarded`);
+    assert.deepEqual(askedOf(docket, from), [{ case: CASE }], `door ${label}`);
+  }
+});
+
+test("R25 R21 everything else is as R21 says: an absent case is NOT_PUBLISHED with the same bytes, no case the argument refusal, the store's refusal relayed; the feed takes no captures", async () => {
+  const { w, docket, env } = withCaptures();
+  const absent = await door(w, env, "publishedcase", { id: "CASE-2099-0404" });
+  const absentBody = await absent.text();
+  for (const c of ["CASE-2099-0404", "CASE-2026-0002"]) {
+    assert.deepEqual(await w.read("docketpublic", { case: c, captures: "omit" }), w.pr.publishedCase({ id: "CASE-2099-0404" }), c);
+    const r = await door(w, env, "docketpublic", { case: c, captures: "omit" });
+    assert.deepEqual([r.status, await r.text()], [404, absentBody], c);
+  }
+  for (const q of [{ captures: "omit" }, { case: "", captures: "omit" }, { case: "  ", captures: "omit" }]) {
+    const asked = [];
+    const b = await door(w, env, "docketpublic", q, { async fetch(req) { asked.push(req); return stubOf(w).fetch(req); } });
+    assert.equal(b.status, 400);
+    assert.deepEqual((({ reason, argument }) => [reason, argument])(await b.json()), ["REQUIRED_ARGUMENT_MISSING", "case"]);
+    assert.equal(asked.length, 0, "the store is never asked");
+  }
+  const refused = await door(w, env, "docketpublic", { case: CASE, captures: "omit" },
+    replying(() => Response.json({ ok: false, reason: "STORE_BUSY", detail: "the store refused" }, { status: 429 })));
+  assert.deepEqual([refused.status, (await refused.json()).reason], [429, "STORE_BUSY"]);
+  const silent = await door(w, env, "docketpublic", { case: CASE, captures: "omit" },
+    replying(() => Response.json({ ok: true, result: null })));
+  assert.deepEqual([silent.status, (await silent.json()).reason], [502, "STORE_DID_NOT_ANSWER"]);
+  /* the feed is R21's alone: `captures` is not forwarded to it, and its bytes are unchanged */
+  const feed = await docket.docketFeed({ case: CASE });
+  const asked = [];
+  const f = await door(w, env, "docketfeed", { case: CASE, captures: "omit" },
+                       { async fetch(req) { asked.push(req); return stubOf(w).fetch(req); } });
+  assert.deepEqual([f.status, await f.text()], [200, feed]);
+  assert.deepEqual([...new URL(asked[0].url).searchParams], [["case", CASE]]);
+  /* and the reads write nothing (R16) */
+  const before = JSON.stringify(w.snapshot());
+  await w.read("docketpublic", { case: CASE, captures: "omit" });
+  await door(w, env, "docketpublic", { case: CASE, captures: "omit" });
+  assert.equal(JSON.stringify(w.snapshot()), before);
+});

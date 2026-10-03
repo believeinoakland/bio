@@ -56,11 +56,18 @@ import { renderFeed, docketAddress, feedAddress, ATOM_MEDIA_TYPE } from "./feed.
 
 export { DOCKET_CHECKS } from "./checks.mjs";
 export { DOCKET_SCHEMA, DOCKET_TABLES } from "./schema.mjs";
-export { docketAddress, feedAddress, feedHref, ATOM_MEDIA_TYPE } from "./feed.mjs";
+export { docketAddress, feedAddress, feedHref, ATOM_MEDIA_TYPE, FEED_ID_PREFIX } from "./feed.mjs";
 
 /* ---------------------------------------------------------------- the vocabularies and bounds */
 
-export const ENTRY_FORMAT = "civicos-docket-entry/1";                                   /* R6 */
+/** R6 (DEC-124, K1365): the label a new public entry carries. */
+export const ENTRY_FORMAT = "civicsmith-docket-entry/1";
+/** R6: the label an entry published before T31 keeps with its bytes; the same format, accepted by every reader forever. */
+export const LEGACY_ENTRY_FORMAT = "civicos-docket-entry/1";
+/** R6: both labels of the one entry format. */
+export const ENTRY_FORMATS = Object.freeze([ENTRY_FORMAT, LEGACY_ENTRY_FORMAT]);
+/** R6: whether `label` names the docket entry format, under either label. */
+export const isEntryFormat = (label) => ENTRY_FORMATS.includes(label);
 export const SHELVES = Object.freeze(["listed", "reactions", "record"]);
 export const PUBLIC_SHELVES = Object.freeze(["listed", "reactions"]);
 export const RECORD_KINDS = Object.freeze(["response", "statement", "reaction", "outcome"]);       /* R1 */
@@ -902,15 +909,21 @@ export class Docket {
       .map((r) => ({ keyB64: r.k, first_signed: r.first }));
   }
 
-  /** R14: the case's public entries, oldest first, the bytes of each listed entry's capture and `last_entry`; null for a
-   *  case with no ratified edition. The record shelf never appears. */
-  async docketPublic({ case: caseId = null } = {}) {
+  /** R14, R24: the case's public entries, oldest first, the bytes of each listed entry's capture and `last_entry`; null
+   *  for a case with no ratified edition. The record shelf never appears. With `captures: "omit"` no capture's bytes are
+   *  read: `captures` is `{}` and the answer says `captures_omitted: true` (a citing copy's daily read, R24). Entries
+   *  under either format label are answered alike, each as stored (R6). */
+  async docketPublic({ case: caseId = null, captures: want = null } = {}) {
     const c = this.#case(caseId);
     if (!c) return null;
     const backs = this.#takenBack(c.case);
     const rows = this.#entries(c.case);
     const entries = rows.map((e) => this.#publicView(e, backs));
-    const captures = {}, unread = [];
+    const last = rows[rows.length - 1];
+    const answer = (captures, extra) => ({ ok: true, case: c.case, group: this.#slug(), entries, captures,
+      last_entry: last ? (parse(last.json) || {}).date ?? null : null, feed: feedAddress(c.case), ...extra });
+    if (want === "omit") return answer({}, { captures_omitted: true });
+    const captures = {};
     const store = this.#call(() => this.record.evidenceStore());
     for (const e of entries) {
       const f = e.fields || {};
@@ -920,12 +933,10 @@ export class Docket {
         const o = store ? await store.get(f.capture.sha256) : null;
         if (o) bytes = new Uint8Array(await o.arrayBuffer());
       } catch { bytes = null; }
+      /* bytes the store cannot answer are null, never invented (K1274) */
       captures[f.capture.sha256] = bytes ? b64(bytes) : null;
-      if (!bytes) unread.push(f.capture.sha256);
     }
-    const last = rows[rows.length - 1];
-    return { ok: true, case: c.case, group: this.#slug(), entries, captures, ...(unread.length ? { captures_unread: unread } : {}),
-             last_entry: last ? (parse(last.json) || {}).date ?? null : null, feed: feedAddress(c.case) };
+    return answer(captures);
   }
 
   /** R14 (K1276): the date of the case's latest public entry, the `last_entry` `docketPublic` answers, or null; synchronous,

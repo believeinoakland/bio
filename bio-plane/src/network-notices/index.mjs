@@ -54,22 +54,28 @@ import { NETWORK_NOTICE_CHECKS, rowOf } from "./checks.mjs";
 import { NETWORK_NOTICES_TABLES, migrateNetworkNotices } from "./schema.mjs";
 import {
   DAY_MS, WEEK_MS, weekStartOf, weekLabel, weekStartFromLabel, dateOf, parseDate, ACTIVITY_WINDOW, ACTIVITY_METHOD,
-  ACTIVITY_METHOD_VERSION, levelOf, SEAL_SLOTS, WEEK_SLOTS, SEAL_METHOD, leafHash, weekLeafHash, slotsFor, randomHex,
-  randomPositions, treeOf, rootOf, pathOf, verifyOpening,
+  ACTIVITY_METHOD_VERSION, ACTIVITY_METHOD_EARLIER_LABELS, levelOf, SEAL_SLOTS, WEEK_SLOTS, SEAL_METHOD, leafHash,
+  weekLeafHash, slotsFor, randomHex, randomPositions, treeOf, rootOf, pathOf, verifyOpening, OPENING_FORMAT,
 } from "./seals.mjs";
 
 export { NETWORK_NOTICE_CHECKS } from "./checks.mjs";
 export { NETWORK_NOTICES_SCHEMA, NETWORK_NOTICES_TABLES } from "./schema.mjs";
 export {
-  weekStartOf, weekLabel, ACTIVITY_WINDOW, ACTIVITY_LEVELS, ACTIVITY_METHOD, ACTIVITY_METHOD_VERSION, levelOf,
+  weekStartOf, weekLabel, ACTIVITY_WINDOW, ACTIVITY_LEVELS, ACTIVITY_METHOD, ACTIVITY_METHOD_VERSION,
+  ACTIVITY_METHOD_EARLIER_LABELS, levelOf,
   SEAL_SLOTS, WEEK_SLOTS, SEAL_METHOD, leafHash, nodeHash, weekLeafHash, climb, verifyOpening,
 } from "./seals.mjs";
 
 /* ---------------------------------------------------------------- the formats and bounds (R2, R3, R12) */
 
-export const NOTICE_FORMAT = "civicos-working-on/1";
-export const ATTESTATION_FORMAT = "civicos-working-on-attestation/1";
-export const OPENING_FORMAT = "civicos-working-on-opening/1";
+/* R3, R12, R17 (DEC-124, K1365): a new record carries the Civicsmith label. One published before T31 keeps its bytes and
+   its earlier label, and every reader accepts both, forever, as the same format; a notice's revisions may hold both,
+   each `previous` being the prior revision's digest over its own stored bytes. Each list holds the current label first. */
+export const NOTICE_FORMAT = "civicsmith-working-on/1";
+export const NOTICE_FORMATS = Object.freeze([NOTICE_FORMAT, "civicos-working-on/1"]);
+export const ATTESTATION_FORMAT = "civicsmith-working-on-attestation/1";
+export const ATTESTATION_FORMATS = Object.freeze([ATTESTATION_FORMAT, "civicos-working-on-attestation/1"]);
+export { OPENING_FORMAT, OPENING_FORMATS } from "./seals.mjs";
 /** K1115: the prefix notice ids are minted under (`mintOpaqueId`); never a project's id. */
 export const NOTICE_ID_PREFIX = "NOTE";
 export const WORDING_MAX = 280;            // R1
@@ -95,6 +101,8 @@ export const CAUTION_TWO_OPEN = "two_open_without_published_work";
 export const COPY_KEY_LABEL = "this copy's key";
 
 const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
+/* R15: the user agent the timestamp requests carry, naming the product (DEC-124). */
+const tsaUserAgent = (version) => `Civicsmith/${str(version) || "0"} (working-on seal)`;
 const WELL_FORMED = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/;
 const oneLine = (v, max) => typeof v === "string" && !!v.trim() && v.length <= max && !/[\n\r]/.test(v) && !WELL_FORMED.test(v);
 const parse = (s) => { try { return JSON.parse(s); } catch { return null; } };
@@ -439,8 +447,10 @@ export class NetworkNotices {
              weeks: [...weeks].sort() };
   }
 
-  /** R10: the method, with no credential. */
-  activityMethod() { return { ok: true, method: ACTIVITY_METHOD, version: ACTIVITY_METHOD_VERSION }; }
+  /** R10: the method, with no credential; the earlier labels that name the same method are listed with it. */
+  activityMethod() {
+    return { ok: true, method: ACTIVITY_METHOD, version: ACTIVITY_METHOD_VERSION, earlier_labels: ACTIVITY_METHOD_EARLIER_LABELS };
+  }
 
   /* ================================================================ attestations (R12, R13) */
 
@@ -463,7 +473,9 @@ export class NetworkNotices {
     return { json, digest: sha256HexSync(canonicalJson(json)) };
   }
 
-  /* R13: signed with the instance key over attestation's statement (its R5); null when no key is bound. */
+  /* R13: signed with the instance key over attestation's statement (its R5) under the new attestation's own format,
+     `ATTESTATION_FORMAT`; one issued before T31 stays signed, and verifies, over its earlier label. Null when no key is
+     bound. */
   async #sign(digest) {
     try {
       const r = await this.attestation.instanceSign(instanceStatement(ATTESTATION_FORMAT, digest));
@@ -669,7 +681,7 @@ export class NetworkNotices {
       try {
         const { der } = timestampRequest(root);
         const g = await governedFetch(endpoint, {
-          userAgent: `CivicOS/${str(this.env.VERSION) || "0"} (working-on seal)`, governor: this.governor,
+          userAgent: tsaUserAgent(this.env.VERSION), governor: this.governor,
           fetch: (u, init) => this.fetch(u, { ...init, method: "POST", body: der,
             headers: { ...(init && init.headers), "content-type": TSA_CONTENT_TYPE, accept: TSA_ACCEPT } }) });
         if (g.refusedByGovernor) { attempts.push({ service: endpoint, attempted, ok: false, note: `governed: ${g.reason}` }); continue; }

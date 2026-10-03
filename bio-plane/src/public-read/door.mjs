@@ -17,7 +17,7 @@
  *
  * R21: THE DOCKET AND ITS FEED, `op=docketpublic&case=<case>` and `op=docketfeed&case=<case>`, through
  * `publicReadDoorDocket`, under the same terms: the published store the door hands in, no credential, and of the query
- * only `case`. */
+ * only `case`, and for the docket `captures=omit` (R25), forwarded only when it is exactly that. */
 
 import { publishedRoutes } from "../publication/worker.mjs";
 import { PUBLIC_READ_NAME, PUBLIC_READ_RESERVED_PARAMS, PUBLIC_READ_NOT_REGISTERED, DOCKET_FEED_MEDIA_TYPE } from "./reads.mjs";
@@ -27,8 +27,8 @@ export const PUBLIC_READ_DOOR_OPS = Object.freeze(["verify", "publishedmanifest"
 
 /** R21 (DEC-116 item 8; DEC-100 item 2): a case's docket (`docketpublic`, JSON at 200) or its Atom feed (`docketfeed`,
  *  the feed's own bytes at 200 under `application/atom+xml`), relayed from the published store under R10's terms: only
- *  `case` is forwarded, and no header. No `case` is the required-argument refusal (400). A case the docket answers null
- *  for is the store's `NOT_PUBLISHED`, relayed at 404 exactly as `op=publishedcase` relays it for an absent case, so
+ *  `case` is forwarded (and, R25, `captures=omit` for the docket), and no header. No `case` is the required-argument
+ *  refusal (400). A case the docket answers null for is the store's `NOT_PUBLISHED`, relayed at 404 exactly as `op=publishedcase` relays it for an absent case, so
  *  the two answers are the same bytes. R9: the store's own refusal through `storeRefusal`; a reply that is no answer is
  *  `storeSilent`'s. */
 export async function publicReadDoorDocket(op, url, env, stub, { json, requiredArgument, storeSilent, storeRefusal, doAnswer }) {
@@ -36,7 +36,11 @@ export async function publicReadDoorDocket(op, url, env, stub, { json, requiredA
   if (!c)
     return json({ ok: false, ...requiredArgument(op, "case", "<a published case's id>"),
       error: `${op} requires case=<a published case's id>` }, 400);
-  const out = await doAnswer(stub.fetch(new Request(`http://do/${op}?${new URLSearchParams({ case: c })}`)));
+  /* R25 (DEC-101 (3)): the docket without its captures' bytes, for a citing copy's daily read; any other value of
+     `captures` is not forwarded. */
+  const q = new URLSearchParams({ case: c });
+  if (op === "docketpublic" && url.searchParams.get("captures") === "omit") q.set("captures", "omit");
+  const out = await doAnswer(stub.fetch(new Request(`http://do/${op}?${q}`)));
   if (out.refused) return storeRefusal(out);
   if (!out.answered) return storeSilent(op, out.correlation);
   const r = out.result;
