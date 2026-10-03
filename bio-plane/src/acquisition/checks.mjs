@@ -1,4 +1,4 @@
-/* acquisition's own refusal rows and the one CivicOS user agent (requirements: `build/requirements/acquisition.md`).
+/* acquisition's own refusal rows and the one Civicsmith user agent (requirements: `build/requirements/acquisition.md`).
  * DEC-49: every refusal this module answers with a catalogue row carries its code, its row and the member's translation,
  * so a surface shows the same sentence wherever the act is reached.
  *
@@ -12,17 +12,21 @@
 
 const at = (region) => `src/acquisition/index.mjs acquire > ${region}`;
 
-/** R24. THE ONE COMPOSER FOR THE HONEST CIVICOS AGENT. SOURCE-ACCESS.md records that this string replaced "two bare
+/** R24. THE ONE COMPOSER FOR THE HONEST CIVICSMITH AGENT. SOURCE-ACCESS.md records that this string replaced "two bare
  *  tokens spread across three call sites that did not agree with each other", and the 403 that cost three sessions of
  *  wrong reasoning was the consequence; a conduct check reading a copy would be that defect rebuilt one layer down (the
  *  drain would approve a string nobody sends), so every module that sends or judges the agent reads it here.
  *
  *  The components are D-94's, and the contact URL is the LOAD-BEARING one: removing it flips admission 200 -> 403
  *  uniformly (MEASURED 2026-07-30, nine rungs, second path confirmed). */
-export const CIVICOS_CONTACT_URL = 'https://github.com/believeinoakland/bio';
-export function civicosUserAgent(version, instance, purpose) {
-  return `CivicOS/${version || '0.0.0'} (+${CIVICOS_CONTACT_URL}; instance ${instance || 'unnamed'}; ${purpose})`;
+export const CIVICSMITH_CONTACT_URL = 'https://github.com/believeinoakland/bio';
+export function civicsmithUserAgent(version, instance, purpose) {
+  return `Civicsmith/${version || '0.0.0'} (+${CIVICSMITH_CONTACT_URL}; instance ${instance || 'unnamed'}; ${purpose})`;
 }
+/* R24 (DEC-124, K1365 (6)): the names from before the rename, kept as aliases of the SAME constant and the SAME function
+   (never copies) until every user has re-pointed; their removal is a later entry. */
+export const CIVICOS_CONTACT_URL = CIVICSMITH_CONTACT_URL;
+export const civicosUserAgent = civicsmithUserAgent;
 
 /* C-28.13 (K58), the capture-request arm's one row. THE DRAIN IS THE SOLE FETCHER. op=acquire's capture-request arm
    admits a row in `draining` and nothing else, and `draining` is set by the drain inside the tick that then fetches. So

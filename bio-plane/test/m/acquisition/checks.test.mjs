@@ -1,12 +1,13 @@
-/* acquisition: its own rows (R29) and the one CivicOS user agent (R24), at the module's interface. The rows are driven by
+/* acquisition: its own rows (R29) and the one Civicsmith user agent (R24), at the module's interface. The rows are driven by
    their refusals in acquire.test.mjs (R1, R4, R5, each with its negative control); here the table itself is checked
    whole, and every refusal the act answers with a row is driven once more and matched to the row it names. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, run, text, rendererEnv } from "./fixture.mjs";
 import { readFileSync, readdirSync } from "node:fs";
-import { ACQUISITION_CHECKS, CAPTURE_REQUEST_ARM_CHECKS, DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, INSTALLATION_CHECKS, SWEEP_SCOPE_CHECKS, CIVICOS_CONTACT_URL,
-         civicosUserAgent, userAgent, evidenceStorageAbsent } from "../../../src/acquisition/index.mjs";
+import { ACQUISITION_CHECKS, CAPTURE_REQUEST_ARM_CHECKS, DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, INSTALLATION_CHECKS, SWEEP_SCOPE_CHECKS, CIVICSMITH_CONTACT_URL,
+         civicsmithUserAgent, CIVICOS_CONTACT_URL, civicosUserAgent, userAgent, evidenceStorageAbsent } from "../../../src/acquisition/index.mjs";
+import * as checksTable from "../../../src/acquisition/checks.mjs";
 
 const EXPECTED = {
   CAPTURE_NOT_DRAINING: "C-28.13",
@@ -85,19 +86,34 @@ test("R29 R31: every refusal carrying a row answers that row's check and transla
   }
 });
 
-test("R24: civicosUserAgent is the one spelling of the CivicOS agent, with its defaults; pure, and never throws", () => {
-  assert.equal(civicosUserAgent("1.2.3", "inst", "acquire"), `CivicOS/1.2.3 (+${CIVICOS_CONTACT_URL}; instance inst; acquire)`);
-  assert.equal(civicosUserAgent(undefined, undefined, "monitor"), `CivicOS/0.0.0 (+${CIVICOS_CONTACT_URL}; instance unnamed; monitor)`);
-  assert.equal(civicosUserAgent("", "", "x"), `CivicOS/0.0.0 (+${CIVICOS_CONTACT_URL}; instance unnamed; x)`);
-  assert.match(CIVICOS_CONTACT_URL, /^https:\/\/[a-z0-9.-]+\//, "the project's public address");
-  for (const args of [[], [null, null, null], [{}, [], 7], [Symbol.iterator.description, 1, 2]])
-    assert.doesNotThrow(() => civicosUserAgent(...args));
-  assert.equal(civicosUserAgent("1", "i", "p"), civicosUserAgent("1", "i", "p"), "the same inputs, the same bytes");
+test("R24 R9: civicsmithUserAgent is the one spelling of the Civicsmith agent, with its defaults; pure, and never throws; R9's agent is it", () => {
+  assert.equal(civicsmithUserAgent("1.2.3", "inst", "acquire"), `Civicsmith/1.2.3 (+${CIVICSMITH_CONTACT_URL}; instance inst; acquire)`);
+  assert.equal(civicsmithUserAgent(undefined, undefined, "monitor"), `Civicsmith/0.0.0 (+${CIVICSMITH_CONTACT_URL}; instance unnamed; monitor)`);
+  assert.equal(civicsmithUserAgent("", "", "x"), `Civicsmith/0.0.0 (+${CIVICSMITH_CONTACT_URL}; instance unnamed; x)`);
+  assert.equal(CIVICSMITH_CONTACT_URL, "https://github.com/believeinoakland/bio", "the project's public address, unchanged by the rename");
+  for (const args of [[], [null, null, null], [{}, [], 7], [Symbol.iterator.description, 1, 2]]) {
+    assert.doesNotThrow(() => civicsmithUserAgent(...args));
+    assert.match(civicsmithUserAgent(...args), /^Civicsmith\/.* \(\+https:\/\/github\.com\/believeinoakland\/bio; instance /s);
+  }
+  assert.equal(civicsmithUserAgent("1", "i", "p"), civicsmithUserAgent("1", "i", "p"), "the same inputs, the same bytes");
+  assert.doesNotMatch(civicsmithUserAgent("1", "i", "p"), /CivicOS/, "the old name is sent nowhere");
   /* R9's agent is R24's, a delegated agent returned verbatim */
-  assert.equal(userAgent({ VERSION: "2.0.0", INSTANCE_NAME: "grp" }, "acquire"), civicosUserAgent("2.0.0", "grp", "acquire"));
-  assert.equal(userAgent(null), civicosUserAgent("0.0.0", "unnamed", "acquire"));
+  assert.equal(userAgent({ VERSION: "2.0.0", INSTANCE_NAME: "grp" }, "acquire"), civicsmithUserAgent("2.0.0", "grp", "acquire"));
+  assert.equal(userAgent(null), civicsmithUserAgent("0.0.0", "unnamed", "acquire"));
   assert.equal(userAgent({}, "acquire", "  Mozilla/5.0 Member  "), "Mozilla/5.0 Member");
-  assert.equal(userAgent({}, "acquire", "   "), civicosUserAgent("0.0.0", "unnamed", "acquire"), "an empty delegation is no delegation");
+  assert.equal(userAgent({}, "acquire", "   "), civicsmithUserAgent("0.0.0", "unnamed", "acquire"), "an empty delegation is no delegation");
+});
+
+test("R24 (K1365 (6)): civicosUserAgent and CIVICOS_CONTACT_URL are aliases of the same function and the same constant, not copies, from the module and its table", () => {
+  assert.equal(civicosUserAgent, civicsmithUserAgent, "the same function object");
+  assert.equal(CIVICOS_CONTACT_URL, CIVICSMITH_CONTACT_URL, "the same constant");
+  assert.equal(checksTable.civicosUserAgent, civicsmithUserAgent);
+  assert.equal(checksTable.civicsmithUserAgent, civicsmithUserAgent);
+  assert.equal(checksTable.CIVICOS_CONTACT_URL, CIVICSMITH_CONTACT_URL);
+  /* so a user not yet re-pointed sends the one agent, byte for byte */
+  for (const args of [["1.2.3", "inst", "acquire"], [undefined, undefined, "monitor"], ["", "", "group-domain"]])
+    assert.equal(civicosUserAgent(...args), civicsmithUserAgent(...args));
+  assert.match(civicosUserAgent("9.9.9", "inst", "investigate"), /^Civicsmith\/9\.9\.9 /);
 });
 
 test("R29 (C-68.1, K794): acquire with no evidence storage is refused 503 with its row before anything is fetched or filed, whatever the arm; with storage the same act files", async () => {

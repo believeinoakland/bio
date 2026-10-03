@@ -13,7 +13,7 @@
  * Every refusal is an answer `{status, body}`, never a throw. The comments carried from the legacy handler keep the
  * reasoning beside the code it explains. */
 import { isPublicHttpsLocator, createSha256, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE } from "../record-grammar/index.mjs";
-import { civicosUserAgent, CAPTURE_REQUEST_ARM_CHECKS, DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, INSTALLATION_CHECKS,
+import { civicsmithUserAgent, CAPTURE_REQUEST_ARM_CHECKS, DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, INSTALLATION_CHECKS,
          SWEEP_SCOPE_CHECKS } from "./checks.mjs";
 import { captureSubresources, normalizeAddress, normalizeCitation } from "../subresources.mjs";
 import { detectFormat } from "../formats.mjs";
@@ -30,9 +30,10 @@ import { governedFetch as hostGovernedFetch, retryAfterMs } from "../host-govern
 import { ARCHIVE_CAPTURE_GRADE } from "../provenance/index.mjs";
 import { attest } from "../attestation/index.mjs";
 
-/* R24, R29: the one user agent and this module's rows, for every module that sends or judges them. */
-export { CIVICOS_CONTACT_URL, civicosUserAgent, CAPTURE_REQUEST_ARM_CHECKS, DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS,
-         INSTALLATION_CHECKS, SWEEP_SCOPE_CHECKS, ACQUISITION_CHECKS } from "./checks.mjs";
+/* R24, R29: the one user agent (and its pre-rename aliases, K1365 (6)) and this module's rows, for every module that
+   sends or judges them. */
+export { CIVICSMITH_CONTACT_URL, civicsmithUserAgent, CIVICOS_CONTACT_URL, civicosUserAgent, CAPTURE_REQUEST_ARM_CHECKS,
+         DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, INSTALLATION_CHECKS, SWEEP_SCOPE_CHECKS, ACQUISITION_CHECKS } from "./checks.mjs";
 
 
 const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
@@ -80,12 +81,12 @@ export const ACQUIRE_GRADE_NOTE = acquireGradeNote(EARNED_CAPTURE_CEILING, UNREA
 
 /** R9, R24. The plane's identity to a source, in one place because it was in three and they had drifted. BIO does
  *  not disguise its requests; a bare token matches no browser and no known-good crawler pattern, and a great many WAF
- *  rulesets refuse exactly that shape. The STRING is composed by this module's `civicosUserAgent` (R24) so the drain's
+ *  rulesets refuse exactly that shape. The STRING is composed by this module's `civicsmithUserAgent` (R24) so the drain's
  *  conduct check reads the bytes that will be sent. A DELEGATED member-browser agent is returned verbatim: it reaches
  *  here only from the capture-request arm, read from a row the conduct check already judged (PL-4, BOB-3). */
 export function userAgent(env, purpose = "acquire", delegated = null) {
   if (typeof delegated === "string" && delegated.trim() !== "") return delegated.trim();
-  return civicosUserAgent((env && env.VERSION) || "0.0.0", (env && env.INSTANCE_NAME) || "unnamed", purpose);
+  return civicsmithUserAgent((env && env.VERSION) || "0.0.0", (env && env.INSTANCE_NAME) || "unnamed", purpose);
 }
 
 /* Whether a primary is read back as TEXT for the recognisers and FW-4's digests: single-part, bounded, and a textual
@@ -1080,9 +1081,10 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     }),
     /* R16: ordered hops from us back to the origin; a direct fetch is ONE hop, which grades it above an archive-
        sourced capture (grade tracks directness, never technique). A render whose wait timed out is NEVER presented
-       as the whole page (D-499), the qualification derived by `completenessReading`, never retyped. */
+       as the whole page (D-499), the qualification derived by `completenessReading`, never retyped. `who` names
+       Civicsmith (DEC-124); a document filed before T31 keeps the `who` it was written with: this act rewrites none. */
     provenance_chain: [{
-      who: `instance ${(cap.env || {}).INSTANCE_NAME || "unnamed"} (CivicOS/${(cap.env || {}).VERSION || "0.0.0"})`,
+      who: `instance ${(cap.env || {}).INSTANCE_NAME || "unnamed"} (Civicsmith/${(cap.env || {}).VERSION || "0.0.0"})`,
       asserts: renderRecorded
         ? `these bytes are the document a ${renderRecorded.engine || "renderer (engine not reported)"} render produced from ${locator} at ${retrieved}; the shell it was rendered from was served for ${locator} and is held beside it (render.of)${completenessReading(renderRecorded) ? `; ${completenessReading(renderRecorded)}, so they are not asserted to be the whole page` : ""}`
         : `these bytes were served for ${locator} at ${retrieved}`,

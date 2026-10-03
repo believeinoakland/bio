@@ -10,7 +10,7 @@ import { EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE } from "../../../src/
 import { ARCHIVE_CAPTURE_GRADE } from "../../../src/provenance/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 import { DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, CAPTURE_REQUEST_ARM_CHECKS, acquireGradeNote, ACQUIRE_GRADE_NOTE,
-         civicosUserAgent } from "../../../src/acquisition/index.mjs";
+         civicsmithUserAgent } from "../../../src/acquisition/index.mjs";
 
 const ROW = (table, code) => [table[code].check, table[code].translation];
 
@@ -281,7 +281,7 @@ test("R9 R28: every outbound fetch goes through the governor under a legible age
   const r = await run(w, { "https://a.example/x": text("bytes", { "retry-after": "7" }) }, { locator: "https://a.example/x" });
   assert.equal(r.status, 200);
   assert.deepEqual(w.gov.calls.slice(0, 2), [["admit", "a.example"], ["report", "a.example", 200, 7000]]);
-  assert.equal(r.net.seen[0].init.headers["user-agent"], civicosUserAgent("9.9.9", "inst", "acquire"), "R24's one spelling, naming the instance and purpose");
+  assert.equal(r.net.seen[0].init.headers["user-agent"], civicsmithUserAgent("9.9.9", "inst", "acquire"), "R24's one spelling, naming the instance and purpose");
   const cool = world({ gov: { refuse: ["a.example"] } });
   const c = await run(cool, {}, { locator: "https://a.example/x" });
   assert.deepEqual([c.status, c.body.reason, c.body.retry_in_ms, c.net.seen.length], [429, "HOST_COOLING_OFF", 5000, 0]);
@@ -289,11 +289,11 @@ test("R9 R28: every outbound fetch goes through the governor under a legible age
   /* the capture-request arm's purpose names the agent's purpose */
   const cr = await run(w, { "https://a.example/y": text("y") }, {}, { cls: "daemon", member: false,
     captureRequest: { locator: "https://a.example/y", purpose: "investigation", agent: null, render: false } });
-  assert.equal(cr.net.seen[0].init.headers["user-agent"], civicosUserAgent("9.9.9", "inst", "investigation"));
+  assert.equal(cr.net.seen[0].init.headers["user-agent"], civicsmithUserAgent("9.9.9", "inst", "investigation"));
   /* with no instance name or version, R24's defaults */
   const bare = world({ env: { INSTANCE_NAME: "", VERSION: "" } });
   const b = await run(bare, { "https://a.example/x": text("x") }, { locator: "https://a.example/x" });
-  assert.equal(b.net.seen[0].init.headers["user-agent"], civicosUserAgent("0.0.0", "unnamed", "acquire"));
+  assert.equal(b.net.seen[0].init.headers["user-agent"], civicsmithUserAgent("0.0.0", "unnamed", "acquire"));
 });
 
 test("R10: hashed as it arrives, stored in parts of 8 MiB; each refusal named; every attempt recorded against the document address", async () => {
@@ -423,7 +423,7 @@ test("R14 R16 R31: transport, the chain, the capture block, the origin and the f
   assert.deepEqual([d.capture.transport.requested, d.capture.transport.resolved, d.capture.transport.status, d.capture.transport.redirected],
                    ["https://a.example/dir/report.txt", "https://a.example/dir/report.txt", 200, false]);
   const hop = d.provenance_chain[0];
-  assert.equal(hop.who, "instance inst (CivicOS/9.9.9)");
+  assert.equal(hop.who, "instance inst (Civicsmith/9.9.9)", "R16 (DEC-124): this instance, Civicsmith and its version");
   assert.equal(hop.asserts, `these bytes were served for https://a.example/dir/report.txt at ${d.retrieved}`);
   assert.deepEqual([hop.bound, hop.via], [false, "direct"]);
   assert.deepEqual([d.capture.method, d.capture.actor_class, d.capture.actor, d.capture.encoding, d.capture.bytes, d.capture.content_type],
@@ -569,7 +569,7 @@ test("R19: the walk of a single HTML page's supporting files, its bookkeeping th
   assert.ok(st.siteRecords[0].observations.length >= 1, "capture R25: the site observations");
   assert.ok(w.gov.calls.some((c) => c[0] === "report" && c[1] === "s.example" && c[2] === 200), "every subresource outcome reported");
   const subFetches = r.net.seen.filter((x) => x.url !== "https://s.example/p");
-  assert.ok(subFetches.length >= 1 && subFetches.every((x) => /CivicOS/.test(x.init.headers["user-agent"])));
+  assert.ok(subFetches.length >= 1 && subFetches.every((x) => /^Civicsmith\//.test(x.init.headers["user-agent"])));
   /* the ceiling: a probe is due, so the observed one is not used; a known one is */
   const limited = world(); limited.store.recordCaptureLimit({ runtime: "subrequests", observed: 7 });
   const many = Array.from({ length: 6 }, (_, i) => `<link rel="stylesheet" href="/c${i}.css">`).join("");
@@ -639,7 +639,7 @@ test("R20 R28: every capture asks attestation's attest for a timestamp and, wher
   assert.ok(posts.length >= 1, "the timestamp authorities were asked");
   assert.deepEqual(gets.map((x) => x.url.endsWith("https://a.example/x")), [true], "one co-archive, of the locator");
   for (const x of asked) {
-    assert.equal(x.init.headers["user-agent"], civicosUserAgent("9.9.9", "inst", "attest"));
+    assert.equal(x.init.headers["user-agent"], civicsmithUserAgent("9.9.9", "inst", "attest"));
     assert.ok(w.gov.calls.some((c) => c[0] === "admit" && c[1] === new URL(x.url).host), `${x.url} through the governor`);
   }
   const at = d.body.document.attestation_attempts;
@@ -809,7 +809,7 @@ test("R23: a supplied credential rides the fetch to its own host only, as its ki
   assert.ok(!JSON.stringify(ua.body).includes("member's own"), "an agent secret is not recorded either");
   const other = await arm(w, plainRoutes, { credential: cred("other", "Bearer tok-123") });
   assert.equal(other.net.seen[0].init.headers.authorization, "Bearer tok-123");
-  assert.match(other.net.seen[0].init.headers["user-agent"], /CivicOS/, "R9's agent stays when the credential is not an agent");
+  assert.match(other.net.seen[0].init.headers["user-agent"], /^Civicsmith\//, "R9's agent stays when the credential is not an agent");
   /* a thrown fetch carries no message when a credential rode it */
   const boom = await arm(w, () => new Error(`refused for ${SECRET}`), { credential: cred("login") });
   assert.equal(boom.body.reason, "FETCH_FAILED"); assert.ok(!JSON.stringify(boom.body).includes(SECRET));
@@ -838,8 +838,37 @@ test("R28: every outbound request of a capture is to a public locator, through t
     const u = new URL(x.url);
     assert.equal(u.protocol, "https:", x.url);
     assert.ok(!/^\d+\.\d+\.\d+\.\d+$/.test(u.hostname) && u.hostname !== "localhost", x.url);
-    assert.match(x.init.headers["user-agent"], /^CivicOS\/9\.9\.9 \(\+https:\/\/\S+; instance inst; (acquire|attest)\)$/);
+    assert.match(x.init.headers["user-agent"], /^Civicsmith\/9\.9\.9 \(\+https:\/\/\S+; instance inst; (acquire|attest)\)$/);
   }
   const hosts = new Set(r.net.seen.map((x) => new URL(x.url).host));
   for (const h of hosts) assert.ok(w.gov.calls.some((c) => (c[0] === "admit" || c[0] === "isHeld") && c[1] === h), `${h} asked of the governor`);
+});
+
+test("R9 R16 (DEC-124): on every arm each outbound request names Civicsmith, the instance and the purpose, and the first hop's who is the instance with Civicsmith and its version; CivicOS is sent and written nowhere", async () => {
+  const agentOk = (ua) => /^Civicsmith\/9\.9\.9 \(\+https:\/\/github\.com\/believeinoakland\/bio; instance inst; (acquire|attest|investigate|archive-lookup)\)$/.test(ua);
+  const WHO = "instance inst (Civicsmith/9.9.9)";
+  /* the direct arm, with its supporting files and co-attestation */
+  const d = await run(world(), siteRoutes, { locator: "https://s.example/p", subresources: true });
+  /* the archive arm */
+  const a = world(); await eligible(a);
+  const arch = await run(a, wayback([{ ts: "20250101000000", body: "archived" }]), { via: "archive.org", address: "https://gone.example/doc" }, { cls: "admin", member: false });
+  /* the render arm (its shell fetch) */
+  const r = await run(world({ env: rendererEnv(renderAnswer) }), { "https://r.example/page": page(HTML("<div id=app></div>")) }, { locator: "https://r.example/page", render: true });
+  /* the capture-request arm with no delegated agent */
+  const c = await arm(world(), { "https://a.example/doc": () => text("d") }, {});
+  for (const [what, x] of [["direct", d], ["archive", arch], ["render", r], ["capture-request", c]]) {
+    assert.equal(x.status, 200, what);
+    const sent = [...x.net.seen, ...x.net.attest];
+    assert.ok(sent.length >= 1, what);
+    for (const s of sent) assert.ok(agentOk(s.init.headers["user-agent"]), `${what}: ${s.url} sent ${s.init.headers["user-agent"]}`);
+    assert.equal(x.body.document.provenance_chain[0].who, WHO, `${what}: R16's first hop`);
+    assert.ok(!JSON.stringify(x.body).includes("CivicOS"), `${what}: the old name is in no answer`);
+  }
+  /* the version and instance come from the instance; absent, R24's defaults */
+  const bare = await run(world({ env: { INSTANCE_NAME: "", VERSION: "" } }), { "https://a.example/x": text("x") }, { locator: "https://a.example/x" });
+  assert.equal(bare.body.document.provenance_chain[0].who, "instance unnamed (Civicsmith/0.0.0)");
+  /* negative control: a delegated agent is sent verbatim, and the who is still this instance's */
+  const del = await arm(world(), { "https://a.example/doc": () => text("d") }, { agent: "Mozilla/5.0 Member" });
+  assert.equal(del.net.seen[0].init.headers["user-agent"], "Mozilla/5.0 Member");
+  assert.equal(del.body.document.provenance_chain[0].who, WHO);
 });

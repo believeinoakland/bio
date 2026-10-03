@@ -111,7 +111,7 @@ test("R32 R9: every Memento request goes through the host governor; a cooling ar
   assert.equal(r.status, 200);
   assert.deepEqual(admits, ["web.archive.org", "web.archive.org", "web.archive.org"], "TimeGate, TimeMap and memento each admitted");
   assert.deepEqual(reports, [["web.archive.org", 404], ["web.archive.org", 200], ["web.archive.org", 200]], "each outcome reported");
-  assert.ok(r.net.seen.every((x) => /^CivicOS\//.test(x.init.headers["user-agent"])), "under this instance's agent");
+  assert.ok(r.net.seen.every((x) => /^Civicsmith\//.test(x.init.headers["user-agent"])), "under this instance's agent");
   const cool = world({ gov: { refuse: ["web.archive.org"] } }); await eligible(cool);
   const c = await run(cool, wayback([{ ts: "20250101000000" }]), ARCH, ADMIN);
   assert.deepEqual([c.status, c.body.reason, c.net.seen.length], [429, "HOST_COOLING_OFF", 0]);
