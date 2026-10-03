@@ -27,6 +27,7 @@ T26's rules hold (merge early; one file, one editor; marks struck at the merge; 
 4. `bio-plane/test/m/control-plane/` R22: `CHECK_FAMILIES` does not reach `docket`'s `DOCKET_CHECKS` (found by PUBLIC-READ #8 at L8), until control-plane's L11 merge (K1280).
 5. `bio-plane/test/m/affordances/backing.test.mjs` R19's `actionhold` case drives a release through `actionhold`, now refused `HOLD_RELEASE_IS_ITS_OWN_ACT` (actions R52 amended), red from actions' L9 merge until affordances' L11 merge re-points it (K1283).
 6. `bio-plane/test/m/queue/` feed tests (30): queue's test world lacks fakes for `actions.holdsReleased`, `reevaluation.docketDependents`, `docket.coreDue`, red from queue-producers' L11 merge until queue's (K1288).
+7. `bio-plane/test/m/control-plane/totality.test.mjs` R2, R41: the 12 ops affordances R33, R34 name lack op-declarations' rows, red from affordances' L11 merge until op-declarations' (K1289). Red 5 cleared at affordances' merge (K1289).
 
 ## Roster (by layer; 17 jobs)
 
