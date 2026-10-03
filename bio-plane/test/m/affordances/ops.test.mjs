@@ -23,10 +23,10 @@ const world = () => {
 };
 const route = (a, query) => affordancesOps(a, new URL(`http://do/affordancefacts?${new URLSearchParams(query)}`));
 
-test("R13 R14 R15: the op map holds exactly `affordancefacts`, and it answers affordanceFacts for the query's target, "
+test("R13 R14 R15 R37: the op map holds exactly `affordancefacts` and `affordancescreens`, and `affordancefacts` it answers affordanceFacts for the query's target, "
    + "viewer, identity, author and by", () => {
   const { a } = world();
-  assert.deepEqual(Object.keys(route(a, {})), ["affordancefacts"]);
+  assert.deepEqual(Object.keys(route(a, {})), ["affordancefacts", "affordancescreens"]);
   const asks = [
     { target: IQ.a, viewer: M1, identity: M1, author: M1, by: "m1" },
     { target: IQ.a, viewer: M2, identity: M1, author: "class:ai", by: "class:ai" },

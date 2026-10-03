@@ -15,7 +15,7 @@ The feed's producers: each derives, on read and writing nothing, the items one p
 Terms. An **item** is `queue`'s item (its Provides) without `disposition` (`queue`'s mint gives it) and without `catalogue_id` (`queue` stamps it from its R2). A **home set**, the **depth bound** and a **case** are `queue`'s.
 
 **feedItems({member, viewer, now, identity, homesOf, optionsOf}) → {items, facts}** (`queue`'s one read of this module)
-- **R8** Answers every item R1–R7, R9, R14, R15–R23, R26, R27, R29, R30, R31, R32, R33, R34 and R35 derive for this member and viewer, each homed through `homesOf(subjectIds)` (`queue` R7's walk, passed in) and carrying `options` from `optionsOf(subjectIds)` (`queue` R12's options, passed in), and `facts`: `objective_gap` `{bound, truncated}` (R2), `unattributed`, `contradiction` `{bound, truncated}` (R4), and the proposals feed's `dispositions` (one `proposalsFeed` read, so R2 and `queue` R15 cannot disagree). A contradiction-duty, -lead or -plurality item's `subject` is `{kind: "contradiction_candidate", id, state, inquiry?, between_projects, parties: [{project, opted_in}]}` (the member's party projects only), and a -duty-unseen or -plurality-unseen item's is `{kind: "contradiction_notice", id, parties: [{project, opted_in}]}`, which `queue` R46's dispositions read (K558). Writes nothing. (R22, R23: DEC-95 (1), DEC-102 item 3; K1019; R29: DEC-113; R34, R35: DEC-101 (3), N534) *(not yet met: T31: R32, R33, R34, R35)*
+- **R8** Answers every item R1–R7, R9, R14, R15–R23, R26, R27, R29, R30, R31, R32, R33, R34 and R35 derive for this member and viewer, each homed through `homesOf(subjectIds)` (`queue` R7's walk, passed in) and carrying `options` from `optionsOf(subjectIds)` (`queue` R12's options, passed in), and `facts`: `objective_gap` `{bound, truncated}` (R2), `unattributed`, `contradiction` `{bound, truncated}` (R4), and the proposals feed's `dispositions` (one `proposalsFeed` read, so R2 and `queue` R15 cannot disagree). A contradiction-duty, -lead or -plurality item's `subject` is `{kind: "contradiction_candidate", id, state, inquiry?, between_projects, parties: [{project, opted_in}]}` (the member's party projects only), and a -duty-unseen or -plurality-unseen item's is `{kind: "contradiction_notice", id, parties: [{project, opted_in}]}`, which `queue` R46's dispositions read (K558). Writes nothing. (R22, R23: DEC-95 (1), DEC-102 item 3; K1019; R29: DEC-113; R34, R35: DEC-101 (3), N534)
 
 **The producers**
 - **R1** Each uncleared bias debt (from `bias`) inside the viewer's gate whose recipients include the member or name nobody, at most 200, keyed `OBLIGATION::bias-debt::<run>`.
@@ -89,8 +89,8 @@ Terms. An **item** is `queue`'s item (its Provides) without `disposition` (`queu
   - **When it leaves.** When the notice leaves `contradiction` R50: the candidate is resolved or dismissed, or the member comes to see both sides (then R4's item answers it).
 
 **Wizard scripts** (DEC-121 (1), (5); N528)
-- **R32** (`wizard-scripts` R13; DEC-121 (5): "its owner is told why") FINDINGs `wizard-withdrawn` and `wizard-restored`: one per entry `wizard-scripts.brokenScripts` answers (its R13), keyed `FINDING::wizard-<kind>::<script>@<version>::<at>`, to the script's project owners (`membership` R65) and its version's author, and to nobody else; its subject the script's version, naming its name and, for a withdrawal, the first refusal in plain words (the row's translation). It is raised once and never repeated, and leaves when its recipient disposes of it (DEC-69, DEC-70). *(not yet met: T31)*
-- **R33** (`wizard-scripts` R7, R17; DEC-121 (1)) OBLIGATIONs `wizard-approval-requested`: one per (version, owner) `wizard-scripts.submittedFor` answers the viewer (its R17), keyed `OBLIGATION::wizard-approval-requested::<script>@<version>::<owner>`, to that owner and to nobody else, as R20's; its subject the script's version, naming its name and author; its `age` from the submission. It leaves when the version is approved, withdrawn or its script retired. It is raised once and never repeated unless the member asks (DEC-69, DEC-94). *(not yet met: T31)*
+- **R32** (`wizard-scripts` R13; DEC-121 (5): "its owner is told why") FINDINGs `wizard-withdrawn` and `wizard-restored`: one per entry `wizard-scripts.brokenScripts` answers (its R13), keyed `FINDING::wizard-<kind>::<script>@<version>::<at>`, to the script's project owners (`membership` R65) and its version's author, and to nobody else; its subject the script's version, naming its name and, for a withdrawal, the first refusal in plain words (the row's translation). It is raised once and never repeated, and leaves when its recipient disposes of it (DEC-69, DEC-70).
+- **R33** (`wizard-scripts` R7, R17; DEC-121 (1)) OBLIGATIONs `wizard-approval-requested`: one per (version, owner) `wizard-scripts.submittedFor` answers the viewer (its R17), keyed `OBLIGATION::wizard-approval-requested::<script>@<version>::<owner>`, to that owner and to nobody else, as R20's; its subject the script's version, naming its name and author; its `age` from the submission. It leaves when the version is approved, withdrawn or its script retired. It is raised once and never repeated unless the member asks (DEC-69, DEC-94).
 
 **Watched cases at their publishers** (DEC-101 (3); DEC-116 item 8; N534)
 - **R34** (`reevaluation` R33; DEC-101 (3)) FINDINGs `cited-newer-edition` and `cited-edition-withdrawn`, by the move's kind:
@@ -100,14 +100,16 @@ Terms. An **item** is `queue`'s item (its Provides) without `disposition` (`queu
   - its detail names the group, the case, the cited edition, the edition named, and the `what_changed` or `reason` quoted. When `key_listed` is false, it says that the entry's signing key is not among the keys the imported case file lists. When the move was taken back, it says so;
   - it leaves when the cause closes (as R31).
 
-  *(not yet met: T31)*
+ 
 - **R35** (`case-import` R20; DEC-101 (3), DEC-116 item 8) The watch's items go to the member who set the watch in force (`set_by`). When that member is no longer an active member, they go to the administrators (`membership` R86). They go to nobody else. A verified entry that is not a publisher move (a subject's response, a reaction, a disclosure) reaches only them, never as a re-evaluation cause (K1339, K1366 F1). Each item's subject is `{kind: "import", id}`, and it has no project home (as R20's `group` template):
   - FINDING `followed-case-entry`: one per verified entry seen, keyed `FINDING::followed-case-entry::<import>#<seq>`. It names the kind, edition, date and `key_listed`, and quotes `what_changed` or `reason` for a move. It is raised once and leaves when its recipient disposes of it (DEC-69, DEC-94).
   - FINDING `cited-docket-entry-refused`: one per refused entry, keyed `FINDING::cited-docket-entry-refused::<import>#<seq>`. It names the check failed. It is raised once.
   - CONDITION `cited-docket-unreadable`: one per watch whose latest read is unreadable, keyed `CONDITION::cited-docket-unreadable::<import>`. Its detail opens with `DOCKET_UNREADABLE`'s sentence and gives the reason and the instant. It leaves when a read succeeds or the watch ends.
 
-  *(not yet met: T31)*
+ 
 
+
+**Settled readings (K1397):** the `brokenScripts` and `submittedFor` entry shapes and the factory name stand as K1397 states them; they bind this module's tests.
 ## Private
 
 ### Uses

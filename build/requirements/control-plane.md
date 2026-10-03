@@ -98,6 +98,8 @@ Terms. An **op spec** is `{classes, machineClasses?, mutating}`, with the op's s
 - **R26** An empty POST body is `null`, and a body that is not JSON is refused 400 `BAD_JSON`. A route no module serves is refused 400 `unknown op: <op>`. An answer is `{ok: true, result}`. The routes are the modules' own maps (the `membershipOps` pattern).
 - **R27** A read whose parameters name a project (the declared `PROJECT_NAMING_READS`), asked with a stamped `viewer` and naming a discoverable project, is answered by `membership.existenceAct` first (C-70.1), before its route runs. The reads declared to name no project are listed with the reason.
 
+
+**Settled readings (K1396):** the readings of control-plane's T31 question stand as K1396 states them; they bind this module's tests.
 ## Private
 
 ### Uses

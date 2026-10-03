@@ -84,6 +84,8 @@ Terms. An **op** is a name the instance answers. An **op spec** is `{classes, ma
 
   R6 holds over them. *(not yet met: T31)*
 
+
+**Settled readings (K1396):** the readings of op-declarations's T31 question stand as K1396 states them; they bind this module's tests.
 ## Private
 
 ### Uses

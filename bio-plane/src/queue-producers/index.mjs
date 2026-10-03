@@ -1,9 +1,9 @@
-/* queue-producers — the feed's producers (requirements: `build/requirements/queue-producers.md`, R1–R31).
+/* queue-producers — the feed's producers (requirements: `build/requirements/queue-producers.md`, R1–R35).
  * Split out of `queue` by N363 (Bob's K507; seams ruled K531, `build/plan/draft-N363-queue-split.md` §1, §3.2): each
  * producer derives, on read and writing nothing, the items one provider's facts earn for a viewer, naming each item's
  * subjects and home subjects, for `queue` to home, offer, mint and publish.
  *
- *   feedItems      queue's one read of this module (R8): every item R1–R7, R9, R14, R15–R23, R26, R27, R29–R31 derive for a
+ *   feedItems      queue's one read of this module (R8): every item R1–R7, R9, R14, R15–R23, R26, R27, R29–R35 derive for a
  *                  member and viewer, each homed through queue's walk and carrying queue's options (both passed in),
  *                  with the facts the answer publishes beside them. No item carries `disposition` (queue's mint gives
  *                  it) or `catalogue_id` (queue stamps it from its R2).
@@ -15,7 +15,7 @@
  * `deps` (each defaults to its module's instance on the same `ctx`, reached lazily when first asked):
  *   record, membership, credentials, governor, provenance, capture, captureRequests, basisVersions, progressions, aiRuns, bias,
  *   publication, corpusExport, reevaluation, intent, monitoring, contradiction, actionClocks, escalation, actionPlans,
- *   actions, filingTemplates, localFacts, networkNotices, linkSweep, docket   the providers.
+ *   actions, filingTemplates, localFacts, networkNotices, linkSweep, docket, caseImport, wizardScripts   the providers.
  *
  * R7 (queue's homes walk) and R12 (queue's options) stay in queue, one walk and one derivation: `feedItems` takes them
  * as `homesOf(subjectIds)` and `optionsOf(subjectIds)`, closed over the read's viewer and identity by queue, and holds
@@ -51,7 +51,9 @@ import { actionsOf } from "../actions/index.mjs";
 import { filingTemplatesOf } from "../filing-templates/index.mjs";
 import { localFactsOf } from "../local-facts/index.mjs";
 import { networkNoticesOf } from "../network-notices/index.mjs";
-import { docketOf } from "../docket/index.mjs";
+import { docketOf, DOCKET_UNREADABLE } from "../docket/index.mjs";
+import { caseImportOf } from "../case-import/index.mjs";
+import { wizardScriptsOf } from "../wizard-scripts/index.mjs";
 import { proposalFindingItems } from "./proposals.mjs";
 
 export { proposalFindingItems, CARDINALITY_EXCEEDED } from "./proposals.mjs";
@@ -103,6 +105,10 @@ export class QueueProducers {
   get #linkSweep() { return this.#dep("linkSweep", () => linkSweepOf(this.#host)); }
   /* N520: a case's required core is docket's (its R9). */
   get #docket() { return this.#dep("docket", () => docketOf(this.#host)); }
+  /* N534: a watch's entries are case-import's (its R20). */
+  get #caseImport() { return this.#dep("caseImport", () => caseImportOf(this.#host)); }
+  /* N528: a wizard script's breaks and its submissions are wizard-scripts' (its R13, R17). */
+  get #wizardScripts() { return this.#dep("wizardScripts", () => wizardScriptsOf(this.#host)); }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
@@ -238,6 +244,14 @@ export class QueueProducers {
          withdrawn or contested on its docket. */
       items.push(...this.#obligationsDocketCoreDue(me, viewer, at));
       items.push(...this.#findingsDocketDependents(viewer, at));
+      /* R34, R35 (N534; DEC-101 (3)): a finding resting on another group's edition its publisher replaced or withdrew; and
+         what a watch saw at the publisher's docket, to the member who set it. */
+      items.push(...this.#findingsCitedCaseMoved(viewer, at));
+      items.push(...this.#watchItems(me, viewer, at));
+      /* R32, R33 (N528; DEC-121 (1), (5)): a group's wizard script withdrawn or restored, told its owners and author; a
+         version submitted, to each owner who may approve it. */
+      items.push(...this.#findingsWizardBroken(me, viewer, at));
+      items.push(...this.#obligationsWizardApproval(me, viewer, at));
       return {
         items,
         facts: {
@@ -3276,6 +3290,411 @@ export class QueueProducers {
       after = r.cursor;
     }
     if (cut) for (const it of out) it.basis.bound.truncated = true;
+    return out;
+  }
+
+  /* ======================================================================
+   * N534 · R34, R35 — WATCHED CASES AT THEIR PUBLISHERS (reevaluation R33; case-import R20; DEC-101 (3), DEC-116 item 8).
+   * Each reads the one fact its owning module offers, derived on read and writing nothing, so an item leaves on the first
+   * read after the fact stops holding. Only a publisher move (a verified `edition` or `withdrawal` entry) is a cause of
+   * re-evaluation (R34); every verified entry, a move or not, reaches only the member who set the watch (R35; K1339,
+   * K1366 F1).
+   * ====================================================================== */
+
+  /** R34: the item kind of each publisher move (reevaluation R33 (a), (b)), and the page its listing is read in (its
+   *  largest). */
+  static CITED_MOVE_KINDS = Object.freeze({ edition: "cited-newer-edition", withdrawal: "cited-edition-withdrawn" });
+  static QUEUE_CITED_PAGE = 200;
+  /** R35: the acts a watch's item offers (case-import R4, R17): reading the imported case with its docket entries, and,
+   *  for an unreadable docket, setting the watch's address again or ending the watch. */
+  static IMPORT_READ = Object.freeze({ id: "importedcase", label: "Read the imported case and what its publisher's docket said", weight: "single" });
+  static IMPORT_REWATCH = Object.freeze({ id: "importwatch", label: "Set the publisher's address again", weight: "single" });
+  static IMPORT_UNWATCH = Object.freeze({ id: "importunwatch", label: "Stop following this case", weight: "single" });
+
+  /** The sentence naming another group's case, as far as the viewer is told it (reevaluation R33 states the group and
+   *  case only where the viewer sees the imported reference). */
+  static #citedCaseWords(group, cs) {
+    return `${cs ? `case ${cs}` : "a case"}${group ? ` of the group ${group}` : " of another group"}`;
+  }
+
+  /** What one entry seen at a publisher's docket says, quoted: a move's `what_changed` or `reason`, and its signing key
+   *  and take-back as R34 and R35 state them. */
+  static #entryWords(e) {
+    const quoted = e.kind === "edition" && typeof e.what_changed === "string" && e.what_changed
+      ? ` What changed, in its publisher's words: "${e.what_changed}".`
+      : e.kind === "withdrawal" && typeof e.reason === "string" && e.reason
+        ? ` The reason, in its publisher's words: "${e.reason}".` : "";
+    const key = e.key_listed === false
+      ? " The entry's signing key is not among the keys the imported case file lists." : "";
+    const back = e.taken_back && typeof e.taken_back === "object"
+      ? ` The publisher has since taken this entry back (entry ${e.taken_back.seq ?? "unnumbered"}`
+        + `${e.taken_back.date ? `, dated ${e.taken_back.date}` : ""}).` : "";
+    return `${quoted}${key}${back}`;
+  }
+
+  /** `cited-newer-edition` and `cited-edition-withdrawn` (R34; reevaluation R33; DEC-101 (3)): one FINDING per
+   *  (dependent, move) `reevaluation.citedCaseDependents` answers the viewer (which withholds a hidden dependent and does
+   *  not count it), by the move's kind, keyed `FINDING::<kind>::<dependent>::<import>#<seq>`, homed under the dependent
+   *  and its ancestors. Its detail names the group, the case, the cited edition, the edition the move names, and quotes
+   *  `what_changed` or `reason`; it says when the entry's signing key is not among the keys the imported case file lists,
+   *  and when the move was taken back (the cause still stands). It leaves when the cause closes (a recorded
+   *  re-evaluation, reevaluation R16), as R31's. */
+  #findingsCitedCaseMoved(viewer, now) {
+    const out = [];
+    const seen = new Set();
+    let after = null, cut = false, flags = {};
+    for (let page = 0; ; page += 1) {
+      if (page === QueueProducers.QUEUE_CONTRADICTION_PAGES) { cut = true; break; }
+      const r = this.#reevaluation.citedCaseDependents({ after, limit: QueueProducers.QUEUE_CITED_PAGE, viewer });
+      if (!r || r.ok !== true || !Array.isArray(r.entries)) break;
+      if (r.accepted_work_absent) flags = { ...flags, accepted_work_absent: true };
+      if (r.accepted_work_unreadable) flags = { ...flags, accepted_work_unreadable: true };
+      for (const e of r.entries) {
+        const kind = e ? QueueProducers.CITED_MOVE_KINDS[e.kind] : null;
+        if (!kind || typeof e.dependent !== "string" || !e.dependent || typeof e.import !== "string" || !e.import
+            || !Number.isInteger(Number(e.seq)) || e.seq === null || e.seq === "") continue;
+        const id = `FINDING::${kind}::${e.dependent}::${e.import}#${Number(e.seq)}`;
+        if (seen.has(id)) continue;
+        seen.add(id);
+        const title = this.#record.bundleInfo(e.dependent);
+        const name = title && title.title ? title.title : e.dependent;
+        const legs = Array.isArray(e.legs) ? e.legs : [];
+        const cited = [...new Set(legs.map((l) => l && l.cited_edition).filter((x) => x !== undefined && x !== null))]
+          .sort((a, b) => Number(a) - Number(b));
+        const edition = e.edition === "all" ? "all" : e.edition === undefined || e.edition === null ? null : Number(e.edition);
+        const withdrawn = kind === "cited-edition-withdrawn";
+        const whose = QueueProducers.#citedCaseWords(e.group ?? null, e.case ?? null);
+        const citedWords = cited.length ? `${cited.length === 1 ? "edition" : "editions"} ${cited.join(", ")}` : "an edition";
+        const sinceMs = Date.parse(e.since ?? "");
+        out.push({
+          id,
+          class: "FINDING",
+          kind,
+          case: this.#homesAt([e.dependent], viewer),
+          subject: { kind: "bundle", id: e.dependent, import: e.import, group: e.group ?? null, case: e.case ?? null,
+                     move: e.move ?? null, seq: Number(e.seq), cited_editions: cited, edition },
+          summary: withdrawn
+            ? `${name} cites ${citedWords} of ${whose}, which its publisher has withdrawn`
+            : `${name} cites ${citedWords} of ${whose}, and its publisher has published edition ${edition ?? "a later one"}`,
+          detail: (withdrawn
+            ? `The publisher's docket for ${whose} withdrew ${edition === "all" ? "every edition" : `edition ${edition ?? ""}`.trim()}`
+              + `${e.date ? ` on ${e.date}` : ""}; what this rests on cites ${citedWords}.`
+            : `The publisher's docket for ${whose} lists edition ${edition ?? "(unnumbered)"}${e.date ? `, dated ${e.date}` : ""}; `
+              + `what this rests on cites ${citedWords}.`)
+            + QueueProducers.#entryWords(e)
+            + " The cited edition keeps answering as it was signed, and nothing here moved or was regraded. Whether this "
+            + "still stands is the members' to decide; a recorded re-evaluation closes this.",
+          basis: { source: "reevaluation.citedCaseDependents", dependent: e.dependent, move: e.move ?? null, import: e.import,
+                   group: e.group ?? null, case: e.case ?? null, move_kind: e.kind, edition, seq: Number(e.seq),
+                   date: e.date ?? null, since: e.since ?? null,
+                   ...(e.kind === "edition" ? { what_changed: e.what_changed ?? null } : { reason: e.reason ?? null }),
+                   key_listed: typeof e.key_listed === "boolean" ? e.key_listed : null, taken_back: e.taken_back ?? null,
+                   cited_editions: cited, legs, cause_detail: e.detail ?? null, ...flags,
+                   bound: { limit: QueueProducers.QUEUE_CITED_PAGE, pages_bound: QueueProducers.QUEUE_CONTRADICTION_PAGES,
+                            truncated: cut },
+                   detail: "the cause is reevaluation's (its R33): a live leg of this finding rests on another group's "
+                         + "finding at an edition whose publisher has since listed a later edition or withdrawn it on its "
+                         + "docket, a verified entry this copy read. It is read here, never raised, and nothing was regraded." },
+          age: Number.isFinite(sinceMs)
+            ? { state: "determined", since: e.since, ms: Math.max(0, now - sinceMs) }
+            : { state: "undetermined", reason: "no_cause_instant",
+                detail: "the cause carries no instant this producer can read" },
+          assignee: null,
+          assignee_role: null,
+          options: this.#optionsOf([e.dependent]),
+        });
+      }
+      if (!r.truncated || !r.cursor) break;
+      after = r.cursor;
+    }
+    if (cut) for (const it of out) it.basis.bound.truncated = true;
+    return out;
+  }
+
+  /** Who a watch's items go to (R35): the member who set the watch in force, while an active member (membership R68's
+   *  status); else the administrators (membership R86); with the rule that chose them. */
+  #watchRecipients(setBy) {
+    const who = typeof setBy === "string" ? setBy.trim() : "";
+    const facts = who ? this.#membership.memberFacts(who) : null;
+    if (facts && facts.status === "active") return { rule: "watch_setter", members: [who] };
+    return { rule: "administrators", members: this.#activeAdmins() };
+  }
+
+  /** `followed-case-entry`, `cited-docket-entry-refused` and `cited-docket-unreadable` (R35; case-import R20; DEC-101 (3),
+   *  DEC-116 item 8): what `case-import.watchItems` answers the viewer, each to the member who set the watch, else (that
+   *  member no longer active) the administrators, and to nobody else: a caller with no member is none of them. Each
+   *  item's subject is the import, and it has no project home (as R20's `group` template). A verified entry that is not
+   *  a publisher move reaches only them here, and never as a cause of re-evaluation (R34 reads moves alone).
+   *  - one FINDING per verified entry seen, keyed `FINDING::followed-case-entry::<import>#<seq>`, naming its kind,
+   *    edition, date and `key_listed`, and quoting a move's `what_changed` or `reason`;
+   *  - one FINDING per refused entry, keyed `FINDING::cited-docket-entry-refused::<import>#<seq>`, naming the check
+   *    failed (refused copies of one `seq` are one item, naming every check; a refused entry with no readable `seq` is
+   *    keyed `<import>#unnumbered`);
+   *  - one CONDITION per watch in force whose latest read is unreadable, keyed `CONDITION::cited-docket-unreadable::<import>`,
+   *    its detail opening with DOCKET_UNREADABLE's sentence (docket R15) and giving the reason and the instant, aged from
+   *    it; it leaves when a read succeeds or the watch ends.
+   *  The findings are raised once and leave when their recipient disposes of them (queue's mint). */
+  #watchItems(me, viewer, now) {
+    if (!me) return [];
+    const r = this.#caseImport.watchItems({ viewer });
+    if (!r || typeof r !== "object") return [];
+    const recipients = new Map();
+    const to = (setBy) => {
+      const k = typeof setBy === "string" ? setBy : "";
+      if (!recipients.has(k)) recipients.set(k, this.#watchRecipients(setBy));
+      return recipients.get(k);
+    };
+    const complete = r.complete === false ? { complete: false } : {};
+    const subjectOf = (x) => ({ kind: "import", id: x.import, group: x.group ?? null, case: x.case ?? null });
+    const whose = (x) => QueueProducers.#citedCaseWords(x.group ?? null, x.case ?? null);
+    const out = [];
+    const findings = new Map();
+    for (const e of Array.isArray(r.entries) ? r.entries : []) {
+      if (!e || typeof e.import !== "string" || !e.import || !Number.isInteger(e.seq)) continue;
+      const rec = to(e.set_by);
+      if (!rec.members.includes(me)) continue;
+      const id = `FINDING::followed-case-entry::${e.import}#${e.seq}`;
+      if (findings.has(id)) continue;
+      const edition = e.edition === "all" ? "all" : e.edition === undefined || e.edition === null ? null : Number(e.edition);
+      const kindWords = e.kind === "edition" ? `edition ${edition ?? "(unnumbered)"}`
+        : e.kind === "withdrawal" ? `a withdrawal of ${edition === "all" ? "every edition" : `edition ${edition ?? "(unnumbered)"}`}`
+          : `an entry of kind ${e.kind || "(unstated)"}${edition !== null ? ` on edition ${edition}` : ""}`;
+      const it = {
+        id,
+        class: "FINDING",
+        kind: "followed-case-entry",
+        case: this.#homesOf([]),
+        subject: subjectOf(e),
+        summary: `the publisher's docket for ${whose(e)}, which you follow, lists ${kindWords}`,
+        detail: `Entry ${e.seq} of the docket, ${kindWords}${e.date ? `, dated ${e.date}` : ""}, was read and verified by this copy. `
+              + `Its signing key ${e.key_listed === false ? "is not" : "is"} among the keys the imported case file lists.`
+              + QueueProducers.#entryWords({ ...e, key_listed: null })
+              + (e.move ? " Anything here resting on an edition it moves is told to its own members as well."
+                        : " It is not a new edition or a withdrawal, so nothing resting on the case is re-evaluated for it.")
+              + " This is told once.",
+        basis: { source: "case-import.watchItems", import: e.import, group: e.group ?? null, case: e.case ?? null,
+                 seq: e.seq, entry_kind: e.kind ?? null, edition, date: e.date ?? null,
+                 key_listed: typeof e.key_listed === "boolean" ? e.key_listed : null, move: e.move === true,
+                 ...(e.kind === "edition" ? { what_changed: e.what_changed ?? null } : {}),
+                 ...(e.kind === "withdrawal" ? { reason: e.reason ?? null } : {}),
+                 taken_back: e.taken_back ?? null, set_by: e.set_by ?? null, recipients_rule: rec.rule, ...complete,
+                 detail: "a verified entry of a followed case's docket is case-import's (its R18, R20), read here and "
+                       + "never stored. It goes to the member who set the watch, else the administrators, and to nobody "
+                       + "else; only a new edition or a withdrawal is a cause of re-evaluation (K1339, K1366)." },
+        age: { state: "undetermined", reason: "no_seen_instant",
+               detail: "the entry carries the publisher's date but not the instant this copy read it" },
+        assignee: null,
+        assignee_role: null,
+        recipients: [...rec.members],
+        options: [QueueProducers.IMPORT_READ],
+      };
+      findings.set(id, it);
+      out.push(it);
+    }
+    for (const e of Array.isArray(r.refused) ? r.refused : []) {
+      if (!e || typeof e.import !== "string" || !e.import) continue;
+      const rec = to(e.set_by);
+      if (!rec.members.includes(me)) continue;
+      const seq = Number.isInteger(e.seq) ? e.seq : null;
+      const id = `FINDING::cited-docket-entry-refused::${e.import}#${seq === null ? "unnumbered" : seq}`;
+      const failed = typeof e.failed === "string" && e.failed ? e.failed : "an undetermined check";
+      const held = findings.get(id);
+      if (held) {
+        if (!held.basis.failed.includes(failed)) {
+          held.basis.failed.push(failed);
+          held.detail = QueueProducers.#refusedWords(e, seq, held.basis.failed);
+        }
+        continue;
+      }
+      const it = {
+        id,
+        class: "FINDING",
+        kind: "cited-docket-entry-refused",
+        case: this.#homesOf([]),
+        subject: subjectOf(e),
+        summary: `an entry on the publisher's docket for ${whose(e)}, which you follow, failed this copy's checks`,
+        detail: QueueProducers.#refusedWords(e, seq, [failed]),
+        basis: { source: "case-import.watchItems", import: e.import, group: e.group ?? null, case: e.case ?? null, seq,
+                 failed: [failed], entry_detail: e.detail ?? null, set_by: e.set_by ?? null, recipients_rule: rec.rule,
+                 ...complete,
+                 detail: "a refused entry is case-import's (its R18, R20): an entry of the followed case's docket that "
+                       + "failed a check, recorded and never a move. It goes to the member who set the watch, else the "
+                       + "administrators, and to nobody else." },
+        age: { state: "undetermined", reason: "no_seen_instant",
+               detail: "the entry carries no instant this copy read it at" },
+        assignee: null,
+        assignee_role: null,
+        recipients: [...rec.members],
+        options: [QueueProducers.IMPORT_READ],
+      };
+      findings.set(id, it);
+      out.push(it);
+    }
+    for (const u of Array.isArray(r.unreadable) ? r.unreadable : []) {
+      if (!u || typeof u.import !== "string" || !u.import) continue;
+      const rec = to(u.set_by);
+      if (!rec.members.includes(me)) continue;
+      const id = `CONDITION::cited-docket-unreadable::${u.import}`;
+      if (findings.has(id)) continue;
+      const atMs = Date.parse(u.at ?? "");
+      const it = {
+        id,
+        class: "CONDITION",
+        kind: "cited-docket-unreadable",
+        case: this.#homesOf([]),
+        subject: subjectOf(u),
+        summary: `${DOCKET_UNREADABLE} for ${whose(u)}, which you follow`,
+        detail: `${DOCKET_UNREADABLE}${u.reason ? ` (${u.reason})` : ""}${u.at ? ` at ${u.at}` : ""}. This says the read failed, `
+              + "never that nothing changed. It leaves when a read succeeds or the watch ends.",
+        basis: { source: "case-import.watchItems", import: u.import, group: u.group ?? null, case: u.case ?? null,
+                 docket: u.docket ?? null, reason: u.reason ?? null, at: u.at ?? null, sentence: DOCKET_UNREADABLE,
+                 set_by: u.set_by ?? null, recipients_rule: rec.rule, ...complete,
+                 detail: "an unreadable docket is case-import's fact about this copy's latest read (its R18, R20), read "
+                       + "here and never stored: a signal about our own reading, not about the publisher. It goes to the "
+                       + "member who set the watch, else the administrators, and leaves on the first read after it stops "
+                       + "holding." },
+        age: Number.isFinite(atMs)
+          ? { state: "determined", since: u.at, ms: Math.max(0, now - atMs) }
+          : { state: "undetermined", reason: "no_read_instant",
+              detail: "the read carries no instant this producer can read" },
+        assignee: null,
+        assignee_role: null,
+        recipients: [...rec.members],
+        options: [QueueProducers.IMPORT_REWATCH, QueueProducers.IMPORT_UNWATCH],
+      };
+      findings.set(id, it);
+      out.push(it);
+    }
+    return out;
+  }
+
+  /** R35: the refused entry's sentence, naming every check its copies failed. */
+  static #refusedWords(e, seq, failed) {
+    return `${seq === null ? "An entry with no readable number" : `Entry ${seq}`} of the docket was read and refused: it failed `
+      + `${failed.length === 1 ? "the check" : "the checks"} ${failed.join(", ")}. A refused entry is never taken as a new `
+      + "edition or a withdrawal, and nothing resting on the case moved. This is told once.";
+  }
+
+  /* ======================================================================
+   * N528 · R32, R33 — WIZARD SCRIPTS (wizard-scripts R7, R13, R17; DEC-121 (1), (5); K1397).
+   * Each reads the one fact its owning module offers, derived on read and writing nothing.
+   * ====================================================================== */
+
+  /** R32: the item kinds of a break and a return (wizard-scripts R13); R33: the act that answers a submission (its R7). */
+  static WIZARD_BREAK_KINDS = Object.freeze({ withdrawn: "wizard-withdrawn", restored: "wizard-restored" });
+  static WIZARD_APPROVE = Object.freeze({ id: "wizardapprove", label: "Read this wizard script and approve it", weight: "single" });
+  static WIZARD_READ = Object.freeze({ id: "wizardread", label: "Read this wizard script", weight: "single" });
+
+  /** `wizard-withdrawn` and `wizard-restored` (R32; wizard-scripts R13; DEC-121 (5): "its owner is told why"): one FINDING
+   *  per entry `wizard-scripts.brokenScripts` answers the viewer, keyed `FINDING::wizard-<kind>::<script>@<version>::<at>`,
+   *  to the script's project owners (membership R65) and its version's author, and to nobody else; a group script's
+   *  owners are the administrators (membership R86; K1397, as wizard-scripts R17's). Its subject the version, naming its
+   *  name and, for a withdrawal, the first refusal by its row's translation. Homed under the script's project (none for a
+   *  group script). Raised once: it leaves when its recipient disposes of it (queue's mint), never by anything here. */
+  #findingsWizardBroken(me, viewer, now) {
+    if (!me) return [];
+    const page = this.#actionPages((after) => {
+      const r = this.#wizardScripts.brokenScripts({ after, viewer });
+      return r && Array.isArray(r.entries) ? { ...r, items: r.entries } : r;
+    });
+    const visible = this.#bundleRedactor(viewer);
+    const owners = new Map();
+    const out = [];
+    for (const x of page.items) {
+      const kind = x ? QueueProducers.WIZARD_BREAK_KINDS[x.kind] : null;
+      if (!kind || typeof x.script !== "string" || !x.script || x.version === undefined || x.version === null
+          || typeof x.at !== "string" || !x.at) continue;
+      const project = typeof x.project === "string" && x.project ? x.project : null;
+      if (project && visible(project) === null) continue;       // R11: a script of a project the viewer may not see
+      const key = project || "";
+      if (!owners.has(key)) owners.set(key, project ? (this.#membership.projectOwners(project) || []) : this.#activeAdmins());
+      const author = typeof x.author === "string" && x.author && !x.author.startsWith(MACHINE_AUTHOR_PREFIX)
+        && !x.author.startsWith(MACHINE_CLASS_PREFIX) ? x.author : null;
+      const recipients = [...new Set([...owners.get(key), ...(author ? [author] : [])])];
+      if (!recipients.includes(me)) continue;
+      const version = `${x.script}@${x.version}`;
+      const withdrawn = kind === "wizard-withdrawn";
+      const refusal = withdrawn && x.refusal && typeof x.refusal === "object" ? x.refusal : null;
+      const words = refusal && typeof refusal.translation === "string" && refusal.translation ? refusal.translation : null;
+      const name = typeof x.name === "string" && x.name ? `"${x.name}"` : version;
+      const atMs = Date.parse(x.at);
+      out.push({
+        id: `FINDING::${kind}::${version}::${x.at}`,
+        class: "FINDING",
+        kind,
+        case: project ? this.#homesAt([project], viewer) : this.#homesOf([]),
+        subject: { kind: "wizard_version", id: version, script: x.script, version: x.version, name: x.name ?? null, project,
+                   ...(withdrawn ? { refusal: refusal ? { code: refusal.code ?? null, check: refusal.check ?? null, translation: words } : null } : {}) },
+        summary: withdrawn
+          ? `the wizard script ${name} no longer matches the screens and is withdrawn until it is fixed`
+          : `the wizard script ${name} matches the screens again and is offered again`,
+        detail: withdrawn
+          ? `It is not offered to members while it fails its checks${words ? `. The first thing it failed: ${words}` : ""}. `
+            + "A new version that passes them, approved as before, returns it. This is told once."
+          : "It passed its checks again when this copy started, and members are offered it as before. This is told once.",
+        basis: { source: "wizard-scripts.brokenScripts", script: x.script, version: x.version, name: x.name ?? null, project,
+                 author, at: x.at, break_kind: x.kind, refusal, recipients_rule: project ? "project_owners_and_author" : "administrators_and_author",
+                 bound: { pages_bound: QueueProducers.QUEUE_ACTION_PAGES, truncated: page.truncated },
+                 detail: "a script's break or return is wizard-scripts' record (its R13), made when its checks are run "
+                       + "again at start, read here and never stored. It goes to the script's project owners (for a group "
+                       + "script, the administrators) and its version's author, once (DEC-69, DEC-70)." },
+        age: Number.isFinite(atMs)
+          ? { state: "determined", since: x.at, ms: Math.max(0, now - atMs) }
+          : { state: "undetermined", reason: "no_break_instant", detail: "the record carries no instant this producer can read" },
+        assignee: null,
+        assignee_role: null,
+        recipients,
+        options: [QueueProducers.WIZARD_READ],
+      });
+    }
+    return out;
+  }
+
+  /** `wizard-approval-requested` (R33; wizard-scripts R7, R17; DEC-121 (1)): one OBLIGATION per (version, owner)
+   *  `wizard-scripts.submittedFor` answers the viewer, keyed `OBLIGATION::wizard-approval-requested::<script>@<version>::<owner>`,
+   *  to that owner and to nobody else, as R20's; its subject the version, naming its name and author, aged from the
+   *  submission, homed under the script's project (none for a group script). It leaves when the version is approved,
+   *  withdrawn or its script retired (the read no longer answers it); raised once (DEC-69, DEC-94). */
+  #obligationsWizardApproval(me, viewer, now) {
+    if (!me) return [];
+    const page = this.#actionPages((after) => {
+      const r = this.#wizardScripts.submittedFor({ after, viewer });
+      return r && Array.isArray(r.entries) ? { ...r, items: r.entries } : r;
+    });
+    const visible = this.#bundleRedactor(viewer);
+    const out = [];
+    for (const x of page.items) {
+      if (!x || typeof x.script !== "string" || !x.script || x.version === undefined || x.version === null
+          || x.owner !== me) continue;
+      const project = typeof x.project === "string" && x.project ? visible(x.project) : null;    // R11
+      const version = `${x.script}@${x.version}`;
+      const name = typeof x.name === "string" && x.name ? `"${x.name}"` : version;
+      const atMs = Date.parse(x.submitted_at ?? "");
+      out.push({
+        id: `OBLIGATION::wizard-approval-requested::${version}::${x.owner}`,
+        class: "OBLIGATION",
+        kind: "wizard-approval-requested",
+        case: project ? this.#homesAt([project], viewer) : this.#homesOf([]),
+        subject: { kind: "wizard_version", id: version, script: x.script, version: x.version, name: x.name ?? null,
+                   author: x.author ?? null, project },
+        summary: `${x.author || "a member"} submitted the wizard script ${name} for your approval`,
+        detail: "A version of this wizard script was submitted, and you may approve it. Read its steps and approve it; "
+              + "this is told once, and it leaves when the version is approved or withdrawn, or the script retired.",
+        basis: { source: "wizard-scripts.submittedFor", script: x.script, version: x.version, name: x.name ?? null,
+                 author: x.author ?? null, owner: x.owner, project, submitted_at: x.submitted_at ?? null,
+                 recipients_rule: "approver",
+                 bound: { pages_bound: QueueProducers.QUEUE_ACTION_PAGES, truncated: page.truncated },
+                 detail: "a submitted version is wizard-scripts' fact (its R7, R17): each owner who may approve it is "
+                       + "listed. It goes to that owner and to nobody else, and is raised once (DEC-69, DEC-94)." },
+        age: Number.isFinite(atMs)
+          ? { state: "determined", since: x.submitted_at, ms: Math.max(0, now - atMs) }
+          : { state: "undetermined", reason: "no_submission_instant", detail: "the submission carries no instant this producer can read" },
+        assignee: null,
+        assignee_role: null,
+        recipients: [me],
+        options: [QueueProducers.WIZARD_APPROVE],
+      });
+    }
     return out;
   }
 

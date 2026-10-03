@@ -59,7 +59,7 @@ Terms. An **act** is `{id, label, weight, types, applies(facts, type), prompt?}`
   - `false` when its rung is `terminal`, `attested` or `irreversible`, when its absence ground is `credential`, or when it is in the frozen `LARGER_SCREEN_ACTS`;
   - `true` otherwise, so reads, captures and everyday acts are phone acts.
 
-  `LARGER_SCREEN_ACTS` is published as `VOCABULARIES.larger_screen_acts` and holds `filingsent` (DEC-122's "sending", though its rung is `reasoned`). It is advisory: nothing refuses by device, and the plane cannot know one. A change of the phone set is a change here only. R11's shape gains the key, so a queue option and an `op=affordances` act stay one shape. *(not yet met: T31)*
+  `LARGER_SCREEN_ACTS` is published as `VOCABULARIES.larger_screen_acts` and holds `filingsent` (DEC-122's "sending", though its rung is `reasoned`). It is advisory: nothing refuses by device, and the plane cannot know one. A change of the phone set is a change here only. R11's shape gains the key, so a queue option and an `op=affordances` act stay one shape.
 - **R37** (DEC-120, DEC-121; `wizard-scripts`) The ops of `wizard-scripts` (`op-declarations` R15), by R7 and R27, R12's totality holding with them:
   - `RUNGS` assigns `reasoned` to `wizardretire` (a reason is required, refused `WIZARD_REASON_REFUSED`, as `templateretire`, R30); the code joins `JUSTIFICATION_REFUSALS` (R19).
   - `RUNG_ABSENT` holds `wizarddraft`, `wizardrevise`, `wizardpropose`, `wizardsubmit` and `wizardapprove`, ground `undetermined`, on R27's rule, as the template acts; `wizardeditorgrant` and `wizardeditorrevoke`, ground `credential`; and `wizardprogress`, ground `observational` (an unattributed tally).
@@ -67,14 +67,14 @@ Terms. An **act** is `{id, label, weight, types, applies(facts, type), prompt?}`
   - None is in `MACHINE_REFUSALS`, which holds only `ACTS` (R7, R20); `wizard-scripts` refuses a machine by name itself (its R3, R7).
   - The no-target answer (R17) gains `screens` (the registered screen registry, `wizard-scripts` R13) and `wizard_scripts` (the offered scripts, as `wizard-scripts` R11 answers the viewer for each registered screen) for the pack (`skills` R9, R10).
 
-  *(not yet met: T31)*
+ 
 - **R38** (DEC-101 (3); N534) The ops `case-import` adds for watching (`op-declarations` R16), by R7 and R27, with R12's totality holding over them:
   - `RUNGS` assigns `reversible` to `importwatch` and `importunwatch`: each takes the other back, and neither asks a reason (R27).
   - `NON_ACTS` gives both R35's sentence ("import-directed: …").
   - Neither is in `MACHINE_REFUSALS`. `case-import` refuses a machine by name itself (`MACHINE_CANNOT_IMPORT`).
   - No vocabulary is added.
 
-  *(not yet met: T31)*
+ 
 
 
 **deriveActs(facts) → act[]** (pure; never throws on a well-formed facts object)
@@ -100,6 +100,8 @@ Terms. An **act** is `{id, label, weight, types, applies(facts, type), prompt?}`
 **affordances({target?, viewer, identity, author, by, gate}) → answer** (`op=affordances`)
 - **R17** With no target: `{target: null, catalog, vocabularies, capture_acts, set_acts, detail}`, `catalog` each act decorated with `appliesTo` (its types), `set_acts` each decorated with `set_key`, `item_keys`, `shared_keys` and `max_items` (`PER_ITEM_MAX`). With a target: R13's refusal as given, else `{target, object_type, current_state, acts, vocabularies, capture_acts}`, `acts` being R8–R10 decorated. `capture_acts` is never filtered by the target. Every act in `catalog` is a member's: its `mode` is `session` or `admin-session`, never `machine` (INVESTIGATIVE-SESSION §4; K728).
 
+
+**Settled readings (K1396):** the readings of affordances's T31 question stand as K1396 states them; they bind this module's tests.
 ## Private
 
 ### Uses

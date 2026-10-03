@@ -11,6 +11,16 @@ import { viewerPredicate } from "../../../src/membership/index.mjs";
 const DOCKET_DEPENDENTS = { ok: true, truncated: false, cursor: null, entries: [
   { dependent: "INQ-S", entry: "CASE-W#3", kind: "withdrawal", case: "CASE-W", since: iso(NOW - 2), withdrawn_editions: [1], legs: [] },
   { dependent: "INF-1", entry: "DKT-2026-0002", kind: "contested", case: "CASE-W", since: iso(NOW - 1), edition: 1, legs: [] }] };
+const IMP = "c".repeat(64);
+const CITED_DEPENDENTS = () => ({ ok: true, truncated: false, cursor: null, entries: [
+  { dependent: "INQ-S", move: "IMM-1", import: IMP, group: "g2", case: "CASE-I", kind: "edition", edition: 2, seq: 1, date: "2026-08-20",
+    since: iso(NOW - 4), what_changed: "corrected", key_listed: true, taken_back: null, legs: [{ cited_edition: 1 }] },
+  { dependent: "INQ-S", move: "IMM-2", import: IMP, group: "g2", case: "CASE-I", kind: "withdrawal", edition: 1, seq: 2, date: "2026-08-21",
+    since: iso(NOW - 3), reason: "retracted", key_listed: false, taken_back: null, legs: [{ cited_edition: 1 }] }] });
+const WATCH_ITEMS = () => ({
+  entries: [{ import: IMP, group: "g2", case: "CASE-I", set_by: "alice", seq: 3, kind: "response", edition: 2, date: "2026-08-22", key_listed: true, move: false, taken_back: null }],
+  refused: [{ import: IMP, group: "g2", case: "CASE-I", set_by: "alice", seq: 4, failed: "C-130.15", detail: "d" }],
+  unreadable: [{ import: IMP, group: "g2", case: "CASE-I", set_by: "alice", docket: "https://x.example/", reason: "not_json", at: iso(NOW - 2) }] });
 function busy(extra = {}) {
   const drawing = (list) => Object.assign(list, { bound: 32, truncated: false });
   const w = world({
@@ -38,7 +48,15 @@ function busy(extra = {}) {
       exports: [{ seq: 1, at: iso(NOW), scope: "working-corpus", bundles: 1, files: 1, note: null }] }) },
     reevaluation: { notices: () => ({ ok: true, limit: 1000, truncated: false, notices: [
       { notice: "RN-1", holder: "INQ-S", target: "INF-1", grade: "affected", raised_at: iso(NOW), state: "open" }] }),
-      docketDependents: () => DOCKET_DEPENDENTS },
+      docketDependents: () => DOCKET_DEPENDENTS, citedCaseDependents: CITED_DEPENDENTS },
+    caseImport: { watchItems: WATCH_ITEMS },
+    wizardScripts: {
+      brokenScripts: () => ({ ok: true, cursor: null, truncated: false, entries: [
+        { script: "WIZ-1", version: 1, kind: "withdrawn", at: iso(NOW - 6), name: "File", project: "PRJ-A", author: "alice",
+          refusal: { code: "WIZARD_SCREEN_UNKNOWN", check: "C-131.4", translation: "A step names a screen this copy no longer has." } },
+        { script: "WIZ-1", version: 1, kind: "restored", at: iso(NOW - 5), name: "File", project: "PRJ-A", author: "alice", refusal: null }] }),
+      submittedFor: () => ({ ok: true, cursor: null, truncated: false, entries: [
+        { script: "WIZ-2", version: 1, owner: "alice", name: "Comment", author: "bob", submitted_at: iso(NOW - 4), project: "PRJ-A" }] }) },
     intent: { gaps: ({ project }) => ({ ok: true, gaps: project === "PRJ-A"
       ? [{ key: "intent::PRJ-A::p::E", basis: { project, stages_missing: ["s"], says: "ask" } }] : [] }) },
     monitoring: {
@@ -100,7 +118,9 @@ test("R8: every producer's items, homed through homesOf and offered optionsOf; n
                    "archive-fallback-eligible", "monitoring-recheck-due", "signer-self-registered", "action-clock-overdue",
                    "plan-checkpoint-due", "escalation-stage-proposed", "action-reminder", "litigation-hold",
                    "template-review-requested", "local-fact-due", "litigation-hold-released", "docket-core-due",
-                   "edition-withdrawn", "edition-contested"])
+                   "edition-withdrawn", "edition-contested", "cited-newer-edition", "cited-edition-withdrawn",
+                   "followed-case-entry", "cited-docket-entry-refused", "cited-docket-unreadable",
+                   "wizard-withdrawn", "wizard-restored", "wizard-approval-requested"])
     assert.ok(kinds.has(k), k);
   for (const it of r.items) {
     assert.ok(!("disposition" in it), `${it.id}: the mint's`);
@@ -238,6 +258,8 @@ test("R12: a CONDITION earns an item only where a member's act can change it: it
   const conds = r.items.filter((i) => i.class === "CONDITION");
   assert.ok(conds.length >= 6);
   for (const it of conds) {
+    /* R35: a signal about a watch (no document behind it) is changed by the watch's own acts: set its address again, end it */
+    if (it.subject.kind === "import") { assert.deepEqual(it.options.map((o) => o.id), ["importwatch", "importunwatch"], it.id); continue; }
     const docs = it.subject.kind === "bundle" || it.subject.kind === "action" ? [it.subject.id] : it.subject.bundles
       || (it.subject.kind === "capture_request" || it.subject.kind === "address" ? null : []);
     if (docs) assert.deepEqual(it.options, docs.length ? [{ id: "opt", on: docs }] : [], it.id);
@@ -273,7 +295,7 @@ function everyKind() {
         { notice: "RN-1", holder: "INQ-S", target: "INF-1", grade: "affected", raised_at: iso(NOW), state: "open" }] }),
       correctedDependents: () => ({ ok: true, truncated: false, cursor: null, entries: [
         { dependent: "INQ-S", candidate: "CC-D", reason: "named wrong", since: iso(NOW) }] }),
-      docketDependents: () => DOCKET_DEPENDENTS },
+      docketDependents: () => DOCKET_DEPENDENTS, citedCaseDependents: CITED_DEPENDENTS },
     corpusExport: { exportLog: () => ({ ok: true, limit: 200, truncated: false,
                      exports: [{ seq: 1, at: iso(NOW), scope: "working-corpus", bundles: 1, files: 1, note: null }] }) },
     publication: { caseTensions: () => ({ ok: true, cursor: null, cases: [{ case: "CASE-1", edition: 1, project: "PRJ-A",
@@ -307,9 +329,11 @@ test("R24 (DEC-107; H15, H19): no member-facing sentence of any item kind says '
   for (const k of ["contradiction-duty", "contradiction-lead", "contradiction-plurality", "contradiction-duty-unseen",
                    "contradiction-plurality-unseen", "side-corrected", "tension-after-publication", "bias-debt", "governor-holding-host",
                    "render-deferred", "plan-checkpoint-due", "objective-gap", "template-review-requested", "local-fact-due",
-                   "attribution-unchosen", "litigation-hold-released", "docket-core-due", "edition-withdrawn", "edition-contested"])
+                   "attribution-unchosen", "litigation-hold-released", "docket-core-due", "edition-withdrawn", "edition-contested",
+                   "cited-newer-edition", "cited-edition-withdrawn", "followed-case-entry", "cited-docket-entry-refused",
+                   "cited-docket-unreadable", "wizard-withdrawn", "wizard-restored", "wizard-approval-requested"])
     assert.ok(kinds.has(k), `the world produces ${k}`);
-  assert.ok(kinds.size >= 36, `every kind this module produces (${[...kinds].sort().join(", ")})`);
+  assert.ok(kinds.size >= 44, `every kind this module produces (${[...kinds].sort().join(", ")})`);
   for (const it of r.items) {
     for (const [key, s] of memberWords(it))
       assert.doesNotMatch(s, /\b(obligation|condition)s?\b/i, `${it.id} ${key}: "${s}"`);
@@ -336,7 +360,7 @@ test("R28 (DEC-114): no member-facing sentence of any item kind calls what an ac
   const r = everyKind().read("alice");
   const m = byId(r);
   assert.ok(m["OBLIGATION::plan-checkpoint-due::PLN-1::1::p"], "the world produces the action plan's item");
-  assert.ok(new Set(r.items.map((i) => i.kind)).size >= 36, "every kind this module produces");
+  assert.ok(new Set(r.items.map((i) => i.kind)).size >= 44, "every kind this module produces");
   for (const it of r.items) {
     /* R28's words: the summary, the detail and the words of the options; and every other sentence under the item */
     const words = [["summary", it.summary], ["detail", it.detail],
