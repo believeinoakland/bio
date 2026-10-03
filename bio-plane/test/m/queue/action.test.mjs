@@ -16,7 +16,7 @@ const ITEMS = {
                 subject: { kind: "bundle", id: "ACT-1" }, door: "reminderanswer", says: /op=reminderanswer/ },
   hold:       { id: "OBLIGATION::litigation-hold::ACT-1::2", class: "OBLIGATION", kind: "litigation-hold",
                 subject: { kind: "bundle", id: "ACT-1" }, door: "actionhold",
-                says: /keyed by the action and the entry rather than by a task: it leaves when a member records the hold in place or released, with a reason \(op=actionhold\)/ },
+                says: /keyed by the action and the entry rather than by a task: it leaves when a member records the hold in place or released, with a reason: in place by placing it \(op=actionhold\), released by releasing it \(op=actionholdrelease\), its own act/ },
   overdue:    { id: "CONDITION::action-clock-overdue::ACT-1::0", class: "CONDITION", kind: "action-clock-overdue",
                 subject: { kind: "bundle", id: "ACT-1" } },
 };

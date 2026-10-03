@@ -69,7 +69,7 @@ test("R27: with items, each item on its own through record-core's perItem, the d
   assert.deepEqual(w.all(`SELECT decided_by FROM finding_dispositions`).map((x) => x.decided_by), ["alice", "alice"]);
 });
 
-test("R28: the bridge: a CONDITION or OBLIGATION key is CLASS_NOT_DISPOSED with instead, the per-kind door R12 names; a FINDING key NO_PROJECT_SCOPE; nothing written", () => {
+test("R28, R50: the bridge: a CONDITION or OBLIGATION key is CLASS_NOT_DISPOSED with instead, the per-kind door R12 names; a FINDING key NO_PROJECT_SCOPE; nothing written", () => {
   const w = setup();
   for (const [key, cls, kind, instead] of [["CONDITION::governor-holding-host::h", "CONDITION", "governor-holding-host", "queuemute"],
                                            ["render-deferred::CR-1", "CONDITION", "render-deferred", "queuemute"],
@@ -85,7 +85,13 @@ test("R28: the bridge: a CONDITION or OBLIGATION key is CLASS_NOT_DISPOSED with 
                                            ["OBLIGATION::bias-debt::r1", "OBLIGATION", "bias-debt", "biasdebtresolve"],
                                            ["OBLIGATION::plan-checkpoint-due::PLN-1::S::2", "OBLIGATION", "plan-checkpoint-due", "checkpointrecord"],
                                            ["OBLIGATION::escalation-stage-proposed::ESC-1::filed", "OBLIGATION", "escalation-stage-proposed", "escalationadvance"],
-                                           ["OBLIGATION::action-reminder::ACT-1::0::2026-09-02", "OBLIGATION", "action-reminder", "reminderanswer"]]) {
+                                           ["OBLIGATION::action-reminder::ACT-1::0::2026-09-02", "OBLIGATION", "action-reminder", "reminderanswer"],
+                                           // R50 (DEC-116 item 2): the docket's core item has two doors
+                                           ["OBLIGATION::docket-core-due::CASE-1::response::DKT-1", "OBLIGATION", "docket-core-due", ["docketprepare", "docketdecline"]],
+                                           ["docket-core-due::CASE-1::edition::2", "OBLIGATION", "docket-core-due", ["docketprepare", "docketdecline"]],
+                                           // R46: a contradiction duty's doors, before it is taken up (the bridge holds no subject)
+                                           ["contradiction-duty::C1", "OBLIGATION", "contradiction-duty", ["contradictionclarify", "contradictiontakeup"]],
+                                           ["contradiction-duty-unseen::C2", "OBLIGATION", "contradiction-duty-unseen", ["contradictionoptin"]]]) {
     const r = pd(w, { key, to: "deferred", reason: "r" });
     assert.deepEqual([r.reason, r.class, r.kind, r.instead, r.check, r.translation],
       ["CLASS_NOT_DISPOSED", cls, kind, instead, "C-33.44", QUEUE_ACT_CHECKS.CLASS_NOT_DISPOSED.translation], key);

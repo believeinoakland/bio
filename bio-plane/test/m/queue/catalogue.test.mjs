@@ -7,14 +7,15 @@ import {
 } from "../../../src/queuestate.mjs";
 import { CONDITION_KINDS } from "../../../src/observation-log/vocabulary.mjs";
 
-/* R1's sixteen, N345's two duties among them (DEC-85's unseen one included), N375's self-registered key, the Action
-   layer's three (K608, K614), the litigation hold (K899 (7)), K921's review request and local fact, and the unchosen
-   credit level (queue-producers R23, DEC-102 item 3). */
+/* R1's seventeen, N345's two duties among them (DEC-85's unseen one included), N375's self-registered key, the Action
+   layer's three (K608, K614), the litigation hold (K899 (7)), K921's review request and local fact, the unchosen
+   credit level (queue-producers R23, DEC-102 item 3) and the docket's core item (queue-producers R30, DEC-116 item 2). */
 const OBLIGATION = ["authority-undetermined", "bias-debt", "endorsement-owed", "expertise-confirmation-owed",
   "membership-request", "project-owners-inactive", "contradiction-duty", "contradiction-duty-unseen",
   "signer-self-registered", "plan-checkpoint-due", "escalation-stage-proposed", "action-reminder", "litigation-hold",
-  "template-review-requested", "local-fact-due", "attribution-unchosen"];
-/* R1's twenty-six, `cardinality_exceeded` (N107, K209), `newer-capture-affects-reference` (N172) and N345's five among
+  "template-review-requested", "local-fact-due", "attribution-unchosen", "docket-core-due"];
+/* R1's twenty-nine, `cardinality_exceeded` (N107, K209), `newer-capture-affects-reference` (N172), N345's five, the two
+   docket kinds (queue-producers R31, DEC-116 items 3, 7) and the released hold (queue-producers R29, DEC-113) among
    them. */
 const FINDING = ["missing_predecessor", "overdue_successor", "temporal-expectation-due", "source-modified",
   "source-removed", "duplicate-document", "link-verdict-changed", "reused-asset-changed", "assistant-surfaced-focus",
@@ -22,7 +23,7 @@ const FINDING = ["missing_predecessor", "overdue_successor", "temporal-expectati
   "out-of-inquiry-lead", "stance-changed-here-not-elsewhere", "new-version-arrived-from-another-team",
   "shared-inquiry-concluded-by-another-project", "cardinality_exceeded", "newer-capture-affects-reference",
   "contradiction-plurality-unseen", "contradiction-lead", "contradiction-plurality", "side-corrected",
-  "tension-after-publication"];
+  "tension-after-publication", "edition-withdrawn", "edition-contested", "litigation-hold-released"];
 /* observation-log's twenty (R5): its twelve, the five sweep kinds (link-sweep R11, queue-producers R26) and the three
    notice kinds (network-notices R12, R13, queue-producers R27) its R33 added in T23 (K1099); and the overdue action
    clock (K611). */
@@ -66,8 +67,18 @@ test("R1: every catalogued kind answers its class, anything else null, and every
   assert.match(QUEUE_OBLIGATION_KINDS["plan-checkpoint-due"], /checkpoint your group set in an action plan has come; a member judges whether its condition was met/);
   assert.match(QUEUE_OBLIGATION_KINDS["escalation-stage-proposed"], /next stage is proposed because its trigger was met; a member advances it or declines with a reason/);
   assert.match(QUEUE_OBLIGATION_KINDS["action-reminder"], /reminder you asked for on one of the group's action deadlines; answer it with another reminder or none/);
-  // K899 (7), DEC-61: the litigation hold says what was marked and what a member records
+  // K899 (7), DEC-61: the litigation hold says what was marked and what a member records; DEC-113: the release is its own act
   assert.match(QUEUE_OBLIGATION_KINDS["litigation-hold"], /a reply the group marked as legal pressure: consider whether to place a litigation hold, and record it in place or released with a reason/);
+  assert.match(QUEUE_OBLIGATION_KINDS["litigation-hold"], /op=actionhold to place it, op=actionholdrelease to release it/);
+  // T27 (N518, N520): the released hold, the docket's core item and the two edition kinds, each with R1's sentence
+  assert.match(QUEUE_FINDING_KINDS["litigation-hold-released"], /a member released a litigation hold: the projects it alone covered may be purged again and their assistant transcripts deleted on schedule/);
+  assert.match(QUEUE_OBLIGATION_KINDS["docket-core-due"], /a case you manage has an item its docket must list: a response or statement from its subject or a holder of standing, a newer edition, or a conflict on a load-bearing finding not disclosed; place it, or decline it/);
+  assert.match(QUEUE_FINDING_KINDS["edition-withdrawn"], /something a finding rests on is in a case edition its group has withdrawn/);
+  assert.match(QUEUE_FINDING_KINDS["edition-contested"], /a response the group filed contests a case edition this finding is part of/);
+  // negative control: near-misses of the T27 kinds are outside the vocabulary
+  for (const v of ["litigation-hold-release", "hold-released", "docket-core", "docket-core-due ", "edition-withdrawal",
+                   "edition-contest", "EDITION-WITHDRAWN", "FINDING::edition-withdrawn"])
+    assert.equal(classOfKind(v), null, v);
   // K921: the review request and the local fact say what is owed, each with its own door
   assert.match(QUEUE_OBLIGATION_KINDS["template-review-requested"], /a member asked you to review a filing template's version/);
   assert.match(QUEUE_OBLIGATION_KINDS["local-fact-due"], /a holiday calendar or office hours one of the group's deadlines reads is unconfirmed or due for confirmation/);

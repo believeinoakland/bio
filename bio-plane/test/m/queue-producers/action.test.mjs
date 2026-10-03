@@ -1,6 +1,6 @@
-/* The Action layer's producers (R15–R19; K608, K611, K613–K615, K899 (7)) and the self-registered signing key (R14; N375) at
+/* The Action layer's producers (R15–R19, R29; K608, K611, K613–K615, K899 (7); DEC-113) and the self-registered signing key (R14; N375) at
    feedItems' interface. Each provider is a fake answering in the shape its requirements publish (action-clocks R3, R5;
-   action-plans R17; escalation R16; actions R54), filled per test; membership is real, so the recipients (the author, else the
+   action-plans R17; escalation R16; actions R54, R59), filled per test; membership is real, so the recipients (the author, else the
    project's owners, else the administrators: membership R65, R86) and the signing keys (its R27) are its own. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -220,14 +220,15 @@ test("R19: one OBLIGATION litigation-hold per legal mark actions.holdsDue answer
   assert.deepEqual(it.age, { state: "determined", since: iso(NOW - 3 * DAY), ms: 3 * DAY }, "aged from the mark's instant");
   assert.equal(byId(alice)["OBLIGATION::litigation-hold::ACT-2::0"].age.state, "undetermined");
   assert.deepEqual(it.recipients, ["ada", "alice"], "every administrator and the marker");
-  assert.deepEqual(it.options, [{ id: "actionhold", label: "Record whether a litigation hold is in place", weight: "single" },
-    { id: "opt", on: ["ACT-1"] }], "its door, the hold statement, beside the acts on the action");
+  assert.deepEqual(it.options, [{ id: "actionhold", label: "Record that a litigation hold is in place", weight: "single" },
+    { id: "actionholdrelease", label: "Record that no hold is needed, with a reason", weight: "single" },
+    { id: "opt", on: ["ACT-1"] }], "both its doors (DEC-113): the hold in place and its release, beside the acts on the action");
   assert.deepEqual(it.case.ancestors.map((a) => [a.id, a.depth]), [["PRJ-1", 0]], "homed under the action's project");
   assert.equal(it.basis.source, "actions.holdsDue"); assert.equal(it.basis.bound.truncated, false);
   assert.ok(!/bundle/i.test(`${it.summary} ${it.detail} ${it.basis.detail}`), "K899 (1): the text says record, never bundle");
   // raised once: the same read twice is the same items
   assert.deepEqual(ids(w.read("alice")), ids(alice));
-  // gone once any hold is stated on the mark, in place or released
+  // gone once any hold is stated on the mark: in place (actions R52) or released, its own act (actions R56)
   held.add("ACT-1#2"); held.add("ACT-2#0");
   assert.deepEqual(ids(w.read("ada")), ["OBLIGATION::litigation-hold::ACT-1::4", "OBLIGATION::litigation-hold::ACT-H::1"]);
   assert.deepEqual(ids(w.read("alice")), []);
@@ -252,4 +253,63 @@ test("R25 (DEC-110 (1)): action-clock-overdue and action-reminder carry the cloc
   assert.equal(m["OBLIGATION::plan-checkpoint-due::PLN-1::2::q"].due, "2026-08-29", "spelled YYYY-MM-DD");
   for (const it of Object.values(m))
     if (it.due !== null) assert.match(it.due, /^\d{4}-\d{2}-\d{2}$/, it.id);
+});
+
+test("R29 (DEC-113): one FINDING litigation-hold-released per release actions.holdsReleased answers the viewer, keyed FINDING::litigation-hold-released::<action>::<position>::<sequence>, to every administrator and each member among its placers and nobody else, raised once", () => {
+  const asked = [];
+  const released = [
+    { action: "ACT-1", ord: 2, seq: 3, released_by: "olga", released_at: iso(NOW - 2 * DAY), reason: "the matter settled",
+      placers: ["alice", "bob"], restarted: ["PRJ-1", "PRJ-H"] },
+    { action: "ACT-1", ord: 4, seq: 7, released_by: "alice", released_at: "not an instant", reason: "no suit was filed",
+      placers: ["bob", "token:member"], restarted: [] },
+    { action: "ACT-2", ord: 0, seq: 2, released_by: "ada", released_at: iso(NOW - DAY), reason: "withdrawn",
+      placers: ["alice"], restarted: ["PRJ-1"] },
+    { action: "ACT-H", ord: 1, seq: 2, released_by: "ada", released_at: iso(NOW), reason: "r", placers: ["alice"], restarted: [] }];
+  const w = people({ actions: { holdsReleased: (a) => { asked.push(a);
+    /* two pages: the first truncated with a cursor, the second the rest */
+    return a.after ? page(released.slice(2)) : page(released.slice(0, 2), { truncated: true, cursor: "ACT-1#4#7" }); } } });
+  w.bundle("ACT-H", "action"); w.run(`UPDATE bundles SET project='PRJ-H' WHERE bundle_id='ACT-H'`);
+  w.run(`UPDATE bundles SET project='PRJ-1' WHERE bundle_id IN ('ACT-1','ACT-2')`);
+  const ids = (r) => ofKind(r, "litigation-hold-released").map((i) => i.id).sort();
+  const alice = w.read("alice");
+  assert.deepEqual(asked.slice(0, 2).map((a) => [a.after, a.viewer]), [[null, "member:alice"], ["ACT-1#4#7", "member:alice"]],
+    "the viewer is actions' to read by, and its cursor is followed");
+  const all = ["FINDING::litigation-hold-released::ACT-1::2::3", "FINDING::litigation-hold-released::ACT-1::4::7",
+    "FINDING::litigation-hold-released::ACT-2::0::2", "FINDING::litigation-hold-released::ACT-H::1::2"];
+  assert.deepEqual(ids(w.read("ada")), all, "every administrator member: one item per release");
+  assert.deepEqual(ids(w.read(null, "class:admin")), all, "and the admin machine credential, as R14's");
+  assert.deepEqual(ids(alice), ["FINDING::litigation-hold-released::ACT-1::2::3", "FINDING::litigation-hold-released::ACT-2::0::2"],
+    "a placer, of the holds she placed, never one on an action she may not see, nor one she released and did not place");
+  assert.deepEqual(ids(w.read("bob")), ["FINDING::litigation-hold-released::ACT-1::2::3", "FINDING::litigation-hold-released::ACT-1::4::7"]);
+  assert.deepEqual(ids(w.read("olga")), [], "not the member who released it, nor the project's owner, who is neither");
+  assert.deepEqual(ids(w.read(null, "class:member")), [], "nor another machine credential");
+  assert.ok(!JSON.stringify(alice).includes("ACT-H") && !JSON.stringify(alice).includes("PRJ-H"),
+    "R11: the hidden action and the hidden restarted project are named nowhere");
+  const it = byId(alice)["FINDING::litigation-hold-released::ACT-1::2::3"];
+  assert.deepEqual([it.class, it.kind], ["FINDING", "litigation-hold-released"]);
+  assert.deepEqual(it.subject, { kind: "action", id: "ACT-1", entry: 2, sequence: 3, released_by: "olga",
+    reason: "the matter settled", restarted: ["PRJ-1"] }, "its subject the action, naming who released it, the reason, the restarted projects she may see");
+  assert.match(it.summary, /olga released the litigation hold on ACT-1/);
+  assert.match(it.detail, /the matter settled/); assert.match(it.detail, /restarts for PRJ-1\./);
+  assert.ok(!/PRJ-H/.test(JSON.stringify(it)));
+  assert.deepEqual(byId(w.read("ada"))["FINDING::litigation-hold-released::ACT-1::2::3"].subject.restarted, ["PRJ-1", "PRJ-H"],
+    "an administrator who sees both projects is told both");
+  assert.deepEqual(it.age, { state: "determined", since: iso(NOW - 2 * DAY), ms: 2 * DAY }, "aged from the release");
+  assert.equal(byId(w.read("bob"))["FINDING::litigation-hold-released::ACT-1::4::7"].age.state, "undetermined");
+  assert.deepEqual(it.recipients, ["ada", "alice", "bob"], "every administrator and each placer");
+  assert.deepEqual(byId(w.read("bob"))["FINDING::litigation-hold-released::ACT-1::4::7"].recipients, ["ada", "bob"],
+    "a machine among the placers is no member to tell");
+  assert.deepEqual(it.options, [{ id: "opt", on: ["ACT-1"] }], "the acts on the action; it leaves by its recipient's disposal");
+  assert.deepEqual(it.case.ancestors.map((a) => [a.id, a.depth]), [["PRJ-1", 0]], "homed as R15's, under the action's project");
+  assert.equal(it.basis.source, "actions.holdsReleased"); assert.deepEqual(it.basis.placers, ["alice", "bob"]);
+  for (const s of [it.summary, it.detail, it.basis.detail]) assert.doesNotMatch(s, /\b(obligation|condition|subject|bundle)s?\b/i, s);
+  // raised once and never repeated: the same read twice is the same items, and nothing here makes it leave
+  assert.deepEqual(ids(w.read("alice")), ids(alice));
+  assert.deepEqual(ids(w.read("alice", "member:alice", { now: NOW + 30 * DAY })), ids(alice),
+    "it stands until its recipient disposes of it (queue's mint), however long");
+  // at most 20 pages are followed, and a cut is stated
+  let n = 0;
+  w.fakes.actions.holdsReleased = () => { n += 1; return page([{ ...released[0], seq: n }], { truncated: true, cursor: `ACT-1#2#${n}` }); };
+  const cut = ofKind(w.read("alice"), "litigation-hold-released");
+  assert.equal(n, 20); assert.equal(cut.length, 20); assert.ok(cut.every((i) => i.basis.bound.truncated === true));
 });
