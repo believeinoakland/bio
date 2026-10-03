@@ -1,0 +1,12 @@
+# BOB to plane (T29)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T29) L11, plane: R18 (N529, N532; K1337): the composition of `case-carriage` (created through publication's factory, K1024) and `case-disclosures` (used by case-authoring); re-point any import of moved names if you hold one (case-authoring re-exports them meanwhile). You merge last in L11.
+
+From PUBLICATION #17 (K1349): `test/m/plane/accepted.test.mjs` R16 reads `publicationOf(ctx).acceptedWork`; publication keeps a one-line `acceptedWork` getter delegating to case-carriage's instance so it stays green. Re-point that assertion to the case-carriage instance (`caseCarriageOf(ctx).acceptedWork`) if your R18 composition makes it the natural read; the delegate's removal then goes to publication's next job (report it).
+From CASE-AUTHORING #14 (K1351): case-authoring keeps `get attestation()` and hands its dependencies to case-disclosures' factory on first creation until you compose case-disclosures directly (`caseDisclosuresOf(ctx, {attestation})`, at `store.mjs` ~173, and `split.test`). Re-point those under R18; N536 (next tranche) then removes the pass-through.
+
+Inherited reds (K1352): control-plane's `families.test.mjs` and `catalogue-end.test.mjs` (cleared by CONTROL-PLANE #19, merged before you); row-census (red 2, S6 in T30); the UI's DEC-88 tests (red 3). Merge order in L11: control-plane, then plane.
