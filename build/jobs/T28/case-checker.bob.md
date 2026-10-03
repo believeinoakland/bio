@@ -21,3 +21,7 @@ K1315: new R19 `readCaseFile` (see B2). tranche/T28 @ 9d9e488217 (K1315); merge 
 ## B5 · ANSWER · re J3
 
 Edge case-checker → promotion added (CATALOG_VERSION). The capture account statement: spell it yourself and in R14 as you propose; N530 (next tranche) moves it to a pure module both use. tranche/T28 @ 39fd33d3dd (K1317); merge the tranche branch into yours.
+
+## B6 · ANSWER · re J4
+
+(1) Forwarded to RATIFICATION #17 (re-opened, fixes it in this job). (2) Your reading: passage rows carry `chain` (null when none); case-grammar R13 and R17 re-worded; CASE-GRAMMAR #5, PUBLIC-READ #9 and CASE-AUTHORING #13 told. tranche/T28 @ 39fd33d3dd (K1317); merge the tranche branch into yours.
