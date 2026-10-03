@@ -56,6 +56,16 @@ test("R3: a version's leg on an imported finding reference passes C-25.10 and C-
   assert.ok(notRef.some((x) => x.check === "C-25.10"), "a spelling R11 does not match is not a ref");
 });
 
+test("R3, R6: at the promotion a malformed leg on another group's finding is BASIS_VERSION_REFUSED with R11's C-21.3 finding and its translation, and accepted-work is not asked", () => {
+  const aw = acceptance();
+  const w = world({ acceptedWork: aw });
+  w.doc(DOC);
+  const r = w.inquiry(Q, block(withRefs("first", [[REF, 2, { grade: "A" }]])));
+  assert.equal(r.reason, "BASIS_VERSION_REFUSED");
+  assert.deepEqual(r.findings.map((f) => [f.check, f.code, typeof f.translation]), [["C-21.3", "IMPORTED_LEG_MALFORMED", "string"]]);
+  assert.deepEqual(aw.calls, []);
+});
+
 test("R3, R5: the edition a leg on another group's finding names is in the composition after the leg_capture lines, and a composition without one is unchanged", () => {
   const [v] = versionsIn(fm(withRefs("first", [[REF, 2]])));
   const lines = v.composition.split("\n");
@@ -82,8 +92,12 @@ test("R3: a new version's leg on another group's finding not accepted at its edi
   /* accepted at that edition: it lands, the ref projected as spelled with no content row */
   aw.accepted.add(`${REF2}@1`);
   assert.equal(w.inquiry(Q, block(withRefs("first", [[REF, 2], [REF2, 1]]))).ok, true);
-  const legs = w.rows(`SELECT ord, target_id, target_type, content_id FROM inquiry_basis_version_legs WHERE bundle_id=? ORDER BY ord`, Q);
-  assert.deepEqual(legs.slice(1).map((l) => [l.target_id, l.content_id]), [[REF, null], [REF2, null]]);
+  const legs = w.rows(`SELECT ord, target_id, content_id, target_edition FROM inquiry_basis_version_legs WHERE bundle_id=? ORDER BY ord`, Q);
+  assert.deepEqual(legs.map((l) => [l.target_id, l.content_id === null, l.target_edition]),
+                   [[DOC, false, null], [REF, true, 2], [REF2, true, 1]], "the edition is stored on the leg's row (K1305)");
+  /* the read of a version's legs answers the edition, so strength reads it there */
+  const read = w.bv.basisVersions({ id: Q, viewer: V("alice") });
+  assert.deepEqual(read.versions[0].legs.map((l) => [l.target_id, l.target_edition]), [[DOC, null], [REF, 2], [REF2, 1]]);
 });
 
 test("R3: a leg is asked only when new or changed against the version it derives from; a held version is never asked again, so a withdrawal never refuses an unrelated revision", () => {

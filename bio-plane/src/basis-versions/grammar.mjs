@@ -34,7 +34,7 @@ function f(check, severity, message, repairs, code) {
 
 /** R3 (N522): whether a leg's target is an imported finding reference (`inquiry-grammar` R11), never a local id. */
 export function isImportedRef(t) {
-  return typeof t === "string" && IMPORTED_FINDING_RE.test(t);
+  return typeof t === "string" && IMPORTED_FINDING_RE.test(t.trim());
 }
 
 /** PL-1 / IS-1 — the version block's grammar, at BOTH gates through one function.
@@ -332,9 +332,9 @@ export function basisVersionFindings(fm, findings) {
       /* R3 (N522; DEC-112 (6)): a leg on another group's finding (`inquiry-grammar` R11's reference) has its form
          judged there (C-21.3) in place of the id, grade and extent arms: it names a finding and one edition, carries
          no grade and no extent. Whether an acceptance is in force is the promotion check's (`./index.mjs`, R6). */
-      const imported = isImportedRef(t);
+      const imported = importedLegFindings(`basis_version_legs[${li}] (version '${name}')`, leg, findings);
       if (imported) {
-        importedLegFindings(`basis_version_legs[${li}] (version '${name}')`, leg, findings);
+        /* judged by R11's arm, its findings C-21.3 */
       } else if (typeof t !== 'string' || !BUNDLE_ID_RE.test(t)) {
         push('VERSION_LEG_NOT_CITABLE', `basis_version_legs[${li}] (version '${name}').target '${String(t).slice(0, 40)}' is not a canonical record id`);
       } else if (typeof fm?.id === 'string' && t === fm.id) {

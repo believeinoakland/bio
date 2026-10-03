@@ -29,7 +29,7 @@
 
 import { parseFrontmatter, isMachineIdentity, normalizeType, LEGACY_TYPE_ALIASES, OBJECT_TYPES, STATES, vocabFor,
          createSha256 } from "../record-grammar/index.mjs";
-import { checkLegExtentGrammar } from "../inquiry-grammar/index.mjs";
+import { checkLegExtentGrammar, INQUIRY_GRAMMAR_CHECKS } from "../inquiry-grammar/index.mjs";
 import { readingSourceFromColumns } from "../textchain.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal } from "../membership/index.mjs";
@@ -200,9 +200,11 @@ export class BasisVersions {
     if (verrs.length)
       return { ok: false, reason: "BASIS_VERSION_REFUSED",
                findings: verrs.map((x) => ({ check: x.check, detail: x.message, code: x.code,
-                                             /* three registries: a kind is C-27's, a leg extent relays C-45's codes */
+                                             /* four registries: a kind is C-27's, a leg extent relays C-45's codes,
+                                                a leg on another group's finding inquiry-grammar's C-21.3 (N522) */
                                              translation: (BASIS_VERSION_CHECKS[x.code] ?? VERSION_KIND_CHECKS[x.code]
-                                                           ?? CONTENT_EXTENT_CHECKS[x.code])?.translation,
+                                                           ?? CONTENT_EXTENT_CHECKS[x.code]
+                                                           ?? INQUIRY_GRAMMAR_CHECKS[x.code])?.translation,
                                              ...(x.repairs ? { repairs: x.repairs } : {}) })) };
     const offered = versionsIn(docFm);
     /* DEC-49 REGION basis-version-resolve */
@@ -329,10 +331,13 @@ export class BasisVersions {
         }
         this.sql.exec(
           `INSERT INTO inquiry_basis_version_legs
-             (bundle_id,name,ord,target_id,target_type,role,grade,grade_axis,grade_source,note,at,ground,content_id)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+             (bundle_id,name,ord,target_id,target_type,role,grade,grade_axis,grade_source,note,at,ground,content_id,
+              target_edition)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
           bundleId, v.name, k, l.target_id, l.target_type, l.role,
-          l.grade, l.grade_axis, l.grade_source, l.note, l.at, l.ground, vContentId);
+          l.grade, l.grade_axis, l.grade_source, l.note, l.at, l.ground, vContentId,
+          /* R3 (N522, K1305): the edition a leg on another group's finding names, as written */
+          l.edition === null ? null : (/^\d+$/.test(l.edition) ? Number(l.edition) : null));
       }
     }
     if (!vLegRowsAll.length) return null;
@@ -349,7 +354,8 @@ export class BasisVersions {
    *  record earns (R10). */
   versionCollections(bundleId, row) {
     const legs = this.#legsEarned(this.#rows(
-      `SELECT ord, target_id, target_type, role, grade, grade_axis, grade_source, note, at, ground, content_id
+      `SELECT ord, target_id, target_type, role, grade, grade_axis, grade_source, note, at, ground, content_id,
+              target_edition
          FROM inquiry_basis_version_legs WHERE bundle_id=? AND name=? ORDER BY ord LIMIT ?`,
       bundleId, row.name, BASIS_VERSION_LEGS_MAX));
     const grounds = [...new Set(legs.map((l) => String(l.ground ?? "").trim()).filter(Boolean))].sort();

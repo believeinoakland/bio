@@ -75,8 +75,9 @@ function setup() {
 }
 const read = (w, id, o = {}) => w.bv.basisVersions({ id, viewer: V("ruth"), ...o });
 const byName = (a, n) => (a?.versions ?? []).find((v) => v.name === n) ?? null;
+/* `target_edition` (N522, K1305): the edition a leg on another group's finding names, null on every other leg */
 const LEG_KEYS = ["ord", "target_id", "target_type", "role", "grade", "grade_axis", "grade_source", "note", "at", "ground",
-                  "content_id", "grade_authored", "grade_why"];
+                  "content_id", "target_edition", "grade_authored", "grade_why"];
 
 test("R9: op=basisversions answers each version's own fields — relationship, grounds sorted, description, derived_from, claim, run, regroup — and each leg's fields in order, for a written version and one derived from it", () => {
   const { w } = setup();
