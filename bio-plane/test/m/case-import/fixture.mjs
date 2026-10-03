@@ -23,7 +23,10 @@ import { caseImportOf, CASE_IMPORT_CHECKS } from "../../../src/case-import/index
 import { readCaseFile } from "../../../src/case-import/parts.mjs";
 import { canonicalJson } from "../../../src/record-grammar/json.mjs";
 
-const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
+/* as workerd binds: an ArrayBuffer is a BLOB (node:sqlite takes it as a typed array), and a BLOB reads back as an
+   ArrayBuffer */
+const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v instanceof ArrayBuffer ? new Uint8Array(v) : v);
+const unbind = (r) => { for (const k of Object.keys(r)) if (r[k] instanceof Uint8Array) r[k] = r[k].buffer.slice(r[k].byteOffset, r[k].byteOffset + r[k].byteLength); return r; };
 function cursor(rows) {
   let i = 0;
   const c = {
@@ -39,7 +42,7 @@ export function storage() {
   let n = 0;
   const sql = { exec(q, ...args) {
     const st = db.prepare(q);
-    return cursor(st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []));
+    return cursor(st.columns().length ? st.all(...args.map(bind)).map((r) => unbind({ ...r })) : (st.run(...args.map(bind)), []));
   } };
   return { db, sql, transactionSync(fn) {
     const sp = `sp${n++}`;
@@ -200,7 +203,7 @@ export function world({ minimal = false } = {}) {
     snapshot(prefix = "") {
       const out = {};
       for (const { name } of st.sql.exec(`SELECT name FROM sqlite_master WHERE type='table' AND name LIKE ? ORDER BY name`, `${prefix}%`))
-        out[name] = JSON.stringify([...st.sql.exec(`SELECT * FROM ${name}`)], (k, v) => (v instanceof Uint8Array ? sha(v) : v));
+        out[name] = JSON.stringify([...st.sql.exec(`SELECT * FROM ${name}`)], (k, v) => (v instanceof ArrayBuffer ? sha(new Uint8Array(v)) : v));
       return out;
     },
     member(id, { role = "member", status = "active" } = {}) {

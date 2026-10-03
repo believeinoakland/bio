@@ -247,9 +247,9 @@ export class CaseImport {
   /* Bytes by SHA-256, once; chunked, append-only. Called inside a transaction. */
   #putBlob(sha, bytes) {
     if (this.#one(`SELECT 1 AS x FROM case_import_blobs WHERE sha=? AND chunk=0`, sha)) return;
-    if (!bytes.length) { this.sql.exec(`INSERT INTO case_import_blobs (sha, chunk, data) VALUES (?,?,?)`, sha, 0, new Uint8Array(0)); return; }
-    for (let i = 0, c = 0; i < bytes.length; i += BLOB_CHUNK, c++)
-      this.sql.exec(`INSERT INTO case_import_blobs (sha, chunk, data) VALUES (?,?,?)`, sha, c, bytes.slice(i, i + BLOB_CHUNK));
+    /* each chunk bound as its own ArrayBuffer, the plane's SQL type for a BLOB */
+    for (let i = 0, c = 0; c === 0 || i < bytes.length; i += BLOB_CHUNK, c++)
+      this.sql.exec(`INSERT INTO case_import_blobs (sha, chunk, data) VALUES (?,?,?)`, sha, c, bytes.slice(i, i + BLOB_CHUNK).buffer);
   }
   #blob(sha) {
     const rows = this.#rows(`SELECT data FROM case_import_blobs WHERE sha=? ORDER BY chunk`, sha);

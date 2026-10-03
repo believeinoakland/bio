@@ -148,6 +148,20 @@ test("R1 the act records the edition with its source group, case, edition, lens,
   assert.equal(w.ci.fileOf({ import: r.import, edition: 1, path: "nowhere" }), null);
 });
 
+test("R1 R13 a file larger than one stored chunk is held whole and read back byte for byte", () => {
+  const w = seeded();
+  const big = new Uint8Array(2.5 * 1024 * 1024);
+  for (let i = 0; i < big.length; i++) big[i] = (i * 31 + 7) & 0xff;
+  const f = caseFile({ documents: [{ name: "scan.pdf", bytes: big }] });
+  const r = imp(w, f);
+  assert.equal(r.ok, true);
+  const held = w.ci.fileOf({ import: r.import, edition: 1, path: "documents/scan.pdf" });
+  assert.equal(held.sha, sha(big));
+  assert.equal(held.bytes.length, big.length);
+  assert.ok(held.bytes.every((b, i) => b === big[i]));
+  assert.ok(w.rows(`SELECT COUNT(*) AS n FROM case_import_blobs`)[0].n >= 3, "held in chunks");
+});
+
 test("R1 R3 the act runs checkCaseFile and records each finding's result: what is missing, what differs, the recomputed pair, the checker's versions", () => {
   const w = seeded();
   const fp = "c3".repeat(32);
