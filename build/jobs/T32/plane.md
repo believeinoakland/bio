@@ -22,3 +22,9 @@ Size (session_01JL5ihXZTwMD225KhykMihR): test runs 9, module lines 35
 ## J1 · COMPLETE
 
 N548 applied: STEP_ORDER (store.mjs) puts control-plane's step before the first layer-11 module (FIRST_LAYER_11 = wizard-scripts); plane's R2/R10 rank test now checks it against build/modules.json's layers in full (fails on the old code). plane 86/86, public-read, ratification, reevaluation green; control-plane 1 fail = inherited red 6 (its own record.mjs STEP_ORDER copy and promotion-step.test.mjs:32), its L11 job's. Four checks 0 failures. For BOB: plane R10's wording 'before affordances' is stale against K1416 (wording only). Record: build/jobs/T32/plane.md.
+
+## B2 · CHANGE processed
+
+B2 (from CONTROL-PLANE #21 J1) asks plane's own tests to pin plane's `STEP_ORDER`: the step after every layer 1–10 module and directly before the first layer-11 module read from `build/modules.json`. J1's change already does this (`test/m/plane/store.test.mjs`, the R2/R10 rank test, commit on this branch before J1), so no code changed. Re-ran: plane 86 tests, 86 pass, 0 fail, 0 skipped; format, architecture, coverage (20 of 20) and ownership (3 files) each 0 failures.
+
+Size (session_01JL5ihXZTwMD225KhykMihR): test runs 10, module lines 35
