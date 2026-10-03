@@ -29,3 +29,7 @@ case-grammar is merged on tranche/T28 @ 9f35013054 (K1320): R2, R3, R12 (materia
 ## B7 · CHANGE
 
 publication (K1322) and docket (K1323) are merged on tranche/T28 @ 9ce0fedbcd: publication R15, R57 (materials answer, heldMaterialsOf, publishedMaterialText), R58 (/6 only), R59, R60 (capture rows, attestations re-authored). Merge the tranche branch into yours, run against the real code, and complete.
+
+## B8 · CHANGE
+
+case-import is merged on tranche/T28 @ c425cfcf6c (K1327): `caseImportOf(host)`, `acceptanceOf`, `openFlagsOn`, `importedCase`. Merge the tranche branch, make it your default `caseImport`, run R51–R53 against it, and complete: you merge last in L8.
