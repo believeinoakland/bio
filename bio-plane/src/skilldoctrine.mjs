@@ -809,7 +809,7 @@ export const ACTION_RULES = [
     ] },
   { rule: 9, heading: "The doctrine's limits.",
     sentences: [
-      "CivicOS takes no position on what policy should be (Operational Principle 1).",
+      "Civicsmith takes no position on what policy should be (Operational Principle 1).",
       "Political accountability asks officials to act on a breach, requests oversight and audits, testifies, "
       + "and supports legislation that restores or enforces an existing requirement; lobbying is an option "
       + "only for that.",
@@ -864,7 +864,7 @@ export const PLANNING_ACTS = Object.freeze({
 export const PLANNING_ACT = PLANNING_ACTS.proposes[0].id;
 
 /* THE PUBLISHED CATALOGUE BY ACT ID, the one lookup every act-reading layer
-   (R28, R30, R31) selects through; a non-list, or an entry with no string id,
+   (R28, R30, R31, R32) selects through; a non-list, or an entry with no string id,
    contributes nothing. */
 const catalogueById = (catalog) => new Map((Array.isArray(catalog) ? catalog : [])
   .filter((a) => a && typeof a.id === "string").map((a) => [a.id, a]));
@@ -890,7 +890,7 @@ export function actionPlanningLayer(catalog) {
     load_when: "never, in this edition",
     sourcing: "absent",
     body: {},
-    /* THE ABSENCE, STATED IN THE PACK ITSELF, as the recipes layer states its own. */
+    /* THE ABSENCE, STATED IN THE PACK ITSELF, as the wizard scripts layer states its own. */
     absent_because: `the plane's published catalogue holds no ${PLANNING_ACT} act, the one act a run in the `
       + "plan mode proposes plan options through, so this layer carries no doctrine for work no run can do; a "
       + "plan-mode run is refused before any turn.",
@@ -982,7 +982,7 @@ export function filingDraftingLayer(catalog) {
     load_when: "never, in this edition",
     sourcing: "absent",
     body: {},
-    /* THE ABSENCE, STATED IN THE PACK ITSELF, as the recipes layer states its own. */
+    /* THE ABSENCE, STATED IN THE PACK ITSELF, as the wizard scripts layer states its own. */
     absent_because: `the plane's published catalogue holds no ${FILING_TEMPLATE_ACT} act, the one act a run `
       + "proposes a filing template's wording through, so this layer carries no doctrine for work no run can do.",
   };
@@ -1060,7 +1060,7 @@ export function editionStatementLayer(catalog) {
     load_when: "never, in this edition",
     sourcing: "absent",
     body: {},
-    /* THE ABSENCE, STATED IN THE PACK ITSELF, as the recipes layer states its own. */
+    /* THE ABSENCE, STATED IN THE PACK ITSELF, as the wizard scripts layer states its own. */
     absent_because: `the plane's published catalogue holds no ${EDITION_STATEMENT_ACT} act, the one act a run `
       + "drafts a new edition's statement of what changed through, so this layer carries no doctrine for work no "
       + "run can do.",
@@ -1080,6 +1080,96 @@ export function editionStatementLayer(catalog) {
       note: "this layer is INSTRUCTION. Every act it names is refused or labelled by the module that performs "
         + "it: a drafted statement is stored apart and labelled as machine work, and becomes the group's statement "
         + "only by a member's signing act, which refuses a machine. A run ignoring every word here gets past nothing.",
+    },
+  };
+}
+
+/* =========================================================================
+ * THE WIZARD AUTHORING LAYER (R32; DEC-120 (2), DEC-121 (3), (4), K1364 B3)
+ *
+ * The doctrine a run works under when it drafts a wizard script, or critiques
+ * one a member recorded: the checks every script passes (`BIO_Interaction_
+ * Constructs_v0_1.md` §P, DEC-121), and that a script never says or submits
+ * anything for a member (`ASSISTANT-PILOT.md` §3 as amended). Each clause is a
+ * span of its section found by R21's normaliser; nothing here rewords it. The
+ * layer holds no gate: a script's screens, acts, "why" and drafts are refused by
+ * `wizard-scripts`' checks (its R12), a proposal is stored apart and labelled,
+ * and a script becomes the group's only by a member's acts, which refuse a
+ * machine. Whether a step's words tell a member what to conclude is no code's to
+ * read: it is this critique's and the approving member's (K1364 B3).
+ * ========================================================================= */
+
+/** Where the wizard authoring doctrine is quoted from: canon, whole. */
+export const INTERACTION_SOURCE = "docs/architecture/BIO_Interaction_Constructs_v0_1.md";
+/* §P is the section headed "P · THE ASSISTANT" (the document has an earlier "P · PROPOSAL" too). */
+export const WIZARD_RULING_SECTION = "§P";
+export const PILOT_SOURCE = "docs/development/ASSISTANT-PILOT.md";
+export const PILOT_WIZARD_SECTION = "§3";
+
+/** The clauses a run drafting or critiquing a wizard script works under (R32),
+ *  each `{text, source, section}`, every `text` a span of its section. */
+export const WIZARD_AUTHORING_CLAUSES = [
+  { text: "Checks refuse a script naming screens or acts that do not exist, lacking a step's \"why\", or telling a "
+      + "member what to conclude.",
+    source: INTERACTION_SOURCE, section: WIZARD_RULING_SECTION },
+  { text: "A script never says or submits anything for a member: a draft becomes the member's words only by the "
+      + "member's own act of keeping or editing it.",
+    source: PILOT_SOURCE, section: PILOT_WIZARD_SECTION },
+  { text: "No step submits, signs or files; the member alone presses the act's button, and the act runs its own "
+      + "checks, reason and receipt.",
+    source: PILOT_SOURCE, section: PILOT_WIZARD_SECTION },
+];
+
+/* THE ACTS THE LAYER NAMES, EACH BY THE REQUIREMENT THAT DEFINES IT (R32), named
+   once here as a SELECTOR over the published catalogue, as R28's are:
+   `wizard-scripts` is later in the order (P4). `proposes` is the one act a run
+   may use; `leaves_to_a_member` the acts that make a script the group's. */
+export const WIZARD_AUTHORING_ACTS = Object.freeze({
+  proposes: Object.freeze([
+    Object.freeze({ id: "wizardpropose", defined_by: "wizard-scripts R5" }),
+  ]),
+  leaves_to_a_member: Object.freeze([
+    Object.freeze({ id: "wizarddraft",   defined_by: "wizard-scripts R3" }),
+    Object.freeze({ id: "wizardrevise",  defined_by: "wizard-scripts R4" }),
+    Object.freeze({ id: "wizardsubmit",  defined_by: "wizard-scripts R6" }),
+    Object.freeze({ id: "wizardapprove", defined_by: "wizard-scripts R7" }),
+  ]),
+});
+
+/** The act a run proposes a wizard script through: while the plane publishes it
+ *  not, the layer is a stated absence. */
+export const WIZARD_AUTHORING_ACT = WIZARD_AUTHORING_ACTS.proposes[0].id;
+
+/** THE `wizard_authoring` LAYER over the published catalogue (R32). Absent in
+ *  R9's form while the catalogue holds no `WIZARD_AUTHORING_ACT`; with it, every
+ *  other act named above must be published too, or the render throws naming it,
+ *  as R28's does (R1). */
+export function wizardAuthoringLayer(catalog) {
+  const byId = catalogueById(catalog);
+  if (!byId.has(WIZARD_AUTHORING_ACT)) return {
+    load_when: "never, in this edition",
+    sourcing: "absent",
+    body: {},
+    /* THE ABSENCE, STATED IN THE PACK ITSELF, as the wizard scripts layer states its own. */
+    absent_because: `the plane's published catalogue holds no ${WIZARD_AUTHORING_ACT} act, the one act a run `
+      + "proposes a wizard script through, so this layer carries no doctrine for work no run can do.",
+  };
+  const read = actReader(byId, "wizard authoring", "the wizard script proposal act");
+  return {
+    load_when: "the run drafts a wizard script, or critiques one recorded by a member",
+    sourcing: "authored",
+    body: {
+      clauses: WIZARD_AUTHORING_CLAUSES,
+      acts: {
+        proposes: WIZARD_AUTHORING_ACTS.proposes.map(read),
+        leaves_to_a_member: WIZARD_AUTHORING_ACTS.leaves_to_a_member.map(read),
+      },
+      judged_not_coded: "whether a step's words tell a member what to conclude is judged by this critique and by "
+        + "the approving member, not by code; the checks refuse what they can read: a screen or act that does "
+        + "not exist, a step with no why, and a draft on an act a machine is refused.",
+      note: "this layer is INSTRUCTION. Every act it names is refused or labelled by the module that performs "
+        + "it: a proposed script is stored apart and labelled as machine work, and becomes a script members run "
+        + "only by a member's acts, which refuse a machine. A run ignoring every word here gets past nothing.",
     },
   };
 }
