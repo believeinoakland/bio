@@ -21,3 +21,7 @@
 - `checks/ownership.mjs . case-checker tranche/T29`: 5 files changed; 0 failures.
 
 Size (session_01WJvRKHshhLTwUVBauzgSmg): test runs 3, module lines 1740
+
+## J1 · COMPLETE
+
+L8 entry applied (N530): R3's member attestation verified over signatures.captureAccountStatement in NS_RATIFY; check.mjs's own spelling deleted, accountStatement kept as the very imported function; program.mjs rebuilt and committed (sha256 f2bd6c48…). case-checker tests 27/27; signatures + case-import 111/111; format, architecture, coverage (19/19), ownership: 0 failures. Nothing deferred, nothing found in other modules. Record: build/jobs/T29/case-checker.md on job/T29/case-checker.
