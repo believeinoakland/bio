@@ -24,3 +24,7 @@
 - `checks/ownership.mjs … reevaluation tranche/T29`: 4 files changed by reevaluation between tranche/T29 and HEAD; 0 failures.
 
 Size (session_01NTpQJf5vp8NWhH7MCRQXe9): test runs 9, module lines 2,439 (`index.mjs`; `checks.mjs` 185, `schema.mjs` 170)
+
+## J1 · COMPLETE
+
+N531 applied (R31's telling reads as the plane; each told dependent carries group, case and detail; read paths keep the asking viewer, a missing viewer asked as nobody). Two stale catalogue notes re-worded. reevaluation 113/113; case-import 52/0, accepted-work 19/0, conformance 54/0, consequences 30/0; format, architecture, coverage (32/32), ownership (4 files) 0 failures. Stales the plane bundle (fleetbundles green on tranche/T29, red after): regenerate at L7's close. Record: build/jobs/T29/reevaluation.md.
