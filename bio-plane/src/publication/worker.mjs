@@ -120,6 +120,7 @@ export function publishedObjectMissing() {
    what op=ratify always answered as `container`. */
 export async function assembleCaseContainer({ env, stub, storeName, cs, via, maxBytes = undefined }) {
   /* R6, R23 (DEC-112 (3)): AN EDITION WHOSE SIGNED DOCUMENT IS `/6` IS PACKAGED AS ITS CASE FILE (`case-grammar` R13),
+     and a `/7` one, read as `/6` (N538), likewise,
      everything it carries read from the published projection (`casefilefacts`) and the published bucket. An edition
      prepared before T28 (its document is not `/6`, which `publication` R58 now refuses to commit, but an edition committed
      before it may complete after) keeps the container below, unchanged, so nothing already promised changes form. */
@@ -391,7 +392,7 @@ export async function assembleCaseContainer({ env, stub, storeName, cs, via, max
             : { ok: false, ...(rec || { reason: "MANIFEST_NOT_RECORDED" }) };
 }
 
-/* R6, R23, R24 (DEC-112 (2), (3); K1315): THE CASE FILE, assembled once when a `/6` case edition completes. Every file
+/* R6, R23, R24 (DEC-112 (2), (3); K1315): THE CASE FILE, assembled once when a `/6` or `/7` case edition completes. Every file
    is put in the published bucket by its hash first, then the manifest is recorded through `publication`'s
    `recordCaseManifest` (its R15), which registers every file it lists in `published_shas` in the same transaction, so
    each is served by hash (R5, R24); the manifest's own bytes go to the bucket once it is recorded, as the container's
