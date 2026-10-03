@@ -23,3 +23,7 @@
 - `format`: 0 failures. `architecture reevaluation`: 0 failures. `coverage reevaluation`: 33 of 33 live ids named, 0 failures. `ownership reevaluation tranche/T31`: 0 failures.
 
 Size (session_013cjuBNfdxEeQYE6n1vCq5N): test runs 9, module lines 3039
+
+## J1 · COMPLETE
+
+reevaluation T31 is complete. N534 applied: R33, the cited_case_moved arm over accepted-work.publisherMoves (rules (a) and (b), taken-back moves, key_listed), with citedCaseDependents and citedCaseMoved; R8's cited_case_moved kind is told after commit. Module tests: 121 pass, 0 fail; the new citedmoved.test.mjs names R33. Users' tests (12 modules and migrate-released) pass. format, architecture, coverage (33/33) and ownership: 0 failures. Three readings for you to overrule: (1) on the read paths, group and case are stated only to a viewer answered the ref (R20, as N531 did for R31); (2) a registration without moves is stated accepted_work_absent, as accepted-work R8 says, and acceptance.test.mjs's stand-in gained a moves function; (3) the listing's move order is recorded order. REPORT: bio-plane/dist/bio-plane.bundled.mjs (not_product) is stale; regenerate it at the layer close. Details are in my record's Completion section.
