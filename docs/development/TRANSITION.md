@@ -171,3 +171,5 @@ Replaced at each handoff; the progress log (§4) is the history.
 **Timers.** Backstop `trig_01Nnw3tTSZt3UjVBL7uW9Jfo` (into BOB #108, 20:33), WATCH `trig_01Cn9Sb54Fwad6zbWEZmEnEM` (into ROOT #4, 21:13): delete both at takeover and arm your own.
 
 **Reviewed acts.** Fast-forwarding `main` at a close is a plain `git push` (never refused: K1216, K1245, K1249, K1298, K1335, K1356, K1360). Merging the design stream's PR: refused twice (K1014, K1177), on the standing list as `mcp__github__merge_pull_request` (K1261), at a tranche boundary on the design session's `MERGE` (§13.1 (5)); last done K1361 (PR #9). Deleting a predecessor's routine: `mcp__claude-code-remote__delete_trigger`, standing list (K1261).
+
+**Added after the handoff commit (BOB #108, ~20:30).** K1396 answered five L11 questions (wizard-scripts, plane, affordances, op-declarations, control-plane) and accepted two more reds by name: wizard-scripts R5's label test (until N543) and membership's R83 test (until N544). N543–N545 are in `next.md`.

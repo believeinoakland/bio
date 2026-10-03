@@ -1,6 +1,6 @@
 # BOB to control-plane (T31)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -9,3 +9,7 @@ Your requirements carry `*(not yet met: T31)*` on each changed line (folded at t
 R52 reads covered by an unrelated string (K1369; `promotion-step.test.mjs` cites provenance R52): write a real test for it. Merge the tranche branch after wizard-scripts', affordances' and op-declarations' merges.
 Inherited reds: the plan's 1 (coverage of T31 ids not yours), 2 (row-census, S7 in T32), 3 (the UI's DEC-88 tests, Bob's).
 Found before your start (CASE-IMPORT #2, K1383): case-import's ops map now holds importwatch and importunwatch (its R17), so the test that pins the map at eight ops is red on tranche/T31 until your entry for them lands (op-declarations t28 #6 / control-plane r49-routes #1 / plane accepted #7): yours to turn green.
+
+## B2 · ANSWER · re J1
+
+K1396: readings 1-5 stand; admission's pre-caller refusals are not counted. op-declarations is told to list wizardrefusaltally as store-internal. You merge after affordances, instance-setup, op-declarations (and wizard-scripts); CHANGEs follow.

@@ -26,6 +26,8 @@ The instance's composition root. It builds every module on one Durable Object's 
 - **R7** `wrangler.jsonc`'s `main` names this module's Worker entry (R6), its bindings unchanged; `package.json`'s `test` runs the module tests and `test:system` the old system suites for the release (K619), the old suites' other `test:*` entries dropped; `build-plane.mjs` and the fleet bundle (`bundler`) take this entry.
 - **R13** (N482, K1020; D-54) The deployment config states the plane's subrequest ceiling as a decision, never the platform's default: `wrangler.jsonc`, parsed as JSONC (bundler's one reader, its R11), has `limits.subrequests` equal to 10000, a whole number that bundler's `deriveLimits` (its R15) derives unchanged (never its `NO_SUBREQUEST_LIMIT` refusal), and that ceiling covers the widest invocation the plane is sized for, a capture: it is at least ten times `2 × (1 + subresources.SUBRESOURCE_CAP)` (one primary fetch and up to `SUBRESOURCE_CAP` subresource fetches, each with its write), read from the constant's export, so a cap raised past the ceiling's margin fails. A test checks it by parsing the config and importing the constant, never by reading a comment's text; the comment that explains the figure binds nothing.
 
+
+**Settled readings (K1396):** the readings of plane's T31 question stand as K1396 states them; they bind this module's tests.
 ## Private
 
 ### Uses
