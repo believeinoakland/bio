@@ -14,7 +14,7 @@ import * as signatures from "../../../src/sshsig.mjs";
 import { NS_RATIFY, NS_RELEASE } from "../../../src/sshsig.mjs";
 import { ARCHIVE_SERVICE, ARCHIVE_SAVE_BASE, TSA_ENDPOINTS } from "../../../src/tsa.mjs";
 import { DOORBELL_VIA } from "../../../src/provenance/index.mjs";
-import { INSTALLATION_CHECKS } from "../../../src/acquisition/index.mjs";
+import { INSTALLATION_CHECKS, firstHopWho } from "../../../src/acquisition/index.mjs";
 
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
 const requiredArgument = (op, argument, shape, error) => ({ reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error });
@@ -225,7 +225,7 @@ test("R65 R69 R70 R32: a pull holds the bytes under their own digest, writes one
   assert.equal(c.inboxGet(k2.knockId).item.capture_sha, sha("second memo"));
 });
 
-test("R65 (acquisition R16, DEC-124): a pull names the instance, Civicsmith and the version in its first hop, an unnamed instance and no version read as such; a knock pulled before T31 answers its document again with its who as written", async () => {
+test("R65 (acquisition R16, R33, DEC-124; N541): a pull names the instance by acquisition's firstHopWho: the instance, Civicsmith and the version in its first hop, an unnamed instance and no version read as such; a knock pulled before T31 answers its document again with its who as written", async () => {
   const { c, rows } = setup();
   const k = await c.knock({ content: "renamed", sourceAddress: "5.5.5.9" });
   const r = await c.pullKnock({ knockId: k.knockId, by: "m1" });
@@ -234,6 +234,9 @@ test("R65 (acquisition R16, DEC-124): a pull names the instance, Civicsmith and 
   const bare = setup({ env: { INSTANCE_NAME: undefined, VERSION: undefined } });
   const kb = await bare.c.knock({ content: "unnamed", sourceAddress: "5.5.5.8" });
   assert.equal((await bare.c.pullKnock({ knockId: kb.knockId, by: "m1" })).document.provenance_chain[0].who, "instance unnamed (Civicsmith/0.0.0)");
+  /* N541: the who is acquisition's one spelling (its R33), the same as its own first hop's, for a named and an unnamed instance */
+  assert.equal(r.document.provenance_chain[0].who, firstHopWho("inst", "9.9.9"));
+  assert.equal(firstHopWho(undefined, undefined), "instance unnamed (Civicsmith/0.0.0)");
   /* a pull made before T31: its stored document names CivicOS, and a repeat answers it as written, never re-worded */
   const k2 = await c.knock({ content: "pulled long ago", sourceAddress: "5.5.5.7" });
   const first = await c.pullKnock({ knockId: k2.knockId, by: "m1" });

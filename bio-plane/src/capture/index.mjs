@@ -20,7 +20,8 @@ import { KNOCK, isWeakKnockerSecret, knockerSecretWeak } from "./doorbell.mjs";
 import { CAPTURE_CHECKS, KNOCK_CHECKS } from "./checks.mjs";
 import { INFORMATION_GRAMMAR } from "./grammar.mjs";
 import { evidenceAbsent } from "./ops.mjs";
-import { acquire, archiveLookup, profileOf, profileView, governedFetch, governedCall, INSTALLATION_CHECKS } from "../acquisition/index.mjs";
+import { acquire, archiveLookup, profileOf, profileView, governedFetch, governedCall, INSTALLATION_CHECKS,
+         firstHopWho } from "../acquisition/index.mjs";
 import { verifySshsig, NS_RATIFY, captureAccountStatement } from "../sshsig.mjs";
 /* R69 (N530, K1336): the account statement is spelled once, by `signatures` (its R41); re-exported so the names this
    module's users import (`affordances`' tests among them) still resolve, with no spelling of capture's own. */
@@ -842,9 +843,9 @@ export class Capture {
       authority_state: "undetermined",
       authority_basis: `material handed to the group through its doorbell by an unnamed knocker; no authority is asserted; recorded ${at} for resolution through the task list`,
       provenance_chain: [{
-        /* `acquisition` R16 (DEC-124): the product is named Civicsmith; a document pulled before T31 keeps its `who`,
-           answered again as stored (`pulled_document`). */
-        who: `instance ${this.env.INSTANCE_NAME || "unnamed"} (Civicsmith/${this.env.VERSION || "0.0.0"})`,
+        /* R65 (N541): the first hop's `who` in acquisition's one spelling (its R33), never a copy. A document pulled
+           before T31 keeps its `who` as written (DEC-124), answered again as stored (`pulled_document`). */
+        who: firstHopWho(this.env.INSTANCE_NAME, this.env.VERSION),
         asserts: `these bytes were received at this instance's doorbell as knock ${row.knock_id} at ${row.received}, `
                + `and brought into the record by ${by} at ${at}; they were received, not fetched from any address`,
         evidence: "the knock's receipt: its digest, taken as the bytes arrived, and its instant",
