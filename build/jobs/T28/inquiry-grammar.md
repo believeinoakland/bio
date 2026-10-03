@@ -43,3 +43,11 @@ Also: `importedFindingRef(import, finding)` answers null when the two parts woul
 Two other modules' tests go red when my row lands (both expected):
 1. `inquiry`: `bio-plane/test/m/inquiry/grammar.test.mjs:177` (its R38 test) pins `INQUIRY_GRAMMAR_CHECKS` to six rows. It now fails because C-21.3 IMPORTED_LEG_MALFORMED is a seventh. The inquiry job widens the pin, or reads its five mints and C-54.1 by name.
 2. `bio-plane/test/system/row-census.test.mjs` (R50): "arrived with no record: C-21.3 IMPORTED_LEG_MALFORMED". This is accepted red 2 until the row is declared in `AWAITING_STAMP` (`{kind: "arrived", check: "C-21.3", code: "IMPORTED_LEG_MALFORMED", after: "1.57.0", record: "build/jobs/T28/inquiry-grammar.md", by: "INQUIRY-GRAMMAR #5"}`) or stamped in T29. My record names the row `awaiting stamp`.
+
+## J3 · COMPLETE
+
+Done, on `job/T28/inquiry-grammar`, ready to merge first in L6.
+- R11, R7 and R8 are applied, with `importedLegFindings` as K1304 words it.
+- Module tests: 32 run, 32 pass. All four checks report 0 failures; coverage is 11 of 11.
+- Row `awaiting stamp`: C-21.3 IMPORTED_LEG_MALFORMED.
+- The two red tests in other modules (inquiry R38, row-census) are in my REPORT and my record.
