@@ -43,7 +43,7 @@ test("R14: the document, in publication's CASE_DOCUMENT_FORMAT, is stored unsign
   const fm = w.fm(row.text);
   assert.deepEqual([fm.format, fm.case_id, fm.case_edition, fm.case_project, fm.case_scope],
     [CASE_DOCUMENT_FORMAT, r.caseId, 1, P, AUTHORED.scope]);
-  /* its tension section, present with nothing to disclose (R31; `/5` and publication's reader: tensions.test.mjs) */
+  /* its tension section, present with nothing to disclose (R55 (case-disclosures R1); `/5` and publication's reader: tensions.test.mjs) */
   assert.deepEqual([fm.tensions_disclosed, fm.tensions_highlighted, fm.case_tensions, fm.case_tension_sentences],
     [0, 0, [], []]);
   assert.deepEqual(fm.case_findings, [Q, Q2]);
@@ -130,7 +130,7 @@ test("R14: the bias manifest is frozen from bias.biasManifest at the project's s
   assert.ok(bodyOf(docOf(w, und).text).includes("THE MANIFEST IS UNDETERMINED"));
 });
 
-test("R15: the answer carries the case, whether it was minted, its edition, the document to review (its sha and length), the findings with their pins, pairs, roles and bar, the scope, project, bar, roles, bias acknowledgement and manifest, citations, completeness, the tensions disclosed (R31), author, instant, weight and next; target, bundleSha and state at the top only for one member", () => {
+test("R15: the answer carries the case, whether it was minted, its edition, the document to review (its sha and length), the findings with their pins, pairs, roles and bar, the scope, project, bar, roles, bias acknowledgement and manifest, citations, completeness, the tensions disclosed (R55 (case-disclosures R1)), author, instant, weight and next; target, bundleSha and state at the top only for one member", () => {
   const w = setup();
   w.finding(Q, [{ target: DOC }]); w.finding(Q2, [{ target: DOC2 }]);
   const P = w.project("Team", "alice", [Q, Q2]);
@@ -203,7 +203,7 @@ test("R17: the searched section is computed from the observation log at authorin
   w.prov.recordReceipt({ address: "https://example.org/a", addressNorm: "example.org/a", captureSha: capA,
                          retrieved: "2026-09-27T00:00:00Z" });
   const P = w.project("Team", "alice", [Q]);
-  /* fetched direct, so Grade B, and not co-attested: published as self-attested only (R35) */
+  /* fetched direct, so Grade B, and not co-attested: published as self-attested only (R55 (case-disclosures R2)) */
   const r = w.publish(P, "alice", [Q], { selfAttested: [{ capture: capA, reason: "the site refuses the archive" }] });
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
   const text = docOf(w, r).text;
@@ -224,7 +224,7 @@ test("R17: the searched section is computed from the observation log at authorin
   assert.equal(docOf(w, r).text, text);
   /* the bound: past SEARCHED_SUBJECT_MAX captures the overflow is unidentified, never searched over a truncated set */
   assert.equal(SEARCHED_SUBJECT_MAX, 500);
-  /* Q's synthetic captures are not held, so Q travels supporting (R44), beside a load-bearing Q2 on the same document */
+  /* Q's synthetic captures are not held, so Q travels supporting (R55 (case-disclosures R6)), beside a load-bearing Q2 on the same document */
   const w2 = setup();
   w2.finding(Q, [{ target: DOC }]);
   w2.finding(Q2, [{ target: DOC }]);

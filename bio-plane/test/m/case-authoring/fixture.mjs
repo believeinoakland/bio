@@ -141,7 +141,7 @@ export function world({ group = "test-group", provider = true, now = null, recor
      use it itself: the fixture reaches the one instance through inquiry's (below). */
   const prov = provenanceOf(host, { record, membership, now: () => clock.now });
   prov.migrate();
-  /* attestation (layer 3, after provenance), the real one: the attestations a capture holds (its R7), R35's read. */
+  /* attestation (layer 3, after provenance), the real one: the attestations a capture holds (its R7), R55 (case-disclosures R2)'s read. */
   const attestation = attestationOf(host, { record, provenance: prov });
   /* capture (layer 3), its late attestations and signed accounts (its R68, R69) and its inbox (R72's read), and sources
      (layer 3) over it, each the real one; nothing here fetches. Created before any module that reaches sources on this storage, so its
@@ -256,7 +256,7 @@ export function world({ group = "test-group", provider = true, now = null, recor
       st.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
                    VALUES (?, ?, ?, ?, 'active', '["contribute","publish"]', 't', 't')`, id, `Cover ${id}`, `h_${id}`, role);
     },
-    /** R44: a whole extracted-text index for `captureSha` (extraction R36's `unitsOf` reads it), one unit per entry of
+    /** R55 (case-disclosures R6): a whole extracted-text index for `captureSha` (extraction R36's `unitsOf` reads it), one unit per entry of
      *  `units` (`{text, truncated?}`), or with `state` other than whole; the fixture's documents carry one unless asked
      *  not to (`text: false`). */
     indexText(captureSha, bundleId, units = [{ text: `the text of ${bundleId}` }], state = "whole") {

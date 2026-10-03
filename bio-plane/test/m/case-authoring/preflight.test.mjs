@@ -1,5 +1,5 @@
-/* case-authoring (N364): each document's grade and co-attestation and the owner's acknowledgement (R35, R36), what may be
-   said of a source (R37), the `/5` blocks in the document (R14), hunch debt's row (R12), the rows C-120.4–C-120.7 (R29),
+/* case-authoring (N364): each document's grade and co-attestation and the owner's acknowledgement (R55 (case-disclosures R2, R3)), what may be
+   said of a source (R55 (case-disclosures R4)), the `/5` blocks in the document (R14), hunch debt's row (R55 (case-disclosures R16)), the rows C-120.4–C-120.7 (R29: `case-disclosures`' own, re-exported),
    and the ceremony's pre-flight (R34), which carries R32's read as its step three. Over the real provenance, capture and
    sources modules; ratification's pre-flight (its R18) is a stand-in at its ruled interface (K552 (5)) where a test
    must control its answer. */
@@ -7,6 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, T0, sha, WHAT_CHANGED } from "./fixture.mjs";
 import { caseAuthoringOps, CASE_DISCLOSURE_CHECKS, SELF_ATTESTED_SENTENCE } from "../../../src/case-authoring/index.mjs";
+import * as DISCLOSURES from "../../../src/case-disclosures/index.mjs";
 import { caseDocumentBlocks, unnamedSourceStatement, sourceStatement } from "../../../src/publication/index.mjs";
 import { ARCHIVE_VIA, ARCHIVE_CAPTURE_GRADE } from "../../../src/provenance/index.mjs";
 import { EARNED_CAPTURE_CEILING } from "../../../src/record-grammar/index.mjs";
@@ -41,7 +42,8 @@ const lateRow = (w, capture, seq, o) => w.st.sql.exec(`INSERT INTO late_attestat
   by, outcome) VALUES (?, ?, ?, ?, ?, ?, 'alice', ?)`, capture, seq, o.kind, o.service, o.ok ? 1 : 0, o.at,
   JSON.stringify({ late: true, proves: `proves the bytes existed by ${o.at}, not at capture`, ...o }));
 
-test("R29: C-120.4–C-120.7 are this module's rows, in the family 'a case's disclosures and its pre-flight', with the requirements' translations, each naming its region", () => {
+test("R29 (N529): C-120.4–C-120.7, in the family 'a case's disclosures and its pre-flight', moved with their translations to case-disclosures (its R22), re-exported here as that one table, each naming its raising method there", () => {
+  assert.equal(CASE_DISCLOSURE_CHECKS, DISCLOSURES.CASE_DISCLOSURE_CHECKS, "the one table, re-exported, never a copy");
   const rows = Object.entries(CASE_DISCLOSURE_CHECKS).slice(3, 7);
   assert.deepEqual(rows.map(([k, v]) => [k, v.check]),
     [["CO_ATTESTATION_UNACKNOWLEDGED", "C-120.4"], ["SELF_ATTESTED_NO_REASON", "C-120.5"],
@@ -52,20 +54,20 @@ test("R29: C-120.4–C-120.7 are this module's rows, in the family 'a case's dis
     "A document acknowledged as self-attested only is either co-attested already or not one this case rests on, so it needs no acknowledgement. Remove it from the list. Nothing was written.",
     "A finding in this case rests on a hunch. A hunch is temporary declared bias, and it is the one bias that must be cleared before publication: the case must still hold with the hunch removed. Give each leg a grade the record earns, or take the hunch out of the basis, and publish again. Nothing was written."]);
   assert.deepEqual(rows.map(([, v]) => v.where), [
-    "src/case-authoring/index.mjs #selfAttestedJudged > is-co-attestation-acknowledged",
-    "src/case-authoring/index.mjs #selfAttestedJudged > is-self-attested-reasoned",
-    "src/case-authoring/index.mjs #selfAttestedJudged > is-self-attestation-standing",
-    "src/case-authoring/index.mjs #hunchDebt > is-hunch-cleared"], "each names the function that raises it");
+    "src/case-disclosures/index.mjs selfAttestedJudged > is-co-attestation-acknowledged",
+    "src/case-disclosures/index.mjs selfAttestedJudged > is-self-attested-reasoned",
+    "src/case-disclosures/index.mjs selfAttestedJudged > is-self-attestation-standing",
+    "src/case-disclosures/index.mjs hunchDebt > is-hunch-cleared"], "each names the method that raises it there");
 });
 
-test("R29: C-120.8 and C-120.10–C-120.13 (DEC-112, N522) are this module's rows in the same family, with the requirements' translations word for word, each naming its region; C-120.9 is withdrawn and not used", () => {
+test("R29 (N529): C-120.8 and C-120.10–C-120.13 (DEC-112, N522), in the same family, moved with their translations word for word to case-disclosures (its R22), each naming its raising method there; C-120.9 is withdrawn and not used", () => {
   const rows = Object.entries(CASE_DISCLOSURE_CHECKS).slice(7);
   assert.deepEqual(rows.map(([k, v]) => [k, v.check, v.where]), [
-    ["RELIED_ON_NOT_PRESENTABLE", "C-120.8", "src/case-authoring/index.mjs #materialsJudged > is-relied-on-presentable"],
-    ["ACCEPTED_WORK_NOT_IN_FORCE", "C-120.10", "src/case-authoring/index.mjs #acceptedWorkJudged > is-accepted-work-in-force"],
-    ["FLAG_NOT_DISCLOSED", "C-120.11", "src/case-authoring/index.mjs #flagsJudged > is-flag-disclosed"],
-    ["FLAGS_UNDETERMINED", "C-120.12", "src/case-authoring/index.mjs #flagsJudged > is-flags-determined"],
-    ["FLAG_DISCLOSURE_NOT_STANDING", "C-120.13", "src/case-authoring/index.mjs #flagsJudged > is-flag-disclosure-standing"]]);
+    ["RELIED_ON_NOT_PRESENTABLE", "C-120.8", "src/case-disclosures/index.mjs materialsJudged > is-relied-on-presentable"],
+    ["ACCEPTED_WORK_NOT_IN_FORCE", "C-120.10", "src/case-disclosures/index.mjs acceptedWorkJudged > is-accepted-work-in-force"],
+    ["FLAG_NOT_DISCLOSED", "C-120.11", "src/case-disclosures/index.mjs flagsJudged > is-flag-disclosed"],
+    ["FLAGS_UNDETERMINED", "C-120.12", "src/case-disclosures/index.mjs flagsJudged > is-flags-determined"],
+    ["FLAG_DISCLOSURE_NOT_STANDING", "C-120.13", "src/case-disclosures/index.mjs flagsJudged > is-flag-disclosure-standing"]]);
   assert.deepEqual(rows.map(([, v]) => v.translation), [
     "A finding this case relies on rests on material this copy does not hold whole, and everything a case relies on travels with it in full. Find a presentable copy, stop relying on the material, or make the finding supporting. Nothing was written.",
     "A finding in this case rests on another group's finding, and this group's acceptance of that edition is not in force. Accept it again, or take the leg out. Nothing was written.",
@@ -74,7 +76,7 @@ test("R29: C-120.8 and C-120.10–C-120.13 (DEC-112, N522) are this module's row
     "One of the flags disclosed is not open on work this case rests on: it may have been cleared since. Read the list again. Nothing was published."]);
 });
 
-test("R12: uncleared hunch debt is UNCLEARED_HUNCH with its row C-120.7, naming every hunch leg, before anything is written; the pre-flight answers it before the first screen", () => {
+test("R55 (case-disclosures R16): uncleared hunch debt is UNCLEARED_HUNCH with its row C-120.7, naming every hunch leg, before anything is written; the pre-flight answers it before the first screen", () => {
   const w = world();
   w.member("alice"); w.doc(DOC);
   w.finding(Q, [{ target: DOC, grade: "B", grade_axis: "connection", grade_source: "hunch", author: "member:alice",
@@ -96,7 +98,7 @@ const AUTH = { author: "alice", scope: "s", statement: "It does not cover the am
                subjectJustification: "A public record.", biasAcknowledgement: "We read the minutes as the account.",
                excluded: [] };
 
-test("R35: each capture a member rests on is stated with its grade (provenance.captureGrade) and co-attestation (both a timestamp and a co-archive); a load-bearing Grade B capture not co-attested is CO_ATTESTATION_UNACKNOWLEDGED (C-120.4), naming each, and nothing is written", () => {
+test("R55 (case-disclosures R2): each capture a member rests on is stated with its grade (provenance.captureGrade) and co-attestation (both a timestamp and a co-archive); a load-bearing Grade B capture not co-attested is CO_ATTESTATION_UNACKNOWLEDGED (C-120.4), naming each, and nothing is written", () => {
   const { w, P, a, b } = setup();
   const before = w.snapshot();
   const r = w.publish(P, "alice", [Q]);
@@ -130,7 +132,7 @@ test("R35: each capture a member rests on is stated with its grade (provenance.c
     [[null, "CAPTURE_ROUTE_UNRECORDED", false]]);
 });
 
-test("R35: the co-attestation recorded at capture is read through attestation.attestationsOf (its R7), from the instance the composition hands in, never provenance: what it answers is what the case states", () => {
+test("R55 (case-disclosures R2): the co-attestation recorded at capture is read through attestation.attestationsOf (its R7), from the instance the composition hands in, never provenance: what it answers is what the case states", () => {
   const { w, a, b } = setup();
   const held = w.attestation.attestationsOf(a);
   assert.deepEqual(held.attestations.map((x) => x.kind), ["rfc3161", "co_archive"], "the real module reads DOC's record");
@@ -152,7 +154,7 @@ test("R35: the co-attestation recorded at capture is read through attestation.at
   void b;
 });
 
-test("R35: the grade that needs co-attestation or an acknowledgement is EARNED_CAPTURE_CEILING, provenance R24's one definition (capture R18): the refusal names it, and a load-bearing capture below it (an archive replay's ARCHIVE_CAPTURE_GRADE) that is not co-attested needs none", () => {
+test("R55 (case-disclosures R2): the grade that needs co-attestation or an acknowledgement is EARNED_CAPTURE_CEILING, provenance R24's one definition (capture R18): the refusal names it, and a load-bearing capture below it (an archive replay's ARCHIVE_CAPTURE_GRADE) that is not co-attested needs none", () => {
   assert.equal(EARNED_CAPTURE_CEILING, "B");
   const { w, P, b } = setup();
   const r = w.publish(P, "alice", [Q]);
@@ -177,7 +179,7 @@ test("R35: the grade that needs co-attestation or an acknowledgement is EARNED_C
     + "one that is not is published only as self-attested"));
 });
 
-test("R35: a document leg names its content row's capture, else every capture its target registers; an inquiry leg names none; one level deep", () => {
+test("R55 (case-disclosures R2): a document leg names its content row's capture, else every capture its target registers; an inquiry leg names none; one level deep", () => {
   const { w, P, a, b } = setup();
   const c = w.graded(DOC3, CO_ATTESTED);
   const cid = sha("a passage of DOC3");
@@ -192,7 +194,7 @@ test("R35: a document leg names its content row's capture, else every capture it
   void a; void b; void P;
 });
 
-test("R35: a timestamp or co-archive obtained late (capture.lateAttestationsOf) counts, stated as late; a late co-archive whose replay holds other bytes, or a failed attempt, does not", () => {
+test("R55 (case-disclosures R2): a timestamp or co-archive obtained late (capture.lateAttestationsOf) counts, stated as late; a late co-archive whose replay holds other bytes, or a failed attempt, does not", () => {
   const { w, P, b } = setup();
   lateRow(w, b, 1, { kind: "timestamp", service: "tsa.example", ok: true, at: "2026-09-28T00:00:00Z" });
   lateRow(w, b, 2, { kind: "co_archive", service: "archive.example", ok: true, at: "2026-09-28T00:01:00Z",
@@ -212,7 +214,7 @@ test("R35: a timestamp or co-archive obtained late (capture.lateAttestationsOf) 
   assert.match(bodyOf(docOf(w, ok).text), /obtained LATE: it proves the bytes existed by then, not at capture/);
 });
 
-test("R35: an empty reason is SELF_ATTESTED_NO_REASON (C-120.5); an entry for a co-attested capture, or one not in the case, is SELF_ATTESTATION_NOT_STANDING (C-120.6); a malformed list is R3's BAD_COMPLETENESS naming the field; each writes nothing", () => {
+test("R55 (case-disclosures R2): an empty reason is SELF_ATTESTED_NO_REASON (C-120.5); an entry for a co-attested capture, or one not in the case, is SELF_ATTESTATION_NOT_STANDING (C-120.6); a malformed list is R3's BAD_COMPLETENESS naming the field; each writes nothing", () => {
   const { w, P, a, b } = setup();
   const before = w.snapshot();
   for (const reason of [undefined, "", "   "]) {
@@ -240,7 +242,7 @@ test("R35: an empty reason is SELF_ATTESTED_NO_REASON (C-120.5); an entry for a 
   assert.equal(caseDocumentBlocks(docOf(w, ok).text).captures.find((c) => c.capture === b).acknowledgement.reason, REASON);
 });
 
-test("R36: an acknowledged capture is marked self_attested_only with {reason, acknowledged_by (the author stamp), at} and capture.captureAccountsOf's signed accounts, exact, and its block carries DEC-81 item 3's sentence", () => {
+test("R55 (case-disclosures R3): an acknowledged capture is marked self_attested_only with {reason, acknowledged_by (the author stamp), at} and capture.captureAccountsOf's signed accounts, exact, and its block carries DEC-81 item 3's sentence", () => {
   const { w, P, b } = setup();
   const text = "I saved it from the council page myself.\nThe archive refused it that day.";
   const signature = "-----BEGIN SSH SIGNATURE-----\nU1NIU0lH\n-----END SSH SIGNATURE-----";
@@ -264,7 +266,7 @@ test("R36: an acknowledged capture is marked self_attested_only with {reason, ac
   assert.equal(caseDocumentBlocks(doc).captures.find((c) => c.capture !== b).acknowledgement, undefined);
 });
 
-test("R37: a capture given to the group states only what sources.publishableAt answers for the public, with its basis; with nothing publishable, an unnamed source with the receipt's digest and time; a fetched capture states nothing; no source or entry id is written", () => {
+test("R55 (case-disclosures R4): a capture given to the group states only what sources.publishableAt answers for the public, with its basis; with nothing publishable, an unnamed source with the receipt's digest and time; a fetched capture states nothing; no source or entry id is written", () => {
   const w = world();
   for (const m of ["alice", "bo"]) w.member(m);
   const k = w.graded(DOC, {}, { receipt: false });
@@ -337,7 +339,7 @@ test("R34: publishPreflight runs op=publish in a transaction it rolls back, then
   assert.equal(calls[0].text.split(id).join(r.caseId), stored);
 });
 
-test("R34: first is exactly the refusal op=publish would give, and blockers every other refusal reachable independently — each bar shortfall (R6), hunch debt (R12), R35's, R31's as R32 reads it — each once", () => {
+test("R34: first is exactly the refusal op=publish would give, and blockers every other refusal reachable independently — each bar shortfall (R6), hunch debt (R55 (case-disclosures R16)), R55 (case-disclosures R2)'s, R55 (case-disclosures R1)'s as R32 reads it — each once", () => {
   const cand = "c".repeat(64);
   const side = (ref, bundle) => ({ kind: "leg", ref, source: { bundle, ref }, capture_sha: null, date: null, doctype: null });
   const contradiction = { unresolvedRecordOn: ({ finding }) => ({ ok: true, truncated: false, candidates: finding === Q
@@ -388,7 +390,7 @@ test("R34: ratification R18's list is folded into blockers; its undetermined ans
   assert.deepEqual([r3.ready, r3.first, r3.blockers, r3.steps[4].ratification.reached], [false, null, [], false]);
 });
 
-test("R34: steps gives the five steps' content — what becomes permanent; what this rests on (roles, pairs, bar); what you are leaving out (exclusions, searched section, bias, R32's tensions, R35's self-attested documents, R37's source statements); the edition this creates; and sign", () => {
+test("R34: steps gives the five steps' content — what becomes permanent; what this rests on (roles, pairs, bar); what you are leaving out (exclusions, searched section, bias, R32's tensions, R55 (case-disclosures R2)'s self-attested documents, R55 (case-disclosures R4)'s source statements); the edition this creates; and sign", () => {
   const { w, P, b } = setup({ ratification: ratifyWith({ ok: true, ready: true, refusals: [] }) });
   w.knocked(b);
   const excluded = [{ description: "the side letter", reason: "not in hand" }];

@@ -1,7 +1,7 @@
-/* case-authoring (T28; DEC-112 (3)(4)(5), DEC-119; N519): what a `/6` case carries — the method it is signed under (R43),
-   every document and observation its findings reach with what travels whole and who attests it (R44, R45), material from
+/* case-authoring (T28; DEC-112 (3)(4)(5), DEC-119; N519): what a `/6` case carries — the method it is signed under (R55 (case-disclosures R5)),
+   every document and observation its findings reach with what travels whole and who attests it (R55 (case-disclosures R6, R7)), material from
    a source whose identity is withheld travelling like any other with its attesting member unnamed unless they chose
-   otherwise (R37, R46–R48), and a named member's self-attested capture unchanged (R49). Read back through
+   otherwise (R55 (case-disclosures R4, R8–R10)), and a named member's self-attested capture unchanged (R55 (case-disclosures R11)). Read back through
    case-grammar's readers (its R1, R11, R12), the one reading of the bytes. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -26,7 +26,7 @@ const textSha = (bundle) => sha(canonicalJson([{ extent: { kind: "doc-para", par
 const account = (w, capture, text = "I saved it myself.") => w.st.sql.exec(`INSERT INTO capture_accounts (capture_sha, seq,
   by, text, signature, key_b64, at) VALUES (?, 1, 'alice', ?, 'SIG-of-alice-7f3', 'AAAA', ?)`, capture, text, "2026-09-27T12:00:00Z");
 
-test("R14, R43: the document is bio-case-document/6 and its method: block carries strength's GRADING_METHOD_VERSION and promotion's CATALOG_VERSION at the act, inside what the owner signs", () => {
+test("R14, R55 (case-disclosures R5): the document is bio-case-document/6 and its method: block carries strength's GRADING_METHOD_VERSION and promotion's CATALOG_VERSION at the act, inside what the owner signs", () => {
   const w = world(); w.member("alice"); w.doc(DOC); w.finding(Q, [{ target: DOC }]);
   const r = w.publish(w.project("Team", "alice", [Q]), "alice", [Q]);
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
@@ -36,7 +36,7 @@ test("R14, R43: the document is bio-case-document/6 and its method: block carrie
   assert.ok(bodyOf(docOf(w, r)).includes(`by the grading method ${GRADING_METHOD_VERSION}`));
 });
 
-test("R45, R44: materials: lists every document a member's chain reaches — its fingerprint, its extracted text's fingerprint, its origin and archived copy, whether it travels whole and what rests on it — and material only a supporting member reaches, not held whole, is listed included: false, never refused", () => {
+test("R55 (case-disclosures R7, R6): materials: lists every document a member's chain reaches — its fingerprint, its extracted text's fingerprint, its origin and archived copy, whether it travels whole and what rests on it — and material only a supporting member reaches, not held whole, is listed included: false, never refused", () => {
   const w = world(); w.member("alice");
   const a = w.graded(DOC, CO_ATTESTED), b = w.doc(DOC2, undefined, { text: false });
   w.finding(Q, [{ target: DOC }]);
@@ -55,7 +55,7 @@ test("R45, R44: materials: lists every document a member's chain reaches — its
   assert.ok(body.includes(`- ${DOC2}, a document, fingerprint ${b}: NOT INCLUDED`));
 });
 
-test("R45: material_attestations: states, per material, the attesting member's signed accounts, its co-attestation, the project's record that holds it, and the group's own row whose signature is the case's; no new table holds them", () => {
+test("R55 (case-disclosures R7): material_attestations: states, per material, the attesting member's signed accounts, its co-attestation, the project's record that holds it, and the group's own row whose signature is the case's; no new table holds them", () => {
   const w = world(); w.member("alice");
   const a = w.graded(DOC, CO_ATTESTED);
   account(w, a);
@@ -75,7 +75,7 @@ test("R45: material_attestations: states, per material, the attesting member's s
   assert.ok(bodyOf(docOf(w, r)).includes("test-group vouches for it by signing this case"));
 });
 
-test("R37, R46, R47, R48: a load-bearing document from a knocker with no publishable name publishes: it travels whole, its source shows \"Withheld\" with its reason, and its attesting member's row and signed account name no handle and carry no signature while no level is chosen; its grade is the capture's as recorded", () => {
+test("R55 (case-disclosures R4, R8, R9, R10): a load-bearing document from a knocker with no publishable name publishes: it travels whole, its source shows \"Withheld\" with its reason, and its attesting member's row and signed account name no handle and carry no signature while no level is chosen; its grade is the capture's as recorded", () => {
   const w = world(); w.member("alice");
   const k = w.graded(DOC, CO_ATTESTED, { receipt: false });
   w.knocked(k);
@@ -98,8 +98,8 @@ test("R37, R46, R47, R48: a load-bearing document from a knocker with no publish
   for (const leak of ["SIG-of-alice-7f3", "AAAA", "h_alice", "by alice"]) assert.equal(text.includes(leak), false, `names ${leak}`);
   /* K1316: the attribution section carries the capture's row, written though the case reaches no observation */
   assert.deepEqual((fm.observation_attributions || []).map((x) => [x.capture, x.level === "null" ? null : x.level]), [[k, null]]);
-  assert.match(blocks.sources[0].stated, /^Withheld: /, "R37's label and reason");
-  /* R48, publication R60: the attesting member chooses `name`, and their row is re-authored at that level */
+  assert.match(blocks.sources[0].stated, /^Withheld: /, "R55 (case-disclosures R4)'s label and reason");
+  /* R55 (case-disclosures R10), publication R60: the attesting member chooses `name`, and their row is re-authored at that level */
   w.st.sql.exec(`INSERT OR IGNORE INTO capture_actors (capture_sha, actor, at) VALUES (?, 'member:alice', ?)`, k, T0);
   const chose = w.publication.attributeObservation({ caseId: r.caseId, edition: 1, capture: k, level: "name",
                                                      reason: "I stand behind it by name.", by: "alice" });
@@ -108,7 +108,7 @@ test("R37, R46, R47, R48: a load-bearing document from a knocker with no publish
   assert.deepEqual(after.map((x) => x.level), ["name"]);
 });
 
-test("R49: a named member's capture, a load-bearing self-attested Grade B one included, is governed by R35 and R36 unchanged: its account names its member and carries the signature", () => {
+test("R55 (case-disclosures R11): a named member's capture, a load-bearing self-attested Grade B one included, is governed by R55 (case-disclosures R2 and R3) unchanged: its account names its member and carries the signature", () => {
   const w = world(); w.member("alice");
   const b = w.graded(DOC);
   account(w, b);
@@ -123,7 +123,7 @@ test("R49: a named member's capture, a load-bearing self-attested Grade B one in
   void DOC3;
 });
 
-test("R54: grading_facts: and passages: are written at the act through case-grammar's R17 — one row per leg of each finding a member's chain reaches, as strength.gradingFacts answers it, so recomputePair over the signed facts answers the pair strengthOf answers; one passage row per leg naming a content row, its quoted text found in the document's extracted text", () => {
+test("R55 (case-disclosures R15): grading_facts: and passages: are written at the act through case-grammar's R17 — one row per leg of each finding a member's chain reaches, as strength.gradingFacts answers it, so recomputePair over the signed facts answers the pair strengthOf answers; one passage row per leg naming a content row, its quoted text found in the document's extracted text", () => {
   const w = world(); w.member("alice");
   const a = w.graded(DOC);
   w.doc(DOC2);
