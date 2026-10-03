@@ -31,7 +31,9 @@ function sessions() {
 const stampsOf = (op, c) => (ACTS.includes(op) ? { viewer: c.viewer, by: c.identity } : { viewer: c.viewer });
 
 test("R49, R2, R26: each of case-import's eight ops is declared, a route of case-import's own map, a member's session's alone, and routed through the door's general path to that route in bio, with the caller's own parameters and body, for a member's session and the founder's (negative control: a name no owner serves is `unknown op`, nothing forwarded)", async () => {
-  assert.deepEqual([...IMPORT_MAP].sort(), [...MEMBER_OPS].sort(), "case-import's map is the eight member ops");
+  /* the map holds R49's eight and R52's two watch acts (`r52-routes.test.mjs`), and nothing else */
+  assert.deepEqual([...IMPORT_MAP].sort(), [...MEMBER_OPS, "importwatch", "importunwatch"].sort(),
+                   "case-import's map is the eight member ops and the two watch acts");
   for (const op of MEMBER_OPS) {
     assert.ok(Object.hasOwn(OPS, op), `${op} is declared`);
     assert.deepEqual([OPS[op].classes, OPS[op].machineClasses], [["admin", "member"], []], op);

@@ -1,4 +1,4 @@
-/* control-plane: THE INSTANCE'S DOOR (R1–R49). The Worker's HTTP entry — routing, the stamps, the answer's decoration
+/* control-plane: THE INSTANCE'S DOOR (R1–R52). The Worker's HTTP entry — routing, the stamps, the answer's decoration
    and envelope — moved from legacy-index (`index.mjs`) at control-plane's extraction (T12, K3, K93). Who may call an op is
    `admission`'s and what each op is `op-declarations'` (the split, K617, K624 (2)): this door calls admission's gates in
    R28's order and reads op-declarations' tables. An op's own handler is its module's: `makeFetch(hooks)` takes the
@@ -48,10 +48,57 @@ import { OPS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, 
    membership's `positionalMember` of) and `viewer`; the two reads `viewer` alone. Each op's row admits a member's session
    only (`machineClasses: []`), so no other caller reaches a stamp here. `case-checker`'s public reads (its R15) are
    registered with `public-read` (its R18) and served by public-read's door read, credential-free, as R45's are. */
+/* R52 (DEC-101 (3); N534; op-declarations R16): the watch acts `importwatch` and `importunwatch` (case-import R17) join
+   them, stamped as they are (`by` and `viewer`), each for a member's session only by its row. */
 const CASE_IMPORT_ACTIONS = Object.freeze(["caseimport", "caseimportdocument", "importaccept", "importacceptwithdraw",
-                                           "importflag", "importflagclear"]);
+                                           "importflag", "importflagclear", "importwatch", "importunwatch"]);
 const CASE_IMPORT_READS = Object.freeze(["importedcases", "importedcase"]);
 const CASE_CHECKER_PUBLIC_READS = Object.freeze(["casechecker", "casefilespec"]);
+
+/* R50 (DEC-120, DEC-121; N528; op-declarations R15): `wizard-scripts`' ops, routed through its own map by the general
+   forward. The authoring acts take `author` (its R3, R4, R6) and the approver's and administrator's acts `by` (its R7–R9),
+   each the POSITIONAL identity, filing-templates' form (`QUERY_AUTHOR_ACTIONS`); a proposal `proposer`, the template
+   proposal's label (its R5); every act but the editor grant's two, and every read, `viewer`. `wizardprogress` (its R15)
+   takes nothing: no member id, viewer or identity reaches the module, and every caller's stamp is deleted as for every
+   op. */
+const WIZARD_AUTHOR_ACTIONS = Object.freeze(["wizarddraft", "wizardrevise", "wizardsubmit"]);
+const WIZARD_BY_ACTIONS = Object.freeze(["wizardapprove", "wizardretire", "wizardeditorgrant", "wizardeditorrevoke"]);
+const WIZARD_PROPOSAL_ACTIONS = Object.freeze(["wizardpropose"]);
+const WIZARD_VIEWER_OPS = Object.freeze(["wizarddraft", "wizardrevise", "wizardsubmit", "wizardapprove", "wizardretire",
+                                         "wizardpropose", "wizards", "wizardread", "wizardsat", "wizarduse",
+                                         "wizardcandidates", "wizardcheck"]);
+
+/* R51 (DEC-122 (3); N528): the policy every `text/html` response this door serves carries, so a browser loads no script,
+   style, font, image or connection from another origin and sends nothing elsewhere. Both pages are single files with
+   their script and style inline, fetching only `/api` on their own origin, so inline is allowed and nothing else is. */
+const PAGE_POLICY = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; "
+  + "img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'";
+function withPagePolicy(res) {
+  const type = res && res.headers ? res.headers.get("content-type") || "" : "";
+  if (!/^\s*text\/html\b/i.test(type)) return res;
+  const headers = new Headers(res.headers);
+  headers.set("content-security-policy", PAGE_POLICY);
+  return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
+}
+
+/* R50 (wizard-scripts R16; K1364 B4): A REFUSAL ANSWERED TO A MEMBER'S SESSION IS COUNTED, UNATTRIBUTED. Read off the
+   answer on its way out (the two levels R22 decorates): its op and its code, and nothing else of the call, reach the
+   store's internal route `wizardrefusaltally` (`dispatch.mjs`), which hands them to `wizard-scripts.tallyRefusal`. A
+   count that cannot be written, or an answer that cannot be read, changes nothing the caller receives. */
+async function tallySessionRefusal(res, session) {
+  if (!session || !res) return;
+  try {
+    if (!/application\/json/i.test(res.headers.get("content-type") || "")) return;
+    const body = await res.clone().json();
+    const codeOf = (r) => r && typeof r === "object" && !Array.isArray(r) && r.ok === false
+      ? (typeof r.reason === "string" ? r.reason : typeof r.code === "string" ? r.code : null) : null;
+    const code = codeOf(body) ?? codeOf(body && body.result);
+    if (!code) return;
+    await doAnswer(session.stub.fetch(new Request("http://do/wizardrefusaltally", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ op: session.op, code }) })));
+  } catch { /* the tally is status, never a gate */ }
+}
 
 /* REC-22: the ONE namespace the public read path answers from. An instance has
    one published record, so op=publishedcase and op=publishedbytes are pinned
@@ -645,13 +692,19 @@ const BODY_STAMPS = Object.freeze(["actorIdentity", "actorViewer", "actorMemberI
 const STATED_STATUS_OPS = Object.freeze(["inbox", "inboxpull", "inboxresolve", "heldsetaside", "heldrestore"]);
 export function makeFetch(hooks = {}) {
   /* R25: the door's one outermost catch. */
+  /* R50: `seen.session` is set once admission has admitted a member's session, so a refusal answered to it is tallied;
+     R51: every HTML answer leaves with the page policy. */
   const planeDoor = async function planeDoor(req, env) {
-    try { return await fetch(req, env); } catch (e) { return planeInternalError(e, req); }
+    const seen = { session: null };
+    let res;
+    try { res = await fetch(req, env, seen); } catch (e) { res = planeInternalError(e, req); }
+    await tallySessionRefusal(res, seen.session);
+    return withPagePolicy(res);
   };
   planeDoor.limits = PLANE_LIMITS;
   planeDoor.limitsStatement = PLANE_LIMITS_STATEMENT;
   return planeDoor;
-  async function fetch(req, env) {
+  async function fetch(req, env, seen = { session: null }) {
     const url = new URL(req.url);
     if (req.method === "OPTIONS")
       return new Response(null, { status: 204, headers: { "access-control-allow-origin": "*", "access-control-allow-methods": "GET, POST, OPTIONS", "access-control-allow-headers": "content-type" } });
@@ -711,6 +764,7 @@ export function makeFetch(hooks = {}) {
 
     const path = url.pathname.replace(/^\/api\/?/, "/");
     let op = url.searchParams.get("op") || path.slice(1) || "selftest";
+    const askedOp = op;   /* R50: the op the caller asked, before R36's re-route */
     let spec = Object.hasOwn(OPS, op) ? OPS[op] : undefined;   /* R2: the table's own keys only */
     /* R36 (N364; capture R32, R65): a knock resolved to `pulled` is R65's pull, so it is routed as `op=inboxpull` before
        any gate: every gate, stamp and answer it meets is the pull's, the promotion included, and no pull files a capture
@@ -930,6 +984,8 @@ export function makeFetch(hooks = {}) {
     }
 
     const stub = env.STORE.get(env.STORE.idFromName(storeName));
+    /* R50: from here on, a refusal answered to a member's session is counted (`tallySessionRefusal`, in its namespace). */
+    if (viaSession) seen.session = { op: askedOp, stub };
 
     /* A few ops read better at the edge than they do inside the store, so
        the public name and the internal name differ. The map is the only
@@ -1362,6 +1418,9 @@ export function makeFetch(hooks = {}) {
         /* R49 (op-declarations R14; case-import R1, R4): every import act and read answers by the caller's membership,
            asked of `viewer` (or `by`), and case-import answers a viewer who is no active member as if no import exists. */
         || CASE_IMPORT_ACTIONS.includes(op) || CASE_IMPORT_READS.includes(op)
+        /* R50 (op-declarations R15; wizard-scripts R20): every wizard act but the editor grant's and every wizard read
+           answers a script the viewer may not see as absent, so each takes the stamp. */
+        || WIZARD_VIEWER_OPS.includes(op)
         || REC30_VIEWER_READS.includes(op)) {
       /* PL-11 / IS-5 / D-199 (4) — THE STATED VIEWER, AND IT IS THE RECORD'S
          ANSWER RATHER THAN THE CLASS'S.
@@ -2062,6 +2121,21 @@ export function makeFetch(hooks = {}) {
        when `by` is absent) is overwritten or deleted above. */
     if (CASE_IMPORT_ACTIONS.includes(op))
       inner.searchParams.set("by", viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* R50 (op-declarations R15; wizard-scripts R3–R9): WHO DRAFTS, REVISES OR SUBMITS (`author`), AND WHO APPROVES,
+       RETIRES, GRANTS OR REVOKES THE EDITOR (`by`), the POSITIONAL identity, filing-templates' form; only a member's
+       session reaches these ops (their rows), and a machine stamp, were one to arrive, is refused there by name
+       (MACHINE_CANNOT_DRAFT_WIZARD, MACHINE_CANNOT_APPROVE_WIZARD). A PROPOSAL's label is the template proposal's (any
+       credential may propose): a session its member, a machine `class:<cls>`, an agent `class:ai/<tokenId>`. A caller's
+       copy of each is overwritten. `wizardprogress` is stamped nothing. */
+    if (WIZARD_AUTHOR_ACTIONS.includes(op))
+      inner.searchParams.set("author", viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (WIZARD_BY_ACTIONS.includes(op))
+      inner.searchParams.set("by", viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (WIZARD_PROPOSAL_ACTIONS.includes(op))
+      inner.searchParams.set("proposer",
+        viaSession ? sessMember
+        : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`
+        : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* PL-18 / DEC-63 — WHICH MEMBER IS ASKING, for the project-participation
        gate on the three run verbs. Bob ruled 2026-08-09 that an investigation
        can be started by ANY MEMBER OF THE PROJECT: the gate is participation in
