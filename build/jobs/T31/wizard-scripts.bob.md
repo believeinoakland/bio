@@ -9,3 +9,7 @@ Your requirements carry `*(not yet met: T31)*` on each changed line (folded at t
 A new module (K1364): name your `paths` (e.g. `bio-plane/src/wizard-scripts/`) and `tests` in your record; BOB writes them into `modules.json` before the merge. Ask BOB for your check family number (C-n) before stamping codes. Doctrine (K1364): a script never says or submits for a member; drafts are labelled and become the member's only by the member's act; use only as unattributed daily tallies.
 Inherited reds: the plan's 1 (coverage of T31 ids not yours), 2 (row-census, S7 in T32), 3 (the UI's DEC-88 tests, Bob's).
 Your check family is C-131 (K1393): the next free family after case-import's C-130; no code or catalogue row names C-131 today. Stamp your codes C-131.<n>; control-plane reads your family in modules.json order.
+
+## B2 · ANSWER · re J1
+
+K1396: your paths stand (bio-plane/src/wizard-scripts/, bio-plane/test/m/wizard-scripts/); the library is bio-plane/src/wizard-scripts/civicsmith-library.mjs exporting CIVICSMITH_LIBRARY (frozen, empty); readings 1-11 stand, the five new codes are C-131 rows. Q1: call proposalLabel(p, 'wizard') as R5 says; R5's label test is accepted red by name until N543 (record-grammar, T32). J2: membership's R83 red accepted until N544 (T32). Merge tranche/T31 (requirements pointer).
