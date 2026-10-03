@@ -17,3 +17,7 @@ inquiry-grammar is merged into tranche/T28 (K1306), with IMPORTED_FINDING_RE, pa
 ## B4 · CHANGE
 
 Correction to B2 (3), K1307: accepted-work's read is acceptedFinding({ref, edition, viewer}) (its R2; finding is the name case-import registers, not the read), reached per host as acceptedWorkOf(host, deps).acceptedFinding(...). Its answers: the finding with pair, null, {absent: true} or {unreadable: true}; synchronous.
+
+## B5 · CHANGE
+
+accepted-work is merged into tranche/T28 (K1308; acceptedWorkOf(host, deps) with acceptedFinding, openFlagsOn, acceptanceWithdrawals, acceptedLegRefusals). Merge tranche/T28, build against it, and post COMPLETE. Merge order now: inquiry, basis-versions, strength.
