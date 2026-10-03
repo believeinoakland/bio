@@ -23,12 +23,12 @@ Terms.
   - `openFlags({ref, edition, viewer})` answers `{flags: [{flag, finding, issue, at}], complete}`. It covers the open flags on that edition, both the edition's own and the named finding's.
   - `withdrawals({after, limit})` answers `{withdrawals: [{withdrawal, import, edition, refs, at}], cursor}` in withdrawal order.
 
-  (DEC-96 items 1, 2, 4) *(not yet met: T28)*
+  (DEC-96 items 1, 2, 4)
 - **R2** `acceptedFinding`, `openFlagsOn` and `acceptanceWithdrawals` take the same arguments and answer the registered functions' answers.
   - With none registered, each answers `{absent: true}`, stated as `accepted_work_absent`.
   - When the registered function throws, each answers `{unreadable: true}`.
 
-  None of them writes or throws. They are the one way `strength`, `reevaluation`, `basis-versions` and `publication` read accepted work. (P4; DEC-96) *(not yet met: T28)*
+  None of them writes or throws. They are the one way `strength`, `reevaluation`, `basis-versions` and `publication` read accepted work. (P4; DEC-96)
 
 **acceptedLegRefusals({legs, viewer})**
 
@@ -36,8 +36,8 @@ Terms.
   - when R2 answers absent or unreadable, the leg is refused `ACCEPTED_WORK_UNREADABLE` (C-21.5);
   - when `finding` answers null, or answers `acceptance: null` at the leg's `target_edition`, the leg is refused `IMPORTED_NOT_ACCEPTED` (C-21.4).
 
-  Each refusal is a finding naming the leg's `ord` and ref. Other legs are not asked. It writes nothing and never throws. (DEC-112 (6): "an accepted finding may support the group's own work"; DEC-96 item 1: acceptance names one edition) *(not yet met: T28)*
-- **R4** At start, the module registers with `promotion` (`registerStep`, its R39) a check of every promotion of an inquiry that is not a replay. It runs R3 over each leg whose target is a ref and that is new against the held version, or whose target or `target_edition` changed. A refusal is `BASIS_REFUSED` with R3's findings, as `inquiry` R11 answers it, and nothing is written. An unchanged leg is not asked again, so a withdrawal never refuses an unrelated revision (DEC-96 item 1: a withdrawal sends notices, it does not move work). *(not yet met: T28)*
+  Each refusal is a finding naming the leg's `ord` and ref. Other legs are not asked. It writes nothing and never throws. (DEC-112 (6): "an accepted finding may support the group's own work"; DEC-96 item 1: acceptance names one edition)
+- **R4** At start, the module registers with `promotion` (`registerStep`, its R39) a check of every promotion of an inquiry that is not a replay. It runs R3 over each leg whose target is a ref and that is new against the held version, or whose target or `target_edition` changed. A refusal is `BASIS_REFUSED` with R3's findings, as `inquiry` R11 answers it, and nothing is written. An unchanged leg is not asked again, so a withdrawal never refuses an unrelated revision (DEC-96 item 1: a withdrawal sends notices, it does not move work).
 
 ## Private
 
@@ -51,11 +51,11 @@ Terms.
 
 ### Invariants
 
-- **R5** No table. Nothing here regrades, composes a strength or trust score, or states the source's bar as this group's (DEC-96 item 1, DEC-92, DEC-45). *(not yet met: T28)*
-- **R6** Rows C-21.4 and C-21.5 are held in this module's own `checks.mjs`. `promotion` stamps them, and a change moves `CATALOG_VERSION`. *(not yet met: T28)*
+- **R5** No table. Nothing here regrades, composes a strength or trust score, or states the source's bar as this group's (DEC-96 item 1, DEC-92, DEC-45).
+- **R6** Rows C-21.4 and C-21.5 are held in this module's own `checks.mjs`. `promotion` stamps them, and a change moves `CATALOG_VERSION`.
   - C-21.4 `IMPORTED_NOT_ACCEPTED`: "This finding rests on another group's finding that this group has not accepted at that edition. Accept that edition first, or take the leg out. Nothing was written."
   - C-21.5 `ACCEPTED_WORK_UNREADABLE`: "Another group's work this finding rests on could not be read, so whether it is accepted is not known. Try again. Nothing was written."
-- **R7** No place is named in this module's behaviour or outward text. *(not yet met: T28)*
+- **R7** No place is named in this module's behaviour or outward text.
 
 ### Satisfies
 
