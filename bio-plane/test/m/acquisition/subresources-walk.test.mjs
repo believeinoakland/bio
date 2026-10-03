@@ -116,7 +116,7 @@ test("R9 R19 R24 R28: a refused reference never leaves; every fetch of the walk 
   assert.ok(!r.net.seen.some((x) => /insecure|localhost|198\.51\.100/.test(x.url)), "nothing refused was ever fetched");
   for (const reason of ["REFUSED_LOCATOR"]) assert.ok(r.body.subresources.some((s) => s.reason === reason), "recorded as refused, not dropped");
   const pageUa = r.net.seen.find((x) => x.url === LOC).init.headers["user-agent"];
-  assert.match(pageUa, /^CivicOS\/9\.9\.9 \(\+https:\/\/\S+; instance inst; acquire\)$/, "product, version, contact, instance and purpose");
+  assert.match(pageUa, /^Civicsmith\/9\.9\.9 \(\+https:\/\/\S+; instance inst; acquire\)$/, "product, version, contact, instance and purpose");
   assert.equal(/Mozilla|Chrome|Safari|Gecko/.test(pageUa), false, "it does not impersonate a browser");
   const walk = r.net.seen.filter((x) => x.url !== LOC && new URL(x.url).hostname === "w.example" && /\/(css|img|js|favicon)/.test(x.url));
   assert.ok(walk.length >= 4);
