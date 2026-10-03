@@ -1,6 +1,6 @@
 # affordances (T27)
 
-**Status** · session_01RzGjMiL9jvaJHwknSRAGV6 · depth 2 · WORKING · handled B1
+**Status** · session_01RzGjMiL9jvaJHwknSRAGV6 · depth 2 · COMPLETE · handled B1
 
 ## Completion (T27 L11)
 
