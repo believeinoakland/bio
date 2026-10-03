@@ -50,3 +50,20 @@ Found in other modules, from this job's merge (details in my record, 'Found in o
 ## J2 · COMPLETE
 
 case-grammar T28 complete at b177827f2e on job/T28/case-grammar: R1 (/6), R9 (N524), R11–R16. Module tests 53/0; format, architecture, coverage (16/16) and ownership checks 0 failures. No catalogue row added. Two other modules' tests pin /5 until their own T28 jobs, and the plane bundle is stale (REPORT J2). Ready to merge first in L8.
+
+## B2, B3 · CHANGE (K1315, K1317), re-opened and completed
+
+Merged `origin/tranche/T28` @ 39fd33d3dd. Applied:
+- **R2** (K1315 (7)): `attributionFrontmatterLines` writes `capture: <sha>` in place of `observation` for a row that names a capture and no observation; `attributionBodyLines` names it the same way.
+- **R3** (K1317 (6)): `SECTIONS.attestations`, from `material_attestations:` (or `material_attestations: []`) to the next top-level key, no prose run: answered as an empty run at the document's end, `b0 === b1 === lines.length`, so `publication`'s splice with no body lines leaves every other line as it was.
+- **R12** (K1317): `materialsLines(rows)`, `materialAttestationLines(rows)` (`materialBlockLines` kept, composing them). A `member` row with no level chosen now carries no `by` and no `signature`, as K1317 (6) says.
+- **R13** (K1315 (3), K1317 (5)): `partFingerprint(files)`, SHA-256 of the canonical JSON of the part's `[{path, sha256, bytes}]` in manifest order, bytes their sum; replaces the J-era `casePartDigest` (removed: no other module used it). Passage rows carry `chain`.
+- **R14** (K1315 (4)): `completeEditionOf({format, group, case, edition, case_document_sha, keys, files: [{path, kind, sha256, bytes, content}]})`. A finding's chain and passages are read from the signed R17 blocks; from the per-finding files only when the document carries no block. A path listed twice renders the copy whose content hashes to its row's SHA-256.
+- **R17** (K1315 (1)(2)): `gradingFactsLines`, `passagesLines`, `gradingFactsOf`, `passagesOf` (`{[finding]: rows in ord order}`, null when absent or not `/6`), `extractedTextOf(units)` (`./facts.mjs`). Every value but null, a number or a boolean is written as its canonical JSON in single quotes, a `'` escaped `'`, so values read back byte for byte (`fmSafe` would fold a quoted passage's quotes and line breaks).
+- K1315 (8): `unnamedSourceStatement` is re-worded to case-authoring R37's "Withheld" text; `withheldSourceStatement` is the same function. `sourceRowsStanding` compares with it alone.
+
+**Found in other modules** (added): `publication`'s `casedoc.test.mjs` R21 arm pins `REAUTHORABLE_SECTIONS` to two names; red from this merge until publication's T28 job (K1317's `attestations`). Publication now 96/2 (the `/6` pin and this); case-authoring 99/1 (the `/6` pin).
+
+**Tests and checks** (after the merge): `node --test bio-plane/test/m/case-grammar/`: 60 pass, 0 fail. Users: public-read 95/0, ratification 199/0, docket 37/0, publication 96/2, case-authoring 99/1 (above). Format 0 failures; architecture 22 product files, 66 imports, 0 failures; coverage 17 of 17; ownership 20 files, 0 failures. P6: module 1,722 lines.
+
+Size (session_016TiHSZQkrggTJ3QAahBMjg): test runs 28, module lines 1722
