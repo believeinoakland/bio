@@ -36,7 +36,8 @@ test("R2: OPS maps every op to a well-formed spec {classes, machineClasses?, mut
   }
   /* The public surface is exactly the ops that gate themselves. */
   assert.deepEqual(ops.filter((op) => OPS[op].classes === null).sort(),
-    ["activitymethod", "bootstrap", "casedocument", "caseflags", "claim", "enroll", "groupidentity", "groupkeyspublic",
+    ["activitymethod", "bootstrap", "casedocument", "caseflags", "claim", "docketfeed", "docketpublic", "enroll",
+     "groupidentity", "groupkeyspublic",
      "instancegroup", "invitelook", "knock", "knockerconsent", "login", "noticespublic", "publicread", "publishedbytes",
      "publishedcase", "publishedmanifest", "reviewcomment", "reviewcopy", "statementack", "templatecomment",
      "templatecomments", "templateread", "templatereview", "verify"]);
@@ -170,15 +171,17 @@ test("R3, R4 (transcribe convert): transcribe and transcriptionattest are a pers
   assert.equal(NEEDS.transcription, null);
 });
 
-test("R4, R3 (N-A12, K704, K709, K711, K705): the action layer's new ops — action-plans' fifteen, actions' five, action-clocks' two, filings' two and the template read — each declared with its spec, its list, both session sets for an act and its capability", () => {
+test("R4, R3 (N-A12, K704, K709, K711, K705): the action layer's new ops — action-plans' fifteen, actions' eight, action-clocks' two, filings' two and the template read — each declared with its spec, its list, both session sets for an act and its capability", () => {
   const acts = {
     ACTION_PLANS_ACTIONS: ["planopen", "plansubjectadd", "plansubjectremove", "optionadd", "optionrevise", "optionadopt",
                            "optiondispose", "scenarioset", "checkpointrecord", "optionstart", "planclose"],
     PLAN_PROPOSAL_ACTIONS: ["optionpropose"],
-    ACTIONS_ACTIONS: ["actioncreate", "actionpressure", "actionhold"],
+    /* T27 (R12): the hold's release joins actions' acts, its two reads actions' reads (`t27.test.mjs`). */
+    ACTIONS_ACTIONS: ["actioncreate", "actionpressure", "actionhold", "actionholdrelease"],
     ACTION_CLOCKS_ACTIONS: ["reminderset", "reminderanswer"],
   };
-  const reads = { ACTION_PLANS_READS: ["plan", "plans", "planproposals"], ACTIONS_READS: ["action", "actions"] };
+  const reads = { ACTION_PLANS_READS: ["plan", "plans", "planproposals"],
+                  ACTIONS_READS: ["action", "actions", "actionholdpreview", "projectholds"] };
   for (const [name, list] of [...Object.entries(acts), ...Object.entries(reads)]) assert.deepEqual([...named(name)], list, name);
   /* action-plans' ops are exactly `actionPlansOps`' sixteen: R1–R34's fifteen (K711) and R37's start preview (R11). */
   assert.equal([...acts.ACTION_PLANS_ACTIONS, ...acts.PLAN_PROPOSAL_ACTIONS, ...reads.ACTION_PLANS_READS,
@@ -203,8 +206,10 @@ test("R4, R3 (N-A12, K704, K709, K711, K705): the action layer's new ops — act
     assert.deepEqual([...OPS[op].classes], ["admin", "member", "probe"], op);
     assert.equal(OPS[op].mutating, false, op);
     assert.ok(O.ACTION_LAYER_READS.includes(op), op);
-    /* `templates` carries a null row since R8 (affordances R30 names it in NON_ACTS); the T18 reads none. */
-    assert.ok(op === "templates" ? NEEDS[op] === null && Object.hasOwn(NEEDS, op) : !Object.hasOwn(NEEDS, op), op);
+    /* `templates` carries a null row since R8 (affordances R30 names it in NON_ACTS), and R12's two reads since T27
+       (affordances R33); the T18 reads none. */
+    assert.ok(["templates", "actionholdpreview", "projectholds"].includes(op)
+      ? NEEDS[op] === null && Object.hasOwn(NEEDS, op) : !Object.hasOwn(NEEDS, op), op);
   }
 });
 
