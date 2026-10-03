@@ -37,3 +37,7 @@ R15 and R16 applied, K1396's wizardrefusaltally store-internal added; t28's case
 ## J3 · REPORT
 
 B3 done: tranche/T31 merged; R15's R6 test against wizardScriptsOps added (the map serves exactly R15's fifteen; lists match its acts and reads); op-declarations 59/59. Seam for control-plane R50: wizardScriptsOps reads every identity stamp from the query's author (author, proposer and by alike, filingTemplatesOps' pattern), so the door must set author for WIZARD_SCRIPTS_BY and WIZARD_PROPOSAL_ACTIONS too, as for templatepropose; wizardprogress receives viewer from the map, null since the door stamps none. Waiting on your CHANGE after affordances merges.
+
+## J4 · COMPLETE
+
+B4 done: tranche/T31 merged after affordances; op-declarations 59/59; format, architecture, coverage 16/16, ownership 0 failures. control-plane's R2/R41 unaccounted test is green now. Reds outside this module (record): control-plane r49-routes R49 (its R52) and families R22 (CHECK_FAMILIES lacks WIZARD_SCRIPTS_CHECKS); wizard-scripts authoring R5 (record-grammar R42's proposalLabel has no 'wizard' subject). Ready to merge.
