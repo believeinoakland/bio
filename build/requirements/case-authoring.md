@@ -135,7 +135,7 @@ Row C-82.8 (R19, R29; DEC-88, K1025), with its translation; stamped by 1.53.0:
 
 #### The disclosures `publishCase` asks (N529; K617, K1333)
 
-- **R55** *(not yet met: T29)* `publishCase` takes `tensionsDisclosed`, `selfAttested` and `flagsDisclosed`, and hands them to `case-disclosures`.
+- **R55** `publishCase` takes `tensionsDisclosed`, `selfAttested` and `flagsDisclosed`, and hands them to `case-disclosures`.
   - **The order.** After R6 and before the case identity is derived, it asks `case-disclosures`, in this order:
     - `hunchDebt` (its R16);
     - `tensionsJudged` (its R1, at the bytes R13 pins);

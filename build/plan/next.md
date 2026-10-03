@@ -10,6 +10,8 @@
 
 - N535 · 2026-10-03 · **case-disclosures**: `acceptedBodyLines` prints "because: <reason>." after a reason that already ends in a full stop ("whole.."); add the full stop only when the reason lacks one, for editions written from then on (a published edition's bytes stay as signed). From CASE-DISCLOSURES #1 J3 (K1348). **Why next:** the T29 move had to keep signed bytes identical (K1333).
 
+- N536 · 2026-10-03 · **case-authoring**: drop the `get attestation()` pass-through and the dependency hand-through in `caseAuthoringOf` once no caller passes them (plane's T29 L11 re-point to `caseDisclosuresOf(ctx, {attestation})`). From CASE-AUTHORING #14 J2 (K1351). **Why next:** one job per module (P8); it waits on plane's re-point, L11 after L8 (P10).
+
 ## Carried from T29
 
 The left-out table of `current.md` (T29), unchanged until re-read at T30's opening.
