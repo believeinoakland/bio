@@ -588,7 +588,7 @@ test("R19: the reasoned registry, progression and theme acts, and intent's three
   assert.deepEqual(Object.entries(got).filter(([, c]) => !JUSTIFICATION_REFUSALS.includes(c)), []);
 });
 
-test("R19 R35: together the two drives reach every op RUNGS grades `reasoned`", () => {
+test("R19 R35 R37: together the two drives reach every op RUNGS grades `reasoned`", () => {
   const driven = ["release", "dispose", "sever", "reinstate", "conclude", "reopen", "inquirydivide", "inquiryground",
     "actionmove", "versionreject", "versionconsider", "withdrawconclusion", "projectownerremove", "projectownerrescue",
     "adminremove", "connectionassert", "filemembershipjudge", "relationdeclare", "aliaswithdraw", "relationwithdraw",
@@ -618,7 +618,9 @@ test("R19 R35: together the two drives reach every op RUNGS grades `reasoned`", 
     /* R34: at docket's interface over its fixture, backing.test.mjs */
     "docketfile", "docketdecline",
     /* R35: at case-import's interface over its fixture, backing.test.mjs */
-    "importaccept", "importacceptwithdraw", "importflag", "importflagclear"];
+    "importaccept", "importacceptwithdraw", "importflag", "importflagclear",
+    /* R37: at wizard-scripts' interface over its fixture, t31.test.mjs */
+    "wizardretire"];
   assert.deepEqual(Object.keys(RUNGS).filter((op) => RUNGS[op] === "reasoned" && !driven.includes(op)), []);
 });
 

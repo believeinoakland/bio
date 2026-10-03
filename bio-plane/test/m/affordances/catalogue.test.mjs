@@ -94,7 +94,7 @@ const bandsOf = (rungs) => {
   for (const k of Object.keys(got)) got[k].sort();
   return got;
 };
-test("R2 R35: the rung ladder, low to high, and RUNGS' assignment — DEC-88's three bands word for word among them — with "
+test("R2 R35 R37 R38: the rung ladder, low to high, and RUNGS' assignment — DEC-88's three bands word for word among them — with "
    + "its negative controls: an op moved to the wrong band, or one of the 57 left out of RUNGS, is seen", () => {
   assert.deepEqual(RUNG_LADDER, ["reversible", "reasoned", "terminal", "attested", "irreversible"]);
   assert.deepEqual([DEC88.reversible.length, DEC88.reasoned.length, DEC88.terminal.length], [25, 30, 2]);
@@ -124,8 +124,12 @@ test("R2 R35: the rung ladder, low to high, and RUNGS' assignment — DEC-88's t
       /* R34: the docket's filing and the manager's decline */
       "docketfile", "docketdecline",
       /* R35: DEC-96's four reasoned acts on an imported case */
-      "importaccept", "importacceptwithdraw", "importflag", "importflagclear"],
+      "importaccept", "importacceptwithdraw", "importflag", "importflagclear",
+      /* R37: a wizard script's retirement */
+      "wizardretire"],
   };
+  /* R38: the watch of an imported case's docket and its end, each taking the other back */
+  want.reversible.push("importwatch", "importunwatch");
   want.reversible.push(...DEC88.reversible);
   want.terminal.push(...DEC88.terminal);
   for (const k of Object.keys(want)) want[k].sort();
@@ -167,7 +171,7 @@ test("R3 R12: against a table of every op the catalogue classifies, with each ru
   assert.deepEqual(ACTS.map((a) => a.id).filter((id) => !Object.hasOwn(RUNGS, id) && !Object.hasOwn(RUNG_ABSENT, id)), []);
 });
 
-test("R4: VOCABULARIES carries exactly the named vocabularies", () => {
+test("R4 R36: VOCABULARIES carries exactly the named vocabularies", () => {
   assert.deepEqual(Object.keys(VOCABULARIES).sort(), ["action_kind", "law_levels", "dispositions", "subject_positions",
     "basis_roles", "entity_kinds", "relation_kinds", "stage_requiredness", "action_basis_kinds",
     "correspondence_directions", "correspondence_stages", "correspondence_outcomes", "resolutions", "risk_tiers",
@@ -177,7 +181,8 @@ test("R4: VOCABULARIES carries exactly the named vocabularies", () => {
     "dismissal_reasons",
     /* R30 */ "template_states", "template_uses", "template_review_outcomes", "local_fact_acts",
     "local_fact_statuses",
-    /* R34 */ "docket_shelves", "docket_entry_kinds", "docket_proposals", "docket_pressure_kinds"].sort());
+    /* R34 */ "docket_shelves", "docket_entry_kinds", "docket_proposals", "docket_pressure_kinds",
+    /* R36 */ "larger_screen_acts"].sort());
 });
 
 test("R4: each fixed value is the very object its enforcing module refuses against — the same reference, never a copy", () => {
@@ -205,6 +210,7 @@ test("R4: each fixed value is the very object its enforcing module refuses again
     /* R34: docket R1, R2, R6's four */
     ["docket_shelves", docket.SHELVES], ["docket_entry_kinds", docket.ENTRY_KINDS], ["docket_proposals", docket.PROPOSALS],
     ["docket_pressure_kinds", docket.PRESSURE_KINDS],
+    ["larger_screen_acts", A.LARGER_SCREEN_ACTS] /* R36: this module's own */,
   ];
   assert.deepEqual(same.filter(([k, v]) => VOCABULARIES[k] !== v).map(([k]) => k), []);
   assert.equal(same.length + 1, Object.keys(VOCABULARIES).length, "every key but action_kind is a fixed value checked here");
@@ -439,19 +445,21 @@ const R27_LEFT = ["inboxpull", "contradictionrecommend", "contradictionoptin", "
   "checkpointrecord", "optionstart", "templatedraft", "templaterevise", "templatepropose", "templatesubmit",
   "templatereview", "templatecomment", "templateapprove"];
 const undeterminedOf = (absent) => Object.keys(absent).filter((op) => absent[op].ground === "undetermined").sort();
-test("R27 R32 R34 R35: no op is graded `undetermined` that the rulings moved (K211, DEC-88), and exactly the 21 R27 names "
+test("R27 R32 R34 R35 R37: no op is graded `undetermined` that the rulings moved (K211, DEC-88), and exactly the 21 R27 names "
    + "remain `undetermined`, with R32's whatchangedpropose, R34's docketpressure and R35's caseimport and "
    + "caseimportdocument beside them — R27's count reads 25 with them; one of DEC-88's 57 left there is seen", () => {
   const moved = { biasdebtresolve: "reasoned", actionrisktier: "reasoned", narrow: "reasoned", versionaccept: "reversible",
     versioncurrent: "reversible", actionlaws: "reversible", projectvisibilityset: "reversible" };
   for (const [op, r] of Object.entries(moved)) { assert.equal(RUNGS[op], r, op); assert.ok(!Object.hasOwn(RUNG_ABSENT, op), op); }
   /* R32 (T23) and R34 (T27) each grade one more op `undetermined` on R27's rule, after R27's count, and R35 (T28) two */
-  const LATER = ["whatchangedpropose", "docketpressure", "caseimport", "caseimportdocument"];
+  const LATER = ["whatchangedpropose", "docketpressure", "caseimport", "caseimportdocument",
+    /* R37 (T31): wizard-scripts' five drafting and approving acts, as the template acts */
+    "wizarddraft", "wizardrevise", "wizardpropose", "wizardsubmit", "wizardapprove"];
   const undetermined = undeterminedOf(RUNG_ABSENT).filter((op) => !LATER.includes(op));
   for (const op of LATER) assert.equal(RUNG_ABSENT[op]?.ground, "undetermined", op);
   assert.deepEqual(undetermined, [...R27_LEFT].sort());
   assert.equal(undetermined.length, 21, "R27's count: DEC-88 moved 57 of the 78 into RUNGS");
-  assert.equal(undeterminedOf(RUNG_ABSENT).length, 25, "R35: R27's count reads 25 with R32's, R34's and R35's");
+  assert.equal(undeterminedOf(RUNG_ABSENT).length, 30, "R27's count reads 30 with R32's, R34's, R35's and R37's five");
   /* the 78 held before DEC-88: the 21 and the 57 together, each of the 57 now ranked in RUNGS */
   const before78 = ["inboxresolve", "taskforward", "taskresolve", "actioncorrespond", "actionlawspropose",
     "projectfork", "biasadopt", "strengthbar", "entitycreate", "entityalias", "resolve", "attesttext", "thread",
@@ -874,7 +882,7 @@ test("R31 R33 R4 R11: CONSEQUENCE_STATEMENTS holds exactly the six with their fr
   assert.match(C.filingapprove.statement, /approved once/);
   assert.match(C.leadshare.statement, /cannot be un-read/);
   /* R11: the decorated shape is unchanged — no consequence key on any act */
-  const KEYS = ["id", "label", "weight", "needs", "mode", "rung", "rung_absence", "prompt"];
+  const KEYS = ["id", "label", "weight", "needs", "mode", "rung", "rung_absence", "prompt", "phone" /* R36 */];
   for (const a of [...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS]) assert.deepEqual(Object.keys(A.decorate(a, null)), KEYS, a.id);
   for (const op of Object.keys(C)) assert.deepEqual(Object.keys(A.decorate({ id: op, label: "x" }, null)), KEYS, op);
   /* and no place is named in them (R25: outward text) */
@@ -1192,8 +1200,9 @@ test("R35 R2 R3 R7 R12 R19 R27: case-import's ops — importaccept, importaccept
    + "`undetermined` as inboxpull, the six import-directed in NON_ACTS, its reads `read:` and case-checker's public reads "
    + "`read: public, no credential`, none in MACHINE_REFUSALS and no vocabulary added — and with the control plane's rows "
    + "nothing is unaccounted; a misgraded op or one left out is seen", () => {
-  const ops = Object.keys(caseImportOps({}, new URL("http://x/"), {})).sort();
-  assert.deepEqual(ops, [...Object.keys(R35_GRADES), ...R35_READS].sort(), "case-import's op map holds exactly these");
+  /* R38's watch acts (T31) are graded in t31.test.mjs */
+  const ops = Object.keys(caseImportOps({}, new URL("http://x/"), {})).filter((op) => !["importwatch", "importunwatch"].includes(op)).sort();
+  assert.deepEqual(ops, [...Object.keys(R35_GRADES), ...R35_READS].sort(), "case-import's op map holds exactly these, beside R38's two");
   const grades = Object.fromEntries(Object.keys(R35_GRADES).map((op) => [op, gradeOf(op)]));
   assert.deepEqual(grades, R35_GRADES);
   for (const op of ["caseimport", "caseimportdocument"]) {
