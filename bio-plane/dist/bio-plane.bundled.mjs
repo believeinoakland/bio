@@ -95233,6 +95233,10 @@ function caseImportOps(m, url, body) {
 }
 
 // src/case-disclosures/checks.mjs
+var checks_exports34 = {};
+__export(checks_exports34, {
+  CASE_DISCLOSURE_CHECKS: () => CASE_DISCLOSURE_CHECKS
+});
 var at13 = (fn, region) => `src/case-disclosures/index.mjs ${fn} > ${region}`;
 var CASE_DISCLOSURE_CHECKS = Object.freeze({
   TENSION_NOT_DISCLOSED: {
@@ -96463,8 +96467,8 @@ function caseDisclosuresOf(host, deps) {
 }
 
 // src/case-authoring/checks.mjs
-var checks_exports34 = {};
-__export(checks_exports34, {
+var checks_exports35 = {};
+__export(checks_exports35, {
   CASE_DERIVATION_CHECKS: () => CASE_DERIVATION_CHECKS,
   PUBLISH_ACT_CHECKS: () => PUBLISH_ACT_CHECKS,
   STATEMENT_ACK_CHECKS: () => STATEMENT_ACK_CHECKS
@@ -99199,8 +99203,8 @@ function blanksOf(text5) {
 }
 
 // src/filing-templates/checks.mjs
-var checks_exports35 = {};
-__export(checks_exports35, {
+var checks_exports36 = {};
+__export(checks_exports36, {
   FILING_TEMPLATE_CHECKS: () => FILING_TEMPLATE_CHECKS,
   rowOf: () => rowOf9
 });
@@ -101160,8 +101164,8 @@ function filingTemplatesOps(m, url, body) {
 }
 
 // src/local-facts/checks.mjs
-var checks_exports36 = {};
-__export(checks_exports36, {
+var checks_exports37 = {};
+__export(checks_exports37, {
   LOCAL_FACTS_CHECKS: () => LOCAL_FACTS_CHECKS,
   refusal: () => refusal11
 });
@@ -101699,8 +101703,8 @@ function localFactsOf(host, deps) {
 }
 
 // src/citation/checks.mjs
-var checks_exports37 = {};
-__export(checks_exports37, {
+var checks_exports38 = {};
+__export(checks_exports38, {
   CITE_CHECKS: () => CITE_CHECKS,
   CITE_EXTENT_CHECKS: () => CITE_EXTENT_CHECKS
 });
@@ -107034,8 +107038,8 @@ var UNATTENDED_BY_DECISION = Object.freeze({
 });
 
 // src/admission/checks.mjs
-var checks_exports38 = {};
-__export(checks_exports38, {
+var checks_exports39 = {};
+__export(checks_exports39, {
   ADMISSION_CHECKS: () => ADMISSION_CHECKS,
   AI_SCOPE_CHECKS: () => AI_SCOPE_CHECKS,
   GROUP_IDENTITY_FENCE_CHECKS: () => GROUP_IDENTITY_FENCE_CHECKS,
@@ -108107,8 +108111,8 @@ var CaptureCredentials = class _CaptureCredentials {
 };
 
 // src/run-rules/checks.mjs
-var checks_exports39 = {};
-__export(checks_exports39, {
+var checks_exports40 = {};
+__export(checks_exports40, {
   AI_RUNS_CHECKS: () => AI_RUNS_CHECKS,
   AI_RUNS_CONTEXT_CHECKS: () => AI_RUNS_CONTEXT_CHECKS,
   AI_RUN_ACT_SHAPE_CHECKS: () => AI_RUN_ACT_SHAPE_CHECKS,
@@ -108533,8 +108537,8 @@ var AI_RUNS_CHECKS = Object.freeze({
 });
 
 // src/run-productions/checks.mjs
-var checks_exports40 = {};
-__export(checks_exports40, {
+var checks_exports41 = {};
+__export(checks_exports41, {
   EXTRACT_PROPOSE_CHECKS: () => EXTRACT_PROPOSE_CHECKS,
   EXTRACT_PROPOSE_CHECK_KEYS: () => EXTRACT_PROPOSE_CHECK_KEYS,
   ROWLESS_CODES: () => ROWLESS_CODES,
@@ -108763,8 +108767,8 @@ var SUGGEST_CHECKS = pick(SUGGEST_ROWS, SUGGEST_CHECK_KEYS);
 var EXTRACT_PROPOSE_CHECKS = pick(EXTRACT_PROPOSE_ROWS, EXTRACT_PROPOSE_CHECK_KEYS);
 
 // src/capture-requests/checks.mjs
-var checks_exports41 = {};
-__export(checks_exports41, {
+var checks_exports42 = {};
+__export(checks_exports42, {
   CAPTURE_PURPOSES: () => CAPTURE_PURPOSES,
   CAPTURE_REQUEST_CHECKS: () => CAPTURE_REQUEST_CHECKS,
   CAPTURE_SOURCE_CHECKS: () => CAPTURE_SOURCE_CHECKS,
@@ -113727,8 +113731,8 @@ function judgementLayers() {
 var JUDGEMENT_VERSION = `${JUDGEMENT_ID}@${JUDGEMENT_EDITION}`;
 
 // src/intent/checks.mjs
-var checks_exports42 = {};
-__export(checks_exports42, {
+var checks_exports43 = {};
+__export(checks_exports43, {
   INTENT_CHECKS: () => INTENT_CHECKS,
   refusal: () => refusal15
 });
@@ -113871,8 +113875,8 @@ function refusal15(code, detail, extra) {
 }
 
 // src/review/checks.mjs
-var checks_exports43 = {};
-__export(checks_exports43, {
+var checks_exports44 = {};
+__export(checks_exports44, {
   REVIEW_COPY_CHECKS: () => REVIEW_COPY_CHECKS
 });
 var at19 = (fn, region) => `src/review/index.mjs ${fn} > ${region}`;
@@ -113945,8 +113949,8 @@ var REVIEW_COPY_CHECKS = Object.freeze({
 });
 
 // src/standards/checks.mjs
-var checks_exports44 = {};
-__export(checks_exports44, {
+var checks_exports45 = {};
+__export(checks_exports45, {
   STANDARDS_CHECKS: () => STANDARDS_CHECKS,
   refusal: () => refusal16
 });
@@ -114059,8 +114063,8 @@ function refusal16(code, detail, extra) {
 }
 
 // src/conformance/checks.mjs
-var checks_exports45 = {};
-__export(checks_exports45, {
+var checks_exports46 = {};
+__export(checks_exports46, {
   CONFORMANCE_CHECKS: () => CONFORMANCE_CHECKS,
   refusal: () => refusal17
 });
@@ -114198,8 +114202,8 @@ function refusal17(code, detail, extra = {}) {
 }
 
 // src/consequences/checks.mjs
-var checks_exports46 = {};
-__export(checks_exports46, {
+var checks_exports47 = {};
+__export(checks_exports47, {
   CONSEQUENCES_CHECKS: () => CONSEQUENCES_CHECKS
 });
 var at22 = (fn) => `src/consequences/index.mjs ${fn}`;
@@ -114227,8 +114231,8 @@ var CONSEQUENCES_CHECKS = Object.freeze({
 });
 
 // src/action-clocks/checks.mjs
-var checks_exports47 = {};
-__export(checks_exports47, {
+var checks_exports48 = {};
+__export(checks_exports48, {
   ACTION_CLOCK_CHECKS: () => ACTION_CLOCK_CHECKS
 });
 var ACTION_CLOCK_CHECKS = {
@@ -114259,8 +114263,8 @@ var ACTION_CLOCK_CHECKS = {
 };
 
 // src/filings/checks.mjs
-var checks_exports48 = {};
-__export(checks_exports48, {
+var checks_exports49 = {};
+__export(checks_exports49, {
   FILINGS_CHECKS: () => FILINGS_CHECKS,
   rowOf: () => rowOf12
 });
@@ -114446,8 +114450,8 @@ function rowOf12(code) {
 }
 
 // src/escalation/checks.mjs
-var checks_exports49 = {};
-__export(checks_exports49, {
+var checks_exports50 = {};
+__export(checks_exports50, {
   ESCALATION_CHECKS: () => ESCALATION_CHECKS,
   refusal: () => refusal18
 });
@@ -114675,8 +114679,8 @@ function refusal18(code, detail, extra) {
 }
 
 // src/action-plans/checks.mjs
-var checks_exports50 = {};
-__export(checks_exports50, {
+var checks_exports51 = {};
+__export(checks_exports51, {
   ACTION_PLAN_CHECKS: () => ACTION_PLAN_CHECKS,
   refusal: () => refusal19
 });
@@ -114983,8 +114987,8 @@ function refusal19(code, detail, extra) {
 }
 
 // src/monitoring/checks.mjs
-var checks_exports51 = {};
-__export(checks_exports51, {
+var checks_exports52 = {};
+__export(checks_exports52, {
   CADENCE_ENUM: () => CADENCE_ENUM,
   CRITICALITY_ENUM: () => CRITICALITY_ENUM,
   DRIVE_TICK_CHECKS: () => DRIVE_TICK_CHECKS,
@@ -115157,8 +115161,8 @@ function checkGatheringGrammar(ctx, findings, sweepArm = null) {
 }
 
 // src/link-sweep/checks.mjs
-var checks_exports52 = {};
-__export(checks_exports52, {
+var checks_exports53 = {};
+__export(checks_exports53, {
   SWEEP_BOUNDS: () => SWEEP_BOUNDS,
   SWEEP_CADENCES: () => SWEEP_CADENCES,
   SWEEP_CHECKS: () => SWEEP_CHECKS,
@@ -115579,8 +115583,8 @@ function sweepGrammar(s, ids) {
 }
 
 // src/tasks/checks.mjs
-var checks_exports53 = {};
-__export(checks_exports53, {
+var checks_exports54 = {};
+__export(checks_exports54, {
   QUEUE_INBOX_CHECKS: () => QUEUE_INBOX_CHECKS,
   QUEUE_MACHINE_CHECKS: () => QUEUE_MACHINE_CHECKS,
   TASK_ACTOR_CHECKS: () => TASK_ACTOR_CHECKS,
@@ -115727,8 +115731,8 @@ function checkInboxGrammar(ctx, findings) {
 }
 
 // src/queue/checks.mjs
-var checks_exports54 = {};
-__export(checks_exports54, {
+var checks_exports55 = {};
+__export(checks_exports55, {
   QUEUE_ACT_CHECKS: () => QUEUE_ACT_CHECKS,
   QUEUE_MINT_CHECKS: () => QUEUE_MINT_CHECKS,
   queueRefusal: () => queueRefusal
@@ -138321,40 +138325,41 @@ var CHECK_FAMILY_FILES = Object.freeze([
   ["src/inquiry-grammar/checks.mjs", checks_exports11],
   ["src/accepted-work/checks.mjs", checks_exports20],
   ["src/inquiry/index.mjs", inquiry_exports],
-  ["src/citation/checks.mjs", checks_exports37],
+  ["src/citation/checks.mjs", checks_exports38],
   ["src/basis-versions/checks.mjs", checks_exports21],
   ["src/strength/checks.mjs", checks_exports23],
   ["src/contradiction/checks.mjs", checks_exports24],
-  ["src/run-rules/checks.mjs", checks_exports39],
-  ["src/run-productions/checks.mjs", checks_exports40],
-  ["src/capture-requests/checks.mjs", checks_exports41],
+  ["src/run-rules/checks.mjs", checks_exports40],
+  ["src/run-productions/checks.mjs", checks_exports41],
+  ["src/capture-requests/checks.mjs", checks_exports42],
   ["src/skilldoctrine.mjs", skilldoctrine_exports],
-  ["src/intent/checks.mjs", checks_exports42],
+  ["src/intent/checks.mjs", checks_exports43],
   ["src/reevaluation/checks.mjs", checks_exports26],
   ["src/publication/checks.mjs", checks_exports27],
+  ["src/docket/checks.mjs", checks_exports28],
   ["src/public-read/checks.mjs", checks_exports29],
   ["src/network-notices/checks.mjs", checks_exports30],
   ["src/ratification/checks.mjs", checks_exports31],
   ["src/case-import/checks.mjs", checks_exports33],
-  ["src/case-authoring/checks.mjs", checks_exports34],
-  ["src/review/checks.mjs", checks_exports43],
-  ["src/local-facts/checks.mjs", checks_exports36],
-  ["src/standards/checks.mjs", checks_exports44],
-  ["src/conformance/checks.mjs", checks_exports45],
-  ["src/consequences/checks.mjs", checks_exports46],
+  ["src/case-disclosures/checks.mjs", checks_exports34],
+  ["src/case-authoring/checks.mjs", checks_exports35],
+  ["src/review/checks.mjs", checks_exports44],
+  ["src/local-facts/checks.mjs", checks_exports37],
+  ["src/standards/checks.mjs", checks_exports45],
+  ["src/conformance/checks.mjs", checks_exports46],
+  ["src/consequences/checks.mjs", checks_exports47],
   ["src/action-grammar/checks.mjs", checks_exports22],
-  ["src/docket/checks.mjs", checks_exports28],
-  ["src/action-clocks/checks.mjs", checks_exports47],
-  ["src/filing-templates/checks.mjs", checks_exports35],
-  ["src/filings/checks.mjs", checks_exports48],
-  ["src/escalation/checks.mjs", checks_exports49],
-  ["src/action-plans/checks.mjs", checks_exports50],
-  ["src/monitoring/checks.mjs", checks_exports51],
-  ["src/link-sweep/checks.mjs", checks_exports52],
-  ["src/tasks/checks.mjs", checks_exports53],
-  ["src/queue/checks.mjs", checks_exports54],
+  ["src/action-clocks/checks.mjs", checks_exports48],
+  ["src/filing-templates/checks.mjs", checks_exports36],
+  ["src/filings/checks.mjs", checks_exports49],
+  ["src/escalation/checks.mjs", checks_exports50],
+  ["src/action-plans/checks.mjs", checks_exports51],
+  ["src/monitoring/checks.mjs", checks_exports52],
+  ["src/link-sweep/checks.mjs", checks_exports53],
+  ["src/tasks/checks.mjs", checks_exports54],
+  ["src/queue/checks.mjs", checks_exports55],
   ["src/setup.mjs", setup_exports],
-  ["src/admission/checks.mjs", checks_exports38],
+  ["src/admission/checks.mjs", checks_exports39],
   ["src/control-plane/checks.mjs", checks_exports7]
 ].map((e) => Object.freeze(e)));
 var translated = (row2) => !!row2 && typeof row2 === "object" && typeof row2.translation === "string" && row2.translation !== "";
@@ -152166,12 +152171,13 @@ var Store = class extends DurableObject {
     strengthOf(ctx, { retrieval, acceptedWork });
     registerCaseCheckerPublicReads(ctx, { publicRead: publicReadOf(ctx) });
     caseImportOf(ctx, { env, checkCaseFile, strength: strengthOf(ctx), acceptedWork, reevaluation: reevaluationOf(ctx) });
+    caseDisclosuresOf(ctx, { attestation });
     biasOf(ctx, { env });
     biasOf(ctx).registerWorkProducts("finding", inquiryFindings(ctx, biasOf(ctx)));
     runProductionsOf(ctx, { aiRuns: aiRunsOf(ctx, env) });
     reviewOf(ctx);
     intentOf(ctx);
-    caseAuthoringOf(ctx, { attestation });
+    caseAuthoringOf(ctx);
     const localFacts = localFactsOf(ctx);
     const conformance = conformanceOf(ctx);
     const consequences = consequencesModule(ctx, { conformance });
