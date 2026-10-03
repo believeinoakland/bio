@@ -1,4 +1,4 @@
-/* acquisition: its own rows (R29) and the one Civicsmith user agent (R24), at the module's interface. The rows are driven by
+/* acquisition: its own rows (R29), the one Civicsmith user agent (R24) and the one first hop's who (R33), at the module's interface. The rows are driven by
    their refusals in acquire.test.mjs (R1, R4, R5, each with its negative control); here the table itself is checked
    whole, and every refusal the act answers with a row is driven once more and matched to the row it names. */
 import { test } from "node:test";
@@ -6,7 +6,8 @@ import assert from "node:assert/strict";
 import { world, run, text, rendererEnv } from "./fixture.mjs";
 import { readFileSync, readdirSync } from "node:fs";
 import { ACQUISITION_CHECKS, CAPTURE_REQUEST_ARM_CHECKS, DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, INSTALLATION_CHECKS, SWEEP_SCOPE_CHECKS, CIVICSMITH_CONTACT_URL,
-         civicsmithUserAgent, CIVICOS_CONTACT_URL, civicosUserAgent, userAgent, evidenceStorageAbsent } from "../../../src/acquisition/index.mjs";
+         civicsmithUserAgent, firstHopWho, userAgent, evidenceStorageAbsent } from "../../../src/acquisition/index.mjs";
+import * as acquisition from "../../../src/acquisition/index.mjs";
 import * as checksTable from "../../../src/acquisition/checks.mjs";
 
 const EXPECTED = {
@@ -104,16 +105,37 @@ test("R24 R9: civicsmithUserAgent is the one spelling of the Civicsmith agent, w
   assert.equal(userAgent({}, "acquire", "   "), civicsmithUserAgent("0.0.0", "unnamed", "acquire"), "an empty delegation is no delegation");
 });
 
-test("R24 (K1365 (6)): civicosUserAgent and CIVICOS_CONTACT_URL are aliases of the same function and the same constant, not copies, from the module and its table", () => {
-  assert.equal(civicosUserAgent, civicsmithUserAgent, "the same function object");
-  assert.equal(CIVICOS_CONTACT_URL, CIVICSMITH_CONTACT_URL, "the same constant");
-  assert.equal(checksTable.civicosUserAgent, civicsmithUserAgent);
-  assert.equal(checksTable.civicsmithUserAgent, civicsmithUserAgent);
-  assert.equal(checksTable.CIVICOS_CONTACT_URL, CIVICSMITH_CONTACT_URL);
-  /* so a user not yet re-pointed sends the one agent, byte for byte */
-  for (const args of [["1.2.3", "inst", "acquire"], [undefined, undefined, "monitor"], ["", "", "group-domain"]])
-    assert.equal(civicosUserAgent(...args), civicsmithUserAgent(...args));
-  assert.match(civicosUserAgent("9.9.9", "inst", "investigate"), /^Civicsmith\/9\.9\.9 /);
+test("R34 (N539): civicosUserAgent and CIVICOS_CONTACT_URL are exported neither by the module nor by its table; the Civicsmith names are the only ones", () => {
+  for (const ns of [acquisition, checksTable]) {
+    assert.equal("civicosUserAgent" in ns, false);
+    assert.equal("CIVICOS_CONTACT_URL" in ns, false);
+    assert.deepEqual(Object.keys(ns).filter((k) => /civicos/i.test(k)), [], "no export carries the old name");
+    /* negative control: the Civicsmith names are there, the one function and the one constant */
+    assert.equal(ns.civicsmithUserAgent, civicsmithUserAgent);
+    assert.equal(ns.CIVICSMITH_CONTACT_URL, CIVICSMITH_CONTACT_URL);
+  }
+});
+
+test("R33 R16 (N541): firstHopWho answers `instance <name> (Civicsmith/<version>)` with R24's defaults; pure, never throws; it is the who acquire's first hop carries", async () => {
+  assert.equal(firstHopWho("inst", "9.9.9"), "instance inst (Civicsmith/9.9.9)");
+  assert.equal(firstHopWho("Oakland Watch", "1.60.0"), "instance Oakland Watch (Civicsmith/1.60.0)", "the name as given");
+  for (const [n, v] of [[undefined, undefined], [null, null], ["", ""], ["  ", " "]])
+    assert.equal(firstHopWho(n, v), "instance unnamed (Civicsmith/0.0.0)", JSON.stringify([n, v]));
+  assert.equal(firstHopWho("inst"), "instance inst (Civicsmith/0.0.0)");
+  assert.equal(firstHopWho(undefined, "2.0.0"), "instance unnamed (Civicsmith/2.0.0)");
+  for (const args of [[], [{}, []], [7, 8], [Symbol("s"), Symbol("v")], [{ toString() { throw new Error("x"); } }, 1]]) {
+    assert.doesNotThrow(() => firstHopWho(...args));
+    assert.match(firstHopWho(...args), /^instance .+ \(Civicsmith\/.+\)$/);
+  }
+  assert.equal(firstHopWho("i", "1"), firstHopWho("i", "1"), "the same inputs, the same bytes");
+  assert.doesNotMatch(firstHopWho("i", "1"), /CivicOS/);
+  assert.equal(checksTable.firstHopWho, firstHopWho, "one function, from the module and its table");
+  /* R16 reads it: the first hop of a capture on a named instance and on a bare one */
+  const env = { INSTANCE_NAME: "grp", VERSION: "3.1.4" };
+  const direct = await run(world({ env }), { "https://a.example/x": text("x") }, { locator: "https://a.example/x" });
+  assert.equal(direct.body.document.provenance_chain[0].who, firstHopWho("grp", "3.1.4"));
+  const bare = await run(world({ env: { INSTANCE_NAME: "", VERSION: "" } }), { "https://a.example/x": text("x") }, { locator: "https://a.example/x" });
+  assert.equal(bare.body.document.provenance_chain[0].who, firstHopWho(undefined, undefined));
 });
 
 test("R29 (C-68.1, K794): acquire with no evidence storage is refused 503 with its row before anything is fetched or filed, whatever the arm; with storage the same act files", async () => {

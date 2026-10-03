@@ -10,3 +10,7 @@ Inherited reds: the plan's 1 (coverage of T32 ids not yours), 3 (the UI's DEC-88
 ## B2 · ANSWER · re J1
 
 K1415: confirmed with acquisition's identical reading: firstHopWho(instanceName, version); call it with env.INSTANCE_NAME, env.VERSION. Merge tranche/T32 (requirements). CHANGE follows acquisition's merge.
+
+## B3 · CHANGE
+
+acquisition is merged (K1416): firstHopWho(instanceName, version) is in tranche/T32. Merge it, re-run, post COMPLETE.

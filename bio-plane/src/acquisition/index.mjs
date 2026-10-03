@@ -13,7 +13,7 @@
  * Every refusal is an answer `{status, body}`, never a throw. The comments carried from the legacy handler keep the
  * reasoning beside the code it explains. */
 import { isPublicHttpsLocator, createSha256, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE } from "../record-grammar/index.mjs";
-import { civicsmithUserAgent, CAPTURE_REQUEST_ARM_CHECKS, DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, INSTALLATION_CHECKS,
+import { civicsmithUserAgent, firstHopWho, CAPTURE_REQUEST_ARM_CHECKS, DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, INSTALLATION_CHECKS,
          SWEEP_SCOPE_CHECKS } from "./checks.mjs";
 import { captureSubresources, normalizeAddress, normalizeCitation } from "../subresources.mjs";
 import { detectFormat } from "../formats.mjs";
@@ -30,9 +30,9 @@ import { governedFetch as hostGovernedFetch, retryAfterMs } from "../host-govern
 import { ARCHIVE_CAPTURE_GRADE } from "../provenance/index.mjs";
 import { attest } from "../attestation/index.mjs";
 
-/* R24, R29: the one user agent (and its pre-rename aliases, K1365 (6)) and this module's rows, for every module that
-   sends or judges them. */
-export { CIVICSMITH_CONTACT_URL, civicsmithUserAgent, CIVICOS_CONTACT_URL, civicosUserAgent, CAPTURE_REQUEST_ARM_CHECKS,
+/* R24, R29, R33: the one user agent, the one first hop's `who`, and this module's rows, for every module that sends,
+   writes or judges them. The pre-rename aliases are gone (R34, N539). */
+export { CIVICSMITH_CONTACT_URL, civicsmithUserAgent, firstHopWho, CAPTURE_REQUEST_ARM_CHECKS,
          DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, INSTALLATION_CHECKS, SWEEP_SCOPE_CHECKS, ACQUISITION_CHECKS } from "./checks.mjs";
 
 
@@ -1082,9 +1082,9 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     /* R16: ordered hops from us back to the origin; a direct fetch is ONE hop, which grades it above an archive-
        sourced capture (grade tracks directness, never technique). A render whose wait timed out is NEVER presented
        as the whole page (D-499), the qualification derived by `completenessReading`, never retyped. `who` names
-       Civicsmith (DEC-124); a document filed before T31 keeps the `who` it was written with: this act rewrites none. */
+       Civicsmith (DEC-124), spelled by R33's `firstHopWho`; a document filed before T31 keeps the `who` it was written with: this act rewrites none. */
     provenance_chain: [{
-      who: `instance ${(cap.env || {}).INSTANCE_NAME || "unnamed"} (Civicsmith/${(cap.env || {}).VERSION || "0.0.0"})`,
+      who: firstHopWho((cap.env || {}).INSTANCE_NAME, (cap.env || {}).VERSION),
       asserts: renderRecorded
         ? `these bytes are the document a ${renderRecorded.engine || "renderer (engine not reported)"} render produced from ${locator} at ${retrieved}; the shell it was rendered from was served for ${locator} and is held beside it (render.of)${completenessReading(renderRecorded) ? `; ${completenessReading(renderRecorded)}, so they are not asserted to be the whole page` : ""}`
         : `these bytes were served for ${locator} at ${retrieved}`,

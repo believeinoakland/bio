@@ -4,7 +4,7 @@
  *
  * Copied from the check catalogue (`bio-plane/checks/bio-checks.mjs`) with the acquisition act (K617, K649 (1)): C-48.1–
  * C-48.7 (the Drive arm, R4), C-83.1–C-83.8 (the render arm, R5), C-28.13 (the capture-request arm, R1), and the user
- * agent with its contact address (R24); and C-68.1 (no evidence storage, K794, K850), below. C-128 (R31, the sweep's
+ * agent with its contact address (R24), beside which sits the first hop's `who` (R33); and C-68.1 (no evidence storage, K794, K850), below. C-128 (R31, the sweep's
  * scope) is this module's own, new at T23. Each row's code, number, translation and reasons are unchanged; its `where` names
  * this module's site (R29), the change stamped by 1.49.0 (T18's rows), C-68.1's by 1.50.0 and 1.51.0, and C-128's arrival by
  * 1.54.0. These are the only copies: T19's layer 1 deleted the catalogue's (legacy-checks, K717, K769). C-48.8 and
@@ -23,10 +23,15 @@ export const CIVICSMITH_CONTACT_URL = 'https://github.com/believeinoakland/bio';
 export function civicsmithUserAgent(version, instance, purpose) {
   return `Civicsmith/${version || '0.0.0'} (+${CIVICSMITH_CONTACT_URL}; instance ${instance || 'unnamed'}; ${purpose})`;
 }
-/* R24 (DEC-124, K1365 (6)): the names from before the rename, kept as aliases of the SAME constant and the SAME function
-   (never copies) until every user has re-pointed; their removal is a later entry. */
-export const CIVICOS_CONTACT_URL = CIVICSMITH_CONTACT_URL;
-export const civicosUserAgent = civicsmithUserAgent;
+/** R33 (N541): THE ONE SPELLING OF A FIRST HOP'S `who`, the instance that fetched (or, for `capture` R65, that held a
+ *  knock's bytes), named with Civicsmith and its version (DEC-124). It sits beside the agent because both are the
+ *  instance naming itself, and a rename that reached one and not the other is the drift R24 exists to end. A missing
+ *  or blank instance is `unnamed` and a missing version `0.0.0`, R24's defaults. Pure; never throws. */
+export function firstHopWho(instanceName, version) {
+  const name = typeof instanceName === 'string' && instanceName.trim() ? instanceName : 'unnamed';
+  const ver = typeof version === 'string' && version.trim() ? version : '0.0.0';
+  return `instance ${name} (Civicsmith/${ver})`;
+}
 
 /* C-28.13 (K58), the capture-request arm's one row. THE DRAIN IS THE SOLE FETCHER. op=acquire's capture-request arm
    admits a row in `draining` and nothing else, and `draining` is set by the drain inside the tick that then fetches. So
