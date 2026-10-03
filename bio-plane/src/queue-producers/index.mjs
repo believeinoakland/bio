@@ -15,7 +15,7 @@
  * `deps` (each defaults to its module's instance on the same `ctx`, reached lazily when first asked):
  *   record, membership, credentials, governor, provenance, capture, captureRequests, basisVersions, progressions, aiRuns, bias,
  *   publication, corpusExport, reevaluation, intent, monitoring, contradiction, actionClocks, escalation, actionPlans,
- *   actions, filingTemplates, localFacts, networkNotices, linkSweep, docket, caseImport   the providers.
+ *   actions, filingTemplates, localFacts, networkNotices, linkSweep, docket, caseImport, wizardScripts   the providers.
  *
  * R7 (queue's homes walk) and R12 (queue's options) stay in queue, one walk and one derivation: `feedItems` takes them
  * as `homesOf(subjectIds)` and `optionsOf(subjectIds)`, closed over the read's viewer and identity by queue, and holds
@@ -106,6 +106,8 @@ export class QueueProducers {
   get #docket() { return this.#dep("docket", () => docketOf(this.#host)); }
   /* N534: a watch's entries are case-import's (its R20). */
   get #caseImport() { return this.#dep("caseImport", () => caseImportOf(this.#host)); }
+  /* N528: a wizard script's breaks and its submissions are wizard-scripts' (its R13, R17). */
+  get #wizardScripts() { return this.#dep("wizardScripts", () => wizardScriptsOf(this.#host)); }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
@@ -245,6 +247,10 @@ export class QueueProducers {
          what a watch saw at the publisher's docket, to the member who set it. */
       items.push(...this.#findingsCitedCaseMoved(viewer, at));
       items.push(...this.#watchItems(me, viewer, at));
+      /* R32, R33 (N528; DEC-121 (1), (5)): a group's wizard script withdrawn or restored, told its owners and author; a
+         version submitted, to each owner who may approve it. */
+      items.push(...this.#findingsWizardBroken(me, viewer, at));
+      items.push(...this.#obligationsWizardApproval(me, viewer, at));
       return {
         items,
         facts: {
@@ -3566,6 +3572,129 @@ export class QueueProducers {
     return `${seq === null ? "An entry with no readable number" : `Entry ${seq}`} of the docket was read and refused: it failed `
       + `${failed.length === 1 ? "the check" : "the checks"} ${failed.join(", ")}. A refused entry is never taken as a new `
       + "edition or a withdrawal, and nothing resting on the case moved. This is told once.";
+  }
+
+  /* ======================================================================
+   * N528 · R32, R33 — WIZARD SCRIPTS (wizard-scripts R7, R13, R17; DEC-121 (1), (5); K1397).
+   * Each reads the one fact its owning module offers, derived on read and writing nothing.
+   * ====================================================================== */
+
+  /** R32: the item kinds of a break and a return (wizard-scripts R13); R33: the act that answers a submission (its R7). */
+  static WIZARD_BREAK_KINDS = Object.freeze({ withdrawn: "wizard-withdrawn", restored: "wizard-restored" });
+  static WIZARD_APPROVE = Object.freeze({ id: "wizardapprove", label: "Read this wizard script and approve it", weight: "single" });
+  static WIZARD_READ = Object.freeze({ id: "wizardread", label: "Read this wizard script", weight: "single" });
+
+  /** `wizard-withdrawn` and `wizard-restored` (R32; wizard-scripts R13; DEC-121 (5): "its owner is told why"): one FINDING
+   *  per entry `wizard-scripts.brokenScripts` answers the viewer, keyed `FINDING::wizard-<kind>::<script>@<version>::<at>`,
+   *  to the script's project owners (membership R65) and its version's author, and to nobody else; a group script's
+   *  owners are the administrators (membership R86; K1397, as wizard-scripts R17's). Its subject the version, naming its
+   *  name and, for a withdrawal, the first refusal by its row's translation. Homed under the script's project (none for a
+   *  group script). Raised once: it leaves when its recipient disposes of it (queue's mint), never by anything here. */
+  #findingsWizardBroken(me, viewer, now) {
+    if (!me) return [];
+    const page = this.#actionPages((after) => {
+      const r = this.#wizardScripts.brokenScripts({ after, viewer });
+      return r && Array.isArray(r.entries) ? { ...r, items: r.entries } : r;
+    });
+    const visible = this.#bundleRedactor(viewer);
+    const owners = new Map();
+    const out = [];
+    for (const x of page.items) {
+      const kind = x ? QueueProducers.WIZARD_BREAK_KINDS[x.kind] : null;
+      if (!kind || typeof x.script !== "string" || !x.script || x.version === undefined || x.version === null
+          || typeof x.at !== "string" || !x.at) continue;
+      const project = typeof x.project === "string" && x.project ? x.project : null;
+      if (project && visible(project) === null) continue;       // R11: a script of a project the viewer may not see
+      const key = project || "";
+      if (!owners.has(key)) owners.set(key, project ? (this.#membership.projectOwners(project) || []) : this.#activeAdmins());
+      const author = typeof x.author === "string" && x.author && !x.author.startsWith(MACHINE_AUTHOR_PREFIX)
+        && !x.author.startsWith(MACHINE_CLASS_PREFIX) ? x.author : null;
+      const recipients = [...new Set([...owners.get(key), ...(author ? [author] : [])])];
+      if (!recipients.includes(me)) continue;
+      const version = `${x.script}@${x.version}`;
+      const withdrawn = kind === "wizard-withdrawn";
+      const refusal = withdrawn && x.refusal && typeof x.refusal === "object" ? x.refusal : null;
+      const words = refusal && typeof refusal.translation === "string" && refusal.translation ? refusal.translation : null;
+      const name = typeof x.name === "string" && x.name ? `"${x.name}"` : version;
+      const atMs = Date.parse(x.at);
+      out.push({
+        id: `FINDING::${kind}::${version}::${x.at}`,
+        class: "FINDING",
+        kind,
+        case: project ? this.#homesAt([project], viewer) : this.#homesOf([]),
+        subject: { kind: "wizard_version", id: version, script: x.script, version: x.version, name: x.name ?? null, project,
+                   ...(withdrawn ? { refusal: refusal ? { code: refusal.code ?? null, check: refusal.check ?? null, translation: words } : null } : {}) },
+        summary: withdrawn
+          ? `the wizard script ${name} no longer matches the screens and is withdrawn until it is fixed`
+          : `the wizard script ${name} matches the screens again and is offered again`,
+        detail: withdrawn
+          ? `It is not offered to members while it fails its checks${words ? `. The first thing it failed: ${words}` : ""}. `
+            + "A new version that passes them, approved as before, returns it. This is told once."
+          : "It passed its checks again when this copy started, and members are offered it as before. This is told once.",
+        basis: { source: "wizard-scripts.brokenScripts", script: x.script, version: x.version, name: x.name ?? null, project,
+                 author, at: x.at, break_kind: x.kind, refusal, recipients_rule: project ? "project_owners_and_author" : "administrators_and_author",
+                 bound: { pages_bound: QueueProducers.QUEUE_ACTION_PAGES, truncated: page.truncated },
+                 detail: "a script's break or return is wizard-scripts' record (its R13), made when its checks are run "
+                       + "again at start, read here and never stored. It goes to the script's project owners (for a group "
+                       + "script, the administrators) and its version's author, once (DEC-69, DEC-70)." },
+        age: Number.isFinite(atMs)
+          ? { state: "determined", since: x.at, ms: Math.max(0, now - atMs) }
+          : { state: "undetermined", reason: "no_break_instant", detail: "the record carries no instant this producer can read" },
+        assignee: null,
+        assignee_role: null,
+        recipients,
+        options: [QueueProducers.WIZARD_READ],
+      });
+    }
+    return out;
+  }
+
+  /** `wizard-approval-requested` (R33; wizard-scripts R7, R17; DEC-121 (1)): one OBLIGATION per (version, owner)
+   *  `wizard-scripts.submittedFor` answers the viewer, keyed `OBLIGATION::wizard-approval-requested::<script>@<version>::<owner>`,
+   *  to that owner and to nobody else, as R20's; its subject the version, naming its name and author, aged from the
+   *  submission, homed under the script's project (none for a group script). It leaves when the version is approved,
+   *  withdrawn or its script retired (the read no longer answers it); raised once (DEC-69, DEC-94). */
+  #obligationsWizardApproval(me, viewer, now) {
+    if (!me) return [];
+    const page = this.#actionPages((after) => {
+      const r = this.#wizardScripts.submittedFor({ after, viewer });
+      return r && Array.isArray(r.entries) ? { ...r, items: r.entries } : r;
+    });
+    const visible = this.#bundleRedactor(viewer);
+    const out = [];
+    for (const x of page.items) {
+      if (!x || typeof x.script !== "string" || !x.script || x.version === undefined || x.version === null
+          || x.owner !== me) continue;
+      const project = typeof x.project === "string" && x.project ? visible(x.project) : null;    // R11
+      const version = `${x.script}@${x.version}`;
+      const name = typeof x.name === "string" && x.name ? `"${x.name}"` : version;
+      const atMs = Date.parse(x.submitted_at ?? "");
+      out.push({
+        id: `OBLIGATION::wizard-approval-requested::${version}::${x.owner}`,
+        class: "OBLIGATION",
+        kind: "wizard-approval-requested",
+        case: project ? this.#homesAt([project], viewer) : this.#homesOf([]),
+        subject: { kind: "wizard_version", id: version, script: x.script, version: x.version, name: x.name ?? null,
+                   author: x.author ?? null, project },
+        summary: `${x.author || "a member"} submitted the wizard script ${name} for your approval`,
+        detail: "A version of this wizard script was submitted, and you may approve it. Read its steps and approve it; "
+              + "this is told once, and it leaves when the version is approved or withdrawn, or the script retired.",
+        basis: { source: "wizard-scripts.submittedFor", script: x.script, version: x.version, name: x.name ?? null,
+                 author: x.author ?? null, owner: x.owner, project, submitted_at: x.submitted_at ?? null,
+                 recipients_rule: "approver",
+                 bound: { pages_bound: QueueProducers.QUEUE_ACTION_PAGES, truncated: page.truncated },
+                 detail: "a submitted version is wizard-scripts' fact (its R7, R17): each owner who may approve it is "
+                       + "listed. It goes to that owner and to nobody else, and is raised once (DEC-69, DEC-94)." },
+        age: Number.isFinite(atMs)
+          ? { state: "determined", since: x.submitted_at, ms: Math.max(0, now - atMs) }
+          : { state: "undetermined", reason: "no_submission_instant", detail: "the submission carries no instant this producer can read" },
+        assignee: null,
+        assignee_role: null,
+        recipients: [me],
+        options: [QueueProducers.WIZARD_APPROVE],
+      });
+    }
+    return out;
   }
 
   static DAY_MS = 86400000;

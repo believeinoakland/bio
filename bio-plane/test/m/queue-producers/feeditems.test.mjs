@@ -50,6 +50,13 @@ function busy(extra = {}) {
       { notice: "RN-1", holder: "INQ-S", target: "INF-1", grade: "affected", raised_at: iso(NOW), state: "open" }] }),
       docketDependents: () => DOCKET_DEPENDENTS, citedCaseDependents: CITED_DEPENDENTS },
     caseImport: { watchItems: WATCH_ITEMS },
+    wizardScripts: {
+      brokenScripts: () => ({ ok: true, cursor: null, truncated: false, entries: [
+        { script: "WIZ-1", version: 1, kind: "withdrawn", at: iso(NOW - 6), name: "File", project: "PRJ-A", author: "alice",
+          refusal: { code: "WIZARD_SCREEN_UNKNOWN", check: "C-131.4", translation: "A step names a screen this copy no longer has." } },
+        { script: "WIZ-1", version: 1, kind: "restored", at: iso(NOW - 5), name: "File", project: "PRJ-A", author: "alice", refusal: null }] }),
+      submittedFor: () => ({ ok: true, cursor: null, truncated: false, entries: [
+        { script: "WIZ-2", version: 1, owner: "alice", name: "Comment", author: "bob", submitted_at: iso(NOW - 4), project: "PRJ-A" }] }) },
     intent: { gaps: ({ project }) => ({ ok: true, gaps: project === "PRJ-A"
       ? [{ key: "intent::PRJ-A::p::E", basis: { project, stages_missing: ["s"], says: "ask" } }] : [] }) },
     monitoring: {
@@ -112,7 +119,8 @@ test("R8: every producer's items, homed through homesOf and offered optionsOf; n
                    "plan-checkpoint-due", "escalation-stage-proposed", "action-reminder", "litigation-hold",
                    "template-review-requested", "local-fact-due", "litigation-hold-released", "docket-core-due",
                    "edition-withdrawn", "edition-contested", "cited-newer-edition", "cited-edition-withdrawn",
-                   "followed-case-entry", "cited-docket-entry-refused", "cited-docket-unreadable"])
+                   "followed-case-entry", "cited-docket-entry-refused", "cited-docket-unreadable",
+                   "wizard-withdrawn", "wizard-restored", "wizard-approval-requested"])
     assert.ok(kinds.has(k), k);
   for (const it of r.items) {
     assert.ok(!("disposition" in it), `${it.id}: the mint's`);
@@ -323,9 +331,9 @@ test("R24 (DEC-107; H15, H19): no member-facing sentence of any item kind says '
                    "render-deferred", "plan-checkpoint-due", "objective-gap", "template-review-requested", "local-fact-due",
                    "attribution-unchosen", "litigation-hold-released", "docket-core-due", "edition-withdrawn", "edition-contested",
                    "cited-newer-edition", "cited-edition-withdrawn", "followed-case-entry", "cited-docket-entry-refused",
-                   "cited-docket-unreadable"])
+                   "cited-docket-unreadable", "wizard-withdrawn", "wizard-restored", "wizard-approval-requested"])
     assert.ok(kinds.has(k), `the world produces ${k}`);
-  assert.ok(kinds.size >= 41, `every kind this module produces (${[...kinds].sort().join(", ")})`);
+  assert.ok(kinds.size >= 44, `every kind this module produces (${[...kinds].sort().join(", ")})`);
   for (const it of r.items) {
     for (const [key, s] of memberWords(it))
       assert.doesNotMatch(s, /\b(obligation|condition)s?\b/i, `${it.id} ${key}: "${s}"`);
@@ -352,7 +360,7 @@ test("R28 (DEC-114): no member-facing sentence of any item kind calls what an ac
   const r = everyKind().read("alice");
   const m = byId(r);
   assert.ok(m["OBLIGATION::plan-checkpoint-due::PLN-1::1::p"], "the world produces the action plan's item");
-  assert.ok(new Set(r.items.map((i) => i.kind)).size >= 41, "every kind this module produces");
+  assert.ok(new Set(r.items.map((i) => i.kind)).size >= 44, "every kind this module produces");
   for (const it of r.items) {
     /* R28's words: the summary, the detail and the words of the options; and every other sentence under the item */
     const words = [["summary", it.summary], ["detail", it.detail],

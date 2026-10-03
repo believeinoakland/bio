@@ -138,6 +138,8 @@ export function defaultFakes() {
                     docketDependents: () => ({ ok: true, entries: [], count: 0, limit: 200, truncated: false, cursor: null }),
                     citedCaseDependents: () => ({ ok: true, entries: [], count: 0, limit: 200, truncated: false, cursor: null, wrote: false }) },
     caseImport: { watchItems: () => ({ entries: [], refused: [], unreadable: [] }) },
+    wizardScripts: { brokenScripts: () => ({ ok: true, entries: [], cursor: null, truncated: false }),
+                     submittedFor: () => ({ ok: true, entries: [], cursor: null, truncated: false }) },
     intent: { gaps: () => ({ ok: true, gaps: [] }) },
     monitoring: { monitoring: () => ({ ok: true, items: [], truncated: false }),
                   flagged: () => ({ ok: true, items: [], limit: 200, truncated: false }),
