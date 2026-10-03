@@ -22,6 +22,7 @@ T31's rules hold. Merge order within a layer is `modules.json` order. N545 was c
 3. The UI's DEC-88 tests (Bob's).
 4. wizard-scripts R5's label test, until record-grammar's N543 merges (L1).
 5. membership's R83 test (`module-order.test.mjs`), until N544 merges (L2).
+6. control-plane's R42 rank test (`promotion-step.test.mjs`:32), until plane's and control-plane's L11 merges (K1416).
 
 ## Roster (by layer)
 
@@ -30,7 +31,7 @@ T31's rules hold. Merge order within a layer is `modules.json` order. N545 was c
 **L3** · acquisition: N541 (provides the `who` spelling; merges first in L3), N539 (no module outside acquisition names the aliases; `newgroup/src/release.mjs` only embeds the released bundle's source, rebuilt at the next signed release); capture: N541 (reads it).
 **L4** · reading-pipeline: N542 (with the `uses` edge reading-pipeline → acquisition).
 **L8** · case-import: N546 (R20's `seen_at`).
-**L11** · queue-producers: N546 (R35 ages from `seen_at`; merges first in L11); queue: N547.
+**L11** · queue-producers: N546 (R35 ages from `seen_at`; merges first in L11); queue: N547; control-plane: R42's rank test names the step's next module as the first layer-11 module, not `affordances` (K1416); plane: `STEP_ORDER` (`store.mjs`) puts the step before the first layer-11 module, now `wizard-scripts` (K1416); merges last, after control-plane.
 
 ## Entries
 
@@ -41,6 +42,7 @@ T31's rules hold. Merge order within a layer is `modules.json` order. N545 was c
 - N539 · **acquisition**: remove the `civicosUserAgent` and `CIVICOS_CONTACT_URL` aliases (K1365 (6)).
 - N542 · **reading-pipeline**: `tier-pagewise.probe.mjs` composes its `--census` user agent with `acquisition.civicsmithUserAgent`; `modules.json` gains the edge reading-pipeline → acquisition (K1376).
 - N546 · **case-import**: each `watchItems` entry names the instant this copy read it, so queue-producers R35's findings age from it (K1397); queue-producers reads it (P10: a provided service changed, its user in a later layer).
+- N548 · **plane, control-plane**: the promotion step's rank (control-plane R42: after every layer 1–10 module, before every later one) holds now that `MODULE_ORDER` carries `wizard-scripts` before `affordances` (N544): plane's `STEP_ORDER` places the step before the first layer-11 module instead of before `affordances`; control-plane's R42 test expects that module after the step (ACQUISITION #9 J2; K1416). P10: membership's provided list changed in L2, so its users in L11 pick it up in this tranche.
 - N547 · **queue**: R50 names `reevaluationrecord` as the act of `cited-newer-edition` and `cited-edition-withdrawn`, as for `edition-withdrawn` (QUEUE #16 J2).
 
 Out: N540 (a live acquisition after the first deploy carrying the Civicsmith user agent): a deployment. N538 (4): Bob's domains.
