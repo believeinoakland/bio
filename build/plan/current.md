@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #107 · session_01Fibz26JrnCgkNYHwprt7tt · depth 1
 
-**Jobs** · promotion: PROMOTION #30 session_011zouuDt37KpxHQBHzQxiy3; publication: PUBLICATION #18 session_01Ez4jm4BPM9Hw57fyKwKCSW
+**Jobs** · promotion: PROMOTION #30 session_011zouuDt37KpxHQBHzQxiy3; publication: PUBLICATION #18 session_01Ez4jm4BPM9Hw57fyKwKCSW; case-disclosures: CASE-DISCLOSURES #2 session_01U6qsAeYBHqtfyBmpcudgfN
 
 **Opened** 2026-10-03 ~04:55 UTC by BOB #107 from `main` @ 92e387269b (T29 closed, K1356), from T29's `next.md` (K1357). **Bob's weekly meter** · 72% after T26 (K1250); asked at T29's close.
 
