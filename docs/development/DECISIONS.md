@@ -1984,3 +1984,31 @@ response: **Bob, 2026-10-03: "Agreed with all"** (G1 A, G2 yes, G3 yes, as recom
 decided: 2026-10-03 · Bob
 reasoning recorded in: this entry; the design-principles page (8.6, 8.8, 9.6); BIO_Interaction_Constructs_v0_1.md §L (RULED 2026-10-03).
 owed: the phone's act set (reversible and reasoned only, for now) and its "finish on a larger screen" handoff; light and dark themes with contrast checked in both; the interface's typefaces, icons and scripts bundled in the release, the old interface's Google Fonts load removed, and no outside requests from member screens or the public case.
+
+### DEC-123 · answered
+raised: 2026-10-03 · the UX design session with Bob on his primary account (session_01TNeXM2Qvi7zMXT6BntbENE; the development process runs on his secondary account) (the design phase's step 1: the design principles)
+for: bob
+question: Whether the design-principles page, every UX principle Bob has ruled stated once in plain words, with his comments of 2–3 October folded in and gaps G1–G5 ruled (DEC-120, DEC-122), is the yardstick every screen of the redesign is checked against.
+why it is Bob's: UX (P17).
+provisional: the principles' sources: Bob's UX principles and refinements of 2026-07-28 (UI-KICKOFF), the interface brief's standing constraints, DEC-24 to DEC-122, K1.
+alternative: none offered; the page invited edits to any principle.
+recommendation: approve.
+reversal cost: low (each principle remains individually amendable by a later ruling).
+response: **Bob, 2026-10-03: "principals accepted"** (principles accepted). `docs/development/ux-substrate/design-principles.html` (57 principles in nine families, with Bob's five comments folded in: professional members, zooming out, imported work, confirmed versus unconfirmed findings, "wizard") is APPROVED as the design phase's yardstick: every screen and wizard script in steps 2 to 5 is checked against it before it comes to Bob.
+decided: 2026-10-03 · Bob
+reasoning recorded in: this entry; the page itself (status line: APPROVED 2026-10-03); BIO_Interaction_Constructs_v0_1.md (pointer under §L).
+owed: none to the build directly (each principle's own ruling carries its owed work); the design session checks every step 2–5 deliverable against the page.
+
+### DEC-124 · answered
+raised: 2026-10-03 · the UX design session with Bob on his primary account (session_01JZtUsAKpStQoiwF6rzqsyJ; the development process runs on his secondary account) (Bob's direction at the session's takeover: the name CivicOS must change, because several other projects, in related and unrelated fields, already use it)
+for: bob
+question: The product's new name, replacing CivicOS in every text people read.
+why it is Bob's: brand and member-facing vocabulary (UX, P17): the name is how members, readers, journalists and officials know the tool.
+provisional: CivicOS (K1: outward text names CivicOS and the group; DEC-118: "Made with CivicOS").
+alternative: first round: Plumb (recommended, then withdrawn on finding at least five software products of that name), Assay, Steadfact, Standing, Heedwork, Stet; second round, under Bob's test of how someone who hears the name finds the tool: Heedwork, Factstand, Casesmith, Heedfast, Casestead; Bob's own suggestions Civicworks, Civicwatch, Civicfacts, Civication, Civicize and Civiceyes, each already in use nearby or flawed. About 150 names screened for free addresses, 27 searched for every existing use.
+recommendation: Civicsmith (Bob's suggestion): the only candidate passing all four finding steps (one spelling from hearing; nothing else uses it, so search results can be the project's; civicsmith.com, .org, .app and .net free; no software of that name), with Heedwork as runner-up.
+reversal cost: low now (text only); rising once the addresses, signed records and published cases carry it.
+response: **Bob, 2026-10-03: "Yes, smith implies expert. Not as welcoming for newcomers, but definitely pointing at the destination we're offering - expert civic accountability tools. So you're right, we have to make sure that the "path to success" is wide enough and inclusive enough for all audiences." Then: "Civicsmith it is. I'll get the domains. You coordinate with BOB to start the process of converting from CivicOS".** The product is named **Civicsmith**: one word with only its first letter capital (never "CivicSmith", "Civic Smith" or "the Civicsmith"); "civicsmith" in lower case only in addresses and identifiers. Every text people read says Civicsmith where it said CivicOS: "Made with Civicsmith", "your group's copy of Civicsmith". It is software, never a publisher, a person or a firm. The name names the destination, skilled civic accountability work; the journeys make the path to it wide and inclusive for every audience. Records already signed keep their old labels. Bob registers the addresses (civicsmith.org, .com, .app, .net). BIO and Believe in Oakland are unchanged.
+decided: 2026-10-03 · Bob
+reasoning recorded in: this entry; docs/development/ux-substrate/new-name.html (both rounds, the four finding steps, every name set aside and why, the brand check by audience); BIO_Publication_v0_1.md §7 (RULED passage).
+owed: (design session, done with this entry) the text rename in the canon documents and the design-phase pages; brand and voice revised for the name; (design session, later) the journeys (step 3) keep the path wide for newcomers. (BOB, by HANDOFF U36) member- and public-facing strings in requirements and code (K1's wording, installer R22, signatures R32, the "Made with" credit); the code identifiers (`civicos-ui`, `civicosUserAgent`, the workers.dev address, the `civicos-process` repository name, the type labels written into new signed records such as `civicos-working-on-attestation`), records already signed keeping their labels and still verifying; CLAUDE.md and the process documents; the move to civicsmith.org once Bob holds it.

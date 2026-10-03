@@ -1,4 +1,4 @@
-# BIO / CivicOS — the system design
+# BIO / Civicsmith — the system design
 
 **Status** · v0.1 DRAFT, written 2026-09-14 by session BOB #10 at Bob's direction, awaiting Bob's review. This is the level-0 document the design corpus standard (`CORPUS-STANDARD.md` §2) requires: the whole system, broadly and completely, at one altitude — its purpose, the path it serves, every major construct with its importance, relationships and home document, and the runtime shape — so a reader can place any construct before opening its document. It was written from the record at `origin/main` `c2ba7a2` and the documents it points at, and rules and designs nothing of its own. Completeness: §3's construct inventory is believed complete at this altitude, and its STATE column is rendered (Incomplete sections, §3); §5 points at `MILESTONES.md`, the authority for what is open. Caveat: several level-1 documents this map points at were written against the retired runtime and say so in their own front matter — read their Status before their body. **BOB RULED §3 THE SINGLE AUTHORITY ON DESIGN STATUS on 2026-09-17 and asked for second sources of truth to be found; `tools/corpuscheck.mjs`'s `--authority` arm (M0-57) refuses a governed document that lists a construct as still to be designed when a home document this map names has designed it.** Its narrow reach is stated in the tool's header; M0-58 is the sweep. as of 2026-09-25 (§3 state rendered from construct-status.json).
 
@@ -24,7 +24,7 @@
 
 ## 1. Purpose — the path, and the stance
 
-**CivicOS exists to answer questions, make a case, tell a story, and take action to affect
+**Civicsmith exists to answer questions, make a case, tell a story, and take action to affect
 a living civic system** (Bob, 2026-08-01, `CLAUDE.md`). Everything in this system is
 substrate for one thing: supporting a member through the winding path of *questioning,
 exploring, discovering, documenting, and impacting* the civic system they live in. A

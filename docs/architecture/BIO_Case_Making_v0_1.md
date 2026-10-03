@@ -91,13 +91,13 @@ Nothing here is settled unless it says so.
 
 ## The frame, in Bob's words
 
-**The purpose.** CivicOS is about telling a story — equivalently, making a case. The
+**The purpose.** Civicsmith is about telling a story — equivalently, making a case. The
 substrate collects the record, extracts meaning rigorously, understands the
 legal/regulatory/policy framework, makes connections, and figures out how
 {information, money, responsibility, relationships, decisions, power} is SUPPOSED to
 flow, how it ACTUALLY flows, and where the system works and where it does not. A
 meta-level above all of that: **answer questions, make a case, tell a story, and take
-action to affect this living civic system.** Nothing about how CivicOS works is more
+action to affect this living civic system.** Nothing about how Civicsmith works is more
 important than supporting users along that path.
 
 **The path.** Questioning → exploring → discovering (understanding) → documenting →

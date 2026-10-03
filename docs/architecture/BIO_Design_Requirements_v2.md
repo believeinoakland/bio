@@ -175,7 +175,7 @@ protection system exploits.
 
 ### 8. Evidence is separated from legal strategy. Available actions are classified by risk.
 
-**Amended by Bob, 2026-09-26** (`build/layers.md`, layer 9): for Tier 3, CivicOS prepares a **counsel packet** for counsel the group names (the facts with their citations, a chronology, exhibits with provenance, the standards' text, candidate legal theories and remedies, and any deadline that binds a claim), marked as prepared for counsel's review, never published, and never in a form that can be filed as it stands. Counsel drafts and files. Tier 3 filing templates remain excluded from evidence packages.
+**Amended by Bob, 2026-09-26** (`build/layers.md`, layer 9): for Tier 3, Civicsmith prepares a **counsel packet** for counsel the group names (the facts with their citations, a chronology, exhibits with provenance, the standards' text, candidate legal theories and remedies, and any deadline that binds a claim), marked as prepared for counsel's review, never published, and never in a form that can be filed as it stands. Counsel drafts and files. Tier 3 filing templates remain excluded from evidence packages.
 
 Evidence packages contain all factual findings, source documents, and
 analysis. These are fully public and available to all. This includes

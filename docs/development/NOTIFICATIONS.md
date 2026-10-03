@@ -52,7 +52,7 @@ this catalogue closes the ad-hoc-event-strings half of D-68.
 ## What the three classes actually ARE — Bob, 2026-08-01
 
 The classes were derived here as a notification taxonomy. Bob's response reframes them
-as three **domains of the CivicOS workflow**, of which notifications are only one entry
+as three **domains of the Civicsmith workflow**, of which notifications are only one entry
 point. Recorded before the taxonomy below, because it changes what the taxonomy is FOR.
 
 **FINDING is the substrate of case-making.** *"The system is about developing grounded,

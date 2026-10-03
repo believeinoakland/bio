@@ -530,7 +530,7 @@ included with advisory notes.
 **Tier 3 --- Do not file without counsel.** Prop 218 challenges, CCP
 526a taxpayer actions, consent decree motions. Evidence published;
 filing templates NOT included. Contact information for legal
-organizations provided. For counsel the group names, CivicOS prepares
+organizations provided. For counsel the group names, Civicsmith prepares
 a counsel packet (the facts with their citations, a chronology, exhibits
 with provenance, the standards' text, candidate legal theories and
 remedies, and any deadline that binds a claim), marked as prepared for
@@ -711,7 +711,7 @@ disclosed, never blocked. A public list of acceptances and flags follows when a 
 read-only project. The system confirms each finding by recreating it from the case file (Recreated, Recreated in part, or Did
 not recreate, each naming what is missing or differs) and shows it against the importing group's own bar. Recreating is not
 endorsing. Acceptance is offered only on findings recreated, or recreated in part with the gaps stated. Anybody can recreate a
-case without CivicOS from its complete edition and case file (`BIO_Publication_v0_1.md` §5C).
+case without Civicsmith from its complete edition and case file (`BIO_Publication_v0_1.md` §5C).
 
 ## Inter-group awareness
 

@@ -1,0 +1,229 @@
+<title>Civicsmith Brand and Voice</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=Source+Code+Pro:wght@400;500&display=swap">
+<style>
+/* Layout: the same reading document as the principles page; five sections (who speaks, names, voice, tone by moment, words), then the questions to rule. */
+:root {
+  --bg:#EDEFE8; --sheet:#FBFBF8; --ink:#16232E; --soft:#38474F; --muted:#5C6B66;
+  --rule:#C6CBBF; --accent:#2F6F62; --accent-tint:#E3EEE9; --signal:#8E3416; --signal-tint:#F8EFE9;
+  --f-rec:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --f-ui:"Source Sans 3",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-fact:"Source Code Pro",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg:#11181D; --sheet:#182128; --ink:#E4E9E3; --soft:#C2CBC5; --muted:#8F9C96;
+  --rule:#2E3A41; --accent:#74B9A7; --accent-tint:#1C2E2A; --signal:#E3936E; --signal-tint:#33231C; color-scheme:dark } }
+:root[data-theme="dark"] {
+  --bg:#11181D; --sheet:#182128; --ink:#E4E9E3; --soft:#C2CBC5; --muted:#8F9C96;
+  --rule:#2E3A41; --accent:#74B9A7; --accent-tint:#1C2E2A; --signal:#E3936E; --signal-tint:#33231C; color-scheme:dark }
+body { background:var(--bg); color:var(--ink); font:16px/1.6 var(--f-ui) }
+.wrap { max-width:960px; margin:0 auto; padding-inline:20px; padding-block:32px 72px }
+h1,h2,h3 { font-family:var(--f-rec); font-weight:600; text-wrap:balance; line-height:1.2; margin:0 }
+h1 { font-size:clamp(30px,5vw,42px); letter-spacing:-0.012em }
+h2 { font-size:25px; margin-top:52px; padding-top:14px; border-top:2px solid var(--ink) }
+p { margin:0; max-width:68ch }
+.eyebrow { font:500 12px var(--f-fact); letter-spacing:.08em; text-transform:uppercase; color:var(--accent) }
+.lede { font-size:18px; color:var(--soft); margin-top:10px }
+.meta { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr)); gap:12px; margin-top:22px }
+.meta div { background:var(--sheet); border:1px solid var(--rule); padding:12px 14px }
+.meta b { display:block; font-family:var(--f-rec); font-size:17px; margin-bottom:2px }
+.bar { position:sticky; top:env(safe-area-inset-top,0px); z-index:5; background:var(--bg); border-bottom:1px solid var(--rule); padding-block:10px; margin-top:26px; display:flex; flex-wrap:wrap; gap:6px 16px; align-items:center; font-size:14px; font-weight:600 }
+.bar a { color:var(--accent); text-decoration:none } .bar a:hover,.bar a:focus-visible { text-decoration:underline }
+.bar label { margin-left:auto; font-weight:400; color:var(--muted); display:flex; gap:6px; align-items:center; cursor:pointer }
+.fam-intro { color:var(--soft); margin-top:6px }
+ol.pr { list-style:none; padding:0; margin:18px 0 0; display:grid; gap:10px; counter-reset:p }
+ol.pr > li { background:var(--sheet); border:1px solid var(--rule); padding:14px 16px; display:grid; grid-template-columns:auto 1fr; gap:2px 12px; counter-increment:p }
+ol.pr > li::before { content:attr(data-n); grid-row:1 / span 3; font:500 13px var(--f-fact); color:var(--accent); padding-top:3px; font-variant-numeric:tabular-nums }
+.name { font-family:var(--f-rec); font-weight:600; font-size:18px; line-height:1.3 }
+.say { color:var(--ink) }
+.eg { color:var(--muted); font-size:15px } .eg::before { content:"In practice: "; font-weight:600; color:var(--soft) }
+q { quotes:"\201C" "\201D" }
+.src { font:12.5px/1.45 var(--f-fact); color:var(--muted); grid-column:2; margin-top:4px }
+body:not(.show-src) .src { display:none }
+.gap { background:var(--sheet); border:1px solid var(--rule); border-left:4px solid var(--signal); padding:16px 18px; margin-top:16px; display:grid; gap:10px }
+.gap h3 { font-size:20px }
+.opts { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr)); gap:10px }
+.opt { border:1px solid var(--rule); padding:10px 12px; background:var(--bg) } .opt b { display:block; font-family:var(--f-rec) }
+.rec { background:var(--accent-tint); padding:10px 12px; max-width:none }
+.answer { font:14px var(--f-fact); color:var(--soft) }
+ul.say-list { margin:6px 0 0; padding-left:20px; display:grid; gap:4px }
+.foot { margin-top:48px; padding-top:14px; border-top:1px solid var(--rule); color:var(--muted); font-size:14px }
+a:focus-visible, input:focus-visible { outline:2px solid var(--accent); outline-offset:2px }
+@media (max-width:560px) { .bar label { margin-left:0 } ol.pr > li { grid-template-columns:1fr } ol.pr > li::before { grid-row:auto } .src { grid-column:1 } }
+</style>
+<style>
+table.tone { width:100%; border-collapse:collapse; font-size:15px; margin-top:14px; background:var(--sheet) }
+table.tone th, table.tone td { text-align:left; vertical-align:top; padding:9px 10px; border-bottom:1px solid var(--rule) }
+table.tone thead th { font:500 12px var(--f-fact); letter-spacing:.06em; text-transform:uppercase; color:var(--muted) }
+table.tone td:first-child { font-weight:600; width:22% }
+.tw { overflow-x:auto; margin-top:8px }
+.ex { font-family:var(--f-rec); color:var(--ink) } .ex::before { content:"\201C" } .ex::after { content:"\201D" }
+.no { color:var(--signal); text-decoration:line-through; text-decoration-thickness:1px }
+.words { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr)); gap:12px; margin-top:14px }
+.words div { background:var(--sheet); border:1px solid var(--rule); padding:12px 14px; min-width:0 }
+.words h3 { font-size:17px; margin-bottom:6px }
+.words ul { margin:0; padding-left:18px; display:grid; gap:4px }
+.mast { background:var(--sheet); border:1px solid var(--rule); margin-top:14px }
+.mast .top { padding:14px 16px; border-bottom:1px solid var(--rule); display:flex; flex-wrap:wrap; gap:4px 12px; align-items:baseline }
+.mast .grp { font-family:var(--f-rec); font-weight:600; font-size:21px }
+.mast .crumb { color:var(--soft) }
+.mast .body { padding:14px 16px; color:var(--muted); font-size:15px }
+.mast .foot2 { padding:8px 16px; border-top:1px solid var(--rule); font:12px var(--f-fact); color:var(--muted); display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px }
+.wm { font-family:var(--f-ui); font-weight:600; letter-spacing:-0.01em } .wm span { color:var(--accent) }
+</style>
+<div class="wrap">
+<header>
+<p class="eyebrow">Design phase · step 2 of 5 · draft for Bob, 3 October 2026 · revised for the name Civicsmith (DEC-124)</p>
+<h1>Civicsmith brand and voice</h1>
+<p class="lede">Who speaks on each screen, how the names are written, and how Civicsmith sounds, drawn from your values and principles and your ruling that the group leads. Four questions at the end are yours to rule; everything else is proposed for your approval or edits.</p>
+<div class="meta">
+<div><b>What it builds on</b>The four values and eight operational principles, especially "Show your work. Always." and "output must be disciplined, but humans can be human"; your ruling that the group leads (2 October); the approved design principles.</div>
+<div><b>What it does not cover</b>Colour, type and the look of the marks: that is step 4. Believe in Cities' own identity belongs to the network site.</div>
+<div><b>How to answer</b>Comment on any line, or reply "Brand and voice: approved", with your answers to V1–V4, for example "V1: A, V2: yes, V3: yes, V4: as recommended".</div>
+</div>
+</header>
+<nav class="bar" aria-label="Sections">
+<a href="#who">Who speaks</a><a href="#names">Names</a><a href="#voice">Voice</a><a href="#tone">Tone by moment</a><a href="#words">Words</a><a href="#qs">Questions</a>
+<label for="srcToggle"><input type="checkbox" id="srcToggle"> Show sources</label>
+</nav>
+
+<section id="who">
+<h2>1. Who speaks</h2>
+<p class="fam-intro">Three names appear in front of people, and two voices. Keeping them apart is what lets a reader trust what they are reading.</p>
+<ol class="pr">
+<li data-n="1.1"><span class="name">The group leads</span><span class="say">Everything public is the group's: it publishes, it signs, it is accountable. Its name heads every public page and every member's workspace.</span><span class="eg">The example below: the group's name heads the page, and Civicsmith is a small credit at its foot.</span><span class="src">DEC-118</span></li>
+<li data-n="1.2"><span class="name">Civicsmith is the tool, credited quietly</span><span class="say">Civicsmith appears as a small credit, never as the publisher, and never speaks for the group.</span><span class="eg">"Made with Civicsmith" at the foot of the public page, in the complete edition and in the case file.</span><span class="src">DEC-118; K1</span></li>
+<li data-n="1.3"><span class="name">Believe in Cities is the network</span><span class="say">The network has its own sites. Inside Civicsmith it appears only as links to its directory and forum, and in the "working on" notices sent there.</span><span class="eg">"Find related work in the network directory ↗".</span><span class="src">DEC-111; DEC-118</span></li>
+<li data-n="1.4"><span class="name">Two voices</span><span class="say">The group's voice is the words the group writes: its cases, findings, notices and docket entries, in its own "we". Civicsmith's voice is the interface's words: labels, explanations, refusals and the assistant. Civicsmith never says "we" on the group's behalf, and the group's words are never rewritten by Civicsmith.</span><span class="eg">A finding reads "We found that…" because a member wrote it; the line above it, "Relied on · meets this project's bar", is Civicsmith's.</span><span class="src">Principle 1.6; Roadmap §4–§5 (values in "our" voice, principles in "we" voice)</span></li>
+</ol>
+<div class="mast" aria-label="Example of a published case's header and foot">
+<div class="top"><span class="grp">Lakeshore Tenants</span><span class="crumb">The Coliseum lease · Edition 2 · published 14 November 2026</span></div>
+<div class="body">Each finding, the lens, what was searched, the docket…</div>
+<div class="foot2"><span>lakeshore-tenants · signed by an owner of the project · fingerprint 7c1e…a90b</span><span>Made with <span class="wm">Civicsmith</span></span></div>
+</div>
+</section>
+
+<section id="names">
+<h2>2. How the names are written</h2>
+<ol class="pr">
+<li data-n="2.1"><span class="name">Civicsmith</span><span class="say">One word, only its first letter capital. Never "CivicSmith", "Civic Smith", "CIVICSMITH" or "the Civicsmith". In lower case only in addresses and identifiers (civicsmith.org). It is software, never an organisation, a firm or a person: "made with Civicsmith", never "Civicsmith says" or "Civicsmith found".</span><span class="eg">"Your group's copy of Civicsmith". The credit "Made with Civicsmith" links to a short page saying Civicsmith is free software for civic groups, so no reader takes it for a firm or a co-author.</span><span class="src">DEC-124; K1; DEC-118</span></li>
+<li data-n="2.2"><span class="name">Your group's copy</span><span class="say">What the code calls an instance is, for members, "your group's copy of Civicsmith", or just "your group's copy". Never "instance", "plane" or "server".</span><span class="eg">"Who controls this copy" (the administrators' card).</span><span class="src">DEC-109; principle 2.4</span></li>
+<li data-n="2.3"><span class="name">The group's two names</span><span class="say">The group's display name leads wherever people read; its short name (the slug) appears where an address or a signature is shown. A group that wants to stay unnamed chooses an unrevealing short name at install.</span><span class="eg">"Lakeshore Tenants" in the header; "lakeshore-tenants" beside the signature and in the address.</span><span class="src">Publication §7 (public identity)</span></li>
+<li data-n="2.4"><span class="name">No city in the product</span><span class="say">Civicsmith's own words never name a city, county or state. Places come from the group's profile and the group's own writing.</span><span class="eg">"Counting your profile's holidays", never "Counting Oakland holidays".</span><span class="src">K1</span></li>
+</ol>
+</section>
+
+<section id="voice">
+<h2>3. Civicsmith's voice</h2>
+<p class="fam-intro">Seven traits, each from a value or principle you have already set. Together they describe a calm, exact colleague who respects the reader's time and judgement. The name points at the destination, skilled civic accountability work; the voice keeps the way there wide, so a newcomer never feels the tool is only for experts (your words, 3 October: the path to success must be "wide enough and inclusive enough for all audiences").</p>
+<ol class="pr">
+<li data-n="3.1"><span class="name">Plain</span><span class="say">Everyday words and short sentences, naming things as members know them. A term of art is used only when it is the right word, and then explained once, where it appears.</span><span class="eg"><span class="ex">Publishing makes this edition permanent and public.</span> not <span class="no">Commit will finalize the immutable artifact.</span></span><span class="src">Design Requirement 11; principles 2.4, 8.4</span></li>
+<li data-n="3.2"><span class="name">Exact</span><span class="say">Dates, numbers, names and sources, not adjectives. "Show your work. Always."</span><span class="eg"><span class="ex">Waiting on the City Clerk's reply, due 14 October.</span> not <span class="no">Response pending soon.</span></span><span class="src">Operational principle 2; DEC-98</span></li>
+<li data-n="3.3"><span class="name">Calm, especially under pressure</span><span class="say">Weight is carried by clarity, never by alarm. No exclamation marks, no capitals for emphasis, no red-alert words. You chose "pressure" over "attacks" for the same reason.</span><span class="eg"><span class="ex">This reply is marked as a legal threat. Record whether a litigation hold is in place.</span> not <span class="no">WARNING: You may be sued!</span></span><span class="src">Operational principle 8 and its wording note; principle 7.2</span></li>
+<li data-n="3.4"><span class="name">Honest about limits</span><span class="say">Says what is not known, and why, in the five fixed terms. Never guesses past a gap or softens it.</span><span class="eg"><span class="ex">Undetermined, because the page could not be read as text.</span></span><span class="src">Principles 3.1–3.3</span></li>
+<li data-n="3.5"><span class="name">Respectful</span><span class="say">Informs once and trusts the member. No praise, no scolding, no "Are you sure?": instead, it states what the act does, and lets the member decide.</span><span class="eg"><span class="ex">Declining this option records your reason with it. You can reconsider it later.</span> not <span class="no">Are you sure? Great job!</span></span><span class="src">DEC-69; principles 1.1, 4.2</span></li>
+<li data-n="3.6"><span class="name">Neutral on policy</span><span class="say">Civicsmith's words take no position on what policy should be and never characterise a person or office. Words like "breach" appear only where a member's determination put them.</span><span class="eg"><span class="ex">Noncompliant with the two-thirds requirement, as determined by Rosa on 3 March.</span> never <span class="no">The city illegally diverted funds.</span></span><span class="src">Operational principle 1; Action §1 rule 3</span></li>
+<li data-n="3.7"><span class="name">Disciplined output, human members</span><span class="say">Members may be angry, and their own notes may say so. What Civicsmith writes, and what it helps the group publish, stays disciplined.</span><span class="eg">A member's private note can say "this is outrageous"; the drafted finding the assistant offers says what the documents show.</span><span class="src">Roadmap §5 ("civic OS OUTPUT must be disciplined, but humans can be human")</span></li>
+</ol>
+</section>
+
+<section id="tone">
+<h2>4. Tone by moment</h2>
+<p class="fam-intro">One voice; its tone shifts with the moment's weight, as friction does.</p>
+<div class="tw"><table class="tone">
+<thead><tr><th>Moment</th><th>Tone</th><th>Example</th></tr></thead>
+<tbody>
+<tr><td>Everyday work</td><td>Brief, almost invisible.</td><td><span class="ex">Tagged.</span> <span class="ex">Added to Questions.</span></td></tr>
+<tr><td>A weighty act</td><td>Slower, states the consequence and who signs.</td><td><span class="ex">Publishing makes Edition 2 permanent and public. It can be corrected by a new edition, never removed. You sign it with your key.</span></td></tr>
+<tr><td>A refusal</td><td>Teaches: what, why, and the way forward.</td><td><span class="ex">Can't sign yet: finding 2 rests on testimony with no independent corroboration. Add a corroborating source, or move finding 2 to supporting.</span></td></tr>
+<tr><td>Waiting and empty</td><td>Factual, with the date and who.</td><td><span class="ex">Nothing here yet. Add the first question.</span> <span class="ex">Still loading.</span></td></tr>
+<tr><td>Something failed</td><td>Owns it, says what to do.</td><td><span class="ex">Could not read this, because the City's site didn't answer. Try again later, or capture it from a saved copy.</span></td></tr>
+<tr><td>Pressure and legal threats</td><td>Steady, procedural, never alarming.</td><td><span class="ex">Pressure recorded. It's part of the record and can be cited.</span></td></tr>
+<tr><td>The assistant</td><td>Helpful, modest, always labelled as machine work.</td><td><span class="ex">I found three passages that may support this question. They're suggestions until you accept one.</span></td></tr>
+<tr><td>A wizard</td><td>Step, what, why; nothing more.</td><td><span class="ex">Step 2 of 6 · Choose the office. Why: the request goes to the office that holds the records.</span></td></tr>
+<tr><td>The public reader</td><td>Explains from zero, layer by layer, never selling.</td><td><span class="ex">A case has two strengths, never one.</span></td></tr>
+</tbody></table></div>
+</section>
+
+<section id="words">
+<h2>5. Words</h2>
+<p class="fam-intro">The words members see, held in one place (principle 8.5), with the ones Civicsmith avoids. Terms you have ruled are fixed.</p>
+<div class="words">
+<div><h3>Use</h3><ul>
+<li>group, member, administrator, owner</li>
+<li>project, question, finding, case, edition</li>
+<li>document, capture, record (not "bundle")</li>
+<li>matter (on a plan), action, determination</li>
+<li>To do, Noticed, Signal (the queue)</li>
+<li>Undetermined, Withheld, Unrated, Nobody looked, Refused</li>
+<li>wizard, wizard script, the assistant</li>
+<li>your group's copy (of Civicsmith)</li>
+<li>Stated, Reported, Proven ("working on" notices)</li>
+</ul></div>
+<div><h3>Avoid</h3><ul>
+<li>"user", "content", "data" for people and their work</li>
+<li>"instance", "plane", "op", "token" in member text</li>
+<li>"claim" on public pages</li>
+<li>"Submit": name the act ("Send", "Publish", "Record")</li>
+<li>"Oops", "Something went wrong", "Are you sure?"</li>
+<li>"AI" as a label: say "the assistant", or "machine work"</li>
+<li>Characterising words ("corrupt", "illegal", "fraud") in Civicsmith's own text</li>
+<li>Exclamation marks and capitals for emphasis</li>
+</ul></div>
+<div><h3>Addressing people</h3><ul>
+<li>The member is "you"; the group is "your group".</li>
+<li>Other members by their handle, as the record shows them.</li>
+<li>Offices by their role ("the City Clerk"), never a private person.</li>
+<li>Dates written out: "14 October 2026"; times with their zone.</li>
+</ul></div>
+</div>
+</section>
+
+<section id="qs">
+<h2>Questions for you</h2>
+<p class="fam-intro">Four choices no ruling covers yet.</p>
+
+<div class="gap" id="v1">
+<h3>V1. Does Civicsmith have a symbol, or only a wordmark?</h3>
+<p>The credit line, the browser tab and the app icon on a phone all need something. The old interface set "OS" in the signature colour; the new name needs its own treatment, drawn in step 4.</p>
+<div class="opts">
+<div class="opt"><b>A. Wordmark only (recommended)</b>Civicsmith is always the typed name; the tab and app icon use a simple initial derived from it. Quiet, consistent with "credited quietly", nothing to explain.</div>
+<div class="opt"><b>B. A small symbol</b>A simple mark beside the name, designed in step 4. More recognisable on a phone's home screen; one more thing to carry meaning.</div>
+</div>
+<p class="answer">Answer: "V1: A" or "V1: B".</p>
+</div>
+
+<div class="gap" id="v2">
+<h3>V2. May a group show its own logo?</h3>
+<p>Today a group's public identity is its name, short name and verified web address. Many groups have a logo they'd want on their cases.</p>
+<p class="rec"><b>Recommendation: yes, optional.</b> An administrator may add the group's logo; it appears beside the group's name on its public face and workspace, stored inside the group's copy (nothing loaded from outside). The name always appears in words too, so the logo is never the only signal. Never required.</p>
+<p class="answer">Answer: "V2: yes" or "V2: no".</p>
+</div>
+
+<div class="gap" id="v3">
+<h3>V3. Does the assistant say "I"?</h3>
+<p>Your ruling labels its work "the assistant did this, at Rosa's request". In conversation it needs a way to speak.</p>
+<p class="rec"><b>Recommendation: yes, in conversation only.</b> It says "I" in its replies ("I found three passages…"), and appears as "the assistant" in every label and record. It never says "we", which is the group's word.</p>
+<p class="answer">Answer: "V3: yes" or "V3: never 'I'".</p>
+</div>
+
+<div class="gap" id="v4">
+<h3>V4. Who may change the interface's words?</h3>
+<p>The words live in one place (principle 8.5), so they can be translated. A group might also want its own terms (a tenants' group calling a project a "campaign").</p>
+<div class="opts">
+<div class="opt"><b>A. Civicsmith's words only (recommended for now)</b>Every group sees the same words; translations come with releases. Fixed terms keep cases readable across groups.</div>
+<div class="opt"><b>B. Groups may rename some labels</b>Friendlier locally, but the same thing reads differently from group to group, and imported cases get confusing.</div>
+</div>
+<p class="answer">Answer: "V4: A" or "V4: B".</p>
+</div>
+</section>
+
+<p class="foot">Drawn from the Roadmap's preamble, values and operational principles (§3–§5), the approved design principles (DEC-123), and your rulings on brand (DEC-118), the name (DEC-124), naming (K1), the queue's words (DEC-110), "Matters" (DEC-114), "record" (K899 (1)), notices (DEC-111) and wizards (DEC-120, DEC-121). Kept in the repository at docs/development/ux-substrate/brand-and-voice.html.</p>
+</div>
+<script>
+(function(){
+  var t=document.getElementById('srcToggle');
+  try{ if(localStorage.getItem('bv-src')==='1'){t.checked=true;document.body.classList.add('show-src');} }catch(e){}
+  t.addEventListener('change',function(){document.body.classList.toggle('show-src',t.checked);try{localStorage.setItem('bv-src',t.checked?'1':'0')}catch(e){}});
+})();
+</script>
