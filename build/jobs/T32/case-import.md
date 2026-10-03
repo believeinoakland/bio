@@ -26,3 +26,7 @@ Size (session_01MiW6fXUHMWPvHxptpYDLsJ): test runs 3, module lines 1325
 ## J1 · REPORT
 
 For BOB (a requirement, not code): R20's `refused` items carry no `seen_at`, yet queue-producers R35 says an entry's item ages from the instant this copy read it, which also covers its `cited-docket-entry-refused` item (today aged `no_seen_instant`). Adding `seen_at` to `refused` is one line in case-import (the same join); it widens R20's provided answer, so it waits on your requirement change. Not done in this job.
+
+## J2 · COMPLETE
+
+N546 applied: each `watchItems` verified entry names `seen_at`, the `at` of the docket read that first recorded it (the read's instant, else this copy's; the same instant queue-producers ages the unreadable CONDITION from). No schema change. case-import 75/75; queue-producers 79/79; format, architecture, coverage (20/20), ownership: 0 failures. Nothing deferred. R20's `*(not yet met: T32)*` mark can be struck. See J1 for an optional widening to `refused`. Record: build/jobs/T32/case-import.md on job/T32/case-import.
