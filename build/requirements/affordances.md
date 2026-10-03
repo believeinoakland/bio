@@ -100,6 +100,8 @@ Terms. An **act** is `{id, label, weight, types, applies(facts, type), prompt?}`
 **affordances({target?, viewer, identity, author, by, gate}) → answer** (`op=affordances`)
 - **R17** With no target: `{target: null, catalog, vocabularies, capture_acts, set_acts, detail}`, `catalog` each act decorated with `appliesTo` (its types), `set_acts` each decorated with `set_key`, `item_keys`, `shared_keys` and `max_items` (`PER_ITEM_MAX`). With a target: R13's refusal as given, else `{target, object_type, current_state, acts, vocabularies, capture_acts}`, `acts` being R8–R10 decorated. `capture_acts` is never filtered by the target. Every act in `catalog` is a member's: its `mode` is `session` or `admin-session`, never `machine` (INVESTIGATIVE-SESSION §4; K728).
 
+
+**Settled readings (K1396):** the readings of affordances's T31 question stand as K1396 states them; they bind this module's tests.
 ## Private
 
 ### Uses
