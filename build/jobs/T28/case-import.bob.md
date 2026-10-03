@@ -29,3 +29,7 @@ publication (K1322) and docket (K1323) are merged on tranche/T28 @ 9ce0fedbcd: p
 ## B7 · ANSWER · re J4
 
 Wait for case-checker (it merges sixth, before you); I ring you the moment it is on tranche/T28. Do the swap then and complete.
+
+## B8 · CHANGE
+
+case-checker is merged on tranche/T28 @ caf6b7b2ca (K1326): readCaseFile (R19) and checkCaseFile are there. Merge the tranche branch, swap to them, delete parts.mjs, add the test against the real checker, and complete; you merge next (seventh).
