@@ -84,7 +84,7 @@ Reads a stored capture. `document` is `capture`'s acquire answer's document (dig
 
 ### Uses
 
-- `acquisition`: `civicsmithUserAgent` (the probe's `--census` user agent; N542). *(not yet met: T32)*
+- `acquisition`: `civicsmithUserAgent` (the probe's `--census` user agent; N542).
 - `text-chain`: `layerChain`, `appendStep`, `describeChain`, `checkChain`, `checkAnchor`, `applyConfidenceFloor`, `mergedChain`, `convertedChain`, `readingSource`, `mergeTier2Text`, `tier2Note`, `glyphCount`, `stepCovers` (R3–R12, R17).
 - `format-registry`: `getFormat`, `readingDialect` (R2, R13).
 - `docprofile`: `identify`, `doctypeFor`, `readText` (R1, R2, R11), `flattenText` (R18).
