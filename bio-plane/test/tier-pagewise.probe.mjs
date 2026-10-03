@@ -193,7 +193,7 @@ function report(measured, label) {
 }
 
 /* ── the live census arm (network) ───────────────────────────────────────── */
-const UA = "CivicOS/0.58.0 (+https://github.com/believeinoakland/bio; instance biosmoke7; acquire)";
+const UA = "Civicsmith/0.58.0 (+https://github.com/believeinoakland/bio; instance biosmoke7; acquire)";
 const CACHE = "/var/tmp/cpdf20-corpus/docs";
 async function censusDocs(limit = 60) {
   mkdirSync(CACHE, { recursive: true });
