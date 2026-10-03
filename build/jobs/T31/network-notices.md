@@ -31,3 +31,7 @@
 - `checks/format.mjs`: 0 failures. `checks/architecture.mjs bio network-notices`: 0 failures. `checks/coverage.mjs bio network-notices`: 30 of 30 live ids named; 0 failures. `checks/ownership.mjs bio network-notices tranche/T31`: 0 failures.
 
 Size (session_016Qoe57tyy7EQDdaxDtEBXa): test runs 6, module lines 1408
+
+## J1 · COMPLETE
+
+N538 applied: R3, R10, R12, R13, R17 new civicsmith labels with the old ones accepted (old-label verification tests in labels.test.mjs); seal tags and civicos-working-on-seal/1 kept; TSA user agent Civicsmith/<VERSION>. Module tests 68/68, users' tests 116/116; format, architecture, coverage (30/30), ownership 0 failures. Nothing deferred, nothing found in other modules; bio-plane dist stale (BOB at layer close). Record: build/jobs/T31/network-notices.md.
