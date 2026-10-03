@@ -31,3 +31,7 @@ Size (session_01EdzfgSAti176MrfZd2aQyS): test runs 5, module lines 1726
 ## J1 · REPORT
 
 not_product's bio-plane/dist/bio-plane.bundled.mjs is stale on src/capture-requests/checks.mjs and index.mjs after this job (fleetbundles.test.mjs says so); regenerate at the layer close (manifest §14). Nothing else found: queue-producers passes ua_mode through from R26's reads, so its feed items say civicsmith with no change of its own.
+
+## J2 · COMPLETE
+
+N538 R14 applied: ua_mode civicsmith (CAPTURE_UA_MODES civicsmith, member-browser); civicos accepted on input and written civicsmith; a stored civicos row judged and read as civicsmith in every read and feed item (uaModeOf, CAPTURE_UA_MODE_ALIASES); agent composed by civicsmithUserAgent. test/m/capture-requests 73/73 (new R14 alias test; plane test checks the Civicsmith agent sent); users' tests (scheduler, intent, queue-producers, link-sweep, plane sweep) 238/238. format, architecture, coverage (45/45), ownership: 0 failures each. Nothing deferred; one REPORT (J1: plane bundle stale). Size: test runs 5, module lines 1726.
