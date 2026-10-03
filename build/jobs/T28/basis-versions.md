@@ -1,6 +1,6 @@
 # basis-versions (T28)
 
-**Status** · session_01EC1CbcpHTUynmhmiinbKPz · depth 2 · WAITING ON BOB (J1) · handled B6
+**Status** · session_01EC1CbcpHTUynmhmiinbKPz · depth 2 · COMPLETE · handled B6
 
 ## J1 · QUESTION
 
