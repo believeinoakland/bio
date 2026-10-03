@@ -40,7 +40,7 @@ import { inquiryOf, legCapped, actNoBasis } from "../inquiry/index.mjs";
    which the retired check catalogue's copy (legacy-checks) did not. */
 import { contentOf, mintLabel, contentMintState, CONTENT_MINTED_BY_PLANE, legContentId, legExtent, canonicalExtent,
          describeExtent, extentRelation, CONTENT_EXTENT_CHECKS } from "../content/index.mjs";
-import { acceptedLegRefusals } from "../accepted-work/index.mjs";
+import { acceptedWorkOf } from "../accepted-work/index.mjs";
 import { basisVersionFindings, versionsIn, compositionDiff, sameComposition, registerBasisVersionGrammar,
          isImportedRef } from "./grammar.mjs";
 import { BASIS_VERSION_CHECKS, VERSION_ACT_CHECKS, VERSION_KIND_CHECKS, CONCLUDE_ACT_CHECKS, NARROW_CHECKS, VERSION_MACHINE,
@@ -116,9 +116,8 @@ export class BasisVersions {
     this.promotion = promotion;
     this.content = content;
     this.inquiry = inquiry;
-    /* R3 (N522): accepted-work's leg check (its R3), its own unless a test passes one */
-    this.acceptedLegRefusals = acceptedWork && typeof acceptedWork.acceptedLegRefusals === "function"
-      ? acceptedWork.acceptedLegRefusals : acceptedLegRefusals;
+    /* R3 (N522): accepted-work's instance on the same host, whose leg check (its R3) the promotion check asks */
+    this.acceptedWork = acceptedWork;
     this.now = typeof now === "function" ? now : () => stampInstant("second");
   }
 
@@ -270,7 +269,7 @@ export class BasisVersions {
     }
     if (fresh.length) {
       let refused;
-      try { refused = this.acceptedLegRefusals({ legs: fresh.map((x) => x.leg), viewer: c.author ?? null }); }
+      try { refused = this.acceptedWork.acceptedLegRefusals({ legs: fresh.map((x) => x.leg), viewer: c.author ?? null }); }
       catch { refused = null; }
       /* accepted-work's call never throws (its R3); a defect there is not a pass */
       const list = Array.isArray(refused) ? refused : Array.isArray(refused?.findings) ? refused.findings : null;
@@ -1708,7 +1707,10 @@ export function basisVersionsOf(host, deps) {
       basisFor: typeof given.basisFor === "function" ? given.basisFor
         : (id, o) => (own ||= inquiryOf(host, { record, membership, promotion, content })).basisFor(id, o),
     };
-    bv = new BasisVersions({ ...d, inquiry, storage: d.storage || host.storage, record, membership, promotion, content });
+    /* R3 (N522): accepted-work's instance (its R3 is an instance method, K1307), unless a test passes its own */
+    const acceptedWork = d.acceptedWork && typeof d.acceptedWork.acceptedLegRefusals === "function" ? d.acceptedWork
+      : acceptedWorkOf(host, { record, membership, promotion });
+    bv = new BasisVersions({ ...d, inquiry, acceptedWork, storage: d.storage || host.storage, record, membership, promotion, content });
     instances.set(host, bv);
     record.declarePurge("basis-versions", BASIS_VERSIONS_TABLES);
     registerBasisVersionGrammar(record);   /* R43: the version grammar in the C-2.8 slot, after inquiry-grammar's */
