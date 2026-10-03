@@ -25,6 +25,7 @@ T27's rules hold (merge early; one file, one editor; marks struck at the merge; 
 2. `bio-plane/test/system/row-census.test.mjs`: catalogue rows this tranche's L6–L11 jobs add read `awaiting stamp` until T29's promotion stamp (promotion is L2, before they exist). S4 stamps T27's rows now.
 3. The UI's DEC-88 tests (N487, K1030): stay red, Bob's.
 4. The new ops' L11 arms (control-plane totality, affordances R12) for `case-import`'s eight ops, from case-import's L8 merge until L11's.
+5. `bio-plane/test/m/inquiry/grammar.test.mjs` (inquiry R38): pins `INQUIRY_GRAMMAR_CHECKS` to six rows; C-21.3 is a seventh. Red from inquiry-grammar's L6 merge until inquiry's (K1306).
 
 ## Roster (by layer; 21 jobs)
 
