@@ -66,7 +66,7 @@ Terms. An **op** is a name the instance answers. An **op spec** is `{classes, ma
   - `caseimport` (`case-import` R1), `caseimportdocument` (its R5), `importaccept`, `importacceptwithdraw` (its R6, R7), `importflag` and `importflagclear` (its R8): mutating, `by` and `viewer` stamped; `importedcases` and `importedcase` (its R4): reads, `viewer` stamped, each with a `NEEDS` row of no capability (`null`), since `affordances` names them (its R35); each for a member session only, with classes `admin`, `member` and `machineClasses: []` (no machine, AI credential or operator token imports, completes, accepts, withdraws, flags or clears, or reads an import, `case-import` R1, R4, R8);
   - the public reads `casechecker` and `casefilespec` (`public-read` R18; `case-checker` R15): `classes: null`, not mutating, nothing stamped, each with a `NEEDS` row of `null`, since `affordances` names them (its R35).
 
-  `publish` and `publishpreflight` keep their specs: `flagsDisclosed` (`case-authoring` R52, R53) is a body field that reaches the handler as given, as `tensionsDisclosed` does, and no act list names it as a stamp. R6 holds over them. *(not yet met: T28)*
+  `publish` and `publishpreflight` keep their specs: `flagsDisclosed` (`case-authoring` R52, R53) is a body field that reaches the handler as given, as `tensionsDisclosed` does, and no act list names it as a stamp.
 
   R6 holds over them.
 
@@ -76,6 +76,7 @@ Terms. An **op** is a name the instance answers. An **op spec** is `{classes, ma
 
 - `affordances`: `decorate` (its R11), for R1.
 - `case-import` (N520): the ops R14 declares.
+- `link-sweep` (N506): the `sweeps` read R10 declares, served by its R9.
 
 ### Invariants
 
