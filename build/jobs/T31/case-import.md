@@ -46,3 +46,7 @@ Status: the job is built and tested (case-import 75 pass, 0 fail; format, archit
 - `format`: 0 failures; `architecture case-import`: 0 failures; `coverage case-import`: 20 of 20 ids named, 0 failures; `ownership case-import tranche/T31`: 0 failures.
 
 Size (session_01MtNWSCDRK9AGiEKUk2dMFY): test runs 16, module lines 1649
+
+## J3 · COMPLETE
+
+Complete on job/T31/case-import after merging tranche/T31 (case-grammar, docket, case-checker in): N534 R12–R14, R16–R20, C-130.15/.16 applied; case-import 75 pass 0 fail; format, architecture, coverage (20/20), ownership 0 failures. Record's Completion section has the detail. Reds outside this module: the three L11 ones accepted in B4, and case-authoring's two /6 format tests (#1, #115), red on tranche/T31 without this change (its own /7 entry).
