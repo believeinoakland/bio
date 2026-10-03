@@ -9,7 +9,7 @@
    - `case-checker.checkCaseFile` (its R1): it answers, for each finding the test scripts, its role, result, what is
      missing and what differs, and its recomputed pair; a document supplied later whose SHA-256 a missing entry names
      fills that gap (its R9). It records each call.
-   - `reevaluation.acceptanceWithdrawn` (its R31): a recorder, which can be made to throw.
+   - `reevaluation.acceptanceWithdrawn` (its R31) and `citedCaseMoved` (its R33): recorders, which can be made to throw.
    Every test drives `case-import` at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import assert from "node:assert/strict";
@@ -191,7 +191,11 @@ export function world({ minimal = false, realChecker = false } = {}) {
   };
   const reeval = { told: [], throws: false,
     acceptanceWithdrawn(q) { reeval.told.push(q); if (reeval.throws) throw new Error("listeners down");
-                             return { ok: true, told: true, kind: "acceptance", withdrawal: q.withdrawal, dependents: 0 }; } };
+                             return { ok: true, told: true, kind: "acceptance", withdrawal: q.withdrawal, dependents: 0 }; },
+    /* `reevaluation.citedCaseMoved` (its R33): a recorder, which can be made to throw (R18) */
+    moved: [], movedThrows: false,
+    citedCaseMoved(q) { reeval.moved.push(q); if (reeval.movedThrows) throw new Error("moves listeners down");
+                        return { ok: true, told: true, kind: "cited_case_moved", move: q.move.move, dependents: 0 }; } };
   const w = {
     st, host, record, membership, strength, acceptedWork, clock, script, checker, reeval,
     rows: (q, ...a) => [...st.sql.exec(q, ...a)],
