@@ -1,7 +1,7 @@
 /* membership — who the members are and what each may do; projects as working groups, sight, and the fence.
  *
- * Requirements: build/requirements/membership.md (R4–R96; T28's R83 order (accepted-work, case-checker, case-import;
- * K1292, K1299); T27's R83 order (docket, N520, K1256); T25's R83 order (attestation, provenance-routes,
+ * Requirements: build/requirements/membership.md (R4–R96; T32's R83 order (wizard-scripts, N544, K1396); T28's R83
+ * order (accepted-work, case-checker, case-import; K1292, K1299); T27's R83 order (docket, N520, K1256); T25's R83 order (attestation, provenance-routes,
  * reading-pipeline; N512, N513, K1219); T24's R83 order (link-sweep, K1185); T23's R83 order (corpus-export,
  * network-notices); T21's N453 deletions (the signer-key copies, K910); T20's N445 deletions and R96's figure source,
  * K861; T19's split, K637: sessions and passwords, signer keys and AI credentials are `credentials`', reached only
@@ -185,7 +185,7 @@ export const MODULE_ORDER = Object.freeze([
   /* 9 */ "local-facts", "standards", "conformance", "consequences", "action-grammar", "actions", "action-clocks",
           "filing-templates", "filings", "escalation", "action-plans",
   /* 10 */ "monitoring", "link-sweep", "scheduler",
-  /* 11 */ "affordances", "tasks", "queue-producers", "queue", "instance-setup", "op-declarations", "admission",
+  /* 11 */ "wizard-scripts", "affordances", "tasks", "queue-producers", "queue", "instance-setup", "op-declarations", "admission",
            "control-plane", "plane", "legacy-ui", "installer",
 ]);
 
