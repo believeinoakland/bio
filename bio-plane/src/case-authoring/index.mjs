@@ -59,7 +59,10 @@ import { membershipOf, viewerPredicate, noSuchProject } from "../membership/inde
 import { observationLogOf } from "../observation-log/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
-import { strengthOf, STRENGTH_AXES } from "../strength/index.mjs";
+import { strengthOf, STRENGTH_AXES, DEPTH_BOUND } from "../strength/index.mjs";
+import { extractionOf } from "../extraction/index.mjs";
+import { promotionOf, CATALOG_VERSION } from "../promotion/index.mjs";
+import { parseImportedFindingRef } from "../inquiry-grammar/index.mjs";
 import { biasOf } from "../bias/index.mjs";
 import { reevaluationOf } from "../reevaluation/index.mjs";
 import { publicationOf, sourceStatement, unnamedSourceStatement } from "../publication/index.mjs";
@@ -71,11 +74,14 @@ import { captureOf } from "../capture/index.mjs";
 import { sourcesOf } from "../sources/index.mjs";
 import { networkNoticesOf } from "../network-notices/index.mjs";
 import { parseFrontmatter, normalizeType, isMachineIdentity, OBJECT_TYPES, BASIS_GRADES,
-         EARNED_CAPTURE_CEILING, isPublicHttpsLocator, proposalLabel } from "../record-grammar/index.mjs";
+         EARNED_CAPTURE_CEILING, isPublicHttpsLocator, proposalLabel, canonicalJson,
+         createSha256 } from "../record-grammar/index.mjs";
 import { SECTIONS } from "../case-grammar/index.mjs";
 import { PUBLISH_ACT_CHECKS, CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS, CASE_DISCLOSURE_CHECKS } from "./checks.mjs";
 import { CASE_AUTHORING_TABLES, migrateCaseAuthoring } from "./schema.mjs";
 import { searchedSection } from "./searched.mjs";
+import { chainsOf, materialHeld } from "./materials.mjs";
+import { flagsListed, flagsJudged, acceptedWorkRow, FLAG_SENTENCE, FLAGS_SAY } from "./accepted.mjs";
 import { fmSafe, statementSha, caseDocumentText, ackFrontmatterLines, ackBodyLines, withheldWriterStated,
          CEREMONY_HIGHLIGHT_SENTENCE, NOT_SHOWN_WORDS, TENSIONS_DEPTH_STATED, tensionSide,
          SELF_ATTESTED_SENTENCE } from "./document.mjs";
@@ -145,13 +151,14 @@ export class CaseAuthoring {
   constructor({ storage, record, membership, host = null, inquiry = null, basisVersions = null, strength = null,
                 bias = null, observations = null, reevaluation = null, publication = null, ratification = null,
                 contradiction = null, provenance = null, attestation = null, capture = null, sources = null,
-                networkNotices = null, now = null } = {}) {
+                networkNotices = null, extraction = null, caseImport = null, promotion = null, now = null } = {}) {
     this.sql = storage.sql;
     this.storage = storage;
     this.record = record;
     this.membership = membership;
     this.#deps = { host, inquiry, basisVersions, strength, bias, observations, reevaluation, publication, ratification,
-                   contradiction, provenance, attestation, capture, sources, networkNotices };
+                   contradiction, provenance, attestation, capture, sources, networkNotices, extraction, caseImport,
+                   promotion };
     this.now = typeof now === "function" ? now : (precision) => stampInstant(precision);
   }
 
@@ -170,6 +177,13 @@ export class CaseAuthoring {
   get capture() { return this.#deps.capture ||= captureOf(this.#deps.host); }
   get sources() { return this.#deps.sources ||= sourcesOf(this.#deps.host); }
   get networkNotices() { return this.#deps.networkNotices ||= networkNoticesOf(this.#deps.host); }
+  get extraction() { return this.#deps.extraction ||= extractionOf(this.#deps.host); }
+  get promotion() { return this.#deps.promotion ||= promotionOf(this.#deps.host); }
+  /* TODO(T28, until case-import merges): `caseImportOf(this.#deps.host)`. */
+  get caseImport() {
+    if (!this.#deps.caseImport) throw new Error("case-import is not composed on this host");
+    return this.#deps.caseImport;
+  }
 
   migrate() { migrateCaseAuthoring(this.sql); }
 
@@ -208,6 +222,7 @@ export class CaseAuthoring {
                  statement = "", excluded = null, subjectPosition = "",
                  subjectJustification = "", biasAcknowledgement = "",
                  project = null, roles = null, draft = null, tensionsDisclosed = null, selfAttested = null,
+                 flagsDisclosed = null,
                  whatChanged = undefined, viewer = null, author = null } = {}, run = {}) {
     const seen = run.seen || {};
     const who = str(author);
@@ -359,6 +374,16 @@ export class CaseAuthoring {
     const facts = new Map([...new Set(resting.map((r) => r.capture))].map((sha) => [sha, this.#captureFacts(sha)]));
     const selfJ = this.#selfAttestedJudged(resting, facts, memberRoles, selfAttested);
     if (selfJ.refusals.length) return selfJ.refusals[0];
+
+    /* R44–R46 (DEC-112 (4)): what each member's chain reaches, and whether a load-bearing one rests on material this
+       copy does not hold whole; asked before the case identity is derived, so a refusal draws no id. */
+    const reached = this.#materialsJudged(prepared, memberRoles, viewer);
+    if (reached.refusals.length) return reached.refusals[0];
+    /* R51, R52 (DEC-96 item 4): another group's work the chains reach, its acceptance in force, then its open flags. */
+    const accepted = this.#acceptedWorkJudged(reached.refs, viewer);
+    if (accepted.refusals.length) return accepted.refusals[0];
+    const flagsJ = this.#flagsJudged(accepted.editions, flagsDisclosed);
+    if (flagsJ.refusals.length) return flagsJ.refusals[0];
 
     /* R7 — REC-44: THE CASE IDENTITY, DECIDED FROM THE RECORD. Name one, derive one from what the members already serve,
        or mint one; a caller never mints an identity. D-309 / DEC-72 clause 6: a finding may serve many cases, so the
@@ -1233,6 +1258,180 @@ export class CaseAuthoring {
                 + `document this case rests on`)).join("; ") + `. Remove it from selfAttested. Nothing was written.` }));
     /* END DEC-49 REGION is-self-attestation-standing */
     return { refusals, byCapture };
+  }
+
+  /** R44–R46, R50 (DEC-112 (4); K1134 reading 1): each member's chain (`chainsOf`, as `viewer` sees the record), each
+   *  material it reaches with what this copy holds of it (`materialHeld`), and C-120.8 for every load-bearing member
+   *  whose chain reaches material not held whole, naming each member and each material. Material only supporting
+   *  members reach is listed `included: false` and never refused. Answers `{refusals, materials, refs, findings}`;
+   *  `op=publish` answers the first refusal, R34's pre-flight lists it. */
+  #materialsJudged(prepared, memberRoles, viewer) {
+    const gate = viewerPredicate(viewer);
+    const io = {
+      rows: (q, ...a) => this.#rows(q, ...a), one: (q, ...a) => this.#one(q, ...a), normalizeType,
+      parseRef: (t) => parseImportedFindingRef(t),
+      visible: (id) => gate.scope !== "DENY"
+        && !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, id, ...gate.args),
+      readFile: (b, p) => this.record.readFile(b, p),
+      unitsOf: (sha) => this.extraction.unitsOf(sha),
+      sha256: (s) => createSha256().update(new TextEncoder().encode(s)).hex(), canonicalJson,
+    };
+    const roleOf = new Map(memberRoles.map((m) => [m.target, m.role]));
+    const chains = chainsOf(prepared.map((p) => ({ id: p.id, role: roleOf.get(p.id) })), io, DEPTH_BOUND);
+    const materials = chains.materials.map((m) => {
+      const held = materialHeld(m, io);
+      return { ...m, held, included: held.whole };
+    });
+    const short = materials.filter((m) => !m.included && m.rests_under === "load_bearing");
+    const refusals = [];
+    /* DEC-49 REGION is-relied-on-presentable */
+    if (short.length) {
+      const byMember = memberRoles.filter((r) => r.role === "load_bearing")
+        .map((r) => ({ target: r.target, materials: short.filter((m) => m.members.includes(r.target))
+          .map((m) => ({ ref: m.ref, kind: m.kind, sha: m.sha, missing: m.held.missing })) }))
+        .filter((x) => x.materials.length);
+      refusals.push(disclosureRefusal("RELIED_ON_NOT_PRESENTABLE", { not_presentable: byMember,
+        detail: `${short.length} document(s) or observation(s) a load-bearing finding of this case rests on are not held `
+              + `whole by this copy (` + byMember.map((x) => `${x.target}: ` + x.materials.map((m) => `${m.ref} `
+                + `${m.sha} lacks ${m.missing.join(" and ")}`).join(", ")).join("; ")
+              + `). Everything a case relies on travels with it in full (DEC-112 (4)): find a presentable copy, stop `
+              + `relying on the material, or make the finding supporting. Nothing was written.` }));
+    }
+    /* END DEC-49 REGION is-relied-on-presentable */
+    return { refusals, materials, refs: chains.refs, findings: chains.findings };
+  }
+
+  /** R54 (DEC-112 (3); K1305, K1315): for each finding a member's chain reaches (R46), its legs exactly as
+   *  `strength.gradingFacts` (its R35) answers them at the act, with `levels` null (`recomputePair` takes the levels the
+   *  signed attribution section states), one `grading_facts:` row each, `{finding, ord}` beside the answer's fields; and
+   *  each relied-on passage, one `passages:` row per leg naming a content row, `{finding, ord, content_id, capture_sha,
+   *  extent, quoted}`, `quoted` the text of the extracted unit at that extent (`extraction.unitsOf`), null where the copy
+   *  holds none there. A finding `gradingFacts` refuses contributes no row, and the refusal is kept in `unread`, stated. */
+  #findingFacts(findings, viewer) {
+    const grading = [], passages = [], unread = [];
+    const units = new Map();
+    const unitsOf = (sha) => {
+      if (!units.has(sha)) { let u = null; try { u = this.extraction.unitsOf(sha); } catch { u = null; } units.set(sha, u); }
+      return units.get(sha);
+    };
+    for (const id of [...new Set(findings.map((f) => f.id))]) {
+      let gf = null;
+      try { gf = this.strength.gradingFacts({ inquiry: id, levels: null, viewer }); } catch (e) { gf = { ok: false, reason: String(e && e.message || e).slice(0, 160) }; }
+      if (!gf || gf.ok !== true) { unread.push({ finding: id, reason: gf ? gf.reason ?? null : null }); continue; }
+      gf.legs.forEach((leg, ord) => grading.push({ finding: id, ord, ...leg }));
+      for (const leg of this.#rows(`SELECT b.ord, c.content_id, c.capture_sha, c.extent FROM inquiry_basis b
+                                    JOIN content c ON c.content_id = b.content_id WHERE b.bundle_id=? ORDER BY b.ord`, id)) {
+        const u = unitsOf(leg.capture_sha);
+        const at = u && Array.isArray(u.units) ? u.units.find((x) => canonicalJson(x.extent) === leg.extent) : null;
+        passages.push({ finding: id, ord: Number(leg.ord), content_id: leg.content_id, capture_sha: leg.capture_sha,
+                        extent: leg.extent, quoted: at && !at.truncated ? at.text : null });
+      }
+    }
+    return { grading, passages, unread };
+  }
+
+  /** R46, R48 (DEC-112 (5); DEC-119 (1)(3)): whether a capture is off-the-record — its source a knocker or a
+   *  hand-carried source (`sources.sourceOf`) with no `name` entry `sources.publishableAt({audience: "public"})` answers
+   *  for any source standing behind it — so the case states its identity as "Withheld" (R37). A read that fails is
+   *  answered off-the-record: the less a case names, the safer. */
+  #offTheRecord(sha, viewer) {
+    let of = null;
+    try { of = this.sources.sourceOf({ captureSha: sha, viewer }); } catch { return true; }
+    if (of && of.ok === false && of.reason === "NO_SUCH_SOURCE") return false;
+    if (!of || of.ok !== true) return true;
+    const each = Array.isArray(of.sources) && of.sources.length ? of.sources : [{ sourceId: of.sourceId }];
+    return !each.some((s) => {
+      let pa = null;
+      try { pa = this.sources.publishableAt({ source: s.sourceId, audience: "public" }); } catch { pa = null; }
+      return !!(pa && pa.ok === true && Array.isArray(pa.entries) && pa.entries.some((e) => e && e.kind === "name"));
+    });
+  }
+
+  /** R51 (DEC-96 item 4; N522): for each leg a member's chain reaches on another group's finding, the acceptance in force
+   *  at the leg's `target_edition` (`case-import.acceptanceOf`, its R9) and the imported edition's facts
+   *  (`importedCase`, its R4), as `accepted_work:` rows. A leg with none in force is C-120.10, naming each member, leg,
+   *  source case and edition. The edition is read from the inquiry's own `bundle.md` `basis[ord]` (K1305 (2)). Answers
+   *  `{refusals, rows, editions}`, `editions` each (import, edition) named with its refs, for R52. */
+  #acceptedWorkJudged(refs, viewer) {
+    const rows = [], missing = [], editions = new Map();
+    for (const leg of refs) {
+      const parsed = parseImportedFindingRef(leg.ref);
+      const text = this.#liveText(leg.leg_of);
+      const basis = text !== null ? (parseFrontmatter(text).data || {}).basis : null;
+      const at = Array.isArray(basis) ? basis[leg.ord] : null;
+      const ed = at && Number.isInteger(Number(at.target_edition)) && Number(at.target_edition) > 0
+        ? Number(at.target_edition) : null;
+      const read = (fn) => { try { return fn(); } catch { return null; } };
+      const imported = ed === null ? null : read(() => this.caseImport.importedCase({ import: parsed.import, edition: ed, viewer }));
+      const edition = imported && imported.ok !== false
+        ? (Array.isArray(imported.editions) ? imported.editions.find((e) => Number(e.edition) === ed) : imported) || null
+        : null;
+      const acceptance = ed === null ? null
+        : read(() => this.caseImport.acceptanceOf({ import: parsed.import, edition: ed, finding: parsed.finding }));
+      const source = { group: edition ? edition.group ?? null : null, case: edition ? edition.case ?? null : null, edition: ed };
+      if (!acceptance || acceptance.ok === false) {
+        missing.push({ target: leg.member, leg_of: leg.leg_of, ord: leg.ord, ref: leg.ref, source });
+        continue;
+      }
+      const found = edition && Array.isArray(edition.findings)
+        ? edition.findings.find((f) => f.finding === parsed.finding) || null : null;
+      rows.push(acceptedWorkRow({ ...leg, target_edition: ed }, parsed, acceptance, edition, found));
+      const key = `${parsed.import}#${ed}`;
+      if (!editions.has(key)) editions.set(key, { import: parsed.import, edition: ed, refs: [] });
+      editions.get(key).refs.push({ ref: leg.ref, finding: parsed.finding, member: leg.member });
+    }
+    const refusals = [];
+    /* DEC-49 REGION is-accepted-work-in-force */
+    if (missing.length)
+      refusals.push(disclosureRefusal("ACCEPTED_WORK_NOT_IN_FORCE", { not_in_force: missing,
+        detail: `${missing.length} leg(s) of this case's findings rest on another group's finding with no acceptance of `
+              + `that edition in force (` + missing.map((m) => `${m.target}: ${m.leg_of} leg ${m.ord} on ${m.ref}, `
+                + `${m.source.case ?? "an imported case"} edition ${m.source.edition ?? "not stated"}`).join("; ")
+              + `). Accept that edition again (op=importaccept), or take the leg out. Nothing was written.` }));
+    /* END DEC-49 REGION is-accepted-work-in-force */
+    return { refusals, rows, editions: [...editions.values()] };
+  }
+
+  /** R52 (DEC-96 items 2, 4; DEC-84 (13)): the open flags on each edition R51 names (`case-import.openFlagsOn`, its
+   *  R9), judged against `flagsDisclosed` (`flagsJudged`): a failed or incomplete read C-120.12 alone; else an open flag
+   *  not listed C-120.11, naming each, and a listed one not open C-120.13. Never refused because a flag is open. Answers
+   *  `{refusals, open, byFlag}`. */
+  #flagsJudged(editions, flagsDisclosed) {
+    const listed = flagsListed(flagsDisclosed);
+    if (listed.ok === false) return { refusals: [listed], open: [], byFlag: new Map() };
+    const reads = editions.map((e) => {
+      let answer;
+      try { answer = this.caseImport.openFlagsOn({ import: e.import, edition: e.edition }); }
+      catch (x) { answer = { failed: String(x && x.message || x).slice(0, 160) }; }
+      return { ...e, answer };
+    });
+    const j = flagsJudged(reads, listed);
+    const refusals = [];
+    /* DEC-49 REGION is-flags-determined */
+    if (j.failed.length)
+      return { refusals: [disclosureRefusal("FLAGS_UNDETERMINED", { undetermined: j.failed,
+        detail: `the flags on another group's work this case rests on could not be read whole (`
+              + j.failed.map((f) => `edition ${f.edition} of import ${f.import}: ${f.why}`).join("; ")
+              + `), so what this case must disclose is not known. Try again. Nothing was published.` })],
+        open: [], byFlag: listed.byFlag };
+    /* END DEC-49 REGION is-flags-determined */
+    /* DEC-49 REGION is-flag-disclosed */
+    if (j.undisclosed.length)
+      refusals.push(disclosureRefusal("FLAG_NOT_DISCLOSED", {
+        undisclosed: j.undisclosed.map((f) => ({ flag: f.flag, ref: f.ref, edition: f.edition, issue: f.issue })),
+        detail: `${j.undisclosed.length} open flag(s) on another group's work this case rests on are not disclosed (`
+              + j.undisclosed.map((f) => `flag ${f.flag} on ${f.ref} edition ${f.edition}`).join("; ")
+              + `). A case is published with its open flags disclosed, never refused because one is open (DEC-96 item `
+              + `4): list each in flagsDisclosed, or clear it first. Nothing was published.` }));
+    /* END DEC-49 REGION is-flag-disclosed */
+    /* DEC-49 REGION is-flag-disclosure-standing */
+    if (j.notStanding.length)
+      refusals.push(disclosureRefusal("FLAG_DISCLOSURE_NOT_STANDING", {
+        not_standing: j.notStanding.map((d) => ({ flag: d.flag, ord: d.ord })),
+        detail: `${j.notStanding.map((d) => d.flag).join(", ")} is not an open flag on work this case rests on: it may `
+              + `have been cleared since. Read the list again (op=publishpreflight). Nothing was published.` }));
+    /* END DEC-49 REGION is-flag-disclosure-standing */
+    return { refusals, open: j.open, byFlag: listed.byFlag };
   }
 
   /** R37 (DEC-78 item 5): what may be stated of the source of each capture given to the group rather than fetched. The

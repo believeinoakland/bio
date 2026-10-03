@@ -225,7 +225,7 @@ export function world({ group = "test-group", provider = true, now = null, recor
                                                                                   : w.networkNotices.noticeReferenceOf(project)) };
   w.ca = caseAuthoringOf(host, { record: recordWrap ? recordWrap(record) : record, membership, inquiry, basisVersions,
     strength, bias, observations, reevaluation, publication, ratification: ratWrap ? ratWrap(ratification) : ratification,
-    contradiction, provenance: prov, attestation, capture, networkNotices,
+    contradiction, provenance: prov, attestation, capture, networkNotices, extraction: ex,
     sources, now: now || ((p) => (p === "millisecond" ? clock.ms : clock.now)), ...deps });
   let n = 0;
   Object.assign(w, {
@@ -236,8 +236,21 @@ export function world({ group = "test-group", provider = true, now = null, recor
       st.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
                    VALUES (?, ?, ?, ?, 'active', '["contribute","publish"]', 't', 't')`, id, `Cover ${id}`, `h_${id}`, role);
     },
-    /** An information bundle registering one capture; answers the capture's sha. */
-    doc(id, text = `bytes of ${id}`) {
+    /** R44: a whole extracted-text index for `captureSha` (extraction R36's `unitsOf` reads it), one unit per entry of
+     *  `units` (`{text, truncated?}`), or with `state` other than whole; the fixture's documents carry one unless asked
+     *  not to (`text: false`). */
+    indexText(captureSha, bundleId, units = [{ text: `the text of ${bundleId}` }], state = "whole") {
+      st.sql.exec(`INSERT OR REPLACE INTO capture_text_state (capture_sha, bundle_id, state, offered, written, over_bound,
+                   unaddressable, truncated, skipped_named, chain_kind, at) VALUES (?,?,?,?,?,0,0,?,0,'text',?)`,
+                  captureSha, bundleId, state, units.length, units.length, units.filter((u) => u.truncated).length, T0);
+      units.forEach((u, i) => st.sql.exec(`INSERT OR REPLACE INTO capture_text (capture_sha, bundle_id, extent_kind, extent,
+                   ref, seq, text, truncated, chain_kind) VALUES (?,?,'doc-para',?,?,?,?,?,'text')`,
+                  captureSha, bundleId, JSON.stringify({ kind: "doc-para", para: i + 1 }), `paragraph ${i + 1}`, i, u.text,
+                  u.truncated ? 1 : 0));
+    },
+    /** An information bundle registering one capture, its text indexed whole unless `text: false`; answers the
+     *  capture's sha. */
+    doc(id, text = `bytes of ${id}`, { text: indexed = true } = {}) {
       const c = { path: "snapshots/c0.txt", text, sha: sha(text) };
       const r = promotion.promote({ bundleId: id, base: null, snapKey: `k${++n}`, author: V("alice"),
         files: [{ path: "bundle.md", text: infoMd(id) }, { path: c.path, text: c.text },
@@ -245,6 +258,7 @@ export function world({ group = "test-group", provider = true, now = null, recor
         meta: { object_type: "information" },
         register: [{ sha256: c.sha, path: c.path, encoding: "utf8", bytes: Buffer.byteLength(c.text) }] });
       if (!r.ok) throw new Error(`fixture doc refused: ${JSON.stringify(r).slice(0, 400)}`);
+      if (indexed) w.indexText(c.sha, id);
       return c.sha;
     },
     /** An inquiry whose basis is `legs` (each `{target, …leg fields}`), in `state`; `concluded` carries its own
@@ -308,7 +322,7 @@ export function world({ group = "test-group", provider = true, now = null, recor
     /** An information bundle registering one capture whose provenance document carries `extra` (attestations, a
      *  co-archive, attempts), fetched `direct` by this instance unless `receipt: false` (provenance R13: a Grade B
      *  capture, R24); answers the capture's sha. */
-    graded(id, extra = {}, { receipt = true, text = `bytes of ${id}` } = {}) {
+    graded(id, extra = {}, { receipt = true, text = `bytes of ${id}`, indexed = true } = {}) {
       const c = { path: "snapshots/c0.txt", text, sha: sha(text) };
       const r = promotion.promote({ bundleId: id, base: null, snapKey: `k${++n}`, author: V("alice"),
         files: [{ path: "bundle.md", text: infoMd(id) }, { path: c.path, text: c.text },
@@ -316,6 +330,7 @@ export function world({ group = "test-group", provider = true, now = null, recor
         meta: { object_type: "information" },
         register: [{ sha256: c.sha, path: c.path, encoding: "utf8", bytes: Buffer.byteLength(c.text) }] });
       if (!r.ok) throw new Error(`fixture graded refused: ${JSON.stringify(r).slice(0, 400)}`);
+      if (indexed) w.indexText(c.sha, id);
       if (receipt) prov.recordReceipt({ address: `https://example.org/${id}`, addressNorm: `example.org/${id}`,
                                         captureSha: c.sha, retrieved: T0, via: "direct" });
       return c.sha;

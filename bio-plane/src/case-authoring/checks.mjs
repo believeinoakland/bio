@@ -186,4 +186,39 @@ export const CASE_DISCLOSURE_CHECKS = Object.freeze({
       + 'must be cleared before publication: the case must still hold with the hunch removed. Give each leg a grade the '
       + 'record earns, or take the hunch out of the basis, and publish again. Nothing was written.',
   },
+  /* R44 (DEC-112 (4); K1134 reading 1): everything a load-bearing finding relies on travels whole. C-120.9 (K1254) was
+     withdrawn unstamped (K1275), and its number is not used. New in T28: awaiting stamp (T29's promotion). */
+  RELIED_ON_NOT_PRESENTABLE: {
+    check: 'C-120.8',
+    where: at('#materialsJudged', 'is-relied-on-presentable'),
+    translation: 'A finding this case relies on rests on material this copy does not hold whole, and everything a case '
+      + 'relies on travels with it in full. Find a presentable copy, stop relying on the material, or make the finding '
+      + 'supporting. Nothing was written.',
+  },
+  /* R51, R52 (DEC-96 item 4; N522): another group's work a case rests on, its acceptance stated and its open flags
+     disclosed, never blocked (R31's pattern). New in T28: awaiting stamp. */
+  ACCEPTED_WORK_NOT_IN_FORCE: {
+    check: 'C-120.10',
+    where: at('#acceptedWorkJudged', 'is-accepted-work-in-force'),
+    translation: 'A finding in this case rests on another group\'s finding, and this group\'s acceptance of that edition '
+      + 'is not in force. Accept it again, or take the leg out. Nothing was written.',
+  },
+  FLAG_NOT_DISCLOSED: {
+    check: 'C-120.11',
+    where: at('#flagsJudged', 'is-flag-disclosed'),
+    translation: 'Another group\'s work this case rests on carries an open flag, and a case may be published with it '
+      + 'only if the flag is disclosed. Each one is named. Disclose it, or clear it first. Nothing was published.',
+  },
+  FLAGS_UNDETERMINED: {
+    check: 'C-120.12',
+    where: at('#flagsJudged', 'is-flags-determined'),
+    translation: 'The flags on another group\'s work this case rests on could not be read completely, so what must be '
+      + 'disclosed is not known. Try again. Nothing was published.',
+  },
+  FLAG_DISCLOSURE_NOT_STANDING: {
+    check: 'C-120.13',
+    where: at('#flagsJudged', 'is-flag-disclosure-standing'),
+    translation: 'One of the flags disclosed is not open on work this case rests on: it may have been cleared since. '
+      + 'Read the list again. Nothing was published.',
+  },
 });
