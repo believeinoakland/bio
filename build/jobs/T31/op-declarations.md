@@ -17,7 +17,9 @@
 
 **Checks** · format: 0 failures; architecture: 0 failures; coverage: 16 of 16 live ids named, 0 failures; ownership vs tranche/T31: 0 failures.
 
-Size (session_01WV8MW7765m14i8DS4LJJx5): test runs 8, module lines 2683
+**Re-run after B4 (affordances merged, K1403; tranche/T31 merged)** · op-declarations 59/59. Users: admission 19/19, affordances 167/167, public-read 110/110, skills 54/54; control-plane 145 pass, 2 fail and wizard-scripts 34 pass, 1 fail, none touching op-declarations: control-plane's R2/R41 unaccounted test is now green; still red there, `r49-routes` R49 (case-import's map pin, control-plane R52's) and `families.test.mjs` R22 (CHECK_FAMILIES does not yet read `WIZARD_SCRIPTS_CHECKS`, control-plane R22/R43's, N528); in wizard-scripts, `authoring.test.mjs` R5 (`proposalLabel` refuses the subject `wizard`: record-grammar R42 does not list it yet). Checks: format, architecture, coverage 16/16, ownership: 0 failures.
+
+Size (session_01WV8MW7765m14i8DS4LJJx5): test runs 12, module lines 2683
 
 ## J1 · QUESTION
 
