@@ -1,6 +1,6 @@
 /* control-plane R46 (DEC-113; K1252, K1253): a purge of held material is refused in the record store's door. Driven through
    `dispatch(req, store)` with the reader `plane` hands it (`store.purgeHeld`, actions R60) and the object's namespace
-   (`store.namespace`, plane R2, R14): a purge of the real record runs only when the reader answers exactly `false`, and
+   (`store.namespace()`, plane R2, R14): a purge of the real record runs only when the reader answers exactly `false`, and
    is otherwise refused 409 PURGE_HOLD_IN_PLACE (C-69.5) before record-core's arm runs; `scratch` is never refused for a
    hold. A record fixture shows nothing is cleared, read for proof or written; the Worker door relays the refusal at its
    status (R23). */
@@ -15,7 +15,7 @@ const { DISPATCH_CHECKS } = await import("../../../src/control-plane/checks.mjs"
 /* A store whose purge route and reader record what reached them. */
 function store({ namespace = "bio", held } = {}) {
   const log = { routes: 0, asked: [] };
-  const s = { namespace, routes: () => ({ purge: () => { log.routes++; return { ok: true, scope: "all" }; } }),
+  const s = { namespace: () => namespace, routes: () => ({ purge: () => { log.routes++; return { ok: true, scope: "all" }; } }),
               membership: () => null };
   if (held !== undefined) s.purgeHeld = (a) => { log.asked.push(a); return typeof held === "function" ? held(a) : held; };
   return { s, log };
@@ -43,7 +43,7 @@ test("R46 (C-69.5): in `bio`, a purge the reader answers `true` for is refused 4
   }
 });
 
-test("R46: a failure to ask refuses too — a reader that throws, one never handed, and any answer but exactly `false` (a truthy or falsy non-boolean, a promise, undefined); the namespace not handed or unknown is the real record's, and asked", async () => {
+test("R46: a failure to ask refuses too — a reader that throws, one never handed, and any answer but exactly `false` (a truthy or falsy non-boolean, a promise, undefined); a namespace unknown, not a function or throwing is the real record's, and asked", async () => {
   const answers = [() => { throw new Error("hold table unreadable"); }, 0, "", null, "false", 1, {}, Promise.resolve(false)];
   for (const held of answers) {
     const { s, log } = store({ held: typeof held === "function" ? held : () => held });
@@ -57,6 +57,13 @@ test("R46: a failure to ask refuses too — a reader that throws, one never hand
     const { s, log } = store({ namespace, held: true });
     isHoldRefusal(await go(s, "purge"), null);
     assert.deepEqual([log.routes, log.asked.length], [0, 1], String(namespace));
+  }
+  /* a namespace that is not a function, or one that throws, is the real record's: asked, and refused */
+  for (const ns of ["scratch", () => { throw new Error("x"); }, undefined]) {
+    const { s, log } = store({ held: true });
+    s.namespace = ns;
+    isHoldRefusal(await go(s, "purge"), null);
+    assert.equal(log.asked.length, 1, String(ns));
   }
 });
 
@@ -72,7 +79,7 @@ test("R46: a purge reaching the `scratch` store is never refused for a hold — 
 
 test("R46: only `op=purge` is held — every other route runs without the reader being asked, and a route no module serves is still `unknown op` (negative control: purge is asked)", async () => {
   const asked = [];
-  const s = { namespace: "bio", membership: () => null, purgeHeld: (a) => { asked.push(a); return true; },
+  const s = { namespace: () => "bio", membership: () => null, purgeHeld: (a) => { asked.push(a); return true; },
               routes: () => ({ stats: () => "s", purgeproof: () => "p", allocid: () => "a" }) };
   for (const op of ["stats", "purgeproof", "allocid"]) assert.deepEqual((await go(s, op)).json, { ok: true, result: op[0] }, op);
   assert.deepEqual((await go(s, "nosuch")).json, { ok: false, error: "unknown op: nosuch" });
@@ -96,7 +103,7 @@ test("R46: against a real record, a refused purge clears nothing and reads nothi
   let proofReads = 0;
   const orig = rc.proofCounts.bind(rc);
   rc.proofCounts = () => { proofReads++; return orig(); };
-  const door = (held) => ({ namespace: "bio", membership: () => null, purgeHeld: () => held,
+  const door = (held) => ({ namespace: () => "bio", membership: () => null, purgeHeld: () => held,
                             routes: (url, body) => recordCoreOps(rc, url, body) });
   const r = await D.dispatch(new Request("http://do/purge?confirm=bio", { method: "POST" }), door(true));
   assert.equal(r.status, 409);

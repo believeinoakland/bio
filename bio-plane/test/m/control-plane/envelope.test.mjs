@@ -467,7 +467,7 @@ test("R32, R39, R46: each check the door answers carries its C-number on the wir
   const sj = await sie.json();
   got[sj.code] = sj.check; sentences[sj.code] = sj.translation;                 /* C-69.4 */
   const held = await (await D.dispatch(new Request("http://do/purge?confirm=bio"),
-    { routes: () => ({ purge: () => ({ ok: true }) }), namespace: "bio", purgeHeld: () => true })).json();
+    { routes: () => ({ purge: () => ({ ok: true }) }), namespace: () => "bio", purgeHeld: () => true })).json();
   got[held.code] = held.check; sentences[held.code] = held.translation;         /* C-69.5 (R46) */
   assert.deepEqual(got, {
     NOT_AUTHENTICATED: "C-38.1", CLASS_FORBIDDEN: "C-38.2", MACHINE_CREDENTIAL_REQUIRED: "C-38.3", ROOT_OF_TRUST_REQUIRED: "C-38.4",

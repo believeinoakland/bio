@@ -124,6 +124,10 @@ export const PROJECT_NAMING_READS_NOT = Object.freeze({
      see at FULL as `held: null`, never refused, so the existence answer is not run for it. */
   projectholds: "`projects` lists PROJECT ids, and each one the viewer does not see at FULL is answered `held: null` "
     + "(actions R58, DEC-36), never refused, so no existence answer is given for it",
+  /* R48's reads (docket R3, R4, R8): a published case, or a docket entry, never a bundle id. */
+  docket: "`case` is a published CASE id, answered by the docket's own sight of the case's project (docket R3)",
+  docketprepare: "`case` is a published CASE id and `entry` a DOCKET ENTRY id, never a bundle id (docket R4)",
+  docketinvitation: "`entry` is a DOCKET ENTRY id, never a bundle id (docket R8)",
 });
 
 /* R27 (REC-196): the answer for a read naming a discoverable project's own id, asked by a caller at EXISTENCE: C-70.1
@@ -178,7 +182,10 @@ function internalAnswer(correlation) {
 const PURGE_OP = "purge";
 const SCRATCH_NAMESPACE = "scratch";
 function purgeHoldRefusal(store, url) {
-  if (store.namespace === SCRATCH_NAMESPACE) return null;
+  /* the object's own name, asked at the purge (plane R2, R14); a name it cannot give reads as the real record's */
+  let namespace = null;
+  try { namespace = typeof store.namespace === "function" ? store.namespace() : null; } catch { namespace = null; }
+  if (namespace === SCRATCH_NAMESPACE) return null;
   const bundleId = url.searchParams.get("bundleId") || null;
   let clear = false;
   try { clear = typeof store.purgeHeld === "function" && store.purgeHeld({ bundleId }) === false; } catch { clear = false; }
@@ -194,7 +201,8 @@ function purgeHoldRefusal(store, url) {
 }
 
 /* R26: the frame. `store.routes(url, body)` answers the route map, `store.membership()` membership for R27;
-   `store.namespace` (the object's own name, plane R2) and `store.purgeHeld` (`actions`' R60 reader, plane R14) for R46. */
+   `store.namespace()` (the object's own name, plane R2) and `store.purgeHeld({bundleId})` (`actions`' R60 reader, plane
+   R14), each a function asked at a purge and never before, for R46. */
 export async function dispatch(req, store) {
   const url = new URL(req.url);
   const op = url.pathname.slice(1);
