@@ -20,7 +20,7 @@ import { caseDocumentRequiresV4Disclosures } from "./formats.mjs";
 import { fmSafe } from "./blocks.mjs";
 import { WHAT_CHANGED_HEAD } from "./edition.mjs";
 
-export { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V5, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3,
+export { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V5, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3,
          CASE_DOCUMENT_FORMAT_V2, CASE_DOCUMENT_FORMAT_LEGACY, CASE_DOCUMENT_FORMATS_ACCEPTED,
          caseDocumentStatesMemberBlocks, caseDocumentRequiresDisclosures, caseDocumentRequiresV4Disclosures,
          caseDocumentRequiresTensionSection, caseDocumentRequiresMaterials } from "./formats.mjs";
@@ -45,8 +45,8 @@ export { CASE_FILE_FORMAT, CASE_FILE_MANIFEST_PATH, CASE_FILE_KINDS, CASE_FILE_S
 export { GRADING_FACT_FIELDS, PASSAGE_FIELDS, gradingFactsLines, passagesLines, gradingFactsOf, passagesOf,
          extractedTextOf } from "./facts.mjs";
 export { BAR_AXES, STANDING_ROLE_WORDS, standingOf } from "./standing.mjs";
-export { COMPLETE_EDITION_HEADINGS, TWO_STRENGTHS_SENTENCE, GRADE_MEANINGS, MADE_WITH_LINE, CHECKER_READS,
-         completeEditionOf } from "./complete.mjs";
+export { COMPLETE_EDITION_HEADINGS, TWO_STRENGTHS_SENTENCE, GRADE_MEANINGS, PRODUCT_NAMES, editionProductOf,
+         madeWithLine, CHECKER_READS, completeEditionOf } from "./complete.mjs";
 
 
 /** MK-7 — THE ATTRIBUTION LEVELS (MEMBER-KNOWLEDGE-DESIGN.md §4, §4.6), MOST PROTECTIVE FIRST (R2).
