@@ -32,3 +32,7 @@ Requirements wording, yours to fold (no change of meaning asked): (a) R33 and R3
 ## J2 · REPORT
 
 (1) control-plane: test/m/control-plane/promotion-step.test.mjs:32 (R42, the rank) fails on tranche/T32 without my change: 'wizard-scripts (layer 11) ranks after the step' (7/1). Not one of the plan's inherited reds. (2) Stale generated artifact (§14): bio-plane/dist/bio-plane.bundled.mjs (acquisition source changed; it still carries the removed aliases), for regeneration at the close. newgroup/src/release.mjs and release/bio-plane.bundled.mjs embed the released bundle, unchanged, as N539 says.
+
+## J3 · COMPLETE
+
+N541 (R33 firstHopWho(instanceName, version), R16's first hop reads it, byte-identical) and N539 (R34, aliases removed) applied. acquisition 73/73; users 877/878 (the one red is control-plane R42, red on the base, J3). format, architecture, coverage (34/34), ownership (4 files): 0 failures each. Nothing deferred. Capture may now read firstHopWho(env.INSTANCE_NAME, env.VERSION). Size: test runs 10, module lines 1578.
