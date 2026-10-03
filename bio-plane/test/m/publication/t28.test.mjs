@@ -149,10 +149,13 @@ test("R57 at the commit the published projection comes to hold, by SHA-256, each
   w.prepare(CASE, 1, { project: proj, roles, materials });
   const r = w.signCase(CASE, 1, { project: proj, roster: roster(roles) });
   assert.equal(r.ok, true, JSON.stringify(r));
-  assert.deepEqual(r.materials, [{ ref: DOC, kind: "document", sha256: docSha, held: "text" },
-                                 { ref: DOC, kind: "extracted_text", sha256: sha(extracted), held: "text" },
-                                 { ref: obs, kind: "observation", sha256: obsSha, held: "text" }]);
+  assert.deepEqual(r.materials, [{ sha: docSha, held: "inline" }, { sha: sha(extracted), held: "inline" },
+                                 { sha: obsSha, held: "inline" }]);
   assert.deepEqual(r.materials_unheld, []);
+  /* K1317: the same list, read back for the committed edition (a retried ratification's), and none for another */
+  assert.deepEqual(w.p.heldMaterialsOf(CASE, 1), r.materials);
+  assert.deepEqual(w.p.heldMaterialsOf(CASE, 2), []);
+  assert.deepEqual(w.p.heldMaterialsOf("CASE-NONE", 1), []);
   for (const [s, kind, text] of [[docSha, "document", textOf(DOC)], [sha(extracted), "extracted_text", extracted], [obsSha, "observation", obsText]]) {
     assert.deepEqual(w.p.publishedMaterialText(s), { found: true, sha256: s, kind, text });
     assert.equal(sha(text), s, "held by its own SHA-256");
@@ -182,7 +185,8 @@ test("R57 a document's bytes held only in the evidence store are registered and 
   w.prepare(CASE, 1, { project: proj, roles, materials });
   const r = w.signCase(CASE, 1, { project: proj, roster: roster(roles) });
   assert.equal(r.ok, true, "never refused for a material it cannot hold");
-  assert.deepEqual(r.materials.map((m) => [m.sha256, m.kind, m.held]), [[big, "document", "evidence"], [docSha, "document", "text"]]);
+  assert.deepEqual(r.materials, [{ sha: big, held: "evidence" }, { sha: docSha, held: "inline" }]);
+  assert.deepEqual(w.p.heldMaterialsOf(CASE, 1), r.materials, "what is left for ratification R39 to copy is read back");
   assert.deepEqual(w.rows(`SELECT bundle_id, kind, bytes FROM published_shas WHERE sha256=?`, big), [{ bundle_id: DOC, kind: "document", bytes: 999 }]);
   assert.deepEqual(w.p.publishedMaterialText(big), { found: false }, "its bytes are not text here");
   assert.deepEqual(r.materials_unheld.map((m) => [m.ref, m.kind]), [[DOC, "extracted_text"], [DOC, "extracted_text"],
@@ -206,7 +210,7 @@ test("R57 (K1315) the timestamp tokens an included document's provenance names a
   assert.equal(res.ok, true, JSON.stringify(res).slice(0, 300));
   w.prepare(CASE, 1, { project: proj, roles, materials: [{ ref: id, kind: "document", sha: sha(body), text_sha: null, included: true, rests_under: "load_bearing" }] });
   const r = w.signCase(CASE, 1, { project: proj, roster: roster(roles) });
-  assert.deepEqual(r.materials.map((m) => [m.kind, m.sha256, m.held]), [["document", sha(body), "text"], ["attestation", sha(token), "text"]]);
+  assert.deepEqual(r.materials, [{ sha: sha(body), held: "inline" }, { sha: sha(token), held: "inline" }]);
   assert.deepEqual(w.p.publishedMaterialText(sha(token)), { found: true, sha256: sha(token), kind: "attestation", text: token });
 });
 
@@ -220,10 +224,16 @@ function offRecord({ sources = [WITHHELD(CAP)] } = {}) {
   const b = base();
   b.w.knock(CAP);   /* the pulled knock behind CAP, so the Withheld row stands at the commit (R51) */
   b.w.actors.set(CAP, [V("ann")]);
-  b.w.prepare(CASE, 1, { project: b.proj, roles: b.roles, blocks: { sources }, attributions: [] });
+  b.w.prepare(CASE, 1, { project: b.proj, roles: b.roles, blocks: { sources }, attributions: [],
+    materials: [{ ref: "INFO-2026-0009-knocked", kind: "document", sha: CAP, text_sha: null, origin: null, archived_copy: null,
+                  included: false, rests_under: "supporting" }],
+    attestations: [ATTESTED("cover", "Cover ann", "SIG-ANN"), { ref: "INFO-2026-0009-knocked", by_kind: "group", by: "test-group",
+                   level: null, at: NOW, signature: "case", recorded_in: null }] });
   return b;
 }
 const REASON = "Credit the group for what I brought in.";
+const ATTESTED = (level, by, signature) => ({ ref: "INFO-2026-0009-knocked", by_kind: "member", by, level, at: NOW, signature,
+                                              recorded_in: null });
 const attributeCapture = (w, { by = "ann", level = "group", capture = CAP, edition = 1, reason = REASON } = {}) =>
   w.op("attribute", { by }, { caseId: CASE, edition, capture, level, reason });
 
@@ -247,6 +257,15 @@ test("R60 attributeObservation takes capture in place of observation: the captur
   assert.ok(text.includes(`  - capture: ${CAP}`), text.slice(0, 400));
   const after = w.p.attributionFacts(w.row(`SELECT case_id, edition, text FROM case_documents`));
   assert.deepEqual(after.stated.map((s) => [s.capture, s.level]), [[CAP, "cover"]]);
+  /* K1317: the attesting member's row in the attestations section states the chosen level, and the group's row is kept */
+  const rowsNow = () => w.p.caseDocumentFacts(CASE, 1, V("olive")).doc.text.split("material_attestations:")[1].split("\n---")[0];
+  assert.ok(rowsNow().includes('level: "cover"') || rowsNow().includes("level: cover"), rowsNow());
+  assert.ok(rowsNow().includes("Cover ann") && rowsNow().includes("SIG-ANN") && rowsNow().includes("test-group"));
+  const grp = attributeCapture(w, { level: "group", reason: "group now" });
+  assert.equal(grp.attestations.reauthored, true);
+  assert.ok(!rowsNow().includes("Cover ann") && !rowsNow().includes("SIG-ANN") && !rowsNow().includes("h_ann"),
+            "at group: no handle, cover or signature");
+  assert.ok(rowsNow().includes("test-group"), "the group's own row is kept");
   /* each level publishes the attesting member's own value, never the member id */
   for (const level of ["group", "project", "name"]) {
     const x = attributeCapture(w, { level, reason: `now ${level}` });

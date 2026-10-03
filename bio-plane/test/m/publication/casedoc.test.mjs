@@ -159,7 +159,7 @@ test("R21 writes only inside the caller's transaction: a caller that refuses lea
 test("R21 reauthorSection splices one named section only while unsigned and at docSha, projects the exclusions, and says when it did not", () => {
   const obs = "INFO-2026-0099-observation";
   const { w, proj, roles } = prepared({ attributions: [{ observation: obs }], ack: true });
-  assert.deepEqual(REAUTHORABLE_SECTIONS, ["attribution", "acknowledgements"]);
+  assert.deepEqual(REAUTHORABLE_SECTIONS, ["attribution", "acknowledgements", "attestations"]);
   const held = w.row(`SELECT doc_sha, text FROM case_documents`);
   const lines = { frontmatter: ["observation_attributions:", `  - observation: ${obs}`, "    level: group",
                                 '    shown: "g"', "    chosen_at_edition: 1"], body: ["## Whose Words These Are", "", "new words", ""] };

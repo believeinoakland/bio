@@ -74,7 +74,7 @@ import { observerRef, provenanceOf } from "../provenance/index.mjs";
 import { caseDocumentStatesMemberBlocks, caseTensionsOf, disclosedCandidates, caseDocumentBlocks, sourceRowsStanding,
          SECTIONS, REAUTHORABLE_SECTIONS, signedCitations, ATTRIBUTION_LEVELS, attributionFrontmatterLines,
          attributionBodyLines, publishedGraphEdges, caseDocumentRequiresMaterials, acceptedWorkOf as acceptedWorkBlocksOf,
-         materialsOf, extractedTextOf } from "../case-grammar/index.mjs";
+         materialsOf, extractedTextOf, materialAttestationLines } from "../case-grammar/index.mjs";
 
 export { ATTRIBUTION_ACT_CHECKS, CASE_SOURCES_CHECKS } from "./checks.mjs";
 export { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3, CASE_DOCUMENT_FORMAT_V2,
@@ -885,6 +885,9 @@ export class Publication {
        in the case file from the published projection alone. A material this copy cannot hold at its stated digest never
        refuses the commit: it is named, and the case file shows it missing. */
     const held = this.#holdMaterials(docFm, when);
+    held.materials.forEach((m, i) => this.sql.exec(
+      `INSERT INTO published_case_materials (case_id,edition,ord,sha256,held) VALUES (?,?,?,?,?)
+       ON CONFLICT(case_id,edition,ord) DO NOTHING`, id, ed, i, m.sha, m.held));
     return { ...outcome(false), materials: held.materials, materials_unheld: held.unheld };
   }
 
@@ -910,7 +913,7 @@ export class Publication {
                      ON CONFLICT(sha256,bundle_id,path) DO NOTHING`,
                     sha, ref, `materials/${sha}`, kind, typeof text === "string" ? new TextEncoder().encode(text).length
                       : Number.isInteger(bytes) ? bytes : null, when);
-      materials.push({ ref, kind, sha256: sha, held: typeof text === "string" ? "text" : "evidence" });
+      materials.push({ sha, held: typeof text === "string" ? "inline" : "evidence" });
     };
     for (const m of Array.isArray(rows) ? rows : []) {
       if (!m || typeof m !== "object" || !(m.included === true || m.included === "true")) continue;
@@ -970,6 +973,16 @@ export class Publication {
         if (t && t.kind === "rfc3161" && typeof t.file === "string" && t.file) out.add(t.file);
     }
     return [...out];
+  }
+
+  /** R57 (K1317): what a committed case edition held, `[{sha, held}]` in its materials' order, `held` `inline` or
+   *  `evidence`, as its commit answered it, so a retried ratification copies what is left (ratification R39); `[]` for
+   *  an edition that held nothing or was never committed. Writes nothing; never throws. */
+  heldMaterialsOf(caseId, edition) {
+    try {
+      return this.#rows(`SELECT sha256, held FROM published_case_materials WHERE case_id=? AND edition=? ORDER BY ord`,
+                        str(caseId), Number(edition)).map((r) => ({ sha: r.sha256, held: r.held }));
+    } catch { return []; }
   }
 
   /** R57 (K1316): a held material's text by its SHA-256, for `public-read`'s case file: `{found, sha256, kind, text}`,
@@ -2167,14 +2180,50 @@ export class Publication {
                     cid, ed, obs, lv, who, when, why);
     const held = this.attributionInForce(cid, ed, subject);
     const reauthored = this.#reauthorAttributions(doc);
+    /* R60 (K1317): the capture's attesting member row in the attestations section follows the choice. */
+    const attested = cap ? this.#reauthorCaptureAttestation(cid, ed, cap, who, lv, me) : null;
     const fm = parseFrontmatter(doc.text).data || {};
     const stmt = this.attributionStatements(cid, ed, String(fm.case_project ?? "").trim(), [subject])[0];
     return { ok: true, existed: same, ...(cap ? { capture: cap, observation: null } : { observation: obs }), caseId: cid, edition: ed, level: lv, shown: stmt.shown,
              reason: held ? held.reason ?? null : null,
              previous: prior ? { level: prior.level, edition: Number(prior.edition) } : null,
-             case_document: reauthored,
+             case_document: reauthored, ...(attested ? { attestations: attested } : {}),
              stated: `edition ${ed} of ${cid} now states ${subject} at level '${lv}'. The case document was re-authored; `
                    + `its owner signs the new bytes. A later edition inherits this choice until you change it.` };
+  }
+
+  /* R60 (K1317; case-authoring R48): RE-AUTHOR THE CAPTURE'S ATTESTING MEMBER ROW in the unsigned document's
+     `material_attestations:` section, through R21's one splice: each `member` row the chooser made for a material whose
+     SHA-256 is the capture is replaced by one stating the chosen level, carrying the member's handle (or cover) and the
+     account's signature only at `cover` or `name`, never at `group` or `project`. Every other row is kept as written. A
+     document with no such section or row is left as it is and the answer says so. */
+  #reauthorCaptureAttestation(caseId, edition, cap, who, level, me) {
+    const doc = this.#one(`SELECT case_id, edition, doc_sha, text, sig_armored FROM case_documents WHERE case_id=? AND edition=?`,
+                          caseId, edition);
+    if (!doc || doc.sig_armored) return { reauthored: false, why: "no unsigned case document is held for this edition" };
+    let m = null;
+    try { m = materialsOf(parseFrontmatter(doc.text).data || {}); } catch { m = null; }
+    const rows = m && Array.isArray(m.material_attestations) ? m.material_attestations : null;
+    const refs = new Set((m && Array.isArray(m.materials) ? m.materials : [])
+      .filter((x) => x && String(x.sha || "").toLowerCase() === cap).map((x) => x.ref));
+    const bare = (v) => String(v ?? "").replace(/^member:/, "");
+    const mine = (r) => r && r.by_kind === "member" && refs.has(r.ref)
+      && (r.by == null || r.by === "null" || ["group", "project"].includes(r.level)
+          || [bare(who), me.handle, me.cover].filter(Boolean).includes(bare(r.by)));
+    if (!rows || !rows.some(mine))
+      return { reauthored: false, why: "this case document states no attestation row of yours for that capture" };
+    let signature = null;
+    try {
+      const accounts = (this.capture.captureAccountsOf(cap).accounts || []).filter((a) => bare(a.by) === bare(who));
+      signature = accounts.length ? accounts[accounts.length - 1].signature ?? null : null;
+    } catch { signature = null; }
+    const named = level === "cover" || level === "name";
+    const next = rows.map((r) => (!mine(r) ? r : { ...r, level,
+      by: named ? (level === "name" ? me.handle ?? null : me.cover ?? null) : null,
+      signature: named ? (r.signature && r.signature !== "null" ? r.signature : signature) : null }));
+    const { ok: _ok, ...out } = this.reauthorSection({ caseId, edition, docSha: doc.doc_sha, section: "attestations",
+      lines: { frontmatter: materialAttestationLines(next), body: [] } });
+    return out;
   }
 
   /* D-442 / BIO_Publication_v0_1.md §3 rule 12: a member's edition and frozen pair as the RATIFIED

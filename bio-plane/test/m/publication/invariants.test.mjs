@@ -52,8 +52,9 @@ test("R31 published bytes are exempt from purge; the derived and working tables 
   assert.deepEqual(w.rows(`SELECT edition FROM case_documents`), [{ edition: 1 }]);
   assert.deepEqual(w.rows(`SELECT DISTINCT edition FROM case_exclusions`), [{ edition: 1 }]);
   assert.deepEqual(w.snapshot(KEPT), exempt, "published_*, cases and corpus-export's export_log are never cleared");
-  assert.deepEqual([...PUBLICATION_EXEMPT].sort(), ["cases", "published_bundles", "published_case_members",
-                                                    "published_cases", "published_material_texts", "published_shas"]);
+  assert.deepEqual([...PUBLICATION_EXEMPT].sort(), ["cases", "published_bundles", "published_case_materials",
+                                                    "published_case_members", "published_cases", "published_material_texts",
+                                                    "published_shas"]);
   assert.deepEqual(PUBLICATION_TABLES.map((t) => t.name || t).sort(),
                    ["capture_attributions", "case_documents", "case_exclusions", "case_revision_flags",
                     "observation_attributions", "published_edges", "published_held_references"]);

@@ -582,6 +582,18 @@ CREATE TABLE IF NOT EXISTS published_material_texts (
   published TEXT NOT NULL
 );
 
+-- R57 (K1317): WHAT ONE COMMITTED CASE EDITION HELD, in the order its materials: block lists them: each SHA-256 and
+-- whether its text is held here (inline) or its bytes are in the evidence store for ratification R39 to copy (evidence).
+-- Written once by commitCaseEdition, read by heldMaterialsOf for a retried ratification. Published, so exempt (R31).
+CREATE TABLE IF NOT EXISTS published_case_materials (
+  case_id  TEXT NOT NULL,
+  edition  INTEGER NOT NULL,
+  ord      INTEGER NOT NULL,
+  sha256   TEXT NOT NULL,
+  held     TEXT NOT NULL CHECK (held IN ('inline','evidence')),
+  PRIMARY KEY (case_id, edition, ord)
+);
+
 -- R60 (DEC-119 (3); DEC-102 items 1-3; N523): THE ATTESTING MEMBER'S CREDIT FOR OFF-THE-RECORD MATERIAL. One row per
 -- (case edition, capture): the level the capture's attesting member (its actor, acquisition R16) chose for how that
 -- edition credits their attestation of material from a source the case shows as Withheld. Written only by
@@ -611,7 +623,7 @@ export const PUBLICATION_TABLES = Object.freeze([
 ]);
 /** R24, R31: the published bytes, never cleared by any purge. */
 export const PUBLICATION_EXEMPT = Object.freeze([
-  "published_bundles", "published_shas", "published_material_texts", "published_cases", "published_case_members", "cases",
+  "published_bundles", "published_shas", "published_material_texts", "published_case_materials", "published_cases", "published_case_members", "cases",
 ]);
 
 /* Columns added after a store was first written, added by hand because CREATE TABLE IF NOT EXISTS does nothing to a
