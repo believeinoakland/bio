@@ -45,13 +45,32 @@ test("R13: acceptedWorkJudged reads, for each ref leg, case-import's acceptance 
   assert.deepEqual(acceptedWorkOf(fm).rows.map((r) => [r.ref, r.edition, r.reason]), [[ref, 2, "We recreated it whole."]]);
   const body = acceptedBodyLines({ rows: a.rows, flags: [] }).join("\n");
   assert.ok(body.includes("## Another Group's Work This Case Rests On"));
-  assert.ok(body.includes(`- ${Q} rests, through ${Q}, on ${THEIRS} of other-group's case CASE-2026-0900, edition 2: accepted by alice on 2026-09-27T00:00:00Z, because: We recreated it whole.. It was recreated from that case file, with the gaps stated: the third page's image was not carried.`));
-  /* the reason's own full stop is followed by the sentence's (`whole..`): the bytes as signed before the split (K1333) */
+  assert.ok(body.includes(`- ${Q} rests, through ${Q}, on ${THEIRS} of other-group's case CASE-2026-0900, edition 2: accepted by alice on 2026-09-27T00:00:00Z, because: We recreated it whole. It was recreated from that case file, with the gaps stated: the third page's image was not carried.`));
+  /* the reason's own full stop is not doubled (N535) */
+  assert.equal(body.includes(".."), false);
   assert.ok(body.includes("No flag was open on that work when this case was published."));
   assert.deepEqual(acceptedBodyLines({ rows: [], flags: [] }), [], "no accepted work: no section");
   assert.deepEqual(acceptedWorkRow({ member: "m", leg_of: "l", ref: "r", target_edition: 3 }, { finding: "f" }, {}, null, null),
     { member: "m", leg_of: "l", ref: "r", group: null, case: null, edition: 3, finding: "f", manifest_sha: null, pair: null,
       result: null, gaps: null, accepted_by: null, accepted_at: null, reason: null });
+});
+
+test("R13, R14 (N535): each member's words in the section — an acceptance's reason and gaps, a flag's issue, the owner's words — close as one sentence: a full stop is added only when the words do not already end one (., ! or ? or …), never doubled; words are otherwise printed as given", () => {
+  const row = (reason, gaps) => ({ member: "M", leg_of: "L", ref: "R", group: "g", case: "C", edition: 1, finding: "F",
+    manifest_sha: null, pair: null, result: "recreated", gaps, accepted_by: "alice", accepted_at: "t", reason });
+  const flag = (issue, words) => ({ ref: "R", edition: 1, flag: "F1", issue, flagged_at: "t", words, acknowledged_by: "alice", acknowledged_at: "t" });
+  const line = (r, f = []) => acceptedBodyLines({ rows: [r], flags: f }).filter((l) => l.startsWith("- "));
+  for (const [given, printed] of [["We recreated it whole", "We recreated it whole."], ["We recreated it whole.", "We recreated it whole."],
+                                  ["Did it recreate?", "Did it recreate?"], ["It did!", "It did!"], ["and so on…", "and so on…"],
+                                  ["Three dots...", "Three dots..."], ["ends in a quote 'x'", "ends in a quote 'x'."]]) {
+    assert.ok(line(row(given, null))[0].includes(`because: ${printed} It was recreated from that case file. Its grades`), given);
+    assert.ok(line(row("r", given))[0].includes(`with the gaps stated: ${printed} Its grades`), given);
+    const [, f] = line(row("r", null), [flag(given, given)]);
+    assert.equal(f, `- Flag F1 on R, edition 1, raised t: ${printed} In the owner's words: ${printed} Disclosed by alice on t.`, given);
+  }
+  const [, nowords] = line(row("r", null), [flag("an issue.", null)]);
+  assert.equal(nowords, "- Flag F1 on R, edition 1, raised t: an issue. Disclosed by alice on t.");
+  for (const l of [...line(row("x.", "y."), [flag("z.", "w.")])]) assert.equal(/\.\./.test(l), false, l);
 });
 
 test("R13 (C-120.10): a leg with no acceptance in force — withdrawn, or a read that fails or throws — is ACCEPTED_WORK_NOT_IN_FORCE, naming the member, the leg and the source case and edition; it writes nothing", () => {

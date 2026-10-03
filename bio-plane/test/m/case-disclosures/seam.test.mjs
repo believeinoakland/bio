@@ -270,13 +270,27 @@ const RENDERED = {
   "fe16ace5dca89d8bb3ea1dd6f7371ae334b08cdc1e964be0800d11d388ff9eb1": ["captureBodyLines", [[], []]],
   "54051f5fdfe26a6d6017163cb0115033e67c6076a0d9855e96a0c18bbf8b4d6f": ["carriesBodyLines", [METHOD, MATERIALS, "test-group"]],
   "90eb0ce32c1afc3fa9af5d11f4c768f7ff59c62daac0562ff4516428000324cb": ["carriesBodyLines", [null, { rows: [] }, null]],
-  "557eeb47abfb15756efe91a681364b912cc007dda9b7d40ec6b73286471a7145": ["acceptedBodyLines", [ACCEPTED]],
-  "ad9a96ebac55e2784f2d60cee6ad7bfb581b2cd94cc6f355d4a4507123420cc3": ["acceptedBodyLines", [{ rows: ACCEPTED.rows, flags: [] }]],
+  /* re-pinned by N535: the first row's reason ends in its own full stop, which is no longer doubled */
+  "ca07dd944ad664fbc7e30d31254e9c6b344aaedecbd8cf67071e9500e797ef17": ["acceptedBodyLines", [ACCEPTED]],
+  "c4da3290d6ee7b150705bd817934413dbab78b4a750388db92bec2be569fb2e1": ["acceptedBodyLines", [{ rows: ACCEPTED.rows, flags: [] }]],
 };
+/* N535: the bytes case-authoring's renderer produced before the split, for the two sections that changed. */
+const ACCEPTED_BEFORE_N535 = [["557eeb47abfb15756efe91a681364b912cc007dda9b7d40ec6b73286471a7145", ACCEPTED],
+  ["ad9a96ebac55e2784f2d60cee6ad7bfb581b2cd94cc6f355d4a4507123420cc3", { rows: ACCEPTED.rows, flags: [] }]];
 
 test("R1, R3, R5, R7, R13, R14 (K1333): the renderers moved byte for byte — each section rendered from fixed rows hashes to what case-authoring's renderers produced from them before the split, and so does each member's tension sentence (negative control: one changed byte in a row changes the hash)", () => {
   for (const [want, [fn, args]] of Object.entries(RENDERED)) assert.equal(hash(CD[fn](...args)), want, fn);
   assert.equal(hash(ROWS_T.map(CD.tensionSentence)), "ea2712a31f72c703a3308c648cb20d048e210232c2eb1cda3995cf468c283417");
   const changed = [{ ...ROWS_T[0], words: "we read the later page." }, ...ROWS_T.slice(1)];
   assert.notEqual(hash(CD.tensionBodyLines(changed, UNREAD)), "7b4d64ee3bbd113a414cf7a9b7fbbe3b4a871838fcac7aaf624c8a183ce25f39");
+});
+
+test("R13 (N535): acceptedBodyLines changed in one place only — with the doubled full stop after a reason that ends in its own put back, each section is byte for byte what case-authoring's renderer produced before the split", () => {
+  for (const [before, accepted] of ACCEPTED_BEFORE_N535) {
+    const lines = CD.acceptedBodyLines(accepted);
+    const one = lines.filter((l) => l.includes("because: We recreated it. It was"));
+    assert.equal(one.length, 1, "the changed sentence, once");
+    assert.equal(hash(lines.map((l) => l.replace("because: We recreated it. It was", "because: We recreated it.. It was"))), before);
+    assert.notEqual(hash(lines), before, "negative control: the new bytes differ");
+  }
 });

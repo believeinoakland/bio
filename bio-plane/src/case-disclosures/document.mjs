@@ -118,6 +118,15 @@ export function carriesBodyLines(method, materials, group) {
     ""];
 }
 
+/* N535: a member's words (an acceptance's reason and gaps, a flag's issue, the owner's words on it) closed as a
+   sentence, its full stop added only when the words do not already end one (a reason "We recreated it whole."
+   printed "whole.." before). The words are otherwise printed as given. An edition written before N535 keeps its
+   bytes as signed: nothing re-renders a published edition. */
+const sentence = (words) => {
+  const s = String(words);
+  return /[.!?…]$/.test(s) ? s : `${s}.`;
+};
+
 export function acceptedBodyLines(accepted) {
   const rows = accepted && Array.isArray(accepted.rows) ? accepted.rows : [];
   const flags = accepted && Array.isArray(accepted.flags) ? accepted.flags : [];
@@ -127,13 +136,13 @@ export function acceptedBodyLines(accepted) {
     + "work, and everything it rests on, is the other group's, in its own case file: check it there.", "",
     ...rows.map((r) => `- ${r.member} rests, through ${r.leg_of}, on ${r.finding} of ${r.group ?? "another group"}'s case `
       + `${r.case ?? "(not stated)"}, edition ${r.edition}: accepted by ${r.accepted_by} on ${r.accepted_at}, because: `
-      + `${r.reason}. It was ${String(r.result ?? "not recorded").replace(/_/g, " ")} from that case file`
-      + (r.gaps ? `, with the gaps stated: ${r.gaps}` : "") + `. Its grades as that edition publishes them: ${pairLine(r.pair)}. `
+      + `${sentence(r.reason)} It was ${String(r.result ?? "not recorded").replace(/_/g, " ")} from that case file`
+      + (r.gaps ? `, with the gaps stated: ${sentence(r.gaps)}` : ".") + ` Its grades as that edition publishes them: ${pairLine(r.pair)}. `
       + `Its case file's manifest is ${r.manifest_sha ?? "not stated"}.`),
     ...(flags.length
       ? ["", "Each open flag on that work is disclosed here, and never blocks the case (DEC-96 item 4):", "",
          ...flags.map((f) => `- Flag ${f.flag} on ${f.ref}, edition ${f.edition}, raised ${f.flagged_at ?? "at a time not stated"}: `
-           + `${f.issue}.` + (f.words ? ` In the owner's words: ${f.words}.` : "")
+           + sentence(f.issue) + (f.words ? ` In the owner's words: ${sentence(f.words)}` : "")
            + ` Disclosed by ${f.acknowledged_by} on ${f.acknowledged_at}.`)]
       : ["", "No flag was open on that work when this case was published."]),
     ""];
