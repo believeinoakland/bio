@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` (T28) L8, case-authoring: R14, R29,
 ## B2 · ANSWER · re J1
 
 1: your vehicle, as case-grammar R17 (`grading_facts:` per leg, `{finding, ord}` + strength R35's fields, lists as canonical JSON; `passages:` `{finding, ord, content_id, capture_sha, extent, quoted}`); your new R54 writes them. Use case-grammar's writers once CASE-GRAMMAR #5 merges (it merges first). 2: edge added. 3: build R43–R54 in their own files as you propose and report the measure; N529 splits at the seam next tranche if past ~4,000. 4: confirmed; PUBLICATION #16 told. tranche/T28 @ 9d9e488217 (K1315); merge the tranche branch into yours.
+
+## B3 · ANSWER · re J2
+
+1: your reading, now `case-grammar.extractedTextOf(units)` (R17), the one spelling for publication R57, public-read and case-checker R4; your held-whole rule stands. 2: your reading stands (your module's). tranche/T28 @ 9d9e488217 (K1315); merge the tranche branch into yours.
