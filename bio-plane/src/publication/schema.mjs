@@ -4,7 +4,8 @@
  *
  * The published projection (`published_bundles`, `published_shas`, `published_cases`, `published_case_members`,
  * `cases`) is append-only and exempt from purge (R24, R31): an edition answers forever. `export_log` is
- * `corpus-export`'s since K1024. The derived
+ * `corpus-export`'s since K1024, and `published_material_texts` and
+ * `published_case_materials` `case-carriage`'s since N532. The derived
  * and working tables (`published_edges`, `published_held_references`, unsigned `case_documents` and their
  * `case_exclusions`, `case_revision_flags`, `observation_attributions`, `capture_attributions` (R60)) are declared to record-core's purge as the
  * store declared them (K23); the held references (N256) as `published_edges` is. */
@@ -568,32 +569,6 @@ CREATE TABLE IF NOT EXISTS observation_attributions (
 );
 CREATE INDEX IF NOT EXISTS observation_attributions_bundle ON observation_attributions(bundle_id);
 
--- R57 (DEC-112 (3)(4); K1316): THE TEXTS A PUBLISHED CASE CARRIES WHOLE, BY SHA-256. Written by commitCaseEdition, in its
--- transaction, for each material the signed document's materials: block lists included: true: a document's extracted
--- text (case-grammar extractedTextOf), an observation's whole text, a document's captured bytes where the register holds
--- them inline as text, and a timestamp token held inline. Each is also a published_shas row (materials/<sha>), so it is
--- served by hash; public-read reads the text here through publishedMaterialText. Content-addressed and append-only: a
--- text once held is never rewritten or removed, and the table is exempt from purge as published bytes are (R31).
-CREATE TABLE IF NOT EXISTS published_material_texts (
-  sha256    TEXT PRIMARY KEY,
-  kind      TEXT NOT NULL,      -- document | extracted_text | observation | attestation
-  text      TEXT NOT NULL,
-  bytes     INTEGER NOT NULL,   -- the UTF-8 length of text
-  published TEXT NOT NULL
-);
-
--- R57 (K1317): WHAT ONE COMMITTED CASE EDITION HELD, in the order its materials: block lists them: each SHA-256 and
--- whether its text is held here (inline) or its bytes are in the evidence store for ratification R39 to copy (evidence).
--- Written once by commitCaseEdition, read by heldMaterialsOf for a retried ratification. Published, so exempt (R31).
-CREATE TABLE IF NOT EXISTS published_case_materials (
-  case_id  TEXT NOT NULL,
-  edition  INTEGER NOT NULL,
-  ord      INTEGER NOT NULL,
-  sha256   TEXT NOT NULL,
-  held     TEXT NOT NULL CHECK (held IN ('inline','evidence')),
-  PRIMARY KEY (case_id, edition, ord)
-);
-
 -- R60 (DEC-119 (3); DEC-102 items 1-3; N523): THE ATTESTING MEMBER'S CREDIT FOR OFF-THE-RECORD MATERIAL. One row per
 -- (case edition, capture): the level the capture's attesting member (its actor, acquisition R16) chose for how that
 -- edition credits their attestation of material from a source the case shows as Withheld. Written only by
@@ -623,7 +598,7 @@ export const PUBLICATION_TABLES = Object.freeze([
 ]);
 /** R24, R31: the published bytes, never cleared by any purge. */
 export const PUBLICATION_EXEMPT = Object.freeze([
-  "published_bundles", "published_shas", "published_material_texts", "published_case_materials", "published_cases", "published_case_members", "cases",
+  "published_bundles", "published_shas", "published_cases", "published_case_members", "cases",
 ]);
 
 /* Columns added after a store was first written, added by hand because CREATE TABLE IF NOT EXISTS does nothing to a

@@ -38,8 +38,10 @@
  *   inquiry        `exclusionsNaming` (R12).
  *   basisVersions  `testimonyReach` (R2, R17).
  *   contradiction  `unresolvedRecordOn` (its R29), for R50 (N345).
- *   sources        `publishableAt` (its R8), for R51 (N364); its `source_knocks` read contract (its R15) joined in
- *                  this module's own SQL, the sources behind a capture.
+ *   caseCarriage   `holdMaterials`, `heldMaterialsOf`, `publishedMaterialText`, `acceptedWorkLapsed`, `sourcesLapsed`
+ *                  (its R1–R5), for R51, R57 and R59 (N532); created at creation with this module's storage, record,
+ *                  membership, promotion and clock, so its two tables exist and are declared at every boot (its R6). A
+ *                  given `sources`, `acceptedWork` or `extraction` is forwarded to it (test injection).
  *   reevaluation   `registerCaseParts` (its R26), at creation only (R41, R43).
  *   corpusExport   created at creation with this module's clock, so `export_log` exists and is declared at every boot
  *                  (its R4); its ops are spread by the plane's op map (`corpusExportOps`, N483), and nothing here calls it.
@@ -61,20 +63,18 @@ import { rowOf, ATTRIBUTION_ACT_CHECKS } from "./checks.mjs";
 import { PUBLICATION_TABLES, PUBLICATION_EXEMPT, migratePublication, registerCaseDocumentSha,
          caseDocumentPath } from "./schema.mjs";
 import { contradictionOf } from "../contradiction/index.mjs";
-import { sourcesOf } from "../sources/index.mjs";
 import { corpusExportOf } from "../corpus-export/index.mjs";
-import { acceptedWorkOf } from "../accepted-work/index.mjs";
+import { caseCarriageOf } from "../case-carriage/index.mjs";
 import { captureOf } from "../capture/index.mjs";
-import { extractionOf } from "../extraction/index.mjs";
 import { observerRef, provenanceOf } from "../provenance/index.mjs";
 /* The case document's grammar is `case-grammar`'s (K651): the formats and predicates, the /5 blocks and tension
    section, the attribution run's text, the section locators, the signed citations and the edge set a finding rests on.
    This module reads them from there and re-exports, unchanged, every name it exported before the split, so its
    importers import exactly what they imported. */
-import { caseDocumentStatesMemberBlocks, caseTensionsOf, disclosedCandidates, caseDocumentBlocks, sourceRowsStanding,
+import { caseDocumentStatesMemberBlocks, caseTensionsOf, disclosedCandidates, caseDocumentBlocks,
          SECTIONS, REAUTHORABLE_SECTIONS, signedCitations, ATTRIBUTION_LEVELS, attributionFrontmatterLines,
-         attributionBodyLines, publishedGraphEdges, caseDocumentRequiresMaterials, acceptedWorkOf as acceptedWorkBlocksOf,
-         materialsOf, extractedTextOf, materialAttestationLines } from "../case-grammar/index.mjs";
+         attributionBodyLines, publishedGraphEdges, caseDocumentRequiresMaterials, materialsOf,
+         materialAttestationLines } from "../case-grammar/index.mjs";
 
 export { ATTRIBUTION_ACT_CHECKS, CASE_SOURCES_CHECKS } from "./checks.mjs";
 export { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3, CASE_DOCUMENT_FORMAT_V2,
@@ -178,11 +178,17 @@ export class Publication {
   get credentials() {
     return this.#deps.credentials ||= credentialsOf(this.#deps.host, { record: this.record, membership: this.membership });
   }
-  get acceptedWork() { return this.#deps.acceptedWork ||= acceptedWorkOf(this.#deps.host, { record: this.record, promotion: this.promotion }); }
-  get extraction() { return this.#deps.extraction ||= extractionOf(this.#deps.host, { record: this.record, membership: this.membership }); }
   get provenance() { return this.#deps.provenance ||= provenanceOf(this.#deps.host, { record: this.record, membership: this.membership, promotion: this.promotion }); }
   get capture() { return this.#deps.capture ||= captureOf(this.#deps.host, { record: this.record }); }
-  get sources() { return this.#deps.sources ||= sourcesOf(this.#deps.host, { record: this.record, membership: this.membership }); }
+  /* N532: case-carriage, one per host, forwarded the uses a test gave this module (its Suggestions' factory). */
+  get caseCarriage() {
+    const { host, storage, sources, acceptedWork, extraction } = this.#deps;
+    return caseCarriageOf(host, { storage, record: this.record, membership: this.membership, promotion: this.promotion,
+                                  now: this.now, ...(sources ? { sources } : {}), ...(acceptedWork ? { acceptedWork } : {}),
+                                  ...(extraction ? { extraction } : {}) });
+  }
+  /* The accepted-work instance case-carriage reads (R59), a one-line delegate: `plane` R16's test reads it here. */
+  get acceptedWork() { return this.caseCarriage.acceptedWork; }
   get corpusExport() {
     return this.#deps.corpusExport ||= corpusExportOf(this.#deps.host, { storage: this.#deps.storage, record: this.record,
                                                                         now: this.now });
@@ -822,9 +828,9 @@ export class Publication {
     const when = str(at) || this.#when();
     /* R51, R52 (N364; DEC-78 item 5(d)): WHAT THE DOCUMENT STATES OF ITS SOURCES IS RE-READ AT THE COMMIT. A consent
        withdrawn binds only later publications, and this is one: every row of the `sources:` block must still be what
-       `sources.publishableAt({audience: "public", at})` answers now, or the capture's unnamed statement. Any other row
-       stops the commit, nothing written; the remedy is a new preparation. */
-    const lapsed = this.#sourcesLapsed(doc.text, when);
+       `sources.publishableAt({audience: "public", at})` answers now, or the capture's unnamed statement, read through
+       case-carriage (its R5). Any other row stops the commit, nothing written; the remedy is a new preparation. */
+    const lapsed = this.caseCarriage.sourcesLapsed(doc.text, when);
     if (lapsed.length) {
       /* DEC-49 REGION is-source-consent-withdrawn */
       return { ok: false, reason: "SOURCE_CONSENT_WITHDRAWN", ...rowOf("SOURCE_CONSENT_WITHDRAWN"), caseId: id,
@@ -836,8 +842,9 @@ export class Publication {
     }
     /* R59 (DEC-96 items 1, 4; N522): ANOTHER GROUP'S WORK THE DOCUMENT RESTS ON IS RE-READ AT THE COMMIT, R51's pattern.
        Each `accepted_work:` row's acceptance must still be in force at its edition, and every open flag on that edition
-       must be one `accepted_work_flags:` discloses; otherwise nothing is committed and the remedy is a new preparation. */
-    const standing = this.#acceptedWorkLapsed(docFm, attestorMember);
+       must be one `accepted_work_flags:` discloses, read through case-carriage (its R4); otherwise nothing is committed
+       and the remedy is a new preparation. */
+    const standing = this.caseCarriage.acceptedWorkLapsed(docFm, attestorMember);
     if (standing) {
       /* DEC-49 REGION is-accepted-work-standing */
       if (standing.withdrawn.length)
@@ -882,175 +889,22 @@ export class Publication {
        act and transaction that signs it, so op=verify answers for the one hash a member signed here. */
     registerCaseDocumentSha(this.sql, id, ed, doc.doc_sha, doc.text, when);
     /* R57 (DEC-112 (3)(4); K1316): EVERYTHING THE CASE INCLUDES, HELD BY SHA-256 IN THE SAME ACT, so public-read carries it
-       in the case file from the published projection alone. A material this copy cannot hold at its stated digest never
-       refuses the commit: it is named, and the case file shows it missing. */
-    const held = this.#holdMaterials(docFm, when);
-    held.materials.forEach((m, i) => this.sql.exec(
-      `INSERT INTO published_case_materials (case_id,edition,ord,sha256,held) VALUES (?,?,?,?,?)
-       ON CONFLICT(case_id,edition,ord) DO NOTHING`, id, ed, i, m.sha, m.held));
+       in the case file from the published projection alone: case-carriage holds them (its R1) and this module registers
+       every file it answers by hash, every write to `published_shas` being this module's. A material this copy cannot
+       hold at its stated digest never refuses the commit: it is named, and the case file shows it missing. */
+    const held = this.caseCarriage.holdMaterials(docFm, { caseId: id, edition: ed, at: when });
+    for (const f of held.files)
+      this.sql.exec(`INSERT INTO published_shas (sha256,bundle_id,path,kind,bytes,published) VALUES (?,?,?,?,?,?)
+                     ON CONFLICT(sha256,bundle_id,path) DO NOTHING`, f.sha256, f.ref, f.path, f.kind, f.bytes ?? null, when);
     return { ...outcome(false), materials: held.materials, materials_unheld: held.unheld };
   }
 
-  /* R57: hold, by SHA-256, each `included: true` material of the signed document's `materials:` block, inside the commit's
-     transaction: an observation's whole text and a document's captured bytes where the register holds them as inline
-     text (verified against the stated digest), a document's extracted text (`extractedTextOf` over extraction's units,
-     only when the index is whole and no unit was cut, verified against `text_sha`), and the timestamp tokens its home's
-     provenance names, as text where inline. Bytes held only in the evidence store are registered and answered
-     `held: "evidence"`, for ratification R39 to copy. Answers `{materials, unheld}`; never throws. */
-  #holdMaterials(fm, when) {
-    const materials = [], unheld = [];
-    let rows = null;
-    try { const m = materialsOf(fm); rows = m && Array.isArray(m.materials) ? m.materials : null; } catch { rows = null; }
-    const seen = new Set();
-    const hold = (ref, kind, sha, text, bytes) => {
-      if (seen.has(sha)) return;
-      seen.add(sha);
-      if (typeof text === "string") {
-        this.sql.exec(`INSERT INTO published_material_texts (sha256,kind,text,bytes,published) VALUES (?,?,?,?,?)
-                       ON CONFLICT(sha256) DO NOTHING`, sha, kind, text, new TextEncoder().encode(text).length, when);
-      }
-      this.sql.exec(`INSERT INTO published_shas (sha256,bundle_id,path,kind,bytes,published) VALUES (?,?,?,?,?,?)
-                     ON CONFLICT(sha256,bundle_id,path) DO NOTHING`,
-                    sha, ref, `materials/${sha}`, kind, typeof text === "string" ? new TextEncoder().encode(text).length
-                      : Number.isInteger(bytes) ? bytes : null, when);
-      materials.push({ sha, held: typeof text === "string" ? "inline" : "evidence" });
-    };
-    for (const m of Array.isArray(rows) ? rows : []) {
-      if (!m || typeof m !== "object" || !(m.included === true || m.included === "true")) continue;
-      const ref = str(m.ref), sha = str(m.sha).toLowerCase(), kind = m.kind;
-      const miss = (what, why) => unheld.push({ ref: ref || null, kind: what, sha256: what === "extracted_text" ? str(m.text_sha) || null : sha || null, why });
-      if (!HEX64.test(sha)) { miss(kind === "observation" ? "observation" : "document", "the row names no SHA-256"); continue; }
-      const home = this.#registered(sha);
-      const inline = home ? this.#fileText(home.bundle_id, home.path) : null;
-      const inlineOk = !!inline && shaOf(inline.content) === sha;
-      if (kind === "observation") {
-        if (inlineOk) hold(ref, "observation", sha, inline.content);
-        else miss("observation", "this copy holds no text of that observation at its digest");
-        continue;
-      }
-      if (inlineOk) hold(ref, "document", sha, inline.content);
-      else if (home && !inline) hold(ref, "document", sha, null, Number(home.bytes));
-      else { miss("document", "this copy holds no bytes of that document at its digest"); continue; }
-      /* its extracted text */
-      const textSha = str(m.text_sha).toLowerCase();
-      let text = null;
-      try {
-        const u = this.extraction.unitsOf(sha);
-        if (u && u.state === "whole" && Array.isArray(u.units) && u.units.length && !u.units.some((x) => x.truncated))
-          text = extractedTextOf(u.units);
-      } catch { text = null; }
-      if (typeof text === "string" && HEX64.test(textSha) && shaOf(text) === textSha) hold(ref, "extracted_text", textSha, text);
-      else miss("extracted_text", "this copy holds no whole extracted text of that document at its stated digest");
-      /* its co-attestation tokens (K1315) */
-      for (const t of this.#tokenFiles(home, sha)) {
-        const f = this.#fileRow(home.bundle_id, t);
-        if (f && typeof f.text === "string") hold(ref, "attestation", shaOf(f.text), f.text);
-        else if (f && typeof f.blobSha === "string" && HEX64.test(f.blobSha)) hold(ref, "attestation", f.blobSha, null, f.bytes);
-        else miss("attestation", `the timestamp token ${t} is not held`);
-      }
-    }
-    return { materials, unheld: unheld.slice(0, 1000) };
-  }
+  /** R57 (K1317): what a committed case edition held, as case-carriage answers it (its R2), so a retried ratification
+   *  copies what is left (ratification R39). */
+  heldMaterialsOf(caseId, edition) { return this.caseCarriage.heldMaterialsOf(caseId, edition); }
 
-  /* R57: the register row homing a capture on a bundle that exists, or null (provenance's read contract, R48). */
-  #registered(sha) {
-    return this.#one(`SELECT r.bundle_id, r.path, r.bytes FROM register r JOIN bundles b ON b.bundle_id=r.bundle_id
-                       WHERE r.capture_sha=? LIMIT 1`, sha);
-  }
-
-  /* R57: a live file's record-core read (R13): inline text, or its blob reference. */
-  #fileRow(bundleId, path) { try { return this.record.readFile(bundleId, path); } catch { return null; } }
-
-  /* R57 (K1315): the timestamp token files the home's `data/provenance.json` names for one capture. */
-  #tokenFiles(home, sha) {
-    const f = home ? this.#fileText(home.bundle_id, "data/provenance.json") : null;
-    const reg = f ? safeJson(f.content) : null;
-    const out = new Set();
-    for (const d of reg && Array.isArray(reg.documents) ? reg.documents : []) {
-      if (!d || !d.capture || String(d.capture.sha256 || "").replace(/^sha256:/, "").toLowerCase() !== sha) continue;
-      if (d.timestamp && typeof d.timestamp.token_file === "string" && d.timestamp.token_file) out.add(d.timestamp.token_file);
-      for (const t of Array.isArray(d.attestations) ? d.attestations : [])
-        if (t && t.kind === "rfc3161" && typeof t.file === "string" && t.file) out.add(t.file);
-    }
-    return [...out];
-  }
-
-  /** R57 (K1317): what a committed case edition held, `[{sha, held}]` in its materials' order, `held` `inline` or
-   *  `evidence`, as its commit answered it, so a retried ratification copies what is left (ratification R39); `[]` for
-   *  an edition that held nothing or was never committed. Writes nothing; never throws. */
-  heldMaterialsOf(caseId, edition) {
-    try {
-      return this.#rows(`SELECT sha256, held FROM published_case_materials WHERE case_id=? AND edition=? ORDER BY ord`,
-                        str(caseId), Number(edition)).map((r) => ({ sha: r.sha256, held: r.held }));
-    } catch { return []; }
-  }
-
-  /** R57 (K1316): a held material's text by its SHA-256, for `public-read`'s case file: `{found, sha256, kind, text}`,
-   *  or `{found: false}`. Answered only for a text a commit held, so working material is unreachable here. */
-  publishedMaterialText(sha) {
-    const r = this.#one(`SELECT sha256, kind, text FROM published_material_texts WHERE sha256=?`, String(sha ?? "").toLowerCase());
-    return r ? { found: true, sha256: r.sha256, kind: r.kind, text: r.text } : { found: false };
-  }
-
-  /* R59: the rows of a document's `accepted_work:` block whose acceptance is no longer in force, and the open flags on
-     their editions its `accepted_work_flags:` block does not disclose, or null when every row stands. Read through
-     `accepted-work` (its R2) as the signer (`member:<signer>`, case-import answering only an active member). A read
-     that answers absent, unreadable, null, or (for flags) not complete counts as not in force. Writes nothing. */
-  #acceptedWorkLapsed(fm, signer) {
-    let blocks = null;
-    try { blocks = acceptedWorkBlocksOf(fm); } catch { blocks = null; }
-    const rows = blocks && Array.isArray(blocks.rows) ? blocks.rows : [];
-    if (!rows.length) return null;
-    const disclosed = new Set((Array.isArray(blocks.flags) ? blocks.flags : [])
-      .filter((f) => f && typeof f === "object").map((f) => `${f.ref}\u0000${Number(f.edition)}\u0000${f.flag}`));
-    const viewer = str(signer) ? `member:${str(signer).replace(/^member:/, "")}` : null;
-    const aw = this.acceptedWork;
-    const withdrawn = [], undisclosed = [];
-    const asked = new Set();
-    for (const r of rows) {
-      if (!r || typeof r !== "object") continue;
-      const ref = str(r.ref), edition = Number(r.edition);
-      const key = `${ref}\u0000${edition}`;
-      if (asked.has(key)) continue;
-      asked.add(key);
-      const named = { ref: ref || null, edition: Number.isInteger(edition) ? edition : null };
-      const f = aw.acceptedFinding({ ref, edition, viewer });
-      const inForce = !!f && typeof f === "object" && !f.absent && !f.unreadable && f.acceptance
-        && typeof f.acceptance === "object" && (f.edition === undefined || Number(f.edition) === edition);
-      if (!inForce) { withdrawn.push(named); continue; }
-      const o = aw.openFlagsOn({ ref, edition, viewer });
-      if (!o || typeof o !== "object" || o.absent || o.unreadable || o.complete !== true || !Array.isArray(o.flags)) {
-        withdrawn.push(named);
-        continue;
-      }
-      for (const fl of o.flags)
-        if (fl && !disclosed.has(`${ref}\u0000${edition}\u0000${fl.flag}`))
-          undisclosed.push({ ...named, flag: fl.flag ?? null, issue: typeof fl.issue === "string" ? fl.issue : null });
-    }
-    return withdrawn.length || undisclosed.length ? { withdrawn, undisclosed: undisclosed.slice(0, 200) } : null;
-  }
-
-  /* R51: the `sources:` rows of one document that no longer hold at `at` (`sourceRowsStanding`). The sources behind a
-     capture are the pulled knocks `sources` minted for it (its `source_knocks` read contract, R15), each asked what the
-     public may be told at `at`; a source that cannot be read answers nothing, so its rows fail closed (R52). A document
-     before /5, or one stating no `sources:` block, states no source and has nothing to re-read. */
-  #sourcesLapsed(text, at) {
-    const { sources: rows } = caseDocumentBlocks(text);
-    if (!Array.isArray(rows) || !rows.length) return [];
-    const src = this.sources;
-    return sourceRowsStanding(rows, (capture) => {
-      const knocks = this.#rows(`SELECT source_id, received FROM source_knocks WHERE capture_sha=?
-                                  ORDER BY received, knock_id`, capture);
-      if (!knocks.length) return null;
-      const entries = [];
-      for (const s of [...new Set(knocks.map((k) => k.source_id))]) {
-        const r = src.publishableAt({ source: s, audience: "public", at });
-        if (!r || r.ok !== true || !Array.isArray(r.entries)) return null;
-        entries.push(...r.entries);
-      }
-      return { entries, received: knocks[0].received };
-    });
-  }
+  /** R57 (K1316): a held material's text by its SHA-256, as case-carriage answers it (its R3), for `public-read`. */
+  publishedMaterialText(sha) { return this.caseCarriage.publishedMaterialText(sha); }
 
   /* D-734: THE BYTES op=publishedbytes SERVES FOR A `case_document` HASH, read from `case_documents.text` — the signed
      bytes themselves, which never reach the published bucket. Answered ONLY for a sha that BOTH a `case_document` row
@@ -2934,6 +2788,9 @@ export function publicationOf(host, deps) {
     p.purgeDeclaration = record.declarePurge("publication", PUBLICATION_TABLES, { exempt: PUBLICATION_EXEMPT });
     /* K1024: corpus-export created here, eagerly, so `export_log` exists and is declared exempt at every boot (its R4). */
     void p.corpusExport;
+    /* N532: case-carriage created here too, after this module's declaration, so its two tables exist and are declared
+       exempt at every boot (its R6). */
+    void p.caseCarriage;
     promotion.registerFact("caseMember", "publication", (id) => !!p.caseRelation(id).member);
     promotion.registerFact("publishedRegistry", "publication", (id, targets) => p.publishedRegistryFor(id, targets));
     promotion.registerFact("publishedCaseRegistry", "publication", (ids) => p.publishedCaseRegistryFor(ids));
