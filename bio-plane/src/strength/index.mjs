@@ -41,8 +41,8 @@
  *                subject_entity, subject_known}`, `legCapped(stated, earned, targetId)`, `subjectEntityOf(id)` (its
  *                R13, R14, R16), and `onGrounded(module, fn)` (its R42) when it offers one. Default: `inquiryOf(host)`
  *                with the module's own `legCapped`, reached lazily as the other modules are (N218).
- *   acceptedWork `acceptedFinding({ref, edition, viewer})` (accepted-work R2; R33). With none given, every ref reads as
- *                `{absent: true}`.
+ *   acceptedWork `acceptedFinding({ref, edition, viewer})` (accepted-work R2; R33). Default: `acceptedWorkOf(host)`,
+ *                reached lazily on the first ref read (K1307); with nothing registered there, a ref reads `{absent: true}`.
  *   versions     `currentOf(project, inquiry, viewer) → {version} | null` (basis-versions R11). Default:
  *                `basisVersionsOf(host)`, reached lazily on the first read that names a project. The version rows and
  *                legs are read from `inquiry_basis_versions` and `inquiry_basis_version_legs`.
@@ -58,6 +58,7 @@ import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, noSuchProject } from "../membership/index.mjs";
 import { promotionOf, PROMOTION_ROW_CHECKS } from "../promotion/index.mjs";
 import { inquiryOf, legCapped } from "../inquiry/index.mjs";
+import { acceptedWorkOf } from "../accepted-work/index.mjs";
 import { basisVersionsOf, BASIS_VERSION_LEGS_MAX, VERSION_MACHINE } from "../basis-versions/index.mjs";
 import { BASIS_GRADES, TESTIMONY_GRADE, normalizeType, OBJECT_TYPES, BUNDLE_ID_RE, parseFrontmatter,
          isMachineIdentity } from "../record-grammar/index.mjs";
@@ -137,12 +138,12 @@ export class Strength {
   #joined = false;
   #versionEdition = undefined;
 
-  constructor({ storage, record, membership, inquiry = null, versions = null, acceptedWork = null, producingGroup = null,
-                now = null, host = null }) {
+  constructor({ storage, record, membership, inquiry = null, versions = null, acceptedWork = null, promotion = null,
+                producingGroup = null, now = null, host = null }) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
-    this.#deps = { inquiry, versions, acceptedWork, host };
+    this.#deps = { inquiry, versions, acceptedWork, promotion, host };
     this.producingGroup = typeof producingGroup === "function" ? producingGroup : () => null;
     this.now = typeof now === "function" ? now : () => new Date().toISOString();
   }
@@ -153,6 +154,13 @@ export class Strength {
     return this.#deps.inquiry ||= inquiryReader(inquiryOf(this.#deps.host, { record: this.record, membership: this.membership }));
   }
   set inquiry(v) { this.#deps.inquiry = v; }
+  /* R33: accepted-work's read (its R2), on the same host, reached on the first ref read (K1307). */
+  get acceptedWork() {
+    if (!this.#deps.acceptedWork && this.#deps.host)
+      this.#deps.acceptedWork = acceptedWorkOf(this.#deps.host,
+        { record: this.record, ...(this.#deps.promotion ? { promotion: this.#deps.promotion } : {}) });
+    return this.#deps.acceptedWork;
+  }
   get versions() {
     if (!this.#deps.versions && this.#deps.host)
       this.#deps.versions = basisVersionsOf(this.#deps.host, { record: this.record, membership: this.membership });
@@ -266,7 +274,7 @@ export class Strength {
   /* R33: `accepted-work.acceptedFinding`'s answer for a ref at an edition: its R2 answer, `{absent: true}` when nothing
      is registered or given, `{unreadable: true}` when the read throws. */
   #acceptedFinding(ref, edition, viewer = null) {
-    const aw = this.#deps.acceptedWork;
+    const aw = this.acceptedWork;
     if (!aw || typeof aw.acceptedFinding !== "function") return { absent: true };
     try { return aw.acceptedFinding({ ref, edition, viewer }); } catch { return { unreadable: true }; }
   }
@@ -1331,7 +1339,7 @@ export function strengthOf(host, deps) {
       const f = promotion.fact("producingGroup");
       return f && f.ok ? (f.value || null) : null;
     });
-    s = new Strength({ ...d, host, storage, record, membership, producingGroup });
+    s = new Strength({ ...d, host, storage, record, membership, promotion, producingGroup });
     instances.set(host, s);
     s.migrate();
     record.declarePurge("strength", [...STRENGTH_PURGED_TABLES], { exempt: STRENGTH_EXEMPT_TABLES });
