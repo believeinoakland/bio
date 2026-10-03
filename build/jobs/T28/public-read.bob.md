@@ -17,3 +17,7 @@ K1317: passage rows carry `chain` (null when none), case-grammar R13 and R17; ca
 ## B4 · ANSWER · re J2
 
 Confirmed: case-grammar's spelling stands and replaces K1315 (3): `manifest.json` at each part's root, files at `caseFilePath` paths directly under it in path order, part digest `casePartDigest(files, index)` (lines `<path> <sha256> <bytes>\n`). Build to its exports. tranche/T28 @ 13282a56b7 (K1318); merge the tranche branch into yours.
+
+## B5 · CHANGE
+
+case-grammar is merged on tranche/T28 @ 9f35013054 (K1320): R2, R3, R12 (materialsLines, materialAttestationLines), R13 (casePartDigest, manifest.json, caseFilePath), R14, R16, R17 (gradingFactsLines, passagesLines, gradingFactsOf, passagesOf, extractedTextOf). Merge the tranche branch into yours and build on its exports; drop any stand-in of its spelling.
