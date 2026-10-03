@@ -4,6 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, byId, NOW, iso } from "./world.mjs";
+import { QUEUE_ACT_CHECKS } from "../../../src/queue/index.mjs";
 
 const age = { state: "undetermined", reason: "derived_on_read", detail: "d" };
 const item = (cls, kind, id, subject, extra = {}) => ({ id: `${cls}::${id}`, class: cls, kind, subject, summary: kind,
@@ -124,4 +125,44 @@ test("R2, R11: the mint stamps catalogue_id beside kind; an uncatalogued produce
   assert.equal(e.catalogue_id, "N-1");
   const bad = withProducers(() => [item("FINDING", "contradiction-dispute", "contradiction::X", cand("X", "open"))]).feed(null, "class:admin");
   assert.deepEqual([bad.ok, bad.reason, bad.check, bad.id], [false, "NO_SUCH_KIND", "C-31.2", "FINDING::contradiction::X"]);
+});
+
+test("R28 (N527): a contradiction duty's published id, OBLIGATION::contradiction::<c> or OBLIGATION::contradiction-unseen::<c>, is bridged as contradiction-duty or contradiction-duty-unseen: CLASS_NOT_DISPOSED with the door R12 names; nothing written", () => {
+  const w = withProducers(() => [
+    item("OBLIGATION", "contradiction-duty", "contradiction::C1", cand("C1", "open")),
+    item("OBLIGATION", "contradiction-duty-unseen", "contradiction-unseen::C2", notice("C2", [])),
+    item("FINDING", "contradiction-lead", "contradiction::C3", cand("C3", "open"))]);
+  w.member("alice");
+  const m = byId(w.feed(null, "class:admin"));
+  const pd = (a) => w.q.proposeDispose({ to: "deferred", reason: "r", decidedBy: "alice", viewer: "member:alice",
+                                          identity: "member:alice", ...a });
+  const refused = (key, kind) => {
+    const r = pd({ key });
+    assert.deepEqual([r.ok, r.reason, r.code, r.class, r.kind, r.check, r.translation],
+      [false, "CLASS_NOT_DISPOSED", "CLASS_NOT_DISPOSED", "OBLIGATION", kind, "C-33.44",
+       QUEUE_ACT_CHECKS.CLASS_NOT_DISPOSED.translation], key);
+    assert.equal(r.progression_arm, undefined, `${key}: the progression arm is not reached`);
+    return r;
+  };
+  // the ids exactly as the feed publishes them, with the item's own door (a duty not taken up, no party: the bridge
+  // holds no subject, so it names the doors of a duty not taken up, R12's `doorOf`)
+  for (const [id, kind] of [["OBLIGATION::contradiction::C1", "contradiction-duty"],
+                            ["OBLIGATION::contradiction-unseen::C2", "contradiction-duty-unseen"]]) {
+    assert.equal(m[id].kind, kind);
+    assert.deepEqual(refused(id, kind).instead, m[id].disposition.instead, id);
+  }
+  // a candidate id holding the separator, and surrounding blanks, are still the duty's
+  assert.deepEqual(refused(" OBLIGATION::contradiction::C1::x ", "contradiction-duty").instead,
+    ["contradictionclarify", "contradictiontakeup"]);
+  assert.deepEqual(refused("OBLIGATION::contradiction-unseen::C9", "contradiction-duty-unseen").instead, ["contradictionoptin"]);
+  // under the per-item weight each duty is retained with that reason, beside an item that is applied
+  const set = pd({ items: [{ key: "OBLIGATION::contradiction::C1" }, { key: "OBLIGATION::contradiction-unseen::C2" },
+                           { key: "proc::award" }] });
+  assert.deepEqual(set.items.map((i) => i.outcome), ["retained", "retained", "applied"]);
+  assert.equal(w.all(`SELECT count(*) c FROM finding_dispositions`)[0].c, 0, "nothing written");
+  // with no candidate it names no duty, and the finding of the same family is not an obligation: neither is bridged as one
+  for (const key of ["OBLIGATION::contradiction::", "OBLIGATION::contradiction-unseen:: ", "OBLIGATION::contradiction"])
+    assert.notEqual(pd({ key }).reason, "CLASS_NOT_DISPOSED", key);
+  const lead = pd({ key: "FINDING::contradiction::C3" });
+  assert.deepEqual([lead.reason, lead.finding], ["NO_PROJECT_SCOPE", "FINDING::contradiction::C3"]);
 });
