@@ -39,6 +39,8 @@ function imports(w, { seers = ["member:alice", "member:ann"], held = null, withd
       const i = after ? Number(after) : 0, n = Math.min(limit, page);
       return { withdrawals: s.withdrawals.slice(i, i + n), cursor: i + n < s.withdrawals.length ? String(i + n) : null };
     },
+    /* case-import's registration carries its publisher moves (accepted-work R8; R33's, in citedmoved.test.mjs) */
+    moves: () => ({ moves: [], cursor: null }),
   });
   assert.deepEqual(r, { ok: true, module: "case-import" });
   return s;

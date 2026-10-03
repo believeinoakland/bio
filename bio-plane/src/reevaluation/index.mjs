@@ -6,8 +6,9 @@
  * later modules are told when a finding's basis changed (R8, R9): a source's rung (R28, heard from `sources`) or an
  * observation's credit level, or an off-the-record capture's attesting member's (R29, R32, told by `ratification`
  * through `levelMoved`) moving included, a case edition withdrawn or contested on its docket (R30, read through the
- * registration `docket` fills, told through `docketActed`), and this group's acceptance of another group's finding
- * withdrawn (R31, read through `accepted-work`, told by `case-import` through `acceptanceWithdrawn`).
+ * registration `docket` fills, told through `docketActed`), this group's acceptance of another group's finding
+ * withdrawn (R31, read through `accepted-work`, told by `case-import` through `acceptanceWithdrawn`), and a cited case's
+ * new edition or withdrawal at its publisher (R33, `accepted-work`'s publisher moves, told through `citedCaseMoved`).
  *
  * Extracted from the legacy modules (T7, layer 7; K3, K102): `store.mjs` (`#reevalRaisedBy`, now `raise`; the REC-17
  * obligation, `reevaluations`, with `#reevalLegsEarned` and `#reevalMoved`; D-256's `changedFromAudit`; D-394's
@@ -41,8 +42,9 @@
  *   sources        `onDisclosure` (its R10): each rung move of a source, heard and kept (R28 here). Its `rungOf` is
  *                  never called on a read.
  *   acceptedWork   `acceptedFinding`, `acceptanceWithdrawals` (its R2): whether a viewer may see an imported finding
- *                  reference (R1) and the acceptances withdrawn (R31). `case-import` fills it and tells
- *                  `acceptanceWithdrawn` after a withdrawal commits.
+ *                  reference (R1) and the acceptances withdrawn (R31); `publisherMoves` (its R8): the cited cases'
+ *                  new editions and withdrawals (R33). `case-import` fills it and tells `acceptanceWithdrawn` after a
+ *                  withdrawal commits, `citedCaseMoved` after a docket read that recorded a move commits.
  *   now            the clock for the instants it writes, an ISO string (default: the wall clock, to the second).
  *   env            the instance bindings: `REEVAL_NOTICE_DELAY_MS` (R25).
  *
@@ -104,6 +106,15 @@ export const ADOPT_WHY_MAX = 2000;
 export const DOCKET_KINDS = Object.freeze(["withdrawal", "contested"]);
 /** R31: the withdrawals one page of accepted-work's `acceptanceWithdrawals` is asked for. */
 export const ACCEPTANCE_PAGE = 200;
+/** R33: the cause a publisher move raises, also the kind R8's listeners are told; the two kinds of entry that are moves
+ *  (K1339, K1366 F1: no other docket entry raises a cause here). */
+export const CITED_CASE_MOVED = "cited_case_moved";
+export const PUBLISHER_MOVE_KINDS = Object.freeze(["edition", "withdrawal"]);
+/** R33: the moves one page of accepted-work's `publisherMoves` is asked for (its R8's most). */
+export const MOVES_PAGE = 200;
+/** R33: the (dependent, move) pairs one `citedCaseDependents` read lists (default and most). */
+export const CITED_LIMIT_DEFAULT = 200;
+export const CITED_LIMIT_MAX = 200;
 /** R2, R16: the sources a cause may carry. R2's five are facts about the target's own row; `corrected` is R27's, a fact
  *  about a side the leg rests on; `source` is R28's, a rung move of the source behind a capture the leg rests on;
  *  `attribution` is R29's, a move of the credit level of the observation the leg rests on; `withdrawal` and `contested`
@@ -111,7 +122,7 @@ export const ACCEPTANCE_PAGE = 200;
  *  another group's finding withdrawn at the edition the leg names; §5.4's four cascade events (C-10.1's
  *  `REEVAL_SOURCES`, `./checks.mjs`) are derived the same way; `weakened` is R17's. */
 export const CAUSE_SOURCES = Object.freeze(["supersession", "edition", "deferred", "reopened", "dismissed", "corrected",
-  "source", "attribution", ...DOCKET_KINDS, "acceptance", ...REEVAL_SOURCES, "weakened"]);
+  "source", "attribution", ...DOCKET_KINDS, "acceptance", CITED_CASE_MOVED, ...REEVAL_SOURCES, "weakened"]);
 /** R21, R27: what an answer says when a tensions read could not be made. */
 const CORRECTIONS_UNREAD = "the contradiction module's tensions read could not be made, so whether a side this rests on "
   + "was named wrong was not read and no corrected cause could be derived; that is not the same as none";
@@ -134,10 +145,15 @@ const DOCKET_ABSENT = "no module has registered the docket, so no withdrawn or c
 const DOCKET_UNREAD = "the docket's withdrawals or contesting entries could not all be read, so a withdrawal, contested or "
   + "wp_retraction cause may be missing; that is not the same as none";
 /** R1, R21, R31: what an answer says when no module registered accepted work, or a read of it could not be made. */
-const ACCEPTED_WORK_ABSENT_WHY = "no module holding another group's work is registered, so no acceptance withdrawal was read "
-  + "and no acceptance cause could be derived; that is not the same as none";
+const ACCEPTED_WORK_ABSENT_WHY = "no module holding another group's work is registered, so no acceptance withdrawal or "
+  + "publisher move was read and no acceptance or cited_case_moved cause could be derived; that is not the same as none";
 const ACCEPTANCE_UNREAD = "the acceptances withdrawn could not all be read, so an acceptance cause may be missing; that is "
   + "not the same as none";
+/** R33, R21: what an answer says when no module keeps the publisher moves, or a read of them could not be made. */
+const MOVES_ABSENT_WHY = "the module holding another group's work keeps no publisher moves here, so no new edition or withdrawal "
+  + "of a cited case was read and no cited_case_moved cause could be derived; that is not the same as none";
+const MOVES_UNREAD = "the cited cases' publisher moves could not all be read, so a cited_case_moved cause may be missing; "
+  + "that is not the same as none";
 /* R1, R31: an imported finding reference (`inquiry-grammar` R11), as a leg's target names it. */
 const isRef = (id) => typeof id === "string" && !!parseImportedFindingRef(id);
 /** R27: the (dependent, candidate) entries one `correctedDependents` read lists (default and most). */
@@ -196,6 +212,48 @@ function attributionDetail(m) {
   return `the credit level of the observation ${m.observation} moved from ${m.level_before} to ${m.level_after}`
     + `${m.case_id ? ` in case ${m.case_id}` : ""}${m.edition != null ? ` at edition ${m.edition}` : ""}, at ${m.at}:`
     + ` how the member who gave it is identified has changed.`;
+}
+
+/* R33: one publisher move as accepted-work's R8 answers it, checked; null when it cannot be one (a kind that is not a
+   move, an edition that is neither a positive whole number nor `all`, no id or import). */
+function moveOf(x) {
+  const move = str(x.move), imp = str(x.import);
+  const edition = x.edition === "all" ? "all" : Number.isInteger(x.edition) && x.edition > 0 ? x.edition : null;
+  if (!move || !imp || !PUBLISHER_MOVE_KINDS.includes(x.kind) || edition === null) return null;
+  if (x.kind === "edition" && edition === "all") return null;
+  const tb = x.taken_back && typeof x.taken_back === "object"
+    ? { seq: x.taken_back.seq ?? null, date: typeof x.taken_back.date === "string" ? x.taken_back.date : null } : null;
+  const text = (v) => (typeof v === "string" ? v : null);
+  return { move, import: imp.toLowerCase(), group: str(x.group), case: str(x.case), kind: x.kind, edition,
+           seq: Number.isFinite(Number(x.seq)) && x.seq !== null && x.seq !== "" ? Number(x.seq) : null,
+           date: text(x.date), at: str(x.at), what_changed: text(x.what_changed), reason: text(x.reason),
+           key_listed: typeof x.key_listed === "boolean" ? x.key_listed : null, taken_back: tb };
+}
+
+/* R33: whether move `m` raises a cause on a leg citing edition `n`, among `moves`, the same import's: (a) an edition
+   move naming m > n; (b) a withdrawal naming n, or naming `all` at seq s unless an edition move naming n has a greater
+   seq (that edition was published again after everything was withdrawn). */
+function movesCited(m, n, moves) {
+  if (m.kind === "edition") return m.edition > n;
+  if (m.edition === n) return true;
+  if (m.edition !== "all") return false;
+  return !moves.some((e) => e.kind === "edition" && e.edition === n && e.seq !== null && m.seq !== null && e.seq > m.seq);
+}
+
+/* R33: the cause's words: the group and case (where they may be stated), the cited edition, what moved, the entry's
+   seq and date, the words it gives, whether its key is one the case file lists, and a take-back. */
+function movedDetail(ref, n, m, group, kase) {
+  const what = m.kind === "edition" ? `published edition ${m.edition}`
+    : m.edition === "all" ? "withdrew every edition" : `withdrew edition ${m.edition}`;
+  const words = m.kind === "edition" ? m.what_changed : m.reason;
+  return `this leg rests on another group's finding ${ref} at edition ${n}${kase ? `, of case ${kase}` : ""}`
+    + `${group ? ` by ${group}` : ""}, and its publisher ${what} (docket entry ${m.seq ?? "unnumbered"}`
+    + `${m.date ? `, dated ${m.date}` : ""}${words ? `: "${words}"` : ""}).`
+    + `${m.key_listed === false ? " The entry's signing key is not among the keys the imported case file lists." : ""}`
+    + `${m.taken_back ? ` The publisher has since taken this entry back (entry ${m.taken_back.seq ?? "unnumbered"}`
+      + `${m.taken_back.date ? `, dated ${m.taken_back.date}` : ""}); the cause still stands.` : ""}`
+    + ` The finding keeps answering as that edition published it and the leg is unchanged; whether this finding still `
+    + `stands is the members' to decide.`;
 }
 
 export class Reevaluation {
@@ -758,6 +816,98 @@ export class Reevaluation {
     return { byPair };
   }
 
+  /** R33 (DEC-101 (3); DEC-116 item 8): the cited cases' publisher moves as one answer reads them, through
+   *  `accepted-work`'s `publisherMoves` (its R8), paged through each `cursor` to null on first use, in the order this copy
+   *  recorded them. A move is `{move, import, group, case, kind, edition, seq, date, at, what_changed, reason, key_listed,
+   *  taken_back}`, `kind` `edition` or `withdrawal` (no other entry is a move, K1366 F1), `edition` a number or `all`.
+   *  Answers `{get(), flags()}`: `get` the read (`byImport` keyed by import, each list in recorded order; `entries` by
+   *  move id; `order` each move's place); `flags` what the answer states when nothing is registered
+   *  (`accepted_work_absent`) or a page could not be read (`accepted_work_unreadable`), R21. */
+  #publisherMoves() {
+    let read = null;
+    const get = () => {
+      if (read) return read;
+      read = { absent: false, ok: true, byImport: new Map(), entries: new Map(), order: new Map() };
+      const seen = new Set();
+      let after = "";
+      for (;;) {
+        let page = null;
+        try { page = this.acceptedWork.publisherMoves({ after, limit: MOVES_PAGE }); } catch { page = null; }
+        if (page && page.absent === true) { read.absent = true; break; }
+        if (!page || !Array.isArray(page.moves)) { read.ok = false; break; }
+        for (const x of page.moves) {
+          const m = x && typeof x === "object" ? moveOf(x) : null;
+          if (!m) { read.ok = false; continue; }
+          if (read.entries.has(m.move)) continue;
+          read.order.set(m.move, read.order.size);
+          read.entries.set(m.move, m);
+          if (!read.byImport.has(m.import)) read.byImport.set(m.import, []);
+          read.byImport.get(m.import).push(m);
+        }
+        const next = typeof page.cursor === "string" ? page.cursor : null;
+        if (!page.moves.length || next === null || seen.has(next)) break;
+        seen.add(next);
+        after = next;
+      }
+      return read;
+    };
+    const flags = () => {
+      const m = get();
+      /* nothing registered at all is said as R1 and R31 say it; a registration without `moves` is said as its own */
+      let whole = false;
+      if (m.absent) try { whole = this.acceptedWork.acceptanceWithdrawals({ after: "", limit: 1 })?.absent === true; } catch { whole = false; }
+      return { ...(m.absent ? { accepted_work_absent: true, accepted_work_why: whole ? ACCEPTED_WORK_ABSENT_WHY : MOVES_ABSENT_WHY } : {}),
+               ...(m.ok ? {} : { accepted_work_unreadable: true, accepted_work_unreadable_why: MOVES_UNREAD }) };
+    };
+    return { get, flags };
+  }
+
+  /** R33: the `cited_case_moved` causes on `legs` (`inquiry_basis` rows), for a viewer's visible dependents. A live leg
+   *  (R7) on an imported finding reference at `target_edition` n carries one per move of the same import that is (a) an
+   *  `edition` move naming m > n, or (b) a `withdrawal` naming n, or naming `all` at `seq` s unless an `edition` move
+   *  naming n has a greater `seq`. `since` is the move's `at`; a move taken back still stands, and its detail says so.
+   *  `named(ref)` says whether the group and case may be stated for that ref (R20: a read path states them only to a
+   *  viewer the import is answered for; the telling, the plane's own, always). `only` keeps one move's. Answers
+   *  `{byPair}` keyed `<dependent>\0<target>`, each list in (ord, move order). Reads only; regrades nothing (R19). */
+  #citedMovedOn(legs, visible, mv, named, only = null) {
+    const byPair = new Map();
+    const { byImport, order } = mv.get();
+    if (!byImport.size) return { byPair };
+    const rows = legs.filter((l) => l && l.bundle_id && isRef(l.target_id) && visible(l.bundle_id) !== null);
+    if (!rows.length) return { byPair };
+    const cited = this.#citedEditions(rows);
+    const hits = [];
+    for (const l of rows) {
+      const n = cited.get(`${l.bundle_id}\u0000${l.ord}`);
+      if (n === null) continue;
+      const moves = byImport.get(parseImportedFindingRef(l.target_id).import.toLowerCase()) || [];
+      for (const m of moves) {
+        if (only && m.move !== only) continue;
+        if (movesCited(m, n, moves)) hits.push({ l, m, n });
+      }
+    }
+    if (!hits.length) return { byPair };
+    const live = this.#liveOn(hits.map((h) => h.l.target_id));
+    for (const { l, m, n } of hits) {
+      const x = live.get(l.target_id).get(`${l.bundle_id}\u0000${l.ord}`);
+      if (!x) continue;
+      const pk = `${l.bundle_id}\u0000${l.target_id}`;
+      if (!byPair.has(pk)) byPair.set(pk, []);
+      if (byPair.get(pk).some((c) => c.ord === l.ord && c.move === m.move)) continue;
+      const say = named(l.target_id);
+      const group = say ? m.group : null, kase = say ? m.case : null;
+      byPair.get(pk).push({
+        source: CITED_CASE_MOVED, since: m.at, ord: l.ord, role: x.role ?? null, state: x.state ?? null, ref: l.target_id,
+        cited_edition: n, move: m.move, import: m.import, group, case: kase, kind: m.kind, edition: m.edition, seq: m.seq,
+        date: m.date, ...(m.kind === "edition" ? { what_changed: m.what_changed } : { reason: m.reason }),
+        key_listed: m.key_listed, taken_back: m.taken_back,
+        detail: movedDetail(l.target_id, n, m, group, kase) });
+    }
+    for (const list of byPair.values())
+      list.sort((a, b) => (a.ord - b.ord) || (order.get(a.move) - order.get(b.move)));
+    return { byPair };
+  }
+
   /* R16: the recorded re-evaluations of the (dependent, target) pairs one answer lists, keyed (dependent, target,
      source): the LATEST record of each key, which is the one with the latest `since`, because a record is only written
      for a cause still owed, whose `since` is later than every earlier record's (`recordReevaluation`). So the read is
@@ -1193,6 +1343,7 @@ export class Reevaluation {
     const wp = this.#workProducts();
     const dk = this.#docket();
     const aw = this.#accepted();
+    const mv = this.#publisherMoves();
     const obligations = [], closedOnly = [];
     /* Each obligation found is held with its causes, and the recorded re-evaluations of exactly those pairs are read
        once after the walk (R16), so that read is bounded by the answer. */
@@ -1213,8 +1364,10 @@ export class Reevaluation {
     const wdr = this.#withdrawn(onTargets, all, dk);
     /* R31: the acceptance causes, over the same legs. */
     const acc = this.#acceptanceOn(onTargets, all, aw, viewer);
+    /* R33: the cited_case_moved causes, over the same legs; the group and case stated where the viewer sees the ref. */
+    const cmv = this.#citedMovedOn(onTargets, all, mv, (ref) => refs.seen(ref));
     const correctedOn = new Set([...corr.byPair.keys(), ...srcm.byPair.keys(), ...lvlm.byPair.keys(), ...wdr.byPair.keys(),
-                                 ...acc.byPair.keys()].map((k) => k.slice(k.indexOf("\u0000") + 1)));
+                                 ...acc.byPair.keys(), ...cmv.byPair.keys()].map((k) => k.slice(k.indexOf("\u0000") + 1)));
     for (const t of targets) {
       const moved = this.#moved(t, visible, reg, wp, dk);
       if (!moved && !correctedOn.has(t)) continue;
@@ -1277,7 +1430,7 @@ export class Reevaluation {
         }
         causes.push(...(corr.byPair.get(`${bundleId}\u0000${t}`) || []), ...(srcm.byPair.get(`${bundleId}\u0000${t}`) || []),
                     ...(lvlm.byPair.get(`${bundleId}\u0000${t}`) || []), ...(wdr.byPair.get(`${bundleId}\u0000${t}`) || []),
-                    ...(acc.byPair.get(`${bundleId}\u0000${t}`) || []));
+                    ...(acc.byPair.get(`${bundleId}\u0000${t}`) || []), ...(cmv.byPair.get(`${bundleId}\u0000${t}`) || []));
         if (!causes.length) continue;
         place({
           bundle_id: bundleId, title: dep?.title ?? null,
@@ -1331,7 +1484,7 @@ export class Reevaluation {
                                   + "and no edition cause could be derived; that is not the same as none" } : {}),
              corrections_read: corr.read,
              ...(corr.read ? {} : { corrections_why: CORRECTIONS_UNREAD }), ...wp.flags(), ...dk.flags(),
-             ...refs.flags(), ...aw.flags() };
+             ...refs.flags(), ...aw.flags(), ...mv.flags() };
   }
 
   /** R5 (REC-118 / D-410): an obligation's leg letters, resolved against what the record can earn, so the two halves of
@@ -1451,7 +1604,7 @@ export class Reevaluation {
   /* ---------------------------------------------------------------- R9: the recovery read */
 
   /** R9: now, the causes standing on each named finding (R2's arms and §5.4's, the finding as target, R17's, and R27's
-   *  `corrected`, R28's `source`, R29's `attribution`, R30's and R31's `acceptance` causes the finding carries on its
+   *  `corrected`, R28's `source`, R29's `attribution`, R30's, R31's `acceptance` and R33's `cited_case_moved` causes the finding carries on its
    *  own legs, each naming its target, less those a recorded re-evaluation closed) and each named passage's `affects` (`content.passageNotice`). Ids the viewer may not see
    *  answer as absent. Writes nothing. */
   changesOf({ findings = null, contents = null, viewer = null } = {}) {
@@ -1463,7 +1616,8 @@ export class Reevaluation {
     const wp = this.#workProducts();
     const dk = this.#docket();
     const aw = this.#accepted();
-    const corr = this.#standingCorrected(seen, viewer, visible, { withSource: true, dk, aw });
+    const mv = this.#publisherMoves();
+    const corr = this.#standingCorrected(seen, viewer, visible, { withSource: true, dk, aw, mv });
     const outF = fl.map((id) => {
       if (!seen.includes(id)) return { id, absent: true };
       const moved = this.#moved(id, visible, reg, wp, dk);
@@ -1494,17 +1648,17 @@ export class Reevaluation {
              limit: CHANGES_OF_MAX, wrote: false,
              ...(reg === null ? { editions_read: false } : { editions_read: true }),
              corrections_read: corr.read, ...(corr.read ? {} : { corrections_why: CORRECTIONS_UNREAD }), ...wp.flags(),
-             ...dk.flags(), ...aw.flags() };
+             ...dk.flags(), ...aw.flags(), ...mv.flags() };
   }
 
-  /* R9, R27 (and R28, R29, R30, R31 `withSource`): the corrected (and source, attribution, withdrawal, contested and
-     acceptance) causes the
+  /* R9, R27 (and R28, R29, R30, R31, R33 `withSource`): the corrected (and source, attribution, withdrawal, contested,
+     acceptance and cited_case_moved) causes the
      named dependents carry on their own legs, each with its `target`, less those a recorded re-evaluation closed (R16).
      `byDependent` keyed by dependent, in (target, ord, candidate) order, each target's source causes after its corrected
-     ones, its attribution causes after those, then its withdrawal causes and its acceptance causes last; a contested
+     ones, its attribution causes after those, then its withdrawal, acceptance and cited_case_moved causes; a contested
      cause names the finding itself
      as its target. */
-  #standingCorrected(dependents, viewer, visible, { withSource = false, dk = null, aw = null } = {}) {
+  #standingCorrected(dependents, viewer, visible, { withSource = false, dk = null, aw = null, mv = null } = {}) {
     const byDependent = new Map();
     if (!dependents.length) return { byDependent, read: true };
     const legs = this.#rows(`SELECT bundle_id, ord, target_id, content_id FROM inquiry_basis
@@ -1512,9 +1666,12 @@ export class Reevaluation {
                  JSON.stringify(dependents));
     const corr = this.#corrected(legs, viewer, visible);
     if (withSource) {
+      /* R33 (R20): the group and case of a move are stated where the viewer sees the ref, as R31's are (N531). */
+      const refs = this.#refSeer(viewer);
       const moved = [this.#sourceMoves(legs, visible), this.#levelMoves(legs, visible),
                      ...(dk ? [this.#withdrawn(legs, visible, dk)] : []),
-                     ...(aw ? [this.#acceptanceOn(legs, visible, aw, viewer)] : [])];
+                     ...(aw ? [this.#acceptanceOn(legs, visible, aw, viewer)] : []),
+                     ...(mv ? [this.#citedMovedOn(legs, visible, mv, (ref) => refs.seen(ref))] : [])];
       for (const moves of moved)
         for (const [k, list] of moves.byPair) corr.byPair.set(k, [...(corr.byPair.get(k) || []), ...list]);
       for (const d of dk ? dependents : []) {
@@ -1701,6 +1858,94 @@ export class Reevaluation {
         import: rec ? rec.import : null, edition: rec ? rec.edition : null, refs: rec ? rec.refs : [],
         detail: `this group's acceptance of another group's work was withdrawn (${id}`
           + `${rec ? `, edition ${rec.edition}` : ""}); ${dependents.length ? "what rests on it is named" : "nothing here rests on it"}`,
+        dependents }, out);
+      return out;
+    } catch { return { ok: true, told: false, why: "accepted work could not be read" }; }
+  }
+
+  /* ---------------------------------------------------------------- R33: a cited edition moved at its publisher */
+
+  /* R33: the live legs on an imported finding reference, read for the listing and the telling (every ref leg, in
+     (dependent, ord) order; the arm keeps those of a moved import). */
+  #refLegs() {
+    return this.#rows(`SELECT bundle_id, ord, target_id FROM inquiry_basis WHERE target_id LIKE 'imported:%'
+                        ORDER BY bundle_id, ord`).filter((l) => isRef(l.target_id));
+  }
+
+  /** R33: each (dependent, move) a standing `cited_case_moved` cause names, in dependent then move order (the order this
+   *  copy recorded the moves) after `after` (`<dependent>#<move>`, split at the first `#`, which no bundle id holds), at
+   *  most `limit` (1–200, default 200), with `truncated` and `cursor` (the last entry's key when more follow). Each entry
+   *  names the legs the move reaches. A cause a recorded re-evaluation closed is not listed (R16). A dependent the viewer
+   *  may not see is withheld and not counted (R20); the group and case are stated where the viewer sees the ref. For
+   *  `queue-producers`' findings (its R32). Writes nothing. */
+  citedCaseDependents({ after = null, limit = null, viewer = null } = {}) {
+    const cap = clamp(limit, CITED_LIMIT_DEFAULT, CITED_LIMIT_MAX);
+    const aft = String(after ?? "");
+    const cut = aft.indexOf("#");
+    const [aDep, aMove] = cut >= 0 ? [aft.slice(0, cut), aft.slice(cut + 1)] : [aft, ""];
+    const visible = this.#redactor(viewer);
+    const refs = this.#refSeer(viewer);
+    const mv = this.#publisherMoves();
+    const { order } = mv.get();
+    const byPair = this.#citedMovedOn(this.#refLegs(), visible, mv, (ref) => refs.seen(ref)).byPair;
+    const pairs = [...byPair.keys()].map((k) => k.split("\u0000"));
+    const records = this.#records(pairs);
+    const byKey = new Map();
+    for (const [dep, t] of pairs) {
+      for (const c of this.#split(dep, t, byPair.get(`${dep}\u0000${t}`), records).open) {
+        const k = `${dep}\u0000${c.move}`;
+        if (!byKey.has(k)) byKey.set(k, { dependent: dep, move: c.move, import: c.import, group: c.group, case: c.case,
+          kind: c.kind, edition: c.edition, seq: c.seq, date: c.date, since: c.since,
+          ...(c.kind === "edition" ? { what_changed: c.what_changed } : { reason: c.reason }),
+          key_listed: c.key_listed, taken_back: c.taken_back, legs: [], detail: c.detail });
+        byKey.get(k).legs.push({ target: t, ord: c.ord, cited_edition: c.cited_edition });
+      }
+    }
+    const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+    /* a move the cursor names that is not read now is passed whole, so nothing is listed twice */
+    const aIdx = aMove ? (order.has(aMove) ? order.get(aMove) : Infinity) : -1;
+    const entries = [...byKey.values()]
+      .filter((e) => e.dependent > aDep || (e.dependent === aDep && order.get(e.move) > aIdx))
+      .sort((a, b) => cmp(a.dependent, b.dependent) || (order.get(a.move) - order.get(b.move)));
+    for (const e of entries) e.legs.sort((a, b) => cmp(a.target, b.target) || (a.ord - b.ord));
+    const listed = entries.slice(0, cap);
+    const truncated = entries.length > cap;
+    return { ok: true, entries: listed, count: listed.length, limit: cap, truncated,
+             cursor: truncated ? `${listed[listed.length - 1].dependent}#${listed[listed.length - 1].move}` : null,
+             wrote: false, ...mv.flags(), ...refs.flags(),
+             says: "each finding listed rests on another group's finding at an edition its publisher has since replaced "
+                 + "or withdrawn; nothing was moved or regraded, the finding keeps answering as that edition published it, "
+                 + "and a recorded re-evaluation closes the cause" };
+  }
+
+  /** R33, R8 (DEC-101 (3)): told by `case-import` after a docket read that recorded the move commits (its R18). Tells
+   *  R8's listeners once, as `kind: "cited_case_moved"`, `subject` the move, with the dependents R33's arm answers for
+   *  that move now, as the plane reads them (no viewer: a listener is the plane's own, R28's precedent), each
+   *  `{bundle_id, ord, role, state, target, cited_edition, group, case, detail}`. `move` is its id (or an object
+   *  carrying one). Writes nothing and never throws; a move accepted work does not answer is still told, with no
+   *  dependents, and says so. */
+  citedCaseMoved({ move = null } = {}) {
+    try {
+      const id = str(move && typeof move === "object" ? move.move : move);
+      if (!id) return { ok: true, told: false, why: "only a named move is told" };
+      const mv = this.#publisherMoves();
+      const rec = mv.get().entries.get(id) || null;
+      const dependents = !rec ? []
+        : [...this.#citedMovedOn(this.#refLegs(), (x) => x ?? null, mv, () => true, id).byPair.entries()]
+          .flatMap(([k, list]) => list.map((x) => ({ bundle_id: k.split("\u0000")[0], ord: x.ord, role: x.role,
+                                                     state: x.state, target: x.ref, cited_edition: x.cited_edition,
+                                                     group: x.group, case: x.case, detail: x.detail })));
+      const since = rec && rec.at ? rec.at : this.#when();
+      const out = { ok: true, told: true, kind: CITED_CASE_MOVED, move: id, dependents: dependents.length,
+                    ...(rec ? {} : { move_read: false }), ...mv.flags() };
+      const what = !rec ? "moved" : rec.kind === "edition" ? `published edition ${rec.edition}`
+        : rec.edition === "all" ? "withdrew every edition" : `withdrew edition ${rec.edition}`;
+      this.#tellAfterCommit({ kind: CITED_CASE_MOVED, subject: id, source: CITED_CASE_MOVED, since,
+        import: rec ? rec.import : null, group: rec ? rec.group : null, case: rec ? rec.case : null,
+        move_kind: rec ? rec.kind : null, edition: rec ? rec.edition : null, seq: rec ? rec.seq : null,
+        taken_back: rec ? rec.taken_back : null,
+        detail: `the publisher of a cited case ${what}${rec && rec.case ? ` (case ${rec.case})` : ""} (move ${id}); `
+          + `${dependents.length ? "what rests on it is named" : "nothing here rests on it"}`,
         dependents }, out);
       return out;
     } catch { return { ok: true, told: false, why: "accepted work could not be read" }; }
