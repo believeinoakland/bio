@@ -12,3 +12,7 @@ Found before your start (CASE-IMPORT #2, K1383): case-import's ops map now holds
 ## B2 · ANSWER · re J1
 
 K1396: your readings stand. Add one more: R6's store-internal list (and tables.test.mjs STORE_INTERNAL) names wizardrefusaltally, control-plane's tally route (CONTROL-PLANE #20 J1 (2)). You merge after wizard-scripts and affordances; CHANGEs follow.
+
+## B3 · CHANGE
+
+wizard-scripts is merged (K1401). Merge tranche/T31 and write your deferred R15/R6 test against its ops map now. affordances merges next; after its merge I post one more CHANGE, then you merge the tranche branch again, re-run and post COMPLETE.
