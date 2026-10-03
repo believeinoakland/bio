@@ -59,3 +59,34 @@ On B4 (R39, K1316). Tranche merged (bb777edb23 included). Two points decide what
    - The Worker copies each from `CAPTURES` (`<store>/captures/<sha>`) to `PUBLISHED` (`<store>/published/<sha>`) if absent, as op=ratify does. It answers `materials_copied: {copied, present, missing: [sha]}`, and a missing one never changes `ok`.
 
    "Retried by the same act" means a re-sent `op=caseratify` with the same signature (the `existed: true` path). Today `ratifyCaseDocument` answers `existed` from its own check (`doc.ratified_at`, R3's order) before it calls `commitCaseEdition`, so it has no list there. Under my reading, that retry path asks publication for the list: either `commitCaseEdition` is called and answers `existed` with `materials`, or a read `heldMaterialsOf(case, edition)`. Please name which one PUBLICATION #16 provides, and the field names.
+
+## J4 · COMPLETE
+
+Job complete again at d0966ea35a on `job/T28/ratification`. B4 and B5 are applied; tranche/T28 is merged through 39fd33d3dd (K1317).
+
+**Entries applied**
+- J2's work stands as reported: R2, R18, R35, R36 and R14, with the `capture` key confirmed by B2 and B3.
+- **R39** (K1316, K1317):
+  - `ratifyCaseDocument` passes up the SHA-256s of the materials `commitCaseEdition` answers `held: "evidence"` as an internal `evidenceMaterials`. It does so on a commit and on `existed`.
+  - On its own retry path (`doc.ratified_at`, which answers before the commit), it reads them from `publication.heldMaterialsOf(case, edition)`.
+  - The Worker (`caseRatifyOp`) copies each from `CAPTURES` (`<store>/captures/<sha>`) into `PUBLISHED` (`<store>/published/<sha>`), put with its digest. It answers `materials_copied: {copied, present, missing}`. A material the evidence store lacks, or whose put fails, is `missing`, never changes `ok`, and is retried by a re-sent op=caseratify. The internal list is not spread into the answer.
+- **K1317 (CASE-CHECKER #1's J4):** `checks.mjs` now imports `STRENGTH_STATES` from `../strength/arithmetic.mjs`, and the case-document formats, predicates, `whatChangedOf`, `isNoticeReference` and `WORKING_ON_KEY` from `../case-grammar/index.mjs`. Its whole import graph is now `record-grammar` (index, grades), `strength/arithmetic.mjs` and `case-grammar`'s six files. Nothing store-bound remains.
+- **Size (B5):** I shortened three `ops.mjs` comments that only restated code or recounted history (REC-53's known-ids note, REC-128 and REC-130). Nothing they state is lost. The module stands at **3,982** lines (3,989 before B4; 4,018 with R39 before the trim). No split.
+
+**Rows awaiting stamp:** unchanged from J2.
+- C-58.5 ANONYMOUS_TESTIMONY_UNCORROBORATED: translation re-worded, awaiting stamp (T29).
+- C-92.10 ATTRIBUTION_UNCHOSEN: translation re-worded, awaiting stamp (T29).
+
+**Found in other modules:** `publication` must provide `heldMaterialsOf(case, edition)` answering the same `[{sha, held}]` list (or `{materials}`), and `materials` on `commitCaseEdition`'s answer, including on `existed` (B5). My tests steer both. Until PUBLICATION #16 merges, the retry path reads none: the method is called optionally, so it answers an empty list rather than throwing.
+
+**Deferred:** none.
+
+**Tests and checks:**
+- `node --test bio-plane/test/m/ratification/`: pass 203, fail 0. New: caseratify-op "R39" (copied, present, missing, inline not copied, the retry through `heldMaterialsOf`, a failing put, and the negative control). The two retry assertions (case-commit R3/R10, seals R37) now expect `evidenceMaterials: []` on the store half's `existed` answer.
+- `format`: 95 modules, 94 requirements files, 0 failures.
+- `architecture` (ratification): 24 product files, 114 relative imports, 0 failures.
+- `coverage` (ratification): 39 of 39 live requirement ids named by a test, 0 failures.
+- `ownership` (ratification, tranche/T28): 10 files changed, 0 failures.
+- `row-census`: red, as in J2 (the two rows above, plus C-21.3–C-21.5, which are not mine).
+
+Size (session_01KY9hTGfankh8NKom3Z2q59): test runs 9, module lines 3,982
