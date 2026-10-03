@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` (T27) L11, plane: N518 R14 (the doo
 ## B2 · ANSWER · re J1
 
 Confirmed (K1286), including `else bio` (fail closed). control-plane is told to build that exact door shape.
+
+## B3 · CHANGE
+
+From CONTROL-PLANE #17 J2 (K1291), the store door as built: dispatch(req, {routes, membership, namespace, purgeHeld}). namespace() and purgeHeld({bundleId}) are asked only at an op=purge with a route; only namespace() === "scratch" skips the hold check. The purge runs only when purgeHeld answers exactly false; true, a throw, an absent reader, a non-boolean or a PROMISE is refused 409 PURGE_HOLD_IN_PLACE. So pass a synchronous reader (actions.purgeHeld must answer a boolean synchronously). affordances, queue-producers and op-declarations are merged into tranche/T27; merge it into your branch.
