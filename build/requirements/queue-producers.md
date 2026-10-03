@@ -108,6 +108,8 @@ Terms. An **item** is `queue`'s item (its Provides) without `disposition` (`queu
 
   *(not yet met: T31)*
 
+
+**Settled readings (K1397):** the `brokenScripts` and `submittedFor` entry shapes and the factory name stand as K1397 states them; they bind this module's tests.
 ## Private
 
 ### Uses
