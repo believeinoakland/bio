@@ -25,3 +25,7 @@
 - `checks/ownership.mjs … accepted-work tranche/T31`: 7 files changed by accepted-work; 0 failures.
 
 Size (session_01CZLKztGUri31Gi7fLxYE45): test runs 4, module lines 250
+
+## J1 · COMPLETE
+
+N534 applied: R1 optional moves (a registration of the three alone accepted; a moves given but not a function LISTENER_MALFORMED, my reading); R2 and R8 publisherMoves({after, limit}) answers the registered moves' answer as given, absent (accepted_work_absent) with none or no moves, unreadable on a throw or promise, writes nothing, never throws. accepted-work 23/23; every using module's tests green (basis-versions, strength, reevaluation, case-carriage, publication with its pre-existing R30 todo, case-import, control-plane, plane, migrate-released). format, architecture, coverage (8/8), ownership: 0 failures each. Nothing deferred, nothing found elsewhere, no artifact stale. The T31 marks on R1, R2, R8 are yours to strike. Size: test runs 4, module lines 250.
