@@ -3,7 +3,7 @@
    `casedoc`, `sources` and `tensions` suites' R20 arms (K651) and driven on the bytes alone. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V5, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3, CASE_DOCUMENT_FORMAT_V2,
+import { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V5, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3, CASE_DOCUMENT_FORMAT_V2,
          CASE_DOCUMENT_FORMAT_LEGACY, CASE_DOCUMENT_FORMATS_ACCEPTED, caseDocumentStatesMemberBlocks,
          caseDocumentRequiresDisclosures, caseDocumentRequiresV4Disclosures, caseDocumentRequiresTensionSection,
          caseDocumentRequiresMaterials, caseDocumentBlocks, captureBlockLines, sourceBlockLines, sourceStatement, unnamedSourceStatement,
@@ -18,26 +18,30 @@ const PREDICATES = [caseDocumentStatesMemberBlocks, caseDocumentRequiresDisclosu
 const ODD = [null, undefined, 7, "x", {}, [], { format: null }, { format: "bio-case-document/5 " },
              { get format() { throw new Error("boom"); } }];
 
-test("R1 the formats: /6 is written, /6–/1 accepted as written, and the five predicates read the token, pure and never throwing", () => {
-  assert.equal(CASE_DOCUMENT_FORMAT, "bio-case-document/6");
-  assert.deepEqual([CASE_DOCUMENT_FORMAT_V5, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3, CASE_DOCUMENT_FORMAT_V2,
-                    CASE_DOCUMENT_FORMAT_LEGACY],
-                   ["bio-case-document/5", "bio-case-document/4", "bio-case-document/3", "bio-case-document/2", "bio-case-document/1"]);
-  assert.deepEqual([...CASE_DOCUMENT_FORMATS_ACCEPTED], ["bio-case-document/6", "bio-case-document/5", "bio-case-document/4",
-    "bio-case-document/3", "bio-case-document/2", "bio-case-document/1"]);
+test("R1 the formats: /7 is written, /7–/1 accepted as written, /7 identical in fields to /6 under every predicate, pure and never throwing", () => {
+  assert.equal(CASE_DOCUMENT_FORMAT, "bio-case-document/7");
+  assert.deepEqual([CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V5, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3,
+                    CASE_DOCUMENT_FORMAT_V2, CASE_DOCUMENT_FORMAT_LEGACY],
+                   ["bio-case-document/6", "bio-case-document/5", "bio-case-document/4", "bio-case-document/3",
+                    "bio-case-document/2", "bio-case-document/1"]);
+  assert.deepEqual([...CASE_DOCUMENT_FORMATS_ACCEPTED], ["bio-case-document/7", "bio-case-document/6", "bio-case-document/5",
+    "bio-case-document/4", "bio-case-document/3", "bio-case-document/2", "bio-case-document/1"]);
   assert.equal(Object.isFrozen(CASE_DOCUMENT_FORMATS_ACCEPTED), true);
   const f = (v) => ({ format: `bio-case-document/${v}` });
-  const vs = [6, 5, 4, 3, 2, 1, 7, 0];
-  assert.deepEqual(vs.map((v) => caseDocumentStatesMemberBlocks(f(v))), [true, true, true, true, true, false, false, false]);
-  assert.deepEqual(vs.map((v) => caseDocumentRequiresDisclosures(f(v))), [true, true, true, true, false, false, false, false]);
-  assert.deepEqual(vs.map((v) => caseDocumentRequiresV4Disclosures(f(v))), [true, true, true, false, false, false, false, false]);
-  assert.deepEqual(vs.map((v) => caseDocumentRequiresTensionSection(f(v))), [true, true, false, false, false, false, false, false],
-                   "the other predicates hold for /6 as they hold for /5");
-  assert.deepEqual(vs.map((v) => caseDocumentRequiresMaterials(f(v))), [true, false, false, false, false, false, false, false],
-                   "the method and materials blocks are required of /6 only");
-  for (const odd of [...ODD, { format: "bio-case-document/6 " }]) for (const pred of PREDICATES) assert.equal(pred(odd), false);
+  const vs = [7, 6, 5, 4, 3, 2, 1, 8, 0];
+  assert.deepEqual(vs.map((v) => caseDocumentStatesMemberBlocks(f(v))), [true, true, true, true, true, true, false, false, false]);
+  assert.deepEqual(vs.map((v) => caseDocumentRequiresDisclosures(f(v))), [true, true, true, true, true, false, false, false, false]);
+  assert.deepEqual(vs.map((v) => caseDocumentRequiresV4Disclosures(f(v))), [true, true, true, true, false, false, false, false, false]);
+  assert.deepEqual(vs.map((v) => caseDocumentRequiresTensionSection(f(v))), [true, true, true, false, false, false, false, false, false],
+                   "the other predicates hold for /6 and /7 as they hold for /5");
+  assert.deepEqual(vs.map((v) => caseDocumentRequiresMaterials(f(v))), [true, true, false, false, false, false, false, false, false],
+                   "the method and materials blocks are required of /6 and /7 only");
+  /* DEC-124: /7 is identical in fields to /6: every predicate answers the same for both */
+  for (const pred of PREDICATES) assert.equal(pred(f(7)), pred(f(6)), pred.name);
+  for (const odd of [...ODD, { format: "bio-case-document/6 " }, { format: "bio-case-document/7 " }, { format: "Bio-case-document/7" }])
+    for (const pred of PREDICATES) assert.equal(pred(odd), false);
   /* pure: the same answer twice, and the argument untouched */
-  for (const v of [6, 5]) {
+  for (const v of [7, 6, 5]) {
     const fm = f(v);
     for (const pred of PREDICATES) assert.equal(pred(fm), pred(fm));
     assert.deepEqual(fm, { format: `bio-case-document/${v}` });
