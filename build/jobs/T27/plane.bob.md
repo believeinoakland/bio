@@ -13,3 +13,7 @@ Confirmed (K1286), including `else bio` (fail closed). control-plane is told to 
 ## B3 · CHANGE
 
 From CONTROL-PLANE #17 J2 (K1291), the store door as built: dispatch(req, {routes, membership, namespace, purgeHeld}). namespace() and purgeHeld({bundleId}) are asked only at an op=purge with a route; only namespace() === "scratch" skips the hold check. The purge runs only when purgeHeld answers exactly false; true, a throw, an absent reader, a non-boolean or a PROMISE is refused 409 PURGE_HOLD_IN_PLACE. So pass a synchronous reader (actions.purgeHeld must answer a boolean synchronously). affordances, queue-producers and op-declarations are merged into tranche/T27; merge it into your branch.
+
+## B4 · CHANGE
+
+queue is merged into tranche/T27 (K1293); with affordances, queue-producers and op-declarations, every L11 job but control-plane and plane is in. Merge tranche/T27 into your branch, re-run, and post COMPLETE (control-plane first, plane last).
