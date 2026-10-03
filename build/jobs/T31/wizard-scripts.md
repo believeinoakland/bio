@@ -26,3 +26,7 @@ Readings (settled unless you say otherwise):
 ## J2 · REPORT
 
 Another module, found at my start (not mine to change): `membership` R83's test (`bio-plane/test/m/membership/module-order.test.mjs`) fails on `tranche/T31`: `MODULE_ORDER` (`membership/index.mjs`:170) lacks `wizard-scripts`, which `modules.json` now lists between `scheduler` and `affordances`. Membership is not in T31; it needs one line added (as for link-sweep, attestation, docket at T24, T25, T27). My module registers no listener, so nothing of mine reads it.
+
+## J3 · REPORT
+
+B3 applied. One reading for queue-producers (please forward, P9): in both brokenScripts and submittedFor entries, `version` is the version NUMBER (an integer), so its keys `<script>@<version>` are built from `script` and `version` as R32 and R33 write them; `author` is the version author's member id; `refusal.translation` is the row's (R32 names a withdrawal's refusal by it). One more for R17/R33: a retired script's submitted versions are not listed (R33's item leaves when its script is retired). Also R7 (my reading, stated in my record): since only a version's author revises it (R4), a member contributes by a proposal the author adopts or drafts from; a member's adopted proposal counts as that member's contribution for APPROVER_IS_AUTHOR, a machine's as a run.
