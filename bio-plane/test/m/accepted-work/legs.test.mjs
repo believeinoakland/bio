@@ -67,15 +67,16 @@ test("R3 with nothing registered, or a registered function that throws or answer
   }
 });
 
-test("R3 other legs are not asked: only a target that is an imported finding reference reaches the registered function, each (ref, edition) once per call", () => {
+test("R3 other legs are not asked: only a target that is an imported finding reference (trimmed, as inquiry-grammar R11 reads it) reaches the registered function, each (ref, edition) once per call", () => {
   const w = world();
   w.source.publish(REF, 1);
   const legs = [local("INF-2026-0001-doc"), local("INQ-2026-0002-x"), local(`imported:${"a".repeat(63)}/INQ-2026-0001-x`),
                 local(`imported:${"A".repeat(64)}/INQ-2026-0001-x`), local(` ${REF}`), { target: 7 }, null, "leg",
                 { target: REF, target_edition: 1 }, { target: REF, target_edition: 1 }];
   const out = w.aw.acceptedLegRefusals({ legs, viewer: ALICE });
-  assert.deepEqual(w.source.calls.map(([n, a]) => [n, a.ref, a.edition]), [["finding", REF, 1]]);
-  assert.deepEqual(out.map((f) => f.ord), [8, 9], "both legs named, one read");
+  assert.deepEqual(w.source.calls.map(([n, a]) => [n, a.ref, a.edition]), [["finding", REF, undefined], ["finding", REF, 1]],
+                   "the padded ref is asked as the ref; the two legs at edition 1 are one read");
+  assert.deepEqual(out.map((f) => [f.ord, f.ref]), [[4, REF], [8, REF], [9, REF]]);
 });
 
 test("R3 it writes nothing and never throws, whatever it is handed", () => {

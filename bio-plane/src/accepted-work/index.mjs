@@ -93,8 +93,8 @@ class AcceptedWork {
       const list = Array.isArray(legs) ? legs : [];
       const asked = new Map();   // one read per (ref, edition) in one call
       list.forEach((leg, i) => {
-        const ref = isObj(leg) && typeof leg.target === "string" ? leg.target : null;
-        if (!ref || !parseImportedFindingRef(ref)) return;
+        const ref = isObj(leg) ? refOf(leg.target) : null;
+        if (!ref) return;
         const ord = Number.isInteger(leg.ord) ? leg.ord : i;
         const edition = leg.target_edition;
         const key = `${ref}\u0000${typeof edition}\u0000${String(edition)}`;
@@ -135,7 +135,7 @@ class AcceptedWork {
     const held = c.head ? this.#heldPairs(c.bundleId) : new Set();
     const asked = [];
     legs.forEach((leg, ord) => {
-      if (typeof leg.target !== "string" || !parseImportedFindingRef(leg.target)) return;
+      if (!refOf(leg.target)) return;
       if (held.has(pairKey(leg))) return;
       asked.push({ ...leg, ord });
     });
@@ -157,7 +157,7 @@ class AcceptedWork {
       const text = f && typeof f.text === "string" ? f.text : null;
       const fm = text ? parseFrontmatter(text).data : null;
       for (const leg of basisOf(fm))
-        if (isObj(leg) && typeof leg.target === "string" && parseImportedFindingRef(leg.target)) out.add(pairKey(leg));
+        if (isObj(leg) && refOf(leg.target)) out.add(pairKey(leg));
     } catch {
       out.clear();
     }
@@ -194,7 +194,14 @@ function fmOfFiles(files) {
   return md && typeof md.text === "string" ? parseFrontmatter(md.text).data : null;
 }
 
-const pairKey = (leg) => `${leg.target}\u0000${typeof leg.target_edition}\u0000${String(leg.target_edition)}`;
+/* The ref a leg's target names, as `inquiry-grammar` R11's leg arm reads it (trimmed), else null. */
+function refOf(target) {
+  if (typeof target !== "string") return null;
+  const t = target.trim();
+  return parseImportedFindingRef(t) ? t : null;
+}
+
+const pairKey = (leg) => `${refOf(leg.target)}\u0000${typeof leg.target_edition}\u0000${String(leg.target_edition)}`;
 
 const instances = new WeakMap();
 

@@ -22,6 +22,10 @@ test("R4 a promotion of an inquiry with a leg on an accepted finding is written;
     assert.equal(r.findings[0].ord, legs.length - 1);
     assert.equal(w.sha(ID), sha, "nothing was written");
   }
+  /* a target written with spaces around the ref is the ref (inquiry-grammar R11 reads it trimmed), and is asked */
+  const padded = w.promote(ID, [{ ...onRef(REF, 2), target: `"  ${REF} "` }]);
+  assert.equal(padded.reason, "BASIS_REFUSED");
+  assert.deepEqual(padded.findings.map((f) => [f.ref, f.edition]), [[REF, 2]]);
   /* a creation is asked too */
   const c = w.promote("INQ-2026-0002-q", [local, onRef(REF, 2)]);
   assert.equal(c.reason, "BASIS_REFUSED");
