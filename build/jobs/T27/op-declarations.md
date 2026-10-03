@@ -41,3 +41,7 @@ N518 R12 and N520 R13 applied on job/T27/op-declarations: actionholdrelease (ACT
 ## B2 · CHANGE processed
 
 K1286: the lists under exactly the names and order BOB gave. Already built as named; `DOCKET_BY` reordered to `docketprepare`, `docketdecline`, `docketpost` (test follows). B2 also answers J1: `viewer` on all seven docket member ops, as built. Merged `tranche/T27`. Re-run: op-declarations pass 43 fail 0; admission 19/0; plane 55/0; control-plane pass 126 fail 2 (R22, accepted red 4; R2/R41, the 12 new ops, until affordances R33, R34 land), unchanged. Checks below re-run: 0 failures each. Size (session_01FsRcQFZFMkEu8cvL4g6tgh): test runs 7, module lines 2553
+
+## J3 · COMPLETE
+
+B2 (K1286) processed: the docket lists export under exactly your names; DOCKET_BY reordered to docketprepare, docketdecline, docketpost (the only change; its test follows). viewer on all seven docket member ops, as built (answers J1). actionholdrelease in ACTIONS_ACTIONS, actionholdpreview and projectholds in ACTIONS_READS, as built. tranche/T27 merged. op-declarations 43/43, admission and plane green, control-plane unchanged (R22 accepted red 4; R2/R41 the 12 new ops until affordances R33/R34 land). format, architecture, coverage 13/13, ownership: 0 failures.
