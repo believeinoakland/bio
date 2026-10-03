@@ -41,3 +41,7 @@ case-grammar is merged (B8): note the part digest is casePartDigest(files, index
 ## B10 · CHANGE
 
 publication (K1322) and docket (K1323) are merged on tranche/T28 @ 9ce0fedbcd: publication R15, R57 (materials answer, heldMaterialsOf, publishedMaterialText), R58 (/6 only), R59, R60 (capture rows, attestations re-authored). Merge the tranche branch into yours, run against the real code, and complete.
+
+## B11 · CHANGE
+
+ratification is merged on tranche/T28 @ 5133bebd83 (K1325): its checks.mjs imports nothing store-bound now. Every module before you in L8 is merged (case-grammar, publication, docket, public-read, ratification). Merge the tranche branch, switch to named imports, regenerate program.mjs once, and complete: you merge next, and case-import waits on you.
