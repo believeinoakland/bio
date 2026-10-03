@@ -6,7 +6,8 @@
    (`bundle_projection`, created by retrieval's `PROJECTION_SCHEMA`, the statements its `migrate()` runs; R61, N283); the host governor records every call and
    refuses the hosts a test names; the network is a scripted `fetch` the test controls; the evidence bucket is an
    in-memory R2 stand-in; credentials is the real module, made after membership as the composition root makes it; intent, action-clocks, escalation and publication are stand-ins in their Provides' shapes unless
-   a test passes the real one (`realActions`: the real actions and action-clocks modules); the tables other modules'
+   a test passes the real one; case-import is the real module (no watch in force) unless a test passes `stubCaseImport`, its R18 in
+   its Provides' shape (`realActions`: the real actions and action-clocks modules); the tables other modules'
    promotion steps read once a wake has reached them on this host (`refs`, connections'; `inquiry_bundle_facts`,
    inquiry's) are created as the plane creates them (N506's tail, K1164: SCHEDULER #25 found a promotion after a wake
    failing on them here), their statements copied, since this module uses neither. Every test drives `monitoring` at its
@@ -87,16 +88,17 @@ export function governor({ refuse = [] } = {}) {
 
 /** A scripted network: `routes` maps a URL to a Response factory (or an Error to throw); every fetch is recorded. */
 export function network(routes = {}) {
-  const seen = [];
-  const fetch = async (u) => {
+  const seen = [], inits = [];
+  const fetch = async (u, init) => {
     const url = String(u && u.url ? u.url : u);
     seen.push(url);
+    inits.push(init ?? null);
     const r = routes[url];
     if (r instanceof Error) throw r;
     if (!r) return new Response("not found", { status: 404 });
     return typeof r === "function" ? r(url) : r;
   };
-  return { seen, routes, fetch };
+  return { seen, inits, routes, fetch };
 }
 /** A response serving `body` with `type`. */
 export const serve = (body, type = "text/plain", status = 200) => () =>
@@ -145,7 +147,7 @@ export const PLANE_TABLES = Object.freeze([
 
 export function world({ profiles = ["test-port-ellery"], env = null, evidence = true, refuse = [], intent = undefined,
                         actionClocks = undefined, escalation = undefined, publication = undefined, extraColumns = [], realActions = false,
-                        planeTables = true } = {}) {
+                        planeTables = true, caseImport = undefined } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -205,7 +207,8 @@ export function world({ profiles = ["test-port-ellery"], env = null, evidence = 
   const publicationStub = publication === undefined ? stubPublication() : publication;
   const m = monitoringOf(host, { record, membership, promotion, provenance: prov, observationLog: obs, capture,
     governor: gov, env: env || {}, now: () => clock.ms, fetch: net.fetch, intent: intentStub, publication: publicationStub,
-    ...(actionClocks !== undefined ? { actionClocks } : clocks ? { actionClocks: clocks } : {}), ...(escalation !== undefined ? { escalation } : {}) });
+    ...(actionClocks !== undefined ? { actionClocks } : clocks ? { actionClocks: clocks } : {}), ...(escalation !== undefined ? { escalation } : {}),
+    ...(caseImport !== undefined ? { caseImport } : {}) });
   let n = 0;
   const w = {
     st, host, record, membership, credentials, promotion, prov, obs, capture, gov, net, bkt, m, clock, intent: intentStub, act, clocks,
@@ -330,3 +333,31 @@ export function stubPublication(resting = []) {
     },
   };
 }
+
+/** case-import's R18 as monitoring reaches it (R67, R68): `watches` are `{import, group, case, docket, set_by, set_at,
+ *  last_read}`, answered by `watchedImports` in import order in pages of two with the cursor the last import answered;
+ *  `recordDocketRead` records each call in `reads` and sets the watch's `last_read`, answering `{ok: true, outcome,
+ *  new_entries, new_moves, new_refused}`, or `refuse` (an answer) or `fail` (an Error) when set. */
+export function stubCaseImport(watches = []) {
+  return {
+    watches, reads: [], pages: [], refuse: null, fail: null,
+    watchedImports({ after = null, limit = null } = {}) {
+      this.pages.push({ after, limit });
+      const all = [...this.watches].sort((a, b) => (a.import < b.import ? -1 : 1)).filter((w) => after == null || w.import > after);
+      const page = all.slice(0, 2);
+      return { watches: page.map((w) => ({ ...w })), cursor: all.length > 2 ? page[page.length - 1].import : null };
+    },
+    async recordDocketRead(q) {
+      this.reads.push(JSON.parse(JSON.stringify(q)));
+      if (this.fail) throw this.fail;
+      if (this.refuse) return this.refuse;
+      const w = this.watches.find((x) => x.import === q.import);
+      if (w) w.last_read = { at: q.at, outcome: q.outcome, reason: q.reason ?? null };
+      const n = q.answer && Array.isArray(q.answer.entries) ? q.answer.entries.length : 0;
+      return { ok: true, outcome: q.outcome, new_entries: n, new_moves: 0, new_refused: 0 };
+    },
+  };
+}
+/** A watch in case-import R18's shape: import `imp`, its docket at `docket`, last read at `at` (null: never). */
+export const watchOf = (imp, docket, at = null) => ({ import: imp, group: "source-group", case: "CASE-2026-0101", docket,
+  set_by: "carol", set_at: "2026-09-20T00:00:00Z", last_read: at ? { at, outcome: "read", reason: null } : null });
