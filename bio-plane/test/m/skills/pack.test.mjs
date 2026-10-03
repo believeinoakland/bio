@@ -163,11 +163,12 @@ test("R4 disclosable lists every disclosed key with its load_when, and nothing o
   for (const d of resident.disclosable) assert.deepEqual(Object.keys(d).sort(), ["layer", "load_when"]);
 });
 
-test("R5 disclosed holds the judgement layers, then vocabularies, acts, bounds, refusals, contradiction, action_planning, filing_drafting, edition_statement, recipes, each with load_when and sourcing", () => {
+test("R5 disclosed holds the judgement layers, then vocabularies, acts, bounds, refusals, contradiction, action_planning, filing_drafting, edition_statement, wizard_authoring, wizard_scripts (no recipes layer), each with load_when and sourcing", () => {
   const pub = published();
   const { disclosed } = renderPack(pub);
   assert.deepEqual(Object.keys(disclosed), [...JUDGEMENT_KEYS, "vocabularies", "acts", "bounds", "refusals",
-    "contradiction", "action_planning", "filing_drafting", "edition_statement", "recipes"]);
+    "contradiction", "action_planning", "filing_drafting", "edition_statement", "wizard_authoring", "wizard_scripts"]);
+  assert.ok(!("recipes" in disclosed), "DEC-120 retires the recipe: no layer carries the word");
   assert.deepEqual(JUDGEMENT_KEYS.map((k) => disclosed[k]), JUDGEMENT_KEYS.map((k) => judgementLayers()[k]));
   assert.equal(disclosed.vocabularies.body, pub.vocabularies, "the published vocabularies, unchanged");
   assert.equal(disclosed.vocabularies.sourcing, "driven");
@@ -261,35 +262,77 @@ test("R8 memberOnlyActs: every act whose mode is a string other than machine, so
   for (const odd of [undefined, null, "x", { id: "a", mode: "session" }]) assert.deepEqual(memberOnlyActs(odd), []);
 });
 
-test("R9 with no recipes published, recipes loads never, is absent, has an empty body and states why", () => {
-  for (const recipes of [undefined, null, "x", { a: 1 }]) {
-    const { disclosed: { recipes: layer } } = renderPack(published({ recipes }));
-    assert.equal(layer.load_when, "never, in this edition");
-    assert.equal(layer.sourcing, "absent");
-    assert.deepEqual(layer.body, []);
-    assert.equal(typeof layer.absent_because, "string");
-    assert.ok(layer.absent_because.trim().length > 0);
+/* A published screen registry in the plane's shape (`affordances` R37, `wizard-scripts` R13): each screen with the ops
+   a step on it may name. */
+const SCREENS = [{ id: "s-home", acts: ["act-b", "act-a"] }, { id: "s-queue", acts: ["act-m"] }, { id: "s-empty", acts: [] }];
+const step = (screen, act, more = {}) => ({ screen, act, what: "Open it.", why: "It is next.", ...more });
+
+test("R9 with no wizard scripts published, wizard_scripts loads never, is absent, has an empty body and states why", () => {
+  for (const wizard_scripts of [undefined, null, "x", { a: 1 }]) {
+    for (const pub of [published({ wizard_scripts }), published({ wizard_scripts, screens: SCREENS })]) {
+      const { disclosed: { wizard_scripts: layer }, resident } = renderPack(pub);
+      assert.deepEqual(Object.keys(layer).sort(), ["absent_because", "body", "load_when", "sourcing"]);
+      assert.equal(layer.load_when, "never, in this edition");
+      assert.equal(layer.sourcing, "absent");
+      assert.equal(SOURCING.wizard_scripts, "absent");
+      assert.deepEqual(layer.body, []);
+      assert.equal(typeof layer.absent_because, "string");
+      assert.match(layer.absent_because, /wizard script/);
+      assert.ok(!/recipe/i.test(layer.absent_because), "the retired word is not used");
+      assert.ok(resident.disclosable.some((d) => d.layer === "wizard_scripts" && d.load_when === "never, in this edition"));
+    }
   }
+  /* The old key carries nothing: a published `recipes` list is neither carried nor validated. */
+  const old = renderPack(published({ recipes: [{ id: "r", steps: [] }], surfaces: [] }));
+  assert.equal(old.disclosed.wizard_scripts.sourcing, "absent");
 });
 
-test("R10 published recipes are carried as data, each step a published surface and act; a step naming anything else fails the render", () => {
-  const surfaces = [{ id: "s-home" }, { id: "s-queue" }];
-  const recipes = [{ id: "r1", steps: [{ surface: "s-home", act: "act-b" }, { surface: "s-queue", act: "act-m" }] }];
-  const { disclosed: { recipes: layer } } = renderPack(published({ surfaces, recipes }));
-  assert.equal(layer.body, recipes, "the published recipes, unchanged");
-  assert.equal(layer.sourcing, "driven");
-  assert.ok(layer.load_when.trim() && layer.load_when !== "never, in this edition");
-  const bad = [
-    [[{ id: "r2", steps: [] }], /recipe r2 has no steps/],
-    [[{ id: "r3" }], /recipe r3 has no steps/],
-    [[{ id: "r4", steps: [{ surface: "s-nowhere", act: "act-b" }] }], /recipe r4 step 1 names the surface "s-nowhere"/],
-    [[{ id: "r5", steps: [{ surface: "s-home", act: "act-b" }, { surface: "s-home", act: "act-gone" }] }],
-      /recipe r5 step 2 names the act "act-gone"/],
-    [[{ id: "r6", steps: [{ act: "act-b" }] }], /recipe r6 step 1 names the surface undefined/],
+test("R10 published wizard scripts are carried unchanged, driven, each step a published screen and an op of that screen; any other step, or a script with no steps, fails the render naming the script, the step and the name", () => {
+  const scripts = [
+    { id: "WIZ-1", version: 1, origin: "civicsmith", required: true,
+      steps: [step("s-home", "act-b"), step("s-queue", "act-m"), step("s-home", null, { draft: { text: "words" } })] },
+    { id: "WIZ-2", version: 3, origin: "group", required: false, steps: [step("s-empty", null)] },
   ];
-  for (const [rs, re] of bad) assert.throws(() => renderPack(published({ surfaces, recipes: rs })), re);
-  assert.throws(() => renderPack(published({ recipes })), /names the surface "s-home"/,
-    "no published surfaces: every surface is unknown");
+  const pub = published({ screens: SCREENS, wizard_scripts: scripts });
+  const { disclosed: { wizard_scripts: layer }, resident } = renderPack(pub);
+  assert.equal(layer.body, scripts, "the published scripts, unchanged");
+  assert.equal(layer.sourcing, "driven");
+  assert.equal(SOURCING.wizard_scripts_published, "driven");
+  assert.ok(layer.load_when.trim() && layer.load_when !== "never, in this edition");
+  assert.ok(resident.disclosable.some((d) => d.layer === "wizard_scripts" && d.load_when === layer.load_when));
+  assert.deepEqual(renderPack(published({ screens: SCREENS, wizard_scripts: [] })).disclosed.wizard_scripts.body, [],
+    "a published empty list is carried as published");
+  /* Steps name ops of their screen, read from published.screens, never from the catalogue (K262 (4)): an act the
+     catalogue publishes but the screen does not list is refused, and an op the screen lists but the catalogue does
+     not is carried. */
+  const viaScreen = [{ id: "WIZ-3", steps: [step("s-queue", "op-only-on-screen")] }];
+  const screens2 = [...SCREENS, { id: "s-q2" }].map((s) => (s.id === "s-queue" ? { ...s, acts: ["op-only-on-screen"] } : s));
+  assert.equal(renderPack(published({ screens: screens2, wizard_scripts: viaScreen })).disclosed.wizard_scripts.body, viaScreen);
+  const bad = [
+    [[{ id: "WIZ-4", steps: [] }], /wizard script WIZ-4 has no steps/],
+    [[{ id: "WIZ-5" }], /wizard script WIZ-5 has no steps/],
+    [[{ id: "WIZ-6", steps: "x" }], /wizard script WIZ-6 has no steps/],
+    [[{ steps: [] }], /wizard script #0 has no steps/],
+    [[{ id: "WIZ-7", steps: [step("s-nowhere", "act-b")] }], /wizard script WIZ-7 step 1 names the screen "s-nowhere", which the plane does not publish/],
+    [[{ id: "WIZ-8", steps: [step("s-home", "act-b"), step("s-home", "act-gone")] }],
+      /wizard script WIZ-8 step 2 names the act "act-gone", which is not an op of the screen "s-home"/],
+    [[{ id: "WIZ-9", steps: [step("s-home", "act-m")] }], /wizard script WIZ-9 step 1 names the act "act-m", which is not an op of the screen "s-home"/],
+    [[{ id: "WIZ-10", steps: [step("s-empty", "act-b")] }], /WIZ-10 step 1 names the act "act-b"/],
+    [[{ id: "WIZ-11", steps: [{ act: "act-b" }] }], /WIZ-11 step 1 names the screen undefined/],
+    [[{ id: "WIZ-12", steps: [{ screen: "s-home" }] }], /WIZ-12 step 1 names the act undefined/],
+    [[{ id: "WIZ-13", steps: [null] }], /WIZ-13 step 1 names the screen null/],
+    [[scripts[0], { id: "WIZ-14", steps: [step("s-queue", "act-b")] }], /WIZ-14 step 1 names the act "act-b"/],
+  ];
+  for (const [ws, re] of bad) {
+    assert.throws(() => renderPack(published({ screens: SCREENS, wizard_scripts: ws })), re, String(re));
+    assert.throws(() => renderPack(published({ screens: SCREENS, wizard_scripts: ws })), (e) => e instanceof Error);
+  }
+  for (const screens of [undefined, null, "x", [], [{ acts: ["act-b"] }, "s-home"]])
+    assert.throws(() => renderPack(published({ screens, wizard_scripts: scripts })), /WIZ-1 step 1 names the screen "s-home"/,
+      `no published screen ${JSON.stringify(screens)}: every screen is unknown`);
+  /* The version moves with a script (R11). */
+  const moved = [{ ...scripts[0], steps: [...scripts[0].steps, step("s-queue", "act-m")] }, scripts[1]];
+  assert.notEqual(renderPack(pub).version, renderPack(published({ screens: SCREENS, wizard_scripts: moved })).version);
 });
 
 test("R11 packVersion is investigative-session@<edition>+<16 hex>, over the pack without its version, in canonical form; any rendered word moves it", () => {

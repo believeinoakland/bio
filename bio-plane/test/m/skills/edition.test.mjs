@@ -30,7 +30,7 @@ test("R31 R5 the edition_statement layer, in disclosed after filing_drafting: au
   const { disclosed, resident } = renderPack(published({ catalog: editionCatalog() }));
   const keys = Object.keys(disclosed);
   assert.equal(keys.indexOf("edition_statement"), keys.indexOf("filing_drafting") + 1, "after filing_drafting");
-  assert.equal(keys.indexOf("recipes"), keys.indexOf("edition_statement") + 1, "and before recipes");
+  assert.equal(keys.indexOf("wizard_authoring"), keys.indexOf("edition_statement") + 1, "and before wizard_authoring");
   const layer = disclosed.edition_statement;
   assert.equal(layer.sourcing, "authored");
   assert.equal(SOURCING.edition_statement, "authored");

@@ -37,8 +37,9 @@
  *        may never be read as.
  *     4. THE ABSENCE VOCABULARY (D-129). The words the third rule is stated in.
  *
- *   PROGRESSIVELY DISCLOSED — the vocabularies and recipes of §14b.1, each with
- *   the trigger that loads it. They are named in the resident layer (so the run
+ *   PROGRESSIVELY DISCLOSED — the vocabularies and recipes of §14b.1 (the
+ *   recipes are wizard scripts since DEC-120), each with the trigger that
+ *   loads it. They are named in the resident layer (so the run
  *   knows what it may ASK FOR) and their bodies are not carried until asked.
  *
  * ---------------------------------------------------------------------------
@@ -100,25 +101,20 @@
  * WHAT THIS PACK CANNOT SEE, STATED RATHER THAN DISCOVERED
  * ---------------------------------------------------------------------------
  *
- *   - **RECIPES ARE NAMED AND EMPTY.** `ASSISTANT-PILOT.md` §1 requires a recipe
- *     to be DATA whose every step names a surface id and an act/op, mechanically
- *     validated so a recipe naming a surface that does not exist FAILS THE
- *     BUILD. The surface registry now exists, in `civicos-ui` (`ASSISTANT-
- *     PILOT.md` Status), but no plane op publishes it, so a recipe authored
- *     HERE could still not be validated here (R9, R10: SK-5 waits on the plane
- *     publishing that registry). The layer is
- *     therefore declared, empty, and its emptiness is PUBLISHED in the pack —
- *     an honest absence, never a silent omission.
- *     **STILL EMPTY AFTER SK-2, AND THE REASON IS UNCHANGED RATHER THAN
- *     FORGOTTEN.** SK-1 wrote "SK-2's to fill"; SK-2 landed its five JUDGEMENT
- *     layers (`skilldoctrine.mjs`) and did not fill this one, because the
- *     blocker is not authorship — it is validation. A recipe is worth having
- *     only if a step naming a surface that does not exist FAILS THE BUILD, the
- *     surface registry is `civicos-ui`'s, and no plane op publishes it. Writing
- *     unvalidated recipes here would buy the appearance of a layer and none of
- *     the property that makes one worth carrying. It waits on a surface
- *     registry the PLANE publishes, and that is an interface item, not a skill
- *     one.
+ *   - **WIZARD SCRIPTS ARE CARRIED ONLY AS THE PLANE PUBLISHES THEM.**
+ *     `ASSISTANT-PILOT.md` §1 requires a wizard script (DEC-120; the "recipe"
+ *     of the first design) to be DATA whose every step names a screen and an
+ *     op, mechanically validated so a script naming a screen that does not exist
+ *     FAILS THE BUILD. The library is `wizard-scripts`' and the screen registry is
+ *     registered there; the plane publishes both in `op=affordances`' no-target
+ *     answer (`screens`, `wizard_scripts`; `affordances` R37). This file authors
+ *     no script: it carries the published ones unchanged, and checks every step
+ *     against the published screens, its act against the ops of the screen it
+ *     names (R10), so a pack rendered at build over a broken script fails the
+ *     build. Until the plane publishes them, the layer is declared, empty, and
+ *     its emptiness is PUBLISHED in the pack (R9) — an honest absence, never a
+ *     silent omission. The doctrine a run DRAFTS a script under is the
+ *     `wizard_authoring` layer (`skilldoctrine.mjs`, R32).
  *   - **THE MACHINE FENCE IS WIDER THAN ITS CANNED WORDS.** The boundary layer
  *     renders the fences that carry a DEC-49 canned translation, as the plane
  *     PUBLISHES them (`op=affordances`' `fences`: `machineFences` below, run by
@@ -147,8 +143,8 @@ import { RUN_BOUNDS, RUN_ENDINGS, AI_RUN_CHECKS } from "./run-rules/index.mjs";
    defence (each sentence pinned to the document it is quoted from, and a
    source-scan proving it holds no control-flow authority). Two deliverables with
    two suites, and the pack composes them. */
-import { judgementLayers, actionPlanningLayer, filingDraftingLayer, editionStatementLayer, SKILL_CHECKS,
-         SKILL_CHECK_KEYS } from "./skilldoctrine.mjs";
+import { judgementLayers, actionPlanningLayer, filingDraftingLayer, editionStatementLayer, wizardAuthoringLayer,
+         SKILL_CHECKS, SKILL_CHECK_KEYS } from "./skilldoctrine.mjs";
 export { SKILL_CHECKS, SKILL_CHECK_KEYS };
 /* N345. The recommender's prompt is contradiction's (its R41): measured on the blind fixture of dissolved pairs
    under its digest, and carried here unchanged as the words a run recommends under (R27). The digest is checked
@@ -242,8 +238,10 @@ export const SOURCING = {
   filing_drafting_unpublished: "absent", /* while op=affordances publishes no template proposal act (R30) */
   edition_statement: "authored", /* skilldoctrine.mjs, BIO_Publication_v0_1.md §5A (R31) */
   edition_statement_unpublished: "absent", /* while op=affordances publishes no edition statement proposal act (R31) */
-  recipes:        "absent",     /* absent until the plane publishes recipes — see the header */
-  recipes_published: "driven",  /* op=affordances .recipes, validated against .surfaces and .catalog (R10) */
+  wizard_authoring: "authored", /* skilldoctrine.mjs, Interaction Constructs §P, ASSISTANT-PILOT §3 (R32) */
+  wizard_authoring_unpublished: "absent", /* while op=affordances publishes no wizard script proposal act (R32) */
+  wizard_scripts: "absent",     /* absent until the plane publishes wizard scripts — see the header (R9) */
+  wizard_scripts_published: "driven", /* op=affordances .wizard_scripts, validated against .screens (R10) */
   /* SK-2's five layers. `authored` throughout, and the label is the honest one:
      they are doctrine somebody wrote. Their vocabularies are imported and their
      quoted sentences are pinned to the documents they come from, which is the
@@ -359,7 +357,7 @@ export function renderPack(published) {
   /* R1, N345: the recommender's words are contradiction's, measured under their digest. A prompt that is
      not the measured one is a detector that never passed its fixture, so no pack renders over it. A digest
      that is null says no measurement was made: then the layer states its absence (R27) and carries no
-     prompt, as the recipes layer does (R9), and the rest of the pack renders. */
+     prompt, as the wizard scripts layer does (R9), and the rest of the pack renders. */
   if (typeof RECOMMEND_PROMPT !== "string" || RECOMMEND_PROMPT.trim() === "")
     throw new Error("the pack carries contradiction's recommender prompt and writes none of its own: "
       + "contradiction exported no RECOMMEND_PROMPT");
@@ -404,13 +402,14 @@ export function renderPack(published) {
     disclosable: null,   /* filled below, from the disclosed layer's own keys */
   };
 
-  /* R10: recipes the plane publishes are validated here, and a step naming a
-     surface or an act the plane does not publish throws, so a pack rendered at
-     build fails the build. Absent, the layer states its absence (R9). */
-  const recipes = Array.isArray(p.recipes) ? p.recipes : null;
-  if (recipes) validateRecipes(recipes, p.surfaces, catalog);
+  /* R10: wizard scripts the plane publishes are validated here, and a step
+     naming a screen the plane does not publish, or an act that is not an op of
+     the screen it names, throws, so a pack rendered at build fails the build.
+     Absent, the layer states its absence (R9). */
+  const wizardScripts = Array.isArray(p.wizard_scripts) ? p.wizard_scripts : null;
+  if (wizardScripts) validateWizardScripts(wizardScripts, p.screens);
 
-  const disclosed = disclosedLayers({ vocabularies, catalog, captureActs: p.capture_acts, recipes });
+  const disclosed = disclosedLayers({ vocabularies, catalog, captureActs: p.capture_acts, wizardScripts });
   resident.disclosable = Object.keys(disclosed).map((k) => ({ layer: k, load_when: disclosed[k].load_when }));
 
   const pack = { id: SKILL_PACK_ID, edition: DOCTRINE_EDITION, resident, disclosed,
@@ -421,7 +420,7 @@ export function renderPack(published) {
 /** THE PROGRESSIVELY-DISCLOSED LAYERS (§14b.1). Each names the work that loads
  *  it, so "loads when the run reaches work that needs them" is a field a
  *  scheduler can read rather than a sentence a model must interpret. */
-export function disclosedLayers({ vocabularies, catalog, captureActs, recipes = null } = {}) {
+export function disclosedLayers({ vocabularies, catalog, captureActs, wizardScripts = null } = {}) {
   return {
     /* SK-2's judgement layers first, so `disclosable` lists what the run is
        INSTRUCTED BY before what it is given to work with. Spread from one
@@ -462,7 +461,7 @@ export function disclosedLayers({ vocabularies, catalog, captureActs, recipes = 
       load_when: "never, in this edition",
       sourcing: SOURCING.contradiction_unmeasured,
       body: {},
-      /* THE ABSENCE, STATED IN THE PACK ITSELF, as the recipes layer states its own. */
+      /* THE ABSENCE, STATED IN THE PACK ITSELF, as the wizard scripts layer states its own. */
       absent_because: "contradiction's recommender prompt has passed no measurement: its digest is null "
         + "until the blind fixture of dissolved pairs is run under it and recorded, and a prompt no "
         + "measurement vouches for is not given to a run as the words it recommends under.",
@@ -479,49 +478,55 @@ export function disclosedLayers({ vocabularies, catalog, captureActs, recipes = 
        under, and the acts it may use and must leave to a member, read from the published catalogue; a stated
        absence while the plane publishes no edition statement proposal act. */
     edition_statement: editionStatementLayer(catalog),
-    recipes: Array.isArray(recipes) ? {
+    /* R32 (DEC-121 (3), (4), K1364 B3). The doctrine a run drafting or critiquing a wizard script works under,
+       and the acts it may use and must leave to a member, read from the published catalogue; a stated absence
+       while the plane publishes no wizard script proposal act. */
+    wizard_authoring: wizardAuthoringLayer(catalog),
+    wizard_scripts: Array.isArray(wizardScripts) ? {
       load_when: "the run guides a member through a path to a result, or must say which steps reach it",
-      sourcing: SOURCING.recipes_published,
-      body: recipes,
+      sourcing: SOURCING.wizard_scripts_published,
+      body: wizardScripts,
     } : {
       load_when: "never, in this edition",
-      sourcing: SOURCING.recipes,
+      sourcing: SOURCING.wizard_scripts,
       body: [],
       /* THE ABSENCE, STATED IN THE PACK ITSELF. A run reading this layer learns
-         that the pack holds no recipes, which is a different fact from a pack
-         that forgot to carry them. */
-      absent_because: "a recipe is DATA whose every step names a surface id and an act, and it is "
-        + "worth having only if a step naming a surface that does not exist FAILS THE BUILD. The "
-        + "surface registry is the interface's and no plane op publishes it, so a recipe authored "
-        + "here could not be validated here. SK-2 landed the judgement layers and left this one "
-        + "empty for that reason rather than for want of an author: it waits on the plane "
-        + "publishing the surface registry and its recipes.",
+         that the pack holds no wizard scripts, which is a different fact from a
+         pack that forgot to carry them. */
+      absent_because: "a wizard script is DATA whose every step names a screen and an op of that screen, and it "
+        + "is worth carrying only if a step naming a screen or an op that does not exist FAILS THE BUILD. The "
+        + "plane has not published its screen registry and its wizard scripts to this render, so no script "
+        + "could be validated here, and none is carried: the layer waits on the plane publishing both.",
     },
   };
 }
 
-/** R10. Every recipe is a list of steps, each naming a surface id the plane
- *  published and an act id its catalogue publishes; anything else throws,
- *  naming the recipe, the step and the unknown name, and nothing renders. The
- *  names are read from what was published, so this file holds none of them. */
-function validateRecipes(recipes, surfaces, catalog) {
-  const surfaceIds = new Set((Array.isArray(surfaces) ? surfaces : [])
-    .map((x) => (x && typeof x === "object" ? x.id : x)).filter((x) => typeof x === "string"));
-  const actIds = new Set(catalog.map((a) => a && a.id).filter((x) => typeof x === "string"));
-  recipes.forEach((r, i) => {
-    const name = r && typeof r.id === "string" ? r.id : `#${i}`;
-    const steps = r && Array.isArray(r.steps) ? r.steps : [];
+/** R10. Every wizard script is a list of steps, each naming a screen the plane
+ *  published and, unless its act is null (a step that only reads), an op that
+ *  screen lists; anything else throws, naming the script, the step and the
+ *  unknown name, and nothing renders. The names are read from what was
+ *  published (`published.screens[].acts`), so this file holds none of them. */
+function validateWizardScripts(scripts, screens) {
+  const opsByScreen = new Map();
+  for (const sc of Array.isArray(screens) ? screens : []) {
+    if (!sc || typeof sc !== "object" || typeof sc.id !== "string") continue;
+    opsByScreen.set(sc.id, new Set((Array.isArray(sc.acts) ? sc.acts : [])
+      .map((a) => (a && typeof a === "object" ? a.id : a)).filter((a) => typeof a === "string")));
+  }
+  scripts.forEach((w, i) => {
+    const name = w && typeof w.id === "string" ? w.id : `#${i}`;
+    const steps = w && Array.isArray(w.steps) ? w.steps : [];
     if (steps.length === 0)
-      throw new Error(`recipe ${name} has no steps: a recipe is a path of steps, each naming a `
-        + "surface and an act the plane publishes");
+      throw new Error(`wizard script ${name} has no steps: a wizard script is a path of steps, each naming a `
+        + "screen the plane publishes and an op of that screen");
     steps.forEach((st, j) => {
-      const surface = st && st.surface, act = st && st.act;
-      if (!surfaceIds.has(surface))
-        throw new Error(`recipe ${name} step ${j + 1} names the surface ${JSON.stringify(surface)}, `
+      const screen = st && st.screen, act = st ? st.act : undefined;
+      if (typeof screen !== "string" || !opsByScreen.has(screen))
+        throw new Error(`wizard script ${name} step ${j + 1} names the screen ${JSON.stringify(screen)}, `
           + "which the plane does not publish");
-      if (!actIds.has(act))
-        throw new Error(`recipe ${name} step ${j + 1} names the act ${JSON.stringify(act)}, `
-          + "which the plane's catalogue does not publish");
+      if (act !== null && !opsByScreen.get(screen).has(act))
+        throw new Error(`wizard script ${name} step ${j + 1} names the act ${JSON.stringify(act)}, `
+          + `which is not an op of the screen ${JSON.stringify(screen)}`);
     });
   });
 }
