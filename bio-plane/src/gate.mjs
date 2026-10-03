@@ -629,8 +629,35 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    1.56.0 (docket registers none; `MODULE_ORDER` gaining docket moves no gate's order), and the case gate's registered
    catalogue is unmoved.
    MINOR, rule 17 moving the stamp for arrivals. ROW_CENSUS (R50) is re-pinned to this tree, module tables only: 1103
-   rows. Rows T28's layers 3–11 change are T29's stamp. */
-export const CATALOG_VERSION = "1.57.0";
+   rows. Rows T28's layers 3–11 change were T29's stamp, taken by 1.58.0. */
+/* 1.58.0 (PROMOTION #29, T29 layer 2, 2026-10-03; S5, K1334): EVERY ROW CHANGE SINCE 1.57.0, counted wherever the rows
+   live (R34, R47), read by diffing R50's census lines of `tranche/T29` at its layer 2 against 1.57.0's own
+   (`test/fixtures/row-census-1.57.0.jsonl`: 1103 rows, 966af5b4…): twenty-six new rows, one re-keyed, four changed (twenty-
+   seven lines arrived, one departed). Each is one a job record names (T28's layers 3–11 `awaiting stamp`, accepted red 2:
+   INQUIRY-GRAMMAR's, ACCEPTED-WORK's, CASE-AUTHORING's, PUBLICATION's, RATIFICATION's, DOCKET's and CASE-IMPORT's records;
+   T29's layer 2 changes none).
+   ARRIVED: C-21.3 IMPORTED_LEG_MALFORMED (inquiry-grammar R11); C-21.4 IMPORTED_NOT_ACCEPTED, C-21.5
+   ACCEPTED_WORK_UNREADABLE (the new module accepted-work); C-120.8 RELIED_ON_NOT_PRESENTABLE, C-120.10
+   ACCEPTED_WORK_NOT_IN_FORCE, C-120.11 FLAG_NOT_DISCLOSED, C-120.12 FLAGS_UNDETERMINED, C-120.13
+   FLAG_DISCLOSURE_NOT_STANDING (case-authoring's `CASE_DISCLOSURE_CHECKS`; C-120.9 is withdrawn, K1277, and its number
+   is never reused); C-122.2 CASE_FORMAT_SUPERSEDED, C-122.3 ACCEPTANCE_WITHDRAWN_SINCE, C-122.4 FLAG_OPENED_SINCE
+   (publication); C-130.1–C-130.14, MACHINE_CANNOT_IMPORT through IMPORT_FLAG_NOT_OPEN (the new module case-import, N520).
+   RE-KEYED, number, `where` and translation unmoved (the old code departed, the new arrived): C-129.10
+   MACHINE_CANNOT_MARK_DOCKET_PRESSURE, was MACHINE_CANNOT_MARK_PRESSURE (docket, N526: action-grammar's C-117.14 keeps
+   that code).
+   CHANGED, code and number unmoved: the translations of C-92.4 ATTRIBUTION_NOT_AN_OBSERVATION and C-92.5
+   ATTRIBUTION_NOT_THE_AUTHOR (publication R60: a capture's attesting member) and of C-58.5
+   ANONYMOUS_TESTIMONY_UNCORROBORATED and C-92.10 ATTRIBUTION_UNCHOSEN (ratification, N523, DEC-119 (3): material from an
+   unnamed source a member attests).
+   CHANGED IN WHAT THE GATES RUN: the promote gate gains accepted-work's registered step (C-21.4, C-21.5); inquiry-grammar's
+   registered grammar runs the imported-leg arm (C-21.3); the case gate's registered catalogue (ratification's) holds an
+   anonymous attestation to C-58.5's guard. Each is counted with its row above. `MODULE_ORDER` gaining accepted-work,
+   case-checker and case-import (membership, T28) places accepted-work's step in the modules' total order (R39).
+   Rows this tranche's L8 jobs will move (the C-120 rows' `where` with the case-authoring split, N529; docket's own codes
+   for PRESSURE_MARKED and PRESSURE_REFUSED, N533) are not stamped in advance: they are T30's.
+   MINOR, rule 17 moving the stamp for arrivals, a re-keyed row, changed rows and a changed composition. ROW_CENSUS (R50)
+   is re-pinned to this tree, module tables only: 1128 rows. Rows T29's layers 3–11 change are T30's stamp. */
+export const CATALOG_VERSION = "1.58.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
@@ -722,8 +749,8 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
    this module's own census suite, `bio-plane/test/system/row-census.test.mjs` (legacy-tests' until T22's opening, K1006):
    a test may import every module's tables, which this module's source cannot (P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
-export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1103,
-  digest: "966af5b4736d874c29c44d81e1e3d6d7f1c1479721af0aa663609f19b15e9226" });
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1128,
+  digest: "bc45a9ec49445340dafecfc7adaa1ba57dfdb4291355da067a579bb9d14622e6" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();

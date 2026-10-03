@@ -79,7 +79,14 @@
    966af5b4…); the 1.56.0 snapshot (no stamp reads it) deleted; T27's layers 3–11 rows (C-117.23–C-117.25, C-69.5,
    C-129.1–C-129.26, thirty arrivals, none declared here, accepted red 2) stamped in 1.57.0. A row a T28 job in layers
    3–11 adds or changes turns this suite red, accepted by name until T29's layer-2 stamp (`build/plan/current.md` red 2),
-   so none is declared. Negative control re-run on the stamp commit: its arms in the suite pass. */
+   so none is declared. Negative control re-run on the stamp commit: its arms in the suite pass.
+   RE-PINNED 2026-10-03 (PROMOTION #29, T29, S5): over 1.58.0, the stamp's own lines (`fixtures/row-census-1.58.0.jsonl`,
+   1128 lines) reproduced by this reader on the stamp commit (named in `build/jobs/T29/promotion.md`: 1128 rows,
+   bc45a9ec…); the 1.57.0 snapshot (no stamp reads it) deleted; T28's layers 3–11 rows (C-21.3–C-21.5, C-120.8,
+   C-120.10–C-120.13, C-122.2–C-122.4, C-130.1–C-130.14 arrived; C-129.10 re-keyed; C-58.5, C-92.4, C-92.5, C-92.10
+   re-worded; none declared here, accepted red 2) stamped in 1.58.0. A row a T29 job in layers 3–11 adds or changes turns
+   this suite red, accepted by name until T30's layer-2 stamp (S6), so none is declared. Negative control re-run on the
+   stamp commit: its arms in the suite pass. */
 import "../stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
@@ -97,9 +104,9 @@ const FIXTURE = (v) => fileURLToPath(new URL(`./fixtures/row-census-${v}.jsonl`,
    carries the line as the stamp read it (so the stamp's census can be rebuilt); `arrived` names the row by check and
    code (its line is the tree's). */
 const AWAITING_STAMP = [
-  /* RE-ANCHORED 2026-10-03 (PROMOTION #28, T28; S4): over 1.57.0, the stamp's own lines (`fixtures/row-census-1.57.0.jsonl`,
-     1103 lines, 966af5b4…). T27's layers 3–11 rows (C-117.23–C-117.25, C-69.5, C-129.1–C-129.26) were never declared
-     (accepted red 2) and are stamped in 1.57.0. None is open (see the header). */
+  /* RE-ANCHORED 2026-10-03 (PROMOTION #29, T29; S5): over 1.58.0, the stamp's own lines (`fixtures/row-census-1.58.0.jsonl`,
+     1128 lines, bc45a9ec…). T28's layers 3–11 rows were never declared (accepted red 2) and are stamped in 1.58.0. None
+     is open (see the header). */
 ];
 /* COMPOSITIONS AWAITING STAMP: a change to which checks a gate runs moves no row, so the census cannot see it; each is
    declared here by name, verified against its record like a row, and listed (R50, K408, K464). Queue's registered step
@@ -109,9 +116,9 @@ const AWAITING_STAMP = [
    retired; no T17 job names a composition change. LEGACY-TESTS #19 (T21, 2026-10-01): intent's registration changed its
    ids after the 1.51.0 stamp (INTENT #9, no row), declared for T22. */
 const COMPOSITIONS_AWAITING = [
-  /* PROMOTION #28 (T28, 2026-10-03): re-anchored at 1.57.0; no gate's composition changed since 1.56.0 (docket, new in
-     T27, registers no step, grammar or listener, as 1.57.0's note says), and no T27 or T28 layer-2 job named one, so none
-     is open. */
+  /* PROMOTION #29 (T29, 2026-10-03): re-anchored at 1.58.0. T28's composition changes (accepted-work's promote step,
+     inquiry-grammar's imported-leg arm, ratification's widened C-58.5 arm) each moved a row and are stamped in 1.58.0 with
+     it (its note); no T29 layer-2 job names one, so none is open. */
 ];
 /* The plane's suite shape: every arm printed PASS or FAIL with its reason, the tally last, the exit its verdict. */
 let pass = 0, fail = 0;
