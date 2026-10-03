@@ -91,7 +91,7 @@ Terms. A **dependent** is a bundle with a basis leg naming the target (`inquiry_
   (DEC-96 item 1; K1273)
 
 **A cited edition moved at its publisher** (DEC-101 (3); DEC-116 item 8; N534)
-- **R33** **A cited edition moved at its publisher** (DEC-101 (3); DEC-116 item 8). Only a verified `edition` or `withdrawal` entry on the publisher's docket is a move; no other docket entry raises a cause here (K1339, K1366 F1). *(not yet met: T31)*
+- **R33** **A cited edition moved at its publisher** (DEC-101 (3); DEC-116 item 8). Only a verified `edition` or `withdrawal` entry on the publisher's docket is a move; no other docket entry raises a cause here (K1339, K1366 F1).
   - **The cause.** R2 gains the cause arm `cited_case_moved`, derived on read. A dependent carries one cause for each pair of a live leg (R7) and a move (`accepted-work.publisherMoves`, its R8, read through each `cursor` to null) where:
     - the leg rests on an imported finding reference at `target_edition` *n*;
     - the move is of the same import;
