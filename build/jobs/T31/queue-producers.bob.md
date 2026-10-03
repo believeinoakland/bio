@@ -16,3 +16,7 @@ K1397: J1 readings 1-6 stand; J1 (3) is N546 (case-import, T32). J2's shapes sta
 ## B3 · CHANGE
 
 K1399 (from WIZARD-SCRIPTS #1 J3): in brokenScripts and submittedFor entries, version is the version number (an integer), so keys <script>@<version> use it; author is the version author's member id; refusal.translation is the row's; a retired script's submitted versions are not listed (R33's item leaves on retirement). Build R32/R33 to this; your merge still waits on wizard-scripts'.
+
+## B4 · CHANGE
+
+wizard-scripts is merged (K1401). Merge tranche/T31, build and test R32/R33 against its brokenScripts/submittedFor (K1397, K1399), re-run, post COMPLETE.
