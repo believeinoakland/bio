@@ -4,9 +4,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, T0, ENV, refused, renderRefusal, sha, filed } from "./fixture.mjs";
 import { captureRequestAttribution, CAPTURE_REQUEST_TICK_BATCH, CAPTURE_REQUEST_TTL_MS, CAPTURE_SOURCE_CHECKS,
-         CAPTURE_REQUEST_CHECKS, CAPTURE_PURPOSES, CAPTURE_UA_MODES, userAgentIsLegible, sourceReasonOf, captureRequestsOps }
-  from "../../../src/capture-requests/index.mjs";
-import { RENDER_CAPTURE_CHECKS, civicosUserAgent } from "../../../src/acquisition/index.mjs";
+         CAPTURE_REQUEST_CHECKS, CAPTURE_PURPOSES, CAPTURE_UA_MODES, CAPTURE_UA_MODE_ALIASES, uaModeOf, userAgentIsLegible,
+         sourceReasonOf, captureRequestsOps } from "../../../src/capture-requests/index.mjs";
+import { RENDER_CAPTURE_CHECKS, civicsmithUserAgent } from "../../../src/acquisition/index.mjs";
 
 const iso = (ms) => new Date(ms).toISOString().replace(/\.\d+Z$/, "Z");
 const addr = (i) => `https://h${i}.example.org/doc`;
@@ -148,7 +148,7 @@ test("R14 conduct's order: attribution before purpose before agent before rate, 
                    ["CAPTURE_ATTRIBUTION_ONE_PRINCIPAL", "CAPTURE_CONDUCT_NO_PURPOSE", "CAPTURE_CONDUCT_UA_ILLEGIBLE"]);
 });
 
-test("R14 the civicos agent is the catalogue's composer and legible; the member agent inquiry records (its R44 memberUserAgent) is delegated verbatim, never the document's line; no robots.txt is read and a Disallow path is captured (BOB-3)", async () => {
+test("R14 the civicsmith agent is acquisition's composer (its R24 civicsmithUserAgent) and legible; the member agent inquiry records (its R44 memberUserAgent) is delegated verbatim, never the document's line; no robots.txt is read and a Disallow path is captured (BOB-3)", async () => {
   const UA = "Mozilla/5.0 (X11; Linux x86_64) Firefox/140.0";
   const w = world().scene();
   w.bundle("INQ-UA", "inquiry", { md: inquiryMd("Document/1.0") });
@@ -170,21 +170,84 @@ test("R14 the civicos agent is the catalogue's composer and legible; the member 
   assert.deepEqual(w.asked, ["INQ-UA"], "inquiry is asked for the member-browser row's target only");
   assert.equal(by["https://p.example.org/x"].purpose, "acquire");
   assert.equal(by["https://www.example.gov/private/disallowed/report.pdf"].agent, null);
-  const ua = civicosUserAgent(ENV.VERSION, ENV.INSTANCE_NAME, "investigate");
+  const ua = civicsmithUserAgent(ENV.VERSION, ENV.INSTANCE_NAME, "investigate");
+  assert.equal(ua, "Civicsmith/9.9.9 (+https://github.com/believeinoakland/bio; instance testbed; investigate)");
   assert.equal(userAgentIsLegible(ua), true);
 });
 
-test("R14 the conduct vocabulary: the purposes are exactly investigate and acquire, the agent forms exactly civicos and member-browser, both frozen; a legible agent names a (+<url> contact, and nothing else is legible", () => {
+test("R14 the conduct vocabulary: the purposes are exactly investigate and acquire, the agent forms exactly civicsmith and member-browser, both frozen, civicos the one alias (of civicsmith); a legible agent names a (+<url> contact, and nothing else is legible", () => {
   assert.deepEqual([...CAPTURE_PURPOSES], ["investigate", "acquire"]);
-  assert.deepEqual([...CAPTURE_UA_MODES], ["civicos", "member-browser"]);
+  assert.deepEqual([...CAPTURE_UA_MODES], ["civicsmith", "member-browser"]);
+  assert.deepEqual({ ...CAPTURE_UA_MODE_ALIASES }, { civicos: "civicsmith" });
   assert.equal(Object.isFrozen(CAPTURE_PURPOSES), true);
   assert.equal(Object.isFrozen(CAPTURE_UA_MODES), true);
-  for (const p of CAPTURE_PURPOSES) assert.equal(userAgentIsLegible(civicosUserAgent("1.0.0", "i", p)), true, p);
+  assert.equal(Object.isFrozen(CAPTURE_UA_MODE_ALIASES), true);
+  for (const [v, want] of [["civicos", "civicsmith"], ["civicsmith", "civicsmith"], ["member-browser", "member-browser"],
+                           ["CivicOS", "CivicOS"], [" civicos", " civicos"], ["constructor", "constructor"],
+                           ["toString", "toString"], [null, null], [undefined, undefined], [7, 7]])
+    assert.equal(uaModeOf(v), want, String(v));
+  for (const p of CAPTURE_PURPOSES) assert.equal(userAgentIsLegible(civicsmithUserAgent("1.0.0", "i", p)), true, p);
   for (const ua of ["Bot/1.0 (+https://example.org/bot)", "x (+http://e.org)"])
     assert.equal(userAgentIsLegible(ua), true, ua);
   for (const ua of [undefined, null, 7, {}, "", "   ", "CivicOS/1.0 (instance i; investigate)", "x (https://e.org)",
                     "x (+ftp://e.org)", "x (+https://)", "x +https://e.org", "Mozilla/5.0 (compatible; +https://example.org/bot)"])
     assert.equal(userAgentIsLegible(ua), false, String(ua));
+});
+
+test("R14 civicos is accepted on input and read in a stored row as civicsmith: a request is always written civicsmith; a stored civicos row is judged and fetched as civicsmith; every read and feed item answers it civicsmith; no other spelling is the alias", async () => {
+  const w = world().scene();
+  const iso0 = iso(T0), exp0 = iso(T0 + CAPTURE_REQUEST_TTL_MS);
+  /* the door: the alias, the default and the mode itself are each written and answered civicsmith */
+  const asked = [w.ask({ address: "https://a.example.org/alias", ua_mode: "civicos" }),
+                 w.ask({ address: "https://a.example.org/default" }),
+                 w.ask({ address: "https://a.example.org/named", ua_mode: "civicsmith" }),
+                 w.ask({ address: "https://a.example.org/camel", uaMode: "civicos" })];
+  for (const a of asked) assert.deepEqual([a.ok, a.ua_mode, w.req(a.request).ua_mode], [true, "civicsmith", "civicsmith"], a.address);
+  /* rows stored before T31 under the old name: one waiting, one captured with a lead, one held render */
+  const legacy = (request, address, state, extra = {}) => w.st.sql.exec(
+    `INSERT INTO capture_requests (request, run, target, address, host, purpose, ua_mode, principal_plane, principal_claude,
+       state, attempts, requested_at, updated, expires, captured_at, capture_sha, lead_inquiry, render, code)
+     VALUES (?, 'R-1', 'INQ-1', ?, ?, 'investigate', 'civicos', 'member:ann/tok1', 'instance', ?, 0, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    request, address, new URL(address).host, state, iso0, iso0, exp0, extra.captured_at ?? null, extra.capture_sha ?? null,
+    extra.lead ?? null, extra.render ?? 0, extra.code ?? null);
+  legacy("CR-OLD-WAIT", "https://old.example.org/wait", "requested");
+  legacy("CR-OLD-DONE", "https://done.example.org/x", "captured", { captured_at: iso0, capture_sha: sha("old"), lead: "INQ-2" });
+  legacy("CR-OLD-RENDER", "https://render.example.org/x", "requested", { render: 1, code: "RENDER_DEFERRED" });
+  assert.equal(w.row(`SELECT count(*) AS n FROM capture_requests WHERE ua_mode='civicos'`).n, 3, "the stored rows stand as stored");
+  /* the standing answer for a stored civicos row (R6) */
+  const again = w.ask({ address: "https://old.example.org/wait" });
+  assert.deepEqual([again.already, again.request, again.ua_mode], [true, "CR-OLD-WAIT", "civicsmith"]);
+  /* every read answers civicsmith: R23, R26 (the feed's producers), R29, R43 */
+  const reads = {
+    captureRequests: w.cr.captureRequests({ viewer: V("ann") }).requests,
+    completed: w.cr.completed({ viewer: V("ann") }).requests,
+    leads: w.cr.leads({ viewer: V("ann") }).requests,
+    rendersHeld: w.cr.rendersHeld({ viewer: V("ann") }).requests,
+    outstanding: w.cr.waits({ run: "R-1" }).outstanding,
+    completions: w.cr.waits({ run: "R-1" }).completions,
+    byId: ["CR-OLD-WAIT", "CR-OLD-DONE", "CR-OLD-RENDER"].map((request) => w.cr.requestById({ request, viewer: V("ann") })),
+  };
+  for (const [name, rows] of Object.entries(reads)) {
+    assert.ok(rows.length > 0, name);
+    for (const r of rows) assert.equal(r.ua_mode, "civicsmith", `${name} ${r.request}`);
+  }
+  assert.deepEqual(reads.completed.map((r) => r.request), ["CR-OLD-DONE"]);
+  assert.deepEqual(reads.leads.map((r) => r.request), ["CR-OLD-DONE"]);
+  assert.deepEqual(reads.rendersHeld.map((r) => r.request), ["CR-OLD-RENDER"]);
+  assert.equal(JSON.stringify(Object.values(reads)).includes("civicos"), false, "no read says civicos");
+  /* the drain judges a stored civicos row as civicsmith: fetched with no delegated agent, never refused illegible */
+  const d = await w.cr.drain({});
+  assert.deepEqual([w.req("CR-OLD-WAIT").state, w.req("CR-OLD-WAIT").code], ["captured", null]);
+  const call = w.capture.calls.find((c) => c.opts.captureRequest.locator === "https://old.example.org/wait");
+  assert.equal(call.opts.captureRequest.agent, null, "the Civicsmith agent is acquisition's to send, not a delegated one");
+  assert.equal(d.refused.length, 0, JSON.stringify(d.refused));
+  assert.equal(w.asked.length, 0, "inquiry is never asked for a member agent for a civicsmith row");
+  /* nothing written civicos since, and no near spelling is the alias */
+  assert.equal(w.row(`SELECT count(*) AS n FROM capture_requests WHERE ua_mode='civicos' AND request NOT LIKE 'CR-OLD-%'`).n, 0);
+  const near = ["CivicOS", "CIVICOS", "civic-os"].map((ua_mode, i) => w.ask({ address: `https://near${i}.example.org/x`, ua_mode }));
+  assert.deepEqual(near.map((a) => w.req(a.request).ua_mode), ["CivicOS", "CIVICOS", "civic-os"], "recorded as sent (R8)");
+  await w.cr.drain({});
+  for (const a of near) assert.deepEqual([w.req(a.request).state, w.req(a.request).code], ["refused", "CAPTURE_CONDUCT_UA_ILLEGIBLE"], a.request);
 });
 
 test("R15 a row passing conduct is set draining in the tick that fires, counts one fetch for its host, and is fired with the row's address, purpose, agent and render, its sweep origin (R38) and nothing else", async () => {
