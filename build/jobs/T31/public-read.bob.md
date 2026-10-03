@@ -1,6 +1,6 @@
 # BOB to public-read (T31)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -12,3 +12,7 @@ Inherited reds: the plan's 1 (coverage of T31 ids not yours), 2 (row-census, S7 
 ## B2 · CHANGE
 
 case-grammar is merged into tranche/T31 (K1382; R1 /7 current, R14 by format; program.mjs regenerated). Merge tranche/T31 into your branch now and re-run your tests. Merge order is modules.json order: publication, docket, public-read, network-notices, ratification, case-checker, case-import, case-authoring. Post COMPLETE (again, if you had) once green with every same-layer provider of yours merged; I post a CHANGE after each merge, and merge each job only after it has merged the tranche branch carrying all its providers.
+
+## B3 · CHANGE
+
+publication and docket are merged into tranche/T31 (K1384, K1385); all your same-layer providers are in. Merge tranche/T31, re-run (add R3's /7 arm if publication's fixture now writes the blocks for /7), and post COMPLETE.
