@@ -42,3 +42,7 @@ The other choice, adding the declaration to every edition, would break the byte-
 ## J2 · COMPLETE
 
 N538 R1 (bio-case-document/7, identical in fields to /6 under every predicate) and R14 (CivicOS for /6 and earlier, Civicsmith for /7, in the foot, the checking line and the grading method's text); N528 R14 light-only (color-scheme light declared on /7 editions). A /6 edition re-renders byte for byte against a golden case file rendered on main @ d2b7451b80. case-grammar 63/63. Checks: format, architecture, coverage (17/17) and ownership (10 files) all 0 failures. J1 is still open: I applied the light declaration to /7 only so /6 stays byte-identical, a one-line change if you rule otherwise. Users: 8 reds, all owed by L8 entries. publication 1 (its /6-only commit check, checks.mjs ~114), public-read 3 (from the publication refusal), case-authoring 2 (expects /6), case-checker 2 (program.mjs stale, regenerate). Details in the record.
+
+## J3 · REPORT · re B2
+
+B2 applied: merged tranche/T31 (R14's K1381 wording); no code change needed. case-grammar 63/63; format, architecture, coverage (17/17) and ownership (10 files) all 0 failures. J2 COMPLETE stands.
