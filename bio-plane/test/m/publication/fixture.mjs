@@ -273,7 +273,8 @@ export function world({ group = "test-group", workerd = false, contradiction = n
   return w;
 }
 
-/** A case document (`bio-case-document/6` unless `format`, with its `method:` and `materials:` blocks; R58): the facts this module reads from it. `roles`:
+/** A case document (`bio-case-document/6` unless `format`, with its `method:` and `materials:` blocks; R58; a `/7`
+ *  one, identical in fields (case-grammar R1; DEC-124, K1365 (1)), states the same blocks): the facts this module reads from it. `roles`:
  *  [{target, version_sha, edition?, role?}]; `strength`: [{target, axis, state, grade}]; `excluded`: [{target,
  *  description, reason}]; `attributions`: [{observation, level, shown, chosen_at_edition}] (a run is written only when
  *  given); `citations`: rows for /4's `case_citations` ({target, version, capture?}; `capture` written when given);
@@ -288,7 +289,7 @@ export function caseDoc(caseId, edition, { project = "PROJ-1", roles = [], findi
                                            method = { grading: "grading/1", checks: "1.0.0" }, materials = [],
                                            attestations = [], acceptedWork = null, acceptedWorkFlags = null } = {}) {
   format ??= "bio-case-document/6";
-  const v6 = format === "bio-case-document/6";
+  const v6 = format === "bio-case-document/6" || format === "bio-case-document/7";
   const scalar = (v) => (v === null || v === undefined ? "null" : typeof v === "string" ? `"${v}"` : String(v));
   const rowsOf = (key, list) => (list.length ? [`${key}:`, ...list.flatMap((r) => Object.entries(r)
     .map(([k, v], i) => `${i ? "   " : "  -"} ${k}: ${scalar(v)}`))] : [`${key}: []`]);

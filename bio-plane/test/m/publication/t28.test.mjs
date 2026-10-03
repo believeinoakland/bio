@@ -1,5 +1,5 @@
 /* publication — what a case carries at its commit (T28): its materials held by SHA-256 (R57; DEC-112, K1315, K1316), a
-   pre-/6 preparation refused (R58, C-122.2), another group's accepted work re-read (R59, C-122.3, C-122.4; N522), the
+   pre-/6 preparation refused (R58, C-122.2; a /7 one read as /6, N538), another group's accepted work re-read (R59, C-122.3, C-122.4; N522), the
    attesting member's credit for off-the-record material (R60; DEC-119 (3)), and the manifest's files registered (R15,
    K1315). `accepted-work` is the real module, with a stand-in registered as case-import registers; extraction's units
    and capture's actors are the fixture's stand-ins. Driven at the module's interface. */
@@ -28,7 +28,7 @@ const expectRow = (r, code, table = CASE_SOURCES_CHECKS) =>
 
 /* ---------------------------------------------------------------- R58 */
 
-test("R58 commitCaseEdition refuses a case document whose format is not /6 with CASE_FORMAT_SUPERSEDED (C-122.2), nothing committed; a /6 preparation signs; a retry of an edition signed before T28 still answers existed", () => {
+test("R58 commitCaseEdition refuses a case document whose format is not /6 (nor /7, read as /6: N538) with CASE_FORMAT_SUPERSEDED (C-122.2), nothing committed; a /6 preparation signs; a retry of an edition signed before T28 still answers existed", () => {
   const { w, proj, roles } = base();
   assert.equal(CASE_SOURCES_CHECKS.CASE_FORMAT_SUPERSEDED.translation, "This case was prepared before published cases "
     + "carried everything they rest on. Prepare it again, and sign the new preparation. Nothing was published.");
@@ -49,6 +49,26 @@ test("R58 commitCaseEdition refuses a case document whose format is not /6 with 
   w.signLegacy("CASE-2026-0002", 1, { project: proj, roster: roster(roles), sig: SIG(7) });
   const again = w.signCase("CASE-2026-0002", 1, { project: proj, roster: roster(roles), sig: SIG(7) });
   assert.deepEqual([again.ok, again.existed], [true, true]);
+});
+
+test("R58 R57 R55 (N538; DEC-124, K1365 (1), K1367) a bio-case-document/7 preparation is read exactly as /6: it is not superseded and signs, the materials its block includes are held, its member blocks answer; a /6 preparation still signs", () => {
+  for (const format of ["bio-case-document/7", "bio-case-document/6"]) {
+    const { w, proj, roles } = base();
+    const docSha = sha(textOf(DOC));
+    const materials = [{ ref: DOC, kind: "document", sha: docSha, text_sha: null, origin: null, archived_copy: null,
+                         included: true, rests_under: "load_bearing" }];
+    w.prepare(CASE, 1, { project: proj, roles, format, materials });
+    assert.equal(w.p.caseDocumentFacts(CASE, 1, V("olive")).ok, true, `${format}: its facts answer`);
+    const r = w.signCase(CASE, 1, { project: proj, roster: roster(roles) });
+    assert.equal(r.ok, true, `${format}: ${JSON.stringify(r)}`);
+    assert.notEqual(r.reason, "CASE_FORMAT_SUPERSEDED");
+    assert.deepEqual(r.materials, [{ sha: docSha, held: "inline" }], `${format}: its included material is held`);
+    assert.deepEqual(w.p.publishedMaterialText(docSha), { found: true, sha256: docSha, kind: "document", text: textOf(DOC) });
+    const frozen = w.p.caseDocMemberFrozen(CASE, 1);
+    assert.ok(frozen && frozen.get(F), `${format}: its member blocks are read`);
+    assert.equal(frozen.get(F).version_sha, roles[0].version_sha);
+    assert.equal(w.p.caseEditionState(CASE, 1).document.doc_sha, r.doc_sha);
+  }
 });
 
 /* ---------------------------------------------------------------- R59 */

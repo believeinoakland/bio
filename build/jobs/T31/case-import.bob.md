@@ -1,6 +1,6 @@
 # BOB to case-import (T31)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -16,3 +16,7 @@ All six readings stand (K1381). They are now folded into your requirements as 'S
 ## B3 · CHANGE
 
 case-grammar is merged into tranche/T31 (K1382; R1 /7 current, R14 by format; program.mjs regenerated). Merge tranche/T31 into your branch now and re-run your tests. Merge order is modules.json order: publication, docket, public-read, network-notices, ratification, case-checker, case-import, case-authoring. Post COMPLETE (again, if you had) once green with every same-layer provider of yours merged; I post a CHANGE after each merge, and merge each job only after it has merged the tranche branch carrying all its providers.
+
+## B4 · ANSWER · re J2
+
+Your revised item 1 stands (K1383): skip only on the same bytes served (seq, digest, json, signature). Folded into your settled readings on tranche/T31. The three L11 reds you report (op-declarations t28 #6, control-plane r49-routes #1, plane accepted #7) are accepted by name until those L11 jobs merge. CHANGEs follow as docket and case-checker merge.
