@@ -10,7 +10,7 @@
 - `bio-plane/public/newgroup/index.html` (115, the invitation page).
 - Its bundle `newgroup/dist/newgroup.bundled.mjs`, a generated artifact.
 
-There is no `from`. Not yet met: R13 (MULTI-INSTANCE-ISOLATION row 6), R24 (MULTI-INSTANCE-ISOLATION), R32, R33 (K102). Carried old-plan row: DIST-15. DEC-109's last-screen block, by a worker for BOB #90 on `tranche/T22`, 2026-10-02 (K1038, H17): R34 added; not yet met (T22 layer 11).
+There is no `from`. Not yet met: R13 (MULTI-INSTANCE-ISOLATION row 6), R24 (MULTI-INSTANCE-ISOLATION), R32, R33 (K102). Carried old-plan row: DIST-15. DEC-109's last-screen block, by a worker for BOB #90 on `tranche/T22`, 2026-10-02 (K1038, H17): R34 added; not yet met (T22 layer 11). DEC-122 (3), by a worker for BOB #107 on `tranche/T31`, 2026-10-03 (N528; K1363 B7): R35 (no outside loads from the installer's pages or the invitation page) added; not yet met (T31 layer 11).
 
 **Size (P6).** About 1,770 lines of source (about 1,220 without comment-only and blank lines), and a 1,632-line test battery (`newgroup/test/`). Well under 4,000.
 
@@ -44,6 +44,7 @@ Terms. The **slug** is the copy's name, and becomes its worker name, its address
 - **R15** `verify`: `op=selftest` with the probe credential, up to ten tries. Then, when the release's plane can report builds (its source carries `storeVersion` and `memberVersions`), `op=bootstrap&members=1` is asked until every part answers the release. Each part that does not is named: the address, the record store, and each member that is serving another build, misnamed, silent, installed but unbound, installed but unknown, or failed to upload. A release that cannot report builds is said to be undetermined for those parts. No success is claimed while a part lags.
 - **R16** The final panel shows the address, the one-time password, and the member and probe credentials, once. It never shows `DAEMON_TOKEN`, `INSTANCE_AI_TOKEN` or the Cloudflare token. It hands over to the copy with the one-time password in the URL fragment.
 - **R34** (DEC-109; H17) The wizard's last screen (R16's final panel) shows, before it hands over to the copy where the founder chooses a password, the same block as `instance-setup` R47 in DEC-109's words: whoever can sign in to the hosting account controls the copy (can replace the one-time password, claim the copy again, read everything, lock everyone out, and no administrators' vote can stop them); use a group account, not a personal login; add at least one other trusted person; where possible let someone other than the administrators hold it; the same account is the way back in if the password is lost. No acknowledgement is asked or recorded. (K1038)
+- **R35** (DEC-122 (3); K1363 B7; N528) Every page the installer serves, and the invitation page (`bio-plane/public/newgroup/index.html`), names no resource on another origin in any `src`, `href`, `@import` or `url()`. Typefaces are the device's or carried beside the page; a link the reader follows (to the hosting provider's sign-up, say) is not a load. *(not yet met: T31: the invitation page loads Google Fonts)*
 
 **The update**
 - **R17** `find` refuses a slug with no script, changing nothing. The buckets are created where possible, and the release is chosen as in R8. The copy's version before the update is read (`op=bootstrap`). The upload keeps the credentials and the Durable Object (`keep_bindings`), keeps the buckets unless it re-binds them, and restates `VERSION`, `INSTANCE_NAME`, `SELF`, the members present, `BROWSER`, a fresh `DAEMON_TOKEN`, and `INSTANCE_AI_TOKEN` only when supplied. A refused upload leaves the copy as it was, and the page says so. The fleet, bind and verify steps run as in R11, R12 and R15. An update that moved nothing (same version before) says so, and never says "Updated".
@@ -87,12 +88,13 @@ Terms. The **slug** is the copy's name, and becomes its worker name, its address
 - `docs/architecture/BIO_Membership_Architecture_v2.md` §4.6 (the one-time password is the root of trust's credential), §4.8 (hosting access is not enforced at install).
 - `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` §6 (the instance `ai` credential, carried and never generated; D-260, DIST-9).
 - `build/layers.md`, "No jurisdiction in the product", rules 2 and 4.
+- DEC-122 (3) (R35: nothing loaded from outside; K1363 B7).
 
 ### Suggestions
 
 - **Tests at the interface.** The wizard suite already drives a stateful fake account. It should import `GROUP_SLUG_RE`, `FLEET_BINDINGS` and the release's limits, and stop reading the plane's source text and `wrangler.jsonc` (R30, R20).
 - **DIST-15's format.** A separately signed plane-limits statement in its own namespace, so the fleet statement (`bio-release-fleet/2`), and every older installer's check of it, is unchanged.
-- **The invitation page** (`bio-plane/public/newgroup/`) is static and has no logic. R22 and R23 are its only requirements.
+- **The invitation page** (`bio-plane/public/newgroup/`) is static and has no logic. R22, R23 and R35 are its only requirements; R35 removes its Google Fonts load (a system font stack, as the Worker's own pages use).
 - **Callers' obligations.** `instance-setup` records the slug and the profiles at first boot. The installer only binds them.
 
 ## Open for Bob
