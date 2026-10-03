@@ -47,6 +47,9 @@
  *   capture              `lateAttestationsOf`, `captureAccountsOf` (its R68, R69; R35, R36: N364).
  *   sources              `sourceOf` to find a capture's source, then `publishableAt` (its R1, R8; R37: N364).
  *   networkNotices       `noticeReferenceOf` (its R19; R41, R42: DEC-111).
+ *   extraction           `unitsOf` (its R36; R44, R45, R54).
+ *   promotion            the fact `producingGroup` (R45's group row); `CATALOG_VERSION` is imported (R43).
+ *   caseImport           `acceptanceOf`, `openFlagsOn`, `importedCase` (its R4, R9; R51–R53).
  *   now                  the clock for the instants it writes, `(precision) => ISO string` (default: the wall clock).
  *
  * READ CONTRACTS it joins in its own SQL, each named at its statement: record-core's `bundles` (R37); publication's
@@ -63,6 +66,7 @@ import { strengthOf, STRENGTH_AXES, DEPTH_BOUND, GRADING_METHOD_VERSION } from "
 import { extractionOf } from "../extraction/index.mjs";
 import { promotionOf, CATALOG_VERSION } from "../promotion/index.mjs";
 import { parseImportedFindingRef } from "../inquiry-grammar/index.mjs";
+import { caseImportOf } from "../case-import/index.mjs";
 import { biasOf } from "../bias/index.mjs";
 import { reevaluationOf } from "../reevaluation/index.mjs";
 import { publicationOf, sourceStatement, unnamedSourceStatement } from "../publication/index.mjs";
@@ -182,12 +186,9 @@ export class CaseAuthoring {
   get networkNotices() { return this.#deps.networkNotices ||= networkNoticesOf(this.#deps.host); }
   get extraction() { return this.#deps.extraction ||= extractionOf(this.#deps.host); }
   get promotion() { return this.#deps.promotion ||= promotionOf(this.#deps.host); }
-  /* R51, R52: `case-import` (its R4, R9), handed in by the composition. With none, its reads throw, and every read of it
-     here fails closed: a leg on another group's finding is not in force (C-120.10), its flags undetermined (C-120.12). */
-  get caseImport() {
-    if (!this.#deps.caseImport) throw new Error("case-import is not composed on this host");
-    return this.#deps.caseImport;
-  }
+  /* R51, R52: `case-import`'s reads (its R4, R9). A read that throws fails closed here: a leg on another group's
+     finding is not in force (C-120.10), its flags undetermined (C-120.12). */
+  get caseImport() { return this.#deps.caseImport ||= caseImportOf(this.#deps.host); }
 
   migrate() { migrateCaseAuthoring(this.sql); }
 
@@ -1401,9 +1402,11 @@ export class CaseAuthoring {
         ? Number(at.target_edition) : null;
       const read = (fn) => { try { return fn(); } catch { return null; } };
       const imported = ed === null ? null : read(() => this.caseImport.importedCase({ import: parsed.import, edition: ed, viewer }));
-      const edition = imported && imported.ok !== false
-        ? (Array.isArray(imported.editions) ? imported.editions.find((e) => Number(e.edition) === ed) : imported) || null
-        : null;
+      /* case-import R4: the import's source group and case at the top, the named edition in full under `edition`. */
+      const view = imported && imported.ok !== false && imported.edition && Number(imported.edition.edition) === ed
+        ? imported.edition : null;
+      const edition = view ? { group: imported.group ?? null, case: imported.case ?? null,
+                               manifest_sha: view.manifest_sha ?? null, findings: view.findings } : null;
       const acceptance = ed === null ? null
         : read(() => this.caseImport.acceptanceOf({ import: parsed.import, edition: ed, finding: parsed.finding }));
       const source = { group: edition ? edition.group ?? null : null, case: edition ? edition.case ?? null : null, edition: ed };

@@ -29,6 +29,7 @@ import { sourcesOf } from "../../../src/sources/index.mjs";
 import { networkNoticesOf } from "../../../src/network-notices/index.mjs";
 import { caseAuthoringOf } from "../../../src/case-authoring/index.mjs";
 import { parseImportedFindingRef, importedFindingRef } from "../../../src/inquiry-grammar/index.mjs";
+import { caseImportOf } from "../../../src/case-import/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
@@ -119,7 +120,7 @@ function reviewProvider(w) {
 }
 
 export function world({ group = "test-group", provider = true, now = null, record: recordWrap = null, ratification: ratWrap = null,
-                        deps = {} } = {}) {
+                        deps = {}, realImports = false } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -201,11 +202,25 @@ export function world({ group = "test-group", provider = true, now = null, recor
              refusal: caller === r.principal ? null : { ok: false, reason: "AI_RUN_NOT_PRINCIPAL", code: "AI_RUN_NOT_PRINCIPAL" } };
   });
   st.db.exec(CASE_DRAFTS);
-  const imports = importsStandIn();
-  /* accepted-work's one instance on this host (K1307), reached through strength, which reads it (its R33). */
-  strength.acceptedWork.registerAcceptedWork("case-import", imports.registration);
+  /* `case-import`: the real one composed on this host (it fills accepted-work's registration itself, its R16), its
+     checker scripted at case-checker's R1 (`w.checks`); else the stand-in, registered with accepted-work's one instance
+     on this host (K1307), reached through strength, which reads it (its R33). */
+  const checks = { group: "other-group", case: "CASE-2026-0900", edition: 1, findings: [] };
+  const imports = realImports
+    ? caseImportOf(host, { record, membership, strength, acceptedWork: strength.acceptedWork,
+                           reevaluation: { acceptanceWithdrawn: () => ({ ok: true, told: true, dependents: 0 }) },
+                           checkCaseFile: async () => ({ format: "bio-case-file/1", case: checks.case, edition: checks.edition,
+                             group: checks.group, checker: { grading_versions: ["bio-grading/1"], checks_version: "1.57.0" },
+                             integrity: { departures: [] }, signatures: { case: { verified: true } },
+                             publication_checks: { findings: [] }, complete_edition: { equal: true },
+                             statement: "Recreating shows the case intact and consistent, not true.",
+                             findings: checks.findings.map((f) => ({ role: "load_bearing", result: "recreated", missing: [],
+                                                                     differs: [], bar_met: "not_asked", ...f })) }),
+                           now: () => Date.parse(clock.now) })
+    : importsStandIn();
+  if (!realImports) strength.acceptedWork.registerAcceptedWork("case-import", imports.registration);
   const w = {
-    imports,
+    imports, checks,
     st, host, record, membership, credentials, promotion, prov, content, entities, connections, inquiry, basisVersions, strength,
     bias, observations, reevaluation, publication, ratification, contradiction, runs, clock, readings, grants: new Map(),
     capture, sources, attestation, extraction: ex,
@@ -375,9 +390,12 @@ export function importsStandIn() {
     openFlagsOn: ({ import: imp, edition }) => (s.flagsRead ? s.flagsRead({ import: imp, edition })
       : { ok: true, complete: true, flags: flags.filter((f) => f.open && f.import === imp && f.edition === edition)
           .map(({ flag, finding, issue, at }) => ({ flag, finding, issue, at })) }),
+    /* as case-import R4 answers: the source group and case at the top, the edition in full under `edition` */
     importedCase: ({ import: imp, edition }) => {
       const e = editions.get(key(imp, edition));
-      return e ? { ok: true, import: imp, editions: [e] } : { ok: false, reason: "NO_SUCH_IMPORT" };
+      return e ? { ok: true, import: imp, group: e.group, case: e.case, editions: [{ edition: e.edition }],
+                   edition: { edition: e.edition, manifest_sha: e.manifest_sha, findings: e.findings } }
+               : { ok: false, reason: "IMPORT_NO_SUCH_EDITION" };
     },
   };
   s.registration = {
