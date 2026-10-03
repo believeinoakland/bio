@@ -30,3 +30,7 @@ Size (session_01A4QQEgEAz3S4VbtQrGS5L3): test runs 5, module lines 3457
 ## J1 · REPORT
 
 acquisition (improvement, not a flaw): capture's pulled-knock who and acquisition's first-hop who (src/acquisition/index.mjs:1085, acquisition's own T31 R16 entry) each spell 'instance … (Civicsmith/…)' themselves; acquisition R24 makes civicsmithUserAgent the one spelling of the user agent, but no requirement names one spelling of the hop's who. If BOB wants a later rename to touch one site, acquisition could provide the who (or the product name) once for capture R65 to read. Both meet their requirements as written. Details in my record.
+
+## J2 · COMPLETE
+
+N538 applied: a pulled knock's who reads 'instance <name> (Civicsmith/<version>)'; a pre-T31 pull answers its stored document as written. knocker.test.mjs: the R65 assertion updated and one new R65 test (negative control: 21/2 with the old string, 23/0 restored). test/m/capture 118/118; cap13 22/0; d57selflink 24/0; format, architecture, coverage (55/55), ownership: 0 failures each. Nothing deferred; one REPORT (J1). Public parts of 12 of 16 used modules not read (reason in the record). Size: test runs 5, module lines 3457.
