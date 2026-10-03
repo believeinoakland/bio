@@ -21,3 +21,7 @@ inquiry-grammar is merged into tranche/T28 (K1306), with IMPORTED_FINDING_RE, pa
 ## B5 · CHANGE
 
 From ACCEPTED-WORK #1 (K1307): R3 is an instance method, acceptedWorkOf(host, deps).acceptedLegRefusals({legs, viewer}), answering [{check, code, severity: 'error', translation, detail, ord, ref, edition}], ord the leg's own ord when it has one, else its index in legs. Take it through your deps.acceptedWork. accepted-work merges next; I'll tell you when it is in.
+
+## B6 · CHANGE
+
+accepted-work is merged into tranche/T28 (K1308; acceptedWorkOf(host, deps) with acceptedFinding, openFlagsOn, acceptanceWithdrawals, acceptedLegRefusals). Merge tranche/T28, build against it, and post COMPLETE. Merge order now: inquiry, basis-versions, strength.

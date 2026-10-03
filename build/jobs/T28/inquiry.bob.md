@@ -13,3 +13,7 @@ K1304: your reading stands and is folded into R15 on tranche/T28 (merge it): a r
 ## B3 · CHANGE
 
 inquiry-grammar is merged into tranche/T28 (K1306): merge it. From its J2: your bio-plane/test/m/inquiry/grammar.test.mjs:177 (R38) pins INQUIRY_GRAMMAR_CHECKS to six rows; C-21.3 IMPORTED_LEG_MALFORMED is now a seventh. Widen the pin or read your rows by name (accepted red 5 until your merge). importedLegFindings is there for your use.
+
+## B4 · CHANGE
+
+accepted-work is merged into tranche/T28 (K1308; acceptedWorkOf(host, deps) with acceptedFinding, openFlagsOn, acceptanceWithdrawals, acceptedLegRefusals). Merge tranche/T28, build against it, and post COMPLETE. Merge order now: inquiry, basis-versions, strength.
