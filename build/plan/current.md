@@ -1,8 +1,8 @@
 # Plan T29
 
-**Status** · OPEN · BOB #106 · session_014NiBSyfeN9Ej6wJuwzhDhh · depth 1
+**Status** · OPEN · BOB #107 · session_01Fibz26JrnCgkNYHwprt7tt · depth 1
 
-**Jobs** · signatures: SIGNATURES #7 session_01LrwnC23wRd3ati4bwBSKnq; membership: MEMBERSHIP #22 session_016G62nZSnbukEEdrMHSsV1z; promotion: PROMOTION #29 session_012itywqqcejzP4TtrJ2dRny; capture: CAPTURE #18 session_0181RUrJ7zf5WDcW4trWkR3Y; reevaluation: REEVALUATION #16 session_01NTpQJf5vp8NWhH7MCRQXe9
+**Jobs** · signatures: SIGNATURES #7 session_01LrwnC23wRd3ati4bwBSKnq; membership: MEMBERSHIP #22 session_016G62nZSnbukEEdrMHSsV1z; promotion: PROMOTION #29 session_012itywqqcejzP4TtrJ2dRny; capture: CAPTURE #18 session_0181RUrJ7zf5WDcW4trWkR3Y; reevaluation: REEVALUATION #16 session_01NTpQJf5vp8NWhH7MCRQXe9; case-carriage: CASE-CARRIAGE #1 session_01NMLMCaPqjqRW2kHK9vegRN; publication: PUBLICATION #17 session_017bm3BWK3xDxBgctGcV2Rnp; docket: DOCKET #3 session_01CSkgoq9z5tRnMWZZnTMGfA; case-checker: CASE-CHECKER #2 session_01WJvRKHshhLTwUVBauzgSmg; case-disclosures: CASE-DISCLOSURES #1 session_01KGf5pxXzTcDPj2Jf6NWLvV; case-authoring: CASE-AUTHORING #14 session_01GeKDKfZzHTVtMfNysZDXp7
 
 **Opened** 2026-10-03 ~03:25 UTC by BOB #106 from `main` @ cd196e63c4 (T28 closed, K1335), from T28's `next.md` (K1336). **Bob's weekly meter** · 72% after T26 (K1250); asked at T28's close.
 

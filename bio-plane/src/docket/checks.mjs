@@ -1,7 +1,10 @@
 /* docket's refusal rows (requirements: `build/requirements/docket.md` R1, R2, R4, R5, R7, R8, R10–R12, R22; DEC-49).
  * A new family, C-129 (C-128 is acquisition's, stamped by 1.54.0), arriving at T27 and stamped in 1.57.0. At T28 (N526)
  * C-129.10's code became this module's own `MACHINE_CANNOT_MARK_DOCKET_PRESSURE`, its check id kept (a renamed code
- * keeps its id, K238), the row `awaiting stamp` until T29's promotion stamp. `NO_SUCH_CASE` is the shared answer for an absent case, a case with no ratified edition and one
+ * keeps its id, K238), the row `awaiting stamp` until T29's promotion stamp. At T29 (N533, K1331) C-129.12 and C-129.13
+ * became this module's own `DOCKET_PRESSURE_MARKED` and `DOCKET_PRESSURE_REFUSED`, their ids kept, in place of
+ * `PRESSURE_MARKED` and `PRESSURE_REFUSED`, which are `action-grammar`'s (C-117.17, C-117.15); both rows read changed
+ * until T30's stamp. No code here is a code another module's table holds (R22). `NO_SUCH_CASE` is the shared answer for an absent case, a case with no ratified edition and one
  * the viewer does not see, and has no row here (R22). The words a member reads before posting (the outward-act warning,
  * the invitation, the shelves' labels) are the UX design stream's; these rows only say why an act was refused and that
  * nothing changed. */
@@ -72,11 +75,13 @@ export const DOCKET_CHECKS = Object.freeze({
     translation: "There is no docket entry here by that name for you: it does not exist, or it belongs to a case "
       + "you do not see. Nothing was written.",
   },
-  PRESSURE_MARKED: {
+  /* R2, R22 (N533): this module's own codes; `action-grammar`'s `PRESSURE_MARKED` (C-117.17) and `PRESSURE_REFUSED`
+     (C-117.15) are `actions`' and are never answered here. */
+  DOCKET_PRESSURE_MARKED: {
     check: "C-129.12", where: PRESSURE,
     translation: "This docket entry is already marked as a threat; a mark is never rewritten. Nothing was marked.",
   },
-  PRESSURE_REFUSED: {
+  DOCKET_PRESSURE_REFUSED: {
     check: "C-129.13", where: PRESSURE,
     translation: "A threat is marked as legal, retaliation, discrediting or other, with a note of at most 500 "
       + "characters. Nothing was marked.",
