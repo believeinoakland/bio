@@ -7,7 +7,8 @@ import * as CG from "../../../src/case-grammar/index.mjs";
 import { canonicalJson } from "../../../src/record-grammar/json.mjs";
 import { CATALOG_VERSION } from "../../../src/gate.mjs";
 import { GRADING_METHOD_VERSIONS } from "../../../src/strength/method.mjs";
-import { caseFile, caseFiles, gradingFacts, byId, sha, keyFor, A, B, C, MINUTES, MEMO, MEMO_BYTES, MINUTES_BYTES, REF, GROUP, CASE } from "./fixture.mjs";
+import { captureAccountStatement, ratifyStatement, NS_RELEASE } from "../../../src/sshsig.mjs";
+import { caseFile, caseFiles, gradingFacts, byId, sha, keyFor, A, B, C, MINUTES, MEMO, MEMO_BYTES, MEMO_ACCOUNT, MINUTES_BYTES, REF, GROUP, CASE } from "./fixture.mjs";
 
 const passagesOfFixture = () => Object.fromEntries([A, B, C].map((id) => [id, JSON.parse(caseFiles().texts.get(CG.caseFilePath("passages", id)))]));
 const check = (opts = {}, args = {}) => CC.checkCaseFile({ parts: caseFile(opts).parts, ...args });
@@ -165,6 +166,26 @@ test("R3 R8 (K1275): material from a source whose identity is withheld recreates
   /* a project row must name a material the manifest lists */
   const noFile = await check({ mutate: (t) => { t.delete(CG.caseFilePath("document", MINUTES)); t.delete(CG.caseFilePath("extracted_text", MINUTES)); } });
   assert.equal(noFile.signatures.attestations.find((a) => a.by_kind === "project").state, "fails");
+});
+
+test("R3 (N530): a member's account is verified over signatures.captureAccountStatement in the ratify namespace, and over no other spelling of it", async () => {
+  assert.equal(CC.accountStatement, captureAccountStatement, "the very function signatures provides");
+  /* signed over that statement: checked */
+  const over = await check({ memoAccountMessage: captureAccountStatement(sha(MEMO_BYTES), MEMO_ACCOUNT) });
+  assert.equal(over.signatures.attestations.find((a) => a.ref === MEMO && a.by_kind === "member").state, "checked");
+  assert.deepEqual(results(over), ALL_RECREATED);
+  /* signed over a near spelling of it, or over another statement: fails for each finding whose chain reaches the memo */
+  for (const bad of [`bio-capture-account ${sha(MEMO_BYTES)} \n${MEMO_ACCOUNT}`, `bio-capture-account ${sha(MEMO_BYTES)}\n${MEMO_ACCOUNT}\n`,
+                     `bio-capture-account\n${sha(MEMO_BYTES)}\n${MEMO_ACCOUNT}`, String(ratifyStatement(MEMO, sha(MEMO_BYTES)))]) {
+    const r = await check({ memoAccountMessage: Buffer.from(bad) });
+    assert.equal(r.signatures.attestations.find((a) => a.ref === MEMO && a.by_kind === "member").state, "fails", bad);
+    assert.equal(byId(r)[A].result, "did_not_recreate"); assert.equal(byId(r)[B].result, "did_not_recreate");
+    assert.equal(byId(r)[C].result, "recreated");
+  }
+  /* signed over that statement, but in another namespace */
+  const ns = await check({ memoAccountNamespace: NS_RELEASE });
+  assert.equal(ns.signatures.attestations.find((a) => a.ref === MEMO && a.by_kind === "member").state, "fails");
+  assert.ok(has(byId(ns)[B].differs, "signature", /signed account attesting INFO-2026-0002-memo was made for another purpose/));
 });
 
 test("R4: each relied-on passage is found where it is said to be; a moved passage or a wrong content id differs, and extracted text not carried is missing", async () => {

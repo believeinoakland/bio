@@ -434,14 +434,14 @@ export class Docket {
     if (!r || !c || !c.project || this.#call(() => this.membership.sight(c.project, str(viewer) || str(author))) !== "full")
       return refuse("NO_SUCH_DOCKET_ENTRY", "no record entry you see answers by that id", { entry: id });
     if (this.#marks(id).some((m) => m.kind === "pressure"))
-      return refuse("PRESSURE_MARKED", "the entry is already marked", { entry: id });
+      return refuse("DOCKET_PRESSURE_MARKED", "the entry is already marked", { entry: id });
     const note = p && typeof p === "object" && p.note !== undefined && p.note !== null && p.note !== "" ? p.note : null;
     if (!p || typeof p !== "object" || !PRESSURE_KINDS.includes(p.kind) || (note !== null && !words(note, NOTE_MAX)))
-      return refuse("PRESSURE_REFUSED", `kind is one of ${PRESSURE_KINDS.join(", ")}, with a note of at most ${NOTE_MAX} characters`);
+      return refuse("DOCKET_PRESSURE_REFUSED", `kind is one of ${PRESSURE_KINDS.join(", ")}, with a note of at most ${NOTE_MAX} characters`);
     /* END DEC-49 REGION is-docket-pressure */
     const at = this.#stamp();
     const out = this.record.transact(() => {
-      if (this.#marks(id).some((m) => m.kind === "pressure")) return refuse("PRESSURE_MARKED", "the entry was marked meanwhile", { entry: id });
+      if (this.#marks(id).some((m) => m.kind === "pressure")) return refuse("DOCKET_PRESSURE_MARKED", "the entry was marked meanwhile", { entry: id });
       this.sql.exec(`INSERT INTO docket_marks (entry_id, kind, pressure, note, by_member, at) VALUES (?,?,?,?,?,?)`,
                     id, "pressure", p.kind, note, member, at);
       return { ok: true };
