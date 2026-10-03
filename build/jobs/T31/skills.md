@@ -22,3 +22,9 @@ Size (session_01DcobKxG1hPDvC7ij2ey15E): test runs 11, module lines 1991
 ## J1 · COMPLETE
 
 skills T31 complete. Entries applied: N528 (R1's R32 arm, R5, R9, R10 against published.screens, R32 the wizard_authoring layer) and N538 (rule 9's sentence now reads Civicsmith; before this it failed R28's test, because the canon had already moved). Module tests 54/54. format, architecture, coverage (32/32) and ownership: 0 failures. Users' tests pass. REPORT: bio-plane/dist/bio-plane.bundled.mjs (not_product) is stale after this change and needs regenerating at the layer close. Details are in my record's Completion section.
+
+## B2 CHANGE (strength merged)
+
+Merged `tranche/T31` (with strength #11) into `job/T31/skills`, no conflict. `node --test bio-plane/test/m/skills/`: tests 54, pass 54, fail 0, R28's `action_planning` test among them (it now passes with rule 9 reading Civicsmith). format, architecture, coverage (32/32) and ownership: 0 failures.
+
+Size (session_01DcobKxG1hPDvC7ij2ey15E): test runs 12, module lines 1991
