@@ -157,7 +157,8 @@ export class Store extends DurableObject {
        R15; public-read R18). case-import is built with the deps it reads (case-checker's `checkCaseFile`, strength,
        accepted-work's one instance (R16), reevaluation) and this environment; its case-file bytes are held in its own
        tables, so no object store is handed to it (K1319). At creation it creates its tables, declares them to purge
-       (whole store only, its R13) and starts, filling accepted-work's registration (its R16) before the first request. */
+       (whole store only, its R13) and starts, filling accepted-work's registration (its R16), `moves` among it (R20;
+       accepted-work R8), before the first request. */
     registerCaseCheckerPublicReads(ctx, { publicRead: publicReadOf(ctx) });
     caseImportOf(ctx, { env, checkCaseFile, strength: strengthOf(ctx), acceptedWork, reevaluation: reevaluationOf(ctx) });
     /* R18 (N529; K1333): case-disclosures, at its place after case-import and before case-authoring in the modules'
@@ -199,7 +200,10 @@ export class Store extends DurableObject {
        the first sweep service is judged, never refused for want of a check (K1163). */
     const captureRequests = captureRequestsOf(ctx, { env, storeName: () => this.#ownNamespace() || "bio",
       now: () => this.#nowMs(null), runs: aiRunsOf(ctx, env), aiRuns: aiRunsOf(ctx, env) });
-    const monitoring = monitoringOf(ctx, { env });
+    /* R20 (N534; DEC-101 (3)): monitoring is handed the case-import instance built above, whose watches its cadence tick
+       reads and whose `recordDocketRead` records each docket read (monitoring R67, R68). */
+    const caseImport = caseImportOf(ctx);
+    const monitoring = monitoringOf(ctx, { env, caseImport });
     /* link-sweep (N506), after monitoring, whose seam it registers with at creation (`registerSweep`, monitoring R66:
        C-18.5's sweep arm, the fence and the slate share), handed the composed capture-requests (its R12) and capture.
        Built before the scheduler, whose `gathering-sweep` owner (`linkSweepOf(ctx)`, scheduler R5) then reaches this
@@ -212,8 +216,9 @@ export class Store extends DurableObject {
     ctx.blockConcurrencyWhile(async () => this.#migrate());
     ctx.blockConcurrencyWhile(async () => schedulerOf(ctx, env).start());
     /* queue, then tasks, each creating its own tables (queue R36, tasks R8). R11: queue is handed the two modules
-       `queue-producers` R20 and R21 read, and R15 the docket its R30's items read (`Queue.PRODUCER_DEPS`). */
-    queueOf(ctx, { env, filingTemplates, localFacts, docket }).migrate();
+       `queue-producers` R20 and R21 read, R15 the docket its R30's items read (`Queue.PRODUCER_DEPS`), and R20 the
+       case-import its R35's watch items read. */
+    queueOf(ctx, { env, filingTemplates, localFacts, docket, caseImport }).migrate();
     tasksOf(ctx, { env }).migrate();
     /* R1: instance-setup started once per object (its `start` is idempotent on one storage). */
     ctx.blockConcurrencyWhile(async () => instanceSetupOf(ctx, env).start());
@@ -342,8 +347,8 @@ export class Store extends DurableObject {
       ...reevaluationOps(reevaluationOf(ctx), url, body),
       ...caseAuthoringOps(caseAuthoringOf(ctx), url, body),
       ...ratificationOps(ratificationOf(ctx), url, body),
-      /* R17 (N520, N522): case-import's eight member ops; case-checker's public reads `casechecker` and `casefilespec` are
-         public-read's (its R18). */
+      /* R17 (N520, N522): case-import's ten member ops (`importwatch` and `importunwatch` the watch's, R20);
+         case-checker's public reads `casechecker` and `casefilespec` are public-read's (its R18). */
       ...caseImportOps(caseImportOf(ctx), url, body),
       /* N483 (K1122): `export` and `exportlog` are corpus-export's (its R6), on the one instance publication created. */
       ...corpusExportOps(corpusExportOf(ctx), (k) => url.searchParams.get(k)),

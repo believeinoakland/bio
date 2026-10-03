@@ -149,7 +149,7 @@ test("R17, R5: every op of case-import's map is in the route map and answers thr
   const u = new URL("http://do/");
   const ops = Object.keys(caseImportOps(null, u, null));
   assert.deepEqual(ops, ["caseimport", "importedcases", "importedcase", "caseimportdocument", "importaccept",
-                         "importacceptwithdraw", "importflag", "importflagclear"]);
+                         "importacceptwithdraw", "importflag", "importflagclear", "importwatch", "importunwatch"]);
   const x = await store(), twin = await store();
   const map = Object.keys(x.s.routes(u, null));
   for (const op of ops) assert.ok(map.includes(op), `the route map lacks ${op}`);
