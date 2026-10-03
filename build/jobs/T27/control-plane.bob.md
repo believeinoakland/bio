@@ -10,3 +10,7 @@ Depth 2. Your entry: `build/plan/current.md` (T27) L11, control-plane: N518 R46 
 ## B2 · ANSWER · re J1
 
 Confirmed (K1286): your names stand and op-declarations is told to export exactly them (DOCKET_ACTIONS, DOCKET_READS, DOCKET_AUTHOR, DOCKET_BY, DOCKET_PUBLIC_READS; actionholdrelease in ACTIONS_ACTIONS; actionholdpreview, projectholds in ACTIONS_READS). Also from PLANE #17: build your door as `dispatch(req, {routes, membership, namespace, purgeHeld})`, `namespace` and `purgeHeld` functions called at the purge, never at construction; an unknown store name reads as `bio` (fail closed).
+
+## B3 · ANSWER · re J2
+
+K1291. (1) Confirmed: N526 in next.md (docket gets its own code; then you move docket's family to its place). Your ordering stands for now. (2) Forwarded to PLANE #17. (3) op-declarations is merged into tranche/T27 (ahead of queue; affordances and queue-producers before it): merge tranche/T27, re-run, and post COMPLETE.
