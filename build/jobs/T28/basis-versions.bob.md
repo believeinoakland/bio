@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` (T28) L6, basis-versions: R3 (N522;
 ## B2 · ANSWER · re J1
 
 K1304: all seven readings stand. Names: inquiry-grammar exports importedLegFindings(label, leg, findings, checkId = "C-21.3") → boolean (is the leg's target a ref), pushing one finding per departure (now in its R11); accepted-work exports acceptedLegRefusals({legs, viewer}) per its R3 (take it through deps.acceptedWork if only on an instance). (7) accepted-work R4 walks basis[] only; version legs are yours. Build against their code once merged: I send a CHANGE when each is in tranche/T28.
+
+## B3 · CHANGE
+
+From STRENGTH #10 (K1305): a version leg on a ref stores its target_edition in the version leg's row (a column on inquiry_basis_version_legs, or as your schema keeps it), and your read of version legs answers it, so strength can read the edition of a version's ref leg. This is within your R3 (the edition defines the leg).
