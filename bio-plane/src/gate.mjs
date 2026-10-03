@@ -672,8 +672,28 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    CHANGED IN WHAT THE GATES RUN: nothing. case-disclosures and docket register no step, grammar, fact or case catalogue,
    and no registered step of either gate changed its ids since 1.58.0.
    MINOR, rule 17 moving the stamp for changed and re-keyed rows. ROW_CENSUS (R50) is re-pinned to this tree, module
-   tables only: 1128 rows. Rows T30's layers 3–11 change are T31's stamp. */
-export const CATALOG_VERSION = "1.59.0";
+   tables only: 1128 rows. Rows T30's layers 3–11 change were T31's stamp, and T31's are T32's, taken by 1.60.0. */
+/* 1.60.0 (PROMOTION #31, T32 layer 2, 2026-10-03; S7, K1393, K1401, N534): EVERY ROW CHANGE SINCE 1.59.0, counted
+   wherever the rows live (R34, R47), read by diffing R50's census lines of `tranche/T32` at its layer 2 against 1.59.0's
+   own (`test/fixtures/row-census-1.59.0.jsonl`: 1128 rows, 61929a98…): thirty-four arrivals, none changed, no departure.
+   Each is one a job record names (T31's layers 3–11, accepted red 2: WIZARD-SCRIPTS' and CASE-IMPORT's records; T30's
+   layers 3–11 changed no row; T32's layers 1–2 change none).
+   ARRIVED: C-131.1–C-131.32 in the new family `WIZARD_SCRIPTS_CHECKS`, MACHINE_CANNOT_DRAFT_WIZARD through
+   WIZARD_NO_SUCH_GRANT (the new module wizard-scripts, `src/wizard-scripts/checks.mjs`, K1393, K1401). Three of its codes,
+   C-131.8 NOT_A_DRAFT, C-131.14 NOT_AN_APPROVER and C-131.15 APPROVER_IS_AUTHOR, are also filing-templates' (C-125): each
+   family's row is its own row object and is stamped as its own, so each code is counted twice, once per family;
+   filing-templates' lines are unmoved, and control-plane's composed catalogue keeps the first source's row for them
+   (WIZARD-SCRIPTS #1's record). C-130.15 IMPORT_WATCH_BAD_ADDRESS and C-130.16 IMPORT_NOT_WATCHED (case-import, the
+   watch, N534). Docket's T31 job added and changed no row (its record).
+   CHANGED IN WHAT THE GATES RUN, no row line moving: the case gate's registered catalogue (ratification's) accepts
+   `bio-case-document/7`, `/6` in every field (case-grammar R1, DEC-124, K1365 (1)), and names the format a document
+   declares in the findings of C-41.1 and C-41.13–C-41.15 (N538, K1367), so a `/6` document's findings are unmoved;
+   publication's C-122.2 admits `/7` beside `/6`, through case-grammar's predicate. wizard-scripts and case-import
+   register no step, grammar, fact or case catalogue, and no registered step of the promote gate changed its ids since
+   1.59.0.
+   MINOR, rule 17 moving the stamp for arrivals and a changed composition. ROW_CENSUS (R50) is re-pinned to this tree,
+   module tables only: 1162 rows. Rows T32's layers 3–11 change are T33's stamp. */
+export const CATALOG_VERSION = "1.60.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
@@ -765,8 +785,8 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
    this module's own census suite, `bio-plane/test/system/row-census.test.mjs` (legacy-tests' until T22's opening, K1006):
    a test may import every module's tables, which this module's source cannot (P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
-export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1128,
-  digest: "61929a985736a8e24b0d7a5e8d59cd78bd2fdc39d1f50bd851bd8be3cde23acf" });
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1162,
+  digest: "2bc34e4652d0f43f89149fecafe493300e9b3806a1a8a4ca3f7e8d040732bc2b" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();
