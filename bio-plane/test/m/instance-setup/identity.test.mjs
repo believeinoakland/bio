@@ -3,7 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { boot, providers } from "./fixture.mjs";
 import { GROUP_DOMAIN_CHECKS_MAX, GROUP_WELL_KNOWN_MAX_BYTES, NO_GROUP_RECORDED } from "../../../src/setup.mjs";
-import { civicosUserAgent } from "../../../src/acquisition/index.mjs";
+import { civicsmithUserAgent } from "../../../src/acquisition/index.mjs";
 
 const ADDR = "https://river.example";
 const file = (o, status = 200) => () => new Response(typeof o === "string" ? o : JSON.stringify(o), { status });
@@ -63,60 +63,107 @@ test("R7 a domain is lower-cased, its trailing dot removed, and must be a bare h
   assert.deepEqual(r2.history.map((h) => h.value), ["river.example.org", "other.example"]);
 });
 
-test("R8 the check: governed fetch of the well-known file, no redirect followed, at most 16 KiB read, one dated verdict with its trigger — verified, absent, mismatched, undetermined", async () => {
-  const cases = [
-    ["verified", file({ instance: ADDR + "/", group: "river-town", extra: 1 })],
-    ["absent", file("gone", 404)], ["absent", file("gone", 410)],
-    ["absent", () => new Response(null, { status: 301, headers: { location: "https://elsewhere.example/x" } })],
-    ["absent", () => new Response(null, { status: 302 })],
-    ["mismatched", file({ instance: "https://other.example", group: "river-town" })],
-    ["mismatched", file({ instance: ADDR, group: "other-town" })],
-    ["mismatched", file("not json")], ["mismatched", file("[1,2]")], ["mismatched", file("null")],
-    ["mismatched", file({ instance: ADDR })],
-    ["undetermined", file("err", 500)], ["undetermined", file("err", 429)], ["undetermined", file("err", 403)],
-    ["undetermined", () => { throw new Error("connection refused"); }],
-  ];
-  for (const [want, answer] of cases) {
-    const w = await world();
-    w.prov.answer = answer;
-    const r = await w.m.groupDomainSet({ domain: "river.example.org", by: "admin", origin: ADDR });
-    assert.equal(r.check.verdict, want, `${want}: ${r.check.detail}`);
-    assert.equal(r.check.trigger, "set");
-    assert.match(r.check.checked_at, /^\d{4}-\d\d-\d\dT/);
-    assert.equal(w.prov.fetched.length, 1);
-    assert.equal(w.prov.fetched[0].url, "https://river.example.org/.well-known/civicos-group.json");
-    assert.equal(w.prov.fetched[0].init.redirect, "manual");
-    /* the agent is acquisition's one composer (its R24), for this instance and this purpose */
-    assert.equal(w.prov.fetched[0].init.headers["user-agent"], civicosUserAgent(undefined, "river-town", "group-domain"));
-    assert.deepEqual(w.prov.governed[0], ["admit", "river.example.org"]);
-    /* admit, then report the status: a fetch that did not complete has no status to report */
-    if (r.check.status === null) assert.equal(w.prov.governed.length, 1);
-    else assert.deepEqual(w.prov.governed[1], ["report", "river.example.org", r.check.status]);
+/* R8's two files, named here as the requirement names them, never read from the module. */
+const NEW_FILE = "https://river.example.org/.well-known/civicsmith-group.json";
+const OLD_FILE = "https://river.example.org/.well-known/civicos-group.json";
+const GOOD = { instance: ADDR, group: "river-town" };
+const redirect = (status) => () => new Response(null, { status, headers: { location: "https://elsewhere.example/x" } });
+/* Every answer the requirement sorts, with the verdict it is: a file or a thrown fetch. */
+const ANSWERS = [
+  ["verified", file({ instance: ADDR + "/", group: "river-town", extra: 1 })],
+  ["absent", file("gone", 404)], ["absent", file("gone", 410)], ["absent", redirect(301)], ["absent", redirect(302)],
+  ["absent", redirect(307)],
+  ["mismatched", file({ instance: "https://other.example", group: "river-town" })],
+  ["mismatched", file({ instance: ADDR, group: "other-town" })],
+  ["mismatched", file("not json")], ["mismatched", file("[1,2]")], ["mismatched", file("null")],
+  ["mismatched", file({ instance: ADDR })],
+  ["undetermined", file("err", 500)], ["undetermined", file("err", 429)], ["undetermined", file("err", 403)],
+  ["undetermined", file("err", 418)],
+  ["undetermined", () => { throw new Error("connection refused"); }],
+];
+/* A domain answering each file by its own function; a file not given answers 404. */
+const domainOf = (byFile) => (url, init) => (byFile[url] || file("", 404))(url, init);
+/* One set on a fresh world over `byFile`, with what was fetched and governed. */
+const checkOver = async (byFile, env) => {
+  const w = await world(env);
+  w.prov.answer = domainOf(byFile);
+  const r = await w.m.groupDomainSet({ domain: "river.example.org", by: "admin", origin: ADDR });
+  return { w, check: r.check, urls: w.prov.fetched.map((f) => f.url) };
+};
+/* Each fetch as the requirement says it is made: no redirect followed, acquisition's one agent, and governed as admit
+   then report its status (a fetch that did not complete has no status, so no report). */
+const assertGoverned = (w, why) => {
+  let g = 0;
+  for (const f of w.prov.fetched) {
+    assert.equal(f.init.redirect, "manual", why);
+    assert.equal(f.init.headers["user-agent"], civicsmithUserAgent(undefined, "river-town", "group-domain"), why);
+    assert.deepEqual(w.prov.governed[g++], ["admit", "river.example.org"], why);
+    if (w.prov.governed[g] && w.prov.governed[g][0] === "report") g++;
   }
-  /* the governor holding the host: nothing fetched, undetermined, never absent */
+  assert.equal(g, w.prov.governed.length, `${why}: every governor call belongs to a fetch`);
+};
+
+test("R8 the check fetches /.well-known/civicsmith-group.json through the governor, no redirect followed, at most 16 KiB read; its answer, unless absent, is the one dated verdict with its trigger: verified, mismatched or undetermined, and nothing else is fetched", async () => {
+  for (const [want, answer] of ANSWERS.filter(([v]) => v !== "absent")) {
+    const { w, check, urls } = await checkOver({ [NEW_FILE]: answer, [OLD_FILE]: file(GOOD) });
+    assert.equal(check.verdict, want, `${want}: ${check.detail}`);
+    assert.deepEqual(urls, [NEW_FILE], `${want}: the file from before T31 is read only after an absent`);
+    assert.equal(check.trigger, "set");
+    assert.match(check.checked_at, /^\d{4}-\d\d-\d\dT/);
+    assertGoverned(w, want);
+    const t = await w.prov.consumers[0].tick(Date.now());
+    assert.deepEqual([t.groupdomain.verdict, t.groupdomain.trigger], [want, "alarm"]);
+  }
+});
+
+test("R8 when /.well-known/civicsmith-group.json is absent (404, 410 or a redirect), /.well-known/civicos-group.json is fetched the same way and its answer decides: verified, absent, mismatched or undetermined, one verdict recorded", async () => {
+  for (const [first, firstAnswer] of ANSWERS.filter(([v]) => v === "absent")) {
+    for (const [want, answer] of ANSWERS) {
+      const { w, check, urls } = await checkOver({ [NEW_FILE]: firstAnswer, [OLD_FILE]: answer });
+      const why = `${first} then ${want}: ${check.detail}`;
+      assert.equal(check.verdict, want, why);
+      assert.deepEqual(urls, [NEW_FILE, OLD_FILE], why);
+      assertGoverned(w, why);
+      assert.equal(w.st.db.prepare(`SELECT count(*) n FROM group_domain_checks`).get().n, 1, why);
+      assert.equal(w.m.groupIdentityPublic().domain, want === "verified" ? "river.example.org" : null, why);
+    }
+  }
+  /* the governor holding the host at the second fetch: undetermined, never absent, and the second file not fetched */
+  const w = await world();
+  w.prov.answer = (url) => { w.prov.governorHold = "cooling_off"; return file("", 404)(url); };
+  const r = await w.m.groupDomainSet({ domain: "river.example.org", by: "admin", origin: ADDR });
+  assert.deepEqual([r.check.verdict, w.prov.fetched.map((f) => f.url)], ["undetermined", [NEW_FILE]]);
+  /* on the alarm too: a group that published only the file from before T31 stays verified */
+  const old = await checkOver({ [OLD_FILE]: file(GOOD) });
+  const t = await old.w.prov.consumers[0].tick(Date.now());
+  assert.deepEqual([t.groupdomain.verdict, t.groupdomain.trigger], ["verified", "alarm"]);
+});
+
+test("R8 undetermined, never absent, whenever nothing about the domain was learnt: the governor holds the host, there is no slug, or there is no address; nothing is fetched", async () => {
   const held = await world();
   held.prov.governorHold = "cooling_off";
   const h = await held.m.groupDomainSet({ domain: "river.example.org", by: "admin", origin: ADDR });
   assert.equal(h.check.verdict, "undetermined"); assert.equal(held.prov.fetched.length, 0);
-  /* no slug, and no address: undetermined, nothing fetched */
   const noSlug = await world({});
   const n = await noSlug.m.groupDomainSet({ domain: "river.example.org", by: "admin", origin: ADDR });
   assert.equal(n.check.verdict, "undetermined"); assert.equal(noSlug.prov.fetched.length, 0);
   const noAddr = await world();
   const a = await noAddr.m.groupDomainSet({ domain: "river.example.org", by: "admin", origin: "not an origin" });
   assert.equal(a.check.verdict, "undetermined"); assert.equal(noAddr.prov.fetched.length, 0);
-  /* at most 16 KiB is read: the file's first 16 KiB are its whole text */
-  const big = await world();
+  assert.equal(held.st.db.prepare(`SELECT count(*) n FROM group_domain_checks WHERE verdict='absent'`).get().n, 0);
+});
+
+test("R8 at most 16 KiB of either file is read: the file's first 16 KiB are its whole text", async () => {
   const pad = " ".repeat(GROUP_WELL_KNOWN_MAX_BYTES);
-  let pulled = 0;
-  big.prov.answer = () => new Response(new ReadableStream({
-    pull(c) { pulled += 1; if (pulled > 40) { c.close(); return; } c.enqueue(new TextEncoder().encode(pulled === 1 ? JSON.stringify({ instance: ADDR, group: "river-town" }) : pad)); },
-  }), { status: 200 });
-  assert.equal((await big.m.groupDomainSet({ domain: "river.example.org", by: "admin", origin: ADDR })).check.verdict, "verified");
-  assert.ok(pulled <= 4, `read ${pulled} chunks`);
-  const cut = await world();
-  cut.prov.answer = file(pad + JSON.stringify({ instance: ADDR, group: "river-town" }));
-  assert.equal((await cut.m.groupDomainSet({ domain: "river.example.org", by: "admin", origin: ADDR })).check.verdict, "mismatched");
+  for (const at of [NEW_FILE, OLD_FILE]) {
+    let pulled = 0;
+    const streamed = () => new Response(new ReadableStream({
+      pull(c) { pulled += 1; if (pulled > 40) { c.close(); return; } c.enqueue(new TextEncoder().encode(pulled === 1 ? JSON.stringify(GOOD) : pad)); },
+    }), { status: 200 });
+    assert.equal((await checkOver({ [at]: streamed })).check.verdict, "verified", at);
+    assert.ok(pulled <= 4, `${at}: read ${pulled} chunks`);
+    assert.equal((await checkOver({ [at]: file(pad + JSON.stringify(GOOD)) })).check.verdict, "mismatched", at);
+  }
 });
 
 test("R9 the current claim is re-checked on the reconciling alarm one interval after its latest verdict; an instance claiming no domain holds no wake", async () => {
