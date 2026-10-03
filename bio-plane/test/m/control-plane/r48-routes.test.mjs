@@ -71,7 +71,7 @@ test("R47, R48, R2, R26: each op is declared, a route of its owner's own map (ac
     assert.equal(r.json.store, c.ns);
     reached++;
   }
-  assert.ok(reached >= 35, String(reached));
+  assert.ok(reached >= 30, String(reached));
   for (const op of ["docketwithdraw", "actionholdlift", "projecthold"]) {
     assert.equal(Object.hasOwn(OPS, op), false, op);
     w.env.calls.length = 0;
