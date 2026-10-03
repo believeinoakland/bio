@@ -18,3 +18,7 @@ The left-out table of `current.md` (T31), unchanged until re-read at T32's openi
 - N544 · **membership**: `MODULE_ORDER` gains `wizard-scripts` between `scheduler` and `affordances` (R83), as for link-sweep, attestation, docket (K1396). **Why next:** membership has no T31 job (P10).
 - N545 · **queue**: `Queue.PRODUCER_DEPS` gains `caseImport` and `wizardScripts`, so plane R20's hand-off reaches queue-producers through queue (K1396). **Why next:** queue has no T31 job (P10).
 - N546 · **case-import**: each `watchItems` entry names the instant this copy read it, so queue-producers R35's findings age from it instead of `no_seen_instant` (QUEUE-PRODUCERS #10 J1 (3); K1397). **Why next:** case-import's layer is closed in T31 (P10).
+
+## Roster draft (BOB #109, P18; re-read at the opening)
+
+**L1** · record-grammar: N543. **L2** · membership: N544; promotion: S7 (stamps every row T31's merged jobs added, read from their records at the opening). **L3** · acquisition: N541 (provides the `who` spelling), N539 (if no user still names the aliases, checked by grep at the opening); capture: N541 (reads it). **L4** · reading-pipeline: N542 (with the new `uses` edge). **L8** · case-import: N546. **L11** · queue: N545. Accepted reds this plan clears: T31's 2 (row-census, by S7), wizard-scripts R5's label test (N543), membership R83 (N544).
