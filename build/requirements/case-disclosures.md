@@ -135,7 +135,7 @@ This module judges each against the owner's lists and the record at the act, and
 
 #### Hunch debt (Publication §3 rule 4; DEC-20)
 
-- **R16** (was `case-authoring` R12) *(not yet met: T29)* `hunchDebt(prepared)` answers `UNCLEARED_HUNCH` (C-120.7), naming each member, leg and target whose live basis (`inquiry.basisFor`) carries a leg whose grade source is `hunch`, or null. It is asked of every member, load-bearing or supporting.
+- **R16** (was `case-authoring` R12) *(not yet met: T29)* `hunchDebt(prepared)` answers `UNCLEARED_HUNCH` (C-120.7), naming each member, leg and target whose live basis (`inquiry.basisFor`) carries a leg whose grade source is `hunch`, or null. It is asked of every member, load-bearing or supporting. A member whose basis cannot be read is not passed: the same `UNCLEARED_HUNCH` answer names it under `undetermined: [{target, why}]` beside the hunches, saying whether it rests on a hunch is not known (R18, R23: the read states less and the answer fails closed; K1346).
 
 ## Private
 

@@ -18,7 +18,7 @@ The refusals those re-reads lead to, and every write to the published projection
 
 Terms. A **material** is a row of the case document's `materials:` block (`case-grammar` R12). It is **included** when its `included` is `true` (or `"true"`).
 
-- **R1** *(not yet met: T29)* `holdMaterials(fm, {caseId, edition, at})` writes inside the caller's transaction and opens none of its own. For each included material of the front matter `fm`, it holds, by SHA-256:
+- **R1** `holdMaterials(fm, {caseId, edition, at})` writes inside the caller's transaction and opens none of its own. For each included material of the front matter `fm`, it holds, by SHA-256:
   - **an observation**: its whole text, when the register homes its `sha` on a bundle that exists and record-core holds that file as inline text whose SHA-256 is `sha`;
   - **a document**: its captured bytes, as text when held inline at `sha`; else as `evidence` with the register's byte count, when the register homes it and no inline text is held (its bytes are only in the evidence store);
   - **a document's extracted text**, spelled by `case-grammar.extractedTextOf` (its R17) over `extraction.unitsOf(sha)`. It is held only when the index is `whole`, holds at least one unit and no unit is truncated, and only when the text's SHA-256 is the row's `text_sha`;
@@ -33,15 +33,15 @@ Terms. A **material** is a row of the case document's `materials:` block (`case-
   - `files`: one `{sha256, ref, path: "materials/<sha>", kind, bytes}` per held item, for the caller to register by hash.
 
   Nothing is held for a material not included. A material it cannot hold is answered, never refused. Never throws.
-- **R2** *(not yet met: T29)* `heldMaterialsOf(caseId, edition)` answers the `[{sha, held}]` R1 wrote for that case edition, in its order. It answers `[]` for an edition that held nothing or was never committed. Writes nothing; never throws. (K1317)
-- **R3** *(not yet met: T29)* `publishedMaterialText(sha)` answers `{found: true, sha256, kind, text}` for a text R1 held (`sha` read case-insensitively), else `{found: false}`. A text no commit held is unreachable here. Writes nothing. (K1316)
-- **R4** *(not yet met: T29)* `acceptedWorkLapsed(fm, signer)` reads the `accepted_work:` and `accepted_work_flags:` blocks (`case-grammar` R16). It asks `accepted-work` (its R2) once per distinct `(ref, edition)`, as `member:<signer>`:
+- **R2** `heldMaterialsOf(caseId, edition)` answers the `[{sha, held}]` R1 wrote for that case edition, in its order. It answers `[]` for an edition that held nothing or was never committed. Writes nothing; never throws. (K1317)
+- **R3** `publishedMaterialText(sha)` answers `{found: true, sha256, kind, text}` for a text R1 held (`sha` read case-insensitively), else `{found: false}`. A text no commit held is unreachable here. Writes nothing. (K1316)
+- **R4** `acceptedWorkLapsed(fm, signer)` reads the `accepted_work:` and `accepted_work_flags:` blocks (`case-grammar` R16). It asks `accepted-work` (its R2) once per distinct `(ref, edition)`, as `member:<signer>`:
   - `acceptedFinding({ref, edition, viewer})`: a row is **withdrawn** when the answer is null, `absent`, `unreadable`, carries no `acceptance` object, or names another edition;
   - otherwise `openFlagsOn({ref, edition, viewer})`: a row is **withdrawn** when that answer is not an object, is `absent` or `unreadable`, has `complete` not `true`, or has `flags` not a list;
   - otherwise each open flag whose `(ref, edition, flag)` the flags block does not state is **undisclosed**: `{ref, edition, flag, issue}`.
 
   It answers null when the block states no row or every row stands, else `{withdrawn: [{ref, edition}], undisclosed}` (at most 200 undisclosed). Writes nothing. (K1316 (3), (4))
-- **R5** *(not yet met: T29)* `sourcesLapsed(text, at)` answers the `sources:` rows of a case document (`case-grammar` R1's `caseDocumentBlocks`) that no longer hold at `at`, judged by `case-grammar`'s `sourceRowsStanding`.
+- **R5** `sourcesLapsed(text, at)` answers the `sources:` rows of a case document (`case-grammar` R1's `caseDocumentBlocks`) that no longer hold at `at`, judged by `case-grammar`'s `sourceRowsStanding`.
   - The sources behind a capture are the pulled knocks `sources` minted for it (its `source_knocks` read contract, R15), first received first.
   - Each is asked `sources.publishableAt({source, audience: "public", at})` (its R8).
   - A capture with no knock, or a source whose answer is not `ok` with a list of entries, answers nothing, so its rows lapse (fail closed).
@@ -64,8 +64,8 @@ Terms. A **material** is a row of the case document's `materials:` block (`case-
 
 ### Invariants
 
-- **R6** (was `publication` R31's clause; K1316) *(not yet met: T29)* `published_material_texts` and `published_case_materials` are declared to record-core's purge as exempt, as published bytes are. They are content-addressed and append-only: a held text or list is never rewritten or removed (as `publication` R24).
-- **R7** (copied from `publication` R34) *(not yet met: T29)* No place is named in this module's behaviour or outward text.
+- **R6** (was `publication` R31's clause; K1316) `published_material_texts` and `published_case_materials` are declared to record-core's purge as exempt, as published bytes are. They are content-addressed and append-only: a held text or list is never rewritten or removed (as `publication` R24).
+- **R7** (copied from `publication` R34) No place is named in this module's behaviour or outward text.
 
 ### Satisfies
 
