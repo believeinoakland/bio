@@ -177,25 +177,127 @@ test("R2: scenarioset, graded `reversible` (K727), asks no reason and is taken b
 
 /* K918 (T20): actions R52's hold statement, graded `reasoned`, driven at actions' interface over its fixture: on a
    `legal` pressure mark, a hold stated well-formed but without its reason is refused HOLD_REFUSED, in the justification
-   family, and with one it is accepted; a later statement corrects it forward, the earlier kept. */
+   family, and with one it is accepted; a later statement corrects it forward, the earlier kept. Since DEC-113 (T27) a
+   release is its own act (R33, actions R56), so `actionhold` is driven `in_place` only and the release through
+   `actionHoldRelease`. */
 import { world as aWorld, V as AV } from "../actions/fixture.mjs";
-test("R19 R2: actionhold, graded `reasoned` (K918), is refused without its reason on a legal pressure mark, with a code "
-   + "in JUSTIFICATION_REFUSALS, and accepted with one", () => {
+/* With `inProject`, the action sits in a project alice owns, promoted as a project is, so a hold covers it (actions R52). */
+const holdScene = ({ inProject = false } = {}) => {
   const w = aWorld(), A = "ACTN-2026-0001-a", M = AV("alice");
-  w.action(A, ["correspondence:", "  - direction: received", "    at: 2026-09-03", '    account: "a letter"',
-               "    author: member:alice"]);
+  let P = null;
+  if (inProject) {
+    const r = w.promotion.promote({ base: null, snapKey: "p1", author: M, ownerMemberId: "alice",
+      files: [{ path: "bundle.md", text: ["---", "object_type: project", "schema: project@1", 'title: "Project 1"',
+        "current_state: forming", "prior_state: null", 'created: "2026-09-27T00:00:00Z"', 'last_updated: "2026-09-27T00:00:00Z"',
+        "references: []", "state_history: []", "---", "", "## Objective", "", "Find out.", ""].join("\n") }],
+      meta: { object_type: "project" } });
+    assert.equal(r.ok, true, JSON.stringify(r));
+    P = r.bundleId;
+  }
+  w.action(A, [...(P ? [`project: ${P}`] : []), "correspondence:", "  - direction: received", "    at: 2026-09-03",
+               '    account: "a letter"', "    author: member:alice"]);
   assert.equal(w.a.actionPressure({ target: A, ord: 0, pressure: { kind: "legal", note: "a threatened suit" },
                                     viewer: M, author: M }).ok, true);
+  return { w, A, M, P };
+};
+test("R19 R2: actionhold, graded `reasoned` (K918), is refused without its reason on a legal pressure mark, with a code "
+   + "in JUSTIFICATION_REFUSALS, and accepted with one; a later statement corrects it forward, the earlier kept", () => {
+  const { w, A, M } = holdScene();
   assert.equal(RUNGS.actionhold, "reasoned");
-  for (const hold of ["in_place", "released"])
-    for (const reason of [undefined, null, "", "   "]) {
-      const r = w.a.actionHold({ target: A, ord: 0, hold, reason, viewer: M, author: M });
-      assert.equal(r.reason, "HOLD_REFUSED", `${hold} ${JSON.stringify(reason)}`);
-      assert.ok(JUSTIFICATION_REFUSALS.includes(r.reason));
-    }
+  for (const reason of [undefined, null, "", "   "]) {
+    const before = dump(sqlOf(w));
+    const r = w.a.actionHold({ target: A, ord: 0, hold: "in_place", reason, viewer: M, author: M });
+    assert.equal(r.reason, "HOLD_REFUSED", JSON.stringify(reason));
+    assert.ok(JUSTIFICATION_REFUSALS.includes(r.reason));
+    assert.equal(dump(sqlOf(w)), before, "nothing written");
+  }
   assert.equal(w.a.actionHold({ target: A, ord: 0, hold: "in_place", reason: "preserving the emails", viewer: M, author: M }).ok, true);
-  assert.equal(w.a.actionHold({ target: A, ord: 0, hold: "released", reason: "the claim was withdrawn", viewer: M, author: M }).ok, true);
-  assert.deepEqual(w.a.actionRead({ id: A, viewer: M }).pressure[0].holds.map((h) => h.hold), ["in_place", "released"]);
+  assert.equal(w.a.actionHold({ target: A, ord: 0, hold: "in_place", reason: "and the texts", viewer: M, author: M }).ok, true);
+  assert.deepEqual(w.a.actionRead({ id: A, viewer: M }).pressure[0].holds.map((h) => h.hold), ["in_place", "in_place"]);
+});
+
+/* R33 (DEC-113; K1134 (3); actions R56, R57): the release, graded `terminal` as a named exception to R27, driven at
+   actions' interface. Its reason is backed by HOLD_REFUSED as `actionhold`'s is (in the justification family, nothing
+   written). Its rung by what it does: it records, with the release, the projects it restarted (what R57's preview
+   answered at that instant, the statement's projects); once released, the hold is not released again
+   (HOLD_ALREADY_RELEASED), and the restarted projects stand released — no act takes a release back into the same hold:
+   a later `in_place` is a new hold, stated anew, and the release stays in the record. */
+test("R19 R2 R33: actionholdrelease, graded `terminal`, is refused without its reason (HOLD_REFUSED, in the family) and "
+   + "writes nothing; with one it records what it restarted — R57's answer — and cannot be walked back: released again is "
+   + "refused HOLD_ALREADY_RELEASED, and the release stays in the record under any later hold", () => {
+  assert.equal(RUNGS.actionholdrelease, "terminal");
+  const { w, A, M, P } = holdScene({ inProject: true });
+  assert.equal(w.a.actionHold({ target: A, ord: 0, hold: "in_place", reason: "preserving the emails", viewer: M, author: M }).ok, true);
+  for (const reason of [undefined, null, "", "   "]) {
+    const before = dump(sqlOf(w));
+    const r = w.a.actionHoldRelease({ target: A, ord: 0, reason, viewer: M, author: M });
+    assert.equal(r.reason, "HOLD_REFUSED", JSON.stringify(reason));
+    assert.ok(JUSTIFICATION_REFUSALS.includes(r.reason));
+    assert.equal(dump(sqlOf(w)), before, "nothing written");
+  }
+  const preview = w.a.holdReleasePreview({ target: A, ord: 0, viewer: M });
+  assert.equal(preview.ok, true, JSON.stringify(preview).slice(0, 300));
+  const rel = w.a.actionHoldRelease({ target: A, ord: 0, reason: "the claim was withdrawn", viewer: M, author: M });
+  assert.deepEqual([rel.ok, rel.hold], [true, "released"], JSON.stringify(rel).slice(0, 300));
+  assert.deepEqual(preview.restarts, [P], "the hold covers the action's own project, and nothing else holds it");
+  assert.deepEqual(rel.restarted, preview.restarts, "the release records what the preview said it would restart");
+  assert.deepEqual(w.a.holdReleasePreview({ target: A, ord: 0, viewer: M }).restarts, [], "released, it restarts nothing more");
+  const again = w.a.actionHoldRelease({ target: A, ord: 0, reason: "once more", viewer: M, author: M });
+  assert.equal(again.reason, "HOLD_ALREADY_RELEASED", JSON.stringify(again).slice(0, 300));
+  /* a later hold is stated anew; the release stays */
+  assert.equal(w.a.actionHold({ target: A, ord: 0, hold: "in_place", reason: "a new threat", viewer: M, author: M }).ok, true);
+  assert.deepEqual(w.a.actionRead({ id: A, viewer: M }).pressure[0].holds.map((h) => h.hold), ["in_place", "released", "in_place"]);
+});
+
+/* R34 (DEC-116, N520): the docket's two reasoned acts and its attested post, driven at docket's interface over its
+   fixture (real record-core, membership, credentials, promotion, provenance, publication tables and signatures). */
+import * as dk from "../docket/fixture.mjs";
+test("R19 R34: docketfile and docketdecline, graded `reasoned`, are refused without their reason with DOCKET_NO_REASON "
+   + "(in the family) and write nothing — the filing, its take-back and the manager's decline — and are accepted with one", () => {
+  for (const op of ["docketfile", "docketdecline"]) assert.equal(RUNGS[op], "reasoned", op);
+  const bad = [];
+  const check = (label, w, act) => {
+    const before = dump(w.st.sql);
+    const r = act();
+    if (!(r && r.ok !== true && r.reason === "DOCKET_NO_REASON" && JUSTIFICATION_REFUSALS.includes(r.reason))) bad.push(`${label}: ${JSON.stringify(r).slice(0, 200)}`);
+    else if (dump(w.st.sql) !== before) bad.push(`${label}: refused, but wrote`);
+  };
+  for (const reason of [undefined, null, "", "   "]) {
+    const w = dk.seeded();
+    check(`file ${JSON.stringify(reason)}`, w, () => dk.file(w, { reason }));
+    const f = dk.file(w);
+    assert.equal(f.ok, true, JSON.stringify(f).slice(0, 300));
+    check(`take back ${JSON.stringify(reason)}`, w, () => dk.file(w, { takesBack: f.entry, reason }));
+    check(`decline ${JSON.stringify(reason)}`, w, () => w.docket.docketDecline({ entry: f.entry, reason, by: dk.V("alice"), viewer: dk.V("alice") }));
+  }
+  assert.deepEqual(bad, []);
+  const w = dk.seeded();
+  const f = dk.file(w);
+  assert.equal(f.ok, true);
+  const d = w.docket.docketDecline({ entry: f.entry, reason: "It contains redactions.", by: dk.V("alice"), viewer: dk.V("alice") });
+  assert.equal(d.ok, true, JSON.stringify(d).slice(0, 300));
+  const g = dk.file(w);
+  const t = dk.file(w, { takesBack: g.entry, reason: "filed in error" });
+  assert.equal(t.ok, true, JSON.stringify(t).slice(0, 300));
+});
+
+test("R2 R34: docketpost, graded `attested`, publishes only under the manager's own registered signature over the "
+   + "prepared statement — another member's key, or a signature over other bytes, is refused DOCKET_SIGNATURE_REFUSED "
+   + "and writes nothing; signed by the manager, it is posted", async () => {
+  assert.equal(RUNGS.docketpost, "attested");
+  const w = dk.seeded();
+  const f = dk.file(w);
+  assert.equal(f.ok, true);
+  const p = dk.prepare(w, { kind: "response", entry: f.entry });
+  assert.equal(p.ok, true, JSON.stringify(p).slice(0, 300));
+  const before = dump(w.st.sql);
+  for (const signature of [dk.sign(p, "bob"), dk.sign({ statement: p.statement + " " }, "alice")]) {
+    const r = await w.docket.docketPost({ digest: p.digest, signature, acknowledged: true, by: dk.V("alice"), viewer: dk.V("alice") });
+    assert.equal(r.reason, "DOCKET_SIGNATURE_REFUSED", JSON.stringify(r).slice(0, 300));
+  }
+  assert.equal(dump(w.st.sql), before, "nothing written");
+  const ok = await w.docket.docketPost({ digest: p.digest, signature: dk.sign(p, "alice"), acknowledged: true, by: dk.V("alice"), viewer: dk.V("alice") });
+  assert.equal(ok.ok, true, JSON.stringify(ok).slice(0, 300));
 });
 
 /* R30 (K921, T21): `templateretire` and `factconfirm`, graded `reasoned`, driven at filing-templates' and local-facts'
