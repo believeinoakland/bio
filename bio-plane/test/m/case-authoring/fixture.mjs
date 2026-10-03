@@ -208,7 +208,7 @@ export function world({ group = "test-group", provider = true, now = null, recor
     imports,
     st, host, record, membership, credentials, promotion, prov, content, entities, connections, inquiry, basisVersions, strength,
     bias, observations, reevaluation, publication, ratification, contradiction, runs, clock, readings, grants: new Map(),
-    capture, sources, attestation,
+    capture, sources, attestation, extraction: ex,
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a),
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,

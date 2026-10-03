@@ -17,7 +17,7 @@
 import { createSha256, EARNED_CAPTURE_CEILING } from "../record-grammar/index.mjs";
 import { fmSafe, whatChangedBlockLines, whatChangedSectionLines, lensBlockLines,
          lensSectionLines, workingOnLines, methodBlockLines, materialBlockLines, acceptedWorkBlockLines,
-         pairLine, ANONYMOUS_ATTESTATION_LEVELS } from "../case-grammar/index.mjs";
+         pairLine, ANONYMOUS_ATTESTATION_LEVELS, gradingFactsLines, passagesLines } from "../case-grammar/index.mjs";
 import { FLAG_SENTENCE } from "./accepted.mjs";
 import { CASE_DOCUMENT_FORMAT, attributionFrontmatterLines, attributionBodyLines, captureBlockLines,
          sourceBlockLines } from "../publication/index.mjs";
@@ -428,7 +428,7 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
                                    citations = [], attributions = [], tensions = [],
                                    tensionsUnread = [], captures = [], sources = [], whatChanged = null,
                                    lens: lensRead = null, method = null, materials = null, group = null,
-                                   accepted = null }) {
+                                   accepted = null, grading = null, passages = null }) {
   const roleOf = new Map((roles || []).map((r) => [r.target, r.role]));
   const lens = manifest && manifest.in_force === true ? manifest
     : { in_force: manifest && manifest.in_force === null ? null : false,
@@ -516,6 +516,9 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
     ...(method ? methodBlockLines(method) : []),
     ...(materials ? materialBlockLines({ materials: materials.rows, attestations: materials.attestations }) : []),
     ...acceptedWorkBlockLines(accepted || {}),
+    /* R54 (K1315): each reached finding's grading facts and relied-on passages, signed with the document. */
+    ...(grading ? gradingFactsLines(grading) : []),
+    ...(passages ? passagesLines(passages) : []),
     "completeness:",
     `  statement: "${fmSafe(statement)}"`,
     `  subject_position: ${position}`,

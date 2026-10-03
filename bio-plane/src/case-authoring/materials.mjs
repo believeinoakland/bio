@@ -23,8 +23,8 @@ function materialsOfLeg(leg, io) {
 
 /** R44, R45: what of one material this copy holds whole. Its captured bytes are held when record-core's file at the
  *  register's `(bundle_id, path)` exists, inline or by blob (`publishCase` is synchronous, R18, so object storage is not
- *  asked). A document's extracted text is `extraction.unitsOf`'s units in reading order, each `{extent, ref, text}`, as
- *  canonical JSON, held whole only when the index is `whole` and no unit was cut; `text_sha` is its SHA-256. An
+ *  asked). A document's extracted text is `case-grammar.extractedTextOf` over `extraction.unitsOf`'s units (its R17;
+ *  K1315), held whole only when the index is `whole` and no unit was cut; `text_sha` is its SHA-256. An
  *  observation's text is its own bytes, so it has no separate text (`text_sha` null). Answers `{bytes, text, text_sha,
  *  whole, missing}`, `missing` naming what is not held. */
 export function materialHeld(m, io) {
@@ -40,8 +40,7 @@ export function materialHeld(m, io) {
   try { units = io.unitsOf(m.sha); } catch { units = null; }
   const list = units && Array.isArray(units.units) ? units.units : [];
   const text = !!(units && units.state === "whole" && list.length && !list.some((u) => u.truncated));
-  const textSha = text ? io.sha256(io.canonicalJson(list.map((u) => ({ extent: u.extent, ref: u.ref, text: u.text }))))
-                       : null;
+  const textSha = text ? io.sha256(io.extractedTextOf(list)) : null;
   const missing = [...(bytes ? [] : ["bytes"]), ...(text ? [] : ["extracted_text"])];
   return { bytes, text, text_sha: textSha, whole: bytes && text, missing };
 }

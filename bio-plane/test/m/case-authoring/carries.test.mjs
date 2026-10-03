@@ -6,10 +6,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, T0, sha } from "./fixture.mjs";
-import { CASE_DOCUMENT_FORMAT, caseDocumentRequiresMaterials, methodOf, materialsOf, caseDocumentBlocks }
-  from "../../../src/case-grammar/index.mjs";
+import { CASE_DOCUMENT_FORMAT, caseDocumentRequiresMaterials, methodOf, materialsOf, caseDocumentBlocks, gradingFactsOf,
+         passagesOf, extractedTextOf, GRADING_FACT_FIELDS } from "../../../src/case-grammar/index.mjs";
 import { unnamedSourceStatement } from "../../../src/publication/index.mjs";
-import { GRADING_METHOD_VERSION } from "../../../src/strength/index.mjs";
+import { GRADING_METHOD_VERSION, recomputePair } from "../../../src/strength/index.mjs";
 import { CATALOG_VERSION } from "../../../src/promotion/index.mjs";
 import { canonicalJson } from "../../../src/record-grammar/index.mjs";
 
@@ -66,7 +66,7 @@ test("R45: material_attestations: states, per material, the attesting member's s
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
   const reg = w.row(`SELECT bundle_id, registered FROM register WHERE capture_sha=?`, a);
   assert.deepEqual(materialsOf(w.fm(docOf(w, r))).attestations, [
-    { ref: DOC, by_kind: "member", by: "alice", level: null, at: "2026-09-27T12:00:00Z", signature: "SIG-of-alice-7f3", recorded_in: null },
+    { ref: DOC, by_kind: "member", by: "alice", level: "name", at: "2026-09-27T12:00:00Z", signature: "SIG-of-alice-7f3", recorded_in: null },
     { ref: DOC, by_kind: "co_attestation", by: "https://archive.example/web/x", level: null, at: null, signature: null,
       recorded_in: null },
     { ref: DOC, by_kind: "project", by: P, level: null, at: reg.registered, signature: null, recorded_in: reg.bundle_id },
@@ -109,6 +109,38 @@ test("R49: a named member's capture, a load-bearing self-attested Grade B one in
   const row = caseDocumentBlocks(text).captures.find((c) => c.capture === b);
   assert.deepEqual([row.self_attested_only, row.accounts[0].by, row.accounts[0].signature], [true, "alice", "SIG-of-alice-7f3"]);
   assert.deepEqual(materialsOf(w.fm(text)).attestations.find((x) => x.by_kind === "member"),
-    { ref: DOC, by_kind: "member", by: "alice", level: null, at: "2026-09-27T12:00:00Z", signature: "SIG-of-alice-7f3", recorded_in: null });
+    { ref: DOC, by_kind: "member", by: "alice", level: "name", at: "2026-09-27T12:00:00Z", signature: "SIG-of-alice-7f3", recorded_in: null });
   void DOC3;
+});
+
+test("R54: grading_facts: and passages: are written at the act through case-grammar's R17 — one row per leg of each finding a member's chain reaches, as strength.gradingFacts answers it, so recomputePair over the signed facts answers the pair strengthOf answers; one passage row per leg naming a content row, its quoted text found in the document's extracted text", () => {
+  const w = world(); w.member("alice");
+  const a = w.graded(DOC);
+  w.doc(DOC2);
+  const cid = sha("passage of DOC");
+  w.st.sql.exec(`INSERT INTO content (content_id, capture_sha, bundle_id, extent_kind, extent, ref, minted_by, at, stale)
+                 VALUES (?, ?, ?, 'doc-para', ?, 'paragraph 1', 'plane', '2026-01-01', 0)`, cid, a, DOC,
+                canonicalJson({ kind: "doc-para", para: 1 }));
+  w.finding(Q2, [{ target: DOC2, grade: "C", grade_axis: "capture", grade_source: "capture" }]);
+  w.finding(Q, [{ target: DOC, content_id: cid, grade: "B", grade_axis: "capture", grade_source: "capture" },
+                { target: Q2 }]);
+  const r = w.publish(w.project("Team", "alice", [Q]), "alice", [Q], { selfAttested: [{ capture: a, reason: REASON }] });
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+  const fm = w.fm(docOf(w, r));
+  const facts = gradingFactsOf(fm);
+  assert.deepEqual(Object.keys(facts), [Q, Q2], "each finding the chain reaches, members first");
+  for (const id of [Q, Q2]) {
+    const given = w.strength.gradingFacts({ inquiry: id, levels: null, viewer: "member:alice" }).legs;
+    assert.deepEqual(facts[id].map(({ finding, ord, ...leg }) => leg),
+      given.map((g) => Object.fromEntries(GRADING_FACT_FIELDS.slice(2).map((f) => [f, g[f] ?? null]))), id);
+    const re = recomputePair({ legs: facts[id], version: methodOf(fm).grading });
+    const live = w.strength.strengthOf(id);
+    for (const axis of ["capture", "connection"])
+      assert.deepEqual([re[axis].state, re[axis].grade], [live[axis].state, live[axis].grade], `${id} ${axis}`);
+  }
+  const p = passagesOf(fm);
+  assert.deepEqual(p[Q], [{ finding: Q, ord: 0, content_id: cid, capture_sha: a,
+    extent: canonicalJson({ kind: "doc-para", para: 1 }), chain: null, quoted: `the text of ${DOC}` }]);
+  assert.ok(extractedTextOf(w.extraction.unitsOf(a).units).includes(JSON.stringify(p[Q][0].quoted)),
+    "the passage is found in the extracted text");
 });

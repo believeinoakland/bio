@@ -76,7 +76,7 @@ import { networkNoticesOf } from "../network-notices/index.mjs";
 import { parseFrontmatter, normalizeType, isMachineIdentity, OBJECT_TYPES, BASIS_GRADES,
          EARNED_CAPTURE_CEILING, isPublicHttpsLocator, proposalLabel, canonicalJson,
          createSha256 } from "../record-grammar/index.mjs";
-import { SECTIONS } from "../case-grammar/index.mjs";
+import { SECTIONS, extractedTextOf, sourceRowWithheld } from "../case-grammar/index.mjs";
 import { PUBLISH_ACT_CHECKS, CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS, CASE_DISCLOSURE_CHECKS } from "./checks.mjs";
 import { CASE_AUTHORING_TABLES, migrateCaseAuthoring } from "./schema.mjs";
 import { searchedSection } from "./searched.mjs";
@@ -683,7 +683,9 @@ export class CaseAuthoring {
         if (m.kind === "observation")
           return [{ by: attr ? attr.shown ?? null : null, level: attr ? attr.level ?? null : null, at: null, signature: null }];
         const accounts = f && Array.isArray(f.accounts_read) ? f.accounts_read : [];
-        if (!withheld.has(m.sha)) return accounts.map((x) => ({ by: x.by, level: null, at: x.at, signature: x.signature }));
+        /* A capture whose source is not withheld: its signed accounts are in the capturing member's own name (DEC-81
+           item 3), so their row states that level and carries the handle and signature (case-grammar R12). */
+        if (!withheld.has(m.sha)) return accounts.map((x) => ({ by: x.by, level: "name", at: x.at, signature: x.signature }));
         const level = attr ? attr.level ?? null : null, open = named(m.sha);
         const shown = open ? attr.shown ?? null : null;
         return accounts.length ? accounts.map((x) => ({ by: shown, level, at: x.at, signature: open ? x.signature : null }))
@@ -1320,7 +1322,7 @@ export class CaseAuthoring {
         && !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, id, ...gate.args),
       readFile: (b, p) => this.record.readFile(b, p),
       unitsOf: (sha) => this.extraction.unitsOf(sha),
-      sha256: (s) => createSha256().update(new TextEncoder().encode(s)).hex(), canonicalJson,
+      sha256: (s) => createSha256().update(new TextEncoder().encode(s)).hex(), extractedTextOf,
     };
     const roleOf = new Map(memberRoles.map((m) => [m.target, m.role]));
     const chains = chainsOf(prepared.map((p) => ({ id: p.id, role: roleOf.get(p.id) })), io, DEPTH_BOUND);
@@ -1351,7 +1353,7 @@ export class CaseAuthoring {
    *  `strength.gradingFacts` (its R35) answers them at the act, with `levels` null (`recomputePair` takes the levels the
    *  signed attribution section states), one `grading_facts:` row each, `{finding, ord}` beside the answer's fields; and
    *  each relied-on passage, one `passages:` row per leg naming a content row, `{finding, ord, content_id, capture_sha,
-   *  extent, quoted}`, `quoted` the text of the extracted unit at that extent (`extraction.unitsOf`), null where the copy
+   *  extent, chain, quoted}` (`chain` as minted, null when none: K1317), `quoted` the text of the extracted unit at that extent (`extraction.unitsOf`), null where the copy
    *  holds none there. A finding `gradingFacts` refuses contributes no row, and the refusal is kept in `unread`, stated. */
   #findingFacts(findings, viewer) {
     const grading = [], passages = [], unread = [];
@@ -1365,21 +1367,21 @@ export class CaseAuthoring {
       try { gf = this.strength.gradingFacts({ inquiry: id, levels: null, viewer }); } catch (e) { gf = { ok: false, reason: String(e && e.message || e).slice(0, 160) }; }
       if (!gf || gf.ok !== true) { unread.push({ finding: id, reason: gf ? gf.reason ?? null : null }); continue; }
       gf.legs.forEach((leg, ord) => grading.push({ finding: id, ord, ...leg }));
-      for (const leg of this.#rows(`SELECT b.ord, c.content_id, c.capture_sha, c.extent FROM inquiry_basis b
+      for (const leg of this.#rows(`SELECT b.ord, c.content_id, c.capture_sha, c.extent, c.chain FROM inquiry_basis b
                                     JOIN content c ON c.content_id = b.content_id WHERE b.bundle_id=? ORDER BY b.ord`, id)) {
         const u = unitsOf(leg.capture_sha);
         const at = u && Array.isArray(u.units) ? u.units.find((x) => canonicalJson(x.extent) === leg.extent) : null;
         passages.push({ finding: id, ord: Number(leg.ord), content_id: leg.content_id, capture_sha: leg.capture_sha,
-                        extent: leg.extent, quoted: at && !at.truncated ? at.text : null });
+                        extent: leg.extent, chain: leg.chain ?? null, quoted: at && !at.truncated ? at.text : null });
       }
     }
     return { grading, passages, unread };
   }
 
   /** R46, R48 (K1316): the off-the-record captures, those whose `sources:` row (R37) states the identity "Withheld":
-   *  `basis` null is `publication`'s `unnamedSourceStatement`, the one spelling. */
+   *  `case-grammar`'s `sourceRowWithheld`, the one reading of such a row. */
   static #withheld(sourceRows) {
-    return new Set(sourceRows.filter((r) => r.basis === null).map((r) => r.capture));
+    return new Set(sourceRows.filter(sourceRowWithheld).map((r) => r.capture));
   }
 
   /** R51 (DEC-96 item 4; N522): for each leg a member's chain reaches on another group's finding, the acceptance in force
