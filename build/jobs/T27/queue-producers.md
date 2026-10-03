@@ -1,6 +1,6 @@
 # queue-producers (T27)
 
-**Status** · session_01Sjz6RPkzZvWJfVxCrKMMo8 · depth 2 · WORKING · handled B2
+**Status** · session_01Sjz6RPkzZvWJfVxCrKMMo8 · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
