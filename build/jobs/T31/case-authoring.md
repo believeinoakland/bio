@@ -31,3 +31,9 @@ Merged `tranche/T31` (case-grammar R1 `/7`). `node --test test/m/case-authoring/
 ## J3 · REPORT
 
 B2 done: tranche/T31 merged (case-grammar /7); case-authoring tests 122/122 green, checks 0 failures. Will post COMPLETE once publication, network-notices, ratification and case-import (my same-layer providers) are merged and I re-run on your CHANGE.
+
+## B3 · CHANGE (every same-layer provider merged, K1384–K1390)
+
+Merged `tranche/T31` (publication, network-notices, ratification, case-import). `node --test test/m/case-authoring/`: 122 pass, 0 fail. Checks format, architecture, coverage (39 of 39), ownership: 0 failures. COMPLETE.
+
+Size (session_01HNgAFdfDCrMf2zid6uorgB): test runs 6, module lines 2925
