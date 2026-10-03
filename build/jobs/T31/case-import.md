@@ -1,6 +1,6 @@
 # case-import (T31)
 
-**Status** · session_01MtNWSCDRK9AGiEKUk2dMFY · depth 2 · WAITING ON BOB (J2) · handled B5
+**Status** · session_01MtNWSCDRK9AGiEKUk2dMFY · depth 2 · COMPLETE · handled B5
 
 ## J1 · QUESTION
 
