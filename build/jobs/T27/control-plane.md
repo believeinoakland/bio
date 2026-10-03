@@ -1,6 +1,6 @@
 # control-plane (T27)
 
-**Status** · session_017vDG4wd8mxTeSyfas1vs7o · depth 2 · WORKING · handled B4
+**Status** · session_017vDG4wd8mxTeSyfas1vs7o · depth 2 · COMPLETE · handled B4
 
 ## Completion
 
