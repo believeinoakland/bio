@@ -1,6 +1,6 @@
 # Plan T27
 
-**Status** · OPEN · BOB #103 · session_01BaZjVu3eHvWLLU4C5CdGA7 · depth 1
+**Status** · OPEN · BOB #104 · session_01GJwrrGrvmxmL87Ju4BtBpV · depth 1
 
 **Jobs** · signatures: SIGNATURES #6 session_01N3t7Hfj37rLM9MSN2KgSNZ; membership: MEMBERSHIP #20 session_013WoUArmhh78ngbjAEuCSMa; reevaluation: REEVALUATION #14 session_01KA6UG6rXYyJAWoe5sPuf8x; docket: DOCKET #1 session_01PJ5cMH43RbHxx4SXkb3E7X; publication: PUBLICATION #15 session_01PBj2Sb1NuqAgKWDSQUEqiZ; public-read: PUBLIC-READ #8 session_01RxP8D4FZ4YPUucNfhaQQx2; network-notices: NETWORK-NOTICES #4 session_01MRJKiiGZ1Mddztgdog1A5d; action-grammar: ACTION-GRAMMAR #5 session_01U9Fumb6uphtpXWNehTqT13; actions: ACTIONS #11 session_015hujGgkB8skFWudt1A18AM; affordances: AFFORDANCES #17 session_01RzGjMiL9jvaJHwknSRAGV6; queue-producers: QUEUE-PRODUCERS #9 session_01Sjz6RPkzZvWJfVxCrKMMo8; queue: QUEUE #14 session_01F38bSR7bu33Tfs9jy4JEQS; op-declarations: OP-DECLARATIONS #7 session_01FsRcQFZFMkEu8cvL4g6tgh; control-plane: CONTROL-PLANE #17 session_017vDG4wd8mxTeSyfas1vs7o; plane: PLANE #17 session_013CHccnA8eCupoC3T3KyKSB
 
@@ -26,6 +26,8 @@ T26's rules hold (merge early; one file, one editor; marks struck at the merge; 
 3. The UI's DEC-88 tests (N487, K1030): stay red, Bob's.
 4. `bio-plane/test/m/control-plane/` R22: `CHECK_FAMILIES` does not reach `docket`'s `DOCKET_CHECKS` (found by PUBLIC-READ #8 at L8), until control-plane's L11 merge (K1280).
 5. `bio-plane/test/m/affordances/backing.test.mjs` R19's `actionhold` case drives a release through `actionhold`, now refused `HOLD_RELEASE_IS_ITS_OWN_ACT` (actions R52 amended), red from actions' L9 merge until affordances' L11 merge re-points it (K1283).
+6. `bio-plane/test/m/queue/` feed tests (30): queue's test world lacks fakes for `actions.holdsReleased`, `reevaluation.docketDependents`, `docket.coreDue`, red from queue-producers' L11 merge until queue's (K1288).
+7. `bio-plane/test/m/control-plane/totality.test.mjs` R2, R41: the 12 ops affordances R33, R34 name lack op-declarations' rows, red from affordances' L11 merge until op-declarations' (K1289). Red 5 cleared at affordances' merge (K1289).
 
 ## Roster (by layer; 17 jobs)
 

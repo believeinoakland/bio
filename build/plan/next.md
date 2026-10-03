@@ -20,6 +20,8 @@
 
 - N525 · 2026-10-02 · **docket**: its public addresses (R14's `feed`, the entry links) begin with `?` while public-read's do not (PUBLIC-READ #8's record); make them one form. **Why next:** docket's T27 job had closed when found (P8).
 
+- N526 · 2026-10-03 · **docket** R2: its machine refusal of `docketpressure` gets its own code (e.g. `MACHINE_CANNOT_MARK_DOCKET_PRESSURE`) and row; today it reuses `MACHINE_CANNOT_MARK_PRESSURE`, held by `action-grammar` C-117.14 (DEC-49: one code, one row). Then **control-plane** moves docket's family to its module-order place in `CHECK_FAMILY_FILES` (one line). Found by CONTROL-PLANE #17 (J2; K1291). **Why next:** docket's T27 job had closed when found (P8, P9).
+
 ## Carried from T27
 
 | row | item | hard reason | note |

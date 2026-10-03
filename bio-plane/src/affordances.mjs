@@ -120,6 +120,11 @@ import { CONTENT_MINT_STATES } from "./content/index.mjs";
    owner's own object (R4). */
 import { TEMPLATE_STATES, TEMPLATE_USES, REVIEW_OUTCOMES } from "./filing-templates/index.mjs";
 import { LOCAL_FACT_ACTS, LOCAL_FACT_STATUSES } from "./local-facts/index.mjs";
+/* R34 (N520; DEC-116): the docket's shelves, entry kinds, a filing's proposals and the kinds of pressure a docket entry is
+   marked with are `docket'`s (its R1, R2, R6), the arrays its acts refuse against; each published as the owner's own
+   object (R4). */
+import { SHELVES as DOCKET_SHELVES, ENTRY_KINDS as DOCKET_ENTRY_KINDS, PROPOSALS as DOCKET_PROPOSALS,
+         PRESSURE_KINDS as DOCKET_PRESSURE_KINDS } from "./docket/index.mjs";
 /* R13–R16, R23 (T9, K225): the facts the derivation below reads, one object as it stands and one caller as they are,
    extracted from the legacy store with the three joined-project predicates, whose only caller they were; and (N13) the
    op map that answers `op=affordancefacts`. */
@@ -548,6 +553,10 @@ export const JUSTIFICATION_REFUSALS = [
   /* K1019, K1023 (T22): a held capture set aside or restored without its reason (capture R79, R81), and an address's
      frequency set without a canned or custom reason (monitoring R52, C-18.15). */
   "SET_ASIDE_NO_REASON", "FREQUENCY_NO_REASON",
+  /* R34 (N520; DEC-116): a docket filing's reason for the record/public/both choice (docket R1, C-129.9), a record
+     entry's take-back (its R11) and the manager's decline of a submission (its R7), each refused absent as well as
+     malformed. */
+  "DOCKET_NO_REASON",
 ];
 
 /* THE GROUNDS ON WHICH A MUTATING OP HAS NO RUNG. Written ONCE here and pointed
@@ -617,6 +626,13 @@ export const CONSEQUENCE_STATEMENTS = Object.freeze({
   workobjective: Object.freeze({ friction: "in-place",
     statement: "An assistant will work this project's objective within the run's budget and scope, shown beside "
       + "this field. Your reason is recorded on the run's opening; the run proposes and never concludes." }),
+  /* R33 (DEC-113; K1134 (3), K1252): releasing a litigation hold restarts what the hold stopped, for the projects
+     `actions` R57 answers (`op=actionholdpreview`), which the surface reads and shows beside the statement. DEC-113's
+     sentence, with K1252's purge: while a hold stands no held material is purged (actions R60). */
+  actionholdrelease: Object.freeze({ friction: "dialog",
+    statement: "Releasing this hold restarts deletion for the projects shown beside this: their material may be purged "
+      + "again, and assistant transcripts for them past the time limit will be deleted on each member's device when it "
+      + "is next opened. This cannot be undone." }),
 });
 
 /* The object vocabularies, published the way op=searchfields publishes the
@@ -789,6 +805,14 @@ export const VOCABULARIES = {
   template_review_outcomes: REVIEW_OUTCOMES,
   local_fact_acts: LOCAL_FACT_ACTS,
   local_fact_statuses: LOCAL_FACT_STATUSES,
+  /* R34 (N520; DEC-116): what a member offers when an entry is filed for the docket, posted to a shelf or marked as
+     pressure — each the array `docket` refuses against (DOCKET_NO_REASON's proposals, DOCKET_KIND_UNKNOWN,
+     PRESSURE_REFUSED) or answers in (a public entry's shelf and kind), so a surface offers a choice before a member is
+     refused it. */
+  docket_shelves: DOCKET_SHELVES,
+  docket_entry_kinds: DOCKET_ENTRY_KINDS,
+  docket_proposals: DOCKET_PROPOSALS,
+  docket_pressure_kinds: DOCKET_PRESSURE_KINDS,
 };
 
 /* R26 (N65 (3)): the vocabularies an instance publishes, with `action_kind` the kinds its `actions` accepts at the
@@ -835,11 +859,21 @@ export const RUNGS = {
      (network-notices R4, R24), `caseratify`'s reason — a key the group does not hold by having decided something. A
      change or a stop is a new revision (its R6, R11), and nothing published is altered (its R26). */
   noticepost:         "attested",   // network-notices R4, R24 · an owner's own signature publishes the revision
+  /* R34 (DEC-116, N520): a docket entry is published only by the manager's own signature over its statement (docket R5,
+     R18), `noticepost`'s and `caseratify`'s reason; an entry is taken back only by a later entry (its R11), and nothing
+     published is altered (its R16). The draft's "signed" is this rung: the ladder has no rung of that name (R27). */
+  docketpost:         "attested",   // docket R5, R18 · the manager's own signature publishes the entry
 
   /* ---- terminal: the target state has no outgoing edge. See the ladder note.
      `op=retire` ALSO raises NO_REASON, so it is `reasoned` at minimum; it is
      declared at the higher rung because the state it writes cannot be left. */
   retire:             "terminal",   // Constructs:244 · STATES.information.edges.retired === []
+  /* R33 (DEC-113; K1134 (3)): A NAMED EXCEPTION TO R27, which would grade it `reasoned` (a further statement corrects it
+     forward, and HOLD_REFUSED asks its reason). DEC-113 rules releasing heavier than reasoned: what it restarts — the
+     purge of held material and the deletion of assistant transcripts on members' devices — cannot be undone, and a
+     release ends a hold in place at most once (actions R56, HOLD_ALREADY_RELEASED). Placing stays light: `actionhold` is
+     `reasoned` (K918), and it refuses `released` (HOLD_RELEASE_IS_ITS_OWN_ACT), so the heavier act has its own op. */
+  actionholdrelease:  "terminal",   // actions R56 · DEC-113: what it restarts cannot be undone; HOLD_REFUSED asks its reason
 
   /* ---- reasoned: the store refuses the act for want of an authored account.
      The four with a Constructs line keep it; the rest are DERIVED FROM THE
@@ -1049,6 +1083,11 @@ export const RUNGS = {
   heldsetaside:          "reasoned",   // SET_ASIDE_NO_REASON (capture R79; DEC-97 (2))
   heldrestore:           "reasoned",   // SET_ASIDE_NO_REASON (capture R81, as R79)
   addressfrequencyset:   "reasoned",   // FREQUENCY_NO_REASON (monitoring R52, C-18.15): a canned or custom reason
+
+  /* ---- R34 (DEC-116, N520): the docket's two reasoned acts, each corrected forward — a filing is taken back by a later
+     record act with a reason (docket R11) and a declined submission may be filed again; neither is ever deleted. */
+  docketfile:            "reasoned",   // DOCKET_NO_REASON (docket R1, C-129.9): why record, public or both
+  docketdecline:         "reasoned",   // DOCKET_NO_REASON (docket R7): why the submission is declined
 };
 
 
@@ -1165,7 +1204,7 @@ export const RUNG_ABSENT = {
      not signed — so neither `attested` (no key) nor `reversible` (no act takes it back) describes it. DEC-88 (K1038)
      closed the gap by ruling for 57 of the 78 that stood here, banding each `reversible`, `reasoned` or `terminal`
      (RUNGS); these 21 are what it left `undetermined` (R27), each on R27's rule: no authored reason is asked and no
-     published act takes it back. R32 adds T23's `whatchangedpropose` on the same rule, at the foot of this table. */
+     published act takes it back. R32 adds T23's `whatchangedpropose` and R34 the docket's `docketpressure` on the same rule, at the foot of this table. */
   /* N364 (capture R65), on R27's rule: pulling a knock files its bytes as a capture with a receipt, in the puller's
      name; no reason is asked and no published act takes it back (a pulled knock stays pulled, and the capture stands). */
   inboxpull:            { ground: "undetermined", is: "a member pulls a knock into the record: its bytes held under their own digest, a doorbell receipt written and the knock marked pulled, in one act; never un-pulled (capture R65)" },
@@ -1223,6 +1262,9 @@ export const RUNG_ABSENT = {
   /* R32 (N485: K1025, K1035), on R27's rule, as `templatepropose`: a draft of a new edition's statement, machine or
      member, append-only; it asks no authored reason and no published act takes it back. */
   whatchangedpropose:   { ground: "undetermined", is: "a machine or a member PROPOSES a draft of a published case's next edition statement, labelled machine work when a machine proposed it and kept append-only; never a statement until a member adopts or rewrites it (case-authoring R39)" },
+  /* R34 (DEC-116, N520), on R27's rule, as `actionpressure`: a pressure mark's note describes what was received (a
+     malformed mark is PRESSURE_REFUSED, not a missing account), and no published act takes a mark back. */
+  docketpressure:       { ground: "undetermined", is: "a member marks a docket record entry as a threat — legal, retaliation, discrediting or other — with an optional note; appended, never rewriting the entry, and an entry is marked once (docket R2)" },
 };
 
 /* REC-38, UI-22's delegation: THE CAPTURE-DIRECTED ACTS' METADATA, and the
@@ -2673,6 +2715,11 @@ export const NON_ACTS = {
   /* K899 (7), K902 (T20): a litigation hold is stated on one `legal` pressure mark, `actionpressure`'s key; it is
      reached where the mark is shown (and from the hold reminder, queue-producers R19), never beside a bundle. */
   actionhold: "entry-directed: keyed by (action, entry ordinal); appends a hold statement and never rewrites the entry or its mark",
+  /* R33 (DEC-113; actions R56–R58): the release is the hold's own act, keyed as the hold is; its preview and the
+     "is this project held?" answer are reads, gated as the act and stamped `viewer`, so each carries a `NEEDS` row. */
+  actionholdrelease: "entry-directed: keyed by (action, entry ordinal); appends a release and never rewrites the entry, its mark or an earlier statement",
+  actionholdpreview: "read: what releasing one entry's hold would restart — the projects it alone covers that the viewer may see, and whether any is out of view — keyed by (action, entry ordinal); writes nothing",
+  projectholds: "read: for each of 1 to 50 projects, whether a hold in place covers it, with when and by whom it was first stated; names no action, entry or reason, and writes nothing",
   /* K727 (T18): action-plans' twelve acts. A plan is a `PLN-` record object whose options, scenarios and checkpoints are
      rows of its own, none a bundle state `affordanceFacts` describes; they are reached in the plan's view. Its reads
      (`plan`, `plans`, `planproposals`) carry no `NEEDS` row and are not named here (R12); `optionstartpreview` (T24,
@@ -2733,6 +2780,19 @@ export const NON_ACTS = {
   activitymethod: "read: public, no credential",
   noticespublic: "read: public, no credential",
   groupkeyspublic: "read: public, no credential",
+  /* R34 (DEC-116, DEC-100; N520): the docket's ops. A docket entry is keyed by a published case (and an entry by its
+     id), never a bundle state `affordanceFacts` describes; each is reached from the case's docket. The reads write
+     nothing (`docketprepare` composes an entry to sign and holds it in memory for the post, `noticeprepare`'s shape), and the two public reads answer
+     with no credential (docket R14, R15). */
+  docketfile: "case-directed: keyed by a published case, reached from its docket; never evidence, moves no bundle",
+  docketpressure: "case-directed: keyed by a published case, reached from its docket; never evidence, moves no bundle",
+  docketdecline: "case-directed: keyed by a published case, reached from its docket; never evidence, moves no bundle",
+  docketpost: "case-directed: keyed by a published case, reached from its docket; never evidence, moves no bundle",
+  docket: "read: one published case's docket as the viewer may see it — its record entries with their states and marks, and its public shelves; writes nothing",
+  docketprepare: "read: a docket entry composed for the case's manager to sign, keyed by case, with its statement and digest; publishes nothing and writes nothing",
+  docketinvitation: "read: the request to resend a receipted reply without the private person's name, prefilled for a member to send by their own means; sends nothing and writes nothing",
+  docketpublic: "read: public, no credential",
+  docketfeed: "read: public, no credential",
 };
 
 /* D-126 — THE FOURTH WEIGHT, `per-item`, AND THE THREE ACTS THAT TAKE A SET.
