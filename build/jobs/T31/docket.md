@@ -26,3 +26,7 @@
 - The Uses modules' public parts read for the services these entries touch (`signatures` R39, R40; `case-import` R18's reading of R6 and R24); the others were not re-read whole, since no entry touches them.
 
 Size (session_01Qyoizgt1w9CACfsTkAN1sV): test runs 11, module lines 1313
+
+## J1 · COMPLETE
+
+N538 R6 and N534 R24 applied. New entries carry civicsmith-docket-entry/1; civicos-docket-entry/1 accepted as the same format (LEGACY_ENTRY_FORMAT, ENTRY_FORMATS, isEntryFormat); a mixed chain proven to verify, chain and read whole and in order, feed ids unchanged (FEED_ID_PREFIX urn:civicos:docket). docketPublic takes captures: "omit" (captures {}, captures_omitted: true, no bytes read); its exact form tested. Fixed for R24's exact form: the undocumented captures_unread key is dropped (an unread capture is null, K1274; nothing reads it). docket 43/43; every user module's tests green (public-read, network-notices, case-import, affordances, queue-producers, control-plane, plane); format, architecture, coverage (24/24), ownership: 0 failures. Report, in the record: bio-plane/dist/bio-plane.bundled.mjs (not_product's generated bundle) is stale from this change.
