@@ -1,8 +1,8 @@
-/* case-import's tables (requirements: `build/requirements/case-import.md` R1–R9, R12, R13).
+/* case-import's tables (requirements: `build/requirements/case-import.md` R1–R9, R12, R13, R17, R18).
  *
  * APPEND-ONLY (R12): no act of this module updates or deletes a row. An import, an edition, its files, each recreation
  * (one `case_import_checks` row and its results per run: the import's, then each completion's), each acceptance,
- * withdrawal, flag and clear is a row of its own, and what is "in force" or "open" is read from the rows that follow it.
+ * withdrawal, flag and clear, each watch, its end, each docket read and each entry it saw is a row of its own, and what is "in force" or "open" is read from the rows that follow it.
  *
  * THE BYTES (R1, R13). Every part of a case file, and every document a completion supplies, is held by its SHA-256 in
  * `case_import_blobs`, cut into chunks of at most `BLOB_CHUNK` bytes (a row's value is bounded on the plane's storage).
@@ -143,12 +143,75 @@ CREATE TABLE IF NOT EXISTS case_import_clears (
   by_member     TEXT NOT NULL,
   at            TEXT NOT NULL
 );
+-- R1, R18: the signing keys each edition's manifest lists (wire base64), one row per edition, written at its import.
+CREATE TABLE IF NOT EXISTS case_import_edition_keys (
+  import_id     TEXT NOT NULL,
+  edition       INTEGER NOT NULL,
+  keys          TEXT NOT NULL,
+  PRIMARY KEY (import_id, edition)
+);
+-- R17: a watch of the publisher's docket. The latest watch of an import is in force unless it has ended; a later one
+-- replaces an earlier.
+CREATE TABLE IF NOT EXISTS case_import_watches (
+  rn            INTEGER PRIMARY KEY AUTOINCREMENT,
+  import_id     TEXT NOT NULL,
+  publisher     TEXT NOT NULL,
+  docket        TEXT NOT NULL,
+  set_by        TEXT NOT NULL,
+  set_at        TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS case_import_watches_import ON case_import_watches (import_id, rn);
+-- R17: a watch ended, once.
+CREATE TABLE IF NOT EXISTS case_import_watch_ends (
+  watch_rn      INTEGER PRIMARY KEY,
+  by_member     TEXT NOT NULL,
+  at            TEXT NOT NULL
+);
+-- R18: one docket read, under the watch in force.
+CREATE TABLE IF NOT EXISTS case_import_docket_reads (
+  rn            INTEGER PRIMARY KEY AUTOINCREMENT,
+  import_id     TEXT NOT NULL,
+  watch_rn      INTEGER NOT NULL,
+  docket        TEXT NOT NULL,
+  at            TEXT NOT NULL,
+  outcome       TEXT NOT NULL,
+  reason        TEXT,
+  entries_seen  INTEGER NOT NULL,
+  last_entry    TEXT,
+  recorded_at   TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS case_import_docket_reads_watch ON case_import_docket_reads (watch_rn, rn);
+-- R18: one public docket entry seen, verified or refused.
+CREATE TABLE IF NOT EXISTS case_import_docket_entries (
+  rn            INTEGER PRIMARY KEY AUTOINCREMENT,
+  import_id     TEXT NOT NULL,
+  read_rn       INTEGER NOT NULL,
+  seq           INTEGER,
+  digest        TEXT,
+  json          TEXT,
+  signature     TEXT,
+  published_at  TEXT,
+  status        TEXT NOT NULL,
+  failed        TEXT,
+  detail        TEXT,
+  held_digest   TEXT,
+  kind          TEXT,
+  edition       TEXT,
+  date          TEXT,
+  key_b64       TEXT,
+  key_listed    INTEGER,
+  chain         TEXT,
+  recorded_at   TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS case_import_docket_entries_import ON case_import_docket_entries (import_id, seq, rn);
 `;
 
 /** The tables, every one cleared by the whole-store purge only (R13). */
 export const CASE_IMPORT_TABLES = Object.freeze(["case_imports", "case_import_editions", "case_import_parts",
   "case_import_files", "case_import_blobs", "case_import_checks", "case_import_results", "case_import_documents",
-  "case_import_acceptances", "case_import_withdrawals", "case_import_flags", "case_import_clears"]);
+  "case_import_acceptances", "case_import_withdrawals", "case_import_flags", "case_import_clears",
+  "case_import_edition_keys", "case_import_watches", "case_import_watch_ends", "case_import_docket_reads",
+  "case_import_docket_entries"]);
 
 /** Creates the tables; idempotent. */
 export function migrateCaseImport(sql) {

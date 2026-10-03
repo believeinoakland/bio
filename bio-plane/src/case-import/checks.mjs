@@ -1,4 +1,4 @@
-/* case-import's refusal rows (requirements: `build/requirements/case-import.md` R1, R5–R8, R14; DEC-49).
+/* case-import's refusal rows (requirements: `build/requirements/case-import.md` R1, R5–R8, R14, R17, R18; DEC-49).
  *
  * A new family, C-130 (C-129 is docket's), arriving at T28, each row `awaiting stamp` until T29's promotion stamp
  * (`plan/next.md` S5); the number is the stamp's to confirm. The translations are this job's plain drafts for BOB to
@@ -16,6 +16,8 @@ const WITHDRAW = at("withdrawAcceptance", "is-import-withdraw");
 const FLAG = at("#flagRefusal", "is-import-flag");
 const OPEN = at("clearFlag", "is-import-flag-open");
 const DOCUMENT = at("completeImportedDocument", "is-import-document");
+const WATCH = at("watchImport", "is-import-watch-address");
+const WATCHED = at("#notWatched", "is-import-watched");
 
 export const CASE_IMPORT_CHECKS = Object.freeze({
   MACHINE_CANNOT_IMPORT: {
@@ -85,6 +87,16 @@ export const CASE_IMPORT_CHECKS = Object.freeze({
     check: "C-130.14", where: OPEN,
     translation: "There is no open flag here by that name: it was never raised, or it has been cleared. Nothing was "
       + "written.",
+  },
+  /* R14 (N534): the translations BOB drafted, as the requirements state them. */
+  IMPORT_WATCH_BAD_ADDRESS: {
+    check: "C-130.15", where: WATCH,
+    translation: "That is not the public https address of the publishing group's copy. Give the address of their copy, "
+      + "with no query and no fragment. Nothing was written.",
+  },
+  IMPORT_NOT_WATCHED: {
+    check: "C-130.16", where: WATCHED,
+    translation: "This imported case is not being watched, so there is no watch to end. Nothing was written.",
   },
 });
 

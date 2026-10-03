@@ -222,10 +222,10 @@ test("R2 nothing an import holds is a record bundle, and this module offers no a
   const r = (await imp(w, f));
   assert.equal(w.count("bundles"), bundles, "no bundle");
   assert.equal(w.count("manifest"), manifest, "no promotion");
-  /* the ops: the import, two reads, the completion, and R6–R8's four acts; none edits, promotes, ratifies or publishes */
+  /* the ops: the import, two reads, the completion, R6–R8's four acts and R17's two; none edits, promotes, ratifies or publishes */
   const ops = Object.keys(caseImportOps(w.ci, new URL("https://x/"), {})).sort();
   assert.deepEqual(ops, ["caseimport", "caseimportdocument", "importaccept", "importacceptwithdraw", "importedcase",
-                         "importedcases", "importflag", "importflagclear"]);
+                         "importedcases", "importflag", "importflagclear", "importunwatch", "importwatch"]);
   /* every later act leaves the imported files and the edition as they were */
   const filesBefore = JSON.stringify(w.rows(`SELECT * FROM case_import_files ORDER BY path`));
   const editionBefore = JSON.stringify(w.rows(`SELECT * FROM case_import_editions`));

@@ -1,6 +1,6 @@
 /* case-import — another group's case file, imported into a read-only project (requirements:
- * `build/requirements/case-import.md` R1–R16; DEC-112 (6), DEC-96 items 1, 2, 4, DEC-92, DEC-45, DEC-46 (3);
- * `BIO_Publication_v0_1.md` §5C "Import"; N520, N522, K1256, K1257, K1273).
+ * `build/requirements/case-import.md` R1–R20; DEC-112 (6), DEC-96 items 1, 2, 4, DEC-92, DEC-45, DEC-46 (3), DEC-101 (3),
+ * DEC-116 item 8; `BIO_Publication_v0_1.md` §5A, §5C "Import"; N520, N522, N534, K1256, K1257, K1273, K1339, K1366).
  *
  * A member imports another group's case file (R1). The copy holds it as an IMPORT, one per source group, case and lens,
  * its id the SHA-256 of canonical `{group, case, lens}`, with each EDITION side by side and never replaced. It confirms
@@ -9,6 +9,13 @@
  * material's fingerprint completes it, and the edition is checked again (R5). The group may accept an edition for the
  * findings that recreated, by a reasoned act, and withdraw that acceptance, and may flag and clear issues on it (R6–R8).
  * Recreating is not endorsing, and an acceptance changes no grade.
+ *
+ * A member may watch an import (R17): `monitoring` then reads the publisher's public docket for that case daily and hands
+ * each read to `recordDocketRead` (R18), which verifies each new entry (its digest and form, its signature against the
+ * key it embeds, labelled `key_listed` when a held manifest lists that key, and its chain) and records it verified or
+ * refused. A verified new edition or withdrawal is a publisher move: `reevaluation` is told of it (its R33) and reads the
+ * moves through `accepted-work` (R16's `moves`). Every other entry reaches only the watch's setter (R20). The reads say
+ * what was seen and when a docket could not be read, never that nothing changed (R19).
  *
  * Nothing an import holds is a record bundle (R2): it lives in this module's own tables, append-only (R12), and no act
  * here edits, promotes, ratifies or publishes it. `accepted-work` (layer 6) reads it for the modules before this one
@@ -23,7 +30,7 @@
  *   membership      `positionalMember`, `memberFacts`, `isAdministrator` (who is an active member of this group).
  *   strength        `strengthBarOf` (its R16): this group's default bar (R4).
  *   acceptedWork    `registerAcceptedWork` (its R1; R16).
- *   reevaluation    `acceptanceWithdrawn` (its R31; R7).
+ *   reevaluation    `acceptanceWithdrawn` (its R31; R7), `citedCaseMoved` (its R33; R18).
  *   checkCaseFile   `case-checker.checkCaseFile` (its R1), pure; it answers a promise. Default: case-checker's own.
  *   caseFileManifestCheck   `case-grammar.caseFileManifestCheck` (its R13), pure.
  *   now             the clock, milliseconds (default `env.BIO_NOW_MS`, else the wall clock).
@@ -44,6 +51,9 @@ import { canonicalJson } from "../record-grammar/json.mjs";
 import { createSha256, sha256HexSync } from "../record-grammar/sha256.mjs";
 import { parseFrontmatter } from "../record-grammar/frontmatter.mjs";
 import { BASIS_GRADES } from "../record-grammar/index.mjs";
+import { isPublicHttpsLocator } from "../record-grammar/index.mjs";
+import { verifySshsig, NS_DOCKET, docketStatement, normalizeKey } from "../sshsig.mjs";
+import { DOCKET_UNREADABLE } from "../docket/index.mjs";
 import { CASE_IMPORT_CHECKS, rowOf } from "./checks.mjs";
 import { CASE_IMPORT_TABLES, BLOB_CHUNK, migrateCaseImport } from "./schema.mjs";
 import { checkCaseFile, readCaseFile } from "../case-checker/index.mjs";
@@ -68,7 +78,23 @@ export const NO_OWN_BAR = "no bar is set for this group";
 /** R1 (`case-checker` R1): the checker's statement when no answer carries one; its words are the UX stream's. */
 export const STATEMENT = "Recreating a case shows it is intact and consistent, not that it is true.";
 const AXES = Object.freeze(["capture", "connection", "testimony"]);
-const ID = { acceptance: "IMA", withdrawal: "IMW", flag: "IMF" };
+const ID = { acceptance: "IMA", withdrawal: "IMW", flag: "IMF", move: "IMM" };
+/** R18 check 1: the docket entry's format, one format under two labels (`docket` R6; DEC-124, K1365). */
+export const DOCKET_ENTRY_FORMATS = Object.freeze(["civicsmith-docket-entry/1", "civicos-docket-entry/1"]);
+/** R17: the query a watch's docket address carries (`docket` R23, R24; `public-read` R25). */
+export const docketAddressOf = (publisher, caseId) =>
+  `${publisher}?op=docketpublic&case=${encodeURIComponent(caseId)}&captures=omit`;
+/** R18: the two kinds of verified entry that are publisher moves (K1339, K1366 F1). */
+export const MOVE_KINDS = Object.freeze(["edition", "withdrawal"]);
+/** R18: the outcomes of a docket read, and the checks an entry can fail. */
+export const READ_OUTCOMES = Object.freeze(["read", "unreadable"]);
+export const ENTRY_CHECKS = Object.freeze(["digest", "form", "signature", "chain", "seq"]);
+/** R16, R18: the most watches or moves one page answers, and the default. */
+export const WATCH_PAGE_MAX = 200;
+/** R19: what an import's reads say beside a `publisher` of null (DEC-116 item 8: never that nothing changed). */
+export const NO_MOVE_SEEN = "No new edition or withdrawal of this case has been seen on its publisher's docket. That is "
+  + "not a statement that none was made: it says only what this copy's reads have seen, as of the last read.";
+export { DOCKET_UNREADABLE };
 
 const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
 const LONE_SURROGATE = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/;
@@ -333,6 +359,11 @@ export class CaseImport {
     return list.filter(isObj).map((f) => ({ path: str(f.path), kind: str(f.kind), sha: str(f.sha ?? f.sha256), part: int(f.part) ?? 0 }))
       .filter((f) => f.path);
   }
+  /* R18 check 2: the signing keys a manifest lists (`case-grammar` R13), as wire base64. */
+  static #manifestKeys(manifest) {
+    const list = isObj(manifest) && Array.isArray(manifest.keys) ? manifest.keys : [];
+    return [...new Set(list.map((k) => normalizeKey(isObj(k) ? k.key : k)).filter(Boolean))].sort();
+  }
   static #manifestIdentity(manifest) {
     const m = isObj(manifest) ? manifest : {};
     return { group: str(m.group ?? m.source_group), case: str(m.case ?? m.case_id), edition: int(m.edition ?? m.case_edition) };
@@ -404,6 +435,8 @@ export class CaseImport {
         this.sql.exec(`INSERT INTO case_import_parts (import_id, edition, idx, sha, bytes) VALUES (?,?,?,?,?)`,
                       importId, who.edition, idx, sha, bytes.length);
       });
+      this.sql.exec(`INSERT INTO case_import_edition_keys (import_id, edition, keys) VALUES (?,?,?)`,
+                    importId, who.edition, canonicalJson(CaseImport.#manifestKeys(read.manifest)));
       for (const f of files)
         this.sql.exec(`INSERT OR IGNORE INTO case_import_files (import_id, edition, path, kind, sha, bytes, part) VALUES (?,?,?,?,?,?,?)`,
                       importId, who.edition, f.path, str(f.kind), shaOf(f.content), f.content.length, listed.get(f.path)?.part ?? 0);
@@ -482,10 +515,11 @@ export class CaseImport {
    *  not an active member is answered as if no import exists. Writes nothing. */
   importedCases({ viewer = null } = {}) {
     if (!this.#isActiveMember(viewer)) return { ok: true, imports: [], count: 0, wrote: false };
-    const imports = this.#rows(`SELECT * FROM case_imports ORDER BY source_group, case_id, import_id`).map((i) => ({
-      import: i.import_id, group: i.source_group, case: i.case_id, lens: i.lens ?? null,
-      editions: this.#rows(`SELECT edition, imported_at, imported_by FROM case_import_editions WHERE import_id=? ORDER BY edition`, i.import_id)
-        .map((e) => ({ edition: Number(e.edition), imported_at: e.imported_at, imported_by: e.imported_by })) }));
+    const imports = this.#rows(`SELECT * FROM case_imports ORDER BY source_group, case_id, import_id`).map((i) => {
+      const wf = this.#watchFacts(i);
+      return { import: i.import_id, group: i.source_group, case: i.case_id, lens: i.lens ?? null,
+               editions: this.#editionsOf(i, wf), ...wf.facts };
+    });
     return { ok: true, imports, count: imports.length, wrote: false };
   }
 
@@ -507,15 +541,20 @@ export class CaseImport {
    *  held and an edition not held are answered alike. Writes nothing. */
   importedCase({ import: importId = null, edition = null, viewer = null } = {}) {
     const i = this.#isActiveMember(viewer) ? this.#import(importId) : null;
-    const editions = i ? this.#rows(`SELECT edition, imported_at, imported_by FROM case_import_editions WHERE import_id=? ORDER BY edition`,
-                                    i.import_id).map((e) => ({ edition: Number(e.edition), imported_at: e.imported_at, imported_by: e.imported_by }))
-      : [];
+    const wf = i ? this.#watchFacts(i) : null;
+    const editions = i ? this.#editionsOf(i, wf) : [];
     const named = edition === null || edition === undefined || edition === "" ? (editions.length ? editions[editions.length - 1].edition : null)
       : int(edition);
     const e = i && named ? this.#edition(i.import_id, named) : null;
     if (!e) return this.#noSuchEdition(importId, edition);
     return { ok: true, import: i.import_id, group: i.source_group, case: i.case_id, lens: i.lens ?? null, editions,
-             edition: this.#editionView(i, e), wrote: false };
+             edition: { ...this.#editionView(i, e), ...wf.publisher(Number(e.edition)) }, ...wf.facts, wrote: false };
+  }
+
+  /* R4, R19: an import's editions, each with when it was imported and its publisher facts. */
+  #editionsOf(i, wf) {
+    return this.#rows(`SELECT edition, imported_at, imported_by FROM case_import_editions WHERE import_id=? ORDER BY edition`, i.import_id)
+      .map((e) => ({ edition: Number(e.edition), imported_at: e.imported_at, imported_by: e.imported_by, ...wf.publisher(Number(e.edition)) }));
   }
 
   /* R4: one edition in full. */
@@ -782,6 +821,384 @@ export class CaseImport {
     } catch { return { flags: [], complete: false }; }
   }
 
+  /* ================================================================ R17–R20: watching the publisher's docket (N534) */
+
+  /* R17: the watch in force on an import: its latest watch, unless that one has ended. */
+  #watchInForce(importId) {
+    const w = this.#one(`SELECT * FROM case_import_watches WHERE import_id=? ORDER BY rn DESC LIMIT 1`, importId);
+    return w && !this.#one(`SELECT 1 AS x FROM case_import_watch_ends WHERE watch_rn=?`, w.rn) ? w : null;
+  }
+  /* R18: the latest read made under a watch, as `{at, outcome, reason}`, or null. */
+  #lastRead(watchRn) {
+    const r = this.#one(`SELECT at, outcome, reason FROM case_import_docket_reads WHERE watch_rn=? ORDER BY rn DESC LIMIT 1`, watchRn);
+    return r ? { at: r.at, outcome: r.outcome, reason: r.reason ?? null } : null;
+  }
+  /* R17, R18: an import that is held, or IMPORT_NOT_WATCHED's refusal (one site for both acts and the service). */
+  #notWatched(importId, detail, extra = {}) {
+    /* DEC-49 REGION is-import-watched */
+    return refuse("IMPORT_NOT_WATCHED", detail, { import: str(importId), ...extra });
+    /* END DEC-49 REGION is-import-watched */
+  }
+
+  /** R17: a member's standing request that this copy read the publisher's docket for one import. The same docket
+   *  address already in force answers `existed: true` and writes nothing; another address replaces the watch in force.
+   *  Every watch stays in the history. */
+  watchImport({ import: importId = null, publisher = null, by = null, viewer = null } = {}) {
+    const k = this.#callerRefusal({ by, viewer });
+    if (k.refusal) return k.refusal;
+    const i = this.#import(importId);
+    if (!i) return this.#noSuchEdition(importId, null);
+    const p = typeof publisher === "string" ? publisher.trim() : null;
+    /* DEC-49 REGION is-import-watch-address */
+    if (!p || !isPublicHttpsLocator(p) || /[?#\s]/.test(p))
+      return refuse("IMPORT_WATCH_BAD_ADDRESS", "the publisher's address is the public https address of their copy, with no "
+        + "query and no fragment", { publisher: typeof publisher === "string" ? publisher.slice(0, 400) : null });
+    /* END DEC-49 REGION is-import-watch-address */
+    const docket = docketAddressOf(p, i.case_id);
+    const held = this.#watchInForce(i.import_id);
+    if (held && held.docket === docket)
+      return { ok: true, existed: true, import: i.import_id, group: i.source_group, case: i.case_id, publisher: held.publisher,
+               docket, set_by: held.set_by, set_at: held.set_at, wrote: false };
+    const at = this.#stamp();
+    const out = this.record.transact(() => {
+      this.sql.exec(`INSERT INTO case_import_watches (import_id, publisher, docket, set_by, set_at) VALUES (?,?,?,?,?)`,
+                    i.import_id, p, docket, k.member, at);
+      return { ok: true };
+    });
+    if (!out || out.ok !== true) return out;
+    return { ok: true, existed: false, import: i.import_id, group: i.source_group, case: i.case_id, publisher: p, docket,
+             set_by: k.member, set_at: at, replaced: held ? held.docket : null };
+  }
+
+  /** R17: ends the watch in force; it stays in the history. */
+  unwatchImport({ import: importId = null, by = null, viewer = null } = {}) {
+    const k = this.#callerRefusal({ by, viewer });
+    if (k.refusal) return k.refusal;
+    const i = this.#import(importId);
+    if (!i) return this.#noSuchEdition(importId, null);
+    const w = this.#watchInForce(i.import_id);
+    if (!w) return this.#notWatched(i.import_id, "no watch of this import is in force");
+    const at = this.#stamp();
+    const out = this.record.transact(() => {
+      if (!this.#watchInForce(i.import_id)) return this.#notWatched(i.import_id, "the watch ended meanwhile");
+      this.sql.exec(`INSERT INTO case_import_watch_ends (watch_rn, by_member, at) VALUES (?,?,?)`, w.rn, k.member, at);
+      return { ok: true };
+    });
+    if (!out || out.ok !== true) return out;
+    return { ok: true, import: i.import_id, docket: w.docket, ended_by: k.member, ended_at: at };
+  }
+
+  /** R18: each watch in force, in import order after `after`, at most `limit` (1–200, default 200), with `cursor` the
+   *  last import listed when more follow. Read as the plane; writes nothing and never throws. */
+  watchedImports({ after = null, limit = null } = {}) {
+    try {
+      const cap = Math.min(int(limit) ?? WATCH_PAGE_MAX, WATCH_PAGE_MAX);
+      const rows = this.#rows(`SELECT w.*, i.source_group, i.case_id FROM case_import_watches w
+                                 JOIN case_imports i ON i.import_id = w.import_id
+                                WHERE w.rn = (SELECT MAX(x.rn) FROM case_import_watches x WHERE x.import_id = w.import_id)
+                                  AND NOT EXISTS (SELECT 1 FROM case_import_watch_ends e WHERE e.watch_rn = w.rn)
+                                  AND w.import_id > ? ORDER BY w.import_id LIMIT ?`, str(after) ?? "", cap + 1);
+      const more = rows.length > cap;
+      if (more) rows.length = cap;
+      return { watches: rows.map((w) => ({ import: w.import_id, group: w.source_group, case: w.case_id, docket: w.docket,
+                                           set_by: w.set_by, set_at: w.set_at, last_read: this.#lastRead(w.rn) })),
+               cursor: more ? rows[rows.length - 1].import_id : null };
+    } catch { return { watches: [], cursor: null, complete: false }; }
+  }
+
+  /* R18 check 2: the keys any held edition's manifest lists. An edition imported before the keys were kept is read from
+     its parts. */
+  #listedKeys(importId) {
+    const out = new Set();
+    for (const e of this.#rows(`SELECT edition FROM case_import_editions WHERE import_id=?`, importId)) {
+      const k = this.#one(`SELECT keys FROM case_import_edition_keys WHERE import_id=? AND edition=?`, importId, e.edition);
+      const keys = k ? parse(k.keys, [])
+        : this.#call(() => CaseImport.#manifestKeys(readCaseFile(this.#parts(importId, Number(e.edition))).manifest), []);
+      for (const x of keys) out.add(x);
+    }
+    return [...out];
+  }
+
+  /* R18: checks the entries of one answer that this import does not yet hold, in `seq` order. An entry already recorded
+     with the same bytes (seq, digest, json and signature) is not recorded again, so a refused copy never hides a genuine
+     one served later; a `seq` held by a verified entry with another digest is
+     refused `differs`, and the held one stands. Answers the rows to record. */
+  async #checkEntries(i, list) {
+    const verified = new Map(), seen = new Set();
+    /* an entry is the same entry only when every byte served is: its seq, digest, json and signature */
+    const served = (seq, digest, json, signature) => sha256HexSync(canonicalJson([seq ?? null, digest ?? null, json ?? null, signature ?? null]));
+    for (const r of this.#rows(`SELECT seq, digest, json, signature, status FROM case_import_docket_entries WHERE import_id=?`, i.import_id)) {
+      seen.add(served(r.seq === null ? null : Number(r.seq), r.digest, r.json, r.signature));
+      if (r.status === "verified") verified.set(Number(r.seq), r.digest);
+    }
+    const listed = this.#listedKeys(i.import_id);
+    const seqOf = (e) => (isObj(e) && Number.isInteger(e.seq) && e.seq > 0 ? e.seq : null);
+    const ordered = list.map((e, n) => ({ e, n })).sort((a, b) => ((seqOf(a.e) ?? Infinity) - (seqOf(b.e) ?? Infinity)) || (a.n - b.n));
+    const out = [];
+    for (const { e } of ordered) {
+      const seq = seqOf(e);
+      const digest = isObj(e) && typeof e.digest === "string" ? e.digest.slice(0, 128) : null;
+      const json = isObj(e) && typeof e.json === "string" && e.json.length <= 65536 ? e.json : null;
+      const signature = isObj(e) && typeof e.signature === "string" && e.signature.length <= 16384 ? e.signature : null;
+      const key = served(seq, digest, json, signature);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const f = json ? parse(json, null) : null;
+      const row = { seq, digest, json, signature, published_at: isObj(e) ? str(e.published_at) : null, status: "refused",
+                    failed: null, detail: null, held_digest: null, kind: isObj(f) ? str(f.kind) : null,
+                    edition: isObj(f) && (f.edition === "all" || Number.isInteger(f.edition)) ? String(f.edition) : null,
+                    date: isObj(f) ? str(f.date) : null, key_b64: null, key_listed: null, chain: null };
+      const fail = (check, detail) => { row.failed = check; row.detail = detail; out.push(row); };
+      if (seq !== null && verified.has(seq) && verified.get(seq) !== digest) {
+        row.held_digest = verified.get(seq);
+        fail("seq", `entry ${seq} is held with digest ${row.held_digest}; this one has ${digest}; the held entry stands`);
+        continue;
+      }
+      /* check 1: the digest and the form */
+      if (!json || !isSha(digest) || sha256HexSync(json) !== digest) { fail("digest", "the SHA-256 of the entry's JSON is not its digest"); continue; }
+      if (!isObj(f) || !DOCKET_ENTRY_FORMATS.includes(f.format) || f.group !== i.source_group || f.case !== i.case_id
+          || seq === null || f.seq !== seq) {
+        fail("form", "the entry is not a docket entry of this group's case at its number"); continue;
+      }
+      /* check 2: the signature, against the key it embeds; listed when a held manifest lists that key */
+      let statement = null;
+      try { statement = docketStatement(i.case_id, seq, digest); } catch { statement = null; }
+      let v = statement && signature ? await verifySshsig(signature, statement, NS_DOCKET, listed) : { ok: false, reason: "MALFORMED" };
+      let keyListed = v.ok === true;
+      if (!v.ok && v.reason === "UNKNOWN_KEY" && v.keyB64) {
+        v = await verifySshsig(signature, statement, NS_DOCKET, [v.keyB64]);
+        keyListed = false;
+      }
+      if (!v.ok) { fail("signature", `the signature does not verify over the entry's statement (${v.reason})`); continue; }
+      row.key_b64 = v.keyB64;
+      row.key_listed = keyListed;
+      /* check 3: the chain */
+      const prev = f.previous ?? null;
+      if (seq === 1) {
+        if (prev !== null) { fail("chain", "entry 1 names a previous entry"); continue; }
+        row.chain = "checked";
+      } else if (!verified.has(seq - 1)) row.chain = "unchecked";
+      else if (verified.get(seq - 1) !== prev) { fail("chain", `previous is not the digest of the held entry ${seq - 1}`); continue; }
+      else row.chain = "checked";
+      row.status = "verified";
+      verified.set(seq, digest);
+      out.push(row);
+    }
+    return out;
+  }
+
+  /** R18: records one docket read of a watched import, made by `monitoring` (its R67), and every entry it saw that this
+   *  import does not yet hold, each verified or refused. After the read commits, `reevaluation.citedCaseMoved` (its R33) is
+   *  told of each new move; a throw there never undoes the read and is named under `listeners_failed`. Read as the plane;
+   *  never throws. */
+  async recordDocketRead({ import: importId = null, docket = null, at = null, outcome = null, reason = null, answer = null } = {}) {
+    try {
+      const i = this.#import(importId);
+      if (!i) return this.#noSuchEdition(importId, null);
+      const w = this.#watchInForce(i.import_id);
+      if (!w || str(docket) !== w.docket)
+        return this.#notWatched(i.import_id, w ? "the watch in force names another docket address" : "no watch of this import is in force",
+                                { docket: str(docket) });
+      const atMs = typeof at === "string" ? Date.parse(at) : NaN;
+      const readAt = Number.isFinite(atMs) ? stampInstant("second", atMs) : this.#stamp();
+      let out = READ_OUTCOMES.includes(outcome) ? outcome : "unreadable";
+      let why = outcome === "unreadable" ? (typeof reason === "string" ? reason.slice(0, 200) : null)
+        : out === "read" ? null : "outcome_unknown";
+      let list = null;
+      if (out === "read") {
+        if (!isObj(answer) || !Array.isArray(answer.entries)) { out = "unreadable"; why = "not_a_docket"; }
+        else if (answer.group !== i.source_group || answer.case !== i.case_id) { out = "unreadable"; why = "not_this_case"; }
+        else list = answer.entries;
+      }
+      const checked = list ? await this.#checkEntries(i, list) : [];
+      const recordedAt = this.#stamp();
+      const rns = [];
+      const res = this.record.transact(() => {
+        const now = this.#watchInForce(i.import_id);
+        if (!now || now.rn !== w.rn) return this.#notWatched(i.import_id, "the watch changed meanwhile", { docket: str(docket) });
+        this.sql.exec(`INSERT INTO case_import_docket_reads (import_id, watch_rn, docket, at, outcome, reason, entries_seen, last_entry,
+                                                            recorded_at) VALUES (?,?,?,?,?,?,?,?,?)`,
+                      i.import_id, w.rn, w.docket, readAt, out, why, isObj(answer) && Array.isArray(answer.entries) ? answer.entries.length : 0,
+                      isObj(answer) && typeof answer.last_entry === "string" ? answer.last_entry.slice(0, 64) : null, recordedAt);
+        const readRn = Number(this.#one(`SELECT MAX(rn) AS rn FROM case_import_docket_reads`).rn);
+        for (const r of checked) {
+          this.sql.exec(`INSERT INTO case_import_docket_entries (import_id, read_rn, seq, digest, json, signature, published_at, status,
+                           failed, detail, held_digest, kind, edition, date, key_b64, key_listed, chain, recorded_at)
+                         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+                        i.import_id, readRn, r.seq, r.digest, r.json, r.signature, r.published_at, r.status, r.failed, r.detail,
+                        r.held_digest, r.kind, r.edition, r.date, r.key_b64, r.key_listed === null ? null : r.key_listed ? 1 : 0,
+                        r.chain, recordedAt);
+          rns.push(Number(this.#one(`SELECT MAX(rn) AS rn FROM case_import_docket_entries`).rn));
+        }
+        return { ok: true };
+      });
+      if (!res || res.ok !== true) return res;
+      const rows = rns.length ? this.#rows(`SELECT * FROM case_import_docket_entries WHERE rn >= ? AND rn <= ? AND import_id=? ORDER BY rn`,
+                                           Math.min(...rns), Math.max(...rns), i.import_id) : [];
+      const moves = rows.filter((r) => r.status === "verified" && MOVE_KINDS.includes(r.kind));
+      const told = [], failed = [];
+      if (moves.length) {
+        const backs = this.#takeBacks(i.import_id);
+        for (const r of moves) {
+          const move = this.#moveOf(r, i, backs);
+          try {
+            const a = this.reevaluation.citedCaseMoved({ move });
+            told.push(a ?? null);
+            if (a && Array.isArray(a.listeners_failed)) failed.push(...a.listeners_failed);
+          } catch (err) {
+            failed.push({ module: "reevaluation", move: move.move, error: String(err && err.message ? err.message : err).slice(0, 200) });
+          }
+        }
+      }
+      return { ok: true, import: i.import_id, at: readAt, outcome: out, ...(why ? { reason: why } : {}),
+               new_entries: rows.length, new_moves: moves.length, new_refused: rows.filter((r) => r.status === "refused").length,
+               ...(moves.length ? { reevaluation: told } : {}), ...(failed.length ? { listeners_failed: failed } : {}) };
+    } catch (err) {
+      return { ok: false, failed: true, detail: `the read could not be recorded: ${String(err && err.message ? err.message : err).slice(0, 200)}` };
+    }
+  }
+
+  /* R18: a verified take-back naming the seq of an entry, stated beside it as `taken_back: {seq, date}`. */
+  #takeBacks(importId) {
+    const out = new Map();
+    for (const r of this.#rows(`SELECT json, seq, date FROM case_import_docket_entries WHERE import_id=? AND status='verified'
+                                  AND kind='take-back' ORDER BY rn`, importId)) {
+      const f = parse(r.json, null);
+      if (isObj(f) && Number.isInteger(f.takes_back) && !out.has(f.takes_back)) out.set(f.takes_back, { seq: Number(r.seq), date: r.date ?? null });
+    }
+    return out;
+  }
+  static #editionOf(v) { return v === "all" ? "all" : v === null || v === undefined ? null : Number(v); }
+  /* R16 (`accepted-work` R8): one publisher move, as recorded. */
+  #moveOf(r, i, backs) {
+    const f = parse(r.json, {}) || {};
+    return { move: idOf("move", r.rn), import: r.import_id, group: i.source_group, case: i.case_id, kind: r.kind,
+             edition: CaseImport.#editionOf(r.edition), seq: Number(r.seq), date: r.date ?? null, at: r.recorded_at,
+             what_changed: r.kind === "edition" && typeof f.what_changed === "string" ? f.what_changed : null,
+             reason: r.kind === "withdrawal" && typeof f.reason === "string" ? f.reason : null,
+             key_listed: Number(r.key_listed) === 1, taken_back: backs.get(Number(r.seq)) ?? null };
+  }
+  /* R19: every entry seen for an import, in the order seen. */
+  #entriesSeen(importId) {
+    const backs = this.#takeBacks(importId);
+    return this.#rows(`SELECT * FROM case_import_docket_entries WHERE import_id=? ORDER BY rn`, importId).map((r) => {
+      const f = parse(r.json, null);
+      const verified = r.status === "verified";
+      return { seq: r.seq === null ? null : Number(r.seq), digest: r.digest ?? null, status: r.status, kind: r.kind ?? null,
+               edition: CaseImport.#editionOf(r.edition), date: r.date ?? null, published_at: r.published_at ?? null,
+               recorded_at: r.recorded_at,
+               ...(verified ? { key_listed: Number(r.key_listed) === 1, chain: r.chain,
+                                ...(r.kind === "edition" ? { what_changed: isObj(f) && typeof f.what_changed === "string" ? f.what_changed : null } : {}),
+                                ...(r.kind === "withdrawal" ? { reason: isObj(f) && typeof f.reason === "string" ? f.reason : null } : {}),
+                                ...(r.kind === "take-back" ? { takes_back: isObj(f) && Number.isInteger(f.takes_back) ? f.takes_back : null } : {}),
+                                taken_back: backs.get(Number(r.seq)) ?? null }
+                 : { failed: r.failed, detail: r.detail, ...(r.failed === "seq" ? { differs: true, held_digest: r.held_digest } : {}) }) };
+    });
+  }
+  /* R19: an import's moves, in the order recorded. */
+  #movesOf(i) {
+    const backs = this.#takeBacks(i.import_id);
+    return this.#rows(`SELECT * FROM case_import_docket_entries WHERE import_id=? AND status='verified' AND kind IN ('edition','withdrawal')
+                        ORDER BY rn`, i.import_id).map((r) => this.#moveOf(r, i, backs));
+  }
+  /* R19: one edition's `publisher`: the newest edition move naming a later edition, and the withdrawal move covering it
+     by `reevaluation` R33's rule; null when neither has been seen. */
+  static #publisherOf(moves, n) {
+    const newest = (list) => list.reduce((a, m) => (!a || m.seq > a.seq ? m : a), null);
+    const ed = newest(moves.filter((m) => m.kind === "edition" && typeof m.edition === "number" && m.edition > n));
+    const wd = newest(moves.filter((m) => m.kind === "withdrawal" && (m.edition === n || (m.edition === "all"
+      && !moves.some((e) => e.kind === "edition" && e.edition === n && e.seq > m.seq)))));
+    if (!ed && !wd) return null;
+    return { edition: ed ? { seq: ed.seq, edition: ed.edition, date: ed.date, what_changed: ed.what_changed, key_listed: ed.key_listed,
+                             taken_back: ed.taken_back } : null,
+             withdrawal: wd ? { seq: wd.seq, edition: wd.edition, date: wd.date, reason: wd.reason, key_listed: wd.key_listed,
+                                taken_back: wd.taken_back } : null };
+  }
+  /* R19: what a member reads of an import's watch: the watch, the docket unreadable, the entries seen, and a function
+     answering an edition's `publisher` facts. */
+  #watchFacts(i) {
+    const w = this.#watchInForce(i.import_id);
+    const last = w ? this.#lastRead(w.rn) : null;
+    const moves = this.#movesOf(i);
+    const publisher = (n) => {
+      const p = CaseImport.#publisherOf(moves, n);
+      return p ? { publisher: p } : { publisher: null, publisher_note: NO_MOVE_SEEN, last_read: last };
+    };
+    return {
+      facts: { watch: w ? { docket: w.docket, publisher: w.publisher, set_by: w.set_by, set_at: w.set_at, last_read: last } : null,
+               ...(last && last.outcome === "unreadable"
+                 ? { docket_unreadable: { sentence: DOCKET_UNREADABLE, reason: last.reason, at: last.at } } : {}),
+               docket_entries: this.#entriesSeen(i.import_id) },
+      publisher,
+    };
+  }
+
+  /** R20: the watch's items for `queue-producers` (its R35): each verified entry seen, each refused entry, and each watch
+   *  in force whose latest read is unreadable, each naming the import, its group and case, and the watch's `set_by`. A
+   *  viewer who is not an active member is answered empty. Read as the plane; writes nothing and never throws. */
+  watchItems({ viewer = null } = {}) {
+    const empty = { entries: [], refused: [], unreadable: [] };
+    try {
+      if (!this.#sees(viewer)) return empty;
+      const out = { entries: [], refused: [], unreadable: [] };
+      const imports = new Map(this.#rows(`SELECT * FROM case_imports`).map((i) => [i.import_id, i]));
+      const backs = new Map();
+      for (const r of this.#rows(`SELECT e.*, w.set_by AS watch_set_by FROM case_import_docket_entries e
+                                    JOIN case_import_docket_reads d ON d.rn = e.read_rn
+                                    JOIN case_import_watches w ON w.rn = d.watch_rn ORDER BY e.rn`)) {
+        const i = imports.get(r.import_id);
+        if (!i) continue;
+        const head = { import: i.import_id, group: i.source_group, case: i.case_id, set_by: r.watch_set_by,
+                       seq: r.seq === null ? null : Number(r.seq) };
+        if (r.status === "verified") {
+          if (!backs.has(i.import_id)) backs.set(i.import_id, this.#takeBacks(i.import_id));
+          const f = parse(r.json, {}) || {};
+          out.entries.push({ ...head, kind: r.kind, edition: CaseImport.#editionOf(r.edition), date: r.date ?? null,
+                             key_listed: Number(r.key_listed) === 1, move: MOVE_KINDS.includes(r.kind),
+                             ...(r.kind === "edition" ? { what_changed: typeof f.what_changed === "string" ? f.what_changed : null } : {}),
+                             ...(r.kind === "withdrawal" ? { reason: typeof f.reason === "string" ? f.reason : null } : {}),
+                             taken_back: backs.get(i.import_id).get(Number(r.seq)) ?? null });
+        } else out.refused.push({ ...head, failed: r.failed, detail: r.detail });
+      }
+      for (const w of this.#allWatches())
+        if (w.last_read && w.last_read.outcome === "unreadable")
+          out.unreadable.push({ import: w.import, group: w.group, case: w.case, set_by: w.set_by, docket: w.docket,
+                                sentence: DOCKET_UNREADABLE, reason: w.last_read.reason, at: w.last_read.at });
+      return out;
+    } catch { return { ...empty, complete: false }; }
+  }
+  /* R18, R20: every watch in force, through each page. */
+  #allWatches() {
+    const out = [];
+    let after = null;
+    for (;;) {
+      const p = this.watchedImports({ after, limit: WATCH_PAGE_MAX });
+      out.push(...p.watches);
+      if (!p.cursor) return out;
+      after = p.cursor;
+    }
+  }
+
+  /** R16 (`accepted-work` R8's `moves`): the publisher moves, in the order this copy recorded them, after `after` (a move
+   *  id; null or "" from the first), at most `limit` (1–200, default 200), with `cursor` the last listed when more
+   *  follow. Read as the plane; writes nothing. */
+  moves({ after = null, limit = null } = {}) {
+    const cap = Math.min(int(limit) ?? WATCH_PAGE_MAX, WATCH_PAGE_MAX);
+    const from = rnOf("move", after) ?? 0;
+    const rows = this.#rows(`SELECT * FROM case_import_docket_entries WHERE rn > ? AND status='verified' AND kind IN ('edition','withdrawal')
+                              ORDER BY rn LIMIT ?`, from, cap + 1);
+    const more = rows.length > cap;
+    if (more) rows.length = cap;
+    const imports = new Map(), backs = new Map();
+    const moves = [];
+    for (const r of rows) {
+      if (!imports.has(r.import_id)) { imports.set(r.import_id, this.#import(r.import_id)); backs.set(r.import_id, this.#takeBacks(r.import_id)); }
+      const i = imports.get(r.import_id);
+      if (i) moves.push(this.#moveOf(r, i, backs.get(r.import_id)));
+    }
+    return { moves, cursor: more ? idOf("move", rows[rows.length - 1].rn) : null };
+  }
+
   /* ================================================================ R16: the registration with accepted-work */
 
   /** R16 (`accepted-work` R1's `finding`): one imported finding at one edition, with its published pair and the
@@ -831,17 +1248,18 @@ export class CaseImport {
     this.registration = this.#call(() => this.acceptedWork.registerAcceptedWork("case-import", {
       finding: (q) => this.findingFacts(q || {}),
       openFlags: (q) => this.openFlagsFacts(q || {}),
-      withdrawals: (q) => this.withdrawals(q || {}) }), { ok: false, reason: "REGISTRATION_FAILED" });
+      withdrawals: (q) => this.withdrawals(q || {}),
+      moves: (q) => this.moves(q || {}) }), { ok: false, reason: "REGISTRATION_FAILED" });
     return this.registration;
   }
 }
 
 /* The member acts and reads answer their own refusals with code, check and translation (DEC-49). */
-for (const m of ["importedCase", "acceptImported", "withdrawAcceptance", "flagImported", "clearFlag"]) {
+for (const m of ["importedCase", "acceptImported", "withdrawAcceptance", "flagImported", "clearFlag", "watchImport", "unwatchImport"]) {
   const fn = CaseImport.prototype[m];
   CaseImport.prototype[m] = function (...a) { return withRow(fn.apply(this, a)); };
 }
-for (const m of ["importCaseFile", "completeImportedDocument"]) {
+for (const m of ["importCaseFile", "completeImportedDocument", "recordDocketRead"]) {
   const fn = CaseImport.prototype[m];
   CaseImport.prototype[m] = async function (...a) { return withRow(await fn.apply(this, a)); };
 }
@@ -878,7 +1296,7 @@ export function caseImportOwns(t) {
   return CASE_IMPORT_TABLES.includes(name);
 }
 
-/** The module's eight member ops: `by` and `viewer` are the control plane's stamps, read from the query, never the
+/** The module's ten member ops: `by` and `viewer` are the control plane's stamps, read from the query, never the
  *  body. `op-declarations` declares them, `control-plane` routes them and `plane` composes them (L11). Bytes arrive in
  *  the body as base64 text (`parts`, a list; `bytes`). */
 export function caseImportOps(m, url, body) {
@@ -899,5 +1317,7 @@ export function caseImportOps(m, url, body) {
     importflag: () => m.flagImported({ import: pick("import"), edition: pick("edition"), finding: pick("finding"),
       issue: pick("issue"), by, viewer }),
     importflagclear: () => m.clearFlag({ flag: pick("flag"), reason: pick("reason"), by, viewer }),
+    importwatch: () => m.watchImport({ import: pick("import"), publisher: pick("publisher"), by, viewer }),
+    importunwatch: () => m.unwatchImport({ import: pick("import"), by, viewer }),
   };
 }
