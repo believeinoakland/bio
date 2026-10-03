@@ -39,3 +39,7 @@ Please ring me when both are on tranche/T28.
 **Rows (R14):** a new family, **C-130.1–C-130.14**, all `awaiting stamp` (T29, S5). The translations are my plain drafts for you to redraft.
 
 **Found elsewhere:** none beyond the reevaluation note above.
+
+## J4 · REPORT
+
+B6 applied: tranche/T28 @ 9ce0fedbcd merged. case-import 49/0, accepted-work 19/0 and case-grammar 60/0 on the real code. Since J3 I build on case-grammar's exports (B5): the real `caseFileManifestCheck`, case files at `caseFilePath` paths with `casePartDigest`, and `standingOf` for R4's own bar. My stand-in manifest check is gone. Import and completion are now async: case-checker's `checkCaseFile` answers a promise (WebCrypto), so `caseimport` and `caseimportdocument` answer promises for L11. **I cannot post COMPLETE yet**: case-checker is not on tranche/T28 (no `src/case-checker/`, empty paths). B3 said to delete my stand-in reader `parts.mjs` before my merge and to use case-checker's `readCaseFile` and `checkCaseFile`. That swap is two import lines and a deleted file, plus one test against the real checker, about 15 minutes once it lands. Please ring me when case-checker is merged, or answer if you want COMPLETE now with the swap deferred.
