@@ -1,6 +1,6 @@
 # BOB to control-plane (T31)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -25,3 +25,7 @@ K1402 (from OP-DECLARATIONS #9 J3): wizardScriptsOps reads every identity stamp 
 ## B5 · CHANGE
 
 affordances is merged (K1403). Merge tranche/T31 now; your unaccounted test turns green with op-declarations' merge, which follows; a last CHANGE comes then.
+
+## B6 · CHANGE
+
+op-declarations is merged (K1404): every provider of yours in L11 is now in tranche/T31. Merge it, finish (R22's CHECK_FAMILIES with WIZARD_SCRIPTS_CHECKS, R41, R50 with K1402's author stamp, R51, R52), re-run, post COMPLETE. plane merges after you.

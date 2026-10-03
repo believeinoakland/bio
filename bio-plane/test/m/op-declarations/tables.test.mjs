@@ -427,7 +427,9 @@ test("R9, R4: the act lists name each of T22's ops, so its stamps are named — 
 });
 
 /* R6's store-internal routes: served to no caller, so in no table. */
-const STORE_INTERNAL = ["monitorlook", "doorbellrefused"];
+/* T31 (K1396): `wizardrefusaltally`, control-plane's call of wizard-scripts' refusal tally (its R16; control-plane R50),
+   joins them. */
+const STORE_INTERNAL = ["monitorlook", "doorbellrefused", "wizardrefusaltally"];
 const tablesNaming = (op, t = { OPS, NEEDS, UNATTENDED_BY_DECISION, member: SESSION_OPS.member, admin: SESSION_OPS.admin }) => [
   ...Object.entries({ OPS: t.OPS, NEEDS: t.NEEDS, UNATTENDED_BY_DECISION: t.UNATTENDED_BY_DECISION })
     .filter(([, v]) => Object.hasOwn(v, op)).map(([k]) => k),
@@ -435,7 +437,7 @@ const tablesNaming = (op, t = { OPS, NEEDS, UNATTENDED_BY_DECISION, member: SESS
   ...LISTS.filter(([, list]) => list.includes(op)).map(([name]) => name),
   ...(PLAN_RUN_SCOPE.reads.includes(op) || PLAN_RUN_SCOPE.writes.includes(op) ? ["PLAN_RUN_SCOPE"] : [])];
 
-test("R6, R9: the store-internal routes monitorlook and doorbellrefused have no spec and are in no table (negative control: a table that adds one is seen)", () => {
+test("R6, R9, R15: the store-internal routes monitorlook, doorbellrefused and wizardrefusaltally have no spec and are in no table (negative control: a table that adds one is seen)", () => {
   for (const op of STORE_INTERNAL) assert.deepEqual(tablesNaming(op), [], op);
   /* Negative control: doorbellrefused added to OPS (as a careless hand would, beside doorbelltally) is found. */
   const added = { ...OPS, doorbellrefused: { classes: ["admin", "member"], machineClasses: [], mutating: true } };

@@ -14,6 +14,7 @@ import { sourcesOf, sourcesOps } from "../sources/index.mjs";
 import { queueOf, queueOps } from "../queue/index.mjs";
 import { tasksOf, tasksOps } from "../tasks/index.mjs";
 import { affordancesOf, affordancesOps } from "../affordances.mjs";
+import { wizardScriptsOf } from "../wizard-scripts/index.mjs";
 import { DISPATCH_CHECKS } from "./checks.mjs";
 import { pullAndFile } from "./pull.mjs";
 
@@ -246,7 +247,9 @@ export async function dispatch(req, store) {
 /* N364, N13: the routes this module adds to plane's one map (plane R5), each passing R26's frame: queue's, tasks' and
    affordances' maps; `sources`' own map (N379, K566: its acts, its reads and the no-account `knockerconsent`, which no
    other module dispatches); the two own-key acts, credentials' since layer 2 (K757, K784), which credentials keeps out of
-   its map (`by` spread, then overridden, as `signeradd`); and R36's pull, a route of its own beside capture's `inboxpull`, which the Worker's
+   its map (`by` spread, then overridden, as `signeradd`); R50's unattributed refusal count (`wizardrefusaltally`, the
+   Worker's tally of a refusal it answered to a member's session, handed to `wizard-scripts.tallyRefusal` with the op and
+   the code alone; store-internal, op-declarations R6, so no caller reaches it, as capture's `doorbellrefused`); and R36's pull, a route of its own beside capture's `inboxpull`, which the Worker's
    `op=inboxpull` (and `op=inboxresolve` at `pulled`) addresses. */
 export function controlPlaneRoutes(ctx, url, body) {
   const q = (k) => url.searchParams.get(k);
@@ -266,6 +269,7 @@ export function controlPlaneRoutes(ctx, url, body) {
     ...sourceRoutes,
     signerregister: () => credentialsOf(ctx).signerRegisterOwn({ ...b, by: q("by") }),
     signerrevoke: () => credentialsOf(ctx).signerRevokeOwn({ ...b, by: q("by") }),
+    wizardrefusaltally: () => wizardScriptsOf(ctx).tallyRefusal(b.op, b.code),
     inboxpullfile: () => pullAndFile({ capture: captureOf(ctx), promotion: promotionOf(ctx), record: recordOf(ctx),
                                        provenance: provenanceOf(ctx) },
                                      { knockId: (typeof b.knockId === "string" && b.knockId) || q("id"),

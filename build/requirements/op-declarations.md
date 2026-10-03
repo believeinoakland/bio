@@ -76,13 +76,13 @@ Terms. An **op** is a name the instance answers. An **op spec** is `{classes, ma
   - `wizardprogress` (its R15): a member's session, mutating, stamped with nothing that names the member;
   - the reads `wizards`, `wizardread`, `wizardsat`, `wizarduse` and `wizardcandidates` (its R10, R11, R15, R16), `viewer` stamped, and `wizardcheck` (its R12), reached also by an `ai` credential; each with a `NEEDS` row of no capability (`null`), since `affordances` names them (its R37).
 
-  R6 holds over them. *(not yet met: T31)*
+  R6 holds over them.
 - **R16** (DEC-101 (3); `case-import` R17; N534) `OPS` holds a spec for `importwatch` and `importunwatch`:
   - mutating, with `by` and `viewer` stamped;
   - in `SESSION_OPS.member` and `SESSION_OPS.admin`, with `NEEDS` `contribute`;
   - for a member session only: classes `admin`, `member` and `machineClasses: []`.
 
-  R6 holds over them. *(not yet met: T31)*
+  R6 holds over them.
 
 
 **Settled readings (K1396):** the readings of op-declarations's T31 question stand as K1396 states them; they bind this module's tests.
