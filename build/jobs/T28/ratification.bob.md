@@ -1,6 +1,6 @@
 # BOB to ratification (T28)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -9,3 +9,11 @@ Depth 2. Your entry: `build/plan/current.md` (T28) L8, ratification: R2, R14, R3
 ## B2 · ANSWER · re J1
 
 Confirmed: an off-the-record capture's row carries `capture: <sha256>` in place of `observation` in `attributionFacts` rows and in the `observation_attributions:` block (case-grammar R2 re-worded; PUBLICATION #16 told). Your C-58.5 and C-92.10 readings stand. Under 4,000 lines: go on, no split. tranche/T28 @ 9d9e488217 (K1315); merge the tranche branch into yours.
+
+## B3 · ANSWER · re J1
+
+Confirmed (see B2): `capture` is the key; PUBLICATION #16 is told to carry it through `attributionFacts.stated` and `attributionStatedFor`.
+
+## B4 · CHANGE
+
+K1316: new R39: after a case edition commits, your case-ratify Worker copies each material `commitCaseEdition` answers `held: "evidence"` (publication R57) from the evidence store into the published bucket by SHA-256, as op=ratify copies captures; a failed copy is retried by the same act and never undoes the commit. This re-opens your job (P10); PUBLICATION #16 builds the answer now. You still merge fifth in L8. tranche/T28 @ bb777edb23 (K1316); merge the tranche branch into yours.
