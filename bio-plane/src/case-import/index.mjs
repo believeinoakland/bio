@@ -53,7 +53,7 @@ import { parseFrontmatter } from "../record-grammar/frontmatter.mjs";
 import { BASIS_GRADES } from "../record-grammar/index.mjs";
 import { isPublicHttpsLocator } from "../record-grammar/index.mjs";
 import { verifySshsig, NS_DOCKET, docketStatement, normalizeKey } from "../sshsig.mjs";
-import { DOCKET_UNREADABLE } from "../docket/index.mjs";
+import { DOCKET_UNREADABLE, ENTRY_FORMATS } from "../docket/index.mjs";
 import { CASE_IMPORT_CHECKS, rowOf } from "./checks.mjs";
 import { CASE_IMPORT_TABLES, BLOB_CHUNK, migrateCaseImport } from "./schema.mjs";
 import { checkCaseFile, readCaseFile } from "../case-checker/index.mjs";
@@ -79,8 +79,8 @@ export const NO_OWN_BAR = "no bar is set for this group";
 export const STATEMENT = "Recreating a case shows it is intact and consistent, not that it is true.";
 const AXES = Object.freeze(["capture", "connection", "testimony"]);
 const ID = { acceptance: "IMA", withdrawal: "IMW", flag: "IMF", move: "IMM" };
-/** R18 check 1: the docket entry's format, one format under two labels (`docket` R6; DEC-124, K1365). */
-export const DOCKET_ENTRY_FORMATS = Object.freeze(["civicsmith-docket-entry/1", "civicos-docket-entry/1"]);
+/** R18 check 1: the docket entry's format, one format under two labels, as `docket` spells them (its R6; DEC-124, K1365). */
+export const DOCKET_ENTRY_FORMATS = ENTRY_FORMATS;
 /** R17: the query a watch's docket address carries (`docket` R23, R24; `public-read` R25). */
 export const docketAddressOf = (publisher, caseId) =>
   `${publisher}?op=docketpublic&case=${encodeURIComponent(caseId)}&captures=omit`;
