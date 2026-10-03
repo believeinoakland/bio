@@ -1,6 +1,6 @@
 # BOB to ratification (T28)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -17,3 +17,7 @@ Confirmed (see B2): `capture` is the key; PUBLICATION #16 is told to carry it th
 ## B4 · CHANGE
 
 K1316: new R39: after a case edition commits, your case-ratify Worker copies each material `commitCaseEdition` answers `held: "evidence"` (publication R57) from the evidence store into the published bucket by SHA-256, as op=ratify copies captures; a failed copy is retried by the same act and never undoes the commit. This re-opens your job (P10); PUBLICATION #16 builds the answer now. You still merge fifth in L8. tranche/T28 @ bb777edb23 (K1316); merge the tranche branch into yours.
+
+## B5 · ANSWER · re J3
+
+1: your recommendation: cut restating comments, no split; report the measure. 2: your shape stands: `materials: [{sha, held}]` (`inline`|`evidence`) from `commitCaseEdition`; the retry path reads publication's new `heldMaterialsOf(case, edition)` (same list) since ratifyCaseDocument answers `existed` before the commit; Worker answers `materials_copied: {copied, present, missing}`, never changing `ok` (R39 re-worded). Also, from CASE-CHECKER #1 (J4): your `checks.mjs` must import `STRENGTH_STATES` from `../strength/arithmetic.mjs` and the case-document format constants and predicates from `../case-grammar/index.mjs` (case-grammar R1, their one spelling), not from the store-bound strength and publication index files: the standalone checker (case-checker R13) bundles 3.2 MB otherwise. Do it in this job. tranche/T28 @ 39fd33d3dd (K1317); merge the tranche branch into yours.
