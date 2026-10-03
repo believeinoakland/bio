@@ -35,3 +35,7 @@ Stamp commit `1b10a766cb` on `job/T30/promotion` (from `tranche/T30` @ e6f168ff2
 - Module size: 3,305 lines (`gate.mjs` and `promotion/`).
 
 Size (session_011zouuDt37KpxHQBHzQxiy3): test runs 8, module lines 3305
+
+## J1 · COMPLETE
+
+S6 stamped on job/T30/promotion (1b10a766cb): CATALOG_VERSION 1.58.0 -> 1.59.0; C-120.1-.8, .10-.13 where re-pointed to case-disclosures; C-129.12/.13 re-keyed to DOCKET_PRESSURE_MARKED/REFUSED; nothing else moved, no composition change. ROW_CENSUS 1128 rows 61929a98...; fixture row-census-1.59.0.jsonl (swap my tests entry from 1.58.0's). row-census 8/0 (T29 red 2 cleared); promotion 102/102; d526 31/0; test/m 5780/5793, the 2 fails case-checker's stale program.mjs (regenerate build-program.mjs) - plane bundle also stale, yours at the close.
