@@ -40,7 +40,9 @@ import { inquiryOf, legCapped, actNoBasis } from "../inquiry/index.mjs";
    which the retired check catalogue's copy (legacy-checks) did not. */
 import { contentOf, mintLabel, contentMintState, CONTENT_MINTED_BY_PLANE, legContentId, legExtent, canonicalExtent,
          describeExtent, extentRelation, CONTENT_EXTENT_CHECKS } from "../content/index.mjs";
-import { basisVersionFindings, versionsIn, compositionDiff, sameComposition, registerBasisVersionGrammar } from "./grammar.mjs";
+import { acceptedLegRefusals } from "../accepted-work/index.mjs";
+import { basisVersionFindings, versionsIn, compositionDiff, sameComposition, registerBasisVersionGrammar,
+         isImportedRef } from "./grammar.mjs";
 import { BASIS_VERSION_CHECKS, VERSION_ACT_CHECKS, VERSION_KIND_CHECKS, CONCLUDE_ACT_CHECKS, NARROW_CHECKS, VERSION_MACHINE,
          versionNeedsReason, VERSION_NAME_RE, isBoilerplate } from "./checks.mjs";
 import { fmSafe, quoted, typedValue, randHex, setVersionField, setCurrentVersionRow, appendFmRows,
@@ -106,7 +108,7 @@ const drawsOn = (fm, inquiryId) => (Array.isArray(fm?.references) ? fm.reference
 export class BasisVersions {
   #candidateSource = null;   // R25's extract arm: {module, fn}
 
-  constructor({ storage, record, membership, promotion, content, inquiry = null, now } = {}) {
+  constructor({ storage, record, membership, promotion, content, inquiry = null, acceptedWork = null, now } = {}) {
     this.storage = storage;
     this.sql = storage.sql;
     this.record = record;
@@ -114,6 +116,9 @@ export class BasisVersions {
     this.promotion = promotion;
     this.content = content;
     this.inquiry = inquiry;
+    /* R3 (N522): accepted-work's leg check (its R3), its own unless a test passes one */
+    this.acceptedLegRefusals = acceptedWork && typeof acceptedWork.acceptedLegRefusals === "function"
+      ? acceptedWork.acceptedLegRefusals : acceptedLegRefusals;
     this.now = typeof now === "function" ? now : () => stampInstant("second");
   }
 
@@ -203,6 +208,8 @@ export class BasisVersions {
     /* DEC-49 REGION basis-version-resolve */
     for (const v of offered) {
       for (const leg of v.legs) {
+        /* R3 (N522): another group's finding is not a bundle of this record; whether it is held is accepted-work's */
+        if (isImportedRef(leg.target_id)) continue;
         if (!this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, leg.target_id))
           return { ok: false, reason: "VERSION_LEG_UNRESOLVED", version: v.name, target: leg.target_id,
                    findings: [{ check: BASIS_VERSION_CHECKS.VERSION_LEG_UNRESOLVED.check,
@@ -240,6 +247,45 @@ export class BasisVersions {
                                       `or restore '${v.name}' to the composition the record holds`] }] };
     }
     /* END DEC-49 REGION basis-version-freeze */
+    /* R3 (N522; DEC-112 (6), DEC-96 item 1): a leg on another group's finding rests on an acceptance in force at the
+       edition it names, asked when the leg is written: in a version this promotion adds, a leg with no leg of the same
+       finding and edition in the version it derives from. A held version is frozen and is not asked again, so a
+       withdrawal never refuses an unrelated revision; it sends notices and moves no work (reevaluation's). */
+    const fresh = [];
+    const docLegs = Array.isArray(docFm.basis_version_legs) ? docFm.basis_version_legs : [];
+    const byName = new Map(offered.map((v) => [v.name, v]));
+    for (const v of offered) {
+      if (!v.legs.some((l) => isImportedRef(l.target_id))) continue;
+      if (this.#one(`SELECT 1 AS x FROM inquiry_basis_versions WHERE bundle_id=? AND name=?`, bundleId, v.name)) continue;
+      const parent = v.derived_from ? byName.get(v.derived_from) : null;
+      const inherited = new Set((parent ? parent.legs : []).filter((l) => isImportedRef(l.target_id))
+        .map((l) => `${l.target_id}\u0000${l.edition ?? ""}`));
+      for (const l of v.legs) {
+        if (!isImportedRef(l.target_id) || inherited.has(`${l.target_id}\u0000${l.edition ?? ""}`)) continue;
+        const row = docLegs[l.src_ord] || {};
+        fresh.push({ version: v.name, leg: { ord: l.src_ord, target: l.target_id, target_edition: row.target_edition } });
+      }
+    }
+    if (fresh.length) {
+      let refused;
+      try { refused = this.acceptedLegRefusals({ legs: fresh.map((x) => x.leg), viewer: c.author ?? null }); }
+      catch { refused = null; }
+      /* accepted-work's call never throws (its R3); a defect there is not a pass */
+      const list = Array.isArray(refused) ? refused : Array.isArray(refused?.findings) ? refused.findings : null;
+      const findings = list === null
+        ? fresh.map((x) => ({ code: "ACCEPTED_WORK_UNREADABLE", leg: x.leg }))
+        : list;
+      if (findings.length)
+        return { ok: false, reason: "BASIS_VERSION_REFUSED",
+                 findings: findings.map((x) => {
+                   const ord = Number.isInteger(x?.ord) ? x.ord : x?.leg?.ord;
+                   const owner = fresh.find((y) => y.leg.ord === ord);
+                   return { ...x,
+                            ...(owner ? { version: owner.version, detail: `basis_version_legs[${ord}] (version `
+                              + `'${owner.version}'): ${x?.detail ?? x?.message ?? "rests on another group's finding "
+                              + "whose acceptance at the edition named could not be established"}` } : {}) };
+                 }) };
+    }
     return null;
   }
 
@@ -1562,7 +1608,8 @@ export class BasisVersions {
     const grounds = (Array.isArray(src.fm.basis_version_grounds) ? src.fm.basis_version_grounds : [])
       .filter((g) => g && typeof g === "object" && String(g.version ?? "").trim() === src.vname)
       .map((g) => ({ ground: String(g.ground ?? ""), asserted_by: who, at: nowIso, statement: g.statement }));
-    const LEG_KEYS = ["target", "role", "ground", "grade", "grade_axis", "grade_source", "note", "date",
+    /* `target_edition` so a leg on another group's finding is copied whole (N522) */
+    const LEG_KEYS = ["target", "target_edition", "role", "ground", "grade", "grade_axis", "grade_source", "note", "date",
                       "extent_capture", ...Object.keys(EXTENT_FIELDS)];
     const EXTENT_KEYS = new Set([...Object.keys(EXTENT_FIELDS), "extent_capture"]);
     const GRADE_KEYS = new Set(["grade", "grade_axis", "grade_source"]);

@@ -9,7 +9,8 @@
 
 import { BUNDLE_ID_RE, ISO_TS_RE, OBJECT_TYPES, normalizeType, isMachineIdentity, BASIS_ROLES, BASIS_GRADES, GRADE_AXES,
          GRADE_SOURCES } from "../record-grammar/index.mjs";
-import { GROUND_LABEL_RE, leadLegFindings, checkLegExtentGrammar, registerInquiryGrammar } from "../inquiry-grammar/index.mjs";
+import { GROUND_LABEL_RE, leadLegFindings, checkLegExtentGrammar, registerInquiryGrammar, IMPORTED_FINDING_RE,
+         importedLegFindings } from "../inquiry-grammar/index.mjs";
 import { themeLegFindings } from "../connections/index.mjs";
 import { legContentId, legExtent } from "../content/index.mjs";
 import { canonicalExtent } from "../textchain.mjs";
@@ -29,6 +30,11 @@ function f(check, severity, message, repairs, code) {
   if (repairs) { out.repairable = true; out.repairs = repairs; }
   if (code) out.code = code;
   return out;
+}
+
+/** R3 (N522): whether a leg's target is an imported finding reference (`inquiry-grammar` R11), never a local id. */
+export function isImportedRef(t) {
+  return typeof t === "string" && IMPORTED_FINDING_RE.test(t);
 }
 
 /** PL-1 / IS-1 — the version block's grammar, at BOTH gates through one function.
@@ -323,7 +329,13 @@ export function basisVersionFindings(fm, findings) {
       /* D-162 / C-81.1: the theme refusal at the version's grain. */
       if (themeLegFindings(`basis_version_legs[${li}] (version '${name}')`, leg, findings)) continue;
       const t = leg.target;
-      if (typeof t !== 'string' || !BUNDLE_ID_RE.test(t)) {
+      /* R3 (N522; DEC-112 (6)): a leg on another group's finding (`inquiry-grammar` R11's reference) has its form
+         judged there (C-21.3) in place of the id, grade and extent arms: it names a finding and one edition, carries
+         no grade and no extent. Whether an acceptance is in force is the promotion check's (`./index.mjs`, R6). */
+      const imported = isImportedRef(t);
+      if (imported) {
+        importedLegFindings(`basis_version_legs[${li}] (version '${name}')`, leg, findings);
+      } else if (typeof t !== 'string' || !BUNDLE_ID_RE.test(t)) {
         push('VERSION_LEG_NOT_CITABLE', `basis_version_legs[${li}] (version '${name}').target '${String(t).slice(0, 40)}' is not a canonical record id`);
       } else if (typeof fm?.id === 'string' && t === fm.id) {
         push('VERSION_LEG_SELF', `basis_version_legs[${li}] (version '${name}') rests on ${t}, which is this inquiry: a question is not evidence for its own answer, in any account of it`);
@@ -334,24 +346,27 @@ export function basisVersionFindings(fm, findings) {
       }
       if (!BASIS_ROLES.includes(leg.role))
         push('VERSION_LEG_NOT_CITABLE', `basis_version_legs[${li}] (version '${name}').role '${String(leg.role).slice(0, 40)}' is not one of: ${BASIS_ROLES.join(', ')}`);
-      if (leg.grade !== undefined && leg.grade !== null && !BASIS_GRADES.includes(leg.grade))
-        push('VERSION_LEG_NOT_CITABLE', `basis_version_legs[${li}] (version '${name}').grade '${String(leg.grade).slice(0, 40)}' is not one of: ${BASIS_GRADES.join(', ')} (absent or null means undetermined, and is STATED as such)`);
-      if (leg.grade_axis !== undefined && leg.grade_axis !== null && !GRADE_AXES.includes(leg.grade_axis))
-        push('VERSION_LEG_NOT_CITABLE', `basis_version_legs[${li}] (version '${name}').grade_axis '${String(leg.grade_axis).slice(0, 40)}' is not one of: ${GRADE_AXES.join(', ')}`);
-      if (leg.grade_source !== undefined && leg.grade_source !== null && !GRADE_SOURCES.includes(leg.grade_source))
-        push('VERSION_LEG_NOT_CITABLE', `basis_version_legs[${li}] (version '${name}').grade_source '${String(leg.grade_source).slice(0, 40)}' is not one of: ${GRADE_SOURCES.join(', ')}`);
-      /* REC-84 / IC-84 (1): THE EXTENT AT THE VERSION'S OWN GRAIN, C-25.10,
-         through the SAME function `basis[]` runs — and it is what retires bound
-         (1) in this function's header, which said D-164 was unlanded so a
-         version's legs address whole bundles. They no longer must. The header
-         bound is corrected there rather than deleted, because a superseded rule
-         is corrected with its reason and never quietly removed. */
-      /* THE C-NUMBER IS READ OUT OF THE MAP AND NEVER TYPED, which is this
-         function's own stated discipline ("`basisVersionFindings` reads the
-         C-number OUT of this map at every site"): a second literal is a second
-         place for the number to drift. Typed here, that arm once went red. */
-      checkLegExtentGrammar(leg, `basis_version_legs[${li}] (version '${name}')`,
-        BASIS_VERSION_CHECKS.VERSION_LEG_NOT_CITABLE.check, findings);
+      /* the grade and extent arms do not ask a leg on another group's finding: R11's arm refuses either outright */
+      if (!imported) {
+        if (leg.grade !== undefined && leg.grade !== null && !BASIS_GRADES.includes(leg.grade))
+          push('VERSION_LEG_NOT_CITABLE', `basis_version_legs[${li}] (version '${name}').grade '${String(leg.grade).slice(0, 40)}' is not one of: ${BASIS_GRADES.join(', ')} (absent or null means undetermined, and is STATED as such)`);
+        if (leg.grade_axis !== undefined && leg.grade_axis !== null && !GRADE_AXES.includes(leg.grade_axis))
+          push('VERSION_LEG_NOT_CITABLE', `basis_version_legs[${li}] (version '${name}').grade_axis '${String(leg.grade_axis).slice(0, 40)}' is not one of: ${GRADE_AXES.join(', ')}`);
+        if (leg.grade_source !== undefined && leg.grade_source !== null && !GRADE_SOURCES.includes(leg.grade_source))
+          push('VERSION_LEG_NOT_CITABLE', `basis_version_legs[${li}] (version '${name}').grade_source '${String(leg.grade_source).slice(0, 40)}' is not one of: ${GRADE_SOURCES.join(', ')}`);
+        /* REC-84 / IC-84 (1): THE EXTENT AT THE VERSION'S OWN GRAIN, C-25.10,
+           through the SAME function `basis[]` runs — and it is what retires bound
+           (1) in this function's header, which said D-164 was unlanded so a
+           version's legs address whole bundles. They no longer must. The header
+           bound is corrected there rather than deleted, because a superseded rule
+           is corrected with its reason and never quietly removed. */
+        /* THE C-NUMBER IS READ OUT OF THE MAP AND NEVER TYPED, which is this
+           function's own stated discipline ("`basisVersionFindings` reads the
+           C-number OUT of this map at every site"): a second literal is a second
+           place for the number to drift. Typed here, that arm once went red. */
+        checkLegExtentGrammar(leg, `basis_version_legs[${li}] (version '${name}')`,
+          BASIS_VERSION_CHECKS.VERSION_LEG_NOT_CITABLE.check, findings);
+      }
 
       const g = typeof leg.ground === 'string' ? leg.ground.trim() : '';
       if (!g) { unlabelled++; continue; }
@@ -467,6 +482,9 @@ export function versionsIn(fm) {
         ground: str(l.ground) ?? "",
         /* D-595 (BOB #34, K182): the capture a leg is pinned to, inside the composition so the freeze sees the pin */
         capture: str(l.extent_capture),
+        /* R3 (N522): the edition a leg on another group's finding names, inside the composition so the freeze sees it */
+        edition: l.target_edition === undefined || l.target_edition === null || String(l.target_edition).trim() === ""
+          ? null : String(l.target_edition).trim(),
       });
     }
     const grounds = groundRows
@@ -490,6 +508,8 @@ export function versionsIn(fm) {
       ...legs.flatMap((l, k) => (l.referent === null ? [] : [`leg_referent\t${k}\t${c(l.referent)}`])),
       /* and the pin, after the referents and only when a leg carries one, for the same byte-identity reason */
       ...legs.flatMap((l, k) => (l.capture === null ? [] : [`leg_capture\t${k}\t${c(l.capture)}`])),
+      /* and the edition a leg on another group's finding names (N522), last, for the same byte-identity reason */
+      ...legs.flatMap((l, k) => (l.edition === null ? [] : [`leg_edition\t${k}\t${c(l.edition)}`])),
     ].join("\n");
     out.push({
       name, ord: i,
@@ -551,7 +571,10 @@ export function versionAsWritten({ kind, name, description, claim, relationship,
       target: fs(l?.target), role: fs(String(l?.role ?? "supports")),
       ground: opt(l?.ground), grade: opt(l?.grade), grade_axis: opt(l?.grade_axis),
       grade_source: opt(l?.grade_source), note: opt(l?.note), date: opt(l?.date),
-      extent_kind: "document", ...(blank(l?.extent_capture) ? {} : { extent_capture: fs(l.extent_capture) }) })),
+      /* a leg on another group's finding names its edition and carries no extent (inquiry-grammar R11; N522) */
+      ...(isImportedRef(l?.target)
+        ? { target_edition: Number.isInteger(l?.target_edition) ? l.target_edition : opt(l?.target_edition == null ? null : String(l.target_edition)) }
+        : { extent_kind: "document", ...(blank(l?.extent_capture) ? {} : { extent_capture: fs(l.extent_capture) }) }) })),
   };
 }
 
