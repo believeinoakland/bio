@@ -35,3 +35,7 @@ Stamp commit `81b3d9a7e4` on `job/T32/promotion` (from `tranche/T32` @ f48bb998f
 - Module size: 3325 lines (`gate.mjs` and `promotion/`).
 
 Size (session_01UDnkacoJ2wBBSc6UQbGpGi): test runs 7, module lines 3325
+
+## J1 · COMPLETE
+
+S7 stamped on job/T32/promotion (81b3d9a7e4; record b4f7a53bd7+): CATALOG_VERSION 1.59.0 -> 1.60.0; exactly the 34 rows B1 lists arrived (C-131.1-.32, each family's own row for the 3 codes shared with C-125; C-130.15/.16), nothing else moved. Note also records T31's case-gate composition change (/7 accepted, C-41.1/.13-.15 name the declared format; C-122.2 admits /7), no row line moving. ROW_CENSUS 1162 rows 2bc34e46...; fixture row-census-1.60.0.jsonl (swap my tests entry from 1.59.0's). row-census 8/0 (red 2 cleared); promotion 101/102, the 1 fail red 5 (MODULE_ORDER, N544; same with my change stashed); d526 31/0; test/m 5952/5968, 5 fails = 3 red 5 + 2 case-checker stale program.mjs (regenerate build-program.mjs); plane bundle also stale. format, architecture 0; coverage 56/56 (needs your tests swap to run without a placeholder); ownership 1 = the new fixture until the swap.
