@@ -63,6 +63,12 @@ import * as CONSEQUENCES from "../consequences/checks.mjs";
 /* K835, K837, K914: the action layer's eight families are action-grammar's, read from there; `actions` holds no file of
    them (its re-export was deleted, K914). */
 import * as ACTION_GRAMMAR from "../action-grammar/checks.mjs";
+/* K1280 (N520, R43): docket's C-129. Its place in the module order is directly after publication, but it is read after
+   action-grammar's file: docket's family holds `MACHINE_CANNOT_MARK_PRESSURE` (C-129.10), a code action-grammar's
+   C-117.14 already holds (a code in two places, reported to BOB), and a source read first would take that code's row
+   from `actionpressure`'s refusal (R43: every code keeps the row it had). Docket's own refusals carry their row at the
+   site (its `withRow`), which the decoration never overwrites, so its answers are unchanged either way. */
+import * as DOCKET from "../docket/checks.mjs";
 import * as ACTION_CLOCKS from "../action-clocks/checks.mjs";
 /* K921 (R43): filing-templates' C-125 and local-facts' C-126, each in its place in the module order. */
 import * as FILING_TEMPLATES from "../filing-templates/checks.mjs";
@@ -128,6 +134,7 @@ export const CHECK_FAMILY_FILES = Object.freeze([
   ["src/conformance/checks.mjs", CONFORMANCE],
   ["src/consequences/checks.mjs", CONSEQUENCES],
   ["src/action-grammar/checks.mjs", ACTION_GRAMMAR],
+  ["src/docket/checks.mjs", DOCKET],
   ["src/action-clocks/checks.mjs", ACTION_CLOCKS],
   ["src/filing-templates/checks.mjs", FILING_TEMPLATES],
   ["src/filings/checks.mjs", FILINGS],

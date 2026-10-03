@@ -1,9 +1,10 @@
-/* control-plane: THE RECORD STORE'S DOOR (R25–R27). `dispatch(req, store)` is the one frame every Durable Object request
-   passes: the body read, the route looked up in the modules' own maps (the `membershipOps` pattern; `store.routes(url,
-   body)`, the union `plane` composes, its R5), the existence answer of a read naming a discoverable project (R27), the
-   `{ok: true, result}` envelope, and the one catch (R25). Moved from legacy-store's `Store.fetch` at control-plane's
-   extraction (built T12, K93; re-applied T13 by N333). The Durable Object class whose `fetch` this is is `plane`'s (its
-   R1, was this module's R35, moved at T19), which also spreads `controlPlaneRoutes` below into its map. */
+/* control-plane: THE RECORD STORE'S DOOR (R25–R27, R46). `dispatch(req, store)` is the one frame every Durable Object
+   request passes: the body read, the route looked up in the modules' own maps (the `membershipOps` pattern;
+   `store.routes(url, body)`, the union `plane` composes, its R5), the existence answer of a read naming a discoverable
+   project (R27), a purge's hold check (R46), the `{ok: true, result}` envelope, and the one catch (R25). Moved from
+   legacy-store's `Store.fetch` at control-plane's extraction (built T12, K93; re-applied T13 by N333). The Durable Object
+   class whose `fetch` this is is `plane`'s (its R1, was this module's R35, moved at T19), which also spreads
+   `controlPlaneRoutes` below into its map. */
 import { credentialsOf } from "../credentials/index.mjs";
 import { captureOf } from "../capture/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
@@ -119,6 +120,10 @@ export const PROJECT_NAMING_READS_NOT = Object.freeze({
   /* R45's reads naming a published case (case-authoring R39, network-notices R23), never a bundle id. */
   whatchangeddrafts: "`case` is a CASE id, answered by the case's own fence",
   directorysubmission: "`case` is a CASE id and `edition` one of its editions, never a bundle id",
+  /* R47 (DEC-113, DEC-36; actions R58): the held-project strip names projects, and answers each one the viewer does not
+     see at FULL as `held: null`, never refused, so the existence answer is not run for it. */
+  projectholds: "`projects` lists PROJECT ids, and each one the viewer does not see at FULL is answered `held: null` "
+    + "(actions R58, DEC-36), never refused, so no existence answer is given for it",
 });
 
 /* R27 (REC-196): the answer for a read naming a discoverable project's own id, asked by a caller at EXISTENCE: C-70.1
@@ -164,7 +169,32 @@ function internalAnswer(correlation) {
   /* END DEC-49 REGION is-store-internal-error */
 }
 
-/* R26: the frame. `store.routes(url, body)` answers the route map, `store.membership()` membership for R27. */
+/* R46 (DEC-113; K1252, K1253; C-69.5) — A PURGE OF HELD MATERIAL IS REFUSED IN THE STORE'S DOOR. In the real record (any
+   namespace but `scratch`, the test store), `op=purge` runs only when `actions.purgeHeld({bundleId})` (its R60) answers
+   exactly `false`: `true` (a hold stands over what the purge would reach), a throw, a reader never handed and any other
+   answer refuse, so a failure to ask is never read as clearance. Asked before record-core's `purge` arm, so nothing is
+   cleared, read for proof or written. The refusal names nothing but the `bundleId` asked (null for the whole store): no
+   action, project or member. `bundleId` is read as record-core's arm reads it (its R72). */
+const PURGE_OP = "purge";
+const SCRATCH_NAMESPACE = "scratch";
+function purgeHoldRefusal(store, url) {
+  if (store.namespace === SCRATCH_NAMESPACE) return null;
+  const bundleId = url.searchParams.get("bundleId") || null;
+  let clear = false;
+  try { clear = typeof store.purgeHeld === "function" && store.purgeHeld({ bundleId }) === false; } catch { clear = false; }
+  if (clear) return null;
+  const row = DISPATCH_CHECKS.PURGE_HOLD_IN_PLACE;
+  /* DEC-49 REGION is-purge-hold-in-place */
+  return { ok: false, error: "purge refused: a litigation hold is in place", reason: "PURGE_HOLD_IN_PLACE",
+           code: "PURGE_HOLD_IN_PLACE", check: row.check, translation: row.translation, bundleId,
+           detail: bundleId === null
+             ? "a litigation hold is in place, so the whole record cannot be cleared. Nothing was removed."
+             : "this bundle is, or may be, material a litigation hold preserves. Nothing was removed." };
+  /* END DEC-49 REGION is-purge-hold-in-place */
+}
+
+/* R26: the frame. `store.routes(url, body)` answers the route map, `store.membership()` membership for R27;
+   `store.namespace` (the object's own name, plane R2) and `store.purgeHeld` (`actions`' R60 reader, plane R14) for R46. */
 export async function dispatch(req, store) {
   const url = new URL(req.url);
   const op = url.pathname.slice(1);
@@ -188,6 +218,10 @@ export async function dispatch(req, store) {
     const map = store.routes(url, body);
     /* R26: the map's own keys only, so an inherited name (`toString`, `constructor`) is no route. */
     if (!Object.hasOwn(map, op)) return Response.json({ ok: false, error: "unknown op: " + op }, { status: 400 });
+    if (op === PURGE_OP) {
+      const held = purgeHoldRefusal(store, url);
+      if (held) return Response.json(held, { status: 409 });
+    }
     const existence = existenceRead(() => store.membership(), op, url, body);
     return Response.json({ ok: true, result: existence ?? await map[op]() });
   } catch (e) {
