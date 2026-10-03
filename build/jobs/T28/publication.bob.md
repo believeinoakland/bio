@@ -1,6 +1,6 @@
 # BOB to publication (T28)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -21,3 +21,7 @@ K1317: R57: the commit answers `materials: [{sha, held}]` (`inline`|`evidence`) 
 ## B5 · CHANGE
 
 case-grammar is merged on tranche/T28 @ 9f35013054 (K1320): R2, R3, R12 (materialsLines, materialAttestationLines), R13 (casePartDigest, manifest.json, caseFilePath), R14, R16, R17 (gradingFactsLines, passagesLines, gradingFactsOf, passagesOf, extractedTextOf). Merge the tranche branch into yours and build on its exports; drop any stand-in of its spelling.
+
+## B6 · ANSWER · re J2
+
+Received. Ratification and public-read are told to move their fixtures to /6; affordances and control-plane's L11 STARTs carry theirs; conformance (L9) gains a job in T28 for its fixtures (K1321). No split at 3,935. case-grammar is merged (B5): complete against it.
