@@ -73,13 +73,17 @@ import { wizardRegistration } from "./wizards.mjs";
 /* The name control-plane's promotion step (its R42) is registered under. */
 const STEP = "control-plane";
 
+/* The first module of layer 11 in the modules' total order. `MODULE_ORDER` carries no layers and product code cannot read
+   `build/` at run time, so it is named here; `store.test.mjs`' R2 test holds it to `build/modules.json`'s layers. */
+const FIRST_LAYER_11 = "wizard-scripts";
+
 /* The order promotion ranks its steps by: the modules' total order (membership R83), with control-plane's step (its R42;
-   R10) after every module of layer 10 and before `affordances`' and `tasks`', the rank the step has held since it was
-   `legacy-store`'s, so every step's checks and projections, and the order of refusals, are today's. Promotion ranks a name the
-   order lacks last (its R39). */
+   R10) after every module of layers 1–10 and before every later one (K1416: before the first layer-11 module, now
+   `wizard-scripts`, N544), the rank the step has held since it was `legacy-store`'s, so every step's checks and
+   projections, and the order of refusals, are today's. Promotion ranks a name the order lacks last (its R39). */
 export const STEP_ORDER = Object.freeze((() => {
   const o = MODULE_ORDER.filter((m) => m !== STEP);
-  const at = o.indexOf("affordances");
+  const at = o.indexOf(FIRST_LAYER_11);
   return at === -1 ? [...o, STEP] : [...o.slice(0, at), STEP, ...o.slice(at)];
 })());
 
@@ -100,7 +104,7 @@ export class Store extends DurableObject {
     registerOwnersCounts(ctx);
     registerStats(ctx);
     /* promotion, built first with the order its steps rank by (membership, then promotion, as provenance's first call
-       built them), so control-plane's step ranks after layer 10 and before `affordances` (STEP_ORDER). */
+       built them), so control-plane's step ranks after layer 10 and before every layer-11 module (STEP_ORDER). */
     const promotion = promotionOf(ctx, { order: STEP_ORDER });
     /* R16 (N522; K1307): accepted-work's one instance on this host, made here, before inquiry's factory and every reader,
        on this promotion, so its promotion check (its R4) is registered at its rank before the first request. The same
