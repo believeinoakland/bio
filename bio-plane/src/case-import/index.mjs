@@ -628,11 +628,11 @@ export class CaseImport {
     const named = Array.isArray(asked) ? [...new Set(asked.map((f) => (typeof f === "string" ? f.trim() : f)))] : [];
     const results = new Map(this.#resultsOf(e.import_id, ed).map((r) => [r.finding, r]));
     const unknown = named.filter((f) => typeof f !== "string" || !results.has(f));
-    /* DEC-49 REGION is-import-edition */
+    /* DEC-49 REGION is-import-finding */
     if (!named.length || unknown.length)
       return refuse("IMPORT_NO_SUCH_FINDING", named.length ? "a finding named is not one of this edition's" : "no finding is named",
                     { import: e.import_id, edition: ed, findings: unknown.map((f) => (typeof f === "string" ? f : null)) });
-    /* END DEC-49 REGION is-import-edition */
+    /* END DEC-49 REGION is-import-finding */
     const stated = isObj(gaps) ? gaps : typeof gaps === "string" ? parse(gaps, {}) : {};
     const notRecreated = named.filter((f) => results.get(f).result === "did_not_recreate");
     /* DEC-49 REGION is-import-accept */
@@ -730,12 +730,12 @@ export class CaseImport {
     const { e } = er;
     const ed = Number(e.edition);
     const f = finding === null || finding === undefined || finding === "" ? null : str(finding);
-    /* DEC-49 REGION is-import-edition */
+    /* DEC-49 REGION is-import-finding */
     if ((finding !== null && finding !== undefined && finding !== "" && !f)
         || (f && !this.#resultsOf(e.import_id, ed).some((r) => r.finding === f)))
       return refuse("IMPORT_NO_SUCH_FINDING", "the finding named is not one of this edition's",
                     { import: e.import_id, edition: ed, findings: [typeof finding === "string" ? finding : null] });
-    /* END DEC-49 REGION is-import-edition */
+    /* END DEC-49 REGION is-import-finding */
     const at = this.#stamp();
     let rn = null;
     const out = this.record.transact(() => {
@@ -757,11 +757,9 @@ export class CaseImport {
     const rn = rnOf("flag", flag);
     const open = () => (rn ? this.#one(`SELECT f.* FROM case_import_flags f LEFT JOIN case_import_clears c ON c.flag_rn = f.rn
                                          WHERE f.rn=? AND c.flag_rn IS NULL`, rn) : null);
-    const notOpen = () => {
-      /* DEC-49 REGION is-import-flag */
-      return refuse("IMPORT_FLAG_NOT_OPEN", "no open flag answers by that id", { flag: str(flag) });
-      /* END DEC-49 REGION is-import-flag */
-    };
+    /* DEC-49 REGION is-import-flag-open */
+    const notOpen = () => refuse("IMPORT_FLAG_NOT_OPEN", "no open flag answers by that id", { flag: str(flag) });
+    /* END DEC-49 REGION is-import-flag-open */
     const f = open();
     if (!f) return notOpen();
     const at = this.#stamp();

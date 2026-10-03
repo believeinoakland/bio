@@ -215,9 +215,16 @@ test("R14 each refusal carries its row in this module's own table, a new family,
     assert.match(r.check, /^C-\d+\.\d+$/);
     assert.ok(typeof r.translation === "string" && /Nothing was \w+\.$/.test(r.translation), code);
     const [, fn, region] = /^src\/case-import\/index\.mjs (\S+) > (\S+)$/.exec(r.where);
-    assert.ok(src.includes(`DEC-49 REGION ${region}`), `${code}: its region is marked`);
-    assert.ok(src.includes(fn.replace(/^#/, "")), `${code}: its site exists`);
-    assert.ok(src.includes(`"${code}"`), `${code}: minted here`);
+    /* each opening of the region lies inside the method the row names, and the code is minted inside a region of it */
+    const opens = [...src.matchAll(new RegExp(`(?<!END )DEC-49 REGION ${region}\\b`, "g"))].map((m) => m.index);
+    assert.ok(opens.length, `${code}: its region is marked`);
+    const methodAt = (at) => [...src.slice(0, at).matchAll(/\n  (?:static )?(#?[A-Za-z]\w*)\([^)]*\)?[^\n]*\{\n/g)].at(-1)[1];
+    assert.ok(opens.some((at) => methodAt(at) === fn), `${code}: ${region} sits in ${fn}`);
+    const inside = opens.some((at) => {
+      const end = src.indexOf(`END DEC-49 REGION ${region}`, at);
+      return end > at && src.slice(at, end).includes(`"${code}"`);
+    });
+    assert.ok(inside, `${code}: minted inside its region`);
   }
   /* each refusal the acts answer carries its row: withRow fills it, and leaves another module's refusal as it came */
   assert.deepEqual(withRow({ ok: false, reason: "IMPORT_FLAG_NOT_OPEN" }).check, CASE_IMPORT_CHECKS.IMPORT_FLAG_NOT_OPEN.check);

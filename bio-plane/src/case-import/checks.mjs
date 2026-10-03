@@ -9,10 +9,12 @@
 const at = (fn, region) => `src/case-import/index.mjs ${fn} > ${region}`;
 const CALLER = at("#callerRefusal", "is-import-caller");
 const FILE = at("importCaseFile", "is-import-case-file");
-const EDITION = at("#editionRefusal", "is-import-edition");
+const EDITION = at("#noSuchEdition", "is-import-edition");
+const FINDING = at("acceptImported", "is-import-finding");
 const ACCEPT = at("acceptImported", "is-import-accept");
 const WITHDRAW = at("withdrawAcceptance", "is-import-withdraw");
 const FLAG = at("#flagRefusal", "is-import-flag");
+const OPEN = at("clearFlag", "is-import-flag-open");
 const DOCUMENT = at("completeImportedDocument", "is-import-document");
 
 export const CASE_IMPORT_CHECKS = Object.freeze({
@@ -56,7 +58,7 @@ export const CASE_IMPORT_CHECKS = Object.freeze({
       + "it, or why it withdraws the acceptance. Nothing was written.",
   },
   IMPORT_NO_SUCH_FINDING: {
-    check: "C-130.9", where: EDITION,
+    check: "C-130.9", where: FINDING,
     translation: "A finding named is not one of this imported edition's findings. Nothing was written.",
   },
   IMPORT_ACCEPT_NOT_RECREATED: {
@@ -80,7 +82,7 @@ export const CASE_IMPORT_CHECKS = Object.freeze({
       + "2,000 characters. Nothing was written.",
   },
   IMPORT_FLAG_NOT_OPEN: {
-    check: "C-130.14", where: FLAG,
+    check: "C-130.14", where: OPEN,
     translation: "There is no open flag here by that name: it was never raised, or it has been cleared. Nothing was "
       + "written.",
   },
