@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #109 · session_01StRnMqhDPSE4Afi9a5z1U7 · depth 1
 
-**Jobs** · 
+**Jobs** · record-grammar: RECORD-GRAMMAR #7 session_01TRvdoW3T2CWeCikzNiB9jS
 
 **Opened** 2026-10-03 ~22:00 UTC by BOB #109 from `main` @ 8cd952d87c (T31 closed, K1410), at once (§5.7 (6), P18). Bob's weekly meter: asked at the opening.
 
