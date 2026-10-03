@@ -1,6 +1,6 @@
 # case-checker (T31)
 
-**Status** · session_01DbmGw6aXDCHDt4jNqGVCsU · depth 2 · WORKING · handled B0
+**Status** · session_01DbmGw6aXDCHDt4jNqGVCsU · depth 2 · WAITING ON BOB (J1) · handled B0
 
 ## J1 · REPORT
 
