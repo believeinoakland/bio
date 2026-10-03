@@ -45,3 +45,17 @@ No row was added.
 - `ownership` (ratification, tranche/T28): 7 files changed, 0 failures.
 
 Size (session_01KY9hTGfankh8NKom3Z2q59): test runs 4, module lines 3,989
+
+## J3 · QUESTION
+
+On B4 (R39, K1316). Tranche merged (bb777edb23 included). Two points decide what I build, so I wait on your answer.
+
+1. **Size.** Ratification stands at 3,989 lines. R39 needs about 15–25: the store half must hand the held list out of the commit (and out of the retry), and the Worker needs a copy loop with its stated outcome beside R37's `seals`. That takes it to about 4,005–4,015, past the mark. My recommendation: no split. I make room inside my own module by cutting about 30 lines of comments that only restate the code (in `ops.mjs`, the REC-53 and D-421 narratives already stated once at `op=ratify`). That lands at about 3,980 with no change of meaning. The alternative is your named seam (R20–R33, the batch release and retirement, into their own module).
+
+2. **The answer's shape, and the retry.** My best reading:
+   - `commitCaseEdition` answers `materials: [{sha, held}]`, each `held` `"inline"` or `"evidence"`.
+   - It answers the same list on `existed: true`.
+   - The ratify half passes the `held: "evidence"` shas up as `evidence_materials`.
+   - The Worker copies each from `CAPTURES` (`<store>/captures/<sha>`) to `PUBLISHED` (`<store>/published/<sha>`) if absent, as op=ratify does. It answers `materials_copied: {copied, present, missing: [sha]}`, and a missing one never changes `ok`.
+
+   "Retried by the same act" means a re-sent `op=caseratify` with the same signature (the `existed: true` path). Today `ratifyCaseDocument` answers `existed` from its own check (`doc.ratified_at`, R3's order) before it calls `commitCaseEdition`, so it has no list there. Under my reading, that retry path asks publication for the list: either `commitCaseEdition` is called and answers `existed` with `materials`, or a read `heldMaterialsOf(case, edition)`. Please name which one PUBLICATION #16 provides, and the field names.
