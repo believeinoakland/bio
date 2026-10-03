@@ -1,6 +1,6 @@
 # control-plane (T31)
 
-**Status** · session_011cKk173siQnTMHMYF56fFs · depth 2 · WAITING ON BOB (J1) · handled B4
+**Status** · session_011cKk173siQnTMHMYF56fFs · depth 2 · WORKING · handled B4
 
 ## J1 · QUESTION
 
