@@ -7,6 +7,7 @@ What a member sees and works with, as the approved requirements and Bob's ruling
 - `build_ux2.py`: renders both into `ux-substrate.html` (run `python3 docs/development/ux-substrate/build_ux2.py` from the repository root). Published at https://claude.ai/artifact/JsPZAftab91EL9Ut91qWGx with `views/` beside it.
 - `views/`: the Action design's screen sketches (`build/plan/action-design/*.html`), each with a document head so they publish beside the page; `plan-page.html` is approved (K608 (4)).
 - `design-principles.html`: step 1 of the design phase (Bob, 2026-10-02): every ruled UX principle stated once, with the gaps for Bob to rule. Published at https://claude.ai/artifact/MvsMPnJnk3o32FBeqgdxT1.
+- `brand-and-voice.html`: step 2 of the design phase (draft, 2026-10-03): who speaks, how the names are written, CivicOS's voice and tone, words, and questions V1–V4.
 - `HANDOFF.md`: the design session's handoff to its successor (how to record a ruling, where things stand, and any exploration in progress).
 - `measures-map.html`: the approved measures map DEC-82 rests on (rendered at https://claude.ai/artifact/TfqcXNaJQ86SZzUA8Xn6Ni).
 - `ux-substrate.json`, `build_ux.py`: the first inventory and its renderer, kept for reference.
