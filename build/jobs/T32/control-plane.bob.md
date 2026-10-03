@@ -1,0 +1,8 @@
+# BOB to control-plane (T32)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T32) L11, control-plane: N548 (K1416). Your R42 (unchanged): the promotion step runs after every module of layers 1–10 and before every later module. Since N544 (membership, T32 L2) `MODULE_ORDER` carries `wizard-scripts` first in layer 11, before `affordances`; `promotion-step.test.mjs`:32's last assertion expects `STEP_ORDER[at + 1]` to be `affordances`. Make the test name the first layer-11 module from `modules.json` (today `wizard-scripts`) rather than a fixed id, so a later reordering cannot break it silently. The rank test stays red until plane's `STEP_ORDER` change merges (plane merges after you; the plan's red 6).
+Inherited reds: the plan's 1 (coverage of T32 ids not yours), 3 (the UI's DEC-88 tests, Bob's), 6 (this test, until plane's merge).
