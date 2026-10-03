@@ -13,3 +13,7 @@ K1304: all seven readings stand. Names: inquiry-grammar exports importedLegFindi
 ## B3 · CHANGE
 
 From STRENGTH #10 (K1305): a version leg on a ref stores its target_edition in the version leg's row (a column on inquiry_basis_version_legs, or as your schema keeps it), and your read of version legs answers it, so strength can read the edition of a version's ref leg. This is within your R3 (the edition defines the leg).
+
+## B4 · CHANGE
+
+inquiry-grammar is merged into tranche/T28 (K1306), with IMPORTED_FINDING_RE, parseImportedFindingRef and importedLegFindings: merge tranche/T28 into your branch and build against them.
