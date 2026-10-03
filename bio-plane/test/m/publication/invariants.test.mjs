@@ -1,4 +1,4 @@
-/* publication — the invariants not driven elsewhere: purge (R31) beside corpus-export's declaration (K1024), the check
+/* publication — the invariants not driven elsewhere: purge (R31) beside corpus-export's (K1024) and case-carriage's (N532) declarations, the check
    rows that moved here (R33), no place named (R34), and the id that does not hold yet (R30). The export and its log are
    corpus-export's, written here through it (its R1), never through this module (N483). Driven at the module's
    interface. */
@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { planeWorld as world, V, SIG, NOW } from "./fixture.mjs";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { corpusExportOf } from "../../../src/corpus-export/index.mjs";
+import { caseCarriageOf, CASE_CARRIAGE_EXEMPT } from "../../../src/case-carriage/index.mjs";
 import * as CHECKS from "../../../src/publication/checks.mjs";
 import { ATTRIBUTION_ACT_CHECKS, CASE_SOURCES_CHECKS, rowOf } from "../../../src/publication/checks.mjs";
 import { PUBLICATION_TABLES, PUBLICATION_EXEMPT, publicationOwns, publicationOps } from "../../../src/publication/index.mjs";
@@ -52,9 +53,14 @@ test("R31 published bytes are exempt from purge; the derived and working tables 
   assert.deepEqual(w.rows(`SELECT edition FROM case_documents`), [{ edition: 1 }]);
   assert.deepEqual(w.rows(`SELECT DISTINCT edition FROM case_exclusions`), [{ edition: 1 }]);
   assert.deepEqual(w.snapshot(KEPT), exempt, "published_*, cases and corpus-export's export_log are never cleared");
-  assert.deepEqual([...PUBLICATION_EXEMPT].sort(), ["cases", "published_bundles", "published_case_materials",
-                                                    "published_case_members", "published_cases", "published_material_texts",
+  assert.deepEqual([...PUBLICATION_EXEMPT].sort(), ["cases", "published_bundles", "published_case_members", "published_cases",
                                                     "published_shas"]);
+  /* N532: the two tables of held materials are case-carriage's, declared exempt by it (its R6), created at this
+     module's creation on the same host; this module's declaration and its both answer ok */
+  assert.equal(w.p.caseCarriage, caseCarriageOf(w.host), "created eagerly at this module's creation, one per host");
+  assert.deepEqual([w.p.purgeDeclaration, w.p.caseCarriage.purgeDeclaration], [{ ok: true }, { ok: true }]);
+  assert.deepEqual([...CASE_CARRIAGE_EXEMPT].sort(), ["published_case_materials", "published_material_texts"]);
+  for (const t of CASE_CARRIAGE_EXEMPT) assert.equal(publicationOwns(t), false, `${t} is case-carriage's`);
   assert.deepEqual(PUBLICATION_TABLES.map((t) => t.name || t).sort(),
                    ["capture_attributions", "case_documents", "case_exclusions", "case_revision_flags",
                     "observation_attributions", "published_edges", "published_held_references"]);
