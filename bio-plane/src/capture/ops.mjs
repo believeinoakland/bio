@@ -115,7 +115,7 @@ export async function captureObjectOp(req, url, env, { json, storageAbsent, requ
  * discovered by probing for the wall. Bob, 2026-07-31: there is no need to
  * push traffic to the breaking point; there is plenty of time.
  * (Moved from `legacy-index` beside the op's call, N247.) */
-/** R3: op=archivelookup, forwarded to the service. */
+/** R73 (`acquisition` R3): op=archivelookup, forwarded to the service. */
 export async function archiveLookupOp(req, url, store, { json, storeSilent, storeRefusal, doAnswer }) {
   const body = req.method === "POST" ? await req.json().catch(() => null) : null;
   const address = body?.address || url.searchParams.get("address");
@@ -140,9 +140,9 @@ export async function archiveLookupOp(req, url, store, { json, storeSilent, stor
  * state; the daemon and the member are writers like every writer." So this
  * returns a provenance document and the caller promotes it.
  * (Moved from `legacy-index` beside the op's call, N247.) */
-/** R1–R20, K72 (11): op=acquire, forwarded to the service with the control plane's stamps. Answers `{response}`
+/** R73 (`acquisition` R1–R23), K72 (11): op=acquire, forwarded to the service with the control plane's stamps. Answers `{response}`
  *  (a refusal, a silence) or `{answer}`, the filed capture's answer, which `extraction` reads from the stored primary
- *  itself (R42, K49; N103: no second read of the primary here). */
+ *  itself (`acquisition` R8, K49; N103: no second read of the primary here). */
 export async function acquireOp(req, env, store, { json, storeSilent, storeRefusal, storageAbsent, doAnswer, cls, member, sessMember,
                                                     storeName }) {
   if (req.method !== "POST") return { response: json({ ok: false, error: "acquire is a POST" }, 405) };

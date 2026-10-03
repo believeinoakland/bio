@@ -10,6 +10,7 @@ import { captureOps, captureAccountStatement, CAPTURE_ACCOUNT_TOKEN, pseudonymOf
 import { knockOp, KNOCK, KNOCKER_SECRET_MIN } from "../../../src/capture/doorbell.mjs";
 import { evidenceAbsent } from "../../../src/capture/ops.mjs";
 import { CAPTURE_CHECKS } from "../../../src/capture/checks.mjs";
+import * as signatures from "../../../src/sshsig.mjs";
 import { NS_RATIFY, NS_RELEASE } from "../../../src/sshsig.mjs";
 import { ARCHIVE_SERVICE, ARCHIVE_SAVE_BASE, TSA_ENDPOINTS } from "../../../src/tsa.mjs";
 import { DOORBELL_VIA } from "../../../src/provenance/index.mjs";
@@ -365,6 +366,23 @@ test("R69 R37 (C-118.5, C-118.6): only a capture's actor appends a signed accoun
   assert.equal(captureOps(c, new URL(`http://x/captureaccounts?capture=${d}&viewer=admin`), null, c.env).captureaccounts().accounts.length, 2);
 });
 
+test("R69 (N530): the account statement capture verifies over, and the names it exports, are signatures' own (its R41): one spelling, no copy of capture's", async () => {
+  assert.equal(captureAccountStatement, signatures.captureAccountStatement, "the very function signatures provides");
+  assert.equal(CAPTURE_ACCOUNT_TOKEN, signatures.CAPTURE_ACCOUNT_TOKEN);
+  /* the account is verified over exactly signatures' bytes: a signature over them is admitted, over any other spelling refused */
+  const { c, s } = setup();
+  const d = H("c9");
+  c.recordCaptureActor({ captureSha: d, actor: "m1" });
+  const key = await newKey();
+  signer(s, "m1", key.keyB64);
+  const text = "Saved from the clerk's page.\nSecond line, kept as written.";
+  const theirs = signatures.captureAccountStatement(d, text);
+  assert.deepEqual([...theirs], [...new TextEncoder().encode(`bio-capture-account ${d}\n${text}`)]);
+  assert.equal((await c.recordCaptureAccount({ captureSha: d, text, signature: await sshsign(key, `bio-capture-account ${d} \n${text}`, NS_RATIFY), by: "m1" })).reason,
+               "SIG_BAD_SIGNATURE", "another spelling of the statement does not verify");
+  assert.equal((await c.recordCaptureAccount({ captureSha: d, text, signature: await sshsign(key, theirs, NS_RATIFY), by: "m1" })).ok, true);
+});
+
 test("R69: the puller of a knock is its capture's actor and may give a signed account of receiving it", async () => {
   const { c, s } = setup();
   const k = await c.knock({ content: "handed over", sourceAddress: "8.8.8.8" });
@@ -649,7 +667,7 @@ test("R69 (N388, REC-30): captureAccountsOf answers by the caller's viewer throu
   /* an information bundle and a capture filed in no bundle: seen by every member */
   for (const x of [open, loose]) assert.equal(sees(x, "member:m2"), true, x);
   assert.deepEqual(c.captureAccountsOf(loose, { viewer: "junk" }), nothing(loose), "an unrecognised viewer sees nothing at all");
-  /* in process, no viewer: whole (case-authoring R36's pre-flight) */
+  /* in process, no viewer: whole (`case-disclosures` R3's pre-flight) */
   assert.equal(c.captureAccountsOf(d).accounts[0].text, "captured for the budget project");
   /* the route: the stamp decides, and an unstamped call sees nothing */
   const route = (q) => captureOps(c, new URL(`http://x/captureaccounts?capture=${d}${q}`), null, c.env).captureaccounts();
