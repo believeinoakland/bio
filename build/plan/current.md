@@ -1,6 +1,6 @@
 # Plan T28
 
-**Status** · OPEN · BOB #104 · session_01GJwrrGrvmxmL87Ju4BtBpV · depth 1
+**Status** · OPEN · BOB #105 · session_01DDpGto6QSiBnw4AxvJcYJq · depth 1
 
 **Jobs** · membership: MEMBERSHIP #21 session_014t8ory3KuXTmiZLiSDLmaB; promotion: PROMOTION #28 session_01JXCfBLEWnwDJYd7wTMihga; inquiry-grammar: INQUIRY-GRAMMAR #5 session_01PnLhSoHMj7KMjQmdKaYkP6; accepted-work: ACCEPTED-WORK #1 session_01Ny1sjsJ9vEJz7rxs28vcCh; inquiry: INQUIRY #13 session_01QNQaUggEEA2eXfwiByRD2P; basis-versions: BASIS-VERSIONS #11 session_01EC1CbcpHTUynmhmiinbKPz; strength: STRENGTH #10 session_01Q7AodKmzj5rYSu6PxmkvRb; reevaluation: REEVALUATION #15 session_01CqAd23e8YE6QX8eLXZeLoJ
 
