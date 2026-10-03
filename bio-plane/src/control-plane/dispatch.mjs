@@ -128,6 +128,12 @@ export const PROJECT_NAMING_READS_NOT = Object.freeze({
   docket: "`case` is a published CASE id, answered by the docket's own sight of the case's project (docket R3)",
   docketprepare: "`case` is a published CASE id and `entry` a DOCKET ENTRY id, never a bundle id (docket R4)",
   docketinvitation: "`entry` is a DOCKET ENTRY id, never a bundle id (docket R8)",
+  /* R49's reads (case-import R4): an import is its own id, never a bundle id, and case-import answers a viewer who is no
+     active member as if no import exists, byte-identically. */
+  importedcases: "names nothing: it lists the imports, each a read-only project held apart from the record's bundles, "
+    + "and case-import answers a non-member as if none exists (its R4)",
+  importedcase: "`import` is an IMPORT's id (the SHA-256 of its source group, case and lens), never a bundle id, and "
+    + "case-import answers a non-member with the same bytes as an absent import (its R4)",
 });
 
 /* R27 (REC-196): the answer for a read naming a discoverable project's own id, asked by a caller at EXISTENCE: C-70.1

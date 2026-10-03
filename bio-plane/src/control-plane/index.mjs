@@ -1,4 +1,4 @@
-/* control-plane: THE INSTANCE'S DOOR (R1–R48). The Worker's HTTP entry — routing, the stamps, the answer's decoration
+/* control-plane: THE INSTANCE'S DOOR (R1–R49). The Worker's HTTP entry — routing, the stamps, the answer's decoration
    and envelope — moved from legacy-index (`index.mjs`) at control-plane's extraction (T12, K3, K93). Who may call an op is
    `admission`'s and what each op is `op-declarations'` (the split, K617, K624 (2)): this door calls admission's gates in
    R28's order and reads op-declarations' tables. An op's own handler is its module's: `makeFetch(hooks)` takes the
@@ -42,6 +42,16 @@ import { OPS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, 
          TEMPLATE_DOOR_READS, WHAT_CHANGED_PROPOSAL_ACTIONS, WHAT_CHANGED_READS, NETWORK_NOTICES_ACTIONS,
          NETWORK_NOTICES_READS, NETWORK_NOTICES_BY, NETWORK_NOTICES_PUBLIC_READS, DOCKET_ACTIONS, DOCKET_READS, DOCKET_AUTHOR,
          DOCKET_BY } from "../op-declarations/index.mjs";
+
+/* R49 (DEC-112 (3)(6), DEC-96; N520, N522; op-declarations R14): `case-import`'s eight member ops (its R1–R8), routed
+   through its own map by the general forward. The six acts take `by` (the positional identity case-import asks
+   membership's `positionalMember` of) and `viewer`; the two reads `viewer` alone. Each op's row admits a member's session
+   only (`machineClasses: []`), so no other caller reaches a stamp here. `case-checker`'s public reads (its R15) are
+   registered with `public-read` (its R18) and served by public-read's door read, credential-free, as R45's are. */
+const CASE_IMPORT_ACTIONS = Object.freeze(["caseimport", "caseimportdocument", "importaccept", "importacceptwithdraw",
+                                           "importflag", "importflagclear"]);
+const CASE_IMPORT_READS = Object.freeze(["importedcases", "importedcase"]);
+const CASE_CHECKER_PUBLIC_READS = Object.freeze(["casechecker", "casefilespec"]);
 
 /* REC-22: the ONE namespace the public read path answers from. An instance has
    one published record, so op=publishedcase and op=publishedbytes are pinned
@@ -853,7 +863,8 @@ export function makeFetch(hooks = {}) {
          public-read's door read from the published store (`stub`, `bio`; a `store=scratch` was refused above), with no
          credential and none of the caller's stamps; the read is handed only the parameters it declared. Asked as
          `op=publicread&name=<name>`, the same read is the public hook's (plane's, through `publicReadDoorOp`). */
-      if (NETWORK_NOTICES_PUBLIC_READS.includes(op))
+      /* R49 (case-checker R15): case-checker's two public reads, by the same door read. */
+      if (NETWORK_NOTICES_PUBLIC_READS.includes(op) || CASE_CHECKER_PUBLIC_READS.includes(op))
         return publicReadDoorRead(op, url, env, stub, { json, requiredArgument, storeSilent, storeRefusal, doAnswer });
       /* The public ops whose handlers are their modules' (publication, public-read, instance-setup, capture). */
       return hooks.publicOp({ req, url, env, op, stub, invStub, fp, presentedAi });
@@ -1348,6 +1359,9 @@ export function makeFetch(hooks = {}) {
            case's project, and docket fails closed without the stamp. (`projectholds`, `actionholdpreview` and
            `actionholdrelease`, R47, take it as the action layer's, op-declarations R12.) */
         || DOCKET_ACTIONS.includes(op) || DOCKET_READS.includes(op)
+        /* R49 (op-declarations R14; case-import R1, R4): every import act and read answers by the caller's membership,
+           asked of `viewer` (or `by`), and case-import answers a viewer who is no active member as if no import exists. */
+        || CASE_IMPORT_ACTIONS.includes(op) || CASE_IMPORT_READS.includes(op)
         || REC30_VIEWER_READS.includes(op)) {
       /* PL-11 / IS-5 / D-199 (4) — THE STATED VIEWER, AND IT IS THE RECORD'S
          ANSWER RATHER THAN THE CLASS'S.
@@ -2040,6 +2054,13 @@ export function makeFetch(hooks = {}) {
     if (DOCKET_AUTHOR.includes(op))
       inner.searchParams.set("author", viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (DOCKET_BY.includes(op))
+      inner.searchParams.set("by", viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* R49 (op-declarations R14; case-import R1, R5–R8): WHO IMPORTS, COMPLETES, ACCEPTS, WITHDRAWS, FLAGS OR CLEARS, the
+       POSITIONAL identity (`member:<id>`, the founder's `member:admin`), the form case-import asks membership's
+       `positionalMember` of; only a member's session reaches these ops, and a machine stamp, were one to arrive, is
+       refused there by name (C-130.1, MACHINE_CANNOT_IMPORT). A caller's `by` (or `author`, which case-import's map reads
+       when `by` is absent) is overwritten or deleted above. */
+    if (CASE_IMPORT_ACTIONS.includes(op))
       inner.searchParams.set("by", viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* PL-18 / DEC-63 — WHICH MEMBER IS ASKING, for the project-participation
        gate on the three run verbs. Bob ruled 2026-08-09 that an investigation

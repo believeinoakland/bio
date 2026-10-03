@@ -206,3 +206,33 @@ test("R22, R43 (N512; K1193): the list reads attestation's C-89 (`ATTEST_CHECKS`
   for (const code of ["CAPTURE_HELD_IN_PARTS", "ROUTE_MARK_NO_AUTHOR", "ROUTE_MARK_NO_BUNDLE", "ROUTE_MARK_NO_SUCH_BUNDLE", "ROUTE_MARK_NOT_A_DOCUMENT"])
     assert.ok(M.dec49Row(code), code);
 });
+
+test("R22, R43 (N520, N522, N526; K1310): the list reads accepted-work's C-21.4 and C-21.5 (after inquiry-grammar, before inquiry) and case-import's C-130 (after ratification, before case-authoring), each in its module's place, and every one of their rows decorates with its own check and words; case-checker holds no family and has no entry; docket's C-129 is read after action-grammar while `PRESSURE_MARKED` and `PRESSURE_REFUSED` stay in both families, so both keep action-grammar's rows, and docket's own `MACHINE_CANNOT_MARK_DOCKET_PRESSURE` decorates with C-129.10 (negative control: the list without either new file misses its family)", async () => {
+  const paths = M.CHECK_FAMILY_FILES.map(([p]) => p);
+  const at = (p) => paths.indexOf(p);
+  assert.ok(at("src/inquiry-grammar/checks.mjs") < at("src/accepted-work/checks.mjs") && at("src/accepted-work/checks.mjs") < at("src/inquiry/index.mjs"), paths.join(", "));
+  assert.ok(at("src/ratification/checks.mjs") < at("src/case-import/checks.mjs") && at("src/case-import/checks.mjs") < at("src/case-authoring/checks.mjs"), paths.join(", "));
+  assert.equal(paths.some((p) => p.startsWith("src/case-checker/")), false);
+  for (const [path, fam, checks] of [["src/accepted-work/checks.mjs", "ACCEPTED_WORK_CHECKS", /^C-21\.[45]$/],
+                                     ["src/case-import/checks.mjs", "CASE_IMPORT_CHECKS", /^C-130\.\d+$/]]) {
+    const table = (await import(`../../../${path}`))[fam];
+    assert.ok(Object.keys(table).length >= 2, `${path} ${fam}`);
+    for (const [code, row] of Object.entries(table)) {
+      assert.match(row.check, checks, code);
+      assert.deepEqual(M.dec49Row(code), { check: row.check, translation: row.translation }, code);
+    }
+    const missing = await unreached(M.CHECK_FAMILY_FILES.filter(([p]) => p !== path));
+    assert.ok(missing.includes(`bio-plane/${path} ${fam}`), missing.join(", "));
+  }
+  assert.deepEqual(Object.values((await import("../../../src/accepted-work/checks.mjs")).ACCEPTED_WORK_CHECKS).map((r) => r.check).sort(), ["C-21.4", "C-21.5"]);
+  /* docket: read after action-grammar, its two shared codes keeping action-grammar's rows, its own code its own */
+  assert.ok(at("src/action-grammar/checks.mjs") < at("src/docket/checks.mjs"), paths.join(", "));
+  const AG = (await import("../../../src/action-grammar/checks.mjs"));
+  const agRow = (code) => Object.entries(AG).filter(([k, v]) => isFamily(k, v) && v[code]).map(([, v]) => v[code])[0];
+  for (const code of ["PRESSURE_MARKED", "PRESSURE_REFUSED", "MACHINE_CANNOT_MARK_PRESSURE"])
+    assert.deepEqual(M.dec49Row(code), { check: agRow(code).check, translation: agRow(code).translation }, code);
+  const DK = (await import("../../../src/docket/checks.mjs")).DOCKET_CHECKS;
+  assert.equal(Object.hasOwn(DK, "MACHINE_CANNOT_MARK_PRESSURE"), false, "docket's shared machine code is gone (N526)");
+  assert.deepEqual(M.dec49Row("MACHINE_CANNOT_MARK_DOCKET_PRESSURE"), { check: "C-129.10", translation: DK.MACHINE_CANNOT_MARK_DOCKET_PRESSURE.translation });
+  for (const code of ["PRESSURE_MARKED", "PRESSURE_REFUSED"]) assert.ok(DK[code], `docket still holds ${code}`);
+});
