@@ -1,6 +1,6 @@
 # queue (T27)
 
-**Status** · session_01F38bSR7bu33Tfs9jy4JEQS · depth 2 · COMPLETE · handled B1
+**Status** · session_01F38bSR7bu33Tfs9jy4JEQS · depth 2 · COMPLETE · handled B3
 
 ## Completion
 
@@ -45,7 +45,18 @@
 - Accepted red 2: no catalogue row added or changed (no check row; the kinds are vocabulary), so no `awaiting stamp` row to list.
 - Merge order (L11): affordances and queue-producers merge before queue. This branch builds without either, and its tests pass before and after queue-producers' R29–R31 land.
 
-Size (session_01F38bSR7bu33Tfs9jy4JEQS): test runs 9, module lines 5936
+
+**B2, B3 (CHANGE; K1288–K1290).** Merged `tranche/T27` @ `4545026b15`, which includes the affordances and queue-producers merges. B2's three fakes were already in the test world. `holdsReleased`'s fake now carries `limit: 500`, as actions answers. New test: a fake `actions.holdsReleased` reaches the real queue-producers R29. Its `litigation-hold-released` item passes the mint as a FINDING, goes to an administrator and to the placer, and with no release there is no item. Re-run on the merged tree:
+- `test/m/queue/`: 105 pass, 0 fail.
+- `conclude-project`: 75 pass, 0 fail.
+- Whole `test/m`: tests 5437, pass 5425, fail 1 (red 4, control-plane R22 `CHECK_FAMILIES`; red 5 cleared with affordances' merge), todo 11.
+- Checks:
+  - `format`: 0 failures.
+  - `architecture queue`: 25 product files, 68 relative imports, 0 failures.
+  - `coverage queue`: 40 of 40 named, 0 failures.
+  - `ownership queue tranche/T27`: 8 files changed, 0 failures.
+
+Size (session_01F38bSR7bu33Tfs9jy4JEQS): test runs 13, module lines 5958
 
 ## J1 · COMPLETE
 
