@@ -222,9 +222,15 @@ export function anonymityOf(legs, levels, f) {
 
 /* ============================================================ the method in words (R31) */
 
+/** R31 (DEC-124; K1365 (1)): the product's name when a caller gives none. The name is not part of the method: the
+ *  same version under either name is the same method, and only the first line names it. */
+export const PRODUCT_NAME = "Civicsmith";
+
+/* Each version's words, as a function of the product's name. With "CivicOS" a version answers, byte for byte, the
+   words it answered before T31 (a `bio-case-document/6` edition re-renders identically, `case-grammar` R14). */
 const METHOD_TEXT = Object.freeze({
-  [GRADING_METHOD_VERSION]: [
-    `How CivicOS grades a finding (method ${GRADING_METHOD_VERSION}).`,
+  [GRADING_METHOD_VERSION]: (product) => [
+    `How ${product} grades a finding (method ${GRADING_METHOD_VERSION}).`,
     "",
     "1. Two strengths, never one. A finding has a capture strength (how faithfully the documents it rests on were "
       + "taken in) and a connection strength (how firmly they are tied to what the finding is about), with testimony "
@@ -259,10 +265,12 @@ const METHOD_TEXT = Object.freeze({
   ].join("\n"),
 });
 
-/** R31: the method of `version` in plain words, complete enough to recompute a grade by hand; null for a version this
- *  module never published. Pure; never throws. */
-export function gradingMethodText(version) {
-  return typeof version === "string" && Object.hasOwn(METHOD_TEXT, version) ? METHOD_TEXT[version] : null;
+/** R31: the method of `version` in plain words, complete enough to recompute a grade by hand, naming the product by
+ *  `product` (a non-blank string, used as given), else `PRODUCT_NAME`; null for a version this module never published.
+ *  Pure; never throws. */
+export function gradingMethodText(version, product = PRODUCT_NAME) {
+  if (typeof version !== "string" || !Object.hasOwn(METHOD_TEXT, version)) return null;
+  return METHOD_TEXT[version](typeof product === "string" && product.trim() ? product : PRODUCT_NAME);
 }
 
 /* ============================================================ recomputation from a case file's facts (R32) */
