@@ -1,10 +1,10 @@
 /* case-checker — the one checker of a case file (requirements: `build/requirements/case-checker.md`; DEC-112 (3)(6);
  * `BIO_Publication_v0_1.md` §5C; K1256, K1257).
  *
- * Anybody can check a published case, and recreate its findings, without a CivicOS copy. This module is the one
+ * Anybody can check a published case, and recreate its findings, without a Civicsmith copy. This module is the one
  * checker:
  *
- *   checkCaseFile        R1–R11, R18 (`./check.mjs`): a pure function CivicOS runs on import (`case-import`);
+ *   checkCaseFile        R1–R11, R18 (`./check.mjs`): a pure function Civicsmith runs on import (`case-import`);
  *   the program          R13 (`./main.mjs`, built by `./build-program.mjs` into `./program.mjs`): the same code, one
  *                        file anyone runs offline with nothing to install;
  *   the specification    R14 (`./spec.mjs`): the readable text of each case-file format version;

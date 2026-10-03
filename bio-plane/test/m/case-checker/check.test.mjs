@@ -2,6 +2,7 @@
    (`./fixture.mjs`): a clean case file recreates every finding, and each check has its negative control. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import * as CC from "../../../src/case-checker/index.mjs";
 import * as CG from "../../../src/case-grammar/index.mjs";
 import { canonicalJson } from "../../../src/record-grammar/json.mjs";
@@ -305,6 +306,43 @@ test("R10: the carried complete edition equals the one the rest of the case file
   assert.equal(other.complete_edition.equal, false);
   assert.deepEqual(new Set(Object.values(results(other))), new Set(["did_not_recreate"]));
   assert.ok(other.findings.every((f) => has(f.differs, "complete_edition", /is not the edition the rest of the case file renders/)));
+});
+
+/* R10 (DEC-124; K1365 (1)): a `/6` case file as published before T31, built and packed by this fixture on `main` @
+   d2b7451b80 (the commit T31 opened from) and kept whole as bytes, so its complete edition is the one rendered then. */
+const BEFORE_T31 = readFileSync(new URL("./case-file-6-before-T31.zip", import.meta.url));
+
+test("R10: a bio-case-document/6 case file whose complete edition was rendered before T31 still compares equal, with no differs entry", async () => {
+  const r = await CC.checkCaseFile({ parts: [new Uint8Array(BEFORE_T31)] });
+  const doc = r.integrity.files.find((f) => f.kind === "case_document");
+  assert.ok(doc && doc.state === "intact");
+  assert.equal(r.complete_edition.equal, true, r.complete_edition.detail);
+  assert.equal(r.complete_edition.sha256, r.complete_edition.rendered_sha256);
+  for (const f of r.findings) assert.deepEqual(f.differs, [], f.finding);
+  assert.deepEqual(results(r), ALL_RECREATED);
+  /* and it is the edition that names the product as it was then */
+  const read = CC.readCaseFile([new Uint8Array(BEFORE_T31)]);
+  const edition = new TextDecoder().decode(read.files.find((f) => f.kind === "complete_edition").content);
+  assert.match(new TextDecoder().decode(read.files.find((f) => f.kind === "case_document").content), /^---\nformat: bio-case-document\/6\n/);
+  assert.ok(edition.includes("Made with CivicOS") && !edition.includes("Civicsmith"));
+});
+
+test("R10: a bio-case-document/7 case file compares its complete edition rendered with the name Civicsmith; one carrying the CivicOS words differs for the case", async () => {
+  const seven = { format: "bio-case-document/7" };
+  const r = await check(seven);
+  assert.equal(r.complete_edition.equal, true, r.complete_edition.detail);
+  assert.deepEqual(results(r), ALL_RECREATED);
+  const edition = caseFile(seven).bytesOf.get(CG.caseFilePath("complete_edition")).toString("utf8");
+  assert.ok(edition.includes("Civicsmith") && !edition.includes("CivicOS"));
+  /* the same /7 case file carrying an edition in the old words: the rest renders another edition, so it differs */
+  const old = await check({ ...seven, completeEdition: edition.replaceAll("Civicsmith", "CivicOS") });
+  assert.equal(old.complete_edition.equal, false);
+  assert.deepEqual(new Set(Object.values(results(old))), new Set(["did_not_recreate"]));
+  assert.ok(old.findings.every((f) => has(f.differs, "complete_edition", /is not the edition the rest of the case file renders/)));
+  /* and a /6 case file carrying the new words differs the same way */
+  const six = caseFile().bytesOf.get(CG.caseFilePath("complete_edition")).toString("utf8");
+  const renamed = await check({ completeEdition: six.replaceAll("CivicOS", "Civicsmith") });
+  assert.equal(renamed.complete_edition.equal, false);
 });
 
 test("R12: no answer composes a case-level strength or a single verdict: pairs are per finding and per axis, and recreation is never stated as endorsement", async () => {

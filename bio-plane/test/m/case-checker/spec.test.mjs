@@ -39,6 +39,9 @@ test("R14: it states every field, kind and rule a checker needs, from case-gramm
      presentability, completion, the complete edition, another group's work */
   for (const h of ["Integrity", "Signatures", "Passages", "Grades", "The bar", "Publication checks", "Presentability", "Completion",
                    "The complete edition", "Another group's work"]) assert.match(SPEC, new RegExp(`\\n\\d+\\. ${h}\\.`), h);
+  /* the case document formats it reads, and the product name the complete edition renders by format (DEC-124) */
+  for (const w of ["bio-case-document/7", "bio-case-document/6", "CivicOS", "Civicsmith"]) assert.ok(named(w), w);
+  assert.match(SPEC, /`bio-case-document\/6` document, or an earlier one, renders `CivicOS`, and a `bio-case-document\/7` document renders `Civicsmith`/);
 });
 
 test("R15: at start the module registers casechecker and casefilespec with public-read, credential-free; a second registration is refused", async () => {
