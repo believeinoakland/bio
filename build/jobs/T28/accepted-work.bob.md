@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` (T28) L6, accepted-work, a NEW modu
 ## B2 · ANSWER · re J2
 
 K1304 answers J1 and J2. J1: your paths and tests (bio-plane/src/accepted-work/, bio-plane/test/m/accepted-work/) are ruled; BOB writes them into modules.json in your merge commit (the format check refuses a path not yet in the tree, as docket's at T27, K1278). Run ownership with that edit made locally (uncommitted). J2: you use record-core (recordOf, readFile for the held bundle.md); the edge is in modules.json and your Uses on tranche/T28: merge it. Also from basis-versions: your R4 walks the inquiry's basis[] only; version legs are basis-versions' (its R3). Export acceptedLegRefusals({legs, viewer}) as R3 names it; basis-versions builds against your merged code.
+
+## B3 · CHANGE
+
+inquiry-grammar is merged into tranche/T28 (K1306), with IMPORTED_FINDING_RE, parseImportedFindingRef and importedLegFindings: merge tranche/T28 into your branch and build against them.
