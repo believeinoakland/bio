@@ -64,7 +64,9 @@ test("R2 negative control: on a host where another module took network-notices' 
   const n = networkNoticesOf(st.ctx);
   assert.equal(n.publicReadsRegistration.ok, false);
   assert.equal(n.publicReadsRegistration.reason, "PROVIDER_DECLARED");
-  assert.deepEqual(publicReadOf(st.ctx).publicReads().map((r) => [r.name, r.module]), [["noticespublic", "zz-squatter"]]);
+  /* the squatter's read stands, and none of network-notices' is registered; case-checker's two (R17) are its own names */
+  assert.deepEqual(publicReadOf(st.ctx).publicReads().map((r) => [r.name, r.module]),
+    [["casechecker", "case-checker"], ["casefilespec", "case-checker"], ["noticespublic", "zz-squatter"]]);
 });
 
 test("R2: network-notices is built at its place in the modules' order: its purge declaration follows publication's and precedes every layer-9 and layer-10 module's", async () => {

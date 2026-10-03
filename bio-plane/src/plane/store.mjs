@@ -49,6 +49,9 @@ import { caseAuthoringOf, caseAuthoringOps } from "../case-authoring/index.mjs";
 import { ratificationOf, ratificationOps } from "../ratification/index.mjs";
 import { publicationOf, publicationOps } from "../publication/index.mjs";
 import { docketOf, docketOps } from "../docket/index.mjs";
+import { acceptedWorkOf } from "../accepted-work/index.mjs";
+import { checkCaseFile, registerCaseCheckerPublicReads } from "../case-checker/index.mjs";
+import { caseImportOf, caseImportOps } from "../case-import/index.mjs";
 import { publicReadOf, publicReadOps } from "../public-read/index.mjs";
 import { projectStageOf, projectStageOps } from "../project-stage/index.mjs";
 import { networkNoticesOf, networkNoticesOps } from "../network-notices/index.mjs";
@@ -96,6 +99,11 @@ export class Store extends DurableObject {
     /* promotion, built first with the order its steps rank by (membership, then promotion, as provenance's first call
        built them), so control-plane's step ranks after layer 10 and before `affordances` (STEP_ORDER). */
     const promotion = promotionOf(ctx, { order: STEP_ORDER });
+    /* R16 (N522; K1307): accepted-work's one instance on this host, made here, before inquiry's factory and every reader,
+       on this promotion, so its promotion check (its R4) is registered at its rank before the first request. The same
+       instance is handed to every module that reads accepted work (strength, basis-versions, reevaluation,
+       publication) and to case-import, which fills its one registration (R17), so one registration serves them all. */
+    const acceptedWork = acceptedWorkOf(ctx, { record: recordOf(ctx), promotion });
     /* provenance declares its tables and joins every promotion first, so its register write runs before the
        projections that read it. observation-log registers its look on each receipt (its R5, provenance R47), and
        listens to extraction's reading notice once extraction exists (below). */
@@ -118,14 +126,14 @@ export class Store extends DurableObject {
     /* retrieval: its projection and text index join every promotion. */
     const retrieval = retrievalOf(ctx, { now: () => this.#nowMs(null) });
     registerInquiryGrammar(recordOf(ctx));   /* inquiry-grammar R6 (K812): before basis-versions, whose R43 runs at its sub-slot */
-    basisVersionsOf(ctx, { retrieval });   /* basis-versions registers its projection decoration (its R42) */
+    basisVersionsOf(ctx, { retrieval, acceptedWork });   /* basis-versions registers its projection decoration (its R42) */
     aiRunsOf(ctx, env);   /* ai-runs registers with retrieval, in the modules' order */
     /* reevaluation before actions: actions reaches conformance, which reaches reevaluation, and a factory reads its
        `deps` on the first call only, so created there it would never see `env` (its R25). */
-    reevaluationOf(ctx, { env });
+    reevaluationOf(ctx, { env, acceptedWork });
     /* publication (K365): built here, after reevaluation, so its case reads are registered with reevaluation (its R41,
        R43; reevaluation R26) before anything runs. Built lazily, a sweep an alarm reached before any op found none. */
-    publicationOf(ctx);
+    publicationOf(ctx, { acceptedWork });
     /* R15 (N520; DEC-116): docket, directly after publication in the modules' order, built here with this environment
        (its factory reads its deps on the first call only). At creation it creates and declares its tables to purge
        (whole store only, its R16) and starts, filling reevaluation's docket registration (its R13, reevaluation R30)
@@ -141,7 +149,16 @@ export class Store extends DurableObject {
     retrieval.registerLegGrades("inquiry", inquiryLegGrades(ctx));   /* R10 (K861): inquiry's leg grades (its R52, retrieval R55) */
     observationLogOf(ctx).attachMeaning({ connections: connectionsOf(ctx, { env }) });
     ratificationOf(ctx);   /* ratification: its case catalogue and C-2.8's case-member arm, registered at start (R8, R9) */
-    strengthOf(ctx, { retrieval });   /* strength: registers its pair (R17), its cache projection (R13) and, with retrieval, the cache's fields (R23) */
+    strengthOf(ctx, { retrieval, acceptedWork });   /* strength: registers its pair (R17), its cache projection (R13) and, with retrieval, the cache's fields (R23) */
+    /* R17 (N520, N522): case-checker, then case-import, at their places after ratification in the modules' order, built
+       here once strength (with its retrieval, above) and reevaluation (with its environment) exist, since a factory reads
+       its deps on its first call only. case-checker starts by registering its two public reads with public-read (its
+       R15; public-read R18). case-import is built with the deps it reads (case-checker's `checkCaseFile`, strength,
+       accepted-work's one instance (R16), reevaluation) and this environment; its case-file bytes are held in its own
+       tables, so no object store is handed to it (K1319). At creation it creates its tables, declares them to purge
+       (whole store only, its R13) and starts, filling accepted-work's registration (its R16) before the first request. */
+    registerCaseCheckerPublicReads(ctx, { publicRead: publicReadOf(ctx) });
+    caseImportOf(ctx, { env, checkCaseFile, strength: strengthOf(ctx), acceptedWork, reevaluation: reevaluationOf(ctx) });
     biasOf(ctx, { env });
     /* R12 (K1061; inquiry R53, bias R40): inquiry's findings registered with bias as kind `finding`, after bias is built
        with its environment above (its factory reads its deps on the first call only), so a lens change raises a debt on
@@ -242,6 +259,7 @@ export class Store extends DurableObject {
     biasOf(this.ctx).migrate();
     intentOf(this.ctx).migrate();
     docketOf(this.ctx).migrate();   /* R15: its tables, in the modules' order (directly after publication) */
+    caseImportOf(this.ctx).migrate();   /* R17: its tables, in the modules' order (after ratification and case-checker) */
     networkNoticesOf(this.ctx).migrate();   /* its tables, in the modules' order (after project-stage) */
     /* R11 (K921): layer 9's two new modules, in the modules' order: local-facts' table, then filing-templates' tables
        and its take of the library `filings` R26 kept (a template already taken is passed over). */
@@ -318,6 +336,9 @@ export class Store extends DurableObject {
       ...reevaluationOps(reevaluationOf(ctx), url, body),
       ...caseAuthoringOps(caseAuthoringOf(ctx), url, body),
       ...ratificationOps(ratificationOf(ctx), url, body),
+      /* R17 (N520, N522): case-import's eight member ops; case-checker's public reads `casechecker` and `casefilespec` are
+         public-read's (its R18). */
+      ...caseImportOps(caseImportOf(ctx), url, body),
       /* N483 (K1122): `export` and `exportlog` are corpus-export's (its R6), on the one instance publication created. */
       ...corpusExportOps(corpusExportOf(ctx), (k) => url.searchParams.get(k)),
       ...publicationOps(publicationOf(ctx), url, body),
