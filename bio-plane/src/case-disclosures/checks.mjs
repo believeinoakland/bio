@@ -11,8 +11,8 @@
  * published as self-attested without its owner saying so and why, an acknowledgement that stands on nothing, and an
  * uncleared hunch; and material a load-bearing finding relies on that this copy does not hold whole, another group's
  * work with no acceptance in force, and an open flag on it left undisclosed, a disclosure standing on nothing, or a
- * flags read not made whole. Promotion stamps these rows (N318); C-120.1–C-120.7 were stamped in `CATALOG_VERSION`
- * 1.47.0 and earlier (T17); C-120.8 and C-120.10–C-120.13, and C-120.1–C-120.7's new `where`s, await T29's stamp.
+ * flags read not made whole. Promotion stamps these rows (N318); C-120.4–C-120.7 were stamped in `CATALOG_VERSION`
+ * 1.47.0 (T17); C-120.8 and C-120.10–C-120.13, and C-120.1–C-120.7's new `where`s, await T29's stamp.
  * C-120.9 was withdrawn unstamped (K1275), and its number is never reused. A change to any row moves `CATALOG_VERSION`
  * (rule 17). */
 
