@@ -3,10 +3,10 @@
    `casedoc`, `sources` and `tensions` suites' R20 arms (K651) and driven on the bytes alone. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3, CASE_DOCUMENT_FORMAT_V2,
+import { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V5, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3, CASE_DOCUMENT_FORMAT_V2,
          CASE_DOCUMENT_FORMAT_LEGACY, CASE_DOCUMENT_FORMATS_ACCEPTED, caseDocumentStatesMemberBlocks,
          caseDocumentRequiresDisclosures, caseDocumentRequiresV4Disclosures, caseDocumentRequiresTensionSection,
-         caseDocumentBlocks, captureBlockLines, sourceBlockLines, sourceStatement, unnamedSourceStatement,
+         caseDocumentRequiresMaterials, caseDocumentBlocks, captureBlockLines, sourceBlockLines, sourceStatement, unnamedSourceStatement,
          sourceRowsStanding, CAPTURE_FIELDS, ACKNOWLEDGEMENT_FIELDS, SOURCE_FIELDS, SOURCE_BASES,
          BLOCKS_PREDATE_SENTENCE, BLOCK_UNREADABLE_SENTENCE, NOT_RECORDED_STATED, caseTensionsOf, disclosedCandidates,
          TENSION_STATE_WORDS, TENSION_HIGHLIGHT_SENTENCE, TENSION_DEPTH_SENTENCE, TENSIONS_PREDATE_SENTENCE,
@@ -14,28 +14,34 @@ import { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3,
 import { doc, tensionLines, sha, NOW, V } from "./helpers.mjs";
 
 const PREDICATES = [caseDocumentStatesMemberBlocks, caseDocumentRequiresDisclosures, caseDocumentRequiresV4Disclosures,
-                    caseDocumentRequiresTensionSection];
+                    caseDocumentRequiresTensionSection, caseDocumentRequiresMaterials];
 const ODD = [null, undefined, 7, "x", {}, [], { format: null }, { format: "bio-case-document/5 " },
              { get format() { throw new Error("boom"); } }];
 
-test("R1 the formats: /5 is written, /5–/1 accepted as written, and the four predicates read the token, pure and never throwing", () => {
-  assert.equal(CASE_DOCUMENT_FORMAT, "bio-case-document/5");
-  assert.deepEqual([CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3, CASE_DOCUMENT_FORMAT_V2, CASE_DOCUMENT_FORMAT_LEGACY],
-                   ["bio-case-document/4", "bio-case-document/3", "bio-case-document/2", "bio-case-document/1"]);
-  assert.deepEqual([...CASE_DOCUMENT_FORMATS_ACCEPTED], ["bio-case-document/5", "bio-case-document/4",
+test("R1 the formats: /6 is written, /6–/1 accepted as written, and the five predicates read the token, pure and never throwing", () => {
+  assert.equal(CASE_DOCUMENT_FORMAT, "bio-case-document/6");
+  assert.deepEqual([CASE_DOCUMENT_FORMAT_V5, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3, CASE_DOCUMENT_FORMAT_V2,
+                    CASE_DOCUMENT_FORMAT_LEGACY],
+                   ["bio-case-document/5", "bio-case-document/4", "bio-case-document/3", "bio-case-document/2", "bio-case-document/1"]);
+  assert.deepEqual([...CASE_DOCUMENT_FORMATS_ACCEPTED], ["bio-case-document/6", "bio-case-document/5", "bio-case-document/4",
     "bio-case-document/3", "bio-case-document/2", "bio-case-document/1"]);
   assert.equal(Object.isFrozen(CASE_DOCUMENT_FORMATS_ACCEPTED), true);
   const f = (v) => ({ format: `bio-case-document/${v}` });
-  const vs = [5, 4, 3, 2, 1, 6, 0];
-  assert.deepEqual(vs.map((v) => caseDocumentStatesMemberBlocks(f(v))), [true, true, true, true, false, false, false]);
-  assert.deepEqual(vs.map((v) => caseDocumentRequiresDisclosures(f(v))), [true, true, true, false, false, false, false]);
-  assert.deepEqual(vs.map((v) => caseDocumentRequiresV4Disclosures(f(v))), [true, true, false, false, false, false, false]);
-  assert.deepEqual(vs.map((v) => caseDocumentRequiresTensionSection(f(v))), [true, false, false, false, false, false, false]);
-  for (const odd of ODD) for (const pred of PREDICATES) assert.equal(pred(odd), false);
+  const vs = [6, 5, 4, 3, 2, 1, 7, 0];
+  assert.deepEqual(vs.map((v) => caseDocumentStatesMemberBlocks(f(v))), [true, true, true, true, true, false, false, false]);
+  assert.deepEqual(vs.map((v) => caseDocumentRequiresDisclosures(f(v))), [true, true, true, true, false, false, false, false]);
+  assert.deepEqual(vs.map((v) => caseDocumentRequiresV4Disclosures(f(v))), [true, true, true, false, false, false, false, false]);
+  assert.deepEqual(vs.map((v) => caseDocumentRequiresTensionSection(f(v))), [true, true, false, false, false, false, false, false],
+                   "the other predicates hold for /6 as they hold for /5");
+  assert.deepEqual(vs.map((v) => caseDocumentRequiresMaterials(f(v))), [true, false, false, false, false, false, false, false],
+                   "the method and materials blocks are required of /6 only");
+  for (const odd of [...ODD, { format: "bio-case-document/6 " }]) for (const pred of PREDICATES) assert.equal(pred(odd), false);
   /* pure: the same answer twice, and the argument untouched */
-  const fm = f(5);
-  for (const pred of PREDICATES) assert.equal(pred(fm), pred(fm));
-  assert.deepEqual(fm, { format: "bio-case-document/5" });
+  for (const v of [6, 5]) {
+    const fm = f(v);
+    for (const pred of PREDICATES) assert.equal(pred(fm), pred(fm));
+    assert.deepEqual(fm, { format: `bio-case-document/${v}` });
+  }
 });
 
 const CAP = sha("the knocked bytes");

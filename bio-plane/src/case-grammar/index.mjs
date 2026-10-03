@@ -4,7 +4,10 @@
  * blocks (R1, `./blocks.mjs`) and tension section (R1, `./tensions.mjs`), the attribution run's text (R2), the
  * sections a later act re-authors (R3), the citations a signed document carries (R4), the edge set a finding rests
  * on (R5), what changed in an edition and the lens it was produced under (R8, R9, `./edition.mjs`), and the project
- * reference a case carries (R10, `./reference.mjs`). It reads no table, holds no store and never throws.
+ * reference a case carries (R10, `./reference.mjs`), the method and materials a `/6` case carries and the other
+ * group's work it rests on (R11, R12, R16, `./materials.mjs`), the case file's format (R13, `./casefile.mjs`), the
+ * complete edition (R14, `./complete.mjs`) and a finding's standing against the bar (R15, `./standing.mjs`). It reads
+ * no table, holds no store and never throws.
  *
  * Split from `publication` by copy (K651, K624 (1)): the format block of `publication/checks.mjs`, and `fmSafe`,
  * `SECTIONS`, `REAUTHORABLE_SECTIONS`, `signedCitations`, the attribution renderers and `publishedGraphEdges` of
@@ -16,11 +19,12 @@ import { caseDocumentRequiresV4Disclosures } from "./formats.mjs";
 import { fmSafe } from "./blocks.mjs";
 import { WHAT_CHANGED_HEAD } from "./edition.mjs";
 
-export { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3, CASE_DOCUMENT_FORMAT_V2,
-         CASE_DOCUMENT_FORMAT_LEGACY, CASE_DOCUMENT_FORMATS_ACCEPTED, caseDocumentStatesMemberBlocks,
-         caseDocumentRequiresDisclosures, caseDocumentRequiresV4Disclosures,
-         caseDocumentRequiresTensionSection } from "./formats.mjs";
+export { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V5, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3,
+         CASE_DOCUMENT_FORMAT_V2, CASE_DOCUMENT_FORMAT_LEGACY, CASE_DOCUMENT_FORMATS_ACCEPTED,
+         caseDocumentStatesMemberBlocks, caseDocumentRequiresDisclosures, caseDocumentRequiresV4Disclosures,
+         caseDocumentRequiresTensionSection, caseDocumentRequiresMaterials } from "./formats.mjs";
 export { caseDocumentBlocks, captureBlockLines, sourceBlockLines, sourceStatement, unnamedSourceStatement,
+         withheldSourceStatement, sourceRowWithheld, WITHHELD_SOURCE_LABEL, WITHHELD_SOURCE_REASON,
          sourceRowsStanding, CAPTURE_FIELDS, ACKNOWLEDGEMENT_FIELDS, SOURCE_FIELDS, SOURCE_BASES,
          BLOCKS_PREDATE_SENTENCE, BLOCK_UNREADABLE_SENTENCE, NOT_RECORDED_STATED, fmSafe } from "./blocks.mjs";
 export { caseTensionsOf, disclosedCandidates, TENSION_STATE_WORDS, TENSION_HIGHLIGHT_SENTENCE, TENSION_DEPTH_SENTENCE,
@@ -30,6 +34,16 @@ export { WHAT_CHANGED_HEAD, WHAT_CHANGED_ORIGINS, whatChangedText, whatChangedBl
          LENS_NONE_SENTENCE, LENS_UNDETERMINED_SENTENCE, lensStatementKey, lensBlockLines, lensSectionLines, lensOf,
          editionStatementsOf } from "./edition.mjs";
 export { WORKING_ON_KEY, NOTICE_REFERENCE_PATTERN, isNoticeReference, workingOnLines, workingOnOf } from "./reference.mjs";
+export { METHOD_FIELDS, methodBlockLines, methodOf, MATERIAL_FIELDS, MATERIAL_ATTESTATION_FIELDS, MATERIAL_KINDS,
+         MATERIAL_RESTS_UNDER, ATTESTATION_BY_KINDS, ATTESTATION_LEVELS, ANONYMOUS_ATTESTATION_LEVELS,
+         GROUP_ATTESTATION_SIGNATURE, materialBlockLines, materialsOf, ACCEPTED_WORK_FIELDS, ACCEPTED_WORK_FLAG_FIELDS,
+         PAIR_AXES, pairLine, pairOf, acceptedWorkBlockLines, acceptedWorkOf } from "./materials.mjs";
+export { CASE_FILE_FORMAT, CASE_FILE_MANIFEST_PATH, CASE_FILE_KINDS, CASE_FILE_SINGLE_KINDS, CASE_FILE_MANIFEST_FIELDS,
+         CASE_FILE_KEY_FIELDS, CASE_FILE_PART_FIELDS, CASE_FILE_FILE_FIELDS, caseFilePath, caseFileEntryOf,
+         casePartDigest, caseFileManifestCheck } from "./casefile.mjs";
+export { BAR_AXES, STANDING_ROLE_WORDS, standingOf } from "./standing.mjs";
+export { COMPLETE_EDITION_HEADINGS, TWO_STRENGTHS_SENTENCE, GRADE_MEANINGS, MADE_WITH_LINE, CHECKER_READS,
+         completeEditionOf } from "./complete.mjs";
 
 
 /** MK-7 — THE ATTRIBUTION LEVELS (MEMBER-KNOWLEDGE-DESIGN.md §4, §4.6), MOST PROTECTIVE FIRST (R2).
@@ -116,7 +130,7 @@ export const SECTIONS = Object.freeze({
 });
 export const REAUTHORABLE_SECTIONS = Object.freeze(Object.keys(SECTIONS));
 
-/* R4, R6: the citations a signed case document carries. A `/4` or `/5` document carrying `case_citations` answers them
+/* R4, R6: the citations a signed case document carries. A `/4`, `/5` or `/6` document carrying `case_citations` answers them
    as signed; every other document states that its citation versions are undetermined, never filled. */
 export const CITATIONS_UNDETERMINED_SENTENCE = "version undetermined (signed before capture pins): this document was "
   + "signed before a case's citation edges were pinned to the capture they were made against, and it carries neither";

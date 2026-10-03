@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as CG from "../../../src/case-grammar/index.mjs";
 import { doc, tensionLines, sha, NOW } from "./helpers.mjs";
+import { caseFileFixture } from "./casefile-fixture.mjs";
 
 const OLDER = ["bio-case-document/4", "bio-case-document/3", "bio-case-document/2", "bio-case-document/1"];
 
@@ -46,6 +47,11 @@ test("R7 no place is named in this module's behaviour or outward text", () => {
     CG.unnamedSourceStatement(), CG.publishedGraphEdges({ references: [{ target: "T" }], division_parent: "P" }),
     CG.whatChangedSectionLines("s"), CG.whatChangedBlockLines({ statement: "s", began_as: "member" }),
     CG.workingOnLines("NOTE-2026-0001"), CG.workingOnOf({ format: "bio-case-document/5", working_on: "NOTE-2026-0001" }),
+    CG.withheldSourceStatement(), CG.methodOf({ format: "bio-case-document/6", method: {} }),
+    CG.caseFileManifestCheck({}), CG.caseFileManifestCheck(null), caseFileFixture().manifest,
+    CG.completeEditionOf(caseFileFixture()), CG.completeEditionOf(null),
+    ...[["load_bearing", { capture: "B" }], ["supporting", { connection: "C" }], [null, { capture: "B" }], ["load_bearing", null]]
+      .map(([role, bar]) => CG.standingOf({ role, bar, pair: { capture: "C" } })),
     ...[true, false, null].map((inForce) => CG.lensSectionLines({ statements: [{ kind: "scrutiny" }, { kind: "inference" },
                                                                              { kind: "pattern", citations: [{}] }], inForce })),
   ]);

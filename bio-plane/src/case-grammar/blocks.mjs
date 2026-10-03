@@ -1,4 +1,4 @@
-/* case-grammar — the `captures:` and `sources:` blocks of a `/5` case document (requirements:
+/* case-grammar — the `captures:` and `sources:` blocks of a `/5` or `/6` case document (requirements:
  * `build/requirements/case-grammar.md` R1, R6; copied from `publication/blocks.mjs` (K651), whose ids the comments below
  * keep: publication R20 is this module's R1, and R2, R10, R28, R51, R52 are publication's readers of it; N364: DEC-81
  * items 1 and 3, DEC-78 item 5; K497, K509).
@@ -77,6 +77,25 @@ export function unnamedSourceStatement({ capture = null, received = null } = {})
   return oneLine(`an unnamed source; received as ${capture ?? "an undetermined digest"} at ${received ?? "an undetermined time"}`);
 }
 
+/** R1, R14 (DEC-112 (5), DEC-119 (1); `case-authoring` R37, K1134 reading 6): how a source whose identity a case
+ *  withholds is labelled, and the reason it states. The reason names the source's lack of consent and of a public
+ *  record (`sources` R8), never what was withheld. The words are the UX stream's; until it gives them, these. */
+export const WITHHELD_SOURCE_LABEL = "Withheld";
+export const WITHHELD_SOURCE_REASON = "the source has not consented to being named, and no public record names them";
+
+/** R1 (`case-authoring` R37): the statement for a capture whose source has nothing publishable, the identity withheld:
+ *  the label, its reason, and the receipt's digest and time. */
+export function withheldSourceStatement(given) {
+  const { capture = null, received = null } = given && typeof given === "object" ? given : {};
+  return oneLine(`${WITHHELD_SOURCE_LABEL}: ${WITHHELD_SOURCE_REASON}; received as `
+    + `${capture ?? "an undetermined digest"} at ${received ?? "an undetermined time"}`);
+}
+
+/** R1, R14: whether a `sources:` row states its source's identity withheld: a row with no basis, which is either the
+ *  withheld statement or the unnamed one an older preparation wrote. */
+export const sourceRowWithheld = (row) => !!row && typeof row === "object" && (row.basis ?? null) === null
+  && typeof row.stated === "string" && row.stated.length > 0;
+
 /** R20: the `sources:` block's lines, from `[{capture, stated, basis}]`. */
 export function sourceBlockLines(rows) {
   const list = (Array.isArray(rows) ? rows : []).filter((r) => r && typeof r === "object")
@@ -143,7 +162,7 @@ export function caseDocumentBlocks(text) {
 /** R51, R52: which `sources:` rows no longer hold. `publishable(capture)` answers, for the capture, `{entries, received}`:
  *  every entry `publishableAt({audience: "public", at})` answers now over the sources behind it, and the receipt's
  *  time, or null when no source stands behind the capture. A row holds when its `stated` and `basis` are an answered
- *  entry's, or when it is the capture's unnamed statement with `basis: null`; every other row is answered, so nothing
+ *  entry's, or when it is the capture's unnamed or withheld statement with `basis: null`; every other row is answered, so nothing
  *  is stated that `publishableAt` did not answer at the commit. */
 export function sourceRowsStanding(rows, publishable) {
   const failed = [];
@@ -160,6 +179,7 @@ export function sourceRowsStanding(rows, publishable) {
     const basis = r ? r.basis ?? null : null;
     const holds = !!p && stated !== null && (basis === null
       ? stated === unnamedSourceStatement({ capture, received: p.received })
+        || stated === withheldSourceStatement({ capture, received: p.received })
       : SOURCE_BASES.includes(basis)
         && (p.entries || []).some((e) => e && e.basis === basis && sourceStatement(e) === stated));
     if (!holds) failed.push({ capture, stated, basis });
