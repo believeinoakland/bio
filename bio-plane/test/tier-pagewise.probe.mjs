@@ -72,6 +72,7 @@ import { createRequire } from "node:module";
 import { createHash } from "node:crypto";
 import { extractPdfStructure } from "../src/pdfstructure.mjs";
 import { perPageTierWinner, mergeTier2Text, TIER_RULE } from "../src/textchain.mjs";
+import { civicsmithUserAgent } from "../src/acquisition/index.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FIXTURES = join(HERE, "fixtures", "cpdf20");
@@ -193,7 +194,8 @@ function report(measured, label) {
 }
 
 /* ── the live census arm (network) ───────────────────────────────────────── */
-const UA = "Civicsmith/0.58.0 (+https://github.com/believeinoakland/bio; instance biosmoke7; acquire)";
+/* The census's agent is composed by `acquisition`'s one composer (its R24), never a written copy (N542). */
+const UA = civicsmithUserAgent("0.58.0", "biosmoke7", "acquire");
 const CACHE = "/var/tmp/cpdf20-corpus/docs";
 async function censusDocs(limit = 60) {
   mkdirSync(CACHE, { recursive: true });
