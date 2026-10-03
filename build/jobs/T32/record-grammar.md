@@ -25,3 +25,7 @@
 - `ownership: 3 files changed by record-grammar between tranche/T32 and HEAD; 0 failures`
 
 Size (session_01TRvdoW3T2CWeCikzNiB9jS): test runs 5, module lines 2302
+
+## J1 · REPORT
+
+case-checker's generated artifact bio-plane/src/case-checker/program.mjs embeds record-grammar/labels.mjs, so N543 stales it: case-checker R13 (the committed program.mjs is that build) goes red (29/0 on tranche/T32 before, 1 fail after). Not written by me (mechanics §14). Regenerate at the layer close: node bio-plane/src/case-checker/build-program.mjs from the repository root.
