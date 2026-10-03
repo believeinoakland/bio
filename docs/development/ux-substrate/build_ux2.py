@@ -309,7 +309,7 @@ exp_block = ""
 if x:
     exp_block = f'''
 <h2 id="audiences">Who meets it</h2>
-<p>Everyone who uses CivicOS or reads what it produces, inside and outside the group: what they want, what they already know, the conditions they meet it in, and what they must never see or be able to do.</p>
+<p>Everyone who uses Civicsmith or reads what it produces, inside and outside the group: what they want, what they already know, the conditions they meet it in, and what they must never see or be able to do.</p>
 <div class="auds">{aud}</div>
 <h2 id="usecases">Use cases</h2>
 <p>The full catalogue: every function the Functional Architecture says a group needs, and what the construct designs add. <b>{len(ucs)}</b> use cases; <b>{len(uc_no)}</b> have no requirement behind them yet, so no module builds them.</p>
@@ -319,7 +319,7 @@ if x:
 {jx}
 '''
 
-page = f'''<title>CivicOS UX Substrate</title>
+page = f'''<title>Civicsmith UX Substrate</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Public+Sans:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
@@ -415,9 +415,9 @@ ul.bl {{ margin:2px 0; padding-left:18px }} ul.bl li {{ margin:2px 0 }}
 </style>
 <div class="wrap">
 <header>
-<p class="src" style="display:block">CivicOS · as of {e(d["meta"].get("asOf"))}</p>
+<p class="src" style="display:block">Civicsmith · as of {e(d["meta"].get("asOf"))}</p>
 <h1>The UX substrate</h1>
-<p class="lede">What a CivicOS member sees and works with, as the approved requirements and Bob's rulings define it today, and everything a designer needs to build its experience on. It opens with the decisions that are still Bob's to make.</p>
+<p class="lede">What a Civicsmith member sees and works with, as the approved requirements and Bob's rulings define it today, and everything a designer needs to build its experience on. It opens with the decisions that are still Bob's to make.</p>
 <div class="readme">
 <div><b>Part 1 · For Bob</b>What the product is to a member, in plain words; <a href="#needed">what is still needed from you</a>, each with its background, the choices and a recommendation; and <a href="#settled">what is settled</a>.</div>
 <div><b>Part 2 · Design inputs</b>For the UX work: audiences, use cases, the experience step by step, screens and their rules, how heavy each act is, and the words. Each line is marked <span class="pill fixed">Fixed</span> by the canon or <span class="pill open">Open</span> for design.</div>
@@ -429,7 +429,7 @@ ul.bl {{ margin:2px 0; padding-left:18px }} ul.bl li {{ margin:2px 0 }}
 <label for="srcToggle"><input type="checkbox" id="srcToggle"> Show sources</label></nav>
 
 <p class="part">Part 1 · For Bob</p>
-<h2 id="overview">What a member does with CivicOS</h2>
+<h2 id="overview">What a member does with Civicsmith</h2>
 {"".join("<p>" + t + "</p>" for t in d["meta"].get("overview", []))}
 <div class="diagram"><pre class="mermaid">{e(spine)}</pre></div>
 <p class="legend">In the diagrams below, colour shows how far each thing is built: <span class="pill built">Built</span> <span class="pill gaps">Built, with gaps</span> <span class="pill spec">Not built</span></p>

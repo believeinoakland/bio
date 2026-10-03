@@ -558,13 +558,13 @@ Either way the member works on the real screens, the guide sitting in the docked
 **labelled draft** in a field for the member to edit and adopt (as DEC-101 and K1019 allow); the member alone presses the
 act's button, and the act still runs its four beats.
 
-**RULED 2026-10-03 by Bob (DEC-121): who authors, approves, finds and shares wizard scripts.** Two libraries: the CivicOS
+**RULED 2026-10-03 by Bob (DEC-121): who authors, approves, finds and shares wizard scripts.** Two libraries: the Civicsmith
 library, shipped with releases and approved by Bob, and each group's own, governed like filing templates (versioned; approved
 by a project owner, widened by an administrator; a machine never approves; retired, never deleted). Any member authors by
 recording a walk-through (screens and acts, never values) or by asking the assistant, which is an expert script author;
 building by hand is an advanced editor an administrator grants. Checks refuse a script naming screens or acts that do not
 exist, lacking a step's "why", or telling a member what to conclude. Required wizards (setup and claim, member onboarding, the
-publication ceremony) are the CivicOS library's and a failing one blocks the release; a broken optional wizard is withdrawn
+publication ceremony) are the Civicsmith library's and a failing one blocks the release; a broken optional wizard is withdrawn
 until fixed, its owner told. Wherever wizards begin, a standard mark in a standard place shows them on hover or tap, starts one
 on click, or records a new one from there. Groups may share approved scripts as signed files or through the network directory;
 an importing group approves them before use.
@@ -685,7 +685,7 @@ place's languages, named by its jurisdiction profile, is a later decision.
 
 **Translated cases (principle now, design later).** A translation of a published case is never presented as the signed case:
 it is marked as an unofficial translation and names the signed original. Whether and how a group issues translations through
-CivicOS is decided when a group asks to publish one.
+Civicsmith is decided when a group asks to publish one.
 
 **Devices, themes and nothing from outside (RULED 2026-10-03 by Bob, DEC-122).** On a phone a member reads everything and
 does everyday acts (reversible and reasoned), including capturing a document; signing, publishing and sending happen on a

@@ -1,6 +1,6 @@
 {
  "meta": {
-  "title": "CivicOS experience inputs for UX design",
+  "title": "Civicsmith experience inputs for UX design",
   "written": "2026-09-28",
   "branch": "claude/gallant-brown-zg0wc1",
   "readThis": [
@@ -91,7 +91,7 @@
    "name": "Group operator (installs the copy)",
    "whoTheyAre": [
     {
-     "text": "The person who puts the group's own copy of CivicOS into the group's own cloud account, from a page opened in a browser. May or may not become the founder.",
+     "text": "The person who puts the group's own copy of Civicsmith into the group's own cloud account, from a page opened in a browser. May or may not become the founder.",
      "basis": "fixed",
      "src": "installer Purpose, R1; Distribution section 2 (a sovereign instance, not a hosted service)"
     }
@@ -161,7 +161,7 @@
      "src": "installer Purpose, R15, R33"
     },
     {
-     "text": "Believe in Oakland appears only as publisher and signer of the release; every page names CivicOS and the installing group.",
+     "text": "Believe in Oakland appears only as publisher and signer of the release; every page names Civicsmith and the installing group.",
      "basis": "fixed",
      "src": "installer R22"
     },
@@ -1274,7 +1274,7 @@
      "basis": "open"
     },
     {
-     "text": "Any group may use CivicOS; a group with a stake in a matter discloses it.",
+     "text": "Any group may use Civicsmith; a group with a stake in a matter discloses it.",
      "basis": "fixed",
      "src": "D6 (K590); docs/architecture/BIO_Action_v0_1.md (canon whole, K608 (1)) §4 rule 9"
     }
@@ -1493,7 +1493,7 @@
    ],
    "whatTheyAlreadyKnow": [
     {
-     "text": "What counsel knows of CivicOS is not stated.",
+     "text": "What counsel knows of Civicsmith is not stated.",
      "basis": "open"
     }
    ],
@@ -4731,7 +4731,7 @@
     "group operator"
    ],
    "goal": "Get a proven copy of the signed release running.",
-   "trigger": "A group decides to use CivicOS.",
+   "trigger": "A group decides to use Civicsmith.",
    "constructs": [
     "group-instance"
    ],
@@ -9283,7 +9283,7 @@
      "src": "instance-setup R23"
     },
     {
-     "text": "Prerequisites stated; every page names CivicOS and the installing group.",
+     "text": "Prerequisites stated; every page names Civicsmith and the installing group.",
      "basis": "fixed",
      "src": "installer R22-R23"
     },
@@ -11422,7 +11422,7 @@
     "decision": "The four points left open on 29 September: (1) what 'Accepted by our group' commits the group to, whether it is public, and how it is withdrawn; (2) how a 'Flagged' mark is raised, answered and cleared, and who sees it; (3) whether 'Meets standards' returns; (4) what a reader of your own case sees when it rests on work you accepted or flagged.",
     "alreadyDecidedPart": "On 29 September you replaced the Roadmap's five trust levels with an origin mark saying who made a thing: 'Ours', 'Another group's', 'Accepted by our group', 'Not yet evaluated', 'Flagged'. It is always visible, a hover shows the fact behind it, and it is never combined with grades into a trust score. 'Flagged' comes only from a member's recorded evaluation naming specific issues, never a machine's; 'Meets standards' waits for an evaluator of incoming work.",
     "basics": [
-     "A group is the people using one copy of CivicOS, usually one civic organisation; a member is one of them. A project is a group's line of work toward a goal. A case is a project's finished, signed argument, published and never changed: a correction is a new numbered edition, the way an errata filing sits beside the original.",
+     "A group is the people using one copy of Civicsmith, usually one civic organisation; a member is one of them. A project is a group's line of work toward a goal. A case is a project's finished, signed argument, published and never changed: a correction is a new numbered edition, the way an errata filing sits beside the original.",
      "Each finding in a case has two separate grades, A to D, never combined: capture (how well the documents are held) and connection (how firmly the links between them are established).",
      "Members can cite another group's published case: part of a question then rests on, say, 'Budget Watch, edition 2'. Your ruling of 30 July sets the limit: citing carries over the fact that they published it, never the credibility of the content, and the citation can never be stronger than that edition's grades when it was signed.",
      "The origin mark is a small label on any information saying who made it. Two of its labels, 'Accepted by our group' and 'Flagged', need acts that do not exist yet, taken by a named member with a reason.",
@@ -11430,11 +11430,11 @@
     ],
     "today": [
      "Nothing of this is built. A member can cite another group's edition, capped at its signed grades. There is no accept or flag button and no origin mark on screen.",
-     "The requirements for the acceptance act and the origin mark are owed to you under your 29 September ruling and wait on these four points. Only one group uses CivicOS; no second group has published anything yet."
+     "The requirements for the acceptance act and the origin mark are owed to you under your 29 September ruling and wait on these four points. Only one group uses Civicsmith; no second group has published anything yet."
     ],
     "problem": [
      "Acceptance is the one place a group could take on another group's credibility, which your 30 July ruling otherwise keeps out. If it means 'we vouch for this as our own', one careless click carries another group's error into your cases. If it means nothing visible, members will not see the point.",
-     "The founding requirement says acceptance is public. But CivicOS speaks to the outside only by publishing signed cases, so a public acceptance list would be a new kind of published object. A private acceptance falls short unless it becomes public when it matters: when your own case relies on it.",
+     "The founding requirement says acceptance is public. But Civicsmith speaks to the outside only by publishing signed cases, so a public acceptance list would be a new kind of published object. A private acceptance falls short unless it becomes public when it matters: when your own case relies on it.",
      "A public flag is a public criticism of an ally and needs the care of a finding, with a fair chance to answer. A private flag may never reach the group that made the error. Either way something must clear it, usually their next edition.",
      "Too generous a choice risks your group's credibility; too strict, and members keep their doubts in email, outside the record. The owed requirements wait on it."
     ],
@@ -11537,7 +11537,7 @@
       "commitsYouTo": "Nothing now."
      }
     ],
-    "tradeoff": "How far acceptance and flags reach: inside the group until a published case relies on them, using the channel CivicOS already has, or public at once, literal to the founding requirement but a new public object and a public criticism of allies.",
+    "tradeoff": "How far acceptance and flags reach: inside the group until a published case relies on them, using the channel Civicsmith already has, or public at once, literal to the founding requirement but a new public object and a public criticism of allies.",
     "recommendation": {
      "choice": "A",
      "why": [
@@ -11701,7 +11701,7 @@
     "decision": "(1) Whether there is a 'held captures' list at all, per member and per project, showing each one's age. (2) If there is, whether a member may act on several at once from it: vouch for a uniform batch in one act (with the recorded statement of what they checked), set several aside with one reason, or link several to a question. (3) Whether anything other than 'crucial' material is barred from a batch, for example a document caught in an unresolved conflict.",
     "alreadyDecidedPart": "",
     "basics": [
-     "A capture is a document the group's copy of CivicOS fetched from a public web address (or received) and stored byte for byte, with where and when it came from. Every capture lands 'held': stored and traced, but not yet part of the group's working evidence.",
+     "A capture is a document the group's copy of Civicsmith fetched from a public web address (or received) and stored byte for byte, with where and when it came from. Every capture lands 'held': stored and traced, but not yet part of the group's working evidence.",
      "Vouching for a held capture (the record calls it 'release') is a named member's statement that the document appears to be what it claims to be: a real council agenda, not spam or a phishing page. It does not say the contents are true. Only a person may vouch; the machine never may.",
      "Setting aside is the other way out: under the intake doctrine, a document the group will not proceed with stays held with its reason written down, never silently parked or deleted.",
      "Held captures pile up: a member's own captures, captures the assistant requests (which arrive hours later), material pulled in from the public doorbell, bulk captures, and later standing 'sweeps' (searches the group approves in advance) bringing dozens per run.",
@@ -12040,7 +12040,7 @@
     "decision": "(1) Whether empty, loading and waiting states use one shared vocabulary across the product, or are designed screen by screen. (2) Whether every wait must say what is awaited, from whom, and by when (where a date is known). (3) Whether an empty screen may offer a next step, and if so only on something the member has just created.",
     "alreadyDecidedPart": "On 29 September you fixed how the product states what it does not know: 'Undetermined' always carries a 'because…' line, and its four neighbours ('Withheld', 'Unrated', 'Nobody looked', 'Refused') each look and read differently, none dressed as an error. The same day you ruled that as a deadline nears, an item's position, colour or wording may change, and that this is display, not a notification. What remains is the ordinary cases those rulings do not cover: an empty list, a screen still loading, a screen that failed to load, and a long wait.",
     "basics": [
-     "Much in CivicOS takes time. A capture (fetching a public document and storing its exact bytes) can take minutes, and the system paces itself per website so it never hammers a city's server. A capture the assistant asks for is queued and may run hours later; if it cannot be made within 24 hours, the request expires and the record says nothing was filed. A site may refuse to let a page be rendered fully, and the request is held with the site's reason. Outside the system, legal clocks run for days, such as a public-records request's response deadline.",
+     "Much in Civicsmith takes time. A capture (fetching a public document and storing its exact bytes) can take minutes, and the system paces itself per website so it never hammers a city's server. A capture the assistant asks for is queued and may run hours later; if it cannot be made within 24 hours, the request expires and the record says nothing was filed. A site may refuse to let a page be rendered fully, and the request is held with the site's reason. Outside the system, legal clocks run for days, such as a public-records request's response deadline.",
      "Every list can be empty, and every screen depends on asking the record a question, which can fail (a dropped connection, a timeout).",
      "So four different truths can look identical, as a blank or a spinner: there is nothing here; the answer has not arrived; the screen could not get an answer; and the record answered that it does not know. A fifth is a wait with a known end: waiting on someone, until a date.",
      "The product already sorts signals three ways: recorded (never shown), noticed (shown as status where the thing lives, such as 'the system is pacing this capture'), and actionable (a queue item). Losing the middle one means 'either drowning the member or hiding what is happening'.",
@@ -12249,7 +12249,7 @@
    }
   },
   {
-   "question": "What accessibility standard must CivicOS's member screens and public case pages meet, and should anything in CivicOS appear in languages other than English?",
+   "question": "What accessibility standard must Civicsmith's member screens and public case pages meet, and should anything in Civicsmith appear in languages other than English?",
    "whyItMatters": "Canon names phones and print only; a civic product's public output may need to reach non-English readers and assistive technology users.",
    "relatedUseCases": [
     "UC-107"
@@ -12308,24 +12308,24 @@
     "stillOpen": false,
     "settledSince": "",
     "title": "Accessibility standard and languages",
-    "inOneBreath": "What accessibility standard must CivicOS's member screens and public case pages meet, and should anything in CivicOS appear in languages other than English?",
+    "inOneBreath": "What accessibility standard must Civicsmith's member screens and public case pages meet, and should anything in Civicsmith appear in languages other than English?",
     "decision": "(1) Whether to adopt a named accessibility standard now, as a requirement every screen of the redesign is built to; the candidate is WCAG 2.2 at level AA, for both the member screens and the published case. (2) Which languages: English only for now but built so its words can be translated later, or the interface also offered in the languages a place needs. (3) Whether a group may issue a translated version of a published case, and if so whether it carries the group's signature or is marked as an unofficial translation of the signed original.",
     "alreadyDecidedPart": "",
     "basics": [
-     "CivicOS has two kinds of screens. The member screens are where a group's members do their work: the queue of things that want their attention, projects, captured documents, the publishing steps. The published output is what the public sees: the case page on the web, its printed version and its downloadable file. Its readers are residents, journalists, officials and other groups, and most of them have never used CivicOS.",
+     "Civicsmith has two kinds of screens. The member screens are where a group's members do their work: the queue of things that want their attention, projects, captured documents, the publishing steps. The published output is what the public sees: the case page on the web, its printed version and its downloadable file. Its readers are residents, journalists, officials and other groups, and most of them have never used Civicsmith.",
      "Accessibility here means access for people with disabilities: someone who is blind and uses a screen reader (software that reads the page aloud and lets them jump between headings, links and table cells), someone who cannot use a mouse and works by keyboard alone, someone who zooms the page to 200 per cent or more, or someone who cannot tell red from green. A page built without them in mind is often unusable to them, not merely awkward.",
-     "The usual yardstick is WCAG, the Web Content Accessibility Guidelines. Each rule has a level: A (minimum), AA (the level most laws and public bodies point to) and AAA (rarely required in full). Version 2.2 (2023) is current. As general background, not from the project's files: the US Justice Department's 2024 rule for state and local government websites uses WCAG 2.1 AA. My reading (not legal advice) is that it does not bind CivicOS groups directly, but the officials who receive or cite a case are held to it.",
+     "The usual yardstick is WCAG, the Web Content Accessibility Guidelines. Each rule has a level: A (minimum), AA (the level most laws and public bodies point to) and AAA (rarely required in full). Version 2.2 (2023) is current. As general background, not from the project's files: the US Justice Department's 2024 rule for state and local government websites uses WCAG 2.1 AA. My reading (not legal advice) is that it does not bind Civicsmith groups directly, but the officials who receive or cite a case are held to it.",
      "Language is a separate question. Offering the interface (buttons, explanations) in several languages is mostly engineering if planned early. The published case is different: it is signed, meaning members attest it and its file carries a fingerprint that lets anyone check that not one character changed. A translation is new text and cannot carry that signature unless someone signs it too. A familiar parallel: agencies post translated decisions marked 'unofficial translation; the English version controls'."
     ],
     "today": [
      "No canon document, requirement or ruling names an accessibility standard or a supported language. The one 'accessibility' item in the technical architecture's open questions means ease of use for newcomers, not disability access.",
      "Several of your rulings already lean toward accessibility without naming a standard (see 'fixed' below): colour is never the only signal, every hover explanation also opens on keyboard focus or a tap, and the assistant panel does not float, partly because floating panels trap or lose keyboard focus.",
      "The current member app (left as it is until the redesign replaces it, by your ruling of 30 September) is one file of about 26,500 lines with almost no accessibility markup: two of the standard accessibility attributes and seven role labels. No keyboard or screen-reader check has ever been run; the old plan's 'hardening pass' was never built. It has a phone viewing layout and a full print layout.",
-     "Everything is in English. Each place's local facts live in a 'jurisdiction profile', a data file (the first covers Oakland and Alameda County). A profile records a 'locale', but that is the language of the government's own documents, used when capturing them, not the language CivicOS speaks. If languages were chosen per place, the profile is where that choice would live."
+     "Everything is in English. Each place's local facts live in a 'jurisdiction profile', a data file (the first covers Oakland and Alameda County). A profile records a 'locale', but that is the language of the government's own documents, used when capturing them, not the language Civicsmith speaks. If languages were chosen per place, the profile is where that choice would live."
     ],
     "problem": [
      "The redesign is being designed now. Accessibility designed in costs modestly: headings marked as headings, every grade badge given a spoken name, tables given header cells, contrast chosen once in the palette. Retrofitting means revisiting every built screen. Without a named target, each screen built meanwhile is a guess and may need rework. That is the reason to decide now.",
-     "Public readers are most affected. They know least about CivicOS, cannot ask a member what a badge means, and include the residents a civic group exists to serve. A case a blind resident cannot read undercuts the mission and, in a dispute, the group's credibility. Members with disabilities are affected too. CivicOS has particular traps: grades are small coloured badges explained on hover, stages are coloured bars, evidence tables are dense, and an accessible downloadable PDF is extra work of its own.",
+     "Public readers are most affected. They know least about Civicsmith, cannot ask a member what a badge means, and include the residents a civic group exists to serve. A case a blind resident cannot read undercuts the mission and, in a dispute, the group's credibility. Members with disabilities are affected too. Civicsmith has particular traps: grades are small coloured badges explained on hover, stages are coloured bars, evidence tables are dense, and an accessible downloadable PDF is extra work of its own.",
      "Languages raise doctrine as well as engineering. If a member translates a case and the group posts it, is it part of the published record? Who stands behind it? How is it corrected when the English case is? Machine translation would carry your 'machine work' marking. Decided badly one way, a careless translation misstates a finding under the group's signature. Decided badly the other way, the communities most affected (in Oakland, for example, Spanish and Chinese speakers, whom the city itself serves in their languages; general knowledge, not from the project's files) are left out."
     ],
     "story": {
@@ -12335,7 +12335,7 @@
       "Dolores, a retired teacher who is blind, opens the case with her screen reader. Without a standard, the reader announces 'B' next to each piece of evidence, or nothing at all, the stage bars are silent, and the evidence table reads as one long run of words. Its explanations open only on mouse hover, which she cannot use.",
       "Built to AA, the same page reads: 'Capture grade B: someone else could check this copy with some effort. Press Enter for what this grade means.' She jumps heading to heading, and each table cell is announced with its column name.",
       "Minh, a member, asks whether his mother, who reads Vietnamese, can read the case. Ana, another member, offers to translate the summary.",
-      "Under the recommended option, the published case stays in English, and the group posts Ana's summary on its own website, unconnected to the case. Under the fuller option (B), CivicOS publishes it beside the case marked: 'Unofficial Vietnamese translation by a member of East Oakland Water Watch. The signed English case is the record: [link].' When the English case is corrected a month later, the translation is marked 'out of date: the English case was corrected on 14 November'.",
+      "Under the recommended option, the published case stays in English, and the group posts Ana's summary on its own website, unconnected to the case. Under the fuller option (B), Civicsmith publishes it beside the case marked: 'Unofficial Vietnamese translation by a member of East Oakland Water Watch. The signed English case is the record: [link].' When the English case is corrected a month later, the translation is marked 'out of date: the English case was corrected on 14 November'.",
       "A council aide prints the case for a committee packet. Because the grades carry their names and icons and not just colours, the black-and-white printout still says what each grade is."
      ]
     },
@@ -12362,7 +12362,7 @@
      },
      {
       "point": "Product code names no place; everything local lives in a jurisdiction profile.",
-      "why": "Your concern of 25 September that CivicOS serve groups anywhere.",
+      "why": "Your concern of 25 September that Civicsmith serve groups anywhere.",
       "src": "build/layers.md 'No jurisdiction in the product'; K1"
      },
      {
@@ -12376,7 +12376,7 @@
       "label": "A",
       "name": "AA now for everything; English first, built for translation",
       "howItWorks": "WCAG 2.2 AA becomes a requirement for member screens and the published case page, print and file. Each new screen is checked against it before it is accepted. The interface stays in English but keeps all its words in one place, so another language can be added without rebuilding screens. Published cases appear in whatever language the group wrote them in.",
-      "inTheStory": "Dolores reads the case fully. Minh's mother gets nothing from CivicOS itself; Ana's Vietnamese summary lives on the group's website, unlinked, and can silently go out of date.",
+      "inTheStory": "Dolores reads the case fully. Minh's mother gets nothing from Civicsmith itself; Ana's Vietnamese summary lives on the group's website, unlinked, and can silently go out of date.",
       "gains": [
        "A recognised bar that officials, funders and journalists understand.",
        "Modest cost when designed in, not retrofitted.",
@@ -12391,7 +12391,7 @@
      {
       "label": "B",
       "name": "A, plus local languages and translated versions",
-      "howItWorks": "As A. In addition, the interface is offered in the languages a jurisdiction profile names (for Oakland, for example, Spanish, Chinese and Vietnamese), and a group may publish a translated version of a case through CivicOS, marked as an unofficial translation, linked to the signed original, and flagged out of date when the original is corrected.",
+      "howItWorks": "As A. In addition, the interface is offered in the languages a jurisdiction profile names (for Oakland, for example, Spanish, Chinese and Vietnamese), and a group may publish a translated version of a case through Civicsmith, marked as an unofficial translation, linked to the signed original, and flagged out of date when the original is corrected.",
       "inTheStory": "Ana's Vietnamese summary is published beside the case with the unofficial-translation marking and the link, and is flagged when the English case is corrected.",
       "gains": [
        "Reaches the communities most affected.",
@@ -12514,7 +12514,7 @@
     "status": "ruled",
     "title": "Accessibility standard and languages",
     "decided": "Every member screen of the redesign, and the published case page, print and file, is built to WCAG 2.2 at level AA, and each new screen is checked against it before it is accepted; the rules already set (colour never the only signal, focus and tap equivalents to hover, a docked assistant panel) are part of meeting it. The interface is in English for now, built so its words live in one place and another language can be added without rebuilding screens; a published case appears in the language its group wrote it in. A translation of a published case is never presented as the signed case: it is marked as an unofficial translation and names the signed original. Whether and how a group issues translations, and the interface in a place's languages, are decided later.",
-    "trigger": "A group asks to publish a translated case, or to use CivicOS in another language."
+    "trigger": "A group asks to publish a translated case, or to use Civicsmith in another language."
    }
   },
   {
@@ -12580,10 +12580,10 @@
     "alreadyDecidedPart": "You ruled that the subject's right of reply is a declaration, not a gate: every case must say whether the group asked the subject and why, but publication is never blocked for want of asking or of an answer. A request for comment names the questions put and a response window nobody enforces. A reply enters the record only as captured evidence or a member's signed account, and silence is recorded with its date. On 30 September you ruled that actions go to offices and roles, never to a private individual.",
     "basics": [
      "A case is what a project publishes: a set of findings (questions the group has answered) and the evidence beneath them. The project's owner signs it, and anyone can read and check it without the group's help. Once published, a case can never be changed or withdrawn. A correction is a new edition, a separate document.",
-     "A case's subject is the office, or the official acting in their role, whose conduct the case examines: for example, the Director of Public Works or the City Administrator's office. (CivicOS also uses the word 'subject' for any named person, office or thing in the record. Question 34 deals with that clash.)",
+     "A case's subject is the office, or the official acting in their role, whose conduct the case examines: for example, the Director of Public Works or the City Administrator's office. (Civicsmith also uses the word 'subject' for any named person, office or thing in the record. Question 34 deals with that clash.)",
      "Right of reply is the journalistic practice of putting findings to the people they concern before publishing, and reporting what came back. It resembles a party's chance to comment on a proposed decision before it becomes final, though here it is fairness, not law. The August case-making research found that practice treats it as the expected workflow.",
-     "'A declaration, not a gate' means this. Every case must declare one of three positions: 'we asked and they answered', 'we asked and got no answer', or 'we did not ask'. It must also give a written reason. CivicOS never checks that contact happened or that the answer was favourable. 'We did not ask' is legitimate when justified, for example where warning an office could lead to records being altered. The declaration counts as part of the group's declared bias: it is the group's own judgement, shown so that readers can weigh it.",
-     "A request for comment is one kind of action in CivicOS. A member records that the group put specific questions to an office and gave it a window to answer, much like a data request with a response date. Replies are logged against that action, either as the captured email or letter (its exact bytes, dated and fingerprinted) or as a member's signed account of a phone call. Silence is logged as a fact with its date."
+     "'A declaration, not a gate' means this. Every case must declare one of three positions: 'we asked and they answered', 'we asked and got no answer', or 'we did not ask'. It must also give a written reason. Civicsmith never checks that contact happened or that the answer was favourable. 'We did not ask' is legitimate when justified, for example where warning an office could lead to records being altered. The declaration counts as part of the group's declared bias: it is the group's own judgement, shown so that readers can weigh it.",
+     "A request for comment is one kind of action in Civicsmith. A member records that the group put specific questions to an office and gave it a window to answer, much like a data request with a response date. Replies are logged against that action, either as the captured email or letter (its exact bytes, dated and fingerprinted) or as a member's signed account of a phone call. Silence is logged as a fact with its date."
     ],
     "today": [
      "Built on the server: every case must carry the three-way position and its reason. Both must be freshly written for each new edition, and copying the last edition's wording is refused. The request-for-comment action and its reply log are also built.",
@@ -12788,7 +12788,7 @@
    }
   },
   {
-   "question": "When a group corrects a published case by issuing a new edition, how do people who read or cited the old edition learn what changed and why, given that CivicOS never sends anyone a message?",
+   "question": "When a group corrects a published case by issuing a new edition, how do people who read or cited the old edition learn what changed and why, given that Civicsmith never sends anyone a message?",
    "whyItMatters": "Media and peers rely on cases; a published hash answers forever.",
    "relatedUseCases": [
     "UC-105"
@@ -12848,16 +12848,16 @@
     "stillOpen": false,
     "settledSince": "",
     "title": "How a correction reaches people who relied on an earlier edition",
-    "inOneBreath": "When a group corrects a published case by issuing a new edition, how do people who read or cited the old edition learn what changed and why, given that CivicOS never sends anyone a message?",
+    "inOneBreath": "When a group corrects a published case by issuing a new edition, how do people who read or cited the old edition learn what changed and why, given that Civicsmith never sends anyone a message?",
     "decision": "(1) Should every edition after the first carry a required, written statement, 'What changed in this edition, and why', shown at the top of the new edition and quoted in the old edition's banner? (2) Should a computed list of differences appear beneath it, labelled as machine work? (How readers and citing groups learn that a newer edition exists is now part of question 36.)",
     "alreadyDecidedPart": "",
     "basics": [
      "A case is what a project publishes: a set of findings and the evidence beneath them, signed by the project's owner. Each published edition has a fingerprint (a hash), a short code computed from its exact bytes. Anyone holding the fingerprint can check that what they are reading is exactly what was signed.",
      "Publication cannot be undone. A correction is never an edit. It is a new edition with its own number, a separate document, and the old edition keeps answering at the same address forever. A citation names a particular edition. This is like an errata filing in a regulatory proceeding: the original filing stays in the docket, and the errata is a separate dated document.",
-     "'Pull, never push' means readers learn of changes by coming back to look. CivicOS does not email, text or push notifications to anyone. Your ruling of 29 September says so for members, and the same holds for outside readers. A 'notify me' button for readers was considered by the earlier interface design and refused, because it would turn readers into a mailing list the group has to hold.",
+     "'Pull, never push' means readers learn of changes by coming back to look. Civicsmith does not email, text or push notifications to anyone. Your ruling of 29 September says so for members, and the same holds for outside readers. A 'notify me' button for readers was considered by the earlier interface design and refused, because it would turn readers into a mailing list the group has to hold.",
      "The freshness rule: four parts of a case must be newly written for each edition. They are the statement of what the case does not cover, the reason for its position on contacting the subject, the list of exclusions, and the bias acknowledgement. Copying last edition's wording is refused. None of these is a note about what was corrected.",
-     "A re-evaluation notice is how CivicOS tells members that something their work rests on has changed. Inside one group's copy, if a question cites edition 1 of a case and edition 2 appears, that question's members get such a notice.",
-     "Each group runs its own copy of CivicOS in its own hosting account. There is no central server and no central directory of groups."
+     "A re-evaluation notice is how Civicsmith tells members that something their work rests on has changed. Inside one group's copy, if a question cites edition 1 of a case and edition 2 appears, that question's members get such a notice.",
+     "Each group runs its own copy of Civicsmith in its own hosting account. There is no central server and no central directory of groups."
     ],
     "today": [
      "Built: every edition page carries a banner. An old edition says: 'A newer edition of this case exists. You are reading edition 1; edition 2 was published later. Edition 1 has not been withdrawn and still answers: an edition is a separate document and every published one stands.' It then explains that the strengths shown are edition 1's own, and gives a link, 'Read edition 2'. The newest edition says 'You are reading edition 2, which is the newest edition of this case.' A published list shows every edition.",
@@ -12876,7 +12876,7 @@
      "title": "Marcus, the $4.2M transfer and the tenants' union",
      "steps": [
       "Edition 1 of the Budget Watch project's case 'Sewer fund transfers' reports that $4.2M moved from the sewer fund to the general fund in fiscal 2025.",
-      "A local news site quotes $4.2M. A tenants' union running its own copy of CivicOS cites edition 1 in its own case on sewer rate increases.",
+      "A local news site quotes $4.2M. A tenants' union running its own copy of Civicsmith cites edition 1 in its own case on sewer rate increases.",
       "Marcus, a Budget Watch member, finds that a $1.1M transfer was counted twice. The group publishes edition 2, which says $3.1M.",
       "A month later the reporter opens her link to edition 1. She sees the banner, clicks through, and faces two 20-page documents with no pointer to the change.",
       "The tenants' union's copy knows nothing about edition 2. Its case keeps saying $4.2M.",
@@ -12939,7 +12939,7 @@
      {
       "label": "B",
       "name": "A computed list of differences only",
-      "howItWorks": "Beside the banner, CivicOS lists what differs: findings added or removed, strengths changed, documents added, sections reworded.",
+      "howItWorks": "Beside the banner, Civicsmith lists what differs: findings added or removed, strengths changed, documents added, sections reworded.",
       "inTheStory": "Edition 1's banner lists: 'Finding 2: text changed. Evidence: one document removed.' The reporter still has to read finding 2 to learn that $4.2M became $3.1M, and nothing tells her why.",
       "gains": [
        "Objective and effortless."
@@ -12983,7 +12983,7 @@
      "choice": "C",
      "why": [
       "Corrections should explain themselves, and only the group can say why. The computed list beside the statement keeps the group honest without asking more of it. The pull model is untouched: the statement waits on the page for whoever comes back.",
-      "On (3), other groups: I recommend that a group's copy of CivicOS treat the published editions list of any group it cites as something it checks now and then. A newer edition would then raise the same re-evaluation notice inside the citing group that a newer edition from inside the group already raises. That is still pull: the citing group's own copy looks, and nobody is messaged. This is my judgement; the sources are silent on it, and how it works would be BOB's to decide."
+      "On (3), other groups: I recommend that a group's copy of Civicsmith treat the published editions list of any group it cites as something it checks now and then. A newer edition would then raise the same re-evaluation notice inside the citing group that a newer edition from inside the group already raises. That is still pull: the citing group's own copy looks, and nobody is messaged. This is my judgement; the sources are silent on it, and how it works would be BOB's to decide."
      ],
      "risk": "The statement may turn into boilerplate. That is contained by the computed list beside it and by the rule that it is never prefilled. For other groups, a group's copy could go offline. The check would then say it could not reach the other group and would never claim that nothing changed."
     },
@@ -13005,7 +13005,7 @@
      },
      {
       "n": 29,
-      "how": "Whether CivicOS connects to a network directory, which would be another way for groups to learn of new editions."
+      "how": "Whether Civicsmith connects to a network directory, which would be another way for groups to learn of new editions."
      },
      {
       "n": 30,
@@ -13027,7 +13027,7 @@
      },
      {
       "term": "Pull, never push",
-      "plain": "Readers come back to look. CivicOS never sends them a message."
+      "plain": "Readers come back to look. Civicsmith never sends them a message."
      },
      {
       "term": "Banner",
@@ -13042,7 +13042,7 @@
       "plain": "A notice to members that something their work rests on has changed."
      },
      {
-      "term": "Copy of CivicOS",
+      "term": "Copy of Civicsmith",
       "plain": "A group's own installation, in its own hosting account."
      },
      {
@@ -13140,7 +13140,7 @@
     "basics": [
      "An observation is something a member saw or heard themselves, written in their own words and signed. For example: 'On 3 March at 7 a.m. I saw sewage overflowing the manhole at 10th and Mandela for 40 minutes.' It is evidence, but it stands on that member's trustworthiness, like a witness declaration rather than a document from the agency's files.",
      "Every piece of evidence carries a letter grade from A to D for how easily an outsider could check it for themselves. A firsthand observation is always graded D as testimony, whatever credit level the member chooses. The credit level changes only what the public reads about who said it, never how strong the evidence is.",
-     "The four levels: 'the group' (the publishing group, no person named); 'the project' (the project that produced the case); 'cover'; and 'by name'. A cover is a label an administrator gives a member when inviting them, to tell members apart, such as 'volunteer-7' or 'the CPA from the Tuesday meeting'. It is deliberately not a legal identity. A handle is the name a member picks for themselves on joining. It already appears in the record as the author of their acts, and the public sees it on what they sign. CivicOS stores no legal names at all, so a seized membership list unmasks no one.",
+     "The four levels: 'the group' (the publishing group, no person named); 'the project' (the project that produced the case); 'cover'; and 'by name'. A cover is a label an administrator gives a member when inviting them, to tell members apart, such as 'volunteer-7' or 'the CPA from the Tuesday meeting'. It is deliberately not a legal identity. A handle is the name a member picks for themselves on joining. It already appears in the record as the author of their acts, and the public sees it on what they sign. Civicsmith stores no legal names at all, so a seized membership list unmasks no one.",
      "The observation's own signed files never name its author; only the group's private register links it to the member. So the published files are the same at every level, and the level changes only the sentence the case prints. A member may also record what an unnamed source told them; there is no place at all to store that source's identity, so it cannot leak.",
      "Only the project's owner signs a case edition. The member whose words are used is often someone else, which is why the choice has to come from them and cannot be part of the owner's signing."
     ],
@@ -13152,7 +13152,7 @@
     ],
     "problem": [
      "The blocking rule gives each member a veto over the use of their own words, and over nothing else. Without it, either the owner would decide how a colleague is credited or a default would, and your 14 September ruling forbids both. With it, one silent or absent member can hold up one finding; the owner can publish without it but loses the evidence. A member who has left cannot choose: their words stay usable in later editions of a case where they already chose, and in no new case.",
-     "Your phrase was 'the member by name', and CivicOS deliberately holds no legal names. Reading 'name' as the handle keeps it that way. A member who wants their legal name printed would make their handle their legal name. Storing a typed legal name would put real names into a database that can be subpoenaed or breached.",
+     "Your phrase was 'the member by name', and Civicsmith deliberately holds no legal names. Reading 'name' as the handle keeps it that way. A member who wants their legal name printed would make their handle their legal name. Storing a typed legal name would put real names into a database that can be subpoenaed or breached.",
      "Display: if 'Credited to the group' looks like a missing name, readers will treat anonymous testimony as weaker, and your ruling says the grade, not the name, measures strength. In proceedings, keeping a declarant's identity confidential under a protective order does not change the weight of the testimony, and the page should reflect that.",
      "Why now: the ceremony is being designed, and until a choice screen exists no case resting on an observation can be signed."
     ],
@@ -13267,7 +13267,7 @@
      "choice": "A",
      "why": [
       "Confirm both rules as built. The blocking rule is the only way to honour 'the attesting member chooses' when the person signing is someone else, and the veto it gives covers only the member's own words. The owner can always publish the rest.",
-      "Reading 'by name' as the handle keeps CivicOS free of legal names, which protects every member if the group's records are ever seized. A member who wants their real name printed can make it their handle.",
+      "Reading 'by name' as the handle keeps Civicsmith free of legal names, which protects every member if the group's records are ever seized. A member who wants their real name printed can make it their handle.",
       "Asking in the author's queue is respectful (asked once, at the moment the words are used), and showing the waiting state on the draft spares the author pressure from the owner."
      ],
      "risk": "A member who has left, or who never answers, keeps one finding out of a case. This is contained by the owner's visible way forward and by earlier choices carrying into later editions of the same case."
@@ -13889,7 +13889,7 @@
    }
   },
   {
-   "question": "When a group sets the standard of evidence a project's published case must meet, should CivicOS tell it what a newsroom, a city administrator or a court actually expects, and if so, how?",
+   "question": "When a group sets the standard of evidence a project's published case must meet, should Civicsmith tell it what a newsroom, a city administrator or a court actually expects, and if so, how?",
    "whyItMatters": "Without it the project bar is 'a number a project picks'.",
    "relatedUseCases": [
     "UC-071"
@@ -13941,7 +13941,7 @@
     "stillOpen": false,
     "settledSince": "Partly narrowed since first raised. On 29 September you ruled a co-attested Grade B enough to publish, with Grade A the ceiling for adversarial or legal use. On 30 September you ruled that for actions (filings, counsel packets) the venue sets the standard: a sourced fact in the jurisdiction profile, shown beside each exhibit's grade, never refusing. Still open: guidance on what the audiences of a published case expect.",
     "title": "Standards of proof by audience: guidance for the project's bar",
-    "inOneBreath": "When a group sets the standard of evidence a project's published case must meet, should CivicOS tell it what a newsroom, a city administrator or a court actually expects, and if so, how?",
+    "inOneBreath": "When a group sets the standard of evidence a project's published case must meet, should Civicsmith tell it what a newsroom, a city administrator or a court actually expects, and if so, how?",
     "decision": "(1) Ship the bar setting now, with plain meanings for each letter and an honest note that no audience guidance exists yet, or hold it until guidance exists? (2) When guidance comes, does it take the form you approved for legal venues on 30 September: sourced facts in the jurisdiction profile, shown beside the choice, reading 'undetermined' where nobody has researched them, and never a default? (3) Is the research commissioned now, or when a named trigger occurs?",
     "alreadyDecidedPart": "The bar belongs to a project and never combines across projects: one finding may clear a journalist project's bar and miss a lawyer project's, 'and both facts stand' (10 August). Co-attested Grade B suffices to publish (29 September). For actions, each venue's standard is a sourced fact beside each exhibit's grade, never refusing (30 September).",
     "basics": [
@@ -13969,7 +13969,7 @@
       "Rosa opens two projects: a reporter brief for Keisha's local paper, and a claim to the City Auditor that may lead to a filing.",
       "Setting the reporter project's bar, she sees four letters per axis and nothing about newsrooms. She picks B/C; the case publishes saying 'This case was held to capture B, connection C.'",
       "The claim goes by an action: the filing draft shows each exhibit's grade and the venue's standard where the profile holds it, else 'undetermined'.",
-      "Keisha asks: 'Is B/C good enough for us to print?' CivicOS has no answer; Rosa answers from memory."
+      "Keisha asks: 'Is B/C good enough for us to print?' Civicsmith has no answer; Rosa answers from memory."
      ]
     },
     "fixed": [
@@ -14003,7 +14003,7 @@
      {
       "label": "A",
       "name": "Letters now, with an honest note",
-      "howItWorks": "The owner picks a letter per axis, or none, each with its one-line meaning from your measures map, under the line: 'CivicOS has no guidance yet on what particular audiences expect. Readers see the bar you set in these words.'",
+      "howItWorks": "The owner picks a letter per axis, or none, each with its one-line meaning from your measures map, under the line: 'Civicsmith has no guidance yet on what particular audiences expect. Readers see the bar you set in these words.'",
       "inTheStory": "Rosa sees 'Capture B: we fetched it ourselves and fingerprinted it on receipt' and 'Connection C: the same name appears in both; plausible, not established', and picks B/C knowing what she tells readers.",
       "gains": [
        "Buildable now, honest, and uses approved wording."
@@ -14126,7 +14126,7 @@
     ],
     "status": "ruled",
     "title": "Standards of proof by audience: the project's bar",
-    "decided": "The bar belongs to a project and never combines across projects. The owner sets it now: a letter per axis, or none, each with its one-line meaning from the measures map, under the line 'CivicOS has no guidance yet on what particular audiences expect. Readers see the bar you set in these words.' When audience guidance comes, it takes the form already ruled for legal venues: sourced audience standards in the jurisdiction profile, shown beside the choice, reading 'Undetermined' where nobody has researched them, never preselected or defaulted. The research starts when a group asks what bar suits an audience, or a case is challenged as below its audience's standard.",
+    "decided": "The bar belongs to a project and never combines across projects. The owner sets it now: a letter per axis, or none, each with its one-line meaning from the measures map, under the line 'Civicsmith has no guidance yet on what particular audiences expect. Readers see the bar you set in these words.' When audience guidance comes, it takes the form already ruled for legal venues: sourced audience standards in the jurisdiction profile, shown beside the choice, reading 'Undetermined' where nobody has researched them, never preselected or defaulted. The research starts when a group asks what bar suits an audience, or a case is challenged as below its audience's standard.",
     "trigger": "A group asks what bar suits an audience, or a case is challenged as below its audience's standard."
    }
   },
@@ -14192,9 +14192,9 @@
     "decision": "(1) Does your 4 August rule (something hidden is never named or counted, but the fact that something is missing is stated) also apply 'downstream', to lists of the work that rests on or cites what a member is looking at? (2) If yes, should the incompleteness line appear only when something was actually withheld, or as a standing caveat on every such list? (3) Confirm that the one-for-one placeholders still used in four places ('an object you may not see') are removed, since they let a reader count hidden items.",
     "alreadyDecidedPart": "On 4 August you ruled that when something a member's item rests on is out of their sight, the screen states that the picture is incomplete, with no name, title, state or count, and that a later session must not 'fix' this toward silence. On 29 September you ruled that 'Withheld' has its own distinct look and one fixed sentence. You also ruled that in a conflict with a hidden project, each side is told only on its own side, without naming the other.",
     "basics": [
-     "A group's copy of CivicOS holds many projects. A project is a shared workspace, and most projects are hidden from members who have not joined them. 'Sight' means what a given member is allowed to see. A confidential project might be an inquiry into a council office that only three members know exists.",
+     "A group's copy of Civicsmith holds many projects. A project is a shared workspace, and most projects are hidden from members who have not joined them. 'Sight' means what a given member is allowed to see. A confidential project might be an inquiry into a council office that only three members know exists.",
      "Items in the record link to each other. Upstream of an item is what it rests on: the documents, observations and earlier findings beneath it. Downstream is what rests on it or cites it: the questions and findings that use it. One budget PDF can sit beneath questions in five projects.",
-     "A re-evaluation notice is how CivicOS tells members that something their work rests on has changed (a document superseded by a newer version, a finding reopened) and asks for a second look. The member who makes the change also sees a list of what rests on the item, so they can judge how far the change reaches. A 'cited by' list shows everything that cites an item.",
+     "A re-evaluation notice is how Civicsmith tells members that something their work rests on has changed (a document superseded by a newer version, a finding reopened) and asks for a second look. The member who makes the change also sees a list of what rests on the item, so they can judge how far the change reaches. A 'cited by' list shows everything that cites an item.",
      "Even the sentence 'something you cannot see uses this' reveals one fact: hidden work touches this item. A count reveals more, and repeated looks at counts could let a determined member map a hidden project. That is why your rule forbids counts.",
      "An analogy: a docket under a protective order notes that a filing was made under seal, without its title or contents. It does not silently omit the filing.",
      "'Withheld' is one of five named states you ruled must each have their own look: Undetermined, Withheld, Unrated, Nobody looked and Refused. Withheld means something exists that is not yours to see."
@@ -14202,7 +14202,7 @@
     "today": [
      "Upstream, built as ruled: the queue and strength panels say, for example, 'Part of what this is filed under is not visible to you, so this list is incomplete rather than settled', with no count. The strength panel was corrected on 29 September to stop counting hidden items.",
      "Downstream, built as silence: the re-evaluation list and the 'cited by' list show only what the member can see and say nothing about the rest. The written requirements say a hidden dependent is 'withheld whole, with no count' and, for 'cited by', 'no count of what was withheld'. Neither adds a marker. Members of the hidden project still get their own notices, so their work is not silently broken.",
-     "Placeholders in four places: the parts of CivicOS that judge whether a government act meets a standard, its consequences, escalations and filings still replace each hidden item one-for-one with a placeholder such as 'an object you may not see'. That lets a reader count hidden items, which your rule forbids. Fixing it was deliberately held until you rule on this question."
+     "Placeholders in four places: the parts of Civicsmith that judge whether a government act meets a standard, its consequences, escalations and filings still replace each hidden item one-for-one with a placeholder such as 'an object you may not see'. That lets a reader count hidden items, which your rule forbids. Fixing it was deliberately held until you rule on this question."
     ],
     "problem": [
      "Silence misleads. A member superseding a document sees '2 questions rest on this' and judges the change minor, when three more in a confidential project rest on it. Your rule forbids exactly this silence upstream, but downstream it is current behaviour.",
@@ -14262,7 +14262,7 @@
       ],
       "costs": [
        "It reveals one fact: hidden work uses this item.",
-       "Six parts of CivicOS need rewording."
+       "Six parts of Civicsmith need rewording."
       ],
       "commitsYouTo": "Treating downstream exactly like upstream."
      },
@@ -14398,7 +14398,7 @@
    ],
    "basis": "open",
    "whereTheCanonStops": "UI-KICKOFF constraints",
-   "context": "CivicOS holds two kinds of material: the working record (private material the group is still judging) and the published record (cases the group has signed and released, which anyone can read and verify). This 'privacy fence' is built into the system, not just the look of the screens. Members cross between the two constantly.",
+   "context": "Civicsmith holds two kinds of material: the working record (private material the group is still judging) and the published record (cases the group has signed and released, which anyone can read and verify). This 'privacy fence' is built into the system, not just the look of the screens. Members cross between the two constantly.",
    "canonSays": [
     {
      "source": "UI-KICKOFF, 'Constraints that are law'",
@@ -14453,7 +14453,7 @@
     "basics": [
      "The working record is the group's private material: captured documents, observations, questions, findings and drafts that the group is still judging. To an outsider it answers exactly as if it did not exist.",
      "The published record is the set of signed cases the group has released. Anyone can read and check them without the group's help or permission.",
-     "The privacy fence between them is built into how CivicOS stores things, not just how screens look. The two records live in separate stores, and only the publishing act writes to the public one. It is like the confidential and public versions of a regulatory filing: two documents, each clearly stamped, so a reader never wonders which one they hold.",
+     "The privacy fence between them is built into how Civicsmith stores things, not just how screens look. The two records live in separate stores, and only the publishing act writes to the public one. It is like the confidential and public versions of a regulatory filing: two documents, each clearly stamped, so a reader never wonders which one they hold.",
      "The path to publication is the series of steps a piece of work goes through, from a captured document being released for use to a finding concluded and a case signed. The ceremony is its last step and the only one that cannot be undone.",
      "Some things sit in between. A review copy is a draft case shown, through a private link that can be revoked, to people the owner names, such as a reporter or a committee chair. It never leaves the group's copy, it can still change, and it may never be published. A member may export a review copy to a file. Every page is then stamped with its fingerprint, date, author and the strength bar the case would be held to, and the member is told the file cannot be recalled. Since the Action design, members also prepare letters, filings and statements, which a member approves, stamps and sends by their own hand. Nothing private leaves by the system's own doing.",
      "Your interface brief also says the public never sees that a fence exists. Public pages show the group's face, not fence markers."
@@ -14520,7 +14520,7 @@
       "howItWorks": "The member app has one working frame and the public site has its own. Review copies, exported files and outgoing drafts appear inside the working frame with a band saying what they are and who can see them.",
       "inTheStory": "Luis's draft shows 'Review copy · shared with 2 people · not published'. A prepared letter shows 'Draft letter · not sent'.",
       "gains": [
-       "Simple, and matches how CivicOS is built."
+       "Simple, and matches how Civicsmith is built."
       ],
       "costs": [
        "The bands must be strong enough that a shared draft never feels as private as an unshared one."
@@ -14568,11 +14568,11 @@
       "commitsYouTo": "Nothing now."
      }
     ],
-    "tradeoff": "Two spaces keep the fence simple and true to how CivicOS is built but rely on strong bands for the in-between items. Three spaces name those items but add a concept that still does not cover everything.",
+    "tradeoff": "Two spaces keep the fence simple and true to how Civicsmith is built but rely on strong bands for the in-between items. Three spaces name those items but add a concept that still does not cover everything.",
     "recommendation": {
      "choice": "C",
      "why": [
-      "Two spaces with distinct frames, plus a path marker on each item, and review copies and outgoing drafts shown as working-side items with their own band. The fence in CivicOS really is two stores, and a review copy really is working material that a named outsider can see. Teaching it as anything else would mislead.",
+      "Two spaces with distinct frames, plus a path marker on each item, and review copies and outgoing drafts shown as working-side items with their own band. The fence in Civicsmith really is two stores, and a review copy really is working material that a named outsider can see. Teaching it as anything else would mislead.",
       "You need only confirm 'two spaces'. The rest goes to Design. BOB would also make the definitions table plainer ('never shown to anyone outside the group except through a review link you issue'). This is my recommendation, not canon."
      ],
      "risk": "A member may treat a shared draft as private. This is contained by the band naming how many people can read it, and by the export warning that already exists."
@@ -14640,7 +14640,7 @@
       "plain": "The header that identifies the public pages as the group's published record."
      },
      {
-      "term": "Copy of CivicOS",
+      "term": "Copy of Civicsmith",
       "plain": "A group's own installation, in its own hosting account."
      }
     ],
@@ -14670,7 +14670,7 @@
    }
   },
   {
-   "question": "Should the queue's class of 'things a named member must do', now labelled 'Obligation', be shown to members as 'To do', so that the word 'obligation' in CivicOS means only a public body's duty?",
+   "question": "Should the queue's class of 'things a named member must do', now labelled 'Obligation', be shown to members as 'To do', so that the word 'obligation' in Civicsmith means only a public body's duty?",
    "whyItMatters": "The delta is the product; conflating plans with progressions converts a management fact into evidence.",
    "relatedUseCases": [
     "UC-024",
@@ -14735,12 +14735,12 @@
     "stillOpen": false,
     "settledSince": "Nothing since 30 September changes this question. The part already decided (below) was settled on 30 September; only the word for the to-do class remains, and it is still yours.",
     "title": "What members call the queue's to-do items",
-    "inOneBreath": "Should the queue's class of 'things a named member must do', now labelled 'Obligation', be shown to members as 'To do', so that the word 'obligation' in CivicOS means only a public body's duty?",
+    "inOneBreath": "Should the queue's class of 'things a named member must do', now labelled 'Obligation', be shown to members as 'To do', so that the word 'obligation' in Civicsmith means only a public body's duty?",
     "decision": "(1) The word members see on the queue's to-do class: 'To do' (recommended), 'Obligation' with the owner named ('Obligation · ours'), or 'Obligation' as now. (2) Whether, beyond the queue, 'obligation' is kept in everything members and readers see for a public body's duty only. Renaming the internal code is a technical matter the architecture session can handle without you, and is not asked here.",
     "alreadyDecidedPart": "On 30 September you approved the Action design's answers: a plan's checkpoints are the group's own intentions, and a missed or not-met checkpoint is never a finding, a condition of the record or a fact about the government; its reminder reaches the queue as the group's own item. The other side's missed deadline is a different kind of item, a signal about the action, raised once when it passes. On 29 September you ruled that the queue's class of things the record noticed is shown to members as 'Noticed'. Only the word for the to-do class was left to you, by name.",
     "basics": [
      "The queue is each member's list of things that want their attention, grouped by the case they belong to (a case is an inquiry or a project). Every item belongs to one of three classes. To-dos: something a named member must do for the work to proceed; it can be forwarded to someone else, cannot be muted, and leaves everyone's list once done. Noticed items: something the record noticed about the world or about the record that nobody has judged yet; a member takes it up or sets it aside with a reason. Signals: mostly facts about the system's own machinery, such as a capture paused because a city website is limiting requests; a member can mute them.",
-     "Inside the system the to-do class is named 'obligation', and members see the label 'Obligation'. That is the problem. On 1 August you said what obligations are: 'the flows (edges) that go on in a living civic system', meaning a public body's duties, such as posting a meeting's minutes within ten days or following a solicitation with an award. CivicOS models these duties as declared sequences of steps and shows where the real documents depart from them; you called that difference 'the analytic product'. The note that day added that giving a member's task the same name 'would have modelled our inbox and called it the institution'. The class kept its name anyway.",
+     "Inside the system the to-do class is named 'obligation', and members see the label 'Obligation'. That is the problem. On 1 August you said what obligations are: 'the flows (edges) that go on in a living civic system', meaning a public body's duties, such as posting a meeting's minutes within ten days or following a solicitation with an award. Civicsmith models these duties as declared sequences of steps and shows where the real documents depart from them; you called that difference 'the analytic product'. The note that day added that giving a member's task the same name 'would have modelled our inbox and called it the institution'. The class kept its name anyway.",
      "An analogy from your world: a utility's compliance obligation (file an advice letter within 30 days of a decision) and an intervenor's internal to-do (draft our comments by Friday). If the intervenor's tracker labelled both 'obligations', a missed internal date could be read in a summary as the utility's non-compliance.",
      "The word also appears in its civic sense on screens members and readers see. When two records conflict because a rule required one thing and the body did another, the conflict is classed 'obligation against act', and its published form follows the government auditor's elements of a finding (criteria, condition, cause, effect, recommendation), as you ruled on 29 September."
     ],
@@ -14752,7 +14752,7 @@
     ],
     "problem": [
      "The same word now names opposite owners, on the same screen, in the same case. A member, a journalist shown a screen, or a lawyer in a later dispute can read 'Obligation · overdue' as the city's failure when it is the group's own, or read a real civic duty as just one more item on the group's list. Your 30 September ruling keeps a missed checkpoint out of the record's findings; the words on the screen do not yet keep it out of people's heads.",
-     "This matters more for CivicOS than for an ordinary task tool. Its groups make claims about public bodies, and in a records or legal setting 'obligation' carries the weight of a duty. Using it for the group's internal chores invites careless or hostile quoting. That is my judgement, not a canon statement.",
+     "This matters more for Civicsmith than for an ordinary task tool. Its groups make claims about public bodies, and in a records or legal setting 'obligation' carries the weight of a duty. Using it for the group's internal chores invites careless or hostile quoting. That is my judgement, not a canon statement.",
      "Why now: the redesigned queue is being designed, the three class labels (question 28) depend on this one, and the Action work is adding more of the group's own to-dos right now. Labels are cheap to change before members learn them and costly after.",
      "The risk of changing it carelessly is the other way round: if 'To do' replaced the word but items lost the Action design's 'ours' versus 'theirs' wording, a reader could no longer tell the group's checkpoint from the city's deadline. Whatever label is chosen, each item's own sentence should still say whose step it is where that matters."
     ],
@@ -14992,7 +14992,7 @@
     "decision": "Whether the system keeps a count-only tally of knocks it turned away (a daily total for the whole doorbell, how often the whole-doorbell limit was reached, and when last; no addresses, fingerprints or content), shown as status on the inbox page, or records nothing. With the limits now 5 and 10, a busy day will reach the whole-doorbell limit far more often, which makes the tally more useful.",
     "alreadyDecidedPart": "On 1 October you ruled: the doorbell's inbox reads like an email inbox: unhandled knocks highlighted, handled ones still visible, sortable by time, status, whether the knocker presented a secret, the project affected, and so on. The limits are at most 5 knocks from one source and 10 in total in any 10 minutes, and a would-be knocker is made aware whenever a limit is in effect, so nobody believes they knocked when they did not. A group may enable a gatekeeper (machine work) that identifies and dismisses obvious spam and denial-of-service submissions. Discarded knocks go to an archive, in case a gem is buried in the flood, cleared automatically a week after receipt.",
     "basics": [
-     "The doorbell is the one way into a group's copy of CivicOS that needs no account: anyone may hand the group a document. Each hand-over is a 'knock', and the person is the 'knocker'. It exists because a group whose purpose is accountability must be reachable by people who will not or cannot join it, whistleblowers above all.",
+     "The doorbell is the one way into a group's copy of Civicsmith that needs no account: anyone may hand the group a document. Each hand-over is a 'knock', and the person is the 'knocker'. It exists because a group whose purpose is accountability must be reachable by people who will not or cannot join it, whistleblowers above all.",
      "A knock writes one row in the group's inbox: the bytes, their fingerprint, the time, an optional note and an optional contact. Nothing enters the record until a signed-in member reads it and pulls it in, or discards it.",
      "To stop one sender or a flood filling the inbox, the doorbell limits knocks: at most 12 from one sender and 300 in total in any 10 minutes. 'One sender' means one connecting internet address, kept only as a keyed fingerprint that cannot be turned back into the address. Over a limit, the sender gets a refusal (the web's standard 'too many requests' answer) with a plain explanation and the published limit. Nothing about a refused knock is stored, and it does not count toward the limits.",
      "Since 29 September, a source who gave a knocker secret can also use it, with no account, to consent to (or withdraw consent from) publishing a detail about themselves, such as their job title. Each such attempt counts against the same limits as a knock.",
@@ -15193,7 +15193,7 @@
    }
   },
   {
-   "question": "When someone installs and claims a group's copy of CivicOS, what should they be told about the fact that whoever controls the hosting account can take over the whole copy, and should that stay visible to administrators afterwards?",
+   "question": "When someone installs and claims a group's copy of Civicsmith, what should they be told about the fact that whoever controls the hosting account can take over the whole copy, and should that stay visible to administrators afterwards?",
    "whyItMatters": "Losing or leaking it has costs the group should understand at claim time.",
    "relatedUseCases": [
     "UC-030",
@@ -15201,7 +15201,7 @@
    ],
    "basis": "open",
    "whereTheCanonStops": "DEC-2; Membership v2 section 9",
-   "context": "When a group installs CivicOS, the installer produces a one-time password (technically the ADMIN_TOKEN) and the founder uses it to 'claim' the copy and set their own password. Whoever controls the group's hosting account can reset that token and take the instance back, which makes the hosting account the real 'root of trust'.",
+   "context": "When a group installs Civicsmith, the installer produces a one-time password (technically the ADMIN_TOKEN) and the founder uses it to 'claim' the copy and set their own password. Whoever controls the group's hosting account can reset that token and take the instance back, which makes the hosting account the real 'root of trust'.",
    "canonSays": [
     {
      "source": "DEC-2 (deferred)",
@@ -15245,14 +15245,14 @@
     "stillOpen": false,
     "settledSince": "",
     "title": "What the founder is told about who really controls the group's copy",
-    "inOneBreath": "When someone installs and claims a group's copy of CivicOS, what should they be told about the fact that whoever controls the hosting account can take over the whole copy, and should that stay visible to administrators afterwards?",
+    "inOneBreath": "When someone installs and claims a group's copy of Civicsmith, what should they be told about the fact that whoever controls the hosting account can take over the whole copy, and should that stay visible to administrators afterwards?",
     "decision": "(1) Whether the claim page tells the founder the whole truth about the hosting account's power, not only that it is a way back in. (2) Whether the same explanation stays visible in administrator settings, with who the group recorded as holding hosting access. (3) Whether anyone must record that they read it. This is only about what the group is told; it does not reopen how custody should work, which you deferred.",
     "alreadyDecidedPart": "",
     "basics": [
-     "Each group runs its own copy of CivicOS in a hosting account at Cloudflare, a cloud provider. The CivicOS project does not host it; the group's own account does.",
+     "Each group runs its own copy of Civicsmith in a hosting account at Cloudflare, a cloud provider. The Civicsmith project does not host it; the group's own account does.",
      "Installing and claiming: a setup wizard creates the copy and shows a one-time password. The founder, the person installing, opens the new copy, types the one-time password and chooses a real password, becoming its first administrator. The one-time password is stored as a setting inside the hosting account.",
      "The power that follows: anyone who can sign in to the hosting account can replace that setting. That returns the copy to 'unclaimed', and whoever claims it next becomes its administrator, able to read everything in the working record (confidential sources included), make the full export of the group's working material, which is gated on exactly this credential, and shut everyone else out. The membership design says it plainly: whoever can set the one-time password 'can take the group over', its holders 'are the root of trust for that group', and 'membership does not and cannot constrain them'.",
-     "'Root of trust' means the one power everything else rests on and nothing inside the system can overrule. An analogy: a board can vote an officer out, but whoever holds the signature card on the bank account can still move the money until the bank is told. Administrator votes inside CivicOS are the board; the hosting account is the bank.",
+     "'Root of trust' means the one power everything else rests on and nothing inside the system can overrule. An analogy: a board can vote an officer out, but whoever holds the signature card on the bank account can still move the money until the bank is told. Administrator votes inside Civicsmith are the board; the hosting account is the bank.",
      "'Custody' means how a group holds that power: how many people, who, how it is changed, and how changes are logged. On 31 July you deferred designing custody until a real group with several members shows what it can manage, and said meanwhile to document the limit honestly. That record also notes the question had been re-raised more than once. This brief does not re-raise it; it asks only what the founder and administrators are told."
     ],
     "today": [
@@ -15264,7 +15264,7 @@
     ],
     "problem": [
      "The current wording is true but one-sided. It tells the founder the account is a safety net, and not that it is also the master key. The founder is the one person who chooses whose login hosts the copy, and they choose at claim time, usually alone and in a hurry. A personal login chosen then is hard to undo later.",
-     "What goes wrong: a founder uses a personal account and later leaves after a dispute, or becomes unreachable, or has the personal login phished. In each case one person, or a stranger, holds the whole group's record, including the identities of confidential sources. The group's administrators cannot fix it from inside CivicOS.",
+     "What goes wrong: a founder uses a personal account and later leaves after a dispute, or becomes unreachable, or has the personal login phished. In each case one person, or a stranger, holds the whole group's record, including the identities of confidential sources. The group's administrators cannot fix it from inside Civicsmith.",
      "Who is affected: confidential sources first, then members, then the group's credibility. A leaked full export is the worst event the system can suffer, and it runs through this account.",
      "Why decide now: the redesign's setup and administrator screens are being designed, and the claim page is used on every install today. Onboarding as a whole is deferred until the redesign settles, but this is one paragraph on an existing page, not onboarding.",
      "Decided badly the other way: a wall of warnings at setup frightens a founder who just wants to start, or wording implies a safeguard that does not exist, which the canon forbids."
@@ -15407,7 +15407,7 @@
     "glossary": [
      {
       "term": "Copy (instance)",
-      "plain": "One group's own CivicOS, running in that group's hosting account."
+      "plain": "One group's own Civicsmith, running in that group's hosting account."
      },
      {
       "term": "Hosting account",
@@ -15749,7 +15749,7 @@
    }
   },
   {
-   "question": "Should CivicOS itself talk to the Believe in Oakland network's shared directory, forum and 'working on' signals, or leave them to the network's own websites?",
+   "question": "Should Civicsmith itself talk to the Believe in Oakland network's shared directory, forum and 'working on' signals, or leave them to the network's own websites?",
    "whyItMatters": "Design Requirements 9-10 require them; no module holds them.",
    "relatedUseCases": [
     "UC-005",
@@ -15758,7 +15758,7 @@
    ],
    "basis": "open",
    "whereTheCanonStops": "Design Requirements 9-10; Publication section 9",
-   "context": "The broader Believe in Oakland network expects groups to find each other's published work in a public directory, to discuss across groups in a forum, and to post optional 'working on' signals saying what they are investigating. These sit between groups rather than inside one group's copy of CivicOS.",
+   "context": "The broader Believe in Oakland network expects groups to find each other's published work in a public directory, to discuss across groups in a forum, and to post optional 'working on' signals saying what they are investigating. These sit between groups rather than inside one group's copy of Civicsmith.",
    "canonSays": [
     {
      "source": "Design Requirement 9",
@@ -15781,7 +15781,7 @@
      "says": "Acts that are visible outside must say so at the point of the act."
     }
    ],
-   "whyOpen": "The requirements place the directory and forum on network sites outside CivicOS, but no module or canon text says whether CivicOS itself submits to, reads from or links to them, so the use cases have no requirement. A 'working on' signal publishes a group's interest, which DR-13's tell discipline treats as an outward act that must be flagged, and 'anonymous-compatible' is undefined for a group identified by its public slug.",
+   "whyOpen": "The requirements place the directory and forum on network sites outside Civicsmith, but no module or canon text says whether Civicsmith itself submits to, reads from or links to them, so the use cases have no requirement. A 'working on' signal publishes a group's interest, which DR-13's tell discipline treats as an outward act that must be flagged, and 'anonymous-compatible' is undefined for a group identified by its public slug.",
    "todayInOldUI": "Nothing.",
    "related": [
     "Q11 onboarding and starter materials",
@@ -15793,11 +15793,11 @@
    ],
    "options": [
     {
-     "option": "Keep all three outside CivicOS; CivicOS only offers a 'submit to directory' link after publishing and a 'find related work' link out.",
+     "option": "Keep all three outside Civicsmith; Civicsmith only offers a 'submit to directory' link after publishing and a 'find related work' link out.",
      "tradeoffs": "Respects DR-9 and keeps scope small; the experience is split across sites."
     },
     {
-     "option": "CivicOS submits a published case's metadata to the directory itself and shows its directory status and flags inside.",
+     "option": "Civicsmith submits a published case's metadata to the directory itself and shows its directory status and flags inside.",
      "tradeoffs": "Smooth for members; needs a directory service and requirements, and couples the product to one site."
     },
     {
@@ -15805,29 +15805,29 @@
      "tradeoffs": "Serves the Roadmap's handoff pattern; publishes interest and needs anonymity rules."
     }
    ],
-   "recommendation": "Bob should first decide whether these are in CivicOS's scope at all; the smallest honest step is option one, with a tell warning on any link that submits.",
-   "whoDecides": "Bob: scope and requirements (whether CivicOS owns any of the network's shared functions) are his.",
+   "recommendation": "Bob should first decide whether these are in Civicsmith's scope at all; the smallest honest step is option one, with a tell warning on any link that submits.",
+   "whoDecides": "Bob: scope and requirements (whether Civicsmith owns any of the network's shared functions) are his.",
    "brief": {
     "stillOpen": false,
     "settledSince": "",
-    "title": "Does CivicOS connect to the network's directory, forum and 'working on' signals?",
-    "inOneBreath": "Should CivicOS itself talk to the Believe in Oakland network's shared directory, forum and 'working on' signals, or leave them to the network's own websites?",
-    "decision": "(1) Do the directory of published work, the cross-group forum and 'working on' signals stay outside CivicOS, with at most links out, or does CivicOS submit to them and show what they say? (2) If 'working on' signals ever come inside CivicOS, what does 'anonymous-compatible' mean for a group whose only public identity is its name?",
+    "title": "Does Civicsmith connect to the network's directory, forum and 'working on' signals?",
+    "inOneBreath": "Should Civicsmith itself talk to the Believe in Oakland network's shared directory, forum and 'working on' signals, or leave them to the network's own websites?",
+    "decision": "(1) Do the directory of published work, the cross-group forum and 'working on' signals stay outside Civicsmith, with at most links out, or does Civicsmith submit to them and show what they say? (2) If 'working on' signals ever come inside Civicsmith, what does 'anonymous-compatible' mean for a group whose only public identity is its name?",
     "alreadyDecidedPart": "",
     "basics": [
-     "Believe in Oakland is the wider network of independent civic groups, with no headquarters. CivicOS is the software one group uses to investigate and publish; each group's copy is its own and speaks outward only by publishing signed cases.",
+     "Believe in Oakland is the wider network of independent civic groups, with no headquarters. Civicsmith is the software one group uses to investigate and publish; each group's copy is its own and speaks outward only by publishing signed cases.",
      "The network's platform plan names three shared functions, each on its own platform so none is essential. A forum: a self-hosted Discourse discussion site (Discourse is open-source forum software) where groups find each other and debate methods. Hosting: each group publishes wherever it likes, with a stable public link. A directory at believeinoakland.org: a searchable index of all published work, open to submissions without pre-approval, showing an automated metadata check and community flags (flagged entries stay visible), downloadable so anyone can mirror it.",
      "'Working on' signals, per the Roadmap: 'lightweight directory entries. Optional, anonymous-compatible, no ownership implied.' They help groups avoid duplication and hand off leads; 'no group owns an issue'.",
-     "CivicOS already serves a public, login-free index of each group's published cases that anyone can read and verify. A group's only public identity is its short name, the slug. And by the 'tell discipline', any act visible outside the group says so at the moment it is taken."
+     "Civicsmith already serves a public, login-free index of each group's published cases that anyone can read and verify. A group's only public identity is its short name, the slug. And by the 'tell discipline', any act visible outside the group says so at the moment it is taken."
     ],
     "today": [
-     "Nothing in CivicOS connects to the three. The publication design records that nothing built serves the directory; when last checked the directory's domain was not serving, and whether it or the forum runs today is not recorded.",
+     "Nothing in Civicsmith connects to the three. The publication design records that nothing built serves the directory; when last checked the directory's domain was not serving, and whether it or the forum runs today is not recorded.",
      "The canon pulls two ways: the Roadmap's early interface sketch put forum threads and 'working on' signals inside the app; the later platform plan and design requirements put them on network sites. Nothing reconciles the two.",
      "Nearby: other groups' work carries an origin mark (29 September); an action may be addressed to another civic group, and joint action waits until a coalition asks (30 September); your 29 September design for conflicts between projects kept to notification replies, with no discussion thread or general messaging."
     ],
     "problem": [
      "The use cases for finding related work, listing a case and signalling interest have no requirement, so the redesign has nothing to build to; members do it by hand.",
-     "Building CivicOS around believeinoakland.org cuts against the network's own rule that no platform is essential: a takedown of the site should not break publishing, and a group elsewhere may use another directory.",
+     "Building Civicsmith around believeinoakland.org cuts against the network's own rule that no platform is essential: a takedown of the site should not break publishing, and a group elsewhere may use another directory.",
      "A 'working on' signal tells the public, including the officials being examined, what a group is investigating before any case exists, in a network designed for active opposition. 'Anonymous-compatible' is undefined: an anonymous signal cannot carry the group's name, and then cannot be told from astroturf.",
      "The redesign is drawing the publishing flow and home screen now; whether a 'list in directory' step or 'related work' panel belongs there depends on this."
     ],
@@ -15836,7 +15836,7 @@
      "steps": [
       "Oakland Ratepayers publishes a case: $2.3 million in parking late fees booked to the general fund instead of the parking fund over two years (illustrative).",
       "Rosa wants it listed in the network directory, and wonders whether West Oakland Neighbors is looking at the towing contract her case touches.",
-      "Today she leaves CivicOS, retypes title, summary and link into the directory's form, and searches the forum by hand.",
+      "Today she leaves Civicsmith, retypes title, summary and link into the directory's form, and searches the forum by hand.",
       "A month later Luis wants to tell the network 'we are examining the 2022 towing contract'. The contractor's lobbyist reads the directory too."
      ]
     },
@@ -15876,7 +15876,7 @@
      {
       "label": "A",
       "name": "Outside, with links out",
-      "howItWorks": "After publishing, 'Submit to the network directory' opens the directory's own form in a new tab, prefilled with the case's public link, title and summary, after saying 'This sends your case's public details to a public website.' 'Find related work' opens the directory search; 'Discuss in the forum' opens the forum. Nothing is sent automatically. The addresses are set per group. A directory could also read CivicOS's public index itself.",
+      "howItWorks": "After publishing, 'Submit to the network directory' opens the directory's own form in a new tab, prefilled with the case's public link, title and summary, after saying 'This sends your case's public details to a public website.' 'Find related work' opens the directory search; 'Discuss in the forum' opens the forum. Nothing is sent automatically. The addresses are set per group. A directory could also read Civicsmith's public index itself.",
       "inTheStory": "Rosa reads the warning, checks the prefilled form and submits on the directory's site; 'Find related work' shows West Oakland's entries. Luis posts on the forum by hand, saying as much as he chooses.",
       "gains": [
        "Keeps no-platform-essential.",
@@ -15885,14 +15885,14 @@
       ],
       "costs": [
        "Split across sites.",
-       "CivicOS cannot show listing status or directory flags."
+       "Civicsmith cannot show listing status or directory flags."
       ],
       "commitsYouTo": "Three links and a prefilled form."
      },
      {
       "label": "B",
-      "name": "CivicOS submits and shows status",
-      "howItWorks": "'List in the directory' is a step at publication; CivicOS sends the listing and shows its directory status on the case.",
+      "name": "Civicsmith submits and shows status",
+      "howItWorks": "'List in the directory' is a step at publication; Civicsmith sends the listing and shows its directory status on the case.",
       "inTheStory": "A week later Rosa's case shows 'Directory: listed · meets metadata standard · 1 community flag: \"figures not reconciled to the annual financial report\"'.",
       "gains": [
        "Smooth; outside flags reach the group."
@@ -15906,7 +15906,7 @@
      },
      {
       "label": "C",
-      "name": "A 'working on' act in CivicOS",
+      "name": "A 'working on' act in Civicsmith",
       "howItWorks": "'Tell the network we are working on this' posts a directory entry after a full warning ('This tells the public, including anyone you are investigating, that a group is examining ...'), optionally without the group's name.",
       "inTheStory": "Luis posts 'Examining the 2022 towing contract' without the name. West Oakland replies; so might the lobbyist.",
       "gains": [
@@ -15936,15 +15936,15 @@
     "recommendation": {
      "choice": "A",
      "why": [
-      "A is the smallest honest step: it keeps the network's no-platform-essential rule, keeps every outward act in the member's hands with the warning visible, and needs no directory to exist. Since CivicOS's public index is readable by anyone, the network can automate listing on its side.",
-      "Revisit B when the directory runs as a service and a group asks to see its status in CivicOS; revisit C when a group asks, after 'anonymous' is defined. (Recommendation, not canon.)"
+      "A is the smallest honest step: it keeps the network's no-platform-essential rule, keeps every outward act in the member's hands with the warning visible, and needs no directory to exist. Since Civicsmith's public index is readable by anyone, the network can automate listing on its side.",
+      "Revisit B when the directory runs as a service and a group asks to see its status in Civicsmith; revisit C when a group asks, after 'anonymous' is defined. (Recommendation, not canon.)"
      ],
      "risk": "Members may skip the directory. Contained by putting the prefilled form and related-work link at the moment of publishing."
     },
     "howToAnswer": [
      "29: as recommended.",
      "29: as recommended, and give C a trigger: the first time two groups find they duplicated an investigation.",
-     "29: B. CivicOS should list cases in the directory itself.",
+     "29: B. Civicsmith should list cases in the directory itself.",
      "29: question: does believeinoakland.org's directory actually run today?"
     ],
     "ifLeftOpen": "The use cases for finding related work, listing a case and signalling interest stay without requirements, and the redesign leaves them out. Members keep using the network's sites by hand. Nothing else waits.",
@@ -15981,7 +15981,7 @@
      },
      {
       "term": "Slug",
-      "plain": "The short public name of a group's copy of CivicOS."
+      "plain": "The short public name of a group's copy of Civicsmith."
      },
      {
       "term": "Public index",
@@ -16012,7 +16012,7 @@
     ],
     "status": "ruled",
     "title": "The network: believeincities.org, 'working on' notices, and keeping them honest",
-    "decided": "The network's directory and forum stay outside CivicOS: after publishing, a member gets links out and a prefilled directory submission, after the warning; nothing is sent automatically. Inside CivicOS, a project's owner may tell the network the group is working on something, but only from a project defined as working on the issue, after a warning that the public, including anyone being examined, will see it and that stopping later won't unsay it. The notice names the group by its slug (never its members; there are no anonymous notices) and carries the owner's own wording, optionally naming the public body and the matter; 'Working on this since', a date no earlier than the project's creation and no later than today; the date posted; an activity level in five steps (Very active, Active, Some work, Quiet, Dormant) counted from the weeks in the last 13 with real work by members, never the assistant's and never by volume, by a published method and re-signed monthly; 'Interested in collaborating' with a link to knock, only if the owner chooses; and links to any case the project published. Nothing else from the project's private work. Each counted week gets an independent timestamp on a sealed summary of its work, opened when the project publishes. An owner signs the notice as a case is signed, and it is published at the group's own public address, whose page lists its owners' public keys without names. Stopping says so, with an optional handoff note; a notice Dormant for a further month lapses. As holder of the domains, Bob set the network site's policy: the directory lives at believeincities.org/<place> (believein.city for short; believeinoakland.org redirects to /oakland), reads notices where groups publish them, records when it first saw each and keeps them all, and shows each as Stated (typed by hand; lapses after 60 days), Reported (signed by a group's copy) or Proven (its seals opened at publication). A group's record is facts, never a score; notices on the same matter sit side by side, each saying others are welcome; public pages never say 'claim'; impossible combinations are flagged; a group with no published work may have at most two open notices. The screens are Design's."
+    "decided": "The network's directory and forum stay outside Civicsmith: after publishing, a member gets links out and a prefilled directory submission, after the warning; nothing is sent automatically. Inside Civicsmith, a project's owner may tell the network the group is working on something, but only from a project defined as working on the issue, after a warning that the public, including anyone being examined, will see it and that stopping later won't unsay it. The notice names the group by its slug (never its members; there are no anonymous notices) and carries the owner's own wording, optionally naming the public body and the matter; 'Working on this since', a date no earlier than the project's creation and no later than today; the date posted; an activity level in five steps (Very active, Active, Some work, Quiet, Dormant) counted from the weeks in the last 13 with real work by members, never the assistant's and never by volume, by a published method and re-signed monthly; 'Interested in collaborating' with a link to knock, only if the owner chooses; and links to any case the project published. Nothing else from the project's private work. Each counted week gets an independent timestamp on a sealed summary of its work, opened when the project publishes. An owner signs the notice as a case is signed, and it is published at the group's own public address, whose page lists its owners' public keys without names. Stopping says so, with an optional handoff note; a notice Dormant for a further month lapses. As holder of the domains, Bob set the network site's policy: the directory lives at believeincities.org/<place> (believein.city for short; believeinoakland.org redirects to /oakland), reads notices where groups publish them, records when it first saw each and keeps them all, and shows each as Stated (typed by hand; lapses after 60 days), Reported (signed by a group's copy) or Proven (its seals opened at publication). A group's record is facts, never a score; notices on the same matter sit side by side, each saying others are welcome; public pages never say 'claim'; impossible combinations are flagged; a group with no published work may have at most two open notices. The screens are Design's."
    }
   },
   {
@@ -16023,7 +16023,7 @@
    ],
    "basis": "open",
    "whereTheCanonStops": "UI-KICKOFF refinements",
-   "context": "Published cases are read by the public, journalists, officials and other groups, who know the least about CivicOS. A case reports each finding's strength on two separate axes (how directly the documents are held, and how strongly the links between them are established), letter grades A-D, and 'look states' saying what was searched and what nobody looked at. Bob wants this explained in layers on screen, and the printed version must carry the whole story without interactivity.",
+   "context": "Published cases are read by the public, journalists, officials and other groups, who know the least about Civicsmith. A case reports each finding's strength on two separate axes (how directly the documents are held, and how strongly the links between them are established), letter grades A-D, and 'look states' saying what was searched and what nobody looked at. Bob wants this explained in layers on screen, and the printed version must carry the whole story without interactivity.",
    "canonSays": [
     {
      "source": "UI-KICKOFF refinements (Bob, 2026-07-28)",
@@ -16076,7 +16076,7 @@
     "decision": "(1) On the public page, does each finding open with one line naming its role and the project's bar, for example 'Relied on · meets this project's bar (capture B, connection C)', above its two grades? (2) Does the printed edition carry every layer in full, with no length limit, plus a one-page glossary?",
     "alreadyDecidedPart": "Your measures map (29 September) sets words and forms for every grade: each mark opens to its plain question, colour marks the scale, never the value, and no combined score appears. For members' workspaces you approved a phrase against the bar ('Meets the bar', 'Short on connection'). On 28 July you said readers need layered explanation most, and print is first-class and carries the full narrative.",
     "basics": [
-     "A published case is a project's signed argument, read by those who know least about CivicOS: residents, reporters, officials, other groups. It is made of findings; load-bearing ones are relied on, supporting ones are included but not relied on.",
+     "A published case is a project's signed argument, read by those who know least about Civicsmith: residents, reporters, officials, other groups. It is made of findings; load-bearing ones are relied on, supporting ones are included but not relied on.",
      "Each finding has two grades, A to D, never combined: capture (how well documents are held) and connection (how firmly links are established). A finding is only as strong as its weakest document and weakest link, counted separately.",
      "The bar is the project's declared minimum per axis. Publishing is refused if a load-bearing finding falls short on a declared axis, so on a published case every load-bearing finding meets the bar by rule; only supporting findings can be short, and the bar may be low, partial or absent. A verdict line therefore means something different here than in a member's workspace.",
      "Layers (progressive disclosure) mean a short answer first, detail a click away. Print loses the clicks, so whatever the screen hides must be printed.",
@@ -16261,7 +16261,7 @@
     ],
     "status": "ruled",
     "title": "The forms of a published case: the public page, the complete edition and the case file",
-    "decided": "The test of a published case is that anybody can review it, and even recreate it, without CivicOS. It comes in three forms. The public page: each finding opens with one line naming its role and the project's bar ('Relied on · meets this project's bar (capture B, connection C)'), never a bare 'meets', then its two grades, then the detail; the strength section opens 'a case has two strengths, never one'. The complete edition (what was called print): a self-contained file anyone can open with nothing to install, with no length limit, ordered so a reader can stop early, carrying every layer, the grading method and 'How to check this case yourself'; every page carries the identifying notice, and printing is incidental. The case file: the complete structured record in a published, versioned format rich enough that the results can be recreated, holding the complete edition, every document and observation a conclusion rests on (whole, with its extracted text), the findings' chains, attestations, signatures, and the method version inside the signed case; split into parts, never trimmed; an open specification and a standalone open checker let anyone recreate it. Everything a conclusion rests on must be presentable: publishing is refused while a relied-on finding rests on material that cannot travel whole; the warning says the case republishes these documents and that judging whether they may be is the group's. An off-the-record source's material travels whole with its attestations (member, project, group); only the identity is withheld, labelled 'Withheld' with its reason. Evidence from a member credited only at the group or project level counts as anonymous and cannot carry a relied-on finding without independent corroboration, including when that member attests an off-the-record source. Another group's copy imports a case file into a new, read-only project, and the system confirms each finding by recreating it: Recreated, Recreated in part (naming what is missing) or Did not recreate (naming what differs), shown also against the importing group's own bar. Recreating is not endorsing; the group may accept an edition only for recreated findings, and an accepted finding may support its own work, marked as another group's. The screens are Design's."
+    "decided": "The test of a published case is that anybody can review it, and even recreate it, without Civicsmith. It comes in three forms. The public page: each finding opens with one line naming its role and the project's bar ('Relied on · meets this project's bar (capture B, connection C)'), never a bare 'meets', then its two grades, then the detail; the strength section opens 'a case has two strengths, never one'. The complete edition (what was called print): a self-contained file anyone can open with nothing to install, with no length limit, ordered so a reader can stop early, carrying every layer, the grading method and 'How to check this case yourself'; every page carries the identifying notice, and printing is incidental. The case file: the complete structured record in a published, versioned format rich enough that the results can be recreated, holding the complete edition, every document and observation a conclusion rests on (whole, with its extracted text), the findings' chains, attestations, signatures, and the method version inside the signed case; split into parts, never trimmed; an open specification and a standalone open checker let anyone recreate it. Everything a conclusion rests on must be presentable: publishing is refused while a relied-on finding rests on material that cannot travel whole; the warning says the case republishes these documents and that judging whether they may be is the group's. An off-the-record source's material travels whole with its attestations (member, project, group); only the identity is withheld, labelled 'Withheld' with its reason. Evidence from a member credited only at the group or project level counts as anonymous and cannot carry a relied-on finding without independent corroboration, including when that member attests an off-the-record source. Another group's copy imports a case file into a new, read-only project, and the system confirms each finding by recreating it: Recreated, Recreated in part (naming what is missing) or Did not recreate (naming what differs), shown also against the importing group's own bar. Recreating is not endorsing; the group may accept an edition only for recreated findings, and an accepted finding may support its own work, marked as another group's. The screens are Design's."
    }
   },
   {
@@ -16278,16 +16278,16 @@
     "decision": "(1) Whether recording 'hold in place' itself stops both scheduled deletions of assistant transcripts on members' devices (at the time limit and at publication), once those deletions are built. (2) How far it reaches: the threatened action's project, with other projects named by the member who places it, or the whole group. (3) Who may place and release it (today any member who can see the action), and whether releasing, which would restart deletion, is heavier than placing. (4) What members see while a hold is in place. (5) Whether the operator's wipe of the real record is refused while any hold is in place.",
     "alreadyDecidedPart": "You ruled on 1 October that the litigation-hold reminder is cleared by a member's own, named act on the reply marked as a legal threat: 'hold in place' or 'hold released', always with a written reason. That act is the reminder's only way out. Each statement is kept, never rewritten, and the latest one stands; no machine can make it. BOB read your 'a member's act' as any member who can see the action, with the reminder going to the administrators and to the member who marked the threat.",
     "basics": [
-     "A group (say, a neighbourhood budget watchdog) runs its own copy of CivicOS. Members work in projects, some hidden from outsiders; a project may publish a case, the group's public account of what it found. A few members are administrators, who look after membership and settings.",
-     "An action is one outward engagement with an addressee, such as a records request to a city department; members record what was sent and what came back. Since your ruling of 30 September that CivicOS is prepared for opposition, a member can mark a received reply as pressure: legal (a threat to sue, a subpoena, a demand to preserve records), retaliation, discrediting or other. The mark is kept as evidence.",
+     "A group (say, a neighbourhood budget watchdog) runs its own copy of Civicsmith. Members work in projects, some hidden from outsiders; a project may publish a case, the group's public account of what it found. A few members are administrators, who look after membership and settings.",
+     "An action is one outward engagement with an addressee, such as a records request to a city department; members record what was sent and what came back. Since your ruling of 30 September that Civicsmith is prepared for opposition, a member can mark a received reply as pressure: legal (a threat to sue, a subpoena, a demand to preserve records), retaliation, discrediting or other. The mark is kept as evidence.",
      "A member's session with the AI assistant produces a transcript: the assistant's working notes and the conversation. On 6 August you ruled that transcripts are internal notes, like a reporter's notebook: kept only on the member's own device, never in the shared record; deleted after a set time; and deleted when the work is published. The reason was subpoena protection: the group's hosting company can be served directly, sometimes without the group knowing, while a member's device can only be reached through the member, who can contest the demand.",
      "The same ruling said why that deletion is safe only until a lawsuit is in view. Deleting on a schedule fixed in advance is defensible; deleting once litigation is reasonably expected is spoliation (destruction of evidence), treated far worse than whatever the material showed. So once the group is on notice, both deletions must stop for relevant material: a litigation hold, the duty a utility has to switch off its email auto-delete once a complaint is in view."
     ],
     "today": [
      "Built in the engine on 1 October (the old interface shows none of it): a reply marked as a legal threat sends one reminder to every administrator and to the member who marked it: 'a legal threat was recorded on [the action] and no litigation hold is stated for it', with one button, 'Record whether a litigation hold is in place'. It is shown once and leaves only when a member records 'hold in place' or 'hold released' with a reason, even if the action has closed.",
      "Any member who can see the action may record either statement, not only an administrator. 'Released' covers both 'we have stopped preserving' and 'no hold was needed'. Each letter marked as a legal threat needs its own statement. The statements are listed on the action; nothing else shows them.",
-     "The statement suspends nothing; the requirement says so plainly, leaving the transcript deletion as a separate matter on the devices. That matter does not exist yet: nothing writes transcripts to devices or deletes them, and no time limit is set, so nothing is being destroyed today. As far as I can find, those two transcript deletions are the only scheduled deletions in CivicOS.",
-     "The operator's wipe of the group's whole record (used to reset it) still runs while a hold is in place, and erases the hold statements too. With no email or push, a device learns of anything only when its member next opens CivicOS."
+     "The statement suspends nothing; the requirement says so plainly, leaving the transcript deletion as a separate matter on the devices. That matter does not exist yet: nothing writes transcripts to devices or deletes them, and no time limit is set, so nothing is being destroyed today. As far as I can find, those two transcript deletions are the only scheduled deletions in Civicsmith.",
+     "The operator's wipe of the group's whole record (used to reset it) still runs while a hold is in place, and erases the hold statements too. With no email or push, a device learns of anything only when its member next opens Civicsmith."
     ],
     "problem": [
      "Your August ruling requires deletion to stop once the group is on notice. Your October ruling created the moment of notice: a named member saying 'hold in place', for a reason, on a dated threat. The link between the two is missing. Left separate, the group can record 'hold in place' while devices go on deleting: a written admission of notice followed by destruction, the worst position in a dispute.",
@@ -16333,7 +16333,7 @@
       "src": "K613 (2); K614; DEC-69; DEC-70"
      },
      {
-      "point": "No email or push: a member hears of anything only inside CivicOS.",
+      "point": "No email or push: a member hears of anything only inside Civicsmith.",
       "why": "Your ruling of 29 September on deadline reminders.",
       "src": "DEC-94 (3)"
      },
@@ -16455,7 +16455,7 @@
      },
      {
       "term": "Reminder",
-      "plain": "An item in a member's list of things waiting for attention inside CivicOS."
+      "plain": "An item in a member's list of things waiting for attention inside Civicsmith."
      },
      {
       "term": "Reasoned act",
@@ -16704,7 +16704,7 @@
     "alreadyDecidedPart": "",
     "basics": [
      "The current member app (the old interface) is the screen members use today. It is being replaced by a redesigned interface, which is still being designed. Meanwhile the system underneath has moved on, and the old app has fallen behind it.",
-     "A release is a signed, numbered version of CivicOS that groups install or update to. The development line is the newer, unreleased work. The last release was cut on 24 September, the day before the current rebuild began."
+     "A release is a signed, numbered version of Civicsmith that groups install or update to. The development line is the newer, unreleased work. The last release was cut on 24 September, the day before the current rebuild began."
     ],
     "today": [
      "On the development line, the old app lacks the six record types added since (standard, goal, escalation, determination, consequence, aspiration), cannot resolve a conflict between records, has no screen for a source's consent or for a publication's disclosures, writes the other side of an action in a form the system now refuses (a name alone, where a role and a body are now required), and cannot publish a case that carries an unresolved conflict, because it sends no disclosure.",
@@ -16823,7 +16823,7 @@
    }
   },
   {
-   "question": "On the action plan page, should the list of things the plan is about be headed 'Subjects' or 'Matters', given that 'Subject' already names a person, office, place, law or thing elsewhere in CivicOS?",
+   "question": "On the action plan page, should the list of things the plan is about be headed 'Subjects' or 'Matters', given that 'Subject' already names a person, office, place, law or thing elsewhere in Civicsmith?",
    "basis": "open",
    "relatedUseCases": [
     "UC-126"
@@ -16832,7 +16832,7 @@
     "stillOpen": false,
     "settledSince": "",
     "title": "What a plan is about: 'Subjects' or 'Matters'",
-    "inOneBreath": "On the action plan page, should the list of things the plan is about be headed 'Subjects' or 'Matters', given that 'Subject' already names a person, office, place, law or thing elsewhere in CivicOS?",
+    "inOneBreath": "On the action plan page, should the list of things the plan is about be headed 'Subjects' or 'Matters', given that 'Subject' already names a person, office, place, law or thing elsewhere in Civicsmith?",
     "decision": "Choose the word members see for the things an action plan addresses, used everywhere they appear: the plan page's heading and buttons, the preview when an action starts, queue items and the glossary. The term inside the requirements stays 'subject' whichever you pick; members never see it.",
     "alreadyDecidedPart": "",
     "basics": [
@@ -17027,7 +17027,7 @@
     "decision": "(1) For each of the three sketches, say whether it is fixed as the design reference or left to Design. Fixed means the redesign keeps what it shows, the order of its steps and its wording; look and layout stay Design's, as for the plan page. (2) If you wish, fix only part of a sketch, for example the filing panels of the third sheet but not its queue items.",
     "alreadyDecidedPart": "",
     "basics": [
-     "The Action layer is where a group decides what to do with what it has learned. A project's action plan, its private working notes, lists options (a demand letter, a records request, a grand-jury complaint). Starting a chosen option creates an action: one outward engagement with an addressee such as the City Clerk's office. CivicOS sends nothing itself. The assistant may draft the text as a proposal; a member edits and approves it, sends it by the venue's own means and records the sending with the exact text sent.",
+     "The Action layer is where a group decides what to do with what it has learned. A project's action plan, its private working notes, lists options (a demand letter, a records request, a grand-jury complaint). Starting a chosen option creates an action: one outward engagement with an addressee such as the City Clerk's office. Civicsmith sends nothing itself. The assistant may draft the text as a proposal; a member edits and approves it, sends it by the venue's own means and records the sending with the exact text sent.",
      "One rule shapes starting. An action that asserts a breach (says the government broke a rule) must rest on a member's determination, made on published findings, that the act was noncompliant. On 30 September you ruled that such an action is refused by default when it does not; a member may still proceed, by an act signed with their name and a stated reason, and then the action and everything prepared from it say it 'rests on an unestablished premise'. Actions that seek evidence, such as a records request, are never refused this way.",
      "In the week of 29 September the Action design session drew four sample screens as clickable web pages with made-up data. You approved one, the plan page, on 30 September, leaving its look (spacing, colour, narrow screens) to Design. The interface redesign is done separately from the build, so a sketch is how your intent reaches whoever draws the screens.",
      "The approved plan page (views/plan-page.html), for comparison: the plan's title; a 'Checks' strip in words ('no branch answers a hostile response'); the plan's subjects with their support; options collapsed to one line, sortable, with Choose and Decline and the assistant's suggestions in a separate tray marked 'not yet in the plan'; up to three scenarios of phases with checkpoints a member judges; 'Started', each action's state; and 'Close plan…'."
@@ -17039,7 +17039,7 @@
      "Status: only the plan page is approved. The three are marked 'Design view · sample data' and nothing in the build cites them. None of the four screens is built yet; they wait for the redesign."
     ],
     "problem": [
-     "If a sketch is left open, the designer may keep the rules but lose their feel. Your override ruling could become a yellow banner with a one-click 'Continue', no reason asked. Approving and recording the sending could become a single 'Send' button that implies CivicOS sends. The requirements say what must happen; only a fixed picture says how it is met.",
+     "If a sketch is left open, the designer may keep the rules but lose their feel. Your override ruling could become a yellow banner with a one-click 'Continue', no reason asked. Approving and recording the sending could become a single 'Send' button that implies Civicsmith sends. The requirements say what must happen; only a fixed picture says how it is met.",
      "If everything is fixed, two open questions get decided by the back door. The queue panel's labels ('condition', 'obligation · ours') are internal class names whose member-facing words are question 28, and its litigation-hold item means whatever question 31 decides. The matter page's place among the existing screens is unsettled, and its use of 'matter' for a whole act sits awkwardly with question 34.",
      "The filing and counsel-packet panels carry your rulings that the venue sets the standard of evidence and that a counsel packet is never fileable as it stands. They touch no open question, so they are low-risk to fix. The standards list is part of a screen the redesign already owns.",
      "Who is affected: the designer, who needs to know what is fixed; members, who will meet the override and the sending every time they act; and the group's credibility, which rests on the disclosure travelling with an overridden action."
@@ -17179,7 +17179,7 @@
      },
      {
       "term": "Design, the redesign",
-      "plain": "The separate work of drawing CivicOS's new screens."
+      "plain": "The separate work of drawing Civicsmith's new screens."
      },
      {
       "term": "Determination",
@@ -17253,7 +17253,7 @@
      "Your point of 1 October: a case is a waypoint, not an end product. After publication the world responds without changing the case: the office replies, a paper writes about it, another group cites it. The proposal is a docket beside each case: dated entries, each naming the edition it concerns, growing while the signed editions never change.",
      "How the CPUC curates its docket, which you asked about: structurally, not editorially. Only parties file formally, and party status is ruled on. The public comments on a separate shelf, which the Commission says is not evidence and not part of the formal record. The Docket Office rejects for form only, with reasons. The decision rests on a record narrower than the docket. Corrections come as new filings or decisions. Anyone can follow through the information-only service list, by email.",
      "What carries over. Here the publishing group keeps its own docket, a built-in conflict of interest, so neutrality is replaced by rules. The docket has shelves. The first holds what the group stands behind as accurately listed (vouching that each is what it says, not agreeing with it): the subject's responses, a newer edition, corrections, a withdrawal, outcomes. The second, 'Reactions elsewhere', is labelled 'Listed by the group. Not evidence. Not endorsed.' The third, 'In our record only', is seen by members and never published.",
-     "Checks are on form, never merit: every entry is dated, attributed, names its edition and has a captured copy with its origin. A docket entry never makes anything evidence: to affect a finding, material is captured, read, made to support it, and a new edition follows. Email push does not fit: CivicOS sends nothing. A feed does: a page at a fixed address that a reader's own software checks, with no list of readers kept.",
+     "Checks are on form, never merit: every entry is dated, attributed, names its edition and has a captured copy with its origin. A docket entry never makes anything evidence: to affect a finding, material is captured, read, made to support it, and a new edition follows. Email push does not fit: Civicsmith sends nothing. A feed does: a page at a fixed address that a reader's own software checks, with no list of readers kept.",
      "A capture is the group's kept copy of a document's exact bytes, with where and when they came from and a grade saying how strongly that is proven. Where it can, it also has an independent archive, such as the Internet Archive, save the same page (a co-archive), so proof survives if the original is deleted. The doorbell is the group's public submission page; each submission is a knock, limited per sender and in total. Correspondence is the letters and calls recorded against one of the group's actions, such as a request for comment.",
      "Withdrawal (in journals, retraction) is not a correction. A correction says 'here is what we now conclude'; a withdrawal says 'we no longer stand behind this'. A retracted article stays readable, stamped and linked to a notice with the reason."
     ],
@@ -17291,7 +17291,7 @@
      },
      {
       "point": "No confidential entries: an entry is public whole or not on the public docket, though it may stay in the record.",
-      "why": "Your ruling of 1 October: confidential filings do not fit CivicOS's founding principles.",
+      "why": "Your ruling of 1 October: confidential filings do not fit Civicsmith's founding principles.",
       "src": "DEC-100 item 2"
      },
      {

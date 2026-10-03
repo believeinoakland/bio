@@ -12,7 +12,7 @@
    "memberWord": "memberWordSrc cites a design doc, requirement or the old UI; proposed: true means the worker's proposal"
   },
   "overview": [
-   "A group runs its own copy of CivicOS to investigate how a government is meeting its obligations. Members bring documents in with a record of where each came from. They ask questions and support each answer with passages from those documents. A project concludes a question on the support it accepts, and the concluded question becomes a finding. The group publishes its findings as a case, in editions.",
+   "A group runs its own copy of Civicsmith to investigate how a government is meeting its obligations. Members bring documents in with a record of where each came from. They ask questions and support each answer with passages from those documents. A project concludes a question on the support it accepts, and the concluded question becomes a finding. The group publishes its findings as a case, in editions.",
    "Then the group decides what to do. From the first suspicion, a project can open an <b>action plan</b>: the matters it is about and how well each is shown, the options open to it (a records request, a complaint, a story, testimony, a filing through counsel, and so on), which it chooses and which it declines with a reason, and up to three scenarios with checkpoints the group judges. Choosing an option starts an <b>action</b>, addressed to an office, an outlet or an organisation, never a private person. The assistant may draft what is sent; a member approves it and sends it by their own hand. The group then tracks replies and deadlines and, for a breach, the seven-stage escalation until compliance is restored.",
    "Three things run through all of it. The record always says what is not known and why. It keeps track of who looked where and what they found. And the assistant finds, proposes and drafts, but a person makes every judgement and takes every act that commits the group."
   ]
@@ -21,7 +21,7 @@
   {
    "id": "group-instance",
    "name": "Group and its copy (instance)",
-   "plainDefinition": "A group, as small as one person, runs its own copy of CivicOS in its own account; the copy knows which group it belongs to and which local rules it reads.",
+   "plainDefinition": "A group, as small as one person, runs its own copy of Civicsmith in its own account; the copy knows which group it belongs to and which local rules it reads.",
    "layer": 11,
    "module": "instance-setup (with installer, membership)",
    "states": [
@@ -8045,7 +8045,7 @@
  "glossary": [
   {
    "term": "Group",
-   "plain": "The people who run one copy of CivicOS together; it can be one person.",
+   "plain": "The people who run one copy of Civicsmith together; it can be one person.",
    "internalNames": [
     "instance",
     "group slug",
@@ -8054,7 +8054,7 @@
    "avoidConfusionWith": ""
   },
   {
-   "term": "Copy (of CivicOS)",
+   "term": "Copy (of Civicsmith)",
    "plain": "The group's own installation, in the group's own hosting account.",
    "internalNames": [
     "instance",
@@ -10123,7 +10123,7 @@
    "id": "D1-D6 (K590)",
    "date": "2026-09-30",
    "title": "Who and what an action may address, and who drafts",
-   "decided": "An action is addressed to a government office by role and body, a reporter or outlet, an organisation or another civic group by role and organisation, or a described audience; never a private individual, and a breach action is addressed to an office (D1). The assistant drafts communications as proposals a member adopts (D2). An action may resolve as 'completed' when no counterparty's answer decides it, its own outcome saying what happened (D3). A project may declare its kind of work (reporting, fixing, legal, oversight, other), which shapes the assistant's suggestions and nothing else (D4). A started option may name the group's contact, which grants nothing (D5). Any group may use CivicOS; a group with a stake in a matter discloses it (D6).",
+   "decided": "An action is addressed to a government office by role and body, a reporter or outlet, an organisation or another civic group by role and organisation, or a described audience; never a private individual, and a breach action is addressed to an office (D1). The assistant drafts communications as proposals a member adopts (D2). An action may resolve as 'completed' when no counterparty's answer decides it, its own outcome saying what happened (D3). A project may declare its kind of work (reporting, fixing, legal, oversight, other), which shapes the assistant's suggestions and nothing else (D4). A started option may name the group's contact, which grants nothing (D5). Any group may use Civicsmith; a group with a stake in a matter discloses it (D6).",
    "src": "build/rulings.md K590 (D1-D6), K608 (1); docs/architecture/BIO_Action_v0_1.md §4 rules 6, 9, 10; actions R7, R9, R45; action-plans R21; filings R23"
   },
   {
