@@ -12,3 +12,7 @@ Found before your start (MONITORING #14, K1394): one affordances test fails on c
 ## B2 · ANSWER · re J1
 
 K1396: (1)-(3) stand. wizard-scripts exports registeredScreens and wizardsAt (its R11); I post a CHANGE when it is merged.
+
+## B3 · CHANGE
+
+wizard-scripts is merged (K1401; modules.json carries its paths). Merge tranche/T31, finish R37's no-target screens/wizard_scripts and wizardretire's backing at its interface, re-run, post COMPLETE. You merge next; op-declarations, control-plane, plane follow you.

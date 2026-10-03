@@ -1,15 +1,16 @@
 /* The wizard's front page and the CSS shared with the progress and error
  * pages. One aesthetic across parts 1, 2, and 3: paper, ink, verdigris.
  *
- * R22 (N5, K262): every page names the product, CivicOS, and speaks to the group installing it: by the name it chose
- * once it has chosen one, as "your group" before. Each says the installer is run by the publisher of CivicOS releases
- * (PUBLISHER, the line every page carries), and names no third party. R23: the install page states the two
- * prerequisites the install enforces.
+ * R22 (N5, K262; DEC-124): every page names the product, Civicsmith (PRODUCT, the one place the name is written), and
+ * speaks to the group installing it: by the name it chose once it has chosen one, as "your group" before. Each says the
+ * installer is run by the publisher of Civicsmith releases (PUBLISHER, the line every page carries), and names no third
+ * party. R23: the install page states the two prerequisites the install enforces. R35 (DEC-122 (3)): every page loads
+ * nothing from another origin; its typefaces are the device's own (PAGE_CSS's stacks).
  */
 
 import { list as heldProfiles } from "../../jurisdictions/index.mjs";
 
-export const PRODUCT = "CivicOS";
+export const PRODUCT = "Civicsmith";
 export const PUBLISHER = `This installer is run by the publisher of ${PRODUCT} releases.`;
 /* The example name is not a place (R22): a group names itself for what it does. */
 export const EXAMPLE_SLUG = "clean-water-coalition";
@@ -156,10 +157,10 @@ $("#go").addEventListener("click",async()=>{
 
 export const WIZARD_HTML = page({
   mode: "install",
-  title: "Set up your group's copy of CivicOS",
-  description: "Install your group's own copy of CivicOS, the accountability record, into your own Cloudflare account.",
-  eyebrow: "CivicOS &middot; installer",
-  lede: `In a few minutes your group will have its own copy of CivicOS, the
+  title: `Set up your group's copy of ${PRODUCT}`,
+  description: `Install your group's own copy of ${PRODUCT}, the accountability record, into your own Cloudflare account.`,
+  eyebrow: `${PRODUCT} &middot; installer`,
+  lede: `In a few minutes your group will have its own copy of ${PRODUCT}, the
 accountability record, running in your own Cloudflare account. Not an account
 of ours: yours, under your control, from the first second.`,
   blocks: `<div class="card">
@@ -184,7 +185,7 @@ database and nowhere to keep it, and it is never stored.</p>
 <p class="small">Prefer to do everything by hand, with nothing passing
 through us at all? The manual path is documented and permanently supported.
 It is slower and uses the Cloudflare dashboard directly, and it exists so
-that your group can stand up a copy even if the publisher of CivicOS releases
+that your group can stand up a copy even if the publisher of ${PRODUCT} releases
 disappears.</p>
 
 ${profilesBlock()}
@@ -202,10 +203,10 @@ Already running a copy and looking for the current release? That is
 
 export const UPDATE_HTML = page({
   mode: "update",
-  title: "Update your copy of CivicOS",
-  description: "Bring your group's existing copy of CivicOS up to the current release.",
-  eyebrow: "CivicOS &middot; software update",
-  lede: `This brings the copy of CivicOS your group already runs up to the current
+  title: `Update your copy of ${PRODUCT}`,
+  description: `Bring your group's existing copy of ${PRODUCT} up to the current release.`,
+  eyebrow: `${PRODUCT} &middot; software update`,
+  lede: `This brings the copy of ${PRODUCT} your group already runs up to the current
 release. It changes the software and nothing else: your passwords, your
 credentials, and your record are untouched, and that is enforced by how the
 update is applied, not by promise. The one exception is yours to choose: an
