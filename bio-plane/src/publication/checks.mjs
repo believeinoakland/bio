@@ -4,7 +4,7 @@
  * Moved here from the check catalogue with their ids and translations unchanged (K6, R33): C-92.1–.9 (the attribution
  * act; C-92.10–.12 are ratification's, in its `RATIFY_ATTRIBUTION_CHECKS`), under a name of its own because the rest
  * of the family is held elsewhere. C-92.13 (R17, DEC-88, K1025) is new here: the act's reason. C-122.1 (R51, N364) is
- * new here, a family of its own: a case's sources.
+ * new here, a family of its own: a case's sources; C-122.2 (R58, DEC-112) and C-122.3, C-122.4 (R59, N522) join it at T28.
  *
  * C-44.2, C-68.5 and C-98.1–.9, raised by `public-read`'s code since K651, are `public-read`'s (its R17), moved there
  * with their numbers, wheres and translations unchanged and deleted here (T19), so no row id is held twice.
@@ -52,14 +52,16 @@ export const ATTRIBUTION_ACT_CHECKS = {
   ATTRIBUTION_NOT_AN_OBSERVATION: {
     check: 'C-92.4',
     where: 'src/publication/index.mjs attributeObservation > is-attribute-author',
-    translation: 'That document is not a member\'s firsthand observation in this record, so there is no '
-      + 'author whose choice this is. Attribution is chosen for observations only.',
+    translation: 'That is not a member\'s firsthand observation in this record, nor material from a source this case '
+      + 'shows as Withheld, so there is no author or attesting member whose choice this is. Attribution is chosen for '
+      + 'those only.',
   },
   ATTRIBUTION_NOT_THE_AUTHOR: {
     check: 'C-92.5',
     where: 'src/publication/index.mjs attributeObservation > is-attribute-author',
-    translation: 'Another member recorded that observation. Only the member who said it chooses how a '
-      + 'published case shows who said it — not a project owner, not an administrator, and not a default.',
+    translation: 'Another member recorded that observation, or attested that material. Only the member who said it, '
+      + 'or who attested it, chooses how a published case credits them — not a project owner, not an administrator, '
+      + 'and not a default.',
   },
   ATTRIBUTION_AUTHOR_NOT_ACTIVE: {
     check: 'C-92.6',
@@ -107,6 +109,28 @@ export const CASE_SOURCES_CHECKS = {
     where: 'src/publication/index.mjs commitCaseEdition > is-source-consent-withdrawn',
     translation: 'A source withdrew consent for a detail this case states, after the case was prepared. Prepare the '
       + 'case again, and it will leave that detail out. Nothing was published.',
+  },
+  /* C-122.2 (R58; DEC-112, K1268 BOB's decision 5): a preparation made before published cases carried their method and
+     materials (any format but `bio-case-document/6`) is never committed; the remedy is a new preparation. */
+  CASE_FORMAT_SUPERSEDED: {
+    check: 'C-122.2',
+    where: 'src/publication/index.mjs commitCaseEdition > is-case-format-current',
+    translation: 'This case was prepared before published cases carried everything they rest on. Prepare it again, '
+      + 'and sign the new preparation. Nothing was published.',
+  },
+  /* C-122.3, C-122.4 (R59; DEC-96 items 1, 4, N522): another group's work the case rests on is re-read at the commit,
+     as R51 re-reads a source's consent. */
+  ACCEPTANCE_WITHDRAWN_SINCE: {
+    check: 'C-122.3',
+    where: 'src/publication/index.mjs commitCaseEdition > is-accepted-work-standing',
+    translation: "This group's acceptance of another group's work this case rests on was withdrawn after the case was "
+      + 'prepared. Prepare the case again. Nothing was published.',
+  },
+  FLAG_OPENED_SINCE: {
+    check: 'C-122.4',
+    where: 'src/publication/index.mjs commitCaseEdition > is-accepted-work-standing',
+    translation: "A flag was raised on another group's work this case rests on after the case was prepared, and the case "
+      + 'must disclose it. Prepare the case again. Nothing was published.',
   },
 };
 

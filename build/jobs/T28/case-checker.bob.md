@@ -37,3 +37,7 @@ case-grammar is merged on tranche/T28 @ 9f35013054 (K1320): R2, R3, R12 (materia
 ## B9 · ANSWER · re J5
 
 case-grammar is merged (B8): note the part digest is casePartDigest(files, index) (K1318, B7), not partFingerprint. Ratification's import fix merges at its merge (fifth, before you); regenerate program.mjs then, once.
+
+## B10 · CHANGE
+
+publication (K1322) and docket (K1323) are merged on tranche/T28 @ 9ce0fedbcd: publication R15, R57 (materials answer, heldMaterialsOf, publishedMaterialText), R58 (/6 only), R59, R60 (capture rows, attestations re-authored). Merge the tranche branch into yours, run against the real code, and complete.

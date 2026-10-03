@@ -1,11 +1,15 @@
-/* docket's Atom feed (requirements: `build/requirements/docket.md` R15; DEC-116 item 8). Pure: it renders the entries
- * `docketPublic` answers as an Atom 1.0 feed (RFC 4287), newest first, and reads, writes and records nothing. Each entry
- * links to the case's docket at its fixed address on the group's public path (`public-read` R21). */
+/* docket's Atom feed (requirements: `build/requirements/docket.md` R15, R23; DEC-116 item 8). Pure: it renders the
+ * entries `docketPublic` answers as an Atom 1.0 feed (RFC 4287), newest first, and reads, writes and records nothing.
+ * Each entry links to the case's docket at its fixed address on the group's public path (`public-read` R21). */
 
-/** R15: the docket's public address for a case, relative to the group's public address. */
-export const docketAddress = (caseId) => `?op=docketpublic&case=${encodeURIComponent(caseId)}`;
-/** R15: the feed's own fixed address. */
-export const feedAddress = (caseId) => `?op=docketfeed&case=${encodeURIComponent(caseId)}`;
+/** R23: the docket's public address for a case, in the house form of the public read path (`public-read` R20, R21):
+ *  the query alone, no leading `?`. */
+export const docketAddress = (caseId) => `op=docketpublic&case=${encodeURIComponent(caseId)}`;
+/** R23: the feed's own fixed address, in the same form. */
+export const feedAddress = (caseId) => `op=docketfeed&case=${encodeURIComponent(caseId)}`;
+/** R23: an address as an `href` inside the feed: a query-only relative reference (RFC 3986 §4.2), which resolves
+ *  against the feed's own address. */
+export const feedHref = (address) => `?${address}`;
 export const ATOM_MEDIA_TYPE = "application/atom+xml";
 
 const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
@@ -31,8 +35,8 @@ export function renderFeed(pub, updatedFallback) {
     `  <title>${esc(`${group} docket: ${pub.case}`)}</title>`,
     `  <updated>${esc(updated)}</updated>`,
     `  <author><name>${esc(group)}</name></author>`,
-    `  <link rel="self" type="${ATOM_MEDIA_TYPE}" href="${esc(feedAddress(pub.case))}"/>`,
-    `  <link rel="alternate" type="application/json" href="${esc(docketAddress(pub.case))}"/>`,
+    `  <link rel="self" type="${ATOM_MEDIA_TYPE}" href="${esc(feedHref(feedAddress(pub.case)))}"/>`,
+    `  <link rel="alternate" type="application/json" href="${esc(feedHref(docketAddress(pub.case)))}"/>`,
   ];
   for (const e of entries) {
     const j = e.fields || {};
@@ -44,7 +48,7 @@ export function renderFeed(pub, updatedFallback) {
       `    <title>${esc(`#${e.seq} ${title}`)}</title>`,
       `    <updated>${esc(instant(e.published_at))}</updated>`,
       `    <published>${esc(instant(e.published_at))}</published>`,
-      `    <link rel="alternate" type="application/json" href="${esc(docketAddress(pub.case))}"/>`,
+      `    <link rel="alternate" type="application/json" href="${esc(feedHref(docketAddress(pub.case)))}"/>`,
       `    <category term="${esc(j.shelf)}"/>`,
       `    <content type="text">${esc(e.json)}</content>`,
       `  </entry>`);
