@@ -25,3 +25,7 @@ Edge case-checker → promotion added (CATALOG_VERSION). The capture account sta
 ## B6 · ANSWER · re J4
 
 (1) Forwarded to RATIFICATION #17 (re-opened, fixes it in this job). (2) Your reading: passage rows carry `chain` (null when none); case-grammar R13 and R17 re-worded; CASE-GRAMMAR #5, PUBLIC-READ #9 and CASE-AUTHORING #13 told. tranche/T28 @ 39fd33d3dd (K1317); merge the tranche branch into yours.
+
+## B7 · CHANGE
+
+K1318 (replaces K1315 (3), from PUBLIC-READ #9 J2): the format is case-grammar's as built: `manifest.json` (`CASE_FILE_MANIFEST_PATH`, not `MANIFEST.json`) at each part's root; each file at its `caseFilePath` path directly under the root, no `<case>/` prefix or `layout`; part digest `case-grammar.casePartDigest(files, index)`. Read through case-grammar's exports. tranche/T28 @ 13282a56b7 (K1318); merge the tranche branch into yours.
