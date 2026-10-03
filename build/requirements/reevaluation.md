@@ -85,7 +85,7 @@ Terms. A **dependent** is a bundle with a basis leg naming the target (`inquiry_
     - `since` is the withdrawal's instant. `detail` is the source group, case and edition, and the withdrawal.
     - It closes as any cause does (R16). Nothing regrades (R19).
     - With none registered, it is not raised, and the answer says so (`accepted_work_absent`).
-  - **The telling.** `acceptanceWithdrawn({withdrawal})` is called by `case-import` after its withdrawal commits (its R7). It tells R8's listeners once, as `kind: "acceptance"`, with the dependents R31's arm answers for that withdrawal at that instant, read as the plane (no viewer; R30's telling, `case-import` R16), so each dependent's `detail` names the source group and case. *(not yet met: T29)* It writes nothing and never throws. R18 is unchanged: the arm writes no row.
+  - **The telling.** `acceptanceWithdrawn({withdrawal})` is called by `case-import` after its withdrawal commits (its R7). It tells R8's listeners once, as `kind: "acceptance"`, with the dependents R31's arm answers for that withdrawal at that instant, read as the plane (no viewer; R30's telling, `case-import` R16), so each dependent's `detail` names the source group and case. It writes nothing and never throws. R18 is unchanged: the arm writes no row.
   - **The recovery read.** `changesOf` (R9) answers it too. The read paths (`changesOf` and the obligation) keep the asking viewer: an import's group and case read null to a viewer `case-import` R4 and R16 do not let see them (N531).
 
   (DEC-96 item 1; K1273)

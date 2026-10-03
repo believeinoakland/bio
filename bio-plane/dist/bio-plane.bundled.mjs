@@ -76344,10 +76344,12 @@ var Reevaluation = class {
   /** R31 (DEC-96 item 1): the `acceptance` causes on `legs` (`inquiry_basis` rows), for a viewer's visible dependents.
    *  A live leg (R7) on an imported finding reference carries one per withdrawal naming that ref at the edition the leg
    *  names, `since` the withdrawal's instant, `detail` the source group, case and edition (read through
-   *  `acceptedFinding` for `viewer`; null where it answers none) and the withdrawal. `only` keeps one withdrawal's.
-   *  Answers `{byPair}` keyed `<dependent>\0<target>`, each list in (ord, withdrawal) order. Reads only; regrades
-   *  nothing (R19). */
-  #acceptanceOn(legs, visible, aw, viewer, only = null) {
+   *  `acceptedFinding`; null where it answers none) and the withdrawal. A read path asks for its `viewer`, a viewer never
+   *  sent asked as nobody, so an import's group and case read null to whom `case-import` R4, R16 do not show them; the
+   *  telling (`plane`) asks with no viewer, the plane reading for itself (N531). `only` keeps one withdrawal's. Answers
+   *  `{byPair}` keyed `<dependent>\0<target>`, each list in (ord, withdrawal) order. Reads only; regrades nothing (R19). */
+  #acceptanceOn(legs, visible, aw, viewer, only = null, { plane: plane2 = false } = {}) {
+    const asking = plane2 ? null : viewer ?? "";
     const byPair = /* @__PURE__ */ new Map();
     const index = aw.get().byRefEdition;
     if (!index.size) return { byPair };
@@ -76369,7 +76371,7 @@ var Reevaluation = class {
       if (!source.has(k)) {
         let a = null;
         try {
-          a = this.acceptedWork.acceptedFinding({ ref, edition, viewer });
+          a = this.acceptedWork.acceptedFinding({ ref, edition, viewer: asking });
         } catch {
           a = null;
         }
@@ -77464,9 +77466,10 @@ var Reevaluation = class {
   /* ---------------------------------------------------------------- R31: an acceptance withdrawn */
   /** R31, R8 (DEC-96 item 1): told by `case-import` after its withdrawal of an acceptance commits (its R7). Tells R8's
    *  listeners once, as `kind: "acceptance"`, `subject` the withdrawal, with the dependents R31's arm answers for that
-   *  withdrawal now, as the plane reads them (no viewer: a listener is the plane's own, R28's precedent), each
-   *  `{bundle_id, ord, role, state, target}`. `withdrawal` is its id (or an object carrying one). Writes nothing and
-   *  never throws; a withdrawal accepted work does not answer is still told, with no dependents, and says so. */
+   *  withdrawal now, as the plane reads them (no viewer: a listener is the plane's own, R28's precedent; N531), each
+   *  `{bundle_id, ord, role, state, target, group, case, detail}`, the detail naming the source group and case.
+   *  `withdrawal` is its id (or an object carrying one). Writes nothing and never throws; a withdrawal accepted work does
+   *  not answer is still told, with no dependents, and says so. */
   acceptanceWithdrawn({ withdrawal = null } = {}) {
     try {
       const id = str5(withdrawal && typeof withdrawal === "object" ? withdrawal.withdrawal : withdrawal);
@@ -77477,12 +77480,15 @@ var Reevaluation = class {
       if (rec && rec.refs.length) {
         const legs = this.#rows(`SELECT bundle_id, ord, target_id FROM inquiry_basis WHERE target_id IN (SELECT value FROM json_each(?))
                                   ORDER BY bundle_id, ord`, JSON.stringify(rec.refs));
-        dependents = [...this.#acceptanceOn(legs, (x) => x ?? null, aw, MACHINE_ADMIN, id).byPair.entries()].flatMap(([k, list2]) => list2.map((x) => ({
+        dependents = [...this.#acceptanceOn(legs, (x) => x ?? null, aw, null, id, { plane: true }).byPair.entries()].flatMap(([k, list2]) => list2.map((x) => ({
           bundle_id: k.split("\0")[0],
           ord: x.ord,
           role: x.role,
           state: x.state,
-          target: x.ref
+          target: x.ref,
+          group: x.group,
+          case: x.case,
+          detail: x.detail
         })));
       }
       const since = rec && rec.at ? rec.at : this.#when();
