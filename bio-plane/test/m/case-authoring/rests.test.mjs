@@ -1,7 +1,7 @@
 /* case-authoring (T28; DEC-112 (4)(6), DEC-96 item 4; N519, N522): what a case's findings reach and may rest on — each
-   chain followed through inquiry legs to the depth bound and stopping at another group's finding (R46, R50), material a
-   load-bearing finding relies on held whole or refused (R44), another group's work stated with its acceptance (R51) and
-   its open flags disclosed, never blocked (R52). Over the real record, provenance, extraction and accepted-work;
+   chain followed through inquiry legs to the depth bound and stopping at another group's finding (R55 (case-disclosures R8, R12)), material a
+   load-bearing finding relies on held whole or refused (R55 (case-disclosures R6)), another group's work stated with its acceptance (R55 (case-disclosures R13)) and
+   its open flags disclosed, never blocked (R55 (case-disclosures R14)). Over the real record, provenance, extraction and accepted-work;
    `case-import` is the fixture's stand-in at its ruled interface (its R4, R9, R16) until it is composed here. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -25,7 +25,7 @@ function setup() {
   return w;
 }
 
-test("R44: a load-bearing finding resting on a document this copy does not hold whole — its extracted text not indexed, indexed only in part, a unit cut, or its bytes gone — is RELIED_ON_NOT_PRESENTABLE (C-120.8), naming each member and material and what it lacks, before anything is written", () => {
+test("R55 (case-disclosures R6): a load-bearing finding resting on a document this copy does not hold whole — its extracted text not indexed, indexed only in part, a unit cut, or its bytes gone — is RELIED_ON_NOT_PRESENTABLE (C-120.8), naming each member and material and what it lacks, before anything is written", () => {
   for (const [why, lacks, spoil] of [
     ["not indexed", ["extracted_text"], () => {}],
     ["partial", ["extracted_text"], (w, c) => w.indexText(c, DOC2, [{ text: "half" }], "partial")],
@@ -48,7 +48,7 @@ test("R44: a load-bearing finding resting on a document this copy does not hold 
   }
 });
 
-test("R44: material only a supporting member reaches is never refused; held whole, a load-bearing one publishes", () => {
+test("R55 (case-disclosures R6): material only a supporting member reaches is never refused; held whole, a load-bearing one publishes", () => {
   const w = setup();
   w.doc(DOC); w.doc(DOC2, undefined, { text: false });
   w.finding(Q, [{ target: DOC }]);
@@ -60,7 +60,7 @@ test("R44: material only a supporting member reaches is never refused; held whol
   refused(w.publish(P, "alice", [Q2], { newCase: true }), "RELIED_ON_NOT_PRESENTABLE");
 });
 
-test("R46: a chain reaches what its legs target through inquiry legs, to strength's depth bound, and no further", () => {
+test("R55 (case-disclosures R8): a chain reaches what its legs target through inquiry legs, to strength's depth bound, and no further", () => {
   const w = setup();
   w.doc(DOC);
   const c = w.doc(DOC2, undefined, { text: false });
@@ -100,13 +100,13 @@ function onTheirs(over = {}) {
   return { w, P, ref };
 }
 
-test("R50, R51: a chain stops at a leg on another group's finding — none of that group's material is asked of this copy — and with an acceptance in force the case publishes", () => {
+test("R55 (case-disclosures R12, R13): a chain stops at a leg on another group's finding — none of that group's material is asked of this copy — and with an acceptance in force the case publishes", () => {
   const { w, P } = onTheirs();
   const r = w.publish(P, "alice", [Q]);
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
 });
 
-test("R51: with no acceptance in force at the leg's edition the act is ACCEPTED_WORK_NOT_IN_FORCE (C-120.10), naming the member, the leg and the source case and edition, before anything is written", () => {
+test("R55 (case-disclosures R13): with no acceptance in force at the leg's edition the act is ACCEPTED_WORK_NOT_IN_FORCE (C-120.10), naming the member, the leg and the source case and edition, before anything is written", () => {
   const { w, P, ref } = onTheirs();
   w.imports.withdraw(IMP, 2, THEIRS);
   const before = w.snapshot();
@@ -120,7 +120,7 @@ test("R51: with no acceptance in force at the leg's edition the act is ACCEPTED_
   assert.equal(w.publish(P, "alice", [Q]).ok, true);
 });
 
-test("R52: an open flag on the edition is FLAG_NOT_DISCLOSED (C-120.11) until listed in flagsDisclosed, then it publishes — disclose, never block; a listed flag not open is FLAG_DISCLOSURE_NOT_STANDING (C-120.13); a failed or incomplete read FLAGS_UNDETERMINED (C-120.12); a malformed list R3's BAD_COMPLETENESS", () => {
+test("R55 (case-disclosures R14): an open flag on the edition is FLAG_NOT_DISCLOSED (C-120.11) until listed in flagsDisclosed, then it publishes — disclose, never block; a listed flag not open is FLAG_DISCLOSURE_NOT_STANDING (C-120.13); a failed or incomplete read FLAGS_UNDETERMINED (C-120.12); a malformed list R3's BAD_COMPLETENESS", () => {
   const { w, P } = onTheirs();
   w.imports.flag(IMP, 2, { flag: "IMPFLAG-1", finding: THEIRS, issue: "page 3 is misread" });
   const before = w.snapshot();
@@ -147,7 +147,7 @@ test("R52: an open flag on the edition is FLAG_NOT_DISCLOSED (C-120.11) until li
   refused(w.publish(P, "alice", [Q], { flagsDisclosed: [{ flag: "IMPFLAG-1" }], newCase: true }), "FLAG_DISCLOSURE_NOT_STANDING");
 });
 
-test("R53, R34: the pre-flight's blockers gain R44's, R51's and R52's refusals, each reachable independently; its step one says the case republishes every document it includes; step two names each accepted_work row; step three lists the flags R52 requires beside R32's tensions, saying publishing discloses them and is never blocked; it writes nothing", () => {
+test("R53, R34: the pre-flight's blockers gain R55 (case-disclosures R6)'s, R55 (case-disclosures R13)'s and R55 (case-disclosures R14)'s refusals, each reachable independently; its step one says the case republishes every document it includes; step two names each accepted_work row; step three lists the flags R55 (case-disclosures R14) requires beside R32's tensions, saying publishing discloses them and is never blocked; it writes nothing", () => {
   const { w, P, ref } = onTheirs();
   w.imports.flag(IMP, 2, { flag: "IMPFLAG-1", finding: THEIRS, issue: "page 3 is misread" });
   const before = w.snapshot();
@@ -179,12 +179,12 @@ test("R53, R34: the pre-flight's blockers gain R44's, R51's and R52's refusals, 
   assert.equal(blocked.first.reason, "NO_STATEMENT");
   assert.deepEqual(blocked.blockers.map((b) => b.reason).filter((c) => c !== "NO_ATTESTING_KEY" && !c.startsWith("CASE_SIGNER")),
     ["RELIED_ON_NOT_PRESENTABLE", "ACCEPTED_WORK_NOT_IN_FORCE"]);
-  /* a flags read that fails is stated in step three as R52 reads it */
+  /* a flags read that fails is stated in step three as R55 (case-disclosures R14) reads it */
   w.imports.flagsRead = () => ({ ok: true, complete: false, flags: [] });
   assert.equal(w.ca.publishPreflight(publishArgs(P, [Q])).steps[2].flags.reason, "FLAGS_UNDETERMINED");
 });
 
-test("R51, R52, R14: the document's accepted_work: row states who accepted which edition, when and why, the recreation result, the gaps stated and the pair as that edition publishes it, never what was checked; each open flag disclosed is an accepted_work_flags: row with the issue, when it was flagged, the owner's words and acknowledged_by (the author stamp), its flagging member unnamed; the member's block gains its sentence", () => {
+test("R55 (case-disclosures R13, R14), R14: the document's accepted_work: row states who accepted which edition, when and why, the recreation result, the gaps stated and the pair as that edition publishes it, never what was checked; each open flag disclosed is an accepted_work_flags: row with the issue, when it was flagged, the owner's words and acknowledged_by (the author stamp), its flagging member unnamed; the member's block gains its sentence", () => {
   const { w, P, ref } = onTheirs({ gaps: "the third page's image was not carried" });
   w.imports.flag(IMP, 2, { flag: "IMPFLAG-1", finding: THEIRS, issue: "page 3 is misread", by: "bo" });
   const r = w.publish(P, "alice", [Q], { flagsDisclosed: [{ flag: "IMPFLAG-1", words: "we checked page 3 ourselves" }] });

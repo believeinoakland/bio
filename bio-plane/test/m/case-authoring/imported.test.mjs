@@ -1,6 +1,6 @@
 /* case-authoring over the real `case-import` (T28; DEC-96 item 4, N522; K1327): another group's case file imported,
    recreated, accepted, flagged and withdrawn through case-import's own acts, and a case of this group resting on it —
-   its acceptance stated (R51), its open flags disclosed and never blocking (R52), the ceremony told both (R53). The case
+   its acceptance stated (R55 (case-disclosures R13)), its open flags disclosed and never blocking (R55 (case-disclosures R14)), the ceremony told both (R53). The case
    file is built as case-import's own suite builds one; its checker is scripted at case-checker's R1 (`w.checks`). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -38,7 +38,7 @@ const args = (P) => ({ scope: "s", statement: "It does not cover the amendments.
   project: P, targets: [Q], roles: { [Q]: "load_bearing" }, viewer: V("alice"), author: "alice" });
 const docOf = (w, r) => w.row(`SELECT text FROM case_documents WHERE case_id=?`, r.caseId).text;
 
-test("R51 (real case-import): the accepted_work: row states, from case-import's acceptanceOf and importedCase, who accepted which edition, when and why, the recreation result and the source case file's manifest; what was checked stays inside the group", async () => {
+test("R55 (case-disclosures R13) (real case-import): the accepted_work: row states, from case-import's acceptanceOf and importedCase, who accepted which edition, when and why, the recreation result and the source case file's manifest; what was checked stays inside the group", async () => {
   const { w, P, ref, imp, cf } = await setup();
   const r = w.ca.publishCase(args(P));
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
@@ -52,7 +52,7 @@ test("R51 (real case-import): the accepted_work: row states, from case-import's 
   assert.equal(text.includes("every passage"), false);
 });
 
-test("R52 (real case-import): an open flag raised by flagImported is FLAG_NOT_DISCLOSED until listed, then the case publishes disclosing it; once cleared by clearFlag, listing it is FLAG_DISCLOSURE_NOT_STANDING", async () => {
+test("R55 (case-disclosures R14) (real case-import): an open flag raised by flagImported is FLAG_NOT_DISCLOSED until listed, then the case publishes disclosing it; once cleared by clearFlag, listing it is FLAG_DISCLOSURE_NOT_STANDING", async () => {
   const { w, P, imp } = await setup();
   const f = w.imports.flagImported({ import: imp, edition: 1, finding: THEIRS, issue: "page 3 is misread", by: V("bob"), viewer: V("bob") });
   assert.equal(f.ok, true, JSON.stringify(f).slice(0, 300));
@@ -67,7 +67,7 @@ test("R52 (real case-import): an open flag raised by flagImported is FLAG_NOT_DI
   refused(w.ca.publishCase({ ...args(P), newCase: true, flagsDisclosed: [{ flag: f.flag }] }), "FLAG_DISCLOSURE_NOT_STANDING");
 });
 
-test("R51, R53 (real case-import): once the acceptance is withdrawn the act is ACCEPTED_WORK_NOT_IN_FORCE, and the pre-flight's step two names the accepted_work row while it is in force", async () => {
+test("R55 (case-disclosures R13), R53 (real case-import): once the acceptance is withdrawn the act is ACCEPTED_WORK_NOT_IN_FORCE, and the pre-flight's step two names the accepted_work row while it is in force", async () => {
   const { w, P, imp, ref } = await setup();
   const pre = w.ca.publishPreflight(args(P));
   assert.deepEqual(pre.steps[1].accepted_work.map((x) => [x.ref, x.edition, x.case]), [[ref, 1, CASE]]);
