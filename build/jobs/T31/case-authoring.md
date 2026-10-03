@@ -1,6 +1,6 @@
 # case-authoring (T31)
 
-**Status** · session_01HNgAFdfDCrMf2zid6uorgB · depth 2 · WORKING · handled B1
+**Status** · session_01HNgAFdfDCrMf2zid6uorgB · depth 2 · COMPLETE · handled B1
 
 ## Completion
 
