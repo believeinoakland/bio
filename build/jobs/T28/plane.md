@@ -20,3 +20,7 @@
 - `checks/format.mjs`: 0 failures. `architecture.mjs plane`: 0 failures. `coverage.mjs plane`: 17 of 17 live ids named, 0 failures. `ownership.mjs plane tranche/T28`: 5 files, 0 failures.
 
 Size (session_01DTDPxZBZLmQC7tRB7xsnJX): test runs 9, module lines 30
+
+## J1 · COMPLETE
+
+R16 and R17 applied; tranche/T28 merged @ a278b38f93. plane tests 72/72; migrate-released 1/1. Scratch merge with queue and control-plane: plane all green; control-plane's 4 R49 tests wait on op-declarations' R14 specs. Checks: format, architecture, coverage (17/17), ownership: 0 failures. No catalogue rows added; dist bundle stale for BOB's regeneration. Record: build/jobs/T28/plane.md.
