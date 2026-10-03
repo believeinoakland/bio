@@ -9,9 +9,11 @@
 
 **Tests** · new `t31.test.mjs` (R15, R16: spec whole, bearers and agent reach, session sets, `NEEDS`, stamps by list, the map totality for case-import, the wizard op set exact). `node --test test/m/op-declarations/`: tests 58, pass 58, fail 0. No layer tests in `build/manifest.md`.
 
-**Deferred** · R15's R6 arm against `wizard-scripts`' own ops map (as `t28.test.mjs` reads `caseImportOps`): the map does not exist on `tranche/T31` until wizard-scripts merges; on the `CHANGE` after it, I add that test.
+**Deferred** · none. R15's R6 arm against `wizard-scripts`' own ops map (`wizardScriptsOps`) was added in `t31.test.mjs` on B3's `CHANGE`, after wizard-scripts merged (K1401): op-declarations 59/59.
 
 **Found in other modules (REPORT)** · Users' tests run with this change: admission 19/19, public-read 110/110, skills 54/54 (unchanged). affordances 155 pass, 1 fail (its R35 test, red before this change too: its R38 rows). control-plane 145 pass, 2 fail: `r49-routes.test.mjs` R49 (pins case-import's map at eight ops; red on the tranche before this change, control-plane R52's to update), and one new, its R2/R41 "unaccounted" test, which now sees the seventeen new ops as unpublished until affordances' R37/R38 `NON_ACTS` rows land (affordances merges before op-declarations in L11, so green after the merge order). Conversely affordances' R12 totality will read its new `NON_ACTS` keys as stale until this module merges.
+
+**Seam noted (B3)** · `wizardScriptsOps` reads every identity stamp from the query's `author` (R3–R6's author, R5's proposer, R7–R9's `by`), as `filingTemplatesOps` does; so control-plane R50 must set `author` for `WIZARD_SCRIPTS_BY` and `WIZARD_PROPOSAL_ACTIONS` (the lists name the role, `by`/`proposer`), as it does for `templatepropose`. Its map also passes `viewer` to `wizardProgress`; the door stamps none on `WIZARD_PROGRESS_ACTIONS`, so it arrives null (control-plane R50).
 
 **Checks** · format: 0 failures; architecture: 0 failures; coverage: 16 of 16 live ids named, 0 failures; ownership vs tranche/T31: 0 failures.
 

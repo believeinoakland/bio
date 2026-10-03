@@ -6,6 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as O from "../../../src/op-declarations/index.mjs";
 import { caseImportOps } from "../../../src/case-import/index.mjs";
+import { wizardScriptsOps } from "../../../src/wizard-scripts/index.mjs";
 
 const { OPS, SESSION_OPS, NEEDS, UNATTENDED_BY_DECISION, ACT_GATE, PLAN_RUN_SCOPE } = O;
 const LISTS = Object.entries(O).filter(([, v]) => Array.isArray(v));
@@ -131,4 +132,20 @@ test("R15, R6: every op R15 declares is a name the door can answer and is named 
   /* Only R15's fifteen are wizard ops: no abandon event (wizard-scripts R15), no delete (R9: retired, never deleted). */
   assert.deepEqual(Object.keys(OPS).filter((op) => op.startsWith("wizard")).sort(), Object.keys(R15).sort());
   for (const op of ["wizardabandon", "wizarddelete", "wizardedit", "recipes"]) assert.ok(!Object.hasOwn(OPS, op), op);
+});
+
+test("R15, R6: every op wizard-scripts' ops map serves has a spec and is named by the tables, and the map serves exactly R15's fifteen — the wizard lists name exactly the map, its mutating ops the acts and its reads the reads (negative control: an op added to the map without a spec is seen)", () => {
+  const served = Object.keys(wizardScriptsOps({}, new URL("https://instance.invalid/"), {}));
+  assert.deepEqual([...served].sort(), Object.keys(R15).sort());
+  for (const op of served) {
+    assert.ok(Object.hasOwn(OPS, op) && Object.hasOwn(NEEDS, op), `${op}: no spec or NEEDS row`);
+    assert.ok(listsHolding(op).some((l) => l.startsWith("WIZARD_")), `${op} is in no wizard list`);
+    assert.ok(SESSION_OPS.member.has(op) && SESSION_OPS.admin.has(op), op);
+  }
+  const wizardOps = (re) => [...new Set(LISTS.filter(([name]) => re.test(name)).flatMap(([, l]) => l))].sort();
+  assert.deepEqual(wizardOps(/^WIZARD_.*(ACTIONS|AUTHOR|BY)$/), served.filter((op) => OPS[op].mutating).sort());
+  assert.deepEqual(wizardOps(/^WIZARD_.*READS$/), served.filter((op) => !OPS[op].mutating).sort());
+  /* The tally route the door calls from within itself is no op of the map and has no spec (R6; K1396). */
+  assert.ok(!served.includes("wizardrefusaltally") && !Object.hasOwn(OPS, "wizardrefusaltally"));
+  assert.deepEqual([...served, "wizarddelete"].filter((op) => !Object.hasOwn(OPS, op)), ["wizarddelete"]);
 });
