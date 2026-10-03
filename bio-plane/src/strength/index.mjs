@@ -61,9 +61,10 @@ import { inquiryOf, legCapped } from "../inquiry/index.mjs";
 import { basisVersionsOf, BASIS_VERSION_LEGS_MAX, VERSION_MACHINE } from "../basis-versions/index.mjs";
 import { BASIS_GRADES, TESTIMONY_GRADE, normalizeType, OBJECT_TYPES, BUNDLE_ID_RE, parseFrontmatter,
          isMachineIdentity } from "../record-grammar/index.mjs";
+import { IMPORTED_FINDING_RE, parseImportedFindingRef } from "../inquiry-grammar/index.mjs";
 import { STRENGTH_AXES, DEPTH_BOUND, GRADE_RANK } from "./arithmetic.mjs";
-import { levelPair, anonymityOf, levelsGiven, HUNCH_WHY, UNCORROBORATED_WHY, UNCORROBORATED_EVIDENCE_WHY }
-  from "./method.mjs";
+import { levelPair, anonymityOf, levelsGiven, HUNCH_WHY, UNCORROBORATED_WHY, UNCORROBORATED_EVIDENCE_WHY,
+         GRADING_METHOD_VERSION } from "./method.mjs";
 import { VERSION_STRENGTH_CHECKS, VERSION_STRENGTH_DEFAULT_STATES, VERSION_STRENGTH_INERT_SOURCES,
          PARTITION_INDEPENDENCE_CHECKS, STRENGTH_BAR_CHECKS } from "./checks.mjs";
 import { STRENGTH_EXEMPT_TABLES, STRENGTH_PURGED_TABLES, STRENGTH_CACHE_TABLE, STRENGTH_CACHE_FIELDS,
@@ -98,14 +99,13 @@ const PAIR_COMPOSED_KEYS = Object.freeze(["strength", "grade", "score", "overall
 const MEMBER_ID_FIELDS = Object.freeze(["bundle_id", "target_id", "inherited_from", "through"]);
 /* R6 (DEC-36): the one sentence a swept prose string ends in, the same whatever and however much was withheld. */
 const OUT_OF_VIEW_WORDS = "Part of what this rests on is out of your view.";
-/* R33: an imported finding reference, `imported:<import>/<finding>` (`inquiry-grammar` R11). */
-const IMPORTED_PREFIX_RE = /imported:[0-9a-f]{64}\//;
-const IMPORTED_RE = new RegExp(`^${IMPORTED_PREFIX_RE.source}(.+)$`);
-const isImportedRef = (id) => typeof id === "string" && IMPORTED_RE.test(id);
-/* R6: a record id as it appears in a sentence, derived from the catalogue's own pattern by dropping its anchors, so
-   the two cannot come to disagree about what a bundle id looks like; a ref (R33) is matched whole. */
-const ID_IN_PROSE = new RegExp(`(?:${IMPORTED_PREFIX_RE.source})?`
-  + BUNDLE_ID_RE.source.replace(/^\^/, "").replace(/\$$/, ""), "g");
+/* R33: a leg on an imported finding reference, by `inquiry-grammar`'s one spelling (its R11; K1305). */
+const isImportedRef = (id) => parseImportedFindingRef(id) !== null;
+/* R6: a record id as it appears in a sentence, derived from the catalogue's own patterns by dropping their anchors, so
+   they cannot come to disagree about what an id looks like; a ref (R33) is matched whole, before the record id its
+   tail would otherwise be read as. */
+const unanchored = (re) => re.source.replace(/^\^/, "").replace(/\$$/, "");
+const ID_IN_PROSE = new RegExp(`(?:${unanchored(IMPORTED_FINDING_RE)}|${unanchored(BUNDLE_ID_RE)})`, "g");
 /** R15 (DEC-88): the longest reason an administrator may give for the group's default bar. */
 export const BAR_REASON_MAX = 2000;
 /* R15 (DEC-105, H12): the bar's honest note, in the ruling's words. */
@@ -959,6 +959,92 @@ export class Strength {
     }
     return { ok: true, inquiry: id, ...(name ? { version: name } : {}), levels: lv, legs: answered, wrote: false,
              ...(withheld ? { out_of_view: true } : {}) };
+  }
+
+  /* ============================================================ a finding's grading facts (R35; DEC-112 (3)) */
+
+  /** R35 (K1305): for one finding, the legs exactly as `recomputePair` (R32) reads them, so a case file that states this
+   *  answer recomputes the pair `strengthOf` answers (or, for a named version, `versionStrength`'s pair over it). Per
+   *  leg `{target, kind, role, grade, grade_axis, grade_source, ground, target_edition?, answer?, another_groups?,
+   *  origins, origins_complete, captures, author_key?}`: a document's grade as the walk counts it (a capture letter
+   *  under its ceiling, R1; a version leg's grade from the record, R9); a question's or another group's finding's
+   *  `answer`, its per-axis pair as the walk read it (R2, R33); the origins R12 reads; the captures the register holds
+   *  (R34); and, for an observation, an opaque `author_key` equal for the same member within this answer and never an
+   *  account (R29). Refusals as R30's. A leg the viewer may not see is withheld whole, `out_of_view: true` saying only
+   *  that something was, and the pair over what remains is then not the record's. Writes nothing; names no author. */
+  gradingFacts({ inquiry = null, version = null, levels = null, viewer = null } = {}) {
+    const id = str(inquiry);
+    if (!id) return { ok: false, reason: "NO_ID", detail: "this answers for one question: pass inquiry=<record id>." };
+    if (!this.membership.inSight(id, viewer)) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
+    const ty = normalizeType(this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, id)?.object_type);
+    if (ty !== "inquiry")
+      return { ok: false, reason: "NOT_AN_INQUIRY", target: id, object_type: ty ?? null,
+        detail: `${id} is a ${ty ?? "record"}, not an inquiry. Only a question has grading facts.` };
+    const name = str(version);
+    const lv = levelsGiven(levels);
+    let legs, captureBounds, ownTop;
+    if (name) {
+      if (!this.#one(`SELECT name FROM inquiry_basis_versions WHERE bundle_id=? AND name=?`, id, name)) {
+        const r = VERSION_STRENGTH_CHECKS.VERSION_STRENGTH_NO_SUCH_VERSION;
+        return { ok: false, reason: "VERSION_STRENGTH_NO_SUCH_VERSION", code: "VERSION_STRENGTH_NO_SUCH_VERSION",
+                 check: r.check, translation: r.translation, inquiry: id, version: name.slice(0, 200),
+                 detail: `no reading named '${name.slice(0, 60)}' belongs to ${id}.` };
+      }
+      legs = this.#versionLegsAsMembers(this.#versionLegs(id, name, true), this.inquiry.subjectEntityOf(id)).legs;
+      captureBounds = this.#captureBoundsFor(id, DEPTH_BOUND, legs);
+      ownTop = false;
+    } else {
+      legs = this.#legsOf(id);
+      captureBounds = this.#captureBoundsFor(id, DEPTH_BOUND, legs);
+      ownTop = true;
+    }
+    const ctx = { captureBounds, levels: lv, refs: new Map(), ownTop };
+    const observed = this.#observationReader();
+    const keys = new Map();
+    const keyOf = (author) => {
+      if (author == null) return null;
+      if (!keys.has(author)) keys.set(author, `a${keys.size + 1}`);
+      return keys.get(author);
+    };
+    const facts = legs.map((leg) => {
+      const kind0 = Strength.#kindOf(leg);
+      const isObs = kind0 === "document" && typeof leg.target_id === "string" && leg.target_id
+        && observed(leg.target_id).observation;
+      const kind = isObs ? "observation" : kind0;
+      const o = this.#originsOf(leg.target_id ? [leg.target_id] : []);
+      const out = { target: leg.target_id, kind, role: leg.role ?? "", grade: leg.grade ?? null,
+                    grade_axis: leg.grade_axis ?? null, grade_source: leg.grade_source ?? null, ground: leg.ground ?? null,
+                    origins: [...o.set], origins_complete: o.complete,
+                    captures: kind0 === "document" && leg.target_id
+                      ? this.#rows(`SELECT capture_sha FROM register WHERE bundle_id=? ORDER BY capture_sha`, leg.target_id)
+                          .map((r) => r.capture_sha)
+                      : [] };
+      if (kind === "observation") {
+        const k = keyOf(observed(leg.target_id).author);
+        if (k) out.author_key = k;
+      }
+      /* R1: a capture letter as the walk counts it, under its ceiling (null when the ceiling is undetermined). */
+      if (kind0 === "document" && leg.grade_axis === "capture" && leg.grade != null && captureBounds) {
+        const capped = this.inquiry.legCapped(leg.grade, captureBounds.get(leg.target_id), leg.target_id);
+        if (capped) out.grade = capped.grade;
+      }
+      if (kind0 === "inquiry" && !isHunch(leg.grade_source)) {
+        const sub = this.#walk(leg.target_id, 1, DEPTH_BOUND, null, ctx);
+        out.answer = Object.fromEntries(STRENGTH_AXES.map((a) => [a, sub[a]]));
+      }
+      if (kind0 === "imported" && !isHunch(leg.grade_source)) {
+        const got = this.#importedAnswer(id, leg, ctx, ownTop);
+        const ed = ctx.refs.get(leg.target_id);
+        if (ed != null) out.target_edition = ed;
+        if (!got.stopped) { out.answer = got.pair; out.another_groups = got.another_groups; }
+      }
+      return out;
+    });
+    const keep = this.#redactor(viewer, ctx.refs);
+    const seen = facts.filter((f) => !(f.target && keep(f.target) === null));
+    return { ok: true, inquiry: id, ...(name ? { version: name } : {}), method: GRADING_METHOD_VERSION,
+             ...(lv ? { levels: lv } : {}), legs: seen, wrote: false,
+             ...(seen.length < facts.length ? { out_of_view: true } : {}) };
   }
 
   /* ============================================================ the bar (R14–R16; DEC-17, DEC-72) */

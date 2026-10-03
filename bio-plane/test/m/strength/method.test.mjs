@@ -4,7 +4,7 @@
    recomputed with nothing else, give the same state and grade on every axis, the same member setting it. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world } from "./fixture.mjs";
+import { world, MACHINE } from "./fixture.mjs";
 import { GRADING_METHOD_VERSION, GRADING_METHOD_VERSIONS, gradingMethodText, recomputePair, STRENGTH_AXES,
          DEPTH_BOUND } from "../../../src/strength/index.mjs";
 
@@ -170,4 +170,102 @@ test("R32, R29, R34: given levels, recomputePair judges anonymous legs from the 
   assert.match(alone.connection.not_load_bearing[0].why, /attests anonymously/);
   assert.equal(recomputePair({ version: V, levels: lv3, legs: [knock, doc] }).connection.grade, "B");
   assert.deepEqual(recomputePair({ version: V, levels: lv3, legs: [knock] }).levels, lv3);
+});
+
+/* R35's world: every arm the walk resolves against the record, in one basis. */
+function rich() {
+  const w = world();
+  const REF = `imported:${"d".repeat(64)}/INQ-2026-0500-a`;
+  w.acceptedFinding(REF, 2, { pair: { capture: "B", connection: "C" } });
+  w.ceilings.set("INFO-2026-0001-a", { grade: "C", why: "measured" });
+  w.ceilings.set("INFO-2026-0006-a", { grade: null, why: "unmeasured", undetermined_because: "unmeasured" });
+  for (const id of ["INFO-2026-0001-a", "INFO-2026-0002-a", "INFO-2026-0003-a", "INFO-2026-0006-a"]) w.bundle(id);
+  w.capture("knock", "INFO-2026-0003-a", "https://example.test/knock");
+  w.capture("doc2", "INFO-2026-0002-a", "https://example.test/two");
+  w.observation("INFO-2026-0004-observation", "member-ann");
+  w.observation("INFO-2026-0005-observation", "member-bo");
+  w.inquiry("INQ-2026-0002-a", [{ target: "INFO-2026-0002-a", grade: "B", axis: "connection", source: "resolution" }]);
+  w.inquiry("INQ-2026-0001-a", [
+    { target: "INFO-2026-0001-a", grade: "A", axis: "capture", source: "capture", ground: "P1" },
+    { target: "INFO-2026-0006-a", grade: "B", axis: "capture", source: "capture", ground: "P1" },
+    { target: "INFO-2026-0002-a", grade: "B", axis: "connection", source: "resolution", ground: "P1" },
+    { target: "INFO-2026-0003-a", grade: "A", axis: "connection", source: "resolution", ground: "P2" },
+    { target: "INFO-2026-0004-observation", grade: "D", axis: "testimony", source: "testimony", ground: "P2" },
+    { target: "INFO-2026-0005-observation", grade: "D", axis: "testimony", source: "testimony", ground: "P2" },
+    { target: "INFO-2026-0002-a", grade: "A", axis: "connection", source: "hunch", ground: "P2" },
+    { target: "INQ-2026-0002-a", ground: "P1" },
+    { target: REF, edition: 2, ground: "P2" },
+  ], "ENT-1");
+  return { w, REF };
+}
+
+test("R35: recomputePair over gradingFacts answers the pair strengthOf answers, with and without levels (R29, R34), every arm resolved from the record", () => {
+  const { w, REF } = rich();
+  for (const levels of [null, { "INFO-2026-0004-observation": "group", knock: "project", "INFO-2026-0005-observation": "cover" },
+                        { "INFO-2026-0004-observation": "project", "INFO-2026-0005-observation": "group" }, { knock: "group" }]) {
+    const live = w.s.strengthOf("INQ-2026-0001-a", { levels });
+    const f = w.s.gradingFacts({ inquiry: "INQ-2026-0001-a", levels, viewer: MACHINE });
+    assert.equal(f.ok, true, JSON.stringify(f).slice(0, 300));
+    assert.equal(f.method, V);
+    assert.equal(f.wrote, false);
+    const r = recomputePair({ legs: JSON.parse(JSON.stringify(f.legs)), levels, version: f.method });
+    assert.deepEqual(axesOf(r), axesOf(live), JSON.stringify(levels));
+    for (const a of STRENGTH_AXES) assert.deepEqual(r[a].grounds?.map((g) => [g.ground, g.state, g.grade]),
+                                                    live[a].grounds?.map((g) => [g.ground, g.state, g.grade]), a);
+    assert.equal(r.hunches_left_out, live.hunches_left_out);
+  }
+  const f = w.s.gradingFacts({ inquiry: "INQ-2026-0001-a", viewer: MACHINE });
+  const by = Object.fromEntries(f.legs.map((l, i) => [i, l]));
+  assert.equal(by[0].grade, "C", "a capture letter under its ceiling");
+  assert.equal(by[1].grade, null, "an undetermined ceiling: the leg claims nothing, as the walk counts it");
+  assert.equal(by[4].kind, "observation");
+  assert.deepEqual([by[4].author_key, by[5].author_key], ["a1", "a2"], "opaque, equal only for the same member");
+  assert.ok(!JSON.stringify(f).includes("member-ann") && !JSON.stringify(f).includes("member-bo"), "never an account");
+  assert.deepEqual(by[3].captures, ["knock"]);
+  assert.equal(by[3].origins_complete, true);
+  assert.ok(by[3].origins.includes("address:https://example.test/knock"));
+  assert.equal(by[7].kind, "inquiry");
+  assert.equal(by[7].answer.connection.grade, "B");
+  assert.deepEqual([by[8].kind, by[8].target, by[8].target_edition, by[8].answer.connection], ["imported", REF, 2, "C"]);
+  assert.equal(by[8].another_groups.case, "CASE-1");
+});
+
+test("R35: over a named version, recomputePair answers versionStrength's pair; refusals as R30's", () => {
+  const { w } = rich();
+  w.connection.set("ENT-1|INFO-2026-0002-a", "B");
+  w.ceilings.set("INFO-2026-0009-a", { grade: "B", why: "held" });
+  w.version("INQ-2026-0001-a", "v1", "accepted", [
+    { target: "INFO-2026-0002-a", grade: "D", axis: "connection", source: "resolution", ground: "" },
+    { target: "INFO-2026-0009-a", grade: "A", axis: "capture", source: "capture", ground: "" },
+    { target: "INQ-2026-0002-a", ground: "" }]);
+  const v = w.s.versionStrength({ id: "INQ-2026-0001-a", version: "v1", viewer: MACHINE });
+  const f = w.s.gradingFacts({ inquiry: "INQ-2026-0001-a", version: "v1", viewer: MACHINE });
+  assert.equal(f.version, "v1");
+  assert.deepEqual(axesOf(recomputePair({ legs: f.legs, version: V })), axesOf(v.pair));
+  const g = (a) => w.s.gradingFacts({ viewer: MACHINE, ...a });
+  assert.equal(g({}).reason, "NO_ID");
+  assert.deepEqual(g({ inquiry: "INQ-2026-0099-a" }), { ok: false, reason: "NO_SUCH_BUNDLE", target: "INQ-2026-0099-a" });
+  assert.deepEqual(g({ inquiry: "INQ-2026-0001-a", viewer: "nobody" }), { ok: false, reason: "NO_SUCH_BUNDLE", target: "INQ-2026-0001-a" });
+  assert.equal(g({ inquiry: "INFO-2026-0001-a" }).reason, "NOT_AN_INQUIRY");
+  const nv = g({ inquiry: "INQ-2026-0001-a", version: "nope" });
+  assert.deepEqual([nv.reason, nv.check], ["VERSION_STRENGTH_NO_SUCH_VERSION", "C-30.4"]);
+});
+
+test("R35: a leg the viewer may not see is withheld whole and out_of_view says so; it writes nothing", () => {
+  const w = world();
+  w.member("alice"); w.member("carol");
+  w.bundle("INFO-2026-0001-a");
+  w.project("PROJ-2026-0042-hid", ["alice"]);
+  w.inquiry("INQ-2026-0001-a", [{ target: "INFO-2026-0001-a", grade: "B", axis: "connection", source: "resolution" },
+                                { target: "PROJ-2026-0042-hid", grade: "C", axis: "connection", source: "resolution" }]);
+  const dump = () => JSON.stringify(w.rows(`SELECT name FROM sqlite_master ORDER BY name`)) + JSON.stringify(w.rows(`SELECT * FROM bundles`));
+  const before = dump();
+  const carol = w.s.gradingFacts({ inquiry: "INQ-2026-0001-a", viewer: "member:carol" });
+  assert.deepEqual(carol.legs.map((l) => l.target), ["INFO-2026-0001-a"]);
+  assert.equal(carol.out_of_view, true);
+  assert.ok(!JSON.stringify(carol).includes("PROJ-2026-0042-hid"));
+  const alice = w.s.gradingFacts({ inquiry: "INQ-2026-0001-a", viewer: "member:alice" });
+  assert.equal(alice.legs.length, 2);
+  assert.equal(alice.out_of_view, undefined);
+  assert.equal(dump(), before);
 });
