@@ -117,6 +117,9 @@ export const STATEMENT_ACK_REASON_MAX = 2000;
  *  stream gives the words. */
 export const NOTICE_SEALS_SENTENCE = "This project has a public notice that the group is working on it, so publishing "
   + "this edition also opens the notice's sealed weeks for the work this edition publishes.";
+/** R34 (DEC-112 (4)): what step one adds, one plain sentence until the UX design stream gives the words. */
+export const REPUBLISH_SENTENCE = "The published case republishes in full every document it includes, and judging whether "
+  + "they may be republished, copyright included, is the group's.";
 /** R16: the id chunk for the citations' grouped read, this module's own copy of `retrieval`'s (K57). */
 export const SELECTION_ID_CHUNK = 64;
 /** R21: the most drafts the writer read scans, the bound `review` R26 states for `case_drafts` (`REVIEW_LIST_MAX`):
@@ -1330,21 +1333,10 @@ export class CaseAuthoring {
     return { grading, passages, unread };
   }
 
-  /** R46, R48 (DEC-112 (5); DEC-119 (1)(3)): whether a capture is off-the-record — its source a knocker or a
-   *  hand-carried source (`sources.sourceOf`) with no `name` entry `sources.publishableAt({audience: "public"})` answers
-   *  for any source standing behind it — so the case states its identity as "Withheld" (R37). A read that fails is
-   *  answered off-the-record: the less a case names, the safer. */
-  #offTheRecord(sha, viewer) {
-    let of = null;
-    try { of = this.sources.sourceOf({ captureSha: sha, viewer }); } catch { return true; }
-    if (of && of.ok === false && of.reason === "NO_SUCH_SOURCE") return false;
-    if (!of || of.ok !== true) return true;
-    const each = Array.isArray(of.sources) && of.sources.length ? of.sources : [{ sourceId: of.sourceId }];
-    return !each.some((s) => {
-      let pa = null;
-      try { pa = this.sources.publishableAt({ source: s.sourceId, audience: "public" }); } catch { pa = null; }
-      return !!(pa && pa.ok === true && Array.isArray(pa.entries) && pa.entries.some((e) => e && e.kind === "name"));
-    });
+  /** R46, R48 (K1316): the off-the-record captures, those whose `sources:` row (R37) states the identity "Withheld":
+   *  `basis` null is `publication`'s `unnamedSourceStatement`, the one spelling. */
+  static #withheld(sourceRows) {
+    return new Set(sourceRows.filter((r) => r.basis === null).map((r) => r.capture));
   }
 
   /** R51 (DEC-96 item 4; N522): for each leg a member's chain reaches on another group's finding, the acceptance in force
@@ -1630,7 +1622,7 @@ export class CaseAuthoring {
     const found = [];
     const who = str(a.author);
     const auth = who && !isMachineIdentity(who) ? this.#authority(a.project ?? null, a.viewer ?? null, who) : null;
-    let judged = null, partition = null, tensions = null;
+    let judged = null, partition = null, tensions = null, rests = null;
     if (auth && auth.ok !== false) {
       const set = Array.isArray(a.targets) ? a.targets
                 : typeof a.targets === "string" && a.targets.trim() ? a.targets.split(",") : a.target ? [a.target] : [];
@@ -1645,6 +1637,14 @@ export class CaseAuthoring {
           const resting = this.#restingCaptures(judged.prepared);
           const facts = new Map([...new Set(resting.map((r) => r.capture))].map((sha) => [sha, this.#captureFacts(sha)]));
           found.push(...this.#selfAttestedJudged(resting, facts, partition.memberRoles, a.selfAttested ?? null).refusals);
+          /* R44, then R53: R51's acceptances and R52's flags, read as op=publish reads them. */
+          const reached = this.#materialsJudged(judged.prepared, partition.memberRoles, a.viewer ?? null);
+          found.push(...reached.refusals);
+          const accepted = this.#acceptedWorkJudged(reached.refs, a.viewer ?? null);
+          found.push(...accepted.refusals);
+          const flags = this.#flagsJudged(accepted.editions, a.flagsDisclosed ?? null);
+          found.push(...flags.refusals);
+          rests = { accepted: accepted.rows, flags };
         }
         tensions = this.#tensionsJudged(judged.prepared, a.viewer ?? null, a.tensionsDisclosed ?? null);
         found.push(...tensions.refusals);
@@ -1657,7 +1657,7 @@ export class CaseAuthoring {
     /* R42: whether the project has a notice, asked only of a project the act's own authority fences let through. */
     const notice = auth && auth.ok !== false ? this.#workingOn(auth.proj) : null;
     /* R42 says so whenever the project has a notice: whatever reference R41 would write. */
-    const steps = this.#preflightSteps(a, answer, seen, ratify, notice);
+    const steps = this.#preflightSteps(a, answer, seen, ratify, notice, rests);
     /* Ready only when nothing refuses AND ratification's list was read: a list not reached is not a list that is empty. */
     return { ok: true, wrote: false, ready: !first && !blockers.length && ratify.reached, first, blockers, steps };
   }
@@ -1680,7 +1680,7 @@ export class CaseAuthoring {
 
   /* R34: the five steps (DEC-80 item 2), each read from the rolled-back run when it published, and each part it could
      not reach stated as not reached, never filled. Step three carries R32's read as the ceremony shows it. */
-  #preflightSteps(a, answer, seen, ratify, notice = null) {
+  #preflightSteps(a, answer, seen, ratify, notice = null, rests = null) {
     const ok = !!(answer && answer.ok === true);
     const notReached = ok ? null : `not reached: op=publish refuses first (${answer ? answer.reason : "no answer"})`;
     const tensions = this.tensionsToDisclose({ project: a.project ?? null, targets: a.targets ?? null,
@@ -1690,6 +1690,8 @@ export class CaseAuthoring {
         says: "Signing publishes this case edition, and each finding in it at the version pinned here. A published "
             + "edition is never withdrawn or edited: it is corrected only by a later edition."
             /* R42 (DEC-111; K1031 (3)): the plain sentence until the UX design stream gives the words. */
+            /* R34 (DEC-112 (4)): the plain sentence until the UX design stream gives the words. */
+            + ` ${REPUBLISH_SENTENCE}`
             + (notice !== null ? ` ${NOTICE_SEALS_SENTENCE}` : ""),
         working_on: notice,
         ...(ok ? { case: answer.caseId, edition: answer.edition, document: answer.caseDocument,
@@ -1698,17 +1700,26 @@ export class CaseAuthoring {
       { step: 2, name: "what this rests on",
         ...(ok ? { roles: answer.roles, required: answer.required,
                    pairs: answer.findings.map((f) => ({ target: f.target, role: f.role, strength: f.strength })) }
-               : { stated: notReached }) },
+               : { stated: notReached }),
+        /* R53: each accepted_work: row, as R51 reads it. */
+        accepted_work: rests ? rests.accepted : { stated: "not reached: the members or their roles are refused first" } },
       { step: 3, name: "what you are leaving out",
         tensions: tensions.ok === false ? tensions : { candidates: tensions.candidates, count: tensions.count,
                                                         highlighted: tensions.highlighted, says: tensions.says },
+        /* R53: the flags R52 requires, read as R52 reads them, beside R32's tensions. */
+        flags: !rests ? { stated: "not reached: the members or their roles are refused first" }
+          : rests.flags.refusals.some((x) => x.reason === "FLAGS_UNDETERMINED") ? rests.flags.refusals[0]
+          : { open: rests.flags.open.map(({ flag, ref, edition, issue, at }) => ({ flag, ref, edition, issue, at })),
+              count: rests.flags.open.length, says: FLAGS_SAY },
         ...(ok ? { excluded: seen.excluded, searched: seen.searched, bias: { acknowledgement: seen.bias,
                                                                               manifest: seen.manifest },
                    self_attested: seen.captures.filter((c) => c.self_attested_only)
                      .map((c) => ({ capture: c.capture, member: c.member, reason: c.acknowledgement.reason,
                                     sentence: SELF_ATTESTED_SENTENCE })),
                    not_co_attested: [...new Set(seen.captures.filter((c) => !c.co_attested).map((c) => c.capture))],
-                   sources: seen.sources }
+                   sources: seen.sources,
+                   /* R34 (DEC-112 (5)): each source the case shows as "Withheld" (R37). */
+                   withheld: seen.sources.filter((x) => x.basis === null) }
                : { stated: notReached }) },
       { step: 4, name: "the edition this creates",
         ...(ok ? { case: answer.caseId, edition: answer.edition, minted: answer.minted, members: seen.memberEditions }

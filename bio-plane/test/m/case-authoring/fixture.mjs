@@ -28,6 +28,8 @@ import { Capture } from "../../../src/capture/index.mjs";
 import { sourcesOf } from "../../../src/sources/index.mjs";
 import { networkNoticesOf } from "../../../src/network-notices/index.mjs";
 import { caseAuthoringOf } from "../../../src/case-authoring/index.mjs";
+import { acceptedWorkOf } from "../../../src/accepted-work/index.mjs";
+import { parseImportedFindingRef, importedFindingRef } from "../../../src/inquiry-grammar/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
@@ -200,7 +202,10 @@ export function world({ group = "test-group", provider = true, now = null, recor
              refusal: caller === r.principal ? null : { ok: false, reason: "AI_RUN_NOT_PRINCIPAL", code: "AI_RUN_NOT_PRINCIPAL" } };
   });
   st.db.exec(CASE_DRAFTS);
+  const imports = importsStandIn();
+  acceptedWorkOf(host).registerAcceptedWork("case-import", imports.registration);
   const w = {
+    imports,
     st, host, record, membership, credentials, promotion, prov, content, entities, connections, inquiry, basisVersions, strength,
     bias, observations, reevaluation, publication, ratification, contradiction, runs, clock, readings, grants: new Map(),
     capture, sources, attestation,
@@ -225,7 +230,7 @@ export function world({ group = "test-group", provider = true, now = null, recor
                                                                                   : w.networkNotices.noticeReferenceOf(project)) };
   w.ca = caseAuthoringOf(host, { record: recordWrap ? recordWrap(record) : record, membership, inquiry, basisVersions,
     strength, bias, observations, reevaluation, publication, ratification: ratWrap ? ratWrap(ratification) : ratification,
-    contradiction, provenance: prov, attestation, capture, networkNotices, extraction: ex,
+    contradiction, provenance: prov, attestation, capture, networkNotices, extraction: ex, caseImport: imports,
     sources, now: now || ((p) => (p === "millisecond" ? clock.ms : clock.now)), ...deps });
   let n = 0;
   Object.assign(w, {
@@ -347,6 +352,53 @@ export function world({ group = "test-group", provider = true, now = null, recor
   return w;
 }
 
+/** `case-import` at its ruled interface (its R4, R9, R16), standing in until it is composed here: another group's
+ *  imported editions, the acceptances in force and the open flags, as a test sets them. `accept(...)` answers the ref a
+ *  leg names; `flagsRead`, when set, answers `openFlagsOn` in place of the held flags (a failed or incomplete read). */
+export function importsStandIn() {
+  const editions = new Map(), acceptances = new Map(), flags = [];
+  const key = (...a) => a.join("#");
+  const s = {
+    flagsRead: null,
+    edition(imp, edition, { group = "other-group", caseId = "CASE-2026-0900", manifestSha = "f".repeat(64), findings = [] } = {}) {
+      editions.set(key(imp, edition), { edition, group, case: caseId, manifest_sha: manifestSha, findings });
+    },
+    accept(imp, edition, finding, a = {}) {
+      acceptances.set(key(imp, edition, finding), { by: "alice", at: T0, reason: "We recreated it whole.",
+        checked: "every passage", gaps: null, ...a });
+      return importedFindingRef(imp, finding);
+    },
+    withdraw(imp, edition, finding) { acceptances.delete(key(imp, edition, finding)); },
+    flag(imp, edition, f) { flags.push({ import: imp, edition, open: true, finding: null, at: T0, ...f }); },
+    clear(flag) { for (const f of flags) if (f.flag === flag) f.open = false; },
+    acceptanceOf: ({ import: imp, edition, finding }) => acceptances.get(key(imp, edition, finding)) ?? null,
+    openFlagsOn: ({ import: imp, edition }) => (s.flagsRead ? s.flagsRead({ import: imp, edition })
+      : { ok: true, complete: true, flags: flags.filter((f) => f.open && f.import === imp && f.edition === edition)
+          .map(({ flag, finding, issue, at }) => ({ flag, finding, issue, at })) }),
+    importedCase: ({ import: imp, edition }) => {
+      const e = editions.get(key(imp, edition));
+      return e ? { ok: true, import: imp, editions: [e] } : { ok: false, reason: "NO_SUCH_IMPORT" };
+    },
+  };
+  s.registration = {
+    finding: ({ ref, edition }) => {
+      const p = parseImportedFindingRef(ref);
+      const e = p && editions.get(key(p.import, edition));
+      if (!p || !e) return null;
+      const f = e.findings.find((x) => x.finding === p.finding) || {};
+      return { ref, import: p.import, group: e.group, case: e.case, edition, finding: p.finding,
+               manifest_sha: e.manifest_sha, result: f.result ?? null, pair: f.pair ?? null,
+               acceptance: acceptances.get(key(p.import, edition, p.finding)) ?? null };
+    },
+    openFlags: ({ ref, edition }) => {
+      const p = parseImportedFindingRef(ref);
+      return { complete: true, flags: flags.filter((f) => p && f.open && f.import === p.import && f.edition === edition) };
+    },
+    withdrawals: () => ({ withdrawals: [], cursor: null }),
+  };
+  return s;
+}
+
 export function infoMd(id) {
   return ["---", `id: ${id}`, "object_type: information", "schema: information@1", `title: "Document ${id}"`,
           "current_state: collected", "prior_state: null", `created: "${T0}"`,
@@ -357,7 +409,8 @@ export function infoMd(id) {
 /** An inquiry document: `legs` its basis (each cited by a confirmed `cites` reference); concluded in its own bytes. */
 export function inqMd(id, legs = [], { state = "concluded", lines = [] } = {}) {
   const val = (v) => (typeof v === "number" ? String(v) : `${v}`);
-  const refs = [...new Set(legs.map((l) => l.target))];
+  /* a leg on another group's finding is not a reference (inquiry-grammar R11) */
+  const refs = [...new Set(legs.map((l) => l.target).filter((t) => !String(t).startsWith("imported:")))];
   return ["---", `id: ${id}`, "object_type: inquiry", "schema: inquiry@1", `title: "Question ${id}"`,
     `current_state: ${state}`, "prior_state: open", `created: "${T0}"`, `last_updated: "${T0}"`, "surfaced_by: human",
     ...(refs.length ? ["references:", ...refs.flatMap((t) => ["  - rel: cites", `    target: ${t}`, "    status: confirmed",

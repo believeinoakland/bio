@@ -224,9 +224,11 @@ test("R17: the searched section is computed from the observation log at authorin
   assert.equal(docOf(w, r).text, text);
   /* the bound: past SEARCHED_SUBJECT_MAX captures the overflow is unidentified, never searched over a truncated set */
   assert.equal(SEARCHED_SUBJECT_MAX, 500);
+  /* Q's synthetic captures are not held, so Q travels supporting (R44), beside a load-bearing Q2 on the same document */
   const w2 = setup();
   w2.finding(Q, [{ target: DOC }]);
-  const P2 = w2.project("Team", "alice", [Q]);
+  w2.finding(Q2, [{ target: DOC }]);
+  const P2 = w2.project("Team", "alice", [Q, Q2]);
   const ord0 = w2.row(`SELECT MAX(ord) AS m FROM inquiry_basis WHERE bundle_id=?`, Q).m + 1;
   for (let i = 0; i < SEARCHED_SUBJECT_MAX + 1; i++) {
     const cid = sha(`content ${i}`), cap = sha(`capture ${i}`);
@@ -236,7 +238,7 @@ test("R17: the searched section is computed from the observation log at authorin
     w2.st.sql.exec(`INSERT INTO inquiry_basis (bundle_id, ord, role, target_id, target_type, content_id)
                     VALUES (?, ?, 'supports', ?, 'information', ?)`, Q, ord0 + i, DOC, cid);
   }
-  const big = w2.publish(P2, "alice", [Q]);
+  const big = w2.publish(P2, "alice", [Q2, Q], { roles: { [Q2]: "load_bearing", [Q]: "supporting" } });
   assert.equal(big.ok, true, JSON.stringify(big).slice(0, 300));
   const blv = Object.fromEntries(w2.fm(docOf(w2, big).text).searched_levels.map((l) => [l.level, l]));
   /* 502 captures (the leg's own and the 501 above): 500 computed over, 2 folded into unidentified */

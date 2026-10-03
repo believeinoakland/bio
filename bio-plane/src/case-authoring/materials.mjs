@@ -30,7 +30,10 @@ function materialsOfLeg(leg, io) {
 export function materialHeld(m, io) {
   const reg = io.one(`SELECT bundle_id, path FROM register WHERE capture_sha=?`, m.sha);
   let bytes = false;
-  try { bytes = !!(reg && io.readFile(reg.bundle_id, reg.path)); } catch { bytes = false; }
+  try {
+    const f = reg ? io.readFile(reg.bundle_id, reg.path) : null;
+    bytes = !!(f && (typeof f.text === "string" || f.blobSha));
+  } catch { bytes = false; }
   if (m.kind === "observation")
     return { bytes, text: bytes, text_sha: null, whole: bytes, missing: bytes ? [] : ["text"] };
   let units = null;
