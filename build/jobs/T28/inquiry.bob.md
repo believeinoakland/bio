@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` (T28) L6, inquiry: R4 and R12 wordi
 ## B2 · ANSWER · re J1
 
 K1304: your reading stands and is folded into R15 on tranche/T28 (merge it): a ref leg is listed, earns nothing here, null case IMPORTED_TARGET, never out of view nor INQUIRY_TARGET. Your R24 (divide: a ref stays on the child's leg, not in references[]) and R15 fixes stand. Merge order: after inquiry-grammar and accepted-work.
+
+## B3 · CHANGE
+
+inquiry-grammar is merged into tranche/T28 (K1306): merge it. From its J2: your bio-plane/test/m/inquiry/grammar.test.mjs:177 (R38) pins INQUIRY_GRAMMAR_CHECKS to six rows; C-21.3 IMPORTED_LEG_MALFORMED is now a seventh. Widen the pin or read your rows by name (accepted red 5 until your merge). importedLegFindings is there for your use.
