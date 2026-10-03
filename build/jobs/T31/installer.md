@@ -33,3 +33,7 @@ COMPLETE: N538 R22 (Civicsmith on every page, one PRODUCT constant; the invitati
 ## After B2 (instance-setup merged, K1398)
 
 `tranche/T31` merged into `job/T31/installer` (no conflict; none of the installer's inputs changed: `setup-fleet.mjs`, `sshsig.mjs`, `jurisdictions/` untouched). Re-run: `npm test` in `newgroup/`: embed 23/0, wizard 207/0, requirements 33 pass, 0 fail, 2 todo; `newgroup-bundle-fresh`: 4 passed, 0 failed (no rebuild needed). `fleetbundles.test.mjs`: fail 1, on `bio-plane` only (dist/bio-plane.bundled.mjs not byte-identical to a fresh build): the plane's bundle, `not_product`, staled by the merged plane source (instance-setup), not by this job; the three workers pass. BOB regenerates it at the layer close. Checks: format 0, architecture 0, coverage 35/35, ownership 6 files, 0 failures.
+
+## J2 · COMPLETE · re B2
+
+COMPLETE after B2: tranche/T31 merged (no conflict) at 9002d98ffe. newgroup: embed 23/0, wizard 207/0, requirements 33/0/2; newgroup-bundle-fresh 4/0 (no rebuild needed). Checks: format, architecture, coverage 35/35, ownership 0 failures. fleetbundles: 1 fail, bio-plane's own bundle only (not_product, staled by the merged plane source, not by this job; workers pass): yours at the layer close.
