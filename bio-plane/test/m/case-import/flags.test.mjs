@@ -191,7 +191,7 @@ test("R16 before the module starts, accepted-work answers absent; once it starts
   const w = world();
   const ref = importedFindingRef("a".repeat(64), F1);
   /* a fresh accepted-work, as the plane makes it before case-import's factory runs */
-  const aw = acceptedWorkOf({ storage: w.st, env: {} }, { record: w.record, promotion: w.promotion });
+  const aw = acceptedWorkOf({ storage: w.st, env: {} }, { record: w.record });
   assert.equal(aw.acceptedFinding({ ref, edition: 1 }).absent, true);
   const ci = caseImportOf({ storage: w.st, env: {} }, { record: w.record, membership: w.membership, strength: w.strength,
                                                          acceptedWork: aw, reevaluation: w.reeval, checkCaseFile: () => ({}) });

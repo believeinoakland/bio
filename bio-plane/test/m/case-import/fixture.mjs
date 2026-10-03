@@ -1,5 +1,5 @@
 /* case-import over the modules it uses, the real ones where a test needs their behaviour (record-core, membership,
-   promotion, strength, accepted-work), on a real SQLite database (node:sqlite) standing in for a Durable Object's
+   strength, accepted-work), on a real SQLite database (node:sqlite) standing in for a Durable Object's
    storage, answering as workerd's does (a cursor). Members are rows of membership's own table, as its acts would leave
    them; this group's default bar is a row of strength's own table, as `strengthBarSet` leaves it.
 
@@ -17,7 +17,6 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
-import { promotionOf } from "../../../src/promotion/index.mjs";
 import { strengthOf } from "../../../src/strength/index.mjs";
 import { acceptedWorkOf } from "../../../src/accepted-work/index.mjs";
 import { caseImportOf, CASE_IMPORT_CHECKS } from "../../../src/case-import/index.mjs";
@@ -160,12 +159,11 @@ export function world({ minimal = false } = {}) {
   const membership = membershipOf(host, { record });
   membership.migrate();
   /* `minimal`: stand-ins for strength and accepted-work, so record-core's purge meets only tables this world holds */
-  const promotion = minimal ? null : promotionOf(host, { record, membership });
-  if (promotion) promotion.registerFact("producingGroup", "instance-setup", () => SLUG);
+  /* the producing group is `strength`'s dep (promotion's fact on the plane); accepted-work makes its own promotion */
   const strength = minimal ? { strengthBarOf: () => ({ ok: true, group: SLUG, bar: null }) }
-    : strengthOf(host, { record, membership, promotion });
+    : strengthOf(host, { record, membership, producingGroup: () => SLUG });
   const acceptedWork = minimal ? { registerAcceptedWork: (module) => ({ ok: true, module }) }
-    : acceptedWorkOf(host, { record, promotion });
+    : acceptedWorkOf(host, { record });
   /* case-checker's checkCaseFile, scripted per finding */
   const script = new Map();
   const checker = { calls: [], throws: false, statement: "Recreating shows the case intact and consistent, not true.",
@@ -195,7 +193,7 @@ export function world({ minimal = false } = {}) {
     acceptanceWithdrawn(q) { reeval.told.push(q); if (reeval.throws) throw new Error("listeners down");
                              return { ok: true, told: true, kind: "acceptance", withdrawal: q.withdrawal, dependents: 0 }; } };
   const w = {
-    st, host, record, membership, promotion, strength, acceptedWork, clock, script, checker, reeval,
+    st, host, record, membership, strength, acceptedWork, clock, script, checker, reeval,
     rows: (q, ...a) => [...st.sql.exec(q, ...a)],
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`).one().n,
     /** Every table's rows, for "nothing written", "append-only" and "byte-identical". */
