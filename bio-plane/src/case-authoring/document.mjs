@@ -161,7 +161,8 @@ export function withheldWriterStated(withheld, writerBy) {
       + `hidden — everything recorded is shown or stated (§6A).`;
 }
 
-/** R14: THE CASE DOCUMENT, `publication`'s `CASE_DOCUMENT_FORMAT` (`bio-case-document/5`, N345). Everything it asserts arrived as an argument (R22): the authored
+/** R14: THE CASE DOCUMENT, in `case-grammar`'s `CASE_DOCUMENT_FORMAT` through `publication`'s re-export (`bio-case-document/7`
+ *  from T31, identical in fields to `/6`; DEC-124, K1365 (1)). Everything it asserts arrived as an argument (R22): the authored
  *  sentences as the publisher typed them, and every fact the caller read from the record at the act (`searched`,
  *  `conclusions`, `frozen`, `manifest`, `acks`, `citations`, `attributions`, the writer). Nothing here is composed,
  *  summarised or inferred, and no case-level strength has anywhere to be written (R24).
