@@ -23,9 +23,9 @@ const STAMP_NAMES = [...new Set([...QUERY_STAMPS, "proposedBy", "proposer", "pri
 /* What each op is stamped, for a caller `c` ({viewer, identity, member, label}). */
 function stampsOf(op, c) {
   if (AUTHOR.includes(op)) return { author: c.identity, viewer: c.viewer };
-  if (APPROVER.includes(op)) return { author: c.identity, by: c.identity, viewer: c.viewer };
-  if (ADMIN.includes(op)) return { author: c.identity, by: c.identity };
-  if (op === "wizardpropose") return { author: c.label, proposer: c.label, viewer: c.viewer };
+  if (APPROVER.includes(op)) return { author: c.identity, viewer: c.viewer };
+  if (ADMIN.includes(op)) return { author: c.identity };
+  if (op === "wizardpropose") return { author: c.label, viewer: c.viewer };
   if (op === "wizardprogress") return {};
   return { viewer: c.viewer };
 }
@@ -57,7 +57,7 @@ test("R50, R2, R26: wizard-scripts' map is exactly the ops op-declarations R15 d
   }
 });
 
-test("R50, R17, R29: each wizard op's stamps are the server's — `author` the positional identity on the authoring acts, `by` beside it on the approver's and the administrator's, the proposal's label as `proposer` (and `author`, the key wizard-scripts' map reads), `viewer` on every act but the editor grant's two and on every read — whatever the caller sent; `wizardprogress` receives no member id, viewer or identity at all (negative control: unforged calls stamp the same)", async () => {
+test("R50, R17, R29 (K1402): each wizard op's stamps are the server's — `author`, the one key wizard-scripts' map reads, the positional identity on the authoring, approving and editor acts and the proposal's label on a proposal, `viewer` on every act but the editor grant's two and on every read — whatever the caller sent; `wizardprogress` receives no member id, viewer or identity at all (negative control: unforged calls stamp the same)", async () => {
   const w = world();
   const forgedQ = Object.fromEntries(STAMP_NAMES.map((k) => [k, FORGED]));
   const forgedB = Object.fromEntries([...STAMP_NAMES, ...BODY_STAMPS].map((k) => [k, FORGED]));
@@ -72,14 +72,16 @@ test("R50, R17, R29: each wizard op's stamps are the server's — `author` the p
       for (const k of STAMP_NAMES) {
         const got = inner.params[k] ?? null;
         if (Object.hasOwn(want, k)) { assert.equal(got, want[k], `${where}: ?${k}`); checked++; }
-        else assert.equal(got, null, `${where}: ?${k} is not this op's stamp`);
+        else if (QUERY_STAMPS.includes(k)) assert.notEqual(got, FORGED, `${where}: ?${k} carries the caller's value`);
+        if (!Object.hasOwn(want, k) && params !== forgedQ) assert.equal(got, null, `${where}: ?${k} is not this op's stamp`);
       }
       for (const k of BODY_STAMPS) assert.notEqual(inner.body?.[k], FORGED, `${where}: #${k}`);
       assert.equal(inner.body.note, "kept", where);
       if (op === "wizardprogress")
-        assert.equal([...Object.values(inner.params)].some((v) => /ann|admin|member:/.test(String(v))), false, where);
+        assert.equal([...Object.values(inner.params)].some((v) => /^(ann|admin|member:ann|member:admin)$/.test(String(v))), false, where);
     }
-  assert.ok(checked > 100, String(checked));
+  /* every declared stamp of every op, for both sessions, forged and not */
+  assert.equal(checked, 2 * 2 * ALL.reduce((n, op) => n + Object.keys(stampsOf(op, sessions(w)[0])).length, 0));
 });
 
 test("R50, R28 (op-declarations R15): the session-only wizard acts are refused to every binding class and an agent credential, with nothing forwarded; a proposal and the check are reached by an agent credential, stamped with its label (`class:ai/<tokenId>`) and its principal as viewer; negative control: a member's session reaches each", async () => {
@@ -103,7 +105,7 @@ test("R50, R28 (op-declarations R15): the session-only wizard acts are refused t
     assert.equal(r.status, 200, `${op}: ${r.text.slice(0, 200)}`);
     const [inner] = opCalls(env);
     assert.equal(inner.params.viewer, "member:ann", op);
-    if (op === "wizardpropose") assert.deepEqual([inner.params.proposer, inner.params.author], ["class:ai/agent-wide", "class:ai/agent-wide"]);
+    if (op === "wizardpropose") assert.equal(inner.params.author, "class:ai/agent-wide");
   }
   for (const op of AUTHOR) {
     env.calls.length = 0;

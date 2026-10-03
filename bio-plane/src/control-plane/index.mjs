@@ -55,14 +55,14 @@ const CASE_IMPORT_ACTIONS = Object.freeze(["caseimport", "caseimportdocument", "
 const CASE_IMPORT_READS = Object.freeze(["importedcases", "importedcase"]);
 const CASE_CHECKER_PUBLIC_READS = Object.freeze(["casechecker", "casefilespec"]);
 
-/* R50 (DEC-120, DEC-121; N528; op-declarations R15): `wizard-scripts`' ops, routed through its own map by the general
-   forward. The authoring acts take `author` (its R3, R4, R6) and the approver's and administrator's acts `by` (its R7–R9),
-   each the POSITIONAL identity, filing-templates' form (`QUERY_AUTHOR_ACTIONS`); a proposal `proposer`, the template
-   proposal's label (its R5); every act but the editor grant's two, and every read, `viewer`. `wizardprogress` (its R15)
-   takes nothing: no member id, viewer or identity reaches the module, and every caller's stamp is deleted as for every
-   op. */
-const WIZARD_AUTHOR_ACTIONS = Object.freeze(["wizarddraft", "wizardrevise", "wizardsubmit"]);
-const WIZARD_BY_ACTIONS = Object.freeze(["wizardapprove", "wizardretire", "wizardeditorgrant", "wizardeditorrevoke"]);
+/* R50 (DEC-120, DEC-121; N528; op-declarations R15; K1402): `wizard-scripts`' ops, routed through its own map by the
+   general forward. Every act is stamped `author`, the one key its map reads every identity from (the
+   `filingTemplatesOps` pattern): the POSITIONAL identity on the authoring, approving and editor acts (its R3, R4, R6–R9),
+   filing-templates' form (`QUERY_AUTHOR_ACTIONS`), and the template proposal's label on a proposal (its R5). Every act but
+   the editor grant's two, and every read, takes `viewer`. `wizardprogress` (its R15) takes nothing: no member id, viewer
+   or identity reaches the module, and every caller's stamp is deleted as for every op. */
+const WIZARD_AUTHOR_ACTIONS = Object.freeze(["wizarddraft", "wizardrevise", "wizardsubmit", "wizardapprove", "wizardretire",
+                                             "wizardeditorgrant", "wizardeditorrevoke"]);
 const WIZARD_PROPOSAL_ACTIONS = Object.freeze(["wizardpropose"]);
 const WIZARD_VIEWER_OPS = Object.freeze(["wizarddraft", "wizardrevise", "wizardsubmit", "wizardapprove", "wizardretire",
                                          "wizardpropose", "wizards", "wizardread", "wizardsat", "wizarduse",
@@ -2121,26 +2121,20 @@ export function makeFetch(hooks = {}) {
        when `by` is absent) is overwritten or deleted above. */
     if (CASE_IMPORT_ACTIONS.includes(op))
       inner.searchParams.set("by", viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`);
-    /* R50 (op-declarations R15; wizard-scripts R3–R9): WHO DRAFTS, REVISES OR SUBMITS (`author`), AND WHO APPROVES,
-       RETIRES, GRANTS OR REVOKES THE EDITOR (`by`), the POSITIONAL identity, filing-templates' form; only a member's
-       session reaches these ops (their rows), and a machine stamp, were one to arrive, is refused there by name
-       (MACHINE_CANNOT_DRAFT_WIZARD, MACHINE_CANNOT_APPROVE_WIZARD). A PROPOSAL's label is the template proposal's (any
-       credential may propose): a session its member, a machine `class:<cls>`, an agent `class:ai/<tokenId>`. A caller's
-       copy of each is overwritten. wizard-scripts' map reads every one of the three from `author` (its ops map), so each
-       is also set there; `by` and `proposer` are the stamps op-declarations R15 names. `wizardprogress` is stamped
-       nothing. */
-    if (WIZARD_AUTHOR_ACTIONS.includes(op) || WIZARD_BY_ACTIONS.includes(op)) {
-      const who = viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`;
-      inner.searchParams.set("author", who);
-      if (WIZARD_BY_ACTIONS.includes(op)) inner.searchParams.set("by", who);
-    }
-    if (WIZARD_PROPOSAL_ACTIONS.includes(op)) {
-      const proposer = viaSession ? sessMember
+    /* R50 (op-declarations R15; wizard-scripts R3–R9; K1402): WHO DRAFTS, REVISES, SUBMITS, APPROVES, RETIRES, GRANTS OR
+       REVOKES THE EDITOR, the POSITIONAL identity, filing-templates' form, and WHO PROPOSED, the template proposal's label
+       (a session its member, a machine `class:<cls>`, an agent `class:ai/<tokenId>`): each stamped as `author`, the one
+       key wizard-scripts' map reads every identity from (the `filingTemplatesOps` pattern). Only a member's session
+       reaches the acts (their rows); a machine stamp, were one to arrive, is refused there by name
+       (MACHINE_CANNOT_DRAFT_WIZARD, MACHINE_CANNOT_APPROVE_WIZARD); any credential may propose. A caller's `author` was
+       deleted above. `wizardprogress` is stamped nothing. */
+    if (WIZARD_AUTHOR_ACTIONS.includes(op))
+      inner.searchParams.set("author", viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (WIZARD_PROPOSAL_ACTIONS.includes(op))
+      inner.searchParams.set("author",
+        viaSession ? sessMember
         : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`
-        : `${MACHINE_CLASS_PREFIX}${cls}`;
-      inner.searchParams.set("proposer", proposer);
-      inner.searchParams.set("author", proposer);
-    }
+        : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* PL-18 / DEC-63 — WHICH MEMBER IS ASKING, for the project-participation
        gate on the three run verbs. Bob ruled 2026-08-09 that an investigation
        can be started by ANY MEMBER OF THE PROJECT: the gate is participation in

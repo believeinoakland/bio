@@ -57,7 +57,10 @@ test("R52, R17, R29: each watch act's `by` (the positional identity) and `viewer
       const where = `${op}/${c.name}${params === forgedQ ? " (forged)" : ""}`;
       assert.deepEqual([inner.params.by, inner.params.viewer], [c.identity, c.viewer], where);
       checked++;
-      for (const k of STAMP_NAMES) if (k !== "by" && k !== "viewer") assert.equal(inner.params[k] ?? null, null, `${where}: ?${k}`);
+      for (const k of STAMP_NAMES) if (k !== "by" && k !== "viewer") {
+        if (QUERY_STAMPS.includes(k)) assert.notEqual(inner.params[k], FORGED, `${where}: ?${k} carries the caller's value`);
+        if (params !== forgedQ) assert.equal(inner.params[k] ?? null, null, `${where}: ?${k} is not this op's stamp`);
+      }
       for (const k of BODY_STAMPS) assert.notEqual(inner.body?.[k], FORGED, `${where}: #${k}`);
       assert.equal(inner.body.note, "kept", where);
     }
