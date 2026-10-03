@@ -28049,6 +28049,16 @@ var DISPATCH_CHECKS = {
     check: "C-69.4",
     where: "src/control-plane/dispatch.mjs internalAnswer > is-store-internal-error",
     translation: "This copy failed inside its own record while carrying out the request, so no answer was produced. That is a fault in this copy, not a statement about what the record holds or about your request; whether any part of it took effect is not known from here. The administrator can find the details in this copy's logs under the reference given with this answer."
+  },
+  /* DEC-113 (R46, C-69.5; K1252, K1253) — A PURGE THAT WOULD REACH HELD MATERIAL. While a litigation hold stands, the
+     store's door refuses every purge of the real record that would reach what the hold preserves: the whole store while
+     any hold is in place, and a single bundle of a held project or a held action, or one whose project cannot be told.
+     A failure to ask the hold refuses too, so the sentence claims only that the removal could not be shown to be clear
+     of the hold. Nothing was removed, read for proof or written. The test store (`scratch`) is never refused for a hold. */
+  PURGE_HOLD_IN_PLACE: {
+    check: "C-69.5",
+    where: "src/control-plane/dispatch.mjs purgeHoldRefusal > is-purge-hold-in-place",
+    translation: "This copy is preserving records under a litigation hold, and this removal would reach material the hold covers, or could not be shown to stay clear of it. Nothing was removed. A removal ordered while a hold stands waits until the hold is released."
   }
 };
 var BOOTSTRAP_CHECKS = {
@@ -81946,6 +81956,11 @@ function projectStageOps(s, url) {
 }
 
 // src/docket/checks.mjs
+var checks_exports27 = {};
+__export(checks_exports27, {
+  DOCKET_CHECKS: () => DOCKET_CHECKS,
+  rowOf: () => rowOf4
+});
 var at10 = (fn, region) => `src/docket/index.mjs ${fn} > ${region}`;
 var FILER = at10("#filerRefusal", "is-docket-filer");
 var FORM = at10("#formRefusal", "is-docket-form");
@@ -83279,10 +83294,58 @@ function docketOf(host, deps) {
   }
   return k;
 }
+function docketOps(m, url, body) {
+  const q7 = (k) => url.searchParams.get(k);
+  const b = body && typeof body === "object" ? body : {};
+  const pick2 = (k) => b[k] !== void 0 && b[k] !== null ? b[k] : url.searchParams.has(k) ? q7(k) : null;
+  const by = q7("by") ?? q7("author"), author = q7("author") ?? q7("by"), viewer = q7("viewer");
+  return {
+    docketfile: () => m.docketFile({
+      case: pick2("case"),
+      edition: pick2("edition"),
+      kind: pick2("kind"),
+      from: pick2("from"),
+      capture: pick2("capture"),
+      contests: pick2("contests"),
+      proposed: pick2("proposed"),
+      reason: pick2("reason"),
+      answers: pick2("answers"),
+      takesBack: pick2("takesBack"),
+      author,
+      viewer
+    }),
+    docketpressure: () => m.docketPressure({ entry: pick2("entry"), pressure: pick2("pressure"), author, viewer }),
+    docket: () => m.docketOf({ case: q7("case"), viewer }),
+    docketprepare: () => m.docketPrepare({
+      case: pick2("case"),
+      kind: pick2("kind"),
+      shelf: pick2("shelf"),
+      edition: pick2("edition"),
+      entry: pick2("entry"),
+      summary: pick2("summary"),
+      reason: pick2("reason"),
+      holder: pick2("holder"),
+      takesBack: pick2("takesBack"),
+      candidate: pick2("candidate"),
+      grant: pick2("grant"),
+      by,
+      viewer
+    }),
+    docketpost: () => m.docketPost({
+      digest: pick2("digest"),
+      signature: pick2("signature"),
+      acknowledged: b.acknowledged === true || q7("acknowledged") === "true" ? true : b.acknowledged ?? q7("acknowledged"),
+      by,
+      viewer
+    }),
+    docketdecline: () => m.docketDecline({ entry: pick2("entry"), reason: pick2("reason"), by, viewer }),
+    docketinvitation: () => m.docketInvitation({ entry: q7("entry"), viewer })
+  };
+}
 
 // src/public-read/checks.mjs
-var checks_exports27 = {};
-__export(checks_exports27, {
+var checks_exports28 = {};
+__export(checks_exports28, {
   CASE_RESOLUTION_CHECKS: () => CASE_RESOLUTION_CHECKS,
   PUBLISHED_READ_CHECKS: () => PUBLISHED_READ_CHECKS,
   PUBLISHED_STORE_CHECKS: () => PUBLISHED_STORE_CHECKS,
@@ -84449,8 +84512,8 @@ function publicReadOps(r, url) {
 }
 
 // src/network-notices/checks.mjs
-var checks_exports28 = {};
-__export(checks_exports28, {
+var checks_exports29 = {};
+__export(checks_exports29, {
   NETWORK_NOTICE_CHECKS: () => NETWORK_NOTICE_CHECKS,
   rowOf: () => rowOf6
 });
@@ -85944,8 +86007,8 @@ function networkNoticesPublicReads(m) {
 }
 
 // src/ratification/checks.mjs
-var checks_exports29 = {};
-__export(checks_exports29, {
+var checks_exports30 = {};
+__export(checks_exports30, {
   CASE_CITATION_VERSIONS: () => CASE_CITATION_VERSIONS,
   CASE_CONCLUSION_CHECKS: () => CASE_CONCLUSION_CHECKS,
   CASE_DOCUMENT_FAMILY: () => CASE_DOCUMENT_FAMILY,
@@ -88466,8 +88529,8 @@ function ratificationOps(r, url, body) {
 }
 
 // src/bias/checks.mjs
-var checks_exports30 = {};
-__export(checks_exports30, {
+var checks_exports31 = {};
+__export(checks_exports31, {
   BIAS_BAR_PHRASING: () => BIAS_BAR_PHRASING,
   BIAS_CHECKS: () => BIAS_CHECKS,
   BIAS_STATEMENT_KINDS: () => BIAS_STATEMENT_KINDS,
@@ -90254,8 +90317,8 @@ function biasOps(b, url, body) {
 }
 
 // src/case-authoring/checks.mjs
-var checks_exports31 = {};
-__export(checks_exports31, {
+var checks_exports32 = {};
+__export(checks_exports32, {
   CASE_DERIVATION_CHECKS: () => CASE_DERIVATION_CHECKS,
   CASE_DISCLOSURE_CHECKS: () => CASE_DISCLOSURE_CHECKS,
   PUBLISH_ACT_CHECKS: () => PUBLISH_ACT_CHECKS,
@@ -93453,8 +93516,8 @@ function blanksOf(text5) {
 }
 
 // src/filing-templates/checks.mjs
-var checks_exports32 = {};
-__export(checks_exports32, {
+var checks_exports33 = {};
+__export(checks_exports33, {
   FILING_TEMPLATE_CHECKS: () => FILING_TEMPLATE_CHECKS,
   rowOf: () => rowOf8
 });
@@ -95414,8 +95477,8 @@ function filingTemplatesOps(m, url, body) {
 }
 
 // src/local-facts/checks.mjs
-var checks_exports33 = {};
-__export(checks_exports33, {
+var checks_exports34 = {};
+__export(checks_exports34, {
   LOCAL_FACTS_CHECKS: () => LOCAL_FACTS_CHECKS,
   refusal: () => refusal10
 });
@@ -95953,8 +96016,8 @@ function localFactsOf(host, deps) {
 }
 
 // src/citation/checks.mjs
-var checks_exports34 = {};
-__export(checks_exports34, {
+var checks_exports35 = {};
+__export(checks_exports35, {
   CITE_CHECKS: () => CITE_CHECKS,
   CITE_EXTENT_CHECKS: () => CITE_EXTENT_CHECKS
 });
@@ -97250,6 +97313,13 @@ var CONSEQUENCE_STATEMENTS = Object.freeze({
   workobjective: Object.freeze({
     friction: "in-place",
     statement: "An assistant will work this project's objective within the run's budget and scope, shown beside this field. Your reason is recorded on the run's opening; the run proposes and never concludes."
+  }),
+  /* R33 (DEC-113; K1134 (3), K1252): releasing a litigation hold restarts what the hold stopped, for the projects
+     `actions` R57 answers (`op=actionholdpreview`), which the surface reads and shows beside the statement. DEC-113's
+     sentence, with K1252's purge: while a hold stands no held material is purged (actions R60). */
+  actionholdrelease: Object.freeze({
+    friction: "dialog",
+    statement: "Releasing this hold restarts deletion for the projects shown beside this: their material may be purged again, and assistant transcripts for them past the time limit will be deleted on each member's device when it is next opened. This cannot be undone."
   })
 });
 var VOCABULARIES = {
@@ -97418,7 +97488,15 @@ var VOCABULARIES = {
   template_uses: TEMPLATE_USES2,
   template_review_outcomes: REVIEW_OUTCOMES2,
   local_fact_acts: LOCAL_FACT_ACTS,
-  local_fact_statuses: LOCAL_FACT_STATUSES
+  local_fact_statuses: LOCAL_FACT_STATUSES,
+  /* R34 (N520; DEC-116): what a member offers when an entry is filed for the docket, posted to a shelf or marked as
+     pressure — each the array `docket` refuses against (DOCKET_NO_REASON's proposals, DOCKET_KIND_UNKNOWN,
+     PRESSURE_REFUSED) or answers in (a public entry's shelf and kind), so a surface offers a choice before a member is
+     refused it. */
+  docket_shelves: SHELVES,
+  docket_entry_kinds: ENTRY_KINDS,
+  docket_proposals: PROPOSALS,
+  docket_pressure_kinds: PRESSURE_KINDS
 };
 function vocabulariesFor(kinds) {
   const ok2 = Array.isArray(kinds) && kinds.length > 0 && kinds.every((k) => typeof k === "string" && k.length > 0);
@@ -97457,11 +97535,23 @@ var RUNGS2 = {
      change or a stop is a new revision (its R6, R11), and nothing published is altered (its R26). */
   noticepost: "attested",
   // network-notices R4, R24 · an owner's own signature publishes the revision
+  /* R34 (DEC-116, N520): a docket entry is published only by the manager's own signature over its statement (docket R5,
+     R18), `noticepost`'s and `caseratify`'s reason; an entry is taken back only by a later entry (its R11), and nothing
+     published is altered (its R16). The draft's "signed" is this rung: the ladder has no rung of that name (R27). */
+  docketpost: "attested",
+  // docket R5, R18 · the manager's own signature publishes the entry
   /* ---- terminal: the target state has no outgoing edge. See the ladder note.
      `op=retire` ALSO raises NO_REASON, so it is `reasoned` at minimum; it is
      declared at the higher rung because the state it writes cannot be left. */
   retire: "terminal",
   // Constructs:244 · STATES.information.edges.retired === []
+  /* R33 (DEC-113; K1134 (3)): A NAMED EXCEPTION TO R27, which would grade it `reasoned` (a further statement corrects it
+     forward, and HOLD_REFUSED asks its reason). DEC-113 rules releasing heavier than reasoned: what it restarts — the
+     purge of held material and the deletion of assistant transcripts on members' devices — cannot be undone, and a
+     release ends a hold in place at most once (actions R56, HOLD_ALREADY_RELEASED). Placing stays light: `actionhold` is
+     `reasoned` (K918), and it refuses `released` (HOLD_RELEASE_IS_ITS_OWN_ACT), so the heavier act has its own op. */
+  actionholdrelease: "terminal",
+  // actions R56 · DEC-113: what it restarts cannot be undone; HOLD_REFUSED asks its reason
   /* ---- reasoned: the store refuses the act for want of an authored account.
      The four with a Constructs line keep it; the rest are DERIVED FROM THE
      REFUSAL, which is FW-14's instruction ("derive rungs from what the code
@@ -97790,8 +97880,14 @@ var RUNGS2 = {
   // SET_ASIDE_NO_REASON (capture R79; DEC-97 (2))
   heldrestore: "reasoned",
   // SET_ASIDE_NO_REASON (capture R81, as R79)
-  addressfrequencyset: "reasoned"
+  addressfrequencyset: "reasoned",
   // FREQUENCY_NO_REASON (monitoring R52, C-18.15): a canned or custom reason
+  /* ---- R34 (DEC-116, N520): the docket's two reasoned acts, each corrected forward — a filing is taken back by a later
+     record act with a reason (docket R11) and a declined submission may be filed again; neither is ever deleted. */
+  docketfile: "reasoned",
+  // DOCKET_NO_REASON (docket R1, C-129.9): why record, public or both
+  docketdecline: "reasoned"
+  // DOCKET_NO_REASON (docket R7): why the submission is declined
 };
 var RUNG_ABSENT = {
   /* ---- substrate: how a chosen act lands, or how the store maintains itself. */
@@ -97894,7 +97990,7 @@ var RUNG_ABSENT = {
      not signed — so neither `attested` (no key) nor `reversible` (no act takes it back) describes it. DEC-88 (K1038)
      closed the gap by ruling for 57 of the 78 that stood here, banding each `reversible`, `reasoned` or `terminal`
      (RUNGS); these 21 are what it left `undetermined` (R27), each on R27's rule: no authored reason is asked and no
-     published act takes it back. R32 adds T23's `whatchangedpropose` on the same rule, at the foot of this table. */
+     published act takes it back. R32 adds T23's `whatchangedpropose` and R34 the docket's `docketpressure` on the same rule, at the foot of this table. */
   /* N364 (capture R65), on R27's rule: pulling a knock files its bytes as a capture with a receipt, in the puller's
      name; no reason is asked and no published act takes it back (a pulled knock stays pulled, and the capture stands). */
   inboxpull: { ground: "undetermined", is: "a member pulls a knock into the record: its bytes held under their own digest, a doorbell receipt written and the knock marked pulled, in one act; never un-pulled (capture R65)" },
@@ -97951,7 +98047,10 @@ var RUNG_ABSENT = {
   templateapprove: { ground: "undetermined", is: "an approver who is not the version's sole author approves a reviewed version, the earlier approved version marked updated and still offered; or an administrator widens an approved template to the group (filing-templates R10)" },
   /* R32 (N485: K1025, K1035), on R27's rule, as `templatepropose`: a draft of a new edition's statement, machine or
      member, append-only; it asks no authored reason and no published act takes it back. */
-  whatchangedpropose: { ground: "undetermined", is: "a machine or a member PROPOSES a draft of a published case's next edition statement, labelled machine work when a machine proposed it and kept append-only; never a statement until a member adopts or rewrites it (case-authoring R39)" }
+  whatchangedpropose: { ground: "undetermined", is: "a machine or a member PROPOSES a draft of a published case's next edition statement, labelled machine work when a machine proposed it and kept append-only; never a statement until a member adopts or rewrites it (case-authoring R39)" },
+  /* R34 (DEC-116, N520), on R27's rule, as `actionpressure`: a pressure mark's note describes what was received (a
+     malformed mark is PRESSURE_REFUSED, not a missing account), and no published act takes a mark back. */
+  docketpressure: { ground: "undetermined", is: "a member marks a docket record entry as a threat \u2014 legal, retaliation, discrediting or other \u2014 with an optional note; appended, never rewriting the entry, and an entry is marked once (docket R2)" }
 };
 var CAPTURE_ACTS = [
   /* op=attest. The verb is "co-attest" because the group is not the only
@@ -99538,6 +99637,12 @@ var OPS = frozenTable({
   /* T20 (K899 (7), K902; actions R52): a litigation hold stated on a `legal` pressure mark, `actionpressure`'s posture
      (the module refuses a machine by name, MACHINE_CANNOT_SET_HOLD). */
   actionhold: { classes: ["admin", "member", "probe"], mutating: true },
+  /* T27 (N518, DEC-113, K1134 (3); actions R56–R58; R12): the hold's release, `actionhold`'s posture (the module refuses
+     a machine by name, MACHINE_CANNOT_SET_HOLD), its author query-stamped; what a release would restart, and whether
+     projects are held, reads, viewer-stamped. */
+  actionholdrelease: { classes: ["admin", "member", "probe"], mutating: true },
+  actionholdpreview: { classes: ["admin", "member", "probe"], mutating: false },
+  projectholds: { classes: ["admin", "member", "probe"], mutating: false },
   action: { classes: ["admin", "member", "probe"], mutating: false },
   actions: { classes: ["admin", "member", "probe"], mutating: false },
   /* T18 (K704; action-clocks R4, R6, DEC-94): a member's own reminder on a dated clock entry, set and answered; a
@@ -99608,6 +99713,18 @@ var OPS = frozenTable({
   noticepost: { classes: ["admin", "member"], machineClasses: [], mutating: true },
   notices: { classes: ["admin", "member"], machineClasses: [], mutating: false },
   directorysubmission: { classes: ["admin", "member"], machineClasses: [], mutating: false },
+  /* T27 (N520; DEC-116, DEC-100; docket R1–R8, R12, R18; R13): a case's docket — filing to the record and marking a
+     threat (`author` stamped), the manager's preparation, signed post and decline (`by` stamped), and the reads — each a
+     member session's only, `knocksof`'s fence: `machineClasses: []` refuses every bearer, and so every agent credential
+     and operator token (docket refuses a machine stamp by name too, MACHINE_CANNOT_FILE_DOCKET, _PLACE_DOCKET). `viewer`
+     stamped on each. */
+  docketfile: { classes: ["admin", "member"], machineClasses: [], mutating: true },
+  docketpressure: { classes: ["admin", "member"], machineClasses: [], mutating: true },
+  docketdecline: { classes: ["admin", "member"], machineClasses: [], mutating: true },
+  docketpost: { classes: ["admin", "member"], machineClasses: [], mutating: true },
+  docket: { classes: ["admin", "member"], machineClasses: [], mutating: false },
+  docketprepare: { classes: ["admin", "member"], machineClasses: [], mutating: false },
+  docketinvitation: { classes: ["admin", "member"], machineClasses: [], mutating: false },
   /* REC-94: a capture's content-axis state; frontier's classes and gate. */
   contentaxis: { classes: ["admin", "member", "probe"], mutating: false },
   /* REC-69: the context-keyed run read; the viewer stamp decides what a caller sees. */
@@ -99661,7 +99778,12 @@ var OPS = frozenTable({
   publicread: { classes: null, mutating: false },
   activitymethod: { classes: null, mutating: false },
   noticespublic: { classes: null, mutating: false },
-  groupkeyspublic: { classes: null, mutating: false }
+  groupkeyspublic: { classes: null, mutating: false },
+  /* T27 (public-read R21; docket R14, R15; R13): the docket's public shelves and its feed, credential-free and served
+     through public-read's map as `publishedcase` is: each answers only what is already public, so nothing is stamped
+     and no session set holds it. */
+  docketpublic: { classes: null, mutating: false },
+  docketfeed: { classes: null, mutating: false }
 });
 var RETRIEVAL_READS = frozenList([
   "search",
@@ -99847,8 +99969,8 @@ var ESCALATION_ACTIONS = frozenList([
   "declinetoescalate"
 ]);
 var ESCALATION_READS = frozenList(["escalation", "escalationsdue", "escalationstatus", "escalationreasondraft"]);
-var ACTIONS_ACTIONS = frozenList(["actioncreate", "actionpressure", "actionhold"]);
-var ACTIONS_READS = frozenList(["action", "actions"]);
+var ACTIONS_ACTIONS = frozenList(["actioncreate", "actionpressure", "actionhold", "actionholdrelease"]);
+var ACTIONS_READS = frozenList(["action", "actions", "actionholdpreview", "projectholds"]);
 var ACTION_CLOCKS_ACTIONS = frozenList(["reminderset", "reminderanswer"]);
 var ACTION_PLANS_ACTIONS = frozenList([
   "planopen",
@@ -99889,6 +100011,11 @@ var NETWORK_NOTICES_ACTIONS = frozenList(["noticepost"]);
 var NETWORK_NOTICES_READS = frozenList(["noticeprepare", "notices", "directorysubmission"]);
 var NETWORK_NOTICES_BY = frozenList(["noticeprepare", "noticepost"]);
 var NETWORK_NOTICES_PUBLIC_READS = frozenList(["activitymethod", "noticespublic", "groupkeyspublic"]);
+var DOCKET_ACTIONS = frozenList(["docketfile", "docketpressure", "docketdecline", "docketpost"]);
+var DOCKET_READS = frozenList(["docket", "docketprepare", "docketinvitation"]);
+var DOCKET_AUTHOR = frozenList(["docketfile", "docketpressure"]);
+var DOCKET_BY = frozenList(["docketprepare", "docketdecline", "docketpost"]);
+var DOCKET_PUBLIC_READS = frozenList(["docketpublic", "docketfeed"]);
 var QUERY_AUTHOR_ACTIONS = frozenList([
   ...CONFORMANCE_ACTIONS,
   ...CONSEQUENCES_ACTIONS,
@@ -100164,6 +100291,13 @@ var SESSION_OPS = Object.freeze({
     ...NETWORK_NOTICES_READS,
     /* T24 (op-declarations R11): action-plans' start preview, in BOTH sets, as the start it previews. */
     ...ACTION_PLANS_PREVIEWS,
+    /* T27 (op-declarations R12, R13): the hold's release and its two reads arrive through
+       `ACTIONS_ACTIONS` above and the reads here; the docket's acts and reads, in BOTH sets (a bearer
+       refused them by `machineClasses: []`). Its public reads are in neither: every caller reaches them. */
+    "actionholdpreview",
+    "projectholds",
+    ...DOCKET_ACTIONS,
+    ...DOCKET_READS,
     /* N314 (T12, monitoring R30): the daemon's pause, every member session's to ask; monitoring refuses a
        non-administrator by name. */
     "monitorpause",
@@ -100288,6 +100422,10 @@ var SESSION_OPS = Object.freeze({
     ...NETWORK_NOTICES_ACTIONS,
     ...NETWORK_NOTICES_READS,
     ...ACTION_PLANS_PREVIEWS,
+    "actionholdpreview",
+    "projectholds",
+    ...DOCKET_ACTIONS,
+    ...DOCKET_READS,
     ...IDENTITY_ACTIONS,
     ...GOVERNANCE_ACTIONS,
     ...CUSTODIAL_ACTIONS,
@@ -101092,7 +101230,29 @@ var NEEDS = Object.freeze({
      starting would do and writes nothing, and `contribute` gates the start itself. PRESENT, null, because affordances
      names it in NON_ACTS (its R7) and its totality reads a NON_ACTS key this table does not carry as stale (its R12),
      K516's precedent. */
-  optionstartpreview: null
+  optionstartpreview: null,
+  /* T27 (op-declarations R12; actions R56): releasing a hold appends a statement to the action's record in a member's
+     name, `actionhold`'s capability and reason. NO CAPABILITY for the release's preview and the held-project read, the
+     start preview's posture (each writes nothing; `contribute` gates the release itself): PRESENT, null, because
+     affordances names both (its R33) in NON_ACTS and its totality reads a NON_ACTS key this table does not carry as stale
+     (its R12), K516's precedent. */
+  actionholdrelease: "contribute",
+  actionholdpreview: null,
+  projectholds: null,
+  /* T27 (op-declarations R13; docket R1, R2, R5, R7): filing to the record, marking a threat, posting a signed entry and
+     declining a submission each write the docket in a member's name — `contribute`, NO fifth capability token
+     (CAPABILITIES.md §4): who may post or decline (the case's manager) is docket's, asked of the stamped `by`. NO
+     CAPABILITY for its reads (preparing writes nothing) nor its public reads, on `contradictionpairs`' reasoning: PRESENT,
+     null, because affordances names each in NON_ACTS (its R34), K516's precedent. */
+  docketfile: "contribute",
+  docketpressure: "contribute",
+  docketdecline: "contribute",
+  docketpost: "contribute",
+  docket: null,
+  docketprepare: null,
+  docketinvitation: null,
+  docketpublic: null,
+  docketfeed: null
 });
 var ACT_GATE = Object.freeze({
   needs: (id) => (Object.hasOwn(NEEDS, id) ? NEEDS[id] : null) ?? null,
@@ -101115,8 +101275,8 @@ var UNATTENDED_BY_DECISION = Object.freeze({
 });
 
 // src/admission/checks.mjs
-var checks_exports35 = {};
-__export(checks_exports35, {
+var checks_exports36 = {};
+__export(checks_exports36, {
   ADMISSION_CHECKS: () => ADMISSION_CHECKS,
   AI_SCOPE_CHECKS: () => AI_SCOPE_CHECKS,
   GROUP_IDENTITY_FENCE_CHECKS: () => GROUP_IDENTITY_FENCE_CHECKS,
@@ -102188,8 +102348,8 @@ var CaptureCredentials = class _CaptureCredentials {
 };
 
 // src/run-rules/checks.mjs
-var checks_exports36 = {};
-__export(checks_exports36, {
+var checks_exports37 = {};
+__export(checks_exports37, {
   AI_RUNS_CHECKS: () => AI_RUNS_CHECKS,
   AI_RUNS_CONTEXT_CHECKS: () => AI_RUNS_CONTEXT_CHECKS,
   AI_RUN_ACT_SHAPE_CHECKS: () => AI_RUN_ACT_SHAPE_CHECKS,
@@ -102614,8 +102774,8 @@ var AI_RUNS_CHECKS = Object.freeze({
 });
 
 // src/run-productions/checks.mjs
-var checks_exports37 = {};
-__export(checks_exports37, {
+var checks_exports38 = {};
+__export(checks_exports38, {
   EXTRACT_PROPOSE_CHECKS: () => EXTRACT_PROPOSE_CHECKS,
   EXTRACT_PROPOSE_CHECK_KEYS: () => EXTRACT_PROPOSE_CHECK_KEYS,
   ROWLESS_CODES: () => ROWLESS_CODES,
@@ -102844,8 +103004,8 @@ var SUGGEST_CHECKS = pick(SUGGEST_ROWS, SUGGEST_CHECK_KEYS);
 var EXTRACT_PROPOSE_CHECKS = pick(EXTRACT_PROPOSE_ROWS, EXTRACT_PROPOSE_CHECK_KEYS);
 
 // src/capture-requests/checks.mjs
-var checks_exports38 = {};
-__export(checks_exports38, {
+var checks_exports39 = {};
+__export(checks_exports39, {
   CAPTURE_PURPOSES: () => CAPTURE_PURPOSES,
   CAPTURE_REQUEST_CHECKS: () => CAPTURE_REQUEST_CHECKS,
   CAPTURE_SOURCE_CHECKS: () => CAPTURE_SOURCE_CHECKS,
@@ -107808,8 +107968,8 @@ function judgementLayers() {
 var JUDGEMENT_VERSION = `${JUDGEMENT_ID}@${JUDGEMENT_EDITION}`;
 
 // src/intent/checks.mjs
-var checks_exports39 = {};
-__export(checks_exports39, {
+var checks_exports40 = {};
+__export(checks_exports40, {
   INTENT_CHECKS: () => INTENT_CHECKS,
   refusal: () => refusal14
 });
@@ -107952,8 +108112,8 @@ function refusal14(code, detail, extra) {
 }
 
 // src/review/checks.mjs
-var checks_exports40 = {};
-__export(checks_exports40, {
+var checks_exports41 = {};
+__export(checks_exports41, {
   REVIEW_COPY_CHECKS: () => REVIEW_COPY_CHECKS
 });
 var at17 = (fn, region) => `src/review/index.mjs ${fn} > ${region}`;
@@ -108026,8 +108186,8 @@ var REVIEW_COPY_CHECKS = Object.freeze({
 });
 
 // src/standards/checks.mjs
-var checks_exports41 = {};
-__export(checks_exports41, {
+var checks_exports42 = {};
+__export(checks_exports42, {
   STANDARDS_CHECKS: () => STANDARDS_CHECKS,
   refusal: () => refusal15
 });
@@ -108140,8 +108300,8 @@ function refusal15(code, detail, extra) {
 }
 
 // src/conformance/checks.mjs
-var checks_exports42 = {};
-__export(checks_exports42, {
+var checks_exports43 = {};
+__export(checks_exports43, {
   CONFORMANCE_CHECKS: () => CONFORMANCE_CHECKS,
   refusal: () => refusal16
 });
@@ -108279,8 +108439,8 @@ function refusal16(code, detail, extra = {}) {
 }
 
 // src/consequences/checks.mjs
-var checks_exports43 = {};
-__export(checks_exports43, {
+var checks_exports44 = {};
+__export(checks_exports44, {
   CONSEQUENCES_CHECKS: () => CONSEQUENCES_CHECKS
 });
 var at20 = (fn) => `src/consequences/index.mjs ${fn}`;
@@ -108308,8 +108468,8 @@ var CONSEQUENCES_CHECKS = Object.freeze({
 });
 
 // src/action-clocks/checks.mjs
-var checks_exports44 = {};
-__export(checks_exports44, {
+var checks_exports45 = {};
+__export(checks_exports45, {
   ACTION_CLOCK_CHECKS: () => ACTION_CLOCK_CHECKS
 });
 var ACTION_CLOCK_CHECKS = {
@@ -108340,8 +108500,8 @@ var ACTION_CLOCK_CHECKS = {
 };
 
 // src/filings/checks.mjs
-var checks_exports45 = {};
-__export(checks_exports45, {
+var checks_exports46 = {};
+__export(checks_exports46, {
   FILINGS_CHECKS: () => FILINGS_CHECKS,
   rowOf: () => rowOf11
 });
@@ -108527,8 +108687,8 @@ function rowOf11(code) {
 }
 
 // src/escalation/checks.mjs
-var checks_exports46 = {};
-__export(checks_exports46, {
+var checks_exports47 = {};
+__export(checks_exports47, {
   ESCALATION_CHECKS: () => ESCALATION_CHECKS,
   refusal: () => refusal17
 });
@@ -108756,8 +108916,8 @@ function refusal17(code, detail, extra) {
 }
 
 // src/action-plans/checks.mjs
-var checks_exports47 = {};
-__export(checks_exports47, {
+var checks_exports48 = {};
+__export(checks_exports48, {
   ACTION_PLAN_CHECKS: () => ACTION_PLAN_CHECKS,
   refusal: () => refusal18
 });
@@ -109064,8 +109224,8 @@ function refusal18(code, detail, extra) {
 }
 
 // src/monitoring/checks.mjs
-var checks_exports48 = {};
-__export(checks_exports48, {
+var checks_exports49 = {};
+__export(checks_exports49, {
   CADENCE_ENUM: () => CADENCE_ENUM,
   CRITICALITY_ENUM: () => CRITICALITY_ENUM,
   DRIVE_TICK_CHECKS: () => DRIVE_TICK_CHECKS,
@@ -109238,8 +109398,8 @@ function checkGatheringGrammar(ctx, findings, sweepArm = null) {
 }
 
 // src/link-sweep/checks.mjs
-var checks_exports49 = {};
-__export(checks_exports49, {
+var checks_exports50 = {};
+__export(checks_exports50, {
   SWEEP_BOUNDS: () => SWEEP_BOUNDS,
   SWEEP_CADENCES: () => SWEEP_CADENCES,
   SWEEP_CHECKS: () => SWEEP_CHECKS,
@@ -109660,8 +109820,8 @@ function sweepGrammar(s, ids) {
 }
 
 // src/tasks/checks.mjs
-var checks_exports50 = {};
-__export(checks_exports50, {
+var checks_exports51 = {};
+__export(checks_exports51, {
   QUEUE_INBOX_CHECKS: () => QUEUE_INBOX_CHECKS,
   QUEUE_MACHINE_CHECKS: () => QUEUE_MACHINE_CHECKS,
   TASK_ACTOR_CHECKS: () => TASK_ACTOR_CHECKS,
@@ -109808,8 +109968,8 @@ function checkInboxGrammar(ctx, findings) {
 }
 
 // src/queue/checks.mjs
-var checks_exports51 = {};
-__export(checks_exports51, {
+var checks_exports52 = {};
+__export(checks_exports52, {
   QUEUE_ACT_CHECKS: () => QUEUE_ACT_CHECKS,
   QUEUE_MINT_CHECKS: () => QUEUE_MINT_CHECKS,
   queueRefusal: () => queueRefusal
@@ -132396,43 +132556,44 @@ var CHECK_FAMILY_FILES = Object.freeze([
   ["src/connections/checks.mjs", checks_exports9],
   ["src/connections/themes.mjs", themes_exports],
   ["src/progressions/checks.mjs", checks_exports19],
-  ["src/bias/checks.mjs", checks_exports30],
+  ["src/bias/checks.mjs", checks_exports31],
   ["src/observation-log/checks.mjs", checks_exports10],
   ["src/retrieval/checks.mjs", checks_exports18],
   ["src/inquiry-grammar/checks.mjs", checks_exports11],
   ["src/inquiry/index.mjs", inquiry_exports],
-  ["src/citation/checks.mjs", checks_exports34],
+  ["src/citation/checks.mjs", checks_exports35],
   ["src/basis-versions/checks.mjs", checks_exports20],
   ["src/strength/checks.mjs", checks_exports22],
   ["src/contradiction/checks.mjs", checks_exports23],
-  ["src/run-rules/checks.mjs", checks_exports36],
-  ["src/run-productions/checks.mjs", checks_exports37],
-  ["src/capture-requests/checks.mjs", checks_exports38],
+  ["src/run-rules/checks.mjs", checks_exports37],
+  ["src/run-productions/checks.mjs", checks_exports38],
+  ["src/capture-requests/checks.mjs", checks_exports39],
   ["src/skilldoctrine.mjs", skilldoctrine_exports],
-  ["src/intent/checks.mjs", checks_exports39],
+  ["src/intent/checks.mjs", checks_exports40],
   ["src/reevaluation/checks.mjs", checks_exports25],
   ["src/publication/checks.mjs", checks_exports26],
-  ["src/public-read/checks.mjs", checks_exports27],
-  ["src/network-notices/checks.mjs", checks_exports28],
-  ["src/ratification/checks.mjs", checks_exports29],
-  ["src/case-authoring/checks.mjs", checks_exports31],
-  ["src/review/checks.mjs", checks_exports40],
-  ["src/local-facts/checks.mjs", checks_exports33],
-  ["src/standards/checks.mjs", checks_exports41],
-  ["src/conformance/checks.mjs", checks_exports42],
-  ["src/consequences/checks.mjs", checks_exports43],
+  ["src/public-read/checks.mjs", checks_exports28],
+  ["src/network-notices/checks.mjs", checks_exports29],
+  ["src/ratification/checks.mjs", checks_exports30],
+  ["src/case-authoring/checks.mjs", checks_exports32],
+  ["src/review/checks.mjs", checks_exports41],
+  ["src/local-facts/checks.mjs", checks_exports34],
+  ["src/standards/checks.mjs", checks_exports42],
+  ["src/conformance/checks.mjs", checks_exports43],
+  ["src/consequences/checks.mjs", checks_exports44],
   ["src/action-grammar/checks.mjs", checks_exports21],
-  ["src/action-clocks/checks.mjs", checks_exports44],
-  ["src/filing-templates/checks.mjs", checks_exports32],
-  ["src/filings/checks.mjs", checks_exports45],
-  ["src/escalation/checks.mjs", checks_exports46],
-  ["src/action-plans/checks.mjs", checks_exports47],
-  ["src/monitoring/checks.mjs", checks_exports48],
-  ["src/link-sweep/checks.mjs", checks_exports49],
-  ["src/tasks/checks.mjs", checks_exports50],
-  ["src/queue/checks.mjs", checks_exports51],
+  ["src/docket/checks.mjs", checks_exports27],
+  ["src/action-clocks/checks.mjs", checks_exports45],
+  ["src/filing-templates/checks.mjs", checks_exports33],
+  ["src/filings/checks.mjs", checks_exports46],
+  ["src/escalation/checks.mjs", checks_exports47],
+  ["src/action-plans/checks.mjs", checks_exports48],
+  ["src/monitoring/checks.mjs", checks_exports49],
+  ["src/link-sweep/checks.mjs", checks_exports50],
+  ["src/tasks/checks.mjs", checks_exports51],
+  ["src/queue/checks.mjs", checks_exports52],
   ["src/setup.mjs", setup_exports],
-  ["src/admission/checks.mjs", checks_exports35],
+  ["src/admission/checks.mjs", checks_exports36],
   ["src/control-plane/checks.mjs", checks_exports7]
 ].map((e) => Object.freeze(e)));
 var translated = (row2) => !!row2 && typeof row2 === "object" && typeof row2.translation === "string" && row2.translation !== "";
@@ -134084,7 +134245,7 @@ function makeFetch(hooks = {}) {
          fails closed without the stamp. `lateattestations` names no bundle and takes none. */
       "captureaccounts"
     ];
-    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "contentcrop" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || RUN_VERB_ACTIONS.includes(op) || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "versionnotice" || op === "basisversions" || op === "versionstrength" || op === "partitionindependence" || op === "biasmanifest" || op === "biasdebt" || op === "biasdebtresolve" || op === "biasadopt" || op === "casedraft" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "capturerequestretry" || INTENT_ACTIONS.includes(op) || INTENT_READS.includes(op) || op === "reevaluationnotices" || op === "reevaluationchanges" || REEVALUATION_ACTIONS.includes(op) || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "contradictionpropose" || op === "narrow" || op === "narrowcandidates" || op === "connectionchoose" || op === "connectionassert" || op === "connectionsasserted" || op === "filemembershipstore" || op === "filemembership" || op === "filemembershipjudge" || op === "contradictionpairs" || op === "actionquotes" || op === "casedrafts" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "attesttext" || op === "leadlook" || op === "leadread" || op === "leadshare" || op === "leadlist" || op === "themeplace" || op === "themepropose" || op === "themeread" || op === "themewithdraw" || op === "idmatch" || op === "actionlawspropose" || op === "stats" || op === "selectionlist" || op === "driveshells" || PROJECT_ACTIONS.includes(op) || op === "memberpairings" || ACTION_LAYER_ACTIONS.includes(op) || ACTION_LAYER_READS.includes(op) || op === "actionriskpropose" || op === "monitoring" || op === "monitorslate" || CONTRADICTION_ACTIONS.includes(op) || CONTRADICTION_READS.includes(op) || op === "contradictionrecommend" || op === "entity" || op === "entitybyalias" || op === "publishtensions" || op === "publishpreflight" || SOURCE_READS.includes(op) || op === "inboxpull" || CAPTURE_VIEWER_ACTIONS.includes(op) || CAPTURE_READS.includes(op) || WHAT_CHANGED_PROPOSAL_ACTIONS.includes(op) || WHAT_CHANGED_READS.includes(op) || NETWORK_NOTICES_ACTIONS.includes(op) || NETWORK_NOTICES_READS.includes(op) || REC30_VIEWER_READS.includes(op)) {
+    if (op === "search" || op === "meaningrows" || op === "select" || op === "selection" || EDGE_ACTIONS.includes(op) || STATE_ACTIONS.includes(op) || ACTION_ACTIONS.includes(op) || STRUCTURE_ACTIONS.includes(op) || op === "list" || op === "index" || op === "projection" || op === "image" || op === "file" || op === "backlinks" || op === "excludedby" || op === "reevaluations" || op === "inquirystrength" || op === "earnedbasis" || op === "content" || op === "contentcrop" || op === "provenancechain" || op === "provenanceroute" || op === "provenanceroutes" || QUEUE_ACTIONS.includes(op) || op === "airun" || op === "airunlog" || op === "airunspawn" || RUN_VERB_ACTIONS.includes(op) || op === "frontier" || op === "contentaxis" || op === "airuns" || op === "versionchain" || op === "versionnotice" || op === "basisversions" || op === "versionstrength" || op === "partitionindependence" || op === "biasmanifest" || op === "biasdebt" || op === "biasdebtresolve" || op === "biasadopt" || op === "casedraft" || VERSION_ACTIONS.includes(op) || op === "suggest" || op === "capturerequest" || op === "capturerequests" || op === "capturerequestretry" || INTENT_ACTIONS.includes(op) || INTENT_READS.includes(op) || op === "reevaluationnotices" || op === "reevaluationchanges" || REEVALUATION_ACTIONS.includes(op) || op === "proposedispose" || op === "contentmint" || op === "extractpropose" || op === "extractproposals" || op === "contradictionpropose" || op === "narrow" || op === "narrowcandidates" || op === "connectionchoose" || op === "connectionassert" || op === "connectionsasserted" || op === "filemembershipstore" || op === "filemembership" || op === "filemembershipjudge" || op === "contradictionpairs" || op === "actionquotes" || op === "casedrafts" || op === "transcribe" || op === "transcriptionattest" || op === "transcription" || op === "attesttext" || op === "leadlook" || op === "leadread" || op === "leadshare" || op === "leadlist" || op === "themeplace" || op === "themepropose" || op === "themeread" || op === "themewithdraw" || op === "idmatch" || op === "actionlawspropose" || op === "stats" || op === "selectionlist" || op === "driveshells" || PROJECT_ACTIONS.includes(op) || op === "memberpairings" || ACTION_LAYER_ACTIONS.includes(op) || ACTION_LAYER_READS.includes(op) || op === "actionriskpropose" || op === "monitoring" || op === "monitorslate" || CONTRADICTION_ACTIONS.includes(op) || CONTRADICTION_READS.includes(op) || op === "contradictionrecommend" || op === "entity" || op === "entitybyalias" || op === "publishtensions" || op === "publishpreflight" || SOURCE_READS.includes(op) || op === "inboxpull" || CAPTURE_VIEWER_ACTIONS.includes(op) || CAPTURE_READS.includes(op) || WHAT_CHANGED_PROPOSAL_ACTIONS.includes(op) || WHAT_CHANGED_READS.includes(op) || NETWORK_NOTICES_ACTIONS.includes(op) || NETWORK_NOTICES_READS.includes(op) || DOCKET_ACTIONS.includes(op) || DOCKET_READS.includes(op) || REC30_VIEWER_READS.includes(op)) {
       inner.searchParams.set(
         "viewer",
         viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`
@@ -134292,6 +134453,10 @@ function makeFetch(hooks = {}) {
       inner.searchParams.set("author", proposer);
     }
     if (NETWORK_NOTICES_BY.includes(op))
+      inner.searchParams.set("by", viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (DOCKET_AUTHOR.includes(op))
+      inner.searchParams.set("author", viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (DOCKET_BY.includes(op))
       inner.searchParams.set("by", viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`);
     if (RUN_VERB_ACTIONS.includes(op)) {
       inner.searchParams.delete("actor");
@@ -138149,6 +138314,10 @@ var QueueProducers = class _QueueProducers {
   get #linkSweep() {
     return this.#dep("linkSweep", () => linkSweepOf(this.#host));
   }
+  /* N520: a case's required core is docket's (its R9). */
+  get #docket() {
+    return this.#dep("docket", () => docketOf(this.#host));
+  }
   #rows(q7, ...a) {
     return [...this.sql.exec(q7, ...a)];
   }
@@ -138278,11 +138447,14 @@ var QueueProducers = class _QueueProducers {
       items.push(...this.#obligationsEscalationStageProposed(me, viewer, at28));
       items.push(...this.#obligationsActionReminder(me, viewer, at28));
       items.push(...this.#obligationsLitigationHold(me, viewer, at28));
+      items.push(...this.#findingsHoldReleased(me, viewer, at28));
       items.push(...this.#obligationsTemplateReview(me, viewer, at28));
       items.push(...this.#obligationsLocalFactDue(me, viewer, at28));
       items.push(...this.#obligationsAttributionUnchosen(me, viewer, at28));
       items.push(...this.#conditionsSweep(me, viewer, at28));
       items.push(...this.#conditionsNotice(me, viewer, at28));
+      items.push(...this.#obligationsDocketCoreDue(me, viewer, at28));
+      items.push(...this.#findingsDocketDependents(viewer, at28));
       return {
         items,
         facts: {
@@ -140414,8 +140586,10 @@ var QueueProducers = class _QueueProducers {
   static STAGE_ADVANCE = Object.freeze({ id: "escalationadvance", label: "Advance to the proposed stage", weight: "single" });
   static STAGE_DECLINE = Object.freeze({ id: "escalationdecline", label: "Decline to advance now, with a reason", weight: "single" });
   static REMINDER_ANSWER = Object.freeze({ id: "reminderanswer", label: "Remind me again on a later day, or not again", weight: "single" });
-  /** R19: the item's door, a member's statement of the hold (actions R52, `op=actionhold`). */
-  static HOLD_STATE = Object.freeze({ id: "actionhold", label: "Record whether a litigation hold is in place", weight: "single" });
+  /** R19: the item's two doors (DEC-113): a member's statement that a hold is in place (actions R52, `op=actionhold`), or
+   *  its release, its own act (actions R56, `op=actionholdrelease`). */
+  static HOLD_STATE = Object.freeze({ id: "actionhold", label: "Record that a litigation hold is in place", weight: "single" });
+  static HOLD_RELEASE = Object.freeze({ id: "actionholdrelease", label: "Record that no hold is needed, with a reason", weight: "single" });
   /** Who an Action-layer item goes to (R15–R17): the member who authored the thing, when that is a member (a machine
    *  credential is not), else the project's owners, else the administrators; with the rule that chose them. */
   #actionRecipients(author, project) {
@@ -140695,8 +140869,9 @@ var QueueProducers = class _QueueProducers {
   /** `litigation-hold` (R19; K899 (7), DEC-61, N-A19; actions R52, R54): one OBLIGATION per `legal` pressure mark
    *  `actions.holdsDue` answers the viewer (no hold stated on it, whatever the action's state), to every administrator
    *  member, or the `admin` machine credential as R14's, and to the member who marked it; to nobody else. Homed as R15's,
-   *  aged from the mark's instant, offering the hold statement (`actionhold`), which is its door: once any hold is
-   *  stated, `in_place` or `released`, the read no longer answers the mark. Raised once; nothing here repeats it. */
+   *  aged from the mark's instant, offering both its doors: the hold in place (`actionhold`, actions R52) and its release
+   *  (`actionholdrelease`, actions R56). Once either is stated the read no longer answers the mark. Raised once; nothing
+   *  here repeats it. */
   #obligationsLitigationHold(me, viewer, now) {
     const admin = me ? this.#isAdminMember(me) : viewer === `${MACHINE_CLASS_PREFIX}admin`;
     if (!me && !admin) return [];
@@ -140720,7 +140895,7 @@ var QueueProducers = class _QueueProducers {
         case: this.#actionHomes(m.action, project, viewer),
         subject: { kind: "action", id: m.action, entry: m.ord, note: m.note ?? null, project },
         summary: `a legal threat was recorded on ${m.action} and no litigation hold is stated for it`,
-        detail: `a received entry of this action (position ${m.ord}) was marked as a legal threat` + (m.note ? ` ("${m.note}")` : "") + ". Record whether the group is preserving what the matter may reach (a hold in place) or not (released), with a reason. This is told once; it leaves when a member states it.",
+        detail: `a received entry of this action (position ${m.ord}) was marked as a legal threat` + (m.note ? ` ("${m.note}")` : "") + ". Record that the group is preserving what the matter may reach (a hold in place), or that it need not (a release), with a reason. This is told once; it leaves when a member records either.",
         basis: {
           source: "actions.holdsDue",
           action: m.action,
@@ -140731,7 +140906,7 @@ var QueueProducers = class _QueueProducers {
           project,
           recipients_rule: "administrators_and_marker",
           bound: { pages_bound: _QueueProducers.QUEUE_ACTION_PAGES, truncated: page.truncated },
-          detail: "a legal pressure mark with no hold stated is actions' fact (its R52, R54), read here and never stored. It goes to every administrator and to the member who marked it (DEC-61), is raised once (DEC-69, DEC-70), and leaves when any member states a hold on that mark, in place or released."
+          detail: "a legal pressure mark with no hold stated is actions' fact (its R52, R54), read here and never stored. It goes to every administrator and to the member who marked it (DEC-61), is raised once (DEC-69, DEC-70), and leaves when any member states a hold on that mark: in place (its R52) or released (its R56)."
         },
         age: Number.isFinite(markedMs) ? { state: "determined", since: m.marked_at, ms: Math.max(0, now - markedMs) } : {
           state: "undetermined",
@@ -140741,7 +140916,77 @@ var QueueProducers = class _QueueProducers {
         assignee: null,
         assignee_role: null,
         recipients,
-        options: [_QueueProducers.HOLD_STATE, ...this.#optionsOf([m.action])]
+        options: [_QueueProducers.HOLD_STATE, _QueueProducers.HOLD_RELEASE, ...this.#optionsOf([m.action])]
+      });
+    }
+    return out;
+  }
+  /** `litigation-hold-released` (R29; DEC-113: "the administrators and whoever placed the hold are told once"; actions
+   *  R56, R59): one FINDING per release `actions.holdsReleased` answers the viewer (a `released` statement that ended a
+   *  hold in place), keyed by the action, the entry's position and the statement's sequence, to every administrator
+   *  member, or the `admin` machine credential as R14's, and to each member among the release's `placers`; to nobody
+   *  else. Its subject the action, naming who released the hold, the reason, and the restarted projects this viewer may
+   *  see; homed as R15's (the action's project, as record-core's `bundleInfo` answers it), aged from the release. Raised once and never repeated: it leaves when its recipient disposes of
+   *  it (queue's disposition), never by anything here. */
+  #findingsHoldReleased(me, viewer, now) {
+    const admin = me ? this.#isAdminMember(me) : viewer === `${MACHINE_CLASS_PREFIX}admin`;
+    if (!me && !admin) return [];
+    const page = this.#actionPages((after) => this.#actions.holdsReleased({ after, viewer }));
+    const visible = this.#bundleRedactor(viewer);
+    const person = (x) => typeof x === "string" && x.trim() && !x.startsWith(MACHINE_AUTHOR_PREFIX) && !x.startsWith(MACHINE_CLASS_PREFIX);
+    const out = [];
+    let admins = null;
+    for (const x of page.items) {
+      if (!x || typeof x.action !== "string" || !x.action || !Number.isInteger(x.ord) || !Number.isInteger(x.seq)) continue;
+      if (visible(x.action) === null) continue;
+      const placers = [...new Set((Array.isArray(x.placers) ? x.placers : []).filter(person))];
+      if (!admin && !placers.includes(me)) continue;
+      if (admins === null) admins = this.#activeAdmins();
+      const restarted = (Array.isArray(x.restarted) ? x.restarted : []).filter((p) => typeof p === "string" && p && visible(p) !== null);
+      const by = typeof x.released_by === "string" && x.released_by ? x.released_by : null;
+      const info = this.#record.bundleInfo(x.action);
+      const project = info && typeof info.project === "string" && info.project && visible(info.project) !== null ? info.project : null;
+      const atMs = Date.parse(x.released_at ?? "");
+      out.push({
+        id: `FINDING::litigation-hold-released::${x.action}::${x.ord}::${x.seq}`,
+        class: "FINDING",
+        kind: "litigation-hold-released",
+        case: this.#actionHomes(x.action, project, viewer),
+        subject: {
+          kind: "action",
+          id: x.action,
+          entry: x.ord,
+          sequence: x.seq,
+          released_by: by,
+          reason: x.reason ?? null,
+          restarted
+        },
+        summary: `${by || "a member"} released the litigation hold on ${x.action}`,
+        detail: `the hold on a legal threat recorded on this action (position ${x.ord}) was released` + (x.reason ? `, because "${x.reason}"` : "") + ". " + (restarted.length ? `Ordinary deletion restarts for ${restarted.join(", ")}.` : "No project you can see restarts its ordinary deletion.") + " This is told once, to the administrators and to whoever placed the hold.",
+        basis: {
+          source: "actions.holdsReleased",
+          action: x.action,
+          entry: x.ord,
+          sequence: x.seq,
+          released_by: by,
+          released_at: x.released_at ?? null,
+          reason: x.reason ?? null,
+          placers,
+          restarted,
+          raised_to: [.../* @__PURE__ */ new Set([...admins, ...placers])],
+          recipients_rule: "administrators_and_placers",
+          bound: { pages_bound: _QueueProducers.QUEUE_ACTION_PAGES, truncated: page.truncated },
+          detail: "a release that ended a hold in place is actions' fact (its R56, R59), read here and never stored. It is told to every administrator and to each member who placed the hold (DEC-113), once (DEC-69, DEC-70), and leaves when its recipient disposes of it."
+        },
+        age: Number.isFinite(atMs) ? { state: "determined", since: x.released_at, ms: Math.max(0, now - atMs) } : {
+          state: "undetermined",
+          reason: "no_release_instant",
+          detail: "the release carries no instant this producer can read"
+        },
+        assignee: null,
+        assignee_role: null,
+        recipients: [.../* @__PURE__ */ new Set([...admins, ...placers])],
+        options: this.#optionsOf([x.action])
       });
     }
     return out;
@@ -141197,6 +141442,156 @@ var QueueProducers = class _QueueProducers {
     }
     return out;
   }
+  /* ======================================================================
+   * N520 · R30, R31 — THE DOCKET (docket R9; reevaluation R30; DEC-116 items 2, 3, 7).
+   * Each reads the one fact its owning module offers, derived on read and writing nothing, so an item leaves on the
+   * first read after the fact stops holding.
+   * ====================================================================== */
+  /** R30: the acts that answer a core item (docket R4, R7): placing it, and, for a submission, declining it. */
+  static DOCKET_PREPARE = Object.freeze({ id: "docketprepare", label: "Place this on the case's docket", weight: "single" });
+  static DOCKET_DECLINE = Object.freeze({ id: "docketdecline", label: "Decline it for containing redactions, with a reason", weight: "single" });
+  /** R30: how each core item is named to the manager (docket R9 (a)–(c)). */
+  static DOCKET_CORE_WORDS = Object.freeze({
+    response: "a response",
+    statement: "a statement",
+    edition: "a newer edition",
+    tension: "an undisclosed tension"
+  });
+  /** R31: the item kind of each docket cause (reevaluation R30 (a), (b)). */
+  static DOCKET_CAUSE_KINDS = Object.freeze({ withdrawal: "edition-withdrawn", contested: "edition-contested" });
+  /** R31: the page `reevaluation.docketDependents` is read in (its R30's largest). */
+  static QUEUE_DOCKET_PAGE = 200;
+  /** The project a case belongs to, from publication's `cases` (its R40, a stated read contract); null when none. */
+  #caseProject(caseId) {
+    if (!this.#one(`SELECT 1 AS x FROM sqlite_master WHERE type='table' AND name='cases'`)) return null;
+    const r = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, caseId);
+    return r && typeof r.project_id === "string" && r.project_id ? r.project_id : null;
+  }
+  /** `docket-core-due` (R30; docket R9; DEC-116 item 2): one OBLIGATION per core item `docket.coreDue` answers the viewer,
+   *  keyed by the case, the item's kind and its reference, to the case's manager (its project's owners, membership R65)
+   *  and to nobody else: a caller with no member is none of them. Its subject the case, naming the item and its edition;
+   *  offering placement and, for a submission (a response or a statement), the decline; aged from the item's `since`.
+   *  It leaves when the item is done (the read no longer answers it); raised once (DEC-69, DEC-94). */
+  #obligationsDocketCoreDue(me, viewer, now) {
+    if (!me) return [];
+    const r = this.#docket.coreDue({ viewer });
+    const list2 = r && r.ok !== false && Array.isArray(r.items) ? r.items : [];
+    const visible = this.#bundleRedactor(viewer);
+    const owners = /* @__PURE__ */ new Map();
+    const out = [];
+    for (const x of list2) {
+      if (!x || typeof x.case !== "string" || !x.case || typeof x.kind !== "string" || !x.kind || x.ref === void 0 || x.ref === null || x.ref === "") continue;
+      const project = this.#caseProject(x.case);
+      if (!project || visible(project) === null) continue;
+      if (!owners.has(project)) owners.set(project, this.#membership.projectOwners(project) || []);
+      const managers = owners.get(project);
+      if (!managers.includes(me)) continue;
+      const what = _QueueProducers.DOCKET_CORE_WORDS[x.kind] || `an item (${x.kind})`;
+      const submission = x.kind === "response" || x.kind === "statement";
+      const edition = Number.isInteger(Number(x.edition)) && x.edition !== null ? Number(x.edition) : null;
+      const sinceMs = Date.parse(x.since ?? "");
+      out.push({
+        id: `OBLIGATION::docket-core-due::${x.case}::${x.kind}::${x.ref}`,
+        class: "OBLIGATION",
+        kind: "docket-core-due",
+        case: this.#homesAt([project], viewer),
+        subject: { kind: "case", id: x.case, project, item: x.kind, ref: String(x.ref), edition },
+        summary: `case ${x.case}'s docket is missing ${what}${edition !== null ? ` on edition ${edition}` : ""}`,
+        detail: (submission ? `${what[0].toUpperCase()}${what.slice(1)} filed on this case is not yet listed. List it whole, or decline it for containing redactions, with a reason.` : x.kind === "edition" ? `edition ${edition ?? ""} of this case was ratified with no entry on its docket quoting what changed. Place that entry.` : "a conflict found on a load-bearing finding of this case's latest edition is not disclosed on its docket. Place the disclosure.") + " This is a to do for the case's managers; it is told once, and it leaves when the item is placed, declined, receipted or disclosed.",
+        basis: {
+          source: "docket.coreDue",
+          case: x.case,
+          project,
+          item: x.kind,
+          ref: String(x.ref),
+          edition,
+          since: x.since ?? null,
+          ...x.what_changed !== void 0 ? { what_changed: x.what_changed } : {},
+          ...x.state !== void 0 ? { state: x.state } : {},
+          recipients_rule: "case_managers",
+          detail: "a core item still due is docket's fact (its R9), read here and never stored; the case's project is publication's (its R40). It goes to the case's managers, its project's owners, and to nobody else (DEC-116 item 2), and is raised once (DEC-69, DEC-94)."
+        },
+        age: Number.isFinite(sinceMs) ? { state: "determined", since: x.since, ms: Math.max(0, now - sinceMs) } : {
+          state: "undetermined",
+          reason: "no_due_instant",
+          detail: "the item carries no instant this producer can read for when it fell due"
+        },
+        assignee: null,
+        assignee_role: null,
+        recipients: [...managers],
+        options: submission ? [_QueueProducers.DOCKET_PREPARE, _QueueProducers.DOCKET_DECLINE] : [_QueueProducers.DOCKET_PREPARE]
+      });
+    }
+    return out;
+  }
+  /** `edition-withdrawn` and `edition-contested` (R31; reevaluation R30; DEC-116 items 3, 7): one FINDING per
+   *  (dependent, entry) `reevaluation.docketDependents` answers the viewer (which withholds a hidden dependent and does
+   *  not count it), keyed by the kind, the dependent and the entry the listing names (`<case>#<seq>` for a withdrawal;
+   *  for a contesting entry, its record entry id), homed under the dependent and its ancestors. It leaves when the cause
+   *  closes (a recorded re-evaluation, reevaluation R16), as R5's. */
+  #findingsDocketDependents(viewer, now) {
+    const out = [];
+    let after = null, cut4 = false, flags = {};
+    for (let page = 0; ; page += 1) {
+      if (page === _QueueProducers.QUEUE_CONTRADICTION_PAGES) {
+        cut4 = true;
+        break;
+      }
+      const r = this.#reevaluation.docketDependents({ after, limit: _QueueProducers.QUEUE_DOCKET_PAGE, viewer });
+      if (!r || r.ok !== true || !Array.isArray(r.entries)) break;
+      if (r.docket_absent) flags = { ...flags, docket_absent: true };
+      if (r.docket_read === false) flags = { ...flags, docket_read: false };
+      for (const e of r.entries) {
+        const kind = e ? _QueueProducers.DOCKET_CAUSE_KINDS[e.kind] : null;
+        if (!kind || typeof e.dependent !== "string" || !e.dependent || typeof e.entry !== "string" || !e.entry) continue;
+        const title = this.#record.bundleInfo(e.dependent);
+        const name2 = title && title.title ? title.title : e.dependent;
+        const withdrawn = kind === "edition-withdrawn";
+        const editions = withdrawn ? Array.isArray(e.withdrawn_editions) ? e.withdrawn_editions : [] : e.edition !== void 0 && e.edition !== null ? [e.edition] : [];
+        const cs = typeof e.case === "string" && e.case ? `case ${e.case}` : "a case";
+        const sinceMs = Date.parse(e.since ?? "");
+        out.push({
+          id: `FINDING::${kind}::${e.dependent}::${e.entry}`,
+          class: "FINDING",
+          kind,
+          case: this.#homesAt([e.dependent], viewer),
+          subject: { kind: "bundle", id: e.dependent, case: e.case ?? null, entry: e.entry, editions },
+          summary: withdrawn ? `something ${name2} rests on is in a case edition its authors withdrew` : `a response on the docket of ${cs} contests an edition ${name2} is part of`,
+          detail: (withdrawn ? `${cs}${editions.length ? ` (${editions.length === 1 ? "edition" : "editions"} ${editions.join(", ")})` : ""} was withdrawn on its docket. The edition keeps answering as it was signed, and nothing resting on it moved.` : `a response filed on the docket of ${cs} contests ${editions.length ? `edition ${editions[0]}` : "an edition"}, of which this is a finding. Nothing moved, and no docket entry is evidence.`) + " Whether this still stands is the members' to decide; a recorded re-evaluation closes this.",
+          basis: {
+            source: "reevaluation.docketDependents",
+            dependent: e.dependent,
+            entry: e.entry,
+            cause: e.kind,
+            case: e.case ?? null,
+            editions,
+            since: e.since ?? null,
+            legs: Array.isArray(e.legs) ? e.legs : [],
+            cause_detail: e.detail ?? null,
+            ...flags,
+            bound: {
+              limit: _QueueProducers.QUEUE_DOCKET_PAGE,
+              pages_bound: _QueueProducers.QUEUE_CONTRADICTION_PAGES,
+              truncated: cut4
+            },
+            detail: "the cause is reevaluation's (its R30): a live leg of this finding rests on a member finding of a withdrawn case edition, or this finding is a member of an edition a filed response contests. It is read here, never raised, and nothing was regraded."
+          },
+          age: Number.isFinite(sinceMs) ? { state: "determined", since: e.since, ms: Math.max(0, now - sinceMs) } : {
+            state: "undetermined",
+            reason: "no_cause_instant",
+            detail: "the cause carries no instant this producer can read"
+          },
+          assignee: null,
+          assignee_role: null,
+          options: this.#optionsOf([e.dependent])
+        });
+      }
+      if (!r.truncated || !r.cursor) break;
+      after = r.cursor;
+    }
+    if (cut4) for (const it of out) it.basis.bound.truncated = true;
+    return out;
+  }
   static DAY_MS = 864e5;
 };
 var OF9 = /* @__PURE__ */ new WeakMap();
@@ -141247,10 +141642,11 @@ var QUEUE_OBLIGATION_KINDS = {
   "plan-checkpoint-due": "a checkpoint your group set in an action plan has come; a member judges whether its condition was met (op=checkpointrecord) \u2014 LIVE: queue-producers R16",
   "escalation-stage-proposed": "an escalation's next stage is proposed because its trigger was met; a member advances it or declines with a reason (op=escalationadvance, op=escalationdecline) \u2014 LIVE: queue-producers R17",
   "action-reminder": "a reminder you asked for on one of the group's action deadlines; answer it with another reminder or none (op=reminderanswer, DEC-94) \u2014 LIVE: queue-producers R18",
-  /* K899 (7), DEC-61 (R1; actions R52): a reply the group marked as legal pressure asks the group whether to place a
-     litigation hold; a member answers by recording the hold in place or released, with a reason, and that act is the
-     item's door (R12). An OBLIGATION, never muted. Its producer is `queue-producers`' (its R19). */
-  "litigation-hold": "a reply the group marked as legal pressure: consider whether to place a litigation hold, and record it in place or released with a reason (op=actionhold, DEC-61) \u2014 LIVE: queue-producers R19",
+  /* K899 (7), DEC-61, DEC-113 (R1; actions R52, R56): a reply the group marked as legal pressure asks the group whether
+     to place a litigation hold; a member answers by placing the hold (op=actionhold) or releasing it
+     (op=actionholdrelease, its own act since DEC-113), each with a reason, and those acts are the item's doors (R12). An
+     OBLIGATION, never muted. Its producer is `queue-producers`' (its R19). */
+  "litigation-hold": "a reply the group marked as legal pressure: consider whether to place a litigation hold, and record it in place or released with a reason (op=actionhold to place it, op=actionholdrelease to release it; DEC-61, DEC-113) \u2014 LIVE: queue-producers R19",
   /* K921 (R1; filing-templates R9, local-facts R1): two more OBLIGATIONs a named member owes, each leaving by its own act
      (R12's doors) and never by a mute. Their producers are `queue-producers`' (its R20, R21). */
   "template-review-requested": "a member asked you to review a filing template's version (op=templatereview) \u2014 LIVE: queue-producers R20",
@@ -141258,7 +141654,11 @@ var QUEUE_OBLIGATION_KINDS = {
   /* DEC-102 item 3, K1019 (R1; publication R17): a case edition being prepared reaches an observation the member authored
      and they have chosen no credit level for it. Theirs alone to answer, by choosing one (R12's door, op=attribute), and
      never muted. Its producer is `queue-producers`' (its R23). */
-  "attribution-unchosen": "a case edition being prepared reaches an observation you authored and you have chosen no credit level for it; choose one (op=attribute) \u2014 LIVE: queue-producers R23"
+  "attribution-unchosen": "a case edition being prepared reaches an observation you authored and you have chosen no credit level for it; choose one (op=attribute) \u2014 LIVE: queue-producers R23",
+  /* DEC-116 item 2 (R1, R50; docket R9): the docket's required core is a To-do for the case's manager until it is done,
+     so it is an OBLIGATION, never muted; it leaves by placement or, for a submission, a decline (R50's doors). Its
+     producer is `queue-producers`' (its R30). */
+  "docket-core-due": "a case you manage has an item its docket must list: a response or statement from its subject or a holder of standing, a newer edition, or a conflict on a load-bearing finding not disclosed; place it, or decline it (op=docketprepare, op=docketdecline; DEC-116) \u2014 LIVE: queue-producers R30"
 };
 var QUEUE_FINDING_KINDS = {
   "missing_predecessor": "a required predecessor stage is absent (D-73) \u2014 LIVE: queue-producers/proposals.mjs",
@@ -141340,7 +141740,16 @@ var QUEUE_FINDING_KINDS = {
   "contradiction-plurality": "two projects' conclusions that may not both hold (N345)",
   "contradiction-plurality-unseen": "this project's conclusion may not hold together with a conclusion you cannot see (DEC-85)",
   "side-corrected": "something a finding rests on was marked wrong (N345)",
-  "tension-after-publication": "a published case's finding rests on a conflict found since it was published (N345)"
+  "tension-after-publication": "a published case's finding rests on a conflict found since it was published (N345)",
+  /* DEC-116 items 3, 7 (R1, R50; reevaluation R30, docket R12): what a case edition's docket did to something a
+     finding rests on. Each leaves as `side-corrected` does, by a recorded re-evaluation (R50). Their producer is
+     `queue-producers`' (its R31). */
+  "edition-withdrawn": "something a finding rests on is in a case edition its group has withdrawn (DEC-116) \u2014 LIVE: queue-producers R31",
+  "edition-contested": "a response the group filed contests a case edition this finding is part of (DEC-116) \u2014 LIVE: queue-producers R31",
+  /* DEC-113 (R1; actions R56, R59): the administrators and whoever placed the hold are told once that it was released.
+     Something the record noticed, which the recipient disposes of (R12's FINDING disposition). Its producer is
+     `queue-producers`' (its R29). */
+  "litigation-hold-released": "a member released a litigation hold: the projects it alone covered may be purged again and their assistant transcripts deleted on schedule (DEC-113) \u2014 LIVE: queue-producers R29"
 };
 var QUEUE_KIND_IDS = {
   "export-performed": "N-1"
@@ -141583,7 +141992,9 @@ var Queue = class _Queue {
     /* queue-producers R2 (N483) and R27 (DEC-111): corpus-export's export log; network-notices' notices of a project. */
     "networkNotices",
     /* queue-producers R26 (N506, K1181): link-sweep's sweep conditions (its R11), since the sweep left monitoring. */
-    "linkSweep"
+    "linkSweep",
+    /* queue-producers R30 (N520, DEC-116): docket's required core (its R9); queue passes it and calls none of its reads. */
+    "docket"
   ]);
   get #scheduler() {
     return this.#dep("scheduler", () => schedulerOf(this.#host, this.#env));
@@ -142007,9 +142418,13 @@ var Queue = class _Queue {
   static TASK_LIVE_STATUSES = Object.freeze(["open", "forwarded"]);
   /** R12, R28 (K607, K608): the door an OBLIGATION not held in `tasks` leaves by, by kind; every other obligation is a
    *  task (taskresolve). The Action layer's four: a checkpoint is judged (action-plans R16), a proposed stage advanced
-   *  or declined (escalation R13), a reminder answered (action-clocks R6), a litigation hold stated (actions R52;
-   *  K899 (7)); K921's two: a template version reviewed (filing-templates R9), a local fact confirmed
-   *  (local-facts R1); and a credit level chosen (publication R17; queue-producers R23, DEC-102 item 3). */
+   *  or declined (escalation R13), a reminder answered (action-clocks R6), a litigation hold placed (actions R52;
+   *  K899 (7); its release, actions R56, the other answer, named in its detail); K921's two: a template version reviewed
+   *  (filing-templates R9), a local fact confirmed (local-facts R1); a credit level chosen (publication R17;
+   *  queue-producers R23, DEC-102 item 3); and (R50, DEC-116 item 2) the docket's core item placed or declined, two
+   *  doors. The contradiction duties' doors are R46's, read off the item's subject (`#contradictionDisposition`); the
+   *  bridge (R28), which holds no subject, answers the doors of a duty not yet taken up. A list is copied out
+   *  (`doorOf`), never handed out frozen. */
   static OBLIGATION_DOORS = Object.freeze({
     "bias-debt": "biasdebtresolve",
     "signer-self-registered": "signerset",
@@ -142019,8 +142434,16 @@ var Queue = class _Queue {
     "litigation-hold": "actionhold",
     "template-review-requested": "templatereview",
     "local-fact-due": "factconfirm",
-    "attribution-unchosen": "attribute"
+    "attribution-unchosen": "attribute",
+    "docket-core-due": Object.freeze(["docketprepare", "docketdecline"]),
+    "contradiction-duty": Object.freeze(["contradictionclarify", "contradictiontakeup"]),
+    "contradiction-duty-unseen": Object.freeze(["contradictionoptin"])
   });
+  /** The door R12 and R28 name for an OBLIGATION of `kind`: its entry above (a list copied), else `taskresolve`. */
+  static doorOf(kind) {
+    const d = Object.prototype.hasOwnProperty.call(_Queue.OBLIGATION_DOORS, kind) ? _Queue.OBLIGATION_DOORS[kind] : null;
+    return Array.isArray(d) ? [...d] : d || "taskresolve";
+  }
   /** R12: what each of those doors is, said on the item's disposition after the general sentence. */
   static OBLIGATION_DOOR_DETAIL = Object.freeze({
     "bias-debt": " This one is a bias debt, which is keyed by the RUN it is about rather than by a task, so it is settled through op=biasdebtresolve with a stated reason \u2014 or by a re-run under the lens now in force, or by the lens moving back (BOB #32, 2026-09-23).",
@@ -142028,10 +142451,19 @@ var Queue = class _Queue {
     "plan-checkpoint-due": " This one is a checkpoint your group set in an action plan, keyed by the plan, scenario and phase rather than by a task: it leaves when a member records whether its condition was met (op=checkpointrecord), or when the plan is closed.",
     "escalation-stage-proposed": " This one is an escalation's next stage, proposed because its trigger was met and keyed by the escalation and the stage rather than by a task: a member advances it (op=escalationadvance) or declines it with a reason (op=escalationdecline), and it also leaves when the escalation is suspended or ended.",
     "action-reminder": " This one is a reminder you asked for on one of the group's action deadlines, keyed by the action, the entry and the day rather than by a task: you answer it with another reminder or with none (op=reminderanswer), and it also leaves when the entry is no longer pending or the action is closed.",
-    "litigation-hold": " This one is a reply your group marked as legal pressure, keyed by the action and the entry rather than by a task: it leaves when a member records the hold in place or released, with a reason (op=actionhold).",
+    "litigation-hold": " This one is a reply your group marked as legal pressure, keyed by the action and the entry rather than by a task: it leaves when a member records the hold in place or released, with a reason: in place by placing it (op=actionhold), released by releasing it (op=actionholdrelease), its own act.",
     "template-review-requested": " This one is a review a member asked of you on a filing template's version, keyed by the version and by you rather than by a task: it leaves when you review the version's present text (op=templatereview), or when the version is no longer in review.",
     "local-fact-due": " This one is a holiday calendar or office hours one of the group's deadlines reads, keyed by the fact rather than by a task: it leaves when a member confirms or corrects the fact (op=factconfirm), or when no live action reads it.",
-    "attribution-unchosen": " This one is a case edition being prepared that reaches an observation you authored, keyed by the edition and the observation rather than by a task: it leaves when you choose a credit level for it (op=attribute), or when the edition no longer reaches it, or is signed or replaced."
+    "attribution-unchosen": " This one is a case edition being prepared that reaches an observation you authored, keyed by the edition and the observation rather than by a task: it leaves when you choose a credit level for it (op=attribute), or when the edition no longer reaches it, or is signed or replaced.",
+    "docket-core-due": " This one is an item the docket of a case you manage must list, keyed by the case, the item's kind and what it refers to rather than by a task: it stays until it is done, and it leaves when you place it on the docket (op=docketprepare prepares the entry) or, for a submission, decline it with a reason (op=docketdecline), or when it is otherwise placed, receipted or disclosed."
+  });
+  /** R46, R50: the acts a project-scoped FINDING of these kinds names beside R12's disposition: a recorded re-evaluation
+   *  answers what a finding rests on being marked wrong (N345), or a case edition it rests on being withdrawn or
+   *  contested (DEC-116 items 3, 7). */
+  static FINDING_ACTS = Object.freeze({
+    "side-corrected": Object.freeze(["reevaluationrecord"]),
+    "edition-withdrawn": Object.freeze(["reevaluationrecord"]),
+    "edition-contested": Object.freeze(["reevaluationrecord"])
   });
   /** D-266 / IC-60 — THE SECOND IDENTITY, and the whole of what this item added.
    *
@@ -142083,7 +142515,7 @@ var Queue = class _Queue {
         keyed_on: KEYED_ON,
         key: null,
         reason: "an_obligation_is_resolved_not_disposed",
-        instead: _Queue.OBLIGATION_DOORS[item.kind] || "taskresolve",
+        instead: _Queue.doorOf(item.kind),
         detail: "a to-do is something a named person must do for the record to proceed and it leaves every list when it is DONE (D-125, DEC-16). Setting it aside is not a narrower version of that act, it is a different one." + (Object.prototype.hasOwnProperty.call(_Queue.OBLIGATION_DOOR_DETAIL, item.kind) ? _Queue.OBLIGATION_DOOR_DETAIL[item.kind] : "")
       };
     if (item.class === "CONDITION")
@@ -142132,7 +142564,7 @@ var Queue = class _Queue {
       };
     const homes = (item.case && Array.isArray(item.case.ancestors) ? item.case.ancestors : []).filter((a) => a && a.type === "project" && typeof a.id === "string" && a.id.trim()).map((a) => a.id.trim()).sort();
     const fid = typeof item.id === "string" && item.id.trim() ? item.id.trim() : null;
-    const acts = item.kind === "side-corrected" ? { acts: ["reevaluationrecord"] } : {};
+    const acts = Object.prototype.hasOwnProperty.call(_Queue.FINDING_ACTS, item.kind) ? { acts: [..._Queue.FINDING_ACTS[item.kind]] } : {};
     if (homes.length === 0 || !fid)
       return {
         available: false,
@@ -143159,7 +143591,7 @@ var Queue = class _Queue {
         class: keyClass,
         kind: keyKind,
         /* R28 (K607): the same per-kind door R12 publishes on the item. */
-        instead: keyClass === "CONDITION" ? "queuemute" : _Queue.OBLIGATION_DOORS[keyKind] || "taskresolve",
+        instead: keyClass === "CONDITION" ? "queuemute" : _Queue.doorOf(keyKind),
         detail: `this names ${keyClass === "CONDITION" ? "a signal" : "a to-do"}, and ${keyClass === "CONDITION" ? "a signal" : "a to-do"} is not DISPOSED: a disposition is an authored record act on something the record noticed, and op=queue publishes the act that does reach this item as its \`disposition.instead\`. Nothing was written. The rest of a selection is unaffected \u2014 under the per-item weight this item alone is kept, carrying this reason.`
       };
     }
@@ -145436,7 +145868,14 @@ var PROJECT_NAMING_READS_NOT = Object.freeze({
   factsdue: "`paths` are local FACTs' paths in a profile, never a bundle id",
   /* R45's reads naming a published case (case-authoring R39, network-notices R23), never a bundle id. */
   whatchangeddrafts: "`case` is a CASE id, answered by the case's own fence",
-  directorysubmission: "`case` is a CASE id and `edition` one of its editions, never a bundle id"
+  directorysubmission: "`case` is a CASE id and `edition` one of its editions, never a bundle id",
+  /* R47 (DEC-113, DEC-36; actions R58): the held-project strip names projects, and answers each one the viewer does not
+     see at FULL as `held: null`, never refused, so the existence answer is not run for it. */
+  projectholds: "`projects` lists PROJECT ids, and each one the viewer does not see at FULL is answered `held: null` (actions R58, DEC-36), never refused, so no existence answer is given for it",
+  /* R48's reads (docket R3, R4, R8): a published case, or a docket entry, never a bundle id. */
+  docket: "`case` is a published CASE id, answered by the docket's own sight of the case's project (docket R3)",
+  docketprepare: "`case` is a published CASE id and `entry` a DOCKET ENTRY id, never a bundle id (docket R4)",
+  docketinvitation: "`entry` is a DOCKET ENTRY id, never a bundle id (docket R8)"
 });
 function existenceRead(membershipOf2, op, url, body) {
   const params = Object.hasOwn(PROJECT_NAMING_READS, op) ? PROJECT_NAMING_READS[op] : null;
@@ -145477,6 +145916,36 @@ function internalAnswer(correlation) {
     correlation
   };
 }
+var PURGE_OP = "purge";
+var SCRATCH_NAMESPACE = "scratch";
+function purgeHoldRefusal(store, url) {
+  let namespace = null;
+  try {
+    namespace = typeof store.namespace === "function" ? store.namespace() : null;
+  } catch {
+    namespace = null;
+  }
+  if (namespace === SCRATCH_NAMESPACE) return null;
+  const bundleId = url.searchParams.get("bundleId") || null;
+  let clear = false;
+  try {
+    clear = typeof store.purgeHeld === "function" && store.purgeHeld({ bundleId }) === false;
+  } catch {
+    clear = false;
+  }
+  if (clear) return null;
+  const row2 = DISPATCH_CHECKS.PURGE_HOLD_IN_PLACE;
+  return {
+    ok: false,
+    error: "purge refused: a litigation hold is in place",
+    reason: "PURGE_HOLD_IN_PLACE",
+    code: "PURGE_HOLD_IN_PLACE",
+    check: row2.check,
+    translation: row2.translation,
+    bundleId,
+    detail: bundleId === null ? "a litigation hold is in place, so the whole record cannot be cleared. Nothing was removed." : "this bundle is, or may be, material a litigation hold preserves. Nothing was removed."
+  };
+}
 async function dispatch(req, store) {
   const url = new URL(req.url);
   const op = url.pathname.slice(1);
@@ -145498,6 +145967,10 @@ async function dispatch(req, store) {
   try {
     const map = store.routes(url, body);
     if (!Object.hasOwn(map, op)) return Response.json({ ok: false, error: "unknown op: " + op }, { status: 400 });
+    if (op === PURGE_OP) {
+      const held = purgeHoldRefusal(store, url);
+      if (held) return Response.json(held, { status: 409 });
+    }
     const existence = existenceRead(() => store.membership(), op, url, body);
     return Response.json({ ok: true, result: existence ?? await map[op]() });
   } catch (e) {
@@ -145621,7 +146094,9 @@ var Store = class extends DurableObject {
     aiRunsOf(ctx, env);
     reevaluationOf(ctx, { env });
     publicationOf(ctx);
-    networkNoticesOf(ctx, { env, attestation });
+    const docket = docketOf(ctx, { env });
+    publicReadOf(ctx, { docket });
+    networkNoticesOf(ctx, { env, attestation, docket });
     actionsOf(ctx, { env });
     retrieval.registerLegGrades("inquiry", inquiryLegGrades(ctx));
     observationLogOf(ctx).attachMeaning({ connections: connectionsOf(ctx, { env }) });
@@ -145656,7 +146131,7 @@ var Store = class extends DurableObject {
     schedulerOf(ctx, env);
     ctx.blockConcurrencyWhile(async () => this.#migrate());
     ctx.blockConcurrencyWhile(async () => schedulerOf(ctx, env).start());
-    queueOf(ctx, { env, filingTemplates, localFacts }).migrate();
+    queueOf(ctx, { env, filingTemplates, localFacts, docket }).migrate();
     tasksOf(ctx, { env }).migrate();
     ctx.blockConcurrencyWhile(async () => instanceSetupOf(ctx, env).start());
   }
@@ -145697,6 +146172,7 @@ var Store = class extends DurableObject {
     progressionsOf(this.ctx).migrate();
     biasOf(this.ctx).migrate();
     intentOf(this.ctx).migrate();
+    docketOf(this.ctx).migrate();
     networkNoticesOf(this.ctx).migrate();
     localFactsOf(this.ctx).migrate();
     filingTemplatesOf(this.ctx).migrate();
@@ -145716,9 +146192,16 @@ var Store = class extends DurableObject {
   async schedAlarmAt() {
     return await schedulerOf(this.ctx, this.env).alarmAt();
   }
-  /* R1, R5: every store request passes control-plane's one frame. */
+  /* R1, R5: every store request passes control-plane's one frame. R14 (DEC-113; control-plane R46): it is handed the
+     object's namespace, R2's own name (`bio` or `scratch`, else `bio`, so an object whose name is unknown is the real
+     record's and fails closed), and `actions`' `purgeHeld` (its R60) on this storage, each asked at the purge only. */
   async fetch(req) {
-    return dispatch(req, { routes: (url, body) => this.routes(url, body), membership: () => membershipOf(this.ctx) });
+    return dispatch(req, {
+      routes: (url, body) => this.routes(url, body),
+      membership: () => membershipOf(this.ctx),
+      namespace: () => this.#ownNamespace() || "bio",
+      purgeHeld: (q7) => actionsOf(this.ctx).purgeHeld(q7)
+    });
   }
   /* The injectable clock: an explicit instant, else `BIO_NOW_MS` (so a suite pins "now"), else the wall clock.
      Milliseconds. An absent param (null or "") falls through to env, not to Number(null) === 0. */
@@ -145770,6 +146253,8 @@ var Store = class extends DurableObject {
       /* N483 (K1122): `export` and `exportlog` are corpus-export's (its R6), on the one instance publication created. */
       ...corpusExportOps(corpusExportOf(ctx), (k) => url.searchParams.get(k)),
       ...publicationOps(publicationOf(ctx), url, body),
+      /* R15 (N520): docket's member ops; its public reads `docketpublic` and `docketfeed` are public-read's (its R21). */
+      ...docketOps(docketOf(ctx), url, body),
       ...publicReadOps(publicReadOf(ctx), url),
       ...projectStageOps(projectStageOf(ctx), url),
       ...networkNoticesOps(networkNoticesOf(ctx), url, body),
