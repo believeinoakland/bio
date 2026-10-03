@@ -59,3 +59,28 @@ test("R41: a targeted answer carries neither key, nor does a refusal or another 
   r = await call(w.env, { op: "affordances", token: w.env.ADMIN_TOKEN, hooks: hooksAnswering(() => M.json({ ok: true, result: untargeted() })) });
   assert.equal(typeof r.json.result.pack?.version, "string");
 });
+
+test("R41 (affordances R37; skills R9, R10): `screens` and `wizard_scripts` in the untargeted answer are passed to renderPack whole, so the pack carries the scripts as its driven layer; a script naming a screen the answer does not publish renders no pack (`pack: null`, `pack_absent` naming it), never a partial pack (negative control: without them the layer states its absence)", async () => {
+  const w = world();
+  const screens = [{ id: "case.summary", acts: ["publish", "statementack"] }, { id: "inbox", acts: ["inboxresolve"] }];
+  const wizard_scripts = [{ id: "WIZ-a", version: 1, name: "Publish a case", steps: [
+    { screen: "case.summary", act: null, what: "Read the summary.", why: "So you know what you publish." },
+    { screen: "case.summary", act: "publish", what: "Press publish.", why: "Only you can publish it." }] }];
+  const answerWith = (extra) => hooksAnswering(() => M.json({ ok: true, result: { ...untargeted(), ...extra } }));
+  let r = await call(w.env, { op: "affordances", token: w.S.ann, hooks: answerWith({ screens, wizard_scripts }) });
+  const fences = machineFences(M.CHECK_FAMILIES);
+  const { pack, ...published } = r.json.result;
+  assert.deepEqual([published.screens, published.wizard_scripts], [screens, wizard_scripts], "both kept in the answer");
+  assert.deepEqual(pack, JSON.parse(JSON.stringify(renderPack({ ...untargeted(), screens, wizard_scripts, fences }))));
+  assert.deepEqual(pack.disclosed.wizard_scripts.body, wizard_scripts);
+  assert.equal(pack.disclosed.wizard_scripts.sourcing, "driven");
+  /* a script whose step names an unpublished screen: no pack, the sentence names it */
+  const broken = [{ ...wizard_scripts[0], steps: [{ screen: "nowhere", act: null, what: "x", why: "y" }] }];
+  r = await call(w.env, { op: "affordances", token: w.S.ann, hooks: answerWith({ screens, wizard_scripts: broken }) });
+  assert.equal(r.json.result.pack, null);
+  assert.match(r.json.result.pack_absent, /WIZ-a.*nowhere/);
+  /* negative control: with neither published, the layer is the stated absence */
+  r = await call(w.env, { op: "affordances", token: w.S.ann, hooks: answerWith({}) });
+  assert.deepEqual(r.json.result.pack.disclosed.wizard_scripts.body, []);
+  assert.equal(typeof r.json.result.pack.disclosed.wizard_scripts.absent_because, "string");
+});
