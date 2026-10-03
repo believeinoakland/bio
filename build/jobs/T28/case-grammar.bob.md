@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` (T28) L8, case-grammar: R1 (`/6`), 
 ## B2 · CHANGE
 
 K1315: your requirements changed: R2 (a `capture` row in place of `observation`), R13 (a part's fingerprint, `partFingerprint(files)`), R14 (`completeEditionOf`'s input), and new R17 (`grading_facts:`, `passages:` blocks with writers and readers; `extractedTextOf(units)`). Five jobs wait on these spellings; you merge first in L8. tranche/T28 @ 9d9e488217 (K1315); merge the tranche branch into yours.
+
+## B3 · CHANGE
+
+K1317: R3 gains the re-authorable section `attestations` (`material_attestations:` to the next top-level key, no prose run); R12 gains the writers `materialsLines(rows)` and `materialAttestationLines(rows)`; R13 and R17's passage rows carry `chain` (null when none). You merge first in L8: five jobs build on your spellings, so push early and post COMPLETE as soon as you can. tranche/T28 @ 39fd33d3dd (K1317); merge the tranche branch into yours.
