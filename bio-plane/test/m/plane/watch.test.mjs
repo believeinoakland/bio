@@ -119,4 +119,13 @@ test("R20: queue is handed the plane's case-import, so the producers it reads an
   assert.deepEqual(items("alice"), [[`FINDING::followed-case-entry::${a.import}#1`, "followed-case-entry"],
                                     [`FINDING::followed-case-entry::${a.import}#2`, "followed-case-entry"]]);
   assert.deepEqual(items("bob"), [], "the watch's items go to its setter only");
+  /* and through control-plane's door: the setter's queue carries them, minted with their class */
+  const door = async (who) => {
+    const r = await (await x.fetch(`/queue?member=${who}&viewer=member:${who}`)).json();
+    assert.equal(r.result.ok, true, JSON.stringify(r.result).slice(0, 300));
+    return r.result.items.filter((i) => String(i.id).includes(a.import)).map((i) => [i.id, i.class]).sort();
+  };
+  assert.deepEqual(await door("alice"), [[`FINDING::followed-case-entry::${a.import}#1`, "FINDING"],
+                                         [`FINDING::followed-case-entry::${a.import}#2`, "FINDING"]]);
+  assert.deepEqual(await door("bob"), []);
 });
