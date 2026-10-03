@@ -194,8 +194,10 @@ test("R57 a document's bytes held only in the evidence store are registered and 
 test("R57 (K1315) the timestamp tokens an included document's provenance names are held too: inline as text, blob-backed as evidence", () => {
   const { w, proj, roles } = base();
   const id = "INFO-2026-0003-stamped", body = textOf(id), token = "TSA-TOKEN-BYTES";
-  const prov = { documents: [{ file: `snapshots/${id}.txt`, capture: { sha256: sha(body), bytes: Buffer.byteLength(body) },
-                               timestamp: { service: "tsa.example", token_file: "attestations/stamp.tsr" } }] };
+  const prov = { documents: [{ file: `snapshots/${id}.txt`, locator: `https://example.org/${id}`, retrieved: "2026-09-27T00:00:00Z",
+    authority: "the publisher", authority_state: "determined", authority_basis: "named on the document",
+    capture: { method: "acquire", grade: "B", actor_class: "session", sha256: sha(body), encoding: "utf8", bytes: Buffer.byteLength(body) },
+    origin: { kind: "named_request" }, timestamp: { service: "tsa.example", token_file: "attestations/stamp.tsr" } }] };
   const md = w.text(DOC).replace(new RegExp(DOC, "g"), id);
   const res = w.promotion.promote({ bundleId: id, base: null, snapKey: "k-stamped", author: V("alice"),
     files: [{ path: "bundle.md", text: md }, { path: `snapshots/${id}.txt`, text: body },
@@ -216,6 +218,7 @@ const WITHHELD = (capture) => ({ capture, stated: unnamedSourceStatement({ captu
 /* ann attested CAP, off the record; the case document states its source as Withheld and carries the attribution run. */
 function offRecord({ sources = [WITHHELD(CAP)] } = {}) {
   const b = base();
+  b.w.knock(CAP);   /* the pulled knock behind CAP, so the Withheld row stands at the commit (R51) */
   b.w.actors.set(CAP, [V("ann")]);
   b.w.prepare(CASE, 1, { project: b.proj, roles: b.roles, blocks: { sources }, attributions: [] });
   return b;

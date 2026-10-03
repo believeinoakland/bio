@@ -585,7 +585,7 @@ CREATE TABLE IF NOT EXISTS published_material_texts (
 -- R60 (DEC-119 (3); DEC-102 items 1-3; N523): THE ATTESTING MEMBER'S CREDIT FOR OFF-THE-RECORD MATERIAL. One row per
 -- (case edition, capture): the level the capture's attesting member (its actor, acquisition R16) chose for how that
 -- edition credits their attestation of material from a source the case shows as Withheld. Written only by
--- op=attribute with `capture`, by that member and nobody else, never prefilled; a later edition inherits the latest
+-- op=attribute with capture, by that member and nobody else, never prefilled; a later edition inherits the latest
 -- earlier edition's row, as observation_attributions'. capture_sha is a capture's SHA-256, never a bundle id, so the
 -- rows are cleared by the whole-store purge only. reason is the member's words, as DEC-88 asks of an observation's.
 CREATE TABLE IF NOT EXISTS capture_attributions (
