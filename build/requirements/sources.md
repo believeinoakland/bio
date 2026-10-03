@@ -1,6 +1,6 @@
 # sources — requirements
 
-**Status** · APPROVED by Bob 2026-09-30 (K509 (1): a new product module, placed after `capture` in layer 3). DRAFT by a worker for BOB #69, 2026-09-30 (`build/plan/draft-N345-dec78-80-81.md` §2), reviewed by BOB (K497); Bob ruled its questions as recommended (K509: (1) this module; (4) a pseudonym is an identity detail, consent by the source's knocker secret or a member's evidenced record; (5) hand-carried material's rule recorded here, R12, its intake built with the upload redesign). Folded by a worker for BOB #71, 2026-09-30 (T16 opening). Layer 3. Code today: none; the module is written new by its first job. Met in T16 (SOURCES #1, K541).
+**Status** · APPROVED by Bob 2026-09-30 (K509 (1): a new product module, placed after `capture` in layer 3). DRAFT by a worker for BOB #69, 2026-09-30 (`build/plan/draft-N345-dec78-80-81.md` §2), reviewed by BOB (K497); Bob ruled its questions as recommended (K509: (1) this module; (4) a pseudonym is an identity detail, consent by the source's knocker secret or a member's evidenced record; (5) hand-carried material's rule recorded here, R12, its intake built with the upload redesign). Folded by a worker for BOB #71, 2026-09-30 (T16 opening). Layer 3. Code today: none; the module is written new by its first job. Met in T16 (SOURCES #1, K541). AMENDED by a fold worker for BOB #106 on `prep/T29-folds`, 2026-10-03, entry N529, ruling K1333 (`case-authoring`'s disclosures moved to `case-disclosures`): the Callers' reader of R8 re-pointed from `case-authoring` R37 to `case-disclosures` R4; wording only, no meaning changed.
 
 **Size (P6).** New. Expected well under 4,000 lines: a history table, a consent table, a read log and their reads.
 
@@ -77,7 +77,7 @@ Rows C-121.1–C-121.6 (R14; N364), a new family, "a source's disclosures", with
 - **Factory.** `sourcesOf(ctx)` answers the one instance per Durable Object storage (K61); the op handlers live in this module's paths, and the control plane routes them and stamps `by` and `viewer`.
 - **Where a source comes from.** `capture` is earlier and cannot call this module, so R1's sources are derived from capture's pulled inbox rows at read (one per pseudonym, one per knock without a secret), or minted on first read and kept; either keeps R1 true.
 - **Hand-carried material** (K509 (5)) has no intake route yet: R12 is its rule, and its intake is built with the upload redesign.
-- **Callers.** `reevaluation` registers on R10 (its R28); `publication` (its R51, R52) and `case-authoring` (its R37) read R8; `affordances` grades the ops (its R2, R3).
+- **Callers.** `reevaluation` registers on R10 (its R28); `publication` (its R51, R52) and `case-disclosures` (its R4) read R8; `affordances` grades the ops (its R2, R3).
 - **Tests.** Each C-121 refusal gets a negative control; R5's withheld value and read log; R3's hostile claim never reads confirmed; R7's withdrawal leaves an earlier publication's statement unchanged; R11's refusal byte-identical for a wrong secret, an unknown entry and a malformed call; R13's exemption declared.
 
 ## Open for Bob

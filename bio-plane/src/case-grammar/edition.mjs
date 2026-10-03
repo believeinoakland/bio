@@ -2,9 +2,9 @@
  * `build/requirements/case-grammar.md` R8, R9, with R1's `/5` and R6; DEC-101 (1)(2) and `BIO_Publication_v0_1.md` §5A;
  * DEC-103 and `BIO_Declared_Bias_v0_1.md`, "RULED 2026-10-01 by Bob (DEC-103)"; K1019). `case-authoring` writes both
  * (its R38, and the lens with its withheld counts) with the line builders here, so the bytes are written one way, and
- * `whatChangedOf` and `lensOf` are the one reading of them, so no module parses them a second way. Only a `/5` document
- * states them: the blocks join `/5` because no `/5` document was stored when they were added (the signed release knows
- * `/1`–`/3` only), so no `/6` was needed.
+ * `whatChangedOf` and `lensOf` are the one reading of them, so no module parses them a second way. Only a `/5` or `/6`
+ * document states them: the blocks joined `/5` because no `/5` document was stored when they were added (the signed
+ * release knows `/1`–`/3` only), and `/6` states everything `/5` states (R1).
  *
  * THE BLOCKS, as a `/5` document's front matter carries them (the grammar `parseFrontmatter` reads: a map, and arrays
  * of flat rows):
@@ -129,9 +129,10 @@ export const LENS_KIND_WORDS = Object.freeze({
   inference: "an inference this group allows or refuses to draw",
   pattern: "a pattern this group has evidence an institution or source follows",
 });
-/** R9: the two sentences that close the section, verbatim (DEC-103; BOB's, to be confirmed by the design session). */
+/** R9: the two sentences that close the section, verbatim (DEC-103; the first is Bob's, DEC-117, N524). */
 export const LENS_CLOSING_SENTENCES = Object.freeze([
-  "Every group works under some lens, and an undeclared lens is the most dangerous kind.",
+  "Everyone who investigates looks through a lens: what they care about and expect to find. An undeclared lens is the "
+    + "most dangerous kind.",
   "This group declares its lens, with its reasons and its evidence, so that you can weigh its findings knowing how it "
     + "looked at the material.",
 ]);

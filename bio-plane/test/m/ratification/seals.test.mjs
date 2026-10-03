@@ -93,7 +93,7 @@ test("R37: a refused commit, a rolled-back one and a retry answering existed cal
   w.publication.commitCaseEdition = real;
   assert.equal((await commit()).ok, true);
   assert.equal(w.sealCalls.length, 1);
-  assert.deepEqual(await commit(), { ok: true, existed: true, caseId: CASE, edition: 1 });
+  assert.deepEqual(await commit(), { ok: true, existed: true, caseId: CASE, edition: 1, evidenceMaterials: [] });
   assert.equal(w.sealCalls.length, 1, "a retry answering existed opens nothing");
   assert.ok(docSha);
 });

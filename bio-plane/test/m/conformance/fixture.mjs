@@ -328,15 +328,21 @@ export function world({ group = "test-group" } = {}) {
   return w;
 }
 
-/** A case document (`bio-case-document/4`): the facts publication reads from it. */
+/** A case document (`bio-case-document/6`, the one format publication commits, its R58): the facts publication reads
+ *  from it, with `/6`'s `method:` block and its `materials:` and `material_attestations:` blocks (case-grammar R11,
+ *  R12). No finding of these scenes rests on a material, so both blocks are empty, written as case-grammar's
+ *  `materialsLines([])` and `materialAttestationLines([])` write them (`case-grammar` is not in conformance's uses,
+ *  so its builders are not imported here). */
 export function caseDoc(caseId, edition, { project, roles = [], strength = [] } = {}) {
-  return ["---", "format: bio-case-document/4", `case_id: ${caseId}`, `case_edition: ${edition}`, `case_project: ${project}`,
+  return ["---", "format: bio-case-document/6", `case_id: ${caseId}`, `case_edition: ${edition}`, `case_project: ${project}`,
     "case_roles:", ...roles.flatMap((r) => [`  - target: ${r.target}`, `    version_sha: ${r.version_sha}`,
       `    edition: ${r.edition ?? 1}`, `    role: ${r.role ?? "load_bearing"}`]),
     "case_findings:", ...roles.map((r) => `  - ${r.target}`),
     ...(strength.length ? ["case_strength:", ...strength.flatMap((s) => [`  - target: ${s.target}`, `    axis: ${s.axis}`,
       `    state: ${s.state ?? "graded"}`, `    grade: ${s.grade}`])] : ["case_strength: []"]),
     "completeness:", "  author: member:olive", `  at: "${NOW}"`, "completeness_excluded: []", "case_citations: []",
+    "method:", '  grading: "grading/1"', '  checks: "1.0.0"',
+    "materials: []", "material_attestations: []",
     "---", "", "## Scope", "", "The question.", "", "## What This Excludes", "", "Nothing else.", "",
     "## What Was Searched", "", "Everything.", ""].join("\n");
 }

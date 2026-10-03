@@ -31,7 +31,7 @@ import { parseFrontmatter, normalizeType, OBJECT_TYPES, STATES, vocabFor, derive
          SHARED_ACT_CHECKS } from "../record-grammar/index.mjs";
 import { checkInquiryBasis, checkInquiryExtension, supersedesEdgeFindings, divisionDisclosureFindings, INQUIRY_ROWS }
   from "./grammar.mjs";
-import { INQUIRY_GRAMMARS } from "../inquiry-grammar/index.mjs";
+import { INQUIRY_GRAMMARS, parseImportedFindingRef } from "../inquiry-grammar/index.mjs";
 import { captureBound, isTranscribed } from "../textchain.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, listenerRefusal } from "../membership/index.mjs";
@@ -102,6 +102,9 @@ export const AUTHORED_ROUTE_BASES = Object.freeze(["CAPTURE_ROUTE_UNRECORDED", "
 /* §8.1's rank (entities' `gradeRank`): A strongest. */
 const GRADE_RANK = gradeRank;
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
+/** R4, R12 (N522): a leg's target that is an imported finding reference (`inquiry-grammar` R11), another group's finding
+ *  rather than a bundle of this record: never in `references[]`, no content row, projected as spelled. */
+const isImportedRef = (t) => typeof t === "string" && parseImportedFindingRef(t) !== null;
 
 /** The catalogue row a refusal code has, if any: its check id and canned translation travel with it (DEC-49). */
 const ROW_FAMILIES = [INQUIRY_ROWS, SHARED_ACT_CHECKS, INQUIRY_DISPOSE_CHECKS, INQUIRY_CONTRADICTION_CHECKS,
@@ -502,7 +505,8 @@ export class Inquiry {
 
   /** In the promotion's transaction: the superseded-by index, `inquiry_basis` whole from `basis[]` with each document
    *  leg's content row, `inquiry_exclusions` from `completeness_excluded[]`, the leg count and subject entity, and a
-   *  migration replay's row. The answer's keys join the promotion's. */
+   *  migration replay's row. The answer's keys join the promotion's. A leg on an imported finding reference (N522) is
+   *  projected with its ref as `target_id`, as spelled, and no content row: content's plan reads it as no document. */
   project(c) {
     const { pkg, bundleId, meta, promotedType } = stepContext(c);
     const cur = c.head, docFm = c.docFm, isInquiry = promotedType === "inquiry";
@@ -1556,7 +1560,9 @@ export class Inquiry {
          to the parent WITH ITS REASON — the requirement C-6.1 gains with this
          item, because before it `supersedes` passed on the strength of being in
          a list and had no producer at all. */
-      const refTargets = [...new Set(childLegs.map((l) => l.target).filter((t) => typeof t === "string"))];
+      /* R4 (N522): a leg on an imported finding reference is carried verbatim and is never a `references[]` entry. */
+      const refTargets = [...new Set(childLegs.map((l) => l.target)
+        .filter((t) => typeof t === "string" && !isImportedRef(t)))];
       text = setOrAddBlock(text, "references", [
         ...refTargets.flatMap((t) => [`  - target: ${t}`, "    rel: cites", "    status: confirmed"]),
         `  - target: ${target}`, "    rel: supersedes", "    status: confirmed",
@@ -2207,6 +2213,12 @@ export class Inquiry {
                        detail: `no basis leg ${ord} on ${bundleId}` };
     if (leg.content_id)
       return { ok: true, content_id: leg.content_id, minted: false, backfilled: false };
+    /* R12 (N522): another group's finding is no document of this record: its grades are the edition's it names. */
+    if (isImportedRef(leg.target_id))
+      return { ok: true, content_id: null, minted: false, backfilled: false,
+               null_case: "IMPORTED_TARGET",
+               why: `basis[${ord}] rests on ${leg.target_id}, another group's finding, graded as the edition this leg `
+                  + `names publishes it. This record holds no part of it, so it has no content row here` };
     /* REC-83: THE CASE IS NAMED, NOT ONLY DESCRIBED. IC-83's AMENDMENT 2 says
        the reads must state WHICH of the two legitimate nulls they met and never
        collapse them, and a reader that has to pattern-match an English sentence
@@ -2858,7 +2870,10 @@ export class Inquiry {
       ? String(targets).split(",").map((s) => s.trim()).filter(Boolean).slice(0, 200)
       : this.#rows(`SELECT DISTINCT target_id FROM inquiry_basis WHERE bundle_id=? ORDER BY target_id`, id)
           .map((r) => r.target_id);
-    const visible = asked.filter((t) => this.membership.inSight(t, viewer));
+    /* R15 (N522): a leg on an imported finding reference is a line of the question's own document, which the viewer
+       sees (checked above); it is no bundle for the gate to ask, and it earns nothing here. */
+    const sees = (t) => isImportedRef(t) || this.membership.inSight(t, viewer);
+    const visible = asked.filter(sees);
     const withheld = visible.length !== asked.length;
     /* ================= REC-83 / IC-84 (3) · THE LEG PASS ==================
      *
@@ -2890,7 +2905,7 @@ export class Inquiry {
     const legRows = this.#rows(
       `SELECT ord, target_id, target_type, content_id FROM inquiry_basis
         WHERE bundle_id=? ORDER BY ord`, id);
-    const legsVisible = legRows.filter((l) => this.membership.inSight(l.target_id, viewer));
+    const legsVisible = legRows.filter((l) => sees(l.target_id));
     const legsWithheld = legsVisible.length !== legRows.length;
     const legs = legsVisible.map((l) => ({ ord: l.ord, target: l.target_id,
                                            target_type: l.target_type, content_id: l.content_id }));

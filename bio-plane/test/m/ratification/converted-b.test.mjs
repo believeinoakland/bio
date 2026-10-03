@@ -9,7 +9,7 @@
    `ratifyOp`, with `plane(w)`) or the exported pure functions (`checkCaseDocument`, `completenessFields`,
    `caseMemberFindings`); none reads source text. Where an old suite read "the /5 document op=publish really authored",
    that document is case-authoring's to write (a module this one may not import), so it is built here by hand in the
-   same format — `bio-case-document/5`, the fixture's `cleanCase` with the old suite's authored values — rendered to
+   same format — `bio-case-document/6` (K1321), the fixture's `cleanCase` with the old suite's authored values — rendered to
    bytes with `fmText` and parsed back with record-grammar's `parseFrontmatter`, as the old suites parsed the bytes they
    read. The signatures are real SSHSIGs (the fixture's signer), never a stand-in. */
 import { test } from "node:test";
@@ -59,7 +59,7 @@ const CTX3 = { caseId: CASE, edition: 3, body: CASE_BODY };
 const PRIOR2 = { edition: 2, statement: STMT2, bias_acknowledgement: BACK2 };
 const c21 = (fm, ctx = { ...CTX3, priorCase: PRIOR2 }) => checkCaseDocument(fm, ctx).filter((e) => e.check === "C-21.1");
 
-test("R8 (publish): the freshly authored /5 edition draws no finding at all, against the previous edition", () => {
+test("R8 (publish): the freshly authored /6 edition draws no finding at all, against the previous edition", () => {
   assert.deepEqual(checkCaseDocument(edition3(), { ...CTX3, priorCase: PRIOR2 }), []);
 });
 
@@ -262,7 +262,7 @@ test("R2 (testify, testimonyaxis): op=caseratify on a case whose finding rests o
 
 /* testimonyaxis §6: C-2.8's case arm over a /5 document whose member rests on a member's testimony (three frozen rows).
    The member's basis at its pinned bytes is `memberBasis`, as the store hands it. */
-test("R8, R9 (testimonyaxis): C-2.8's case arm over a /5 document with a three-row (testimony) member — clean as frozen; the testimony row removed is testimony-axis-unfrozen; the historic two rows with no testimony leg are clean; an unmeasured axis, a second testimony row or a missing connection row is refused", () => {
+test("R8, R9 (testimonyaxis): C-2.8's case arm over a /6 document with a three-row (testimony) member — clean as frozen; the testimony row removed is testimony-axis-unfrozen; the historic two rows with no testimony leg are clean; an unmeasured axis, a second testimony row or a missing connection row is refused", () => {
   const M = "INQ-2026-5302-case-testimony";
   const basis = [{ target: "INFO-2026-5302-upload", role: "supports", grade: "B", grade_axis: "capture", grade_source: "capture" },
                  { target: OBS, role: "supports", grade: "D", grade_axis: "testimony", grade_source: "testimony" }];

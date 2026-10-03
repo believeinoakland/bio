@@ -8,6 +8,7 @@
 import { planeWorld, world as bareWorld } from "../publication/fixture.mjs";
 import { publicationOps } from "../../../src/publication/index.mjs";
 import { publicReadOf, publicReadOps } from "../../../src/public-read/index.mjs";
+import { CASE_DOCUMENT_FORMAT } from "../../../src/case-grammar/index.mjs";
 
 export { cursor, V, SIG, NOW, KEY, sha, caseDoc, inquiryMd } from "../publication/fixture.mjs";
 
@@ -56,7 +57,32 @@ export function docketOn({ cases = [] } = {}) {
   return d;
 }
 
+/* R58 (`publication`, T28): only a `/6` preparation commits. An edition this module's tests prepare in an older format is,
+   by that format, one signed before T28, so it is signed as such an edition was (`signLegacy`, the rows its commit wrote
+   then); a `/6` one is committed as ratification commits it today. */
+const FORMAT_LINE = /^format: (\S+)$/m;
+function signAsOfItsFormat(w) {
+  const commit = w.signCase.bind(w);
+  w.signCase = (caseId, edition, opts = {}) => {
+    const d = w.row(`SELECT text FROM case_documents WHERE case_id=? AND edition=?`, caseId, edition);
+    const format = d ? (FORMAT_LINE.exec(d.text) || [])[1] : null;
+    return format && format !== CASE_DOCUMENT_FORMAT ? w.signLegacy(caseId, edition, opts) : commit(caseId, edition, opts);
+  };
+}
+
+/** An edition signed before T28 (R58 refuses committing one now), with the signer's key and deliverer a test names:
+ *  `signLegacy`'s rows, the case document's `attestor_key` then set to `attestorKey`. `deliveredBy` undefined is a
+ *  commit that recorded no deliverer. */
+export function legacyCaseCommit(w, { case: caseId, edition, project, roster, sigArmored, attestorKey, attestorMember,
+                                      deliveredBy, at, completeness, bar = null }) {
+  const r = w.signLegacy(caseId, edition, { project, roster, signer: attestorMember, sig: sigArmored, at, bar,
+                                            ...(completeness ? { completeness } : {}), deliveredBy: deliveredBy ?? null });
+  w.st.sql.exec(`UPDATE case_documents SET attestor_key=? WHERE case_id=? AND edition=?`, attestorKey, caseId, edition);
+  return r;
+}
+
 function withRead(w, opts = {}) {
+  signAsOfItsFormat(w);
   w.docket = opts.docket || docketOn();
   w.pr = publicReadOf(w.host, { publication: w.p, docket: w.docket });
   w.read = (name, query = {}) => {

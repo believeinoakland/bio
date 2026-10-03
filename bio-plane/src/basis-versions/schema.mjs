@@ -40,7 +40,8 @@ CREATE INDEX IF NOT EXISTS inquiry_basis_versions_derived ON inquiry_basis_versi
 
 -- One row per leg of a version. ground is NOT NULL: a version carries its partition, so the partition is total.
 -- content_id is the leg's referent, minted or found through content's plan (NULL: an inquiry target, no bytes held,
--- or a replayed leg the module would now refuse).
+-- or a replayed leg the module would now refuse). target_edition is the edition a leg on another group's finding
+-- names (N522), NULL on every other leg.
 CREATE TABLE IF NOT EXISTS inquiry_basis_version_legs (
   bundle_id    TEXT NOT NULL,
   name         TEXT NOT NULL,
@@ -55,6 +56,7 @@ CREATE TABLE IF NOT EXISTS inquiry_basis_version_legs (
   at           TEXT,
   ground       TEXT NOT NULL,
   content_id   TEXT,
+  target_edition INTEGER,
   PRIMARY KEY (bundle_id, name, ord)
 );
 CREATE INDEX IF NOT EXISTS inquiry_basis_version_legs_target ON inquiry_basis_version_legs(target_id);
@@ -73,6 +75,7 @@ const ADDED_COLUMNS = [
   ["inquiry_basis_versions", "kind", "TEXT"],
   ["inquiry_basis_versions", "affirmed_parts", "TEXT"],
   ["inquiry_basis_version_legs", "content_id", "TEXT"],
+  ["inquiry_basis_version_legs", "target_edition", "INTEGER"],
 ];
 
 export function migrateBasisVersions(sql) {

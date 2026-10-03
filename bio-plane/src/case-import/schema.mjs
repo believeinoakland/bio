@@ -1,0 +1,157 @@
+/* case-import's tables (requirements: `build/requirements/case-import.md` R1–R9, R12, R13).
+ *
+ * APPEND-ONLY (R12): no act of this module updates or deletes a row. An import, an edition, its files, each recreation
+ * (one `case_import_checks` row and its results per run: the import's, then each completion's), each acceptance,
+ * withdrawal, flag and clear is a row of its own, and what is "in force" or "open" is read from the rows that follow it.
+ *
+ * THE BYTES (R1, R13). Every part of a case file, and every document a completion supplies, is held by its SHA-256 in
+ * `case_import_blobs`, cut into chunks of at most `BLOB_CHUNK` bytes (a row's value is bounded on the plane's storage).
+ * A file of the case file is held by its SHA-256 in `case_import_files`, its bytes those of the part that carries it,
+ * read back by the one reader of the format (`case-checker` R19), so nothing is stored twice. The bytes live in this module's tables, so record-core's
+ * purge clears them with the import (R13); no object store is needed, and none could be purged.
+ *
+ * Every table is declared to record-core's purge as the import's own record, with no bundle key: an import is no bundle
+ * (R2), so only the whole-store purge clears it, the bytes with it. */
+
+export const BLOB_CHUNK = 1024 * 1024;
+
+export const CASE_IMPORT_SCHEMA = `
+-- An import: one per source group, case and lens (its id is the SHA-256 of canonical {group, case, lens}).
+CREATE TABLE IF NOT EXISTS case_imports (
+  import_id     TEXT PRIMARY KEY,
+  source_group  TEXT NOT NULL,
+  case_id       TEXT NOT NULL,
+  lens          TEXT,
+  created_by    TEXT NOT NULL,
+  created_at    TEXT NOT NULL
+);
+-- An imported edition, side by side with the import's others; never replaced.
+CREATE TABLE IF NOT EXISTS case_import_editions (
+  import_id     TEXT NOT NULL,
+  edition       INTEGER NOT NULL,
+  manifest_sha  TEXT NOT NULL,
+  format        TEXT,
+  case_doc_sha  TEXT,
+  source_bar    TEXT,
+  imported_by   TEXT NOT NULL,
+  imported_at   TEXT NOT NULL,
+  PRIMARY KEY (import_id, edition)
+);
+-- Each part of the edition's case file, in order, by SHA-256.
+CREATE TABLE IF NOT EXISTS case_import_parts (
+  import_id     TEXT NOT NULL,
+  edition       INTEGER NOT NULL,
+  idx           INTEGER NOT NULL,
+  sha           TEXT NOT NULL,
+  bytes         INTEGER NOT NULL,
+  PRIMARY KEY (import_id, edition, idx)
+);
+-- Each file of the case file, by the SHA-256 of the bytes the parts carry, and the part the manifest places it in.
+CREATE TABLE IF NOT EXISTS case_import_files (
+  import_id     TEXT NOT NULL,
+  edition       INTEGER NOT NULL,
+  path          TEXT NOT NULL,
+  kind          TEXT,
+  sha           TEXT NOT NULL,
+  bytes         INTEGER NOT NULL,
+  part          INTEGER NOT NULL,
+  PRIMARY KEY (import_id, edition, path)
+);
+CREATE INDEX IF NOT EXISTS case_import_files_sha ON case_import_files (sha);
+-- Bytes by SHA-256, in chunks.
+CREATE TABLE IF NOT EXISTS case_import_blobs (
+  sha           TEXT NOT NULL,
+  chunk         INTEGER NOT NULL,
+  data          BLOB NOT NULL,
+  PRIMARY KEY (sha, chunk)
+);
+-- R3: one recreation of an edition: at its import, and again at each completion (R5).
+CREATE TABLE IF NOT EXISTS case_import_checks (
+  rn            INTEGER PRIMARY KEY AUTOINCREMENT,
+  import_id     TEXT NOT NULL,
+  edition       INTEGER NOT NULL,
+  cause         TEXT NOT NULL,
+  document_sha  TEXT,
+  checker       TEXT NOT NULL,
+  answer        TEXT NOT NULL,
+  checked_by    TEXT NOT NULL,
+  checked_at    TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS case_import_checks_edition ON case_import_checks (import_id, edition, rn);
+-- R3: each finding's result at one recreation.
+CREATE TABLE IF NOT EXISTS case_import_results (
+  check_rn      INTEGER NOT NULL,
+  ord           INTEGER NOT NULL,
+  finding       TEXT NOT NULL,
+  role          TEXT,
+  result        TEXT NOT NULL,
+  missing       TEXT NOT NULL,
+  differs       TEXT NOT NULL,
+  pair          TEXT,
+  published     TEXT,
+  PRIMARY KEY (check_rn, ord)
+);
+-- R5: a document a member supplied that completes a missing material.
+CREATE TABLE IF NOT EXISTS case_import_documents (
+  import_id     TEXT NOT NULL,
+  edition       INTEGER NOT NULL,
+  sha           TEXT NOT NULL,
+  bytes         INTEGER NOT NULL,
+  by_member     TEXT NOT NULL,
+  at            TEXT NOT NULL,
+  PRIMARY KEY (import_id, edition, sha)
+);
+-- R6: an acceptance of one edition for named findings.
+CREATE TABLE IF NOT EXISTS case_import_acceptances (
+  rn            INTEGER PRIMARY KEY AUTOINCREMENT,
+  import_id     TEXT NOT NULL,
+  edition       INTEGER NOT NULL,
+  findings      TEXT NOT NULL,
+  checked       TEXT NOT NULL,
+  reason        TEXT NOT NULL,
+  gaps          TEXT NOT NULL,
+  by_member     TEXT NOT NULL,
+  at            TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS case_import_acceptances_edition ON case_import_acceptances (import_id, edition, rn);
+-- R7: a withdrawal of every acceptance of one edition then in force.
+CREATE TABLE IF NOT EXISTS case_import_withdrawals (
+  rn            INTEGER PRIMARY KEY AUTOINCREMENT,
+  import_id     TEXT NOT NULL,
+  edition       INTEGER NOT NULL,
+  acceptances   TEXT NOT NULL,
+  refs          TEXT NOT NULL,
+  reason        TEXT NOT NULL,
+  by_member     TEXT NOT NULL,
+  at            TEXT NOT NULL
+);
+-- R8: a flag on an edition, or on one of its findings.
+CREATE TABLE IF NOT EXISTS case_import_flags (
+  rn            INTEGER PRIMARY KEY AUTOINCREMENT,
+  import_id     TEXT NOT NULL,
+  edition       INTEGER NOT NULL,
+  finding       TEXT,
+  issue         TEXT NOT NULL,
+  by_member     TEXT NOT NULL,
+  at            TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS case_import_flags_edition ON case_import_flags (import_id, edition, rn);
+-- R8: a flag cleared, once.
+CREATE TABLE IF NOT EXISTS case_import_clears (
+  flag_rn       INTEGER PRIMARY KEY,
+  reason        TEXT NOT NULL,
+  by_member     TEXT NOT NULL,
+  at            TEXT NOT NULL
+);
+`;
+
+/** The tables, every one cleared by the whole-store purge only (R13). */
+export const CASE_IMPORT_TABLES = Object.freeze(["case_imports", "case_import_editions", "case_import_parts",
+  "case_import_files", "case_import_blobs", "case_import_checks", "case_import_results", "case_import_documents",
+  "case_import_acceptances", "case_import_withdrawals", "case_import_flags", "case_import_clears"]);
+
+/** Creates the tables; idempotent. */
+export function migrateCaseImport(sql) {
+  const bare = CASE_IMPORT_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+  for (const s of bare.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
+}

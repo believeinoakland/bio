@@ -58,53 +58,59 @@ export function testimonyCaseRefusal(caseId, edition, legacy) {
        recourse is an edition without the finding resting on it.
    (2) STALE: the document's statements are compared with what the authors' acts give NOW. The act re-authors the
        unsigned document when it lands, so this refuses only bytes that drifted from the acts by another route —
-       never a level the author did not choose. */
+       never a level the author did not choose.
+   A row keyed `capture` (its SHA-256) in place of `observation` is an off-the-record capture's attesting member's
+   level (publication R60; DEC-119 (3)), asked as an observation's is. */
+const keyOf = (r) => (r.observation || !r.capture ? { observation: r.observation } : { capture: r.capture });
+const idOf = (r) => Object.values(keyOf(r))[0];
 export function attributionUnchosenRefusal(caseId, edition, attr) {
   const unchosen = (attr && Array.isArray(attr.current) ? attr.current : []).filter((r) => !r.level);
   if (!unchosen.length) return null;
   /* DEC-49 REGION is-attribution-unchosen */
   return { ok: false, reason: "ATTRIBUTION_UNCHOSEN", ...rowOf("ATTRIBUTION_UNCHOSEN"),
     caseId, edition,
-    unchosen: unchosen.slice(0, 50).map((r) => ({ observation: r.observation, why: r.why })),
-    detail: `${unchosen.length} observation${unchosen.length === 1 ? "" : "s"} this edition reaches `
-          + `${unchosen.length === 1 ? "has" : "have"} no level chosen by ${unchosen.length === 1 ? "its" : "their"} `
-          + `author: ${unchosen.slice(0, 5).map((r) => r.observation).join(", ")} (MEMBER-KNOWLEDGE-DESIGN.md §4.4). `
-          + `Each author chooses with op=attribute; nothing is filled in for them` };
+    unchosen: unchosen.slice(0, 50).map((r) => ({ ...keyOf(r), why: r.why })),
+    detail: `${unchosen.length} observation${unchosen.length === 1 ? "" : "s"} or attested capture`
+          + `${unchosen.length === 1 ? "" : "s"} this edition reaches ${unchosen.length === 1 ? "has" : "have"} no level `
+          + `chosen by its author or attesting member: ${unchosen.slice(0, 5).map(idOf).join(", ")} `
+          + `(MEMBER-KNOWLEDGE-DESIGN.md §4.4). Each chooses with op=attribute; nothing is filled in for them` };
   /* END DEC-49 REGION is-attribution-unchosen */
 }
 
 export function attributionStaleRefusal(caseId, edition, attr) {
   const current = attr && Array.isArray(attr.current) ? attr.current : [];
   const stated = attr && Array.isArray(attr.stated) ? attr.stated : [];
-  const statedOf = new Map(stated.map((r) => [r.observation, r]));
+  const statedOf = new Map(stated.map((r) => [JSON.stringify(keyOf(r)), r]));
   const drift = current.filter((r) => {
-    const st = statedOf.get(r.observation);
+    const st = statedOf.get(JSON.stringify(keyOf(r)));
     return !st || st.level !== r.level || (st.shown ?? null) !== (r.shown ?? null);
   });
   if (!drift.length && stated.length === current.length) return null;
   /* DEC-49 REGION is-attribution-stale */
   return { ok: false, reason: "ATTRIBUTION_STATEMENT_STALE", ...rowOf("ATTRIBUTION_STATEMENT_STALE"),
     caseId, edition,
-    observations: (drift.length ? drift : current).slice(0, 50).map((r) => r.observation),
-    detail: `the case document's attribution statements do not match what the observations' authors chose `
+    observations: (drift.length ? drift : current).slice(0, 50).map(idOf),
+    detail: `the case document's attribution statements do not match what the authors and attesting members chose `
           + `for this edition; re-prepare it (op=publish) and sign the new bytes` };
   /* END DEC-49 REGION is-attribution-stale */
 }
 
 /* DEC-102 items 1 and 2 / C-58.5 (R35). Testimony credited only to the group or the project is an anonymous tip, and
-   supports a finding only beside an independent corroborating leg (strength R29, R30). `offenders` is each
-   `{member, observation}` strength answers uncorroborated, as the act's store half and the pre-flight both compute it
-   (`./index.mjs`); it names no author. None answers null. */
+   supports a finding only beside an independent corroborating leg (strength R29, R30), and so does material from an
+   off-the-record source a member attests at those levels (strength R34; DEC-119 (3)). `offenders` is each `{member,
+   observation}` or `{member, document}` strength answers uncorroborated, as the act's store half and the pre-flight
+   both compute it (`./index.mjs`); it names no author, attesting member or source. None answers null. */
 export function anonymousTestimonyRefusal(caseId, edition, offenders) {
   if (!Array.isArray(offenders) || !offenders.length) return null;
   /* DEC-49 REGION is-anonymous-testimony */
   return { ok: false, reason: "ANONYMOUS_TESTIMONY_UNCORROBORATED", ...rowOf("ANONYMOUS_TESTIMONY_UNCORROBORATED"),
     caseId, edition, uncorroborated: offenders.slice(0, 50),
-    detail: `case ${caseId} edition ${edition} rests on testimony credited only to the group or the project with no `
-          + `independent leg corroborating it: ${offenders.slice(0, 5).map((x) => `${x.member} on ${x.observation}`)
-            .join(", ")}. Such testimony counts as an anonymous tip (DEC-102). Corroborate the claim with an `
-          + `independent leg, ask the observation's author to choose cover or name (op=attribute), or drop the finding `
-          + `resting on it from the edition (op=publish). Nothing was signed.` };
+    detail: `case ${caseId} edition ${edition} rests on testimony, or on material from an unnamed source a member `
+          + `attests, credited only to the group or the project with no independent leg corroborating it: `
+          + `${offenders.slice(0, 5).map((x) => `${x.member} on ${x.observation ?? x.document}`).join(", ")}. It counts `
+          + `as an anonymous tip (DEC-102, DEC-119). Corroborate the claim with an independent leg, ask the author or `
+          + `attesting member to choose cover or name (op=attribute), or drop the finding resting on it from the edition `
+          + `(op=publish). Nothing was signed.` };
   /* END DEC-49 REGION is-anonymous-testimony */
 }
 

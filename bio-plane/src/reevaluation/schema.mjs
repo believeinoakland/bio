@@ -1,4 +1,4 @@
-/* reevaluation's tables (requirements: `build/requirements/reevaluation.md`, R14–R16, R18, R25, R26, R28, R29). The obligation itself is a
+/* reevaluation's tables (requirements: `build/requirements/reevaluation.md`, R14–R16, R18, R25, R26, R28, R29, R32). The obligation itself is a
  * query and has no table (R18, P-64); these hold only what a member's act or the pushed notice writes. Each is keyed by
  * the bundle it is about and declared to record-core's purge (K23), so a purge of that bundle clears its rows; the sweep's
  * position (R25) is about no bundle and is cleared by a whole-store purge only. */
@@ -112,6 +112,22 @@ CREATE TABLE IF NOT EXISTS reevaluation_level_moves (
   at           TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS reevaluation_level_moves_observation ON reevaluation_level_moves (observation, at);
+-- R32 (DEC-119 (3), N523): AN OFF-THE-RECORD CAPTURE'S ATTESTING MEMBER'S
+-- CREDIT LEVEL MOVED, told by ratification (its R36) as R29's moves are: one
+-- row per call, the capture (its sha-256), the level before and after, the
+-- case and edition, and the move's instant. It names no member and holds no
+-- text. The attribution cause on a leg targeting a document whose capture it
+-- is is derived on read from these rows. Append-only.
+CREATE TABLE IF NOT EXISTS reevaluation_capture_level_moves (
+  move_id      INTEGER PRIMARY KEY AUTOINCREMENT,
+  capture_sha  TEXT NOT NULL,
+  level_before TEXT NOT NULL,
+  level_after  TEXT NOT NULL,
+  case_id      TEXT,
+  edition      INTEGER,
+  at           TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS reevaluation_capture_level_moves_capture ON reevaluation_capture_level_moves (capture_sha, at);
 -- R25 (N178): WHERE THE NOTICE SWEEP'S PASS STANDS. One row (id 1): the cursor
 -- of the pass part-way (after the last leg a batch read), when that pass began
 -- and when the last complete one began, and the receipt mark: receipt_seq is
@@ -141,6 +157,8 @@ export const REEVALUATION_TABLES = Object.freeze([
   { name: "reevaluation_source_moves", keys: [] },
   /* R29: a level move is about the observation it names, a bundle, so a purge of that bundle clears its rows. */
   { name: "reevaluation_level_moves", keys: ["observation"] },
+  /* R32: a capture is no bundle, so a single-bundle purge never names one; a whole-store purge clears these. */
+  { name: "reevaluation_capture_level_moves", keys: [] },
   /* R25: the sweep's one position row is about no bundle, so only a whole-store purge clears it. */
   { name: "reevaluation_sweep", keys: [] },
 ]);

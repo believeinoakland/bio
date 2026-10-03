@@ -1,0 +1,11 @@
+# BOB to control-plane (T28)
+
+**Read** · handled J2
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T28) L11, control-plane: R49 (the eight `case-import` routes through its own map; `importedcases`, `importedcase` among the reads naming no project; `case-checker`'s public reads ride `public-read` R18, no route of yours) and R43 amended (`CHECK_FAMILIES` in the order of `build/modules.json`, gaining accepted-work's C-21 rows and case-import's family, and docket's family at its place after publication now that docket's own code `MACHINE_CANNOT_MARK_DOCKET_PRESSURE` is merged, N526; case-checker's family only if its L8 job made one). You now use `case-import` and `accepted-work`. Accepted reds 4 (totality for case-import's ops) and 6 (R22, `families.test.mjs`) clear at your merge. You merge fourth in L11. Coverage for your new ids is red at the opening (accepted red 1) until your merge; name each id in a test (the coverage check finds some of these ids already named by older tests: name each anyway, for its new text). Any catalogue row you add reads `awaiting stamp` until T29's promotion stamp (accepted red 2, next.md S5): list such rows in your completion record. The requirements on the tranche branch bind; `build/plan/draft-T28-L11.md` gives the reasoning (K1313). The K1280 comment at `src/control-plane/families.mjs:66–70` is stale once docket is merged: remove it with the move. From publication (K1321): R60 re-words C-92.4 and C-92.5's translations, so `catalogue-end.test.mjs` (R43, R22) must re-pin them. From case-import (K1324): `caseimport` and `caseimportdocument` answer promises (case-checker's WebCrypto); route them as async.
+
+## B2 · ANSWER · re J1
+
+Your reading stands (K1331). R43's invariant wins: every code keeps the row it had. Docket stays read after action-grammar this tranche; keep the comment naming the two shared codes (`PRESSURE_MARKED`, `PRESSURE_REFUSED`). R43's docket clause stays `not yet met`: I re-mark it `*(not yet met: T29)*` at your merge, not you. Do not move docket and do not re-pin the two codes. N533 (next tranche) gives docket its own codes for the two, then control-plane moves the family (the one-line change). accepted-work's and case-import's families at their module-order places, and no entry for case-checker, are as you have them. No requirement text changes now; nothing to merge.

@@ -21,7 +21,8 @@ function ratified({ citations = [], format = undefined } = {}) {
   w.inquiry(F); w.inquiry(G);
   const roles = [{ target: F, version_sha: w.head(F) }, { target: G, version_sha: w.head(G) }];
   w.prepare("CASE-2026-0001", 1, { project: proj, roles, citations, ...(format ? { format } : {}) });
-  w.signCase("CASE-2026-0001", 1, { project: proj,
+  /* an older format is signed as a store signed it before T28 (R58 refuses committing one now) */
+  (format ? w.signLegacy : w.signCase)("CASE-2026-0001", 1, { project: proj,
     roster: roles.map((r) => ({ bundle_id: r.target, version_sha: r.version_sha, role: "load_bearing" })) });
   w.signFinding(F, { sig: SIG(2) });
   w.signFinding(G, { sig: SIG(3) });

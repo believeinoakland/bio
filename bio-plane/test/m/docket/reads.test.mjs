@@ -4,9 +4,13 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { seeded, world, file, prepare, post, fileAndPlace, V, MACHINE, CASE, SUBJECT, NOW, DAY, keyFor, sha } from "./fixture.mjs";
 import { DOCKET_CHECKS, DOCKET_TABLES, DOCKET_UNREADABLE, OUTWARD_ACT_WARNING, RESEND_INVITATION, CHECKPOINT_OFFER, RECEIPT_REASON,
-         RECORD_STATES, CORE_KINDS, DOCKET_VOCABULARIES, SHELVES, ENTRY_KINDS, PROPOSALS, PRESSURE_KINDS, ATOM_MEDIA_TYPE, docketOps }
+         RECORD_STATES, CORE_KINDS, DOCKET_VOCABULARIES, SHELVES, ENTRY_KINDS, PROPOSALS, PRESSURE_KINDS, ATOM_MEDIA_TYPE, docketOps,
+         docketAddress, feedAddress, feedHref }
   from "../../../src/docket/index.mjs";
 import { renderFeed } from "../../../src/docket/feed.mjs";
+import { readdirSync, readFileSync } from "node:fs";
+import { join, sep } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const A = V("alice");
 
@@ -333,8 +337,8 @@ test("R22 each refusal code is a row of this module's own table, one new family;
     "DOCKET_NOT_A_PARTICIPANT", "DOCKET_NOT_THE_MANAGER", "DOCKET_NOT_THE_SUBJECT", "DOCKET_NO_ARCHIVE_COPY", "DOCKET_NO_CAPTURE",
     "DOCKET_NO_EDITION", "DOCKET_NO_GROUP_SLUG", "DOCKET_NO_REASON", "DOCKET_NO_STANDING", "DOCKET_NO_SUMMARY", "DOCKET_SIGNATURE_REFUSED",
     "DOCKET_STALE", "DOCKET_TAKE_BACK_FINAL", "DOCKET_WARNING_NOT_ACKNOWLEDGED", "DOCKET_WITHDRAWAL_FINAL", "DOCKET_WRONG_SHELF",
-    "MACHINE_CANNOT_FILE_DOCKET", "MACHINE_CANNOT_MARK_PRESSURE", "MACHINE_CANNOT_PLACE_DOCKET", "NO_SUCH_DOCKET_ENTRY",
-    "PRESSURE_MARKED", "PRESSURE_REFUSED"].sort());
+    "MACHINE_CANNOT_FILE_DOCKET", "MACHINE_CANNOT_MARK_DOCKET_PRESSURE", "MACHINE_CANNOT_PLACE_DOCKET", "NO_SUCH_DOCKET_ENTRY",
+    "DOCKET_PRESSURE_MARKED", "DOCKET_PRESSURE_REFUSED"].sort());
   const checks = Object.values(DOCKET_CHECKS).map((r) => r.check);
   assert.equal(new Set(checks).size, checks.length, "one row per code");
   for (const c of checks) assert.match(c, /^C-129\.\d+$/, "one family");
@@ -344,6 +348,86 @@ test("R22 each refusal code is a row of this module's own table, one new family;
     assert.ok(r.translation.length > 20);
   }
   assert.equal("NO_SUCH_CASE" in DOCKET_CHECKS, false);
+});
+
+test("R22 no code of this module's table is a code another module's table holds (one code, one row; K1291, K1331)", async () => {
+  /* every DEC-49 table any other product module exports (a `*_CHECKS` export, flat `{code: row}` or by family
+     `{FAMILY: {code: row}}`), read through its exports */
+  const src = fileURLToPath(new URL("../../../src/", import.meta.url));
+  const files = readdirSync(src, { recursive: true }).map(String)
+    .filter((f) => f.endsWith(".mjs") && !f.startsWith(`docket${sep}`) && /export[^\n]*_CHECKS/.test(readFileSync(join(src, f), "utf8")));
+  const isRow = (v) => v && typeof v === "object" && typeof v.check === "string";
+  const held = new Map();
+  for (const f of files) {
+    const ns = await import(pathToFileURL(join(src, f)).href);
+    for (const [name, table] of Object.entries(ns)) {
+      if (!name.endsWith("_CHECKS") || !table || typeof table !== "object" || table === DOCKET_CHECKS) continue;
+      const rows = Object.values(table).every((v) => isRow(v) || !v || typeof v !== "object") ? [table] : Object.values(table);
+      for (const t of rows) for (const [code, row] of Object.entries(t || {}))
+        if (isRow(row) && !/^C-129\./.test(row.check)) held.set(code, `${f} ${name} ${row.check}`);
+    }
+  }
+  assert.ok(held.size > 500, `the other tables were read (${held.size} codes)`);
+  assert.ok(held.has("PRESSURE_MARKED") && held.has("PRESSURE_REFUSED") && held.has("MACHINE_CANNOT_MARK_PRESSURE"),
+            "negative control: action-grammar's pressure codes, which docket once shared, are seen");
+  for (const code of Object.keys(DOCKET_CHECKS)) assert.equal(held.get(code), undefined, `${code} is held by another module's table`);
+  assert.deepEqual([DOCKET_CHECKS.DOCKET_PRESSURE_MARKED.check, DOCKET_CHECKS.DOCKET_PRESSURE_REFUSED.check], ["C-129.12", "C-129.13"],
+                   "the two rows keep their numbers (N533)");
+});
+
+test("R23 every address the module answers is the house form `op=…` with no `?`; inside the feed each href is `?op=…`, resolving against the feed's own address", async () => {
+  const w = seeded();
+  const ODD = "CASE-2026-0303 a&b=c?#";   /* a case id the query must encode */
+  w.publish(w.P, ODD, 1, [{ id: w.F1, role: "load_bearing" }]);
+  for (const c of [CASE, ODD]) {
+    const q = `case=${encodeURIComponent(c)}`;
+    assert.equal(docketAddress(c), `op=docketpublic&${q}`);
+    assert.equal(feedAddress(c), `op=docketfeed&${q}`);
+    assert.equal(new URLSearchParams(docketAddress(c)).get("case"), c, "the case reads back from the address");
+  }
+  await fileAndPlace(w);
+  const rec = file(w).entry;
+  await post(w, { kind: "receipt", entry: rec, reason: "names a neighbour" });
+  /* every address in every answer, found by walking each answer whole: an `op=` value anywhere */
+  const found = [];
+  const walk = (v) => {
+    if (typeof v === "string") { if (/(^|[?&])op=/.test(v) && !v.includes("<")) found.push(v); }
+    else if (Array.isArray(v)) v.forEach(walk);
+    else if (v && typeof v === "object") Object.values(v).forEach(walk);
+  };
+  const answers = [await w.docket.docketPublic({ case: CASE }), await w.docket.docketPublic({ case: ODD }),
+                   w.docket.docketInvitation({ entry: rec, viewer: A }), w.docket.docketOf({ case: CASE, viewer: A }),
+                   w.docket.coreDue({ viewer: A }), w.docket.withdrawalOf({ case: CASE, edition: 1 }),
+                   w.reeval.registrations[0].fns.withdrawals({}), w.reeval.registrations[0].fns.contested({}), w.docket.docketSigners()];
+  answers.forEach(walk);
+  assert.deepEqual(found.sort(), [feedAddress(CASE), feedAddress(ODD), docketAddress(CASE)].sort(),
+                   "the feed's address (R14) and the invitation's docket (R8), and no other");
+  for (const a of found) assert.match(a, /^op=docket(public|feed)&case=[^?#&]+$/, `${a}: the query alone, no leading ?`);
+  assert.equal((await w.docket.docketPublic({ case: CASE })).feed, feedAddress(CASE));
+  assert.equal(w.docket.docketInvitation({ entry: rec, viewer: A }).invitation.docket, docketAddress(CASE));
+  /* negative control: the walk sees an address written with a leading ? */
+  const bad = [];
+  ((v) => { const f = found.length; walk(v); bad.push(...found.splice(f)); })({ feed: `?${feedAddress(CASE)}` });
+  assert.ok(bad.length === 1 && !/^op=/.test(bad[0]), "a `?op=` address is found and is not the house form");
+  /* inside the feed: every href is `?op=…`, and resolves against the feed's own address to the house-form address */
+  for (const c of [CASE, ODD]) {
+    const feed = await w.docket.docketFeed({ case: c });
+    const hrefs = [...feed.matchAll(/href="([^"]*)"/g)].map((m) => m[1].replace(/&amp;/g, "&").replace(/&quot;/g, '"'));
+    assert.ok(hrefs.length >= 2, "the self link and the docket link");
+    const base = new URL(`https://group.example/pub?${feedAddress(c)}`);
+    for (const h of hrefs) {
+      assert.match(h, /^\?op=docket(public|feed)&case=/, `${h}: a query-only relative reference (RFC 3986 §4.2)`);
+      const u = new URL(h, base);
+      assert.equal(`${u.origin}${u.pathname}`, "https://group.example/pub", "it resolves on the feed's own path");
+      assert.ok([docketAddress(c), feedAddress(c)].includes(u.search.slice(1)), "to the house-form address");
+      assert.equal(u.searchParams.get("case"), c);
+    }
+    assert.ok(hrefs.includes(feedHref(feedAddress(c))), "rel=self is the feed's own address");
+    assert.ok(hrefs.includes(feedHref(docketAddress(c))), "the entries link to the case's docket");
+  }
+  /* negative control: a bare house-form href would resolve to another path, which the check above refuses */
+  const bare = new URL(docketAddress(CASE), new URL(`https://group.example/pub?${feedAddress(CASE)}`));
+  assert.notEqual(`${bare.origin}${bare.pathname}`, "https://group.example/pub");
 });
 
 test("R6 R1 R2 R4 the vocabularies and the ops map pass a call's fields through, the stamps from the query only", async () => {

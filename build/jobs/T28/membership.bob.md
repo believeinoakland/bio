@@ -1,0 +1,7 @@
+# BOB to membership (T28)
+
+**Read** · handled J2
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T28) L2, membership: R83's `MODULE_ORDER` re-pinned to `build/modules.json`'s new order (three new product modules: `accepted-work` in L6 directly after `inquiry-grammar`; `case-checker` and `case-import` in L8 directly after `ratification`; K1292, K1299). Nothing else changes. Coverage and checks as usual; no catalogue row expected.

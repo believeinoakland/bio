@@ -1,0 +1,7 @@
+# BOB to case-carriage (T29)
+
+**Read** · handled J1
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T29) L8, case-carriage (new, N532; K1332, K1337): build the module from `build/requirements/case-carriage.md` (R1–R7, all not yet met) by COPY from publication (K624 (1): copy, then publication's job deletes): R57's holding (`#holdMaterials`, `#registered`, `#fileRow`, `#tokenFiles`, `heldMaterialsOf`, `publishedMaterialText`), R59's re-read and R51's `#sourcesLapsed`, and the tables `published_material_texts`, `published_case_materials` (same names; you declare them, purge-exempt). Seam map: `build/extraction/publication-split-2.md`. Paths: `bio-plane/src/case-carriage/`, tests `bio-plane/test/m/case-carriage/`; name them in your record and BOB writes them into `modules.json` before your merge (your registered `uses` are there; correct them in your record if your imports differ). You merge FIRST in L8; publication's job then re-points to you. Interface tests only (no source-text tests).

@@ -1,4 +1,4 @@
-/* publication — the invariants not driven elsewhere: purge (R31) beside corpus-export's declaration (K1024), the check
+/* publication — the invariants not driven elsewhere: purge (R31) beside corpus-export's (K1024) and case-carriage's (N532) declarations, the check
    rows that moved here (R33), no place named (R34), and the id that does not hold yet (R30). The export and its log are
    corpus-export's, written here through it (its R1), never through this module (N483). Driven at the module's
    interface. */
@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { planeWorld as world, V, SIG, NOW } from "./fixture.mjs";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { corpusExportOf } from "../../../src/corpus-export/index.mjs";
+import { caseCarriageOf, CASE_CARRIAGE_EXEMPT } from "../../../src/case-carriage/index.mjs";
 import * as CHECKS from "../../../src/publication/checks.mjs";
 import { ATTRIBUTION_ACT_CHECKS, CASE_SOURCES_CHECKS, rowOf } from "../../../src/publication/checks.mjs";
 import { PUBLICATION_TABLES, PUBLICATION_EXEMPT, publicationOwns, publicationOps } from "../../../src/publication/index.mjs";
@@ -52,11 +53,17 @@ test("R31 published bytes are exempt from purge; the derived and working tables 
   assert.deepEqual(w.rows(`SELECT edition FROM case_documents`), [{ edition: 1 }]);
   assert.deepEqual(w.rows(`SELECT DISTINCT edition FROM case_exclusions`), [{ edition: 1 }]);
   assert.deepEqual(w.snapshot(KEPT), exempt, "published_*, cases and corpus-export's export_log are never cleared");
-  assert.deepEqual([...PUBLICATION_EXEMPT].sort(), ["cases", "published_bundles", "published_case_members",
-                                                    "published_cases", "published_shas"]);
+  assert.deepEqual([...PUBLICATION_EXEMPT].sort(), ["cases", "published_bundles", "published_case_members", "published_cases",
+                                                    "published_shas"]);
+  /* N532: the two tables of held materials are case-carriage's, declared exempt by it (its R6), created at this
+     module's creation on the same host; this module's declaration and its both answer ok */
+  assert.equal(w.p.caseCarriage, caseCarriageOf(w.host), "created eagerly at this module's creation, one per host");
+  assert.deepEqual([w.p.purgeDeclaration, w.p.caseCarriage.purgeDeclaration], [{ ok: true }, { ok: true }]);
+  assert.deepEqual([...CASE_CARRIAGE_EXEMPT].sort(), ["published_case_materials", "published_material_texts"]);
+  for (const t of CASE_CARRIAGE_EXEMPT) assert.equal(publicationOwns(t), false, `${t} is case-carriage's`);
   assert.deepEqual(PUBLICATION_TABLES.map((t) => t.name || t).sort(),
-                   ["case_documents", "case_exclusions", "case_revision_flags", "observation_attributions", "published_edges",
-                    "published_held_references"]);
+                   ["capture_attributions", "case_documents", "case_exclusions", "case_revision_flags",
+                    "observation_attributions", "published_edges", "published_held_references"]);
   assert.equal(publicationOwns("published_edges"), true);
   assert.equal(publicationOwns({ name: "export_log" }), false, "corpus-export's since K1024");
   assert.equal(publicationOwns("statement_acknowledgements"), false, "case-authoring's");
@@ -113,14 +120,14 @@ test("N483 N501 (K1119) this module answers no export: no op `export` or `export
   for (const name of constants) assert.equal(name in pub, false, `${name} is corpus-export's alone`);
 });
 
-test("R33 this module's table holds exactly C-92.1–.9, C-92.13 and C-122.1, each with its code, sentence and its raiser's site here; C-44.2, C-68.5 and C-98 left it for public-read's (its R17)", () => {
-  /* every table this file exports, not a sample: two, and every row in them is one of the twelve */
+test("R33 this module's table holds exactly C-92.1–.9, C-92.13 and C-122.1–.4, each with its code, sentence and its raiser's site here; C-44.2, C-68.5 and C-98 left it for public-read's (its R17)", () => {
+  /* every table this file exports, not a sample: two, and every row in them is one of the fourteen */
   const tables = Object.entries(CHECKS).filter(([, v]) => v && typeof v === "object" && !Array.isArray(v)
     && Object.values(v).some((r) => r && typeof r.check === "string"));
   assert.deepEqual(tables.map(([k]) => k).sort(), ["ATTRIBUTION_ACT_CHECKS", "CASE_SOURCES_CHECKS"]);
   const ids = Object.values(MINE).map((r) => r.check).sort((a, b) => a.localeCompare(b, "en", { numeric: true }));
   assert.deepEqual(ids, ["C-92.1", "C-92.2", "C-92.3", "C-92.4", "C-92.5", "C-92.6", "C-92.7", "C-92.8", "C-92.9", "C-92.13",
-                         "C-122.1"]);
+                         "C-122.1", "C-122.2", "C-122.3", "C-122.4"]);
   for (const [code, row] of Object.entries(MINE)) {
     assert.ok(typeof row.translation === "string" && row.translation.length > 40, `${code} has its sentence`);
     assert.match(row.where, /^src\/publication\/index\.mjs \w+ > is-[a-z-]+$/, `${code}'s site is this module's`);

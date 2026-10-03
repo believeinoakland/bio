@@ -7,6 +7,8 @@ import { world, V, AUTHORED } from "./fixture.mjs";
 import { caseAuthoringOps, caseAuthoringOwns, CASE_AUTHORING_TABLES, CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS,
          CASE_DISCLOSURE_CHECKS, PUBLISH_ACT_CHECKS, STATEMENT_ACK_MAX, SEARCHED_LEVEL_OUTCOMES }
   from "../../../src/case-authoring/index.mjs";
+import * as CHECKS from "../../../src/case-authoring/checks.mjs";
+import * as DISCLOSURES from "../../../src/case-disclosures/index.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
 
@@ -71,7 +73,7 @@ test("R28: statement_acknowledgements is declared whole to record-core's purge, 
   assert.equal(w.count("statement_acknowledgements"), 0);
 });
 
-test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3–C-44.5, C-82.2–C-82.8 (C-82.8 new, DEC-88), C-32.6 (and R3's C-33.14) — and the family C-120.1–C-120.7 is held here, every refusal carrying its check, code and translation", () => {
+test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3–C-44.5, C-82.2–C-82.8 (C-82.8 new, DEC-88), C-32.6 (and R3's C-33.14) — every refusal carrying its check, code and translation; the family C-120.1–C-120.8 and C-120.10–C-120.13 (C-120.9 withdrawn unstamped) is case-disclosures' (its R22, N529), re-exported here and held nowhere in this module's own families (K529)", () => {
   assert.deepEqual(Object.entries(CASE_DERIVATION_CHECKS).map(([k, v]) => [k, v.check]),
     [["CASE_IDENTITY_AMBIGUOUS", "C-44.1"], ["PUBLISH_DRAFT_NOT_FOUND", "C-44.3"], ["PUBLISH_DRAFT_NOT_THIS_CASE", "C-44.4"],
      ["PUBLISH_DRAFT_ALREADY_BOUND", "C-44.5"]]);
@@ -87,12 +89,20 @@ test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3
   assert.equal(STATEMENT_ACK_CHECKS.STATEMENT_ACK_NO_REASON.where,
     "src/case-authoring/index.mjs acknowledgeStatement > is-statement-ack-reasoned");
   assert.deepEqual(Object.values(CASE_DISCLOSURE_CHECKS).map((v) => v.check),
-    ["C-120.1", "C-120.2", "C-120.3", "C-120.4", "C-120.5", "C-120.6", "C-120.7"]);
+    ["C-120.1", "C-120.2", "C-120.3", "C-120.4", "C-120.5", "C-120.6", "C-120.7", "C-120.8", "C-120.10", "C-120.11",
+     "C-120.12", "C-120.13"]);
+  assert.equal(Object.values(CASE_DISCLOSURE_CHECKS).some((v) => v.check === "C-120.9"), false, "withdrawn, never used");
   assert.deepEqual(Object.entries(PUBLISH_ACT_CHECKS).map(([k, v]) => [k, v.check]),
     [["MACHINE_CANNOT_PUBLISH", "C-32.6"], ["NO_STATEMENT", "C-33.14"]]);
+  assert.equal(CASE_DISCLOSURE_CHECKS, DISCLOSURES.CASE_DISCLOSURE_CHECKS, "case-disclosures' one table, re-exported");
+  for (const row of Object.values(CASE_DISCLOSURE_CHECKS))
+    assert.match(row.where, /^src\/case-disclosures\/index\.mjs \S+ > [a-z-]+$/, "each C-120 row names case-disclosures' region");
+  /* K529: this module's own family file holds no C-120 row and no disclosure code */
+  const own = Object.values(CHECKS).filter((v) => v && typeof v === "object").flatMap((f) => Object.entries(f));
+  assert.equal(own.some(([k, v]) => k in CASE_DISCLOSURE_CHECKS || /^C-120\./.test(v.check)), false, "no C-120 row held here");
   for (const row of [...Object.values(CASE_DERIVATION_CHECKS), ...Object.values(STATEMENT_ACK_CHECKS),
                      ...Object.values(CASE_DISCLOSURE_CHECKS), ...Object.values(PUBLISH_ACT_CHECKS)]) {
-    assert.match(row.where, /^src\/case-authoring\/index\.mjs \S+ > [a-z-]+$/, "each row names this module's region");
+    assert.match(row.where, /^src\/case-(authoring|disclosures)\/index\.mjs \S+ > [a-z-]+$/, "each row names its module's region");
     assert.ok(typeof row.translation === "string" && row.translation.length > 40, "a member's sentence");
     assert.ok(!/[A-Z]{2,}_[A-Z_]+/.test(row.translation), "no code in a member's words");
   }

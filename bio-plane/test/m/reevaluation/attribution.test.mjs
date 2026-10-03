@@ -7,7 +7,7 @@
    directly. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, U, V, MACHINE } from "./fixture.mjs";
+import { world, U, V, MACHINE, sha } from "./fixture.mjs";
 import { CAUSE_SOURCES } from "../../../src/reevaluation/index.mjs";
 
 const OBS = "INFO-2026-0001-observed", ELSE = "INFO-2026-0002-fetched", LONE = "INFO-2026-0003-lone";
@@ -186,4 +186,83 @@ test("R29 R28 R20: a targeted read whose only dependents of a moved observation 
   /* negative control: the one who sees them is given both, and nothing is said withheld */
   const a = w.r.reevaluations({ target: OBS, viewer: V("ann") });
   assert.deepEqual([a.obligations.map((o) => o.bundle_id), a.out_of_view], [[D, W], undefined]);
+});
+
+/* R32 (DEC-119 (3); N523): an off-the-record capture's attesting member's credit level moved. OBS's one capture is `a`. */
+const CAP = sha("what I saw at the meeting");
+const CMOVE = { capture: CAP, from: "group", to: "name", case: CASE, edition: 2, at: AT };
+
+test("R32 R29 R2: a capture's attesting member's level moved gives the attribution cause to each live leg targeting a document whose capture it is (a passage leg and a whole leg), naming the capture and no member; nothing regrades", () => {
+  const { w } = observed();
+  const m = w.r.levelMoved(CMOVE);
+  assert.deepEqual([m.ok, m.moved, m.at, m.dependents], [true, true, AT, 2]);
+  const r = w.r.reevaluations({ viewer: ADMIN });
+  assert.deepEqual(r.obligations.map((o) => [o.bundle_id, o.target]), [[D, OBS], [W, OBS]], "O rests on another document");
+  for (const o of r.obligations) {
+    const [c, ...more] = attributed(o);
+    assert.equal(more.length, 0, "once per move");
+    assert.deepEqual([c.source, c.since, c.ord, c.capture_sha, c.level_before, c.level_after, c.case, c.edition, c.observation],
+      ["attribution", AT, 0, CAP, "group", "name", CASE, 2, undefined]);
+    assert.match(c.detail, new RegExp(`the member attesting capture ${CAP.slice(0, 12)} moved from group to name in case ${CASE} at edition 2`));
+    assert.ok(!/alice|member:/.test(JSON.stringify(c)), "no member is named");
+  }
+  assert.equal(r.obligations.find((o) => o.bundle_id === D).legs[0].grade, "B", "it never regrades");
+  assert.deepEqual(w.r.reevaluations({ target: OBS, viewer: ADMIN }).obligations.map((o) => o.bundle_id), [D, W]);
+  /* a move before the dependents' last write raises nothing new */
+  const w2 = observed().w;
+  w2.r.levelMoved({ ...CMOVE, at: "2026-09-26T00:00:00Z" });
+  assert.equal(w2.r.reevaluations({ viewer: ADMIN }).count, 0);
+  /* a capture no leg rests on */
+  assert.deepEqual(w2.r.levelMoved({ ...CMOVE, capture: "f".repeat(64) }).dependents, 0);
+  assert.equal(w2.r.reevaluations({ viewer: ADMIN }).count, 0);
+});
+
+test("R32 R8 R18: each capture move keeps one row (the capture, both levels, case, edition, instant; no member) and is told once as kind attribution with the capture as subject; a malformed call, or one naming both an observation and a capture, writes nothing", () => {
+  const { w } = observed();
+  const tables = () => { const s = w.snapshot(); delete s.sqlite_sequence; return s; };
+  const empty = tables();
+  for (const bad of [{ ...CMOVE, capture: "not-a-sha" }, { ...CMOVE, capture: "" }, { ...CMOVE, from: null },
+                     { ...CMOVE, to: "group" }, { ...CMOVE, observation: OBS }])
+    assert.deepEqual(w.r.levelMoved(bad), { ok: true, moved: false }, JSON.stringify(bad));
+  assert.deepEqual(tables(), empty);
+  const heard = [];
+  w.r.onBasisChanged("conformance", (e) => heard.push(e));
+  w.r.onBasisChanged("consequences", () => { throw new Error("boom"); });
+  const m = w.r.levelMoved({ ...CMOVE, capture: CAP.toUpperCase() });
+  assert.deepEqual(m.listeners_failed, ["consequences"]);
+  const after = tables();
+  assert.deepEqual(Object.keys(after).filter((t) => after[t] !== empty[t]), ["reevaluation_capture_level_moves"]);
+  const rows = w.rows(`SELECT * FROM reevaluation_capture_level_moves`);
+  assert.deepEqual(rows.map((x) => Object.keys(x).sort()),
+    [["at", "capture_sha", "case_id", "edition", "level_after", "level_before", "move_id"]]);
+  assert.deepEqual([rows[0].capture_sha, rows[0].level_before, rows[0].level_after, rows[0].case_id, rows[0].edition],
+    [CAP, "group", "name", CASE, 2]);
+  assert.equal(heard.length, 1);
+  const [h] = heard;
+  assert.deepEqual([h.kind, h.subject, h.source, h.since, h.level_before, h.level_after, h.case, h.edition],
+    ["attribution", CAP, "attribution", AT, "group", "name", CASE, 2]);
+  assert.deepEqual(h.dependents, [{ bundle_id: D, ord: 0, role: "supports", state: "open" },
+                                  { bundle_id: W, ord: 0, role: "supports", state: "open" }]);
+  assert.ok(!/alice|member:/.test(JSON.stringify(h)), "no member is named");
+  /* a rolled-back caller keeps no row and tells nobody */
+  assert.throws(() => w.record.transact(() => { w.r.levelMoved({ ...CMOVE, from: "name", to: "cover" }); throw new Error("undo"); }));
+  assert.deepEqual([w.count("reevaluation_capture_level_moves"), heard.length], [1, 1]);
+  /* the reads write nothing */
+  const before = w.snapshot();
+  w.r.reevaluations({ viewer: ADMIN }); w.r.changesOf({ findings: [D, W], viewer: ADMIN });
+  assert.deepEqual(w.snapshot(), before);
+});
+
+test("R32 R16 R9 R20: changesOf answers a capture move with its target; a recorded re-evaluation closes it until the level moves again; a dependent the viewer may not see is withheld", () => {
+  const { w } = observed();
+  w.r.levelMoved(CMOVE);
+  assert.deepEqual(w.r.changesOf({ findings: [D, O], viewer: ADMIN }).findings.map((f) => [f.id, f.causes.map((c) => [c.source, c.target, c.capture_sha])]),
+    [[D, [["attribution", OBS, CAP]]], [O, []]]);
+  assert.equal(w.r.recordReevaluation({ dependent: D, target: OBS, source: "attribution", note: "the attestation stands",
+                                        author: "alice", viewer: ADMIN }).ok, true);
+  assert.deepEqual(w.r.reevaluations({ viewer: ADMIN }).obligations.map((o) => o.bundle_id), [W]);
+  w.r.levelMoved({ ...CMOVE, from: "name", to: "project", at: "2026-09-29T00:00:00Z" });
+  assert.deepEqual(w.r.reevaluations({ viewer: ADMIN }).obligations.map((o) => o.bundle_id), [D, W], "moved again: owed again");
+  assert.equal(w.r.reevaluations({ viewer: "nobody" }).count, 0);
+  assert.deepEqual(w.r.changesOf({ findings: [D], viewer: "nobody" }).findings, [{ id: D, absent: true }]);
 });

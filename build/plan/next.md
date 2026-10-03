@@ -1,57 +1,11 @@
-# Plan: next (T28)
+# Plan: next (T31)
 
-**Status** · Entries for the tranche after T27, written as T27 runs (P18). Started at T27's opening by BOB #103, 2026-10-02 (K1262).
+**Status** · Entries for the tranche after T30, written as T30 runs (P18). Started at T30's opening by BOB #107, 2026-10-03 (K1357).
 
 ## Entries
 
-- S4 · 2026-10-02 · **promotion**: stamp the catalogue rows T27's L8–L11 jobs add (C-117.23–.25, C-69.5, C-129.1–.26 (`docket`), and, `public-read`'s and `signatures`' new rows, as their T27 records name them); `CATALOG_VERSION` MINOR; `ROW_CENSUS` re-pinned (R50). **Why next:** promotion is L2, before the rows exist (P8, P10). Clears T27's red 2.
+- N534 · 2026-10-03 · **DEC-101 (3) with DEC-116 (8)'s citing side** (from T29, K1339, K1342): `plan/draft-T29-n534.md`, plane R18 → R19. **Hard reason:** Bob's; folded at the opening once he approves.
 
-- N519 · 2026-10-02 · **DEC-112 (5) as ruled on 1 October** (re-cut by K1275: DEC-119 withdrew K1254 and K1263): off-the-record source material may support a case and travels whole in the published case and case file with the attesting member's, the project's and the group's attestations, only its identity withheld ("Withheld", with the reason), its grade reflecting an unnamed source; K1134 Q6 (which record holds the project's and the group's attestations) decided by BOB in the re-cut. **Ready for T28** (re-cut, K1277) once PR #8 is on `main` (merged at T27's close).
+## Carried from T30
 
-- N520 (DEC-112 share) · 2026-10-02 · **`case-checker` and `case-import`** (K1256): fold `plan/draft-T24-dec112.md` with K1134's readings and K1254 into requirements; add both modules to `modules.json` and `layers.md` (L8: case-checker directly after ratification, case-import directly after it). **Ready for T28** (K1263; drafted in `plan/draft-T28-dec112.md`, reviewed K1268). DEC-116's share is in T27.
-
-- N521 · 2026-10-02 · **DEC-113's device half** (N518's remainder): the device transcript store's check for a hold before either scheduled deletion, failing closed, reading `actions` R58; the time limit (DEC-61's TTL) is Bob's then. **Hard reason:** dependency not yet built (no device-storage module).
-
-- N522 · 2026-10-02 · **DEC-96 item 4 and item 1's withdrawal notice** (K1268, K1273): the published case states each acceptance and discloses open flags on relied-on work; withdrawing an acceptance sends re-evaluation notices. **Ready for T28**: `plan/draft-T28-n522.md` (the seam module `accepted-work`, L6, and changes in inquiry-grammar, inquiry, basis-versions, strength, reevaluation, case-import, case-grammar, case-checker, case-authoring, publication), applied after `draft-T28-dec112.md` (its indices shift by one).
-
-- N523 · 2026-10-02 · **ratification R35** (DEC-119 (3), K1275): the guard (no relied-on finding signed on anonymous testimony or evidence without an independent corroborating leg) also applies when an anonymous member (credited only at group or project level) is the one attesting an off-the-record source. **For T28** (PR #8 on `main` at T27's close).
-
-- N524 · 2026-10-02 · **case-grammar R9** (DEC-117, U27): the first lens sentence becomes, verbatim, "Everyone who investigates looks through a lens: what they care about and expect to find. An undeclared lens is the most dangerous kind."; strike "to be confirmed by the design session". **For T28** (case-grammar has a T28 job).
-
-- N525 · 2026-10-02 · **docket**: its public addresses (R14's `feed`, the entry links) begin with `?` while public-read's do not (PUBLIC-READ #8's record); make them one form. **Why next:** docket's T27 job had closed when found (P8).
-
-- N526 · 2026-10-03 · **docket** R2: its machine refusal of `docketpressure` gets its own code (e.g. `MACHINE_CANNOT_MARK_DOCKET_PRESSURE`) and row; today it reuses `MACHINE_CANNOT_MARK_PRESSURE`, held by `action-grammar` C-117.14 (DEC-49: one code, one row). Then **control-plane** moves docket's family to its module-order place in `CHECK_FAMILY_FILES` (one line). Found by CONTROL-PLANE #17 (J2; K1291). **Why next:** docket's T27 job had closed when found (P8, P9).
-
-- N527 · 2026-10-03 · **queue** R28: the bridge classes a key by R3, by an `OBLIGATION::<kind>` id, or by its first segment; a contradiction duty's published id `OBLIGATION::contradiction::<candidate>` (`queue-producers` R4), and `-unseen`'s, has no kind in its second segment, so it falls to the progression arm. Word R28 to class these ids as the contradiction-duty kinds (R46's doors). Found by QUEUE #14 (K1293). **Why next:** a requirement change found as the job closed (P8).
-
-## Carried from T27
-
-| row | item | hard reason | note |
-|---|---|---|---|
-| B1 | DIST-14 (office-readers) | deployment | CSV bound measured on a deployed plane |
-| B2 | N75 (image-codecs) | deployment | 61.3 MB bound |
-| B3 | N34 (pdf-worker) | deployment | JPX bound; JBIG2 fixture encoder; 4,277 lines (P6) |
-| B11, C9 | N461 release share; N471's release copies | deployment | the next signed release, Bob's act |
-| B16 | N473 (`filing_templates` table) | deployment | migration run at every instance |
-| C1 | office-readers R28/R29 retired | deployment | migrations at every instance |
-| C2 | `MODES.plan` deployed | deployment | K660 (5) |
-| C3 | newgroup installer deployed, N336 | deployment | a signed release |
-| C4, A11–A17 | contradiction R24, R27, R32, R33/R36 K5 arms, R34, R41, R57 | measurement | a measured recommender run (K488) |
-| C8 | first profile's facts without a source | measurement | K925, K934, K941 |
-| B4, B5 | N144, N232 | Bob's (UX) | K899 (2) |
-| A54 | skills R10 | Bob's (UX): ruled, waits on the new interface | K899 (2), with N144 |
-| B6–B10, B12, B18, B20, C6, C7, D2, I2 | legacy-ui shares, UI fixtures, the module | Bob's (UX) | K633, K1006 |
-| N487 | legacy-ui DEC-88 reasons | Bob's (UX) | K633, K1030 |
-| J7 | DEC-81's Grade A (and its three decisions) | trigger: DEC-81 (4) defers Grade A until a case is challenged on authenticity, a group needs legal-grade evidence, "self-attested only" becomes material, or Bob asks | nothing to ask Bob (K1267) |
-| H13 | DEC-105 audience guidance | trigger (a group asks, or a case is challenged) | DEC-105 defers it; nothing to ask Bob (K1266) |
-| C5 | `PLN-` affordances, plan page, joint action | Bob's (UX) for the plan page (approved, K608 (4)); trigger for joint action (a coalition asks, K600 (c)) | nothing to ask Bob (K1266) |
-| H3, H4, H9b, H11, H14, H16c, H18, H20, J6, J11 | DEC screens of the new interface | Bob's (UX) | K633, K899 (2) |
-| H1, H6b, J4 | DEC-96, DEC-101 (3), DEC-92 | dependency not yet built | nothing brings another group's edition into this copy |
-| A8 | bias R26 | dependency not yet built | K102's trigger |
-| A21 | inquiry R31 | dependency not yet built | no opinion element (MK-5) |
-| A22, A23 | installer R13, R24 | dependency not yet built | the new member surfaces |
-| A37 | progressions R32 | dependency not yet built | no amounts or funds as values |
-| A41 | publication R30 | dependency not yet built | nothing publishes a rendering (D-246) |
-| N493 (part) | member-facing translations of "noticed" (contradiction `checks.mjs`:136, :236; queue `checks.mjs`:63) | Bob's: UX (the design stream's DECs decide member-facing wording) | by BOB #93, K1099 |
-
-| T27-1 | a docket-signing step in the member interface (signatures J1: the signer page signs docket entries; `civicos-ui` signs nothing) | Bob's (UX) | K633; legacy-ui |
+The left-out table of `current.md` (T30), unchanged until re-read at T31's opening.

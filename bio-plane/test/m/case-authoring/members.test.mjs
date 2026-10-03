@@ -1,5 +1,5 @@
 /* case-authoring: each member of the case — who may be one (R4), the project's bar asked of the load-bearing ones (R6),
-   hunch debt (R12), what publishing writes on a member (nothing: R13, R23), and that no case-level strength is composed
+   hunch debt (R55 (case-disclosures R16)), what publishing writes on a member (nothing: R13, R23), and that no case-level strength is composed
    anywhere (R24). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -132,7 +132,7 @@ test("R6: the project's bar is read once; on each axis it declares each load-bea
   assert.deepEqual([noBar.ok, noBar.required.declared], [true, false]);
 });
 
-test("R12: a member carrying uncleared hunch debt is refused UNCLEARED_HUNCH, naming every hunch leg, before anything is written (no case id drawn)", () => {
+test("R55 (case-disclosures R16): a member carrying uncleared hunch debt is refused UNCLEARED_HUNCH, naming every hunch leg, before anything is written (no case id drawn)", () => {
   const w = setup();
   w.finding(Q, [{ target: DOC }, { target: DOC2, grade: "B", grade_axis: "connection", grade_source: "hunch",
                                    author: ALICE, date: "2026-09-27" }]);

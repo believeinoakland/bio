@@ -1,0 +1,15 @@
+session,role,module,cache_read,cache_write,input,output,turns,test_runs,module_lines
+session_01LrwnC23wRd3ati4bwBSKnq,job,signatures,3402338,111651,54,14529,,6,1329
+session_016G62nZSnbukEEdrMHSsV1z,job,membership,2067390,46101,50,8354,,9,3347
+session_012itywqqcejzP4TtrJ2dRny,job,promotion,6482319,145589,87,19151,,9,3289
+session_0181RUrJ7zf5WDcW4trWkR3Y,job,capture,12047964,355969,96,17715,,7,3455
+session_01NTpQJf5vp8NWhH7MCRQXe9,job,reevaluation,5714433,158657,74,18666,,9,2794
+session_014NiBSyfeN9Ej6wJuwzhDhh,BOB-final,,70027423,1355582,817,276282,,,
+session_01NMLMCaPqjqRW2kHK9vegRN,job,case-carriage,8534281,184793,104,55075,,18,341
+session_017bm3BWK3xDxBgctGcV2Rnp,job,publication,14982033,283838,122,24716,,12,3828
+session_01CSkgoq9z5tRnMWZZnTMGfA,job,docket,4159439,138897,58,11935,,6,1299
+session_01WJvRKHshhLTwUVBauzgSmg,job,case-checker,2695501,102189,48,12466,,3,1740
+session_01KGf5pxXzTcDPj2Jf6NWLvV,job,case-disclosures,35549887,420212,228,119662,,14,1292
+session_01GeKDKfZzHTVtMfNysZDXp7,job,case-authoring,31890132,461007,182,52962,,9,2937
+session_0131YRU3q99y5WXShe5oMaPr,job,control-plane,3921100,87476,74,14783,,5,3649
+session_013R53oRbit9nK4tT9VYdbFQ,job,plane,5648584,109881,94,19485,,3,551

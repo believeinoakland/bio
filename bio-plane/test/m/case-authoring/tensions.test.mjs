@@ -1,10 +1,11 @@
-/* case-authoring: disclosing a contradiction (R31), the ceremony's read before the act (R32), sight at the act (R33),
-   and the rows of "a case's disclosures", C-120.1–C-120.3 (R29), over the real `contradiction` module: every candidate
+/* case-authoring: disclosing a contradiction (R55 (case-disclosures R1)), the ceremony's read before the act (R32), sight at the act (R33),
+   and the rows of "a case's disclosures", C-120.1–C-120.3 (R29: `case-disclosures`' own, re-exported), over the real `contradiction` module: every candidate
    here is laid down through its own doors (the pairing forms a pair, a run proposes it, a member acts on it). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, AUTHORED, sha } from "./fixture.mjs";
 import { CASE_DOCUMENT_FORMAT, caseTensionsOf } from "../../../src/publication/index.mjs";
+import * as DISCLOSURES from "../../../src/case-disclosures/index.mjs";
 import { caseAuthoringOps, CASE_DISCLOSURE_CHECKS, TENSION_TEMPLATES, HIGHLIGHT_SENTENCE,
          CEREMONY_HIGHLIGHT_SENTENCE, NOT_SHOWN_WORDS, TENSIONS_DEPTH_STATED } from "../../../src/case-authoring/index.mjs";
 
@@ -60,7 +61,8 @@ function refused(r, code) {
     [code, code, CASE_DISCLOSURE_CHECKS[code].check, CASE_DISCLOSURE_CHECKS[code].translation]);
 }
 
-test("R29: C-120.1–C-120.3, a case's disclosures, are this module's own family with the translations of the requirements, each naming its region (C-120.4–C-120.7: preflight.test.mjs)", () => {
+test("R29 (N529): C-120.1–C-120.3, a case's disclosures, are case-disclosures' own rows (its R22), re-exported here as that one table, never a copy, with the translations of the requirements, each naming its raising method there; publishCase's refusals carry them", () => {
+  assert.equal(CASE_DISCLOSURE_CHECKS, DISCLOSURES.CASE_DISCLOSURE_CHECKS, "the one table, re-exported");
   assert.deepEqual(Object.entries(CASE_DISCLOSURE_CHECKS).slice(0, 3).map(([k, v]) => [k, v.check]),
     [["TENSION_NOT_DISCLOSED", "C-120.1"], ["DISCLOSURE_NOT_STANDING", "C-120.2"], ["TENSIONS_UNDETERMINED", "C-120.3"]]);
   assert.deepEqual(Object.values(CASE_DISCLOSURE_CHECKS).slice(0, 3).map((v) => v.translation), [
@@ -68,15 +70,14 @@ test("R29: C-120.1–C-120.3, a case's disclosures, are this module's own family
     "One of the conflicts disclosed is not an unresolved conflict on this case's findings: it may have been resolved since. Read the list again. Nothing was published.",
     "The record could not be read completely for conflicts on this case's findings, so what must be disclosed is not known. Try again. Nothing was published."]);
   for (const row of Object.values(CASE_DISCLOSURE_CHECKS))
-    assert.match(row.where, /^src\/case-authoring\/index\.mjs \S+ > [a-z-]+$/);
-  /* each names the function that raises it (N383): R31's two in `#tensionsJudged`, C-120.3 at its one site */
+    assert.match(row.where, /^src\/case-disclosures\/index\.mjs \S+ > [a-z-]+$/);
   assert.deepEqual(Object.values(CASE_DISCLOSURE_CHECKS).slice(0, 3).map((v) => v.where), [
-    "src/case-authoring/index.mjs #tensionsJudged > is-tension-disclosed",
-    "src/case-authoring/index.mjs #tensionsJudged > is-disclosure-standing",
-    "src/case-authoring/index.mjs #undetermined > is-tensions-determined"]);
+    "src/case-disclosures/index.mjs tensionsJudged > is-tension-disclosed",
+    "src/case-disclosures/index.mjs tensionsJudged > is-disclosure-standing",
+    "src/case-disclosures/index.mjs tensionsUndetermined > is-tensions-determined"]);
 });
 
-test("R31 (C-120.1): an undisclosed tension is refused, naming each, before any id is drawn and with nothing written; disclosed, the case publishes — disclose, never block (DEC-76 item 4)", () => {
+test("R55 (case-disclosures R1) (C-120.1): an undisclosed tension is refused, naming each, before any id is drawn and with nothing written; disclosed, the case publishes — disclose, never block (DEC-76 item 4)", () => {
   const { w, P, id } = seen();
   const before = w.snapshot();
   const r = w.publish(P, "alice", [F]);
@@ -94,7 +95,7 @@ test("R31 (C-120.1): an undisclosed tension is refused, naming each, before any 
   assert.equal(n.publish(n.project("Team", "alice", [F]), "alice", [F]).ok, true);
 });
 
-test("R31, R14: the tension section lists each one — the finding, both sides verbatim with source, date and doctype, its state, the explanation, the owner's words, acknowledged_by (the author stamp) and the instant, and the one-level sentence — and each member's block gains its template's sentence; nothing composes a strength (R24)", () => {
+test("R55 (case-disclosures R1), R14: the tension section lists each one — the finding, both sides verbatim with source, date and doctype, its state, the explanation, the owner's words, acknowledged_by (the author stamp) and the instant, and the one-level sentence — and each member's block gains its template's sentence; nothing composes a strength (R24)", () => {
   const { w, P, id } = seen();
   /* explained, not yet shown: a member's differs without evidence (contradiction R32) */
   const ex = w.contradiction.clarify({ candidate: id, choice: "differs", coordinates: ["scope"],
@@ -136,7 +137,7 @@ test("R31, R14: the tension section lists each one — the finding, both sides v
   assert.equal(o.w.fm(docOf(o.w, ro).text).case_tensions[0].words, null, "no words given: null, never filled");
 });
 
-test("R31: an irreconcilable conclusion must be disclosed, and its member's block holds it irreconcilable; a taken-up one is in tension", () => {
+test("R55 (case-disclosures R1): an irreconcilable conclusion must be disclosed, and its member's block holds it irreconcilable; a taken-up one is in tension", () => {
   const { w, P, id } = seen();
   const up = w.contradiction.takeUp({ candidate: id, question: "Which page governs?", frame: "a", viewer: V("alice"), author: V("alice") });
   assert.equal(up.ok, true, JSON.stringify(up).slice(0, 300));
@@ -161,7 +162,7 @@ test("R31: an irreconcilable conclusion must be disclosed, and its member's bloc
   assert.ok(fm.case_tension_sentences[0].sentence.startsWith(TENSION_TEMPLATES.irreconcilable));
 });
 
-test("R31 (C-120.2): a listed candidate the read does not answer — one resolved since, or one nothing holds — is DISCLOSURE_NOT_STANDING, and nothing is written", () => {
+test("R55 (case-disclosures R1) (C-120.2): a listed candidate the read does not answer — one resolved since, or one nothing holds — is DISCLOSURE_NOT_STANDING, and nothing is written", () => {
   const { w, P, id } = seen();
   const other = sha("no such candidate");
   const before = w.snapshot();
@@ -178,7 +179,7 @@ test("R31 (C-120.2): a listed candidate the read does not answer — one resolve
   assert.deepEqual(ok.tensions, []);
 });
 
-test("R31 (C-120.3): a read that fails or is truncated is TENSIONS_UNDETERMINED — what cannot be read cannot be disclosed — and nothing is written; a whole read publishes", () => {
+test("R55 (case-disclosures R1) (C-120.3): a read that fails or is truncated is TENSIONS_UNDETERMINED — what cannot be read cannot be disclosed — and nothing is written; a whole read publishes", () => {
   for (const [answer, why] of [[{ ok: true, candidates: [], undetermined: true, why: "the read failed" }, /the read failed/],
                                [{ ok: true, candidates: [], truncated: true, bound: 200 }, /more than 200/],
                                [null, /no answer/], ["throws", /boom/]]) {
@@ -200,7 +201,7 @@ test("R31 (C-120.3): a read that fails or is truncated is TENSIONS_UNDETERMINED 
   assert.equal(w.publish(w.project("Team", "alice", [F]), "alice", [F]).ok, true, "negative control");
 });
 
-test("R31, R26: a leg the read could name no referent for is stated in the document, never read as no conflict", () => {
+test("R55 (case-disclosures R1), R26: a leg the read could name no referent for is stated in the document, never read as no conflict", () => {
   const w = world({ deps: { contradiction: { unresolvedRecordOn: () => ({ ok: true, candidates: [], truncated: false,
                                                                           undetermined_legs: 1 }) } } });
   w.member("alice"); w.doc(DOC); w.finding(F, [{ target: DOC }]);
@@ -212,7 +213,7 @@ test("R31, R26: a leg the read could name no referent for is stated in the docum
   assert.match(text, /1 leg\(s\) of INQ-2026-0001-q name no passage the record holds/);
 });
 
-test("R31, R33 (DEC-85): a tension with a side the owner may not see is named in C-120.1 by its candidate and finding only; disclosed, it publishes highlighted, and neither the document's bytes nor the answer hold anything of that side", () => {
+test("R55 (case-disclosures R1), R33 (DEC-85): a tension with a side the owner may not see is named in C-120.1 by its candidate and finding only; disclosed, it publishes highlighted, and neither the document's bytes nor the answer hold anything of that side", () => {
   const { w, P, H, id } = hidden();
   /* the explanation a member who sees both sides recorded quotes the hidden side */
   assert.equal(w.contradiction.clarify({ candidate: id, choice: "differs", coordinates: ["scope"],
@@ -249,7 +250,7 @@ test("R33 (DEC-85): a publisher whose project was revealed to the hidden party (
   for (const leak of [CH, "hidden minutes", H, "Hidden"]) assert.equal(text.includes(leak), false, `names ${leak}`);
 });
 
-test("R32: tensionsToDisclose answers the candidates R31 then requires, read as R31 reads them, with the ceremony's sentence for a highlighted one and the count; it writes nothing and never throws", () => {
+test("R32: tensionsToDisclose answers the candidates R55 (case-disclosures R1) then requires, read as R55 (case-disclosures R1) reads them, with the ceremony's sentence for a highlighted one and the count; it writes nothing and never throws", () => {
   const { w, P, H, id } = hidden();
   const before = w.snapshot();
   const r = w.ca.tensionsToDisclose({ project: P, targets: [F, F], viewer: V("alice"), author: "alice" });
@@ -259,7 +260,7 @@ test("R32: tensionsToDisclose answers the candidates R31 then requires, read as 
   assert.deepEqual(r.candidates.map((c) => [c.candidate, c.finding, c.highlighted, c.sentence]),
     [[id, F, true, CEREMONY_HIGHLIGHT_SENTENCE]]);
   assert.match(r.says, /never blocked by a conflict/);
-  /* exactly what R31 then requires: publishing without them names the same, and with them publishes */
+  /* exactly what R55 (case-disclosures R1) then requires: publishing without them names the same, and with them publishes */
   const refusedNow = w.publish(P, "alice", [F]);
   assert.deepEqual(refusedNow.undisclosed.map((u) => u.candidate), r.candidates.map((c) => c.candidate));
   assert.equal(w.publish(P, "alice", [F], { tensionsDisclosed: r.candidates.map((c) => ({ candidate: c.candidate })) }).ok, true);
@@ -289,7 +290,7 @@ test("R32: its refusals are R2's authority refusals and R4's per-member refusals
   assert.equal(ask({ project: null, targets: ["INQ-2026-0404-none"] }).reason, "NO_PUBLISHING_PROJECT", "R2 before R4");
 });
 
-test("R32, R31: op=publishtensions takes its stamps from the query after the body, and op=publish carries tensionsDisclosed in its body", () => {
+test("R32, R55 (case-disclosures R1): op=publishtensions takes its stamps from the query after the body, and op=publish carries tensionsDisclosed in its body", () => {
   const { w, P, id } = seen();
   const q = (op, s) => new URL(`http://do/${op}?viewer=${encodeURIComponent(V("alice"))}&author=alice&${s}`);
   const read = caseAuthoringOps(w.ca, q("publishtensions", `project=${P}&targets=${F}`), { author: "bo", viewer: V("bo") })
@@ -301,7 +302,7 @@ test("R32, R31: op=publishtensions takes its stamps from the query after the bod
   assert.equal(pub.tensions[0].acknowledged_by, "alice", "the author stamp, never a body's");
 });
 
-test("R31: tensionsDisclosed absent or null is none; a candidate listed twice is disclosed once; any malformed shape — not a list, an entry naming no candidate, words outside the grammar — is R3's BAD_COMPLETENESS naming the field (K498)", () => {
+test("R55 (case-disclosures R1): tensionsDisclosed absent or null is none; a candidate listed twice is disclosed once; any malformed shape — not a list, an entry naming no candidate, words outside the grammar — is R3's BAD_COMPLETENESS naming the field (K498)", () => {
   const { w, P, id } = seen();
   const twice = w.publish(P, "alice", [F], { tensionsDisclosed: [...disclose(id, "first"), ...disclose(id, "second")] });
   assert.equal(twice.ok, true, JSON.stringify(twice).slice(0, 300));
@@ -325,13 +326,13 @@ test("R31: tensionsDisclosed absent or null is none; a candidate listed twice is
   assert.equal(n.publish(n.project("Team", "alice", [F]), "alice", [F], { tensionsDisclosed: null }).ok, true);
 });
 
-test("R14: the document's format is bio-case-document/5, and its tension section reads back through publication's caseTensionsOf (K498) — both sides of a seen one, the seen side only of a highlighted one, each member's sentences, the unread legs", () => {
-  assert.equal(CASE_DOCUMENT_FORMAT, "bio-case-document/5");
+test("R14: the document's format is bio-case-document/6 (it states everything /5 states), and its tension section reads back through publication's caseTensionsOf (K498) — both sides of a seen one, the seen side only of a highlighted one, each member's sentences, the unread legs", () => {
+  assert.equal(CASE_DOCUMENT_FORMAT, "bio-case-document/6");
   const { w, P, id } = seen();
   const r = w.publish(P, "alice", [F], { tensionsDisclosed: disclose(id, "we read the later page") });
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
   const text = docOf(w, r).text;
-  assert.equal(w.fm(text).format, "bio-case-document/5");
+  assert.equal(w.fm(text).format, "bio-case-document/6");
   const back = caseTensionsOf(text);
   assert.equal(back.detail, null);
   assert.deepEqual([back.highlighted, back.depth, back.tensions.length], [0, TENSIONS_DEPTH_STATED, 1]);

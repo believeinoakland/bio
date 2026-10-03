@@ -162,3 +162,46 @@ test("R38: a case document carrying a malformed working_on is refused GATE_REFUS
   const ok = await good.run();
   assert.deepEqual([ok.status, ok.body.ok], [200, true], JSON.stringify(ok.body).slice(0, 300));
 });
+
+/* R39 (K1316, K1317): after the commit, each material publication's commit answers `held: "evidence"` (its R57) is
+   copied from the evidence store into the published bucket by its SHA-256; a re-sent op=caseratify retries through
+   `heldMaterialsOf`; the answer states `materials_copied`, and a missing one never changes `ok`. */
+test("R39: each evidence-held material is copied by its SHA-256 after the commit, one already published is present, one the evidence store lacks or whose put fails is missing and never changes ok; inline material is not copied; a re-sent op=caseratify retries through heldMaterialsOf", async () => {
+  const { w, docSha, sig } = await setup();
+  const A = "a1".repeat(32), B = "b2".repeat(32), C = "c3".repeat(32);
+  const held = [{ sha: A, held: "evidence" }, { sha: B, held: "evidence" }, { sha: C, held: "inline" }];
+  const real = w.publication.commitCaseEdition;
+  w.publication.commitCaseEdition = (a) => ({ ...real(a), materials: held });
+  const body = { caseId: CASE, edition: 1, expectedSha: docSha, sig };
+  const bytesA = new TextEncoder().encode("document A, whole");
+  const p1 = plane(w);
+  p1.captures.set(`s/captures/${A}`, bytesA);
+  const first = await caseRatifyOp(p1.request(body), p1.stub, p1.ctx);
+  assert.deepEqual([first.status, first.body.ok], [200, true], JSON.stringify(first.body).slice(0, 300));
+  assert.deepEqual(first.body.materials_copied, { copied: 1, present: 0, missing: [B] });
+  assert.deepEqual(p1.published.get(`s/published/${A}`), bytesA, "copied by its SHA-256, byte for byte");
+  assert.equal(p1.published.has(`s/published/${C}`), false, "inline material is publication's, never copied here");
+  assert.equal("evidenceMaterials" in first.body, false, "the store's internal list is not spread into the answer");
+  assert.equal(w.pub.committed.length, 1);
+  /* the retry: the same signature answers existed, and the missing material is copied from heldMaterialsOf's list */
+  const asked = [];
+  w.publication.heldMaterialsOf = (c, e) => (asked.push([c, e]), held);
+  const p2 = plane(w);
+  p2.published.set(`s/published/${A}`, bytesA);
+  p2.captures.set(`s/captures/${B}`, new TextEncoder().encode("document B"));
+  const retry = await caseRatifyOp(p2.request(body), p2.stub, p2.ctx);
+  assert.deepEqual([retry.status, retry.body.ok, retry.body.existed], [200, true, true]);
+  assert.deepEqual(retry.body.materials_copied, { copied: 1, present: 1, missing: [] });
+  assert.deepEqual(asked, [[CASE, 1]]);
+  assert.equal(w.pub.committed.length, 1, "the retry commits nothing");
+  /* a put that fails is missing, and ok stands */
+  const p3 = plane(w);
+  p3.captures.set(`s/captures/${A}`, bytesA); p3.captures.set(`s/captures/${B}`, bytesA);
+  p3.ctx.env.PUBLISHED.put = async () => { throw new Error("bucket refused"); };
+  const failed = await caseRatifyOp(p3.request(body), p3.stub, p3.ctx);
+  assert.deepEqual([failed.status, failed.body.ok, failed.body.materials_copied], [200, true, { copied: 0, present: 0, missing: [A, B] }]);
+  /* negative control: a commit holding nothing in the evidence store copies nothing */
+  const none = await setup();
+  const r = await none.run();
+  assert.deepEqual([r.status, r.body.materials_copied, r.p.published.size], [200, { copied: 0, present: 0, missing: [] }, 0]);
+});

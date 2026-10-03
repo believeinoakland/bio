@@ -42,7 +42,8 @@ export const LEAD_CHECKS = {
 };
 
 
-/** R7: the rows `inquiry`'s acts mint for the inquiry's own refusals, and the lead row (R5), by code. Named with the
+/** R7: the rows `inquiry`'s acts mint for the inquiry's own refusals, the lead row (R5) and the imported leg's (R11),
+ *  by code. Named with the
  *  reserved `_CHECKS` suffix, so DEC-49 composition (control-plane's `families.mjs`) finds it as a family (K850). */
 export const INQUIRY_GRAMMAR_CHECKS = Object.freeze({
   LEAD_NOT_EVIDENCE: LEAD_CHECKS.LEAD_NOT_EVIDENCE,
@@ -81,5 +82,12 @@ export const INQUIRY_GRAMMAR_CHECKS = Object.freeze({
       + 'it on their own, and it is the one act here that makes a finding stronger rather than '
       + 'weaker. That decision needs a person behind it, and the credential that asked is an '
       + 'automated one. Sign in to ground it.',
+  },
+  /* R11 (N522): a leg on another group's finding, refused by `importedLegFindings` (`./grammar.mjs`). */
+  IMPORTED_LEG_MALFORMED: {
+    check: 'C-21.3',
+    where: 'src/inquiry-grammar/grammar.mjs importedRefusal > is-imported-leg-form',
+    translation: 'A leg on another group\'s finding names that finding and one edition, and nothing else: its '
+      + 'grades are that edition\'s. Correct the leg. Nothing was written.',
   },
 });

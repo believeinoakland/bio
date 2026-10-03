@@ -146,7 +146,13 @@ test("R2 a pressure mark: refusals in order, each writing nothing; appended once
   const mark = (x = {}, who = "bob") => w.docket.docketPressure({ entry: e, pressure: { kind: "legal", note: "A letter from counsel." },
                                                                 author: V(who), viewer: V(who), ...x });
   for (const who of [MACHINE, "token:operator", null])
-    refusedThenAccepted(w, () => mark({ author: who, viewer: who }), () => ({ ok: true }), "MACHINE_CANNOT_MARK_PRESSURE");
+    refusedThenAccepted(w, () => mark({ author: who, viewer: who }), () => ({ ok: true }), "MACHINE_CANNOT_MARK_DOCKET_PRESSURE");
+  /* N526 (DEC-49, one code one row): the refusal is this module's own code and row, never action-grammar's
+     `MACHINE_CANNOT_MARK_PRESSURE` (C-117.14, `actions`' own), which no row here holds */
+  const machine = mark({ author: MACHINE, viewer: MACHINE });
+  assert.deepEqual([machine.reason, machine.code, machine.check], ["MACHINE_CANNOT_MARK_DOCKET_PRESSURE", "MACHINE_CANNOT_MARK_DOCKET_PRESSURE", "C-129.10"]);
+  assert.equal(Object.hasOwn(DOCKET_CHECKS, "MACHINE_CANNOT_MARK_PRESSURE"), false, "action-grammar's code has no row here");
+  assert.ok(!Object.values(DOCKET_CHECKS).some((r) => r.check === "C-117.14"), "nor its check");
   const strip = ({ entry: _e, ...x }) => x;
   const absent = mark({ entry: "DKT-2026-9999" });
   const unseen = mark({}, "dave");
@@ -154,13 +160,24 @@ test("R2 a pressure mark: refusals in order, each writing nothing; appended once
   rowOk(unseen, "NO_SUCH_DOCKET_ENTRY");
   assert.deepEqual(strip(absent), strip(unseen), "absent and unseen answer alike");
   for (const pressure of [null, { kind: "rude" }, { kind: "legal", note: "n".repeat(501) }, "legal"])
-    refusedThenAccepted(w, () => mark({ pressure }), () => ({ ok: true }), "PRESSURE_REFUSED");
+    refusedThenAccepted(w, () => mark({ pressure }), () => ({ ok: true }), "DOCKET_PRESSURE_REFUSED");
   const before = w.rows(`SELECT * FROM docket_record`);
   const ok = mark({ pressure: { kind: "retaliation", note: "n".repeat(500) } });
   assert.equal(ok.ok, true);
   assert.deepEqual(ok.pressure, { kind: "retaliation", note: "n".repeat(500), at: "2026-10-01T12:00:00Z" });
   assert.deepEqual(w.rows(`SELECT * FROM docket_record`), before, "the entry itself is never rewritten");
-  refusedThenAccepted(w, () => mark(), () => ({ ok: true }), "PRESSURE_MARKED");
+  refusedThenAccepted(w, () => mark(), () => ({ ok: true }), "DOCKET_PRESSURE_MARKED");
+  /* N533 (K1331, DEC-49): both are this module's own codes and rows, C-129.12 and C-129.13, never action-grammar's
+     `PRESSURE_MARKED` (C-117.17) or `PRESSURE_REFUSED` (C-117.15), which no row here holds */
+  const marked = mark(), refused = mark({ pressure: { kind: "rude" } });
+  assert.deepEqual([marked.reason, marked.code, marked.check], ["DOCKET_PRESSURE_MARKED", "DOCKET_PRESSURE_MARKED", "C-129.12"]);
+  assert.deepEqual([refused.reason, refused.code, refused.check], ["DOCKET_PRESSURE_MARKED", "DOCKET_PRESSURE_MARKED", "C-129.12"],
+                   "R2's order: an entry already marked is answered before the kind is read");
+  const fresh = file(w).entry;
+  const bad = w.docket.docketPressure({ entry: fresh, pressure: { kind: "rude" }, author: V("bob"), viewer: V("bob") });
+  assert.deepEqual([bad.reason, bad.code, bad.check], ["DOCKET_PRESSURE_REFUSED", "DOCKET_PRESSURE_REFUSED", "C-129.13"]);
+  for (const code of ["PRESSURE_MARKED", "PRESSURE_REFUSED"]) assert.equal(Object.hasOwn(DOCKET_CHECKS, code), false, `${code} has no row here`);
+  assert.ok(!Object.values(DOCKET_CHECKS).some((r) => ["C-117.15", "C-117.17"].includes(r.check)), "nor their checks");
   for (const kind of PRESSURE_KINDS) assert.equal(w.docket.docketPressure({ entry: file(w).entry, pressure: { kind }, author: V("alice"), viewer: V("alice") }).ok, true);
   const d = w.docket.docketOf({ case: CASE, viewer: V("bob") });
   assert.deepEqual(d.entries.find((x) => x.entry === e).pressure, ok.pressure);
@@ -207,7 +224,7 @@ test("R18 only a member files: no machine, AI run, operator token or administrat
     assert.equal(f.ok, false);
     assert.equal(f.reason, "MACHINE_CANNOT_FILE_DOCKET", `${who} files nothing`);
     assert.equal(w.docket.docketPressure({ entry: e, pressure: { kind: "other" }, author: who, viewer: V("bob") }).reason,
-                 "MACHINE_CANNOT_MARK_PRESSURE");
+                 "MACHINE_CANNOT_MARK_DOCKET_PRESSURE");
     assert.equal(w.docket.docketFile({ case: CASE, takesBack: e, reason: "r", author: who, viewer: V("bob") }).reason,
                  "MACHINE_CANNOT_FILE_DOCKET");
   }

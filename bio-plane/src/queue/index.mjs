@@ -569,6 +569,22 @@ export class Queue {
     const d = Object.prototype.hasOwnProperty.call(Queue.OBLIGATION_DOORS, kind) ? Queue.OBLIGATION_DOORS[kind] : null;
     return Array.isArray(d) ? [...d] : d || "taskresolve";
   }
+  /** R28 (N527): the class segments of the contradiction duties' published ids (queue-producers R4, R7), each the
+   *  duty's kind; the segment names the candidate's family, not a kind, because the producer keys an item by its
+   *  candidate whatever its class. */
+  static CONTRADICTION_DUTY_SEGMENTS = Object.freeze({ "contradiction": "contradiction-duty",
+    "contradiction-unseen": "contradiction-duty-unseen" });
+  /** R26, R28: the kind of an OBLIGATION published under its own class segment, or null: `OBLIGATION::<kind>::<rest>`
+   *  for a catalogued OBLIGATION kind, or a contradiction duty's `OBLIGATION::<segment>::<candidate>` with a non-blank
+   *  candidate. Anything else, an id of any other class included, is null. */
+  static obligationKindOfId(id) {
+    const m = typeof id === "string" ? /^OBLIGATION::([^:]*)(?:::(.*))?$/s.exec(id.trim()) : null;
+    if (!m) return null;
+    const [, seg, rest] = m;
+    if (classOfKind(seg) === "OBLIGATION") return seg;
+    return Object.prototype.hasOwnProperty.call(Queue.CONTRADICTION_DUTY_SEGMENTS, seg)
+           && typeof rest === "string" && rest.trim() ? Queue.CONTRADICTION_DUTY_SEGMENTS[seg] : null;
+  }
   /** R12: what each of those doors is, said on the item's disposition after the general sentence. */
   static OBLIGATION_DOOR_DETAIL = Object.freeze({
     "bias-debt": " This one is a bias debt, which is keyed by the RUN it is about rather than by "
@@ -1888,11 +1904,13 @@ export class Queue {
     /* R12, R26: an OBLIGATION not held in `tasks` is published as `OBLIGATION::<kind>::<rest>` (bias-debt, the
        self-registered key, the Action layer's four), which R3 does not read; its second segment is read here as R26
        reads it at the mute, so the bridge names its door rather than handing a progression arm the word OBLIGATION. */
-    const oblId = !scoped && /^OBLIGATION::/.test(keyed) && classOfKind(keyed.split("::")[1]) === "OBLIGATION"
-      ? "OBLIGATION" : null;
-    const byId = !scoped && keyed ? (itemClassOf(keyed) || oblId) : null;
+    /* R28 (N527, K1293): a contradiction duty is published under its candidate, `OBLIGATION::contradiction::<c>` or
+       `OBLIGATION::contradiction-unseen::<c>` (queue-producers R4, R7), whose second segment is no kind; it is read as
+       the duty's kind, so the bridge names the duty's doors rather than handing a progression arm the word OBLIGATION. */
+    const oblKind = !scoped ? Queue.obligationKindOfId(keyed) : null;
+    const byId = !scoped && keyed ? (itemClassOf(keyed) || (oblKind ? "OBLIGATION" : null)) : null;
     const keyClass = byId || (!scoped ? classOfKind(pk) : null);
-    const keyKind = byId ? (keyed.split("::")[1] || null) : (keyClass ? pk : null);
+    const keyKind = oblKind || (byId ? (keyed.split("::")[1] || null) : (keyClass ? pk : null));
     /* DEC-49 REGION is-dispose-class — REC-205/C-33.44. The code is a STRING LITERAL at its site and the
        translation comes off the row (R28's tests compare them), and a member reads the same sentence
        wherever this act is reached. */

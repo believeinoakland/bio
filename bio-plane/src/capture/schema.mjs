@@ -409,10 +409,10 @@ CREATE TABLE IF NOT EXISTS link_chrome (
   at           TEXT NOT NULL,
   PRIMARY KEY (host, address_norm)
 );
--- R61 (N140, K287): the validators a filed direct capture's own fetch was served with, so a later request for the
+-- R73 (acquisition R22; N140, K287): the validators a filed direct capture's own fetch was served with, so a later request for the
 -- same document address can be fetched conditionally against the capture the record already holds. One row per
 -- (document address, capture); a column the source did not send is NULL. Evidence of what the source said about
--- ITS bytes, never used to name a capture: a 304 answered against these files no capture (R61).
+-- ITS bytes, never used to name a capture: a 304 answered against these files no capture (acquisition R22).
 CREATE TABLE IF NOT EXISTS capture_validators (
   address_norm  TEXT NOT NULL,
   capture_sha   TEXT NOT NULL,
@@ -430,7 +430,7 @@ CREATE TABLE IF NOT EXISTS knocker_key (
 );
 CREATE INDEX IF NOT EXISTS inbox_pseudonym ON inbox(pseudonym, received);
 CREATE INDEX IF NOT EXISTS inbox_capture ON inbox(capture_sha, received);
--- R16, R69: each member this module stamped as capturing a capture (a member session's acquire, a knock's pull).
+-- acquisition R16, R69: each member this module stamped as capturing a capture (a member session's acquire, a knock's pull).
 -- Several members who captured the same bytes are each its actor. Written once per pair, never removed but by purge.
 CREATE TABLE IF NOT EXISTS capture_actors (
   capture_sha TEXT NOT NULL,

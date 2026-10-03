@@ -29,7 +29,7 @@
 
 import { parseFrontmatter, isMachineIdentity, normalizeType, LEGACY_TYPE_ALIASES, OBJECT_TYPES, STATES, vocabFor,
          createSha256 } from "../record-grammar/index.mjs";
-import { checkLegExtentGrammar } from "../inquiry-grammar/index.mjs";
+import { checkLegExtentGrammar, INQUIRY_GRAMMAR_CHECKS } from "../inquiry-grammar/index.mjs";
 import { readingSourceFromColumns } from "../textchain.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal } from "../membership/index.mjs";
@@ -40,7 +40,9 @@ import { inquiryOf, legCapped, actNoBasis } from "../inquiry/index.mjs";
    which the retired check catalogue's copy (legacy-checks) did not. */
 import { contentOf, mintLabel, contentMintState, CONTENT_MINTED_BY_PLANE, legContentId, legExtent, canonicalExtent,
          describeExtent, extentRelation, CONTENT_EXTENT_CHECKS } from "../content/index.mjs";
-import { basisVersionFindings, versionsIn, compositionDiff, sameComposition, registerBasisVersionGrammar } from "./grammar.mjs";
+import { acceptedWorkOf, ACCEPTED_WORK_CHECKS } from "../accepted-work/index.mjs";
+import { basisVersionFindings, versionsIn, compositionDiff, sameComposition, registerBasisVersionGrammar,
+         isImportedRef } from "./grammar.mjs";
 import { BASIS_VERSION_CHECKS, VERSION_ACT_CHECKS, VERSION_KIND_CHECKS, CONCLUDE_ACT_CHECKS, NARROW_CHECKS, VERSION_MACHINE,
          versionNeedsReason, VERSION_NAME_RE, isBoilerplate } from "./checks.mjs";
 import { fmSafe, quoted, typedValue, randHex, setVersionField, setCurrentVersionRow, appendFmRows,
@@ -106,7 +108,7 @@ const drawsOn = (fm, inquiryId) => (Array.isArray(fm?.references) ? fm.reference
 export class BasisVersions {
   #candidateSource = null;   // R25's extract arm: {module, fn}
 
-  constructor({ storage, record, membership, promotion, content, inquiry = null, now } = {}) {
+  constructor({ storage, record, membership, promotion, content, inquiry = null, acceptedWork = null, now } = {}) {
     this.storage = storage;
     this.sql = storage.sql;
     this.record = record;
@@ -114,6 +116,8 @@ export class BasisVersions {
     this.promotion = promotion;
     this.content = content;
     this.inquiry = inquiry;
+    /* R3 (N522): accepted-work's instance on the same host, whose leg check (its R3) the promotion check asks */
+    this.acceptedWork = acceptedWork;
     this.now = typeof now === "function" ? now : () => stampInstant("second");
   }
 
@@ -195,14 +199,18 @@ export class BasisVersions {
     if (verrs.length)
       return { ok: false, reason: "BASIS_VERSION_REFUSED",
                findings: verrs.map((x) => ({ check: x.check, detail: x.message, code: x.code,
-                                             /* three registries: a kind is C-27's, a leg extent relays C-45's codes */
+                                             /* four registries: a kind is C-27's, a leg extent relays C-45's codes,
+                                                a leg on another group's finding inquiry-grammar's C-21.3 (N522) */
                                              translation: (BASIS_VERSION_CHECKS[x.code] ?? VERSION_KIND_CHECKS[x.code]
-                                                           ?? CONTENT_EXTENT_CHECKS[x.code])?.translation,
+                                                           ?? CONTENT_EXTENT_CHECKS[x.code]
+                                                           ?? INQUIRY_GRAMMAR_CHECKS[x.code])?.translation,
                                              ...(x.repairs ? { repairs: x.repairs } : {}) })) };
     const offered = versionsIn(docFm);
     /* DEC-49 REGION basis-version-resolve */
     for (const v of offered) {
       for (const leg of v.legs) {
+        /* R3 (N522): another group's finding is not a bundle of this record; whether it is held is accepted-work's */
+        if (isImportedRef(leg.target_id)) continue;
         if (!this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, leg.target_id))
           return { ok: false, reason: "VERSION_LEG_UNRESOLVED", version: v.name, target: leg.target_id,
                    findings: [{ check: BASIS_VERSION_CHECKS.VERSION_LEG_UNRESOLVED.check,
@@ -240,6 +248,48 @@ export class BasisVersions {
                                       `or restore '${v.name}' to the composition the record holds`] }] };
     }
     /* END DEC-49 REGION basis-version-freeze */
+    /* R3 (N522; DEC-112 (6), DEC-96 item 1): a leg on another group's finding rests on an acceptance in force at the
+       edition it names, asked when the leg is written: in a version this promotion adds, a leg with no leg of the same
+       finding and edition in the version it derives from. A held version is frozen and is not asked again, so a
+       withdrawal never refuses an unrelated revision; it sends notices and moves no work (reevaluation's). */
+    const fresh = [];
+    const docLegs = Array.isArray(docFm.basis_version_legs) ? docFm.basis_version_legs : [];
+    const byName = new Map(offered.map((v) => [v.name, v]));
+    for (const v of offered) {
+      if (!v.legs.some((l) => isImportedRef(l.target_id))) continue;
+      if (this.#one(`SELECT 1 AS x FROM inquiry_basis_versions WHERE bundle_id=? AND name=?`, bundleId, v.name)) continue;
+      const parent = v.derived_from ? byName.get(v.derived_from) : null;
+      const inherited = new Set((parent ? parent.legs : []).filter((l) => isImportedRef(l.target_id))
+        .map((l) => `${l.target_id}\u0000${l.edition ?? ""}`));
+      for (const l of v.legs) {
+        if (!isImportedRef(l.target_id) || inherited.has(`${l.target_id}\u0000${l.edition ?? ""}`)) continue;
+        const row = docLegs[l.src_ord] || {};
+        fresh.push({ version: v.name, leg: { ord: l.src_ord, target: l.target_id, target_edition: row.target_edition } });
+      }
+    }
+    if (fresh.length) {
+      let refused;
+      try { refused = this.acceptedWork.acceptedLegRefusals({ legs: fresh.map((x) => x.leg), viewer: c.author ?? null }); }
+      catch { refused = null; }
+      const list = Array.isArray(refused) ? refused : null;
+      /* a defect there is accepted-work's own C-21.5 for each leg asked, never a pass */
+      const unreadable = ACCEPTED_WORK_CHECKS.ACCEPTED_WORK_UNREADABLE;
+      const findings = list === null
+        ? fresh.map((x) => ({ check: unreadable.check, code: "ACCEPTED_WORK_UNREADABLE", severity: "error",
+                              translation: unreadable.translation, ord: x.leg.ord, ref: x.leg.target,
+                              edition: x.leg.target_edition }))
+        : list;
+      if (findings.length)
+        return { ok: false, reason: "BASIS_VERSION_REFUSED",
+                 findings: findings.map((x) => {
+                   const ord = x?.ord;
+                   const owner = fresh.find((y) => y.leg.ord === ord);
+                   return { ...x,
+                            ...(owner ? { version: owner.version, detail: `basis_version_legs[${ord}] (version `
+                              + `'${owner.version}'): ${x?.detail ?? x?.message ?? "rests on another group's finding "
+                              + "whose acceptance at the edition named could not be established"}` } : {}) };
+                 }) };
+    }
     return null;
   }
 
@@ -283,10 +333,13 @@ export class BasisVersions {
         }
         this.sql.exec(
           `INSERT INTO inquiry_basis_version_legs
-             (bundle_id,name,ord,target_id,target_type,role,grade,grade_axis,grade_source,note,at,ground,content_id)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+             (bundle_id,name,ord,target_id,target_type,role,grade,grade_axis,grade_source,note,at,ground,content_id,
+              target_edition)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
           bundleId, v.name, k, l.target_id, l.target_type, l.role,
-          l.grade, l.grade_axis, l.grade_source, l.note, l.at, l.ground, vContentId);
+          l.grade, l.grade_axis, l.grade_source, l.note, l.at, l.ground, vContentId,
+          /* R3 (N522, K1305): the edition a leg on another group's finding names, as written */
+          l.edition === null ? null : (/^\d+$/.test(l.edition) ? Number(l.edition) : null));
       }
     }
     if (!vLegRowsAll.length) return null;
@@ -303,7 +356,8 @@ export class BasisVersions {
    *  record earns (R10). */
   versionCollections(bundleId, row) {
     const legs = this.#legsEarned(this.#rows(
-      `SELECT ord, target_id, target_type, role, grade, grade_axis, grade_source, note, at, ground, content_id
+      `SELECT ord, target_id, target_type, role, grade, grade_axis, grade_source, note, at, ground, content_id,
+              target_edition
          FROM inquiry_basis_version_legs WHERE bundle_id=? AND name=? ORDER BY ord LIMIT ?`,
       bundleId, row.name, BASIS_VERSION_LEGS_MAX));
     const grounds = [...new Set(legs.map((l) => String(l.ground ?? "").trim()).filter(Boolean))].sort();
@@ -1562,7 +1616,8 @@ export class BasisVersions {
     const grounds = (Array.isArray(src.fm.basis_version_grounds) ? src.fm.basis_version_grounds : [])
       .filter((g) => g && typeof g === "object" && String(g.version ?? "").trim() === src.vname)
       .map((g) => ({ ground: String(g.ground ?? ""), asserted_by: who, at: nowIso, statement: g.statement }));
-    const LEG_KEYS = ["target", "role", "ground", "grade", "grade_axis", "grade_source", "note", "date",
+    /* `target_edition` so a leg on another group's finding is copied whole (N522) */
+    const LEG_KEYS = ["target", "target_edition", "role", "ground", "grade", "grade_axis", "grade_source", "note", "date",
                       "extent_capture", ...Object.keys(EXTENT_FIELDS)];
     const EXTENT_KEYS = new Set([...Object.keys(EXTENT_FIELDS), "extent_capture"]);
     const GRADE_KEYS = new Set(["grade", "grade_axis", "grade_source"]);
@@ -1655,7 +1710,10 @@ export function basisVersionsOf(host, deps) {
       basisFor: typeof given.basisFor === "function" ? given.basisFor
         : (id, o) => (own ||= inquiryOf(host, { record, membership, promotion, content })).basisFor(id, o),
     };
-    bv = new BasisVersions({ ...d, inquiry, storage: d.storage || host.storage, record, membership, promotion, content });
+    /* R3 (N522): accepted-work's instance (its R3 is an instance method, K1307), unless a test passes its own */
+    const acceptedWork = d.acceptedWork && typeof d.acceptedWork.acceptedLegRefusals === "function" ? d.acceptedWork
+      : acceptedWorkOf(host, { record, membership, promotion });
+    bv = new BasisVersions({ ...d, inquiry, acceptedWork, storage: d.storage || host.storage, record, membership, promotion, content });
     instances.set(host, bv);
     record.declarePurge("basis-versions", BASIS_VERSIONS_TABLES);
     registerBasisVersionGrammar(record);   /* R43: the version grammar in the C-2.8 slot, after inquiry-grammar's */
