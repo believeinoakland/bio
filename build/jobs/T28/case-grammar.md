@@ -75,3 +75,6 @@ B2 and B3 (K1315, K1317) applied on job/T28/case-grammar: R2 capture row; R3 SEC
 ## B4 · CHANGE (K1318), re-opened and completed
 
 Merged `origin/tranche/T28` @ 13282a56b7. K1318 replaces K1315 (3): `casePartDigest(files, index)` restored (lines `<path> <sha256> <bytes>\n` of the part's files in path order, bytes their sum) and used by `caseFileManifestCheck`; `partFingerprint` removed (nothing else used it). `manifest.json` and the `caseFilePath` layout unchanged. The rest of B2 and B3 stands. Tests: case-grammar 60/0 after the change; checks below.
+Checks after B4: format 0 failures; architecture 22 product files, 66 imports, 0 failures; coverage 17 of 17; ownership 20 files, 0 failures. Users: public-read 95/0, ratification 199/0, docket 37/0.
+
+Size (session_016TiHSZQkrggTJ3QAahBMjg): test runs 33, module lines 1722
