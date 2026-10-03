@@ -45,8 +45,9 @@ test("R19 the cadence tick: due while a subject is due; wake now + 1 s, else nex
   assert.equal(w.m.cadenceWake(NOW_MS), NOW_MS + MONITOR_CADENCE_DELAY_MS);
   const t = await w.m.cadenceTick(NOW_MS);
   assert.deepEqual(Object.keys(t).sort(), ["addresses", "at", "candidates", "configured", "epoch", "failed", "gathered", "monitored",
-                                           "next", "paused", "skipped", "ticked", "unscheduled"].sort());
+                                           "next", "paused", "skipped", "ticked", "unscheduled", "watched"].sort());
   assert.deepEqual(t.gathered, { due: 0, captured: [], failed: [], skipped: [] }, "R28's requests: none here");
+  assert.deepEqual(t.watched, { due: 0, read: [], unreadable: [], governed: [], failed: [] }, "R67's dockets: the real case-import, no watch in force");
   assert.deepEqual([t.configured, t.at, t.candidates, t.ticked.length, t.failed.length, t.paused], [true, iso(NOW_MS), 1, 1, 0, { paused: false }]);
   assert.deepEqual([t.ticked[0].bundle, t.ticked[0].frequency, t.ticked[0].status, t.ticked[0].reeval_raised],
                    [id, "daily", "unchanged", false]);
