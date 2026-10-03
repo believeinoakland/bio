@@ -28,3 +28,7 @@
 - `node checks/ownership.mjs … membership tranche/T28`: 1 file changed by membership; 0 failures.
 
 Size (session_014t8ory3KuXTmiZLiSDLmaB): test runs 7, module lines 3346
+
+## J1 · REPORT
+
+Generated artifact staled (§14): the plane bundle bio-plane/dist/bio-plane.bundled.mjs (and .bundle.json); src/membership/index.mjs is one of its inputs. test/system/fleetbundles.test.mjs names it STALE BUNDLE (bio-plane arm, 1 fail). Not regenerated: yours at the layer close.
