@@ -1134,8 +1134,8 @@ export class CaseImport {
   }
 
   /** R20: the watch's items for `queue-producers` (its R35): each verified entry seen, with `seen_at`, the instant of the
-   *  docket read that first recorded it (N546), each refused entry, and each watch in force whose latest read is
-   *  unreadable, each naming the import, its group and case, and the watch's `set_by`. A viewer who is not an active
+   *  docket read that first recorded it (N546), each refused entry, with its `seen_at` too (K1419), and each watch in
+   *  force whose latest read is unreadable, each naming the import, its group and case, and the watch's `set_by`. A viewer who is not an active
    *  member is answered empty. Read as the plane; writes nothing and never throws. */
   watchItems({ viewer = null } = {}) {
     const empty = { entries: [], refused: [], unreadable: [] };
@@ -1159,7 +1159,7 @@ export class CaseImport {
                              ...(r.kind === "edition" ? { what_changed: typeof f.what_changed === "string" ? f.what_changed : null } : {}),
                              ...(r.kind === "withdrawal" ? { reason: typeof f.reason === "string" ? f.reason : null } : {}),
                              taken_back: backs.get(i.import_id).get(Number(r.seq)) ?? null });
-        } else out.refused.push({ ...head, failed: r.failed, detail: r.detail });
+        } else out.refused.push({ ...head, failed: r.failed, detail: r.detail, seen_at: r.read_at });
       }
       for (const w of this.#allWatches())
         if (w.last_read && w.last_read.outcome === "unreadable")

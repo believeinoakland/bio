@@ -399,7 +399,7 @@ test("R19 importedCases and importedCase answer the watch, the docket unreadable
 
 /* ================================================================ R20 */
 
-test("R20 watchItems answers each verified entry with the instant this copy read it (seen_at), each refused entry and each unreadable watch, naming the import, group, case and set_by; empty to a non-member", async () => {
+test("R20 watchItems answers each verified and each refused entry with the instant this copy read it (seen_at), and each unreadable watch, naming the import, group, case and set_by; empty to a non-member", async () => {
   const { w, a } = await watched();
   /* the clock this copy records by differs from the read's instant, so seen_at is shown to be the read's */
   w.clock.now = Date.parse("2026-10-30T12:00:00Z");
@@ -428,7 +428,11 @@ test("R20 watchItems answers each verified entry with the instant this copy read
   /* every verified entry names its seen_at, an instant to the second */
   assert.ok(w.ci.watchItems({}).entries.every((e) => /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(e.seen_at)));
   items = w.ci.watchItems({ viewer: V("bob") });
-  assert.deepEqual(items.refused, [{ ...head, seq: 3, failed: "digest", detail: items.refused[0].detail }]);
+  assert.deepEqual(items.refused, [{ ...head, seq: 3, failed: "digest", detail: items.refused[0].detail, seen_at: READ1 }]);
+  /* a refused entry first seen by a later read is seen at that read's instant */
+  await read(w, a, answer([{ ...entry(5, null), json: "[]" }]), { at: "2026-10-22T08:00:00Z" });
+  assert.deepEqual(w.ci.watchItems({}).refused.map((e) => [e.seq, e.failed, e.seen_at]),
+                   [[3, "digest", READ1], [5, "digest", "2026-10-22T08:00:00Z"]]);
   assert.deepEqual(items.unreadable, []);
   await read(w, a, null, { outcome: "unreadable", reason: "too_large", at: "2026-10-24T00:00:00Z" });
   items = w.ci.watchItems({});

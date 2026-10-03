@@ -21,7 +21,7 @@
 
 **Reading done.** The requirements whole, the module's `index.mjs` and `watch.test.mjs` whole, the plan's entries; the Uses' public parts and the module's other test files were not re-read, since the change touches only R20's answer and none of the modules it uses.
 
-Size (session_01MiW6fXUHMWPvHxptpYDLsJ): test runs 3, module lines 1325
+
 
 ## J1 · REPORT
 
@@ -30,3 +30,12 @@ For BOB (a requirement, not code): R20's `refused` items carry no `seen_at`, yet
 ## J2 · COMPLETE
 
 N546 applied: each `watchItems` verified entry names `seen_at`, the `at` of the docket read that first recorded it (the read's instant, else this copy's; the same instant queue-producers ages the unreadable CONDITION from). No schema change. case-import 75/75; queue-producers 79/79; format, architecture, coverage (20/20), ownership: 0 failures. Nothing deferred. R20's `*(not yet met: T32)*` mark can be struck. See J1 for an optional widening to `refused`. Record: build/jobs/T32/case-import.md on job/T32/case-import.
+
+## B2 · CHANGE (K1419)
+
+Merged `tranche/T32`. R20's `refused` items now also name `seen_at`, the same instant as `entries` (the `at` of the docket read that first recorded the entry). The R20 test checks it on a refused entry of the first read and on one first seen by a later read.
+- `node --test bio-plane/test/m/case-import/`: tests 75, pass 75, fail 0.
+- `node --test bio-plane/test/m/queue-producers/`: pass 79, fail 0.
+- format, architecture, coverage (20 of 20), ownership: 0 failures (ownership re-run after the commit).
+
+Size (session_01MiW6fXUHMWPvHxptpYDLsJ): test runs 5, module lines 1326
