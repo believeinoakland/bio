@@ -754,7 +754,7 @@ export class CaseAuthoring {
       /* R43 (DEC-112 (3)): the versions the owner signs under. */
       method: { grading: GRADING_METHOD_VERSION, checks: CATALOG_VERSION },
       /* R45, R51, R52, R54. */
-      materials: materialBlocks, accepted: { rows: accepted.rows, flags: flagRows },
+      materials: materialBlocks, group, accepted: { rows: accepted.rows, flags: flagRows },
       grading: findingFacts.grading, passages: findingFacts.passages,
     });
     const docBytes = new TextEncoder().encode(docText);

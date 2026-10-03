@@ -16,7 +16,9 @@
 
 import { createSha256, EARNED_CAPTURE_CEILING } from "../record-grammar/index.mjs";
 import { fmSafe, whatChangedBlockLines, whatChangedSectionLines, lensBlockLines,
-         lensSectionLines, workingOnLines } from "../case-grammar/index.mjs";
+         lensSectionLines, workingOnLines, methodBlockLines, materialBlockLines, acceptedWorkBlockLines,
+         pairLine, ANONYMOUS_ATTESTATION_LEVELS } from "../case-grammar/index.mjs";
+import { FLAG_SENTENCE } from "./accepted.mjs";
 import { CASE_DOCUMENT_FORMAT, attributionFrontmatterLines, attributionBodyLines, captureBlockLines,
          sourceBlockLines } from "../publication/index.mjs";
 import { caseConclusionRowLines } from "../ratification/index.mjs";
@@ -78,9 +80,12 @@ function captureBodyLines(captures, sources) {
              ? [`  - SELF-ATTESTED ONLY, acknowledged by ${c.acknowledgement.acknowledged_by} on ${c.acknowledgement.at}: `
                 + `${c.acknowledgement.reason}`, `  - ${SELF_ATTESTED_SENTENCE}`]
              : []),
-           ...c.accounts.flatMap((a, k) => [
-             `  - The capturing member's signed account ${k + 1}, by ${a.by} on ${a.at}, in its own words:`, "",
-             "```", a.text, "```", "", "    Its signature:", "", "```", a.signature ?? "(none held)", "```", ""])])]
+           ...c.accounts.flatMap((a, k) => (a.by === null && a.signature === null
+             /* R48: an off-the-record capture's attesting member not named: the account's words, nothing of who. */
+             ? [`  - The attesting member's account ${k + 1}, on ${a.at}, in its own words; the member is not named, as `
+                + "their credit allows:", "", "```", a.text, "```", ""]
+             : [`  - The capturing member's signed account ${k + 1}, by ${a.by} on ${a.at}, in its own words:`, "",
+                "```", a.text, "```", "", "    Its signature:", "", "```", a.signature ?? "(none held)", "```", ""]))])]
       : ["This case's findings rest on no document the record holds a capture of, one level deep."]),
     "",
     "## Sources Of Material Given To The Group",
@@ -91,6 +96,71 @@ function captureBodyLines(captures, sources) {
          + "other case.", "",
          ...sources.map((x) => `- ${x.capture}: ${x.stated}` + (x.basis ? `, ${BASIS_WORDS[x.basis] ?? x.basis}.` : "."))]
       : ["No document this case rests on was given to the group by a source: each was fetched, or brought in by a member."]),
+    ""];
+}
+
+/* ===========================================================================
+ * WHAT THE CASE CARRIES (R43, R45, R48; DEC-112 (3)(4)(5), DEC-119) AND ANOTHER GROUP'S WORK IT RESTS ON (R51, R52;
+ * DEC-96 item 4). The blocks are case-grammar's spelling (its R11, R12, R16), written only through its line builders;
+ * the body, which a person reads, is this module's, in plain sentences until the UX design stream gives the words.
+ * =========================================================================== */
+
+const MATERIAL_KIND_WORDS = Object.freeze({ document: "a document", observation: "a member's firsthand observation" });
+
+/* R48: who attests a material, as the row states them, never more. */
+function attesterWords(a, group) {
+  if (a.by_kind === "group") return `${group ?? "the group"} vouches for it by signing this case`;
+  if (a.by_kind === "project") return `the record of ${a.by} holds it, registered ${a.at ?? "at a time not stated"}, in ${a.recorded_in}`;
+  if (a.by_kind === "co_attestation")
+    return a.by === "timestamp" ? `a trusted timestamp of ${a.at ?? "a time not stated"}` : `a third party's co-archive at ${a.by}`;
+  if (ANONYMOUS_ATTESTATION_LEVELS.includes(a.level))
+    return `a member of the ${a.level}, not named, as they chose`;
+  if (!a.level && !a.by) return "a member who has not yet chosen how they are credited, so not named";
+  return `${a.by}${a.level ? `, credited at the ${a.level} level as they chose` : ""}${a.at ? `, on ${a.at}` : ""}`
+    + (a.signature ? ", with their signature" : "");
+}
+
+function carriesBodyLines(method, materials, group) {
+  const rows = materials && Array.isArray(materials.rows) ? materials.rows : [];
+  const att = materials && Array.isArray(materials.attestations) ? materials.attestations : [];
+  return ["## How This Case Was Graded And Checked", "",
+    `Each grade in this case was reached by the grading method ${method ? method.grading ?? "(not stated)" : "(not stated)"}, `
+    + `and the case was checked under the publication checks ${method ? method.checks ?? "(not stated)" : "(not stated)"}. `
+    + "Both versions are inside what is signed, so anybody can recompute each grade by the stated method.", "",
+    "## What This Case Carries", "",
+    ...(rows.length
+      ? ["Every document and observation this case's findings reach. One a load-bearing finding relies on travels whole "
+         + "with the case. One that only a supporting finding reaches, and that this copy does not hold whole, is listed "
+         + "with its fingerprint, origin and archived copy.", "",
+         ...rows.flatMap((m) => [
+           `- ${m.ref}, ${MATERIAL_KIND_WORDS[m.kind] ?? m.kind}, fingerprint ${m.sha}: `
+             + (m.included ? "travels whole with this case" : "NOT INCLUDED: only its fingerprint, origin and archived copy travel")
+             + `; relied on by ${m.rests_under === "load_bearing" ? "a load-bearing" : "only a supporting"} finding`
+             + `; origin ${m.origin ?? "not stated"}; archived copy ${m.archived_copy ?? "none held"}`
+             + (m.text_sha ? `; extracted text ${m.text_sha}` : "") + ".",
+           ...att.filter((a) => a.ref === m.ref).map((a) => `  - Attested: ${attesterWords(a, group)}.`)])]
+      : ["This case's findings reach no document or observation the record holds."]),
+    ""];
+}
+
+function acceptedBodyLines(accepted) {
+  const rows = accepted && Array.isArray(accepted.rows) ? accepted.rows : [];
+  const flags = accepted && Array.isArray(accepted.flags) ? accepted.flags : [];
+  if (!rows.length) return [];
+  return ["## Another Group's Work This Case Rests On", "",
+    "A finding of this case rests on a finding of another group's published case, which this group accepted. That "
+    + "work, and everything it rests on, is the other group's, in its own case file: check it there.", "",
+    ...rows.map((r) => `- ${r.member} rests, through ${r.leg_of}, on ${r.finding} of ${r.group ?? "another group"}'s case `
+      + `${r.case ?? "(not stated)"}, edition ${r.edition}: accepted by ${r.accepted_by} on ${r.accepted_at}, because: `
+      + `${r.reason}. It was ${String(r.result ?? "not recorded").replace(/_/g, " ")} from that case file`
+      + (r.gaps ? `, with the gaps stated: ${r.gaps}` : "") + `. Its grades as that edition publishes them: ${pairLine(r.pair)}. `
+      + `Its case file's manifest is ${r.manifest_sha ?? "not stated"}.`),
+    ...(flags.length
+      ? ["", "Each open flag on that work is disclosed here, and never blocks the case (DEC-96 item 4):", "",
+         ...flags.map((f) => `- Flag ${f.flag} on ${f.ref}, edition ${f.edition}, raised ${f.flagged_at ?? "at a time not stated"}: `
+           + `${f.issue}.` + (f.words ? ` In the owner's words: ${f.words}.` : "")
+           + ` Disclosed by ${f.acknowledged_by} on ${f.acknowledged_at}.`)]
+      : ["", "No flag was open on that work when this case was published."]),
     ""];
 }
 
@@ -357,7 +427,8 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
                                    acks = { statementSha: null, truncated: false, rows: [] },
                                    citations = [], attributions = [], tensions = [],
                                    tensionsUnread = [], captures = [], sources = [], whatChanged = null,
-                                   lens: lensRead = null }) {
+                                   lens: lensRead = null, method = null, materials = null, group = null,
+                                   accepted = null }) {
   const roleOf = new Map((roles || []).map((r) => [r.target, r.role]));
   const lens = manifest && manifest.in_force === true ? manifest
     : { in_force: manifest && manifest.in_force === null ? null : false,
@@ -440,6 +511,11 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
        always present, empty included. */
     ...captureBlockLines(captures),
     ...sourceBlockLines(sources),
+    /* R43, R45 (DEC-112 (3)(4)): the method signed under, and every material a chain reaches with its attestations;
+       R51, R52: another group's work and its disclosed flags (none when no chain reaches it). */
+    ...(method ? methodBlockLines(method) : []),
+    ...(materials ? materialBlockLines({ materials: materials.rows, attestations: materials.attestations }) : []),
+    ...acceptedWorkBlockLines(accepted || {}),
     "completeness:",
     `  statement: "${fmSafe(statement)}"`,
     `  subject_position: ${position}`,
@@ -537,8 +613,11 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
     ...roster.flatMap((m, i) => [
       `${i + 1}. ${m} — ${roleOf.get(m) === "load_bearing" ? "LOAD-BEARING" : "supporting"}, `
       + `frozen at version ${pins.get(m) ?? "(unpinned)"}`,
-      /* R31: its tension sentences, in its own block. */
-      ...tensions.filter((t) => t.finding === m).map((t) => `   - ${tensionSentence(t)}`)]),
+      /* R31: its tension sentences, in its own block; R52: one sentence per open flag disclosed on work it rests on. */
+      ...tensions.filter((t) => t.finding === m).map((t) => `   - ${tensionSentence(t)}`),
+      ...((accepted && accepted.flags) || []).filter((f) => ((accepted && accepted.rows) || [])
+        .some((r) => r.member === m && r.ref === f.ref && r.edition === f.edition))
+        .map((f) => `   - ${FLAG_SENTENCE}${f.issue} (flag ${f.flag}).`)]),
     "",
     /* DEC-72 clause 4, in prose: a reader is told, in the document that asserts it, which half claims what. */
     "A LOAD-BEARING finding is one this case rests on, and the standard of evidence below was asked of it.",
@@ -583,6 +662,8 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
     "",
     ...tensionBodyLines(tensions, tensionsUnread),
     ...captureBodyLines(captures, sources),
+    ...(materials ? carriesBodyLines(method, materials, group) : []),
+    ...acceptedBodyLines(accepted),
     ...(attributions.length ? attributionBodyLines(attributions) : []),
     "## What This Excludes",
     "",
