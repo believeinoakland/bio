@@ -19,3 +19,7 @@
 **Runs** · `node --test test/m/acquisition/` (from `bio-plane/`): tests 72, pass 72, fail 0, skipped 0. Users of the changed service, unchanged and green: capture (with `cap13-reuse-pages`, `d57selflink`) 119/119; capture-requests 72/72; docket 39/39; ratification 203/203; monitoring 99/99; instance-setup 88/88; control-plane 147/147. No layer tests are named in the manifest. Checks: `format: 98 modules, 97 requirements files; 0 failures`; `architecture: 11 product files, 46 relative imports (0 naming no tracked file, not judged); 0 failures`; `coverage: 1 modules, 32 of 32 live requirement ids named by a test; 0 failures`; `ownership: 7 files changed by acquisition between tranche/T31 and HEAD; 0 failures`. R9, R16 and R24's `*(not yet met: T31)*` marks are in `build/requirements/acquisition.md`, BOB's to strike.
 
 Size (session_01TNXZ4EjoqnXE7ZRkqLBzKq): test runs 4, module lines 1573
+
+## J1 · COMPLETE
+
+R9, R16, R24 met (N538): civicsmithUserAgent and CIVICSMITH_CONTACT_URL, the agent and the first hop's who read Civicsmith; civicosUserAgent and CIVICOS_CONTACT_URL kept as aliases of the same function and constant (K1365 (6)). acquisition 72/72; users capture, capture-requests, docket, ratification, monitoring, instance-setup, control-plane all green; format, architecture, coverage (32/32), ownership 0. The plane bundle is now stale (yours at the close). Record: build/jobs/T31/acquisition.md.
