@@ -15,3 +15,7 @@
 **Runs** · `node --test test/m/signatures/` (from `bio-plane/`): tests 72, pass 72, fail 0, skipped 0. Checks: `format: 98 modules, 97 requirements files; 0 failures`; `architecture: 8 product files, 7 relative imports (0 naming no tracked file, not judged); 0 failures`; `coverage: 1 modules, 41 of 41 live requirement ids named by a test; 0 failures`; `ownership: 5 files changed by signatures between tranche/T31 and HEAD; 0 failures`. R32's `*(not yet met: T31)*` mark is in `build/requirements/signatures.md`, BOB's to strike.
 
 Size (session_01JojTP81KLXqohStkarosgE): test runs 2, module lines 1329
+
+## J1 · COMPLETE
+
+R32 met (N538): sign-release.html names Civicsmith (5 places), signpage.mjs re-rendered, R32 test made total. 72/72 pass; format, architecture, coverage (41/41), ownership 0. Plane bundle now stale (yours at the close). Record: build/jobs/T31/signatures.md.
