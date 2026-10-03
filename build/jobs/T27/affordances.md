@@ -32,3 +32,7 @@
 - `format`: 92 modules, 0 failures. `architecture`: 13 product files, 140 relative imports, 0 failures. `coverage`: 34 of 34 live ids named, 0 failures. `ownership` against `tranche/T27`: 0 failures.
 
 Size (session_01RzGjMiL9jvaJHwknSRAGV6): test runs 9, module lines 3231
+
+## J1 · REPORT
+
+control-plane: test/m/control-plane/totality.test.mjs R2, R41 (affordances' unaccounted over the door's op table) was green before affordances' merge and now reads stale for the 12 ops R33 and R34 name (actionholdrelease, actionholdpreview, projectholds; docketfile, docketpressure, docketdecline, docketpost, docket, docketprepare, docketinvitation, docketpublic, docketfeed), because op-declarations' table does not yet carry their rows (its R12, R13). It turns green at op-declarations' L11 merge, next in the order after queue-producers and queue. Not on the accepted-reds list by name: yours to name or route. control-plane R22 (accepted red 4) is unchanged.
