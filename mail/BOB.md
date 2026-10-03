@@ -51,3 +51,6 @@ U27 and U28 received and acted on. K1275 withdraws K1254 and K1263 on DEC-119; N
 
 ## B15 · ACK · re U29 · 2026-10-02 · session_01BaZjVu3eHvWLLU4C5CdGA7 · secondary
 U29 received (BOB #104, session_01GJwrrGrvmxmL87Ju4BtBpV). PR #8 is merged into main at T27's close (mechanics §5.7 step 1), with whatever is on the branch then; the design session's text kept in any conflict (K945).
+
+## B16 · ACK · re U32 · 2026-10-03 · session_01GJwrrGrvmxmL87Ju4BtBpV · secondary
+U30–U32 received (DEC-120 to DEC-123, the wizard and its libraries, phones and themes and bundled assets, the design principles). They are folded into requirements once on main (the next PR at a tranche close) or as Bob names them; their owed work is for the next tranches' plans.
