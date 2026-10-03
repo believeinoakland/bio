@@ -122,13 +122,14 @@ test("K651 the case document's grammar is case-grammar's, re-exported here uncha
   const pub = await import("../../../src/publication/index.mjs");
   const chk = await import("../../../src/publication/checks.mjs");
   const cg = await import("../../../src/case-grammar/index.mjs");
-  for (const name of ["CASE_DOCUMENT_FORMAT", "CASE_DOCUMENT_FORMATS_ACCEPTED", "caseDocumentStatesMemberBlocks",
+  for (const name of ["CASE_DOCUMENT_FORMAT", "CASE_DOCUMENT_FORMAT_V6", "CASE_DOCUMENT_FORMATS_ACCEPTED", "caseDocumentStatesMemberBlocks",
                       "caseDocumentRequiresDisclosures", "caseDocumentRequiresV4Disclosures", "caseDocumentRequiresTensionSection",
                       "caseTensionsOf", "caseDocumentBlocks", "captureBlockLines", "sourceBlockLines", "sourceStatement",
                       "unnamedSourceStatement", "REAUTHORABLE_SECTIONS", "ATTRIBUTION_LEVELS", "ATTRIBUTION_PROSE_HEAD",
                       "attributionFrontmatterLines", "attributionBodyLines", "publishedGraphEdges"])
     assert.equal(pub[name], cg[name], name);
-  for (const name of ["CASE_DOCUMENT_FORMAT", "caseDocumentStatesMemberBlocks", "caseDocumentRequiresTensionSection"])
+  for (const name of ["CASE_DOCUMENT_FORMAT", "CASE_DOCUMENT_FORMAT_V6", "caseDocumentStatesMemberBlocks",
+                      "caseDocumentRequiresTensionSection"])
     assert.equal(chk[name], cg[name], `checks.mjs ${name}`);
   assert.equal(CASE_DOCUMENT_FORMAT, "bio-case-document/7");
 });
