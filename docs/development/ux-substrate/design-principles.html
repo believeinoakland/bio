@@ -53,17 +53,17 @@ a:focus-visible, input:focus-visible { outline:2px solid var(--accent); outline-
 </style>
 <div class="wrap">
 <header>
-<p class="eyebrow">Design phase · step 1 of 5 · draft for Bob, 2 October 2026</p>
+<p class="eyebrow">Design phase · step 1 of 5 · draft for Bob, updated 3 October 2026</p>
 <h1>CivicOS design principles</h1>
-<p class="lede">Every principle you have already ruled about how CivicOS should look, feel and behave, stated once, in plain words. Nothing here is new except the three gaps at the end, which are yours to rule. Once approved, this page is the yardstick every screen in steps 2 to 5 is checked against.</p>
+<p class="lede">Every principle you have already ruled about how CivicOS should look, feel and behave, stated once, in plain words. The gaps found while gathering them are now ruled and folded in. Once approved, this page is the yardstick every screen in steps 2 to 5 is checked against.</p>
 <div class="meta">
-<div><b>How to read it</b>Nine families, 55 principles. Each has a one-line statement and what it looks like in practice. Turn on “Show sources” to see the ruling behind each.</div>
+<div><b>How to read it</b>Nine families, 57 principles. Each has a one-line statement and what it looks like in practice. Turn on “Show sources” to see the ruling behind each.</div>
 <div><b>What comes next</b>Step 2, brand and voice (you ruled that the group leads). Step 3, journeys. Step 4, the visual language. Step 5, layouts and key screens.</div>
-<div><b>How to answer</b>“Principles: approved”, or name a principle to change. Then the gaps: for example “G1: A, G2: yes, G3: yes”.</div>
+<div><b>How to answer</b>“Principles: approved”, or name a principle to change. All gaps are ruled.</div>
 </div>
 </header>
 <nav class="bar" aria-label="Families">
-<a href="#f1">Respect</a><a href="#f2">Depth</a><a href="#f3">Truth</a><a href="#f4">Weight</a><a href="#f5">Where you are</a><a href="#f6">The assistant</a><a href="#f7">Alive</a><a href="#f8">For everyone</a><a href="#f9">One product</a><a href="#gaps">Gaps to rule</a>
+<a href="#f1">Respect</a><a href="#f2">Depth</a><a href="#f3">Truth</a><a href="#f4">Weight</a><a href="#f5">Where you are</a><a href="#f6">The assistant</a><a href="#f7">Alive</a><a href="#f8">For everyone</a><a href="#f9">One product</a><a href="#gaps">Gaps, ruled</a>
 <label for="srcToggle"><input type="checkbox" id="srcToggle"> Show sources</label>
 </nav>
 
@@ -141,7 +141,7 @@ a:focus-visible, input:focus-visible { outline:2px solid var(--accent); outline-
 <li data-n="6.1"><span class="name">The assistant proposes, never concludes</span><span class="say">It finds, pursues, extracts and checks. It never concludes, signs, sends, or chooses the question.</span><span class="eg">It suggests three passages that may support a question; a member accepts one.</span><span class="src">DEC-24; DEC-55; DEC-60</span></li>
 <li data-n="6.2"><span class="name">Machine work looks like machine work</span><span class="say">Everything the machine produced carries one shared treatment, with who asked for it.</span><span class="eg">"The assistant did this, at Rosa's request."</span><span class="src">DEC-90</span></li>
 <li data-n="6.3"><span class="name">Docked beside what it serves</span><span class="say">The assistant is a panel docked beside the screen it serves, which a member can widen; some of the work always stays visible. It never floats over the work.</span><span class="eg">It docks at the side on wide screens and at the bottom on phones, and shrinks back by itself when a guided step needs the member to press something.</span><span class="src">DEC-90; DEC-99</span></li>
-<li data-n="6.4"><span class="name">A wizard points; the member presses</span><span class="say">A guided step highlights the real control and never fills it in or presses it.</span><span class="eg">"Press 'Start the action' when you're ready" with the real button outlined.</span><span class="src">DEC-90</span></li>
+<li data-n="6.4"><span class="name">A guide points; the member presses</span><span class="say">A guided step highlights the real control and never presses it. It may place a labelled draft in a field for the member to edit and adopt; the act itself is always the member's.</span><span class="eg">"Press 'Start the action' when you're ready", with the real button outlined and the drafted request, labelled "Draft · edit before sending", already in the field.</span><span class="src">DEC-90; DEC-120 (G5)</span></li>
 <li data-n="6.5"><span class="name">No shortcut past an act's safeguards</span><span class="say">Anything the assistant starts still goes through the act's own checks, reason and receipt.</span><span class="eg">An assistant-started records request still opens the outward-act warning.</span><span class="src">Interaction Constructs §P</span></li>
 <li data-n="6.6"><span class="name">Any multi-step journey can be walked as a guided flow</span><span class="say">A guided flow takes the member through the real screens, one step at a time: it opens each screen, says what to do there and why, checks the step is done, and moves on. It runs from a wizard script for every group, with no AI needed; the assistant can also plan one on the fly. A step may place a labelled draft in a field for the member to adopt; only the member presses the act's button. Abandoning a flow is a non-event.</span><span class="eg">"Guided: first records request · step 2 of 6 · Choose the office. Why: the request goes to the office that holds the records." The real form is open beside it.</span><span class="src">DEC-120 (G4, G5); DEC-27; DEC-90; ASSISTANT-PILOT §3</span></li>
 <li data-n="6.7"><span class="name">Guided flows are found where they start, and kept working</span><span class="say">Wherever flows begin, a standard mark sits in a standard place: hover shows the flows that start there and how often members finish them; a click starts one, or records a new one from there. Members author by recording a walk-through or asking the assistant; the flows the product depends on are required and must always work; a broken optional flow is withdrawn until fixed, never shown broken. A script says what to do, never what to conclude.</span><span class="eg">On a project's page, the mark beside the title shows "2 guided flows start here: Start a records request (finished by 14 members) · Open a first question".</span><span class="src">DEC-121</span></li>
@@ -167,8 +167,9 @@ a:focus-visible, input:focus-visible { outline:2px solid var(--accent); outline-
 <li data-n="8.3"><span class="name">Every hover also opens on focus or tap</span><span class="say">Anything explained on mouse-over is also reachable by keyboard and by touch.</span><span class="eg">Tapping a grade badge on a phone opens the same explanation a hover shows.</span><span class="src">DEC-82; DEC-99</span></li>
 <li data-n="8.4"><span class="name">Usable in one session</span><span class="say">Someone with no civic experience can understand and use it within one session.</span><span class="eg">A newcomer meets only two things first, strength against the bar and "Undetermined"; everything else is explained where it is used.</span><span class="src">Design Requirement 11; DEC-82; DEC-91 (onboarding waits for the new design)</span></li>
 <li data-n="8.5"><span class="name">Words in one place, English first</span><span class="say">The interface's words live in one place so other languages can be added. A translated case is never presented as the signed case.</span><span class="eg">A Spanish translation of a case says "Unofficial translation" and links the signed original.</span><span class="src">DEC-99</span></li>
-<li data-n="8.6"><span class="name">Every device, honestly</span><span class="say">Phones, tablets, laptops and desktops each have their own possibilities and limits; a feature may be absent where it does not fit. The first release supports phones, at least for reading. What a phone may do is gap G1.</span><span class="eg">A phone shows the queue and the case; a complex comparison may wait for a larger screen.</span><span class="src">Refinements, 2026-07-28</span></li>
+<li data-n="8.6"><span class="name">Every device, honestly</span><span class="say">Phones, tablets, laptops and desktops each have their own possibilities and limits; a feature may be absent where it does not fit. On a phone a member reads everything and does everyday acts, including capturing a document; signing, publishing and sending happen on a larger screen for now, and the phone says where to finish.</span><span class="eg">At a council meeting a member photographs a handout and captures it from their phone; that evening they sign the case at their laptop.</span><span class="src">Refinements, 2026-07-28; DEC-122 (G1)</span></li>
 <li data-n="8.7"><span class="name">The public reads least, so explain most</span><span class="say">Layered explanation matters most on the published case. The complete edition carries every layer, so anyone can review or recreate the case without CivicOS.</span><span class="eg">Each finding opens "Relied on · meets this project's bar (capture B, connection C)".</span><span class="src">Refinements, 2026-07-28; DEC-112</span></li>
+<li data-n="8.8"><span class="name">Light and dark</span><span class="say">Member screens come in light and dark, following the device's setting, with a choice in settings. The public case follows the reader's setting on screen; print and the complete edition are always light.</span><span class="eg">A member working at 10pm sees the dark appearance; the printed case is always on white.</span><span class="src">DEC-122 (G2)</span></li>
 </ol>
 </section>
 
@@ -181,45 +182,19 @@ a:focus-visible, input:focus-visible { outline:2px solid var(--accent); outline-
 <li data-n="9.3"><span class="name">The group leads</span><span class="say">On every public face the group is the publisher and signer. CivicOS is credited quietly. Believe in Cities appears only as links.</span><span class="eg">"Lakeshore Tenants · The Coliseum lease · Edition 2" … "Made with CivicOS".</span><span class="src">DEC-118</span></li>
 <li data-n="9.4"><span class="name">The same for one group or a thousand</span><span class="say">Nothing in the design assumes a single group or a central host.</span><span class="eg">A group alone and a group in a busy network see the same screens.</span><span class="src">Roadmap §12; Design Requirements 1, 14</span></li>
 <li data-n="9.5"><span class="name">Built to evolve</span><span class="say">The workflow will change as experience and requirements grow; the design leaves room for it.</span><span class="eg">New act kinds take their weight and look from the shared rules, without new screens.</span><span class="src">Bob's UX principles, 2026-07-28</span></li>
-<li data-n="9.6"><span class="name">Your standard</span><span class="say">Clean, self-evident, functional and consistent with the brand. Extra effort and outside-the-box thinking on every call; minimal-effort solutions are unacceptable.</span><span class="eg">Every screen in steps 2 to 5 is checked against this page before it comes to you.</span><span class="src">UI-KICKOFF "Bob's UX standard"</span></li>
+<li data-n="9.6"><span class="name">Nothing loaded from outside the group's copy</span><span class="say">Everything the interface needs (typefaces, icons, scripts) ships inside the group's own copy. No outside fonts, analytics or trackers, on member screens or the public case.</span><span class="eg">Opening a screen tells no outside company which group is working, from where, or when.</span><span class="src">DEC-122 (G3); DEC-31; Design Requirements 9, 14</span></li>
+<li data-n="9.7"><span class="name">Your standard</span><span class="say">Clean, self-evident, functional and consistent with the brand. Extra effort and outside-the-box thinking on every call; minimal-effort solutions are unacceptable.</span><span class="eg">Every screen in steps 2 to 5 is checked against this page before it comes to you.</span><span class="src">UI-KICKOFF "Bob's UX standard"</span></li>
 </ol>
 </section>
 
 <section id="gaps">
-<h2>Gaps for you to rule</h2>
-<p class="fam-intro">G4 and G5 are ruled (2 October, yes and yes). Three things no ruling covers yet remain. Each shapes every screen that follows, so they are best settled now. How CivicOS speaks (its voice) comes in step 2.</p>
-
-<div class="gap" id="g1">
-<h3>G1. What a phone can do</h3>
-<p>You said the first release supports phones, <q>acceptably as a viewing MVP</q> if time requires. An earlier plan kept publishing a desktop act. Members will capture at council meetings on their phones, and reporters will read cases on them.</p>
-<div class="opts">
-<div class="opt"><b>A. Read all, act light (recommended)</b>A phone reads everything and does reversible and reasoned acts, including capturing a document. Terminal, attested and irreversible acts (signing, publishing, sending) happen on a larger screen for now; the phone says where to finish.</div>
-<div class="opt"><b>B. Everything everywhere</b>Every act works on a phone. Most useful, but the heaviest acts get the least screen to show their weight.</div>
-<div class="opt"><b>C. Phone reads only</b>Simplest to build; members can't capture at a meeting.</div>
-</div>
-<p class="rec"><b>Recommendation: A.</b> It matches how members will use a phone, keeps the weight of the heaviest acts visible, and can widen later without redesign.</p>
-<p class="answer">Answer: “G1: A”, “G1: B” or “G1: C”.</p>
-</div>
-
-<div class="gap" id="g2">
-<h3>G2. Light and dark</h3>
-<p>Nothing rules on a dark appearance. Your brief asked what CivicOS should feel like to a member at 10pm. The old design language has no dark mode; the approved plan-page sketch has one.</p>
-<p class="rec"><b>Recommendation: yes.</b> Member screens come in light and dark from the start, following the device's setting, with a choice in settings. The public case follows the reader's setting on screen; print and the complete edition are always light. The cost is that every colour is designed twice and checked for contrast in both.</p>
-<p class="answer">Answer: “G2: yes” or “G2: light only”.</p>
-</div>
-
-<div class="gap" id="g3">
-<h3>G3. Nothing loaded from outside the group's copy</h3>
-<p>The old interface loads its typefaces from Google each time a screen opens. That tells Google which group's copy is in use, from where and when. For a group investigating a powerful subject, that is a leak. It also breaks the screens when the outside service is down.</p>
-<p class="rec"><b>Recommendation: yes.</b> Everything the interface needs (typefaces, icons, scripts) ships inside the group's own copy. No outside fonts, analytics or trackers on member screens or the public case. This follows your rules that nothing non-public leaves by a system path and that no outside platform is essential.</p>
-<p class="answer">Answer: “G3: yes” or “G3: allow well-known services”.</p>
-</div>
-</section>
-
-<section id="ruled-gaps">
-<h2>Gaps already ruled</h2>
-<div class="gap" style="border-left-color:var(--accent)"><h3>G4. Guided flows without the AI: yes</h3><p>Wizard scripts run for every group with no AI and no key; the assistant adds free-form planning where a key is set. (2 October)</p></div>
-<div class="gap" style="border-left-color:var(--accent)"><h3>G5. Labelled drafts in fields: yes</h3><p>A step may place a labelled draft in a field for the member to edit and adopt; only the member presses the act's button. (2 October)</p></div>
+<h2>Gaps, now ruled</h2>
+<p class="fam-intro">All five gaps are ruled. Nothing on this page waits on you except your overall approval and any principle you want changed.</p>
+<div class="gap" style="border-left-color:var(--accent)"><h3>G1. What a phone can do: A</h3><p>A phone reads everything and does everyday acts, including capturing a document. Signing, publishing and sending happen on a larger screen for now, and the phone says where to finish. (3 October; now principle 8.6)</p></div>
+<div class="gap" style="border-left-color:var(--accent)"><h3>G2. Light and dark: yes</h3><p>Member screens in both, following the device; print and the complete edition always light. (3 October; now principle 8.8)</p></div>
+<div class="gap" style="border-left-color:var(--accent)"><h3>G3. Nothing loaded from outside the group's copy: yes</h3><p>Typefaces, icons and scripts ship inside the group's copy; no outside fonts, analytics or trackers. (3 October; now principle 9.6)</p></div>
+<div class="gap" style="border-left-color:var(--accent)"><h3>G4. Guided flows without the AI: yes</h3><p>Wizard scripts run for every group with no AI and no key; the assistant adds free-form planning where a key is set. (2 October; principle 6.6)</p></div>
+<div class="gap" style="border-left-color:var(--accent)"><h3>G5. Labelled drafts in fields: yes</h3><p>A step may place a labelled draft in a field for the member to edit and adopt; only the member presses the act's button. (2 October; principles 6.4, 6.6)</p></div>
 </section>
 
 <p class="foot">Gathered from your stated principles of 28 July, the interface brief's standing constraints, and the design rulings to 2 October 2026 (DEC-24 to DEC-118, K1). Sources for each line are behind “Show sources”. Kept in the repository at docs/development/ux-substrate/design-principles.html.</p>

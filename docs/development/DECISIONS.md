@@ -1969,3 +1969,17 @@ response: **Bob, 2026-10-03, on the design session's revised draft: "3. agreed",
 decided: 2026-10-03 · Bob
 reasoning recorded in: this entry; BIO_Interaction_Constructs_v0_1.md §P "THE WIZARD" (RULED 2026-10-03); the design-principles page (6.6, 6.7).
 owed: a governed wizard-script library per group (versions, review, approval, widening, retirement; machine never approves), mirroring filing-templates; the walk-through recorder (screens and acts only); the step touch-up and the advanced editor behind an administrator's grant; the checks (refusals and warnings) as code; the assistant's script-authoring guidance in its instruction pack; required flows in the CivicOS library, their failure blocking the release; optional flows withdrawn when broken, with the owner's notice; the starting-point mark and its hover, click and record-from-here; candidate suggestions and per-script use counts; sharing as a signed file and import with approval (later); the design session's step-3 candidate list and step-5 scripts.
+
+### DEC-122 · answered
+raised: 2026-10-03 · the UX design session with Bob on his primary account (session_01TNeXM2Qvi7zMXT6BntbENE; the development process runs on his secondary account) (the design phase's principles page, gaps G1, G2 and G3)
+for: bob
+question: (G1) What a phone can do; (G2) whether member screens come in light and dark; (G3) whether everything the interface needs ships inside the group's own copy, with no outside fonts, analytics or trackers.
+why it is Bob's: UX and the privacy doctrine (Refinements 2026-07-28 on devices; DEC-31 and K597 (5): nothing non-public leaves by a system path; Design Requirements 9, 14: no platform essential).
+provisional: the first release supports phones, "acceptably as a viewing MVP" (Refinements 2026-07-28); UI-PLAN keeps release a desktop act; no ruling on dark mode; `civicos-ui/tokens.css` asks for no runtime font loading while the old interface loads Google Fonts.
+alternative: (G1) B, every act on a phone; C, a phone reads only; (G2) light only; (G3) allow well-known services.
+recommendation: G1 A; G2 yes; G3 yes.
+reversal cost: low now; higher once screens are drawn.
+response: **Bob, 2026-10-03: "Agreed with all"** (G1 A, G2 yes, G3 yes, as recommended). (1) On a phone a member reads everything and does everyday acts (reversible and reasoned), including capturing a document; terminal, attested and irreversible acts (signing, publishing, sending) happen on a larger screen for now, and the phone says where to finish. (2) Member screens come in light and dark, following the device's setting, with a choice in settings; the public case follows the reader's setting on screen; print and the complete edition are always light; every colour is checked for contrast in both. (3) Everything the interface needs (typefaces, icons, scripts) ships inside the group's own copy; no outside fonts, analytics or trackers on member screens or the public case.
+decided: 2026-10-03 · Bob
+reasoning recorded in: this entry; the design-principles page (8.6, 8.8, 9.6); BIO_Interaction_Constructs_v0_1.md §L (RULED 2026-10-03).
+owed: the phone's act set (reversible and reasoned only, for now) and its "finish on a larger screen" handoff; light and dark themes with contrast checked in both; the interface's typefaces, icons and scripts bundled in the release, the old interface's Google Fonts load removed, and no outside requests from member screens or the public case.

@@ -687,6 +687,13 @@ place's languages, named by its jurisdiction profile, is a later decision.
 it is marked as an unofficial translation and names the signed original. Whether and how a group issues translations through
 CivicOS is decided when a group asks to publish one.
 
+**Devices, themes and nothing from outside (RULED 2026-10-03 by Bob, DEC-122).** On a phone a member reads everything and
+does everyday acts (reversible and reasoned), including capturing a document; signing, publishing and sending happen on a
+larger screen for now, and the phone says where to finish. Member screens come in light and dark, following the device, with
+a choice in settings; the public case follows the reader's setting on screen, and print and the complete edition are always
+light; contrast is checked in both. Everything the interface needs (typefaces, icons, scripts) ships inside the group's own
+copy: no outside fonts, analytics or trackers, on member screens or the public case.
+
 ## W · WORKING AND PUBLISHED — the fence a member can always see (Bob, 2026-10-01, DEC-106)
 
 Members are taught **two spaces**, each with its own distinct frame: the group's private **working** record, and the public
