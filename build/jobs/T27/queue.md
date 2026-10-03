@@ -1,5 +1,7 @@
 # queue (T27)
 
+**Status** · session_01F38bSR7bu33Tfs9jy4JEQS · depth 2 · WORKING · handled B1
+
 ## Completion
 
 **Entries applied** (B1 START; `build/plan/current.md` T27 L11, queue: N518 (R1, R12), N520 (R1, R50)):
@@ -44,5 +46,3 @@
 - Merge order (L11): affordances and queue-producers merge before queue. This branch builds without either, and its tests pass before and after queue-producers' R29–R31 land.
 
 Size (session_01F38bSR7bu33Tfs9jy4JEQS): test runs 9, module lines 5936
-
-**Status** · session_01F38bSR7bu33Tfs9jy4JEQS · depth 2 · WORKING · handled B1
