@@ -18594,6 +18594,7 @@ var MODULE_ORDER = Object.freeze([
   "retrieval",
   /* 6 */
   "inquiry-grammar",
+  "accepted-work",
   "inquiry",
   "citation",
   "basis-versions",
@@ -18617,6 +18618,8 @@ var MODULE_ORDER = Object.freeze([
   "project-stage",
   "network-notices",
   "ratification",
+  "case-checker",
+  "case-import",
   "case-authoring",
   "review",
   /* 9 */
@@ -22514,12 +22517,12 @@ function withProducingGroup(text5, slug) {
 }
 
 // src/gate.mjs
-var CATALOG_VERSION = "1.56.0";
+var CATALOG_VERSION = "1.57.0";
 var GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
 var ROW_CENSUS = Object.freeze({
   version: CATALOG_VERSION,
-  rows: 1073,
-  digest: "3371a04bcec276dbc1a1ecc62623d326b70a25a7ca151ed7c1fffd8652be094a"
+  rows: 1103,
+  digest: "966af5b4736d874c29c44d81e1e3d6d7f1c1479721af0aa663609f19b15e9226"
 });
 var hex2 = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var te3 = new TextEncoder();
