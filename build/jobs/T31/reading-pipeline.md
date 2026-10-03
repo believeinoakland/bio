@@ -23,3 +23,7 @@
 - `checks/ownership.mjs … reading-pipeline tranche/T31`: 1 file changed by reading-pipeline; 0 failures.
 
 Size (session_01DyVawcUA9UTeHgLqooX3Aa): test runs 3, module lines 1327
+
+## J1 · REPORT
+
+acquisition (improvement, not a flaw): acquisition R24 says every module that sends the agent reads it from civicsmithUserAgent; tier-pagewise.probe.mjs sends it on --census from a hand-written copy, since acquisition is not in reading-pipeline's uses (modules.json, BOB's). If BOB adds acquisition to uses, the probe can compose civicsmithUserAgent(version, 'biosmoke7', 'acquire') so a later rename touches one site. Details in my record.
