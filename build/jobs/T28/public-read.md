@@ -43,3 +43,44 @@ Found while doing T28's public-read share. None of these blocks my merge; each i
    - affordances R19: not this job's.
 
    The new internal store op `casefilefacts` trips no op-coverage test.
+
+## J4 · COMPLETE
+
+**Entries applied** (`build/plan/current.md` T28 L8, public-read; N520's DEC-112 share; K1315–K1318). All six are written and tested; their marks are BOB's to strike at the merge.
+
+- **R3.** A `/6` document's `method` and `materials` are answered as signed, through `case-grammar`'s `methodOf` and `materialsOf`; any other format answers null for both.
+- **R22.** Each member's `standing` is `case-grammar.standingOf` over three things read from the signed document only: the member's role (`case_roles`), the bar it records (`required_strength`, where an undeclared bar is none) and its frozen pair (`case_strength`). A document stating no member blocks answers null. There is no case-level standing (R11).
+- **R23.** `PublicRead.caseFileFacts`, with its internal store op `casefilefacts` that no door routes, gathers from the published projection:
+  - the signed document;
+  - each member, and each finding a member's chain reaches, with its published row at the edition its leg names;
+  - their `grading_facts:` and `passages:` rows (`case-grammar` R17);
+  - each included material, as text held inline (`publishedMaterialText`) or by hash in the bucket;
+  - each attestation row: a `member` row with its signed account where the row may name one, and a `co_attestation` row with each token `publication` held for that material.
+
+  The new `public-read/casefile.mjs` builds the files at `caseFilePath`'s paths, adds the signing keys (one line each, `SHA256:` fingerprint) and the complete edition, and packs the files in path order into parts under the bound, each part with `casePartDigest`.
+  - Bytes that don't hash to the stated digest are never carried. Such a material is listed in `unheld`, so the checker shows it missing.
+  - A finding's bytes the bucket can't produce mean the case file is not built: the assembly states `CASE_FILE_NOT_ASSEMBLED`, naming what is missing, and records nothing.
+- **R24.** The complete edition is `completeEditionOf` over every other file. Its SHA-256 is in the manifest, and like every file it is served by hash (`publication` R15 registers the files).
+- **R6.** A `/6` edition is assembled as its case file once, when it completes: each file is put in the bucket first, the manifest's hash is taken with `inbandQuartet`, and the manifest is recorded through `recordCaseManifest`. Each part is a stored ZIP with fixed timestamps and `manifest.json` at its root (`container.mjs`: a layout may have an empty root). An edition signed before T28 keeps its container unchanged.
+- **R5.** A case file is served one part at a time with `&part=<n>` (1 by default). A part the manifest doesn't list is the required-argument refusal, naming the parts it does list. A file held at another hash refuses the part with `PART_MISSING` (C-98.5) at its one governed site (`containerEntries`). `CONTAINER_TOO_LARGE` (C-98.7) now applies to one part. A file larger than the bound sits alone in its own part.
+
+**Rows.** None added and none changed: no catalogue row awaits a stamp.
+
+**Deferred.** Nothing.
+
+**Found in other modules.** See J3: my Uses line, the stale plane bundle, the tests needing `publication`'s fixture, and the dependents measured.
+
+**Tests and checks.** These ran on this branch with `publication`'s job branch @ 3d1b8fadf2 merged locally, never pushed, because `publication` merges before me:
+
+| what | result |
+|---|---|
+| public-read (`test/m/public-read/`) | 105 pass / 0 fail, adding `casefile.test.mjs` (7 tests) and `standing.test.mjs` (3) |
+| dependents | network-notices 63/0, filings 60/0, plane 65/0, op-declarations 43/0 |
+| dependents already red | ratification 159/40, control-plane 137/2, affordances 152/1: the same failures by name without my changes |
+| layer tests | none in the manifest |
+| `checks/format.mjs` | 0 failures |
+| `checks/architecture.mjs` | 0 failures |
+| `checks/coverage.mjs` | 24 of 24 live ids named; 0 failures |
+| `checks/ownership.mjs` against tranche/T28 | 16 files; 0 failures |
+
+Size (session_0181u3c6mH6hCT6JNt1c6phB): test runs 16, module lines 2890
