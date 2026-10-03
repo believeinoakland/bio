@@ -28,8 +28,8 @@ export const REEVAL_SOURCES = Object.freeze(["deletion", "source_status", "wp_re
 /** R22: the age past which a raised flag with no recorded re-evaluation is reported, unless set. */
 export const REEVAL_POLICY_AGE_DAYS = 30;
 
-/** R22 (C-10.1): the findings for one document's front matter. `nowMs` and `maxReevalAgeDays` as the catalogue's
- *  `checkBundle` takes them. Pure; never throws. */
+/** R22 (C-10.1): the findings for one document's front matter. `nowMs` the instant staleness is read at,
+ *  `maxReevalAgeDays` the policy age (R22). Pure; never throws. */
 export function checkReevalPending(fm, { nowMs = Date.now(), maxReevalAgeDays = REEVAL_POLICY_AGE_DAYS } = {}) {
   const out = [];
   const rp = fm && typeof fm === "object" ? fm.reeval_pending : undefined;

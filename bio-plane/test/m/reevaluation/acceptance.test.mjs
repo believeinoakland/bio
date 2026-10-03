@@ -16,13 +16,16 @@ const D = "INQ-2026-0011-at2", D1 = "INQ-2026-0012-at1", E = "INQ-2026-0013-othe
 const ADMIN = "class:admin";
 const T1 = "2026-09-29T00:00:00Z", T2 = "2026-09-30T00:00:00Z", T3 = "2026-10-01T00:00:00Z";
 
-/** The case-import stand-in. `seers` are the viewers `finding` answers (a machine credential is not asked); `held` the
- *  (ref, edition) pairs it holds; `withdrawals` the live list, `page` at a time. `failing` makes `withdrawals` throw. */
+/** The case-import stand-in. `seers` are the viewers `finding` answers (a machine credential is not asked), and, as
+ *  case-import R16 reads, a viewer never sent (the plane reading for itself); `viewers` logs each viewer `finding` was
+ *  asked for. `held` the (ref, edition) pairs it holds; `withdrawals` the live list, `page` at a time. `failing` makes
+ *  `withdrawals` throw. */
 function imports(w, { seers = ["member:alice", "member:ann"], held = null, withdrawals = [], page = 200, failing = false } = {}) {
-  const s = { seers: new Set(seers), held, withdrawals, asked: 0, failing };
+  const s = { seers: new Set(seers), held, withdrawals, asked: 0, failing, viewers: [] };
   const r = acceptedWorkOf(w.host).registerAcceptedWork("case-import", {
     finding: ({ ref, edition, viewer }) => {
-      if (!s.seers.has(viewer)) return null;
+      s.viewers.push(viewer);
+      if (viewer !== null && viewer !== undefined && !s.seers.has(viewer)) return null;
       if (s.held && !s.held.has(`${ref}@${edition}`)) return null;
       const withdrawn = s.withdrawals.some((x) => x.edition === edition && x.refs.includes(ref));
       return { ref, import: IMP, group: "other-group", case: "CASE-2026-0007-theirs", edition, finding: ref.split("/")[1],
@@ -217,9 +220,10 @@ test("R31 R8: acceptanceWithdrawn tells the listeners once after the act, as kin
   const [h] = heard;
   assert.deepEqual([h.kind, h.subject, h.source, h.since, h.import, h.edition, h.refs],
                    ["acceptance", "AW-1", "acceptance", T2, IMP, 2, [REF, REF2].sort()]);
-  assert.deepEqual(h.dependents, [{ bundle_id: D, ord: 0, role: "supports", state: "open", target: REF },
-                                  { bundle_id: D, ord: 1, role: "supports", state: "open", target: REF2 },
-                                  { bundle_id: E, ord: 0, role: "supports", state: "open", target: REF2 }]);
+  assert.deepEqual(h.dependents.map(({ detail, ...x }) => x),
+    [{ bundle_id: D, ord: 0, role: "supports", state: "open", target: REF, group: "other-group", case: "CASE-2026-0007-theirs" },
+     { bundle_id: D, ord: 1, role: "supports", state: "open", target: REF2, group: "other-group", case: "CASE-2026-0007-theirs" },
+     { bundle_id: E, ord: 0, role: "supports", state: "open", target: REF2, group: "other-group", case: "CASE-2026-0007-theirs" }]);
   assert.equal(typeof h.detail, "string");
   /* an object carrying the id is read the same */
   assert.equal(w.r.acceptanceWithdrawn({ withdrawal: { withdrawal: "AW-1" } }).dependents, 3);
@@ -237,4 +241,69 @@ test("R31 R8: acceptanceWithdrawn tells the listeners once after the act, as kin
   bare.r.onBasisChanged("conformance", (e) => told.push(e));
   const d = bare.r.acceptanceWithdrawn({ withdrawal: "AW-1" });
   assert.deepEqual([d.ok, d.told, d.dependents, d.accepted_work_absent, told.length], [true, true, 0, true, 1]);
+});
+
+test("R31 (N531): the telling reads the acceptance detail as the plane, with no viewer: each dependent told names the source group and case, whoever may see the import", () => {
+  /* once the legs are written (accepted-work R4 asks as their author), nobody is a seer: only the plane's own read (no
+     viewer) is answered */
+  const { w, s } = setup();
+  s.seers = new Set();
+  s.withdrawals.push(withdrawal([REF, REF2]), withdrawal([REF], { id: "AW-2", edition: 1, at: T3 }));
+  const heard = [];
+  w.r.onBasisChanged("conformance", (e) => heard.push(e));
+  s.viewers.length = 0;
+  const a = w.r.acceptanceWithdrawn({ withdrawal: "AW-1" });
+  assert.deepEqual([a.told, a.dependents], [true, 3]);
+  assert.ok(s.viewers.length > 0 && s.viewers.every((v) => v === null || v === undefined),
+            `asked as the plane, never as a credential: ${JSON.stringify(s.viewers)}`);
+  const [h] = heard;
+  assert.equal(h.dependents.length, 3);
+  for (const d of h.dependents) {
+    assert.deepEqual([d.group, d.case], ["other-group", "CASE-2026-0007-theirs"], d.bundle_id);
+    assert.match(d.detail, new RegExp(`another group's finding ${d.target.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} at edition 2, `
+      + "of case CASE-2026-0007-theirs by other-group, and this group's acceptance of that edition was withdrawn \\(AW-1"));
+  }
+  /* one withdrawal's dependents only: AW-2 names edition 1, D1's leg */
+  heard.length = 0;
+  w.r.acceptanceWithdrawn({ withdrawal: "AW-2" });
+  assert.deepEqual(heard[0].dependents.map((d) => [d.bundle_id, d.target, d.group, d.case]),
+                   [[D1, REF, "other-group", "CASE-2026-0007-theirs"]]);
+  assert.match(heard[0].dependents[0].detail, /at edition 1, of case CASE-2026-0007-theirs by other-group/);
+  /* negative control: the import not held, the plane's read answers null too, and the detail names neither */
+  s.held = new Set();
+  heard.length = 0;
+  w.r.acceptanceWithdrawn({ withdrawal: "AW-2" });
+  const [d] = heard[0].dependents;
+  assert.deepEqual([d.group, d.case], [null, null]);
+  assert.ok(!/other-group|CASE-2026-0007/.test(d.detail), d.detail);
+});
+
+test("R31 R9 R20 (N531): the read paths keep the asking viewer: a viewer case-import does not answer reads the group and case null in the obligation and in changesOf, and a viewer never sent is never asked as the plane", () => {
+  const { w, s } = setup();
+  s.withdrawals.push(withdrawal([REF]));
+  /* owen sees the dependents (no project), but case-import does not answer him the import */
+  w.st.sql.exec(`UPDATE bundles SET project=NULL`);
+  const nulls = (c) => [c.group, c.case, /other-group|CASE-2026-0007/.test(c.detail)];
+  s.viewers.length = 0;
+  const ch = w.r.changesOf({ findings: [D], viewer: V("owen") }).findings[0];
+  const c0 = ch.causes.find((c) => c.source === "acceptance");
+  assert.deepEqual([c0.withdrawal, ...nulls(c0)], ["AW-1", null, null, false]);
+  assert.ok(s.viewers.length > 0 && s.viewers.every((v) => v === V("owen")), JSON.stringify(s.viewers));
+  /* a machine credential is no member to case-import: the obligation (seen, R1) reads them null too */
+  const o = w.r.reevaluations({ viewer: ADMIN }).obligations.find((x) => x.bundle_id === D);
+  assert.deepEqual(nulls(o.causes.find((c) => c.source === "acceptance")), [null, null, false]);
+  const ct = w.r.changesOf({ findings: [D], viewer: ADMIN }).findings[0].causes.find((c) => c.source === "acceptance");
+  assert.deepEqual(nulls(ct), [null, null, false]);
+  /* negative control: a member case-import answers reads them, on both paths */
+  const ann = w.r.changesOf({ findings: [D], viewer: V("ann") }).findings[0].causes.find((c) => c.source === "acceptance");
+  assert.deepEqual([ann.group, ann.case], ["other-group", "CASE-2026-0007-theirs"]);
+  const annO = w.r.reevaluations({ target: REF, viewer: V("ann") }).obligations[0].causes[0];
+  assert.deepEqual([annO.group, annO.case], ["other-group", "CASE-2026-0007-theirs"]);
+  /* a read with no viewer is nobody's: nothing is answered and the plane's read is never asked for it */
+  s.viewers.length = 0;
+  for (const r of [w.r.reevaluations({}), w.r.reevaluations({ viewer: null })])
+    assert.ok(!/other-group|CASE-2026-0007/.test(JSON.stringify(r)), JSON.stringify(r).slice(0, 300));
+  const none = w.r.changesOf({ findings: [D] });
+  assert.deepEqual(none.findings, [{ id: D, absent: true }]);
+  assert.ok(s.viewers.every((v) => v !== null && v !== undefined), `never asked as the plane: ${JSON.stringify(s.viewers)}`);
 });

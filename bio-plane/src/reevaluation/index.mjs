@@ -108,8 +108,8 @@ export const ACCEPTANCE_PAGE = 200;
  *  about a side the leg rests on; `source` is R28's, a rung move of the source behind a capture the leg rests on;
  *  `attribution` is R29's, a move of the credit level of the observation the leg rests on; `withdrawal` and `contested`
  *  are R30's, a case edition withdrawn or contested on its docket; `acceptance` is R31's, this group's acceptance of
- *  another group's finding withdrawn at the edition the leg names; §5.4's four cascade events (the catalogue's
- *  `REEVAL_SOURCES`) are derived the same way; `weakened` is R17's. */
+ *  another group's finding withdrawn at the edition the leg names; §5.4's four cascade events (C-10.1's
+ *  `REEVAL_SOURCES`, `./checks.mjs`) are derived the same way; `weakened` is R17's. */
 export const CAUSE_SOURCES = Object.freeze(["supersession", "edition", "deferred", "reopened", "dismissed", "corrected",
   "source", "attribution", ...DOCKET_KINDS, "acceptance", ...REEVAL_SOURCES, "weakened"]);
 /** R21, R27: what an answer says when a tensions read could not be made. */
@@ -706,10 +706,12 @@ export class Reevaluation {
   /** R31 (DEC-96 item 1): the `acceptance` causes on `legs` (`inquiry_basis` rows), for a viewer's visible dependents.
    *  A live leg (R7) on an imported finding reference carries one per withdrawal naming that ref at the edition the leg
    *  names, `since` the withdrawal's instant, `detail` the source group, case and edition (read through
-   *  `acceptedFinding` for `viewer`; null where it answers none) and the withdrawal. `only` keeps one withdrawal's.
-   *  Answers `{byPair}` keyed `<dependent>\0<target>`, each list in (ord, withdrawal) order. Reads only; regrades
-   *  nothing (R19). */
-  #acceptanceOn(legs, visible, aw, viewer, only = null) {
+   *  `acceptedFinding`; null where it answers none) and the withdrawal. A read path asks for its `viewer`, a viewer never
+   *  sent asked as nobody, so an import's group and case read null to whom `case-import` R4, R16 do not show them; the
+   *  telling (`plane`) asks with no viewer, the plane reading for itself (N531). `only` keeps one withdrawal's. Answers
+   *  `{byPair}` keyed `<dependent>\0<target>`, each list in (ord, withdrawal) order. Reads only; regrades nothing (R19). */
+  #acceptanceOn(legs, visible, aw, viewer, only = null, { plane = false } = {}) {
+    const asking = plane ? null : (viewer ?? "");
     const byPair = new Map();
     const index = aw.get().byRefEdition;
     if (!index.size) return { byPair };
@@ -730,7 +732,7 @@ export class Reevaluation {
       const k = `${ref}\u0000${edition}`;
       if (!source.has(k)) {
         let a = null;
-        try { a = this.acceptedWork.acceptedFinding({ ref, edition, viewer }); } catch { a = null; }
+        try { a = this.acceptedWork.acceptedFinding({ ref, edition, viewer: asking }); } catch { a = null; }
         source.set(k, a && typeof a === "object" && !a.absent && !a.unreadable
           ? { group: str(a.group), case: str(a.case) } : { group: null, case: null });
       }
@@ -1673,9 +1675,10 @@ export class Reevaluation {
 
   /** R31, R8 (DEC-96 item 1): told by `case-import` after its withdrawal of an acceptance commits (its R7). Tells R8's
    *  listeners once, as `kind: "acceptance"`, `subject` the withdrawal, with the dependents R31's arm answers for that
-   *  withdrawal now, as the plane reads them (no viewer: a listener is the plane's own, R28's precedent), each
-   *  `{bundle_id, ord, role, state, target}`. `withdrawal` is its id (or an object carrying one). Writes nothing and
-   *  never throws; a withdrawal accepted work does not answer is still told, with no dependents, and says so. */
+   *  withdrawal now, as the plane reads them (no viewer: a listener is the plane's own, R28's precedent; N531), each
+   *  `{bundle_id, ord, role, state, target, group, case, detail}`, the detail naming the source group and case.
+   *  `withdrawal` is its id (or an object carrying one). Writes nothing and never throws; a withdrawal accepted work does
+   *  not answer is still told, with no dependents, and says so. */
   acceptanceWithdrawn({ withdrawal = null } = {}) {
     try {
       const id = str(withdrawal && typeof withdrawal === "object" ? withdrawal.withdrawal : withdrawal);
@@ -1686,9 +1689,10 @@ export class Reevaluation {
       if (rec && rec.refs.length) {
         const legs = this.#rows(`SELECT bundle_id, ord, target_id FROM inquiry_basis WHERE target_id IN (SELECT value FROM json_each(?))
                                   ORDER BY bundle_id, ord`, JSON.stringify(rec.refs));
-        dependents = [...this.#acceptanceOn(legs, (x) => x ?? null, aw, MACHINE_ADMIN, id).byPair.entries()]
+        dependents = [...this.#acceptanceOn(legs, (x) => x ?? null, aw, null, id, { plane: true }).byPair.entries()]
           .flatMap(([k, list]) => list.map((x) => ({ bundle_id: k.split("\u0000")[0], ord: x.ord, role: x.role,
-                                                     state: x.state, target: x.ref })));
+                                                     state: x.state, target: x.ref, group: x.group, case: x.case,
+                                                     detail: x.detail })));
       }
       const since = rec && rec.at ? rec.at : this.#when();
       const out = { ok: true, told: true, kind: "acceptance", withdrawal: id, dependents: dependents.length,
