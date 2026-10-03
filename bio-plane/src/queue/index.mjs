@@ -22,7 +22,7 @@
  *   producers   the providers (`producers` is `queue-producers`, handed whichever of its own providers were given
  *              here: governor, provenance, capture, captureRequests, basisVersions, aiRuns, publication, reevaluation,
  *              intent, monitoring, contradiction, actionClocks, escalation, actionPlans, actions, filingTemplates,
- *              localFacts, networkNotices, linkSweep, docket and the shared ones);
+ *              localFacts, networkNotices, linkSweep, docket, caseImport, wizardScripts and the shared ones);
  *   env       the instance bindings: `BIO_NOW_MS` (the clock);
  *   now       a clock, `() => ms`, in place of `env`'s;
  *   start     false to skip the scheduler registration (a test that drives the consumer itself).
@@ -114,7 +114,10 @@ export class Queue {
     /* queue-producers R26 (N506, K1181): link-sweep's sweep conditions (its R11), since the sweep left monitoring. */
     "linkSweep",
     /* queue-producers R30 (N520, DEC-116): docket's required core (its R9); queue passes it and calls none of its reads. */
-    "docket"]);
+    "docket",
+    /* queue-producers R35 and R32, R33 (N545; plane R20's hand-off): case-import's followed dockets, wizard-scripts'
+       breaks and submissions; queue passes them and calls none of their reads. */
+    "caseImport", "wizardScripts"]);
   get #scheduler() { return this.#dep("scheduler", () => schedulerOf(this.#host, this.#env)); }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -560,7 +563,7 @@ export class Queue {
     "plan-checkpoint-due": "checkpointrecord", "escalation-stage-proposed": "escalationadvance",
     "action-reminder": "reminderanswer", "litigation-hold": "actionhold",
     "template-review-requested": "templatereview", "local-fact-due": "factconfirm",
-    "attribution-unchosen": "attribute",
+    "attribution-unchosen": "attribute", "wizard-approval-requested": "wizardapprove",
     "docket-core-due": Object.freeze(["docketprepare", "docketdecline"]),
     "contradiction-duty": Object.freeze(["contradictionclarify", "contradictiontakeup"]),
     "contradiction-duty-unseen": Object.freeze(["contradictionoptin"]) });
@@ -619,6 +622,9 @@ export class Queue {
       + "kind and what it refers to rather than by a task: it stays until it is done, and it leaves when you place it on "
       + "the docket (op=docketprepare prepares the entry) or, for a submission, decline it with a reason "
       + "(op=docketdecline), or when it is otherwise placed, receipted or disclosed.",
+    "wizard-approval-requested": " This one is a wizard script's version submitted for your approval, keyed by the "
+      + "version and by you rather than by a task: it leaves when you approve it (op=wizardapprove), or when the version "
+      + "is withdrawn or its script retired.",
   });
 
   /** R46, R50: the acts a project-scoped FINDING of these kinds names beside R12's disposition: a recorded re-evaluation

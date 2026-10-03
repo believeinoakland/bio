@@ -69,6 +69,10 @@ export const QUEUE_CONDITION_KINDS = Object.freeze({
   ...CONDITION_KINDS,
   "action-clock-overdue":       "a deadline on one of the group's actions passed while its entry is still pending "
                               + "(DEC-94) — LIVE: queue-producers R15, from action-clocks' overdueClocks",
+  /* R1, R5 (DEC-101 (3), DEC-116 item 8; T31): a docket a member follows could not be read on this copy's latest read.
+     A fact about our own reading, never about the publisher, so a CONDITION a member quiets for themselves; queue's to add
+     for action-clock-overdue's reason (no look carries it). Its producer is `queue-producers`' (its R35). */
+  "cited-docket-unreadable":    "a docket you follow could not be read (DEC-101, DEC-116) — LIVE: queue-producers R35",
 });
 
 /* Every OTHER kind the catalogue names, with the class it belongs to — so a
@@ -143,6 +147,11 @@ export const QUEUE_OBLIGATION_KINDS = {
                               + "subject or a holder of standing, a newer edition, or a conflict on a load-bearing finding "
                               + "not disclosed; place it, or decline it (op=docketprepare, op=docketdecline; DEC-116) "
                               + "— LIVE: queue-producers R30",
+  /* DEC-121 (1) (R1; wizard-scripts R7, R17): a submitted wizard script's version waits on an owner who may approve it.
+     Theirs to answer by approving it (R12's door, op=wizardapprove), and never muted. Its producer is `queue-producers`'
+     (its R33). */
+  "wizard-approval-requested":   "a member submitted a wizard script's version that you may approve; approve it or leave "
+                              + "it (op=wizardapprove; DEC-121) — LIVE: queue-producers R33",
 };
 
 export const QUEUE_FINDING_KINDS = {
@@ -258,6 +267,22 @@ export const QUEUE_FINDING_KINDS = {
      `queue-producers`' (its R29). */
   "litigation-hold-released":   "a member released a litigation hold: the projects it alone covered may be purged again "
                               + "and their assistant transcripts deleted on schedule (DEC-113) — LIVE: queue-producers R29",
+  /* DEC-121 (5) (R1; wizard-scripts R13): a script's owner is told once why it was withheld, and when it returns. Each is
+     something the record noticed, disposed of by its recipient. Their producer is `queue-producers`' (its R32). */
+  "wizard-withdrawn":           "a wizard script you own or wrote no longer matches the screens and is withheld until "
+                              + "fixed; its first refusal named (DEC-121) — LIVE: queue-producers R32",
+  "wizard-restored":            "a withheld wizard script matches the screens again and is offered again (DEC-121) "
+                              + "— LIVE: queue-producers R32",
+  /* DEC-101 (3) (R1; reevaluation R33): a case another group published, which your group cites, moved on its publisher's
+     docket. Each leaves as `edition-withdrawn` does, by a recorded re-evaluation. Their producer is `queue-producers`'
+     (its R34). */
+  "cited-newer-edition":        "a case your group cites has a newer edition (DEC-101) — LIVE: queue-producers R34",
+  "cited-edition-withdrawn":    "a case edition your group cites has been withdrawn (DEC-101) — LIVE: queue-producers R34",
+  /* DEC-101 (3), DEC-116 item 8 (R1; case-import R20): what a followed docket gained or refused, told once to who set the
+     watch. Their producer is `queue-producers`' (its R35). */
+  "followed-case-entry":        "a docket you follow gained an entry (DEC-101, DEC-116) — LIVE: queue-producers R35",
+  "cited-docket-entry-refused": "an entry of a docket you follow failed its checks and was not taken in (DEC-116) "
+                              + "— LIVE: queue-producers R35",
 };
 
 /* THE N-NUMBERS — the catalogue's STABLE IDS, allocated when a generator is built and not before

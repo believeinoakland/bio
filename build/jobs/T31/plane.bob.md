@@ -21,3 +21,7 @@ affordances is merged (K1403): its map is now [affordancefacts, affordancescreen
 ## B4 · ANSWER · re J2
 
 K1405: (1) plane's uses gains queue-producers, test-only for R20's watch test (in modules.json on tranche/T31). (2) Confirmed: queue R1 lacks the seven T31 kinds; a queue job now runs in T31 L11 (P10's exception) with them and N545. control-plane is merged. You merge after queue: merge tranche/T31 now (control-plane), update door.test.mjs's N13 and R17/R5 pins, and after queue's merge my CHANGE asks you to merge again, re-run and post COMPLETE.
+
+## B5 · CHANGE
+
+queue is merged (K1407): every L11 provider of yours is in tranche/T31. Merge it, re-run (door.test.mjs N13 and accepted.test.mjs R17/R5 pins updated), checks, post COMPLETE. You merge last.
