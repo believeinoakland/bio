@@ -13,7 +13,9 @@ import { CONDITION_KINDS } from "../../../src/observation-log/vocabulary.mjs";
 const OBLIGATION = ["authority-undetermined", "bias-debt", "endorsement-owed", "expertise-confirmation-owed",
   "membership-request", "project-owners-inactive", "contradiction-duty", "contradiction-duty-unseen",
   "signer-self-registered", "plan-checkpoint-due", "escalation-stage-proposed", "action-reminder", "litigation-hold",
-  "template-review-requested", "local-fact-due", "attribution-unchosen", "docket-core-due"];
+  "template-review-requested", "local-fact-due", "attribution-unchosen", "docket-core-due",
+  /* T31 (queue-producers R33, DEC-121 (1)) */
+  "wizard-approval-requested"];
 /* R1's twenty-nine, `cardinality_exceeded` (N107, K209), `newer-capture-affects-reference` (N172), N345's five, the two
    docket kinds (queue-producers R31, DEC-116 items 3, 7) and the released hold (queue-producers R29, DEC-113) among
    them. */
@@ -23,7 +25,10 @@ const FINDING = ["missing_predecessor", "overdue_successor", "temporal-expectati
   "out-of-inquiry-lead", "stance-changed-here-not-elsewhere", "new-version-arrived-from-another-team",
   "shared-inquiry-concluded-by-another-project", "cardinality_exceeded", "newer-capture-affects-reference",
   "contradiction-plurality-unseen", "contradiction-lead", "contradiction-plurality", "side-corrected",
-  "tension-after-publication", "edition-withdrawn", "edition-contested", "litigation-hold-released"];
+  "tension-after-publication", "edition-withdrawn", "edition-contested", "litigation-hold-released",
+  /* T31 (queue-producers R32, R34, R35; DEC-121 (5), DEC-101 (3), DEC-116 item 8) */
+  "wizard-withdrawn", "wizard-restored", "cited-newer-edition", "cited-edition-withdrawn", "followed-case-entry",
+  "cited-docket-entry-refused"];
 /* observation-log's twenty (R5): its twelve, the five sweep kinds (link-sweep R11, queue-producers R26) and the three
    notice kinds (network-notices R12, R13, queue-producers R27) its R33 added in T23 (K1099); and the overdue action
    clock (K611). */
@@ -34,7 +39,10 @@ const LOOK_CONDITION = ["monitoring-recheck-due", "archive-fallback-eligible", "
   "source-unreachable-governed", "capture-completed-unattended", "partial-capture-outstanding", "text-undetermined",
   "client-rendered-shell", "invitation-spent-or-expired", "governor-holding-host", "runtime-ceiling-reached",
   "render-deferred", ...SWEEP_CONDITION, ...NOTICE_CONDITION];
-const CONDITION = [...LOOK_CONDITION, "action-clock-overdue"];
+/* Beside them, the conditions no look carries: the overdue action clock (K611) and the unreadable followed docket
+   (queue-producers R35, T31; the reading J1 asks BOB to fold into R5). */
+const QUEUE_ONLY_CONDITION = ["action-clock-overdue", "cited-docket-unreadable"];
+const CONDITION = [...LOOK_CONDITION, ...QUEUE_ONLY_CONDITION];
 /* What each of the eight says, as R1 states it: the sentence is observation-log's, and it says this. */
 const NEW_CONDITION_SAYS = {
   "sweep-held-backlog": /sweep is held: its backlog .* is at or over its ceiling, so it does not run/,
@@ -151,12 +159,12 @@ test("R4: suppressedBy names the first muted ancestor holding the kind, with no 
     assert.deepEqual(parseMutedKinds(serializeMutedKinds(kinds)), sorted(new Set(kinds)));
 });
 
-test("R5: the condition kinds are observation-log's vocabulary with action-clock-overdue, re-exported as QUEUE_CONDITION_KINDS", () => {
+test("R5: the condition kinds are observation-log's vocabulary with action-clock-overdue and cited-docket-unreadable, re-exported as QUEUE_CONDITION_KINDS", () => {
   assert.deepEqual(sorted(Object.keys(CONDITION_KINDS)), sorted(LOOK_CONDITION));
   // every one of observation-log's, with its own sentence, and action-clock-overdue beside them; nothing else
   for (const [k, s] of Object.entries(CONDITION_KINDS)) assert.equal(QUEUE_CONDITION_KINDS[k], s, k);
-  assert.deepEqual(sorted(Object.keys(QUEUE_CONDITION_KINDS)), sorted([...Object.keys(CONDITION_KINDS), "action-clock-overdue"]));
-  assert.equal(Object.keys(QUEUE_CONDITION_KINDS).length, 21);
+  assert.deepEqual(sorted(Object.keys(QUEUE_CONDITION_KINDS)), sorted([...Object.keys(CONDITION_KINDS), ...QUEUE_ONLY_CONDITION]));
+  assert.equal(Object.keys(QUEUE_CONDITION_KINDS).length, 22);
   // T23 (K1099): the eight new kinds are among them, each with observation-log's own sentence
   for (const k of [...SWEEP_CONDITION, ...NOTICE_CONDITION]) {
     assert.ok(k in CONDITION_KINDS, k);
@@ -164,12 +172,12 @@ test("R5: the condition kinds are observation-log's vocabulary with action-clock
   }
   // negative control: a kind outside observation-log's vocabulary, other than action-clock-overdue, is not carried
   for (const k of Object.keys(QUEUE_CONDITION_KINDS))
-    assert.ok(k in CONDITION_KINDS || k === "action-clock-overdue", k);
+    assert.ok(k in CONDITION_KINDS || QUEUE_ONLY_CONDITION.includes(k), k);
   for (const v of ["sweep-unknown", "notice-posted", "bias-debt", "export-performed"]) {
     assert.ok(!(v in QUEUE_CONDITION_KINDS), v);
     assert.notEqual(classOfKind(v), "CONDITION", v);
   }
-  assert.ok(!("action-clock-overdue" in CONDITION_KINDS), "observation-log's list is not changed: no look carries it");
+  for (const k of QUEUE_ONLY_CONDITION) assert.ok(!(k in CONDITION_KINDS), `observation-log's list is not changed: no look carries ${k}`);
   assert.ok(Object.isFrozen(QUEUE_CONDITION_KINDS));
   for (const k of Object.keys(QUEUE_CONDITION_KINDS)) assert.equal(classOfKind(k), "CONDITION", k);
 });
