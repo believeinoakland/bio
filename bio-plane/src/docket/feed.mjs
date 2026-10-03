@@ -11,6 +11,9 @@ export const feedAddress = (caseId) => `op=docketfeed&case=${encodeURIComponent(
  *  against the feed's own address. */
 export const feedHref = (address) => `?${address}`;
 export const ATOM_MEDIA_TYPE = "application/atom+xml";
+/** R15 (DEC-124, K1365 (3)): the feed's and each entry's Atom id keep `urn:civicos:` permanently, whatever an entry's
+ *  `format` label: a changed id makes every reader show every entry again as new. */
+export const FEED_ID_PREFIX = "urn:civicos:docket";
 
 const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
   .replace(/"/g, "&quot;").replace(/'/g, "&apos;");
@@ -31,7 +34,7 @@ export function renderFeed(pub, updatedFallback) {
   const lines = [
     `<?xml version="1.0" encoding="utf-8"?>`,
     `<feed xmlns="http://www.w3.org/2005/Atom">`,
-    `  <id>urn:civicos:docket:${esc(group)}:${esc(pub.case)}</id>`,
+    `  <id>${FEED_ID_PREFIX}:${esc(group)}:${esc(pub.case)}</id>`,
     `  <title>${esc(`${group} docket: ${pub.case}`)}</title>`,
     `  <updated>${esc(updated)}</updated>`,
     `  <author><name>${esc(group)}</name></author>`,
@@ -44,7 +47,7 @@ export function renderFeed(pub, updatedFallback) {
       .filter(Boolean).join(", ");
     lines.push(
       `  <entry>`,
-      `    <id>urn:civicos:docket:${esc(group)}:${esc(pub.case)}:${e.seq}</id>`,
+      `    <id>${FEED_ID_PREFIX}:${esc(group)}:${esc(pub.case)}:${e.seq}</id>`,
       `    <title>${esc(`#${e.seq} ${title}`)}</title>`,
       `    <updated>${esc(instant(e.published_at))}</updated>`,
       `    <published>${esc(instant(e.published_at))}</published>`,
