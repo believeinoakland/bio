@@ -22,3 +22,7 @@
 - `checks/ownership.mjs … reading-pipeline tranche/T32`: 1 file changed; 0 failures.
 
 Size (session_01JD6kskytnjr8DdFry3Y75L): test runs 2, module lines 0
+
+## J1 · COMPLETE
+
+N542 applied: tier-pagewise.probe.mjs composes its --census agent with acquisition.civicsmithUserAgent (byte-identical string). Module tests 77/77 pass; format, architecture, coverage (24/24), ownership all 0 failures. Nothing deferred, nothing found in other modules. The Uses line's 'not yet met: T32' marker on acquisition is yours to clear. Record: build/jobs/T32/reading-pipeline.md @ job/T32/reading-pipeline.
