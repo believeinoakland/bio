@@ -30,7 +30,8 @@ Terms. A **finding** is `record-grammar`'s (its R11): `{check, severity, message
 **The imported finding reference: IMPORTED_FINDING_RE, importedFindingRef(import, finding), parseImportedFindingRef(s)** (DEC-112 (6); DEC-96 items 1, 4; N522) Pure; never throws.
 - **R11** **The imported finding reference.**
   - `IMPORTED_FINDING_RE` matches exactly `imported:<import>/<finding>`. `<import>` is `case-import`'s import id (64 lowercase hex). `<finding>` is the finding's id as the source case states it (`BUNDLE_ID_RE`). The two never collide with a local id, which `BUNDLE_ID_RE` alone matches.
-  - `importedFindingRef(import, finding)` spells it. `parseImportedFindingRef(s)` answers `{import, finding}`, or null.
+  - `importedFindingRef(import, finding)` spells it, or answers null when the parts would not spell a ref this pattern matches. `parseImportedFindingRef(s)` answers `{import, finding}`, or null.
+  - `importedLegFindings(label, leg, findings, checkId = "C-21.3")`: the leg arm below, answering whether the leg's target is a ref, pushing one finding per departure into `findings` (K1304). For such a leg the grade-vocabulary, axis and source, hunch, testimony, earned, inherited and extent arms stay silent; each field they judge is already one departure here. *(not yet met: T28)*
 
   **The leg on it.** A leg whose `target` is such a ref:
   - names a positive integer `target_edition`;
