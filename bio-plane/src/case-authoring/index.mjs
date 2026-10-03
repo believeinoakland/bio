@@ -45,10 +45,8 @@
  *   ratification         `caseConclusionFor`, `editionsRecordingConclusion` (its R1).
  *   networkNotices       `noticeReferenceOf` (its R19; R41, R42: DEC-111).
  *   disclosures          `case-disclosures` (N529, K1333): what a case discloses about what it rests on, asked in R55's
- *                        order. Created on first use with the dependencies it reads (`contradiction`, `provenance`,
- *                        `attestation`, `capture`, `sources`, `extraction`, `caseImport`, `promotion`, `inquiry`,
- *                        `strength`) when a caller hands them here, so a composition that hands this module those
- *                        reaches the one instance it composed; this module reads none of them itself.
+ *                        order: its one instance on this host, which the composition builds with the dependencies it
+ *                        reads (N536); this module hands it none and reads none of them itself.
  *   now                  the clock for the instants it writes, `(precision) => ISO string` (default: the wall clock).
  *
  * READ CONTRACTS it joins in its own SQL, each named at its statement: record-core's `bundles` (R37); publication's
@@ -143,22 +141,16 @@ const actRefusal = (key, extra) => refusal(PUBLISH_ACT_CHECKS, key, extra);
 
 export class CaseAuthoring {
   #deps;
-  #handed;
 
   constructor({ storage, record, membership, host = null, inquiry = null, basisVersions = null, strength = null,
                 bias = null, observations = null, reevaluation = null, publication = null, ratification = null,
-                networkNotices = null, disclosures = null, contradiction = null, provenance = null, attestation = null,
-                capture = null, sources = null, extraction = null, caseImport = null, promotion = null,
-                now = null } = {}) {
+                networkNotices = null, disclosures = null, now = null } = {}) {
     this.sql = storage.sql;
     this.storage = storage;
     this.record = record;
     this.membership = membership;
     this.#deps = { host, inquiry, basisVersions, strength, bias, observations, reevaluation, publication, ratification,
                    networkNotices, disclosures };
-    /* What `case-disclosures` reads, when a caller handed it here: passed to its factory on first use (N529). */
-    this.#handed = Object.fromEntries(Object.entries({ contradiction, provenance, attestation, capture, sources, extraction,
-                                                       caseImport, promotion, inquiry, strength }).filter(([, v]) => v));
     this.now = typeof now === "function" ? now : (precision) => stampInstant(precision);
   }
 
@@ -172,14 +164,9 @@ export class CaseAuthoring {
   get publication() { return this.#deps.publication ||= publicationOf(this.#deps.host); }
   get ratification() { return this.#deps.ratification ||= ratificationOf(this.#deps.host); }
   get networkNotices() { return this.#deps.networkNotices ||= networkNoticesOf(this.#deps.host); }
-  /* R55 (N529, K1333): `case-disclosures`, the one instance on this host, asked in R55's order. */
-  get disclosures() {
-    return this.#deps.disclosures ||= caseDisclosuresOf(this.#deps.host,
-      { storage: this.storage, record: this.record, ...this.#handed });
-  }
-  /* N529 (K625's named-copy pattern): the attestation instance `case-disclosures` reads, until `plane` re-points its
-     composition to `case-disclosures` (seam read §5). */
-  get attestation() { return this.disclosures.attestation; }
+  /* R55 (N529, K1333): `case-disclosures`, the one instance on this host, asked in R55's order. The composition builds
+     it with what it reads (N536: `plane` composes `caseDisclosuresOf(ctx, {attestation})` first, K1355). */
+  get disclosures() { return this.#deps.disclosures ||= caseDisclosuresOf(this.#deps.host); }
 
   migrate() { migrateCaseAuthoring(this.sql); }
 
