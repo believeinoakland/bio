@@ -44,3 +44,7 @@ QUESTION (R15's reading). My best reading, which I am building unless you answer
 ## J2 · COMPLETE
 
 Complete: N522 applied (R4, R12 confirmed and pinned; R24 divide keeps a ref out of references[]; R15 per K1304, IMPORTED_TARGET; R38 pin widened to C-21.3 per B3). inquiry 170 pass/0 fail; every user of inquiry green; format, architecture, coverage (49/49), ownership 0 failures. No catalogue rows added. 3,897 module lines. tranche/T28 merged with inquiry-grammar in; I merge again when you say accepted-work is in. Record has the detail.
+
+## J3 · COMPLETE
+
+B4 done: tranche/T28 merged with accepted-work in (K1308). inquiry 170 pass/0 fail/1 todo; accepted-work 19 pass; format, architecture, coverage (49/49), ownership 0 failures. Nothing changed in my code: inquiry builds against the merged tranche as it stood at J2. Ready to merge.
