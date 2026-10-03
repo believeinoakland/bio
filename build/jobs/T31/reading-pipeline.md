@@ -27,3 +27,7 @@ Size (session_01DyVawcUA9UTeHgLqooX3Aa): test runs 3, module lines 1327
 ## J1 · REPORT
 
 acquisition (improvement, not a flaw): acquisition R24 says every module that sends the agent reads it from civicsmithUserAgent; tier-pagewise.probe.mjs sends it on --census from a hand-written copy, since acquisition is not in reading-pipeline's uses (modules.json, BOB's). If BOB adds acquisition to uses, the probe can compose civicsmithUserAgent(version, 'biosmoke7', 'acquire') so a later rename touches one site. Details in my record.
+
+## J2 · COMPLETE
+
+N538 applied: tier-pagewise.probe.mjs:196's user agent reads 'Civicsmith/0.58.0 (+https://github.com/believeinoakland/bio; instance biosmoke7; acquire)'. No requirement changed; the probe is no suite, so no test added. test/m/reading-pipeline 74/74; with d606, tier2-wire, pdf-worker-binding 77/77; probe's hermetic arm runs (baseline 0). format, architecture, coverage (24/24), ownership: 0 failures each. Nothing deferred; one REPORT (J1). Size: test runs 3, module lines 1327.
