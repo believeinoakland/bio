@@ -137,7 +137,7 @@ test("R1 R2 R14: a determination rests on findings this project published in a r
   const G = "INQ-2026-0002-prepared";
   w.inquiry(G);
   w.publication.storeCaseDocument({ case: "CASE-2026-0007", edition: 1, author: V("olive"), at: "2026-09-28T01:00:00Z",
-    text: "---\nformat: bio-case-document/4\ncase_id: CASE-2026-0007\ncase_edition: 1\n---\n" });
+    text: "---\nformat: bio-case-document/6\ncase_id: CASE-2026-0007\ncase_edition: 1\n---\n" });
   for (const findings of [[G], ["INQ-2026-0099-none"], [DOC], [""]]) {
     const r = nothing(w, () => w.c.determine(input({ findings })));
     refused(r, "FINDING_NOT_PUBLISHED");
