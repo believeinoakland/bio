@@ -21,7 +21,8 @@ import { attestationOf } from "../../../src/attestation/index.mjs";
 import { publicationOf } from "../../../src/publication/index.mjs";
 import { docketOf } from "../../../src/docket/index.mjs";
 import { signSshsig, signerPublicLine } from "../../../scripts/sign-sshsig.mjs";
-import { NS_DOCKET } from "../../../src/sshsig.mjs";
+import { NS_DOCKET, docketStatement } from "../../../src/sshsig.mjs";
+import { canonicalJson } from "../../../src/record-grammar/json.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 function cursor(rows) {
@@ -227,4 +228,23 @@ export async function fileAndPlace(w, x = {}, place = {}) {
   if (!f.ok) throw new Error(`fixture file refused: ${JSON.stringify(f).slice(0, 300)}`);
   const kind = x.kind || "response";
   return { filed: f, posted: await post(w, { kind, entry: f.entry, shelf: kind === "reaction" ? "reactions" : "listed", ...place }) };
+}
+
+/** R6: a public entry as the code before T31 published it, under the old label `civicos-docket-entry/1`, signed by `who`
+ *  over `signatures.docketStatement`: its row exactly as that code's post left it (the stored bytes, digest, signature,
+ *  signing key and instant). `fields` are the entry's own (kind, shelf, edition, and by kind); the chain's fields are
+ *  filled from the docket as it stands. */
+export function legacyEntry(w, fields, who = "alice") {
+  const prior = w.rows(`SELECT seq, digest FROM docket_entries WHERE case_id=? ORDER BY seq DESC LIMIT 1`, CASE)[0];
+  const seq = prior ? Number(prior.seq) + 1 : 1;
+  const json = { format: "civicos-docket-entry/1", group: SLUG, case: CASE, seq, previous: prior ? prior.digest : null,
+                 date: iso(w.clock.now).slice(0, 10), ...fields };
+  const text = canonicalJson(json);
+  const digest = sha(text);
+  const signature = signSshsig(keyFor(who).env, Buffer.from(docketStatement(CASE, seq, digest)), NS_DOCKET);
+  w.st.sql.exec(`INSERT INTO docket_entries (case_id, seq, digest, json, kind, shelf, edition, record_entry, editions, signature,
+                                             signer_key, published_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+                CASE, seq, digest, text, json.kind, json.shelf, String(json.edition), null,
+                json.kind === "withdrawal" ? JSON.stringify([json.edition]) : null, signature, keyFor(who).b64, iso(w.clock.now));
+  return { seq, digest, text, signature, json };
 }

@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, caseDoc, V, NOW } from "./fixture.mjs";
-import { standingOf, CASE_DOCUMENT_FORMAT } from "../../../src/case-grammar/index.mjs";
+import { standingOf, CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V6 } from "../../../src/case-grammar/index.mjs";
 import { standingsOf } from "../../../src/public-read/index.mjs";
 
 const CASE = "CASE-2026-0001", F = "INQ-2026-0001", G = "INQ-2026-0002";
@@ -24,7 +24,7 @@ const METHOD = { grading: "bio-grading/1", checks: "1.57.0" };
 
 /* A case document of `format`, its members F (load-bearing) and G (supporting), their frozen pairs, the bar it records
    (`required_strength`), and, for /6, the method and materials blocks. */
-function docOf({ format = CASE_DOCUMENT_FORMAT, bar = { declared: true, capture: "B", connection: "C" }, pins }) {
+function docOf({ format = CASE_DOCUMENT_FORMAT_V6, bar = { declared: true, capture: "B", connection: "C" }, pins }) {
   const text = caseDoc(CASE, 1, { format, project: "PROJ-1", method: METHOD, ...MATERIALS,
     roles: [{ target: F, version_sha: pins[F], role: "load_bearing" }, { target: G, version_sha: pins[G], role: "supporting" }],
     strength: [{ target: F, axis: "capture", grade: "A" }, { target: F, axis: "connection", grade: "D" },
@@ -80,7 +80,7 @@ test("R22 negative controls: a document recording no bar answers `no_bar`; one s
   assert.equal(standingsOf({ format: "bio-case-document/1", case_roles: [{ target: F, role: "load_bearing" }] }), null);
   assert.equal(standingsOf(null), null);
   /* Exactly the document's facts: the same front matter gives the same standings, whatever the record holds. */
-  const s = standingsOf({ format: CASE_DOCUMENT_FORMAT, case_roles: [{ target: F, role: "load_bearing" }],
+  const s = standingsOf({ format: CASE_DOCUMENT_FORMAT_V6, case_roles: [{ target: F, role: "load_bearing" }],
                           case_strength: [{ target: F, axis: "capture", grade: "B" }, { target: F, axis: "connection", grade: "C" }],
                           required_strength: { declared: true, capture: "B", connection: "C" } });
   assert.equal(s.get(F).meets, true);
@@ -100,4 +100,14 @@ test("R3 a /6 document answers its `method` and `materials` blocks as signed (ca
   assert.equal(five.ok, true);
   assert.equal(five.method, null);
   assert.equal(five.materials, null);
+});
+
+test("R3 a /7 document, identical in fields to /6 (case-grammar R1; DEC-124), answers the same `method` and `materials` blocks as signed", () => {
+  assert.equal(CASE_DOCUMENT_FORMAT, "bio-case-document/7");
+  const six = published().w.read("publishedcase", { id: CASE });
+  const seven = published({ format: CASE_DOCUMENT_FORMAT }).w.read("publishedcase", { id: CASE });
+  assert.equal(seven.ok, true);
+  assert.deepEqual(seven.method, METHOD);
+  assert.deepEqual(seven.materials, six.materials, "the same blocks as the /6 document's");
+  assert.deepEqual(seven.findings.map((f) => f.standing), six.findings.map((f) => f.standing), "and the same standings (R22)");
 });

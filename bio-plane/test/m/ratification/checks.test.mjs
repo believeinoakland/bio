@@ -342,3 +342,42 @@ test("R15: no place is named in the catalogue's rows, vocabularies or findings",
   ]);
   assert.doesNotMatch(said, /oakland|alameda|california|berkeley/i);
 });
+
+/* N538 (DEC-124; K1365 (1), K1367): `bio-case-document/7` is `/6` in every field (case-grammar R1), and the catalogue reads
+   it as `/6`: the same findings by the same arms, each message naming the format the document declares. A `/6`
+   document's messages are byte for byte those before T31, which named the then-current `/6` (the deployed copy may hold
+   one). Every arm of the family is driven over both, with the one mutation that fires it. */
+test("R8 (N538): a /7 case document is read as /6: it draws no finding, each of C-41.1–C-41.17 fires on it as on the /6 twin, and every message names the format the document declares, a /6 one's unchanged", () => {
+  const as = (fmt, d = doc()) => ({ ...d, format: fmt });
+  const run = (d, ctx) => R.checkCaseDocument(d, ctx);
+  for (const fmt of ["bio-case-document/6", "bio-case-document/7"])
+    assert.deepEqual(checks(as(fmt), { ...CTX, body: BODY, memberBasis: { [M1]: [], [M2]: [] } }), [], `${fmt}: the baseline`);
+  for (const [key, num, mutate, also = [], ctx = { ...CTX, body: BODY }] of ARMS) {
+    if (key === "FORMAT") continue;
+    const six = run(mutate(as("bio-case-document/6")), ctx), seven = run(mutate(as("bio-case-document/7")), ctx);
+    assert.deepEqual([...new Set(six.map((x) => x.check))].sort(), [num, ...also].sort(), `${num} (and only what it drags) on the /6 document`);
+    assert.deepEqual(seven, six.map((x) => ({ ...x, message: x.message.replaceAll("bio-case-document/6", "bio-case-document/7") })),
+      `${num}: the /7 document draws the /6 document's findings, the token aside`);
+    assert.ok(!six.some((x) => x.message.includes("bio-case-document/7")), `${num}: a /6 document is never told /7`);
+  }
+  /* byte identity for /6 with the messages as written before T31 (`a ${CASE_DOCUMENT_FORMAT} case document …`, /6 then) */
+  const before = {
+    "C-41.13": "a bio-case-document/6 case document requires completeness.statement_by, the member who WROTE its exclusion statement",
+    "C-41.14": "a bio-case-document/6 case document's bias_manifest.pins_proposed says 1 and its bias_manifest_pins_proposed lists 0",
+    "C-41.15": "a bio-case-document/6 case document's case_citations has 1 row(s) that do not state a target and a version",
+  };
+  for (const [key, num, mutate] of ARMS.filter(([, n]) => before[n])) {
+    const [m] = run(mutate(as("bio-case-document/6")), CTX).filter((x) => x.check === num).map((x) => x.message);
+    assert.ok(m.startsWith(before[num]), `${key}: ${m.slice(0, 120)}`);
+  }
+  /* an earlier format is named as itself, never as the current one */
+  for (const fmt of ["bio-case-document/3", "bio-case-document/4", "bio-case-document/5"]) {
+    const [m] = run({ ...as(fmt), completeness: { ...doc().completeness, statement_by: undefined } }, CTX)
+      .filter((x) => x.check === "C-41.13").map((x) => x.message);
+    assert.ok(m.startsWith(`a ${fmt} case document requires completeness.statement_by`), m.slice(0, 80));
+  }
+  /* C-41.1 names the current format and every format accepted as written */
+  const [bad] = run(as("bio-case-document/9"), CTX).filter((x) => x.check === "C-41.1");
+  for (const fmt of ["/7", "/6", "/5", "/4", "/3", "/2", "/1"]) assert.ok(bad.message.includes(`'bio-case-document${fmt}'`), fmt);
+  assert.ok(bad.message.startsWith("a case document declares format 'bio-case-document/7', or one of the earlier"), bad.message.slice(0, 90));
+});

@@ -24,7 +24,7 @@ export async function buildProgram() {
   const built = await buildMember(member, { write: false });
   const body = built.bytes.toString("utf8");
   const bodySha = sha(body);
-  const text = `// CivicOS case checker (bio-case-file/1). SHA-256 of everything after this line: ${bodySha}\n${body}`;
+  const text = `// Civicsmith case checker (bio-case-file/1). SHA-256 of everything after this line: ${bodySha}\n${body}`;
   return { text, sha256: sha(text), body_sha256: bodySha, inputs: built.inputs.map((i) => i.path) };
 }
 

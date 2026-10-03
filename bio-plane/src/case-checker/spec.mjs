@@ -8,7 +8,7 @@
 
 const V1 = `# The case file, format bio-case-file/1
 
-This document specifies version 1 of the case file: the one file (or set of parts) that carries a published case whole, so that anybody can check it and recreate its findings without a copy of CivicOS. It states every field, kind and rule a checker needs. A checker built from this text alone, given the same case file, answers the same as the checker CivicOS runs.
+This document specifies version 1 of the case file: the one file (or set of parts) that carries a published case whole, so that anybody can check it and recreate its findings without a copy of Civicsmith. It states every field, kind and rule a checker needs. A checker built from this text alone, given the same case file, answers the same as the checker Civicsmith runs.
 
 Recreating a case shows that what it carries is intact and consistent with what it states. It does not show that the case is true, and it is not an endorsement of it.
 
@@ -50,7 +50,7 @@ Each kind is carried at one path, so a file's path says which finding or materia
 
 ## 4. The case document
 
-The case document is text: a front matter between two lines \`---\`, in the record's restricted grammar (top-level keys; a key whose value is a block holds a map or a list of flat maps; scalars are \`null\`, \`true\`, \`false\`, integers, decimals, double- or single-quoted strings, or bare words), then a Markdown body. Its format is \`bio-case-document/6\` (\`/5\` to \`/1\` are older). A checker reads these fields:
+The case document is text: a front matter between two lines \`---\`, in the record's restricted grammar (top-level keys; a key whose value is a block holds a map or a list of flat maps; scalars are \`null\`, \`true\`, \`false\`, integers, decimals, double- or single-quoted strings, or bare words), then a Markdown body. Its format is \`bio-case-document/7\`, or \`bio-case-document/6\`, which is identical in fields (\`/5\` to \`/1\` are older). The two differ only in the product name the complete edition renders (section 6). A checker reads these fields:
 
 - \`case_id\`, \`case_edition\`, \`case_findings\` (the members), \`case_roles\` (per member \`{target, role, version_sha, edition}\`, \`role\` \`load_bearing\` or \`supporting\`, \`version_sha\` the SHA-256 of the member's published bytes).
 - \`case_strength\`: each member's frozen pair, one row per member and axis \`{target, axis, state, grade, …}\`. A case has no strength of its own.
@@ -75,7 +75,7 @@ The key a signature embeds must be among the manifest's \`keys\`. A checker give
 
 ## 6. The complete edition
 
-The complete edition is one HTML file rendered from the case file's other files, with every style inline, no script and no external reference. The same case file always renders the same bytes, so a checker renders it and compares.
+The complete edition is one HTML file rendered from the case file's other files, with every style inline, no script and no external reference. The same case file always renders the same bytes, so a checker renders it and compares. The product's name in its words (the credit at its foot, the line saying the case can be checked without the product, and the grading method's text) follows the case document's format: a \`bio-case-document/6\` document, or an earlier one, renders \`CivicOS\`, and a \`bio-case-document/7\` document renders \`Civicsmith\`. So a case file published before \`/7\` still renders its own carried edition byte for byte.
 
 ## 7. Canonical JSON, and the canonical extent
 

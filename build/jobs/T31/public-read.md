@@ -1,0 +1,53 @@
+# public-read (T31)
+
+**Status** · session_016SfTxv2owbWsyKBSjqM3an · depth 2 · COMPLETE · handled B3
+
+## Completion
+
+**Entries applied** · L8, N534: R25 (`op=docketpublic&case=<case>&captures=omit`).
+- Store side (`src/public-read/index.mjs`): `docketPublic(caseId, captures)` hands `docket.docketPublic` `{case, captures: "omit"}` only when `captures` is exactly `"omit"`; any other value, or none, hands `{case}` alone (no `captures` key). `publicReadOps.docketpublic` passes the query's `captures`.
+- Door (`src/public-read/door.mjs`): `publicReadDoorDocket` forwards `captures=omit` to the store for `docketpublic` only, and only when it is exactly `omit`; otherwise `case` alone, as R21 (R10's terms unchanged: no header, no other parameter). `docketfeed` forwards no `captures`.
+- Tests (`test/m/public-read/docket.test.mjs`, three `R25` arms; K1369's real test): the docket is handed exactly `{case, captures: "omit"}` at the store op and through the door, and the answer is the docket's own (`captures: {}`, `captures_omitted: true`); thirteen other values and none hand `{case}` alone and answer the captures' bytes; an absent case is `NOT_PUBLISHED` with `publishedcase`'s bytes, no case is the argument refusal (store never asked), the store's refusal and silence relayed, the feed unchanged and not handed `captures`, nothing written. The fixture's docket (`fixture.mjs` `docketOn`) now answers `docket` R24's form (`captures` by hash for listed entries with a capture; `{}` and `captures_omitted: true` for `"omit"`) and records each argument whole (`publicAsked`). Negative control: with the code change stashed, the first R25 arm fails.
+
+**Deferred** · none. No real-docket arm for R25 (`docket-real.test.mjs`): the real `docket.docketPublic` takes `captures` only once `docket`'s T31 job (its R24) merges, which is before this one in `modules.json` order; the arm over the fixture holds the interface `docket` R24 states. A real-docket arm can be added in this module's next job.
+
+**Found in other modules** · none.
+
+**Tests and checks**
+- `node --test bio-plane/test/m/public-read/`: tests 108, pass 108, fail 0.
+- Layer tests: none named in `build/manifest.md`. No provided service changed in meaning (the store op's `docketPublic` gained an optional argument), so no user module's tests to run.
+- `format`: 98 modules, 97 requirements files; 0 failures. `architecture public-read`: 34 product files, 108 relative imports; 0 failures. `coverage public-read`: 25 of 25 live requirement ids named by a test; 0 failures. `ownership public-read tranche/T31` (after commit): 5 files changed; 0 failures.
+
+Size (session_016SfTxv2owbWsyKBSjqM3an): test runs 4, module lines 2896
+
+## J1 · COMPLETE
+
+R25 applied (store op and door pass captures: "omit" only for exactly "omit"); three real R25 tests in docket.test.mjs over the fixture docket in docket R24's form. public-read tests 108/108; format, architecture, coverage (25/25), ownership 0 failures. Nothing deferred; nothing found in other modules. Record has the details.
+
+## B2 · CHANGE (case-grammar merged, K1382)
+
+Merged `tranche/T31` (case-grammar: `CASE_DOCUMENT_FORMAT` is now `/7`). Three tests went red (two R23 case-file arms, R3's `/6` blocks): the fixture's `signAsOfItsFormat` (`fixture.mjs`) committed only a document of exactly `CASE_DOCUMENT_FORMAT`, so a `/6` document was signed as a pre-T28 one, and `standing.test.mjs` built "a /6 document" from `CASE_DOCUMENT_FORMAT`. Test-side only, no product change: the fixture now commits whatever `case-grammar.caseDocumentRequiresMaterials` holds for (`/6`, `/7`), and `standing.test.mjs` names `CASE_DOCUMENT_FORMAT_V6`. Not changed: no `/7` arm for R3's blocks yet, because `publication`'s test fixture (`caseDoc`, not this module's) writes the method and materials blocks only for a literal `/6`; I can add one once `publication` merges, if its fixture writes them for `/7`.
+
+- `node --test bio-plane/test/m/public-read/`: tests 108, pass 108, fail 0.
+- `format` 0, `architecture public-read` 0, `coverage public-read` 25 of 25, 0 failures; `ownership` re-run after commit below.
+
+Waiting on the same-layer providers `publication` and `docket` to merge before posting COMPLETE again (B2).
+
+Size (session_016SfTxv2owbWsyKBSjqM3an): test runs 9, module lines 2896
+
+## B3 · CHANGE (publication and docket merged, K1384, K1385)
+
+Merged `tranche/T31`; all same-layer providers are in. The existing 108 tests passed unchanged. Added two:
+- `standing.test.mjs`: R3's `/7` arm. A `/7` document, identical in fields to `/6`, answers the same `method`, `materials` and standings as a `/6` one. `publication`'s `caseDoc` now writes the blocks for `/7`.
+- `docket-real.test.mjs`: R25 over the real `docket`. `captures=omit` gets the docket's own `{captures: {}, captures_omitted: true}` answer, at the store op and through the door. Negative control: any other value, or none, gets its plain answer. This closes the gap the first completion noted.
+
+- `node --test bio-plane/test/m/public-read/`: tests 110, pass 110, fail 0.
+- `format` 0 failures; `architecture public-read` 0; `coverage public-read` 25 of 25, 0 failures; `ownership public-read tranche/T31` 0 (run after commit).
+
+Deferred: none. Found in other modules: none.
+
+Size (session_016SfTxv2owbWsyKBSjqM3an): test runs 11, module lines 2896
+
+## J4 · COMPLETE
+
+B3 done: tranche/T31 merged (publication, docket in). public-read tests 110/110, adding R3's /7 arm and R25 over the real docket. format, architecture, coverage 25/25 and ownership all have 0 failures. Nothing deferred.

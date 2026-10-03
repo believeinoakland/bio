@@ -79,14 +79,14 @@ const q = (v) => (v === null ? "null" : typeof v === "string" ? `"${v}"` : Strin
 const rows = (key, list) => (list.length ? [`${key}:`, ...list.flatMap((r) => Object.entries(r)
   .map(([k, v], i) => `${i ? "   " : "  -"} ${k}: ${q(v)}`))] : [`${key}: []`]);
 
-/** The `/6` case document's text. */
-export function caseDocument({ pairs, bar = { declared: true, capture: "B", connection: "C" }, findings = { [A]: "load_bearing", [C]: "supporting" },
+/** The case document's text, `/6` unless `format` names another (`/7`, T31). */
+export function caseDocument({ format = "bio-case-document/6", pairs, bar = { declared: true, capture: "B", connection: "C" }, findings = { [A]: "load_bearing", [C]: "supporting" },
                               pins, materials, attestations, accounts, accepted = [], edition = 2, recorded = null,
                               facts = {}, passages = {} } = {}) {
   const roster = Object.keys(findings);
   const rec = recorded || pairs;
   const fm = [
-    "---", "format: bio-case-document/6", `case_id: ${CASE}`, `case_edition: ${edition}`, "case_project: PROJ-2026-0001-parks",
+    "---", `format: ${format}`, `case_id: ${CASE}`, `case_edition: ${edition}`, "case_project: PROJ-2026-0001-parks",
     'case_scope: "Who approved the lease, and on what record."',
     'bias_acknowledgement: "We expected the board to defer to the vendor."',
     "bias_manifest:", "  in_force: false", '  stated: "no manifest was in force"', "  pins_proposed: 0",
@@ -168,7 +168,7 @@ export function caseFiles(opts = {}) {
     { ref: MEMO, by_kind: "member", by: "bob", level: "cover", at: NOW, signature: accounts[1].signature_b64 },
     { ref: MEMO, by_kind: "group", by: GROUP },
     { ref: OBS, by_kind: "member", by: null, level: "group", at: NOW }];
-  const doc = caseDocument({ pairs, findings, pins, materials, attestations, accounts, accepted, bar: opts.bar,
+  const doc = caseDocument({ format: opts.format, pairs, findings, pins, materials, attestations, accounts, accepted, bar: opts.bar,
     recorded: opts.recorded ? opts.recorded(pairs) : null, facts: opts.signedFacts || facts, passages: opts.signedPassages || passages });
   put("case_document", null, doc);
   put("case_signature", null, sign(opts.caseSigner || "group", caseRatifyStatement(CASE, 2, sha(doc))));
