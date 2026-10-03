@@ -16,47 +16,47 @@ const clear = (w, id, x = {}, who = "bob") => w.ci.clearFlag({ flag: id, reason:
 
 /* ================================================================ R8 */
 
-test("R8 a flag is a member's: R1's first two refusals, each writing nothing", () => {
+test("R8 a flag is a member's: R1's first two refusals, each writing nothing", async () => {
   const w = seeded();
-  const a = imp(w);
+  const a = (await imp(w));
   for (const who of [MACHINE, "class:daemon", "token:operator", ""])
-    refusedThenAccepted(w, () => flag(w, a, { by: who }), () => flag(w, a), "MACHINE_CANNOT_IMPORT");
-  refusedThenAccepted(w, () => flag(w, a, {}, "carol"), () => flag(w, a), "IMPORT_NOT_A_MEMBER");
+    (await refusedThenAccepted(w, async () => flag(w, a, { by: who }), async () => flag(w, a), "MACHINE_CANNOT_IMPORT"));
+  (await refusedThenAccepted(w, async () => flag(w, a, {}, "carol"), async () => flag(w, a), "IMPORT_NOT_A_MEMBER"));
   const f = flag(w, a);
-  refusedThenAccepted(w, () => clear(w, f.flag, { by: MACHINE }), () => flag(w, a), "MACHINE_CANNOT_IMPORT");
-  refusedThenAccepted(w, () => clear(w, f.flag, {}, "dave"), () => clear(w, f.flag), "IMPORT_NOT_A_MEMBER");
+  (await refusedThenAccepted(w, async () => clear(w, f.flag, { by: MACHINE }), async () => flag(w, a), "MACHINE_CANNOT_IMPORT"));
+  (await refusedThenAccepted(w, async () => clear(w, f.flag, {}, "dave"), async () => clear(w, f.flag), "IMPORT_NOT_A_MEMBER"));
 });
 
-test("R8 an issue or reason absent, blank or over 2,000 characters is IMPORT_FLAG_NO_ISSUE", () => {
+test("R8 an issue or reason absent, blank or over 2,000 characters is IMPORT_FLAG_NO_ISSUE", async () => {
   const w = seeded();
-  const a = imp(w);
+  const a = (await imp(w));
   for (const issue of [null, "", "   ", "i".repeat(2001)])
-    refusedThenAccepted(w, () => flag(w, a, { issue }), () => flag(w, a, { issue: "i".repeat(2000) }), "IMPORT_FLAG_NO_ISSUE");
+    (await refusedThenAccepted(w, async () => flag(w, a, { issue }), async () => flag(w, a, { issue: "i".repeat(2000) }), "IMPORT_FLAG_NO_ISSUE"));
   const f = flag(w, a);
   for (const reason of [null, "", "\n", "r".repeat(2001)])
-    refusedThenAccepted(w, () => clear(w, f.flag, { reason }), () => flag(w, a), "IMPORT_FLAG_NO_ISSUE");
+    (await refusedThenAccepted(w, async () => clear(w, f.flag, { reason }), async () => flag(w, a), "IMPORT_FLAG_NO_ISSUE"));
   assert.equal(clear(w, f.flag, { reason: "r".repeat(2000) }).ok, true);
   /* the issue is asked before the edition */
-  rowOk(flag(w, a, { issue: "", edition: 9 }), "IMPORT_FLAG_NO_ISSUE");
+  (await rowOk(flag(w, a, { issue: "", edition: 9 }), "IMPORT_FLAG_NO_ISSUE"));
 });
 
-test("R8 an edition or finding not held is IMPORT_NO_SUCH_EDITION or IMPORT_NO_SUCH_FINDING; clearing a flag not open is IMPORT_FLAG_NOT_OPEN", () => {
+test("R8 an edition or finding not held is IMPORT_NO_SUCH_EDITION or IMPORT_NO_SUCH_FINDING; clearing a flag not open is IMPORT_FLAG_NOT_OPEN", async () => {
   const w = seeded();
-  const a = imp(w);
+  const a = (await imp(w));
   for (const x of [{ edition: 2 }, { edition: "x" }, { import: "e".repeat(64) }])
-    refusedThenAccepted(w, () => flag(w, a, x), () => flag(w, a), "IMPORT_NO_SUCH_EDITION");
+    (await refusedThenAccepted(w, async () => flag(w, a, x), async () => flag(w, a), "IMPORT_NO_SUCH_EDITION"));
   for (const finding of ["INQ-2026-0999-none", 42, "   x"])
-    refusedThenAccepted(w, () => flag(w, a, { finding }), () => flag(w, a, { finding: F2 }), "IMPORT_NO_SUCH_FINDING");
+    (await refusedThenAccepted(w, async () => flag(w, a, { finding }), async () => flag(w, a, { finding: F2 }), "IMPORT_NO_SUCH_FINDING"));
   const f = flag(w, a);
   for (const id of ["IMF-999", "nonsense", null, "IMA-1"])
-    refusedThenAccepted(w, () => clear(w, id), () => flag(w, a), "IMPORT_FLAG_NOT_OPEN");
+    (await refusedThenAccepted(w, async () => clear(w, id), async () => flag(w, a), "IMPORT_FLAG_NOT_OPEN"));
   assert.equal(clear(w, f.flag).ok, true);
-  refusedThenAccepted(w, () => clear(w, f.flag), () => flag(w, a), "IMPORT_FLAG_NOT_OPEN");
+  (await refusedThenAccepted(w, async () => clear(w, f.flag), async () => flag(w, a), "IMPORT_FLAG_NOT_OPEN"));
 });
 
-test("R8 a flag records by, the instant and the issue; a clear records by, the instant and the reason; the flag stays in the history", () => {
+test("R8 a flag records by, the instant and the issue; a clear records by, the instant and the reason; the flag stays in the history", async () => {
   const w = seeded();
-  const a = imp(w);
+  const a = (await imp(w));
   w.clock.now = Date.parse("2026-10-10T10:10:10Z");
   const f = flag(w, a, { finding: F1 });
   assert.deepEqual(f, { ok: true, flag: f.flag, import: a.import, edition: 1, finding: F1, issue: "the payroll figure is a year off",
@@ -71,9 +71,9 @@ test("R8 a flag records by, the instant and the issue; a clear records by, the i
   assert.deepEqual(w.ci.openFlagsOn({ import: a.import, edition: 1 }).flags.map((x) => x.flag), [e.flag]);
 });
 
-test("R8 flags are seen only by those who may see the import, and never on a public path", () => {
+test("R8 flags are seen only by those who may see the import, and never on a public path", async () => {
   const w = seeded();
-  const a = imp(w);
+  const a = (await imp(w));
   flag(w, a, { finding: F1 });
   const member = w.ci.importedCase({ import: a.import, viewer: V("alice") });
   assert.equal(member.edition.flags.length, 1);
@@ -88,9 +88,9 @@ test("R8 flags are seen only by those who may see the import, and never on a pub
 
 /* ================================================================ R9 */
 
-test("R9 acceptanceOf answers the acceptance in force for a finding of an edition, or null; openFlagsOn the open flags with their issues", () => {
+test("R9 acceptanceOf answers the acceptance in force for a finding of an edition, or null; openFlagsOn the open flags with their issues", async () => {
   const w = seeded();
-  const a = imp(w);
+  const a = (await imp(w));
   assert.equal(w.ci.acceptanceOf({ import: a.import, edition: 1, finding: F1 }), null);
   assert.deepEqual(w.ci.openFlagsOn({ import: a.import, edition: 1 }), { flags: [], complete: true });
   w.clock.now = Date.parse("2026-10-12T00:00:00Z");
@@ -113,7 +113,7 @@ test("R9 acceptanceOf answers the acceptance in force for a finding of an editio
 
 /* ================================================================ R16 */
 
-test("R16 at start the module registers with accepted-work, once; a second start registers nothing again", () => {
+test("R16 at start the module registers with accepted-work, once; a second start registers nothing again", async () => {
   const w = seeded();
   assert.deepEqual(w.ci.registration, { ok: true, module: "case-import" });
   assert.equal(w.ci.start(), w.ci.registration);
@@ -122,11 +122,11 @@ test("R16 at start the module registers with accepted-work, once; a second start
   assert.equal(again.reason, "LISTENER_DECLARED");
 });
 
-test("R16 `finding` answers R4's facts for one finding at one edition with R9's acceptance, through accepted-work's read, synchronously", () => {
+test("R16 `finding` answers R4's facts for one finding at one edition with R9's acceptance, through accepted-work's read, synchronously", async () => {
   const w = seeded();
   w.script.set(F1, { role: "load_bearing", result: "recreated", pair: { capture: "C", connection: "C" } });
   const file = caseFile({ pairs: { [F1]: { capture: "B", connection: "C" } } });
-  const a = imp(w, file);
+  const a = (await imp(w, file));
   const ref = importedFindingRef(a.import, F1);
   const read = (edition = 1, viewer = V("bob")) => w.acceptedWork.acceptedFinding({ ref, edition, viewer });
   const got = read();
@@ -151,9 +151,9 @@ test("R16 `finding` answers R4's facts for one finding at one edition with R9's 
                "IMPORTED_NOT_ACCEPTED");
 });
 
-test("R16 `openFlags` answers the edition's own open flags and the named finding's, complete; null for a non-member", () => {
+test("R16 `openFlags` answers the edition's own open flags and the named finding's, complete; null for a non-member", async () => {
   const w = seeded();
-  const a = imp(w);
+  const a = (await imp(w));
   const e = flag(w, a);
   const f1 = flag(w, a, { finding: F1 });
   flag(w, a, { finding: F2 });
@@ -166,9 +166,9 @@ test("R16 `openFlags` answers the edition's own open flags and the named finding
   assert.equal(w.acceptedWork.openFlagsOn({ ref: importedFindingRef(a.import, F1), edition: 1, viewer: V("carol") }), null);
 });
 
-test("R16 `withdrawals` answers R7's records in withdrawal order, paged by cursor", () => {
+test("R16 `withdrawals` answers R7's records in withdrawal order, paged by cursor", async () => {
   const w = seeded();
-  const a = imp(w);
+  const a = (await imp(w));
   const ids = [];
   for (let i = 0; i < 5; i++) {
     w.ci.acceptImported({ import: a.import, edition: 1, findings: [F1], checked: "c", reason: "r", by: V("alice"), viewer: V("alice") });
@@ -187,14 +187,14 @@ test("R16 `withdrawals` answers R7's records in withdrawal order, paged by curso
   assert.equal(page(null, 5).cursor, null);
 });
 
-test("R16 before the module starts, accepted-work answers absent; once it starts, every read answers", () => {
+test("R16 before the module starts, accepted-work answers absent; once it starts, every read answers", async () => {
   const w = world();
   const ref = importedFindingRef("a".repeat(64), F1);
   /* a fresh accepted-work, as the plane makes it before case-import's factory runs */
   const aw = acceptedWorkOf({ storage: w.st, env: {} }, { record: w.record });
   assert.equal(aw.acceptedFinding({ ref, edition: 1 }).absent, true);
   const ci = caseImportOf({ storage: w.st, env: {} }, { record: w.record, membership: w.membership, strength: w.strength,
-                                                         acceptedWork: aw, reevaluation: w.reeval, checkCaseFile: () => ({}) });
+                                                         acceptedWork: aw, reevaluation: w.reeval, checkCaseFile: async () => ({}) });
   assert.equal(ci.registration.ok, true);
   assert.equal(aw.acceptedFinding({ ref, edition: 1 }), null, "answered: not held");
   assert.deepEqual(aw.openFlagsOn({ ref, edition: 1 }), { flags: [], complete: true });
@@ -203,7 +203,7 @@ test("R16 before the module starts, accepted-work answers absent; once it starts
 
 /* ================================================================ R14 */
 
-test("R14 each refusal carries its row in this module's own table, a new family, with a check, a site and a translation", () => {
+test("R14 each refusal carries its row in this module's own table, a new family, with a check, a site and a translation", async () => {
   const rows = Object.entries(CASE_IMPORT_CHECKS);
   assert.equal(rows.length, 14);
   const ids = rows.map(([, r]) => r.check);
@@ -218,7 +218,7 @@ test("R14 each refusal carries its row in this module's own table, a new family,
     /* each opening of the region lies inside the method the row names, and the code is minted inside a region of it */
     const opens = [...src.matchAll(new RegExp(`(?<!END )DEC-49 REGION ${region}\\b`, "g"))].map((m) => m.index);
     assert.ok(opens.length, `${code}: its region is marked`);
-    const methodAt = (at) => [...src.slice(0, at).matchAll(/\n  (?:static )?(#?[A-Za-z]\w*)\([^)]*\)?[^\n]*\{\n/g)].at(-1)[1];
+    const methodAt = (at) => [...src.slice(0, at).matchAll(/\n  (?:static )?(?:async )?(#?[A-Za-z]\w*)\([^)]*\)?[^\n]*\{\n/g)].at(-1)[1];
     assert.ok(opens.some((at) => methodAt(at) === fn), `${code}: ${region} sits in ${fn}`);
     const inside = opens.some((at) => {
       const end = src.indexOf(`END DEC-49 REGION ${region}`, at);

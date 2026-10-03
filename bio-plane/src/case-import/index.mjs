@@ -272,12 +272,13 @@ export class CaseImport {
   /* ================================================================ R3: one recreation */
 
   /* The checker's answer over the edition's parts and the documents supplied for it, or what stands for none. The
-     checker is pure and never throws (its R1); one that does, or is absent, answers every finding as unknown here. */
-  #recreate(parts, documents) {
+     checker is pure and never throws (its R1); it answers a promise (a signature is verified by WebCrypto). One that
+     throws, or is absent, answers every finding as unknown here. */
+  async #recreate(parts, documents) {
     const fn = this.#checkCaseFile;
     try {
       if (typeof fn !== "function") return { findings: [], unread: "no case checker is composed on this copy" };
-      const a = fn({ parts, documents });
+      const a = await fn({ parts, documents });
       return isObj(a) ? a : { findings: [], unread: "the case checker gave no answer" };
     } catch (e) {
       return { findings: [], unread: `the case checker failed: ${String(e && e.message ? e.message : e).slice(0, 200)}` };
@@ -339,7 +340,7 @@ export class CaseImport {
 
   /** R1: imports a case file's parts into this group's read-only import of that case and lens, recreating each finding.
    *  The same edition with the same bytes answers `existed: true` and writes nothing. */
-  importCaseFile({ parts = null, by = null, viewer = null } = {}) {
+  async importCaseFile({ parts = null, by = null, viewer = null } = {}) {
     const k = this.#callerRefusal({ by, viewer });
     if (k.refusal) return k.refusal;
     const list = Array.isArray(parts) ? parts.map(bytesOf) : [];
@@ -383,7 +384,7 @@ export class CaseImport {
       return refuse("IMPORT_EDITION_DIFFERS", `edition ${who.edition} of this case is held with other bytes; an edition never changes`,
                     { import: importId, edition: who.edition, held: held.manifest_sha, given: manifestSha });
     /* END DEC-49 REGION is-import-case-file */
-    const answer = this.#recreate(list, []);
+    const answer = await this.#recreate(list, []);
     const at = this.#stamp();
     const published = this.#publishedPairs(files);
     const sourceBar = isObj(fm) && isObj(fm.required_strength) ? fm.required_strength : null;
@@ -563,7 +564,7 @@ export class CaseImport {
 
   /** R5: stores a document whose SHA-256 matches a material the edition records as missing, and checks every finding of
    *  the edition again. Nothing else about the edition changes. */
-  completeImportedDocument({ import: importId = null, edition = null, bytes = null, by = null, viewer = null } = {}) {
+  async completeImportedDocument({ import: importId = null, edition = null, bytes = null, by = null, viewer = null } = {}) {
     const k = this.#callerRefusal({ by, viewer });
     if (k.refusal) return k.refusal;
     const b = bytesOf(bytes);
@@ -579,7 +580,7 @@ export class CaseImport {
     const ed = Number(e.edition);
     const at = this.#stamp();
     const parts = this.#parts(e.import_id, ed);
-    const answer = this.#recreate(parts, [...this.#documents(e.import_id, ed), b]);
+    const answer = await this.#recreate(parts, [...this.#documents(e.import_id, ed), b]);
     const published = this.#publishedPairs(this.#heldFiles(e.import_id, ed));
     const out = this.record.transact(() => {
       this.#putBlob(sha, b);
@@ -836,10 +837,13 @@ export class CaseImport {
 }
 
 /* The member acts and reads answer their own refusals with code, check and translation (DEC-49). */
-for (const m of ["importCaseFile", "importedCase", "completeImportedDocument", "acceptImported", "withdrawAcceptance",
-                 "flagImported", "clearFlag"]) {
+for (const m of ["importedCase", "acceptImported", "withdrawAcceptance", "flagImported", "clearFlag"]) {
   const fn = CaseImport.prototype[m];
   CaseImport.prototype[m] = function (...a) { return withRow(fn.apply(this, a)); };
+}
+for (const m of ["importCaseFile", "completeImportedDocument"]) {
+  const fn = CaseImport.prototype[m];
+  CaseImport.prototype[m] = async function (...a) { return withRow(await fn.apply(this, a)); };
 }
 
 const instances = new WeakMap();

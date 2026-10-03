@@ -167,7 +167,8 @@ export function world({ minimal = false } = {}) {
   const script = new Map();
   const checker = { calls: [], throws: false, statement: "Recreating shows the case intact and consistent, not true.",
                     signature: true, versions: { grading_versions: ["g1"], checks_version: "1.55.0" } };
-  const checkCaseFile = ({ parts, documents = [] }) => {
+  /* as case-checker answers: a promise (its signatures are verified by WebCrypto) */
+  const checkCaseFile = async ({ parts, documents = [] }) => {
     checker.calls.push({ parts: parts.length, documents: documents.length });
     if (checker.throws) throw new Error("checker down");
     const read = readCaseFile(parts);
@@ -241,12 +242,12 @@ export const rowOk = (r, code) => {
   assert.equal(r.translation, CASE_IMPORT_CHECKS[code].translation);
 };
 /* Refused with nothing written anywhere; then the control, accepted. */
-export function refusedThenAccepted(w, bad, good, code) {
+export async function refusedThenAccepted(w, bad, good, code) {
   const before = w.snapshot();
-  const r = bad();
+  const r = await bad();
   rowOk(r, code);
   assert.deepEqual(w.snapshot(), before, `${code}: nothing written`);
-  const ok = good();
+  const ok = await good();
   assert.equal(ok.ok, true, `${code}'s control: ${JSON.stringify(ok).slice(0, 300)}`);
   return r;
 }

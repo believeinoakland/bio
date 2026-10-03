@@ -8,63 +8,63 @@ import { importedFindingRef } from "../../../src/inquiry-grammar/index.mjs";
 const LETTER = bytes("%PDF the letter the case relies on");
 const NOTE = bytes("%PDF a second document");
 const g = (grade) => ({ state: "graded", grade });
-function scripted(w) {
+async function scripted(w) {
   w.script.set(F1, { role: "load_bearing", result: "recreated", pair: { capture: g("B"), connection: g("C") } });
   w.script.set(F2, { role: "supporting", result: "recreated_in_part",
                      missing: [{ sha: sha(LETTER), words: "the letter, fetch it" }, { sha: sha(NOTE), words: "the note" }],
                      pair: { capture: g("D"), connection: g("D") } });
   w.script.set(F3, { role: "load_bearing", result: "did_not_recreate", differs: [{ axis: "capture" }], pair: null });
-  return imp(w);
+  return (await imp(w));
 }
 const accept = (w, a, x = {}, who = "alice") => w.ci.acceptImported({ import: a.import, edition: 1, findings: [F1],
   checked: "every passage against its document", reason: "the chain holds", by: V(who), viewer: V(who), ...x });
 const withdraw = (w, a, x = {}, who = "alice") => w.ci.withdrawAcceptance({ import: a.import, edition: 1, reason: "the source corrected it",
   by: V(who), viewer: V(who), ...x });
-const complete = (w, a, b, x = {}, who = "bob") => w.ci.completeImportedDocument({ import: a.import, edition: 1, bytes: b,
-  by: V(who), viewer: V(who), ...x });
+const complete = async (w, a, b, x = {}, who = "bob") => (await w.ci.completeImportedDocument({ import: a.import, edition: 1, bytes: b,
+  by: V(who), viewer: V(who), ...x }));
 
 /* ================================================================ R5 */
 
-test("R5 applies R1's first two refusals: MACHINE_CANNOT_IMPORT, then IMPORT_NOT_A_MEMBER", () => {
+test("R5 applies R1's first two refusals: MACHINE_CANNOT_IMPORT, then IMPORT_NOT_A_MEMBER", async () => {
   for (const who of [MACHINE, "token:operator", null]) {
     const w = seeded();
-    const a = scripted(w);
-    refusedThenAccepted(w, () => complete(w, a, LETTER, { by: who, viewer: V("bob") }), () => complete(w, a, LETTER), "MACHINE_CANNOT_IMPORT");
+    const a = (await scripted(w));
+    (await refusedThenAccepted(w, async () => (await complete(w, a, LETTER, { by: who, viewer: V("bob") })), async () => (await complete(w, a, LETTER)), "MACHINE_CANNOT_IMPORT"));
   }
   for (const who of ["carol", "dave"]) {
     const w = seeded();
-    const a = scripted(w);
-    refusedThenAccepted(w, () => complete(w, a, LETTER, {}, who), () => complete(w, a, LETTER), "IMPORT_NOT_A_MEMBER");
+    const a = (await scripted(w));
+    (await refusedThenAccepted(w, async () => (await complete(w, a, LETTER, {}, who)), async () => (await complete(w, a, LETTER)), "IMPORT_NOT_A_MEMBER"));
   }
   /* the order: a machine before a non-member, both before the bytes are asked */
   const w = seeded();
-  const a = scripted(w);
-  rowOk(complete(w, a, bytes("stray"), { by: MACHINE, viewer: V("carol") }), "MACHINE_CANNOT_IMPORT");
-  rowOk(complete(w, a, bytes("stray"), {}, "carol"), "IMPORT_NOT_A_MEMBER");
+  const a = (await scripted(w));
+  (await rowOk((await complete(w, a, bytes("stray"), { by: MACHINE, viewer: V("carol") })), "MACHINE_CANNOT_IMPORT"));
+  (await rowOk((await complete(w, a, bytes("stray"), {}, "carol")), "IMPORT_NOT_A_MEMBER"));
 });
 
-test("R5 bytes matching no missing material are IMPORT_DOCUMENT_NOT_MISSING, naming the fingerprint they have", () => {
+test("R5 bytes matching no missing material are IMPORT_DOCUMENT_NOT_MISSING, naming the fingerprint they have", async () => {
   const w = seeded();
-  const a = scripted(w);
+  const a = (await scripted(w));
   const stray = bytes("%PDF something else");
-  const r = refusedThenAccepted(w, () => complete(w, a, stray), () => complete(w, a, LETTER), "IMPORT_DOCUMENT_NOT_MISSING");
+  const r = (await refusedThenAccepted(w, async () => (await complete(w, a, stray)), async () => (await complete(w, a, LETTER)), "IMPORT_DOCUMENT_NOT_MISSING"));
   assert.equal(r.fingerprint, sha(stray));
   /* once completed, the same bytes are no longer missing */
-  rowOk(complete(w, a, LETTER), "IMPORT_DOCUMENT_NOT_MISSING");
+  (await rowOk((await complete(w, a, LETTER)), "IMPORT_DOCUMENT_NOT_MISSING"));
   /* nothing given, or an edition not held, matches nothing */
-  rowOk(complete(w, a, null), "IMPORT_DOCUMENT_NOT_MISSING");
-  rowOk(complete(w, a, NOTE, { edition: 4 }), "IMPORT_DOCUMENT_NOT_MISSING");
-  assert.equal(complete(w, a, Buffer.from(NOTE).toString("base64")).ok, true, "base64 bytes, as the op carries them");
+  (await rowOk((await complete(w, a, null)), "IMPORT_DOCUMENT_NOT_MISSING"));
+  (await rowOk((await complete(w, a, NOTE, { edition: 4 })), "IMPORT_DOCUMENT_NOT_MISSING"));
+  assert.equal((await complete(w, a, Buffer.from(NOTE).toString("base64"))).ok, true, "base64 bytes, as the op carries them");
 });
 
-test("R5 matching bytes are stored, every finding of the edition is checked again (R3), and nothing else about the edition changes", () => {
+test("R5 matching bytes are stored, every finding of the edition is checked again (R3), and nothing else about the edition changes", async () => {
   const w = seeded();
-  const a = scripted(w);
+  const a = (await scripted(w));
   const edition = JSON.stringify(w.rows(`SELECT * FROM case_import_editions`));
   const files = JSON.stringify(w.rows(`SELECT * FROM case_import_files ORDER BY path`));
   const calls = w.checker.calls.length;
   w.clock.now = Date.parse("2026-10-06T08:00:00Z");
-  const r = complete(w, a, LETTER);
+  const r = (await complete(w, a, LETTER));
   assert.equal(r.ok, true);
   assert.equal(r.document, sha(LETTER));
   assert.equal(w.checker.calls.length, calls + 1);
@@ -75,7 +75,7 @@ test("R5 matching bytes are stored, every finding of the edition is checked agai
   assert.deepEqual(f2.missing, [{ sha: sha(NOTE), words: "the note" }], "one gap filled, one left");
   assert.equal(r.recreation.findings.length, 3, "every finding re-checked");
   /* the second completes it */
-  const r2 = complete(w, a, NOTE);
+  const r2 = (await complete(w, a, NOTE));
   assert.equal(r2.recreation.findings.find((f) => f.finding === F2).result, "recreated");
   assert.deepEqual(w.checker.calls.at(-1), { parts: 1, documents: 2 });
   assert.equal(JSON.stringify(w.rows(`SELECT * FROM case_import_editions`)), edition, "the edition is unchanged");
@@ -87,48 +87,48 @@ test("R5 matching bytes are stored, every finding of the edition is checked agai
 
 /* ================================================================ R6 */
 
-test("R6 refusals in order: R1's two, then IMPORT_NO_SUCH_EDITION, each writing nothing", () => {
+test("R6 refusals in order: R1's two, then IMPORT_NO_SUCH_EDITION, each writing nothing", async () => {
   const w = seeded();
-  const a = scripted(w);
-  refusedThenAccepted(w, () => accept(w, a, { by: MACHINE }), () => accept(w, a), "MACHINE_CANNOT_IMPORT");
-  refusedThenAccepted(w, () => accept(w, a, {}, "carol"), () => accept(w, a), "IMPORT_NOT_A_MEMBER");
+  const a = (await scripted(w));
+  (await refusedThenAccepted(w, async () => accept(w, a, { by: MACHINE }), async () => accept(w, a), "MACHINE_CANNOT_IMPORT"));
+  (await refusedThenAccepted(w, async () => accept(w, a, {}, "carol"), async () => accept(w, a), "IMPORT_NOT_A_MEMBER"));
   for (const x of [{ edition: 2 }, { edition: null }, { edition: "one" }, { import: "f".repeat(64) }, { import: null }])
-    refusedThenAccepted(w, () => accept(w, a, x), () => accept(w, a), "IMPORT_NO_SUCH_EDITION");
+    (await refusedThenAccepted(w, async () => accept(w, a, x), async () => accept(w, a), "IMPORT_NO_SUCH_EDITION"));
   /* the order: a machine on a missing edition is the machine's refusal; a non-member's is the membership's */
-  rowOk(accept(w, a, { by: MACHINE, edition: 9 }), "MACHINE_CANNOT_IMPORT");
-  rowOk(accept(w, a, { edition: 9 }, "carol"), "IMPORT_NOT_A_MEMBER");
+  (await rowOk(accept(w, a, { by: MACHINE, edition: 9 }), "MACHINE_CANNOT_IMPORT"));
+  (await rowOk(accept(w, a, { edition: 9 }, "carol"), "IMPORT_NOT_A_MEMBER"));
 });
 
-test("R6 checked or reason absent, blank or over 2,000 characters is IMPORT_ACCEPT_NO_REASON, before the findings are asked", () => {
+test("R6 checked or reason absent, blank or over 2,000 characters is IMPORT_ACCEPT_NO_REASON, before the findings are asked", async () => {
   const w = seeded();
-  const a = scripted(w);
+  const a = (await scripted(w));
   for (const x of [{ checked: null }, { checked: "" }, { checked: "   " }, { checked: "c".repeat(2001) },
                    { reason: null }, { reason: "" }, { reason: "\n\t" }, { reason: "r".repeat(2001) }])
-    refusedThenAccepted(w, () => accept(w, a, x), () => accept(w, a, { checked: "c".repeat(2000), reason: "r".repeat(2000) }),
-                        "IMPORT_ACCEPT_NO_REASON");
-  rowOk(accept(w, a, { reason: "", findings: ["INQ-2026-0999-none"] }), "IMPORT_ACCEPT_NO_REASON");
+    (await refusedThenAccepted(w, async () => accept(w, a, x), async () => accept(w, a, { checked: "c".repeat(2000), reason: "r".repeat(2000) }),
+                        "IMPORT_ACCEPT_NO_REASON"));
+  (await rowOk(accept(w, a, { reason: "", findings: ["INQ-2026-0999-none"] }), "IMPORT_ACCEPT_NO_REASON"));
 });
 
-test("R6 a finding not in the edition is IMPORT_NO_SUCH_FINDING; a did_not_recreate finding is IMPORT_ACCEPT_NOT_RECREATED, naming each", () => {
+test("R6 a finding not in the edition is IMPORT_NO_SUCH_FINDING; a did_not_recreate finding is IMPORT_ACCEPT_NOT_RECREATED, naming each", async () => {
   const w = seeded();
-  const a = scripted(w);
+  const a = (await scripted(w));
   for (const findings of [["INQ-2026-0999-none"], [F1, "INQ-2026-0999-none"], [], null, "INQ-2026-0999-none"])
-    refusedThenAccepted(w, () => accept(w, a, { findings }), () => accept(w, a), "IMPORT_NO_SUCH_FINDING");
-  const r = refusedThenAccepted(w, () => accept(w, a, { findings: [F1, F3] }), () => accept(w, a, { findings: [F1] }), "IMPORT_ACCEPT_NOT_RECREATED");
+    (await refusedThenAccepted(w, async () => accept(w, a, { findings }), async () => accept(w, a), "IMPORT_NO_SUCH_FINDING"));
+  const r = (await refusedThenAccepted(w, async () => accept(w, a, { findings: [F1, F3] }), async () => accept(w, a, { findings: [F1] }), "IMPORT_ACCEPT_NOT_RECREATED"));
   assert.deepEqual(r.findings, [F3]);
   /* the order: an unknown finding before a not-recreated one */
-  rowOk(accept(w, a, { findings: [F3, "INQ-2026-0999-none"] }), "IMPORT_NO_SUCH_FINDING");
+  (await rowOk(accept(w, a, { findings: [F3, "INQ-2026-0999-none"] }), "IMPORT_NO_SUCH_FINDING"));
 });
 
-test("R6 a recreated_in_part finding needs each missing entry stated in the member's words, else IMPORT_ACCEPT_GAPS_UNSTATED naming each gap", () => {
+test("R6 a recreated_in_part finding needs each missing entry stated in the member's words, else IMPORT_ACCEPT_GAPS_UNSTATED naming each gap", async () => {
   const w = seeded();
-  const a = scripted(w);
+  const a = (await scripted(w));
   const both = { [F2]: ["we have not seen the letter", "the note is not public"] };
   for (const gaps of [null, {}, { [F2]: [] }, { [F2]: ["only the first"] }, { [F2]: ["", "the note"] }, { [F2]: ["x".repeat(2001), "y"] }])
-    refusedThenAccepted(w, () => accept(w, a, { findings: [F2], gaps }), () => accept(w, a, { findings: [F2], gaps: both }),
-                        "IMPORT_ACCEPT_GAPS_UNSTATED");
+    (await refusedThenAccepted(w, async () => accept(w, a, { findings: [F2], gaps }), async () => accept(w, a, { findings: [F2], gaps: both }),
+                        "IMPORT_ACCEPT_GAPS_UNSTATED"));
   const r = accept(w, a, { findings: [F1, F2], gaps: { [F2]: ["", "the note"] } });
-  rowOk(r, "IMPORT_ACCEPT_GAPS_UNSTATED");
+  (await rowOk(r, "IMPORT_ACCEPT_GAPS_UNSTATED"));
   assert.deepEqual(r.unstated, [{ finding: F2, entry: 0, missing: { sha: sha(LETTER), words: "the letter, fetch it" } }]);
   /* with gaps stated, accepted; the gaps are kept in the member's words */
   const ok = accept(w, a, { findings: [F2], gaps: JSON.stringify(both) });
@@ -137,10 +137,10 @@ test("R6 a recreated_in_part finding needs each missing entry stated in the memb
   assert.deepEqual(w.ci.acceptanceOf({ import: a.import, edition: 1, finding: F2 }).gaps, both[F2]);
 });
 
-test("R6 the act records one edition's acceptance for those findings with by, instant, checked, reason and gaps, naming each finding's ref", () => {
+test("R6 the act records one edition's acceptance for those findings with by, instant, checked, reason and gaps, naming each finding's ref", async () => {
   const w = seeded();
-  const a = scripted(w);
-  imp(w, caseFile({ edition: 2 }));
+  const a = (await scripted(w));
+  (await imp(w, caseFile({ edition: 2 })));
   w.clock.now = Date.parse("2026-10-07T07:07:07Z");
   const r = accept(w, a, { findings: [F1] }, "bob");
   assert.equal(r.ok, true);
@@ -159,24 +159,24 @@ test("R6 the act records one edition's acceptance for those findings with by, in
 
 /* ================================================================ R7 */
 
-test("R7 refusals: R1's two, IMPORT_NO_SUCH_EDITION, IMPORT_ACCEPT_NO_REASON for a missing reason, IMPORT_NOTHING_ACCEPTED, each writing nothing", () => {
+test("R7 refusals: R1's two, IMPORT_NO_SUCH_EDITION, IMPORT_ACCEPT_NO_REASON for a missing reason, IMPORT_NOTHING_ACCEPTED, each writing nothing", async () => {
   const w = seeded();
-  const a = scripted(w);
-  rowOk(withdraw(w, a), "IMPORT_NOTHING_ACCEPTED");
+  const a = (await scripted(w));
+  (await rowOk(withdraw(w, a), "IMPORT_NOTHING_ACCEPTED"));
   accept(w, a);
-  refusedThenAccepted(w, () => withdraw(w, a, { by: "class:daemon" }), () => accept(w, a), "MACHINE_CANNOT_IMPORT");
-  refusedThenAccepted(w, () => withdraw(w, a, {}, "dave"), () => accept(w, a), "IMPORT_NOT_A_MEMBER");
-  refusedThenAccepted(w, () => withdraw(w, a, { edition: 3 }), () => accept(w, a), "IMPORT_NO_SUCH_EDITION");
+  (await refusedThenAccepted(w, async () => withdraw(w, a, { by: "class:daemon" }), async () => accept(w, a), "MACHINE_CANNOT_IMPORT"));
+  (await refusedThenAccepted(w, async () => withdraw(w, a, {}, "dave"), async () => accept(w, a), "IMPORT_NOT_A_MEMBER"));
+  (await refusedThenAccepted(w, async () => withdraw(w, a, { edition: 3 }), async () => accept(w, a), "IMPORT_NO_SUCH_EDITION"));
   for (const reason of [null, "", "  ", "r".repeat(2001)])
-    refusedThenAccepted(w, () => withdraw(w, a, { reason }), () => accept(w, a), "IMPORT_ACCEPT_NO_REASON");
+    (await refusedThenAccepted(w, async () => withdraw(w, a, { reason }), async () => accept(w, a), "IMPORT_ACCEPT_NO_REASON"));
   assert.equal(withdraw(w, a).ok, true);
-  refusedThenAccepted(w, () => withdraw(w, a), () => accept(w, a), "IMPORT_NOTHING_ACCEPTED");
+  (await refusedThenAccepted(w, async () => withdraw(w, a), async () => accept(w, a), "IMPORT_NOTHING_ACCEPTED"));
   assert.equal(withdraw(w, a, { reason: "r".repeat(2000) }).ok, true, "the control at the bound");
 });
 
-test("R7 the withdrawal is recorded with by, instant and reason; the acceptance stays in the history, corrected forward and never erased", () => {
+test("R7 the withdrawal is recorded with by, instant and reason; the acceptance stays in the history, corrected forward and never erased", async () => {
   const w = seeded();
-  const a = scripted(w);
+  const a = (await scripted(w));
   w.clock.now = Date.parse("2026-10-08T00:00:00Z");
   const acc = accept(w, a, { findings: [F1, F2], gaps: { [F2]: ["a", "b"] } });
   const rowsBefore = JSON.stringify(w.rows(`SELECT * FROM case_import_acceptances`));
@@ -194,9 +194,9 @@ test("R7 the withdrawal is recorded with by, instant and reason; the acceptance 
   assert.equal(w.count("case_import_acceptances"), 2);
 });
 
-test("R7 after the withdrawal commits it calls reevaluation.acceptanceWithdrawn and carries its answer; a failure there never undoes it and is named", () => {
+test("R7 after the withdrawal commits it calls reevaluation.acceptanceWithdrawn and carries its answer; a failure there never undoes it and is named", async () => {
   const w = seeded();
-  const a = scripted(w);
+  const a = (await scripted(w));
   accept(w, a);
   const r = withdraw(w, a);
   assert.deepEqual(w.reeval.told, [{ withdrawal: r.withdrawal }]);
