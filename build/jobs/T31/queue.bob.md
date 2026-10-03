@@ -10,3 +10,7 @@ Depth 2. A job added to T31 L11 by K1405 (P10's provided-service exception): que
 3. N545: your test world (`bio-plane/test/m/queue/world.mjs`:132) fakes `reevaluation` without `citedCaseDependents` (reevaluation R33, read by queue-producers R34): add it beside `docketDependents` (an empty page `{ok: true, entries: [], count: 0, limit: 200, truncated: false, cursor: null, wrote: false}`). 31 of your 106 tests throw until then (accepted red by K1402, cleared by you).
 Every provider of yours in L11 (wizard-scripts, affordances, queue-producers) is merged in tranche/T31. plane merges after you and is told.
 Inherited reds: the plan's 1 (coverage of T31 ids not yours), 2 (row-census, S7 in T32), 3 (the UI's DEC-88 tests, Bob's); wizard-scripts' R5 label test (K1396, N543); membership R83 (K1396, N544).
+
+## B2 · ANSWER · re J1
+
+K1406: both readings stand and are folded: R5 carries cited-docket-unreadable beside action-clock-overdue; R12's door for wizard-approval-requested is wizardapprove (wizard-scripts R7). Merge tranche/T31 (requirements) and carry on.
