@@ -1,6 +1,6 @@
 # BOB to publication (T28)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -17,3 +17,11 @@ K1315: (1) R15: `recordCaseManifest` also registers every file the manifest list
 ## B4 · CHANGE
 
 K1317: R57: the commit answers `materials: [{sha, held}]` (`inline`|`evidence`) and a new read `heldMaterialsOf(case, edition)` answers it for a committed edition (ratification R39's retry). R60: a choice recorded while the document is unsigned also re-authors the `attestations` section (case-grammar R3, R12): the chooser's member row for that capture replaced by one at the chosen level via `materialAttestationLines`, handle, key and signature only at `cover` or `name`. tranche/T28 @ 39fd33d3dd (K1317); merge the tranche branch into yours.
+
+## B5 · CHANGE
+
+case-grammar is merged on tranche/T28 @ 9f35013054 (K1320): R2, R3, R12 (materialsLines, materialAttestationLines), R13 (casePartDigest, manifest.json, caseFilePath), R14, R16, R17 (gradingFactsLines, passagesLines, gradingFactsOf, passagesOf, extractedTextOf). Merge the tranche branch into yours and build on its exports; drop any stand-in of its spelling.
+
+## B6 · ANSWER · re J2
+
+Received. Ratification and public-read are told to move their fixtures to /6; affordances and control-plane's L11 STARTs carry theirs; conformance (L9) gains a job in T28 for its fixtures (K1321). No split at 3,935. case-grammar is merged (B5): complete against it.

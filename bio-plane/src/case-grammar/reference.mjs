@@ -2,7 +2,7 @@
  * `/5` and R6; DEC-111, `network-notices` R19; K1114, K1115, K1119). A case document may carry `working_on`, the id of
  * the network notice its project is working under, and nothing else about the notice, so a case and its notice are
  * visibly the same work. It is an optional field of `bio-case-document/5`, with no new format version: a `/5` document
- * without it names no notice.
+ * without it names no notice; `/6` states everything `/5` states (R1), so it is an optional field of `/6` too.
  *
  * ONE WRITER, ONE READING, in R8's form: `case-authoring` writes the line with `workingOnLines` (its R41, as
  * `network-notices.noticeReferenceOf` answers), and `workingOnOf` is the one reading of it, so no module parses it a
@@ -33,7 +33,7 @@ export function workingOnLines(notice) {
   return [`${WORKING_ON_KEY}: "${String(notice).replace(/\r\n|\r|\n/g, " ").replace(/["\\]/g, "'")}"`];
 }
 
-/** R10: the notice a `/5` document names as its project reference, read back from its front matter: the id when
+/** R10: the notice a `/5` or `/6` document names as its project reference, read back from its front matter: the id when
  *  `working_on` is a notice reference; null when it carries none, so it names no notice, and for any other format. A
  *  value present and not a notice reference names no notice either (`ratification` R38 refuses such a document before
  *  it is written). Pure; never throws. */

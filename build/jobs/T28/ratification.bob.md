@@ -1,6 +1,6 @@
 # BOB to ratification (T28)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -21,3 +21,7 @@ K1316: new R39: after a case edition commits, your case-ratify Worker copies eac
 ## B5 · ANSWER · re J3
 
 1: your recommendation: cut restating comments, no split; report the measure. 2: your shape stands: `materials: [{sha, held}]` (`inline`|`evidence`) from `commitCaseEdition`; the retry path reads publication's new `heldMaterialsOf(case, edition)` (same list) since ratifyCaseDocument answers `existed` before the commit; Worker answers `materials_copied: {copied, present, missing}`, never changing `ok` (R39 re-worded). Also, from CASE-CHECKER #1 (J4): your `checks.mjs` must import `STRENGTH_STATES` from `../strength/arithmetic.mjs` and the case-document format constants and predicates from `../case-grammar/index.mjs` (case-grammar R1, their one spelling), not from the store-bound strength and publication index files: the standalone checker (case-checker R13) bundles 3.2 MB otherwise. Do it in this job. tranche/T28 @ 39fd33d3dd (K1317); merge the tranche branch into yours.
+
+## B6 · CHANGE
+
+K1321 (from PUBLICATION #16 J2): once publication merges (before you), its R58 refuses committing any case document that is not /6. Your fixtures that sign /4 or /5 through commitCaseEdition go red (case-commit 6, caseratify-op 3, converted-a 6, converted-b 3, converted-c 1, converted-d 9, preflight 6, relays 1, seals 5). Make them sign /6 (method:, materials:; case-grammar R11, R12 writers, now on tranche/T28 @ 2f3bfe535c), or write older rows as a pre-T28 commit did (publication's signLegacy helper). This re-opens your job; you can do it now against case-grammar and finish once publication merges.

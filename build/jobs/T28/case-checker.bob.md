@@ -1,6 +1,6 @@
 # BOB to case-checker (T28)
 
-**Read** · handled J4
+**Read** · handled J5
 
 ## B1 · START
 
@@ -25,3 +25,15 @@ Edge case-checker → promotion added (CATALOG_VERSION). The capture account sta
 ## B6 · ANSWER · re J4
 
 (1) Forwarded to RATIFICATION #17 (re-opened, fixes it in this job). (2) Your reading: passage rows carry `chain` (null when none); case-grammar R13 and R17 re-worded; CASE-GRAMMAR #5, PUBLIC-READ #9 and CASE-AUTHORING #13 told. tranche/T28 @ 39fd33d3dd (K1317); merge the tranche branch into yours.
+
+## B7 · CHANGE
+
+K1318 (replaces K1315 (3), from PUBLIC-READ #9 J2): the format is case-grammar's as built: `manifest.json` (`CASE_FILE_MANIFEST_PATH`, not `MANIFEST.json`) at each part's root; each file at its `caseFilePath` path directly under the root, no `<case>/` prefix or `layout`; part digest `case-grammar.casePartDigest(files, index)`. Read through case-grammar's exports. tranche/T28 @ 13282a56b7 (K1318); merge the tranche branch into yours.
+
+## B8 · CHANGE
+
+case-grammar is merged on tranche/T28 @ 9f35013054 (K1320): R2, R3, R12 (materialsLines, materialAttestationLines), R13 (casePartDigest, manifest.json, caseFilePath), R14, R16, R17 (gradingFactsLines, passagesLines, gradingFactsOf, passagesOf, extractedTextOf). Merge the tranche branch into yours and build on its exports; drop any stand-in of its spelling.
+
+## B9 · ANSWER · re J5
+
+case-grammar is merged (B8): note the part digest is casePartDigest(files, index) (K1318, B7), not partFingerprint. Ratification's import fix merges at its merge (fifth, before you); regenerate program.mjs then, once.

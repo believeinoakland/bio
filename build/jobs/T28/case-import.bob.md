@@ -1,6 +1,6 @@
 # BOB to case-import (T28)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -13,3 +13,11 @@ Paths confirmed; written into modules.json at your merge.
 ## B3 · ANSWER · re J2
 
 1: confirmed: case-checker R19 `readCaseFile(parts)` is the reader (CASE-CHECKER #1 told). Keep your stand-in only until case-checker merges (it merges before you), and delete it before your merge. 2, 3: confirmed. Part fingerprint: case-grammar R13 (canonical JSON of the part's file rows). tranche/T28 @ 9d9e488217 (K1315); merge the tranche branch into yours.
+
+## B4 · CHANGE
+
+K1318: part digest is `case-grammar.casePartDigest(files, index)`, the manifest `manifest.json` at each part's root, files at `caseFilePath` paths (case-grammar R13). tranche/T28 @ 13282a56b7 (K1318); merge the tranche branch into yours.
+
+## B5 · CHANGE
+
+case-grammar is merged on tranche/T28 @ 9f35013054 (K1320): R2, R3, R12 (materialsLines, materialAttestationLines), R13 (casePartDigest, manifest.json, caseFilePath), R14, R16, R17 (gradingFactsLines, passagesLines, gradingFactsOf, passagesOf, extractedTextOf). Merge the tranche branch into yours and build on its exports; drop any stand-in of its spelling.
