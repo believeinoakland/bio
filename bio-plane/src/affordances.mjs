@@ -557,6 +557,10 @@ export const JUSTIFICATION_REFUSALS = [
      entry's take-back (its R11) and the manager's decline of a submission (its R7), each refused absent as well as
      malformed. */
   "DOCKET_NO_REASON",
+  /* R35 (N520, N522; DEC-96 items 1, 2): an imported edition accepted, or its acceptance withdrawn, without what the
+     member checked and why (case-import R6, R7), and a flag raised or cleared without the issue or the reason (its R8),
+     each refused absent, blank or over its bound. */
+  "IMPORT_ACCEPT_NO_REASON", "IMPORT_FLAG_NO_ISSUE",
 ];
 
 /* THE GROUNDS ON WHICH A MUTATING OP HAS NO RUNG. Written ONCE here and pointed
@@ -1088,6 +1092,14 @@ export const RUNGS = {
      record act with a reason (docket R11) and a declined submission may be filed again; neither is ever deleted. */
   docketfile:            "reasoned",   // DOCKET_NO_REASON (docket R1, C-129.9): why record, public or both
   docketdecline:         "reasoned",   // DOCKET_NO_REASON (docket R7): why the submission is declined
+
+  /* ---- R35 (DEC-96 items 1, 2; N520, N522): DEC-96's four "reasoned acts" on an imported case, each corrected forward
+     and never erased — an acceptance stands in the history after its withdrawal, and a flag after its clear
+     (case-import R7, R8, R12). */
+  importaccept:          "reasoned",   // IMPORT_ACCEPT_NO_REASON (case-import R6): what was checked, and why
+  importacceptwithdraw:  "reasoned",   // IMPORT_ACCEPT_NO_REASON (case-import R7): why the acceptance is withdrawn
+  importflag:            "reasoned",   // IMPORT_FLAG_NO_ISSUE (case-import R8): the specific issue
+  importflagclear:       "reasoned",   // IMPORT_FLAG_NO_ISSUE (case-import R8): why the flag is cleared
 };
 
 
@@ -1204,7 +1216,8 @@ export const RUNG_ABSENT = {
      not signed — so neither `attested` (no key) nor `reversible` (no act takes it back) describes it. DEC-88 (K1038)
      closed the gap by ruling for 57 of the 78 that stood here, banding each `reversible`, `reasoned` or `terminal`
      (RUNGS); these 21 are what it left `undetermined` (R27), each on R27's rule: no authored reason is asked and no
-     published act takes it back. R32 adds T23's `whatchangedpropose` and R34 the docket's `docketpressure` on the same rule, at the foot of this table. */
+     published act takes it back. R32 adds T23's `whatchangedpropose`, R34 the docket's `docketpressure` and R35 `case-import`'s `caseimport` and
+     `caseimportdocument` on the same rule, at the foot of this table. */
   /* N364 (capture R65), on R27's rule: pulling a knock files its bytes as a capture with a receipt, in the puller's
      name; no reason is asked and no published act takes it back (a pulled knock stays pulled, and the capture stands). */
   inboxpull:            { ground: "undetermined", is: "a member pulls a knock into the record: its bytes held under their own digest, a doorbell receipt written and the knock marked pulled, in one act; never un-pulled (capture R65)" },
@@ -1265,6 +1278,11 @@ export const RUNG_ABSENT = {
   /* R34 (DEC-116, N520), on R27's rule, as `actionpressure`: a pressure mark's note describes what was received (a
      malformed mark is PRESSURE_REFUSED, not a missing account), and no published act takes a mark back. */
   docketpressure:       { ground: "undetermined", is: "a member marks a docket record entry as a threat — legal, retaliation, discrediting or other — with an optional note; appended, never rewriting the entry, and an entry is marked once (docket R2)" },
+  /* R35 (DEC-112 (6); N520), on R27's rule, as `inboxpull`: each brings bytes into this copy in a member's name, asks no
+     authored reason, and no published act takes it back — an import is append-only and read-only (case-import R2, R12),
+     and a completion stores only bytes the edition already names by fingerprint (its R5). */
+  caseimport:           { ground: "undetermined", is: "a member imports another group's case file into a read-only project, one per source group, case and lens, each edition held beside the others and never replaced; every finding is recreated and its result recorded (case-import R1–R3)" },
+  caseimportdocument:   { ground: "undetermined", is: "a member completes an imported edition with a document whose fingerprint the edition records as missing, and every finding of that edition is checked again; nothing else about the edition changes (case-import R5)" },
 };
 
 /* REC-38, UI-22's delegation: THE CAPTURE-DIRECTED ACTS' METADATA, and the
@@ -2793,6 +2811,20 @@ export const NON_ACTS = {
   docketinvitation: "read: the request to resend a receipted reply without the private person's name, prefilled for a member to send by their own means; sends nothing and writes nothing",
   docketpublic: "read: public, no credential",
   docketfeed: "read: public, no credential",
+  /* R35 (DEC-112 (6), DEC-96 items 1, 2; N520, N522): `case-import`'s ops. An imported case lives in that module's own
+     tables, keyed by an import (and an edition, a finding or a flag), never a bundle state `affordanceFacts` describes
+     (case-import R2); each is reached from the imported cases. The two reads write nothing, and `case-checker`'s two
+     public reads answer with no credential (its R15, registered through public-read R18). */
+  caseimport: "import-directed: keyed by an imported case (an import, an edition, a finding or a flag), reached from the imported cases; writes this module's rows and moves no bundle",
+  caseimportdocument: "import-directed: keyed by an imported case (an import, an edition, a finding or a flag), reached from the imported cases; writes this module's rows and moves no bundle",
+  importaccept: "import-directed: keyed by an imported case (an import, an edition, a finding or a flag), reached from the imported cases; writes this module's rows and moves no bundle",
+  importacceptwithdraw: "import-directed: keyed by an imported case (an import, an edition, a finding or a flag), reached from the imported cases; writes this module's rows and moves no bundle",
+  importflag: "import-directed: keyed by an imported case (an import, an edition, a finding or a flag), reached from the imported cases; writes this module's rows and moves no bundle",
+  importflagclear: "import-directed: keyed by an imported case (an import, an edition, a finding or a flag), reached from the imported cases; writes this module's rows and moves no bundle",
+  importedcases: "read: every case this copy has imported, with its source group, case, lens and editions, and when each was imported; writes nothing",
+  importedcase: "read: one imported case's editions, each finding's recreation and its standing against this group's own bar, the source's bar labelled as the source's, and the acceptance in force and the open flags; writes nothing",
+  casechecker: "read: public, no credential",
+  casefilespec: "read: public, no credential",
 };
 
 /* D-126 — THE FOURTH WEIGHT, `per-item`, AND THE THREE ACTS THAT TAKE A SET.
