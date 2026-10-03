@@ -8,6 +8,9 @@ import { DOCKET_CHECKS, DOCKET_TABLES, DOCKET_UNREADABLE, OUTWARD_ACT_WARNING, R
          docketAddress, feedAddress, feedHref }
   from "../../../src/docket/index.mjs";
 import { renderFeed } from "../../../src/docket/feed.mjs";
+import { readdirSync, readFileSync } from "node:fs";
+import { join, sep } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const A = V("alice");
 
@@ -335,7 +338,7 @@ test("R22 each refusal code is a row of this module's own table, one new family;
     "DOCKET_NO_EDITION", "DOCKET_NO_GROUP_SLUG", "DOCKET_NO_REASON", "DOCKET_NO_STANDING", "DOCKET_NO_SUMMARY", "DOCKET_SIGNATURE_REFUSED",
     "DOCKET_STALE", "DOCKET_TAKE_BACK_FINAL", "DOCKET_WARNING_NOT_ACKNOWLEDGED", "DOCKET_WITHDRAWAL_FINAL", "DOCKET_WRONG_SHELF",
     "MACHINE_CANNOT_FILE_DOCKET", "MACHINE_CANNOT_MARK_DOCKET_PRESSURE", "MACHINE_CANNOT_PLACE_DOCKET", "NO_SUCH_DOCKET_ENTRY",
-    "PRESSURE_MARKED", "PRESSURE_REFUSED"].sort());
+    "DOCKET_PRESSURE_MARKED", "DOCKET_PRESSURE_REFUSED"].sort());
   const checks = Object.values(DOCKET_CHECKS).map((r) => r.check);
   assert.equal(new Set(checks).size, checks.length, "one row per code");
   for (const c of checks) assert.match(c, /^C-129\.\d+$/, "one family");
@@ -345,6 +348,31 @@ test("R22 each refusal code is a row of this module's own table, one new family;
     assert.ok(r.translation.length > 20);
   }
   assert.equal("NO_SUCH_CASE" in DOCKET_CHECKS, false);
+});
+
+test("R22 no code of this module's table is a code another module's table holds (one code, one row; K1291, K1331)", async () => {
+  /* every DEC-49 table any other product module exports (a `*_CHECKS` export, flat `{code: row}` or by family
+     `{FAMILY: {code: row}}`), read through its exports */
+  const src = fileURLToPath(new URL("../../../src/", import.meta.url));
+  const files = readdirSync(src, { recursive: true }).map(String)
+    .filter((f) => f.endsWith(".mjs") && !f.startsWith(`docket${sep}`) && /export[^\n]*_CHECKS/.test(readFileSync(join(src, f), "utf8")));
+  const isRow = (v) => v && typeof v === "object" && typeof v.check === "string";
+  const held = new Map();
+  for (const f of files) {
+    const ns = await import(pathToFileURL(join(src, f)).href);
+    for (const [name, table] of Object.entries(ns)) {
+      if (!name.endsWith("_CHECKS") || !table || typeof table !== "object" || table === DOCKET_CHECKS) continue;
+      const rows = Object.values(table).every((v) => isRow(v) || !v || typeof v !== "object") ? [table] : Object.values(table);
+      for (const t of rows) for (const [code, row] of Object.entries(t || {}))
+        if (isRow(row) && !/^C-129\./.test(row.check)) held.set(code, `${f} ${name} ${row.check}`);
+    }
+  }
+  assert.ok(held.size > 500, `the other tables were read (${held.size} codes)`);
+  assert.ok(held.has("PRESSURE_MARKED") && held.has("PRESSURE_REFUSED") && held.has("MACHINE_CANNOT_MARK_PRESSURE"),
+            "negative control: action-grammar's pressure codes, which docket once shared, are seen");
+  for (const code of Object.keys(DOCKET_CHECKS)) assert.equal(held.get(code), undefined, `${code} is held by another module's table`);
+  assert.deepEqual([DOCKET_CHECKS.DOCKET_PRESSURE_MARKED.check, DOCKET_CHECKS.DOCKET_PRESSURE_REFUSED.check], ["C-129.12", "C-129.13"],
+                   "the two rows keep their numbers (N533)");
 });
 
 test("R23 every address the module answers is the house form `op=…` with no `?`; inside the feed each href is `?op=…`, resolving against the feed's own address", async () => {
