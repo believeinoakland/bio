@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #106 · session_014NiBSyfeN9Ej6wJuwzhDhh · depth 1
 
-**Jobs** · signatures: SIGNATURES #7 session_01LrwnC23wRd3ati4bwBSKnq
+**Jobs** · signatures: SIGNATURES #7 session_01LrwnC23wRd3ati4bwBSKnq; membership: MEMBERSHIP #22 session_016G62nZSnbukEEdrMHSsV1z; promotion: PROMOTION #29 session_012itywqqcejzP4TtrJ2dRny
 
 **Opened** 2026-10-03 ~03:25 UTC by BOB #106 from `main` @ cd196e63c4 (T28 closed, K1335), from T28's `next.md` (K1336). **Bob's weekly meter** · 72% after T26 (K1250); asked at T28's close.
 
@@ -51,7 +51,7 @@ T28's rules hold (merge early; one file, one editor; marks struck at the merge; 
 
 - N533 · 2026-10-03 · **docket, then control-plane** (K1331; CONTROL-PLANE #18 J1): docket's family shares `PRESSURE_MARKED` (C-129.12 / action-grammar C-117.17) and `PRESSURE_REFUSED` (C-129.13 / C-117.15) with action-grammar, so reading it at its module-order place would re-row both. docket: its own codes for the two (catalogue rows re-worded, stamped by promotion); then control-plane: `CHECK_FAMILY_FILES` reads docket at its module-order place (R43's docket clause). **Why next:** docket's T28 job is merged (P8); control-plane's move follows docket's codes (dependency).
 
-- N534 · 2026-10-03 · **DEC-101 (3) and DEC-116 (8)'s citing side: watching other groups' published cases** (T28-1's last share, K1268; `draft-T29-carried.md` §1): a member's watch on an imported case, naming the publisher's docket address; corrections and withdrawals told to dependents; ops routed. Drafted and folded on `prep/T29-folds` before L7 (P18).
+- N534 · 2026-10-03 · **DEC-101 (3) and DEC-116 (8)'s citing side: watching other groups' published cases** (T28-1's last share, K1268; `draft-T29-carried.md` §1): a member's watch on an imported case, naming the publisher's docket address; corrections and withdrawals told to dependents; ops routed. Drafted (`draft-T29-n534.md`); **waits on Bob's approval** (DEC-101's owed line: "BOB places them, for Bob's approval"; K1339). Folded and run in this tranche (adding L6 for accepted-work R8) if he approves before L7 starts; otherwise moved to T30 with that hard reason.
 
 N528 stays out: DEC-120–DEC-123 are not on `main` (manifest "Parallel work"). T28-1 closes (K1336): DEC-96 (1), (2), (4) and DEC-92's server share are met; DEC-96 (3) and the public list (option B) wait on Bob's triggers; the display is UX (K633); DEC-101 (3) is N534.
 
