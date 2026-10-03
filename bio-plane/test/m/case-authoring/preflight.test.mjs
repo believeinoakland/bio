@@ -42,7 +42,7 @@ const lateRow = (w, capture, seq, o) => w.st.sql.exec(`INSERT INTO late_attestat
   JSON.stringify({ late: true, proves: `proves the bytes existed by ${o.at}, not at capture`, ...o }));
 
 test("R29: C-120.4–C-120.7 are this module's rows, in the family 'a case's disclosures and its pre-flight', with the requirements' translations, each naming its region", () => {
-  const rows = Object.entries(CASE_DISCLOSURE_CHECKS).slice(3);
+  const rows = Object.entries(CASE_DISCLOSURE_CHECKS).slice(3, 7);
   assert.deepEqual(rows.map(([k, v]) => [k, v.check]),
     [["CO_ATTESTATION_UNACKNOWLEDGED", "C-120.4"], ["SELF_ATTESTED_NO_REASON", "C-120.5"],
      ["SELF_ATTESTATION_NOT_STANDING", "C-120.6"], ["UNCLEARED_HUNCH", "C-120.7"]]);
@@ -56,6 +56,22 @@ test("R29: C-120.4–C-120.7 are this module's rows, in the family 'a case's dis
     "src/case-authoring/index.mjs #selfAttestedJudged > is-self-attested-reasoned",
     "src/case-authoring/index.mjs #selfAttestedJudged > is-self-attestation-standing",
     "src/case-authoring/index.mjs #hunchDebt > is-hunch-cleared"], "each names the function that raises it");
+});
+
+test("R29: C-120.8 and C-120.10–C-120.13 (DEC-112, N522) are this module's rows in the same family, with the requirements' translations word for word, each naming its region; C-120.9 is withdrawn and not used", () => {
+  const rows = Object.entries(CASE_DISCLOSURE_CHECKS).slice(7);
+  assert.deepEqual(rows.map(([k, v]) => [k, v.check, v.where]), [
+    ["RELIED_ON_NOT_PRESENTABLE", "C-120.8", "src/case-authoring/index.mjs #materialsJudged > is-relied-on-presentable"],
+    ["ACCEPTED_WORK_NOT_IN_FORCE", "C-120.10", "src/case-authoring/index.mjs #acceptedWorkJudged > is-accepted-work-in-force"],
+    ["FLAG_NOT_DISCLOSED", "C-120.11", "src/case-authoring/index.mjs #flagsJudged > is-flag-disclosed"],
+    ["FLAGS_UNDETERMINED", "C-120.12", "src/case-authoring/index.mjs #flagsJudged > is-flags-determined"],
+    ["FLAG_DISCLOSURE_NOT_STANDING", "C-120.13", "src/case-authoring/index.mjs #flagsJudged > is-flag-disclosure-standing"]]);
+  assert.deepEqual(rows.map(([, v]) => v.translation), [
+    "A finding this case relies on rests on material this copy does not hold whole, and everything a case relies on travels with it in full. Find a presentable copy, stop relying on the material, or make the finding supporting. Nothing was written.",
+    "A finding in this case rests on another group's finding, and this group's acceptance of that edition is not in force. Accept it again, or take the leg out. Nothing was written.",
+    "Another group's work this case rests on carries an open flag, and a case may be published with it only if the flag is disclosed. Each one is named. Disclose it, or clear it first. Nothing was published.",
+    "The flags on another group's work this case rests on could not be read completely, so what must be disclosed is not known. Try again. Nothing was published.",
+    "One of the flags disclosed is not open on work this case rests on: it may have been cleared since. Read the list again. Nothing was published."]);
 });
 
 test("R12: uncleared hunch debt is UNCLEARED_HUNCH with its row C-120.7, naming every hunch leg, before anything is written; the pre-flight answers it before the first screen", () => {

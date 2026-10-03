@@ -28,6 +28,8 @@ import { Capture } from "../../../src/capture/index.mjs";
 import { sourcesOf } from "../../../src/sources/index.mjs";
 import { networkNoticesOf } from "../../../src/network-notices/index.mjs";
 import { caseAuthoringOf } from "../../../src/case-authoring/index.mjs";
+import { parseImportedFindingRef, importedFindingRef } from "../../../src/inquiry-grammar/index.mjs";
+import { caseImportOf } from "../../../src/case-import/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
@@ -118,7 +120,7 @@ function reviewProvider(w) {
 }
 
 export function world({ group = "test-group", provider = true, now = null, record: recordWrap = null, ratification: ratWrap = null,
-                        deps = {} } = {}) {
+                        deps = {}, realImports = false } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -200,10 +202,28 @@ export function world({ group = "test-group", provider = true, now = null, recor
              refusal: caller === r.principal ? null : { ok: false, reason: "AI_RUN_NOT_PRINCIPAL", code: "AI_RUN_NOT_PRINCIPAL" } };
   });
   st.db.exec(CASE_DRAFTS);
+  /* `case-import`: the real one composed on this host (it fills accepted-work's registration itself, its R16), its
+     checker scripted at case-checker's R1 (`w.checks`); else the stand-in, registered with accepted-work's one instance
+     on this host (K1307), reached through strength, which reads it (its R33). */
+  const checks = { group: "other-group", case: "CASE-2026-0900", edition: 1, findings: [] };
+  const imports = realImports
+    ? caseImportOf(host, { record, membership, strength, acceptedWork: strength.acceptedWork,
+                           reevaluation: { acceptanceWithdrawn: () => ({ ok: true, told: true, dependents: 0 }) },
+                           checkCaseFile: async () => ({ format: "bio-case-file/1", case: checks.case, edition: checks.edition,
+                             group: checks.group, checker: { grading_versions: ["bio-grading/1"], checks_version: "1.57.0" },
+                             integrity: { departures: [] }, signatures: { case: { verified: true } },
+                             publication_checks: { findings: [] }, complete_edition: { equal: true },
+                             statement: "Recreating shows the case intact and consistent, not true.",
+                             findings: checks.findings.map((f) => ({ role: "load_bearing", result: "recreated", missing: [],
+                                                                     differs: [], bar_met: "not_asked", ...f })) }),
+                           now: () => Date.parse(clock.now) })
+    : importsStandIn();
+  if (!realImports) strength.acceptedWork.registerAcceptedWork("case-import", imports.registration);
   const w = {
+    imports, checks,
     st, host, record, membership, credentials, promotion, prov, content, entities, connections, inquiry, basisVersions, strength,
     bias, observations, reevaluation, publication, ratification, contradiction, runs, clock, readings, grants: new Map(),
-    capture, sources, attestation,
+    capture, sources, attestation, extraction: ex,
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a),
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
@@ -225,7 +245,7 @@ export function world({ group = "test-group", provider = true, now = null, recor
                                                                                   : w.networkNotices.noticeReferenceOf(project)) };
   w.ca = caseAuthoringOf(host, { record: recordWrap ? recordWrap(record) : record, membership, inquiry, basisVersions,
     strength, bias, observations, reevaluation, publication, ratification: ratWrap ? ratWrap(ratification) : ratification,
-    contradiction, provenance: prov, attestation, capture, networkNotices,
+    contradiction, provenance: prov, attestation, capture, networkNotices, extraction: ex, caseImport: imports,
     sources, now: now || ((p) => (p === "millisecond" ? clock.ms : clock.now)), ...deps });
   let n = 0;
   Object.assign(w, {
@@ -236,8 +256,21 @@ export function world({ group = "test-group", provider = true, now = null, recor
       st.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
                    VALUES (?, ?, ?, ?, 'active', '["contribute","publish"]', 't', 't')`, id, `Cover ${id}`, `h_${id}`, role);
     },
-    /** An information bundle registering one capture; answers the capture's sha. */
-    doc(id, text = `bytes of ${id}`) {
+    /** R44: a whole extracted-text index for `captureSha` (extraction R36's `unitsOf` reads it), one unit per entry of
+     *  `units` (`{text, truncated?}`), or with `state` other than whole; the fixture's documents carry one unless asked
+     *  not to (`text: false`). */
+    indexText(captureSha, bundleId, units = [{ text: `the text of ${bundleId}` }], state = "whole") {
+      st.sql.exec(`INSERT OR REPLACE INTO capture_text_state (capture_sha, bundle_id, state, offered, written, over_bound,
+                   unaddressable, truncated, skipped_named, chain_kind, at) VALUES (?,?,?,?,?,0,0,?,0,'text',?)`,
+                  captureSha, bundleId, state, units.length, units.length, units.filter((u) => u.truncated).length, T0);
+      units.forEach((u, i) => st.sql.exec(`INSERT OR REPLACE INTO capture_text (capture_sha, bundle_id, extent_kind, extent,
+                   ref, seq, text, truncated, chain_kind) VALUES (?,?,'doc-para',?,?,?,?,?,'text')`,
+                  captureSha, bundleId, JSON.stringify({ kind: "doc-para", para: i + 1 }), `paragraph ${i + 1}`, i, u.text,
+                  u.truncated ? 1 : 0));
+    },
+    /** An information bundle registering one capture, its text indexed whole unless `text: false`; answers the
+     *  capture's sha. */
+    doc(id, text = `bytes of ${id}`, { text: indexed = true } = {}) {
       const c = { path: "snapshots/c0.txt", text, sha: sha(text) };
       const r = promotion.promote({ bundleId: id, base: null, snapKey: `k${++n}`, author: V("alice"),
         files: [{ path: "bundle.md", text: infoMd(id) }, { path: c.path, text: c.text },
@@ -245,6 +278,7 @@ export function world({ group = "test-group", provider = true, now = null, recor
         meta: { object_type: "information" },
         register: [{ sha256: c.sha, path: c.path, encoding: "utf8", bytes: Buffer.byteLength(c.text) }] });
       if (!r.ok) throw new Error(`fixture doc refused: ${JSON.stringify(r).slice(0, 400)}`);
+      if (indexed) w.indexText(c.sha, id);
       return c.sha;
     },
     /** An inquiry whose basis is `legs` (each `{target, …leg fields}`), in `state`; `concluded` carries its own
@@ -308,7 +342,7 @@ export function world({ group = "test-group", provider = true, now = null, recor
     /** An information bundle registering one capture whose provenance document carries `extra` (attestations, a
      *  co-archive, attempts), fetched `direct` by this instance unless `receipt: false` (provenance R13: a Grade B
      *  capture, R24); answers the capture's sha. */
-    graded(id, extra = {}, { receipt = true, text = `bytes of ${id}` } = {}) {
+    graded(id, extra = {}, { receipt = true, text = `bytes of ${id}`, indexed = true } = {}) {
       const c = { path: "snapshots/c0.txt", text, sha: sha(text) };
       const r = promotion.promote({ bundleId: id, base: null, snapKey: `k${++n}`, author: V("alice"),
         files: [{ path: "bundle.md", text: infoMd(id) }, { path: c.path, text: c.text },
@@ -316,6 +350,7 @@ export function world({ group = "test-group", provider = true, now = null, recor
         meta: { object_type: "information" },
         register: [{ sha256: c.sha, path: c.path, encoding: "utf8", bytes: Buffer.byteLength(c.text) }] });
       if (!r.ok) throw new Error(`fixture graded refused: ${JSON.stringify(r).slice(0, 400)}`);
+      if (indexed) w.indexText(c.sha, id);
       if (receipt) prov.recordReceipt({ address: `https://example.org/${id}`, addressNorm: `example.org/${id}`,
                                         captureSha: c.sha, retrieved: T0, via: "direct" });
       return c.sha;
@@ -332,6 +367,56 @@ export function world({ group = "test-group", provider = true, now = null, recor
   return w;
 }
 
+/** `case-import` at its ruled interface (its R4, R9, R16), standing in until it is composed here: another group's
+ *  imported editions, the acceptances in force and the open flags, as a test sets them. `accept(...)` answers the ref a
+ *  leg names; `flagsRead`, when set, answers `openFlagsOn` in place of the held flags (a failed or incomplete read). */
+export function importsStandIn() {
+  const editions = new Map(), acceptances = new Map(), flags = [];
+  const key = (...a) => a.join("#");
+  const s = {
+    flagsRead: null,
+    edition(imp, edition, { group = "other-group", caseId = "CASE-2026-0900", manifestSha = "f".repeat(64), findings = [] } = {}) {
+      editions.set(key(imp, edition), { edition, group, case: caseId, manifest_sha: manifestSha, findings });
+    },
+    accept(imp, edition, finding, a = {}) {
+      acceptances.set(key(imp, edition, finding), { by: "alice", at: T0, reason: "We recreated it whole.",
+        checked: "every passage", gaps: null, ...a });
+      return importedFindingRef(imp, finding);
+    },
+    withdraw(imp, edition, finding) { acceptances.delete(key(imp, edition, finding)); },
+    flag(imp, edition, f) { flags.push({ import: imp, edition, open: true, finding: null, at: T0, ...f }); },
+    clear(flag) { for (const f of flags) if (f.flag === flag) f.open = false; },
+    acceptanceOf: ({ import: imp, edition, finding }) => acceptances.get(key(imp, edition, finding)) ?? null,
+    openFlagsOn: ({ import: imp, edition }) => (s.flagsRead ? s.flagsRead({ import: imp, edition })
+      : { ok: true, complete: true, flags: flags.filter((f) => f.open && f.import === imp && f.edition === edition)
+          .map(({ flag, finding, issue, at }) => ({ flag, finding, issue, at })) }),
+    /* as case-import R4 answers: the source group and case at the top, the edition in full under `edition` */
+    importedCase: ({ import: imp, edition }) => {
+      const e = editions.get(key(imp, edition));
+      return e ? { ok: true, import: imp, group: e.group, case: e.case, editions: [{ edition: e.edition }],
+                   edition: { edition: e.edition, manifest_sha: e.manifest_sha, findings: e.findings } }
+               : { ok: false, reason: "IMPORT_NO_SUCH_EDITION" };
+    },
+  };
+  s.registration = {
+    finding: ({ ref, edition }) => {
+      const p = parseImportedFindingRef(ref);
+      const e = p && editions.get(key(p.import, edition));
+      if (!p || !e) return null;
+      const f = e.findings.find((x) => x.finding === p.finding) || {};
+      return { ref, import: p.import, group: e.group, case: e.case, edition, finding: p.finding,
+               manifest_sha: e.manifest_sha, result: f.result ?? null, pair: f.pair ?? null,
+               acceptance: acceptances.get(key(p.import, edition, p.finding)) ?? null };
+    },
+    openFlags: ({ ref, edition }) => {
+      const p = parseImportedFindingRef(ref);
+      return { complete: true, flags: flags.filter((f) => p && f.open && f.import === p.import && f.edition === edition) };
+    },
+    withdrawals: () => ({ withdrawals: [], cursor: null }),
+  };
+  return s;
+}
+
 export function infoMd(id) {
   return ["---", `id: ${id}`, "object_type: information", "schema: information@1", `title: "Document ${id}"`,
           "current_state: collected", "prior_state: null", `created: "${T0}"`,
@@ -342,7 +427,8 @@ export function infoMd(id) {
 /** An inquiry document: `legs` its basis (each cited by a confirmed `cites` reference); concluded in its own bytes. */
 export function inqMd(id, legs = [], { state = "concluded", lines = [] } = {}) {
   const val = (v) => (typeof v === "number" ? String(v) : `${v}`);
-  const refs = [...new Set(legs.map((l) => l.target))];
+  /* a leg on another group's finding is not a reference (inquiry-grammar R11) */
+  const refs = [...new Set(legs.map((l) => l.target).filter((t) => !String(t).startsWith("imported:")))];
   return ["---", `id: ${id}`, "object_type: inquiry", "schema: inquiry@1", `title: "Question ${id}"`,
     `current_state: ${state}`, "prior_state: open", `created: "${T0}"`, `last_updated: "${T0}"`, "surfaced_by: human",
     ...(refs.length ? ["references:", ...refs.flatMap((t) => ["  - rel: cites", `    target: ${t}`, "    status: confirmed",
