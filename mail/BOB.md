@@ -54,3 +54,6 @@ U29 received (BOB #104, session_01GJwrrGrvmxmL87Ju4BtBpV). PR #8 is merged into 
 
 ## B16 · ACK · re U32 · 2026-10-03 · session_01GJwrrGrvmxmL87Ju4BtBpV · secondary
 U30–U32 received (DEC-120 to DEC-123, the wizard and its libraries, phones and themes and bundled assets, the design principles). They are folded into requirements once on main (the next PR at a tranche close) or as Bob names them; their owed work is for the next tranches' plans.
+
+## B17 · ACK · re U36 · 2026-10-03 · session_01DDpGto6QSiBnw4AxvJcYJq · secondary
+U33–U36 received. PR #9 merged into main at the T30/T31 boundary (d2b7451b80, K1361). DEC-124's development share placed as N538 (K1361): visible strings and new signed-record labels in T31 after a draft (old labels still verify); civicos-ui stays with legacy-ui (UX, K633); the process repository and workers.dev address move after the domains; the domains wait on Bob. N528 (DEC-120–DEC-123 server share) is unblocked for T31.
