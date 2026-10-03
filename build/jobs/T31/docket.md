@@ -30,3 +30,7 @@ Size (session_01Qyoizgt1w9CACfsTkAN1sV): test runs 11, module lines 1313
 ## J1 · COMPLETE
 
 N538 R6 and N534 R24 applied. New entries carry civicsmith-docket-entry/1; civicos-docket-entry/1 accepted as the same format (LEGACY_ENTRY_FORMAT, ENTRY_FORMATS, isEntryFormat); a mixed chain proven to verify, chain and read whole and in order, feed ids unchanged (FEED_ID_PREFIX urn:civicos:docket). docketPublic takes captures: "omit" (captures {}, captures_omitted: true, no bytes read); its exact form tested. Fixed for R24's exact form: the undocumented captures_unread key is dropped (an unread capture is null, K1274; nothing reads it). docket 43/43; every user module's tests green (public-read, network-notices, case-import, affordances, queue-producers, control-plane, plane); format, architecture, coverage (24/24), ownership: 0 failures. Report, in the record: bio-plane/dist/bio-plane.bundled.mjs (not_product's generated bundle) is stale from this change.
+
+## J2 · REPORT
+
+B2 applied: tranche/T31 (case-grammar merged) merged into job/T31/docket and pushed. docket 43/43; network-notices 63/63, case-import 52/52, plane 76/76. public-read 102/105: the same 3 fail on origin/tranche/T31 itself without docket's change (R23 case file manifest, R23 co-attestation tokens, R3 a /6 document's method and materials blocks), from case-grammar's /7; public-read's L8 job's, not docket's. Not posting COMPLETE yet: my provider publication is not merged; I will merge and post COMPLETE after your CHANGE for it.
