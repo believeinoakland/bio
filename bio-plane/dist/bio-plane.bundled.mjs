@@ -81423,10 +81423,6 @@ var Publication = class {
       ...extraction ? { extraction } : {}
     });
   }
-  /* The accepted-work instance case-carriage reads (R59), a one-line delegate: `plane` R16's test reads it here. */
-  get acceptedWork() {
-    return this.caseCarriage.acceptedWork;
-  }
   get corpusExport() {
     return this.#deps.corpusExport ||= corpusExportOf(this.#deps.host, {
       storage: this.#deps.storage,
@@ -84061,7 +84057,7 @@ var STAGE_SENTENCES = Object.freeze({
   closed_not_recorded: "a close is the owner's recorded act with its reason (resolved, superseded or abandoned), not a stage the record grows into",
   closed_unrecognised: "the document records a close, but its reason is not resolved, superseded or abandoned, so the close is not read"
 });
-var fillCounts = (sentence, n) => sentence.replace(/\{(read|with_legs|concluded|editions)\}/g, (_, k) => String(n[k]));
+var fillCounts = (sentence2, n) => sentence2.replace(/\{(read|with_legs|concluded|editions)\}/g, (_, k) => String(n[k]));
 function stageWhy(stage, reached, earned, n) {
   const key = stage === "forming" ? "forming_reached" : stage === "investigating" ? reached ? earned ? "investigating_reached" : "investigating_skipped" : n.read ? "investigating_no_leg" : "investigating_none_held" : reached ? "matured_reached" : "matured_not_reached";
   return fillCounts(STAGE_SENTENCES[key], n);
@@ -95594,6 +95590,10 @@ function carriesBodyLines(method, materials, group) {
     ""
   ];
 }
+var sentence = (words3) => {
+  const s = String(words3);
+  return /[.!?…]$/.test(s) ? s : `${s}.`;
+};
 function acceptedBodyLines(accepted) {
   const rows2 = accepted && Array.isArray(accepted.rows) ? accepted.rows : [];
   const flags = accepted && Array.isArray(accepted.flags) ? accepted.flags : [];
@@ -95603,12 +95603,12 @@ function acceptedBodyLines(accepted) {
     "",
     "A finding of this case rests on a finding of another group's published case, which this group accepted. That work, and everything it rests on, is the other group's, in its own case file: check it there.",
     "",
-    ...rows2.map((r) => `- ${r.member} rests, through ${r.leg_of}, on ${r.finding} of ${r.group ?? "another group"}'s case ${r.case ?? "(not stated)"}, edition ${r.edition}: accepted by ${r.accepted_by} on ${r.accepted_at}, because: ${r.reason}. It was ${String(r.result ?? "not recorded").replace(/_/g, " ")} from that case file` + (r.gaps ? `, with the gaps stated: ${r.gaps}` : "") + `. Its grades as that edition publishes them: ${pairLine(r.pair)}. Its case file's manifest is ${r.manifest_sha ?? "not stated"}.`),
+    ...rows2.map((r) => `- ${r.member} rests, through ${r.leg_of}, on ${r.finding} of ${r.group ?? "another group"}'s case ${r.case ?? "(not stated)"}, edition ${r.edition}: accepted by ${r.accepted_by} on ${r.accepted_at}, because: ${sentence(r.reason)} It was ${String(r.result ?? "not recorded").replace(/_/g, " ")} from that case file` + (r.gaps ? `, with the gaps stated: ${sentence(r.gaps)}` : ".") + ` Its grades as that edition publishes them: ${pairLine(r.pair)}. Its case file's manifest is ${r.manifest_sha ?? "not stated"}.`),
     ...flags.length ? [
       "",
       "Each open flag on that work is disclosed here, and never blocks the case (DEC-96 item 4):",
       "",
-      ...flags.map((f17) => `- Flag ${f17.flag} on ${f17.ref}, edition ${f17.edition}, raised ${f17.flagged_at ?? "at a time not stated"}: ${f17.issue}.` + (f17.words ? ` In the owner's words: ${f17.words}.` : "") + ` Disclosed by ${f17.acknowledged_by} on ${f17.acknowledged_at}.`)
+      ...flags.map((f17) => `- Flag ${f17.flag} on ${f17.ref}, edition ${f17.edition}, raised ${f17.flagged_at ?? "at a time not stated"}: ` + sentence(f17.issue) + (f17.words ? ` In the owner's words: ${sentence(f17.words)}` : "") + ` Disclosed by ${f17.acknowledged_by} on ${f17.acknowledged_at}.`)
     ] : ["", "No flag was open on that work when this case was published."],
     ""
   ];
@@ -97159,7 +97159,6 @@ var derivationRefusal = (key, extra) => refusal10(CASE_DERIVATION_CHECKS, key, e
 var actRefusal4 = (key, extra) => refusal10(PUBLISH_ACT_CHECKS, key, extra);
 var CaseAuthoring = class {
   #deps;
-  #handed;
   constructor({
     storage,
     record,
@@ -97175,14 +97174,6 @@ var CaseAuthoring = class {
     ratification = null,
     networkNotices = null,
     disclosures = null,
-    contradiction = null,
-    provenance = null,
-    attestation = null,
-    capture = null,
-    sources = null,
-    extraction = null,
-    caseImport = null,
-    promotion = null,
     now = null
   } = {}) {
     this.sql = storage.sql;
@@ -97202,18 +97193,6 @@ var CaseAuthoring = class {
       networkNotices,
       disclosures
     };
-    this.#handed = Object.fromEntries(Object.entries({
-      contradiction,
-      provenance,
-      attestation,
-      capture,
-      sources,
-      extraction,
-      caseImport,
-      promotion,
-      inquiry,
-      strength
-    }).filter(([, v]) => v));
     this.now = typeof now === "function" ? now : (precision) => stampInstant(precision);
   }
   /* The modules reached lazily: each is created on the same host on first use, unless a test passed its own. */
@@ -97244,17 +97223,10 @@ var CaseAuthoring = class {
   get networkNotices() {
     return this.#deps.networkNotices ||= networkNoticesOf(this.#deps.host);
   }
-  /* R55 (N529, K1333): `case-disclosures`, the one instance on this host, asked in R55's order. */
+  /* R55 (N529, K1333): `case-disclosures`, the one instance on this host, asked in R55's order. The composition builds
+     it with what it reads (N536: `plane` composes `caseDisclosuresOf(ctx, {attestation})` first, K1355). */
   get disclosures() {
-    return this.#deps.disclosures ||= caseDisclosuresOf(
-      this.#deps.host,
-      { storage: this.storage, record: this.record, ...this.#handed }
-    );
-  }
-  /* N529 (K625's named-copy pattern): the attestation instance `case-disclosures` reads, until `plane` re-points its
-     composition to `case-disclosures` (seam read §5). */
-  get attestation() {
-    return this.disclosures.attestation;
+    return this.#deps.disclosures ||= caseDisclosuresOf(this.#deps.host);
   }
   migrate() {
     migrateCaseAuthoring(this.sql);

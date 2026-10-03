@@ -178,7 +178,7 @@ Row C-82.8 (R19, R29; DEC-88, K1025), with its translation; stamped by 1.53.0:
   - A named member's self-attested capture still publishes with its reason (`case-disclosures` R11's negative control).
   - Material not held whole under a load-bearing member is refused, and under a supporting member is listed `included: false`.
   - The `method:` block carries both versions.
-- **P6 (N529).** Split at the disclosures seam after T28 (4,010 lines): `case-disclosures` holds R31, R35–R37, R43–R52, R54 and R12 as its R1–R16. The renderers move there and are imported here, never copied (K1333). The end-to-end arms of `tensions`, `carries`, `rests`, `imported` and `preflight` stay here, proving R55 and R14. The fixture builds `caseDisclosuresOf` first. Until `plane` re-points, a one-line `get attestation()` passes through to `case-disclosures`.
+- **P6 (N529).** Split at the disclosures seam after T28 (4,010 lines): `case-disclosures` holds R31, R35–R37, R43–R52, R54 and R12 as its R1–R16. The renderers move there and are imported here, never copied (K1333). The end-to-end arms of `tensions`, `carries`, `rests`, `imported` and `preflight` stay here, proving R55 and R14. The fixture builds `caseDisclosuresOf` first. The plane composes `case-disclosures` itself; this module reads the one instance on the host (N536, K1359).
 
 ## Open for Bob
 
