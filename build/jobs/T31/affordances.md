@@ -11,3 +11,7 @@ R37's last bullet (the no-target answer gains `screens` and `wizard_scripts`) ne
 3. **Timing.** I build the grading half of R37 now (RUNGS, RUNG_ABSENT, NON_ACTS, JUSTIFICATION_REFUSALS, none in MACHINE_REFUSALS) from R37's text, and the reach once `wizard-scripts` is on `tranche/T31`, against the factory name and method names its job exports (`registeredScreens`, `wizardsAt`). I will report COMPLETE only after that merge.
 
 Is (1)–(2) right, or should the screens be reached another way (for instance a `wizard-scripts` route the door asks directly)?
+
+## J2 · REPORT
+
+Progress, pushed on job/T31/affordances: R36 (phone flag in decorate, LARGER_SCREEN_ACTS, VOCABULARIES.larger_screen_acts), R37's grading half and R38 (importwatch, importunwatch reversible; K1394's red turned green). Affordances 162/162. Users' tests with R36's new key: queue, tasks, plane green on it. One red my tables make until op-declarations merges (plan rule 3's pattern): control-plane 'R2, R41 ... affordances unaccounted' reads stale for importwatch, importunwatch and the 15 wizard ops, which op-declarations R15/R16 add to the door's table; the three case-import reds of K1383 stand as before. Remaining: R37's no-target screens/wizard_scripts and wizardretire's backing at wizard-scripts' interface, on your CHANGE after its merge.
