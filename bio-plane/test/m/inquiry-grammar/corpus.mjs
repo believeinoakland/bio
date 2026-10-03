@@ -275,9 +275,19 @@ export const BUNDLE_CASES = {
   [PROJ]: "project",
 };
 
+/* ---- legs on another group's finding (R11; N522): new at T28, so no golden entry; their tests state findings by hand ---- */
+export const IMPORT = "f".repeat(64);
+export const REF = `imported:${IMPORT}/INQ-2026-0042-src`;
+export const IMPORTED_BUNDLE_CASES = {
+  "INQ-2026-0200-imported-clean": { current_state: "concluded", prior_state: "open", conclusion: "it is", falsifier: "a ledger",
+    references: refsTo(INFO), basis: [{ target: REF, role: "supports", target_edition: 2 }, { target: INFO, role: "cuts_against" }] },
+  "INQ-2026-0201-imported-bad": { references: [...refsTo(INFO), { target: REF, rel: "cites", status: "confirmed" }],
+    basis: [{ target: REF, role: "maybe", grade: "B", grade_axis: "connection", grade_source: "inherited", content_id: CID }] },
+};
+
 /** The files of a bundle case. */
 export function bundleFiles(id) {
-  const c = BUNDLE_CASES[id];
+  const c = BUNDLE_CASES[id] ?? IMPORTED_BUNDLE_CASES[id];
   if (c === "info") return new Map([["bundle.md", infoDoc(id)]]);
   if (c === "info-supersedes") return new Map([["bundle.md", infoDoc(id, { references: [{ target: INFO2, rel: "supersedes" }] })]]);
   if (c === "project") return new Map([["bundle.md", projDoc(id, { surfaced_by: "robot", recheck_triggers: undefined })]]);
