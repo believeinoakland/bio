@@ -1298,6 +1298,14 @@ var PROPOSAL_STATES = Object.freeze({
     machine_proposed: "a machine credential assembled this reason for opening an escalation from the determination's record. That is machine work, labelled as machine work: it is a draft, which can set out what the record holds and can never open an escalation. It is not a member's reason until a member sends it, as offered or edited",
     member_proposed: "a member assembled this reason for opening an escalation from the determination's record. It is a proposal and not a member's reason until a member sends it, as offered or edited, and the record holds who proposed it",
     unstated: "the record does not say who assembled this reason for opening an escalation from the determination's record, and it is not a member's reason until a member sends it, as offered or edited"
+  }),
+  /* N543 (K1396; T32, R45): steps proposed for a wizard script (wizard-scripts R5) are not a script's steps until its
+     author adopts them into a version, and a machine can propose steps and never draft, submit or approve a script
+     (wizard-scripts R19), worded as `template`'s sentences are. */
+  wizard: Object.freeze({
+    machine_proposed: "a machine credential proposed these steps for a wizard script. That is machine work, labelled as machine work: it is a draft, which can propose steps and can never draft, submit or approve a script. They are not a script's steps until its author adopts them into a version",
+    member_proposed: "a member proposed these steps for a wizard script. It is a proposal and not a script's steps until its author adopts them into a version, and the record holds who proposed it",
+    unstated: "the record does not say who proposed these steps for a wizard script, and they are not a script's steps until its author adopts them into a version"
   })
 });
 
