@@ -1,0 +1,8 @@
+# BOB to publication (T30)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T30) L8, publication: N537. Drop the one-line `get acceptedWork()` delegate to case-carriage (`src/publication/index.mjs` ~191); nothing in product code or another module's tests reads it since PLANE #19 (K1355). Re-point any test of your own that reads it to `caseCarriage.acceptedWork` or the fixture's instance. No requirement changes.
+Inherited red: the UI's DEC-88 tests (Bob's).
