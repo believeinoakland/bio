@@ -111,7 +111,8 @@ export const CASE_SOURCES_CHECKS = {
       + 'case again, and it will leave that detail out. Nothing was published.',
   },
   /* C-122.2 (R58; DEC-112, K1268 BOB's decision 5): a preparation made before published cases carried their method and
-     materials (any format but `bio-case-document/6`) is never committed; the remedy is a new preparation. */
+     materials (any format but `bio-case-document/6` or `/7`, which is `/6` in every field: N538, K1365 (1)) is never
+     committed; the remedy is a new preparation. */
   CASE_FORMAT_SUPERSEDED: {
     check: 'C-122.2',
     where: 'src/publication/index.mjs commitCaseEdition > is-case-format-current',

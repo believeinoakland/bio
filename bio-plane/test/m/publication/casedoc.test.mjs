@@ -130,7 +130,7 @@ test("K651 the case document's grammar is case-grammar's, re-exported here uncha
     assert.equal(pub[name], cg[name], name);
   for (const name of ["CASE_DOCUMENT_FORMAT", "caseDocumentStatesMemberBlocks", "caseDocumentRequiresTensionSection"])
     assert.equal(chk[name], cg[name], `checks.mjs ${name}`);
-  assert.equal(CASE_DOCUMENT_FORMAT, "bio-case-document/6");
+  assert.equal(CASE_DOCUMENT_FORMAT, "bio-case-document/7");
 });
 test("R21 storeCaseDocument replaces an unsigned document, never a signed one, and answers what the store holds", () => {
   const { w, proj, roles } = prepared();

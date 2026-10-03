@@ -813,7 +813,9 @@ export class Publication {
                      + `${project}. A case does not change hands between editions (DEC-72).` };
     /* R58 (DEC-112; K1268, BOB's decision 5): EVERY EDITION COMMITTED FROM T28 ON CARRIES ITS METHOD AND MATERIALS, so a
        preparation made before T28 (any format but /6) is never committed, nothing written: the remedy is a new
-       preparation, which carries them. A retry of an edition already signed answered above, whatever its format. */
+       preparation, which carries them. A retry of an edition already signed answered above, whatever its format. A /7
+       document (T31, DEC-124) is /6 in every field and is read as /6 here, as everywhere in this module: every reading of
+       a document's shape is `case-grammar`'s predicates (its R1), never a format named here (N538, K1367). */
     const docFm = parseFrontmatter(doc.text).data || {};
     if (!caseDocumentRequiresMaterials(docFm)) {
       /* DEC-49 REGION is-case-format-current */
