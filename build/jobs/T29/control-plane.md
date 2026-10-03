@@ -30,3 +30,7 @@ Both entries applied on `job/T29/control-plane` @ 37e4472e7c; module tests 147/1
 One check fails, on a file that is yours: `node checks/architecture.mjs bio control-plane` → `FAIL families.mjs imports src/case-disclosures/checks.mjs of case-disclosures, which control-plane does not declare in uses`. My requirements' Uses already names `case-disclosures` (N529, K1333), but `build/modules.json` control-plane's `uses` does not. My reading: you add `"case-disclosures"` to control-plane's `uses` in `build/modules.json` on `tranche/T29`; I merge the tranche and re-run the checks, then post COMPLETE. format, coverage (33/33) and ownership pass.
 
 For your L11 close: `families.mjs` is an input to `bio-plane/dist/bio-plane.bundled.mjs` (not_product's artifact), now stale; regenerate it at the close.
+
+## J2 · COMPLETE
+
+Both L11 entries applied and the tranche merged (K1353): module tests 147/147; format, architecture, coverage (33/33) and ownership 0 failures. Every code keeps its row; C-120's twelve are reached again. Record's Completion section has the detail. Bundle regeneration is yours at the close.
