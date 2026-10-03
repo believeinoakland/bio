@@ -280,6 +280,91 @@ test("R35, R2, R18: a member resting on group- or project-level testimony streng
   }
 });
 
+/* N519, N523 (DEC-119 (3); K1275): an off-the-record capture's attesting member is asked as an observation's author is.
+   publication R60 answers the member's level beside the observations, keyed by the capture's SHA-256. */
+const CAP = "ab".repeat(32), DOC = "INFO-2026-0011-document";
+
+test("R2, R18, R14: an off-the-record capture whose attesting member chose no level is ATTRIBUTION_UNCHOSEN (C-92.10), naming the capture, and a stated level no longer in force ATTRIBUTION_STATEMENT_STALE (C-92.11), by the act and the pre-flight byte for byte; once the member chose and the document states it, it passes", async () => {
+  const s = await setup();
+  let attr = { reached: [], legacy: [], stated: [], current: [{ capture: CAP, level: null, why: "no choice made" }] };
+  s.w.publication.attributionFacts = () => attr;
+  assert.deepEqual(reasons(s.preflight()), ["ATTRIBUTION_UNCHOSEN", "ATTRIBUTION_STATEMENT_STALE"]);
+  const un = entry(s.preflight(), "ATTRIBUTION_UNCHOSEN");
+  assert.deepEqual(un.unchosen, [{ capture: CAP, why: "no choice made" }]);
+  assert.match(un.detail, /attesting member/);
+  assert.equal(un.translation, R14_C92_10, "R14's re-worded translation");
+  const steps = [
+    ["ATTRIBUTION_UNCHOSEN", "C-92.10", () => { attr = { ...attr, current: [{ capture: CAP, level: "project", shown: null, why: null }] }; }],
+    ["ATTRIBUTION_STATEMENT_STALE", "C-92.11", () => { attr = { ...attr, stated: [{ capture: CAP, level: "project", shown: null }] }; }],
+  ];
+  for (const [reason, check, relax] of steps) {
+    const got = entry(s.preflight(), reason);
+    if (reason === "ATTRIBUTION_STATEMENT_STALE") assert.deepEqual(got.observations, [CAP], "the capture is named");
+    const r = await s.act();
+    assert.deepEqual([r.status, r.body.reason, r.body.check], [409, reason, check], reason);
+    assert.deepEqual(got, envelopeless(r.body), `${reason}: the act's refusal, less its envelope`);
+    relax();
+  }
+  /* negative control: a stated level for an observation of the same id does not answer for the capture */
+  attr = { ...attr, stated: [{ observation: CAP, level: "project", shown: null }] };
+  assert.deepEqual(reasons(s.preflight()), ["ATTRIBUTION_STATEMENT_STALE"]);
+  attr = { ...attr, stated: [{ capture: CAP, level: "project", shown: null }] };
+  s.w.corroboration.set(Q1, []);
+  assert.deepEqual(s.preflight().refusals, []);
+  assert.equal((await s.act()).status, 200);
+});
+
+test("R35, R2, R18, R14: a member resting on a document whose off-the-record capture's attesting member is at group or project, which strength answers uncorroborated, is refused C-58.5 after C-92.11 by the act and the pre-flight byte for byte, naming member and document, never the member, the capture's source or its author; corroborated, or at cover or name, it passes", async () => {
+  const LEG = { ord: 1, target_id: DOC, level: "group", kind: "evidence", capture: CAP, state: "uncorroborated", corroborated_by: [] };
+  for (const level of ["group", "project"]) {
+    const s = await setup();
+    const stated = [{ capture: CAP, level, shown: "g" }];
+    s.w.publication.attributionFacts = () => ({ reached: [], legacy: [], stated, current: [{ ...stated[0], why: null }] });
+    s.w.corroboration.set(Q1, [{ ...LEG, level }]);
+    const pf = s.preflight();
+    assert.deepEqual(reasons(pf), ["ANONYMOUS_TESTIMONY_UNCORROBORATED"], level);
+    const got = entry(pf, "ANONYMOUS_TESTIMONY_UNCORROBORATED");
+    assert.deepEqual(got.uncorroborated, [{ member: Q1, document: DOC }]);
+    assert.match(got.detail, new RegExp(`${Q1} on ${DOC}`));
+    assert.match(got.detail, /unnamed source.*independent leg.*attesting member to choose cover or name.*drop the finding/s);
+    assert.equal(got.translation, R14_C58_5, "R14's re-worded translation");
+    assert.ok(!/alice|eve|author_id|"author"|source_id/.test(JSON.stringify(got)), "never the member or the source");
+    assert.deepEqual(s.w.corroborationAsked.at(-1).levels, { [CAP]: level }, "the capture's level is handed to strength");
+    const r = await s.act();
+    assert.deepEqual([r.status, r.body.reason], [409, "ANONYMOUS_TESTIMONY_UNCORROBORATED"]);
+    assert.deepEqual(got, envelopeless(r.body), "the act's refusal, less its envelope");
+    s.w.corroboration.set(Q1, [{ ...LEG, level, state: "corroborated", corroborated_by: [{ ord: 2, target_id: "INFO-2026-0012-document" }] }]);
+    assert.deepEqual(s.preflight().refusals, [], `${level}, corroborated`);
+    assert.equal((await s.act()).status, 200);
+  }
+  /* testimony and evidence together are named side by side */
+  const both = await setup();
+  const stated = [{ observation: OBS2, level: "group", shown: "g" }, { capture: CAP, level: "project", shown: "p" }];
+  both.w.publication.attributionFacts = () => ({ reached: [OBS2], legacy: [], stated, current: stated.map((x) => ({ ...x, why: null })) });
+  both.w.corroboration.set(Q1, [TIP, LEG]);
+  assert.deepEqual(entry(both.preflight(), "ANONYMOUS_TESTIMONY_UNCORROBORATED").uncorroborated,
+                   [{ member: Q1, observation: OBS2 }, { member: Q1, document: DOC }]);
+  assert.deepEqual(both.w.corroborationAsked.at(-1).levels, { [OBS2]: "group", [CAP]: "project" });
+  for (const level of ["cover", "name"]) {
+    const s = await setup();
+    const st = [{ capture: CAP, level, shown: "x" }];
+    s.w.publication.attributionFacts = () => ({ reached: [], legacy: [], stated: st, current: [{ ...st[0], why: null }] });
+    s.w.corroboration.set(Q1, [LEG]);
+    assert.deepEqual(s.preflight().refusals, [], level);
+    assert.equal(s.w.corroborationAsked.length, 0, `a capture at ${level} is not asked`);
+  }
+});
+
+const R14_C92_10 = "This case edition uses a member's firsthand observation, or material from an unnamed source a member "
+  + "attests, and that member has not yet chosen how they are credited, so it cannot be signed. Publishing it at any "
+  + "level would be choosing for them. Ask that member to choose, or prepare the edition without the finding that "
+  + "rests on it.";
+const R14_C58_5 = "This edition rests on testimony, or on material from an unnamed source attested by a member, credited "
+  + "only to the group or the project, with no independent leg corroborating it. Such testimony or evidence counts as "
+  + "an anonymous tip and supports a finding only beside an independent corroborating leg. Each such member, "
+  + "observation and document is named. Corroborate the claim with an independent leg, ask the author or the "
+  + "attesting member to choose cover or name, or drop the finding that rests on it. Nothing was signed.";
+
 test("R8, R2, R18: C-41.16 — edition 2 with no \"What changed\" statement, or a blank one, is refused GATE_REFUSED naming C-41.16 by the act and the pre-flight, byte for byte; edition 1 without one, and edition 2 with one, pass", async () => {
   const NO_WC = "# Case\n\n## What This Excludes\n\nNothing named.\n";
   for (const body of [NO_WC, `${NO_WC}\n## What Changed in This Edition, and Why\n\n \n`]) {

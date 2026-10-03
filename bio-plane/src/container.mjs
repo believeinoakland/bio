@@ -68,9 +68,11 @@ function u32(v) { return [v & 0xff, (v >>> 8) & 0xff, (v >>> 16) & 0xff, (v >>> 
  *  the one REC-14 wrote. */
 export function layoutOf(manifest) {
   const l = (manifest && typeof manifest.layout === "object" && manifest.layout) || {};
-  const root = typeof l.root === "string" && l.root ? l.root : `${manifest?.case || "case"}/`;
+  /* public-read R6: a case file's part carries its files at their paths under the part's own root (`root: ""`, its
+     `caseFilePartLayout`); a container's manifest names its root, or gets the format's default. */
+  const root = typeof l.root === "string" ? l.root : `${manifest?.case || "case"}/`;
   return {
-    root: root.endsWith("/") ? root : root + "/",
+    root: root === "" || root.endsWith("/") ? root : root + "/",
     manifestAt: typeof l.manifest_at === "string" && l.manifest_at ? l.manifest_at : "MANIFEST.json",
     partsAt: typeof l.parts_at === "string" ? l.parts_at : "path",
   };
