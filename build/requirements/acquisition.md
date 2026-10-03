@@ -57,16 +57,16 @@ Terms. The **document address** is what the record identifies the document by; t
 
 *The archive lookup through Memento* (N492; K1032)
 - **R32** (N492, K1032) The archive arm (R3) and `archiveLookup` find a memento through `capture-sources` R37's Memento services, so any compliant archive can serve the lookup and the CDX index is one source, not the interface:
-- **R33** (N541) `firstHopWho(instanceName)` answers `instance <name> (Civicsmith/<version>)`, the one spelling of a first hop's `who` (R16's, and `capture` R65's); never throws. *(not yet met: T32)*
-- **R34** (N539; retires K1365 (6)'s aliases) `civicosUserAgent` and `CIVICOS_CONTACT_URL` are no longer exported; `civicsmithUserAgent` and `CIVICSMITH_CONTACT_URL` are the only names. *(not yet met: T32)*
   - the archive is a descriptor (`WAYBACK_MEMENTO` for the Internet Archive); its endpoints for the document address are `mementoEndpoints(archive, address)`;
   - the lookup asks the TimeGate with `Accept-Datetime` (`acceptDatetime`) and reads the answer with `readMementoAnswer`, or reads the TimeMap (`parseTimeMap`) and takes its candidates with `timeMapCandidates`, each through the host governor as R3's query is;
   - the chosen memento's raw bytes are fetched (the descriptor's `raw`, else the memento URI as given), its row is `mementoRow(answer, {sha256, bytes})` over the bytes received, and the choice is `selectCapture`'s, with R29–R31's rules as written;
   - the chain's archive hop is `mementoHop(chosen, mementoUri, {archive, answer})`, and the document address is the answer's `original` where R3 names the CDX `original`;
   - each Memento refusal (`MEMENTO_LINK_MALFORMED`, `MEMENTO_NO_ORIGINAL`, `MEMENTO_NOT_NEGOTIATED`, `MEMENTO_NO_DATETIME`, `MEMENTO_BAD_DATETIME`, `NO_USABLE_CAPTURE`) is answered by name, as R3's refusals are, and nothing is filed.
+- **R33** (N541) `firstHopWho(instanceName, version)` answers `instance <name> (Civicsmith/<version>)` (a missing name `unnamed`, a missing version `0.0.0`, R24's defaults), the one spelling of a first hop's `who` (R16's, and `capture` R65's); never throws. *(not yet met: T32)*
+- **R34** (N539; retires K1365 (6)'s aliases) `civicosUserAgent` and `CIVICOS_CONTACT_URL` are no longer exported; `civicsmithUserAgent` and `CIVICSMITH_CONTACT_URL` are the only names. *(not yet met: T32)*
 
 **civicsmithUserAgent(version, instance, purpose), CIVICSMITH_CONTACT_URL** (moved from the check catalogue, K649 (1); renamed by DEC-124)
-- **R24** `civicsmithUserAgent` answers `Civicsmith/<version> (+<CIVICSMITH_CONTACT_URL>; instance <instance>; <purpose>)`, a missing version read as `0.0.0` and a missing instance as `unnamed`; `CIVICSMITH_CONTACT_URL` is the project's public address, the component whose absence makes sources refuse. It is the one spelling of R9's user agent: every module that sends or judges the Civicsmith agent (`capture-requests` R14, `monitoring`, `ratification`, `instance-setup`) reads it here, never a copy. `civicosUserAgent` and `CIVICOS_CONTACT_URL` are also exported, as aliases of the same function and the same constant (not copies), until every user has re-pointed; their removal is a later entry (DEC-124; K1365 (6)). Pure; never throws.
+- **R24** `civicsmithUserAgent` answers `Civicsmith/<version> (+<CIVICSMITH_CONTACT_URL>; instance <instance>; <purpose>)`, a missing version read as `0.0.0` and a missing instance as `unnamed`; `CIVICSMITH_CONTACT_URL` is the project's public address, the component whose absence makes sources refuse. It is the one spelling of R9's user agent: every module that sends or judges the Civicsmith agent (`capture-requests` R14, `monitoring`, `ratification`, `instance-setup`) reads it here, never a copy. (Its CivicOS-named aliases are retired by R34.) Pure; never throws.
 
 ## Private
 
