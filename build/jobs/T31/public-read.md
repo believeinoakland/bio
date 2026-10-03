@@ -47,3 +47,7 @@ Merged `tranche/T31`; all same-layer providers are in. The existing 108 tests pa
 Deferred: none. Found in other modules: none.
 
 Size (session_016SfTxv2owbWsyKBSjqM3an): test runs 11, module lines 2896
+
+## J4 · COMPLETE
+
+B3 done: tranche/T31 merged (publication, docket in). public-read tests 110/110, adding R3's /7 arm and R25 over the real docket. format, architecture, coverage 25/25 and ownership all have 0 failures. Nothing deferred.
