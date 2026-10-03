@@ -4,7 +4,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ATTRIBUTION_LEVELS, ATTRIBUTION_PROSE_HEAD, attributionFrontmatterLines, attributionBodyLines, fmSafe,
-         SECTIONS, REAUTHORABLE_SECTIONS } from "../../../src/case-grammar/index.mjs";
+         SECTIONS, REAUTHORABLE_SECTIONS, materialsLines, materialAttestationLines } from "../../../src/case-grammar/index.mjs";
+import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
 const OBS = "INFO-2026-0099-observation";
 const OBS2 = "INFO-2026-0098-observation";
@@ -77,8 +78,8 @@ const DOC = ["---", "format: bio-case-document/5", "case_id: CASE-2026-0001", "c
   "## What Was Searched", "", "Everything.", ""];
 const at = (s) => DOC.indexOf(s);
 
-test("R3 the re-authorable sections are attribution and acknowledgements, each located as a front-matter run and a prose run", () => {
-  assert.deepEqual([...REAUTHORABLE_SECTIONS], ["attribution", "acknowledgements"]);
+test("R3 the re-authorable sections are attribution, acknowledgements and attestations, each located as a front-matter run and a prose run", () => {
+  assert.deepEqual([...REAUTHORABLE_SECTIONS], ["attribution", "acknowledgements", "attestations"]);
   assert.deepEqual(Object.keys(SECTIONS), [...REAUTHORABLE_SECTIONS]);
   assert.equal(Object.isFrozen(SECTIONS), true);
   assert.equal(Object.isFrozen(REAUTHORABLE_SECTIONS), true);
@@ -108,4 +109,41 @@ test("R3 a document carrying no such run answers null for it, and a locator neve
   assert.equal(SECTIONS.acknowledgements(without(["## What Was Searched"])), null);
   for (const odd of [null, undefined, 7, "text", {}, [], [null, 7]])
     for (const s of REAUTHORABLE_SECTIONS) assert.equal(SECTIONS[s](odd), null);
+});
+
+test("R2 K1315 an off-the-record capture's attesting member is a row keyed capture, the capture's SHA-256, in place of observation, in both renderings", () => {
+  const CAP = "a".repeat(64);
+  assert.deepEqual(attributionFrontmatterLines([{ capture: CAP, level: "group", shown: "g", chosen_at_edition: 2 },
+                                                { observation: OBS, capture: CAP, level: null }]),
+    ["observation_attributions:", `  - capture: ${CAP}`, "    level: group", '    shown: "g"', "    chosen_at_edition: 2",
+     `  - observation: ${OBS}`, "    level: null", "    shown: null", "    chosen_at_edition: null"],
+    "an observation keeps its key; a capture takes it only in the observation's place");
+  const fm = parseFrontmatter(["---", "format: bio-case-document/6", ...attributionFrontmatterLines([{ capture: CAP, level: "name", shown: "olive", chosen_at_edition: 1 }]), "---", ""].join("\n"));
+  assert.deepEqual([fm.findings, fm.data.observation_attributions], [[], [{ capture: CAP, level: "name", shown: "olive", chosen_at_edition: 1 }]]);
+  const body = attributionBodyLines([{ capture: CAP, level: "name", shown: "olive", chosen_at_edition: 1 }, { capture: CAP, level: null, why: "not chosen" }]);
+  assert.equal(body[4], `- **${CAP}** — attributed to the name its author chose to appear under: olive — level \`name\`, chosen at edition 1.`);
+  assert.match(body[5], new RegExp(`^- \\*\\*${CAP}\\*\\* — NO LEVEL IS CHOSEN: not chosen\\.`));
+});
+
+test("R3 K1317 attestations: from material_attestations: to the next top-level key, with no prose run, so re-writing it leaves every other line as it was", () => {
+  const rows = [{ ref: "INFO-2026-0001-m", by_kind: "member", level: null, at: "2026-10-01T00:00:00Z" },
+                { ref: "INFO-2026-0001-m", by_kind: "group", by: "lakeshore-tenants" }];
+  const lines = ["---", "format: bio-case-document/6", ...materialsLines([{ ref: "INFO-2026-0001-m", kind: "document" }]),
+                 ...materialAttestationLines(rows), "case_citations: []", "---", "", "## Scope", "", "x", ""];
+  const f0 = lines.indexOf("material_attestations:");
+  const at = SECTIONS.attestations(lines);
+  assert.deepEqual(at, { f0, f1: lines.indexOf("case_citations: []"), b0: lines.length, b1: lines.length });
+  /* the member chooses name: the run is re-written whole by the one writer, and nothing else moves */
+  const chosen = materialAttestationLines([{ ...rows[0], level: "name", by: "member:olive", signature: "SIG" }, rows[1]]);
+  const spliced = [...lines.slice(0, at.f0), ...chosen, ...lines.slice(at.f1, at.b0), ...lines.slice(at.b1)];
+  assert.deepEqual(spliced.filter((l, i) => i < at.f0 || i >= at.f0 + chosen.length),
+                   lines.filter((l, i) => i < at.f0 || i >= at.f1));
+  assert.deepEqual(parseFrontmatter(spliced.join("\n")).data.material_attestations[0],
+                   { ref: "INFO-2026-0001-m", by_kind: "member", by: "member:olive", level: "name", at: "2026-10-01T00:00:00Z",
+                     signature: "SIG", recorded_in: null });
+  /* an empty block is located too, and a document without it answers null */
+  const empty = ["---", ...materialAttestationLines([]), "x: 1", "---"];
+  assert.deepEqual(SECTIONS.attestations(empty), { f0: 1, f1: 2, b0: 4, b1: 4 });
+  assert.equal(SECTIONS.attestations(lines.filter((l) => !l.startsWith("material_attestations"))), null);
+  for (const odd of [null, undefined, 7, "x", {}, [null]]) assert.equal(SECTIONS.attestations(odd), null);
 });
