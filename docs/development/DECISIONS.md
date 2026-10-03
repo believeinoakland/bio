@@ -1984,3 +1984,17 @@ response: **Bob, 2026-10-03: "Agreed with all"** (G1 A, G2 yes, G3 yes, as recom
 decided: 2026-10-03 · Bob
 reasoning recorded in: this entry; the design-principles page (8.6, 8.8, 9.6); BIO_Interaction_Constructs_v0_1.md §L (RULED 2026-10-03).
 owed: the phone's act set (reversible and reasoned only, for now) and its "finish on a larger screen" handoff; light and dark themes with contrast checked in both; the interface's typefaces, icons and scripts bundled in the release, the old interface's Google Fonts load removed, and no outside requests from member screens or the public case.
+
+### DEC-123 · answered
+raised: 2026-10-03 · the UX design session with Bob on his primary account (session_01TNeXM2Qvi7zMXT6BntbENE; the development process runs on his secondary account) (the design phase's step 1: the design principles)
+for: bob
+question: Whether the design-principles page, every UX principle Bob has ruled stated once in plain words, with his comments of 2–3 October folded in and gaps G1–G5 ruled (DEC-120, DEC-122), is the yardstick every screen of the redesign is checked against.
+why it is Bob's: UX (P17).
+provisional: the principles' sources: Bob's UX principles and refinements of 2026-07-28 (UI-KICKOFF), the interface brief's standing constraints, DEC-24 to DEC-122, K1.
+alternative: none offered; the page invited edits to any principle.
+recommendation: approve.
+reversal cost: low (each principle remains individually amendable by a later ruling).
+response: **Bob, 2026-10-03: "principals accepted"** (principles accepted). `docs/development/ux-substrate/design-principles.html` (57 principles in nine families, with Bob's five comments folded in: professional members, zooming out, imported work, confirmed versus unconfirmed findings, "wizard") is APPROVED as the design phase's yardstick: every screen and wizard script in steps 2 to 5 is checked against it before it comes to Bob.
+decided: 2026-10-03 · Bob
+reasoning recorded in: this entry; the page itself (status line: APPROVED 2026-10-03); BIO_Interaction_Constructs_v0_1.md (pointer under §L).
+owed: none to the build directly (each principle's own ruling carries its owed work); the design session checks every step 2–5 deliverable against the page.

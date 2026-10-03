@@ -694,6 +694,10 @@ a choice in settings; the public case follows the reader's setting on screen, an
 light; contrast is checked in both. Everything the interface needs (typefaces, icons, scripts) ships inside the group's own
 copy: no outside fonts, analytics or trackers, on member screens or the public case.
 
+**The design principles (APPROVED 2026-10-03 by Bob, DEC-123).** Every ruled UX principle is stated once, in plain words, in
+`docs/development/ux-substrate/design-principles.html` (published at https://claude.ai/artifact/MvsMPnJnk3o32FBeqgdxT1),
+the yardstick every screen and wizard script of the redesign is checked against.
+
 ## W · WORKING AND PUBLISHED — the fence a member can always see (Bob, 2026-10-01, DEC-106)
 
 Members are taught **two spaces**, each with its own distinct frame: the group's private **working** record, and the public
