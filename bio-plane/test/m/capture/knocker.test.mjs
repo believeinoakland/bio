@@ -199,7 +199,7 @@ test("R65 R69 R70 R32: a pull holds the bytes under their own digest, writes one
   assert.deepEqual([doc.locator, doc.retrieved, doc.file], [`knock:${k.knockId}`, "2026-09-30T10:00:00Z", `snapshots/${k.knockId}`]);
   assert.equal(doc.provenance_chain.length, 1);
   assert.deepEqual([doc.provenance_chain[0].via, doc.provenance_chain[0].bound], ["doorbell", false]);
-  assert.match(doc.provenance_chain[0].who, /^instance inst \(CivicOS\/9\.9\.9\)$/);
+  assert.match(doc.provenance_chain[0].who, /^instance inst \(Civicsmith\/9\.9\.9\)$/, "acquisition R16 (DEC-124): the product named Civicsmith");
   assert.match(doc.provenance_chain[0].asserts, /received at this instance's doorbell as knock .* not fetched/);
   assert.deepEqual(doc.attestation_attempts, []);
   assert.ok(doc.profile && doc.profile.format && doc.profile.digests, "R17's profile over the bytes");
@@ -223,6 +223,26 @@ test("R65 R69 R70 R32: a pull holds the bytes under their own digest, writes one
                    [true, false, sha("second memo"), null]);
   assert.equal(prov.receipts.length, 2);
   assert.equal(c.inboxGet(k2.knockId).item.capture_sha, sha("second memo"));
+});
+
+test("R65 (acquisition R16, DEC-124): a pull names the instance, Civicsmith and the version in its first hop, an unnamed instance and no version read as such; a knock pulled before T31 answers its document again with its who as written", async () => {
+  const { c, rows } = setup();
+  const k = await c.knock({ content: "renamed", sourceAddress: "5.5.5.9" });
+  const r = await c.pullKnock({ knockId: k.knockId, by: "m1" });
+  assert.equal(r.document.provenance_chain[0].who, "instance inst (Civicsmith/9.9.9)");
+  assert.ok(!JSON.stringify(r.document).includes("CivicOS"), "the old name nowhere in a new pull's document");
+  const bare = setup({ env: { INSTANCE_NAME: undefined, VERSION: undefined } });
+  const kb = await bare.c.knock({ content: "unnamed", sourceAddress: "5.5.5.8" });
+  assert.equal((await bare.c.pullKnock({ knockId: kb.knockId, by: "m1" })).document.provenance_chain[0].who, "instance unnamed (Civicsmith/0.0.0)");
+  /* a pull made before T31: its stored document names CivicOS, and a repeat answers it as written, never re-worded */
+  const k2 = await c.knock({ content: "pulled long ago", sourceAddress: "5.5.5.7" });
+  const first = await c.pullKnock({ knockId: k2.knockId, by: "m1" });
+  const old = structuredClone(first.document);
+  old.provenance_chain[0].who = "instance inst (CivicOS/0.9.0)";
+  rows(`UPDATE inbox SET pulled_document = ? WHERE knock_id = ?`, JSON.stringify(old), k2.knockId);
+  const again = await c.pullKnock({ knockId: k2.knockId, by: "m2" });
+  assert.deepEqual([again.existed, again.document.provenance_chain[0].who], [true, "instance inst (CivicOS/0.9.0)"]);
+  assert.deepEqual(again.document, old, "the document as it was written, whole");
 });
 
 test("R65 R37 (C-118.2, C-118.4, R63): refusals in order, NO_SUCH_KNOCK, KNOCK_DISCARDED, then the bytes gone; a refused pull writes nothing, and a discarded knock moved back to new is pulled", async () => {
