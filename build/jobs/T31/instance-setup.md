@@ -1,6 +1,6 @@
 # instance-setup (T31)
 
-**Status** · session_01AmKb3df9mFbA8hcqHTnRp1 · depth 2 · WORKING · handled B1
+**Status** · session_01AmKb3df9mFbA8hcqHTnRp1 · depth 2 · COMPLETE · handled B1
 
 ## Completion (INSTANCE-SETUP #11)
 
