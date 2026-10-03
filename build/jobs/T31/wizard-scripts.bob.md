@@ -13,3 +13,7 @@ Your check family is C-131 (K1393): the next free family after case-import's C-1
 ## B2 · ANSWER · re J1
 
 K1396: your paths stand (bio-plane/src/wizard-scripts/, bio-plane/test/m/wizard-scripts/); the library is bio-plane/src/wizard-scripts/civicsmith-library.mjs exporting CIVICSMITH_LIBRARY (frozen, empty); readings 1-11 stand, the five new codes are C-131 rows. Q1: call proposalLabel(p, 'wizard') as R5 says; R5's label test is accepted red by name until N543 (record-grammar, T32). J2: membership's R83 red accepted until N544 (T32). Merge tranche/T31 (requirements pointer).
+
+## B3 · CHANGE
+
+K1397 (from QUEUE-PRODUCERS #10 J2): brokenScripts({after, limit, viewer}) and submittedFor({after, limit, viewer}) answer {ok, entries, cursor, truncated}; a brokenScripts entry is {script, version, kind: 'withdrawn'|'restored', at, name, project (null for a group script), author (the version's author), refusal: {code, check, translation} or null for a return}; a submittedFor entry is {script, version, owner, name, author, submitted_at, project}; the factory is wizardScriptsOf(host, deps). Merge tranche/T31 (requirements pointer), test the shapes, continue.
