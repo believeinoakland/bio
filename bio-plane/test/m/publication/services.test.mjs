@@ -22,7 +22,8 @@ function signed({ format = null, strength = [{ target: F, axis: "capture", grade
   const roles = [{ target: F, version_sha: w.head(F), edition: 3 }, { target: G, version_sha: w.head(G), role: "supporting" }];
   w.prepare(CASE, 1, { project: proj, roles, strength, excludes: "The annex.", ...(format ? { format } : {}) });
   const bar = { declared: true, capture: "B", connection: "C" };
-  assert.equal(w.signCase(CASE, 1, { project: proj, roster: roster(roles), bar }).ok, true);
+  /* an older format is signed as a store signed it before T28 (R58 refuses committing one now) */
+  assert.equal((format ? w.signLegacy : w.signCase)(CASE, 1, { project: proj, roster: roster(roles), bar }).ok, true);
   return { w, proj, roles, bar };
 }
 

@@ -6,7 +6,7 @@
  * `cases`) is append-only and exempt from purge (R24, R31): an edition answers forever. `export_log` is
  * `corpus-export`'s since K1024. The derived
  * and working tables (`published_edges`, `published_held_references`, unsigned `case_documents` and their
- * `case_exclusions`, `case_revision_flags`, `observation_attributions`) are declared to record-core's purge as the
+ * `case_exclusions`, `case_revision_flags`, `observation_attributions`, `capture_attributions` (R60)) are declared to record-core's purge as the
  * store declared them (K23); the held references (N256) as `published_edges` is. */
 
 export const PUBLICATION_SCHEMA = `
@@ -567,12 +567,55 @@ CREATE TABLE IF NOT EXISTS observation_attributions (
   PRIMARY KEY (case_id, edition, bundle_id)
 );
 CREATE INDEX IF NOT EXISTS observation_attributions_bundle ON observation_attributions(bundle_id);
+
+-- R57 (DEC-112 (3)(4); K1316): THE TEXTS A PUBLISHED CASE CARRIES WHOLE, BY SHA-256. Written by commitCaseEdition, in its
+-- transaction, for each material the signed document's materials: block lists included: true: a document's extracted
+-- text (case-grammar extractedTextOf), an observation's whole text, a document's captured bytes where the register holds
+-- them inline as text, and a timestamp token held inline. Each is also a published_shas row (materials/<sha>), so it is
+-- served by hash; public-read reads the text here through publishedMaterialText. Content-addressed and append-only: a
+-- text once held is never rewritten or removed, and the table is exempt from purge as published bytes are (R31).
+CREATE TABLE IF NOT EXISTS published_material_texts (
+  sha256    TEXT PRIMARY KEY,
+  kind      TEXT NOT NULL,      -- document | extracted_text | observation | attestation
+  text      TEXT NOT NULL,
+  bytes     INTEGER NOT NULL,   -- the UTF-8 length of text
+  published TEXT NOT NULL
+);
+
+-- R57 (K1317): WHAT ONE COMMITTED CASE EDITION HELD, in the order its materials: block lists them: each SHA-256 and
+-- whether its text is held here (inline) or its bytes are in the evidence store for ratification R39 to copy (evidence).
+-- Written once by commitCaseEdition, read by heldMaterialsOf for a retried ratification. Published, so exempt (R31).
+CREATE TABLE IF NOT EXISTS published_case_materials (
+  case_id  TEXT NOT NULL,
+  edition  INTEGER NOT NULL,
+  ord      INTEGER NOT NULL,
+  sha256   TEXT NOT NULL,
+  held     TEXT NOT NULL CHECK (held IN ('inline','evidence')),
+  PRIMARY KEY (case_id, edition, ord)
+);
+
+-- R60 (DEC-119 (3); DEC-102 items 1-3; N523): THE ATTESTING MEMBER'S CREDIT FOR OFF-THE-RECORD MATERIAL. One row per
+-- (case edition, capture): the level the capture's attesting member (its actor, acquisition R16) chose for how that
+-- edition credits their attestation of material from a source the case shows as Withheld. Written only by
+-- op=attribute with capture, by that member and nobody else, never prefilled; a later edition inherits the latest
+-- earlier edition's row, as observation_attributions'. capture_sha is a capture's SHA-256, never a bundle id, so the
+-- rows are cleared by the whole-store purge only. reason is the member's words, as DEC-88 asks of an observation's.
+CREATE TABLE IF NOT EXISTS capture_attributions (
+  case_id     TEXT NOT NULL,
+  edition     INTEGER NOT NULL,
+  capture_sha TEXT NOT NULL,     -- the off-the-record capture (64 lowercase hex)
+  level       TEXT NOT NULL CHECK (level IN ('group','project','cover','name')),
+  chosen_by   TEXT NOT NULL,     -- the capture's attesting member, stamped from the signed-in session
+  chosen_at   TEXT NOT NULL,
+  reason      TEXT NOT NULL,     -- why this level, in the member's words
+  PRIMARY KEY (case_id, edition, capture_sha)
+);
 `;
 
 /** R31 (K23): what purge clears, as the store declared it — `published_edges` keyed by either end, the unsigned case
  *  documents and their exclusions by the whole-store form only, the flags and the attributions by their bundle. */
 export const PUBLICATION_TABLES = Object.freeze([
-  "case_revision_flags", "observation_attributions",
+  "case_revision_flags", "observation_attributions", "capture_attributions",
   { name: "published_edges", keys: ["from_bundle", "to_bundle"] },
   { name: "published_held_references", keys: ["from_bundle", "to_bundle"] },
   { name: "case_documents", keys: [], whole: "ratified_at IS NULL" },
@@ -580,7 +623,7 @@ export const PUBLICATION_TABLES = Object.freeze([
 ]);
 /** R24, R31: the published bytes, never cleared by any purge. */
 export const PUBLICATION_EXEMPT = Object.freeze([
-  "published_bundles", "published_shas", "published_cases", "published_case_members", "cases",
+  "published_bundles", "published_shas", "published_material_texts", "published_case_materials", "published_cases", "published_case_members", "cases",
 ]);
 
 /* Columns added after a store was first written, added by hand because CREATE TABLE IF NOT EXISTS does nothing to a
