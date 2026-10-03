@@ -770,7 +770,9 @@ const OPS = frozenTable({
      editor's grant and revocation are an administrator's own session acts, asked of the roster (NOT_AN_ADMIN); a
      proposal is any credential's, an agent credential's by its scope, labelled (`templatepropose`'s posture); a wizard's
      progress is a member session's unattributed tally; the five reads are a member session's, and the check is any
-     credential's read, an agent credential's included, so a wizard planned on the fly passes the same checks. */
+     credential's read, an agent credential's included, so a wizard planned on the fly passes the same checks.
+     NOTHING IS DECLARED FOR `wizardrefusaltally`: it is the door's own call of wizard-scripts' refusal tally (its R16;
+     control-plane R50), a store-internal route never served to a caller (R6; K1396), as `doorbellrefused` is. */
   wizarddraft:          { classes: ["admin", "member"], machineClasses: [], mutating: true  },
   wizardrevise:         { classes: ["admin", "member"], machineClasses: [], mutating: true  },
   wizardsubmit:         { classes: ["admin", "member"], machineClasses: [], mutating: true  },
