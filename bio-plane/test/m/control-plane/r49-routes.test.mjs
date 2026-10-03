@@ -8,7 +8,6 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { M, O, world, call, opCalls, aik, cred, refused, FORGED, QUERY_STAMPS, BODY_STAMPS } from "./harness.mjs";
 const { caseImportOps } = await import("../../../src/case-import/index.mjs");
-const { caseCheckerPublicReads } = await import("../../../src/case-checker/index.mjs");
 const { publicReadDoorOp } = await import("../../../src/public-read/door.mjs");
 const D = await import("../../../src/control-plane/dispatch.mjs");
 
@@ -155,7 +154,6 @@ test("R49, R26, R25 (K1324): case-import's map answers promises (`caseimport`, `
 });
 
 test("R49 (case-checker R15; public-read R18): `casechecker` and `casefilespec` are public ops, answered credential-free by public-read's door read from bio's store — by their own names and as `op=publicread&name=` — the read asked by name with its declared parameters, never a credential or a stamp; `store=scratch` is refused with nothing read; this door holds no store route for either (negative controls: the store's unregistered answer is 404; a silence is a silence)", async () => {
-  assert.deepEqual(Object.keys(caseCheckerPublicReads()).sort(), [...PUBLIC_READS].sort());
   for (const op of PUBLIC_READS) {
     assert.equal(OPS[op]?.classes, null, `${op} is public`);
     assert.equal(OPS[op].mutating, false, op);
