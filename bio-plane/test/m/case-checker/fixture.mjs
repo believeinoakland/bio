@@ -46,7 +46,7 @@ export const MEMO_ACCOUNT = "A clerk handed me this memo in person.";
 const MINUTES_UNITS = [{ extent: { kind: "pdf-page", page: 0 }, ref: "page 1", text: "Item 7. The lease was approved without a vote." },
                        { extent: { kind: "pdf-page", page: 1 }, ref: "page 2", text: "Adjourned at nine." }];
 const MEMO_UNITS = [{ extent: { kind: "pdf-page", page: 0 }, ref: "page 1", text: "Please sign the lease before the meeting." }];
-export const extracted = (units) => (typeof CG.extractedTextOf === "function" ? CG.extractedTextOf(units) : canonicalJson(units));
+export const extracted = (units) => CG.extractedTextOf(units);
 
 const PAIR_AXES = ["capture", "connection", "testimony"];
 const pairOf = (r) => Object.fromEntries(PAIR_AXES.map((a) => [a, { state: r[a].state, grade: r[a].grade ?? null }]));
@@ -80,7 +80,8 @@ const rows = (key, list) => (list.length ? [`${key}:`, ...list.flatMap((r) => Ob
 
 /** The `/6` case document's text. */
 export function caseDocument({ pairs, bar = { declared: true, capture: "B", connection: "C" }, findings = { [A]: "load_bearing", [C]: "supporting" },
-                              pins, materials, attestations, accounts, accepted = [], edition = 2, recorded = null } = {}) {
+                              pins, materials, attestations, accounts, accepted = [], edition = 2, recorded = null,
+                              facts = {}, passages = {} } = {}) {
   const roster = Object.keys(findings);
   const rec = recorded || pairs;
   const fm = [
@@ -100,6 +101,8 @@ export function caseDocument({ pairs, bar = { declared: true, capture: "B", conn
     ...CG.methodBlockLines({ grading: GRADING_METHOD_VERSION, checks: CATALOG_VERSION }),
     ...CG.materialBlockLines({ materials, attestations }),
     ...CG.acceptedWorkBlockLines({ rows: accepted, flags: [] }),
+    ...CG.gradingFactsLines(Object.entries(facts).flatMap(([finding, f]) => f.legs.map((l, ord) => ({ finding, ord, ...l })))),
+    ...CG.passagesLines(Object.entries(passages).flatMap(([finding, list]) => list.map((p, ord) => ({ finding, ord, ...p })))),
     "completeness:", '  statement: "the 2019 permits are not covered"', "  author: alice", "  statement_by: bob",
     '  at: "2026-09-28T00:00:00Z"', "  subject_position: not_sought", '  subject_justification: "the office is closed until October"',
     "  acknowledged: 1",
@@ -138,9 +141,8 @@ export function caseFiles(opts = {}) {
   const passageExtent = { kind: "pdf-page", page: 0 };
   const passage = { content_id: contentIdFor(MINUTES_SHA, passageExtent, null), capture_sha: MINUTES_SHA, extent: passageExtent, chain: null,
                     quoted: opts.quoted || "The lease was approved without a vote." };
-  put("passages", A, JSON.stringify([passage]));
-  put("passages", B, JSON.stringify([]));
-  put("passages", C, JSON.stringify([]));
+  const passages = { [A]: [passage], [B]: [], [C]: [] };
+  for (const [id, list] of Object.entries(passages)) put("passages", id, JSON.stringify(list));
   put("document", MINUTES, MINUTES_BYTES);
   put("extracted_text", MINUTES, extracted(MINUTES_UNITS));
   put("document", MEMO, MEMO_BYTES);
@@ -165,7 +167,8 @@ export function caseFiles(opts = {}) {
     { ref: MEMO, by_kind: "member", by: "bob", level: "cover", at: NOW, signature: accounts[1].signature_b64 },
     { ref: MEMO, by_kind: "group", by: GROUP },
     { ref: OBS, by_kind: "member", by: null, level: "group", at: NOW }];
-  const doc = caseDocument({ pairs, findings, pins, materials, attestations, accounts, accepted, bar: opts.bar, recorded: opts.recorded ? opts.recorded(pairs) : null });
+  const doc = caseDocument({ pairs, findings, pins, materials, attestations, accounts, accepted, bar: opts.bar,
+    recorded: opts.recorded ? opts.recorded(pairs) : null, facts: opts.signedFacts || facts, passages: opts.signedPassages || passages });
   put("case_document", null, doc);
   put("case_signature", null, sign(opts.caseSigner || "group", caseRatifyStatement(CASE, 2, sha(doc))));
   if (opts.mutate) opts.mutate(texts);
@@ -177,8 +180,7 @@ export function manifestFor(listed, { keys = ["group", "alice", "bob"], over = {
   const files = [...listed].sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
   const parts = [...new Set(files.map((f) => f.part))].sort((a, b) => a - b).map((index) => {
     const mine = files.filter((f) => f.part === index);
-    return { index, sha256: CG.partFingerprint(mine.map(({ path, sha256, bytes }) => ({ path, sha256, bytes }))),
-             bytes: mine.reduce((n, f) => n + f.bytes, 0) };
+    return { index, ...CG.casePartDigest(files, index) };
   });
   const doc = files.find((f) => f.kind === "case_document");
   return { format: "bio-case-file/1", group: GROUP, case: CASE, edition: 2, case_document_sha: doc ? doc.sha256 : null,
@@ -196,7 +198,7 @@ export function caseFile(opts = {}) {
     part: (i % n) + 1, kind: CG.caseFileEntryOf(path).kind }));
   const pre = manifestFor(listedOf(), opts);
   const ce = CG.completeEditionOf({ format: pre.format, group: pre.group, case: pre.case, edition: pre.edition,
-    case_document_sha: pre.case_document_sha, keys: pre.keys, manifest: pre,
+    case_document_sha: pre.case_document_sha, keys: pre.keys,
     files: listedOf().map((f) => ({ path: f.path, kind: f.kind, sha256: f.sha256, bytes: f.bytes, content: new Uint8Array(bytesOf.get(f.path)) })) });
   bytesOf.set(CG.caseFilePath("complete_edition"), Buffer.from(opts.completeEdition ?? ce, "utf8"));
   const listed = listedOf();

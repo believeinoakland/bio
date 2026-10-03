@@ -7,8 +7,9 @@ import * as CG from "../../../src/case-grammar/index.mjs";
 import { canonicalJson } from "../../../src/record-grammar/json.mjs";
 import { CATALOG_VERSION } from "../../../src/gate.mjs";
 import { GRADING_METHOD_VERSIONS } from "../../../src/strength/method.mjs";
-import { caseFile, byId, sha, keyFor, A, B, C, MINUTES, MEMO, MEMO_BYTES, MINUTES_BYTES, REF, GROUP, CASE } from "./fixture.mjs";
+import { caseFile, caseFiles, gradingFacts, byId, sha, keyFor, A, B, C, MINUTES, MEMO, MEMO_BYTES, MINUTES_BYTES, REF, GROUP, CASE } from "./fixture.mjs";
 
+const passagesOfFixture = () => Object.fromEntries([A, B, C].map((id) => [id, JSON.parse(caseFiles().texts.get(CG.caseFilePath("passages", id)))]));
 const check = (opts = {}, args = {}) => CC.checkCaseFile({ parts: caseFile(opts).parts, ...args });
 const results = (answer) => Object.fromEntries(answer.findings.map((f) => [f.finding, f.result]));
 const ALL_RECREATED = { [A]: "recreated", [C]: "recreated", [B]: "recreated" };
@@ -56,6 +57,11 @@ test("R2 R11: a changed byte in a carried file differs for each finding that nee
   assert.equal(byId(r)[A].result, "did_not_recreate");
   assert.ok(has(byId(r)[A].differs, "integrity", /materials\/INFO-2026-0001-minutes\/document does not match the manifest/));
   assert.equal(byId(r)[C].result, "recreated");     /* C's chain does not reach the minutes */
+  /* bytes the manifest lists consistently, but not the bytes the signed materials block fingerprints */
+  const swapped = await check({ mutate: (t) => t.set(CG.caseFilePath("document", MINUTES), "%PDF other minutes") });
+  assert.deepEqual(swapped.integrity.departures, []);
+  assert.ok(has(byId(swapped)[A].differs, "integrity", /the carried document INFO-2026-0001-minutes is not the bytes the signed case fingerprints/));
+  assert.equal(byId(swapped)[C].result, "recreated");
   /* a part fingerprint the manifest lists falsely is a departure of the whole case */
   const fp = await check({ parts: 2, manifest: (m) => { m.parts[1].sha256 = sha("not it"); } });
   assert.ok(fp.integrity.departures.some((d) => /part 2's files do not recompute the fingerprint/.test(d)), fp.integrity.departures.join("; "));
@@ -165,9 +171,13 @@ test("R4: each relied-on passage is found where it is said to be; a moved passag
   const moved = await check({ quoted: "Adjourned at nine." });             /* on page 2, said to be on page 1 */
   assert.equal(byId(moved)[A].result, "did_not_recreate");
   assert.ok(has(byId(moved)[A].differs, "passage", /not found where it is said to be/));
-  const forged = await check({ mutate: (t) => {
-    const p = JSON.parse(t.get(CG.caseFilePath("passages", A))); p[0].content_id = sha("another"); t.set(CG.caseFilePath("passages", A), JSON.stringify(p)); } });
+  const forgedRows = (rows) => rows.map((p) => ({ ...p, content_id: sha("another") }));
+  const forged = await check({ signedPassages: { [A]: forgedRows(passagesOfFixture()[A]) }, mutate: (t) =>
+    t.set(CG.caseFilePath("passages", A), JSON.stringify(forgedRows(passagesOfFixture()[A]))) });
   assert.ok(has(byId(forged)[A].differs, "passage", /does not recompute to the content id/));
+  /* the carried file must say what the signed document states: only the document is signed */
+  const unsigned = await check({ mutate: (t) => t.set(CG.caseFilePath("passages", A), JSON.stringify(forgedRows(passagesOfFixture()[A]))) });
+  assert.ok(has(byId(unsigned)[A].differs, "passage", /carried passages are not the passages the signed case document states/));
   const noText = await check({ edit: (b) => b.delete(CG.caseFilePath("extracted_text", MINUTES)) });
   assert.equal(byId(noText)[A].result, "recreated_in_part");
   assert.ok(has(byId(noText)[A].missing, "passage", /extracted text is not carried; fetch the document whose SHA-256 is/));
@@ -188,11 +198,13 @@ test("R5: each pair recomputes at the stated method version; a changed recorded 
   assert.deepEqual([d.axis, d.recorded, d.recomputed], ["capture", "A", "B"]);
   assert.equal(byId(changed)[A].result, "did_not_recreate");
   /* the answer a leg states for the finding it rests on recomputes too: changed, it differs for both */
-  const leg = await check({ mutate: (t) => {
-    const f = JSON.parse(t.get(CG.caseFilePath("grading_facts", A))); f.legs[1].answer.capture = { state: "graded", grade: "D" };
-    t.set(CG.caseFilePath("grading_facts", A), JSON.stringify(f)); } });
+  const legFacts = gradingFacts(); legFacts[A].legs[1].answer.capture = { state: "graded", grade: "D" };
+  const leg = await check({ signedFacts: legFacts, mutate: (t) => t.set(CG.caseFilePath("grading_facts", A), JSON.stringify(legFacts[A])) });
   assert.ok(has(byId(leg)[B].differs, "grade", /the grading facts of INQ-2026-0001-lease records D/));
   assert.ok(has(byId(leg)[A].differs, "grade", /rests on INQ-2026-0002-board, whose stated grade on capture does not recompute/));
+  /* the carried grading facts must be what the signed document states */
+  const lied = await check({ mutate: (t) => t.set(CG.caseFilePath("grading_facts", C), JSON.stringify({ legs: [] })) });
+  assert.ok(has(byId(lied)[C].differs, "grade", /carried grading facts are not the facts the signed case document states/));
   /* a version this checker does not hold */
   const unknown = await check({ mutate: (t) => t.set(CG.caseFilePath("case_document"), t.get(CG.caseFilePath("case_document")).replace("grading: \"bio-grading/1\"", "grading: \"bio-grading/99\"")) });
   for (const f of unknown.findings) {
@@ -238,9 +250,8 @@ test("R8: every material a load-bearing chain reaches is listed included and car
   assert.ok(has(byId(notIncluded)[A].differs, "presentability", /load-bearing and rests on the document INFO-2026-0002-memo, which the case lists as not travelling whole/));
   /* B is reached, not a load-bearing member: not asked to be presentable, and nothing it lacks is missing */
   assert.equal(byId(notIncluded)[B].result, "recreated");
-  const unlisted = await check({ mutate: (t) => {
-    const f = JSON.parse(t.get(CG.caseFilePath("grading_facts", A))); f.legs.push({ target: "INFO-2026-0077-gone", kind: "document", role: "supports", grade: "C", grade_axis: "capture", grade_source: "capture" });
-    t.set(CG.caseFilePath("grading_facts", A), JSON.stringify(f)); } });
+  const more = gradingFacts(); more[A].legs.push({ target: "INFO-2026-0077-gone", kind: "document", role: "supports", grade: "C", grade_axis: "capture", grade_source: "capture" });
+  const unlisted = await check({ facts: more });
   assert.ok(has(byId(unlisted)[A].differs, "presentability", /reaches document INFO-2026-0077-gone, which the case document's materials do not list/));
   const gone = await check({ edit: (b) => b.delete(CG.caseFilePath("document", MINUTES)) });
   assert.equal(byId(gone)[A].result, "recreated_in_part");
