@@ -113,12 +113,29 @@ export function world({ group = "grp-one", now = "2026-09-28T00:00:00.000Z" } = 
   const retrieval = {
     registerField: (module, field, relation) => { fields.push({ module, field, ...relation }); return { ok: true, module, field }; },
   };
+  /* accepted-work's side (its R2; R33): `acceptedFinding` over findings the test holds by `${ref}@${edition}`, each
+     optionally seen only by the viewers it lists (null, the plane's own read, sees all); `aw.mode` "absent" answers as
+     with nothing registered, "throw" as a registered function that throws (unreadable). */
+  const accepted = new Map();
+  const aw = { mode: "present", reads: [] };
+  const acceptedWork = {
+    acceptedFinding: ({ ref, edition, viewer = null }) => {
+      aw.reads.push({ ref, edition, viewer });
+      if (aw.mode === "absent") return { absent: true };
+      if (aw.mode === "throw") return { unreadable: true };
+      const f = accepted.get(`${ref}@${edition}`);
+      if (!f) return null;
+      if (viewer != null && Array.isArray(f.viewers) && !f.viewers.includes(viewer)) return null;
+      const { viewers: _v, ...out } = f;
+      return out;
+    },
+  };
   const clock = { now };
-  const s = strengthOf(host, { record, membership, inquiry, versions, promotion, retrieval, producingGroup: () => group,
-                               now: () => clock.now });
+  const s = strengthOf(host, { record, membership, inquiry, versions, promotion, retrieval, acceptedWork,
+                               producingGroup: () => group, now: () => clock.now });
 
   const w = {
-    st, host, record, membership, s, clock, basis, ceilings, connection, testimony, subjects, currents, calls, steps, fields,
+    st, host, record, membership, s, clock, basis, accepted, aw, ceilings, connection, testimony, subjects, currents, calls, steps, fields,
     rows: (q, ...a) => st.sql.exec(q, ...a),
     /** One promotion of `id` as promotion runs the registered projections (its R39): inside one transaction, which a
      *  throw after the projection (`fail`) rolls back whole. Answers what the projection answered. */
@@ -144,13 +161,24 @@ export function world({ group = "grp-one", now = "2026-09-28T00:00:00.000Z" } = 
     file(id, path, text) {
       st.sql.exec(`INSERT INTO files (bundle_id,path,content,sha256,bytes) VALUES (?,?,?,?,?)`, id, path, text, "x", text.length);
     },
-    /** An inquiry and its projected basis. Legs: `{target, role?, grade?, axis?, source?, ground?}`. */
+    /** An inquiry and its projected basis. Legs: `{target, role?, grade?, axis?, source?, ground?, edition?}`. As
+     *  inquiry projects it (its R12), a leg's `target_edition` is not in the projection: with `edition` given, the
+     *  inquiry's bundle.md states it on the authored `basis[ord]`, where the record holds it. */
     inquiry(id, legs = [], subject = null) {
       w.bundle(id, "inquiry");
       basis.set(id, legs.map((l, ord) => ({ ord, target_id: l.target, target_type: l.target.startsWith("INQ-") ? "inquiry" : "information",
         role: l.role ?? "supports", grade: l.grade ?? null, grade_axis: l.axis ?? null, grade_source: l.source ?? null,
         note: null, at: null, ground: l.ground ?? null })));
+      if (legs.some((l) => l.edition != null))
+        w.file(id, "bundle.md", "---\nbasis:\n" + legs.map((l) => `  - target: "${l.target}"\n    role: supports\n`
+          + (l.edition != null ? `    target_edition: ${l.edition}\n` : "")).join("") + "---\n");
       if (subject) subjects.set(id, subject);
+    },
+    /** Another group's accepted finding as accepted-work answers it (its R1's `finding`), at one edition. */
+    acceptedFinding(ref, edition, { pair, group = "other-group", caseId = "CASE-1", finding = "INQ-2026-0500-a", viewers,
+                                    acceptance = { by: "member-ann", at: now, reason: "checked", checked: "all", gaps: null } } = {}) {
+      accepted.set(`${ref}@${edition}`, { ref, import: ref.slice(9, 73), group, case: caseId, edition, finding,
+        manifest_sha: "f".repeat(64), result: "recreated", pair, acceptance, ...(viewers ? { viewers } : {}) });
     },
     /** A stored version of an inquiry's basis, its legs as `inquiry` (`ground` required on a version). */
     version(inq, name, state, legs, { legCount = legs.length } = {}) {
