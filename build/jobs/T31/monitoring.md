@@ -29,3 +29,7 @@ R67/R68, my readings (carrying on with them; tell me if any is wrong):
 - `format`: 98 modules, 97 requirements files; 0 failures. `architecture monitoring`: 16 product files, 75 relative imports; 0 failures. `coverage monitoring`: 55 of 55 live ids named by a test; 0 failures. `ownership monitoring tranche/T31`: 5 files changed; 0 failures.
 
 Size (session_01P7ix1fsb1sMMLpFiv27Btv): test runs 12, module lines 3363
+
+## J2 · COMPLETE
+
+monitoring T31 complete on job/T31/monitoring: N534 (R67, R68, R30, R36, with K1392's settled readings) and N538 (civicsmithUserAgent, SLATE_FRAMING_OPEN). monitoring 111/111; checks 0 failures. The not-yet-met marks on R30, R36, R67, R68 can be struck. affordances, control-plane and plane each fail one test on case-import's new ops, identically without this change (their L11 jobs). Record: build/jobs/T31/monitoring.md.
