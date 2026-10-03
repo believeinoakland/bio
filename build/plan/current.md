@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #104 · session_01GJwrrGrvmxmL87Ju4BtBpV · depth 1
 
-**Jobs** · 
+**Jobs** · membership: MEMBERSHIP #21 session_014t8ory3KuXTmiZLiSDLmaB; promotion: PROMOTION #28 session_01JXCfBLEWnwDJYd7wTMihga
 
 **Opened** 2026-10-03 ~00:40 UTC by BOB #104 from `main` @ 416385c819 (T27 closed, K1298; PR #8, DEC-117–DEC-119, on `main`), from T27's `next.md` (K1299). **Bob's weekly meter** · 72% after T26 (K1250); asked at T27's opening and again at its close.
 
