@@ -3,6 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
+import { readFileSync } from "node:fs";
 import { store, storage, Store, STEP_ORDER } from "./fixture.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
@@ -81,21 +82,27 @@ test("R2: before the first request every module's start registrations are held, 
   for (const t of ["tasks", "queue_state"]) assert.ok(names.includes(t), `table ${t}`);
 });
 
-test("R2, R10: control-plane's step runs after layer 10 in the step order (the rank `legacy-store`'s step held) and before `affordances` and `tasks`, so checks and refusals keep their order", async () => {
-  assert.ok(STEP_ORDER.indexOf(STEP) > STEP_ORDER.indexOf("monitoring"));
-  assert.ok(STEP_ORDER.indexOf(STEP) > STEP_ORDER.indexOf("scheduler"));
-  assert.equal(STEP_ORDER.indexOf(STEP) + 1, STEP_ORDER.indexOf("affordances"));
-  assert.ok(STEP_ORDER.indexOf(STEP) < STEP_ORDER.indexOf("tasks"));
+test("R2, R10 (K1416; control-plane R42): control-plane's step ranks after every module of layers 1-10 and before every later module of `build/modules.json`, directly before the first layer-11 module, so checks and refusals keep their order", async () => {
+  const file = JSON.parse(readFileSync(new URL("../../../../build/modules.json", import.meta.url), "utf8"));
+  const mods = (file.modules || file).filter((m) => m.id !== STEP);
+  const at = STEP_ORDER.indexOf(STEP);
+  assert.equal(STEP_ORDER.filter((m) => m === STEP).length, 1, "the step is ranked once");
+  for (const m of mods) {
+    assert.ok(STEP_ORDER.includes(m.id), `${m.id} is in the step order`);
+    if (m.layer <= 10) assert.ok(STEP_ORDER.indexOf(m.id) < at, `${m.id} (layer ${m.layer}) ranks before the step`);
+    else assert.ok(STEP_ORDER.indexOf(m.id) > at, `${m.id} (layer ${m.layer}) ranks after the step`);
+  }
+  assert.equal(STEP_ORDER[at + 1], mods.find((m) => m.layer > 10).id, "directly before the first layer-11 module");
   assert.deepEqual(STEP_ORDER.filter((m) => m !== STEP), MODULE_ORDER.filter((m) => m !== STEP), "otherwise the modules' order");
   /* Observed on a promotion: probes registered either side of it see its testimony check run between them. */
   const x = await store();
   instanceSetupOf(x.ctx).instanceGroupSeed({ slug: "oak-watch", author: "admin" });
   const seen = [];
-  for (const m of ["scheduler", "affordances"]) promotionOf(x.ctx).registerStep(m, { check: () => { seen.push(m); return null; } });
+  for (const m of ["scheduler", "wizard-scripts", "affordances"]) promotionOf(x.ctx).registerStep(m, { check: () => { seen.push(m); return null; } });
   provenanceOf(x.ctx).onTestimony("zz-probe", { check: () => { seen.push(STEP); return null; } });
   const r = await x.call("/testify?author=member:m-riley", { words: "The gate was chained.", observedAt: "2026-09-01" });
   assert.equal(r.ok, true, JSON.stringify(r));
-  assert.deepEqual(seen, ["scheduler", STEP, "affordances"]);
+  assert.deepEqual(seen, ["scheduler", STEP, "wizard-scripts", "affordances"]);
 });
 
 test("R3: the migration pass is idempotent: a second construction on one storage changes no table, and the PROJ ledger is seeded from the live bundles", async () => {
