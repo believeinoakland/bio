@@ -13,14 +13,16 @@
    - `reevaluation.acceptanceWithdrawn` (its R31): a recorder, which can be made to throw.
    Every test drives `case-import` at its interface. */
 import { DatabaseSync } from "node:sqlite";
+import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { strengthOf } from "../../../src/strength/index.mjs";
 import { acceptedWorkOf } from "../../../src/accepted-work/index.mjs";
-import { caseImportOf } from "../../../src/case-import/index.mjs";
+import { caseImportOf, CASE_IMPORT_CHECKS } from "../../../src/case-import/index.mjs";
 import { readCaseFile } from "../../../src/case-import/parts.mjs";
+import { canonicalJson } from "../../../src/record-grammar/json.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 function cursor(rows) {
@@ -121,13 +123,17 @@ export function caseFile({ group = SOURCE, case: caseId = CASE, edition = 1, len
     ...documents.map((d) => ({ path: `documents/${d.name}`, kind: "document", bytes: d.bytes })),
   ];
   const groups = split ? [files.slice(0, 2), ...files.slice(2).map((f) => [f])] : [files];
+  /* `case-grammar` R13: a part's SHA-256 is over the canonical JSON of its file rows `[{path, sha256, bytes}]`, its bytes
+     their sum (`partFingerprint`) */
+  const rowsOf = (g) => g.map((f) => ({ path: f.path, sha256: sha(f.bytes), bytes: f.bytes.length }));
   const manifest = { format: "bio-case-file/1", group, case: caseId, edition, case_document_sha: sha(files[0].bytes),
-                     keys: [], parts: groups.map((_, index) => ({ index })),
-                     files: groups.flatMap((g, part) => g.map((f) => ({ path: f.path, kind: f.kind, sha: sha(f.bytes), bytes: f.bytes.length, part }))),
+                     keys: [], parts: groups.map((g, index) => ({ index, sha256: sha(canonicalJson(rowsOf(g))),
+                                                                  bytes: g.reduce((n, f) => n + f.bytes.length, 0) })),
+                     files: groups.flatMap((g, part) => g.map((f) => ({ path: f.path, sha256: sha(f.bytes), bytes: f.bytes.length, part, kind: f.kind }))),
                      ...manifestExtra };
   const mBytes = bytes(JSON.stringify(manifest));
   const parts = groups.map((g) => zip([{ name: manifestName, bytes: mBytes }, ...g.map((f) => ({ name: f.path, bytes: f.bytes }))]));
-  return { parts, manifest, files, manifestSha: sha(mBytes) };
+  return { parts, manifest, files, manifestSha: sha(canonicalJson(manifest)) };
 }
 
 /** The stand-in manifest check (`case-grammar` R13's `caseFileManifestCheck`): each departure from the shape written here. */
@@ -227,4 +233,23 @@ export function seeded(opts) {
 /** Imports a case file as alice (or `who`). */
 export function imp(w, file = caseFile(), who = "alice") {
   return w.ci.importCaseFile({ parts: file.parts, by: V(who), viewer: V(who) });
+}
+
+/** A refusal of this module's own: its code, its row and its translation (R14). */
+export const rowOk = (r, code) => {
+  assert.equal(r.ok, false, JSON.stringify(r).slice(0, 300));
+  assert.equal(r.reason, code);
+  assert.equal(r.code, code);
+  assert.equal(r.check, CASE_IMPORT_CHECKS[code].check);
+  assert.equal(r.translation, CASE_IMPORT_CHECKS[code].translation);
+};
+/* Refused with nothing written anywhere; then the control, accepted. */
+export function refusedThenAccepted(w, bad, good, code) {
+  const before = w.snapshot();
+  const r = bad();
+  rowOk(r, code);
+  assert.deepEqual(w.snapshot(), before, `${code}: nothing written`);
+  const ok = good();
+  assert.equal(ok.ok, true, `${code}'s control: ${JSON.stringify(ok).slice(0, 300)}`);
+  return r;
 }

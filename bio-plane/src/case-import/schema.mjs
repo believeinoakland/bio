@@ -6,8 +6,8 @@
  *
  * THE BYTES (R1, R13). Every part of a case file, and every document a completion supplies, is held by its SHA-256 in
  * `case_import_blobs`, cut into chunks of at most `BLOB_CHUNK` bytes (a row's value is bounded on the plane's storage).
- * A file of the case file is held by its SHA-256 in `case_import_files`, as a span of the part that carries it, so a
- * file's bytes are the part's own and nothing is stored twice. The bytes live in this module's tables, so record-core's
+ * A file of the case file is held by its SHA-256 in `case_import_files`, its bytes those of the part that carries it,
+ * read back by the one reader of the format (`case-checker` R19), so nothing is stored twice. The bytes live in this module's tables, so record-core's
  * purge clears them with the import (R13); no object store is needed, and none could be purged.
  *
  * Every table is declared to record-core's purge as the import's own record, with no bundle key: an import is no bundle
@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS case_import_parts (
   bytes         INTEGER NOT NULL,
   PRIMARY KEY (import_id, edition, idx)
 );
--- Each file of the case file, by SHA-256: the part that carries it and where.
+-- Each file of the case file, by the SHA-256 of the bytes the parts carry, and the part the manifest places it in.
 CREATE TABLE IF NOT EXISTS case_import_files (
   import_id     TEXT NOT NULL,
   edition       INTEGER NOT NULL,
@@ -55,7 +55,6 @@ CREATE TABLE IF NOT EXISTS case_import_files (
   sha           TEXT NOT NULL,
   bytes         INTEGER NOT NULL,
   part          INTEGER NOT NULL,
-  at_byte       INTEGER NOT NULL,
   PRIMARY KEY (import_id, edition, path)
 );
 CREATE INDEX IF NOT EXISTS case_import_files_sha ON case_import_files (sha);

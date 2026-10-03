@@ -268,15 +268,17 @@ export class CaseImport {
     return this.#rows(`SELECT sha FROM case_import_documents WHERE import_id=? AND edition=? ORDER BY at, sha`, importId, edition)
       .map((d) => this.#blob(d.sha)).filter(Boolean);
   }
-  /** R1, R13: a file of an imported edition, by its path, as held: `{path, kind, sha, bytes}`, or null. */
+  /** R1, R13: a file of an imported edition, by its path, as held: `{path, kind, sha, bytes}`, or null. The file is
+   *  read from the parts held for the edition, by the one reader of the format (`case-checker` R19). */
   fileOf({ import: importId = null, edition = null, path = null } = {}) {
     const ed = int(edition);
     const f = str(importId) && ed && str(path)
       ? this.#one(`SELECT * FROM case_import_files WHERE import_id=? AND edition=? AND path=?`, str(importId), ed, str(path)) : null;
     if (!f) return null;
-    const part = this.#one(`SELECT sha FROM case_import_parts WHERE import_id=? AND edition=? AND idx=?`, f.import_id, ed, f.part);
-    const whole = part ? this.#blob(part.sha) : null;
-    const bytes = whole ? whole.slice(Number(f.at_byte), Number(f.at_byte) + Number(f.bytes)) : null;
+    const parts = this.#parts(f.import_id, ed);
+    if (parts.some((p) => !p)) return null;
+    const got = this.#call(() => readCaseFile(parts, shaOf).files.find((x) => x.path === f.path));
+    const bytes = got && got.content instanceof Uint8Array ? got.content : null;
     return bytes && shaOf(bytes) === f.sha ? { path: f.path, kind: f.kind ?? null, sha: f.sha, bytes } : null;
   }
 
@@ -318,12 +320,12 @@ export class CaseImport {
     return rn;
   }
 
-  /* R16: each finding's published pair, from the edition's `finding` files. */
+  /* R16: each finding's published pair, from the edition's `finding` files (`{kind, content}`). */
   #publishedPairs(files) {
     const out = new Map();
     for (const f of files) {
-      if (f.kind !== "finding") continue;
-      const fm = this.#call(() => parseFrontmatter(new TextDecoder().decode(f.bytes)).data);
+      if (f.kind !== "finding" || !(f.content instanceof Uint8Array)) continue;
+      const fm = this.#call(() => parseFrontmatter(new TextDecoder().decode(f.content)).data);
       const id = isObj(fm) ? str(fm.id) : null;
       const pair = publishedPairOf(fm);
       if (id && pair && !out.has(id)) out.set(id, pair);
@@ -331,8 +333,8 @@ export class CaseImport {
     return out;
   }
   #heldFiles(importId, edition) {
-    return this.#rows(`SELECT path FROM case_import_files WHERE import_id=? AND edition=? ORDER BY path`, importId, edition)
-      .map((f) => this.fileOf({ import: importId, edition, path: f.path })).filter(Boolean);
+    const parts = this.#parts(importId, edition);
+    return parts.some((p) => !p) ? [] : this.#call(() => readCaseFile(parts, shaOf).files, []);
   }
 
   /* ================================================================ R1: the import */
@@ -358,15 +360,16 @@ export class CaseImport {
     if (!list.length || list.some((p) => !p))
       return refuse("IMPORT_NOT_A_CASE_FILE", "parts are the case file's parts, each as bytes",
                     { departures: [!list.length ? "no part was given" : `part ${list.findIndex((p) => !p)} is not bytes`] });
-    const read = readCaseFile(list);
-    if (read.departures.length)
-      return refuse("IMPORT_NOT_A_CASE_FILE", "the parts could not be read as a case file", { departures: read.departures });
+    /* The manifest, by the one reader of the format (`case-checker` R19), checked by `case-grammar` R13's check. A file
+       whose bytes differ from the manifest is the checker's to report (its R2), never a refusal here. */
+    const read = this.#call(() => readCaseFile(list, shaOf), { manifest: null, files: [], departures: ["the parts could not be read"] });
     const check = this.#manifestCheck;
-    const departures = typeof check === "function" ? this.#call(() => check(read.manifest), ["the manifest could not be checked"])
+    const checked = !isObj(read.manifest) ? (Array.isArray(read.departures) && read.departures.length ? read.departures : ["no manifest was found"])
+      : typeof check === "function" ? this.#call(() => check(read.manifest), ["the manifest could not be checked"])
       : ["this copy holds no check of a case file's manifest"];
-    const named = Array.isArray(departures) ? departures : departures ? [departures] : [];
+    const named = Array.isArray(checked) ? checked : checked ? [checked] : [];
     if (named.length)
-      return refuse("IMPORT_NOT_A_CASE_FILE", "the manifest departs from the case-file format", { departures: named });
+      return refuse("IMPORT_NOT_A_CASE_FILE", "the parts do not carry a manifest that meets the case-file format", { departures: named });
     const big = list.findIndex((p) => p.length > PART_MAX);
     if (big >= 0)
       return refuse("IMPORT_PART_TOO_LARGE", `part ${big} is ${list[big].length} bytes, over the part bound of ${PART_MAX}`,
@@ -376,13 +379,14 @@ export class CaseImport {
       return refuse("IMPORT_NOT_A_CASE_FILE", "the manifest departs from the case-file format",
                     { departures: ["the manifest does not name its group, case and edition"] });
     /* END DEC-49 REGION is-import-case-file */
-    const listed = CaseImport.#manifestFiles(read.manifest);
-    const docEntry = listed.find((f) => f.kind === "case_document");
-    const docBytes = docEntry && read.files.get(docEntry.path) ? read.files.get(docEntry.path).bytes : null;
+    const listed = new Map(CaseImport.#manifestFiles(read.manifest).map((f) => [f.path, f]));
+    const files = (Array.isArray(read.files) ? read.files : []).filter((f) => isObj(f) && str(f.path) && f.content instanceof Uint8Array);
+    const docFile = files.find((f) => f.kind === "case_document");
+    const docBytes = docFile ? docFile.content : null;
     const fm = docBytes ? this.#call(() => parseFrontmatter(new TextDecoder().decode(docBytes)).data) : null;
     const lensSha = isObj(fm) && isObj(fm.bias_manifest) && isSha(fm.bias_manifest.statements_sha) ? fm.bias_manifest.statements_sha : null;
     const importId = importIdOf({ group: who.group, case: who.case, lens: lensSha });
-    const manifestSha = shaOf(read.manifestBytes);
+    const manifestSha = sha256HexSync(canonicalJson(read.manifest));
     const held = this.#one(`SELECT manifest_sha FROM case_import_editions WHERE import_id=? AND edition=?`, importId, who.edition);
     if (held && held.manifest_sha === manifestSha)
       return { ok: true, existed: true, import: importId, group: who.group, case: who.case, lens: lensSha, edition: who.edition,
@@ -394,8 +398,7 @@ export class CaseImport {
     /* END DEC-49 REGION is-import-case-file */
     const answer = this.#recreate(list, []);
     const at = this.#stamp();
-    const files = listed.map((f) => ({ ...f, entry: read.files.get(f.path) })).filter((f) => f.entry);
-    const published = this.#publishedPairs(files.map((f) => ({ kind: f.kind, bytes: f.entry.bytes })));
+    const published = this.#publishedPairs(files);
     const sourceBar = isObj(fm) && isObj(fm.required_strength) ? fm.required_strength : null;
     const out = this.record.transact(() => {
       if (this.#one(`SELECT 1 AS x FROM case_import_editions WHERE import_id=? AND edition=?`, importId, who.edition))
@@ -414,8 +417,8 @@ export class CaseImport {
                       importId, who.edition, idx, sha, bytes.length);
       });
       for (const f of files)
-        this.sql.exec(`INSERT INTO case_import_files (import_id, edition, path, kind, sha, bytes, part, at_byte) VALUES (?,?,?,?,?,?,?,?)`,
-                      importId, who.edition, f.path, f.kind, shaOf(f.entry.bytes), f.entry.bytes.length, f.entry.part, f.entry.at);
+        this.sql.exec(`INSERT OR IGNORE INTO case_import_files (import_id, edition, path, kind, sha, bytes, part) VALUES (?,?,?,?,?,?,?)`,
+                      importId, who.edition, f.path, str(f.kind), shaOf(f.content), f.content.length, listed.get(f.path)?.part ?? 0);
       this.#recordCheck(importId, who.edition, answer, { cause: "import", by: k.member, at, published });
       return { ok: true };
     });

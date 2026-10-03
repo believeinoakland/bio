@@ -5,29 +5,12 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { seeded, imp, caseFile, V, MACHINE, SOURCE, CASE, LENS, OTHER_LENS, F1, F2, F3, sha, bytes, zip, world }
+import { rowOk, refusedThenAccepted, seeded, imp, caseFile, V, MACHINE, SOURCE, CASE, LENS, OTHER_LENS, F1, F2, F3, sha, bytes, zip, world }
   from "./fixture.mjs";
 import { CASE_IMPORT_CHECKS, CASE_IMPORT_TABLES, PART_MAX, importIdOf, caseImportOps, caseImportOwns }
   from "../../../src/case-import/index.mjs";
 import { canonicalJson } from "../../../src/record-grammar/json.mjs";
 
-export const rowOk = (r, code) => {
-  assert.equal(r.ok, false, JSON.stringify(r).slice(0, 300));
-  assert.equal(r.reason, code);
-  assert.equal(r.code, code);
-  assert.equal(r.check, CASE_IMPORT_CHECKS[code].check);
-  assert.equal(r.translation, CASE_IMPORT_CHECKS[code].translation);
-};
-/* Refused with nothing written anywhere; then the control, accepted. */
-export function refusedThenAccepted(w, bad, good, code) {
-  const before = w.snapshot();
-  const r = bad();
-  rowOk(r, code);
-  assert.deepEqual(w.snapshot(), before, `${code}: nothing written`);
-  const ok = good();
-  assert.equal(ok.ok, true, `${code}'s control: ${JSON.stringify(ok).slice(0, 300)}`);
-  return r;
-}
 const as = (w, file, by, viewer = by) => w.ci.importCaseFile({ parts: file.parts, by, viewer });
 
 test("R1 a machine, an AI credential, an operator token or nobody is MACHINE_CANNOT_IMPORT, first", () => {
@@ -66,9 +49,9 @@ test("R1 parts that are not a case file, or whose manifest fails the manifest ch
                                  () => imp(w, caseFile({ edition: 11 })), "IMPORT_NOT_A_CASE_FILE");
   assert.equal(r2.departures.length, 2);
   assert.ok(r2.departures.some((d) => /format/.test(d)) && r2.departures.some((d) => /group/.test(d)));
-  /* parts whose manifests differ */
-  const a = caseFile({ split: true }), b = caseFile({ split: true, edition: 2 });
-  rowOk(w.ci.importCaseFile({ parts: [a.parts[0], b.parts[1]], by: V("alice"), viewer: V("alice") }), "IMPORT_NOT_A_CASE_FILE");
+  /* a manifest that is not JSON */
+  rowOk(w.ci.importCaseFile({ parts: [zip([{ name: "manifest.json", bytes: bytes("{not json") }])], by: V("alice"), viewer: V("alice") }),
+        "IMPORT_NOT_A_CASE_FILE");
   /* a compressed entry is not a stored part */
   const z = zip([{ name: "manifest.json", bytes: bytes("{}") }]);
   const dv = new DataView(z.buffer); dv.setUint16(8, 8, true);

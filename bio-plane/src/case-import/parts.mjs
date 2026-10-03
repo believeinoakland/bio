@@ -46,14 +46,15 @@ export function readPart(bytes, index) {
   }
 }
 
-/** Every part: the manifest (parsed, and its bytes as the first part holds them), every entry of every part by name with
- *  the part it lies in, and the departures. Parts whose manifests differ depart. */
-export function readCaseFile(parts) {
+/** `case-checker` R19's shape: `{manifest, files: [{path, kind, sha256, bytes, content}], departures}`, each file as the
+ *  manifest lists it (its kind) with the bytes the parts carry (`content`, its `sha256` and `bytes` computed from them).
+ *  Parts whose manifests differ depart. */
+export function readCaseFile(parts, sha256 = null) {
   const departures = [];
-  const files = new Map();
+  const found = new Map();
   let manifest = null, manifestBytes = null;
   const list = Array.isArray(parts) ? parts : [];
-  if (!list.length) return { manifest, manifestBytes, files, departures: ["no part was given"] };
+  if (!list.length) return { manifest, manifestBytes, files: [], departures: ["no part was given"] };
   list.forEach((bytes, index) => {
     const p = readPart(bytes, index);
     departures.push(...p.departures);
@@ -62,7 +63,7 @@ export function readCaseFile(parts) {
     if (!m) { departures.push(`part ${index}: carries no manifest at its root`); return; }
     if (manifestBytes === null) manifestBytes = m.bytes;
     else if (!sameBytes(manifestBytes, m.bytes)) departures.push(`part ${index}: its manifest differs from part 0's`);
-    for (const e of p.entries) if (!MANIFEST_NAMES.includes(e.name) && !files.has(e.name)) files.set(e.name, { ...e, part: index });
+    for (const e of p.entries) if (!MANIFEST_NAMES.includes(e.name) && !found.has(e.name)) found.set(e.name, e.bytes);
   });
   if (manifestBytes !== null) {
     try {
@@ -74,6 +75,15 @@ export function readCaseFile(parts) {
     } catch {
       departures.push("the manifest is not JSON");
     }
+  }
+  const rows = manifest && Array.isArray(manifest.files) ? manifest.files : [];
+  const files = [];
+  for (const r of rows) {
+    const path = r && typeof r.path === "string" ? r.path : null;
+    const content = path ? found.get(path) : null;
+    if (!content) continue;
+    files.push({ path, kind: typeof r.kind === "string" ? r.kind : null, sha256: sha256 ? sha256(content) : null,
+                 bytes: content.length, content });
   }
   return { manifest, manifestBytes, files, departures };
 }
