@@ -25,3 +25,7 @@ None. `newgroup/dist/newgroup.bundled.mjs` (mine) is rebuilt and fresh. Noted, n
 - `checks/format.mjs`: 0 failures. `checks/architecture.mjs bio installer`: 0 failures. `checks/coverage.mjs bio installer`: 35 of 35 live ids named, 0 failures. `checks/ownership.mjs bio installer tranche/T31`: 6 files, 0 failures.
 
 Size (session_01Ex7oYmPtwwinSZN6zJhg1w): test runs 6, module lines 2023
+
+## J1 · COMPLETE
+
+COMPLETE: N538 R22 (Civicsmith on every page, one PRODUCT constant; the invitation page renamed; newgroup/dist rebuilt, fresh 4/0) and N528 R35 (the invitation page's Google Fonts head removed, the Worker's system stacks; a test over every page served, streamed and the invitation page) met at the interface, each named by its test with a negative control. Branch job/T31/installer @ 87937b8fc7. newgroup/test requirements 33/0/2 (R13, R24 todos stay); wizard 207/0; embed 23/0; fleetbundles 1/0. Checks: format, architecture, coverage (35/35), ownership all 0 failures. The not-yet-met marks on R22 and R35 are yours to strike. release.mjs untouched (next signed release). Details in the record.
