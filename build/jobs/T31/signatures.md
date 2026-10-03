@@ -12,6 +12,6 @@
 
 **Found elsewhere** · `bio-plane/dist/bio-plane.bundled.mjs` (the plane bundle, BOB's at the close, manifest) now holds the stale `SIGN_HTML` with the old name; regenerate at the layer close. No other module's test names the page's strings (`git grep`).
 
-**Runs** · `node --test test/m/signatures/` (from `bio-plane/`): tests 72, pass 72, fail 0, skipped 0. Checks: `format: 98 modules, 97 requirements files; 0 failures`; `architecture: 8 product files, 7 relative imports (0 naming no tracked file, not judged); 0 failures`; `coverage: 1 modules, 41 of 41 live requirement ids named by a test; 0 failures`; ownership re-run after the commit (below). R32's `*(not yet met: T31)*` mark is in `build/requirements/signatures.md`, BOB's to strike.
+**Runs** · `node --test test/m/signatures/` (from `bio-plane/`): tests 72, pass 72, fail 0, skipped 0. Checks: `format: 98 modules, 97 requirements files; 0 failures`; `architecture: 8 product files, 7 relative imports (0 naming no tracked file, not judged); 0 failures`; `coverage: 1 modules, 41 of 41 live requirement ids named by a test; 0 failures`; `ownership: 5 files changed by signatures between tranche/T31 and HEAD; 0 failures`. R32's `*(not yet met: T31)*` mark is in `build/requirements/signatures.md`, BOB's to strike.
 
 Size (session_01JojTP81KLXqohStkarosgE): test runs 2, module lines 1329
