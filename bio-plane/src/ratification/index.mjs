@@ -628,13 +628,14 @@ export class Ratification {
 
   /* R35 (DEC-102 items 1, 2; K1074): each roster member's testimony legs on an observation whose level in force for
      this edition (publication's attribution facts) is `group` or `project` that strength answers uncorroborated (its
-     R30), as `{member, observation}`, judged at its pinned bytes: the reading the document records for it
+     R30), as `{member, observation}`, and its legs on a document whose off-the-record capture's attesting member is at
+     those levels (publication R60, strength R34; DEC-119 (3)), as `{member, document}`; judged at its pinned bytes: the reading the document records for it
      (`case_conclusions[].version`), its live basis only where it records none. Read as the plane: the pre-flight runs
      before a signer exists and must answer as the act does. No such level asks nothing. */
   #uncorroborated(text, attr) {
     const fm = parseFrontmatter(String(text ?? "")).data || {};
     const levels = Object.fromEntries((attr && Array.isArray(attr.current) ? attr.current : [])
-      .filter((x) => x.level).map((x) => [x.observation, x.level]));
+      .filter((x) => x.level).map((x) => [x.observation || x.capture, x.level]));
     if (!Object.values(levels).some((l) => l === "group" || l === "project")) return [];
     const out = [];
     for (const m of (Array.isArray(fm.case_findings) ? fm.case_findings : []).map((x) => String(x ?? "").trim())) {
@@ -642,7 +643,8 @@ export class Ratification {
       const a = this.strength.testimonyCorroboration({ inquiry: m, levels, viewer: PLANE_VIEWER,
         version: version === undefined || version === null || version === "null" ? null : String(version) });
       for (const l of a && a.ok && Array.isArray(a.legs) ? a.legs : [])
-        if (l.state === "uncorroborated") out.push({ member: m, observation: l.target_id });
+        if (l.state === "uncorroborated")
+          out.push(l.kind === "evidence" ? { member: m, document: l.target_id } : { member: m, observation: l.target_id });
     }
     return out;
   }
@@ -784,7 +786,9 @@ export class Ratification {
       if (denied) return denied;
       /* ===== END REC-137 ================================================================ */
       if (doc.ratified_at) {
-        if (doc.sig_armored === sigArmored) return { ok: true, existed: true, caseId: id, edition: ed };
+        if (doc.sig_armored === sigArmored)   /* R39: a retry re-copies what the commit held in the evidence store */
+          return { ok: true, existed: true, caseId: id, edition: ed,
+                   evidenceMaterials: evidenceShas(this.publication.heldMaterialsOf?.(id, ed)) };
         return { ok: false, reason: "CASE_EDITION_ALREADY_RATIFIED", caseId: id, edition: ed,
                  detail: `case ${id} edition ${ed} is already ratified under a different signature. An `
                        + `edition is a separate document and answers forever — a second attestation over the `
@@ -913,24 +917,29 @@ export class Ratification {
         }),
         sigArmored, attestorKey, attestorMember: attestorMember ?? null, gateVersion, deliveredBy: deliveredBy ?? null });
       if (!committed || !committed.ok) return committed || { ok: false, reason: "CASE_PUBLISH_FAILED", caseId: id, edition: ed };
-      if (committed.existed) return { ok: true, existed: true, caseId: id, edition: ed };
+      const evidenceMaterials = evidenceShas(committed.materials ?? this.publication.heldMaterialsOf?.(id, ed));   /* R39 */
+      if (committed.existed) return { ok: true, existed: true, caseId: id, edition: ed, evidenceMaterials };
       /* R3, publication R5: a ratified newer edition discharges the case's outstanding revision flags, stamped with
          who ratified it and when; never deleted (set-but-never-clear). */
       this.publication.dischargeCaseFlags(id, ed, attestorMember ?? null, now);
-      /* R36 (DEC-102 item 2): each observation this edition reaches whose level in force (stated in the signed bytes,
-         C-92.11) differs from its level at the case's previous ratified edition is told to reevaluation (its R29), in
-         this transaction, once. A first edition, or an observation the previous edition did not reach, tells nothing. */
+      /* R36 (DEC-102 item 2): each observation this edition reaches, and each off-the-record capture's attesting member
+         (a row keyed `capture`, publication R60; DEC-119 (3)), whose level in force (stated in the signed bytes, C-92.11)
+         differs from its level at the case's previous ratified edition is told to reevaluation (its R29, R32), in this
+         transaction, once. A first edition, or one the previous edition did not reach, tells nothing. */
       const prior = this.#one(`SELECT text FROM case_documents WHERE case_id=? AND edition<? AND ratified_at IS NOT NULL
                                 ORDER BY edition DESC LIMIT 1`, id, ed);
       const levelsIn = (text) => {
         const rows = (parseFrontmatter(text).data || {}).observation_attributions;
-        return new Map((Array.isArray(rows) ? rows : []).filter((x) => x && x.observation && x.level && x.level !== "null")
-          .map((x) => [String(x.observation), String(x.level)]));
+        return new Map((Array.isArray(rows) ? rows : []).filter((x) => x && (x.observation || x.capture) && x.level
+          && x.level !== "null").map((x) => [x.observation ? `observation ${x.observation}` : `capture ${x.capture}`,
+                                             String(x.level)]));
       };
       const was = prior ? levelsIn(prior.text) : new Map();
-      for (const [observation, to] of prior ? levelsIn(doc.text) : [])
-        if (was.has(observation) && was.get(observation) !== to)
-          this.reevaluation.levelMoved({ observation, from: was.get(observation), to, case: id, edition: ed, at: now });
+      for (const [k, to] of prior ? levelsIn(doc.text) : []) {
+        const [kind, key] = k.split(" ");
+        if (was.has(k) && was.get(k) !== to)
+          this.reevaluation.levelMoved({ [kind]: key, from: was.get(k), to, case: id, edition: ed, at: now });
+      }
       const completedCase = committed.state && committed.state.complete && !committed.state.manifest_sha
         ? committed.state : null;
       this.record.afterCommit(() => { seals = this.#openSeals(id, ed); });   /* R37 */
@@ -940,7 +949,7 @@ export class Ratification {
                statement: { author: fm.completeness && typeof fm.completeness === "object"
                               ? (fm.completeness.author ?? null) : null,
                             by: stmtWriter.by, stated: stmtWriter.stated },
-               ...(completedCase ? { completedCase } : {}),
+               ...(completedCase ? { completedCase } : {}), evidenceMaterials,
                members: roster.map((m) => {
                  const r = rows.find((x) => x.target === m) || {};
                  return { bundle_id: m, role: r.role ?? null, version_sha: r.version_sha ?? null };
@@ -1147,6 +1156,11 @@ export class Ratification {
                     connections: this.connections }, a);
   }
 }
+
+/* R39: the SHA-256s of the materials publication's commit (its R57) or `heldMaterialsOf` answers held only in the
+   evidence store, from a list or `{materials}`; anything else is none. */
+const evidenceShas = (x) => (Array.isArray(x) ? x : Array.isArray(x?.materials) ? x.materials : [])
+  .filter((m) => m && m.held === "evidence" && typeof m.sha === "string").map((m) => m.sha);
 
 const instances = new WeakMap();
 

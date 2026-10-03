@@ -18,11 +18,12 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, plane, newKey, signBundle, signCase, cleanInfoMd, sha, V, SILENT, NOW } from "./fixture.mjs";
 import { caseRatifyOp, ratifyOp } from "../../../src/ratification/ops.mjs";
+import { methodBlockLines, materialBlockLines } from "../../../src/case-grammar/index.mjs";
 import { checkCaseDocument, CASE_DOCUMENT_FAMILY, caseConclusionRowLines } from "../../../src/ratification/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { CASE_AUTHORITY_CHECKS, PROJECT_AUTHORITY_CHECKS } from "../../../src/membership/index.mjs";
 
-/* ================================================================ a /5 case document, in op=publish's shape */
+/* ================================================================ a /6 case document, in op=publish's shape */
 
 const SCOPE = "Whether the FY2024 transfer was authorised and whether notice was given, on the documents in hand.";
 const STMT = "This case covers the FY2024 transfer only, on the documents in hand at edition 1.";
@@ -32,14 +33,16 @@ const BACK = "This group holds a declared position that transfers should be adop
 const EXCL_D = "the FY2023 comparison memo", EXCL_R = "a records request for it is still outstanding with the City Clerk";
 const LEFT = "INFO-2026-7700-left-out", MEMO = "INFO-2026-7700-memo";
 
-/** The /5 text op=publish authors (case-authoring's `caseDocumentText`), written out line for line for `members`
+/** The /6 text op=publish authors (case-authoring's `caseDocumentText`), written out line for line for `members`
  *  ([{id, pin, role}]) with `conclusions` rows ([[member, conclusion]], ratification's own row writer). Each member is
  *  frozen at its edition 1 with capture honestly unrated and connection graded D on testimony, no stronger than MEMO;
  *  the searched section reports three levels, each partial with the case's two unresolvable referents. */
 function publishedCaseText({ caseId, edition = 1, project, members, conclusions = [], at = "2026-07-02T00:00:00Z" }) {
   const q = (s) => `"${s}"`;
   const fm = [
-    "---", "format: bio-case-document/5", `case_id: ${caseId}`, `case_edition: ${edition}`, `case_project: ${project}`,
+    "---", "format: bio-case-document/6", `case_id: ${caseId}`, `case_edition: ${edition}`, `case_project: ${project}`,
+    /* K1321: op=publish writes /6 (publication R58), with its method and (here empty) materials blocks */
+    ...methodBlockLines({ grading: "bio-grading/1", checks: "1.57.0" }), ...materialBlockLines({}),
     `case_scope: ${q(SCOPE)}`, `bias_acknowledgement: ${q(BACK)}`,
     "bias_manifest:", "  in_force: false", "  scope: project", `  scope_id: ${project}`, "  statements_sha: null",
     "  lock_violations: 0", `  stated: "no manifest was in force"`, "  pins_proposed: 0",
@@ -120,10 +123,10 @@ const CASESIGN_ARMS = [
   ["WORKING_ON", "C-41.17", (d) => { d.working_on = "PROJ 2026"; return d; }],   /* R38 */
 ];
 
-test("R8, R38 (casesign §7): the case gate draws no finding over a /5 document in op=publish's shape, and each of C-41.1–C-41.17 is what CASE_DOCUMENT_FAMILY declares and fires on its own mutation; the arms cover the family exactly", () => {
+test("R8, R38 (casesign §7): the case gate draws no finding over a /6 document in op=publish's shape, and each of C-41.1–C-41.17 is what CASE_DOCUMENT_FAMILY declares and fires on its own mutation; the arms cover the family exactly", () => {
   const { data: fm, body } = parsed();
   const ctx = { caseId: CASE, edition: 1 };
-  assert.equal(fm.format, "bio-case-document/5");
+  assert.equal(fm.format, "bio-case-document/6");
   assert.deepEqual(fm.case_findings, [LEAD, SUPP], "the flow-list roster op=publish writes parses as the roster");
   assert.deepEqual(checkCaseDocument(fm, ctx), [], "the baseline: without it every arm below proves only that the gate fires");
   assert.deepEqual(checkCaseDocument(fm, { ...ctx, body }), [], "and with its body");
@@ -173,7 +176,7 @@ async function caseCeremony() {
   return { w, P, text, store, run };
 }
 
-test("R2, R8 (casesign §3, §7): op=caseratify runs the registered case gate over a /5 document in op=publish's shape and commits it; the same document with its scope emptied is GATE_REFUSED C-41.5 and commits nothing", async () => {
+test("R2, R8 (casesign §3, §7): op=caseratify runs the registered case gate over a /6 document in op=publish's shape and commits it; the same document with its scope emptied is GATE_REFUSED C-41.5 and commits nothing", async () => {
   const bad = await caseCeremony();
   const refused = await bad.run(bad.store(bad.text.replace(`case_scope: "${SCOPE}"`, `case_scope: ""`)));
   assert.deepEqual([refused.status, refused.body.reason, refused.body.findings.map((x) => x.check)], [409, "GATE_REFUSED", ["C-41.5"]]);
@@ -249,7 +252,7 @@ test("R4, R9 (casesign §4): a finding whose own bytes name a case is GATE_REFUS
 
 /* ================================================================ d442-publish-writes-nothing */
 
-test("R8 (d442 §5): over a /5 document in op=publish's shape, with its body and each member's basis, the case gate draws no error; each moved block removed fires by name — a member's capture row or edition C-2.8 naming the member, the section C-3.1 alone, a testimony-graded leg at the pin C-2.8; a /1 document is still read, and an unknown format is C-41.1", () => {
+test("R8 (d442 §5): over a /6 document in op=publish's shape, with its body and each member's basis, the case gate draws no error; each moved block removed fires by name — a member's capture row or edition C-2.8 naming the member, the section C-3.1 alone, a testimony-graded leg at the pin C-2.8; a /1 document is still read, and an unknown format is C-41.1", () => {
   const { data: fm, body } = parsed();
   const ctx = { caseId: CASE, edition: 1, body, memberBasis: { [LEAD]: [], [SUPP]: [] } };
   assert.deepEqual(errorsOf(checkCaseDocument(fm, ctx)), [], "the non-empty guard for the arms below");

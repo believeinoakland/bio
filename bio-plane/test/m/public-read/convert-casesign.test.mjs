@@ -13,7 +13,7 @@ import { mkdtempSync, writeFileSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { execFileSync, spawnSync } from "node:child_process";
-import { world, stubOf, bucket, V, NOW, sha } from "./fixture.mjs";
+import { world, stubOf, bucket, V, NOW, sha, legacyCaseCommit } from "./fixture.mjs";
 import { bindPublishedPlane, publishedRoutes, assembleCaseContainer } from "../../../src/publication/worker.mjs";
 import { caseRatifyStatement, ratifyStatement, NS_RATIFY } from "../../../src/sshsig.mjs";
 import { readContainer, readPart } from "../../../src/ooxml.mjs";
@@ -70,15 +70,15 @@ function signedCase(dir) {
   w.inquiry(F, { question: QUESTION_1 });
   const pin = w.head(F);
   const text = w.text(F);
-  const prepared = w.prepare(CASE, 1, { project: proj, roles: [{ target: F, version_sha: pin }],
+  const prepared = w.prepare(CASE, 1, { format: "bio-case-document/5", project: proj, roles: [{ target: F, version_sha: pin }],
                                         strength: [{ target: F, axis: "capture", grade: "B" }], author: "iris" });
   const iris = signer(dir, "iris");
   const caseArmored = iris.sign(caseRatifyStatement(CASE, 1, prepared.doc_sha));
-  const committed = w.record.transact(() => w.p.commitCaseEdition({ case: CASE, edition: 1, project: proj,
-    scope: "The question.", completeness: { statement: "It leaves out the minutes.", author: V("iris") },
-    biasAcknowledgement: "none declared", bar: null, roster: [{ bundle_id: F, version_sha: pin }],
-    sigArmored: caseArmored, attestorKey: iris.keyB64, attestorMember: "iris", gateVersion: "plane-gate/test",
-    deliveredBy: V("iris"), at: NOW }));
+  /* A /5 edition, so one signed before T28 (publication R58): its rows as its commit wrote them then. */
+  const committed = legacyCaseCommit(w, { case: CASE, edition: 1, project: proj,
+    completeness: { statement: "It leaves out the minutes.", author: V("iris") },
+    roster: [{ bundle_id: F, version_sha: pin }],
+    sigArmored: caseArmored, attestorKey: iris.keyB64, attestorMember: "iris", deliveredBy: V("iris"), at: NOW });
   assert.equal(committed.ok, true, `commitCaseEdition: ${JSON.stringify(committed).slice(0, 300)}`);
   const findingArmored = iris.sign(ratifyStatement(F, pin));
   const edition = w.record.transact(() => w.p.commitEdition({ bundleId: F, bundleSha: pin, title: `Finding ${F}`,

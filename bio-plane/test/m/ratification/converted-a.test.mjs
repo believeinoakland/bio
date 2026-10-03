@@ -196,20 +196,22 @@ const d84Docs = () => {
   return { FA: read(plain, CASE_BODY), FB: read(lensed(plain), LENS_BODY) };
 };
 
-test("R8 (d84 §1, §2): the case gate promotion runs with this module's catalogue accepts a /5 document with no lens in force and one naming each pair and the hash", async () => {
+test("R8 (d84 §1, §2): the case gate promotion runs with this module's catalogue accepts a /6 document, and a /5 one as written, with no lens in force and one naming each pair and the hash", async () => {
   const w = world();
   const { FA, FB } = d84Docs();
   assert.deepEqual([FA.format, FA.bias_manifest.in_force, FA.bias_manifest.stated, FA.bias_manifest_bundles],
-    ["bio-case-document/5", false, "no manifest was in force", []]);
+    ["bio-case-document/6", false, "no manifest was in force", []]);
   assert.deepEqual([FB.bias_manifest.in_force, FB.bias_manifest.statements_sha, FB.bias_manifest_bundles.length],
     [true, LENS_SHA, 2]);
-  for (const [fm, body] of [[FA, CASE_BODY], [FB, LENS_BODY]]) {
+  /* K1321: the catalogue still accepts a /5 document as written (case-grammar R1); only publication's commit refuses it */
+  const v5 = ({ method, materials, material_attestations, ...rest }) => ({ ...rest, format: "bio-case-document/5" });
+  for (const [fm, body] of [[FA, CASE_BODY], [FB, LENS_BODY], [v5(FA), CASE_BODY], [v5(FB), LENS_BODY]]) {
     const g = w.promotion.runCaseGate({ caseId: CASE, edition: 1, fm, priorCase: null, body });
     assert.deepEqual([g.ok, g.findings.map((x) => x.check)], [true, []], fm.bias_manifest.stated);
   }
 });
 
-test("R2, R8 (d84 §2): a /5 case document stamped with a lens in force is signed through op=caseratify", async () => {
+test("R2, R8 (d84 §2): a /6 case document stamped with a lens in force is signed through op=caseratify", async () => {
   const { w, run } = await caseWorld({ mutate: (d, P) => lensed(d, P), body: LENS_BODY });
   const r = await run();
   assert.deepEqual([r.status, r.body.ok], [200, true], JSON.stringify(r.body).slice(0, 400));

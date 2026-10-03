@@ -19,6 +19,14 @@ import { promotionOf } from "../../../src/promotion/index.mjs";
 import { publicationOf } from "../../../src/publication/index.mjs";
 import { ratificationOf, ratificationOps } from "../../../src/ratification/index.mjs";
 import { ratifyStatement, caseRatifyStatement, NS_RATIFY } from "../../../src/sshsig.mjs";
+import { methodBlockLines, materialBlockLines } from "../../../src/case-grammar/index.mjs";
+import { GRADING_METHOD_VERSION } from "../../../src/strength/method.mjs";
+import { CATALOG_VERSION } from "../../../src/promotion/index.mjs";
+
+/* K1321: every case document these fixtures sign is `/6` (publication R58 refuses committing any other), with its
+   `method:` block and its `materials:` and `material_attestations:` blocks (empty), written by case-grammar's own
+   writers (its R11, R12). */
+const METHOD = Object.freeze({ grading: GRADING_METHOD_VERSION, checks: CATALOG_VERSION });
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -266,17 +274,17 @@ export function projMd(title) {
           "references: []", "state_history: []", "---", "", "## Objective", "", "Find out.", ""].join("\n");
 }
 
-/** A /5 case document's text (the format op=publish authors) over `members` ([{id, pin, role}]), with `conclusions` rows ([[member, conclusion]])
+/** A /6 case document's text (the format op=publish authors) over `members` ([{id, pin, role}]), with `conclusions` rows ([[member, conclusion]])
  *  written by this module's one writer, and `extra` frontmatter lines. */
 export function caseMd({ caseId, edition, project, members, conclusions = [], extra = [], rowLines }) {
-  return ["---", "format: bio-case-document/5", `case_id: ${caseId}`, `case_edition: ${edition}`,
+  return ["---", "format: bio-case-document/6", `case_id: ${caseId}`, `case_edition: ${edition}`,
     `case_project: ${project}`, `case_scope: "whether the permits were issued as the minutes say"`,
     `bias_acknowledgement: "we expected the permits were late"`,
     "case_findings:", ...members.map((m) => `  - ${m.id}`),
     "case_roles:", ...members.flatMap((m) => [`  - target: ${m.id}`, `    role: ${m.role || "load_bearing"}`,
                                               `    version_sha: ${m.pin}`, `    edition: 1`]),
     ...(conclusions.length ? ["case_conclusions:", ...conclusions.flatMap(([m, c]) => rowLines(m, c))] : []),
-    ...extra, "---", "", "# Case", "", "## What This Excludes", "", "Nothing named.", "",
+    ...methodBlockLines(METHOD), ...materialBlockLines({}), ...extra, "---", "", "# Case", "", "## What This Excludes", "", "Nothing named.", "",
     "## What Changed in This Edition, and Why", "", "The roster was revised.", ""].join("\n");
 }
 
@@ -312,11 +320,11 @@ export function cleanInfoMd(id) {
     "## Provenance Notes", "", "None.", "", "## Review Notes", "", "## Session Log", ""].join("\n");
 }
 
-/** A catalogue-clean bio-case-document/5 as an object, the format op=publish authors, with its tension section empty
+/** A catalogue-clean bio-case-document/6 as an object, the format op=publish authors, with its tension section empty
  *  (`checkCaseDocument` draws no finding over it). */
 export function cleanCase({ caseId, edition, project, members }) {
   return {
-    format: "bio-case-document/5", case_id: caseId, case_edition: edition, case_project: project,
+    format: "bio-case-document/6", case_id: caseId, case_edition: edition, case_project: project,
     case_scope: "whether the permits were issued as the minutes say", bias_acknowledgement: "we expected them late",
     case_findings: members.map((m) => m.id),
     case_roles: members.map((m, i) => ({ target: m.id, role: i ? "supporting" : "load_bearing", version_sha: m.pin, edition: 1 })),
@@ -332,6 +340,7 @@ export function cleanCase({ caseId, edition, project, members }) {
     case_strength: members.flatMap((m) => [{ target: m.id, axis: "capture", state: "unrated", grade: null },
                                            { target: m.id, axis: "connection", state: "unrated", grade: null }]),
     case_strength_grounds: [], case_tensions: [], case_tension_sentences: [], case_tensions_unread: [],
+    method: { ...METHOD }, materials: [], material_attestations: [],
   };
 }
 export const CASE_BODY = "# Case\n\n## What This Excludes\n\nNothing named.\n\n## What Changed in This Edition, and Why\n\nThe roster was revised.\n";

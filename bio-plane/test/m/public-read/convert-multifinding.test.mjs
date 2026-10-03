@@ -66,7 +66,7 @@ function twoMemberCase() {
   const pins = { [FIND_A]: w.head(FIND_A), [FIND_B]: w.head(FIND_B) };
   const texts = { [FIND_A]: w.text(FIND_A), [FIND_B]: w.text(FIND_B) };
   const roles = [FIND_A, FIND_B].map((t) => ({ target: t, version_sha: pins[t] }));
-  w.prepare(CASE, 1, { project: proj, roles, strength: PAIRS });
+  w.prepare(CASE, 1, { format: "bio-case-document/5", project: proj, roles, strength: PAIRS });
   const signed = w.signCase(CASE, 1, { project: proj, bar: NO_BAR,
     roster: roles.map((r) => ({ bundle_id: r.target, version_sha: r.version_sha, role: "load_bearing" })) });
   assert.equal(signed.ok, true, JSON.stringify(signed));
@@ -180,7 +180,7 @@ test("R3 (edited member leaves) a member whose bytes move after the case pinned 
   const cMd = w.text(FIND_C), pin = w.head(FIND_C);
   const C_CASE = "CASE-2026-4410";
   /* prepared and not signed: nothing on the public index names it */
-  w.prepare(C_CASE, 1, { project: proj, roles: [{ target: FIND_C, version_sha: pin }] });
+  w.prepare(C_CASE, 1, { format: "bio-case-document/5", project: proj, roles: [{ target: FIND_C, version_sha: pin }] });
   const before = w.read("publishedmanifest");
   assert.deepEqual([before.cases.some((c) => c.case_id === C_CASE), before.caseMembers.some((m) => m.case_id === C_CASE)],
                    [false, false], "an unsigned case document commits nothing to the public index");
@@ -300,9 +300,9 @@ test("R4 (awaiting window, caseMembers, altitudes) publishedmanifest carries a r
   /* a second case, signed and never published by any member, and a third, prepared and never signed */
   w.inquiry(FIND_C);
   const pinC = w.head(FIND_C);
-  w.prepare("CASE-2026-4410", 1, { project: w.pr.publishedCase({ id: CASE }).project, roles: [{ target: FIND_C, version_sha: pinC }] });
+  w.prepare("CASE-2026-4410", 1, { format: "bio-case-document/5", project: w.pr.publishedCase({ id: CASE }).project, roles: [{ target: FIND_C, version_sha: pinC }] });
   w.signCase("CASE-2026-4410", 1, { project: w.pr.publishedCase({ id: CASE }).project, roster: [{ bundle_id: FIND_C, version_sha: pinC }] });
-  w.prepare("CASE-2026-4420", 1, { project: w.pr.publishedCase({ id: CASE }).project, roles: [{ target: FIND_C, version_sha: pinC }] });
+  w.prepare("CASE-2026-4420", 1, { format: "bio-case-document/5", project: w.pr.publishedCase({ id: CASE }).project, roles: [{ target: FIND_C, version_sha: pinC }] });
 
   const now = expand(w.read("publishedmanifest"));
   assert.deepEqual(understated(now, "publishedmanifest"), [], "the complete edition: every ratified member's pair, no awaited member's");
