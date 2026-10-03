@@ -20,8 +20,8 @@
  * to every later caller. `deps`:
  *   publication    `caseEditionState` (its R53), `soleCase` (its R54), `caseDocMemberFrozen` (its R55), and its
  *                  storage, whose tables it reads under its R40 (default: `publicationOf(host)`).
- *   docket         `withdrawalOf` (its R12), `lastEntryOf`, `docketPublic` (its R14) and `docketFeed` (its R15), for
- *                  R20 and R21:
+ *   docket         `withdrawalOf` (its R12), `lastEntryOf`, `docketPublic` (its R14, and its R24's `captures: "omit"`)
+ *                  and `docketFeed` (its R15), for R20, R21 and R25:
  *                  the docket's public answers, which this module serves and never composes (N520; default:
  *                  `docketOf(host)`).
  *   storage        the Durable Object's storage (default: the host's).
@@ -228,10 +228,12 @@ export class PublicRead {
   /** R21 (DEC-116 item 8; DEC-100 item 2): a case's docket, `docket.docketPublic` (its R14), served with no credential
    *  (R10): `{...its answer, ok: true, case}`, a promise as the docket's read is. A case the docket answers null for
    *  (absent, or with no ratified edition) is `publishedCase`'s own `NOT_PUBLISHED` answer for an absent case, taken
-   *  from `publishedCase` itself, so the two are the same bytes by construction and C-98.8 keeps its one site. */
-  async docketPublic(caseId) {
+   *  from `publishedCase` itself, so the two are the same bytes by construction and C-98.8 keeps its one site.
+   *  R25 (DEC-101 (3); N534): `captures` exactly `"omit"` is handed on as `captures: "omit"` (`docket` R24: no
+   *  capture's bytes read or answered), for a citing copy's daily read; any other value, or none, hands on nothing. */
+  async docketPublic(caseId, captures = null) {
     const c = str(caseId);
-    const d = c ? await this.docket.docketPublic({ case: c }) : null;
+    const d = c ? await this.docket.docketPublic({ case: c, ...(captures === "omit" ? { captures: "omit" } : {}) }) : null;
     if (d == null) return this.#absentCase();
     return { ...d, ok: true, case: c };
   }
@@ -1290,8 +1292,8 @@ export function publicReadOps(r, url) {
     publishedlist: () => r.publishedList(),
     /* R18: a registered read by its name, handed only the parameters it declared (R10). */
     publicread: () => r.publicRead(q("name"), Object.fromEntries(url.searchParams)),
-    /* R21: the docket and its feed, by case, under R10's terms. */
-    docketpublic: () => r.docketPublic(q("case")),
+    /* R21: the docket and its feed, by case, under R10's terms; R25: the docket with its captures' bytes left out. */
+    docketpublic: () => r.docketPublic(q("case"), q("captures")),
     docketfeed: () => r.docketFeed(q("case")),
     /* R23: what a case edition's case file carries, for the Worker's assembly (R6); internal, routed by no door. */
     casefilefacts: () => r.caseFileFacts(q("caseId"), q("edition")),

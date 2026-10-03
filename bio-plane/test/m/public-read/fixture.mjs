@@ -14,12 +14,13 @@ export { cursor, V, SIG, NOW, KEY, sha, caseDoc, inquiryMd } from "../publicatio
 
 /** A docket on its public interface (`docket` R12, R14, R15): `withdrawalOf`, `lastEntryOf`, `docketPublic`, `docketFeed`, over cases
  *  a test declares (`cases`) and the public entries and withdrawals it places (`place`). A case it does not hold answers
- *  null, as an absent one; `calls` records every read, so a test can see what was asked and that nothing was written. */
+ *  null, as an absent one; `calls` records every read, so a test can see what was asked and that nothing was written;
+ *  `publicAsked` holds each argument `docketPublic` was handed, whole, so a test sees every key it carried (R25). */
 export function docketOn({ cases = [] } = {}) {
   const held = new Map(cases.map((c) => [c, []]));
-  const calls = [];
+  const calls = [], publicAsked = [];
   const d = {
-    held, calls,
+    held, calls, publicAsked,
     hold(c) { if (!held.has(c)) held.set(c, []); return d; },
     /* a public entry: `{seq, date, kind, edition, reason, digest}` as `docket` R6 and R12 state them */
     place(c, entry) { d.hold(c); held.get(c).push({ ...entry }); return d; },
@@ -35,14 +36,21 @@ export function docketOn({ cases = [] } = {}) {
       const es = held.get(c) || [];
       return es.length ? es[es.length - 1].date : null;
     },
-    /* async, as `docket` answers it (B3): `{ok, case, group, entries, captures, last_entry, feed}` */
-    async docketPublic({ case: c }) {
+    /* async, as `docket` answers it (B3): `{ok, case, group, entries, captures, last_entry, feed}`; each listed entry's
+       capture (`capture: {sha256}`) by its hash, unless asked with `captures: "omit"` (`docket` R24): then `captures` is
+       `{}` and the answer adds `captures_omitted: true` */
+    async docketPublic(arg) {
+      publicAsked.push(arg);
+      const { case: c, captures: mode } = arg || {};
       calls.push(["docketPublic", c]);
       if (!held.has(c)) return null;
+      const omit = mode === "omit";
       const entries = held.get(c).map((e) => ({ seq: e.seq, entry: `${c}#${e.seq}`, digest: e.digest ?? null,
         json: JSON.stringify(e), fields: { ...e }, signature: "-----BEGIN SSH SIGNATURE-----", published_at: e.date,
         taken_back: null }));
-      return { ok: true, case: c, group: "parks-group", entries, captures: {},
+      const captures = {};
+      if (!omit) for (const e of held.get(c)) if (e.shelf === "listed" && e.capture) captures[e.capture.sha256] = `Ynl0ZXM6${e.seq}`;
+      return { ok: true, case: c, group: "parks-group", entries, captures, ...(omit ? { captures_omitted: true } : {}),
                last_entry: entries.length ? entries[entries.length - 1].fields.date : null,
                feed: `op=docketfeed&case=${encodeURIComponent(c)}` };
     },
