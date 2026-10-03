@@ -23,12 +23,12 @@ Terms.
   - `openFlags({ref, edition, viewer})` answers `{flags: [{flag, finding, issue, at}], complete}`. It covers the open flags on that edition, both the edition's own and the named finding's.
   - `withdrawals({after, limit})` answers `{withdrawals: [{withdrawal, import, edition, refs, at}], cursor}` in withdrawal order.
 
-  The registration may also carry a fourth function, `moves` (R8). A registration without it is accepted. (DEC-96 items 1, 2, 4; DEC-101 (3)) *(not yet met: T31: the optional `moves`)*
+  The registration may also carry a fourth function, `moves` (R8). A registration without it is accepted. (DEC-96 items 1, 2, 4; DEC-101 (3))
 - **R2** `acceptedFinding`, `openFlagsOn`, `acceptanceWithdrawals` and `publisherMoves` (R8) take the same arguments and answer the registered functions' answers.
   - With none registered, each answers `{absent: true}`, stated as `accepted_work_absent`.
   - When the registered function throws, each answers `{unreadable: true}`.
 
-  None of them writes or throws. They are the one way `strength`, `reevaluation`, `basis-versions` and `publication` read accepted work. (P4; DEC-96) *(not yet met: T31: `publisherMoves`)*
+  None of them writes or throws. They are the one way `strength`, `reevaluation`, `basis-versions` and `publication` read accepted work. (P4; DEC-96)
 
 **acceptedLegRefusals({legs, viewer})**
 
