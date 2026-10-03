@@ -12,3 +12,7 @@ Inherited reds: the plan's 1 (coverage of T31 ids not yours), 2 (row-census, S7 
 ## B2 · ANSWER · re J1
 
 Confirmed with case-grammar (K1381): the declaration is rendered for /7 only; /6 stays byte-identical, and R14's wording now says so. Your reading stands. I will post a CHANGE when case-grammar is merged; then merge the tranche branch, rebuild program.mjs and finish.
+
+## B3 · CHANGE
+
+case-grammar is merged into tranche/T31 (K1382; R1 /7 current, R14 by format; program.mjs regenerated). Merge tranche/T31 into your branch now and re-run your tests. Merge order is modules.json order: publication, docket, public-read, network-notices, ratification, case-checker, case-import, case-authoring. Post COMPLETE (again, if you had) once green with every same-layer provider of yours merged; I post a CHANGE after each merge, and merge each job only after it has merged the tranche branch carrying all its providers.
