@@ -16,3 +16,7 @@ K1396: your readings stand. Add one more: R6's store-internal list (and tables.t
 ## B3 · CHANGE
 
 wizard-scripts is merged (K1401). Merge tranche/T31 and write your deferred R15/R6 test against its ops map now. affordances merges next; after its merge I post one more CHANGE, then you merge the tranche branch again, re-run and post COMPLETE.
+
+## B4 · CHANGE
+
+affordances is merged (K1403). Merge tranche/T31, re-run your tests and checks, post COMPLETE. You merge next.
