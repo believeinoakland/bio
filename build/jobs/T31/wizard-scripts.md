@@ -22,3 +22,7 @@ Readings (settled unless you say otherwise):
 9. R15 `wizardProgress` carries no viewer (R15 keeps none); it counts for any held version (a Civicsmith one included, and an author's own draft run), `NO_SUCH_WIZARD` otherwise.
 10. R16 `wizardCandidates`: at most 20 step drops (script, version, step, screen, act, reached, next, drop; summed over days) among the scripts the viewer may see, and at most 20 (op, code) pairs by count.
 11. R13 runs the break check for the offered version of each group script; a Civicsmith script is judged only by R14 (release).
+
+## J2 · REPORT
+
+Another module, found at my start (not mine to change): `membership` R83's test (`bio-plane/test/m/membership/module-order.test.mjs`) fails on `tranche/T31`: `MODULE_ORDER` (`membership/index.mjs`:170) lacks `wizard-scripts`, which `modules.json` now lists between `scheduler` and `affordances`. Membership is not in T31; it needs one line added (as for link-sweep, attestation, docket at T24, T25, T27). My module registers no listener, so nothing of mine reads it.
