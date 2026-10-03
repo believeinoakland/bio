@@ -396,3 +396,24 @@ export const docketStatement = (caseId, seq, sha) => {
     throw new Error("docketStatement: the digest is not 64 lowercase hex characters");
   return te.encode(`${NS_DOCKET} ${caseId} ${seq} ${sha}\n`);
 };
+
+/* ---------------------------------------------------- the capture account */
+
+/* DEC-81 item 3(c) (N530): A CAPTURING MEMBER'S ACCOUNT OF A CAPTURE, its one
+   spelling. The capture module asks for the signature and the standalone case
+   checker verifies it, in different processes and, for the checker, on a
+   reader's machine months later; if each spelled the bytes, the first
+   divergence would read as a forged account. So both call this.
+   The digest is on the first line behind a fixed leading token, and the text
+   follows exactly as given, newlines and all: an account is prose, so unlike
+   the notice and docket statements nothing here refuses its fields, and each
+   is taken as `String(…)`. The leading token is no other statement's, so an
+   account is never the same signed bytes as a ratification, a case
+   ratification, a notice or a docket entry. It is signed in `NS_RATIFY`, the
+   namespace a member's key is already configured for; the separation is in
+   the message, as it is for `caseRatifyStatement`. */
+export const CAPTURE_ACCOUNT_TOKEN = "bio-capture-account";
+
+/* R41: the bytes a capturing member signs for their account of a capture. */
+export const captureAccountStatement = (captureSha, text) =>
+  te.encode(`${CAPTURE_ACCOUNT_TOKEN} ${String(captureSha)}\n${String(text)}`);

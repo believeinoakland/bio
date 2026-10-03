@@ -24,7 +24,7 @@ import { renderSignpage, SIGNPAGE_SRC, SIGNPAGE_OUT } from "../../../scripts/emb
 
 const {
   NS_RELEASE, NS_RATIFY, NS_FLEET, NS_NOTICE, verifySshsig, ratifyStatement, caseRatifyStatement, fleetStatement,
-  noticeStatement, NS_DOCKET, docketStatement,
+  noticeStatement, NS_DOCKET, docketStatement, CAPTURE_ACCOUNT_TOKEN, captureAccountStatement,
 } = sshsig;
 const {
   timestampRequest, parseTimestampResponse, TSA_ENDPOINTS, TSA_CONTENT_TYPE, TSA_ACCEPT,
@@ -494,6 +494,117 @@ test("R39 NS_DOCKET is bio-docket, distinct from every other namespace, and a do
   for (const ns of [NS_RATIFY, NS_NOTICE]) {
     assert.equal((await verifyAndLog(await sign(KEY, ns, stmt), stmt, NS_DOCKET, [KEY.line])).reason, "NAMESPACE");
   }
+});
+
+/* ===================================================================== R41 */
+
+const CAPTURE_SHA = "c0ffee".repeat(10) + "0123";
+/* Accounts as members write them: one line, several, blank lines, trailing and leading whitespace, a CR, non-ASCII
+   prose, text that itself reads like another statement, and none at all. */
+const ACCOUNTS = ["I saved this page from the council's agenda site at 9:14.",
+  "Line one.\nLine two.\n\nAfter a blank line.\n", "  indented, with a trailing space \n", "windows\r\nline ends\r\n",
+  "Café — 東京 — emoji 🌉, and a NUL \u0000 inside", `bio-ratify REC-2026-0001 ${"0".repeat(64)}\n`,
+  `\nbio-docket CASE-2026-0001 1 ${"0".repeat(64)}\n`, ""];
+
+test("R41 captureAccountStatement is exactly the token, the digest, a newline and the text unchanged, the same bytes every time", () => {
+  assert.equal(CAPTURE_ACCOUNT_TOKEN, "bio-capture-account");
+  assert.throws(() => { sshsig.CAPTURE_ACCOUNT_TOKEN = "bio-ratify"; });
+  for (const text of ACCOUNTS) {
+    const out = captureAccountStatement(CAPTURE_SHA, text);
+    assert.ok(out instanceof Uint8Array);
+    assert.deepEqual([...out], [...Buffer.from(`bio-capture-account ${CAPTURE_SHA}\n${text}`, "utf8")]);
+    assert.deepEqual(captureAccountStatement(CAPTURE_SHA, text), out);
+    /* The text is unchanged after the first newline, and the first line is the token and the digest alone. */
+    const s = td.decode(out);
+    assert.equal(s.slice(s.indexOf("\n") + 1), text);
+    assert.equal(s.slice(0, s.indexOf("\n")), `${CAPTURE_ACCOUNT_TOKEN} ${CAPTURE_SHA}`);
+  }
+  /* Each argument is taken as String(…): nothing is refused, and what is signed is what String gives. */
+  for (const [sha, text] of [[undefined, undefined], [null, null], [42, 7], [{ toString: () => "obj" }, ["a", "b"]],
+    [true, false], [1n, 2n]]) {
+    assert.deepEqual([...captureAccountStatement(sha, text)],
+      [...Buffer.from(`bio-capture-account ${String(sha)}\n${String(text)}`, "utf8")]);
+  }
+  /* Each field is in the bytes: change one and the statement changes. */
+  const base = td.decode(captureAccountStatement(CAPTURE_SHA, ACCOUNTS[0]));
+  assert.notEqual(td.decode(captureAccountStatement("f".repeat(64), ACCOUNTS[0])), base);
+  assert.notEqual(td.decode(captureAccountStatement(CAPTURE_SHA, ACCOUNTS[0] + " ")), base);
+  assert.notEqual(td.decode(captureAccountStatement(CAPTURE_SHA, ACCOUNTS[0] + "\n")), base);
+});
+
+test("R41 captureAccountStatement is byte-identical to the spellings capture and case-checker carry today, wherever they still carry one", () => {
+  /* Run in a child process, so this module's tests import neither (each later module's job replaces its spelling
+     with this export, N530; a spelling no longer exported has been replaced, which is the point). */
+  const src = new URL("../../../src/", import.meta.url).href;
+  const cases = [["", ""], ...ACCOUNTS.map((t) => [CAPTURE_SHA, t]), [42, null]];
+  const child = `
+    const out = {};
+    const s = await import(${JSON.stringify(src + "sshsig.mjs")});
+    const theirs = {
+      capture: (await import(${JSON.stringify(src + "capture/index.mjs")})).captureAccountStatement,
+      "case-checker": (await import(${JSON.stringify(src + "case-checker/check.mjs")})).accountStatement,
+    };
+    const capToken = (await import(${JSON.stringify(src + "capture/index.mjs")})).CAPTURE_ACCOUNT_TOKEN;
+    const hex = (b) => Buffer.from(b).toString("hex");
+    for (const [name, fn] of Object.entries(theirs)) {
+      if (typeof fn !== "function") { out[name] = null; continue; }
+      out[name] = ${JSON.stringify(cases)}.map(([a, b]) => hex(fn(a, b)) === hex(s.captureAccountStatement(a, b)));
+    }
+    out.capToken = capToken === undefined ? null : capToken === s.CAPTURE_ACCOUNT_TOKEN;
+    console.log(JSON.stringify(out));
+  `;
+  const r = spawnSync(process.execPath, ["--input-type=module", "-e", child], { encoding: "utf8" });
+  assert.equal(r.status, 0, r.stderr);
+  const out = JSON.parse(r.stdout.trim().split("\n").at(-1));
+  for (const name of ["capture", "case-checker"]) {
+    if (out[name] === null) continue;
+    assert.deepEqual(out[name], cases.map(() => true), name);
+  }
+  assert.notEqual(out.capToken, false);
+});
+
+test("R41 a capture account's leading token differs from every other statement's, so it is never the same signed bytes", async () => {
+  const id = "REC-2026-0001", sha = CAPTURE_SHA;
+  const lead = (s) => s.split(/[ \n]/)[0];
+  const others = [td.decode(ratifyStatement(id, sha)), td.decode(caseRatifyStatement(id, 1, sha)),
+    td.decode(noticeStatement(id, 1, sha)), td.decode(docketStatement(id, 1, sha)),
+    fleetStatement({ version: "1", plane: PLANE, members: [] })];
+  for (const text of ACCOUNTS) {
+    const account = td.decode(captureAccountStatement(sha, text));
+    assert.ok(account.startsWith("bio-capture-account "));
+    for (const other of others) {
+      assert.notEqual(other, account);
+      assert.notEqual(lead(other), lead(account));
+    }
+  }
+  /* Whatever the fields, no other statement begins with the account's token and its space, nor the reverse. */
+  for (const a of ["x", "", "bio-capture-account", " ", "\n"]) {
+    for (const other of [ratifyStatement(a, a), caseRatifyStatement(a, a, a)]) {
+      assert.ok(!td.decode(other).startsWith(`${CAPTURE_ACCOUNT_TOKEN} `));
+    }
+    assert.ok(!td.decode(captureAccountStatement(a, a)).startsWith("bio-ratify"));
+  }
+  /* Signed in NS_RATIFY: an account signature verifies there over its own bytes, and in no other namespace. */
+  const stmt = captureAccountStatement(sha, ACCOUNTS[1]);
+  const sig = await sign(KEY, NS_RATIFY, stmt);
+  assert.deepEqual(await verifyAndLog(sig, stmt, NS_RATIFY, [KEY.line]), { ok: true, keyB64: KEY.keyB64, namespace: NS_RATIFY });
+  for (const ns of [NS_RELEASE, NS_FLEET, NS_NOTICE, NS_DOCKET]) {
+    assert.equal((await verifyAndLog(sig, stmt, ns, [KEY.line])).reason, "NAMESPACE");
+  }
+  /* A ratification or case ratification over the same digest never verifies as an account, nor the reverse. */
+  for (const m of [ratifyStatement(id, sha), caseRatifyStatement(id, 1, sha)]) {
+    const rsig = await sign(KEY, NS_RATIFY, m);
+    assert.equal((await verifyAndLog(rsig, stmt, NS_RATIFY, [KEY.line])).reason, "BAD_SIGNATURE");
+    assert.equal((await verifyAndLog(sig, m, NS_RATIFY, [KEY.line])).reason, "BAD_SIGNATURE");
+  }
+});
+
+test("R41 a capture account signed by stock ssh-keygen in bio-ratify verifies, and only over its own bytes", { skip: NO_SSH_KEYGEN }, async () => {
+  const stmt = captureAccountStatement(CAPTURE_SHA, ACCOUNTS[4]);
+  const f = keygenSign(NS_RATIFY, stmt);
+  assert.deepEqual(await verifyAndLog(f.sig, stmt, NS_RATIFY, [f.pub]), { ok: true, keyB64: f.pub.split(/\s+/)[1], namespace: NS_RATIFY });
+  assert.equal((await verifyAndLog(f.sig, captureAccountStatement(CAPTURE_SHA, ACCOUNTS[4] + "\n"), NS_RATIFY, [f.pub])).reason,
+    "BAD_SIGNATURE");
 });
 
 /* ================================================================== R8–R14 */
@@ -1153,6 +1264,7 @@ test("R26 pure and offline: no service fetches or reads a clock, and the endpoin
     try { s.noticeStatement("bad", 0, "x"); } catch {}
     s.docketStatement("CASE-2026-0001", 1, "0".repeat(64));
     try { s.docketStatement("bad", 0, "x"); } catch {}
+    s.captureAccountStatement("0".repeat(64), "an account");
     s.fleetStatement({ version: "v", plane: { sha256: "p", bytes: 1, asset: "a" },
       members: [{ member: "m", sha256: "s", bytes: 1, asset: "a", compat: { date: "d", flags: [] }, services: [], parts: [] }] });
     const req = t.timestampRequest("${DIGEST}", new Uint8Array(8).fill(3));
@@ -1189,6 +1301,7 @@ test("R27 no place is named in any string the module exports", () => {
   strings.push(td.decode(ratifyStatement("a", "b")), td.decode(caseRatifyStatement("a", 1, "b")),
     td.decode(noticeStatement("NOTE-2026-0001", 1, "0".repeat(64))),
     td.decode(docketStatement("CASE-2026-0001", 1, "0".repeat(64))),
+    td.decode(captureAccountStatement("0".repeat(64), "an account")),
     fleetStatement({ version: "v", plane: PLANE, members: [] }));
   assert.ok(strings.includes(SIGN_HTML));
   for (const s of strings) assert.doesNotMatch(s, PLACE);
@@ -1196,9 +1309,10 @@ test("R27 no place is named in any string the module exports", () => {
 
 /* ===================================================================== R28 */
 
-test("R28 a signature never verifies for another namespace or message; every tampered signature is BAD_SIGNATURE", async () => {
+test("R28 (R41 among the messages) a signature never verifies for another namespace or message; every tampered signature is BAD_SIGNATURE", async () => {
   const messages = [enc("m1\n"), ratifyStatement("B", "0".repeat(64)), caseRatifyStatement("B", 1, "0".repeat(64)),
     noticeStatement("NOTE-2026-0001", 1, "0".repeat(64)), docketStatement("CASE-2026-0001", 1, "0".repeat(64)),
+    captureAccountStatement("0".repeat(64), "my account\nof the capture\n"), captureAccountStatement("0".repeat(64), ""),
     enc(fleetStatement({ version: "v", plane: PLANE, members: [member("m")] }))];
   for (const [i, m] of messages.entries()) {
     const sig = await sign(KEY, NS_RATIFY, m);
