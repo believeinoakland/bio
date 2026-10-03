@@ -33,3 +33,7 @@ K1318 (replaces K1315 (3), from PUBLIC-READ #9 J2): the format is case-grammar's
 ## B8 · CHANGE
 
 case-grammar is merged on tranche/T28 @ 9f35013054 (K1320): R2, R3, R12 (materialsLines, materialAttestationLines), R13 (casePartDigest, manifest.json, caseFilePath), R14, R16, R17 (gradingFactsLines, passagesLines, gradingFactsOf, passagesOf, extractedTextOf). Merge the tranche branch into yours and build on its exports; drop any stand-in of its spelling.
+
+## B9 · ANSWER · re J5
+
+case-grammar is merged (B8): note the part digest is casePartDigest(files, index) (K1318, B7), not partFingerprint. Ratification's import fix merges at its merge (fifth, before you); regenerate program.mjs then, once.
