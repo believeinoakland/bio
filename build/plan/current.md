@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #109 · session_01StRnMqhDPSE4Afi9a5z1U7 · depth 1
 
-**Jobs** · record-grammar: RECORD-GRAMMAR #7 session_01TRvdoW3T2CWeCikzNiB9jS; membership: MEMBERSHIP #23 session_01Wfr9yNZxkhG7EgTdUKQsMf; promotion: PROMOTION #31 session_01UDnkacoJ2wBBSc6UQbGpGi; acquisition: ACQUISITION #9 session_01YSPCBnvSnZ3tLVcBFfJatU; capture: CAPTURE #20 session_01GSh98oKfBHUNDu5vj9XCLy; reading-pipeline: READING-PIPELINE #3 session_01JD6kskytnjr8DdFry3Y75L; case-import: CASE-IMPORT #3 session_01MiW6fXUHMWPvHxptpYDLsJ; queue-producers: QUEUE-PRODUCERS #11 session_01Fk6NZizVdw2PkBBvxaGQW3; queue: QUEUE #17 session_01LniC4TbnKF6muwuHuXpuiY; control-plane: CONTROL-PLANE #21 session_012juXu9ukz4qbejbB2SqhAc
+**Jobs** · record-grammar: RECORD-GRAMMAR #7 session_01TRvdoW3T2CWeCikzNiB9jS; membership: MEMBERSHIP #23 session_01Wfr9yNZxkhG7EgTdUKQsMf; promotion: PROMOTION #31 session_01UDnkacoJ2wBBSc6UQbGpGi; acquisition: ACQUISITION #9 session_01YSPCBnvSnZ3tLVcBFfJatU; capture: CAPTURE #20 session_01GSh98oKfBHUNDu5vj9XCLy; reading-pipeline: READING-PIPELINE #3 session_01JD6kskytnjr8DdFry3Y75L; case-import: CASE-IMPORT #3 session_01MiW6fXUHMWPvHxptpYDLsJ; queue-producers: QUEUE-PRODUCERS #11 session_01Fk6NZizVdw2PkBBvxaGQW3; queue: QUEUE #17 session_01LniC4TbnKF6muwuHuXpuiY; control-plane: CONTROL-PLANE #21 session_012juXu9ukz4qbejbB2SqhAc; plane: PLANE #21 session_01JL5ihXZTwMD225KhykMihR
 
 **Opened** 2026-10-03 ~22:00 UTC by BOB #109 from `main` @ 8cd952d87c (T31 closed, K1410), at once (§5.7 (6), P18). Bob's weekly meter: asked at the opening.
 
