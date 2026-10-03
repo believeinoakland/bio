@@ -1,6 +1,6 @@
 # queue-producers (T31)
 
-**Status** · session_017G9P7gWoc355pFUPiJKHKb · depth 2 · WORKING · handled B1
+**Status** · session_017G9P7gWoc355pFUPiJKHKb · depth 2 · WAITING ON BOB (J2) · handled B1
 
 ## J1 · QUESTION
 
