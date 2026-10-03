@@ -1433,7 +1433,7 @@ function list() {
 }
 
 // src/ui.mjs
-var PRODUCT = "CivicOS";
+var PRODUCT = "Civicsmith";
 var PUBLISHER = `This installer is run by the publisher of ${PRODUCT} releases.`;
 var EXAMPLE_SLUG = "clean-water-coalition";
 var publisherFooter = () => `<p class="small publisher">${PUBLISHER}</p>`;
@@ -1584,10 +1584,10 @@ $("#go").addEventListener("click",async()=>{
 }
 var WIZARD_HTML = page({
   mode: "install",
-  title: "Set up your group's copy of CivicOS",
-  description: "Install your group's own copy of CivicOS, the accountability record, into your own Cloudflare account.",
-  eyebrow: "CivicOS &middot; installer",
-  lede: `In a few minutes your group will have its own copy of CivicOS, the
+  title: `Set up your group's copy of ${PRODUCT}`,
+  description: `Install your group's own copy of ${PRODUCT}, the accountability record, into your own Cloudflare account.`,
+  eyebrow: `${PRODUCT} &middot; installer`,
+  lede: `In a few minutes your group will have its own copy of ${PRODUCT}, the
 accountability record, running in your own Cloudflare account. Not an account
 of ours: yours, under your control, from the first second.`,
   blocks: `<div class="card">
@@ -1612,7 +1612,7 @@ database and nowhere to keep it, and it is never stored.</p>
 <p class="small">Prefer to do everything by hand, with nothing passing
 through us at all? The manual path is documented and permanently supported.
 It is slower and uses the Cloudflare dashboard directly, and it exists so
-that your group can stand up a copy even if the publisher of CivicOS releases
+that your group can stand up a copy even if the publisher of ${PRODUCT} releases
 disappears.</p>
 
 ${profilesBlock()}
@@ -1629,10 +1629,10 @@ Already running a copy and looking for the current release? That is
 });
 var UPDATE_HTML = page({
   mode: "update",
-  title: "Update your copy of CivicOS",
-  description: "Bring your group's existing copy of CivicOS up to the current release.",
-  eyebrow: "CivicOS &middot; software update",
-  lede: `This brings the copy of CivicOS your group already runs up to the current
+  title: `Update your copy of ${PRODUCT}`,
+  description: `Bring your group's existing copy of ${PRODUCT} up to the current release.`,
+  eyebrow: `${PRODUCT} &middot; software update`,
+  lede: `This brings the copy of ${PRODUCT} your group already runs up to the current
 release. It changes the software and nothing else: your passwords, your
 credentials, and your record are untouched, and that is enforced by how the
 update is applied, not by promise. The one exception is yours to choose: an
@@ -1940,7 +1940,7 @@ async function selectRelease(emit) {
     } else said = "The built-in release (" + RELEASE_VERSION + ") is current.";
   } catch (e) {
     if (!(e && (e.integrity || e.unsigned || e.signature))) man = null;
-    const fallback = " The installer's own built-in release (" + RELEASE_VERSION + ") installs instead, which is safe. This is worth mentioning to the publisher of CivicOS releases.";
+    const fallback = " The installer's own built-in release (" + RELEASE_VERSION + ") installs instead, which is safe. This is worth mentioning to the publisher of " + PRODUCT + " releases.";
     said = e && e.integrity ? "The repository's copy did not pass its integrity check, so it was NOT used." + fallback : e && e.unsigned ? "The repository's copy carries no signature, and this installer only accepts signed releases, so it was NOT used." + fallback : e && e.signature ? "The repository's copy is signed, but not by a key this installer trusts (" + (e.reason || "invalid") + "), so it was NOT used." + fallback : "The public repository was not reachable just now, so the built-in release (" + RELEASE_VERSION + ") is used. That is fine.";
   }
   const lim = planeLimits(RELEASE_SOURCE);
@@ -2517,7 +2517,7 @@ function progressShell(title, slug) {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">
 <title>${esc(title)}</title><style>${PAGE_CSS}</style></head><body><main>
-<p class="eyebrow">CivicOS &middot; installer</p>
+<p class="eyebrow">${PRODUCT} &middot; installer</p>
 <h1>${esc(title)}</h1>
 <p class="small">For the group <b class="mono" id="group">${esc(slug)}</b>. Leave this page open. This usually takes under a minute.</p>
 <div id="log" class="log"></div>
@@ -2582,7 +2582,7 @@ function instanceAiNotice(emit, mode, carried) {
 }
 function oneCopyRefusal(emit, held) {
   return emit.fail(
-    "Your Cloudflare account already holds a copy of CivicOS",
+    `Your Cloudflare account already holds a copy of ${PRODUCT}`,
     `${ONE_COPY}: this account already holds ${held.join(", ")}, and a second copy installed beside them would share or overwrite them. Nothing was created or changed, so there is nothing to clean up.`,
     "To continue: install your group's copy into a Cloudflare account that holds no copy, or, if this account's copy is your group's, bring it up to the current release with the update option instead."
   );
@@ -2646,7 +2646,7 @@ async function runInstall(emit, code, saved) {
     return emit.fail(
       "This installer cannot say which limits your copy runs under",
       "Nothing was created, so there is nothing to clean up. " + release.refused,
-      "This is for the publisher of CivicOS releases to fix with a release that states them; try again after the next release."
+      `This is for the publisher of ${PRODUCT} releases to fix with a release that states them; try again after the next release.`
     );
   }
   const further = (Array.isArray(release.man?.fleet) ? release.man.fleet : []).map((m) => m && m.member).filter((m) => typeof m === "string" && !BINDING_OF.has(m));
@@ -2781,7 +2781,7 @@ async function runInstall(emit, code, saved) {
   else emit.no("verify");
   emit.done(successPanel(base, secrets, !!st, verdict));
 }
-var NO_KEY = "No one else holds a key to it, the publisher of CivicOS releases included.";
+var NO_KEY = `No one else holds a key to it, the publisher of ${PRODUCT} releases included.`;
 function successPanel(base, secrets, verified, verdict = null) {
   const lagging = !!(verdict && !verdict.confirmed);
   const head = verified && !lagging ? `<b>Your copy is running.</b> It lives in your
@@ -2896,7 +2896,7 @@ async function runUpdate(emit, code, saved) {
     return emit.fail(
       "This update cannot say which limits your copy runs under",
       "Your copy is still running the version it had before. Nothing about it changed. " + release.refused,
-      "This is for the publisher of CivicOS releases to fix with a release that states them; try again after the next release."
+      `This is for the publisher of ${PRODUCT} releases to fix with a release that states them; try again after the next release.`
     );
   }
   let before = null;
@@ -3051,11 +3051,11 @@ var index_default = {
   }
 };
 function plainPage(head, what, detail, slug) {
-  const group = typeof slug === "string" && slugOk(slug) ? `For the group <b class="mono" id="group">${esc(slug)}</b>.` : "Setting up your group&#39;s copy of CivicOS.";
+  const group = typeof slug === "string" && slugOk(slug) ? `For the group <b class="mono" id="group">${esc(slug)}</b>.` : `Setting up your group&#39;s copy of ${PRODUCT}.`;
   return `<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">
 <title>${esc(head)}</title><style>${PAGE_CSS}</style></head><body><main>
-<p class="eyebrow">CivicOS &middot; installer</p>
+<p class="eyebrow">${PRODUCT} &middot; installer</p>
 <h1>${esc(head)}</h1><p>${esc(what)}</p>
 ${detail ? `<p class="small mono">${esc(detail)}</p>` : ""}
 <p class="small">${group}</p>
