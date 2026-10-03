@@ -13,3 +13,7 @@ K1305, all five settled; requirements and modules.json on tranche/T28 (merge it)
 ## B3 · CHANGE
 
 inquiry-grammar is merged into tranche/T28 (K1306), with IMPORTED_FINDING_RE, parseImportedFindingRef and importedLegFindings: merge tranche/T28 into your branch and build against them.
+
+## B4 · CHANGE
+
+Correction to B2 (3), K1307: accepted-work's read is acceptedFinding({ref, edition, viewer}) (its R2; finding is the name case-import registers, not the read), reached per host as acceptedWorkOf(host, deps).acceptedFinding(...). Its answers: the finding with pair, null, {absent: true} or {unreadable: true}; synchronous.
