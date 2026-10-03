@@ -38,6 +38,8 @@ import * as BIAS from "../bias/checks.mjs";
 import * as OBSERVATION_LOG from "../observation-log/checks.mjs";
 import * as RETRIEVAL from "../retrieval/checks.mjs";
 import * as INQUIRY_GRAMMAR from "../inquiry-grammar/checks.mjs";
+/* R43 (N522, K1310): accepted-work's C-21.4 and C-21.5, in its place in the module order (after inquiry-grammar). */
+import * as ACCEPTED_WORK from "../accepted-work/checks.mjs";
 import * as INQUIRY from "../inquiry/index.mjs";
 import * as CITATION from "../citation/checks.mjs";
 import * as BASIS_VERSIONS from "../basis-versions/checks.mjs";
@@ -54,6 +56,9 @@ import * as PUBLIC_READ from "../public-read/checks.mjs";
 /* K1150 (R43): network-notices' C-127, in its place in the module order (after public-read and project-stage). */
 import * as NETWORK_NOTICES from "../network-notices/checks.mjs";
 import * as RATIFICATION from "../ratification/checks.mjs";
+/* R43 (N520): case-import's C-130, in its place in the module order (after ratification and case-checker, which holds no
+   family: it answers results, not refusals). */
+import * as CASE_IMPORT from "../case-import/checks.mjs";
 import * as CASE_AUTHORING from "../case-authoring/checks.mjs";
 import * as REVIEW from "../review/checks.mjs";
 import * as LOCAL_FACTS from "../local-facts/checks.mjs";
@@ -63,11 +68,14 @@ import * as CONSEQUENCES from "../consequences/checks.mjs";
 /* K835, K837, K914: the action layer's eight families are action-grammar's, read from there; `actions` holds no file of
    them (its re-export was deleted, K914). */
 import * as ACTION_GRAMMAR from "../action-grammar/checks.mjs";
-/* K1280 (N520, R43): docket's C-129. Its place in the module order is directly after publication, but it is read after
-   action-grammar's file: docket's family holds `MACHINE_CANNOT_MARK_PRESSURE` (C-129.10), a code action-grammar's
-   C-117.14 already holds (a code in two places, reported to BOB), and a source read first would take that code's row
-   from `actionpressure`'s refusal (R43: every code keeps the row it had). Docket's own refusals carry their row at the
-   site (its `withRow`), which the decoration never overwrites, so its answers are unchanged either way. */
+/* K1280, N526 (R43): docket's C-129. Its place in the module order is directly after publication, but it is still read
+   after action-grammar's file. Docket's machine refusal on a pressure mark is its own code since N526
+   (`MACHINE_CANNOT_MARK_DOCKET_PRESSURE`, C-129.10), but two codes remain in both families: `PRESSURE_MARKED` (docket's
+   C-129.12, action-grammar's C-117.17) and `PRESSURE_REFUSED` (C-129.13, C-117.15). A source read first takes a code's
+   row, so docket at its module-order place would move those two codes' rows off `actionpressure`'s, and R43 keeps every
+   code's row. Reported to BOB (CONTROL-PLANE #18, T28); the move waits on docket's own codes for the two. Docket's own
+   refusals carry their row at the site (its `withRow`), which the decoration never overwrites, so its answers are
+   unchanged either way. */
 import * as DOCKET from "../docket/checks.mjs";
 import * as ACTION_CLOCKS from "../action-clocks/checks.mjs";
 /* K921 (R43): filing-templates' C-125 and local-facts' C-126, each in its place in the module order. */
@@ -112,6 +120,7 @@ export const CHECK_FAMILY_FILES = Object.freeze([
   ["src/observation-log/checks.mjs", OBSERVATION_LOG],
   ["src/retrieval/checks.mjs", RETRIEVAL],
   ["src/inquiry-grammar/checks.mjs", INQUIRY_GRAMMAR],
+  ["src/accepted-work/checks.mjs", ACCEPTED_WORK],
   ["src/inquiry/index.mjs", INQUIRY],
   ["src/citation/checks.mjs", CITATION],
   ["src/basis-versions/checks.mjs", BASIS_VERSIONS],
@@ -127,6 +136,7 @@ export const CHECK_FAMILY_FILES = Object.freeze([
   ["src/public-read/checks.mjs", PUBLIC_READ],
   ["src/network-notices/checks.mjs", NETWORK_NOTICES],
   ["src/ratification/checks.mjs", RATIFICATION],
+  ["src/case-import/checks.mjs", CASE_IMPORT],
   ["src/case-authoring/checks.mjs", CASE_AUTHORING],
   ["src/review/checks.mjs", REVIEW],
   ["src/local-facts/checks.mjs", LOCAL_FACTS],
