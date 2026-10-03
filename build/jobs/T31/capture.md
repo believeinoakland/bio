@@ -10,7 +10,7 @@
 
 **Deferred.** None.
 
-**Found in other modules** (REPORT J2):
+**Found in other modules** (REPORT J1):
 - `acquisition`: its own first-hop `who` (`src/acquisition/index.mjs:1085`) is acquisition's T31 entry (R16), not yet pushed when this job ran. Capture's and acquisition's `who` each spell `instance … (Civicsmith/…)` on their own; acquisition R24 makes `civicsmithUserAgent` the one spelling of the user agent, but no requirement names one spelling of the hop's `who`. An improvement for BOB to weigh: acquisition could provide the hop's `who` (or the product name) once, for capture R65's pull to read, so a later rename touches one site. Not a flaw: both meet their requirements as written.
 - No other module's test pins capture's pulled-knock `who` (the remaining `CivicOS/` strings in `host-governor`, `provenance` and `capture-requests` tests are fixed samples). Capture feeds no generated artifact (manifest §14), so nothing is made stale.
 
