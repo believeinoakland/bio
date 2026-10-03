@@ -26,7 +26,7 @@
 - `checks/format.mjs`: 95 modules, 94 requirements files; 0 failures.
 - `checks/architecture.mjs … inquiry-grammar`: 8 product files, 20 relative imports; 0 failures.
 - `checks/coverage.mjs … inquiry-grammar`: 11 of 11 live requirement ids named by a test; 0 failures.
-- `checks/ownership.mjs … inquiry-grammar tranche/T28`: OWNERSHIP_LINE
+- `checks/ownership.mjs … inquiry-grammar tranche/T28`: 7 files changed between tranche/T28 and HEAD; 0 failures.
 
 Size (session_01PnLhSoHMj7KMjQmdKaYkP6): test runs 9, module lines 1561
 
