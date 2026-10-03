@@ -1,6 +1,6 @@
 # strength (T28)
 
-**Status** · session_01Q7AodKmzj5rYSu6PxmkvRb · depth 2 · WORKING · handled B4
+**Status** · session_01Q7AodKmzj5rYSu6PxmkvRb · depth 2 · WAITING ON BOB (J1) · handled B4
 
 ## J1 · QUESTION
 
