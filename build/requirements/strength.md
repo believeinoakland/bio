@@ -47,6 +47,7 @@ Terms. An **axis** is `capture`, `connection` or `testimony`. An axis answer is 
 **The grading method and its recomputation: GRADING_METHOD_VERSION, gradingMethodText(version), recomputePair({legs, levels?, version})** (DEC-112; K1268)
 - **R31** `GRADING_METHOD_VERSION` names the grading arithmetic of R1–R5, R29 and R30, and changes whenever any of them changes. `gradingMethodText(version)` answers that version's method in plain words, complete enough to recompute a grade by hand. An unknown version answers null. Pure; never throws. (DEC-112 (2)(3)) *(not yet met: T28)*
 - **R32** `recomputePair({legs, levels?, version})` answers the pair (R1–R5, R29, R30) from the facts a case file states for one finding, and reads nothing else. Each leg gives its target's recorded grade or answer, its axis, its grade source and its ground. It answers for every version this module has published. Any other version is `UNKNOWN_METHOD_VERSION`. Pure; writes nothing; never throws. (DEC-112 (3)(6); Publication §5C "each grade recomputes the same by the stated method version") *(not yet met: T28)*
+- **R35** (K1305) `gradingFacts({inquiry, version?, levels, viewer})` (in-process) answers, for one finding, the legs exactly as R32 reads them: per leg `{target, kind (document | observation | inquiry | imported), role, grade, grade_axis, grade_source, ground, target_edition?, answer?, origins, origins_complete, captures, author_key?}`, `author_key` an opaque token equal for the same member within one case and never an account. A case file states what this answers, so `recomputePair` over it answers the pair `strengthOf` answers. Writes nothing. *(not yet met: T28)*
 
 **A leg on another group's accepted work** (DEC-96 item 1; N522)
 - **R33** A leg on an imported finding reference contributes, on each axis, the grade that the accepted edition publishes for that finding (`accepted-work.acceptedFinding`'s `pair`). It is read as an inquiry leg's target answer (R2), with no recursion past it, and is never stronger than that edition's frozen grade (DEC-96 item 1, the inherited-trust rule).
@@ -82,6 +83,7 @@ Terms. An **axis** is `capture`, `connection` or `testimony`. An axis answer is 
 - `retrieval`: `registerField` (its R62), for R23's cache (K675).
 - `provenance`: the `register` and `captured_locators` read contract (R12).
 - `inquiry`: `basisFor`, `earned`, `legCapped`, `subjectEntityOf`, the registration R17 fills.
+- `inquiry-grammar`: `IMPORTED_FINDING_RE`, `parseImportedFindingRef` (its R11), to know a leg on an imported finding (R33; K1305).
 - `basis-versions`: the version rows and legs, `currentOf` (R7, R8); `BASIS_VERSION_LEGS_MAX` (its R9), R8's bound (N184).
 - `accepted-work`: `acceptedFinding` (its R2; R33). Index 44 is before 48 (N522).
 - `content`, `connections`, `bias`: nothing here calls them once the earned registry is `inquiry`'s (map §5.2).

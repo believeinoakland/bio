@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import * as IG from "../../../src/inquiry-grammar/index.mjs";
 import { LEAD_CHECKS as OBSERVATION_LEAD_CHECKS, LEAD_ID_RE } from "../../../src/observation-log/index.mjs";
 import { BUNDLE_CASES, LEG_CASES, REGISTRY_VARIANTS, GROUND_CASES, SUPERSEDE_CASES, LEAD_LEG_CASES, legFm,
-         INFO, INFO2, INFO3, SELF, PUBLISHED, EARNED } from "./corpus.mjs";
+         INFO, INFO2, INFO3, SELF, PUBLISHED, EARNED, IMPORTED_BUNDLE_CASES } from "./corpus.mjs";
 import { GOLDEN, run, plain, judge } from "./fixture.mjs";
 
 const { checkInquiryExtension, checkRecheckCoverage, checkInquiryBasis, checkLegExtentGrammar, supersedesEdgeFindings,
@@ -217,15 +217,23 @@ test("R5 the row: this module's LEAD_CHECKS is exactly {LEAD_NOT_EVIDENCE: C-54.
   for (const r of Object.values(OBSERVATION_LEAD_CHECKS)) assert.notEqual(r.check, "C-54.1");
 });
 
-test("R7 INQUIRY_GRAMMAR_CHECKS: the six rows, each {check, where, translation}, number and translation unchanged; the five inquiry mints keep their `where`; LEAD_NOT_EVIDENCE's names the site that raises it now (stamped by 1.50.0); the table has one name", async () => {
+test("R7 INQUIRY_GRAMMAR_CHECKS: the seven rows, each {check, where, translation}, number and translation unchanged; the five inquiry mints keep their `where`; LEAD_NOT_EVIDENCE's names the site that raises it now (stamped by 1.50.0); IMPORTED_LEG_MALFORMED (C-21.3) is new, its translation BOB's draft; the table has one name", async () => {
   assert.ok(Object.isFrozen(INQUIRY_GRAMMAR_CHECKS));
   assert.deepEqual(Object.keys(INQUIRY_GRAMMAR_CHECKS),
-                   ["LEAD_NOT_EVIDENCE", "NOT_INQUIRIES", "SELF_BASIS", "BASIS_CYCLE", "MACHINE_CANNOT_DIVIDE", "MACHINE_CANNOT_GROUND"]);
+                   ["LEAD_NOT_EVIDENCE", "NOT_INQUIRIES", "SELF_BASIS", "BASIS_CYCLE", "MACHINE_CANNOT_DIVIDE", "MACHINE_CANNOT_GROUND",
+                    "IMPORTED_LEG_MALFORMED"]);
   const numbers = { LEAD_NOT_EVIDENCE: "C-54.1", NOT_INQUIRIES: "C-33.13", SELF_BASIS: "C-33.22", BASIS_CYCLE: "C-33.23",
-                    MACHINE_CANNOT_DIVIDE: "C-32.7", MACHINE_CANNOT_GROUND: "C-32.8" };
+                    MACHINE_CANNOT_DIVIDE: "C-32.7", MACHINE_CANNOT_GROUND: "C-32.8", IMPORTED_LEG_MALFORMED: "C-21.3" };
+  const imported = INQUIRY_GRAMMAR_CHECKS.IMPORTED_LEG_MALFORMED;
+  assert.deepEqual(Object.keys(imported), ["check", "where", "translation"]);
+  assert.equal(imported.check, "C-21.3");
+  assert.equal(imported.translation, "A leg on another group's finding names that finding and one edition, and nothing else: "
+    + "its grades are that edition's. Correct the leg. Nothing was written.");
+  assert.equal(imported.where, "src/inquiry-grammar/grammar.mjs importedRefusal > is-imported-leg-form");
   for (const [k, row] of Object.entries(INQUIRY_GRAMMAR_CHECKS)) {
     assert.deepEqual(Object.keys(row), ["check", "where", "translation"], k);
     assert.equal(row.check, numbers[k], k);
+    if (k === "IMPORTED_LEG_MALFORMED") continue;
     const was = k === "LEAD_NOT_EVIDENCE" ? GOLDEN.LEAD_CHECKS[k] : GOLDEN.rows[k];
     assert.equal(row.translation, was.translation, k);
     if (k !== "LEAD_NOT_EVIDENCE") assert.equal(row.where, was.where, k);
@@ -240,15 +248,17 @@ test("R7 INQUIRY_GRAMMAR_CHECKS: the six rows, each {check, where, translation},
   /* the finding carries its row: the code is the row's key, the check its number */
   const r = run((f) => leadLegFindings("basis[0]", { content_id: "LEAD-2026-0101-abc" }, f)).findings[0];
   assert.equal(r.check, INQUIRY_GRAMMAR_CHECKS[r.code].check);
+  const i = run((f) => IG.importedLegFindings("basis[0]", { target: IG.importedFindingRef("c".repeat(64), INFO) }, f)).findings[0];
+  assert.equal(i.check, INQUIRY_GRAMMAR_CHECKS[i.code].check);
 });
 
-test("R8 the invariants: each check the module holds is raised through its interface (C-2.8, C-21.2, C-6.1, C-6.3, C-15.1, C-54.1) and each row it holds is present (C-33.13, C-33.22, C-33.23, C-32.7, C-32.8)", async () => {
+test("R8 the invariants: each check the module holds is raised through its interface (C-2.8, C-21.2, C-6.1, C-6.3, C-15.1, C-54.1, C-21.3) and each row it holds is present (C-33.13, C-33.22, C-33.23, C-32.7, C-32.8, C-21.3)", async () => {
   const raised = new Set();
-  for (const id of Object.keys(BUNDLE_CASES)) for (const v of VARIANTS)
+  for (const id of [...Object.keys(BUNDLE_CASES), ...Object.keys(IMPORTED_BUNDLE_CASES)]) for (const v of VARIANTS)
     for (const x of await judge(id, v, INQUIRY_GRAMMARS)) raised.add(x.check);
-  for (const c of ["C-2.8", "C-21.2", "C-6.1", "C-6.3", "C-15.1", "C-54.1"]) assert.ok(raised.has(c), c);
+  for (const c of ["C-2.8", "C-21.2", "C-6.1", "C-6.3", "C-15.1", "C-54.1", "C-21.3"]) assert.ok(raised.has(c), c);
   const rows = new Set(Object.values(INQUIRY_GRAMMAR_CHECKS).map((r) => r.check));
-  for (const c of ["C-33.13", "C-33.22", "C-33.23", "C-32.7", "C-32.8", "C-54.1"]) assert.ok(rows.has(c), c);
+  for (const c of ["C-33.13", "C-33.22", "C-33.23", "C-32.7", "C-32.8", "C-54.1", "C-21.3"]) assert.ok(rows.has(c), c);
 });
 
 test("R9 pure: the same inputs give the same findings, nothing handed in is changed, and no clock or network is read", async () => {
