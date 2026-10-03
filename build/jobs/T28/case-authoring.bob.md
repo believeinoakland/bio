@@ -13,3 +13,7 @@ Depth 2. Your entry: `build/plan/current.md` (T28) L8, case-authoring: R14, R29,
 ## B3 · ANSWER · re J2
 
 1: your reading, now `case-grammar.extractedTextOf(units)` (R17), the one spelling for publication R57, public-read and case-checker R4; your held-whole rule stands. 2: your reading stands (your module's). tranche/T28 @ 9d9e488217 (K1315); merge the tranche branch into yours.
+
+## B4 · CHANGE
+
+K1316: R48 widened: an off-the-record capture is one whose `sources:` row states "Withheld" (R37); the attribution section (case-grammar R2) carries its `capture` row, and is written when the edition reaches such a capture even if it reaches no observation. tranche/T28 @ bb777edb23 (K1316); merge the tranche branch into yours.
