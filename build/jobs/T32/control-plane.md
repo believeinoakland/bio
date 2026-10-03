@@ -17,3 +17,7 @@
 - format: 98 modules, 97 requirements files; 0 failures. architecture: 45 product files, 253 relative imports; 0 failures. coverage: 36 of 36 live requirement ids named by a test; 0 failures. ownership: 0 failures (re-run after commit, below).
 
 Size (session_012juXu9ukz4qbejbB2SqhAc): test runs 3, module lines 25
+
+## J1 · COMPLETE
+
+N548 applied. R42's rank test reads the module after the step from build/modules.json (first layer-11 module, today wizard-scripts), and the suite's fixture STEP_ORDER (record.mjs, what the test reads) now splices the step there. 159/159 pass; format, architecture, coverage (36/36), ownership all 0 failures. Note: the test reads the fixture's order, not plane's, so red 6 is already green here; plane's N548 job should pin plane's own STEP_ORDER against modules.json in its tests. Record: build/jobs/T32/control-plane.md.
