@@ -23,3 +23,14 @@ Size (session_016SfTxv2owbWsyKBSjqM3an): test runs 4, module lines 2896
 ## J1 · COMPLETE
 
 R25 applied (store op and door pass captures: "omit" only for exactly "omit"); three real R25 tests in docket.test.mjs over the fixture docket in docket R24's form. public-read tests 108/108; format, architecture, coverage (25/25), ownership 0 failures. Nothing deferred; nothing found in other modules. Record has the details.
+
+## B2 · CHANGE (case-grammar merged, K1382)
+
+Merged `tranche/T31` (case-grammar: `CASE_DOCUMENT_FORMAT` is now `/7`). Three tests went red (two R23 case-file arms, R3's `/6` blocks): the fixture's `signAsOfItsFormat` (`fixture.mjs`) committed only a document of exactly `CASE_DOCUMENT_FORMAT`, so a `/6` document was signed as a pre-T28 one, and `standing.test.mjs` built "a /6 document" from `CASE_DOCUMENT_FORMAT`. Test-side only, no product change: the fixture now commits whatever `case-grammar.caseDocumentRequiresMaterials` holds for (`/6`, `/7`), and `standing.test.mjs` names `CASE_DOCUMENT_FORMAT_V6`. Not changed: no `/7` arm for R3's blocks yet, because `publication`'s test fixture (`caseDoc`, not this module's) writes the method and materials blocks only for a literal `/6`; I can add one once `publication` merges, if its fixture writes them for `/7`.
+
+- `node --test bio-plane/test/m/public-read/`: tests 108, pass 108, fail 0.
+- `format` 0, `architecture public-read` 0, `coverage public-read` 25 of 25, 0 failures; `ownership` re-run after commit below.
+
+Waiting on the same-layer providers `publication` and `docket` to merge before posting COMPLETE again (B2).
+
+Size (session_016SfTxv2owbWsyKBSjqM3an): test runs 9, module lines 2896
