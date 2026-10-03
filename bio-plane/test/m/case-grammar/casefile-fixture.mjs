@@ -1,4 +1,4 @@
-/* case-grammar tests: a whole `/6` case and its case file, as `case-authoring` and `public-read` would write them,
+/* case-grammar tests: a whole `/7` case (or `/6`, by `format`) and its case file, as `case-authoring` and `public-read` would write them,
    built from this module's own line builders; the manifest's part fingerprints computed here a second way. */
 import { createHash } from "node:crypto";
 import * as CG from "../../../src/case-grammar/index.mjs";
@@ -50,10 +50,11 @@ export const LEGS = [
 export const PASSAGES = [{ finding: A, ord: 1, content_id: sha("passage"), capture_sha: MINUTES_SHA,
   extent: { page: 3, start: 10, end: 52 }, chain: null, quoted: "No vote was taken on item 7 <the lease>. It's \"final\" # here" }];
 
-/** The `/6` case document's text. */
-export function caseDocument({ bar = { declared: true, capture: "B", connection: "C" }, blocks = true } = {}) {
+/** The case document's text, `/7` (the format written) unless `format` says otherwise. */
+export function caseDocument({ bar = { declared: true, capture: "B", connection: "C" }, blocks = true,
+                               format = CG.CASE_DOCUMENT_FORMAT } = {}) {
   const fm = [
-    "---", "format: bio-case-document/6", "case_id: CASE-2026-0001", "case_edition: 2", "case_project: PROJ-2026-0001-parks",
+    "---", `format: ${format}`, "case_id: CASE-2026-0001", "case_edition: 2", "case_project: PROJ-2026-0001-parks",
     'case_scope: "Who approved the lease, and on what record."',
     'bias_acknowledgement: "We expected the board to defer to the vendor."',
     "bias_manifest:", "  in_force: true", "  scope: project", "  scope_id: PROJ-2026-0001-parks", `  statements_sha: ${sha("lens")}`,

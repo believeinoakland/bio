@@ -1,12 +1,14 @@
 /* case-grammar at its interface: R14, the complete edition rendered from a case file, and R15, a finding's standing
-   against the bar the case records, each with its negative controls. Driven on a whole `/6` case file built by this
-   module's own writers (`./casefile-fixture.mjs`). */
+   against the bar the case records, each with its negative controls. Driven on a whole `/7` case file built by this
+   module's own writers (`./casefile-fixture.mjs`), and on a `/6` case file and its edition as rendered before T31
+   (`./complete-v6-golden.json`, DEC-124). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { gradingMethodText, GRADING_METHOD_VERSION } from "../../../src/strength/method.mjs";
-import { completeEditionOf, COMPLETE_EDITION_HEADINGS, TWO_STRENGTHS_SENTENCE, GRADE_MEANINGS, MADE_WITH_LINE,
-         CHECKER_READS, standingOf, BAR_AXES, STANDING_ROLE_WORDS, LENS_CLOSING_SENTENCES, LENS_KIND_WORDS,
+import { completeEditionOf, COMPLETE_EDITION_HEADINGS, TWO_STRENGTHS_SENTENCE, GRADE_MEANINGS, PRODUCT_NAMES,
+         editionProductOf, madeWithLine, CHECKER_READS, standingOf, BAR_AXES, STANDING_ROLE_WORDS, LENS_CLOSING_SENTENCES, LENS_KIND_WORDS,
          WITHHELD_SOURCE_LABEL, WITHHELD_SOURCE_REASON, caseFilePath } from "../../../src/case-grammar/index.mjs";
 import { caseFileFixture, editionInput, caseDocument, A, B, C, MINUTES, OBS, MINUTES_SHA, REF } from "./casefile-fixture.mjs";
 import { sha } from "./helpers.mjs";
@@ -96,7 +98,7 @@ test("R14 its order: the claims, the findings, the materials, what was searched,
   assert.equal(has(strength, `${C}: capture D, connection undetermined.`), true);
   /* 8. the grading method in plain words, at the document's grading version */
   const method = sectionOf(html, 8);
-  for (const line of gradingMethodText(GRADING_METHOD_VERSION).split("\n").filter((l) => l.trim()))
+  for (const line of gradingMethodText(GRADING_METHOD_VERSION, "Civicsmith").split("\n").filter((l) => l.trim()))
     assert.equal(has(method, line), true, line.slice(0, 40));
   assert.equal(has(method, "It was checked under catalogue version 1.61.0."), true);
   /* 9. how to check it, naming the checker's public read */
@@ -107,7 +109,7 @@ test("R14 its order: the claims, the findings, the materials, what was searched,
   assert.equal(has(check, "It does not show that it is true."), true);
 });
 
-test("R14 the identifying notice: the case, edition, group, declared bias, both floors and the case document's hash with where to verify it, heading the file and fixed on every printed page; the group leads and CivicOS is credited at the foot", () => {
+test("R14 the identifying notice: the case, edition, group, declared bias, both floors and the case document's hash with where to verify it, heading the file and fixed on every printed page; the group leads and the product is credited at the foot", () => {
   const { manifest, files } = caseFileFixture();
   const html = render(manifest, files);
   const notice = html.slice(html.indexOf('<div class="notice">'), html.indexOf("</div>"));
@@ -118,8 +120,8 @@ test("R14 the identifying notice: the case, edition, group, declared bias, both 
   assert.equal(html.indexOf('<div class="notice">') < html.indexOf("<h1>"), true, "it heads the file");
   assert.match(html, /@media print\{\.notice\{position:fixed;top:0/, "and is fixed on every printed page");
   assert.equal(has(html, "<h1>lakeshore-tenants · Case CASE-2026-0001 · Edition 2</h1>".replace(/<\/?h1>/g, "")), true);
-  assert.equal(html.includes(`<p class="foot">${MADE_WITH_LINE}</p>`), true);
-  assert.equal(MADE_WITH_LINE, "Made with CivicOS");
+  assert.equal(html.includes(`<p class="foot">${madeWithLine("Civicsmith")}</p>`), true);
+  assert.equal(madeWithLine("Civicsmith"), "Made with Civicsmith");
   /* a bar on one axis, and no bar, are stated as such */
   const one = caseFileFixture({ bar: { declared: true, capture: "A", connection: null } });
   assert.equal(has(render(one.manifest, one.files), "Bar (floors): capture A, connection not set."), true);
@@ -202,6 +204,71 @@ test("R14 R6 negative controls: no case document, an unreadable one, odd input, 
   for (const s of ["This case document lists no materials.", "This case document does not state what was searched.",
                    "This case document does not state the grading method it was graded by.", "Declared bias: none stated."])
     assert.equal(has(bare, s), true, s);
+});
+
+const GOLDEN = JSON.parse(readFileSync(new URL("./complete-v6-golden.json", import.meta.url), "utf8"));
+const countOf = (html, s) => html.split(s).length - 1;
+
+test("R14 DEC-124 K1365 a complete edition rendered from a /6 case file before T31 re-renders byte-identical", () => {
+  /* the pinned bytes: rendered on main @ d2b7451b80, before T31, from the case file beside them */
+  assert.equal(createHash("sha256").update(GOLDEN.html).digest("hex"), GOLDEN.sha256);
+  assert.equal(GOLDEN.sha256, "e86dfa0c1810f313c52471dcf08e4425a0ab0cceacfceebfe91b154511576e22");
+  assert.match(GOLDEN.input.files.find((f) => f.path === "case.md").content, /\nformat: bio-case-document\/6\n/);
+  const html = completeEditionOf(GOLDEN.input);
+  assert.equal(html, GOLDEN.html, "byte for byte");
+  assert.equal(createHash("sha256").update(html).digest("hex"), GOLDEN.sha256);
+  /* the three places name CivicOS, and nothing names Civicsmith */
+  assert.equal(countOf(html, "CivicOS"), 3);
+  assert.equal(html.includes(`<p class="foot">Made with CivicOS</p>`), true);
+  assert.equal(html.includes("without CivicOS and without a network connection"), true);
+  assert.equal(has(sectionOf(html, 8), gradingMethodText(GRADING_METHOD_VERSION, "CivicOS").split("\n")[0]), true);
+  assert.equal(html.includes("Civicsmith"), false);
+  /* a /6 case file built today renders the same way: the name is chosen by the format, not by when it is rendered */
+  const v6 = caseFileFixture({ format: "bio-case-document/6" });
+  assert.equal(render(v6.manifest, v6.files), GOLDEN.html, "this module's own /6 fixture gives the pinned bytes");
+});
+
+test("R14 DEC-124 a /7 case file renders Civicsmith in the foot, in the line on checking without the product and in the grading method's text, and never CivicOS; /6 and earlier render CivicOS", () => {
+  assert.deepEqual({ ...PRODUCT_NAMES }, { before_v7: "CivicOS", current: "Civicsmith" });
+  const { manifest, files } = caseFileFixture();
+  assert.match(files.get("case.md"), /\nformat: bio-case-document\/7\n/);
+  const html = render(manifest, files);
+  assert.equal(html.includes(`<p class="foot">Made with Civicsmith</p>`), true, "the foot");
+  assert.equal(has(sectionOf(html, 9), "You can check this case yourself, without Civicsmith and without a network connection."), true);
+  const method = sectionOf(html, 8);
+  const lines = gradingMethodText(GRADING_METHOD_VERSION, "Civicsmith").split("\n").filter((l) => l.trim());
+  assert.equal(lines.some((l) => l.includes("Civicsmith")), true, "the method's text names the product");
+  for (const line of lines) assert.equal(has(method, line), true, line.slice(0, 40));
+  assert.equal(html.includes("CivicOS"), false, "never the old name");
+  /* the same case under /6 differs only in the three names and the colour-scheme line */
+  const v6 = caseFileFixture({ format: "bio-case-document/6" });
+  const old = render(v6.manifest, v6.files);
+  assert.equal(countOf(old, "CivicOS"), 3);
+  assert.equal(countOf(html, "Civicsmith"), countOf(old, "CivicOS") + countOf(gradingMethodText(GRADING_METHOD_VERSION, "Civicsmith"), "Civicsmith")
+    - countOf(gradingMethodText(GRADING_METHOD_VERSION, "CivicOS"), "CivicOS"));
+  /* the name, by format: /6 and every earlier accepted format CivicOS; /7, and anything else, Civicsmith */
+  for (const v of [6, 5, 4, 3, 2, 1]) assert.equal(editionProductOf({ format: `bio-case-document/${v}` }), "CivicOS", `/${v}`);
+  for (const fm of [{ format: "bio-case-document/7" }, { format: "bio-case-document/8" }, { format: null }, {}, null, 7,
+                    { get format() { throw new Error("boom"); } }])
+    assert.equal(editionProductOf(fm), "Civicsmith");
+  const v5 = render(manifest, new Map([["case.md", "---\nformat: bio-case-document/5\ncase_id: CASE-2026-0002\n---\n"]]));
+  assert.equal(countOf(v5, "CivicOS"), 2, "a /5 document: the foot and the checking line (it states no grading method)");
+  /* a case file with no readable document is not an earlier edition: the current name */
+  assert.match(completeEditionOf(null), /<p class="foot">Made with Civicsmith<\/p>/);
+});
+
+test("R14 DEC-122 (2) the /7 complete edition is always light: it sets its own colours and declares only the light colour scheme, with no rule for a dark setting", () => {
+  const { manifest, files } = caseFileFixture();
+  const html = render(manifest, files);
+  const head = html.slice(html.indexOf("<head>"), html.indexOf("</head>"));
+  assert.deepEqual([...head.matchAll(/<meta name="color-scheme" content="([^"]*)">/g)].map((m) => m[1]), ["light"],
+                   "one declaration, light only");
+  assert.equal(/color-scheme\s*:\s*(?!light\b)/i.test(html), false, "no stylesheet colour scheme but light");
+  assert.equal(/prefers-color-scheme/i.test(html), false, "no rule for a reader's dark setting");
+  assert.match(head, /body\{[^}]*color:#1b1b1b;background:#fff/, "its own colours");
+  for (const odd of [null, {}, { files: [] }]) assert.match(completeEditionOf(odd), /<meta name="color-scheme" content="light">/);
+  /* negative control: a /6 edition keeps its pre-T31 bytes, which carry no declaration */
+  assert.equal(GOLDEN.html.includes("color-scheme"), false);
 });
 
 /* ===== R15 ===== */
