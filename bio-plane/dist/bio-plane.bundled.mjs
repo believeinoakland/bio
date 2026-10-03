@@ -151007,8 +151007,9 @@ var QueueProducers = class _QueueProducers {
    *  - one FINDING per verified entry seen, keyed `FINDING::followed-case-entry::<import>#<seq>`, naming its kind,
    *    edition, date and `key_listed`, and quoting a move's `what_changed` or `reason`;
    *  - one FINDING per refused entry, keyed `FINDING::cited-docket-entry-refused::<import>#<seq>`, naming the check
-   *    failed (refused copies of one `seq` are one item, naming every check; a refused entry with no readable `seq` is
-   *    keyed `<import>#unnumbered`);
+   *    failed (refused copies of one `seq` are one item, naming every check, aged from the first copy read; a refused
+   *    entry with no readable `seq` is keyed `<import>#unnumbered`);
+   *  - each finding ages from the instant this copy read its entry (`seen_at`; N546);
    *  - one CONDITION per watch in force whose latest read is unreadable, keyed `CONDITION::cited-docket-unreadable::<import>`,
    *    its detail opening with DOCKET_UNREADABLE's sentence (docket R15) and giving the reason and the instant, aged from
    *    it; it leaves when a read succeeds or the watch ends.
@@ -151058,16 +151059,13 @@ var QueueProducers = class _QueueProducers {
           ...e.kind === "edition" ? { what_changed: e.what_changed ?? null } : {},
           ...e.kind === "withdrawal" ? { reason: e.reason ?? null } : {},
           taken_back: e.taken_back ?? null,
+          seen_at: e.seen_at ?? null,
           set_by: e.set_by ?? null,
           recipients_rule: rec.rule,
           ...complete,
           detail: "a verified entry of a followed case's docket is case-import's (its R18, R20), read here and never stored. It goes to the member who set the watch, else the administrators, and to nobody else; only a new edition or a withdrawal is a cause of re-evaluation (K1339, K1366)."
         },
-        age: {
-          state: "undetermined",
-          reason: "no_seen_instant",
-          detail: "the entry carries the publisher's date but not the instant this copy read it"
-        },
+        age: _QueueProducers.#seenAge(e.seen_at, now),
         assignee: null,
         assignee_role: null,
         recipients: [...rec.members],
@@ -151089,6 +151087,11 @@ var QueueProducers = class _QueueProducers {
           held.basis.failed.push(failed2);
           held.detail = _QueueProducers.#refusedWords(e, seq, held.basis.failed);
         }
+        const age = _QueueProducers.#seenAge(e.seen_at, now);
+        if (age.state === "determined" && (held.age.state !== "determined" || Date.parse(age.since) < Date.parse(held.age.since))) {
+          held.age = age;
+          held.basis.seen_at = age.since;
+        }
         continue;
       }
       const it = {
@@ -151107,16 +151110,13 @@ var QueueProducers = class _QueueProducers {
           seq,
           failed: [failed2],
           entry_detail: e.detail ?? null,
+          seen_at: e.seen_at ?? null,
           set_by: e.set_by ?? null,
           recipients_rule: rec.rule,
           ...complete,
           detail: "a refused entry is case-import's (its R18, R20): an entry of the followed case's docket that failed a check, recorded and never a move. It goes to the member who set the watch, else the administrators, and to nobody else."
         },
-        age: {
-          state: "undetermined",
-          reason: "no_seen_instant",
-          detail: "the entry carries no instant this copy read it at"
-        },
+        age: _QueueProducers.#seenAge(e.seen_at, now),
         assignee: null,
         assignee_role: null,
         recipients: [...rec.members],
@@ -151168,6 +151168,16 @@ var QueueProducers = class _QueueProducers {
       out.push(it);
     }
     return out;
+  }
+  /** R35 (N546): an entry's item ages from the instant this copy read it, case-import R20's `seen_at` (the docket read
+   *  that first recorded it), never the publisher's date nor this read's clock; undetermined when none can be read. */
+  static #seenAge(seenAt, now) {
+    const ms2 = typeof seenAt === "string" && seenAt ? Date.parse(seenAt) : NaN;
+    return Number.isFinite(ms2) ? { state: "determined", since: seenAt, ms: Math.max(0, now - ms2) } : {
+      state: "undetermined",
+      reason: "no_seen_instant",
+      detail: "the entry carries no instant this copy read it at that this producer can read"
+    };
   }
   /** R35: the refused entry's sentence, naming every check its copies failed. */
   static #refusedWords(e, seq, failed2) {
@@ -152218,12 +152228,15 @@ var Queue = class _Queue {
     "wizard-approval-requested": " This one is a wizard script's version submitted for your approval, keyed by the version and by you rather than by a task: it leaves when you approve it (op=wizardapprove), or when the version is withdrawn or its script retired."
   });
   /** R46, R50: the acts a project-scoped FINDING of these kinds names beside R12's disposition: a recorded re-evaluation
-   *  answers what a finding rests on being marked wrong (N345), or a case edition it rests on being withdrawn or
-   *  contested (DEC-116 items 3, 7). */
+   *  answers what a finding rests on being marked wrong (N345), a case edition it rests on being withdrawn or
+   *  contested (DEC-116 items 3, 7), or a case the group cites having a newer edition or a withdrawn one (N547;
+   *  DEC-101 (3)). */
   static FINDING_ACTS = Object.freeze({
     "side-corrected": Object.freeze(["reevaluationrecord"]),
     "edition-withdrawn": Object.freeze(["reevaluationrecord"]),
-    "edition-contested": Object.freeze(["reevaluationrecord"])
+    "edition-contested": Object.freeze(["reevaluationrecord"]),
+    "cited-newer-edition": Object.freeze(["reevaluationrecord"]),
+    "cited-edition-withdrawn": Object.freeze(["reevaluationrecord"])
   });
   /** D-266 / IC-60 — THE SECOND IDENTITY, and the whole of what this item added.
    *
@@ -155867,9 +155880,10 @@ var wizardRegistration = () => ({
 
 // src/plane/store.mjs
 var STEP = "control-plane";
+var FIRST_LAYER_11 = "wizard-scripts";
 var STEP_ORDER = Object.freeze((() => {
   const o = MODULE_ORDER.filter((m) => m !== STEP);
-  const at31 = o.indexOf("affordances");
+  const at31 = o.indexOf(FIRST_LAYER_11);
   return at31 === -1 ? [...o, STEP] : [...o.slice(0, at31), STEP, ...o.slice(at31)];
 })());
 var MINT_LEDGER_LIVE = Object.freeze([["PROJ", "bundles", "bundle_id"]]);
