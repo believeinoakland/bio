@@ -207,14 +207,17 @@ test("R22, R43 (N512; K1193): the list reads attestation's C-89 (`ATTEST_CHECKS`
     assert.ok(M.dec49Row(code), code);
 });
 
-test("R22, R43 (N520, N522, N526; K1310): the list reads accepted-work's C-21.4 and C-21.5 (after inquiry-grammar, before inquiry) and case-import's C-130 (after ratification, before case-authoring), each in its module's place, and every one of their rows decorates with its own check and words; case-checker holds no family and has no entry; docket's C-129 is read after action-grammar while `PRESSURE_MARKED` and `PRESSURE_REFUSED` stay in both families, so both keep action-grammar's rows, and docket's own `MACHINE_CANNOT_MARK_DOCKET_PRESSURE` decorates with C-129.10 (negative control: the list without either new file misses its family)", async () => {
+test("R22, R43 (N520, N522, N526, N533; K1310, K1331): the list reads accepted-work's C-21.4 and C-21.5 (after inquiry-grammar, before inquiry), case-import's C-130 (after ratification, before case-authoring) and docket's C-129 (directly after publication, before public-read), each in its module's place, and every one of their rows decorates with its own check and words; case-checker holds no family and has no entry; docket's pressure codes are its own (`MACHINE_CANNOT_MARK_DOCKET_PRESSURE` C-129.10, `DOCKET_PRESSURE_MARKED` C-129.12, `DOCKET_PRESSURE_REFUSED` C-129.13), no code is in both docket's and action-grammar's families, and action-grammar's `PRESSURE_MARKED`, `PRESSURE_REFUSED` and `MACHINE_CANNOT_MARK_PRESSURE` keep their own rows (negative control: the list without any of the three files misses its family)", async () => {
   const paths = M.CHECK_FAMILY_FILES.map(([p]) => p);
   const at = (p) => paths.indexOf(p);
   assert.ok(at("src/inquiry-grammar/checks.mjs") < at("src/accepted-work/checks.mjs") && at("src/accepted-work/checks.mjs") < at("src/inquiry/index.mjs"), paths.join(", "));
   assert.ok(at("src/ratification/checks.mjs") < at("src/case-import/checks.mjs") && at("src/case-import/checks.mjs") < at("src/case-authoring/checks.mjs"), paths.join(", "));
+  assert.equal(at("src/docket/checks.mjs"), at("src/publication/checks.mjs") + 1, paths.join(", "));
+  assert.ok(at("src/docket/checks.mjs") < at("src/public-read/checks.mjs"), paths.join(", "));
   assert.equal(paths.some((p) => p.startsWith("src/case-checker/")), false);
   for (const [path, fam, checks] of [["src/accepted-work/checks.mjs", "ACCEPTED_WORK_CHECKS", /^C-21\.[45]$/],
-                                     ["src/case-import/checks.mjs", "CASE_IMPORT_CHECKS", /^C-130\.\d+$/]]) {
+                                     ["src/case-import/checks.mjs", "CASE_IMPORT_CHECKS", /^C-130\.\d+$/],
+                                     ["src/docket/checks.mjs", "DOCKET_CHECKS", /^C-129\.\d+$/]]) {
     const table = (await import(`../../../${path}`))[fam];
     assert.ok(Object.keys(table).length >= 2, `${path} ${fam}`);
     for (const [code, row] of Object.entries(table)) {
@@ -225,14 +228,34 @@ test("R22, R43 (N520, N522, N526; K1310): the list reads accepted-work's C-21.4 
     assert.ok(missing.includes(`bio-plane/${path} ${fam}`), missing.join(", "));
   }
   assert.deepEqual(Object.values((await import("../../../src/accepted-work/checks.mjs")).ACCEPTED_WORK_CHECKS).map((r) => r.check).sort(), ["C-21.4", "C-21.5"]);
-  /* docket: read after action-grammar, its two shared codes keeping action-grammar's rows, its own code its own */
-  assert.ok(at("src/action-grammar/checks.mjs") < at("src/docket/checks.mjs"), paths.join(", "));
+  /* docket: its own pressure codes, no code shared with action-grammar, whose rows stay its own */
   const AG = (await import("../../../src/action-grammar/checks.mjs"));
-  const agRow = (code) => Object.entries(AG).filter(([k, v]) => isFamily(k, v) && v[code]).map(([, v]) => v[code])[0];
+  const agFams = Object.entries(AG).filter(([k, v]) => isFamily(k, v)).map(([, v]) => v);
+  const agRow = (code) => agFams.filter((v) => v[code]).map((v) => v[code])[0];
   for (const code of ["PRESSURE_MARKED", "PRESSURE_REFUSED", "MACHINE_CANNOT_MARK_PRESSURE"])
     assert.deepEqual(M.dec49Row(code), { check: agRow(code).check, translation: agRow(code).translation }, code);
   const DK = (await import("../../../src/docket/checks.mjs")).DOCKET_CHECKS;
-  assert.equal(Object.hasOwn(DK, "MACHINE_CANNOT_MARK_PRESSURE"), false, "docket's shared machine code is gone (N526)");
-  assert.deepEqual(M.dec49Row("MACHINE_CANNOT_MARK_DOCKET_PRESSURE"), { check: "C-129.10", translation: DK.MACHINE_CANNOT_MARK_DOCKET_PRESSURE.translation });
-  for (const code of ["PRESSURE_MARKED", "PRESSURE_REFUSED"]) assert.ok(DK[code], `docket still holds ${code}`);
+  for (const code of Object.keys(DK)) assert.equal(agFams.some((v) => Object.hasOwn(v, code)), false, `${code} is in both docket's and action-grammar's families`);
+  for (const code of ["MACHINE_CANNOT_MARK_PRESSURE", "PRESSURE_MARKED", "PRESSURE_REFUSED"])
+    assert.equal(Object.hasOwn(DK, code), false, `docket's shared ${code} is gone (N526, N533)`);
+  for (const [code, check] of [["MACHINE_CANNOT_MARK_DOCKET_PRESSURE", "C-129.10"], ["DOCKET_PRESSURE_MARKED", "C-129.12"], ["DOCKET_PRESSURE_REFUSED", "C-129.13"]])
+    assert.deepEqual(M.dec49Row(code), { check, translation: DK[code].translation }, code);
+});
+
+test("R22, R43 (N529; K1331, K1333): the list reads case-disclosures' C-120 (`CASE_DISCLOSURE_CHECKS`) in its module's place (after case-import, directly before case-authoring), every one of its rows (C-120.1–C-120.8, C-120.10–C-120.13) decorates with its own check and words, case-authoring's file no longer holds them, and C-120.9 is held by no code (negative control: the list without case-disclosures' file misses its family)", async () => {
+  const paths = M.CHECK_FAMILY_FILES.map(([p]) => p);
+  const path = "src/case-disclosures/checks.mjs";
+  assert.ok(paths.indexOf("src/case-import/checks.mjs") < paths.indexOf(path), paths.join(", "));
+  assert.equal(paths.indexOf(path) + 1, paths.indexOf("src/case-authoring/checks.mjs"), paths.join(", "));
+  const table = (await import(`../../../${path}`)).CASE_DISCLOSURE_CHECKS;
+  assert.deepEqual(Object.values(table).map((r) => r.check).sort((a, b) => Number(a.split(".")[1]) - Number(b.split(".")[1])),
+    ["C-120.1", "C-120.2", "C-120.3", "C-120.4", "C-120.5", "C-120.6", "C-120.7", "C-120.8", "C-120.10", "C-120.11", "C-120.12", "C-120.13"]);
+  for (const [code, row] of Object.entries(table)) assert.deepEqual(M.dec49Row(code), { check: row.check, translation: row.translation }, code);
+  const CA = await import("../../../src/case-authoring/checks.mjs");
+  for (const code of Object.keys(table))
+    assert.equal(Object.entries(CA).some(([k, v]) => isFamily(k, v) && Object.hasOwn(v, code)), false, `${code} left case-authoring's file`);
+  const held = Object.values(M.CHECK_FAMILIES).flatMap((rows) => Object.values(rows)).map((r) => r.check);
+  assert.equal(held.includes("C-120.9"), false, "C-120.9 is withdrawn and never reused (K1275)");
+  const missing = await unreached(M.CHECK_FAMILY_FILES.filter(([p]) => p !== path));
+  assert.ok(missing.includes(`bio-plane/${path} CASE_DISCLOSURE_CHECKS`), missing.join(", "));
 });
