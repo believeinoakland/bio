@@ -132,3 +132,26 @@ test("R13, R23 (N137): promotion holds strength's projection from its build; ret
   strengthOf(b.host);
   assert.equal(retrievalOf(b.host).registerField("inquiry", "capture", { table: "t", key: "bundle_id", col: "c" }).ok, true);
 });
+
+test("R33 (K1307): with no acceptedWork given, a ref is read through accepted-work's own instance on the same host: absent until case-import registers, then the registered finding's pair", async () => {
+  const { acceptedWorkOf } = await import("../../../src/accepted-work/index.mjs");
+  const h = bareHost();
+  const REF = `imported:${"e".repeat(64)}/INQ-2026-0500-a`;
+  h.bundle("INQ-2026-0001-a", "inquiry");
+  h.leg("INQ-2026-0001-a", 0, REF, "information");
+  h.st.sql.exec(`INSERT INTO files (bundle_id,path,content,sha256,bytes) VALUES (?,?,?,?,?)`, "INQ-2026-0001-a", "bundle.md",
+    `---\nbasis:\n  - target: "${REF}"\n    target_edition: 4\n---\n`, "x", 1);
+  const s = strengthOf(h.host);
+  const before = s.strengthOf("INQ-2026-0001-a");
+  assert.equal(before.connection.state, "undetermined");
+  assert.match(before.connection.undetermined_at[0].why, /holds no accepted work/);
+  const asked = [];
+  const reg = acceptedWorkOf(h.host).registerAcceptedWork("case-import", {
+    finding: (a) => { asked.push(a); return { ref: a.ref, group: "g2", case: "C-1", edition: a.edition, finding: "INQ-2026-0500-a",
+                                             pair: { capture: "C", connection: "B" }, acceptance: null }; },
+    openFlags: () => ({ flags: [], complete: true }), withdrawals: () => ({ withdrawals: [], cursor: null }) });
+  assert.notEqual(reg && reg.ok, false, JSON.stringify(reg));
+  const after = s.strengthOf("INQ-2026-0001-a");
+  assert.deepEqual([after.capture.grade, after.connection.grade], ["C", "B"]);
+  assert.deepEqual(asked[0], { ref: REF, edition: 4, viewer: null });
+});

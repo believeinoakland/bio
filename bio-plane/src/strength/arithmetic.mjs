@@ -37,14 +37,18 @@ function weakestOf(members) {
 }
 
 /** A member of a population as it is NAMED: the weakest leg, and every leg that is not load-bearing. A leg is
- *  addressable by (bundle_id, ord). `ground`, `inherited_from`, `through` and `why` appear only when present, so a
- *  named member of an unstructured basis reads exactly as it did before DEC-32. */
+ *  addressable by (bundle_id, ord). `ground`, `inherited_from`, `through`, `another_groups` (R33: the group, case and
+ *  edition of another group's accepted finding), `unknown` (an unfinished member stopped by something other than the
+ *  depth bound) and `why` appear only when present, so a named member of an unstructured basis reads exactly as it did
+ *  before DEC-32. */
 export function namedMember(m) {
   return { bundle_id: m.bundle_id, ord: m.ord, target_id: m.target_id, role: m.role,
            grade: m.grade ?? null, grade_source: m.grade_source ?? null, via: m.via,
            ...(m.ground ? { ground: m.ground } : {}),
            ...(m.inherited_from ? { inherited_from: m.inherited_from } : {}),
            ...(m.through ? { through: m.through } : {}),
+           ...(m.another_groups ? { another_groups: m.another_groups } : {}),
+           ...(m.unknown ? { unknown: true } : {}),
            ...(m.why ? { why: m.why } : {}) };
 }
 
@@ -66,6 +70,16 @@ function groundResult(ground, members, exhausted) {
   const w = weakestOf(members);
   return { ground, state: "graded", grade: w.grade, weakest: namedMember(w),
            load_bearing: loadBearing.length, population: members.length, not_load_bearing: inert };
+}
+
+/* Where the walk stopped, in words: the depth bound for the members it reached there, and for an unfinished member
+   stopped by anything else (R33: another group's work that could not be read), that nothing here establishes it. */
+function stoppedAt(exhausted, depthBound) {
+  const ids = (ms) => ms.map((e) => e.target_id).join(", ");
+  const bound = exhausted.filter((e) => !e.unknown), unknown = exhausted.filter((e) => e.unknown);
+  return [bound.length ? `the basis walk reached its depth bound of ${depthBound} at ${ids(bound)}` : null,
+          unknown.length ? `nothing here establishes what ${ids(unknown)} rests on` : null]
+    .filter(Boolean).join(", and ");
 }
 
 /** One axis's answer, composed from its grounds (R4, DEC-32). Three states and no fourth: `graded` (the member that
@@ -130,9 +144,8 @@ export function axisResult(axis, members, exhausted, depthBound = DEPTH_BOUND) {
                        : structured
                        ? `a leg every one of those sets needs is undetermined, and `
                        : ``)
-                   + `the basis walk reached its `
-                   + `depth bound of ${depthBound} at `
-                   + `${allExhausted.map((e) => e.target_id).join(", ")}, so what lies below is `
+                   + stoppedAt(allExhausted, depthBound)
+                   + `, so what lies below is `
                    + `unknown rather than absent. This is what we do not know, not a low score.` });
   }
   /* Nothing established anywhere. An unrated ground is inert exactly as an ungraded leg is (DEC-18). */

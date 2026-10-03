@@ -266,3 +266,29 @@ test("R28: the sentences R29 and R5 added (an uncorroborated anonymous observati
   assert.ok(anon.length >= 3, "the sentence was reached on every path");
   clean(corpus);
 });
+
+test("R28: the sentences T28 added (another group's finding, R33; anonymous evidence, R34; the method in words, R31; a recomputed pair, R32) carry no analyst's word", async () => {
+  const { GRADING_METHOD_VERSION, gradingMethodText, recomputePair } = await import("../../../src/strength/index.mjs");
+  const w = real();
+  const REF = `imported:${"c".repeat(64)}/INQ-2026-0500-a`;
+  w.acceptedFinding(REF, 2, { pair: { capture: "B", connection: { state: "undetermined" } } });
+  w.bundle("INFO-2026-0001-a");
+  w.capture("knock", "INFO-2026-0001-a");
+  w.inquiry("INQ-2026-0001-a", [{ target: REF, edition: 2, ground: "P1" }, { target: REF, edition: 3, ground: "P2" },
+                                { target: REF, grade: "A", axis: "capture", source: "capture", edition: 2 },
+                                conn("INFO-2026-0001-a", "B", "P1")]);
+  const levels = { knock: "group" };
+  const answers = [w.s.strengthOf("INQ-2026-0001-a", { levels }),
+                   w.s.candidatePair({ inquiry: "INQ-2026-0001-a", legs: [{ target: REF }], levels }),
+                   recomputePair({ version: GRADING_METHOD_VERSION, levels,
+                     legs: [{ target: REF, kind: "imported" }, { target: REF, kind: "imported", answer: { capture: "C" } },
+                            { target: "INFO-2026-0001-a", kind: "document", grade: "B", grade_axis: "connection", captures: ["knock"] }] })];
+  const corpus = answers.flatMap((a, i) => sentences(a, `answer ${i}`));
+  for (const re of [/another group's finding, in that group's case/, /publishes connection as undetermined/,
+                    /without saying which edition/, /does not hold at edition 3/, /nothing here establishes what/,
+                    /attests anonymously/, /case file states no answer/, /not a document, so a capture grade/])
+    assert.ok(corpus.some(([, s]) => re.test(s)), `reached: ${re}`);
+  corpus.push(["gradingMethodText", gradingMethodText(GRADING_METHOD_VERSION)]);
+  corpus.push(["recomputePair refusal", recomputePair({ version: "x" }).detail]);
+  clean(corpus);
+});
