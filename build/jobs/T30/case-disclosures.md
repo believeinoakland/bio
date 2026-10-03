@@ -28,3 +28,7 @@ Commit `8e7d548c1c` on `job/T30/case-disclosures` (from `tranche/T30` @ 48aa9c64
 - `checks/ownership.mjs … case-disclosures tranche/T30`: 4 files; 0 failures.
 
 Size (session_01U6qsAeYBHqtfyBmpcudgfN): test runs 2, module lines 1301
+
+## J1 · COMPLETE
+
+N535 applied on job/T30/case-disclosures (8e7d548c1c): acceptedBodyLines adds the full stop after a reason only when it lacks one (ends in . ! ? or …); the same fix for the gaps, a flag's issue and the owner's words on it, same section, same flaw. Byte identity: the two acceptedBodyLines pins re-pinned (557eeb47->ca07dd94, ad9a96eb->c4da3290), and a new arm proves the old pins differ only by that one sentence; every other pin unchanged. case-disclosures 48/48; case-authoring 122/122 (it renders through my export, pins none of it); format, architecture, coverage 23/23, ownership 4 files, all 0 failures. Stale: the plane bundle (yours at the close). Record: Completion section.
