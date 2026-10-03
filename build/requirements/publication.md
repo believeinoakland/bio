@@ -77,7 +77,7 @@ Terms. A **case** is a production of one project over one or more findings (inqu
 
 #### A source's consent at the commit (N364; DEC-78 item 5(d))
 
-- **R51** *(not yet met: T29)* `commitCaseEdition` re-reads, at the commit, what may be published of every source the document's `sources:` block states, through `case-carriage`'s `sourcesLapsed(text, now)` (its R5: `sources.publishableAt({audience: "public", at: now})` per source). Any row it answers lapsed (consent withdrawn since authoring) is `SOURCE_CONSENT_WITHDRAWN` (C-122.1), naming the captures (at most 200), and nothing is committed. The remedy is a new preparation.
+- **R51** `commitCaseEdition` re-reads, at the commit, what may be published of every source the document's `sources:` block states, through `case-carriage`'s `sourcesLapsed(text, now)` (its R5: `sources.publishableAt({audience: "public", at: now})` per source). Any row it answers lapsed (consent withdrawn since authoring) is `SOURCE_CONSENT_WITHDRAWN` (C-122.1), naming the captures (at most 200), and nothing is committed. The remedy is a new preparation.
 
   Row C-122.1 (R51; N364), a new family, "a case's sources", held in this module's own table: `SOURCE_CONSENT_WITHDRAWN`, "A source withdrew consent for a detail this case states, after the case was prepared. Prepare the case again, and it will leave that detail out. Nothing was published."
 
@@ -90,7 +90,7 @@ Terms. A **case** is a production of one project over one or more findings (inqu
 
 #### What a case carries at its commit (DEC-112; N519, N520)
 
-- **R57** *(not yet met: T29)* At a case edition's commit (`commitCaseEdition`, R22), after every refusal and in the same transaction:
+- **R57** At a case edition's commit (`commitCaseEdition`, R22), after every refusal and in the same transaction:
   - The commit holds the materials the document's `materials:` block (`case-grammar` R12) lists as `included: true`, through `case-carriage`'s `holdMaterials` (its R1). This holds, by SHA-256, the whole captured bytes and extracted text (`case-grammar.extractedTextOf`, its R17) of every included document, the whole text of every included observation, and the bytes of each timestamp token the capture's `provenance.json` names for such material, read from that file as built (K1322, K1332; co-archives are locators and hold no bytes).
   - It registers every file `holdMaterials` answers in `published_shas` (`materials/<sha>`), so `public-read` can carry them in the case file from the published projection alone. Nothing is held for material listed `included: false`.
   - The commit answers `materials: [{sha, held}]` (`held` `inline` or `evidence`) and `materials_unheld` as `case-carriage` answers them. An `included: true` material that cannot be held at its stated digest does not refuse the commit; the case file then shows it missing (`case-checker` R8).
@@ -102,7 +102,7 @@ Terms. A **case** is a production of one project over one or more findings (inqu
 
 #### Another group's work at the commit (DEC-96 items 1, 4; N522)
 
-- **R59** *(not yet met: T29)* At the commit, `commitCaseEdition` re-reads each `accepted_work:` row (`case-grammar` R16) through `case-carriage`'s `acceptedWorkLapsed(fm, signer)` (its R4). That reads `accepted-work`'s `acceptedFinding` and `openFlagsOn` as the signer's member (`member:<id>`). An acceptance it answers withdrawn is `ACCEPTANCE_WITHDRAWN_SINCE` (C-122.3), naming each; withdrawn means no longer in force, absent or unreadable, or a flags read answering `complete: false`. Otherwise, an open flag it answers undisclosed is `FLAG_OPENED_SINCE` (C-122.4), naming each. Either refuses the commit, and nothing is committed. (K1316) The remedy is a new preparation. This is R51's pattern. (DEC-96 items 1, 4; K1273)
+- **R59** At the commit, `commitCaseEdition` re-reads each `accepted_work:` row (`case-grammar` R16) through `case-carriage`'s `acceptedWorkLapsed(fm, signer)` (its R4). That reads `accepted-work`'s `acceptedFinding` and `openFlagsOn` as the signer's member (`member:<id>`). An acceptance it answers withdrawn is `ACCEPTANCE_WITHDRAWN_SINCE` (C-122.3), naming each; withdrawn means no longer in force, absent or unreadable, or a flags read answering `complete: false`. Otherwise, an open flag it answers undisclosed is `FLAG_OPENED_SINCE` (C-122.4), naming each. Either refuses the commit, and nothing is committed. (K1316) The remedy is a new preparation. This is R51's pattern. (DEC-96 items 1, 4; K1273)
   - C-122.3: "This group's acceptance of another group's work this case rests on was withdrawn after the case was prepared. Prepare the case again. Nothing was published."
   - C-122.4: "A flag was raised on another group's work this case rests on after the case was prepared, and the case must disclose it. Prepare the case again. Nothing was published."
 
