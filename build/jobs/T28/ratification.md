@@ -120,3 +120,30 @@ Job complete again at 42fbad0e5b on `job/T28/ratification`. B6 (K1321) is applie
 - `ownership` (ratification, tranche/T28): 14 files changed, 0 failures.
 
 Size (session_01KY9hTGfankh8NKom3Z2q59): test runs 15, module lines 3,982
+
+## J6 · COMPLETE
+
+Job complete against the real publication code, at af2cdd72a6 on `job/T28/ratification`. B7 is applied, and tranche/T28 is merged through 9ce0fedbcd (publication K1322, docket K1323).
+
+**Run against the merged code:** `node --test bio-plane/test/m/ratification/` gives pass 203, fail 0, with no change needed to the tests.
+
+**Shapes checked in publication's merged code against what ratification reads:**
+- `attributionFacts` `stated` rows carry `capture` in `observation`'s place. `attributionStatements` keys the `current` rows `{capture}` for a 64-hex capture.
+- `commitCaseEdition` answers `materials: [{sha, held}]` (`inline` or `evidence`).
+- `heldMaterialsOf(case, edition)` answers the same list from `published_case_materials`.
+
+**One change from that reading (R39):** publication's `existed` answer on the commit carries no `materials`. The commit path now falls back to `heldMaterialsOf` there, as the retry path already did. The edit is one line, and the module stays at 3,982 lines.
+
+**Rows awaiting stamp:** unchanged.
+- C-58.5 ANONYMOUS_TESTIMONY_UNCORROBORATED: translation re-worded, awaiting stamp (T29).
+- C-92.10 ATTRIBUTION_UNCHOSEN: translation re-worded, awaiting stamp (T29).
+
+**Deferred:** none.
+
+**Checks:**
+- `format`: 95 modules, 94 requirements files, 0 failures.
+- `architecture` (ratification): 24 product files, 118 relative imports, 0 failures.
+- `coverage` (ratification): 39 of 39 live requirement ids, 0 failures.
+- `ownership` (ratification, tranche/T28): 14 files changed, 0 failures.
+
+Size (session_01KY9hTGfankh8NKom3Z2q59): test runs 17, module lines 3,982
