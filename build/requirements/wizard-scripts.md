@@ -65,6 +65,10 @@ Terms. A **script** is R1's record; a **version** R1's version. A version's **st
 **submittedFor({after?, limit?, viewer})**
 - **R17** Lists every (version, owner) pair where the version is `submitted` and the owner is one of its project's owners who may approve it (R7; a `group` script's, the administrators), with the script's name and the author, at most 500 per page with `cursor` and `truncated`, for `queue-producers` R33. Writes nothing. *(not yet met: T31)*
 
+
+**Settled readings (K1396):** the readings of wizard-scripts's T31 question stand as K1396 states them; they bind this module's tests.
+
+**Settled readings (K1397):** the `brokenScripts` and `submittedFor` entry shapes and the factory name stand as K1397 states them; they bind this module's tests.
 ## Private
 
 ### Uses
