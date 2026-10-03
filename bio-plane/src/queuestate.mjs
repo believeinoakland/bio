@@ -118,12 +118,13 @@ export const QUEUE_OBLIGATION_KINDS = {
                               + "— LIVE: queue-producers R17",
   "action-reminder":             "a reminder you asked for on one of the group's action deadlines; answer it with "
                               + "another reminder or none (op=reminderanswer, DEC-94) — LIVE: queue-producers R18",
-  /* K899 (7), DEC-61 (R1; actions R52): a reply the group marked as legal pressure asks the group whether to place a
-     litigation hold; a member answers by recording the hold in place or released, with a reason, and that act is the
-     item's door (R12). An OBLIGATION, never muted. Its producer is `queue-producers`' (its R19). */
+  /* K899 (7), DEC-61, DEC-113 (R1; actions R52, R56): a reply the group marked as legal pressure asks the group whether
+     to place a litigation hold; a member answers by placing the hold (op=actionhold) or releasing it
+     (op=actionholdrelease, its own act since DEC-113), each with a reason, and those acts are the item's doors (R12). An
+     OBLIGATION, never muted. Its producer is `queue-producers`' (its R19). */
   "litigation-hold":             "a reply the group marked as legal pressure: consider whether to place a litigation "
-                              + "hold, and record it in place or released with a reason (op=actionhold, DEC-61) "
-                              + "— LIVE: queue-producers R19",
+                              + "hold, and record it in place or released with a reason (op=actionhold to place it, "
+                              + "op=actionholdrelease to release it; DEC-61, DEC-113) — LIVE: queue-producers R19",
   /* K921 (R1; filing-templates R9, local-facts R1): two more OBLIGATIONs a named member owes, each leaving by its own act
      (R12's doors) and never by a mute. Their producers are `queue-producers`' (its R20, R21). */
   "template-review-requested":   "a member asked you to review a filing template's version (op=templatereview) "
@@ -135,6 +136,13 @@ export const QUEUE_OBLIGATION_KINDS = {
      never muted. Its producer is `queue-producers`' (its R23). */
   "attribution-unchosen":        "a case edition being prepared reaches an observation you authored and you have chosen "
                               + "no credit level for it; choose one (op=attribute) — LIVE: queue-producers R23",
+  /* DEC-116 item 2 (R1, R50; docket R9): the docket's required core is a To-do for the case's manager until it is done,
+     so it is an OBLIGATION, never muted; it leaves by placement or, for a submission, a decline (R50's doors). Its
+     producer is `queue-producers`' (its R30). */
+  "docket-core-due":             "a case you manage has an item its docket must list: a response or statement from its "
+                              + "subject or a holder of standing, a newer edition, or a conflict on a load-bearing finding "
+                              + "not disclosed; place it, or decline it (op=docketprepare, op=docketdecline; DEC-116) "
+                              + "— LIVE: queue-producers R30",
 };
 
 export const QUEUE_FINDING_KINDS = {
@@ -238,6 +246,18 @@ export const QUEUE_FINDING_KINDS = {
                                 "this project's conclusion may not hold together with a conclusion you cannot see (DEC-85)",
   "side-corrected":             "something a finding rests on was marked wrong (N345)",
   "tension-after-publication":  "a published case's finding rests on a conflict found since it was published (N345)",
+  /* DEC-116 items 3, 7 (R1, R50; reevaluation R30, docket R12): what a case edition's docket did to something a
+     finding rests on. Each leaves as `side-corrected` does, by a recorded re-evaluation (R50). Their producer is
+     `queue-producers`' (its R31). */
+  "edition-withdrawn":          "something a finding rests on is in a case edition its group has withdrawn (DEC-116) "
+                              + "— LIVE: queue-producers R31",
+  "edition-contested":          "a response the group filed contests a case edition this finding is part of (DEC-116) "
+                              + "— LIVE: queue-producers R31",
+  /* DEC-113 (R1; actions R56, R59): the administrators and whoever placed the hold are told once that it was released.
+     Something the record noticed, which the recipient disposes of (R12's FINDING disposition). Its producer is
+     `queue-producers`' (its R29). */
+  "litigation-hold-released":   "a member released a litigation hold: the projects it alone covered may be purged again "
+                              + "and their assistant transcripts deleted on schedule (DEC-113) — LIVE: queue-producers R29",
 };
 
 /* THE N-NUMBERS — the catalogue's STABLE IDS, allocated when a generator is built and not before
