@@ -78,7 +78,7 @@ Terms.
   - `finding` (R4's facts for one finding at one edition, with R9's `acceptanceOf`);
   - `openFlags` (R9's `openFlagsOn`, the edition's own flags and the finding's);
   - `withdrawals` (R7's records, in order, paged);
-  - `moves` (R18's publisher moves, in the order recorded, paged; `accepted-work` R8). *(not yet met: T31: `moves`; N534)*
+  - `moves` (R18's publisher moves, in the order recorded, paged; `accepted-work` R8).
 
   A viewer who is not an active member is answered null, as R4 answers. (DEC-96 items 1, 4; P4)
 
@@ -90,7 +90,7 @@ Terms.
   - for `watchImport`, a `publisher` that is not a public https locator (`record-grammar.isPublicHttpsLocator`), or that carries a query or a fragment, is `IMPORT_WATCH_BAD_ADDRESS`;
   - for `unwatchImport`, an import with no watch in force is `IMPORT_NOT_WATCHED`.
 
-  Otherwise `watchImport` records a watch with `by`, the instant, `publisher` and the docket address. The docket address is `publisher` with the query `op=docketpublic&case=<the import's case, percent-encoded>&captures=omit` (`docket` R23, R24; `public-read` R25). A watch with the same docket address already in force answers `existed: true` and writes nothing. A different address replaces the watch in force. `unwatchImport` records the end of the watch, with `by` and the instant. Every watch and every end stays in the history. A watch is never a default: an import is not watched until a member asks. A case is watched only once it is imported, since the import holds the case's id and keys, against which its entries are verified (K1339 F2: "cites or follows" read as imported). (DEC-101 (3): "can be configured"; Publication §5A) *(not yet met: T31)*
+  Otherwise `watchImport` records a watch with `by`, the instant, `publisher` and the docket address. The docket address is `publisher` with the query `op=docketpublic&case=<the import's case, percent-encoded>&captures=omit` (`docket` R23, R24; `public-read` R25). A watch with the same docket address already in force answers `existed: true` and writes nothing. A different address replaces the watch in force. `unwatchImport` records the end of the watch, with `by` and the instant. Every watch and every end stays in the history. A watch is never a default: an import is not watched until a member asks. A case is watched only once it is imported, since the import holds the case's id and keys, against which its entries are verified (K1339 F2: "cites or follows" read as imported). (DEC-101 (3): "can be configured"; Publication §5A)
 
 **watchedImports({after, limit}) and recordDocketRead({import, docket, at, outcome, reason?, answer?})** (services for `monitoring`; read as the plane)
 
@@ -107,7 +107,7 @@ Terms.
   - A verified `take-back` entry naming the `seq` of a move is stated beside that move as `taken_back`.
   - After the read commits, the act calls `reevaluation.citedCaseMoved({move})` (its R33) once for each new move. A throw there never undoes the read, and the answer names it under `listeners_failed`.
 
-  (DEC-116 items 6, 8; DEC-101 (3); signatures R39, R40) *(not yet met: T31)*
+  (DEC-116 items 6, 8; DEC-101 (3); signatures R39, R40)
 
 **What a member reads** (N534)
 
@@ -116,13 +116,13 @@ Terms.
   - when `last_read.outcome` is `unreadable`, `docket_unreadable`: `DOCKET_UNREADABLE`'s sentence ("Could not read the publisher's docket"; `docket` R15) with the reason and the instant, never a statement that nothing changed;
   - and, per edition, `publisher`: the newest `edition` move (its edition, `date`, `what_changed`, `key_listed`), the `withdrawal` move covering that edition by `reevaluation` R33's rule (its `seq`, `date`, `reason`, `key_listed`), each with `taken_back`, or null. A `publisher` of null means only that no move has been seen, and the answer says so together with `last_read`.
 
-  Every entry seen, verified or refused, is answered in order under `docket_entries`. A non-member is answered as R4 says. (DEC-116 item 8: "never that nothing changed") *(not yet met: T31)*
+  Every entry seen, verified or refused, is answered in order under `docket_entries`. A non-member is answered as R4 says. (DEC-116 item 8: "never that nothing changed")
 - **R20** `watchItems({viewer})` (a service for `queue-producers`, read as the plane) answers the following, each naming the import, its group and case, and the watch's `set_by`:
   - `entries`: each verified entry seen, of any kind, with its `seq`, kind, edition, `date`, `key_listed` and, for a move, `what_changed` or `reason`;
   - `refused`: each refused entry, with its `seq` and the check it failed;
   - `unreadable`: each watch in force whose latest read is `unreadable`, with the reason and the instant.
 
-  A viewer who is not an active member is answered empty. It writes nothing and never throws. (DEC-101 (3): "telling the members"; K1339 F1: a verified entry that is not a move reaches only the watch's setter, through `queue-producers` R35) *(not yet met: T31)*
+  A viewer who is not an active member is answered empty. It writes nothing and never throws. (DEC-101 (3): "telling the members"; K1339 F1: a verified entry that is not a move reaches only the watch's setter, through `queue-producers` R35)
 
   **Settled readings of R16, R18–R20** (CASE-IMPORT #2's questions, K1381, K1383): (1) R18 skips an entry when this import already holds one with the same bytes served (`seq`, `digest`, `json` and `signature`; verified or refused), so a refused tampered copy never hides the genuine entry served later; a `seq` held by a verified entry with another digest makes the new one `refused`, `differs: true`, both digests; a `seq` held only by refused entries is checked afresh. (2) `new_entries` counts every entry the read newly recorded, `new_moves` and `new_refused` being parts of it; `entries_seen` is the length of `answer.entries`, `last_entry` is `answer.last_entry`. (3) `outcome: "read"` without an object carrying an `entries` list is recorded `unreadable`, reason `not_a_docket`; any other outcome than `read` or `unreadable` is `unreadable`, reason `outcome_unknown`; a missing or unreadable `at` is this copy's instant. (4) R19's `publisher.edition` is the newest `edition` move naming an edition later than this one (R33 (a)'s rule); `publisher` is `{edition, withdrawal}`, each null when none, itself null when neither, with `publisher_note` saying no move has been seen, beside `last_read`. (5) R20's `entries` and `refused` cover every entry seen for each import, also under an ended or replaced watch, each naming the `set_by` of the watch whose read saw it; `unreadable` covers watches in force only. (6) R16's move ids are `IMM-<n>`; `after` null or `""` starts from the first.
 
@@ -146,9 +146,9 @@ Terms.
 
 - **R10** No answer composes a case-level strength or a trust score. Origin marks are never composed with grades (DEC-92, DEC-44).
 - **R11** The source's bar is never stated or used as this group's (DEC-45). An acceptance changes no grade (DEC-96 item 1).
-- **R12** Every act is append-only. An import, its results, acceptances, withdrawals, flags and clears, and its watches, their ends, docket reads and entries seen, are never edited or deleted by any act of this module. *(not yet met: T31: the watch tables; N534)*
-- **R13** This module's tables are declared to `record-core`'s purge as the import's own record (K23). The stored case-file bytes are purged with their import. The watch, read and entry tables are the import's own record, purged with it. *(not yet met: T31: the watch, read and entry tables; N534)*
-- **R14** Each refusal carries its row in this module's own table (`checks.mjs`), a new family, its number given by `promotion`'s stamp. The translations are drafted by BOB and stamped by promotion. A change moves `CATALOG_VERSION`. Two new rows of the family C-130, stamped by promotion (N534): *(not yet met: T31: C-130.15, C-130.16)*
+- **R12** Every act is append-only. An import, its results, acceptances, withdrawals, flags and clears, and its watches, their ends, docket reads and entries seen, are never edited or deleted by any act of this module.
+- **R13** This module's tables are declared to `record-core`'s purge as the import's own record (K23). The stored case-file bytes are purged with their import. The watch, read and entry tables are the import's own record, purged with it.
+- **R14** Each refusal carries its row in this module's own table (`checks.mjs`), a new family, its number given by `promotion`'s stamp. The translations are drafted by BOB and stamped by promotion. A change moves `CATALOG_VERSION`. Two new rows of the family C-130, stamped by promotion (N534):
   - C-130.15 `IMPORT_WATCH_BAD_ADDRESS`: "That is not the public https address of the publishing group's copy. Give the address of their copy, with no query and no fragment. Nothing was written."
   - C-130.16 `IMPORT_NOT_WATCHED`: "This imported case is not being watched, so there is no watch to end. Nothing was written."
 - **R15** No place is named in this module's behaviour or outward text.
