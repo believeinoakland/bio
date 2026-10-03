@@ -129,7 +129,10 @@ export function defaultFakes() {
     reevaluation: { notices: () => ({ ok: true, notices: [], limit: 1000, truncated: false }),
                     correctedDependents: () => ({ ok: true, entries: [], limit: 200, truncated: false, cursor: null }),
                     /* reevaluation R30 (queue-producers R31): no withdrawn or contested edition under anything. */
-                    docketDependents: () => ({ ok: true, entries: [], count: 0, limit: 200, truncated: false, cursor: null }) },
+                    docketDependents: () => ({ ok: true, entries: [], count: 0, limit: 200, truncated: false, cursor: null }),
+                    /* reevaluation R33 (queue-producers R34, N545): no cited case moved under anything. */
+                    citedCaseDependents: () => ({ ok: true, entries: [], count: 0, limit: 200, truncated: false, cursor: null,
+                                                  wrote: false }) },
     intent: { gaps: () => ({ ok: true, gaps: [] }) },
     monitoring: { monitoring: () => ({ ok: true, items: [], truncated: false }),
                   flagged: () => ({ ok: true, items: [], limit: 200, truncated: false }),
@@ -144,6 +147,11 @@ export function defaultFakes() {
                holdsReleased: () => ({ ok: true, items: [], limit: 500, truncated: false, cursor: null }) },
     /* docket R9 (queue-producers R30): no core item due on any case until a test says otherwise. */
     docket: { coreDue: () => ({ ok: true, items: [], count: 0, wrote: false }) },
+    /* case-import R20 (queue-producers R35, N545): no followed docket gained, refused or failed a read. */
+    caseImport: { watchItems: () => ({ ok: true, entries: [], refused: [], unreadable: [] }) },
+    /* wizard-scripts R13, R17 (queue-producers R32, R33, N545): no script broke or returned, none submitted. */
+    wizardScripts: { brokenScripts: () => ({ ok: true, entries: [], cursor: null, truncated: false }),
+                     submittedFor: () => ({ ok: true, entries: [], cursor: null, truncated: false }) },
     /* filing-templates R20, local-facts R4 (queue-producers R20, R21; K921): no review asked and no fact due until a test
        says otherwise. */
     filingTemplates: { reviewsRequested: ({ limit } = {}) => ({ ok: true, items: [], limit: limit ?? 500, truncated: false, cursor: null }) },
