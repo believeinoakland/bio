@@ -27,3 +27,7 @@ N538 R14 applied: the document writes case-grammar's CASE_DOCUMENT_FORMAT (throu
 ## B2 · CHANGE (case-grammar merged, K1382)
 
 Merged `tranche/T31` (case-grammar R1 `/7`). `node --test test/m/case-authoring/`: 122 pass, 0 fail (the three `/7` arms green against case-grammar's own code). Checks format, architecture, coverage (39 of 39), ownership: 0 failures. Waiting for publication, network-notices, ratification and case-import to merge before COMPLETE again (B2).
+
+## J3 · REPORT
+
+B2 done: tranche/T31 merged (case-grammar /7); case-authoring tests 122/122 green, checks 0 failures. Will post COMPLETE once publication, network-notices, ratification and case-import (my same-layer providers) are merged and I re-run on your CHANGE.
