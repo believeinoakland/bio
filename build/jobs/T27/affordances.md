@@ -20,14 +20,14 @@
 
 **Deferred**: none.
 
-**Found in other modules** (REPORT J2)
+**Found in other modules** (REPORT J1)
 - `control-plane` test `totality.test.mjs` R2, R41 (`unaccounted` over the door's op table) was green before this merge and reads `stale` for the 12 ops R33 and R34 name (`actionholdrelease`, `actionholdpreview`, `projectholds`, the nine docket ops) until op-declarations' L11 merge carries their rows (its R12, R13). Not on the accepted-reds list by name; it is the merge order's own consequence (affordances first).
 - `control-plane` R22 (CHECK_FAMILIES, docket's DOCKET_CHECKS): accepted red 4, unchanged.
 - No generated artifact staled: `affordances` feeds no bundle in `build/manifest.md`'s table.
 
 **Tests and checks** (on `job/T27/affordances` with `tranche/T27` @ `4d283665f9` merged in)
 - `node --test test/m/affordances/*.test.mjs`: tests 153, pass 153, fail 0, skipped 0 (147/1 before, the one red accepted red 5).
-- The users of affordances: tasks 71/0, queue (with `conclude-project.test.mjs`) 98/0, op-declarations 35/0, plane (with `migrate-released.test.mjs`) 56/0, control-plane 126 pass, 2 fail: R22 (accepted red 4) and R2/R41's totality (the 12 ops R33, R34 name read `stale` until op-declarations' merge; green before this change; REPORT J2).
+- The users of affordances: tasks 71/0, queue (with `conclude-project.test.mjs`) 98/0, op-declarations 35/0, plane (with `migrate-released.test.mjs`) 56/0, control-plane 126 pass, 2 fail: R22 (accepted red 4) and R2/R41's totality (the 12 ops R33, R34 name read `stale` until op-declarations' merge; green before this change; REPORT J1).
 - No layer tests are named in `build/manifest.md`.
 - `format`: 92 modules, 0 failures. `architecture`: 13 product files, 140 relative imports, 0 failures. `coverage`: 34 of 34 live ids named, 0 failures. `ownership` against `tranche/T27`: 0 failures.
 
