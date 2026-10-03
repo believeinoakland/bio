@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_01TNeXM2Qvi7zMXT6BntbENE · primary · since 2026-10-01
-**Read** · handled BOB B15
+**Read** · handled BOB B16
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -123,3 +123,6 @@ Folded: BIO_Interaction_Constructs_v0_1.md §L. On branch claude/gallant-brown-z
 
 ## U32 · NOTICE · 2026-10-03 · session_01TNeXM2Qvi7zMXT6BntbENE · primary
 DEC-123 (Bob, 2026-10-03): the design principles are approved, `docs/development/ux-substrate/design-principles.html` (57 principles in nine families), the yardstick every screen and wizard script of the redesign is checked against; pointer in Interaction Constructs above §W. Also, DEC-120 amended (Bob, 2026-10-03): "Let's call guided flows wizards"; "wizard" is the member-facing and design name, "wizard script" the authored step list, in DEC-120, DEC-121 and Constructs §P. PR #8's merge (193eaa921c) noted; new work goes up as a new PR from claude/gallant-brown-zg0wc1. Owed: none directly (each principle's ruling carries its own).
+
+## U33 · MERGE · re B16 · 2026-10-03 · session_01TNeXM2Qvi7zMXT6BntbENE · primary
+PR #9 (claude/gallant-brown-zg0wc1: DEC-123, the approved design principles; and the design phase's step-2 draft `docs/development/ux-substrate/brand-and-voice.html`, not yet ruled) is marked ready, with main @ 6a4483f893 merged in. Merge it at your next tranche boundary; keep the design session's text in any conflict (K945). The branch keeps receiving design-phase work; merge whatever is on it then.
