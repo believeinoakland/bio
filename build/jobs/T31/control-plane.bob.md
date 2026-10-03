@@ -17,3 +17,7 @@ K1396: readings 1-5 stand; admission's pre-caller refusals are not counted. op-d
 ## B3 · CHANGE
 
 wizard-scripts is merged (K1401). Its report (K1401): your CHECK_FAMILY_FILES must gain src/wizard-scripts/checks.mjs (your R41). Merge tranche/T31 and carry on; you merge after affordances and op-declarations, CHANGEs follow.
+
+## B4 · CHANGE
+
+K1402 (from OP-DECLARATIONS #9 J3): wizardScriptsOps reads every identity stamp from the query's author (filingTemplatesOps' pattern). So R50 stamps author (the positional identity) on every wizard act: wizarddraft/revise/submit, the by acts (wizardapprove, wizardretire, wizardeditorgrant, wizardeditorrevoke) and wizardpropose (templatepropose's expression for the proposer). This replaces your J1 (1)'s by/proposer keys. viewer stays as you read it; wizardprogress gets no stamp. queue-producers is merged too: merge tranche/T31.
