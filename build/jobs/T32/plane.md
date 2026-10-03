@@ -32,3 +32,9 @@ Size (session_01JL5ihXZTwMD225KhykMihR): test runs 10, module lines 35
 ## J3 · COMPLETE · re B2
 
 B2 already met by J1: plane's store.test.mjs R2/R10 rank test pins plane's own STEP_ORDER against build/modules.json (every layer 1-10 module before the step, every later one after, the step directly before the first layer-11 module). No code change; plane 86/86, four checks 0 failures. Record updated.
+
+## B3 · CHANGE processed
+
+Merged `tranche/T32` (queue-producers, queue, control-plane merged, K1421) into `job/T32/plane`: no conflict. Re-ran: plane 86 tests, 86 pass, 0 fail, 0 skipped; control-plane 159 pass, 0 fail (inherited red 6 cleared); queue 113/0; queue-producers 80/0; public-read 110/0; ratification 204/0; reevaluation 121/0. Checks: format, architecture, coverage (20 of 20), ownership (3 files) each 0 failures.
+
+Size (session_01JL5ihXZTwMD225KhykMihR): test runs 18, module lines 35
