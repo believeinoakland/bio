@@ -1,6 +1,6 @@
 # Plan T28
 
-**Status** · OPEN · BOB #105 · session_01DDpGto6QSiBnw4AxvJcYJq · depth 1
+**Status** · OPEN · BOB #106 · session_014NiBSyfeN9Ej6wJuwzhDhh · depth 1
 
 **Jobs** · membership: MEMBERSHIP #21 session_014t8ory3KuXTmiZLiSDLmaB; promotion: PROMOTION #28 session_01JXCfBLEWnwDJYd7wTMihga; inquiry-grammar: INQUIRY-GRAMMAR #5 session_01PnLhSoHMj7KMjQmdKaYkP6; accepted-work: ACCEPTED-WORK #1 session_01Ny1sjsJ9vEJz7rxs28vcCh; inquiry: INQUIRY #13 session_01QNQaUggEEA2eXfwiByRD2P; basis-versions: BASIS-VERSIONS #11 session_01EC1CbcpHTUynmhmiinbKPz; strength: STRENGTH #10 session_01Q7AodKmzj5rYSu6PxmkvRb; reevaluation: REEVALUATION #15 session_01CqAd23e8YE6QX8eLXZeLoJ; case-grammar: CASE-GRAMMAR #5 session_016TiHSZQkrggTJ3QAahBMjg; publication: PUBLICATION #16 session_01XULTB98f6bHiUb3Y9gRxug; docket: DOCKET #2 session_01Pn2VewSRXzbLW8i6uHf5Ds; public-read: PUBLIC-READ #9 session_0181u3c6mH6hCT6JNt1c6phB; ratification: RATIFICATION #17 session_01KY9hTGfankh8NKom3Z2q59; case-checker: CASE-CHECKER #1 session_01CyxbPWKAwn7Y32K6Dp5yZP; case-import: CASE-IMPORT #1 session_01Mr16UuJqdWD9MAumx7iRos; case-authoring: CASE-AUTHORING #13 session_01HnTijf8F1LJnr1J6wARkTF; conformance: CONFORMANCE #11 session_01D7FUNzKZyDySkUXiYWbkNJ
 
