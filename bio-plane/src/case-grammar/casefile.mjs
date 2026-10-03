@@ -9,10 +9,10 @@
  *    parts: [{index, sha256, bytes}],                    one per part, indexed from 1, in order
  *    files: [{path, sha256, bytes, part, kind}]}         every file, in path order, each in exactly one part
  *
- * A PART'S FINGERPRINT is taken over its file rows, never over its own bytes: the manifest is inside each part, so a
- * hash of the part's bytes could not be written in it. `sha256` is the SHA-256 of the canonical JSON of the part's
- * `[{path, sha256, bytes}]` in manifest order, and `bytes` their sum (`partFingerprint`, K1315), so a part's fingerprint
- * fixes every byte it carries and is checked from the manifest alone.
+ * A PART'S FINGERPRINT is taken over its files, never over its own bytes: the manifest is inside each part, so a hash of
+ * the part's bytes could not be written in it. `sha256` is the SHA-256 of one line per file of the part, in path order,
+ * `<path> <sha256> <bytes>\n`, and `bytes` the sum of those files' bytes (`casePartDigest`, K1318), so a part's
+ * fingerprint fixes every byte it carries and is checked from the manifest alone.
  *
  * THE PATHS. Each kind is spelled at one path (`caseFilePath`), and `caseFileEntryOf` reads a path back, so a reader
  * knows which finding or material a file belongs to without a second index:
@@ -22,7 +22,7 @@
  *   materials/<ref>/document, …/extracted.txt, …/observation.md          a material, whole (R12's `ref`)
  *   attestations/<ref>/<name>                                            a signed account, a timestamp token, a co-archive */
 
-import { sha256HexSync, canonicalJson } from "../record-grammar/index.mjs";
+import { sha256HexSync } from "../record-grammar/index.mjs";
 
 /** R13: the format token. */
 export const CASE_FILE_FORMAT = "bio-case-file/1";
@@ -84,13 +84,14 @@ export function caseFileEntryOf(path) {
   return null;
 }
 
-/** R13 (K1315 (3)): a part's fingerprint and size from its file rows, in manifest order: `{sha256, bytes}`, `sha256`
- *  the SHA-256 of the canonical JSON of `[{path, sha256, bytes}]` and `bytes` their sum. The one spelling. */
-export function partFingerprint(files) {
-  const rows = (Array.isArray(files) ? files : []).filter((f) => f && typeof f === "object")
-    .map((f) => ({ path: f.path ?? null, sha256: f.sha256 ?? null, bytes: f.bytes ?? null }));
-  return { sha256: sha256HexSync(canonicalJson(rows)),
-           bytes: rows.reduce((n, f) => n + (Number.isSafeInteger(f.bytes) ? f.bytes : 0), 0) };
+/** R13 (K1318): a part's fingerprint and size from the manifest's files: `{sha256, bytes}` over the files whose `part`
+ *  is `index`, in path order, `sha256` the SHA-256 of their lines `<path> <sha256> <bytes>\n`. The one spelling. */
+export function casePartDigest(files, index) {
+  const mine = (Array.isArray(files) ? files : [])
+    .filter((f) => f && typeof f === "object" && f.part === index && typeof f.path === "string")
+    .sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
+  return { sha256: sha256HexSync(mine.map((f) => `${f.path} ${f.sha256} ${f.bytes}\n`).join("")),
+           bytes: mine.reduce((n, f) => n + (Number.isSafeInteger(f.bytes) ? f.bytes : 0), 0) };
 }
 
 const plain = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
@@ -190,7 +191,7 @@ export function caseFileManifestCheck(manifest) {
       if (!plain(p) || p.index !== i + 1) return;
       const mine = files.filter((f) => plain(f) && f.part === p.index);
       if (!mine.length) return no(`parts[${i}]`, "part_empty", `part ${p.index} carries no file`);
-      const d = partFingerprint(mine);
+      const d = casePartDigest(files, p.index);
       if (p.sha256 !== d.sha256) no(`parts[${i}].sha256`, "part_sha256", `part ${p.index}'s SHA-256 is not the one its files give`);
       if (p.bytes !== d.bytes) no(`parts[${i}].bytes`, "part_bytes", `part ${p.index}'s size is not the sum of its files' sizes`);
     });

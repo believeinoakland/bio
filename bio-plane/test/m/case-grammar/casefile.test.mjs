@@ -235,7 +235,7 @@ test("R1 DEC-119 a source whose identity is withheld is stated as Withheld with 
 
 /* ===== R13 ===== */
 
-test("R13 K1315 the case file's format: its token, its kinds, one path per kind read back, and a part fingerprinted over its file rows", () => {
+test("R13 K1318 the case file's format: its token, its kinds, one path per kind read back, and a part fingerprinted over its files", () => {
   assert.equal(CG.CASE_FILE_FORMAT, "bio-case-file/1");
   assert.equal(CG.CASE_FILE_MANIFEST_PATH, "manifest.json");
   assert.deepEqual([...CG.CASE_FILE_KINDS], ["case_document", "case_signature", "complete_edition", "finding",
@@ -266,13 +266,13 @@ test("R13 K1315 the case file's format: its token, its kinds, one path per kind 
   for (const path of ["manifest.json", "/case.md", "findings/x/other.md", "findings/../x/finding.md", "materials/r/document/x",
                       "attestations/r/../x", "case.MD", "", null, 7, "findings/.x/finding.md"])
     assert.equal(CG.caseFileEntryOf(path), null, String(path));
-  /* K1315 (3): the part's fingerprint is the SHA-256 of the canonical JSON of its file rows in manifest order */
-  const files = [{ path: "a", sha256: sha("a"), bytes: 3, part: 1, kind: "x" }, { path: "b", sha256: sha("b"), bytes: 2, part: 1 }];
-  assert.deepEqual(CG.partFingerprint(files),
-    { sha256: sha(`[{"bytes":3,"path":"a","sha256":"${sha("a")}"},{"bytes":2,"path":"b","sha256":"${sha("b")}"}]`), bytes: 5 });
-  assert.deepEqual(CG.partFingerprint(files), digest(files, 1), "only path, sha256 and bytes are fingerprinted");
-  assert.notDeepEqual(CG.partFingerprint([...files].reverse()).sha256, CG.partFingerprint(files).sha256, "in manifest order");
-  assert.deepEqual(CG.partFingerprint(null), { sha256: sha("[]"), bytes: 0 });
+  /* K1318: the part's fingerprint: one line per file of the part, in path order, and the sum of their sizes */
+  const files = [{ path: "b", sha256: sha("b"), bytes: 2, part: 1 }, { path: "a", sha256: sha("a"), bytes: 3, part: 1 },
+                 { path: "c", sha256: sha("c"), bytes: 5, part: 2 }];
+  assert.deepEqual(CG.casePartDigest(files, 1), { sha256: sha(`a ${sha("a")} 3\nb ${sha("b")} 2\n`), bytes: 5 });
+  assert.deepEqual(CG.casePartDigest(files, 2), digest(files, 2));
+  assert.deepEqual(CG.casePartDigest([...files].reverse(), 1), CG.casePartDigest(files, 1), "path order, whatever the order handed");
+  assert.deepEqual(CG.casePartDigest(null, 1), { sha256: sha(""), bytes: 0 });
 });
 
 test("R13 caseFileManifestCheck answers none for a manifest that meets the rule, split into parts or not", () => {

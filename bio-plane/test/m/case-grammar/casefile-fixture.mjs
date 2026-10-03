@@ -5,11 +5,12 @@ import * as CG from "../../../src/case-grammar/index.mjs";
 import { sha, NOW, V } from "./helpers.mjs";
 
 const bytesOf = (s) => Buffer.byteLength(s, "utf8");
-/** A part's fingerprint, spelled a second way (K1315 (3)): SHA-256 of the JSON of its `[{path, sha256, bytes}]` in
-    manifest order (keys already sorted), and the sum of sizes. */
+/** A part's fingerprint, spelled a second way (K1318): one line per file of the part, in path order, and the sum of
+    sizes. */
 export const digest = (files, index) => {
-  const mine = files.filter((f) => f.part === index).map((f) => ({ bytes: f.bytes, path: f.path, sha256: f.sha256 }));
-  return { sha256: createHash("sha256").update(JSON.stringify(mine)).digest("hex"),
+  const mine = files.filter((f) => f.part === index).map((f) => f.path).sort()
+    .map((p) => files.find((f) => f.path === p && f.part === index));
+  return { sha256: createHash("sha256").update(mine.map((f) => `${f.path} ${f.sha256} ${f.bytes}\n`).join("")).digest("hex"),
            bytes: mine.reduce((n, f) => n + f.bytes, 0) };
 };
 export const KEY = { key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExampleKeyBytesForTheFixture group@lakeshore",

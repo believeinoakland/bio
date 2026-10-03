@@ -41,7 +41,7 @@ export { METHOD_FIELDS, methodBlockLines, methodOf, MATERIAL_FIELDS, MATERIAL_AT
          PAIR_AXES, pairLine, pairOf, acceptedWorkBlockLines, acceptedWorkOf } from "./materials.mjs";
 export { CASE_FILE_FORMAT, CASE_FILE_MANIFEST_PATH, CASE_FILE_KINDS, CASE_FILE_SINGLE_KINDS, CASE_FILE_MANIFEST_FIELDS,
          CASE_FILE_KEY_FIELDS, CASE_FILE_PART_FIELDS, CASE_FILE_FILE_FIELDS, caseFilePath, caseFileEntryOf,
-         partFingerprint, caseFileManifestCheck } from "./casefile.mjs";
+         casePartDigest, caseFileManifestCheck } from "./casefile.mjs";
 export { GRADING_FACT_FIELDS, PASSAGE_FIELDS, gradingFactsLines, passagesLines, gradingFactsOf, passagesOf,
          extractedTextOf } from "./facts.mjs";
 export { BAR_AXES, STANDING_ROLE_WORDS, standingOf } from "./standing.mjs";
