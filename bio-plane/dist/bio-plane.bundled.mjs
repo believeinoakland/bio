@@ -75490,6 +75490,22 @@ CREATE TABLE IF NOT EXISTS reevaluation_level_moves (
   at           TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS reevaluation_level_moves_observation ON reevaluation_level_moves (observation, at);
+-- R32 (DEC-119 (3), N523): AN OFF-THE-RECORD CAPTURE'S ATTESTING MEMBER'S
+-- CREDIT LEVEL MOVED, told by ratification (its R36) as R29's moves are: one
+-- row per call, the capture (its sha-256), the level before and after, the
+-- case and edition, and the move's instant. It names no member and holds no
+-- text. The attribution cause on a leg targeting a document whose capture it
+-- is is derived on read from these rows. Append-only.
+CREATE TABLE IF NOT EXISTS reevaluation_capture_level_moves (
+  move_id      INTEGER PRIMARY KEY AUTOINCREMENT,
+  capture_sha  TEXT NOT NULL,
+  level_before TEXT NOT NULL,
+  level_after  TEXT NOT NULL,
+  case_id      TEXT,
+  edition      INTEGER,
+  at           TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS reevaluation_capture_level_moves_capture ON reevaluation_capture_level_moves (capture_sha, at);
 -- R25 (N178): WHERE THE NOTICE SWEEP'S PASS STANDS. One row (id 1): the cursor
 -- of the pass part-way (after the last leg a batch read), when that pass began
 -- and when the last complete one began, and the receipt mark: receipt_seq is
@@ -75517,6 +75533,8 @@ var REEVALUATION_TABLES = Object.freeze([
   { name: "reevaluation_source_moves", keys: [] },
   /* R29: a level move is about the observation it names, a bundle, so a purge of that bundle clears its rows. */
   { name: "reevaluation_level_moves", keys: ["observation"] },
+  /* R32: a capture is no bundle, so a single-bundle purge never names one; a whole-store purge clears these. */
+  { name: "reevaluation_capture_level_moves", keys: [] },
   /* R25: the sweep's one position row is about no bundle, so only a whole-store purge clears it. */
   { name: "reevaluation_sweep", keys: [] }
 ]);
@@ -75539,6 +75557,7 @@ var REEVAL_NOTICE_DELAY_MS = 1e3;
 var NOTE_MAX2 = 500;
 var ADOPT_WHY_MAX = 2e3;
 var DOCKET_KINDS = Object.freeze(["withdrawal", "contested"]);
+var ACCEPTANCE_PAGE = 200;
 var CAUSE_SOURCES = Object.freeze([
   "supersession",
   "edition",
@@ -75549,6 +75568,7 @@ var CAUSE_SOURCES = Object.freeze([
   "source",
   "attribution",
   ...DOCKET_KINDS,
+  "acceptance",
   ...REEVAL_SOURCES,
   "weakened"
 ]);
@@ -75561,6 +75581,9 @@ var DOCKET_LIMIT_DEFAULT = 200;
 var DOCKET_LIMIT_MAX = 200;
 var DOCKET_ABSENT = "no module has registered the docket, so no withdrawn or contested case edition was read and no withdrawal, contested or withdrawal wp_retraction cause could be derived; that is not the same as none";
 var DOCKET_UNREAD = "the docket's withdrawals or contesting entries could not all be read, so a withdrawal, contested or wp_retraction cause may be missing; that is not the same as none";
+var ACCEPTED_WORK_ABSENT_WHY = "no module holding another group's work is registered, so no acceptance withdrawal was read and no acceptance cause could be derived; that is not the same as none";
+var ACCEPTANCE_UNREAD = "the acceptances withdrawn could not all be read, so an acceptance cause may be missing; that is not the same as none";
+var isRef2 = (id) => typeof id === "string" && !!parseImportedFindingRef(id);
 var CORRECTED_LIMIT_DEFAULT = 200;
 var CORRECTED_LIMIT_MAX = 200;
 var RAISED_ON = Object.freeze(["affected", "undetermined"]);
@@ -75592,6 +75615,8 @@ function laterThan(at28, written) {
   return Number.isNaN(o) ? String(at28) > String(written) : o > 0;
 }
 function attributionDetail(m) {
+  if (m.capture_sha)
+    return `the credit level of the member attesting capture ${m.capture_sha.slice(0, 12)} moved from ${m.level_before} to ${m.level_after}${m.case_id ? ` in case ${m.case_id}` : ""}${m.edition != null ? ` at edition ${m.edition}` : ""}, at ${m.at}: how the member who attests it is identified has changed.`;
   return `the credit level of the observation ${m.observation} moved from ${m.level_before} to ${m.level_after}${m.case_id ? ` in case ${m.case_id}` : ""}${m.edition != null ? ` at edition ${m.edition}` : ""}, at ${m.at}: how the member who gave it is identified has changed.`;
 }
 var Reevaluation = class {
@@ -75616,6 +75641,7 @@ var Reevaluation = class {
     basisVersions = null,
     contradiction = null,
     sources = null,
+    acceptedWork = null,
     now = null,
     env = null
   } = {}) {
@@ -75623,7 +75649,7 @@ var Reevaluation = class {
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
-    this.#deps = { host, inquiry, content, connections, provenance, strength, basisVersions, contradiction, sources };
+    this.#deps = { host, inquiry, content, connections, provenance, strength, basisVersions, contradiction, sources, acceptedWork };
     this.now = typeof now === "function" ? now : () => stampInstant("second");
     this.env = env && typeof env === "object" ? env : {};
   }
@@ -75648,6 +75674,9 @@ var Reevaluation = class {
   }
   get sources() {
     return this.#deps.sources ||= sourcesOf(this.#deps.host);
+  }
+  get acceptedWork() {
+    return this.#deps.acceptedWork ||= acceptedWorkOf(this.#deps.host, { record: this.record, promotion: this.promotion });
   }
   migrate() {
     migrateReevaluation(this.sql);
@@ -75763,6 +75792,7 @@ var Reevaluation = class {
    *  which is the common case and what keeps the untargeted sweep cheap. `reg` is the published registry (null unread);
    *  `wp` the answer's work-product reader (`#workProducts`), `dk` its docket reader (`#docket`). */
   #moved(targetId, visible, reg, wp = this.#workProducts(), dk = this.#docket()) {
+    if (isRef2(targetId)) return null;
     const row2 = this.#targetRow(targetId);
     if (!row2)
       return {
@@ -76111,6 +76141,184 @@ var Reevaluation = class {
       detail: `${finding3} is a member finding of case ${e.case}${e.edition != null ? ` edition ${e.edition}` : ""}, and a response filed on its docket contests that edition (entry ${e.entry}, filed at ${e.at}). Nothing was moved and no entry is evidence; whether this finding still stands is the members' to decide.`
     })).sort((a, b) => a.entry < b.entry ? -1 : a.entry > b.entry ? 1 : 0);
   }
+  /** R31 (DEC-96 item 1): accepted work's withdrawals as one answer reads them, through `accepted-work`'s
+   *  `acceptanceWithdrawals` (its R2), paged through each `cursor` to null on first use. A withdrawal is `{withdrawal,
+   *  import, edition, refs, at}`. Answers `{get(), flags()}`: `get` the read (`byRefEdition` keyed `<ref>\0<edition>`,
+   *  `entries` by withdrawal id); `flags` what the answer states when nothing is registered (`accepted_work_absent`) or a
+   *  page could not be read (`acceptance_read: false`), R21. */
+  #accepted() {
+    let read2 = null;
+    const get2 = () => {
+      if (read2) return read2;
+      read2 = { absent: false, ok: true, byRefEdition: /* @__PURE__ */ new Map(), entries: /* @__PURE__ */ new Map() };
+      const seen = /* @__PURE__ */ new Set();
+      let after = "";
+      for (; ; ) {
+        let page = null;
+        try {
+          page = this.acceptedWork.acceptanceWithdrawals({ after, limit: ACCEPTANCE_PAGE });
+        } catch {
+          page = null;
+        }
+        if (page && page.absent === true) {
+          read2.absent = true;
+          break;
+        }
+        if (!page || !Array.isArray(page.withdrawals)) {
+          read2.ok = false;
+          break;
+        }
+        for (const x of page.withdrawals) {
+          const id = x && typeof x === "object" ? str5(x.withdrawal) : null;
+          const edition = x && Number.isInteger(x.edition) && x.edition > 0 ? x.edition : null;
+          if (!id || edition === null) {
+            read2.ok = false;
+            continue;
+          }
+          const w = {
+            withdrawal: id,
+            import: str5(x.import),
+            edition,
+            at: str5(x.at),
+            refs: [...new Set((Array.isArray(x.refs) ? x.refs : []).map(str5).filter(isRef2))].sort()
+          };
+          read2.entries.set(id, w);
+          for (const ref of w.refs) {
+            const k = `${ref}\0${edition}`;
+            if (!read2.byRefEdition.has(k)) read2.byRefEdition.set(k, []);
+            read2.byRefEdition.get(k).push(w);
+          }
+        }
+        const next = typeof page.cursor === "string" ? page.cursor : null;
+        if (!page.withdrawals.length || next === null || seen.has(next)) break;
+        seen.add(next);
+        after = next;
+      }
+      return read2;
+    };
+    const flags = () => {
+      const a = get2();
+      return {
+        ...a.absent ? { accepted_work_absent: true, accepted_work_why: ACCEPTED_WORK_ABSENT_WHY } : {},
+        ...a.ok ? {} : { acceptance_read: false, acceptance_read_why: ACCEPTANCE_UNREAD }
+      };
+    };
+    return { get: get2, flags };
+  }
+  /* R1, R31: the edition each leg on a ref names (`target_edition`, authored on the leg and not projected), keyed
+     `<bundle>\0<ord>`; a leg whose document no longer names that target there names none. */
+  #citedEditions(legs) {
+    const fms = /* @__PURE__ */ new Map(), out = /* @__PURE__ */ new Map();
+    for (const l of legs) {
+      if (!fms.has(l.bundle_id)) fms.set(l.bundle_id, this.#basisFrontmatter(this.#frontmatterOf(l.bundle_id)));
+      const leg = fms.get(l.bundle_id)[l.ord];
+      const e = leg && typeof leg.target === "string" && leg.target.trim() === l.target_id ? Number(leg.target_edition) : NaN;
+      out.set(`${l.bundle_id}\0${l.ord}`, Number.isInteger(e) && e > 0 ? e : null);
+    }
+    return out;
+  }
+  /** R1 (N522): whether a viewer may see an imported finding reference: `accepted-work.acceptedFinding` answers a
+   *  finding at some edition a leg on it names. Answers `{seen(ref), flags()}`: `seen` true or false, memoised for the
+   *  answer; a machine credential is not filtered, as for a bundle; with nothing registered, or the read unreadable,
+   *  the ref is not seen (whether it may be cannot be read, R20). `flags` states `accepted_work_absent` when nothing is
+   *  registered, and a failed read nothing more (R1, R20; K1312). */
+  #refSeer(viewer) {
+    const g = viewerPredicate(viewer);
+    const memo = /* @__PURE__ */ new Map();
+    const state = { absent: false };
+    const seen = (ref) => {
+      if (!isRef2(ref)) return false;
+      if (g.scope === "member") return true;
+      if (g.scope === "DENY") return false;
+      if (memo.has(ref)) return memo.get(ref);
+      const legs = this.#rows(`SELECT bundle_id, ord, target_id FROM inquiry_basis WHERE target_id = ? ORDER BY bundle_id, ord`, ref);
+      const editions = [...new Set([...this.#citedEditions(legs).values()].filter((e) => e !== null))].sort((a, b) => a - b);
+      let ok2 = false;
+      for (const edition of editions) {
+        let a = null;
+        try {
+          a = this.acceptedWork.acceptedFinding({ ref, edition, viewer });
+        } catch {
+          a = { unreadable: true };
+        }
+        if (a && a.absent === true) {
+          state.absent = true;
+          break;
+        }
+        if (a && a.unreadable === true) continue;
+        if (a && typeof a === "object") {
+          ok2 = true;
+          break;
+        }
+      }
+      memo.set(ref, ok2);
+      return ok2;
+    };
+    const flags = () => state.absent ? { accepted_work_absent: true, accepted_work_why: ACCEPTED_WORK_ABSENT_WHY } : {};
+    return { seen, flags };
+  }
+  /** R31 (DEC-96 item 1): the `acceptance` causes on `legs` (`inquiry_basis` rows), for a viewer's visible dependents.
+   *  A live leg (R7) on an imported finding reference carries one per withdrawal naming that ref at the edition the leg
+   *  names, `since` the withdrawal's instant, `detail` the source group, case and edition (read through
+   *  `acceptedFinding` for `viewer`; null where it answers none) and the withdrawal. `only` keeps one withdrawal's.
+   *  Answers `{byPair}` keyed `<dependent>\0<target>`, each list in (ord, withdrawal) order. Reads only; regrades
+   *  nothing (R19). */
+  #acceptanceOn(legs, visible, aw, viewer, only = null) {
+    const byPair = /* @__PURE__ */ new Map();
+    const index = aw.get().byRefEdition;
+    if (!index.size) return { byPair };
+    const rows2 = legs.filter((l) => l && l.bundle_id && isRef2(l.target_id) && visible(l.bundle_id) !== null);
+    if (!rows2.length) return { byPair };
+    const cited = this.#citedEditions(rows2);
+    const hits = [];
+    for (const l of rows2) {
+      const edition = cited.get(`${l.bundle_id}\0${l.ord}`);
+      if (edition === null) continue;
+      for (const w of index.get(`${l.target_id}\0${edition}`) || [])
+        if (!only || w.withdrawal === only) hits.push({ l, w, edition });
+    }
+    if (!hits.length) return { byPair };
+    const live = this.#liveOn(hits.map((h) => h.l.target_id));
+    const source = /* @__PURE__ */ new Map();
+    const sourceOf = (ref, edition) => {
+      const k = `${ref}\0${edition}`;
+      if (!source.has(k)) {
+        let a = null;
+        try {
+          a = this.acceptedWork.acceptedFinding({ ref, edition, viewer });
+        } catch {
+          a = null;
+        }
+        source.set(k, a && typeof a === "object" && !a.absent && !a.unreadable ? { group: str5(a.group), case: str5(a.case) } : { group: null, case: null });
+      }
+      return source.get(k);
+    };
+    for (const { l, w, edition } of hits) {
+      const x = live.get(l.target_id).get(`${l.bundle_id}\0${l.ord}`);
+      if (!x) continue;
+      const pk = `${l.bundle_id}\0${l.target_id}`;
+      if (!byPair.has(pk)) byPair.set(pk, []);
+      if (byPair.get(pk).some((c) => c.ord === l.ord && c.withdrawal === w.withdrawal)) continue;
+      const s = sourceOf(l.target_id, edition);
+      byPair.get(pk).push({
+        source: "acceptance",
+        since: w.at,
+        ord: l.ord,
+        role: x.role ?? null,
+        state: x.state ?? null,
+        ref: l.target_id,
+        edition,
+        withdrawal: w.withdrawal,
+        import: w.import,
+        group: s.group,
+        case: s.case,
+        detail: `this leg rests on another group's finding ${l.target_id} at edition ${edition}${s.case ? `, of case ${s.case}` : ""}${s.group ? ` by ${s.group}` : ""}, and this group's acceptance of that edition was withdrawn (${w.withdrawal}${w.at ? `, at ${w.at}` : ""}). The finding keeps answering as that group published it and the leg is unchanged; whether this finding still stands is the members' to decide.`
+      });
+    }
+    for (const list2 of byPair.values())
+      list2.sort((a, b) => a.ord - b.ord || (a.withdrawal < b.withdrawal ? -1 : a.withdrawal > b.withdrawal ? 1 : 0));
+    return { byPair };
+  }
   /* R16: the recorded re-evaluations of the (dependent, target) pairs one answer lists, keyed (dependent, target,
      source): the LATEST record of each key, which is the one with the latest `since`, because a record is only written
      for a cause still owed, whose `since` is later than every earlier record's (`recordReevaluation`). So the read is
@@ -76386,7 +76594,12 @@ var Reevaluation = class {
   /* R28: the live legs resting on any capture `sourceId` stands behind, each `{bundle_id, ord, role, state, target}`, as
      the plane reads them (a listener is the plane's own; no viewer is asked). */
   #legsOnSource(sourceId) {
-    const caps = this.#rows(`SELECT DISTINCT capture_sha FROM source_knocks WHERE source_id = ? ORDER BY capture_sha`, sourceId).map((r) => r.capture_sha);
+    return this.#legsOnCaptures(this.#rows(`SELECT DISTINCT capture_sha FROM source_knocks WHERE source_id = ?
+                                              ORDER BY capture_sha`, sourceId).map((r) => r.capture_sha));
+  }
+  /* R28, R32: the live legs resting on any of `caps` (a passage's capture, or a capture a whole target registers), each
+     `{bundle_id, ord, role, state, target}`, as the plane reads them. */
+  #legsOnCaptures(caps) {
     if (!caps.length) return [];
     const legs = this.#rows(
       `SELECT ib.bundle_id AS bundle_id, ib.ord AS ord, ib.target_id AS target_id FROM inquiry_basis ib
@@ -76443,13 +76656,16 @@ var Reevaluation = class {
     }, out);
     return out;
   }
-  /** R29: the `attribution` causes on `legs` (`inquiry_basis` rows), for a viewer's visible dependents. A live leg
-   *  carries one per kept level move of the observation it names as its target, when the move came after the
+  /** R29, R32: the `attribution` causes on `legs` (`inquiry_basis` rows), for a viewer's visible dependents. A live leg
+   *  carries one per kept level move of the observation it names as its target, or (R32) of the attesting member of a
+   *  capture of the document it targets (R28's captures: its passage's, or each its whole target registers), when the move came after the
    *  dependent's last write (`bundles.last_updated`). Answers `{byPair}` keyed `<dependent>\0<target>`, each list latest
    *  move first, then ord. Reads only; it names no author and regrades nothing. */
   #levelMoves(legs, visible) {
     const byPair = /* @__PURE__ */ new Map();
-    if (!this.#one(`SELECT 1 AS x FROM reevaluation_level_moves LIMIT 1`)) return { byPair };
+    const anyObs = !!this.#one(`SELECT 1 AS x FROM reevaluation_level_moves LIMIT 1`);
+    const anyCap = !!this.#one(`SELECT 1 AS x FROM reevaluation_capture_level_moves LIMIT 1`);
+    if (!anyObs && !anyCap) return { byPair };
     const rows2 = legs.filter((l) => l && l.bundle_id && l.target_id && visible(l.bundle_id) !== null);
     if (!rows2.length) return { byPair };
     const obs = [...new Set(rows2.map((l) => l.target_id))];
@@ -76460,8 +76676,22 @@ var Reevaluation = class {
       if (!movesOf.has(m.observation)) movesOf.set(m.observation, []);
       movesOf.get(m.observation).push(m);
     }
-    if (!movesOf.size) return { byPair };
-    const deps = [...new Set(rows2.filter((l) => movesOf.has(l.target_id)).map((l) => l.bundle_id))];
+    const capMoves = /* @__PURE__ */ new Map();
+    const caps = anyCap ? this.#legCaptures(rows2) : /* @__PURE__ */ new Map();
+    const allCaps = [...new Set([...caps.values()].flat())];
+    for (const m of allCaps.length ? this.#rows(`SELECT move_id, capture_sha, level_before, level_after, case_id, edition, at
+                                                   FROM reevaluation_capture_level_moves
+                                                  WHERE capture_sha IN (SELECT value FROM json_each(?))
+                                                  ORDER BY capture_sha, move_id`, JSON.stringify(allCaps)) : []) {
+      if (!capMoves.has(m.capture_sha)) capMoves.set(m.capture_sha, []);
+      capMoves.get(m.capture_sha).push(m);
+    }
+    const movesOn = (l) => [
+      ...movesOf.get(l.target_id) || [],
+      ...(caps.get(`${l.bundle_id}\0${l.ord}`) || []).flatMap((c) => capMoves.get(c) || [])
+    ];
+    if (!movesOf.size && !capMoves.size) return { byPair };
+    const deps = [...new Set(rows2.filter((l) => movesOn(l).length).map((l) => l.bundle_id))];
     const written = new Map(this.#rows(
       `SELECT bundle_id, last_updated FROM bundles WHERE bundle_id IN (SELECT value FROM json_each(?)) LIMIT ?`,
       JSON.stringify(deps),
@@ -76469,7 +76699,7 @@ var Reevaluation = class {
     ).map((r) => [r.bundle_id, r.last_updated]));
     const hits = [];
     for (const l of rows2)
-      for (const m of movesOf.get(l.target_id) || [])
+      for (const m of movesOn(l))
         if (laterThan(m.at, written.get(l.bundle_id))) hits.push({ l, m });
     if (!hits.length) return { byPair };
     const live = this.#liveOn(hits.map((h) => h.l.target_id));
@@ -76481,7 +76711,7 @@ var Reevaluation = class {
         source: "attribution",
         since: m.at,
         ord: l.ord,
-        observation: m.observation,
+        ...m.capture_sha ? { capture_sha: m.capture_sha } : { observation: m.observation },
         level_before: m.level_before,
         level_after: m.level_after,
         case: m.case_id ?? null,
@@ -76497,9 +76727,26 @@ var Reevaluation = class {
    *  level for an observation other than the one in force at the case's previous ratified edition. Keeps one row per
    *  call (R18: no author, no text), then tells R8's listeners `kind: "attribution"` once, after the act commits. A call
    *  naming no observation, a level missing on either side or the same level twice writes nothing. `at` is the move's
-   *  instant (the commit's); one that does not read as an instant is replaced by now. It regrades nothing. */
-  levelMoved({ observation = null, from = null, to = null, case: caseId = null, edition = null, at: at28 = null } = {}) {
-    const id = str5(observation), before = str5(from), after = str5(to);
+   *  instant (the commit's); one that does not read as an instant is replaced by now. It regrades nothing. R32: `capture`
+   *  (a whole sha-256) in place of `observation`, for an off-the-record capture's attesting member; a call naming both,
+   *  or a capture that is not one, writes nothing. */
+  levelMoved({
+    observation = null,
+    capture = null,
+    from = null,
+    to = null,
+    case: caseId = null,
+    edition = null,
+    at: at28 = null
+  } = {}) {
+    const before = str5(from), after = str5(to);
+    const cap = typeof capture === "string" && SHA256_HEX.test(capture.trim()) ? capture.trim().toLowerCase() : null;
+    if (capture != null && observation != null) return { ok: true, moved: false };
+    if (capture != null) {
+      if (!cap || !before || !after || before === after) return { ok: true, moved: false };
+      return this.#captureLevelMoved(cap, before, after, caseId, edition, at28);
+    }
+    const id = str5(observation);
     if (!id || !before || !after || before === after) return { ok: true, moved: false };
     const when = typeof at28 === "string" && at28.trim() && Number.isFinite(Date.parse(at28.trim())) ? at28.trim() : this.#when();
     const ed = Number.isInteger(edition) ? edition : typeof edition === "string" && /^\d+$/.test(edition.trim()) ? Number(edition.trim()) : null;
@@ -76528,18 +76775,52 @@ var Reevaluation = class {
     }, out);
     return out;
   }
+  /* R32 (DEC-119 (3)): `levelMoved` for an off-the-record capture's attesting member, called by ratification R36. One
+     row per call (the capture, both levels, the case, the edition and the instant; no member, no text), then R8's
+     listeners told `kind: "attribution"`, `subject` the capture, with the live legs targeting a document whose capture
+     it is. It names no member and regrades nothing. */
+  #captureLevelMoved(cap, before, after, caseId, edition, at28) {
+    const when = typeof at28 === "string" && at28.trim() && Number.isFinite(Date.parse(at28.trim())) ? at28.trim() : this.#when();
+    const ed = Number.isInteger(edition) ? edition : typeof edition === "string" && /^\d+$/.test(edition.trim()) ? Number(edition.trim()) : null;
+    const m = { capture_sha: cap, level_before: before, level_after: after, case_id: str5(caseId), edition: ed, at: when };
+    this.sql.exec(`INSERT INTO reevaluation_capture_level_moves (capture_sha, level_before, level_after, case_id, edition, at)
+                   VALUES (?,?,?,?,?,?)`, cap, before, after, m.case_id, ed, when);
+    let dependents = [];
+    try {
+      dependents = this.#legsOnCaptures([cap]).map(({ target, ...l }) => l);
+    } catch {
+      dependents = [];
+    }
+    const out = { ok: true, moved: true, at: when, dependents: dependents.length };
+    this.#tellAfterCommit({
+      kind: "attribution",
+      subject: cap,
+      source: "attribution",
+      since: when,
+      detail: `${attributionDetail(m)} ${dependents.length ? "What rests on it is named." : "Nothing here rests on it."}`,
+      level_before: before,
+      level_after: after,
+      case: m.case_id,
+      edition: ed,
+      dependents
+    }, out);
+    return out;
+  }
   /* ---------------------------------------------------------------- R1–R6, R16, R17: the obligation */
   /** R1–R6: the re-evaluation obligation, derived on read. With `target`, the dependents of one moved thing (and, R17,
    *  that thing itself if its derivation weakened under a published edition); with none, every id a basis leg names. */
   reevaluations({ target = null, viewer = null } = {}) {
     const t0 = str5(target);
-    if (t0 && !this.#visible(t0, viewer)) return { ok: false, reason: "NO_SUCH_BUNDLE", target: t0 };
+    const refs = this.#refSeer(viewer);
+    if (t0 && (isRef2(t0) ? !refs.seen(t0) : !this.#visible(t0, viewer)))
+      return { ok: false, reason: "NO_SUCH_BUNDLE", target: t0, ...refs.flags() };
     const targets = t0 ? [t0] : this.#rows(`SELECT DISTINCT target_id FROM inquiry_basis ORDER BY target_id`).map((r) => r.target_id);
     const dependents = t0 ? [t0] : this.#rows(`SELECT DISTINCT bundle_id FROM inquiry_basis ORDER BY bundle_id`).map((r) => r.bundle_id);
     const visible = this.#redactor(viewer);
     const reg = this.#registry([...targets, ...dependents]);
     const wp = this.#workProducts();
     const dk = this.#docket();
+    const aw = this.#accepted();
     const obligations = [], closedOnly = [];
     const found = [];
     let withheld = false;
@@ -76551,11 +76832,18 @@ var Reevaluation = class {
     const srcm = this.#sourceMoves(onTargets, all);
     const lvlm = this.#levelMoves(onTargets, all);
     const wdr = this.#withdrawn(onTargets, all, dk);
-    const correctedOn = new Set([...corr.byPair.keys(), ...srcm.byPair.keys(), ...lvlm.byPair.keys(), ...wdr.byPair.keys()].map((k) => k.slice(k.indexOf("\0") + 1)));
+    const acc = this.#acceptanceOn(onTargets, all, aw, viewer);
+    const correctedOn = new Set([
+      ...corr.byPair.keys(),
+      ...srcm.byPair.keys(),
+      ...lvlm.byPair.keys(),
+      ...wdr.byPair.keys(),
+      ...acc.byPair.keys()
+    ].map((k) => k.slice(k.indexOf("\0") + 1)));
     for (const t of targets) {
       const moved = this.#moved(t, visible, reg, wp, dk);
       if (!moved && !correctedOn.has(t)) continue;
-      if (!t0 && !(moved && moved.held === false) && visible(t) === null) continue;
+      if (!t0 && !(moved && moved.held === false) && (isRef2(t) ? !refs.seen(t) : visible(t) === null)) continue;
       if (moved && moved.withheld) withheld = true;
       const own3 = moved ? { state: moved.state, object_type: moved.object_type } : this.#one(`SELECT current_state AS state, object_type FROM bundles WHERE bundle_id=?`, t) || { state: null, object_type: null };
       const rest = this.inquiry.restingOn(t);
@@ -76594,7 +76882,8 @@ var Reevaluation = class {
           ...corr.byPair.get(`${bundleId}\0${t}`) || [],
           ...srcm.byPair.get(`${bundleId}\0${t}`) || [],
           ...lvlm.byPair.get(`${bundleId}\0${t}`) || [],
-          ...wdr.byPair.get(`${bundleId}\0${t}`) || []
+          ...wdr.byPair.get(`${bundleId}\0${t}`) || [],
+          ...acc.byPair.get(`${bundleId}\0${t}`) || []
         );
         if (!causes.length) continue;
         place({
@@ -76671,7 +76960,9 @@ var Reevaluation = class {
       corrections_read: corr.read,
       ...corr.read ? {} : { corrections_why: CORRECTIONS_UNREAD },
       ...wp.flags(),
-      ...dk.flags()
+      ...dk.flags(),
+      ...refs.flags(),
+      ...aw.flags()
     };
   }
   /** R5 (REC-118 / D-410): an obligation's leg letters, resolved against what the record can earn, so the two halves of
@@ -76802,8 +77093,8 @@ var Reevaluation = class {
   }
   /* ---------------------------------------------------------------- R9: the recovery read */
   /** R9: now, the causes standing on each named finding (R2's arms and §5.4's, the finding as target, R17's, and R27's
-   *  `corrected`, R28's `source` and R29's `attribution` causes the finding carries on its own legs, each naming its target, less those a recorded
-   *  re-evaluation closed) and each named passage's `affects` (`content.passageNotice`). Ids the viewer may not see
+   *  `corrected`, R28's `source`, R29's `attribution`, R30's and R31's `acceptance` causes the finding carries on its
+   *  own legs, each naming its target, less those a recorded re-evaluation closed) and each named passage's `affects` (`content.passageNotice`). Ids the viewer may not see
    *  answer as absent. Writes nothing. */
   changesOf({ findings = null, contents = null, viewer = null } = {}) {
     const F = asList(findings), C2 = asList(contents);
@@ -76813,7 +77104,8 @@ var Reevaluation = class {
     const reg = this.#registry(seen);
     const wp = this.#workProducts();
     const dk = this.#docket();
-    const corr = this.#standingCorrected(seen, viewer, visible, { withSource: true, dk });
+    const aw = this.#accepted();
+    const corr = this.#standingCorrected(seen, viewer, visible, { withSource: true, dk, aw });
     const outF = fl.map((id) => {
       if (!seen.includes(id)) return { id, absent: true };
       const moved = this.#moved(id, visible, reg, wp, dk);
@@ -76870,15 +77162,18 @@ var Reevaluation = class {
       corrections_read: corr.read,
       ...corr.read ? {} : { corrections_why: CORRECTIONS_UNREAD },
       ...wp.flags(),
-      ...dk.flags()
+      ...dk.flags(),
+      ...aw.flags()
     };
   }
-  /* R9, R27 (and R28, R29, R30 `withSource`): the corrected (and source, attribution, withdrawal and contested) causes the
+  /* R9, R27 (and R28, R29, R30, R31 `withSource`): the corrected (and source, attribution, withdrawal, contested and
+     acceptance) causes the
      named dependents carry on their own legs, each with its `target`, less those a recorded re-evaluation closed (R16).
      `byDependent` keyed by dependent, in (target, ord, candidate) order, each target's source causes after its corrected
-     ones, its attribution causes after those and its withdrawal causes last; a contested cause names the finding itself
+     ones, its attribution causes after those, then its withdrawal causes and its acceptance causes last; a contested
+     cause names the finding itself
      as its target. */
-  #standingCorrected(dependents, viewer, visible, { withSource = false, dk = null } = {}) {
+  #standingCorrected(dependents, viewer, visible, { withSource = false, dk = null, aw = null } = {}) {
     const byDependent = /* @__PURE__ */ new Map();
     if (!dependents.length) return { byDependent, read: true };
     const legs = this.#rows(
@@ -76891,7 +77186,8 @@ var Reevaluation = class {
       const moved = [
         this.#sourceMoves(legs, visible),
         this.#levelMoves(legs, visible),
-        ...dk ? [this.#withdrawn(legs, visible, dk)] : []
+        ...dk ? [this.#withdrawn(legs, visible, dk)] : [],
+        ...aw ? [this.#acceptanceOn(legs, visible, aw, viewer)] : []
       ];
       for (const moves of moved)
         for (const [k, list2] of moves.byPair) corr.byPair.set(k, [...corr.byPair.get(k) || [], ...list2]);
@@ -77079,6 +77375,56 @@ var Reevaluation = class {
       return out;
     } catch {
       return { ok: true, told: false, why: "the docket could not be read" };
+    }
+  }
+  /* ---------------------------------------------------------------- R31: an acceptance withdrawn */
+  /** R31, R8 (DEC-96 item 1): told by `case-import` after its withdrawal of an acceptance commits (its R7). Tells R8's
+   *  listeners once, as `kind: "acceptance"`, `subject` the withdrawal, with the dependents R31's arm answers for that
+   *  withdrawal now, as the plane reads them (no viewer: a listener is the plane's own, R28's precedent), each
+   *  `{bundle_id, ord, role, state, target}`. `withdrawal` is its id (or an object carrying one). Writes nothing and
+   *  never throws; a withdrawal accepted work does not answer is still told, with no dependents, and says so. */
+  acceptanceWithdrawn({ withdrawal = null } = {}) {
+    try {
+      const id = str5(withdrawal && typeof withdrawal === "object" ? withdrawal.withdrawal : withdrawal);
+      if (!id) return { ok: true, told: false, why: "only a named withdrawal is told" };
+      const aw = this.#accepted();
+      const rec = aw.get().entries.get(id) || null;
+      let dependents = [];
+      if (rec && rec.refs.length) {
+        const legs = this.#rows(`SELECT bundle_id, ord, target_id FROM inquiry_basis WHERE target_id IN (SELECT value FROM json_each(?))
+                                  ORDER BY bundle_id, ord`, JSON.stringify(rec.refs));
+        dependents = [...this.#acceptanceOn(legs, (x) => x ?? null, aw, MACHINE_ADMIN, id).byPair.entries()].flatMap(([k, list2]) => list2.map((x) => ({
+          bundle_id: k.split("\0")[0],
+          ord: x.ord,
+          role: x.role,
+          state: x.state,
+          target: x.ref
+        })));
+      }
+      const since = rec && rec.at ? rec.at : this.#when();
+      const out = {
+        ok: true,
+        told: true,
+        kind: "acceptance",
+        withdrawal: id,
+        dependents: dependents.length,
+        ...rec ? {} : { withdrawal_read: false },
+        ...aw.flags()
+      };
+      this.#tellAfterCommit({
+        kind: "acceptance",
+        subject: id,
+        source: "acceptance",
+        since,
+        import: rec ? rec.import : null,
+        edition: rec ? rec.edition : null,
+        refs: rec ? rec.refs : [],
+        detail: `this group's acceptance of another group's work was withdrawn (${id}${rec ? `, edition ${rec.edition}` : ""}); ${dependents.length ? "what rests on it is named" : "nothing here rests on it"}`,
+        dependents
+      }, out);
+      return out;
+    } catch {
+      return { ok: true, told: false, why: "accepted work could not be read" };
     }
   }
   /* ---------------------------------------------------------------- R10, R11: the cross-version notice (D-394) */
@@ -77916,7 +78262,7 @@ Why: ${line}
     if (!dep || !tgt || !src || !CAUSE_SOURCES.includes(src))
       return noCause(`pass dependent=<the finding looked at>, target=<what moved under it> and source=<one of ${CAUSE_SOURCES.join(", ")}>.`);
     if (!this.#visible(dep, viewer)) return noCause(`no finding by the id '${dep.slice(0, 60)}' is readable here.`);
-    const ob = this.#visible(tgt, viewer) || tgt === dep ? this.reevaluations({ target: tgt, viewer }) : { ok: true, obligations: [] };
+    const ob = (isRef2(tgt) ? this.#refSeer(viewer).seen(tgt) : this.#visible(tgt, viewer)) || tgt === dep ? this.reevaluations({ target: tgt, viewer }) : { ok: true, obligations: [] };
     const hit = ob.ok ? (ob.obligations || []).find((o) => o.bundle_id === dep && o.target === tgt) : null;
     const cause = hit ? hit.causes.find((c) => c.source === src && (since == null || String(c.since) === String(since))) : null;
     if (!cause)
