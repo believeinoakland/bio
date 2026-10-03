@@ -1,4 +1,4 @@
-/* op-declarations: WHAT EACH OP IS (R1–R13). Every op's spec, the act lists that drive the stamps and the fences, the
+/* op-declarations: WHAT EACH OP IS (R1–R14). Every op's spec, the act lists that drive the stamps and the fences, the
    session sets, the capability table, the recorded decisions that a verb is not a person's, and the act gate read
    from those tables. It declares; it judges no caller and routes nothing (`admission` and `control-plane` read it).
    Copied from `control-plane/ops.mjs` at the control-plane split (T18, K617, K624 (1), (2)), which control-plane's own
@@ -746,6 +746,20 @@ const OPS = frozenTable({
   docket:             { classes: ["admin", "member"], machineClasses: [], mutating: false },
   docketprepare:      { classes: ["admin", "member"], machineClasses: [], mutating: false },
   docketinvitation:   { classes: ["admin", "member"], machineClasses: [], mutating: false },
+  /* T28 (N520, N522; DEC-112 (3)(6), DEC-96 items 1, 2; case-import R1–R8; R14): another group's case file imported into
+     a read-only project, a missing document completed, an edition accepted for its recreated findings and the acceptance
+     withdrawn, a flag raised and cleared — each a member's act in their own name, `by` stamped — and the two reads of
+     what is imported, each a member session's only, `knocksof`'s fence: `machineClasses: []` refuses every bearer, and
+     so every agent credential and operator token (case-import refuses a machine `by` by name too, MACHINE_CANNOT_IMPORT).
+     `viewer` stamped on each. */
+  caseimport:           { classes: ["admin", "member"], machineClasses: [], mutating: true  },
+  caseimportdocument:   { classes: ["admin", "member"], machineClasses: [], mutating: true  },
+  importaccept:         { classes: ["admin", "member"], machineClasses: [], mutating: true  },
+  importacceptwithdraw: { classes: ["admin", "member"], machineClasses: [], mutating: true  },
+  importflag:           { classes: ["admin", "member"], machineClasses: [], mutating: true  },
+  importflagclear:      { classes: ["admin", "member"], machineClasses: [], mutating: true  },
+  importedcases:        { classes: ["admin", "member"], machineClasses: [], mutating: false },
+  importedcase:         { classes: ["admin", "member"], machineClasses: [], mutating: false },
   /* REC-94: a capture's content-axis state; frontier's classes and gate. */
   contentaxis:        { classes: ["admin", "member", "probe"],      mutating: false },
   /* REC-69: the context-keyed run read; the viewer stamp decides what a caller sees. */
@@ -805,6 +819,11 @@ const OPS = frozenTable({
      and no session set holds it. */
   docketpublic:    { classes: null,                              mutating: false },
   docketfeed:      { classes: null,                              mutating: false },
+  /* T28 (public-read R18; case-checker R15; DEC-112 (3); R14): the standalone checker program and the readable
+     specification of a case-file format, credential-free and registered with public-read as network-notices' reads
+     are: each answers only what is already public, so nothing is stamped and no session set holds it. */
+  casechecker:     { classes: null,                              mutating: false },
+  casefilespec:    { classes: null,                              mutating: false },
 });
 
 /* What a signed-in browser session may do, the write arc's evolution of the
@@ -1329,6 +1348,18 @@ const DOCKET_READS = frozenList(["docket", "docketprepare", "docketinvitation"])
 const DOCKET_AUTHOR = frozenList(["docketfile", "docketpressure"]);
 const DOCKET_BY = frozenList(["docketprepare", "docketdecline", "docketpost"]);
 const DOCKET_PUBLIC_READS = frozenList(["docketpublic", "docketfeed"]);
+/* T28 (N520, N522; case-import R1–R8; R14): case-import's six acts and two reads, each viewer-stamped (case-import asks
+   whether the viewer is an active member; an unstamped read is answered as if no import exists); `CASE_IMPORT_BY` names
+   the six a member performs in their own name, `by` stamped (case-import's map reads `by` from the query, else
+   `author`). One array per stamp, the docket's shape. `publish` and `publishpreflight` gain nothing here: `flagsDisclosed`
+   (case-authoring R52, R53) is a body field the handler reads as given, as `tensionsDisclosed` is, never a stamp.
+   case-checker's two public reads (its R15) stamp nothing. */
+const CASE_IMPORT_ACTIONS = frozenList(["caseimport", "caseimportdocument", "importaccept", "importacceptwithdraw",
+                                        "importflag", "importflagclear"]);
+const CASE_IMPORT_READS = frozenList(["importedcases", "importedcase"]);
+const CASE_IMPORT_BY = frozenList(["caseimport", "caseimportdocument", "importaccept", "importacceptwithdraw",
+                                   "importflag", "importflagclear"]);
+const CASE_CHECKER_PUBLIC_READS = frozenList(["casechecker", "casefilespec"]);
 /* The modules whose acts read `author` from the query: the four of T8, T18's three, T21's filing-templates and T22's
    monitoring act; and T24's start preview, the one read among them, stamped as the start it previews (R11). */
 const QUERY_AUTHOR_ACTIONS = frozenList([...CONFORMANCE_ACTIONS, ...CONSEQUENCES_ACTIONS, ...FILINGS_ACTIONS, ...ESCALATION_ACTIONS,
@@ -1567,6 +1598,9 @@ const SESSION_OPS = Object.freeze({
                       `ACTIONS_ACTIONS` above and the reads here; the docket's acts and reads, in BOTH sets (a bearer
                       refused them by `machineClasses: []`). Its public reads are in neither: every caller reaches them. */
                    "actionholdpreview", "projectholds", ...DOCKET_ACTIONS, ...DOCKET_READS,
+                   /* T28 (op-declarations R14): case-import's acts and reads, in BOTH sets (a bearer refused them by
+                      `machineClasses: []`). case-checker's public reads are in neither: every caller reaches them. */
+                   ...CASE_IMPORT_ACTIONS, ...CASE_IMPORT_READS,
                    /* N314 (T12, monitoring R30): the daemon's pause, every member session's to ask; monitoring refuses a
                       non-administrator by name. */
                    "monitorpause",
@@ -1635,6 +1669,7 @@ const SESSION_OPS = Object.freeze({
                    ...NETWORK_NOTICES_ACTIONS, ...NETWORK_NOTICES_READS,
                    ...ACTION_PLANS_PREVIEWS,
                    "actionholdpreview", "projectholds", ...DOCKET_ACTIONS, ...DOCKET_READS,
+                   ...CASE_IMPORT_ACTIONS, ...CASE_IMPORT_READS,
                    ...IDENTITY_ACTIONS,
                    ...GOVERNANCE_ACTIONS,
                    ...CUSTODIAL_ACTIONS,
@@ -2477,6 +2512,22 @@ const NEEDS = Object.freeze({
   docketinvitation:      null,
   docketpublic:          null,
   docketfeed:            null,
+  /* T28 (op-declarations R14; case-import R1, R5–R8): importing a case file, completing a missing document, accepting an
+     edition or withdrawing the acceptance, and flagging or clearing a flag each write case-import's rows in a member's
+     name — `contribute`, the house default for a member's act on the record, NO fifth capability token (CAPABILITIES.md
+     §4): who may act (an active member) is case-import's, asked of the stamped `by`. NO CAPABILITY for its two reads nor
+     case-checker's two public reads, on `contradictionpairs`' reasoning: PRESENT, null, because affordances names each
+     (its R35) and its totality reads a NON_ACTS key this table does not carry as stale (its R12), K516's precedent. */
+  caseimport:            "contribute",
+  caseimportdocument:    "contribute",
+  importaccept:          "contribute",
+  importacceptwithdraw:  "contribute",
+  importflag:            "contribute",
+  importflagclear:       "contribute",
+  importedcases:         null,
+  importedcase:          null,
+  casechecker:           null,
+  casefilespec:          null,
 });
 
 /* REC-19's act decoration, shared by op=affordances and op=queue (REC-20) so a queue item's options[] and an
@@ -2550,4 +2601,4 @@ const UNATTENDED_BY_DECISION = Object.freeze({
            + "one' — a deploy's maintenance pass, addressed to the operator's credential.",
 });
 
-export { OPS, RETRIEVAL_READS, READING_READS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, STRUCTURE_ACTIONS, VERSION_ACTIONS, PROJECT_ACTIONS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS, ROSTER_SELF_ACTIONS, OWN_KEY_ACTIONS, CAPTURE_MEMBER_ACTIONS, CAPTURE_VIEWER_ACTIONS, CAPTURE_READS, SOURCE_ACTIONS, SOURCE_READS, PROVENANCE_JUDGEMENT_ACTIONS, CALIBRATION_WRITE_ACTIONS, EXPERTISE_ACTIONS, REGISTRY_ACTIONS, TASK_ACTIONS, QUEUE_ACTIONS, AI_RUN_ACTIONS, RUN_VERB_ACTIONS, RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, BIAS_ACTIONS, BIAS_DEBT_ACTIONS, INTENT_ACTIONS, INTENT_READS, REEVALUATION_ACTIONS, STANDARDS_ACTIONS, STANDARDS_READS, CONFORMANCE_ACTIONS, CONFORMANCE_READS, CONSEQUENCES_ACTIONS, CONSEQUENCES_READS, FILINGS_ACTIONS, FILINGS_READS, FILING_TEMPLATES_ACTIONS, FILING_TEMPLATES_READS, TEMPLATE_PROPOSAL_ACTIONS, TEMPLATE_DOOR_ACTIONS, TEMPLATE_DOOR_READS, GRANT_SECRET_ACTIONS, LOCAL_FACTS_ACTIONS, LOCAL_FACTS_READS, ESCALATION_ACTIONS, ESCALATION_READS, MONITORING_ACTIONS, LINK_SWEEP_READS, WHAT_CHANGED_PROPOSAL_ACTIONS, WHAT_CHANGED_READS, NETWORK_NOTICES_ACTIONS, NETWORK_NOTICES_READS, NETWORK_NOTICES_BY, NETWORK_NOTICES_PUBLIC_READS, DOCKET_ACTIONS, DOCKET_READS, DOCKET_AUTHOR, DOCKET_BY, DOCKET_PUBLIC_READS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, ACTIONS_ACTIONS, ACTIONS_READS, ACTION_CLOCKS_ACTIONS, ACTION_PLANS_ACTIONS, ACTION_PLANS_READS, ACTION_PLANS_PREVIEWS, PLAN_PROPOSAL_ACTIONS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS, ACTION_LAYER_READS, PLAN_RUN_SCOPE, RECOGNISER_ACTIONS, PROGRESSION_ACTIONS, SESSION_OPS, NEEDS, decorateAct, ACT_GATE, UNATTENDED_BY_DECISION };
+export { OPS, RETRIEVAL_READS, READING_READS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, STRUCTURE_ACTIONS, VERSION_ACTIONS, PROJECT_ACTIONS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS, ROSTER_SELF_ACTIONS, OWN_KEY_ACTIONS, CAPTURE_MEMBER_ACTIONS, CAPTURE_VIEWER_ACTIONS, CAPTURE_READS, SOURCE_ACTIONS, SOURCE_READS, PROVENANCE_JUDGEMENT_ACTIONS, CALIBRATION_WRITE_ACTIONS, EXPERTISE_ACTIONS, REGISTRY_ACTIONS, TASK_ACTIONS, QUEUE_ACTIONS, AI_RUN_ACTIONS, RUN_VERB_ACTIONS, RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, BIAS_ACTIONS, BIAS_DEBT_ACTIONS, INTENT_ACTIONS, INTENT_READS, REEVALUATION_ACTIONS, STANDARDS_ACTIONS, STANDARDS_READS, CONFORMANCE_ACTIONS, CONFORMANCE_READS, CONSEQUENCES_ACTIONS, CONSEQUENCES_READS, FILINGS_ACTIONS, FILINGS_READS, FILING_TEMPLATES_ACTIONS, FILING_TEMPLATES_READS, TEMPLATE_PROPOSAL_ACTIONS, TEMPLATE_DOOR_ACTIONS, TEMPLATE_DOOR_READS, GRANT_SECRET_ACTIONS, LOCAL_FACTS_ACTIONS, LOCAL_FACTS_READS, ESCALATION_ACTIONS, ESCALATION_READS, MONITORING_ACTIONS, LINK_SWEEP_READS, WHAT_CHANGED_PROPOSAL_ACTIONS, WHAT_CHANGED_READS, NETWORK_NOTICES_ACTIONS, NETWORK_NOTICES_READS, NETWORK_NOTICES_BY, NETWORK_NOTICES_PUBLIC_READS, DOCKET_ACTIONS, DOCKET_READS, DOCKET_AUTHOR, DOCKET_BY, DOCKET_PUBLIC_READS, CASE_IMPORT_ACTIONS, CASE_IMPORT_READS, CASE_IMPORT_BY, CASE_CHECKER_PUBLIC_READS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, ACTIONS_ACTIONS, ACTIONS_READS, ACTION_CLOCKS_ACTIONS, ACTION_PLANS_ACTIONS, ACTION_PLANS_READS, ACTION_PLANS_PREVIEWS, PLAN_PROPOSAL_ACTIONS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS, ACTION_LAYER_READS, PLAN_RUN_SCOPE, RECOGNISER_ACTIONS, PROGRESSION_ACTIONS, SESSION_OPS, NEEDS, decorateAct, ACT_GATE, UNATTENDED_BY_DECISION };
