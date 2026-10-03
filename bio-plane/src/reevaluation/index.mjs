@@ -675,11 +675,12 @@ export class Reevaluation {
   /** R1 (N522): whether a viewer may see an imported finding reference: `accepted-work.acceptedFinding` answers a
    *  finding at some edition a leg on it names. Answers `{seen(ref), flags()}`: `seen` true or false, memoised for the
    *  answer; a machine credential is not filtered, as for a bundle; with nothing registered, or the read unreadable,
-   *  the ref is not seen (whether it may be cannot be read, R20) and `flags` says so. */
+   *  the ref is not seen (whether it may be cannot be read, R20). `flags` states `accepted_work_absent` when nothing is
+   *  registered, and a failed read nothing more (R1, R20; K1312). */
   #refSeer(viewer) {
     const g = viewerPredicate(viewer);
     const memo = new Map();
-    const state = { absent: false, unread: false };
+    const state = { absent: false };
     const seen = (ref) => {
       if (!isRef(ref)) return false;
       if (g.scope === "member") return true;
@@ -692,14 +693,13 @@ export class Reevaluation {
         let a = null;
         try { a = this.acceptedWork.acceptedFinding({ ref, edition, viewer }); } catch { a = { unreadable: true }; }
         if (a && a.absent === true) { state.absent = true; break; }
-        if (a && a.unreadable === true) { state.unread = true; continue; }
+        if (a && a.unreadable === true) continue;
         if (a && typeof a === "object") { ok = true; break; }
       }
       memo.set(ref, ok);
       return ok;
     };
-    const flags = () => ({ ...(state.absent ? { accepted_work_absent: true, accepted_work_why: ACCEPTED_WORK_ABSENT_WHY } : {}),
-                           ...(state.unread ? { acceptance_read: false, acceptance_read_why: ACCEPTANCE_UNREAD } : {}) });
+    const flags = () => (state.absent ? { accepted_work_absent: true, accepted_work_why: ACCEPTED_WORK_ABSENT_WHY } : {});
     return { seen, flags };
   }
 

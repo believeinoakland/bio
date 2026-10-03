@@ -77,6 +77,13 @@ test("R1 (N522): an imported finding reference is a target: refused NO_SUCH_BUND
   assert.equal(w.r.reevaluations({ target: REF, viewer: V("ann") }).ok, true, "edition 1 is named by D1's leg");
   s.held = new Set([`${REF}@3`]);
   assert.equal(w.r.reevaluations({ target: REF, viewer: V("ann") }).reason, "NO_SUCH_BUNDLE", "no leg names edition 3");
+  /* a finding read that fails is refused, stating nothing more (R20; K1312) */
+  s.held = null;
+  assert.equal(w.r.reevaluations({ target: REF, viewer: V("ann") }).ok, true, "negative control: readable, it is seen");
+  const thrower = s.seers;
+  s.seers = { has: () => { throw new Error("case-import down"); } };
+  assert.deepEqual(w.r.reevaluations({ target: REF, viewer: V("ann") }), { ok: false, reason: "NO_SUCH_BUNDLE", target: REF });
+  s.seers = thrower;
   /* a ref no leg names */
   assert.equal(w.r.reevaluations({ target: importedFindingRef(IMP, "INQ-2026-0009-unnamed"), viewer: V("ann") }).reason,
                "NO_SUCH_BUNDLE");
