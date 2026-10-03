@@ -93,8 +93,9 @@ test("R14, R4: the act lists name each op's stamps — by and viewer for caseimp
     assert.deepEqual(listsHolding(op), [...want.lists].sort(), op);
     assert.deepEqual(stampsOf(op), want.stamps, op);
   }
+  /* R16's watch ops follow R14's six in the same lists (`t31.test.mjs`). */
   assert.deepEqual([...O.CASE_IMPORT_ACTIONS], ["caseimport", "caseimportdocument", "importaccept", "importacceptwithdraw",
-                                                "importflag", "importflagclear"]);
+                                                "importflag", "importflagclear", "importwatch", "importunwatch"]);
   assert.deepEqual([...O.CASE_IMPORT_READS], ["importedcases", "importedcase"]);
   assert.deepEqual([...O.CASE_IMPORT_BY], [...O.CASE_IMPORT_ACTIONS]);
   assert.deepEqual([...O.CASE_CHECKER_PUBLIC_READS], ["casechecker", "casefilespec"]);
@@ -125,7 +126,8 @@ test("R14: publish and publishpreflight keep their specs, NEEDS rows and lists �
 
 test("R14, R6: every op case-import's ops map serves has a spec the door answers by name, and the tables name each one — OPS, NEEDS, an act list and both session sets; case-checker's two public reads (its R15) are specced and in neither set (negative control: an op added to the map without a spec is seen)", () => {
   const served = Object.keys(caseImportOps({}, new URL("https://instance.invalid/"), {}));
-  assert.deepEqual([...served].sort(), SESSION_REACHED.sort());
+  /* The map also serves R16's two watch ops (N534), declared and tested in `t31.test.mjs`. */
+  assert.deepEqual([...served].sort(), [...SESSION_REACHED, "importwatch", "importunwatch"].sort());
   for (const op of [...served, ...PUBLIC_OPS]) {
     assert.match(op, /^[a-z]+$/, op);
     assert.ok(Object.hasOwn(OPS, op) && Object.hasOwn(NEEDS, op), `${op}: no spec or NEEDS row`);

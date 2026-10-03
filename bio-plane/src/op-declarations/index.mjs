@@ -1,4 +1,4 @@
-/* op-declarations: WHAT EACH OP IS (R1–R14). Every op's spec, the act lists that drive the stamps and the fences, the
+/* op-declarations: WHAT EACH OP IS (R1–R16). Every op's spec, the act lists that drive the stamps and the fences, the
    session sets, the capability table, the recorded decisions that a verb is not a person's, and the act gate read
    from those tables. It declares; it judges no caller and routes nothing (`admission` and `control-plane` read it).
    Copied from `control-plane/ops.mjs` at the control-plane split (T18, K617, K624 (1), (2)), which control-plane's own
@@ -760,6 +760,34 @@ const OPS = frozenTable({
   importflagclear:      { classes: ["admin", "member"], machineClasses: [], mutating: true  },
   importedcases:        { classes: ["admin", "member"], machineClasses: [], mutating: false },
   importedcase:         { classes: ["admin", "member"], machineClasses: [], mutating: false },
+  /* T31 (N534; DEC-101 (3); case-import R17; R16): a member's watch on an import's publisher docket, set and lifted in
+     their own name — `by` and `viewer` stamped, the import acts' fence (`machineClasses: []` refuses every bearer). */
+  importwatch:          { classes: ["admin", "member"], machineClasses: [], mutating: true  },
+  importunwatch:        { classes: ["admin", "member"], machineClasses: [], mutating: true  },
+  /* T31 (N528; DEC-120, DEC-121; wizard-scripts R3–R16; R15): the wizard library. Drafting, revising, submitting,
+     approving and retiring a script are a member's acts in their own name, each a member session's only (`machineClasses:
+     []`; wizard-scripts refuses a machine stamp by name too, MACHINE_CANNOT_DRAFT_WIZARD, _APPROVE_WIZARD); the advanced
+     editor's grant and revocation are an administrator's own session acts, asked of the roster (NOT_AN_ADMIN); a
+     proposal is any credential's, an agent credential's by its scope, labelled (`templatepropose`'s posture); a wizard's
+     progress is a member session's unattributed tally; the five reads are a member session's, and the check is any
+     credential's read, an agent credential's included, so a wizard planned on the fly passes the same checks.
+     NOTHING IS DECLARED FOR `wizardrefusaltally`: it is the door's own call of wizard-scripts' refusal tally (its R16;
+     control-plane R50), a store-internal route never served to a caller (R6; K1396), as `doorbellrefused` is. */
+  wizarddraft:          { classes: ["admin", "member"], machineClasses: [], mutating: true  },
+  wizardrevise:         { classes: ["admin", "member"], machineClasses: [], mutating: true  },
+  wizardsubmit:         { classes: ["admin", "member"], machineClasses: [], mutating: true  },
+  wizardapprove:        { classes: ["admin", "member"], machineClasses: [], mutating: true  },
+  wizardretire:         { classes: ["admin", "member"], machineClasses: [], mutating: true  },
+  wizardeditorgrant:    { classes: ["admin", "member"], machineClasses: [], mutating: true  },
+  wizardeditorrevoke:   { classes: ["admin", "member"], machineClasses: [], mutating: true  },
+  wizardpropose:        { classes: ["admin", "member", "probe"],          mutating: true  },
+  wizardprogress:       { classes: ["admin", "member"], machineClasses: [], mutating: true  },
+  wizards:              { classes: ["admin", "member"], machineClasses: [], mutating: false },
+  wizardread:           { classes: ["admin", "member"], machineClasses: [], mutating: false },
+  wizardsat:            { classes: ["admin", "member"], machineClasses: [], mutating: false },
+  wizarduse:            { classes: ["admin", "member"], machineClasses: [], mutating: false },
+  wizardcandidates:     { classes: ["admin", "member"], machineClasses: [], mutating: false },
+  wizardcheck:          { classes: ["admin", "member", "probe"],          mutating: false },
   /* REC-94: a capture's content-axis state; frontier's classes and gate. */
   contentaxis:        { classes: ["admin", "member", "probe"],      mutating: false },
   /* REC-69: the context-keyed run read; the viewer stamp decides what a caller sees. */
@@ -1354,12 +1382,28 @@ const DOCKET_PUBLIC_READS = frozenList(["docketpublic", "docketfeed"]);
    `author`). One array per stamp, the docket's shape. `publish` and `publishpreflight` gain nothing here: `flagsDisclosed`
    (case-authoring R52, R53) is a body field the handler reads as given, as `tensionsDisclosed` is, never a stamp.
    case-checker's two public reads (its R15) stamp nothing. */
+/* T31 (N534; case-import R17; R16): the watch and its lifting join the acts, `by` and `viewer` stamped as the rest. */
 const CASE_IMPORT_ACTIONS = frozenList(["caseimport", "caseimportdocument", "importaccept", "importacceptwithdraw",
-                                        "importflag", "importflagclear"]);
+                                        "importflag", "importflagclear", "importwatch", "importunwatch"]);
 const CASE_IMPORT_READS = frozenList(["importedcases", "importedcase"]);
 const CASE_IMPORT_BY = frozenList(["caseimport", "caseimportdocument", "importaccept", "importacceptwithdraw",
-                                   "importflag", "importflagclear"]);
+                                   "importflag", "importflagclear", "importwatch", "importunwatch"]);
 const CASE_CHECKER_PUBLIC_READS = frozenList(["casechecker", "casefilespec"]);
+/* T31 (N528; wizard-scripts R3–R16; R15): one array per stamp, the docket's shape. `WIZARD_SCRIPTS_ACTIONS` are the
+   viewer-stamped acts (wizard-scripts asks the viewer's sight of a script); `WIZARD_SCRIPTS_AUTHOR` names the three an
+   author performs, `author` stamped (its R3, R4, R6); `WIZARD_SCRIPTS_BY` the four an approver or administrator performs
+   in their own name, `by` stamped (its R7–R9); `WIZARD_PROPOSAL_ACTIONS` the proposal, which names its PROPOSER, the
+   label (`proposalLabel`), `TEMPLATE_PROPOSAL_ACTIONS`' kind of stamp, with `viewer`. `WIZARD_PROGRESS_ACTIONS` stamps
+   NOTHING: the tally keeps no member, viewer or identity (its R15; control-plane R50), so the door passes none. The five
+   reads are viewer-stamped; the check (its R12) is pure over the registration and stamps nothing. */
+const WIZARD_SCRIPTS_ACTIONS = frozenList(["wizarddraft", "wizardrevise", "wizardsubmit", "wizardapprove", "wizardretire",
+                                           "wizardpropose"]);
+const WIZARD_SCRIPTS_AUTHOR = frozenList(["wizarddraft", "wizardrevise", "wizardsubmit"]);
+const WIZARD_SCRIPTS_BY = frozenList(["wizardapprove", "wizardretire", "wizardeditorgrant", "wizardeditorrevoke"]);
+const WIZARD_PROPOSAL_ACTIONS = frozenList(["wizardpropose"]);
+const WIZARD_PROGRESS_ACTIONS = frozenList(["wizardprogress"]);
+const WIZARD_SCRIPTS_READS = frozenList(["wizards", "wizardread", "wizardsat", "wizarduse", "wizardcandidates"]);
+const WIZARD_CHECK_READS = frozenList(["wizardcheck"]);
 /* The modules whose acts read `author` from the query: the four of T8, T18's three, T21's filing-templates and T22's
    monitoring act; and T24's start preview, the one read among them, stamped as the start it previews (R11). */
 const QUERY_AUTHOR_ACTIONS = frozenList([...CONFORMANCE_ACTIONS, ...CONSEQUENCES_ACTIONS, ...FILINGS_ACTIONS, ...ESCALATION_ACTIONS,
@@ -1601,6 +1645,11 @@ const SESSION_OPS = Object.freeze({
                    /* T28 (op-declarations R14): case-import's acts and reads, in BOTH sets (a bearer refused them by
                       `machineClasses: []`). case-checker's public reads are in neither: every caller reaches them. */
                    ...CASE_IMPORT_ACTIONS, ...CASE_IMPORT_READS,
+                   /* T31 (op-declarations R15): every op of wizard-scripts, in BOTH sets (an enrolled administrator's
+                      session is a `member` kind, D-136; the editor grant is asked of the roster), the bearers refused
+                      by `machineClasses: []` but for the proposal and the check, which any credential reaches. */
+                   ...WIZARD_SCRIPTS_ACTIONS, ...WIZARD_SCRIPTS_BY, ...WIZARD_PROGRESS_ACTIONS, ...WIZARD_SCRIPTS_READS,
+                   ...WIZARD_CHECK_READS,
                    /* N314 (T12, monitoring R30): the daemon's pause, every member session's to ask; monitoring refuses a
                       non-administrator by name. */
                    "monitorpause",
@@ -1670,6 +1719,8 @@ const SESSION_OPS = Object.freeze({
                    ...ACTION_PLANS_PREVIEWS,
                    "actionholdpreview", "projectholds", ...DOCKET_ACTIONS, ...DOCKET_READS,
                    ...CASE_IMPORT_ACTIONS, ...CASE_IMPORT_READS,
+                   ...WIZARD_SCRIPTS_ACTIONS, ...WIZARD_SCRIPTS_BY, ...WIZARD_PROGRESS_ACTIONS, ...WIZARD_SCRIPTS_READS,
+                   ...WIZARD_CHECK_READS,
                    ...IDENTITY_ACTIONS,
                    ...GOVERNANCE_ACTIONS,
                    ...CUSTODIAL_ACTIONS,
@@ -2528,6 +2579,34 @@ const NEEDS = Object.freeze({
   importedcase:          null,
   casechecker:           null,
   casefilespec:          null,
+  /* T31 (op-declarations R16; case-import R17): setting and lifting a watch write case-import's rows in a member's name,
+     the import acts' capability and reason. */
+  importwatch:           "contribute",
+  importunwatch:         "contribute",
+  /* T31 (op-declarations R15; wizard-scripts R3–R9): drafting, revising, submitting, approving and retiring a script each
+     write wizard-scripts' rows in a member's name, `templatedraft`'s capability and reason, and the proposal
+     `templatepropose`'s (proposing is contributing, never publishing) — NO fifth capability token (CAPABILITIES.md §4):
+     who may approve or retire is the module's, asked of the stamped `by`. NO WORKING CAPABILITY for the editor's grant and
+     revocation, on D-136's reasoning: an administrator's act over a member, bounded by the roster (NOT_AN_ADMIN, its R8),
+     not one of section 5's working rights. NONE for the progress tally, on `queuemute`'s reasoning: it writes an
+     unattributed count, nothing in anyone's name, and a view-only member runs wizards too (DEC-120 (1)). NONE for the six
+     reads, on `contradictionpairs`' reasoning. Each PRESENT, because affordances names all fifteen (its R37) and its
+     totality reads a NON_ACTS key this table does not carry as stale (its R12), K516's precedent. */
+  wizarddraft:           "contribute",
+  wizardrevise:          "contribute",
+  wizardsubmit:          "contribute",
+  wizardapprove:         "contribute",
+  wizardretire:          "contribute",
+  wizardpropose:         "contribute",
+  wizardeditorgrant:     null,
+  wizardeditorrevoke:    null,
+  wizardprogress:        null,
+  wizards:               null,
+  wizardread:            null,
+  wizardsat:             null,
+  wizarduse:             null,
+  wizardcandidates:      null,
+  wizardcheck:           null,
 });
 
 /* REC-19's act decoration, shared by op=affordances and op=queue (REC-20) so a queue item's options[] and an
@@ -2601,4 +2680,4 @@ const UNATTENDED_BY_DECISION = Object.freeze({
            + "one' — a deploy's maintenance pass, addressed to the operator's credential.",
 });
 
-export { OPS, RETRIEVAL_READS, READING_READS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, STRUCTURE_ACTIONS, VERSION_ACTIONS, PROJECT_ACTIONS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS, ROSTER_SELF_ACTIONS, OWN_KEY_ACTIONS, CAPTURE_MEMBER_ACTIONS, CAPTURE_VIEWER_ACTIONS, CAPTURE_READS, SOURCE_ACTIONS, SOURCE_READS, PROVENANCE_JUDGEMENT_ACTIONS, CALIBRATION_WRITE_ACTIONS, EXPERTISE_ACTIONS, REGISTRY_ACTIONS, TASK_ACTIONS, QUEUE_ACTIONS, AI_RUN_ACTIONS, RUN_VERB_ACTIONS, RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, BIAS_ACTIONS, BIAS_DEBT_ACTIONS, INTENT_ACTIONS, INTENT_READS, REEVALUATION_ACTIONS, STANDARDS_ACTIONS, STANDARDS_READS, CONFORMANCE_ACTIONS, CONFORMANCE_READS, CONSEQUENCES_ACTIONS, CONSEQUENCES_READS, FILINGS_ACTIONS, FILINGS_READS, FILING_TEMPLATES_ACTIONS, FILING_TEMPLATES_READS, TEMPLATE_PROPOSAL_ACTIONS, TEMPLATE_DOOR_ACTIONS, TEMPLATE_DOOR_READS, GRANT_SECRET_ACTIONS, LOCAL_FACTS_ACTIONS, LOCAL_FACTS_READS, ESCALATION_ACTIONS, ESCALATION_READS, MONITORING_ACTIONS, LINK_SWEEP_READS, WHAT_CHANGED_PROPOSAL_ACTIONS, WHAT_CHANGED_READS, NETWORK_NOTICES_ACTIONS, NETWORK_NOTICES_READS, NETWORK_NOTICES_BY, NETWORK_NOTICES_PUBLIC_READS, DOCKET_ACTIONS, DOCKET_READS, DOCKET_AUTHOR, DOCKET_BY, DOCKET_PUBLIC_READS, CASE_IMPORT_ACTIONS, CASE_IMPORT_READS, CASE_IMPORT_BY, CASE_CHECKER_PUBLIC_READS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, ACTIONS_ACTIONS, ACTIONS_READS, ACTION_CLOCKS_ACTIONS, ACTION_PLANS_ACTIONS, ACTION_PLANS_READS, ACTION_PLANS_PREVIEWS, PLAN_PROPOSAL_ACTIONS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS, ACTION_LAYER_READS, PLAN_RUN_SCOPE, RECOGNISER_ACTIONS, PROGRESSION_ACTIONS, SESSION_OPS, NEEDS, decorateAct, ACT_GATE, UNATTENDED_BY_DECISION };
+export { OPS, RETRIEVAL_READS, READING_READS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, STRUCTURE_ACTIONS, VERSION_ACTIONS, PROJECT_ACTIONS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS, ROSTER_SELF_ACTIONS, OWN_KEY_ACTIONS, CAPTURE_MEMBER_ACTIONS, CAPTURE_VIEWER_ACTIONS, CAPTURE_READS, SOURCE_ACTIONS, SOURCE_READS, PROVENANCE_JUDGEMENT_ACTIONS, CALIBRATION_WRITE_ACTIONS, EXPERTISE_ACTIONS, REGISTRY_ACTIONS, TASK_ACTIONS, QUEUE_ACTIONS, AI_RUN_ACTIONS, RUN_VERB_ACTIONS, RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, BIAS_ACTIONS, BIAS_DEBT_ACTIONS, INTENT_ACTIONS, INTENT_READS, REEVALUATION_ACTIONS, STANDARDS_ACTIONS, STANDARDS_READS, CONFORMANCE_ACTIONS, CONFORMANCE_READS, CONSEQUENCES_ACTIONS, CONSEQUENCES_READS, FILINGS_ACTIONS, FILINGS_READS, FILING_TEMPLATES_ACTIONS, FILING_TEMPLATES_READS, TEMPLATE_PROPOSAL_ACTIONS, TEMPLATE_DOOR_ACTIONS, TEMPLATE_DOOR_READS, GRANT_SECRET_ACTIONS, LOCAL_FACTS_ACTIONS, LOCAL_FACTS_READS, ESCALATION_ACTIONS, ESCALATION_READS, MONITORING_ACTIONS, LINK_SWEEP_READS, WHAT_CHANGED_PROPOSAL_ACTIONS, WHAT_CHANGED_READS, NETWORK_NOTICES_ACTIONS, NETWORK_NOTICES_READS, NETWORK_NOTICES_BY, NETWORK_NOTICES_PUBLIC_READS, DOCKET_ACTIONS, DOCKET_READS, DOCKET_AUTHOR, DOCKET_BY, DOCKET_PUBLIC_READS, CASE_IMPORT_ACTIONS, CASE_IMPORT_READS, CASE_IMPORT_BY, CASE_CHECKER_PUBLIC_READS, WIZARD_SCRIPTS_ACTIONS, WIZARD_SCRIPTS_AUTHOR, WIZARD_SCRIPTS_BY, WIZARD_PROPOSAL_ACTIONS, WIZARD_PROGRESS_ACTIONS, WIZARD_SCRIPTS_READS, WIZARD_CHECK_READS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, ACTIONS_ACTIONS, ACTIONS_READS, ACTION_CLOCKS_ACTIONS, ACTION_PLANS_ACTIONS, ACTION_PLANS_READS, ACTION_PLANS_PREVIEWS, PLAN_PROPOSAL_ACTIONS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS, ACTION_LAYER_READS, PLAN_RUN_SCOPE, RECOGNISER_ACTIONS, PROGRESSION_ACTIONS, SESSION_OPS, NEEDS, decorateAct, ACT_GATE, UNATTENDED_BY_DECISION };
