@@ -48,7 +48,7 @@ Terms.
   - `what_changed` (for an edition) and `reason` (for a withdrawal) are quoted as the entry gives them.
   - `taken_back` is `{seq, date}` or null.
 
-  With no `moves` registered, it answers `{absent: true}`, stated as `accepted_work_absent`. When the registered function throws, it answers `{unreadable: true}`. It writes nothing and never throws. (DEC-101 (3); DEC-116 item 8; P4) *(not yet met: T31)*
+  With no `moves` registered, it answers `{absent: true}`, stated as `accepted_work_absent`. When the registered function throws, it answers `{unreadable: true}`. It writes nothing and never throws. (DEC-101 (3); DEC-116 item 8; P4)
 
 ## Private
 
