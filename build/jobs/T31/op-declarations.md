@@ -31,3 +31,7 @@ The act lists I add, for control-plane R50's stamps: `WIZARD_SCRIPTS_ACTIONS` (v
 ## J2 · COMPLETE
 
 R15 and R16 applied, K1396's wizardrefusaltally store-internal added; t28's case-import pin green. op-declarations 58/58; format, architecture, coverage (16/16), ownership 0 failures. Deferred: R15's R6 test against wizard-scripts' ops map, on the CHANGE after it merges. Reported in the record: control-plane's R2/R41 unaccounted test is red until affordances' R37/R38 rows merge (and affordances' R12 sees my rows' absence until I merge); r49-routes is control-plane R52's.
+
+## J3 · REPORT
+
+B3 done: tranche/T31 merged; R15's R6 test against wizardScriptsOps added (the map serves exactly R15's fifteen; lists match its acts and reads); op-declarations 59/59. Seam for control-plane R50: wizardScriptsOps reads every identity stamp from the query's author (author, proposer and by alike, filingTemplatesOps' pattern), so the door must set author for WIZARD_SCRIPTS_BY and WIZARD_PROPOSAL_ACTIONS too, as for templatepropose; wizardprogress receives viewer from the map, null since the door stamps none. Waiting on your CHANGE after affordances merges.
