@@ -22,6 +22,8 @@
 
 - N526 · 2026-10-03 · **docket** R2: its machine refusal of `docketpressure` gets its own code (e.g. `MACHINE_CANNOT_MARK_DOCKET_PRESSURE`) and row; today it reuses `MACHINE_CANNOT_MARK_PRESSURE`, held by `action-grammar` C-117.14 (DEC-49: one code, one row). Then **control-plane** moves docket's family to its module-order place in `CHECK_FAMILY_FILES` (one line). Found by CONTROL-PLANE #17 (J2; K1291). **Why next:** docket's T27 job had closed when found (P8, P9).
 
+- N527 · 2026-10-03 · **queue** R28: the bridge classes a key by R3, by an `OBLIGATION::<kind>` id, or by its first segment; a contradiction duty's published id `OBLIGATION::contradiction::<candidate>` (`queue-producers` R4), and `-unseen`'s, has no kind in its second segment, so it falls to the progression arm. Word R28 to class these ids as the contradiction-duty kinds (R46's doors). Found by QUEUE #14 (K1293). **Why next:** a requirement change found as the job closed (P8).
+
 ## Carried from T27
 
 | row | item | hard reason | note |
