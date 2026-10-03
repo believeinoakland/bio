@@ -24,3 +24,22 @@ A spelling conflict in the case file's ZIP layout, between two jobs that are not
 - `case-checker` (job branch, its reader): looks for `MANIFEST.json` at the part's root and reads each file at `<case>/<path>` (or a `layout.root`).
 
 I build to `case-grammar`'s spelling, since it owns the format: `manifest.json` at each part's root, and each file at its `caseFilePath` path directly under the part's root, with no `<case>/` prefix (my R6's "each file under the root at its path"). `case-checker` would then read the same. Its reader, and K1315's reading (3) of the part digest (canonical JSON of the rows), differ from what `case-grammar` built: whichever BOB keeps, I follow `case-grammar`'s exports, so only `case-checker` needs telling.
+
+## J3 · REPORT
+
+Found while doing T28's public-read share. None of these blocks my merge; each is another file's owner's to act on.
+
+1. **My requirements' Uses line (BOB's to word).** `build/requirements/public-read.md`'s Uses doesn't yet name what this job reads:
+   - `publication`'s `publishedMaterialText` (its R57, K1316);
+   - `case-grammar`'s `methodOf`, `materialsOf`, `standingOf`, `gradingFactsOf`, `passagesOf`, `caseFilePath`, `casePartDigest`, `completeEditionOf`, `CASE_FILE_FORMAT`, `CASE_FILE_MANIFEST_PATH` and `caseDocumentRequiresMaterials` (its R1, R11–R15, R17);
+   - `record-grammar`'s `canonicalJson`.
+
+   No new module edge: all three are already in `uses`.
+2. **A generated artifact made stale.** The plane bundle (`bio-plane/dist/bio-plane.bundled.mjs`, `not_product`) bundles the Worker and store source this job changed. BOB regenerates it at the layer close (manifest §14).
+3. **My tests need `publication`'s fixture to run.** They use `signLegacy`, `w.units` and its `/6` default `caseDoc`, which arrive with `publication`'s merge, and it merges before mine in L8. On `publication`'s job branch @ 3d1b8fadf2 merged over this branch, public-read is 105/105. On this branch alone, the tests that sign a pre-`/6` edition fail until `publication` is merged.
+4. **Dependents measured against the same merge.** network-notices 63/0, filings 60/0, plane 65/0 and op-declarations 43/0 all pass. ratification (40 failing), control-plane (2) and affordances (1) fail the same tests by name with and without this job's changes:
+   - ratification: `publication` R58 (ratification's own L8 job);
+   - control-plane: accepted red 6;
+   - affordances R19: not this job's.
+
+   The new internal store op `casefilefacts` trips no op-coverage test.
