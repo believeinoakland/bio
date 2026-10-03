@@ -1,6 +1,6 @@
 # inquiry-grammar (T28)
 
-**Status** · session_01PnLhSoHMj7KMjQmdKaYkP6 · depth 2 · WORKING · handled B2
+**Status** · session_01PnLhSoHMj7KMjQmdKaYkP6 · depth 2 · COMPLETE · handled B2
 
 ## Completion (INQUIRY-GRAMMAR #5, T28 L6)
 
