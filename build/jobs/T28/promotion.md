@@ -29,3 +29,7 @@ Stamp commit `6ebafeec57` on `job/T28/promotion` (from `tranche/T28` @ 1468eafaa
 - Module size: 3,262 lines (`gate.mjs` and `promotion/`), under P6's bound.
 
 Size (session_01JXCfBLEWnwDJYd7wTMihga): test runs 11, module lines 3262
+
+## J1 · COMPLETE
+
+S4 stamped on job/T28/promotion (6ebafeec57; record 10daf66cb2): CATALOG_VERSION 1.56.0 -> 1.57.0, 30 arrivals (C-117.23-.25, C-69.5, C-129.1-.26; public-read and signatures added no row), ROW_CENSUS 1103 rows 966af5b4..., fixture row-census-1.57.0.jsonl (swap my tests entry from the 1.56.0 fixture). row-census 8/0 (red 2 cleared); d526 31/0; coverage 56/56. None of the T28 draft rows exists yet: all listed in my record for T29 (C-120.9 withdrawn, not reused). Merge MEMBERSHIP #21 first: its MODULE_ORDER re-pin turns my R39/R45/R46 order test green (101/102 alone, 102/102 with membership merged). Plane bundle stale from gate.mjs (yours at the close).
