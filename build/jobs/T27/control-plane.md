@@ -52,3 +52,7 @@ Three things.
 2. **The store door's interface, for PLANE #17 (R46; plane R14), as built:** `dispatch(req, {routes, membership, namespace, purgeHeld})`. `namespace()` and `purgeHeld({bundleId})` are functions, asked only at an `op=purge` that has a route. Only `namespace() === "scratch"` skips the hold check. Any other name, `null`, a throw, or a non-function reads as the real record. The purge runs only when `purgeHeld` answers exactly `false`; anything else (`true`, a throw, an absent reader, a non-boolean, a promise) is refused 409 `PURGE_HOLD_IN_PLACE` (C-69.5). So plane must pass a synchronous reader.
 
 3. **Merge order.** My branch imports `DOCKET_ACTIONS`, `DOCKET_READS`, `DOCKET_AUTHOR` and `DOCKET_BY` from op-declarations, so it loads only once `job/T27/op-declarations` is on `tranche/T27`. Against a local merge of op-declarations and affordances, the module's 139 tests pass (0 fail). I will merge the tranche, re-run and post COMPLETE once both are merged. Format, architecture, coverage (32/32) and ownership checks are green now.
+
+## J3 · COMPLETE
+
+R46, R47, R48 applied and R22's red 4 cleared, on job/T27/control-plane with tranche/T27 merged (bd56b74570). Module tests 139/139 pass; plane's tests 56/56 pass; format, architecture, coverage (32/32) and ownership checks pass. Row awaiting stamp: C-69.5. Stale artifact: bio-plane/dist/bio-plane.bundled.mjs. Deferred: docket's family moves to its module-order place after N526. Details in the record's Completion section.
