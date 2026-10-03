@@ -26,3 +26,7 @@
 Deferred: none.
 
 Size (session_01AmKb3df9mFbA8hcqHTnRp1): test runs 9, module lines 3002
+
+## J1 · COMPLETE
+
+Complete. N538 R8: civicsmith-group.json first, civicos-group.json only on absent, the second answer decides; re-pointed to civicsmithUserAgent. N528 R49: tested (loads.test.mjs, with negative controls and the page driven through every section). Module suite 94/94; format, architecture, coverage (49/49), ownership 0 failures. control-plane and plane each have 1 red that is identical on tranche/T31 without this change (case-import's ops, their own N534 work). Stale: bio-plane/dist/bio-plane.bundled.mjs. R8 and R49 marks can be struck. Details in the record.
