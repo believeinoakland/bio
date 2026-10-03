@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, NON_ACTS, RUNGS, RUNG_ABSENT, decorate, unaccounted,
          deriveActs } from "../../../src/affordances.mjs";
 
-const KEYS = ["id", "label", "weight", "needs", "mode", "rung", "rung_absence", "prompt"];
+const KEYS = ["id", "label", "weight", "needs", "mode", "rung", "rung_absence", "prompt", "phone" /* R36 */];
 const gateOf = (needs, modes) => ({ needs: (op) => needs[op], mode: (op) => modes[op] });
 
 test("R11: needs and mode are the gate's answer for the act, rung RUNGS', rung_absence RUNG_ABSENT's ground, and "
@@ -23,6 +23,7 @@ test("R11: needs and mode are the gate's answer for the act, rung RUNGS', rung_a
     assert.equal(d.rung, Object.hasOwn(RUNGS, a.id) ? RUNGS[a.id] : null);
     assert.equal(d.rung_absence, Object.hasOwn(RUNG_ABSENT, a.id) ? RUNG_ABSENT[a.id].ground : null);
     assert.equal(d.prompt, a.prompt ?? null);
+    assert.equal(typeof d.phone, "boolean", a.id);
   }
 });
 

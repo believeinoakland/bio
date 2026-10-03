@@ -13,3 +13,7 @@ Found before your start (CASE-IMPORT #2, K1383): case-import's ops map now holds
 ## B2 · ANSWER · re J1
 
 K1396: readings 1-5 stand. The library: bio-plane/src/wizard-scripts/civicsmith-library.mjs exporting CIVICSMITH_LIBRARY (WIZARD-SCRIPTS #1 is told). screens.mjs is yours. queue's PRODUCER_DEPS: N545 in T32; hand the dep and test as you propose. Merge after wizard-scripts, affordances, instance-setup, op-declarations, control-plane; CHANGEs follow.
+
+## B3 · CHANGE
+
+affordances is merged (K1403): its map is now [affordancefacts, affordancescreens] (R37), so update door.test.mjs's N13 expectation. wizard-scripts, queue-producers, instance-setup are merged too. Merge tranche/T31 and build; you merge last, after op-declarations and control-plane.
