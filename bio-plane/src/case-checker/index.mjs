@@ -18,7 +18,7 @@ import { CASE_FILE_SPECS, CASE_FILE_SPEC_VERSIONS } from "./spec.mjs";
 import { publicReadOf } from "../public-read/index.mjs";
 
 export { checkCaseFile, RESULTS, RESULT_WORDS, CHECKER_VERSIONS, RECREATION_STATEMENT, REST_ON_ANOTHER_GROUP_STATEMENT,
-         KEYS_NOT_CHECKED_STATEMENT, CHECKS_VERSION_STATEMENT, accountStatement, partFingerprint, keyFingerprint,
+         KEYS_NOT_CHECKED_STATEMENT, CHECKS_VERSION_STATEMENT, accountStatement, keyFingerprint, readCaseFile,
          textAtExtent } from "./check.mjs";
 export { runProgram } from "./main.mjs";
 export { CASE_FILE_SPECS, CASE_FILE_SPEC_VERSIONS } from "./spec.mjs";

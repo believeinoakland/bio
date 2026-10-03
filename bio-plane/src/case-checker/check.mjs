@@ -16,9 +16,9 @@
 import { parseFrontmatter } from "../record-grammar/frontmatter.mjs";
 import { canonicalJson } from "../record-grammar/json.mjs";
 import { createSha256, b64ToBytes } from "../record-grammar/sha256.mjs";
-import { BASIS_GRADES, GRADE_AXES } from "../record-grammar/grades.mjs";
+import { GRADE_AXES } from "../record-grammar/grades.mjs";
 import { verifySshsig, ratifyStatement, caseRatifyStatement, NS_RATIFY, normalizeKey, parseSshsig } from "../sshsig.mjs";
-import { contentIdFor, canonicalExtent } from "../content/extent.mjs";
+import { contentIdFor, extentRelation } from "../content/extent.mjs";
 import { recomputePair, GRADING_METHOD_VERSIONS } from "../strength/method.mjs";
 import { checkCaseDocument } from "../ratification/checks.mjs";
 import * as grammar from "../case-grammar/index.mjs";
@@ -71,7 +71,6 @@ const b64 = (bytes) => {
   }
   return out;
 };
-const GRADE_RANK = Object.fromEntries(BASIS_GRADES.map((g, i) => [g, BASIS_GRADES.length - i])); /* A strongest */
 const call = (name, ...args) => { const fn = grammar[name]; if (typeof fn !== "function") return undefined; try { return fn(...args); } catch { return undefined; } };
 
 /** An entry of `missing[]` or `differs[]` (R11): which check, what it is about, and a sentence a reader can act on. */
@@ -85,17 +84,26 @@ export function keyFingerprint(keyB64) {
 }
 function hexBytes(hex) { const o = new Uint8Array(hex.length / 2); for (let i = 0; i < o.length; i++) o[i] = parseInt(hex.slice(2 * i, 2 * i + 2), 16); return o; }
 
-/** R2: a part's fingerprint, as listed in the manifest: the SHA-256 of the canonical JSON of that part's file rows
- *  `[{path, sha256, bytes}]` in path order. The manifest sits inside every part, so a digest over a part's whole ZIP
- *  could not be listed in it; this one is recomputed from the files the part carries (job record J2). */
-export function partFingerprint(rows) {
-  const r = rows.map((f) => ({ path: f.path, sha256: f.sha256, bytes: f.bytes }))
-    .sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
-  return createSha256().update(te.encode(canonicalJson(r))).hex();
+/* R19: a part's fingerprint, by `case-grammar`'s one spelling (its R13, K1315). */
+const partDigest = (rows) => (typeof grammar.partFingerprint === "function"
+  ? grammar.partFingerprint(rows)
+  : createSha256().update(te.encode(canonicalJson(rows.map((f) => ({ path: f.path, sha256: f.sha256, bytes: f.bytes }))))).hex());
+const MANIFEST_PATH = () => (typeof grammar.CASE_FILE_MANIFEST_PATH === "string" ? grammar.CASE_FILE_MANIFEST_PATH : "manifest.json");
+const entryOf = (path) => { const e = call("caseFileEntryOf", path); return isObj(e) ? e : null; };
+const departureWords = (d) => (typeof d === "string" ? d : isObj(d) && (d.detail || d.message)
+  ? `${d.at ? `${d.at}: ` : ""}${String(d.detail || d.message)}` : canonicalJson(d));
+
+/** R19: the one reader of a case file. `parts` are the parts' bytes (`public-read` R6's stored ZIPs). Answers
+ *  `{manifest, files: [{path, kind, sha256, bytes, content, state, part, finding, ref}], departures}`: `manifest` the
+ *  parsed manifest (the same in every part), or null; each file the manifest lists, `content` its bytes when it is
+ *  carried and matches its row, else null, and `state` one of `intact`, `missing` or `differs` (`finding` and `ref` read
+ *  from its path by `case-grammar`'s `caseFileEntryOf`); `departures` every way the parts depart from `case-grammar`
+ *  R13, each a sentence. Pure; never throws. */
+export function readCaseFile(parts) {
+  try { return readParts(parts); }
+  catch (e) { return { manifest: null, files: [], departures: [`the case file could not be read: ${String(e && e.message ? e.message : e).slice(0, 200)}`], parts: [] }; }
 }
 
-/* Reads the parts: each ZIP, its manifest (the same in every part), and every file the manifest lists, checked by
-   SHA-256 and length. Answers what was found and what departs, never throwing. */
 function readParts(parts) {
   const departures = [];
   const list = Array.isArray(parts) ? parts : [];
@@ -107,11 +115,12 @@ function readParts(parts) {
     for (const pr of z.problems) departures.push(`part ${i + 1} given: ${pr}`);
     zips.push({ given: i + 1, entries: z.entries });
   });
+  const mpath = MANIFEST_PATH();
   let manifestText = null;
   for (const z of zips) {
-    const m = z.entries.get("MANIFEST.json");
-    if (!m) { departures.push(`part ${z.given} given carries no MANIFEST.json at its root`); continue; }
-    const t = textOf(m);
+    const mb = z.entries.get(mpath);
+    if (!mb) { departures.push(`part ${z.given} given carries no ${mpath} at its root`); continue; }
+    const t = textOf(mb);
     if (manifestText === null) manifestText = t;
     else if (t !== manifestText) departures.push(`part ${z.given} given carries a manifest that differs from the first part's`);
   }
@@ -122,81 +131,81 @@ function readParts(parts) {
   }
   if (manifest) {
     const named = call("caseFileManifestCheck", manifest);
-    for (const d of Array.isArray(named) ? named : named && Array.isArray(named.departures) ? named.departures : [])
-      departures.push(typeof d === "string" ? d : d && (d.detail || d.message) ? String(d.detail || d.message) : canonicalJson(d));
+    for (const d of Array.isArray(named) ? named : []) departures.push(departureWords(d));
   }
   const m = manifest || {};
-  const root = isObj(m.layout) && typeof m.layout.root === "string" && m.layout.root
-    ? (m.layout.root.endsWith("/") ? m.layout.root : m.layout.root + "/") : `${str(m.case) || "case"}/`;
   const listedParts = Array.isArray(m.parts) ? m.parts.filter(isObj) : [];
-  const files = (Array.isArray(m.files) ? m.files.filter(isObj) : []).map((f, k) => ({
-    k, path: str(f.path) || "", sha256: str(f.sha256) || "", bytes: Number.isInteger(f.bytes) ? f.bytes : null,
-    part: Number.isInteger(f.part) ? f.part : null, kind: str(f.kind) || "", finding: str(f.finding), ref: str(f.ref),
-    content: null, state: "missing", detail: null }));
-  /* Which given ZIP is which listed part: the one whose files recompute the part's fingerprint, else by index. */
+  const files = (Array.isArray(m.files) ? m.files.filter(isObj) : []).map((f) => {
+    const e = entryOf(f.path) || {};
+    return { path: str(f.path) || "", kind: str(f.kind) || "", sha256: str(f.sha256) || "",
+             bytes: Number.isSafeInteger(f.bytes) ? f.bytes : null, content: null, state: "missing",
+             part: Number.isSafeInteger(f.part) ? f.part : null, finding: str(e.finding), ref: str(e.ref), detail: null };
+  });
+  /* Which given ZIP is which listed part: the one carrying every file the manifest puts in it. */
   const partOf = new Map();
   for (const lp of listedParts) {
     const rows = files.filter((f) => f.part === lp.index);
-    const holds = (z) => rows.length > 0 && rows.every((f) => z.entries.has(root + f.path));
-    const z = zips.find((zz) => holds(zz) && ![...partOf.values()].includes(zz));
+    const z = zips.find((zz) => rows.length > 0 && rows.every((f) => zz.entries.has(f.path)) && ![...partOf.values()].includes(zz))
+      || zips.find((zz) => rows.some((f) => zz.entries.has(f.path)) && ![...partOf.values()].includes(zz));
     if (z) partOf.set(lp.index, z);
   }
   const partStates = listedParts.map((lp) => {
     const z = partOf.get(lp.index);
     const rows = files.filter((f) => f.part === lp.index);
     if (!z) return { index: lp.index, sha256: str(lp.sha256), state: "missing" };
-    const carried = rows.filter((f) => z.entries.has(root + f.path)).map((f) => {
-      const b = z.entries.get(root + f.path); return { path: f.path, sha256: shaOf(b), bytes: b.length }; });
-    const fp = carried.length === rows.length ? partFingerprint(carried) : null;
-    const ok = fp !== null && fp === lp.sha256 && (lp.bytes === undefined || lp.bytes === carried.reduce((n, f) => n + f.bytes, 0));
+    if (!rows.every((f) => z.entries.has(f.path))) return { index: lp.index, sha256: str(lp.sha256), state: "incomplete" };
+    const carried = rows.map((f) => { const b = z.entries.get(f.path); return { path: f.path, sha256: shaOf(b), bytes: b.length }; });
+    const ok = partDigest(carried) === lp.sha256 && lp.bytes === carried.reduce((n, f) => n + f.bytes, 0);
     return { index: lp.index, sha256: str(lp.sha256), state: ok ? "intact" : "differs" };
   });
-  for (const ps of partStates) if (ps.state === "differs")
-    departures.push(`part ${ps.index}'s files do not recompute the fingerprint its manifest lists (${ps.sha256})`);
   for (const f of files) {
-    const z = f.part !== null ? partOf.get(f.part) : zips.find((zz) => zz.entries.has(root + f.path));
-    const b = z ? z.entries.get(root + f.path) : null;
+    const z = f.part !== null ? partOf.get(f.part) : null;
+    const b = z ? z.entries.get(f.path) : null;
     if (!b) continue;
     const sha = shaOf(b);
-    if (sha !== f.sha256 || (f.bytes !== null && b.length !== f.bytes)) {
+    if (sha !== f.sha256 || b.length !== f.bytes) {
       f.state = "differs";
-      f.detail = `${f.path} does not match the manifest: its SHA-256 is ${sha} and ${b.length} bytes, where the manifest lists ${f.sha256} and ${f.bytes} bytes`;
+      f.detail = `${f.path} does not match the manifest: it has SHA-256 ${sha} and ${b.length} bytes, where the manifest lists ${f.sha256} and ${f.bytes} bytes`;
     } else { f.state = "intact"; f.content = b; }
   }
-  const listedNames = new Set(files.map((f) => root + f.path));
+  /* A part whose files differ is answered by those files' own entries, for the findings that need them; only a part
+     whose every file matches its row and still does not recompute its listed fingerprint departs as a whole. */
+  for (const ps of partStates) if (ps.state === "differs" && files.filter((f) => f.part === ps.index).every((f) => f.state === "intact"))
+    departures.push(`part ${ps.index}'s files do not recompute the fingerprint the manifest lists for it (${ps.sha256})`);
+  const listedNames = new Set(files.map((f) => f.path));
   for (const z of zips) for (const name of z.entries.keys())
-    if (name !== "MANIFEST.json" && !listedNames.has(name))
-      departures.push(`part ${z.given} given carries ${name}, which the manifest does not list`);
-  return { manifest, manifestText, departures, files, partStates, readable: zips.length > 0 && manifest !== null };
+    if (name !== mpath && !listedNames.has(name)) departures.push(`part ${z.given} given carries ${name}, which the manifest does not list`);
+  return { manifest, files, departures, parts: partStates };
 }
 
 /* ============================================================ the chain a finding rests on */
 
 /* One finding's grading facts, as `strength` R35 answers them and R32 reads them: `{legs, levels?}`. */
 const factsOf = (raw) => (isObj(raw) && Array.isArray(raw.legs) ? raw : null);
+/* A leg's list and map fields, carried in the document's flat rows as canonical JSON in one value (`case-grammar` R17),
+   read back as values; a field already a value is kept. */
+const factFields = (leg) => {
+  if (!isObj(leg)) return leg;
+  const out = { ...leg };
+  for (const k of ["answer", "origins", "captures", "another_groups"])
+    if (typeof out[k] === "string" && /^[[{]/.test(out[k])) { try { out[k] = JSON.parse(out[k]); } catch { /* kept as given */ } }
+  return out;
+};
 
 /* ============================================================ the passages (R4) */
 
-/* The text at an extent of a document's carried extracted text. A structured text (`{units: [{extent, text}]}`) is read
-   by canonical extent; a plain text is the whole document, its pages split at form feeds for a `pdf-page` extent. */
+/** R4: the text at an extent of a document's carried extracted text. The extracted text is `case-grammar`'s one
+ *  spelling (its R17, `extractedTextOf`): the canonical JSON of the reading's units, each `{extent, ref, text}`. The text
+ *  at an extent is every unit's text whose extent overlaps it by `content.extentRelation` (the same place, one inside
+ *  the other), in the units' order; null when no unit does or the text is not that spelling. */
 export function textAtExtent(extracted, extent) {
+  let units;
+  try { units = JSON.parse(extracted); } catch { return null; }
+  if (!Array.isArray(units)) return null;
   const e = isObj(extent) ? extent : { kind: "document" };
-  let parsed;
-  try { parsed = JSON.parse(extracted); } catch { parsed = null; }
-  if (isObj(parsed) && Array.isArray(parsed.units)) {
-    const want = canonicalExtent(e);
-    const page = e.kind === "pdf-page" ? canonicalExtent({ kind: "pdf-page", page: e.page }) : null;
-    const hit = parsed.units.filter((u) => isObj(u) && typeof u.text === "string" && isObj(u.extent)
-      && (e.kind === "document" || canonicalExtent(u.extent) === want
-          || (page && canonicalExtent({ kind: "pdf-page", page: u.extent.page }) === page)));
-    return hit.length ? hit.map((u) => u.text).join("\n") : null;
-  }
-  if (typeof extracted !== "string") return null;
-  if (e.kind === "pdf-page" && Number.isInteger(e.page)) {
-    const pages = extracted.split("\f");
-    return e.page >= 0 && e.page < pages.length ? pages[e.page] : null;
-  }
-  return extracted;
+  const hit = units.filter((u) => isObj(u) && typeof u.text === "string" && isObj(u.extent)
+    && ["same", "narrower", "wider"].includes(extentRelation(u.extent, e)));
+  return hit.length ? hit.map((u) => u.text).join("\n") : null;
 }
 const squash = (s) => String(s).replace(/\s+/g, " ").trim();
 
@@ -230,8 +239,8 @@ function malformed(departures, manifest) {
 
 async function check({ parts, documents = [], keys = null }) {
   const parentDiffers = {};    // finding → entries from the findings it rests on (R5)
-  const read = readParts(parts);
-  if (!read.readable) return malformed(read.departures, read.manifest);
+  const read = readCaseFile(parts);
+  if (!read.manifest) return malformed(read.departures, read.manifest);
   const m = read.manifest;
   const files = read.files;
   const caseLevel = { missing: [], differs: [] };
@@ -265,12 +274,12 @@ async function check({ parts, documents = [], keys = null }) {
     body = typeof p.body === "string" ? p.body : null;
     if (!fm) caseLevel.differs.push(entry("integrity", docFile.path, "the case document carries no front matter this checker can read"));
   }
-  const docSha = docFile && docFile.content ? shaOf(docFile.content) : null;
+  const docSha = docFile && docFile.content ? docFile.sha256 : null;
   if (!docFile) caseLevel.differs.push(entry("integrity", "case document", "the manifest lists no case document"));
   else if (docFile.state === "missing") caseLevel.missing.push(entry("integrity", docFile.path, `the case document is not carried; fetch the file whose SHA-256 is ${docFile.sha256}`, { sha256: docFile.sha256 }));
   else if (docFile.entry) caseLevel.differs.push(docFile.entry);
-  if (docSha && str(m.doc_sha) && docSha !== m.doc_sha)
-    caseLevel.differs.push(entry("integrity", "case document", `the case document's SHA-256 is ${docSha}, where the manifest names ${m.doc_sha}`));
+  if (docSha && str(m.case_document_sha) && docSha !== m.case_document_sha)
+    caseLevel.differs.push(entry("integrity", "case document", `the case document's SHA-256 is ${docSha}, where the manifest names ${m.case_document_sha}`));
   if (fm && str(m.case) && fm.case_id !== m.case)
     caseLevel.differs.push(entry("integrity", "case document", `the case document names case ${fm.case_id}, where the manifest names ${m.case}`));
   if (fm && Number.isInteger(m.edition) && fm.case_edition !== m.edition)
@@ -281,7 +290,14 @@ async function check({ parts, documents = [], keys = null }) {
   const materials = isObj(materialsRead) && Array.isArray(materialsRead.materials) ? materialsRead.materials.filter(isObj) : [];
   const attestations = isObj(materialsRead) && Array.isArray(materialsRead.attestations) ? materialsRead.attestations.filter(isObj) : [];
   const accepted = fm ? call("acceptedWorkOf", fm) ?? null : null;
-  const acceptedRows = isObj(accepted) && Array.isArray(accepted.accepted_work) ? accepted.accepted_work.filter(isObj) : [];
+  const acceptedRows = isObj(accepted) && Array.isArray(accepted.rows) ? accepted.rows.filter(isObj) : [];
+  /* R5 (strength R29, R34): the attribution level in force for each observation or attested capture, as the signed
+     document states it (`observation_attributions:`, `case-grammar` R2). */
+  const levels = {};
+  for (const r of fm && Array.isArray(fm.observation_attributions) ? fm.observation_attributions.filter(isObj) : []) {
+    const k = str(r.observation) || str(r.capture);
+    if (k && typeof r.level === "string") levels[k] = r.level;
+  }
 
   /* The roster and its roles, as the signed document states them. */
   const roster = fm && Array.isArray(fm.case_findings) ? fm.case_findings.map(String) : [];
@@ -334,7 +350,7 @@ async function check({ parts, documents = [], keys = null }) {
     const id = findingIds[i];
     const gf = fileOf("grading_facts", "finding", id);
     const raw = gf && gf.content ? jsonOf(gf.content) : null;
-    const fx = raw === undefined ? undefined : factsOf(raw);
+    const fx = raw === undefined ? undefined : factsOf(Array.isArray(raw) ? { legs: raw } : raw);
     facts.set(id, fx);
     for (const leg of fx ? fx.legs.filter(isObj) : []) {
       const target = str(leg.target);
@@ -427,8 +443,16 @@ async function check({ parts, documents = [], keys = null }) {
   else if (!ceFile.content) {
     complete_edition.detail = ceFile.state === "missing" ? `the complete edition is not carried; fetch the file whose SHA-256 is ${ceFile.sha256}` : ceFile.detail;
     (ceFile.state === "missing" ? caseLevel.missing : caseLevel.differs).push(entry("complete_edition", ceFile.path, complete_edition.detail, { sha256: ceFile.sha256 }));
+  } else if (files.some((f) => f.kind !== "complete_edition" && f.state !== "intact" && f.state !== "supplied")) {
+    /* Rendered from files that are missing or differ, it could not be the carried edition; what they lack is already
+       entered for each finding that needs them, so the edition is not compared rather than counted against every one. */
+    complete_edition.detail = "the complete edition was not compared, because files it is rendered from are missing or "
+      + "differ from the manifest";
   } else {
-    const caseFile = { manifest: m, files: Object.fromEntries(files.filter((f) => f.content && f.kind !== "complete_edition").map((f) => [f.path, f.content])) };
+    const caseFile = { format: m.format, group: m.group, case: m.case, edition: m.edition, case_document_sha: m.case_document_sha,
+      keys: m.keys, manifest: m,
+      files: files.filter((f) => f.content && f.kind !== "complete_edition")
+        .map((f) => ({ path: f.path, kind: f.kind, sha256: f.sha256, bytes: f.bytes, content: f.content })) };
     const rendered = call("completeEditionOf", caseFile);
     const rb = typeof rendered === "string" ? te.encode(rendered) : asBytes(rendered && rendered.bytes !== undefined ? rendered.bytes : rendered);
     if (!rb) { complete_edition.detail = "this checker could not render the complete edition from the case file"; caseLevel.differs.push(entry("complete_edition", ceFile.path, complete_edition.detail)); }
@@ -443,7 +467,6 @@ async function check({ parts, documents = [], keys = null }) {
 
   /* ---------------------------------------------------------- per finding */
   const bar = fm && isObj(fm.required_strength) ? fm.required_strength : null;
-  const barAxes = bar && bar.declared !== false ? ["capture", "connection", "testimony"].filter((a) => typeof bar[a] === "string" && GRADE_RANK[bar[a]]) : [];
   const version = method && typeof method.grading === "string" ? method.grading : null;
   const strengthRows = fm && Array.isArray(fm.case_strength) ? fm.case_strength.filter(isObj) : [];
   const findingSigs = [];
@@ -496,7 +519,7 @@ async function check({ parts, documents = [], keys = null }) {
           { sha256: tf ? tf.sha256 : cap, ...(mat && mat.origin ? { origin: mat.origin } : {}) }));
         continue;
       }
-      const at = textAtExtent(textOf(tf.content), row.extent);
+      const at = mat.kind === "observation" ? textOf(tf.content) : textAtExtent(textOf(tf.content), row.extent);
       if (at === null || typeof row.quoted !== "string" || !squash(at).includes(squash(row.quoted)))
         differs.push(entry("passage", id, `${where} is not found where it is said to be: its quoted text is not in the document's text at that place`));
     }
@@ -514,7 +537,7 @@ async function check({ parts, documents = [], keys = null }) {
         const row = acceptedRows.find((r) => r.ref === leg.target && (r.member === id || r.leg_of === id)) || acceptedRows.find((r) => r.ref === leg.target);
         return row && isObj(row.pair) ? { ...leg, answer: row.pair } : leg;    /* R18: the row's pair is that leg's fact */
       });
-      const r = recomputePair({ legs, levels: fx.levels ?? null, version });
+      const r = recomputePair({ legs: legs.map(factFields), levels: Object.keys(levels).length ? levels : null, version });
       if (!r.ok && r.reason === "UNKNOWN_METHOD_VERSION")
         missing.push(entry("grade", id, `the grade was set by grading method ${version === null ? "(none stated)" : version}, which this checker does not hold (it holds ${GRADING_METHOD_VERSIONS.join(", ")})`, { version }));
       else if (!r.ok) differs.push(entry("grade", id, `finding ${id}'s grade could not be recomputed: ${r.detail}`));
@@ -537,18 +560,18 @@ async function check({ parts, documents = [], keys = null }) {
       }
     }
 
-    /* R6: the bar, for a load-bearing member. */
-    let bar_met;
-    if (!isMember || role !== "load_bearing") bar_met = "not_asked";
-    else if (!barAxes.length) bar_met = "no_bar";
-    else {
+    /* R6: the bar, by `case-grammar`'s one reading of a standing (its R15), over the recomputed pair (or, where it
+       could not be recomputed, the recorded one). A finding reached through a member's chain is not asked. */
+    let bar_met = "not_asked";
+    if (isMember) {
       const p = pair || Object.fromEntries(GRADE_AXES.map((a) => {
         const row = strengthRows.find((x) => String(x.target ?? "") === id && x.axis === a);
-        return [a, { state: row ? String(row.state ?? "") : null, grade: row ? row.grade ?? null : null }];
+        return [a, { state: row ? str(row.state) : null, grade: row ? row.grade ?? null : null }];
       }));
-      const short = barAxes.filter((a) => !(p[a] && p[a].state === "graded" && GRADE_RANK[p[a].grade] >= GRADE_RANK[bar[a]]));
-      bar_met = short.length === 0 ? true : false;
-      for (const a of short) differs.push(entry("bar", id, `on ${a}, finding ${id} reaches ${p[a]?.grade ?? p[a]?.state ?? "nothing"}, short of the bar the case records (${bar[a]})`, { axis: a, bar: bar[a] }));
+      const st = call("standingOf", { role, bar, pair: p });
+      bar_met = isObj(st) ? st.meets : null;
+      for (const a of isObj(st) && st.meets === false && Array.isArray(st.short) ? st.short : [])
+        differs.push(entry("bar", id, `on ${a}, finding ${id} reaches ${p[a]?.grade ?? p[a]?.state ?? "nothing"}, short of the bar the case records (${st.bar[a]})`, { axis: a, bar: st.bar[a] }));
     }
 
     /* R8, R2, R3: the material its chain reaches. */
@@ -591,7 +614,7 @@ async function check({ parts, documents = [], keys = null }) {
     format: str(m.format), case: str(m.case), edition: Number.isInteger(m.edition) ? m.edition : null, group: str(m.group),
     checker: { ...CHECKER_VERSIONS, grading_versions: [...CHECKER_VERSIONS.grading_versions] },
     integrity: { intact: !read.departures.length && files.every((f) => f.state === "intact" || f.state === "supplied"),
-      departures: read.departures, parts: read.partStates,
+      departures: read.departures, parts: read.parts,
       files: files.map((f) => ({ path: f.path, kind: f.kind, sha256: f.sha256, state: f.state })),
       documents: { used, unmatched } },
     signatures: { case: caseSig ? { file: caseSig.path, verified: sigCase.verified === true, reason: sigCase.reason ?? null,
