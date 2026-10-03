@@ -2,9 +2,30 @@
 
 **Status** · session_017vDG4wd8mxTeSyfas1vs7o · depth 2 · WORKING · handled B4
 
-## Progress
+## Completion
 
-Built and pushed: R46 (the store door's hold refusal, C-69.5, in `dispatch.mjs`; the row in `checks.mjs`), R47 (`projectholds` in `PROJECT_NAMING_READS_NOT`; the stamps come from op-declarations' lists), R48 (docket's stamps in `index.mjs` from `DOCKET_*`; docket's three reads classified), and R22 (docket's family in `CHECK_FAMILY_FILES`, read after action-grammar's; J2 item 1). Tests: `purge-hold.test.mjs`, `r48-routes.test.mjs`, and C-69.5 in `envelope.test.mjs`. **Next:** once `job/T27/op-declarations` (and affordances) are on `tranche/T27`, merge the tranche, run the module's tests and the four checks, then the users' tests (plane), write the completion, and post COMPLETE.
+**Entries applied** (L11; N518 R46, R47; N520 R48; R22's accepted red 4 cleared):
+- **R46** (DEC-113, C-69.5): `dispatch.mjs` refuses `op=purge` 409 `PURGE_HOLD_IN_PLACE` before the purge route (record-core's arm) runs, unless `store.purgeHeld({bundleId})` answers exactly `false`. A throw, an absent reader or any other answer refuses (a failure to ask). `bundleId` is read as record-core's arm reads it (`|| null`). `store.namespace()` is asked at the purge: only `"scratch"` skips the check, and any other answer, a throw or a non-function reads as the real record (B2, PLANE #17's shape). The refusal names only the `bundleId` asked. The row C-69.5 is new in `checks.mjs` `DISPATCH_CHECKS`; its `where` is `dispatch.mjs purgeHoldRefusal > is-purge-hold-in-place`.
+- **R47**: `projectholds` is in `PROJECT_NAMING_READS_NOT`, with its reason (`held: null`, DEC-36). The three hold ops route through `actions`' map with the stamps from op-declarations' `ACTIONS_ACTIONS`/`ACTIONS_READS` (R12); the door needed no new stamp code.
+- **R48**: `index.mjs` stamps `viewer` on `DOCKET_ACTIONS` and `DOCKET_READS`, and the positional identity as `author` on `DOCKET_AUTHOR` and as `by` on `DOCKET_BY` (op-declarations R13, names agreed in J1/B2). The docket's public shelves and feed are public ops answered by plane's public hook through public-read's door (its R21); the door adds nothing for them. Docket's three reads are classified in `PROJECT_NAMING_READS_NOT`.
+- **R22**: `families.mjs` reads `src/docket/checks.mjs`. It is read after action-grammar's file, not at docket's module-order place, because docket holds `MACHINE_CANNOT_MARK_PRESSURE` (C-129.10), a code action-grammar's C-117.14 already holds (J2 item 1; N526 in `next.md`, K1291). Once docket renames it, docket's entry moves to its place directly after publication.
+
+**Deferred:** moving docket's family to its module-order place, after N526 (above). Nothing else.
+
+**Found in other modules (reported, J2):**
+- `docket`: one code held in two places (DEC-49), above.
+- `plane`: until PLANE #17 hands `namespace` and `purgeHeld` to `dispatch` (plane R14), every purge outside `scratch` is refused C-69.5 (fail closed).
+- Generated artifact: `bio-plane/dist/bio-plane.bundled.mjs` (owned by `not_product`) is stale by this module's source; regenerated at layer close.
+
+**Catalogue rows awaiting stamp (accepted red 2):** C-69.5 `PURGE_HOLD_IN_PLACE`.
+
+**Tests and checks** (on `job/T27/control-plane` with `tranche/T27` merged, bd56b74570):
+- `node --test bio-plane/test/m/control-plane/*.test.mjs`: tests 139, pass 139, fail 0. New: `purge-hold.test.mjs` (R46), `r48-routes.test.mjs` (R47, R48); C-69.5 added to `envelope.test.mjs`'s R32 census.
+- Users' tests, `plane`: `test/m/plane/*.test.mjs` and `test/system/migrate-released.test.mjs`: tests 56, pass 56, fail 0, skipped 0.
+- `format`: 0 failures · `architecture control-plane`: 0 failures · `coverage control-plane`: 32 of 32 ids named, 0 failures · `ownership control-plane tranche/T27`: 8 files, 0 failures.
+- Module size: code 3,612 lines (`src/control-plane/`), tests 5,739 lines; diff against the tranche +413/−10 in 7 files.
+
+Size (session_017vDG4wd8mxTeSyfas1vs7o): test runs 9, module lines 9351
 
 ## J1 · QUESTION
 
