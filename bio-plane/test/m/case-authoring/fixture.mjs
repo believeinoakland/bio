@@ -28,6 +28,7 @@ import { Capture } from "../../../src/capture/index.mjs";
 import { sourcesOf } from "../../../src/sources/index.mjs";
 import { networkNoticesOf } from "../../../src/network-notices/index.mjs";
 import { caseAuthoringOf } from "../../../src/case-authoring/index.mjs";
+import { caseDisclosuresOf } from "../../../src/case-disclosures/index.mjs";
 import { parseImportedFindingRef, importedFindingRef } from "../../../src/inquiry-grammar/index.mjs";
 import { caseImportOf } from "../../../src/case-import/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
@@ -243,10 +244,20 @@ export function world({ group = "test-group", provider = true, now = null, recor
   w.notices = new Map();
   const networkNotices = { noticeReferenceOf: (project) => (w.notices.has(project) ? w.notices.get(project)
                                                                                   : w.networkNotices.noticeReferenceOf(project)) };
-  w.ca = caseAuthoringOf(host, { record: recordWrap ? recordWrap(record) : record, membership, inquiry, basisVersions,
+  /* case-disclosures (N529), composed here before case-authoring as the plane composes it (N536, K1355): the modules it
+     reads are handed to it, a test's own stand-in for one of them (`deps`) included; case-authoring reaches this one
+     instance on the host and hands it nothing. */
+  const caseRecord = recordWrap ? recordWrap(record) : record;
+  const READ_BY_DISCLOSURES = ["contradiction", "provenance", "attestation", "capture", "sources", "extraction",
+                               "caseImport", "promotion", "inquiry", "strength"];
+  const given = (k) => Object.fromEntries(Object.entries(deps).filter(([d]) => k(d)));
+  caseDisclosuresOf(host, { storage: st, record: caseRecord, contradiction, provenance: prov, attestation, capture, sources,
+    extraction: ex, caseImport: imports, promotion, inquiry, strength,
+    ...given((d) => READ_BY_DISCLOSURES.includes(d)) });
+  w.ca = caseAuthoringOf(host, { record: caseRecord, membership, inquiry, basisVersions,
     strength, bias, observations, reevaluation, publication, ratification: ratWrap ? ratWrap(ratification) : ratification,
-    contradiction, provenance: prov, attestation, capture, networkNotices, extraction: ex, caseImport: imports,
-    sources, now: now || ((p) => (p === "millisecond" ? clock.ms : clock.now)), ...deps });
+    networkNotices, now: now || ((p) => (p === "millisecond" ? clock.ms : clock.now)),
+    ...given((d) => !READ_BY_DISCLOSURES.includes(d) || d === "inquiry" || d === "strength") });
   let n = 0;
   Object.assign(w, {
     text: (id) => record.readFile(id, "bundle.md")?.text ?? null,
