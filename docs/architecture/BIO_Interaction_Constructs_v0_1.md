@@ -551,9 +551,9 @@ step** (never a copy of it inside the dialog, which would fork the interface) an
 step is, why it is needed, and how it serves what was asked for. The member does it and presses
 next; the assistant checks and advances.
 
-**RULED 2026-10-02 by Bob (DEC-120): guided flows, wizard scripts, and drafts in fields.** Any multi-step journey can be
-walked as a guided flow. A guided flow runs from a **wizard script** (the authored step list this design first called a
-recipe) for every group, with no AI and no key; where a group has set a key, the assistant may also plan a flow on the fly.
+**RULED 2026-10-02 by Bob (DEC-120): wizards, wizard scripts, and drafts in fields.** Any multi-step journey can be
+walked with a wizard (Bob, 2026-10-03: "Let's call guided flows wizards"). A wizard runs from a **wizard script** (the authored step list this design first called a
+recipe) for every group, with no AI and no key; where a group has set a key, the assistant may also plan a wizard on the fly.
 Either way the member works on the real screens, the guide sitting in the docked panel (DEC-90). A step may place a
 **labelled draft** in a field for the member to edit and adopt (as DEC-101 and K1019 allow); the member alone presses the
 act's button, and the act still runs its four beats.
@@ -563,9 +563,9 @@ library, shipped with releases and approved by Bob, and each group's own, govern
 by a project owner, widened by an administrator; a machine never approves; retired, never deleted). Any member authors by
 recording a walk-through (screens and acts, never values) or by asking the assistant, which is an expert script author;
 building by hand is an advanced editor an administrator grants. Checks refuse a script naming screens or acts that do not
-exist, lacking a step's "why", or telling a member what to conclude. Required flows (setup and claim, member onboarding, the
-publication ceremony) are the CivicOS library's and a failing one blocks the release; a broken optional flow is withdrawn
-until fixed, its owner told. Wherever flows begin, a standard mark in a standard place shows them on hover or tap, starts one
+exist, lacking a step's "why", or telling a member what to conclude. Required wizards (setup and claim, member onboarding, the
+publication ceremony) are the CivicOS library's and a failing one blocks the release; a broken optional wizard is withdrawn
+until fixed, its owner told. Wherever wizards begin, a standard mark in a standard place shows them on hover or tap, starts one
 on click, or records a new one from there. Groups may share approved scripts as signed files or through the network directory;
 an importing group approves them before use.
 
