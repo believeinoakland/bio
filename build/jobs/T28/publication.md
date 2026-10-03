@@ -20,3 +20,19 @@ QUESTION (four points; my best reading for each, which I am building now; only (
 (3) R59: the viewer the commit reads accepted work as is `member:<attestorMember>` (the signer). case-import R16 answers null to a viewer who is not an active member.
 
 (4) R59 flags: a flags read that is `complete: false` counts as not in force (C-122.3), as absent and unreadable do.
+
+## J2 · REPORT
+
+REPORT: what my T28 change does to other modules' tests (measured against a scratch stub of case-grammar's T28 names, the same stub on tranche/T28 as the baseline; 107 tests red with my change that are green without it).
+
+1. R58 (C-122.2) refuses committing any case document that is not /6. Every other module whose test fixture signs a /4 or /5 document through `commitCaseEdition` goes red until its fixture writes /6 (with `method:` and `materials:`):
+   - ratification (T28 L8 job): case-commit 6, caseratify-op 3, converted-a 6, converted-b 3, converted-c 1, converted-d 9, preflight 6, relays 1, seals 5.
+   - public-read (T28 L8 job): edition-statements 6, project-reference 3, published 1, sources 1, tensions 2.
+   - conformance (layer 9, NO job in T28): contradiction-cause 11, determine 18, helpers 4, reads 12, record 7. Its fixture signs a /4 case.
+   - affordances (L11 job): backing.test.mjs R19, through a fixture that signs a /4 case.
+   My own module's tests keep reading older signed documents through a fixture helper that writes their rows as a pre-T28 commit did (`signLegacy`); the same pattern serves any module that must keep reading an older edition.
+2. R60 re-words C-92.4 and C-92.5's translations (they now cover a capture's attesting member): control-plane's `catalogue-end.test.mjs` (R43, R22) pins each decorated code's translation, so it goes red until control-plane's L11 job re-pins it. The rows also read `awaiting stamp` (accepted red 2), with C-122.2, C-122.3 and C-122.4.
+3. P6: publication now measures 3,935 lines by its paths (was 3,633), near the 4,000 mark. The seam the draft named stands: R57's holding (`#holdMaterials`, `#tokenFiles`, `publishedMaterialText`, `heldMaterialsOf`, about 140 lines) and R59's re-read (about 50).
+4. For public-read: R57's texts are read in-process with `publication.publishedMaterialText(sha)` (no op added); the commit's `materials` answer and `heldMaterialsOf` are as K1317 states.
+
+I am otherwise built and green against the stub; I complete once case-grammar is merged and my tests run against its real code.
