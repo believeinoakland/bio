@@ -216,6 +216,7 @@ Rows C-120.8 and C-120.10–C-120.13 (R29; DEC-112, N522), with their translatio
   - Its step three lists the flags R52 requires, read as R52 reads them, beside R32's tensions, with the statement that publishing discloses them and is never blocked by them.
 
   It writes nothing. (DEC-96 item 4; DEC-85) *(not yet met: T28)*
+- **R54** `publishCase` writes the `grading_facts:` and `passages:` blocks (`case-grammar` R17) at the act, from `strength.gradingFacts({inquiry, levels: null, viewer})` (its R35) for each finding a member's chain reaches (R46), and each relied-on passage's `quoted` text from `content`, so they are signed with the document. Its "Withheld" statement (R37) is `publication`'s `unnamedSourceStatement`, the one spelling. (DEC-112 (3); K1305, K1315) *(not yet met: T28)*
 
 ### Satisfies
 
