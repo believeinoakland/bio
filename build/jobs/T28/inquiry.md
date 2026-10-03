@@ -40,3 +40,7 @@ Two places in my module would mishandle a ref leg, which I am fixing within R4/R
 2. `earnedBasis` (R15) asks `membership.inSight` of each target and leg; a ref is no bundle, so a ref leg is dropped and the answer says `legs_out_of_view` / `out_of_view`, and `ensureLegContent` would call its null case `INQUIRY_TARGET`.
 
 QUESTION (R15's reading). My best reading, which I am building unless you answer otherwise: a ref leg is a part of the inquiry's own document, which the viewer already sees, so `earnedBasis` lists it (sight of the ref is the inquiry's sight; inquiry reads no accepted-work, per N522's "no new use"), earns nothing for it (its grades are the edition's, strength R33), and states its null case as a new `IMPORTED_TARGET` ("another group's finding, graded by the edition it names; this record holds no part of it"), never `INQUIRY_TARGET` and never out of view. The alternative is to keep it left out as out of view (fail closed), which misreports a visible leg as hidden.
+
+## J2 · COMPLETE
+
+Complete: N522 applied (R4, R12 confirmed and pinned; R24 divide keeps a ref out of references[]; R15 per K1304, IMPORTED_TARGET; R38 pin widened to C-21.3 per B3). inquiry 170 pass/0 fail; every user of inquiry green; format, architecture, coverage (49/49), ownership 0 failures. No catalogue rows added. 3,897 module lines. tranche/T28 merged with inquiry-grammar in; I merge again when you say accepted-work is in. Record has the detail.
