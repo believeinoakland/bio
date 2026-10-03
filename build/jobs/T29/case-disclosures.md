@@ -20,3 +20,30 @@ Findings in other modules (none blocks my merge; each is the seam read's expecte
 2. promotion: the `where`s of C-120.1–C-120.7 now name `src/case-disclosures/index.mjs <method> > <region>` (C-120.3's method is `tensionsUndetermined`), joining C-120.8 and C-120.10–C-120.13 for the stamp (R22). Codes, checks and translations unchanged.
 3. case-authoring (its job, after my merge): import from `../case-disclosures/index.mjs` — the renderers `tensionFrontmatterLines`, `tensionBodyLines`, `tensionSentence`, `captureBodyLines`, `carriesBodyLines`, `acceptedBodyLines`, and `FLAG_SENTENCE`, `FLAGS_SAY`, `SELF_ATTESTED_SENTENCE`, `NOT_SHOWN_WORDS`, `TENSIONS_DEPTH_STATED`, `TENSION_TEMPLATES`, `HIGHLIGHT_SENTENCE`, `tensionSide`, `CASE_DISCLOSURE_CHECKS` (`CEREMONY_HIGHLIGHT_SENTENCE` stays its own). Byte identity is pinned in my seam test against its pre-split renderers. Its R32 calls `tensionsRead` and, when its own read throws, `tensionsUndetermined`. `disclosureBlocks({resting, facts, selfAttested: selfJ, reached, flags: flagsJ, withheld, attributionOf, project: proj, author: who, at: when})` answers `{captures, materials, flags, group}` = today's `captureRows`, `materialBlocks`, `flagRows`, `group`. Note R16 now answers C-120.7 with `undetermined` when a basis read fails (K1346); with every read whole its answer is unchanged.
 4. Test fixtures: `strength` reaches basis-versions lazily on the host, and its tables are not created unless someone migrates them; my fixture calls `strength.versions.migrate()` so contradiction's pairing works without my tests importing basis-versions (not in my Uses). No change asked.
+
+## J3 · COMPLETE
+
+Complete. Branch job/T29/case-disclosures, tranche/T29 merged in (for B2's R16 wording).
+
+Files, for your modules.json edit: paths ["bio-plane/src/case-disclosures/"]; tests ["bio-plane/test/m/case-disclosures/"]; uses as registered (record-grammar, record-core, membership, promotion, provenance, attestation, capture, sources, extraction, content, inquiry-grammar, inquiry, strength, contradiction, case-grammar, publication, case-import), every one imported, none other.
+
+Entry applied (L8, N529; K1333, K1337, K1346): R1–R23 met.
+- `index.mjs` (705 lines): `CaseDisclosures`, `caseDisclosuresOf(host, deps)`; the 15 services moved from case-authoring's private methods with bodies unchanged (`#x` → `x`; static `#withheld`/`#undetermined` → instance `withheldOf`/`tensionsUndetermined`), `methodOf`, and `disclosureBlocks` (publishCase's block assembly, 659–700). Re-exports the renderers, constants and helpers.
+- `materials.mjs`, `accepted.mjs`: moved whole; code byte-identical, comments re-pointed to this module's ids.
+- `checks.mjs`: CASE_DISCLOSURE_CHECKS, the 12 rows with ids, codes and translations verbatim; `where`s name this module's methods.
+- `document.mjs`: the disclosure renderers (tension section and sentences, capture/sources body, carries body, accepted-work body) moved byte for byte; CEREMONY_HIGHLIGHT_SENTENCE stays case-authoring's.
+Changes beyond the move, each for a requirement: R16 fails closed without throwing (K1346); `#liveText` and `promotion.fact` reads guarded, `disclosureBlocks` tolerant of a capture absent from `facts` (reads it) and of an unlisted flag (words null) — R23, no change when inputs are as publishCase hands them. Comments cite this module's ids; one fix: materials.mjs's chainsOf comment said `{…, truncated}`, it answers `findings`.
+
+Deferred: `acceptedBodyLines` prints "because: <reason>." after a reason that ends in a full stop ("whole.."). Fixing it changes signed bytes, which K1333 forbids in this move; pinned as is in my test. A later entry (UX wording) can take it.
+
+Other modules: J2.
+
+Tests (46, all named by id; 23 of 23 ids): `node --test bio-plane/test/m/case-disclosures/` → tests 46, pass 46, fail 0. Arms over the real record-core, membership, promotion, provenance, attestation, capture, sources, extraction, content, inquiry, strength, contradiction and (two arms) case-import; byte-identity arm pins each renderer's output hash as case-authoring's pre-split renderers produced it from the same rows. Also run: case-authoring's suite 118/0 (untouched), promotion's 102/0, control-plane families 6/2 (J2 item 1). No layer tests named in the manifest.
+Checks (with my modules.json paths made locally, not committed):
+- format: 97 modules, 96 requirements files; 0 failures
+- architecture case-disclosures: 12 product files, 64 relative imports; 0 failures
+- coverage case-disclosures: 23 of 23 live requirement ids named by a test; 0 failures
+- ownership case-disclosures tranche/T29: 13 files; 0 failures
+No generated artifact touched. Requirements' `not yet met: T29` marks are yours to strike at the merge.
+
+Size (session_01KGf5pxXzTcDPj2Jf6NWLvV): test runs 14, module lines 1292
