@@ -28,3 +28,7 @@
 **Size:** `index.mjs` 2,604 lines (was 2,553).
 
 Size (session_016KFczMmF55nqNMETV7tFqA): test runs 4, module lines 2604
+
+## J1 · COMPLETE
+
+R14 applied: specs, lists (CASE_IMPORT_ACTIONS, CASE_IMPORT_READS, CASE_IMPORT_BY, CASE_CHECKER_PUBLIC_READS), both session sets, NEEDS. 49/0 module tests; checks clean. For control-plane's job: stamp by from CASE_IMPORT_BY and viewer from CASE_IMPORT_ACTIONS/READS. control-plane totality R2/R41 red for the eight ops and casechecker/casefilespec until affordances' merge (accepted red 4). Stray duplicate 'R6 holds over them.' in R14's text; details in the record.
