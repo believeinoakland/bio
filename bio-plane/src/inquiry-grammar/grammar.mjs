@@ -1,5 +1,5 @@
 /* inquiry-grammar — THE GRAMMAR OF AN INQUIRY DOCUMENT (requirements: `build/requirements/inquiry-grammar.md` R1–R5,
- * R8–R10; T19 layer 6, K766).
+ * R8–R11; T19 layer 6, K766; R11 at T28, N522).
  *
  * MOVED FROM THE CHECK CATALOGUE (`checks/bio-checks.mjs`, legacy-checks) UNCHANGED: the C-2.8 entry arm and the
  * division block (`checkInquiryExtension`, `checkDividedExtension`), the recheck coverage (C-15.1,
@@ -28,7 +28,7 @@ import { checkContentExtent, legExtent, legHasAuthoredExtent, CONTENT_ID_RE, CON
 import { CONTENT_EXTENT_KINDS } from "../textchain.mjs";
 import { themeLegFindings } from "../connections/checks.mjs";
 import { LEAD_ID_RE } from "../observation-log/checks.mjs";
-import { LEAD_CHECKS } from "./checks.mjs";
+import { LEAD_CHECKS, INQUIRY_GRAMMAR_CHECKS } from "./checks.mjs";
 
 /** A finding, record-grammar's shape (its R11), with the optional `code` (REC-56 / D-206): a discriminator within a
  *  rule, minted at the same call site as the finding it describes. */
@@ -575,6 +575,9 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
      over no legs asserts independent sufficiency for nothing, and leaving it
      unchecked here would make "author the structure first" a way to leave an
      assertion in the record with nothing under it. */
+  /* R11 (N522): a references[] entry naming an imported finding reference is refused, whatever the legs; such a leg's
+     target is not a reference, so C-6.3 never asks it. Raised before the legs, so it holds for an inquiry with none. */
+  importedReferenceFindings(fm, findings);
   if (legs === undefined || legs === null) { checkGrounds(fm, [], findings); return; }
   if (!Array.isArray(legs)) {
     findings.push(f('C-2.8', 'error', `basis is not an array`));
@@ -594,6 +597,19 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
     if (leadLegFindings(`basis[${i}]`, leg, findings)) continue;
     /* D-162 / C-81.1: a THEME, or membership in one, is refused BY NAME at the same door (§8.4 fence 4). */
     if (themeLegFindings(`basis[${i}]`, leg, findings)) continue;
+    /* R11 (N522): a leg on another group's finding is judged by its own arm IN PLACE OF the target arm below; role,
+       note and grounds are asked as of any leg. The grade, axis, source, hunch, testimony, earned, inherited and
+       extent arms stay silent: every field they judge is already one C-21.3 departure on such a leg, and a second
+       complaint about one broken field helps nobody. */
+    if (importedLegFindings(`basis[${i}]`, leg, findings)) {
+      if (!BASIS_ROLES.includes(leg.role)) {
+        findings.push(f('C-2.8', 'error', `basis[${i}].role '${leg.role}' is not one of: ${BASIS_ROLES.join(', ')}`));
+      }
+      if (leg.note !== undefined && leg.note !== null && typeof leg.note !== 'string') {
+        findings.push(f('C-2.8', 'error', `basis[${i}].note is not a string`));
+      }
+      continue;
+    }
     const t = leg.target;
     /* Hoisted out of the else below by REC-31: the capture-axis arm at the end
        of this loop asks the SAME question (what does this leg rest on), and a
@@ -1289,4 +1305,101 @@ export function leadLegFindings(label, leg, findings) {
   }
   /* END DEC-49 REGION is-lead-not-evidence */
   return false;
+}
+
+
+/* =====================================================================
+ * R11 (N522; DEC-112 (6); DEC-96 items 1, 4) — ANOTHER GROUP'S FINDING, NAMED.
+ *
+ * A group's finding may rest on a finding of another group's case that the group has accepted. That finding is not a
+ * bundle of this record (case-import holds it, late in the order), so it is named by a reference of its own:
+ * `imported:<import>/<finding>`, the import's 64-hex id and the finding's id as the source case states it. The prefix
+ * is not a bundle prefix, so a ref never collides with a local id, which BUNDLE_ID_RE alone matches.
+ *
+ * WHAT A LEG ON ONE MAY SAY, AND WHY SO LITTLE. It names the finding and the ONE edition it rests on, and nothing
+ * else: the edition's grades stand as published (DEC-96 item 1), so the leg carries no grade of its own to disagree
+ * with them, and that edition's own case file is the place its parts are checked, so the leg carries no part either.
+ * Whether an acceptance of that edition is in force is not a fact this pure grammar can see: `accepted-work` asks it
+ * at the write (its R3, R4). This arm judges only the form.
+ * ===================================================================== */
+
+const IMPORT_ID = '[0-9a-f]{64}';
+const BUNDLE_BODY = BUNDLE_ID_RE.source.replace(/^\^/, '').replace(/\$$/, '');
+
+/** R11: exactly `imported:<import>/<finding>`; capture 1 is the import, the last capture the finding. */
+export const IMPORTED_FINDING_RE = new RegExp(`^imported:(${IMPORT_ID})/(${BUNDLE_BODY})$`);
+
+/** R11: `{import, finding}` for a ref, else null. Never throws. */
+export function parseImportedFindingRef(s) {
+  if (typeof s !== 'string') return null;
+  const m = IMPORTED_FINDING_RE.exec(s);
+  return m ? { import: m[1], finding: m[2] } : null;
+}
+
+/** R11: the ref spelled from its two parts, or null when they would not spell one IMPORTED_FINDING_RE matches, so
+ *  nothing this spells is a ref the grammar refuses. Never throws. */
+export function importedFindingRef(importId, finding) {
+  if (typeof importId !== 'string' || typeof finding !== 'string') return null;
+  const s = `imported:${importId}/${finding}`;
+  return IMPORTED_FINDING_RE.test(s) ? s : null;
+}
+
+const isRef = (v) => typeof v === 'string' && IMPORTED_FINDING_RE.test(v.trim());
+const carries = (v) => v !== undefined && v !== null && v !== '';
+
+/** R11: the leg arm. A leg whose target is a ref gains one C-21.3 error, IMPORTED_LEG_MALFORMED, for each departure,
+ *  naming the leg and the field, and the answer is true; any other leg (a non-object read as an empty one) gains
+ *  nothing and the answer is false, so the caller runs its own target arm. `checkId` lets a leg grammar at another
+ *  grain relabel the rule, as checkLegExtentGrammar does; the code travels. Pure; never throws. */
+export function importedLegFindings(label, leg, findings, checkId = INQUIRY_GRAMMAR_CHECKS.IMPORTED_LEG_MALFORMED.check) {
+  const l = leg && typeof leg === 'object' ? leg : {};
+  if (!isRef(l.target)) return false;
+  const ref = l.target.trim();
+  const refusal = (message, repairs) => importedRefusal(checkId, message, repairs);
+  const ed = l.target_edition;
+  if (!Number.isInteger(ed) || ed < 1) {
+    findings.push(refusal(`${label}.target_edition '${String(ed).slice(0, 40)}' does not name an edition of ${ref}: a leg on another group's finding names the one edition it rests on, a positive whole number, because each edition is a separate document with its own published grades`,
+      [`set ${label}.target_edition to the edition this group accepted`]));
+  }
+  for (const field of ['grade', 'grade_axis', 'grade_source']) {
+    if (carries(l[field])) {
+      findings.push(refusal(`${label}.${field} is set on a leg on another group's finding (${ref}): that finding's grades are the ones its edition published, and the leg states none of its own`,
+        [`remove ${field} from ${label}`]));
+    }
+  }
+  if (carries(l.content_id)) {
+    findings.push(refusal(`${label}.content_id is set on a leg on another group's finding (${ref}): the leg names the finding, and the parts it rests on are checked in that group's own case file`,
+      [`remove content_id from ${label}`]));
+  }
+  if (legHasAuthoredExtent(l)) {
+    findings.push(refusal(`${label} names an extent on a leg on another group's finding (${ref}): the leg names the finding, and the parts it rests on are checked in that group's own case file`,
+      [`remove the extent fields from ${label}`]));
+  }
+  if (carries(l.extent_capture)) {
+    findings.push(refusal(`${label}.extent_capture is set on a leg on another group's finding (${ref}): no capture of this record holds that finding`,
+      [`remove extent_capture from ${label}`]));
+  }
+  return true;
+}
+
+/** R11: the one site the code IMPORTED_LEG_MALFORMED is minted, for the leg arm and the references arm alike: the rule
+ *  (`checkId`) is the caller's, the code and its row this module's. */
+function importedRefusal(checkId, message, repairs) {
+  /* The family helper, by name: DEC-49's guard judges `refusal("CODE"` at the site. */
+  const refusal = (code) => f(checkId, 'error', message, repairs, code);
+  /* DEC-49 REGION is-imported-leg-form */
+  return refusal("IMPORTED_LEG_MALFORMED");
+  /* END DEC-49 REGION is-imported-leg-form */
+}
+
+/** R11: each references[] entry naming a ref is one C-21.3 error. Such a leg is not a reference (C-6.3 does not ask
+ *  it), so an entry naming one would make the published graph claim an edge into another group's case. */
+function importedReferenceFindings(fm, findings) {
+  const refs = Array.isArray(fm?.references) ? fm.references : [];
+  refs.forEach((r, i) => {
+    if (!r || typeof r !== 'object' || !isRef(r.target)) return;
+    findings.push(importedRefusal(INQUIRY_GRAMMAR_CHECKS.IMPORTED_LEG_MALFORMED.check,
+      `references[${i}].target names another group's finding (${r.target.trim()}): a leg on it is not a reference, so references[] does not list it`,
+      [`remove references[${i}]; the basis leg alone names that finding`]));
+  });
 }
