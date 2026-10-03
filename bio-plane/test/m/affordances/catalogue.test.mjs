@@ -21,6 +21,7 @@ import * as ratification from "../../../src/ratification/index.mjs";
 import * as contradiction from "../../../src/contradiction/index.mjs";
 import * as filingTemplates from "../../../src/filing-templates/index.mjs";
 import * as localFacts from "../../../src/local-facts/index.mjs";
+import * as docket from "../../../src/docket/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 import { list as profiles, get as profile } from "../../../../jurisdictions/index.mjs";
 
@@ -99,8 +100,9 @@ test("R2: the rung ladder, low to high, and RUNGS' assignment — DEC-88's three
   assert.deepEqual([DEC88.reversible.length, DEC88.reasoned.length, DEC88.terminal.length], [25, 30, 2]);
   const want = {
     irreversible: ["publish"],
-    attested: ["attest", "caseratify", "ratify", "reattest", "captureaccount" /* N364 */, "noticepost" /* R32 */],
-    terminal: ["retire"],
+    attested: ["attest", "caseratify", "ratify", "reattest", "captureaccount" /* N364 */, "noticepost" /* R32 */,
+      "docketpost" /* R34 */],
+    terminal: ["retire", "actionholdrelease" /* R33: a named exception to R27 */],
     reversible: ["actionlaws", "cite", "escalationresume", "projectvisibilityset", "versionaccept", "versioncurrent",
       "versionhide", "versionrevert", "sourceconsentwithdraw" /* N364, K558 */, "scenarioset" /* K727 */],
     reasoned: ["actionmove", "actionrisktier", "addressedrecord", "adminremove", "aliaswithdraw", "aspirationdepart",
@@ -118,7 +120,9 @@ test("R2: the rung ladder, low to high, and RUNGS' assignment — DEC-88's three
       /* K918: actions R52's hold statement */
       "actionhold",
       /* R30: a template's retirement and a member's act on a local fact */
-      "templateretire", "factconfirm", ...DEC88.reasoned, ...T22_REASONED],
+      "templateretire", "factconfirm", ...DEC88.reasoned, ...T22_REASONED,
+      /* R34: the docket's filing and the manager's decline */
+      "docketfile", "docketdecline"],
   };
   want.reversible.push(...DEC88.reversible);
   want.terminal.push(...DEC88.terminal);
@@ -170,7 +174,8 @@ test("R4: VOCABULARIES carries exactly the named vocabularies", () => {
     /* N345 */ "contradiction_coordinates", "plurality_differences", "resolution_kinds", "norm_canons",
     "dismissal_reasons",
     /* R30 */ "template_states", "template_uses", "template_review_outcomes", "local_fact_acts",
-    "local_fact_statuses"].sort());
+    "local_fact_statuses",
+    /* R34 */ "docket_shelves", "docket_entry_kinds", "docket_proposals", "docket_pressure_kinds"].sort());
 });
 
 test("R4: each fixed value is the very object its enforcing module refuses against — the same reference, never a copy", () => {
@@ -195,6 +200,9 @@ test("R4: each fixed value is the very object its enforcing module refuses again
     ["template_states", filingTemplates.TEMPLATE_STATES], ["template_uses", filingTemplates.TEMPLATE_USES],
     ["template_review_outcomes", filingTemplates.REVIEW_OUTCOMES], ["local_fact_acts", localFacts.LOCAL_FACT_ACTS],
     ["local_fact_statuses", localFacts.LOCAL_FACT_STATUSES],
+    /* R34: docket R1, R2, R6's four */
+    ["docket_shelves", docket.SHELVES], ["docket_entry_kinds", docket.ENTRY_KINDS], ["docket_proposals", docket.PROPOSALS],
+    ["docket_pressure_kinds", docket.PRESSURE_KINDS],
   ];
   assert.deepEqual(same.filter(([k, v]) => VOCABULARIES[k] !== v).map(([k]) => k), []);
   assert.equal(same.length + 1, Object.keys(VOCABULARIES).length, "every key but action_kind is a fixed value checked here");
@@ -347,11 +355,11 @@ test("R7: NON_ACTS gives every op it names a reason, names no act, and a reason 
     ids(CAPTURE_ACTS));
 });
 
-test("R19: `terminal` is given only while STATES.information.edges.retired is empty — to retire and DEC-88's two — and "
-   + "`irreversible` only to publish", () => {
+test("R19 R33: `terminal` is given only while STATES.information.edges.retired is empty — to retire, DEC-88's two and "
+   + "R33's named exception actionholdrelease — and `irreversible` only to publish", () => {
   const terminal = Object.keys(RUNGS).filter((op) => RUNGS[op] === "terminal");
   assert.deepEqual(STATES.information.edges.retired, []);
-  assert.deepEqual(terminal.sort(), ["escalationend", "filingapprove", "retire"]);
+  assert.deepEqual(terminal.sort(), ["actionholdrelease", "escalationend", "filingapprove", "retire"]);
   assert.deepEqual(Object.keys(RUNGS).filter((op) => RUNGS[op] === "irreversible"), ["publish"]);
 });
 
@@ -429,14 +437,16 @@ const R27_LEFT = ["inboxpull", "contradictionrecommend", "contradictionoptin", "
   "checkpointrecord", "optionstart", "templatedraft", "templaterevise", "templatepropose", "templatesubmit",
   "templatereview", "templatecomment", "templateapprove"];
 const undeterminedOf = (absent) => Object.keys(absent).filter((op) => absent[op].ground === "undetermined").sort();
-test("R27 R32: no op is graded `undetermined` that the rulings moved (K211, DEC-88), and exactly the 21 R27 names remain "
-   + "`undetermined`, with R32's whatchangedpropose beside them; one of DEC-88's 57 left there is seen", () => {
+test("R27 R32 R34: no op is graded `undetermined` that the rulings moved (K211, DEC-88), and exactly the 21 R27 names "
+   + "remain `undetermined`, with R32's whatchangedpropose and R34's docketpressure beside them; one of DEC-88's 57 left "
+   + "there is seen", () => {
   const moved = { biasdebtresolve: "reasoned", actionrisktier: "reasoned", narrow: "reasoned", versionaccept: "reversible",
     versioncurrent: "reversible", actionlaws: "reversible", projectvisibilityset: "reversible" };
   for (const [op, r] of Object.entries(moved)) { assert.equal(RUNGS[op], r, op); assert.ok(!Object.hasOwn(RUNG_ABSENT, op), op); }
-  /* R32 (T23) grades one more op `undetermined` on R27's rule, after R27's count */
-  const undetermined = undeterminedOf(RUNG_ABSENT).filter((op) => op !== "whatchangedpropose");
-  assert.equal(RUNG_ABSENT.whatchangedpropose?.ground, "undetermined");
+  /* R32 (T23) and R34 (T27) each grade one more op `undetermined` on R27's rule, after R27's count */
+  const LATER = ["whatchangedpropose", "docketpressure"];
+  const undetermined = undeterminedOf(RUNG_ABSENT).filter((op) => !LATER.includes(op));
+  for (const op of LATER) assert.equal(RUNG_ABSENT[op]?.ground, "undetermined", op);
   assert.deepEqual(undetermined, [...R27_LEFT].sort());
   assert.equal(undetermined.length, 21, "R27's count: DEC-88 moved 57 of the 78 into RUNGS");
   /* the 78 held before DEC-88: the 21 and the 57 together, each of the 57 now ranked in RUNGS */
@@ -838,13 +848,14 @@ test("R30 R19: TEMPLATE_REASON_REFUSED and FACT_HOW_REFUSED are in the justifica
 /* R31 (DEC-88 (4); K1038): the six judgement calls' consequence statements, published beside the ladder as
    `VOCABULARIES.rung_consequences`, the very object `CONSEQUENCE_STATEMENTS`; the rung names unchanged (R27); no key
    added to the decorated act (R11), so op=affordances and a queue item's options keep their shape. */
-test("R31 R4 R11: CONSEQUENCE_STATEMENTS holds exactly the six with their friction — the full dialog for attribute, "
-   + "leadshare, entitycreate, strengthbar and filingapprove, in-place for workobjective — each with its statement, "
-   + "published as VOCABULARIES.rung_consequences by reference, the rungs unchanged and the decorated act's keys too", () => {
+test("R31 R33 R4 R11: CONSEQUENCE_STATEMENTS holds exactly the six with their friction — the full dialog for attribute, "
+   + "leadshare, entitycreate, strengthbar and filingapprove, in-place for workobjective — and R33's actionholdrelease, "
+   + "the full dialog, each with its statement, published as VOCABULARIES.rung_consequences by reference, the rungs "
+   + "unchanged and the decorated act's keys too", () => {
   const C = A.CONSEQUENCE_STATEMENTS;
   assert.deepEqual(Object.fromEntries(Object.entries(C).map(([op, c]) => [op, c.friction])), {
     attribute: "dialog", leadshare: "dialog", entitycreate: "dialog", strengthbar: "dialog", filingapprove: "dialog",
-    workobjective: "in-place" });
+    workobjective: "in-place", actionholdrelease: "dialog" });
   for (const [op, c] of Object.entries(C)) {
     assert.deepEqual(Object.keys(c).sort(), ["friction", "statement"], op);
     assert.ok(typeof c.statement === "string" && c.statement.length > 80, op);
@@ -854,7 +865,8 @@ test("R31 R4 R11: CONSEQUENCE_STATEMENTS holds exactly the six with their fricti
   assert.equal(A.affordancesAnswer({ kinds: null, gate: null }).vocabularies.rung_consequences, C);
   /* the rungs are the ladder's own: five reasoned, filingapprove terminal (its statement is its terminal effect) */
   assert.deepEqual(Object.keys(C).map((op) => [op, RUNGS[op]]), [["attribute", "reasoned"], ["leadshare", "reasoned"],
-    ["entitycreate", "reasoned"], ["strengthbar", "reasoned"], ["filingapprove", "terminal"], ["workobjective", "reasoned"]]);
+    ["entitycreate", "reasoned"], ["strengthbar", "reasoned"], ["filingapprove", "terminal"], ["workobjective", "reasoned"],
+    ["actionholdrelease", "terminal"]]);
   assert.match(C.workobjective.statement, /budget and scope/);
   assert.match(C.filingapprove.statement, /approved once/);
   assert.match(C.leadshare.statement, /cannot be un-read/);
@@ -1054,4 +1066,108 @@ test("R19: the justification family holds DEC-88's and T22's codes, each a row i
   /* what demands an object, a choice or a position, never an account, stays out */
   for (const c of ["KNOCK_EMPTY", "NO_IDS", "BAD_FREQUENCY", "NOT_A_SOURCE_OWNER", "ALREADY_OPEN", "NEITHER_CAPTURE_NOR_TESTIMONY",
     "MACHINE_CANNOT_SET_ASIDE", "LEAD_TOO_LONG", "STANDARD_NO_TEXT", "NO_COUNSEL"]) assert.ok(!JUSTIFICATION_REFUSALS.includes(c), c);
+});
+
+/* R33 (DEC-113; K1134 (3), K1252; T27): the litigation hold's release and its two reads, keyed to actions' op map
+   (op-declarations R12 carries their rows: the release mutating, every op gated and stamped `viewer`). The release is
+   `terminal`, R27's named exception, with a consequence statement beside it; the preview and the held-project answer are
+   reads. Their backing is driven at actions' interface in backing.test.mjs. */
+const R33_READS = ["actionholdpreview", "projectholds"];
+test("R33 R2 R7 R12 R20: actionholdrelease is `terminal`, a named exception to R27 (actionhold stays `reasoned`), "
+   + "HOLD_REFUSED backs its reason, its consequence statement says what releasing restarts and that it cannot be undone, "
+   + "NON_ACTS names it entry-directed and its two reads `read:`, it is not in MACHINE_REFUSALS, and with the control "
+   + "plane's rows nothing is unaccounted; a misgraded release or an unnamed read is seen", () => {
+  const ops = Object.keys(actionsOps({}, new URL("http://x/"), {}));
+  for (const op of ["actionholdrelease", ...R33_READS]) assert.ok(ops.includes(op), `actions' op map holds ${op}`);
+  assert.equal(RUNGS.actionholdrelease, "terminal");
+  assert.equal(RUNGS.actionhold, "reasoned", "placing stays light (K918)");
+  assert.ok(!Object.hasOwn(RUNG_ABSENT, "actionholdrelease"));
+  assert.ok(JUSTIFICATION_REFUSALS.includes("HOLD_REFUSED"));
+  /* the consequence statement: the dialog, what is restarted for the projects the surface reads beside it, and that it
+     cannot be undone */
+  const c = A.CONSEQUENCE_STATEMENTS.actionholdrelease;
+  assert.deepEqual(Object.keys(c).sort(), ["friction", "statement"]);
+  assert.equal(c.friction, "dialog");
+  assert.match(c.statement, /restarts deletion for the projects shown beside this/);
+  assert.match(c.statement, /material may be purged again/);
+  assert.match(c.statement, /assistant transcripts for them past the time limit will be deleted on each member's device when it is next opened/);
+  assert.match(c.statement, /This cannot be undone\.$/);
+  assert.equal(VOCABULARIES.rung_consequences.actionholdrelease, c);
+  /* NON_ACTS, word for word for the release; the reads begin `read:` and write nothing */
+  assert.equal(NON_ACTS.actionholdrelease, "entry-directed: keyed by (action, entry ordinal); appends a release and never "
+    + "rewrites the entry, its mark or an earlier statement");
+  for (const op of R33_READS) {
+    assert.ok(NON_ACTS[op]?.startsWith("read: ") && NON_ACTS[op].length > 40, op);
+    assert.match(NON_ACTS[op], /writes nothing$/, op);
+    assert.ok(!Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
+  }
+  assert.ok(!Object.hasOwn(MACHINE_REFUSALS, "actionholdrelease") && !Object.hasOwn(MACHINE_REFUSALS, "actionhold"));
+  assert.ok(![...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => ["actionholdrelease", ...R33_READS].includes(a.id)));
+  assert.deepEqual([A.decorate({ id: "actionholdrelease", label: "x" }, null).rung,
+                    A.decorate({ id: "actionholdrelease", label: "x" }, null).rung_absence], ["terminal", null], "R24");
+  const table = [{ op: "actionholdrelease", mutating: true, gated: true },
+    ...R33_READS.map((op) => ({ op, mutating: false, gated: true }))];
+  const r = A.unaccounted(table);
+  assert.deepEqual([r.unpublished, r.unranked], [[], []]);
+  assert.deepEqual(r.stale.filter((op) => table.some((t) => t.op === op)), []);
+  /* negative controls: carried ungated, a read reads stale; carried by no row, each reads stale */
+  for (const op of R33_READS) assert.ok(A.unaccounted([{ op, mutating: false, gated: false }]).stale.includes(op), op);
+  assert.deepEqual(["actionholdrelease", ...R33_READS].filter((op) => !A.unaccounted([]).stale.includes(op)), []);
+});
+
+/* R34 (DEC-116, DEC-100; N520; T27): the docket's ops, keyed to docket's op map (its `docketOps`), and its two public
+   reads (docket R14, R15, registered through public-read, not in this module's uses, so named as R34 names them).
+   op-declarations R13 carries their rows. The reasoned pair's backing and the post's signature are driven at docket's
+   interface in backing.test.mjs. */
+const R34_GRADES = { docketfile: ["rung", "reasoned"], docketdecline: ["rung", "reasoned"], docketpost: ["rung", "attested"],
+  docketpressure: ["absent", "undetermined"] };
+const R34_READS = ["docket", "docketprepare", "docketinvitation"];
+const R34_PUBLIC = ["docketpublic", "docketfeed"];
+const CASE_DIRECTED = "case-directed: keyed by a published case, reached from its docket; never evidence, moves no bundle";
+test("R34 R2 R3 R4 R7 R12 R19: the docket's ops — docketfile and docketdecline `reasoned`, DOCKET_NO_REASON in the "
+   + "family, docketpost `attested` as noticepost, docketpressure `undetermined` as actionpressure, each case-directed in "
+   + "NON_ACTS, its reads `read:` and its public reads `read: public, no credential`, its four vocabularies the owner's "
+   + "objects — and with the control plane's rows nothing is unaccounted; a misgraded op or one left out is seen", () => {
+  const ops = Object.keys(docket.docketOps({}, new URL("http://x/"), {})).sort();
+  assert.deepEqual(ops, [...Object.keys(R34_GRADES), ...R34_READS].sort(), "docket's op map holds exactly these");
+  const grades = Object.fromEntries(Object.keys(R34_GRADES).map((op) => [op, gradeOf(op)]));
+  assert.deepEqual(grades, R34_GRADES);
+  assert.equal(RUNGS.docketpost, RUNGS.noticepost);
+  assert.equal(RUNG_ABSENT.docketpressure.ground, RUNG_ABSENT.actionpressure.ground);
+  assert.ok(RUNG_ABSENT.docketpressure.is.length > 40);
+  assert.ok(JUSTIFICATION_REFUSALS.includes("DOCKET_NO_REASON"));
+  assert.ok(Object.hasOwn(docket.DOCKET_CHECKS, "DOCKET_NO_REASON"), "a row of its owner's checks");
+  for (const c of ["DOCKET_KIND_UNKNOWN", "DOCKET_NO_CAPTURE", "NO_SUCH_DOCKET_ENTRY", "MACHINE_CANNOT_MARK_PRESSURE",
+    "DOCKET_SIGNATURE_REFUSED"]) assert.ok(!JUSTIFICATION_REFUSALS.includes(c), c);
+  /* negative controls: the same comparison sees a misgraded op */
+  assert.notDeepEqual({ ...grades, docketpost: ["rung", "reasoned"] }, R34_GRADES);
+  assert.notDeepEqual({ ...grades, docketpressure: ["rung", "reversible"] }, R34_GRADES);
+  for (const op of Object.keys(R34_GRADES)) {
+    const d = A.decorate({ id: op, label: "x" }, null);
+    assert.equal((d.rung === null) !== (d.rung_absence === null), true, `R24: ${op}`);
+    assert.equal(NON_ACTS[op], CASE_DIRECTED, op);
+  }
+  for (const op of R34_READS) {
+    assert.ok(NON_ACTS[op]?.startsWith("read: ") && NON_ACTS[op].length > 40, op);
+    assert.match(NON_ACTS[op], /writes nothing$/, op);
+    assert.ok(!Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
+  }
+  for (const op of R34_PUBLIC) {
+    assert.equal(NON_ACTS[op], "read: public, no credential", op);
+    assert.ok(!Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
+  }
+  const ALL = [...Object.keys(R34_GRADES), ...R34_READS, ...R34_PUBLIC];
+  assert.ok(![...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => ALL.includes(a.id)));
+  assert.deepEqual(ALL.filter((op) => Object.hasOwn(MACHINE_REFUSALS, op)), []);
+  /* R4: the four vocabularies, docket's own objects (its DOCKET_VOCABULARIES), by reference */
+  for (const [k, v] of Object.entries(docket.DOCKET_VOCABULARIES)) assert.equal(VOCABULARIES[k], v, k);
+  /* the control plane's rows (op-declarations R13): the four writes mutating, every op gated */
+  const table = [...Object.keys(R34_GRADES).map((op) => ({ op, mutating: true, gated: true })),
+    ...[...R34_READS, ...R34_PUBLIC].map((op) => ({ op, mutating: false, gated: true }))];
+  const r = A.unaccounted(table);
+  assert.deepEqual([r.unpublished, r.unranked], [[], []]);
+  assert.deepEqual(r.stale.filter((op) => ALL.includes(op)), []);
+  assert.deepEqual(ALL.filter((op) => !A.unaccounted([]).stale.includes(op)), []);
+  const left = A.unaccounted([...table, { op: "docketunnamed", mutating: true, gated: true }]);
+  assert.deepEqual([left.unpublished, left.unranked], [["docketunnamed"], ["docketunnamed"]]);
 });
