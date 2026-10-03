@@ -16,6 +16,8 @@
 
 - N532 · 2026-10-03 · **publication split** (K1322): 3,996 lines at its T28 merge, at the ~4,000 mark (P6). Split at the seam its job named (R57's holding: `#holdMaterials`, `#tokenFiles`, `publishedMaterialText`, `heldMaterialsOf`, ~140 lines; R59's re-read, ~50) before its next job adds to it. **Why next:** its T28 job is merged (P8).
 
+- N533 · 2026-10-03 · **docket, then control-plane** (K1331; CONTROL-PLANE #18 J1): docket's family shares `PRESSURE_MARKED` (C-129.12 / action-grammar C-117.17) and `PRESSURE_REFUSED` (C-129.13 / C-117.15) with action-grammar, so reading it at its module-order place would re-row both. docket: its own codes for the two (catalogue rows re-worded, stamped by promotion); then control-plane: `CHECK_FAMILY_FILES` reads docket at its module-order place (R43's docket clause). **Why next:** docket's T28 job is merged (P8); control-plane's move follows docket's codes (dependency).
+
 ## Carried from T28
 
 The left-out table of `current.md` (T28), unchanged until re-read at T29's opening.
