@@ -613,8 +613,24 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    tally moved line for line (PROVENANCE-ROUTES #1's record), so what the audit counts is unmoved. Membership's T26 job
    is none; T26's layer 2 is this stamp alone.
    MINOR, rule 17 moving the stamp for changed rows. ROW_CENSUS (R50) is re-pinned to this tree, module tables only:
-   1073 rows. Rows T26's layers 3–11 change are T27's stamp. */
-export const CATALOG_VERSION = "1.56.0";
+   1073 rows. Rows T26's layers 3–11 change were T27's stamp, and T27's were T28's, taken by 1.57.0. */
+/* 1.57.0 (PROMOTION #28, T28 layer 2, 2026-10-03; S4, K1299): EVERY ROW CHANGE SINCE 1.56.0, counted wherever the rows
+   live (R34, R47), read by diffing R50's census lines of `tranche/T28` at its layer 2 against 1.56.0's own
+   (`test/fixtures/row-census-1.56.0.jsonl`: 1073 rows, 3371a04b…): thirty arrivals, none changed, no departure. Each is
+   one a job record names (T27's layers 3–11 `awaiting stamp`, accepted red 2: ACTION-GRAMMAR's, CONTROL-PLANE's and
+   DOCKET's records; T26's layers 3–11 changed no row; T28's layer 2 changes none).
+   ARRIVED: C-117.23 HOLD_RELEASE_IS_ITS_OWN_ACT, C-117.24 HOLD_PROJECTS_REFUSED, C-117.25 HOLD_ALREADY_RELEASED
+   (action-grammar R9, DEC-113, their `where`s naming actions' regions); C-69.5 PURGE_HOLD_IN_PLACE (control-plane R46);
+   C-129.1–C-129.26 in the new family `DOCKET_CHECKS`, MACHINE_CANNOT_FILE_DOCKET through DOCKET_ALREADY_WITHDRAWN (the
+   new module docket, N520). public-read's and signatures' T27 jobs added no row (their records), and none of T28's
+   drafted rows (C-120.8, C-120.10–C-120.13, C-122.2–C-122.4, C-21.3–C-21.5, case-import's family; C-58.5's and C-92.10's
+   re-wordings) exists at this stamp: each is T29's. C-120.9 is withdrawn (K1277) and its number is never reused.
+   CHANGED IN WHAT THE GATES RUN: nothing. No registered step, grammar or listener of either gate changed its ids since
+   1.56.0 (docket registers none; `MODULE_ORDER` gaining docket moves no gate's order), and the case gate's registered
+   catalogue is unmoved.
+   MINOR, rule 17 moving the stamp for arrivals. ROW_CENSUS (R50) is re-pinned to this tree, module tables only: 1103
+   rows. Rows T28's layers 3–11 change are T29's stamp. */
+export const CATALOG_VERSION = "1.57.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
@@ -706,8 +722,8 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
    this module's own census suite, `bio-plane/test/system/row-census.test.mjs` (legacy-tests' until T22's opening, K1006):
    a test may import every module's tables, which this module's source cannot (P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
-export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1073,
-  digest: "3371a04bcec276dbc1a1ecc62623d326b70a25a7ca151ed7c1fffd8652be094a" });
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1103,
+  digest: "966af5b4736d874c29c44d81e1e3d6d7f1c1479721af0aa663609f19b15e9226" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();
