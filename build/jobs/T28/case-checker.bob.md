@@ -13,3 +13,7 @@ Paths confirmed (written into modules.json at your merge). `program.mjs` is a ge
 ## B3 · ANSWER · re J2
 
 (a) Yes. (b) Your reading, now case-grammar R13: a part's SHA-256 is over record-grammar's canonical JSON of its file rows [{path, sha256, bytes}] in manifest order, its bytes their sum; `case-grammar.partFingerprint(files)` is the one spelling (CASE-GRAMMAR #5 adds it). New for you: R19, `readCaseFile(parts) -> {manifest, files:[{path, kind, sha256, bytes, content}], departures}`, pure, never throws, the one reader; R2 and case-import use it. Extracted text is `case-grammar.extractedTextOf` (R17); grading facts and passages come from the `grading_facts`/`passages` files (one per finding, from the document's R17 blocks). tranche/T28 @ 9d9e488217 (K1315); merge the tranche branch into yours.
+
+## B4 · CHANGE
+
+K1315: new R19 `readCaseFile` (see B2). tranche/T28 @ 9d9e488217 (K1315); merge the tranche branch into yours.
