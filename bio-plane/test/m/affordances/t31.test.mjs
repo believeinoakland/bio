@@ -177,3 +177,83 @@ test("R38 R2: importwatch and importunwatch ask no reason — each is accepted w
   assert.equal(w.count("case_import_watches"), 2, "every watch stays in the history");
   assert.equal(w.count("case_import_watch_ends"), 1, "and every end");
 });
+
+/* ============================================================ R37: the no-target answer, and wizardretire's backing */
+import * as wz from "../wizard-scripts/fixture.mjs";
+import { wizardScriptsOps } from "../../../src/wizard-scripts/index.mjs";
+
+test("R37 R12: wizard-scripts' op map holds exactly the ops R37 grades and names", () => {
+  const ops = Object.keys(wizardScriptsOps({}, new URL("http://x/"), {})).sort();
+  assert.deepEqual(ops, [...Object.keys(R37_GRADES), ...R37_READS].sort());
+});
+
+/* A wizard world: frank's script in P approved by alice (starting on case-home), a second draft of frank's still a
+   draft (case-home too), and dave's script in Q approved by dave's co-owner — beside the test Civicsmith library. */
+const wizardWorld = (opts) => {
+  const w = wz.seeded(opts);
+  const a = A.affordancesOf(w.host, { record: w.record, membership: w.membership, sql: w.st.sql, wizardScripts: w.wz });
+  return { w, screens: (viewer) => A.affordancesOps(a, new URL(`http://do/affordancescreens?viewer=${encodeURIComponent(viewer ?? "")}`)).affordancescreens() };
+};
+
+test("R37 R17: the no-target answer's screens are the registry as wizard-scripts registered it, and wizard_scripts, for "
+   + "each registered screen in registry order, wizard-scripts' own R11 answer for the viewer passed in unchanged, the "
+   + "caller's drafts left out — so what a member sees differs by viewer, and asking writes nothing", () => {
+  const { w, screens } = wizardWorld();
+  const app = wz.approved(w);
+  const drafted = wz.draft(w, { name: "A second script" });
+  w.join(w.Q, "erin", "joined", true);
+  const q = wz.approved(w, { who: "dave", by: "erin", project: w.Q, name: "Harbour" });
+  const want = (viewer) => wz.SCREENS.flatMap(({ id }) => w.wz.wizardsAt({ screen: id, viewer }).scripts.filter((s) => s.draft !== true));
+  const before = w.snapshot();
+  for (const m of ["alice", "frank", "dave", "nobody"]) {
+    const r = screens(wz.V(m));
+    assert.equal(r.ok, true);
+    assert.deepEqual(r.screens, w.wz.registeredScreens());
+    assert.deepEqual(r.screens.map((s) => s.id), wz.SCREENS.map((s) => s.id));
+    assert.deepEqual(r.wizard_scripts, want(wz.V(m)), m);
+    assert.deepEqual(r.wizard_scripts.filter((s) => s.draft === true), [], `${m}: no draft`);
+  }
+  const ids = (m) => screens(wz.V(m)).wizard_scripts.map((s) => s.id);
+  assert.ok(ids("alice").includes(app.script) && !ids("alice").includes(q.script), "alice sees P's script, not Q's");
+  assert.ok(ids("dave").includes(q.script) && !ids("dave").includes(app.script), "dave sees Q's, not P's");
+  assert.ok(ids("alice").includes("WIZ-2026-9001"), "the Civicsmith library is offered");
+  /* frank's own draft is in wizard-scripts' answer to him, marked, and left out of the published list */
+  assert.ok(w.wz.wizardsAt({ screen: "case-home", viewer: wz.V("frank") }).scripts.some((s) => s.draft === true && s.id === drafted.script));
+  assert.equal(screens(wz.V("frank")).wizard_scripts.filter((s) => s.version === drafted.version).length, 0);
+  assert.deepEqual(w.snapshot(), before, "nothing written");
+});
+
+test("R37: before wizard-scripts is registered, the screens and the offered scripts are two empty lists", () => {
+  const { screens } = wizardWorld({ register: false });
+  const r = screens(wz.V("alice"));
+  assert.deepEqual([r.ok, r.screens, r.wizard_scripts], [true, [], []]);
+});
+
+test("R19 R37: wizardretire, graded `reasoned`, is refused without its reason with WIZARD_REASON_REFUSED (in the family) "
+   + "and writes nothing — retiring a whole script by an owner, and withdrawing a draft by its author — and is accepted "
+   + "with one", () => {
+  assert.equal(RUNGS.wizardretire, "reasoned");
+  const bad = [];
+  for (const reason of [undefined, null, "", "   ", "x".repeat(501)]) {
+    const w = wz.seeded();
+    const a = wz.approved(w);
+    const d = wz.draft(w, { name: "Another" });
+    for (const [label, act] of [
+      ["retire", () => w.wz.wizardRetire({ script: a.script, reason, by: wz.V("alice"), viewer: wz.V("alice") })],
+      ["withdraw", () => w.wz.wizardRetire({ script: d.script, version: d.version, reason, by: wz.V("frank"), viewer: wz.V("frank") })]]) {
+      const before = JSON.stringify(w.snapshot());
+      const r = act();
+      if (!(r && r.ok !== true && r.reason === "WIZARD_REASON_REFUSED" && JUSTIFICATION_REFUSALS.includes(r.reason)))
+        bad.push(`${label} ${JSON.stringify(reason)?.slice(0, 12)}: ${JSON.stringify(r).slice(0, 200)}`);
+      else if (JSON.stringify(w.snapshot()) !== before) bad.push(`${label}: refused, but wrote`);
+    }
+  }
+  assert.deepEqual(bad, []);
+  const w = wz.seeded();
+  const a = wz.approved(w);
+  const d = wz.draft(w, { name: "Another" });
+  const ok = w.wz.wizardRetire({ script: a.script, reason: "the screen it walks was redesigned", by: wz.V("alice"), viewer: wz.V("alice") });
+  assert.equal(ok.ok, true, JSON.stringify(ok).slice(0, 300));
+  const wd = w.wz.wizardRetire({ script: d.script, version: d.version, reason: "drafted in error", by: wz.V("frank"), viewer: wz.V("frank") });
+  assert.equal(wd.ok, true, JSON.stringify(wd).slice(0, 300));
+});
