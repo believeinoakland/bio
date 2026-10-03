@@ -1,15 +1,14 @@
-# Plan: next (T31)
+# Plan: next (T32)
 
-**Status** · Entries for the tranche after T30, written as T30 runs (P18). Started at T30's opening by BOB #107, 2026-10-03 (K1357).
+**Status** · Entries for the tranche after T31, written as T31 runs (P18). Started at T31's opening by BOB #107, 2026-10-03.
 
 ## Entries
 
-- N534 · 2026-10-03 · **DEC-101 (3) with DEC-116 (8)'s citing side** (from T29, K1339, K1342): `plan/draft-T29-n534.md`, plane R18 → R19. **Hard reason:** Bob's; folded at the opening once he approves.
+- S7 · **promotion**: stamp the catalogue rows T31's jobs add or move (wizard-scripts' family, case-import C-130.15–.16, any the T31 records name); `CATALOG_VERSION` MINOR; `ROW_CENSUS` re-pinned. **Why next:** promotion is L2, before the rows exist (P10). Clears T31's red 2.
+- N539 · **acquisition**: remove the `civicosUserAgent` and `CIVICOS_CONTACT_URL` aliases once no user names them (K1365 (6)). **Why next:** its users re-point in T31's later layers (P10).
+- N540 · **a live acquisition** on the deployed copy against the sources measured before, after the first deploy carrying the Civicsmith user agent (K1365 (8)). **Hard reason:** a deployment.
+- N538 (4) · the served addresses and what waits on them. **Hard reason:** Bob's domains.
 
-- N528 · 2026-10-03 · **DEC-120–DEC-123's server-side share** (now on `main`, PR #9 merged, K1361): fold each DEC's `owed:` line into module requirements (drafted first, `plan/draft-T31-dec120-123.md`); screens are the UX stream's (K633).
+## Carried from T31
 
-- N538 · 2026-10-03 · **DEC-124, the product renamed Civicsmith: the development share** (U36; K1361). (1) Every visible "CivicOS" in requirements and product code becomes "Civicsmith" (K1's outward text, signatures R32, installer R22, DEC-118's credit, the setup, installer and published pages). (3) New signed records carry `civicsmith-…` type labels; every record already signed keeps its `civicos-…` label and still verifies (both accepted on read, only the new written). Drafted first (`plan/draft-T31-n538.md`: every module and requirement touched, by layer). (2) Code identifiers: `civicosUserAgent` and the like with (1); the `civicos-ui` folder stays with legacy-ui (Bob's: UX, K633); renaming the `civicos-process` repository and the workers.dev address are acts outside the product's code, placed after (4). (4) Served addresses: **hard reason**, Bob does not yet hold civicsmith.org/.com/.app/.net.
-
-## Carried from T30
-
-The left-out table of `current.md` (T30), unchanged until re-read at T31's opening.
+The left-out table of `current.md` (T31), unchanged until re-read at T32's opening.
