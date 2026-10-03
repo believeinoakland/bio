@@ -962,16 +962,9 @@ export class PublicRead {
     if (!state.complete) return { ok: false, reason: "INCOMPLETE" };
     const doc = signedParts(state.document);
     if (!doc || !caseDocumentRequiresMaterials(doc.fm)) return { ok: false, reason: "NOT_A_CASE_FILE_DOCUMENT" };
-    const g = gradingFactsOf(doc.fm) || {}, ps = passagesOf(doc.fm) || {};
-    /* `case-grammar` R17's readers answer each finding's rows; taken grouped by finding whichever shape they answer. */
-    const byFinding = (x) => {
-      if (x instanceof Map) return x;
-      if (!Array.isArray(x)) return new Map(Object.entries(x));
-      const m = new Map();
-      for (const r of x) if (r && typeof r.finding === "string") (m.get(r.finding) || m.set(r.finding, []).get(r.finding)).push(r);
-      return m;
-    };
-    const grading = byFinding(g), passages = byFinding(ps);
+    /* `case-grammar` R17's readers: each finding's rows, keyed by finding, in `ord` order. */
+    const grading = new Map(Object.entries(gradingFactsOf(doc.fm) || {}));
+    const passages = new Map(Object.entries(passagesOf(doc.fm) || {}));
     const members = state.findings.map((f) => ({ bundle_id: f.bundle_id, member: true, role: f.role ?? null,
       published: { edition: f.edition, bundle_sha: f.bundle_sha, sig_armored: f.sig_armored,
                    key_b64: f.attestor ? f.attestor.key_b64 : null, parts: f.parts || [] } }));
