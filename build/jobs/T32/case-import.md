@@ -39,3 +39,7 @@ Merged `tranche/T32`. R20's `refused` items now also name `seen_at`, the same in
 - format, architecture, coverage (20 of 20), ownership: 0 failures (ownership re-run after the commit).
 
 Size (session_01MiW6fXUHMWPvHxptpYDLsJ): test runs 5, module lines 1326
+
+## J3 · COMPLETE · re B2
+
+B2 (K1419) applied: tranche/T32 merged; R20's `refused` items name `seen_at` (the read that first recorded them), tested. case-import 75/75; queue-producers 79/79; format, architecture, coverage 20/20, ownership: 0 failures. R20's refused `*(not yet met: T32)*` mark can be struck.
