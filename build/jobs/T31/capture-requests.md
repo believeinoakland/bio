@@ -27,3 +27,7 @@
 - `checks/ownership.mjs … capture-requests tranche/T31`: 8 files changed by capture-requests; 0 failures.
 
 Size (session_01EdzfgSAti176MrfZd2aQyS): test runs 5, module lines 1726
+
+## J1 · REPORT
+
+not_product's bio-plane/dist/bio-plane.bundled.mjs is stale on src/capture-requests/checks.mjs and index.mjs after this job (fleetbundles.test.mjs says so); regenerate at the layer close (manifest §14). Nothing else found: queue-producers passes ua_mode through from R26's reads, so its feed items say civicsmith with no change of its own.
