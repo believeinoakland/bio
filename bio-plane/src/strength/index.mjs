@@ -27,6 +27,9 @@
  * and `levels` may name an off-the-record capture, whose anonymously attested evidence counts only beside something
  * independent (R34; DEC-119 (3)).
  *
+ * T31 (layer 6): the product is named Civicsmith (DEC-124): the bar's honest note says so (R15), and the method's words
+ * take the product's name from their caller, "CivicOS" answering the words that version answered before (R31; K1365 (1)).
+ *
  * REACHED as `strengthOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the first
  * call with `deps`, returned to every later caller. At creation it declares its tables to record-core's purge
  * (`strength_cache` by bundle, `group_strength_bar` exempt, R23), registers its projection with promotion (the cache,
@@ -72,8 +75,8 @@ import { STRENGTH_EXEMPT_TABLES, STRENGTH_PURGED_TABLES, STRENGTH_CACHE_TABLE, S
          migrateStrength } from "./schema.mjs";
 
 export { STRENGTH_AXES, DOCUMENT_AXES, DEPTH_BOUND, GRADE_RANK, STRENGTH_STATES } from "./arithmetic.mjs";
-export { GRADING_METHOD_VERSION, GRADING_METHOD_VERSIONS, gradingMethodText, recomputePair, CREDIT_LEVELS }
-  from "./method.mjs";
+export { GRADING_METHOD_VERSION, GRADING_METHOD_VERSIONS, gradingMethodText, recomputePair, CREDIT_LEVELS,
+         PRODUCT_NAME } from "./method.mjs";
 export { VERSION_STRENGTH_CHECKS, VERSION_STRENGTH_DEFAULT_STATES, VERSION_STRENGTH_INERT_SOURCES,
          PARTITION_INDEPENDENCE_CHECKS, STRENGTH_BAR_CHECKS } from "./checks.mjs";
 export { STRENGTH_SCHEMA, STRENGTH_EXEMPT_TABLES, STRENGTH_PURGED_TABLES, STRENGTH_CACHE_TABLE,
@@ -109,8 +112,8 @@ const unanchored = (re) => re.source.replace(/^\^/, "").replace(/\$$/, "");
 const ID_IN_PROSE = new RegExp(`(?:${unanchored(IMPORTED_FINDING_RE)}|${unanchored(BUNDLE_ID_RE)})`, "g");
 /** R15 (DEC-88): the longest reason an administrator may give for the group's default bar. */
 export const BAR_REASON_MAX = 2000;
-/* R15 (DEC-105, H12): the bar's honest note, in the ruling's words. */
-const BAR_HONEST_NOTE = "CivicOS has no guidance yet on what particular audiences expect. Readers see the bar you set "
+/* R15 (DEC-105, H12): the bar's honest note, in the ruling's words, the product named as DEC-124 names it. */
+const BAR_HONEST_NOTE = "Civicsmith has no guidance yet on what particular audiences expect. Readers see the bar you set "
   + "in these words.";
 
 const isHunch = (source) => typeof source === "string" && VERSION_STRENGTH_INERT_SOURCES.includes(source);

@@ -29,7 +29,7 @@ import { isPublicHttpsLocator } from "../record-grammar/locator.mjs";
 import { MACHINE_AUTHOR_PREFIX } from "../record-grammar/actors.mjs";
 import { normalizeType } from "../record-grammar/types.mjs";
 import { createSha256 } from "../record-grammar/sha256.mjs";
-import { RENDER_CAPTURE_CHECKS, civicosUserAgent } from "../acquisition/index.mjs";
+import { RENDER_CAPTURE_CHECKS, civicsmithUserAgent } from "../acquisition/index.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { viewerPredicate, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
@@ -40,10 +40,11 @@ import { observationLogOf } from "../observation-log/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { runPrincipalGate } from "../run-rules/index.mjs";
 import { migrateCaptureRequests } from "./schema.mjs";
-import { CAPTURE_REQUEST_CHECKS, CAPTURE_SOURCE_CHECKS, CAPTURE_PURPOSES, CAPTURE_UA_MODES, userAgentIsLegible }
-  from "./checks.mjs";
+import { CAPTURE_REQUEST_CHECKS, CAPTURE_SOURCE_CHECKS, CAPTURE_PURPOSES, CAPTURE_UA_MODES, CAPTURE_UA_MODE_ALIASES,
+         uaModeOf, userAgentIsLegible } from "./checks.mjs";
 
-export { CAPTURE_REQUEST_CHECKS, CAPTURE_SOURCE_CHECKS, CAPTURE_PURPOSES, CAPTURE_UA_MODES, userAgentIsLegible };
+export { CAPTURE_REQUEST_CHECKS, CAPTURE_SOURCE_CHECKS, CAPTURE_PURPOSES, CAPTURE_UA_MODES, CAPTURE_UA_MODE_ALIASES,
+         uaModeOf, userAgentIsLegible };
 
 export const CAPTURE_REQUESTS_MODULE = "capture-requests";
 
@@ -300,9 +301,11 @@ export class CaptureRequests {
     /* R8: the PLANE principal is the caller's stamp (REC-168), the CLAUDE principal the run's: it is the account the
        run's budget is paid from, which the request does not choose. Neither is taken from the body, and neither is
        JUDGED here (R32): attribution, like conduct, is judged once, at the drain, where a row that outlived the door's
-       rules is judged again before anything leaves. `purpose` and `ua_mode` ride the row as sent. */
+       rules is judged again before anything leaves. `purpose` and `ua_mode` ride the row as sent,
+       save that R14's alias is written as the mode it names (`civicos` as `civicsmith`, DEC-124): a request is always
+       written with `civicsmith`. */
     const purpose = text(args.purpose).trim();
-    const uaMode = text(args.ua_mode ?? args.uaMode ?? "civicos").trim();
+    const uaMode = uaModeOf(text(args.ua_mode ?? args.uaMode ?? "civicsmith").trim());
     const callerPlane = text(caller).trim();
     /* R45: THE SWEEP the request asks to be filed under (`"<bundle>#<id>"`), recorded as sent and judged only at the
        drain, with conduct (R9, R32): whether the sweep admits it can change while the row waits. Absent, null or blank
@@ -319,7 +322,7 @@ export class CaptureRequests {
       run, address, render);
     if (standing)
       return { ok: true, request: standing.request, run, target: standing.target, address,
-               host: standing.host, purpose: standing.purpose, ua_mode: standing.ua_mode,
+               host: standing.host, purpose: standing.purpose, ua_mode: uaModeOf(standing.ua_mode),
                lead_inquiry: standing.lead_inquiry ?? null, render: standing.render === 1,
                sweep: standing.sweep ?? null, state: standing.state, requested: false, already: true,
                principals: { plane: standing.principal_plane, claude: standing.principal_claude } };
@@ -675,15 +678,17 @@ export class CaptureRequests {
                      + `an investigation fetch to introduce or reuse a purpose token DELIBERATELY, and `
                      + `borrowing a word that means something else is the disguise SOURCE-ACCESS.md rules out.` };
     /* CONDUCT 1 — THE AGENT, and there are exactly TWO legible forms, legible for different reasons: the member's own
-       browser agent because a member actually used it (BOB-3: delegated, never invented), the CivicOS form because of
-       the contact component D-94 measured. So the rule is applied per form. */
-    if (!CAPTURE_UA_MODES.includes(q.ua_mode))
+       browser agent because a member actually used it (BOB-3: delegated, never invented), the Civicsmith form because
+       of the contact component D-94 measured. So the rule is applied per form. A row stored under the name written
+       before T31 (`civicos`) is judged as the mode that name means (DEC-124). */
+    const mode = uaModeOf(q.ua_mode);
+    if (!CAPTURE_UA_MODES.includes(mode))
       return { ok: false, terminal: true, code: "CAPTURE_CONDUCT_UA_ILLEGIBLE",
                detail: `'${String(q.ua_mode || "").slice(0, 40) || "(none)"}' is not one of the legible `
                      + `agent forms: ${CAPTURE_UA_MODES.join(", ")}. BIO does not disguise its requests, `
                      + `and a mode this door cannot express is a string nobody could account for.` };
     let ua;
-    if (q.ua_mode === "member-browser") {
+    if (mode === "member-browser") {
       ua = this.#memberAgent(q.target);
       if (!ua)
         return { ok: false, terminal: true, code: "CAPTURE_CONDUCT_UA_UNRECORDED",
@@ -694,7 +699,7 @@ export class CaptureRequests {
     } else {
       /* The honest product string, composed by `acquisition`'s ONE composer (its R24) — the string it sends. */
       const env = this.#env();
-      ua = civicosUserAgent(env.VERSION, env.INSTANCE_NAME, q.purpose);
+      ua = civicsmithUserAgent(env.VERSION, env.INSTANCE_NAME, q.purpose);
       if (!userAgentIsLegible(ua))
         return { ok: false, terminal: true, code: "CAPTURE_CONDUCT_UA_ILLEGIBLE",
                  detail: `the agent this fetch would carry names no contact anybody could reach. D-94's `
@@ -894,12 +899,13 @@ export class CaptureRequests {
    * R23–R29 — THE READS.
    * ==================================================================== */
 
-  /** One row as every read answers it (R24, R25, R40): the request's fields less the principals, `render` a boolean,
-   *  the render deferral, the source's reason and the attribution composed by R10. */
+  /** One row as every read answers it (R24, R25, R40): the request's fields less the principals, `ua_mode` the mode it
+   *  names (R14: a stored `civicos` answers `civicsmith`, in every read and so in every feed item built on R26), `render`
+   *  a boolean, the render deferral, the source's reason and the attribution composed by R10. */
   static project(r) {
     return {
       request: r.request, run: r.run, target: r.target, address: r.address, host: r.host,
-      purpose: r.purpose, ua_mode: r.ua_mode, state: r.state, code: r.code, detail: r.detail,
+      purpose: r.purpose, ua_mode: uaModeOf(r.ua_mode), state: r.state, code: r.code, detail: r.detail,
       capture_sha: r.capture_sha, attempts: r.attempts, requested_at: r.requested_at,
       updated: r.updated, expires: r.expires, captured_at: r.captured_at,
       lead_inquiry: r.lead_inquiry ?? null, run_woken_at: r.run_woken_at ?? null,

@@ -135,7 +135,7 @@ test("R6 idempotent on (run, address, render): a standing row in requested, drai
   const again = w.ask({ purpose: "acquire", target: "INQ-2", lead: null, ua_mode: "member-browser" });
   assert.deepEqual([again.requested, again.already, again.request, again.target, again.purpose, again.ua_mode,
                     again.lead_inquiry, again.render, again.state],
-                   [false, true, first.request, "INQ-1", "investigate", "civicos", "INQ-2", false, "requested"]);
+                   [false, true, first.request, "INQ-1", "investigate", "civicsmith", "INQ-2", false, "requested"]);
   assert.deepEqual(again.principals, { plane: "member:ann/tok1", claude: "instance" });
   assert.equal(count(w), 1);
   /* a render ask is a different key */
@@ -153,12 +153,12 @@ test("R6 idempotent on (run, address, render): a standing row in requested, drai
 
 test("R6 a new row is written requested, attempts 0, requested_at and updated now, expires now + 24 h, on this instance's clock and never a body's `at`, answered as written", () => {
   const w = world().scene();
-  const a = w.ask({ at: "2001-01-01T00:00:00Z", purpose: "  investigate  ", ua_mode: " civicos " });
+  const a = w.ask({ at: "2001-01-01T00:00:00Z", purpose: "  investigate  ", ua_mode: " civicsmith " });
   const r = w.req(a.request);
   const now = new Date(T0).toISOString().replace(/\.\d+Z$/, "Z");
   const exp = new Date(T0 + CAPTURE_REQUEST_TTL_MS).toISOString().replace(/\.\d+Z$/, "Z");
   assert.deepEqual([r.state, r.attempts, r.requested_at, r.updated, r.expires], ["requested", 0, now, now, exp]);
-  assert.deepEqual([a.requested_at, a.expires, a.purpose, a.ua_mode], [now, exp, "investigate", "civicos"],
+  assert.deepEqual([a.requested_at, a.expires, a.purpose, a.ua_mode, r.ua_mode], [now, exp, "investigate", "civicsmith", "civicsmith"],
     "the answer is the row as written, not the call as sent");
   assert.equal(a.target, r.target);
   assert.equal(a.address, r.address);

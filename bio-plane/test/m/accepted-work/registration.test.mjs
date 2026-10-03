@@ -46,14 +46,47 @@ test("R1 one registration takes the three functions; a missing one is refused LI
   assert.equal(w.aw.registerAcceptedWork("x", {}).reason, "LISTENER_MALFORMED");
 });
 
-test("R1 the registered functions are called with the arguments the reads name: finding and openFlags with {ref, edition, viewer}, withdrawals with {after, limit}", () => {
+test("R1 the registered functions are called with the arguments the reads name: finding and openFlags with {ref, edition, viewer}, withdrawals and moves with {after, limit}", () => {
   const w = world();
   w.aw.acceptedFinding({ ref: REF, edition: 2, viewer: ALICE });
   w.aw.openFlagsOn({ ref: REF, edition: 2, viewer: ALICE });
   w.aw.acceptanceWithdrawals({ after: "W1", limit: 5 });
+  w.aw.publisherMoves({ after: "M3", limit: 7, extra: "dropped" });
   assert.deepEqual(w.source.calls, [
     ["finding", { ref: REF, edition: 2, viewer: ALICE }],
     ["openFlags", { ref: REF, edition: 2, viewer: ALICE }],
     ["withdrawals", { after: "W1", limit: 5 }],
+    ["moves", { after: "M3", limit: 7 }],
   ]);
+});
+
+test("R1 the fourth function, moves, is optional: a registration of the three alone is accepted and answers the three reads (publisherMoves then absent); one carrying moves is accepted and answers it; a moves given but not a function makes the registration LISTENER_MALFORMED", () => {
+  const s = importer();
+  const { moves, ...three } = s.fns;
+  const w = world({ register: false });
+  assert.deepEqual(w.aw.registerAcceptedWork("case-import", three), { ok: true, module: "case-import" });
+  s.publish(REF, 1); s.accept(REF, 1); s.move(REF, "edition", 2);
+  assert.equal(w.aw.acceptedFinding({ ref: REF, edition: 1, viewer: ALICE }).acceptance.by, ALICE);
+  assert.deepEqual(w.aw.openFlagsOn({ ref: REF, edition: 1, viewer: ALICE }), { flags: [], complete: true });
+  assert.deepEqual(w.aw.acceptanceWithdrawals({}), { withdrawals: [], cursor: null });
+  const none = w.aw.publisherMoves({});
+  assert.equal(none.absent, true);
+  assert.equal(none.reason, "accepted_work_absent");
+  /* with `moves` explicitly undefined, the same */
+  const w1 = world({ register: false });
+  assert.equal(w1.aw.registerAcceptedWork("case-import", { ...three, moves: undefined }).ok, true);
+  assert.equal(w1.aw.publisherMoves({}).absent, true);
+  /* with `moves`, it is answered */
+  const w2 = world({ register: false });
+  assert.equal(w2.aw.registerAcceptedWork("case-import", s.fns).ok, true);
+  assert.deepEqual(w2.aw.publisherMoves({}).moves.map((m) => m.move), ["M1"]);
+  /* a `moves` that is not a function is malformed, and registers nothing */
+  for (const bad of [null, "moves", 7, {}, [], true]) {
+    const w3 = world({ register: false });
+    const r = w3.aw.registerAcceptedWork("case-import", { ...three, moves: bad });
+    assert.equal(r.ok, false, String(bad));
+    assert.equal(r.reason, "LISTENER_MALFORMED");
+    assert.equal(r.check, MEMBERSHIP_CHECKS.LISTENER_MALFORMED.check);
+    assert.equal(w3.aw.acceptedFinding({ ref: REF, edition: 1, viewer: ALICE }).absent, true);
+  }
 });

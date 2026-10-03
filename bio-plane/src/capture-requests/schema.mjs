@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS capture_requests (
   address           TEXT NOT NULL,    -- the public https locator asked for
   host              TEXT NOT NULL,    -- derived at the write from address
   purpose           TEXT NOT NULL,    -- the user-agent purpose token this fetch will carry
-  ua_mode           TEXT NOT NULL,    -- civicos, or member-browser (BOB-3, permitted for public documents)
+  ua_mode           TEXT NOT NULL,    -- civicsmith (civicos before T31, read as civicsmith: R14, DEC-124), or member-browser (BOB-3, permitted for public documents)
   principal_plane   TEXT NOT NULL,    -- the caller's stamp (REC-168): whose scope the writes ran under
   principal_claude  TEXT NOT NULL,    -- the run's: WHICH LEVEL of the cascade paid
   state             TEXT NOT NULL,    -- requested | draining | captured | refused | expired (D-523, a C-83 render hold released UNDETERMINED at expires)

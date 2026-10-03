@@ -96,7 +96,7 @@ export function filed(loc, opts, { bytes = `bytes of ${loc}`, existed = false, e
   return { status: 200, body: { ok: true, existed, document: {
     file: `snapshots/${s.slice(0, 16)}.bin`, locator: loc, retrieved: "2026-09-28T01:00:00Z",
     authority_state: "undetermined", authority_basis: "no assertion was supplied",
-    provenance_chain: [{ who: "instance testbed (CivicOS/9.9.9)", asserts: `these bytes were served for ${loc}`,
+    provenance_chain: [{ who: "instance testbed (Civicsmith/9.9.9)", asserts: `these bytes were served for ${loc}`,
                          evidence: "first-party https fetch, hashed at receipt", bound: false, via: null }],
     capture: { method: "bio-plane acquire, https fetch, hashed at receipt", grade: "B", actor_class: "daemon",
                sha256: s, encoding: "binary", bytes: n, content_type: "application/pdf" },

@@ -4,9 +4,10 @@
    recomputed with nothing else, give the same state and grade on every axis, the same member setting it. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { world, MACHINE } from "./fixture.mjs";
 import { GRADING_METHOD_VERSION, GRADING_METHOD_VERSIONS, gradingMethodText, recomputePair, STRENGTH_AXES,
-         DEPTH_BOUND } from "../../../src/strength/index.mjs";
+         DEPTH_BOUND, PRODUCT_NAME } from "../../../src/strength/index.mjs";
 
 const V = GRADING_METHOD_VERSION;
 const axesOf = (p) => STRENGTH_AXES.map((a) => [a, p[a].state, p[a].grade, p[a].weakest ? p[a].weakest.target_id : null]);
@@ -41,6 +42,36 @@ test("R31: GRADING_METHOD_VERSION names the method; gradingMethodText answers it
   for (const bad of [undefined, null, "", "bio-grading/0", "bio-grading/2", 1, {}, [V], "toString", "__proto__"])
     assert.equal(gradingMethodText(bad), null, String(bad));
   assert.equal(gradingMethodText(V), text, "the same version always the same words");
+});
+
+/* R31 (DEC-124; K1365 (1)): the words `gradingMethodText(GRADING_METHOD_VERSION)` answered before T31, as SHA-256 of
+   their UTF-8 bytes (3,085 characters, measured on `job/T31/strength` before the change). */
+const PRE_T31_SHA256 = "85cac7dd2794e8d0970f7f9aa6846b61523775bb6a258597132d5b86c9e77c08";
+const sha = (t) => createHash("sha256").update(t, "utf8").digest("hex");
+
+test("R31: with \"CivicOS\" gradingMethodText answers byte for byte the text this version answered before T31; with no product it names Civicsmith; the name is the only difference, so either name states the same method", () => {
+  const old = gradingMethodText(V, "CivicOS");
+  assert.equal(sha(old), PRE_T31_SHA256, "a bio-case-document/6 edition re-renders byte for byte");
+  assert.equal(old.length, 3085);
+  assert.equal(old.split("\n")[0], `How CivicOS grades a finding (method ${V}).`);
+  assert.equal(PRODUCT_NAME, "Civicsmith");
+  const now = gradingMethodText(V);
+  assert.equal(now.split("\n")[0], `How Civicsmith grades a finding (method ${V}).`);
+  assert.equal(gradingMethodText(V, "Civicsmith"), now);
+  /* A missing product, or one that is not a name, is read as "Civicsmith"; it never throws. */
+  for (const missing of [undefined, null, "", "   ", 7, {}, ["CivicOS"], true])
+    assert.equal(gradingMethodText(V, missing), now, String(missing));
+  /* The name given is used as given, and is the only thing that differs: the method is the same. */
+  assert.equal(gradingMethodText(V, "Another Name").split("\n")[0], `How Another Name grades a finding (method ${V}).`);
+  const body = (t) => t.split("\n").slice(1).join("\n");
+  for (const name of ["CivicOS", "Another Name", undefined]) assert.equal(body(gradingMethodText(V, name)), body(now), String(name));
+  assert.notEqual(now, old, "negative control: the two names render different words");
+  assert.notEqual(sha(now), PRE_T31_SHA256);
+  /* An unknown version answers null whatever name is given. */
+  for (const bad of [undefined, "bio-grading/2", "toString"]) {
+    assert.equal(gradingMethodText(bad, "CivicOS"), null);
+    assert.equal(gradingMethodText(bad, "Civicsmith"), null);
+  }
 });
 
 test("R32: any version this module has not published is UNKNOWN_METHOD_VERSION, naming the versions it holds; it never throws on any input", () => {

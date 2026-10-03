@@ -9,6 +9,7 @@ import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { civicsmithUserAgent } from "../../../src/acquisition/index.mjs";
 
 const SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "src");
 const sha = (v) => createHash("sha256").update(v).digest("hex");
@@ -102,7 +103,7 @@ test("R30 capturerequest: admin, member with contribute and probe; capturereques
     assert.equal((await call(op, AI, ask)).status, 403, `ai ${op}`);
 });
 
-test("R16 R31 the spine in the plane: the member's run requests and nothing is fetched; op=acquire refuses the capture-request arm from every caller; only the daemon's drain fetches, and the capture lands", async () => {
+test("R16 R31 R14 the spine in the plane: the member's run requests (as civicsmith by default) and nothing is fetched; op=acquire refuses the capture-request arm from every caller; only the daemon's drain fetches, with the Civicsmith agent, and the capture lands", async () => {
   const { RUTH } = await world();
   const before = SEEN.length;
   const a = (await call("capturerequest", RUTH, { run: "RUN-CR-1", address: "https://spine.example.org/spine.pdf",
@@ -120,6 +121,9 @@ test("R16 R31 the spine in the plane: the member's run requests and nothing is f
   assert.ok(got, JSON.stringify(d).slice(0, 400));
   assert.equal(got.attribution.actor, "token:daemon");
   assert.equal(SEEN.filter((u) => u.startsWith("https://spine.example.org/")).length, 1);
+  assert.equal(a.ua_mode, "civicsmith");
+  assert.equal(AGENTS.get("https://spine.example.org/spine.pdf"), civicsmithUserAgent("1.0.0", "cr-plane", "investigate"),
+    "the agent that left the instance is acquisition's Civicsmith agent");
   const read = (await call(`capturerequests&run=RUN-CR-1`, RUTH)).body;
   assert.equal(read.requests.find((r) => r.request === a.request).state, "captured");
 });

@@ -8,9 +8,10 @@ const READS = [
   ["acceptedFinding", { ref: REF, edition: 1, viewer: ALICE }],
   ["openFlagsOn", { ref: REF, edition: 1, viewer: ALICE }],
   ["acceptanceWithdrawals", { after: null, limit: 10 }],
+  ["publisherMoves", { after: null, limit: 10 }],
 ];
 
-test("R2 each read answers the registered function's answer, unchanged: the finding with its pair and acceptance (or null), the open flags, the withdrawals page", () => {
+test("R2 each read (publisherMoves among them) answers the registered function's answer, unchanged: the finding with its pair and acceptance (or null), the open flags, the withdrawals page", () => {
   const w = world();
   w.source.publish(REF, 1, { pair: { evidence: "A", inference: "C" } });
   w.source.accept(REF, 1);
@@ -39,7 +40,8 @@ test("R2 each read answers the registered function's answer, unchanged: the find
   const odd = { anything: [1, 2] };
   const w2 = world({ register: false });
   const s = importer();
-  w2.aw.registerAcceptedWork("case-import", { finding: () => odd, openFlags: () => odd, withdrawals: () => odd });
+  w2.aw.registerAcceptedWork("case-import", { finding: () => odd, openFlags: () => odd, withdrawals: () => odd,
+                                              moves: () => odd });
   for (const [name, args] of READS) assert.equal(w2.aw[name](args), odd, name);
 });
 
@@ -53,7 +55,7 @@ test("R2 with none registered each read answers {absent: true}, stated as accept
     assert.equal(typeof a.detail, "string");
     assert.equal(a.ok, undefined, "a read is not a refusal");
   }
-  for (const name of ["acceptedFinding", "openFlagsOn", "acceptanceWithdrawals"]) {
+  for (const name of ["acceptedFinding", "openFlagsOn", "acceptanceWithdrawals", "publisherMoves"]) {
     assert.equal(w.aw[name]().absent, true, `${name} with no arguments`);
     assert.equal(w.aw[name](undefined).absent, true);
   }
@@ -70,7 +72,7 @@ test("R2 when the registered function throws (or answers a promise, which no syn
   }
   const w2 = world({ register: false });
   w2.aw.registerAcceptedWork("case-import", { finding: () => { throw "a string"; }, openFlags: () => { throw null; },
-    withdrawals: () => { throw new Error("x".repeat(5000)); } });
+    withdrawals: () => { throw new Error("x".repeat(5000)); }, moves: () => { throw undefined; } });
   for (const [name, args] of READS) {
     const a = w2.aw[name](args);
     assert.equal(a.unreadable, true, name);
@@ -78,14 +80,14 @@ test("R2 when the registered function throws (or answers a promise, which no syn
   }
   const w3 = world({ register: false });
   const later = () => Promise.reject(new Error("later"));
-  w3.aw.registerAcceptedWork("case-import", { finding: later, openFlags: later, withdrawals: later });
+  w3.aw.registerAcceptedWork("case-import", { finding: later, openFlags: later, withdrawals: later, moves: later });
   for (const [name, args] of READS) assert.equal(w3.aw[name](args).unreadable, true, name);
   await new Promise((r) => setImmediate(r));   // no unhandled rejection is left behind
 });
 
 test("R2 none of the reads writes: the database is byte-for-byte the same after every read, registered or not", () => {
   const w = world();
-  w.source.publish(REF, 1); w.source.accept(REF, 1); w.source.withdraw(REF, 1);
+  w.source.publish(REF, 1); w.source.accept(REF, 1); w.source.withdraw(REF, 1); w.source.move(REF, "edition", 2);
   const dump = () => JSON.stringify(w.tables().map((t) => [t, w.st.rows(`SELECT * FROM "${t}"`)]));
   const before = dump();
   for (const [name, args] of READS) w.aw[name](args);
@@ -96,10 +98,10 @@ test("R2 none of the reads writes: the database is byte-for-byte the same after 
 test("R2 a read handed arguments that cannot be read answers, never throws: absent with none registered, else unreadable", () => {
   const hostile = { get ref() { throw new Error("boom"); }, get after() { throw new Error("boom"); } };
   const w = world(), bare = world({ register: false });
-  for (const name of ["acceptedFinding", "openFlagsOn", "acceptanceWithdrawals"]) {
+  for (const name of ["acceptedFinding", "openFlagsOn", "acceptanceWithdrawals", "publisherMoves"]) {
     for (const args of [null, 7, "x", []]) assert.doesNotThrow(() => w.aw[name](args));
     assert.equal(w.aw[name](hostile).unreadable, true, name);
     assert.equal(bare.aw[name](hostile).absent, true, name);
   }
-  assert.equal(w.source.calls.length, 3 * 4, "only readable arguments reached the registered functions");
+  assert.equal(w.source.calls.length, 4 * 4, "only readable arguments reached the registered functions");
 });
