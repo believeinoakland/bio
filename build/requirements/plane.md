@@ -73,8 +73,8 @@ The instance's composition root. It builds every module on one Durable Object's 
   - it builds it on the object's storage at its place in R2's order (first in layer 11, `build/modules.json`), runs its migration as R3 says, declares its tables to purge through `record-core` (K23), and routes its ops map (R5);
   - at start, before the first request, it registers with it (`wizard-scripts` R13) the screen registry carried in the plane's bundle (empty until the new interface ships one), the member op table (`op-declarations`), `affordances`' `MACHINE_REFUSALS`, the machine-draft ops (`case-authoring` R39's `whatchangedpropose` and `escalationreasondraft`) and the Civicsmith library carried in the bundle.
 
-  The plane's release suite holds `requiredFailures` (`wizard-scripts` R14) empty for the bundled registry and library: a required script that fails fails the suite, and a release requires that suite (K619's release checks; DEC-121 (5): a failing required flow blocks the release). *(not yet met: T31)*
-- **R20** (N534; DEC-101 (3)) The composition root hands `monitoring` the `case-import` instance it reads (`watchedImports`, `recordDocketRead`; `monitoring` R67). It hands `queue` the `case-import` dep that `queue-producers` R35 reads. `case-import`'s `accepted-work` registration carries `moves` (`accepted-work` R8), filled before the first request as R16 and R17 say. *(not yet met: T31)*
+  The plane's release suite holds `requiredFailures` (`wizard-scripts` R14) empty for the bundled registry and library: a required script that fails fails the suite, and a release requires that suite (K619's release checks; DEC-121 (5): a failing required flow blocks the release).
+- **R20** (N534; DEC-101 (3)) The composition root hands `monitoring` the `case-import` instance it reads (`watchedImports`, `recordDocketRead`; `monitoring` R67). It hands `queue` the `case-import` dep that `queue-producers` R35 reads. `case-import`'s `accepted-work` registration carries `moves` (`accepted-work` R8), filled before the first request as R16 and R17 say.
 
 ### Satisfies
 
