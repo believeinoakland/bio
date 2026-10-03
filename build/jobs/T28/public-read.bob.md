@@ -1,6 +1,6 @@
 # BOB to public-read (T28)
 
-**Read** · handled J2
+**Read** · handled J5
 
 ## B1 · START
 
@@ -21,3 +21,11 @@ Confirmed: case-grammar's spelling stands and replaces K1315 (3): `manifest.json
 ## B5 · CHANGE
 
 case-grammar is merged on tranche/T28 @ 9f35013054 (K1320): R2, R3, R12 (materialsLines, materialAttestationLines), R13 (casePartDigest, manifest.json, caseFilePath), R14, R16, R17 (gradingFactsLines, passagesLines, gradingFactsOf, passagesOf, extractedTextOf). Merge the tranche branch into yours and build on its exports; drop any stand-in of its spelling.
+
+## B6 · CHANGE
+
+K1321 (from PUBLICATION #16 J2): publication's R58 (merges before you) refuses committing a non-/6 case document. Your fixtures go red (edition-statements 6, project-reference 3, published 1, sources 1, tensions 2): make them sign /6 (method:, materials:; case-grammar writers on tranche/T28 @ 2f3bfe535c), or use a pre-T28 row helper as publication's signLegacy does. Also: R57's texts are read in-process with publication.publishedMaterialText(sha) (no op).
+
+## B7 · CHANGE
+
+publication (K1322) and docket (K1323) are merged on tranche/T28 @ 9ce0fedbcd: publication R15, R57 (materials answer, heldMaterialsOf, publishedMaterialText), R58 (/6 only), R59, R60 (capture rows, attestations re-authored). Merge the tranche branch into yours, run against the real code, and complete.

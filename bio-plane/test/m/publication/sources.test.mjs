@@ -70,7 +70,7 @@ test("R2 caseDocumentFacts answers a /5 document's captures and sources blocks, 
   /* fenced: an outsider reads exactly what a store with no document answers */
   assert.deepEqual(w.p.caseDocumentFacts("CASE-2026-0001", 1, V("bo")), world().p.caseDocumentFacts("CASE-2026-0001", 1, V("bo")));
   /* a /4 document states neither */
-  w.prepare("CASE-2026-0002", 1, { project: proj, roles });
+  w.prepare("CASE-2026-0002", 1, { project: proj, roles, format: "bio-case-document/4" });
   const old = w.p.caseDocumentFacts("CASE-2026-0002", 1, V("olive"));
   assert.deepEqual([old.captures, old.sources, old.blocks_detail], [null, null, BLOCKS_PREDATE_SENTENCE]);
 });
