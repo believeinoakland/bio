@@ -28,3 +28,7 @@ Change commit `8edb991822` on `job/T32/capture`; `tranche/T32` merged after acqu
 - `checks/ownership.mjs … capture tranche/T32`: 3 files changed; 0 failures.
 
 Size (session_01GSh98oKfBHUNDu5vj9XCLy): test runs 1, module lines 3458
+
+## J2 · COMPLETE
+
+N541 applied: R65's first hop is acquisition.firstHopWho(env.INSTANCE_NAME, env.VERSION). After merging tranche/T32 (acquisition merged): module tests 120/120 pass; format, architecture, coverage (55/55), ownership (3 files): 0 failures. Stale for your layer close: bio-plane/dist/bio-plane.bundled.mjs (not_product). Details in my record's Completion.
