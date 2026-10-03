@@ -95997,9 +95997,10 @@ var CaseImport = class _CaseImport {
       publisher
     };
   }
-  /** R20: the watch's items for `queue-producers` (its R35): each verified entry seen, each refused entry, and each watch
-   *  in force whose latest read is unreadable, each naming the import, its group and case, and the watch's `set_by`. A
-   *  viewer who is not an active member is answered empty. Read as the plane; writes nothing and never throws. */
+  /** R20: the watch's items for `queue-producers` (its R35): each verified entry seen, with `seen_at`, the instant of the
+   *  docket read that first recorded it (N546), each refused entry, with its `seen_at` too (K1419), and each watch in
+   *  force whose latest read is unreadable, each naming the import, its group and case, and the watch's `set_by`. A viewer who is not an active
+   *  member is answered empty. Read as the plane; writes nothing and never throws. */
   watchItems({ viewer = null } = {}) {
     const empty = { entries: [], refused: [], unreadable: [] };
     try {
@@ -96007,7 +96008,7 @@ var CaseImport = class _CaseImport {
       const out = { entries: [], refused: [], unreadable: [] };
       const imports = new Map(this.#rows(`SELECT * FROM case_imports`).map((i) => [i.import_id, i]));
       const backs = /* @__PURE__ */ new Map();
-      for (const r of this.#rows(`SELECT e.*, w.set_by AS watch_set_by FROM case_import_docket_entries e
+      for (const r of this.#rows(`SELECT e.*, d.at AS read_at, w.set_by AS watch_set_by FROM case_import_docket_entries e
                                     JOIN case_import_docket_reads d ON d.rn = e.read_rn
                                     JOIN case_import_watches w ON w.rn = d.watch_rn ORDER BY e.rn`)) {
         const i = imports.get(r.import_id);
@@ -96028,12 +96029,13 @@ var CaseImport = class _CaseImport {
             edition: _CaseImport.#editionOf(r.edition),
             date: r.date ?? null,
             key_listed: Number(r.key_listed) === 1,
+            seen_at: r.read_at,
             move: MOVE_KINDS.includes(r.kind),
             ...r.kind === "edition" ? { what_changed: typeof f17.what_changed === "string" ? f17.what_changed : null } : {},
             ...r.kind === "withdrawal" ? { reason: typeof f17.reason === "string" ? f17.reason : null } : {},
             taken_back: backs.get(i.import_id).get(Number(r.seq)) ?? null
           });
-        } else out.refused.push({ ...head, failed: r.failed, detail: r.detail });
+        } else out.refused.push({ ...head, failed: r.failed, detail: r.detail, seen_at: r.read_at });
       }
       for (const w of this.#allWatches())
         if (w.last_read && w.last_read.outcome === "unreadable")
