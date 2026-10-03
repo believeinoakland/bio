@@ -187,7 +187,7 @@ Rows C-120.8 and C-120.10–C-120.13 (R29; DEC-112, N522), with their translatio
 
   (DEC-112 (5); DEC-119 (1)(3); K1275) *(not yet met: T28)*
 - **R47** Off-the-record material is presentable like any other material. R44 and R45 apply to it unchanged: it travels whole when this copy holds it whole, with its attestations. `publishCase` never refuses a case because material is off-the-record. Its grade is the capture's grade as recorded: a doorbell capture earns no fetched letter, and its letter is the member's, stated as authored (`provenance` R51). That grade recreates from the same recorded facts (`case-checker` R5). (DEC-112 (5); DEC-119 (1); K1275) *(not yet met: T28)*
-- **R48** For each off-the-record capture a member's chain reaches, the attesting member's `material_attestations:` row states them at the level in force for that capture (`publication` R60), in `publication`'s one spelling of each level (`attributionStatements`). At `group` or `project` it carries the member's account text (`capture.captureAccountsOf`), never their handle, key or signature. (DEC-119 (3); DEC-102 items 2, 3; K1275, K1277) *(not yet met: T28)*
+- **R48** For each off-the-record capture a member's chain reaches (one whose `sources:` row states its identity "Withheld", R37), the attribution section (`case-grammar` R2) carries its `capture` row, and is written when the edition reaches such a capture even if it reaches no observation (K1316); and the attesting member's `material_attestations:` row states them at the level in force for that capture (`publication` R60), in `publication`'s one spelling of each level (`attributionStatements`). At `group` or `project` it carries the member's account text (`capture.captureAccountsOf`), never their handle, key or signature. (DEC-119 (3); DEC-102 items 2, 3; K1275, K1277) *(not yet met: T28)*
 - **R49** A capture a named member made, including a load-bearing, self-attested Grade B capture, is governed by R35 and R36 (DEC-81 item 3), unchanged. Testimony a member credited at the group or project level is governed by `strength` R29 and `ratification` R35 (DEC-102), unchanged. Off-the-record material attested by such a member is governed by `ratification` R35 as amended (N523). (DEC-119 (2)–(4); K1275) *(not yet met: T28)*
 
 #### Another group's work this case rests on (DEC-96 item 4; N522)
@@ -216,6 +216,7 @@ Rows C-120.8 and C-120.10–C-120.13 (R29; DEC-112, N522), with their translatio
   - Its step three lists the flags R52 requires, read as R52 reads them, beside R32's tensions, with the statement that publishing discloses them and is never blocked by them.
 
   It writes nothing. (DEC-96 item 4; DEC-85) *(not yet met: T28)*
+- **R54** `publishCase` writes the `grading_facts:` and `passages:` blocks (`case-grammar` R17) at the act, from `strength.gradingFacts({inquiry, levels: null, viewer})` (its R35) for each finding a member's chain reaches (R46), and each relied-on passage's `quoted` text from `content`, so they are signed with the document. Its "Withheld" statement (R37) is `publication`'s `unnamedSourceStatement`, the one spelling. (DEC-112 (3); K1305, K1315) *(not yet met: T28)*
 
 ### Satisfies
 

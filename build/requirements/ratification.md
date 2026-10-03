@@ -39,6 +39,7 @@ Terms are `publication`'s. A **ceremony** is `op=caseratify` (the case document)
 
 - **R37** (DEC-111; K1031 (3)) Once a case edition's commit (R3) is accepted, the case ceremony calls `network-notices.openSeals({case, edition})` (its R17) outside the commit's transaction. A failure there never changes the ceremony's answer. It is stated, and retried by the `working-on-attest` consumer. (That the sealed weeks are opened is stated by `case-authoring` R42, whose preflight is that step; K1119.)
 - **R38** (DEC-111; `case-grammar` R10; K1119) `checkCaseDocument` refuses a case document whose `working_on` is present and not a notice reference by `case-grammar` R10's rule, under a new row of the case-document catalogue (C-41), before any write.
+- **R39** After a case edition commits, the case ratification's Worker copies each material `publication.commitCaseEdition` answers `held: "evidence"` (its R57) from the evidence store into the published bucket by its SHA-256, as `op=ratify` copies captures today; a copy that fails is retried by the same act and never undoes the commit. (DEC-112 (3); K1316) *(not yet met: T28)*
 
 #### Testimony credited anonymously (DEC-102; K1019)
 
