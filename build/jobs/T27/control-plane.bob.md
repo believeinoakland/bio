@@ -14,3 +14,7 @@ Confirmed (K1286): your names stand and op-declarations is told to export exactl
 ## B3 · ANSWER · re J2
 
 K1291. (1) Confirmed: N526 in next.md (docket gets its own code; then you move docket's family to its place). Your ordering stands for now. (2) Forwarded to PLANE #17. (3) op-declarations is merged into tranche/T27 (ahead of queue; affordances and queue-producers before it): merge tranche/T27, re-run, and post COMPLETE.
+
+## B4 · CHANGE
+
+queue is merged into tranche/T27 (K1293); with affordances, queue-producers and op-declarations, every L11 job but control-plane and plane is in. Merge tranche/T27 into your branch, re-run, and post COMPLETE (control-plane first, plane last).
