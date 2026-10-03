@@ -47,3 +47,7 @@
 - `ownership: 5 files changed by affordances between tranche/T28 and HEAD; 0 failures`
 
 Size (session_01PjbqD3UQJJBDSqXLMiUhac): test runs 15, module lines 3263
+
+## J1 · REPORT
+
+control-plane totality.test.mjs (R2, R41): with R35 merged, affordances' unaccounted over the door's table reads stale for my ten names: caseimport, caseimportdocument, importaccept, importacceptwithdraw, importflag, importflagclear, importedcases, importedcase, casechecker, casefilespec. op-declarations R14 has not yet carried their rows. Nothing is unpublished or unranked. This is accepted red 4's arm, and it clears when op-declarations and control-plane merge in L11. control-plane's other two failures (catalogue-end R43 C-92.4; families R22 CHECK_FAMILIES) were already red before my change and are unchanged by it. Publication's K1321 note needed no change here: no affordances test signs a case directly, and case-authoring's fixture used by the R19 statementack case already signs /6.
