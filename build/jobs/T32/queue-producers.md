@@ -1,6 +1,6 @@
 # queue-producers (T32)
 
-**Status** · session_01Fk6NZizVdw2PkBBvxaGQW3 · depth 2 · WORKING · handled B0
+**Status** · session_01Fk6NZizVdw2PkBBvxaGQW3 · depth 2 · COMPLETE · handled B0
 
 ## Completion
 
