@@ -5,7 +5,8 @@
  * sections a later act re-authors (R3), the citations a signed document carries (R4), the edge set a finding rests
  * on (R5), what changed in an edition and the lens it was produced under (R8, R9, `./edition.mjs`), and the project
  * reference a case carries (R10, `./reference.mjs`), the method and materials a `/6` case carries and the other
- * group's work it rests on (R11, R12, R16, `./materials.mjs`), the case file's format (R13, `./casefile.mjs`), the
+ * group's work it rests on (R11, R12, R16, `./materials.mjs`), each finding's signed grading facts and passages and the
+ * one extracted text (R17, `./facts.mjs`), the case file's format (R13, `./casefile.mjs`), the
  * complete edition (R14, `./complete.mjs`) and a finding's standing against the bar (R15, `./standing.mjs`). It reads
  * no table, holds no store and never throws.
  *
@@ -36,11 +37,13 @@ export { WHAT_CHANGED_HEAD, WHAT_CHANGED_ORIGINS, whatChangedText, whatChangedBl
 export { WORKING_ON_KEY, NOTICE_REFERENCE_PATTERN, isNoticeReference, workingOnLines, workingOnOf } from "./reference.mjs";
 export { METHOD_FIELDS, methodBlockLines, methodOf, MATERIAL_FIELDS, MATERIAL_ATTESTATION_FIELDS, MATERIAL_KINDS,
          MATERIAL_RESTS_UNDER, ATTESTATION_BY_KINDS, ATTESTATION_LEVELS, ANONYMOUS_ATTESTATION_LEVELS,
-         GROUP_ATTESTATION_SIGNATURE, materialBlockLines, materialsOf, ACCEPTED_WORK_FIELDS, ACCEPTED_WORK_FLAG_FIELDS,
+         GROUP_ATTESTATION_SIGNATURE, materialsLines, materialAttestationLines, materialBlockLines, materialsOf, ACCEPTED_WORK_FIELDS, ACCEPTED_WORK_FLAG_FIELDS,
          PAIR_AXES, pairLine, pairOf, acceptedWorkBlockLines, acceptedWorkOf } from "./materials.mjs";
 export { CASE_FILE_FORMAT, CASE_FILE_MANIFEST_PATH, CASE_FILE_KINDS, CASE_FILE_SINGLE_KINDS, CASE_FILE_MANIFEST_FIELDS,
          CASE_FILE_KEY_FIELDS, CASE_FILE_PART_FIELDS, CASE_FILE_FILE_FIELDS, caseFilePath, caseFileEntryOf,
-         casePartDigest, caseFileManifestCheck } from "./casefile.mjs";
+         partFingerprint, caseFileManifestCheck } from "./casefile.mjs";
+export { GRADING_FACT_FIELDS, PASSAGE_FIELDS, gradingFactsLines, passagesLines, gradingFactsOf, passagesOf,
+         extractedTextOf } from "./facts.mjs";
 export { BAR_AXES, STANDING_ROLE_WORDS, standingOf } from "./standing.mjs";
 export { COMPLETE_EDITION_HEADINGS, TWO_STRENGTHS_SENTENCE, GRADE_MEANINGS, MADE_WITH_LINE, CHECKER_READS,
          completeEditionOf } from "./complete.mjs";
@@ -64,7 +67,8 @@ const rowsOf = (rows) => (Array.isArray(rows) ? rows.filter((r) => r && typeof r
 export function attributionFrontmatterLines(rows) {
   return ["observation_attributions:",
     ...rowsOf(rows).flatMap((r) => [
-      `  - observation: ${r.observation}`,
+      /* K1315 (publication R60): an off-the-record capture's attesting member is keyed by the capture's SHA-256. */
+      r.observation == null && r.capture != null ? `  - capture: ${r.capture}` : `  - observation: ${r.observation}`,
       `    level: ${r.level ?? "null"}`,
       `    shown: ${r.shown == null ? "null" : `"${fmSafe(r.shown)}"`}`,
       `    chosen_at_edition: ${r.chosen_at_edition ?? "null"}`])];
@@ -79,7 +83,8 @@ export function attributionBodyLines(given) {
     + "that member's own choice, made for this edition and never filled in for them (MEMBER-KNOWLEDGE-DESIGN.md "
     + "§4). An observation names no person in its own bytes; the words below are the whole of the attribution.",
     "",
-    ...rows.map((r) => !r.level
+    ...rows.map((r) => ({ ...r, observation: r.observation == null && r.capture != null ? r.capture : r.observation }))
+      .map((r) => !r.level
       ? `- **${r.observation}** — NO LEVEL IS CHOSEN: ${r.why}. This edition cannot be signed until its author `
         + "chooses one, or the finding resting on it leaves the case."
       : `- **${r.observation}** — attributed to ${said[r.level]}${r.shown == null ? " (this record names no "
@@ -126,6 +131,17 @@ export const SECTIONS = Object.freeze({
     const b0 = lines.findIndex((l, i) => l.startsWith("**Who else read this statement.**") && ours(i));
     const b1 = lines.indexOf("## What Was Searched");
     return f0 < 0 || f1 < f0 || b0 < 0 || b1 < b0 + 1 ? null : { f0, f1, b0, b1: b1 - 1 };
+  }),
+  /* K1317 (case-authoring R48, publication R60): the material attestations, re-authored when an attesting member
+     chooses a level — from `material_attestations:` to the next top-level key, with no prose run. Its prose run is
+     answered empty at the document's end (`b0 === b1 === lines.length`), so a splice with no body lines leaves every
+     other line as it was. */
+  attestations: located((lines) => {
+    const f0 = lines.indexOf("material_attestations:") >= 0 ? lines.indexOf("material_attestations:")
+      : lines.indexOf("material_attestations: []");
+    let f1 = f0 + 1;
+    while (f0 >= 0 && f1 < lines.length && lines[f1].startsWith("  ")) f1++;
+    return f0 < 0 ? null : { f0, f1, b0: lines.length, b1: lines.length };
   }),
 });
 export const REAUTHORABLE_SECTIONS = Object.freeze(Object.keys(SECTIONS));

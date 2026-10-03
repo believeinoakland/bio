@@ -103,7 +103,7 @@ test("R1 R6 blocks before /5 answer null with the sentence that the format preda
   assert.equal(caseDocumentBlocks("---\nformat: bio-case-document/5\n---\n").detail, BLOCK_UNREADABLE_SENTENCE);
 });
 
-test("R1 sourceStatement is the one spelling of an entry the public may be told, and unnamedSourceStatement the one for none", () => {
+test("R1 sourceStatement is the one spelling of an entry the public may be told, and unnamedSourceStatement the one for none, Withheld with its reason", () => {
   assert.equal(sourceStatement({ kind: "attribute", attribute: "employer", value: "the water board", how: "self" }),
                "attribute employer: the water board");
   assert.equal(sourceStatement({ kind: "name", recorded: false, how: "self" }), `name: ${NOT_RECORDED_STATED}`);
@@ -116,8 +116,12 @@ test("R1 sourceStatement is the one spelling of an entry the public may be told,
   assert.equal(sourceStatement({ kind: "name", value: "Pat", how: "self", claim: "ignored" }), "name: Pat");
   assert.equal(sourceStatement({ kind: "name", value: 'A "B"\nC' }), "name: A 'B' C");
   for (const odd of [null, undefined, {}, { kind: "" }, "name", 7]) assert.equal(sourceStatement(odd), null);
-  assert.equal(unnamedSourceStatement({ capture: CAP, received: NOW }), `an unnamed source; received as ${CAP} at ${NOW}`);
-  assert.equal(unnamedSourceStatement(), "an unnamed source; received as an undetermined digest at an undetermined time");
+  /* K1315 (8): the one spelling is case-authoring R37's "Withheld", with its reason */
+  assert.equal(unnamedSourceStatement({ capture: CAP, received: NOW }), "Withheld: the source has not consented to being "
+    + `named, and no public record names them; received as ${CAP} at ${NOW}`);
+  assert.equal(unnamedSourceStatement(), "Withheld: the source has not consented to being named, and no public record "
+    + "names them; received as an undetermined digest at an undetermined time");
+  assert.equal(unnamedSourceStatement(null), unnamedSourceStatement());
 });
 
 test("R1 sourceRowsStanding answers exactly the sources: rows no answered entry or unnamed statement still holds", () => {

@@ -10,9 +10,11 @@
  * bias; disclosed contradictions; the strength section; the grading method; how to check the case yourself. The
  * identifying notice heads the file and, printed, every page.
  *
- * WHAT IT READS: the case file alone, `{manifest, files}` (R13), `files` a `Map` or an object of path to bytes or text,
- * or a list of `{path, bytes}`. Every fact comes from the signed case document or from the files the manifest lists, in
- * the document's own order, so the same case file always gives the same bytes and the order files are handed in never
+ * WHAT IT READS: the case file alone, as K1315 (4) hands it: the manifest's facts and every file but the complete
+ * edition, with no part, `{format, group, case, edition, case_document_sha, keys, files: [{path, kind, sha256, bytes,
+ * content}]}`, `content` the file's bytes or text (R13). Every fact comes from the signed case document (its R17
+ * blocks first, the per-finding files where it carries none) or from the files listed, in the document's own order, so
+ * the same case file always gives the same bytes and the order files are handed in never
  * matters. THE WORDS of its sentences and headings are the UX stream's; these are used until it gives them. Pure; never
  * throws. */
 
@@ -23,6 +25,7 @@ import { caseTensionsOf } from "./tensions.mjs";
 import { lensOf, LENS_KIND_WORDS, LENS_CLOSING_SENTENCES, LENS_NONE_SENTENCE, LENS_UNDETERMINED_SENTENCE } from "./edition.mjs";
 import { methodOf, materialsOf, acceptedWorkOf, PAIR_AXES } from "./materials.mjs";
 import { caseFilePath } from "./casefile.mjs";
+import { gradingFactsOf, passagesOf } from "./facts.mjs";
 import { standingOf } from "./standing.mjs";
 
 /** R14: the sections, in order, by their headings (the UX stream's words, until it gives them). */
@@ -65,22 +68,19 @@ const li = (s) => `<li>${esc(s)}</li>`;
 const ul = (items) => (items.length ? `<ul>${items.join("")}</ul>` : "");
 const objects = (xs) => (Array.isArray(xs) ? xs.filter((x) => x && typeof x === "object" && !Array.isArray(x)) : []);
 
-/* The files as a lookup by path. A path handed twice keeps the copy whose SHA-256 the manifest lists for it, else the
-   copy with the lowest SHA-256, so the order the files are handed in never changes what is rendered. */
-function filesOf(files, manifest) {
+/* The files as a lookup by path. A path listed twice keeps the copy whose content hashes to the SHA-256 its row states,
+   else the copy with the lowest SHA-256, so the order the files are handed in never changes what is rendered. */
+function filesOf(files) {
   const all = new Map();
-  const put = (path, bytes) => {
-    if (typeof path !== "string" || (typeof bytes !== "string" && !(bytes instanceof Uint8Array))) return;
-    all.set(path, [...(all.get(path) || []), bytes]);
-  };
-  if (files instanceof Map) for (const [k, v] of files) put(k, v);
-  else if (Array.isArray(files)) for (const f of files) { if (f && typeof f === "object") put(f.path, f.bytes); }
-  else if (files && typeof files === "object") for (const k of Object.keys(files)) put(k, files[k]);
-  const listed = new Map(objects(manifest.files).map((f) => [f.path, f.sha256]));
+  for (const f of objects(files)) {
+    const c = f.content;
+    if (typeof f.path !== "string" || (typeof c !== "string" && !(c instanceof Uint8Array))) continue;
+    all.set(f.path, [...(all.get(f.path) || []), [shaOf(c), c, f.sha256]]);
+  }
   const out = new Map();
   for (const [path, copies] of all) {
-    const ranked = copies.map((b) => [shaOf(b), b]).sort((x, y) => (x[0] < y[0] ? -1 : x[0] > y[0] ? 1 : 0));
-    out.set(path, (ranked.find(([h]) => h === listed.get(path)) || ranked[0])[1]);
+    const ranked = copies.sort((x, y) => (x[0] < y[0] ? -1 : x[0] > y[0] ? 1 : 0));
+    out.set(path, (ranked.find(([h, , stated]) => h === stated) || ranked[0])[1]);
   }
   return out;
 }
@@ -97,23 +97,22 @@ const extentWords = (e) => (e === null || e === undefined ? "no location stated"
 const pairWords = (pair) => (pair ? PAIR_AXES.filter((x) => pair[x])
   .map((x) => `${x} ${pair[x].state === "graded" ? pair[x].grade : pair[x].state}`).join(", ") : "not stated");
 
-/** R14: the complete edition of `caseFile` (`{manifest, files}`), one HTML file as text. The same case file always gives
+/** R14: the complete edition of `caseFile` (`{format, group, case, edition, case_document_sha, keys, files}`), one HTML file as text. The same case file always gives
  *  the same bytes. A case file carrying no readable case document gives a file that says so. Pure; never throws. */
 export function completeEditionOf(caseFile) {
   try {
     const cf = caseFile && typeof caseFile === "object" ? caseFile : {};
-    const manifest = cf.manifest && typeof cf.manifest === "object" ? cf.manifest : {};
-    const files = filesOf(cf.files, manifest);
+    const files = filesOf(cf.files);
     const docBytes = files.get(caseFilePath("case_document"));
     const docText = textOf(docBytes);
     const parsed = docText === null ? null : parseFrontmatter(docText);
     const fm = parsed && parsed.data && typeof parsed.data === "object" ? parsed.data : null;
-    const group = typeof manifest.group === "string" ? manifest.group : null;
+    const group = typeof cf.group === "string" ? cf.group : null;
     if (!fm) return page({ title: "A case file with no readable case document", notice: null, group,
       sections: [p("This case file carries no readable case document, so nothing of the case can be shown from it.")] });
 
-    const caseId = said(fm.case_id ?? manifest.case);
-    const edition = said(fm.case_edition ?? manifest.edition);
+    const caseId = said(fm.case_id ?? cf.case);
+    const edition = said(fm.case_edition ?? cf.edition);
     const bar = fm.required_strength && typeof fm.required_strength === "object" ? fm.required_strength : {};
     const floors = bar.declared === false ? "no bar declared"
       : `capture ${said(bar.capture, "not set")}, connection ${said(bar.connection, "not set")}`;
@@ -129,6 +128,16 @@ export function completeEditionOf(caseFile) {
     const pairOfMember = (m) => Object.fromEntries(strengthRows.filter((r) => String(r.target) === m)
       .map((r) => [r.axis, { state: r.state ?? null, grade: r.grade ?? null }]));
     const accepted = acceptedWorkOf(fm);
+    /* R17: each finding's legs and passages as the document signs them; the per-finding files where it carries none. */
+    const signedLegs = gradingFactsOf(fm);
+    const signedPassages = passagesOf(fm);
+    const chainFacts = {
+      /* the block holds a row per leg of every finding a chain reaches, so a finding with none rests on nothing */
+      legs: (f) => (signedLegs ? signedLegs[f] || []
+        : (() => { const j = jsonOf(files.get(caseFilePath("grading_facts", f))); return j && Array.isArray(j.legs) ? objects(j.legs) : null; })()),
+      passages: (f) => (signedPassages ? signedPassages[f] || []
+        : objects(jsonOf(files.get(caseFilePath("passages", f))))),
+    };
     const method = methodOf(fm);
 
     /* 1. the claims */
@@ -152,7 +161,7 @@ export function completeEditionOf(caseFile) {
         const g = !a ? "not stated" : a.state === "graded" ? `grade ${a.grade}` : said(a.state);
         return li(`${GRADE_MEANINGS[axis]} This finding: ${g}.`);
       });
-      return `<h3>${esc(m)}</h3><p class="standing">${esc(s.line)}</p>${ul(grades)}${chainHtml(m, files, accepted, m, 0, new Set())}`;
+      return `<h3>${esc(m)}</h3><p class="standing">${esc(s.line)}</p>${ul(grades)}${chainHtml(m, chainFacts, accepted, m, 0, new Set())}`;
     });
 
     /* 3. the materials */
@@ -254,13 +263,11 @@ export function completeEditionOf(caseFile) {
 /* One finding's chain, down to the passages relied on: its legs from its grading facts (`strength` R35's legs), a leg
    to a question followed into that question's own facts when the case file carries them (to `strength`'s depth bound,
    6, never round a loop), a leg to another group's finding stopping there with what the case states of it (R16). */
-function chainHtml(finding, files, accepted, member, depth, seen) {
+function chainHtml(finding, facts, accepted, member, depth, seen) {
   if (seen.has(finding)) return p(`${finding} is already shown above in this chain.`);
   if (depth > 6) return p("This chain goes deeper than six steps; the steps below are not followed.");
   const next = new Set([...seen, finding]);
-  const facts = jsonOf(files.get(caseFilePath("grading_facts", finding)));
-  const passages = jsonOf(files.get(caseFilePath("passages", finding)));
-  const legs = facts && Array.isArray(facts.legs) ? objects(facts.legs) : null;
+  const legs = facts.legs(finding);
   const legHtml = legs === null
     ? p(`This case file carries no grading facts for ${finding}, so its chain is not shown.`)
     : legs.length === 0 ? p(`${finding} rests on nothing.`)
@@ -285,10 +292,10 @@ function chainHtml(finding, files, accepted, member, depth, seen) {
             li("The chain stops here: what that finding rests on is in its own case file."),
           ])}</li>`;
         }
-        if (l.kind === "inquiry") return `<li>${esc(head)}${chainHtml(target, files, accepted, member, depth + 1, next)}</li>`;
+        if (l.kind === "inquiry") return `<li>${esc(head)}${chainHtml(target, facts, accepted, member, depth + 1, next)}</li>`;
         return li(head);
       }));
-  const quoted = Array.isArray(passages) ? objects(passages) : [];
+  const quoted = facts.passages(finding);
   const passageHtml = quoted.length
     ? `<p>${esc(`The passages ${finding} relies on:`)}</p>${quoted.map((q) => `<blockquote class="quote">${esc(said(q.quoted, ""))}`
       + `<br><small>${esc(`In the document captured as ${said(q.capture_sha)}, at ${extentWords(q.extent)} (content `

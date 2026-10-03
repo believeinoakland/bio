@@ -92,21 +92,32 @@ const materialRow = (r) => ({ ref: r.ref ?? null, kind: oneOf(r.kind, MATERIAL_K
 const attestationRow = (r) => {
   const byKind = oneOf(r.by_kind, ATTESTATION_BY_KINDS);
   const level = byKind === "member" ? oneOf(r.level, ATTESTATION_LEVELS) : null;
-  const anonymous = byKind === "member" && ANONYMOUS_ATTESTATION_LEVELS.includes(level);
+  /* K1317 (6): until a member's level is chosen, the row states none and carries no identity. */
+  const anonymous = byKind === "member" && (level === null || ANONYMOUS_ATTESTATION_LEVELS.includes(level));
   return { ref: r.ref ?? null, by_kind: byKind, by: anonymous ? null : r.by ?? null, level, at: r.at ?? null,
            signature: byKind === "group" ? GROUP_ATTESTATION_SIGNATURE
              : byKind === "project" || anonymous ? null : r.signature ?? null,
            recorded_in: r.recorded_in ?? null };
 };
 
-/** R12: the `materials:` and `material_attestations:` blocks' lines, from `{materials: [{ref, kind, sha, text_sha,
- *  origin, archived_copy, included, rests_under}], attestations: [{ref, by_kind, by, level, at, signature,
- *  recorded_in}]}`, each in the order given. A `member` row at `group` or `project` is written with no `by` and no
- *  `signature`; a `group` row's signature is `case`; a `project` row's null. Empty blocks are written `[]`. */
+/** R12 (K1317): the `materials:` block's lines, from `[{ref, kind, sha, text_sha, origin, archived_copy, included,
+ *  rests_under}]`, in the order given; `materials: []` when there are none. */
+export function materialsLines(rows) {
+  return rowsBlock("materials", objects(rows).map(materialRow), MATERIAL_FIELDS);
+}
+
+/** R12 (K1317): the `material_attestations:` block's lines, from `[{ref, by_kind, by, level, at, signature,
+ *  recorded_in}]`, in the order given. A `member` row at `group` or `project`, or with no level chosen yet, is written
+ *  with no `by` and no `signature`; a `group` row's signature is `case`; a `project` row's null. `[]` when none. It is
+ *  the run `SECTIONS.attestations` locates, so the act that records a member's level re-writes it whole. */
+export function materialAttestationLines(rows) {
+  return rowsBlock("material_attestations", objects(rows).map(attestationRow), MATERIAL_ATTESTATION_FIELDS);
+}
+
+/** R12: both blocks' lines, from `{materials, attestations}` (`materialsLines`, then `materialAttestationLines`). */
 export function materialBlockLines(given) {
   const { materials = [], attestations = [] } = given && typeof given === "object" ? given : {};
-  return [...rowsBlock("materials", objects(materials).map(materialRow), MATERIAL_FIELDS),
-          ...rowsBlock("material_attestations", objects(attestations).map(attestationRow), MATERIAL_ATTESTATION_FIELDS)];
+  return [...materialsLines(materials), ...materialAttestationLines(attestations)];
 }
 
 /** R12: the two blocks read back from a `/6` document's front matter, in the document's order: `{materials: [{ref,

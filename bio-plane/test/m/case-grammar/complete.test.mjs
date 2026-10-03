@@ -8,7 +8,7 @@ import { gradingMethodText, GRADING_METHOD_VERSION } from "../../../src/strength
 import { completeEditionOf, COMPLETE_EDITION_HEADINGS, TWO_STRENGTHS_SENTENCE, GRADE_MEANINGS, MADE_WITH_LINE,
          CHECKER_READS, standingOf, BAR_AXES, STANDING_ROLE_WORDS, LENS_CLOSING_SENTENCES, LENS_KIND_WORDS,
          WITHHELD_SOURCE_LABEL, WITHHELD_SOURCE_REASON, caseFilePath } from "../../../src/case-grammar/index.mjs";
-import { caseFileFixture, manifestFor, A, B, C, MINUTES, OBS, MINUTES_SHA, REF } from "./casefile-fixture.mjs";
+import { caseFileFixture, editionInput, caseDocument, A, B, C, MINUTES, OBS, MINUTES_SHA, REF } from "./casefile-fixture.mjs";
 import { sha } from "./helpers.mjs";
 
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
@@ -16,13 +16,13 @@ const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, 
 const has = (html, s) => html.includes(esc(s));
 const at = (html, s) => html.indexOf(esc(s));
 const sectionOf = (html, i) => html.slice(html.indexOf(`<h2>${i}. `), i < 9 ? html.indexOf(`<h2>${i + 1}. `) : undefined);
-const others = (files) => new Map([...files].filter(([p]) => p !== caseFilePath("complete_edition")));
+const render = (manifest, files) => completeEditionOf(editionInput(manifest, files));
 
 /* ===== R14 ===== */
 
 test("R14 the complete edition is one self-contained HTML file: every style inline, no script, no external reference, and it opens with nothing installed", () => {
   const { manifest, files } = caseFileFixture();
-  const html = completeEditionOf({ manifest, files });
+  const html = render(manifest, files);
   assert.match(html, /^<!doctype html>\n<html lang="en">/);
   assert.match(html, /<style>[^<]+<\/style>/, "the styles are inline");
   for (const bad of [/<script/i, /\son\w+=/i, /\ssrc=/i, /\shref=/i, /<link/i, /@import/i, /url\(/i, /<iframe/i, /<object/i, /<img/i])
@@ -34,7 +34,7 @@ test("R14 the complete edition is one self-contained HTML file: every style inli
 
 test("R14 its order: the claims, the findings, the materials, what was searched, the declared bias, disclosed contradictions, the strength section, the grading method, and how to check it yourself", () => {
   const { manifest, files } = caseFileFixture();
-  const html = completeEditionOf({ manifest, files });
+  const html = render(manifest, files);
   assert.deepEqual([...COMPLETE_EDITION_HEADINGS], ["The claims", "The findings", "The documents and observations",
     "What was searched", "The declared bias", "Disclosed contradictions", "Strength", "How grades are worked out",
     "How to check this case yourself"]);
@@ -109,7 +109,7 @@ test("R14 its order: the claims, the findings, the materials, what was searched,
 
 test("R14 the identifying notice: the case, edition, group, declared bias, both floors and the case document's hash with where to verify it, heading the file and fixed on every printed page; the group leads and CivicOS is credited at the foot", () => {
   const { manifest, files } = caseFileFixture();
-  const html = completeEditionOf({ manifest, files });
+  const html = render(manifest, files);
   const notice = html.slice(html.indexOf('<div class="notice">'), html.indexOf("</div>"));
   const docSha = createHash("sha256").update(files.get("case.md")).digest("hex");
   for (const s of ["lakeshore-tenants · Case CASE-2026-0001 · Edition 2", "Declared bias: We expected the board to defer to the vendor.",
@@ -122,39 +122,41 @@ test("R14 the identifying notice: the case, edition, group, declared bias, both 
   assert.equal(MADE_WITH_LINE, "Made with CivicOS");
   /* a bar on one axis, and no bar, are stated as such */
   const one = caseFileFixture({ bar: { declared: true, capture: "A", connection: null } });
-  assert.equal(has(completeEditionOf(one), "Bar (floors): capture A, connection not set."), true);
+  assert.equal(has(render(one.manifest, one.files), "Bar (floors): capture A, connection not set."), true);
   const none = caseFileFixture({ bar: { declared: false, capture: null, connection: null } });
-  const noneHtml = completeEditionOf(none);
+  const noneHtml = render(none.manifest, none.files);
   assert.equal(has(noneHtml, "Bar (floors): no bar declared."), true);
   assert.equal(has(noneHtml, "Relied on · this project declared no bar"), true);
 });
 
 test("R14 the same case file always gives the same bytes, however its files are handed in; nothing is left out for length; the carried edition is never read", () => {
   const { manifest, files } = caseFileFixture();
-  const html = completeEditionOf({ manifest, files });
-  assert.equal(completeEditionOf({ manifest, files }), html, "byte-identical twice");
-  assert.equal(completeEditionOf({ manifest, files: new Map([...files].reverse()) }), html, "a reordered Map");
-  assert.equal(completeEditionOf({ manifest, files: Object.fromEntries([...files].reverse()) }), html, "an object");
-  assert.equal(completeEditionOf({ manifest, files: [...files].map(([path, t]) => ({ path, bytes: new TextEncoder().encode(t) })) }),
-               html, "a list of bytes");
-  assert.equal(completeEditionOf({ manifest, files: others(files) }), html, "rendered from the case file's other files");
-  assert.equal(files.get("complete-edition.html") === completeEditionOf({ manifest: manifestFor([], { group: "riverside-watch" }), files: others(files) }), false,
-               "the manifest's group is read");
-  /* a path handed twice: the copy the manifest lists, in either order */
+  const html = render(manifest, files);
+  assert.equal(render(manifest, files), html, "byte-identical twice");
+  const input = editionInput(manifest, files);
+  assert.equal(completeEditionOf({ ...input, files: [...input.files].reverse() }), html, "files handed in another order");
+  assert.equal(completeEditionOf({ ...input, files: input.files.map((f) => ({ ...f, content: new TextEncoder().encode(f.content) })) }),
+               html, "content as bytes");
+  assert.equal(files.get("complete-edition.html"), html, "rendered from the case file's other files");
+  assert.equal(input.files.some((f) => f.kind === "complete_edition"), false);
+  assert.equal(completeEditionOf({ ...input, group: "riverside-watch" }) === html, false, "the manifest's group is read");
+  /* a path handed twice: the copy whose content hashes to its row's SHA-256, in either order */
   const forged = "---\nformat: bio-case-document/6\ncase_id: FORGED\n---\n";
-  const twice = [...[...files].map(([path, bytes]) => ({ path, bytes })), { path: "case.md", bytes: forged }];
-  assert.equal(completeEditionOf({ manifest, files: twice }), html);
-  assert.equal(completeEditionOf({ manifest, files: [...twice].reverse() }), html);
+  const doc = input.files.find((f) => f.path === "case.md");
+  const twice = [...input.files, { ...doc, content: forged }];
+  assert.equal(completeEditionOf({ ...input, files: twice }), html);
+  assert.equal(completeEditionOf({ ...input, files: [...twice].reverse() }), html);
   /* no length limit: a long passage travels whole */
   const long = "word ".repeat(60000).trim();
-  const big = new Map(files);
+  const unsigned = caseFileFixture({ blocks: false });
+  const big = new Map(unsigned.files);
   big.set(caseFilePath("passages", A), JSON.stringify([{ content_id: "c", capture_sha: MINUTES_SHA, extent: "p1", quoted: long }]));
-  assert.equal(completeEditionOf({ manifest, files: big }).includes(long), true, "nothing is left out for length");
+  assert.equal(render(unsigned.manifest, big).includes(long), true, "nothing is left out for length");
 });
 
 test("R14 DEC-96 item 4 a chain reaching another group's finding prints, at that leg, the acceptance, the recreation result and gaps, each disclosed flag and the source case file, and stops there", () => {
   const { manifest, files } = caseFileFixture();
-  const leg = sectionOf(completeEditionOf({ manifest, files }), 2);
+  const leg = sectionOf(render(manifest, files), 2);
   const from = leg.indexOf(esc(`Supports: ${REF}`));
   const part = leg.slice(from, leg.indexOf("</ul></li>", from));
   for (const s of ["This is another group's finding.",
@@ -167,12 +169,12 @@ test("R14 DEC-96 item 4 a chain reaching another group's finding prints, at that
   /* negative control: with no acceptance stated, the leg says so */
   const bare = new Map(files);
   bare.set("case.md", files.get("case.md").replace(/\naccepted_work:[\s\S]*?\naccepted_work_flags:/, "\naccepted_work: []\naccepted_work_flags:"));
-  assert.equal(has(completeEditionOf({ manifest, files: bare }), "This case states no acceptance for it."), true);
+  assert.equal(has(render(manifest, bare), "This case states no acceptance for it."), true);
 });
 
 test("R14 DEC-119 material from a source whose identity is withheld is shown with its source as Withheld and its reason, and an anonymous attesting member is never named", () => {
   const { manifest, files } = caseFileFixture();
-  const mats = sectionOf(completeEditionOf({ manifest, files }), 3);
+  const mats = sectionOf(render(manifest, files), 3);
   assert.equal(has(mats, `Source: ${WITHHELD_SOURCE_LABEL}: ${WITHHELD_SOURCE_REASON}.`), true);
   assert.equal(mats.includes("heron"), false, "a member credited to the group is not named");
   assert.equal(has(mats, "Included whole in this case file."), true, "it travels whole, like any other material");
@@ -180,22 +182,23 @@ test("R14 DEC-119 material from a source whose identity is withheld is shown wit
 
 test("R14 R6 negative controls: no case document, an unreadable one, odd input, a method this rendering does not hold and absent facts are stated, never filled, and it never throws", () => {
   const { manifest, files } = caseFileFixture();
-  const noDoc = completeEditionOf({ manifest, files: new Map([...files].filter(([p]) => p !== "case.md")) });
+  const noDoc = render(manifest, new Map([...files].filter(([p]) => p !== "case.md")));
   assert.match(noDoc, /This case file carries no readable case document/);
   assert.match(noDoc, /^<!doctype html>/);
   for (const odd of [null, undefined, 7, "x", {}, [], { manifest: 7, files: 7 }, { files: new Map([["case.md", 7]]) },
-                     { get manifest() { throw new Error("boom"); } }]) {
+                     { get files() { throw new Error("boom"); } }]) {
     assert.doesNotThrow(() => completeEditionOf(odd));
     assert.match(completeEditionOf(odd), /^<!doctype html>[\s\S]*<\/html>\n$/);
   }
-  assert.match(completeEditionOf({ get manifest() { throw new Error("boom"); } }), /could not be read whole/);
-  const odd = new Map(files);
-  odd.set("case.md", files.get("case.md").replace('grading: "bio-grading/1"', 'grading: "bio-grading/99"'));
+  assert.match(completeEditionOf({ get files() { throw new Error("boom"); } }), /could not be read whole/);
+  const unsigned = caseFileFixture({ blocks: false });
+  const odd = new Map(unsigned.files);
+  odd.set("case.md", unsigned.files.get("case.md").replace('grading: "bio-grading/1"', 'grading: "bio-grading/99"'));
   odd.delete(caseFilePath("grading_facts", C));
-  const html = completeEditionOf({ manifest, files: odd });
+  const html = render(unsigned.manifest, odd);
   assert.equal(has(html, "This case was graded by method bio-grading/99, whose words this rendering does not hold."), true);
   assert.equal(has(html, `This case file carries no grading facts for ${C}, so its chain is not shown.`), true);
-  const bare = completeEditionOf({ manifest, files: new Map([["case.md", "---\nformat: bio-case-document/6\ncase_id: CASE-2026-0002\n---\n"]]) });
+  const bare = render(manifest, new Map([["case.md", "---\nformat: bio-case-document/6\ncase_id: CASE-2026-0002\n---\n"]]));
   for (const s of ["This case document lists no materials.", "This case document does not state what was searched.",
                    "This case document does not state the grading method it was graded by.", "Declared bias: none stated."])
     assert.equal(has(bare, s), true, s);

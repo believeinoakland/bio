@@ -49,7 +49,7 @@ test("R7 no place is named in this module's behaviour or outward text", () => {
     CG.workingOnLines("NOTE-2026-0001"), CG.workingOnOf({ format: "bio-case-document/5", working_on: "NOTE-2026-0001" }),
     CG.withheldSourceStatement(), CG.methodOf({ format: "bio-case-document/6", method: {} }),
     CG.caseFileManifestCheck({}), CG.caseFileManifestCheck(null), caseFileFixture().manifest,
-    CG.completeEditionOf(caseFileFixture()), CG.completeEditionOf(null),
+    caseFileFixture().files.get("complete-edition.html"), CG.completeEditionOf(null),
     ...[["load_bearing", { capture: "B" }], ["supporting", { connection: "C" }], [null, { capture: "B" }], ["load_bearing", null]]
       .map(([role, bar]) => CG.standingOf({ role, bar, pair: { capture: "C" } })),
     ...[true, false, null].map((inForce) => CG.lensSectionLines({ statements: [{ kind: "scrutiny" }, { kind: "inference" },

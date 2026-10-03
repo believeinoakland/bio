@@ -5,11 +5,11 @@ import * as CG from "../../../src/case-grammar/index.mjs";
 import { sha, NOW, V } from "./helpers.mjs";
 
 const bytesOf = (s) => Buffer.byteLength(s, "utf8");
-/** A part's fingerprint, spelled a second way: one line per file of the part, in path order, and the sum of sizes. */
+/** A part's fingerprint, spelled a second way (K1315 (3)): SHA-256 of the JSON of its `[{path, sha256, bytes}]` in
+    manifest order (keys already sorted), and the sum of sizes. */
 export const digest = (files, index) => {
-  const mine = files.filter((f) => f.part === index).map((f) => f.path).sort()
-    .map((p) => files.find((f) => f.path === p && f.part === index));
-  return { sha256: createHash("sha256").update(mine.map((f) => `${f.path} ${f.sha256} ${f.bytes}\n`).join("")).digest("hex"),
+  const mine = files.filter((f) => f.part === index).map((f) => ({ bytes: f.bytes, path: f.path, sha256: f.sha256 }));
+  return { sha256: createHash("sha256").update(JSON.stringify(mine)).digest("hex"),
            bytes: mine.reduce((n, f) => n + f.bytes, 0) };
 };
 export const KEY = { key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExampleKeyBytesForTheFixture group@lakeshore",
@@ -35,8 +35,22 @@ export const SECRET_SOURCE = "Pat the clerk";
 const rows = (key, list) => (list.length ? [`${key}:`, ...list.flatMap((r) => Object.entries(r)
   .map(([k, v], i) => `${i ? "   " : "  -"} ${k}: ${v === null ? "null" : typeof v === "string" ? `"${v}"` : v}`))] : [`${key}: []`]);
 
+/** The grading facts and passages the case signs (R17), as case-authoring R54 writes them. */
+export const LEGS = [
+  { finding: A, ord: 1, target: MINUTES, kind: "document", role: "supports", grade: "B", grade_axis: "capture", grade_source: "capture",
+    ground: null, origins: [MINUTES_SHA], origins_complete: true, captures: [MINUTES_SHA] },
+  { finding: A, ord: 2, target: B, kind: "inquiry", role: "supports", grade: null, grade_axis: null, grade_source: "inherited",
+    ground: "the record", answer: { capture: { state: "graded", grade: "B" } } },
+  { finding: A, ord: 3, target: REF, kind: "imported", role: "supports", grade: null, grade_axis: null, grade_source: null, ground: null },
+  { finding: B, ord: 1, target: OBS, kind: "observation", role: "cuts_against", grade: "D", grade_axis: "testimony",
+    grade_source: "testimony", ground: null, author_key: "k1" },
+  { finding: B, ord: 2, target: A, kind: "inquiry", role: "supports" },
+];
+export const PASSAGES = [{ finding: A, ord: 1, content_id: sha("passage"), capture_sha: MINUTES_SHA,
+  extent: { page: 3, start: 10, end: 52 }, chain: null, quoted: "No vote was taken on item 7 <the lease>. It's \"final\" # here" }];
+
 /** The `/6` case document's text. */
-export function caseDocument({ bar = { declared: true, capture: "B", connection: "C" } } = {}) {
+export function caseDocument({ bar = { declared: true, capture: "B", connection: "C" }, blocks = true } = {}) {
   const fm = [
     "---", "format: bio-case-document/6", "case_id: CASE-2026-0001", "case_edition: 2", "case_project: PROJ-2026-0001-parks",
     'case_scope: "Who approved the lease, and on what record."',
@@ -74,6 +88,7 @@ export function caseDocument({ bar = { declared: true, capture: "B", connection:
                reason: "We read it twice." }],
       flags: [{ ref: REF, edition: 2, flag: "FLAG-1", issue: "The lease date may be wrong.", flagged_at: NOW,
                 words: "We disclose it.", acknowledged_by: V("olive"), acknowledged_at: NOW }] }),
+    ...(blocks ? [...CG.gradingFactsLines(LEGS), ...CG.passagesLines(PASSAGES)] : []),
     "searched:", '  computed_at: "2026-09-30T00:00:00Z"', "  subject_source: case", "  subjects: 3", "  looked: 2",
     ...rows("searched_levels", [{ level: "document", subject_kind: "document", outcome: "looked", subjects: 3, looked: 2,
                                   never_looked: 0, undetermined: 1, detail: "One was never logged." }]),
@@ -96,23 +111,24 @@ export function caseFileFixture(opts = {}) {
     [CG.caseFilePath("finding_signature", A), "sig A"],
     [CG.caseFilePath("finding", C), "---\nid: C\n---\n"],
     [CG.caseFilePath("finding_signature", C), "sig C"],
-    [CG.caseFilePath("grading_facts", A), JSON.stringify({ legs: [
-      { target: MINUTES, kind: "document", role: "supports", grade: "B", grade_axis: "capture", grade_source: "capture", ground: null },
-      { target: B, kind: "inquiry", role: "supports", grade: null, grade_axis: null, grade_source: "inherited", ground: "the record" },
-      { target: REF, kind: "imported", role: "supports", grade: null, grade_axis: null, grade_source: null, ground: null }] })],
-    [CG.caseFilePath("passages", A), JSON.stringify([{ content_id: sha("passage"), capture_sha: MINUTES_SHA,
-      extent: { page: 3, start: 10, end: 52 }, quoted: "No vote was taken on item 7 <the lease>." }])],
-    [CG.caseFilePath("grading_facts", B), JSON.stringify({ legs: [
-      { target: OBS, kind: "observation", role: "cuts_against", grade: "D", grade_axis: "testimony", grade_source: "testimony", ground: null },
-      { target: A, kind: "inquiry", role: "supports" }] })],
-    [CG.caseFilePath("grading_facts", C), JSON.stringify({ legs: [] })],
+    ...[A, B, C].map((f) => [CG.caseFilePath("grading_facts", f),
+      JSON.stringify({ legs: LEGS.filter((l) => l.finding === f).map(({ finding, ord, ...leg }) => leg) })]),
+    [CG.caseFilePath("passages", A), JSON.stringify(PASSAGES.map(({ finding, ord, ...q }) => q))],
     [CG.caseFilePath("document", MINUTES), "%PDF the minutes' bytes"],
     [CG.caseFilePath("extracted_text", MINUTES), "No vote was taken on item 7 <the lease>."],
     [CG.caseFilePath("attestation", [MINUTES, "account-1.txt"]), "I pulled it from the box."],
   ]);
   const listed = (m) => [...m].map(([path, t]) => ({ path, sha256: sha(t), bytes: bytesOf(t), part: 1,
                                                      kind: CG.caseFileEntryOf(path).kind }));
-  const edition = CG.completeEditionOf({ manifest: manifestFor(listed(text)), files: text });
+  const edition = CG.completeEditionOf(editionInput(manifestFor(listed(text)), text));
   text.set(CG.caseFilePath("complete_edition"), edition);
   return { manifest: manifestFor(listed(text)), files: text };
+}
+
+/** R14's input (K1315 (4)) from a manifest and a Map of path to content: the manifest's facts and every file but the
+    complete edition, with no part. */
+export function editionInput(manifest, files) {
+  const { parts, files: rows, ...facts } = manifest;
+  return { ...facts, files: rows.filter((f) => f.kind !== "complete_edition")
+    .map(({ part, ...f }) => ({ ...f, content: files.get(f.path) })) };
 }
