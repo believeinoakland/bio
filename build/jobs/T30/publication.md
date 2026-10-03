@@ -27,3 +27,7 @@ The forwarding of a given `acceptedWork` to case-carriage (test injection, in th
 - `ownership.mjs … publication tranche/T30`: 1 file changed; 0 failures.
 
 Size (session_01Ez4jm4BPM9Hw57fyKwKCSW): test runs 3, module lines 4613
+
+## J1 · COMPLETE
+
+N537 applied on job/T30/publication (622054a76e): get acceptedWork() delegate removed from src/publication/index.mjs; no reader anywhere (t28's w.acceptedWork is the fixture's own instance), so no test re-pointed; no requirement change. publication 108/109 (1 todo, R30), plane accepted.test 7/7, test/m 5782/5793 0 fail 11 todo; format, architecture, coverage (43/43), ownership: 0 failures. Stale: bio-plane/dist/bio-plane.bundled.mjs (not_product) still embeds the delegate, yours at the close.
