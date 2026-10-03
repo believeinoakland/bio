@@ -1,4 +1,4 @@
-/* installer R1–R33, each at the module's interface: the Worker's routes driven with a request, everything it reaches
+/* installer R1–R35, each at the module's interface: the Worker's routes driven with a request, everything it reaches
  * answered by the fixture's stateful account, repository and copy; the embed step's exported functions; the pages it
  * serves, and the invitation page, as a browser receives them. A requirement not yet met is a `test.todo` naming its
  * cause (build/requirements/installer.md).
@@ -13,7 +13,7 @@ import worker, * as installer from "../src/index.mjs";
 import { CFG, planeLimits } from "../src/index.mjs";
 import { GROUP_SLUG_RE, FLEET_BINDINGS, HOSTING_CONTROL, hostingControlBlock } from "../../bio-plane/src/setup-fleet.mjs";
 import { setupPage } from "../../bio-plane/src/setup.mjs";
-import { EXAMPLE_SLUG, PUBLISHER, PROFILE_CHOICES, PROFILES_NONE } from "../src/ui.mjs";
+import { EXAMPLE_SLUG, PUBLISHER, PROFILE_CHOICES, PROFILES_NONE, PAGE_CSS } from "../src/ui.mjs";
 import { RELEASE_VERSION, RELEASE_SOURCE } from "../src/release.mjs";
 import { resolveVersion, checkSignedAsset, embedRelease } from "../scripts/embed-release.mjs";
 import { verifySshsig, NS_RELEASE } from "../../bio-plane/src/sshsig.mjs";
@@ -26,9 +26,10 @@ after(restoreSigners);
 const NEXT = bump(RELEASE_VERSION);
 const text = async (path) => (await req(path)).text();
 const secretsOf = (put) => (put?.meta?.bindings || []).filter((b) => b.type === "secret_text");
-/* Every page this suite renders, for R19, R22 and R31, which hold over all of them. */
-const PAGES = [];
-const seen = (x) => { PAGES.push(typeof x === "string" ? x : x.page.words); return x; };
+/* Every page this suite renders, for R19, R22, R31 and R35, which hold over all of them: its words, and (R35) each page
+   as the browser receives it, the streamed page's own scripts included. */
+const PAGES = [], RAW = [];
+const seen = (x) => { PAGES.push(typeof x === "string" ? x : x.page.words); RAW.push(typeof x === "string" ? x : x.raw); return x; };
 const MEMBERS = FLEET_BINDINGS.map(([m]) => m), BINDINGS = FLEET_BINDINGS.map(([, b]) => b);
 /* R21's choices are `jurisdictions`' data, shown as data: R22 and R31 hold over every other word of every page, so
    exactly the rendered name and coverage of each choice is taken out before they read a page. */
@@ -694,16 +695,17 @@ test("R21 the install offers the held non-test jurisdiction profiles by name and
   for (const put of u.planePuts) assert.equal((put.meta.bindings || []).some((b) => b.name === "JURISDICTION_PROFILES"), false);
 });
 
-test("R22 every page names CivicOS and the installing group, by its chosen name once chosen; no page names a third party (K262); the installer's own address stays, and its pages say it is run by the publisher of CivicOS releases; the example name is not a place", async () => {
+test("R22 every page names Civicsmith and the installing group, by its chosen name once chosen, and never the old name; Believe in Oakland is named on no page (K262), the installer's own address staying where it runs; its pages say it is run by the publisher of Civicsmith releases; the example name is not a place", async () => {
   const before = { "/": await text("/"), "/update": await text("/update"), "404": await text("/nowhere"), invitation: INVITATION };
+  assert.equal(PUBLISHER, "This installer is run by the publisher of Civicsmith releases.");
   for (const [where, page] of Object.entries(before)) {
-    assert.match(page, /CivicOS/, where);
+    assert.match(page, /Civicsmith/, where);
     assert.match(page, /your group/i, `${where} speaks to the group`);
-    assert.ok(page.includes(PUBLISHER), `${where} says the publisher runs it`);
+    assert.ok(page.includes("This installer is run by the publisher of Civicsmith releases."), `${where} says the publisher runs it`);
   }
-  assert.match(before["/"], /<title>Set up your group's copy of CivicOS<\/title>/);
-  assert.match(before["/update"], /<title>Update your copy of CivicOS<\/title>/);
-  assert.match(before.invitation, /<title>Start your group's copy — CivicOS<\/title>/);
+  assert.match(before["/"], /<title>Set up your group's copy of Civicsmith<\/title>/);
+  assert.match(before["/update"], /<title>Update your copy of Civicsmith<\/title>/);
+  assert.match(before.invitation, /<title>Start your group's copy — Civicsmith<\/title>/);
   assert.ok(before.invitation.includes('href="https://newgroup.believeinoakland.workers.dev/"'), "the address stays where it runs");
   for (const path of ["/", "/update"]) assert.ok(before[path].includes(`placeholder="${EXAMPLE_SLUG}"`), path);
   const places = jurisdictions.list().flatMap((p) => p.covers).flatMap((c) => c.toLowerCase().split(/\W+/)).filter((x) => x.length > 2);
@@ -712,17 +714,20 @@ test("R22 every page names CivicOS and the installing group, by its chosen name 
   const named = seen(await run({ slug: "river-keepers" }));
   const upd = seen(await run({ slug: "river-keepers", mode: "update", pre: { "river-keepers": planeBase("river-keepers", "0.70.0") } }));
   for (const w of [named, upd]) {
-    assert.match(w.raw, /CivicOS &middot; installer/);
+    assert.match(w.raw, /Civicsmith &middot; installer/);
     assert.match(w.raw, /For the group <b class="mono" id="group">river-keepers<\/b>/);
     assert.ok(w.raw.includes(PUBLISHER));
   }
   const { cookie } = await begin("river-keepers");
   const denied = seen(await callback("error=access_denied", cookie));
-  assert.match(denied.raw, /CivicOS/);
+  assert.match(denied.raw, /Civicsmith/);
   assert.match(denied.raw, /For the group <b class="mono" id="group">river-keepers<\/b>/);
-  /* Over every page rendered anywhere in this suite (K262): no page names a third party. The publisher is said to run
-     the installer without being named, and the only trace of its name is the installer's own address, which stays. */
+  /* Over every page rendered anywhere in this suite (K262): no page names a third party, and none the product's old name
+     (DEC-124). The publisher is said to run the installer without being named, and the only trace of its name is the
+     installer's own address, which stays. */
   for (const page of [...PAGES, ...Object.values(before)].map(withoutChoices)) {
+    assert.match(page, /Civicsmith/, page.slice(0, 120));
+    assert.equal(/civic ?os\b/i.test(page), false, page.match(/.{0,60}civic ?os\b.{0,40}/i)?.[0]);
     const rest = page.replace(/newgroup\.believeinoakland\.workers\.dev/g, "");
     assert.equal(/believe in oakland|oakland|biosmoke/i.test(rest), false, rest.match(/.{0,60}(oakland|biosmoke).{0,40}/i)?.[0]);
   }
@@ -990,4 +995,57 @@ test("R33 the install and the update read back the uploaded plane's content and 
   assert.match(noAddr.page.done, MISMATCH);
   assert.ok(!/<b>Updated (from|to)/.test(noAddr.page.done));
   restoreSigners();
+});
+
+/* ------------------------------------------------------------------------------------------------ nothing loaded from elsewhere */
+
+/* R35: every load a page names, with its value: any `src`, `srcset`, `poster`, `data` or `background`; any `href` but a
+   link's (`<a>`, which the reader follows: not a load); any CSS `@import` or `url()`; any script `fetch` or `import()`.
+   One on another origin is one whose value names a scheme (other than `data:`, `blob:`, `about:`) or starts `//`. */
+const loadsIn = (page) => {
+  const out = [];
+  for (const [, tag, attrs] of page.matchAll(/<([a-z][a-z0-9-]*)\b([^>]*)>/gi))
+    for (const a of attrs.matchAll(/(?:^|\s)(src|srcset|poster|data|background|href)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi)) {
+      if (tag.toLowerCase() === "a" && a[1].toLowerCase() === "href") continue;
+      const v = a[2] ?? a[3] ?? a[4];
+      out.push(...(a[1].toLowerCase() === "srcset" ? v.split(",").map((x) => x.trim().split(/\s+/)[0]) : [v]));
+    }
+  for (const m of page.matchAll(/@import\s+(?:url\(\s*)?["']?([^"')\s;]+)/gi)) out.push(m[1]);
+  for (const m of page.matchAll(/url\(\s*["']?([^"')]+)/gi)) out.push(m[1].trim());
+  for (const m of page.matchAll(/\b(?:fetch|import)\(\s*["'`]([^"'`]+)/g)) out.push(m[1]);
+  return out;
+};
+const elsewhere = (v) => /^\s*\/\//.test(v) || (/^\s*[a-z][a-z0-9+.-]*:/i.test(v) && !/^\s*(data|blob|about):/i.test(v));
+
+test("R35 every page the installer serves, and the invitation page, names no resource on another origin in any src, href, @import or url(); typefaces are the device's; a link the reader follows is not a load", async () => {
+  /* The reading itself: it finds each kind of load on another origin, the invitation page's old Google Fonts head among
+     them, and passes a link, a same-origin load and a fetch of the installer's own route. */
+  const OLD_HEAD = `<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces&display=swap" rel="stylesheet">`;
+  assert.deepEqual(loadsIn(OLD_HEAD).filter(elsewhere), ["https://fonts.googleapis.com", "https://fonts.gstatic.com",
+    "https://fonts.googleapis.com/css2?family=Fraunces&display=swap"]);
+  for (const bad of [`<script src="https://cdn.example/x.js"></script>`, `<img src=//cdn.example/x.png>`,
+      `<img srcset="/a.png 1x, https://cdn.example/b.png 2x">`, `<style>@import "https://cdn.example/x.css";</style>`,
+      `<style>@import url(https://cdn.example/x.css);</style>`, `<style>body{background:url('//cdn.example/x.png')}</style>`,
+      `<style>@font-face{src:url(https://fonts.gstatic.com/x.woff2)}</style>`, `<script>fetch("https://api.example/x")</script>`])
+    assert.ok(loadsIn(bad).filter(elsewhere).length >= 1, bad);
+  for (const fine of [`<a href="https://dash.cloudflare.com/sign-up" rel="noopener">`, `<a class="btn" href='https://newgroup.example/'>`,
+      `<link rel="stylesheet" href="/x.css">`, `<script>fetch("/begin",{method:"POST"})</script>`, `<button data-url="https://x.example/">`,
+      `<img src="data:image/png;base64,AAAA">`])
+    assert.deepEqual(loadsIn(fine).filter(elsewhere), [], fine);
+
+  /* Every page: the install and update pages, a 404, every page the suite above streamed or answered (the progress pages
+     of every install and update, with their panels, and the callback's refusals), and the invitation page. */
+  const pages = [await text("/"), await text("/update"), await text("/elsewhere"), ...RAW, ...PAGES, INVITATION];
+  assert.ok(RAW.length > 40, "the pages this suite rendered");
+  for (const page of pages) assert.deepEqual(loadsIn(page).filter(elsewhere), [], page.slice(0, 160));
+  /* Typefaces are the device's: no page declares a face to fetch, and the invitation page's stacks are the Worker's own. */
+  for (const page of pages) assert.equal(/@font-face/i.test(page), false, page.slice(0, 160));
+  const stacks = (css) => [...css.matchAll(/--(display|body|mono):([^;]+);/g)].map((m) => [m[1], m[2]]);
+  assert.deepEqual(stacks(INVITATION).filter(([k]) => k !== "display"), stacks(PAGE_CSS));
+  assert.ok(/(--display:|font-family:)Georgia,serif/.test(INVITATION) && PAGE_CSS.includes("font-family:Georgia,serif"));
+  /* A link the reader follows stays: the hosting provider's sign-up, and the installer's own address. */
+  assert.ok(INVITATION.includes('<a href="https://dash.cloudflare.com/sign-up"'));
+  assert.ok(INVITATION.includes('href="https://newgroup.believeinoakland.workers.dev/"'));
 });

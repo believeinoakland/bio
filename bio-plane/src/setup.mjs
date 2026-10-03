@@ -20,8 +20,8 @@
    there and never copied. */
 import { STATES, HEADINGS } from "./record-grammar/document.mjs";
 import { deriveInquiryTitle } from "./record-grammar/titles.mjs";
-/* The CivicOS agent's one composer is acquisition's (its R24), read there and never copied. */
-import { civicosUserAgent } from "./acquisition/index.mjs";
+/* The Civicsmith agent's one composer is acquisition's (its R24), read there and never copied. */
+import { civicsmithUserAgent } from "./acquisition/index.mjs";
 /* R32 (N65 (3)): the risk tiers and their reader are action-grammar's, read there and never copied (its R1). */
 import { RISK_TIERS, riskTierState } from "./action-grammar/index.mjs";
 import { COUNTERPARTY_LEVELS, list as heldProfiles, get as heldProfile, combine as combineProfiles }
@@ -1836,7 +1836,10 @@ export const GROUP_DISPLAY_NAME_MAX = 120;
 /* A bare lowercase host name with at least one dot, labels of 1-63 letters, digits and hyphens: no scheme, path, port
    or IP literal. The last label must begin with a letter, which is what excludes a dotted-quad. */
 export const GROUP_DOMAIN_RE = /^(?=.{4,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
-export const GROUP_WELL_KNOWN_PATH = "/.well-known/civicos-group.json";
+/* R8 (DEC-124; K1365 (5)): the file a group publishes, and the one it published before T31, read only when the first is
+   `absent` so a group that already published it stays verified. The second answer decides. */
+export const GROUP_WELL_KNOWN_PATH = "/.well-known/civicsmith-group.json";
+export const GROUP_WELL_KNOWN_PATH_BEFORE_T31 = "/.well-known/civicos-group.json";
 export const GROUP_WELL_KNOWN_MAX_BYTES = 16384;
 export const GROUP_DOMAIN_RECHECK_MS = 86_400_000;   // chosen, not measured: once a day
 /* IC-246: the check log answered newest first, cut at a NAMED bound and the cut PUBLISHED (R11). */
@@ -2096,7 +2099,8 @@ export class InstanceSetup {
              shown_publicly: !!check && check.verdict === "verified", history: this.#identityHistory("domain") };
   }
 
-  /** R8, THE VERIFIER: one governed fetch of the current claim's well-known file, and one dated verdict. */
+  /** R8, THE VERIFIER: a governed fetch of the current claim's well-known file, the file from before T31 fetched the
+   *  same way only when the first answer is `absent` (the second answer then decides), and one dated verdict. */
   async #checkGroupDomain(trigger) {
     const cur = this.#identityCurrent("domain");
     if (!cur) return null;
@@ -2108,54 +2112,60 @@ export class InstanceSetup {
       detail = !slug ? "this store records no producing group, so there is no slug for the file to name"
                      : "the claim carries no instance address for the file to name";
     } else {
-      let g;
-      try { g = this.#governor().governorAdmit({ host: domain }); }
-      catch (e) { g = { admitted: false, reason: `the governor did not answer (${String(e && e.message || e).slice(0, 120)})` }; }
-      if (!g || !g.admitted) {
-        detail = `the per-host governor held ${domain} (${g && g.reason}); this says nothing about the domain`;
-      } else {
-        if (g.wait_ms) await this.#sleep(g.wait_ms);
-        let res = null;
-        try {
-          res = await this.#fetch(`https://${domain}${GROUP_WELL_KNOWN_PATH}`, { redirect: "manual",
-            headers: { "user-agent": civicosUserAgent(this.#env.VERSION, this.#env.INSTANCE_NAME, "group-domain") } });
-        } catch { res = null; }
-        if (!res) {
-          detail = "the fetch did not complete, and this plane did not record why";
-        } else {
-          status = res.status;
-          try { this.#governor().governorReport({ host: domain, status }); } catch { /* an unrecorded outcome is not a verdict */ }
-          if (status === 404 || status === 410 || (status >= 300 && status < 400)) {
-            verdict = "absent";
-            detail = status < 400 ? `the domain redirected (HTTP ${status}); the file is read on the claimed domain itself`
-                                  : `the domain serves no ${GROUP_WELL_KNOWN_PATH} (HTTP ${status})`;
-          } else if (status >= 200 && status < 300) {
-            const text = await boundedText(res, GROUP_WELL_KNOWN_MAX_BYTES);
-            let f = null;
-            try { f = JSON.parse(text); } catch { f = null; }
-            const isObject = !!f && typeof f === "object" && !Array.isArray(f);
-            const inst = isObject && typeof f.instance === "string" ? instanceAddress(f.instance) : null;
-            const grp = isObject && typeof f.group === "string" ? f.group.trim() : null;
-            if (inst === address && grp === slug) {
-              verdict = "verified";
-              detail = `the file names this instance (${address}) and its slug (${slug})`;
-            } else {
-              verdict = "mismatched";
-              detail = !isObject
-                ? "the file is not the JSON object this plane reads ({ instance, group })"
-                : `the file names instance ${JSON.stringify(inst ?? f.instance ?? null).slice(0, 120)} and group `
-                  + `${JSON.stringify(grp).slice(0, 60)}; this instance is ${address} and its slug is ${slug}`;
-            }
-          } else {
-            detail = `the domain answered HTTP ${status}, which is neither the file nor its absence`;
-          }
-        }
+      const first = await this.#readWellKnown(domain, GROUP_WELL_KNOWN_PATH, address, slug);
+      let answer = first;
+      if (first.verdict === "absent") {
+        const before = await this.#readWellKnown(domain, GROUP_WELL_KNOWN_PATH_BEFORE_T31, address, slug);
+        answer = { ...before, detail: `${first.detail}; read instead: ${before.detail}` };
       }
+      ({ verdict, status, detail } = answer);
     }
     const at = this.#iso();
     this.#sql.exec(`INSERT INTO group_domain_checks (domain, verdict, checked_at, trigger, status, detail)
                     VALUES (?, ?, ?, ?, ?, ?)`, domain, verdict, at, trigger, status, detail);
     return { domain, verdict, checked_at: at, trigger, status, detail };
+  }
+
+  /* R8: ONE governed read of one well-known file on the claimed domain (admit, then report the status), following no
+     redirect and reading at most 16 KiB, answered as `{verdict, status, detail}`. */
+  async #readWellKnown(domain, path, address, slug) {
+    let g;
+    try { g = this.#governor().governorAdmit({ host: domain }); }
+    catch (e) { g = { admitted: false, reason: `the governor did not answer (${String(e && e.message || e).slice(0, 120)})` }; }
+    if (!g || !g.admitted)
+      return { verdict: "undetermined", status: null,
+               detail: `the per-host governor held ${domain} (${g && g.reason}); this says nothing about the domain` };
+    if (g.wait_ms) await this.#sleep(g.wait_ms);
+    let res = null;
+    try {
+      res = await this.#fetch(`https://${domain}${path}`, { redirect: "manual",
+        headers: { "user-agent": civicsmithUserAgent(this.#env.VERSION, this.#env.INSTANCE_NAME, "group-domain") } });
+    } catch { res = null; }
+    if (!res)
+      return { verdict: "undetermined", status: null,
+               detail: `the fetch of ${path} did not complete, and this plane did not record why` };
+    const status = res.status;
+    try { this.#governor().governorReport({ host: domain, status }); } catch { /* an unrecorded outcome is not a verdict */ }
+    if (status === 404 || status === 410 || (status >= 300 && status < 400))
+      return { verdict: "absent", status,
+               detail: status < 400 ? `the domain redirected ${path} (HTTP ${status}); the file is read on the claimed domain itself`
+                                    : `the domain serves no ${path} (HTTP ${status})` };
+    if (!(status >= 200 && status < 300))
+      return { verdict: "undetermined", status,
+               detail: `the domain answered ${path} with HTTP ${status}, which is neither the file nor its absence` };
+    const text = await boundedText(res, GROUP_WELL_KNOWN_MAX_BYTES);
+    let f = null;
+    try { f = JSON.parse(text); } catch { f = null; }
+    const isObject = !!f && typeof f === "object" && !Array.isArray(f);
+    const inst = isObject && typeof f.instance === "string" ? instanceAddress(f.instance) : null;
+    const grp = isObject && typeof f.group === "string" ? f.group.trim() : null;
+    if (inst === address && grp === slug)
+      return { verdict: "verified", status, detail: `${path} names this instance (${address}) and its slug (${slug})` };
+    return { verdict: "mismatched", status,
+             detail: !isObject
+               ? `${path} is not the JSON object this plane reads ({ instance, group })`
+               : `${path} names instance ${JSON.stringify(inst ?? f.instance ?? null).slice(0, 120)} and group `
+                 + `${JSON.stringify(grp).slice(0, 60)}; this instance is ${address} and its slug is ${slug}` };
   }
 
   /** R9, the alarm consumer's two halves: the next re-check is due one interval after the current claim's latest

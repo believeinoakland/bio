@@ -23,7 +23,7 @@
  * on the client, deploy, verify a real run, then remove the old.
  */
 
-import { WIZARD_HTML, UPDATE_HTML, PAGE_CSS, publisherFooter, PROFILE_CHOICES } from "./ui.mjs";
+import { WIZARD_HTML, UPDATE_HTML, PAGE_CSS, PRODUCT, publisherFooter, PROFILE_CHOICES } from "./ui.mjs";
 import { RELEASE_SOURCE, RELEASE_VERSION } from "./release.mjs";
 import { ARMED_SIGNERS } from "./signers.mjs";
 /* One verifier, shared with the plane. The installer and the instance
@@ -124,7 +124,7 @@ async function selectRelease(emit) {
        install) rather than "not reachable". Only a repository that did not answer leaves no manifest. */
     if (!(e && (e.integrity || e.unsigned || e.signature))) man = null;
     const fallback = " The installer's own built-in release (" + RELEASE_VERSION
-      + ") installs instead, which is safe. This is worth mentioning to the publisher of CivicOS releases.";
+      + ") installs instead, which is safe. This is worth mentioning to the publisher of " + PRODUCT + " releases.";
     said = (
       e && e.integrity
         ? "The repository's copy did not pass its integrity check, so it was NOT used." + fallback
@@ -876,7 +876,7 @@ function progressShell(title, slug) {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">
 <title>${esc(title)}</title><style>${PAGE_CSS}</style></head><body><main>
-<p class="eyebrow">CivicOS &middot; installer</p>
+<p class="eyebrow">${PRODUCT} &middot; installer</p>
 <h1>${esc(title)}</h1>
 <p class="small">For the group <b class="mono" id="group">${esc(slug)}</b>. Leave this page open. This usually takes under a minute.</p>
 <div id="log" class="log"></div>
@@ -946,7 +946,7 @@ function instanceAiNotice(emit, mode, carried) {
 
 /* R32's refusal, before anything is created: what the account holds, by name, and the two ways on. */
 function oneCopyRefusal(emit, held) {
-  return emit.fail("Your Cloudflare account already holds a copy of CivicOS",
+  return emit.fail(`Your Cloudflare account already holds a copy of ${PRODUCT}`,
     `${ONE_COPY}: this account already holds ${held.join(", ")}, and a second copy installed beside them would share or `
     + "overwrite them. Nothing was created or changed, so there is nothing to clean up.",
     "To continue: install your group's copy into a Cloudflare account that holds no copy, or, if this account's copy is "
@@ -1005,7 +1005,7 @@ async function runInstall(emit, code, saved) {
   if (release.refused) {
     return emit.fail("This installer cannot say which limits your copy runs under",
       "Nothing was created, so there is nothing to clean up. " + release.refused,
-      "This is for the publisher of CivicOS releases to fix with a release that states them; try again after the next release.");
+      `This is for the publisher of ${PRODUCT} releases to fix with a release that states them; try again after the next release.`);
   }
   /* R32, the rest of the fleet: a member the chosen release names beyond those `fresh` looked for is looked for now,
      still before the plan probe creates anything. */
@@ -1169,7 +1169,7 @@ async function runInstall(emit, code, saved) {
   emit.done(successPanel(base, secrets, !!st, verdict));
 }
 
-const NO_KEY = "No one else holds a key to it, the publisher of CivicOS releases included.";
+const NO_KEY = `No one else holds a key to it, the publisher of ${PRODUCT} releases included.`;
 function successPanel(base, secrets, verified, verdict = null) {
   const lagging = !!(verdict && !verdict.confirmed);
   const head = verified && !lagging
@@ -1300,7 +1300,7 @@ async function runUpdate(emit, code, saved) {
   if (release.refused) {
     return emit.fail("This update cannot say which limits your copy runs under",
       "Your copy is still running the version it had before. Nothing about it changed. " + release.refused,
-      "This is for the publisher of CivicOS releases to fix with a release that states them; try again after the next release.");
+      `This is for the publisher of ${PRODUCT} releases to fix with a release that states them; try again after the next release.`);
   }
 
   /* What is it running now? Asked before the upload, so an update that changes
@@ -1483,15 +1483,15 @@ export default {
   },
 };
 
-/* R22: a refusal page names CivicOS, and the group by the name it chose when this browser's request carried one;
-   before a group has chosen a name (the 404, an unverifiable return) it speaks to "your group". */
+/* R22: a refusal page names Civicsmith (PRODUCT), and the group by the name it chose when this browser's request carried
+   one; before a group has chosen a name (the 404, an unverifiable return) it speaks to "your group". */
 function plainPage(head, what, detail, slug) {
   const group = typeof slug === "string" && slugOk(slug)
-    ? `For the group <b class="mono" id="group">${esc(slug)}</b>.` : "Setting up your group&#39;s copy of CivicOS.";
+    ? `For the group <b class="mono" id="group">${esc(slug)}</b>.` : `Setting up your group&#39;s copy of ${PRODUCT}.`;
   return `<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">
 <title>${esc(head)}</title><style>${PAGE_CSS}</style></head><body><main>
-<p class="eyebrow">CivicOS &middot; installer</p>
+<p class="eyebrow">${PRODUCT} &middot; installer</p>
 <h1>${esc(head)}</h1><p>${esc(what)}</p>
 ${detail ? `<p class="small mono">${esc(detail)}</p>` : ""}
 <p class="small">${group}</p>
