@@ -1,6 +1,6 @@
 # membership (T28)
 
-**Status** · session_014t8ory3KuXTmiZLiSDLmaB · depth 2 · WORKING · handled B1
+**Status** · session_014t8ory3KuXTmiZLiSDLmaB · depth 2 · COMPLETE · handled B1
 
 ## Entries applied
 
