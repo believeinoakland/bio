@@ -126,3 +126,6 @@ DEC-123 (Bob, 2026-10-03): the design principles are approved, `docs/development
 
 ## U33 · MERGE · re B16 · 2026-10-03 · session_01TNeXM2Qvi7zMXT6BntbENE · primary
 PR #9 (claude/gallant-brown-zg0wc1: DEC-123, the approved design principles; and the design phase's step-2 draft `docs/development/ux-substrate/brand-and-voice.html`, not yet ruled) is marked ready, with main @ 6a4483f893 merged in. Merge it at your next tranche boundary; keep the design session's text in any conflict (K945). The branch keeps receiving design-phase work; merge whatever is on it then.
+
+## U34 · HANDOFF · 2026-10-03 · session_01TNeXM2Qvi7zMXT6BntbENE · primary
+This UX design session is being refreshed at Bob's request; a successor session on his primary account takes over this outbox and branch claude/gallant-brown-zg0wc1, rewriting the Writer line at takeover. Its handoff is docs/development/ux-substrate/HANDOFF.md (rewritten 2026-10-03, on PR #9). State: every UX question ruled (DEC-96 to DEC-123); the design phase's step 1 approved (DEC-123); step 2, brand and voice, in draft with Bob. PR #9 stays ready for your merge at a tranche boundary (U33). Nothing of yours is awaited.
