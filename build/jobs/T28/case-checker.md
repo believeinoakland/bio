@@ -25,3 +25,34 @@ Progress, pushed at dbde0e4e07: checkCaseFile R1–R12, R16, R18, readCaseFile R
 ## J6 · REPORT
 
 B10 done: tranche/T28 @ 9ce0fedbcd merged in and the module run against the real code. 23 of 26 tests pass; the 3 that fail are R13's and all wait on one thing: program.mjs is regenerated after ratification's import fix is on the tranche, and it is not yet (the tranche's ratification/checks.mjs still imports strength/index.mjs and publication/index.mjs). Verified ahead, not committed: with job/T28/ratification's checks.mjs in place the build is 351,526 bytes from 43 inputs (down from 3.3 MB, 196) and all 26 tests pass. format, architecture, coverage (19 of 19) and ownership (with my modules.json paths made locally) pass. As B9 says, I regenerate once when ratification merges, then post COMPLETE; ring me then.
+
+## J7 · COMPLETE
+
+COMPLETE at 4012caa2c6 on job/T28/case-checker (tranche/T28 @ 5133bebd83 merged in).
+
+Entries applied: L8 case-checker, a new module (N520, N522; K1256, K1268): R1–R19 whole.
+- paths ["bio-plane/src/case-checker/"], tests ["bio-plane/test/m/case-checker/"] (for your modules.json edit; uses as now, with promotion).
+- check.mjs: checkCaseFile (R1–R12, R16, R18) and readCaseFile (R19), built on case-grammar's exports (caseFileManifestCheck, caseFileEntryOf, casePartDigest, CASE_FILE_MANIFEST_PATH, methodOf, materialsOf, acceptedWorkOf, standingOf, completeEditionOf, gradingFactsOf, passagesOf), ratification's checkCaseDocument, strength's recomputePair, content's contentIdFor/extentRelation and signatures' verifySshsig. The manifest is unsigned, so grades are recomputed from the signed document's grading_facts:/passages: blocks, and carried facts, passages, material bytes (materials: sha/text_sha) and member bytes (version_sha) are each checked against what the signed document states.
+- zip.mjs: the checker's own stored-ZIP reader (CRC and length checked), so the program needs nothing else.
+- main.mjs + build-program.mjs -> program.mjs (R13): one ES module, 351,526 bytes from 43 inputs, imports only node:fs/promises, node:path, node:url; first line names the SHA-256 of the rest. Manifest §14 row: owner case-checker; regenerate with `node bio-plane/src/case-checker/build-program.mjs` from the repository root (any cwd works); verified by program.test.mjs (byte identity and freshness).
+- spec.mjs (R14): the readable specification of bio-case-file/1.
+- index.mjs (R15): registerCaseCheckerPublicReads(host, deps) registers casechecker and casefilespec with public-read R18, once per host; an unknown version is answered (held: false, versions), not refused, so the module raises no refusal and exports no *_CHECKS family (control-plane R22's red 6 needs no case-checker family). plane composes the registration at L11.
+
+Catalogue rows added: none (no "awaiting stamp" rows).
+
+Deferred: none of my module. Notes:
+- R1's answer adds rests_on_another_group and its statement (R18) and integrity.documents (R9's named bytes) beside R1's listed keys.
+- The test of a case file built by public-read R23 itself (a suggestion) is not written: public-read's builder is store-bound; my fixture packs with public-read's serialiser and case-grammar's paths and digests, as R23 states them. case-import's tests can add it end to end.
+- The capture account statement is spelled in check.mjs and the specification (B5); N530 moves it.
+
+Found in other modules: ratification/checks.mjs imported store-bound code (J4; fixed by RATIFICATION #17, K1325). Nothing else open.
+
+Tests and checks (tranche/T28 @ 5133bebd83 merged):
+- node --test bio-plane/test/m/case-checker/ : tests 26, pass 26, fail 0
+- format: 95 modules, 94 requirements files; 0 failures
+- architecture case-checker: 11 product files, 44 relative imports; 0 failures
+- coverage case-checker: 19 of 19 live requirement ids named by a test; 0 failures
+- ownership case-checker tranche/T28 (with my modules.json paths made locally): 12 files; 0 failures
+No layer tests are named in build/manifest.md; no module uses case-checker yet.
+
+Size (session_01CyxbPWKAwn7Y32K6Dp5yZP): test runs 27, module lines 1001 (excluding the generated program.mjs)
