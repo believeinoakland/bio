@@ -31,3 +31,7 @@ Not affected: accepted-work's C-21.4/.5 and case-import's C-130 are added at the
 - Size: module 3,649 lines by its paths (code); tests 5,959.
 
 Size (session_01NE62TdrMXNdMYfJdn16std): test runs 9, module lines 3649
+
+## J2 · COMPLETE
+
+Complete; record on job/T28/control-plane. R49 routed (case-import's eight ops by the general forward, by/viewer stamped; casechecker and casefilespec by public-read's door read; importedcases and importedcase in PROJECT_NAMING_READS_NOT; promises enveloped settled). R43: accepted-work's and case-import's families at their places; docket unmoved per B2. C-92.4/.5/.10 re-pinned. Four r49 arms are red until op-declarations' R14 specs merge (all pass with them applied locally); totality stays accepted red 4 until affordances. Checks: format, architecture, coverage (33/33), ownership: 0 failures.
