@@ -3428,8 +3428,9 @@ export class QueueProducers {
    *  - one FINDING per verified entry seen, keyed `FINDING::followed-case-entry::<import>#<seq>`, naming its kind,
    *    edition, date and `key_listed`, and quoting a move's `what_changed` or `reason`;
    *  - one FINDING per refused entry, keyed `FINDING::cited-docket-entry-refused::<import>#<seq>`, naming the check
-   *    failed (refused copies of one `seq` are one item, naming every check; a refused entry with no readable `seq` is
-   *    keyed `<import>#unnumbered`);
+   *    failed (refused copies of one `seq` are one item, naming every check, aged from the first copy read; a refused
+   *    entry with no readable `seq` is keyed `<import>#unnumbered`);
+   *  - each finding ages from the instant this copy read its entry (`seen_at`; N546);
    *  - one CONDITION per watch in force whose latest read is unreadable, keyed `CONDITION::cited-docket-unreadable::<import>`,
    *    its detail opening with DOCKET_UNREADABLE's sentence (docket R15) and giving the reason and the instant, aged from
    *    it; it leaves when a read succeeds or the watch ends.
@@ -3477,12 +3478,12 @@ export class QueueProducers {
                  key_listed: typeof e.key_listed === "boolean" ? e.key_listed : null, move: e.move === true,
                  ...(e.kind === "edition" ? { what_changed: e.what_changed ?? null } : {}),
                  ...(e.kind === "withdrawal" ? { reason: e.reason ?? null } : {}),
-                 taken_back: e.taken_back ?? null, set_by: e.set_by ?? null, recipients_rule: rec.rule, ...complete,
+                 taken_back: e.taken_back ?? null, seen_at: e.seen_at ?? null, set_by: e.set_by ?? null,
+                 recipients_rule: rec.rule, ...complete,
                  detail: "a verified entry of a followed case's docket is case-import's (its R18, R20), read here and "
                        + "never stored. It goes to the member who set the watch, else the administrators, and to nobody "
                        + "else; only a new edition or a withdrawal is a cause of re-evaluation (K1339, K1366)." },
-        age: { state: "undetermined", reason: "no_seen_instant",
-               detail: "the entry carries the publisher's date but not the instant this copy read it" },
+        age: QueueProducers.#seenAge(e.seen_at, now),
         assignee: null,
         assignee_role: null,
         recipients: [...rec.members],
@@ -3504,6 +3505,12 @@ export class QueueProducers {
           held.basis.failed.push(failed);
           held.detail = QueueProducers.#refusedWords(e, seq, held.basis.failed);
         }
+        /* one item for every refused copy of this entry: it ages from the first of them this copy read */
+        const age = QueueProducers.#seenAge(e.seen_at, now);
+        if (age.state === "determined" && (held.age.state !== "determined" || Date.parse(age.since) < Date.parse(held.age.since))) {
+          held.age = age;
+          held.basis.seen_at = age.since;
+        }
         continue;
       }
       const it = {
@@ -3515,13 +3522,13 @@ export class QueueProducers {
         summary: `an entry on the publisher's docket for ${whose(e)}, which you follow, failed this copy's checks`,
         detail: QueueProducers.#refusedWords(e, seq, [failed]),
         basis: { source: "case-import.watchItems", import: e.import, group: e.group ?? null, case: e.case ?? null, seq,
-                 failed: [failed], entry_detail: e.detail ?? null, set_by: e.set_by ?? null, recipients_rule: rec.rule,
+                 failed: [failed], entry_detail: e.detail ?? null, seen_at: e.seen_at ?? null, set_by: e.set_by ?? null,
+                 recipients_rule: rec.rule,
                  ...complete,
                  detail: "a refused entry is case-import's (its R18, R20): an entry of the followed case's docket that "
                        + "failed a check, recorded and never a move. It goes to the member who set the watch, else the "
                        + "administrators, and to nobody else." },
-        age: { state: "undetermined", reason: "no_seen_instant",
-               detail: "the entry carries no instant this copy read it at" },
+        age: QueueProducers.#seenAge(e.seen_at, now),
         assignee: null,
         assignee_role: null,
         recipients: [...rec.members],
@@ -3566,6 +3573,16 @@ export class QueueProducers {
       out.push(it);
     }
     return out;
+  }
+
+  /** R35 (N546): an entry's item ages from the instant this copy read it, case-import R20's `seen_at` (the docket read
+   *  that first recorded it), never the publisher's date nor this read's clock; undetermined when none can be read. */
+  static #seenAge(seenAt, now) {
+    const ms = typeof seenAt === "string" && seenAt ? Date.parse(seenAt) : NaN;
+    return Number.isFinite(ms)
+      ? { state: "determined", since: seenAt, ms: Math.max(0, now - ms) }
+      : { state: "undetermined", reason: "no_seen_instant",
+          detail: "the entry carries no instant this copy read it at that this producer can read" };
   }
 
   /** R35: the refused entry's sentence, naming every check its copies failed. */
