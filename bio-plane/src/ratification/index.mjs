@@ -917,7 +917,7 @@ export class Ratification {
         }),
         sigArmored, attestorKey, attestorMember: attestorMember ?? null, gateVersion, deliveredBy: deliveredBy ?? null });
       if (!committed || !committed.ok) return committed || { ok: false, reason: "CASE_PUBLISH_FAILED", caseId: id, edition: ed };
-      const evidenceMaterials = evidenceShas(committed.materials);   /* R39: publication R57's `held: "evidence"` */
+      const evidenceMaterials = evidenceShas(committed.materials ?? this.publication.heldMaterialsOf?.(id, ed));   /* R39 */
       if (committed.existed) return { ok: true, existed: true, caseId: id, edition: ed, evidenceMaterials };
       /* R3, publication R5: a ratified newer edition discharges the case's outstanding revision flags, stamped with
          who ratified it and when; never deleted (set-but-never-clear). */
