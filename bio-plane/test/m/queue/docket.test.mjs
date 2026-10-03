@@ -156,3 +156,23 @@ test("R8 (N520): docket is among the providers queue hands queue-producers, and 
   assert.equal(w.q.proposeDispose({ key: ITEMS.core.id, to: "deferred", reason: "r", decidedBy: "alice",
                                     viewer: "member:alice", identity: "member:alice" }).reason, "CLASS_NOT_DISPOSED");
 });
+
+test("R1, R8, R11, R12 (N518): a fake actions.holdsReleased reaches the real queue-producers R29, whose litigation-hold-released item passes the mint as a FINDING; answering none, no item", () => {
+  const asked = [];
+  const releases = (items) => ({ holdsReleased: (a) => { asked.push(a.viewer); return { ok: true, items, limit: 500, truncated: false, cursor: null }; } });
+  const release = { action: "ACT-1", ord: 2, seq: 4, released_by: "bob", released_at: iso(NOW - 5000), reason: "the matter settled",
+                    placers: ["carol"], restarted: [] };
+  const w = world({ actions: releases([release]) });
+  w.member("alice", { role: "admin" }); w.member("bob"); w.member("carol"); w.bundle("ACT-1", "action");
+  const f = w.feed("alice");
+  assert.equal(f.ok, true, JSON.stringify(f).slice(0, 300));
+  const it = byId(f)["FINDING::litigation-hold-released::ACT-1::2::4"];
+  assert.ok(it, "the fake's release reached R29's item and the mint accepted it");
+  assert.deepEqual([it.class, it.kind, it.disposition.scope], ["FINDING", "litigation-hold-released", "project"]);
+  assert.ok(byId(w.feed("carol"))["FINDING::litigation-hold-released::ACT-1::2::4"], "the placer is told too");
+  assert.ok(asked.includes("member:alice"));
+  // negative control: answering no release, the same feed carries none
+  const none = world({ actions: releases([]) });
+  none.member("alice", { role: "admin" }); none.bundle("ACT-1", "action");
+  assert.equal(none.feed("alice").items.filter((i) => i.kind === "litigation-hold-released").length, 0);
+});

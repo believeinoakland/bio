@@ -141,7 +141,7 @@ export function defaultFakes() {
     /* actions R54 (queue-producers R19): no legal pressure mark awaits a hold until a test says otherwise. */
     actions: { holdsDue: () => ({ ok: true, items: [], truncated: false, cursor: null }),
                /* actions R59 (queue-producers R29): no hold released until a test says otherwise. */
-               holdsReleased: () => ({ ok: true, items: [], truncated: false, cursor: null }) },
+               holdsReleased: () => ({ ok: true, items: [], limit: 500, truncated: false, cursor: null }) },
     /* docket R9 (queue-producers R30): no core item due on any case until a test says otherwise. */
     docket: { coreDue: () => ({ ok: true, items: [], count: 0, wrote: false }) },
     /* filing-templates R20, local-facts R4 (queue-producers R20, R21; K921): no review asked and no fact due until a test

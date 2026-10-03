@@ -1,6 +1,6 @@
 # queue (T27)
 
-**Status** · session_01F38bSR7bu33Tfs9jy4JEQS · depth 2 · COMPLETE · handled B1
+**Status** · session_01F38bSR7bu33Tfs9jy4JEQS · depth 2 · COMPLETE · handled B3
 
 ## Completion
 
@@ -45,8 +45,23 @@
 - Accepted red 2: no catalogue row added or changed (no check row; the kinds are vocabulary), so no `awaiting stamp` row to list.
 - Merge order (L11): affordances and queue-producers merge before queue. This branch builds without either, and its tests pass before and after queue-producers' R29–R31 land.
 
-Size (session_01F38bSR7bu33Tfs9jy4JEQS): test runs 9, module lines 5936
+
+**B2, B3 (CHANGE; K1288–K1290).** Merged `tranche/T27` @ `4545026b15`, which includes the affordances and queue-producers merges. B2's three fakes were already in the test world. `holdsReleased`'s fake now carries `limit: 500`, as actions answers. New test: a fake `actions.holdsReleased` reaches the real queue-producers R29. Its `litigation-hold-released` item passes the mint as a FINDING, goes to an administrator and to the placer, and with no release there is no item. Re-run on the merged tree:
+- `test/m/queue/`: 105 pass, 0 fail.
+- `conclude-project`: 75 pass, 0 fail.
+- Whole `test/m`: tests 5437, pass 5425, fail 1 (red 4, control-plane R22 `CHECK_FAMILIES`; red 5 cleared with affordances' merge), todo 11.
+- Checks:
+  - `format`: 0 failures.
+  - `architecture queue`: 25 product files, 68 relative imports, 0 failures.
+  - `coverage queue`: 40 of 40 named, 0 failures.
+  - `ownership queue tranche/T27`: 8 files changed, 0 failures.
+
+Size (session_01F38bSR7bu33Tfs9jy4JEQS): test runs 13, module lines 5956
 
 ## J1 · COMPLETE
 
 COMPLETE. N518 and N520 applied on job/T27/queue (merged tranche/T27 @ 4d283665f9). R1: docket-core-due (OBLIGATION), edition-withdrawn, edition-contested and litigation-hold-released (FINDINGs), each with its sentence; litigation-hold's sentence names its release (op=actionholdrelease). R12: the hold's detail names actionholdrelease as the other answer (actionhold now refuses a release). R50: docket-core-due instead [docketprepare, docketdecline] (the R28 bridge answers the same); the edition kinds take R12's project-scoped disposition with acts [reevaluationrecord]. PRODUCER_DEPS gains docket (queue-producers R30). Fixed in-module: R28's bridge gave contradiction-duty(-unseen) kind keys taskresolve; now R46's doors for a duty not yet taken up. Test world defaults gain holdsReleased, docketDependents, coreDue, so the suites stay green once queue-producers' R29-R31 land. queue 104/104 (new docket.test.mjs; hand-armed negative control fails 4); conclude-project 75/0; whole test/m 5407 pass, 2 fail (reds 4 and 5 only). Checks format/architecture/coverage (40/40)/ownership: 0 failures. Red 2: no catalogue row added. Deferred: R28 cannot class a duty's published id OBLIGATION::contradiction::<c> (its second segment is not a kind), which needs a wording change. REPORT: plane bundle stale (queuestate.mjs, queue/index.mjs; nothing regenerated); queue R1 lists litigation-hold after the FINDING list with no class word, though the code, R12 and queue-producers R19 make it an OBLIGATION; suggest moving it to R1's OBLIGATION list. Details in the record. Please merge job/T27/queue after affordances and queue-producers.
+
+## J2 · COMPLETE
+
+COMPLETE (re B2, B3). Merged tranche/T27 @ 4545026b15 (affordances, queue-producers in). B2's three fakes were already in world.mjs; holdsReleased now also answers limit 500. New end-to-end test: a fake actions.holdsReleased reaches the real queue-producers R29 and its litigation-hold-released item passes the mint (admin and placer told; none when no release). queue 105/105; conclude-project 75/0; whole test/m 5425 pass, 1 fail (red 4 only; red 5 cleared). Checks: 0 failures each, coverage 40/40. Everything else stands as in J1. Please merge job/T27/queue.
