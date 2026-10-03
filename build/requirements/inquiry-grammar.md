@@ -30,7 +30,8 @@ Terms. A **finding** is `record-grammar`'s (its R11): `{check, severity, message
 **The imported finding reference: IMPORTED_FINDING_RE, importedFindingRef(import, finding), parseImportedFindingRef(s)** (DEC-112 (6); DEC-96 items 1, 4; N522) Pure; never throws.
 - **R11** **The imported finding reference.**
   - `IMPORTED_FINDING_RE` matches exactly `imported:<import>/<finding>`. `<import>` is `case-import`'s import id (64 lowercase hex). `<finding>` is the finding's id as the source case states it (`BUNDLE_ID_RE`). The two never collide with a local id, which `BUNDLE_ID_RE` alone matches.
-  - `importedFindingRef(import, finding)` spells it. `parseImportedFindingRef(s)` answers `{import, finding}`, or null.
+  - `importedFindingRef(import, finding)` spells it, or answers null when the parts would not spell a ref this pattern matches. `parseImportedFindingRef(s)` answers `{import, finding}`, or null.
+  - `importedLegFindings(label, leg, findings, checkId = "C-21.3")`: the leg arm below, answering whether the leg's target is a ref, pushing one finding per departure into `findings` (K1304). For such a leg the grade-vocabulary, axis and source, hunch, testimony, earned, inherited and extent arms stay silent; each field they judge is already one departure here.
 
   **The leg on it.** A leg whose `target` is such a ref:
   - names a positive integer `target_edition`;
@@ -38,13 +39,13 @@ Terms. A **finding** is `record-grammar`'s (its R11): `{check, severity, message
   - carries no `content_id`, extent or `extent_capture`;
   - is not listed in `references[]`, so C-6.3 does not ask it, and a `references[]` entry naming a ref is refused.
 
-  Any departure is one `C-21.3` error, `IMPORTED_LEG_MALFORMED`, naming the leg and the field. Whether an acceptance is in force is not asked here (`accepted-work` R3, R4). The arm is pure and never throws. `checkInquiryBasis` runs it in place of R4's target arm for such a leg; every other arm of R4 (lead and theme first, role, grounds) is unchanged. (DEC-112 (6); DEC-96 items 1, 4; K1273) *(not yet met: T28)*
+  Any departure is one `C-21.3` error, `IMPORTED_LEG_MALFORMED`, naming the leg and the field. Whether an acceptance is in force is not asked here (`accepted-work` R3, R4). The arm is pure and never throws. `checkInquiryBasis` runs it in place of R4's target arm for such a leg; every other arm of R4 (lead and theme first, role, grounds) is unchanged. (DEC-112 (6); DEC-96 items 1, 4; K1273)
 
 **The registration** (rule 2; record-core R67; record-grammar R28, R40)
 - **R6** At start, the module registers through record-core's grammar seam (`registerGrammar`, record-core R67) the arms of record-grammar R28's three slots it takes: `checkSupersession` (`C-6.1`: `supersedesEdgeFindings` then `divisionDisclosureFindings` over `ctx.fm`, for every document, at the end of the references arm), `checkRecheckCoverage` (`C-15.1`, R3) and `checkInquiryExtension` (`C-2.8`, R1, R2, R4), each slot claimed whole, in one registration (record-core R67, K766). Today the catalogue's C-2.8 arm runs `basisVersionFindings` inside itself, for an inquiry only, after the entry, division and subject-entity findings (R1, R2) and before the grounds and leg findings (R4); so the arm offers a sub-slot at exactly that place, and `basis-versions`' grammar, registered into the C-2.8 slot after this module's (its R43), runs there, never after the arm (P1). From then the catalogue's `LEGACY_GRAMMARS` fills neither `C-6.1` nor `C-15.1`, and the catalogue's own C-2.8 arm is gone. For every bundle, `checkBundle` called with `record.grammars()` answers the findings it answered before the move, identical in content and in order.
 
 **The rows: INQUIRY_GRAMMAR_CHECKS** (DEC-49; K6)
-- **R7** The module holds, each `{check, where, translation}` with its number and translation unchanged and its `where` naming the site that now raises it: `NOT_INQUIRIES` (C-33.13), `SELF_BASIS` (C-33.22), `BASIS_CYCLE` (C-33.23), `MACHINE_CANNOT_DIVIDE` (C-32.7), `MACHINE_CANNOT_GROUND` (C-32.8), and `LEAD_NOT_EVIDENCE` (C-54.1, R5), and a new row, `IMPORTED_LEG_MALFORMED` (C-21.3, R11; N522), its translation BOB's draft: "A leg on another group's finding names that finding and one edition, and nothing else: its grades are that edition's. Correct the leg. Nothing was written." `inquiry` mints the first five in its acts (its R20, R11, R23, R27) and reads them from here. A changed `where` was stamped by 1.50.0. *(not yet met: T28)*
+- **R7** The module holds, each `{check, where, translation}` with its number and translation unchanged and its `where` naming the site that now raises it: `NOT_INQUIRIES` (C-33.13), `SELF_BASIS` (C-33.22), `BASIS_CYCLE` (C-33.23), `MACHINE_CANNOT_DIVIDE` (C-32.7), `MACHINE_CANNOT_GROUND` (C-32.8), and `LEAD_NOT_EVIDENCE` (C-54.1, R5), and a new row, `IMPORTED_LEG_MALFORMED` (C-21.3, R11; N522), its translation BOB's draft: "A leg on another group's finding names that finding and one edition, and nothing else: its grades are that edition's. Correct the leg. Nothing was written." `inquiry` mints the first five in its acts (its R20, R11, R23, R27) and reads them from here. A changed `where` was stamped by 1.50.0.
 
 ## Private
 
@@ -60,7 +61,7 @@ Terms. A **finding** is `record-grammar`'s (its R11): `{check, severity, message
 
 ### Invariants
 
-- **R8** (was `inquiry` R38's share) Each check moves here as an invariant with its test (K6): C-2.8 and C-21.2 as the grammar uses them, C-6.1's supersession and division arms, C-6.3, C-15.1, C-54.1, and the rows C-33.13, C-33.22, C-33.23, C-32.7, C-32.8, and C-21.3 (R11; N522). Promotion stamps them. *(not yet met: T28)*
+- **R8** (was `inquiry` R38's share) Each check moves here as an invariant with its test (K6): C-2.8 and C-21.2 as the grammar uses them, C-6.1's supersession and division arms, C-6.3, C-15.1, C-54.1, and the rows C-33.13, C-33.22, C-33.23, C-32.7, C-32.8, and C-21.3 (R11; N522). Promotion stamps them.
 - **R9** Pure: apart from R6's registration, nothing here reads or writes the record, the clock or the network; the same inputs give the same findings.
 - **R10** No place is named in this module's behaviour or outward text.
 
