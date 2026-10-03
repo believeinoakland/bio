@@ -31,3 +31,39 @@ Adds to J1–J2 (replaces neither). **R48 and when a level is chosen.** An attes
 Progress, and what I wait on. Built and pushed on `job/T28/case-authoring` (tested against CASE-GRAMMAR #5's branch in a scratch worktree, 114/114): R43 (`method:`), R44 (C-120.8; chain walk in `materials.mjs`), R45 and R48 (materials and attestations rows through case-grammar's `materialBlockLines`, anonymous attesting members unnamed per B5), R46/R47 (off-the-record = a "Withheld" `sources:` row, K1316; never refused), R49, R50–R52 (C-120.10–.13; `accepted.mjs`), R53 and R34's additions, the `/6` body sections, and R54's rows (assembled, not yet written). Rows C-120.8, C-120.10–C-120.13 are new, awaiting stamp. Measure now: 3,999 lines.
 
 **Waiting on merges, nothing from Bob:** (1) CASE-GRAMMAR #5: R17's `gradingFactsLines`, `passagesLines` and `extractedTextOf` (not on its branch yet); my branch imports case-grammar's `/6` writers, so its tests pass only once case-grammar merges. (2) PUBLICATION #16: R60's `attributionStatements` over capture SHA-256s (K1316's capture rows in the attribution section) and `unnamedSourceStatement` re-worded to "Withheld". (3) CASE-IMPORT #1: its factory, to replace my fixture's stand-in at its R4/R9/R16 interface and my `caseImport` getter. Please send a CHANGE when those are on `tranche/T28`; I then merge, finish R54, K1316's attribution rows and the case-import wiring, and complete.
+
+## J5 · COMPLETE
+
+**Completion record** (job/T28/case-authoring @ bfb9f8e905, tranche/T28 @ 9ce0fedbcd merged).
+
+**Entries applied** (N519, N520, N522; K1305, K1315–K1317, K1320, K1322):
+- R14: `bio-case-document/6` through case-grammar's writers: `method:`, `materials:`, `material_attestations:`, `accepted_work:`, `accepted_work_flags:`, `grading_facts:`, `passages:`; body sections "How This Case Was Graded And Checked", "What This Case Carries", "Another Group's Work This Case Rests On"; a member's flag sentence in its block.
+- R43: `method:` with strength's `GRADING_METHOD_VERSION` and promotion's `CATALOG_VERSION`.
+- R44 (C-120.8), R46: each member's chain walked through inquiry legs to strength's `DEPTH_BOUND`, stopping at a ref leg (R50), as the publisher sees the record. Material is held whole when its file row exists and its extracted text (`case-grammar.extractedTextOf` over `extraction.unitsOf`) is whole with no unit cut. Supporting-only material is listed `included: false`. In `materials.mjs`.
+- R45, R47, R48, R49: material and attestation rows (member, co_attestation, project register row, group row signed `case`). Off-the-record = a `sources:` row `sourceRowWithheld` reads (K1316). Its attesting member is unnamed (no `by` or signature, account text kept) unless they choose `cover` or `name`. The attribution section carries the capture's row even with no observation, and publication R60's choice re-authors the row (tested end to end). A named member's account states level `name`, so case-grammar's writer keeps its handle and signature. Sources are now read over every material reached, so a deep off-the-record capture is never named. A knock address is never written as an origin.
+- R51 (C-120.10), R52 (C-120.11–.13), R53: `accepted.mjs`, plus `#acceptedWorkJudged` and `#flagsJudged`. `target_edition` is read from `basis[ord]` (K1305 (2)). `checked` stays inside the group; the flagging member is not named.
+- R34: the blockers gain R44, R51 and R52. Step one gains `REPUBLISH_SENTENCE`; step two gains `accepted_work`; step three gains the flags (R53) and the "Withheld" sources.
+- R37: "Withheld" is publication's `unnamedSourceStatement`, the one spelling (K1315 (8)).
+- R54: `grading_facts:` from `strength.gradingFacts({inquiry, levels: null, viewer})` for each finding reached, and `passages:` with `chain` and `quoted` (the extracted unit at the content row's extent). `recomputePair` over the signed facts answers `strengthOf`'s pair (tested).
+- R29: rows C-120.8 and C-120.10–C-120.13 added, with the requirements' translations.
+
+**Catalogue rows awaiting stamp (accepted red 2):** C-120.8 `RELIED_ON_NOT_PRESENTABLE`, C-120.10 `ACCEPTED_WORK_NOT_IN_FORCE`, C-120.11 `FLAG_NOT_DISCLOSED`, C-120.12 `FLAGS_UNDETERMINED`, C-120.13 `FLAG_DISCLOSURE_NOT_STANDING`.
+
+**Deferred, and why:**
+- Wiring `case-import`'s factory. `bio-plane/src/case-import/` is not on tranche/T28 (CASE-IMPORT #1 is waiting on you). Until it is composed, `caseImport` comes from the composition (`deps.caseImport`). With none, every read of it fails closed: a ref leg is C-120.10 and its flags C-120.12. The tests use a fixture stand-in at case-import's R4/R9/R16 interface, registered with accepted-work through `strength.acceptedWork`. When case-import merges, a CHANGE lets me add `caseImportOf(host)` as the default and run the R51–R53 tests against it.
+
+**Found in other modules (for BOB):**
+- The suites outside my paths that import case-authoring show 33 failures. They are identical, test for test, on tranche/T28 itself without my branch: ratification's `converted-*` caseratify arms, public-read's R3/R19 `/5`-shaped conversions, affordances' R19, and others. None is from this job. They look like `/6`-only commit (publication R58) fallout awaiting RATIFICATION #17 and the public-read follow-ups.
+- I write no generated artifact.
+
+**Size (P6, K617, K1315 (11)):** 4,007 lines, past the ~4,000 mark (3,426 at the START). By file: `index.mjs` about 2,560, `document.mjs` about 810, `checks.mjs` 230, `materials.mjs` 125, `accepted.mjs` 85, `searched.mjs` 149, `schema.mjs` 61. The disclosures seam is ready for N529's split: `materials.mjs` and `accepted.mjs` are whole files; `#materialsJudged`, `#acceptedWorkJudged`, `#flagsJudged`, `#findingFacts` and `#withheld` in `index.mjs`; the carries and accepted body sections in `document.mjs`.
+
+**Tests and checks:**
+- `node --test bio-plane/test/m/case-authoring/`: tests 115, pass 115, fail 0. New suites `rests.test.mjs` and `carries.test.mjs`; R29's, R14's and R17's tests updated.
+- No layer tests are named in `build/manifest.md`.
+- `checks/format.mjs`: 95 modules, 94 requirements files; 0 failures.
+- `checks/architecture.mjs case-authoring`: 22 product files, 112 relative imports; 0 failures.
+- `checks/coverage.mjs case-authoring`: 54 of 54 live requirement ids named by a test; 0 failures.
+- `checks/ownership.mjs case-authoring tranche/T28`: 13 files changed; 0 failures.
+
+Size (session_01HnTijf8F1LJnr1J6wARkTF): test runs 31, module lines 4007
