@@ -125,11 +125,11 @@ export function caseFile({ group = SOURCE, case: caseId = CASE, edition = 1, len
     ...documents.map((d) => ({ path: `documents/${d.name}`, kind: "document", bytes: d.bytes })),
   ];
   const groups = split ? [files.slice(0, 2), ...files.slice(2).map((f) => [f])] : [files];
-  /* `case-grammar` R13: a part's SHA-256 is over the canonical JSON of its file rows `[{path, sha256, bytes}]`, its bytes
-     their sum (`partFingerprint`) */
-  const rowsOf = (g) => g.map((f) => ({ path: f.path, sha256: sha(f.bytes), bytes: f.bytes.length }));
+  /* `case-grammar` R13 (K1318): a part's SHA-256 is over the lines `<path> <sha256> <bytes>\n` of its files in path
+     order, its bytes their sum (`casePartDigest`) */
+  const digestOf = (g) => sha([...g].sort((a, b) => (a.path < b.path ? -1 : 1)).map((f) => `${f.path} ${sha(f.bytes)} ${f.bytes.length}\n`).join(""));
   const manifest = { format: "bio-case-file/1", group, case: caseId, edition, case_document_sha: sha(files[0].bytes),
-                     keys: [], parts: groups.map((g, index) => ({ index, sha256: sha(canonicalJson(rowsOf(g))),
+                     keys: [], parts: groups.map((g, index) => ({ index, sha256: digestOf(g),
                                                                   bytes: g.reduce((n, f) => n + f.bytes.length, 0) })),
                      files: groups.flatMap((g, part) => g.map((f) => ({ path: f.path, sha256: sha(f.bytes), bytes: f.bytes.length, part, kind: f.kind }))),
                      ...manifestExtra };
