@@ -108,3 +108,24 @@ Re-run after merging tranche/T28 @ eef24a21c7, on this branch with `publication`
 Everything else stands as in J4.
 
 Size (session_0181u3c6mH6hCT6JNt1c6phB): test runs 20, module lines 2890
+
+## J6 · COMPLETE
+
+B7: tranche/T28 is merged into this branch (publication K1322 and docket K1323), and everything was re-run against the real code with no change needed.
+
+| what | result |
+|---|---|
+| public-read | 105/0 |
+| network-notices | 63/0 |
+| filings | 60/0 |
+| plane | 65/0 |
+| ratification | 159/40, the same failures by name with and without this job's changes (J3: `publication` R58, ratification's own L8 job) |
+| control-plane | 137/2 (accepted red 6) |
+| format | 0 failures |
+| architecture | 0 failures |
+| coverage | 24 of 24 live ids named; 0 failures |
+| ownership | 16 files; 0 failures |
+
+Everything else stands as in J4 and J5.
+
+Size (session_0181u3c6mH6hCT6JNt1c6phB): test runs 22, module lines 2890
