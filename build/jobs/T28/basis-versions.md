@@ -13,3 +13,7 @@ R3 (N522), my readings; I am building on them now and need only the export names
 5. **C-25.16.** A ref leg is not looked up in `bundles` (it is not a bundle); its existence is accepted-work's (C-21.4).
 6. **Writers.** `versionAsWritten` and `appendVersion`/`narrow` carry `target_edition` through and write no `extent_kind` on a ref leg (R11 forbids an extent). `narrow` on a ref leg answers `NARROW_NO_PART` (no content row).
 7. **Overlap check.** Does accepted-work's R4 step also walk `basis_version_legs`? My reading: no, it asks `basis[]` only, and the versions are mine (R3). If it does both, one of us drops it.
+
+## J2 · REPORT
+
+control-plane (not mine; found running my users' tests after merging tranche/T28 with accepted-work in): `test/m/control-plane/families.test.mjs` "R22 (K585 (1)): CHECK_FAMILIES is total" fails 138/1: `bio-plane/src/accepted-work/checks.mjs ACCEPTED_WORK_CHECKS` (C-21.4, C-21.5) is exported by a module of the plane and not reached by control-plane's CHECK_FAMILIES (its R22). The list needs accepted-work's family in its module's place (after inquiry-grammar, before inquiry). Caused by accepted-work's new family, not by basis-versions.
