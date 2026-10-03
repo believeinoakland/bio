@@ -1,3 +1,24 @@
 # wizard-scripts (T31)
 
 **Status** · session_015rXhvVXUnRr73rAvgxK4WZ · depth 2 · WORKING · handled B1
+
+## J1 · QUESTION
+
+Two points need you; my best readings follow, and I carry on with them.
+
+**Q1 (decides one test, R5).** R5 labels a proposal `proposalLabel(proposer, "wizard")` (record-grammar R42), but record-grammar's `PROPOSAL_STATES` has no `wizard` subject: the call throws `RangeError`. record-grammar is not in T31 and I may not write it. Reading: I call `proposalLabel(p, "wizard")` exactly as R5 says, so R5's label test stays red until record-grammar gains the subject (one frozen table, three sentences, worded as `template`'s for a wizard script's steps). Please either add a record-grammar entry now (a small CHANGE to a record-grammar job, or your own fold), or rule an interim.
+
+**Q2 (paths).** `paths`: `bio-plane/src/wizard-scripts/`; `tests`: `bio-plane/test/m/wizard-scripts/`. The Civicsmith library's data file (your path at the opening, not in START): reading `bio-plane/src/wizard-scripts/civicsmith-library.mjs`, exporting `CIVICSMITH_LIBRARY`, a frozen empty list (an .mjs so it bundles without a JSON import), entries `{id, name, required, version, steps, approved: {by, at}}`; `plane` passes it to `wizardRegister`.
+
+Readings (settled unless you say otherwise):
+1. R12's `{template}` check: `checkScript` stays pure and takes an optional `templateOffered(ref)` predicate in its options; the module's own submit, approve, registration and `op=wizardcheck` pass one built from `filing-templates.offeredVersion` with the actor's viewer (registration: the version author's). Without it a `{template}` is judged by shape only. `offered` is the offered scripts' step lists, for `WIZARD_DUPLICATE`.
+2. A step's `what` or `why` left empty (a recorded step not yet revised) is R12's `WIZARD_STEP_NO_WHY`; R4 and R5 refuse `WIZARD_STEP_REFUSED` only on shape (types, lengths over 300, a malformed draft), so a draft may be saved part-written.
+3. R3 `from` an approved (or `updated`) version makes a new draft version of that same script; a `civicsmith` script answers `WIZARD_NOT_THE_GROUPS` (after `NO_SUCH_WIZARD`, R9's "R3 included"), and a retired script `WIZARD_ALREADY_ENDED`. `from` a draft, submitted or withdrawn version is `NO_SUCH_WIZARD`. A proposal for a script makes a new version of it; one for a project a new script there (it needs `name`).
+4. R4's allowed pairs without a grant: the multiset union (max counts) of the recorded pairs, the `from` source's pairs, and every adopted proposal's pairs.
+5. A widened (`group`) script's next version is approved, and retired, by an administrator (R17's reading, as filing-templates widens); drafted still by a joined participant of its project.
+6. New codes, each a C-131 row: `WIZARD_PROGRESS_REFUSED` (R15: an event other than start, step or finish, so `abandon` is refused; a step outside the version); `WIZARD_USE_REFUSED` (R15, R16: visible, but the viewer is not a project owner, the version's author or, for a script with no project, an administrator); `WIZARD_EDITOR_MEMBER_UNKNOWN` and `WIZARD_NO_SUCH_GRANT` (R8); `WIZARDS_STATE_REFUSED` (R10, an unknown `state`). A second live grant to one member answers `existed: true` with the first.
+7. R10 `wizards` lists only scripts whose project the viewer owns, and every script to an administrator (a Civicsmith script to administrators); others get an empty list. `wizardRead` answers any visible version (R20).
+8. R11 answers `{ok: true, screen, scripts}`; "answers `[]`" is `scripts: []`.
+9. R15 `wizardProgress` carries no viewer (R15 keeps none); it counts for any held version (a Civicsmith one included, and an author's own draft run), `NO_SUCH_WIZARD` otherwise.
+10. R16 `wizardCandidates`: at most 20 step drops (script, version, step, screen, act, reached, next, drop; summed over days) among the scripts the viewer may see, and at most 20 (op, code) pairs by count.
+11. R13 runs the break check for the offered version of each group script; a Civicsmith script is judged only by R14 (release).
