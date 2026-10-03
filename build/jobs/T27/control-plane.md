@@ -2,6 +2,10 @@
 
 **Status** · session_017vDG4wd8mxTeSyfas1vs7o · depth 2 · WORKING · handled B2
 
+## Progress
+
+Built and pushed: R46 (the store door's hold refusal, C-69.5, in `dispatch.mjs`; the row in `checks.mjs`), R47 (`projectholds` in `PROJECT_NAMING_READS_NOT`; the stamps come from op-declarations' lists), R48 (docket's stamps in `index.mjs` from `DOCKET_*`; docket's three reads classified), and R22 (docket's family in `CHECK_FAMILY_FILES`, read after action-grammar's; J2 item 1). Tests: `purge-hold.test.mjs`, `r48-routes.test.mjs`, and C-69.5 in `envelope.test.mjs`. **Next:** once `job/T27/op-declarations` (and affordances) are on `tranche/T27`, merge the tranche, run the module's tests and the four checks, then the users' tests (plane), write the completion, and post COMPLETE.
+
 ## J1 · QUESTION
 
 R48 and R47's stamps are set from op-declarations' act lists. OP-DECLARATIONS #7 is building R12 and R13 now, so I need the names of the lists it will export. My best reading, which I am building against:
