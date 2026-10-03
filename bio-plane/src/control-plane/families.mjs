@@ -73,7 +73,7 @@ import * as ACTION_GRAMMAR from "../action-grammar/checks.mjs";
    (`MACHINE_CANNOT_MARK_DOCKET_PRESSURE`, C-129.10), but two codes remain in both families: `PRESSURE_MARKED` (docket's
    C-129.12, action-grammar's C-117.17) and `PRESSURE_REFUSED` (C-129.13, C-117.15). A source read first takes a code's
    row, so docket at its module-order place would move those two codes' rows off `actionpressure`'s, and R43 keeps every
-   code's row. Reported to BOB (CONTROL-PLANE #18, T28); the move waits on docket's own codes for the two. Docket's own
+   code's row (K1331). The move waits on docket's own codes for the two (N533). Docket's own
    refusals carry their row at the site (its `withRow`), which the decoration never overwrites, so its answers are
    unchanged either way. */
 import * as DOCKET from "../docket/checks.mjs";
