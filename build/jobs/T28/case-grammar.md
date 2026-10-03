@@ -78,3 +78,7 @@ Merged `origin/tranche/T28` @ 13282a56b7. K1318 replaces K1315 (3): `casePartDig
 Checks after B4: format 0 failures; architecture 22 product files, 66 imports, 0 failures; coverage 17 of 17; ownership 20 files, 0 failures. Users: public-read 95/0, ratification 199/0, docket 37/0.
 
 Size (session_016TiHSZQkrggTJ3QAahBMjg): test runs 33, module lines 1722
+
+## J5 · COMPLETE
+
+B4 (K1318) applied: casePartDigest(files, index) restored (lines '<path> <sha256> <bytes>\n' in path order, bytes their sum) and used by caseFileManifestCheck; partFingerprint removed; manifest.json and caseFilePath layout unchanged; the rest of B2/B3 stands. case-grammar 60/0; format, architecture, coverage 17/17, ownership 0 failures; public-read 95/0, ratification 199/0, docket 37/0. Ready to merge first in L8.
