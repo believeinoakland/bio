@@ -21,6 +21,7 @@ import { normalizeType } from "../record-grammar/types.mjs";
 import { sectionText } from "../record-grammar/document.mjs";
 import { NS_RATIFY, ratifyStatement, caseRatifyStatement } from "../sshsig.mjs";
 import { serialiseContainer, containerEntries } from "../container.mjs";
+import { buildCaseFile, isCaseFileManifest, caseFilePartLayout, caseFileParts, sha256Hex } from "../public-read/casefile.mjs";
 import { inbandQuartet } from "../inband.mjs";
 import { caseDocumentStatesMemberBlocks } from "../case-grammar/index.mjs";
 import { rowOf } from "../public-read/checks.mjs";
@@ -117,7 +118,16 @@ export function publishedObjectMissing() {
    finding ratified at the version the case pinned. D-442 moved it out of the op=ratify block VERBATIM
    so op=caseratify can call it too (see the call sites). `cs` is `#caseEditionState`'s answer. Returns
    what op=ratify always answered as `container`. */
-export async function assembleCaseContainer({ env, stub, storeName, cs, via }) {
+export async function assembleCaseContainer({ env, stub, storeName, cs, via, maxBytes = undefined }) {
+  /* R6, R23 (DEC-112 (3)): AN EDITION WHOSE SIGNED DOCUMENT IS `/6` IS PACKAGED AS ITS CASE FILE (`case-grammar` R13),
+     everything it carries read from the published projection (`casefilefacts`) and the published bucket. An edition
+     prepared before T28 (its document is not `/6`, which `publication` R58 now refuses to commit, but an edition committed
+     before it may complete after) keeps the container below, unchanged, so nothing already promised changes form. */
+  const fOut = await plane().doAnswer(stub.fetch(
+    `http://do/casefilefacts?${new URLSearchParams({ caseId: cs.caseId, edition: String(cs.edition) })}`));
+  if (!fOut.answered)
+    return { ok: false, reason: plane().STORE_SILENT_REASON, op: `${via}/casefilefacts`, detail: plane().STORE_SILENT_DETAIL };
+  if (fOut.result && fOut.result.ok) return assembleCaseFile({ env, stub, storeName, cs, via, facts: fOut.result, maxBytes });
         const manifest = {
           /* REC-47 bumps 2 -> 3, and the bump is deliberate rather than
              bookkeeping. The container gains `bias_acknowledgement`, which is a
@@ -381,6 +391,48 @@ export async function assembleCaseContainer({ env, stub, storeName, cs, via }) {
             : { ok: false, ...(rec || { reason: "MANIFEST_NOT_RECORDED" }) };
 }
 
+/* R6, R23, R24 (DEC-112 (2), (3); K1315): THE CASE FILE, assembled once when a `/6` case edition completes. Every file
+   is put in the published bucket by its hash first, then the manifest is recorded through `publication`'s
+   `recordCaseManifest` (its R15), which registers every file it lists in `published_shas` in the same transaction, so
+   each is served by hash (R5, R24); the manifest's own bytes go to the bucket once it is recorded, as the container's
+   always did. The manifest's hash is the in-band quartet's (R7), the one hasher. Answers what `op=ratify` carries as
+   `container`: the manifest's hash, its parts and their addresses, or the statement of what was not built. */
+async function assembleCaseFile({ env, storeName, cs, stub, via, facts, maxBytes }) {
+  const key = (sha) => `${storeName}/published/${sha}`;
+  const read = async (sha) => {
+    if (typeof env.PUBLISHED?.get !== "function") return null;
+    const o = await env.PUBLISHED.get(key(sha));
+    return o ? new Uint8Array(await o.arrayBuffer()) : null;
+  };
+  const built = await buildCaseFile({ facts, group: cs.group ?? null, read, ...(maxBytes ? { maxBytes } : {}) });
+  if (!built.ok) return built;
+  if (typeof env.PUBLISHED?.put === "function")
+    for (const f of built.files) if (!(await env.PUBLISHED.head(key(f.sha256)))) await env.PUBLISHED.put(key(f.sha256), f.content);
+  const { bytes: mBytes, quartet: inband } = await inbandQuartet({
+    subject: built.manifest,
+    over: "this case edition's case file manifest (MANIFEST.json, at the root of every part), exactly as served at "
+        + "op=publishedbytes&sha256=<this hash>",
+    date: cs.ratified_at ?? null,
+    author: (cs.document && cs.document.attestor && cs.document.attestor.member) ?? null,
+    bar: cs.bar ?? null });
+  const mSha = inband.hash.sha256;
+  const recOut = await plane().doAnswer(stub.fetch(new Request("http://do/recordcasemanifest", {
+    method: "POST", body: JSON.stringify({ caseId: cs.caseId, edition: cs.edition,
+                                           manifest: built.manifest, manifestSha: mSha, bytes: mBytes.length }) })));
+  const rec = recOut.result;
+  if (recOut.answered && rec && rec.ok && typeof env.PUBLISHED?.put === "function"
+      && !(await env.PUBLISHED.head(key(mSha)))) await env.PUBLISHED.put(key(mSha), mBytes);
+  if (!recOut.answered)
+    return { ok: false, reason: plane().STORE_SILENT_REASON, op: `${via}/recordcasemanifest`, detail: plane().STORE_SILENT_DETAIL };
+  if (!(rec && rec.ok)) return { ok: false, ...(rec || { reason: "MANIFEST_NOT_RECORDED" }) };
+  const parts = built.manifest.parts.map((p) => ({ index: p.index, sha256: p.sha256, bytes: p.bytes,
+    zip: `op=publishedbytes&sha256=${mSha}&format=zip&part=${p.index}` }));
+  return { manifest_sha: mSha, format: built.manifest.format, parts: parts.length, part_addresses: parts,
+           files: built.files.length, findings: facts.findings.length,
+           complete_edition: built.files.find((f) => f.kind === "complete_edition")?.sha256 ?? null,
+           unheld: built.unheld, zip: parts[0].zip, inband };
+}
+
 /* REC-22 / DEC-34 / R3, R5: the public read path's control-plane side, `op=publishedcase` and `op=publishedbytes`,
    for a caller holding no credential. `stub` is the published store's Durable Object (PUBLISHED_STORE). Answers the
    Response. */
@@ -500,7 +552,22 @@ export async function publishedRoutes({ op, url, env, stub }) {
                     sha256: shaParam }, 500);
       /* END DEC-49 REGION is-manifest-unreadable */
     }
-    const built = await containerEntries(manifest, raw, pubBytes);
+    /* R5, R6 (DEC-112 (3)): A CASE FILE is served one part at a time, `&part=<n>` (1 by default), each a stored ZIP with
+       the manifest at its root; a part the manifest does not list is the required-argument refusal naming the parts it
+       does. Its files are read at their hashes: bytes the bucket holds at another hash count as missing (C-98.5). A
+       container from before T28 is served as stored. */
+    let source = manifest, read = pubBytes, part = null;
+    if (isCaseFileManifest(manifest)) {
+      const asked = url.searchParams.get("part");
+      part = asked == null || asked === "" ? 1 : /^[1-9][0-9]{0,5}$/.test(asked) ? Number(asked) : NaN;
+      source = Number.isInteger(part) ? caseFilePartLayout(manifest, part) : null;
+      if (!source)
+        return P.json({ ok: false, ...P.requiredArgument("publishedbytes", "part", `one of ${caseFileParts(manifest).join(", ")}`,
+          `this case file has ${caseFileParts(manifest).length} part(s); ask for one by part=<index>, `
+          + `one of ${caseFileParts(manifest).join(", ")} (1 by default)`) }, 400);
+      read = async (sha) => { const b = await pubBytes(sha); return b && (await sha256Hex(b)) === sha ? b : null; };
+    }
+    const built = await containerEntries(source, raw, read);
     /* D-561 (C-98.5–.7): `container.mjs` is pure and reads no catalogue, so each refusal's row is attached here, by
        its code, from this module's rows. D-613: THE STATUS FOLLOWS THE CODE — a part missing and two parts claiming one
        path are conflicts in what is published (409); only a container over the bound is too large (413). Every
@@ -515,8 +582,10 @@ export async function publishedRoutes({ op, url, env, stub }) {
       "content-type": "application/zip", "access-control-allow-origin": "*",
       "x-manifest-sha256": shaParam, "x-container-sha256": zipSha,
       "x-container-parts": String(built.entries.length),
+      ...(part != null ? { "x-case-file-part": String(part), "x-case-file-parts": String(caseFileParts(manifest).length) } : {}),
       "content-disposition": `attachment; filename="${String(manifest.case || "case").replace(/[^\w.\-]/g, "_")}`
-                           + `-edition-${Number(manifest.edition) || 1}.zip"`,
+                           + `-edition-${Number(manifest.edition) || 1}`
+                           + `${part != null ? `-part-${part}` : ""}.zip"`,
     } });
   }
 

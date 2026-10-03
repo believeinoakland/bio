@@ -58,7 +58,7 @@ test("R3 publishedCase carries a /5 document's captures and sources blocks as si
   const { w, proj, roles, source } = base();
   disclose(w, source);
   const rows = statedRows(w, CAP, source);
-  w.prepare("CASE-2026-0001", 1, { project: proj, roles, blocks: { captures: [captureRow()], sources: rows } });
+  w.prepare("CASE-2026-0001", 1, { format: "bio-case-document/5", project: proj, roles, blocks: { captures: [captureRow()], sources: rows } });
   assert.equal(w.signCase("CASE-2026-0001", 1, { project: proj, roster: roster(roles) }).ok, true);
   assert.equal(w.signFinding(F).ok, true);
   const c = w.pr.publishedCase({ id: "CASE-2026-0001" });
@@ -72,7 +72,7 @@ test("R3 publishedCase carries a /5 document's captures and sources blocks as si
   w.inquiry("INQ-2026-0002");
   const pin2 = w.head("INQ-2026-0002");
   const roles2 = [{ target: "INQ-2026-0002", version_sha: pin2 }];
-  w.prepare("CASE-2026-0002", 1, { project: proj, roles: roles2 });
+  w.prepare("CASE-2026-0002", 1, { format: "bio-case-document/4", project: proj, roles: roles2 });
   w.signCase("CASE-2026-0002", 1, { project: proj, roster: roster(roles2) });
   w.signFinding("INQ-2026-0002");
   const old = w.pr.publishedCase({ id: "CASE-2026-0002" });
