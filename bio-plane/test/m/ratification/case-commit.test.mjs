@@ -79,7 +79,7 @@ test("R3, R10: a retry with the same signature answers existed and writes nothin
   assert.equal((await commit()).ok, true);
   assert.equal(commits(w), 1);
   const before = w.row(`SELECT * FROM case_documents WHERE case_id=?`, CASE);
-  assert.deepEqual((await commit()), { ok: true, existed: true, caseId: CASE, edition: 1 });
+  assert.deepEqual((await commit()), { ok: true, existed: true, caseId: CASE, edition: 1, evidenceMaterials: [] });
   const other = await commit({ sigArmored: SIG.replace("AAAA", "BBBB") });
   assert.equal(other.reason, "CASE_EDITION_ALREADY_RATIFIED");
   assert.equal((await commit({ attestorMember: "bo" })).reason, "CASE_SIGNER_NOT_AN_OWNER", "never an authority answer to somebody with none");

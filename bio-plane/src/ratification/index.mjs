@@ -786,7 +786,9 @@ export class Ratification {
       if (denied) return denied;
       /* ===== END REC-137 ================================================================ */
       if (doc.ratified_at) {
-        if (doc.sig_armored === sigArmored) return { ok: true, existed: true, caseId: id, edition: ed };
+        if (doc.sig_armored === sigArmored)   /* R39: a retry re-copies what the commit held in the evidence store */
+          return { ok: true, existed: true, caseId: id, edition: ed,
+                   evidenceMaterials: evidenceShas(this.publication.heldMaterialsOf?.(id, ed)) };
         return { ok: false, reason: "CASE_EDITION_ALREADY_RATIFIED", caseId: id, edition: ed,
                  detail: `case ${id} edition ${ed} is already ratified under a different signature. An `
                        + `edition is a separate document and answers forever — a second attestation over the `
@@ -915,7 +917,8 @@ export class Ratification {
         }),
         sigArmored, attestorKey, attestorMember: attestorMember ?? null, gateVersion, deliveredBy: deliveredBy ?? null });
       if (!committed || !committed.ok) return committed || { ok: false, reason: "CASE_PUBLISH_FAILED", caseId: id, edition: ed };
-      if (committed.existed) return { ok: true, existed: true, caseId: id, edition: ed };
+      const evidenceMaterials = evidenceShas(committed.materials);   /* R39: publication R57's `held: "evidence"` */
+      if (committed.existed) return { ok: true, existed: true, caseId: id, edition: ed, evidenceMaterials };
       /* R3, publication R5: a ratified newer edition discharges the case's outstanding revision flags, stamped with
          who ratified it and when; never deleted (set-but-never-clear). */
       this.publication.dischargeCaseFlags(id, ed, attestorMember ?? null, now);
@@ -946,7 +949,7 @@ export class Ratification {
                statement: { author: fm.completeness && typeof fm.completeness === "object"
                               ? (fm.completeness.author ?? null) : null,
                             by: stmtWriter.by, stated: stmtWriter.stated },
-               ...(completedCase ? { completedCase } : {}),
+               ...(completedCase ? { completedCase } : {}), evidenceMaterials,
                members: roster.map((m) => {
                  const r = rows.find((x) => x.target === m) || {};
                  return { bundle_id: m, role: r.role ?? null, version_sha: r.version_sha ?? null };
@@ -1153,6 +1156,11 @@ export class Ratification {
                     connections: this.connections }, a);
   }
 }
+
+/* R39: the SHA-256s of the materials publication's commit (its R57) or `heldMaterialsOf` answers held only in the
+   evidence store, from a list or `{materials}`; anything else is none. */
+const evidenceShas = (x) => (Array.isArray(x) ? x : Array.isArray(x?.materials) ? x.materials : [])
+  .filter((m) => m && m.held === "evidence" && typeof m.sha === "string").map((m) => m.sha);
 
 const instances = new WeakMap();
 

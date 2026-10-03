@@ -12,11 +12,12 @@
  * are `case-grammar`'s (its R1), read through `publication`'s re-export. The legacy code's comments moved with it. */
 
 import { ISO_TS_RE, BUNDLE_ID_RE, BASIS_GRADES, GRADE_AXES } from "../record-grammar/index.mjs";
-import { STRENGTH_STATES } from "../strength/index.mjs";
+/* K1317: the pure spellings (strength's arithmetic, case-grammar R1), never the store-bound index files, so the
+   standalone checker (case-checker R13) bundles only pure code. */
+import { STRENGTH_STATES } from "../strength/arithmetic.mjs";
 import { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V2, CASE_DOCUMENT_FORMAT_LEGACY, CASE_DOCUMENT_FORMATS_ACCEPTED,
-         caseDocumentStatesMemberBlocks, caseDocumentRequiresDisclosures,
-         caseDocumentRequiresV4Disclosures } from "../publication/index.mjs";
-import { whatChangedOf, isNoticeReference, WORKING_ON_KEY } from "../case-grammar/index.mjs";
+         caseDocumentStatesMemberBlocks, caseDocumentRequiresDisclosures, caseDocumentRequiresV4Disclosures,
+         whatChangedOf, isNoticeReference, WORKING_ON_KEY } from "../case-grammar/index.mjs";
 
 /* The catalogue's finding shape (`{check, severity, message, repairable?, repairs?, code?}`), so a finding from here
    reads exactly as one from the record's grammars (`record-grammar` R11). */
