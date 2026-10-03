@@ -999,9 +999,9 @@ export class Publication {
   #acceptedWorkLapsed(fm, signer) {
     let blocks = null;
     try { blocks = acceptedWorkBlocksOf(fm); } catch { blocks = null; }
-    const rows = blocks && Array.isArray(blocks.accepted_work) ? blocks.accepted_work : [];
+    const rows = blocks && Array.isArray(blocks.rows) ? blocks.rows : [];
     if (!rows.length) return null;
-    const disclosed = new Set((Array.isArray(blocks.accepted_work_flags) ? blocks.accepted_work_flags : [])
+    const disclosed = new Set((Array.isArray(blocks.flags) ? blocks.flags : [])
       .filter((f) => f && typeof f === "object").map((f) => `${f.ref}\u0000${Number(f.edition)}\u0000${f.flag}`));
     const viewer = str(signer) ? `member:${str(signer).replace(/^member:/, "")}` : null;
     const aw = this.acceptedWork;
@@ -2203,7 +2203,7 @@ export class Publication {
     if (!doc || doc.sig_armored) return { reauthored: false, why: "no unsigned case document is held for this edition" };
     let m = null;
     try { m = materialsOf(parseFrontmatter(doc.text).data || {}); } catch { m = null; }
-    const rows = m && Array.isArray(m.material_attestations) ? m.material_attestations : null;
+    const rows = m && Array.isArray(m.attestations) ? m.attestations : null;
     const refs = new Set((m && Array.isArray(m.materials) ? m.materials : [])
       .filter((x) => x && String(x.sha || "").toLowerCase() === cap).map((x) => x.ref));
     const bare = (v) => String(v ?? "").replace(/^member:/, "");

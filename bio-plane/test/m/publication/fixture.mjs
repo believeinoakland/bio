@@ -17,6 +17,7 @@ import { reevaluationOf } from "../../../src/reevaluation/index.mjs";
 import { sourcesOf } from "../../../src/sources/index.mjs";
 import { publicationOf, publicationOps, captureBlockLines, sourceBlockLines } from "../../../src/publication/index.mjs";
 import { acceptedWorkOf } from "../../../src/accepted-work/index.mjs";
+import { materialsLines, materialAttestationLines, acceptedWorkBlockLines } from "../../../src/case-grammar/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
@@ -318,10 +319,10 @@ export function caseDoc(caseId, edition, { project = "PROJ-1", roles = [], findi
     ...(blocks && blocks.sources ? sourceBlockLines(blocks.sources) : []),
     /* case-grammar R11, R12, R16 (DEC-112, N522): /6's method and materials, and another group's work it rests on. */
     ...(v6 && method ? ["method:", `  grading: ${scalar(method.grading)}`, `  checks: ${scalar(method.checks)}`] : []),
-    ...(v6 ? rowsOf("materials", materials) : []),
-    ...(v6 ? rowsOf("material_attestations", attestations) : []),
-    ...(acceptedWork ? rowsOf("accepted_work", acceptedWork) : []),
-    ...(acceptedWorkFlags ? rowsOf("accepted_work_flags", acceptedWorkFlags) : []),
+    /* written with case-grammar's own line builders (its R12, R16), as case-authoring writes them */
+    ...(v6 ? materialsLines(materials) : []),
+    ...(v6 ? materialAttestationLines(attestations) : []),
+    ...(acceptedWork || acceptedWorkFlags ? acceptedWorkBlockLines({ rows: acceptedWork || [], flags: acceptedWorkFlags || [] }) : []),
     "---"];
   const body = ["", "## Scope", "", "The question.", "",
     ...(ack ? ["**Who else read this statement.** Nobody yet.", ""] : []),

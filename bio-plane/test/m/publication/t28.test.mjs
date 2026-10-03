@@ -56,7 +56,8 @@ test("R58 commitCaseEdition refuses a case document whose format is not /6 with 
 const IMP = "a".repeat(64);
 const REF = `imported:${IMP}/INQ-2026-0042-their-finding`;
 const awRow = (over = {}) => ({ member: F, leg_of: F, ref: REF, group: "other-group", case: "CASE-2026-0042", edition: 2,
-  finding: "INQ-2026-0042-their-finding", manifest_sha: "b".repeat(64), pair: "B/C", result: "recreated", gaps: "none",
+  finding: "INQ-2026-0042-their-finding", manifest_sha: "b".repeat(64),
+  pair: { capture: { state: "graded", grade: "B" }, connection: { state: "graded", grade: "C" } }, result: "recreated", gaps: [],
   accepted_by: V("olive"), accepted_at: NOW, reason: "we checked it", ...over });
 const flagRow = (flag, over = {}) => ({ ref: REF, edition: 2, flag, issue: "a date is wrong", flagged_at: NOW, words: "noted",
   acknowledged_by: V("olive"), acknowledged_at: NOW, ...over });
