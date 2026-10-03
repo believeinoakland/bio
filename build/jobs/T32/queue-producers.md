@@ -29,3 +29,7 @@ The existing R35 fixture also carries `seen_at` now.
 - `checks/ownership.mjs … queue-producers tranche/T32`: 0 failures (re-run after the commit).
 
 Size (session_01Fk6NZizVdw2PkBBvxaGQW3): test runs 2, module lines 3873
+
+## J1 · COMPLETE
+
+N546 applied: R35's followed-case-entry and cited-docket-entry-refused age from case-import R20's seen_at (refused copies of one entry from the earliest; missing or unreadable seen_at stays undetermined, never the publisher's date or this read's clock). queue-producers 80/80; queue 111/111; format, architecture, coverage (35/35), ownership: 0 failures. Nothing deferred. For BOB (requirements wording): R35's '(not yet met: T32)' can be struck; the Uses' membership line should name memberFacts (R35's 'no longer active', membership R68). Record: build/jobs/T32/queue-producers.md on job/T32/queue-producers.
