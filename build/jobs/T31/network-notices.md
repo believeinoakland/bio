@@ -41,3 +41,7 @@ N538 applied: R3, R10, R12, R13, R17 new civicsmith labels with the old ones acc
 Merged `tranche/T31` after case-grammar (B2), then after publication, docket and public-read (B3); no conflicts. Re-ran on the merged branch: `node --test test/m/network-notices/` 68 pass, 0 fail; the users' tests 116 pass, 0 fail; format, architecture, coverage (30 of 30), ownership: 0 failures each.
 
 Size (session_016Qoe57tyy7EQDdaxDtEBXa): test runs 10, module lines 1408
+
+## J2 · COMPLETE
+
+Merged tranche/T31 with all same-layer providers (B3). network-notices 68/68, users' tests 116/116; format, architecture, coverage 30/30, ownership 0 failures. Ready to merge.
