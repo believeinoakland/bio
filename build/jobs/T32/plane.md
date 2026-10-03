@@ -38,3 +38,7 @@ B2 already met by J1: plane's store.test.mjs R2/R10 rank test pins plane's own S
 Merged `tranche/T32` (queue-producers, queue, control-plane merged, K1421) into `job/T32/plane`: no conflict. Re-ran: plane 86 tests, 86 pass, 0 fail, 0 skipped; control-plane 159 pass, 0 fail (inherited red 6 cleared); queue 113/0; queue-producers 80/0; public-read 110/0; ratification 204/0; reevaluation 121/0. Checks: format, architecture, coverage (20 of 20), ownership (3 files) each 0 failures.
 
 Size (session_01JL5ihXZTwMD225KhykMihR): test runs 18, module lines 35
+
+## J4 · COMPLETE · re B3
+
+tranche/T32 merged cleanly. plane 86/86; control-plane 159/0 (red 6 cleared); queue 113/0; queue-producers 80/0; public-read, ratification, reevaluation green. Four checks 0 failures. Ready to merge last.
