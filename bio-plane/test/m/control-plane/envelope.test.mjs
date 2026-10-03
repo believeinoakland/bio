@@ -424,7 +424,7 @@ test("R30: no credential, session token, secret or stack appears in any answer �
   assert.equal(later.text.includes(minted), false);
 });
 
-test("R32, R39: each check the door answers carries its C-number on the wire — its own C-69.1–.4, C-68.2–.4, C-66.6 and R39's C-61.1, and admission's C-38, C-78, C-29.6–.10, C-32.17 and C-64.4 from the gates it calls", async () => {
+test("R32, R39, R46: each check the door answers carries its C-number on the wire — its own C-69.1–.5, C-68.2–.4, C-66.6 and R39's C-61.1, and admission's C-38, C-78, C-29.6–.10, C-32.17 and C-64.4 from the gates it calls", async () => {
   const w = world({ answer: (c) => (c.route === "casedrafts" ? new Response("x") : null) });
   const { env, S, A } = w;
   const got = {};
@@ -466,10 +466,14 @@ test("R32, R39: each check the door answers carries its C-number on the wire —
   const { value: sie } = await quietly(() => D.dispatch(new Request("http://do/x"), { routes: () => ({ x: () => { throw new Error("x"); } }) }));
   const sj = await sie.json();
   got[sj.code] = sj.check; sentences[sj.code] = sj.translation;                 /* C-69.4 */
+  const held = await (await D.dispatch(new Request("http://do/purge?confirm=bio"),
+    { routes: () => ({ purge: () => ({ ok: true }) }), namespace: () => "bio", purgeHeld: () => true })).json();
+  got[held.code] = held.check; sentences[held.code] = held.translation;         /* C-69.5 (R46) */
   assert.deepEqual(got, {
     NOT_AUTHENTICATED: "C-38.1", CLASS_FORBIDDEN: "C-38.2", MACHINE_CREDENTIAL_REQUIRED: "C-38.3", ROOT_OF_TRUST_REQUIRED: "C-38.4",
     NOT_CAPABLE: "C-38.5", SCOPE_REFUSED: "C-38.6", SESSION_ROLE_CANNOT_REACH_OP: "C-38.7",
     UNKNOWN_OP: "C-69.1", STORE_DID_NOT_ANSWER: "C-69.2", PLANE_INTERNAL_ERROR: "C-69.3", STORE_INTERNAL_ERROR: "C-69.4",
+    PURGE_HOLD_IN_PLACE: "C-69.5",
     NAMESPACE_UNKNOWN: "C-78.1", NAMESPACE_PINNED: "C-78.2", NAMESPACE_CONFINED: "C-78.3",
     AI_BEYOND_TASK_SCOPE: "C-29.6", AI_CREDENTIAL_REVOKED: "C-29.7", AI_SCOPE_UNKNOWN_OP: "C-29.8",
     AI_SCOPE_BEYOND_MEMBER_REACH: "C-29.9", AI_CONFINEMENT_NOT_SCRATCH: "C-29.10",

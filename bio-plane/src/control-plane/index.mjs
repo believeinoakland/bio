@@ -1,4 +1,4 @@
-/* control-plane: THE INSTANCE'S DOOR (R1–R44). The Worker's HTTP entry — routing, the stamps, the answer's decoration
+/* control-plane: THE INSTANCE'S DOOR (R1–R48). The Worker's HTTP entry — routing, the stamps, the answer's decoration
    and envelope — moved from legacy-index (`index.mjs`) at control-plane's extraction (T12, K3, K93). Who may call an op is
    `admission`'s and what each op is `op-declarations'` (the split, K617, K624 (2)): this door calls admission's gates in
    R28's order and reads op-declarations' tables. An op's own handler is its module's: `makeFetch(hooks)` takes the
@@ -40,7 +40,8 @@ import { OPS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, 
          STANDARDS_ACTIONS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS,
          ACTION_LAYER_READS, PLAN_PROPOSAL_ACTIONS, TEMPLATE_PROPOSAL_ACTIONS, LOCAL_FACTS_ACTIONS, TEMPLATE_DOOR_ACTIONS,
          TEMPLATE_DOOR_READS, WHAT_CHANGED_PROPOSAL_ACTIONS, WHAT_CHANGED_READS, NETWORK_NOTICES_ACTIONS,
-         NETWORK_NOTICES_READS, NETWORK_NOTICES_BY, NETWORK_NOTICES_PUBLIC_READS } from "../op-declarations/index.mjs";
+         NETWORK_NOTICES_READS, NETWORK_NOTICES_BY, NETWORK_NOTICES_PUBLIC_READS, DOCKET_ACTIONS, DOCKET_READS, DOCKET_AUTHOR,
+         DOCKET_BY } from "../op-declarations/index.mjs";
 
 /* REC-22: the ONE namespace the public read path answers from. An instance has
    one published record, so op=publishedcase and op=publishedbytes are pinned
@@ -1343,6 +1344,10 @@ export function makeFetch(hooks = {}) {
            (escalation's `escalationreasondraft` and link-sweep's `sweeps`, its R9 (N506), take it as `ACTION_LAYER_READS`). */
         || WHAT_CHANGED_PROPOSAL_ACTIONS.includes(op) || WHAT_CHANGED_READS.includes(op)
         || NETWORK_NOTICES_ACTIONS.includes(op) || NETWORK_NOTICES_READS.includes(op)
+        /* R48 (op-declarations R13; docket R1–R8, R12): every docket act and read answers by the caller's sight of the
+           case's project, and docket fails closed without the stamp. (`projectholds`, `actionholdpreview` and
+           `actionholdrelease`, R47, take it as the action layer's, op-declarations R12.) */
+        || DOCKET_ACTIONS.includes(op) || DOCKET_READS.includes(op)
         || REC30_VIEWER_READS.includes(op)) {
       /* PL-11 / IS-5 / D-199 (4) — THE STATED VIEWER, AND IT IS THE RECORD'S
          ANSWER RATHER THAN THE CLASS'S.
@@ -2024,6 +2029,17 @@ export function makeFetch(hooks = {}) {
        founder's `member:admin`), the form network-notices asks membership of; only a member's session reaches these
        ops, and a machine stamp, were one to arrive, is refused there by name (C-127.1). */
     if (NETWORK_NOTICES_BY.includes(op))
+      inner.searchParams.set("by", viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* R48 (op-declarations R13; docket R1, R2, R4, R5, R7, R18): WHO FILES OR MARKS A THREAT (`author`, any joined member)
+       AND WHO PREPARES, POSTS OR DECLINES (`by`, the case's manager), the POSITIONAL identity (`member:<id>`, the
+       founder's `member:admin`), the form docket asks membership's `positionalMember` of; only a member's session reaches
+       these ops (their rows' `machineClasses: []`), and a machine stamp, were one to arrive, is refused there by name
+       (C-129.1, MACHINE_CANNOT_PLACE_DOCKET). A caller's copy of either is overwritten. The docket's public shelves and
+       its feed (`docketpublic`, `docketfeed`) are public ops, answered by plane's public hook through public-read's door
+       (its R21), and stamp nothing. */
+    if (DOCKET_AUTHOR.includes(op))
+      inner.searchParams.set("author", viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`);
+    if (DOCKET_BY.includes(op))
       inner.searchParams.set("by", viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* PL-18 / DEC-63 — WHICH MEMBER IS ASKING, for the project-participation
        gate on the three run verbs. Bob ruled 2026-08-09 that an investigation

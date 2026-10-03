@@ -62,6 +62,18 @@ export const DISPATCH_CHECKS = {
       + 'any part of it took effect is not known from here. The administrator can find the details in this copy\'s '
       + 'logs under the reference given with this answer.',
   },
+  /* DEC-113 (R46, C-69.5; K1252, K1253) — A PURGE THAT WOULD REACH HELD MATERIAL. While a litigation hold stands, the
+     store's door refuses every purge of the real record that would reach what the hold preserves: the whole store while
+     any hold is in place, and a single bundle of a held project or a held action, or one whose project cannot be told.
+     A failure to ask the hold refuses too, so the sentence claims only that the removal could not be shown to be clear
+     of the hold. Nothing was removed, read for proof or written. The test store (`scratch`) is never refused for a hold. */
+  PURGE_HOLD_IN_PLACE: {
+    check: 'C-69.5',
+    where: 'src/control-plane/dispatch.mjs purgeHoldRefusal > is-purge-hold-in-place',
+    translation: 'This copy is preserving records under a litigation hold, and this removal would reach material the '
+      + 'hold covers, or could not be shown to stay clear of it. Nothing was removed. A removal ordered while a hold '
+      + 'stands waits until the hold is released.',
+  },
 };
 
 /* C-68.2–.4 — THE BOOTSTRAP CLAIM (D-278). `claim`'s three bootstrap-credential complaints, pre-authentication, met
