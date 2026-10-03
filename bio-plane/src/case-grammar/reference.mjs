@@ -2,7 +2,7 @@
  * `/5` and R6; DEC-111, `network-notices` R19; K1114, K1115, K1119). A case document may carry `working_on`, the id of
  * the network notice its project is working under, and nothing else about the notice, so a case and its notice are
  * visibly the same work. It is an optional field of `bio-case-document/5`, with no new format version: a `/5` document
- * without it names no notice; `/6` states everything `/5` states (R1), so it is an optional field of `/6` too.
+ * without it names no notice; `/6` states everything `/5` states (R1), so it is an optional field of `/6` and `/7` too.
  *
  * ONE WRITER, ONE READING, in R8's form: `case-authoring` writes the line with `workingOnLines` (its R41, as
  * `network-notices.noticeReferenceOf` answers), and `workingOnOf` is the one reading of it, so no module parses it a
