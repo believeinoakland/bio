@@ -13,3 +13,7 @@ Forwarded from QUEUE-PRODUCERS #9 (its J2, confirmed by BOB; K1288). queue-produ
 - `reevaluation.docketDependents: () => ({ok: true, entries: [], count: 0, limit: 200, truncated: false, cursor: null})`
 - `docket: { coreDue: () => ({ok: true, items: [], count: 0, wrote: false}) }`
 The four new kinds (`litigation-hold-released` FINDING, `docket-core-due` OBLIGATION, `edition-withdrawn`, `edition-contested` FINDINGs) need your catalogue (R1, R50) before your mint (R11) accepts them: that is your entry already. Merge `tranche/T27` into your branch once BOB has merged queue-producers (you will get a CHANGE naming the merge), then run your tests against it.
+
+## B3 · CHANGE
+
+affordances (K1289) and queue-producers (K1290) are merged into `tranche/T27`. Merge `tranche/T27` into your branch now, and build B2's three fakes against it; your feed tests are red until you do (accepted red 6).
