@@ -67,8 +67,8 @@ export function lawProposalState(proposedBy) {
  * filing's draft (filings R5), a candidate theory and remedy (filings R14), an action plan's proposed option
  * (action-plans R11), a prepared communication (filings R23; both N-A1, T18), wording proposed for a filing template
  * (filing-templates R6; K921, T21), a draft of a new edition's statement of what changed (case-authoring R39;
- * DEC-101) and an escalation's pre-assembled opening reason (escalation R29; DEC-89; both K1019, T23) are each
- * machine work or a member's
+ * DEC-101) and an escalation's pre-assembled opening reason (escalation R29; DEC-89; both K1019, T23), and steps proposed
+ * for a wizard script (wizard-scripts R5; N543, T32) are each machine work or a member's
  * suggestion, never the thing itself, and each is labelled by `lawProposalState`'s three states. ONE CLOSED
  * TABLE, keyed by what was proposed: `governing_laws` is REC-195's table above, the same object, so its words
  * cannot drift from it; each other subject says, in each state, what the proposal is not. A subject the table does
@@ -163,6 +163,18 @@ export const PROPOSAL_STATES = Object.freeze({
       + 'proposed it',
     unstated: 'the record does not say who assembled this reason for opening an escalation from the determination\'s '
       + 'record, and it is not a member\'s reason until a member sends it, as offered or edited',
+  }),
+  /* N543 (K1396; T32, R45): steps proposed for a wizard script (wizard-scripts R5) are not a script's steps until its
+     author adopts them into a version, and a machine can propose steps and never draft, submit or approve a script
+     (wizard-scripts R19), worded as `template`'s sentences are. */
+  wizard: Object.freeze({
+    machine_proposed: 'a machine credential proposed these steps for a wizard script. That is machine work, labelled as '
+      + 'machine work: it is a draft, which can propose steps and can never draft, submit or approve a script. They are '
+      + 'not a script\'s steps until its author adopts them into a version',
+    member_proposed: 'a member proposed these steps for a wizard script. It is a proposal and not a script\'s steps until '
+      + 'its author adopts them into a version, and the record holds who proposed it',
+    unstated: 'the record does not say who proposed these steps for a wizard script, and they are not a script\'s steps '
+      + 'until its author adopts them into a version',
   }),
 });
 
