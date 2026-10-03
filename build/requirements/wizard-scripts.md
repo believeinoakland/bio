@@ -67,6 +67,8 @@ Terms. A **script** is R1's record; a **version** R1's version. A version's **st
 
 
 **Settled readings (K1396):** the readings of wizard-scripts's T31 question stand as K1396 states them; they bind this module's tests.
+
+**Settled readings (K1397):** the `brokenScripts` and `submittedFor` entry shapes and the factory name stand as K1397 states them; they bind this module's tests.
 ## Private
 
 ### Uses
