@@ -64,13 +64,16 @@ import { PUBLICATION_TABLES, PUBLICATION_EXEMPT, migratePublication, registerCas
 import { contradictionOf } from "../contradiction/index.mjs";
 import { sourcesOf } from "../sources/index.mjs";
 import { corpusExportOf } from "../corpus-export/index.mjs";
+import { acceptedWorkOf } from "../accepted-work/index.mjs";
+import { captureOf } from "../capture/index.mjs";
 /* The case document's grammar is `case-grammar`'s (K651): the formats and predicates, the /5 blocks and tension
    section, the attribution run's text, the section locators, the signed citations and the edge set a finding rests on.
    This module reads them from there and re-exports, unchanged, every name it exported before the split, so its
    importers import exactly what they imported. */
 import { caseDocumentStatesMemberBlocks, caseTensionsOf, disclosedCandidates, caseDocumentBlocks, sourceRowsStanding,
          SECTIONS, REAUTHORABLE_SECTIONS, signedCitations, ATTRIBUTION_LEVELS, attributionFrontmatterLines,
-         attributionBodyLines, publishedGraphEdges } from "../case-grammar/index.mjs";
+         attributionBodyLines, publishedGraphEdges, caseDocumentRequiresMaterials, acceptedWorkOf as acceptedWorkBlocksOf,
+         materialsOf } from "../case-grammar/index.mjs";
 
 export { ATTRIBUTION_ACT_CHECKS, CASE_SOURCES_CHECKS } from "./checks.mjs";
 export { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3, CASE_DOCUMENT_FORMAT_V2,
@@ -122,6 +125,7 @@ function pinCursor(after) {
 const CITATION_NAMES_CAPTURE = Object.freeze(["pinned", "only_capture"]);
 /* CPDF-10: a column this module WROTE as JSON, read back; null rather than a throw on a malformed value. */
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
+const HEX64 = /^[0-9a-f]{64}$/;
 const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : "");
 const shaOf = (text) => createSha256().update(new TextEncoder().encode(String(text))).hex();
 
@@ -155,12 +159,14 @@ export class Publication {
   purgeDeclaration = null;   // R31: record-core's answer to this module's purge declaration, set at creation
 
   constructor({ storage, record, membership, promotion, host = null, inquiry = null, basisVersions = null,
-                contradiction = null, sources = null, credentials = null, corpusExport = null, now = null } = {}) {
+                contradiction = null, sources = null, credentials = null, corpusExport = null, acceptedWork = null,
+                capture = null, extraction = null, now = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
-    this.#deps = { host, storage, inquiry, basisVersions, contradiction, sources, credentials, corpusExport };
+    this.#deps = { host, storage, inquiry, basisVersions, contradiction, sources, credentials, corpusExport, acceptedWork,
+                   capture, extraction };
     this.now = typeof now === "function" ? now : () => new Date().toISOString();
   }
 
@@ -171,6 +177,8 @@ export class Publication {
   get credentials() {
     return this.#deps.credentials ||= credentialsOf(this.#deps.host, { record: this.record, membership: this.membership });
   }
+  get acceptedWork() { return this.#deps.acceptedWork ||= acceptedWorkOf(this.#deps.host, { record: this.record, promotion: this.promotion }); }
+  get capture() { return this.#deps.capture ||= captureOf(this.#deps.host, { record: this.record }); }
   get sources() { return this.#deps.sources ||= sourcesOf(this.#deps.host, { record: this.record, membership: this.membership }); }
   get corpusExport() {
     return this.#deps.corpusExport ||= corpusExportOf(this.#deps.host, { storage: this.#deps.storage, record: this.record,
@@ -796,6 +804,18 @@ export class Publication {
                declared: owner.project_id, signed: project ?? null,
                detail: `case ${id} is ${owner.project_id}'s production and this signed case document names `
                      + `${project}. A case does not change hands between editions (DEC-72).` };
+    /* R58 (DEC-112; K1268, BOB's decision 5): EVERY EDITION COMMITTED FROM T28 ON CARRIES ITS METHOD AND MATERIALS, so a
+       preparation made before T28 (any format but /6) is never committed, nothing written: the remedy is a new
+       preparation, which carries them. A retry of an edition already signed answered above, whatever its format. */
+    const docFm = parseFrontmatter(doc.text).data || {};
+    if (!caseDocumentRequiresMaterials(docFm)) {
+      /* DEC-49 REGION is-case-format-current */
+      return { ok: false, reason: "CASE_FORMAT_SUPERSEDED", ...rowOf("CASE_FORMAT_SUPERSEDED"), caseId: id, edition: ed,
+               format: typeof docFm.format === "string" ? docFm.format : null,
+               detail: "this case document was prepared in a format that carries no method and no materials, so nothing "
+                     + "was committed. Prepare the case again, and sign the new preparation." };
+      /* END DEC-49 REGION is-case-format-current */
+    }
     const when = str(at) || this.#when();
     /* R51, R52 (N364; DEC-78 item 5(d)): WHAT THE DOCUMENT STATES OF ITS SOURCES IS RE-READ AT THE COMMIT. A consent
        withdrawn binds only later publications, and this is one: every row of the `sources:` block must still be what
@@ -810,6 +830,23 @@ export class Publication {
                      + "published of that source, so nothing was committed. What is published under a consent stays "
                      + "published; this edition was not, and a new preparation leaves the detail out." };
       /* END DEC-49 REGION is-source-consent-withdrawn */
+    }
+    /* R59 (DEC-96 items 1, 4; N522): ANOTHER GROUP'S WORK THE DOCUMENT RESTS ON IS RE-READ AT THE COMMIT, R51's pattern.
+       Each `accepted_work:` row's acceptance must still be in force at its edition, and every open flag on that edition
+       must be one `accepted_work_flags:` discloses; otherwise nothing is committed and the remedy is a new preparation. */
+    const standing = this.#acceptedWorkLapsed(docFm, attestorMember);
+    if (standing) {
+      /* DEC-49 REGION is-accepted-work-standing */
+      if (standing.withdrawn.length)
+        return { ok: false, reason: "ACCEPTANCE_WITHDRAWN_SINCE", ...rowOf("ACCEPTANCE_WITHDRAWN_SINCE"), caseId: id,
+                 edition: ed, accepted_work: standing.withdrawn,
+                 detail: `${standing.withdrawn.length} acceptance(s) of another group's work this case document rests on `
+                       + "are no longer known to be in force, so nothing was committed. Prepare the case again." };
+      return { ok: false, reason: "FLAG_OPENED_SINCE", ...rowOf("FLAG_OPENED_SINCE"), caseId: id, edition: ed,
+               flags: standing.undisclosed,
+               detail: `${standing.undisclosed.length} open flag(s) on another group's work this case document rests on `
+                     + "are not disclosed by it, so nothing was committed. Prepare the case again, disclosing them." };
+      /* END DEC-49 REGION is-accepted-work-standing */
     }
     if (!owner)
       this.sql.exec(`INSERT INTO cases (case_id,project_id,opened) VALUES (?,?,?) ON CONFLICT(case_id) DO NOTHING`,
@@ -842,6 +879,44 @@ export class Publication {
        act and transaction that signs it, so op=verify answers for the one hash a member signed here. */
     registerCaseDocumentSha(this.sql, id, ed, doc.doc_sha, doc.text, when);
     return outcome(false);
+  }
+
+  /* R59: the rows of a document's `accepted_work:` block whose acceptance is no longer in force, and the open flags on
+     their editions its `accepted_work_flags:` block does not disclose, or null when every row stands. Read through
+     `accepted-work` (its R2) as the signer (`member:<signer>`, case-import answering only an active member). A read
+     that answers absent, unreadable, null, or (for flags) not complete counts as not in force. Writes nothing. */
+  #acceptedWorkLapsed(fm, signer) {
+    let blocks = null;
+    try { blocks = acceptedWorkBlocksOf(fm); } catch { blocks = null; }
+    const rows = blocks && Array.isArray(blocks.accepted_work) ? blocks.accepted_work : [];
+    if (!rows.length) return null;
+    const disclosed = new Set((Array.isArray(blocks.accepted_work_flags) ? blocks.accepted_work_flags : [])
+      .filter((f) => f && typeof f === "object").map((f) => `${f.ref}\u0000${Number(f.edition)}\u0000${f.flag}`));
+    const viewer = str(signer) ? `member:${str(signer).replace(/^member:/, "")}` : null;
+    const aw = this.acceptedWork;
+    const withdrawn = [], undisclosed = [];
+    const asked = new Set();
+    for (const r of rows) {
+      if (!r || typeof r !== "object") continue;
+      const ref = str(r.ref), edition = Number(r.edition);
+      const key = `${ref}\u0000${edition}`;
+      if (asked.has(key)) continue;
+      asked.add(key);
+      const named = { ref: ref || null, edition: Number.isInteger(edition) ? edition : null };
+      const f = aw.acceptedFinding({ ref, edition, viewer });
+      const inForce = !!f && typeof f === "object" && !f.absent && !f.unreadable && f.acceptance
+        && typeof f.acceptance === "object" && (f.edition === undefined || Number(f.edition) === edition);
+      if (!inForce) { withdrawn.push(named); continue; }
+      const o = aw.openFlagsOn({ ref, edition, viewer });
+      if (!o || typeof o !== "object" || o.absent || o.unreadable || o.complete !== true || !Array.isArray(o.flags)) {
+        withdrawn.push(named);
+        continue;
+      }
+      for (const fl of o.flags)
+        if (fl && !disclosed.has(`${ref}\u0000${edition}\u0000${fl.flag}`))
+          undisclosed.push({ ...named, flag: fl.flag ?? null, issue: typeof fl.issue === "string" ? fl.issue : null });
+    }
+    return withdrawn.length || undisclosed.length ? { withdrawn, undisclosed: undisclosed.slice(0, 200) } : null;
   }
 
   /* R51: the `sources:` rows of one document that no longer hold at `at` (`sourceRowsStanding`). The sources behind a
@@ -1736,6 +1811,11 @@ export class Publication {
    *  by ratification — so an inherited level is one a published edition already carried. None is none:
    *  nothing is ever prefilled. */
   attributionInForce(caseId, edition, observation) {
+    /* R60: a capture's SHA-256 (never a bundle id) reads its attesting member's choice, on the same rule. */
+    if (typeof observation === "string" && HEX64.test(observation))
+      return this.#one(`SELECT level, edition, chosen_by, chosen_at, reason FROM capture_attributions
+                         WHERE case_id=? AND capture_sha=? AND edition<=? ORDER BY edition DESC LIMIT 1`,
+                       caseId, observation, edition) || null;
     /* R17: the choice is read back with its reason (DEC-88), null on a choice recorded before it. */
     return this.#one(`SELECT level, edition, chosen_by, chosen_at, reason FROM observation_attributions
                        WHERE case_id=? AND bundle_id=? AND edition<=? ORDER BY edition DESC LIMIT 1`,
@@ -1750,6 +1830,22 @@ export class Publication {
     return [...new Set([...reach.self, ...reach.via.map((v) => v.observation)])];
   }
 
+  /** R60 (DEC-119 (3)): THE OFF-THE-RECORD CAPTURES ONE CASE DOCUMENT REACHES: each capture its `sources:` block (case-grammar
+   *  R1) states with no basis, the Withheld statement (case-authoring R37, R46), in the document's order, once each. */
+  #capturesReachedBy(docText) {
+    let rows = null;
+    try { rows = caseDocumentBlocks(String(docText || "")).sources; } catch { rows = null; }
+    return [...new Set((Array.isArray(rows) ? rows : [])
+      .filter((r) => r && typeof r.capture === "string" && HEX64.test(r.capture) && (r.basis == null || r.basis === "null"))
+      .map((r) => r.capture))];
+  }
+
+  /* R17, R60: everything an edition's attribution statements are about: its observations, then its off-the-record
+     captures, keyed by their SHA-256. */
+  #attributedReachedBy(docText) {
+    return [...this.#observationsReachedBy(docText), ...this.#capturesReachedBy(docText)];
+  }
+
   /** MK-7 / §4.3, §4.6 — THE EDITION'S ATTRIBUTION STATEMENTS, DERIVED FROM THE ACTS AND NEVER FROM THE
    *  OWNER'S INPUT. One row per reached observation: the level in force and what that level PUBLISHES —
    *  `group` the producing group (null when this store records none, stated in the prose), `project` the
@@ -1761,13 +1857,15 @@ export class Publication {
     /* R17: with no observations named, those the edition's own document reaches. */
     const obsList = Array.isArray(observations) ? observations : (() => {
       const d = this.#one(`SELECT text FROM case_documents WHERE case_id=? AND edition=?`, caseId, Number(edition));
-      return d ? this.#observationsReachedBy(d.text) : [];
+      return d ? this.#attributedReachedBy(d.text) : [];
     })();
     return obsList.map((obs) => {
       const act = this.attributionInForce(caseId, edition, obs);
       if (!act) return { observation: obs, level: null, shown: null, chosen_at_edition: null,
                          why: "its author has chosen no level for this edition or any earlier one" };
-      const g = this.#one(`SELECT author FROM register WHERE bundle_id=? AND authored=1 LIMIT 1`, obs);
+      /* R60: a capture's level publishes its attesting member's values, the member who chose it. */
+      const g = HEX64.test(String(obs)) ? { author: act.chosen_by }
+        : this.#one(`SELECT author FROM register WHERE bundle_id=? AND authored=1 LIMIT 1`, obs);
       const m = g ? this.membership.memberFacts(g.author) : null;
       /* WHAT EACH LEVEL PUBLISHES, and nothing else (a projection, not a refusal site, so it carries no DEC-49 marker). */
       const shown = act.level === "group" ? this.#producingGroup()
@@ -1795,7 +1893,7 @@ export class Publication {
                why: "this case document carries no attribution statements to re-author" };
     const fm = parseFrontmatter(doc.text).data || {};
     const rows = this.attributionStatements(doc.case_id, Number(doc.edition), String(fm.case_project ?? "").trim(),
-                                            this.#observationsReachedBy(doc.text));
+                                            this.#attributedReachedBy(doc.text));
     /* R21: the one splice, so the section's bytes are written one way whoever re-authors them. */
     const { ok: _ok, ...out } = this.reauthorSection({ caseId: doc.case_id, edition: Number(doc.edition),
       docSha: doc.doc_sha, section: "attribution",
@@ -1810,13 +1908,16 @@ export class Publication {
    *  level the author did not choose. */
   attributionFacts(doc) {
     const fm = parseFrontmatter(String(doc && doc.text || "")).data || {};
-    const reached = this.#observationsReachedBy(doc && doc.text);
+    const observations = this.#observationsReachedBy(doc && doc.text);
+    /* R60: the off-the-record captures beside the observations, keyed by their SHA-256; only an observation can name its
+       author in its own files (§4.1), so `legacy` asks of observations alone. */
+    const reached = [...observations, ...this.#capturesReachedBy(doc && doc.text)];
     const stated = (Array.isArray(fm.observation_attributions) ? fm.observation_attributions : [])
       .map((r) => ({ observation: String(r && r.observation != null ? r.observation : ""),
                      level: r && typeof r.level === "string" && r.level !== "null" ? r.level : null,
                      shown: r && r.shown != null && r.shown !== "null" ? String(r.shown) : null }));
     const current = this.attributionStatements(doc.case_id, Number(doc.edition), String(fm.case_project ?? "").trim(), reached);
-    return { reached, legacy: this.observationsNamingAuthor(reached), stated, current };
+    return { reached, legacy: this.observationsNamingAuthor(observations), stated, current };
   }
 
   /** MK-7 — DOES ANY RATIFIED CASE DOCUMENT STATE A CHOSEN LEVEL FOR THIS OBSERVATION? op=ratify asks it before
@@ -1843,7 +1944,7 @@ export class Publication {
    *  signs. No `publish` capability is needed: it is a decision about the member's own words, not about
    *  the case. `by` is the control plane's stamp and nothing else. DEC-88: `reason`, the author's words on why
    *  this level, is recorded with the choice (C-92.13). */
-  attributeObservation({ caseId = null, edition = null, observation = null, level = null, reason = null,
+  attributeObservation({ caseId = null, edition = null, observation = null, capture = null, level = null, reason = null,
                          by = null } = {}) {
     const refusal = (code, detail, extra) => {
       const row = ATTRIBUTION_ACT_CHECKS[code];
@@ -1879,28 +1980,50 @@ export class Publication {
         `'${lv.slice(0, 40)}' is not a level; choose one of ${ATTRIBUTION_LEVELS.join(", ")}`,
         { allowed: ATTRIBUTION_LEVELS });
     /* END DEC-49 REGION is-attribute-act */
-    const obs = typeof observation === "string" ? observation.trim() : "";
-    const reg = obs ? this.#one(`SELECT author FROM register WHERE bundle_id=? AND authored=1 LIMIT 1`, obs) : null;
-    /* DEC-49 REGION is-attribute-author */
-    if (!reg)
-      return refusal("ATTRIBUTION_NOT_AN_OBSERVATION",
-        `${obs ? obs.slice(0, 80) : "(none named)"} is not a member's firsthand observation in this record, so it `
-        + `has no author to choose how it is attributed`, { observation: obs || null });
-    if (reg.author !== who)
-      return refusal("ATTRIBUTION_NOT_THE_AUTHOR",
-        `${obs} was recorded by another member. Only an observation's author chooses how a case shows who said it: `
-        + `not a project owner, not an administrator, and not a default (§4.2)`, { observation: obs });
-    const me = this.membership.memberFacts(who);
-    if (!me || me.status !== "active")
-      return refusal("ATTRIBUTION_AUTHOR_NOT_ACTIVE",
-        `the author of ${obs} is not an active member, and nobody takes this act for them (§4.5)`, { observation: obs });
-    /* END DEC-49 REGION is-attribute-author */
+    /* R60 (DEC-119 (3)): `capture` in place of `observation` names an off-the-record capture, whose attesting member
+       chooses how the edition credits their attestation, by this same act and its refusals. */
+    const cap = typeof capture === "string" && capture.trim() ? capture.trim().toLowerCase() : "";
+    const obs = cap ? "" : typeof observation === "string" ? observation.trim() : "";
+    const subject = cap || obs;
     const cid = typeof caseId === "string" ? caseId.trim() : "";
     const ed = Number(edition);
     const doc = cid && Number.isInteger(ed) && ed >= 1
       ? this.#one(`SELECT case_id, edition, doc_sha, text, sig_armored FROM case_documents WHERE case_id=? AND edition=?`, cid, ed)
       : null;
-    const reaches = !!doc && this.#observationsReachedBy(doc.text).includes(obs);
+    const reg = obs ? this.#one(`SELECT author FROM register WHERE bundle_id=? AND authored=1 LIMIT 1`, obs) : null;
+    const named = cap ? { capture: cap } : { observation: obs || null };
+    /* DEC-49 REGION is-attribute-author */
+    if (cap) {
+      /* A capture is "such a capture" only where the named edition's document states its source as Withheld: one
+         answer for a capture no such document names, so the act is not a way to learn what cases exist. */
+      if (!HEX64.test(cap) || !doc || !this.#capturesReachedBy(doc.text).includes(cap))
+        return refusal("ATTRIBUTION_NOT_AN_OBSERVATION",
+          `${cap.slice(0, 80)} is not material from a source the named case edition shows as Withheld, so it has no `
+          + `attesting member to choose how they are credited`, named);
+      let actors = [];
+      try { actors = (this.capture.captureAccountsOf(cap).actors || []).map((r) => String(r.actor || "").replace(/^member:/, "")); }
+      catch { actors = []; }
+      if (!actors.includes(who.replace(/^member:/, "")))
+        return refusal("ATTRIBUTION_NOT_THE_AUTHOR",
+          `${cap} was attested by another member. Only the member who attested off-the-record material chooses how a `
+          + `case credits them: not a project owner, not an administrator, and not a default (DEC-119 (3))`, named);
+    } else {
+      if (!reg)
+        return refusal("ATTRIBUTION_NOT_AN_OBSERVATION",
+          `${obs ? obs.slice(0, 80) : "(none named)"} is not a member's firsthand observation in this record, so it `
+          + `has no author to choose how it is attributed`, named);
+      if (reg.author !== who)
+        return refusal("ATTRIBUTION_NOT_THE_AUTHOR",
+          `${obs} was recorded by another member. Only an observation's author chooses how a case shows who said it: `
+          + `not a project owner, not an administrator, and not a default (§4.2)`, named);
+    }
+    const me = this.membership.memberFacts(who);
+    if (!me || me.status !== "active")
+      return refusal("ATTRIBUTION_AUTHOR_NOT_ACTIVE",
+        `the ${cap ? "attesting member" : "author"} of ${subject} is not an active member, and nobody takes this act for `
+        + `them (§4.5)`, named);
+    /* END DEC-49 REGION is-attribute-author */
+    const reaches = !!doc && (cap ? true : this.#observationsReachedBy(doc.text).includes(obs));
     /* DEC-49 REGION is-attribute-edition
        ONE ANSWER for no such document and a document that does not reach this observation, so the act is not
        a way to learn what cases exist: the author is told only about an edition that uses their words. */
@@ -1908,38 +2031,44 @@ export class Publication {
       return refusal("ATTRIBUTION_NOT_REACHED",
         `no prepared case edition ${cid ? `${cid.slice(0, 60)} edition ${Number.isInteger(ed) ? ed : "(none)"}` : "(none named)"} `
         + `rests on ${obs}. An attribution is chosen for an edition that uses the observation, once op=publish has `
-        + `prepared its case document`, { observation: obs, caseId: cid || null, edition: Number.isInteger(ed) ? ed : null });
+        + `prepared its case document`, { ...named, caseId: cid || null, edition: Number.isInteger(ed) ? ed : null });
     if (doc.sig_armored)
       return refusal("ATTRIBUTION_EDITION_RATIFIED",
         `${cid} edition ${ed} is already signed, and a signed edition answers forever; your choice applies to the `
-        + `next edition, which inherits it until you change it (§4.3)`, { observation: obs, caseId: cid, edition: ed });
+        + `next edition, which inherits it until you change it (§4.3)`, { ...named, caseId: cid, edition: ed });
     if (lv === "name" && !(me.handle && String(me.handle).trim()))
       return refusal("ATTRIBUTION_NAME_NO_HANDLE",
         `'name' publishes the handle you appear under in this record, and you have none (§4.6). Choose another `
-        + `level, or set a handle first`, { observation: obs });
+        + `level, or set a handle first`, named);
     /* END DEC-49 REGION is-attribute-edition */
-    const prior = this.attributionInForce(cid, ed, obs);
+    const prior = this.attributionInForce(cid, ed, subject);
     /* c22-batch29 union (CONDUCT #22): D-543's one helper, not a hand-spelled whole-second stamp — MK-7 was cut before
        D-543 and d543-instant-precision named this site. Same value: stampInstant("second") of the current instant. */
     const when = stampInstant("second");
     /* The same level again at the same edition writes nothing, so the first reason stands (K1058); another level is a
        new choice, recorded with its own reason. */
     const same = !!(prior && Number(prior.edition) === ed && prior.level === lv);
-    if (!same)
+    if (!same && cap)
+      this.sql.exec(`INSERT INTO capture_attributions (case_id, edition, capture_sha, level, chosen_by, chosen_at, reason)
+                     VALUES (?,?,?,?,?,?,?) ON CONFLICT(case_id, edition, capture_sha) DO UPDATE SET
+                       level=excluded.level, chosen_by=excluded.chosen_by, chosen_at=excluded.chosen_at,
+                       reason=excluded.reason`,
+                    cid, ed, cap, lv, who, when, why);
+    else if (!same)
       this.sql.exec(`INSERT INTO observation_attributions (case_id, edition, bundle_id, level, chosen_by, chosen_at, reason)
                      VALUES (?,?,?,?,?,?,?) ON CONFLICT(case_id, edition, bundle_id) DO UPDATE SET
                        level=excluded.level, chosen_by=excluded.chosen_by, chosen_at=excluded.chosen_at,
                        reason=excluded.reason`,
                     cid, ed, obs, lv, who, when, why);
-    const held = this.attributionInForce(cid, ed, obs);
+    const held = this.attributionInForce(cid, ed, subject);
     const reauthored = this.#reauthorAttributions(doc);
     const fm = parseFrontmatter(doc.text).data || {};
-    const stmt = this.attributionStatements(cid, ed, String(fm.case_project ?? "").trim(), [obs])[0];
-    return { ok: true, existed: same, observation: obs, caseId: cid, edition: ed, level: lv, shown: stmt.shown,
+    const stmt = this.attributionStatements(cid, ed, String(fm.case_project ?? "").trim(), [subject])[0];
+    return { ok: true, existed: same, ...(cap ? { capture: cap, observation: null } : { observation: obs }), caseId: cid, edition: ed, level: lv, shown: stmt.shown,
              reason: held ? held.reason ?? null : null,
              previous: prior ? { level: prior.level, edition: Number(prior.edition) } : null,
              case_document: reauthored,
-             stated: `edition ${ed} of ${cid} now states ${obs} at level '${lv}'. The case document was re-authored; `
+             stated: `edition ${ed} of ${cid} now states ${subject} at level '${lv}'. The case document was re-authored; `
                    + `its owner signs the new bytes. A later edition inherits this choice until you change it.` };
   }
 
@@ -2685,7 +2814,8 @@ export function publicationOps(p, url, body) {
                                    outstandingOnly: q("outstanding") === "1" }),
     /* MK-7: WHO CHOSE comes from the query string, where the control plane stamped it (R17). */
     attribute: () => p.attributeObservation({ caseId: b.caseId ?? null, edition: b.edition ?? null,
-                                              observation: b.observation ?? null, level: b.level ?? null,
+                                              observation: b.observation ?? null, capture: b.capture ?? null,
+                                              level: b.level ?? null,
                                               reason: b.reason ?? null, by: q("by") }),
     /* REC-44: internal only, and no caller's op (R15). */
     recordcasemanifest: () => p.recordCaseManifest(b),

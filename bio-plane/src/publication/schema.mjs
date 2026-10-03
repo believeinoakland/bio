@@ -6,7 +6,7 @@
  * `cases`) is append-only and exempt from purge (R24, R31): an edition answers forever. `export_log` is
  * `corpus-export`'s since K1024. The derived
  * and working tables (`published_edges`, `published_held_references`, unsigned `case_documents` and their
- * `case_exclusions`, `case_revision_flags`, `observation_attributions`) are declared to record-core's purge as the
+ * `case_exclusions`, `case_revision_flags`, `observation_attributions`, `capture_attributions` (R60)) are declared to record-core's purge as the
  * store declared them (K23); the held references (N256) as `published_edges` is. */
 
 export const PUBLICATION_SCHEMA = `
@@ -567,12 +567,29 @@ CREATE TABLE IF NOT EXISTS observation_attributions (
   PRIMARY KEY (case_id, edition, bundle_id)
 );
 CREATE INDEX IF NOT EXISTS observation_attributions_bundle ON observation_attributions(bundle_id);
+
+-- R60 (DEC-119 (3); DEC-102 items 1-3; N523): THE ATTESTING MEMBER'S CREDIT FOR OFF-THE-RECORD MATERIAL. One row per
+-- (case edition, capture): the level the capture's attesting member (its actor, acquisition R16) chose for how that
+-- edition credits their attestation of material from a source the case shows as Withheld. Written only by
+-- op=attribute with `capture`, by that member and nobody else, never prefilled; a later edition inherits the latest
+-- earlier edition's row, as observation_attributions'. capture_sha is a capture's SHA-256, never a bundle id, so the
+-- rows are cleared by the whole-store purge only. reason is the member's words, as DEC-88 asks of an observation's.
+CREATE TABLE IF NOT EXISTS capture_attributions (
+  case_id     TEXT NOT NULL,
+  edition     INTEGER NOT NULL,
+  capture_sha TEXT NOT NULL,     -- the off-the-record capture (64 lowercase hex)
+  level       TEXT NOT NULL CHECK (level IN ('group','project','cover','name')),
+  chosen_by   TEXT NOT NULL,     -- the capture's attesting member, stamped from the signed-in session
+  chosen_at   TEXT NOT NULL,
+  reason      TEXT NOT NULL,     -- why this level, in the member's words
+  PRIMARY KEY (case_id, edition, capture_sha)
+);
 `;
 
 /** R31 (K23): what purge clears, as the store declared it — `published_edges` keyed by either end, the unsigned case
  *  documents and their exclusions by the whole-store form only, the flags and the attributions by their bundle. */
 export const PUBLICATION_TABLES = Object.freeze([
-  "case_revision_flags", "observation_attributions",
+  "case_revision_flags", "observation_attributions", "capture_attributions",
   { name: "published_edges", keys: ["from_bundle", "to_bundle"] },
   { name: "published_held_references", keys: ["from_bundle", "to_bundle"] },
   { name: "case_documents", keys: [], whole: "ratified_at IS NULL" },
