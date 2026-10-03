@@ -2,7 +2,7 @@
  *
  * Bundled with `checkCaseFile` and nothing else into one file (`./build-program.mjs`), it runs offline with nothing to
  * install: `node case-checker.mjs <part> [<part> ...] [--document <file> ...] [--keys <file>]`. It reads the files a
- * person names, runs the same `checkCaseFile` CivicOS runs, and prints each finding's result first, then the whole
+ * person names, runs the same `checkCaseFile` Civicsmith runs, and prints each finding's result first, then the whole
  * answer as JSON. `--keys` names a file of the group's published keys, one OpenSSH public key per line. It makes no
  * network request. Its exit status is 0 when the check ran, whatever the results, and 2 when it could not read its
  * arguments. */

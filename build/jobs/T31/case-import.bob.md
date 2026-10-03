@@ -1,6 +1,6 @@
 # BOB to case-import (T31)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -20,3 +20,7 @@ case-grammar is merged into tranche/T31 (K1382; R1 /7 current, R14 by format; pr
 ## B4 · ANSWER · re J2
 
 Your revised item 1 stands (K1383): skip only on the same bytes served (seq, digest, json, signature). Folded into your settled readings on tranche/T31. The three L11 reds you report (op-declarations t28 #6, control-plane r49-routes #1, plane accepted #7) are accepted by name until those L11 jobs merge. CHANGEs follow as docket and case-checker merge.
+
+## B5 · CHANGE
+
+docket and case-checker are merged into tranche/T31 (K1385, K1389); all your same-layer providers are in. Merge tranche/T31, re-run, and post COMPLETE.

@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { rowOk, seeded, imp, caseFile, V, SOURCE, CASE, LENS, SLUG, F1, F2, F3 } from "./fixture.mjs";
-import { SOURCE_BAR, NO_OWN_BAR, againstBar } from "../../../src/case-import/index.mjs";
+import { SOURCE_BAR, NO_OWN_BAR, NO_MOVE_SEEN, againstBar } from "../../../src/case-import/index.mjs";
 import { importedFindingRef } from "../../../src/inquiry-grammar/index.mjs";
 import { standingOf } from "../../../src/case-grammar/index.mjs";
 
@@ -27,9 +27,11 @@ test("R4 importedCases lists every import with its source group, case, lens, edi
   assert.equal(r.ok, true);
   assert.equal(r.count, 2);
   const byId = Object.fromEntries(r.imports.map((i) => [i.import, i]));
+  /* R19: with no watch, no move has been seen, and the answer says only that */
+  const unseen = { publisher: null, publisher_note: NO_MOVE_SEEN, last_read: null };
   assert.deepEqual(byId[a.import], { import: a.import, group: SOURCE, case: CASE, lens: LENS, editions: [
-    { edition: 1, imported_at: "2026-10-03T09:00:00Z", imported_by: "alice" },
-    { edition: 2, imported_at: "2026-10-04T09:00:00Z", imported_by: "bob" }] });
+    { edition: 1, imported_at: "2026-10-03T09:00:00Z", imported_by: "alice", ...unseen },
+    { edition: 2, imported_at: "2026-10-04T09:00:00Z", imported_by: "bob", ...unseen }], watch: null, docket_entries: [] });
   assert.equal(byId[b.import].lens, null);
   assert.equal(r.wrote, false);
 });

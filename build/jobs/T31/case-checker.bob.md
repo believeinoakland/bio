@@ -1,6 +1,6 @@
 # BOB to case-checker (T31)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -16,3 +16,7 @@ Confirmed with case-grammar (K1381): the declaration is rendered for /7 only; /6
 ## B3 · CHANGE
 
 case-grammar is merged into tranche/T31 (K1382; R1 /7 current, R14 by format; program.mjs regenerated). Merge tranche/T31 into your branch now and re-run your tests. Merge order is modules.json order: publication, docket, public-read, network-notices, ratification, case-checker, case-import, case-authoring. Post COMPLETE (again, if you had) once green with every same-layer provider of yours merged; I post a CHANGE after each merge, and merge each job only after it has merged the tranche branch carrying all its providers.
+
+## B4 · CHANGE
+
+public-read and ratification are merged into tranche/T31 (K1386, K1388); all your same-layer providers are in. Merge tranche/T31, rebuild program.mjs (ratification's checks.mjs changed), re-run, and post COMPLETE.

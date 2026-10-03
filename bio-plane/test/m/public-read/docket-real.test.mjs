@@ -90,3 +90,20 @@ test("R21 over the real docket: op=docketpublic is the docket's own answer, op=d
     assert.deepEqual(await n.json(), { ok: false, ...read("publishedcase", { caseId: "CASE-2099-0404" }) }, op);
   }
 });
+
+test("R25 over the real docket: op=docketpublic&captures=omit is the docket's own answer to captures: \"omit\"; any other value is its plain answer", async () => {
+  const { w, read, door } = served();
+  await post(w, { kind: "withdrawal", edition: 1, reason: "Withdrawn." });
+  const omitted = await w.docket.docketPublic({ case: CASE, captures: "omit" });
+  assert.deepEqual([omitted.captures, omitted.captures_omitted], [{}, true]);
+  assert.deepEqual(await read("docketpublic", { case: CASE, captures: "omit" }), { ...omitted, ok: true, case: CASE });
+  const r = await door("docketpublic", { case: CASE, captures: "omit", token: "t" });
+  assert.deepEqual([r.status, await r.json()], [200, { ...omitted, ok: true, case: CASE }]);
+  /* negative control: another value, or none, is the docket's plain answer, which says nothing was omitted */
+  const plain = await w.docket.docketPublic({ case: CASE });
+  assert.equal("captures_omitted" in plain, false);
+  for (const q of [{}, { captures: "OMIT" }, { captures: "keep" }]) {
+    assert.deepEqual(await read("docketpublic", { case: CASE, ...q }), { ...plain, ok: true, case: CASE }, JSON.stringify(q));
+    assert.deepEqual(await (await door("docketpublic", { case: CASE, ...q })).json(), { ...plain, ok: true, case: CASE });
+  }
+});

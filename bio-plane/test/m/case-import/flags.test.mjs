@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { rowOk, refusedThenAccepted, seeded, world, imp, caseFile, V, MACHINE, SOURCE, CASE, F1, F2, F3 } from "./fixture.mjs";
-import { CASE_IMPORT_CHECKS, caseImportOf, withRow } from "../../../src/case-import/index.mjs";
+import { CASE_IMPORT_CHECKS, caseImportOf, caseImportOps, withRow } from "../../../src/case-import/index.mjs";
 import { importedFindingRef } from "../../../src/inquiry-grammar/index.mjs";
 import { acceptedWorkOf } from "../../../src/accepted-work/index.mjs";
 
@@ -81,9 +81,13 @@ test("R8 flags are seen only by those who may see the import, and never on a pub
   for (const v of [V("carol"), V("dave"), "class:ai"])
     assert.equal(JSON.stringify(w.ci.importedCase({ import: a.import, viewer: v })), none, "absent, the flags with it");
   assert.equal(w.ci.openFlagsFacts({ ref: importedFindingRef(a.import, F1), edition: 1, viewer: V("carol") }), null);
-  /* no public read: every op this module answers is a member's (op-declarations names them member-session only) */
-  const src = readFileSync(fileURLToPath(new URL("../../../src/case-import/index.mjs", import.meta.url)), "utf8");
-  assert.doesNotMatch(src, /registerPublicRead|publicReads?\(/);
+  /* no public path: every op this module answers asks for a member, so a call with no stamped member sees no flag */
+  const ops = caseImportOps(w.ci, new URL(`https://x/?import=${a.import}&edition=1`), {});
+  for (const [op, fn] of Object.entries(ops)) {
+    const r = await fn();
+    assert.doesNotMatch(JSON.stringify(r), /the payroll figure is a year off/, op);
+    assert.ok(op === "importedcases" ? r.count === 0 : r.ok === false, op);
+  }
 });
 
 /* ================================================================ R9 */
@@ -205,7 +209,7 @@ test("R16 before the module starts, accepted-work answers absent; once it starts
 
 test("R14 each refusal carries its row in this module's own table, a new family, with a check, a site and a translation", async () => {
   const rows = Object.entries(CASE_IMPORT_CHECKS);
-  assert.equal(rows.length, 14);
+  assert.equal(rows.length, 16);
   const ids = rows.map(([, r]) => r.check);
   assert.equal(new Set(ids).size, ids.length, "each number once");
   const fam = new Set(ids.map((c) => c.replace(/\.\d+$/, "")));

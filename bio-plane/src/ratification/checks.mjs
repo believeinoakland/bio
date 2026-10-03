@@ -15,7 +15,7 @@ import { ISO_TS_RE, BUNDLE_ID_RE, BASIS_GRADES, GRADE_AXES } from "../record-gra
 /* K1317: the pure spellings (strength's arithmetic, case-grammar R1), never the store-bound index files, so the
    standalone checker (case-checker R13) bundles only pure code. */
 import { STRENGTH_STATES } from "../strength/arithmetic.mjs";
-import { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V2, CASE_DOCUMENT_FORMAT_LEGACY, CASE_DOCUMENT_FORMATS_ACCEPTED,
+import { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMATS_ACCEPTED,
          caseDocumentStatesMemberBlocks, caseDocumentRequiresDisclosures, caseDocumentRequiresV4Disclosures,
          whatChangedOf, isNoticeReference, WORKING_ON_KEY } from "../case-grammar/index.mjs";
 
@@ -511,10 +511,15 @@ const C41 = Object.fromEntries(
 export function checkCaseDocument(fm, ctx = {}) {
   const findings = [];
   const { caseId = null, edition = null, priorCase = null, body = null, memberBasis = null } = ctx;
+  /* N538 (K1365 (1), K1367): the obligations below are named by the format the document DECLARES, never by the current
+     one. `/7` is `/6` in every field and is read as `/6` (case-grammar R1), so a `/6` document's findings stay byte for
+     byte what they were before T31 and a `/7` one's differ only in the token; a `/3`, `/4` or `/5` document is no longer
+     told it is the current format. The arms are asked only of an accepted format (case-grammar's predicates). */
+  const declared = String(fm?.format);
 
   /* D-442: an ACCEPTED SET, never a single value — the IC-166 precondition for the bump. */
   if (!CASE_DOCUMENT_FORMATS_ACCEPTED.includes(fm?.format)) {
-    findings.push(f(C41.FORMAT, 'error', `a case document declares format '${CASE_DOCUMENT_FORMAT}' (or, authored before REC-188, '${CASE_DOCUMENT_FORMAT_V2}'; or, authored before BIO_Publication_v0_1.md §3 rule 12, '${CASE_DOCUMENT_FORMAT_LEGACY}') (got '${fm?.format}'): the format token is what lets a stranger holding these bytes know what they are reading and what rules they were made under, which is the same reason the container manifest carries one`,
+    findings.push(f(C41.FORMAT, 'error', `a case document declares format '${CASE_DOCUMENT_FORMAT}', or one of the earlier formats accepted as written (${CASE_DOCUMENT_FORMATS_ACCEPTED.filter((x) => x !== CASE_DOCUMENT_FORMAT).map((x) => `'${x}'`).join(', ')}) (got '${fm?.format}'): the format token is what lets a stranger holding these bytes know what they are reading and what rules they were made under, which is the same reason the container manifest carries one`,
       ['re-publish through op=publish, which authors the case document']));
   }
   /* THE IDENTITY AND THE EDITION, CHECKED AGAINST WHAT THE STORE IS ABOUT TO
@@ -693,25 +698,25 @@ export function checkCaseDocument(fm, ctx = {}) {
   if (caseDocumentRequiresDisclosures(fm)) {
     const bm = fm?.bias_manifest;
     if (!bm || typeof bm !== 'object' || Array.isArray(bm) || typeof bm.in_force !== 'boolean') {
-      findings.push(f(C41.DISCLOSURES, 'error', `a ${CASE_DOCUMENT_FORMAT} case document requires a bias_manifest map with a boolean in_force (got ${JSON.stringify(bm ?? null)}): a published case CARRIES the bias it was produced under (DEC-20), and the manifest is the lens itself — computed and stamped by the plane beside the acknowledgement the publisher authors (DEC-46). A document silent about the lens cannot be told from one produced under none`,
+      findings.push(f(C41.DISCLOSURES, 'error', `a ${declared} case document requires a bias_manifest map with a boolean in_force (got ${JSON.stringify(bm ?? null)}): a published case CARRIES the bias it was produced under (DEC-20), and the manifest is the lens itself — computed and stamped by the plane beside the acknowledgement the publisher authors (DEC-46). A document silent about the lens cannot be told from one produced under none`,
         ['re-publish through op=publish, which stamps the manifest in force for the case\'s project into the case document']));
     } else if (bm.in_force === true && !(typeof bm.statements_sha === 'string' && /^[0-9a-f]{64}$/.test(bm.statements_sha))) {
-      findings.push(f(C41.DISCLOSURES, 'error', `a ${CASE_DOCUMENT_FORMAT} case document's bias_manifest says a lens was in force and names no 64-hex statements_sha (got '${bm.statements_sha}'): the manifest is the (record, revision) pairs PLUS a hash of the effective statement set, and a lens named without its hash cannot be checked against op=biasmanifest by anyone`,
+      findings.push(f(C41.DISCLOSURES, 'error', `a ${declared} case document's bias_manifest says a lens was in force and names no 64-hex statements_sha (got '${bm.statements_sha}'): the manifest is the (record, revision) pairs PLUS a hash of the effective statement set, and a lens named without its hash cannot be checked against op=biasmanifest by anyone`,
         ['re-publish through op=publish']));
     } else if (bm.in_force === false && !(typeof bm.stated === 'string' && bm.stated.trim())) {
-      findings.push(f(C41.DISCLOSURES, 'error', `a ${CASE_DOCUMENT_FORMAT} case document's bias_manifest says no lens was in force and does not SAY so (stated is empty): "no manifest was in force" is a statement, and a blank is not one`,
+      findings.push(f(C41.DISCLOSURES, 'error', `a ${declared} case document's bias_manifest says no lens was in force and does not SAY so (stated is empty): "no manifest was in force" is a statement, and a blank is not one`,
         ['re-publish through op=publish']));
     }
     if (bm && typeof bm === 'object' && !Array.isArray(fm?.bias_manifest_bundles)) {
-      findings.push(f(C41.DISCLOSURES, 'error', `a ${CASE_DOCUMENT_FORMAT} case document requires bias_manifest_bundles beside bias_manifest: an EMPTY list is a claim (no bias record was in force) and is legal — an ABSENT field is silence about which revisions the lens was`,
+      findings.push(f(C41.DISCLOSURES, 'error', `a ${declared} case document requires bias_manifest_bundles beside bias_manifest: an EMPTY list is a claim (no bias record was in force) and is legal — an ABSENT field is silence about which revisions the lens was`,
         ['re-publish through op=publish']));
     }
     if (!c || !Number.isInteger(c.acknowledged) || c.acknowledged < 0) {
-      findings.push(f(C41.DISCLOSURES, 'error', `a ${CASE_DOCUMENT_FORMAT} case document requires completeness.acknowledged, the count of second readers of its statement (got '${c ? c.acknowledged : undefined}'): ZERO is a statement — nobody but its author acknowledged it — and is legal; an absent count is silence (BIO_Publication §3 rule 11). An acknowledgement is never required to publish`,
+      findings.push(f(C41.DISCLOSURES, 'error', `a ${declared} case document requires completeness.acknowledged, the count of second readers of its statement (got '${c ? c.acknowledged : undefined}'): ZERO is a statement — nobody but its author acknowledged it — and is legal; an absent count is silence (BIO_Publication §3 rule 11). An acknowledgement is never required to publish`,
         ['re-publish through op=publish, which lists every acknowledgement of the statement it publishes']));
     }
     if (!Array.isArray(fm?.completeness_acknowledgements)) {
-      findings.push(f(C41.DISCLOSURES, 'error', `a ${CASE_DOCUMENT_FORMAT} case document requires completeness_acknowledgements: an EMPTY list is a claim (nobody but the statement's author acknowledged it) and is legal — an ABSENT field is silence about who else read what this case leaves out (BIO_Publication §3 rule 11)`,
+      findings.push(f(C41.DISCLOSURES, 'error', `a ${declared} case document requires completeness_acknowledgements: an EMPTY list is a claim (nobody but the statement's author acknowledged it) and is legal — an ABSENT field is silence about who else read what this case leaves out (BIO_Publication §3 rule 11)`,
         ['re-publish through op=publish, which lists every acknowledgement of the statement it publishes']));
     }
     /* REC-212 — (c) `completeness.statement_by`: WHO WROTE THE STATEMENT, told apart from
@@ -726,7 +731,7 @@ export function checkCaseDocument(fm, ctx = {}) {
        so nothing that already crossed is disturbed (rule 1). */
     if (!c || !Object.prototype.hasOwnProperty.call(c, 'statement_by')
         || !(c.statement_by === null || (typeof c.statement_by === 'string' && c.statement_by.trim()))) {
-      findings.push(f(C41.DISCLOSURES, 'error', `a ${CASE_DOCUMENT_FORMAT} case document requires completeness.statement_by, the member who WROTE its exclusion statement — a different act, and a different name, from completeness.author, who prepared and published the case (BIO_Publication §3 rule 13). NULL is a statement (the plane could not establish who wrote the sentence) and is legal; an ABSENT key is silence, and a reader holding only the publisher's name reads two acts as one (got ${c ? JSON.stringify(c.statement_by ?? null) : undefined}${c && !Object.prototype.hasOwnProperty.call(c, 'statement_by') ? ', with no such key' : ''})`,
+      findings.push(f(C41.DISCLOSURES, 'error', `a ${declared} case document requires completeness.statement_by, the member who WROTE its exclusion statement — a different act, and a different name, from completeness.author, who prepared and published the case (BIO_Publication §3 rule 13). NULL is a statement (the plane could not establish who wrote the sentence) and is legal; an ABSENT key is silence, and a reader holding only the publisher's name reads two acts as one (got ${c ? JSON.stringify(c.statement_by ?? null) : undefined}${c && !Object.prototype.hasOwnProperty.call(c, 'statement_by') ? ', with no such key' : ''})`,
         ['re-publish through op=publish, which carries the draft\'s server-stamped statement_by onto the document']));
     }
   }
@@ -755,10 +760,10 @@ export function checkCaseDocument(fm, ctx = {}) {
       const list = fm?.bias_manifest_pins_proposed;
       const n = bm.pins_proposed;
       if (!Number.isInteger(n) || n < 0 || !Array.isArray(list)) {
-        findings.push(f(C41.PENDING, 'error', `a ${CASE_DOCUMENT_FORMAT} case document requires bias_manifest.pins_proposed (a count, zero legal) and bias_manifest_pins_proposed (a list, empty legal) beside its manifest (got count ${JSON.stringify(n ?? null)}, list ${Array.isArray(list) ? `of ${list.length}` : 'absent'}): "no manifest was in force" is true of a scope whose only adoption pins a revision the group has proposed and not accepted, and a document silent about that adoption lets a reader take "a declaration was pending" for "nobody declared anything" (BIO_Publication §3 rule 18)`,
+        findings.push(f(C41.PENDING, 'error', `a ${declared} case document requires bias_manifest.pins_proposed (a count, zero legal) and bias_manifest_pins_proposed (a list, empty legal) beside its manifest (got count ${JSON.stringify(n ?? null)}, list ${Array.isArray(list) ? `of ${list.length}` : 'absent'}): "no manifest was in force" is true of a scope whose only adoption pins a revision the group has proposed and not accepted, and a document silent about that adoption lets a reader take "a declaration was pending" for "nobody declared anything" (BIO_Publication §3 rule 18)`,
           ['re-publish through op=publish, which states every adoption of the scope pinning a proposed revision at signing']));
       } else if (list.length !== n) {
-        findings.push(f(C41.PENDING, 'error', `a ${CASE_DOCUMENT_FORMAT} case document's bias_manifest.pins_proposed says ${n} and its bias_manifest_pins_proposed lists ${list.length}: the count and the list are one fact stated twice, and a document disagreeing with itself about a pending adoption states neither`,
+        findings.push(f(C41.PENDING, 'error', `a ${declared} case document's bias_manifest.pins_proposed says ${n} and its bias_manifest_pins_proposed lists ${list.length}: the count and the list are one fact stated twice, and a document disagreeing with itself about a pending adoption states neither`,
           ['re-publish through op=publish']));
       } else {
         const bad = list.filter((x) => !(x && typeof x === 'object'
@@ -766,10 +771,10 @@ export function checkCaseDocument(fm, ctx = {}) {
           && typeof x.revision === 'string' && /^[0-9a-f]{64}$/.test(x.revision)
           && (x.scope === 'instance' || x.scope === 'project')));
         if (bad.length > 0)
-          findings.push(f(C41.PENDING, 'error', `a ${CASE_DOCUMENT_FORMAT} case document's bias_manifest_pins_proposed has ${bad.length} row(s) not naming a bundle_id, a 64-hex revision and a scope of instance or project (first: ${JSON.stringify(bad[0])}): the ruling is that the document names the proposed revision the adoption pinned — its id — and a row without it says an adoption was pending without saying which`,
+          findings.push(f(C41.PENDING, 'error', `a ${declared} case document's bias_manifest_pins_proposed has ${bad.length} row(s) not naming a bundle_id, a 64-hex revision and a scope of instance or project (first: ${JSON.stringify(bad[0])}): the ruling is that the document names the proposed revision the adoption pinned — its id — and a row without it says an adoption was pending without saying which`,
             ['re-publish through op=publish']));
         if (!(typeof bm.pins_proposed_stated === 'string' && bm.pins_proposed_stated.trim()))
-          findings.push(f(C41.PENDING, 'error', `a ${CASE_DOCUMENT_FORMAT} case document's bias_manifest carries no pins_proposed_stated: the list is stated in a sentence as "no manifest was in force" is, because a bare count is a blank a reader must decode`,
+          findings.push(f(C41.PENDING, 'error', `a ${declared} case document's bias_manifest carries no pins_proposed_stated: the list is stated in a sentence as "no manifest was in force" is, because a bare count is a blank a reader must decode`,
             ['re-publish through op=publish']));
       }
     }
@@ -789,7 +794,7 @@ export function checkCaseDocument(fm, ctx = {}) {
   if (caseDocumentRequiresV4Disclosures(fm)) {
     const rows = fm?.case_citations;
     if (!Array.isArray(rows)) {
-      findings.push(f(C41.CITATIONS, 'error', `a ${CASE_DOCUMENT_FORMAT} case document requires case_citations, the case's citation edges each with the version it rests on (got ${JSON.stringify(rows ?? null)}): an EMPTY list is a claim (the project cited nothing) and is legal — an ABSENT field leaves a reader unable to say which version of anything the case cited (BIO_Publication §3 rule 18)`,
+      findings.push(f(C41.CITATIONS, 'error', `a ${declared} case document requires case_citations, the case's citation edges each with the version it rests on (got ${JSON.stringify(rows ?? null)}): an EMPTY list is a claim (the project cited nothing) and is legal — an ABSENT field leaves a reader unable to say which version of anything the case cited (BIO_Publication §3 rule 18)`,
         ['re-publish through op=publish, which signs every cites edge of the project with its version']));
     } else {
       const bad = rows.filter((x) => !(x && typeof x === 'object' && typeof x.target === 'string' && x.target.trim()
@@ -798,7 +803,7 @@ export function checkCaseDocument(fm, ctx = {}) {
           ? typeof x.capture === 'string' && /^[0-9a-f]{64}$/.test(x.capture)
           : x.capture === null || x.capture === undefined)));
       if (bad.length > 0)
-        findings.push(f(C41.CITATIONS, 'error', `a ${CASE_DOCUMENT_FORMAT} case document's case_citations has ${bad.length} row(s) that do not state a target and a version from {${CASE_CITATION_VERSIONS.join(', ')}}, with the 64-hex capture exactly where the version names one (first: ${JSON.stringify(bad[0])}): a citation edge that says it is pinned and omits the pin, or names a capture its version disowns, states a version nobody can verify`,
+        findings.push(f(C41.CITATIONS, 'error', `a ${declared} case document's case_citations has ${bad.length} row(s) that do not state a target and a version from {${CASE_CITATION_VERSIONS.join(', ')}}, with the 64-hex capture exactly where the version names one (first: ${JSON.stringify(bad[0])}): a citation edge that says it is pinned and omits the pin, or names a capture its version disowns, states a version nobody can verify`,
           ['re-publish through op=publish']));
     }
   }

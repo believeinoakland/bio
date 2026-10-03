@@ -204,7 +204,8 @@ test("R14 docketPublic and lastEntryOf: public entries oldest first, each with i
   /* bytes the evidence store cannot answer are named, never invented */
   w.evidence.m.clear();
   const unread = await w.docket.docketPublic({ case: CASE });
-  assert.deepEqual([unread.captures[w.cap.sha], unread.captures_unread], [null, [w.cap.sha]]);
+  assert.equal(unread.captures[w.cap.sha], null);
+  assert.equal("captures_unread" in unread, false, "R24's exact form: an unread capture is null, and no other key says so");
   assert.ok(listed.posted.ok);
 });
 
