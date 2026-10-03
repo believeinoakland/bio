@@ -160,13 +160,24 @@ test("R2 a pressure mark: refusals in order, each writing nothing; appended once
   rowOk(unseen, "NO_SUCH_DOCKET_ENTRY");
   assert.deepEqual(strip(absent), strip(unseen), "absent and unseen answer alike");
   for (const pressure of [null, { kind: "rude" }, { kind: "legal", note: "n".repeat(501) }, "legal"])
-    refusedThenAccepted(w, () => mark({ pressure }), () => ({ ok: true }), "PRESSURE_REFUSED");
+    refusedThenAccepted(w, () => mark({ pressure }), () => ({ ok: true }), "DOCKET_PRESSURE_REFUSED");
   const before = w.rows(`SELECT * FROM docket_record`);
   const ok = mark({ pressure: { kind: "retaliation", note: "n".repeat(500) } });
   assert.equal(ok.ok, true);
   assert.deepEqual(ok.pressure, { kind: "retaliation", note: "n".repeat(500), at: "2026-10-01T12:00:00Z" });
   assert.deepEqual(w.rows(`SELECT * FROM docket_record`), before, "the entry itself is never rewritten");
-  refusedThenAccepted(w, () => mark(), () => ({ ok: true }), "PRESSURE_MARKED");
+  refusedThenAccepted(w, () => mark(), () => ({ ok: true }), "DOCKET_PRESSURE_MARKED");
+  /* N533 (K1331, DEC-49): both are this module's own codes and rows, C-129.12 and C-129.13, never action-grammar's
+     `PRESSURE_MARKED` (C-117.17) or `PRESSURE_REFUSED` (C-117.15), which no row here holds */
+  const marked = mark(), refused = mark({ pressure: { kind: "rude" } });
+  assert.deepEqual([marked.reason, marked.code, marked.check], ["DOCKET_PRESSURE_MARKED", "DOCKET_PRESSURE_MARKED", "C-129.12"]);
+  assert.deepEqual([refused.reason, refused.code, refused.check], ["DOCKET_PRESSURE_MARKED", "DOCKET_PRESSURE_MARKED", "C-129.12"],
+                   "R2's order: an entry already marked is answered before the kind is read");
+  const fresh = file(w).entry;
+  const bad = w.docket.docketPressure({ entry: fresh, pressure: { kind: "rude" }, author: V("bob"), viewer: V("bob") });
+  assert.deepEqual([bad.reason, bad.code, bad.check], ["DOCKET_PRESSURE_REFUSED", "DOCKET_PRESSURE_REFUSED", "C-129.13"]);
+  for (const code of ["PRESSURE_MARKED", "PRESSURE_REFUSED"]) assert.equal(Object.hasOwn(DOCKET_CHECKS, code), false, `${code} has no row here`);
+  assert.ok(!Object.values(DOCKET_CHECKS).some((r) => ["C-117.15", "C-117.17"].includes(r.check)), "nor their checks");
   for (const kind of PRESSURE_KINDS) assert.equal(w.docket.docketPressure({ entry: file(w).entry, pressure: { kind }, author: V("alice"), viewer: V("alice") }).ok, true);
   const d = w.docket.docketOf({ case: CASE, viewer: V("bob") });
   assert.deepEqual(d.entries.find((x) => x.entry === e).pressure, ok.pressure);
