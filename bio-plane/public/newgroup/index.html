@@ -3,19 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Start your group's copy — CivicOS</title>
-<meta name="description" content="Set up your group's own copy of CivicOS, the accountability record, in your own Cloudflare account, under your own control.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,400;9..144,600;9..144,700&family=Public+Sans:ital,wght@0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>Start your group's copy — Civicsmith</title>
+<meta name="description" content="Set up your group's own copy of Civicsmith, the accountability record, in your own Cloudflare account, under your own control.">
 <style>
 :root{
   --ink:#16232E; --paper:#EDEFE8; --paper-2:#E3E7DD;
   --verdigris:#2F6F62; --verdigris-dk:#1F4F45;
   --signal:#B3441E; --rule:#C6CBBF; --muted:#5C6B66;
-  --display:"Fraunces",Georgia,serif;
-  --body:"Public Sans",system-ui,-apple-system,sans-serif;
-  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  /* R35 (DEC-122 (3)): the device's own typefaces, the installer's pages' stacks; nothing is loaded from elsewhere. */
+  --display:Georgia,serif;
+  --body:system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
@@ -24,9 +22,9 @@ body{background:var(--paper);color:var(--ink);font-family:var(--body);
 main{max-width:700px;margin:0 auto;padding:56px 24px 90px}
 .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
   color:var(--verdigris);margin:0 0 14px}
-h1{font-family:var(--display);font-variation-settings:"SOFT" 0,"WONK" 1,"opsz" 90;
+h1{font-family:var(--display);
   font-weight:600;font-size:clamp(30px,4.6vw,46px);line-height:1.08;letter-spacing:-.015em;margin:0 0 18px}
-h2{font-family:var(--display);font-variation-settings:"WONK" 1;font-weight:600;
+h2{font-family:var(--display);font-weight:600;
   font-size:21px;margin:34px 0 10px;letter-spacing:-.01em}
 p{margin:0 0 16px;max-width:62ch}
 .lede{font-size:19px;color:#26343F}
@@ -46,10 +44,10 @@ hr{border:0;border-top:1px solid var(--rule);margin:34px 0}
 </head>
 <body>
 <main>
-<p class="eyebrow">CivicOS</p>
+<p class="eyebrow">Civicsmith</p>
 <h1>Start your group's own accountability record</h1>
 
-<p class="lede">CivicOS is a public, tamper-evident record: every capture
+<p class="lede">Civicsmith is a public, tamper-evident record: every capture
 signed, every change kept, nothing quietly rewritten. Your group can run its
 own copy for the government it watches, the agency it holds to account, the
 fight it is in. Not an account on someone else's servers. Your own copy, in
@@ -57,10 +55,10 @@ your own infrastructure, from the first second.</p>
 
 <h2>What you get</h2>
 <ul>
-<li>Your own copy of CivicOS, running in your own Cloudflare account, at
+<li>Your own copy of Civicsmith, running in your own Cloudflare account, at
 your own web address.</li>
 <li>Full control: your passwords, your credentials, your data. No one else,
-the publisher of CivicOS releases included, holds a key to any of it or can
+the publisher of Civicsmith releases included, holds a key to any of it or can
 see inside it.</li>
 <li>An append-only history, so what your group has established can be shown
 and cannot be silently altered, by anyone, including you.</li>
@@ -93,7 +91,7 @@ the installer, or its publisher, at all.</p>
 <p class="small">Prefer that nothing pass through the installer even once? The
 manual path is documented and permanently supported, using only the Cloudflare
 dashboard. It exists so your group could stand a copy up even if the
-publisher of CivicOS releases disappeared tomorrow. Find it in the project
+publisher of Civicsmith releases disappeared tomorrow. Find it in the project
 documentation.</p>
 
 <hr>
@@ -101,7 +99,7 @@ documentation.</p>
 <div class="okbox">
 <p style="margin:0"><b>One thing before you press the button.</b> It takes
 you to <span class="mono">newgroup.believeinoakland.workers.dev</span>. That
-is the CivicOS setup assistant, run by the publisher of CivicOS releases on
+is the Civicsmith setup assistant, run by the publisher of Civicsmith releases on
 Cloudflare's worker platform, which is why the address ends the way it does. You will see the
 name in your address bar the whole time. We send you there with a button
 rather than a silent redirect, so you always know where you are.</p>
@@ -114,7 +112,7 @@ is a separate page:
 <span class="mono">newgroup.believeinoakland.workers.dev/update</span>.
 Updates never touch your passwords or your record.</p>
 
-<p class="small publisher">This installer is run by the publisher of CivicOS releases.</p>
+<p class="small publisher">This installer is run by the publisher of Civicsmith releases.</p>
 
 </main>
 </body>
