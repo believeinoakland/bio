@@ -1,6 +1,6 @@
 # inquiry (T28)
 
-**Status** · session_01QNQaUggEEA2eXfwiByRD2P · depth 2 · WAITING ON BOB (J1) · handled B1
+**Status** · session_01QNQaUggEEA2eXfwiByRD2P · depth 2 · WAITING ON BOB (J1) · handled B3
 
 ## J1 · QUESTION
 
