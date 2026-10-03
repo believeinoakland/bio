@@ -40,3 +40,7 @@
   - `ownership queue tranche/T28`: 0 failures, re-run after the commit (below).
 
 Size (session_0118axgxaDiy6mVVbmPjTRhG): test runs 8, module lines 6015
+
+## J1 · COMPLETE
+
+QUEUE #15 complete (fe7f4e1034 + mailbox). R28 (N527): OBLIGATION::contradiction::<c> and OBLIGATION::contradiction-unseen::<c> are bridged as contradiction-duty / contradiction-duty-unseen, CLASS_NOT_DISPOSED with R12's doors; nothing written. queue tests 107/107; whole test/m 5672 pass, 2 fail (control-plane CHECK_FAMILIES, accepted red 6); format, architecture, coverage (40/40), ownership all 0 failures. No catalogue row added (nothing awaiting stamp). Plane bundle already stale on the tranche; this change is one more input. R28's '(not yet met: T28; N527)' mark can be struck. Record: build/jobs/T28/queue.md.
