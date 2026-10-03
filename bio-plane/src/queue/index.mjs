@@ -628,10 +628,13 @@ export class Queue {
   });
 
   /** R46, R50: the acts a project-scoped FINDING of these kinds names beside R12's disposition: a recorded re-evaluation
-   *  answers what a finding rests on being marked wrong (N345), or a case edition it rests on being withdrawn or
-   *  contested (DEC-116 items 3, 7). */
+   *  answers what a finding rests on being marked wrong (N345), a case edition it rests on being withdrawn or
+   *  contested (DEC-116 items 3, 7), or a case the group cites having a newer edition or a withdrawn one (N547;
+   *  DEC-101 (3)). */
   static FINDING_ACTS = Object.freeze({ "side-corrected": Object.freeze(["reevaluationrecord"]),
-    "edition-withdrawn": Object.freeze(["reevaluationrecord"]), "edition-contested": Object.freeze(["reevaluationrecord"]) });
+    "edition-withdrawn": Object.freeze(["reevaluationrecord"]), "edition-contested": Object.freeze(["reevaluationrecord"]),
+    "cited-newer-edition": Object.freeze(["reevaluationrecord"]),
+    "cited-edition-withdrawn": Object.freeze(["reevaluationrecord"]) });
 
   /** D-266 / IC-60 — THE SECOND IDENTITY, and the whole of what this item added.
    *
@@ -773,8 +776,8 @@ export class Queue {
       .map((a) => a.id.trim())
       .sort();
     const fid = typeof item.id === "string" && item.id.trim() ? item.id.trim() : null;
-    /* R46, R50: a side-corrected, edition-withdrawn or edition-contested finding keeps this disposition and names the
-       act that answers it. */
+    /* R46, R50: a side-corrected, edition-withdrawn, edition-contested, cited-newer-edition or cited-edition-withdrawn
+       finding keeps this disposition and names the act that answers it. */
     const acts = Object.prototype.hasOwnProperty.call(Queue.FINDING_ACTS, item.kind)
       ? { acts: [...Queue.FINDING_ACTS[item.kind]] } : {};
     if (homes.length === 0 || !fid)

@@ -4,7 +4,9 @@
    feed carrying each is minted rather than refused NO_SUCH_KIND (R11, C-31.2): wizard-approval-requested an OBLIGATION
    whose door is the approval (R12; J1's reading) and which no mute reaches (R19, R31); wizard-withdrawn,
    wizard-restored, cited-newer-edition, cited-edition-withdrawn, followed-case-entry and cited-docket-entry-refused
-   FINDINGs taking R12's disposition; cited-docket-unreadable a CONDITION quieted only personally (R12, R19). Negative
+   FINDINGs taking R12's disposition, the two cited-edition kinds with a recorded re-evaluation as their act (R50, N547,
+   as `edition-withdrawn`), aged per project (R13); cited-docket-unreadable a CONDITION quieted only personally (R12,
+   R19). Negative
    controls: each kind minted under another class is KIND_MISCLASSED (C-31.3), a near-miss of its name NO_SUCH_KIND. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -133,6 +135,53 @@ test("R12, R19: cited-docket-unreadable is a signal quieted only for its member;
   assert.deepEqual(after.mute.suppressed.map((s) => [s.id, s.scope]), [[sig.id, "item"]]);
   const k = w.q.queueMute({ member: "alice", viewer: "member:alice", case: "PRJ-A", kinds: ["wizard-withdrawn", "cited-newer-edition"] });
   assert.equal(k.ok, true);
+});
+
+test("R12, R50 (N547): cited-newer-edition and cited-edition-withdrawn take R12's project-scoped disposition with reevaluationrecord; with no project home, no scope; the other T31 findings name no act", () => {
+  const w = withT31();
+  const f = w.feed("alice");
+  for (const k of ["cited-newer-edition", "cited-edition-withdrawn"]) {
+    const it = ofKind(f, k)[0];
+    const d = it.disposition;
+    assert.deepEqual([d.available, d.op, d.scope, d.key, d.finding, d.projects, d.requires, d.acts, d.keyed_on],
+      [true, "proposedispose", "project", null, it.id, ["PRJ-A"], ["project", "finding"], ["reevaluationrecord"],
+       ["project", "finding"]], k);
+    // each item's acts are its own list: changing one answer's changes neither the next feed's nor the catalogue's
+    d.acts.push("tampered");
+    assert.deepEqual(ofKind(w.feed("alice"), k)[0].disposition.acts, ["reevaluationrecord"], k);
+    assert.ok(Object.isFrozen(Queue.FINDING_ACTS[k]), k);
+  }
+  // negative control: the other T31 findings, with no progression stage either, name no act
+  for (const k of ["wizard-withdrawn", "wizard-restored", "followed-case-entry", "cited-docket-entry-refused"])
+    assert.equal(ofKind(f, k)[0].disposition.acts, undefined, k);
+  // filed under no project the viewer can see: no scope, the act still named (as edition-withdrawn, R50)
+  const lone = world({ producers: { feedItems: (a) => ({ facts: {}, items: ["cited-newer-edition", "cited-edition-withdrawn"]
+    .map((kind) => ({ id: `FINDING::${kind}::INQ-L::IMP-1#4`, class: "FINDING", kind, case: a.homesOf(["INQ-L"]),
+      subject: { kind: "bundle", id: "INQ-L" }, summary: kind, detail: null, basis: { source: "stub" },
+      age: { state: "undetermined" }, assignee: null, assignee_role: null, options: [] })) }) } });
+  lone.bundle("INQ-L", "inquiry");
+  for (const it of lone.feed(null, "class:admin").items)
+    assert.deepEqual([it.disposition.available, it.disposition.reason, it.disposition.projects, it.disposition.acts],
+      [false, "no_project_scope", [], ["reevaluationrecord"]], it.kind);
+});
+
+test("R13, R27, R50 (N547): a project's set-aside of cited-edition-withdrawn ages it for that project, keeping its act; the newer-edition item is untouched", () => {
+  const w = withT31();
+  w.bundle("PRJ-B", "project"); w.join("PRJ-B", "alice"); w.cite("PRJ-B", "INQ-D");
+  const it = ofKind(w.feed("alice"), "cited-edition-withdrawn")[0];
+  assert.deepEqual(it.disposition.projects, ["PRJ-A", "PRJ-B"]);
+  const pd = (project) => w.q.proposeDispose({ project, finding: it.id, kind: it.kind, to: "deferred",
+    reason: "after re-reading", decidedBy: "alice", viewer: "member:alice", identity: "member:alice" });
+  assert.equal(pd("PRJ-A").ok, true);
+  let f = w.feed("alice");
+  const kept = byId(f)[it.id];
+  assert.deepEqual([kept.disposition.projects, kept.disposition.disposed_by, kept.disposition.acts],
+    [["PRJ-B"], ["PRJ-A"], ["reevaluationrecord"]]);
+  assert.deepEqual(ofKind(f, "cited-newer-edition")[0].disposition.projects, ["PRJ-A", "PRJ-B"]);
+  assert.equal(pd("PRJ-B").ok, true);
+  f = w.feed("alice");
+  assert.equal(byId(f)[it.id], undefined);
+  assert.equal(f.disposed.findings.filter((d) => d.finding === it.id).length, 2);
 });
 
 test("R11 (negative controls): each T31 kind minted under another class is KIND_MISCLASSED, a near-miss of its name NO_SUCH_KIND", () => {

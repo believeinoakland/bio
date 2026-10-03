@@ -101,7 +101,7 @@ Terms. An **item** is `queue`'s item (its Provides) without `disposition` (`queu
   - it leaves when the cause closes (as R31).
 
  
-- **R35** (`case-import` R20; DEC-101 (3), DEC-116 item 8) The watch's items go to the member who set the watch in force (`set_by`). When that member is no longer an active member, they go to the administrators (`membership` R86). They go to nobody else. A verified entry that is not a publisher move (a subject's response, a reaction, a disclosure) reaches only them, never as a re-evaluation cause (K1339, K1366 F1). An entry's item ages from the instant this copy read it (`case-import` R20's `seen_at`; N546). *(not yet met: T32)* Each item's subject is `{kind: "import", id}`, and it has no project home (as R20's `group` template):
+- **R35** (`case-import` R20; DEC-101 (3), DEC-116 item 8) The watch's items go to the member who set the watch in force (`set_by`). When that member is no longer an active member, they go to the administrators (`membership` R86). They go to nobody else. A verified entry that is not a publisher move (a subject's response, a reaction, a disclosure) reaches only them, never as a re-evaluation cause (K1339, K1366 F1). An entry's item ages from the instant this copy read it (`case-import` R20's `seen_at`; N546). Each item's subject is `{kind: "import", id}`, and it has no project home (as R20's `group` template):
   - FINDING `followed-case-entry`: one per verified entry seen, keyed `FINDING::followed-case-entry::<import>#<seq>`. It names the kind, edition, date and `key_listed`, and quotes `what_changed` or `reason` for a move. It is raised once and leaves when its recipient disposes of it (DEC-69, DEC-94).
   - FINDING `cited-docket-entry-refused`: one per refused entry, keyed `FINDING::cited-docket-entry-refused::<import>#<seq>`. It names the check failed. It is raised once.
   - CONDITION `cited-docket-unreadable`: one per watch whose latest read is unreadable, keyed `CONDITION::cited-docket-unreadable::<import>`. Its detail opens with `DOCKET_UNREADABLE`'s sentence and gives the reason and the instant. It leaves when a read succeeds or the watch ends.
@@ -117,7 +117,7 @@ Terms. An **item** is `queue`'s item (its Provides) without `disposition` (`queu
 - `actions`: `holdsDue` (its R54; R19); `holdsReleased` (its R59; R29; DEC-113).
 - `record-grammar`: `normalizeType`, `STATES`, `vocabFor`, `MACHINE_AUTHOR_PREFIX`, `MACHINE_CLASS_PREFIX`.
 - `record-core`: `bundleInfo`, `head`, `manifestByAuthor` (its R53; R3), `stampInstant`.
-- `membership`: `viewerPredicate` and `inSight` (the viewer gate), `isAdministrator` (its R64; R2's export-performed), `activeAdmins` (its R86), `participation` (R2's objective-gap, R4's joined projects), `hiddenBundles` (its R88; N352), `projectOwners` (its R65; R6).
+- `membership`: `viewerPredicate` and `inSight` (the viewer gate), `isAdministrator` (its R64; R2's export-performed), `activeAdmins` (its R86), `memberFacts` (its R68; R35's "no longer active"), `participation` (R2's objective-gap, R4's joined projects), `hiddenBundles` (its R88; N352), `projectOwners` (its R65; R6).
 - `host-governor`: `governorHolding` (its R14; R3).
 - `provenance`: `homeOf`, `register` (capture to bundle) and `captured_locators` by host (R2, R3).
 - `capture`: `liveCaptureSessions` (its R46; R3); `gradeNoteOf` (its R76; R22; K1019).
