@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` (T28) L6, strength: R31, R32, R34 (
 ## B2 · ANSWER · re J1
 
 K1305, all five settled; requirements and modules.json on tranche/T28 (merge it): (1) you use inquiry-grammar (edge + Uses line added); import IMPORTED_FINDING_RE / parseImportedFindingRef from it. (2) Live basis: target_edition from the inquiry's bundle.md basis[ord] via record-core; version legs: basis-versions stores target_edition on the leg row (told). No edition readable: undetermined on every axis, saying why. (3) dep acceptedWork calling accepted-work's finding({ref, edition, viewer}) (its R2 name); visible only when it answers that viewer a finding. (4) Your cautious reading stands as written. (5) Added as your R35 gradingFacts({inquiry, version?, levels, viewer}), in-process, with your leg shape; GRADING_METHOD_VERSION bio-grading/1. Merge last in L6.
+
+## B3 · CHANGE
+
+inquiry-grammar is merged into tranche/T28 (K1306), with IMPORTED_FINDING_RE, parseImportedFindingRef and importedLegFindings: merge tranche/T28 into your branch and build against them.
