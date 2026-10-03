@@ -124,7 +124,7 @@ Terms. A **tick** is one check of one monitored document. A **look** is the obse
 - `host-governor`: `governedFetch` (R2).
 - `capture-sources`: `readDriveAddress`, `driveBaselineRow`, `classifyDriveBaseline`, `RENDERED_METHOD`, `RENDER_TICK_UNDETERMINED`.
 - `capture`: `acquire`'s archive arm (R20), `sourceReachability`, `reachabilityThresholds` (R43), the outcome record (R8, for R25), the capture key; and `source_reachability` (the pending count and the failing addresses R20 reads), through the read contract `capture` states in its Provides (N166; capture R59, K235).
-- `acquisition`: `substanceDigests`, `profilesAsText`, `ODF_DIGEST_MAX` (its R17), `civicosUserAgent` (its R24); the acquisition act itself through `capture`'s `acquire` (capture R73). *(K649 (1): moved from `capture`; this module's T18 job re-points its imports)*
+- `acquisition`: `substanceDigests`, `profilesAsText`, `ODF_DIGEST_MAX` (its R17), `civicsmithUserAgent` (its R24; DEC-124); the acquisition act itself through `capture`'s `acquire` (capture R73). *(K649 (1): moved from `capture`; this module's T18 job re-points its imports)*
 - `docprofile`: `identify`, `doctypeFor`, `assess`, `CONTRACT`; `format-registry`: `detectFormat`.
 - `observation-log`: its one append (R11).
 - `retrieval`: the projection's monitoring columns and `source_locator` (K75 (3)).

@@ -190,7 +190,7 @@ Terms. A **credential** is what a member supplies so that a source's refusal (ca
   - capture-requests passes `principalPlane`, `target` and `host` to R56 from the row, never from a body.
   - `capture` sends R56's credential only to its host: a redirect to another host is followed without it.
   - `capture` (or `provenance`) records R56's facts on the capture, marks it not reproducible by the public, and never writes the secret into the capture's record or receipt.
-  - **A supplied user-agent** (K158): capture-requests judges a `user-agent` credential at the drain as its R14 judges the member-browser form (DEC-47's access-parity amendment), not as the legible CivicOS agent; the capture's provenance names it.
+  - **A supplied user-agent** (K158): capture-requests judges a `user-agent` credential at the drain as its R14 judges the member-browser form (DEC-47's access-parity amendment), not as the legible Civicsmith agent; the capture's provenance names it.
 - **Ops**, which are the control plane's to route: `capturecredentialsupply` and `capturecredentialwithdraw` (admin and member with `contribute`, mutating), and `capturecredentials` (admin and member, carrying the viewer stamp). R56 has no op.
 - The render locale: `capture` passes R54 its view (`jurisdictions.combine` of the active profiles) and asks the renderer with the answer; timezone stays UTC.
 - `cdpConnection` and `collectBodies` are exported for tests; they are internals of R19–R25, not services.

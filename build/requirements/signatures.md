@@ -77,7 +77,7 @@ Builds and verifies the signed and timestamped statements the plane and the inst
 - **R25** A single, non-empty, self-contained HTML document (opens with `<!doctype html>`): no `src=`/`href=` naming an `http:`/`https:` URL anywhere in it, so the page loads and runs with no network access once opened.
 - **R30** `SIGN_HTML` is the byte-identical render of `bio-plane/src/sign-release.html` by `bio-plane/scripts/embed-signpage.mjs` (K33).
 - **R31** The page's own script signs `bio-release` and `bio-ratify` statements that both `ssh-keygen -Y verify` and `verifySshsig` (R1) accept.
-- **R32** The page's visible text names the product CivicOS, never BIO (`layers.md` rule 4); its wire formats are unchanged: the `BIOKEY-RAW1.`/`BIOKEY1.` prefixes, the `bio-release`/`bio-ratify` namespaces and the download filename. It calls the ratified thing a record, never a bundle; `bio-plane.bundled.mjs`, a file name, stays (K899 (1), N458; K934).
+- **R32** *(not yet met: T31)* The page's visible text names the product Civicsmith, never BIO (`layers.md` rule 4; DEC-124); its wire formats are unchanged: the `BIOKEY-RAW1.`/`BIOKEY1.` prefixes, the `bio-release`/`bio-ratify` namespaces and the download filename. It calls the ratified thing a record, never a bundle; `bio-plane.bundled.mjs`, a file name, stays (K899 (1), N458; K934).
 
 **The release signer (`bio-plane/scripts/sign-sshsig.mjs`, moved from `tools/` in T19; BOB-5)** — run only on an operator's machine by the release assembler (bundler R23), never imported by the plane or the installer.
 
