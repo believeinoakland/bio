@@ -1,6 +1,6 @@
 # public-read (T28)
 
-**Status** · session_0181u3c6mH6hCT6JNt1c6phB · depth 2 · WORKING · handled B1
+**Status** · session_0181u3c6mH6hCT6JNt1c6phB · depth 2 · WAITING ON BOB (J1) · handled B1
 
 ## J1 · QUESTION
 
