@@ -241,11 +241,14 @@ test("R28 undetermined is stated and never filled: a deliverer, an acknowledgeme
   const proj = w2.project("Parks", "olive");
   w2.inquiry(F);
   const pin = w2.head(F);
-  w2.prepare("CASE-2026-0001", 1, { project: proj, roles: [{ target: F, version_sha: pin }], format: "bio-case-document/2" });
+  w2.prepare("CASE-2026-0001", 1, { project: proj, roles: [{ target: F, version_sha: pin }] });
   w2.signCase("CASE-2026-0001", 1, { project: proj, roster: [{ bundle_id: F, version_sha: pin }],
                                      completeness: { statement: "s", acknowledgements: null } });
   assert.equal(JSON.parse(w2.row(`SELECT completeness FROM published_cases`).completeness).acknowledgements, null);
-  assert.equal(w2.p.caseDocument("CASE-2026-0001", 1, null).citations.state, "undetermined");
+  /* a document signed before /4 (as a store signed it before T28) states its citations undetermined */
+  w2.prepare("CASE-2026-0002", 1, { project: proj, roles: [{ target: F, version_sha: pin }], format: "bio-case-document/2" });
+  w2.signLegacy("CASE-2026-0002", 1, { project: proj, roster: [{ bundle_id: F, version_sha: pin }] });
+  assert.equal(w2.p.caseDocument("CASE-2026-0002", 1, null).citations.state, "undetermined");
 });
 
 test("R35 publishing a target turns every name edge a published finding holds to it into a serve edge, in the same transaction", () => {

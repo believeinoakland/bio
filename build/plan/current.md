@@ -26,6 +26,7 @@ T27's rules hold (merge early; one file, one editor; marks struck at the merge; 
 3. The UI's DEC-88 tests (N487, K1030): stay red, Bob's.
 4. The new ops' L11 arms (control-plane totality, affordances R12) for `case-import`'s eight ops, from case-import's L8 merge until L11's.
 5. `bio-plane/test/m/inquiry/grammar.test.mjs` (inquiry R38): pins `INQUIRY_GRAMMAR_CHECKS` to six rows; C-21.3 is a seventh. Red from inquiry-grammar's L6 merge until inquiry's (K1306).
+7. From publication's L8 merge (K1322): fixtures that sign a non-`/6` case through `commitCaseEdition` (publication R58): ratification's and public-read's until their L8 merges, conformance's until its L9 merge (K1321), affordances' `backing.test.mjs` until its L11 merge; control-plane's `catalogue-end.test.mjs` (C-92.4, C-92.5 re-worded) until its L11 merge.
 6. `bio-plane/test/m/control-plane/families.test.mjs` R22: `CHECK_FAMILIES` misses accepted-work's family (and, from L8, case-checker's and case-import's), red until control-plane's L11 merge (K1310).
 
 ## Roster (by layer; 21 jobs)

@@ -146,7 +146,13 @@ test("R2 a pressure mark: refusals in order, each writing nothing; appended once
   const mark = (x = {}, who = "bob") => w.docket.docketPressure({ entry: e, pressure: { kind: "legal", note: "A letter from counsel." },
                                                                 author: V(who), viewer: V(who), ...x });
   for (const who of [MACHINE, "token:operator", null])
-    refusedThenAccepted(w, () => mark({ author: who, viewer: who }), () => ({ ok: true }), "MACHINE_CANNOT_MARK_PRESSURE");
+    refusedThenAccepted(w, () => mark({ author: who, viewer: who }), () => ({ ok: true }), "MACHINE_CANNOT_MARK_DOCKET_PRESSURE");
+  /* N526 (DEC-49, one code one row): the refusal is this module's own code and row, never action-grammar's
+     `MACHINE_CANNOT_MARK_PRESSURE` (C-117.14, `actions`' own), which no row here holds */
+  const machine = mark({ author: MACHINE, viewer: MACHINE });
+  assert.deepEqual([machine.reason, machine.code, machine.check], ["MACHINE_CANNOT_MARK_DOCKET_PRESSURE", "MACHINE_CANNOT_MARK_DOCKET_PRESSURE", "C-129.10"]);
+  assert.equal(Object.hasOwn(DOCKET_CHECKS, "MACHINE_CANNOT_MARK_PRESSURE"), false, "action-grammar's code has no row here");
+  assert.ok(!Object.values(DOCKET_CHECKS).some((r) => r.check === "C-117.14"), "nor its check");
   const strip = ({ entry: _e, ...x }) => x;
   const absent = mark({ entry: "DKT-2026-9999" });
   const unseen = mark({}, "dave");
@@ -207,7 +213,7 @@ test("R18 only a member files: no machine, AI run, operator token or administrat
     assert.equal(f.ok, false);
     assert.equal(f.reason, "MACHINE_CANNOT_FILE_DOCKET", `${who} files nothing`);
     assert.equal(w.docket.docketPressure({ entry: e, pressure: { kind: "other" }, author: who, viewer: V("bob") }).reason,
-                 "MACHINE_CANNOT_MARK_PRESSURE");
+                 "MACHINE_CANNOT_MARK_DOCKET_PRESSURE");
     assert.equal(w.docket.docketFile({ case: CASE, takesBack: e, reason: "r", author: who, viewer: V("bob") }).reason,
                  "MACHINE_CANNOT_FILE_DOCKET");
   }

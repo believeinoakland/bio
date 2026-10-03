@@ -14,6 +14,8 @@
 
 - N531 · 2026-10-03 · **reevaluation**: `acceptanceWithdrawn`'s detail read passes `class:admin` as its viewer, which `case-import` R16 answers null, so the acceptance cause's `group` and `case` read null (CASE-IMPORT #1 J3; K1319). Read as the plane (no viewer) for the telling's detail, or state why not. **Why next:** reevaluation's T28 job is merged (P8).
 
+- N532 · 2026-10-03 · **publication split** (K1322): 3,996 lines at its T28 merge, at the ~4,000 mark (P6). Split at the seam its job named (R57's holding: `#holdMaterials`, `#tokenFiles`, `publishedMaterialText`, `heldMaterialsOf`, ~140 lines; R59's re-read, ~50) before its next job adds to it. **Why next:** its T28 job is merged (P8).
+
 ## Carried from T28
 
 The left-out table of `current.md` (T28), unchanged until re-read at T29's opening.

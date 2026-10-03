@@ -25,3 +25,7 @@ Not the protective reading alone: R48 stands. The `material_attestations:` membe
 ## B6 · CHANGE
 
 case-grammar is merged on tranche/T28 @ 9f35013054 (K1320): R2, R3, R12 (materialsLines, materialAttestationLines), R13 (casePartDigest, manifest.json, caseFilePath), R14, R16, R17 (gradingFactsLines, passagesLines, gradingFactsOf, passagesOf, extractedTextOf). Merge the tranche branch into yours and build on its exports; drop any stand-in of its spelling.
+
+## B7 · CHANGE
+
+publication (K1322) and docket (K1323) are merged on tranche/T28 @ 9ce0fedbcd: publication R15, R57 (materials answer, heldMaterialsOf, publishedMaterialText), R58 (/6 only), R59, R60 (capture rows, attestations re-authored). Merge the tranche branch into yours, run against the real code, and complete.
