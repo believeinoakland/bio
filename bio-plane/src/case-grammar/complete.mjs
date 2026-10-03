@@ -16,7 +16,14 @@
  * blocks first, the per-finding files where it carries none) or from the files listed, in the document's own order, so
  * the same case file always gives the same bytes and the order files are handed in never
  * matters. THE WORDS of its sentences and headings are the UX stream's; these are used until it gives them. Pure; never
- * throws. */
+ * throws.
+ *
+ * THE PRODUCT'S NAME, AND LIGHT ONLY, BY FORMAT (DEC-124, K1365 (1); DEC-122 (2)). A `/6` case document, or an earlier
+ * one, renders exactly the bytes it rendered before T31: "CivicOS" in the foot, in the line saying the case can be
+ * checked without the product, and in the grading method's text, and no colour-scheme declaration (its colours are its
+ * own and light already), so a published `/6` case file's edition re-renders byte for byte. A `/7` document renders
+ * "Civicsmith" in those three places and declares only the light colour scheme, so a reader's dark setting does not
+ * restyle it. */
 
 import { parseFrontmatter, canonicalJson, createSha256 } from "../record-grammar/index.mjs";
 import { gradingMethodText } from "../strength/method.mjs";
@@ -25,6 +32,7 @@ import { caseTensionsOf } from "./tensions.mjs";
 import { lensOf, LENS_KIND_WORDS, LENS_CLOSING_SENTENCES, LENS_NONE_SENTENCE, LENS_UNDETERMINED_SENTENCE } from "./edition.mjs";
 import { methodOf, materialsOf, acceptedWorkOf, PAIR_AXES } from "./materials.mjs";
 import { caseFilePath } from "./casefile.mjs";
+import { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMATS_ACCEPTED } from "./formats.mjs";
 import { gradingFactsOf, passagesOf } from "./facts.mjs";
 import { standingOf } from "./standing.mjs";
 
@@ -43,8 +51,21 @@ export const GRADE_MEANINGS = Object.freeze({
     + "follow the link. A is the strongest, D the weakest. It never says whether the finding is true.",
   testimony: "Testimony: a member's own firsthand account, graded beside the two and never combined with them.",
 });
-/** R14: the foot line (DEC-118: the group leads; CivicOS is credited quietly). */
-export const MADE_WITH_LINE = "Made with CivicOS";
+/** R14 (DEC-124; K1365 (1)): the product's name an edition renders: before T31's `/7`, and from it. */
+export const PRODUCT_NAMES = Object.freeze({ before_v7: "CivicOS", current: "Civicsmith" });
+/** R14: the name an edition of a case document with front matter `fm` renders: "CivicOS" for a `/6` document or an
+ *  earlier one, "Civicsmith" for `/7` and for anything that is not an earlier accepted format. Pure; never throws. */
+export function editionProductOf(fm) {
+  try {
+    const f = fm && typeof fm === "object" ? fm.format : undefined;
+    return f !== CASE_DOCUMENT_FORMAT && CASE_DOCUMENT_FORMATS_ACCEPTED.includes(f) ? PRODUCT_NAMES.before_v7
+      : PRODUCT_NAMES.current;
+  } catch {
+    return PRODUCT_NAMES.current;
+  }
+}
+/** R14: the foot line (DEC-118: the group leads; the product is credited quietly). */
+export const madeWithLine = (product) => `Made with ${product}`;
 /** R14: what the checker's public reads are called (`case-checker` R15). */
 export const CHECKER_READS = Object.freeze({ program: "casechecker", specification: "casefilespec" });
 
@@ -108,7 +129,8 @@ export function completeEditionOf(caseFile) {
     const parsed = docText === null ? null : parseFrontmatter(docText);
     const fm = parsed && parsed.data && typeof parsed.data === "object" ? parsed.data : null;
     const group = typeof cf.group === "string" ? cf.group : null;
-    if (!fm) return page({ title: "A case file with no readable case document", notice: null, group,
+    const product = editionProductOf(fm);
+    if (!fm) return page({ product, title: "A case file with no readable case document", notice: null, group,
       sections: [p("This case file carries no readable case document, so nothing of the case can be shown from it.")] });
 
     const caseId = said(fm.case_id ?? cf.case);
@@ -231,7 +253,7 @@ export function completeEditionOf(caseFile) {
       p(`This project's bar: ${floors}.`)];
 
     /* 8. the grading method */
-    const methodText = method && method.grading ? gradingMethodText(method.grading) : null;
+    const methodText = method && method.grading ? gradingMethodText(method.grading, product) : null;
     const methodHtml = methodText ? methodText.split("\n").filter((l) => l.trim()).map(p)
       : [p(method && method.grading
         ? `This case was graded by method ${method.grading}, whose words this rendering does not hold.`
@@ -240,7 +262,7 @@ export function completeEditionOf(caseFile) {
 
     /* 9. how to check it */
     const checkHtml = [
-      p("You can check this case yourself, without CivicOS and without a network connection."),
+      p(`You can check this case yourself, without ${product} and without a network connection.`),
       p(`1. Get the checker, one file, from the publishing group's public read ${CHECKER_READS.program}, and the `
         + `specification of the case file's format from ${CHECKER_READS.specification}.`),
       p("2. Run the checker on every part of this case file. It checks every fingerprint and signature, finds each "
@@ -251,11 +273,11 @@ export function completeEditionOf(caseFile) {
       p("Recreating a case shows it is intact and consistent. It does not show that it is true."),
     ];
 
-    return page({ title: `${said(group, "A group")} · Case ${caseId} · Edition ${edition}`, notice, group, sections: [
+    return page({ product, title: `${said(group, "A group")} · Case ${caseId} · Edition ${edition}`, notice, group, sections: [
       ...COMPLETE_EDITION_HEADINGS.map((h, i) => `<h2>${esc(`${i + 1}. ${h}`)}</h2>${[claims, findingHtml, materialHtml,
         searchedHtml, biasHtml, tensionHtml, strengthHtml, methodHtml, checkHtml][i].join("")}`)] });
   } catch {
-    return page({ title: "A case file that could not be read", notice: null, group: null,
+    return page({ product: PRODUCT_NAMES.current, title: "A case file that could not be read", notice: null, group: null,
                   sections: [p("This case file could not be read whole, so nothing of the case is shown from it.")] });
   }
 }
@@ -323,13 +345,14 @@ function attestationWords(a) {
   }
 }
 
-function page({ title, notice, group, sections }) {
+function page({ product, title, notice, group, sections }) {
   return ["<!doctype html>", '<html lang="en">', "<head>", '<meta charset="utf-8">',
+    ...(product === PRODUCT_NAMES.before_v7 ? [] : ['<meta name="color-scheme" content="light">']),
     `<title>${esc(title)}</title>`, `<style>${STYLE}</style>`, "</head>", "<body>",
     ...(notice ? [`<div class="notice">${esc(notice)}</div>`] : []),
     `<h1>${esc(title)}</h1>`,
     ...(group ? [p(`Published and signed by ${group}.`)] : []),
     ...sections,
-    `<p class="foot">${esc(MADE_WITH_LINE)}</p>`,
+    `<p class="foot">${esc(madeWithLine(product))}</p>`,
     "</body>", "</html>", ""].join("\n");
 }
