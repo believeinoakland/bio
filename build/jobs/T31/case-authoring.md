@@ -19,3 +19,7 @@
 - `checks/format.mjs`: 0 failures. `checks/architecture.mjs . case-authoring`: 0 failures. `checks/coverage.mjs . case-authoring`: 39 of 39 live ids named; 0 failures. `checks/ownership.mjs . case-authoring tranche/T31`: 0 failures.
 
 Size (session_01HNgAFdfDCrMf2zid6uorgB): test runs 4, module lines 2925
+
+## J1 · COMPLETE
+
+N538 R14 applied: the document writes case-grammar's CASE_DOCUMENT_FORMAT (through publication), so it writes /7 once case-grammar R1 lands; the R14 tests (document, carries, tensions) now name bio-case-document/7 literally. On this branch alone those 3 are red (119/122); with case-grammar R1 simulated in a scratch worktree, 122/122 green, pre-flight arms included. Merge after case-grammar (modules.json order already does). Checks format, architecture, coverage (39/39), ownership: 0 failures. Record: build/jobs/T31/case-authoring.md.
