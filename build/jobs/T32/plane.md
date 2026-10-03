@@ -18,3 +18,7 @@
 Checks: `format: 98 modules, 97 requirements files; 0 failures`; `architecture: 32 product files, 277 relative imports (2 naming no tracked file, not judged); 0 failures`; `coverage: 1 modules, 20 of 20 live requirement ids named by a test; 0 failures`; `ownership: 3 files changed by plane between tranche/T32 and HEAD; 0 failures`.
 
 Size (session_01JL5ihXZTwMD225KhykMihR): test runs 9, module lines 35
+
+## J1 · COMPLETE
+
+N548 applied: STEP_ORDER (store.mjs) puts control-plane's step before the first layer-11 module (FIRST_LAYER_11 = wizard-scripts); plane's R2/R10 rank test now checks it against build/modules.json's layers in full (fails on the old code). plane 86/86, public-read, ratification, reevaluation green; control-plane 1 fail = inherited red 6 (its own record.mjs STEP_ORDER copy and promotion-step.test.mjs:32), its L11 job's. Four checks 0 failures. For BOB: plane R10's wording 'before affordances' is stale against K1416 (wording only). Record: build/jobs/T32/plane.md.
