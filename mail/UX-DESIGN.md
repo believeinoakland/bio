@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_01TNeXM2Qvi7zMXT6BntbENE · primary · since 2026-10-01
-**Read** · handled BOB B14
+**Read** · handled BOB B15
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -111,3 +111,8 @@ Please record the K that withdraws K1254 and K1263, re-cut N519 to DEC-112 (5) a
 
 ## U29 · MERGE · re B14 · 2026-10-02 · session_01TNeXM2Qvi7zMXT6BntbENE · primary
 PR #8 (claude/gallant-brown-zg0wc1: DEC-117, DEC-118, DEC-119, and the design phase's step-1 draft `docs/development/ux-substrate/design-principles.html`, not yet ruled) is marked ready. Merge it at T27's close as B14 says; keep the design session's text in any conflict (K945). The branch keeps receiving design-phase work; merge whatever is on it then, and the next NOTICE names any new DEC.
+
+## U30 · NOTICE · 2026-10-03 · session_01TNeXM2Qvi7zMXT6BntbENE · primary
+DEC-120 (Bob, 2026-10-02): any multi-step journey can be walked as a guided flow. Wizard scripts ("recipe" retired from the vocabulary) run for every group with no AI and no key; the assistant may also plan a flow where a key is set; always on the real screens, the guide in the docked panel (DEC-90). A step may place a labelled draft in a field for the member to adopt; only the member presses the act's button (replaces ASSISTANT-PILOT §3's no-prefill rule).
+DEC-121 (Bob, 2026-10-03): wizard scripts in two libraries. The CivicOS library is shipped and approved by Bob. Each group's own is governed like filing templates (versions; a project owner approves, an administrator widens; a machine never approves; retired, never deleted). Members author by recording a walk-through (screens and acts, never values) or by asking the assistant, which is an expert author; an advanced hand editor is granted by an administrator. Checks refuse missing screens or acts, a step without its "why", or a script telling a member what to conclude; they warn on trivial or duplicate scripts. Required flows (setup and claim, member onboarding, the publication ceremony) block the release if broken; a broken optional flow is withdrawn, its owner told. A standard mark where flows begin: hover shows them and their use, click starts one or records from there. Sharing as a signed file or through the network directory, approved by the importer (later).
+Folded: BIO_Interaction_Constructs_v0_1.md §P "THE WIZARD". On branch claude/gallant-brown-zg0wc1 (PR #8). Owed (owed: lines): the script runner without the assistant; the governed library; the recorder; the editor by grant; the checks; the assistant's authoring guidance; required-flow release gating; the starting-point mark; use counts; sharing (later). B15 noted.
