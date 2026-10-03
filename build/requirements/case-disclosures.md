@@ -33,7 +33,7 @@ This module judges each against the owner's lists and the record at the act, and
 
 #### Tensions (N345; DEC-76 item 4, DEC-84 items 11–13, DEC-85)
 
-- **R1** (was `case-authoring` R31) *(not yet met: T29)*
+- **R1** (was `case-authoring` R31)
   - **The read.** `tensionsRead(prepared, viewer)` reads `contradiction.unresolvedRecordOn({finding, sha, viewer})` (its R29) for each member at its `bundleSha`. It answers one entry per candidate and member, with each side as `tensionSide` states it, and `unread`: per member, the count of document legs with no content row, which are stated and never filled.
   - **Read failure.** A read that fails, throws or is `truncated` is `TENSIONS_UNDETERMINED` (C-120.3), naming each finding and why. `tensionsUndetermined(failed)` is the same refusal, for a caller's own failed read.
   - **The judgment.** `tensionsJudged(prepared, viewer, tensionsDisclosed)` takes `tensionsDisclosed: [{candidate, words?}]` (absent is none; a candidate listed twice is disclosed once, its first words kept). It answers `{refusals, entries, unread, byCandidate}`. Its refusals are:
@@ -60,7 +60,7 @@ This module judges each against the owner's lists and the record at the act, and
 
 #### Each document's grade and co-attestation, and its source (N364; DEC-81 items 1 and 3, DEC-78 item 5)
 
-- **R2** (was `case-authoring` R35) *(not yet met: T29)*
+- **R2** (was `case-authoring` R35)
   - **The captures.** `restingCaptures(prepared)` answers `[{member, capture}]`, one level deep: each document leg's content-row capture, else every capture its target registers. An inquiry leg names none. The list is in member order, then leg order, each pair once.
   - **One capture's facts.** `captureFacts(sha)` answers:
     - the capture's grade (`provenance.captureGrade`);
@@ -74,20 +74,20 @@ This module judges each against the owner's lists and the record at the act, and
     - `SELF_ATTESTATION_NOT_STANDING` (C-120.6), for a listed capture that is co-attested or not in the case.
 
     The case is never refused because a capture is not co-attested.
-- **R3** (was `case-authoring` R36) *(not yet met: T29)* An acknowledged capture's rows, in `disclosureBlocks`' `captures`, are marked `self_attested_only: true` with `{reason, acknowledged_by, at, sentence}`, and carry its signed accounts on its first row. `captureBodyLines(captures, sources)` prints the fixed `SELF_ATTESTED_SENTENCE`: "Without co-attestation an outsider can verify the copy has not changed since capture and can follow the reasoning, but cannot independently verify that the source served those bytes, or when."
-- **R4** (was `case-authoring` R37) *(not yet met: T29)*
+- **R3** (was `case-authoring` R36) An acknowledged capture's rows, in `disclosureBlocks`' `captures`, are marked `self_attested_only: true` with `{reason, acknowledged_by, at, sentence}`, and carry its signed accounts on its first row. `captureBodyLines(captures, sources)` prints the fixed `SELF_ATTESTED_SENTENCE`: "Without co-attestation an outsider can verify the copy has not changed since capture and can follow the reasoning, but cannot independently verify that the source served those bytes, or when."
+- **R4** (was `case-authoring` R37)
   - **The rows.** `sourcesStated(shas, viewer)` answers rows `{capture, stated, basis}`, each statement once. For each capture whose source is a knocker or a hand-carried source (`sources.sourceOf`), they state only what `sources.publishableAt({audience: "public"})` answers, with its basis, spelled by `publication.sourceStatement`.
   - **Withheld.** With no `name` entry publishable, the row states the identity "Withheld" with its reason (the source has not consented to being named, and no public record names them), and the receipt's digest and time, in `publication`'s `unnamedSourceStatement`, the one spelling (K1315 (8)). It never states what was withheld. No authored field adds to it. A source read that fails states the Withheld row.
   - **Off-the-record.** `withheldOf(rows)` is the set of off-the-record captures, read by `case-grammar.sourceRowWithheld`.
 
 #### What the case carries, and what it may rest on (DEC-112; DEC-119)
 
-- **R5** (was `case-authoring` R43) *(not yet met: T29)* `methodOf()` answers `{grading: strength.GRADING_METHOD_VERSION, checks: promotion.CATALOG_VERSION}` at the call, written by `case-grammar`'s `methodBlockLines` (its R11) and `carriesBodyLines`, so the version is inside what the owner signs.
-- **R6** (was `case-authoring` R44) *(not yet met: T29)* `materialsJudged(prepared, memberRoles, viewer)` follows each member's chain (R8; `chainsOf`) and answers `{refusals, materials, refs, findings}`:
+- **R5** (was `case-authoring` R43) `methodOf()` answers `{grading: strength.GRADING_METHOD_VERSION, checks: promotion.CATALOG_VERSION}` at the call, written by `case-grammar`'s `methodBlockLines` (its R11) and `carriesBodyLines`, so the version is inside what the owner signs.
+- **R6** (was `case-authoring` R44) `materialsJudged(prepared, memberRoles, viewer)` follows each member's chain (R8; `chainsOf`) and answers `{refusals, materials, refs, findings}`:
   - **What is held.** Each material carries what this copy holds of it (`materialHeld`: the captured bytes and extracted text, or an observation's text), and `included` when whole.
   - **The refusal.** `RELIED_ON_NOT_PRESENTABLE` (C-120.8) names each load-bearing member and each material its chain reaches that is not held whole.
   - **Supporting only.** Material only supporting members reach, and not held whole, is listed `included: false` and never refused.
-- **R7** (was `case-authoring` R45) *(not yet met: T29)* `disclosureBlocks(…)` answers the `materials:` and `material_attestations:` rows (`case-grammar` R12) for every material R6 answered, with:
+- **R7** (was `case-authoring` R45) `disclosureBlocks(…)` answers the `materials:` and `material_attestations:` rows (`case-grammar` R12) for every material R6 answered, with:
   - its fingerprint, its extracted text's fingerprint, its origin and archived copy;
   - whether it is included;
   - its attestations:
@@ -97,24 +97,24 @@ This module judges each against the owner's lists and the record at the act, and
     - the group's (one row whose signature is the case's own).
 
   No table and no act holds the project's or the group's attestation. A side the publisher could not see is never listed (R17).
-- **R8** (was `case-authoring` R46) *(not yet met: T29)* Terms for R6–R12.
+- **R8** (was `case-authoring` R46) Terms for R6–R12.
   - **Off-the-record.** A capture is off-the-record when its `source` is a knocker or a hand-carried source and R4 states its identity "Withheld".
   - **Attesting member.** Its attesting member is the capture's `actor` (`acquisition` R16; for a pulled knock, the member who pulled it, `capture` R65).
   - **Reaches.** A chain reaches what its legs target, followed through inquiry legs to `strength`'s depth bound (its R2), as the viewer sees the record.
-- **R9** (was `case-authoring` R47) *(not yet met: T29)* Off-the-record material is presentable like any other: R6 and R7 apply unchanged, and nothing here refuses because material is off-the-record. Its grade is the capture's grade as recorded (`provenance` R51).
-- **R10** (was `case-authoring` R48) *(not yet met: T29)* For each off-the-record capture a chain reaches, the attesting member's `material_attestations:` row states them at the level in force for that capture (`publication` R60), read from the attribution rows the caller passes (`attributionOf`, `publication.attributionStatements`).
+- **R9** (was `case-authoring` R47) Off-the-record material is presentable like any other: R6 and R7 apply unchanged, and nothing here refuses because material is off-the-record. Its grade is the capture's grade as recorded (`provenance` R51).
+- **R10** (was `case-authoring` R48) For each off-the-record capture a chain reaches, the attesting member's `material_attestations:` row states them at the level in force for that capture (`publication` R60), read from the attribution rows the caller passes (`attributionOf`, `publication.attributionStatements`).
   - At `cover` or `name`, the row carries their handle and signature.
   - At `group`, `project` or no level yet, it carries the account's text only (`capture.captureAccountsOf`), never their handle, key or signature, in `disclosureBlocks`' `captures` too.
   - An off-the-record capture's origin is not stated.
-- **R11** (was `case-authoring` R49) *(not yet met: T29)* A capture a named member made, including a load-bearing self-attested Grade B capture, is governed by R2 and R3, unchanged. Testimony and off-the-record material credited at the group or project level are governed by `strength` R29 and `ratification` R35.
+- **R11** (was `case-authoring` R49) A capture a named member made, including a load-bearing self-attested Grade B capture, is governed by R2 and R3, unchanged. Testimony and off-the-record material credited at the group or project level are governed by `strength` R29 and `ratification` R35.
 
 #### Another group's work this case rests on (DEC-96 item 4; N522)
 
-- **R12** (was `case-authoring` R50) *(not yet met: T29)* A chain stops at a leg on an imported finding reference (`inquiry-grammar` R11). That leg is answered in R6's `refs`, and R6, R7 and R10 do not follow past it.
-- **R13** (was `case-authoring` R51) *(not yet met: T29)* `acceptedWorkJudged(refs, viewer)` reads, for each ref leg, `case-import.acceptanceOf` and `importedCase` at the leg's `target_edition` (from the inquiry's own `bundle.md` `basis[ord]`). It answers `{refusals, rows, editions}`.
+- **R12** (was `case-authoring` R50) A chain stops at a leg on an imported finding reference (`inquiry-grammar` R11). That leg is answered in R6's `refs`, and R6, R7 and R10 do not follow past it.
+- **R13** (was `case-authoring` R51) `acceptedWorkJudged(refs, viewer)` reads, for each ref leg, `case-import.acceptanceOf` and `importedCase` at the leg's `target_edition` (from the inquiry's own `bundle.md` `basis[ord]`). It answers `{refusals, rows, editions}`.
   - **The rows.** `rows` are `accepted_work:` rows (`case-grammar` R16): who accepted which edition, when and why, the recreation result and the gaps stated; `checked` stays inside the group.
   - **The refusal.** A leg with no acceptance in force is `ACCEPTED_WORK_NOT_IN_FORCE` (C-120.10), naming the member, the leg, and the source case and edition.
-- **R14** (was `case-authoring` R52) *(not yet met: T29)* `flagsJudged(editions, flagsDisclosed)` reads `case-import.openFlagsOn` for each edition R13 names, against `flagsDisclosed: [{flag, words?}]`. It answers `{refusals, open, byFlag}`.
+- **R14** (was `case-authoring` R52) `flagsJudged(editions, flagsDisclosed)` reads `case-import.openFlagsOn` for each edition R13 names, against `flagsDisclosed: [{flag, words?}]`. It answers `{refusals, open, byFlag}`.
   - **Refusals.**
     - A failed or incomplete read is `FLAGS_UNDETERMINED` (C-120.12), alone.
     - Else an open flag not listed is `FLAG_NOT_DISCLOSED` (C-120.11), naming each.
@@ -127,7 +127,7 @@ This module judges each against the owner's lists and the record at the act, and
 
 #### Grading facts and passages (DEC-112 (3); K1315)
 
-- **R15** (was `case-authoring` R54) *(not yet met: T29)* `findingFacts(findings, viewer)` answers the `grading_facts:` and `passages:` rows (`case-grammar` R17) for each finding R6 reached:
+- **R15** (was `case-authoring` R54) `findingFacts(findings, viewer)` answers the `grading_facts:` and `passages:` rows (`case-grammar` R17) for each finding R6 reached:
   - `strength.gradingFacts({inquiry, levels: null, viewer})` (its R35), one row per leg `{finding, ord, …}`;
   - one passage row per leg naming a content row, `{finding, ord, content_id, capture_sha, extent, chain, quoted}`, with `quoted` the extracted unit's text at that extent, or null where none is held.
 
@@ -135,7 +135,7 @@ This module judges each against the owner's lists and the record at the act, and
 
 #### Hunch debt (Publication §3 rule 4; DEC-20)
 
-- **R16** (was `case-authoring` R12) *(not yet met: T29)* `hunchDebt(prepared)` answers `UNCLEARED_HUNCH` (C-120.7), naming each member, leg and target whose live basis (`inquiry.basisFor`) carries a leg whose grade source is `hunch`, or null. It is asked of every member, load-bearing or supporting. A member whose basis cannot be read is not passed: the same `UNCLEARED_HUNCH` answer names it under `undetermined: [{target, why}]` beside the hunches, saying whether it rests on a hunch is not known (R18, R23: the read states less and the answer fails closed; K1346).
+- **R16** (was `case-authoring` R12) `hunchDebt(prepared)` answers `UNCLEARED_HUNCH` (C-120.7), naming each member, leg and target whose live basis (`inquiry.basisFor`) carries a leg whose grade source is `hunch`, or null. It is asked of every member, load-bearing or supporting. A member whose basis cannot be read is not passed: the same `UNCLEARED_HUNCH` answer names it under `undetermined: [{target, why}]` beside the hunches, saying whether it rests on a hunch is not known (R18, R23: the read states less and the answer fails closed; K1346).
 
 ## Private
 
@@ -161,13 +161,13 @@ This module judges each against the owner's lists and the record at the act, and
 
 ### Invariants
 
-- **R17** (copy of `case-authoring` R33; DEC-85) *(not yet met: T29)* No row, sentence or answer this module gives names the project, members, content, kind or source of a side the publisher could not see at the act. A reveal (`contradiction` R52) never widens it: sight at the act, by `membership` R43, governs.
-- **R18** (copy of `case-authoring` R26) *(not yet met: T29)* Undetermined is stated and never filled. That covers a conflict leg unread (R1), a source read that failed (R4, stated Withheld), and a finding's grading facts unread (R15).
-- **R19** (copy of `case-authoring` R24) *(not yet met: T29)* No row composes a case-level strength: every pair is per member and per axis.
-- **R20** (copy of `case-authoring` R22) *(not yet met: T29)* Everything a row asserts arrived as an argument or was read from the record at the call. Nothing is composed, summarised or inferred.
-- **R21** (copy of `case-authoring` R30) *(not yet met: T29)* No place is named in this module's behaviour or outward text.
-- **R22** (`case-authoring` R29's share) *(not yet met: T29)* C-120.1–C-120.8 and C-120.10–C-120.13, the family "a case's disclosures and its pre-flight" (`CASE_DISCLOSURE_CHECKS`), are held in this module's own table with their ids, codes and translations unchanged, each `where` naming this module's raising method. C-120.9 is withdrawn and never reused. A change to any moves `CATALOG_VERSION` (rule 17).
-- **R23** (the seam, K617) *(not yet met: T29)*
+- **R17** (copy of `case-authoring` R33; DEC-85) No row, sentence or answer this module gives names the project, members, content, kind or source of a side the publisher could not see at the act. A reveal (`contradiction` R52) never widens it: sight at the act, by `membership` R43, governs.
+- **R18** (copy of `case-authoring` R26) Undetermined is stated and never filled. That covers a conflict leg unread (R1), a source read that failed (R4, stated Withheld), and a finding's grading facts unread (R15).
+- **R19** (copy of `case-authoring` R24) No row composes a case-level strength: every pair is per member and per axis.
+- **R20** (copy of `case-authoring` R22) Everything a row asserts arrived as an argument or was read from the record at the call. Nothing is composed, summarised or inferred.
+- **R21** (copy of `case-authoring` R30) No place is named in this module's behaviour or outward text.
+- **R22** (`case-authoring` R29's share) C-120.1–C-120.8 and C-120.10–C-120.13, the family "a case's disclosures and its pre-flight" (`CASE_DISCLOSURE_CHECKS`), are held in this module's own table with their ids, codes and translations unchanged, each `where` naming this module's raising method. C-120.9 is withdrawn and never reused. A change to any moves `CATALOG_VERSION` (rule 17).
+- **R23** (the seam, K617)
   - Every service is synchronous.
   - It never throws on a failed read of another module (that read states less, never more).
   - It writes nothing of its own. The one write it reaches is `sources.sourceOf`'s minting of a source id, inside the caller's transaction (`case-authoring` R18), so the caller can roll it back.
