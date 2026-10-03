@@ -37,3 +37,7 @@ B2 done: tranche/T31 merged (case-grammar /7); case-authoring tests 122/122 gree
 Merged `tranche/T31` (publication, network-notices, ratification, case-import). `node --test test/m/case-authoring/`: 122 pass, 0 fail. Checks format, architecture, coverage (39 of 39), ownership: 0 failures. COMPLETE.
 
 Size (session_01HNgAFdfDCrMf2zid6uorgB): test runs 6, module lines 2925
+
+## J4 · COMPLETE
+
+B3 done: tranche/T31 merged with publication, network-notices, ratification, case-import (and case-grammar). case-authoring tests 122/122 green; checks format, architecture, coverage 39/39, ownership: 0 failures. Branch job/T31/case-authoring pushed, ready to merge.
