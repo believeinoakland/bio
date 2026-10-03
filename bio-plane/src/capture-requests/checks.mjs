@@ -7,8 +7,8 @@
  * was deleted by this module in T19 (rule 1, K816; 1.50.0 records it): this table is now the only one.
  * `CAPTURE_PURPOSES`, `CAPTURE_UA_MODES` and `userAgentIsLegible` MOVED here (K586 BOB-1: this module was their only
  * product importer).
- * The CivicOS agent's one composer, `civicosUserAgent`, is `acquisition`'s (its R24), read from there so the drain
- * judges the string `acquisition` sends. C-108 is this module's own family (K181 (2); K174's pattern).
+ * The Civicsmith agent's one composer, `civicsmithUserAgent`, is `acquisition`'s (its R24), read from there so the
+ * drain judges the string `acquisition` sends. C-108 is this module's own family (K181 (2); K174's pattern).
  *
  * The catalogue's comments are carried with each row, so the reasoning stays beside it. */
 
@@ -64,13 +64,24 @@
  *  already named does not have to misdescribe that either. */
 export const CAPTURE_PURPOSES = Object.freeze(['investigate', 'acquire']);
 
-/** The two LEGIBLE user-agent forms, and there is no third. `civicos` is the
- *  honest product string with its contact URL (`acquisition`'s `civicosUserAgent`);
+/** The two LEGIBLE user-agent forms, and there is no third. `civicsmith` is the
+ *  honest product string with its contact URL (`acquisition`'s `civicsmithUserAgent`);
  *  `member-browser` is BOB-3's delegation of the member's OWN browser UA, which
  *  is permitted for publicly available documents and is a member speaking as
  *  themselves through a tool they run. A fabricated string is neither, and this
  *  door cannot express one. */
-export const CAPTURE_UA_MODES = Object.freeze(['civicos', 'member-browser']);
+export const CAPTURE_UA_MODES = Object.freeze(['civicsmith', 'member-browser']);
+
+/** R14 (DEC-124, K1365 (4)): the names a mode was written under before, each read as the mode it names now. `civicos`
+ *  is the product's name before T31: accepted on input, read in a stored row as `civicsmith`, never written. An alias
+ *  is not a third form: it names one of the two. */
+export const CAPTURE_UA_MODE_ALIASES = Object.freeze({ civicos: 'civicsmith' });
+
+/** R14: a mode as this module answers and judges it, an alias read as the mode it names; any other value as it is. */
+export function uaModeOf(mode) {
+  return typeof mode === 'string' && Object.prototype.hasOwnProperty.call(CAPTURE_UA_MODE_ALIASES, mode)
+    ? CAPTURE_UA_MODE_ALIASES[mode] : mode;
+}
 
 /** Is this user-agent LEGIBLE — does it name a contact a third party can reach?
  *  ONE predicate, used by the drain's conduct check and by its R14 tests, so
