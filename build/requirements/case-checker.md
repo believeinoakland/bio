@@ -44,6 +44,7 @@ Terms. The **case file**, its **manifest**, **parts** and **files** are `case-gr
   - R4 and R8 do not follow past it.
   - The answer lists `rests_on_another_group: [{group, case, edition, finding, manifest_sha}]`, with the sentence that this part is checked against that group's own case file. The words are the UX stream's.
   - It adds no `missing` entry, and it is never `recreated` on that group's behalf.
+- **R19** `readCaseFile(parts)` answers `{manifest, files: [{path, kind, sha256, bytes, content}], departures}` from a case file's parts (`public-read` R6's stored ZIPs), every way they depart from `case-grammar` R13 named in `departures`. It is the one reader of the format, used by R2 and by `case-import` (its R1, R5). Pure; never throws. (DEC-112 (3); K1315) *(not yet met: T28)*
 
   (DEC-96 item 4; DEC-112 (6); K1273 reading 2) *(not yet met: T28)*
 
