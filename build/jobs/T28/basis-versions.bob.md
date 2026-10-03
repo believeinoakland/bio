@@ -17,3 +17,7 @@ From STRENGTH #10 (K1305): a version leg on a ref stores its target_edition in t
 ## B4 · CHANGE
 
 inquiry-grammar is merged into tranche/T28 (K1306), with IMPORTED_FINDING_RE, parseImportedFindingRef and importedLegFindings: merge tranche/T28 into your branch and build against them.
+
+## B5 · CHANGE
+
+From ACCEPTED-WORK #1 (K1307): R3 is an instance method, acceptedWorkOf(host, deps).acceptedLegRefusals({legs, viewer}), answering [{check, code, severity: 'error', translation, detail, ord, ref, edition}], ord the leg's own ord when it has one, else its index in legs. Take it through your deps.acceptedWork. accepted-work merges next; I'll tell you when it is in.
