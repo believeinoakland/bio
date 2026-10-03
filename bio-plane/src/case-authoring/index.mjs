@@ -59,7 +59,7 @@ import { membershipOf, viewerPredicate, noSuchProject } from "../membership/inde
 import { observationLogOf } from "../observation-log/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
-import { strengthOf, STRENGTH_AXES, DEPTH_BOUND } from "../strength/index.mjs";
+import { strengthOf, STRENGTH_AXES, DEPTH_BOUND, GRADING_METHOD_VERSION } from "../strength/index.mjs";
 import { extractionOf } from "../extraction/index.mjs";
 import { promotionOf, CATALOG_VERSION } from "../promotion/index.mjs";
 import { parseImportedFindingRef } from "../inquiry-grammar/index.mjs";
@@ -80,7 +80,7 @@ import { SECTIONS } from "../case-grammar/index.mjs";
 import { PUBLISH_ACT_CHECKS, CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS, CASE_DISCLOSURE_CHECKS } from "./checks.mjs";
 import { CASE_AUTHORING_TABLES, migrateCaseAuthoring } from "./schema.mjs";
 import { searchedSection } from "./searched.mjs";
-import { chainsOf, materialHeld } from "./materials.mjs";
+import { chainsOf, materialHeld, materialRows } from "./materials.mjs";
 import { flagsListed, flagsJudged, acceptedWorkRow, FLAG_SENTENCE, FLAGS_SAY } from "./accepted.mjs";
 import { fmSafe, statementSha, caseDocumentText, ackFrontmatterLines, ackBodyLines, withheldWriterStated,
          CEREMONY_HIGHLIGHT_SENTENCE, NOT_SHOWN_WORDS, TENSIONS_DEPTH_STATED, tensionSide,
@@ -636,9 +636,27 @@ export class CaseAuthoring {
                detail: `the case document's searched section could not be computed: ${searched.why}. `
                      + `A case document publishes what was looked for beside what it claims to cover `
                      + `(D-196); it does not publish the claim with the record of the looking left blank.` };
+    /* R37: what may be stated of the source of each capture a chain reaches (R35's, one level deep, and every document
+       R45 lists), read after the last refusal (reading a source mints its id, sources R1, inside this act's
+       transaction). R46, R48 (K1316): a capture R37 states "Withheld" is off-the-record. */
+    const documentsReached = reached.materials.filter((m) => m.kind === "document").map((m) => m.sha);
+    const sourceRows = this.#sourcesStated([...new Set([...facts.keys(), ...documentsReached])], viewer);
+    const withheld = CaseAuthoring.#withheld(sourceRows);
+    /* MK-7 / §4.3: each observation this edition reaches (basis-versions R39), at the level its author chose, or
+       UNCHOSEN (publication R17); and, K1316, each off-the-record capture a chain reaches, at its attesting member's
+       level (publication R60), its row keyed by the capture: the section is written when either is reached. */
+    const reach = this.basisVersions.testimonyReach(members);
+    const observations = [...new Set([...reach.self, ...reach.via.map((v) => v.observation)])];
+    const attributions = this.publication.attributionStatements(theCase, edition, proj,
+      [...observations, ...documentsReached.filter((sha) => withheld.has(sha))]);
+    const attributionOf = new Map((Array.isArray(attributions) ? attributions : [])
+      .map((r) => [r.capture ?? r.observation, r]));
+    /* R48: a member credited at `cover` or `name` is named as they chose; at `group`, `project` or none yet, never by
+       handle, key or signature. */
+    const named = (sha) => { const l = (attributionOf.get(sha) || {}).level; return l === "cover" || l === "name"; };
     /* R35, R36: each (member, capture) row, the owner's acknowledgement (the `author` stamp at this act) on every row of
-       an acknowledged capture, and each capture's signed accounts. R37: what may be stated of each capture's source,
-       read after the last refusal (reading a source mints its id, sources R1, inside this act's transaction). */
+       an acknowledged capture, and each capture's signed accounts, an off-the-record one's text only unless its member
+       chose to be named (R48). */
     const accountsCarried = new Set();
     const captureRows = resting.map((r) => {
       const { accounts_read, ...f } = facts.get(r.capture);
@@ -647,12 +665,35 @@ export class CaseAuthoring {
          capture). */
       const first = !accountsCarried.has(r.capture);
       accountsCarried.add(r.capture);
+      const hidden = withheld.has(r.capture) && !named(r.capture);
       return { ...f, member: r.member, self_attested_only: !!ack,
                ...(ack ? { acknowledgement: { reason: ack.reason, acknowledged_by: who, at: when,
                                               sentence: SELF_ATTESTED_SENTENCE } } : {}),
-               accounts: first ? accounts_read : [] };
+               accounts: !first ? [] : hidden ? accounts_read.map((x) => ({ ...x, by: null, signature: null })) : accounts_read };
     });
-    const sourceRows = this.#sourcesStated([...facts.keys()], viewer);
+    /* R45 (K1134 Q6, BOB's decision 15): each material a chain reaches and its attestations. */
+    const factsOf = (sha) => { if (!facts.has(sha)) facts.set(sha, this.#captureFacts(sha)); return facts.get(sha); };
+    const group = (() => { const f = this.promotion.fact("producingGroup"); return f && f.ok ? f.value ?? null : null; })();
+    const materialBlocks = materialRows(reached.materials, { project: proj, group, at: when, facts: factsOf,
+      origin: (sha) => withheld.has(sha) ? null : (this.#one(`SELECT address FROM captured_locators WHERE capture_sha=?
+                         AND address NOT LIKE 'knock:%' ORDER BY first_retrieved, address LIMIT 1`, sha) || {}).address ?? null,
+      registered: (sha) => this.#one(`SELECT bundle_id, registered FROM register WHERE capture_sha=?`, sha),
+      member: (m, f) => {
+        const attr = attributionOf.get(m.kind === "observation" ? m.ref : m.sha) || null;
+        if (m.kind === "observation")
+          return [{ by: attr ? attr.shown ?? null : null, level: attr ? attr.level ?? null : null, at: null, signature: null }];
+        const accounts = f && Array.isArray(f.accounts_read) ? f.accounts_read : [];
+        if (!withheld.has(m.sha)) return accounts.map((x) => ({ by: x.by, level: null, at: x.at, signature: x.signature }));
+        const level = attr ? attr.level ?? null : null, open = named(m.sha);
+        const shown = open ? attr.shown ?? null : null;
+        return accounts.length ? accounts.map((x) => ({ by: shown, level, at: x.at, signature: open ? x.signature : null }))
+                               : [{ by: shown, level, at: null, signature: null }];
+      } });
+    /* R54 (K1315): each reached finding's grading facts and relied-on passages, signed with the document. */
+    const findingFacts = this.#findingFacts(reached.findings, viewer);
+    /* R52: each open flag disclosed, the owner's words marked as the owner's, acknowledged by the `author` stamp. */
+    const flagRows = flagsJ.open.map((f) => ({ ref: f.ref, edition: f.edition, flag: f.flag, issue: f.issue,
+      flagged_at: f.at, words: flagsJ.byFlag.get(f.flag).words, acknowledged_by: who, acknowledged_at: when }));
 
     /* REC-135: the conclusion each member rests on, from the SAME answer the NOT_CONCLUDED gate decided on. */
     const conclusionRows = prepared.map((p) => ({ target: p.id, ...p.conclusion }));
@@ -690,12 +731,8 @@ export class CaseAuthoring {
     /* R20 — D-150 / §3 rule 11: who acknowledged this statement, read at the act that authors the document the owner
        signs, so the list is inside the signature. None is required, and none is ever a gate. */
     const acks = this.statementAcknowledgements(proj, theCase, edition, stmt, who, writer, null, draftLink);
-    /* MK-7 / §4.3: each observation this edition reaches (basis-versions R39), at the level its author chose, or
-       UNCHOSEN (publication R17). */
-    const reach = this.basisVersions.testimonyReach(members);
     /* R41 (DEC-111): the project reference, read at this act from the project's notice. */
     const workingOn = this.#workingOn(proj);
-    const observations = [...new Set([...reach.self, ...reach.via.map((v) => v.observation)])];
     const docText = caseDocumentText({
       caseId: theCase, edition, project: proj, workingOn, scope: scp, bias: back, bar,
       roster: members, roles: memberRoles, pins: pinOf,
@@ -703,7 +740,7 @@ export class CaseAuthoring {
       author: who, at: when, searched, conclusions: conclusionRows,
       statementBy: writer.by, statementByStated: writer.stated,
       frozen, manifest, acks, citations,
-      attributions: this.publication.attributionStatements(theCase, edition, proj, observations),
+      attributions,
       /* R31: each entry, the owner's words marked as the owner's, the acknowledgement the `author` stamp at this act. */
       tensions: read.entries.map((e) => ({ ...e, words: listed.byCandidate.get(e.candidate).words,
                                            acknowledged_by: who, acknowledged_at: when })),
@@ -714,6 +751,11 @@ export class CaseAuthoring {
                                adopted_as_drafted: changed.adopted_as_drafted } : null,
       /* R40: the frozen manifest's statements, every page, each citation printed or withheld. */
       lens: lensStatements,
+      /* R43 (DEC-112 (3)): the versions the owner signs under. */
+      method: { grading: GRADING_METHOD_VERSION, checks: CATALOG_VERSION },
+      /* R45, R51, R52, R54. */
+      materials: materialBlocks, accepted: { rows: accepted.rows, flags: flagRows },
+      grading: findingFacts.grading, passages: findingFacts.passages,
     });
     const docBytes = new TextEncoder().encode(docText);
     /* publication R21: stored unsigned, replacing an unsigned document of this case edition and never a signed one; the
@@ -722,6 +764,7 @@ export class CaseAuthoring {
                                                         draft: boundDraft });
     /* R34's steps read what this act read, from the same values (never a second reading). */
     Object.assign(seen, { workingOn, excluded: rows, searched, manifest, bias: back, captures: captureRows, sources: sourceRows,
+                          materials: materialBlocks, accepted: accepted.rows, flags: flagRows,
                           tensions: read.entries, memberEditions: [...frozen].map(([target, z]) =>
                             ({ target, edition: z.edition, crossed: z.crossed })) });
 
