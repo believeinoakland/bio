@@ -51,3 +51,7 @@ Size (session_01PjbqD3UQJJBDSqXLMiUhac): test runs 15, module lines 3263
 ## J1 · REPORT
 
 control-plane totality.test.mjs (R2, R41): with R35 merged, affordances' unaccounted over the door's table reads stale for my ten names: caseimport, caseimportdocument, importaccept, importacceptwithdraw, importflag, importflagclear, importedcases, importedcase, casechecker, casefilespec. op-declarations R14 has not yet carried their rows. Nothing is unpublished or unranked. This is accepted red 4's arm, and it clears when op-declarations and control-plane merge in L11. control-plane's other two failures (catalogue-end R43 C-92.4; families R22 CHECK_FAMILIES) were already red before my change and are unchanged by it. Publication's K1321 note needed no change here: no affordances test signs a case directly, and case-authoring's fixture used by the R19 statementack case already signs /6.
+
+## J2 · COMPLETE
+
+R35 applied: the four DEC-96 acts are reasoned with both codes in the family; caseimport and caseimportdocument are undetermined; NON_ACTS covers the eight ops and case-checker's two public reads. Docket's code is re-worded in the test. No new catalogue rows read awaiting stamp. affordances tests 156/156. format, architecture, coverage (35/35) and ownership: 0 failures. Record: build/jobs/T28/affordances.md on job/T28/affordances.
