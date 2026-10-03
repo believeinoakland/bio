@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #107 · session_01Fibz26JrnCgkNYHwprt7tt · depth 1
 
-**Jobs** · signatures: SIGNATURES #8 session_01JojTP81KLXqohStkarosgE; acquisition: ACQUISITION #8 session_01TNXZ4EjoqnXE7ZRkqLBzKq
+**Jobs** · signatures: SIGNATURES #8 session_01JojTP81KLXqohStkarosgE; acquisition: ACQUISITION #8 session_01TNXZ4EjoqnXE7ZRkqLBzKq; capture: CAPTURE #19 session_01A4QQEgEAz3S4VbtQrGS5L3
 
 **Opened** 2026-10-03 by BOB #107 from `main` @ d2b7451b80 (PR #9 merged at the T30/T31 boundary, K1361) with T30's boundary records; on Bob's "Start the work now" (K1362). Requirements folded at the opening on this branch (K1367 N538, K1368 N528, K1369 N534). **Bob's weekly meter** · 86% at the opening (K1361).
 
