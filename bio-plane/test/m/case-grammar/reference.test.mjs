@@ -66,7 +66,8 @@ test("R10 a /5 document with a well-formed working_on reads it back as its proje
   const fm = fmOf(text);
   assert.equal(parseFrontmatter(text).findings.length, 0, "the grammar reads the line");
   assert.equal(workingOnOf(fm), NOTICE);
-  assert.equal(CASE_DOCUMENT_FORMAT, V5, "an optional field of the format written today: no new version");
+  assert.equal(CASE_DOCUMENT_FORMAT, "bio-case-document/6", "the format written today states everything /5 states");
+  assert.equal(workingOnOf(fmOf(doc(CASE_DOCUMENT_FORMAT, workingOnLines(NOTICE)))), NOTICE, "an optional field of /6 too");
   assert.deepEqual([caseDocumentStatesMemberBlocks(fm), caseDocumentRequiresDisclosures(fm),
                     caseDocumentRequiresV4Disclosures(fm), caseDocumentRequiresTensionSection(fm)], [true, true, true, true],
                    "the /5 predicates hold as they did");
