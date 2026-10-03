@@ -19,3 +19,7 @@ For wizard-scripts, while it builds (its R13, R17 name `queue-producers` R32, R3
 - `submittedFor({after, limit, viewer})` → `{ok, entries, cursor, truncated}`, each `{script, version, owner, name, author, submitted_at, project}`. R33 keys `OBLIGATION::wizard-approval-requested::<script>@<version>::<owner>`, ages from `submitted_at`, homes under `project` (none for a group script).
 - `wizardScriptsOf(host, deps)` as the factory name.
 Progress: R34 and R35 are built and tested (J1's readings); queue-producers tests 76/76, format, architecture, coverage and ownership all 0 failures. Coverage reads R32 and R33 as named only because unrelated strings carry them ("reevaluation R33", proposals); I write their real tests after wizard-scripts merges.
+
+## J3 · REPORT
+
+`queue` (not in T31): its test world `bio-plane/test/m/queue/world.mjs`:132 fakes `reevaluation` without `citedCaseDependents` (reevaluation R33, which queue-producers R34 now reads), so 31 of queue's 106 tests throw `citedCaseDependents is not a function` once queue-producers merges. One line fixes it: add `citedCaseDependents: () => ({ ok: true, entries: [], count: 0, limit: 200, truncated: false, cursor: null, wrote: false })` beside `docketDependents`. Measured: with that read answered, queue passes 106/106. Nothing else of queue's is touched (its world reaches the real case-import and wizard-scripts and they answer empty). I did not guard the call in my module: a real reevaluation always offers it, and a guard would hide a missing provider.
