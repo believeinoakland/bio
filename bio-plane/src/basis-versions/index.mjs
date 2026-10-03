@@ -40,7 +40,7 @@ import { inquiryOf, legCapped, actNoBasis } from "../inquiry/index.mjs";
    which the retired check catalogue's copy (legacy-checks) did not. */
 import { contentOf, mintLabel, contentMintState, CONTENT_MINTED_BY_PLANE, legContentId, legExtent, canonicalExtent,
          describeExtent, extentRelation, CONTENT_EXTENT_CHECKS } from "../content/index.mjs";
-import { acceptedWorkOf } from "../accepted-work/index.mjs";
+import { acceptedWorkOf, ACCEPTED_WORK_CHECKS } from "../accepted-work/index.mjs";
 import { basisVersionFindings, versionsIn, compositionDiff, sameComposition, registerBasisVersionGrammar,
          isImportedRef } from "./grammar.mjs";
 import { BASIS_VERSION_CHECKS, VERSION_ACT_CHECKS, VERSION_KIND_CHECKS, CONCLUDE_ACT_CHECKS, NARROW_CHECKS, VERSION_MACHINE,
@@ -271,15 +271,18 @@ export class BasisVersions {
       let refused;
       try { refused = this.acceptedWork.acceptedLegRefusals({ legs: fresh.map((x) => x.leg), viewer: c.author ?? null }); }
       catch { refused = null; }
-      /* accepted-work's call never throws (its R3); a defect there is not a pass */
-      const list = Array.isArray(refused) ? refused : Array.isArray(refused?.findings) ? refused.findings : null;
+      const list = Array.isArray(refused) ? refused : null;
+      /* a defect there is accepted-work's own C-21.5 for each leg asked, never a pass */
+      const unreadable = ACCEPTED_WORK_CHECKS.ACCEPTED_WORK_UNREADABLE;
       const findings = list === null
-        ? fresh.map((x) => ({ code: "ACCEPTED_WORK_UNREADABLE", leg: x.leg }))
+        ? fresh.map((x) => ({ check: unreadable.check, code: "ACCEPTED_WORK_UNREADABLE", severity: "error",
+                              translation: unreadable.translation, ord: x.leg.ord, ref: x.leg.target,
+                              edition: x.leg.target_edition }))
         : list;
       if (findings.length)
         return { ok: false, reason: "BASIS_VERSION_REFUSED",
                  findings: findings.map((x) => {
-                   const ord = Number.isInteger(x?.ord) ? x.ord : x?.leg?.ord;
+                   const ord = x?.ord;
                    const owner = fresh.find((y) => y.leg.ord === ord);
                    return { ...x,
                             ...(owner ? { version: owner.version, detail: `basis_version_legs[${ord}] (version `

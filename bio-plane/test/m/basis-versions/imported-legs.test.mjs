@@ -6,6 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, block, version, merge, inqMd, V } from "./fixture.mjs";
 import { basisVersionFindings, versionsIn, versionAsWritten } from "../../../src/basis-versions/index.mjs";
+import { acceptedWorkOf } from "../../../src/accepted-work/index.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q";
 const IMP = "a".repeat(64);
@@ -168,4 +169,24 @@ test("R3: a leg check that fails is not a pass — the leg is refused BASIS_VERS
   assert.equal(r.reason, "BASIS_VERSION_REFUSED");
   assert.deepEqual(r.findings.map((f) => [f.code, f.version]), [["ACCEPTED_WORK_UNREADABLE", "first"]]);
   assert.equal(w.record.head(Q), null);
+});
+
+test("R3: through accepted-work's own instance — with nothing registered the leg is C-21.5, at an edition not accepted C-21.4, and accepted at that edition it lands", () => {
+  const w = world();
+  w.doc(DOC);
+  const none = w.inquiry(Q, block(withRefs("first", [[REF, 2]])));
+  assert.equal(none.reason, "BASIS_VERSION_REFUSED");
+  assert.deepEqual(none.findings.map((f) => [f.check, f.code, f.version, typeof f.translation]),
+                   [["C-21.5", "ACCEPTED_WORK_UNREADABLE", "first", "string"]]);
+  const aw = acceptedWorkOf(w.host);
+  const asked = [];
+  assert.equal(aw.registerAcceptedWork("case-import", {
+    finding: ({ ref, edition, viewer }) => { asked.push([ref, edition, viewer]);
+      return edition === 2 ? { ref, edition, acceptance: { by: "member:bo", at: "2026-09-27T00:00:00Z", reason: "checked" } }
+                           : { ref, edition, acceptance: null }; },
+    openFlags: () => ({ flags: [], complete: true }), withdrawals: () => ({ withdrawals: [], cursor: null }) }).ok, true);
+  const other = w.inquiry(Q, block(withRefs("first", [[REF, 3]])));
+  assert.deepEqual(other.findings.map((f) => [f.check, f.code]), [["C-21.4", "IMPORTED_NOT_ACCEPTED"]]);
+  assert.equal(w.inquiry(Q, block(withRefs("first", [[REF, 2]]))).ok, true);
+  assert.deepEqual(asked.at(-1), [REF, 2, V("alice")], "asked as the promotion's author");
 });
