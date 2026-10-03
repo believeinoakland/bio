@@ -69,10 +69,16 @@ export const ACTIVITY_LEVELS = Object.freeze([
   Object.freeze({ level: "Dormant", min: 0, max: 0 }),
 ]);
 /** R10: the method's version; a change to the method is a new version. */
-export const ACTIVITY_METHOD_VERSION = "civicos-working-on-activity/1";
+export const ACTIVITY_METHOD_VERSION = "civicsmith-working-on-activity/1";
+/** R10 (DEC-124, K1365 (2)): the labels attestations named this same method by before T31's rename. Renaming the label is
+ *  not a change to the method, so a reader holding an earlier attestation finds its method here. */
+export const ACTIVITY_METHOD_EARLIER_LABELS = Object.freeze(["civicos-working-on-activity/1"]);
 /** R10: the method as fixed text with its version. */
 export const ACTIVITY_METHOD = Object.freeze({
   version: ACTIVITY_METHOD_VERSION,
+  earlier_labels: ACTIVITY_METHOD_EARLIER_LABELS,
+  same_method: "Each earlier label names this same method: an attestation that carries one was computed exactly as "
+    + "stated here. Only the label's name changed.",
   window: `The ${ACTIVITY_WINDOW} complete UTC ISO weeks (Monday 00:00Z to the next Monday 00:00Z) before the date the `
     + "level is computed.",
   counted: "A week counts when it holds at least one member act on the project. How many acts a week holds never "
@@ -93,10 +99,17 @@ export function levelOf(weeksCounted) {
 
 /* ---------------------------------------------------------------- the seals (R14–R18) */
 
+/** R17 (DEC-124, K1365): an opening's `format`. One published before T31 keeps its bytes and its earlier label; every
+ *  reader, `verifyOpening` included, accepts both, forever, as the same format. */
+export const OPENING_FORMAT = "civicsmith-working-on-opening/1";
+export const OPENING_FORMATS = Object.freeze([OPENING_FORMAT, "civicos-working-on-opening/1"]);
+
 /** The fewest slots a project's week seal and a week's root are padded to. */
 export const SEAL_SLOTS = 1024;
 export const WEEK_SLOTS = 256;
-/** The construction, stated for a verifier written elsewhere (R18). */
+/** The construction, stated for a verifier written elsewhere (R18). Its name and its four hash tags are permanent
+ *  (R14; DEC-124, K1365 (2)): every seal already timestamped was hashed under them, so renaming them would break the
+ *  opening of every week sealed before. */
 export const SEAL_METHOD = Object.freeze({
   version: "civicos-working-on-seal/1",
   hash: "SHA-256, lowercase hex, over the UTF-8 bytes of the tagged line",
@@ -169,7 +182,8 @@ const HEX64 = /^[0-9a-f]{64}$/;
 const b64ToBytes = (s) => { try { return Uint8Array.from(atob(String(s)), (c) => c.charCodeAt(0)); } catch { return null; } };
 
 /** R18: PURE. Whether an opening's leaves hash to the project seal it names, whether that seal reaches the week root,
- *  and whether the timestamp response is bound to that root (`signatures.parseTimestampResponse`). Answers
+ *  and whether the timestamp response is bound to that root (`signatures.parseTimestampResponse`). It reads no label:
+ *  an opening under either of `OPENING_FORMATS` is checked the same (R17), the construction being `SEAL_METHOD`'s. Answers
  *  `{ok, leaves, seal, timestamp, detail}`: `leaves` true when every leaf climbs to the seal, `seal` true when the seal
  *  climbs to the week root, `timestamp` `"bound"`, `"not_bound"` or `"untimestamped"`; `ok` when all hold and the week
  *  is timestamped. Never throws. */
