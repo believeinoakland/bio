@@ -173,10 +173,10 @@ test("R10 the title is the question's first non-empty line, folded, cut at a wor
   assert.equal(inquiryQuestionOf("---\nid: x\n---\n\n## Other\n\nno\n"), "");
 });
 
-test("R38 the rows the module mints are inquiry-grammar's, read with their ids: C-54.1, C-33.13, C-33.22, C-33.23, C-32.7, C-32.8", () => {
+test("R38 R4 the rows the module mints are inquiry-grammar's, read with their ids: C-54.1, C-33.13, C-33.22, C-33.23, C-32.7, C-32.8, and C-21.3 for a leg on an imported finding (N522)", () => {
   assert.deepEqual(Object.fromEntries(Object.entries(INQUIRY_ROWS).map(([k, r]) => [k, r.check])), {
     LEAD_NOT_EVIDENCE: "C-54.1", NOT_INQUIRIES: "C-33.13", SELF_BASIS: "C-33.22", BASIS_CYCLE: "C-33.23",
-    MACHINE_CANNOT_DIVIDE: "C-32.7", MACHINE_CANNOT_GROUND: "C-32.8" });
+    MACHINE_CANNOT_DIVIDE: "C-32.7", MACHINE_CANNOT_GROUND: "C-32.8", IMPORTED_LEG_MALFORMED: "C-21.3" });
   for (const r of Object.values(INQUIRY_ROWS)) assert.ok(typeof r.translation === "string" && r.translation.length > 20);
   const f = []; assert.equal(leadLegFindings("basis[0]", { target: "LEAD-2026-0001-abc" }, f), true);
   assert.equal(f[0].check, "C-54.1");
