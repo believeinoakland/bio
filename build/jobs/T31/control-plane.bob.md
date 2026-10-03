@@ -13,3 +13,7 @@ Found before your start (CASE-IMPORT #2, K1383): case-import's ops map now holds
 ## B2 · ANSWER · re J1
 
 K1396: readings 1-5 stand; admission's pre-caller refusals are not counted. op-declarations is told to list wizardrefusaltally as store-internal. You merge after affordances, instance-setup, op-declarations (and wizard-scripts); CHANGEs follow.
+
+## B3 · CHANGE
+
+wizard-scripts is merged (K1401). Its report (K1401): your CHECK_FAMILY_FILES must gain src/wizard-scripts/checks.mjs (your R41). Merge tranche/T31 and carry on; you merge after affordances and op-declarations, CHANGEs follow.
