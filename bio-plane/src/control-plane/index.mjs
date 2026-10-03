@@ -2126,16 +2126,21 @@ export function makeFetch(hooks = {}) {
        session reaches these ops (their rows), and a machine stamp, were one to arrive, is refused there by name
        (MACHINE_CANNOT_DRAFT_WIZARD, MACHINE_CANNOT_APPROVE_WIZARD). A PROPOSAL's label is the template proposal's (any
        credential may propose): a session its member, a machine `class:<cls>`, an agent `class:ai/<tokenId>`. A caller's
-       copy of each is overwritten. `wizardprogress` is stamped nothing. */
-    if (WIZARD_AUTHOR_ACTIONS.includes(op))
-      inner.searchParams.set("author", viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`);
-    if (WIZARD_BY_ACTIONS.includes(op))
-      inner.searchParams.set("by", viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`);
-    if (WIZARD_PROPOSAL_ACTIONS.includes(op))
-      inner.searchParams.set("proposer",
-        viaSession ? sessMember
+       copy of each is overwritten. wizard-scripts' map reads every one of the three from `author` (its ops map), so each
+       is also set there; `by` and `proposer` are the stamps op-declarations R15 names. `wizardprogress` is stamped
+       nothing. */
+    if (WIZARD_AUTHOR_ACTIONS.includes(op) || WIZARD_BY_ACTIONS.includes(op)) {
+      const who = viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}`;
+      inner.searchParams.set("author", who);
+      if (WIZARD_BY_ACTIONS.includes(op)) inner.searchParams.set("by", who);
+    }
+    if (WIZARD_PROPOSAL_ACTIONS.includes(op)) {
+      const proposer = viaSession ? sessMember
         : cls === "ai" ? `${MACHINE_CLASS_PREFIX}${cls}/${aiCred.tokenId}`
-        : `${MACHINE_CLASS_PREFIX}${cls}`);
+        : `${MACHINE_CLASS_PREFIX}${cls}`;
+      inner.searchParams.set("proposer", proposer);
+      inner.searchParams.set("author", proposer);
+    }
     /* PL-18 / DEC-63 — WHICH MEMBER IS ASKING, for the project-participation
        gate on the three run verbs. Bob ruled 2026-08-09 that an investigation
        can be started by ANY MEMBER OF THE PROJECT: the gate is participation in
