@@ -560,6 +560,11 @@ lines on why groups declare bias. On screen it opens collapsed to one line per s
 always full. Because the statements are in the signed bytes, the lens survives print, download and the group's system going
 away. The publisher sees exactly what will be printed before signing. Earlier cases keep only the manifest's fingerprint.
 
+**The two lines, RULED 2026-10-02 by Bob (DEC-117).** The section ends with these two sentences, verbatim: "Everyone who
+investigates looks through a lens: what they care about and expect to find. An undeclared lens is the most dangerous kind."
+and "This group declares its lens, with its reasons and its evidence, so that you can weigh its findings knowing how it
+looked at the material."
+
 ## Differential traversal and the cross-group rerun
 
 Because the record is re-derivable, two capabilities follow:
