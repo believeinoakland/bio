@@ -45,7 +45,7 @@ export const LAYER = [{ step: "layer", tier: 1, container: "pdf", cap: null, mea
 export const V = (id) => `member:${id}`;
 export const MACHINE = "class:daemon";
 
-export function world({ now = "2026-09-28T01:00:00Z", caseMemberFact = true, withRetrieval = false } = {}) {
+export function world({ now = "2026-09-28T01:00:00Z", caseMemberFact = true, withRetrieval = false, acceptedWork = null } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -102,7 +102,9 @@ export function world({ now = "2026-09-28T01:00:00Z", caseMemberFact = true, wit
     ? retrievalOf(host, { record, membership, promotion, extraction: realEx, observation: {}, now: () => Date.parse(clock.now) })
     : null;
   if (retrieval) retrieval.migrate();
-  const bv = basisVersionsOf(host, { record, membership, promotion, content, inquiry, retrieval, now: () => clock.now });
+  /* `acceptedWork`: accepted-work's leg check (its R3) as the test controls it; absent, accepted-work's own */
+  const bv = basisVersionsOf(host, { record, membership, promotion, content, inquiry, retrieval, now: () => clock.now,
+                                     ...(acceptedWork ? { acceptedWork } : {}) });
   bv.migrate();
   let n = 0;
   const w = {
