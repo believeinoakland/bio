@@ -9,8 +9,8 @@
  *
  * Two parts. `affordancesAnswer` is the composition, pure: the catalogue or one target's acts, decorated through the gate
  * by `decorate` — the SAME function a queue item's options go through, so the two answers cannot drift (REC-20, R11).
- * `affordancesOp` is the door's arm: it asks the store the two things the composition needs (the kinds this instance's
- * `actions` accepts, and the target's facts) and answers through the envelope it was handed.
+ * `affordancesOp` is the door's arm: it asks the store what the composition needs (the kinds this instance's
+ * `actions` accepts, and the target's facts, or with no target the screens and offered wizard scripts, R37) and answers through the envelope it was handed.
  *
  * Nothing is asked of the caller and nothing here writes (R22). `rung` is DECLARED, never guessed, and since FW-14 it is
  * TOTAL: every op the control plane declares mutating carries a rung or is named with the GROUND on which it has none
@@ -32,7 +32,7 @@ const CATALOGUE_DETAIL = "pass target=<record id> for the acts available on that
  *  publishes the product's kinds for anything that is not a kind list). With no `target`, the catalogue — the shape a
  *  surface loads once, searchfields' precedent; with one, `facts` is R13–R14's answer for it: a refusal is returned as
  *  given (stated `ok: false`), and otherwise the target's acts (R8–R10) decorated. */
-export function affordancesAnswer({ target = null, facts = null, kinds, gate } = {}) {
+export function affordancesAnswer({ target = null, facts = null, kinds, gate, screens = [], wizard_scripts = [] } = {}) {
   const vocabularies = vocabulariesFor(kinds);
   const dec = (a) => decorate(a, gate);
   /* REC-38: the SAME block on both arms, and deliberately NOT filtered by a target: a capture act's subject is a capture
@@ -51,6 +51,10 @@ export function affordancesAnswer({ target = null, facts = null, kinds, gate } =
     set_acts: PER_ITEM_ACTS.map((a) => ({ ...dec(a), set_key: a.set_key, item_keys: a.item_keys,
                                           shared_keys: a.shared_keys, max_items: PER_ITEM_MAX })),
     detail: CATALOGUE_DETAIL,
+    /* R37 (DEC-120, DEC-121): the registered screens and the offered wizard scripts, for the pack (`skills` R9, R10),
+       each as `wizard-scripts` answered it; a list always, `[]` when none is registered or offered. */
+    screens: Array.isArray(screens) ? screens : [],
+    wizard_scripts: Array.isArray(wizard_scripts) ? wizard_scripts : [],
   };
   if (!facts || facts.ok !== true) return { ok: false, ...facts };
   return { target: facts.target, object_type: facts.object_type, current_state: facts.current_state,
@@ -70,7 +74,14 @@ export async function affordancesOp(url, stub, { json, doAnswer, storeSilent, st
   if (!kOut.answered) return storeSilent("affordances", kOut.correlation);
   const kinds = kOut.result?.kinds;
   const answer = (result) => json({ ok: true, result, store: storeName, tokenClass: cls }, 200);
-  if (!target) return answer(affordancesAnswer({ kinds, gate }));
+  if (!target) {
+    /* R37: the screens and offered scripts, asked of the store for this viewer; a silence or refusal is answered as the
+       kinds' are (REC-52), never as "no screens". */
+    const sOut = await doAnswer(stub.fetch(`http://do/affordancescreens?viewer=${encodeURIComponent(viewer ?? "")}`));
+    if (sOut.refused) return storeRefusal(sOut);
+    if (!sOut.answered || !sOut.result) return storeSilent("affordances", sOut.correlation);
+    return answer(affordancesAnswer({ kinds, gate, screens: sOut.result.screens, wizard_scripts: sOut.result.wizard_scripts }));
+  }
   /* R13 (REC-25): an object the viewer may not see answers NO_SUCH_BUNDLE, identical to an absent one. The facts are
      asked with the stamps exactly as the acts receive them (D-311), so each question is asked of the caller the act
      will see. */
