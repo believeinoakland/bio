@@ -262,3 +262,22 @@ test("R36: a level that moved between two ratified editions is told to reevaluat
   assert.equal((await s.commit({ edition: 2, docSha: sha2 })).existed, true);
   assert.equal(s.w.levelMoves.length, 1, "its retry tells nothing again");
 });
+
+/* R36 for an off-the-record capture's attesting member (N519, N523; DEC-119 (3); reevaluation R32): a row keyed
+   `capture` in the signed `observation_attributions:` block. */
+const captureAttributions = (rows) => rows.flatMap(([capture, level]) => [`  - capture: ${capture}`, `    level: ${level}`, `    shown: "x"`]);
+
+test("R36: an off-the-record capture's attesting member whose level moved between two ratified editions is told to reevaluation once, with capture in place of observation, both levels, the case, the edition and the instant; a capture first reached, an unchanged one, and an observation of the same id tell nothing else", async () => {
+  const CA = "a1".repeat(32), CB = "b2".repeat(32), CC = "c3".repeat(32), OA = "INFO-2026-0091-observation";
+  const s = setup({ extra: [...attributions([[OA, "group"]]), ...captureAttributions([[CA, "project"], [CB, "name"]])] });
+  assert.equal((await s.commit()).ok, true);
+  assert.deepEqual(s.w.levelMoves, [], "a first edition tells nothing");
+  const rows = s.members.map((m) => [m.id, s.w.r.caseConclusionFor(s.P, m.id, V("alice"), "open")]);
+  const text2 = caseMd({ caseId: CASE, edition: 2, project: s.P, members: s.members, conclusions: rows,
+    extra: [...attributions([[OA, "group"]]), ...captureAttributions([[CA, "cover"], [CB, "name"], [CC, "group"]])],
+    rowLines: caseConclusionRowLines });
+  const second = await s.commit({ edition: 2, docSha: s.w.caseDoc(CASE, 2, text2) });
+  assert.equal(second.ok, true, JSON.stringify(second).slice(0, 300));
+  assert.deepEqual(s.w.levelMoves, [{ capture: CA, from: "project", to: "cover", case: CASE, edition: 2, at: second.ratified_at }]);
+  assert.ok(s.w.levelMoves.every((m) => !("observation" in m)), "never an observation for a capture");
+});

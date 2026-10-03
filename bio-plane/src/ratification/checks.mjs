@@ -1072,9 +1072,11 @@ export const RATIFY_ATTRIBUTION_CHECKS = {
   ATTRIBUTION_UNCHOSEN: {
     check: 'C-92.10',
     where: 'src/ratification/refusals.mjs attributionUnchosenRefusal > is-attribution-unchosen',
-    translation: 'This case edition uses a member\'s firsthand observation whose author has not yet chosen how '
-      + 'it is attributed, so it cannot be signed. Publishing it at any level would be choosing for them. Ask '
-      + 'the author to choose, or prepare the edition without the finding that rests on it.',
+    /* Re-worded at T28 (N523; DEC-119 (3), K1275): awaiting the T29 stamp. */
+    translation: 'This case edition uses a member\'s firsthand observation, or material from an unnamed source a '
+      + 'member attests, and that member has not yet chosen how they are credited, so it cannot be signed. Publishing '
+      + 'it at any level would be choosing for them. Ask that member to choose, or prepare the edition without the '
+      + 'finding that rests on it.',
   },
   ATTRIBUTION_STATEMENT_STALE: {
     check: 'C-92.11',
@@ -1163,11 +1165,13 @@ export const RATIFY_SCOPE_CHECKS = {
   ANONYMOUS_TESTIMONY_UNCORROBORATED: {
     check: 'C-58.5',
     where: 'src/ratification/refusals.mjs anonymousTestimonyRefusal > is-anonymous-testimony',
-    translation: 'This edition rests on testimony credited only to the group or the project, with no independent '
-      + 'leg corroborating it. Such testimony counts as an anonymous tip and supports a finding only beside an '
-      + 'independent corroborating leg. Each such member and observation is named. Corroborate the claim with an '
-      + 'independent leg, ask the observation\'s author to choose cover or name, or drop the finding that rests on '
-      + 'it. Nothing was signed.',
+    /* Re-worded at T28 (N523; DEC-119 (3), K1275): awaiting the T29 stamp. */
+    translation: 'This edition rests on testimony, or on material from an unnamed source attested by a member, '
+      + 'credited only to the group or the project, with no independent leg corroborating it. Such testimony or '
+      + 'evidence counts as an anonymous tip and supports a finding only beside an independent corroborating leg. '
+      + 'Each such member, observation and document is named. Corroborate the claim with an independent leg, ask '
+      + 'the author or the attesting member to choose cover or name, or drop the finding that rests on it. Nothing '
+      + 'was signed.',
   },
 };
 
