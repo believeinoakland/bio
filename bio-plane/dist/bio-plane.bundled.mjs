@@ -1609,17 +1609,21 @@ __export(checks_exports, {
   ACQUISITION_CHECKS: () => ACQUISITION_CHECKS,
   CAPTURE_REQUEST_ARM_CHECKS: () => CAPTURE_REQUEST_ARM_CHECKS,
   CIVICOS_CONTACT_URL: () => CIVICOS_CONTACT_URL,
+  CIVICSMITH_CONTACT_URL: () => CIVICSMITH_CONTACT_URL,
   DRIVE_CAPTURE_CHECKS: () => DRIVE_CAPTURE_CHECKS,
   INSTALLATION_CHECKS: () => INSTALLATION_CHECKS,
   RENDER_CAPTURE_CHECKS: () => RENDER_CAPTURE_CHECKS,
   SWEEP_SCOPE_CHECKS: () => SWEEP_SCOPE_CHECKS,
-  civicosUserAgent: () => civicosUserAgent
+  civicosUserAgent: () => civicosUserAgent,
+  civicsmithUserAgent: () => civicsmithUserAgent
 });
 var at = (region) => `src/acquisition/index.mjs acquire > ${region}`;
-var CIVICOS_CONTACT_URL = "https://github.com/believeinoakland/bio";
-function civicosUserAgent(version, instance, purpose) {
-  return `CivicOS/${version || "0.0.0"} (+${CIVICOS_CONTACT_URL}; instance ${instance || "unnamed"}; ${purpose})`;
+var CIVICSMITH_CONTACT_URL = "https://github.com/believeinoakland/bio";
+function civicsmithUserAgent(version, instance, purpose) {
+  return `Civicsmith/${version || "0.0.0"} (+${CIVICSMITH_CONTACT_URL}; instance ${instance || "unnamed"}; ${purpose})`;
 }
+var CIVICOS_CONTACT_URL = CIVICSMITH_CONTACT_URL;
+var civicosUserAgent = civicsmithUserAgent;
 var CAPTURE_REQUEST_ARM_CHECKS = Object.freeze({
   CAPTURE_NOT_DRAINING: Object.freeze({
     check: "C-28.13",
@@ -26527,7 +26531,7 @@ var acquireGradeNote = (ceiling, unreachable) => {
 var ACQUIRE_GRADE_NOTE = acquireGradeNote(EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE);
 function userAgent(env, purpose = "acquire", delegated = null) {
   if (typeof delegated === "string" && delegated.trim() !== "") return delegated.trim();
-  return civicosUserAgent(env && env.VERSION || "0.0.0", env && env.INSTANCE_NAME || "unnamed", purpose);
+  return civicsmithUserAgent(env && env.VERSION || "0.0.0", env && env.INSTANCE_NAME || "unnamed", purpose);
 }
 var PROFILE_TEXT_MAX = 8 * 1024 * 1024;
 var ODF_DIGEST_MAX = 8 * 1024 * 1024;
@@ -27695,9 +27699,10 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
     },
     /* R16: ordered hops from us back to the origin; a direct fetch is ONE hop, which grades it above an archive-
        sourced capture (grade tracks directness, never technique). A render whose wait timed out is NEVER presented
-       as the whole page (D-499), the qualification derived by `completenessReading`, never retyped. */
+       as the whole page (D-499), the qualification derived by `completenessReading`, never retyped. `who` names
+       Civicsmith (DEC-124); a document filed before T31 keeps the `who` it was written with: this act rewrites none. */
     provenance_chain: [{
-      who: `instance ${(cap.env || {}).INSTANCE_NAME || "unnamed"} (CivicOS/${(cap.env || {}).VERSION || "0.0.0"})`,
+      who: `instance ${(cap.env || {}).INSTANCE_NAME || "unnamed"} (Civicsmith/${(cap.env || {}).VERSION || "0.0.0"})`,
       asserts: renderRecorded ? `these bytes are the document a ${renderRecorded.engine || "renderer (engine not reported)"} render produced from ${locator} at ${retrieved}; the shell it was rendered from was served for ${locator} and is held beside it (render.of)${completenessReading(renderRecorded) ? `; ${completenessReading(renderRecorded)}, so they are not asserted to be the whole page` : ""}` : `these bytes were served for ${locator} at ${retrieved}`,
       evidence: renderRecorded ? "first-party https fetch of the shell, hashed at receipt; the rendered document hashed at receipt from the renderer; render.* records the environment" : "first-party https fetch, hashed at receipt, transport record on this document",
       bound: false,
@@ -45162,7 +45167,9 @@ var Capture = class _Capture {
       authority_state: "undetermined",
       authority_basis: `material handed to the group through its doorbell by an unnamed knocker; no authority is asserted; recorded ${at30} for resolution through the task list`,
       provenance_chain: [{
-        who: `instance ${this.env.INSTANCE_NAME || "unnamed"} (CivicOS/${this.env.VERSION || "0.0.0"})`,
+        /* `acquisition` R16 (DEC-124): the product is named Civicsmith; a document pulled before T31 keeps its `who`,
+           answered again as stored (`pulled_document`). */
+        who: `instance ${this.env.INSTANCE_NAME || "unnamed"} (Civicsmith/${this.env.VERSION || "0.0.0"})`,
         asserts: `these bytes were received at this instance's doorbell as knock ${row2.knock_id} at ${row2.received}, and brought into the record by ${by} at ${at30}; they were received, not fetched from any address`,
         evidence: "the knock's receipt: its digest, taken as the bytes arrived, and its instant",
         bound: false,
