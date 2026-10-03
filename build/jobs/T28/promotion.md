@@ -1,6 +1,6 @@
 # promotion (T28)
 
-**Status** · session_01JXCfBLEWnwDJYd7wTMihga · depth 2 · WORKING · handled B1
+**Status** · session_01JXCfBLEWnwDJYd7wTMihga · depth 2 · COMPLETE · handled B1
 
 ## Completion
 
