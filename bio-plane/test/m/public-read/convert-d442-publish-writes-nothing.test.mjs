@@ -36,7 +36,7 @@ const strip = (rows) => rows.map(({ target, ...r }) => r);
 /* A case document with its own `case_strength_grounds` rows (the fixture's builder writes none), inserted into the
    front matter as case-authoring writes them. */
 function docWithGrounds(caseId, edition, opts, grounds) {
-  const lines = caseDoc(caseId, edition, opts).split("\n");
+  const lines = caseDoc(caseId, edition, { format: "bio-case-document/5", ...opts }).split("\n");
   const at = lines.indexOf("completeness:");
   const rows = ["case_strength_grounds:", ...grounds.flatMap((g) => [`  - target: ${g.target}`, `    version: "${g.version}"`,
                                                                     `    ground: "${g.ground}"`])];

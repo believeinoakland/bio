@@ -28,9 +28,9 @@ Terms.
   - a part over the part bound (`public-read` R5's 64 MiB) is `IMPORT_PART_TOO_LARGE`;
   - an edition already held in this import with different bytes (another manifest SHA-256) is `IMPORT_EDITION_DIFFERS`, naming both hashes. An edition is immutable, so the difference is reported, never resolved.
 
-  The same edition with the same bytes answers `existed: true`. Otherwise the act creates the import if it is absent and stores every file of the case file by its SHA-256. It records the edition with its source group, case, edition, lens, `by` and instant. It then runs `case-checker.checkCaseFile` and records each finding's result, with the checker's versions (R3). (DEC-112 (6); Publication §5C; K1134 reading 4) *(not yet met: T28)*
-- **R2** Read-only. Nothing an import holds is a record bundle. No act of this copy edits, promotes, ratifies or publishes it, and this module offers no act that changes an imported file. The only later writes are R5's completion, R6's acceptance and its withdrawal, and R8's flags. (DEC-112 (6) "a new, read-only project") *(not yet met: T28)*
-- **R3** Recreation is recorded per finding: the result, what is missing, what differs, the recomputed pair, and the checker's grading and checks versions. It is recomputed only by R5. (DEC-112 (6); Bob, DEC-112 response 2: "the system confirms the findings according to the structured case file") *(not yet met: T28)*
+  The same edition with the same bytes answers `existed: true`. Otherwise the act creates the import if it is absent and stores every file of the case file by its SHA-256. It records the edition with its source group, case, edition, lens, `by` and instant. It then runs `case-checker.checkCaseFile` and records each finding's result, with the checker's versions (R3). (DEC-112 (6); Publication §5C; K1134 reading 4)
+- **R2** Read-only. Nothing an import holds is a record bundle. No act of this copy edits, promotes, ratifies or publishes it, and this module offers no act that changes an imported file. The only later writes are R5's completion, R6's acceptance and its withdrawal, and R8's flags. (DEC-112 (6) "a new, read-only project")
+- **R3** Recreation is recorded per finding: the result, what is missing, what differs, the recomputed pair, and the checker's grading and checks versions. It is recomputed only by R5. (DEC-112 (6); Bob, DEC-112 response 2: "the system confirms the findings according to the structured case file")
 
 **importedCases({viewer}), importedCase({import, edition?, viewer})** (`op=importedcases`, `op=importedcase`; member session; reads)
 
@@ -41,11 +41,11 @@ Terms.
   - its origin mark facts (DEC-92): `another_groups` (with the edition and whether its signature verified), the acceptance in force (by, when, why, what was checked, the gaps stated) or none, and the open flags;
   - the statement that recreating shows the case intact and consistent, not true (`case-checker` R1's `statement`).
 
-  A `viewer` who is not an active member is answered as if no import exists, with the same bytes for each. It writes nothing. (DEC-112 (6); DEC-92; DEC-96 item 1) *(not yet met: T28)*
+  A `viewer` who is not an active member is answered as if no import exists, with the same bytes for each. It writes nothing. (DEC-112 (6); DEC-92; DEC-96 item 1)
 
 **completeImportedDocument({import, edition, bytes, by, viewer})** (`op=caseimportdocument`; mutating)
 
-- **R5** It applies R1's first two refusals. Bytes whose SHA-256 matches a material that an edition of this import records as missing are stored, and every finding of that edition is re-checked (R3). Bytes matching no missing material are `IMPORT_DOCUMENT_NOT_MISSING`, naming the fingerprint they have. Nothing else about the edition changes. (Publication §5C "a fetched document that matches its fingerprint completes it") *(not yet met: T28)*
+- **R5** It applies R1's first two refusals. Bytes whose SHA-256 matches a material that an edition of this import records as missing are stored, and every finding of that edition is re-checked (R3). Bytes matching no missing material are `IMPORT_DOCUMENT_NOT_MISSING`, naming the fingerprint they have. Nothing else about the edition changes. (Publication §5C "a fetched document that matches its fingerprint completes it")
 
 **acceptImported({import, edition, findings, checked, reason, gaps?, by, viewer})** (`op=importaccept`) **and withdrawAcceptance({import, edition, reason, by, viewer})** (`op=importacceptwithdraw`); mutating, each a reasoned act
 
@@ -57,16 +57,16 @@ Terms.
   - a finding whose result is `did_not_recreate` is `IMPORT_ACCEPT_NOT_RECREATED`, naming each one;
   - a `recreated_in_part` finding for which `gaps` does not state each missing entry in the member's words is `IMPORT_ACCEPT_GAPS_UNSTATED`, naming each gap left unstated.
 
-  Otherwise the act records the acceptance of that one edition for those findings, with `by`, the instant, `checked`, `reason` and `gaps`. It changes no grade: the edition's grades stand as published. A later edition of the same case reads as another group's until it is accepted. The answer names, for each accepted finding, its imported finding reference (`inquiry-grammar.importedFindingRef`), the spelling a leg names. (DEC-96 item 1; DEC-112 (6): "only for findings recreated, or recreated in part with the gaps stated"; N522) *(not yet met: T28)*
-- **R7** `withdrawAcceptance` applies R1's first two refusals and R6's `IMPORT_NO_SUCH_EDITION`. It refuses `IMPORT_ACCEPT_NO_REASON` for a missing `reason`, and `IMPORT_NOTHING_ACCEPTED` when no acceptance of the edition is in force. Otherwise it records the withdrawal with `by`, the instant and `reason`. The acceptance stays in the history, corrected forward and never erased. After the withdrawal commits, it calls `reevaluation.acceptanceWithdrawn` (its R31). The reply carries that answer as `reevaluation`. A failure there never undoes the withdrawal and is named in the reply (`reevaluation` R8's `listeners_failed`). (DEC-96 item 1; N522) *(not yet met: T28)*
+  Otherwise the act records the acceptance of that one edition for those findings, with `by`, the instant, `checked`, `reason` and `gaps`. It changes no grade: the edition's grades stand as published. A later edition of the same case reads as another group's until it is accepted. The answer names, for each accepted finding, its imported finding reference (`inquiry-grammar.importedFindingRef`), the spelling a leg names. (DEC-96 item 1; DEC-112 (6): "only for findings recreated, or recreated in part with the gaps stated"; N522)
+- **R7** `withdrawAcceptance` applies R1's first two refusals and R6's `IMPORT_NO_SUCH_EDITION`. It refuses `IMPORT_ACCEPT_NO_REASON` for a missing `reason`, and `IMPORT_NOTHING_ACCEPTED` when no acceptance of the edition is in force. Otherwise it records the withdrawal with `by`, the instant and `reason`. The acceptance stays in the history, corrected forward and never erased. After the withdrawal commits, it calls `reevaluation.acceptanceWithdrawn` (its R31). The reply carries that answer as `reevaluation`. A failure there never undoes the withdrawal and is named in the reply (`reevaluation` R8's `listeners_failed`). (DEC-96 item 1; N522)
 
 **flagImported({import, edition, finding?, issue, by, viewer})** (`op=importflag`) **and clearFlag({flag, reason, by, viewer})** (`op=importflagclear`); mutating, each a reasoned act
 
-- **R8** A flag is a member's recorded evaluation naming the specific issue, never a machine's. Each act applies R1's first two refusals. An `issue` or `reason` absent, blank or over 2,000 characters is `IMPORT_FLAG_NO_ISSUE`. An edition or finding not held is `IMPORT_NO_SUCH_EDITION` or `IMPORT_NO_SUCH_FINDING`. Clearing a flag that is not open is `IMPORT_FLAG_NOT_OPEN`. A flag records `by`, the instant and the issue. A clear records `by`, the instant and the reason, and the flag stays in the history. Flags are seen only by those who may see the import (R4), and never on a public path, except as a published case of this group discloses an open flag on work it relies on (`case-authoring` R52; DEC-96 item 4). (DEC-96 items 2, 4; N522) *(not yet met: T28)*
+- **R8** A flag is a member's recorded evaluation naming the specific issue, never a machine's. Each act applies R1's first two refusals. An `issue` or `reason` absent, blank or over 2,000 characters is `IMPORT_FLAG_NO_ISSUE`. An edition or finding not held is `IMPORT_NO_SUCH_EDITION` or `IMPORT_NO_SUCH_FINDING`. Clearing a flag that is not open is `IMPORT_FLAG_NOT_OPEN`. A flag records `by`, the instant and the issue. A clear records `by`, the instant and the reason, and the flag stays in the history. Flags are seen only by those who may see the import (R4), and never on a public path, except as a published case of this group discloses an open flag on work it relies on (`case-authoring` R52; DEC-96 item 4). (DEC-96 items 2, 4; N522)
 
 **acceptanceOf({import, edition, finding}), openFlagsOn({import, edition})** (services for later modules)
 
-- **R9** `acceptanceOf` answers the acceptance in force for a finding of an edition (by, when, why, what was checked, the gaps) or null. `openFlagsOn` answers the open flags with their issues. They are read as the plane. They are the one answer to "is this accepted or flagged" for every later module, including a case of this group that rests on accepted work. `case-authoring` R51–R52 now read it. (DEC-96 items 1, 2, 4; N522) *(not yet met: T28)*
+- **R9** `acceptanceOf` answers the acceptance in force for a finding of an edition (by, when, why, what was checked, the gaps) or null. `openFlagsOn` answers the open flags with their issues. They are read as the plane. They are the one answer to "is this accepted or flagged" for every later module, including a case of this group that rests on accepted work. `case-authoring` R51–R52 now read it. (DEC-96 items 1, 2, 4; N522)
 
 **The registration it fills** (K31's pattern; `accepted-work` R1; N522)
 
@@ -75,7 +75,7 @@ Terms.
   - `openFlags` (R9's `openFlagsOn`, the edition's own flags and the finding's);
   - `withdrawals` (R7's records, in order, paged).
 
-  A viewer who is not an active member is answered null, as R4 answers. (DEC-96 items 1, 4; P4) *(not yet met: T28)*
+  A viewer who is not an active member is answered null, as R4 answers. (DEC-96 items 1, 4; P4)
 
 ## Private
 
@@ -93,12 +93,12 @@ Terms.
 
 ### Invariants
 
-- **R10** No answer composes a case-level strength or a trust score. Origin marks are never composed with grades (DEC-92, DEC-44). *(not yet met: T28)*
-- **R11** The source's bar is never stated or used as this group's (DEC-45). An acceptance changes no grade (DEC-96 item 1). *(not yet met: T28)*
-- **R12** Every act is append-only. An import, its results, acceptances, withdrawals, flags and clears are never edited or deleted by any act of this module. *(not yet met: T28)*
-- **R13** This module's tables are declared to `record-core`'s purge as the import's own record (K23). The stored case-file bytes are purged with their import. *(not yet met: T28)*
-- **R14** Each refusal carries its row in this module's own table (`checks.mjs`), a new family, its number given by `promotion`'s stamp. The translations are drafted by BOB and stamped by promotion. A change moves `CATALOG_VERSION`. *(not yet met: T28)*
-- **R15** No place is named in this module's behaviour or outward text. *(not yet met: T28)*
+- **R10** No answer composes a case-level strength or a trust score. Origin marks are never composed with grades (DEC-92, DEC-44).
+- **R11** The source's bar is never stated or used as this group's (DEC-45). An acceptance changes no grade (DEC-96 item 1).
+- **R12** Every act is append-only. An import, its results, acceptances, withdrawals, flags and clears are never edited or deleted by any act of this module.
+- **R13** This module's tables are declared to `record-core`'s purge as the import's own record (K23). The stored case-file bytes are purged with their import.
+- **R14** Each refusal carries its row in this module's own table (`checks.mjs`), a new family, its number given by `promotion`'s stamp. The translations are drafted by BOB and stamped by promotion. A change moves `CATALOG_VERSION`.
+- **R15** No place is named in this module's behaviour or outward text.
 
 ### Satisfies
 

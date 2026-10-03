@@ -32,7 +32,8 @@
 import { publicationOf } from "../publication/index.mjs";
 import { docketOf } from "../docket/index.mjs";
 import { caseTensionsOf, caseDocumentBlocks, whatChangedOf, lensOf, LENS_HEAD,
-         LENS_CLOSING_SENTENCES, workingOnOf } from "../case-grammar/index.mjs";
+         LENS_CLOSING_SENTENCES, workingOnOf, methodOf, materialsOf, standingOf, gradingFactsOf, passagesOf,
+         caseDocumentRequiresMaterials, caseDocumentStatesMemberBlocks } from "../case-grammar/index.mjs";
 import { parseFrontmatter } from "../record-grammar/index.mjs";
 import { rowOf } from "./checks.mjs";
 import { delivererOf } from "../deliverer.mjs";
@@ -66,6 +67,29 @@ export const LENS_NONE_IN_FORCE_SENTENCE = "this edition carries only the lens's
   + "states that no manifest was in force, so there is no fingerprint to give";
 export const LENS_FINGERPRINT_UNDETERMINED_SENTENCE = "this edition carries only the lens's fingerprint, and its bias "
   + "manifest states none that can be read, so the fingerprint is undetermined, not absent";
+/* R22: a grade as the signed front matter writes it: the YAML word `null` (or nothing) is no grade. */
+const gradeOf = (g) => (typeof g === "string" && g.trim() && g.trim() !== "null" ? g.trim() : null);
+/* R22 (DEC-112 (4)(1)): each member's standing, from the signed document only: its role (`case_roles`), the bar the
+   document records (`required_strength`, an undeclared bar is none) and its frozen pair (`case_strength`, per axis), handed
+   to `case-grammar.standingOf`, the one spelling of the line. A document stating no member blocks answers null. */
+export function standingsOf(fm) {
+  if (!fm || !caseDocumentStatesMemberBlocks(fm)) return null;
+  const rs = fm.required_strength && typeof fm.required_strength === "object" ? fm.required_strength : null;
+  const declared = !!(rs && (rs.declared === true || rs.declared === "true"));
+  const bar = declared ? { capture: gradeOf(rs.capture), connection: gradeOf(rs.connection) } : null;
+  const rows = Array.isArray(fm.case_strength) ? fm.case_strength : [];
+  const out = new Map();
+  for (const r of Array.isArray(fm.case_roles) ? fm.case_roles : []) {
+    if (!r || typeof r !== "object" || typeof r.target !== "string") continue;
+    const pair = {};
+    for (const s of rows) if (s && s.target === r.target && typeof s.axis === "string") pair[s.axis] = gradeOf(s.grade);
+    out.set(r.target, standingOf({ role: gradeOf(r.role), bar, pair }));
+  }
+  return out;
+}
+/* R23: a text held by `publication`'s `publishedMaterialText` (its R57), whichever shape it answers in. */
+const heldText = (v) => (typeof v === "string" ? v : v && typeof v.text === "string" ? v.text : null);
+const HEX64 = /^[0-9a-f]{64}$/;
 /* R21: the fixed address a case's docket is served at (its feed's is `op=docketfeed&case=`). */
 export const docketAddress = (caseId) => `op=docketpublic&case=${encodeURIComponent(caseId)}`;
 export const LENS_NO_DOCUMENT_SENTENCE = "no signed case document is held for this edition, so it states no lens here";
@@ -769,6 +793,13 @@ export class PublicRead {
     const manifest = cRow && cRow.manifest ? JSON.parse(cRow.manifest) : null;
     const signed = signedParts(state.document);
     const said = this.#editionStatements(signed, theCase, ed, editions);
+    /* R22 (DEC-112 (4)(1)): each member's standing, `case-grammar.standingOf` over its role, the bar and its frozen pair,
+       all three read from the signed document only; null where the document states no member blocks (or there is
+       none). It composes no case-level strength (R11): one line per member, never one for the case. */
+    const standings = signed ? standingsOf(signed.fm) : null;
+    for (const f of findings) f.standing = standings ? (standings.get(f.bundle_id) ?? null) : null;
+    /* R3 (DEC-112): a `/6` document's `method` and `materials` blocks, as signed; null for any other document. */
+    const six = !!(signed && caseDocumentRequiresMaterials(signed.fm));
     /* R20 (DEC-116 items 7, 8): each edition a docket withdrawal names carries its stamp; the edition is answered whole
        as before. The docket's last date is `docket` R14's `last_entry`, read synchronously and without any capture's
        bytes through its `lastEntryOf` (K1276), null when the case has no public entry. */
@@ -874,6 +905,7 @@ export class PublicRead {
              /* K499: the member legs the conflict read could not examine, stated by the document; null where it states none. */
              tensions_unread: disclosed.unread,
              captures: blocks.captures, sources: blocks.sources,
+             method: six ? methodOf(signed.fm) : null, materials: six ? materialsOf(signed.fm) : null,
              blocks_detail: blocks.detail
                ?? "each capture a member rests on, with its grade and co-attestation, and what may be told of the source "
                 + "behind it, read from the signed document: a source's detail is stated only as it could be published "
@@ -906,6 +938,87 @@ export class PublicRead {
                          + "published edition. names[] is what it may only NAME. unresolved[] is an edge "
                          + "classified servable at publication with no published edition behind it now, stated "
                          + "rather than dropped; it should be empty." };
+  }
+
+  /** R23 (DEC-112 (3); K1315, K1316): WHAT A CASE EDITION'S CASE FILE CARRIES, read from the published projection only,
+   *  for the Worker's assembly (`../publication/worker.mjs`, R6). Answers, for a complete edition with a signed `/6`
+   *  document, `{ok: true, case, edition, format, document, findings, grading, passages, materials, attestations}`:
+   *  - `document`: the signed text, its digest, its armored signature and its signer's key;
+   *  - `findings`: each member, then each other finding a member's chain reaches (named by the document's
+   *    `grading_facts:` or `passages:` rows, `case-grammar` R17), with its published row at the edition its leg names
+   *    (else its latest): its bytes' parts by hash, its signature and its signer's key; a reached finding nothing
+   *    published answers is `published: null`, carried as what the document states of it and nothing more;
+   *  - `grading`, `passages`: each finding's rows of the two signed blocks, in `ord` order;
+   *  - `materials`: each `materials:` row (`case-grammar` R12) listed `included: true`, with what `publication` holds of
+   *    it (its R57): a text held inline (`publishedMaterialText`), or the hash the published bucket holds it under;
+   *  - `attestations`: each `material_attestations:` row of included material, a `member` row with its signed account
+   *    from the document (when the row may name one), a `co_attestation` row with each token `publication` held for
+   *    that material (its R57: by hash, with its text where held inline).
+   *  Anything else (no such edition, not complete, no signed document, a document before `/6`) answers
+   *  `{ok: false, reason}`, so the Worker keeps the container form for an edition prepared before T28. Writes nothing. */
+  caseFileFacts(caseId, edition) {
+    const c = str(caseId), ed = Number(edition);
+    const state = c && Number.isInteger(ed) ? this.publication.caseEditionState(c, ed) : null;
+    if (!state) return { ok: false, reason: "NO_SUCH_CASE_EDITION" };
+    if (!state.complete) return { ok: false, reason: "INCOMPLETE" };
+    const doc = signedParts(state.document);
+    if (!doc || !caseDocumentRequiresMaterials(doc.fm)) return { ok: false, reason: "NOT_A_CASE_FILE_DOCUMENT" };
+    /* `case-grammar` R17's readers: each finding's rows, keyed by finding, in `ord` order. */
+    const grading = new Map(Object.entries(gradingFactsOf(doc.fm) || {}));
+    const passages = new Map(Object.entries(passagesOf(doc.fm) || {}));
+    const members = state.findings.map((f) => ({ bundle_id: f.bundle_id, member: true, role: f.role ?? null,
+      published: { edition: f.edition, bundle_sha: f.bundle_sha, sig_armored: f.sig_armored,
+                   key_b64: f.attestor ? f.attestor.key_b64 : null, parts: f.parts || [] } }));
+    const seen = new Set(members.map((m) => m.bundle_id));
+    const reached = [];
+    const legsTo = (id) => [...grading.values()].flat().filter((l) => l && l.target === id && l.target_edition != null);
+    for (const id of [...grading.keys(), ...passages.keys()]) {
+      if (seen.has(id)) continue;
+      seen.add(id);
+      const at = legsTo(id).map((l) => Number(l.target_edition)).find((n) => Number.isInteger(n));
+      const r = at != null
+        ? this.#one(`SELECT edition, bundle_sha, sig_armored, attestor_key, parts FROM published_bundles
+                      WHERE bundle_id=? AND edition=?`, id, at)
+        : this.#one(`SELECT edition, bundle_sha, sig_armored, attestor_key, parts FROM published_bundles
+                      WHERE bundle_id=? ORDER BY edition DESC LIMIT 1`, id);
+      reached.push({ bundle_id: id, member: false, role: null,
+        published: r ? { edition: Number(r.edition), bundle_sha: r.bundle_sha, sig_armored: r.sig_armored,
+                         key_b64: r.attestor_key, parts: safeJson(r.parts) || [] } : null });
+    }
+    const findings = [...members, ...reached];
+    const mats = materialsOf(doc.fm) || {};
+    const rows = Array.isArray(mats.materials) ? mats.materials : [];
+    const text = (sha) => (HEX64.test(String(sha ?? "")) ? heldText(this.publication.publishedMaterialText(sha)) : null);
+    const included = rows.filter((m) => m && (m.included === true || m.included === "true"));
+    const materials = included.map((m) => ({ ref: m.ref, kind: m.kind, sha: m.sha ?? null, text_sha: m.text_sha ?? null,
+      bytes_text: text(m.sha), extracted_text: m.kind === "document" ? text(m.text_sha) : null }));
+    const refs = new Set(included.map((m) => m.ref));
+    const accounts = (caseDocumentBlocks(state.document.text).captures || [])
+      .flatMap((cap) => (cap.accounts || []).map((a) => ({ capture: cap.capture, ...a })));
+    const attestations = (Array.isArray(mats.attestations) ? mats.attestations : [])
+      .filter((a) => a && refs.has(a.ref)).map((a) => {
+        const named = a.by_kind === "member" && !["group", "project"].includes(a.level);
+        const material = included.find((m) => m.ref === a.ref);
+        const account = named ? accounts.find((x) => x.by === a.by && material && x.capture === material.sha) ?? null : null;
+        /* K1315: each timestamp token or co-archive record `publication` held for this material (its R57), by its own
+           hash, registered under the material's ref with kind `attestation`. */
+        const held = a.by_kind !== "co_attestation" ? [] : this.#rows(
+          `SELECT sha256 FROM published_shas WHERE bundle_id=? AND kind='attestation' AND path=('materials/' || sha256)
+            ORDER BY sha256`, a.ref).map((r) => ({ sha: r.sha256, text: text(r.sha256) }));
+        return { row: a, account: account ? { by: account.by, at: account.at, text: account.text,
+                                              signature: account.signature } : null,
+                 held };
+      });
+    return { ok: true, case: c, edition: ed, format: doc.fm.format ?? null, ratified_at: state.ratified_at,
+             bar: state.bar ?? null,
+             document: { doc_sha: state.document.doc_sha, text: state.document.text,
+                         sig_armored: state.document.sig_armored,
+                         key_b64: state.document.attestor ? state.document.attestor.key_b64 : null,
+                         attestor: state.document.attestor ?? null },
+             findings,
+             grading: Object.fromEntries(findings.map((f) => [f.bundle_id, grading.get(f.bundle_id) || []])),
+             passages: Object.fromEntries(findings.map((f) => [f.bundle_id, passages.get(f.bundle_id) || []])),
+             materials, attestations };
   }
 
   /* R3 (DEC-101, DEC-103; K1019): THE EDITION'S OWN STATEMENTS, from its signed document through `case-grammar`'s
@@ -1180,5 +1293,7 @@ export function publicReadOps(r, url) {
     /* R21: the docket and its feed, by case, under R10's terms. */
     docketpublic: () => r.docketPublic(q("case")),
     docketfeed: () => r.docketFeed(q("case")),
+    /* R23: what a case edition's case file carries, for the Worker's assembly (R6); internal, routed by no door. */
+    casefilefacts: () => r.caseFileFacts(q("caseId"), q("edition")),
   };
 }

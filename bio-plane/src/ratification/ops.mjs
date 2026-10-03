@@ -82,15 +82,8 @@ export async function caseRatifyOp(req, stub, ctx) {
     const factsOut = await doAnswer(stub.fetch(
       `http://do/casedocfacts?case=${encodeURIComponent(body.caseId)}`
       + `&edition=${encodeURIComponent(String(body.edition))}`
-      /* REC-130: the SAME standing `op=casedocument` answers to, resolved by
-         the SAME function (`resolveSession`). Only a HUMAN's own session
-         reaches this line (the region above) — a member's, or the FOUNDER's,
-         which BOB #14 ruled may deliver (D-421). A member without standing in
-         the owning project is answered NO_CASE_DOCUMENT exactly as for a case
-         that does not exist, rather than CASE_RATIFY_STALE with the document's
-         sha. REC-128's merge CORRECTED this comment and the viewer: it said
-         "only a member's own session" and stamped `member:` plus sessMember,
-         and so answered the founder as a member named admin with no standing. */
+      /* REC-130: the standing `op=casedocument` answers to, for a member's or the founder's own session (D-421): a
+         member without standing in the owning project is answered NO_CASE_DOCUMENT, as for a case that does not exist. */
       + `&viewer=${encodeURIComponent(sessViewer)}`));
     /* REC-53's chokepoint, and the same judgement `op=ratify` records once for
        its whole block: BEFORE the commit a silence refuses the act outright,
@@ -157,21 +150,9 @@ export async function caseRatifyOp(req, stub, ctx) {
       return json({ ok: false, reason: "GATE_REFUSED", gateVersion: gate.gateVersion,
                     findings: gate.findings, store: storeName, tokenClass: cls }, 409);
 
-    /* REC-128 — THE RECORD STATES WHO AUTHORISED AND WHO DELIVERED (BOB #14, the
-       honesty half of D-421). The SIGNATURE says who authorised (`attestor`, from
-       the verified key's registered member); the SESSION says who delivered — a
-       member, or the founder, whose password session is the only live publishing
-       route (DEC-33). They are two facts and each has ONE source:
-         - the deliverer comes from the session ROW the admission block resolved,
-           never from the signature, and never from `sessMember` (which folds the
-           founder's `admin` role into a bare string);
-         - the SIGNER no longer falls back to the session. It read
-           `attestor?.member_id ?? sessMember`: unreachable while `signers.member_id`
-           is NOT NULL and the key was matched out of the signer set, but it was
-           the same conflation pointed the other way — a session standing in for a
-           signature — and with a deliverer now recorded beside it, it would have
-           written one person under both names. Absent is stated as null.
-       REC-125's fence above guarantees a session here, so `sessRights` is the row. */
+    /* REC-128 (R12): the SIGNATURE says who authorised (`attestor`, the verified key's member, null when absent and
+       never the session); the SESSION ROW says who delivered (a member, or the founder, DEC-33), never the signature
+       and never `sessMember`. REC-125's fence above guarantees a session here, so `sessRights` is the row. */
     const deliveredBy = deliveringPrincipal(sessRights); /* REC-128: op=caseratify */
     const out = await doAnswer(stub.fetch("http://do/caseratify", {
       method: "POST", body: JSON.stringify({
@@ -183,7 +164,7 @@ export async function caseRatifyOp(req, stub, ctx) {
     if (out.refused) return storeRefused(out, relay);
     if (!out.answered) return storeSilent("caseratify/commit", out.correlation);
     const answered = out.result;
-    const { completedCase, ...r } = answered || {};
+    const { completedCase, evidenceMaterials, ...r } = answered || {};
     if (!answered || !r.ok)
       return json({ ok: false, ...(r.reason ? r : { reason: "CASE_PUBLISH_FAILED", detail: answered }),
                     store: storeName, tokenClass: cls }, 409);
@@ -191,10 +172,11 @@ export async function caseRatifyOp(req, stub, ctx) {
        its pin is COMPLETE at this act, and no op=ratify will come to assemble it — so it is
        assembled here, by the one function op=ratify uses. `completedCase` is the store's internal
        state and is destructured OFF the answer above, never spread into it (REC-58's pick). */
+    const materialsCopied = await copyMaterials(env, storeName, Array.isArray(evidenceMaterials) ? evidenceMaterials : []);
     const container = completedCase && completedCase.complete && !completedCase.manifest_sha
       ? await assembleCaseContainer({ env, stub, storeName, cs: completedCase, via: "caseratify" })
       : null;
-    return json({ ok: true, ...r, gateVersion: gate.gateVersion,
+    return json({ ok: true, ...r, gateVersion: gate.gateVersion, materials_copied: materialsCopied,
                   ...(container ? { container } : {}),
                   attestor: { member: attestor?.member_id ?? null, key_b64: sv.keyB64 },
                   /* REC-128: who carried the signature in, beside who made it. On a
@@ -215,6 +197,25 @@ export async function caseRatifyOp(req, stub, ctx) {
                       + "this case pinned" + (container && container.manifest_sha
                         ? `, so its container is assembled (${container.zip}).` : "."),
                   store: storeName, tokenClass: cls });
+}
+
+/* R39 (K1316, K1317): each material the case commit held only in the evidence store (publication R57) is copied into
+   the published bucket by its SHA-256, as `op=ratify` copies captures; a key already there is `present`. One the
+   evidence store no longer holds, or whose copy fails, is `missing`: a re-sent op=caseratify retries it, and it never
+   changes `ok`, because the edition is committed. */
+async function copyMaterials(env, storeName, shas) {
+  const out = { copied: 0, present: 0, missing: [] };
+  for (const sha of shas) {
+    const key = `${storeName}/published/${sha}`;
+    try {
+      if (await env.PUBLISHED.head(key)) { out.present++; continue; }
+      const obj = await env.CAPTURES.get(`${storeName}/captures/${sha}`);
+      if (!obj) { out.missing.push(sha); continue; }
+      await env.PUBLISHED.put(key, obj.body, { sha256: sha });
+      out.copied++;
+    } catch { out.missing.push(sha); }
+  }
+  return out;
 }
 
   /* Ratification: the act that moves a bundle into the published corpus.
@@ -408,26 +409,9 @@ export async function ratifyOp(req, stub, ctx) {
     if (!imgOut.answered) return storeSilent("ratify/image", imgOut.correlation);
     const image = imgOut.result;
     const r2 = typeof env.CAPTURES?.head === "function";
-    /* The catalog resolves references against the whole store, so it needs
-       to know which identifiers exist. One cheap query rather than a probe
-       per reference.
-
-       REC-53, AND THIS IS THE WORST REACHABLE FORM OF REC-52'S CLASS. The read
-       was `(…).result || []`, so a store silence gave `runGate` an EMPTY
-       known-id set and `resolveTarget` answered false for EVERY reference in
-       the bundle. The ratification was then refused with C-6.2 / C-8.1 /
-       C-19.1 findings reading "does not resolve in the store" — the plane
-       telling a publisher, at the moment they sign, that their case cites
-       things that are not there, when in fact NOTHING ANSWERED. A refusal ABOUT
-       THE RECORD manufactured out of a failure to consult it, on the one act
-       this whole product exists to make trustworthy.
-
-       `|| []` SURVIVES THE FIX and that is deliberate, not an oversight: once
-       `answered` is true an empty list is a REAL ANSWER — a viewer who can see
-       no bundles — and treating a genuinely empty result as a non-answer would
-       be this same collapse running in the opposite direction, which is what
-       REC-52's arm (f) measured and what `doAnswer` refuses to do by defining
-       `answered` as `ok === true` and nothing else. */
+    /* The catalog resolves references against the whole store, so it reads which identifiers exist, once. REC-53: a
+       silence is refused, never handed to the gate as an empty set (which would report every reference as not
+       resolving); once `answered`, an empty list is a real answer (a viewer who can see no bundles), hence `|| []`. */
     const listOut = await doAnswer(stub.fetch(`http://do/list?viewer=${ratViewer}`));
     if (listOut.refused) return storeRefused(listOut, relay);
     if (!listOut.answered) return storeSilent("ratify/list", listOut.correlation);

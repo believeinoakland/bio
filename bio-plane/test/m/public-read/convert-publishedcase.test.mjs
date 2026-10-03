@@ -72,7 +72,7 @@ async function publishedWorld() {
   assert.equal(loose.caseCount, 0, "fixture: and it is in no case");
   w.inquiry(F, { question: "Was the sewer transfer authorised?", legs: [{ target: DOC_CAP }, { target: DOC_CONN }] });
   const pin = w.head(F);
-  w.prepare(CASE, 1, { project: proj, roles: [{ target: F, version_sha: pin, role: "load_bearing" }],
+  w.prepare(CASE, 1, { format: "bio-case-document/5", project: proj, roles: [{ target: F, version_sha: pin, role: "load_bearing" }],
     strength: [{ target: F, axis: "capture", grade: "B" }, { target: F, axis: "connection", grade: "C" }],
     excluded: [{ target: LEFTOUT, description: "the FY2023 comparison memo", reason: "a records request is outstanding" }] });
   assert.equal(w.signCase(CASE, 1, { project: proj, roster: [{ bundle_id: F, version_sha: pin, role: "load_bearing" }],
@@ -186,7 +186,7 @@ test("R3, R1 (block 5) a second edition: each edition's hash resolves to its own
                  legs: [{ target: DOC_CAP }, { target: DOC_CONN }] });
   const pin2 = w.head(F);
   assert.notEqual(pin2, pin1);
-  w.prepare(CASE, 2, { project: proj, roles: [{ target: F, version_sha: pin2, edition: 2, role: "load_bearing" }],
+  w.prepare(CASE, 2, { format: "bio-case-document/5", project: proj, roles: [{ target: F, version_sha: pin2, edition: 2, role: "load_bearing" }],
     strength: [{ target: F, axis: "capture", grade: "B" }, { target: F, axis: "connection", grade: "C" }] });
   assert.equal(w.signCase(CASE, 2, { project: proj, roster: [{ bundle_id: F, version_sha: pin2, role: "load_bearing" }],
     completeness: { statement: STMT2, author: "olive" }, sig: SIG(2), at: T2 }).ok, true);
@@ -238,7 +238,7 @@ test("R3 (block 6) a division disclosure: a finding names its parent and sibling
   w.inquiry(KID, { legs: [{ target: DOC_CONN }] });
   const pin = w.head(KID);
   const KCASE = "CASE-2026-2201";
-  w.prepare(KCASE, 1, { project: proj, roles: [{ target: KID, version_sha: pin, role: "load_bearing" }] });
+  w.prepare(KCASE, 1, { format: "bio-case-document/5", project: proj, roles: [{ target: KID, version_sha: pin, role: "load_bearing" }] });
   assert.equal(w.signCase(KCASE, 1, { project: proj, roster: [{ bundle_id: KID, version_sha: pin, role: "load_bearing" }] }).ok, true);
   /* The graph ratification hands the commit, classified from the ratified bytes: references[] is serve-class, a
      division's parent and siblings are name-only BY KIND. */
