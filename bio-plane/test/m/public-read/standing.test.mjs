@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, caseDoc, V, NOW } from "./fixture.mjs";
-import { standingOf, CASE_DOCUMENT_FORMAT_V6 } from "../../../src/case-grammar/index.mjs";
+import { standingOf, CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V6 } from "../../../src/case-grammar/index.mjs";
 import { standingsOf } from "../../../src/public-read/index.mjs";
 
 const CASE = "CASE-2026-0001", F = "INQ-2026-0001", G = "INQ-2026-0002";
@@ -100,4 +100,14 @@ test("R3 a /6 document answers its `method` and `materials` blocks as signed (ca
   assert.equal(five.ok, true);
   assert.equal(five.method, null);
   assert.equal(five.materials, null);
+});
+
+test("R3 a /7 document, identical in fields to /6 (case-grammar R1; DEC-124), answers the same `method` and `materials` blocks as signed", () => {
+  assert.equal(CASE_DOCUMENT_FORMAT, "bio-case-document/7");
+  const six = published().w.read("publishedcase", { id: CASE });
+  const seven = published({ format: CASE_DOCUMENT_FORMAT }).w.read("publishedcase", { id: CASE });
+  assert.equal(seven.ok, true);
+  assert.deepEqual(seven.method, METHOD);
+  assert.deepEqual(seven.materials, six.materials, "the same blocks as the /6 document's");
+  assert.deepEqual(seven.findings.map((f) => f.standing), six.findings.map((f) => f.standing), "and the same standings (R22)");
 });

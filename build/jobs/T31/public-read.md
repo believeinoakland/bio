@@ -34,3 +34,16 @@ Merged `tranche/T31` (case-grammar: `CASE_DOCUMENT_FORMAT` is now `/7`). Three t
 Waiting on the same-layer providers `publication` and `docket` to merge before posting COMPLETE again (B2).
 
 Size (session_016SfTxv2owbWsyKBSjqM3an): test runs 9, module lines 2896
+
+## B3 · CHANGE (publication and docket merged, K1384, K1385)
+
+Merged `tranche/T31`; all same-layer providers are in. The existing 108 tests passed unchanged. Added two:
+- `standing.test.mjs`: R3's `/7` arm. A `/7` document, identical in fields to `/6`, answers the same `method`, `materials` and standings as a `/6` one. `publication`'s `caseDoc` now writes the blocks for `/7`.
+- `docket-real.test.mjs`: R25 over the real `docket`. `captures=omit` gets the docket's own `{captures: {}, captures_omitted: true}` answer, at the store op and through the door. Negative control: any other value, or none, gets its plain answer. This closes the gap the first completion noted.
+
+- `node --test bio-plane/test/m/public-read/`: tests 110, pass 110, fail 0.
+- `format` 0 failures; `architecture public-read` 0; `coverage public-read` 25 of 25, 0 failures; `ownership public-read tranche/T31` 0 (run after commit).
+
+Deferred: none. Found in other modules: none.
+
+Size (session_016SfTxv2owbWsyKBSjqM3an): test runs 11, module lines 2896
