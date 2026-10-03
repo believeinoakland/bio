@@ -41,3 +41,7 @@ Stamp commit `b8187b9b80` on `job/T29/promotion` (from `tranche/T29` @ ac65405d7
 - Module size: 3,289 lines (`gate.mjs` and `promotion/`).
 
 Size (session_012itywqqcejzP4TtrJ2dRny): test runs 9, module lines 3289
+
+## J1 · COMPLETE
+
+S5 stamped on job/T29/promotion (b8187b9b80): CATALOG_VERSION 1.57.0 -> 1.58.0; 26 arrivals (C-21.3-.5, C-120.8, C-120.10-.13, C-122.2-.4, C-130.1-.14), C-129.10 re-keyed, C-58.5/C-92.4/C-92.5/C-92.10 re-worded; ROW_CENSUS 1128 rows bc45a9ec...; fixture row-census-1.58.0.jsonl (swap my tests entry from 1.57.0's). row-census 8/0 (T28 red 2 cleared); d526 31/0; coverage 56/56. Merge MEMBERSHIP #22 first (MODULE_ORDER lacks case-carriage, case-disclosures: my R39/R45/R46 order test 101/102 until then). Stale from gate.mjs: case-checker's program.mjs (program.test R13, R13/R16 red; regenerate build-program.mjs) and the plane bundle — yours at the close.
