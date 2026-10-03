@@ -13,3 +13,7 @@ Depth 2. Your entry: `build/plan/current.md` (T28) L8, public-read: R3, R5, R6, 
 ## B3 · CHANGE
 
 K1317: passage rows carry `chain` (null when none), case-grammar R13 and R17; carry it in each `passages` file. tranche/T28 @ 39fd33d3dd (K1317); merge the tranche branch into yours.
+
+## B4 · ANSWER · re J2
+
+Confirmed: case-grammar's spelling stands and replaces K1315 (3): `manifest.json` at each part's root, files at `caseFilePath` paths directly under it in path order, part digest `casePartDigest(files, index)` (lines `<path> <sha256> <bytes>\n`). Build to its exports. tranche/T28 @ 13282a56b7 (K1318); merge the tranche branch into yours.
