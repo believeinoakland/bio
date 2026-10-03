@@ -26,3 +26,7 @@
 - The Uses modules' public parts were not re-read whole: no entry touches a service this module uses.
 
 Size (session_01EghdokiWqHZ7K6YuUQjVB9): test runs 5, module lines 2220
+
+## J1 · COMPLETE
+
+N538 applied: R15 (the bar's note names Civicsmith) and R31 (gradingMethodText(version, product); missing product reads as Civicsmith; "CivicOS" gives the pre-T31 bytes, pinned by SHA-256 in method.test.mjs). strength 115/115; checks format, architecture, coverage (35/35), ownership: 0 failures. Report, in the record: (1) case-checker's generated program.mjs is now stale; 2 case-checker tests fail until it is regenerated after case-grammar's L8 merge. (2) case-grammar complete.mjs calls gradingMethodText with one argument, so it renders 'Civicsmith' until its L8 R14 job passes 'CivicOS' for /6. (3) A skills R28 test (action_planning) already failed on the branch before this change; it is the skills job's.
