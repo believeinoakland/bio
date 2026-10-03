@@ -476,9 +476,9 @@ var deriveInquiryTitle = (question) => {
   const flat = line.replace(/\s+/g, " ");
   if (flat === "") return null;
   if (flat.length <= 120) return flat;
-  const cut4 = flat.slice(0, 120);
-  const at28 = cut4.lastIndexOf(" ");
-  return (at28 > 0 ? cut4.slice(0, at28) : cut4) + "\u2026";
+  const cut5 = flat.slice(0, 120);
+  const at28 = cut5.lastIndexOf(" ");
+  return (at28 > 0 ? cut5.slice(0, at28) : cut5) + "\u2026";
 };
 var inquiryQuestionOf = (markdown) => {
   const m = /\n## Question[^\S\n]*\n([\s\S]*?)(?=\n## |$)/.exec("\n" + String(markdown == null ? "" : markdown));
@@ -3494,15 +3494,15 @@ var OCR_PRODUCER_MARKERS = Object.freeze([
      unrelated word that merely contains the letters does not fire. */
   Object.freeze({ marker: "ocr", re: /(^|[^0-9a-z])ocr([^0-9a-z]|$)/i })
 ]);
-function classifyProducer({ producer = null, creator = null, unreadable = null } = {}) {
+function classifyProducer({ producer = null, creator = null, unreadable: unreadable2 = null } = {}) {
   const clean = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
-  if (unreadable)
+  if (unreadable2)
     return Object.freeze({
       producer: null,
       creator: null,
       determination: "undetermined",
       ocr: null,
-      why: String(unreadable)
+      why: String(unreadable2)
     });
   const p = clean(producer), c = clean(creator);
   for (const [field, value] of [["producer", p], ["creator", c]]) {
@@ -7675,7 +7675,7 @@ function elementsNested(xml, localName, limit = Infinity) {
 }
 function stripElement(xml, localName) {
   let out = "";
-  let cut4 = 0;
+  let cut5 = 0;
   const RE = tokens();
   let m, depth = 0, start = -1;
   while ((m = RE.exec(xml)) !== null) {
@@ -7685,26 +7685,26 @@ function stripElement(xml, localName) {
     const selfClosed = m[3] === "/";
     if (selfClosed) {
       if (depth === 0) {
-        out += xml.slice(cut4, m.index);
-        cut4 = RE.lastIndex;
+        out += xml.slice(cut5, m.index);
+        cut5 = RE.lastIndex;
       }
       continue;
     }
     if (closing) {
       depth--;
       if (depth === 0 && start >= 0) {
-        cut4 = RE.lastIndex;
+        cut5 = RE.lastIndex;
         start = -1;
       }
       continue;
     }
     if (depth === 0) {
-      out += xml.slice(cut4, m.index);
+      out += xml.slice(cut5, m.index);
       start = m.index;
     }
     depth++;
   }
-  return out + xml.slice(cut4);
+  return out + xml.slice(cut5);
 }
 function visibleText(xml) {
   let out = "";
@@ -8386,8 +8386,8 @@ function walkSheet(tableXml) {
     for (const cell of elementsNested(row2.inner, "table-cell")) {
       const crep = parseInt(cell.attrs["number-columns-repeated"] ?? "1", 10);
       const nCols = Number.isFinite(crep) && crep > 0 ? crep : 1;
-      const carries = cell.attrs["value-type"] != null || cell.attrs.formula != null || cell.inner.trim() !== "";
-      if (carries) {
+      const carries2 = cell.attrs["value-type"] != null || cell.attrs.formula != null || cell.inner.trim() !== "";
+      if (carries2) {
         const before = meter.units;
         const display = elementsNested(cell.inner, "p").map((p) => visibleText(p.inner)).join("\n");
         const spaces2 = meter.units - before;
@@ -16527,9 +16527,9 @@ var RecordCore = class _RecordCore {
    *  K is `_history/bundle_K.md`, `data/changes.json` is `_history/data/changes_K.json` — because the
    *  check catalogue parses exactly this shape (C-12.2). */
   static snapPath(path, snapKey) {
-    const cut4 = path.lastIndexOf("/");
-    const dir = cut4 === -1 ? "" : path.slice(0, cut4 + 1);
-    const name2 = cut4 === -1 ? path : path.slice(cut4 + 1);
+    const cut5 = path.lastIndexOf("/");
+    const dir = cut5 === -1 ? "" : path.slice(0, cut5 + 1);
+    const name2 = cut5 === -1 ? path : path.slice(cut5 + 1);
     const dot = name2.lastIndexOf(".");
     return dot === -1 ? `_history/${dir}${name2}_${snapKey}` : `_history/${dir}${name2.slice(0, dot)}_${snapKey}${name2.slice(dot)}`;
   }
@@ -16798,8 +16798,8 @@ var RecordCore = class _RecordCore {
           const md = manifestFiles(r.files_json).find((f17) => f17.name === "bundle.md");
           return md && typeof md.sha256 === "string" ? md.sha256.toLowerCase() : null;
         }).filter(Boolean));
-        const unanchored = rows2.filter((r) => r.base !== EMPTY_STRING_SHA && !outputs.has(String(r.base ?? "").toLowerCase())).map((r) => r.snap_key);
-        if (deficit <= 0 && !unanchored.length) continue;
+        const unanchored2 = rows2.filter((r) => r.base !== EMPTY_STRING_SHA && !outputs.has(String(r.base ?? "").toLowerCase())).map((r) => r.snap_key);
+        if (deficit <= 0 && !unanchored2.length) continue;
         const undetermined = deficit > 0 && !hasCreation ? 1 : 0;
         const overwritten = deficit > 0 ? deficit - undetermined : 0;
         out.overwritten += overwritten;
@@ -16813,7 +16813,7 @@ var RecordCore = class _RecordCore {
             overwritten,
             undetermined,
             creation_row: hasCreation,
-            unanchored
+            unanchored: unanchored2
           });
       }
       for (const [id, rows2] of rowsBy) if (!seen.has(id)) {
@@ -25577,10 +25577,10 @@ var Provenance = class {
   #testimonyFence(bundleId, files, register2, testimony, viewing = {}) {
     const refusal21 = rowRefusal3(TESTIMONY_CHECKS);
     const prov = Array.isArray(files) ? files.find((f17) => f17 && f17.path === "data/provenance.json") : null;
-    let docs = [], unreadable = false;
+    let docs = [], unreadable2 = false;
     if (prov) {
       const j = typeof prov.text === "string" ? safeJson(prov.text) : null;
-      if (j === null) unreadable = true;
+      if (j === null) unreadable2 = true;
       else docs = Array.isArray(j.documents) ? j.documents : [];
     }
     const shaOf2 = (d) => d && typeof d === "object" && d.capture && typeof d.capture === "object" && typeof d.capture.sha256 === "string" && d.capture.sha256 ? d.capture.sha256 : null;
@@ -25637,7 +25637,7 @@ var Provenance = class {
       if (!stated.has(s))
         return refusal21(
           "TESTIMONY_AUTHORED_DROPPED",
-          unreadable ? `${bundleId} holds the member's authored observation ${s.slice(0, 16)}\u2026, and this revision's data/provenance.json cannot be read, so it cannot be shown to still say so` : `${bundleId} holds the member's authored observation ${s.slice(0, 16)}\u2026, and this revision's data/provenance.json no longer carries it as authored`,
+          unreadable2 ? `${bundleId} holds the member's authored observation ${s.slice(0, 16)}\u2026, and this revision's data/provenance.json cannot be read, so it cannot be shown to still say so` : `${bundleId} holds the member's authored observation ${s.slice(0, 16)}\u2026, and this revision's data/provenance.json no longer carries it as authored`,
           { bundleId, capture_sha: s }
         );
     const shas = [...new Set(regs.map((c) => c.sha256))];
@@ -28608,17 +28608,17 @@ function derivationCap(chain2, target = null) {
   if (checkChain(chain2)) return null;
   const page = target && Number.isInteger(target.page) && target.page >= 0 ? target.page : null;
   const measured = (s) => s.cap != null && rank(s.cap) != null ? s.cap : null;
-  let cap = null, unreadable = false;
+  let cap = null, unreadable2 = false;
   const parts = /* @__PURE__ */ new Map();
   for (const step of chain2) {
     if (STEP_KINDS[step.step].role !== "derivation") continue;
     const ext = extentOf(step);
     if (ext === "unreadable") {
-      unreadable = true;
+      unreadable2 = true;
       continue;
     }
     if (STEP_KINDS[step.step].unmeasured === "undetermined" && measured(step) == null && (page == null || ext === "all" || ext.includes(page)))
-      unreadable = true;
+      unreadable2 = true;
     if (page != null) {
       if (ext !== "all" && !ext.includes(page)) continue;
       const m2 = measured(step);
@@ -28635,7 +28635,7 @@ function derivationCap(chain2, target = null) {
     if (!parts.has(key)) parts.set(key, null);
     if (m) parts.set(key, parts.get(key) == null ? m : weaker(parts.get(key), m));
   }
-  if (unreadable) return null;
+  if (unreadable2) return null;
   if (page != null) return cap;
   for (const partCap of parts.values()) {
     if (partCap == null) return null;
@@ -30232,6 +30232,12 @@ var INQUIRY_GRAMMAR_CHECKS = Object.freeze({
     check: "C-32.8",
     where: "src/inquiry/index.mjs #ground > is-machine-ground",
     translation: "Grounding says some of the reasons behind an answer are strong enough to carry it on their own, and it is the one act here that makes a finding stronger rather than weaker. That decision needs a person behind it, and the credential that asked is an automated one. Sign in to ground it."
+  },
+  /* R11 (N522): a leg on another group's finding, refused by `importedLegFindings` (`./grammar.mjs`). */
+  IMPORTED_LEG_MALFORMED: {
+    check: "C-21.3",
+    where: "src/inquiry-grammar/grammar.mjs importedRefusal > is-imported-leg-form",
+    translation: "A leg on another group's finding names that finding and one edition, and nothing else: its grades are that edition's. Correct the leg. Nothing was written."
   }
 });
 
@@ -30572,6 +30578,7 @@ function checkLegExtentGrammar(leg, label, checkId, findings) {
 }
 function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistry) {
   const legs = fm?.basis;
+  importedReferenceFindings(fm, findings);
   if (legs === void 0 || legs === null) {
     checkGrounds(fm, [], findings);
     return;
@@ -30589,6 +30596,15 @@ function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistry) {
     }
     if (leadLegFindings(`basis[${i}]`, leg, findings)) continue;
     if (themeLegFindings(`basis[${i}]`, leg, findings)) continue;
+    if (importedLegFindings(`basis[${i}]`, leg, findings)) {
+      if (!BASIS_ROLES.includes(leg.role)) {
+        findings.push(f7("C-2.8", "error", `basis[${i}].role '${leg.role}' is not one of: ${BASIS_ROLES.join(", ")}`));
+      }
+      if (leg.note !== void 0 && leg.note !== null && typeof leg.note !== "string") {
+        findings.push(f7("C-2.8", "error", `basis[${i}].note is not a string`));
+      }
+      continue;
+    }
     const t = leg.target;
     let targetType = null;
     if (typeof t !== "string" || !BUNDLE_ID_RE.test(t)) {
@@ -31045,6 +31061,71 @@ function leadLegFindings(label, leg, findings) {
     }
   }
   return false;
+}
+var IMPORT_ID = "[0-9a-f]{64}";
+var BUNDLE_BODY = BUNDLE_ID_RE.source.replace(/^\^/, "").replace(/\$$/, "");
+var IMPORTED_FINDING_RE = new RegExp(`^imported:(${IMPORT_ID})/(${BUNDLE_BODY})$`);
+function parseImportedFindingRef(s) {
+  if (typeof s !== "string") return null;
+  const m = IMPORTED_FINDING_RE.exec(s);
+  return m ? { import: m[1], finding: m[2] } : null;
+}
+var isRef = (v) => typeof v === "string" && IMPORTED_FINDING_RE.test(v.trim());
+var carries = (v) => v !== void 0 && v !== null && v !== "";
+function importedLegFindings(label, leg, findings, checkId = INQUIRY_GRAMMAR_CHECKS.IMPORTED_LEG_MALFORMED.check) {
+  const l = leg && typeof leg === "object" ? leg : {};
+  if (!isRef(l.target)) return false;
+  const ref = l.target.trim();
+  const refusal21 = (message2, repairs) => importedRefusal(checkId, message2, repairs);
+  const ed = l.target_edition;
+  if (!Number.isInteger(ed) || ed < 1) {
+    findings.push(refusal21(
+      `${label}.target_edition '${String(ed).slice(0, 40)}' does not name an edition of ${ref}: a leg on another group's finding names the one edition it rests on, a positive whole number, because each edition is a separate document with its own published grades`,
+      [`set ${label}.target_edition to the edition this group accepted`]
+    ));
+  }
+  for (const field of ["grade", "grade_axis", "grade_source"]) {
+    if (carries(l[field])) {
+      findings.push(refusal21(
+        `${label}.${field} is set on a leg on another group's finding (${ref}): that finding's grades are the ones its edition published, and the leg states none of its own`,
+        [`remove ${field} from ${label}`]
+      ));
+    }
+  }
+  if (carries(l.content_id)) {
+    findings.push(refusal21(
+      `${label}.content_id is set on a leg on another group's finding (${ref}): the leg names the finding, and the parts it rests on are checked in that group's own case file`,
+      [`remove content_id from ${label}`]
+    ));
+  }
+  if (legHasAuthoredExtent(l)) {
+    findings.push(refusal21(
+      `${label} names an extent on a leg on another group's finding (${ref}): the leg names the finding, and the parts it rests on are checked in that group's own case file`,
+      [`remove the extent fields from ${label}`]
+    ));
+  }
+  if (carries(l.extent_capture)) {
+    findings.push(refusal21(
+      `${label}.extent_capture is set on a leg on another group's finding (${ref}): no capture of this record holds that finding`,
+      [`remove extent_capture from ${label}`]
+    ));
+  }
+  return true;
+}
+function importedRefusal(checkId, message2, repairs) {
+  const refusal21 = (code) => f7(checkId, "error", message2, repairs, code);
+  return refusal21("IMPORTED_LEG_MALFORMED");
+}
+function importedReferenceFindings(fm, findings) {
+  const refs = Array.isArray(fm?.references) ? fm.references : [];
+  refs.forEach((r, i) => {
+    if (!r || typeof r !== "object" || !isRef(r.target)) return;
+    findings.push(importedRefusal(
+      INQUIRY_GRAMMAR_CHECKS.IMPORTED_LEG_MALFORMED.check,
+      `references[${i}].target names another group's finding (${r.target.trim()}): a leg on it is not a reference, so references[] does not list it`,
+      [`remove references[${i}]; the basis leg alone names that finding`]
+    ));
+  });
 }
 
 // src/inquiry-grammar/index.mjs
@@ -35888,11 +35969,11 @@ var Calibration = class {
         for (const l of this.#listeners) {
           const r = l.fn({ calibration_id: id, engine: cal.engine, version: cal.version, supersedes, drift: d });
           if (r == null) continue;
-          const cut4 = r && typeof r === "object" && !Array.isArray(r) && Array.isArray(r.obligations) && (r.truncated === void 0 || typeof r.truncated === "boolean");
-          if (!Array.isArray(r) && !cut4)
+          const cut5 = r && typeof r === "object" && !Array.isArray(r) && Array.isArray(r.obligations) && (r.truncated === void 0 || typeof r.truncated === "boolean");
+          if (!Array.isArray(r) && !cut5)
             throw new TypeError(`calibration listener ${l.module} answered something other than a list of obligations`);
-          obligations.push(...cut4 ? r.obligations : r);
-          if (cut4 && r.truncated === true) truncated3 = true;
+          obligations.push(...cut5 ? r.obligations : r);
+          if (cut5 && r.truncated === true) truncated3 = true;
         }
       }
       return {
@@ -37848,8 +37929,8 @@ function textUnitsFor(i2text) {
       runs.push(run2);
     };
     for (const u of units || []) {
-      const cut4 = u.text.length > CAPTURE_TEXT_UNIT_CAP;
-      const text5 = cut4 ? u.text.slice(0, CAPTURE_TEXT_UNIT_CAP) : u.text;
+      const cut5 = u.text.length > CAPTURE_TEXT_UNIT_CAP;
+      const text5 = cut5 ? u.text.slice(0, CAPTURE_TEXT_UNIT_CAP) : u.text;
       const size = new TextEncoder().encode(text5).length + ACQUIRE_TEXT_UNIT_ENVELOPE;
       if (size > budget) {
         dropped++;
@@ -37857,7 +37938,7 @@ function textUnitsFor(i2text) {
         continue;
       }
       budget -= size;
-      kept.push(cut4 ? { ...u, text: text5, truncated: true } : u);
+      kept.push(cut5 ? { ...u, text: text5, truncated: true } : u);
       run2 = null;
     }
     textUnits = kept.length ? kept : null;
@@ -39135,8 +39216,8 @@ var Extraction = class _Extraction {
       }
       bytes2 += size;
       run2 = null;
-      const cut4 = capped.length < full.length || u.wireCut;
-      if (cut4) truncatedUnits++;
+      const cut5 = capped.length < full.length || u.wireCut;
+      if (cut5) truncatedUnits++;
       const chainKind2 = kindOf(u.extent);
       kinds.add(chainKind2);
       this.#sql.exec(
@@ -39149,7 +39230,7 @@ var Extraction = class _Extraction {
         describeExtent(u.extent),
         u.seq,
         capped,
-        cut4 ? 1 : 0,
+        cut5 ? 1 : 0,
         chainKind2
       );
       written++;
@@ -49320,7 +49401,7 @@ function checkConnectionMentionUnchosen({
   pairGrade = null,
   pairReached = false,
   mentions = [],
-  cut: cut4 = false,
+  cut: cut5 = false,
   extentKind,
   extent,
   covers: covers2,
@@ -49340,7 +49421,7 @@ function checkConnectionMentionUnchosen({
   const name2 = (list2) => list2.map((m) => `${m.ref} (${m.position ? `read at ${m.position.ref}` : "where it was read is not recorded"})`).join(", ");
   if (!pairReached) {
     const bearing = others.filter((m) => m.inside !== false);
-    if (!bearing.length && !cut4) return null;
+    if (!bearing.length && !cut5) return null;
     const inside = bearing.filter((m) => m.inside === true);
     return refusal6(
       "CONNECTION_PAIR_MENTION_UNCHOSEN",
@@ -49349,7 +49430,7 @@ function checkConnectionMentionUnchosen({
     );
   }
   const tied = others.filter((m) => r(m.grade) >= r(pairGrade) && m.inside !== true);
-  if (!tied.length && !cut4) return null;
+  if (!tied.length && !cut5) return null;
   return refusal6(
     "CONNECTION_PAIR_MENTION_UNCHOSEN",
     `the connection's pair (${pairRef ?? "unnamed"}) was read inside ${part}, but it was kept over ` + (tied.length ? `an equal-grade mention of the same subject, ${name2(tied)}, that is not inside it,` : `mentions of the subject that were not all read,`) + ` by a tie-break \u2014 sort order, which says nothing about which mention is on point \u2014 so whether this connection reaches the citation is undetermined`,
@@ -52168,9 +52249,9 @@ function derivationStatement(row2 = null, missingCause2 = null) {
     const documents = derivationDocumentsFrom(row2.detail);
     const at28 = row2.at == null ? null : String(row2.at);
     const over = documents == null ? "an unrecorded number of documents" : `${documents} document(s)`;
-    const cut4 = row2.state === "partial";
-    const says = cut4 ? `the latest derivation (${at28}) was CUT by its bound after ${over}: the connections here are true but are part of the set through this subject, not all of it` : row2.state === "PRESENT" ? `the latest derivation (${at28}) read ${over} and was not cut` : row2.state === "LOOKED_ABSENT" ? `the latest derivation (${at28}) ran over ${over}, was not cut, and formed no connection` : `the latest derivation (${at28}) recorded state ${row2.state}`;
-    return { state: row2.state, cut: cut4, at: at28, documents, derived: "derived", says };
+    const cut5 = row2.state === "partial";
+    const says = cut5 ? `the latest derivation (${at28}) was CUT by its bound after ${over}: the connections here are true but are part of the set through this subject, not all of it` : row2.state === "PRESENT" ? `the latest derivation (${at28}) read ${over} and was not cut` : row2.state === "LOOKED_ABSENT" ? `the latest derivation (${at28}) ran over ${over}, was not cut, and formed no connection` : `the latest derivation (${at28}) recorded state ${row2.state}`;
+    return { state: row2.state, cut: cut5, at: at28, documents, derived: "derived", says };
   }
   const cause = typeof missingCause2 === "string" ? missingCause2 : "purged";
   if (cause === "never_looked")
@@ -60059,7 +60140,7 @@ var Progressions = class _Progressions {
       const d = recorded.get(pk + "::" + sk);
       return !!(d && d.applies);
     };
-    const instances46 = [];
+    const instances47 = [];
     const groups = /* @__PURE__ */ new Map();
     for (const p of this.#pairs()) {
       const inst = this.#assemble(p.progression_key, p.entity_id);
@@ -60071,7 +60152,7 @@ var Progressions = class _Progressions {
       const findings = [...missing, ...overdueF, ...others];
       if (!findings.length) continue;
       const entityLabel = inst.entity ? inst.entity.label : null;
-      instances46.push({
+      instances47.push({
         progression_key: inst.progression_key,
         progression_label: inst.label,
         definition_version: inst.definition_version,
@@ -60149,10 +60230,10 @@ var Progressions = class _Progressions {
     })).sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
     return {
       ok: true,
-      instances: instances46,
+      instances: instances47,
       proposals,
       dispositions,
-      instance_count: instances46.length,
+      instance_count: instances47.length,
       proposal_count: proposals.length,
       disposition_count: dispositions.length
     };
@@ -60175,7 +60256,7 @@ var Progressions = class _Progressions {
       established: f17.grade_determined === true && isEstablished(f17.grade),
       needs_confirmation: f17.grade === "C"
     });
-    const instances46 = [];
+    const instances47 = [];
     for (const r of rows2) {
       const ck = r.progression_key + "\0" + r.entity_id;
       let a = assembled.get(ck);
@@ -60194,7 +60275,7 @@ var Progressions = class _Progressions {
       const missing = inst.findings.filter((f17) => f17.kind === "missing_predecessor");
       const others = inst.findings.filter((f17) => f17.kind !== "missing_predecessor");
       const findings = [...missing, ...a.overdue, ...others].map(project).map((f17) => ({ ...f17, disposition: a.decided.get(f17.stage_key) ?? null }));
-      instances46.push({
+      instances47.push({
         progression_key: inst.progression_key,
         progression_label: inst.label,
         definition_version: inst.definition_version,
@@ -60207,7 +60288,7 @@ var Progressions = class _Progressions {
         open_finding_count: findings.filter((f17) => !(f17.disposition && f17.disposition.applies)).length
       });
     }
-    return { ok: true, capture_sha: captureSha, count: instances46.length, instances: instances46 };
+    return { ok: true, capture_sha: captureSha, count: instances47.length, instances: instances47 };
   }
   /* ===================================================================== *
    * DECISIONS (R20–R22; REC-7, REC-184, REC-211).
@@ -60798,8 +60879,8 @@ function appendSessionLog2(text5, entry) {
   const at28 = text5.indexOf("## Session Log");
   if (at28 < 0) return text5 + "\n## Session Log\n\n" + entry;
   const nxt = text5.indexOf("\n## ", at28 + 1);
-  const cut4 = nxt === -1 ? text5.length : nxt + 1;
-  return text5.slice(0, cut4) + entry + "\n" + text5.slice(cut4);
+  const cut5 = nxt === -1 ? text5.length : nxt + 1;
+  return text5.slice(0, cut5) + entry + "\n" + text5.slice(cut5);
 }
 function spliceBasisGround(text5, byOrd) {
   const lines = text5.split("\n");
@@ -61065,6 +61146,7 @@ var safeJson10 = (s) => {
     return null;
   }
 };
+var isImportedRef = (t) => typeof t === "string" && parseImportedFindingRef(t) !== null;
 var ROW_FAMILIES2 = [
   INQUIRY_ROWS,
   SHARED_ACT_CHECKS,
@@ -61496,7 +61578,8 @@ var Inquiry = class _Inquiry {
   /* ---------------------------------------------------------------- R12: the projection (promotion R39) */
   /** In the promotion's transaction: the superseded-by index, `inquiry_basis` whole from `basis[]` with each document
    *  leg's content row, `inquiry_exclusions` from `completeness_excluded[]`, the leg count and subject entity, and a
-   *  migration replay's row. The answer's keys join the promotion's. */
+   *  migration replay's row. The answer's keys join the promotion's. A leg on an imported finding reference (N522) is
+   *  projected with its ref as `target_id`, as spelled, and no content row: content's plan reads it as no document. */
   project(c) {
     const { pkg, bundleId, meta, promotedType } = stepContext(c);
     const cur = c.head, docFm = c.docFm, isInquiry = promotedType === "inquiry";
@@ -62553,7 +62636,7 @@ Changes: state ${cur.current_state} to ${to}. Reason: ${why}.
       text6 = setOrAddScalar2(text6, "disposition_reason", `""`);
       text6 = setOrAddScalar2(text6, "division_parent", target);
       text6 = setOrAddScalar2(text6, "division_siblings", `[${sibs.join(", ")}]`);
-      const refTargets = [...new Set(childLegs.map((l) => l.target).filter((t) => typeof t === "string"))];
+      const refTargets = [...new Set(childLegs.map((l) => l.target).filter((t) => typeof t === "string" && !isImportedRef(t)))];
       text6 = setOrAddBlock(text6, "references", [
         ...refTargets.flatMap((t) => [`  - target: ${t}`, "    rel: cites", "    status: confirmed"]),
         `  - target: ${target}`,
@@ -63195,6 +63278,15 @@ Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(
     };
     if (leg.content_id)
       return { ok: true, content_id: leg.content_id, minted: false, backfilled: false };
+    if (isImportedRef(leg.target_id))
+      return {
+        ok: true,
+        content_id: null,
+        minted: false,
+        backfilled: false,
+        null_case: "IMPORTED_TARGET",
+        why: `basis[${ord}] rests on ${leg.target_id}, another group's finding, graded as the edition this leg names publishes it. This record holds no part of it, so it has no content row here`
+      };
     if (leg.target_type !== "information")
       return {
         ok: true,
@@ -63698,14 +63790,15 @@ Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(
         detail: `${id} is a ${normalizeType(b.object_type)}. An earned basis grade is a fact about an INQUIRY's legs \u2014 what each candidate target earns against the question's subject \u2014 and only an inquiry has a basis.`
       };
     const asked = targets ? String(targets).split(",").map((s) => s.trim()).filter(Boolean).slice(0, 200) : this.#rows(`SELECT DISTINCT target_id FROM inquiry_basis WHERE bundle_id=? ORDER BY target_id`, id).map((r) => r.target_id);
-    const visible = asked.filter((t) => this.membership.inSight(t, viewer));
+    const sees = (t) => isImportedRef(t) || this.membership.inSight(t, viewer);
+    const visible = asked.filter(sees);
     const withheld = visible.length !== asked.length;
     const legRows = this.#rows(
       `SELECT ord, target_id, target_type, content_id FROM inquiry_basis
         WHERE bundle_id=? ORDER BY ord`,
       id
     );
-    const legsVisible = legRows.filter((l) => this.membership.inSight(l.target_id, viewer));
+    const legsVisible = legRows.filter((l) => sees(l.target_id));
     const legsWithheld = legsVisible.length !== legRows.length;
     const legs = legsVisible.map((l) => ({
       ord: l.ord,
@@ -63809,6 +63902,200 @@ function inquiryOps(k, url, body) {
     inquirydivide: () => k.divide({ ...b, target: q7("target") || b.target, viewer: q7("viewer"), author: q7("author") }),
     inquiryground: () => k.ground({ ...b, target: q7("target") || b.target, viewer: q7("viewer"), author: q7("author") })
   };
+}
+
+// src/accepted-work/checks.mjs
+var ACCEPTED_WORK_CHECKS = {
+  IMPORTED_NOT_ACCEPTED: {
+    check: "C-21.4",
+    where: "src/accepted-work/index.mjs acceptedLegRefusals > is-imported-accepted",
+    translation: "This finding rests on another group's finding that this group has not accepted at that edition. Accept that edition first, or take the leg out. Nothing was written."
+  },
+  ACCEPTED_WORK_UNREADABLE: {
+    check: "C-21.5",
+    where: "src/accepted-work/index.mjs acceptedLegRefusals > is-accepted-work-readable",
+    translation: "Another group's work this finding rests on could not be read, so whether it is accepted is not known. Try again. Nothing was written."
+  }
+};
+
+// src/accepted-work/index.mjs
+var ACCEPTED_WORK_ABSENT = "accepted_work_absent";
+var ACCEPTED_WORK_UNREADABLE_WHY = "accepted_work_unreadable";
+var ABSENT_DETAIL = "no module holding another group's work is registered here, so none can be read";
+var UNREADABLE_DETAIL = "the module holding another group's work could not answer";
+var DETAIL_MAX = 200;
+var isObj10 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+var isThenable = (v) => v !== null && (typeof v === "object" || typeof v === "function") && typeof v.then === "function";
+var cut3 = (s, n) => s.length > n ? `${s.slice(0, n)}\u2026` : s;
+var AcceptedWork = class {
+  #record;
+  #source = null;
+  // {module, finding, openFlags, withdrawals}: R1's one registration
+  constructor({ record } = {}) {
+    this.#record = record;
+  }
+  /* ---------------------------------------------------------------- R1: the registration */
+  /** R1 (K31): the one registration `case-import` fills at start. Both refusals are `membership`'s (its R81): a
+   *  registration missing any of the three functions is malformed; a second, by any module, is declared, naming the
+   *  holder. */
+  registerAcceptedWork(module, fns) {
+    const whole = isObj10(fns) && typeof fns.finding === "function" && typeof fns.openFlags === "function" && typeof fns.withdrawals === "function";
+    const refused2 = listenerRefusal(this.#source, module, whole ? fns.finding : null);
+    if (refused2) return refused2;
+    this.#source = { module, finding: fns.finding, openFlags: fns.openFlags, withdrawals: fns.withdrawals };
+    return { ok: true, module };
+  }
+  /* ---------------------------------------------------------------- R2: the reads */
+  /** R2: the registered `finding`'s answer for one imported finding at one edition, as this viewer may see it. */
+  acceptedFinding(args) {
+    return this.#read("finding", args, ({ ref, edition, viewer }) => ({ ref, edition, viewer }));
+  }
+  /** R2: the registered `openFlags`' answer, the open flags on that edition and on the named finding. */
+  openFlagsOn(args) {
+    return this.#read("openFlags", args, ({ ref, edition, viewer }) => ({ ref, edition, viewer }));
+  }
+  /** R2: the registered `withdrawals`' answer, a page of acceptance withdrawals in withdrawal order. */
+  acceptanceWithdrawals(args) {
+    return this.#read("withdrawals", args, ({ after, limit }) => ({ after, limit }));
+  }
+  /* The one read: the registered answer as given; `absent` with none registered; `unreadable` when the function
+     throws, or answers a promise (every reader here runs inside a synchronous transaction, so a later answer could
+     never be read). The function is handed the read's own fields alone, copied. Writes nothing and never throws. */
+  #read(name2, given, pick2) {
+    const src = this.#source;
+    if (!src) return { absent: true, reason: ACCEPTED_WORK_ABSENT, detail: ABSENT_DETAIL };
+    try {
+      const answer = src[name2](pick2(argsOf(given)));
+      if (isThenable(answer)) {
+        Promise.resolve(answer).catch(() => {
+        });
+        return unreadable(`${src.module} answered later than the read can wait`);
+      }
+      return answer;
+    } catch (e) {
+      return unreadable(String(e && e.message ? e.message : e));
+    }
+  }
+  /* ---------------------------------------------------------------- R3: the legs */
+  /** R3: for each leg whose target is an imported finding reference, a refusal when the acceptance at the leg's
+   *  `target_edition` is not known to be in force. Other legs are not asked. Writes nothing and never throws. */
+  acceptedLegRefusals(args) {
+    const out = [];
+    try {
+      const { legs, viewer } = argsOf(args);
+      const list2 = Array.isArray(legs) ? legs : [];
+      const asked = /* @__PURE__ */ new Map();
+      list2.forEach((leg, i) => {
+        const ref = isObj10(leg) ? refOf(leg.target) : null;
+        if (!ref) return;
+        const ord = Number.isInteger(leg.ord) ? leg.ord : i;
+        const edition = leg.target_edition;
+        const key = `${ref}\0${typeof edition}\0${String(edition)}`;
+        if (!asked.has(key)) asked.set(key, this.#judge(ref, edition, viewer));
+        const verdict = asked.get(key);
+        if (verdict) out.push(legFinding(verdict, ord, ref, edition));
+      });
+    } catch {
+    }
+    return out;
+  }
+  /* The refusal code for one (ref, edition), or null when an acceptance of that edition is in force. */
+  #judge(ref, edition, viewer) {
+    const a = this.acceptedFinding({ ref, edition, viewer });
+    if (isObj10(a) && (a.absent === true || a.unreadable === true)) return "ACCEPTED_WORK_UNREADABLE";
+    if (a !== null && !isObj10(a)) return "ACCEPTED_WORK_UNREADABLE";
+    if (a === null || !isObj10(a.acceptance)) return "IMPORTED_NOT_ACCEPTED";
+    if (a.edition !== void 0 && a.edition !== edition) return "IMPORTED_NOT_ACCEPTED";
+    return null;
+  }
+  /* ---------------------------------------------------------------- R4: the promotion check (promotion R39) */
+  /** R4: inside the promotion's transaction, before the write. For an inquiry that is not a replay, R3 over each leg
+   *  on a ref that is new against the held version, or whose target or `target_edition` changed (keyed by the pair,
+   *  never by position: a reordered basis re-points nothing). An unchanged leg is not asked again, so a withdrawal
+   *  never refuses an unrelated revision. */
+  check(c) {
+    if (!isObj10(c) || c.replay || c.promotedType !== "inquiry") return null;
+    const legs = basisOf(isObj10(c.docFm) ? c.docFm : fmOfFiles(c.files)).filter(isObj10);
+    const held = c.head ? this.#heldPairs(c.bundleId) : /* @__PURE__ */ new Set();
+    const asked = [];
+    legs.forEach((leg, ord) => {
+      if (!refOf(leg.target)) return;
+      if (held.has(pairKey(leg))) return;
+      asked.push({ ...leg, ord });
+    });
+    if (!asked.length) return null;
+    const viewer = typeof c.author === "string" && c.author ? c.author : c.writer ?? null;
+    const findings = this.acceptedLegRefusals({ legs: asked, viewer });
+    if (!findings.length) return null;
+    return {
+      ok: false,
+      reason: "BASIS_REFUSED",
+      findings,
+      detail: "a leg rests on another group's finding without an acceptance of that edition known to be in force. Nothing was written."
+    };
+  }
+  /* The (ref, edition) pairs the held version's legs name. A held version that cannot be read holds none, so every
+     leg on a ref is asked: the safe side of an unknown. */
+  #heldPairs(bundleId) {
+    const out = /* @__PURE__ */ new Set();
+    try {
+      const f17 = this.#record.readFile(bundleId, "bundle.md");
+      const text5 = f17 && typeof f17.text === "string" ? f17.text : null;
+      const fm = text5 ? parseFrontmatter(text5).data : null;
+      for (const leg of basisOf(fm))
+        if (isObj10(leg) && refOf(leg.target)) out.add(pairKey(leg));
+    } catch {
+      out.clear();
+    }
+    return out;
+  }
+};
+function unreadable(why) {
+  return { unreadable: true, reason: ACCEPTED_WORK_UNREADABLE_WHY, detail: `${UNREADABLE_DETAIL}: ${cut3(why, DETAIL_MAX)}` };
+}
+function legFinding(code, ord, ref, edition) {
+  const row2 = ACCEPTED_WORK_CHECKS[code];
+  const at28 = Number.isInteger(edition) ? ` at edition ${edition}` : "";
+  const detail = code === "IMPORTED_NOT_ACCEPTED" ? `basis[${ord}] rests on ${ref}${at28}, and no acceptance of that edition is in force for this group` : `basis[${ord}] rests on ${ref}${at28}, and whether it is accepted could not be read`;
+  return {
+    check: row2.check,
+    code,
+    severity: "error",
+    translation: row2.translation,
+    detail,
+    ord,
+    ref,
+    edition: edition === void 0 ? null : edition
+  };
+}
+function argsOf(args) {
+  return isObj10(args) ? args : {};
+}
+function basisOf(fm) {
+  return isObj10(fm) && Array.isArray(fm.basis) ? fm.basis : [];
+}
+function fmOfFiles(files) {
+  const md = Array.isArray(files) ? files.find((f17) => f17 && f17.path === "bundle.md") : null;
+  return md && typeof md.text === "string" ? parseFrontmatter(md.text).data : null;
+}
+function refOf(target) {
+  if (typeof target !== "string") return null;
+  const t = target.trim();
+  return parseImportedFindingRef(t) ? t : null;
+}
+var pairKey = (leg) => `${refOf(leg.target)}\0${typeof leg.target_edition}\0${String(leg.target_edition)}`;
+var instances15 = /* @__PURE__ */ new WeakMap();
+function acceptedWorkOf(host, deps) {
+  let w = instances15.get(host);
+  if (!w) {
+    const d = deps || {};
+    const record = d.record || recordOf(host);
+    const promotion = d.promotion || promotionOf(host, { record });
+    w = new AcceptedWork({ record });
+    instances15.set(host, w);
+    promotion.registerStep("accepted-work", { check: (c) => w.check(c) });
+  }
+  return w;
 }
 
 // src/basis-versions/text.mjs
@@ -64523,6 +64810,9 @@ function f9(check, severity, message2, repairs, code) {
   if (code) out.code = code;
   return out;
 }
+function isImportedRef2(t) {
+  return typeof t === "string" && IMPORTED_FINDING_RE.test(t.trim());
+}
 function basisVersionFindings(fm, findings) {
   const rows2 = fm?.basis_versions;
   const legRows = Array.isArray(fm?.basis_version_legs) ? fm.basis_version_legs : [];
@@ -64701,7 +64991,9 @@ function basisVersionFindings(fm, findings) {
       if (leadLegFindings(`basis_version_legs[${li}] (version '${name2}')`, leg, findings)) continue;
       if (themeLegFindings(`basis_version_legs[${li}] (version '${name2}')`, leg, findings)) continue;
       const t = leg.target;
-      if (typeof t !== "string" || !BUNDLE_ID_RE.test(t)) {
+      const imported = importedLegFindings(`basis_version_legs[${li}] (version '${name2}')`, leg, findings);
+      if (imported) {
+      } else if (typeof t !== "string" || !BUNDLE_ID_RE.test(t)) {
         push("VERSION_LEG_NOT_CITABLE", `basis_version_legs[${li}] (version '${name2}').target '${String(t).slice(0, 40)}' is not a canonical record id`);
       } else if (typeof fm?.id === "string" && t === fm.id) {
         push("VERSION_LEG_SELF", `basis_version_legs[${li}] (version '${name2}') rests on ${t}, which is this inquiry: a question is not evidence for its own answer, in any account of it`);
@@ -64712,18 +65004,20 @@ function basisVersionFindings(fm, findings) {
       }
       if (!BASIS_ROLES.includes(leg.role))
         push("VERSION_LEG_NOT_CITABLE", `basis_version_legs[${li}] (version '${name2}').role '${String(leg.role).slice(0, 40)}' is not one of: ${BASIS_ROLES.join(", ")}`);
-      if (leg.grade !== void 0 && leg.grade !== null && !BASIS_GRADES.includes(leg.grade))
-        push("VERSION_LEG_NOT_CITABLE", `basis_version_legs[${li}] (version '${name2}').grade '${String(leg.grade).slice(0, 40)}' is not one of: ${BASIS_GRADES.join(", ")} (absent or null means undetermined, and is STATED as such)`);
-      if (leg.grade_axis !== void 0 && leg.grade_axis !== null && !GRADE_AXES.includes(leg.grade_axis))
-        push("VERSION_LEG_NOT_CITABLE", `basis_version_legs[${li}] (version '${name2}').grade_axis '${String(leg.grade_axis).slice(0, 40)}' is not one of: ${GRADE_AXES.join(", ")}`);
-      if (leg.grade_source !== void 0 && leg.grade_source !== null && !GRADE_SOURCES.includes(leg.grade_source))
-        push("VERSION_LEG_NOT_CITABLE", `basis_version_legs[${li}] (version '${name2}').grade_source '${String(leg.grade_source).slice(0, 40)}' is not one of: ${GRADE_SOURCES.join(", ")}`);
-      checkLegExtentGrammar(
-        leg,
-        `basis_version_legs[${li}] (version '${name2}')`,
-        BASIS_VERSION_CHECKS.VERSION_LEG_NOT_CITABLE.check,
-        findings
-      );
+      if (!imported) {
+        if (leg.grade !== void 0 && leg.grade !== null && !BASIS_GRADES.includes(leg.grade))
+          push("VERSION_LEG_NOT_CITABLE", `basis_version_legs[${li}] (version '${name2}').grade '${String(leg.grade).slice(0, 40)}' is not one of: ${BASIS_GRADES.join(", ")} (absent or null means undetermined, and is STATED as such)`);
+        if (leg.grade_axis !== void 0 && leg.grade_axis !== null && !GRADE_AXES.includes(leg.grade_axis))
+          push("VERSION_LEG_NOT_CITABLE", `basis_version_legs[${li}] (version '${name2}').grade_axis '${String(leg.grade_axis).slice(0, 40)}' is not one of: ${GRADE_AXES.join(", ")}`);
+        if (leg.grade_source !== void 0 && leg.grade_source !== null && !GRADE_SOURCES.includes(leg.grade_source))
+          push("VERSION_LEG_NOT_CITABLE", `basis_version_legs[${li}] (version '${name2}').grade_source '${String(leg.grade_source).slice(0, 40)}' is not one of: ${GRADE_SOURCES.join(", ")}`);
+        checkLegExtentGrammar(
+          leg,
+          `basis_version_legs[${li}] (version '${name2}')`,
+          BASIS_VERSION_CHECKS.VERSION_LEG_NOT_CITABLE.check,
+          findings
+        );
+      }
       const g = typeof leg.ground === "string" ? leg.ground.trim() : "";
       if (!g) {
         unlabelled++;
@@ -64840,7 +65134,9 @@ function versionsIn(fm) {
         at: l.date != null ? String(l.date) : null,
         ground: str22(l.ground) ?? "",
         /* D-595 (BOB #34, K182): the capture a leg is pinned to, inside the composition so the freeze sees the pin */
-        capture: str22(l.extent_capture)
+        capture: str22(l.extent_capture),
+        /* R3 (N522): the edition a leg on another group's finding names, inside the composition so the freeze sees it */
+        edition: l.target_edition === void 0 || l.target_edition === null || String(l.target_edition).trim() === "" ? null : String(l.target_edition).trim()
       });
     }
     const grounds = groundRows.filter((g) => g && typeof g === "object" && str22(g.version) === name2 && str22(g.ground) !== null).map((g) => ({
@@ -64863,7 +65159,9 @@ function versionsIn(fm) {
       /* after the leg lines, so a composition with no referent is byte-identical to one frozen before referents */
       ...legs.flatMap((l, k) => l.referent === null ? [] : [`leg_referent	${k}	${c(l.referent)}`]),
       /* and the pin, after the referents and only when a leg carries one, for the same byte-identity reason */
-      ...legs.flatMap((l, k) => l.capture === null ? [] : [`leg_capture	${k}	${c(l.capture)}`])
+      ...legs.flatMap((l, k) => l.capture === null ? [] : [`leg_capture	${k}	${c(l.capture)}`]),
+      /* and the edition a leg on another group's finding names (N522), last, for the same byte-identity reason */
+      ...legs.flatMap((l, k) => l.edition === null ? [] : [`leg_edition	${k}	${c(l.edition)}`])
     ].join("\n");
     out.push({
       name: name2,
@@ -64947,8 +65245,8 @@ function versionAsWritten({
       grade_source: opt(l?.grade_source),
       note: opt(l?.note),
       date: opt(l?.date),
-      extent_kind: "document",
-      ...blank2(l?.extent_capture) ? {} : { extent_capture: fs(l.extent_capture) }
+      /* a leg on another group's finding names its edition and carries no extent (inquiry-grammar R11; N522) */
+      ...isImportedRef2(l?.target) ? { target_edition: Number.isInteger(l?.target_edition) ? l.target_edition : opt(l?.target_edition == null ? null : String(l.target_edition)) } : { extent_kind: "document", ...blank2(l?.extent_capture) ? {} : { extent_capture: fs(l.extent_capture) } }
     }))
   };
 }
@@ -65019,7 +65317,8 @@ CREATE INDEX IF NOT EXISTS inquiry_basis_versions_derived ON inquiry_basis_versi
 
 -- One row per leg of a version. ground is NOT NULL: a version carries its partition, so the partition is total.
 -- content_id is the leg's referent, minted or found through content's plan (NULL: an inquiry target, no bytes held,
--- or a replayed leg the module would now refuse).
+-- or a replayed leg the module would now refuse). target_edition is the edition a leg on another group's finding
+-- names (N522), NULL on every other leg.
 CREATE TABLE IF NOT EXISTS inquiry_basis_version_legs (
   bundle_id    TEXT NOT NULL,
   name         TEXT NOT NULL,
@@ -65034,6 +65333,7 @@ CREATE TABLE IF NOT EXISTS inquiry_basis_version_legs (
   at           TEXT,
   ground       TEXT NOT NULL,
   content_id   TEXT,
+  target_edition INTEGER,
   PRIMARY KEY (bundle_id, name, ord)
 );
 CREATE INDEX IF NOT EXISTS inquiry_basis_version_legs_target ON inquiry_basis_version_legs(target_id);
@@ -65046,7 +65346,8 @@ var ADDED_COLUMNS2 = [
   ["inquiry_basis_versions", "state_reason", "TEXT"],
   ["inquiry_basis_versions", "kind", "TEXT"],
   ["inquiry_basis_versions", "affirmed_parts", "TEXT"],
-  ["inquiry_basis_version_legs", "content_id", "TEXT"]
+  ["inquiry_basis_version_legs", "content_id", "TEXT"],
+  ["inquiry_basis_version_legs", "target_edition", "INTEGER"]
 ];
 function migrateBasisVersions(sql) {
   for (const [table2, col, type] of ADDED_COLUMNS2) {
@@ -65115,7 +65416,7 @@ var drawsOn = (fm, inquiryId) => (Array.isArray(fm?.references) ? fm.references 
 var BasisVersions = class _BasisVersions {
   #candidateSource = null;
   // R25's extract arm: {module, fn}
-  constructor({ storage, record, membership, promotion, content, inquiry = null, now } = {}) {
+  constructor({ storage, record, membership, promotion, content, inquiry = null, acceptedWork = null, now } = {}) {
     this.storage = storage;
     this.sql = storage.sql;
     this.record = record;
@@ -65123,6 +65424,7 @@ var BasisVersions = class _BasisVersions {
     this.promotion = promotion;
     this.content = content;
     this.inquiry = inquiry;
+    this.acceptedWork = acceptedWork;
     this.now = typeof now === "function" ? now : () => stampInstant("second");
   }
   #rows(q7, ...a) {
@@ -65206,14 +65508,16 @@ var BasisVersions = class _BasisVersions {
           check: x.check,
           detail: x.message,
           code: x.code,
-          /* three registries: a kind is C-27's, a leg extent relays C-45's codes */
-          translation: (BASIS_VERSION_CHECKS[x.code] ?? VERSION_KIND_CHECKS[x.code] ?? CONTENT_EXTENT_CHECKS[x.code])?.translation,
+          /* four registries: a kind is C-27's, a leg extent relays C-45's codes,
+             a leg on another group's finding inquiry-grammar's C-21.3 (N522) */
+          translation: (BASIS_VERSION_CHECKS[x.code] ?? VERSION_KIND_CHECKS[x.code] ?? CONTENT_EXTENT_CHECKS[x.code] ?? INQUIRY_GRAMMAR_CHECKS[x.code])?.translation,
           ...x.repairs ? { repairs: x.repairs } : {}
         }))
       };
     const offered = versionsIn(docFm);
     for (const v of offered) {
       for (const leg of v.legs) {
+        if (isImportedRef2(leg.target_id)) continue;
         if (!this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, leg.target_id))
           return {
             ok: false,
@@ -65258,6 +65562,52 @@ var BasisVersions = class _BasisVersions {
           ]
         }]
       };
+    }
+    const fresh = [];
+    const docLegs = Array.isArray(docFm.basis_version_legs) ? docFm.basis_version_legs : [];
+    const byName = new Map(offered.map((v) => [v.name, v]));
+    for (const v of offered) {
+      if (!v.legs.some((l) => isImportedRef2(l.target_id))) continue;
+      if (this.#one(`SELECT 1 AS x FROM inquiry_basis_versions WHERE bundle_id=? AND name=?`, bundleId, v.name)) continue;
+      const parent = v.derived_from ? byName.get(v.derived_from) : null;
+      const inherited = new Set((parent ? parent.legs : []).filter((l) => isImportedRef2(l.target_id)).map((l) => `${l.target_id}\0${l.edition ?? ""}`));
+      for (const l of v.legs) {
+        if (!isImportedRef2(l.target_id) || inherited.has(`${l.target_id}\0${l.edition ?? ""}`)) continue;
+        const row2 = docLegs[l.src_ord] || {};
+        fresh.push({ version: v.name, leg: { ord: l.src_ord, target: l.target_id, target_edition: row2.target_edition } });
+      }
+    }
+    if (fresh.length) {
+      let refused2;
+      try {
+        refused2 = this.acceptedWork.acceptedLegRefusals({ legs: fresh.map((x) => x.leg), viewer: c.author ?? null });
+      } catch {
+        refused2 = null;
+      }
+      const list2 = Array.isArray(refused2) ? refused2 : null;
+      const unreadable2 = ACCEPTED_WORK_CHECKS.ACCEPTED_WORK_UNREADABLE;
+      const findings = list2 === null ? fresh.map((x) => ({
+        check: unreadable2.check,
+        code: "ACCEPTED_WORK_UNREADABLE",
+        severity: "error",
+        translation: unreadable2.translation,
+        ord: x.leg.ord,
+        ref: x.leg.target,
+        edition: x.leg.target_edition
+      })) : list2;
+      if (findings.length)
+        return {
+          ok: false,
+          reason: "BASIS_VERSION_REFUSED",
+          findings: findings.map((x) => {
+            const ord = x?.ord;
+            const owner = fresh.find((y) => y.leg.ord === ord);
+            return {
+              ...x,
+              ...owner ? { version: owner.version, detail: `basis_version_legs[${ord}] (version '${owner.version}'): ${x?.detail ?? x?.message ?? "rests on another group's finding whose acceptance at the edition named could not be established"}` } : {}
+            };
+          })
+        };
     }
     return null;
   }
@@ -65326,8 +65676,9 @@ var BasisVersions = class _BasisVersions {
         }
         this.sql.exec(
           `INSERT INTO inquiry_basis_version_legs
-             (bundle_id,name,ord,target_id,target_type,role,grade,grade_axis,grade_source,note,at,ground,content_id)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+             (bundle_id,name,ord,target_id,target_type,role,grade,grade_axis,grade_source,note,at,ground,content_id,
+              target_edition)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
           bundleId,
           v.name,
           k,
@@ -65340,7 +65691,9 @@ var BasisVersions = class _BasisVersions {
           l.note,
           l.at,
           l.ground,
-          vContentId
+          vContentId,
+          /* R3 (N522, K1305): the edition a leg on another group's finding names, as written */
+          l.edition === null ? null : /^\d+$/.test(l.edition) ? Number(l.edition) : null
         );
       }
     }
@@ -65357,7 +65710,8 @@ var BasisVersions = class _BasisVersions {
    *  record earns (R10). */
   versionCollections(bundleId, row2) {
     const legs = this.#legsEarned(this.#rows(
-      `SELECT ord, target_id, target_type, role, grade, grade_axis, grade_source, note, at, ground, content_id
+      `SELECT ord, target_id, target_type, role, grade, grade_axis, grade_source, note, at, ground, content_id,
+              target_edition
          FROM inquiry_basis_version_legs WHERE bundle_id=? AND name=? ORDER BY ord LIMIT ?`,
       bundleId,
       row2.name,
@@ -66920,6 +67274,7 @@ Changes: reading '${fmSafe2(name2)}' added, in state suggested.
     const grounds = (Array.isArray(src.fm.basis_version_grounds) ? src.fm.basis_version_grounds : []).filter((g) => g && typeof g === "object" && String(g.version ?? "").trim() === src.vname).map((g) => ({ ground: String(g.ground ?? ""), asserted_by: who2, at: nowIso, statement: g.statement }));
     const LEG_KEYS = [
       "target",
+      "target_edition",
       "role",
       "ground",
       "grade",
@@ -67014,9 +67369,9 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     };
   }
 };
-var instances15 = /* @__PURE__ */ new WeakMap();
+var instances16 = /* @__PURE__ */ new WeakMap();
 function basisVersionsOf(host, deps) {
-  let bv = instances15.get(host);
+  let bv = instances16.get(host);
   if (!bv) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -67031,8 +67386,9 @@ function basisVersionsOf(host, deps) {
       cyclePath: typeof given.cyclePath === "function" ? given.cyclePath : (id, t) => own3.cyclePath(id, t),
       basisFor: typeof given.basisFor === "function" ? given.basisFor : (id, o) => (own3 ||= inquiryOf(host, { record, membership, promotion, content })).basisFor(id, o)
     };
-    bv = new BasisVersions({ ...d, inquiry, storage: d.storage || host.storage, record, membership, promotion, content });
-    instances15.set(host, bv);
+    const acceptedWork = d.acceptedWork && typeof d.acceptedWork.acceptedLegRefusals === "function" ? d.acceptedWork : acceptedWorkOf(host, { record, membership, promotion });
+    bv = new BasisVersions({ ...d, inquiry, acceptedWork, storage: d.storage || host.storage, record, membership, promotion, content });
+    instances16.set(host, bv);
     record.declarePurge("basis-versions", BASIS_VERSIONS_TABLES);
     registerBasisVersionGrammar(record);
     promotion.registerStep("basis-versions", { check: (c) => bv.check(c), project: (c) => bv.project(c) });
@@ -68401,6 +68757,8 @@ function namedMember(m) {
     ...m.ground ? { ground: m.ground } : {},
     ...m.inherited_from ? { inherited_from: m.inherited_from } : {},
     ...m.through ? { through: m.through } : {},
+    ...m.another_groups ? { another_groups: m.another_groups } : {},
+    ...m.unknown ? { unknown: true } : {},
     ...m.why ? { why: m.why } : {}
   };
 }
@@ -68439,6 +68797,14 @@ function groundResult(ground, members, exhausted) {
     population: members.length,
     not_load_bearing: inert
   };
+}
+function stoppedAt(exhausted, depthBound) {
+  const ids = (ms2) => ms2.map((e) => e.target_id).join(", ");
+  const bound = exhausted.filter((e) => !e.unknown), unknown = exhausted.filter((e) => e.unknown);
+  return [
+    bound.length ? `the basis walk reached its depth bound of ${depthBound} at ${ids(bound)}` : null,
+    unknown.length ? `nothing here establishes what ${ids(unknown)} rests on` : null
+  ].filter(Boolean).join(", and ");
 }
 function axisResult(axis, members, exhausted, depthBound = DEPTH_BOUND) {
   const keys = [];
@@ -68481,7 +68847,7 @@ function axisResult(axis, members, exhausted, depthBound = DEPTH_BOUND) {
       not_load_bearing: inert,
       depth_bound: depthBound,
       undetermined_at: allExhausted,
-      detail: `this ${axis} axis has NO computed strength: ` + (structured && branches.length && !implicit ? `EVERY one of the ${branches.length} sets of reasons it rests on is undetermined, and ` : structured ? `a leg every one of those sets needs is undetermined, and ` : ``) + `the basis walk reached its depth bound of ${depthBound} at ${allExhausted.map((e) => e.target_id).join(", ")}, so what lies below is unknown rather than absent. This is what we do not know, not a low score.`
+      detail: `this ${axis} axis has NO computed strength: ` + (structured && branches.length && !implicit ? `EVERY one of the ${branches.length} sets of reasons it rests on is undetermined, and ` : structured ? `a leg every one of those sets needs is undetermined, and ` : ``) + stoppedAt(allExhausted, depthBound) + `, so what lies below is unknown rather than absent. This is what we do not know, not a low score.`
     });
   }
   const gradedParts = parts.filter((p) => p.state === "graded");
@@ -68515,6 +68881,182 @@ function axisResult(axis, members, exhausted, depthBound = DEPTH_BOUND) {
     detail: (orSets ? `${axis} ${setter.grade} \u2014 the STRONGEST of the ${branches.length} sets of reasons that each carry this conclusion on their own, which is ${label(best)}, and no stronger than the weakest ${axis} WITHIN that set, which is ${w.target_id}` : `${axis} ${setter.grade} \u2014 no stronger than the weakest ${axis} it rests on, which is ${w.target_id}`) + (w.through ? ` (through ${w.through})` : "") + `.` + (structured && !orSets && implicit ? ` That leg is needed by every one of those sets, so no set can be stronger than it.` : ``) + (openBranches.length ? ` ${openBranches.length} further set${openBranches.length === 1 ? " is" : "s are"} UNDETERMINED and could only be stronger, never weaker: ${openBranches.map(label).join(", ")}.` : ``) + ` ${inert.length ? `Present and not yet load-bearing: ${nlb}.` : ""}`.trimEnd()
   });
 }
+
+// src/strength/method.mjs
+var GRADING_METHOD_VERSION = "bio-grading/1";
+var GRADING_METHOD_VERSIONS = Object.freeze([GRADING_METHOD_VERSION]);
+var CREDIT_LEVELS = Object.freeze(["group", "project", "cover", "name"]);
+var ANONYMOUS_LEVELS = Object.freeze(["group", "project"]);
+var NAMED_LEVELS = Object.freeze(["cover", "name"]);
+var HUNCH_WHY = "this leg is marked as a hunch, so it is visible here and does not count as evidence";
+var UNCORROBORATED_WHY = "this leg is a member's observation credited anonymously, and nothing independent in what this rests on bears it out, so it is visible here and does not count as evidence";
+var UNCORROBORATED_EVIDENCE_WHY = "this leg rests on material from an unnamed source that a member attests anonymously, and nothing independent in what this rests on bears it out, so it is visible here and does not count as evidence";
+function levelsGiven(levels) {
+  if (!levels || typeof levels !== "object" || Array.isArray(levels)) return null;
+  return Object.freeze(Object.fromEntries(Object.entries(levels).filter(([id, lv]) => id && CREDIT_LEVELS.includes(lv))));
+}
+var LEG_KINDS = Object.freeze(["document", "observation", "inquiry", "imported"]);
+var inheritsAnswer = (kind) => kind === "inquiry" || kind === "imported";
+function axisAnswerOf(a) {
+  if (typeof a === "string") return GRADE_LETTERS.has(a) ? { state: "graded", grade: a } : { state: "unrated", grade: null };
+  if (!a || typeof a !== "object") return { state: "unrated", grade: null };
+  if (a.state === "undetermined") return { ...a, grade: null };
+  if (GRADE_LETTERS.has(a.grade)) return { ...a, state: "graded" };
+  return { ...a, state: "unrated", grade: null };
+}
+var GRADE_LETTERS = /* @__PURE__ */ new Set(["A", "B", "C", "D"]);
+function levelPair(bundleId, legs, {
+  kindOf,
+  capCapture = () => null,
+  inherit,
+  anonymous = /* @__PURE__ */ new Map(),
+  bound = DEPTH_BOUND
+}) {
+  const members = Object.fromEntries(STRENGTH_AXES.map((a) => [a, []]));
+  const exhausted = Object.fromEntries(STRENGTH_AXES.map((a) => [a, []]));
+  for (const [i, leg] of legs.entries()) {
+    const kind = kindOf(leg);
+    const inherits = inheritsAnswer(kind);
+    const site = {
+      bundle_id: bundleId,
+      ord: leg.ord,
+      target_id: leg.target_id,
+      role: leg.role,
+      grade_source: leg.grade_source ?? null,
+      ground: leg.ground ?? null
+    };
+    const hunch = leg.grade_source === "hunch";
+    const anon = anonymous.get(i);
+    for (const axis of STRENGTH_AXES) {
+      const onAxis = leg.grade_axis === axis;
+      const noReferent = DOCUMENT_AXES.includes(axis) && inherits;
+      if (noReferent && !onAxis) continue;
+      if (hunch) {
+        members[axis].push({ ...site, via: "leg", grade: null, why: HUNCH_WHY });
+        continue;
+      }
+      if (onAxis && anon && !anon.corroborated) {
+        members[axis].push({
+          ...site,
+          via: "leg",
+          grade: null,
+          why: anon.kind === "evidence" ? UNCORROBORATED_EVIDENCE_WHY : UNCORROBORATED_WHY
+        });
+        continue;
+      }
+      const stated = onAxis && !noReferent ? leg.grade ?? null : null;
+      const resolved = axis === "capture" && stated != null ? capCapture(leg, stated) : axis === "testimony" && stated != null && stated !== TESTIMONY_GRADE ? {
+        grade: TESTIMONY_GRADE,
+        why: `this leg carries testimony at ${stated}, and a member's firsthand observation is graded ${TESTIMONY_GRADE} on the testimony axis and at no other value, so it is read at ${TESTIMONY_GRADE} here`
+      } : null;
+      members[axis].push({
+        ...site,
+        via: "leg",
+        grade: resolved ? resolved.grade : stated,
+        why: noReferent ? kind === "imported" ? `the target is another group's finding, not a document, so a ${axis} grade on this leg has no referent` : `the target is an inquiry, not a document, so a ${axis} grade on this leg has no referent` : leg.grade == null ? `the leg carries no grade` : resolved && resolved.why ? resolved.why : onAxis ? null : axis === "capture" && leg.grade_axis === "testimony" ? `this leg rests on a member's own firsthand observation, graded as testimony: the capture grade measures how the record read a document in, and these words are the member's own, so it does not apply here` : `the leg's grade is on the ${leg.grade_axis} axis`
+      });
+    }
+    if (!inherits || hunch) continue;
+    const got = inherit(leg) || { stopped: "nothing here establishes what this leg rests on", unknown: true };
+    if (got.stopped) {
+      for (const axis of STRENGTH_AXES)
+        exhausted[axis].push({
+          ...site,
+          via: "inherited",
+          grade: null,
+          why: got.stopped,
+          ...got.unknown ? { unknown: true } : {}
+        });
+      continue;
+    }
+    const via = kind === "imported" ? "imported" : "inherited";
+    for (const axis of STRENGTH_AXES) {
+      const s = axisAnswerOf(got.pair ? got.pair[axis] : null);
+      const from = got.from ?? leg.target_id;
+      if (s.state === "undetermined") {
+        const allUnknown = Array.isArray(s.undetermined_at) && s.undetermined_at.length && s.undetermined_at.every((e) => e.unknown);
+        exhausted[axis].push({
+          ...site,
+          via,
+          grade: null,
+          ...got.another_groups ? { another_groups: got.another_groups } : {},
+          why: got.another_groups ? `${anotherGroupsWords(got.another_groups)}, and that edition publishes ${axis} as undetermined` : `${from} is undetermined on ${axis}: ${s.detail ?? "what lies below it is unknown"}`,
+          ...got.another_groups || allUnknown ? { unknown: true } : {}
+        });
+        continue;
+      }
+      members[axis].push({
+        ...site,
+        via,
+        grade: s.grade,
+        inherited_from: from,
+        ...got.another_groups ? { another_groups: got.another_groups } : {},
+        /* The actual leg, however deep: a weakest that was itself inherited already names it. R33: nothing past
+           another group's finding is walked, so it names no leg below. */
+        through: got.another_groups ? null : s.weakest ? s.weakest.through || s.weakest.target_id : null,
+        why: got.another_groups ? s.grade == null ? `${anotherGroupsWords(got.another_groups)}, and that edition publishes no grade on ${axis}, so it is not load-bearing here` : `${anotherGroupsWords(got.another_groups)}, counted at the grade that accepted edition publishes and never above it` : s.grade == null ? `${from} is UNRATED on ${axis}, so it is not load-bearing here` : null
+      });
+    }
+  }
+  return Object.fromEntries(STRENGTH_AXES.map((axis) => [axis, axisResult(axis, members[axis], exhausted[axis], bound)]));
+}
+function anotherGroupsWords(g) {
+  return `this leg rests on another group's finding, in that group's case ${g.case ?? "(not stated)"} at edition ${g.edition ?? "(not stated)"}, published by ${g.group ?? "that group"}`;
+}
+function anonymityOf(legs, levels, f17) {
+  const out = /* @__PURE__ */ new Map();
+  if (!levels) return out;
+  const levelOf2 = (k) => typeof k === "string" && Object.hasOwn(levels, k) ? levels[k] : null;
+  const onDocument = (l) => typeof l.target_id === "string" && l.target_id && !inheritsAnswer(f17.kindOf(l));
+  const judged = legs.map((l) => {
+    if (!onDocument(l)) return null;
+    if (l.grade_axis === "testimony") {
+      const level = levelOf2(l.target_id);
+      return ANONYMOUS_LEVELS.includes(level) ? { kind: "testimony", level } : null;
+    }
+    if (l.grade_axis !== "capture" && l.grade_axis !== "connection") return null;
+    if (f17.kindOf(l) === "observation") return null;
+    const sha = (f17.capturesOf(l) || []).find((c) => ANONYMOUS_LEVELS.includes(levelOf2(c)));
+    return sha ? { kind: "evidence", level: levelOf2(sha), capture: sha } : null;
+  });
+  const independent = (a, b) => {
+    const x = f17.originsOf(a), y = f17.originsOf(b);
+    return !!(x && y && x.complete && y.complete) && ![...x.set].some((o) => y.set.has(o));
+  };
+  legs.forEach((leg, i) => {
+    const j0 = judged[i];
+    if (!j0) return;
+    const by = [];
+    legs.forEach((other, j) => {
+      if (j === i || judged[j] || !onDocument(other) || !f17.seen(other)) return;
+      if (f17.ownGrade(other) == null) return;
+      let bears;
+      if (other.grade_axis === "testimony") {
+        const a = f17.authorOf(leg), b = f17.authorOf(other);
+        bears = j0.kind === "testimony" && NAMED_LEVELS.includes(levelOf2(other.target_id)) && a != null && b != null && a !== b;
+      } else {
+        bears = f17.kindOf(other) !== "observation";
+      }
+      if (bears && independent(leg, other)) by.push({ ord: other.ord, target_id: other.target_id });
+    });
+    out.set(i, { ...j0, corroborated: by.length > 0, by });
+  });
+  return out;
+}
+var METHOD_TEXT = Object.freeze({
+  [GRADING_METHOD_VERSION]: [
+    `How CivicOS grades a finding (method ${GRADING_METHOD_VERSION}).`,
+    "",
+    "1. Two strengths, never one. A finding has a capture strength (how faithfully the documents it rests on were taken in) and a connection strength (how firmly they are tied to what the finding is about), with testimony (a member's own firsthand account) graded beside them. Each is worked out on its own, from the legs graded for it, and they are never combined into one figure. Grades run from A, the strongest, to D.",
+    "2. Which legs count. A leg counts only for the strength its grade names. A capture grade is never above what the record holds for that document; a testimony grade is always D. A leg with no grade, or one marked as a hunch, is listed and counts for nothing: it never lowers or raises a strength. A capture or testimony grade written on a leg to another question, or to another group's finding, has nothing to grade and is listed, not counted.",
+    "3. Questions resting on questions. A leg to another question contributes that question's own strengths, worked out the same way, up to six steps down. Past six steps, or where that question's strength is not known, the strength is stated as undetermined: unknown, not low.",
+    "4. Another group's work. A leg to a finding of another group's case that this group has accepted contributes the strengths that accepted edition published for that finding, never more, and nothing below it is followed. If that finding cannot be read, the strength is undetermined. Withdrawing the acceptance later changes no grade.",
+    "5. Sets of reasons. Legs the author did not sort into sets of reasons are all needed together, so they are only as strong as the weakest of them. A set of reasons is only as strong as the weakest leg in it. Where the author named several sets that each carry the finding on their own, the strongest set is what counts. The strength is then the weaker of the legs needed by every set and that strongest set.",
+    "6. When a strength is undetermined. A strength is undetermined only when something it needs is unknown: one of the legs every set needs, or every set at once. A set that is unknown beside a known one could only be stronger, and is named. A strength with no counted leg is unrated, and says it rests on nothing established.",
+    "7. Anonymous testimony and evidence. Testimony from a member credited only to the group or the project, and material from an unnamed source that such a member attests, counts only when something independent beside it bears it out; otherwise it is listed and counts for nothing. What bears it out is a counted leg on a document that shares no origin with it (not the same document, not the same capture, not the same web address) and is not itself credited anonymously; for anonymous testimony, also a member's testimony credited by cover name or real name, by another member, sharing no origin with it. Testimony or material credited by cover name or real name is graded as usual.",
+    "8. What is named. Each strength names the leg that sets it, and every leg that does not count, with the reason. It also states how many hunches it left out."
+  ].join("\n")
+});
 
 // src/strength/checks.mjs
 var checks_exports22 = {};
@@ -68756,21 +69298,14 @@ var CANDIDATE_ERROR_MAX = 200;
 var PAIR_COMPOSED_KEYS = Object.freeze(["strength", "grade", "score", "overall", "composed", "letter", "rating", "value"]);
 var MEMBER_ID_FIELDS = Object.freeze(["bundle_id", "target_id", "inherited_from", "through"]);
 var OUT_OF_VIEW_WORDS = "Part of what this rests on is out of your view.";
-var ID_IN_PROSE = new RegExp(BUNDLE_ID_RE.source.replace(/^\^/, "").replace(/\$$/, ""), "g");
-var HUNCH_WHY = "this leg is marked as a hunch, so it is visible here and does not count as evidence";
-var CREDIT_LEVELS = Object.freeze(["group", "project", "cover", "name"]);
-var ANONYMOUS_LEVELS = Object.freeze(["group", "project"]);
-var NAMED_LEVELS = Object.freeze(["cover", "name"]);
-var UNCORROBORATED_WHY = "this leg is a member's observation credited anonymously, and nothing independent in what this rests on bears it out, so it is visible here and does not count as evidence";
+var isImportedRef3 = (id) => parseImportedFindingRef(id) !== null;
+var unanchored = (re) => re.source.replace(/^\^/, "").replace(/\$$/, "");
+var ID_IN_PROSE = new RegExp(`(?:${unanchored(IMPORTED_FINDING_RE)}|${unanchored(BUNDLE_ID_RE)})`, "g");
 var BAR_REASON_MAX = 2e3;
 var BAR_HONEST_NOTE = "CivicOS has no guidance yet on what particular audiences expect. Readers see the bar you set in these words.";
 var isHunch = (source) => typeof source === "string" && VERSION_STRENGTH_INERT_SOURCES.includes(source);
 var str3 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
 var hunchCount = (legs) => legs.filter((l) => isHunch(l.grade_source)).length;
-function levelsGiven(levels) {
-  if (!levels || typeof levels !== "object" || Array.isArray(levels)) return null;
-  return Object.freeze(Object.fromEntries(Object.entries(levels).filter(([id, lv]) => id && CREDIT_LEVELS.includes(lv))));
-}
 var typeOfId = (id) => normalizeType(OBJECT_TYPES[String(id ?? "").split("-")[0]]) ?? "";
 function barAxisWords(bar) {
   return ["capture", "connection"].map((axis) => bar[axis] == null ? `no bar set on the ${axis} axis` : `${axis} ${bar[axis]}`).join(", ");
@@ -68787,12 +69322,15 @@ function inquiryReader(k) {
 var Strength = class _Strength {
   #deps;
   #joined = false;
+  #versionEdition = void 0;
   constructor({
     storage,
     record,
     membership,
     inquiry = null,
     versions = null,
+    acceptedWork = null,
+    promotion = null,
     producingGroup = null,
     now = null,
     host = null
@@ -68800,7 +69338,7 @@ var Strength = class _Strength {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
-    this.#deps = { inquiry, versions, host };
+    this.#deps = { inquiry, versions, acceptedWork, promotion, host };
     this.producingGroup = typeof producingGroup === "function" ? producingGroup : () => null;
     this.now = typeof now === "function" ? now : () => (/* @__PURE__ */ new Date()).toISOString();
   }
@@ -68811,6 +69349,15 @@ var Strength = class _Strength {
   }
   set inquiry(v) {
     this.#deps.inquiry = v;
+  }
+  /* R33: accepted-work's read (its R2), on the same host, reached on the first ref read (K1307). */
+  get acceptedWork() {
+    if (!this.#deps.acceptedWork && this.#deps.host)
+      this.#deps.acceptedWork = acceptedWorkOf(
+        this.#deps.host,
+        { record: this.record, ...this.#deps.promotion ? { promotion: this.#deps.promotion } : {} }
+      );
+    return this.#deps.acceptedWork;
   }
   get versions() {
     if (!this.#deps.versions && this.#deps.host)
@@ -68851,27 +69398,36 @@ var Strength = class _Strength {
     return !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${g.sql})`, id, ...g.args);
   }
   /* R6: the same question of ONE id, as a function: a visible id passes, an unseen one answers null, a value naming no
-     bundle is left alone. Memoised for the one answer it serves. */
-  #redactor(viewer) {
+     bundle is left alone. A ref (R33) is seen only when `accepted-work` answers this viewer a finding for it at the
+     edition the walk read (`refs`), as an import the viewer may not see answers null. Memoised for the one answer it
+     serves. */
+  #redactor(viewer, refs = /* @__PURE__ */ new Map()) {
     const g = viewerPredicate(viewer);
     if (g.scope === "member") return (id) => id ?? null;
     if (g.scope === "DENY") return (id) => id ? null : id ?? null;
     const memo = /* @__PURE__ */ new Map();
+    const seesRef = (id) => {
+      const edition = refs.get(id) ?? null;
+      if (edition == null) return false;
+      const f17 = this.#acceptedFinding(id, edition, viewer);
+      return !!(f17 && typeof f17 === "object" && !f17.absent && !f17.unreadable);
+    };
     return (id) => {
       if (!id) return id ?? null;
       if (!memo.has(id))
-        memo.set(id, !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${g.sql})`, id, ...g.args));
+        memo.set(id, isImportedRef3(id) ? seesRef(id) : !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${g.sql})`, id, ...g.args));
       return memo.get(id) ? id : null;
     };
   }
   /* R1 (REC-105, D-373): the walk's whole document-target set, collected once, so the registry is asked once. It
      traverses the same edges the walk will, under the same bound, so the set is exactly the set the walk asks about. The
-     subject is null on purpose: the registry's capture arm does not branch on one. Null when there is nothing to ask. */
+     subject is null on purpose: the registry's capture arm does not branch on one. Null when there is nothing to ask.
+     Another group's finding (R33) is not a document and is not asked about. */
   #captureBoundsFor(bundleId, bound, topLegs = null) {
     const targets = /* @__PURE__ */ new Set();
     const visit = (legs, depth) => {
       for (const leg of legs) {
-        if (typeof leg.target_id !== "string" || !leg.target_id) continue;
+        if (typeof leg.target_id !== "string" || !leg.target_id || isImportedRef3(leg.target_id)) continue;
         if (normalizeType(leg.target_type) === "inquiry") {
           if (depth + 1 <= bound) visit(this.#legsOf(leg.target_id), depth + 1);
           continue;
@@ -68888,101 +69444,101 @@ var Strength = class _Strength {
     const b = this.inquiry.basisFor(id, opts);
     return b && Array.isArray(b.legs) ? b.legs : [];
   }
-  /* THE WALK (R1–R5). The top level's legs are the inquiry's projected basis, or those a caller hands in (a version's,
-       R9; a candidate's, R26) — one parameter rather than a second walk, so one arithmetic serves every path. The
-       recursion below always reads each sub-inquiry's own stored basis: a reading of THIS question does not restate what
-       the questions beneath it rest on.
+  /* A leg's kind as the walk reads it (R2, R33): another group's finding by its reference, a question by its type, else
+     a document. */
+  static #kindOf(leg) {
+    if (isImportedRef3(leg.target_id)) return "imported";
+    return normalizeType(leg.target_type) === "inquiry" ? "inquiry" : "document";
+  }
+  /* R33: the edition a leg on another group's finding names: the leg's own `target_edition` when it carries one, else,
+     for a leg of the inquiry's own projected basis (`authored`), its authored `basis[ord]` in its bundle.md (the
+     projection does not hold it). A version's or a candidate's leg carries its own. Null when none. */
+  #editionOf(bundleId, leg, authored) {
+    const own3 = Number(leg.target_edition);
+    if (leg.target_edition != null && Number.isInteger(own3) && own3 > 0) return own3;
+    if (!authored || !bundleId || typeof this.record?.readFile !== "function") return null;
+    const md = this.record.readFile(bundleId, "bundle.md");
+    const fm = md && typeof md.text === "string" ? parseFrontmatter(md.text).data || {} : {};
+    const written = Array.isArray(fm.basis) ? fm.basis[leg.ord] : null;
+    const ed = written && written.target === leg.target_id ? Number(written.target_edition) : NaN;
+    return Number.isInteger(ed) && ed > 0 ? ed : null;
+  }
+  /* R33: `accepted-work.acceptedFinding`'s answer for a ref at an edition: its R2 answer, `{absent: true}` when nothing
+     is registered or given, `{unreadable: true}` when the read throws. */
+  #acceptedFinding(ref, edition, viewer = null) {
+    const aw = this.acceptedWork;
+    if (!aw || typeof aw.acceptedFinding !== "function") return { absent: true };
+    try {
+      return aw.acceptedFinding({ ref, edition, viewer });
+    } catch {
+      return { unreadable: true };
+    }
+  }
+  /* R33 (DEC-96 item 1): what a leg on another group's finding contributes: the pair the accepted edition publishes for
+     it, read as an inquiry leg's target answer with nothing walked past it, or why it cannot be read. An acceptance
+     withdrawn since changes nothing: the edition's grades stand as published. The read is a record fact, so no viewer
+     narrows it (R6 withholds afterwards). */
+  #importedAnswer(bundleId, leg, ctx, authored) {
+    const edition = this.#editionOf(bundleId, leg, authored);
+    if (ctx && ctx.refs) ctx.refs.set(leg.target_id, edition);
+    if (edition == null)
+      return { stopped: "this leg rests on another group's finding without saying which edition, so what it rests on is unknown here", unknown: true };
+    const f17 = this.#acceptedFinding(leg.target_id, edition, null);
+    if (f17 && f17.absent)
+      return { stopped: "this leg rests on another group's finding, and this copy holds no accepted work to read it from, so what it rests on is unknown here", unknown: true };
+    if (f17 && f17.unreadable)
+      return { stopped: "this leg rests on another group's finding that could not be read just now, so what it rests on is unknown here", unknown: true };
+    if (!f17 || typeof f17 !== "object")
+      return { stopped: `this leg rests on another group's finding that this copy does not hold at edition ${edition}, so what it rests on is unknown here`, unknown: true };
+    return {
+      pair: f17.pair && typeof f17.pair === "object" ? f17.pair : {},
+      from: leg.target_id,
+      another_groups: {
+        group: f17.group ?? null,
+        case: f17.case ?? null,
+        edition: f17.edition ?? edition,
+        finding: f17.finding ?? null
+      }
+    };
+  }
+  /* THE WALK (R1–R5, R29, R33, R34). The top level's legs are the inquiry's projected basis, or those a caller hands
+       in (a version's, R9; a candidate's, R26) — one parameter rather than a second walk, so one arithmetic serves every
+       path. The recursion below always reads each sub-inquiry's own stored basis. Each level resolves its legs against
+       the record (the capture ceiling, a sub-inquiry's own walk, another group's published pair, who bears out an
+       anonymous leg) and composes them by the method's one arithmetic (`method.mjs`'s `levelPair`), which
+       `recomputePair` composes by too.
   
        There is deliberately no visited set and no memo: the depth bound is what makes it terminate, so a cycle written
-       around the write-time guard costs a bounded walk and reports `undetermined` (R2).
-  
-       Each leg is a member of the axis its grade names (the axis is the leg's own fact, not its target's type); a leg
-       graded elsewhere is inert on this axis and says so. A leg's role is carried and never composed: a leg that cuts
-       against stays in the population. */
-  #walk(bundleId, depth, bound, legsOverride, captureBounds, levels = null) {
+       around the write-time guard costs a bounded walk and reports `undetermined` (R2). */
+  #walk(bundleId, depth, bound, legsOverride, ctx) {
     const legs = legsOverride ?? this.#legsOf(bundleId);
-    const members = Object.fromEntries(STRENGTH_AXES.map((a) => [a, []]));
-    const exhausted = Object.fromEntries(STRENGTH_AXES.map((a) => [a, []]));
-    const anonymous = this.#anonymousOf(legs, levels, captureBounds);
-    for (const [i, leg] of legs.entries()) {
-      const isInquiry = normalizeType(leg.target_type) === "inquiry";
-      const site = {
-        bundle_id: bundleId,
-        ord: leg.ord,
-        target_id: leg.target_id,
-        role: leg.role,
-        grade_source: leg.grade_source ?? null,
-        ground: leg.ground ?? null
-      };
-      const hunch = isHunch(leg.grade_source);
-      for (const axis of STRENGTH_AXES) {
-        const onAxis = leg.grade_axis === axis;
-        const noReferent = DOCUMENT_AXES.includes(axis) && isInquiry;
-        if (noReferent && !onAxis) continue;
-        if (hunch) {
-          members[axis].push({ ...site, via: "leg", grade: null, why: HUNCH_WHY });
-          continue;
-        }
-        if (onAxis && anonymous.has(i) && !anonymous.get(i).corroborated) {
-          members[axis].push({ ...site, via: "leg", grade: null, why: UNCORROBORATED_WHY });
-          continue;
-        }
-        const stated = onAxis && !noReferent ? leg.grade ?? null : null;
-        const resolved = captureBounds && axis === "capture" && stated != null ? this.inquiry.legCapped(stated, captureBounds.get(leg.target_id), leg.target_id) : axis === "testimony" && stated != null && stated !== TESTIMONY_GRADE ? {
-          grade: TESTIMONY_GRADE,
-          why: `this leg carries testimony at ${stated}, and a member's firsthand observation is graded ${TESTIMONY_GRADE} on the testimony axis and at no other value, so it is read at ${TESTIMONY_GRADE} here`
-        } : null;
-        members[axis].push({
-          ...site,
-          via: "leg",
-          grade: resolved ? resolved.grade : stated,
-          why: noReferent ? `the target is an inquiry, not a document, so a ${axis} grade on this leg has no referent` : leg.grade == null ? `the leg carries no grade` : resolved && resolved.why ? resolved.why : onAxis ? null : axis === "capture" && leg.grade_axis === "testimony" ? `this leg rests on a member's own firsthand observation, graded as testimony: the capture grade measures how the record read a document in, and these words are the member's own, so it does not apply here` : `the leg's grade is on the ${leg.grade_axis} axis`
-        });
+    const captureBounds = ctx.captureBounds;
+    return levelPair(bundleId, legs, {
+      bound,
+      kindOf: (l) => _Strength.#kindOf(l),
+      capCapture: (l, stated) => captureBounds ? this.inquiry.legCapped(stated, captureBounds.get(l.target_id), l.target_id) : null,
+      /* R29, R34: which legs of THIS basis are credited anonymously, and which something independent in the same basis
+         bears out. The pair is a record fact, so no viewer narrows it (R6). */
+      anonymous: this.#anonymousOf(legs, ctx.levels, captureBounds),
+      inherit: (l) => {
+        if (_Strength.#kindOf(l) === "imported") return this.#importedAnswer(bundleId, l, ctx, depth > 0 || ctx.ownTop);
+        if (depth + 1 > bound) return { stopped: `the walk reached its depth bound of ${bound} here` };
+        return { pair: this.#walk(l.target_id, depth + 1, bound, null, ctx), from: l.target_id };
       }
-      if (!isInquiry || hunch) continue;
-      if (depth + 1 > bound) {
-        for (const axis of STRENGTH_AXES)
-          exhausted[axis].push({
-            ...site,
-            via: "inherited",
-            grade: null,
-            why: `the walk reached its depth bound of ${bound} here`
-          });
-        continue;
-      }
-      const sub = this.#walk(leg.target_id, depth + 1, bound, null, captureBounds, levels);
-      for (const axis of STRENGTH_AXES) {
-        const s = sub[axis];
-        if (s.state === "undetermined") {
-          exhausted[axis].push({
-            ...site,
-            via: "inherited",
-            grade: null,
-            why: `${leg.target_id} is undetermined on ${axis}: ${s.detail}`
-          });
-          continue;
-        }
-        members[axis].push({
-          ...site,
-          via: "inherited",
-          grade: s.grade,
-          inherited_from: leg.target_id,
-          /* The actual leg, however deep: a weakest that was itself inherited already names it. */
-          through: s.weakest ? s.weakest.through || s.weakest.target_id : null,
-          why: s.grade == null ? `${leg.target_id} is UNRATED on ${axis}, so it is not load-bearing here` : null
-        });
-      }
-    }
-    return Object.fromEntries(STRENGTH_AXES.map((axis) => [axis, axisResult(axis, members[axis], exhausted[axis], bound)]));
+    });
   }
   /* One pair over the given top-level legs (or the inquiry's own, read once), capture-bounded throughout (R1), with the
-     levels R29 applies; answers the pair and the top-level legs it was taken over. */
+     levels R29 and R34 apply; answers the pair, the top-level legs it was taken over, and the refs it read (R33) with
+     the edition each named. */
   #pairOver(bundleId, topLegs = null, levels = null) {
     const legs = topLegs ?? this.#legsOf(bundleId);
-    return {
-      pair: this.#walk(bundleId, 0, DEPTH_BOUND, legs, this.#captureBoundsFor(bundleId, DEPTH_BOUND, legs), levels),
-      legs
+    const ctx = {
+      captureBounds: this.#captureBoundsFor(bundleId, DEPTH_BOUND, legs),
+      levels,
+      refs: /* @__PURE__ */ new Map(),
+      ownTop: topLegs == null
     };
+    return { pair: this.#walk(bundleId, 0, DEPTH_BOUND, legs, ctx), legs, refs: ctx.refs };
   }
   /* R29, R30 (DEC-102): the register's author of an authored observation (provenance R48's `register.author`), read and
      never answered; `observation` false for a bundle holding no authored capture. Memoised for one judgement. */
@@ -68999,7 +69555,7 @@ var Strength = class _Strength {
   /* A leg's own grade as the walk would count it on its own axis (R1, R9): null when it would count nothing. */
   #ownGrade(leg, captureBounds) {
     if (isHunch(leg.grade_source) || leg.grade == null || !STRENGTH_AXES.includes(leg.grade_axis)) return null;
-    if (normalizeType(leg.target_type) === "inquiry") return null;
+    if (_Strength.#kindOf(leg) !== "document") return null;
     if (leg.grade_axis === "testimony") return TESTIMONY_GRADE;
     if (leg.grade_axis === "capture" && captureBounds) {
       const capped = this.inquiry.legCapped(leg.grade, captureBounds.get(leg.target_id), leg.target_id);
@@ -69007,56 +69563,50 @@ var Strength = class _Strength {
     }
     return leg.grade;
   }
-  /* R29, R30 (DEC-102 items 1, 2): for each testimony leg of ONE basis on an observation `levels` states at `group` or
-     `project` (keyed by its position in `legs`), whether something independent in the same basis bears it out, and
-     what: a counted leg on a document (not an observation, not an inquiry), or a counted testimony leg on an observation
-     stated at `cover` or `name` that another member authored, in either case sharing no origin with it (R12's same
-     document, capture or captured address). An origin read cut at R12's limit does not rule a shared origin out, so that
-     leg does not bear it out; nor does an author the register does not hold. `seen` (R30) withholds a leg the viewer may
-     not see from bearing anything out. Empty when no levels were given. Writes nothing; names no author. */
+  /* R29, R30, R34: the method's judgement (`anonymityOf`) over ONE basis, with the record's facts: an observation and
+     its author from the register, a document's captures from the register, origins by R12's one reading. `seen` (R30)
+     withholds a leg the viewer may not see from bearing anything out. Empty when no levels were given. Writes nothing;
+     names no author. */
   #anonymousOf(legs, levels, captureBounds, seen = () => true) {
-    const out = /* @__PURE__ */ new Map();
-    if (!levels) return out;
-    const levelOf2 = (l) => typeof l.target_id === "string" && Object.hasOwn(levels, l.target_id) ? levels[l.target_id] : null;
-    const isDocument = (l) => typeof l.target_id === "string" && l.target_id && normalizeType(l.target_type) !== "inquiry";
+    if (!levels) return /* @__PURE__ */ new Map();
     const observed = this.#observationReader();
     const origins = /* @__PURE__ */ new Map();
-    const originsOf = (id) => {
-      if (!origins.has(id)) origins.set(id, this.#originsOf([id]));
-      return origins.get(id);
-    };
-    const independent = (a, b) => {
-      const x = originsOf(a), y = originsOf(b);
-      return x.complete && y.complete && ![...x.set].some((o) => y.set.has(o));
-    };
-    legs.forEach((leg, i) => {
-      if (leg.grade_axis !== "testimony" || !isDocument(leg) || !ANONYMOUS_LEVELS.includes(levelOf2(leg))) return;
-      const by = [];
-      legs.forEach((other, j) => {
-        if (j === i || !isDocument(other) || !seen(other.target_id)) return;
-        if (this.#ownGrade(other, captureBounds) == null) return;
-        let bears = false;
-        if (other.grade_axis === "testimony") {
-          const a = observed(leg.target_id).author, b = observed(other.target_id).author;
-          bears = NAMED_LEVELS.includes(levelOf2(other)) && a != null && b != null && a !== b;
-        } else {
-          bears = !observed(other.target_id).observation;
-        }
-        if (bears && independent(leg.target_id, other.target_id)) by.push({ ord: other.ord, target_id: other.target_id });
-      });
-      out.set(i, { level: levelOf2(leg), corroborated: by.length > 0, by });
+    const captures = /* @__PURE__ */ new Map();
+    return anonymityOf(legs, levels, {
+      kindOf: (l) => {
+        const k = _Strength.#kindOf(l);
+        return k === "document" && typeof l.target_id === "string" && l.target_id && observed(l.target_id).observation ? "observation" : k;
+      },
+      ownGrade: (l) => this.#ownGrade(l, captureBounds),
+      originsOf: (l) => {
+        if (!origins.has(l.target_id)) origins.set(l.target_id, this.#originsOf([l.target_id]));
+        return origins.get(l.target_id);
+      },
+      authorOf: (l) => observed(l.target_id).author,
+      capturesOf: (l) => {
+        if (!captures.has(l.target_id))
+          captures.set(l.target_id, this.#rows(
+            `SELECT capture_sha FROM register WHERE bundle_id=? ORDER BY capture_sha`,
+            l.target_id
+          ).map((r) => r.capture_sha));
+        return captures.get(l.target_id);
+      },
+      seen: (l) => seen(l.target_id)
     });
-    return out;
   }
-  /** R1–R5, R29: the derived pair for one inquiry, computed on read. One answer per axis and no scalar: a case does not
+  /** R1–R5, R29, R33, R34: the derived pair for one inquiry, computed on read. One answer per axis and no scalar: a case does not
    *  have one strength. This is the authority every consumer that must be right goes through (the gated read, the
    *  pair frozen into a signed case, the grouping act's before and after, re-evaluation, the cache). It states how many
    *  hunch legs it left out (R5), and, given `levels`, which levels it applied (R29). */
   strengthOf(bundleId, { levels = null } = {}) {
-    if (!bundleId) return { ok: false, reason: "NO_ID", detail: "strength requires ?id=" };
+    return this.#strength(bundleId, levels).answer;
+  }
+  /* `strengthOf`'s answer beside the refs its walk read (R33), for R6's withholding. */
+  #strength(bundleId, levels) {
+    if (!bundleId) return { answer: { ok: false, reason: "NO_ID", detail: "strength requires ?id=" }, refs: /* @__PURE__ */ new Map() };
     const lv = levelsGiven(levels);
-    const { pair, legs } = this.#pairOver(bundleId, null, lv);
-    return {
+    const { pair, legs, refs } = this.#pairOver(bundleId, null, lv);
+    return { answer: {
       ok: true,
       bundleId,
       depth_bound: DEPTH_BOUND,
@@ -69065,7 +69615,7 @@ var Strength = class _Strength {
       testimony: pair.testimony,
       hunches_left_out: hunchCount(legs),
       ...lv ? { levels: lv } : {}
-    };
+    }, refs };
   }
   /** R6 (REC-34, N303): `op=inquirystrength`, the pair gated. An inquiry the viewer may not see is withheld whole,
    *  byte for byte as one that does not exist. Inside a visible answer, every member the viewer may not see is withheld
@@ -69089,9 +69639,9 @@ var Strength = class _Strength {
         object_type: ty ?? null,
         detail: `${id} is a ${ty ?? "record"}, not an inquiry. The derived pair is a property of a question and what it rests on; a document has no basis to derive one from.`
       };
-    const s = this.strengthOf(id);
+    const { answer: s, refs } = this.#strength(id, null);
     if (!s.ok) return s;
-    const keep2 = this.#redactor(viewer);
+    const keep2 = this.#redactor(viewer, refs);
     const legs = this.#legsOf(id);
     const hidden = legs.some((l) => l.target_id && keep2(l.target_id) === null);
     const axes = Object.fromEntries(STRENGTH_AXES.map((a) => [a, redactAxis(s[a], keep2, hidden)]));
@@ -69162,7 +69712,7 @@ var Strength = class _Strength {
      about the record, and is published beside the arithmetic's own explanation rather than overwriting it. With `levels`
      (R29), an anonymous observation nothing independent in the version bears out is in `ungraded`, named so. */
   #versionLegsAsMembers(rows2, subjectEntity, levels = null) {
-    const targets = rows2.map((r) => r.target_id).filter((t) => typeof t === "string" && t);
+    const targets = rows2.map((r) => r.target_id).filter((t) => typeof t === "string" && t && !isImportedRef3(t));
     const reg = this.inquiry.earned(subjectEntity || null, targets);
     const earnedConn = reg && reg.earned && reg.earned.connection || {};
     const earnedCap = reg && reg.earned && reg.earned.capture || {};
@@ -69179,7 +69729,8 @@ var Strength = class _Strength {
         role: r.role,
         ground: r.ground,
         grade_axis: axis,
-        grade_source: source
+        grade_source: source,
+        ...r.target_edition != null ? { target_edition: r.target_edition } : {}
       };
       const inert = (why, bucket) => {
         placed.push([bucket, {
@@ -69193,7 +69744,7 @@ var Strength = class _Strength {
         }]);
         return { ...base, grade: null, why };
       };
-      const carries = (grade, why) => {
+      const carries2 = (grade, why) => {
         placed.push(["graded", {
           target_id: r.target_id,
           ord: r.ord,
@@ -69207,12 +69758,14 @@ var Strength = class _Strength {
         return { ...base, grade };
       };
       if (isHunch(source)) return inert(HUNCH_WHY, "hunches");
+      if (isImportedRef3(r.target_id))
+        return inert("this leg rests on another group's finding and carries no grade of its own: it counts at what that accepted edition publishes on each axis", "ungraded");
       if (!axis) return inert("this leg states no axis, so there is no population it belongs to", "ungraded");
       if (axis === "connection") {
         const e = earnedConn[r.target_id];
-        if (e && e.grade) return carries(e.grade, e.why);
+        if (e && e.grade) return carries2(e.grade, e.why);
         if (source === "testimony" && authored)
-          return carries(
+          return carries2(
             authored,
             `${r.target_id} carries a member's own signed account of how it connects to this subject, with its own author and date; the record earns nothing further for it and the machine neither mints that letter nor erases it.`
           );
@@ -69222,7 +69775,7 @@ var Strength = class _Strength {
         if (normalizeType(r.target_type) === "inquiry")
           return inert(`the target is an inquiry, not a document, so a testimony grade on this leg has no referent`, "ungraded");
         const t = earnedTest[r.target_id];
-        if (t && t.grade) return carries(t.grade, t.why);
+        if (t && t.grade) return carries2(t.grade, t.why);
         return inert(`${r.target_id} is not a member's own firsthand observation, so the record holds no testimony grade for it and this leg is present and not yet load-bearing`, "ungraded");
       }
       const c = earnedCap[r.target_id];
@@ -69232,12 +69785,16 @@ var Strength = class _Strength {
       if (!authored)
         return inert(`${r.target_id} is captured, but no capture grade was authored for this leg and the record cannot mint one \u2014 what it holds is a ceiling, not a measurement`, "ungraded");
       const capped = GRADE_RANK2[authored] > GRADE_RANK2[c.grade] ? c.grade : authored;
-      return carries(capped, capped === authored ? c.why : `${c.why} This leg was authored at ${authored} and is reported at ${capped}, because the record cannot support the stronger claim.`);
+      return carries2(capped, capped === authored ? c.why : `${c.why} This leg was authored at ${authored} and is reported at ${capped}, because the record cannot support the stronger claim.`);
     });
     for (const [i, a] of this.#anonymousOf(legs, levels, null)) {
       if (a.corroborated || placed[i][0] !== "graded") continue;
       const { grade, authored: _authored, ...entry } = placed[i][1];
-      placed[i] = ["ungraded", { ...entry, role: rows2[i].role, why: UNCORROBORATED_WHY }];
+      placed[i] = ["ungraded", {
+        ...entry,
+        role: rows2[i].role,
+        why: a.kind === "evidence" ? UNCORROBORATED_EVIDENCE_WHY : UNCORROBORATED_WHY
+      }];
     }
     const named = { ungraded: [], hunches: [], graded: [] };
     for (const [bucket, entry] of placed) named[bucket].push(entry);
@@ -69357,9 +69914,12 @@ var Strength = class _Strength {
     };
     return refusePairComposed(out) ?? out;
   }
-  /* The legs of one stored version, in order, at most `BASIS_VERSION_LEGS_MAX` (R8). */
+  /* The legs of one stored version, in order, at most `BASIS_VERSION_LEGS_MAX` (R8), with the edition a leg on another
+     group's finding names (R33) where `basis-versions` stores one. */
   #versionLegs(inq, name2, withGrades) {
-    const cols = withGrades ? "ord, target_id, target_type, role, grade, grade_axis, grade_source, ground" : "ord, target_id, target_type, role, ground";
+    if (this.#versionEdition === void 0)
+      this.#versionEdition = this.#rows(`PRAGMA table_info(inquiry_basis_version_legs)`).some((c) => c.name === "target_edition");
+    const cols = (withGrades ? "ord, target_id, target_type, role, grade, grade_axis, grade_source, ground" : "ord, target_id, target_type, role, ground") + (withGrades && this.#versionEdition ? ", target_edition" : "");
     return this.#rows(
       `SELECT ${cols} FROM inquiry_basis_version_legs WHERE bundle_id=? AND name=? ORDER BY ord LIMIT ?`,
       inq,
@@ -69489,9 +70049,9 @@ var Strength = class _Strength {
           raw = void 0;
         }
       }
-      const unreadable = (why) => refusal21("PARTITION_INDEPENDENCE_UNREADABLE", why, { inquiry: inq });
+      const unreadable2 = (why) => refusal21("PARTITION_INDEPENDENCE_UNREADABLE", why, { inquiry: inq });
       if (!Array.isArray(raw) || !raw.length)
-        return unreadable(`pass partition=<JSON>: a non-empty list of groups, each a list of reason positions (e.g. [[0,1],[2]]) or {"label":\u2026,"legs":[\u2026]} \u2014 or version=<name> to read a written reading's groups instead.`);
+        return unreadable2(`pass partition=<JSON>: a non-empty list of groups, each a list of reason positions (e.g. [[0,1],[2]]) or {"label":\u2026,"legs":[\u2026]} \u2014 or version=<name> to read a written reading's groups instead.`);
       if (raw.length > BASIS_VERSION_LEGS_MAX)
         return refusal21(
           "PARTITION_INDEPENDENCE_TOO_MANY_LEGS",
@@ -69505,15 +70065,15 @@ var Strength = class _Strength {
         const ords = named ? g.legs : g;
         const label = named ? String(g.label ?? "").trim() : `part ${k + 1}`;
         if (!label)
-          return unreadable(`group ${k + 1} carries no name; leave the name out altogether to have it filed by its position.`);
+          return unreadable2(`group ${k + 1} carries no name; leave the name out altogether to have it filed by its position.`);
         if (label.length > 200)
-          return unreadable(`group ${k + 1}'s name is longer than 200 characters.`);
+          return unreadable2(`group ${k + 1}'s name is longer than 200 characters.`);
         if (!Array.isArray(ords) || !ords.length)
-          return unreadable(`group ${k + 1} lists no reasons; every group holds at least one.`);
+          return unreadable2(`group ${k + 1} lists no reasons; every group holds at least one.`);
         if (!ords.every((o) => Number.isInteger(o) && o >= 0))
-          return unreadable(`group ${k + 1} names something other than a reason's position.`);
+          return unreadable2(`group ${k + 1} names something other than a reason's position.`);
         if (parts.some((p) => p.label === label))
-          return unreadable(`two groups are both named '${label.slice(0, 60)}'.`);
+          return unreadable2(`two groups are both named '${label.slice(0, 60)}'.`);
         parts.push({ label, ords: [...ords] });
       }
       const legRows = this.#legsOf(inq, { limit: BASIS_VERSION_LEGS_MAX + 1 }).slice(0, BASIS_VERSION_LEGS_MAX + 1).map((l) => ({ ord: l.ord, target_id: l.target_id, target_type: l.target_type, role: l.role }));
@@ -69567,7 +70127,7 @@ var Strength = class _Strength {
     };
   }
   /* ============================================================ a candidate's legs (R26, R27; N60) */
-  /* A candidate leg `{target, role, grade, grade_axis, grade_source, ground}` as the walk's leg, its position its ord
+  /* A candidate leg `{target, role, grade, grade_axis, grade_source, ground, target_edition?}` as the walk's leg, its position its ord
      and its type read from its id's prefix. */
   static #candidateLeg(l, k) {
     const target = str3(l?.target) ?? "";
@@ -69579,7 +70139,8 @@ var Strength = class _Strength {
       grade: l?.grade ?? null,
       grade_axis: l?.grade_axis ?? null,
       grade_source: l?.grade_source ?? null,
-      ground: str3(l?.ground)
+      ground: str3(l?.ground),
+      ...l?.target_edition != null ? { target_edition: l.target_edition } : {}
     };
   }
   /** R26: R1–R5's three axes over `legs` given in place of the inquiry's live basis, walking inquiry legs to the depth
@@ -69603,8 +70164,9 @@ var Strength = class _Strength {
     return this.#independenceOf(walkLegs, Number.isInteger(parts) ? parts : distinctParts(walkLegs));
   }
   /* ============================================================ anonymous testimony (R29, R30; DEC-102) */
-  /** R30: for each testimony leg of the inquiry's live basis, or of the named version, on an observation `levels` states
-   *  at `group` or `project`, whether something independent in the same basis bears it out (`corroborated`, with the
+  /** R30, R34: for each testimony leg of the inquiry's live basis, or of the named version, on an observation `levels`
+   *  states at `group` or `project`, and each leg on a document whose capture it states at those levels (answered with
+   *  `kind: "evidence"` and that capture), whether something independent in the same basis bears it out (`corroborated`, with the
    *  legs that do) or not (`uncorroborated`), by the one judgement R29's pair makes. Refusals as R6's, and for a named
    *  version R7's `VERSION_STRENGTH_NO_SUCH_VERSION`. A leg the viewer may not see is withheld whole and bears nothing
    *  out; `out_of_view: true` says only that something was withheld. For `ratification` (its R35), the caller that
@@ -69664,6 +70226,7 @@ var Strength = class _Strength {
         ord: leg.ord,
         target_id: leg.target_id,
         level: a.level,
+        ...a.kind === "evidence" ? { kind: "evidence", capture: a.capture } : {},
         state: a.corroborated ? "corroborated" : "uncorroborated",
         corroborated_by: a.by
       });
@@ -69676,6 +70239,115 @@ var Strength = class _Strength {
       legs: answered,
       wrote: false,
       ...withheld ? { out_of_view: true } : {}
+    };
+  }
+  /* ============================================================ a finding's grading facts (R35; DEC-112 (3)) */
+  /** R35 (K1305): for one finding, the legs exactly as `recomputePair` (R32) reads them, so a case file that states this
+   *  answer recomputes the pair `strengthOf` answers (or, for a named version, `versionStrength`'s pair over it). Per
+   *  leg `{target, kind, role, grade, grade_axis, grade_source, ground, target_edition?, answer?, another_groups?,
+   *  origins, origins_complete, captures, author_key?}`: a document's grade as the walk counts it (a capture letter
+   *  under its ceiling, R1; a version leg's grade from the record, R9); a question's or another group's finding's
+   *  `answer`, its per-axis pair as the walk read it (R2, R33); the origins R12 reads; the captures the register holds
+   *  (R34); and, for an observation, an opaque `author_key` equal for the same member within this answer and never an
+   *  account (R29). Refusals as R30's. A leg the viewer may not see is withheld whole, `out_of_view: true` saying only
+   *  that something was, and the pair over what remains is then not the record's. Writes nothing; names no author. */
+  gradingFacts({ inquiry = null, version = null, levels = null, viewer = null } = {}) {
+    const id = str3(inquiry);
+    if (!id) return { ok: false, reason: "NO_ID", detail: "this answers for one question: pass inquiry=<record id>." };
+    if (!this.membership.inSight(id, viewer)) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
+    const ty = normalizeType(this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, id)?.object_type);
+    if (ty !== "inquiry")
+      return {
+        ok: false,
+        reason: "NOT_AN_INQUIRY",
+        target: id,
+        object_type: ty ?? null,
+        detail: `${id} is a ${ty ?? "record"}, not an inquiry. Only a question has grading facts.`
+      };
+    const name2 = str3(version);
+    const lv = levelsGiven(levels);
+    let legs, captureBounds, ownTop;
+    if (name2) {
+      if (!this.#one(`SELECT name FROM inquiry_basis_versions WHERE bundle_id=? AND name=?`, id, name2)) {
+        const r = VERSION_STRENGTH_CHECKS.VERSION_STRENGTH_NO_SUCH_VERSION;
+        return {
+          ok: false,
+          reason: "VERSION_STRENGTH_NO_SUCH_VERSION",
+          code: "VERSION_STRENGTH_NO_SUCH_VERSION",
+          check: r.check,
+          translation: r.translation,
+          inquiry: id,
+          version: name2.slice(0, 200),
+          detail: `no reading named '${name2.slice(0, 60)}' belongs to ${id}.`
+        };
+      }
+      legs = this.#versionLegsAsMembers(this.#versionLegs(id, name2, true), this.inquiry.subjectEntityOf(id)).legs;
+      captureBounds = this.#captureBoundsFor(id, DEPTH_BOUND, legs);
+      ownTop = false;
+    } else {
+      legs = this.#legsOf(id);
+      captureBounds = this.#captureBoundsFor(id, DEPTH_BOUND, legs);
+      ownTop = true;
+    }
+    const ctx = { captureBounds, levels: lv, refs: /* @__PURE__ */ new Map(), ownTop };
+    const observed = this.#observationReader();
+    const keys = /* @__PURE__ */ new Map();
+    const keyOf2 = (author) => {
+      if (author == null) return null;
+      if (!keys.has(author)) keys.set(author, `a${keys.size + 1}`);
+      return keys.get(author);
+    };
+    const facts = legs.map((leg) => {
+      const kind0 = _Strength.#kindOf(leg);
+      const isObs = kind0 === "document" && typeof leg.target_id === "string" && leg.target_id && observed(leg.target_id).observation;
+      const kind = isObs ? "observation" : kind0;
+      const o = this.#originsOf(leg.target_id ? [leg.target_id] : []);
+      const out = {
+        target: leg.target_id,
+        kind,
+        role: leg.role ?? "",
+        grade: leg.grade ?? null,
+        grade_axis: leg.grade_axis ?? null,
+        grade_source: leg.grade_source ?? null,
+        ground: leg.ground ?? null,
+        origins: [...o.set],
+        origins_complete: o.complete,
+        captures: kind0 === "document" && leg.target_id ? this.#rows(`SELECT capture_sha FROM register WHERE bundle_id=? ORDER BY capture_sha`, leg.target_id).map((r) => r.capture_sha) : []
+      };
+      if (kind === "observation") {
+        const k = keyOf2(observed(leg.target_id).author);
+        if (k) out.author_key = k;
+      }
+      if (kind0 === "document" && leg.grade_axis === "capture" && leg.grade != null && captureBounds) {
+        const capped = this.inquiry.legCapped(leg.grade, captureBounds.get(leg.target_id), leg.target_id);
+        if (capped) out.grade = capped.grade;
+      }
+      if (kind0 === "inquiry" && !isHunch(leg.grade_source)) {
+        const sub = this.#walk(leg.target_id, 1, DEPTH_BOUND, null, ctx);
+        out.answer = Object.fromEntries(STRENGTH_AXES.map((a) => [a, sub[a]]));
+      }
+      if (kind0 === "imported" && !isHunch(leg.grade_source)) {
+        const got = this.#importedAnswer(id, leg, ctx, ownTop);
+        const ed = ctx.refs.get(leg.target_id);
+        if (ed != null) out.target_edition = ed;
+        if (!got.stopped) {
+          out.answer = got.pair;
+          out.another_groups = got.another_groups;
+        }
+      }
+      return out;
+    });
+    const keep2 = this.#redactor(viewer, ctx.refs);
+    const seen = facts.filter((f17) => !(f17.target && keep2(f17.target) === null));
+    return {
+      ok: true,
+      inquiry: id,
+      ...name2 ? { version: name2 } : {},
+      method: GRADING_METHOD_VERSION,
+      ...lv ? { levels: lv } : {},
+      legs: seen,
+      wrote: false,
+      ...seen.length < facts.length ? { out_of_view: true } : {}
     };
   }
   /* ============================================================ the bar (R14–R16; DEC-17, DEC-72) */
@@ -69972,9 +70644,9 @@ function strengthOps(s, url, body) {
     })
   };
 }
-var instances16 = /* @__PURE__ */ new WeakMap();
+var instances17 = /* @__PURE__ */ new WeakMap();
 function strengthOf(host, deps) {
-  let s = instances16.get(host);
+  let s = instances17.get(host);
   if (!s) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -69985,8 +70657,8 @@ function strengthOf(host, deps) {
       const f17 = promotion.fact("producingGroup");
       return f17 && f17.ok ? f17.value || null : null;
     });
-    s = new Strength({ ...d, host, storage, record, membership, producingGroup });
-    instances16.set(host, s);
+    s = new Strength({ ...d, host, storage, record, membership, promotion, producingGroup });
+    instances17.set(host, s);
     s.migrate();
     record.declarePurge("strength", [...STRENGTH_PURGED_TABLES], { exempt: STRENGTH_EXEMPT_TABLES });
     promotion.registerStep("strength", { project: (c) => s.project(c) });
@@ -70433,9 +71105,9 @@ function appendSessionLog3(text5, entry) {
   const at28 = text5.indexOf("## Session Log");
   if (at28 < 0) return text5.replace(/\s*$/, "\n") + "\n## Session Log\n\n" + entry + "\n";
   const nxt = text5.indexOf("\n## ", at28 + 1);
-  const cut4 = nxt === -1 ? text5.length : nxt + 1;
-  const head = text5.slice(0, cut4);
-  return head + (head.endsWith("\n") ? "" : "\n") + entry + "\n" + text5.slice(cut4);
+  const cut5 = nxt === -1 ? text5.length : nxt + 1;
+  const head = text5.slice(0, cut5);
+  return head + (head.endsWith("\n") ? "" : "\n") + entry + "\n" + text5.slice(cut5);
 }
 function setOrAddScalar3(text5, key, value) {
   const lines = text5.split("\n");
@@ -70564,10 +71236,10 @@ var STORED_ROW = `candidate, key, a_kind, a_ref, a_version, a_bundle_id, b_kind,
   proposed_by, label, reason, state, origin, at, a_side, b_side`;
 var RUN_GATE_DECLARED = "RUN_GATE_DECLARED";
 var RUN_GATE_MALFORMED = "RUN_GATE_MALFORMED";
-var instances17 = /* @__PURE__ */ new WeakMap();
+var instances18 = /* @__PURE__ */ new WeakMap();
 function contradictionOf(ctx, opts = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let c = instances17.get(storage);
+  let c = instances18.get(storage);
   if (!c) {
     const record = opts.record ?? recordOf(ctx);
     const lazy = (given, make) => given ?? make;
@@ -70581,7 +71253,7 @@ function contradictionOf(ctx, opts = {}) {
       basisVersions: lazy(opts.basisVersions, () => basisVersionsOf(ctx, { record })),
       inquiry: lazy(opts.inquiry, () => inquiryServices(ctx))
     });
-    instances17.set(storage, c);
+    instances18.set(storage, c);
     const promotion = typeof opts.promotion === "object" && opts.promotion ? opts.promotion : promotionOf(ctx, { record });
     if (promotion && typeof promotion.registerStep === "function")
       promotion.registerStep("contradiction", { check: (step) => c.promotionCheck(step) });
@@ -73828,7 +74500,7 @@ var claimSentence = (claimedBy, at28) => `named by ${claimedBy} on ${String(at28
 var HEX645 = /^[0-9a-f]{64}$/;
 var DATE = /^\d{4}-\d{2}-\d{2}$/;
 var str4 = (v) => typeof v === "string" ? v.trim() : "";
-var isObj10 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+var isObj11 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var rank4 = (a) => AUDIENCES.indexOf(a);
 var safeJson12 = (s) => {
   try {
@@ -73840,7 +74512,7 @@ var safeJson12 = (s) => {
 var hex4 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 function evidenceOf(v) {
   if (typeof v === "string" && v.trim() && v.length <= EVIDENCE_MAX) return { statement: v.trim() };
-  if (isObj10(v) && typeof v.cite === "string" && v.cite.trim() && v.cite.length <= EVIDENCE_MAX) {
+  if (isObj11(v) && typeof v.cite === "string" && v.cite.trim() && v.cite.length <= EVIDENCE_MAX) {
     const note = typeof v.note === "string" && v.note.trim() ? v.note.trim().slice(0, EVIDENCE_MAX) : null;
     return note ? { cite: v.cite.trim(), note } : { cite: v.cite.trim() };
   }
@@ -73985,7 +74657,7 @@ var Sources = class _Sources {
   /** R1: the source as it stood when the capture was received (the capture's own `source`, verbatim), and beside it the
    *  source's current history, each value read as R5 allows. */
   sourceOf(args = {}) {
-    const { captureSha, viewer } = isObj10(args) ? args : {};
+    const { captureSha, viewer } = isObj11(args) ? args : {};
     const reader = this.#memberOf(viewer);
     if (!reader || typeof captureSha !== "string" || !HEX645.test(captureSha)) return noSuchSource(null, { captureSha: HEX645.test(String(captureSha)) ? captureSha : null });
     const knocks = this.#pulledKnocks(captureSha);
@@ -74080,7 +74752,7 @@ var Sources = class _Sources {
   }
   /** R5: the read log, to the members listed on an entry (their entries' reads) and to administrators (every read). */
   readLog(args = {}) {
-    const { source, viewer } = isObj10(args) ? args : {};
+    const { source, viewer } = isObj11(args) ? args : {};
     const reader = this.#memberOf(viewer);
     if (!reader || !this.#source(source)) return noSuchSource(source);
     const all = this.#rows(`SELECT source_id AS source, entry_id AS entry, reader, at FROM source_reads WHERE source_id = ? ORDER BY seq`, source);
@@ -74124,7 +74796,7 @@ var Sources = class _Sources {
   }
   /** R9: the ladder for a viewer, with who knows and how; a withheld value stays withheld (R5). */
   rungOf(args = {}) {
-    const { source, viewer } = isObj10(args) ? args : {};
+    const { source, viewer } = isObj11(args) ? args : {};
     const reader = this.#memberOf(viewer);
     if (!reader || !this.#source(source)) return noSuchSource(source);
     const r = this.#rung(source);
@@ -74165,7 +74837,7 @@ var Sources = class _Sources {
   /* ---- recording a disclosure (R2–R5) ---- */
   /** R2–R5 (`op=sourcedisclose`). */
   recordDisclosure(args = {}) {
-    const a = isObj10(args) ? args : {};
+    const a = isObj11(args) ? args : {};
     const by = this.#memberOf(a.by);
     const src = this.#source(a.source);
     if (!by || !src) return noSuchSource(a.source);
@@ -74176,7 +74848,7 @@ var Sources = class _Sources {
   /** R2–R5, in order: the fields (BAD_DISCLOSURE, naming the field), the evidence (NO_EVIDENCE), the sight list
    *  (NO_SIGHT_LIST). Answers the entry to write, or the refusal. */
   #disclosureRefusal(a, src) {
-    const rv = isObj10(a.revealed) ? a.revealed : null;
+    const rv = isObj11(a.revealed) ? a.revealed : null;
     if (!rv || !KINDS.includes(rv.kind))
       return badDisclosure("revealed.kind", `what was revealed is one of ${KINDS.join(", ")}`);
     const kind = rv.kind;
@@ -74312,7 +74984,7 @@ var Sources = class _Sources {
   /** R6 (`op=sourcelink`). A presented `knockerSecret` whose digest is either source's knocker digest makes the claim's
    *  basis `same_secret`; the secret is never stored or answered. The claim merges nothing. */
   async linkClaim(args = {}) {
-    const a = isObj10(args) ? args : {};
+    const a = isObj11(args) ? args : {};
     const by = this.#memberOf(a.by);
     const src = this.#source(a.source), to = this.#source(a.to);
     if (!by || !src) return noSuchSource(a.source);
@@ -74411,7 +75083,7 @@ var Sources = class _Sources {
   }
   /** R7 (`op=sourceconsent`): a member records the source's consent, with its evidence. */
   recordConsent(args = {}) {
-    const a = isObj10(args) ? args : {};
+    const a = isObj11(args) ? args : {};
     const by = this.#memberOf(a.by);
     const src = this.#source(a.source);
     if (!by || !src) return noSuchSource(a.source);
@@ -74433,7 +75105,7 @@ var Sources = class _Sources {
   }
   /** R7 (`op=sourceconsentwithdraw`): binds only later publications. */
   withdrawConsent(args = {}) {
-    const a = isObj10(args) ? args : {};
+    const a = isObj11(args) ? args : {};
     const by = this.#memberOf(a.by);
     const src = this.#source(a.source);
     if (!by || !src) return noSuchSource(a.source);
@@ -74455,7 +75127,7 @@ var Sources = class _Sources {
    *  it answers only what consent or the public record already opens to that audience, so it logs nothing (R5, K539).
    *  It writes nothing and never throws. */
   publishableAt(args = {}) {
-    const { source, audience, at: at28 = null } = isObj10(args) ? args : {};
+    const { source, audience, at: at28 = null } = isObj11(args) ? args : {};
     try {
       if (!this.#source(source)) return noSuchSource(source);
       if (!AUDIENCES.includes(audience)) return badDisclosure("audience", `an audience is one of ${AUDIENCES.join(", ")}`);
@@ -74497,7 +75169,7 @@ var Sources = class _Sources {
    *  a rate refusal answers as the knock's does. Every other failure answers `SECRET_NOT_RECOGNISED`, byte for byte
    *  the same. `sourceAddress` and `now` are the control plane's, as for a knock. */
   async consentBySecret(args = {}) {
-    const a = isObj10(args) ? args : {};
+    const a = isObj11(args) ? args : {};
     const cap = this.#capture;
     let rate;
     try {
@@ -74545,7 +75217,7 @@ function sourcesOf(ctx, deps = {}) {
 }
 function sourcesOps(s, url, body) {
   const q7 = (k) => url.searchParams.get(k);
-  const b = isObj10(body) ? body : {};
+  const b = isObj11(body) ? body : {};
   return {
     sourceof: () => s.sourceOf({ captureSha: q7("capture") ?? b.captureSha, viewer: q7("viewer") }),
     sourcedisclose: () => s.recordDisclosure({ ...b, by: q7("by") }),
@@ -76246,8 +76918,8 @@ var Reevaluation = class {
   correctedDependents({ after = null, limit = null, viewer = null } = {}) {
     const cap = clamp2(limit, CORRECTED_LIMIT_DEFAULT, CORRECTED_LIMIT_MAX);
     const aft = String(after ?? "");
-    const cut4 = aft.lastIndexOf("#");
-    const [aDep, aCand] = cut4 >= 0 ? [aft.slice(0, cut4), aft.slice(cut4 + 1)] : [aft, ""];
+    const cut5 = aft.lastIndexOf("#");
+    const [aDep, aCand] = cut5 >= 0 ? [aft.slice(0, cut5), aft.slice(cut5 + 1)] : [aft, ""];
     const visible = this.#redactor(viewer);
     const entries = [];
     let read2 = true, from = aDep, first = true;
@@ -76308,8 +76980,8 @@ var Reevaluation = class {
   docketDependents({ after = null, limit = null, viewer = null } = {}) {
     const cap = clamp2(limit, DOCKET_LIMIT_DEFAULT, DOCKET_LIMIT_MAX);
     const aft = String(after ?? "");
-    const cut4 = aft.indexOf("#");
-    const [aDep, aEntry] = cut4 >= 0 ? [aft.slice(0, cut4), aft.slice(cut4 + 1)] : [aft, ""];
+    const cut5 = aft.indexOf("#");
+    const [aDep, aEntry] = cut5 >= 0 ? [aft.slice(0, cut5), aft.slice(cut5 + 1)] : [aft, ""];
     const visible = this.#redactor(viewer);
     const dk = this.#docket();
     const d = dk.get();
@@ -77303,9 +77975,9 @@ Why: ${line}
     return fm ? checkReevalPending(fm) : [];
   }
 };
-var instances18 = /* @__PURE__ */ new WeakMap();
+var instances19 = /* @__PURE__ */ new WeakMap();
 function reevaluationOf(host, deps) {
-  let r = instances18.get(host);
+  let r = instances19.get(host);
   if (!r) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -77313,7 +77985,7 @@ function reevaluationOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     r = new Reevaluation({ ...d, host, storage, record, membership, promotion });
-    instances18.set(host, r);
+    instances19.set(host, r);
     r.migrate();
     record.declarePurge("reevaluation", REEVALUATION_TABLES);
     r.inquiry.onRaised("reevaluation", ({ target, cause, since, viewer }) => r.raise({ target, source: cause, since, viewer }));
@@ -78975,15 +79647,15 @@ function corpusExportOps(ce, q7) {
     exportlog: () => ce.exportLog({ limit: q7("limit") })
   };
 }
-var instances19 = /* @__PURE__ */ new WeakMap();
+var instances20 = /* @__PURE__ */ new WeakMap();
 function corpusExportOf(host, deps) {
-  let c = instances19.get(host);
+  let c = instances20.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     c = new CorpusExport({ ...d, storage, record });
-    instances19.set(host, c);
+    instances20.set(host, c);
     c.migrate();
     c.purgeDeclaration = record.declarePurge("corpus-export", [], { exempt: [...CORPUS_EXPORT_EXEMPT] });
   }
@@ -81470,9 +82142,9 @@ var Publication = class {
     return reg;
   }
 };
-var instances20 = /* @__PURE__ */ new WeakMap();
+var instances21 = /* @__PURE__ */ new WeakMap();
 function publicationOf(host, deps) {
-  let p = instances20.get(host);
+  let p = instances21.get(host);
   if (!p) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -81480,7 +82152,7 @@ function publicationOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     p = new Publication({ ...d, host, storage, record, membership, promotion });
-    instances20.set(host, p);
+    instances21.set(host, p);
     p.migrate();
     p.purgeDeclaration = record.declarePurge("publication", PUBLICATION_TABLES, { exempt: PUBLICATION_EXEMPT });
     void p.corpusExport;
@@ -81937,16 +82609,16 @@ case_project: ${pid}
     };
   }
 };
-var instances21 = /* @__PURE__ */ new WeakMap();
+var instances22 = /* @__PURE__ */ new WeakMap();
 function projectStageOf(host, deps) {
-  let s = instances21.get(host);
+  let s = instances22.get(host);
   if (!s) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     s = new ProjectStage({ ...d, host, storage, record, membership });
-    instances21.set(host, s);
+    instances22.set(host, s);
   }
   return s;
 }
@@ -83148,8 +83820,8 @@ var Docket = class {
   docketWithdrawals({ after = null, limit = null } = {}) {
     const cap = Math.min(Math.max(int(limit) ?? 200, 1), 1e3);
     const a = typeof after === "string" ? after : "";
-    const cut4 = a.lastIndexOf("#");
-    const [ac, as] = cut4 >= 0 ? [a.slice(0, cut4), int(a.slice(cut4 + 1)) ?? 0] : [a, 0];
+    const cut5 = a.lastIndexOf("#");
+    const [ac, as] = cut5 >= 0 ? [a.slice(0, cut5), int(a.slice(cut5 + 1)) ?? 0] : [a, 0];
     const rows2 = this.#rows(`SELECT * FROM docket_entries WHERE kind='withdrawal' AND (case_id > ? OR (case_id = ? AND seq > ?))
                               ORDER BY case_id, seq LIMIT ?`, ac, ac, as, cap + 1);
     const more = rows2.length > cap;
@@ -83276,16 +83948,16 @@ for (const m of ["docketFile", "docketPressure", "docketPrepare", "docketDecline
     return withRow2(await fn.apply(this, a));
   };
 }
-var instances22 = /* @__PURE__ */ new WeakMap();
+var instances23 = /* @__PURE__ */ new WeakMap();
 function docketOf(host, deps) {
-  let k = instances22.get(host);
+  let k = instances23.get(host);
   if (!k) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     k = new Docket({ ...d, host, storage, record, membership, env: d.env ?? host.env ?? null });
-    instances22.set(host, k);
+    instances23.set(host, k);
     k.migrate();
     k.purgeDeclaration = record.declarePurge("docket", DOCKET_TABLES.map((name2) => ({ name: name2, keys: [] })));
     k.countsRegistration = record.registerCounts("docket", ["docketRecordEntries", "docketPublicEntries", "docketMarks"], () => {
@@ -84479,16 +85151,16 @@ var PublicRead = class {
     return legacy.map((r) => ({ case_id: r.case_id, edition: Number(r.edition) }));
   }
 };
-var instances23 = /* @__PURE__ */ new WeakMap();
+var instances24 = /* @__PURE__ */ new WeakMap();
 function publicReadOf(host, deps) {
-  let r = instances23.get(host);
+  let r = instances24.get(host);
   if (!r) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const publication = d.publication || publicationOf(host);
     const docket = d.docket || docketOf(host);
     r = new PublicRead({ storage, publication, docket });
-    instances23.set(host, r);
+    instances24.set(host, r);
   }
   return r;
 }
@@ -85953,16 +86625,16 @@ for (const m of ["prepareNotice", "postNotice"]) {
     return withRow3(await fn.apply(this, a));
   };
 }
-var instances24 = /* @__PURE__ */ new WeakMap();
+var instances25 = /* @__PURE__ */ new WeakMap();
 function networkNoticesOf(host, deps) {
-  let n = instances24.get(host);
+  let n = instances25.get(host);
   if (!n) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     n = new NetworkNotices({ ...d, host, storage, record, membership, env: d.env ?? host.env ?? null });
-    instances24.set(host, n);
+    instances25.set(host, n);
     n.migrate();
     record.declarePurge("network-notices", NETWORK_NOTICES_TABLES.map((name2) => ({ name: name2, keys: [] })));
     const publicRead = d.publicRead || publicReadOf(host);
@@ -88472,13 +89144,13 @@ var Ratification = class _Ratification {
     }, a);
   }
 };
-var instances25 = /* @__PURE__ */ new WeakMap();
+var instances26 = /* @__PURE__ */ new WeakMap();
 var MINT_SEED = Object.freeze([
   Object.freeze(["CASE", "cases", "case_id"]),
   Object.freeze(["CASE", "case_documents", "case_id"])
 ]);
 function ratificationOf(host, deps) {
-  let r = instances25.get(host);
+  let r = instances26.get(host);
   if (!r) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -88486,7 +89158,7 @@ function ratificationOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     r = new Ratification({ ...d, host, storage, record, membership, promotion });
-    instances25.set(host, r);
+    instances26.set(host, r);
     promotion.registerCaseCatalogue("ratification", checkCaseDocument);
     (d.capture || captureOf(host)).registerReader("batch-examination", "ratification", (id) => r.examine(id));
     promotion.registerStep("ratification", { check: (c) => r.check(c) });
@@ -89055,7 +89727,7 @@ var safeJson15 = (s) => {
     return null;
   }
 };
-var isObj11 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+var isObj12 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var str11 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
 var sha256Hex10 = (text5) => createSha256().update(enc.encode(String(text5))).hex();
 function statementRows(bundleId, fm) {
@@ -89128,7 +89800,7 @@ var Bias = class _Bias {
   /* The same gate from a predicate already compiled (`viewerPredicate`'s answer, R43's `gate`). A predicate that is
      not `{sql, args}` admits nothing (fail closed). */
   static #gateOver(col, gate) {
-    if (!isObj11(gate) || typeof gate.sql !== "string" || !Array.isArray(gate.args)) return { sql: `${GATE_MARK} 0=1`, args: [] };
+    if (!isObj12(gate) || typeof gate.sql !== "string" || !Array.isArray(gate.args)) return { sql: `${GATE_MARK} 0=1`, args: [] };
     if (gate.scope === "member") return { sql: `${GATE_MARK} 1=1`, args: [] };
     if (gate.scope === "DENY") return { sql: `${GATE_MARK} 0=1`, args: [] };
     return {
@@ -89829,7 +90501,7 @@ var Bias = class _Bias {
     for (const item of batch) read2.push({ ...item, wp: await item.source.read(item.key) });
     for (const { source, key, wp } of _Bias.#ranked(read2, rank6, Number(nowMs))) {
       out.read++;
-      const lens = wp && isObj11(wp.lens) ? wp.lens : null;
+      const lens = wp && isObj12(wp.lens) ? wp.lens : null;
       const now = wp && lens ? this.#lensNow(wp.context) : { undetermined: true };
       const then = lens && typeof lens.statements_sha === "string" ? lens.statements_sha : null;
       const moved = !lens || now.undetermined || lens.basis !== "at_open" && (then === null || now.sha === null) ? null : then !== now.sha;
@@ -90081,7 +90753,7 @@ var Bias = class _Bias {
    *  run-productions' `counts`) leaves out a row naming such a bundle: a statement by its bundle, an adoption by its
    *  bundle or its project. Synchronous; writes nothing; never throws (a count that cannot be read answers null). */
   counts(hid = null) {
-    const h = isObj11(hid) && typeof hid.sql === "string" && Array.isArray(hid.args) ? hid : null;
+    const h = isObj12(hid) && typeof hid.sql === "string" && Array.isArray(hid.args) ? hid : null;
     const c = (t, ...keys) => {
       try {
         const conds = h ? keys.map((k) => `COALESCE(${k}, '') NOT IN ${h.sql}`) : [];
@@ -93356,23 +94028,23 @@ case_project: ${project}
         stated: `UNDETERMINED: ${project} holds more drafts than one bounded read of them lists (${cap}), so which draft this sentence was written in \u2014 and therefore who wrote it \u2014 cannot be established here. ${notFromAuthor}`
       };
     const here = (d) => (d.case_id ?? null) === (caseId ?? null) || (d.case_id ?? null) === null && Number(edition) === 1;
-    const unreadable = [];
+    const unreadable2 = [];
     const matches = rows2.filter((d) => {
       if (!here(d)) return false;
       let p = null;
       try {
         p = JSON.parse(d.params);
       } catch {
-        unreadable.push(d.draft_id);
+        unreadable2.push(d.draft_id);
         return false;
       }
       return fmSafe4(p && p.statement) === want;
     });
-    if (unreadable.length)
+    if (unreadable2.length)
       return {
         by: null,
         from: "draft_unreadable",
-        stated: `UNDETERMINED: ${unreadable.length} draft(s) of ${project} at this case identity (${unreadable.join(", ")}) hold arguments this plane cannot read, so whether this sentence was written in one of them, and by whom, cannot be established. ${notFromAuthor}`
+        stated: `UNDETERMINED: ${unreadable2.length} draft(s) of ${project} at this case identity (${unreadable2.join(", ")}) hold arguments this plane cannot read, so whether this sentence was written in one of them, and by whom, cannot be established. ${notFromAuthor}`
       };
     if (!matches.length)
       return {
@@ -93400,16 +94072,16 @@ case_project: ${project}
     };
   }
 };
-var instances26 = /* @__PURE__ */ new WeakMap();
+var instances27 = /* @__PURE__ */ new WeakMap();
 function caseAuthoringOf(host, deps) {
-  let c = instances26.get(host);
+  let c = instances27.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     c = new CaseAuthoring({ ...d, host, storage, record, membership });
-    instances26.set(host, c);
+    instances27.set(host, c);
     c.migrate();
     record.declarePurge("case-authoring", CASE_AUTHORING_TABLES);
   }
@@ -94647,7 +95319,7 @@ var FilingTemplates = class _FilingTemplates {
     if (!textUpTo(why, PROPOSAL_WHY_MAX))
       return refuse5("TEMPLATE_WHY_REFUSED", `say why in 1 to ${PROPOSAL_WHY_MAX} characters`, { max: PROPOSAL_WHY_MAX });
     const at28 = this.#when();
-    const cut4 = (v) => str13(v) ? String(v).trim().slice(0, 200) : null;
+    const cut5 = (v) => str13(v) ? String(v).trim().slice(0, 200) : null;
     return this.record.transact(() => {
       const id = this.#mint("TPP", at28.slice(0, 4));
       if (!id) return mintExhausted("TPP");
@@ -94664,9 +95336,9 @@ var FilingTemplates = class _FilingTemplates {
         sha,
         why.trim(),
         who2,
-        cut4(run2),
-        cut4(model),
-        cut4(skill_pack),
+        cut5(run2),
+        cut5(model),
+        cut5(skill_pack),
         at28
       );
       return {
@@ -95364,16 +96036,16 @@ for (const m of [
     return withRow4(fn.apply(this, a));
   };
 }
-var instances27 = /* @__PURE__ */ new WeakMap();
+var instances28 = /* @__PURE__ */ new WeakMap();
 function filingTemplatesOf(host, deps) {
-  let f17 = instances27.get(host);
+  let f17 = instances28.get(host);
   if (!f17) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     f17 = new FilingTemplates({ ...d, storage, record, membership, env: d.env ?? host.env ?? null });
-    instances27.set(host, f17);
+    instances28.set(host, f17);
     f17.migrate();
     record.declarePurge("filing-templates", [...FILING_TEMPLATES_TABLES]);
     record.registerMintSeed("filing-templates", FILING_TEMPLATES_MINT_SEED.map((x) => [...x]));
@@ -95549,10 +96221,10 @@ var YEAR_RE = /^\d{4}$/;
 var PATH_MAX = 1e3;
 var enc2 = (s) => encodeURIComponent(s);
 var name = (s) => typeof s === "string" && s.trim() !== "" && s === s.trim();
-var isObj12 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+var isObj13 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 function officeToken(o) {
   if (name(o)) return `role=${enc2(o)}`;
-  if (isObj12(o) && Object.keys(o).length === 1 && name(o.venue)) return `venue=${enc2(o.venue)}`;
+  if (isObj13(o) && Object.keys(o).length === 1 && name(o.venue)) return `venue=${enc2(o.venue)}`;
   return null;
 }
 function officesToken(offices) {
@@ -95564,7 +96236,7 @@ function officesToken(offices) {
 }
 function factPath(parts) {
   try {
-    if (!isObj12(parts) || typeof parts.profile !== "string" || !PROFILE_RE.test(parts.profile)) return null;
+    if (!isObj13(parts) || typeof parts.profile !== "string" || !PROFILE_RE.test(parts.profile)) return null;
     const { profile, fact } = parts;
     let p = null;
     if (fact === "time_zone") p = `${profile}/time_zone`;
@@ -95576,7 +96248,7 @@ function factPath(parts) {
       p = `${profile}/holidays/${y}${o ? `/${o}` : ""}`;
     } else if (fact === "hours") {
       const of = parts.office;
-      if (!isObj12(of)) return null;
+      if (!isObj13(of)) return null;
       const keys = Object.keys(of).sort().join(",");
       if (keys === "body,role" && name(of.role) && name(of.body)) p = `${profile}/hours/role=${enc2(of.role)},body=${enc2(of.body)}`;
       else if (keys === "venue" && name(of.venue)) p = `${profile}/hours/venue=${enc2(of.venue)}`;
@@ -95643,7 +96315,7 @@ var LOCAL_FACT_HORIZONS = Object.freeze({
 var HOW_MAX = 500;
 var SOURCE_MAX = 500;
 var str14 = (v) => typeof v === "string" ? v.trim() : "";
-var isObj13 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+var isObj14 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var clone2 = (v) => v === void 0 ? void 0 : JSON.parse(JSON.stringify(v));
 var safeJson16 = (s) => {
   try {
@@ -95655,40 +96327,40 @@ var safeJson16 = (s) => {
 var addDays = (date, n) => new Date(Date.parse(`${date}T00:00:00Z`) + n * 864e5).toISOString().slice(0, 10);
 var givers = (x, own3) => own3 ? [own3] : [x.profile, ...(x.bases || []).map((b) => b.profile)].filter(Boolean);
 function factIn(p, parts, own3 = null) {
-  if (!isObj13(p)) return null;
+  if (!isObj14(p)) return null;
   const mine = (x) => givers(x, own3).includes(parts.profile);
   if (parts.fact === "time_zone") {
     const z = p.time_zone;
-    return isObj13(z) && mine(z) ? { value: z.value, status: z.status, basis: z.basis } : null;
+    return isObj14(z) && mine(z) ? { value: z.value, status: z.status, basis: z.basis } : null;
   }
   if (parts.fact === "holidays") {
     const key = officesToken(parts.offices);
-    const h = (Array.isArray(p.holidays) ? p.holidays : []).find((e) => isObj13(e) && Number(e.year) === parts.year && officesToken(e.offices) === key && mine(e));
+    const h = (Array.isArray(p.holidays) ? p.holidays : []).find((e) => isObj14(e) && Number(e.year) === parts.year && officesToken(e.offices) === key && mine(e));
     if (!h) return null;
     const days = (h.days || []).map((d) => ({ date: d.date, name: d.name })).sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
     return { value: days, status: h.status, basis: h.basis };
   }
   if (parts.fact === "hours") {
-    const hoursOf = (h) => isObj13(h) && mine(h) ? { value: { weekly: clone2(h.weekly) }, status: h.status, basis: h.basis } : null;
+    const hoursOf = (h) => isObj14(h) && mine(h) ? { value: { weekly: clone2(h.weekly) }, status: h.status, basis: h.basis } : null;
     if (parts.office.venue !== void 0) {
-      const k = (Array.isArray(p.action_kinds) ? p.action_kinds : []).find((e) => isObj13(e) && e.kind === parts.office.venue);
-      return k && isObj13(k.venue) ? hoursOf(k.venue.hours) : null;
+      const k = (Array.isArray(p.action_kinds) ? p.action_kinds : []).find((e) => isObj14(e) && e.kind === parts.office.venue);
+      return k && isObj14(k.venue) ? hoursOf(k.venue.hours) : null;
     }
-    const c = (Array.isArray(p.counterparties) ? p.counterparties : []).find((e) => isObj13(e) && e.role === parts.office.role && e.body === parts.office.body && isObj13(e.hours));
+    const c = (Array.isArray(p.counterparties) ? p.counterparties : []).find((e) => isObj14(e) && e.role === parts.office.role && e.body === parts.office.body && isObj14(e.hours));
     return c ? hoursOf(c.hours) : null;
   }
   return null;
 }
 function factsOf(p) {
   const out = [];
-  if (!isObj13(p)) return out;
-  if (isObj13(p.time_zone)) out.push({ profile: p.id, fact: "time_zone" });
+  if (!isObj14(p)) return out;
+  if (isObj14(p.time_zone)) out.push({ profile: p.id, fact: "time_zone" });
   for (const h of Array.isArray(p.holidays) ? p.holidays : [])
-    if (isObj13(h)) out.push({ profile: p.id, fact: "holidays", year: Number(h.year), ...h.offices ? { offices: h.offices } : {} });
+    if (isObj14(h)) out.push({ profile: p.id, fact: "holidays", year: Number(h.year), ...h.offices ? { offices: h.offices } : {} });
   for (const c of Array.isArray(p.counterparties) ? p.counterparties : [])
-    if (isObj13(c) && isObj13(c.hours)) out.push({ profile: p.id, fact: "hours", office: { role: c.role, body: c.body } });
+    if (isObj14(c) && isObj14(c.hours)) out.push({ profile: p.id, fact: "hours", office: { role: c.role, body: c.body } });
   for (const k of Array.isArray(p.action_kinds) ? p.action_kinds : [])
-    if (isObj13(k) && isObj13(k.venue) && isObj13(k.venue.hours)) out.push({ profile: p.id, fact: "hours", office: { venue: k.kind } });
+    if (isObj14(k) && isObj14(k.venue) && isObj14(k.venue.hours)) out.push({ profile: p.id, fact: "hours", office: { venue: k.kind } });
   return out;
 }
 function withValue(p, parts, value) {
@@ -95702,7 +96374,7 @@ function withValue(p, parts, value) {
     const h = q7.holidays.find((e) => Number(e.year) === parts.year && officesToken(e.offices) === key);
     h.days = clone2(value);
   } else {
-    if (!isObj13(value) || Object.keys(value).join() !== "weekly") return null;
+    if (!isObj14(value) || Object.keys(value).join() !== "weekly") return null;
     const target = parts.office.venue !== void 0 ? q7.action_kinds.find((k) => k.kind === parts.office.venue).venue : q7.counterparties.find((c) => c.role === parts.office.role && c.body === parts.office.body);
     target.hours.weekly = clone2(value.weekly);
   }
@@ -95746,7 +96418,7 @@ var LocalFacts = class _LocalFacts {
     if (Array.isArray(ids)) for (const id of ids) {
       if (typeof id !== "string" || held.has(id)) continue;
       const p = this.getProfile(id);
-      if (isObj13(p)) held.set(id, p);
+      if (isObj14(p)) held.set(id, p);
     }
     let view = null;
     if (held.size) {
@@ -95854,7 +96526,7 @@ var LocalFacts = class _LocalFacts {
   /** R1, R5: records a member's `confirm`, `correct` or `dispute` of the fact at `path`, appended and never replaced.
    *  Refusals in order: MACHINE_CANNOT_CONFIRM, NO_SUCH_FACT, FACT_ACT_REFUSED, FACT_HOW_REFUSED, FACT_VALUE_REFUSED. */
   factConfirm(a = {}) {
-    const b = isObj13(a) ? a : {};
+    const b = isObj14(a) ? a : {};
     const machine3 = machineRefusal(b.by);
     if (machine3) return machine3;
     const path = typeof b.path === "string" ? b.path : null;
@@ -95910,7 +96582,7 @@ var LocalFacts = class _LocalFacts {
    * ===================================================================== */
   /** R2, R3: one fact's status (with `path`), or every fact of the active profiles, corrections and disputes first. */
   factStatus(a = {}) {
-    const b = isObj13(a) ? a : {};
+    const b = isObj14(a) ? a : {};
     const active = this.#active();
     const blind = _LocalFacts.#blind(b.viewer);
     const today = this.#today();
@@ -95947,7 +96619,7 @@ var LocalFacts = class _LocalFacts {
    *  path that does not name a fact of an active profile is listed in `unknown`; one that names a fact the active
    *  profiles do not hold, in `absent`. Writes nothing. */
   factsDue(a = {}) {
-    const b = isObj13(a) ? a : {};
+    const b = isObj14(a) ? a : {};
     const active = this.#active();
     const blind = _LocalFacts.#blind(b.viewer);
     const today = this.#today();
@@ -95995,7 +96667,7 @@ function noSuchFact(path) {
 }
 function localFactsOps(s, url, body) {
   const qp = (k) => url.searchParams.get(k);
-  const b = isObj13(body) ? body : {};
+  const b = isObj14(body) ? body : {};
   const paths = () => Array.isArray(b.paths) ? b.paths : url.searchParams.getAll("path").length ? url.searchParams.getAll("path") : void 0;
   return {
     factconfirm: () => s.factConfirm({ ...b, viewer: qp("viewer") }),
@@ -96003,16 +96675,16 @@ function localFactsOps(s, url, body) {
     factsdue: () => s.factsDue({ paths: paths(), viewer: qp("viewer") })
   };
 }
-var instances28 = /* @__PURE__ */ new WeakMap();
+var instances29 = /* @__PURE__ */ new WeakMap();
 function localFactsOf(host, deps) {
-  let s = instances28.get(host);
+  let s = instances29.get(host);
   if (!s) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     s = new LocalFacts({ ...d, storage, record, membership });
-    instances28.set(host, s);
+    instances29.set(host, s);
     record.declarePurge("local-facts", LOCAL_FACTS_TABLES);
   }
   return s;
@@ -96243,8 +96915,8 @@ function appendSessionLog4(text5, entry) {
   const at28 = text5.indexOf("## Session Log");
   if (at28 < 0) return text5 + "\n## Session Log\n\n" + entry;
   const nxt = text5.indexOf("\n## ", at28 + 1);
-  const cut4 = nxt === -1 ? text5.length : nxt + 1;
-  return text5.slice(0, cut4) + entry + "\n" + text5.slice(cut4);
+  const cut5 = nxt === -1 ? text5.length : nxt + 1;
+  return text5.slice(0, cut5) + entry + "\n" + text5.slice(cut5);
 }
 
 // src/citation/index.mjs
@@ -96949,12 +97621,12 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
     };
   }
 };
-var instances29 = /* @__PURE__ */ new WeakMap();
+var instances30 = /* @__PURE__ */ new WeakMap();
 function inquiryServices2(k) {
   return { earned: (subject, targets, contentIds) => k.earned(subject, targets, contentIds), checkLegExtentGrammar, BASIS_ROLES };
 }
 function citationOf(host, deps) {
-  let c = instances29.get(host);
+  let c = instances30.get(host);
   if (!c) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -96964,7 +97636,7 @@ function citationOf(host, deps) {
     const retrieval = d.retrieval || retrievalOf(host, { record, membership, promotion });
     const inquiry = d.inquiry || inquiryServices2(inquiryOf(host, { record, membership, promotion, content }));
     c = new Citation({ ...d, record, membership, promotion, content, retrieval, inquiry });
-    instances29.set(host, c);
+    instances30.set(host, c);
   }
   return c;
 }
@@ -97185,12 +97857,12 @@ var AffordanceFacts = class {
     };
   }
 };
-var instances30 = /* @__PURE__ */ new WeakMap();
+var instances31 = /* @__PURE__ */ new WeakMap();
 function affordancesOf(host, deps) {
-  let a = instances30.get(host);
+  let a = instances31.get(host);
   if (!a) {
     a = new AffordanceFacts(host, deps);
-    instances30.set(host, a);
+    instances31.set(host, a);
   }
   return a;
 }
@@ -105351,22 +106023,22 @@ var AiRuns = class _AiRuns {
    *  second read, so making this async would buy a promise nobody awaits for. */
   #standardForRun(row2) {
     const raw = row2.standard_pair;
-    let parsed = null, unreadable = false;
+    let parsed = null, unreadable2 = false;
     if (raw != null && String(raw).trim() !== "") {
       try {
         parsed = JSON.parse(String(raw));
       } catch {
-        unreadable = true;
+        unreadable2 = true;
       }
       if (parsed !== null && (typeof parsed !== "object" || Array.isArray(parsed))) {
         parsed = null;
-        unreadable = true;
+        unreadable2 = true;
       }
     }
     const axis = (v) => typeof v === "string" && v.trim() !== "" ? v.trim() : null;
     const capture = parsed ? axis(parsed.capture) : null;
     const connection = parsed ? axis(parsed.connection) : null;
-    const basis = unreadable ? "unreadable" : parsed !== null ? capture === null && connection === null ? "names-no-axis" : "recorded" : row2.context_type === "project" ? "none-recorded" : "context-has-no-project";
+    const basis = unreadable2 ? "unreadable" : parsed !== null ? capture === null && connection === null ? "names-no-axis" : "recorded" : row2.context_type === "project" ? "none-recorded" : "context-has-no-project";
     return {
       in_force: basis === "recorded",
       basis,
@@ -105516,12 +106188,12 @@ var AiRuns = class _AiRuns {
    *  what the three answers mean. */
   async #biasForRun(row2, viewer) {
     const recordedRaw = row2.bias_manifest;
-    let recorded = null, unreadable = false;
+    let recorded = null, unreadable2 = false;
     if (recordedRaw != null && String(recordedRaw).trim() !== "") {
       try {
         recorded = JSON.parse(String(recordedRaw));
       } catch {
-        unreadable = true;
+        unreadable2 = true;
       }
     }
     const nowManifest = await this.#bias().biasManifest({
@@ -105561,7 +106233,7 @@ var AiRuns = class _AiRuns {
     } : { recorded: false, stated: "not recorded" };
     const handOf = (handedSha) => !atOpen ? null : handedSha === openSha ? "in_force" : "stale";
     const basis = atOpen ? "at_open" : atOpenUnreadable ? null : "handed";
-    if (recorded === null && !unreadable) {
+    if (recorded === null && !unreadable2) {
       const staleEmpty = !!atOpen && atOpen.in_force === true;
       return {
         in_force: false,
@@ -105574,7 +106246,7 @@ var AiRuns = class _AiRuns {
         hand: handOf(null)
       };
     }
-    if (unreadable)
+    if (unreadable2)
       return {
         in_force: false,
         stated: "a manifest was recorded for this run and cannot be read back",
@@ -107242,9 +107914,9 @@ Changes: reading '${name2}' proposed as ${kind}, in state suggested, carrying ru
     return out;
   }
 };
-var instances31 = /* @__PURE__ */ new WeakMap();
+var instances32 = /* @__PURE__ */ new WeakMap();
 function runProductionsOf(host, deps) {
-  let p = instances31.get(host);
+  let p = instances32.get(host);
   if (!p) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -107263,7 +107935,7 @@ function runProductionsOf(host, deps) {
       basisVersions: d.basisVersions || basisVersionsOf(host, { record, membership, content }),
       now: d.now || null
     });
-    instances31.set(host, p);
+    instances32.set(host, p);
     record.declarePurge(RUN_PRODUCTIONS_MODULE, RUN_PRODUCTIONS_TABLES);
     p.basisVersions.onCandidates(RUN_PRODUCTIONS_MODULE, (a) => p.candidates(a));
   }
@@ -109686,17 +110358,17 @@ function compileTerm(term) {
   const regex = term.length >= 2 && term.startsWith("/") && term.endsWith("/");
   if (!regex) {
     const needle = Array.from(term, fold2).join("");
-    return { ok: true, kind: "literal", test: (text5) => Array.from(cut3(text5), fold2).join("").includes(needle) };
+    return { ok: true, kind: "literal", test: (text5) => Array.from(cut4(text5), fold2).join("").includes(needle) };
   }
   try {
     const m = compile5(parse4(term.slice(1, -1)));
-    return { ok: true, kind: "regex", test: (text5) => run(m, Array.from(cut3(text5))) };
+    return { ok: true, kind: "regex", test: (text5) => run(m, Array.from(cut4(text5))) };
   } catch (e) {
     if (e instanceof Refused) return { ok: false, construct: e.construct, detail: e.message };
     return { ok: false, construct: "an expression that does not compile", detail: String(e && e.message || e).slice(0, 160) };
   }
 }
-function cut3(text5) {
+function cut4(text5) {
   const s = typeof text5 === "string" ? text5 : "";
   if (s.length <= MATCH_TEXT_MAX) return s;
   return Array.from(s).slice(0, MATCH_TEXT_MAX).join("");
@@ -111541,10 +112213,10 @@ function deemingActor(attribution) {
 function lookAuthority(q7) {
   return q7 && q7.run ? { authorityKind: "run", authority: String(q7.run), actorClass: "machine" } : { authorityKind: "sweep", authority: q7 && q7.request ? String(q7.request) : null, actorClass: "plane" };
 }
-var instances32 = /* @__PURE__ */ new WeakMap();
+var instances33 = /* @__PURE__ */ new WeakMap();
 function captureRequestsOf(host, deps = {}) {
   const storage = host && host.storage ? host.storage : host;
-  let c = instances32.get(storage);
+  let c = instances33.get(storage);
   if (!c) {
     const env = deps.env || {};
     const record = deps.record || recordOf(host);
@@ -111565,7 +112237,7 @@ function captureRequestsOf(host, deps = {}) {
       inquiry: deps.inquiry || { memberUserAgent: (id) => inquiryOf(host).memberUserAgent(id) }
     };
     c = new CaptureRequests(storage, d);
-    instances32.set(storage, c);
+    instances33.set(storage, c);
     record.declarePurge(CAPTURE_REQUESTS_MODULE, [{ name: "capture_requests", keys: ["target"], clears: ["lead_inquiry"] }]);
     if (typeof record.registerCounts === "function") {
       const counted = record.registerCounts(CAPTURE_REQUESTS_MODULE, [...CAPTURE_REQUESTS_COUNT_KEYS], (hid) => c.counts(hid));
@@ -111920,7 +112592,7 @@ var GOALS_READ_MAX = 1e3;
 var AGEING_READ_MAX = 1e3;
 var AUTHORS_PAGE = 64;
 var str15 = (v) => typeof v === "string" ? v.trim() : "";
-var isObj14 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+var isObj15 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var rand9 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 var machine = (who2) => !str15(who2) || isMachineIdentity(str15(who2));
 var second = (iso5) => String(iso5).replace(/\.\d+Z$/, "Z");
@@ -112136,7 +112808,7 @@ var Intent = class {
   }
   /* R2: the condition's shape, then what it names, in R2's order; null when it is readable and names what exists. */
   #conditionRefusal(c) {
-    const shaped = isObj14(c) && TOKEN.test(str15(c.progression)) && TOKEN.test(str15(c.entity)) && (c.relation == null || typeof c.relation === "string" && this.entities.relationKinds().includes(c.relation)) && (c.filter == null || isObj14(c.filter) && Object.entries(c.filter).every(([k, v]) => /^[a-z][a-z0-9_]{0,39}$/.test(k) && TOKEN.test(String(v)))) && isObj14(c.required) && (c.required.stages == null || Array.isArray(c.required.stages) && c.required.stages.every((s) => TOKEN.test(String(s)))) && isObj14(c.satisfied);
+    const shaped = isObj15(c) && TOKEN.test(str15(c.progression)) && TOKEN.test(str15(c.entity)) && (c.relation == null || typeof c.relation === "string" && this.entities.relationKinds().includes(c.relation)) && (c.filter == null || isObj15(c.filter) && Object.entries(c.filter).every(([k, v]) => /^[a-z][a-z0-9_]{0,39}$/.test(k) && TOKEN.test(String(v)))) && isObj15(c.required) && (c.required.stages == null || Array.isArray(c.required.stages) && c.required.stages.every((s) => TOKEN.test(String(s)))) && isObj15(c.satisfied);
     if (!shaped)
       return refusal14("CONDITION_UNREADABLE", "a condition is {progression, entity, relation?, filter?, required: {grade?, stages?}, satisfied: {share}}, each name a bare key or id. Nothing was written.");
     const def = this.progressions.readProgression({ progressionKey: str15(c.progression) });
@@ -112193,7 +112865,7 @@ var Intent = class {
     if (!why) return refuseNoReason("setting, changing or removing an objective's measure records why, in your own words. Nothing was written.");
     const c = condition == null ? null : {
       ...condition,
-      required: isObj14(condition.required) ? {
+      required: isObj15(condition.required) ? {
         grade: condition.required.grade ?? null,
         stages: condition.required.stages ?? []
       } : condition.required,
@@ -112597,7 +113269,7 @@ Reason: ${bodyText(why)}`
     if (p.refused) return p.refused;
     const denied = this.membership.projectAuthority(project, author, "joined", "linkObjective");
     if (denied) return denied;
-    if ((Array.isArray(g.fm.objectives) ? g.fm.objectives : []).some((o) => isObj14(o) && o.project === project))
+    if ((Array.isArray(g.fm.objectives) ? g.fm.objectives : []).some((o) => isObj15(o) && o.project === project))
       return { ok: true, goal, project, already: true };
     const at28 = this.#when();
     let text5 = appendItem(g.text, "objectives", { project, by: TOKEN.test(str15(author)) ? str15(author) : q(author), at: q(at28) });
@@ -112639,7 +113311,7 @@ Reason: ${bodyText(why)}`
     return { ok: true, goal: this.#goalView(g, viewer) };
   }
   #goalView(g, viewer) {
-    const objectives = (Array.isArray(g.fm.objectives) ? g.fm.objectives : []).filter(isObj14).filter((o) => viewer == null || this.membership.inSight(o.project, viewer)).map((o) => ({ project: o.project, by: o.by ?? null, at: o.at ?? null }));
+    const objectives = (Array.isArray(g.fm.objectives) ? g.fm.objectives : []).filter(isObj15).filter((o) => viewer == null || this.membership.inSight(o.project, viewer)).map((o) => ({ project: o.project, by: o.by ?? null, at: o.at ?? null }));
     const asp = typeof g.fm.aspiration === "string" && g.fm.aspiration ? g.fm.aspiration : null;
     const aspiration = asp && (viewer == null || this.#pursuit(asp, ASPIRATION, viewer)) ? asp : null;
     return {
@@ -112867,9 +113539,9 @@ ${bodyText(note)}`
    *  at most CONTACTS_MAX pairs are listed, in the order of their first and then second aspiration's id; `truncated`
    *  says either was cut (N209, K338). */
   contacts({ viewer = null } = {}) {
-    const { held, truncated: cut4 } = this.#heldAspirations(viewer);
+    const { held, truncated: cut5 } = this.#heldAspirations(viewer);
     const pairs = [];
-    let truncated3 = cut4;
+    let truncated3 = cut5;
     outer: for (let i = 0; i < held.length; i++)
       for (let j = i + 1; j < held.length; j++) {
         const a = held[i], b = held[j];
@@ -113021,7 +113693,7 @@ ${bodyText(note)}`
         got = [];
       }
       for (const p of Array.isArray(got) ? got : [])
-        if (isObj14(p) && typeof p.key === "string" && p.key)
+        if (isObj15(p) && typeof p.key === "string" && p.key)
           out.push({
             key: `${kind}::${p.key}`,
             source: kind,
@@ -113414,7 +114086,7 @@ ${bodyText(note)}`
       reason: why
     };
     const opened = await this.#lazy(this.aiRunsRef).open({
-      ...isObj14(run2) ? run2 : {},
+      ...isObj15(run2) ? run2 : {},
       contextType: "project",
       contextId: project,
       label: why,
@@ -113422,7 +114094,7 @@ ${bodyText(note)}`
       actor: this.#memberOf(author),
       viewer: viewer ?? author
     });
-    return { ...isObj14(opened) ? opened : {}, project, reason: why, instructions };
+    return { ...isObj15(opened) ? opened : {}, project, reason: why, instructions };
   }
 };
 function refuseNoSuchGoal(detail, extra) {
@@ -113546,7 +114218,7 @@ function aspirationMachineRefusal(author, member = true) {
   };
 }
 function captureRequestsNamed(basis) {
-  if (!isObj14(basis)) return [];
+  if (!isObj15(basis)) return [];
   const out = [];
   for (const k of ["capture_request", "capture_requests", "requests"]) {
     const v = basis[k];
@@ -113562,7 +114234,7 @@ var safeJson19 = (s) => {
   }
 };
 function questionOf(p) {
-  const b = isObj14(p.basis) ? p.basis : {};
+  const b = isObj15(p.basis) ? p.basis : {};
   if (p.source === "progressions")
     return `Why is the '${b.stage_key}' stage of '${b.progression_key}' missing where the flow requires it?`;
   if (p.kind === GAP_KIND)
@@ -113592,9 +114264,9 @@ function intentOps(i, url, body) {
     workobjective: () => i.workObjective({ ...b, viewer: qp("viewer") })
   };
 }
-var instances33 = /* @__PURE__ */ new WeakMap();
+var instances34 = /* @__PURE__ */ new WeakMap();
 function intentOf(host, deps) {
-  let i = instances33.get(host);
+  let i = instances34.get(host);
   if (!i) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -113614,7 +114286,7 @@ function intentOf(host, deps) {
       retrieval: d.retrieval || (() => retrievalOf(host)),
       captureRequests: d.captureRequests || (() => captureRequestsOf(host))
     });
-    instances33.set(host, i);
+    instances34.set(host, i);
     record.declarePurge("intent", INTENT_TABLES);
     promotion.registerStep("intent", { check: (c) => i.check(c) });
     record.registerAuditCheck("intent", (image) => i.auditCheck(image));
@@ -113707,7 +114379,7 @@ var DECLARE_KEYS = Object.freeze([
 var PROPOSE_KEYS = Object.freeze(["cite", "kind", "issuer", "text", "why", "act", "proposer", "viewer"]);
 var ADOPT_KEYS = Object.freeze([...DECLARE_KEYS, "proposal"]);
 var str16 = (v) => typeof v === "string" ? v.trim() : "";
-var isObj15 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+var isObj16 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var rand10 = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 var safeJson20 = (s) => {
   try {
@@ -113864,7 +114536,7 @@ var Standards = class {
    * ===================================================================== */
   /** R1–R4, R6: record a standard. */
   standardDeclare(args = {}) {
-    const a = isObj15(args) ? args : {};
+    const a = isObj16(args) ? args : {};
     const byMachine = machineRefusal2(a.author);
     if (byMachine) return byMachine;
     const unknown = refuseFieldUnknown(a, DECLARE_KEYS);
@@ -114089,7 +114761,7 @@ var Standards = class {
    * ===================================================================== */
   /** R9: a proposal, stored apart from standards and labelled with who proposed it and whether it is machine work. */
   standardPropose(args = {}) {
-    const a = isObj15(args) ? args : {};
+    const a = isObj16(args) ? args : {};
     const unknown = refuseFieldUnknown(a, PROPOSE_KEYS);
     if (unknown) return unknown;
     const who2 = str16(a.proposer);
@@ -114163,7 +114835,7 @@ var Standards = class {
    *  reason is never taken from the proposal: the adopting member's own is R1's, and the proposal's `why` is the
    *  proposer's (DEC-88), answered beside it as theirs. */
   standardAdopt(args = {}) {
-    const a = isObj15(args) ? args : {};
+    const a = isObj16(args) ? args : {};
     const byMachine = machineRefusal2(a.author);
     if (byMachine) return byMachine;
     const unknown = refuseFieldUnknown(a, ADOPT_KEYS);
@@ -114278,7 +114950,7 @@ function textIds(v) {
 }
 function periodOf(p) {
   if (p === void 0 || p === null) return { from: null, to: null };
-  if (!isObj15(p) || Object.keys(p).some((k) => k !== "from" && k !== "to")) return null;
+  if (!isObj16(p) || Object.keys(p).some((k) => k !== "from" && k !== "to")) return null;
   const from = p.from ?? null, to = p.to ?? null;
   if (from !== null && !isDate2(from) || to !== null && !isDate2(to)) return null;
   if (from !== null && to !== null && to < from) return null;
@@ -114368,9 +115040,9 @@ function standardsOps(s, url, body) {
     standardadopt: () => s.standardAdopt({ ...b, viewer: qp("viewer") })
   };
 }
-var instances34 = /* @__PURE__ */ new WeakMap();
+var instances35 = /* @__PURE__ */ new WeakMap();
 function standardsOf(host, deps) {
-  let s = instances34.get(host);
+  let s = instances35.get(host);
   if (!s) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -114385,7 +115057,7 @@ function standardsOf(host, deps) {
       promotion,
       content: d.content || (() => contentOf(host, { record, membership }))
     });
-    instances34.set(host, s);
+    instances35.set(host, s);
     record.declarePurge("standards", STANDARDS_TABLES);
     promotion.registerStep("standards", { check: (c) => s.check(c) });
   }
@@ -114570,7 +115242,7 @@ var FACTS_SAY = "These are facts the record holds, as the two sides of the quest
 var OUTCOMES_DIFFER_SAYS = "The outcomes differ from one standard to another. Each is the member's, given per standard, and none is composed into one verdict.";
 var DATE_RE5 = /^\d{4}-\d{2}-\d{2}$/;
 var str17 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
-var isObj16 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+var isObj17 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var text4 = (v) => typeof v === "string" && v.trim() && v.length <= TEXT_MAX ? v.trim() : null;
 var isDate3 = (v) => typeof v === "string" && DATE_RE5.test(v) && !Number.isNaN(Date.parse(`${v}T00:00:00Z`)) && (/* @__PURE__ */ new Date(`${v}T00:00:00Z`)).toISOString().slice(0, 10) === v;
 var q3 = (s) => `"${String(s ?? "").replace(/[\r\n]+/g, " ").replace(/["\\]/g, "'")}"`;
@@ -114589,7 +115261,7 @@ function significanceKeys(v, found = /* @__PURE__ */ new Set(), depth = 0) {
     for (const x of v.slice(0, 500)) significanceKeys(x, found, depth + 1);
     return found;
   }
-  if (isObj16(v))
+  if (isObj17(v))
     for (const [k, x] of Object.entries(v).slice(0, 200)) {
       if (SIGNIFICANCE_KEYS.includes(String(k).toLowerCase())) found.add(k);
       significanceKeys(x, found, depth + 1);
@@ -114602,7 +115274,7 @@ function recommendationKeys(v, found = /* @__PURE__ */ new Set(), depth = 0) {
     for (const x of v.slice(0, 500)) recommendationKeys(x, found, depth + 1);
     return found;
   }
-  if (isObj16(v))
+  if (isObj17(v))
     for (const [k, x] of Object.entries(v).slice(0, 200)) {
       if (RECOMMENDATION_KEYS.includes(String(k).toLowerCase())) found.add(k);
       recommendationKeys(x, found, depth + 1);
@@ -114612,11 +115284,11 @@ function recommendationKeys(v, found = /* @__PURE__ */ new Set(), depth = 0) {
 function namesOutcome(v, depth = 0) {
   if (depth > 12) return false;
   if (Array.isArray(v)) return v.slice(0, 500).some((x) => namesOutcome(x, depth + 1));
-  if (isObj16(v))
+  if (isObj17(v))
     return Object.entries(v).slice(0, 200).some(([k, x]) => ["outcome", "outcomes", "verdict"].includes(String(k).toLowerCase()) || namesOutcome(x, depth + 1));
   return false;
 }
-var axisOf = (a) => isObj16(a) ? { state: a.state ?? null, grade: a.grade ?? null } : null;
+var axisOf = (a) => isObj17(a) ? { state: a.state ?? null, grade: a.grade ?? null } : null;
 var Conformance = class _Conformance {
   #deps;
   #writing = /* @__PURE__ */ new Set();
@@ -114734,7 +115406,7 @@ var Conformance = class _Conformance {
      Answers `{ok, cause}` (cause null when none) or the refusal, in R22's order. */
   #causeRefusal(cause, author) {
     if (cause === void 0 || cause === null) return { ok: true, cause: null };
-    const c = isObj16(cause) ? cause : {};
+    const c = isObj17(cause) ? cause : {};
     const statement = typeof c.statement === "string" ? c.statement.trim() : "";
     if (!statement || statement.length > CAUSE_MAX)
       return refusal16("CAUSE_UNSTATED", `a cause is stated as text of your own, of at most ${CAUSE_MAX} characters; this ${statement ? `is ${statement.length}` : "states none"}. Nothing was written.`, { max: CAUSE_MAX });
@@ -114784,13 +115456,13 @@ var Conformance = class _Conformance {
         link = null;
       }
     }
-    if (!seen || !isObj16(link) || !str17(link.candidate))
+    if (!seen || !isObj17(link) || !str17(link.candidate))
       return refusal16(
         "NO_SUCH_CONTRADICTION_INQUIRY",
         "no question you may see answers to that id as one taken up from a contradiction. One you may not see answers exactly as one that does not exist. Nothing was written.",
         { contradiction: iid }
       );
-    return { ok: true, inquiry: iid, candidate: str17(link.candidate), resolution: isObj16(link.resolution) ? link.resolution : null };
+    return { ok: true, inquiry: iid, candidate: str17(link.candidate), resolution: isObj17(link.resolution) ? link.resolution : null };
   }
   /* ===================================================================== *
    * THE PARTS OF A DETERMINATION (R1–R4, R6, R7)
@@ -114798,7 +115470,7 @@ var Conformance = class _Conformance {
   /* R1, K171 (6): the act. `{id}` names an act an earlier determination of this project minted, and answers it as
      recorded; otherwise every part is required. With `supersedes` and no act id, the act is the predecessor's (R7). */
   #actOf(act, project, supersedes) {
-    const a = isObj16(act) ? act : {};
+    const a = isObj17(act) ? act : {};
     let id = str17(a.id);
     if (!id && str17(supersedes)) {
       const prev = this.#one(
@@ -114827,12 +115499,12 @@ var Conformance = class _Conformance {
     }
     const description = text4(a.description);
     if (!description) return incomplete("description", "the act states no description of what the government did.");
-    const actor = isObj16(a.actor) ? a.actor : {};
+    const actor = isObj17(a.actor) ? a.actor : {};
     const role = text4(actor.role), body = text4(actor.body);
     if (!role || !body)
       return incomplete("actor", "the act names the office that did it by its official role and body, never by a person.");
     let at28 = null, from = null, to = null;
-    if (a.at != null || !isObj16(a.period)) {
+    if (a.at != null || !isObj17(a.period)) {
       if (!isDate3(a.at)) return incomplete("at", "the act states when it was done, as a date (YYYY-MM-DD), or a period.");
       at28 = a.at;
     } else {
@@ -114927,7 +115599,7 @@ var Conformance = class _Conformance {
       return refusal16("NO_FINDINGS", "a determination rests on at least one published finding (R14). Nothing was written.");
     const pins = [], seen = /* @__PURE__ */ new Set();
     for (const item of list2) {
-      const f17 = isObj16(item) ? {
+      const f17 = isObj17(item) ? {
         finding: str17(item.finding ?? item.id),
         version: str17(item.version),
         case: str17(item.case),
@@ -114968,8 +115640,8 @@ var Conformance = class _Conformance {
       return refusal16("NO_STANDARDS", "a determination measures the act against at least one standard the record holds (R14). Nothing was written.");
     const out = [], byId = /* @__PURE__ */ new Map();
     for (const item of list2) {
-      const id = isObj16(item) ? str17(item.standard ?? item.id) : str17(item);
-      const outcome = isObj16(item) ? item.outcome : void 0;
+      const id = isObj17(item) ? str17(item.standard ?? item.id) : str17(item);
+      const outcome = isObj17(item) ? item.outcome : void 0;
       let read2 = null;
       try {
         read2 = id ? this.standards.standardRead({ id, viewer }) : null;
@@ -115007,9 +115679,9 @@ var Conformance = class _Conformance {
     } catch {
       r = null;
     }
-    const ok2 = isObj16(r) && r.ok !== false;
+    const ok2 = isObj17(r) && r.ok !== false;
     const answer = ok2 && ["in_force", "not_in_force", "undetermined"].includes(r.state) ? r.state : "undetermined";
-    return { date, answer, why: ok2 ? r.why ?? null : isObj16(r) ? r.detail ?? r.reason ?? null : "standards did not answer" };
+    return { date, answer, why: ok2 ? r.why ?? null : isObj17(r) ? r.detail ?? r.reason ?? null : "standards did not answer" };
   }
   /* R1: every standard has a row, and every row states what the standard requires, what was done and its reading. */
   #readRows(rows2, standards) {
@@ -115021,7 +115693,7 @@ var Conformance = class _Conformance {
       return refusal16("ROWS_INCOMPLETE", `${detail} Each standard named has a row stating what it requires, what was done and its reading. Nothing was written.`, where);
     };
     for (const [i, r] of list2.entries()) {
-      const row2 = isObj16(r) ? r : {};
+      const row2 = isObj17(r) ? r : {};
       const standard = str17(row2.standard), requires = text4(row2.requires), did = text4(row2.did);
       const reading = READINGS.includes(row2.reading) ? row2.reading : null;
       if (!standard || !named.has(standard))
@@ -115048,7 +115720,7 @@ var Conformance = class _Conformance {
       return refusal16("UNCLEAR_NO_QUESTION", `${detail} Each question is sent back to an inquiry the author may see, or to a new one opened with this determination. Nothing was written.`, which);
     };
     for (const [i, x] of list2.entries()) {
-      const item = isObj16(x) ? x : { question: x };
+      const item = isObj17(x) ? x : { question: x };
       const question = text4(item.question);
       if (!question) return bad(`question ${i} states no question.`, { question: i });
       const inquiry = str17(item.inquiry);
@@ -115102,7 +115774,7 @@ var Conformance = class _Conformance {
       proposal = null,
       cause = null,
       author = null
-    } = isObj16(input) ? input : {};
+    } = isObj17(input) ? input : {};
     const viewer = input && input.viewer != null ? input.viewer : author;
     const byMachine = this.#refuseMachine(author);
     if (byMachine) return byMachine;
@@ -115116,8 +115788,8 @@ var Conformance = class _Conformance {
       standards,
       rows: rows2,
       questions,
-      evidence: isObj16(act) ? act.evidence : null
-    }) || this.#sizeRefusal({ evidence: isObj16(cause) && Array.isArray(cause.evidence) ? cause.evidence : null }, "cause");
+      evidence: isObj17(act) ? act.evidence : null
+    }) || this.#sizeRefusal({ evidence: isObj17(cause) && Array.isArray(cause.evidence) ? cause.evidence : null }, "cause");
     if (large) return large;
     const a = this.#actOf(act, pid, supersedes);
     if (!a.ok) return a;
@@ -115578,7 +116250,7 @@ var Conformance = class _Conformance {
         });
       for (const t of (Array.isArray(read2.text) ? read2.text : []).slice(0, LIMITS.evidence))
         if (typeof t === "string") passages.add(t);
-        else if (isObj16(t) && str17(t.content_id ?? t.id)) passages.add(str17(t.content_id ?? t.id));
+        else if (isObj17(t) && str17(t.content_id ?? t.id)) passages.add(str17(t.content_id ?? t.id));
     }
     for (const cid of [...passages].slice(0, 2 * LIMITS.evidence)) {
       if (!seen.seesContent(cid)) continue;
@@ -115695,12 +116367,12 @@ var Conformance = class _Conformance {
       questions = null,
       proposer = null,
       contradiction = null
-    } = isObj16(input) ? input : {};
+    } = isObj17(input) ? input : {};
     const viewer = input && input.viewer != null ? input.viewer : proposer;
     const pid = str17(project);
     const unseen = this.#projectRefusal(pid, viewer);
     if (unseen) return unseen;
-    const large = this.#sizeRefusal({ standards, rows: rows2, questions, evidence: isObj16(act) ? act.evidence : null });
+    const large = this.#sizeRefusal({ standards, rows: rows2, questions, evidence: isObj17(act) ? act.evidence : null });
     if (large) return large;
     if (namesOutcome(input))
       return refusal16("PROPOSAL_CANNOT_DETERMINE", "a comparison carries rows and questions and never an outcome: only a member's determination records whether the act complied. Nothing was written.");
@@ -115711,27 +116383,27 @@ var Conformance = class _Conformance {
       from = this.#contradictionInquiry(contradiction, viewer);
       if (!from.ok) return from;
     }
-    const a = isObj16(act) ? act : {};
+    const a = isObj17(act) ? act : {};
     const theAct = {
       id: str17(a.id),
       description: text4(a.description),
-      actor: isObj16(a.actor) ? { role: text4(a.actor.role), body: text4(a.actor.body) } : null,
+      actor: isObj17(a.actor) ? { role: text4(a.actor.role), body: text4(a.actor.body) } : null,
       at: isDate3(a.at) ? a.at : null,
-      period: isObj16(a.period) ? {
+      period: isObj17(a.period) ? {
         from: isDate3(a.period.from) ? a.period.from : null,
         to: isDate3(a.period.to) ? a.period.to : null
       } : null,
       evidence: Array.isArray(a.evidence) ? a.evidence.map(str17).filter(Boolean) : []
     };
-    const stds = (Array.isArray(standards) ? standards : []).map((x) => isObj16(x) ? str17(x.standard ?? x.id) : str17(x)).filter(Boolean);
-    const rs = (Array.isArray(rows2) ? rows2 : []).filter(isObj16).map((x) => ({
+    const stds = (Array.isArray(standards) ? standards : []).map((x) => isObj17(x) ? str17(x.standard ?? x.id) : str17(x)).filter(Boolean);
+    const rs = (Array.isArray(rows2) ? rows2 : []).filter(isObj17).map((x) => ({
       standard: str17(x.standard),
       requires: text4(x.requires),
       did: text4(x.did),
       reading: READINGS.includes(x.reading) ? x.reading : null,
       content: Array.isArray(x.content) ? x.content.map(str17).filter(Boolean).slice(0, LIMITS.evidence) : []
     }));
-    const qs = (Array.isArray(questions) ? questions : []).map((x) => isObj16(x) ? x : { question: x }).map((x) => ({ question: text4(x.question), inquiry: str17(x.inquiry) })).filter((x) => x.question);
+    const qs = (Array.isArray(questions) ? questions : []).map((x) => isObj17(x) ? x : { question: x }).map((x) => ({ question: text4(x.question), inquiry: str17(x.inquiry) })).filter((x) => x.question);
     const at28 = this.#when();
     const who2 = str17(proposer);
     let id = null;
@@ -115778,9 +116450,9 @@ var Conformance = class _Conformance {
     const seen = this.#sight(viewer);
     const act = safeJson21(r.act, null);
     const hidden = new Set(safeJson21(r.standards, []).filter((s) => !seen.sees(s)));
-    const rows2 = safeJson21(r.rows, []).filter((x) => !isObj16(x) || !x.standard || !hidden.has(x.standard) && seen.sees(x.standard)).map((x) => isObj16(x) && Array.isArray(x.content) ? { ...x, content: seen.contents(x.content) } : x);
+    const rows2 = safeJson21(r.rows, []).filter((x) => !isObj17(x) || !x.standard || !hidden.has(x.standard) && seen.sees(x.standard)).map((x) => isObj17(x) && Array.isArray(x.content) ? { ...x, content: seen.contents(x.content) } : x);
     const questions = safeJson21(r.questions, []).map((x) => {
-      if (!isObj16(x) || !x.inquiry || seen.sees(x.inquiry)) return x;
+      if (!isObj17(x) || !x.inquiry || seen.sees(x.inquiry)) return x;
       const { inquiry: _i, ...rest } = x;
       return rest;
     });
@@ -115788,7 +116460,7 @@ var Conformance = class _Conformance {
     return seen.mark({
       id: r.proposal_id,
       project: r.project_id,
-      act: isObj16(act) ? { ...act, evidence: seen.contents(act.evidence) } : act,
+      act: isObj17(act) ? { ...act, evidence: seen.contents(act.evidence) } : act,
       standards: safeJson21(r.standards, []).filter((s) => !hidden.has(s)),
       rows: rows2,
       questions,
@@ -115821,7 +116493,7 @@ var Conformance = class _Conformance {
       listed = null;
     }
     const cand = listed && Array.isArray(listed.candidates) ? listed.candidates.find((x) => x && x.candidate === from.candidate) : null;
-    if (!cand || !isObj16(cand.a) || !isObj16(cand.b)) return this.#contradictionInquiry(null, viewer);
+    if (!cand || !isObj17(cand.a) || !isObj17(cand.b)) return this.#contradictionInquiry(null, viewer);
     const fact = (x) => ({
       kind: x.kind ?? null,
       text: this.#sideText(x),
@@ -115868,7 +116540,7 @@ var Conformance = class _Conformance {
    *  newer capture (affected or undetermined) flags every determination whose act it evidences. Recorded once; the
    *  determination itself is not touched. */
   basisChanged(event2) {
-    if (!isObj16(event2) || !str17(event2.subject)) return { flagged: 0 };
+    if (!isObj17(event2) || !str17(event2.subject)) return { flagged: 0 };
     const kind = event2.kind === "passage" ? "passage" : "finding";
     if (kind === "passage" && !["affected", "undetermined"].includes(event2.affects)) return { flagged: 0 };
     const subject = str17(event2.subject);
@@ -116031,9 +116703,9 @@ function determinationDoc({
   ];
   return lines.join("\n");
 }
-var instances35 = /* @__PURE__ */ new WeakMap();
+var instances36 = /* @__PURE__ */ new WeakMap();
 function conformanceOf(host, deps) {
-  let c = instances35.get(host);
+  let c = instances36.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -116041,7 +116713,7 @@ function conformanceOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     c = new Conformance({ ...d, host, storage, record, membership, promotion });
-    instances35.set(host, c);
+    instances36.set(host, c);
     c.migrate();
     record.declarePurge("conformance", CONFORMANCE_TABLES);
     promotion.registerStep("conformance", { check: (x) => c.check(x) });
@@ -116698,8 +117370,8 @@ var Actions = class _Actions {
     const at28 = text5.indexOf("## Session Log");
     if (at28 < 0) return text5 + "\n## Session Log\n\n" + entry;
     const nxt = text5.indexOf("\n## ", at28 + 1);
-    const cut4 = nxt === -1 ? text5.length : nxt + 1;
-    return text5.slice(0, cut4) + entry + "\n" + text5.slice(cut4);
+    const cut5 = nxt === -1 ? text5.length : nxt + 1;
+    return text5.slice(0, cut5) + entry + "\n" + text5.slice(cut5);
   }
   /* A revision of `id` through promotion, carrying every other live file (R14, R16, R18, R24). */
   #revise(id, text5, fm, b, when, who2, marks = {}, state = null) {
@@ -119234,9 +119906,9 @@ function proposalLabelFor(who2, subject) {
   const base = lawProposalLabel(who2);
   return { by: base.by, state: base.state, machine_work: base.machine_work, says: PROPOSAL_SAYS2[subject][base.state] };
 }
-var instances36 = /* @__PURE__ */ new WeakMap();
+var instances37 = /* @__PURE__ */ new WeakMap();
 function actionsOf(host, deps) {
-  let a = instances36.get(host);
+  let a = instances37.get(host);
   if (!a) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -119244,7 +119916,7 @@ function actionsOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     a = new Actions({ ...d, host, storage, record, membership, promotion });
-    instances36.set(host, a);
+    instances37.set(host, a);
     a.migrate();
     void a.conformance;
     record.declarePurge("actions", [...ACTIONS_TABLES]);
@@ -120264,16 +120936,16 @@ for (const m of ["pendingClocks", "clockPropose", "reminderSet", "reminderAnswer
     return withRow6(fn.apply(this, a));
   };
 }
-var instances37 = /* @__PURE__ */ new WeakMap();
+var instances38 = /* @__PURE__ */ new WeakMap();
 function actionClocksOf(host, deps) {
-  let a = instances37.get(host);
+  let a = instances38.get(host);
   if (!a) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     a = new ActionClocks({ ...d, host, storage, record, membership });
-    instances37.set(host, a);
+    instances38.set(host, a);
     a.migrate();
     void a.actions;
     record.declarePurge("action-clocks", ["action_reminders"]);
@@ -120505,7 +121177,7 @@ var PERSON_KEYS = ["name", "person", "individual", "personal_name", "full_name"]
 var CONCLUDED = /* @__PURE__ */ new Set(["concluded", "published"]);
 var INTERNAL2 = `${MACHINE_CLASS_PREFIX}admin`;
 var str18 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
-var isObj17 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+var isObj18 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var q4 = (v) => JSON.stringify(v ?? null);
 var json2 = (v) => v == null ? null : JSON.stringify(v);
 var parse5 = (s) => {
@@ -120553,26 +121225,26 @@ function basisUnreadable(why, extra = {}) {
   return refuse8("BASIS_UNREADABLE", `${why}.${NOTHING}`, extra);
 }
 function checkAffected(a) {
-  const o = isObj17(a) ? a : {};
+  const o = isObj18(a) ? a : {};
   const kind = str18(o.kind) ? o.kind.trim().toLowerCase() : null;
-  const personKey = [o, isObj17(o.role) ? o.role : {}].flatMap((x) => PERSON_KEYS.filter((k) => x[k] != null && x[k] !== ""));
-  const halfRole = o.role != null && (!isObj17(o.role) || !str18(o.role.role) || !str18(o.role.body));
-  const unknown = !isObj17(a) || !kind || !AFFECTED_KINDS.includes(kind) || !str18(o.description);
-  const individual = isObj17(a) && (kind && PERSON_KINDS.has(kind) || personKey.length || halfRole && !unknown);
+  const personKey = [o, isObj18(o.role) ? o.role : {}].flatMap((x) => PERSON_KEYS.filter((k) => x[k] != null && x[k] !== ""));
+  const halfRole = o.role != null && (!isObj18(o.role) || !str18(o.role.role) || !str18(o.role.body));
+  const unknown = !isObj18(a) || !kind || !AFFECTED_KINDS.includes(kind) || !str18(o.description);
+  const individual = isObj18(a) && (kind && PERSON_KINDS.has(kind) || personKey.length || halfRole && !unknown);
   if (individual)
     return refuse8("AFFECTED_INDIVIDUAL", `people are counted as a class or named in their official role, never singled out${personKey.length ? ` (the affected carries ${personKey.join(", ")})` : ""}${halfRole && !personKey.length ? " (a role is an office, {role, body}: the office and the body it belongs to)" : ""}: record a class (kind "class") or an office (role {role, body}). Nothing was written.`, { kind: kind ?? null });
   if (unknown)
-    return refuse8("AFFECTED_UNKNOWN_KIND", `${!kind || !AFFECTED_KINDS.includes(kind) ? `${isObj17(a) ? `"${String(o.kind ?? "")}" is not a kind of affected` : "an affected is {kind, description, role?}"}` : "an affected is described"}: kind one of ${AFFECTED_KINDS.join(", ")}, with a description. Nothing was written.`, { kind: kind ?? null });
+    return refuse8("AFFECTED_UNKNOWN_KIND", `${!kind || !AFFECTED_KINDS.includes(kind) ? `${isObj18(a) ? `"${String(o.kind ?? "")}" is not a kind of affected` : "an affected is {kind, description, role?}"}` : "an affected is described"}: kind one of ${AFFECTED_KINDS.join(", ")}, with a description. Nothing was written.`, { kind: kind ?? null });
   const role = o.role != null ? { role: o.role.role.trim(), body: o.role.body.trim() } : null;
   return { ok: true, affected: { kind, description: o.description.trim(), ...role ? { role } : {} } };
 }
 function checkMeasure(m) {
   if (m == null) return { ok: true, measure: null };
-  if (!isObj17(m) || !str18(m.unit) || !UNITS.includes(m.unit.trim()))
+  if (!isObj18(m) || !str18(m.unit) || !UNITS.includes(m.unit.trim()))
     return refuse8(
       "MEASURE_UNKNOWN_UNIT",
       `a measure's unit is one of ${UNITS.join(", ")}. Nothing was written.`,
-      { unit: isObj17(m) ? m.unit ?? null : null }
+      { unit: isObj18(m) ? m.unit ?? null : null }
     );
   const unit = m.unit.trim();
   const bad = (why) => refuse8("MEASURE_INVALID", `${why}. Nothing was written.`, { unit });
@@ -120589,7 +121261,7 @@ function checkMeasure(m) {
     out.value = m.value;
   }
   if (hasRange) {
-    const [low, high] = Array.isArray(m.range) ? m.range : isObj17(m.range) ? [m.range.low, m.range.high] : [];
+    const [low, high] = Array.isArray(m.range) ? m.range : isObj18(m.range) ? [m.range.low, m.range.high] : [];
     if (typeof low !== "number" || !Number.isFinite(low) || typeof high !== "number" || !Number.isFinite(high))
       return bad("a range's bounds are two finite numbers, {low, high}");
     if (low > high) return bad("the range is reversed: its low bound is above its high bound");
@@ -120599,7 +121271,7 @@ function checkMeasure(m) {
 }
 function checkPeriod(p) {
   const bad = (why) => refuse8("PERIOD_INVALID", `${why}. Nothing was written.`);
-  if (!isObj17(p)) return bad("a period is {from, to}: the dates the consequence ran between");
+  if (!isObj18(p)) return bad("a period is {from, to}: the dates the consequence ran between");
   const from = str18(p.from);
   const to = str18(p.to);
   if (!from || !to || !DATE2.test(from) || !DATE2.test(to) || Number.isNaN(Date.parse(from)) || Number.isNaN(Date.parse(to)))
@@ -120608,9 +121280,9 @@ function checkPeriod(p) {
   return { ok: true, period: { from, to } };
 }
 function isZeroMeasure(m) {
-  if (!isObj17(m)) return false;
+  if (!isObj18(m)) return false;
   if (typeof m.value === "number") return m.value === 0;
-  return isObj17(m.range) && m.range.low === 0 && m.range.high === 0;
+  return isObj18(m.range) && m.range.low === 0 && m.range.high === 0;
 }
 function zeroCausation(inquiryId) {
   return {
@@ -120677,7 +121349,7 @@ var Consequences = class {
     try {
       const fn = this.#deps.passageText || (typeof this.content.passageText === "function" ? (id) => this.content.passageText(id) : null);
       const t = fn ? fn(contentId) : null;
-      return typeof t === "string" ? t : isObj17(t) && typeof t.text === "string" ? t.text : null;
+      return typeof t === "string" ? t : isObj18(t) && typeof t.text === "string" ? t.text : null;
     } catch {
       return null;
     }
@@ -120701,23 +121373,23 @@ var Consequences = class {
     } catch {
       return null;
     }
-    if (!isObj17(d) || d.ok === false) return null;
-    const body = isObj17(d.determination) ? { ...d, ...d.determination } : d;
+    if (!isObj18(d) || d.ok === false) return null;
+    const body = isObj18(d.determination) ? { ...d, ...d.determination } : d;
     const outcomes = body.outcomes ?? body.outcome_per_standard ?? body.standards ?? null;
     const outcome = (std) => {
       if (Array.isArray(outcomes)) {
-        const o = outcomes.find((x) => isObj17(x) && (x.standard === std || x.id === std || isObj17(x.standard) && x.standard.id === std));
+        const o = outcomes.find((x) => isObj18(x) && (x.standard === std || x.id === std || isObj18(x.standard) && x.standard.id === std));
         return o ? o.outcome ?? null : null;
       }
-      if (isObj17(outcomes)) {
+      if (isObj18(outcomes)) {
         const v = outcomes[std];
-        return isObj17(v) ? v.outcome ?? null : v ?? null;
+        return isObj18(v) ? v.outcome ?? null : v ?? null;
       }
       return null;
     };
     const sup = body.superseded_by ?? body.supersededBy ?? body.links?.superseded_by ?? null;
     const live = body.live === false ? false : !(Array.isArray(sup) ? sup.length : sup);
-    const supersededBy = (Array.isArray(sup) ? sup[0] : isObj17(sup) ? sup.id : sup) ?? null;
+    const supersededBy = (Array.isArray(sup) ? sup[0] : isObj18(sup) ? sup.id : sup) ?? null;
     return { id, project: body.project ?? null, outcome, live, supersededBy: str18(supersededBy) };
   }
   /* A part's row, or null when absent or in a project the viewer may not see (R13: one answer). */
@@ -120948,13 +121620,13 @@ var Consequences = class {
   }
   /* R2–R4: what the basis makes of the part: its state, measure and the fields that state carries, or a refusal. */
   #basis(basis, measure, who2, byMachine) {
-    const computation = isObj17(basis) && ("op" in basis || "operands" in basis);
+    const computation = isObj18(basis) && ("op" in basis || "operands" in basis);
     if (computation) return this.#computation(basis, measure, who2);
     const hasFigure = measure && ("value" in measure || "range" in measure);
     if (byMachine)
       return refuse8("MACHINE_CANNOT_ASSESS", "a machine may prepare a computed part, from the record's own figures, and propose an assessment as text for a member; it never records an assessment or an undetermined judgment. Nothing was written.");
     if (hasFigure) {
-      const rationale = isObj17(basis) ? str18(basis.rationale) : null;
+      const rationale = isObj18(basis) ? str18(basis.rationale) : null;
       if (!rationale) return refuse8("NO_RATIONALE", `an assessed value says why: a rationale of at most ${RATIONALE_MAX} characters. Nothing was written.`);
       if (rationale.length > RATIONALE_MAX)
         return refuse8("BAD_RATIONALE", `a rationale is at most ${RATIONALE_MAX} characters. Nothing was written.`);
@@ -120972,7 +121644,7 @@ var Consequences = class {
         doc: { rationale, rests_on: rests.map(String) }
       };
     }
-    const code = isObj17(basis) && str18(basis.why) && UNDETERMINED_WHY[basis.why.trim()] ? basis.why.trim() : "not_assessed";
+    const code = isObj18(basis) && str18(basis.why) && UNDETERMINED_WHY[basis.why.trim()] ? basis.why.trim() : "not_assessed";
     return {
       ok: true,
       state: "undetermined",
@@ -120988,7 +121660,7 @@ var Consequences = class {
     const op = str18(basis.op);
     if (!op || !OPS2.includes(op))
       return basisUnreadable(`a computation names its op, one of ${OPS2.join(", ")}`, { op: basis.op ?? null });
-    if (!Array.isArray(basis.operands) || basis.operands.some((o) => !isObj17(o) || !str18(o.content)))
+    if (!Array.isArray(basis.operands) || basis.operands.some((o) => !isObj18(o) || !str18(o.content)))
       return basisUnreadable("a computation's operands are a list of {content, figure}: the content id whose passage holds the figure, and the figure as read");
     const operands = [];
     let lacking = null;
@@ -121423,9 +122095,9 @@ function partDoc(id, p) {
     ""
   ].join("\n");
 }
-var instances38 = /* @__PURE__ */ new WeakMap();
+var instances39 = /* @__PURE__ */ new WeakMap();
 function consequencesModule(host, deps) {
-  let c = instances38.get(host);
+  let c = instances39.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -121433,7 +122105,7 @@ function consequencesModule(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     c = new Consequences({ ...d, host, storage, record, membership, promotion });
-    instances38.set(host, c);
+    instances39.set(host, c);
     c.migrate();
     record.declarePurge("consequences", CONSEQUENCES_TABLES);
   }
@@ -121441,7 +122113,7 @@ function consequencesModule(host, deps) {
 }
 function consequencesOps(c, url, body) {
   const qp = (k) => url.searchParams.get(k);
-  const b = isObj17(body) ? body : {};
+  const b = isObj18(body) ? body : {};
   const stamps = { author: qp("author"), viewer: qp("viewer") };
   return {
     consequencerecord: () => c.consequenceRecord({ ...b, ...stamps }),
@@ -121759,7 +122431,7 @@ var parse6 = (s) => {
     return null;
   }
 };
-var isObj18 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+var isObj19 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var utf84 = (s) => new TextEncoder().encode(s).length;
 var WELL_FORMED3 = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/;
 var withRowNow = (r) => {
@@ -121904,18 +122576,18 @@ var Filings = class _Filings {
     if (!target || !this.actions || typeof this.actions.actionRead !== "function") return null;
     const a = this.#call(() => this.actions.actionRead({ id: target, viewer }));
     if (!a || a.ok === false) return null;
-    const cp = isObj18(a.counterparty) ? a.counterparty : null;
+    const cp = isObj19(a.counterparty) ? a.counterparty : null;
     return {
       id: str19(a.id) || target,
       kind: str19(a.kind),
       risk_tier: [1, 2, 3].includes(Number(a.risk_tier)) ? Number(a.risk_tier) : "undetermined",
       current_state: str19(a.current_state),
       counterparty: cp,
-      clock: Array.isArray(a.clock) ? a.clock.filter(isObj18) : [],
-      legs: Array.isArray(a.legs) ? a.legs.filter(isObj18) : [],
-      correspondence: Array.isArray(a.correspondence) ? a.correspondence.filter(isObj18) : Array.isArray(a.ledger) ? a.ledger.filter(isObj18) : [],
-      state_history: Array.isArray(a.state_history) ? a.state_history.filter(isObj18) : null,
-      governing_laws: isObj18(a.governing_laws) ? a.governing_laws : null,
+      clock: Array.isArray(a.clock) ? a.clock.filter(isObj19) : [],
+      legs: Array.isArray(a.legs) ? a.legs.filter(isObj19) : [],
+      correspondence: Array.isArray(a.correspondence) ? a.correspondence.filter(isObj19) : Array.isArray(a.ledger) ? a.ledger.filter(isObj19) : [],
+      state_history: Array.isArray(a.state_history) ? a.state_history.filter(isObj19) : null,
+      governing_laws: isObj19(a.governing_laws) ? a.governing_laws : null,
       law: str19(a.law),
       premise_override: _Filings.#override(a.premise_override)
     };
@@ -121923,7 +122595,7 @@ var Filings = class _Filings {
   /* R24: the premise override an action carries (actions R8, shown in its read, R25: `{reason, by, at}`); null when it
      carries none. */
   static #override(o) {
-    if (!isObj18(o) || !str19(o.reason)) return null;
+    if (!isObj19(o) || !str19(o.reason)) return null;
     return { reason: str19(o.reason), by: str19(o.by), at: str19(o.at) };
   }
   /* R1, R8, R13, R14: the one answer for an action that is absent, invisible, not an action, or unreadable because no
@@ -121957,7 +122629,7 @@ var Filings = class _Filings {
      or no membership module to ask, is not seen. membership's `inSight` is the sight conformance R15 and consequences
      R13 withhold by. */
   #sees(basis, viewer) {
-    const det = isObj18(basis) ? str19(basis.determination) : null;
+    const det = isObj19(basis) ? str19(basis.determination) : null;
     if (!det) return true;
     const project = str19(basis.project) || (this.#det(det, MACHINE_READER) || {}).project || null;
     return this.#inSight(project, viewer);
@@ -121973,19 +122645,19 @@ var Filings = class _Filings {
     if (!str19(id) || !this.conformance || typeof this.conformance.determinationRead !== "function") return null;
     const d = this.#call(() => this.conformance.determinationRead({ id: str19(id), viewer }));
     if (!d || d.ok === false) return null;
-    const named = (key) => (Array.isArray(d[key]) ? d[key] : []).map((x) => isObj18(x) ? { ...x, id: str19(key === "findings" ? x.finding : x.standard) || str19(x.id) } : null);
+    const named = (key) => (Array.isArray(d[key]) ? d[key] : []).map((x) => isObj19(x) ? { ...x, id: str19(key === "findings" ? x.finding : x.standard) || str19(x.id) } : null);
     const findings = named("findings"), standards = named("standards");
     const seen = (x) => !!(x && x.id);
     return {
       id: str19(d.id) || str19(id),
       project: str19(d.project),
-      act: isObj18(d.act) ? d.act : {},
+      act: isObj19(d.act) ? d.act : {},
       findings: findings.filter(seen),
       standards: standards.filter(seen),
       withheld: d.out_of_view === true || !findings.every(seen) || !standards.every(seen),
       live: d.live !== false && !str19(d.superseded_by),
       superseded_by: str19(d.superseded_by),
-      basis_changed: isObj18(d.basis_changed) ? d.basis_changed : d.basis_changed === true ? { causes: [] } : null
+      basis_changed: isObj19(d.basis_changed) ? d.basis_changed : d.basis_changed === true ? { causes: [] } : null
     };
   }
   /** R3, R8: the live determination the action rests on (its `rests_on` legs, in leg order), with `hidden` true when one
@@ -122016,7 +122688,7 @@ var Filings = class _Filings {
       return { state: "undetermined", why: "no module answers whether a standard was in force" };
     const r = this.#call(() => this.standards.inForce(id, date));
     if (typeof r === "string") return { state: r, why: null };
-    if (isObj18(r) && str19(r.state)) return { state: r.state, why: r.why ?? null };
+    if (isObj19(r) && str19(r.state)) return { state: r.state, why: r.why ?? null };
     return { state: "undetermined", why: "whether the standard was in force could not be read" };
   }
   /** The governing tier (Terms, R2; K102): the stricter of the kind's tier in the profile and the action's own;
@@ -122061,9 +122733,9 @@ var Filings = class _Filings {
     if (det) {
       const act = det.act || {};
       out.act = str19(act.description) ? { value: str19(act.description), source: det.id } : none("the determination states no act");
-      const period = isObj18(act.period) ? act.period : null;
+      const period = isObj19(act.period) ? act.period : null;
       out.act_date = str19(act.at) ? { value: str19(act.at), source: det.id } : period && (str19(period.from) || str19(period.to)) ? { value: `${str19(period.from) || "undetermined"} to ${str19(period.to) || "undetermined"}`, source: det.id } : none("the determination states no date for the act, so it is undetermined");
-      const cut4 = "a finding or standard the determination rests on is not one you may see, so this list would not be whole";
+      const cut5 = "a finding or standard the determination rests on is not one you may see, so this list would not be whole";
       const cites = [], srcs = [];
       let withheld = false;
       for (const s of det.standards) {
@@ -122075,20 +122747,20 @@ var Filings = class _Filings {
         cites.push(str19(r.cite));
         srcs.push(s.id);
       }
-      out.standards = withheld ? none("a standard the determination names is not one you may see") : det.withheld ? none(cut4) : cites.length ? { value: cites.join("; "), source: srcs.join(", ") } : none("the determination names no standard");
+      out.standards = withheld ? none("a standard the determination names is not one you may see") : det.withheld ? none(cut5) : cites.length ? { value: cites.join("; "), source: srcs.join(", ") } : none("the determination names no standard");
       const fs = det.findings;
-      out.findings = det.withheld ? none(cut4) : fs.length ? {
+      out.findings = det.withheld ? none(cut5) : fs.length ? {
         value: fs.map((f17) => `${f17.id} (case ${f17.case ?? "undetermined"}, edition ${f17.edition ?? "undetermined"})`).join("; "),
         source: fs.map((f17) => `${f17.id}@${f17.case ?? "?"}/${f17.edition ?? "?"}`).join(", ")
       } : none("the determination names no finding");
     } else for (const k of ["act", "act_date", "standards", "findings"]) out[k] = none(detWhy);
     const gl = action.governing_laws;
-    const laws = gl && gl.state === "stated" && Array.isArray(gl.laws) ? gl.laws.map((l) => str19(isObj18(l) ? l.citation : l)).filter(Boolean) : [];
+    const laws = gl && gl.state === "stated" && Array.isArray(gl.laws) ? gl.laws.map((l) => str19(isObj19(l) ? l.citation : l)).filter(Boolean) : [];
     out.governing_laws = laws.length ? { value: laws.join("; "), source: action.id } : none("no member has stated the action's governing laws, so they are undetermined");
     out.law = action.law ? { value: action.law, source: action.id } : none("the action states no law it is made under, so it is undetermined");
     const clock = action.clock.filter((c) => str19(c.date) && str19(c.basis));
     out.clock = clock.length ? { value: clock.map((c) => `${c.date}: ${str19(c.text) || str19(c.description) || "a deadline"} (${c.basis})`).join("; "), source: action.id } : none("the action holds no clock entry with a date and a basis");
-    const venue = entry && isObj18(entry.venue) ? entry.venue : null;
+    const venue = entry && isObj19(entry.venue) ? entry.venue : null;
     const vsrc = venue ? `profile:${venue.profile || entry.profile}/action_kinds/${entry.kind}/venue` : null;
     out.venue = venue && str19(venue.name) ? { value: str19(venue.name), source: vsrc } : none("the profile gives this kind no venue (or its profiles disagree), so it is undetermined");
     out.venue_how = venue && str19(venue.how) ? { value: str19(venue.how), source: vsrc } : none("the profile gives no means of filing");
@@ -122109,7 +122781,7 @@ var Filings = class _Filings {
     } catch {
       return { why: "the producing group could not be read (its reader failed), so it is undetermined" };
     }
-    if (isObj18(g) && "ok" in g) {
+    if (isObj19(g) && "ok" in g) {
       if (g.ok !== true)
         return { why: `no module answers the fact producingGroup (${g.reason === "FACT_FAILED" ? "its provider failed" : "no provider is registered"}), so the producing group is undetermined` };
       g = g.value;
@@ -122150,8 +122822,8 @@ var Filings = class _Filings {
      its refusals passed through as that module's; `asked` is `{id, version?}` or a bare id. */
   #offered(asked, viewer) {
     const t = this.filingTemplates;
-    const id = isObj18(asked) ? str19(asked.id) : str19(asked);
-    const version = isObj18(asked) && asked.version != null && asked.version !== "" ? asked.version : null;
+    const id = isObj19(asked) ? str19(asked.id) : str19(asked);
+    const version = isObj19(asked) && asked.version != null && asked.version !== "" ? asked.version : null;
     if (!t || typeof t.offeredVersion !== "function")
       return withRow4({
         ok: false,
@@ -122227,7 +122899,7 @@ var Filings = class _Filings {
         governing: gov,
         detail: "the governing tier is 3: no filing is prepared; a member names counsel and assembles a counsel packet"
       };
-    const named = isObj18(template) ? !!str19(template.id) || Object.keys(template).length > 0 : template != null && template !== "";
+    const named = isObj19(template) ? !!str19(template.id) || Object.keys(template).length > 0 : template != null && template !== "";
     const own3 = text5 !== void 0 && text5 !== null;
     if (named && own3)
       return {
@@ -122250,7 +122922,7 @@ var Filings = class _Filings {
         detail: `{{${unknown}}} is not a blank filings fill`
       });
     } else {
-      const profileTpl = entry && isObj18(entry.template) && entry.template.use === "file" && str19(entry.template.id) ? entry.template : null;
+      const profileTpl = entry && isObj19(entry.template) && entry.template.use === "file" && str19(entry.template.id) ? entry.template : null;
       if (!named && !profileTpl) {
         const t = this.filingTemplates;
         const list2 = t && typeof t.templatesFor === "function" ? this.#call(() => t.templatesFor({ kind: a.kind, use: "file", viewer })) : null;
@@ -122309,7 +122981,7 @@ ${body}`;
     if (disclosure) body = `${disclosure}
 
 ${body}`;
-    const venue = entry && isObj18(entry.venue) ? {
+    const venue = entry && isObj19(entry.venue) ? {
       name: entry.venue.name ?? null,
       how: entry.venue.how ?? null,
       source: `profile:${entry.venue.profile || entry.profile}/action_kinds/${entry.kind}/venue`
@@ -122676,7 +123348,7 @@ ${body}` : body;
     }
     const m = /\n## Conclusion\s*\n([\s\S]*?)(?=\n## |\s*$)/.exec(text5);
     const conclusion = m && m[1].trim() ? m[1].trim() : null;
-    const legs = fm && Array.isArray(fm.basis) ? fm.basis.filter(isObj18) : [];
+    const legs = fm && Array.isArray(fm.basis) ? fm.basis.filter(isObj19) : [];
     return {
       ...base,
       claim: {
@@ -122752,7 +123424,7 @@ ${body}` : body;
   /* R25: the capture axis for one capture, as provenance answers it (its R24–R27, R51), never computed here. */
   #grade(sha) {
     const g = this.provenance && typeof this.provenance.captureGrade === "function" ? this.#call(() => this.provenance.captureGrade(sha)) : null;
-    if (!isObj18(g)) return { grade: null, determined: false, why: "the capture grade could not be read, so it is undetermined" };
+    if (!isObj19(g)) return { grade: null, determined: false, why: "the capture grade could not be read, so it is undetermined" };
     return {
       grade: g.grade ?? null,
       route: g.route ?? null,
@@ -122778,9 +123450,9 @@ ${body}` : body;
     if (!v.view) return none(v.why);
     if (v.conflicts.some((c) => c.at === `action_kinds[${kind}].evidence`)) return none("the active profiles give different evidence standards for this kind");
     const entry = Array.isArray(v.view.action_kinds) ? v.view.action_kinds.find((k) => k.kind === kind) : null;
-    if (!entry || !isObj18(entry.evidence)) return none("the profile states no standard of evidence for this kind's venue");
+    if (!entry || !isObj19(entry.evidence)) return none("the profile states no standard of evidence for this kind's venue");
     const ev = entry.evidence;
-    const list2 = (l) => Array.isArray(l) ? l.filter(isObj18).map((x) => ({ grade: x.grade, ...x.coattested ? { coattested: true } : {} })) : [];
+    const list2 = (l) => Array.isArray(l) ? l.filter(isObj19).map((x) => ({ grade: x.grade, ...x.coattested ? { coattested: true } : {} })) : [];
     return {
       state: "stated",
       standard: ev.standard,
@@ -122874,13 +123546,13 @@ ${body}` : body;
     const facts = det ? det.findings.map((f17) => this.#fact(f17)) : [];
     const events = [], undated = [];
     const act = det ? det.act || {} : {};
-    const actDay = realDate(act.at) || (isObj18(act.period) ? realDate(act.period.from) : null);
+    const actDay = realDate(act.at) || (isObj19(act.period) ? realDate(act.period.from) : null);
     const push = (day, e) => day ? events.push({ day, ...e }) : undated.push({ ...e, why: "the record states no date for it" });
     if (det)
       push(actDay, {
         event: `the act: ${str19(act.description) || "undescribed"}`,
         source: det.id,
-        ...isObj18(act.actor) ? { actor: { role: act.actor.role ?? null, body: act.actor.body ?? null } } : {}
+        ...isObj19(act.actor) ? { actor: { role: act.actor.role ?? null, body: act.actor.body ?? null } } : {}
       });
     for (const f17 of facts) {
       const r = f17.case != null ? this.#one(`SELECT ratified_at FROM published_cases WHERE case_id=? AND edition=?`, f17.case, Number(f17.edition)) : null;
@@ -123024,7 +123696,7 @@ ${body}` : body;
     return causes;
   }
   #counsel(c) {
-    if (!isObj18(c)) return null;
+    if (!isObj19(c)) return null;
     const ok2 = (v) => typeof v === "string" && v.trim() && v.trim().length <= COUNSEL_FIELD_MAX && !/[\n\r]/.test(v);
     if (!ok2(c.name) || !ok2(c.organisation)) return null;
     if (c.contact != null && !ok2(c.contact)) return null;
@@ -123179,7 +123851,7 @@ ${filled.text}` : filled.text,
      template retired. Nothing in the draft or packet changes, and no approval is refused for it. A draft filled from
      the member's own words recorded `template: null`; one stored before T21 recorded no version, and is shown as stored. */
   #templateShown(stored, viewer) {
-    if (!isObj18(stored) || !str19(stored.id) || stored.version == null) return stored ?? null;
+    if (!isObj19(stored) || !str19(stored.id) || stored.version == null) return stored ?? null;
     const t = this.filingTemplates;
     const r = t && typeof t.templateRead === "function" ? this.#call(() => t.templateRead({ template: stored.id, version: stored.version, viewer })) : null;
     if (!r || r.ok === false) return { ...stored, read: false, says: "the template is not readable here now" };
@@ -123268,7 +123940,7 @@ ${filled.text}` : filled.text,
   #bar(project) {
     if (!str19(project) || !this.strength || typeof this.strength.projectBar !== "function") return null;
     const b = this.#call(() => this.strength.projectBar(str19(project)));
-    return isObj18(b) ? b : null;
+    return isObj19(b) ? b : null;
   }
   /* R22: bytes leaving the instance: `face` (the text a member approved or the packet's rendering, R24's disclosure
      first where it applies), then the in-band block, its hash over `face` by the one hasher (`inbandQuartet`). */
@@ -123542,7 +124214,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
       kinds,
       metadata: { risk_classification: Object.fromEntries(kinds.map((k) => [k.kind, k.tier])) },
       determinations: dets.map((d) => {
-        const actor = isObj18(d.act && d.act.actor) ? d.act.actor : {};
+        const actor = isObj19(d.act && d.act.actor) ? d.act.actor : {};
         const match = offices.find((o) => o.role === actor.role && o.body === actor.body) || null;
         return {
           determination: d.id,
@@ -123588,7 +124260,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
       for (const f17 of Array.isArray(findings) ? findings : []) {
         const page = this.#call(() => this.conformance.determinationsFor({ finding: f17, live: true, viewer: MACHINE_READER }));
         for (const it of page && page.ok !== false && Array.isArray(page.items) ? page.items : []) {
-          const id = str19(isObj18(it) ? it.id : it);
+          const id = str19(isObj19(it) ? it.id : it);
           if (!id || seen.has(id)) continue;
           const d = this.#det(id, MACHINE_READER);
           if (!d || !d.live) continue;
@@ -123610,15 +124282,15 @@ ${inbandBlock(quartet)}`, inband: quartet };
     return { case: caseId, edition, ...b, determinations_read: true };
   }
 };
-var instances39 = /* @__PURE__ */ new WeakMap();
+var instances40 = /* @__PURE__ */ new WeakMap();
 function filingsOf(host, deps) {
-  let f17 = instances39.get(host);
+  let f17 = instances40.get(host);
   if (!f17) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     f17 = new Filings({ ...d, host, storage, record });
-    instances39.set(host, f17);
+    instances40.set(host, f17);
     f17.migrate();
     record.declarePurge("filings", FILINGS_TABLES);
     f17.publicRead.registerEvidenceBlock("filings", "available_actions", (arg) => f17.evidenceBlock(arg));
@@ -124015,7 +124687,7 @@ var evaluationId = (escalation, n) => `${escalation}/evaluation#${n}`;
 var declineId = (determination, n) => `${determination}/decline-to-escalate#${n}`;
 var OLD_EVALUATION_ID = /^(.+)\/evaluation\/(\d+)$/;
 var str20 = (v) => typeof v === "string" ? v.trim() : "";
-var isObj19 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+var isObj20 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var hex8 = () => {
   const b = new Uint8Array(4);
   crypto.getRandomValues(b);
@@ -124038,25 +124710,25 @@ var iso2 = (ms2) => stampInstant("second", ms2);
 var quoted4 = (v) => `"${String(v).trim().replace(/\s*\n\s*/g, " ")}"`;
 var DRAFTED_BY = "system";
 function consequenceSentence(p) {
-  const aff = isObj19(p.affected) ? p.affected : {};
+  const aff = isObj20(p.affected) ? p.affected : {};
   const who2 = str20(aff.description) ? `${quoted4(aff.description)}${str20(aff.kind) ? ` (${str20(aff.kind)})` : ""}` : "what the record does not state (undetermined)";
-  const m = isObj19(p.measure) ? p.measure : null;
-  const amount = !m || p.state === "undetermined" ? null : Number.isFinite(m.value) ? String(m.value) : isObj19(m.range) && Number.isFinite(m.range.low) && Number.isFinite(m.range.high) ? `${m.range.low} to ${m.range.high}` : null;
-  const measure = amount === null ? `its measure is undetermined${isObj19(p.undetermined) && str20(p.undetermined.why) ? ` (${str20(p.undetermined.why)})` : ""}` : `its measure is ${amount} ${str20(m.unit)}${str20(m.currency) ? ` (${str20(m.currency)})` : ""}`;
-  const per = isObj19(p.period) && str20(p.period.from) && str20(p.period.to) ? `from ${str20(p.period.from)} to ${str20(p.period.to)}` : "over a period the record does not state (undetermined)";
-  const cause = isObj19(p.causation) && str20(p.causation.state) ? str20(p.causation.state) : "undetermined";
+  const m = isObj20(p.measure) ? p.measure : null;
+  const amount = !m || p.state === "undetermined" ? null : Number.isFinite(m.value) ? String(m.value) : isObj20(m.range) && Number.isFinite(m.range.low) && Number.isFinite(m.range.high) ? `${m.range.low} to ${m.range.high}` : null;
+  const measure = amount === null ? `its measure is undetermined${isObj20(p.undetermined) && str20(p.undetermined.why) ? ` (${str20(p.undetermined.why)})` : ""}` : `its measure is ${amount} ${str20(m.unit)}${str20(m.currency) ? ` (${str20(m.currency)})` : ""}`;
+  const per = isObj20(p.period) && str20(p.period.from) && str20(p.period.to) ? `from ${str20(p.period.from)} to ${str20(p.period.to)}` : "over a period the record does not state (undetermined)";
+  const cause = isObj20(p.causation) && str20(p.causation.state) ? str20(p.causation.state) : "undetermined";
   return `Consequence ${p.id}${str20(p.standard) ? ` (standard ${str20(p.standard)})` : ""}: it affects ${who2}; ${measure}, ${per}; it is ${str20(p.state) || "of a state the record does not state (undetermined)"}, and its causation is ${cause}.`;
 }
-var outcomesOf = (d) => (Array.isArray(d.outcomes) ? d.outcomes : []).filter((o) => isObj19(o) && typeof o.standard === "string").map((o) => ({ standard: o.standard, outcome: o.outcome ?? null }));
+var outcomesOf = (d) => (Array.isArray(d.outcomes) ? d.outcomes : []).filter((o) => isObj20(o) && typeof o.standard === "string").map((o) => ({ standard: o.standard, outcome: o.outcome ?? null }));
 var liveOf = (d) => d.live === true;
-var actOf = (d) => isObj19(d.act) ? d.act : {};
+var actOf = (d) => isObj20(d.act) ? d.act : {};
 var actIdOf = (d) => actOf(d).id ?? null;
 var projectOf2 = (d) => d.project ?? null;
 var recordedAtOf = (d) => d.at ?? null;
 var overrideOf = (text5) => Actions.overrideOf(parseFm2(text5));
 function ledgerOf(block) {
   const raw = Array.isArray(block.correspondence) ? block.correspondence : [];
-  return raw.map((e, i) => isObj19(e) ? {
+  return raw.map((e, i) => isObj20(e) ? {
     ord: Number.isInteger(e.ord) ? e.ord : i,
     direction: e.direction ?? null,
     at: e.at ?? null,
@@ -124346,7 +125018,7 @@ var Escalation = class {
     const r = this.consequences.addressed({ determination: e.determination, viewer });
     if (!r || r.ok === false) return { state: "undetermined", ids: [], why: "the consequences could not be read" };
     const parts = Array.isArray(r.parts) ? r.parts : [];
-    const ids = parts.map((p) => isObj19(p) ? p.id ?? p.part ?? null : p).filter((x) => typeof x === "string");
+    const ids = parts.map((p) => isObj20(p) ? p.id ?? p.part ?? null : p).filter((x) => typeof x === "string");
     const state = r.state === "addressed" ? "met" : r.state === "not_addressed" ? "not_met" : "undetermined";
     const why = state === "met" ? "every live consequence part is addressed" : state === "not_met" ? "a consequence part is not addressed, or was never assessed" : parts.length ? "a consequence part is undetermined or its causation unproven" : "no consequence recorded";
     return { state, ids, parts, why };
@@ -124377,8 +125049,8 @@ var Escalation = class {
   }
   /* R12: an action's counterparty office in the view, `{elected?, oversight?}`; undefined where the profile is silent. */
   #office(cp, view) {
-    if (!isObj19(cp) || !str20(cp.role) || !str20(cp.body) || !view || !Array.isArray(view.counterparties)) return {};
-    const o = view.counterparties.find((c) => isObj19(c) && c.role === cp.role && c.body === cp.body);
+    if (!isObj20(cp) || !str20(cp.role) || !str20(cp.body) || !view || !Array.isArray(view.counterparties)) return {};
+    const o = view.counterparties.find((c) => isObj20(c) && c.role === cp.role && c.body === cp.body);
     if (!o) return {};
     return {
       elected: typeof o.elected === "boolean" ? o.elected : void 0,
@@ -124395,7 +125067,7 @@ var Escalation = class {
       const m = typeof t === "string" ? OLD_EVALUATION_ID.exec(t) : null;
       return m && m[1] === id && ordinal.has(Number(m[2])) ? evaluationId(id, ordinal.get(Number(m[2]))) : t;
     };
-    return log.map((x) => isObj19(x.trigger) && Array.isArray(x.trigger.ids) ? { ...x, trigger: { ...x.trigger, ids: x.trigger.ids.map(current) } } : x);
+    return log.map((x) => isObj20(x.trigger) && Array.isArray(x.trigger.ids) ? { ...x, trigger: { ...x.trigger, ids: x.trigger.ids.map(current) } } : x);
   }
   /** R26 (K903 (4), DEC-36): the read with every attached action the viewer may not see withheld whole, in the history
    *  and the evaluations as in `actions` and `notes` (withheld at their source): its attachment entry leaves the
@@ -124407,7 +125079,7 @@ var Escalation = class {
     if (!hidden.size) return answer;
     const names = (x) => typeof x === "string" && (hidden.has(x) || hidden.has(x.replace(/#\d+$/, "")));
     const response = (v) => {
-      if (!isObj19(v.response) || !hidden.has(v.response.action)) return v;
+      if (!isObj20(v.response) || !hidden.has(v.response.action)) return v;
       const { response: _, ...rest } = v;
       return rest;
     };
@@ -124417,7 +125089,7 @@ var Escalation = class {
     };
     const history = answer.history.filter((h) => !(h.kind === "attach" && hidden.has(h.action))).map((h) => {
       const x = unnumbered(response(h));
-      return isObj19(x.trigger) && Array.isArray(x.trigger.ids) ? { ...x, trigger: { ...x.trigger, ids: x.trigger.ids.filter((i) => !names(i)) } } : x;
+      return isObj20(x.trigger) && Array.isArray(x.trigger.ids) ? { ...x, trigger: { ...x.trigger, ids: x.trigger.ids.filter((i) => !names(i)) } } : x;
     });
     const proposed = answer.proposed.map((p) => ({ ...p, declines: p.declines.map(unnumbered) }));
     return {
@@ -124713,7 +125385,7 @@ var Escalation = class {
         { action, premise_override: override }
       );
     const legs = Array.isArray(a.legs) ? a.legs : [];
-    if (a.breach !== true || !legs.some((l) => isObj19(l) && l.kind === "rests_on" && l.target === e.determination))
+    if (a.breach !== true || !legs.some((l) => isObj20(l) && l.kind === "rests_on" && l.target === e.determination))
       return refusal17("NOT_A_BREACH_ACTION", "an escalation's act is an action whose document states breach: true and that rests on this escalation's determination. Nothing was written.", { determination: e.determination });
     if (!ATTACHING_STAGES.includes(e.stage))
       return refusal17("STAGE_TAKES_NO_ACTION", `stage ${e.stage} (${STAGES[e.stage]}) takes no attached action; stages 2, 5 and 7 do. Nothing was written.`, { stage: e.stage });
@@ -124776,7 +125448,7 @@ var Escalation = class {
       return refusal17("READING_UNKNOWN", `a reading is one of ${READINGS2.join(", ")}. Nothing was written.`, { readings: READINGS2 });
     let named = null;
     if (response !== void 0 && response !== null) {
-      const ok2 = isObj19(response) && typeof response.action === "string" && Number.isInteger(response.ord) && this.#attachments(e.id).some((a) => a.action === response.action) && (this.#ledger(response.action, viewer) || []).some((x) => x.ord === response.ord && x.direction === "received");
+      const ok2 = isObj20(response) && typeof response.action === "string" && Number.isInteger(response.ord) && this.#attachments(e.id).some((a) => a.action === response.action) && (this.#ledger(response.action, viewer) || []).some((x) => x.ord === response.ord && x.direction === "received");
       if (!ok2)
         return refuseNoSuchResponse("the response named is not a received entry of an action attached to this escalation.");
       named = { action: response.action, ord: response.ord };
@@ -125120,13 +125792,13 @@ var Escalation = class {
     const D = determination;
     say(D, `Determination ${D} finds the act noncompliant with ${pursued.length === 1 ? "one standard" : `${pursued.length} standards`}: ${pursued.join(", ")}.`);
     const act = actOf(d);
-    const actor = isObj19(act.actor) && str20(act.actor.role) && str20(act.actor.body) ? `${str20(act.actor.role)}, ${str20(act.actor.body)}` : "an office the record does not name (undetermined)";
-    const when = str20(act.at) ? `on ${str20(act.at)}` : isObj19(act.period) && str20(act.period.from) && str20(act.period.to) ? `from ${str20(act.period.from)} to ${str20(act.period.to)}` : "at a date the record does not state (undetermined)";
+    const actor = isObj20(act.actor) && str20(act.actor.role) && str20(act.actor.body) ? `${str20(act.actor.role)}, ${str20(act.actor.body)}` : "an office the record does not name (undetermined)";
+    const when = str20(act.at) ? `on ${str20(act.at)}` : isObj20(act.period) && str20(act.period.from) && str20(act.period.to) ? `from ${str20(act.period.from)} to ${str20(act.period.to)}` : "at a date the record does not state (undetermined)";
     say(actIdOf(d) ?? D, `The act determined${actIdOf(d) ? ` (${actIdOf(d)})` : ""}: ${str20(act.description) ? quoted4(act.description) : "its description could not be read (undetermined)"}, by ${actor}, ${when}.`);
-    const held = Array.isArray(d.standards) ? d.standards.filter(isObj19) : [];
+    const held = Array.isArray(d.standards) ? d.standards.filter(isObj20) : [];
     for (const standard of pursued) {
       const st = held.find((x) => x.standard === standard);
-      const rows2 = st && Array.isArray(st.rows) ? st.rows.filter(isObj19) : [];
+      const rows2 = st && Array.isArray(st.rows) ? st.rows.filter(isObj20) : [];
       if (!rows2.length) {
         say(standard, `Standard ${standard} is breached: its basis in the determination could not be read (undetermined).`);
         continue;
@@ -125144,9 +125816,9 @@ var Escalation = class {
         const a = this.actions.actionRead({ id, viewer, now: at28 });
         if (!a || a.ok === false) continue;
         shown2++;
-        const cp = isObj19(a.counterparty) && str20(a.counterparty.role) && str20(a.counterparty.body) ? `${str20(a.counterparty.role)}, ${str20(a.counterparty.body)}` : "an office the record does not name (undetermined)";
+        const cp = isObj20(a.counterparty) && str20(a.counterparty.role) && str20(a.counterparty.body) ? `${str20(a.counterparty.role)}, ${str20(a.counterparty.body)}` : "an office the record does not name (undetermined)";
         say(id, `Action ${id}${str20(a.kind) ? ` (${str20(a.kind)})` : ""} rests on the determination, addressed to ${cp}${str20(a.current_state) ? `; its state is ${str20(a.current_state)}` : ""}.`);
-        const clock = Array.isArray(a.clock) ? a.clock.filter(isObj19) : [];
+        const clock = Array.isArray(a.clock) ? a.clock.filter(isObj20) : [];
         if (!clock.length) say(id, `Action ${id} states no clock entry.`);
         for (const c of clock) {
           const what = str20(c.text) || str20(c.description);
@@ -125161,7 +125833,7 @@ var Escalation = class {
     const q7 = this.consequences.consequencesOf({ determination: D, viewer });
     if (!q7 || q7.ok === false) say(D, "The consequences of the breach could not be read (undetermined).");
     else {
-      const recorded = Array.isArray(q7.parts) ? q7.parts.filter(isObj19) : [];
+      const recorded = Array.isArray(q7.parts) ? q7.parts.filter(isObj20) : [];
       if (!recorded.length) say(D, "No consequence of the breach is recorded on the determination.");
       for (const p of recorded) say(p.id, consequenceSentence(p));
     }
@@ -125186,7 +125858,7 @@ var Escalation = class {
     for (let page = 0; page < 50; page++) {
       const r = this.actions.actionsFor({ determination, after, viewer });
       if (!r || r.ok === false || !Array.isArray(r.items)) return null;
-      for (const x of r.items) if (isObj19(x) && typeof x.id === "string") ids.push(x.id);
+      for (const x of r.items) if (isObj20(x) && typeof x.id === "string") ids.push(x.id);
       if (!r.truncated) return ids;
       after = r.cursor ?? ids.at(-1) ?? null;
       if (!after) return ids;
@@ -125210,7 +125882,7 @@ function refuseReason(reason) {
   return null;
 }
 function refuseJudgment(args) {
-  const found = isObj19(args) ? JUDGMENT_KEYS.filter((k) => k in args) : [];
+  const found = isObj20(args) ? JUDGMENT_KEYS.filter((k) => k in args) : [];
   if (found.length)
     return refusal17("ESCALATION_CARRIES_NO_JUDGMENT", "an escalation records no significance, severity, priority, urgency, rank or score: whether a breach warrants action, and how urgently, is a member's judgment, made with the consequences in front of them. Nothing was written.", { keys: found });
   return null;
@@ -125250,9 +125922,9 @@ for (const name2 of [
     }
   } });
 }
-var instances40 = /* @__PURE__ */ new WeakMap();
+var instances41 = /* @__PURE__ */ new WeakMap();
 function escalationOf(host, deps) {
-  let i = instances40.get(host);
+  let i = instances41.get(host);
   if (!i) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -125264,7 +125936,7 @@ function escalationOf(host, deps) {
     const filings = d.filings || (() => filingsOf(host, { record, membership, promotion }));
     const consequences = d.consequences || (() => consequencesModule(host, { record, membership, promotion, conformance: typeof conformance === "function" ? conformance() : conformance }));
     i = new Escalation({ ...d, storage, record, membership, promotion, conformance, consequences, actions, filings });
-    instances40.set(host, i);
+    instances41.set(host, i);
     i.migrate();
     record.declarePurge("escalation", ESCALATION_TABLES);
     promotion.registerStep("escalation", { check: (c) => i.check(c), project: (c) => i.project(c) });
@@ -125625,8 +126297,8 @@ function withSessionEntry(text5, checked, line) {
   const at28 = text5.indexOf("## Session Log");
   if (at28 < 0) return text5 + "\n## Session Log\n\n" + entry;
   const nxt = text5.indexOf("\n## ", at28 + 1);
-  const cut4 = nxt === -1 ? text5.length : nxt + 1;
-  return text5.slice(0, cut4) + entry + "\n" + text5.slice(cut4);
+  const cut5 = nxt === -1 ? text5.length : nxt + 1;
+  return text5.slice(0, cut5) + entry + "\n" + text5.slice(cut5);
 }
 function settingView(x) {
   const custom = x.reason === CUSTOM_REASON;
@@ -127567,7 +128239,7 @@ var Monitoring = class {
     );
     const truncated3 = raw.length > cap;
     const rows2 = truncated3 ? raw.slice(0, cap) : raw;
-    const shells = [], exported = [], undetermined = [], noBaseline = [], unreadable = [], notDocuments = {};
+    const shells = [], exported = [], undetermined = [], noBaseline = [], unreadable2 = [], notDocuments = {};
     let driveLinked = 0;
     for (const r of rows2) {
       const drive = readDriveAddress(r.locator);
@@ -127593,11 +128265,11 @@ var Monitoring = class {
           reg = null;
         }
       } else if (f17) {
-        unreadable.push({ ...base, reason: "the register is not held inline" });
+        unreadable2.push({ ...base, reason: "the register is not held inline" });
         continue;
       }
       if (f17 && !reg) {
-        unreadable.push({ ...base, reason: "the register is not parsable JSON" });
+        unreadable2.push({ ...base, reason: "the register is not parsable JSON" });
         continue;
       }
       const docs = reg && Array.isArray(reg.documents) ? reg.documents : [];
@@ -127637,7 +128309,7 @@ var Monitoring = class {
       export: exported,
       undetermined,
       no_baseline: noBaseline,
-      unreadable,
+      unreadable: unreadable2,
       not_documents: notDocuments,
       counts: {
         drive: driveLinked,
@@ -127645,7 +128317,7 @@ var Monitoring = class {
         export: exported.length,
         undetermined: undetermined.length,
         no_baseline: noBaseline.length,
-        unreadable: unreadable.length
+        unreadable: unreadable2.length
       }
     };
   }
@@ -128303,17 +128975,17 @@ var Monitoring = class {
     }
   }
 };
-var instances41 = /* @__PURE__ */ new WeakMap();
+var instances42 = /* @__PURE__ */ new WeakMap();
 function monitoringOf(host, deps) {
   const storage = host && host.storage ? host.storage : host;
-  let m = instances41.get(storage);
+  let m = instances42.get(storage);
   if (!m) {
     const d = deps || {};
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     m = new Monitoring({ ...d, host, storage: d.storage || storage, record, membership, promotion });
-    instances41.set(storage, m);
+    instances42.set(storage, m);
     m.migrate();
     record.declarePurge("monitoring", [...MONITORING_TABLES]);
     if (typeof record.registerCounts === "function")
@@ -129189,10 +129861,10 @@ var LinkSweep = class {
 };
 
 // src/link-sweep/index.mjs
-var instances42 = /* @__PURE__ */ new WeakMap();
+var instances43 = /* @__PURE__ */ new WeakMap();
 function linkSweepOf(host, deps) {
   const storage = host && host.storage ? host.storage : host;
-  let s = instances42.get(storage);
+  let s = instances43.get(storage);
   if (!s) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -129214,7 +129886,7 @@ function linkSweepOf(host, deps) {
       captureRequests: lazy(d.captureRequests, () => captureRequestsOf(host, { record })),
       monitoring: lazy(d.monitoring, () => monitoringOf(host, { record, membership, promotion }))
     });
-    instances42.set(storage, s);
+    instances43.set(storage, s);
     s.migrate();
     record.declarePurge(LINK_SWEEP_MODULE, LINK_SWEEP_TABLES.map((t) => ({ name: t.name, keys: [...t.keys] })));
     s.registration = s.registerWithMonitoring();
@@ -129716,9 +130388,9 @@ var Scheduler = class {
     return out;
   }
 };
-var instances43 = /* @__PURE__ */ new WeakMap();
+var instances44 = /* @__PURE__ */ new WeakMap();
 function schedulerOf(ctx, env = null, deps = {}) {
-  let s = instances43.get(ctx);
+  let s = instances44.get(ctx);
   if (!s) {
     const e = env || {};
     const owners = deps.owners || {
@@ -129736,7 +130408,7 @@ function schedulerOf(ctx, env = null, deps = {}) {
       linkSweep: () => linkSweepOf(ctx)
     };
     s = new Scheduler({ storage: deps.storage || ctx.storage, env: e, owners });
-    instances43.set(ctx, s);
+    instances44.set(ctx, s);
     if (!deps.owners)
       s.listenTo({
         retrieval: retrievalOf(ctx),
@@ -132286,14 +132958,14 @@ var InstanceSetup = class _InstanceSetup {
         } } : {}
       };
     });
-    const cut4 = runOut.filter((r) => r.returned === false && r.steps.length);
+    const cut5 = runOut.filter((r) => r.returned === false && r.steps.length);
     return {
       steps: rows2.length,
       highest_completed: top2 ? top2.step : 0,
       elapsed_at_highest_ms: top2 ? top2.elapsed_ms : 0,
       rows: rows2,
       runs: runOut,
-      note: !rows2.length ? "the probe has never run, so nothing is known about the ceiling by measurement" : `a run completed a step ${top2.elapsed_ms} ms into its own isolate, so the ceiling lies above elapsed_at_highest_ms. ` + (cut4.length ? "A run with no recorded end was cut off: the ceiling lies within its bracket, above its last completed step's elapsed time and below what its next step would have cost." : "No run has been cut off yet, so the ceiling is above everything tried.")
+      note: !rows2.length ? "the probe has never run, so nothing is known about the ceiling by measurement" : `a run completed a step ${top2.elapsed_ms} ms into its own isolate, so the ceiling lies above elapsed_at_highest_ms. ` + (cut5.length ? "A run with no recorded end was cut off: the ceiling lies within its bracket, above its last completed step's elapsed time and below what its next step would have cost." : "No run has been cut off yet, so the ceiling is above everything tried.")
     };
   }
 };
@@ -135860,7 +136532,7 @@ var JUDGEMENTS = Object.freeze(["met", "not_met"]);
 var TITLE_MAX = 200;
 var REASON_MAX8 = 500;
 var SUMMARY_MAX2 = 200;
-var DETAIL_MAX = 5e3;
+var DETAIL_MAX2 = 5e3;
 var WHY_MAX2 = 500;
 var NOTE_MAX6 = 500;
 var SUBJECTS_MAX = 50;
@@ -135874,14 +136546,14 @@ var TRAY_PAGE = 5;
 var SOURCES_MAX = 50;
 var STAGE_MAX = 7;
 var DAY_MS5 = 864e5;
-var isObj20 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+var isObj21 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var str21 = (v) => typeof v === "string" ? v.trim() : "";
 var isDay2 = (v) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(`${v}T00:00:00Z`)) && (/* @__PURE__ */ new Date(`${v}T00:00:00Z`)).toISOString().slice(0, 10) === v;
 var isLine = (v, max) => typeof v === "string" && v.trim().length > 0 && v.length <= max && !/["\\\r\n]/.test(v);
 var TOKEN5 = /^[A-Za-z0-9][A-Za-z0-9_.:-]{0,79}$/;
 var isToken = (v) => typeof v === "string" && TOKEN5.test(v);
 function normSubject(s) {
-  if (!isObj20(s)) return null;
+  if (!isObj21(s)) return null;
   if (s.kind === "inquiry") {
     if (!isToken(s.inquiry)) return null;
     const out = { kind: "inquiry", inquiry: s.inquiry };
@@ -135903,7 +136575,7 @@ function normSubject(s) {
 }
 var subjectKey = (s) => s.kind === "inquiry" ? `inquiry:${s.inquiry}` : `outcome:${s.determination}#${s.standard}`;
 function addresseeArm(a) {
-  if (!isObj20(a)) return null;
+  if (!isObj21(a)) return null;
   const ok2 = (k, max = 500) => isLine(a[k], max);
   if (a.state === "named") {
     const kind = a.kind === void 0 || a.kind === null ? "office" : a.kind;
@@ -135929,7 +136601,7 @@ function checkPhases(phases, { chosen, subjects }) {
   for (let i = 0; i < phases.length; i++) {
     const p = phases[i];
     const bad = (detail) => ({ fault: "malformed", index: i, detail });
-    if (!isObj20(p)) return bad("a phase is an object");
+    if (!isObj21(p)) return bad("a phase is an object");
     if (!isToken(p.id) || ids.has(p.id)) return bad("a phase has an id of its own, a token used once in the scenario");
     ids.add(p.id);
     if (!isLine(p.name, TITLE_MAX)) return bad(`a phase has a name of 1 to ${TITLE_MAX} characters, with no quotation mark, backslash or line break`);
@@ -135937,10 +136609,10 @@ function checkPhases(phases, { chosen, subjects }) {
     const s = p.starts;
     let starts;
     if (s === "plan_start") starts = "plan_start";
-    else if (isObj20(s) && Object.keys(s).length === 1 && isToken(s.after)) starts = { after: s.after };
-    else if (isObj20(s) && isToken(s.branch_of) && JUDGEMENTS.includes(s.when) && Object.keys(s).length === 2)
+    else if (isObj21(s) && Object.keys(s).length === 1 && isToken(s.after)) starts = { after: s.after };
+    else if (isObj21(s) && isToken(s.branch_of) && JUDGEMENTS.includes(s.when) && Object.keys(s).length === 2)
       starts = { branch_of: s.branch_of, when: s.when };
-    else if (isObj20(s) && s.when_subject !== void 0 && (s.reaches === "resolved" || s.reaches === "stage")) {
+    else if (isObj21(s) && s.when_subject !== void 0 && (s.reaches === "resolved" || s.reaches === "stage")) {
       const subj = normSubject(s.when_subject);
       if (!subj) return bad("when_subject names a matter of the plan");
       if (s.reaches === "stage" && !(Number.isInteger(s.stage) && s.stage >= 1 && s.stage <= STAGE_MAX))
@@ -135950,7 +136622,7 @@ function checkPhases(phases, { chosen, subjects }) {
     } else return bad("starts is plan_start, {after}, {branch_of, when} or {when_subject, reaches, stage?}");
     let checkpoint = null;
     if (p.checkpoint !== void 0 && p.checkpoint !== null) {
-      const d = isObj20(p.checkpoint) ? p.checkpoint.after_days : void 0;
+      const d = isObj21(p.checkpoint) ? p.checkpoint.after_days : void 0;
       if (!Number.isInteger(d) || d < 1 || d > CHECKPOINT_DAYS_MAX || Object.keys(p.checkpoint).length !== 1)
         return bad(`a checkpoint is {after_days}, 1 to ${CHECKPOINT_DAYS_MAX}`);
       checkpoint = { after_days: d };
@@ -135963,7 +136635,7 @@ function checkPhases(phases, { chosen, subjects }) {
     }
     let branches = null;
     if (p.branches !== void 0 && p.branches !== null) {
-      if (!isObj20(p.branches) || !Object.keys(p.branches).length || !Object.entries(p.branches).every(([k, v]) => JUDGEMENTS.includes(k) && isToken(v)))
+      if (!isObj21(p.branches) || !Object.keys(p.branches).length || !Object.entries(p.branches).every(([k, v]) => JUDGEMENTS.includes(k) && isToken(v)))
         return bad("branches maps met and not_met to the phase each leads to");
       if (!checkpoint) return bad("a phase with branches has a checkpoint whose judgement they follow");
       branches = { ...p.branches };
@@ -136314,13 +136986,13 @@ var ActionPlans = class {
       action: (id) => ask2(`a:${id}`, () => ok(this.actions.actionRead({ id, viewer }))),
       subjects: (list2) => Array.isArray(list2) ? list2.filter((s) => v.subject(s)) : list2,
       fields: (f17) => {
-        if (!isObj20(f17)) return f17;
+        if (!isObj21(f17)) return f17;
         const out = { ...f17, subjects: v.subjects(f17.subjects) };
         if (out.enforces && out.enforces.subject && !v.subject(out.enforces.subject)) delete out.enforces;
         return out;
       },
       phases: (ps) => Array.isArray(ps) ? ps.map((ph) => {
-        if (!isObj20(ph) || !isObj20(ph.starts) || !ph.starts.when_subject || v.subject(ph.starts.when_subject)) return ph;
+        if (!isObj21(ph) || !isObj21(ph.starts) || !ph.starts.when_subject || v.subject(ph.starts.when_subject)) return ph;
         const { when_subject, ...starts } = ph.starts;
         return { ...ph, starts };
       }) : ps
@@ -136419,8 +137091,8 @@ var ActionPlans = class {
         { max: SUMMARY_MAX2 }
       );
     const detail = a.detail === void 0 || a.detail === null ? null : String(a.detail);
-    if (detail !== null && detail.length > DETAIL_MAX)
-      return refusal18("OPTION_DETAIL_TOO_LONG", `an option's detail is at most ${DETAIL_MAX} characters; this is ${detail.length}. Nothing was written.`, { max: DETAIL_MAX, length: detail.length });
+    if (detail !== null && detail.length > DETAIL_MAX2)
+      return refusal18("OPTION_DETAIL_TOO_LONG", `an option's detail is at most ${DETAIL_MAX2} characters; this is ${detail.length}. Nothing was written.`, { max: DETAIL_MAX2, length: detail.length });
     if (!CATEGORIES.includes(a.category))
       return refusal18(
         "CATEGORY_UNKNOWN",
@@ -136450,7 +137122,7 @@ var ActionPlans = class {
     const dates = [];
     if (a.dates !== void 0 && a.dates !== null) {
       const list2 = Array.isArray(a.dates) ? a.dates : null;
-      const bad = !list2 || list2.length > DATES_MAX || list2.some((d) => !isObj20(d) || !isDay2(d.date) || !isLine(d.basis, NOTE_MAX6));
+      const bad = !list2 || list2.length > DATES_MAX || list2.some((d) => !isObj21(d) || !isDay2(d.date) || !isLine(d.basis, NOTE_MAX6));
       if (bad)
         return refusal18("DATE_REFUSED", `regulated dates are a list of at most ${DATES_MAX} {date: YYYY-MM-DD, basis}, each basis naming the statute, order or commitment that sets it. Nothing was written.`);
       for (const d of list2) dates.push({ date: d.date, basis: d.basis });
@@ -136482,7 +137154,7 @@ var ActionPlans = class {
   /* R12: `enforces` names a standard the reader can read, or a determined subject of the plan; null otherwise. */
   #enforces(x, held, viewer) {
     if (typeof x === "string" && held.has(x)) return held.get(x).kind === "outcome" ? { subject: held.get(x) } : null;
-    if (isObj20(x)) {
+    if (isObj21(x)) {
       const s = normSubject(x);
       return s && s.kind === "outcome" && held.has(subjectKey(s)) ? { subject: s } : null;
     }
@@ -137101,8 +137773,8 @@ var ActionPlans = class {
       return refused2("entry", "reminders are a list of {date, on}, each naming a regulated date of the option and a day.");
     const one3 = new Set(ids).size === 1 ? ids[0] : null;
     for (const [i, r] of list2.entries()) {
-      const opt = isObj20(r) ? r.option ?? one3 : null;
-      if (!isObj20(r) || !opt || !by[opt])
+      const opt = isObj21(r) ? r.option ?? one3 : null;
+      if (!isObj21(r) || !opt || !by[opt])
         return refused2(
           "entry",
           `reminder ${i} names no option of this act; with several options, each names its option.`,
@@ -137294,7 +137966,7 @@ var ActionPlans = class {
       }
       if (!facts) return done(contactNotAMember());
     }
-    const reason = override === void 0 || override === null ? null : isObj20(override) ? override.reason : override;
+    const reason = override === void 0 || override === null ? null : isObj21(override) ? override.reason : override;
     const at28 = this.now();
     const doc = actionDocument({
       fields: opt.fields,
@@ -137340,7 +138012,7 @@ var ActionPlans = class {
     if (!p || !opt) return refused2;
     const see = this.#sight(viewer);
     const fields = see.fields(opt.fields);
-    const reason = override === void 0 || override === null ? null : isObj20(override) ? override.reason ?? null : override;
+    const reason = override === void 0 || override === null ? null : isObj21(override) ? override.reason ?? null : override;
     const legs = [];
     for (const s of fields.subjects || []) {
       const target = s.kind === "inquiry" ? s.inquiry : s.determination;
@@ -137908,7 +138580,7 @@ function refuseReason2(reason, needed) {
   return null;
 }
 function refuseKeys(args) {
-  const found = isObj20(args) ? REFUSED_KEYS.filter((k) => k in args) : [];
+  const found = isObj21(args) ? REFUSED_KEYS.filter((k) => k in args) : [];
   if (found.length)
     return refusal18("OPTION_KEY_REFUSED", `a plan holds no ${found.join(", ")}: no cost, budget, money to be spent, assignee, hours or significance score. Nothing was written.`, { keys: found });
   return null;
@@ -137968,9 +138640,9 @@ for (const name2 of [
     }
   } });
 }
-var instances44 = /* @__PURE__ */ new WeakMap();
+var instances45 = /* @__PURE__ */ new WeakMap();
 function actionPlansOf(host, deps) {
-  let i = instances44.get(host);
+  let i = instances45.get(host);
   if (!i) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -137995,7 +138667,7 @@ function actionPlansOf(host, deps) {
       filings: lazy("filings", () => filingsOf(host, base)),
       aiRuns: lazy("aiRuns", () => aiRunsOf(host))
     });
-    instances44.set(host, i);
+    instances45.set(host, i);
     i.migrate();
     record.declarePurge("action-plans", ACTION_PLANS_TABLES);
     promotion.registerStep("action-plans", { check: (c) => i.check(c), project: (c) => i.project(c) });
@@ -138125,8 +138797,8 @@ function cardinalityDetail(g) {
   return `${g.n} ${plural(g.n, "instance", "instances")} of this progression thread more than one document at '${stageName(g)}' (${g.document_count} in all), which is declared to hold ${held}: a finding, which decides nothing about which of them belongs (framework 8.2)`;
 }
 function proposalFindingItems(feed, { subjectsOf, homesOf, optionsOf, subjectsMax = 8 } = {}) {
-  const subjectsFor = (instances46, into = []) => {
-    for (const inst of instances46)
+  const subjectsFor = (instances47, into = []) => {
+    for (const inst of instances47)
       for (const b of subjectsOf(inst.progression_key, inst.entity_id) || [])
         if (!into.includes(b)) into.push(b);
     return into;
@@ -140183,12 +140855,12 @@ var QueueProducers = class _QueueProducers {
    *  of those projects it reaches, and homed under both sides. */
   #contradictionItems(scope, viewer, now) {
     const found = /* @__PURE__ */ new Map();
-    let cut4 = false;
+    let cut5 = false;
     for (const project of scope.projects) {
       let after = null;
       for (let page = 0; ; page += 1) {
         if (page === _QueueProducers.QUEUE_CONTRADICTION_PAGES) {
-          cut4 = true;
+          cut5 = true;
           break;
         }
         const r = this.#contradiction.candidatesFor({ on: { project }, after, viewer });
@@ -140244,7 +140916,7 @@ var QueueProducers = class _QueueProducers {
             projects_bound: scope.bound,
             projects_truncated: scope.truncated === true,
             pages_bound: _QueueProducers.QUEUE_CONTRADICTION_PAGES,
-            pages_truncated: cut4
+            pages_truncated: cut5
           },
           detail: "a candidate is contradiction's (its R24\u2013R26): its weight comes from the machine's label and its key, and its state from the members' acts, both read here and never restated. The machine's label and reason stay the machine's."
         },
@@ -140265,10 +140937,10 @@ var QueueProducers = class _QueueProducers {
    *  under the dependent and its ancestors. It leaves when the cause closes (a recorded re-evaluation, its R16). */
   #findingsSideCorrected(viewer, now) {
     const out = [];
-    let after = null, cut4 = false, read2 = true;
+    let after = null, cut5 = false, read2 = true;
     for (let page = 0; ; page += 1) {
       if (page === _QueueProducers.QUEUE_CONTRADICTION_PAGES) {
-        cut4 = true;
+        cut5 = true;
         break;
       }
       const r = this.#reevaluation.correctedDependents({ after, limit: _QueueProducers.QUEUE_CORRECTED_PAGE, viewer });
@@ -140302,7 +140974,7 @@ var QueueProducers = class _QueueProducers {
             bound: {
               limit: _QueueProducers.QUEUE_CORRECTED_PAGE,
               pages_bound: _QueueProducers.QUEUE_CONTRADICTION_PAGES,
-              truncated: cut4,
+              truncated: cut5,
               corrections_read: read2
             },
             detail: "the cause is reevaluation's (its R27): a live leg of this finding rests on a side contradiction marks stale. It is read here, never raised, and no strength, conclusion or case moved."
@@ -140359,12 +141031,12 @@ var QueueProducers = class _QueueProducers {
     const scope = this.#ownedProjects(me, viewer, _QueueProducers.QUEUE_TENSION_PROJECTS);
     const visible = this.#bundleRedactor(viewer);
     const found = /* @__PURE__ */ new Map();
-    let cut4 = false;
+    let cut5 = false;
     for (const project of scope.projects) {
       let after = null;
       for (let page = 0; ; page += 1) {
         if (page === _QueueProducers.QUEUE_CONTRADICTION_PAGES) {
-          cut4 = true;
+          cut5 = true;
           break;
         }
         const r = this.#publication.caseTensions({ project, after });
@@ -140416,7 +141088,7 @@ var QueueProducers = class _QueueProducers {
             projects_bound: scope.bound,
             projects_truncated: scope.truncated === true,
             pages_bound: _QueueProducers.QUEUE_CONTRADICTION_PAGES,
-            pages_truncated: cut4
+            pages_truncated: cut5
           },
           detail: "a tension after publication is publication's (its R50), read under the owning project's owners' sight: a side any owner may not see is answered unseen, with nothing of it. It is told to the project's owners and to nobody else, and it composes no strength."
         },
@@ -140613,10 +141285,10 @@ var QueueProducers = class _QueueProducers {
   /** A provider's paged read followed by its cursor, at most QUEUE_ACTION_PAGES pages; `truncated` when it was cut. */
   #actionPages(read2) {
     const items = [];
-    let after = null, cut4 = false;
+    let after = null, cut5 = false;
     for (let page = 0; ; page += 1) {
       if (page === _QueueProducers.QUEUE_ACTION_PAGES) {
-        cut4 = true;
+        cut5 = true;
         break;
       }
       const r = read2(after);
@@ -140625,7 +141297,7 @@ var QueueProducers = class _QueueProducers {
       if (!r.truncated || !r.cursor) break;
       after = r.cursor;
     }
-    return { items, truncated: cut4 };
+    return { items, truncated: cut5 };
   }
   /** The homes of an item about an action: its project at depth 0 (as `#homesAt`), and whatever the walk reaches from
    *  the action itself (queue R7). */
@@ -141534,10 +142206,10 @@ var QueueProducers = class _QueueProducers {
    *  closes (a recorded re-evaluation, reevaluation R16), as R5's. */
   #findingsDocketDependents(viewer, now) {
     const out = [];
-    let after = null, cut4 = false, flags = {};
+    let after = null, cut5 = false, flags = {};
     for (let page = 0; ; page += 1) {
       if (page === _QueueProducers.QUEUE_CONTRADICTION_PAGES) {
-        cut4 = true;
+        cut5 = true;
         break;
       }
       const r = this.#reevaluation.docketDependents({ after, limit: _QueueProducers.QUEUE_DOCKET_PAGE, viewer });
@@ -141575,7 +142247,7 @@ var QueueProducers = class _QueueProducers {
             bound: {
               limit: _QueueProducers.QUEUE_DOCKET_PAGE,
               pages_bound: _QueueProducers.QUEUE_CONTRADICTION_PAGES,
-              truncated: cut4
+              truncated: cut5
             },
             detail: "the cause is reevaluation's (its R30): a live leg of this finding rests on a member finding of a withdrawn case edition, or this finding is a member of an edition a filed response contests. It is read here, never raised, and nothing was regraded."
           },
@@ -141592,7 +142264,7 @@ var QueueProducers = class _QueueProducers {
       if (!r.truncated || !r.cursor) break;
       after = r.cursor;
     }
-    if (cut4) for (const it of out) it.basis.bound.truncated = true;
+    if (cut5) for (const it of out) it.basis.bound.truncated = true;
     return out;
   }
   static DAY_MS = 864e5;
@@ -145576,16 +146248,16 @@ var Review = class {
     };
   }
 };
-var instances45 = /* @__PURE__ */ new WeakMap();
+var instances46 = /* @__PURE__ */ new WeakMap();
 function reviewOf(host, deps) {
-  let r = instances45.get(host);
+  let r = instances46.get(host);
   if (!r) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     r = new Review({ ...d, host, storage, record, membership });
-    instances45.set(host, r);
+    instances46.set(host, r);
     r.migrate();
     record.declarePurge("review", REVIEW_TABLES);
     r.seedLedger();
