@@ -130,7 +130,7 @@ Terms.
   - `owners`: every key `credentials.signerList` (its R8) shows registered to a member who owns a project now, or who signed a published edition, a revision or a public docket entry (`docket` R5; N520). Each comes with `status` (`attests`, or `revoked` with the date its status changed, `credentials.signerList`'s `status_at` (its R8, R21), never the date this copy first saw it; null when `status_at` is null, a revocation recorded before the date was kept) and the date it was first listed, never the member's name, handle or id;
   - `copy`: every instance key that has signed an attestation (`attestation.instanceKeys`, its R5), with the date it was first used. Each is labelled as this copy's key.
 
-  A revoked or replaced key stays listed, so older signatures can still be checked. *(not yet met: T27: docket signers, N520)*
+  A revoked or replaced key stays listed, so older signatures can still be checked.
 
 **Member reads**
 - **R22** `noticesOf({project, viewer})` (`op=notices`) answers a viewer who can see the project (`membership.sight`, its R44). A project absent or invisible to `viewer` is `noSuchProject`; a discoverable project `viewer` sees only at `existence` is `membership.existenceAct`'s refusal (its R77, C-70.1). Otherwise it answers:
