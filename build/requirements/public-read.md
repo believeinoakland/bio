@@ -38,7 +38,7 @@ Terms are `publication`'s (a case, an edition, the case document, a pin, the pub
 
 - **R20** `publishedCase` (R3) also answers, for each edition a docket withdrawal names (`docket.withdrawalOf`, its R12), `withdrawn: {seq, date, reason, entry}`, the stamp linked to the withdrawal entry, at the top of the answer; the edition is answered whole as before. It also answers `docket_last_entry`, `docket` R14's `last_entry` (null when the case has no public entry). (DEC-116 items 7, 8)
 - **R21** Serves, with no credential and under R10's terms, `op=docketpublic&case=<case>` (`docket.docketPublic`, its R14) and `op=docketfeed&case=<case>` (`docket.docketFeed`, its R15), the feed with media type `application/atom+xml`, so each case's feed has one fixed address. A case the docket answers null for is `NOT_PUBLISHED` (C-98.8), the same bytes as `publishedCase`'s for an absent case. (DEC-116 item 8; DEC-100 item 2)
-- **R25** `op=docketpublic&case=<case>&captures=omit` passes `captures: "omit"` to `docket.docketPublic` (its R24). Any other value of `captures`, or none, passes nothing. Everything else is as R21 says. (DEC-116 item 8; DEC-101 (3); N534) *(not yet met: T31)*
+- **R25** `op=docketpublic&case=<case>&captures=omit` passes `captures: "omit"` to `docket.docketPublic` (its R24). Any other value of `captures`, or none, passes nothing. Everything else is as R21 says. (DEC-116 item 8; DEC-101 (3); N534)
 
 #### Each member's standing and the case file (DEC-112; N519, N520)
 
