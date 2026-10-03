@@ -6,7 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, block, version, merge, V } from "../basis-versions/fixture.mjs";
 import { seeded, V as IV } from "../intent/fixture.mjs";
-import { JUSTIFICATION_REFUSALS, RUNGS } from "../../../src/affordances.mjs";
+import { JUSTIFICATION_REFUSALS, RUNGS, RUNG_ABSENT } from "../../../src/affordances.mjs";
 
 test("R19: narrow, graded `reasoned` (R27), called well-formed but without its account of what changed, is refused "
    + "with a code in JUSTIFICATION_REFUSALS, and with one it is accepted", () => {
@@ -659,4 +659,77 @@ test("R2 R19: escalationend and filingapprove, graded `terminal` (DEC-88), canno
                    w.esc.escalationAdvance({ id: w.E, to: 2, reason: "again", ...who })])
     assert.notEqual(r.ok, true, JSON.stringify(r).slice(0, 200));
   assert.equal(w.esc.escalationRead({ id: w.E, viewer: escFix.V("bob") }).state, "ended", "never reopened");
+});
+
+/* R35 (DEC-96 items 1, 2; N520, N522): case-import's four reasoned acts, driven at case-import's interface over its
+   fixture (real record-core, membership, strength and accepted-work tables; case-checker's answer scripted). Each is
+   called well-formed but without its account — absent, null, empty, blank, or past its 2,000-character bound — and is
+   refused with its owner's code, in the family, writing nothing; with it, it is accepted. Each is corrected forward and
+   never erased: a withdrawn acceptance and a cleared flag stay in the record. The two `undetermined` writes ask no reason
+   at all: an import and a completion are accepted with none given. */
+import * as ci from "../case-import/fixture.mjs";
+test("R19 R35: importaccept, importacceptwithdraw, importflag and importflagclear, graded `reasoned`, are refused "
+   + "without their account with IMPORT_ACCEPT_NO_REASON or IMPORT_FLAG_NO_ISSUE (in the family) and write nothing, are "
+   + "accepted with it, and are corrected forward: the acceptance and the flag stay in the record", async () => {
+  for (const op of ["importaccept", "importacceptwithdraw", "importflag", "importflagclear"]) assert.equal(RUNGS[op], "reasoned", op);
+  const scene = async () => {
+    const w = ci.seeded();
+    const a = await ci.imp(w);
+    assert.equal(a.ok, true, JSON.stringify(a).slice(0, 300));
+    const by = { by: ci.V("alice"), viewer: ci.V("alice") };
+    const acts = {
+      importaccept: (x) => w.ci.acceptImported({ import: a.import, edition: 1, findings: [ci.F1], checked: "every passage against its document",
+        reason: "the chain holds", ...by, ...x }),
+      importacceptwithdraw: (x) => w.ci.withdrawAcceptance({ import: a.import, edition: 1, reason: "the source corrected it", ...by, ...x }),
+      importflag: (x) => w.ci.flagImported({ import: a.import, edition: 1, finding: ci.F1, issue: "the payroll figure is a year off", ...by, ...x }),
+      importflagclear: (x) => w.ci.clearFlag({ flag: w.flag, reason: "checked against the budget: it is right", ...by, ...x }),
+    };
+    return { w, a, acts };
+  };
+  /* the act's own account fields, each withheld in turn */
+  const FIELDS = { importaccept: ["checked", "reason"], importacceptwithdraw: ["reason"], importflag: ["issue"], importflagclear: ["reason"] };
+  const CODES = { importaccept: "IMPORT_ACCEPT_NO_REASON", importacceptwithdraw: "IMPORT_ACCEPT_NO_REASON",
+                  importflag: "IMPORT_FLAG_NO_ISSUE", importflagclear: "IMPORT_FLAG_NO_ISSUE" };
+  /* what each act needs standing before it: a withdrawal an acceptance in force, a clear an open flag */
+  const before = { importacceptwithdraw: (s) => assert.equal(s.acts.importaccept({}).ok, true),
+                   importflagclear: (s) => { const f = s.acts.importflag({}); assert.equal(f.ok, true); s.w.flag = f.flag; } };
+  const bad = [];
+  for (const [op, fields] of Object.entries(FIELDS))
+    for (const field of fields)
+      for (const why of [undefined, null, "", "   ", "x".repeat(2001)]) {
+        const s = await scene();
+        before[op]?.(s);
+        const snap = s.w.snapshot();
+        const r = s.acts[op]({ [field]: why });
+        if (!(r && r.ok !== true && r.reason === CODES[op] && JUSTIFICATION_REFUSALS.includes(r.reason))) bad.push(`${op} ${field}=${JSON.stringify(why)?.slice(0, 20)}: ${JSON.stringify(r).slice(0, 200)}`);
+        else if (JSON.stringify(s.w.snapshot()) !== JSON.stringify(snap)) bad.push(`${op} ${field}: refused, but wrote`);
+      }
+  assert.deepEqual(bad, []);
+  /* with the account: accepted, and corrected forward — the withdrawn acceptance and the cleared flag are kept */
+  const s = await scene();
+  assert.equal(s.acts.importaccept({}).ok, true);
+  assert.equal(s.acts.importacceptwithdraw({}).ok, true);
+  assert.equal(s.w.count("case_import_acceptances"), 1, "the acceptance stays in the history after its withdrawal");
+  assert.equal(s.acts.importaccept({ reason: "accepted again after the correction" }).ok, true, "a later acceptance moves it forward");
+  const f = s.acts.importflag({});
+  assert.equal(f.ok, true, JSON.stringify(f).slice(0, 300));
+  s.w.flag = f.flag;
+  assert.equal(s.acts.importflagclear({}).ok, true);
+  assert.equal(s.w.count("case_import_flags"), 1, "the flag stays in the history after its clear");
+});
+
+test("R3 R35: caseimport and caseimportdocument, graded `undetermined`, ask no authored reason — each is accepted with "
+   + "none given — and are named in RUNG_ABSENT, not RUNGS", async () => {
+  const w = ci.seeded();
+  const LETTER = ci.bytes("%PDF the letter the case relies on");
+  w.script.set(ci.F2, { role: "supporting", result: "recreated_in_part", missing: [{ sha: ci.sha(LETTER), words: "the letter" }],
+                        pair: { capture: { state: "graded", grade: "D" }, connection: { state: "graded", grade: "D" } } });
+  const a = await ci.imp(w);
+  assert.equal(a.ok, true, JSON.stringify(a).slice(0, 300));
+  const c = await w.ci.completeImportedDocument({ import: a.import, edition: 1, bytes: LETTER, by: ci.V("bob"), viewer: ci.V("bob") });
+  assert.equal(c.ok, true, JSON.stringify(c).slice(0, 300));
+  for (const op of ["caseimport", "caseimportdocument"]) {
+    assert.equal(RUNG_ABSENT[op]?.ground, "undetermined", op);
+    assert.ok(!Object.hasOwn(RUNGS, op), op);
+  }
 });

@@ -94,7 +94,7 @@ const bandsOf = (rungs) => {
   for (const k of Object.keys(got)) got[k].sort();
   return got;
 };
-test("R2: the rung ladder, low to high, and RUNGS' assignment — DEC-88's three bands word for word among them — with "
+test("R2 R35: the rung ladder, low to high, and RUNGS' assignment — DEC-88's three bands word for word among them — with "
    + "its negative controls: an op moved to the wrong band, or one of the 57 left out of RUNGS, is seen", () => {
   assert.deepEqual(RUNG_LADDER, ["reversible", "reasoned", "terminal", "attested", "irreversible"]);
   assert.deepEqual([DEC88.reversible.length, DEC88.reasoned.length, DEC88.terminal.length], [25, 30, 2]);
@@ -122,7 +122,9 @@ test("R2: the rung ladder, low to high, and RUNGS' assignment — DEC-88's three
       /* R30: a template's retirement and a member's act on a local fact */
       "templateretire", "factconfirm", ...DEC88.reasoned, ...T22_REASONED,
       /* R34: the docket's filing and the manager's decline */
-      "docketfile", "docketdecline"],
+      "docketfile", "docketdecline",
+      /* R35: DEC-96's four reasoned acts on an imported case */
+      "importaccept", "importacceptwithdraw", "importflag", "importflagclear"],
   };
   want.reversible.push(...DEC88.reversible);
   want.terminal.push(...DEC88.terminal);
@@ -437,18 +439,19 @@ const R27_LEFT = ["inboxpull", "contradictionrecommend", "contradictionoptin", "
   "checkpointrecord", "optionstart", "templatedraft", "templaterevise", "templatepropose", "templatesubmit",
   "templatereview", "templatecomment", "templateapprove"];
 const undeterminedOf = (absent) => Object.keys(absent).filter((op) => absent[op].ground === "undetermined").sort();
-test("R27 R32 R34: no op is graded `undetermined` that the rulings moved (K211, DEC-88), and exactly the 21 R27 names "
-   + "remain `undetermined`, with R32's whatchangedpropose and R34's docketpressure beside them; one of DEC-88's 57 left "
-   + "there is seen", () => {
+test("R27 R32 R34 R35: no op is graded `undetermined` that the rulings moved (K211, DEC-88), and exactly the 21 R27 names "
+   + "remain `undetermined`, with R32's whatchangedpropose, R34's docketpressure and R35's caseimport and "
+   + "caseimportdocument beside them — R27's count reads 25 with them; one of DEC-88's 57 left there is seen", () => {
   const moved = { biasdebtresolve: "reasoned", actionrisktier: "reasoned", narrow: "reasoned", versionaccept: "reversible",
     versioncurrent: "reversible", actionlaws: "reversible", projectvisibilityset: "reversible" };
   for (const [op, r] of Object.entries(moved)) { assert.equal(RUNGS[op], r, op); assert.ok(!Object.hasOwn(RUNG_ABSENT, op), op); }
-  /* R32 (T23) and R34 (T27) each grade one more op `undetermined` on R27's rule, after R27's count */
-  const LATER = ["whatchangedpropose", "docketpressure"];
+  /* R32 (T23) and R34 (T27) each grade one more op `undetermined` on R27's rule, after R27's count, and R35 (T28) two */
+  const LATER = ["whatchangedpropose", "docketpressure", "caseimport", "caseimportdocument"];
   const undetermined = undeterminedOf(RUNG_ABSENT).filter((op) => !LATER.includes(op));
   for (const op of LATER) assert.equal(RUNG_ABSENT[op]?.ground, "undetermined", op);
   assert.deepEqual(undetermined, [...R27_LEFT].sort());
   assert.equal(undetermined.length, 21, "R27's count: DEC-88 moved 57 of the 78 into RUNGS");
+  assert.equal(undeterminedOf(RUNG_ABSENT).length, 25, "R35: R27's count reads 25 with R32's, R34's and R35's");
   /* the 78 held before DEC-88: the 21 and the 57 together, each of the 57 now ranked in RUNGS */
   const before78 = ["inboxresolve", "taskforward", "taskresolve", "actioncorrespond", "actionlawspropose",
     "projectfork", "biasadopt", "strengthbar", "entitycreate", "entityalias", "resolve", "attesttext", "thread",
@@ -1137,7 +1140,7 @@ test("R34 R2 R3 R4 R7 R12 R19: the docket's ops — docketfile and docketdecline
   assert.ok(RUNG_ABSENT.docketpressure.is.length > 40);
   assert.ok(JUSTIFICATION_REFUSALS.includes("DOCKET_NO_REASON"));
   assert.ok(Object.hasOwn(docket.DOCKET_CHECKS, "DOCKET_NO_REASON"), "a row of its owner's checks");
-  for (const c of ["DOCKET_KIND_UNKNOWN", "DOCKET_NO_CAPTURE", "NO_SUCH_DOCKET_ENTRY", "MACHINE_CANNOT_MARK_PRESSURE",
+  for (const c of ["DOCKET_KIND_UNKNOWN", "DOCKET_NO_CAPTURE", "NO_SUCH_DOCKET_ENTRY", "MACHINE_CANNOT_MARK_DOCKET_PRESSURE",
     "DOCKET_SIGNATURE_REFUSED"]) assert.ok(!JUSTIFICATION_REFUSALS.includes(c), c);
   /* negative controls: the same comparison sees a misgraded op */
   assert.notDeepEqual({ ...grades, docketpost: ["rung", "reasoned"] }, R34_GRADES);
@@ -1170,4 +1173,74 @@ test("R34 R2 R3 R4 R7 R12 R19: the docket's ops — docketfile and docketdecline
   assert.deepEqual(ALL.filter((op) => !A.unaccounted([]).stale.includes(op)), []);
   const left = A.unaccounted([...table, { op: "docketunnamed", mutating: true, gated: true }]);
   assert.deepEqual([left.unpublished, left.unranked], [["docketunnamed"], ["docketunnamed"]]);
+});
+
+/* R35 (DEC-112 (6), DEC-96 items 1, 2; N520, N522; T28): case-import's eight ops, keyed to its op map (`caseImportOps`),
+   and case-checker's two public reads (its R15, registered through public-read R18; case-checker is not in this module's
+   uses, so they are named as R35 names them). op-declarations R14 carries their rows. The four reasoned acts' backing is
+   driven at case-import's interface in backing.test.mjs. */
+import { caseImportOps, CASE_IMPORT_CHECKS } from "../../../src/case-import/index.mjs";
+const R35_GRADES = { importaccept: ["rung", "reasoned"], importacceptwithdraw: ["rung", "reasoned"],
+  importflag: ["rung", "reasoned"], importflagclear: ["rung", "reasoned"],
+  caseimport: ["absent", "undetermined"], caseimportdocument: ["absent", "undetermined"] };
+const R35_READS = ["importedcases", "importedcase"];
+const R35_PUBLIC = ["casechecker", "casefilespec"];
+const IMPORT_DIRECTED = "import-directed: keyed by an imported case (an import, an edition, a finding or a flag), reached "
+  + "from the imported cases; writes this module's rows and moves no bundle";
+test("R35 R2 R3 R7 R12 R19 R27: case-import's ops — importaccept, importacceptwithdraw, importflag and importflagclear "
+   + "`reasoned`, IMPORT_ACCEPT_NO_REASON and IMPORT_FLAG_NO_ISSUE in the family, caseimport and caseimportdocument "
+   + "`undetermined` as inboxpull, the six import-directed in NON_ACTS, its reads `read:` and case-checker's public reads "
+   + "`read: public, no credential`, none in MACHINE_REFUSALS and no vocabulary added — and with the control plane's rows "
+   + "nothing is unaccounted; a misgraded op or one left out is seen", () => {
+  const ops = Object.keys(caseImportOps({}, new URL("http://x/"), {})).sort();
+  assert.deepEqual(ops, [...Object.keys(R35_GRADES), ...R35_READS].sort(), "case-import's op map holds exactly these");
+  const grades = Object.fromEntries(Object.keys(R35_GRADES).map((op) => [op, gradeOf(op)]));
+  assert.deepEqual(grades, R35_GRADES);
+  for (const op of ["caseimport", "caseimportdocument"]) {
+    assert.equal(RUNG_ABSENT[op].ground, RUNG_ABSENT.inboxpull.ground, op);
+    assert.ok(RUNG_ABSENT[op].is.length > 40, op);
+  }
+  /* R19: both codes are in the family, each a row of its owner's checks; the import's other refusals ask an object, a
+     member or a state, never an account, and stay out */
+  for (const c of ["IMPORT_ACCEPT_NO_REASON", "IMPORT_FLAG_NO_ISSUE"]) {
+    assert.ok(JUSTIFICATION_REFUSALS.includes(c), c);
+    assert.ok(Object.hasOwn(CASE_IMPORT_CHECKS, c), `${c} is a row of its owner's checks`);
+  }
+  for (const c of Object.keys(CASE_IMPORT_CHECKS).filter((c) => !["IMPORT_ACCEPT_NO_REASON", "IMPORT_FLAG_NO_ISSUE"].includes(c)))
+    assert.ok(!JUSTIFICATION_REFUSALS.includes(c), c);
+  /* negative controls: the same comparison sees a misgraded op */
+  assert.notDeepEqual({ ...grades, importflag: ["rung", "reversible"] }, R35_GRADES);
+  assert.notDeepEqual({ ...grades, caseimport: ["rung", "reasoned"] }, R35_GRADES);
+  for (const op of Object.keys(R35_GRADES)) {
+    const d = A.decorate({ id: op, label: "x" }, null);
+    assert.equal((d.rung === null) !== (d.rung_absence === null), true, `R24: ${op}`);
+    assert.equal(NON_ACTS[op], IMPORT_DIRECTED, op);
+  }
+  for (const op of R35_READS) {
+    assert.ok(NON_ACTS[op]?.startsWith("read: ") && NON_ACTS[op].length > 40, op);
+    assert.match(NON_ACTS[op], /writes nothing$/, op);
+    assert.ok(!Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
+  }
+  for (const op of R35_PUBLIC) {
+    assert.equal(NON_ACTS[op], "read: public, no credential", op);
+    assert.ok(!Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
+  }
+  const ALL = [...Object.keys(R35_GRADES), ...R35_READS, ...R35_PUBLIC];
+  assert.ok(![...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => ALL.includes(a.id)));
+  assert.deepEqual(ALL.filter((op) => Object.hasOwn(MACHINE_REFUSALS, op)), [], "MACHINE_REFUSALS holds only ACTS (R7, R20)");
+  /* no vocabulary is added: R4's list is unchanged by R35 (its test above holds the exact keys), and none names an import */
+  assert.deepEqual(Object.keys(VOCABULARIES).filter((k) => /import|checker|case_file/.test(k)), []);
+  /* the control plane's rows (op-declarations R14): the six writes mutating, every op gated */
+  const table = [...Object.keys(R35_GRADES).map((op) => ({ op, mutating: true, gated: true })),
+    ...[...R35_READS, ...R35_PUBLIC].map((op) => ({ op, mutating: false, gated: true }))];
+  const r = A.unaccounted(table);
+  assert.deepEqual([r.unpublished, r.unranked], [[], []]);
+  assert.deepEqual(r.stale.filter((op) => ALL.includes(op)), []);
+  /* negative controls: carried by no row, each reads stale; a read carried ungated reads stale; an op left out reads
+     unpublished and unranked */
+  assert.deepEqual(ALL.filter((op) => !A.unaccounted([]).stale.includes(op)), []);
+  for (const op of [...R35_READS, ...R35_PUBLIC])
+    assert.ok(A.unaccounted([{ op, mutating: false, gated: false }]).stale.includes(op), op);
+  const left = A.unaccounted([...table, { op: "importunnamed", mutating: true, gated: true }]);
+  assert.deepEqual([left.unpublished, left.unranked], [["importunnamed"], ["importunnamed"]]);
 });
