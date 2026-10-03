@@ -289,6 +289,7 @@ test("R28: the sentences T28 added (another group's finding, R33; anonymous evid
                     /attests anonymously/, /case file states no answer/, /not a document, so a capture grade/])
     assert.ok(corpus.some(([, s]) => re.test(s)), `reached: ${re}`);
   corpus.push(["gradingMethodText", gradingMethodText(GRADING_METHOD_VERSION)]);
+  corpus.push(["gradingMethodText (CivicOS)", gradingMethodText(GRADING_METHOD_VERSION, "CivicOS")]);
   corpus.push(["recomputePair refusal", recomputePair({ version: "x" }).detail]);
   clean(corpus);
 });

@@ -234,8 +234,9 @@ test("R15: the group named or the producing group; BAD_GRADE; NO_BAR; the answer
   assert.ok(und.check);
 });
 
-/* R15 (DEC-105, H12): the bar's honest note, in the ruling's words, as a reader checks for it. */
-const HONEST_NOTE = "CivicOS has no guidance yet on what particular audiences expect. Readers see the bar you set in these words.";
+/* R15 (DEC-105, H12; DEC-124): the bar's honest note, in the ruling's words with the product named Civicsmith, as a
+   reader checks for it. */
+const HONEST_NOTE = "Civicsmith has no guidance yet on what particular audiences expect. Readers see the bar you set in these words.";
 const noteHolds = (answer) => assert.ok(typeof answer.note === "string" && answer.note.includes(HONEST_NOTE),
                                         "the answer's note carries DEC-105's words");
 
@@ -247,8 +248,10 @@ test("R15 (DEC-105): the answer's note carries the bar's honest note in DEC-105'
   noteHolds(r);
   assert.match(r.note, /DEFAULT a project starts from/);
   assert.match(r.note, /It gates nothing\./);
+  assert.ok(!r.note.includes("CivicOS"), "the product is named as DEC-124 names it");
   for (const stripped of [{ ...r, note: r.note.replace(HONEST_NOTE, "") }, { ...r, note: undefined },
-                          { ...r, note: HONEST_NOTE.slice(0, 40) }])
+                          { ...r, note: HONEST_NOTE.slice(0, 40) },
+                          { ...r, note: r.note.replace("Civicsmith", "CivicOS") }])
     assert.throws(() => noteHolds(stripped), assert.AssertionError);
 });
 
