@@ -29,3 +29,7 @@ Size (session_01Ex7oYmPtwwinSZN6zJhg1w): test runs 6, module lines 2023
 ## J1 · COMPLETE
 
 COMPLETE: N538 R22 (Civicsmith on every page, one PRODUCT constant; the invitation page renamed; newgroup/dist rebuilt, fresh 4/0) and N528 R35 (the invitation page's Google Fonts head removed, the Worker's system stacks; a test over every page served, streamed and the invitation page) met at the interface, each named by its test with a negative control. Branch job/T31/installer @ 87937b8fc7. newgroup/test requirements 33/0/2 (R13, R24 todos stay); wizard 207/0; embed 23/0; fleetbundles 1/0. Checks: format, architecture, coverage (35/35), ownership all 0 failures. The not-yet-met marks on R22 and R35 are yours to strike. release.mjs untouched (next signed release). Details in the record.
+
+## After B2 (instance-setup merged, K1398)
+
+`tranche/T31` merged into `job/T31/installer` (no conflict; none of the installer's inputs changed: `setup-fleet.mjs`, `sshsig.mjs`, `jurisdictions/` untouched). Re-run: `npm test` in `newgroup/`: embed 23/0, wizard 207/0, requirements 33 pass, 0 fail, 2 todo; `newgroup-bundle-fresh`: 4 passed, 0 failed (no rebuild needed). `fleetbundles.test.mjs`: fail 1, on `bio-plane` only (dist/bio-plane.bundled.mjs not byte-identical to a fresh build): the plane's bundle, `not_product`, staled by the merged plane source (instance-setup), not by this job; the three workers pass. BOB regenerates it at the layer close. Checks: format 0, architecture 0, coverage 35/35, ownership 6 files, 0 failures.
