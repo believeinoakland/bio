@@ -12,6 +12,8 @@
 
 - N536 · 2026-10-03 · **case-authoring**: drop the `get attestation()` pass-through and the dependency hand-through in `caseAuthoringOf` once no caller passes them (plane's T29 L11 re-point to `caseDisclosuresOf(ctx, {attestation})`). From CASE-AUTHORING #14 J2 (K1351). **Why next:** one job per module (P8); it waits on plane's re-point, L11 after L8 (P10).
 
+- N537 · 2026-10-03 · **publication**: drop the one-line `get acceptedWork()` delegate to case-carriage; nothing reads it since PLANE #19 re-pointed `accepted.test` R16 (K1349, K1355). **Why next:** one job per module (P8); the reader moved in L11, after publication's L8 job (P10).
+
 ## Carried from T29
 
 The left-out table of `current.md` (T29), unchanged until re-read at T30's opening.

@@ -61,7 +61,7 @@ The instance's composition root. It builds every module on one Durable Object's 
   - it builds `case-import` with the deps it reads (`case-checker`, `strength`, `accepted-work`'s instance (R16), `reevaluation`) (its case-file bytes are held in its own tables, so no object store is handed to it, K1319), runs its migration as R3 says, and declares its tables to purge through `record-core` (K23; `case-import` R13);
   - it starts `case-import`, so that it fills `accepted-work`'s registration (`case-import` R16, `accepted-work` R1) before the first request;
   - it spreads `case-import`'s ops map into R5's route map, so each of its ops reaches its handler through `control-plane`'s door.
-- **R18** (N529, N532; K1332, K1333) *(not yet met: T29)* The composition root composes the two modules split out in T29 at their places in `build/modules.json`:
+- **R18** (N529, N532; K1332, K1333) The composition root composes the two modules split out in T29 at their places in `build/modules.json`:
   - it builds `case-disclosures` (`caseDisclosuresOf(ctx, {attestation})`, with the `attestation` instance R2 builds) before `case-authoring`, whose lazy getter then finds that same one instance per host (`case-disclosures` R23); `case-authoring` is built without `attestation` once it no longer passes it through (until then its `get attestation()` pass-through serves `split.test`);
   - `case-carriage` is created by `publication`'s factory, eagerly, so its two tables exist and are declared to purge at every boot (`case-carriage` R6; K1024's form, as `corpus-export`); the composition root builds `publication` as today and needs no line of its own for it.
 
