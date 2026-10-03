@@ -36,7 +36,8 @@ test("R2: OPS maps every op to a well-formed spec {classes, machineClasses?, mut
   }
   /* The public surface is exactly the ops that gate themselves. */
   assert.deepEqual(ops.filter((op) => OPS[op].classes === null).sort(),
-    ["activitymethod", "bootstrap", "casedocument", "caseflags", "claim", "docketfeed", "docketpublic", "enroll",
+    ["activitymethod", "bootstrap", "casechecker", "casedocument", "casefilespec", "caseflags", "claim", "docketfeed",
+     "docketpublic", "enroll",
      "groupidentity", "groupkeyspublic",
      "instancegroup", "invitelook", "knock", "knockerconsent", "login", "noticespublic", "publicread", "publishedbytes",
      "publishedcase", "publishedmanifest", "reviewcomment", "reviewcopy", "statementack", "templatecomment",
