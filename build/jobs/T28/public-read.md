@@ -84,3 +84,27 @@ Found while doing T28's public-read share. None of these blocks my merge; each i
 | `checks/ownership.mjs` against tranche/T28 | 16 files; 0 failures |
 
 Size (session_0181u3c6mH6hCT6JNt1c6phB): test runs 16, module lines 2890
+
+## J5 · COMPLETE
+
+B6 (K1321) was already met in J4; nothing new to build.
+- My fixture signs an edition prepared in a pre-`/6` format through `publication`'s `signLegacy`, as an edition signed before T28. `legacyCaseCommit` covers the two tests that commit with their own key and deliverer. Each container test that covers the pre-T28 container prepares its document in `/5`.
+- The new tests prepare `/6` documents through the fixture's `method:` and `materials:` options and `case-grammar`'s writers.
+- R57's texts are read in-process with `publication.publishedMaterialText(sha)`; there is no op.
+
+Re-run after merging tranche/T28 @ eef24a21c7, on this branch with `publication`'s COMPLETE branch @ 012cecca00 merged locally (not pushed):
+
+| what | result |
+|---|---|
+| public-read | 105/0 |
+| network-notices | 63/0 |
+| filings | 60/0 |
+| plane | 65/0 |
+| format | 0 failures |
+| architecture | 0 failures |
+| coverage | 24 of 24 live ids named; 0 failures |
+| ownership | 0 failures |
+
+Everything else stands as in J4.
+
+Size (session_0181u3c6mH6hCT6JNt1c6phB): test runs 20, module lines 2890
