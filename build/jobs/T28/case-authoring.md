@@ -67,3 +67,28 @@ Progress, and what I wait on. Built and pushed on `job/T28/case-authoring` (test
 - `checks/ownership.mjs case-authoring tranche/T28`: 13 files changed; 0 failures.
 
 Size (session_01HnTijf8F1LJnr1J6wARkTF): test runs 31, module lines 4007
+
+## J6 · COMPLETE
+
+**Completion record, after B8** (job/T28/case-authoring @ HEAD, tranche/T28 @ c425cfcf6c merged). J5 stands, with these changes:
+
+- **Deferral closed:** `caseImportOf(host)` is now the default `caseImport`. My read of `importedCase` follows its real shape: group and case at the top, the edition in full under `edition`. The fixture's stand-in matches that shape.
+- **R51–R53 against the real case-import** (`imported.test.mjs`, 3 tests). A case file is imported and recreated, then:
+  - accepted through `acceptImported`, and the `accepted_work:` row is stated from the real `acceptanceOf` and `importedCase`;
+  - flagged by `flagImported`: C-120.11 until the flag is disclosed; once it is disclosed the case publishes;
+  - cleared by `clearFlag`: listing the flag is then C-120.13;
+  - withdrawn by `withdrawAcceptance`: C-120.10, with nothing written.
+  The pre-flight's step two names the accepted row.
+  The fixture composes the real case-import with its checker scripted at case-checker's R1, and builds the case file with case-import's own suite's builder.
+- The suites outside my paths that import case-authoring have the same failures as before (33). All of them also fail on tranche/T28 itself; none is from this job.
+
+Rows awaiting stamp are unchanged: C-120.8 and C-120.10–C-120.13.
+
+**Tests and checks:**
+- `node --test bio-plane/test/m/case-authoring/`: tests 118, pass 118, fail 0.
+- `checks/format.mjs`: 0 failures.
+- `checks/architecture.mjs case-authoring`: 0 failures (114 imports).
+- `checks/coverage.mjs case-authoring`: 54 of 54 ids named by a test; 0 failures.
+- `checks/ownership.mjs case-authoring tranche/T28`: 13 files changed; 0 failures.
+
+Size (session_01HnTijf8F1LJnr1J6wARkTF): test runs 36, module lines 4010
