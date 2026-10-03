@@ -42,3 +42,7 @@
 - P6: module 1,595 lines (src), tests 1,551.
 
 Size (session_016TiHSZQkrggTJ3QAahBMjg): test runs 20, module lines 1595
+
+## J1 · REPORT
+
+Found in other modules, from this job's merge (details in my record, 'Found in other modules'): (1) publication's test/m/publication/casedoc.test.mjs K651 arm pins CASE_DOCUMENT_FORMAT to /5, red (97/1) until publication's T28 job (R58, /6). (2) case-authoring's test/m/case-authoring/tensions.test.mjs R14 arm pins /5, red (99/1) until case-authoring's T28 job (R14 /6); until then caseDocumentText writes /6 with no method: or materials: block. (3) bio-plane/dist/bio-plane.bundled.mjs (not_product) is stale: regenerate at the layer close. Interface readings for the rest of L8 (manifest fields, part digest over its files, one path per kind, R16's inline pair, completeEditionOf's input, standingOf's short key, the Withheld spelling and sourceRowsStanding accepting it) are listed in my record under 'Readings this job took'.
