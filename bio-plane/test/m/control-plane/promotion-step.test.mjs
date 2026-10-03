@@ -1,11 +1,12 @@
 /* R42: this module's promotion step, exported whole (`promotionStep`), registered here as `plane` registers it, under
-   this module's name at the rank `legacy-store`'s step had (after layer 10, before `affordances` and `tasks`): the
+   this module's name at the rank `legacy-store`'s step had (after layer 10, before every module of layer 11 and `tasks`): the
    testimony slot's check and projection (provenance R52) and the sight index (D-497), each answer's keys and values as
-   they were, and every step's checks and projections in their old order. */
+   they were, and every step's checks and projections in their old order. The module after the step is the first of
+   layer 11 in `build/modules.json`, read there, never a fixed name (N548). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { record, STEP_ORDER } from "./record.mjs";
+import { record, STEP_ORDER, FIRST_LATER } from "./record.mjs";
 import { promotionStep } from "../../../src/control-plane/step.mjs";
 import { instanceSetupOf } from "../../../src/setup.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
@@ -41,7 +42,13 @@ test("R42: the rank: after every module of layers 1-10 (monitoring's included), 
     else assert.ok(STEP_ORDER.indexOf(m.id) > at, `${m.id} (layer ${m.layer}) ranks after the step`);
   }
   assert.ok(STEP_ORDER.indexOf("monitoring") < at && at < STEP_ORDER.indexOf("tasks"));
-  assert.equal(STEP_ORDER[at + 1], "affordances");
+  /* the module directly after the step is the first module of layer 11 in build/modules.json, whichever it is (N548) */
+  const firstLater = mods.find((m) => m.layer > 10 && m.id !== "control-plane");
+  assert.ok(firstLater && STEP_ORDER.includes(firstLater.id), "a layer-11 module follows the step");
+  assert.equal(firstLater.id, FIRST_LATER);
+  assert.equal(STEP_ORDER[at + 1], firstLater.id);
+  assert.equal(STEP_ORDER[at - 1], [...mods].reverse().find((m) => m.layer <= 10 && STEP_ORDER.includes(m.id)).id,
+               "the module directly before the step is the last of layers 1-10");
 });
 
 test("R42: the step is a {check, project} pair of functions and registers nothing itself", async () => {

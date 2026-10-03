@@ -9,6 +9,7 @@
    `provenanceroute`, `provenanceroutes`; N512). attestation and provenance-routes are built directly after provenance,
    as the composition root builds them (provenance, attestation, provenance-routes). */
 import { DatabaseSync } from "node:sqlite";
+import { readFileSync } from "node:fs";
 import "./harness.mjs";
 import { dispatch, controlPlaneRoutes } from "../../../src/control-plane/dispatch.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
@@ -54,10 +55,13 @@ function cursor(rows) {
 }
 
 /* R42: the order promotion ranks its steps by, as the composition root gives it: the modules' total order with this
-   module's step at the rank `legacy-store`'s step had, after every module of layer 10 and before `affordances`. */
+   module's step at the rank `legacy-store`'s step had, after every module of layers 1-10 and before the first module of
+   layer 11 in `build/modules.json` (`wizard-scripts` since N544; N548). */
+const LAYERS = JSON.parse(readFileSync(new URL("../../../../build/modules.json", import.meta.url), "utf8"));
+export const FIRST_LATER = (LAYERS.modules || LAYERS).find((m) => m.layer > 10 && m.id !== "control-plane").id;
 export const STEP_ORDER = Object.freeze((() => {
   const o = MODULE_ORDER.filter((m) => m !== "control-plane");
-  const at = o.indexOf("affordances");
+  const at = o.indexOf(FIRST_LATER);
   return [...o.slice(0, at), "control-plane", ...o.slice(at)];
 })());
 

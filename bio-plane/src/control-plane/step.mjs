@@ -2,7 +2,7 @@
    with promotion, now this module's export: provenance's testimony slot (its R52) and membership's sight index (D-497),
    which membership cannot register because it does not use promotion. This module registers nothing itself: `plane`
    registers `promotionStep(host)` under this module's name (plane R10), at the rank `legacy-store`'s step had in its
-   `STEP_ORDER` (after every module of layer 10, before `affordances` and `tasks`), so every step's checks and
+   `STEP_ORDER` (after every module of layers 1-10, before every module of layer 11; N548), so every step's checks and
    projections, every answer and the order of refusals are as they were. */
 import { stepContext } from "../promotion/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
