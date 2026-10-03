@@ -92,10 +92,11 @@ export function world({ register = true } = {}) {
 }
 
 /** A stand-in for `case-import`'s registration (its R16): `held` maps `ref\0edition` to the finding as published;
- *  `accepted` holds the `ref\0edition` pairs whose acceptance is in force; `calls` records each call. */
+ *  `accepted` holds the `ref\0edition` pairs whose acceptance is in force; `moved` the publisher moves in the order
+ *  recorded (its R18); `calls` records each call. */
 export function importer() {
   const s = {
-    held: new Map(), accepted: new Set(), flags: [], withdrawn: [], calls: [], throws: null, hidden: new Set(),
+    held: new Map(), accepted: new Set(), flags: [], withdrawn: [], moved: [], calls: [], throws: null, hidden: new Set(),
     publish(ref, edition, extra = {}) {
       s.held.set(`${ref}\u0000${edition}`, { ref, import: ref.slice(9, 73), group: "other-group", case: "CASE-1", edition,
         finding: ref.slice(74), manifest_sha: "c".repeat(64), result: "recreated", pair: { evidence: "B", inference: "B" },
@@ -105,6 +106,13 @@ export function importer() {
     withdraw(ref, edition) {
       s.accepted.delete(`${ref}\u0000${edition}`);
       s.withdrawn.push({ withdrawal: `W${s.withdrawn.length + 1}`, import: ref.slice(9, 73), edition, refs: [ref], at: NOW });
+    },
+    /** A publisher move, as `case-import` R18 records it: an edition, or a withdrawal (of an edition, or `all`). */
+    move(ref, kind, edition, extra = {}) {
+      const seq = s.moved.length + 1;
+      s.moved.push({ move: `M${seq}`, import: ref.slice(9, 73), group: "other-group", case: "CASE-1", kind, edition, seq,
+        date: "2026-10-03", at: NOW, what_changed: kind === "edition" ? `edition ${edition}: a date corrected` : null,
+        reason: kind === "withdrawal" ? "the source was retracted" : null, key_listed: true, taken_back: null, ...extra });
     },
     fns: {
       finding(args) {
@@ -130,6 +138,14 @@ export function importer() {
         const limit = Number.isInteger(args.limit) ? args.limit : 100;
         const page = s.withdrawn.slice(after, after + limit);
         return { withdrawals: page, cursor: after + limit < s.withdrawn.length ? page[page.length - 1].withdrawal : null };
+      },
+      moves(args) {
+        s.calls.push(["moves", args]);
+        if (s.throws) throw new Error(s.throws);
+        const after = typeof args.after === "string" ? s.moved.findIndex((x) => x.move === args.after) + 1 : 0;
+        const limit = Number.isInteger(args.limit) && args.limit >= 1 && args.limit <= 200 ? args.limit : 200;
+        const page = s.moved.slice(after, after + limit);
+        return { moves: page, cursor: after + limit < s.moved.length ? page[page.length - 1].move : null };
       },
     },
   };
