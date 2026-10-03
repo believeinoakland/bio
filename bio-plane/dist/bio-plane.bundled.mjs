@@ -1616,22 +1616,24 @@ var checks_exports = {};
 __export(checks_exports, {
   ACQUISITION_CHECKS: () => ACQUISITION_CHECKS,
   CAPTURE_REQUEST_ARM_CHECKS: () => CAPTURE_REQUEST_ARM_CHECKS,
-  CIVICOS_CONTACT_URL: () => CIVICOS_CONTACT_URL,
   CIVICSMITH_CONTACT_URL: () => CIVICSMITH_CONTACT_URL,
   DRIVE_CAPTURE_CHECKS: () => DRIVE_CAPTURE_CHECKS,
   INSTALLATION_CHECKS: () => INSTALLATION_CHECKS,
   RENDER_CAPTURE_CHECKS: () => RENDER_CAPTURE_CHECKS,
   SWEEP_SCOPE_CHECKS: () => SWEEP_SCOPE_CHECKS,
-  civicosUserAgent: () => civicosUserAgent,
-  civicsmithUserAgent: () => civicsmithUserAgent
+  civicsmithUserAgent: () => civicsmithUserAgent,
+  firstHopWho: () => firstHopWho
 });
 var at = (region) => `src/acquisition/index.mjs acquire > ${region}`;
 var CIVICSMITH_CONTACT_URL = "https://github.com/believeinoakland/bio";
 function civicsmithUserAgent(version, instance, purpose) {
   return `Civicsmith/${version || "0.0.0"} (+${CIVICSMITH_CONTACT_URL}; instance ${instance || "unnamed"}; ${purpose})`;
 }
-var CIVICOS_CONTACT_URL = CIVICSMITH_CONTACT_URL;
-var civicosUserAgent = civicsmithUserAgent;
+function firstHopWho(instanceName, version) {
+  const name2 = typeof instanceName === "string" && instanceName.trim() ? instanceName : "unnamed";
+  const ver = typeof version === "string" && version.trim() ? version : "0.0.0";
+  return `instance ${name2} (Civicsmith/${ver})`;
+}
 var CAPTURE_REQUEST_ARM_CHECKS = Object.freeze({
   CAPTURE_NOT_DRAINING: Object.freeze({
     check: "C-28.13",
@@ -27709,9 +27711,9 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
     /* R16: ordered hops from us back to the origin; a direct fetch is ONE hop, which grades it above an archive-
        sourced capture (grade tracks directness, never technique). A render whose wait timed out is NEVER presented
        as the whole page (D-499), the qualification derived by `completenessReading`, never retyped. `who` names
-       Civicsmith (DEC-124); a document filed before T31 keeps the `who` it was written with: this act rewrites none. */
+       Civicsmith (DEC-124), spelled by R33's `firstHopWho`; a document filed before T31 keeps the `who` it was written with: this act rewrites none. */
     provenance_chain: [{
-      who: `instance ${(cap.env || {}).INSTANCE_NAME || "unnamed"} (Civicsmith/${(cap.env || {}).VERSION || "0.0.0"})`,
+      who: firstHopWho((cap.env || {}).INSTANCE_NAME, (cap.env || {}).VERSION),
       asserts: renderRecorded ? `these bytes are the document a ${renderRecorded.engine || "renderer (engine not reported)"} render produced from ${locator} at ${retrieved}; the shell it was rendered from was served for ${locator} and is held beside it (render.of)${completenessReading(renderRecorded) ? `; ${completenessReading(renderRecorded)}, so they are not asserted to be the whole page` : ""}` : `these bytes were served for ${locator} at ${retrieved}`,
       evidence: renderRecorded ? "first-party https fetch of the shell, hashed at receipt; the rendered document hashed at receipt from the renderer; render.* records the environment" : "first-party https fetch, hashed at receipt, transport record on this document",
       bound: false,
@@ -45176,9 +45178,9 @@ var Capture = class _Capture {
       authority_state: "undetermined",
       authority_basis: `material handed to the group through its doorbell by an unnamed knocker; no authority is asserted; recorded ${at31} for resolution through the task list`,
       provenance_chain: [{
-        /* `acquisition` R16 (DEC-124): the product is named Civicsmith; a document pulled before T31 keeps its `who`,
-           answered again as stored (`pulled_document`). */
-        who: `instance ${this.env.INSTANCE_NAME || "unnamed"} (Civicsmith/${this.env.VERSION || "0.0.0"})`,
+        /* R65 (N541): the first hop's `who` in acquisition's one spelling (its R33), never a copy. A document pulled
+           before T31 keeps its `who` as written (DEC-124), answered again as stored (`pulled_document`). */
+        who: firstHopWho(this.env.INSTANCE_NAME, this.env.VERSION),
         asserts: `these bytes were received at this instance's doorbell as knock ${row2.knock_id} at ${row2.received}, and brought into the record by ${by} at ${at31}; they were received, not fetched from any address`,
         evidence: "the knock's receipt: its digest, taken as the bytes arrived, and its instant",
         bound: false,
