@@ -20,3 +20,7 @@
 - `format`: 97 modules, 96 requirements files; 0 failures. `architecture docket`: 8 product files, 41 relative imports; 0 failures. `coverage docket`: 23 of 23 live requirement ids named by a test; 0 failures. `ownership docket tranche/T29`: 5 files changed; 0 failures.
 
 Size (session_01CSkgoq9z5tRnMWZZnTMGfA): test runs 6, module lines 1299
+
+## J1 · COMPLETE
+
+N533 applied: DOCKET_PRESSURE_MARKED (C-129.12) and DOCKET_PRESSURE_REFUSED (C-129.13) replace the two shared codes; R22 test added (no docket code in any other module's table). docket 39/39; checks 0 failures. Expected reds outside docket: control-plane families.test.mjs:237 (asserts the old shared state; its L11 move) and row-census (planned until T30). bio-plane.bundled.mjs stale. Details in my record.
