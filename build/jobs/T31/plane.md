@@ -1,6 +1,6 @@
 # plane (T31)
 
-**Status** · session_01LnpxMYtH7V2Q35ERcJveMR · depth 2 · WORKING · handled B1
+**Status** · session_01LnpxMYtH7V2Q35ERcJveMR · depth 2 · WAITING ON BOB (J1) · handled B1
 
 ## J1 · QUESTION
 
