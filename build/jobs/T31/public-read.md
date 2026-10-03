@@ -1,6 +1,6 @@
 # public-read (T31)
 
-**Status** · session_016SfTxv2owbWsyKBSjqM3an · depth 2 · COMPLETE · handled B2
+**Status** · session_016SfTxv2owbWsyKBSjqM3an · depth 2 · WAITING ON BOB (J1) · handled B2
 
 ## Completion
 
