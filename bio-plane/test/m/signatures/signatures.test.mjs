@@ -1157,15 +1157,27 @@ test("R39 the served page's docket signatures are accepted by stock ssh-keygen -
   assert.equal(keygenVerifies(pub, NS_DOCKET, fromButton, stmt), true);
 });
 
-test("R32 the page's visible text names CivicOS, never BIO, and its wire formats are unchanged", async () => {
+test("R32 the page's visible text names Civicsmith, never BIO and never the old name CivicOS (DEC-124), and its wire formats are unchanged", async () => {
   /* Everything a person can read: the text between tags, attribute values, and
      the strings the script writes into the page. BIO survives only as the
-     BIOKEY key prefixes, which are wire format. */
+     BIOKEY key prefixes, which are wire format; the old product name survives
+     nowhere in the page, comments included. */
   assert.doesNotMatch(SIGN_HTML, /\bBIO\b/);
-  assert.match(SIGN_HTML, /<title>CivicOS signing keys<\/title>/);
-  assert.match(SIGN_HTML, /<h1>CivicOS signing keys<\/h1>/);
+  assert.doesNotMatch(SIGN_HTML, /civic\s*os/i);
+  assert.match(SIGN_HTML, /<title>Civicsmith signing keys<\/title>/);
+  assert.match(SIGN_HTML, /<h1>Civicsmith signing keys<\/h1>/);
+  /* The markup a person reads names the product only as Civicsmith. */
+  const markup = SIGN_HTML.replace(/<!--[\s\S]*?-->/g, "").replace(/<style>[\s\S]*?<\/style>/g, "")
+    .replace(/<script>[\s\S]*?<\/script>/g, "");
+  assert.deepEqual(markup.match(/civic\w*/gi), ["Civicsmith", "Civicsmith"], "the title and the heading");
   const page = loadPage(SIGN_HTML);
-  await assert.rejects(page.parseKeyString("hello"), /does not look like a CivicOS private key/);
+  await assert.rejects(page.parseKeyString("hello"), /^Error: that does not look like a Civicsmith private key$/);
+  /* Every string the script writes into the page, on each path: none says BIO or CivicOS. */
+  page.el("load-blob").value = "hello";
+  await page.el("load").onclick();
+  const written = [page.el("load-out").innerHTML];
+  assert.match(written[0], /that does not look like a Civicsmith private key/);
+  for (const id of ["rel-key", "rat-key", "not-key", "dock-key"]) written.push(page.el(id).innerHTML);
   /* Wire formats: key prefixes, namespaces and the download name. */
   const made = await page.generateAll();
   assert.ok(made["bio-release"].priv.startsWith("BIOKEY-RAW1.bio-release."));
@@ -1176,8 +1188,16 @@ test("R32 the page's visible text names CivicOS, never BIO, and its wire formats
   assert.ok(wrapped.startsWith("BIOKEY1.bio-release."));
   assert.equal((await page.parseKeyString(wrapped, "a long passphrase")).label, "bio-release");
   await page.el("gen").onclick();
-  assert.match(page.el("gen-out").innerHTML, /CivicOS goes to real groups/);
-  assert.doesNotMatch(page.el("gen-out").innerHTML, /\bBIO\b/);
+  assert.match(page.el("gen-out").innerHTML, /When Civicsmith goes to real groups/);
+  written.push(page.el("gen-out").innerHTML);
+  for (const id of ["rel-key", "rat-key", "not-key", "dock-key"]) written.push(page.el(id).innerHTML);
+  page.el("forget").onclick();
+  written.push(page.el("load-out").innerHTML);
+  for (const s of written) {
+    assert.ok(s.length > 0);
+    assert.doesNotMatch(s, /\bBIO\b/);
+    assert.doesNotMatch(s, /civic\s*os/i);
+  }
   page.el("dl").onclick();
   assert.equal(page.created.find((e) => e.tag === "a").download, "bio-signing-keys.txt");
 });

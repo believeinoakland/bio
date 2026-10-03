@@ -1,6 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>CivicOS signing keys</title>
+<title>Civicsmith signing keys</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <!--
   Signing keys that never leave the person holding them.
@@ -11,7 +11,7 @@
 
   It produces SSHSIG signatures, the same format `ssh-keygen -Y sign`
   emits, so anything signed here can be verified by anyone with stock
-  OpenSSH and no CivicOS code:
+  OpenSSH and no Civicsmith code:
 
       ssh-keygen -Y verify -f allowed_signers -I <you> \
                  -n bio-release -s file.sig < file
@@ -82,7 +82,7 @@
 </style>
 
 <main>
-  <h1>CivicOS signing keys</h1>
+  <h1>Civicsmith signing keys</h1>
   <p class="sub">Runs entirely in this tab. Nothing is sent anywhere.</p>
 
   <div class="tabs">
@@ -288,7 +288,7 @@ async function parseKeyString(blob, pass) {
       return { label, seed };
     } catch { throw new Error("wrong passphrase, or the key was altered"); }
   }
-  throw new Error("that does not look like a CivicOS private key");
+  throw new Error("that does not look like a Civicsmith private key");
 }
 
 /* ---------------------------------------------------------------- state */
@@ -395,7 +395,7 @@ $("gen").onclick = async () => {
     + Object.entries(made).map(([l, m]) =>
         copyBox(`${JOBS[l].title}: private, keep this`, m.priv,
                 `Paste this back into "Load a key you already have" next time you sign. This one ${JOBS[l].what}.`)).join("")
-    + `<p class="note">These are development keys with no passphrase. When CivicOS goes to real groups,
+    + `<p class="note">These are development keys with no passphrase. When Civicsmith goes to real groups,
          generate fresh keys and protect them. Nothing here carries over.</p>`;
 
   $("copy-all").onclick = async (e) => {
