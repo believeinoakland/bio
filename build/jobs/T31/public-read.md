@@ -19,3 +19,7 @@
 - `format`: 98 modules, 97 requirements files; 0 failures. `architecture public-read`: 34 product files, 108 relative imports; 0 failures. `coverage public-read`: 25 of 25 live requirement ids named by a test; 0 failures. `ownership public-read tranche/T31` (after commit): 5 files changed; 0 failures.
 
 Size (session_016SfTxv2owbWsyKBSjqM3an): test runs 4, module lines 2896
+
+## J1 · COMPLETE
+
+R25 applied (store op and door pass captures: "omit" only for exactly "omit"); three real R25 tests in docket.test.mjs over the fixture docket in docket R24's form. public-read tests 108/108; format, architecture, coverage (25/25), ownership 0 failures. Nothing deferred; nothing found in other modules. Record has the details.
