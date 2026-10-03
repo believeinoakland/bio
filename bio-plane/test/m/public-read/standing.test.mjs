@@ -1,11 +1,11 @@
 /* public-read — R22 (each member's standing, DEC-112 (4)(1)) and R3's `/6` blocks (`method`, `materials`, DEC-112 (3)), at
-   `op=publishedcase`. Each `/6` document is written with `case-grammar`'s own line builders (`methodBlockLines`,
-   `materialBlockLines`), as case-authoring writes them, into the fixture's case document; every claim has its negative
-   control (a document of another format, a document stating no bar, a member that is not load-bearing). */
+   `op=publishedcase`. Each `/6` document is the fixture's (`publication`'s, its method and materials blocks as
+   case-authoring writes them), with the bar it records; every claim has its negative control (an edition signed before
+   T28 in another format, a document stating no bar, a member that is not load-bearing). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, caseDoc, V, NOW } from "./fixture.mjs";
-import { methodBlockLines, materialBlockLines, standingOf, CASE_DOCUMENT_FORMAT } from "../../../src/case-grammar/index.mjs";
+import { standingOf, CASE_DOCUMENT_FORMAT } from "../../../src/case-grammar/index.mjs";
 import { standingsOf } from "../../../src/public-read/index.mjs";
 
 const CASE = "CASE-2026-0001", F = "INQ-2026-0001", G = "INQ-2026-0002";
@@ -25,16 +25,14 @@ const METHOD = { grading: "bio-grading/1", checks: "1.57.0" };
 /* A case document of `format`, its members F (load-bearing) and G (supporting), their frozen pairs, the bar it records
    (`required_strength`), and, for /6, the method and materials blocks. */
 function docOf({ format = CASE_DOCUMENT_FORMAT, bar = { declared: true, capture: "B", connection: "C" }, pins }) {
-  const text = caseDoc(CASE, 1, { format, project: "PROJ-1",
+  const text = caseDoc(CASE, 1, { format, project: "PROJ-1", method: METHOD, ...MATERIALS,
     roles: [{ target: F, version_sha: pins[F], role: "load_bearing" }, { target: G, version_sha: pins[G], role: "supporting" }],
     strength: [{ target: F, axis: "capture", grade: "A" }, { target: F, axis: "connection", grade: "D" },
                { target: G, axis: "capture", grade: "E" }, { target: G, axis: "connection", grade: "E" }] });
   const lines = text.split("\n");
   const close = lines.indexOf("---", 1);
-  const extra = [
-    "required_strength:", `  declared: ${bar.declared}`, "  source: project", "  project: PROJ-1",
-    `  capture: ${bar.capture ?? "null"}`, `  connection: ${bar.connection ?? "null"}`, '  detail: "the bar"',
-    ...(format === CASE_DOCUMENT_FORMAT ? [...methodBlockLines(METHOD), ...materialBlockLines(MATERIALS)] : [])];
+  const extra = ["required_strength:", `  declared: ${bar.declared}`, "  source: project", "  project: PROJ-1",
+    `  capture: ${bar.capture ?? "null"}`, `  connection: ${bar.connection ?? "null"}`, '  detail: "the bar"'];
   return [...lines.slice(0, close), ...extra, ...lines.slice(close)].join("\n");
 }
 

@@ -43,7 +43,7 @@ function flipped() {
   const bar = { ...BAR, project: proj };
   w.inquiry(ALPHA);
   const SIGNED_ALPHA_1 = w.head(ALPHA);
-  w.prepare(CASE, 1, { project: proj, roles: [{ target: ALPHA, version_sha: SIGNED_ALPHA_1, edition: 1 }],
+  w.prepare(CASE, 1, { format: "bio-case-document/5", project: proj, roles: [{ target: ALPHA, version_sha: SIGNED_ALPHA_1, edition: 1 }],
                        strength: pair(ALPHA, "B", "C") });
   assert.equal(w.signCase(CASE, 1, { project: proj, signer: "rosa", bar,
     roster: [{ bundle_id: ALPHA, version_sha: SIGNED_ALPHA_1, role: "load_bearing" }] }).ok, true);
@@ -53,7 +53,7 @@ function flipped() {
   const SIGNED_ALPHA_2 = w.head(ALPHA);
   w.inquiry(BETA);
   const SIGNED_BETA_1 = w.head(BETA);
-  w.prepare(CASE, 2, { project: proj,
+  w.prepare(CASE, 2, { format: "bio-case-document/5", project: proj,
     roles: [{ target: ALPHA, version_sha: SIGNED_ALPHA_2, edition: 2, role: "load_bearing" },
             { target: BETA, version_sha: SIGNED_BETA_1, edition: 1, role: "supporting" }],
     strength: [...pair(ALPHA, "B", "C"), ...pair(BETA, "C", "C")] });

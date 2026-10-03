@@ -39,7 +39,7 @@ function publishedCase() {
   const proj = w.project("Parks", "olive");
   w.inquiry(F);
   const pin = w.head(F);
-  w.prepare("CASE-2026-0001", 1, { project: proj, roles: [{ target: F, version_sha: pin }],
+  w.prepare("CASE-2026-0001", 1, { format: "bio-case-document/5", project: proj, roles: [{ target: F, version_sha: pin }],
                                    strength: [{ target: F, axis: "capture", grade: "B" }] });
   w.signCase("CASE-2026-0001", 1, { project: proj, roster: [{ bundle_id: F, version_sha: pin }] });
   const text = w.text(F);

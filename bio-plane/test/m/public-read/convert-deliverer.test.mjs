@@ -10,7 +10,7 @@
    `delivered_by` copied from the signer cannot pass. Driven at the module's interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, stubOf, bucket, V, NOW, KEY, SIG } from "./fixture.mjs";
+import { world, stubOf, bucket, V, NOW, KEY, SIG, legacyCaseCommit } from "./fixture.mjs";
 import { bindPublishedPlane, publishedRoutes, assembleCaseContainer } from "../../../src/publication/worker.mjs";
 import { readContainer, readPart } from "../../../src/ooxml.mjs";
 
@@ -42,10 +42,10 @@ const LOOSE = "INFO-2026-0001", OLD_LOOSE = "INFO-2026-0002";
 
 /* One case edition's commit, as ratification makes it; `deliveredBy` omitted is a legacy commit (no deliverer). */
 function commitCase(w, caseId, project, roster, deliveredBy) {
-  const r = w.record.transact(() => w.p.commitCaseEdition({ case: caseId, edition: 1, project, scope: "The question.",
-    completeness: { statement: "It leaves out the minutes.", author: V("iris") }, biasAcknowledgement: "none declared",
-    bar: null, roster, sigArmored: SIG(1), attestorKey: KEY, attestorMember: "iris", gateVersion: "plane-gate/test",
-    ...(deliveredBy !== undefined ? { deliveredBy } : {}), at: NOW }));
+  /* A /5 edition, so one signed before T28 (publication R58): its rows as its commit wrote them then. */
+  const r = legacyCaseCommit(w, { case: caseId, edition: 1, project,
+    completeness: { statement: "It leaves out the minutes.", author: V("iris") },
+    roster, sigArmored: SIG(1), attestorKey: KEY, attestorMember: "iris", deliveredBy, at: NOW });
   assert.equal(r.ok, true, `commitCaseEdition ${caseId}: ${JSON.stringify(r).slice(0, 300)}`);
   return r;
 }
@@ -74,7 +74,7 @@ function record() {
                                                                  [LEGACY_CASE, OLD_LEAD, undefined, undefined]]) {
     w.inquiry(lead);
     const pin = w.head(lead);
-    w.prepare(caseId, 1, { project: proj, roles: [{ target: lead, version_sha: pin }],
+    w.prepare(caseId, 1, { format: "bio-case-document/5", project: proj, roles: [{ target: lead, version_sha: pin }],
                            strength: [{ target: lead, axis: "capture", grade: "B" }], author: "iris" });
     commitCase(w, caseId, proj, [{ bundle_id: lead, version_sha: pin }], deliveredCase);
     commitFinding(w, lead, deliveredFinding);
