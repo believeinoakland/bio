@@ -2,3 +2,4 @@ session,role,module,cache_read,cache_write,input,output,turns,test_runs,module_l
 session_01JojTP81KLXqohStkarosgE,job,signatures,3816350,125542,64,9296,,2,1329
 session_01TNXZ4EjoqnXE7ZRkqLBzKq,job,acquisition,13541756,314716,110,20822,,4,1573
 session_01A4QQEgEAz3S4VbtQrGS5L3,job,capture,12634862,360611,100,16264,,5,3457
+session_01DyVawcUA9UTeHgLqooX3Aa,job,reading-pipeline,2869298,98594,52,8207,,3,1327

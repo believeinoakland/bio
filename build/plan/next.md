@@ -13,3 +13,4 @@
 
 The left-out table of `current.md` (T31), unchanged until re-read at T32's opening.
 - N541 · **acquisition, capture**: one spelling of a first hop's `who` (`instance <name> (Civicsmith/<version>)`), provided by acquisition and read by capture R65, so a later rename touches one site (CAPTURE #19 J1, K1374). **Why next:** an improvement; both meet their requirements as written, and acquisition's job is complete (P9).
+- N542 · **reading-pipeline**: `tier-pagewise.probe.mjs` composes its `--census` user agent with `acquisition.civicsmithUserAgent` instead of a written copy; `modules.json` gains the edge reading-pipeline → acquisition (READING-PIPELINE #2 J1, K1376). **Why next:** an improvement; the module meets its requirements, and its job is complete (P9).
