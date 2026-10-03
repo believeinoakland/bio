@@ -30,3 +30,32 @@ Another module, found at my start (not mine to change): `membership` R83's test 
 ## J3 · REPORT
 
 B3 applied. One reading for queue-producers (please forward, P9): in both brokenScripts and submittedFor entries, `version` is the version NUMBER (an integer), so its keys `<script>@<version>` are built from `script` and `version` as R32 and R33 write them; `author` is the version author's member id; `refusal.translation` is the row's (R32 names a withdrawal's refusal by it). One more for R17/R33: a retired script's submitted versions are not listed (R33's item leaves when its script is retired). Also R7 (my reading, stated in my record): since only a version's author revises it (R4), a member contributes by a proposal the author adopts or drafts from; a member's adopted proposal counts as that member's contribution for APPROVER_IS_AUTHOR, a machine's as a run.
+
+## J4 · COMPLETE
+
+**Completion.** N528 applied: `wizard-scripts`, a new module, R1–R20, at `bio-plane/src/wizard-scripts/` (`index.mjs`, `checks.mjs`, `schema.mjs`, `civicsmith-library.mjs`), tests at `bio-plane/test/m/wizard-scripts/` (6 test files, fixture). B3 (K1397) applied: `brokenScripts` and `submittedFor` answer `{ok, entries, cursor, truncated}` in its entry shapes; factory `wizardScriptsOf(host, deps)`. BOB writes `paths` and `tests` into `modules.json` before the merge (K1396).
+
+**What it provides.** `wizardRegister`, `registeredScreens`, `brokenScripts`, `wizardDraft`, `wizardRevise`, `wizardPropose`, `wizardSubmit`, `wizardApprove`, `wizardEditorGrant`, `wizardEditorRevoke`, `wizardRetire`, `wizards`, `wizardRead`, `wizardsAt`, `wizardCheck`, `wizardProgress`, `wizardUse`, `tallyRefusal`, `wizardCandidates`, `submittedFor` on the instance; pure `checkScript`, `requiredFailures`, `canonicalSteps`, `stepsSha`, `normaliseRegistration`; `wizardScriptsOps(m, url, body)` with ops `wizarddraft`, `wizardrevise`, `wizardpropose`, `wizardsubmit`, `wizardapprove`, `wizardeditorgrant`, `wizardeditorrevoke`, `wizardretire`, `wizards`, `wizardread`, `wizardsat`, `wizardcheck`, `wizardprogress`, `wizarduse`, `wizardcandidates` (stamps `author`, `viewer` from the query); `WIZARD_SCRIPTS_CHECKS` (C-131.1–C-131.32), `WIZARD_SCRIPTS_TABLES`, `CIVICSMITH_LIBRARY`, `wizardScriptsOwns`. Tables `wiz_*` (10), declared to purge; mint seed WIZ, WZP, WEG.
+
+**Readings beyond J1 (K1396 settled 1–11):**
+- R7: only a version's author revises it (R4), so another member contributes by a proposal the author adopts (or drafts from): a member's adopted proposal is listed as that member's contribution (`kind: "member"`, with `proposal`), a machine's as a run; `APPROVER_IS_AUTHOR` reads members. (J3)
+- R15 (refines reading 9): `wizardProgress` takes an optional stamped `viewer`, asked only whether it may see the script (R20) and never kept; with none it counts for any held version.
+- R17: a retired script's submitted versions are not listed. In both queue reads `version` is the number and `author` the member id (J3).
+- R3: a recording and a `from` together are `WIZARD_STEP_REFUSED`; a malformed recorded step (no screen) is `WIZARD_STEP_REFUSED` naming it, after the values check. A script holds at most 200 steps (`STEPS_MAX`).
+- R16: `wizardCandidates` is answered to administrators and to owners of a project that holds a script (membership offers no "owns any project" read).
+- `NOT_A_DRAFT`, `NOT_AN_APPROVER`, `APPROVER_IS_AUTHOR` are also filing-templates' codes: this module answers its own C-131 rows; control-plane's composed catalogue keeps the first source's (filing-templates', C-125) for `dec49Row`.
+
+**Deferred:** none. Size: 1,584 source lines (estimate 900–1,300), 1,114 test lines.
+
+**Found in other modules (reported, not mine):**
+- record-grammar: no `wizard` subject in `PROPOSAL_STATES` (J1 Q1): R5's label test red, accepted by name until N543 (K1396).
+- membership: `MODULE_ORDER` lacks `wizard-scripts`, R83's test red, accepted until N544 (J2, K1396).
+- control-plane: `CHECK_FAMILY_FILES` must gain `src/wizard-scripts/checks.mjs` (its R41, a T31 entry); its families test's totality arm will name the file once `modules.json` carries my paths.
+- queue-producers: the entry readings in J3.
+
+**Tests and checks** (modules.json patched locally with my paths for the checks, not committed):
+- `node --test bio-plane/test/m/wizard-scripts/`: 35 tests, 34 pass, 1 fail: "R5 a proposal is labelled proposalLabel(proposer, "wizard")" (RangeError from record-grammar; accepted red, K1396).
+- `node --test bio-plane/test/m/filing-templates/` (a provider): 47 pass, 0 fail. `bio-plane/test/m/control-plane/families.test.mjs`: 9 pass, 0 fail. No layer tests named in the manifest.
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs . wizard-scripts`: 11 product files, 29 relative imports, 0 failures. `checks/coverage.mjs . wizard-scripts`: 20 of 20 live ids named, 0 failures. `checks/ownership.mjs . wizard-scripts tranche/T31`: 12 files, 0 failures. (Without the paths in `modules.json`, coverage and ownership fail on the empty paths alone.)
+
+Size (session_015rXhvVXUnRr73rAvgxK4WZ): test runs 17, module lines 1584
