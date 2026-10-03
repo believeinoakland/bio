@@ -13,8 +13,8 @@
 **Deferred.** None.
 
 **Found in other modules.**
-- control-plane: `test/m/control-plane/promotion-step.test.mjs:32` (R42, the rank) fails on `tranche/T32` without this change ("wizard-scripts (layer 11) ranks after the step"); not one of the plan's inherited reds. REPORT J3.
-- Generated artifact made stale (§14): `bio-plane/dist/bio-plane.bundled.mjs` (acquisition source changed; it still carries the aliases). `newgroup/src/release.mjs` and `release/bio-plane.bundled.mjs` embed the released bundle, unchanged (N539's note). REPORT J3.
+- control-plane: `test/m/control-plane/promotion-step.test.mjs:32` (R42, the rank) fails on `tranche/T32` without this change ("wizard-scripts (layer 11) ranks after the step"); not one of the plan's inherited reds. REPORT J2.
+- Generated artifact made stale (§14): `bio-plane/dist/bio-plane.bundled.mjs` (acquisition source changed; it still carries the aliases). `newgroup/src/release.mjs` and `release/bio-plane.bundled.mjs` embed the released bundle, unchanged (N539's note). REPORT J2.
 
 **Tests and checks run** (on 1a3df12a63, after merging `tranche/T32`):
 - `node --test bio-plane/test/m/acquisition/`: tests 73, pass 73, fail 0.
