@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #105 · session_01DDpGto6QSiBnw4AxvJcYJq · depth 1
 
-**Jobs** · membership: MEMBERSHIP #21 session_014t8ory3KuXTmiZLiSDLmaB; promotion: PROMOTION #28 session_01JXCfBLEWnwDJYd7wTMihga; inquiry-grammar: INQUIRY-GRAMMAR #5 session_01PnLhSoHMj7KMjQmdKaYkP6; accepted-work: ACCEPTED-WORK #1 session_01Ny1sjsJ9vEJz7rxs28vcCh; inquiry: INQUIRY #13 session_01QNQaUggEEA2eXfwiByRD2P; basis-versions: BASIS-VERSIONS #11 session_01EC1CbcpHTUynmhmiinbKPz; strength: STRENGTH #10 session_01Q7AodKmzj5rYSu6PxmkvRb; reevaluation: REEVALUATION #15 session_01CqAd23e8YE6QX8eLXZeLoJ; case-grammar: CASE-GRAMMAR #5 session_016TiHSZQkrggTJ3QAahBMjg
+**Jobs** · membership: MEMBERSHIP #21 session_014t8ory3KuXTmiZLiSDLmaB; promotion: PROMOTION #28 session_01JXCfBLEWnwDJYd7wTMihga; inquiry-grammar: INQUIRY-GRAMMAR #5 session_01PnLhSoHMj7KMjQmdKaYkP6; accepted-work: ACCEPTED-WORK #1 session_01Ny1sjsJ9vEJz7rxs28vcCh; inquiry: INQUIRY #13 session_01QNQaUggEEA2eXfwiByRD2P; basis-versions: BASIS-VERSIONS #11 session_01EC1CbcpHTUynmhmiinbKPz; strength: STRENGTH #10 session_01Q7AodKmzj5rYSu6PxmkvRb; reevaluation: REEVALUATION #15 session_01CqAd23e8YE6QX8eLXZeLoJ; case-grammar: CASE-GRAMMAR #5 session_016TiHSZQkrggTJ3QAahBMjg; publication: PUBLICATION #16 session_01XULTB98f6bHiUb3Y9gRxug
 
 **Opened** 2026-10-03 ~00:40 UTC by BOB #104 from `main` @ 416385c819 (T27 closed, K1298; PR #8, DEC-117–DEC-119, on `main`), from T27's `next.md` (K1299). **Bob's weekly meter** · 72% after T26 (K1250); asked at T27's opening and again at its close.
 
