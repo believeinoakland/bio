@@ -24,7 +24,7 @@
  *   strength        `strengthBarOf` (its R16): this group's default bar (R4).
  *   acceptedWork    `registerAcceptedWork` (its R1; R16).
  *   reevaluation    `acceptanceWithdrawn` (its R31; R7).
- *   checkCaseFile   `case-checker.checkCaseFile` (its R1), pure.
+ *   checkCaseFile   `case-checker.checkCaseFile` (its R1), pure; it answers a promise. Default: case-checker's own.
  *   caseFileManifestCheck   `case-grammar.caseFileManifestCheck` (its R13), pure.
  *   now             the clock, milliseconds (default `env.BIO_NOW_MS`, else the wall clock).
  *
@@ -46,7 +46,7 @@ import { parseFrontmatter } from "../record-grammar/frontmatter.mjs";
 import { BASIS_GRADES } from "../record-grammar/index.mjs";
 import { CASE_IMPORT_CHECKS, rowOf } from "./checks.mjs";
 import { CASE_IMPORT_TABLES, BLOB_CHUNK, migrateCaseImport } from "./schema.mjs";
-import { readCaseFile } from "./parts.mjs";
+import { checkCaseFile, readCaseFile } from "../case-checker/index.mjs";
 
 export { CASE_IMPORT_CHECKS } from "./checks.mjs";
 export { CASE_IMPORT_SCHEMA, CASE_IMPORT_TABLES } from "./schema.mjs";
@@ -178,7 +178,7 @@ export class CaseImport {
   get strength() { return this.#deps.strength ||= strengthOf(this.#deps.host, { record: this.record, membership: this.membership }); }
   get reevaluation() { return this.#deps.reevaluation ||= reevaluationOf(this.#deps.host, { record: this.record, membership: this.membership }); }
   get acceptedWork() { return this.#deps.acceptedWork ||= acceptedWorkOf(this.#deps.host, { record: this.record }); }
-  get #checkCaseFile() { return this.#deps.checkCaseFile; }
+  get #checkCaseFile() { return this.#deps.checkCaseFile || checkCaseFile; }
   get #manifestCheck() { return this.#deps.caseFileManifestCheck || caseGrammar.caseFileManifestCheck; }
 
   migrate() { migrateCaseImport(this.sql); }
@@ -264,7 +264,7 @@ export class CaseImport {
     if (!f) return null;
     const parts = this.#parts(f.import_id, ed);
     if (parts.some((p) => !p)) return null;
-    const got = this.#call(() => readCaseFile(parts, shaOf).files.find((x) => x.path === f.path));
+    const got = this.#call(() => readCaseFile(parts).files.find((x) => x.path === f.path));
     const bytes = got && got.content instanceof Uint8Array ? got.content : null;
     return bytes && shaOf(bytes) === f.sha ? { path: f.path, kind: f.kind ?? null, sha: f.sha, bytes } : null;
   }
@@ -322,7 +322,7 @@ export class CaseImport {
   }
   #heldFiles(importId, edition) {
     const parts = this.#parts(importId, edition);
-    return parts.some((p) => !p) ? [] : this.#call(() => readCaseFile(parts, shaOf).files, []);
+    return parts.some((p) => !p) ? [] : this.#call(() => readCaseFile(parts).files, []);
   }
 
   /* ================================================================ R1: the import */
@@ -350,7 +350,7 @@ export class CaseImport {
                     { departures: [!list.length ? "no part was given" : `part ${list.findIndex((p) => !p)} is not bytes`] });
     /* The manifest, by the one reader of the format (`case-checker` R19), checked by `case-grammar` R13's check. A file
        whose bytes differ from the manifest is the checker's to report (its R2), never a refusal here. */
-    const read = this.#call(() => readCaseFile(list, shaOf), { manifest: null, files: [], departures: ["the parts could not be read"] });
+    const read = this.#call(() => readCaseFile(list), { manifest: null, files: [], departures: ["the parts could not be read"] });
     const check = this.#manifestCheck;
     const checked = !isObj(read.manifest) ? (Array.isArray(read.departures) && read.departures.length ? read.departures : ["no manifest was found"])
       : typeof check === "function" ? this.#call(() => check(read.manifest), ["the manifest could not be checked"])

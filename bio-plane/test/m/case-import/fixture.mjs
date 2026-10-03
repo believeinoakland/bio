@@ -19,7 +19,7 @@ import { membershipOf } from "../../../src/membership/index.mjs";
 import { strengthOf } from "../../../src/strength/index.mjs";
 import { acceptedWorkOf } from "../../../src/accepted-work/index.mjs";
 import { caseImportOf, CASE_IMPORT_CHECKS } from "../../../src/case-import/index.mjs";
-import { readCaseFile } from "../../../src/case-import/parts.mjs";
+import { readCaseFile } from "../../../src/case-checker/index.mjs";
 import { canonicalJson } from "../../../src/record-grammar/json.mjs";
 import { caseFilePath, casePartDigest, CASE_FILE_FORMAT, CASE_FILE_MANIFEST_PATH } from "../../../src/case-grammar/index.mjs";
 
@@ -147,7 +147,7 @@ export function caseFile({ group = SOURCE, case: caseId = CASE, edition = 1, len
 
 /* ---------------------------------------------------------------- the world */
 
-export function world({ minimal = false } = {}) {
+export function world({ minimal = false, realChecker = false } = {}) {
   const st = storage();
   const host = { storage: st, env: {} };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -214,7 +214,7 @@ export function world({ minimal = false } = {}) {
     },
   };
   w.ci = caseImportOf(host, { record, membership, strength, acceptedWork, reevaluation: reeval,
-                              checkCaseFile, now: () => clock.now });
+                              ...(realChecker ? {} : { checkCaseFile }), now: () => clock.now });
   return w;
 }
 
