@@ -118,7 +118,7 @@ Terms.
 
   Every entry seen, verified or refused, is answered in order under `docket_entries`. A non-member is answered as R4 says. (DEC-116 item 8: "never that nothing changed")
 - **R20** `watchItems({viewer})` (a service for `queue-producers`, read as the plane) answers the following, each naming the import, its group and case, and the watch's `set_by`:
-  - `entries`: each verified entry seen, of any kind, with its `seq`, kind, edition, `date`, `key_listed` and, for a move, `what_changed` or `reason`;
+  - `entries`: each verified entry seen, of any kind, with its `seq`, kind, edition, `date`, `key_listed`, the instant this copy read it (`seen_at`; N546) *(not yet met: T32)* and, for a move, `what_changed` or `reason`;
   - `refused`: each refused entry, with its `seq` and the check it failed;
   - `unreadable`: each watch in force whose latest read is `unreadable`, with the reason and the instant.
 

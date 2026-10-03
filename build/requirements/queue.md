@@ -81,6 +81,7 @@ Terms. An **item** is `{id, class, kind, case, subject, summary, detail, basis, 
 - **R50** (DEC-116 items 2, 3, 7; N520) Dispositions (added to R12):
   - **`docket-core-due`**: `available: false`, `instead: [docketprepare, docketdecline]`. As an OBLIGATION it is never muted (R19, R31): the ruling makes it a To-do for the manager until done (DEC-116 item 2).
   - **`edition-withdrawn`** and **`edition-contested`**: R12's project-scoped disposition, with `acts: [reevaluationrecord]`, as `side-corrected`.
+  - **`cited-newer-edition`** and **`cited-edition-withdrawn`**: the same, with `acts: [reevaluationrecord]` (N547). *(not yet met: T32)*
 
  
 - **R47** *(retired: moved to `queue-producers` R7, N363)*

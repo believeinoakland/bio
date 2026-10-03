@@ -57,6 +57,8 @@ Terms. The **document address** is what the record identifies the document by; t
 
 *The archive lookup through Memento* (N492; K1032)
 - **R32** (N492, K1032) The archive arm (R3) and `archiveLookup` find a memento through `capture-sources` R37's Memento services, so any compliant archive can serve the lookup and the CDX index is one source, not the interface:
+- **R33** (N541) `firstHopWho(instanceName)` answers `instance <name> (Civicsmith/<version>)`, the one spelling of a first hop's `who` (R16's, and `capture` R65's); never throws. *(not yet met: T32)*
+- **R34** (N539; retires K1365 (6)'s aliases) `civicosUserAgent` and `CIVICOS_CONTACT_URL` are no longer exported; `civicsmithUserAgent` and `CIVICSMITH_CONTACT_URL` are the only names. *(not yet met: T32)*
   - the archive is a descriptor (`WAYBACK_MEMENTO` for the Internet Archive); its endpoints for the document address are `mementoEndpoints(archive, address)`;
   - the lookup asks the TimeGate with `Accept-Datetime` (`acceptDatetime`) and reads the answer with `readMementoAnswer`, or reads the TimeMap (`parseTimeMap`) and takes its candidates with `timeMapCandidates`, each through the host governor as R3's query is;
   - the chosen memento's raw bytes are fetched (the descriptor's `raw`, else the memento URI as given), its row is `mementoRow(answer, {sha256, bytes})` over the bytes received, and the choice is `selectCapture`'s, with R29–R31's rules as written;
