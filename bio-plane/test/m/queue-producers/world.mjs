@@ -1,7 +1,7 @@
 /* The producers' test world: record-core, membership and credentials real, over node:sqlite behind a `sql` that answers as workerd's
    does (a CURSOR, iterable once, with `toArray()` and `one()`; K316); every other provider a fake in the shape its
    requirements publish, which a test fills. The tables other modules own and this module reads by their read contracts
-   (record-core R37, provenance R48, inquiry R40, connections R58, progressions R34, publication R56) are their owners' own schemas
+   (record-core R37, provenance R48, inquiry R40, connections R58, progressions R34, publication R40, R56) are their owners' own schemas
    where this module uses the owner (record-core, provenance, membership, credentials), else created here with exactly the
    contracted columns.
 
@@ -53,7 +53,8 @@ export function world(fakes = {}) {
            CREATE TABLE IF NOT EXISTS inquiry_basis_version_legs (bundle_id TEXT, name TEXT, ord INTEGER, target_id TEXT, target_type TEXT,
              role TEXT, grade TEXT, grade_axis TEXT, grade_source TEXT, ground TEXT, content_id TEXT);
            CREATE TABLE IF NOT EXISTS progression_instances (progression_key TEXT, entity_id TEXT, stage_key TEXT, capture_sha TEXT, bundle_id TEXT);
-           CREATE TABLE IF NOT EXISTS case_documents (case_id TEXT NOT NULL, edition INTEGER NOT NULL, authored_at TEXT NOT NULL, sig_armored TEXT)`);
+           CREATE TABLE IF NOT EXISTS case_documents (case_id TEXT NOT NULL, edition INTEGER NOT NULL, authored_at TEXT NOT NULL, sig_armored TEXT);
+           CREATE TABLE IF NOT EXISTS cases (case_id TEXT PRIMARY KEY, project_id TEXT)`);
   record.migrate();
   membership.migrate();
   credentials.migrate();
@@ -133,7 +134,8 @@ export function defaultFakes() {
                    caseDocumentFacts: (c, e) => ({ ok: false, reason: "NO_CASE_DOCUMENT", case: c, edition: e }) },
     corpusExport: { exportLog: () => ({ ok: true, exports: [], limit: 200, truncated: false }) },
     reevaluation: { notices: () => ({ ok: true, notices: [], limit: 1000, truncated: false }),
-                    correctedDependents: () => ({ ok: true, entries: [], limit: 200, truncated: false, cursor: null }) },
+                    correctedDependents: () => ({ ok: true, entries: [], limit: 200, truncated: false, cursor: null }),
+                    docketDependents: () => ({ ok: true, entries: [], count: 0, limit: 200, truncated: false, cursor: null }) },
     intent: { gaps: () => ({ ok: true, gaps: [] }) },
     monitoring: { monitoring: () => ({ ok: true, items: [], truncated: false }),
                   flagged: () => ({ ok: true, items: [], limit: 200, truncated: false }),
@@ -146,7 +148,9 @@ export function defaultFakes() {
                     calendarFactsRead: () => ({ ok: true, as_of: "2026-09-01", paths: [], actions_limit: 500, truncated: false }) },
     escalation: { escalationsDue: () => ({ ok: true, items: [], limit: 500, truncated: false }) },
     actionPlans: { checkpointsDue: () => ({ ok: true, items: [], limit: 500, truncated: false }) },
-    actions: { holdsDue: () => ({ ok: true, items: [], limit: 500, truncated: false, cursor: null }) },
+    actions: { holdsDue: () => ({ ok: true, items: [], limit: 500, truncated: false, cursor: null }),
+               holdsReleased: () => ({ ok: true, items: [], limit: 500, truncated: false, cursor: null }) },
+    docket: { coreDue: () => ({ ok: true, items: [], count: 0, wrote: false }) },
     filingTemplates: { reviewsRequested: () => ({ ok: true, items: [], limit: 500, truncated: false, cursor: null }) },
     localFacts: { factsDue: () => ({ ok: true, due: [], unknown: [], absent: [] }) },
     networkNotices: { noticesOf: ({ project }) => ({ ok: true, project, notices: [], sealed_weeks: [], methodVersion: 1 }) },
