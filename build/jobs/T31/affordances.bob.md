@@ -8,3 +8,7 @@ Depth 2. Your entries: `build/plan/current.md` (T31) L11, affordances: N528: R36
 Your requirements carry `*(not yet met: T31)*` on each changed line (folded at the opening: K1367 N538, K1368 N528, K1369 N534; read the rulings K1361–K1369 for the decisions behind them). Meet each with a test naming its id; behaviour at the interface. Merge order in the layer is `modules.json` order.
 Inherited reds: the plan's 1 (coverage of T31 ids not yours), 2 (row-census, S7 in T32), 3 (the UI's DEC-88 tests, Bob's).
 Found before your start (MONITORING #14, K1394): one affordances test fails on case-import's new ops (importwatch, importunwatch, its R17), as K1383 found for op-declarations, control-plane and plane: yours to turn green with your N534 R38 entry.
+
+## B2 · ANSWER · re J1
+
+K1396: (1)-(3) stand. wizard-scripts exports registeredScreens and wizardsAt (its R11); I post a CHANGE when it is merged.
