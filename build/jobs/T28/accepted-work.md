@@ -15,3 +15,29 @@ R4 needs the held version of the inquiry ("new against the held version, or whos
 B2 applied: tranche/T28 merged (record-core in my uses). The module is written and pushed (`bio-plane/src/accepted-work/index.mjs` 213 lines, `checks.mjs` 20; tests in `bio-plane/test/m/accepted-work/`, 19 tests naming R1–R7). With inquiry-grammar R11 stood in locally (uncommitted, spelled as R11 states it): 19 pass, 0 fail; format, architecture, coverage (7 of 7) and ownership (with the paths edit made locally, uncommitted) 0 failures. My code imports `parseImportedFindingRef` from inquiry-grammar and my fixture `importedFindingRef`, so my tests cannot run on the tranche until inquiry-grammar R11 is in: I wait for your word that it is merged, then merge, re-run against the real R11 and post COMPLETE.
 
 For basis-versions (re B2): R3 is reached per host as `acceptedWorkOf(host, deps).acceptedLegRefusals({legs, viewer})` (the registration it reads is per host, K61, so it is an instance method, as R2's reads are: `acceptedFinding`, `openFlagsOn`, `acceptanceWithdrawals`). It answers `[{check, code, severity: "error", translation, detail, ord, ref, edition}]`; `ord` is a leg's own integer `ord` when it carries one, else its index in `legs`. R4 walks the inquiry's `basis[]` only, as you say. Also for the plane (L11): `acceptedWorkOf(host, {record, promotion})` registers the R39 step when made, so it is made before inquiry's factory; `case-import` calls `registerAcceptedWork("case-import", {finding, openFlags, withdrawals})`, each function synchronous (a promise answer reads as unreadable: promotion's checks run in a synchronous transaction).
+
+## J4 · COMPLETE
+
+**Entries applied.** `build/plan/current.md` (T28) L6, accepted-work, a new module (N522; K1273): R1–R7, after B2 (K1304: paths ruled; `record-core` in my uses) and B3 (K1306: inquiry-grammar merged; tranche/T28 merged into my branch and built against its real R11).
+- `bio-plane/src/accepted-work/index.mjs` (220 lines): `acceptedWorkOf(host, deps)` (K61; registers R4's step with promotion R39 when made); `registerAcceptedWork` (R1, both refusals through membership R81); `acceptedFinding`, `openFlagsOn`, `acceptanceWithdrawals` (R2: the registered answer as given; `{absent: true, reason: "accepted_work_absent"}`; `{unreadable: true}` when the function throws, is handed unreadable arguments, or answers a promise, since promotion's checks run in a synchronous transaction); `acceptedLegRefusals` (R3); `check` (R4: the inquiry's `basis[]` only, legs keyed by (ref, `target_edition`) against the held `bundle.md`, so a reorder or an unrelated revision asks nothing; the viewer is the promotion's `author`).
+- `bio-plane/src/accepted-work/checks.mjs` (20 lines): `ACCEPTED_WORK_CHECKS` (R6).
+- A ref is read trimmed, as inquiry-grammar R11's leg arm reads it (`isRef` trims), so a target padded with spaces cannot pass the form check and skip the acceptance check.
+
+**Catalogue rows added by this job, awaiting stamp** (accepted red 2, next.md S5; T29's promotion stamp): C-21.4 IMPORTED_NOT_ACCEPTED and C-21.5 ACCEPTED_WORK_UNREADABLE, both in `bio-plane/src/accepted-work/checks.mjs`.
+
+**Deferred.** None.
+
+**For BOB (paths).** `modules.json`'s accepted-work entry still has empty `paths` and `tests` on my branch, as B2 says: BOB writes `["bio-plane/src/accepted-work/"]` and `["bio-plane/test/m/accepted-work/"]` in the merge commit. Every check below was run with that edit made locally, uncommitted.
+
+**Found in other modules.** None needing work. For their jobs (already sent in J3): basis-versions reaches R3 as `acceptedWorkOf(host, deps).acceptedLegRefusals({legs, viewer})`, answering `[{check, code, severity, translation, detail, ord, ref, edition}]`; plane makes accepted-work before inquiry; case-import's three registered functions must answer synchronously.
+
+**Tests and checks** (on `job/T28/accepted-work` with tranche/T28 @ K1306 merged):
+- `node --test bio-plane/test/m/accepted-work/`: tests 19, pass 19, fail 0.
+- `node --test bio-plane/test/m/inquiry-grammar/ bio-plane/test/m/promotion/` (the modules I use that changed this tranche): pass 134, fail 0.
+- `node checks/format.mjs .`: 95 modules, 94 requirements files; 0 failures.
+- `node checks/architecture.mjs . accepted-work`: 8 product files, 22 relative imports; 0 failures.
+- `node checks/coverage.mjs . accepted-work`: 7 of 7 live requirement ids named by a test; 0 failures.
+- `node checks/ownership.mjs . accepted-work tranche/T28`: 9 files; 0 failures.
+- `bio-plane/test/system/row-census.test.mjs`: C-21.4 and C-21.5 listed awaiting stamp by this record (C-21.3 is inquiry-grammar's record's).
+
+Size (session_01Ny1sjsJ9vEJz7rxs28vcCh): test runs 7, module lines 240
