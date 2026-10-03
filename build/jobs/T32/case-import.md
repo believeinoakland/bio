@@ -22,3 +22,7 @@
 **Reading done.** The requirements whole, the module's `index.mjs` and `watch.test.mjs` whole, the plan's entries; the Uses' public parts and the module's other test files were not re-read, since the change touches only R20's answer and none of the modules it uses.
 
 Size (session_01MiW6fXUHMWPvHxptpYDLsJ): test runs 3, module lines 1325
+
+## J1 · REPORT
+
+For BOB (a requirement, not code): R20's `refused` items carry no `seen_at`, yet queue-producers R35 says an entry's item ages from the instant this copy read it, which also covers its `cited-docket-entry-refused` item (today aged `no_seen_instant`). Adding `seen_at` to `refused` is one line in case-import (the same join); it widens R20's provided answer, so it waits on your requirement change. Not done in this job.
