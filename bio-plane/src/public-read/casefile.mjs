@@ -118,11 +118,11 @@ export async function buildCaseFile({ facts, group = null, read, maxBytes = CONT
   for (const a of facts.attestations) {
     const n = (nth.get(a.row.ref) || 0) + 1;
     nth.set(a.row.ref, n);
-    let carried = null;
-    if (a.held_sha) {
-      const bytes = await held(a.held_sha, a.held_text);
-      carried = bytes ? { sha256: a.held_sha, bytes_b64: b64(bytes) } : null;
-      if (!bytes) unheld.push({ ref: a.row.ref, sha: a.held_sha, what: "attestation" });
+    const carried = [];
+    for (const t of a.held || []) {
+      const bytes = await held(t.sha, t.text);
+      if (bytes) carried.push({ sha256: t.sha, bytes_b64: b64(bytes) });
+      else unheld.push({ ref: a.row.ref, sha: t.sha, what: "attestation" });
     }
     await add(caseFilePath("attestation", [a.row.ref, `${n}-${a.row.by_kind}.json`]), "attestation",
               utf8(canonicalJson({ row: a.row, account: a.account ?? null, held: carried })));

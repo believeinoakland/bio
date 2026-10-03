@@ -952,7 +952,8 @@ export class PublicRead {
    *  - `materials`: each `materials:` row (`case-grammar` R12) listed `included: true`, with what `publication` holds of
    *    it (its R57): a text held inline (`publishedMaterialText`), or the hash the published bucket holds it under;
    *  - `attestations`: each `material_attestations:` row of included material, a `member` row with its signed account
-   *    from the document (when the row may name one), a `co_attestation` row with its held bytes' hash or text.
+   *    from the document (when the row may name one), a `co_attestation` row with each token `publication` held for
+   *    that material (its R57: by hash, with its text where held inline).
    *  Anything else (no such edition, not complete, no signed document, a document before `/6`) answers
    *  `{ok: false, reason}`, so the Worker keeps the container form for an edition prepared before T28. Writes nothing. */
   caseFileFacts(caseId, edition) {
@@ -999,10 +1000,14 @@ export class PublicRead {
         const named = a.by_kind === "member" && !["group", "project"].includes(a.level);
         const material = included.find((m) => m.ref === a.ref);
         const account = named ? accounts.find((x) => x.by === a.by && material && x.capture === material.sha) ?? null : null;
-        const held = a.by_kind === "co_attestation" && HEX64.test(String(a.signature ?? "")) ? a.signature : null;
+        /* K1315: each timestamp token or co-archive record `publication` held for this material (its R57), by its own
+           hash, registered under the material's ref with kind `attestation`. */
+        const held = a.by_kind !== "co_attestation" ? [] : this.#rows(
+          `SELECT sha256 FROM published_shas WHERE bundle_id=? AND kind='attestation' AND path=('materials/' || sha256)
+            ORDER BY sha256`, a.ref).map((r) => ({ sha: r.sha256, text: text(r.sha256) }));
         return { row: a, account: account ? { by: account.by, at: account.at, text: account.text,
                                               signature: account.signature } : null,
-                 held_sha: held, held_text: held ? text(held) : null };
+                 held };
       });
     return { ok: true, case: c, edition: ed, format: doc.fm.format ?? null, ratified_at: state.ratified_at,
              bar: state.bar ?? null,
