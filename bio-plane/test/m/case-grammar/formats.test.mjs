@@ -3,10 +3,10 @@
    `casedoc`, `sources` and `tensions` suites' R20 arms (K651) and driven on the bytes alone. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3, CASE_DOCUMENT_FORMAT_V2,
+import { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V5, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3, CASE_DOCUMENT_FORMAT_V2,
          CASE_DOCUMENT_FORMAT_LEGACY, CASE_DOCUMENT_FORMATS_ACCEPTED, caseDocumentStatesMemberBlocks,
          caseDocumentRequiresDisclosures, caseDocumentRequiresV4Disclosures, caseDocumentRequiresTensionSection,
-         caseDocumentBlocks, captureBlockLines, sourceBlockLines, sourceStatement, unnamedSourceStatement,
+         caseDocumentRequiresMaterials, caseDocumentBlocks, captureBlockLines, sourceBlockLines, sourceStatement, unnamedSourceStatement,
          sourceRowsStanding, CAPTURE_FIELDS, ACKNOWLEDGEMENT_FIELDS, SOURCE_FIELDS, SOURCE_BASES,
          BLOCKS_PREDATE_SENTENCE, BLOCK_UNREADABLE_SENTENCE, NOT_RECORDED_STATED, caseTensionsOf, disclosedCandidates,
          TENSION_STATE_WORDS, TENSION_HIGHLIGHT_SENTENCE, TENSION_DEPTH_SENTENCE, TENSIONS_PREDATE_SENTENCE,
@@ -14,28 +14,34 @@ import { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3,
 import { doc, tensionLines, sha, NOW, V } from "./helpers.mjs";
 
 const PREDICATES = [caseDocumentStatesMemberBlocks, caseDocumentRequiresDisclosures, caseDocumentRequiresV4Disclosures,
-                    caseDocumentRequiresTensionSection];
+                    caseDocumentRequiresTensionSection, caseDocumentRequiresMaterials];
 const ODD = [null, undefined, 7, "x", {}, [], { format: null }, { format: "bio-case-document/5 " },
              { get format() { throw new Error("boom"); } }];
 
-test("R1 the formats: /5 is written, /5–/1 accepted as written, and the four predicates read the token, pure and never throwing", () => {
-  assert.equal(CASE_DOCUMENT_FORMAT, "bio-case-document/5");
-  assert.deepEqual([CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3, CASE_DOCUMENT_FORMAT_V2, CASE_DOCUMENT_FORMAT_LEGACY],
-                   ["bio-case-document/4", "bio-case-document/3", "bio-case-document/2", "bio-case-document/1"]);
-  assert.deepEqual([...CASE_DOCUMENT_FORMATS_ACCEPTED], ["bio-case-document/5", "bio-case-document/4",
+test("R1 the formats: /6 is written, /6–/1 accepted as written, and the five predicates read the token, pure and never throwing", () => {
+  assert.equal(CASE_DOCUMENT_FORMAT, "bio-case-document/6");
+  assert.deepEqual([CASE_DOCUMENT_FORMAT_V5, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3, CASE_DOCUMENT_FORMAT_V2,
+                    CASE_DOCUMENT_FORMAT_LEGACY],
+                   ["bio-case-document/5", "bio-case-document/4", "bio-case-document/3", "bio-case-document/2", "bio-case-document/1"]);
+  assert.deepEqual([...CASE_DOCUMENT_FORMATS_ACCEPTED], ["bio-case-document/6", "bio-case-document/5", "bio-case-document/4",
     "bio-case-document/3", "bio-case-document/2", "bio-case-document/1"]);
   assert.equal(Object.isFrozen(CASE_DOCUMENT_FORMATS_ACCEPTED), true);
   const f = (v) => ({ format: `bio-case-document/${v}` });
-  const vs = [5, 4, 3, 2, 1, 6, 0];
-  assert.deepEqual(vs.map((v) => caseDocumentStatesMemberBlocks(f(v))), [true, true, true, true, false, false, false]);
-  assert.deepEqual(vs.map((v) => caseDocumentRequiresDisclosures(f(v))), [true, true, true, false, false, false, false]);
-  assert.deepEqual(vs.map((v) => caseDocumentRequiresV4Disclosures(f(v))), [true, true, false, false, false, false, false]);
-  assert.deepEqual(vs.map((v) => caseDocumentRequiresTensionSection(f(v))), [true, false, false, false, false, false, false]);
-  for (const odd of ODD) for (const pred of PREDICATES) assert.equal(pred(odd), false);
+  const vs = [6, 5, 4, 3, 2, 1, 7, 0];
+  assert.deepEqual(vs.map((v) => caseDocumentStatesMemberBlocks(f(v))), [true, true, true, true, true, false, false, false]);
+  assert.deepEqual(vs.map((v) => caseDocumentRequiresDisclosures(f(v))), [true, true, true, true, false, false, false, false]);
+  assert.deepEqual(vs.map((v) => caseDocumentRequiresV4Disclosures(f(v))), [true, true, true, false, false, false, false, false]);
+  assert.deepEqual(vs.map((v) => caseDocumentRequiresTensionSection(f(v))), [true, true, false, false, false, false, false, false],
+                   "the other predicates hold for /6 as they hold for /5");
+  assert.deepEqual(vs.map((v) => caseDocumentRequiresMaterials(f(v))), [true, false, false, false, false, false, false, false],
+                   "the method and materials blocks are required of /6 only");
+  for (const odd of [...ODD, { format: "bio-case-document/6 " }]) for (const pred of PREDICATES) assert.equal(pred(odd), false);
   /* pure: the same answer twice, and the argument untouched */
-  const fm = f(5);
-  for (const pred of PREDICATES) assert.equal(pred(fm), pred(fm));
-  assert.deepEqual(fm, { format: "bio-case-document/5" });
+  for (const v of [6, 5]) {
+    const fm = f(v);
+    for (const pred of PREDICATES) assert.equal(pred(fm), pred(fm));
+    assert.deepEqual(fm, { format: `bio-case-document/${v}` });
+  }
 });
 
 const CAP = sha("the knocked bytes");
@@ -97,7 +103,7 @@ test("R1 R6 blocks before /5 answer null with the sentence that the format preda
   assert.equal(caseDocumentBlocks("---\nformat: bio-case-document/5\n---\n").detail, BLOCK_UNREADABLE_SENTENCE);
 });
 
-test("R1 sourceStatement is the one spelling of an entry the public may be told, and unnamedSourceStatement the one for none", () => {
+test("R1 sourceStatement is the one spelling of an entry the public may be told, and unnamedSourceStatement the one for none, Withheld with its reason", () => {
   assert.equal(sourceStatement({ kind: "attribute", attribute: "employer", value: "the water board", how: "self" }),
                "attribute employer: the water board");
   assert.equal(sourceStatement({ kind: "name", recorded: false, how: "self" }), `name: ${NOT_RECORDED_STATED}`);
@@ -110,8 +116,12 @@ test("R1 sourceStatement is the one spelling of an entry the public may be told,
   assert.equal(sourceStatement({ kind: "name", value: "Pat", how: "self", claim: "ignored" }), "name: Pat");
   assert.equal(sourceStatement({ kind: "name", value: 'A "B"\nC' }), "name: A 'B' C");
   for (const odd of [null, undefined, {}, { kind: "" }, "name", 7]) assert.equal(sourceStatement(odd), null);
-  assert.equal(unnamedSourceStatement({ capture: CAP, received: NOW }), `an unnamed source; received as ${CAP} at ${NOW}`);
-  assert.equal(unnamedSourceStatement(), "an unnamed source; received as an undetermined digest at an undetermined time");
+  /* K1315 (8): the one spelling is case-authoring R37's "Withheld", with its reason */
+  assert.equal(unnamedSourceStatement({ capture: CAP, received: NOW }), "Withheld: the source has not consented to being "
+    + `named, and no public record names them; received as ${CAP} at ${NOW}`);
+  assert.equal(unnamedSourceStatement(), "Withheld: the source has not consented to being named, and no public record "
+    + "names them; received as an undetermined digest at an undetermined time");
+  assert.equal(unnamedSourceStatement(null), unnamedSourceStatement());
 });
 
 test("R1 sourceRowsStanding answers exactly the sources: rows no answered entry or unnamed statement still holds", () => {
