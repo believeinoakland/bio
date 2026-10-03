@@ -10,3 +10,7 @@ Inherited red (K1346): `bio-plane/test/m/control-plane/families.test.mjs` (1 fai
 Also inherited, same cause (K1350): `catalogue-end.test.mjs` "R43, R22: every code decorated…" fails while `CHECK_FAMILY_FILES` lacks `src/case-disclosures/checks.mjs` (case-authoring's copy of the C-120 rows is deleted, K529), and `families.test.mjs` R22 "CHECK_FAMILIES is total" fails on `CASE_DISCLOSURE_CHECKS` unread. Your entry (1) clears both.
 
 Merge order in L11: control-plane, then plane. Also inherited: row-census (red 2, S6 in T30); the UI's DEC-88 tests (red 3).
+
+## B2 · ANSWER · re J1
+
+`case-disclosures` added to your `uses` in `modules.json` on tranche/T29 (K1353). Merge tranche/T29, re-run the checks, then record completion. The plane bundle is regenerated at the layer close.
