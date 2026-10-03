@@ -1,6 +1,6 @@
 # accepted-work — requirements
 
-**Status** · Requirements for T28, folded by a worker for BOB #104 at T28's opening, entry N522 (DEC-96 items 1 and 4; `plan/draft-T28-n522.md`). A new product module with no `from` (its place is BOB's under P17). It sits in layer 6 directly after `inquiry-grammar`, whose imported-finding reference (its R11) it reads, and before `inquiry`. It is the seam through which modules earlier than `case-import` (L8) read another group's accepted work (P4). Its own T28 job writes its code at `bio-plane/src/accepted-work/` and its tests at `bio-plane/test/m/accepted-work/`, then adds both to its `modules.json` entry (K1043's form). Every requirement is not yet met (T28).
+**Status** · Requirements for T28, folded by a worker for BOB #104 at T28's opening, entry N522 (DEC-96 items 1 and 4; `plan/draft-T28-n522.md`). A new product module with no `from` (its place is BOB's under P17). It sits in layer 6 directly after `inquiry-grammar`, whose imported-finding reference (its R11) it reads, and before `inquiry`. It is the seam through which modules earlier than `case-import` (L8) read another group's accepted work (P4). Its own T28 job writes its code at `bio-plane/src/accepted-work/` and its tests at `bio-plane/test/m/accepted-work/`, then adds both to its `modules.json` entry (K1043's form). Every requirement is not yet met (T28). N534 (DEC-101 (3), DEC-116 item 8; K1339, K1366) folded by a worker for BOB #107 on `tranche/T31`, 2026-10-03, from `plan/draft-T29-n534.md` §2.1: R1 and R2 widened by the optional `moves` function and `publisherMoves`, R8 added; not yet met (T31 layer 6).
 
 **Size (P6).** About 250–400 lines.
 
@@ -16,19 +16,19 @@ Terms.
 - An **imported finding reference** (a **ref**) is `inquiry-grammar` R11's spelling.
 - An **acceptance in force** is `case-import` R6's, not withdrawn by its R7.
 
-**registerAcceptedWork(module, {finding, openFlags, withdrawals})** (K31's pattern)
+**registerAcceptedWork(module, {finding, openFlags, withdrawals, moves?})** (K31's pattern)
 
 - **R1** One registration, filled by `case-import` (its R16) at start. A registration missing any of the three functions is refused `LISTENER_MALFORMED`, and a second registration is refused `LISTENER_DECLARED`. Both come through `membership`'s `listenerRefusal` (its R81). The three functions:
   - `finding({ref, edition, viewer})` answers `{ref, import, group, case, edition, finding, manifest_sha, result, pair, acceptance}`, or null when the finding is not held at that edition or the viewer may not see the import. `pair` is the finding's per-axis pair as the edition publishes it. `acceptance` is `{by, at, reason, checked, gaps}` while one is in force, else null.
   - `openFlags({ref, edition, viewer})` answers `{flags: [{flag, finding, issue, at}], complete}`. It covers the open flags on that edition, both the edition's own and the named finding's.
   - `withdrawals({after, limit})` answers `{withdrawals: [{withdrawal, import, edition, refs, at}], cursor}` in withdrawal order.
 
-  (DEC-96 items 1, 2, 4)
-- **R2** `acceptedFinding`, `openFlagsOn` and `acceptanceWithdrawals` take the same arguments and answer the registered functions' answers.
+  The registration may also carry a fourth function, `moves` (R8). A registration without it is accepted. (DEC-96 items 1, 2, 4; DEC-101 (3)) *(not yet met: T31: the optional `moves`)*
+- **R2** `acceptedFinding`, `openFlagsOn`, `acceptanceWithdrawals` and `publisherMoves` (R8) take the same arguments and answer the registered functions' answers.
   - With none registered, each answers `{absent: true}`, stated as `accepted_work_absent`.
   - When the registered function throws, each answers `{unreadable: true}`.
 
-  None of them writes or throws. They are the one way `strength`, `reevaluation`, `basis-versions` and `publication` read accepted work. (P4; DEC-96)
+  None of them writes or throws. They are the one way `strength`, `reevaluation`, `basis-versions` and `publication` read accepted work. (P4; DEC-96) *(not yet met: T31: `publisherMoves`)*
 
 **acceptedLegRefusals({legs, viewer})**
 
@@ -38,6 +38,17 @@ Terms.
 
   Each refusal is a finding naming the leg's `ord` and ref. Other legs are not asked. It writes nothing and never throws. (DEC-112 (6): "an accepted finding may support the group's own work"; DEC-96 item 1: acceptance names one edition)
 - **R4** At start, the module registers with `promotion` (`registerStep`, its R39) a check of every promotion of an inquiry that is not a replay. It runs R3 over each leg whose target is a ref and that is new against the held version, or whose target or `target_edition` changed. A refusal is `BASIS_REFUSED` with R3's findings, as `inquiry` R11 answers it, and nothing is written. An unchanged leg is not asked again, so a withdrawal never refuses an unrelated revision (DEC-96 item 1: a withdrawal sends notices, it does not move work).
+
+**publisherMoves({after, limit})**
+
+- **R8** `publisherMoves({after, limit})` answers the registered `moves({after, limit})` (R1). That answer is `{moves: [{move, import, group, case, kind, edition, seq, date, at, what_changed, reason, key_listed, taken_back}], cursor}`, in the order this copy recorded the moves (`case-import` R18), with `limit` 1–200 (default 200).
+  - `kind` is `edition` or `withdrawal`.
+  - `edition` is a number, or `all` for a withdrawal of every edition.
+  - `at` is the instant this copy recorded the move.
+  - `what_changed` (for an edition) and `reason` (for a withdrawal) are quoted as the entry gives them.
+  - `taken_back` is `{seq, date}` or null.
+
+  With no `moves` registered, it answers `{absent: true}`, stated as `accepted_work_absent`. When the registered function throws, it answers `{unreadable: true}`. It writes nothing and never throws. (DEC-101 (3); DEC-116 item 8; P4) *(not yet met: T31)*
 
 ## Private
 
@@ -60,6 +71,7 @@ Terms.
 ### Satisfies
 
 - DEC-96 items 1 and 4, DEC-112 (6)'s last clause, read through the order (P4). N522.
+- DEC-101 response 3 and DEC-116 item 8 (a cited case's new edition or withdrawal, seen on its publisher's docket, read by `reevaluation` through this seam): R8 (N534).
 
 ### Suggestions
 
