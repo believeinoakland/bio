@@ -1327,7 +1327,7 @@ const NETWORK_NOTICES_PUBLIC_READS = frozenList(["activitymethod", "noticespubli
 const DOCKET_ACTIONS = frozenList(["docketfile", "docketpressure", "docketdecline", "docketpost"]);
 const DOCKET_READS = frozenList(["docket", "docketprepare", "docketinvitation"]);
 const DOCKET_AUTHOR = frozenList(["docketfile", "docketpressure"]);
-const DOCKET_BY = frozenList(["docketprepare", "docketpost", "docketdecline"]);
+const DOCKET_BY = frozenList(["docketprepare", "docketdecline", "docketpost"]);
 const DOCKET_PUBLIC_READS = frozenList(["docketpublic", "docketfeed"]);
 /* The modules whose acts read `author` from the query: the four of T8, T18's three, T21's filing-templates and T22's
    monitoring act; and T24's start preview, the one read among them, stamped as the start it previews (R11). */

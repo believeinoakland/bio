@@ -157,7 +157,7 @@ test("R13, R4: the act lists name each docket op's stamps — author and viewer 
   assert.deepEqual([...O.DOCKET_ACTIONS], ["docketfile", "docketpressure", "docketdecline", "docketpost"]);
   assert.deepEqual([...O.DOCKET_READS], ["docket", "docketprepare", "docketinvitation"]);
   assert.deepEqual([...O.DOCKET_AUTHOR], ["docketfile", "docketpressure"]);
-  assert.deepEqual([...O.DOCKET_BY], ["docketprepare", "docketpost", "docketdecline"]);
+  assert.deepEqual([...O.DOCKET_BY], ["docketprepare", "docketdecline", "docketpost"]);
   assert.deepEqual([...O.DOCKET_PUBLIC_READS], ["docketpublic", "docketfeed"]);
   /* The docket's ops are in no other module's list: no action-layer author or viewer stamp, no plan-run scope. */
   for (const op of Object.keys(R13)) {
