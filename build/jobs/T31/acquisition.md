@@ -1,6 +1,6 @@
 # acquisition (T31)
 
-**Status** · session_01TNXZ4EjoqnXE7ZRkqLBzKq · depth 2 · WORKING · handled B1
+**Status** · session_01TNXZ4EjoqnXE7ZRkqLBzKq · depth 2 · COMPLETE · handled B1
 
 ## Completion
 
