@@ -187,8 +187,6 @@ export class Publication {
                                   now: this.now, ...(sources ? { sources } : {}), ...(acceptedWork ? { acceptedWork } : {}),
                                   ...(extraction ? { extraction } : {}) });
   }
-  /* The accepted-work instance case-carriage reads (R59), a one-line delegate: `plane` R16's test reads it here. */
-  get acceptedWork() { return this.caseCarriage.acceptedWork; }
   get corpusExport() {
     return this.#deps.corpusExport ||= corpusExportOf(this.#deps.host, { storage: this.#deps.storage, record: this.record,
                                                                         now: this.now });
