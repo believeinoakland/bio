@@ -16,8 +16,8 @@ The copy computes what the owner cannot honestly assert alone, and signs those f
 
 Terms.
 - A **notice** is one "working on" statement about one project. It has an opaque **notice id** that is never the project's id.
-- A **revision** is one owner-signed version of a notice, in the format `civicos-working-on/1`.
-- An **attestation** is one statement about a notice signed with the copy's instance key (R13), in the format `civicos-working-on-attestation/1`.
+- A **revision** is one owner-signed version of a notice, in the format `civicsmith-working-on/1` (`civicos-working-on/1` for a revision published before T31; DEC-124).
+- An **attestation** is one statement about a notice signed with the copy's instance key (R13), in the format `civicsmith-working-on-attestation/1` (`civicos-working-on-attestation/1` for an attestation issued before T31; DEC-124).
 - A **week** is a UTC ISO week, from Monday 00:00Z to the next Monday 00:00Z.
 - A **member act** is defined in R8. A **counted week** is a week with at least one member act on the project.
 - The **activity window** is the 13 complete weeks before an attestation's `as_of`.
@@ -50,8 +50,8 @@ Terms.
   - `expires` is 60 minutes later.
 
   For the same inputs on the same UTC day, the answer is identical byte for byte.
-- **R3** A revision carries these fields and nothing else:
-  - `format` (`civicos-working-on/1`), `group` (the slug), and `notice` (the notice id, minted at the first revision);
+- **R3** *(not yet met: T31)* A revision carries these fields and nothing else:
+  - `format` (`civicsmith-working-on/1`; a revision published before T31 keeps its bytes and `civicos-working-on/1`, every reader accepts both labels forever as the same format, and a notice's revisions may hold both, `previous` being the prior revision's digest over its own stored bytes; DEC-124, K1365), `group` (the slug), and `notice` (the notice id, minted at the first revision);
   - `revision` (1, 2, …) and `previous` (the prior revision's digest, or null);
   - `wording`, `body` and `matter` as the owner gave them, with absent ones omitted. They are never filled in from the project's contents;
   - `since` and `posted` (dates);
@@ -60,6 +60,8 @@ Terms.
   - `others_welcome`, a fixed sentence.
 
   No member's name, handle or id appears in a revision. The level, the cases, the seals, `closed` and `lapsed` are the copy's facts and appear only in attestations (R12).
+
+  A test proves that a revision signed with the old label `civicos-working-on/1` still verifies (the owner's signature over `signatures.noticeStatement`), that a new revision carries `civicsmith-working-on/1`, and that a notice whose revisions hold both labels is served whole and in order (R20). (DEC-124; K1365)
 
 **postNotice({digest, signature, acknowledged, by}) → `{ok, notice, revision, published_at, attestation}`** (`op=noticepost`; member session; mutating)
 - **R4** Refusals, in order. Each writes nothing:
@@ -77,12 +79,12 @@ Terms.
   - A member's adoption of a machine draft counts. The draft does not.
   - How many acts a week holds never changes the level. Only whether it has one does.
 - **R9** `activity` is `{level, weeks_counted, window: 13, as_of, method}`. `as_of` is the date it was computed, and `method` is the version of R10's method.
-- **R10** `activityMethod()` answers, with no credential, the method as fixed text with its version: the window, the cut-offs, R8's definition and what is never counted. A change to the method is a new version. An earlier attestation keeps naming the version it was computed under.
+- **R10** *(not yet met: T31)* `activityMethod()` answers, with no credential, the method as fixed text with its version: the window, the cut-offs, R8's definition and what is never counted. A change to the method is a new version. An earlier attestation keeps naming the version it was computed under. The version's label is `civicsmith-working-on-activity/1`; `civicos-working-on-activity/1`, the label written before T31, names the same method, and `activityMethod()` lists that earlier label as the same method, so a reader holding an earlier attestation finds its method. Renaming the label is not a change to the method. (DEC-124; K1365 (2))
 
 **Stopping, closing and lapse** (§5B "Ending")
 - **R11** An owner stops a notice with a final revision through R1–R5, with `final: stopped`. It carries `status: stopped` and the optional `handoff` (one line, at most 280 characters, which may name another group or an open lead). A stopped notice takes no further revision.
-- **R12** An **attestation** carries these fields and nothing else:
-  - `format` (`civicos-working-on-attestation/1`), `group`, `notice`, `as_of` and `kind`;
+- **R12** *(not yet met: T31)* An **attestation** carries these fields and nothing else:
+  - `format` (`civicsmith-working-on-attestation/1`; an attestation issued before T31 keeps its bytes and `civicos-working-on-attestation/1`, and every reader accepts both labels forever as the same format; DEC-124, K1365), `group`, `notice`, `as_of` and `kind`;
   - `revision`: the digest of the latest revision;
   - `status`: `open`, `stopped`, `closed` or `lapsed`;
   - `activity` (R9), computed at `as_of`;
@@ -98,7 +100,7 @@ Terms.
   - `lapsed`, issued when a notice has been `Dormant` at two consecutive `monthly` attestations with no revision between them. The lapse also goes into the group's record.
 
   A stopped, closed or lapsed notice takes no further `monthly` attestation. It stays served and is never deleted.
-- **R13** An attestation is signed with the copy's instance key (`attestation` R5; `provenance` R56 before N512's split) over the statement `attestation.instanceStatement("civicos-working-on-attestation/1", sha256(attestation))`. When no key is bound at the moment a `monthly` attestation falls due, the attestation is not issued. The miss is stated in R22 and becomes a condition for the project's owners (`queue-producers` R27). The notice then shows its last attested level with that level's date.
+- **R13** *(not yet met: T31)* An attestation is signed with the copy's instance key (`attestation` R5; `provenance` R56 before N512's split) over the statement `attestation.instanceStatement(<its R12 format>, sha256(attestation))`: `civicsmith-working-on-attestation/1` for a new attestation, while one issued before T31 stays signed, and verifies, over `civicos-working-on-attestation/1`. A test proves that an attestation signed with the old label still verifies, and that a new one is signed with the new label (DEC-124; K1365). When no key is bound at the moment a `monthly` attestation falls due, the attestation is not issued. The miss is stated in R22 and becomes a condition for the project's owners (`queue-producers` R27). The notice then shows its last attested level with that level's date.
 
 **Seals: proof of activity** (§5B "Proof of activity")
 - **R14** After each week ends, this module seals that week's member acts (R8) for every project that is not `closed`, whether or not the project has a notice:
@@ -106,13 +108,16 @@ Terms.
   - the project's week **seal** is the SHA-256 Merkle root over those leaves, padded to a fixed size with salted dummy leaves, so the root reveals neither the acts nor how many there were;
   - a week with no member act has no seal.
 
+  The seal construction keeps its published name permanently: the hash tags `civicos-seal-leaf/1`, `civicos-seal-node/1`, `civicos-week-leaf/1` and `civicos-seal-dummy/1`, and the method `civicos-working-on-seal/1` an opening names, never change, because renaming them would break the opening of every week sealed before (DEC-124; K1365 (2)).
+
   `sealWake(now)` answers null when the instance has nothing to seal (no project that is not `closed` has a member act not yet sealed), so an idle instance holds no timer (`scheduler` R15); otherwise the instant the next seal falls due.
 - **R15** One RFC 3161 timestamp is requested per instance per week (`signatures.timestampRequest`, through `host-governor`, trying `TSA_ENDPOINTS` in order). It is requested over the root of all of that week's project seals, and its token is kept. When every authority fails, the week's seals are kept and marked `untimestamped`, and their weeks still count.
 - **R16** Salts and leaves are never served, exported or put in any answer until they are opened (R17). A seal reveals nothing, even to someone who holds candidate documents to test against it.
-- **R17** `openSeals({case, edition})` is called by `ratification`'s case ceremony once an edition is committed (`ratification` R37), with no choice offered (K1031 (3)).
+- **R17** *(not yet met: T31)* `openSeals({case, edition})` is called by `ratification`'s case ceremony once an edition is committed (`ratification` R37), with no choice offered (K1031 (3)).
   - For each sealed week of the case's project, it publishes the leaves for acts on bundles that the edition publishes (`publication.caseCitedParts`, its R41, and the edition's members). Each leaf comes with its salt, its Merkle path to the project seal and on to the week root, and the timestamp token.
   - Nothing else of any week is revealed.
   - An opening is idempotent per (case, edition, week).
+  - An opening's `format` is `civicsmith-working-on-opening/1`; an opening published before T31 keeps its bytes and `civicos-working-on-opening/1`, and every reader, `verifyOpening` (R18) included, accepts both labels forever as the same format. Its `method` stays `civicos-working-on-seal/1` (R14). A test proves that an opening with the old label still verifies (DEC-124; K1365).
   - An edition whose case document is committed (`publication` R40) but which is not yet published whole (its R53) is opened by no call: the call answers `NO_PUBLISHED_EDITION` and keeps the request, and the scheduled `working-on-attest` tick opens it once the edition is published whole, so nothing about an unpublished member is revealed (R16). A call for an edition with no committed case document keeps nothing.
   - A `published` attestation (R12) follows.
   - `attestWake(now)` answers null when no notice is open and no opening is kept, so an idle instance holds no timer (`scheduler` R15); otherwise the instant its next attestation or retried opening falls due.
@@ -169,7 +174,7 @@ Terms.
 
 ### Satisfies
 - `docs/architecture/BIO_Publication_v0_1.md`:
-  - §5B, the CivicOS half: only from a project and only by its owner; what a notice carries; the activity level; proof of activity; signing at the group's own address; ending; the honest limit;
+  - §5B, the Civicsmith half: only from a project and only by its owner; what a notice carries; the activity level; proof of activity; signing at the group's own address; ending; the honest limit;
   - §3 rule 10, the credential-free public read;
   - §5, an owner signs in the browser (DEC-80);
   - §7, the slug as the group's public identity.
