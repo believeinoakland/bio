@@ -101,3 +101,37 @@ test("R33 (wizard-scripts R7, R17; DEC-121 (1)): one OBLIGATION wizard-approval-
   answered = answered.slice(1);
   assert.ok(!ids(w.read("olga"), RE).includes(O), "approved, withdrawn or retired: the read no longer answers it, and it leaves");
 });
+
+test("R32, R33 against wizard-scripts itself (K1397, K1399): a break and a return, and a submission, read through the real brokenScripts and submittedFor", async () => {
+  const fx = await import("../wizard-scripts/fixture.mjs");
+  const { defaultFakes } = await import("./world.mjs");
+  const { QueueProducers } = await import("../../../src/queue-producers/index.mjs");
+  const w = fx.seeded();                 // alice and bob owners of P, frank joined in P, erin an administrator
+  const a = fx.approved(w);              // frank's script, approved by alice
+  w.clock.now = "2026-10-05T00:00:00Z";
+  fx.restart(w, { screens: fx.SCREENS.filter((s) => s.id !== "filing-draft") });
+  w.clock.now = "2026-10-07T00:00:00Z";
+  const back = fx.restart(w);
+  const d = fx.draft(w, { name: "Second" });
+  const sub = back.wizardSubmit({ version: d.version, author: fx.V("frank"), viewer: fx.V("frank") });
+  assert.equal(sub.ok, true);
+  w.st.db.exec(`CREATE TABLE IF NOT EXISTS inquiry_basis (bundle_id TEXT, ord INTEGER, role TEXT, target_id TEXT, content_id TEXT, note TEXT);
+    CREATE TABLE IF NOT EXISTS refs (bundle_id TEXT, target_id TEXT, kind TEXT);
+    CREATE TABLE IF NOT EXISTS progression_instances (progression_key TEXT, entity_id TEXT, stage_key TEXT, capture_sha TEXT, bundle_id TEXT)`);
+  const p = new QueueProducers({ host: w.host, storage: w.st,
+    deps: { ...defaultFakes(), record: w.record, membership: w.membership, credentials: { signerList: () => ({ signers: [] }) }, wizardScripts: back } });
+  const read = (m) => p.feedItems({ member: m, viewer: fx.V(m), now: Date.parse("2026-10-08T00:00:00Z") });
+  const ids = (r) => r.items.filter((i) => /^wizard-/.test(i.kind)).map((i) => i.id).sort();
+  const [v1, v2] = [`${a.script}@1`, `${d.script}@${String(d.version).split("@").pop()}`];
+  const broke = [`FINDING::wizard-restored::${v1}::2026-10-07T00:00:00Z`, `FINDING::wizard-withdrawn::${v1}::2026-10-05T00:00:00Z`];
+  assert.deepEqual(ids(read("frank")), broke, "the version's author: its break and its return; no approval of his own");
+  const alice = read("alice");
+  assert.ok(broke.every((id) => ids(alice).includes(id)), "a project owner: the break and the return");
+  assert.ok(ids(alice).includes(`OBLIGATION::wizard-approval-requested::${v2}::alice`), "and the approval asked of her");
+  assert.ok(ids(read("bob")).includes(`OBLIGATION::wizard-approval-requested::${v2}::bob`), "each owner his own");
+  assert.deepEqual(ids(read("dave")), [], "nobody else");
+  const wd = alice.items.find((i) => i.id === broke[1]);
+  assert.equal(wd.subject.refusal.code, "WIZARD_SCREEN_UNKNOWN");
+  assert.ok(typeof wd.subject.refusal.translation === "string" && wd.detail.includes(wd.subject.refusal.translation), "the row's translation, in plain words");
+  assert.deepEqual(wd.recipients.sort(), ["alice", "bob", "frank"]);
+});

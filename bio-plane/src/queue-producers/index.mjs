@@ -53,6 +53,7 @@ import { localFactsOf } from "../local-facts/index.mjs";
 import { networkNoticesOf } from "../network-notices/index.mjs";
 import { docketOf, DOCKET_UNREADABLE } from "../docket/index.mjs";
 import { caseImportOf } from "../case-import/index.mjs";
+import { wizardScriptsOf } from "../wizard-scripts/index.mjs";
 import { proposalFindingItems } from "./proposals.mjs";
 
 export { proposalFindingItems, CARDINALITY_EXCEEDED } from "./proposals.mjs";
