@@ -56,7 +56,7 @@ import { renderFeed, docketAddress, feedAddress, ATOM_MEDIA_TYPE } from "./feed.
 
 export { DOCKET_CHECKS } from "./checks.mjs";
 export { DOCKET_SCHEMA, DOCKET_TABLES } from "./schema.mjs";
-export { docketAddress, feedAddress, ATOM_MEDIA_TYPE } from "./feed.mjs";
+export { docketAddress, feedAddress, feedHref, ATOM_MEDIA_TYPE } from "./feed.mjs";
 
 /* ---------------------------------------------------------------- the vocabularies and bounds */
 
@@ -429,7 +429,7 @@ export class Docket {
     const p = parse(pressure);
     /* DEC-49 REGION is-docket-pressure */
     if (!member)
-      return refuse("MACHINE_CANNOT_MARK_PRESSURE", "a docket entry is marked by a member signed in as themselves");
+      return refuse("MACHINE_CANNOT_MARK_DOCKET_PRESSURE", "a docket entry is marked by a member signed in as themselves");
     const c = r ? this.#case(r.case_id) : null;
     if (!r || !c || !c.project || this.#call(() => this.membership.sight(c.project, str(viewer) || str(author))) !== "full")
       return refuse("NO_SUCH_DOCKET_ENTRY", "no record entry you see answers by that id", { entry: id });

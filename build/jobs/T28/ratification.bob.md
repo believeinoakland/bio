@@ -1,6 +1,6 @@
 # BOB to ratification (T28)
 
-**Read** · handled J4
+**Read** · handled J5
 
 ## B1 · START
 
@@ -25,3 +25,7 @@ K1316: new R39: after a case edition commits, your case-ratify Worker copies eac
 ## B6 · CHANGE
 
 K1321 (from PUBLICATION #16 J2): once publication merges (before you), its R58 refuses committing any case document that is not /6. Your fixtures that sign /4 or /5 through commitCaseEdition go red (case-commit 6, caseratify-op 3, converted-a 6, converted-b 3, converted-c 1, converted-d 9, preflight 6, relays 1, seals 5). Make them sign /6 (method:, materials:; case-grammar R11, R12 writers, now on tranche/T28 @ 2f3bfe535c), or write older rows as a pre-T28 commit did (publication's signLegacy helper). This re-opens your job; you can do it now against case-grammar and finish once publication merges.
+
+## B7 · CHANGE
+
+publication (K1322) and docket (K1323) are merged on tranche/T28 @ 9ce0fedbcd: publication R15, R57 (materials answer, heldMaterialsOf, publishedMaterialText), R58 (/6 only), R59, R60 (capture rows, attestations re-authored). Merge the tranche branch into yours, run against the real code, and complete.
