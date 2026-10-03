@@ -195,17 +195,19 @@ test("R2, R5 (N13): queue's, tasks' and affordances' maps are part of the route 
   /* they are control-plane's additions to the map (R5), and the map the class answers holds them */
   const mine = Object.keys(D.controlPlaneRoutes(o.ctx, u, null));
   const map = Object.keys(store.routes(u, null));
-  for (const op of [...qOps, ...tOps, "affordancefacts"]) {
+  const aOps = Object.keys(A.affordancesOps(null, u));
+  for (const op of [...qOps, ...tOps, ...aOps]) {
     assert.ok(mine.includes(op), `controlPlaneRoutes lacks ${op}`);
     assert.ok(map.includes(op), `the map lacks ${op}`);
   }
-  assert.deepEqual(Object.keys(A.affordancesOps(null, u)), ["affordancefacts"]);
+  assert.deepEqual(aOps, ["affordancefacts", "affordancescreens"]);   /* affordances R37 (N528): the screens read */
   /* through the door, each answers what its own map answers on a second object */
   const twin = object();
   new Store(twin.ctx, twin.env);
   await settle(twin);
   for (const [path, ops, of] of [["tasks?viewer=class:admin", T.tasksOps, T.tasksOf], ["queue?member=ann&viewer=member:ann", Q.queueOps, Q.queueOf],
-                                 ["affordancefacts?target=NOPE-1&viewer=class:admin&identity=class:admin&author=token:admin&by=class:admin", A.affordancesOps, A.affordancesOf]]) {
+                                 ["affordancefacts?target=NOPE-1&viewer=class:admin&identity=class:admin&author=token:admin&by=class:admin", A.affordancesOps, A.affordancesOf],
+                                 ["affordancescreens?viewer=member:ann", A.affordancesOps, A.affordancesOf]]) {
     const r = await store.fetch(new Request(`http://do/${path}`));
     const url = new URL(`http://do/${path}`);
     const direct = await ops(of(twin.ctx), url, null)[url.pathname.slice(1)]();

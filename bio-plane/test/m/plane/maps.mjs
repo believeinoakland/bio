@@ -50,6 +50,7 @@ import { biasOf, biasOps } from "../../../src/bias/index.mjs";
 import { aiRunsOf, aiRunsOps } from "../../../src/ai-runs/index.mjs";
 import { contentOf, contentOps } from "../../../src/content/index.mjs";
 import { retrievalOf, retrievalRoutes } from "../../../src/retrieval/index.mjs";
+import { wizardScriptsOf, wizardScriptsOps } from "../../../src/wizard-scripts/index.mjs";
 import { instanceSetupOf, instanceSetupOps } from "../../../src/setup.mjs";
 import { controlPlaneRoutes } from "../../../src/control-plane/dispatch.mjs";
 
@@ -103,6 +104,7 @@ export const MODULE_MAPS = [
   ["monitoring", (c, u, b) => monitoringOps(monitoringOf(c), u, b)],
   ["link-sweep", (c, u) => linkSweepOps(linkSweepOf(c), u)],
   ["review", (c, u, b) => reviewOps(reviewOf(c), u, b)],
+  ["wizard-scripts", (c, u, b) => wizardScriptsOps(wizardScriptsOf(c), u, b)],
   ["instance-setup", (c, u, b, e) => instanceSetupOps(instanceSetupOf(c, e), u, b)],
   ["control-plane", (c, u, b) => controlPlaneRoutes(c, u, b)],
 ];
