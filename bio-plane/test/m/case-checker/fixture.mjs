@@ -9,7 +9,7 @@ import { contentIdFor } from "../../../src/content/extent.mjs";
 import { recomputePair, GRADING_METHOD_VERSION } from "../../../src/strength/method.mjs";
 import { CATALOG_VERSION } from "../../../src/gate.mjs";
 import { serialiseContainer } from "../../../src/container.mjs";
-import { ratifyStatement, caseRatifyStatement, NS_RATIFY } from "../../../src/sshsig.mjs";
+import { ratifyStatement, caseRatifyStatement, captureAccountStatement, NS_RATIFY } from "../../../src/sshsig.mjs";
 import { signSshsig, signerPublicLine } from "../../../scripts/sign-sshsig.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
@@ -24,8 +24,9 @@ export function keyFor(label) {
   return { env, line, b64: line.split(" ")[1] };
 }
 export const fingerprintOf = (b64) => "SHA256:" + createHash("sha256").update(Buffer.from(b64, "base64")).digest("base64").replace(/=+$/, "");
-export const sign = (who, message) => signSshsig(keyFor(who).env, Buffer.from(message), NS_RATIFY);
-export const accountMessage = (capSha, text) => te.encode(`bio-capture-account ${capSha}\n${text}`);
+export const sign = (who, message, ns = NS_RATIFY) => signSshsig(keyFor(who).env, Buffer.from(message), ns);
+/* R3: a member signs their account over `signatures.captureAccountStatement` (its R41). */
+export const accountMessage = (capSha, text) => captureAccountStatement(capSha, text);
 
 export const GROUP = "lakeshore-tenants";
 export const CASE = "CASE-2026-0001";
@@ -159,7 +160,7 @@ export function caseFiles(opts = {}) {
     { capture: MINUTES_SHA, by: "alice", at: NOW, text_b64: Buffer.from(ACCOUNT).toString("base64"),
       signature_b64: Buffer.from(sign("alice", accountMessage(MINUTES_SHA, ACCOUNT))).toString("base64") },
     { capture: MEMO_SHA, by: "bob", at: NOW, text_b64: Buffer.from(MEMO_ACCOUNT).toString("base64"),
-      signature_b64: Buffer.from(sign(opts.memoAccountSigner || "bob", accountMessage(MEMO_SHA, opts.memoAccountSigned || MEMO_ACCOUNT))).toString("base64") }];
+      signature_b64: Buffer.from(sign(opts.memoAccountSigner || "bob", opts.memoAccountMessage || accountMessage(MEMO_SHA, opts.memoAccountSigned || MEMO_ACCOUNT), opts.memoAccountNamespace)).toString("base64") }];
   const attestations = [
     { ref: MINUTES, by_kind: "member", by: "alice", level: "name", at: NOW, signature: accounts[0].signature_b64 },
     { ref: MINUTES, by_kind: "project", by: "PROJ-2026-0001-parks", at: NOW, recorded_in: MINUTES },
