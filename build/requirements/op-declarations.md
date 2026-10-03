@@ -58,12 +58,12 @@ Terms. An **op** is a name the instance answers. An **op spec** is `{classes, ma
   - `actionholdrelease` (`actions` R56): mutating, classes `admin`, `member`, `probe` as `actionhold`'s, `NEEDS` `contribute`, in `ACTIONS_ACTIONS` beside `actionhold`, so `author` and `viewer` are stamped;
   - `actionholdpreview` and `projectholds` (`actions` R57, R58): reads, classes `admin`, `member`, `probe`, `viewer` stamped, each with a `NEEDS` row of no capability (`null`, as `optionstartpreview`'s), since `affordances` names them (its R33).
 
-  R6 holds over them. *(not yet met: T27)*
+  R6 holds over them.
 - **R13** (DEC-116, DEC-100; `docket` R1–R8, R12; N520) `OPS` holds a spec for each op `docket` adds, each in `SESSION_OPS.member` and `SESSION_OPS.admin` unless it is public, with `NEEDS` `contribute` for every mutating op a member's session reaches, and the stamps the act lists name:
   - `docketfile` (`docket` R1, stamped `author` and `viewer`), `docketpressure` (its R2, `author` and `viewer`), `docketdecline` (its R7, `by`) and `docketpost` (its R5, `by`): mutating; `docket` (its R3), `docketprepare` (its R4; it writes nothing; `viewer` and `by`) and `docketinvitation` (its R8): reads; each for a member session only, classes `admin`, `member` and `machineClasses: []` (no machine, AI credential or operator token files, places, declines or signs a docket entry, `docket` R1, R4, R18), `viewer` (or `author`, `by`) stamped;
   - the public reads `docketpublic` and `docketfeed` (`public-read` R21; `docket` R14, R15): `classes: null`, not mutating, nothing stamped.
 
-  R6 holds over them. *(not yet met: T27)*
+  R6 holds over them.
 
 ## Private
 
