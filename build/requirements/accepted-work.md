@@ -47,6 +47,7 @@ Terms.
 - `membership`: `listenerRefusal` (its R81).
 - `promotion`: `registerStep` (its R39).
 - `inquiry-grammar`: `IMPORTED_FINDING_RE`, `parseImportedFindingRef` (its R11).
+- `record-core`: `recordOf`, `readFile` (the held `bundle.md`, R4; K1304).
 
 ### Invariants
 
