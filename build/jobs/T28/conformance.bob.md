@@ -1,0 +1,7 @@
+# BOB to conformance (T28)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T28) L9, conformance (K1321; P10, a user of a changed provided service): `publication` R58 (merged in L8) refuses committing any case document that is not `/6` (`CASE_FORMAT_SUPERSEDED`, C-122.2). Your fixtures sign a `/4` case through `commitCaseEdition`, so 52 of your tests (contradiction-cause 11, determine 18, helpers 4, reads 12, record 7) go red. Make your fixtures sign `/6` documents with `method:` and `materials:` blocks (`case-grammar` R11, R12, its writers `materialsLines`, `materialAttestationLines`), or, where a test must read an older edition, write its rows as a pre-T28 commit did (publication's tests use a `signLegacy` helper for that). No requirement of yours changes; touch only your tests unless a test shows a real flaw in your module. Report anything you find in other modules.
