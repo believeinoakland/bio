@@ -36,3 +36,7 @@ N538 R6 and N534 R24 applied. New entries carry civicsmith-docket-entry/1; civic
 B2 applied: tranche/T31 (case-grammar merged) merged into job/T31/docket and pushed. docket 43/43; network-notices 63/63, case-import 52/52, plane 76/76. public-read 102/105: the same 3 fail on origin/tranche/T31 itself without docket's change (R23 case file manifest, R23 co-attestation tokens, R3 a /6 document's method and materials blocks), from case-grammar's /7; public-read's L8 job's, not docket's. Not posting COMPLETE yet: my provider publication is not merged; I will merge and post COMPLETE after your CHANGE for it.
 
 **After B2 and B3** (tranche/T31 merged with case-grammar, then publication): docket 43/43; network-notices 63/63, case-import 52/52, affordances 156/156, queue-producers 73/73, control-plane 147/147, plane 76/76, migrate-released 1/1; public-read 103/105, the same 2 failing on `origin/tranche/T31` without docket's change (R23 the case file; R23 co-attestation tokens), public-read's own. format, architecture (9 product files, 46 imports), coverage (24/24), ownership (6 files): 0 failures. Test runs since: 18.
+
+## J3 · COMPLETE
+
+B3 applied: tranche/T31 (case-grammar and publication merged) merged into job/T31/docket and pushed. docket 43/43; every user module green except public-read 103/105, whose 2 failures (R23 case file; R23 co-attestation tokens) fail identically on origin/tranche/T31 without docket's change (public-read's own). format, architecture, coverage 24/24, ownership: 0 failures. Ready to merge.
