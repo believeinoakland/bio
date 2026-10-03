@@ -21,6 +21,6 @@
 - `checks/format.mjs`: 97 modules, 96 requirements files; 0 failures.
 - `checks/architecture.mjs … reevaluation`: 17 product files, 68 relative imports; 0 failures.
 - `checks/coverage.mjs … reevaluation`: 32 of 32 live requirement ids named by a test; 0 failures.
-- `checks/ownership.mjs … reevaluation tranche/T29`: run after the commit, below.
+- `checks/ownership.mjs … reevaluation tranche/T29`: 4 files changed by reevaluation between tranche/T29 and HEAD; 0 failures.
 
 Size (session_01NTpQJf5vp8NWhH7MCRQXe9): test runs 9, module lines 2,439 (`index.mjs`; `checks.mjs` 185, `schema.mjs` 170)
