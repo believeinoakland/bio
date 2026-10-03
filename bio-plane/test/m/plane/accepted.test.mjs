@@ -13,7 +13,7 @@ import { publicReadOf } from "../../../src/public-read/index.mjs";
 import { strengthOf } from "../../../src/strength/index.mjs";
 import { basisVersionsOf } from "../../../src/basis-versions/index.mjs";
 import { reevaluationOf } from "../../../src/reevaluation/index.mjs";
-import { publicationOf } from "../../../src/publication/index.mjs";
+import { caseCarriageOf } from "../../../src/case-carriage/index.mjs";
 import { ratificationOf, ratificationOps } from "../../../src/ratification/index.mjs";
 import { acceptedWorkOf } from "../../../src/accepted-work/index.mjs";
 import { importedFindingRef } from "../../../src/inquiry-grammar/index.mjs";
@@ -63,7 +63,8 @@ test("R16: one instance per host is handed to strength, basis-versions, reevalua
   assert.equal(strengthOf(x.ctx).acceptedWork, aw, "strength");
   assert.equal(basisVersionsOf(x.ctx).acceptedWork, aw, "basis-versions");
   assert.equal(reevaluationOf(x.ctx).acceptedWork, aw, "reevaluation");
-  assert.equal(publicationOf(x.ctx).acceptedWork, aw, "publication");
+  /* publication reads accepted work through case-carriage, which its factory creates (R18; case-carriage R4) */
+  assert.equal(caseCarriageOf(x.ctx).acceptedWork, aw, "publication (case-carriage)");
   assert.equal(caseImportOf(x.ctx).acceptedWork, aw, "case-import");
   /* filled by case-import before the first request, so no other module can */
   const probe = aw.registerAcceptedWork("zz-probe", { finding: () => null, openFlags: () => null, withdrawals: () => null });
@@ -71,7 +72,7 @@ test("R16: one instance per host is handed to strength, basis-versions, reevalua
   assert.equal(probe.reason, "LISTENER_DECLARED");
   /* every reader reads case-import's answer: an unknown ref is not held (null), never `absent` */
   for (const [name, r] of [["strength", strengthOf(x.ctx)], ["basis-versions", basisVersionsOf(x.ctx)],
-                           ["reevaluation", reevaluationOf(x.ctx)], ["publication", publicationOf(x.ctx)]]) {
+                           ["reevaluation", reevaluationOf(x.ctx)], ["publication (case-carriage)", caseCarriageOf(x.ctx)]]) {
     assert.equal(r.acceptedWork.acceptedFinding({ ref: REF, edition: 1, viewer: "member:nobody" }), null, name);
     assert.deepEqual(codes(r.acceptedWork.acceptedLegRefusals({ legs: [LEG], viewer: "member:nobody" })),
                      ["IMPORTED_NOT_ACCEPTED"], name);

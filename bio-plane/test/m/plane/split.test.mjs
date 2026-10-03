@@ -9,7 +9,7 @@ import { store } from "./fixture.mjs";
 import { attestationOf } from "../../../src/attestation/index.mjs";
 import { provenanceRoutesOf } from "../../../src/provenance-routes/index.mjs";
 import { captureOf } from "../../../src/capture/index.mjs";
-import { caseAuthoringOf } from "../../../src/case-authoring/index.mjs";
+import { caseDisclosuresOf } from "../../../src/case-disclosures/index.mjs";
 import { filingsOf } from "../../../src/filings/index.mjs";
 import { networkNoticesOf } from "../../../src/network-notices/index.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
@@ -20,12 +20,12 @@ const { json } = await import("../../../src/control-plane/index.mjs");
 const signingKey = () => generateKeyPairSync("ed25519").privateKey.export({ type: "pkcs8", format: "der" }).toString("base64");
 const SHA = "ab".repeat(32);
 
-test("R2 (N512): attestation is built once with the deployment's receipt-signing key and name, and that one instance is the one capture, case-authoring, filings and network-notices are handed", async () => {
+test("R2 (N512): attestation is built once with the deployment's receipt-signing key and name, and that one instance is the one capture, case-disclosures (R18), filings and network-notices are handed", async () => {
   const x = await store({ env: { RECEIPT_SIGNING_KEY: signingKey(), INSTANCE_NAME: "oak-plane" } });
   const a = attestationOf(x.ctx);
   assert.equal(await a.instanceKeyBound(), true, "the key the deployment binds is the instance's");
   for (const [who, held] of [["capture (`cap.attestation`)", captureOf(x.ctx).attestation],
-                             ["case-authoring", caseAuthoringOf(x.ctx).attestation],
+                             ["case-disclosures", caseDisclosuresOf(x.ctx).attestation],
                              ["filings", filingsOf(x.ctx).attestation],
                              ["network-notices", networkNoticesOf(x.ctx).attestation]])
     assert.equal(held, a, `${who} holds the plane's one attestation instance`);

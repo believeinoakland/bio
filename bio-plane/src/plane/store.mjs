@@ -52,6 +52,7 @@ import { docketOf, docketOps } from "../docket/index.mjs";
 import { acceptedWorkOf } from "../accepted-work/index.mjs";
 import { checkCaseFile, registerCaseCheckerPublicReads } from "../case-checker/index.mjs";
 import { caseImportOf, caseImportOps } from "../case-import/index.mjs";
+import { caseDisclosuresOf } from "../case-disclosures/index.mjs";
 import { publicReadOf, publicReadOps } from "../public-read/index.mjs";
 import { projectStageOf, projectStageOps } from "../project-stage/index.mjs";
 import { networkNoticesOf, networkNoticesOps } from "../network-notices/index.mjs";
@@ -159,6 +160,11 @@ export class Store extends DurableObject {
        (whole store only, its R13) and starts, filling accepted-work's registration (its R16) before the first request. */
     registerCaseCheckerPublicReads(ctx, { publicRead: publicReadOf(ctx) });
     caseImportOf(ctx, { env, checkCaseFile, strength: strengthOf(ctx), acceptedWork, reevaluation: reevaluationOf(ctx) });
+    /* R18 (N529; K1333): case-disclosures, at its place after case-import and before case-authoring in the modules'
+       order, built here with the attestation instance above, so case-authoring's lazy getter finds that one instance per
+       host (case-disclosures R23). It holds no table and no op. case-carriage (N532) needs no line here: publication's
+       factory (above) creates it eagerly, its two tables made and declared at every boot (case-carriage R6; K1024). */
+    caseDisclosuresOf(ctx, { attestation });
     biasOf(ctx, { env });
     /* R12 (K1061; inquiry R53, bias R40): inquiry's findings registered with bias as kind `finding`, after bias is built
        with its environment above (its factory reads its deps on the first call only), so a lens change raises a debt on
@@ -170,7 +176,7 @@ export class Store extends DurableObject {
     runProductionsOf(ctx, { aiRuns: aiRunsOf(ctx, env) });
     reviewOf(ctx);
     intentOf(ctx);   /* intent: its check (R1, R2, R26) joins every promotion; its audit check keeps C-2.9 (R22) */
-    caseAuthoringOf(ctx, { attestation });   /* its `attestationsOf` (its R35; attestation R7) */
+    caseAuthoringOf(ctx);   /* R18: its disclosures, with their attestation, are case-disclosures' (built above) */
     /* layer 9, in the modules' order, each registering at start what its factory registers (checks, projections,
        purge, filings' evidence block). standards creates its own tables at construction. R11 (K921): local-facts heads
        the layer, creating its table and declaring it to purge (record-core K23). */
