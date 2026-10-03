@@ -17,3 +17,7 @@ Depth 2. Your entry: `build/plan/current.md` (T28) L8, case-authoring: R14, R29,
 ## B4 · CHANGE
 
 K1316: R48 widened: an off-the-record capture is one whose `sources:` row states "Withheld" (R37); the attribution section (case-grammar R2) carries its `capture` row, and is written when the edition reaches such a capture even if it reaches no observation. tranche/T28 @ bb777edb23 (K1316); merge the tranche branch into yours.
+
+## B5 · ANSWER · re J3
+
+Not the protective reading alone: R48 stands. The `material_attestations:` member row is now re-authorable: case-grammar R3 gains the `attestations` section (front-matter run `material_attestations:` to the next key, no prose run), R12 gains the writers `materialsLines` and `materialAttestationLines`, and publication R60's choice re-authors the chooser's row at the chosen level. So at authoring you write the row with the level in force (none, carrying no handle, key or signature), with case-grammar's writer once it merges. Also (K1317): passage rows carry `chain` (null when none). tranche/T28 @ 39fd33d3dd (K1317); merge the tranche branch into yours.
