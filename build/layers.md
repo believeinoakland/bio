@@ -11,7 +11,7 @@
 | 5 | Meaning, bias and retrieval | 6, 7, 9 | Everything derived over content, with its grade; the four-level search, which says at which level absence was found. | entities, connections, progressions, bias, observation-log, query-language, retrieval |
 | 6 | Inquiry and the assistant | 8, 11 | The inquiry and its legs, findings, basis versions and strength; the AI finds, pursues, extracts and checks, and never attests or concludes. | inquiry-grammar, accepted-work, inquiry, citation, basis-versions, strength, contradiction, run-rules, ai-runs, run-productions, capture-requests, skills, agent-worker |
 | 7 | Understanding | Content Framework §12, and 8 | What the investigation below has established: the group's intent, with progress computed against the record, and which findings still stand when their basis changes. | intent, reevaluation |
-| 8 | Publication | 13 | What the group stands behind leaves one way. | case-grammar, corpus-export, publication, docket, public-read, project-stage, network-notices, ratification, case-checker, case-import, case-authoring, review |
+| 8 | Publication | 13 | What the group stands behind leaves one way. | case-grammar, corpus-export, case-carriage, publication, docket, public-read, project-stage, network-notices, ratification, case-checker, case-import, case-disclosures, case-authoring, review |
 | 9 | Action | 16 (`BIO_Action_v0_1.md`); Functional Architecture "Layer 3: Action"; Design Requirements §7–§8 | An action rests on the record, and one asserting a breach rests on a published finding and a standard held in the record; the group plans and decides every act, the AI proposes and prepares and never files or sends; compliance is recorded as carefully as noncompliance; every deadline names its basis. | local-facts, standards, conformance, consequences, action-grammar, actions, action-clocks, filing-templates, filings, escalation, action-plans |
 | 10 | Operations | 10, 14 | The instance keeps itself current unattended, and watches the actions' clocks and the government's response. | monitoring, link-sweep, scheduler |
 | 11 | Interface and distribution | 12, 15 | The ops, the member surfaces and the installer. Nothing below depends on them. | affordances, tasks, queue-producers, queue, instance-setup, op-declarations, admission, control-plane, plane, legacy-ui, installer |
@@ -261,3 +261,14 @@ Uses: `plane` uses every module today's composition root reaches (`store.mjs`' c
 | link-sweep | The ratified link sweep, split from monitoring (N506, K1159). | `monitoring/sweep.mjs`, `sweep-match.mjs`, the sweep's share of `checks.mjs`, `schema.mjs`, `index.mjs`; `monitoring` R53–R64 |
 
 Uses: `link-sweep` uses record-grammar, subresources, format-registry, record-core, membership, promotion, capture, observation-log, capture-requests, project-stage and monitoring; `scheduler`, `queue-producers` and `plane` gain it.
+
+## Layer 8: case-authoring's and publication's splits (K617, K1332, K1333; T29)
+
+Two splits for size (P6; BOB's, K617), no requirement changing meaning. Each new module has no `from` and is built by copy in its own T29 job at `bio-plane/src/<module>/`, merged before the module it leaves; that module's job then deletes its copy and keeps delegates.
+
+| module | what it does | source |
+| --- | --- | --- |
+| case-carriage | What a case carries at its commit: its held materials and their texts, and the re-reads at the commit (sources lapsed, accepted work withdrawn, flags opened). Directly before `publication`, which calls it inside `commitCaseEdition`. | `publication` R51 (part), R57, R59; `build/extraction/publication-split-2.md` |
+| case-disclosures | The case's disclosures: materials and their attestations, accepted work relied on, flags, the C-120 refusals and the blocks `publishCase` signs. Directly before `case-authoring`, after `case-import`, which it uses. | `case-authoring` R12, R31, R35–R37, R43–R52, R54; `materials.mjs`, `accepted.mjs`; `build/extraction/case-authoring-split.md` |
+
+Uses: `case-carriage` uses record-grammar, record-core, membership, promotion, provenance, sources, extraction, accepted-work and case-grammar; `publication` gains it (and drops sources, extraction and accepted-work). `case-disclosures` uses record-grammar, record-core, membership, promotion, provenance, attestation, capture, sources, extraction, content, inquiry-grammar, inquiry, strength, contradiction, case-grammar, publication and case-import; `case-authoring` gains it. Each job's final `uses` is recorded in `modules.json` before its merge.
