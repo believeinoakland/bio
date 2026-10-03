@@ -127,7 +127,9 @@ export function defaultFakes() {
     /* network-notices R22 (queue-producers R27): no notice on any project until a test says otherwise. */
     networkNotices: { noticesOf: () => ({ ok: true, notices: [] }) },
     reevaluation: { notices: () => ({ ok: true, notices: [], limit: 1000, truncated: false }),
-                    correctedDependents: () => ({ ok: true, entries: [], limit: 200, truncated: false, cursor: null }) },
+                    correctedDependents: () => ({ ok: true, entries: [], limit: 200, truncated: false, cursor: null }),
+                    /* reevaluation R30 (queue-producers R31): no withdrawn or contested edition under anything. */
+                    docketDependents: () => ({ ok: true, entries: [], count: 0, limit: 200, truncated: false, cursor: null }) },
     intent: { gaps: () => ({ ok: true, gaps: [] }) },
     monitoring: { monitoring: () => ({ ok: true, items: [], truncated: false }),
                   flagged: () => ({ ok: true, items: [], limit: 200, truncated: false }),
@@ -137,7 +139,11 @@ export function defaultFakes() {
     contradiction: { candidatesFor: () => ({ ok: true, candidates: [], truncated: false, cursor: null }),
                      conflictNotices: () => ({ ok: true, notices: [], truncated: false, cursor: null }) },
     /* actions R54 (queue-producers R19): no legal pressure mark awaits a hold until a test says otherwise. */
-    actions: { holdsDue: () => ({ ok: true, items: [], truncated: false, cursor: null }) },
+    actions: { holdsDue: () => ({ ok: true, items: [], truncated: false, cursor: null }),
+               /* actions R59 (queue-producers R29): no hold released until a test says otherwise. */
+               holdsReleased: () => ({ ok: true, items: [], truncated: false, cursor: null }) },
+    /* docket R9 (queue-producers R30): no core item due on any case until a test says otherwise. */
+    docket: { coreDue: () => ({ ok: true, items: [], count: 0, wrote: false }) },
     /* filing-templates R20, local-facts R4 (queue-producers R20, R21; K921): no review asked and no fact due until a test
        says otherwise. */
     filingTemplates: { reviewsRequested: ({ limit } = {}) => ({ ok: true, items: [], limit: limit ?? 500, truncated: false, cursor: null }) },

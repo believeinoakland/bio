@@ -6,7 +6,7 @@
  * not a task comes from its one read, `feedItems`, its R8).
  *
  *   queueFeed      op=queue: every item typed by class, homed under every case, with its options and its disposition
- *                  (R6–R18, R39, R40, R46); `queueAnswer` is the control plane's decoration of that answer (R17).
+ *                  (R6–R18, R39, R40, R46, R50); `queueAnswer` is the control plane's decoration of that answer (R17).
  *   queueMute, queueSnooze   the PERSONAL half: one member's preferences, writing nothing any other member reads
  *                  (R19–R22, R26, R30, R31).
  *   proposeDispose op=proposedispose: the set, the class bridge, the project arm; the progression arm is
@@ -22,7 +22,7 @@
  *   producers   the providers (`producers` is `queue-producers`, handed whichever of its own providers were given
  *              here: governor, provenance, capture, captureRequests, basisVersions, aiRuns, publication, reevaluation,
  *              intent, monitoring, contradiction, actionClocks, escalation, actionPlans, actions, filingTemplates,
- *              localFacts and the shared ones);
+ *              localFacts, networkNotices, linkSweep, docket and the shared ones);
  *   env       the instance bindings: `BIO_NOW_MS` (the clock);
  *   now       a clock, `() => ms`, in place of `env`'s;
  *   start     false to skip the scheduler registration (a test that drives the consumer itself).
@@ -112,7 +112,9 @@ export class Queue {
     /* queue-producers R2 (N483) and R27 (DEC-111): corpus-export's export log; network-notices' notices of a project. */
     "networkNotices",
     /* queue-producers R26 (N506, K1181): link-sweep's sweep conditions (its R11), since the sweep left monitoring. */
-    "linkSweep"]);
+    "linkSweep",
+    /* queue-producers R30 (N520, DEC-116): docket's required core (its R9); queue passes it and calls none of its reads. */
+    "docket"]);
   get #scheduler() { return this.#dep("scheduler", () => schedulerOf(this.#host, this.#env)); }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -547,14 +549,26 @@ export class Queue {
   static TASK_LIVE_STATUSES = Object.freeze(["open", "forwarded"]);
   /** R12, R28 (K607, K608): the door an OBLIGATION not held in `tasks` leaves by, by kind; every other obligation is a
    *  task (taskresolve). The Action layer's four: a checkpoint is judged (action-plans R16), a proposed stage advanced
-   *  or declined (escalation R13), a reminder answered (action-clocks R6), a litigation hold stated (actions R52;
-   *  K899 (7)); K921's two: a template version reviewed (filing-templates R9), a local fact confirmed
-   *  (local-facts R1); and a credit level chosen (publication R17; queue-producers R23, DEC-102 item 3). */
+   *  or declined (escalation R13), a reminder answered (action-clocks R6), a litigation hold placed (actions R52;
+   *  K899 (7); its release, actions R56, the other answer, named in its detail); K921's two: a template version reviewed
+   *  (filing-templates R9), a local fact confirmed (local-facts R1); a credit level chosen (publication R17;
+   *  queue-producers R23, DEC-102 item 3); and (R50, DEC-116 item 2) the docket's core item placed or declined, two
+   *  doors. The contradiction duties' doors are R46's, read off the item's subject (`#contradictionDisposition`); the
+   *  bridge (R28), which holds no subject, answers the doors of a duty not yet taken up. A list is copied out
+   *  (`doorOf`), never handed out frozen. */
   static OBLIGATION_DOORS = Object.freeze({ "bias-debt": "biasdebtresolve", "signer-self-registered": "signerset",
     "plan-checkpoint-due": "checkpointrecord", "escalation-stage-proposed": "escalationadvance",
     "action-reminder": "reminderanswer", "litigation-hold": "actionhold",
     "template-review-requested": "templatereview", "local-fact-due": "factconfirm",
-    "attribution-unchosen": "attribute" });
+    "attribution-unchosen": "attribute",
+    "docket-core-due": Object.freeze(["docketprepare", "docketdecline"]),
+    "contradiction-duty": Object.freeze(["contradictionclarify", "contradictiontakeup"]),
+    "contradiction-duty-unseen": Object.freeze(["contradictionoptin"]) });
+  /** The door R12 and R28 name for an OBLIGATION of `kind`: its entry above (a list copied), else `taskresolve`. */
+  static doorOf(kind) {
+    const d = Object.prototype.hasOwnProperty.call(Queue.OBLIGATION_DOORS, kind) ? Queue.OBLIGATION_DOORS[kind] : null;
+    return Array.isArray(d) ? [...d] : d || "taskresolve";
+  }
   /** R12: what each of those doors is, said on the item's disposition after the general sentence. */
   static OBLIGATION_DOOR_DETAIL = Object.freeze({
     "bias-debt": " This one is a bias debt, which is keyed by the RUN it is about rather than by "
@@ -574,8 +588,8 @@ export class Queue {
       + "action, the entry and the day rather than by a task: you answer it with another reminder or with none "
       + "(op=reminderanswer), and it also leaves when the entry is no longer pending or the action is closed.",
     "litigation-hold": " This one is a reply your group marked as legal pressure, keyed by the action and the entry "
-      + "rather than by a task: it leaves when a member records the hold in place or released, with a reason "
-      + "(op=actionhold).",
+      + "rather than by a task: it leaves when a member records the hold in place or released, with a reason: in place "
+      + "by placing it (op=actionhold), released by releasing it (op=actionholdrelease), its own act.",
     "template-review-requested": " This one is a review a member asked of you on a filing template's version, keyed by "
       + "the version and by you rather than by a task: it leaves when you review the version's present text "
       + "(op=templatereview), or when the version is no longer in review.",
@@ -585,7 +599,17 @@ export class Queue {
     "attribution-unchosen": " This one is a case edition being prepared that reaches an observation you authored, keyed "
       + "by the edition and the observation rather than by a task: it leaves when you choose a credit level for it "
       + "(op=attribute), or when the edition no longer reaches it, or is signed or replaced.",
+    "docket-core-due": " This one is an item the docket of a case you manage must list, keyed by the case, the item's "
+      + "kind and what it refers to rather than by a task: it stays until it is done, and it leaves when you place it on "
+      + "the docket (op=docketprepare prepares the entry) or, for a submission, decline it with a reason "
+      + "(op=docketdecline), or when it is otherwise placed, receipted or disclosed.",
   });
+
+  /** R46, R50: the acts a project-scoped FINDING of these kinds names beside R12's disposition: a recorded re-evaluation
+   *  answers what a finding rests on being marked wrong (N345), or a case edition it rests on being withdrawn or
+   *  contested (DEC-116 items 3, 7). */
+  static FINDING_ACTS = Object.freeze({ "side-corrected": Object.freeze(["reevaluationrecord"]),
+    "edition-withdrawn": Object.freeze(["reevaluationrecord"]), "edition-contested": Object.freeze(["reevaluationrecord"]) });
 
   /** D-266 / IC-60 — THE SECOND IDENTITY, and the whole of what this item added.
    *
@@ -646,7 +670,7 @@ export class Queue {
          resolved somewhere else will need its own answer here and will find this line when it does. */
       return { available: false, op: null, scope: null, keyed_on: KEYED_ON, key: null,
                reason: "an_obligation_is_resolved_not_disposed",
-               instead: Queue.OBLIGATION_DOORS[item.kind] || "taskresolve",
+               instead: Queue.doorOf(item.kind),
                detail: "a to-do is something a named person must do for the record to proceed "
                      + "and it leaves every list when it is DONE (D-125, DEC-16). Setting it aside "
                      + "is not a narrower version of that act, it is a different one."
@@ -727,8 +751,10 @@ export class Queue {
       .map((a) => a.id.trim())
       .sort();
     const fid = typeof item.id === "string" && item.id.trim() ? item.id.trim() : null;
-    /* R46: a side-corrected finding keeps this disposition and names the act that answers it. */
-    const acts = item.kind === "side-corrected" ? { acts: ["reevaluationrecord"] } : {};
+    /* R46, R50: a side-corrected, edition-withdrawn or edition-contested finding keeps this disposition and names the
+       act that answers it. */
+    const acts = Object.prototype.hasOwnProperty.call(Queue.FINDING_ACTS, item.kind)
+      ? { acts: [...Queue.FINDING_ACTS[item.kind]] } : {};
     if (homes.length === 0 || !fid)
       return { available: false, op: null, scope: "project", keyed_on: SCOPED_ON, key: null,
                finding: fid, projects: [], ...acts,
@@ -1876,7 +1902,7 @@ export class Queue {
                check: row.check, translation: row.translation,
                class: keyClass, kind: keyKind,
                /* R28 (K607): the same per-kind door R12 publishes on the item. */
-               instead: keyClass === "CONDITION" ? "queuemute" : (Queue.OBLIGATION_DOORS[keyKind] || "taskresolve"),
+               instead: keyClass === "CONDITION" ? "queuemute" : Queue.doorOf(keyKind),
                detail: `this names ${keyClass === "CONDITION" ? "a signal" : "a to-do"}, and `
                      + `${keyClass === "CONDITION" ? "a signal" : "a to-do"} is not DISPOSED: a disposition is `
                      + "an authored record act on something the record noticed, and op=queue publishes the act that does "
