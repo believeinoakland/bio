@@ -69,7 +69,7 @@ test("R1 a signed document answers anybody, with its signature, deliverer and th
   assert.deepEqual(w.op("casedocument", { case: "CASE-2026-0001", edition: 1 }), any, "op=casedocument is the same read");
   /* an older format signed no citation: stated, never read from today's edges */
   const { w: w3, proj: p3, roles: r3 } = prepared({ format: "bio-case-document/3", citations: [{ target: "X", version: "pinned" }] });
-  w3.signCase("CASE-2026-0001", 1, { project: p3, roster: roster(r3) });
+  w3.signLegacy("CASE-2026-0001", 1, { project: p3, roster: roster(r3) });
   const old = w3.p.caseDocument("CASE-2026-0001", 1, null);
   assert.equal(old.citations.state, "undetermined");
   assert.equal(old.citations.rows, null);
@@ -130,7 +130,7 @@ test("K651 the case document's grammar is case-grammar's, re-exported here uncha
     assert.equal(pub[name], cg[name], name);
   for (const name of ["CASE_DOCUMENT_FORMAT", "caseDocumentStatesMemberBlocks", "caseDocumentRequiresTensionSection"])
     assert.equal(chk[name], cg[name], `checks.mjs ${name}`);
-  assert.equal(CASE_DOCUMENT_FORMAT, "bio-case-document/5");
+  assert.equal(CASE_DOCUMENT_FORMAT, "bio-case-document/6");
 });
 test("R21 storeCaseDocument replaces an unsigned document, never a signed one, and answers what the store holds", () => {
   const { w, proj, roles } = prepared();

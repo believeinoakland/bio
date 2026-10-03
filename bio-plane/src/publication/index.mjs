@@ -51,7 +51,6 @@
 import { recordOf, stampInstant, instantOrder } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
-import { observerRef } from "../provenance/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { reevaluationOf } from "../reevaluation/index.mjs";
@@ -66,6 +65,8 @@ import { sourcesOf } from "../sources/index.mjs";
 import { corpusExportOf } from "../corpus-export/index.mjs";
 import { acceptedWorkOf } from "../accepted-work/index.mjs";
 import { captureOf } from "../capture/index.mjs";
+import { extractionOf } from "../extraction/index.mjs";
+import { observerRef, provenanceOf } from "../provenance/index.mjs";
 /* The case document's grammar is `case-grammar`'s (K651): the formats and predicates, the /5 blocks and tension
    section, the attribution run's text, the section locators, the signed citations and the edge set a finding rests on.
    This module reads them from there and re-exports, unchanged, every name it exported before the split, so its
@@ -73,7 +74,7 @@ import { captureOf } from "../capture/index.mjs";
 import { caseDocumentStatesMemberBlocks, caseTensionsOf, disclosedCandidates, caseDocumentBlocks, sourceRowsStanding,
          SECTIONS, REAUTHORABLE_SECTIONS, signedCitations, ATTRIBUTION_LEVELS, attributionFrontmatterLines,
          attributionBodyLines, publishedGraphEdges, caseDocumentRequiresMaterials, acceptedWorkOf as acceptedWorkBlocksOf,
-         materialsOf } from "../case-grammar/index.mjs";
+         materialsOf, extractedTextOf } from "../case-grammar/index.mjs";
 
 export { ATTRIBUTION_ACT_CHECKS, CASE_SOURCES_CHECKS } from "./checks.mjs";
 export { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3, CASE_DOCUMENT_FORMAT_V2,
@@ -160,13 +161,13 @@ export class Publication {
 
   constructor({ storage, record, membership, promotion, host = null, inquiry = null, basisVersions = null,
                 contradiction = null, sources = null, credentials = null, corpusExport = null, acceptedWork = null,
-                capture = null, extraction = null, now = null } = {}) {
+                capture = null, extraction = null, provenance = null, now = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
     this.#deps = { host, storage, inquiry, basisVersions, contradiction, sources, credentials, corpusExport, acceptedWork,
-                   capture, extraction };
+                   capture, extraction, provenance };
     this.now = typeof now === "function" ? now : () => new Date().toISOString();
   }
 
@@ -178,6 +179,8 @@ export class Publication {
     return this.#deps.credentials ||= credentialsOf(this.#deps.host, { record: this.record, membership: this.membership });
   }
   get acceptedWork() { return this.#deps.acceptedWork ||= acceptedWorkOf(this.#deps.host, { record: this.record, promotion: this.promotion }); }
+  get extraction() { return this.#deps.extraction ||= extractionOf(this.#deps.host, { record: this.record, membership: this.membership }); }
+  get provenance() { return this.#deps.provenance ||= provenanceOf(this.#deps.host, { record: this.record, membership: this.membership, promotion: this.promotion }); }
   get capture() { return this.#deps.capture ||= captureOf(this.#deps.host, { record: this.record }); }
   get sources() { return this.#deps.sources ||= sourcesOf(this.#deps.host, { record: this.record, membership: this.membership }); }
   get corpusExport() {
@@ -878,7 +881,102 @@ export class Publication {
     /* D-734 (BOB #36, D-731 (b); BIO_Publication_v0_1.md §4): THE SIGNED DOCUMENT'S OWN HASH IS PUBLISHED, in the same
        act and transaction that signs it, so op=verify answers for the one hash a member signed here. */
     registerCaseDocumentSha(this.sql, id, ed, doc.doc_sha, doc.text, when);
-    return outcome(false);
+    /* R57 (DEC-112 (3)(4); K1316): EVERYTHING THE CASE INCLUDES, HELD BY SHA-256 IN THE SAME ACT, so public-read carries it
+       in the case file from the published projection alone. A material this copy cannot hold at its stated digest never
+       refuses the commit: it is named, and the case file shows it missing. */
+    const held = this.#holdMaterials(docFm, when);
+    return { ...outcome(false), materials: held.materials, materials_unheld: held.unheld };
+  }
+
+  /* R57: hold, by SHA-256, each `included: true` material of the signed document's `materials:` block, inside the commit's
+     transaction: an observation's whole text and a document's captured bytes where the register holds them as inline
+     text (verified against the stated digest), a document's extracted text (`extractedTextOf` over extraction's units,
+     only when the index is whole and no unit was cut, verified against `text_sha`), and the timestamp tokens its home's
+     provenance names, as text where inline. Bytes held only in the evidence store are registered and answered
+     `held: "evidence"`, for ratification R39 to copy. Answers `{materials, unheld}`; never throws. */
+  #holdMaterials(fm, when) {
+    const materials = [], unheld = [];
+    let rows = null;
+    try { const m = materialsOf(fm); rows = m && Array.isArray(m.materials) ? m.materials : null; } catch { rows = null; }
+    const seen = new Set();
+    const hold = (ref, kind, sha, text, bytes) => {
+      if (seen.has(sha)) return;
+      seen.add(sha);
+      if (typeof text === "string") {
+        this.sql.exec(`INSERT INTO published_material_texts (sha256,kind,text,bytes,published) VALUES (?,?,?,?,?)
+                       ON CONFLICT(sha256) DO NOTHING`, sha, kind, text, new TextEncoder().encode(text).length, when);
+      }
+      this.sql.exec(`INSERT INTO published_shas (sha256,bundle_id,path,kind,bytes,published) VALUES (?,?,?,?,?,?)
+                     ON CONFLICT(sha256,bundle_id,path) DO NOTHING`,
+                    sha, ref, `materials/${sha}`, kind, typeof text === "string" ? new TextEncoder().encode(text).length
+                      : Number.isInteger(bytes) ? bytes : null, when);
+      materials.push({ ref, kind, sha256: sha, held: typeof text === "string" ? "text" : "evidence" });
+    };
+    for (const m of Array.isArray(rows) ? rows : []) {
+      if (!m || typeof m !== "object" || !(m.included === true || m.included === "true")) continue;
+      const ref = str(m.ref), sha = str(m.sha).toLowerCase(), kind = m.kind;
+      const miss = (what, why) => unheld.push({ ref: ref || null, kind: what, sha256: what === "extracted_text" ? str(m.text_sha) || null : sha || null, why });
+      if (!HEX64.test(sha)) { miss(kind === "observation" ? "observation" : "document", "the row names no SHA-256"); continue; }
+      const home = this.#registered(sha);
+      const inline = home ? this.#fileText(home.bundle_id, home.path) : null;
+      const inlineOk = !!inline && shaOf(inline.content) === sha;
+      if (kind === "observation") {
+        if (inlineOk) hold(ref, "observation", sha, inline.content);
+        else miss("observation", "this copy holds no text of that observation at its digest");
+        continue;
+      }
+      if (inlineOk) hold(ref, "document", sha, inline.content);
+      else if (home && !inline) hold(ref, "document", sha, null, Number(home.bytes));
+      else { miss("document", "this copy holds no bytes of that document at its digest"); continue; }
+      /* its extracted text */
+      const textSha = str(m.text_sha).toLowerCase();
+      let text = null;
+      try {
+        const u = this.extraction.unitsOf(sha);
+        if (u && u.state === "whole" && Array.isArray(u.units) && u.units.length && !u.units.some((x) => x.truncated))
+          text = extractedTextOf(u.units);
+      } catch { text = null; }
+      if (typeof text === "string" && HEX64.test(textSha) && shaOf(text) === textSha) hold(ref, "extracted_text", textSha, text);
+      else miss("extracted_text", "this copy holds no whole extracted text of that document at its stated digest");
+      /* its co-attestation tokens (K1315) */
+      for (const t of this.#tokenFiles(home, sha)) {
+        const f = this.#fileRow(home.bundle_id, t);
+        if (f && typeof f.text === "string") hold(ref, "attestation", shaOf(f.text), f.text);
+        else if (f && typeof f.blobSha === "string" && HEX64.test(f.blobSha)) hold(ref, "attestation", f.blobSha, null, f.bytes);
+        else miss("attestation", `the timestamp token ${t} is not held`);
+      }
+    }
+    return { materials, unheld: unheld.slice(0, 1000) };
+  }
+
+  /* R57: the register row homing a capture on a bundle that exists, or null (provenance's read contract, R48). */
+  #registered(sha) {
+    return this.#one(`SELECT r.bundle_id, r.path, r.bytes FROM register r JOIN bundles b ON b.bundle_id=r.bundle_id
+                       WHERE r.capture_sha=? LIMIT 1`, sha);
+  }
+
+  /* R57: a live file's record-core read (R13): inline text, or its blob reference. */
+  #fileRow(bundleId, path) { try { return this.record.readFile(bundleId, path); } catch { return null; } }
+
+  /* R57 (K1315): the timestamp token files the home's `data/provenance.json` names for one capture. */
+  #tokenFiles(home, sha) {
+    const f = home ? this.#fileText(home.bundle_id, "data/provenance.json") : null;
+    const reg = f ? safeJson(f.content) : null;
+    const out = new Set();
+    for (const d of reg && Array.isArray(reg.documents) ? reg.documents : []) {
+      if (!d || !d.capture || String(d.capture.sha256 || "").replace(/^sha256:/, "").toLowerCase() !== sha) continue;
+      if (d.timestamp && typeof d.timestamp.token_file === "string" && d.timestamp.token_file) out.add(d.timestamp.token_file);
+      for (const t of Array.isArray(d.attestations) ? d.attestations : [])
+        if (t && t.kind === "rfc3161" && typeof t.file === "string" && t.file) out.add(t.file);
+    }
+    return [...out];
+  }
+
+  /** R57 (K1316): a held material's text by its SHA-256, for `public-read`'s case file: `{found, sha256, kind, text}`,
+   *  or `{found: false}`. Answered only for a text a commit held, so working material is unreachable here. */
+  publishedMaterialText(sha) {
+    const r = this.#one(`SELECT sha256, kind, text FROM published_material_texts WHERE sha256=?`, String(sha ?? "").toLowerCase());
+    return r ? { found: true, sha256: r.sha256, kind: r.kind, text: r.text } : { found: false };
   }
 
   /* R59: the rows of a document's `accepted_work:` block whose acceptance is no longer in force, and the open flags on
@@ -1860,8 +1958,10 @@ export class Publication {
       return d ? this.#attributedReachedBy(d.text) : [];
     })();
     return obsList.map((obs) => {
+      /* R60 (K1315): an off-the-record capture's row carries `capture`, its SHA-256, in `observation`'s place. */
+      const key = HEX64.test(String(obs)) ? { capture: obs } : { observation: obs };
       const act = this.attributionInForce(caseId, edition, obs);
-      if (!act) return { observation: obs, level: null, shown: null, chosen_at_edition: null,
+      if (!act) return { ...key, level: null, shown: null, chosen_at_edition: null,
                          why: "its author has chosen no level for this edition or any earlier one" };
       /* R60: a capture's level publishes its attesting member's values, the member who chose it. */
       const g = HEX64.test(String(obs)) ? { author: act.chosen_by }
@@ -1874,10 +1974,10 @@ export class Publication {
         : act.level === "name" ? (m && m.handle ? m.handle : null)
         : null;
       if (shown === null && act.level !== "group")
-        return { observation: obs, level: null, shown: null, chosen_at_edition: null,
+        return { ...key, level: null, shown: null, chosen_at_edition: null,
                  why: `its author chose '${act.level}' at edition ${act.edition}, and the record holds no `
                     + `${act.level === "name" ? "handle" : act.level} for them to publish under it` };
-      return { observation: obs, level: act.level, shown, chosen_at_edition: Number(act.edition), why: null };
+      return { ...key, level: act.level, shown, chosen_at_edition: Number(act.edition), why: null };
     });
   }
 
@@ -1913,7 +2013,8 @@ export class Publication {
        author in its own files (§4.1), so `legacy` asks of observations alone. */
     const reached = [...observations, ...this.#capturesReachedBy(doc && doc.text)];
     const stated = (Array.isArray(fm.observation_attributions) ? fm.observation_attributions : [])
-      .map((r) => ({ observation: String(r && r.observation != null ? r.observation : ""),
+      .map((r) => ({ ...(r && r.capture != null && r.observation == null ? { capture: String(r.capture) }
+                                                                         : { observation: String(r && r.observation != null ? r.observation : "") }),
                      level: r && typeof r.level === "string" && r.level !== "null" ? r.level : null,
                      shown: r && r.shown != null && r.shown !== "null" ? String(r.shown) : null }));
     const current = this.attributionStatements(doc.case_id, Number(doc.edition), String(fm.case_project ?? "").trim(), reached);
@@ -1926,11 +2027,13 @@ export class Publication {
   attributionStatedFor(observation) {
     const id = String(observation ?? "");
     if (!id) return false;
+    /* R60 (K1315): a capture's row carries `capture` in `observation`'s place. */
+    const field = HEX64.test(id) ? "capture" : "observation";
     const docs = this.#rows(`SELECT text FROM case_documents WHERE ratified_at IS NOT NULL
-                              AND instr(text, ?) > 0 ORDER BY case_id, edition LIMIT 50`, `  - observation: ${id}`);
+                              AND instr(text, ?) > 0 ORDER BY case_id, edition LIMIT 50`, `  - ${field}: ${id}`);
     return docs.some((d) => {
       const rows = (parseFrontmatter(d.text).data || {}).observation_attributions;
-      return Array.isArray(rows) && rows.some((r) => r && String(r.observation) === id
+      return Array.isArray(rows) && rows.some((r) => r && String(r[field]) === id
         && ATTRIBUTION_LEVELS.includes(r.level));
     });
   }
@@ -1943,7 +2046,9 @@ export class Publication {
    *  level to — and re-authors that document's attribution runs, so the level is in the bytes its owner
    *  signs. No `publish` capability is needed: it is a decision about the member's own words, not about
    *  the case. `by` is the control plane's stamp and nothing else. DEC-88: `reason`, the author's words on why
-   *  this level, is recorded with the choice (C-92.13). */
+   *  this level, is recorded with the choice (C-92.13). R60 (DEC-119 (3)): `capture` in place of `observation` names a
+   *  capture the edition's document states as Withheld, and its attesting member (an actor `capture` recorded) chooses,
+   *  by this same act, how the edition credits their attestation; the choice is kept per case, capture and edition. */
   attributeObservation({ caseId = null, edition = null, observation = null, capture = null, level = null, reason = null,
                          by = null } = {}) {
     const refusal = (code, detail, extra) => {
@@ -2334,7 +2439,19 @@ export class Publication {
         `INSERT INTO published_shas (sha256,bundle_id,path,kind,bytes,published) VALUES (?,?,?,?,?,?)
          ON CONFLICT(sha256,bundle_id,path) DO NOTHING`,
         manifestSha, caseId, "MANIFEST.json", "manifest", bytes ?? null, this.#when());
-      return { ok: true, caseId, edition: ed, manifest_sha: manifestSha };
+      /* R15 (K1315): every file the manifest lists is registered in the same act, so each is served by hash. */
+      let files = 0;
+      for (const f of Array.isArray(manifest.files) ? manifest.files : []) {
+        if (!f || typeof f !== "object" || typeof f.sha256 !== "string" || !HEX64.test(f.sha256)
+            || typeof f.path !== "string" || !f.path) continue;
+        this.sql.exec(
+          `INSERT INTO published_shas (sha256,bundle_id,path,kind,bytes,published) VALUES (?,?,?,?,?,?)
+           ON CONFLICT(sha256,bundle_id,path) DO NOTHING`,
+          f.sha256, caseId, f.path, typeof f.kind === "string" && f.kind ? f.kind : "case_file",
+          Number.isInteger(f.bytes) ? f.bytes : null, this.#when());
+        files++;
+      }
+      return { ok: true, caseId, edition: ed, manifest_sha: manifestSha, ...(files ? { files } : {}) };
     });
   }
 
