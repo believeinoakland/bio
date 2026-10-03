@@ -132,14 +132,14 @@ test("R9 a withheld citation is counted and never named: not in the bytes, not i
   assert.equal(lensOf(read(shown).fm).statements[0].withheld, 0);
 });
 
-test("R9 the section: the acknowledgement first, each statement's kind in plain words, its subject and text, then justification, printed citations and withheld count beneath, and the two sentences verbatim, once", () => {
+test("R9 N524 the section: the acknowledgement first, each statement's kind in plain words, its subject and text, then justification, printed citations and withheld count beneath, and the two sentences verbatim (the first Bob's, DEC-117), once", () => {
   assert.equal(LENS_HEAD, "## The Lens This Case Was Produced Under");
   assert.deepEqual({ ...LENS_KIND_WORDS }, {
     scrutiny: "a source this group checks more closely before relying on it",
     inference: "an inference this group allows or refuses to draw",
     pattern: "a pattern this group has evidence an institution or source follows" });
   assert.deepEqual([...LENS_CLOSING_SENTENCES], [
-    "Every group works under some lens, and an undeclared lens is the most dangerous kind.",
+    "Everyone who investigates looks through a lens: what they care about and expect to find. An undeclared lens is the most dangerous kind.",
     "This group declares its lens, with its reasons and its evidence, so that you can weigh its findings knowing how it looked at the material."]);
   const lines = lensSectionLines({ acknowledgement: "Ours.", statements: LENS });
   assert.equal(lines[0], LENS_HEAD);

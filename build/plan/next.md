@@ -12,6 +12,8 @@
 
 - N530 · 2026-10-03 · **capture's account statement, one spelling** (K1317): `case-checker` spells `bio-capture-account <sha>\n<text>` itself (R3, R14) because `capture` is store-bound; move `captureAccountStatement` into a pure module both use (`record-grammar` or a pure file of `capture`). **Why next:** both jobs are running or merged (P8).
 
+- N531 · 2026-10-03 · **reevaluation**: `acceptanceWithdrawn`'s detail read passes `class:admin` as its viewer, which `case-import` R16 answers null, so the acceptance cause's `group` and `case` read null (CASE-IMPORT #1 J3; K1319). Read as the plane (no viewer) for the telling's detail, or state why not. **Why next:** reevaluation's T28 job is merged (P8).
+
 ## Carried from T28
 
 The left-out table of `current.md` (T28), unchanged until re-read at T29's opening.

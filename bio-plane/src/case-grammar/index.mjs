@@ -4,7 +4,11 @@
  * blocks (R1, `./blocks.mjs`) and tension section (R1, `./tensions.mjs`), the attribution run's text (R2), the
  * sections a later act re-authors (R3), the citations a signed document carries (R4), the edge set a finding rests
  * on (R5), what changed in an edition and the lens it was produced under (R8, R9, `./edition.mjs`), and the project
- * reference a case carries (R10, `./reference.mjs`). It reads no table, holds no store and never throws.
+ * reference a case carries (R10, `./reference.mjs`), the method and materials a `/6` case carries and the other
+ * group's work it rests on (R11, R12, R16, `./materials.mjs`), each finding's signed grading facts and passages and the
+ * one extracted text (R17, `./facts.mjs`), the case file's format (R13, `./casefile.mjs`), the
+ * complete edition (R14, `./complete.mjs`) and a finding's standing against the bar (R15, `./standing.mjs`). It reads
+ * no table, holds no store and never throws.
  *
  * Split from `publication` by copy (K651, K624 (1)): the format block of `publication/checks.mjs`, and `fmSafe`,
  * `SECTIONS`, `REAUTHORABLE_SECTIONS`, `signedCitations`, the attribution renderers and `publishedGraphEdges` of
@@ -16,11 +20,12 @@ import { caseDocumentRequiresV4Disclosures } from "./formats.mjs";
 import { fmSafe } from "./blocks.mjs";
 import { WHAT_CHANGED_HEAD } from "./edition.mjs";
 
-export { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3, CASE_DOCUMENT_FORMAT_V2,
-         CASE_DOCUMENT_FORMAT_LEGACY, CASE_DOCUMENT_FORMATS_ACCEPTED, caseDocumentStatesMemberBlocks,
-         caseDocumentRequiresDisclosures, caseDocumentRequiresV4Disclosures,
-         caseDocumentRequiresTensionSection } from "./formats.mjs";
+export { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V5, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3,
+         CASE_DOCUMENT_FORMAT_V2, CASE_DOCUMENT_FORMAT_LEGACY, CASE_DOCUMENT_FORMATS_ACCEPTED,
+         caseDocumentStatesMemberBlocks, caseDocumentRequiresDisclosures, caseDocumentRequiresV4Disclosures,
+         caseDocumentRequiresTensionSection, caseDocumentRequiresMaterials } from "./formats.mjs";
 export { caseDocumentBlocks, captureBlockLines, sourceBlockLines, sourceStatement, unnamedSourceStatement,
+         withheldSourceStatement, sourceRowWithheld, WITHHELD_SOURCE_LABEL, WITHHELD_SOURCE_REASON,
          sourceRowsStanding, CAPTURE_FIELDS, ACKNOWLEDGEMENT_FIELDS, SOURCE_FIELDS, SOURCE_BASES,
          BLOCKS_PREDATE_SENTENCE, BLOCK_UNREADABLE_SENTENCE, NOT_RECORDED_STATED, fmSafe } from "./blocks.mjs";
 export { caseTensionsOf, disclosedCandidates, TENSION_STATE_WORDS, TENSION_HIGHLIGHT_SENTENCE, TENSION_DEPTH_SENTENCE,
@@ -30,6 +35,18 @@ export { WHAT_CHANGED_HEAD, WHAT_CHANGED_ORIGINS, whatChangedText, whatChangedBl
          LENS_NONE_SENTENCE, LENS_UNDETERMINED_SENTENCE, lensStatementKey, lensBlockLines, lensSectionLines, lensOf,
          editionStatementsOf } from "./edition.mjs";
 export { WORKING_ON_KEY, NOTICE_REFERENCE_PATTERN, isNoticeReference, workingOnLines, workingOnOf } from "./reference.mjs";
+export { METHOD_FIELDS, methodBlockLines, methodOf, MATERIAL_FIELDS, MATERIAL_ATTESTATION_FIELDS, MATERIAL_KINDS,
+         MATERIAL_RESTS_UNDER, ATTESTATION_BY_KINDS, ATTESTATION_LEVELS, ANONYMOUS_ATTESTATION_LEVELS,
+         GROUP_ATTESTATION_SIGNATURE, materialsLines, materialAttestationLines, materialBlockLines, materialsOf, ACCEPTED_WORK_FIELDS, ACCEPTED_WORK_FLAG_FIELDS,
+         PAIR_AXES, pairLine, pairOf, acceptedWorkBlockLines, acceptedWorkOf } from "./materials.mjs";
+export { CASE_FILE_FORMAT, CASE_FILE_MANIFEST_PATH, CASE_FILE_KINDS, CASE_FILE_SINGLE_KINDS, CASE_FILE_MANIFEST_FIELDS,
+         CASE_FILE_KEY_FIELDS, CASE_FILE_PART_FIELDS, CASE_FILE_FILE_FIELDS, caseFilePath, caseFileEntryOf,
+         casePartDigest, caseFileManifestCheck } from "./casefile.mjs";
+export { GRADING_FACT_FIELDS, PASSAGE_FIELDS, gradingFactsLines, passagesLines, gradingFactsOf, passagesOf,
+         extractedTextOf } from "./facts.mjs";
+export { BAR_AXES, STANDING_ROLE_WORDS, standingOf } from "./standing.mjs";
+export { COMPLETE_EDITION_HEADINGS, TWO_STRENGTHS_SENTENCE, GRADE_MEANINGS, MADE_WITH_LINE, CHECKER_READS,
+         completeEditionOf } from "./complete.mjs";
 
 
 /** MK-7 — THE ATTRIBUTION LEVELS (MEMBER-KNOWLEDGE-DESIGN.md §4, §4.6), MOST PROTECTIVE FIRST (R2).
@@ -50,7 +67,8 @@ const rowsOf = (rows) => (Array.isArray(rows) ? rows.filter((r) => r && typeof r
 export function attributionFrontmatterLines(rows) {
   return ["observation_attributions:",
     ...rowsOf(rows).flatMap((r) => [
-      `  - observation: ${r.observation}`,
+      /* K1315 (publication R60): an off-the-record capture's attesting member is keyed by the capture's SHA-256. */
+      r.observation == null && r.capture != null ? `  - capture: ${r.capture}` : `  - observation: ${r.observation}`,
       `    level: ${r.level ?? "null"}`,
       `    shown: ${r.shown == null ? "null" : `"${fmSafe(r.shown)}"`}`,
       `    chosen_at_edition: ${r.chosen_at_edition ?? "null"}`])];
@@ -65,7 +83,8 @@ export function attributionBodyLines(given) {
     + "that member's own choice, made for this edition and never filled in for them (MEMBER-KNOWLEDGE-DESIGN.md "
     + "§4). An observation names no person in its own bytes; the words below are the whole of the attribution.",
     "",
-    ...rows.map((r) => !r.level
+    ...rows.map((r) => ({ ...r, observation: r.observation == null && r.capture != null ? r.capture : r.observation }))
+      .map((r) => !r.level
       ? `- **${r.observation}** — NO LEVEL IS CHOSEN: ${r.why}. This edition cannot be signed until its author `
         + "chooses one, or the finding resting on it leaves the case."
       : `- **${r.observation}** — attributed to ${said[r.level]}${r.shown == null ? " (this record names no "
@@ -113,10 +132,21 @@ export const SECTIONS = Object.freeze({
     const b1 = lines.indexOf("## What Was Searched");
     return f0 < 0 || f1 < f0 || b0 < 0 || b1 < b0 + 1 ? null : { f0, f1, b0, b1: b1 - 1 };
   }),
+  /* K1317 (case-authoring R48, publication R60): the material attestations, re-authored when an attesting member
+     chooses a level — from `material_attestations:` to the next top-level key, with no prose run. Its prose run is
+     answered empty at the document's end (`b0 === b1 === lines.length`), so a splice with no body lines leaves every
+     other line as it was. */
+  attestations: located((lines) => {
+    const f0 = lines.indexOf("material_attestations:") >= 0 ? lines.indexOf("material_attestations:")
+      : lines.indexOf("material_attestations: []");
+    let f1 = f0 + 1;
+    while (f0 >= 0 && f1 < lines.length && lines[f1].startsWith("  ")) f1++;
+    return f0 < 0 ? null : { f0, f1, b0: lines.length, b1: lines.length };
+  }),
 });
 export const REAUTHORABLE_SECTIONS = Object.freeze(Object.keys(SECTIONS));
 
-/* R4, R6: the citations a signed case document carries. A `/4` or `/5` document carrying `case_citations` answers them
+/* R4, R6: the citations a signed case document carries. A `/4`, `/5` or `/6` document carrying `case_citations` answers them
    as signed; every other document states that its citation versions are undetermined, never filled. */
 export const CITATIONS_UNDETERMINED_SENTENCE = "version undetermined (signed before capture pins): this document was "
   + "signed before a case's citation edges were pinned to the capture they were made against, and it carries neither";
