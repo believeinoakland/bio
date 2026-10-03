@@ -17,7 +17,8 @@ import { parseFrontmatter } from "../record-grammar/frontmatter.mjs";
 import { canonicalJson } from "../record-grammar/json.mjs";
 import { createSha256, b64ToBytes } from "../record-grammar/sha256.mjs";
 import { GRADE_AXES } from "../record-grammar/grades.mjs";
-import { verifySshsig, ratifyStatement, caseRatifyStatement, NS_RATIFY, normalizeKey, parseSshsig } from "../sshsig.mjs";
+import { verifySshsig, ratifyStatement, caseRatifyStatement, captureAccountStatement, NS_RATIFY, normalizeKey,
+         parseSshsig } from "../sshsig.mjs";
 import { contentIdFor, extentRelation } from "../content/extent.mjs";
 import { recomputePair, GRADING_METHOD_VERSIONS } from "../strength/method.mjs";
 import { checkCaseDocument } from "../ratification/checks.mjs";
@@ -50,11 +51,12 @@ export const RESULT_WORDS = Object.freeze({ recreated: "Recreated", recreated_in
 /** R1: the checker's versions, stated in every answer. */
 export const CHECKER_VERSIONS = Object.freeze({ grading_versions: [...GRADING_METHOD_VERSIONS], checks_version: CATALOG_VERSION });
 
-/* The account statement a capturing member signs (`capture`'s `captureAccountStatement`; stated in this module's
-   readable specification, R14). Spelled here so the standalone program carries no store-bound module. */
+/* R3: the account statement a capturing member signs is `signatures.captureAccountStatement` (its R41), the one
+   spelling `capture` signs and checks too (N530); it is pure, so the standalone program carries it. Stated in this
+   module's readable specification (R14). `accountStatement` is that very function, kept under its earlier name. */
+export const accountStatement = captureAccountStatement;
 const te = new TextEncoder();
 const td = new TextDecoder("utf-8", { fatal: false });
-export const accountStatement = (captureSha, text) => te.encode(`bio-capture-account ${String(captureSha)}\n${String(text)}`);
 
 /* ============================================================ small pure helpers */
 
@@ -419,7 +421,7 @@ async function check({ parts, documents = [], keys = null }) {
         try { if (!/BEGIN SSH SIGNATURE/.test(armored)) armored = td.decode(b64ToBytes(armored)); } catch { /* left as given */ }
         if (text === null) gap(`the signed account attesting ${ref} is not carried, so its signature cannot be checked`);
         else {
-          const v = await verifyOver(armored, accountStatement(mat.sha, text));
+          const v = await verifyOver(armored, captureAccountStatement(mat.sha, text));
           Object.assign(a, { key_fingerprint: v.key_fingerprint, listed_in_case_file: v.listed_in_case_file,
             ...(published ? { among_published_keys: v.among_published_keys } : {}) });
           if (!v.verified) fail(`the member's signed account attesting ${ref} ${v.reason === "NOT_PUBLISHED_KEY" ? "was made with a key that is not among the group's published keys" : v.words}`);
