@@ -21,7 +21,10 @@ import { CAPTURE_CHECKS, KNOCK_CHECKS } from "./checks.mjs";
 import { INFORMATION_GRAMMAR } from "./grammar.mjs";
 import { evidenceAbsent } from "./ops.mjs";
 import { acquire, archiveLookup, profileOf, profileView, governedFetch, governedCall, INSTALLATION_CHECKS } from "../acquisition/index.mjs";
-import { verifySshsig, NS_RATIFY } from "../sshsig.mjs";
+import { verifySshsig, NS_RATIFY, captureAccountStatement } from "../sshsig.mjs";
+/* R69 (N530, K1336): the account statement is spelled once, by `signatures` (its R41); re-exported so the names this
+   module's users import (`affordances`' tests among them) still resolve, with no spelling of capture's own. */
+export { CAPTURE_ACCOUNT_TOKEN, captureAccountStatement } from "../sshsig.mjs";
 import { ARCHIVE_SERVICE } from "../tsa.mjs";
 export { acquireGradeNote, ACQUIRE_GRADE_NOTE } from "../acquisition/index.mjs";
 import { ACQUIRE_GRADE_NOTE } from "../acquisition/index.mjs";
@@ -60,13 +63,6 @@ export const pseudonymOf = (digestHex) =>
 /* R69: a member id from a stamp, so `member:x` and `x` name one member. */
 const memberIdOf = (who) => (typeof who === "string" ? who.replace(/^member:/, "") : "");
 
-/** R69: the bytes a capturing member signs for their account of a capture: a fixed leading token and the digest on
- *  the first line, then the text exactly as given. Its leading token is neither `bio-ratify` nor `bio-ratify-case`
- *  (signatures R5–R7), so no account is ever the same signed bytes as a ratification. Signed in `NS_RATIFY`. */
-export const CAPTURE_ACCOUNT_TOKEN = "bio-capture-account";
-export const captureAccountStatement = (captureSha, text) =>
-  te.encode(`${CAPTURE_ACCOUNT_TOKEN} ${String(captureSha)}\n${String(text)}`);
-
 /* R68: the sentence every late attestation carries: what it proves, and what it does not. */
 const lateSentence = (at) => `proves the bytes existed by ${at}, not at capture`;
 /* R68: the raw replay of an archived locator (`/web/<ts>/` becomes `/web/<ts>id_/`): the bytes as the archive holds
@@ -100,7 +96,7 @@ export const SOURCE_OUTCOMES = Object.freeze(["success", "source_refused", "fetc
    fortnight, which reads OUR MONITORING NEGLECT as the source being unreachable — D-104's mistake one level up. So
    the age arm requires corroboration too. */
 export const REACHABILITY_DEFAULTS = Object.freeze({ failures: 3, days: 14, minForAge: 2 });
-/* The names of those settings in record-core, and of R19's stagger. */
+/* The names of those settings in record-core, and of the walk's stagger (`acquisition` R19). */
 export const REACHABILITY_SETTINGS = Object.freeze({ failures: "reachability_consecutive_failures",
                                                      days: "reachability_stale_days", minForAge: "reachability_min_failures_for_age" });
 export const SUBRESOURCE_STAGGER_SETTING = "subresource_stagger_ms";
@@ -726,8 +722,8 @@ export class Capture {
    *  knock's bytes are gone. A knock already pulled answers `existed: true` with the same document. Otherwise, in one
    *  act: the bytes are held under their own digest in the evidence store, one acquisition receipt is written
    *  (`via: "doorbell"`, address `knock:<knockId>`), the knock becomes `pulled` naming the capture, `by` and the
-   *  instant, and `by` is recorded as the capture's actor. The answer carries the provenance document (R16) the
-   *  control plane promotes at `collected`; it never carries `contact` (R70), and nothing here writes a bundle (R33).
+   *  instant, and `by` is recorded as the capture's actor. The answer carries the provenance document (`acquisition` R16) the
+   *  control plane promotes at `collected`; it never carries `contact` (R70), and nothing here writes a bundle (`acquisition` R25).
    *
    *  N380 (K559): `within`, the seam that makes the pull and the control plane's promotion one act (control-plane R36).
    *  `pullKnock` is async and the record's transaction is synchronous, so no caller can wrap both; `within(document)` is
@@ -894,10 +890,10 @@ export class Capture {
   }
 
   /* ==================================================================== *
-   * The capturing member, and late co-attestation (R16, R68, R69)
+   * The capturing member, and late co-attestation (`acquisition` R16's actor, R68, R69)
    * ==================================================================== */
 
-  /** R16, R69: record `actor` as one who captured `captureSha` (a member session's acquire, a knock's pull). Kept once
+  /** `acquisition` R16, R69: record `actor` as one who captured `captureSha` (a member session's acquire, a knock's pull). Kept once
    *  per pair, at the first instant. */
   recordCaptureActor({ captureSha, actor, at = null } = {}) {
     if (typeof captureSha !== "string" || !HEX64.test(captureSha) || typeof actor !== "string" || !actor) return { recorded: false };
@@ -909,7 +905,7 @@ export class Capture {
   /** R69 (DEC-81 item 3(c)): a capture's actor appends a signed account of when and how they captured it. Refused
    *  `NOT_THE_CAPTURING_ACTOR` (C-118.5) for anyone this module did not record as capturing it (and for a capture it
    *  recorded no actor for), `ACCOUNT_NO_TEXT` (C-118.6), and `SIG_<reason>` unless `signature` verifies
-   *  (`signatures.verifySshsig`, `NS_RATIFY`) over `captureAccountStatement(captureSha, text)` against one of `by`'s
+   *  (`signatures.verifySshsig`, `NS_RATIFY`) over `signatures.captureAccountStatement(captureSha, text)` (its R41) against one of `by`'s
    *  attesting keys (`credentials.attestingKeys`, its R11). Append-only. */
   async recordCaptureAccount({ captureSha, text, signature, by, at = null } = {}) {
     const sha = typeof captureSha === "string" ? captureSha.toLowerCase() : "";
@@ -952,7 +948,7 @@ export class Capture {
    *  N388 (REC-30): an account is its member's own words, which can name a project, so through the op it answers by
    *  the caller's `viewer` (membership R43, through the register's bundle, D-701's gate): a capture filed in a bundle
    *  the viewer may not see answers as one with nothing recorded, so an unseen capture and an unknown one read alike.
-   *  No viewer (an in-process caller: case-authoring's pre-flight) reads whole; the route never passes none. */
+   *  No viewer (an in-process caller: `case-disclosures` R3's pre-flight) reads whole; the route never passes none. */
   captureAccountsOf(captureSha, { viewer = undefined } = {}) {
     try {
       const sha = typeof captureSha === "string" ? captureSha.toLowerCase() : "";
@@ -1819,7 +1815,7 @@ export class Capture {
    *  changed would otherwise read as two documents. A primary with NO receipt cannot say which page it was: it is
    *  counted apart as `documents_undetermined`, never guessed into `documents`. N90: `limit` (the op always passes
    *  one) answers at most that many in address order, paged by `after`, unless `addresses` names the assets asked;
-   *  the in-process walk (R19) passes none and reads the host whole. */
+   *  the in-process walk (`acquisition` R19) passes none and reads the host whole. */
   siteAssets({ host, addresses = [], limit = null, after = null } = {}) {
     if (!host) return { host: null, assets: {} };
     const out = {};
@@ -2125,10 +2121,10 @@ export class Capture {
   }
 
   /* ==================================================================== *
-   * R61 (N140, K287): the validators a filed direct capture was served with
+   * R73 (`acquisition` R22; N140, K287): the validators a filed direct capture was served with
    * ==================================================================== */
 
-  /** R61: what the source sent about the bytes of the capture this fetch filed (`ETag`, `Last-Modified`), under the
+  /** R73 (`acquisition` R22): what the source sent about the bytes of the capture this fetch filed (`ETag`, `Last-Modified`), under the
    *  document address. Written by the acquisition act on every filed direct capture; a later write for the same pair
    *  replaces it. Never throws. */
   recordValidators({ addressNorm, captureSha, etag = null, lastModified = null, at = null } = {}) {
@@ -2143,7 +2139,7 @@ export class Capture {
     } catch { return { recorded: false }; }
   }
 
-  /** R61: the validators recorded for one capture at one document address, or null when none was sent or none is
+  /** R73 (`acquisition` R22): the validators recorded for one capture at one document address, or null when none was sent or none is
    *  recorded. Never throws. */
   validatorsOf({ addressNorm, captureSha } = {}) {
     try {
@@ -2167,7 +2163,7 @@ export class Capture {
              minForAge: pick(get(REACHABILITY_SETTINGS.minForAge), REACHABILITY_DEFAULTS.minForAge, 1) };
   }
 
-  /** R19 (K120 (3)): the subresource stagger, an instance setting in record-core in milliseconds; not set, a jittered
+  /** `acquisition` R19 (K120 (3)): the subresource stagger, an instance setting in record-core in milliseconds; not set, a jittered
    *  50–250 ms. */
   subresourceStaggerMs() {
     let v = null;
