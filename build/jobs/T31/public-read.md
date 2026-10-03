@@ -16,6 +16,6 @@
 **Tests and checks**
 - `node --test bio-plane/test/m/public-read/`: tests 108, pass 108, fail 0.
 - Layer tests: none named in `build/manifest.md`. No provided service changed in meaning (the store op's `docketPublic` gained an optional argument), so no user module's tests to run.
-- `format`: 98 modules, 97 requirements files; 0 failures. `architecture public-read`: 34 product files, 108 relative imports; 0 failures. `coverage public-read`: 25 of 25 live requirement ids named by a test; 0 failures. `ownership public-read tranche/T31`: 0 failures (re-run after commit below).
+- `format`: 98 modules, 97 requirements files; 0 failures. `architecture public-read`: 34 product files, 108 relative imports; 0 failures. `coverage public-read`: 25 of 25 live requirement ids named by a test; 0 failures. `ownership public-read tranche/T31` (after commit): 5 files changed; 0 failures.
 
 Size (session_016SfTxv2owbWsyKBSjqM3an): test runs 4, module lines 2896
