@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 import { world } from "./fixture.mjs";
 import { CASE_DISCLOSURE_CHECKS, REPUBLISH_SENTENCE } from "../../../src/case-authoring/index.mjs";
 import { DEPTH_BOUND } from "../../../src/strength/index.mjs";
+import { acceptedWorkOf } from "../../../src/case-grammar/index.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q", Q3 = "INQ-2026-0003-q";
@@ -181,6 +182,31 @@ test("R53, R34: the pre-flight's blockers gain R44's, R51's and R52's refusals, 
   /* a flags read that fails is stated in step three as R52 reads it */
   w.imports.flagsRead = () => ({ ok: true, complete: false, flags: [] });
   assert.equal(w.ca.publishPreflight(publishArgs(P, [Q])).steps[2].flags.reason, "FLAGS_UNDETERMINED");
+});
+
+test("R51, R52, R14: the document's accepted_work: row states who accepted which edition, when and why, the recreation result, the gaps stated and the pair as that edition publishes it, never what was checked; each open flag disclosed is an accepted_work_flags: row with the issue, when it was flagged, the owner's words and acknowledged_by (the author stamp), its flagging member unnamed; the member's block gains its sentence", () => {
+  const { w, P, ref } = onTheirs({ gaps: "the third page's image was not carried" });
+  w.imports.flag(IMP, 2, { flag: "IMPFLAG-1", finding: THEIRS, issue: "page 3 is misread", by: "bo" });
+  const r = w.publish(P, "alice", [Q], { flagsDisclosed: [{ flag: "IMPFLAG-1", words: "we checked page 3 ourselves" }] });
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+  const text = w.row(`SELECT text FROM case_documents WHERE case_id=?`, r.caseId).text;
+  const back = acceptedWorkOf(w.fm(text));
+  assert.deepEqual(back.rows, [{ member: Q, leg_of: Q, ref, group: "other-group", case: "CASE-2026-0900", edition: 2,
+    finding: THEIRS, manifest_sha: "f".repeat(64), pair: { capture: { state: "graded", grade: "B" },
+    connection: { state: "graded", grade: "C" } }, result: "recreated", gaps: "the third page's image was not carried",
+    accepted_by: "alice", accepted_at: "2026-09-27T00:00:00Z", reason: "We recreated it whole." }]);
+  assert.deepEqual(back.flags, [{ ref, edition: 2, flag: "IMPFLAG-1", issue: "page 3 is misread", flagged_at: "2026-09-27T00:00:00Z",
+    words: "we checked page 3 ourselves", acknowledged_by: "alice", acknowledged_at: w.clock.now }]);
+  assert.equal(text.includes("every passage"), false, "what was checked stays inside the group");
+  const body = text.slice(text.indexOf("\n---\n", 4) + 5);
+  assert.ok(body.includes("## Another Group's Work This Case Rests On"));
+  const block = body.slice(body.indexOf("## Findings In This Case"), body.indexOf("## The Conclusions"));
+  assert.ok(block.includes("open flag, disclosed with this case: page 3 is misread (flag IMPFLAG-1)"));
+  /* negative control: a case reaching no other group's work carries neither block */
+  const n = setup(); n.doc(DOC); n.finding(Q, [{ target: DOC }]);
+  const nr = n.publish(n.project("Team", "alice", [Q]), "alice", [Q]);
+  const nt = n.row(`SELECT text FROM case_documents WHERE case_id=?`, nr.caseId).text;
+  assert.deepEqual([acceptedWorkOf(n.fm(nt)), /^accepted_work/m.test(nt)], [{ rows: [], flags: [] }, false]);
 });
 
 const publishArgs = (P, targets) => ({ scope: "s", statement: "It does not cover the amendments.", subjectPosition: "not_sought",
