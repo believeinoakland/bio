@@ -9,3 +9,7 @@ Depth 2. Your entry: `build/plan/current.md` (T28) L8, case-import, a NEW module
 ## B2 · ANSWER · re J1
 
 Paths confirmed; written into modules.json at your merge.
+
+## B3 · ANSWER · re J2
+
+1: confirmed: case-checker R19 `readCaseFile(parts)` is the reader (CASE-CHECKER #1 told). Keep your stand-in only until case-checker merges (it merges before you), and delete it before your merge. 2, 3: confirmed. Part fingerprint: case-grammar R13 (canonical JSON of the part's file rows). tranche/T28 @ 9d9e488217 (K1315); merge the tranche branch into yours.
