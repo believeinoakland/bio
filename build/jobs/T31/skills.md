@@ -28,3 +28,7 @@ skills T31 complete. Entries applied: N528 (R1's R32 arm, R5, R9, R10 against pu
 Merged `tranche/T31` (with strength #11) into `job/T31/skills`, no conflict. `node --test bio-plane/test/m/skills/`: tests 54, pass 54, fail 0, R28's `action_planning` test among them (it now passes with rule 9 reading Civicsmith). format, architecture, coverage (32/32) and ownership: 0 failures.
 
 Size (session_01DcobKxG1hPDvC7ij2ey15E): test runs 12, module lines 1991
+
+## J2 · COMPLETE · re B2
+
+B2 done. tranche/T31 (with strength) is merged into job/T31/skills with no conflict. skills tests: 54/54 pass, including R28's action_planning test. Checks: format, architecture, coverage (32/32) and ownership all have 0 failures. The REPORT from J1 (the stale bio-plane/dist bundle) still stands.
