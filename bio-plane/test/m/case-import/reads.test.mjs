@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { rowOk, seeded, imp, caseFile, V, SOURCE, CASE, LENS, SLUG, F1, F2, F3 } from "./fixture.mjs";
 import { SOURCE_BAR, NO_OWN_BAR, againstBar } from "../../../src/case-import/index.mjs";
 import { importedFindingRef } from "../../../src/inquiry-grammar/index.mjs";
+import { standingOf } from "../../../src/case-grammar/index.mjs";
 
 const g = (grade) => ({ state: "graded", grade });
 function scripted(w) {
@@ -68,33 +69,35 @@ test("R4 R11 the source's bar is stated as the case states it, labelled as the s
   for (const f of e.findings) assert.notDeepEqual(f.against_own_bar.bar, { capture: "A", connection: "B" });
 });
 
-test("R4 each finding is shown against this group's own bar: none set says so; set, each declared axis is reached or not; not_asked for a supporting finding", () => {
+test("R4 each finding is shown against this group's own bar, as case-checker R6 reads it: none set says so; set, each declared axis reached or not; not_asked for a supporting finding", () => {
   const w = seeded();
   scripted(w);
   const a = imp(w);
   let e = w.ci.importedCase({ import: a.import, viewer: V("bob") }).edition;
   assert.deepEqual(e.own_bar, { whose: "this_group", group: SLUG, bar: null, set: false, stated: NO_OWN_BAR });
   const by = (ed) => Object.fromEntries(ed.findings.map((f) => [f.finding, f.against_own_bar]));
-  assert.equal(by(e)[F1].meets, "no_bar");
-  assert.equal(by(e)[F2].meets, "not_asked");
+  const none = { capture: null, connection: null };
+  assert.deepEqual(by(e)[F1], { meets: "no_bar", bar: none, short: [] });
+  assert.deepEqual(by(e)[F2], { meets: "no_bar", bar: none, short: [] }, "with no bar, no bar is set, whatever the role");
   /* this group's default: capture C, connection C */
   w.bar({ capture: "C", connection: "C" });
   e = w.ci.importedCase({ import: a.import, viewer: V("bob") }).edition;
   assert.deepEqual(e.own_bar, { whose: "this_group", group: SLUG, bar: { capture: "C", connection: "C" }, set: true });
   assert.deepEqual(by(e)[F1], { meets: true, bar: { capture: "C", connection: "C" }, short: [] });
   assert.equal(by(e)[F2].meets, "not_asked");
-  assert.deepEqual(by(e)[F3], { meets: false, bar: { capture: "C", connection: "C" }, short: [{ axis: "connection", bar: "C", grade: null }] });
+  assert.deepEqual(by(e)[F3], { meets: false, bar: { capture: "C", connection: "C" }, short: ["connection"] });
   /* one axis declared */
   w.bar({ capture: "A" });
   e = w.ci.importedCase({ import: a.import, viewer: V("bob") }).edition;
-  assert.deepEqual(by(e)[F1], { meets: false, bar: { capture: "A" }, short: [{ axis: "capture", bar: "A", grade: "B" }] });
-  assert.deepEqual(by(e)[F3], { meets: true, bar: { capture: "A" }, short: [] });
-  /* the arithmetic itself, at its interface */
-  assert.deepEqual(againstBar("load_bearing", { capture: "B", connection: "B" }, { capture: "B", connection: null }).meets, true);
-  assert.deepEqual(againstBar("load_bearing", { capture: "C" }, { capture: "B" }).short, [{ axis: "capture", bar: "B", grade: "C" }]);
-  assert.equal(againstBar("supporting", { capture: "D" }, { capture: "A" }).meets, "not_asked");
-  assert.equal(againstBar("load_bearing", { capture: "A" }, null).meets, "no_bar");
-  assert.equal(againstBar("load_bearing", { capture: "A" }, { capture: null, connection: null }).meets, "no_bar");
+  assert.deepEqual(by(e)[F1], { meets: false, bar: { capture: "A", connection: null }, short: ["capture"] });
+  assert.deepEqual(by(e)[F3], { meets: true, bar: { capture: "A", connection: null }, short: [] });
+  /* the reading at its interface: the same as case-grammar's standingOf, the one spelling */
+  for (const [role, pair, bar] of [["load_bearing", { capture: "B", connection: "B" }, { capture: "B", connection: null }],
+                                    ["load_bearing", { capture: "C" }, { capture: "B" }], ["supporting", { capture: "D" }, { capture: "A" }],
+                                    ["load_bearing", { capture: "A" }, null], ["load_bearing", { capture: "A" }, { capture: null }]]) {
+    const s = standingOf({ role, pair, bar });
+    assert.deepEqual(againstBar(role, pair, bar), { meets: s.meets, bar: s.bar, short: s.short });
+  }
 });
 
 test("R4 the origin mark facts: another group's (with the edition and whether its signature verified), the acceptance in force or none, the open flags", () => {

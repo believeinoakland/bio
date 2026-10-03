@@ -120,13 +120,6 @@ export function importIdOf({ group, case: caseId, lens }) {
   return sha256HexSync(canonicalJson({ group, case: caseId, lens: lens ?? null }));
 }
 
-/* R4 (`case-checker` R6): one axis of a pair as `strength` answers it: a letter, or `{state, grade}`. */
-function gradeOf(pair, axis) {
-  const a = isObj(pair) ? pair[axis] : null;
-  if (typeof a === "string") return BASIS_GRADES.includes(a) ? a : null;
-  if (isObj(a) && (a.state === undefined || a.state === "graded") && BASIS_GRADES.includes(a.grade)) return a.grade;
-  return null;
-}
 /* R4: a bar's declared axes, `{axis: letter}`, or null for no bar. */
 function barAxes(bar) {
   if (!isObj(bar)) return null;
@@ -134,18 +127,12 @@ function barAxes(bar) {
   for (const axis of ["capture", "connection"]) if (BASIS_GRADES.includes(bar[axis])) out[axis] = bar[axis];
   return Object.keys(out).length ? out : null;
 }
-/** R4: a finding against a bar, as `case-checker` R6 reads it: `not_asked` for a finding that is not load-bearing,
- *  `no_bar` with none set, else whether each declared axis is reached, `meets` true only when every one is. */
+/** R4: a finding against a bar, as `case-checker` R6 reads it, through `case-grammar`'s one spelling (`standingOf`, its
+ *  R15): `no_bar` with no axis declared, `not_asked` for a supporting finding, else whether each declared axis is
+ *  reached, `short` naming each axis that is not. */
 export function againstBar(role, pair, bar) {
-  const axes = barAxes(bar);
-  if (role !== "load_bearing") return { meets: "not_asked", bar: axes, short: [] };
-  if (!axes) return { meets: "no_bar", bar: null, short: [] };
-  const short = [];
-  for (const [axis, need] of Object.entries(axes)) {
-    const got = gradeOf(pair, axis);
-    if (!got || BASIS_GRADES.indexOf(got) > BASIS_GRADES.indexOf(need)) short.push({ axis, bar: need, grade: got });
-  }
-  return { meets: short.length === 0, bar: axes, short };
+  const s = caseGrammar.standingOf({ role, bar, pair });
+  return { meets: s.meets, bar: s.bar, short: s.short };
 }
 
 /* R16 (`accepted-work` R1): a finding's per-axis pair as its published bytes freeze it (`published_strength`). */

@@ -5,11 +5,10 @@
 
    A case file is built here as `public-read` R6 makes one: each part a stored ZIP with the manifest at its root and each
    file at its path, the files a case document (front matter stating its lens and bar), each finding's published bytes
-   (with `published_strength`) and any documents. Three neighbours are stand-ins the test controls:
+   (with `published_strength`) and any documents. Two neighbours are stand-ins the test controls:
    - `case-checker.checkCaseFile` (its R1): it answers, for each finding the test scripts, its role, result, what is
      missing and what differs, and its recomputed pair; a document supplied later whose SHA-256 a missing entry names
      fills that gap (its R9). It records each call.
-   - `case-grammar.caseFileManifestCheck` (its R13): the manifest's departures from the shape this fixture writes.
    - `reevaluation.acceptanceWithdrawn` (its R31): a recorder, which can be made to throw.
    Every test drives `case-import` at its interface. */
 import { DatabaseSync } from "node:sqlite";
@@ -22,6 +21,7 @@ import { acceptedWorkOf } from "../../../src/accepted-work/index.mjs";
 import { caseImportOf, CASE_IMPORT_CHECKS } from "../../../src/case-import/index.mjs";
 import { readCaseFile } from "../../../src/case-import/parts.mjs";
 import { canonicalJson } from "../../../src/record-grammar/json.mjs";
+import { caseFilePath, casePartDigest, CASE_FILE_FORMAT, CASE_FILE_MANIFEST_PATH } from "../../../src/case-grammar/index.mjs";
 
 /* as workerd binds: an ArrayBuffer is a BLOB (node:sqlite takes it as a typed array), and a BLOB reads back as an
    ArrayBuffer */
@@ -116,37 +116,33 @@ export function caseDocText({ case: caseId = CASE, edition = 1, lens = LENS, bar
           "---", "", `# Case ${caseId}`, note, ""].join("\n");
 }
 
-/** A case file's parts: `{parts, manifest, files}`. `split` puts each file after the first two in a part of its own. */
+/** A case file's parts, as `public-read` R23 writes one (`case-grammar` R13: `caseFilePath` paths, files in path order,
+ *  `casePartDigest` per part, parts numbered from 1): `{parts, manifest, files, manifestSha}`. `split` puts the case
+ *  document and its signature in part 1 and each other file in a part of its own. A document is a material, carried
+ *  at `materials/<name>/document`. */
 export function caseFile({ group = SOURCE, case: caseId = CASE, edition = 1, lens = LENS, bar, note = "", findings = [F1, F2, F3],
-                           pairs = {}, documents = [], split = false, manifestExtra = {}, manifestName = "manifest.json" } = {}) {
+                           pairs = {}, documents = [], split = false, manifestExtra = {} } = {}) {
+  const at = (kind, key) => caseFilePath(kind, key);
   const files = [
-    { path: "case.md", kind: "case_document", bytes: bytes(caseDocText({ case: caseId, edition, lens, bar, note })) },
-    ...findings.map((id) => ({ path: `findings/${id}.md`, kind: "finding", bytes: bytes(findingText(id, pairs[id])) })),
-    ...documents.map((d) => ({ path: `documents/${d.name}`, kind: "document", bytes: d.bytes })),
-  ];
-  const groups = split ? [files.slice(0, 2), ...files.slice(2).map((f) => [f])] : [files];
-  /* `case-grammar` R13 (K1318): a part's SHA-256 is over the lines `<path> <sha256> <bytes>\n` of its files in path
-     order, its bytes their sum (`casePartDigest`) */
-  const digestOf = (g) => sha([...g].sort((a, b) => (a.path < b.path ? -1 : 1)).map((f) => `${f.path} ${sha(f.bytes)} ${f.bytes.length}\n`).join(""));
-  const manifest = { format: "bio-case-file/1", group, case: caseId, edition, case_document_sha: sha(files[0].bytes),
-                     keys: [], parts: groups.map((g, index) => ({ index, sha256: digestOf(g),
-                                                                  bytes: g.reduce((n, f) => n + f.bytes.length, 0) })),
-                     files: groups.flatMap((g, part) => g.map((f) => ({ path: f.path, sha256: sha(f.bytes), bytes: f.bytes.length, part, kind: f.kind }))),
-                     ...manifestExtra };
-  const mBytes = bytes(JSON.stringify(manifest));
-  const parts = groups.map((g) => zip([{ name: manifestName, bytes: mBytes }, ...g.map((f) => ({ name: f.path, bytes: f.bytes }))]));
+    { path: at("case_document"), kind: "case_document", bytes: bytes(caseDocText({ case: caseId, edition, lens, bar, note })) },
+    { path: at("case_signature"), kind: "case_signature", bytes: bytes(`-----BEGIN SSH SIGNATURE-----\n${caseId}/${edition}\n`) },
+    { path: at("complete_edition"), kind: "complete_edition", bytes: bytes(`<!doctype html><title>${caseId}</title>`) },
+    ...findings.map((id) => ({ path: at("finding", id), kind: "finding", bytes: bytes(findingText(id, pairs[id])) })),
+    ...documents.map((d) => ({ path: at("document", d.name), kind: "document", bytes: d.bytes })),
+  ].sort((a, b) => (a.path < b.path ? -1 : 1));
+  const rest = files.filter((x) => x.kind !== "case_document" && x.kind !== "case_signature");
+  const partOf = (f) => (!split || !rest.includes(f) ? 1 : 2 + rest.indexOf(f));
+  const rows = files.map((f) => ({ path: f.path, sha256: sha(f.bytes), bytes: f.bytes.length, part: partOf(f), kind: f.kind }));
+  const count = Math.max(...rows.map((r) => r.part));
+  const manifest = { format: CASE_FILE_FORMAT, group, case: caseId, edition,
+                     case_document_sha: rows.find((r) => r.kind === "case_document").sha256,
+                     keys: [{ key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOfixturekey", fingerprint: `SHA256:${"k".repeat(43)}` }],
+                     parts: Array.from({ length: count }, (_, i) => ({ index: i + 1, ...casePartDigest(rows, i + 1) })),
+                     files: rows, ...manifestExtra };
+  const mBytes = bytes(canonicalJson(manifest));
+  const parts = Array.from({ length: count }, (_, i) => zip([{ name: CASE_FILE_MANIFEST_PATH, bytes: mBytes },
+    ...files.filter((f) => partOf(f) === i + 1).map((f) => ({ name: f.path, bytes: f.bytes }))]));
   return { parts, manifest, files, manifestSha: sha(canonicalJson(manifest)) };
-}
-
-/** The stand-in manifest check (`case-grammar` R13's `caseFileManifestCheck`): each departure from the shape written here. */
-export function manifestCheck(m) {
-  const out = [];
-  if (!m || typeof m !== "object") return ["the manifest is not an object"];
-  if (m.format !== "bio-case-file/1") out.push(`format is ${JSON.stringify(m.format ?? null)}, not bio-case-file/1`);
-  for (const k of ["group", "case"]) if (typeof m[k] !== "string" || !m[k]) out.push(`${k} is not named`);
-  if (!Number.isInteger(m.edition) || m.edition < 1) out.push("edition is not a positive integer");
-  if (!Array.isArray(m.files)) out.push("files is not a list");
-  return out;
 }
 
 /* ---------------------------------------------------------------- the world */
@@ -177,7 +173,7 @@ export function world({ minimal = false } = {}) {
     const read = readCaseFile(parts);
     const given = new Set(documents.map((d) => sha(d)));
     const m = read.manifest || {};
-    const ids = (m.files || []).filter((f) => f.kind === "finding").map((f) => f.path.replace(/^findings\/|\.md$/g, ""));
+    const ids = (m.files || []).filter((f) => f.kind === "finding").map((f) => f.path.split("/")[1]);
     return {
       format: m.format ?? null, case: m.case ?? null, edition: m.edition ?? null, group: m.group ?? null,
       checker: checker.versions, integrity: { departures: [] }, signatures: { case: { verified: checker.signature } },
@@ -217,7 +213,7 @@ export function world({ minimal = false } = {}) {
     },
   };
   w.ci = caseImportOf(host, { record, membership, strength, acceptedWork, reevaluation: reeval,
-                              checkCaseFile, caseFileManifestCheck: manifestCheck, now: () => clock.now });
+                              checkCaseFile, now: () => clock.now });
   return w;
 }
 

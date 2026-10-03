@@ -47,8 +47,9 @@ test("R1 parts that are not a case file, or whose manifest fails the manifest ch
   /* the manifest check's departures, each named */
   const r2 = refusedThenAccepted(w, () => imp(w, caseFile({ manifestExtra: { format: "bio-case-file/0", group: "" } })),
                                  () => imp(w, caseFile({ edition: 11 })), "IMPORT_NOT_A_CASE_FILE");
-  assert.equal(r2.departures.length, 2);
-  assert.ok(r2.departures.some((d) => /format/.test(d)) && r2.departures.some((d) => /group/.test(d)));
+  /* case-grammar R13's own departures, each named: `{at, rule, detail}` */
+  assert.deepEqual(r2.departures.map((d) => d.rule).sort(), ["format", "group"]);
+  assert.ok(r2.departures.every((d) => typeof d.detail === "string" && d.detail));
   /* a manifest that is not JSON */
   rowOk(w.ci.importCaseFile({ parts: [zip([{ name: "manifest.json", bytes: bytes("{not json") }])], by: V("alice"), viewer: V("alice") }),
         "IMPORT_NOT_A_CASE_FILE");
@@ -155,7 +156,7 @@ test("R1 R13 a file larger than one stored chunk is held whole and read back byt
   const f = caseFile({ documents: [{ name: "scan.pdf", bytes: big }] });
   const r = imp(w, f);
   assert.equal(r.ok, true);
-  const held = w.ci.fileOf({ import: r.import, edition: 1, path: "documents/scan.pdf" });
+  const held = w.ci.fileOf({ import: r.import, edition: 1, path: "materials/scan.pdf/document" });
   assert.equal(held.sha, sha(big));
   assert.equal(held.bytes.length, big.length);
   assert.ok(held.bytes.every((b, i) => b === big[i]));
