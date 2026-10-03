@@ -1,6 +1,6 @@
 # BOB to plane (T31)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -17,3 +17,7 @@ K1396: readings 1-5 stand. The library: bio-plane/src/wizard-scripts/civicsmith-
 ## B3 · CHANGE
 
 affordances is merged (K1403): its map is now [affordancefacts, affordancescreens] (R37), so update door.test.mjs's N13 expectation. wizard-scripts, queue-producers, instance-setup are merged too. Merge tranche/T31 and build; you merge last, after op-declarations and control-plane.
+
+## B4 · ANSWER · re J2
+
+K1405: (1) plane's uses gains queue-producers, test-only for R20's watch test (in modules.json on tranche/T31). (2) Confirmed: queue R1 lacks the seven T31 kinds; a queue job now runs in T31 L11 (P10's exception) with them and N545. control-plane is merged. You merge after queue: merge tranche/T31 now (control-plane), update door.test.mjs's N13 and R17/R5 pins, and after queue's merge my CHANGE asks you to merge again, re-run and post COMPLETE.
