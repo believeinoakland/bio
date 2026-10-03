@@ -1,4 +1,4 @@
-/* case-authoring (T28; DEC-112 (3)(4)(5), DEC-119; N519): what a `/6` case carries — the method it is signed under (R55 (case-disclosures R5)),
+/* case-authoring (T28; DEC-112 (3)(4)(5), DEC-119; N519): what a `/7` case carries (identical in fields to `/6`, DEC-124) — the method it is signed under (R55 (case-disclosures R5)),
    every document and observation its findings reach with what travels whole and who attests it (R55 (case-disclosures R6, R7)), material from
    a source whose identity is withheld travelling like any other with its attesting member unnamed unless they chose
    otherwise (R55 (case-disclosures R4, R8–R10)), and a named member's self-attested capture unchanged (R55 (case-disclosures R11)). Read back through
@@ -26,12 +26,12 @@ const textSha = (bundle) => sha(canonicalJson([{ extent: { kind: "doc-para", par
 const account = (w, capture, text = "I saved it myself.") => w.st.sql.exec(`INSERT INTO capture_accounts (capture_sha, seq,
   by, text, signature, key_b64, at) VALUES (?, 1, 'alice', ?, 'SIG-of-alice-7f3', 'AAAA', ?)`, capture, text, "2026-09-27T12:00:00Z");
 
-test("R14, R55 (case-disclosures R5): the document is bio-case-document/6 and its method: block carries strength's GRADING_METHOD_VERSION and promotion's CATALOG_VERSION at the act, inside what the owner signs", () => {
+test("R14, R55 (case-disclosures R5): the document is bio-case-document/7, which requires the materials blocks as /6 does, and its method: block carries strength's GRADING_METHOD_VERSION and promotion's CATALOG_VERSION at the act, inside what the owner signs", () => {
   const w = world(); w.member("alice"); w.doc(DOC); w.finding(Q, [{ target: DOC }]);
   const r = w.publish(w.project("Team", "alice", [Q]), "alice", [Q]);
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
   const fm = w.fm(docOf(w, r));
-  assert.deepEqual([fm.format, CASE_DOCUMENT_FORMAT, caseDocumentRequiresMaterials(fm)], ["bio-case-document/6", "bio-case-document/6", true]);
+  assert.deepEqual([fm.format, CASE_DOCUMENT_FORMAT, caseDocumentRequiresMaterials(fm)], ["bio-case-document/7", "bio-case-document/7", true]);
   assert.deepEqual(methodOf(fm), { grading: GRADING_METHOD_VERSION, checks: CATALOG_VERSION });
   assert.ok(bodyOf(docOf(w, r)).includes(`by the grading method ${GRADING_METHOD_VERSION}`));
 });

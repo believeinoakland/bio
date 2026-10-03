@@ -326,13 +326,13 @@ test("R55 (case-disclosures R1): tensionsDisclosed absent or null is none; a can
   assert.equal(n.publish(n.project("Team", "alice", [F]), "alice", [F], { tensionsDisclosed: null }).ok, true);
 });
 
-test("R14: the document's format is bio-case-document/6 (it states everything /5 states), and its tension section reads back through publication's caseTensionsOf (K498) — both sides of a seen one, the seen side only of a highlighted one, each member's sentences, the unread legs", () => {
-  assert.equal(CASE_DOCUMENT_FORMAT, "bio-case-document/6");
+test("R14: the document's format is bio-case-document/7 (identical in fields to /6, which states everything /5 states; DEC-124), and its tension section reads back through publication's caseTensionsOf (K498) — both sides of a seen one, the seen side only of a highlighted one, each member's sentences, the unread legs", () => {
+  assert.equal(CASE_DOCUMENT_FORMAT, "bio-case-document/7");
   const { w, P, id } = seen();
   const r = w.publish(P, "alice", [F], { tensionsDisclosed: disclose(id, "we read the later page") });
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
   const text = docOf(w, r).text;
-  assert.equal(w.fm(text).format, "bio-case-document/6");
+  assert.equal(w.fm(text).format, "bio-case-document/7");
   const back = caseTensionsOf(text);
   assert.equal(back.detail, null);
   assert.deepEqual([back.highlighted, back.depth, back.tensions.length], [0, TENSIONS_DEPTH_STATED, 1]);

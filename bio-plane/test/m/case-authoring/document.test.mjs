@@ -24,7 +24,7 @@ function setup(opts) {
 const docOf = (w, r) => w.row(`SELECT * FROM case_documents WHERE case_id=? AND edition=?`, r.caseId, r.edition);
 const bodyOf = (text) => text.slice(text.indexOf("\n---\n", 4) + 5);
 
-test("R14: the document, in publication's CASE_DOCUMENT_FORMAT, is stored unsigned through publication and states the case, edition and project, the scope, the roster with roles and pins, each member's own edition, frozen pair (capture and connection always, testimony when not unrated) with grounds and conclusion, the completeness block, the bias acknowledgement and manifest, the bar, the attributions, the citations, the searched section, the draft link and a receipt; its body prints every authored sentence", () => {
+test("R14: the document, in publication's CASE_DOCUMENT_FORMAT, which is bio-case-document/7 from T31 (DEC-124), is stored unsigned through publication and states the case, edition and project, the scope, the roster with roles and pins, each member's own edition, frozen pair (capture and connection always, testimony when not unrated) with grounds and conclusion, the completeness block, the bias acknowledgement and manifest, the bar, the attributions, the citations, the searched section, the draft link and a receipt; its body prints every authored sentence", () => {
   const w = setup();
   /* a member's firsthand observation, reached through Q2's testimony leg */
   const obs = w.prov.testify({ words: "I was at the meeting.", observedAt: "2026-09-20", title: "At the meeting",
@@ -43,6 +43,7 @@ test("R14: the document, in publication's CASE_DOCUMENT_FORMAT, is stored unsign
   const fm = w.fm(row.text);
   assert.deepEqual([fm.format, fm.case_id, fm.case_edition, fm.case_project, fm.case_scope],
     [CASE_DOCUMENT_FORMAT, r.caseId, 1, P, AUTHORED.scope]);
+  assert.equal(fm.format, "bio-case-document/7", "op=publish writes /7, never /6 (DEC-124)");
   /* its tension section, present with nothing to disclose (R55 (case-disclosures R1); `/5` and publication's reader: tensions.test.mjs) */
   assert.deepEqual([fm.tensions_disclosed, fm.tensions_highlighted, fm.case_tensions, fm.case_tension_sentences],
     [0, 0, [], []]);
