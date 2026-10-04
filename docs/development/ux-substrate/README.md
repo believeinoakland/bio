@@ -8,6 +8,7 @@ What a member sees and works with, as the approved requirements and Bob's ruling
 - `views/`: the Action design's screen sketches (`build/plan/action-design/*.html`), each with a document head so they publish beside the page; `plan-page.html` is approved (K608 (4)).
 - `design-principles.html`: step 1 of the design phase (Bob, 2026-10-02): every ruled UX principle stated once, with the gaps for Bob to rule. Published at https://claude.ai/artifact/MvsMPnJnk3o32FBeqgdxT1.
 - `brand-and-voice.html`: step 2 of the design phase (draft, 2026-10-03): who speaks, how the names are written, Civicsmith's voice and tone, words, and questions V1–V4.
+- `journeys.html`: step 3 of the design phase (draft, 2026-10-04): the audiences reconciled into three rings, the wide-path rules, fourteen journeys and nine wizard outlines, with questions J1–J5. Edit the page directly.
 - `marks/civicsmith-plumb-bob.svg`: Civicsmith's mark (DEC-126), one path, one colour; the source for the browser icon, phone icon and credit mark.
 - `new-name.html`: the search for a name to replace CivicOS (3 October 2026): the four steps by which someone who hears the name finds the tool, both rounds of candidates, every name set aside and why, and the brand check by audience. Bob chose Civicsmith (DEC-124). Published at https://claude.ai/artifact/Fmr6rVd7GMifYDRaWcV7s8.
 - `HANDOFF.md`: the design session's handoff to its successor (who you are, how to record a ruling, where the design phase stands, the pages and their URLs). Rewritten 2026-10-03.

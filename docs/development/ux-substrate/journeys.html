@@ -1,0 +1,284 @@
+<title>Civicsmith Journeys</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=Source+Code+Pro:wght@400;500&display=swap">
+
+<style>
+/* Layout: the design-phase reading document; audiences as three rings, the wide-path rules, fourteen journey cards with collapsible steps, wizard outlines, then the questions. */
+:root {
+  --bg:#EDEFE8; --sheet:#FBFBF8; --ink:#16232E; --soft:#38474F; --muted:#5C6B66;
+  --rule:#C6CBBF; --accent:#2F6F62; --accent-tint:#E3EEE9; --signal:#8E3416; --signal-tint:#F8EFE9;
+  --f-rec:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --f-ui:"Source Sans 3",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-fact:"Source Code Pro",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg:#11181D; --sheet:#182128; --ink:#E4E9E3; --soft:#C2CBC5; --muted:#8F9C96;
+  --rule:#2E3A41; --accent:#74B9A7; --accent-tint:#1C2E2A; --signal:#E3936E; --signal-tint:#33231C; color-scheme:dark } }
+:root[data-theme="dark"] {
+  --bg:#11181D; --sheet:#182128; --ink:#E4E9E3; --soft:#C2CBC5; --muted:#8F9C96;
+  --rule:#2E3A41; --accent:#74B9A7; --accent-tint:#1C2E2A; --signal:#E3936E; --signal-tint:#33231C; color-scheme:dark }
+body { background:var(--bg); color:var(--ink); font:16px/1.6 var(--f-ui) }
+.wrap { max-width:960px; margin:0 auto; padding-inline:20px; padding-block:32px 72px }
+h1,h2,h3 { font-family:var(--f-rec); font-weight:600; text-wrap:balance; line-height:1.2; margin:0 }
+h1 { font-size:clamp(30px,5vw,42px); letter-spacing:-0.012em }
+h2 { font-size:25px; margin-top:52px; padding-top:14px; border-top:2px solid var(--ink) }
+p { margin:0; max-width:68ch }
+.eyebrow { font:500 12px var(--f-fact); letter-spacing:.08em; text-transform:uppercase; color:var(--accent) }
+.lede { font-size:18px; color:var(--soft); margin-top:10px }
+.meta { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr)); gap:12px; margin-top:22px }
+.meta div { background:var(--sheet); border:1px solid var(--rule); padding:12px 14px }
+.meta b { display:block; font-family:var(--f-rec); font-size:17px; margin-bottom:2px }
+.bar { position:sticky; top:env(safe-area-inset-top,0px); z-index:5; background:var(--bg); border-bottom:1px solid var(--rule); padding-block:10px; margin-top:26px; display:flex; flex-wrap:wrap; gap:6px 16px; align-items:center; font-size:14px; font-weight:600 }
+.bar a { color:var(--accent); text-decoration:none } .bar a:hover,.bar a:focus-visible { text-decoration:underline }
+.bar label { margin-left:auto; font-weight:400; color:var(--muted); display:flex; gap:6px; align-items:center; cursor:pointer }
+.fam-intro { color:var(--soft); margin-top:6px }
+ol.pr { list-style:none; padding:0; margin:18px 0 0; display:grid; gap:10px; counter-reset:p }
+ol.pr > li { background:var(--sheet); border:1px solid var(--rule); padding:14px 16px; display:grid; grid-template-columns:auto 1fr; gap:2px 12px; counter-increment:p }
+ol.pr > li::before { content:attr(data-n); grid-row:1 / span 3; font:500 13px var(--f-fact); color:var(--accent); padding-top:3px; font-variant-numeric:tabular-nums }
+.name { font-family:var(--f-rec); font-weight:600; font-size:18px; line-height:1.3 }
+.say { color:var(--ink) }
+.eg { color:var(--muted); font-size:15px } .eg::before { content:"In practice: "; font-weight:600; color:var(--soft) }
+q { quotes:"\201C" "\201D" }
+.src { font:12.5px/1.45 var(--f-fact); color:var(--muted); grid-column:2; margin-top:4px }
+body:not(.show-src) .src { display:none }
+.gap { background:var(--sheet); border:1px solid var(--rule); border-left:4px solid var(--signal); padding:16px 18px; margin-top:16px; display:grid; gap:10px }
+.gap h3 { font-size:20px }
+.opts { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr)); gap:10px }
+.opt { border:1px solid var(--rule); padding:10px 12px; background:var(--bg) } .opt b { display:block; font-family:var(--f-rec) }
+.rec { background:var(--accent-tint); padding:10px 12px; max-width:none }
+.answer { font:14px var(--f-fact); color:var(--soft) }
+ul.say-list { margin:6px 0 0; padding-left:20px; display:grid; gap:4px }
+.foot { margin-top:48px; padding-top:14px; border-top:1px solid var(--rule); color:var(--muted); font-size:14px }
+a:focus-visible, input:focus-visible { outline:2px solid var(--accent); outline-offset:2px }
+@media (max-width:560px) { .bar label { margin-left:0 } ol.pr > li { grid-template-columns:1fr } ol.pr > li::before { grid-row:auto } .src { grid-column:1 } }
+</style>
+
+<style>
+.rings { display:grid; gap:14px; margin-top:16px }
+.ring { background:var(--sheet); border:1px solid var(--rule); padding:14px 16px; display:grid; gap:10px }
+.ring h3 { font-size:19px }
+.ring > p { color:var(--soft) }
+.aud { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr)); gap:8px }
+.aud div { border:1px solid var(--rule); background:var(--bg); padding:10px 12px; min-width:0 }
+.aud b { display:block; font-family:var(--f-rec); font-size:16.5px; margin-bottom:2px }
+.aud .src { grid-column:auto; display:block }
+ul.folded { margin:10px 0 0; padding-left:20px; display:grid; gap:4px; max-width:72ch; color:var(--soft) }
+.note { color:var(--soft); margin-top:12px; max-width:72ch }
+ol.rules { list-style:none; padding:0; margin:16px 0 0; display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr)); gap:10px; counter-reset:r }
+ol.rules li { background:var(--sheet); border:1px solid var(--rule); padding:12px 14px; counter-increment:r; min-width:0 }
+ol.rules li::before { content:counter(r); font:500 13px var(--f-fact); color:var(--accent); display:block; margin-bottom:2px }
+ol.rules b { display:block; font-family:var(--f-rec); font-size:17px; margin-bottom:3px }
+.jlist { display:grid; gap:12px; margin-top:16px }
+.jcard { background:var(--sheet); border:1px solid var(--rule); padding:14px 16px; display:grid; gap:8px; min-width:0 }
+.jhead { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 12px }
+.jnum { font:500 13px var(--f-fact); color:var(--accent) }
+.jtitle { font-family:var(--f-rec); font-weight:600; font-size:20px }
+.verdict { font:500 11.5px var(--f-fact); letter-spacing:.05em; text-transform:uppercase; padding:2px 7px; border:1px solid currentColor; color:var(--soft) }
+.verdict.new { color:var(--accent) } .verdict.amended { color:var(--signal) }
+.who { font-size:14.5px; color:var(--muted) }
+.jfacts { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr)); gap:8px }
+.jfacts div { border-top:1px solid var(--rule); padding-top:6px; font-size:15px; min-width:0 }
+.jfacts b { display:block; font:500 11px var(--f-fact); letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:2px }
+details.steps summary { cursor:pointer; font-weight:600; color:var(--accent); font-size:15px }
+details.steps summary:focus-visible { outline:2px solid var(--accent); outline-offset:2px }
+ol.st { margin:8px 0 0; padding-left:22px; display:grid; gap:5px }
+ol.st li { font-size:15px; max-width:76ch }
+.actor { font:500 11.5px var(--f-fact); color:var(--muted); margin-right:6px }
+.chip { font:500 11px var(--f-fact); letter-spacing:.04em; text-transform:uppercase; padding:1px 6px; margin-left:6px; border:1px solid var(--signal); color:var(--signal); white-space:nowrap }
+.wiz { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr)); gap:10px; margin-top:16px }
+.wcard { background:var(--sheet); border:1px solid var(--rule); padding:12px 14px; display:grid; gap:6px; align-content:start; min-width:0 }
+.wcard.req { border-left:4px solid var(--accent) }
+.wcard h3 { font-size:17.5px }
+.wtag { font:500 11px var(--f-fact); letter-spacing:.05em; text-transform:uppercase; color:var(--accent) }
+.wstart { font-size:14px; color:var(--muted) }
+.wcard ol { margin:2px 0 0; padding-left:20px; display:grid; gap:3px; font-size:14.5px }
+.qgrid { display:grid; gap:10px; margin-top:16px }
+</style>
+
+<div class="wrap">
+<header>
+<p class="eyebrow">Design phase · step 3 of 5 · draft for Bob, 4 October 2026</p>
+<h1>Civicsmith journeys</h1>
+<p class="lede">Who we design for, the paths they take through Civicsmith from first contact to finished work, and where a wizard walks them. Your test runs through all of it: the name points at expert civic work, so the path there must be wide and welcoming for everyone.</p>
+<div class="meta">
+<div><b>What it builds on</b>The approved design principles and brand and voice; the eleven journeys and twenty audiences already gathered from the requirements; your rulings on wizards, phones, translation and imported cases.</div>
+<div><b>What changed</b>Audiences reconciled into three rings; fourteen journeys (four new, six amended, one folded in); nine wizards outlined, three of them required.</div>
+<div><b>How to answer</b>Comment on any line, or reply to J1–J5 at the end, for example "J1: yes, J2: yes, J3: yes, J4: yes, J5: yes".</div>
+</div>
+</header>
+<nav class="bar" aria-label="Sections">
+<a href="#who">Who</a><a href="#wide">The wide path</a><a href="#journeys">Journeys</a><a href="#wizards">Wizards</a><a href="#qs">Questions</a>
+<label for="srcToggle"><input type="checkbox" id="srcToggle"> Show sources</label>
+</nav>
+<section id="who">
+<h2>1. Who we design for</h2>
+<p class="fam-intro">The original brief named five audiences in order of how often they use the product; the requirements gathered twenty. Here they are reconciled into three rings. The newcomer member stays the centre of gravity.</p>
+<div class="rings">
+<div class="ring"><h3>Inside the group: members</h3><p>Everyone who belongs to the group and works in its copy. They hold different roles at different moments; one person may be several of these.</p><div class="aud">
+<div><b>Newcomer member</b>A community activist or volunteer, not a technologist, often with no civic-records experience. The interface is built around them.<span class="src">UI-KICKOFF audience 1; ux-experience audiences</span></div>
+<div><b>Experienced investigator</b>Works questions, cites evidence, runs checks and prepares cases; includes the member who vouches for a document at the release moment.<span class="src">UI-KICKOFF audience 2</span></div>
+<div><b>Professional member</b>A journalist, lawyer, accountant, auditor or engineer who joins a group. Declares expertise so the group knows whom to ask; an administrator may confirm it, which gates nothing.<span class="src">Bob&#x27;s comment on the principles page, 2 October; Membership v2 §1.3</span></div>
+<div><b>Project owner</b>Runs a project: its objective, its bar, its participants, and publishing its cases.<span class="src">UI-KICKOFF audience 3</span></div>
+<div><b>Administrator</b>Keeps the roster, capabilities, keys and the group&#x27;s identity. The person who installs the copy and the founder who claims it are administrators at their first moment.<span class="src">UI-KICKOFF audience 4; ux-experience: operator, founder, administrator</span></div>
+<div><b>The group&#x27;s future members</b>Whoever picks up this record years later. Dead ends and reasons are kept for them.<span class="src">ux-experience audiences</span></div>
+</div></div>
+<div class="ring"><h3>Invited in</h3><p>People outside the group given a named, revocable view of something.</p><div class="aud">
+<div><b>Outside reviewer</b>Reads a review copy of a case before it is published, comments, and acknowledges what it leaves out.<span class="src">Publication §6A</span></div>
+<div><b>The group&#x27;s lawyer</b>Receives a counsel packet for a serious matter: facts with citations, chronology, the standard.<span class="src">Design Requirement 8</span></div>
+</div></div>
+<div class="ring"><h3>Outside the group</h3><p>People who meet the group&#x27;s work without an account.</p><div class="aud">
+<div><b>Someone handing over material</b>Anyone, possibly a whistleblower, who gives the group documents through its doorbell, with no account.<span class="src">Intake Doctrine §2a</span></div>
+<div><b>Public reader</b>A stranger who reads a published case and can check it without the group&#x27;s help or permission.<span class="src">UI-KICKOFF audience 5; Publication §5C</span></div>
+<div><b>Journalist</b>Receives, checks and cites the group&#x27;s cases.<span class="src">Case Making audience table</span></div>
+<div><b>Partner group</b>Another group, often running its own copy, that imports and builds on this group&#x27;s cases.<span class="src">Roadmap §11; DEC-112</span></div>
+<div><b>Government office or official</b>Receives requests, filings and cases, and answers them.<span class="src">actions, filings</span></div>
+<div><b>Oversight body</b>A grand jury, controller or auditor receiving referrals.<span class="src">Design Requirement 8</span></div>
+</div></div>
+</div>
+<p class="note"><b>Folded in, not separate audiences:</b></p><ul class="folded"><li><b>Group operator, founder</b>: moments of the administrator&#x27;s role, kept as steps in journey 1.</li><li><b>Project participant, member outside a project</b>: states any member can be in, not separate audiences.</li><li><b>Residents addressed by an action</b>: the people an awareness action speaks to; they meet the group&#x27;s words, not its screens.</li><li><b>The assistant</b>: an actor that works for members, not an audience; it appears in the journeys where it acts.</li></ul>
+<p class="note">Across every ring: members who read in another language, screen-reader and keyboard users, and people working from a phone. These are not separate audiences; every journey must work for them.</p>
+</section>
+<section id="wide">
+<h2>2. The wide path</h2>
+<p class="fam-intro">Your words, 3 October: the path to success must be "wide enough and inclusive enough for all audiences". Proposed as six rules every journey is checked against.</p>
+<ol class="rules"><li><b>A front door in every journey</b>Each journey has a first step a newcomer can take alone, with no prior knowledge, and the screen shows where it starts.</li><li><b>Wizards on the main roads, never gates</b>The main journeys can be walked with a wizard. Nothing is locked behind one, and anyone can leave it at any step: stopping is a non-event.</li><li><b>You can always see where you are</b>Every journey shows its stage and what comes next, so a newcomer never wonders whether they are done.</li><li><b>Explained where it appears</b>A term is explained the first time a member meets it, at that spot, in plain words, and not again.</li><li><b>Heavier steps slow you down</b>Friction rises with an act&#x27;s weight, so no one stumbles into anything permanent, signed or outward.</li><li><b>Fast for those who know</b>Professionals and experienced members move quickly: search, keyboard, acting on many items at once, no repeated teaching.</li></ol>
+</section>
+<section id="journeys">
+<h2>3. Fourteen journeys</h2>
+<p class="fam-intro">Each card says who takes the journey, its newcomer's front door, its wizard, and what changed from the list gathered earlier. Open "Steps" for the path. Marked steps are the heavy ones: permanent, signed, outward (the world sees it), reasoned, terminal or irreversible.</p>
+<div class="jlist">
+<article class="jcard" id="j1">
+<div class="jhead"><span class="jnum">1</span><span class="jtitle">A group gets going</span><span class="verdict amended">Amended</span></div>
+<p>A group installs its own copy of Civicsmith, claims it, says who it is, and sets up its administrators. <span class="who">Who: the person installing it, the founder, administrators.</span></p>
+<div class="jfacts"><div><b>Front door</b>The setup wizard walks every step; the first screen says plainly what is needed before starting.</div><div><b>Wizard</b>Set up and claim (required)</div><div><b>What changed</b>Adds the group&#x27;s logo and its members&#x27; languages. The hardest step for a non-technical group is the cloud account, so the wizard says exactly what is needed before anything starts. The short name&#x27;s permanence is said at the moment it is chosen.</div></div>
+<details class="steps"><summary>Steps (7)</summary><ol class="st"><li><span class="actor">installer</span>Checks what is needed before starting: a cloud account with a payment method, and about twenty minutes.</li><li><span class="actor">installer</span>Chooses the group&#x27;s short name, which appears in addresses and signatures.<span class="chip">Permanent</span></li><li><span class="actor">installer</span>Installs the signed release into the group&#x27;s own account; it tests itself.</li><li><span class="actor">founder</span>Claims the copy with the one-time password and chooses a password.</li><li><span class="actor">founder</span>Names the group; adds its logo if it has one; verifies its web address; chooses the places whose rules apply and the languages its members use.</li><li><span class="actor">founder</span>Adds a second administrator (a group needs two) and records who holds the hosting account.</li><li><span class="actor">administrator</span>Invites the first members.</li></ol></details>
+<span class="src" style="grid-column:auto">ux-experience journey (a) steps 1–6; installer; instance-setup; DEC-121, DEC-125, DEC-127</span>
+</article>
+<article class="jcard" id="j2">
+<div class="jhead"><span class="jnum">2</span><span class="jtitle">A member joins and finds their footing</span><span class="verdict new">New (split from 1)</span></div>
+<p>From an invitation link to a member&#x27;s first useful act. <span class="who">Who: a newcomer member.</span></p>
+<div class="jfacts"><div><b>Front door</b>The invitation link itself; the welcome wizard picks up from there.</div><div><b>Wizard</b>Welcome a new member (required; outline now, final design once the redesign has settled)</div><div><b>What changed</b>Split from journey 1 so a member&#x27;s first session is designed on its own. Onboarding stays deferred until the new screens settle, as you ruled; only its outline is drawn now, because you also made the welcome wizard required.</div></div>
+<details class="steps"><summary>Steps (5)</summary><ol class="st"><li><span class="actor">invitee</span>Opens the invitation and chooses a handle. The screen explains why it should not be their legal name.</li><li><span class="actor">invitee</span>Chooses a password and their language.</li><li><span class="actor">member</span>Lands on the group&#x27;s home: what the group is working on, and what is waiting on them.</li><li><span class="actor">member</span>Meets the two things a newcomer needs first: a question&#x27;s strength against its project&#x27;s bar, and &quot;Undetermined&quot;.</li><li><span class="actor">member</span>Takes a first act: joins a project, captures a document, or records what they saw.</li></ol></details>
+<span class="src" style="grid-column:auto">ux-experience journey (a) step 7; DEC-82 (what a newcomer meets first); DEC-91; DEC-121</span>
+</article>
+<article class="jcard" id="j3">
+<div class="jhead"><span class="jnum">3</span><span class="jtitle">A professional lends expertise</span><span class="verdict new">New</span></div>
+<p>A lawyer, accountant, auditor, engineer or journalist joins, says what they know, and is asked to check work in their field. <span class="who">Who: a professional member; project owners.</span></p>
+<div class="jfacts"><div><b>Front door</b>Declaring expertise is one field at joining; everything else is the ordinary member&#x27;s path.</div><div><b>Wizard</b>None needed; professionals move fast</div><div><b>What changed</b>Added at your request (2 October): professional members are an audience, and their journey is routing expertise to the questions that need it.</div></div>
+<details class="steps"><summary>Steps (5)</summary><ol class="st"><li><span class="actor">professional</span>Joins like any member and declares their expertise (&quot;CPA&quot;, &quot;land-use lawyer&quot;).</li><li><span class="actor">administrator</span>May confirm it. Confirmation gates nothing; it tells the group whether it is trusting a self-report or a checked one.</li><li><span class="actor">project owner</span>Asks for a check from someone with that expertise; it reaches them as a to-do.</li><li><span class="actor">professional</span>Reads the finding and its evidence, and records a check or a reasoned concern.<span class="chip">Reasoned</span></li><li><span class="actor">professional</span>Their declared expertise shows beside their checks, so readers know who looked.</li></ol></details>
+<span class="src" style="grid-column:auto">Membership v2 §1.3; Bob&#x27;s comment on the principles page</span>
+</article>
+<article class="jcard" id="j4">
+<div class="jhead"><span class="jnum">4</span><span class="jtitle">From a question to a published case</span><span class="verdict ">Confirmed</span></div>
+<p>The core of Civicsmith: evidence gathered, a question answered, a case signed and published. <span class="who">Who: members; the project owner; outside reviewers.</span></p>
+<div class="jfacts"><div><b>Front door</b>Capturing one document or recording one observation needs nothing else first.</div><div><b>Wizard</b>Your first question (optional); Publication ceremony (required)</div><div><b>What changed</b>Unchanged in substance; now walked with the two wizards, and the reader&#x27;s side moves to journey 13.</div></div>
+<details class="steps"><summary>Steps (10)</summary><ol class="st"><li><span class="actor">member</span>Captures a public document, or records what they saw or heard.</li><li><span class="actor">member</span>Vouches for the document (releases it), standing behind the capture.<span class="chip">Signed</span></li><li><span class="actor">member</span>Opens a question, or the assistant suggests one.</li><li><span class="actor">member</span>Cites what supports it and what cuts against it.</li><li><span class="actor">participant</span>Concludes, saying what would change the conclusion.<span class="chip">Reasoned</span></li><li><span class="actor">owner</span>Checks strength against the project&#x27;s bar; clears hunches.</li><li><span class="actor">owner</span>Shares a review copy with outside readers, if wanted (journey 9).</li><li><span class="actor">owner</span>Prepares the case: scope, statement, what it leaves out, declared bias.</li><li><span class="actor">owner</span>Goes through the publication ceremony and signs in the browser.<span class="chip">Irreversible</span></li><li><span class="actor">anyone</span>Reads the case and checks it (journey 13).</li></ol></details>
+<span class="src" style="grid-column:auto">ux-experience journey (b); DEC-72; Publication</span>
+</article>
+<article class="jcard" id="j5">
+<div class="jhead"><span class="jnum">5</span><span class="jtitle">A first records request</span><span class="verdict ">Confirmed, now a front door</span></div>
+<p>Asking a government office for its records, under the law that requires it to answer. <span class="who">Who: a member, often a newcomer; the office that holds the records.</span></p>
+<div class="jfacts"><div><b>Front door</b>This is the most common first action a newcomer takes, so it gets its own wizard.</div><div><b>Wizard</b>First records request (optional, offered first)</div><div><b>What changed</b>Kept as its own journey and promoted to a front door: it is the example the principles already use (6.6), and the step most likely to bring a newcomer in.</div></div>
+<details class="steps"><summary>Steps (6)</summary><ol class="st"><li><span class="actor">member</span>Chooses the office and says plainly what records they want.</li><li><span class="actor">member</span>The wizard drafts the request under the governing law from the group&#x27;s profile, labelled as a draft.</li><li><span class="actor">member</span>Edits the draft and sends it, after a warning that this tells the office what the group is looking at.<span class="chip">Outward</span></li><li><span class="actor">member</span>Records it sent; the due date is set from the law and shows in the queue.</li><li><span class="actor">member</span>Records what came back: records, a fee quote, a denial, or nothing.</li><li><span class="actor">member</span>If it is overdue, the queue says so once, and the plan suggests the next step (journey 6).</li></ol></details>
+<span class="src" style="grid-column:auto">ux-experience journey (h); Case Making §2; principle 6.6</span>
+</article>
+<article class="jcard" id="j6">
+<div class="jhead"><span class="jnum">6</span><span class="jtitle">From suspicion to a closed plan</span><span class="verdict amended">Amended (absorbs the old journey &quot;acting on a finding&quot;)</span></div>
+<p>Deciding what to do about a problem, doing it, following it to an outcome, and closing the plan. <span class="who">Who: members; outside offices, reporters, groups, counsel.</span></p>
+<div class="jfacts"><div><b>Front door</b>A plan can be opened from any question with one act; the plan page explains itself.</div><div><b>Wizard</b>Start and send (optional), from the approved sketch</div><div><b>What changed</b>The older journey &quot;acting on a finding&quot; (standards, determinations, escalation stages, counsel packet) is folded in as the plan&#x27;s &quot;advance&quot; steps, so members learn one path instead of two.</div></div>
+<details class="steps"><summary>Steps (9)</summary><ol class="st"><li><span class="actor">member</span>Opens a plan while the inquiry is still young, and sees what it rests on.</li><li><span class="actor">member</span>Gets suggestions from the assistant and adds options of their own.</li><li><span class="actor">member</span>Chooses an option and says when to be reminded; lays out a scenario with checkpoints.<span class="chip">Reasoned</span></li><li><span class="actor">member</span>Records the standard broken and the determination against it, where an action needs one.<span class="chip">Reasoned</span></li><li><span class="actor">member</span>Starts the option: a filing, an escalation to the office, or an awareness action.</li><li><span class="actor">member</span>Prepares what is sent (the assistant may draft), and sends it.<span class="chip">Outward</span></li><li><span class="actor">member</span>Tracks responses and clocks; judges each checkpoint from the queue.</li><li><span class="actor">member</span>Advances (legal tools, political accountability, a counsel packet for a serious matter) or declines, saying why not now.<span class="chip">Reasoned</span></li><li><span class="actor">member</span>Records the outcome, closes the action, then the plan.<span class="chip">Terminal</span></li></ol></details>
+<span class="src" style="grid-column:auto">ux-experience journeys (c) and (k); plan page; start-and-send sketch; DEC-114</span>
+</article>
+<article class="jcard" id="j7">
+<div class="jhead"><span class="jnum">7</span><span class="jtitle">The daily queue</span><span class="verdict amended">Amended</span></div>
+<p>What is waiting on a member today, in one list. <span class="who">Who: every member.</span></p>
+<div class="jfacts"><div><b>Front door</b>The queue opens with a one-line explanation of its three kinds, shown once.</div><div><b>Wizard</b>None; it is a daily habit</div><div><b>What changed</b>Adds the rulings since it was written: the three kinds&#x27; names, sorting and folding, the reminder for an unsent wizard draft, and watched cases.</div></div>
+<details class="steps"><summary>Steps (7)</summary><ol class="st"><li><span class="actor">member</span>Opens the queue: To do, Noticed and Signal, grouped by case.</li><li><span class="actor">member</span>Re-sorts by time added, time due, case or kind, and folds groups away to focus.</li><li><span class="actor">member</span>Sees each item&#x27;s options with their weight before acting.</li><li><span class="actor">member</span>Acts, forwards, or defers and dismisses with a reason.<span class="chip">Reasoned</span></li><li><span class="actor">member</span>Decides on newer versions of what they cited: adopt or keep.</li><li><span class="actor">member</span>Is offered to finish, keep or cancel a wizard draft they left unsent.</li><li><span class="actor">member</span>Sees updates on another group&#x27;s case they are watching.</li></ol></details>
+<span class="src" style="grid-column:auto">ux-experience journey (d); DEC-110; K1364; K1366</span>
+</article>
+<article class="jcard" id="j8">
+<div class="jhead"><span class="jnum">8</span><span class="jtitle">Working with the assistant</span><span class="verdict amended">Amended</span></div>
+<p>Asking the assistant to find, pursue, extract and check, and deciding what to keep. <span class="who">Who: a member; the assistant.</span></p>
+<div class="jfacts"><div><b>Front door</b>Opening the panel and asking in plain words; no setup for the member when the group&#x27;s key is set.</div><div><b>Wizard</b>The assistant walks wizards; it has none of its own</div><div><b>What changed</b>Setting the key moves out of the member&#x27;s path (an administrator sets the group&#x27;s once), so a newcomer starts by asking. Adds how it speaks, wizards it can walk or plan, and translation drafts.</div></div>
+<details class="steps"><summary>Steps (6)</summary><ol class="st"><li><span class="actor">member</span>Opens the assistant panel beside the work. The key it runs on is set once for the group, a project or the member.</li><li><span class="actor">member</span>Asks it to find, pursue, extract or check; it answers as &quot;I&quot;.</li><li><span class="actor">assistant</span>Requests captures it needs; they arrive over time.</li><li><span class="actor">assistant</span>Suggests documents, versions and questions, each labelled as machine work with who asked.</li><li><span class="actor">member</span>Accepts or rejects each one; the assistant never concludes, signs or sends.</li><li><span class="actor">member</span>May ask it to walk a wizard, plan one, or draft a translation.</li></ol></details>
+<span class="src" style="grid-column:auto">ux-experience journey (e); AI Roles; DEC-90, DEC-120, DEC-125, DEC-127</span>
+</article>
+<article class="jcard" id="j9">
+<div class="jhead"><span class="jnum">9</span><span class="jtitle">A review copy, out and back</span><span class="verdict ">Confirmed</span></div>
+<p>Showing a draft case to named outsiders before publishing. <span class="who">Who: project editors, the owner, an outside reviewer.</span></p>
+<div class="jfacts"><div><b>Front door</b>The reviewer needs no account and is told plainly what they are reading and for how long.</div><div><b>Wizard</b>None</div><div><b>What changed</b>Unchanged.</div></div>
+<details class="steps"><summary>Steps (3)</summary><ol class="st"><li><span class="actor">owner</span>Grants a named reader a revocable view of the draft.</li><li><span class="actor">reviewer</span>Reads, comments, and acknowledges what the case leaves out.</li><li><span class="actor">owner</span>Revises, then publishes, naming the draft that was reviewed.<span class="chip">Irreversible</span></li></ol></details>
+<span class="src" style="grid-column:auto">ux-experience journey (g); Publication §6A</span>
+</article>
+<article class="jcard" id="j10">
+<div class="jhead"><span class="jnum">10</span><span class="jtitle">From a knock to the record</span><span class="verdict ">Confirmed</span></div>
+<p>Material handed in through the group&#x27;s doorbell becomes evidence, or is set aside. <span class="who">Who: someone handing over material; members.</span></p>
+<div class="jfacts"><div><b>Front door</b>The doorbell page is the whole journey for the outsider: one page, plain words.</div><div><b>Wizard</b>None for the outsider; the page must need none</div><div><b>What changed</b>Unchanged; the doorbell page&#x27;s words follow brand and voice (calm, plain, nothing alarming).</div></div>
+<details class="steps"><summary>Steps (3)</summary><ol class="st"><li><span class="actor">someone</span>Hands over material on the doorbell page, with no account; the page says what will happen to it.</li><li><span class="actor">member</span>Reads the inbox and moves the material into the record, or discards it, with a reason.<span class="chip">Reasoned</span></li><li><span class="actor">member</span>Records what becomes known about the source, from &quot;unknown&quot; to &quot;known to the group&quot;, never revealing it first.</li></ol></details>
+<span class="src" style="grid-column:auto">ux-experience journey (f); Intake Doctrine §2a; measures map (source identity)</span>
+</article>
+<article class="jcard" id="j11">
+<div class="jhead"><span class="jnum">11</span><span class="jtitle">Using another group&#x27;s case</span><span class="verdict new">New</span></div>
+<p>Bringing in a case another group published, checking it, and building on it. <span class="who">Who: members; a partner group.</span></p>
+<div class="jfacts"><div><b>Front door</b>Importing from a link is one act; the read-only band says whose case it is.</div><div><b>Wizard</b>Use another group&#x27;s case (optional)</div><div><b>What changed</b>Added from the rulings on import, recreation and acceptance and watching, which had no journey.</div></div>
+<details class="steps"><summary>Steps (4)</summary><ol class="st"><li><span class="actor">member</span>Finds the case through the network directory or a link, and imports it into its own read-only project.</li><li><span class="actor">member</span>Civicsmith recreates each finding from the case file; each shows Recreated, Recreated in part, or Did not recreate.</li><li><span class="actor">member</span>Accepts what was recreated, with a reason.<span class="chip">Reasoned</span></li><li><span class="actor">member</span>Watches the publisher&#x27;s docket; a new edition or a withdrawal reaches everything that relies on it.</li></ol></details>
+<span class="src" style="grid-column:auto">DEC-96, DEC-112; K1366; principle 5.4</span>
+</article>
+<article class="jcard" id="j12">
+<div class="jhead"><span class="jnum">12</span><span class="jtitle">A source changes after publishing</span><span class="verdict ">Confirmed</span></div>
+<p>A document a published case rests on changes or disappears. <span class="who">Who: members; readers.</span></p>
+<div class="jfacts"><div><b>Front door</b>Members meet this only through the queue; nothing new to learn.</div><div><b>Wizard</b>None</div><div><b>What changed</b>Adds that groups watching the case are told (journey 11).</div></div>
+<details class="steps"><summary>Steps (3)</summary><ol class="st"><li><span class="actor">system</span>Monitoring notices a changed or removed source and keeps both versions.</li><li><span class="actor">member</span>Sees which findings are affected, and the version notices.</li><li><span class="actor">owner</span>Reopens the case and publishes a new edition; the old one stays, with the correction on the docket.<span class="chip">Irreversible</span></li></ol></details>
+<span class="src" style="grid-column:auto">ux-experience journey (i); reevaluation; DEC-12</span>
+</article>
+<article class="jcard" id="j13">
+<div class="jhead"><span class="jnum">13</span><span class="jtitle">Reading and checking a case</span><span class="verdict new">New</span></div>
+<p>A stranger reads a published case, understands its strength, and checks it for themselves. <span class="who">Who: public readers, journalists, officials.</span></p>
+<div class="jfacts"><div><b>Front door</b>The public page explains itself from zero; nothing assumes an account.</div><div><b>Wizard</b>None; the page itself must teach</div><div><b>What changed</b>Added so the outside audiences have a journey of their own; before, reading was the last step of journey 4.</div></div>
+<details class="steps"><summary>Steps (5)</summary><ol class="st"><li><span class="actor">reader</span>Opens the public page: the group&#x27;s name at the head, &quot;Made with Civicsmith&quot; at the foot.</li><li><span class="actor">reader</span>Reads each finding and its two strengths in plain words, opening layers as far as they want.</li><li><span class="actor">reader</span>Opens the evidence behind any finding.</li><li><span class="actor">reader</span>Checks the signature, or recreates the case with the open checker, without the group&#x27;s help.</li><li><span class="actor">reader</span>Cites the edition, and follows corrections on the docket; may read an unofficial translation.</li></ol></details>
+<span class="src" style="grid-column:auto">Publication §5C; principles 8.7, 8.5</span>
+</article>
+<article class="jcard" id="j14">
+<div class="jhead"><span class="jnum">14</span><span class="jtitle">Changing the administrators</span><span class="verdict ">Confirmed</span></div>
+<p>Adding a third administrator, or removing one. <span class="who">Who: administrators.</span></p>
+<div class="jfacts"><div><b>Front door</b>Administrators only.</div><div><b>Wizard</b>None</div><div><b>What changed</b>Unchanged.</div></div>
+<details class="steps"><summary>Steps (2)</summary><ol class="st"><li><span class="actor">administrator</span>Proposes a new administrator, or a removal with a reason.<span class="chip">Reasoned</span></li><li><span class="actor">administrators</span>Endorse, or vote; refusals explain the arithmetic.</li></ol></details>
+<span class="src" style="grid-column:auto">ux-experience journey (j); membership R5–R14</span>
+</article>
+</div>
+</section>
+<section id="wizards">
+<h2>4. Wizards</h2>
+<p class="fam-intro">Outlines only: what each wizard covers, where it starts, and its steps. Each step says what to do and why; a wizard points at the real control and never presses it; what it puts in a field is a labelled draft until the member keeps it; stopping is fine. The three required wizards must always work, or the release is held.</p>
+<div class="wiz">
+<div class="wcard req"><span class="wtag">Required</span><h3>Set up and claim</h3><span class="wstart">Starts at: The installer page, then the setup page</span><ol><li>Before you start: a cloud account with a payment method, about twenty minutes.</li><li>Choose the short name. Why: it appears in addresses and signatures, and can never change; a group that wants to stay unnamed picks one that reveals nothing.</li><li>Install and let it test itself.</li><li>Claim it with the one-time password; choose your password.</li><li>Name the group, add a logo if you have one, verify your web address, choose your places and languages.</li><li>Add a second administrator and record who holds the hosting account.</li></ol></div>
+<div class="wcard req"><span class="wtag">Required · outline only for now</span><h3>Welcome a new member</h3><span class="wstart">Starts at: The invitation link</span><ol><li>Choose a handle. Why: the record shows it; your legal name stays private unless you choose otherwise.</li><li>Choose your language.</li><li>This is your group&#x27;s home: what it is working on, and what is waiting on you.</li><li>Two things to know first: a question&#x27;s strength against its project&#x27;s bar, and &quot;Undetermined&quot;.</li><li>Your first act: join a project, capture a document, or record what you saw.</li></ol></div>
+<div class="wcard req"><span class="wtag">Required</span><h3>Publication ceremony</h3><span class="wstart">Starts at: A case ready to publish</span><ol><li>What you are publishing: the case, its edition, its scope.</li><li>Check: each finding&#x27;s strength against the bar; anything still open.</li><li>What the case leaves out, and who acknowledged it.</li><li>The group&#x27;s declared bias.</li><li>Preview the public page, as a stranger will see it.</li><li>Sign with your key. Why: publishing is permanent; corrections come as a new edition.</li></ol></div>
+<div class="wcard"><span class="wtag">Optional · offer first</span><h3>First records request</h3><span class="wstart">Starts at: Any office, or a question that needs records</span><ol><li>Which office holds the records.</li><li>What records, in plain words.</li><li>The law it goes under, from your group&#x27;s profile.</li><li>Your draft, labelled as a draft: edit it until it is yours.</li><li>Send it. Why the warning: this tells the office what you are looking at.</li><li>The due date is set and shows in your queue.</li></ol></div>
+<div class="wcard"><span class="wtag">Optional · offer first</span><h3>Your first question</h3><span class="wstart">Starts at: A project page</span><ol><li>What do you want to know? Say it as a question.</li><li>Find or capture a document that bears on it.</li><li>Point at the passage that matters.</li><li>Say whether it supports the question or cuts against it.</li><li>See the question&#x27;s strength against the project&#x27;s bar, and what would raise it.</li></ol></div>
+<div class="wcard"><span class="wtag">Optional</span><h3>Invite a member</h3><span class="wstart">Starts at: The roster</span><ol><li>Who: their handle, and the cover the group knows them by (not a legal name).</li><li>What they may do: contribute, by default.</li><li>Send the link; it waits for them.</li></ol></div>
+<div class="wcard"><span class="wtag">Optional</span><h3>Use another group&#x27;s case</h3><span class="wstart">Starts at: A link to a published case, or the directory</span><ol><li>Import the case into a read-only project.</li><li>Let Civicsmith recreate each finding.</li><li>Accept what recreated, with a reason.</li><li>Watch the publisher&#x27;s docket for new editions.</li></ol></div>
+<div class="wcard"><span class="wtag">Optional</span><h3>Translate the interface</h3><span class="wstart">Starts at: Settings, for administrators or members given the grant</span><ol><li>Choose the language.</li><li>See the words still untranslated.</li><li>Ask the assistant to draft them; each is marked &quot;Draft&quot;.</li><li>Check and adopt each one, or type it yourself.</li></ol></div>
+<div class="wcard"><span class="wtag">Optional</span><h3>Start and send</h3><span class="wstart">Starts at: An option on a plan</span><ol><li>The option you chose and why.</li><li>Prepare what is sent; the assistant may draft it.</li><li>Approve it and send it, after the outward-act warning.</li><li>The clock and the next checkpoint go into the queue.</li></ol></div>
+</div>
+<p class="note">Sources: DEC-120 and DEC-121 (wizards, their libraries, required ones), K1364 (the member's words; drafts; stopping is a non-event), DEC-91 (onboarding deferred until the redesign settles).</p>
+</section>
+<section id="qs">
+<h2>Questions for you</h2>
+<div class="qgrid">
+<div class="gap" id="j1"><h3>J1. Who we design for</h3><p>Approve the reconciled audiences: three rings (members, invited in, outside), with the installer and founder as moments of the administrator&#x27;s role, participants as states, and the assistant as an actor, not an audience.</p><p class="answer">Answer: &quot;J1: yes&quot;, or your changes.</p></div>
+<div class="gap" id="j2"><h3>J2. The wide path</h3><p>Adopt the six rules above as the test every journey and screen passes, alongside the design principles.</p><p class="answer">Answer: &quot;J2: yes&quot;, or your changes.</p></div>
+<div class="gap" id="j3"><h3>J3. One action journey, not two</h3><p>Fold the older &quot;acting on a finding&quot; into the plan journey (6), so members learn one path from suspicion to outcome.</p><p class="answer">Answer: &quot;J3: yes&quot; or &quot;J3: keep both&quot;.</p></div>
+<div class="gap" id="j4"><h3>J4. The journeys</h3><p>Confirm the fourteen journeys as listed: four new (2, 3, 11, 13), six amended, the rest confirmed.</p><p class="answer">Answer: &quot;J4: yes&quot;, or name any to change.</p></div>
+<div class="gap" id="j5"><h3>J5. Wizards first</h3><p>Ship the three required wizards plus two offered first (First records request, Your first question); the other four follow. The welcome wizard stays an outline until the redesign settles (onboarding&#x27;s deferral stands).</p><p class="answer">Answer: &quot;J5: yes&quot;, or your order.</p></div>
+</div>
+</section>
+<p class="foot">Drawn from the journeys and audiences gathered from the requirements (ux-experience.json), the original interface brief (UI-KICKOFF), the approved design principles (DEC-123) and brand and voice (DEC-125 to DEC-127), and your rulings on wizards (DEC-120, DEC-121, K1364), phones (DEC-122), imported cases (DEC-96, DEC-112, K1366), the queue (DEC-110) and onboarding (DEC-91). Kept in the repository at docs/development/ux-substrate/journeys.html.</p>
+</div>
+<script>
+(function(){
+  var t=document.getElementById('srcToggle');
+  try{ if(localStorage.getItem('jr-src')==='1'){t.checked=true;document.body.classList.add('show-src');} }catch(e){}
+  t.addEventListener('change',function(){document.body.classList.toggle('show-src',t.checked);try{localStorage.setItem('jr-src',t.checked?'1':'0')}catch(e){}});
+})();
+</script>
