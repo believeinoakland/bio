@@ -2026,3 +2026,17 @@ response: **Bob, 2026-10-04: "The brand and voice is mostly approved, as are the
 decided: 2026-10-04 · Bob
 reasoning recorded in: this entry; the page itself (status line); BIO_Publication_v0_1.md §7 (V2); BIO_Assistant_and_AI_Roles_v0_1.md §5 (V3); BIO_Interaction_Constructs_v0_1.md (pointer beside DEC-123's).
 owed: (BOB) the group logo: an administrator's upload, stored in the group's copy, shown beside the name on the public face and workspace, with the name always in words (V2); the assistant's conversational wording in first person and "the assistant" in every label and record (V3). (Design session) the voice applied to every screen and wizard script in steps 3 to 5; V1 and V4 when Bob answers.
+
+### DEC-126 · answered
+raised: 2026-10-03 · the UX design session with Bob on his primary account (session_01TNeXM2Qvi7zMXT6BntbENE, V1's author; carried to its answer by session_01JZtUsAKpStQoiwF6rzqsyJ; the development process runs on his secondary account) (the brand-and-voice page's V1: Civicsmith's mark)
+for: bob
+question: Whether Civicsmith is shown by its wordmark alone or by the wordmark with a symbol, and which symbol.
+why it is Bob's: brand (UX, P17).
+provisional: the old interface's typed wordmark; DEC-118 (the tool credited quietly); DEC-124 (Civicsmith).
+alternative: (A) the wordmark alone, a plain "C" where there is no room; (B) a hallmark, a stamp holding "Cs" (recommended until D; its letters fail at browser-tab size); (C) an anvil (reads as hammering at government).
+recommendation: D, the plumb bob: legible at every size, saying "measured against a true standard".
+reversal cost: low now (no screen built); rising once releases, icons and published cases carry it.
+response: **Bob, 2026-10-04**, after asking for the options to be shown ("V1: Explain the wordmark and smybol [symbol] options more clearly. Show me."), commissioning a better symbol than the anvil from another model, and bringing back its plumb-bob board, which this session traced: **"That's okay, I'm happy with the version you now have in the brand document. Let's go with that."** Civicsmith's mark is the wordmark with a plumb bob (option D): a peg, a collar whose lower edge comes to a point, a V-shaped upper band and two long lower facets, in one colour, as drawn on the page and kept in `docs/development/ux-substrate/marks/civicsmith-plumb-bob.svg`. The plumb bob stands alone in the browser tab and as the phone icon, and sits before the word in the credit ("Made with [mark] Civicsmith") and on the setup page. The peg, collar and band stay in every version (without them it reads as a gem, a pin or an arrowhead). Step 4 sets type, colour and proportions around it.
+decided: 2026-10-04 · Bob
+reasoning recorded in: this entry; the brand-and-voice page (V1, options A to D shown in four places each); BIO_Publication_v0_1.md §7.
+owed: (design session) the mark carried into step 4 (type, colour, small-size version) and the screens of step 5; (BOB) the mark as the product's browser icon, phone icon and credit mark when the interface is built, from the source file; (Bob) the mark included in the trademark clearance search with the name.
