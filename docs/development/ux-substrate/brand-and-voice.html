@@ -71,15 +71,44 @@ table.tone td:first-child { font-weight:600; width:22% }
 .mast .foot2 { padding:8px 16px; border-top:1px solid var(--rule); font:12px var(--f-fact); color:var(--muted); display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px }
 .wm { font-family:var(--f-ui); font-weight:600; letter-spacing:-0.01em } .wm span { color:var(--accent) }
 </style>
+<style>
+.v1grid { display:grid; gap:14px; margin-top:6px }
+.v1opt { border:1px solid var(--rule); background:var(--bg); padding:14px; display:grid; gap:12px; min-width:0 }
+.v1opt.pick { border-color:var(--accent); box-shadow:inset 4px 0 0 var(--accent) }
+.v1head { display:flex; flex-wrap:wrap; gap:4px 12px; align-items:baseline }
+.v1head b { font-family:var(--f-rec); font-size:19px }
+.v1tag { font:500 11.5px var(--f-fact); letter-spacing:.06em; text-transform:uppercase; color:var(--sheet); background:var(--accent); padding:2px 7px }
+.ctx { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr)); gap:10px }
+.cell { background:var(--sheet); border:1px solid var(--rule); padding:10px; display:grid; gap:8px; align-content:start; min-width:0 }
+.cell .lbl { font:500 11px var(--f-fact); letter-spacing:.06em; text-transform:uppercase; color:var(--muted) }
+.tab { display:flex; align-items:center; gap:7px; background:var(--bg); border:1px solid var(--rule); border-bottom:none; border-radius:8px 8px 0 0; padding:6px 10px; font-size:13px; max-width:100%; min-width:0 }
+.tab span { white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+.tab svg { width:16px; height:16px; flex:none }
+.phone { display:grid; justify-items:center; gap:5px; padding:6px 0 }
+.phone svg { width:56px; height:56px }
+.phone span { font-size:12px; color:var(--soft) }
+.credit2 { display:flex; flex-wrap:wrap; justify-content:space-between; gap:4px 10px; border-top:1px solid var(--rule); padding-top:6px; font:11.5px var(--f-fact); color:var(--muted) }
+.credit2 .mw { display:inline-flex; align-items:center; gap:5px }
+.credit2 svg { height:12px; width:auto; color:var(--accent) }
+.wmk { font-family:var(--f-ui); font-weight:600; letter-spacing:-0.01em; color:var(--ink) }
+.setup { display:flex; align-items:center; gap:9px; flex-wrap:wrap }
+.setup svg { height:30px; width:auto; color:var(--accent) }
+.setup .wmk { font-size:24px }
+.setup small { display:block; width:100%; color:var(--muted); font-size:13px }
+.ic-bg { fill:var(--accent) } .ic-fg { fill:var(--sheet) } .ic-st { stroke:var(--sheet) }
+.gap.ruled { border-left-color:var(--accent) }
+ol.draft { margin:4px 0 0; padding-left:22px; display:grid; gap:6px; max-width:72ch }
+.story { background:var(--bg); border:1px solid var(--rule); padding:10px 12px; font-size:15px; color:var(--soft) }
+</style>
 <div class="wrap">
 <header>
-<p class="eyebrow">Design phase · step 2 of 5 · draft for Bob, 3 October 2026 · revised for the name Civicsmith (DEC-124)</p>
+<p class="eyebrow">Design phase · step 2 of 5 · APPROVED by Bob, 4 October 2026, except V1 and V4 · revised for the name Civicsmith (DEC-124)</p>
 <h1>Civicsmith brand and voice</h1>
-<p class="lede">Who speaks on each screen, how the names are written, and how Civicsmith sounds, drawn from your values and principles and your ruling that the group leads. Four questions at the end are yours to rule; everything else is proposed for your approval or edits.</p>
+<p class="lede">Who speaks on each screen, how the names are written, and how Civicsmith sounds, drawn from your values and principles and your ruling that the group leads. You approved sections 1 to 5 on 4 October and answered V2 and V3 (DEC-125). V1 is now drawn so you can see the options, and V4 is a draft ruling built on your direction.</p>
 <div class="meta">
 <div><b>What it builds on</b>The four values and eight operational principles, especially "Show your work. Always." and "output must be disciplined, but humans can be human"; your ruling that the group leads (2 October); the approved design principles.</div>
 <div><b>What it does not cover</b>Colour, type and the look of the marks: that is step 4. Believe in Cities' own identity belongs to the network site.</div>
-<div><b>How to answer</b>Comment on any line, or reply "Brand and voice: approved", with your answers to V1–V4, for example "V1: A, V2: yes, V3: yes, V4: as recommended".</div>
+<div><b>How to answer</b>Comment on any line, or reply with V1 (for example "V1: B") and V4 ("V4: as drafted", or your edits).</div>
 </div>
 </header>
 <nav class="bar" aria-label="Sections">
@@ -181,44 +210,79 @@ table.tone td:first-child { font-weight:600; width:22% }
 
 <section id="qs">
 <h2>Questions for you</h2>
-<p class="fam-intro">Four choices no ruling covers yet.</p>
+<p class="fam-intro">V2 and V3 are answered. V1 is drawn below; V4 is a draft ruling from your direction.</p>
 
 <div class="gap" id="v1">
-<h3>V1. Does Civicsmith have a symbol, or only a wordmark?</h3>
-<p>The credit line, the browser tab and the app icon on a phone all need something. The old interface set "OS" in the signature colour; the new name needs its own treatment, drawn in step 4.</p>
-<div class="opts">
-<div class="opt"><b>A. Wordmark only (recommended)</b>Civicsmith is always the typed name; the tab and app icon use a simple initial derived from it. Quiet, consistent with "credited quietly", nothing to explain.</div>
-<div class="opt"><b>B. A small symbol</b>A simple mark beside the name, designed in step 4. More recognisable on a phone's home screen; one more thing to carry meaning.</div>
+<h3>V1. A wordmark alone, or a wordmark with a symbol?</h3>
+<p>A <b>wordmark</b> is the name itself, always set the same way: "Civicsmith" in one typeface and weight. A <b>symbol</b> is a small picture that stands for the name and can appear without it, wherever there is no room for the word: a browser tab, a phone's home screen, a stamp in print. Either way the name in words appears wherever it fits. Below, each option is shown in four places. These are sketches in this page's placeholder type and colour; step 4 draws the final mark.</p>
+<div class="v1grid">
+<div class="v1opt">
+<div class="v1head"><b>A. Wordmark only</b></div>
+<p>The name alone. Where there is no room for it, a square with the first letter, "C", taken from the wordmark rather than drawn as a symbol.</p>
+<div class="ctx">
+<div class="cell"><span class="lbl">Browser tab</span><div class="tab"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" class="ic-bg"/><text x="32" y="45" text-anchor="middle" font-family="Source Sans 3, sans-serif" font-weight="600" font-size="38" class="ic-fg">C</text></svg><span>Lakeshore Tenants · Civicsmith</span></div></div>
+<div class="cell"><span class="lbl">Phone home screen</span><div class="phone"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" class="ic-bg"/><text x="32" y="45" text-anchor="middle" font-family="Source Sans 3, sans-serif" font-weight="600" font-size="38" class="ic-fg">C</text></svg><span>Civicsmith</span></div></div>
+<div class="cell"><span class="lbl">Foot of a published case</span><div class="credit2"><span>lakeshore-tenants · signed</span><span class="mw">Made with <span class="wmk">Civicsmith</span></span></div></div>
+<div class="cell"><span class="lbl">Setting up a group's copy</span><div class="setup"><span class="wmk">Civicsmith</span><small>Set up your group's copy</small></div></div>
 </div>
-<p class="answer">Answer: "V1: A" or "V1: B".</p>
+<p class="answer" style="font-family:var(--f-ui);font-size:15px">Quietest, and nothing new to explain. But a plain "C" is shared by countless apps, so on a crowded phone screen or a row of tabs it is hard to pick out.</p>
+</div>
+<div class="v1opt pick">
+<div class="v1head"><b>B. Wordmark with a hallmark</b><span class="v1tag">Recommended</span></div>
+<p>A hallmark is the small stamp a silversmith strikes into finished work, certifying it met the assay office's standard. Here it is a stamp-shaped outline holding "Cs". It sits beside the name where there is room, and stands alone in the tab and on the phone.</p>
+<div class="ctx">
+<div class="cell"><span class="lbl">Browser tab</span><div class="tab"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" class="ic-bg"/><g transform="translate(9 17.5) scale(1.05)"><path d="M6 1.5H38L42.5 6V24L38 28.5H6L1.5 24V6Z" fill="none" class="ic-st" stroke-width="3"/><text x="22" y="20.5" text-anchor="middle" font-family="Source Serif 4, Georgia, serif" font-weight="600" font-size="15" class="ic-fg">Cs</text></g></svg><span>Lakeshore Tenants · Civicsmith</span></div></div>
+<div class="cell"><span class="lbl">Phone home screen</span><div class="phone"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" class="ic-bg"/><g transform="translate(9 17.5) scale(1.05)"><path d="M6 1.5H38L42.5 6V24L38 28.5H6L1.5 24V6Z" fill="none" class="ic-st" stroke-width="3"/><text x="22" y="20.5" text-anchor="middle" font-family="Source Serif 4, Georgia, serif" font-weight="600" font-size="15" class="ic-fg">Cs</text></g></svg><span>Civicsmith</span></div></div>
+<div class="cell"><span class="lbl">Foot of a published case</span><div class="credit2"><span>lakeshore-tenants · signed</span><span class="mw">Made with <svg viewBox="0 0 44 30" aria-hidden="true"><path d="M6 1.5H38L42.5 6V24L38 28.5H6L1.5 24V6Z" fill="none" stroke="currentColor" stroke-width="2.6"/><text x="22" y="20.5" text-anchor="middle" font-family="Source Serif 4, Georgia, serif" font-weight="600" font-size="15" fill="currentColor">Cs</text></svg><span class="wmk">Civicsmith</span></span></div></div>
+<div class="cell"><span class="lbl">Setting up a group's copy</span><div class="setup"><svg viewBox="0 0 44 30" aria-hidden="true"><path d="M6 1.5H38L42.5 6V24L38 28.5H6L1.5 24V6Z" fill="none" stroke="currentColor" stroke-width="2.6"/><text x="22" y="20.5" text-anchor="middle" font-family="Source Serif 4, Georgia, serif" font-weight="600" font-size="15" fill="currentColor">Cs</text></svg><span class="wmk">Civicsmith</span><small>Set up your group's copy</small></div></div>
+</div>
+<p class="answer" style="font-family:var(--f-ui);font-size:15px">It says what the credit means, work made to a standard, and it is distinctive at small sizes. It is one more thing to keep consistent, and a stamp could be mistaken for a seal of approval, so the credit's link page says plainly what it is: a maker's mark, not an endorsement. At browser-tab size the letters are too small to read, as the sketch shows, so step 4 would draw a simplified tab version.</p>
+</div>
+<div class="v1opt">
+<div class="v1head"><b>C. Wordmark with an anvil</b></div>
+<p>The smith's best-known tool, as a solid silhouette.</p>
+<div class="ctx">
+<div class="cell"><span class="lbl">Browser tab</span><div class="tab"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" class="ic-bg"/><g transform="translate(8 16) scale(1.1)"><path d="M3 7H31C36 7 40 9 41.5 12H30V15.5C30 17.5 28.5 19 26.5 19H25V23H31V27H11V23H17V19H16C13.5 19 12 17.5 12 15V12H8C5 12 3 10 3 7Z" class="ic-fg"/></g></svg><span>Lakeshore Tenants · Civicsmith</span></div></div>
+<div class="cell"><span class="lbl">Phone home screen</span><div class="phone"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" class="ic-bg"/><g transform="translate(8 16) scale(1.1)"><path d="M3 7H31C36 7 40 9 41.5 12H30V15.5C30 17.5 28.5 19 26.5 19H25V23H31V27H11V23H17V19H16C13.5 19 12 17.5 12 15V12H8C5 12 3 10 3 7Z" class="ic-fg"/></g></svg><span>Civicsmith</span></div></div>
+<div class="cell"><span class="lbl">Foot of a published case</span><div class="credit2"><span>lakeshore-tenants · signed</span><span class="mw">Made with <svg viewBox="0 0 44 30" aria-hidden="true"><path d="M3 7H31C36 7 40 9 41.5 12H30V15.5C30 17.5 28.5 19 26.5 19H25V23H31V27H11V23H17V19H16C13.5 19 12 17.5 12 15V12H8C5 12 3 10 3 7Z" fill="currentColor"/></svg><span class="wmk">Civicsmith</span></span></div></div>
+<div class="cell"><span class="lbl">Setting up a group's copy</span><div class="setup"><svg viewBox="0 0 44 30" aria-hidden="true"><path d="M3 7H31C36 7 40 9 41.5 12H30V15.5C30 17.5 28.5 19 26.5 19H25V23H31V27H11V23H17V19H16C13.5 19 12 17.5 12 15V12H8C5 12 3 10 3 7Z" fill="currentColor"/></svg><span class="wmk">Civicsmith</span><small>Set up your group's copy</small></div></div>
+</div>
+<p class="answer" style="font-family:var(--f-ui);font-size:15px">Instantly "smith", but heavy and industrial. Beside a group's case it can read as hammering at government, against your choice of "pressure" over "attacks".</p>
+</div>
+</div>
+<p class="rec"><b>Recommendation: B, the hallmark.</b> The tab and the phone need a mark either way, and the hallmark carries the meaning of "Made with Civicsmith": a maker's mark struck on work that meets a standard. It stays small and quiet at the foot of a case.</p>
+<p class="answer">Answer: "V1: A", "V1: B" or "V1: C", or describe another idea.</p>
 </div>
 
-<div class="gap" id="v2">
-<h3>V2. May a group show its own logo?</h3>
-<p>Today a group's public identity is its name, short name and verified web address. Many groups have a logo they'd want on their cases.</p>
-<p class="rec"><b>Recommendation: yes, optional.</b> An administrator may add the group's logo; it appears beside the group's name on its public face and workspace, stored inside the group's copy (nothing loaded from outside). The name always appears in words too, so the logo is never the only signal. Never required.</p>
-<p class="answer">Answer: "V2: yes" or "V2: no".</p>
+<div class="gap ruled" id="v2">
+<h3>V2. A group's own logo: yes, optional</h3>
+<p>Your answer, 4 October: "Yes, optional". An administrator may add the group's logo. It appears beside the group's name on its public face and in its workspace, stored inside the group's copy (nothing loaded from outside). The name always appears in words too, so the logo is never the only signal. Never required.</p>
 </div>
 
-<div class="gap" id="v3">
-<h3>V3. Does the assistant say "I"?</h3>
-<p>Your ruling labels its work "the assistant did this, at Rosa's request". In conversation it needs a way to speak.</p>
-<p class="rec"><b>Recommendation: yes, in conversation only.</b> It says "I" in its replies ("I found three passages…"), and appears as "the assistant" in every label and record. It never says "we", which is the group's word.</p>
-<p class="answer">Answer: "V3: yes" or "V3: never 'I'".</p>
+<div class="gap ruled" id="v3">
+<h3>V3. The assistant says "I": yes</h3>
+<p>Your answer, 4 October: "Yes". In conversation the assistant says "I" ("I found three passages…"). In every label and record it appears as "the assistant", with who asked ("the assistant did this, at Rosa's request"). It never says "we", which is the group's word.</p>
 </div>
 
 <div class="gap" id="v4">
-<h3>V4. Who may change the interface's words?</h3>
-<p>The words live in one place (principle 8.5), so they can be translated. A group might also want its own terms (a tenants' group calling a project a "campaign").</p>
-<div class="opts">
-<div class="opt"><b>A. Civicsmith's words only (recommended for now)</b>Every group sees the same words; translations come with releases. Fixed terms keep cases readable across groups.</div>
-<div class="opt"><b>B. Groups may rename some labels</b>Friendlier locally, but the same thing reads differently from group to group, and imported cases get confusing.</div>
-</div>
-<p class="answer">Answer: "V4: A" or "V4: B".</p>
+<h3>V4. Translation: a draft ruling from your direction</h3>
+<p>Your direction, 4 October: <q>A group should be able to translate their words too - and thus support multi-lingual usages across their membership. But a surface or feature of the assistant may be needed to support the group in this way.</q></p>
+<p><b>Draft ruling for you to confirm:</b></p>
+<ol class="draft">
+<li><b>Each member chooses their language.</b> Screens show in it wherever a translation exists, and in English otherwise, word by word, never blank.</li>
+<li><b>A group may translate the interface for its members.</b> Civicsmith's own translations come with releases. A group may add a language its members need, or improve a translation, in its own copy. The fixed terms (the grades, "Undetermined", the queue's kinds, the acts' names) each carry a note on what they mean, so every language says the same thing. Renaming words within a language stays out (option A), so cases still read the same from group to group.</li>
+<li><b>The group's own writing can be read in another language.</b> On any note, question, finding or notice, a member can ask to read it in their language. The assistant drafts the translation, labelled "Machine translation · original in English", with the original one tap away. A translation never replaces the original, and a member's own words stay theirs.</li>
+<li><b>Signed and published records stay in the language they were signed in.</b> A translation of a published case is labelled unofficial and links to the signed original (principle 8.5).</li>
+<li><b>A translation workspace, with the assistant.</b> Administrators, or members given the grant, get a page listing every interface word in English beside the group's language, with gaps marked. The assistant drafts the missing words as labelled drafts, and a member who knows the language checks and adopts each one. Without the assistant, members type them in.</li>
+<li><b>Later:</b> a group may offer its translation to Civicsmith's library, reviewed before it reaches every group, the way wizard scripts are shared.</li>
+</ol>
+<p class="story"><b>Example.</b> Barrio Unido's members speak Spanish and English. Their administrator opens Translations and chooses Spanish. Most words already come translated with the release; the assistant drafts the few left, each marked "Draft", and Lucía, who is bilingual, checks and adopts them. Later a member reading an English finding taps "Leer en español" and sees the machine translation, marked as such, with the English original a tap away.</p>
+<p class="answer">Answer: "V4: as drafted", or your edits to any point.</p>
 </div>
 </section>
 
-<p class="foot">Drawn from the Roadmap's preamble, values and operational principles (§3–§5), the approved design principles (DEC-123), and your rulings on brand (DEC-118), the name (DEC-124), naming (K1), the queue's words (DEC-110), "Matters" (DEC-114), "record" (K899 (1)), notices (DEC-111) and wizards (DEC-120, DEC-121). Kept in the repository at docs/development/ux-substrate/brand-and-voice.html.</p>
+
+<p class="foot">Drawn from the Roadmap's preamble, values and operational principles (§3–§5), the approved design principles (DEC-123), and your rulings on brand (DEC-118), the name (DEC-124), this page (DEC-125), naming (K1), the queue's words (DEC-110), "Matters" (DEC-114), "record" (K899 (1)), notices (DEC-111) and wizards (DEC-120, DEC-121). Kept in the repository at docs/development/ux-substrate/brand-and-voice.html.</p>
 </div>
 <script>
 (function(){
