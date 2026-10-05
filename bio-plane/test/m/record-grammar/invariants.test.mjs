@@ -32,6 +32,7 @@ const BATTERY = `async (RG) => {
   out.push(RG.sha256HexSync("abc"), RG.createSha256().update(new Uint8Array(200).fill(7)).hex());
   out.push(Array.from(RG.b64ToBytes("AQID")));
   out.push(RG.BUNDLE_ID_RE.test("PLN-2026-0001-a"), RG.ANN_ID_RE.source, RG.UNREACHABLE_CAPTURE_GRADE);
+  out.push(RG.ID_TABLE, String(RG.idPattern("EVT")), RG.isHypothesisId("HYP-2026-10000"));
   out.push(RG.deriveInquiryTitle("  a   question\\nmore"), RG.inquiryQuestionOf("x\\n## Question\\nq\\n## B"), RG.vocabFor(RG.STATES, "problem"));
   out.push(RG.sectionText("## A\\na\\n## B", "## A"), RG.isCaseMemberBytes({ published_strength: [{ axis: "a" }, { axis: "b" }] }));
   for (const w of ["token:x", "alice", "", "plane"]) out.push(RG.proposalLabel(w, "standard"), RG.contentMintState(w));
@@ -73,8 +74,9 @@ const MOVED = ["BUNDLE_ID_RE", "ANN_ID_RE", "FILENAME_RE", "ISO_TS_RE", "OBJECT_
   "sha256HexSync", "INQUIRY_TITLE_MAX", "deriveInquiryTitle", "inquiryQuestionOf", "HEADINGS", "HEADINGS_WHEN",
   "isCaseMemberBytes", "vocabFor", "STATES", "sectionText", "LAW_PROPOSAL_STATES", "lawProposalState", "PROPOSAL_STATES",
   "proposalLabel", "CONTENT_MINTED_BY_PLANE", "CONTENT_MINT_STATES", "contentMintState"];
-/* Provided here from the first without a catalogue twin: `checkBundle`, `EXTENSION_ARMS` and the shared act rows (R29). */
-const OWN = ["b64ToBytes", "SHARED_ACT_CHECKS", "EXTENSION_ARMS", "checkBundle"];
+/* Provided here from the first without a catalogue twin: `checkBundle`, `EXTENSION_ARMS`, the shared act rows (R29) and
+   T33's id table (R46–R48). */
+const OWN = ["b64ToBytes", "SHARED_ACT_CHECKS", "EXTENSION_ARMS", "checkBundle", "ID_TABLE", "idPattern", "isHypothesisId"];
 
 test("one binding per name: the module's entry answers each provided name with the one binding its part holds", () => {
   assert.deepEqual(Object.keys(RG).sort(), [...MOVED, ...OWN].sort());

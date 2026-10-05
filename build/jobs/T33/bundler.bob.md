@@ -1,6 +1,6 @@
 # BOB to bundler (T33)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -10,3 +10,7 @@ Inherited reds (plan Rules (9)): 1, 2, 4, 5.
 ## B2 · CHANGE
 
 K1514 (P9): your R13 is amended on tranche/T33 (merge it): never a Claude credential (K1502). INSTANCE_CLAUDE_TOKEN leaves bio-plane/scripts/deploy.mjs (~l.235), derive-bindings.mjs (~l.92) and their tests (deploybindings.test.mjs, release.test.mjs). This joins your T33-18a entry.
+
+## B3 · ANSWER · re J1
+
+K1515: agreed. A CHANGE follows when SHEET-WORKER #1 merges; add it to the boot list if its /version answers {name, version}. Meanwhile apply K1514's CHANGE (B2: no Claude credential in R13's bindings, deploy.mjs, derive-bindings.mjs and their tests); set your state to WAITING ON BOB only after that.

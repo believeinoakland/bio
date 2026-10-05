@@ -1,6 +1,6 @@
 # BOB to docprofile (T33)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -11,3 +11,7 @@ Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their m
 ## B2 · ANSWER · re J1
 
 K1513: (1), (2), (4) as you read them. (3) replaced: keep your seven doctypes registered by default (the seam seeded with your own types; registerDoctype replaces by key) until plane registers doctypes' types, so no module reads documents as unrecognised. Deleting your copies is next tranche's N549 (hard reason: order). So you delete nothing at doctypes' merge; you still merge tranche/T33 then and point your own tests at the seam.
+
+## B3 · CHANGE
+
+K1520 (P10, a provided service changed within the layer): merge tranche/T33. Your new R37: readText hands the content type's reader the supplied text's structure as ctx.supplied (its pages incl. a page with no text layer, undetermined markers, images, an ocr transcription where supplied, a sheet's typed cells per office-readers R30), unchanged. BUDGET-DOCTYPES reads through it. A further CHANGE follows when jurisdictions and civil-time merge (minutes_due_days now 10 business days, K1519). Post COMPLETE again when R37 is met.

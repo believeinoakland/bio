@@ -85,7 +85,15 @@ export function walkFacts(p, fn) {
     if (k.venue && k.venue.hours) fn(k.venue.hours, `action_kinds[${i}].venue.hours`);
     if (k.evidence) fn(k.evidence, `action_kinds[${i}].evidence`);
     if (k.template && typeof k.template === "object") fn(k.template, `action_kinds[${i}].template`);
+    /* T33 (R48): the venue's channel facts */
+    for (const f of ["cutoff", "receipt"]) if (k.venue && k.venue[f]) fn(k.venue[f], `action_kinds[${i}].venue.${f}`);
+    if (k.venue) each(k.venue.outages, `action_kinds[${i}].venue.outages`);
   });
+  /* T33 (R46–R54) */
+  (p.deadlines || []).forEach((d, i) => { if (d.observed) fn(d.observed, `deadlines[${i}].observed`); });
+  for (const s of ["weekend", "instrument_key"]) if (p[s]) fn(p[s], s);
+  for (const s of ["computation", "fiscal_year", "law_ranks", "proceeding_kinds", "proceeding_flows", "identifier_schemes",
+    "classification_schemes", "lawful_demands", "recurrences"]) each(p[s], s);
 }
 /** The object at a walkFacts path. */
 walkFacts.at = (p, path) => path.split(/\.|\[|\]\.?/).filter(Boolean)
