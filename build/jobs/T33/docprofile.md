@@ -1,6 +1,6 @@
 # docprofile (T33)
 
-**Status** · session_01HaSoeitaf5svNuEMw8yMQN · depth 2 · COMPLETE · handled B6
+**Status** · session_01HaSoeitaf5svNuEMw8yMQN · depth 2 · COMPLETE · handled B7
 
 ## J1 · QUESTION
 
@@ -74,3 +74,21 @@ Size (session_01HaSoeitaf5svNuEMw8yMQN): test runs 11, module lines 5,180
 ## J5 · COMPLETE
 
 B4-B6 done: tranche/T33 merged; seeded meeting_calendar = doctypes' line for line (only import paths differ), counting minutes_due_days through civil-time evaluateRule; practiceValue carries count (R36, kept). R6 test: held profile (and no view) expected_by null, '10 business days could not be counted'; with closures 'city', 2026-03-02 -> 2026-03-16 and 2026-11-19 -> 2026-12-07. docprofile 56/56; importers + legistar-reader + roster-reader + doctypes 430/430; format, architecture, coverage 26/26, ownership 0 failures. Record's completion section updated.
+
+## Completion of B7 (CHANGE, K1538): the held profile names `city`
+
+**Applied.** I merged `tranche/T33`. My seed is still identical to `doctypes/meeting-calendar.mjs` apart from its import paths. The R6 test now expects the OMC 2.20.160 dates on the held profile:
+- 2026-03-02 gives 2026-03-16, both with no view (K39) and with the held view.
+- 2026-11-19 gives 2026-12-07.
+- It keeps the undetermined case on a view whose practice names no closure list: `expected_by: null` and "10 business days could not be counted".
+
+**Tests and checks.**
+- `node --test docprofile/test/*.test.mjs`: 56 pass, 0 fail.
+- Importers, legistar-reader, roster-reader and doctypes: 429 of 430 pass. The one failure is doctypes' own "R3 R8 the minutes-due date…" test, which asserts that the held profile is undetermined. It is red by design under K1538, so it is doctypes' to update, not this module's.
+- `format`, `architecture`, `coverage` (26 of 26) and `ownership`: 0 failures each.
+
+Size (session_01HaSoeitaf5svNuEMw8yMQN): test runs 14, module lines 5,184
+
+## J6 · COMPLETE
+
+B7 done: tranche/T33 merged; seed still identical to doctypes'. R6 test expects the held profile's OMC 2.20.160 dates on 'city' (2026-03-02 -> 2026-03-16 with and without a view; 2026-11-19 -> 2026-12-07) and keeps the undetermined case on a view with no closure list named. docprofile 56/56; format, architecture, coverage 26/26, ownership 0 failures. Neighbours 429/430: the one red is doctypes' own 'R3 R8 the minutes-due date…' test, which still asserts the held profile undetermined (red by design under K1538, doctypes' to update).

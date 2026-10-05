@@ -155,23 +155,23 @@ test("R6 every content type takes its vocabulary from ctx.view and holds none of
   assert.deepEqual(keys(typeOf("meeting_agenda").parse({ text: legacy, view: EMPTY })), []);
   const ellery = PA_AGENDA.replace(/PA-(\d{3})/g, "M$1/26");
   assert.deepEqual(keys(typeOf("meeting_agenda").parse({ text: ellery })), [], "a test profile is never the fallback");
-  // the held profile's practice is 10 BUSINESS days (OMC 2.20.160; K1519), counted by civil-time. Its practice
-  // names no closure list yet, and it holds its closures only as named lists, so the count is not made and says
-  // why (K1533) …
-  const heldNow = (v) => cal.connections(parsed, parsed, { now: NOW, view: v })
-    .find((c) => c.relation === "minutes_not_yet_published");
-  for (const v of [undefined, HELD]) {
-    assert.equal(heldNow(v).expected_by, null, "never counted as calendar days");
-    assert.match(heldNow(v).why, /10 business days could not be counted/);
-  }
-  // … and with the City's list named (K1504 (5)), Monday 2 March 2026 gives Monday 16 March: two weekends skipped
-  const named = structuredClone(HELD);
-  named.practice.minutes_due_days.closures = "city";
-  assert.equal(due(named), "2026-03-16");
+  // the held profile's practice is 10 BUSINESS days (OMC 2.20.160; K1519), counted by civil-time on the closure
+  // list it names, the City's (K1504 (5), K1538): Monday 2 March 2026 gives Monday 16 March, two weekends skipped,
+  // with or without the view passed (K39 reads the held profiles)
+  const heldDue = (date, v, now) => {
+    const p = cal.parse({ text: calendarHtml([["8", "Harbor Commission", date]]) });
+    return cal.connections(p, p, { now: now || NOW, view: v }).find((c) => c.relation === "minutes_not_yet_published");
+  };
+  assert.equal(HELD.practice.minutes_due_days.closures, "city");
+  for (const v of [undefined, HELD]) assert.equal(heldDue("3/2/2026", v).expected_by, "2026-03-16", "never calendar days");
   // Thanksgiving and the day after are the City's closures: 19 November 2026 gives 7 December
-  const nov = cal.parse({ text: calendarHtml([["8", "Harbor Commission", "11/19/2026"]]) });
-  assert.equal(cal.connections(nov, nov, { now: "2026-12-20T12:00:00Z", view: named })
-    .find((c) => c.relation === "minutes_not_yet_published").expected_by, "2026-12-07");
+  assert.equal(heldDue("11/19/2026", HELD, "2026-12-20T12:00:00Z").expected_by, "2026-12-07");
+  // a view whose business-day practice names no closure list, holding its closures only as named lists: not
+  // counted, and why, never counted as calendar days (K1533)
+  const unnamed = structuredClone(HELD);
+  delete unnamed.practice.minutes_due_days.closures;
+  assert.equal(heldDue("3/2/2026", unnamed).expected_by, null);
+  assert.match(heldDue("3/2/2026", unnamed).why, /10 business days could not be counted/);
   const noView = readText(legacy, {});
   assert.deepEqual(keys(noView.parsed), ["26-0101", "26-0102", "26-0103"]);
 });
