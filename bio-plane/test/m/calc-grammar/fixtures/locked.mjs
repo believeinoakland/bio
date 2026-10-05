@@ -9,7 +9,9 @@ const { battery } = await import("./battery.mjs");
 sealed = true;
 const forbid = (name) => () => { throw new Error(`calc-grammar read ${name}`); };
 const RealDate = Date;
-globalThis.Date = new Proxy(RealDate, { construct: forbid("the clock (new Date)"), apply: forbid("the clock (Date())") });
+// A Date built from stated values is arithmetic; one built from nothing, or Date() or Date.now(), reads the clock.
+globalThis.Date = new Proxy(RealDate, { construct: (T, args) => (args.length ? new T(...args) : forbid("the clock (new Date())")()),
+  apply: forbid("the clock (Date())") });
 globalThis.Date.now = forbid("the clock (Date.now)");
 Math.random = forbid("Math.random");
 performance.now = forbid("performance.now");
