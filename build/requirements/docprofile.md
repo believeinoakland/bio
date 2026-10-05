@@ -123,7 +123,7 @@ type: `SUBSTANCE` (watch the evidentiary digest; any change is an event, furnitu
 notice), `MEMBERSHIP` (watch which entries are present and whether each still says what it said),
 `UNMONITORABLE` (a shell; nothing is watched, and the absence is stated rather than silently
 reported "unchanged") (**R29**). This module holds and exports `CONTRACT` and its three values; each
-content type's own declaration of its contract is `doctypes` R4 (T33-12). *(not yet met: T33-12)*
+content type's own declaration of its contract is `doctypes` R4 (T33-12).
 
 ## Private
 
@@ -184,11 +184,11 @@ content type's own declaration of its contract is `doctypes` R4 (T33-12). *(not 
   and the registry seam). That every local fact a content type tests for comes from the active
   profiles, tested with a profile that is not the first for every type, moved with the types to
   `doctypes` R3 and R20 (T33-12). The four stack handlers (`site-profiles`', its R16) hold no such
-  facts and need none, because they recognise technology, never place. *(not yet met: T33-12)*
+  facts and need none, because they recognise technology, never place.
 - **R31** Deterministic over its inputs: the same `bytes`/`text` and the same `ctx` values always
   give the same answer, with no exception in this module's own code: the calendar's forward-looking
   connection, which reads the wall clock when `ctx.now` is absent, moved with the types to `doctypes`
-  R8 (T33-12). Nothing in this module reads a store or the network. *(not yet met: T33-12)*
+  R8 (T33-12). Nothing in this module reads a store or the network.
 - **R32** The failure asymmetry governs every default: an unrecognised document is never assumed
   decorated (`site-profiles`' `conservative` treats almost nothing as machinery and nothing as furniture, so any
   byte difference is reported), and a recogniser applied without CERTAIN confidence never asserts
@@ -207,7 +207,7 @@ content type's own declaration of its contract is `doctypes` R4 (T33-12). *(not 
   gone. Its pipeline, `readText`, the shared helpers `doctypes` imports (`readerView`, `vocabulary`,
   `CONTRACT`, `entity`, `referential`, `temporal` and the rest its Uses lists) and the registry seam
   stay, with their meaning unchanged; a name it re-exports for an importer not yet re-pointed reads
-  through to `doctypes` until that importer moves (plan T33, Rules (9) item 4). *(not yet met: T33-12)*
+  through to `doctypes` until that importer moves (plan T33, Rules (9) item 4).
 
 ### Satisfies
 

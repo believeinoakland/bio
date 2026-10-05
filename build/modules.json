@@ -23,7 +23,7 @@
     {"id": "site-profiles", "layer": 1, "paths": ["site-profiles/"], "tests": ["site-profiles/test/"], "uses": []},
     {"id": "docprofile", "layer": 1, "paths": ["docprofile/"], "tests": ["docprofile/test/"], "uses": ["jurisdictions", "site-profiles"]},
     {"id": "doctypes", "layer": 1, "paths": [], "tests": [], "uses": ["docprofile", "jurisdictions", "site-profiles"]},
-    {"id": "legistar-reader", "layer": 1, "paths": [], "tests": [], "uses": ["docprofile"]},
+    {"id": "legistar-reader", "layer": 1, "paths": ["legistar-reader/"], "tests": ["legistar-reader/test/"], "uses": ["docprofile"]},
     {"id": "roster-reader", "layer": 1, "paths": [], "tests": [], "uses": ["docprofile"]},
     {"id": "court-doctypes", "layer": 1, "paths": [], "tests": [], "uses": ["docprofile", "id-spaces", "court-citations"]},
     {"id": "budget-doctypes", "layer": 1, "paths": [], "tests": [], "uses": ["docprofile", "office-readers", "pdf-reader"]},

@@ -1,6 +1,6 @@
 # BOB to signatures (T33)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -11,3 +11,11 @@ Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their m
 ## B2 · ANSWER · re J1
 
 K1513: (1) modules.json now gives signatures uses [record-grammar] on tranche/T33; merge it. (2) As you read it.
+
+## B3 · ANSWER · re J3
+
+K1515: agreed. You merge after record-grammar; a CHANGE follows then.
+
+## B4 · CHANGE
+
+K1516: record-grammar is merged into tranche/T33 and you are merged after it. Merge tranche/T33, re-run your tests on the real ID_TABLE (and embed:sign if the sequential form differs), and post COMPLETE again.
