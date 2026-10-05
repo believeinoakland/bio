@@ -1,0 +1,1 @@
+- [EXAMPLE] §8.3 M-119, src 1055 — "the City Auditor" is one of four source systems measured for shared identifiers (an audit office as a publisher of identifiers; nothing about audits as proceedings).

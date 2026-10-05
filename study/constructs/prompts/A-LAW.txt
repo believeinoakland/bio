@@ -1,0 +1,1 @@
+You are the LAW analyst in a study for BOB, the architecture session of the Civicsmith product. Work in the study folder (this folder: the one holding READING-PROTOCOL.md). Read ANALYSIS-PROTOCOL.md and constructs-brief.md there whole, then follow the protocol exactly for the construct LAW: your digest is digest/LAW.md; write studies/LAW.md.

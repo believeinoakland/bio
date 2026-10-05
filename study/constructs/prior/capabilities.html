@@ -1,0 +1,193 @@
+<title>Civicsmith Capability Limits</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,650&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column; each area is a section with built / limits, then decision cards Bob answers by number. */
+:root{
+  --bg:#f6f7f8; --surface:#ffffff; --fg:#1d2329; --muted:#5b6670; --line:#d9dee3;
+  --accent:#2f5d62; --accent-soft:#e3eeee; --rec:#7a4b12; --rec-soft:#f6ecdc; --mine:#3d4a8a; --mine-soft:#e7e9f5;
+  --display:"Source Serif 4", Georgia, serif; --body:"IBM Plex Sans", system-ui, sans-serif; --mono:"IBM Plex Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14191d; --surface:#1c2328; --fg:#e4e8eb; --muted:#9aa6af; --line:#2f3a42;
+  --accent:#7fb7bc; --accent-soft:#1f3133; --rec:#e3b675; --rec-soft:#33281a; --mine:#a9b3ea; --mine-soft:#252a45; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#14191d; --surface:#1c2328; --fg:#e4e8eb; --muted:#9aa6af; --line:#2f3a42;
+  --accent:#7fb7bc; --accent-soft:#1f3133; --rec:#e3b675; --rec-soft:#33281a; --mine:#a9b3ea; --mine-soft:#252a45; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:15px/1.6 var(--body)}
+.wrap{max-width:760px;margin:0 auto;padding-inline:16px;padding-block:32px 64px;display:grid;gap:28px}
+h1,h2{font-family:var(--display);text-wrap:balance;line-height:1.2;margin:0}
+h1{font-size:2rem;font-weight:650}
+h2{font-size:1.4rem;font-weight:650;display:flex;gap:10px;align-items:baseline}
+h2 .n{font-family:var(--mono);font-size:.85rem;color:var(--accent);font-weight:500}
+h3{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0;font-weight:600}
+p{margin:0}
+.lede{color:var(--muted);max-width:65ch}
+.how{background:var(--accent-soft);border-radius:6px;padding:14px 16px;display:grid;gap:6px}
+section.area{display:grid;gap:14px;padding-top:20px;border-top:1px solid var(--line)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.two>div{min-width:0;display:grid;gap:6px;align-content:start}
+ul{margin:0;padding-left:1.1em;display:grid;gap:4px}
+.dec{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px 16px;display:grid;gap:10px}
+.dec .q{font-weight:600}
+.dec .id{font-family:var(--mono);color:var(--accent);margin-right:6px}
+.opts{display:grid;gap:6px}
+.opt{display:grid;grid-template-columns:28px 1fr;gap:6px;padding:6px 8px;border-radius:4px}
+.opt b{font-family:var(--mono);font-weight:500}
+.opt.rec{background:var(--rec-soft)}
+.opt.rec::after{content:"Recommended";grid-column:2;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--rec);font-weight:600}
+.note{font-size:.88rem;color:var(--muted)}
+.mine{background:var(--mine-soft);border-radius:6px;padding:12px 16px;display:grid;gap:6px}
+.mine h3{color:var(--mine)}
+.ex{font-style:italic}
+@media (max-width:620px){.two{grid-template-columns:1fr}}
+</style>
+
+<div class="wrap">
+<header style="display:grid;gap:10px">
+  <h3>For Bob · question U41 · checked against the requirements and code, 2026-10-05</h3>
+  <h1>What Civicsmith can and cannot do with six kinds of material</h1>
+  <p class="lede">The design session asked, on your behalf, what is built, where the limits are, and what to do about each gap. I checked its reading against the requirements and the code. It was mostly right, but it understated what is built in courts, time and spreadsheets.</p>
+</header>
+
+<div class="how">
+  <h3>How to answer</h3>
+  <p>Eleven decisions below, D1 to D11. Reply with a letter for each, for example "D1 A, D2 A, D8 B", or "all as recommended". Your rulings change requirements only. Nothing is built or planned until you open the next tranche (your hold of today, K1425). I then send your answer to the design session, which pairs it with how members meet each capability on screen.</p>
+</div>
+
+<section class="area">
+  <h2><span class="n">1</span>Time</h2>
+  <div class="two">
+    <div><h3>Built</h3><ul>
+      <li>Deadlines in calendar or business days, skipping the holidays members have confirmed. "Undetermined" whenever a date can't be known, e.g. a missing year or a disputed holiday list.</li>
+      <li>Reminders a member sets and answers; overdue and pending lists.</li>
+      <li>Meeting calendars read from agency pages. Missing minutes become dated items with an "expected by" date.</li>
+      <li>Stage durations on a progression ("within 30 days").</li></ul></div>
+    <div><h3>Limits</h3><ul>
+      <li>Days are counted in UTC, so a deadline near midnight can land a day off locally.</li>
+      <li>Time zone and office hours are confirmed by members but never used in the arithmetic.</li>
+      <li>Extensions are recorded but never applied.</li>
+      <li>No model of a regular meeting schedule.</li>
+      <li>No date a document takes effect is read from it.</li>
+      <li>No assembled timeline; dates sit in separate records.</li></ul></div>
+  </div>
+  <div class="mine"><h3>Mine, no ruling needed</h3><p>Counting days in the jurisdiction's own time zone, honouring office hours, and applying extensions. These make existing requirements mean what they already say, so they are a correction, not a change. I'll place them when you open the next tranche.</p></div>
+  <div class="dec"><p class="q"><span class="id">D1</span>Regular meeting schedules ("council meets the first and third Tuesday")</p><div class="opts">
+    <div class="opt rec"><b>A</b><span>Members record a body's schedule as a confirmed local fact. Civicsmith flags a meeting that should have happened but has no agenda or minutes.</span></div>
+    <div class="opt"><b>B</b><span>Leave it to members' own reminders.</span></div></div></div>
+  <div class="dec"><p class="q"><span class="id">D2</span>Dates a document takes effect</p><div class="opts">
+    <div class="opt rec"><b>A</b><span>The reader proposes the effective or enactment date as a labelled draft. It becomes a fact only when a member keeps it.</span></div>
+    <div class="opt"><b>B</b><span>Members enter these dates by hand.</span></div></div></div>
+  <div class="dec"><p class="q"><span class="id">D3</span>A timeline of an investigation</p><div class="opts">
+    <div class="opt rec"><b>A</b><span>A read-only timeline that puts every dated record of a case in order (letters, deadlines, meetings, findings, versions), each linking to its source. It adds nothing new, only arranges.</span></div>
+    <div class="opt"><b>B</b><span>Keep the timeline only in the packet prepared for a lawyer.</span></div></div></div>
+</section>
+
+<section class="area">
+  <h2><span class="n">2</span>Organisations</h2>
+  <div class="two">
+    <div><h3>Built</h3><ul>
+      <li>A registry of agencies, departments, bodies, contracts and other subjects, with aliases.</li>
+      <li>Three relations: <em>acts for</em>, <em>member of</em>, <em>overlaps</em>. Withdrawing one keeps who, when and why.</li>
+      <li>Staff directories read across captures, showing contacts added, removed or changed.</li></ul></div>
+    <div><h3>Limits</h3><ul>
+      <li>No <em>reports to</em>, and no link from a contract to its parties.</li>
+      <li>Relations carry no start or end date, so "who held this office in 2016" can't be recorded.</li>
+      <li>No org chart, current or past. Your roadmap's appendix of officials by year can't be held.</li>
+      <li>Directory changes aren't linked to the registry.</li></ul></div>
+  </div>
+  <div class="dec"><p class="q"><span class="id">D4</span>Structure and history of organisations</p><div class="opts">
+    <div class="opt rec"><b>A</b><span>Add dated relations (from and to) and two new kinds, <em>reports to</em> and <em>party to</em> a contract. Show the org chart for any date. Office-holders are public officials in their public role only. Relations are displayed and cited, never used to infer a conclusion.</span></div>
+    <div class="opt"><b>B</b><span>Dated office-holders only, with no hierarchy.</span></div>
+    <div class="opt"><b>C</b><span>No change.</span></div></div>
+    <p class="note">A touches doctrine. The Declared Bias safeguard says relations are never followed from one to the next, and A keeps that by allowing display only. It also narrows the rule against naming private individuals to "public officials in their public role". Both are yours.</p></div>
+</section>
+
+<section class="area">
+  <h2><span class="n">3</span>Law and regulation</h2>
+  <div class="two">
+    <div><h3>Built</h3><ul>
+      <li>Standards (laws, rules, policies) with citation, issuer, captured text and period in force. Each one is declared with a reason.</li>
+      <li>Proposals from the machine or a member, which another member adopts.</li>
+      <li>A flag when a newer capture no longer contains the cited passage.</li>
+      <li>Findings of conformance per standard, flagged again when the standard is replaced or its text changes.</li>
+      <li>Ordinances read for section references and "hereby amended / repealed" wording.</li></ul></div>
+    <div><h3>Limits</h3><ul>
+      <li>No code → chapter → section structure; each section is a separate standard.</li>
+      <li>Replacement is one-for-one. One ordinance amending three sections means three new standards. A repeal with nothing replacing it can't be recorded.</li>
+      <li>The amendment wording that is read goes nowhere.</li></ul></div>
+  </div>
+  <div class="dec"><p class="q"><span class="id">D5</span>Codes with chapters and sections</p><div class="opts">
+    <div class="opt rec"><b>A</b><span>A "part of" link, so a section sits under its chapter and code, matching the codes the jurisdiction's profile already names.</span></div>
+    <div class="opt"><b>B</b><span>Keep standards flat.</span></div></div></div>
+  <div class="dec"><p class="q"><span class="id">D6</span>Amendment and repeal history</p><div class="opts">
+    <div class="opt rec"><b>A</b><span>"Amended by" and "repealed by" links, one-to-many. Amendments the reader detects arrive as proposals a member adopts, never as facts.</span></div>
+    <div class="opt"><b>B</b><span>Members record history by hand, as now.</span></div></div></div>
+</section>
+
+<section class="area">
+  <h2><span class="n">4</span>Court cases and precedent</h2>
+  <div class="two">
+    <div><h3>Built (more than the design session saw)</h3><ul>
+      <li>A group's own court filings, appeals and decisions, with outcomes (granted, denied, partial, reversed, affirmed) recorded on the action they belong to. An appeal must name the decision it appeals.</li>
+      <li>Prepared filings, including a court petition, approved before sending; a litigation hold; the packet for a lawyer.</li>
+      <li>Court decisions as a kind of standard and of source.</li></ul></div>
+    <div><h3>Limits</h3><ul>
+      <li>No court case as a thing of its own: no case number, court, parties or judge, and no filings by other parties.</li>
+      <li>No way to follow a case the group isn't party to.</li>
+      <li>No link from a decision to the law it interprets. Today a ruling can only <em>replace</em> a standard, which is wrong when the law stays in force.</li></ul></div>
+  </div>
+  <div class="dec"><p class="q"><span class="id">D7</span>Decisions that interpret a law</p><div class="opts">
+    <div class="opt rec"><b>A</b><span>An "interprets" link beside "replaces": the decision is cited with the law it construes, and the law stays in force.</span></div>
+    <div class="opt"><b>B</b><span>No change.</span></div></div></div>
+  <div class="dec"><p class="q"><span class="id">D8</span>Court cases</p><div class="opts">
+    <div class="opt rec"><b>A</b><span>Now: case number, court and parties on a group's own court action. Later, when a group needs to follow someone else's litigation: a separate case tracker that watches court dockets.</span></div>
+    <div class="opt"><b>B</b><span>Build the full tracker now, for any case.</span></div>
+    <div class="opt"><b>C</b><span>No change.</span></div></div></div>
+</section>
+
+<section class="area">
+  <h2><span class="n">5</span>Calculation</h2>
+  <div class="two">
+    <div><h3>Built</h3><ul>
+      <li>Sum, difference, count, product and ratio over cited figures, graded by the weakest input. Available only after a finding of noncompliance, with no screen for it yet.</li>
+      <li>Spreadsheets (xlsx, ODS, CSV) read as cells. Formulas are kept with the file's own saved result, and named ranges are citable.</li></ul></div>
+    <div><h3>Limits</h3><ul>
+      <li>No calculation while investigating, only after a finding.</li>
+      <li>No percentages: one operation per step, and "90%" is refused as a figure.</li>
+      <li>Figures are typed by the member, not taken from cells.</li>
+      <li>No filtering or counting of a dataset's rows.</li>
+      <li>No budget or financial-report reader. Both were measured and ranked, but neither was built.</li>
+      <li>No tables from PDFs, measured as not yet reliable. Most budgets are PDFs.</li></ul></div>
+  </div>
+  <p class="note ex">The pothole test: the city says it filled 90% of reported potholes. Checking that from its own service-request export needs a row count with a filter and a percentage. Neither exists.</p>
+  <div class="dec"><p class="q"><span class="id">D9</span>Calculations a member can cite at any time</p><div class="opts">
+    <div class="opt rec"><b>A</b><span>A calculation record available throughout an investigation: inputs cited to cells or passages; operations including percentage, filter and count over the rows of a cited spreadsheet; reproducible by anyone from the same sources; graded by its weakest input. It can be one leg of a question, and its result is labelled a calculation, never a finding.</span></div>
+    <div class="opt"><b>B</b><span>Keep calculation only after a finding of noncompliance.</span></div></div>
+    <p class="note">Your Functional Architecture already asks for this (field-level comparison and cross-referencing), so A meets existing canon rather than adding scope.</p></div>
+  <div class="dec"><p class="q"><span class="id">D10</span>Budgets and financial reports</p><div class="opts">
+    <div class="opt rec"><b>A</b><span>Readers for budgets and audited statements from spreadsheets and CSV first, linked by fund so a budget and its audit can be compared. PDF tables follow a fresh measurement.</span></div>
+    <div class="opt"><b>B</b><span>Wait until PDF tables are reliable, and do both together.</span></div></div></div>
+</section>
+
+<section class="area">
+  <h2><span class="n">6</span>Plain-language questions</h2>
+  <div class="two">
+    <div><h3>Built</h3><ul>
+      <li>Any question can be opened as an inquiry, and a lead can become one.</li>
+      <li>A member's own search, which states plainly where it looked and what it did not find.</li>
+      <li>Ordinances held as standards with their text; ordinance numbers recognised.</li>
+      <li>The assistant's investigation loop is built, but only its checking mode is switched on.</li></ul></div>
+    <div><h3>Limits</h3><ul>
+      <li>Nothing gives a plain-language answer with citations.</li>
+      <li>No reader for bills or rate schedules, and nothing links a charge to the ordinance that imposes it.</li>
+      <li>A member can't start the assistant on a fresh question.</li></ul></div>
+  </div>
+  <p class="note ex">The water-bill test: "What is this sewer maintenance charge?" needs the assistant to find the rate schedule and its ordinance, quote them and explain the charge.</p>
+  <div class="dec"><p class="q"><span class="id">D11</span>Answering questions of meaning</p><div class="opts">
+    <div class="opt rec"><b>A</b><span>An "explain" mode for the assistant, built together with a reader for bills and rate schedules that links each charge to its authority. The assistant shows how it read the question, finds the authorising ordinance or schedule, quotes and cites it, and says where it looked and what it did not find. The answer is labelled the assistant's and is never a finding. The member can adopt a cited source as a standard.</span></div>
+    <div class="opt"><b>B</b><span>The explain mode alone; bills read as ordinary documents.</span></div>
+    <div class="opt"><b>C</b><span>Search only; the member reads the sources.</span></div></div>
+    <p class="note">Switching on the assistant's investigation mode for members is mine once you rule. How the answer looks on screen is the design session's.</p></div>
+</section>
+</div>

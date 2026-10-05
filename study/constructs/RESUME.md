@@ -1,0 +1,44 @@
+# The constructs study: how to resume it
+
+**Started** 2026-10-05 by BOB #110 (`session_01BPKKPrYLqxMefuVNm32WWf`, Bob's secondary account), at Bob's direction. **Lives** on branch `study/constructs` of `believeinoakland/bio`, folder `study/constructs/`. It is never merged into `main`; its conclusions reach the product only as rulings and requirements once Bob rules. **If this account's usage runs out**, Bob starts a BOB on his other account to continue from here. That BOB reads this file whole, then `STATE.md`.
+
+## What Bob asked (his words, 2026-10-05)
+> It's my sense that the level of support for constructs like time need to be richer than just being able to track a court deadline. It's also my sense that the level of understanding of relationships, responsibilities, obligations, reporting lines of all types, of organizations - city and otherwise - needs to be rich enough to support the types of work the system will be called upon to do. Law and regulations are at the very heart of much of this work, as are court cases. Of course the system is inevitably going to need to do some level of analysis - some simple enough to do in code, other in spreadsheets for more comprehensive challenges. And of course the system must be able to understand and respond to natural language questions - which I thought it could o through the assistant.
+> … we need to throughly consider what levels of support for these constructs the system may need, what the system is current capable of, which modules/AIs are in place for providing that support, and what support is needed to meet the anticipated needs, and the architecture for that support.
+
+> Make sure that this research you'r starting is properly structured so that the workers are able to fully read all documents and not just scan, and come to real world conclusions about how to procede.
+
+> Structure your intermediate results so that a phase that can't complete because the usage is exceeded can be restarted under another BOB that I'll start in the other account.
+
+It began as the design session's question U41 (`mail/UX-DESIGN`, entry U41). Its first quick check is in `prior/u41-area*.md` and `prior/capabilities.html` (the eleven decisions D1–D11 shown to Bob, now superseded by this study).
+
+**Standing constraint:** K1425 (Bob, 2026-10-05): no tranche is opened or planned until Bob says so. This study changes nothing in the product; it ends in a document for Bob.
+
+## The phases
+| phase | units | output | protocol |
+|---|---|---|---|
+| 1 Reading | C1–C10, D1, D2 (canon and design documents); M1–M5 (module requirements, verified against code) | `notes/<id>.md` | `READING-PROTOCOL.md` (+ `READING-PROTOCOL-MODULES.md` for M) |
+| 1→2 Digest | script | `digest/<CONSTRUCT>.md`, `DOCTRINE.md`, `CROSS.md` | `python3 build-digests.py` |
+| 2 Analysis | A-TIME, A-ORGANISATIONS, A-LAW, A-COURTS, A-ANALYSIS, A-QUESTIONS | `studies/<CONSTRUCT>.md` | `ANALYSIS-PROTOCOL.md` |
+| 3 Review | R-* (written when phase 2 starts) | `reviews/R-<id>.md` | `REVIEW-PROTOCOL.md` |
+| 4 Synthesis | BOB itself | `synthesis/constructs.md` and a rendered page for Bob | below |
+
+Every unit's exact prompt is `prompts/<id>.txt`. `python3 status.py` reads each unit's state from its output alone (missing, partial, done) and rewrites `STATE.md`.
+
+## To resume, in order
+1. Clone `believeinoakland/bio`, check out `study/constructs`, and work in `study/constructs/` (call it the study folder).
+2. Rebuild the sources, which are not committed: `sh make-src.sh <a bio checkout> <the study folder>`. They are pinned to fixed commits, so the rebuild is byte-identical to what phase 1 read.
+3. `python3 status.py`. Find the earliest phase with a unit not `done`.
+4. For each such unit, start a background worker (Agent tool, general-purpose) whose prompt is `prompts/<id>.txt`, with "the study folder (…)" replaced by its absolute path. Units of one phase run in parallel. A `partial` unit resumes itself: the protocols' checkpoint rule tells the worker to keep what its output holds and continue from the first range or step not done.
+5. Commit and push the study folder after each unit completes (`sh sync.sh <the study folder> <a git worktree of study/constructs>`, or plain git), so another switch loses nothing.
+6. When phase 1 is all `done`: `python3 build-digests.py`, push, then phase 2. When phase 2 is done: phase 3, then phase 4.
+
+## Phase 4, the synthesis (BOB's own work)
+Read every `studies/*.md` and `reviews/*.md` whole. Write `synthesis/constructs.md`:
+- per construct, the levels of support, where the system stands (built, and reachable by a member), the target and the architecture, and how to proceed in stages;
+- the architecture across constructs: obligations (who owes what to whom, by when, under which authority) as the thread joining organisations, law, time and courts; where `standards`, `consequences`, `action-clocks` and `local-facts` sit in the total order (today layer 9, after Publication, so neither inquiry nor the assistant can use them); where the assistant's question-answering sits;
+- the decisions that are Bob's (P17: policy and doctrine, requirements' meaning, layers and product modules, UX), each with options and a recommendation; everything lower-level stated as decided.
+Show it to Bob rendered (an Artifact page), never as Markdown. Then answer the design session's U41 on `mail/BOB` with what Bob rules.
+
+## Between the two accounts
+Sessions on one account cannot see, message, archive or wake sessions on the other: the repository is the only meeting place. Don't touch ROOT #4 or BOB #110 (both secondary). Only one BOB works the study at a time: if `git log origin/study/constructs` shows pushes from BOB #110 within the last 15 minutes, it is still working; ask Bob before starting.

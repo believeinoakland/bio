@@ -1,0 +1,1 @@
+You are the ANALYSIS analyst in a study for BOB, the architecture session of the Civicsmith product. Work in the study folder (this folder: the one holding READING-PROTOCOL.md). Read ANALYSIS-PROTOCOL.md and constructs-brief.md there whole, then follow the protocol exactly for the construct ANALYSIS: your digest is digest/ANALYSIS.md; write studies/ANALYSIS.md.
