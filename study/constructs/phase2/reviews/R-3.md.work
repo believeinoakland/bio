@@ -1,0 +1,75 @@
+# R-3 working notes (checkpoint; resume from here)
+
+## Read so far (whole)
+- prompts/R-3.txt, ARCH-REVIEW-PROTOCOL.md, READING-PROTOCOL.md, constructs-brief.md, STATE.md, RESUME.md
+- studies/INTEGRATION.md 1-422 complete
+- studies/PEOPLE.md 1-364 complete
+
+## Code: HEAD of /home/user/bio = 55e831ce54 (tranche/T32). INTEGRATION cites @55e831ce54 (brief pins 597f20e11c; 2 commits later = rulings K1460, K1461 only).
+
+## Observations
+- INT §0.2 table: events owns dated facts; event relations; money owns MNY/MSR; duties; people PFA/IDC/MTI/CHK; calculations tables.
+- INT order L5: entities, events, lines, local-facts, connections, standards, progressions, money, duties, people, bias, obs-log, query-language, retrieval, calculations.
+  * CHECK: `people` reads money facts given/received; `people` registerRosterSource filled by calculations. calculations last reads everything.
+  * CHECK: `events` reads `content`, `promotion`, provenance, civil-time. events "after-read dated-fact step" registered on reading pipeline (layer4). OK by registration.
+  * CHECK: duties needs holderAt (lines) fine. people after duties fine.
+  * CHECK: case-disclosures (L8) reading people etc fine.
+  * POTENTIAL ISSUE: bias/observation-log/query-language/retrieval sit AFTER money/duties/people now; query-language fields person:, holder: over lines and people -> query-language after people OK. But inquiry (L6) uses retrieval. OK.
+  * POTENTIAL ISSUE: `local-facts` after `lines`/events: events' `when`/dated facts need calendars? civil-time is L1, fiscal year profile. Events may need local-facts (holidays) for deadline computation? duties do; duties after local-facts OK. But events reads only civil-time; ok.
+  * POTENTIAL ISSUE: `standards` needs events (effective events) but `events` may need standards? events relations `authorises` cite law? Probably not.
+  * POTENTIAL ISSUE: progressions' junction checks move to money (MONEY reads progressions). but progressions stage placements of events; fine.
+  * ISSUE: interest check (CHK) in people needs events (participants) and lines; fine. queue producers read stored matches.
+  * Who computes "set size" index for overlaps? lines.
+- INT C-2: payer/payee on money fact only; payment event only actor/signatory.
+- INT C-6: validity bound either EDTF or {event, edge}. civil-time pure: caller resolves. => every validAt caller must resolve event bounds = repeated resolution logic; holderAt over 15 FY × posts needs event lookups. Cache invalidation: when event's when changes, lines' bounds change -> re-evaluation; indexes on lines' valid_from (for range reads `holderAt`) cannot index an event reference unless materialized -> need a resolved-bound cache on lines too (like when_cache). Not addressed! Check.
+- INT C-12 when_cache rebuilt in same transaction as attestation change. But C-6 means lines' derived bounds depend on event when -> cross-module cache; not specified.
+- INT C-15 id width: "minted opaque with random tail long enough for 10^7 a year". check record-core code.
+- INT C-11 corpus-export via record-core table declaration R21/R46 — verify these exist.
+- INT §2.4 module rows not bundles: "written through promotion (registerStep/registerFact)" verify promotion has registerFact.
+- INT C-4: conformance index.mjs:331 actor; verify.
+- INT case 1 says "ten fiscal years FY2012-FY2026" (15 years); brief says nine fiscal years. Auditor $52.6M FY2012-2021.
+- INT case 2: "38 payment rows of 150,000-row FY checkbook become money facts because a junction check cites them alone" — but the junction check must READ the checkbook table to find them; table in calculations (after money) — money cannot read calculations tables! committedAgainstPaid in money over facts only; the payments must already be money facts before the check. CIRCULAR: which rows become facts? requires calc/sheet-worker scan + member adoption. Check MONEY.
+- Same issue: money facts "may reference a table row by {table,row_key}" — tables owned by calculations (after money): money holds a reference to a later module's object; reading it (validating) would be upward. Need: tables owned earlier (evidence store / content layer?).
+- PEOPLE: staffingAt via registerRosterSource.
+- PEOPLE §5.3: entity identifiers resolving at grade A; identity claims in people (after events/money/duties) but entities (earlier) resolution needs to know claims? reads "this person and records claimed" in people only; OK but query-language/retrieval `concerns:` won't follow same_as (they're after people now, could).
+- PEOPLE says size 1,800-2,400; INT people reads widely.
+- PEOPLE: DR6 filter in case-disclosures (1,306 lines).
+- PEOPLE: Person facts address_as_stated - safety; lawful demand class INT C-20.
+- studies/EVENTS.md 1-338 complete.
+  * EVENTS §5.7: dated facts "written at read time inside the existing promote transaction"; INT C-12 says after-read step as scheduler consumer after commit -> INT supersedes; OK but EVENTS needs reading pipeline->events registration (layer4 calls registered step). Check reading-pipeline has a registration hook.
+  * EVENTS `when` never stored; INT adds when_cache. Range read on timeline index (scope, sort_key) - scope is many things (inquiry, project, entity, fund...) -> index per scope requires join through participants/concerns; "scope: inquiry" requires inquiry (layer 6) -> events reading inquiry scope = UPWARD read! timeline({scope: inquiry|project|action}) in layer-5 events. project = membership (L2 ok). inquiry is L6, action L9 -> must be by registration or caller passes the entity set. Flag.
+  * EVENTS placement: roles payer/payee (INT removes). EVENTS uses extraction.
+  * EVENTS: 32,000 rows/yr Legistar; 130MB/decade.
+  * timeline reads 200 page vs INT 500 page — minor inconsistency.
+  * events relationsOf depth<=6 fanout 1000 ; INT adds total 5000.
+  * conformance act -> event; events written in same txn by conformance (L9 calls events write API; fine down).
+- studies/MONEY.md 1-383 complete.
+  * MONEY §5.3: MNY- as record object type (INT C-13 overrides to module rows).
+  * MAJOR: money fact `source` may be a table row {table_id,row,column} (calculations' canonical table, later module) or a CALC- output (calculations, later) -> data-level cycle money<->calculations; MONEY says money holds table_id "as data" and never calls calculations. But machine writes money facts "from adopted money-table bindings" whose binding lives in calculations -> the writer must be calculations (or sheet-worker/import) calling money's write API downward. Not stated by INT. Also "38 rows become facts because a junction check cites them" (INT case 2; MONEY ex.2): the check in money cannot read table rows (calculations later) -> circular; needs the row->fact promotion step specified (by a member's act or a calculations-side match job by vendor id).
+  * money uses list includes `people` and `extraction` (MONEY order had people before money); INT drops people from money's uses. Fine.
+  * money flowsFrom depth 4 fanout 500.
+  * optional payee index 120MB/decade.
+  * total summation refusal; MSR series.
+  * authorityChain reads events relations authorises + duties.
+- ../synthesis/constructs.md 1-685 complete.
+  * First study: calculations last in L5; results stored sha; 20 MiB bound; isolate 128 MB memory shared. local-facts gains lines & civil-time. standards gains entities, extraction, connections, civil-time. duties uses progressions, standards, lines, local-facts, chronology, civil-time; progressions may store DUT- id as data never reads duties. answers L6 imports L5 services; L9 via registerRuleService. Walk bounds depth 6 fanout 1000.
+  * First study duty obligor never private individual -> INT C-17 widens (K1453).
+  * First study B13 (i): occurrence of duty may be leg.
+  * First study: chronology after standards before progressions; INT moves events to after entities (before lines).
+- reviews/R-1.md 1-221 complete. R-1's 8 points; INT §3.4 maps them. R-1 also: overlaps can't see roster tables (stated limit); expunge in replicating store; participant re-resolution in event_changed; Brown Act agenda posting event; stage 2 split 2a/2b.
+NEXT: src/BIO_Design_Requirements_v2.txt (487), TAD v10 (1713), build/layers.md (274), build/modules.json (104), then verify code claims, web research, walk cases, write.
+- src/BIO_Design_Requirements_v2.txt 1-487 complete. DR1 two admins; DR2 one person few hrs; DR3 groups dissolve; DR4 skill.md compliance, reproducibility; DR5 no canonical source, forks at fact layer signal reproducibility issue; DR6 metadata incl data sources for independent retrieval, methodology to reproduce, disclosure of relationships; individuals only official capacity; accountability belongs to role (l.149-156); DR7 escalation stages member advances; DR8 counsel packet chronology; tier; no funding; DR9 multi-platform; DR10 directory CSV/JSON; DR11 security guide "opposition may identify and target participants"; DR12 advisory tools, no gate; DR13 active opposition, legally harass; DR14 no SPOF; DR15 location-neutral. OP1-8.
+- src/BIO_Technical_Architecture_Decisions_v10.txt 1-1713 complete. Key: §3 canonical ids, no substrate locators link objects; accretive, deletion cascades; §5 no transitive trust; §7.1 tidy/long line items; Legistar & Socrata proven classes; §7.3 dedup on (source, native-id); §7.4 keyed field-level diff numeric tolerance; §10.2 Mechanical Verification Law (every invariant executable check); §10.4 store-authoritative invocation; "read exposure admitted honestly" (leaked token = read store, acceptable because store designed to mirror) ; §10.5 no secret in replicating store ("a secret placed in it is a published secret"); §10.7 interruption: write ordering, cascade-before-change; §10.8 "full id is the identity; a legibility component is a hint and carries no invariant" (-> \d{4} validators violate it); §10.9 derived index fail-closed (absence vs failure); §10.11 a guarantee the store states must be enforced by something the store controls; §12 dependency-chain depth open.
+- build/layers.md 1-274 complete; build/modules.json 1-104 complete. Bob ruling 3: "Each module owns its tables" -> cross-module SQL joins not allowed; must call services. L2 contract owns id allocation & purge. P6 is metric not bound (~4,000 report).
+  * Verified INT's modules.json edge claims (connections->entities; progressions->entities,connections; obs-log->entities,connections; retrieval->obs-log,query-language; bias->entities,credentials; local-facts & standards uses) all TRUE.
+ISSUES LIST (draft):
+ A. money<->calculations data cycle (source CALC-/table row) + unnamed writer of machine-written money facts from bindings + junction-check rows circular.
+ B. event-bounded validity: lines/standards can't index/sort intervals whose bounds are event refs; need resolved-bound cache per owning module + an events change registration (onWhenChanged) in same txn; INT C-6 omits. holderAt/overlaps/set sizes depend on it.
+ C. dated fact vs attestation stated_when from same extent = two homes for a document's date; attestation should reference date_fact id.
+ D. payment date: money fact period vs event when -> define period=accounting period, occurrence date=event's only.
+ E. timeline scope inquiry/action (L6/L9) from events (L5) = upward; caller passes set or registration.
+ F. sensitive tables (source<->person link, member ties, lawful-demand) in corpus-export & replicating store (TAD 10.5 "secret in store is published") -> export classes; sight.
+ G. ids: TAD 10.8 supports C-15 (hint carries no invariant).
+ H. I-B2 vs C-5 inconsistency (INT says settled & also Bob's).
+ I. credential number on line & as entity identifier (two homes).
+ J. EVENTS page 200 vs INT 500.
