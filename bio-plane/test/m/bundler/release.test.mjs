@@ -144,12 +144,12 @@ test("R13: deriveBindings emits VERSION and INSTANCE_NAME, the vars, buckets, se
   ];
   assert.deepEqual(deriveBindings(cfg, { slug: "grp", version: "9.9.9" }), base, "VERSION is the argument's, never vars.VERSION");
   assert.deepEqual(deriveBindings(cfg, { slug: "grp", version: "9.9.9", instanceClaudeToken: "c-tok", instanceAiToken: "a-tok" }), [...base,
-    { type: "secret_text", name: "INSTANCE_CLAUDE_TOKEN", text: "c-tok" },
-    { type: "secret_text", name: "INSTANCE_AI_TOKEN", text: "a-tok" }]);
+    { type: "secret_text", name: "INSTANCE_AI_TOKEN", text: "a-tok" }], "never a Claude credential, even when one is offered (K1502)");
   assert.deepEqual(deriveBindings(cfg, { slug: "grp", version: "9.9.9", instanceAiToken: "a-tok" }).at(-1),
     { type: "secret_text", name: "INSTANCE_AI_TOKEN", text: "a-tok" });
   const all = deriveBindings(cfg, { slug: "grp", version: "9.9.9", instanceClaudeToken: "c", instanceAiToken: "a" });
   assert.ok(!all.some((b) => b.type === "durable_object_namespace"), "no Durable Object binding");
+  assert.ok(!all.some((b) => /CLAUDE/i.test(b.name) || b.text === "c"), "no Claude credential under any name");
   const { browser: _b, r2_buckets: _r, services: _s, ...bare } = cfg;
   assert.deepEqual(deriveBindings({ ...bare, vars: {} }, { slug: "s", version: "1" }),
     [{ type: "plain_text", name: "VERSION", text: "1" }, { type: "plain_text", name: "INSTANCE_NAME", text: "s" }]);
@@ -310,7 +310,7 @@ test("R17: the old release-baton gate is gone: no --thread is asked for and noth
   } finally { rm(root); }
 });
 
-test("R18: uploads with R13's bindings and R15's limits, keeps secret_text, Durable Object and service bindings, states each token without printing it, and succeeds on bytes and limits read back", async () => {
+test("R18: uploads with R13's bindings and R15's limits, keeps secret_text, Durable Object and service bindings, states each token without printing it, never sends a Claude credential (R13), and succeeds on bytes and limits read back", async () => {
   const root = await deployRepo();
   try {
     const tokens = { INSTANCE_CLAUDE_TOKEN: "claude-secret-xyz", INSTANCE_AI_TOKEN: "ai-secret-xyz" };
@@ -320,7 +320,9 @@ test("R18: uploads with R13's bindings and R15's limits, keeps secret_text, Dura
     assert.equal(puts(r).length, 1);
     const cfg = parseJsonc(readFileSync(join(root, "bio-plane/wrangler.jsonc"), "utf8"));
     assert.deepEqual(p.metadata.bindings, deriveBindings(cfg, { slug: SLUG, version: VERSION,
-      instanceClaudeToken: tokens.INSTANCE_CLAUDE_TOKEN, instanceAiToken: tokens.INSTANCE_AI_TOKEN }));
+      instanceAiToken: tokens.INSTANCE_AI_TOKEN }));
+    assert.ok(!p.metadata.bindings.some((b) => /CLAUDE/i.test(b.name) || b.text === tokens.INSTANCE_CLAUDE_TOKEN),
+      "R13: an INSTANCE_CLAUDE_TOKEN in the environment is never sent");
     assert.deepEqual(p.metadata.keep_bindings, ["secret_text", "durable_object_namespace", "service"]);
     assert.deepEqual(p.metadata.limits, deriveLimits(cfg));
     assert.equal(p.metadata.main_module, "index.mjs");
@@ -328,7 +330,7 @@ test("R18: uploads with R13's bindings and R15's limits, keeps secret_text, Dura
     assert.ok(p.url.endsWith(`/accounts/${ACCOUNT}/workers/scripts/${SLUG}`) && p.bearer);
     const all = r.stdout + r.stderr;
     for (const v of [...Object.values(tokens), CF.CF_TOKEN]) assert.ok(!all.includes(v), "no secret printed");
-    assert.match(r.stdout, /INSTANCE_CLAUDE_TOKEN present in this environment — it will be SENT/);
+    assert.match(r.stdout, /INSTANCE_CLAUDE_TOKEN is set in this environment and IGNORED/);
     assert.match(r.stdout, /INSTANCE_AI_TOKEN present in this environment — it will be SENT/);
     assert.match(r.stdout, /verified: deployed bytes are hash-identical to the signed asset/);
     assert.match(r.stdout, /verified: limits\.subrequests 500 read back/);
@@ -336,7 +338,7 @@ test("R18: uploads with R13's bindings and R15's limits, keeps secret_text, Dura
 
     const none = deploy(root, { stub: okStub() });
     assert.equal(none.status, 0);
-    assert.match(none.stdout, /INSTANCE_CLAUDE_TOKEN not in this environment — NOT sent/);
+    assert.doesNotMatch(none.stdout, /INSTANCE_CLAUDE_TOKEN/);
     assert.match(none.stdout, /INSTANCE_AI_TOKEN not in this environment — NOT sent/);
     assert.ok(!puts(none)[0].metadata.bindings.some((b) => b.type === "secret_text"));
   } finally { rm(root); }

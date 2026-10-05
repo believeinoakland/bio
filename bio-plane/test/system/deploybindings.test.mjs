@@ -111,13 +111,13 @@ const CFG = {
     Array.isArray(b) ? b.some((x) => x.service === "bio-plane") : b, false);
 }
 
-/* ---- the cascade token: environment-conditional, exactly one ------------- */
+/* ---- K1502: never a Claude credential, even when one is offered ---------- */
 {
   const withTok = derive(CFG, { slug: "s", version: "1", instanceClaudeToken: "tok-x" });
   const without = derive(CFG, { slug: "s", version: "1" });
-  t("the cascade secret is sent only when the environment carries it",
-    [(Array.isArray(withTok) ? withTok : []).filter((x) => x.type === "secret_text").length,
-     (Array.isArray(without) ? without : []).filter((x) => x.type === "secret_text").length], [1, 0]);
+  t("R13: no Claude credential is derived, whether or not one is offered (K1502)",
+    [withTok, without].map((d) => (Array.isArray(d) ? d : [{ name: "REFUSED" }])
+      .filter((x) => x.type === "secret_text" || /CLAUDE/i.test(x.name) || x.text === "tok-x").length), [0, 0]);
 }
 
 /* ---- DIST-9: the organisation `ai` credential, carried and NEVER invented ---- */
