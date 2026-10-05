@@ -1,11 +1,110 @@
 # COURTS study working notes (checkpoint)
 ## Steps
 - [x] ANALYSIS-PROTOCOL.md, constructs-brief.md, prompts/A-COURTS.txt read whole
-- [ ] digest/COURTS.md
-- [ ] digest/DOCTRINE-REGISTER.md
-- [ ] digest/CROSS-REGISTER.md
-- [ ] notes/M1..M5 ## Modules for named modules
+- [x] digest/COURTS.md (1-462 complete)
+- [x] digest/DOCTRINE-REGISTER.md (1-2815 complete)
+- [x] digest/CROSS-REGISTER.md (1-1049 complete)
+- [x] notes/M1..M5 ## Modules (M1 76-269, M2 28-136, M3 30-167, M4 28-110, M5 24-107) complete
 - [ ] primary sources
 - [ ] web research
 - [ ] study sections 1-9
 ## Findings
+
+### Digest COURTS key findings
+- Courts today = (a) standard kind `court` (standards R?, jurisdictions R23), superseded by later decision R6; (b) venue how=court (jur R25); (c) Tier 2/3 action kinds (records_petition, consent_decree_motion, taxpayer_action, assessment_challenge, constitutional_claim; oakland-alameda.mjs:231-244); (d) correspondence stages court_filing/court_decision + outcomes granted/denied/partial/reversed/affirmed/none stated (CORRESPONDENCE_STAGES :4118); (e) filings: Tier1-2 drafts, Tier3 counsel packet (R8-R12, six sections, never fileable), theoryPropose R14; (f) escalation stage 5 legal_tools, stage 7 testimony/audit_request/oversight_request (escalation R8, R12); (g) group-as-defendant: legal pressure mark actions R48, litigation hold R52,R56-60 (DEC-61, DEC-113); (h) jur R26 applies_to: claim limitation windows (Oakland holds none); (i) jur R39 venue evidence standard.
+- GAPS: no court case/proceeding object, docket of others, parties, orders, judgments, appeals, settlements, consent decree monitoring; no precedent/"interprets" link (HO §4 U41 L71; D1 journeys §6 L531 "Following a court case" waiting); no court doctype in docprofile (meeting_minutes etc only); entities no court kind (institution/body); progressions could host a proceeding flow as DATA (CF §8.2/§9) but none named; no sub-document citation for paragraphs of orders until D-164 content extent (DEC-23); Grade A deferred (DEC-81.4) -> evidence for court use not producible; legally compelled removal no path (DEC-116.7); 0 UI calls for counselpacket/theorypropose/actionpressure/actionhold (M1); Oakland no templates -> KIND_NO_TEMPLATE; firsthand observation of hearing no basis leg (DEC-39/D-184); standing/exhaustion/filing-window checks deferred D-165.
+- Journeys (D1 design-journeys §3 L106, L111): "Reading about a lawsuit the city is a party to" -> capture filings, name parties & offices, watch court docket page; "A utility's rate case before a state commission" -> capture filings, follow docket. §6 L531 gap row.
+- Canon examples: Roadmap §1 L256-258 CPRA petition/Grand Jury complaint/State Controller referral; L272-274 Carachure v Azusa, Zolly v Oakland, Weatherford v San Rafael (precedent with holdings); App B L1099 Livermore settlement $3.78M; L279-281 23-year OPD consent decree, EPA consent decree, Prop 218 litigation; §2 L287-303 audits, grand jury reports; App B L1081-87 Gov Code 7923.005/.110, Penal Code 925a/919(c)/926; FA L1 Fn1 L132-136 "court decisions (case law, consent decrees)", "audit reports (City Auditor, grand jury, State Controller)"; FA Fn4 L317-319 AI surfaces precedent; FA L447 legal databases search.
+- Bob reasons from CPUC (HO §2 L18; DEC-100 docket modelled on CPUC). DEC-77.2 CCCER audit finding form adopted. DEC-55 Cerebras stipulation. DEC-61/113 litigation hold. DEC-105 venue standards in profile. DEC-81.1 Grade A ceiling for legal use.
+- Naming hazards: case (DEC-72 publication), docket (DEC-116 case docket), standard, obligation.
+- TAD §8.2 l.917 civil suit as multi-stage clock; order a deadline origin.
+- PS NO PRECEDENT l.288-290: published conclusion as input with strength inherited.
+
+### Doctrine register: entries to cite for COURTS
+- D1 humans decide; D2 outward acts member's; D3 machine never attests/concludes (layer 6); D4 propose/adopt; D8 DEC-52 machine MAY declare relations/resolve refs/thread progressions, machine-attributed; D14 K1364 labelled draft; D16 DEC-54 inhale = propose for adoption, never install; D21 DEC-26 gate at outward act; D23 no narrative drafting; D24 DEC-47 AI discovery of public sources authorised by inquiry+launch; D26 DEC-88 bands (theorypropose reversible; filingapprove terminal); D35 no generated justification; D41 machine material lands collected; D44 skill=instructions, fence=code; D45 AI never fetches, REQUESTS; D53 proposals stored apart (REC-195/D-149)
+- D55-56 undetermined first-class; no default; D59 four-level/absence-at-level; D67 transitive trust disclosed; D69 OCR labelled (signed orders scanned DEC-4); D74 project bar; D76 finding reports not decides; D91 Grade B suffices publish, A ceiling for legal (DEC-81); D93 contradiction conditional (rules: same applicability); D98 contradiction output; D102 two pubs one source = one system (court opinion reprinted); D106 content is unit (DEC-23); D108 portion citation; D109 firsthand observation testimony grade D (hearing attendance); D115 claim not document; D116 enough = intended use; D129 doctype written from fetched docs; D140 public records surface all, restricted D-124 deferred (sealed!)
+- D156 Actions R9 addressee office never private individual; D160 D-77/inv 7 personal data; D163 never first to make source more public; D165 private persons in reply not published; D166 bad actors by evidence not role; D173 layer-9 no person kind; D176 individuals only official capacity; D177 never characterise a person
+- D178 entities R26 declared relation constitutive never traversed; D183 explicit textual reference is earned connection not hunch (CF v0.13) -> citation in opinion to statute = earned; D184 crosswalk identifiers only via captured document; D186 DB safeguard 4; D188 ids never rewritten; D189 SR closed vocabularies need spec revision vs D225 CF §9 new connection kind one row of data; D190 edges on dependent object
+- D196 jurisdiction in data; D197 profile facts sourced to primary page; D201 sovereign instances (no second vendor credential; DEC-42 Workers Paid $5); D205 no canonical source of truth; D206 DEC-74 paid outside services only on real trigger (funding request to Bob) -> PACER fees!; D208 design for observable case
+- D213-216 layer order; D218 P17; D223 solid substrate; D224 DEC-48 capability must serve path; D225; D226 substrate built != dependent built; D229 layer 9 approved K11-14; D231 place in existing construct not new screen
+- D234 group's own missed checkpoint never finding about govt; D235 nothing deleted; D240 retired not citable; publisher retraction source_status (removed/modified) stays citable -> vacated opinion/sealed doc; D241 due threshold raises question; D245 computed date derived; D250 no deadline invented; layer 9 contract every deadline names statute, order or commitment
+- D253 templates formalised; D255 no machine legal text filed w/o adoption; D256 layer 9 contract; D262 DEC-105 standard of proof sourced profile; D263 DEC-61/113 litigation hold; D264 definition append-only, version named; D267 no actor creates Actions mechanically; D268 legal strategy risk; D270 escalation never withdrawn; D271 layer-9 models one group vs govt offices on breach -> extending is Bob's; D272 stage proposed not advanced; D274 assistant cannot state a law, determine, file; D275 comparison proposal; D276 determination per standard; D277 counsel packet never fileable/published; D279 legal tools from profile as facts not recommendation; D280 no Tier 3 template; D282 venue sets standard
+- D284 publishing irreversible; D295 nothing leaves by system path; D301/D321 docket taken word; D313 standard taken; D314 obligation taken; D315 "Matter" names what plan addresses; "Subject" only entity; D317 never "claim" on public pages; D320 word used differently worse than none
+- D328 designed for active opposition (legal harassment); D330 evenhandedness inv 7 (compliance recorded as carefully); D350 measure don't assume; D353 no significance field; D372 sections accrete as work forces; D373 fetching policy-governed; D375 no disguised requests; D380 OP1 no policy position; D382 deferral with trigger
+- Conflicts relevant: #5/#12 DEC-52 scope; #33 DEC-26 vs DR12; #34 SR closed edges vs action design; #49 intent R4 one hop
+
+### Cross register: entries to cite for COURTS
+- X1-X8, X20-X27 layer order: law/time/calc in layer 9; layer 6 can't use; X26 op-time read by agent-worker plan mode (not import) circumvents P4; X27 registration hooks carry data not services.
+- X5 backward question (filing window, standing, exhaustion D-165) at investigation time — deferred; Bob named "AI support for procedural knowledge" (CM §6b).
+- X14 contradiction NORM_CANONS (higher/lower, later/earlier, specific/general) need law-in-time — courts' interpretation feeds it.
+- X17 publication: venue/audience standards in profile.
+- X37 authored deadline licenses machine tracking (DEC-10); machine-derived deadline from law would not obviously fall under licence -> court-ordered deadlines must be member-authored/adopted.
+- X38 as-of patterns: editions pinned; reuse for court orders amended/vacated.
+- X39 time depends on org: court holiday calendars per court (Grand Jury court vs county).
+- X41 deadline basis is a string, not a link to held provision or order.
+- X42 e-filing outage; deemed-filed cutoff unknown; regulated date YYYY-MM-DD.
+- X50 members' time needs incl court case deadlines and filing deadlines in regulatory proceeding (journeys L106, L111).
+- X53 only legal-suspension clock = litigation hold (group's own).
+- X63/X164 progressions = declared flow; obligation as declared flow (D-128); FLOW MODEL natural home; court proceeding stages could be a declared flow (CF §8.2/§9).
+- X68 content extents precondition for citing paragraph of order (DEC-23/D-164).
+- X69 DEC-54 template: machine reads rulebook, propose for adoption, pins source/date/hash.
+- X70 CCCER audit finding form DEC-77.2.
+- X71 law is an entity kind (DEC-114: subject may be person in public role, office, place, law or thing).
+- X74 plane encodes no law's rules; assistant holds no copy.
+- X76 standards: court decision/order = kind court (measured against, not modelled as a case), layer 9.
+- X86 public body is organising key of directory; party-like standing.
+- X87 private-individual protections: holders vs private persons -> court parties include private individuals!
+- X89 entity relations: declared (proxy_for, member_of, overlaps) constitutive; serves_on/held_by graded; no vocabulary
+- X94 any new relation kind (party to, appeal of) is spec revision; one-hop cascade; viewer-filtered reverse edges.
+- X102 separate evidentiary relation type (graded, cited, time-bounded) in layer 5 recommended by M2.
+- X104 COURTS has no object of its own (summary).
+- X105 grades meet courts only via standards of proof + venue evidence standard.
+- X106 group as litigant: on notice; litigation hold.
+- X107 profile models court only as filing venue; departments/clerk/channels flattened to closed_note.
+- X108 product approaches courts from group's own action side; Bob's reference is CPUC, no surface.
+- X109 precedent rationale: Tier 3 no templates; preclusion; needs with/without-prejudice facts per jurisdiction (profile).
+- X110 sovereignty rule constrains court-docket/legal-database integration (never vendor key / second account; Free tier) — weigh vs SOURCE-ACCESS.
+- X111 publication docket move stream (seq, date, kind, verified, never evidence) = nearest shape for court dockets (reevaluation R30, R33; monitoring R67).
+- X145 assistant FIND not built; answers must be cited read of held material.
+- X148 collected material untrusted data never instructions.
+- X151 questions->law bridge is missing skill not missing ops (standardpropose, theorypropose...) — no skill drives them.
+- X153/X155 NL questions promised & uncovered; only check mode deployed.
+- X156 profile requirements catalogue; X158 template ties law/org/calendar; X159 Oakland profile: no holidays/templates; 1 deadline UNMEASURED.
+- X160 recogniser shape detect(ctx)->{match,confidence,signals[]} — docket/citation recogniser plugs in.
+- X165 none of org/law/courts is a record object type (OBJECT_TYPES {information, inquiry, project, action}).
+- X166 content extents citation substrate (court order page).
+- X168 computed rules computed once by plane.
+- X170 two machine-authority regimes (DEC-52 relations/progressions machine-writable; claims member).
+- X171 justified by member's path (DEC-48).
+- X178/X182 naming: case, standard (three senses), docket, matter.
+- X183 Bob's design-branch rulings: no ruling on court cases as objects.
+- X187 UC coverage; X188 journeys gaps "following a court case" waits on 5 Oct capability question.
+- X189 COURTS UCs: UC-115, 169 no member surface; UC-129 yes hold deferred N-A19.
+- X191 ~115 layer-9 ops; UI calls only actionmove, actioncorrespond, actionlaws, actionrisktier.
+
+### Module facts (from M1-M5 ## Modules)
+- standards L9 849 lines: kinds statute, regulation, ordinance, court, policy, commitment; R1 declare, R2 text required, R3 profile standard_sources match, R5 passageNotice, R6 supersedes one successor, R7 inForce, R8 standardsIn at, R9-10 propose/adopt; TEXTS_MAX 50; no internal structure; UI 0 all ops; no AI caller (PLANE_OPS lacks standardpropose); used by conformance, filings, action-plans (9), 11 only.
+- conformance L9 1539: determine rests on published findings (publication.publishedEditionsOf); actor {role, body}; R3 in force at act's date; UI 0.
+- actions L9 2884: only layer-9 module member reaches (actionmove, actioncorrespond, actionlaws, actionrisktier); R48 pressure marks; R52-R60 litigation hold (UI 0 actionhold etc); R9 addressee office, person check via entities.readEntity; clock date-only UTC; N521 device half unbuilt.
+- action-clocks L9 885: start events filed/received only (act, known undetermined); weekend hard-coded; no roll-forward; UTC; time_zone/hours never used; clockPropose no op.
+- filings L9 2035: counselPacket :1142; chronology :1018-1046 covers only one action's act, findings' ratification dates, state history, correspondence, clock; day-truncated; theoryPropose :1417; availableActions :1548; UI 0 all 11 ops; AI no caller; instance sending "not in this version... Bob's to add (K102)" filings.txt:122.
+- escalation L9 1833: 7 stages; stage 5 legal tools R8; R12 elected/oversight flags; UI 0.
+- filing-templates L9 1719: brief templates; UI 0.
+- jurisdictions L1 1533: R23 standard_sources kind court; R25 venue how court; R26 deadlines applies_to claim; R32 legal_organisations; R39 evidence; R40 templates. Oakland: 2026 holidays only 3 entries (Superior Court venue M-189 ...); 1 deadline records_response; no claim deadline; 13 action kinds incl records_petition (Tier 2, Alameda Superior Court), consent_decree_motion, taxpayer_action, assessment_challenge, constitutional_claim; legal_organisations HJTA, First Amendment Coalition; no layer 6-8 module uses jurisdictions.
+- docprofile L1 3170: doctypes meeting-minutes, meeting-agenda, meeting-calendar, regulation, staff-report, staff-directory, generic; readers emit reference kinds instrument, code_section, legislation, meeting, contact; dates parsed only "Month D, YYYY" UTC; temporal connections not stored.
+- extraction L4: reading's at = capture retrieved instant; no document date.
+- content L4: extents, passageText; UI 0 direct.
+- entities L5 1326: ENTITY_KINDS source, institution, office, movement, person, body, ordinance, parcel, contract, fund; RELATION_KINDS proxy_for, member_of, overlaps; UI reaches entitycreate, relationdeclare etc.
+- connections L5: agenda->file containment built, UI 0.
+- progressions L5 1669: declared flows, threaded instances, missing/overdue; intervals fixed ms; anchor = capture time not doc date; no tz/business days; UI reaches progression, progressiondefine, thread, discharge (member CAN reach!). AI none.
+- inquiry L6: NORM_CANONS bare tokens; nothing ranks norms.
+- run modes: check (deployed), investigate, extract, plan (not deployed). One model call site agent-worker/src/model.mjs; DEFAULT_MODEL claude-opus-5; installer sets no Claude key -> NO_ACCOUNT_RESOLVED; UI never calls airunopen; agent-worker binding INERT. Skill pack investigative-session only; action_planning layer lists theorypropose etc; PLANE_OPS writes only suggest, capturerequest, optionpropose, airuntick, airunclose.
+- retrieval L5: registerActionFacts etc; query time fields string compare.
+- reevaluation L7: R30/R33 publication docket moves (contested since filing instant); not court.
+- monitoring L10 3363: watches docs at cadence (hourly..monthly; per_meeting null); R67 docket watch reads another group's published-case docket daily; deadlineRecheck UTC; legal_deadline_approaching typed reason no link; UI 0 all ops (member sees queue items); monitor op member session.
+- acquisition L3: Memento always asks now (no as-of past retrieval); acquire UI 9.
+- sources L3: disclosure history publishableAt({at}) template for position-holders over time; UI 0.
+- affordances L11: correspondence_stages; ACTS only info/inquiry/action/project; layer-9 acts NON_ACTS never offered per object.
+- queue L11: litigation-hold To-do (R1/R12); due YYYY-MM-DD UTC; UI never calls per-kind doors.
+- publication L8: publishedEditionsOf.
+- Member reach COURTS (M5): 18 ops; called 2 (actioncorrespond, actionrisktier). "No op in the 446 names a court case, docket of a court, party, filing in a court, order or judgment as an object."
