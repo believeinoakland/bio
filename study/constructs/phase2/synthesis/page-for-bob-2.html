@@ -1,0 +1,323 @@
+<title>The Constructs Study II</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap">
+<style>
+/* Layout: one reading column, the first study's tokens; a connection chain and a layer strip as the figures; decisions as a numbered register. */
+:root{
+  --bg:#f3f6f7; --surface:#ffffff; --ink:#15232c; --muted:#56656e; --rule:#d5dee2;
+  --accent:#1d6a86; --accent-soft:#dcecf2; --today:#b5791b; --today-soft:#f6ead4; --built:#8ea3ae;
+  --display:"IBM Plex Serif",Georgia,"Times New Roman",serif;
+  --body:"IBM Plex Sans",-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f171c; --surface:#16222a; --ink:#e3ebef; --muted:#9aaab3; --rule:#2a3a44;
+  --accent:#5fb4d3; --accent-soft:#18394a; --today:#e0a64a; --today-soft:#3a2c14; --built:#5d7380; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f171c; --surface:#16222a; --ink:#e3ebef; --muted:#9aaab3; --rule:#2a3a44;
+  --accent:#5fb4d3; --accent-soft:#18394a; --today:#e0a64a; --today-soft:#3a2c14; --built:#5d7380; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font:16px/1.6 var(--body);}
+.wrap{max-width:860px;margin:0 auto;padding-inline:16px;padding-block:32px 64px;display:flex;flex-direction:column;gap:44px}
+h1,h2,h3{font-family:var(--display);font-weight:600;line-height:1.2;text-wrap:balance;margin:0}
+h1{font-size:2.1rem} h2{font-size:1.45rem} h3{font-size:1.08rem}
+p{margin:0} .muted{color:var(--muted)}
+.eyebrow{font:500 .74rem/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+section{display:flex;flex-direction:column;gap:16px}
+.lede{font-size:1.08rem;max-width:66ch}
+.box{background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:18px 20px}
+code,.id{font-family:var(--mono);font-size:.86em}
+ul{margin:0;padding-left:1.2em} li+li{margin-top:4px}
+.answer{border-left:3px solid var(--accent);padding:4px 0 4px 18px;display:flex;flex-direction:column;gap:10px;max-width:68ch}
+/* ladder */
+.ladder{overflow-x:auto}
+.ladder table{border-collapse:separate;border-spacing:4px;min-width:560px;width:100%}
+.ladder th{font:500 .78rem var(--mono);color:var(--muted);text-align:center;padding:0 0 4px}
+.ladder th.row{text-align:left;font:600 .9rem var(--body);color:var(--ink);padding-right:8px;white-space:nowrap}
+.ladder td{height:30px;border-radius:3px;border:1px solid var(--rule);background:transparent;position:relative}
+.ladder td.u{background:var(--today);border-color:var(--today)}
+.ladder td.b{background:var(--built);border-color:var(--built)}
+.ladder td.h{background:linear-gradient(90deg,var(--built) 50%,transparent 50%);border-color:var(--built)}
+.ladder td.t{box-shadow:inset 0 0 0 2px var(--accent)}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:.85rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:16px;height:12px;border-radius:2px;border:1px solid var(--rule);display:inline-block}
+.sw.u{background:var(--today);border-color:var(--today)} .sw.b{background:var(--built);border-color:var(--built)}
+.sw.t{box-shadow:inset 0 0 0 2px var(--accent)}
+/* construct grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.card h3{font-size:1rem}
+.k{font:500 .72rem var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.today{color:var(--today)}
+/* layers */
+.layers{display:flex;flex-direction:column;gap:6px}
+.layer{display:grid;grid-template-columns:150px 1fr;gap:12px;align-items:start;background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:10px 14px}
+.layer .ln{font:600 .88rem var(--body)} .layer .ln small{display:block;font:400 .78rem var(--mono);color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;min-width:0}
+.chip{font:500 .8rem var(--mono);padding:2px 8px;border-radius:999px;border:1px solid var(--rule);color:var(--muted)}
+.chip.new{background:var(--accent-soft);border-color:var(--accent);color:var(--ink)}
+.chip.moved{background:var(--today-soft);border-color:var(--today);color:var(--ink)}
+.chip.gone{text-decoration:line-through;opacity:.6}
+@media (max-width:520px){.layer{grid-template-columns:1fr}}
+/* stages */
+.stages{display:flex;flex-direction:column;gap:10px}
+.stage{display:grid;grid-template-columns:64px 1fr;gap:14px;background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:14px 16px}
+.stage .n{font:600 1.5rem var(--display);color:var(--accent)}
+.stage div{min-width:0}
+/* decisions */
+.dec{background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.dec header{display:flex;gap:12px;align-items:baseline}
+.dec .num{font:600 .9rem var(--mono);color:var(--accent);flex:none}
+.dec h3{font-size:1.05rem}
+.kind{font:500 .7rem var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.opts{margin:0;padding-left:1.2em}
+.rec{background:var(--accent-soft);border-radius:4px;padding:10px 12px}
+.rec b{color:var(--accent)}
+.dec.ruled{border-color:var(--accent);border-width:2px}
+.dec.newd{border-left:3px solid var(--today)}
+.q{font-size:1.02rem}
+.chg{background:var(--today-soft);border-radius:4px;padding:10px 12px}
+.how{border:2px solid var(--accent);border-radius:6px;padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+ol.corr{margin:0;padding-left:1.4em} ol.corr li+li{margin-top:6px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+footer{font-size:.85rem;color:var(--muted)}
+a{color:var(--accent)}
+/* rungs */
+.rungset{display:flex;flex-direction:column;gap:8px}
+.rungs{display:flex;flex-direction:column;gap:6px}
+.rung{display:grid;grid-template-columns:40px 1fr 170px;gap:12px;align-items:start;background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:10px 14px}
+.rung.tg{border-left:3px solid var(--accent)}
+.rung .lv{font:600 .9rem var(--mono);color:var(--accent);padding-top:2px}
+.rung .rb{min-width:0;display:flex;flex-direction:column;gap:4px}
+.rung .ex{color:var(--muted);font-style:italic;font-size:.94rem}
+.rung .st{display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+.rung .st small{color:var(--muted);font-size:.8rem;line-height:1.4}
+.pill{font:500 .72rem var(--mono);padding:2px 8px;border-radius:999px;border:1px solid var(--rule);color:var(--muted);white-space:nowrap}
+.pill.usable{background:var(--today);border-color:var(--today);color:var(--bg)}
+.pill.built{background:var(--built);border-color:var(--built);color:var(--bg)}
+.pill.part{background:linear-gradient(90deg,var(--built) 50%,transparent 50%);border-color:var(--built);color:var(--ink)}
+.pill.tgt{border-color:var(--accent);color:var(--accent)}
+@media (max-width:620px){.rung{grid-template-columns:36px 1fr}.rung .st{grid-column:2;flex-direction:row;flex-wrap:wrap}}
+</style>
+<style>
+.chain{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.node{font:500 .82rem var(--body);padding:6px 10px;border:1px solid var(--rule);border-radius:4px;background:var(--surface)}
+.edge{font:500 .7rem var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:.04em}
+.tbl{overflow-x:auto}
+.tbl table{border-collapse:collapse;width:100%;min-width:640px;font-size:.88rem}
+.tbl th,.tbl td{border-bottom:1px solid var(--rule);padding:8px 10px;text-align:left;vertical-align:top}
+.tbl th{font:500 .72rem var(--mono);text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.tbl td.n{font-family:var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.verdict{font:600 .72rem var(--mono);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+.q{font-size:1.02rem}
+.ruled-list li+li{margin-top:6px}
+</style>
+<div class="wrap">
+
+<header style="display:flex;flex-direction:column;gap:12px">
+  <span class="eyebrow">Constructs study II · BOB #112 · 5 October 2026</span>
+  <h1>The Constructs Study II</h1>
+  <p class="lede">You named three more constructs: people, events, and money. You asked that the research be done with full knowledge, and that the architecture be load-bearing, built on best practice, and aware of how all the constructs fit together. This page is the answer, with the decisions that are yours.</p>
+</header>
+
+<section>
+  <span class="eyebrow">How it was done</span>
+  <div class="box" style="display:flex;flex-direction:column;gap:8px">
+    <p>Twenty-three readers read every source whole. They covered the whole canon, all your rulings, the design stream's journeys and use cases, and the requirements of 75 modules, each checked against the code. Two workers condensed what they found into a register of 213 rules and system requirements, and a map of 118 interactions between the nine constructs. Three analysts studied people, events and money, each researching how investigators, auditors and journalists actually work and the standards they use. A fourth modelled all nine constructs as one system. Three reviewers then checked every claim against the sources, the code and the web, and walked three real cases end to end. A synthesis joined it all, and I reviewed it.</p>
+    <p>The three worked cases were the sewer-fund transfers over nine fiscal years (FY 2012–2021); a councilmember's career meeting a contract's award, change orders and payments, with a family tie; and the police consent decree's tasks tracked through events and payments.</p>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">The answer</span>
+  <div class="answer">
+    <p><b>People.</b> Today a member can register a person and match documents to them, and nothing more. Needed: identity that links two records without merging them, so a wrong match can be undone. Careers, credentials, memberships, interests and ties held as dated, cited facts. Who decided, signed or carried out each act. One rule for how a published case names people.</p>
+    <p><b>Events.</b> Today nothing holds something that happened in the world. There are only fragments: the government act judged in a determination, votes left as text in minutes, and "overdue" counted from when the group captured a document instead of from the meeting. Needed: one store of events with their participants and roles, timelines, links between events, and a due date matched to what met it.</p>
+    <p><b>Money.</b> Today a member can only cite a figure. Needed: amounts held with what kind they are (revenue, spending, transfer), how far they got (proposed, adopted, committed, paid) and on what accounting basis. Money trails a member follows across fiscal years and relabelling. Reconciling two sources of one figure, and commitments set against payments.</p>
+    <p><b>Connections hold it together.</b> As you said, connections are the heart of an investigation. Every kind of relationship (a donation, a vote, an award, a payment, a post held, a family tie, an act against a rule) keeps its one home. All of them share one shape and one way to explore them. Your own chain is one exploration:</p>
+    <div class="chain" aria-label="An example chain of connections">
+      <span class="node">Donor</span><span class="edge">gave to</span>
+      <span class="node">Campaign committee</span><span class="edge">acts for</span>
+      <span class="node">Councilmember</span><span class="edge">voted aye</span>
+      <span class="node">Vote</span><span class="edge">authorised</span>
+      <span class="node">Award</span><span class="edge">concerns</span>
+      <span class="node">Contract</span><span class="edge">paid under</span>
+      <span class="node">Payments from Fund 1010</span>
+    </div>
+    <p>Each step is cited and graded, and the weakest step sets the grade of the whole chain. Nothing is ever ranked, and the machine never asserts a connection on its own.</p>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">What changes in the six</span>
+  <div class="cols">
+    <div class="box"><p><b>Time.</b> Every date is recorded as a date-time with its precision and time zone. A document's own date and an event are kept as two separate things. A due date's "met or overdue" is recorded as it was known, so a plan step can wait on it.</p></div>
+    <div class="box"><p><b>Organisations.</b> One kind of link, "holds", covers every post and job, with its capacity. A duty can bind a person where a law does (a Form 700 filer, a lobbyist).</p></div>
+    <div class="box"><p><b>Law and courts.</b> A law's in-force dates can point at its enactment event. Court filings and orders become events, and settlements become money facts.</p></div>
+    <div class="box"><p><b>Analysis and questions.</b> A total stays a calculation and is never stored again as a fact. Spreadsheet figures are content, read when a member asks. The assistant gains the new reads as a recorded widening.</p></div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">The architecture</span>
+  <h2>Where the new modules sit</h2>
+  <p class="muted" style="max-width:66ch">The middle layer, where the record's understanding lives, now runs in this order. A module may use only those before it. No existing dependency breaks. Where a later module needs to feed an earlier one, it registers with it.</p>
+  <div class="layers" aria-label="Layer 5 in order">
+    <div class="layer"><div class="ln">Layer 1<small>Foundations</small></div><div class="chips"><span class="chip new">civil-time</span><span class="chip new">calc-grammar</span><span class="chip new">connection-grammar</span></div></div>
+    <div class="layer"><div class="ln">Layer 5<small>Meaning, in order</small></div><div class="chips"><span class="chip">entities</span><span class="chip new">events</span><span class="chip new">lines</span><span class="chip moved">local-facts</span><span class="chip">connections</span><span class="chip">observation-log</span><span class="chip moved">standards</span><span class="chip">progressions</span><span class="chip new">money</span><span class="chip new">duties</span><span class="chip new">people</span><span class="chip new">explore</span><span class="chip">bias</span><span class="chip">query-language</span><span class="chip">retrieval</span><span class="chip new">calculations</span></div></div>
+  </div>
+  <div class="legend"><span><i class="sw" style="background:var(--accent-soft);border-color:var(--accent)"></i>new module</span><span><i class="sw" style="background:var(--today-soft);border-color:var(--today)"></i>moved down from layer 9</span></div>
+  <div class="box" style="display:flex;flex-direction:column;gap:8px">
+    <p><b>Built to carry the full ladder.</b> Every fact has one home, enforced by checks in the store itself. One id scheme covers every kind of record. Today ids break past 9,999 a year, and that is fixed first. Every module's tables travel with the group's export, so a case can be recreated without Civicsmith. Heavy work (large tables, long explorations) runs in slices or off to the side, because a group's record runs on one thread and must never slow members down.</p>
+    <p><b>Realistic volumes.</b> For one city: about 190 meetings and 850 matters a year (Oakland's 2025 council records), a payroll of about 5,000, and 100,000 to 450,000 payments a year in comparable cities. Ledgers stay captured tables. Figures are read from them only when a member asks.</p>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">How to proceed</span>
+  <h2>Stages, in dependency order</h2>
+  <p class="muted" style="max-width:66ch">Stages, not a tranche plan: none opens until you say so (K1425). Each stage measures first.</p>
+  <div class="stages">
+    <div class="stage"><div class="n">0</div><div><h3>Runnable and correct</h3><p>Fix the id ceiling. Every module's tables join the export. Measure Oakland's money sources and how well the readers get dates right.</p></div></div>
+    <div class="stage"><div class="n">1</div><div><h3>Shared ground, identity, amounts</h3><p>A minimal events store, lines, calculations and the connection grammar, plus the one publication filter. Then people's posts and careers, and money facts. <b>Unlocks:</b> who decided and signed an act; "who is the deputy director of planning, and who held it before"; the founding case's transfers held with stage and basis.</p></div></div>
+    <div class="stage"><div class="n">2</div><div><h3>Occurrences, timelines, trails, connections</h3><p>Duties met or missed, timelines, money trails and reconciliation, interests and ties, and the one exploration. <b>Unlocks:</b> a plan step that fires when a reply is overdue; "was the transfer authorised?"; committed against paid; your donation-to-fund chain.</p></div></div>
+    <div class="stage"><div class="n">3</div><div><h3>Applied and assisted</h3><p>Patterns, budget and financial-report readers, unit costs, and the assistant proposing people, events and figures at a member's request.</p></div></div>
+    <div class="stage"><div class="n">4</div><div><h3>Exchange</h3><p>Importing public registers (campaign finance, lobbying, licences, company filings) and sharing between groups.</p></div></div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Your rulings during the study</span>
+  <div class="box">
+    <ul class="ruled-list">
+      <li><b>People (K1452, K1455):</b> tracked fully, with no special rule for family or sensitive facts.</li>
+      <li><b>Names (K1462):</b> "events" and "timeline"; members, sources, people.</li>
+      <li><b>Money (K1463):</b> the construct is called money. The group's own money is followed like anyone's, with no mark that it is the group's.</li>
+      <li><b>Date-times (K1464):</b> every date is a date-time with its precision.</li>
+      <li><b>People in acts (K1465):</b> who decided, wrote, signed or carried out an act is recorded.</li>
+      <li><b>Due dates (K1466):</b> met or not is recorded, and a plan step can wait on it.</li>
+      <li><b>Hunches (K1467):</b> they have a place, but are never facts. This is already how the strength code treats a hunch, so the synthesis's question C12 was withdrawn.</li>
+      <li><b>Extraction (K1468):</b> targeted and ongoing, at a member's request.</li>
+      <li><b>Connections (K1469):</b> the heart of the architecture.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="decisions">
+  <span class="eyebrow">Your decisions</span>
+  <h2>Eleven decisions</h2>
+  <div class="how"><p><b>How to answer.</b> Reply in the session, for example "All as recommended", or "All as recommended except C5 (a)". C1 and C2 together answer your question about Design Requirement 6 and the rules on naming people.</p></div>
+
+  <article class="dec"><header><span class="num">C1</span><div><h3>Design Requirement 6, refined</h3><span class="kind">Requirement meaning</span></div></header>
+    <p class="q"><b>The question.</b> Design Requirement 6 lets a published case name individuals "only in their official capacity in connection with specific documented actions", but its examples name only the role ("the Finance Director certified the ACFR"). The record now holds who decided, signed or carried out each act. So may a published case give the person's name, or only the title? And what about people outside any public role, such as a relative, a settlement payee or a sole-proprietor vendor? On one side: accountability that survives staff turnover, and the fact you singled out, that someone signed an order against policy. On the other: defamation if the wrong person is named, and the safety of people who hold no public role.</p>
+    <ul class="opts"><li>(a) Adopt the draft: <i>"Work products document institutional actions and compliance, and the people who carried them out. A person is named, by name and role, in connection with a specific documented act they performed or took part in: deciding, authoring, signing, approving, implementing (e.g., "Finance Director Jane Doe certified the ACFR"; "the order was signed by Deputy Director John Roe, contrary to policy §4.2"). Accountability belongs to the role and the institution, and also to the person who acted; staff turnover does not extinguish either. If the institution cannot answer for actions taken by predecessor occupants of a role, that failure of institutional recordkeeping is itself a compliance issue. A person outside any official, professional or public role is identified in a published work product only where a documented act of theirs bears on the finding."</i></li><li>(b) Title by default. Name only elected and appointed officials and department heads, or where the source itself names the person in the act.</li><li>(c) Leave the requirement unchanged.</li></ul>
+    <p class="rec"><b>Recommend (a), with two additions to confirm.</b> First, a person in a public or professional role may also be named for a documented position or tie that bears on the finding, not only an act. For example: the councilmember's brother who directs the hauler's parent company, or a registered lobbyist for a client. Otherwise such a person reads only as "a relative of the councilmember". Second, the rest of the requirement stands: the metadata, and disclosing the group's and members' ties to those it examines. One filter checks every person a case names before publication and asks for the basis. Documents the case relies on travel whole and unredacted, as your rulings already require.</p></article>
+
+  <article class="dec"><header><span class="num">C2</span><div><h3>The rules on people's attributes and naming private people</h3><span class="kind">Doctrine</span></div></header>
+    <p class="q"><b>The question.</b> You asked to see every rule saying that no attribute of a person may filter or order anything, or that restricts naming a private person. Read literally, some now forbid what you have ruled: staffing by post, careers, who signed an order. Each was written to protect something real. For each: keep it, narrow it, or retire it?</p>
+    <div class="tbl"><table>
+      <thead><tr><th>#</th><th>The rule today</th><th>What it protects</th><th>Recommend</th></tr></thead>
+      <tbody>
+        <tr><td class="n">1</td><td>Design Requirement 6: name individuals only in official capacity for documented actions</td><td>Readers and the people named</td><td><span class="verdict">Replace</span> by C1</td></tr>
+        <tr><td class="n">2</td><td>"No attribute of a person gates, filters or orders anything" (Action design rule 10; your DEC-17, DEC-54)</td><td>Members treated by their work, never by who they are</td><td><span class="verdict">Narrow</span> to members and users. A member may search and sort the people the record holds by any held fact. The machine never orders people by importance, suspicion or connectedness.</td></tr>
+        <tr><td class="n">3</td><td>No prior by role, no suspicion flag (DEC-54; Case Making §4)</td><td>People from prejudgment</td><td><span class="verdict">Keep</span></td></tr>
+        <tr><td class="n">4</td><td>A planning run reads no person's attributes</td><td>Plans steered by evidence</td><td><span class="verdict">Keep</span></td></tr>
+        <tr><td class="n">5</td><td>The group's action is addressed to an office, "never a private individual"</td><td>The group acts on institutions and never targets a person</td><td><span class="verdict">Keep, narrowed</span> The action may show who holds the office on the day, but is never addressed to a person.</td></tr>
+        <tr><td class="n">6</td><td>A government act's actor is an office, "never by a person"</td><td>Accountability fixed on the institution</td><td><span class="verdict">Retire</span> for the record: deciders and signers are recorded (K1465). The determination still judges the office's duty.</td></tr>
+        <tr><td class="n">7</td><td>A harmed party is "never a person"; people harmed "counted as a class"</td><td>People harmed are not exposed</td><td><span class="verdict">Narrow</span> The record may name an affected person a document names. Published text counts them as a class unless they consent or C1 allows.</td></tr>
+        <tr><td class="n">8</td><td>Brand and screen rules: "never name an individual except in official role"</td><td>Civicsmith's own voice never accuses a person</td><td><span class="verdict">Narrow</span> to Civicsmith's own voice and published surfaces. Members' screens show people as the record holds them.</td></tr>
+        <tr><td class="n">9</td><td>The first study's B8 (a) limits: only holders of registered offices; per-person rows only aggregated</td><td>Against building profiles of people</td><td><span class="verdict">Retire</span> (K1452, K1455), keeping one part: imports never bulk-copy home addresses or phone numbers.</td></tr>
+        <tr><td class="n">10</td><td>A court case's caption is never a searchable name</td><td>A private party's name being indexed</td><td><span class="verdict">Already retired</span> (K1456)</td></tr>
+        <tr><td class="n">11</td><td>A watch's subject "is an address, never a person"</td><td>No unattended surveillance of a person</td><td><span class="verdict">Narrow</span> A member may name a register query for a person (a filer id, a licence number). Never an unattended crawl of a person.</td></tr>
+        <tr><td class="n">12</td><td>The staff directory is keyed by e-mail address, "never the name"</td><td>Identity on a stable key</td><td><span class="verdict">Narrow</span> The address stays the key. The name is also read, as a match graded C.</td></tr>
+        <tr><td class="n">13</td><td>No score, rank or centrality; never "knows"</td><td>People never ranked or declared acquainted</td><td><span class="verdict">Keep</span>, and apply to exploring connections</td></tr>
+        <tr><td class="n">14</td><td>Third parties' names and words leave only by their own act (your DEC-116 (4))</td><td>People who never chose to speak publicly</td><td><span class="verdict">Keep</span>, aligned with C1</td></tr>
+        <tr><td class="n">15</td><td>Never redact what others submit; relied-on material travels whole (your DEC-100, DEC-112)</td><td>Reproducibility and honesty</td><td><span class="verdict">Keep</span> C1 governs the group's own words.</td></tr>
+        <tr><td class="n">16</td><td>Indexing builds profiles of people (DEC-11's warning)</td><td>The cost of holding: legal reach, reversal</td><td><span class="verdict">Retire as a limit</span>. Kept as a design constraint, through sight, removal and export classes.</td></tr>
+        <tr><td class="n">17</td><td>A private individual's own website is where "public" stops (your DEC-47)</td><td>Conduct when looking people up</td><td><span class="verdict">Replace</span> by C9</td></tr>
+        <tr><td class="n">18</td><td>Sources and whistleblowers are protected (your DEC-78)</td><td>Sources</td><td><span class="verdict">Keep</span> Being a source stays protected. A source's public facts as a person are ordinary.</td></tr>
+        <tr><td class="n">19</td><td>No legal name for members</td><td>Members' anonymity</td><td><span class="verdict">Keep</span> Members' ties only by their own act (C7).</td></tr>
+        <tr><td class="n">20</td><td>Material that may not be held (unlawful, confidential)</td><td>Legal exposure</td><td><span class="verdict">Keep and widen</span> by C10's lawful demands</td></tr>
+        <tr><td class="n">21</td><td>Your open DEC-6 question: a bare scrutiny statement naming a person</td><td>No verdict on a person through bias</td><td><span class="verdict">Keep open</span> on its own trigger</td></tr>
+        <tr><td class="n">22</td><td>The ladders' summary row on people</td><td>The summary of all the above</td><td><span class="verdict">Reword</span> to match</td></tr>
+      </tbody>
+    </table></div>
+    <p class="rec"><b>Recommend each row as shown.</b></p></article>
+
+  <article class="dec"><header><span class="num">C3</span><div><h3>The words members see</h3><span class="kind">UX</span></div></header>
+    <p class="q"><b>The question.</b> Members need plain words for what they will now see, and several obvious words are taken ("action", "case", "docket", "obligation", "ledger", "budget"). A clashing word misleads members and the readers of published cases.</p>
+    <ul class="opts">
+      <li><b>Connections</b> is the umbrella, with these kinds:
+        <ul>
+          <li>positions and memberships</li>
+          <li>ties (family, partners, associates a document states)</li>
+          <li>took part (voted, signed, decided, wrote, carried out, was copied)</li>
+          <li>money (paid, gave, received, transferred)</li>
+          <li>event links (authorised, answered, amended, reversed, gave as the cause)</li>
+          <li>law links</li>
+          <li>owes</li>
+          <li>mentioned together</li>
+          <li>same person?</li>
+          <li>overlaps ("both on the 7-member Police Commission, 2019")</li>
+        </ul>
+        Each page about a subject, person, fund, contract or proceeding has a "Connections" place and an "Explore connections" act. Never "knows", "network", "conflict" or "suspicious".</li>
+      <li><b>Events and timeline</b>, with two lanes: "what they did" and "what we did".</li>
+      <li><b>Money</b> words by context: proposed, adopted and amended for budgets; committed, spent and paid for spending; billed and collected for revenue. A member's followed flow is a "money trail". Never "ledger", "diverted" or "misused" in Civicsmith's own words.</li>
+      <li><b>People</b>, members and sources (already ruled). Position, career, credentials, memberships, interests, and a person page.</li>
+    </ul>
+    <p class="rec"><b>Recommend all,</b> for the design stream to render.</p></article>
+
+  <article class="dec"><header><span class="num">C4</span><div><h3>What exploring connections may pass through</h3><span class="kind">Doctrine</span></div></header>
+    <p class="q"><b>The question.</b> The registry's declared groupings ("stands in for", "is part of", "overlaps") are, by a standing rule, never walked, so that a label cannot stand in for evidence. Some connections are computed rather than held: "mentioned together", "met by this event", "in force on that date". Walking a declared grouping could chain into paths no document supports. Leaving out the computed kinds breaks chains like "this payment, under this resolution, against this restriction".</p>
+    <ul class="opts"><li>(a) Walk every evidenced kind and the computed kinds, each showing how it was derived. Declared groupings are shown beside a node but never walked. Hypotheses are never steps.</li><li>(b) Also walk declared groupings.</li><li>(c) Held kinds only.</li></ul>
+    <p class="rec"><b>Recommend (a).</b> It keeps the reason for the old rule and gives you your chains.</p></article>
+
+  <article class="dec"><header><span class="num">C5</span><div><h3>How a person's identity is established</h3><span class="kind">Doctrine</span></div></header>
+    <p class="q"><b>The question.</b> People rarely carry an identifier in a document. Under today's rule nearly every person match is grade C (a name) or D (a member's word). What may establish that two records are the same person? Published, a wrong link is defamation. Never being able to say "this is the same Michael Houston" leaves careers and connections unusable.</p>
+    <ul class="opts"><li>(a) Only an identifier at both ends.</li><li>(b) Also a name match corroborated by a cited fact true at both documents' dates (the same post, the same licence or filer number) earns grade B. It is a recorded claim with its evidence, linked and never merged. A member's word stays D.</li><li>(c) A member's confirmation counts as established.</li></ul>
+    <p class="rec"><b>Recommend (b).</b> It is how investigators identify people. Civicsmith's own words never say "is the same person", only "claimed the same person, grade B, because …".</p></article>
+
+  <article class="dec"><header><span class="num">C6</span><div><h3>Who inside the group sees facts about people</h3><span class="kind">Policy · safety</span></div></header>
+    <p class="q"><b>The question.</b> Facts read from public documents are shared evidence. A member's testimony, identity claims and interest checks inside a hidden project are that project's own thinking. Who sees which? A member who joined to infiltrate the group would see every person fact shared group-wide. Scoping everything to projects would split one person into many records.</p>
+    <ul class="opts"><li>(a) Everything group-wide.</li><li>(b) The registry is group-wide. Facts from public documents follow their document's visibility. Testimony, claims, checks and hypotheses inside a hidden project stay fenced and uncounted. Members' ties and the link from a source to a person get their own narrowest visibility. The exposure is explained at setup.</li><li>(c) Every person fact limited to its project.</li></ul>
+    <p class="rec"><b>Recommend (b).</b></p></article>
+
+  <article class="dec"><header><span class="num">C7</span><div><h3>Members' own ties</h3><span class="kind">Requirement meaning</span></div></header>
+    <p class="q"><b>The question.</b> Design Requirement 6 requires disclosing ties between the group or its members and those it examines. But members are pseudonymous, and nothing holds their ties today. How are they recorded and disclosed? Honest disclosure is at stake on one side, a member's safety on the other.</p>
+    <ul class="opts"><li>(a) Each member declares their own ties (employer, relative, business), seen by them and administrators. A case concerning that entity discloses the tie at the attribution level the member chooses. Each publishing member attests at publication that they have no undeclared tie, vendors named in the money included.</li><li>(b) Administrators may record members' ties.</li><li>(c) No model; disclosure in prose.</li></ul>
+    <p class="rec"><b>Recommend (a).</b></p></article>
+
+  <article class="dec"><header><span class="num">C8</span><div><h3>Questions the machine raises about people and money</h3><span class="kind">Doctrine</span></div></header>
+    <p class="q"><b>The question.</b> Should the machine ever put "worth a look" in the queue? Examples: a councilmember voting on a contract with a firm that paid her; contracts clustered just under a bid threshold; payments past a commitment. It would catch what members miss, but your rulings say the machine does not choose what to look into, and such items can read as accusations.</p>
+    <ul class="opts"><li>(a) Only checks a member declares for people, and detectors a member switches on for money. Each is defined by its data and states its denominator. Each raises "Noticed" with its cited derivation, never "conflict" and never a score. None is shown before a measured false-alarm test.</li><li>(b) The machine raises them on its own.</li><li>(c) None.</li></ul>
+    <p class="rec"><b>Recommend (a).</b></p></article>
+
+  <article class="dec"><header><span class="num">C9</span><div><h3>How the group looks people up</h3><span class="kind">Policy</span></div></header>
+    <p class="q"><b>The question.</b> Much of a career lives on people's own pages and on login-gated platforms. Looking someone up can tip them off. Automated scraping against LinkedIn's terms ended in a permanent injunction and $500,000 (hiQ v. LinkedIn). Complete careers are at stake on one side, legal exposure and the group's safety on the other.</p>
+    <ul class="opts"><li>(a) Public registers and public pages by default. A private individual's own site or a login-gated platform only by a member's own act in their own browser. Never automated collection against a platform's terms. No paid people-search vendor. Data-use limits kept (FEC). Members' lookups never logged.</li><li>(b) Allow automated collection of public profiles.</li></ul>
+    <p class="rec"><b>Recommend (a).</b></p></article>
+
+  <article class="dec"><header><span class="num">C10</span><div><h3>Removing a personal fact, and lawful demands</h3><span class="kind">Policy</span></div></header>
+    <p class="q"><b>The question.</b> The record may hold any cited personal fact (K1455), and it is append-only and published in signed editions. What may remove a fact, and how far does removal reach? California's Gov. Code 7928.215 requires any person or association to take down an official's home address or phone number within 48 hours of the official's written demand.</p>
+    <ul class="opts"><li>(a) Remove, leaving a marker, only material that is unlawful to hold, confidential material, a recorded court order, or a lawful demand of a kind the jurisdiction profile lists. Addresses and phone numbers are never published. A wrong match or a person's request is otherwise corrected forward, with notice. Removal reaches this instance, future exports and future editions. Past published editions stay as they are, and a later edition states the correction.</li><li>(b) Also remove on any person's request.</li><li>(c) Also withdraw published editions.</li></ul>
+    <p class="rec"><b>Recommend (a).</b> It mirrors your open B18 (an order is complied with, never silently).</p></article>
+
+  <article class="dec"><header><span class="num">C11</span><div><h3>A timeline in a published case</h3><span class="kind">Requirement scope</span></div></header>
+    <p class="q"><b>The question.</b> Should a published case carry the timeline of its findings? A timeline helps readers understand sequence. But it names people in a sequence, and must be reproducible.</p>
+    <ul class="opts"><li>(a) Yes. It is frozen at signing, each item shows its source, the two lanes are never mixed, and people appear as C1 rules.</li><li>(b) No; members write sequence in prose.</li></ul>
+    <p class="rec"><b>Recommend (a).</b></p></article>
+</section>
+
+<section>
+  <span class="eyebrow">Decided at my level, reported</span>
+  <div class="cols">
+    <div class="box"><p><b>Order and modules.</b> The new modules events, money, people and explore, plus a small connection grammar. Events replaces the planned chronology. Every upward need is met by registration. A minimal events store comes first, because other modules depend on it.</p></div>
+    <div class="box"><p><b>One home per fact.</b> Payer and payee live on the money fact, never on the event. A duty cites amounts and never holds one. A total is never re-entered as a fact. Hypotheses live with the inquiry, and the store refuses them in evidence.</p></div>
+    <div class="box"><p><b>Exploring.</b> Up to 8 steps by default and 10 at most, 1,000 links per step, 5,000 nodes in total, and very common nodes (a city-wide fund) named rather than walked. Your seven-step chain fits, and is measured on real data first.</p></div>
+    <div class="box"><p><b>The machine.</b> It writes only facts carrying a source's own identifiers (Legistar meetings and votes, licence and filer records), and only for what a member follows or asks for. It proposes everything else, labelled.</p></div>
+  </div>
+</section>
+
+<footer>Study materials: branch <code>study/constructs</code>, folder <code>phase2/</code>: the brief and protocols, 23 reader notes, the registers, four studies, three reviews and the synthesis. The capability ladders are amended from it. No tranche is open or planned (K1425).</footer>
+</div>

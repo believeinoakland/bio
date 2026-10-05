@@ -32,3 +32,4 @@ Every unit's prompt is `prompts/<id>.txt`. `python3 status.py` reads each unit's
 - 2026-10-05 ~16:45 UTC: INTEGRATION done (written from checkpoint notes after a context cut: reviewers verify its citations); R-1 done; R-2 and R-3 running.
 - 2026-10-05 ~17:00 UTC: R-2 done; R-3 running; Bob's rulings K1462–K1469 in the brief.
 - 2026-10-05 ~17:10 UTC: R-3 done; the synthesis protocol extended (K1462–K1469, connections, DR6 draft, the K1465 list, plain-question rule); S-SYNTHESIS running.
+- 2026-10-05: synthesis done and reviewed by BOB (K1470; C12 withdrawn); page for Bob https://claude.ai/artifact/QYMteP7CMTieHJDBDZ5m7Q (source synthesis/page-for-bob-2.html); the ladder amendments being applied by a worker (synthesis/ladders-amended.md); C1–C11 await Bob.
