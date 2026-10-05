@@ -6,7 +6,8 @@ You join the six construct studies, corrected by their three reviews, into one a
 1. `RESUME.md` (Bob's question in his words) and `constructs-brief.md`, including its corrections.
 2. `reviews/R-1.md`, `reviews/R-2.md`, `reviews/R-3.md`, all of them, first: they say where each study is wrong.
 3. Each study `studies/TIME.md`, `ORGANISATIONS.md`, `LAW.md`, `COURTS.md`, `ANALYSIS.md`, `QUESTIONS.md`, whole. Not the `.work` files, except to settle a point a review disputes.
-4. `U41.md`: the design session's question in its six areas; your §8 answers each. Do not read `prior/`: it is superseded.
+4. `BOB-NOTES.md`: BOB's list of the conflicts between studies; settle every one, and say where.
+5. `U41.md`: the design session's question in its six areas; your §8 answers each. Do not read `prior/`: it is superseded.
 Go to a primary source (`src/`, `src/req/`, `notes/`, or the code under /home/user/bio, read-only) only where a study and its review disagree and your text depends on which is right; say which you opened.
 
 ## Rules

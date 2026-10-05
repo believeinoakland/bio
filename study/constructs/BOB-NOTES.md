@@ -29,3 +29,7 @@ Written after reading all six studies whole, before the reviews landed. The synt
 - No member surface: layer 9 ops have zero UI calls (X191). Every stage depends on the UX stream (Bob's redesign).
 - No deployed AI beyond `check`; no model key carried by the installer; the setup page's "Claude subscription". Stage 0 of QUESTIONS gates every construct's AI help.
 - K1425: no tranche is planned; stages only.
+
+## Verified by BOB after the reviews
+- R-1's TIME correction 1 holds (`action-clocks/index.mjs:695–698`): `starts: "received"` is read as the group's first *inbound* ledger entry, so the CPRA rule (counted from the agency's receipt of the request, i.e. the group's sent entry) is undetermined in the no-reply case and wrong in meaning when a reply exists. This is a correction (a defect), with the missing roll-forward and the UTC day; not a decision for Bob.
+- R-1's order for layer 5 (`entities`, `lines`, `local-facts`, `connections`, `standards`, `chronology`, `progressions`, `obligations`) is the starting point for §3 of the synthesis; check it against `modules.json` before adopting.

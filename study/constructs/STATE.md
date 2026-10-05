@@ -29,7 +29,7 @@
 | A-ORGANISATIONS | prompts/A-ORGANISATIONS.txt | studies/ORGANISATIONS.md | done |  |
 | A-QUESTIONS | prompts/A-QUESTIONS.txt | studies/QUESTIONS.md | done |  |
 | A-TIME | prompts/A-TIME.txt | studies/TIME.md | done |  |
-| R-1 | prompts/R-1.txt | reviews/R-1.md | partial | no verdict yet |
+| R-1 | prompts/R-1.txt | reviews/R-1.md | done |  |
 | R-2 | prompts/R-2.txt | reviews/R-2.md | done |  |
 | R-3 | prompts/R-3.txt | reviews/R-3.md | done |  |
 | S-SYNTHESIS | prompts/S-SYNTHESIS.txt | synthesis/constructs.md | missing |  |
