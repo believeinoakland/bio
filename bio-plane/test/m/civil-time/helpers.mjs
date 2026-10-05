@@ -90,7 +90,9 @@ export const TEST_FACTS = {
       observed: { closures: "clerk_practice", status: "researched", basis: "TEST" },
       citation: "Test Stat. § 1.140", ...TEST },
     { rule: "harbour_notice", applies_to: "claim", units: "business_hours", amount: 24, direction: "backward", starts: "act",
-      closures: "statute_days", due_at: "close_of_business", citation: "P.E.B.L. § 9", ...TEST },
+      closures: "statute_days", citation: "P.E.B.L. § 9", ...TEST },
+    { rule: "clerk_reply", applies_to: "records_request", units: "days", amount: 2, count: "business", starts: "received",
+      closures: "statute_days", due_at: "close_of_business", citation: "P.E.B.L. § 4.4", ...TEST },
   ],
 };
 

@@ -299,7 +299,7 @@ function evaluateOn(r, rule, anchor, view, office, tolled, factOf, list, zone) {
 
 /* R12: the extension counted from the original due, as R9–R10 count; both readings where the sources leave its start
    open (from day n before the roll or after it), unless the profile states `from`. */
-function extend(r, rule, base, view, tolled, zone, trace) {
+function extend(r, rule, base, view, office, tolled, zone, trace) {
   const ext = rule.extension;
   const er = { ...r, units: "days", amount: ext.days, count: ext.count || r.count || "calendar" };
   const dir = r.direction === "backward" ? -1 : 1;
@@ -324,7 +324,7 @@ function extend(r, rule, base, view, tolled, zone, trace) {
   if (ext.from === undefined && lo !== hi)
     t.notes.push("the sources leave open whether the extension counts from the period's last day before or after its roll: both readings are kept (K1504 (2))");
   trace.extension = { days: ext.days, count: er.count, when: ext.when ?? null, citation: ext.citation ?? null, ...t };
-  return lo === hi ? dueAtTime(rule, lo, zone, view, null, trace) : { candidates: [dayDt(lo, zone), dayDt(hi, zone)] };
+  return lo === hi ? dueAtTime(rule, lo, zone, view, office, trace) : { candidates: [dayDt(lo, zone), dayDt(hi, zone)] };
 }
 
 /** R9–R17, R25. */
@@ -359,7 +359,7 @@ export function evaluateRule(args) {
   }
   const out = { due: base.due, trace };
   if (rule.extension && r.units !== "hours" && r.units !== "business_hours" && base.results) {
-    const ex = extend(r, rule, base, view, tolledSet, zone, trace);
+    const ex = extend(r, rule, base, view, office, tolledSet, zone, trace);
     if (ex.undetermined) trace.extension = { undetermined: true, code: ex.code, why: ex.why };
     else out.extension = { due: ex, when: rule.extension.when ?? null, citation: rule.extension.citation ?? null };
   }
