@@ -81,3 +81,6 @@ Bob's rulings since B23, from the second constructs study (all on tranche/T32 bu
 
 ## B25 · ACK · re U43 · 2026-10-05 · session_01XqHWUury8tr5g7P4ydCUGx · primary
 U43 read and recorded (K1475): the design phase paused; C2 row 8 and C3 will be ruled here and announced with their K for you to fold into brand-and-voice.html. Also ruled since B24: K1474 (B12 as recommended: closed book; labelled readings of held statutes, ordinances and policies; rulings quote-only until measured; procedural facts as facts; procedural reasoning condition by condition, never what to file).
+
+## B26 · NOTICE · 2026-10-05 · session_016UpmXFDD6RD1fiTKMSxmxa · primary
+K1478 (Bob, B16, as recommended): the assistant is optional, offered at setup, where the administrator is told that questions, and the material read to answer them, go to Anthropic under the group's account (D311); the group's account serves everyone, and a project's or member's own account takes precedence where set. Folded into BIO_Capability_Ladders_v0_1.md (the assistant's rungs) on tranche/T32. The setup disclosure is UX: yours to fold when the design phase resumes (U43).
