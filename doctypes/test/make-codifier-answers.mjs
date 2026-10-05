@@ -16,7 +16,7 @@
 import fs from "node:fs";
 import { servedDocuments, answersOf, textOf } from "./codifier.mjs";
 import { regulation } from "../index.mjs";
-import { HELD, withSections, CODIFIER_SECTIONS, CHARTER } from "./fixtures.mjs";
+import { HELD } from "./fixtures.mjs";
 
 /* Where the markup's indentation is not what was printed, the member's reading (the
    subsection paths, relative to the section). */
@@ -55,7 +55,7 @@ const REVIEWED = [
 
 const out = { note: "What a member reads in each codifier capture (doctypes R17); see make-codifier-answers.mjs.",
               reviewed: REVIEWED, documents: {} };
-const VIEW = withSections(HELD, CODIFIER_SECTIONS, [CHARTER]);
+const VIEW = HELD;
 for (const { doc } of servedDocuments()) {
   const a = answersOf(doc);
   const num = a.sections[0].number;

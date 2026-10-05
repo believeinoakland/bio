@@ -14,7 +14,6 @@ import { flattenText, makeLocator } from "../../docprofile/readtext.mjs";
 import { combine, list } from "../../jurisdictions/index.mjs";
 import {
   PORT_ALDER, LAKEMONT, view, EMPTY, HELD, PA_AGENDA, PA_MINUTES, PA_REPORT, PA_BYLAW, PA_DIRECTORY, calendarHtml,
-  withSections, CODIFIER_SECTIONS, CHARTER, PA_SECTIONS,
 } from "./fixtures.mjs";
 import { CASES, pairsOf } from "./golden-cases.mjs";
 import { registryOf, readWith, typeFor } from "./read.mjs";
@@ -100,10 +99,10 @@ test("R3 every type takes its local facts from ctx.view, and with no view from e
   assert.deepEqual(keys(reg(PA)).sort(), ["order:1990", "pac:4.12"]);
   assert.equal(reg(LK).title, null);
   // the code's section forms too: Port Alder's code read under its own view only
-  const pa = withSections(PA, PA_SECTIONS);
+  const pa = PA;
   const code = "4-12 Mooring fees.\n(a)\nFees are set by order.";
   assert.equal(typeOf("regulation").parse({ text: code, view: pa }).form, "code");
-  assert.equal(typeOf("regulation").parse({ text: code, view: withSections(LK, PA_SECTIONS) }).form, null);
+  assert.equal(typeOf("regulation").parse({ text: code, view: LK }).form, null);
 
   // the calendar's practice threshold, the view's
   const cal = typeOf("meeting_calendar");
@@ -247,14 +246,12 @@ test("R18 the existing fixtures of every type give the verdicts docprofile gave,
   const strip = (p) => Object.fromEntries(Object.entries(p).filter(([k]) => !ADDED.has(k)));
   const noSection = (r) => ({ ...r, events: r.events.filter((e) => e.key !== "section" && e.key !== "form"),
                               sections_compared: undefined, sections_why: undefined });
-  /* Read twice: under the views as they are, and with the code and charter section forms
-     added to the held view (what T33-2 brings), so the new readings are shown to move no
-     verdict when the profile does name sections. */
-  for (const withForms of [false, true]) {
+  /* The views as they are: the held profiles and Port Alder name their codes' section
+     forms (jurisdictions T33-2), so the new readings are shown to move no verdict. */
+  {
     const parsed = {};
     for (const c of CASES) {
-      const ctx = withForms && c.view === "held" ? { ...c.ctx, view: withSections(HELD, CODIFIER_SECTIONS, [CHARTER]) }
-        : withForms && c.view === "pa" ? { ...c.ctx, view: withSections(PA, PA_SECTIONS) } : c.ctx;
+      const ctx = c.ctx;
       const r = readWith(REG, c.supplied, ctx);
       const g = golden.readings[c.id];
       assert.equal(r.doctype.type.key, g.type, `${c.id}: type`);

@@ -12,15 +12,15 @@ import { regulation, DOCTYPES } from "../index.mjs";
 import { EVENTS } from "../../site-profiles/index.mjs";
 import { flattenText, makeLocator } from "../../docprofile/readtext.mjs";
 import { combine, list } from "../../jurisdictions/index.mjs";
-import { PORT_ALDER, LAKEMONT, view, HELD, PA_BYLAW, PA_CODE, withSections, CODIFIER_SECTIONS, CHARTER, PA_SECTIONS } from "./fixtures.mjs";
+import { PORT_ALDER, LAKEMONT, view, HELD, PA_BYLAW, PA_CODE, withCodeSections, PA_SECTIONS } from "./fixtures.mjs";
 import { servedDocuments, textOf, CODIFIER } from "./codifier.mjs";
 
 const ANSWERS = JSON.parse(fs.readFileSync(new URL("./fixtures/codifier-answers.json", import.meta.url), "utf8")).documents;
 const FW18 = JSON.parse(fs.readFileSync(new URL("./fixtures/fw18-doctypes.json", import.meta.url), "utf8")).documents;
-const CODE_VIEW = withSections(HELD, CODIFIER_SECTIONS, [CHARTER]);
+const CODE_VIEW = HELD;
 /* The held view with no code's section forms: what a reader knows without them. */
 const NO_FORMS = (() => { const v = structuredClone(HELD); for (const c of (v.vocabulary || {}).codes || []) delete c.sections; return v; })();
-const PA = withSections(view(PORT_ALDER), PA_SECTIONS);
+const PA = view(PORT_ALDER);
 const LK = view(LAKEMONT);
 const top = (p) => p.sections.filter((s) => s.heading !== null);
 
@@ -60,8 +60,8 @@ test("R9 form is instrument or code; a code section is CERTAIN only on a heading
   assert.equal(regulation.parse({ text: PA_CODE, view: PA }).form, "code");
   // under a profile naming another code's forms, Port Alder's code is not read
   const lkForms = { lmc: { number: { re: "L\\d{2}\\.\\d{2}" }, separators: ".", markers: ["numeral"] } };
-  assert.equal(regulation.detect({ text: PA_CODE, view: withSections(LK, lkForms) }).match, false);
-  assert.equal(regulation.detect({ text: "L09.01 Parking.\n1.\nNo parking.", view: withSections(LK, lkForms) }).confidence, "certain");
+  assert.equal(regulation.detect({ text: PA_CODE, view: view(withCodeSections(LAKEMONT, lkForms)) }).match, false);
+  assert.equal(regulation.detect({ text: "L09.01 Parking.\n1.\nNo parking.", view: view(withCodeSections(LAKEMONT, lkForms)) }).confidence, "certain");
   // neither: a stated null
   const none = regulation.parse({ text: "a letter", view: PA });
   assert.equal(none.form, null);
@@ -109,16 +109,16 @@ test("R11 numbers, separators and marker order come from the view; SECTION n. is
   // the same code text under two marker orders reads two structures
   const p1 = regulation.parse({ text: PA_CODE, view: PA });
   assert.deepEqual(p1.sections.map((s) => s.path.join("/")), ["4/12", "4/12/a", "4/12/b", "4/12/b/i", "4/12/b/ii"]);
-  const flatOrder = withSections(view(PORT_ALDER), { pac: { ...PA_SECTIONS.pac, markers: ["paren_letter"] } });
+  const flatOrder = view(withCodeSections(PORT_ALDER, { pac: { ...PA_SECTIONS.pac, markers: ["paren_letter"] } }));
   assert.deepEqual(regulation.parse({ text: PA_CODE, view: flatOrder }).sections.map((s) => s.path.join("/")), ["4/12", "4/12/a", "4/12/b"]);
-  const noSep = withSections(view(PORT_ALDER), { pac: { ...PA_SECTIONS.pac, separators: "" } });
+  const noSep = view(withCodeSections(PORT_ALDER, { pac: { ...PA_SECTIONS.pac, separators: "" } }));
   assert.deepEqual(regulation.parse({ text: PA_CODE, view: noSep }).sections[0].path, ["4-12"]);
   // the first profile's numbers are not Port Alder's
   assert.equal(regulation.parse({ text: textOf(CORPUS[0].doc).document, view: PA }).sections.length, 0);
   // an instrument's own SECTION headings, in sequence from 1, under any view
   const inst = "HARBOR COMMISSION\nBYLAW NO. ____ T.B.S.\nNOW, THEREFORE, THE HARBOR COMMISSION DOES ORDAIN AS FOLLOWS:\n"
     + "SECTION 1. Fees. The fees are set.\nSECTION 4. Not next.\nSECTION 2. Effect. This bylaw takes effect at once.";
-  for (const v of [PA, LK, withSections(LK, {})]) {
+  for (const v of [PA, LK, view(withCodeSections(PORT_ALDER, { pac: null }))]) {
     const p = regulation.parse({ text: inst, view: v });
     assert.deepEqual(p.sections.map((s) => [s.number, s.heading]), [["1", "Fees"], ["2", "Effect"]]);
     assert.equal(p.sections[1].end, inst.length);
@@ -202,7 +202,7 @@ test("R14 exceptions: each passage that excepts, {start, end, source, section, c
   const p = regulation.parse({ text: t, view: PA });
   assert.deepEqual(p.exceptions.map((x) => [x.section.join("/"), x.cites]),
     [["4/12/a", ["4-14"]], ["4/12/a", []], ["4/12/b", []], ["4/12/b", []]]);
-  assert.deepEqual(regulation.parse({ text: t, view: withSections(view(PORT_ALDER), {}, []) }).exceptions.map((x) => x.cites), [[], [], [], []]);
+  assert.deepEqual(regulation.parse({ text: t, view: view(withCodeSections(PORT_ALDER, { pac: null })) }).exceptions.map((x) => x.cites), [[], [], [], []]);
 });
 
 /* --------------------------------------------------------------------- R15 */

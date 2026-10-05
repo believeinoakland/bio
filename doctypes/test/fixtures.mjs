@@ -1,5 +1,5 @@
-/* Fixtures for doctypes' requirement-named tests (copied from docprofile's, T33-13, with the
- * code-section facts R9–R11 read added below).
+/* Fixtures for doctypes' requirement-named tests (copied from docprofile's, T33-13, with
+ * Port Alder's code's section forms, which R9–R11 read).
  *
  * TWO MADE-UP JURISDICTIONS, neither of them Oakland (R30): Port Alder and Lakemont.
  * Each is a TEST profile in `jurisdictions`' shape (its R1–R7), every fact carrying
@@ -14,6 +14,10 @@ import { combine, validate, list } from "../../jurisdictions/index.mjs";
 
 const p = (re, flags) => (flags ? { re, flags } : { re });
 const fact = (pattern, extra) => ({ pattern, basis: "TEST", ...(extra || {}) });
+
+/** Port Alder's code's section form, unlike the first profile's: `<chapter>-<section>`
+ *  numbers, `(a)` then `(i)` subsections. */
+export const PA_SECTIONS = { pac: { number: p("\\d{1,2}-\\d{2}"), separators: "-", markers: ["paren_letter", "roman"] } };
 
 export const PORT_ALDER = {
   id: "port-alder-test", name: "Port Alder (test)", covers: ["Town of Port Alder"], test: true,
@@ -33,7 +37,7 @@ export const PORT_ALDER = {
     bodies: [fact(p("(Harbor Commission|Select Board|Committee)\\s*$", "i"))],
     member_titles: [fact(p("^Selectperson"))],
     enactment_markers: [fact(p("T\\.B\\.S\\."))],
-    codes: [{ key: "pac", label: "P.A.C.", pattern: p("P\\.A\\.C\\.|Port Alder Code"), basis: "TEST" }],
+    codes: [{ key: "pac", label: "P.A.C.", pattern: p("P\\.A\\.C\\.|Port Alder Code"), sections: PA_SECTIONS.pac, basis: "TEST" }],
     file_numbers: [{ pattern: p("PA-\\d{3}"), system: "pa-records", basis: "TEST" }],
     report_titles: [fact(p("^MEMO TO THE (?:BOARD|COMMISSION)\\b"))],
     report_sections: [fact(p("^RECOMMENDATION\\b")), fact(p("^SUMMARY\\b")), fact(p("^COST\\b")),
@@ -79,31 +83,18 @@ export function view(...profiles) {
   return r.view;
 }
 
-/** A view with section-number facts added to its codes (jurisdictions R6, T33-2:
- *  `codes[].sections`), and any further codes given. Until T33-2 merges, `validate` refuses
- *  `sections` on a profile, so the facts are laid on the combined view, in the shape the
- *  view carries them (each code entry as its profile wrote it, with `profile` and `basis`). */
-export function withSections(v, sections, extraCodes = []) {
-  const out = structuredClone(v);
-  out.vocabulary = out.vocabulary || {};
-  out.vocabulary.codes = [...(out.vocabulary.codes || []).map((c) => (sections[c.key] ? { ...c, sections: sections[c.key] } : c)),
-                          ...extraCodes];
+/** A made-up profile with its codes' section forms (jurisdictions R6) replaced: `null`
+ *  removes a code's forms. The result goes through `view`, so it is validated and combined
+ *  as any profile is. */
+export function withCodeSections(profile, sections) {
+  const out = structuredClone(profile);
+  out.vocabulary.codes = out.vocabulary.codes.map((c) => {
+    if (!Object.hasOwn(sections, c.key)) return c;
+    const { sections: _drop, ...rest } = c;
+    return sections[c.key] ? { ...rest, sections: sections[c.key] } : rest;
+  });
   return out;
 }
-
-/** The first profile's code and charter as the codifier serves them (measured on the
- *  captures in fixtures/codifier.json; time-law §5): the code's numbers are title, chapter
- *  and section joined by `.`, its subsections `A.`, `1.`, `a.`, `i.`, `(1)`; the charter's
- *  numbers are three or four digits, its subsections `(a)`, `(1)`, `(A)`, `(i)`. */
-export const CODIFIER_SECTIONS = {
-  omc: { number: { re: "\\d+\\.\\d+\\.\\d+[A-Z]?" }, separators: ".", markers: ["letter", "numeral", "letter", "roman", "paren_numeral"] },
-};
-export const CHARTER = { key: "charter", label: "Charter", pattern: { re: "Charter" }, basis: "TEST",
-  sections: { number: { re: "\\d{3,4}" }, separators: "", markers: ["paren_letter", "paren_numeral", "paren_letter", "roman"] } };
-
-/** Port Alder's code with a section form unlike the first profile's: `<chapter>-<section>`
- *  numbers, `(a)` then `(i)` subsections. */
-export const PA_SECTIONS = { pac: { number: { re: "\\d{1,2}-\\d{2}" }, separators: "-", markers: ["paren_letter", "roman"] } };
 
 /** A view with no profile in it: nothing local is known. */
 export const EMPTY = combine([]).view;
