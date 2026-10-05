@@ -24,7 +24,7 @@
     {"id": "docprofile", "layer": 1, "paths": ["docprofile/"], "tests": ["docprofile/test/"], "uses": ["jurisdictions", "site-profiles"]},
     {"id": "doctypes", "layer": 1, "paths": [], "tests": [], "uses": ["docprofile", "jurisdictions", "site-profiles"]},
     {"id": "legistar-reader", "layer": 1, "paths": ["legistar-reader/"], "tests": ["legistar-reader/test/"], "uses": ["docprofile"]},
-    {"id": "roster-reader", "layer": 1, "paths": [], "tests": [], "uses": ["docprofile"]},
+    {"id": "roster-reader", "layer": 1, "paths": ["roster-reader/"], "tests": ["roster-reader/test/"], "uses": ["docprofile"]},
     {"id": "court-doctypes", "layer": 1, "paths": [], "tests": [], "uses": ["docprofile", "id-spaces", "court-citations"]},
     {"id": "budget-doctypes", "layer": 1, "paths": [], "tests": [], "uses": ["docprofile", "office-readers", "pdf-reader"]},
     {"id": "image-codecs", "layer": 1, "paths": ["pdf-worker/src/mq.mjs", "pdf-worker/src/dctdecode.mjs", "pdf-worker/src/jbig2decode.mjs", "pdf-worker/src/jpxdecode.mjs", "pdf-worker/src/ccittdecode.mjs"], "tests": ["pdf-worker/test/codecs/", "pdf-worker/test/fixtures/make-dct-fixtures.py", "pdf-worker/test/fixtures/dct-variants.json", "pdf-worker/test/fixtures/make-jbig2-fixtures.py", "pdf-worker/test/fixtures/jbig2-variants.json", "pdf-worker/test/fixtures/make-jpx-fixtures.py", "pdf-worker/test/fixtures/jpx-variants.json"], "uses": ["test-support"]},
