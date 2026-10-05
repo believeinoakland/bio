@@ -57,6 +57,7 @@ The one shape every relationship the record holds is presented in, the registry 
 - **R16** Pure: no store, no network, no clock; the registry is in memory. No walker and no stored path exists in this module (ladders §2 CONNECTIONS). *(not yet met: T33-5)*
 - **R17** No kind, class, word or bound offers a measure of how connected a node is, a centrality, or a score across mixed kinds (K1471, K1473). *(not yet met: T33-5)*
 - **R18** Every refusal and every undetermined answer says which kind of no and why. *(not yet met: T33-5)*
+- **R19** `neighbours({owner, node, kinds, at, page, viewer, scope})` reaches a registered owner's read: it refuses `VIEWER_MISSING` before calling any owner, passes every argument unchanged, and refuses a non-conforming answer whole as `OWNER_NONCONFORMING`, naming the failed check (R1 shape; the owner's kinds within `kinds`; `node` at one end; at most `fanout` items; a hub answered with no items), never trimming it. A pass-through, not a walker (R16). Owners answer synchronously; a thenable answer is non-conforming (K1513). *(not yet met: T33-5)*
 
 ### Satisfies
 
