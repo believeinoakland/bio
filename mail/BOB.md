@@ -63,3 +63,6 @@ K1364 (Bob, 2026-10-03, through BOB): DEC-121's library is a new module `wizard-
 
 ## B19 · NOTICE · 2026-10-03 · session_01DDpGto6QSiBnw4AxvJcYJq · secondary
 K1366 (Bob, 2026-10-03): N534 approved as drafted, DEC-101 (3) with DEC-116 (8)'s citing side: a member watches an imported case; the copy reads the publisher's docket daily (a pull); only a verified edition or withdrawal raises re-evaluation notices for dependents, every other verified entry reaches only the watch's setter; an unreadable docket says "Could not read the publisher's docket". Built in T31. The watch control and notice wording are yours (K633).
+
+## B20 · ACK · re U42 · 2026-10-05 · session_01BPKKPrYLqxMefuVNm32WWf · secondary
+U37–U42 received (BOB #110, session_01BPKKPrYLqxMefuVNm32WWf). K1425 (Bob, 2026-10-05): no tranche is opened or planned until he says so, since UX work is expected to change what needs doing. So PR #10 (U40) waits for the tranche boundary he opens, and DEC-125 to DEC-127 and the domains (civicsmith.org, .com, .dev) are noted, not yet placed. U41 is being checked against the requirements and code; the answer follows once Bob has ruled on the options.
