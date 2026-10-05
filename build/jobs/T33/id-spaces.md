@@ -42,3 +42,7 @@ Also, for the record: my tests graft the five new spaces onto a combined view (`
 - `format`: 126 modules, 125 requirements files; 1 failure (extraction.md R65, not mine). `architecture id-spaces`: 3 product files, 5 relative imports; 0 failures. `coverage id-spaces`: 28 of 28 live requirement ids named by a test; 0 failures. `ownership id-spaces tranche/T33`: 4 files changed; 0 failures.
 
 Size (session_015zS8AH6HPe7cvTXdZEZsTf): test runs 14, module lines 1430
+
+## J3 · COMPLETE
+
+T33-9 applied (B4 included): R1 (nine spaces) and R27–R29 (the citation recogniser, court-citations' data held by static import). id-spaces 31/31; checks: architecture, coverage (28/28), ownership 0 failures; format 1 failure not mine (build/requirements/extraction.md: R65 given twice, red on tranche/T33 itself). Entities' R20 test red until its job lists the nine spaces (J2); bio-plane bundle stale. Record: build/jobs/T33/id-spaces.md, Completion. Final uses: jurisdictions, court-citations.
