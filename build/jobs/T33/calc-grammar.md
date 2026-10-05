@@ -4,7 +4,7 @@
 
 ## Completion
 
-**State of the work.** Built and tested on my readings in J1; one step remains before COMPLETE: re-running R7's date tests and R9's span test on civil-time's own code once CIVIL-TIME merges (until then they ran against a local, uncommitted stand-in of `compare` and `span`, never pushed).
+**State of the work.** Complete. B3 (K1529): tranche/T33 merged at ceb81d53dd with civil-time; the local stand-in removed (never committed); R7's date tests and R9's span test now run on civil-time's own `compare` and `span` (`bio-plane/src/civil-time/`, the names I import), all green. The invariants battery's lockdown was narrowed to what reads the clock (`new Date()` with no argument, `Date()`, `Date.now`): civil-time builds dated `Date`s from stated values, which is arithmetic, not a clock read.
 
 **Entries applied.** T33-4 whole: the figure parser moved from `consequences/figures.mjs` by copy (C:A-11; R1–R3); exact decimals (`add`, `subtract`, `multiply`, `divide`, `round`; R4, R5); the closed `bio-calc/1` grammar with its twelve ops and `checkRecipe` (R6); `evaluate` with `select`, `count`, `sum`, `difference`, `ratio`, `share`, `group`, `span`, `compare`, `round`, `join` (resolver from the caller, choice 4) and `sort` by a stated quantity (R7–R12); the summation refusals by name (R13); the trace (R14); `resultKey` (R15); recorded draws and the exact hypergeometric interval (R16, R17, C §(c)); no eval, pure and exact (R18–R20).
 
@@ -16,13 +16,15 @@
 
 **Found in another module.** None. (consequences' own parser stays until its L9 job, T33-71, re-points to this module.)
 
-**Runs** (from `bio-plane/`): `node --test test/m/calc-grammar/`: tests 29, pass 29, fail 0 (with civil-time's stand-in). Layer tests: none named in `build/manifest.md`.
+**Runs** (from `bio-plane/`): `node --test test/m/calc-grammar/`: tests 29, pass 29, fail 0, on civil-time's own code (tranche/T33 @ ceb81d53dd merged). Layer tests: none named in `build/manifest.md`. No service I use changed, so no other module's tests are owed.
 
 **Checks** (process repository, with this module's row's paths filled in a local, uncommitted copy of `modules.json`, since BOB writes them at merge):
 - `format: 126 modules, 125 requirements files; 0 failures`
-- `architecture: 13 product files, 19 relative imports (1 naming no tracked file, not judged); 0 failures` (the one is civil-time, not yet merged)
+- `architecture: 13 product files, 19 relative imports (0 naming no tracked file, not judged); 0 failures`
 - `coverage: 1 modules, 20 of 20 live requirement ids named by a test; 0 failures`
 - `ownership: 14 files changed by calc-grammar between tranche/T33 and HEAD; 0 failures`
+
+Size (session_01C7SS6rSXVbm5YnkpKzX2FE): test runs 14, module lines 1083
 
 ## J1 · QUESTION
 
