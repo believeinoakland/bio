@@ -40,3 +40,7 @@ Each bundles `sshsig.mjs`, which now imports `record-grammar/index.mjs`.
 - ownership: 6 files changed by signatures between tranche/T33 and HEAD; 0 failures
 
 Size (session_01Rj1YY4SJGHnLERzjPXfZoY): test runs 8, module lines 1373
+
+## J2 · REPORT
+
+Generated artifacts made stale by T33-7 (sshsig.mjs now imports record-grammar/index.mjs); not edited, per mechanics §14: bio-plane/dist/bio-plane.bundled.mjs (fleetbundles, D-298 arm), newgroup/dist/newgroup.bundled.mjs (DIST-13 (C)), bio-plane/src/case-checker/program.mjs (case-checker R13, accepted red 3). Each regenerates at the layer close.
