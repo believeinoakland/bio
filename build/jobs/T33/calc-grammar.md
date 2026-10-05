@@ -41,3 +41,7 @@ Readings I am building on (no answer needed unless one is wrong):
 
 T33-4 built on K1514's readings and pushed (job/T33/calc-grammar): 29/29 tests; format, architecture, coverage (20/20) and ownership 0 failures (with my row's paths filled in a local copy of modules.json: paths bio-plane/src/calc-grammar/, tests bio-plane/test/m/calc-grammar/). Uses unchanged: record-grammar, civil-time.
 One step before COMPLETE: R7's date and R9's span tests ran against a local stand-in of civil-time's compare and span (never committed). When civil-time merges into tranche/T33, send me a CHANGE (or RESUME) and I merge it, re-point to its exported names if they differ, re-run, and post COMPLETE. Progress is in my record's Completion section.
+
+## J3 · COMPLETE
+
+T33-4 complete on civil-time's own code (tranche/T33 @ ceb81d53dd merged; stand-in removed, never committed). Paths: bio-plane/src/calc-grammar/; tests: bio-plane/test/m/calc-grammar/; uses: record-grammar, civil-time (unchanged). Tests 29/29; format, architecture (0 untracked imports), coverage 20/20, ownership: 0 failures (checks run with my row's paths in a local copy of modules.json). The invariants lockdown now forbids clock reads only, since civil-time builds Dates from stated values. Record: build/jobs/T33/calc-grammar.md on job/T33/calc-grammar.
