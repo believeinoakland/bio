@@ -25,7 +25,7 @@
 | M5 | prompts/M5.txt | notes/M5.md | done |  |
 | M6 | prompts/M6.txt | notes/M6.md | done |  |
 | M7 | prompts/M7.txt | notes/M7.md | done |  |
-| X-REGISTER | prompts/X-REGISTER.txt | digest/DOCTRINE-REGISTER.md | missing |  |
+| X-REGISTER | prompts/X-REGISTER.txt | digest/DOCTRINE-REGISTER.md | done |  |
 | A-EVENTS | prompts/A-EVENTS.txt | studies/EVENTS.md | missing |  |
 | A-INTEGRATION | prompts/A-INTEGRATION.txt | studies/INTEGRATION.md | missing |  |
 | A-MONEY | prompts/A-MONEY.txt | studies/MONEY.md | missing |  |
@@ -35,4 +35,4 @@
 | R-3 | prompts/R-3.txt | reviews/R-3.md | missing |  |
 | S-SYNTHESIS | prompts/S-SYNTHESIS.txt | synthesis/constructs-2.md | missing |  |
 
-Digests built: CROSS.md, DOCTRINE.md, EVENTS.md, MONEY.md, PEOPLE.md, SIX.md
+Digests built: CROSS-REGISTER.md, CROSS.md, DOCTRINE-REGISTER.md, DOCTRINE.md, EVENTS.md, MONEY.md, PEOPLE.md, SIX.md
