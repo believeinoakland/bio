@@ -76,3 +76,12 @@ Also, for the OCR path (K1511 left the choice to this job): a transcription is c
 Read correctly, "TOTAL FUND BALANCES (DEFICITS)" holds its 7 figures in 7 columns, and page 48 is usable at 100%. Across every measured page I hold (FY2014 pp. 46, 48, 148, 167, 169; FY2019 pp. 50, 158; FY2024 pp. 49, 50, 51, 57, 179, 204, 212, in both tiers; the budget book pp. 137, 148, 196, 241, 283), no total row prints fewer cells than its table's columns.
 
 **My best reading, which I am building to:** R13's parenthesis reads "R3's `span` tested on a test-profile table, where a total row holds a different number of cells". FY2014's Balance Sheet is tested as usable, with its total row in its columns and not marked `span`. If you want R13 re-worded to match, that is yours; nothing else changes.
+
+## J5 · COMPLETE
+
+T33-17 is applied: R1–R14, the whole module. The details are under "Completion" in this record.
+- **Paths, for `modules.json`:** `["budget-doctypes/"]`; tests `["budget-doctypes/test/"]`. **Uses:** `jurisdictions` (added: the tests read both profiles through `combine`), `docprofile`, `office-readers`, `pdf-reader` (its output shape is read; nothing is imported).
+- **Tests:** 27 pass, 0 fail. The checks pass with 0 failures: format, architecture, coverage (14 of 14 ids) and ownership, the last three run against a scratch copy of `modules.json` holding the paths above.
+- **Measured:** every measured ACFR table is usable (FY2014, FY2019 and FY2024, in both tiers). Budget book pp. 196, 241, 283 and 148 are usable, with p148's chart labels skipped. p17 is unread. All 200 M-M1 figures are found as printed. Two Socrata cycles give their groupings per period.
+- **Open:** J4. R13's parenthesis names FY2014 p48 as a span case, but read correctly that page has none. I test `span` on a test-profile table. If you re-word R13, no code changes.
+- **Merge order:** after `jurisdictions` (K1513's keys; until then the tests add the keys to the views only where the profile lacks them). It does not wait on docprofile's R37: until R37 is met, a caller passes `ctx.supplied`.
