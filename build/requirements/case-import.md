@@ -1,6 +1,6 @@
 # case-import — requirements
 
-**Status** · Requirements for T28, folded by a worker for BOB #104 at T28's opening, entry N520 (DEC-112's share), with DEC-96's acts (`plan/draft-T28-dec112.md`). A new product module with no `from` (K1256, K1257). It sits in layer 8 directly after `case-checker`, through which it recreates, and before `case-authoring`. Its own T28 job writes its code at `bio-plane/src/case-import/` and its tests at `bio-plane/test/m/case-import/`, then adds both to its `modules.json` entry (K1043's form). Every requirement is not yet met (T28). It answers `next.md` rows H1 (DEC-96) and J4 (DEC-92, for imported work). R16 and the changes to R6–R9 are entry N522's (`plan/draft-T28-n522.md` §7; K1273). AMENDED by a fold worker for BOB #106 on `prep/T29-folds`, 2026-10-03, entry N529, ruling K1333 (`case-authoring`'s disclosures moved to `case-disclosures`): references to `case-authoring` R51 and R52 re-pointed to `case-disclosures` R13 and R14; wording only, no meaning changed. N534 (DEC-101 (3), DEC-116 item 8: watching other groups' published editions; K1339, K1366) folded by a worker for BOB #107 on `tranche/T31`, 2026-10-03, from `plan/draft-T29-n534.md` §2.5: R17–R20 (the watch, the docket read and its verification, what a member reads, the watch's items) added; the terms, R12, R13, R14 and R16 widened; Uses gain `signatures` and `docket`; not yet met (T31 layer 8).
+**Status** · Requirements for T28, folded by a worker for BOB #104 at T28's opening, entry N520 (DEC-112's share), with DEC-96's acts (`plan/draft-T28-dec112.md`). A new product module with no `from` (K1256, K1257). It sits in layer 8 directly after `case-checker`, through which it recreates, and before `case-authoring`. Its own T28 job writes its code at `bio-plane/src/case-import/` and its tests at `bio-plane/test/m/case-import/`, then adds both to its `modules.json` entry (K1043's form). Every requirement is not yet met (T28). It answers `next.md` rows H1 (DEC-96) and J4 (DEC-92, for imported work). R16 and the changes to R6–R9 are entry N522's (`plan/draft-T28-n522.md` §7; K1273). AMENDED by a fold worker for BOB #106 on `prep/T29-folds`, 2026-10-03, entry N529, ruling K1333 (`case-authoring`'s disclosures moved to `case-disclosures`): references to `case-authoring` R51 and R52 re-pointed to `case-disclosures` R13 and R14; wording only, no meaning changed. N534 (DEC-101 (3), DEC-116 item 8: watching other groups' published editions; K1339, K1366) folded by a worker for BOB #107 on `tranche/T31`, 2026-10-03, from `plan/draft-T29-n534.md` §2.5: R17–R20 (the watch, the docket read and its verification, what a member reads, the watch's items) added; the terms, R12, R13, R14 and R16 widened; Uses gain `signatures` and `docket`; not yet met (T31 layer 8). T33's fold, by a requirements worker for BOB #114 on `tranche/T33`, 2026-10-05, from plan entry T33-67 (C:A-14; K1448, DEC-112, D312): R3 and R4 amended (recreation recorded and answered per calculation too); R21 (calculations recreated, never trusted) added; Uses gain `calculations`; not yet met (T33-67).
 
 **Size (P6).** About 1,600–2,300 lines: the import and its tables, recreation, completion, the reads, the four acts and its catalogue rows. Acceptance is split out if it grows (K1256).
 
@@ -34,7 +34,9 @@ Terms.
 
   The same edition with the same bytes answers `existed: true`. Otherwise the act creates the import if it is absent and stores every file of the case file by its SHA-256. It records the edition with its source group, case, edition, lens, `by` and instant. It then runs `case-checker.checkCaseFile` and records each finding's result, with the checker's versions (R3). (DEC-112 (6); Publication §5C; K1134 reading 4)
 - **R2** Read-only. Nothing an import holds is a record bundle. No act of this copy edits, promotes, ratifies or publishes it, and this module offers no act that changes an imported file. The only later writes are R5's completion, R6's acceptance and its withdrawal, and R8's flags. (DEC-112 (6) "a new, read-only project")
-- **R3** Recreation is recorded per finding: the result, what is missing, what differs, the recomputed pair, and the checker's grading and checks versions. It is recomputed only by R5. (DEC-112 (6); Bob, DEC-112 response 2: "the system confirms the findings according to the structured case file")
+- **R3** Recreation is recorded per finding: the result, what is missing, what differs, the recomputed pair, and the checker's grading and checks versions; and per calculation the case carries, as R21 records it. It is recomputed only by R5. (DEC-112 (6); Bob, DEC-112 response 2: "the system confirms the findings according to the structured case file") *(not yet met: T33-67)*
+
+- **R21** (C:A-14; K1448; D312) At an import (R1) and at a completion (R5), each calculation the case carries (`case-grammar` R18) is recreated, never trusted: its recipe is evaluated by `calculations.evaluate` (which writes nothing to the record) over the inputs the case file carries, each first checked against its stated SHA-256, and the result recorded per calculation as `recreated` (every result agrees), `differs` (naming each result, the source's value and the recomputed one) or `not_recreated` (an input missing or differing from its hash, or a method version this copy does not hold, each named). The source's stated results are held only as the source's statement: no act of this module writes a `CALC-`, a money fact, or any record row from them, and a later use of the figure in this group's record is a member's own calculation over its own inputs (`calculations`). *(not yet met: T33-67)*
 
 **importedCases({viewer}), importedCase({import, edition?, viewer})** (`op=importedcases`, `op=importedcase`; member session; reads)
 
@@ -43,7 +45,8 @@ Terms.
   - the source's bar as the case states it, labelled as the source's and never as this group's (DEC-45);
   - each finding against this group's own bar. That is the group default (`strength.strengthBarOf` with no project, its R16), and with none set, that no bar is set (K1134 reading 3). The axis is reached or not, as `case-checker` R6 reads it, with `not_asked` for a supporting finding;
   - its origin mark facts (DEC-92): `another_groups` (with the edition and whether its signature verified), the acceptance in force (by, when, why, what was checked, the gaps stated) or none, and the open flags;
-  - the statement that recreating shows the case intact and consistent, not true (`case-checker` R1's `statement`).
+  - the statement that recreating shows the case intact and consistent, not true (`case-checker` R1's `statement`);
+  - each calculation the edition carries, with its result as recreated here (R21) beside the value the source states, labelled as the source's. *(not yet met: T33-67)*
 
   A `viewer` who is not an active member is answered as if no import exists, with the same bytes for each. It writes nothing. (DEC-112 (6); DEC-92; DEC-96 item 1)
 
@@ -135,7 +138,8 @@ Terms.
 - `membership`: the session stamp and whether a viewer is an active member.
 - `strength`: `strengthBarOf` (its R16; R4).
 - `case-grammar`: `caseFileManifestCheck`, `methodOf`, `materialsOf` (its R11–R13).
-- `case-checker`: `checkCaseFile` (its R1).
+- `case-checker`: `checkCaseFile` (its R1), whose `calculations` (its R20) R21 compares with its own recreation.
+- `calculations` (T33-67): `evaluate` (R21).
 - `inquiry-grammar`: `importedFindingRef` (its R11; R6).
 - `accepted-work`: `registerAcceptedWork` (its R1, with its R8's `moves`; R16).
 - `reevaluation`: `acceptanceWithdrawn` (its R31; R7); `citedCaseMoved` (its R33; R18; N534).

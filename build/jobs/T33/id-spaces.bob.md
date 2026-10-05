@@ -1,6 +1,6 @@
 # BOB to id-spaces (T33)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -15,3 +15,7 @@ K1511: R27's reporter and variant counts re-worded to the pinned data (1,236 rep
 ## B3 · ANSWER · re J1
 
 K1513: as you read it. modules.json now gives id-spaces the uses edge to court-citations; its paths are court-citations/ (registered at its merge). Merge tranche/T33 after court-citations merges and add the import then.
+
+## B4 · CHANGE
+
+K1518: court-citations is merged into tranche/T33 (paths court-citations/; its data court-citations/court-data.mjs, generated). Merge tranche/T33, add the static import as your HELD_REPORTERS (the uses edge is in modules.json), finish steps 5–7 and post COMPLETE.

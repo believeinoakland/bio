@@ -1,6 +1,6 @@
 # BOB to calc-grammar (T33)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -11,3 +11,7 @@ Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their m
 ## B2 · ANSWER · re J1
 
 K1514: 1–7 as you read them. civil-time's path is bio-plane/src/civil-time/ (its START); follow its exported names.
+
+## B3 · CHANGE
+
+civil-time is merged into tranche/T33 @ ceb81d53dd (K1529; record-grammar merged earlier). Merge tranche/T33 into your branch, drop the local stand-ins, point R7's and R9's tests at civil-time's real exports (bio-plane/src/civil-time/), re-run steps 5–7, and post COMPLETE with your final paths, tests and uses. BOB #115 now answers this mailbox.

@@ -1,6 +1,6 @@
 # tasks — requirements
 
-**Status** · DRAFT by a worker for BOB, 2026-09-30, on `tranche/T16`, from `queue.md` under N363: Bob's approval of the queue split (K507), its seams ruled by BOB as drafted (K531, `build/plan/draft-N363-queue-split.md`). R1–R5 and R7–R11 are `queue`'s requirements moved with their meaning unchanged (`queue` R23, R24, R25, R41, the `tasks` half of R42; the inbox's share of R33, R35, R36, R37, R38); only cross-references are re-pointed. Layer 11, after `affordances`, before `queue-producers` and `queue`. `from`: `legacy-store` (K531: §12.2's exception is for legacy modules only, so this module writes its code in its own paths and `queue`'s job removes the moved code). R6 met by TASKS #1 (K562).
+**Status** · DRAFT by a worker for BOB, 2026-09-30, on `tranche/T16`, from `queue.md` under N363: Bob's approval of the queue split (K507), its seams ruled by BOB as drafted (K531, `build/plan/draft-N363-queue-split.md`). R1–R5 and R7–R11 are `queue`'s requirements moved with their meaning unchanged (`queue` R23, R24, R25, R41, the `tasks` half of R42; the inbox's share of R33, R35, R36, R37, R38); only cross-references are re-pointed. Layer 11, after `affordances`, before `queue-producers` and `queue`. `from`: `legacy-store` (K531: §12.2's exception is for legacy modules only, so this module writes its code in its own paths and `queue`'s job removes the moved code). R6 met by TASKS #1 (K562). T33's fold, by a requirements worker for BOB #114 on `tranche/T33`, 2026-10-05, from plan entry T33-86 (S0-11, B0.11; K1470's one id grammar): R12 (the task id read from `record-grammar`'s one id table) added; Uses gain `idPattern`; not yet met (T33-86).
 
 **Size (P6).** About 780 lines of today's queue code move here (`queue/index.mjs` :67–76, :196–210, :3645–4171 in part; `checks.mjs` :53–73, :106–117, :124–276; `schema.mjs` :11–45), with about 410 lines of tests (`inbox.test.mjs`, part of `ledger.test.mjs`). Well under one reading.
 
@@ -30,7 +30,7 @@ The obligation inbox: tasks routed from captures whose authority is undetermined
 
 ### Uses
 
-- `record-grammar`: `isMachineStamp`, `isPublicHttpsLocator`, `ISO_TS_RE`, `BUNDLE_ID_RE` (R1, R3, R4).
+- `record-grammar`: `isMachineStamp`, `isPublicHttpsLocator`, `ISO_TS_RE`, `BUNDLE_ID_RE` (R1, R3, R4); `idPattern` (R12; T33-86).
 - `record-core`: `stampInstant`, `mintOpaqueId`, `mintExhausted` (its R62; R1), `bundleInfo`, `seedMintLedger` (its R40), `registerCounts` (its R63) (R5), `registerAuditCheck` (its R59; R4), `declarePurge` (R8), `perItem` (its R50–R52; R3).
 - `membership`: `viewerPredicate` and `GATE_MARK` (the `taskList` gate, R2, R6), `projectOwners` (its R65), `memberFacts` (its R68), `activeAdmins` (its R86), `isAdministrator` (its R64) (R1, R3).
 - `promotion`: `registerStep`, its R39, which registers R4's grammar as a promotion check (K462).
@@ -47,6 +47,7 @@ The obligation inbox: tasks routed from captures whose authority is undetermined
 - **R9** No answer names a bundle the viewer may not see, and no count reveals one (REC-30, DEC-36).
 - **R10** `actor` and `viewer` are taken only from the control plane's stamps, never from a body.
 - **R11** No place is named in this module's behaviour or outward text.
+- **R12** (S0-11, B0.11) The task id C-19.1 tests (`TASK_ID_RE`, `checks.mjs`:80) is tested by the pattern `record-grammar`'s one id table answers for its prefix (`idPattern`, its R46, R47), never by a pattern of its own: a counter of four or more digits is accepted, and every id valid before stays valid, so every finding on an inbox file written before T33 is byte-identical. *(not yet met: T33-86)*
 
 ### Satisfies
 
