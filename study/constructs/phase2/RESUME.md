@@ -10,7 +10,7 @@
 | 1→2 Registers | X-REGISTER | `digest/DOCTRINE-REGISTER.md`, `digest/CROSS-REGISTER.md` | `prompts/X-REGISTER.txt` |
 | 2a Analysis | A-PEOPLE, A-EVENTS, A-MONEY | `studies/<CONSTRUCT>.md` | `ANALYSIS-PROTOCOL.md` |
 | 2b Integration | A-INTEGRATION (after 2a) | `studies/INTEGRATION.md` | `ANALYSIS-PROTOCOL.md` |
-| 3 Review | R-1 (PEOPLE, EVENTS), R-2 (MONEY, INTEGRATION) | `reviews/R-<n>.md` | `REVIEW-PROTOCOL.md` |
+| 3 Review | R-1 (PEOPLE, EVENTS), R-2 (MONEY, INTEGRATION), R-3 (the architecture as one system, K1460) | `reviews/R-<n>.md` | `REVIEW-PROTOCOL.md`; R-3: `ARCH-REVIEW-PROTOCOL.md` |
 | 4 Synthesis | S-SYNTHESIS; then BOB reviews it, applies the ladder amendments, renders it for Bob | `synthesis/constructs-2.md` | `SYNTHESIS-PROTOCOL.md` |
 
 Every unit's prompt is `prompts/<id>.txt`. `python3 status.py` reads each unit's state from its output and rewrites `STATE.md`.
@@ -25,4 +25,4 @@ Every unit's prompt is `prompts/<id>.txt`. `python3 status.py` reads each unit's
 7. **If usage runs out**, Bob starts a BOB on his other account (as for the first study, `../RESUME.md` "Between the two accounts"); that BOB reads this file and `STATE.md`.
 
 ## State
-- 2026-10-05 ~15:35 UTC: protocols written; phase 1 started: C1–C14, D1, D2, M1–M4 running (20, the session's limit); M5, M6, M7 start as readers finish.
+- 2026-10-05 ~15:35 UTC: protocols written; phase 1 started: C1–C14, D1, D2, M1–M4 running (20, the session's limit); M5, M6, M7 start as readers finish. K1460: protocols extended (system requirements; design for the whole; R-3 architecture review); running readers told.

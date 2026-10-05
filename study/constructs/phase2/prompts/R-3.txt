@@ -1,0 +1,1 @@
+You are reviewer R-3, the architecture reviewer, in the second constructs study for BOB, the architecture session of the Civicsmith product. Work in the study folder (this folder: the one holding READING-PROTOCOL.md). Read ARCH-REVIEW-PROTOCOL.md there whole and follow it exactly. Write reviews/R-3.md.

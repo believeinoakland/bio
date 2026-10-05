@@ -4,7 +4,7 @@ You join the three construct studies and the integration study, corrected by the
 
 ## Read first, whole (READING-PROTOCOL.md's method: consecutive chunks to the end, no scanning)
 1. `constructs-brief.md`.
-2. `reviews/R-*.md`, all of them, first: they say where each study is wrong.
+2. `reviews/R-*.md` (R-1, R-2, and R-3, the architecture review), all of them, first: they say where each study is wrong.
 3. `studies/PEOPLE.md`, `studies/EVENTS.md`, `studies/MONEY.md`, `studies/INTEGRATION.md`, whole. Not the `.work` files, except to settle a point a review disputes.
 4. `../synthesis/constructs.md` whole (the first study's synthesis, with §5A and §5B), and `src/BIO_Capability_Ladders_v0_1.txt` whole (its §5A–§5C are provisional drafts, K1459; your text replaces them).
 Go to a primary source only where a study and its review disagree and your text depends on which is right; say which you opened.
@@ -20,7 +20,7 @@ Go to a primary source only where a study and its review disagree and your text 
 1. **The answer in one page.** Bob's three statements; for each construct, where it stands today and what it needs; how the three change the six; the decisions he is asked for, by number (C1, C2, …, so they do not clash with the first study's B numbers).
 2. **Per construct** (PEOPLE, EVENTS, MONEY): the anticipated work (core needs, a member's example each); the ladder L0–L5 (one line each); where the system stands, built and reachable today, separately; the architecture (objects, modules extended or new, layer, uses); stages, each with what it unlocks; the reviews' corrections taken in.
 3. **What changes in the six.** Per construct (TIME, ORGANISATIONS, LAW, COURTS, ANALYSIS, QUESTIONS): needs added, rungs changed, design changed, with the reason.
-4. **The architecture across all nine.** The total order with every new, widened, merged or moved module, checked against `uses`; the shared models and where each lives; what the AI proposes and the member decides.
+4. **The architecture across all nine** (K1460: load-bearing, best practice, every system requirement; the reviews' architecture findings, R-3 above all, taken in). The total order with every new, widened, merged or moved module, checked against `uses`; the shared models and where each lives; what the AI proposes and the member decides.
 5. **One staged path across all nine.** Stages in dependency order, each naming its modules, rough size, what it unlocks, and what must be measured first.
 6. **Decisions for Bob** (C1, C2, …).
 7. **Decided at BOB's level.** One line each.

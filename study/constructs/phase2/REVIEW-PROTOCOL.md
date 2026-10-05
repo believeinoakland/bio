@@ -12,10 +12,11 @@ You review two studies (`studies/<NAME>.md`) adversarially, before the synthesis
 4. **Feasibility:** does it fit the runtime (Workers and Durable Objects, request limits, one alarm, the AI credential)? Is stage 1 concrete enough to plan from?
 5. **Omissions:** a need in the digest the study ignores; an interface it misses; an existing module, or a first-study module, that already does part of the job; a real-world standard or source it should have used.
 6. **Fit with the first study:** does it duplicate, contradict or silently change something the first study or the capability ladders settled? Does it rely on BOB #112's provisional §5A–§5C as evidence (it must not)?
-7. **P17:** are the "decisions for Bob" truly his (policy and doctrine, requirements' meaning, UX; layers and modules are delegated to BOB, K1437)?
+7. **Load-bearing and whole (K1460):** does the design fit the other constructs without a second home for any fact; does it carry L5 at realistic volumes without rework; is it grounded in cited best practice; is every system requirement in the brief addressed?
+8. **P17:** are the "decisions for Bob" truly his (policy and doctrine, requirements' meaning, UX; layers and modules are delegated to BOB, K1437)?
 
 ## Write `reviews/R-<n>.md`
-Per study: `## <NAME>` then `### Errors` (claim → what the source says → correction, each cited), `### Omissions`, `### Doctrine`, `### Feasibility`, `### Fit with the first study`, `### P17`, `### Kept`. End with `## Verdict`: for each study, sound / sound with the corrections listed / unsound (and why), and the three corrections that matter most.
+Per study: `## <NAME>` then `### Errors` (claim → what the source says → correction, each cited), `### Omissions`, `### Doctrine`, `### Feasibility`, `### Fit with the first study`, `### Load-bearing and whole`, `### P17`, `### Kept`. End with `## Verdict`: for each study, sound / sound with the corrections listed / unsound (and why), and the three corrections that matter most.
 
 **Checkpoint:** save the file after each study's section; if it exists when you start, you are resuming: keep it and continue.
 Read-only: never edit, commit or push in /home/user/bio or /home/user/civicos-process. Return a 15-line summary. If your file write is refused, return the full text instead.
