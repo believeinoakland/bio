@@ -32,3 +32,7 @@ Size (session_0177vLzjSyU8nj98B8SxWTmZ): test runs 8, module lines 3356
 Found in other modules by T33-19a (record, Completion):
 1. entities: test/m/entities/resolve.test.mjs:177 (R13, N202) hard-codes the total order as [connections, progressions, observation-log]. Under T33's order (Rules (2)), observation-log precedes progressions, so the test fails after this merge: actual [50, 53, 51] where it expects them sorted. Entities' code orders correctly through MODULE_ORDER; only the test's expected list is stale. It is green on tranche/T33 without my change (9/9). It is for entities' job (T33-25), or a CHANGE to it. Until then it is red by name.
 2. Generated artifact made stale: bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (owner not_product), which inline membership's index.mjs. Regenerate at the layer close (§14). No other artifact includes membership.
+
+## J2 · COMPLETE
+
+T33-19a applied, R83 met. MODULE_ORDER is re-pinned to modules.json (126 ids, plan T33's Rules (2)). The order test pins the T33 order and names the 18 unbuilt T33 modules (empty paths) as not yet built, by name, without failing. Tolerance ends when a module's merge gives it paths, so no other job edits membership's test (my reading, P17; CHANGE it if you read R83 otherwise). Membership 141/141; members 96/96. Users of MODULE_ORDER: 1254/1257, the 3 being K1514, K1515 and the entities red in J2. format, architecture, coverage (79/79) and ownership (3 files): 0 failures. Uses unchanged. Branch job/T33/membership @ 8d71ab76fa.
