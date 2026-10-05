@@ -148,6 +148,8 @@ home; until the flow model and the signal history exist, the link goes to the th
 Its default order is as above (grouped by case; to-dos, then noticed items, then signals), and a member may re-sort it by **time
 added**, **time due**, **case** or **kind**. Sorted by case or by kind, the list folds into groups that can be collapsed, so a
 member can focus on one. The detailed look is Design's.
+**RULED 2026-10-05 (DEC-131, the design session under Bob's delegation): the third kind is shown as "Status", not "Signal",**
+because K1473 uses "signal" for the machine's judgment scores (members see those as a "hint"). Its home is the status history.
 
 
 ## The classes: three, not four severities

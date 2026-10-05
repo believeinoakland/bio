@@ -184,7 +184,9 @@
     }
    ],
    "src": "installer; instance-setup; Distribution v0.1",
-   "basis": "mixed (see each line)"
+   "basis": "mixed (see each line)",
+   "ring": "folded",
+   "foldedNote": "A moment of the administrator's role: the person installing the copy, kept as steps in journey 1 (a group gets going). (DEC-128)"
   },
   {
    "name": "Founder (root of trust)",
@@ -267,7 +269,9 @@
     }
    ],
    "src": "membership; instance-setup; DEC-2",
-   "basis": "mixed (see each line)"
+   "basis": "mixed (see each line)",
+   "ring": "folded",
+   "foldedNote": "A moment of the administrator's role: the founder who claims the copy, kept as steps in journey 1. (DEC-128)"
   },
   {
    "name": "Administrator (custodian)",
@@ -355,7 +359,8 @@
     }
    ],
    "src": "membership; Membership v2",
-   "basis": "fixed"
+   "basis": "fixed",
+   "ring": "members"
   },
   {
    "name": "Member, newcomer (no civic engagement experience)",
@@ -455,7 +460,8 @@
     }
    ],
    "src": "UI-KICKOFF; Design Requirements 2, 11; DEC-69",
-   "basis": "mixed (see each line)"
+   "basis": "mixed (see each line)",
+   "ring": "members"
   },
   {
    "name": "Member, experienced investigator",
@@ -539,7 +545,8 @@
     }
    ],
    "src": "Case Making; Interaction Constructs; strength",
-   "basis": "fixed"
+   "basis": "fixed",
+   "ring": "members"
   },
   {
    "name": "Member with declared professional expertise (lawyer, CPA, engineer)",
@@ -615,7 +622,8 @@
     }
    ],
    "src": "Membership v2 section 1.3; Publication section 6",
-   "basis": "fixed"
+   "basis": "fixed",
+   "ring": "members"
   },
   {
    "name": "Project owner (manager)",
@@ -699,7 +707,8 @@
     }
    ],
    "src": "membership section 7; Publication; case-authoring",
-   "basis": "fixed"
+   "basis": "fixed",
+   "ring": "members"
   },
   {
    "name": "Project participant (joined)",
@@ -776,7 +785,9 @@
     }
    ],
    "src": "membership; queue; basis-versions",
-   "basis": "fixed"
+   "basis": "fixed",
+   "ring": "folded",
+   "foldedNote": "A state any member can be in, not a separate audience. (DEC-128)"
   },
   {
    "name": "Member outside a project",
@@ -842,7 +853,9 @@
     }
    ],
    "src": "membership R43-R53",
-   "basis": "fixed"
+   "basis": "fixed",
+   "ring": "folded",
+   "foldedNote": "A state any member can be in, not a separate audience. (DEC-128)"
   },
   {
    "name": "Review recipient (outsider with a grant)",
@@ -916,7 +929,8 @@
     }
    ],
    "src": "Publication section 6A; review",
-   "basis": "fixed"
+   "basis": "fixed",
+   "ring": "invited"
   },
   {
    "name": "Knocker (anyone handing the group material)",
@@ -1008,7 +1022,8 @@
     }
    ],
    "src": "capture R30-R32, R47-R56; Intake Doctrine section 2a",
-   "basis": "mixed (see each line)"
+   "basis": "mixed (see each line)",
+   "ring": "outside"
   },
   {
    "name": "Public reader of a published case",
@@ -1106,7 +1121,8 @@
     }
    ],
    "src": "Publication; publication R8-R29",
-   "basis": "fixed"
+   "basis": "fixed",
+   "ring": "outside"
   },
   {
    "name": "Journalist or media",
@@ -1192,7 +1208,8 @@
     }
    ],
    "src": "Case Making; Publication section 6",
-   "basis": "mixed (see each line)"
+   "basis": "mixed (see each line)",
+   "ring": "outside"
   },
   {
    "name": "Activist or partner group (outside this instance)",
@@ -1287,7 +1304,8 @@
     }
    ],
    "src": "Design Requirements 3, 5; Declared Bias",
-   "basis": "mixed (see each line)"
+   "basis": "mixed (see each line)",
+   "ring": "outside"
   },
   {
    "name": "Government office or official addressed by an action or filing",
@@ -1399,7 +1417,8 @@
     }
    ],
    "src": "actions; escalation; Case Making section 4",
-   "basis": "mixed (see each line)"
+   "basis": "mixed (see each line)",
+   "ring": "outside"
   },
   {
    "name": "Oversight body (grand jury, controller, auditor)",
@@ -1468,7 +1487,8 @@
     }
    ],
    "src": "Design Requirement 8; escalation R12; DEC-31",
-   "basis": "mixed (see each line)"
+   "basis": "mixed (see each line)",
+   "ring": "outside"
   },
   {
    "name": "Named counsel",
@@ -1560,7 +1580,8 @@
     }
    ],
    "src": "filings R8-R13, R17",
-   "basis": "mixed (see each line)"
+   "basis": "mixed (see each line)",
+   "ring": "invited"
   },
   {
    "name": "AI run as a principal (the assistant)",
@@ -1645,7 +1666,9 @@
     }
    ],
    "src": "AI Roles; ai-runs; affordances R7",
-   "basis": "fixed"
+   "basis": "fixed",
+   "ring": "folded",
+   "foldedNote": "An actor that works for members, not an audience; it appears in the journeys where it acts. (DEC-128)"
   },
   {
    "name": "The group's future members",
@@ -1711,7 +1734,8 @@
     }
    ],
    "src": "Roadmap section 9; intent R11",
-   "basis": "fixed"
+   "basis": "fixed",
+   "ring": "members"
   },
   {
    "name": "Described audience addressed by an action (e.g. residents of a district)",
@@ -1739,7 +1763,9 @@
     }
    ],
    "src": "actions R9; D1",
-   "basis": "fixed"
+   "basis": "fixed",
+   "ring": "folded",
+   "foldedNote": "The people an awareness action speaks to; they meet the group's words, not its screens. (DEC-128)"
   }
  ],
  "useCases": [

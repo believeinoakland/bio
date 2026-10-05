@@ -1789,6 +1789,7 @@ response: **Bob, 2026-10-01: as recommended (A, "Signal"), with re-sorting and f
   3. "otherwise, as recommended": members see "To do", "Noticed" and "Signal"; each kind has its own icon, wording, buttons and an "Open…" link to its home (until the flow model and signal history exist, the link goes to the thing the item concerns); the queue stays one list, its default order grouped by case with to-dos, then noticed items, then signals. The internal "noticed" disposition clash is the architecture session's to rename.
 decided: 2026-10-01 · Bob
 reasoning recorded in: this entry; the UX substrate's brief for question 28; NOTIFICATIONS.md (RULED 2026-10-01).
+amended: 2026-10-05 by the design session under Bob's delegation (DEC-131): the third kind is shown as "Status", not "Signal", since K1473 uses "signal" for the machine's judgment scores (members see a "hint"); its future home is the status history.
 owed: "Condition" re-worded to "Signal" in member-facing text; the queue read able to sort by time added, time due, case and kind (queue; BOB places it); the redesign's three item styles, sorting and collapsible groups; the UX page's question 28 marked ruled.
 
 ### DEC-111 · answered
@@ -2060,3 +2061,59 @@ decided: 2026-10-04 · Bob
 reasoning recorded in: this entry; the brand-and-voice page (V4, with its example); BIO_Interaction_Constructs_v0_1.md §L; the design principles (8.5).
 amended: 2026-10-05 by Bob through the development process (K1502): the assistant runs only on a member's own Claude account, so a translation draft or a machine translation uses the account of the member who asks; a member without one types translations in or reads the original. Noted on brand-and-voice.html under V4.
 owed: (BOB) the member's language setting; the group's translation layer over the interface's words, stored in its copy, with each fixed term's meaning note; the translation workspace and its grant; the assistant's translation drafts (interface words and the group's writing), labelled machine work, adopted only by a member; "read in my language" on notes, questions, findings and notices, the original one tap away; signed records unchanged. (Design session) the translation workspace and the "read in my language" control drawn in step 5; the word list carries meaning notes for the fixed terms.
+
+### DEC-128 · answered
+raised: 2026-10-04 · the UX design session with Bob on his primary account (session_011wdWGoa6RAbZiRU4Bn3Rng, carrying the journeys page drafted by session_01JZtUsAKpStQoiwF6rzqsyJ; the development process also runs on his primary account since K1428) (the design phase's step 3, journeys: question J1, who we design for)
+for: bob
+question: Whether the audiences gathered from the requirements (twenty) and the original brief (five) are reconciled into three rings: members inside the group (newcomer, experienced investigator, professional member, project owner, administrator, the group's future members); people invited in (an outside reviewer, the group's lawyer); people outside the group (someone handing over material, the public reader, journalists, partner groups, government offices and officials, oversight bodies); with the installer and founder kept as moments of the administrator's role, project participant and member outside a project as states, the assistant as an actor and residents addressed by an action as the people an action speaks to.
+why it is Bob's: who the product is designed for (UX, P17).
+provisional: the UI-KICKOFF's five audiences; the twenty in `ux-experience.json`.
+alternative: keep twenty separate audiences, or the brief's five in order of use.
+recommendation: three rings; the newcomer member the centre of gravity; members who read another language, screen-reader and keyboard users and phone users across every ring.
+reversal cost: low (a grouping; no requirement rests on it).
+response: **Bob, 2026-10-04: "J1: yes"** (recorded on the journeys page and in HANDOFF.md by session_01JZtUsAKpStQoiwF6rzqsyJ); **confirmed for the record 2026-10-05: "Record my answers to J1, J2 and J5 as DECs".** Kinds of group (professional; issue-specific; neighbourhood or community; catch-all) are described beside the rings, with the note that a public body may itself run a copy (an inside auditor), so the design never assumes the group stands outside government.
+decided: 2026-10-04 · Bob
+reasoning recorded in: this entry; `docs/development/ux-substrate/journeys.html` §1; BIO_Interaction_Constructs_v0_1.md §R (new); `ux-experience.json` audiences (each with its ring), rendered on the UX substrate page.
+owed: nothing to BOB (a design grouping). (Design session) every later journey, screen and wizard checked against the rings.
+
+### DEC-129 · answered
+raised: 2026-10-04 · the UX design session with Bob on his primary account (session_011wdWGoa6RAbZiRU4Bn3Rng, carrying the journeys page drafted by session_01JZtUsAKpStQoiwF6rzqsyJ; the development process also runs on his primary account since K1428) (step 3: question J2, the wide path)
+for: bob
+question: Whether eight rules, drawn from Bob's words of 3 October that the path to success must be "wide enough and inclusive enough for all audiences", become the test every journey and screen passes, alongside the design principles.
+why it is Bob's: UX standard every screen is checked against (P17).
+provisional: the approved design principles (DEC-123), brand and voice (DEC-125).
+alternative: fold the rules into the principles page as new principles; or leave them as guidance.
+recommendation: adopt them as a test beside the principles, each journey and screen checked against both.
+reversal cost: low.
+response: **Bob, 2026-10-04: "J2: yes"** (recorded on the journeys page and in HANDOFF.md by session_01JZtUsAKpStQoiwF6rzqsyJ, after his three comments that shaped rules 4, 6 and 7); **confirmed for the record 2026-10-05: "Record my answers to J1, J2 and J5 as DECs".** The eight rules: (1) a front door in every journey, a first step a newcomer can take alone, the screen showing where it starts; (2) wizards on the main roads, never gates, and leaving one at any step is a non-event; (3) you can always see where you are: each journey shows its stage and what comes next; (4) explained where it appears, and findable again: a term explained the first time a member meets it, never pushed again, its explanation one hover, focus or tap away and in one list of every term; (5) heavier steps slow you down: friction rises with an act's weight; (6) any order, and pick up where you left off: steps in whatever order the work allows, only a step that truly needs another waiting for it, unfinished work found exactly as left and listed where the member will see it; (7) many front doors: a member starts from whatever drew them in, most often a problem they live with, and no journey assumes everyone starts from a question; (8) fast for those who know: search, keyboard, acting on many items at once, no repeated teaching.
+decided: 2026-10-04 · Bob
+reasoning recorded in: this entry; `journeys.html` §2; BIO_Interaction_Constructs_v0_1.md §R (new).
+owed: nothing new to BOB; rule 4's term list and rule 6's list of unfinished work are screens of step 5. (Design session) every journey, screen and wizard script checked against the eight rules.
+
+### DEC-130 · answered
+raised: 2026-10-04 · the UX design session with Bob on his primary account (session_011wdWGoa6RAbZiRU4Bn3Rng, carrying the journeys page drafted by session_01JZtUsAKpStQoiwF6rzqsyJ; the development process also runs on his primary account since K1428) (step 3: question J5, which wizards are written now)
+for: bob
+question: Whether every outlined wizard is written in step 5, rather than only the three required ones (set up and claim, welcome a new member, the publication ceremony).
+why it is Bob's: scope of the design work and of the wizard module's test (P17).
+provisional: DEC-120, DEC-121 (wizards and wizard scripts; three required).
+alternative: write the three required wizards now and the optional ones later.
+recommendation: write the required three first, the rest after.
+reversal cost: low.
+response: **Bob, 2026-10-04: why delay the optional ones? Writing them tests whether the wizard module can meet real-world needs** (his answer as recorded on the journeys page and in HANDOFF.md, "J5 (write every wizard now; writing them tests the wizard module)"); **confirmed for the record 2026-10-05: "Record my answers to J1, J2 and J5 as DECs".** Every wizard the journeys outline is written as a wizard script in step 5 and walked through the mockups; any limit the scripts hit in the wizard module goes to the development process. The welcome wizard is written too; only its final words wait for the redesign to settle, as DEC-91 ruled for onboarding.
+decided: 2026-10-04 · Bob
+reasoning recorded in: this entry; `journeys.html` §5 and J5; BIO_Interaction_Constructs_v0_1.md §P (beside DEC-121).
+owed: (BOB) any wizard-module limit the written scripts reveal, as a HANDOFF when found. (Design session) every wizard script written and walked in step 5.
+
+### DEC-131 · answered
+raised: 2026-10-05 · the UX design session with Bob on his primary account (session_011wdWGoa6RAbZiRU4Bn3Rng, carrying the journeys page drafted by session_01JZtUsAKpStQoiwF6rzqsyJ; the development process also runs on his primary account since K1428) (BOB's B39: the queue's "Signal" collides with K1473's machine signals)
+for: bob
+question: The members' words for two things now both called "signal": the queue's third kind of item (DEC-110, the CONDITION class: an overdue reply, an unreachable source, a capture about to expire, a limit reached) and the machine's judgment signals (K1473: a score standing for importance, suspicion, significance or a possible cause, held only in the hypothesis layer).
+why it is Bob's: member vocabulary (UX); delegated by Bob to the design session (P17).
+provisional: DEC-110 ("Signal"); K1473 ("signal"); queue R48, queue-producers R24.
+alternative: keep "Signal" for the queue and give the machine's signals another word; or the reverse.
+recommendation: the queue's third kind is "Status" (Bob's alternative when he chose "Signal" in DEC-110; it names what these items are, a state of something the member is following); the machine's judgment signal is a "hint" (beside a member's "hunch" and a "hypothesis"; it says plainly that it is not evidence). "Signal" leaves member text; internal codes and the canon's word "signal" are unchanged.
+reversal cost: low (labels; queue R48's label and queue-producers R24's sentences).
+response: **Bob, 2026-10-05: "The word "Signal": the queue's "Signal" label collides with K1473's machine signals. Choose members' words for both."** Chosen by the design session as recommended: **"Status"** for the queue's third kind and **"hint"** for a machine signal. A queue item reads "Status · The city's reply to “Demand to rescind” was due 9 October; no reply recorded". A hint reads with its machine-work label, method, inputs and measured false-alarm rate, for example "Hint · machine work · 41% of Public Works' payments in FY2024 went to one vendor · method · false alarms 12%"; a member may take it up as a hunch. "Noticed" items the machine raises under K1491 carry the same "Hint" mark.
+decided: 2026-10-05 · the design session, under Bob's delegation
+reasoning recorded in: this entry; NOTIFICATIONS.md (beside DEC-110); BIO_Interaction_Constructs_v0_1.md §revised set (QUEUE); brand-and-voice.html §5; `ux-experience.json` question 28's ruled entry; `ux-substrate-v2.json` (CONDITION's member word).
+owed: (BOB) queue R48's `QUEUE_CLASS_LABELS` CONDITION "Signal" → "Status", and queue-producers R24's member-facing word "signal" → "status" (codes unchanged); the hint's member-facing label wherever K1473's signals and K1491's machine checks reach a member.
