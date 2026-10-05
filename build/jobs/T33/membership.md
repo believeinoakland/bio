@@ -1,6 +1,6 @@
 # membership (T33)
 
-**Status** · session_0177vLzjSyU8nj98B8SxWTmZ · depth 2 · WORKING · handled B1
+**Status** · session_0177vLzjSyU8nj98B8SxWTmZ · depth 2 · COMPLETE · handled B1
 
 ## Completion
 
