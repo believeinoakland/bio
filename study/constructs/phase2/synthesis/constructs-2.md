@@ -473,3 +473,7 @@ Against `src/BIO_Capability_Ladders_v0_1.txt`. Where this list and an earlier pr
 **Opened for a specific point.** `digest/DOCTRINE-REGISTER.md` §People and privacy (l.439–636, entries D61–D88) and §Conflicts (l.1540–1600, A1–A12, B1–B15), to build C2's list of homes and words.
 
 **Primary product sources.** None opened by this synthesis: no study and review disagreed on a point this text depends on in a way only the code could settle. Every code and requirement citation is as verified by the reviews (R-1, R-2, R-3, each listing the files and lines it opened at `tranche/T32`). Web sources are those the studies and reviews cite, at the places named.
+
+## Note by BOB #112 after Bob's K1471 (2026-10-05)
+
+Bob ruled that a ranking by a stated, measured quantity is analysis and allowed (a calculation naming its quantity, scope and period, cited, stored and recomputed). Read every "never ranked", "no ranking" and "no score" above as "no score standing for a judgment (importance, suspicion, significance, severity, connectedness), and no composed score": fact-based rankings are allowed. C2 rows 2 and 13, C3 and C8 are worded so on Bob's page. `query-language` R11 and conformance R8 are unchanged (BOB's reading).

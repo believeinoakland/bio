@@ -145,7 +145,7 @@ a{color:var(--accent)}
       <span class="node">Contract</span><span class="edge">paid under</span>
       <span class="node">Payments from Fund 1010</span>
     </div>
-    <p>Each step is cited and graded, and the weakest step sets the grade of the whole chain. Nothing is ever ranked, and the machine never asserts a connection on its own.</p>
+    <p>Each step is cited and graded, and the weakest step sets the grade of the whole chain. The machine never asserts a connection on its own, and never gives anyone a score for being "connected".</p>
   </div>
 </section>
 
@@ -200,6 +200,7 @@ a{color:var(--accent)}
       <li><b>Hunches (K1467):</b> they have a place, but are never facts. This is already how the strength code treats a hunch, so the synthesis's question C12 was withdrawn.</li>
       <li><b>Extraction (K1468):</b> targeted and ongoing, at a member's request.</li>
       <li><b>Connections (K1469):</b> the heart of the architecture.</li>
+      <li><b>Rankings (K1471):</b> rankings by a measured quantity are analysis, stored and kept up to date. Scores standing for a judgment stay out.</li>
     </ul>
   </div>
 </section>
@@ -220,7 +221,7 @@ a{color:var(--accent)}
       <thead><tr><th>#</th><th>The rule today</th><th>What it protects</th><th>Recommend</th></tr></thead>
       <tbody>
         <tr><td class="n">1</td><td>Design Requirement 6: name individuals only in official capacity for documented actions</td><td>Readers and the people named</td><td><span class="verdict">Replace</span> by C1</td></tr>
-        <tr><td class="n">2</td><td>"No attribute of a person gates, filters or orders anything" (Action design rule 10; your DEC-17, DEC-54)</td><td>Members treated by their work, never by who they are</td><td><span class="verdict">Narrow</span> to members and users. A member may search and sort the people the record holds by any held fact. The machine never orders people by importance, suspicion or connectedness.</td></tr>
+        <tr><td class="n">2</td><td>"No attribute of a person gates, filters or orders anything" (Action design rule 10; your DEC-17, DEC-54)</td><td>Members treated by their work, never by who they are</td><td><span class="verdict">Narrow</span> to members and users. A member may search and sort the people the record holds by any held fact. Rankings by a measured quantity are allowed as analysis (K1471). No score ever stands for importance, suspicion or connectedness.</td></tr>
         <tr><td class="n">3</td><td>No prior by role, no suspicion flag (DEC-54; Case Making §4)</td><td>People from prejudgment</td><td><span class="verdict">Keep</span></td></tr>
         <tr><td class="n">4</td><td>A planning run reads no person's attributes</td><td>Plans steered by evidence</td><td><span class="verdict">Keep</span></td></tr>
         <tr><td class="n">5</td><td>The group's action is addressed to an office, "never a private individual"</td><td>The group acts on institutions and never targets a person</td><td><span class="verdict">Keep, narrowed</span> The action may show who holds the office on the day, but is never addressed to a person.</td></tr>
@@ -231,7 +232,7 @@ a{color:var(--accent)}
         <tr><td class="n">10</td><td>A court case's caption is never a searchable name</td><td>A private party's name being indexed</td><td><span class="verdict">Already retired</span> (K1456)</td></tr>
         <tr><td class="n">11</td><td>A watch's subject "is an address, never a person"</td><td>No unattended surveillance of a person</td><td><span class="verdict">Narrow</span> A member may name a register query for a person (a filer id, a licence number). Never an unattended crawl of a person.</td></tr>
         <tr><td class="n">12</td><td>The staff directory is keyed by e-mail address, "never the name"</td><td>Identity on a stable key</td><td><span class="verdict">Narrow</span> The address stays the key. The name is also read, as a match graded C.</td></tr>
-        <tr><td class="n">13</td><td>No score, rank or centrality; never "knows"</td><td>People never ranked or declared acquainted</td><td><span class="verdict">Keep</span>, and apply to exploring connections</td></tr>
+        <tr><td class="n">13</td><td>No score, rank or centrality; never "knows"</td><td>People never judged by a score or declared acquainted</td><td><span class="verdict">Narrow</span> (K1471): no score standing for importance, suspicion or connectedness, and never "knows". Fact-based rankings ("most contracts from Public Works, FY2019–2025") are analysis and allowed.</td></tr>
         <tr><td class="n">14</td><td>Third parties' names and words leave only by their own act (your DEC-116 (4))</td><td>People who never chose to speak publicly</td><td><span class="verdict">Keep</span>, aligned with C1</td></tr>
         <tr><td class="n">15</td><td>Never redact what others submit; relied-on material travels whole (your DEC-100, DEC-112)</td><td>Reproducibility and honesty</td><td><span class="verdict">Keep</span> C1 governs the group's own words.</td></tr>
         <tr><td class="n">16</td><td>Indexing builds profiles of people (DEC-11's warning)</td><td>The cost of holding: legal reach, reversal</td><td><span class="verdict">Retire as a limit</span>. Kept as a design constraint, through sight, removal and export classes.</td></tr>
@@ -261,7 +262,7 @@ a{color:var(--accent)}
           <li>same person?</li>
           <li>overlaps ("both on the 7-member Police Commission, 2019")</li>
         </ul>
-        Each page about a subject, person, fund, contract or proceeding has a "Connections" place and an "Explore connections" act. Never "knows", "network", "conflict" or "suspicious".</li>
+        Each page about a subject, person, fund, contract or proceeding has a "Connections" place and an "Explore connections" act. "Most" and "largest" are fine when they name the quantity ("most contracts by count, FY2019–2025"). Never "knows", "network", "conflict", "suspicious" or "most connected".</li>
       <li><b>Events and timeline</b>, with two lanes: "what they did" and "what we did".</li>
       <li><b>Money</b> words by context: proposed, adopted and amended for budgets; committed, spent and paid for spending; billed and collected for revenue. A member's followed flow is a "money trail". Never "ledger", "diverted" or "misused" in Civicsmith's own words.</li>
       <li><b>People</b>, members and sources (already ruled). Position, career, credentials, memberships, interests, and a person page.</li>
@@ -290,7 +291,7 @@ a{color:var(--accent)}
 
   <article class="dec"><header><span class="num">C8</span><div><h3>Questions the machine raises about people and money</h3><span class="kind">Doctrine</span></div></header>
     <p class="q"><b>The question.</b> Should the machine ever put "worth a look" in the queue? Examples: a councilmember voting on a contract with a firm that paid her; contracts clustered just under a bid threshold; payments past a commitment. It would catch what members miss, but your rulings say the machine does not choose what to look into, and such items can read as accusations.</p>
-    <ul class="opts"><li>(a) Only checks a member declares for people, and detectors a member switches on for money. Each is defined by its data and states its denominator. Each raises "Noticed" with its cited derivation, never "conflict" and never a score. None is shown before a measured false-alarm test.</li><li>(b) The machine raises them on its own.</li><li>(c) None.</li></ul>
+    <ul class="opts"><li>(a) Only checks a member declares for people, and detectors a member switches on for money. Each is defined by its data and states its denominator ("41% of Public Works' payments in FY2024 went to one vendor"). Each raises "Noticed" with its cited derivation, never "conflict" and never a judgment score. None is shown before a measured false-alarm test.</li><li>(b) The machine raises them on its own.</li><li>(c) None.</li></ul>
     <p class="rec"><b>Recommend (a).</b></p></article>
 
   <article class="dec"><header><span class="num">C9</span><div><h3>How the group looks people up</h3><span class="kind">Policy</span></div></header>
@@ -314,7 +315,7 @@ a{color:var(--accent)}
   <div class="cols">
     <div class="box"><p><b>Order and modules.</b> The new modules events, money, people and explore, plus a small connection grammar. Events replaces the planned chronology. Every upward need is met by registration. A minimal events store comes first, because other modules depend on it.</p></div>
     <div class="box"><p><b>One home per fact.</b> Payer and payee live on the money fact, never on the event. A duty cites amounts and never holds one. A total is never re-entered as a fact. Hypotheses live with the inquiry, and the store refuses them in evidence.</p></div>
-    <div class="box"><p><b>Exploring.</b> Up to 8 steps by default and 10 at most, 1,000 links per step, 5,000 nodes in total, and very common nodes (a city-wide fund) named rather than walked. Your seven-step chain fits, and is measured on real data first.</p></div>
+    <div class="box"><p><b>Exploring.</b> Up to 8 steps by default and 10 at most, 1,000 links per step, 5,000 nodes in total, and very common nodes (a city-wide fund) named rather than walked. Your seven-step chain fits, and is measured on real data first. Results follow the chain by default and can be sorted by a stated quantity, such as amount paid.</p></div>
     <div class="box"><p><b>The machine.</b> It writes only facts carrying a source's own identifiers (Legistar meetings and votes, licence and filer records), and only for what a member follows or asks for. It proposes everything else, labelled.</p></div>
   </div>
 </section>
