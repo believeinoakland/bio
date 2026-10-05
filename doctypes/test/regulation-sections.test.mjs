@@ -18,6 +18,8 @@ import { servedDocuments, textOf, CODIFIER } from "./codifier.mjs";
 const ANSWERS = JSON.parse(fs.readFileSync(new URL("./fixtures/codifier-answers.json", import.meta.url), "utf8")).documents;
 const FW18 = JSON.parse(fs.readFileSync(new URL("./fixtures/fw18-doctypes.json", import.meta.url), "utf8")).documents;
 const CODE_VIEW = withSections(HELD, CODIFIER_SECTIONS, [CHARTER]);
+/* The held view with no code's section forms: what a reader knows without them. */
+const NO_FORMS = (() => { const v = structuredClone(HELD); for (const c of (v.vocabulary || {}).codes || []) delete c.sections; return v; })();
 const PA = withSections(view(PORT_ALDER), PA_SECTIONS);
 const LK = view(LAKEMONT);
 const top = (p) => p.sections.filter((s) => s.heading !== null);
@@ -41,7 +43,7 @@ test("R9 form is instrument or code; a code section is CERTAIN only on a heading
     assert.equal(c.detect.confidence, "certain", c.doc.Title);
     assert.ok(c.detect.signals.some((s) => /section heading/.test(s)), c.doc.Title);
     // the same document under a view naming no section form: not a code section, not a regulation
-    const bare = read(textOf(c.doc), HELD);
+    const bare = read(textOf(c.doc), NO_FORMS);
     assert.equal(bare.parsed.form === "code", false, `${c.doc.Title}: no form, no code`);
     assert.ok(!(bare.detect.signals || []).some((x) => /section heading/.test(x)), `${c.doc.Title}: no heading without the code's forms`);
   }
@@ -301,6 +303,20 @@ test("R17 tested on the captured codifier sections and charter articles, with th
   const tv = combine([tp.id]).view;
   const codes = ((tv.vocabulary || {}).codes || []).filter((x) => x.sections);
   assert.ok(codes.length >= 1, `the test profile ${tp.id} names a code with section forms (jurisdictions T33-2)`);
+  /* A section of the test profile's code, written in its forms (`<n>-<n>` numbers, `(1)`,
+     `(a)`, `(i)` subsections; jurisdictions T33-2), read by them and nothing else. */
+  const ellery = ["12-3 Harbour dues.", "(1)", "\"Berth\" means a mooring at a public quay.", "(2)",
+    "Dues are payable monthly, except as provided in 12-5.", "(a)", "A fishing vessel pays half.", "(i)",
+    "This paragraph does not apply to a vessel over forty feet.", "12-4 Collection.", "The Harbourmaster collects dues."].join("\n");
+  const pe = read(ellery, tv);
+  assert.equal(pe.parsed.form, "code");
+  assert.equal(pe.detect.confidence, "certain");
+  assert.deepEqual(pe.parsed.sections.map((x) => x.path.join("-")), ["12-3", "12-3-1", "12-3-2", "12-3-2-a", "12-3-2-a-i", "12-4"]);
+  assert.deepEqual(pe.parsed.sections.map((x) => [x.start, x.end]), [[0, ellery.indexOf("12-4")],
+    [ellery.indexOf("(1)"), ellery.indexOf("(2)")], [ellery.indexOf("(2)"), ellery.indexOf("12-4")],
+    [ellery.indexOf("(a)"), ellery.indexOf("12-4")], [ellery.indexOf("(i)"), ellery.indexOf("12-4")], [ellery.indexOf("12-4"), ellery.length]]);
+  assert.deepEqual(pe.parsed.definitions.map((x) => [x.term, x.section.join("-")]), [["Berth", "12-3-1"]]);
+  assert.deepEqual(pe.parsed.exceptions.map((x) => [x.section.join("-"), x.cites]), [["12-3-2", ["12-5"]], ["12-3-2-a-i", []]]);
 });
 
 /* --------------------------------------------------------------------- R19 */
