@@ -1,0 +1,25 @@
+@@CERT
+- RETRIEVAL-PROBE.txt: 197 lines; read 1–197 (complete)
+@@WHAT
+- **RETRIEVAL-PROBE.txt** (`RETRIEVAL-PROBE.md`, probe 1, measured 2026-07-24, as of 2026-09-14): a measurement record comparing FTS5 inside the Durable Object, a full scan, and an exported index under one fixed AND token-matching rule, with three-way agreement proved (including a planted divergence) before trusting any figure. Recommendation (adopted): FTS5 in the DO — cost tracks results, keeps the index inside the two-bucket fence (D-26 shape). Its five design questions are superseded by RETRIEVAL-SUBSTRATE. Construct content is slight: search as the member's question entry point, the agreement/measurement discipline (ANALYSIS), and the live-rows-only index (TIME).
+@@TIME
+- [DESIGN] RETRIEVAL-PROBE Design question 5, src 181–184 — "FTS5 maintained transactionally inside `promote` ... over live rows only and not history" — full-text search covers current versions, not historical ones (no as-of text search over past versions designed here).
+@@ORG
+- [DESIGN] RETRIEVAL-PROBE Design question 1, src 158–163 — frontmatter carries `source.locator` and `source.authority`; "a searchable copy of those is a fence-relevant surface even behind member authentication" (answered in RETRIEVAL-SUBSTRATE: searchable).
+- [EXAMPLE] RETRIEVAL-PROBE Actuals, src 85–86 — real queries on the 30-bundle corpus: `sewer`, `transfer`, `sewer AND fund`, `auditor`, `fund AND statements` — fund/auditor terms reflect public-finance and audit material in the live corpus.
+@@LAW
+- none in RETRIEVAL-PROBE.
+@@COURTS
+- none in RETRIEVAL-PROBE (the `auditor` query term is the only audit-related item, src 86).
+@@ANALYSIS
+- [DOCTRINE] RETRIEVAL-PROBE "What was measured", src 71–79 — agreement standard from `op=audit`: "an index that disagrees with a scan is worse than no index"; the harness first plants a divergence and confirms the check catches it; the 30-document corpus "first passed for a reason that was not verified ... which is the whole argument for measuring rather than asserting."
+- [DESIGN] RETRIEVAL-PROBE "What the numbers say", src 109–122 — scan cost is linear in corpus (~22ms at 20k, ~1s at a million per search); FTS5 tracks result size; exported index "Its speed is bought with movement and staleness" — informs where whole-corpus computation is affordable.
+- [GAP] RETRIEVAL-PROBE Incomplete §Actuals, src 9 — never re-measured against the built FTS5 path; Conversion Plan step 6 benchmark owed; prediction table not in corpus (D-28).
+@@QUESTIONS
+- [DESIGN] RETRIEVAL-PROBE Design question 2, src 164–167 — result contract: whether a result "carries provenance into Context as the Roadmap's Search UX category requires" (answered: ids plus full provenance, RETRIEVAL-SUBSTRATE).
+- [DESIGN] RETRIEVAL-PROBE Design question 3, src 168–173 — member search must respect the three project-visibility positions and "must not leak which projects are interested in which Information" (D-15).
+- [BUILT] RETRIEVAL-PROBE "The blocker", src 34–43 — FTS5 (incl. `trigram` substring tokenizer) works in workerd SQLite; `fts4`, `PRAGMA compile_options`, `sqlite_version()` refused by the authorizer.
+@@DOCTRINE
+- [DOCTRINE] RETRIEVAL-PROBE Recommendation, src 135–140 — the index stays on the protected side of the two-bucket fence; an exported index "physically leaves the fence ... precisely the leak the kickoff named when it said no index may become a way around the fence"; D-26: "one call in, an answer out, run where the data is."
+@@CROSS
+- RETRIEVAL-PROBE (src 181–184) + RETRIEVAL-SUBSTRATE: search is over live rows; TIME questions such as "what did this page say in March" depend on the document-version chain (D-220, `op=versionchain`) rather than on the text index.

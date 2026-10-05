@@ -43,3 +43,9 @@ Civicsmith (formerly CivicOS; repository `bio`, /home/user/bio) is an evidence e
 
 ## Rules for you
 Read-only: never edit, commit or push in /home/user/bio or /home/user/civicos-process. Read requirements and canon whole where they matter; verify "built" against code. Cite file:line or doc §. Write your study to the scratchpad file named in your task; keep it dense (aim 200–300 lines) and structured exactly as the task's outline. Return a 15-line summary.
+
+## Corrections found in phase 1 (these override the text above)
+- **Relations "constitutive, never traversed"** is NOT in Declared Bias. It is `build/requirements/entities.md` R26 and Content Framework §13 (src line ~1439). Declared Bias safeguard 4 says relations are declared, justified and citable, and that "Mechanical equivalence extends exactly as far as the registry declares" (bias collision does follow them). Cite each where it actually is (C3, C4 notes).
+- **Private individuals:** Declared Bias has no such safeguard (only its NATURAL PERSON residual). The rule is actions R9 (an addressee is an office by role and body, never a private individual) and the personal-data rules (D-77, invariant 7). See C4, C7, C8 notes.
+- **Bob's rulings DEC-1 to DEC-67** live in an archived ledger, read by C11 and C12; DEC-68 onward by C2.
+- **"Case", "docket", "standard" and "obligation" are taken words** in this product (a case is a group's publication, DEC-72; a docket is a case's public response log; "standard" can mean the evidence bar; "obligation" in NOTIFICATIONS is a member's queue item, while DEC-107 reserves it for a public body's duty). A proposal naming new constructs must avoid the clashes.

@@ -1,0 +1,39 @@
+@@ TIME
+- [DESIGN] SR "Monitoring" purpose, L2007–L2009 (monitoring Purpose; Roadmap §12) — "What the daemon watches, at what cadence, and what it saw."
+- [DESIGN] SR "Monitoring" mustShow, L2014–L2016 (monitoring R32; Roadmap §12) — "Every watched address, including unscheduled, with frequency, detection history and overdue status." (recurrence/cadence exists for monitoring only).
+- [DESIGN] SR "Monitoring" mustShow, L2024–L2031 (monitoring R38; capture-sources R2; monitoring R30 "built T11-T13") — "Rendered-page content undetermined on every tick, stated."; "A paused daemon says so."
+- [DESIGN] SR "Monitoring" stale, L2075–L2078 (queue R10) — "Overdue check: monitoring-recheck-due condition."
+- [DESIGN] SR "Members, keys and credentials" mustShow, L2280–L2282 (membership R24) — "Expertise as declared vs confirmed, with history."; mustNever L2307–L2309 (membership R57) "Never delete a member; revoked keeps history."
+@@ ORGANISATIONS
+- [DESIGN] SR "Members, keys and credentials" mustShow, L2280–L2282 (membership R24) — members' professional expertise recorded "as declared vs confirmed, with history" (group-internal; bears on who can evaluate law or figures; see PR L20 on lawyers, auditors, accountants).
+- [DOCTRINE] SR "Members…" mustShow/mustNever, L2265–L2267, L2312–L2314 (Membership v2 §3) — "Cover and handle together (administrators only)."; "Never let the cover field invite a legal name." (members' identities protected).
+- [DESIGN] SR "Members…" conflict, L2360–L2363 (membership R7) — "Ballot not yet carried; at two administrators removal is impossible." (two-administrator floor; HO L62 J9 proposes changing it).
+@@ LAW
+- none in SR L2001–L2500.
+@@ COURTS
+- none in SR L2001–L2500.
+@@ ANALYSIS
+- [DESIGN] SR "Members…" mustShow, L2270–L2272 (membership R5, R38) — "Ballot arithmetic: votes needed, eligible, have, awaiting." (counts shown with their components).
+- [DESIGN] SR "Monitoring" mustShow, L2014–L2016 — monitoring keeps a "detection history" per address (a time series of observed changes; no analysis over it is specified).
+@@ QUESTIONS
+- [DESIGN] SR "Assistant (persistent tag, dialog, running-session surface)" purpose, L2409–L2414 (Interaction Constructs §P, DEC-27) — natural-language input everywhere with three intents: "Free natural-language input on every surface; FIND needs no ceremony, CREATE needs confirmation, ACT runs the act's four beats."
+- [DESIGN] SR "Assistant" mustShow, L2419–L2421 (Interaction Constructs §P) — "What it understood, before anything is created."
+- [DESIGN] SR "Assistant" mustShow, L2424–L2426 (§P THE WIZARD) — "For each wizard step, the surface that owns the step, why it is needed and how it serves the request."
+- [DESIGN] SR "Assistant" mustShow, L2429–L2431 (§P) — "Rule refusals in the plane's words; objective checks marked advisory."
+- [DESIGN] SR "Assistant" mustShow, L2434–L2436 (§P Attribution) — "'The assistant did this, at <member>'s request'."
+- [DESIGN] SR "Assistant" mustShow, L2439–L2441 (AI Roles rule 6, §4) — "A running indicator to teammates, not the reasoning; one running-session surface for all AI features."
+- [DESIGN] SR "Assistant" mustShow, L2444–L2446 (AI Roles §6) — "That the capability is unavailable, when no credential resolves; never silently degraded."
+- [DESIGN] SR "Assistant" mustShow, L2449–L2451 (§P Voice) — "A voice transcription for correction before it becomes anything."
+- [DESIGN] SR "Assistant" mustShow, L2453–L2466 (DEC-90) — docked panel (side on wide, bottom on narrow, edge switchable and remembered), expandable, "shrinks back by itself when a wizard step needs the member to act"; "A wizard step highlights the real control; the member performs every act on the real surface."
+- [DOCTRINE] SR "Assistant" mustNever, L2471–L2473 (§P) — "Never commit directly; never a shortcut past pre-flight, reason or receipt."
+- [DOCTRINE] SR "Assistant" mustNever, L2476–L2478 (AI Roles rule 1) — "Never write the member's reason; show the reasoning, never the sentence."
+- [DOCTRINE] SR "Assistant" mustNever, L2481–L2483 (AI Roles rule 2) — "Never choose the question or set project defaults silently."
+- [DOCTRINE] SR "Assistant" mustNever, L2486–L2488 (DEC-24; AI Roles rules 3–4) — "Never appear to conclude, accept, attest or grade by assertion."
+- [DESIGN] SR "Assistant" mustNever, L2491–L2493 (AI Roles §4, F11) — the AI run budget (compute, not a civic budget) is "recorded, never shown".
+- [CONFLICT] SR "Assistant" mustNever, L2496–L2498 (DEC-90) — "Never float over the work; never fill in or press a control for the member." vs PR L113 and G5 L185–L186 (DEC-120 G5): a wizard step "may place a labelled draft in a field for the member to edit and adopt". SR states the DEC-90 rule; DEC-120 later allows labelled drafts in fields (pressing stays the member's).
+- [DOCTRINE] SR "Monitoring" mustNever, L2041–L2043 (inventory roles; monitoring R33) — "Never let the machine enable monitoring on its own."
+- [DESIGN] SR "Setup page" mustNever, L2173–L2175 and empty L2199–L2202 (instance-setup R20) — absence vs non-answer: "Never show 'none recorded' when the record did not answer."; "None recorded: said in words."
+@@ DOCTRINE
+- [DOCTRINE] SR "Monitoring" mustNever, L2036–L2038 (monitoring R40) — "Never let bias shape what is monitored."
+- [DOCTRINE] SR "Monitoring" mustShow, L2019–L2021 (monitoring R39) — "A governed refusal as a fact about the instance, never as the source failing."
+- [DOCTRINE] SR "Members…" mustNever, L2316–L2319 (Membership v2 §5) — "Never report a machine credential as holding capabilities."

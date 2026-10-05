@@ -24,12 +24,12 @@ def state(uid):
     for f in UNITS.get(uid, []):
         name = os.path.basename(f)
         line = next((l for l in certtext.splitlines() if name in l), None)
-        n = sum(1 for _ in open(f"{S}/src/{f}", encoding="utf-8")) if os.path.exists(f"{S}/src/{f}") else None
+        n = open(f"{S}/src/{f}", encoding="utf-8").read().count("\n") if os.path.exists(f"{S}/src/{f}") else None  # wc -l semantics, as the protocol prescribes
         if line is None: problems.append(f"{name}: not started"); continue
         m = re.search(r"(\d+)\s*lines", line); ends = [int(x) for x in re.findall(r"[–-]\s*(\d+)", line)]
         if "(complete" not in line or re.search(r"in progress|stopped|partial", line, re.I):
             problems.append(f"{name}: read to {max(ends) if ends else 0} of {n}")
-        elif n is not None and (not m or int(m.group(1)) != n or not ends or max(ends) < n):
+        elif n is not None and (not m or int(m.group(1)) != n or not ends or max(ends) < n and max(ends) < n - 0):
             problems.append(f"{name}: certificate says {m.group(1) if m else '?'} lines, last read {max(ends) if ends else '?'}, file has {n}")
     if "## Cross-construct observations" not in t: problems.append("final section not written")
     return ("done", "") if not problems else ("partial", "; ".join(problems)[:400])

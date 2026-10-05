@@ -1,0 +1,27 @@
+@@FILE NOTIFICATIONS.txt (chunk 281-441; with 1-120 and 121-280 the file is complete)
+@@TIME
+- [DESIGN] NOTIFICATIONS §The item contract, lines 285-295 — item shape carries `raised: <instant>,  deadline: <instant> | null`; example summary: "Minutes for the 4 August meeting are 21 days overdue." (a computed lateness of a body's declared duty, dated).
+- [RULING] NOTIFICATIONS §MARKED AS HANDLED, lines 385-388 — DEC-10 (Bob): "the overdue notice must offer (a) remind me again at a further increment, (b) stop notifying me about this one, (c) stop notifying me about that group — *\"muting is per member\"* — and the finding stands."
+- [DESIGN] NOTIFICATIONS, lines 426-427 — "**A settlement is APPENDED, never replaced**, so a debt raised again when the lens moves ONWARDS is new debt with the old settlement still on record." (history over time kept).
+- [DESIGN] NOTIFICATIONS, lines 409-411 — item-keyed mute names the host, so "a later hold of the same host stays suppressed for her until she unmutes it".
+@@ORGANISATIONS
+- [DOCTRINE] NOTIFICATIONS §item contract rule 3, lines 313-317 — "`detail` carries the BASIS, and an undetermined basis says so." "A notification asserting something about a public body must be able to show its derivation or state that it cannot."
+- [EXAMPLE] NOTIFICATIONS, line 291 — "Minutes for the 4 August meeting are 21 days overdue." (a body's meeting-minutes obligation).
+- [DESIGN] NOTIFICATIONS, lines 367-371, 395-396 — OBLIGATION resolved is record state, leaves everyone's list; "An OBLIGATION stays unmutable (a named person must act, and `tasks` carries no per-member mute)". (Note: per DEC-107, line 94, this class is member "To do", not a body's obligation.)
+@@ANALYSIS
+- [DOCTRINE] NOTIFICATIONS rule 3, lines 313-317 — D-57 cautionary case: "`resolveLinks` reported a self-reference as \"the target changed\", the UI printed the plane's basis verbatim, and a member read a fabricated claim about a source." Any derived claim (e.g. "21 days overdue") must show its derivation or state it cannot.
+- [DESIGN] NOTIFICATIONS §Applying a handler to a selection, lines 329-358 — weights `refuse` (all-or-nothing), `report`, `single`, `per-item` ("each item independently succeeds or is RETAINED WITH A REASON"); retention reasons: capability, drift, doctrine refusal (`SEVERED_EDGE`, retire-refuses-cited, dispose-refuses-`elevated`), absent precondition.
+@@QUESTIONS
+- [DOCTRINE] NOTIFICATIONS item contract rules 1-3, lines 300-317 — "**1. The OPTIONS come from the producer, never from the surface.**" (precedent: GitHub Checks API producer-declared actions); "**2. `summary` is in the record's voice and invents nothing.**"; "**3. `detail` carries the BASIS, and an undetermined basis says so.**" — the labelled, basis-carrying output rule applied to system-generated text.
+- [DESIGN] NOTIFICATIONS, lines 282-283 — Bob's requirement: "a concise description, a fuller explanation with greater context, and a set of options with handlers behind them."
+- [RULING] NOTIFICATIONS, lines 414-428 — REC-207 (BOB #32): bias debt settled by three recorded acts; "a RE-RUN under the lens now in force (an act by a run, closed with that run's id and its lens pins so a reader sees WHICH run settled it)"; member resolve with required reason (DEC-24 "authored-binds side", DEC-69 "never forced to re-run").
+@@DOCTRINE
+- [DOCTRINE] NOTIFICATIONS §MARKED AS HANDLED, lines 362-383 — "an item is **marked as handled**, never deleted"; OBLIGATION resolved → record state; FINDING adopted/deferred/dismissed → authored record act with author and reason; CONDITION acknowledged or muted → PERSONAL only; "**Nothing is deleted from the record in any of the three cases**"; "the muting-is-personal / dismissing-is-a-record-act rule".
+- [RULING] NOTIFICATIONS, lines 385-398 — BOB #26 (D-125, 2026-09-22): personal mute admits FINDING kinds; per item and per case; Bob's amendment made the CASE the aggregation key.
+- [RULING] NOTIFICATIONS, lines 400-412 — BOB #29 (D-170, 2026-09-23): item mute reaches an ungrouped CONDITION; still refused: case-less per-KIND mute of a condition (REC-32) and any mute of an OBLIGATION.
+- [DOCTRINE] NOTIFICATIONS, lines 427-429 — "*an OBLIGATION's resolving act is a property of the KIND, and the item publishes it* — a surface must not infer the act from the class."
+- [CONFLICT] NOTIFICATIONS §Applying a handler, lines 331-350 vs Status line 11 — body/table says `per-item` "[DESIGNED-not-built]: it exists nowhere in `bio-plane/src/`", while the Status says "The **per-item weight is [BUILT]** (D-126, 2026-09-23, IC-235)"; the doc's Incomplete sections (line 23) acknowledge the body was not rewritten.
+- [GAP] NOTIFICATIONS §What this does not settle, lines 433-441 — transport: D-98 email might one day be the transport; "An email rendering re-raises the F5 threat the inbox grammar was bounded for"; which CONDITIONs earn an item is per-generator; N-number allocation.
+@@CROSS
+- NOTIFICATIONS rule 3 (lines 313-317) is the doctrine that binds TIME+ORGANISATIONS+ANALYSIS together for any system-raised claim about a body ("21 days overdue"): the derivation (dates, rule, basis) must be shown or stated undetermined — the same basis-and-grade discipline the brief cites for derived things.
+- DEC-10's remind/mute options and DEC-69 "must not nag" (canon-constructs line 113; canon-mission line 49) constrain any TIME notification design (deadlines approaching/overdue) — threshold crossings once, per-member mute, finding stands.

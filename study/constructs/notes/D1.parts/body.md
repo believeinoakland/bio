@@ -1,0 +1,559 @@
+## TIME
+*design-journeys.txt*
+- [EXAMPLE] journeys §3 "A problem they live with", Potholes, L96 — city's target is a time-bound performance claim; first step is find the claim and "its own records of every report"; members' photos are a sample — "Find the city's claim or target ("90% of reported potholes filled") and its own records of every report."
+- [EXAMPLE] journeys §3 Illegal dumping, L97 — members record sightings "with place, date and photo"; question whether "the same places keep coming back" (recurrence pattern over time).
+- [EXAMPLE] journeys §3 "Something they read", court case, L106 — watch the court's docket page for new filings; "the case's deadlines kept in view (journeys 7 and 14)".
+- [EXAMPLE] journeys §3 public meeting, L109 — recurring meetings: "Watch for the next agenda; questions from what was said or decided (journeys 7 and 14)."
+- [EXAMPLE] journeys §3 contract/franchise, L110 — contractual deadlines as standards: "Capture it and declare its obligations and deadlines as standards." / "Track each deadline and what the parties delivered (journey 13)."
+- [EXAMPLE] journeys §3 regulatory proceeding, L111 — utility rate case before a state commission: "follow the proceeding's docket" / "filing deadlines in the plan (journeys 13 and 14)".
+- [EXAMPLE] journey 4 step 4, L198 — a time standard set by policy is the archetypal question: "is the city repairing reported potholes within the time its own policy sets?"
+- [NEED] journey 5 steps 6 and 8, L218, L220 — statutory response deadline computed from law in profile, shown in queue, overdue once: "Records it sent; the due date is set from the law and shows in the queue." / "If it is overdue, the queue says so once, and the plan suggests the next step (journey 13)."
+- [DESIGN] wizard "Get a record", L467–470 — "The law it goes under, from your group's profile." … "The due date is set and shows in your queue."
+- [NEED] journey 6 step 2, L234 — define the claim's period in the city's own words: "what counts as reported, as filled, and over what period. If the city never says, that itself is recorded as "Undetermined, because the city does not define it"."
+- [NEED] journey 6 step 3, L235 — per-record timestamps from the city's data: "when each was reported, when it was closed, and why."
+- [NEED] journey 6 step 5, L237 — spot-check observations "with place, date and photo".
+- [NEED] journey 10 step 2, L310 — queue sorting by time: "Re-sorts by time added, time due, case or kind".
+- [NEED] journey 13 steps 3 and 7, L360, L364 — reminders, checkpoints, clocks: "Chooses an option and says when to be reminded; lays out a scenario with checkpoints." / "Tracks responses and clocks; judges each checkpoint from the queue."
+- [EXAMPLE] journey 14, L379 — versions over time of sources: "Monitoring notices a changed or removed source and keeps both versions."
+- [EXAMPLE] journey 15 step 4/5, L397–398 — watching another group's publication docket by a daily read (a Civicsmith publication docket, not a court docket): "watching is a quiet daily read of its docket."
+- [NEED] audience "The group's lawyer", L42 — counsel packet includes a chronology: "facts with citations, chronology, the standard."
+- [DESIGN] wizard "Start and send", L510–514 — "The clock and the next checkpoint go into the queue."
+- [GAP] journeys §6 "Gaps to close", row "Meetings and time", L532 — needed by "The "public meeting" row; every deadline"; exists: "Deadlines count calendar or business days against the group's holidays. There is no model of a recurring meeting, days are counted in universal time, and the group's time zone and office hours are stored but not used." Where it goes: "Waiting on the same answer" (the development process's answer to Bob's capability question of 5 October).
+- [GAP] §6 row "Offices and who held them", L533 — "no record of who held a role when" (holders over time).
+- [GAP] §6 row "Following a court case", L531 — no tracking of a case's filings, rulings and appeals over time (see COURTS).
+- [GAP] §6 row "A code's structure", L530 — "no amendment history beyond what members record" (versions in force over time).
+- [DESIGN] wizard "Use another group's case", L502 — "Watch the publisher's docket for new editions." (publication docket).
+- [DESIGN] §6 preamble L520 — gaps "Proposed, 5 October… most wait on the development process's answer to the capability question you sent it on 5 October. Nothing here is decided."
+*design-ux-audiences.txt*
+- [DOCTRINE] audiences "Member, newcomer" timePressure, L320–322 — "Statutory clocks run whether or not the member is ready (Operational Principle 3)." (src Roadmap §5)
+- [DOCTRINE] audiences "Member, experienced investigator" timePressure, L410–412 — "Deadlines are deadlines." (Operational Principle 3)
+- [DESIGN] audiences "Project participant" timePressure, L657–659 — reminders are opt-in: "Sets their own deadline reminders; nothing reminds them unless they asked." (src action-clocks R4-R6, R8; DEC-94)
+- [DESIGN] audiences "Government office or official" timePressure, L1246–1248 — "Statutory clocks apply to them; every deadline carries the statute, order or commitment it derives from." (src actions R35; Functional Architecture Function 5)
+- [NEED] audiences "Named counsel" goals, L1396–1398 — counsel packet includes "chronology" and "binding deadlines" (Design Requirement 8 as amended; filings R9); timePressure L1421 — "Any deadline that binds a claim is in the packet."
+- [DESIGN] audiences "Review recipient" timePressure, L791 — grant expiry by events (revocation, draft moving, draft gone), not by date (review R8).
+- [DESIGN] audiences "Knocker" timePressure, L870 — rate window "At most 12 knocks per source and 300 per instance in any 10 minutes" (capture R31).
+- [DESIGN] audiences "AI run" timePressure, L1515 — "Every run is bounded (fetches, sub-sessions, wall time) and says which bound stopped it." (ai-runs R1-R4)
+- [OPEN] audiences "Journalist" timePressure, L1059 — "Deadlines are implied by the role but not stated in canon."
+- [DESIGN] audiences "The group's future members", L1566–1583 — "Append-only history is presented as the record it is."; "Understand why earlier work concluded what it did, and what was tried and abandoned." (intent R11, R14) — as-of reasoning over the group's own history.
+- [DESIGN] audiences "Public reader" stakes, L970 — "What a published hash asserts is bytes, address, date and chain of custody, not that a document is an authentic municipal record."
+*design-ux-useCases.txt*
+- [EXAMPLE] useCases UC-002 "Search outside sources in one query", L28–48 — outcome "Results with provenance, recency and trust signals" (recency as a result attribute); covered partial.
+- [DESIGN] useCases UC-012 knock, L274 — receipt "(knock id, digest, bytes, time)".
+- [EXAMPLE] UC-023 "Get a trusted timestamp or co-attest a capture", L515–534 — "Add third-party evidence of when bytes existed."; "An attestation recorded; it never reaches Grade A."; covered yes (provenance R32-R34, R49; affordances R5 ATTEST_FENCE); DEC-39, DEC-81.
+- [EXAMPLE] UC-024 "Declare an expected flow and thread documents into it", L537–557 — "Model how a body is supposed to act (e.g. minutes follow a meeting) and place the documents that show what happened."; trigger "A recurring process is under watch."; outcome "Declared flow versus observed flow."; covered yes (progressions R1-R8); src "NOTIFICATIONS.md (OBLIGATION as declared flow, D-128)".
+- [EXAMPLE] UC-028 "Prove later what a public body published", L628–647 — "Keep bytes as served, hashed at receipt, so the record can prove what was available and when."; covered yes (capture R9, R34; provenance R1-R16, R35).
+- [EXAMPLE] UC-029 "See the versions the record holds of one address", L649–667 — "Compare versions when a source changed; both are preserved."; "A version chain with predecessors."; covered yes (provenance R17-R18).
+- [EXAMPLE] UC-031 "Ask for a document to be monitored", L693–712 — "Watch a source at its own cadence (hourly to monthly, per meeting)."; trigger "A document matters over time."; covered yes (monitoring R14-R16, R45).
+- [EXAMPLE] UC-032 "Check a source now", L715–735 — "modified, removed, unchanged or undetermined stated with why."; covered yes.
+- [EXAMPLE] UC-033 "Be told a source was modified or removed", L738–758 — "Notice changes and removals (possible evidence of concealment), with both versions kept."; covered yes (monitoring R47-R48; queue-producers R2-R3); note "monitoring R31's 'not yet met' mark is stale".
+- [GAP] UC-034 "See every watched address, including unscheduled ones", L761–780 — covered partial (monitoring R32 not yet met).
+- [GAP] UC-035 "Keep named requests and ratified sweeps running", L783–801 — "Standing intent: fetch what a request or sweep names, on its cadence, within budget."; covered partial (monitoring R27 met, R28-R29 not yet met).
+- [GAP] UC-037 "Watch the sources a finding rests on", L827–845 — covered partial (monitoring R33 not yet met); "never enabled by the machine".
+- [EXAMPLE] UC-038 "Be told a newer version affects a passage I cited, then adopt or keep", L849–870 — trigger "A newer capture of a cited address is graded affected or undetermined."; covered yes (reevaluation R14-R15; content R29-R31; queue R1, R12; queue-producers R2).
+- [EXAMPLE] UC-039 "Re-evaluate findings when what they rest on changes", L874–893 — "supersession, reopening, dismissal or a later edition"; covered yes (reevaluation R1-R16, R19-R21; "R17 'weakened' not yet met").
+- [EXAMPLE] UC-044 "See who resolved something I did not", L987–999 — outcome "'Resolved by X on this date'."
+- [EXAMPLE] UC-043 "Mute, snooze and unmute", L964–983 — snooze a case (time-boxed suppression); covered yes (queue R4, R14, R19-R22, R40).
+- [CONFLICT] UC-031 (L699) claims monitoring at a "per meeting" cadence, covered yes; journeys §6 L532 says "There is no model of a recurring meeting". (Probably monitoring cadence keyed to a meeting is declared per source, not a meeting model; analysts should verify monitoring R14-R16.)
+- [EXAMPLE] UC-063 "Ask what standard was in force on a date", L1420–1440 — "Know whether a standard applied when the act happened."; trigger "Determining an act."; act "standard: Ask what was in force on a date"; outcome "in_force / not_in_force / undetermined, with why."; covered yes (standards R7-R8; src standards Purpose).
+- [EXAMPLE] UC-062 "Declare a standard from its captured text", L1413 — outcome "A standard with declarer and time; never edited."
+- [EXAMPLE] UC-056 "Conclude a question…", L1279 — "A dated, authored conclusion row: a concluded finding for this project."
+- [EXAMPLE] UC-057 "Withdraw a project's conclusion", L1293–1301 — "history stays"; "An appended withdrawal row." (Operational Principle 4).
+- [EXAMPLE] UC-058 "Reopen a finding", L1309–1327 — "A reopened question saying who reopened it." (DEC-12).
+- [EXAMPLE] UC-060 "Set a question aside (defer or dismiss)", L1353–1371 — "Park or drop a question without deleting it." (defer = later).
+- [EXAMPLE] UC-070 "Turn a contradiction in the world into a finding", L1594–1612 — temporal reversal: "Draw attention to 'rule says X, department did not-X' or 'said X in March, Y in October'."; outcome "A question whose conclusion is the discrepancy."; covered yes (contradiction R35-R36; inquiry R46-R48; DEC-76 "double-speak or reversal promotes into a finding").
+- [EXAMPLE] UC-080 "Find where a declared flow was not followed", L1825–1845 — "See missing predecessors, overdue successors and over-full stages: the delta between declared and observed flow."; outcome "Derived findings that report and never decide."; covered yes (progressions R10-R25, R31-R32; queue R9; NOTIFICATIONS.md D-128).
+- [EXAMPLE] UC-081 "Discharge a stage that was lawfully skipped", L1848–1867 — "Explain, with reason and citation, why a missing stage is not a gap."; covered yes (progressions R14).
+- [EXAMPLE] UC-067 "Judge significance", L1521 — "from context, scale, pattern and consequences" (pattern over time).
+- [EXAMPLE] UC-082 "Weigh another group's published case before citing it", L1878 — "an inherited leg, no stronger than its edition" (edition-dated citation).
+- [EXAMPLE] UC-086 "Read a run: its log, lens, bar and bounds", L1972 — "where it stopped and why" (bounds incl. wall time per audiences file).
+- [EXAMPLE] UC-091 "A question the assistant surfaced ages if nobody acts", L2082–2103 — "Machine-surfaced questions look derived and move to deferred with a recorded reason if ignored."; "A marked question; aged, never vanished."; covered yes (ai-runs R25-R27; intent R17, R27; D-79, D-82).
+- [EXAMPLE] UC-105 "Correct a published case with a new edition", L2396–2415 — "A new edition; the old one still answers." (DEC-12, DEC-19); covered yes.
+- [EXAMPLE] UC-108 "Carry away the portable container", L2480 — "A fixed-timestamp ZIP with a manifest." (DEC-34).
+- [EXAMPLE] UC-098 "Choose how I am named…", L2254 — "A level in force per edition" (attribution in force per edition).
+- [EXAMPLE] UC-118 "State a deadline with its legal basis", L2698–2719 — layer "3 Action", function "Track toward resolution"; "Put a clock on an action; the machine may propose one from a profile deadline."; trigger "A notification was sent."; act "action: Propose a clock entry from a profile deadline"; outcome "A pending clock entry carrying its statute."; covered yes (action-clocks R2, R7, "were actions R32, R35, moved by K617"; escalation R6; Operational Principle 3).
+- [EXAMPLE] UC-127 "Have overdue clocks marked and the next stage proposed", L2910–2931 — "Know when a deadline passed and that a trigger is met, without the plane advancing anything."; trigger "A clock date passes."; outcome "Overdue marks; a proposed stage, never advanced."; covered yes (monitoring R34, R50; scheduler R5 (deadline-recheck); action-clocks R3; queue R1, R5, R12; queue-producers R15 (overdue CONDITION), R17 (stage-proposed OBLIGATION); escalation R2, R16); coverageNote "the overdue clock is a CONDITION (K611); an entry whose last mark failed is re-checked once a day (monitoring R50, N429, T19: K841)."
+- [EXAMPLE] UC-119 "Record correspondence: sent, received, no response, fee quotes", L2721–2742 — "Keep the ledger of what went out and came back, including records-request stages and fee quotes as evidence."; "Append-only ledger entries; a reply becomes a responds_to edge."; covered yes (actions R13-R17, R20-R22, R34, R48).
+- [EXAMPLE] UC-120 "Make a records request", L2744–2765 — "Request public records under the law that governs it, and track the round trip."; covered yes (actions R4-R6, R10, R41; src "Roadmap section 1 (CPRA 26-3028)").
+- [EXAMPLE] UC-121 "Evaluate a government response", L2767–2787 — trigger "A response arrives or a clock passes."; "complied, partial, denied or none"; covered yes (escalation R10).
+- [EXAMPLE] UC-122 "Advance, decline, suspend or resume an escalation", L2789–2811 — "Move to the next stage when its trigger is met"; outcome "History with who, when and why; proposals age visibly."; covered yes; "no member surface yet".
+- [EXAMPLE] UC-126 "Build an action plan: options, dependencies, deadlines, declined options", L2883–2908 — covered yes (action-plans R1-R34, T18: K711; "no member surface yet"); "Dependencies are phases and branches; a plan holds no resources (Bob's ruling 3)."
+- [GAP] UC-129 "Document pressure against supporters as evidence", L2979 — "The litigation-hold reminder for a legal threat is deferred until Bob designs the hold's act (N-A19; DEC-61)."
+- [EXAMPLE] UC-109 "Show the group's public identity", L2504 — "Three states (recorded, none, could not read); verdicts dated."
+- [EXAMPLE] UC-115 counsel packet, L2645 — "A marked, versioned packet; flagged when its basis changes."
+- [EXAMPLE] UC-150 "Record how a source's identity became known…", L3452–3479 — "A dated, attributed history of disclosures"; "a firmer identity reaches resting findings as a notice."; covered yes (sources R1-R15; case-authoring R37; publication R51-R52; reevaluation R28); "Built at the plane; no member surface yet."
+- [EXAMPLE] UC-133, L3066 — "Identity recorded with history".
+- [EXAMPLE] UC-143, L3305 — "Participation states with history."
+- [GAP] UC-154 "Decline to escalate, saying why not now", L3558–3580 — "A reasoned, attributed, dated decline in the member's own words; a later escalation supersedes it and both stay readable."; covered NO ("none (DEC-89 decided; escalation, conformance and affordances requirements owed; in no tranche's plan yet)"); "a plan's declined option also records 'not pursuing' (UX-ANSWERS), without withdrawing DEC-89."
+- [EXAMPLE] UC-164 "Choose options and set my own deadline reminders", L3806–3829 — "Commit to options and be reminded only when I asked."; act "deadline-reminder: Say when to be reminded"; outcome "reminders on the days chosen; the rest undecided."; covered yes (action-plans R13, R29; action-clocks R4; DEC-94; K613-K615); "no member surface yet".
+- [EXAMPLE] UC-165 "Lay out scenarios and judge their checkpoints", L3831–3854 — "Compare up to three ways of sequencing the chosen options"; "Scenarios with phases; checkpoints judged by members; missed ones never findings."; covered yes (action-plans R14-R17, R19, R23; queue-producers R16); no surface.
+- [EXAMPLE] UC-171 "Close a plan with a reason", L3976–3997 — covered yes; no surface.
+- [EXAMPLE] UC-153, L3546 — "Retry a failed co-attestation, late".
+*design-ux-journeyExperience.txt*
+- [DESIGN] journeyExperience (a) step 3 "Set display name, domain and jurisdiction profiles", L44–58 — "Minutes; domain re-checked daily."
+- [DESIGN] (a) step 10 "Make the project discoverable…", L168 — "Days; requests can lapse."
+- [DESIGN] (b) step 4 "Open a question (or the assistant surfaces one)", L234–245 — "Surfaced by the assistant: must look surfaced; ages to deferred if nobody acts (intent R17)."; howLong "Minutes; ageing interval set per instance."
+- [DESIGN] (b) step 5 "Cite…", L255 — "A newer capture may exist: stale version notice."
+- [DESIGN] (b) step 6 "Open an assistant run…", L272–274 — "Capture requests wait on the daemon (hours)."; "Minutes to hours; resumable."
+- [DESIGN] (b) step 15 ceremony, L393 — owner knows "the edition it creates (DEC-80 item 2)".
+- [DESIGN] journey (c) "Acting on a finding", L450–452 — spans "weeks to months; statutory clocks; several members; outside offices and counsel".
+- [DESIGN] (c) step 2 "Record a determination per standard", L471–484 — whatTheyKnow "Published findings with frozen pairs; standards in force."; whatCanGoWrong "A standard not in force at the act's date: refused." / "basis_changed later when a finding reopens." (conformance R1-R10).
+- [DESIGN] journeyExperience (c) step "State the deadline with its legal basis", L566–579 — whatTheyKnow "Profile deadlines, holidays."; whatCanGoWrong "Every date carries its statute; overdue is derived, never silently stale (actions R35)."; howLong "Statutory period (e.g. days)."; handoff "plane (monitoring)"; src "actions R32, R35; escalation R6".
+- [CONFLICT] (c) step "The plane marks overdue and proposes the next stage", L580–592 — "None: it proposes, never advances."; whatCanGoWrong "Not yet built: overdue marks and escalation prompts (monitoring R34-R35)." vs useCases UC-127 L2930 "Built at the plane (T18: monitoring R50 K717, scheduler R5 K719, queue-producers R15 and R17 K728)". The journeyExperience entry is stale on this point (and cites actions R32/R35, which K617 moved to action-clocks per UC-118).
+- [DESIGN] (c) step "Prepare, approve and record the filing sent", L560 — "Hours to send; then the clock."; "FILING_STALE (tier, counterparty, determination or laws changed)."
+- [DESIGN] (c) step "Evaluate the response", L594–607 — "Partial compliance does not stop the clock."; "Days to weeks of waiting."
+- [DESIGN] (c) step "Advance to legal tools or political accountability", L619 — "proposals age visibly".
+- [DESIGN] (c) step "Record consequences addressed; end the escalation", L650 — "Months."
+- [DESIGN] (c) step "Or decline to escalate", L526–531 — "a later escalation, opened with its own reason, supersedes it and both stay readable"; "Until it is built, deciding not to escalate leaves no trace."; "Decided, not built".
+- [DESIGN] (d) step "Mute a condition or snooze a case", L788–800 — "snooze until"; "UNTIL_IN_PAST."
+- [DESIGN] (e) spans L808 — "hours to days (runs wait on captures)"; (e) daemon step L862 "Refused with reason; held under a code; expired."
+- [DESIGN] (f) step "What is known of the source grows", L959–970 — "The source as it stood when the material was received, and each later disclosure, dated and attributed." (as-of reasoning over a source); "Months or years."
+- [DESIGN] (d) step "Adopt newer or keep earlier on a version notice", L742–753 — "Affected or undetermined grading of the newer capture."; "Notice producer not yet built (N172)." (but src says "built T12, N172").
+- [DESIGN] journeyExperience (h) "A records request round trip", L1033–1084 — spans "weeks; statutory clock; the office outside"; step 1 whatTheyKnow "The law and its deadline (from the profile)."; step 2 "Record it sent; state the clock": whatTheyKnow "Statutory days, holidays."; decision "Due date with citation."; feelingRisk "A computed date stored as fact (never: overdue is derived)."; howLong "Statutory period."; step 3 "Record what came back": decision "Direction, stage, quote, exemptions."; "No response: recorded as its own entry."; "Days to weeks."
+- [DESIGN] (i) "A source changes after a case is published", L1086–1135 — monitoring "On cadence."; "Causes derived on read."; "'Weakened' cause not yet met (reevaluation R17)."; new edition: "The published edition keeps answering."; "Determinations and packets flagged basis_changed."; "supersession is surfaced, not pushed."
+- [DESIGN] (k) "From suspicion to a closed plan", spans L1179 — "weeks to months: a plan may open while the inquiry is young and close after its actions resolve; checkpoints set in days (1-3,650 after a phase starts); statutory clocks".
+- [DESIGN] (k) step "See what the plan rests on", L1200–1211 — "A subject superseded or closed since: shown by liveness, never silently."; "A determination recorded since on a suspected subject's act is offered as determined_since; nothing is added without a member." (as-of change detection).
+- [DESIGN] (k) step "Add an option of one's own", L1236–1240 — "regulated dates need a basis"; "dates with basis"; "DATE_REFUSED (no basis)."
+- [DESIGN] (k) step "Choose, and say when to be reminded", L1266–1281 — "Defaults for reminders shown and changeable right there."; "when to be reminded of each dated option"; "REMINDER_REFUSED rejects the whole act (all or none)."; "The default reminder days are the surface's (R29: 'nothing here sets one')." (DEC-94).
+- [DESIGN] (k) step "Lay out a scenario", L1284–1300 — "Chosen options; regulated dates; other subjects' tracks."; "Phases, their order, checkpoints and branches; up to three scenarios."; checks "a regulated date before its phase can start"; "Checkpoints fall 1-3,650 days after their phase starts (action-plans R14); e.g. '8 weeks in'."; feelingRisk "A branch that waits on another subject's track could read as a forecast."
+- [DESIGN] (k) step "Judge a checkpoint", L1303–1314 — "CHECKPOINT_NOT_DUE; CHECKPOINT_JUDGED (no re-judging)."; "When its day comes; the queue item waits until a member judges it or the plan closes."
+- [DESIGN] (k) step "Track", L1349–1361 — "A deadline passed arrives as a CONDITION once; a proposed stage as an OBLIGATION."; howLong "The counterparty's window: statutory, or the group's stated one (a request for comment's window is the group's; 7-30 days is a cited precedent, never enforced)."; "reminders are the member's own and nothing repeats unless asked (DEC-94)."
+- [DESIGN] (g) "A review copy round trip", L1006 — "Draft edited after reading: the answer names the latest change (review R17)."
+- [DESIGN] (j) L1168 — "Days waiting on others."
+
+## ORGANISATIONS
+*design-journeys.txt*
+- [NEED] audiences, L55 — "Government office or official: Receives requests, filings and cases, and answers them." (actions, filings).
+- [NEED] audiences, L57 — "Oversight body: A grand jury, controller or auditor receiving referrals." (Design Requirement 8).
+- [DESIGN] "Kinds of group", L69–74 — group kinds professional / issue-specific / neighbourhood / catch-all ("A whole city, a single agency, a county"); "An inside auditor is worth noting: it means a public body itself may run a copy. The design must not assume the group always stands outside government."
+- [EXAMPLE] §3 franchise, L98 — private body acting for the city and the city's enforcement duty: "Is the hauler delivering what the franchise requires, and is the city enforcing it? (journeys 13 and 8)."
+- [EXAMPLE] §3 court case, L106 — "name the parties and offices involved".
+- [EXAMPLE] §3 contract, L110 — parties' obligations tracked: "Track each deadline and what the parties delivered (journey 13)."
+- [NEED] journey 2 step 2, L158 — group declares what it watches: "Names what it focuses on: issues, places, offices or agencies it watches."
+- [NEED] journey 5 step 3, L215 — choose the office that holds the records: "chooses the office and says plainly what records they want."
+- [NEED] journey 13, L352, L362 — addressees: "outside offices, reporters, groups, counsel"; "a filing, an escalation to the office, or an awareness action."
+- [NEED] journey 4 step 6, L200 — "sees whether other groups in the network are working on the same thing" (partner groups as organisations).
+- [GAP] §6 row "Offices and who held them", L533 — needed by "The "court case" row; journey 13"; exists: "Subjects are registered with three relations (stands in for, is part of, overlaps). There is no "reports to" or "contracts with", and no record of who held a role when." → "Waiting on the same answer".
+- [GAP] §6 row "Asking an expert for a check", L527 — "Nothing finds members by expertise or marks a task as a request for a check." (internal org: members' expertise; requirement if J4 confirmed).
+- [GAP] §6 row "What kind of group this is", L525 — "No kind, focus or purpose is kept" (group's focus includes "offices or agencies it watches", J2 L158).
+- [OPEN] J7, L564–566 — adopt journey 2 (group kinds, focus, purpose; can seed declared bias; never locks anything).
+- [OPEN] J9, L572–574 — one administrator is enough (internal governance; changes membership rules).
+*design-ux-audiences.txt*
+- [DESIGN] audiences "Government office or official addressed by an action or filing", L1205–1215 — "A body or office, named by official role and body, to which the group sends a request, notification, filing or accountability action; also the subject of a determination." / "A breach action is addressed only to an office, by role and body." (actions R9 ADDRESSEE_NOT_AN_OFFICE; escalation R4-R12)
+- [DOCTRINE] same, stakes L1259 — "Individuals are named only in official capacity in connection with specific documented acts; accountability belongs to the role and institution." (Design Requirement 6); L1264 "Consequences never name an individual." (consequences R10)
+- [DOCTRINE] same, trustConcerns L1272 — "An administrator is a stakeholder like any other, not an inverted threat; no adversarial attribute on any subject." (Case Making §4); L1287 "Presumed to want better outcomes; a bad actor is identified by evidence, never by role" (Action §4 rule 12; K597 (1)).
+- [DESIGN] same, L1225–1227 — "Compliance is recorded with the same care and may be commended." (Action §4 rule 4); L1220 office's goal "Understand, track, adjust and respond to the communities they serve."
+- [DESIGN] same, L1277 — office responses "return as ordinary captured evidence (a received correspondence entry), not through a channel into the workspace." (actions R15-R17)
+- [DESIGN] audiences "Oversight body (grand jury, controller, auditor)", L1317–1327 — "Recipients of Tier 1 referrals and complaints; stage 7 targets oversight and audit requests." (Design Requirement 8; escalation R12) / confidential referral "an action addressed to the oversight office… sent by the member's own hand and recorded" (Action §7.5; DEC-31).
+- [OPEN] same, L1332 — oversight bodies' needs "described only in reference research"; L1363 confidential referral without publication "has no bucket".
+- [DESIGN] audiences "Journalist", L1032 — "May be an action's addressee, by role and outlet (D1)"; L1101 "Never addressed as a private individual: always by role and outlet." (actions R9; action-plans R10)
+- [DESIGN] audiences "Activist or partner group", L1113–1120 — "no group owns an issue and groups discover each other through the work"; "May be an action's addressee, by role and organisation (D1)."
+- [GAP] same, L1130 — "Joint action with another group is recorded and deferred (Bob, 2026-09-30); it comes back when a coalition of groups asks to act jointly." (Action §7.6, §8; K600 (c))
+- [DESIGN] audiences "Described audience addressed by an action", L1632 — "may address a described audience ('Voters in the school district'), never a list of private individuals." (actions R9)
+- [DESIGN] audiences "Administrator", L188 — "A custodian of shared infrastructure, not an authority over the network's content or work."
+- [DESIGN] audiences "Project owner" goals, L548 — project's kind of work "(reporting, fixing, legal, oversight, other); it shapes the assistant's suggestions and nothing else." (action-plans R21; D4)
+- [DESIGN] audiences "Member with declared professional expertise", L467 — "Be routed the questions they can judge (e.g. a Brown Act or franchise-fee question)." (Membership v2 §1.3)
+*design-ux-useCases.txt*
+- [EXAMPLE] UC-018 "Register subjects and declare their relations", L399–419 — goal "Name the offices, funds, programs and people-in-role a case is about, with aliases and cited relations."; acts "entity: Register a subject", "entity: Add an alias", "entity: Declare a relation, with justification and citation"; outcome "Registry entries with no adversarial attribute."; covered yes (entities R1-R8, R26); src Case Making §4 (no suspicion flag).
+- [EXAMPLE] UC-019 "Resolve a document's references to subjects", L422–443 — "Tie what a document names to registered subjects, graded by how the match was made."; "Graded matches (A-C by recogniser, D only by member testimony); connections derived."; covered yes (entities R9-R12, R27; connections R17-R19).
+- [EXAMPLE] UC-020 "Declare where a document came from…", L446–466 — "Record the office or system a document came from"; "An attributed declaration; undetermined stays stated."; covered yes (provenance R21-R22, R29).
+- [EXAMPLE] UC-005 "Discover other groups' published work and 'working on' signals", L101–119 — covered no ("Publication section 9 (directory not built)").
+- [EXAMPLE] UC-024, L544 — "Model how a body is supposed to act (e.g. minutes follow a meeting)" — a body's expected process (declared flow) as an obligation pattern; src D-128 "OBLIGATION as declared flow"; covered yes (progressions R1-R8).
+- [DESIGN] UC-028, L629 — "Prove later what a public body published" (public body as publisher of record).
+- [DESIGN] UC-041 "Resolve or forward obligations", L918–938 — NB "obligation" here means a queue task addressed to a member (tasks R1-R3, R6; record-core R50-R52; TASK_NOT_YOURS), not a legal obligation of a government body.
+- [EXAMPLE] UC-064 "Compare a government act to its standards (Government Compliance Analysis)", L1442–1466 — "what the standard requires, what the body did, where they align and diverge, what is still unknown." (a body's act measured against its standards).
+- [EXAMPLE] UC-065 "Record a determination…", L1475 — "State the group's judgment on a named act against named standards, resting on published findings."
+- [EXAMPLE] UC-046 "Decide an obligation the record routed to me (authority, endorsement, expertise, ratification request)", L1031–1053 — includes "determine authority on an undetermined capture" (whether a capture is the body's authoritative record); internal routing "owner, else first citing project's owner, else earliest administrator, else unassigned"; covered yes (queue R1, R8, R12; tasks R1-R3).
+- [EXAMPLE] UC-070, L1600 — "'rule says X, department did not-X'" — a department's act vs a rule; DEC-76 "obligation against act routes into conformance".
+- [EXAMPLE] UC-080 — declared flow is a model of how a body's process is supposed to run (progressions); overdue successors = a body's late act.
+- [EXAMPLE] UC-076 "Regrade a case under another lens, or rerun another group's work", L1733–1750 — partner groups; covered no.
+- [EXAMPLE] UC-083 "Accept or reject another group's work into our body of work", L1896–1917 — covered no; DEC-92 partly decided; "What accepting commits the group to, and rejecting or withdrawing, are still Bob's."
+- [EXAMPLE] UC-084 "Mint an AI credential", L1928 — "organisation-wide only by an administrator" (organisation = the group).
+- [GAP] UC-101 "Fill in the standard metadata for a work product", L2306–2325 — "Summary, area of government, classification, sources, methodology, disclosures of relationships, status, contact, related work."; covered partial (case-authoring R3, R14); "relationship disclosure, point of contact and classification are not in any requirement." (Design Requirement 6) — area of government as a classification of the work is unrequired.
+- [EXAMPLE] UC-099 "Prepare a case", L2269 — case includes "subject position" (the case's stance toward its subject; DEC-13 elsewhere).
+- [EXAMPLE] UC-107 "Read a published case", L2447–2452 — audience includes "government office".
+- [EXAMPLE] UC-113 "Create a breach action to an office, with tier and laws", L2578–2601 — "Address an office by role and body, state governing laws and a risk tier with a reason."; covered yes (actions R1-R12, R18-R28, R33, R45-R47; escalation R9); "no member surface yet".
+- [EXAMPLE] UC-117 "See what actions are available against an office", L2676–2696 — "List the action kinds available for a counterparty from the jurisdiction profile, by tier."; "Kinds and tiers from the profile, undetermined where the profile is silent."; covered yes (filings R15, R21; actions R40-R42; jurisdictions R25-R27; affordances R26).
+- [EXAMPLE] UC-123 "Ask elected officials and oversight bodies to act (political accountability)", L2813–2836 — audience incl. "government office"; "Stage 7: oversight or audit requests, testimony, legislation that restores an existing requirement."; "Accountability actions, each stating its purpose; never policy advocacy or candidate support."; covered yes (escalation R12, R19; action-plans R12); "Lobbying is an option only to enforce or restore an existing requirement (Bob's ruling 6)."
+- [EXAMPLE] UC-119 — trigger "Any exchange with an office."
+- [EXAMPLE] UC-124 "Media outreach, public comment and testimony", L2838–2862 — "actions R9 (addressee beyond offices, D1)"; covered yes; no member surface.
+- [GAP] UC-125 "Discuss across groups (forum, working-on signals)", L2864–2881 — covered no.
+- [DOCTRINE] UC-112, L2571 — "no individual singled out".
+- [EXAMPLE] UC-139 "Declare and confirm expertise", L3194–3216 — trigger "Routing questions."; "Record what a member holds and whether the group has checked it; gates nothing."; "Two separate claims, append-only."; covered yes (membership R21-R24). (Contrast journeys §6 L527: "Nothing finds members by expertise or marks a task as a request for a check.")
+- [DESIGN] UC-135–UC-146 (L3097–3383) — the group's own internal organisation (administrators, ballots with denominator, capabilities, projects, owners, participants, forks) is fully modelled and covered yes (membership R1–R91; promotion R19, R41-R44); this is the group's internal organisation, not government bodies.
+- [EXAMPLE] UC-160 "Report that a subject match was wrong", L3707–3728 — trigger "A member sees a document matched to the wrong person, office or thing."; "A defect with its reason, shown beside the resolution with a count; nothing moves."; covered yes (entities R38; K485); no surface.
+- [EXAMPLE] UC-167 "Act on a success (recognition)", L3882–3905 — "Commend compliance with the same care as a breach."; trigger "A compliant determination."; covered yes (action-plans R1; actions R7-R8, R26; filings R23; Action §4 rule 4; Bob's ruling 5); no surface.
+- [EXAMPLE] UC-172 "Name the group's contact for an action", L3999–4020 — "Show who speaks for the group on this action, without a new capability."; covered yes (actions R45; action-plans R18; CONTACT_NOT_A_MEMBER); no surface.
+- [EXAMPLE] UC-159 "Be told of a conflict with a record I cannot see…", L3680–3705 — inter-project (internal) conflict notices; covered yes (contradiction R49-R55; DEC-85).
+*design-ux-journeyExperience.txt*
+- [DESIGN] (b) step 3 "Resolve its references to subjects", L219–231 — "Recognised references with grades."; "Accept matches; testify a missed one (grade D)."; "Ambiguous alias kept, never resolved silently (entities R6)." / "A C match never reads established."; feelingRisk "One click from an established resolution off a machine-composed list (DEC-53)." (entities R9-R12, R27).
+- [DOCTRINE] (c) step 3 "Record consequences", L493 — "A part naming an individual: refused."
+- [DESIGN] (c) spans L452 — "outside offices and counsel".
+- [DESIGN] (c) step "Create a breach action to the office; set the risk tier", L534–548 — whatTheyKnow "Counterparty by role and body from the profile."; decision "Tier 1, 2 or 3 with a reason; governing laws."; "Tier unset reads UNDETERMINED, never 1 (D-182)."; "MACHINE_CANNOT_SET_RISK_TIER."; src actions R1-R24; Design Requirement 8. (Counterparties come from the jurisdiction profile, not from a modelled organisation registry.)
+- [DESIGN] (c) step "Prepare, approve and record the filing sent", L561 — handoff "the office (outside)".
+- [DESIGN] (c) step "Advance…", L620 — handoff "counsel or officials".
+- [DESIGN] (e) step "Mint a member-scoped AI credential", L811–822 — "Organisation-scoped needs an administrator (membership R62)." (organisation = the group).
+- [DESIGN] (k) step "Get suggestions", L1217 — the assistant knows "The subjects, the standards' text, consequences, the project's kind of work, the profile's deadlines, venues and legal organisations, and the same project's earlier plans only." (venues and legal organisations as profile data).
+- [DESIGN] (k) step "Add an option of one's own", L1239 — "ADDRESSEE_REFUSED (a private individual, or a shape missing its role or organisation)."
+- [DESIGN] (k) step "Read and sort the options", L1261 — "Venues and legal organisations shown beside legal options could read as recommendations; they are labelled as facts."
+- [DESIGN] (k) step "Start an option", L1324 — "ADDRESSEE_NOT_AN_OFFICE for a breach action."
+- [DESIGN] (h) L1035, L1047 — "the office outside"; handoff "the office".
+- [DESIGN] (j) L1138–1174 — administrators' ballots, "'Pending approval' instead of '2 of 3' hides the arithmetic." (group's internal governance).
+
+## LAW
+*design-journeys.txt*
+- [EXAMPLE] §3 franchise, L98 — contract terms as standards: "Capture the agreement and declare its service levels, rates and fees as standards."
+- [EXAMPLE] §3 police overtime, L99 — budget as law plus policy and audit: "Capture the adopted budget, the actual spending, and any overtime policy or audit."
+- [EXAMPLE] §3 bond measure, L100 — ballot-measure text and statements; "campaigning for or against a measure is outside what a group's record prepares".
+- [EXAMPLE] §3 "A law, code or policy", L105 — code section → standard → one question per requirement: "Capture the section and declare what it requires as a standard the city must meet." / "Each requirement becomes a question: is the city meeting it?"
+- [DESIGN] §3 consequences, L119 — "Every kind of document is captured, pointed at and cited the same way: a code section, a court filing, an article, a budget, minutes, a contract, a dataset."
+- [DESIGN] §3, L121 — "The assistant can suggest first questions from whatever the member starts with, such as one question per requirement in a code section, each labelled as a suggestion."
+- [EXAMPLE] §3, L122 — "lawyers start from filings, accountants from financial reports, policy analysts from codes and rates."
+- [NEED] journey 1 step 5, L141 — at setup the founder "chooses the places whose rules apply and the languages its members use" (jurisdiction selection).
+- [NEED] journey 4 step 3, L197 — finding the city's own standard is a newcomer's step: "Finds the standard the city set itself, with the assistant's help if wanted: an ordinance, a policy, a budget promise, a contract term, a published service target."
+- [NEED] journey 5 step 4, L216 — "The wizard drafts the request under the governing law from the group's profile, labelled as a draft."
+- [NEED] journey 13 step 4, L361 — "Records the standard broken and the determination against it, where an action needs one." (Reasoned)
+- [NEED] journey 13 step 8, L365 — "Advances (legal tools, political accountability, a counsel packet for a serious matter) or declines, saying why not now."
+- [NEED] audiences L42 — counsel packet: "facts with citations, chronology, the standard."
+- [GAP] §6 row "Explaining a charge or a rule", L529 — needed by journey 4 and the sewer-utility row ("What's this sewer maintenance charge on my water bill?"); exists: "A question can be about anything, and the assistant's flow from a question to a search is designed but not built. Nothing finds and explains the ordinance or rate schedule behind a charge." → "Waiting on the same answer".
+- [GAP] §6 row "A code's structure", L530 — needed by the "law, code or policy" row; exists: "Each requirement is declared as its own standard, with its citation and text. There is no chapter-and-section structure, and no amendment history beyond what members record." → waiting.
+- [DESIGN] §6 L536 — "Until a gap closes, the journey states the limit honestly at the step where a member meets it."
+*design-ux-audiences.txt*
+- [DESIGN] audiences "Group operator" goals, L18 — "Choose the jurisdiction profiles the copy reads its local facts from." (installer R21; instance-setup R13)
+- [EXAMPLE] audiences "Member with declared professional expertise", L467 — routing "a Brown Act or franchise-fee question" to a lawyer (open-meeting law; franchise fees).
+- [GAP] same, L472 — "Certification by a licensed professional is deferred until a group needs a licensed name on an output" (Action §7.4; K597 (4)); L505 "an unmade divergence".
+- [DESIGN] audiences "Government office", L1246 — "every deadline carries the statute, order or commitment it derives from."
+- [DESIGN] audiences "Named counsel" goals, L1396–1403 — packet: "facts with citations, chronology, exhibits with provenance, the standards' text, candidate legal theories and remedies, and binding deadlines." / "shows each exhibit's grade and co-attestation, the venue's standard where the profile states it, and flags a contestable grade." (filings R9, R25; K597 (3))
+- [DOCTRINE] same, L1442 — "'Prepared for review by <counsel>. Not legal advice. Not for filing'." (filings R10); L1447 "nothing invented or defaulted; blanks show as [UNFILLED: name]." (filings R3, R18); L1464 "Never receives a template, pre-filled filing or fileable document for Tier 3." (filings R17)
+- [DOCTRINE] audiences "Government office" trustConcerns L1282 — "Cause only when evidenced, otherwise 'cause not established'; a hypothesised cause never contributes to a determination; a Recommendation is a proposed action, never a policy position." (DEC-84 (10)); L1292 "A breach claim resting on an unestablished premise says so first on its face." (filings R24; actions R8)
+- [DESIGN] audiences "AI run" goals L1493 — assistant may "propose readings, standards, comparisons, laws, tiers, theories, filings"; must never "state a law, determine, file" (L1554).
+- [DESIGN] audiences "Project participant" goals L627 — participants "record determinations, consequences and escalation acts" (conformance R1).
+*design-ux-useCases.txt*
+- [EXAMPLE] UC-004 "Look up applicable laws and policies (Legal/Policy Lookup)", L74–99 — goal "Get candidate standards proposed for a government act, then adopt the right ones."; trigger "A question needs its legal frame."; acts "standard: Propose a standard", "standard: Adopt a proposal"; outcome "Labelled proposals kept apart from standards until a member adopts."; covered partial (standards R9-R11); coverageNote "The proposal store is required; the lookup skill that produces proposals is not a module."
+- [EXAMPLE] UC-003 "Assemble what is known about a focus area (Context skill)", L50–72 — "Surface relevant laws, reports, other groups' work and request status for an area of interest."; covered no; "No module requirement holds the Context skill." (src Functional Architecture Layer 1 skills; inventory inFlux "Discovery ... beyond MVP").
+- [EXAMPLE] UC-002, L28 — outside search includes "legal databases"; covered partial.
+- [EXAMPLE] UC-024 — a body's prescribed procedure (minutes follow a meeting) modelled as a declared flow (progressions), not as a standard.
+- [EXAMPLE] UC-062 "Declare a standard from its captured text", L1398–1418 — layer "2 Analysis", function "Compare actions to standards"; "Hold what a government act is measured against, by citation and its own words as captured."; trigger "A law, policy or commitment applies."; "A standard with declarer and time; never edited."; covered yes (standards R1-R6, R11-R15; src Functional Architecture Layer 2 Function 1).
+- [EXAMPLE] UC-063 "Ask what standard was in force on a date" — in force/not in force/undetermined; covered yes (standards R7-R8).
+- [GAP] UC-064 "Compare a government act to its standards (Government Compliance Analysis)", L1442–1466 — audience member + AI run; acts "determination: Propose a comparison", "determination: Read the facts for a comparison from a contradiction"; outcome "A labelled proposal for human evaluation, never a determination."; covered partial (conformance R12, R18, R21); "A comparison may start from a contradiction inquiry, with both sides' texts; the skill that prepares one is not a module." (src Functional Architecture "The eighth skill"; Roadmap §9 skill 6).
+- [EXAMPLE] UC-065 "Record a determination: compliant, noncompliant or unclear, per standard", L1468–1488 — trigger "Published findings and standards exist."; "A determination per standard, never one verdict; no significance or score; compliant carries the same obligations."; covered yes (conformance R1-R9, R13-R17).
+- [EXAMPLE] UC-066 "Turn an unclear outcome into questions", L1490–1500 — "Return to Layer 1 when information is insufficient." (continues next chunk).
+- [DESIGN] Note: the use-case file places standards, in-force dating and comparison in functional "2 Analysis" (investigation), yet UC-065's trigger requires "Published findings" — the determination sits after publication.
+- [EXAMPLE] UC-069 "See both sides of a contradiction and resolve it (our own record)", L1567–1590 — resolution kinds include genuine: "double-speak promoted to a finding, obligation against act routed to a determination, a conflict of norms, or held irreconcilable."; covered yes (contradiction R24-R36, R56; queue R46; queue-producers R4); "Built at the plane; no member surface yet."
+- [EXAMPLE] UC-070 — "rule says X, department did not-X" → finding; obligation-against-act → conformance.
+- [EXAMPLE] UC-081 — a stage "lawfully skipped", discharged "with reason and citation" (procedural law exceptions).
+- [EXAMPLE] UC-066 "Turn an unclear outcome into questions", L1490–1510 — act "determination: Open a question from an unclear outcome"; covered yes (conformance R6).
+- [EXAMPLE] UC-067 "Judge significance: is this worth escalating?", L1513–1539 — trigger "A noncompliant determination exists."; acts incl. "escalation: Open from a live noncompliant determination", "escalation: Decline to escalate"; covered yes; coverageNote "DEC-89's required opening reason and 'decline to escalate' act are decided and in no requirement yet; UC-154 stays uncovered."
+- [EXAMPLE] UC-074 "Draft a bias proposal from an outside policy", L1688–1707 — "Read a newsroom or legal policy into draft statements without installing it."; covered yes (bias R19-R21) — policy text read as a proposal, "never installs".
+- [GAP] UC-100 "Check a work product against the publishing standard (Compliance Evaluation)", L2284–2304 — a publishing (methodology) standard, not law: "Run the published skill.md to get a descriptive reference opinion on metadata, methodology and support gaps."; "A reference opinion, never a gate."; covered no; "Until it exists, a case's 'Internally checked' and 'Externally compliant' rungs read 'not yet evaluated', never inferred from a signature (K364; publication R46)."
+- [EXAMPLE] UC-113 — acts "action: State governing laws", "action: Set risk tier (reason)"; outcome "A planned action resting on the determination; tier undetermined until stated."; "Proceeding on an unestablished premise with a stated reason, disclosed (actions R8 as amended)".
+- [GAP] UC-114 "Prepare, approve and record a Tier 1-2 filing", L2603–2627 — audience member + AI run; "Get a filing pre-filled from the record into the profile's template"; "blanks visible as [UNFILLED]; Tier 2 carries the advisory note."; covered yes (filings R1-R7, R16, R18, R22, R24, R25 "(grades and the venue's standard)", R26 "(group templates)"); coverageNote "the real profile has no Tier 1-2 templates yet (N-A14: legal text Bob supplies or approves, and a source)."
+- [EXAMPLE] UC-116 "Propose legal theories and remedies", L2652–2674 — audience "AI run", member; "Candidate theories against named standards, stored apart and labelled."; trigger "Preparing stage 5."; covered yes (filings R14).
+- [EXAMPLE] UC-117 — action kinds and tiers read from the jurisdiction profile.
+- [EXAMPLE] UC-118 — clock "carrying its statute".
+- [EXAMPLE] UC-120 — records request "under the law that governs it"; src cites "CPRA 26-3028" (a California statute named in the Roadmap).
+- [EXAMPLE] UC-123 — "legislation that restores an existing requirement".
+- [EXAMPLE] UC-133 "Name the group and choose its jurisdiction profiles", L3048–3070 — "choose which profiles the copy reads local facts from."; act "group-instance: Choose jurisdiction profiles"; outcome "profiles chosen, none preselected."; covered yes (instance-setup R5-R16, "profiles built T12, N10"); src "build/layers.md 'No jurisdiction in the product'".
+- [GAP] UC-148 "Learn the principles and start from the starter kit", L3407–3425 — "Learn values, principles, the publishing template, data-source and legal-tool guides, and security practices in one session."; covered no; "Deferred by Bob until the redesigned surfaces are built and stable (DEC-91)." (Roadmap §15 not yet started).
+- [EXAMPLE] UC-169 "See each exhibit's grade against the venue's standard", L3931–3951 — "Grades and co-attestation shown; the venue's standard beside them where the profile states it; contestable grades flagged; nothing refused for grade."; covered yes (filings R25; actions R49; jurisdictions R39; Action §4 rule 13; K597 (3); K600 (b)); no surface.
+- [EXAMPLE] UC-168 "Keep a filing as the group's template", L3907–3929 — "Build a library of boilerplate so each filing needs only its case-specific parts."; covered yes (filings R26; K613 (3)); no surface.
+- [EXAMPLE] UC-170 "Declare the project's kind of work", L3953–3974 — "reporting, fixing, legal or oversight project"; "shapes suggestions only."; covered yes (action-plans R21; D4 (K590); Action §4 rule 10).
+- [EXAMPLE] UC-166 "Start a chosen option as an action, overriding openly if needed", L3856–3879 — "Proceed on an unestablished premise (override, with a reason)"; "an override disclosed on it and on everything prepared from it."; covered yes (action-plans R18; actions R8, R45-R47; filings R24; K600 (a)).
+*design-ux-journeyExperience.txt*
+- [DESIGN] (a) step 1 install, L11 — operator decides "which jurisdiction profiles to offer"; (a) step 3, L46–51 — "The slug; the held profiles by name and coverage."; "which profiles (none preselected)"; "Changing profiles changes how local facts read (warning; instance-setup R15)."
+- [DESIGN] (c) step 1 "Declare the standard (or adopt a proposal)", L455–469 — whatTheyKnow "The standard's captured text; profile source match."; whatCanGoWrong "MACHINE_CANNOT_DECLARE_STANDARD." / "STANDARD_NO_CITE." / "Source undetermined when the profile does not supply it."; src standards R1-R11.
+- [DESIGN] (c) step 2 "Record a determination per standard", L471–485 — "Compliant, noncompliant or unclear, per standard."; "A standard not in force at the act's date: refused."; "Any significance, rank or score key: refused (R8)."; feelingRisk "Judging significance through policy preference (Functional Architecture Function 4)."; src "conformance R1-R10; Operational Principle 1".
+- [DESIGN] (c) step 2 — determination rests on "Published findings with frozen pairs" (determination after publication).
+- [DESIGN] (c) breach action, L538 — "governing laws" chosen by the member; tier with reason.
+- [DESIGN] (c) filing, L551–563 — "member (machine may prepare)"; "Draft with [UNFILLED] blanks; Tier 2 advisory first."; "NOT_TIER3 / Tier 3 yields no template."; feelingRisk "A machine-prepared filing mistaken for the group's approved words."; src filings R1-R7, R16-R18.
+- [DESIGN] (c) deadline, L569–572 — profile deadlines carry their statute.
+- [DESIGN] (c) advance, L610–623 — "TRIGGER_NOT_MET naming what is missing."; "ILLEGAL_STAGE."; feelingRisk "Advocacy creeping in: stage 7 only enforces an existing requirement." (escalation R8, R12-R16, R19).
+- [DESIGN] (c) decline, L518–532 — "Nothing may be recorded as significance, severity, priority, urgency or rank (conformance R8, escalation R19)."
+- [DESIGN] (h) step 1 "Make the request under its governing law", L1038–1050 — decision "What to ask; which law."; whatCanGoWrong "MACHINE_CANNOT_STATE_RECORDS_LAW." / "RECORDS_LAW_REFUSED (not yet enforced)."; src actions R4-R6, R18.
+- [DESIGN] (h) step 3, L1070 — records "exemptions" claimed in a response.
+- [DESIGN] (k) step "Add an option", L1237–1243 — "tier (legal only)"; "TIER_REFUSED (a tier on a non-legal option)."; "LOBBYING_NO_REQUIREMENT (a lobbying option naming no requirement it enforces)."
+- [DESIGN] (k) step "Prepare what is sent", L1334–1346 — "A legal option goes through the filing or counsel-packet surface; any other through 'Draft message'."; "KIND_NO_TEMPLATE when neither the profile nor the group has a template."; "send it by the venue's own means".
+- [DESIGN] (k) step "Get suggestions", L1217 — "the standards' text" is an input to the assistant's suggestions.
+- [DESIGN] (i) L1126 — "Determinations and packets flagged basis_changed."
+
+## COURTS
+*design-journeys.txt*
+- [EXAMPLE] §3 court case, L106 — "Reading about a lawsuit the city is a party to." / "Capture the filings, name the parties and offices involved, and watch the court's docket page for new filings."
+- [EXAMPLE] §3 regulatory proceeding, L111 — administrative proceeding: "A utility's rate case before a state commission." / "Capture the filings and follow the proceeding's docket."
+- [NEED] audiences L57 — grand jury, controller, auditor as referral recipients (Design Requirement 8).
+- [NEED] audiences L42 — group's lawyer receives counsel packet for a serious matter.
+- [NEED] journey 13 steps 5, 8, L362, L365 — "a filing", "legal tools", "a counsel packet".
+- [EXAMPLE] §3, L122 — lawyers start from filings.
+- [EXAMPLE] §3 budget/audit, L108 and police overtime L99 — audits as sources ("any overtime policy or audit").
+- [GAP] §6 row "Following a court case", L531 — needed by "court case" and "regulatory proceeding" rows; exists: "A court filing can be captured and a docket page watched for changes. Nothing tracks a case's filings, rulings and appeals, or links a decision to the rule it interprets." → waiting.
+*design-ux-audiences.txt*
+- [DESIGN] audiences "Named counsel", L1386–1398 — "Counsel the group names for a Tier 3 matter." (Design Requirement 8 as amended 2026-09-26; filings R8); packet contents incl. "candidate legal theories and remedies"; L1434 "A poorly filed Tier 3 case can create adverse precedent." (Roadmap §8)
+- [DESIGN] audiences "Oversight body (grand jury, controller, auditor)", L1317–1327 — referral recipients; stage 7 escalation.
+- [DESIGN] audiences "Named counsel" L1401 — "the venue's standard where the profile states it" (court/venue evidentiary standard as profile data).
+- [GAP] whole file — none of the 20 audiences is a court, judge, hearing officer, opposing party or litigant; courts appear only as venues behind counsel and oversight bodies.
+*design-ux-useCases.txt*
+- [EXAMPLE] UC-002, L28 — "legal databases" among outside sources (would include case law); covered partial, no standalone FIND.
+- [EXAMPLE] UC-115 "Assemble a counsel packet for Tier 3", L2629–2651 — "Prepare the six-section packet for counsel the group names; never fileable, never published."; trigger "A Tier 3 theory is available."; covered yes (filings R8-R13, R17, R22, R24, R25); "no member surface yet".
+- [EXAMPLE] UC-116 — legal theories and remedies (stage 5 = legal tools).
+- [EXAMPLE] UC-114 — filings at Tier 1–2 carry "the venue's standard" (filings R25).
+- [EXAMPLE] UC-123 — oversight/audit requests and testimony (quasi-judicial/oversight venues).
+- [GAP] UC-129, L2979 — legal threats recorded as pressure; "The litigation-hold reminder for a legal threat is deferred until Bob designs the hold's act (N-A19; DEC-61)."
+- [GAP] UC-148 — "legal-tool guides" in the starter kit, uncovered/deferred.
+- [EXAMPLE] UC-169 — audience "named counsel"; "Prepare for a challenge to evidence without being refused for it." (the venue's evidentiary standard comes from the jurisdiction profile, jurisdictions R39).
+- [GAP] whole file — none of the 172 use cases follows a court case or administrative proceeding (docket, parties, filings by others, orders, rulings, appeals, settlements, consent decrees), or uses precedent or an AG opinion. Courts appear only as the destination of the group's own action (Tier 1–3 filings, the counsel packet, stage 7 oversight).
+*design-ux-journeyExperience.txt*
+- [DESIGN] (c) spans L452 — "outside offices and counsel".
+- [DESIGN] (c) breach action, L546 — feelingRisk "Legally unsophisticated filing creating adverse precedent (Tier 3)."
+- [DESIGN] (c) step "Assemble a counsel packet (Tier 3)", L625–638 — "Six sections from the record."; decision "Name counsel."; "MACHINE_CANNOT_NAME_COUNSEL." / "basis_changed when a finding moves."; feelingRisk "A packet read as legal advice or as fileable."; src filings R8-R13, R17.
+- [DESIGN] (c) advance, L610–621 — "Advance to legal tools or political accountability"; handoff "counsel or officials".
+- [DESIGN] (k) L1217, L1261 — "venues and legal organisations" from the profile shown beside legal options, "labelled as facts".
+- [DESIGN] (k) L1336 — legal options go through "the filing or counsel-packet surface".
+- [GAP] whole file — no experience journey follows a court case or regulatory proceeding; journeys (c) and (k) end at counsel or a filing "sent by the venue's own means".
+
+## ANALYSIS
+*design-journeys.txt*
+- [EXAMPLE] §3 potholes, L96 — claim vs city's own records; sample not census: "Members' photos are a sample that tests those records, not a count of every pothole." Question: "Do the city's own records support its claim, and do members' spot-checks show that "closed" means "repaired"? (journey 6)"
+- [EXAMPLE] §3 police overtime, L99 — budget-vs-actuals: "How do the actuals compare with what was budgeted and what policy allows? An accountant member checks (journeys 8 and 7)."
+- [EXAMPLE] §3 financial report, L108 — "The annual financial report shows an unexplained fund transfer." → "A question, and a check from an accountant member".
+- [EXAMPLE] §3 dataset, L112 — "The city's open data on service requests; records returned from a request." / "Capture it as received, fingerprinted." / "Compare it with what was promised or required (journeys 7 and 5)."
+- [GAP] journey 6 "What changed", L230 — no in-product computation over spreadsheets: "Civicsmith can capture and read a spreadsheet, but the requirements show no way to compute over one inside the product, so for now the calculation is the assistant's or a member's, shown with its method. A built-in, repeatable calculation step may be needed."
+- [NEED] journey 6 step 4, L236 (Reasoned) — "Works out whether the records support the claim, with the method shown: the assistant's calculation labelled as machine work, or a member's own, checked by a second member."
+- [NEED] journey 6 step 5–6, L237–238 — sampling and a derived finding with counts: "the city's records show 90% closed; of 40 closed reports members visited, 11 were not repaired". Strength shown against the project's bar.
+- [DESIGN] journey 6 sources L241 — "office-readers (CSV and spreadsheets read); strength and Undetermined (measures map)".
+- [DESIGN] wizard "Check a claim", L472–477 — five steps incl. "Work out whether they support it, with the method shown, and have a second member check." / "Plan a spot-check: which sample of records members will visit".
+- [EXAMPLE] journey 6 Who, L226 — "often an analyst or accountant member"; "Civicsmith does not count potholes itself".
+- [GAP] §6 row "Calculating over a dataset", L528 — needed by journey 6 and "the police-overtime and bond-measure rows"; exists: "Spreadsheets are read as text and structure; their formulas are kept but not worked out. The only calculation in the product comes after a breach has been determined." → "Waiting on the development process's answer to the capability question you sent".
+- [DESIGN] §6 L536 — "journey 6 says that the calculation is the assistant's or a member's, shown with its method."
+*design-ux-audiences.txt*
+- [DOCTRINE] audiences "Member, experienced investigator" mustNeverSee L443 — "Never shown a single confidence score or a composed case strength." (AI Roles §3 rule 9; strength R18; case-authoring R24)
+- [DESIGN] audiences "Public reader" L978 — "Sees each finding's strength per axis, never one case score".
+- [DESIGN] audiences "Partner group" stakes L1163 — "Forks at the judgment layer are legitimate; forks at fact or analysis signal a reproducibility issue." (Design Requirement 5) — reproducibility of analysis.
+- [DESIGN] audiences "Partner group" goals L1125 — "rerun it under its own declared bias" (Declared Bias 'Differential traversal and the cross-group rerun').
+- [OPEN] audiences "Partner group" L1176 — "How strength composes across an instance boundary when one group cites another's published case is unanswered."
+- [DESIGN] audiences "Described audience" L1648 — "Reach is not measured, by design (no metrics)." (MATRIX.md §7)
+- [DESIGN] audiences "AI run" goals L1493 — assistant proposes "comparisons".
+*design-ux-useCases.txt*
+- [EXAMPLE] UC-002, L28 — "city data" among outside sources to search; covered partial.
+- [DESIGN] UC-001 "Search the record", L20 — outcome "Rows the viewer may see, with facets, a note of what could not be seen, and widening when an AND finds nothing." (facets = counts); covered yes (retrieval R5-R17, R28-R29; query-language R1-R25).
+- [GAP] UC-027 "Classify material as fact, analysis or judgment", L606–626 — "Keep facts, analysis and judgment separate so each is treated correctly."; layer "2 Analysis", function "Classify findings"; covered no; "No module requirement names the fact / analysis / judgment classification." (src Functional Architecture Layer 2 Function 3; Design Requirement 6 content classification in metadata).
+- [DESIGN] UC-053 "Read how strong a question or version is", L1192–1213 — "See the pair (weakest capture, weakest connection) with testimony beside it, and what is not load-bearing."; "Per-axis grades; unrated and undetermined stated; what-ifs labelled."; covered yes (strength R1-R10, R18-R20; DEC-21, DEC-44, DEC-82, DEC-86).
+- [DESIGN] UC-052 "Check whether grounds share an origin", L1170–1189 — "Make sure 'independent' grounds do not trace to one source."; "An independence answer per pair of parts."; covered yes (strength R11-R12, R27; D-195).
+- [DOCTRINE] UC-065 L1483 — "never one verdict; no significance or score".
+- [DESIGN] UC-064 — structured comparison (requires, did, align, diverge, unknown) as analysis output, partial.
+- [EXAMPLE] UC-067, L1521 — significance judged by a human "from context, scale, pattern and consequences"; "no significance field anywhere".
+- [GAP] UC-076 "Regrade a case under another lens, or rerun another group's work", L1733–1750 — "See conclusions side by side with disagreement localised to named lens differences."; outcome "A structured diff per conclusion."; covered no (Declared Bias "Differential traversal"; System Design row 7 absent).
+- [EXAMPLE] UC-077 "Set the objective's success condition and read progress and gaps", L1754–1773 — "see what is short, derived and never reported"; "Matched and short instances with why; one gap per short instance."; covered yes (intent R1-R7, R19, R28).
+- [EXAMPLE] UC-080 — "over-full stages" (counts per stage) derived from threaded instances.
+- [EXAMPLE] UC-068 "Detect candidate contradictions", L1542–1565 — cross-reference: "Pair assertions worth comparing; a run proposes labels (world, record, precision, unrelated, undetermined)."; covered yes (contradiction R1-R24, R57); "K1-K4 built with the over-strictness gate; K5 is not shown until a measured recommender run (K488)."
+- [EXAMPLE] UC-099 "Prepare a case", L2277 — "An unsigned case document with a computed searched section, citations pinned, per-member pairs frozen." (computed absence section; frozen strength pairs).
+- [GAP] UC-101 — "methodology" field in standard metadata only partly required.
+- [GAP] UC-100 — methodology/support-gap opinion absent.
+- [EXAMPLE] UC-107 — findings shown "with per-axis strength"; coverageNote "The case carries each capture's grade and co-attestation, capture accounts, sources and disclosed or highlighted contradictions (publication R10, R20)."
+- [EXAMPLE] UC-112 "Record what the breach did and to whom", L2555–2576 — "State consequences as computed, assessed or undetermined, with causation established or unproven."; "Parts never composed into one figure; no individual singled out."; covered yes (consequences R1-R8, R10-R14; Operational Principle 6). (This is the "only calculation in the product… after a breach has been determined" named by journeys §6 L528.)
+- [EXAMPLE] UC-128 "Record consequences addressed and end the escalation", L2933–2955 — "Close only when compliance is restored and consequences are addressed."; covered yes (consequences R9; escalation R3, R14).
+- [GAP] UC-110 "List published work in the public directory", L2511–2530 — "with compliance status"; covered no.
+- [EXAMPLE] UC-151 "See where a project stands: its stage and its cases' readiness", L3482–3500 — "Stage bars and readiness rungs computed from the record, each unreached step stating what it still needs" (continues next chunk).
+- [EXAMPLE] UC-137 "Add or remove an administrator by ballot", L3163 — "A carried or pending ballot with the denominator shown." (shown arithmetic).
+- [GAP] UC-148 — "data-source… guides" uncovered.
+- [EXAMPLE] UC-151 "See where a project stands", L3482–3506 — "Stage bars and readiness rungs computed from the record"; covered yes (publication R44-R49; basis-versions R41; State Rules §4.3; K362; K364; DEC-79); "the stacked bars (DEC-79) are not built in the interface."
+- [EXAMPLE] UC-156, L3623 — "the acceptance rate is measured" (measurement of machine recommendations).
+- [EXAMPLE] UC-160, L3722 — defects "shown beside the resolution with a count".
+- [EXAMPLE] UC-152 "Publish a case resting on co-attested Grade B copies", L3508–3530 — "The case discloses each document's capture grade and whether it is co-attested." (DEC-81 item 1).
+*design-ux-journeyExperience.txt*
+- [DESIGN] (c) step 3 "Record consequences", L487–500 — whatTheyKnow "What the record can compute; what must be assessed."; decision "Computed, assessed or undetermined; causation."; whatCanGoWrong "NOT_NONCOMPLIANT." / "A part naming an individual: refused." / "Totals only within one state."; feelingRisk "Composing harm into one headline figure (refused)." (consequences R1-R12).
+- [DESIGN] (b) step 12 "Prepare the case", L357–371 — "the searched section computed from the log"; failure "CASE_SEARCHED_UNCOMPUTABLE".
+- [DESIGN] (b) step 10 "Check strength against the bar", L327–339 — "BELOW_PROJECT_STRENGTH naming member, axis, required and reached (case-authoring R6)."
+- [DESIGN] (b) step 16 "Read and verify by hash", L431–444 — "Cases disagree on a finding's pair: CASES_DISAGREE, each case's pair shown."; feelingRisk "Reading strength as a single score, or authenticity into a hash."
+- [DESIGN] (b) step 7 "Accept a version", L283 — "Versions with legs and per-axis strength; suggested ones labelled."
+- [DESIGN] (c) end escalation, L641–653 — "COMPLIANCE_NOT_RESTORED." / "CONSEQUENCES_NOT_ADDRESSED." / "CONSEQUENCES_UNDETERMINED."; "the exit condition is specific (Operational Principle 6)."
+- [DESIGN] (d) "Open the queue", L665–677 — "Truncated at the bound (said)."; feelingRisk "A truncated set indistinguishable from nobody caring (DEC-16)." (counts/limits stated).
+- [DESIGN] (d) "Resolve a tension in our own record", L766 — "the acceptance rate is measured and reviewed (DEC-77 item 3)."
+- [DOCTRINE] (k) step "Add an option", L1243–1247 — "OPTION_KEY_REFUSED (budget, cost, assignee, hours, significance, priority, score)."; feelingRisk "Wanting to record cost or who does it; the plan refuses both by design."
+- [DESIGN] (j) L1152 — arithmetic shown ("'2 of 3'").
+- [DESIGN] (i) L1110 — "Withheld dependents stated without a count."
+- [DESIGN] (g) L1020 — "Readings on a draft not named at publish are counted UNDETERMINED, never listed (Publication section 3 rule 13)."
+- [DESIGN] (k) step "Get suggestions", L1230 — "the five strongest first… with no score, rank figure or strength (action-plans R34; K660 (2))".
+
+## QUESTIONS
+*design-journeys.txt*
+- [DESIGN] audiences, L63 — "The assistant: an actor that works for members, not an audience; it appears in the journeys where it acts."
+- [DESIGN] §3, L121 — assistant suggests first questions, one per requirement in a code section, "each labelled as a suggestion".
+- [NEED] journey 4 step 3, L197 — assistant helps find the standard.
+- [DESIGN] journey 9, L284–296 — "Asking the assistant to find, pursue, extract and check, and deciding what to keep." Steps: "Asks it to find, pursue, extract or check; it answers as "I"." / "Requests captures it needs; they arrive over time." / "Suggests documents, versions and questions, each labelled as machine work with who asked." / "Accepts or rejects each one; the assistant never concludes, signs or sends." / "May ask it to walk a wizard, plan one, or draft a translation." Front door: "Opening the panel and asking in plain words".
+- [DESIGN] journey 9 step 1, L291 — "The key it runs on is set once for the group, a project or the member."
+- [NEED] journey 13 steps 2, 6, L359, L363 — assistant suggests plan options and may draft what is sent.
+- [DESIGN] wizard "Your first question", L481 — "Say it as a question; the assistant can suggest some from what you started with."
+- [DESIGN] journey 3 step 5, L181 and wizard L452 — newcomer meets "a question's strength against its project's bar, and "Undetermined"" first.
+- [NEED] journey 6 step 4, L236 — assistant's calculation labelled as machine work.
+- [GAP] §6 row "Explaining a charge or a rule", L529 — "the assistant's flow from a question to a search is designed but not built."
+- [OPEN] §6 row "The account the assistant runs on", L534 — "They don't say whether a Claude subscription is enough or a paid developer account is needed." → fact to confirm before the setup wizard is written.
+- [DESIGN] wizard "Translate the interface", L504–508 — "Ask the assistant to draft them; each is marked "Draft"."
+- [DESIGN] wizard "Start and send", L512 — "Prepare what is sent; the assistant may draft it."
+*design-ux-audiences.txt*
+- [DESIGN] audiences "AI run as a principal (the assistant)", L1478–1558 — "A named non-member actor holding its own AI credential, minted by a member; it may do the looking, never the concluding." (DEC-24, DEC-27; AI Roles §§1-3); goals "Find, pursue, extract and check; suggest versions, propose readings, standards, comparisons, laws, tiers, theories, filings; surface questions; request captures." (AI Roles §2)
+- [DESIGN] same, L1486 — "Proposes plan options with why, and drafts communications, filings and theories as proposals; never adds, disposes, schedules, judges, starts or closes. In a planning run it proposes strongest first with no score, reads only that project's own plans, and drafts no letter." (action-plans R11, R24, R31-R34; filings R23; skills R28-R29; agent-worker R50-R53; K660 (2)-(4))
+- [DESIGN] same, L1500 — "Holds no copy of the rules; relays the plane's refusals in the plane's words." (Interaction Constructs §P)
+- [BUILT] same, L1522 — "Only CHECK mode is deployed today." (ai-runs R40, R44)
+- [DESIGN] same, L1529 — "The record states both facts: the assistant did this, at a named member's request." (Interaction Constructs §P)
+- [DOCTRINE] same, L1537 — "Machine work is labelled everywhere; an agent-surfaced question carries a marker wherever listed." (AI Roles §3 rules 3, 8; ai-runs R27); L1542 panel docked beside the surface; "a wizard step highlights the real control and never fills or presses it." (DEC-90)
+- [DOCTRINE] same, L1547 — contradiction: "May recommend which respects of a contradiction may differ, labelled machine work; never which side is wrong nor that a conflict is genuine." (DEC-84 (5); DEC-77 item 3)
+- [DOCTRINE] same, L1554 — "Cannot conclude, accept, reject, make current, ratify, sign, set a tier, state a law, determine, file, choose the question, set an objective, write a member's reason, or travel on a member's token." (affordances R7; AI Roles §3)
+- [DESIGN] audiences "Project owner" L548 — kind of work "shapes the assistant's suggestions and nothing else."
+- [DOCTRINE] audiences "Member, newcomer" trustConcerns L347 — "The system never puts words in a member's mouth: no prefilled or suggested reasons." (Interaction Constructs §J; AI Roles §3 rule 1); L364 "Never shown UNDETERMINED as an error." (Interaction Constructs §U; DEC-86); L300 newcomer meets strength vs bar and 'Undetermined' first (DEC-82).
+- [DESIGN] audiences "Member, experienced investigator" L436 — "Wants machine work visibly labelled as machine work." (AI Roles §3 rule 3)
+*design-ux-useCases.txt*
+- [EXAMPLE] UC-001 "Search the record", L3–24 — "Find documents, passages, questions and legs by typing one query language."; covered yes.
+- [GAP] UC-002 "Search outside sources in one query (city data, legal databases, other groups, news)", L26–48 — "One question fans out to heterogeneous public sources with provenance and trust on each result."; covered partial (ai-runs R9-R14 FIND only inside a run; capture-requests R1-R22); "No module holds a standalone fan-out search over outside sources; FIND exists only inside an investigative run." (src AI Roles §2 standalone FIND ABSENT)
+- [GAP] UC-003 Context skill — covered no.
+- [GAP] UC-004 Legal/Policy Lookup — audience incl. "AI run"; lookup skill not a module.
+- [DESIGN] UC-008 "Read the frontier", L169–188 — "Tell which absence is true: nobody looked, looked and found nothing, could not tell, partial, present."; "Four levels (internet, documents, content, meaning) with look states and missing causes."; covered yes (retrieval R36-R50; observation-log R1-R13); DEC-86 "'nobody looked' has its own treatment, distinct from Undetermined".
+- [DESIGN] UC-015 reading, L330–349 — machine-read text labelled; DEC-4 "machine-read text never presented as publisher text"; covered yes.
+- [DESIGN] UC-016 passage, L353–372 — audience includes "AI run"; outcome "A content row with its mint label (member-marked or machine work)."; covered yes.
+- [DESIGN] UC-025 "Declare themes and place material in them", L560–582 — audience incl. "AI run"; "the machine may propose placements"; "Themes that are never evidence."; covered yes (connections R39-R48).
+- [DESIGN] UC-040 "Work the daily queue", L897–915 — "See things that want me: obligations, then queue findings, then conditions, grouped by the case"; covered yes; "The four Action kinds are built at the plane (T18: K725, K728, K731); no member surface for them yet."
+- [EXAMPLE] UC-047 "Open a question", L1055–1075 — audience member + AI run; "Start an inquiry on what the member wants to know; the assistant may surface one within a run's bound."; outcome "An open (or surfaced, marked) question."; covered yes (inquiry R1-R2; ai-runs R25-R27; intent R16).
+- [EXAMPLE] UC-050 "Narrow a leg to the on-point part", L1124–1144 — "the machine may propose candidates"; covered yes (basis-versions R24-R27).
+- [EXAMPLE] UC-054 "Compare alternative accounts of support and decide on them", L1216–1237 — "(including machine-suggested ones)"; "Member-authored version states; the machine never accepts."; covered yes.
+- [GAP] UC-064 — AI run comparison skill "not a module".
+- [EXAMPLE] UC-068 — audience "AI run", "member"; machine proposes contradiction labels; K1-K4 "reach members as leads or duties (no member surface yet)".
+- [EXAMPLE] UC-079 "Triage proposals and gaps", L1804–1823 — "Adopt, open a question, defer or dismiss what the system proposes."; "Authored triage with reason; nothing adopted automatically."; covered yes (intent R15-R17, R20, R27).
+- [EXAMPLE] UC-084 "Mint an AI credential", L1920–1940 — "Give the assistant its own credential, scoped to a task"; covered yes (membership R28-R30, R62; DEC-55).
+- [EXAMPLE] UC-085 "Open a CHECK run on a question or project", L1943–1962 — "Have the assistant read the record adversarially and raise what it finds."; "A bounded, attributed run; modes not deployed are refused."; covered yes (ai-runs R9-R14, R40, R44; DEC-24 CHECK first; DEC-90 panel).
+- [EXAMPLE] UC-086 "Read a run: its log, lens, bar and bounds", L1965–1984 — "See where the search went, where it stopped and why, under what conditions."; "teammates see a running indicator, not reasoning."; covered yes (ai-runs R19-R24, R31-R34; AI Roles §4; DEC-61).
+- [EXAMPLE] UC-087 "Receive suggested accounts of support", L1986–2000 — "Get machine-suggested basis versions, labelled, to accept or reject."; trigger "An investigate run." (continues next chunk).
+- [GAP] UC-087 "Receive suggested accounts of support", L1986–2008 — "Suggested versions that are never evidence until a member acts."; covered partial (run-productions R1-R9; "ai-runs R40 (investigate not deployed)"); INVESTIGATIVE-SESSION; DEC-60.
+- [GAP] UC-088 "Receive proposed readings of a document", L2011–2031 — "Get machine-proposed readings within a run's bound, labelled and never A."; covered partial (run-productions R10-R14; "ai-runs R40 (extract not deployed)"); AI Roles §7.3.
+- [EXAMPLE] UC-089 "Let the assistant request captures while it works", L2034–2056 — "The run asks; the daemon fetches with provenance under conduct rules."; "attributed to the daemon at the run's request, or refused with a reason."; covered yes (capture-requests R1-R40).
+- [EXAMPLE] UC-090 "Let the assistant work my objective", L2059–2079 — "Open a run with the objective's gaps as instructions; the member alone may start it."; covered yes (intent R18; DEC-24 rule 2).
+- [EXAMPLE] UC-091 — surfaced question marked and aged.
+- [GAP] UC-092 "Ask the assistant in my own words (find, create, act) and be walked through steps", L2105–2123 — "One way in on every surface; the assistant conducts, the member acts, each step in the surface that owns it."; trigger "Any time."; outcome "Proposals, confirmations, acts that still run their four beats."; covered NO, requirementIds none; src DEC-27; Interaction Constructs §P (THE ASSISTANT); ASSISTANT-PILOT; DEC-90; coverageNote "Its panel is decided (DEC-90): docked beside the surface it serves, expandable, never floating; a wizard step highlights the real control and never fills it. No requirement yet."
+- [GAP] UC-093 "Speak to the assistant", L2126–2143 — "Voice input, with the transcription shown for correction before it becomes anything."; "the fact it was transcribed is recorded."; covered no (Interaction Constructs §P 'Voice').
+- [GAP] UC-100 — audience includes "AI run"; skill.md reference opinion; covered no.
+- [EXAMPLE] UC-114 — AI run audience; filing pre-filled from the record.
+- [EXAMPLE] UC-116 — AI run proposes theories "stored apart and labelled".
+- [EXAMPLE] UC-118 — "the machine may propose one from a profile deadline".
+- [EXAMPLE] UC-126 — audience "AI run"; plan options proposed.
+- [EXAMPLE] UC-139 — expertise declared for "Routing questions" (to people, not the assistant).
+- [EXAMPLE] UC-156 "Accept the machine's recommendation in one attributed act", L3607–3629 — "Use a labelled recommendation without it silently becoming the member's decision."; "The record keeps that the member accepted it, and which one; the machine's reason stays the machine's; the acceptance rate is measured."; covered yes (contradiction R30, R37, R39, R41; skills R27; DEC-77 item 3(b); DEC-84 (14); K447 point 15); "No recommendation is produced live until the recommender prompt is measured (R41; K491)."
+- [GAP] UC-163 "Get the assistant's suggested options and adopt some", L3779–3804 — "Widen what the group considers without letting the machine decide."; covered yes (action-plans R11, R21, R24, R30-R34; skills R28-R29; agent-worker R50-R53; run-rules R13-R14); but "the assistant's plan mode is not deployed until it runs model turns (run-rules R14; K660 (5)), so only members' own proposals reach the tray today. Suggestions come five at a time, strongest first, with no score, and the member asks for the next five (action-plans R34; Bob, K660 (2))."
+- [EXAMPLE] UC-170 — kind of work lets "the assistant suggest options fitting a reporting, fixing, legal or oversight project".
+*design-ux-journeyExperience.txt*
+- [DESIGN] (b) step 4, L234–245 — "member or assistant" opens a question; feelingRisk "A machine question must not read as a member's obligation (D-82)."
+- [DESIGN] (b) step 6 "Open an assistant run to check or investigate", L264–278 — "The run's bounds, lens and bar are recorded at open."; decision "Mode (only CHECK deployed)."; "Mode not deployed: refused (ai-runs R40)." / "A bound stops the run and the log says which."; feelingRisk "The assistant appearing to conclude; transcripts are notes, never record."
+- [DESIGN] (b) step 7, L286–291 — "MACHINE_CANNOT_MOVE_VERSION for a machine."; feelingRisk "Accepting a machine suggestion without reading it (DEC-68: the record cannot tell)."
+- [DESIGN] (b) step 9 "Conclude…", L316 — "MACHINE_CANNOT_CONCLUDE."
+- [DESIGN] (b) step 2 "Release it", L202–206 — "Must see the source material itself, never only an AI summary."; "MACHINE_CANNOT_RELEASE".
+- [DESIGN] (c) step 1, L460 — "MACHINE_CANNOT_DECLARE_STANDARD."
+- [DESIGN] journey (e) "Delegating looking to the assistant", L805–916 — spans "hours to days (runs wait on captures); member plus machine"; steps: mint credential ("The credential appearing to carry the member's capabilities (it holds none)."); work the objective ("MACHINE_CANNOT_CHOOSE_THE_QUESTION"; "The assistant's docked, expandable panel is decided (DEC-90), not built."; DEC-88 item 4 reason opens with budget and scope); run requests captures ("Public addresses only."); daemon drains; supply login; run suggests versions, surfaces questions ("Investigate mode not deployed today."; "AI appearing to conclude; suggestions must be labelled machine work."); accept or reject ("Labelled suggestions with their reasoning, never a drafted reason."; "Accepting without reading (unmeasurable, DEC-68).").
+- [DESIGN] (d) "Resolve a tension…", L758 — whatTheyKnow includes "the machine's recommendation, labelled"; L770 "No machine recommendation is produced live until the recommender prompt is measured (R41; K491)."
+- [DESIGN] (d) "Take up an objective gap or proposal", L733 — "Machine refused every adopt act (intent R20)."
+- [DESIGN] (d) "Resolve or forward obligations", L702 — "MACHINE_CANNOT_RESOLVE / FORWARD."
+- [DESIGN] (c) MACHINE_CANNOT_OPEN (L508), MACHINE_CANNOT_SET_RISK_TIER (L541), MACHINE_CANNOT_NAME_COUNSEL (L631).
+- [DESIGN] (k) step "Get suggestions", L1215–1231 — "member; the assistant proposes"; "No assistant suggestions until its plan mode is deployed, as soon as the assistant runs model turns (run-rules R14; K660 (5)); a member may still propose or add options."; feelingRisk "Suggestions shaped by the declared kind of work could narrow what the group considers; they shape suggestions and nothing else."
+- [DESIGN] (k) step "Add an option", L1235 — "member (or the assistant fills the form for them to check)".
+- [DESIGN] (k) step "Prepare what is sent", L1335 — "member; the assistant may draft"; "approval fixes the bytes and adds the stamp."
+- [DESIGN] (h) L1043 — "MACHINE_CANNOT_STATE_RECORDS_LAW."
+- [DESIGN] (k) L1188 — "MACHINE_CANNOT_PLAN."
+- NB: journey (e) has no step for a member asking a natural-language question and getting an answer; the assistant's work is runs (check/investigate), captures and suggestions.
+
+## DOCTRINE
+*design-journeys.txt*
+- [DOCTRINE] §3 "What this means", L117–118 — "Frustration is welcome and the record stays disciplined" / "Civicsmith holds the city to its own laws, standards and statements. It takes no side on what policy should be, including on a ballot measure, while still checking the city's claims about one."
+- [DOCTRINE] §3 bond measure, L100 — "Civicsmith checks the city's claims against its records; campaigning for or against a measure is outside what a group's record prepares".
+- [DOCTRINE] journey 3 step 2, L178 — "a finding resting on such testimony needs an independent source before it can be signed" (testimony credited only as the group).
+- [DOCTRINE] journey 9 step 5, L295 — "the assistant never concludes, signs or sends."
+- [DOCTRINE] wizards preamble, L436 — "a wizard points at the real control and never presses it; what it puts in a field is a labelled draft until the member keeps it".
+- [DOCTRINE] journey 6, L236 — machine calculation labelled as machine work; a member's calculation "checked by a second member".
+- [DOCTRINE] journey 6 step 2, L234 — undefined terms → "Undetermined, because the city does not define it".
+- [DOCTRINE] Kinds of group, L74 — "The design must not assume the group always stands outside government."
+- [DESIGN] journey 1 step 5, L141 — places/jurisdiction chosen at setup as data ("chooses the places whose rules apply").
+- [DOCTRINE] journey 2 step 5, L161 — group kind "shapes suggestions only… Nothing is locked or hidden by it" (L154, L161).
+- [DOCTRINE] §6 L536 — journeys never promise beyond capability: "Until a gap closes, the journey states the limit honestly at the step where a member meets it." and J10 L577 "so the journeys never promise what Civicsmith can't yet do."
+- [RULING] sources L516, L584 — DEC-120, DEC-121 (wizards, required ones), K1364 (the member's words; drafts; stopping is a non-event), DEC-91 (onboarding deferred), DEC-123 principles, DEC-125–127 brand and voice, DEC-122 phones, DEC-96/DEC-112/K1366 imported cases, DEC-110 queue.
+- [OPEN] J11, L580–582 — private notes "never cited and never published" vs observations only.
+*design-ux-audiences.txt*
+- [DOCTRINE] audiences "Government office", L1259 — "Individuals are named only in official capacity in connection with specific documented acts; accountability belongs to the role and institution." (Design Requirement 6)
+- [DOCTRINE] audiences "Journalist" L1101; "Described audience" L1632 — never addressed as private individuals (actions R9; action-plans R10).
+- [DOCTRINE] audiences "Member with declared professional expertise" L517 — "The kind of work belongs to the project, never to a person: no attribute of a person gates, filters or orders anything." (Action §4 rule 10; DEC-17; DEC-54) — bears on routing questions by expertise (J8).
+- [DOCTRINE] same L512 — "Identity disclosure must never become a component of strength".
+- [DOCTRINE] audiences "Partner group" L1171 — "No transitive trust: incoming work is re-evaluated locally before citation" (Functional Architecture 'Trust signals'); L1180 'Flagged' "only from a member's recorded evaluation naming specific issues, never a machine's." (DEC-92)
+- [DOCTRINE] audiences "Partner group" L1189 — "Any group may use Civicsmith; a group with a stake in a matter discloses it." (D6 (K590); Action §4 rule 9)
+- [DOCTRINE] audiences "Government office" L1282 — Cause only when evidenced (DEC-84 (10)); L1308 "a plan is never published" (action-plans R25; DEC-25).
+- [DOCTRINE] audiences "Oversight body" L1377 — "Nothing non-public leaves the instance by any system path." (DEC-31)
+- [DOCTRINE] audiences "Future members" L1613 — "Institutional memory is the point: the protection system depends on institutional amnesia." (Roadmap §9); L1621 correction-by-append.
+- [DOCTRINE] audiences "AI run" L1554 — list of acts the assistant cannot do incl. "state a law, determine, file".
+*design-ux-useCases.txt*
+- [DOCTRINE] UC-018, L415 — "Registry entries with no adversarial attribute." (Case Making §4)
+- [DOCTRINE] UC-019, L439 — match grades: A–C by recogniser, "D only by member testimony".
+- [DOCTRINE] UC-004, L93 — machine proposals kept apart from standards "until a member adopts".
+- [DOCTRINE] UC-015 — DEC-4 machine-read text never presented as publisher text.
+- [DOCTRINE] UC-023 — trusted timestamp "never reaches Grade A"; DEC-81 "a co-attested Grade B is enough to publish, disclosed on the case".
+- [DOCTRINE] UC-025 — "Themes that are never evidence."
+- [DOCTRINE] UC-037 — watch proposals "never enabled by the machine".
+- [DOCTRINE] UC-022 "Retire a document", L507 — "A terminal state; refused while a live edge cites it."
+- [DOCTRINE] UC-056, L1282 — "DEC-24 (the member does the concluding)".
+- [DOCTRINE] UC-054, L1233 — "the machine never accepts."
+- [DOCTRINE] UC-064, L1460 — comparison is "A labelled proposal for human evaluation, never a determination."
+- [DOCTRINE] UC-065, L1483 — "A determination per standard, never one verdict; no significance or score; compliant carries the same obligations."
+- [DOCTRINE] UC-062, L1413 — standard "never edited".
+- [DOCTRINE] UC-049, L1117 — "An edge marked severed, never erased."
+- [DOCTRINE] UC-061, L1390 — hunch legs inert; publication refused UNCLEARED_HUNCH (DEC-15; DEC-20); "a hunch still counts at its stated grade in strength (R5 not yet met)".
+- [DOCTRINE] UC-067, L1534 — "no significance field anywhere"; DEC-89 required reason to open an escalation.
+- [DOCTRINE] UC-068, L1564 — "A precision or unrelated label is never shown as a tension."
+- [DOCTRINE] UC-069, L1585 — corrected side is "stale with its reason, never deleted".
+- [DOCTRINE] UC-071 "Declare the evidence bar", L1615–1638 — "A declared bar beside the strength reached, never a gate on the pair." (DEC-17; DEC-72)
+- [DOCTRINE] UC-072, L1658 — "malformed verdict statements refused" (bias set).
+- [DOCTRINE] UC-078, L1785–1796 — "Set priorities that never filter evidence"; "contacts (never 'contradictions') between aspirations".
+- [DOCTRINE] UC-080, L1841 — "Derived findings that report and never decide."
+- [DOCTRINE] UC-082, L1892 — citing another group's case "inherits the fact of publication, never the credibility of its content (DEC-92; inquiry R7)."
+- [DOCTRINE] UC-075, L1717 — bias debt "is disclosed and blocks nothing".
+- [DOCTRINE] UC-087, L2004 — machine-suggested versions "never evidence until a member acts".
+- [DOCTRINE] UC-088, L2018 — machine readings "labelled and never A".
+- [DOCTRINE] UC-090, L2066 — "the member alone may start it".
+- [DOCTRINE] UC-092, L2123 — "a wizard step highlights the real control and never fills it" (DEC-90).
+- [DOCTRINE] UC-100, L2298–2303 — reference opinion "never a gate"; rungs "never inferred from a signature (K364; publication R46)".
+- [DOCTRINE] UC-097, L2232 — exclusion acknowledgement "disclosed, never required".
+- [DOCTRINE] UC-103, L2366 — "signer and deliverer recorded as two facts"; DEC-87 irreversible act only through the ceremony.
+- [DOCTRINE] UC-123, L2830–2835 — "never policy advocacy or candidate support"; lobbying "only to enforce or restore an existing requirement (Bob's ruling 6)"; Action §4 rule 9.
+- [DOCTRINE] UC-127, L2917–2925 — "without the plane advancing anything"; "a proposed stage, never advanced".
+- [DOCTRINE] UC-112, L2571 — "Parts never composed into one figure; no individual singled out."
+- [DOCTRINE] UC-115, L2637 — counsel packet "never fileable, never published".
+- [DOCTRINE] UC-111 "Open an escalation", L2532–2553 — from "a live noncompliant determination"; "DEC-89's opening reason is still owed"; escalation R23 overridden action refused.
+- [DOCTRINE] UC-126, L2905 — "DEC-25 (plan never published, provisional)"; "hypothetical premises are hunch debt".
+- [DOCTRINE] UC-124 — communications "governed by show-your-work and institutional framing".
+- [DOCTRINE] UC-133 — "No jurisdiction in the product" (build/layers.md); profiles "none preselected".
+- [DOCTRINE] UC-150, L3474 — "an identity detail published only with consent to that audience or where already public, cited" (DEC-78 item 5) — private individuals (sources) protected.
+- [DOCTRINE] UC-149, L3444 — "a pseudonym… never an identity".
+- [DOCTRINE] UC-138, L3177 — "never delete a member".
+- [DOCTRINE] UC-139 — expertise "gates nothing".
+- [DOCTRINE] UC-154, L3565 — "Keep the group's judgement not to pursue a breach, without turning it into a score."
+- [DOCTRINE] UC-156, L3623 — "the machine's reason stays the machine's".
+- [DOCTRINE] UC-163, L3787 — "without letting the machine decide"; "strongest first, with no score".
+- [DOCTRINE] UC-165, L3849 — missed checkpoints "never findings" (Bob's ruling 8).
+- [DOCTRINE] UC-169, L3945 — "nothing refused for grade".
+- [DOCTRINE] UC-153, L3550 — co-attestation failure "never refused outright"; marked "self-attested only".
+- [DOCTRINE] UC-158 "Disclose an unresolved record contradiction when publishing", L3657–3678 — "undisclosed, the case is refused; disclosed, it is not." (DEC-76 item 4; DEC-84 (11)-(13)).
+- [DOCTRINE] UC-155, L3599 — "resolved when evidenced, otherwise softened" (DEC-77 item 1; DEC-84 (16)-(17)).
+- [DOCTRINE] UC-160, L3722 — "nothing moves" (reporting a wrong match does not re-resolve).
+*design-ux-journeyExperience.txt*
+- [DOCTRINE] (b) step 12, L369 — "Nothing may draft framing for the member (Case Making section 4a)."
+- [DOCTRINE] (b) step 15, L407 — "A member who thinks they certify authenticity has been misled (Interaction Constructs section A)."
+- [DOCTRINE] (b) step 6, L276 — "transcripts are notes, never record."
+- [DOCTRINE] (c) step 2, L478–482 — no significance/rank/score key (conformance R8); "Judging significance through policy preference" named as the risk (Operational Principle 1).
+- [DOCTRINE] (c) step 3, L493–498 — no individual named; no single headline figure.
+- [DOCTRINE] (b) step 9, L322 — "a falsifier of 'none' must be the member's stated override."
+- [DOCTRINE] (c) plane, L584 — "it proposes, never advances"; feelingRisk "The system appearing to decide the next stage."
+- [DOCTRINE] (c) decline, L523 — no significance/severity/priority/urgency/rank.
+- [DOCTRINE] (c) advance, L621 — "stage 7 only enforces an existing requirement".
+- [DOCTRINE] (d) resolve tension, L761 — "A record duty cannot be muted, dismissed or set aside (DEC-84 (2))."; "Explained without evidence: the mark softens and does not clear (DEC-77 item 1)."
+- [DOCTRINE] (d) version notice, L751 — "Silence must be earned: never 'unaffected' unless read."
+- [DOCTRINE] (f) source, L964–969 — hostile exposure recorded "as the exposer's claim"; "'known to the group, not recorded' is a first-class choice (DEC-78 item 5(c))"; group never makes a source more public than they chose (DEC-78 item 5(a)).
+- [DOCTRINE] (f) knock, L943 — knocker's note is "their own words, never evidence of truth".
+- [DOCTRINE] (e) L903 — "never a drafted reason".
+- [DOCTRINE] (h) L1063 — "A computed date stored as fact (never: overdue is derived)."
+- [DOCTRINE] (h) L1078 — "A non-response read as agreement (a declared inference bias can block that reading)." (Declared Bias inference example; Case Making §8).
+- [DOCTRINE] (i) L1100 — "Detecting change is mechanical; what it means is not."
+- [DOCTRINE] (k) L1312 — "A missed checkpoint read as a finding about the city; it is always the group's own (action-plans R23)."
+- [DOCTRINE] (k) L1294 — a waiting branch must not read as a forecast.
+- [DOCTRINE] (k) L1329 — "'rests on an unestablished premise' on the action and everything prepared from it"; "An overridden action can never join an escalation (ACTION_PREMISE_OVERRIDDEN)."
+- [DOCTRINE] (k) L1374 — "nothing closes a plan but a member."
+- [DOCTRINE] (k) L1195 — "the plan shows the subject as hypothetical"; L1210 "hunch debt is shown at the top".

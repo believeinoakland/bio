@@ -48,3 +48,5 @@
 - [DOCTRINE] §16 chain rule 3, src 2351–2352 — "Confidence where the engine supplies it, `none` stated otherwise; pseudo-confidence is refused by basis, because a self-reported 0.99 and a computed 0.99 are the same bytes."
 - [GAP] §16, src 2321–2324 — CSV seam: "a re-read of a CSV will want its `reading.dialect` (FW-23's delimiter and encoding, REC-218) beside this provenance" (CSV decoding choice changes the text classified; not built here).
 - [DESIGN] §17, src 2381–2386 — Route 1 query compiler: "thirty-four filterable fields, full text over the bundle's own columns"; it carries "scalar summaries of the meaning layer onto the bundle row (a strength number, a leg count), so *the meaning layer is visible as a number and unreachable as a structure*".
+- [BUILT] §18.1 grade, src 2555–2557 (REC-221) — grade C "similar text (a word-multiset Dice at or above a published floor, `similarity` stated)" — a computed similarity measure published with its floor.
+- [BUILT] Appendix A.2 structured dataset row, src 2681 — schema `data/dataset.json`; reachable only by "`hash:` in `query.mjs:65`"; check C-2.7 (a dataset is a hashed file, not a queryable table).

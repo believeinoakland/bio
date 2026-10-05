@@ -1,0 +1,40 @@
+@@ TIME
+- [DESIGN] SR "Published case" mustShow, L2605–L2608 (DEC-12; Publication §2) — "Edition and supersession, surfaced not followed."; stale L2698–L2701 "Superseded by a later edition: surfaced."
+- [DESIGN] SR "Published case" mustShow, L2610–L2613 (Publication §7) — "Group identity: display name with slug; domain only while verified, with its date."
+- [DESIGN] SR "Published case" mustShow, L2600–L2603 (publication R14, R27–R28) — "Signer and deliverer; deliverer undetermined stated for older records."
+- [DESIGN] SR "Doorbell" mustShow, L2760–L2767 (capture R54; capture Provides inboxResolve) — "A receipt: knock id, digest, bytes, received."; "Who resolved each knock and when."
+- [DESIGN] SR "Published case" mustShow, L2645–L2648 (case-authoring R37; publication R51–R52; K509 (4)) — unnamed source shown "with the receipt's fingerprint and time".
+- [DESIGN] SR "Search and frontier" stale, L2964–L2967 (retrieval R20) — "A selection whose query digest changed." (no date-range or as-of search criterion is listed on the search surface; observation from L2892–L3000).
+@@ ORGANISATIONS
+- [DESIGN] SR "Published case" mustShow, L2635–L2638 (DEC-84 (10)) — findings are made against offices: "For a finding against an office: Criteria, Condition, Cause or 'cause not established', Effect, Recommendation."
+- [DOCTRINE] SR "Published case" mustShow, L2645–L2648 (case-authoring R37; publication R51–R52; K509 (4)) — "A source only as the source consented or as already public; otherwise 'an unnamed source' with the receipt's fingerprint and time."
+- [DOCTRINE] SR "Doorbell" mustShow/mustNever, L2775–L2804 (DEC-78 items 2–4; capture R56, R67) — contact "never enters the record or a publication"; pseudonym's knocks "never an identity"; "Never keep the knocker's address; only a keyed fingerprint."; "never call the material unattributed or its source unknown."
+@@ LAW
+- [DESIGN] SR "Published case" mustShow, L2635–L2638 (DEC-84 (10)) — the published form of a finding against an office states the Criteria (the standard) beside the Condition (what the office did).
+@@ COURTS
+- [DESIGN] SR "Published case" mustShow, L2615–L2618 (Design Requirement 8) — "Evidence package risk classification." (the tier/risk class of what is exported toward a venue).
+@@ ANALYSIS
+- [DESIGN] SR "Published case" purpose, L2578–L2581 (UI-KICKOFF item 5; Publication §1) — reproducibility outside the product: "The group's face: the case, verifiable by a stranger without the instance."
+- [DESIGN] SR "Published case" mustShow, L2620–L2623 (UI-KICKOFF refinements) — visuals in publications: "Interactive story visuals with progressive disclosure; a print version carrying the full narrative."; L2736–L2739 "Print is first-class."
+- [DESIGN] SR "Published case" mustShow, L2585–L2588 (publication R10–R11, R26) — "Each finding's frozen pair per axis and role (load-bearing or supporting); where cases disagree, each case's own pair."
+- [DOCTRINE] SR "Published case" mustNever, L2657–L2660 (publication R26) — "Never compose a case score."
+- [DESIGN] SR "Doorbell" mustShow, L2755–L2757 (Intake Doctrine §2a; capture R31) — "The published rate bound with its method." (a published number states its method).
+- [DESIGN] SR "Search and frontier" mustShow, L2906–L2909 (retrieval R7, R9) — "Facets; widening when an AND finds nothing." (filtering by facets).
+- [DESIGN] SR "Search and frontier" mustShow, L2916–L2919 (query-language R11) — "Only the order of relevance, never a relevance score."
+- [DOCTRINE] SR "Search and frontier" mustNever, L2923–L2926 (retrieval R29) — "Never count what the viewer may not see in totals, tallies or cursors." (counts are visibility-scoped).
+- [DESIGN] SR "Search and frontier" stale + primaryActs, L2964–L2980 (retrieval R18–R20) — a selection carries a query digest; acting on a set reports or refuses (reproducible selection).
+@@ QUESTIONS
+- [GAP] SR "Assistant" not-deployed, L2539–L2543 (ai-runs R40) — "Modes other than CHECK refused as not deployed." (consistent with HO L77).
+- [DESIGN] SR "Assistant" loading, L2526–L2530 (ai-runs R1–R4, R14) — "A run bounded and resumable; the log says which bound stopped it."
+- [DESIGN] SR "Assistant" primaryActs, L2546–L2551 (ai-runs R9) — "open a run (airunopen)": "reversible (DEC-88; the code still lists it as undetermined)".
+- [DOCTRINE] SR "Published case" mustNever, L2662–L2665 (reference only: AUDIENCES.md H5; Case Making §4a) — "Never drop qualifiers when compressing ('records suggest' never becomes 'the city did')." (binds any summarising answer).
+- [DESIGN] SR "Search and frontier" purpose, L2894–L2897 (retrieval Purpose; OBSERVATION-LOG-DESIGN §6) — "Find what the record holds; say what could not be seen and what nobody looked at."
+- [DESIGN] SR "Search and frontier" mustShow, L2911–L2914 (observation-log R21; retrieval R49; DEC-82; DEC-86) — five look states: "nobody looked, looked and absent, could not tell, partial, present."
+- [DESIGN] SR "Search and frontier" empty, L2955–L2958 (observation-log R1–R3) — "Nothing found: distinguish looked-absent from never-looked."
+- [DESIGN] SR "Search and frontier" mustShow, L2901–L2904 (query-language R2) — structured query language with fields: "Warnings for unknown fields read as free text."
+- [DOCTRINE] SR "Search and frontier" mustNever, L2928–L2931 (observation-log R24) — "Never log a member's own unattributed searching."
+- [DESIGN] SR "Published case" conflict, L2703–L2706 (Publication §3 rule 12, UI-81) — "A finding pinned by several cases: the reader chooses, never opened on their behalf."
+@@ DOCTRINE
+- [DOCTRINE] SR "Published case" mustNever, L2652–L2655 (UI-KICKOFF item 5; publication R25, R29) — "Never show working material or that a fence exists."
+- [DOCTRINE] SR "Doorbell" mustNever, L2791–L2794 (Intake Doctrine §2a) — "Never treat a knock as an act or as record."
+- [OPEN] SR "Doorbell" rate-limited, L2845–L2848 (D-508) — "RATE_IP / RATE_GLOBAL have no member-facing translation yet".

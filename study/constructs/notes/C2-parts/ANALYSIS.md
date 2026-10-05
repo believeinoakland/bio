@@ -24,3 +24,4 @@
 - [RULING] DEC-112.4(1) (src 1840) — public strength display: "a case has two strengths, never one"; each finding opens with role and bar, "never a bare \"meets\"".
 - [RULING] DEC-121.6 (src 1990) — per-script use counts (started, finished, where abandoned) shown to the script's owner; "how often members finish it" shown at the flow's starting mark — derived usage counts about flows, not about members' diligence (contrast DEC-68).
 - [RULING] DEC-122 (src 2007) — print and the complete edition are always light; "every colour is checked for contrast in both" themes — constrains charts/figures in publications.
+- [RULING] DEC-125 (src 2050) — voice trait "neutral on policy" and DEC-84.10's "never a policy position" constrain how analytical results are worded in publications.

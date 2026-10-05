@@ -1,0 +1,1 @@
+# M2: src/req/jurisdictions.txt, id-spaces.txt, docprofile.txt, office-readers.txt, odf-reader.txt (layer 1); extraction.txt, content.txt (layer 4); entities.txt, connections.txt, progressions.txt, bias.txt (layer 5)

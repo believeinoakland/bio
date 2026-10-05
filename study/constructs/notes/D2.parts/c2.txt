@@ -1,0 +1,50 @@
+@@ TIME
+- [DESIGN] SR "Question workspace" stale, L529–L532 (content R22; reevaluation R14) — "Stale / newer version notice on a leg: affected or undetermined."
+- [DESIGN] SR "Question workspace" contradiction, L539–L542 and SR "Tension mark…" mustShow L657–L659 (DEC-77 item 1; DEC-84 (16)) — time is the first respect in which two claims may differ without conflict: clarifier choices "different time or occasion, part or scope, meaning, observer or method, not the same subject … one of them is wrong; they really conflict; not sure."
+- [DESIGN] SR "Tension mark…" mustShow, L652–L654 (DEC-77 item 2) — compare view shows "Both sides in the record's own words, each with source, date, document type and why the two were paired".
+- [DESIGN] SR "Tension mark…" mustShow, L667–L669 (DEC-77 item 2; K447 point 9) — a timeline view is designed for reversals: "In the contradiction inquiry: the assumptions checklist as its working view, the timeline for a reversal, the competing-hypotheses matrix…"
+- [DESIGN] SR "Tension mark…" mustShow, L672–L674 (DEC-77 items 1–2; DEC-84 (7); contradiction R27; K544) — mark states incl. "stale with its reason (naming the member, instant and act)".
+- [DESIGN] SR "Document page" mustShow, L828–L830 (provenance R17; monitoring R32) — "Versions of the same address and whether monitoring watches it."
+- [DESIGN] SR "Document page" mustShow, L853–L855 (capture R20, R68, R69; K580) — time of existence vs capture: late attestations "'proves the bytes existed by <at>, not at capture'".
+- [DESIGN] SR "Document page" stale, L904–L907 (provenance R17) — "A newer capture exists: say so; the old one stays."
+- [DESIGN] SR "Document page" primaryActs, L929–L932 — "attest (trusted timestamp / co-attest)", rung attested.
+- [OPEN] SR "Document page" loading, L900–L902 — "Captures may take minutes; renders may be deferred with a code. How long waits look is open."
+- [DESIGN] SR "Project home" mustShow, L978–L980 (bias R13–R15) — as-of for the lens: "The lens in force, or 'no manifest was in force'."
+- [DESIGN] SR "Project home" mustShow, L988–L990 (membership R37, R46) — "visibility setting and its history".
+- [DESIGN] SR "Project home" mustShow, L993–L995 (DEC-79; State Rules §4.3; publication R44–R49) — stage bars; "a click opens when each was reached, what earned it and what the next needs; 'closed' shows its reason and how far it had come".
+@@ ORGANISATIONS
+- [DESIGN] SR "Tension mark…" clarifier, L657–L659 (DEC-77 item 1) — "not the same subject" is a clarifier choice (entity identity across documents bears on conflicts).
+- [DESIGN] SR "Document page" mustShow, L838–L840 (DEC-78 item 2) — "Its source (who handed it over, or the unnamed knocker) apart from the member who captured it."
+- [DESIGN] SR "Document page" mustShow, L848–L850 (DEC-92) — origin mark for another group's work; hover "shows who produced it, which edition, who accepted it and why".
+- [DOCTRINE] SR "Tension mark…" mustNever, L699–L701 (contradiction R55; K523, K544) — "Never name or count a project the viewer cannot see in a candidate's reach; a hidden project reads as absent."
+@@ LAW
+- [DESIGN] SR "Tension mark…" mustShow, L667–L669 (DEC-77 item 2; K447 point 9) — a conflict of norms is an anticipated case, handled with a competing-hypotheses matrix: "the competing-hypotheses matrix for a conflict that will not dissolve or a conflict of norms."
+- [DESIGN] SR "Tension mark…" clarifier, L657–L659 (DEC-77 item 1) — "meaning" and "part or scope" as respects of difference (bears on definitions and applicability of provisions).
+- [DOCTRINE] SR "Tension mark…" mustNever, L689–L691 (DEC-84 (2); DEC-77 item 1) — "never mark aspirations as in contradiction (they are in contact)." (the group's aspirations are not norms).
+- [DESIGN] SR "Project home" mustShow, L983–L985 (intent R10, R12) — "Aspirations held and departures marked notable."
+@@ COURTS
+- none in SR L501–L1000.
+@@ ANALYSIS
+- [DESIGN] SR "Tension mark…" mustShow, L667–L669 (DEC-77 item 2; K447 point 9) — structured analytic tools in the contradiction inquiry: assumptions checklist, timeline, competing-hypotheses matrix.
+- [DESIGN] SR "Tension mark…" clarifier, L657–L659 — "observer or method" and "part or scope" as legitimate reasons two figures differ (relevant to numbers computed differently).
+- [DOCTRINE] SR "Tension mark…" mustNever, L694–L696 (CONTRADICTION-PRESENT-RESOLVE-DESIGN.md §4; contradiction R10) — "Never show a precision or unrelated label as a tension" (a rounding/precision difference is not a conflict).
+- [DESIGN] SR "Document page" mustShow, L813–L815 (provenance R24–R27) — "Capture grade earned (direct at most B, archive at most C, observation none) and what it rests on."
+- [DESIGN] SR "Document page" mustShow, L823–L825 (observation-log R12) — "Content-axis state: indexed full / partial / none, not extracted, undetermined."
+- [DESIGN] SR "Project home" mustShow, L968–L970 (intent R3–R7, R19) — "The objective's condition, progress and gaps, derived and never reported."
+- [DESIGN] SR "Project home" mustShow, L973–L975 (strength R14, R21) — "The declared bar per axis beside the strength reached."
+- [DESIGN] SR "Project home" mustShow, L998–L1000 (K364; publication R46) — case readiness by its own evidence; "Internally checked and Externally compliant read 'not yet evaluated'".
+@@ QUESTIONS
+- [DESIGN] SR "Question workspace" contradiction, L540–L542 — "Only the last two open the contradiction inquiry. Explained without evidence, the mark softens and does not clear."
+- [OPEN] SR "Question workspace" empty, L521–L523 — "A question with no legs: what does it invite, without nagging?"
+- [DESIGN] SR "Tension mark…" mustShow, L662–L664 (DEC-77 item 3; DEC-84 (5)) — "Facts the record holds filled in with their source; a recommendation of which respects may differ, labelled machine work, shown first with its reason."
+- [DOCTRINE] SR "Tension mark…" mustNever, L679–L681 (DEC-84 (5); DEC-24) — "Never say which side is wrong, or that a conflict is genuine, on the machine's word."
+- [DOCTRINE] SR "Tension mark…" mustNever, L684–L686 (DEC-77 item 3(c); DEC-84 (14)) — "Never preselect a choice; never fill the member's reason from the machine's."
+- [DOCTRINE] SR "Tension mark…" mustNever, L704–L706 (affordances R8, R14; K516) — "Never offer 'conclude' on a contradiction inquiry".
+- [DESIGN] SR "Document page" mustShow, L808–L810 (UI-KICKOFF "Who this is for" item 2) — "The source material itself, never only an AI summary."
+- [DESIGN] SR "Document page" mustShow, L818–L820 (DEC-4; System Design §7) — "Machine-read text labelled as machine-read, never as publisher text."
+@@ DOCTRINE
+- [DOCTRINE] SR "Question workspace" conflict, L534–L537 (basis-versions R31; DEC-84 (3)) — two projects' differing conclusions both stand, each attributed; tension is "a duty on both projects, neither made to adopt the other's answer."
+- [DOCTRINE] SR "Tension mark…" mustNever, L689–L691 (DEC-84 (2)) — "Never let a record duty be muted, dismissed or set aside".
+- [DOCTRINE] SR "Tension mark…" stale, L730–L733 (DEC-84 (7), (16)) — "A side marked wrong: stale with its reason, never deleted; holders get a re-evaluation notice."
+- [DOCTRINE] SR "Document page" mustShow, L833–L835 (DR-13 tell discipline) — "asking a public archive to fetch a URL publishes the group's interest, at the point of the act."
+- [DOCTRINE] SR "Document page" mustNever, L865–L872 (Interaction Constructs §A; Intake Doctrine D-476) — "Never imply that a published hash certifies authenticity."; "Never claim 'these bytes are new' on a question never asked."

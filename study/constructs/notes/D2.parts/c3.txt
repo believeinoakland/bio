@@ -1,0 +1,36 @@
+@@ TIME
+- [DESIGN] SR "Project home" mustShow, L1013–L1015 (PATH.md §1) — "Each plan's title, its subjects with their support, how many options are chosen, and the next checkpoint."
+- [DESIGN] SR "Project home" stale, L1079–L1082 (publication R5–R6) — "A case flag when a pinned finding moved."
+- [DESIGN] SR "Case editor" stale, L1219–L1222 (case-authoring R10) — editions over time: "Byte-identical statement to the previous edition: COMPLETENESS_CARRIED_FORWARD."
+- [DESIGN] SR "Publication ceremony" mustShow, L1271–L1273 (Interaction Constructs §A) — what publication claims includes the date: "(bytes, address, date, route; not authenticity)".
+- [DOCTRINE] SR "Publication ceremony" mustShow, L1281–L1283 (affordances R2 IRREVERSIBLE_CORRECTION_PATH; DEC-19) — "Correction moves forward: a new edition, never erasure."
+- [DESIGN] SR "Publication ceremony" mustShow, L1296–L1298 (DEC-81 items 1, 3; case-authoring R35–R36; capture R68–R69) — "a missing co-attestation retried late first (reattest), then acknowledged with a reason and marked 'self-attested only'".
+- [DESIGN] SR "Publication ceremony" stale/conflict, L1373–L1381 (ratification R2–R3) — "CASE_RATIFY_STALE when the document was re-authored after signing"; "CASE_CONCLUSION_MOVED".
+- [DESIGN] SR "Review copy" mustShow, L1475–L1477 (review R17) — "The latest change, since the copy is mutable."
+@@ ORGANISATIONS
+- [DESIGN] SR "Case editor" purpose, L1136–L1138 (case-authoring Purpose) — a case carries a "subject position" alongside findings, scope, exclusion statement and bias acknowledgement.
+- [DESIGN] SR "Publication ceremony" mustShow, L1276–L1278 (ratification R12) — "signer and deliverer as two facts" (role vs actor distinction within the group).
+- [DOCTRINE] SR "Publication ceremony" mustShow, L1291–L1293 (DEC-78 item 5) — step three includes "consent for any source identity the case would reveal".
+- [DOCTRINE] SR "Project home" mustNever, L1030–L1032 (membership R60) — "Never show an administrator acts inside a project they do not participate in (except rescue)." (group-internal roles; noted for completeness).
+@@ LAW
+- [DOCTRINE] SR "Project home" mustNever, L1045–L1047 (action-plans R26; BIO_Action_v0_1.md §4 rule 3, canon whole K608 (1)) — never "Any ranking or priority of plans."
+@@ COURTS
+- none in SR L1001–L1500.
+@@ ANALYSIS
+- [DESIGN] SR "Project home" mustShow, L1003–L1005 (DEC-82) — "Each question with its capture and connection badges (testimony beside), one phrase against the bar and 'Undetermined' with its reason; never one combined badge."
+- [DOCTRINE] SR "Project home" mustNever, L1040–L1042 (DEC-79; K448) — computed states must state the rule that computes them: "Never promise a stage the computation would not give: what the next stage needs is stated from the rule that computes it."
+- [DOCTRINE] SR "Project home" mustNever, L1035–L1037 (intent R21) — "Aspirations never filter or reorder evidence."
+- [DESIGN] SR "Case editor" mustShow, L1143–L1145 (case-authoring R6) — "Each load-bearing finding's pair against the project bar, and which fall short by axis."
+- [DOCTRINE] SR "Case editor" mustNever, L1180–L1187 (case-authoring R24; DEC-72) — "Never compose a case-level strength."; "Never present a supporting finding as load-bearing."
+- [DESIGN] SR "Review copy" mustShow, L1470–L1472 (Publication §3 rule 13, REC-213) — "Withheld acknowledgements counted with the reason (the writer's own)."
+@@ QUESTIONS
+- [DESIGN] SR "Case editor" mustShow, L1148–L1150 (case-authoring R16–R17) — a case carries a computed statement of what was searched: "The computed searched section and citations pinned (or only-capture, or undetermined)."
+- [DOCTRINE] SR "Case editor" mustNever, L1175–L1177 (Case Making §4a; case-authoring R10; DEC-46) — "Never draft the statement, exclusions or bias acknowledgement; each is authored fresh per edition."
+- [DOCTRINE] SR "Publication ceremony" mustNever, L1323–L1325 (AI Roles rule 4, D-421) — "Never let a machine credential or bearer token deliver an attested act."
+- [DESIGN] SR "Publication ceremony" mustShow, L1286–L1288 (DEC-80 item 3; case-authoring R12, R34; ratification R18) — "the pre-flight's real refusals, writing nothing".
+- [DESIGN] SR "Publication ceremony" mustShow, L1306–L1308 (case-authoring R31–R33; DEC-85) — tension told in one of four fixed sentences, incl. "Rests on a side in conflict with a record not shown".
+@@ DOCTRINE
+- [DOCTRINE] SR "Project home" mustNever, L1025–L1027 (Membership v2 §2) — "Never imply project visibility is secrecy."
+- [DOCTRINE] SR "Publication ceremony" mustNever, L1318–L1320 — "Never a button in a row of buttons; the ceremony is the safeguard."
+- [DOCTRINE] SR "Publication ceremony" mustNever, L1333–L1340 (DEC-76 item 4; DEC-84 (13); DEC-81 item 3(d)) — "Never refuse a case because a contradiction exists; refuse only one left undisclosed."; "Never refuse outright a document that cannot be co-archived."
+- [DOCTRINE] SR "Review copy" mustNever, L1482–L1494 (Publication §6A; review R12, R20) — "Never call it pre-publish."; "Never show a recipient anything the last editor could not see."; "Never leave the instance by any system path."

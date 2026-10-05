@@ -1,0 +1,61 @@
+@@ TIME
+- [DESIGN] SR "Queue" mustShow, L28–L30 (queue R39; DEC-16) — attribution with date for items another member resolved: "Resolved by X on this date, for items someone else resolved."
+- [DESIGN] SR "Queue" mustShow, L58–L60 (queue R9, R12, "built T12, N172") — "A newer capture that affects a member's reference, with adopt and keep." (versions of a source over time).
+- [DESIGN] SR "Queue" mustShow, L73–L75 (PATH.md §3; action-design surfaces.html "design view, not stated as approved") — "Whose it is: the group's own (a checkpoint, marked 'ours') or the counterparty's (a deadline: 'the counterparty's deadline, not ours')."
+- [DESIGN] SR "Queue" mustShow, L78–L80 (queue-producers R16; action-plans R16) — "A checkpoint due: the plan, scenario and phase, and its condition; judged met or not met with a note."
+- [DESIGN] SR "Queue" mustShow, L83–L85 (queue-producers R17) — "A proposed stage: 'a member advances or declines with a reason; the system never advances'."
+- [DESIGN] SR "Queue" mustShow, L88–L90 (queue-producers R18; action-clocks R6; DEC-10 (D-125); DEC-94 (1)) — "A reminder the member asked for, to that member only; its answer offers another reminder on a later day or none."
+- [DESIGN] SR "Queue" mustShow, L93–L95 (queue-producers R15; K611; DEC-94 (4)) — "An overdue deadline as a CONDITION naming the entry's date, basis and text, raised once." (every deadline carries a date, a basis and text).
+- [DESIGN] SR "Queue" mustShow, L98–L100 (DEC-94 (2)) — "As a deadline nears, position, colour or wording may change: display, not a notification."
+- [DOCTRINE] SR "Queue" mustNever, L105–L107 (DEC-10; DEC-69) — "one standing entry per (member, case); re-notify only on snooze expiry or something new."
+- [DOCTRINE] SR "Queue" mustNever, L135–L137 (action-plans R23; PATH.md §3) — never show "A missed or not-met checkpoint as a finding, a condition of the record or a fact about the government."
+- [DOCTRINE] SR "Queue" mustNever, L140–L142 (DEC-69; DEC-70; DEC-94 (4); action-clocks R8) — "Repeat anything unless the member asked; 'due within N days' is not new unless requested."
+- [DOCTRINE] SR "Queue" mustNever, L145–L147 (DEC-94 (3)) — no outside channel: "Any outside channel (email, push)."
+- [DESIGN] SR "Queue" stale, L180–L182 (queue R40) — "A snoozed case's items are marked snoozed until the instant, not withheld by the plane."
+- [DESIGN] SR "Queue" primaryActs, L221–L239 — checkpointrecord: "undetermined (RUNG_ABSENT, K732), treated as reasoned (DEC-87)" (basis open); escalationadvance / escalationdecline: reasoned (affordances R2; queue R12); reminderanswer: "off the ladder: a member's own request" (queue R12; action-clocks R6; affordances R3; K732).
+- [DESIGN] SR "ACT" mustShow, L290–L292 (basis-versions R14) — "The receipt: what was written, by whom, when; a preview answers with nothing written."
+- [DESIGN] SR "ACT" conflict, L372–L374 (promotion R1; actions R16) — "An action's 30-second lease held by another: LEASE_HELD." (time-bounded lease on actions).
+- [DESIGN] SR "Question workspace" mustShow, L443–L445 (basis-versions R5, R11, R22) — "Versions, their states, which is CURRENT per project, and each project's conclusion history." (as-of history of an answer).
+- [DESIGN] SR "Question workspace" mustShow, L453–L455 (System Design row 4 (UI-96); content R29) — "A per-leg control asking whether a newer capture holds the passage."
+- [DESIGN] SR "Question workspace" mustShow, L458–L460 (inquiry R19, R24) — "Who reopened, divided or set aside the question, when and why."
+@@ ORGANISATIONS
+- [EXAMPLE] SR "Queue" mustNever, L110–L112 (Interaction Constructs §P; D-79) — a check run across a body's many contracts: "one check across 58 contracts is one proposal with 58 instances."
+- [DESIGN] SR "Queue" mustShow, L73–L75 — counterparty vs group ownership of deadlines (see TIME) — the obligor of a deadline is distinguished ("the counterparty's deadline, not ours").
+- [DOCTRINE] SR "Queue" mustNever, L130–L132 (tasks R6; K565) — "Never reveal a task on a subject the viewer may not see: it reads as no task." (subject-level visibility).
+- [DESIGN] SR "ACT" mustShow, L295–L297 (DEC-88 item 4) — acts with world effect get a full dialog: "attributing a name, sharing a lead, naming a person in the registry, setting the group bar."
+@@ LAW
+- [EXAMPLE] SR "Queue" mustNever, L110–L112 — contracts as a checkable set: "one check across 58 contracts is one proposal with 58 instances" (contracts/commitments examined in bulk by a machine check; result is a proposal, not an obligation).
+@@ COURTS
+- none in SR L1–L500.
+@@ ANALYSIS
+- [DESIGN] SR "Queue" mustShow, L18–L20 (queue R16; D-82) — derived items show their derivation: "A queue finding must look derived: its source and derivation, and that nobody has judged it yet."
+- [DOCTRINE] SR "Queue" mustNever, L110–L112 (Interaction Constructs §P; D-79) — a bulk machine check is one proposal with N instances, never an obligation: "Never present a machine finding as an obligation; one check across 58 contracts is one proposal with 58 instances."
+- [DESIGN] SR "Queue"/"ACT" truncated, L166–L169, L353–L356 (inventory display primitive; queue R6; membership R48) — "Every list says when it was cut at a stated bound." (counts must state bounds).
+- [DESIGN] SR "ACT" mustShow, L280–L282 (Interaction Constructs §S) — "For a set: whether the act is all-or-nothing, report-and-proceed, or per-item, before acting."
+- [DESIGN] SR "ACT" mustShow, L285–L287 (Interaction Constructs §B) — counts shown with denominator: "'2 of 3', never 'pending approval'".
+- [DESIGN] SR "ACT" stale/expired, L366–L379 (retrieval R19–R20) — selections (sets) can move: "report says what moved; refuse hands over nothing (SET_MOVED)"; "NO_SUCH_SELECTION".
+- [DESIGN] SR "Question workspace" mustShow, L433–L440 (inquiry R13–R14, R32; strength R1–R10, R18–R20, R3) — legs with role and "earned grade, what it was capped from and why"; strength pair per axis; "what-ifs labelled as exploration".
+- [DOCTRINE] SR "Question workspace" mustNever, L480–L482 (AI Roles rule 9; strength R18) — "Never a single confidence score or a case-level strength."
+- [DOCTRINE] SR "Question workspace" mustNever, L495–L497 (DEC-82; DEC-44) — "Never hide grades … never one combined badge."
+@@ QUESTIONS
+- [DESIGN] SR "Queue" mustShow, L23–L25 (ai-runs R27; System Design row 12 (D-82)) — "Agent-surfaced marker wherever a question appears."
+- [DESIGN] SR "Queue"/"ACT" refused, L161–L164, L348–L351 (DEC-83; DEC-86; DEC-49; AI Roles rule 10) — "The plane's refusal in its own words with offenders named … never 'something went wrong'."
+- [DESIGN] SR "Queue"/"ACT" undetermined, L151–L154, L338–L341 (DEC-86; Interaction Constructs §U) — "One component with a fixed mark and a mandatory 'because…' line, the same everywhere; never an error, never a zero."
+- [DESIGN] SR withheld, L156–L159, L343–L346 (DEC-86; DEC-36; queue R7) — "never identity, title, state or count."
+- [OPEN] SR "Queue" empty, L171–L173 — "What does an empty queue say (nothing wants you, versus nothing could be read)?"
+- [DESIGN] SR "ACT" mustShow, L300–L302 (DEC-77 item 3) — "A recommendation, labelled machine work, is shown first with its reason and accepted in one attributed act; facts the record holds are filled in with their source."
+- [DOCTRINE] SR "ACT" mustNever, L307–L309 (Interaction Constructs RULED 2026-08-01, DEC-8) — "Never compute a refusal; only render one received from the plane (publication or dry run)."
+- [DOCTRINE] SR "ACT" mustNever, L312–L314 (Interaction Constructs §J) — "Never prefill, suggest, template or complete a justification; assembling the member's own prior words is allowed."
+- [DOCTRINE] SR "ACT" mustNever, L332–L334 (DEC-77 item 3(c)) — "Never enter a value the member never saw under their name; nothing silently preselected."
+- [DESIGN] SR "Question workspace" mustShow, L463–L465 (AI Roles rule 3; run-productions R5) — "Machine-suggested versions labelled as machine work, with the run that made them."
+- [DESIGN] SR "Question workspace" mustShow, L468–L470 (DEC-82; Interaction Constructs §M) — hover "names the weakest document or link and how to raise it".
+- [DESIGN] SR "Question workspace" mustShow, L473–L475 (DEC-77 item 1; DEC-84 (3)) — a tension mark opens "the 'how do these differ?' clarifier".
+- [DOCTRINE] SR "Question workspace" mustNever, L485–L487 (Case Making §4a) — "Never draft framing or a conclusion for the member."
+- [CONFLICT] SR "Queue"/"ACT" accessibilityAndLanguage, L253–L259, L406–L412 — states as open "No accessibility standard … is named in canon" and "No language other than English is named in canon"; later rulings settle both (PR L135 WCAG 2.2 AA, DEC-99; PR L143 and BR V4, DEC-127). SR predates those rulings.
+@@ DOCTRINE
+- [DOCTRINE] SR "Queue" mustNever, L120–L127 (queue R19; NOTIFICATIONS.md) — "Never mute an obligation."; "Never a severity ladder of warning / error colours in place of the three classes."
+- [DOCTRINE] SR "Queue" mustShow, L53–L55 (DEC-76 item 3; DEC-84 (1)–(2), (17)) — "A record contradiction as a duty that cannot be muted or dismissed, leaving only by resolution; a world one as a lead dismissed in one act with a fixed reason."
+- [DOCTRINE] SR "ACT" mustNever, L317–L324 (Interaction Constructs §S; Membership v2 §5) — "nothing preselected; visibility may only shrink a selection"; "absent, not greyed".
+- [DOCTRINE] SR "ACT" accessibility, L415–L417 (affordances R5; DEC-32 clause 1) — "Labels never use AND, OR, disjunction, branch or ground when structuring support."
+- [DOCTRINE] SR "Question workspace" mustShow, L448–L450 (DEC-32 enactment note, UI-27) — "Structure authored before strength is shown; restructuring after seeing is recorded and attributed."
+- [DOCTRINE] SR "Question workspace" mustNever, L490–L492 (basis-versions R31; inquiry R39) — "Never let one project's act move another project's stance."

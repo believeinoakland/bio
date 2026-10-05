@@ -1,0 +1,8 @@
+- src/action-design/ACTION-PLAN.md.txt: 74 lines; read 1–74 (complete)
+- src/action-design/INVENTORY.md.txt: 121 lines; read 1–121 (complete)
+- src/action-design/MATRIX.md.txt: 113 lines; read 1–113 (complete)
+- src/action-design/sources_build-state.md.txt: 415 lines; read 1–210, 211–415 (complete)
+- src/action-design/sources_canon-constructs.md.txt: 215 lines; read 1–110, 111–215 (complete)
+- src/action-design/sources_canon-mission.md.txt: 222 lines; read 1–110, 111–222 (complete)
+- src/action-design/sources_code.md.txt: 297 lines; read 1–150, 151–297 (complete)
+- src/NOTIFICATIONS.txt: 441 lines; read 1–120, 121–280, 281–441 (complete)

@@ -1,0 +1,58 @@
+@@ TIME
+- [DESIGN] SR "Standards, determinations, consequences, actions and escalation" (hereafter "Standards…") mustShow, L1605–L1607 (standards R2, R7) — as-of in force: "Each standard's own captured words and whether it was in force on a date (undetermined stated)."
+- [DESIGN] SR "Standards…" mustShow, L1620–L1622 (actions R25, R35) — every action shows "clocks with their statute and overdue derived" (deadline names its legal origin).
+- [DESIGN] SR "Standards…" mustShow, L1625–L1627 (escalation R2–R3, R16) — "Escalation stage, each proposed edge with its trigger and what is missing, declines and their age; exit conditions separately."
+- [DESIGN] SR "Standards…" mustShow, L1645–L1647 (conformance R9, R12, R21, R22; K503, K569) — compared sides each "with its source, date and text".
+- [DESIGN] SR "Standards…" mustShow, L1665–L1667 (actions R7, R26; PATH.md §2 step 12) — dated outcome: "'completed' ('the story ran on 14 October')".
+- [DESIGN] SR "Standards…" mustShow, L1675–L1677 (action-clocks R4) — "the member's reminders on its dated entries: entry, day, who set it, state."
+- [DESIGN] SR "Standards…" mustShow, L1694–L1697 (matter-page design view, not stated as approved; escalation R2, R13–R14) — "the proposed stage with its trigger's age; advance, or decline with a reason; exit conditions each shown."
+- [DESIGN] SR "Standards…" stale, L1771–L1774 (conformance R10) — "basis_changed when a finding reopens or is superseded."; mustShow L1630–L1632 (conformance R10; consequences R8; filings R12) "basis_changed flags naming causes."
+- [DOCTRINE] SR "Standards…" overdue, L1781–L1784 (actions R35; Functional Architecture Function 5) — "Overdue derived at read; never silently stale."
+- [DESIGN] SR "Standards…" primaryActs, L1843–L1848 (action-clocks R4; affordances R3; K732) — "reminderset": "off the ladder: a member's own request".
+- [DESIGN] SR "Filing and counsel packet" stale, L1962–L1965 (filings R6) — "FILING_STALE naming what changed since the draft."
+@@ ORGANISATIONS
+- [DESIGN] SR "Standards…" purpose, L1588–L1590 (layer 9 modules; Design Requirement 7; Operational Principle 6) — "Where the group measures a government act against standards and pursues it to compliance restored and consequences addressed."
+- [DESIGN] SR "Standards…" purpose, L1597–L1600 (basis open; matter-page.html "design view, not stated as approved") — the matter page is "one government act: determination per standard, consequences, escalation, attached actions and pressure, on one page."
+- [DESIGN] SR "Standards…" mustShow, L1620–L1622 (actions R25, R35) — "counterparty by role and body".
+- [DESIGN] SR "Standards…" mustShow, L1659–L1662 (PATH.md §3; actions R9) — "the addressee by role and organisation (or a described audience)."
+- [DESIGN] SR "Standards…" mustShow, L1654–L1657 (PATH.md §3; actions R45) — "the group's contact, if named."
+- [DESIGN] SR "Standards…" mustShow, L1640–L1642 (DEC-77 item 2; DEC-84 (10)) — "obligation-against-act finding" structured as "Criteria, Condition, Cause (only when evidenced, else 'cause not established'), Effect, Recommendation (a proposed action)." (audit-finding form; obligation of a body measured against its act).
+- [DOCTRINE] SR "Standards…" mustNever, L1712–L1714 (consequences R10; Design Requirement 6) — "Never name an individual except in official role."
+- [DOCTRINE] SR "Standards…" mustNever, L1726–L1729 (PATH.md §3; actions R9) — on the action page never "a private individual as addressee."
+- [DOCTRINE] SR "Standards…" mustShow, L1689–L1692 (matter-page design view; consequences) — "consequences by class, never singling out a person".
+- [DESIGN] SR "Filing and counsel packet" mustShow, L1910–L1913 (Design Requirement 8; jurisdictions R32) — "Legal organisations equipped to evaluate a Tier 3 action, from the profile."
+@@ LAW
+- [DESIGN] SR "Standards…" mustShow, L1605–L1607 (standards R2, R7) — standard shown by "its own captured words" and in-force on a date.
+- [DESIGN] SR "Standards…" mustShow, L1610–L1612 (conformance R4, R9) — "Outcomes per standard, never one verdict; findings with their frozen pairs."
+- [DESIGN] SR "Standards…" mustShow, L1620–L1622 (actions R25, R35) — each action shows its "governing laws"; act "actionlaws" is reversible (L1800–L1804).
+- [DESIGN] SR "Standards…" mustShow, L1634–L1637 (DEC-89) — "Why the group is pursuing a breach (the opening reason), or why it declined to (a reasoned 'decline to escalate'), in the member's own words".
+- [DESIGN] SR "Standards…" mustShow, L1640–L1642 (DEC-77 item 2; DEC-84 (10)) — obligation-against-act finding in Criteria / Condition / Cause / Effect / Recommendation form; "cause not established" when unevidenced.
+- [DESIGN] SR "Standards…" mustShow, L1644–L1647 (conformance R9, R12, R21, R22; K503, K569) — a comparison started from a contradiction inquiry: "the member names which side states the standard (never defaulted)"; "outcomes_differ stated quietly when per-standard outcomes differ."
+- [DESIGN] SR "Standards…" mustShow, L1679–L1682 (matter-page design view; conformance; BIO_Action_v0_1.md §4 rule 4) — "per standard: what it requires, what the act did, and the outcome; a compliant outcome with the same care."
+- [DOCTRINE] SR "Standards…" mustShow, L1684–L1687 (Action §4 rule 3) — "'No significance or priority is recorded here; that judgement lives in the group's acts and reasons.'"
+- [DESIGN] SR "Standards…" primaryActs, L1789–L1792 (affordances R27; layer-9 rungs K264, K309) — "determine": "reasoned (K375: a supersession asks its reason)".
+- [GAP] SR "Standards…" purpose, L1597–L1600 — the matter page (per-act view of law against act) has basis "open": a design view "not stated as approved".
+@@ COURTS
+- [DESIGN] SR "Standards…" mustShow, L1620–L1622 (actions R25, R35) — "Each action's tier (1, 2, 3 or undetermined)".
+- [DOCTRINE] SR "Standards…" mustNever, L1721–L1724 (filings R2, D-182) — "Never default a tier to 1."
+- [DESIGN] SR "Standards…" mustShow, L1699–L1702 (matter-page design view; filings R21) — "available actions at legal tools from the profile, as facts: 'Nothing here is a recommendation.'"
+- [DESIGN] SR "Filing and counsel packet" purpose, L1883–L1886 (filings Purpose; Design Requirement 8 as amended) — "What the group sends, prepared from the record: Tier 1-2 filings, and for Tier 3 a packet for named counsel."
+- [DESIGN] SR "Filing…" mustShow, L1890–L1908 (filings R3, R4, R10, R5) — "[UNFILLED: name] markers and the list of what the record could not fill, with why."; "Tier 2 advisory note first."; "The counsel marking on every section and export."; "Who prepared the draft and whether it is machine work."
+- [DOCTRINE] SR "Filing…" mustNever, L1917–L1930 (filings R17, R11, R18) — "Never a template, pre-filled filing or fileable document for Tier 3."; "Never publish a packet."; "Never invent or default a value."
+- [DESIGN] SR "Filing…" conflict, L1967–L1970 (filings R7) — "ALREADY_SENT; NOT_APPROVED."
+- [DESIGN] SR "Filing…" primaryActs, L1974–L1979 (filings R6–R8) — "approve: terminal; record sent and counsel packet: reasoned (DEC-88; the code still lists them as undetermined); approving carries the full dialog".
+- [GAP] none of the "Standards…" or "Filing…" rules provide for tracking a court case after filing (docket, orders, judgments, appeals); the surface ends at "record sent" (observation from L1584–L2000; consistent with HO L71).
+@@ ANALYSIS
+- [DESIGN] SR "Standards…" mustShow, L1614–L1617 (consequences R2–R7) — "Consequence parts by state (computed, assessed, undetermined), causation established or unproven, totals only within a state." (aggregation rule: never sum across computed/assessed/undetermined).
+- [DOCTRINE] SR "Standards…" mustNever, L1706–L1709 (conformance R8; consequences R11; escalation R19) — "Never a significance, severity, priority, urgency, rank or score."
+- [DOCTRINE] SR "Standards…" mustShow, L1689–L1692 — "undetermined never read as zero".
+- [DESIGN] SR "Standards…" primaryActs, L1824–L1829 — "addressedrecord / consequencerevise": reasoned.
+- [DOCTRINE] SR "Standards…" mustNever, L1731–L1734 (actions R7, R26) — never "an outcome that claims impact without a leg outside the group's own actions." (impact claims need external evidence).
+@@ QUESTIONS
+- [DOCTRINE] SR "Standards…" mustNever, L1716–L1719 (escalation R17) — "Never advance a stage by machine; a proposal is never an advance."
+- [DESIGN] SR "Filing…" mustShow, L1905–L1908 (filings R5) — "Who prepared the draft and whether it is machine work."
+- [DOCTRINE] SR "Filing…" mustNever, L1927–L1930 (filings R18) — "Never invent or default a value."
+- [OPEN] SR "Standards…" primaryActs, L1836–L1856 — rungs still open: "actionpressure … undetermined (RUNG_ABSENT, K723), treated as reasoned"; "communicationprepare … reversible (by analogy with DEC-88's filingprepare)" (basis open); L1806–L1810 "actioncorrespond … the code still lists it as undetermined".
+@@ DOCTRINE
+- [DOCTRINE] SR "Standards…" mustNever, L1706–L1740 — no significance/severity/priority/urgency/rank/score (conformance R8; consequences R11; escalation R19); individuals only in official role (consequences R10; DR 6); no machine advance (escalation R17); no default tier 1 (filings R2); no private individual as addressee (actions R9); no impact claim without an outside leg (actions R7, R26).
+- [DOCTRINE] SR "Filing…" mustNever, L1916–L1931 — no Tier 3 template or fileable document; never publish a packet; never invent or default a value (filings R17, R11, R18).

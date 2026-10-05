@@ -2,23 +2,25 @@
 
 | unit | prompt | output | state | note |
 |---|---|---|---|---|
-| C1 | prompts/C1.txt | notes/C1.md | missing |  |
-| C2 | prompts/C2.txt | notes/C2.md | partial | DECISIONS-design-branch.txt: read to 2012 of 2085 |
-| C3 | prompts/C3.txt | notes/C3.md | partial | working files only: C3.parts |
-| C4 | prompts/C4.txt | notes/C4.md | missing |  |
-| C5 | prompts/C5.txt | notes/C5.md | partial | FINDINGS-WORKPLAN.txt: not started; RETRIEVAL-PROBE.txt: not started |
+| C1 | prompts/C1.txt | notes/C1.md | done |  |
+| C2 | prompts/C2.txt | notes/C2.md | done |  |
+| C3 | prompts/C3.txt | notes/C3.md | done |  |
+| C4 | prompts/C4.txt | notes/C4.md | done |  |
+| C5 | prompts/C5.txt | notes/C5.md | done |  |
 | C6 | prompts/C6.txt | notes/C6.md | done |  |
 | C7 | prompts/C7.txt | notes/C7.md | done |  |
-| C8 | prompts/C8.txt | notes/C8.md | missing |  |
-| C9 | prompts/C9.txt | notes/C9.md | missing |  |
+| C8 | prompts/C8.txt | notes/C8.md | done |  |
+| C9 | prompts/C9.txt | notes/C9.md | done |  |
 | C10 | prompts/C10.txt | notes/C10.md | missing |  |
-| D1 | prompts/D1.txt | notes/D1.md | missing |  |
-| D2 | prompts/D2.txt | notes/D2.md | partial | design-ux-surfaceRules.txt: read to 2500 of 3474 |
+| C11 | prompts/C11.txt | notes/C11.md | missing |  |
+| C12 | prompts/C12.txt | notes/C12.md | partial | DECISIONS-archive-part2.txt: read to 0 of 2037 |
+| D1 | prompts/D1.txt | notes/D1.md | partial | working files only: D1.parts |
+| D2 | prompts/D2.txt | notes/D2.md | done |  |
 | M1 | prompts/M1.txt | notes/M1.md | partial | local-facts.txt: not started; standards.txt: not started; conformance.txt: not started; consequences.txt: not started; action-grammar.txt: not started; actions.txt: not started; action-clocks.txt: not started; filing-templates.txt: not started; filings.txt: not started; escalation.txt: not started; action-plans.txt: not started; final section not written |
 | M2 | prompts/M2.txt | notes/M2.md | done |  |
-| M3 | prompts/M3.txt | notes/M3.md | partial | working files only: M3-work.md |
-| M4 | prompts/M4.txt | notes/M4.md | missing |  |
-| M5 | prompts/M5.txt | notes/M5.md | missing |  |
+| M3 | prompts/M3.txt | notes/M3.md | done |  |
+| M4 | prompts/M4.txt | notes/M4.md | partial | working files only: M4-work.md |
+| M5 | prompts/M5.txt | notes/M5.md | done |  |
 | A-ANALYSIS | prompts/A-ANALYSIS.txt | studies/ANALYSIS.md | missing |  |
 | A-COURTS | prompts/A-COURTS.txt | studies/COURTS.md | missing |  |
 | A-LAW | prompts/A-LAW.txt | studies/LAW.md | missing |  |

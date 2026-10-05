@@ -1,0 +1,46 @@
+@@ TIME
+- [DESIGN] SR "Action plan (the plan page, S11)" mustShow, L3019–L3022 (action-plans R19; PATH.md §1) — plan checks include timing: "a regulated date past or before its phase can start"; "A check informs and never refuses."
+- [DESIGN] SR "Action plan" mustShow, L3029–L3032 (PATH.md §3; action-plans R6, R9, R11) — "Each option's category, subjects served, regulated dates with their basis, disposition and origin (member or assistant)."
+- [DESIGN] SR "Action plan" mustShow, L3034–L3037 (PATH.md §2 step 5, §3) — options "sortable by category, regulated start or end date, subject or disposition." (regulated windows have a start and an end).
+- [DESIGN] SR "Action plan" mustShow, L3054–L3057 (action-plans R14–R15; PATH.md §2 step 7) — "Scenarios (up to three) as phases in order, each with its start words, its checkpoint and its branches; a branch waiting on another subject's track."
+- [DESIGN] SR "Action plan" mustShow, L3069–L3072 (action-plans R6) — chronology of the plan: "Its history: every act, oldest first, with who, when and why."
+- [DESIGN] SR "Action plan" stale, L3137–L3140 (action-plans R8) — "Liveness is derived when read: a subject superseded (naming its successor), closed or removed".
+- [DOCTRINE] SR "Action plan" mustNever, L3091–L3094 (action-plans R16, R20, R24) — "Never judge a checkpoint or close the plan by machine; a plan never closes itself."
+- [DESIGN] SR "Start and send" mustShow, L3337–L3340 (PATH.md §2 step 9; start-and-send.html "design view, not stated as approved") — the ACT preview shows "dates with bases".
+- [DESIGN] SR "Start and send" mustShow, L3347–L3350 (actions R8; filings R24; K600 (a)) — override recorded with time: "'Rests on an unestablished premise:' with the reason, author and time".
+@@ ORGANISATIONS
+- [DESIGN] SR "Action plan" mustShow, L3019–L3022 (action-plans R19) — a plan check flags "a lobbying option whose target is superseded" (the target of lobbying, an office or official, can be superseded over time).
+- [DESIGN] SR "Action plan" mustShow, L3034–L3037 — an option shows its "addressee" when expanded.
+- [DOCTRINE] SR "Start and send" mustNever, L3389–L3392 (actions R9) — "Never address a private individual."
+@@ LAW
+- [DESIGN] SR "Action plan" purpose, L3007–L3010 (action-plans Purpose; UX-ANSWERS.md OQ-9; Bob's rulings 1–10, K590) — the plan is for "deciding what to do about one or more matters, suspected or determined; an outline, not a graph (a graph view may come later)."
+- [DESIGN] SR "Action plan" mustShow, L3024–L3027 (action-plans R6, R8; PATH.md §2 step 2, §3) — "Each subject's support in words (established, short, 'hypothetical: not yet shown') and its liveness; a plan resting only on hypothetical subjects says so at the top, as hunch debt."
+- [DESIGN] SR "Start and send" mustShow, L3342–L3345 (PATH.md §2 step 9; actions R8) — breach assertion on an unestablished subject: ways forward "remove the subject, wait for its determination, untick 'asserts a breach', or proceed with a stated reason."
+- [DOCTRINE] SR "Action plan" mustNever, L3101–L3104 (Bob's ruling 2; BIO_Action_v0_1.md §4 rule 8) — "Never present a fixed catalogue of responses."
+@@ COURTS
+- [DESIGN] SR "Action plan" mustShow, L3044–L3047 (PATH.md §2 step 5; filings R21; Bob's ruling 2) — "Legal options show the profile's venues and legal organisations beside them, labelled as facts, never recommendations."
+- [DESIGN] SR "Action plan" mustShow, L3049–L3052 (action-plans R9; PATH.md §3) — "A legal option's tier written out; 'undetermined' when unstated."
+- [DESIGN] SR "Start and send" mustShow, L3357–L3360 (filings R25; jurisdictions R39) — "Each exhibit's grade and whether co-attested; the venue's standard beside them where the profile states it, flagging a contestable grade; 'undetermined' where it states none."
+- [DESIGN] SR "Start and send" mustShow, L3362–L3370 (filings R22, R7; Action §4 rule 7) — "On approval, the in-band stamp line."; "That the instance sends nothing: the member sends by the venue's own means and records the sending."
+- [DOCTRINE] SR "Start and send" mustNever, L3374–L3387 (filings R7, R23; DEC-31; actions R49; filings R25; K597 (3); filings R24) — "Never send by a system path."; "Never refuse for evidence grade."; "Never let a member's override disappear from what is prepared."
+- [DESIGN] SR "Start and send" primaryActs, L3450–L3463 — "filingapprove": terminal (DEC-88); "filingsent": reasoned (DEC-88).
+@@ ANALYSIS
+- [DOCTRINE] SR "Action plan" mustNever, L3076–L3079 (action-plans R26; PATH.md §3; Bob's ruling 3) — "Never a cost, budget, assignee, hours, score or priority." (no costing on plans).
+- [DOCTRINE] SR "Assistant tray" mustNever, L3260–L3263 (action-plans R34; agent-worker R52; K660 (2)) — "A score, rank figure or strength on any suggestion: the order is the only sign of strength."
+- [DESIGN] SR "Action plan" truncated, L3123–L3126 (action-plans R7) — "200 per page".
+@@ QUESTIONS
+- [DESIGN] SR "Assistant tray (plan suggestions)" purpose, L3211–L3214 (PATH.md §2 step 3; action-plans R11) — "Where the assistant's suggested options wait, apart from the plan, until a member adopts one."
+- [DESIGN] SR "Assistant tray" mustShow, L3218–L3226 (PATH.md §3, §2 step 3; action-plans R11, R21) — "'Suggested by the assistant', with why, on each suggestion."; kind of work at the tray's head ("suggested for a reporting project").
+- [RULING] SR "Assistant tray" mustShow, L3233–L3236 (action-plans R34; Bob 2026-09-30, K660 (2)) — "Five suggestions at a time, strongest first, in the assistant's order, and a way to ask for the next five until none remain."
+- [RULING] SR "Assistant tray" mustShow, L3238–L3241 (action-plans R32; K660 (6)) — fixed disclosure: "Suggested by the assistant (machine work) in run RUN-…, under skill version …. It is not the group's decision; it becomes an option only when a member adopts it."
+- [DESIGN] SR "Assistant tray" mustNever, L3255–L3258 (BIO_Action_v0_1.md §4 rule 8; agent-worker R51; K660 (4)) — no fixed catalogue: "suggestions come from reasoning over the matter and the same project's own earlier plans." (the agent worker is the producer).
+- [DOCTRINE] SR "Assistant tray" mustNever, L3245–L3253 (PATH.md §3; action-plans R24) — never "Anything that reads as the group's decision."; never "Adding, disposing, starting or closing anything by machine."
+- [DESIGN] SR "Assistant tray" mustNever, L3265–L3268 (action-plans R32; K660 (6)) — the disclosure "stops at adoption" (not carried onto the started action or anything sent).
+- [DOCTRINE] SR "Action plan" mustNever, L3081–L3084 (PATH.md §3; action-plans R11) — "Never a suggestion inside the options before a member adopts it."
+- [DESIGN] SR "Start and send" mustShow, L3352–L3355 (filings R5, R23) — "Who prepared the draft and whether it is machine work; 'a proposal until a member approves it'."
+- [OPEN] SR "Assistant tray"/"Action plan"/"Start and send" primaryActs, L3161–L3167, L3175–L3181, L3303–L3309, L3436–L3449 — rungs still "undetermined (RUNG_ABSENT, K732), treated as reasoned (DEC-87)" for optionstart, checkpointrecord, optionadopt; "premise override" rung derived, basis open (K723, K732).
+@@ DOCTRINE
+- [DOCTRINE] SR "Action plan" mustNever, L3086–L3099 (PATH.md §2 step 6; Bob's ruling 7; DEC-69; action-plans R25; DEC-25) — "Never ask the member to decide unticked options; undecided needs no act."; "Never published or reachable from any public read."
+- [DESIGN] SR "Action plan" mustShow, L3039–L3042 (action-plans R13; Bob's ruling 7) — "A declined option keeps its reason and stays visible."
+- [DESIGN] SR "Action plan" closed, L3147–L3150 (action-plans R20) — "A closed plan stays readable; its subjects are free for another plan."
+- [CONFLICT] SR approval status of the design views: SR L3015–L3017, L3197–L3199, L3325 call plan-page.html "approved by Bob, K608 (4)"; SR L75, L85, L1598–L1600, L1672, L3340, L3472 call surfaces.html, matter-page.html and start-and-send.html "design view, not stated as approved". So VP is approved; VM, VS and VF are not (HO L65 calls them "the bound sketches … honoured with later rulings applied").

@@ -140,5 +140,11 @@
   "SOURCE-ACCESS.txt",
   "AUTHORITY-AND-TRUST.txt",
   "BIO_Communications_Platforms.txt"
+ ],
+ "C11": [
+  "DECISIONS-archive-part1.txt"
+ ],
+ "C12": [
+  "DECISIONS-archive-part2.txt"
  ]
 }
