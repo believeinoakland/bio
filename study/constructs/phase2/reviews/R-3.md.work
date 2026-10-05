@@ -73,3 +73,26 @@ ISSUES LIST (draft):
  H. I-B2 vs C-5 inconsistency (INT says settled & also Bob's).
  I. credential number on line & as entity identifier (two homes).
  J. EVENTS page 200 vs INT 500.
+VERIFIED CODE: allocId padStart(4) record-core/index.mjs:392-402 ✓; opaque minter 4 digits, null after 64 ✓; 11 fixed-width regexes incl sshsig.mjs:357 ✓ (INT list ✓); record-grammar/ids.mjs BUNDLE_ID_RE \d{4}-\d{4} (bundles too); corpus-export bundles only unpaged ✓; conformance :330-331 ✓; record-core R21/R46 purge declaration ✓ (no export/rederive fields yet); promotion registerStep (one per module, in txn) & registerFact exist ✓; reading-pipeline has NO registration hook today (new requirement); rulings K1453/1456/1458/1459/1461 ✓; D142, X110 ✓ (meaning reads capped 5,000 exceeded by prominent official; connections quadratic >32 docs).
+WEB: CF DO limits (10GB, 2MB row, 100KB stmt, 100 params, 100 cols/table!, 30s/5min CPU, alarm 15 min wall, 1000 rps soft); Workers 128MB isolate; DO single-threaded, sql sync blocks (rules-of-DO; blog sqlite-in-DO "each request runs to completion before next begins"); Fowler bitemporal (two params salaryAt(actual, record)); AKN timeInterval refs ✓; OpenSanctions statements: canonical_id NK- merge (INT mischaracterises slightly); nomenklatura Resolver judgements positive/negative/unsure, connected components canonical id, transitive; Fowler BoundedContext; PROV-O defs; Fowler EventSourcing rebuild + external query caveat.
+MORE ISSUES:
+ K. Single-threaded DO: "background on alarm" still blocks members; need slicing budget / off-object workers.
+ L. duties/money/people state absence "level searched" but observation-log & retrieval sit AFTER them (upward). Fix: move observation-log after connections (its uses allow) or compose levels at L6.
+ M. duties trigger from group's own request (actions L9) - no registration named (registerEventSource feeds events only).
+ N. calculation output as occurrence evidence (first study 3.1) - calculations after duties -> upward.
+ O. change orders as phase `adjusted` vs award `encumbered` -> summation rule refuses committed total 2.6M. Fix: change order = actual/encumbered + amends relation.
+ P. payment->contract attribution not identifier-backed (PO/contract no. unpublished CF 8.3) -> committedAgainstPaid needs member inclusion set.
+ Q. Case 1 mints one "transfer event" per FY aggregate -> aggregates are not happenings; join by reconcile dims.
+ R. Case 2 INT omitted family tie; CHK is one-hop; family needs 2 hops.
+ S. identity: no derived cluster id -> every read must expand claims; transitivity unspecified; nomenklatura computes connected components -> derived rebuildable cluster id.
+ T. reevaluation cascade volume on bulk re-import; TAD 10.7 ordering.
+ U. 100 columns per table limit; typed columns + JSON tail fine.
+- BOB message: re-read constructs-brief.md l.22-30 K1462-K1468 (done). Impacts:
+  K1463 group's own money followed as money facts -> fee quotes (actions) vs money facts two homes; actions writes into money (down) / cites.
+  K1464 date-times w/ precision+zone: validity value & when_cache must hold zone & UTC interval bounds; day precision = local-day interval.
+  K1465 decider/author/signer/implementer = participants w/ role -> supersedes I-B4 for the record; never infer participant via holderAt; roles add decider/author/implementer.
+  K1466 occurrence state recorded met/not + plan step conditioned -> conflicts INT "derived, never stored"; need recorded transition log (as-known-at), scheduler evaluates, action-plans (L9) reads duties (down) OK; trigger from actions (M) required.
+  K1467 hunches/hypotheses held labelled never influence findings -> one home (existing HUNCH?) + store-side exclusion from legs/walks/totals/checks; separate testimony (D) from hypothesis.
+  K1468 spreadsheet figures are content; extraction targeted -> resolves A: money facts cite content extents (L4); volumes lower; bulk loads opt-in.
+- R-3.md: sections 'One home per fact', 'Interactions' written
+- R-3.md: Load-bearing written

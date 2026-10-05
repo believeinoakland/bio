@@ -31,8 +31,8 @@
 | A-MONEY | prompts/A-MONEY.txt | studies/MONEY.md | done |  |
 | A-PEOPLE | prompts/A-PEOPLE.txt | studies/PEOPLE.md | done |  |
 | R-1 | prompts/R-1.txt | reviews/R-1.md | done |  |
-| R-2 | prompts/R-2.txt | reviews/R-2.md | missing |  |
-| R-3 | prompts/R-3.txt | reviews/R-3.md | partial | working files only: R-3.md.work |
+| R-2 | prompts/R-2.txt | reviews/R-2.md | partial | working files only: R-2.md.work |
+| R-3 | prompts/R-3.txt | reviews/R-3.md | partial | no verdict yet |
 | S-SYNTHESIS | prompts/S-SYNTHESIS.txt | synthesis/constructs-2.md | missing |  |
 
 Digests built: CROSS-REGISTER.md, CROSS.md, DOCTRINE-REGISTER.md, DOCTRINE.md, EVENTS.md, MONEY.md, PEOPLE.md, SIX.md

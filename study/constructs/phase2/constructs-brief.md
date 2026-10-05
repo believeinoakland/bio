@@ -27,6 +27,7 @@ So no construct is designed alone. Every proposal is judged by how it fits and i
 - **K1466 due dates and plans:** a duty's occurrence state is recorded as met or not, and an action-plan step may be conditioned on it (an overdue response activates the next step).
 - **K1467 hunches:** hunches and hypotheses (a hypothesised cause included) have a place, labelled, but are never facts and never influence findings.
 - **K1468 extraction:** a spreadsheet is a document and its figures and formulas are content; extraction is targeted at a member's request, tied to a basis or claim, and ongoing as the work proceeds; extracting everything is rare.
+- **K1469 connections:** Bob: "I think of connections as the heart of an investigation" (decisions and spending, donations and contracts, and many more). Every kind of relationship keeps its one owning module but shares one connection shape (what it joins, kind, when it held, evidence, grade) and one bounded, as-of exploration read across all of them; never ranked, never machine-asserted; the built `connections` (document co-mention) becomes one kind.
 Bob also asked: "aren't ties a type of connection?" (the member-facing words for document co-mention and for ties between people are his, as UX; the synthesis proposes them).
 
 ## The product
