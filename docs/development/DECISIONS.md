@@ -2159,3 +2159,17 @@ response: **Bob, 2026-10-05: "J9: as recommended"**, after the brief on the jour
 decided: 2026-10-05 · Bob
 reasoning recorded in: this entry; `docs/development/ux-substrate/journeys.html` (J9's brief; journeys 1 and 27); BIO_Membership_Architecture_v2.md §4; BIO_Design_Requirements_v2.md §1 (annotation).
 owed: (BOB) membership: `ADMINS_FIRST` removed (R12), so an ordinary member may be invited while one administrator exists (R13); resignation refused only for the last administrator (R10); the hosting-access record asked at setup rather than at the second administrator (R11, instance-setup); the setup's one-time recommendation and its statement of dependence. (Design session) the setup wizard's wording in step 5.
+
+### DEC-135 · answered
+raised: 2026-10-05 · the UX design session with Bob on his primary account (session_011wdWGoa6RAbZiRU4Bn3Rng, carrying the journeys page drafted by session_01JZtUsAKpStQoiwF6rzqsyJ; the development process also runs on his primary account since K1428) (the design phase's step 3, journeys: question J13, journey 16 "A professional lends expertise", found inside J4 when Bob asked which questions were really his)
+for: bob
+question: Whether a project owner can ask for a check by expertise (a request reaching every member who declared that expertise), rather than having to know and assign a person.
+why it is Bob's: a new capability (a new act and a new kind of task) (P17).
+provisional: members declare expertise and an administrator may confirm it, which gates nothing (Membership v2 §1.3; membership R21–R24); a task can be assigned to one member (tasks R3); a second member's check on a calculation is recorded and shown (T33-42).
+alternative: (B) a roster filter by expertise, the owner then assigning an ordinary task to a person; (C) nothing new.
+recommendation: (A) "Ask for a check" by expertise.
+reversal cost: low.
+response: **Bob, 2026-10-05: "J13: A"**, after the brief on the journeys page. Ruled: (1) a new act, "Ask for a check", by a project owner on a finding (or a calculation, a passage or a determination it rests on), naming an expertise label and optionally a note; (2) the request reaches every member who declared that expertise and can see the thing to be checked, as a To do; it never reaches anyone who cannot see it; (3) the first to take it owns it; the others' To do closes, saying who took it; (4) the checker records a check or a reasoned concern, and the check shows the checker's handle and declared expertise, marked confirmed or self-declared, wherever the finding shows (and on the published case where the checker allows their handle, else as the group); (5) expertise still gates nothing: anyone may check, and the request only addresses; (6) a request no one takes stays open, and the owner sees that no one has taken it and may ask a named member instead.
+decided: 2026-10-05 · Bob
+reasoning recorded in: this entry; `docs/development/ux-substrate/journeys.html` (J13's brief; journey 16); BIO_Membership_Architecture_v2.md §1.3; BIO_Interaction_Constructs_v0_1.md §T.
+owed: (BOB) the "Ask for a check" act (owner; target; expertise label; note); a task kind for a check request addressed by expertise and sight, taken by the first who accepts; the check record carrying the checker's declared expertise and its confirmation state; the owner's read of an untaken request. (Design session) the act's screen and the check's display in step 5.
