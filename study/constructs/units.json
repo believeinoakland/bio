@@ -1,0 +1,144 @@
+{
+ "C9": [
+  "action-design/ACTION-PLAN.md.txt",
+  "action-design/INVENTORY.md.txt",
+  "action-design/MATRIX.md.txt",
+  "action-design/sources_build-state.md.txt",
+  "action-design/sources_canon-constructs.md.txt",
+  "action-design/sources_canon-mission.md.txt",
+  "action-design/sources_code.md.txt",
+  "NOTIFICATIONS.txt"
+ ],
+ "C3": [
+  "BIO_Content_Framework_v0_10.txt"
+ ],
+ "M4": [
+  "req/retrieval.txt",
+  "req/query-language.txt",
+  "req/observation-log.txt",
+  "req/intent.txt",
+  "req/reevaluation.txt",
+  "req/monitoring.txt",
+  "req/scheduler.txt",
+  "req/acquisition.txt",
+  "req/sources.txt"
+ ],
+ "D1": [
+  "design-journeys.txt",
+  "design-ux-audiences.txt",
+  "design-ux-useCases.txt",
+  "design-ux-journeyExperience.txt"
+ ],
+ "C2": [
+  "DECISIONS-design-branch.txt"
+ ],
+ "M1": [
+  "req/local-facts.txt",
+  "req/standards.txt",
+  "req/conformance.txt",
+  "req/consequences.txt",
+  "req/action-grammar.txt",
+  "req/actions.txt",
+  "req/action-clocks.txt",
+  "req/filing-templates.txt",
+  "req/filings.txt",
+  "req/escalation.txt",
+  "req/action-plans.txt"
+ ],
+ "C7": [
+  "BIO_State_Rules_Consistency_v1_5.txt",
+  "BIO_Membership_Architecture_v2.txt"
+ ],
+ "C1": [
+  "BIO_Complete_Roadmap_v5.txt",
+  "BIO_Design_Requirements_v2.txt",
+  "BIO_Functional_Architecture_v3.txt",
+  "BIO_System_Design.txt",
+  "BIO_Action_v0_1.txt",
+  "MILESTONES.txt",
+  "UI-KICKOFF.txt"
+ ],
+ "M5": [
+  "req/affordances.txt",
+  "req/op-declarations.txt",
+  "req/wizard-scripts.txt",
+  "req/tasks.txt",
+  "req/queue.txt",
+  "req/control-plane.txt",
+  "req/publication.txt",
+  "req/corpus-export.txt"
+ ],
+ "C8": [
+  "MEMBER-KNOWLEDGE-DESIGN.txt",
+  "EXTRACTION-BREADTH-DESIGN.txt",
+  "DOCUMENT-PROFILES.txt",
+  "OFFICE-FORMATS.txt",
+  "CONTENT-SEARCH-DESIGN.txt",
+  "SCHEDULER.txt"
+ ],
+ "M2": [
+  "req/jurisdictions.txt",
+  "req/id-spaces.txt",
+  "req/docprofile.txt",
+  "req/office-readers.txt",
+  "req/odf-reader.txt",
+  "req/extraction.txt",
+  "req/content.txt",
+  "req/entities.txt",
+  "req/connections.txt",
+  "req/progressions.txt",
+  "req/bias.txt"
+ ],
+ "C5": [
+  "INVESTIGATIVE-SESSION.txt",
+  "ASSISTANT-PILOT.txt",
+  "RETRIEVAL-SUBSTRATE.txt",
+  "CONTRADICTION-IDENTIFY-DESIGN.txt",
+  "FINDINGS-WORKPLAN.txt",
+  "RETRIEVAL-PROBE.txt"
+ ],
+ "M3": [
+  "req/inquiry-grammar.txt",
+  "req/inquiry.txt",
+  "req/citation.txt",
+  "req/strength.txt",
+  "req/basis-versions.txt",
+  "req/run-rules.txt",
+  "req/ai-runs.txt",
+  "req/run-productions.txt",
+  "req/skills.txt",
+  "req/agent-worker.txt",
+  "req/capture-requests.txt"
+ ],
+ "D2": [
+  "design-ux-surfaceRules.txt",
+  "design-principles.txt",
+  "design-brand.txt",
+  "design-measures.txt",
+  "design-HANDOFF.txt",
+  "design-view-matter-page.txt",
+  "design-view-plan-page.txt",
+  "design-view-start-and-send.txt",
+  "design-view-surfaces.txt"
+ ],
+ "C4": [
+  "BIO_Case_Making_v0_1.txt",
+  "BIO_Declared_Bias_v0_1.txt",
+  "BIO_Interaction_Constructs_v0_1.txt",
+  "BIO_Assistant_and_AI_Roles_v0_1.txt"
+ ],
+ "C10": [
+  "OBSERVATION-LOG-DESIGN.txt",
+  "BIO_Technical_Architecture_Decisions_v10.txt",
+  "BIO_Distribution_v0_1.txt",
+  "PRACTICE-SURVEY.txt",
+  "CONSTRUCTS.txt"
+ ],
+ "C6": [
+  "BIO_Publication_v0_1.txt",
+  "BIO_Intake_Doctrine_v1_1.txt",
+  "SOURCE-ACCESS.txt",
+  "AUTHORITY-AND-TRUST.txt",
+  "BIO_Communications_Platforms.txt"
+ ]
+}

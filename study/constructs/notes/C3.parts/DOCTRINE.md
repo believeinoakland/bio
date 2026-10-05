@@ -48,3 +48,6 @@
 - [RULING] §16, src 2241–2247 (BOB #17, D-306) — "A reader meeting any corpus-scale fidelity number must read it as agreement unless its own column says accuracy."
 - [RULING] §16, src 2114–2118 (DEC-75, 2026-09-14) — a conversion is "a derivation step in the chain ... cap undetermined and stated until calibrated ... No third scale, no new letter".
 - [DOCTRINE] §16 limits, src 2193–2194 — "a break placed on an invented width is an invented break" (the reader declines to invent; the pen goes UNKNOWN).
+- [DOCTRINE] §16 chain rules, src 2344–2357 — "A chain, never a token"; "Every derivation step weakens, never strengthens. The cap is computed by the module, never declared by a caller"; "pseudo-confidence is refused by basis"; "A region below the floor reads undetermined, never a best guess"; "Attestation ... refused to any machine credential".
+- [DOCTRINE] §16 promote-time projection, src 2363–2366 — "no absence may stand in for another" (never-recorded ≠ not-transcribed); counts "never zero" when unknown (present-and-null vs absent).
+- [RULING] §16, src 2266–2269 (D-284) — "undetermined is first-class" is "for a fact that is NOT KNOWN"; a known fact is summarised conservatively (weakest governs).

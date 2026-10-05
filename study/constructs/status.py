@@ -2,24 +2,37 @@
 """Each unit's state, read from its output file alone; writes STATE.md. Run from anywhere."""
 import os, re, glob
 S = os.path.dirname(os.path.abspath(__file__))
+import json
+UNITS = json.load(open(f"{S}/units.json")) if os.path.exists(f"{S}/units.json") else {}
 def out_path(uid):
     if uid.startswith("A-"): return f"studies/{uid[2:]}.md"
     if uid.startswith("R-"): return f"reviews/{uid}.md"
     return f"notes/{uid}.md"
 def state(uid):
     p = f"{S}/{out_path(uid)}"
-    if not os.path.exists(p): return "missing", ""
+    if not os.path.exists(p):
+        work = [w for w in glob.glob(f"{S}/{os.path.dirname(out_path(uid))}/*") if re.match(rf"{re.escape(os.path.basename(p)[:-3])}([-._]|$)", os.path.basename(w)) and w != p]
+        return ("partial", "working files only: " + ", ".join(os.path.basename(w) for w in work)) if work else ("missing", "")
     t = open(p, encoding="utf-8").read()
     if uid.startswith("A-"):
         return ("done", "") if re.search(r"^##\s*9\.?\s|Sources opened", t, re.M) else ("partial", "sections 1-9 not all written")
     if uid.startswith("R-"):
         return ("done", "") if "## Verdict" in t else ("partial", "no verdict yet")
     cert = re.search(r"^## Reading certificate\n(.*?)(?=^## )", t, re.S | re.M)
-    finished = "## Cross-construct observations" in t
-    lines = [l for l in (cert.group(1).splitlines() if cert else []) if l.strip().startswith("-")]
-    incomplete = [l.strip() for l in lines if "complete" not in l.lower() or re.search(r"stopped|partial|incomplete", l, re.I)]
-    if finished and lines and not incomplete: return "done", ""
-    return "partial", ("; ".join(incomplete) or "note unfinished")[:300]
+    certtext = cert.group(1) if cert else ""
+    problems = []
+    for f in UNITS.get(uid, []):
+        name = os.path.basename(f)
+        line = next((l for l in certtext.splitlines() if name in l), None)
+        n = sum(1 for _ in open(f"{S}/src/{f}", encoding="utf-8")) if os.path.exists(f"{S}/src/{f}") else None
+        if line is None: problems.append(f"{name}: not started"); continue
+        m = re.search(r"(\d+)\s*lines", line); ends = [int(x) for x in re.findall(r"[–-]\s*(\d+)", line)]
+        if "(complete" not in line or re.search(r"in progress|stopped|partial", line, re.I):
+            problems.append(f"{name}: read to {max(ends) if ends else 0} of {n}")
+        elif n is not None and (not m or int(m.group(1)) != n or not ends or max(ends) < n):
+            problems.append(f"{name}: certificate says {m.group(1) if m else '?'} lines, last read {max(ends) if ends else '?'}, file has {n}")
+    if "## Cross-construct observations" not in t: problems.append("final section not written")
+    return ("done", "") if not problems else ("partial", "; ".join(problems)[:400])
 units = sorted(os.path.basename(p)[:-4] for p in glob.glob(f"{S}/prompts/*.txt"))
 order = lambda u: (u.startswith("A-"), u.startswith("R-"), u[0], int(re.sub(r"\D", "", u) or 0), u)
 rows = [(u, *state(u)) for u in sorted(units, key=order)]

@@ -15,3 +15,4 @@
 - [RULING] DEC-107 (src 1743–1745) — Bob's 1 August ruling: "obligation" means a public body's duty; obligations are "the civic system's own flows, a member's task is downstream of them" (NOTIFICATIONS.md 2026-08-01).
 - [RULING] DEC-114 (src 1868) — a LAW is one of the entity kinds a Subject may be ("a person in a public role, office, place, law or thing") — laws are held as entities on the Subjects screen.
 - [RULING] DEC-115 (src 1886–1888) — "the standards list" in the Action sketch of standards, filings and queue items stays an example the designer may rework within the requirements (not bound).
+- [EXAMPLE] DEC-118 (src 1938) — example published case heading "Lakeshore Tenants · The Coliseum lease · Edition 2" — a lease (contract with a public body) as a typical case subject.
