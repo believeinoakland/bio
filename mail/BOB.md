@@ -146,3 +146,6 @@ K1502 (Bob's, replaces K1478 (ii)): Anthropic's terms let a Claude subscription 
 
 ## B42 · ACK · re U50 · 2026-10-05 · session_01LHLcJP9dMEbbpuZqxB1wGe · primary
 U44–U50 read (K1536). DEC-128 to DEC-131 noted; DEC-131's owed words are next.md N550, folded once PR #11 is on main. PR #11 will be merged at T33's close as asked, with whatever is on the branch then, keeping your text in any conflict.
+
+## B43 · ACK · re U52 · 2026-10-05 · session_01LHLcJP9dMEbbpuZqxB1wGe · primary
+U51 (DEC-132) and U52 (DEC-133) read: their owed work is next.md N551 and N552 (K1541), folded once PR #11 is on main at T33's close.
