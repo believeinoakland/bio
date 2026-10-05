@@ -27,7 +27,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "the machine may EXTRACT; the member concludes; machine work is labelled; no machine credential performs an attested act"
 - **Binds:** all six
 - **Reported by:** C10 (d67, d73, d83); C3 (d335, d392); C5 (d523, d531); C9 (d711); D1 (d804, d834); D2 (d909); M2 (d1029); M3 (d1071, d1072, d1073, d1074, d1075)
-- **Notes:** Built refusals (M3): inquiry R30 "A machine credential authors no division, no grouping and no leg role; it may surface a question"; basis-versions R30 (a machine may only append a `suggested` version); MACHINE_CANNOT_DIVIDE C-32.7, MACHINE_CANNOT_GROUND C-32.8, MACHINE_CANNOT_CONCLUDE C-32.2, MACHINE_CANNOT_DECLARE (bar) C-32.9, MACHINE_CANNOT_MOVE_VERSION C-25.24; content R36: a machine may mark a passage citable, labelled, and never attests (C-35.10) or types (C-52.1).
+- **Notes:** Built refusals (M3): inquiry R30 "A machine credential authors no division, no grouping and no leg role; it may surface a question"; basis-versions R30 (a machine may only append a `suggested` version); MACHINE_CANNOT_DIVIDE C-32.7, MACHINE_CANNOT_GROUND C-32.8, MACHINE_CANNOT_CONCLUDE C-32.2, MACHINE_CANNOT_DECLARE (bar) C-32.9, MACHINE_CANNOT_MOVE_VERSION C-25.24; content R36: a machine may mark a passage citable, labelled, and never attests (C-35.10) or types (C-52.1). In conflict or tension: see Conflicts #4, #12.
 
 ### D4 · The machine proposes, a member adopts: nothing machine-made enters the record or a plan until a member adopts it; dismissal is reversible greying, not deletion
 - **Home:** TAD §7.5; planning skill §1, R31–R33; action-plans R24
@@ -62,7 +62,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "The earlier provisional (sidebar approval as the act of record) is SUPERSEDED as a gate"
 - **Binds:** ORG, LAW, COURTS, QUESTIONS
 - **Reported by:** C12 (d155, d156, d157); C2 (d267, d268); M2 (d1039)
-- **Notes:** Moves the DEC-24 boundary for these acts; the six fields' comments that claimed "a member's constitutive statement" were corrected to match code. `strengthBarSet` still refuses MACHINE_CANNOT_DECLARE (store.mjs:5119). Any reading that relations are member-only must be checked against this ruling (see D178). DEC-53: the machine may propose Grade A/B candidates a member accepts as ESTABLISHED in one act; `op=resolve` is the only grader. C2 flags the brief's "machine never concludes or attests" as needing DEC-52's exact scope (Conflicts).
+- **Notes:** Moves the DEC-24 boundary for these acts; the six fields' comments that claimed "a member's constitutive statement" were corrected to match code. `strengthBarSet` still refuses MACHINE_CANNOT_DECLARE (store.mjs:5119). Any reading that relations are member-only must be checked against this ruling (see D178). DEC-53: the machine may propose Grade A/B candidates a member accepts as ESTABLISHED in one act; `op=resolve` is the only grader. C2 flags the brief's "machine never concludes or attests" as needing DEC-52's exact scope (Conflicts). In conflict or tension: see Conflicts #5, #12.
 
 ### D9 · Machine and AI credentials are least-privilege and confined by REFUSAL, not by convention; what an AI credential may reach widens only by an authored, dated, on-the-record decision, and an agent cannot request a broader token
 - **Home:** DEC-37 (DAEMON_TOKEN, two verbs); DEC-55 (per-op `classes` on 120 op declarations; `scopeFor` confines probe to scratch) and det. 2–3; DEC-55 as restated in ASSISTANT-PILOT (an `ai`-class token with declared task scope)
@@ -104,7 +104,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "the machine's words never become the member's reason (consistent with K1364 labelled draft)."
 - **Binds:** QUESTIONS, LAW, COURTS
 - **Reported by:** C13 (d194); C2 (d321, d322); C4 (d469); C5 (d526); D1 (d805, d812, d853, d870)
-- **Notes:** none
+- **Notes:** In conflict or tension: see Conflicts #13, #14, #25, #46.
 
 ### D15 · A local fact (holiday, office hours, office) is confirmed only by a member, never by a machine (MACHINE_CANNOT_CONFIRM); researched values stay unconfirmed until then
 - **Home:** local-facts R1, R5; filing-templates draft §2; research-oakland-calendar summary
@@ -153,7 +153,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "the gate belongs at the ACT, not at the reasoning. A plan may rest on premises not yet established; an act reaching outside the group may not be taken on them."
 - **Binds:** LAW, COURTS, TIME, ORG, ANALYSIS
 - **Reported by:** C1 (d44); C11 (d128, d131); C4 (d433, d434); C9 (d704, d706, d714, d745, d764); D1 (d862, d900); M3 (d1084)
-- **Notes:** "THE SAFEGUARD IS LABELLING, NOT REFUSAL"; an outward act's pre-flight refuses when its step is not `established`, naming the premise and the shortfall. DEC-29 re-cites the principle. A member may pass the gate openly (AC rule 2).
+- **Notes:** "THE SAFEGUARD IS LABELLING, NOT REFUSAL"; an outward act's pre-flight refuses when its step is not `established`, naming the premise and the shortfall. DEC-29 re-cites the principle. A member may pass the gate openly (AC rule 2). In conflict or tension: see Conflicts #33.
 
 ### D22 · A surface may RENDER a refusal it received from the plane but may never COMPUTE one (derive nothing: codes received, never inferred); the plane is the sole authority on what states exist
 - **Home:** DEC-8 (amended in wording by DEC-49); UI-KICKOFF (plane sole authority; UI SEMANTICS table); DEC-39 (the plane owns member-facing wording that claims what the record asserts); DEC-51
@@ -181,7 +181,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "a value a member never saw does not enter the record under their name."
 - **Binds:** QUESTIONS, LAW, ANALYSIS, ORG
 - **Reported by:** C2 (d277); C4 (d410)
-- **Notes:** Narrows the member screens' reading of DEC-24. The record keeps whether the member chose unaided or accepted which recommendation (see Conflicts on UI-102). "governing laws and risk tiers are reconsidered under it separately, not changed by this ruling".
+- **Notes:** Narrows the member screens' reading of DEC-24. The record keeps whether the member chose unaided or accepted which recommendation (see Conflicts on UI-102). "governing laws and risk tiers are reconsidered under it separately, not changed by this ruling". In conflict or tension: see Conflicts #23.
 
 ### D26 · Machine proposals are REVERSIBLE and bind nothing (`suggest`, `extractpropose`, `contradictionpropose`, `standardpropose`, `comparisonpropose`, `theorypropose`, `actionriskpropose`, `actionlawspropose`, `filingprepare`); member claims others rely on are REASONED and corrected only forward (`entitycreate`, `standarddeclare`, `standardadopt`, `consequencerecord`, `progressiondefine`, `filingsent`, `escalationopen`, `counselpacket`, `attribute`); `escalationend` and `filingapprove` are TERMINAL
 - **Home:** DEC-88 (Bob 2026-09-29: 57 undetermined acts banded)
@@ -195,7 +195,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "every act is performed by the member on the real surface."
 - **Binds:** QUESTIONS, ANALYSIS, LAW
 - **Reported by:** C2 (d292, d296, d302, d329); C3 (d392); C4 (d464); C5 (d523); D1 (d805); D2 (d909, d957); M2 (d1029, d1034, d1047); M3 (d1080)
-- **Notes:** DEC-90 said the wizard never fills or presses a control; DEC-120 later lets a wizard step place a labelled draft (see D14). D-82: assistant-surfaced material must LOOK derived; IC: "proposal looks derived".
+- **Notes:** DEC-90 said the wizard never fills or presses a control; DEC-120 later lets a wizard step place a labelled draft (see D14). D-82: assistant-surfaced material must LOOK derived; IC: "proposal looks derived". In conflict or tension: see Conflicts #14.
 
 ### D28 · Relevance suggestions are labelled machine work under six guards: no notification, reason stated, dismissal memory, never during heavy acts, per-member off, acceptance rate measured
 - **Home:** DEC-95 (Bob 2026-09-29)
@@ -230,7 +230,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "may a caller-asserted flag exempt a machine fence?"
 - **Binds:** QUESTIONS
 - **Reported by:** C4 (d407); C5 (d507)
-- **Notes:** Answered in IS §11 by BOB #33: `replay` is the server's word, never the caller's (admin-class fence plus server verification of every replayed promotion).
+- **Notes:** Answered in IS §11 by BOB #33: `replay` is the server's word, never the caller's (admin-class fence plus server verification of every replayed promotion). In conflict or tension: see Conflicts #30.
 
 ### D33 · A checker raises into a queue and never edits; machine suggestions are candidates
 - **Home:** DEC-24 rules 1 and 4 (CM §THE ACTION PLAN 5)
@@ -251,7 +251,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "**assembling what a member already wrote is not a fabricated attribution; drafting a justification for them is.**"
 - **Binds:** QUESTIONS, LAW, COURTS
 - **Reported by:** C10 (d87); C4 (d468, d469, d480); D1 (d892)
-- **Notes:** IC §J (v0.1, "absolute"): "No templates, no "suggested reason", no LLM-drafted default." Not marked superseded in its own section, though DEC-120 now allows a labelled draft (D14; Conflicts).
+- **Notes:** IC §J (v0.1, "absolute"): "No templates, no "suggested reason", no LLM-drafted default." Not marked superseded in its own section, though DEC-120 now allows a labelled draft (D14; Conflicts). In conflict or tension: see Conflicts #25.
 
 ### D36 · The assistant's stance is PERMISSIVE: anything that does not break the rules
 - **Home:** IC §P
@@ -428,21 +428,21 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "a machine-proposed connection is a HUNCH until earned"
 - **Binds:** QUESTIONS, ANALYSIS, ORG, LAW
 - **Reported by:** C1 (d37); C10 (d87); C11 (d117); C3 (d374); C5 (d496, d511); M3 (d1083)
-- **Notes:** IS §5 (DEC-15): a HUNCH is a member act — "The AI may not propose one."; DEC-52: "DEC-15's hunch-is-a-member-act stands". IS §12: a leg marked HUNCH (member marking only) is visible and "does not count as evidence". See Conflicts on SD §3 row 6's "machine-proposed connection is a HUNCH".
+- **Notes:** IS §5 (DEC-15): a HUNCH is a member act — "The AI may not propose one."; DEC-52: "DEC-15's hunch-is-a-member-act stands". IS §12: a leg marked HUNCH (member marking only) is visible and "does not count as evidence". See Conflicts on SD §3 row 6's "machine-proposed connection is a HUNCH". In conflict or tension: see Conflicts #27.
 
 ### D61 · Only an uncleared HUNCH refuses publication; ordinary bias debt is disclosed and travels with every published case; a published case must hold with every hunch removed
 - **Home:** DEC-15 (Bob 2026-08-01); DEC-20 (Bob 2026-08-02; D-188); DEC-46 (1); DR Addendum; TAD Declared bias
 - **Quote:** "bias debt is DISCLOSED; hunch debt is DISQUALIFYING — because a hunch inflates a GRADE and ordinary bias only frames interpretation"
 - **Binds:** ANALYSIS, QUESTIONS, COURTS
 - **Reported by:** C1 (d24, d26); C10 (d79); C11 (d116, d124); C12 (d151); C2 (d281, d305); C3 (d366); C4 (d434, d447, d451); C6 (d592); C7 (d640); C9 (d790); D1 (d849); M2 (d1056, d1059)
-- **Notes:** C1 records the refusal as stated but not built: SD §3 row 7 says `op=publishpreflight` is in no OPS table (REC-15) (Conflicts). D-188: say HUNCH DEBT where the rule means hunches. DEC-80 (2026-09-29) puts the uncleared-hunch refusal (case-authoring R12) into the built pre-flight in the redesign. CF §13.1: "The discriminator ... is whether the thing left unsettled makes the record CLAIM MORE THAN IT CAN SUPPORT"; measure decay does not block.
+- **Notes:** C1 records the refusal as stated but not built: SD §3 row 7 says `op=publishpreflight` is in no OPS table (REC-15) (Conflicts). D-188: say HUNCH DEBT where the rule means hunches. DEC-80 (2026-09-29) puts the uncleared-hunch refusal (case-authoring R12) into the built pre-flight in the redesign. CF §13.1: "The discriminator ... is whether the thing left unsettled makes the record CLAIM MORE THAN IT CAN SUPPORT"; measure decay does not block. In conflict or tension: see Conflicts #1, #22.
 
 ### D62 · A hunch is not an undetermined leg and must not be composed as one (R1 suspends an axis when a grade is ABSENT; a hunch is PRESENT and composes normally while open)
 - **Home:** DEC-15 determinations
 - **Quote:** "A HUNCH IS NOT AN `undetermined` LEG AND MUST NOT BE COMPOSED AS ONE"
 - **Binds:** ANALYSIS
 - **Reported by:** C11 (d117); C2 (d305); C4 (d452); D1 (d840); M3 (d1083)
-- **Notes:** DEC-104 corrects Declared Bias's "composes normally": a hunch never lifts strength; "Hunches to clear" is a status list, never a notification (Conflicts). UC-061: "a hunch still counts at its stated grade in strength (R5 not yet met)" — the build lags DEC-104.
+- **Notes:** DEC-104 corrects Declared Bias's "composes normally": a hunch never lifts strength; "Hunches to clear" is a status list, never a notification (Conflicts). UC-061: "a hunch still counts at its stated grade in strength (R5 not yet met)" — the build lags DEC-104. In conflict or tension: see Conflicts #19, #45, #51.
 
 ### D63 · An ungraded leg is inert and named, not unrating; when every leg is ungraded the result is UNRATED
 - **Home:** DEC-18 (Bob 2026-08-02), refining R1
@@ -477,7 +477,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "transitive trust is accepted so long as it is disclosed"
 - **Binds:** ORG, COURTS, LAW
 - **Reported by:** C1 (d9, d15); C10 (d80); C2 (d294, d297); C4 (d458); C6 (d601, d613); C7 (d626); D1 (d819, d848)
-- **Notes:** TAD §5 originally said "no transitive trust"; revised 2026-07-30 to accepted-if-disclosed. DB §Rerun: "no-transitive-trust decision made operational between groups".
+- **Notes:** TAD §5 originally said "no transitive trust"; revised 2026-07-30 to accepted-if-disclosed. DB §Rerun: "no-transitive-trust decision made operational between groups". In conflict or tension: see Conflicts #7, #26.
 
 ### D68 · Acceptance changes no grade; flags are disclosed, never blocked
 - **Home:** DEC-96; DEC-92 ("Flagged" only from a member's recorded evaluation); DEC-96
@@ -526,7 +526,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "A PROJECT WITH NO DECLARED STRENGTH GATES NOTHING, and the case says so rather than showing a blank."
 - **Binds:** ANALYSIS, COURTS, LAW
 - **Reported by:** C11 (d120); C12 (d149); C2 (d252, d254); C3 (d390); C9 (d752); D1 (d844)
-- **Notes:** Per-audience relaxation is "a structural prior by role"; a threshold belongs on a RENDERING, never on RATIFICATION (AUDIENCES.md §5). "an absent bar is not a bar of zero". The word "standard" here is the evidence bar (naming clash, see D313). DEC-72 supersedes DEC-71, DEC-17's strictest-across-citers composition and project-less publication: all load-bearing findings must meet the bar, others appear labelled non-load-bearing, and each claim's strength shows beside the case's standard. DEC-71: the bar governs the overall findings, not every piece of evidence (weak evidence may be cited without severance). Publication's bar table still says "strictest wins", which DEC-72 removed across projects (Conflicts). UC-071: "A declared bar beside the strength reached, never a gate on the pair." (DEC-17; DEC-72) — see Conflicts.
+- **Notes:** Per-audience relaxation is "a structural prior by role"; a threshold belongs on a RENDERING, never on RATIFICATION (AUDIENCES.md §5). "an absent bar is not a bar of zero". The word "standard" here is the evidence bar (naming clash, see D313). DEC-72 supersedes DEC-71, DEC-17's strictest-across-citers composition and project-less publication: all load-bearing findings must meet the bar, others appear labelled non-load-bearing, and each claim's strength shows beside the case's standard. DEC-71: the bar governs the overall findings, not every piece of evidence (weak evidence may be cited without severance). Publication's bar table still says "strictest wins", which DEC-72 removed across projects (Conflicts). UC-071: "A declared bar beside the strength reached, never a gate on the pair." (DEC-17; DEC-72) — see Conflicts. In conflict or tension: see Conflicts #20, #24, #36, #43.
 
 ### D75 · Unproven is the default for a group's claims about its own impact: impact needs cited outside documents, and impact asserted from SEQUENCE ALONE is refused; a body's non-response is a first-party fact and fully claimable
 - **Home:** DEC-14 and determinations (invariant 7 turned on the group)
@@ -596,7 +596,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "declared bias may raise scrutiny, constrain inference, and assert evidenced patterns, and may never issue verdicts"
 - **Binds:** ORG, QUESTIONS, ANALYSIS
 - **Reported by:** C10 (d78); C11 (d102); C12 (d163); C3 (d363, d368); C4 (d441, d443, d444, d445); D1 (d845); M2 (d1056, d1057, d1058, d1060, d1061)
-- **Notes:** DEC-6: safeguard 4's argument "is about registry-versus-free-text and about declared relations — not about a closed kind list"; corrected a subject-kind defect (anatomy "source, institution, office, or TOPIC" vs safeguard 4 "sources, institutions, offices and MOVEMENTS"). DEC-54: "the construct that fights undeclared distortion is held to a higher standard than the distortion." CF §13: every work product cites a bias manifest; a changed manifest leaves bias debt (regrade and rerun). CF §13.1: "The malformedness rule refuses "this office lies"" — a measured pattern statement is its accountable form. DB safeguards: 1 override defined by EFFECT not form (locks protect effect, not text); 2 strictest wins; 3 subject collisions are loud; 5 the group is the backstop — "What the machine guarantees is that nothing on a shared subject is QUIET". DB: "the most dangerous bias is the denied one". bias module: "Bias is disclosed and never blocks work"; C-26.5 refuses text that "assigns a truth verdict wholesale ... or calls a speaker a liar or never credible". Gaps: interactions and unregistered subjects listed for review not built (K102); strictest-applies deferred by K102; regrade and cross-group rerun ("Differential traversal") not this module's today.
+- **Notes:** DEC-6: safeguard 4's argument "is about registry-versus-free-text and about declared relations — not about a closed kind list"; corrected a subject-kind defect (anatomy "source, institution, office, or TOPIC" vs safeguard 4 "sources, institutions, offices and MOVEMENTS"). DEC-54: "the construct that fights undeclared distortion is held to a higher standard than the distortion." CF §13: every work product cites a bias manifest; a changed manifest leaves bias debt (regrade and rerun). CF §13.1: "The malformedness rule refuses "this office lies"" — a measured pattern statement is its accountable form. DB safeguards: 1 override defined by EFFECT not form (locks protect effect, not text); 2 strictest wins; 3 subject collisions are loud; 5 the group is the backstop — "What the machine guarantees is that nothing on a shared subject is QUIET". DB: "the most dangerous bias is the denied one". bias module: "Bias is disclosed and never blocks work"; C-26.5 refuses text that "assigns a truth verdict wholesale ... or calls a speaker a liar or never credible". Gaps: interactions and unregistered subjects listed for review not built (K102); strictest-applies deferred by K102; regrade and cross-group rerun ("Differential traversal") not this module's today. In conflict or tension: see Conflicts #10.
 
 ### D85 · Declared bias is a CLOSED SET of three kinds (scrutiny, inference, pattern) and discloses, refusing nothing (only a hunch blocks); a standard of evidence is a BAR that gates; filing one as the other inverts its mechanics
 - **Home:** DEC-54
@@ -624,7 +624,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "Derived informs, authored binds (D-90) — a machine may not refuse the act and must not hide it."
 - **Binds:** all six
 - **Reported by:** C2 (d251, d254, d261, d271); C3 (d333, d343, d344); C4 (d448, d466); C5 (d523); C8 (d693); D1 (d847); M2 (d1052); M4 (d1110)
-- **Notes:** DEC-68: "Authored acts bind; the approval IS the act." DEC-50: friction lands on the person changing a structured case's shape. DB D-86: a member is never forced (DEC-69). IC §P: "A proposal reports; it never decides, never blocks, and never edits the thing it is about."
+- **Notes:** DEC-68: "Authored acts bind; the approval IS the act." DEC-50: friction lands on the person changing a structured case's shape. DB D-86: a member is never forced (DEC-69). IC §P: "A proposal reports; it never decides, never blocks, and never edits the thing it is about." In conflict or tension: see Conflicts #15.
 
 ### D89 · Severance discharges support, never connection: a severed leg contributes nothing to strength, gates nothing and counts toward no bar, but the re-evaluation duty still attaches to whatever a finding ever rested on; re-evaluations are pull-read and, if pushed, tell once and age
 - **Home:** DEC-70 (Bob 2026-09-10; D-79, D-266); SR §4.1 (BOB #31: a leg is withdrawn by an authored new basis version; a project's edge is SEVERED); SR §5.4 (REC-160)
@@ -638,7 +638,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "The difference is really whether the relationship between legs is AND or OR."
 - **Binds:** ANALYSIS, QUESTIONS
 - **Reported by:** C2 (d260, d261, d263, d271); C5 (d510); D2 (d934)
-- **Notes:** Plurality lives inside one finding (one conclusion, one compound falsifier); refutation composes as the De Morgan dual; separate object identity only for distinct propositions, tested by citability. Surface test: "Would refuting this alone change your conclusion?" DEC-50: the shipped refusal of a new leg on a grouped question stands. IS §12: "The machine's OR is a proposal; the member's affirmation is the authored act"; D-195 elicitation informs once, prefills nothing, refuses nothing and shows no strength.
+- **Notes:** Plurality lives inside one finding (one conclusion, one compound falsifier); refutation composes as the De Morgan dual; separate object identity only for distinct propositions, tested by citability. Surface test: "Would refuting this alone change your conclusion?" DEC-50: the shipped refusal of a new leg on a grouped question stands. IS §12: "The machine's OR is a proposal; the member's affirmation is the authored act"; D-195 elicitation informs once, prefills nothing, refuses nothing and shows no strength. In conflict or tension: see Conflicts #11.
 
 ### D91 · A co-attested Grade B capture (RFC 3161 timestamp plus a third-party co-archive) suffices to publish, disclosed per document; Grade A (chain-of-custody web archive) stays the ceiling for adversarial or legal use; a failed co-attestation is published deliberately, visibly and repairably, never refused
 - **Home:** DEC-39; DEC-81 (Bob 2026-09-29; Intake Doctrine §3 corrected; Grade A deferred to GRADE-A-CAPTURE.md)
@@ -666,7 +666,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "letters grade evidence, bars show progress, weights mark acts"
 - **Binds:** ANALYSIS, QUESTIONS
 - **Reported by:** C2 (d283, d284); D2 (d923)
-- **Notes:** DEC-82's unifying idea "an answer is only as strong as the weakest thing it depends on" must be read as the necessary (AND) legs; it does not overrule DEC-32's OR-max (Conflicts). Measures: "Weights never appear on evidence or progress."
+- **Notes:** DEC-82's unifying idea "an answer is only as strong as the weakest thing it depends on" must be read as the necessary (AND) legs; it does not overrule DEC-32's OR-max (Conflicts). Measures: "Weights never appear on evidence or progress." In conflict or tension: see Conflicts #11.
 
 ### D95 · A grade states how a connection was established and how easily someone else could check it, never whether it is true; grade is not credibility and not `asserted_by` (a case file shows both)
 - **Home:** CF §8.1 (A: source identifier both ends captured; B: identifier matched exactly; C: correspondence; D: member testimony with stated basis); DEC-82
@@ -820,7 +820,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "**"enough" is not a property of the evidence but of what you intend to do with it**"
 - **Binds:** ANALYSIS, COURTS, LAW
 - **Reported by:** C4 (d423)
-- **Notes:** none
+- **Notes:** In conflict or tension: see Conflicts #24.
 
 ### D117 · Words are evidence as written: a quotation is not edited, and a member's testimony is never paraphrased, summarised or cleaned; its author is server-stamped (a caller naming the author would be signing as somebody else)
 - **Home:** DB §Hunch heading; MEMBER-KNOWLEDGE-DESIGN §2
@@ -862,7 +862,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "a list quietly shorter than the record is the record claiming less than it can support, which is the same fault as claiming more"
 - **Binds:** ANALYSIS, QUESTIONS
 - **Reported by:** C6 (d565, d566); C7 (d656); C8 (d697)
-- **Notes:** MA §6 calls a view claiming LESS than the record supports "a different defect" (Pub: "the same fault"); both make it a defect. MA: "the record says what it holds". CONTENT-SEARCH-DESIGN §2: "a search that silently under-reports is the record claiming coverage it lacks".
+- **Notes:** MA §6 calls a view claiming LESS than the record supports "a different defect" (Pub: "the same fault"); both make it a defect. MA: "the record says what it holds". CONTENT-SEARCH-DESIGN §2: "a search that silently under-reports is the record claiming coverage it lacks". In conflict or tension: see Conflicts #29.
 
 ### D123 · A stated method and its numbers must not drift: if a qualifier such as "estimated" is dropped, the mechanism must become exact in the same change
 - **Home:** Intake §2a (D-496)
@@ -990,14 +990,14 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "Scope is PUBLIC records — restricted material is D-124, deferred with a trigger."
 - **Binds:** ANALYSIS, LAW, COURTS, QUESTIONS
 - **Reported by:** C11 (d101, d109); C8 (d694, d695); M2 (d1015)
-- **Notes:** DEC-11 was raised as "effects on people outside the project ... the D-77 / invariant-7 neighbourhood" (see D160). OFFICE-FORMATS: "SURFACING it is a different act, with effects on people outside this project"; the section calls the question "Raised as a decision rather than settled here" while L16 and L325–329 treat DEC-5 as settled (Conflicts).
+- **Notes:** DEC-11 was raised as "effects on people outside the project ... the D-77 / invariant-7 neighbourhood" (see D160). OFFICE-FORMATS: "SURFACING it is a different act, with effects on people outside this project"; the section calls the question "Raised as a decision rather than settled here" while L16 and L325–329 treat DEC-5 as settled (Conflicts). In conflict or tension: see Conflicts #32.
 
 ### D141 · Observation log: row-whole withholding is fail-closed (REC-103), stated as in conflict with the `purged` annotation after a per-bundle purge; a `subject NOT NULL`/PRESENT conflict was resolved conservatively to `unstated`
 - **Home:** OLD Incomplete l.56, l.66; REC-103; D-366
 - **Quote:** "the conflict is stated, not resolved."
 - **Binds:** QUESTIONS, ANALYSIS
 - **Reported by:** C10 (d71, d72); M4 (d1101)
-- **Notes:** observation-log R13: "A row is withheld whole, never with a column blanked."
+- **Notes:** observation-log R13: "A row is withheld whole, never with a column blanked." In conflict or tension: see Conflicts #3.
 
 ### D142 · Doctrine of SIGHT across projects: when a conflict's other side lies in a project a member cannot see, each side is told only of its own side, both projects opt in before revealing to each other, no messaging is opened, and no highlight names the hidden project
 - **Home:** DEC-85 (Bob 2026-09-29); DEC-36; DEC-113
@@ -1104,14 +1104,14 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "never a private individual (Requirement 6). An action asserting a breach is addressed to an office."
 - **Binds:** ORG, LAW, COURTS, QUESTIONS
 - **Reported by:** C1 (d47); C13 (d191, d213, d229); C4 (d399); C7 (d644); C9 (d712, d723); D1 (d816); D2 (d915, d945); M1 (d962); M3 (d1084)
-- **Notes:** Brief correction: this is Actions R9 and the personal-data rules, not a Declared Bias safeguard.
+- **Notes:** Brief correction: this is Actions R9 and the personal-data rules, not a Declared Bias safeguard. In conflict or tension: see Conflicts #18.
 
 ### D157 · Open residual: a bare `scrutiny` bias statement naming a NATURAL PERSON with no citations is admitted; doctrine about named individuals is Bob's, triggered by the first such statement challenged as a verdict
 - **Home:** DEC-6 (residual, OPEN); DB §The residual (DB 256–263)
 - **Quote:** "Doctrine about named individuals is Bob's."
 - **Binds:** ORG, QUESTIONS
 - **Reported by:** C11 (d103); C4 (d397, d399)
-- **Notes:** none
+- **Notes:** In conflict or tension: see Conflicts #18.
 
 ### D158 · Member search history stays out of the record (it would be reachable by legal process); conservative because reversible
 - **Home:** OLD §4.6
@@ -1160,7 +1160,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "identity buys strength; weight shows through the grade, "never through a stigmatizing look.""
 - **Binds:** COURTS, QUESTIONS
 - **Reported by:** C2 (d303, d320); C6 (d546, d551); C8 (d676, d677, d681, d683); D1 (d803, d818); M3 (d1087)
-- **Notes:** none
+- **Notes:** In conflict or tension: see Conflicts #21, #42.
 
 ### D165 · Private persons named in a subject's reply are not published
 - **Home:** DEC-116
@@ -1181,7 +1181,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "that a member acted BECAUSE of a proposal is a claim about a person that the record cannot support"
 - **Binds:** QUESTIONS, ORG
 - **Reported by:** C4 (d402, d403)
-- **Notes:** none
+- **Notes:** In conflict or tension: see Conflicts #23.
 
 ### D168 · Third parties' names and words (recipients, comments) leave by no one's act but their own
 - **Home:** Publication §6A.3 pt 3(a)
@@ -1260,14 +1260,14 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "A declared relation is constitutive: it carries no grade, is never traversed to resolve a reference or to answer R15, and never forms a connection."
 - **Binds:** ORG, LAW, COURTS, QUESTIONS
 - **Reported by:** C10 (d88); C3 (d364); C4 (d398); M2 (d1037, d1045, d1063)
-- **Notes:** Brief correction: "constitutive, never traversed" is entities R26 / CF §13, while DB safeguard 4 says relations are declared, justified and citable and mechanical equivalence extends exactly as far as the registry declares. DEC-52 lets a machine be the one who constitutes a relation (D8). CF §14.4 defines a HUNCH as "temporary declared bias that lets the graph be traversed before the evidence exists": traversal before evidence is licensed only as hunch debt (D60).
+- **Notes:** Brief correction: "constitutive, never traversed" is entities R26 / CF §13, while DB safeguard 4 says relations are declared, justified and citable and mechanical equivalence extends exactly as far as the registry declares. DEC-52 lets a machine be the one who constitutes a relation (D8). CF §14.4 defines a HUNCH as "temporary declared bias that lets the graph be traversed before the evidence exists": traversal before evidence is licensed only as hunch debt (D60). In conflict or tension: see Conflicts #5, #17, #49.
 
 ### D179 · Notices go to every ancestor with one shared resolution (the event is the unit of state, one state and N homes); the walk is bounded: the basis graph is a DAG enforced at write and an exhausted walk says the ancestor set is undetermined
 - **Home:** DEC-16 (Bob 2026-08-02); R3 depth bound
 - **Quote:** "an exhausted walk must SAY the ancestor set is undetermined rather than silently notifying a truncated set"
 - **Binds:** QUESTIONS, TIME, ANALYSIS
 - **Reported by:** C11 (d118); M5 (d1136)
-- **Notes:** "NOTHING VANISHES SILENTLY, so 'not presented' is not deletion"; an act that changes the record is itself an event. The only graph walk the doctrine names, and it walks basis legs, not declared relations. queue R7: the home set reads `undetermined` when an ancestor is out of view or the depth bound (6) is hit.
+- **Notes:** "NOTHING VANISHES SILENTLY, so 'not presented' is not deletion"; an act that changes the record is itself an event. The only graph walk the doctrine names, and it walks basis legs, not declared relations. queue R7: the home set reads `undetermined` when an ancestor is out of view or the depth bound (6) is hit. In conflict or tension: see Conflicts #28.
 
 ### D180 · Focus, finding and case collapsed into one recursive type, the INQUIRY, whose basis legs may point at other inquiries
 - **Home:** DEC-72 (Bob 2026-08-01); D-127
@@ -1316,7 +1316,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "Mechanical equivalence extends exactly as far as the registry declares"
 - **Binds:** ORG, QUESTIONS, ANALYSIS
 - **Reported by:** C11 (d102); C4 (d396, d398); M2 (d1063, d1066)
-- **Notes:** Bias collision DOES follow declared relations (MAGA↔Trump collides). Safeguard 4 contains neither "constitutive" nor "never traversed" (D178). Built: bias/index.mjs:504–560 names R24's interactions "safeguard 3" and R25's unregistered subjects "safeguard 4" ("listed for the same review ... It refuses nothing"). entities Satisfies paraphrases safeguard 4 as "the registry, aliases, justified and citable relations; every registry kind a legal subject".
+- **Notes:** Bias collision DOES follow declared relations (MAGA↔Trump collides). Safeguard 4 contains neither "constitutive" nor "never traversed" (D178). Built: bias/index.mjs:504–560 names R24's interactions "safeguard 3" and R25's unregistered subjects "safeguard 4" ("listed for the same review ... It refuses nothing"). entities Satisfies paraphrases safeguard 4 as "the registry, aliases, justified and citable relations; every registry kind a legal subject". In conflict or tension: see Conflicts #17.
 
 ### D187 · Extracting what a document literally contains asserts little; identifying a CONNECTION is closer to a constitutive statement: `resolve` is derived, while entity, alias, relation, progression and threading are constitutive
 - **Home:** IS §14a (BOB-4)
@@ -1337,7 +1337,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "New relationship kinds require a spec revision, not an inline invention; the checker rejects unknown values."
 - **Binds:** ORG, LAW, COURTS, TIME
 - **Reported by:** C7 (d631, d636, d649, d666); C9 (d716, d748, d750, d779)
-- **Notes:** C7: any organisation, law or court relation needs a spec revision. Compare CF §9: a new connection kind is one row of data, no code (D225). C9: the design's edges `action_basis`, `responds_to`, `references[]` lie outside State Rules' closed vocabulary (cites, relates_to, elevated_into, initiates, derived_from, supersedes, corroborates); "No Action→finding, Action→reply or Action→case edge exists in SR's vocabulary" (Conflicts).
+- **Notes:** C7: any organisation, law or court relation needs a spec revision. Compare CF §9: a new connection kind is one row of data, no code (D225). C9: the design's edges `action_basis`, `responds_to`, `references[]` lie outside State Rules' closed vocabulary (cites, relates_to, elevated_into, initiates, derived_from, supersedes, corroborates); "No Action→finding, Action→reply or Action→case edge exists in SR's vocabulary" (Conflicts). In conflict or tension: see Conflicts #34.
 
 ### D190 · Edges live on the dependent object; the reverse direction is derived by the index, never hand-maintained
 - **Home:** SR §5.2
@@ -1351,7 +1351,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "source-grounding makes each hop locally verifiable, so there is no forced transitive walk"
 - **Binds:** ANALYSIS, ORG, LAW, TIME
 - **Reported by:** C7 (d633); M4 (d1113)
-- **Notes:** Contrast DEC-16's bounded every-ancestor walk for notices (D179; Conflicts).
+- **Notes:** Contrast DEC-16's bounded every-ancestor walk for notices (D179; Conflicts). In conflict or tension: see Conflicts #28.
 
 ### D192 · Referential and temporal relations must not be collapsed into one edge type
 - **Home:** DOCUMENT-PROFILES L315
@@ -1379,7 +1379,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "the code takes exactly one hop"
 - **Binds:** ORG, ANALYSIS, QUESTIONS
 - **Reported by:** M2 (d1065); M4 (d1128)
-- **Notes:** Not a contradiction of entities R26's letter (scoping is neither resolving a reference, answering R15 nor forming a connection), but whether it is allowed is open (D178; Conflicts).
+- **Notes:** Not a contradiction of entities R26's letter (scoping is neither resolving a reference, answering R15 nor forming a connection), but whether it is allowed is open (D178; Conflicts). In conflict or tension: see Conflicts #49.
 
 ## Jurisdiction-free product
 
@@ -1388,7 +1388,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "Jurisdiction lives in data. … a missing fact reads undetermined, never a default (build/layers.md, 'No jurisdiction in the product')."
 - **Binds:** all six
 - **Reported by:** C1 (d19, d48); C13 (d187, d203, d220, d241); C2 (d293, d300, d319); C9 (d736); D1 (d809, d864); D2 (d910); M1 (d963); M2 (d992, d998, d999, d1004, d1013, d1018, d1022, d1026, d1042, d1054); M3 (d1070, d1084); M4 (d1095); M5 (d1134, d1135)
-- **Notes:** RM App A/B name officials and California law: the mission text is example, the doctrine keeps such content in data/profiles. Restated in local-facts R8, standards R13, filing-templates R18, actions R10/R39, escalation R20, action-grammar R11, action-clocks R9, action-plans R28; filings R20: "No place, law, venue, template or legal organisation is named in this module's behaviour or outward text"; jurisdictions: "No other module names a place" and R20 "No service treats a profile by its identity"; every module in layers 1, 3–8, 10–11 read by M2–M5 carries the same line; agent-worker's `account_id` is the project's one Cloudflare account. Principles §9 (K1): holidays, offices and laws come from the profile.
+- **Notes:** RM App A/B name officials and California law: the mission text is example, the doctrine keeps such content in data/profiles. Restated in local-facts R8, standards R13, filing-templates R18, actions R10/R39, escalation R20, action-grammar R11, action-clocks R9, action-plans R28; filings R20: "No place, law, venue, template or legal organisation is named in this module's behaviour or outward text"; jurisdictions: "No other module names a place" and R20 "No service treats a profile by its identity"; every module in layers 1, 3–8, 10–11 read by M2–M5 carries the same line; agent-worker's `account_id` is the project's one Cloudflare account. Principles §9 (K1): holidays, offices and laws come from the profile. In conflict or tension: see Conflicts #16, #48.
 
 ### D197 · Every profile fact is sourced to a primary page with capture sha256 and retrieval date; web search only locates primary pages; secondary or other-publisher sources are never a source
 - **Home:** research-oakland-calendar header and M-NEW-3/5; filing-templates draft §2; jurisdictions R2 (every fact carries a `basis`: measurement, ruling, `UNMEASURED`; `TEST` only in a test profile)
@@ -1465,7 +1465,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "the build derives an office's "independent system" "through a measured Oakland table""
 - **Binds:** ORG, LAW
 - **Reported by:** C3 (d341, d358)
-- **Notes:** BOB #35 also says "never a per-instance table a machine applies" while the build derives system from "a measured host" list (Conflicts).
+- **Notes:** BOB #35 also says "never a per-instance table a machine applies" while the build derives system from "a measured host" list (Conflicts). In conflict or tension: see Conflicts #16.
 
 ### D208 · Design for the observable case (this group, Oakland) so that a second audience costs a RENDERING rather than a rewrite
 - **Home:** CM §5
@@ -1493,7 +1493,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "`computeDeadline` hard-codes Saturday and Sunday as non-business days, a calendar assumption that does not come from the profile."
 - **Binds:** TIME, LAW
 - **Reported by:** M1 (d964)
-- **Notes:** In conflict with "No jurisdiction in the product" (D196).
+- **Notes:** In conflict with "No jurisdiction in the product" (D196). In conflict or tension: see Conflicts #48.
 
 ### D212 · With no view, every non-test profile is combined: permanent behaviour
 - **Home:** docprofile R6 (K39, K880)
@@ -1509,7 +1509,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "the build's numbering governs: Action is layer 9"
 - **Binds:** LAW, TIME, ANALYSIS, ORG
 - **Reported by:** C1 (d41, d50); C9 (d766)
-- **Notes:** SD §4 order: membership → capture → record → content → meaning → bias → inquiry → retrieval → assistant → surfaces → publication → distribution/operations.
+- **Notes:** SD §4 order: membership → capture → record → content → meaning → bias → inquiry → retrieval → assistant → surfaces → publication → distribution/operations. In conflict or tension: see Conflicts #39.
 
 ### D214 · Layer order (P4) forces inversions: an earlier module offers a registration hook that a later module fills (e.g. ai-runs cannot read plans itself)
 - **Home:** ai-runs R47 (planning-skill draft); scheduler R9 (K93 (5): a later-module producer arms through registration)
@@ -1530,7 +1530,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "placed "last in layer 9 after `escalation` since it reads every layer-9 module""
 - **Binds:** LAW, TIME
 - **Reported by:** C13 (d223, d235); C9 (d710, d725, d747)
-- **Notes:** In tension with the brief's rule that adding a product module is Bob's, and with filing-templates' "the module split is architecture, also his" (Conflicts).
+- **Notes:** In tension with the brief's rule that adding a product module is Bob's, and with filing-templates' "the module split is architecture, also his" (Conflicts). In conflict or tension: see Conflicts #6.
 
 ### D217 · The functional layers are concurrent, not phases (a group does layer 1, 2 and 3 work at once); build sequencing put the UI before the analysis layer, and the case-making rung (M9) depends on no substrate milestone
 - **Home:** FA three layers; UI-KICKOFF history (2026-07-27); MILESTONES L513–542
@@ -1544,7 +1544,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "the requirements and UX are his (P5, P17); the module split is architecture, also his, with BOB's recommendation."
 - **Binds:** all six
 - **Reported by:** C13 (d186, d189, d197, d226); C2 (d248); C5 (d535); C9 (d703)
-- **Notes:** Deltas: items marked **Bob** change a layer contract, module list or member vocabulary; items marked **BOB** are BOB's. C2 register rules: Bob's are "**doctrine** (what the record means and may claim), **risk carrying his name** (legal, the City), **effects on people outside the project**" and gated acts; sequencing and mechanism are not his. FINDINGS-WORKPLAN (Bob 2026-08-07): "tactical/module decisions are the session's to resolve" (precursor of P17). ACTION-PLAN status: "Nothing here is build state until Bob approves the module and BOB folds the requirements."
+- **Notes:** Deltas: items marked **Bob** change a layer contract, module list or member vocabulary; items marked **BOB** are BOB's. C2 register rules: Bob's are "**doctrine** (what the record means and may claim), **risk carrying his name** (legal, the City), **effects on people outside the project**" and gated acts; sequencing and mechanism are not his. FINDINGS-WORKPLAN (Bob 2026-08-07): "tactical/module decisions are the session's to resolve" (precursor of P17). ACTION-PLAN status: "Nothing here is build state until Bob approves the module and BOB folds the requirements." In conflict or tension: see Conflicts #6, #31.
 
 ### D219 · The run vocabulary is held by `run-rules` (K617); the planning skill rests on K590, K597, K600, K608, K613 (3) and DEC-24 rules 1–2
 - **Home:** K617; K590 (D2, D4; rulings 2, 3, 6, 8, 10); K597; K600; K608; K613 (3); DEC-24 rules 1–2 (planning-skill draft header, §2)
@@ -1579,7 +1579,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "DEC-33 is another case of my saying 'we need a solid substrate before building on top of it.'"
 - **Binds:** all six
 - **Reported by:** C2 (d264)
-- **Notes:** DEC-33's trigger fired in DEC-80 (2026-09-29): the publication ceremony and pre-flight are built in the redesign (D299).
+- **Notes:** DEC-33's trigger fired in DEC-80 (2026-09-29): the publication ceremony and pre-flight are built in the redesign (D299). In conflict or tension: see Conflicts #22.
 
 ### D224 · A capability that does not serve the path is not obviously worth building; no new container until a group asks
 - **Home:** DEC-48 (Bob's capability doctrine, CLAUDE.md 2026-08-01)
@@ -1763,7 +1763,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** ""`UNMEASURED` is not a basis for these facts""
 - **Binds:** TIME, LAW
 - **Reported by:** M2 (d997)
-- **Notes:** none
+- **Notes:** In conflict or tension: see Conflicts #48.
 
 ### D250 · No deadline is invented
 - **Home:** progressions R16; layer 9 contract ("every deadline names the statute, order or commitment it comes from")
@@ -1835,7 +1835,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "Unticked options stay undecided, and the page never asks the member to decide them."
 - **Binds:** all six
 - **Reported by:** C1 (d39, d55); C10 (d87); C12 (d149, d152); C13 (d210, d213, d222); C2 (d277, d298, d306, d322); C4 (d414, d453, d464); C5 (d510); C7 (d668); C8 (d680); C9 (d707); D1 (d864); D2 (d945, d953)
-- **Notes:** DEC-45: "The argument is not convenience, it is whose words they are." Extended to capability by DEC-55 (D9) and to standards by DEC-54 (D16). MA §7.14: neither option preselected — "a preselection would be the surface choosing"; a creation carrying no setting is HIDDEN (fail closed).
+- **Notes:** DEC-45: "The argument is not convenience, it is whose words they are." Extended to capability by DEC-55 (D9) and to standards by DEC-54 (D16). MA §7.14: neither option preselected — "a preselection would be the surface choosing"; a creation carrying no setting is HIDDEN (fail closed). In conflict or tension: see Conflicts #13.
 
 ### D260 · Any group may use the product with its stake disclosed; lobbying is limited (no lobbying without an existing requirement)
 - **Home:** action-design deltas §8 (D6); Design Requirement 6; ruling 6; planning skill R31–R33; D6 (K590); Action §4 rule 9; UC-123; journey experience (c) ("stage 7 only enforces an existing requirement")
@@ -1905,7 +1905,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** ""No tool may gate an action" (Design Requirement 12)"
 - **Binds:** LAW, COURTS, TIME
 - **Reported by:** C9 (d711, d715, d765)
-- **Notes:** In tension with DEC-26's pre-flight refusal of an outward act whose step is not established (D21; Conflicts).
+- **Notes:** In tension with DEC-26's pre-flight refusal of an outward act whose step is not established (D21; Conflicts). In conflict or tension: see Conflicts #33.
 
 ### D270 · An escalation can be suspended or resumed but never withdrawn
 - **Home:** escalation R15
@@ -1919,14 +1919,14 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "the approved layer-9 requirements model **one group, one kind of member, acting against government offices, on a breach**."
 - **Binds:** LAW, ORG, COURTS, TIME
 - **Reported by:** C9 (d739, d755, d767)
-- **Notes:** C9 lists 15 gaps: no level-1 home; group types; non-breach actions; multi-recipient communications; learning of a government response; six clock designs; action plan; edges; outcomes; audience-specific output acts; whether tiers are published; confidential referral; SR distribution; action-act authority; cross-group consumption. The resolution vocabulary fits only request and breach actions.
+- **Notes:** C9 lists 15 gaps: no level-1 home; group types; non-breach actions; multi-recipient communications; learning of a government response; six clock designs; action plan; edges; outcomes; audience-specific output acts; whether tiers are published; confidential referral; SR distribution; action-act authority; cross-group consumption. The resolution vocabulary fits only request and breach actions. In conflict or tension: see Conflicts #40.
 
 ### D272 · The plane proposes the next escalation stage and never advances it: activation is the group's choice, not mechanical on trigger conditions
 - **Home:** Functional Architecture ("if the group chooses to pursue it"); UC-127; journey experience (c)
 - **Quote:** ""a proposed stage, never advanced""
 - **Binds:** LAW, TIME, COURTS
 - **Reported by:** C9 (d761); D1 (d858, d885); D2 (d925, d945); M4 (d1118)
-- **Notes:** Design Requirement 7 says "mechanical: when trigger conditions are met, the next stage activates" (Conflicts). Journey experience risk: "The system appearing to decide the next stage."
+- **Notes:** Design Requirement 7 says "mechanical: when trigger conditions are met, the next stage activates" (Conflicts). Journey experience risk: "The system appearing to decide the next stage." In conflict or tension: see Conflicts #38.
 
 ### D273 · A term the law does not define reads "Undetermined, because the city does not define it"
 - **Home:** design-journeys journey 6 step 2
@@ -2040,14 +2040,14 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "The FINDING stays the unit of truth; the CASE becomes the unit of PUBLICATION."
 - **Binds:** COURTS, ANALYSIS, LAW
 - **Reported by:** C1 (d56); C12 (d147, d148); C2 (d252, d253, d261); C7 (d642); C9 (d749, d763, d769)
-- **Notes:** MS M10: a case is a production of a project; "at least one load-bearing member required"; "A finding serves many cases across projects". Corrected the built model (store.mjs:3539 published one inquiry). DEC-72: "A finding is mined, often involving hard work. So once resolved, the finding should have lasting value." SR amendment `published` (DEC-72 / CASE-4): "only a CONCLUDED finding may be a case member" (`NOT_CONCLUDED`). Publication §3 rule 2: "Only a project publishes, and only its manager". A published case carries bar, strengths, bias manifest, subject-response declaration and exclusion statement (canon-mission §4f).
+- **Notes:** MS M10: a case is a production of a project; "at least one load-bearing member required"; "A finding serves many cases across projects". Corrected the built model (store.mjs:3539 published one inquiry). DEC-72: "A finding is mined, often involving hard work. So once resolved, the finding should have lasting value." SR amendment `published` (DEC-72 / CASE-4): "only a CONCLUDED finding may be a case member" (`NOT_CONCLUDED`). Publication §3 rule 2: "Only a project publishes, and only its manager". A published case carries bar, strengths, bias manifest, subject-response declaration and exclusion statement (canon-mission §4f). In conflict or tension: see Conflicts #9.
 
 ### D289 · An imported published case arrives as findings, re-graded in the new context with no inherited standing; signature, edition and hash are checkable facts about it, not a grade; it lands in a new project per distinct source bias
 - **Home:** DEC-40 det. 4 (corrected by DEC-44); DEC-45; DEC-46 (3) (overruling DEC-45 det. 2); MILESTONES M6
 - **Quote:** "A published case imported elsewhere is a FINDING and gets no inherited standing"
 - **Binds:** COURTS, ANALYSIS
 - **Reported by:** C1 (d55); C12 (d142, d143, d149, d153); C4 (d453); C7 (d626); M3 (d1086)
-- **Notes:** DEC-46 (3): "The manifest preserves the lens as a RECORD and does not make it USABLE"; association with an existing project is a separate authored act where regrade fires. inquiry-grammar R11 / strength R33: "the edition's grades stand as published: DEC-96 item 1"; "a finding's bytes name no case (CASE-5b)" (see Conflicts on re-grading).
+- **Notes:** DEC-46 (3): "The manifest preserves the lens as a RECORD and does not make it USABLE"; association with an existing project is a separate authored act where regrade fires. inquiry-grammar R11 / strength R33: "the edition's grades stand as published: DEC-96 item 1"; "a finding's bytes name no case (CASE-5b)" (see Conflicts on re-grading). In conflict or tension: see Conflicts #8, #50.
 
 ### D290 · A source's bias is PRESERVED by the bias manifest that travels with the case; the lens APPLIED going forward is the importing instance's plus any project layer
 - **Home:** DEC-45 (L579–593)
@@ -2117,7 +2117,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "pre-flight runs real refusals without writing"
 - **Binds:** COURTS, ANALYSIS
 - **Reported by:** C2 (d281); D1 (d856); D2 (d942)
-- **Notes:** Signature is `sshsig`, checkable with `ssh-keygen`. Step three discloses unresolved RECORD contradictions (DEC-76) and asks consent for any revealed source identity (DEC-78.5).
+- **Notes:** Signature is `sshsig`, checkable with `ssh-keygen`. Step three discloses unresolved RECORD contradictions (DEC-76) and asks consent for any revealed source identity (DEC-78.5). In conflict or tension: see Conflicts #22.
 
 ### D300 · Members choose their language; groups translate, not rename, interface words; machine translations are labelled and never replace the original; signed records stay in their signing language and a translation is unofficial and links the signed original
 - **Home:** DEC-99; DEC-127 (Bob 2026-10-04; principle 8.5)
@@ -2152,7 +2152,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "Everything on which the case's conclusions are based must be presentable"
 - **Binds:** COURTS, ANALYSIS, LAW
 - **Reported by:** C2 (d313, d320); C6 (d550, d551)
-- **Notes:** DEC-119: "Not all anonymity is the same." A relied-on finding resting on a member credited only at group or project level needs an independent corroborating leg.
+- **Notes:** DEC-119: "Not all anonymity is the same." A relied-on finding resting on a member credited only at group or project level needs an independent corroborating leg. In conflict or tension: see Conflicts #21.
 
 ### D305 · The group leads everywhere it acts; the product is software, never a publisher, a person or a firm, credited quietly; outward text names the product and the group
 - **Home:** DEC-118 (Bob 2026-10-02; DR v2 §1, §9, §14; K1); DEC-124
@@ -2166,7 +2166,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "It is **"has the author stated what was excluded, and why."**"
 - **Binds:** COURTS, ANALYSIS
 - **Reported by:** C4 (d417, d418); D1 (d855)
-- **Notes:** UC-097: the exclusion acknowledgement is "disclosed, never required" (Conflicts).
+- **Notes:** UC-097: the exclusion acknowledgement is "disclosed, never required" (Conflicts). In conflict or tension: see Conflicts #44.
 
 ### D307 · Open: whether an unresolved objection to the statement travels with the published case is doctrine and not ruled
 - **Home:** Publication §3 rule 11
@@ -2224,7 +2224,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** ""OBLIGATIONs" here are member queue items (`template-review-requested`, `local-fact-due`)"
 - **Binds:** ORG, LAW, TIME
 - **Reported by:** C13 (d207); C2 (d308, d311); C9 (d754, d782); M5 (d1138)
-- **Notes:** none
+- **Notes:** In conflict or tension: see Conflicts #37.
 
 ### D315 · "Matter" names what a plan addresses; "Subject" is used only for an entity
 - **Home:** DEC-114
@@ -2301,7 +2301,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "name collisions: act vs action; OBLIGATION; consequence (DEC-14 own outcome vs breach harm); rung ladder; finding."
 - **Binds:** LAW, ORG, ANALYSIS, TIME
 - **Reported by:** C9 (d754)
-- **Notes:** See D314, D324, D323.
+- **Notes:** See D314, D324, D323. In conflict or tension: see Conflicts #37.
 
 ## Other
 
@@ -2310,7 +2310,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "the Design Requirements govern it on conflict"
 - **Binds:** all six
 - **Reported by:** C1 (d7); C3 (d391); C4 (d400, d478, d484); C6 (d570); C7 (d617); C9 (d717, d751)
-- **Notes:** AIR status: it "RULES NOTHING" (restates DEC-24, 27, 55, 60, 61, 62 and Bob's 5.7). AIR §9 and CF §19: every ruling stays in the ledger it was ruled in. Pub §10: Publication owns neither inquiry, bias, membership, platforms, interaction constructs nor isolation. State Rules banner: "the store this document describes is not the store that was built"; where it disagrees, "the dataplane state is the system". Case Making is listed as canon "whole" in requirements/README.md but its own banner says "several body sentences are now false as written" (Conflicts).
+- **Notes:** AIR status: it "RULES NOTHING" (restates DEC-24, 27, 55, 60, 61, 62 and Bob's 5.7). AIR §9 and CF §19: every ruling stays in the ledger it was ruled in. Pub §10: Publication owns neither inquiry, bias, membership, platforms, interaction constructs nor isolation. State Rules banner: "the store this document describes is not the store that was built"; where it disagrees, "the dataplane state is the system". Case Making is listed as canon "whole" in requirements/README.md but its own banner says "several body sentences are now false as written" (Conflicts). In conflict or tension: see Conflicts #35.
 
 ### D327 · The system fails if any requirement is violated
 - **Home:** DR preamble
@@ -2338,7 +2338,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "Compliance is recorded as carefully as noncompliance."
 - **Binds:** LAW, ANALYSIS, COURTS, ORG
 - **Reported by:** C1 (d30, d31, d45); C10 (d89); C3 (d343, d344, d360); D1 (d837, d882); M4 (d1106)
-- **Notes:** AC rule 4: "recognition and success stories are actions." FA: OP1 is "most tested at significance".
+- **Notes:** AC rule 4: "recognition and success stories are actions." FA: OP1 is "most tested at significance". In conflict or tension: see Conflicts #15.
 
 ### D331 · A measure never edits the statement it measures, and its scope is registry-defined rather than hand-picked
 - **Home:** CON Step 8a
@@ -2436,7 +2436,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "construct-status.json is retired (requirements/README.md); the build state is build/ (layer 9)"
 - **Binds:** all six
 - **Reported by:** C1 (d42)
-- **Notes:** none
+- **Notes:** In conflict or tension: see Conflicts #2.
 
 ### D345 · Bob's rulings DEC-1 to DEC-67 (archived ledger on `coord`) are to be brought back onto `main` because the canon cites them
 - **Home:** action-design deltas §9
@@ -2520,7 +2520,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "no outside fonts, analytics or trackers"
 - **Binds:** QUESTIONS
 - **Reported by:** C2 (d324); C9 (d724); D2 (d913); M5 (d1142)
-- **Notes:** affordances R36: the phone flag is advisory — "nothing refuses by device" (compare DEC-122's larger-screen rule for terminal acts; Conflicts).
+- **Notes:** affordances R36: the phone flag is advisory — "nothing refuses by device" (compare DEC-122's larger-screen rule for terminal acts; Conflicts). In conflict or tension: see Conflicts #52.
 
 ### D357 · `design-principles.html` (57 principles in nine families) is the yardstick every screen and wizard script is checked against
 - **Home:** DEC-123 (Bob 2026-10-03)
@@ -2709,7 +2709,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "notification kinds get **stable ids the way checks do**"
 - **Binds:** TIME, QUESTIONS
 - **Reported by:** C9 (d779, d780, d781, d789, d795)
-- **Notes:** Status: the doctrine is settled and BUILT; "MOST OF THE GENERATORS IT INVENTORIES DO NOT EXIST" (24 of 35 entries designed-not-built; 37 kinds: 12 CONDITION, 6 OBLIGATION, 19 FINDING).
+- **Notes:** Status: the doctrine is settled and BUILT; "MOST OF THE GENERATORS IT INVENTORIES DO NOT EXIST" (24 of 35 entries designed-not-built; 37 kinds: 12 CONDITION, 6 OBLIGATION, 19 FINDING). In conflict or tension: see Conflicts #41.
 
 ### D384 · Notification transport is in-app only: email would re-raise the F5 threat the inbox grammar was bounded for
 - **Home:** NOTIFICATIONS §What this does not settle (D-98)
@@ -2737,7 +2737,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Quote:** "the bound sketches … honoured with later rulings applied"
 - **Binds:** QUESTIONS, LAW, TIME
 - **Reported by:** D2 (d956)
-- **Notes:** none
+- **Notes:** In conflict or tension: see Conflicts #47.
 
 ### D388 · Rulings cited across the layer-9 and interface requirements (index for analysts): K12–K14, K102 (layer-9 approvals; State Rules §4 gains the standard, determination and consequence types), K590 (Bob's 2026-09-29 rulings 1–10 and D1–D6), K1364, K1038 and others
 - **Home:** M1 (11 layer-9 files); M5 (interface files)
