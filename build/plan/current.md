@@ -73,7 +73,7 @@
 
 ## Roster (by layer)
 
-**L1** · 18 jobs. Merge order: record-grammar → jurisdictions → civil-time → calc-grammar → connection-grammar first, because every later entry reads `ID_TABLE`, the profile, or the three engines. Then `modules.json` order, except **doctypes before docprofile** (the copy before the deletion).
+**L1** · 19 jobs (bundler added, K1513). Merge order: record-grammar → jurisdictions → civil-time → calc-grammar → connection-grammar first, because every later entry reads `ID_TABLE`, the profile, or the three engines. Then `modules.json` order, except **doctypes before docprofile** (the copy before the deletion).
 **L2** · 3 jobs: record-core first (the id allocator and `declareTable`), then membership, then credentials.
 **L3** · 2 jobs: acquisition, then sources.
 **L4** · 2 jobs: reading-pipeline (the `onRead` hook), then content.
@@ -109,6 +109,8 @@ Each line is one job (P8): every T33 entry for that module. Fields: what (draft 
 - **T33-16 · court-doctypes** *(new; GO, K1506)* · The three register doctypes (Alameda eCourt, a CourtListener docket page, a CPUC card) and the register row diff (A COURTS 2a) · K1443, K1480 · est 8 · uses docprofile, id-spaces · depends T33-9, T33-12.
 - **T33-17 · budget-doctypes** *(new; GO, K1506)* · Budget and financial-report readers; departments as dated groupings, keyed on org and fund codes (legistar-events, budget codes) (C §(c) ANALYSIS L4) · K1468, K1471 · est 8 · uses docprofile, office-readers, pdf-reader · depends T33-10, T33-12.
 - **T33-18 · sheet-worker** *(new fleet Worker; GO, K1506)* · IronCalc wasm. Recomputes a workbook and returns values with the engine version. Inert until the release (the ocr-worker precedent). Built with bundler's `writeMember` as ocr-worker is (C §(c) ANALYSIS L3) · K1448 · est 12 · uses runtime-limits, bundler, test-support · depends —.
+
+- **T33-18a · bundler** *(added under P10's exception, K1513)* · A test-only change: `fleetbundles.test.mjs`'s pinned member list gains `sheet-worker` and `GUARDED_FLOOR` goes to 4, merged right after sheet-worker (T33-18), so the new fleet member is guarded from its merge. No requirement changes meaning.
 
 ### L2
 
