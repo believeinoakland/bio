@@ -6,7 +6,7 @@
     {"id": "jurisdictions", "layer": 1, "paths": ["jurisdictions/"], "tests": ["jurisdictions/test/"], "uses": ["record-grammar"]},
     {"id": "civil-time", "layer": 1, "paths": ["bio-plane/src/civil-time/"], "tests": ["bio-plane/test/m/civil-time/"], "uses": ["record-grammar", "jurisdictions"]},
     {"id": "calc-grammar", "layer": 1, "paths": ["bio-plane/src/calc-grammar/"], "tests": ["bio-plane/test/m/calc-grammar/"], "uses": ["record-grammar", "civil-time"]},
-    {"id": "connection-grammar", "layer": 1, "paths": [], "tests": [], "uses": ["record-grammar", "civil-time"]},
+    {"id": "connection-grammar", "layer": 1, "paths": ["bio-plane/src/connection-grammar/"], "tests": ["bio-plane/test/m/connection-grammar/"], "uses": ["record-grammar", "civil-time"]},
     {"id": "test-support", "layer": 1, "paths": ["bio-plane/test/sandbox.mjs", "bio-plane/test/stdio.mjs", "pdf-worker/test/make-pdf.mjs"], "tests": ["bio-plane/test/m/test-support/"], "uses": []},
     {"id": "runtime-limits", "layer": 1, "paths": ["bio-plane/src/cpu.mjs", "bio-plane/src/tokens.mjs"], "tests": ["bio-plane/test/m/runtime-limits/"], "uses": []},
     {"id": "signatures", "layer": 1, "paths": ["bio-plane/src/sshsig.mjs", "bio-plane/src/tsa.mjs", "bio-plane/src/signpage.mjs", "bio-plane/src/sign-release.html", "bio-plane/scripts/embed-signpage.mjs", "bio-plane/scripts/sign-sshsig.mjs"], "tests": ["bio-plane/test/m/signatures/"], "uses": ["record-grammar"]},
