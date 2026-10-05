@@ -23,6 +23,6 @@
 - `node bio-plane/test/members.test.mjs`: 96 pass, 0 fail.
 - Layer tests: none (manifest).
 - Users of `MODULE_ORDER`: the full suites of promotion, provenance, calibration, extraction, content, entities, connections, progressions, bias, retrieval, ai-runs, capture-requests, plane and control-plane (`test/m/…`, `d526-refusal-order`, `mk6-bundle-names-no-author`): tests 1257, pass 1254, fail 3. Two are named reds: ai-runs `scheduler.test.mjs:123` (K1514) and entities `idmatch.test.mjs:20` (K1515). One is entities `resolve.test.mjs:177`, above.
-- `format`: 126 modules, 125 requirements files; 0 failures. `architecture membership`: 23 product files, 59 relative imports; 0 failures. `coverage membership`: 79 of 79 live requirement ids named by a test; 0 failures. `ownership membership tranche/T33`: in the commit line below.
+- `format`: 126 modules, 125 requirements files; 0 failures. `architecture membership`: 23 product files, 59 relative imports; 0 failures. `coverage membership`: 79 of 79 live requirement ids named by a test; 0 failures. `ownership membership tranche/T33`: 3 files changed; 0 failures.
 
 Size (session_0177vLzjSyU8nj98B8SxWTmZ): test runs 8, module lines 3356
