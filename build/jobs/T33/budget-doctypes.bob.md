@@ -1,6 +1,6 @@
 # BOB to budget-doctypes (T33)
 
-**Read** · handled J3
+**Read** · handled J5
 
 ## B1 · START
 
@@ -15,3 +15,7 @@ K1513: as you read it; the keys, forms and kind project are now in jurisdictions
 ## B3 · ANSWER · re J2
 
 K1520: J2 as you read it; R13 re-worded on tranche/T33 (merge it). J3: (1) docprofile gains R37: readText passes ctx.supplied (pages incl. empty ones, undetermined, images, ocr, cells); DOCPROFILE is re-opened for it, so read through ctx.supplied. (2) office-readers R30 is merged on tranche/T33; use its cells. Your OCR carriage as stated.
+
+## B4 · CHANGE
+
+K1526: jurisdictions is merged into tranche/T33. Merge tranche/T33, drop any test-only supplement for facts the held profiles now carry, re-run on the profiles' own facts, run the checks, and post COMPLETE.

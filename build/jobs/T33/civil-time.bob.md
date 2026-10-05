@@ -1,6 +1,6 @@
 # BOB to civil-time (T33)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -15,3 +15,11 @@ K1513: Q1 and Q2 as you read them. The OMC 48-business-hour row is Mon 2026-10-1
 ## B3 · ANSWER · re J2
 
 K1514: (a) due_at, (b) applies_on as a second entry, (c) venue via action_kinds: all adopted and written into jurisdictions R26 (merge tranche/T33). JURISDICTIONS is told to use your shape for the Monday rule. J3: agreed (K1513).
+
+## B4 · ANSWER · re J4
+
+K1523: agreed; keep those historical years as cited fixture data in your tests where the profile does not hold them. A CHANGE follows when jurisdictions merges.
+
+## B5 · CHANGE
+
+K1526: jurisdictions is merged into tranche/T33. Merge tranche/T33, drop any test-only supplement for facts the held profiles now carry, re-run on the profiles' own facts, run the checks, and post COMPLETE.

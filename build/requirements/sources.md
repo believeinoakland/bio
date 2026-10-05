@@ -1,6 +1,6 @@
 # sources — requirements
 
-**Status** · APPROVED by Bob 2026-09-30 (K509 (1): a new product module, placed after `capture` in layer 3). DRAFT by a worker for BOB #69, 2026-09-30 (`build/plan/draft-N345-dec78-80-81.md` §2), reviewed by BOB (K497); Bob ruled its questions as recommended (K509: (1) this module; (4) a pseudonym is an identity detail, consent by the source's knocker secret or a member's evidenced record; (5) hand-carried material's rule recorded here, R12, its intake built with the upload redesign). Folded by a worker for BOB #71, 2026-09-30 (T16 opening). Layer 3. Code today: none; the module is written new by its first job. Met in T16 (SOURCES #1, K541). AMENDED by a fold worker for BOB #106 on `prep/T29-folds`, 2026-10-03, entry N529, ruling K1333 (`case-authoring`'s disclosures moved to `case-disclosures`): the Callers' reader of R8 re-pointed from `case-authoring` R37 to `case-disclosures` R4; wording only, no meaning changed.
+**Status** · APPROVED by Bob 2026-09-30 (K509 (1): a new product module, placed after `capture` in layer 3). DRAFT by a worker for BOB #69, 2026-09-30 (`build/plan/draft-N345-dec78-80-81.md` §2), reviewed by BOB (K497); Bob ruled its questions as recommended (K509: (1) this module; (4) a pseudonym is an identity detail, consent by the source's knocker secret or a member's evidenced record; (5) hand-carried material's rule recorded here, R12, its intake built with the upload redesign). Folded by a worker for BOB #71, 2026-09-30 (T16 opening). Layer 3. Code today: none; the module is written new by its first job. Met in T16 (SOURCES #1, K541). AMENDED by a fold worker for BOB #106 on `prep/T29-folds`, 2026-10-03, entry N529, ruling K1333 (`case-authoring`'s disclosures moved to `case-disclosures`): the Callers' reader of R8 re-pointed from `case-authoring` R37 to `case-disclosures` R4; wording only, no meaning changed. T33's fold, by a requirements worker for BOB #114 on `tranche/T33`, 2026-10-05, from plan entry T33-22 (K1449, K1492 (3), (6); Choices 22: `sources` holds the grade and the marking, `credentials`/`acquisition` the keyed services): R16–R18 (a member-keyed outside source: a paid people-search result marked by the member's own act on their own account, cited at a lower grade, not reproducible by the public, never bulk-imported) and R19 (the tables declared explicitly, plan Rules (6)) added; not yet met (T33-22).
 
 **Size (P6).** New. Expected well under 4,000 lines: a history table, a consent table, a read log and their reads.
 
@@ -40,12 +40,18 @@ Terms. A **source** is the person behind a capture that was given to the group r
 - **R11** A source proves who they are by presenting their knocker secret (its digest and pseudonym as `capture.knockerDigestOf` answers them), and consents to, or withdraws from, one entry for one audience, as R7 records a consent. `SECRET_NOT_RECOGNISED` (C-121.6) is answered identically for every failure, and the act is rate-bound as a knock is, in the same windows as knocks (`capture` R31): a consent attempt counts as a knock from its source (K530).
 - **R15** (K547) `source_knocks` is a read contract for later modules (`reevaluation` R28), as `inquiry` R40's columns are: one row per pulled knock a source stands behind, `(knock_id, source_id, capture_sha, bytes, received)`, written for every pulled knock of the source's pseudonym when the source is minted, and for one pulled later before any act that moves its rung; it holds no value, secret or contact, and its columns keep these names.
 
+**markKeyedResult({captureSha, service, terms, by}), keyedResultOf(captureSha)** (`op=sourcekeyed`; T33-22; K1492 (3), K1449)
+- **R16** `markKeyedResult` records that a capture is a result from a member-keyed outside source (a paid people-search database or another fee-bearing record), reached by the member's own act on their own account under the vendor's terms: `service` names the vendor, `terms` the vendor's terms as the member states them. Only by that member's own act, for a capture whose `actor` (`acquisition` R16) is that member: a machine or absent `by` is refused `MACHINE_CANNOT_MARK`, a capture of another actor `NOT_YOUR_CAPTURE`, an unknown capture `NO_SUCH_CAPTURE`, an empty `service` `NO_SERVICE`; each writes nothing. One capture per act; a mark is appended with `by` and the instant and never edited or removed. *(not yet met: T33-22)*
+- **R17** `keyedResultOf(captureSha)` answers a marked capture's `{member_keyed: true, service, by, at, reproducible_by_public: false, grade_cap}`, else null; never throws. `grade_cap` is one rank below the letter `provenance.captureGrade` answers for that capture, in `BASIS_GRADES`' order (never above it, and D stays D): a reader grading a fact that cites the capture caps its capture axis there, so the result is cited at a lower grade than a public capture of the same page. *(not yet met: T33-22)*
+- **R18** (K1492 (3), (6); K1449: never unattended) No path of this module takes rows in bulk from a member-keyed source: nothing here imports a vendor's records, and a result enters only as one capture marked by R16. No act here runs unattended: a machine credential, a daemon or a scheduled consumer is refused R16's `MACHINE_CANNOT_MARK`. Nothing records what a member searched for: the mark holds the vendor and terms, never a query, a search term or the results the member did not capture. *(not yet met: T33-22)*
+
 ## Private
 
 ### Uses
 
 - `record-grammar`: `isMachineIdentity` (its R15).
-- `record-core`: `transact`, `stampInstant`, `mintOpaqueId` (a source's id) and `mintExhausted` (its R62, when no source id can be drawn; N376), `declarePurge` (R13's exemption).
+- `record-core`: `transact`, `stampInstant`, `mintOpaqueId` (a source's id) and `mintExhausted` (its R62, when no source id can be drawn; N376), `declarePurge` (R13's exemption), and `declareTable` (its R21; R19, T33-22).
+- `provenance`: `captureGrade` (R17), and `record-grammar`'s `BASIS_GRADES` (R17).
 - `membership`: `listenerRefusal` (R10), the member session stamp, `activeAdmins` (R5's administrators).
 - `capture`: the inbox rows (`knocker_digest`, `pseudonym`, status; its R32, R66), `knocksOf` (its R67), `knockerDigestOf` (its R66; R11), the capture's `source` (`acquisition` R16, its R65), the knock's rate (its R31; R11).
 
@@ -53,6 +59,7 @@ Terms. A **source** is the person behind a capture that was given to the group r
 
 - **R12** The capturing member is never recorded as the source of what someone else gave them (Membership v2 §1.2): no act here names a capture's `actor` as its source.
 - **R13** Every table here is exempt from purge. A value is never written to a log, an error or a listener payload.
+- **R19** (plan T33, Rules (6)) This module declares every table explicitly through `record-core.declareTable` (its R21), keeping R13's exemption from purge; the tables holding a source's disclosures and stored values (R2, R5), its read log and R16's marks are declared `export: "never"`, as the link from a source to a person is (K1489), their sight being R5's. *(not yet met: T33-22)*
 - **R14** No place is named in this module's behaviour or outward text; C-121.1–C-121.6 are held in its own table.
 
 Rows C-121.1–C-121.6 (R14; N364), a new family, "a source's disclosures", with their translations:
@@ -79,6 +86,8 @@ Rows C-121.1–C-121.6 (R14; N364), a new family, "a source's disclosures", with
 - **Hand-carried material** (K509 (5)) has no intake route yet: R12 is its rule, and its intake is built with the upload redesign.
 - **Callers.** `reevaluation` registers on R10 (its R28); `publication` (its R51, R52) and `case-disclosures` (its R4) read R8; `affordances` grades the ops (its R2, R3).
 - **Tests.** Each C-121 refusal gets a negative control; R5's withheld value and read log; R3's hostile claim never reads confirmed; R7's withdrawal leaves an earlier publication's statement unchanged; R11's refusal byte-identical for a wrong secret, an unknown entry and a malformed call; R13's exemption declared.
+
+- **T33 (T33-22).** R17's cap of one rank below the capture's own letter is this fold's reading of "a lower grade" (K1492 (3)), named to BOB. The callers that grade a fact citing a marked capture (`people`, `strength`) apply `grade_cap` in their own requirements; until they do, the mark is stated beside the capture and the cap is not yet applied anywhere. The price shown first (K1449) is the member-facing surface's, the design stream's. R16's refusal codes are this fold's. R19's `export: "never"` for the marks and stored values is this fold's reading of K1489, named to BOB.
 
 ## Open for Bob
 
