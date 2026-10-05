@@ -835,6 +835,37 @@ async function docxText(parts) {
 }
 
 /* ------------------------------------------------------------------ *
+ * R31 (B §(d) EVENTS 3; K1505 (11)) — what the file states about itself
+ * ------------------------------------------------------------------ */
+
+/** `text()`'s `metadata`: the core-properties item's author and dates exactly
+ *  as `docProps/core.xml` writes them (W3CDTF strings unchanged), or NULL when
+ *  there is no readable core part. A part present but unreadable also yields
+ *  its marker for `text().undetermined`; an ABSENT part yields none, because
+ *  absence is normal OPC (ooxml R19). This states, never asserts an act (R24).
+ *  Shared by the three OOXML entries — one builder, so they cannot drift. */
+export function coreMetadata(parts) {
+  if (parts?.core) {
+    const c = parts.core;
+    return { metadata: { author: c.creator ?? null, lastModifiedBy: c.lastModifiedBy ?? null,
+      created: c.created ?? null, modified: c.modified ?? null, source: CORE_PROPERTIES_PART }, marker: null };
+  }
+  const stated = Array.isArray(parts?.undetermined) ? parts.undetermined.find((u) => u.part === CORE_PROPERTIES_PART) : null;
+  return { metadata: null,
+    marker: stated ? { reason: "metadata_unreadable", part: CORE_PROPERTIES_PART, why: stated.why } : null };
+}
+
+/** Carry `metadata` onto an ok text() result; a marker joins `undetermined`
+ *  and its count. */
+export function withMetadata(out, parts) {
+  if (!out || !out.ok) return out;
+  const { metadata, marker } = coreMetadata(parts);
+  if (!marker) return { ...out, metadata };
+  return { ...out, metadata, undetermined: [...out.undetermined, marker],
+    counts: { ...out.counts, undetermined: out.counts.undetermined + 1 } };
+}
+
+/* ------------------------------------------------------------------ *
  * The I7 entry
  * ------------------------------------------------------------------ */
 
@@ -883,6 +914,6 @@ export const docxEntry = {
       : partsOrBytes;
     /* FW-19 / IC-124: `images` — every image under word/media/, content-
        addressed, exhaustive or NULL (ooxml.mjs's `containerImages`). */
-    return withContainerImages(docxText(parts), parts, "word/media/");
+    return withContainerImages(withMetadata(await docxText(parts), parts), parts, "word/media/");
   },
 };
