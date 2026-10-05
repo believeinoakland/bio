@@ -55,3 +55,8 @@ Found in other modules (also in my record's Completion):
 1. **id-spaces (T33-9):** `recognise(view, "proceeding", …)` answers null until its `proceeding` space is built, so my test "R3 R16 R17" is red on `tranche/T33` as it stands, and that is my only red. With that one space added locally (uncommitted), all 24 pass. It clears once id-spaces merges (it precedes me in L1).
 2. **docprofile:** its seam is not built yet (its J1), so my types are tested through a stub `register`, not through `doctypeFor`/`assess`. plane wires `registerCourtTypes(registerDoctype)` after roster-reader's types, before `generic`.
 3. **following / site-profiles** (my Suggestions, BOB's): a new register row is `item_added` (ROUTINE), so a register that only grew is not `meaningful`.
+
+## J3 · COMPLETE
+
+T33-16 done, R1–R17, on K1514's readings. Code `court-doctypes/`, tests `court-doctypes/test/`. Final uses: docprofile, id-spaces, jurisdictions (court-citations unused). Row for `modules.json`: `{"paths": ["court-doctypes/"], "tests": ["court-doctypes/test/"], "uses": ["docprofile", "id-spaces", "jurisdictions"]}`.
+Tests: 24, 23 pass, 1 red (R3, until id-spaces' `proceeding` space merges; J2). With that space: 24/24. Checks (with that row set locally): format, architecture, coverage (17/17), ownership: 0 failures. I captured the fixtures myself on 2026-10-05: CourtListener 4214664 pages 2 and 4, CPUC A2106021 card and documents page 1, real sign-in, 404 and search pages, and the FICTIONAL eCourt register. Their addresses are in the fixtures README. Details are in my record's Completion section.
