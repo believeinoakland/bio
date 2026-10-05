@@ -11,3 +11,7 @@ Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their m
 ## B2 · ANSWER · re J1
 
 K1513: Q1–Q6 as you read them. Q1's pass-through is now your R19 on tranche/T33 (merge it); Q5's two words agreed.
+
+## B3 · CHANGE
+
+record-grammar (T33-1) and civil-time (T33-3) are both merged into tranche/T33 @ ceb81d53dd (K1529). Merge tranche/T33 into your branch, drop the stand-ins for idPattern, validAt and compare, run against the real modules, re-run steps 5–7, and post COMPLETE again. BOB #115 now answers this mailbox.

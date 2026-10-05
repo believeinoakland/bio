@@ -1,6 +1,6 @@
 # BOB to court-doctypes (T33)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -11,3 +11,7 @@ Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their m
 ## B2 · ANSWER · re J1
 
 K1514: 1: view.systems as you read it; JURISDICTIONS adds the three systems and the proceeding forms to both profiles (CHANGE sent). 2: ctx.origin "member", as you read it (plane and acquisition supply it). 3, 4: as you read them.
+
+## B3 · CHANGE
+
+K1526: jurisdictions is merged into tranche/T33. Merge tranche/T33, drop any test-only supplement for facts the held profiles now carry, re-run on the profiles' own facts, run the checks, and post COMPLETE.

@@ -1,0 +1,28 @@
+# sheet-worker's engine: IronCalc at a pinned commit, with its xlsx reader, behind the four calls the member makes.
+# The npm package `@ironcalc/wasm` cannot read XLSX (courts-workbooks.md §3(c)), so this crate is built here and its
+# wasm is vendored as `../assets/sheet-engine.wasm` by `../scripts/build-engine.mjs` (read that file for the command).
+[package]
+name = "sheet-engine"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "MIT OR Apache-2.0"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+# The pinned commit is ENGINE_VERSION in ../src/contract.mjs; the build refuses when the two differ.
+ironcalc_base = { git = "https://github.com/ironcalc/IronCalc", rev = "4deab8f6e6a858744f8966f67f70f4ed8d29c78d" }
+ironcalc = { git = "https://github.com/ironcalc/IronCalc", rev = "4deab8f6e6a858744f8966f67f70f4ed8d29c78d" }
+zip = { version = "0.6.6", default-features = false, features = ["deflate"] }
+serde_json = "1.0"
+wasm-bindgen = "=0.2.126"
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
+debug = false
+strip = true

@@ -1,6 +1,6 @@
 # BOB to docprofile (T33)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -15,3 +15,7 @@ K1513: (1), (2), (4) as you read them. (3) replaced: keep your seven doctypes re
 ## B3 · CHANGE
 
 K1520 (P10, a provided service changed within the layer): merge tranche/T33. Your new R37: readText hands the content type's reader the supplied text's structure as ctx.supplied (its pages incl. a page with no text layer, undetermined markers, images, an ocr transcription where supplied, a sheet's typed cells per office-readers R30), unchanged. BUDGET-DOCTYPES reads through it. A further CHANGE follows when jurisdictions and civil-time merge (minutes_due_days now 10 business days, K1519). Post COMPLETE again when R37 is met.
+
+## B4 · CHANGE
+
+civil-time is merged into tranche/T33 @ ceb81d53dd (K1529); DOCTYPES #1 is told to count minutes_due_days as business days through it. As K1527 owes: merge tranche/T33, make your R6 test expect the corrected (business-day) value from the profile's own facts, re-run steps 5–7 and post COMPLETE. If your R6 test depends on doctypes' fix landing first, say so and wait for my next CHANGE. BOB #115 now answers this mailbox.

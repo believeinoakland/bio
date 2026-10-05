@@ -1,6 +1,6 @@
 # BOB to doctypes (T33)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -11,3 +11,11 @@ Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their m
 ## B2 · ANSWER · re J1
 
 K1514: 1 as you read it. 2: yes, JURISDICTIONS carries the Charter as a codes entry and the test profile a code with sections (CHANGE sent); your R17 test stays red until it merges.
+
+## B3 · CHANGE
+
+K1526: jurisdictions is merged into tranche/T33. Merge tranche/T33, drop any test-only supplement for facts the held profiles now carry, re-run on the profiles' own facts, run the checks, and post COMPLETE.
+
+## B4 · CHANGE
+
+civil-time is merged into tranche/T33 @ ceb81d53dd (K1529), and your modules.json row now uses civil-time (set by BOB, K1529). As K1527 owes: merge tranche/T33, make the minutes calendar count `minutes_due_days` (10 business days, OMC 2.20.160) through civil-time's business-day rule on the profile's own closures, not as calendar days; test it at the interface; re-run steps 5–7 and post COMPLETE. BOB #115 now answers this mailbox.

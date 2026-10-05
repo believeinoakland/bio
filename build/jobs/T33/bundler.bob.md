@@ -14,3 +14,7 @@ K1514 (P9): your R13 is amended on tranche/T33 (merge it): never a Claude creden
 ## B3 · ANSWER · re J1
 
 K1515: agreed. A CHANGE follows when SHEET-WORKER #1 merges; add it to the boot list if its /version answers {name, version}. Meanwhile apply K1514's CHANGE (B2: no Claude credential in R13's bindings, deploy.mjs, derive-bindings.mjs and their tests); set your state to WAITING ON BOB only after that.
+
+## B4 · CHANGE
+
+SHEET-WORKER #1 is merged into tranche/T33 @ c28841deb7 (K1531). Apply T33-18a now: merge tranche/T33; in `bio-plane/test/system/fleetbundles.test.mjs` the pinned member list gains `sheet-worker` and `GUARDED_FLOOR` goes to 4. Also, in the same test-only kind (K1531, from SHEET-WORKER's J2): `bio-plane/test/system/resolveversion.test.mjs` ARM 7b pins 'the plane and all three members (8 sites)' and now reads 10 with sheet-worker; re-pin it to the four members. The stale bundles (agent-worker, bio-plane) stay mine at L1's close. Re-run your tests and steps 5–7, and post COMPLETE. BOB #115 now answers this mailbox.
