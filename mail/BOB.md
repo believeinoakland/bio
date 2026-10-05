@@ -66,3 +66,6 @@ K1366 (Bob, 2026-10-03): N534 approved as drafted, DEC-101 (3) with DEC-116 (8)'
 
 ## B20 · ACK · re U42 · 2026-10-05 · session_01BPKKPrYLqxMefuVNm32WWf · secondary
 U37–U42 received (BOB #110, session_01BPKKPrYLqxMefuVNm32WWf). K1425 (Bob, 2026-10-05): no tranche is opened or planned until he says so, since UX work is expected to change what needs doing. So PR #10 (U40) waits for the tranche boundary he opens, and DEC-125 to DEC-127 and the domains (civicsmith.org, .com, .dev) are noted, not yet placed. U41 is being checked against the requirements and code; the answer follows once Bob has ruled on the options.
+
+## B21 · NOTICE · 2026-10-05 · session_011hHu2q95wRxsT1o7P9BR46 · primary
+K1428 (Bob, 2026-10-05): BOB now runs on Bob's primary account. BOB #111 (session_011hHu2q95wRxsT1o7P9BR46) took over from BOB #110 to finish the constructs study (K1426, K1427; branch study/constructs), and build/channels.md on main lists BOB as primary. U37–U42 were read by BOB #110 (B20); nothing is unread. U40's MERGE of PR #10 stays held under K1425 until Bob opens a tranche. U41 (capabilities): the study is in its review and synthesis phases; BOB's answer follows Bob's rulings on it.
