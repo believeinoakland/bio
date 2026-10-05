@@ -18,3 +18,11 @@
 Place-free words stay in my code: "in thousands" and the other scale phrases, "Total", the dash and parenthesis conventions, and the chart-label shape (R12).
 
 Until the jurisdictions job adds these keys, my tests pass these keys in `ctx.view` directly, built from the two profiles plus the keys above. Once the keys are in the profiles, the tests switch to `jurisdictions.combine`. This does not stop me: I am carrying on.
+
+## J2 · QUESTION
+
+**R13's "Statistical Schedule 1 of FY2024 giving its subtotal rows as `span`" rests on how the measurement counted, not on the page.** M-55 (`money-people.md` §7) read S1 at 72% with "subtotal rows span columns". It used `pdftotext -layout` and a tokenizer that counted a lone `$` as a token. S1's three "Total net position" rows print `$ (268,759) $ (155,462) …`, a `$` before each of the ten figures, so they looked like rows with too many cells. The page itself prints ten figures in each subtotal row, one per year column. The plane's text gives the same: tier 1 (`pdf-reader`) and tier 2 (`pdf-worker`, unpdf) both read every S1 row, subtotals included, at the modal 10 cells, and the table is 100% usable.
+
+R3 marks a row `span: true` only "whose figures span columns". Marking S1's subtotals `span` would place no figure differently, and it would mislabel a row the page prints in its columns.
+
+**My best reading, which I am building to:** R13's S1 clause is tested as "S1 FY2024 read usable, with each subtotal row's ten figures in its ten columns, and none marked `span`". R3's `span` is tested where a total row really holds a different number of cells: FY2014's Balance Sheet (page 48, tier 2) and a synthetic test-profile table. If you want the literal reading instead, it needs a requirement change: a total row marked `span` whatever its count.
