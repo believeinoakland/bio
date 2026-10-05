@@ -57,18 +57,18 @@ test("R26 pure: with every clock made to throw (Date.now, a Date with no argumen
 
 test("R27 no place in code: the test profile's answers come from its facts alone, and change exactly as its facts change", () => {
   const t = testView();
-  const r = (v) => ct.evaluateRule({ rule: ruleOf(v, "records_answer"), anchor: day("2026-10-07", HFX), view: v }).due.value;
-  assert.equal(r(t), "2026-10-15");
-  const monWeekend = testView(); monWeekend.weekend = { ...monWeekend.weekend, days: ["mon"] };
-  assert.equal(r(monWeekend), "2026-10-13", "a Monday weekend: Thu 8, Fri 9, Sat 10, Sun 11, (Mon 12 closed), Tue 13");
-  const noHoliday = testView(); noHoliday.holidays = noHoliday.holidays.map((h) => (h.list === "statute_days" ? { ...h, days: [] } : h));
-  assert.equal(r(noHoliday), "2026-10-14");
+  const r = (v) => ct.evaluateRule({ rule: ruleOf(v, "records_answer"), anchor: day("2026-03-12", HFX), view: v }).due.value;
+  assert.equal(r(t), "2026-03-19");
+  const friSat = testView(); friSat.weekend = { ...friSat.weekend, days: ["fri", "sat"] };
+  assert.equal(r(friSat), "2026-03-22", "a Friday and Saturday weekend: Sun 15, Mon 16, (Tue 17 closed), Wed 18, Thu 19, (Fri 20, Sat 21), Sun 22");
+  const noHoliday = testView(); noHoliday.holidays = noHoliday.holidays.map((h) => (h.list === "town" ? { ...h, days: [] } : h));
+  assert.equal(r(noHoliday), "2026-03-18");
   /* a zone moved: the anchor's local time and day move with it (12:00Z is 09:00 in Halifax, 21:00 in Tokyo, past the
-     16:00 cutoff) */
+     16:30 cutoff) */
   const tokyo = testView(); tokyo.time_zone = { ...tokyo.time_zone, value: "Asia/Tokyo" };
-  const at = (v) => ct.evaluateRule({ rule: ruleOf(v, "records_answer"), anchor: "2026-10-07T12:00:00Z", view: v }).due.value;
-  assert.equal(at(t), "2026-10-15");
-  assert.equal(at(tokyo), "2026-10-18");
+  const at = (v) => ct.evaluateRule({ rule: ruleOf(v, "records_answer"), anchor: "2026-03-12T12:00:00Z", view: v }).due.value;
+  assert.equal(at(t), "2026-03-19");
+  assert.equal(at(tokyo), "2026-03-20");
   /* the first profile likewise: its records rule from its own closure list and weekend */
   assert.equal(ct.evaluateRule({ rule: ruleOf(firstView(), "records_response"), anchor: day("2026-09-15", LA), view: firstView() }).due.value, "2026-09-28");
 });
@@ -106,7 +106,7 @@ test("R28 every undetermined answer and every refusal says which kind of no and 
     ct.due({ basis: "nope" }), ct.overdueOn({ due: { undetermined: true, why: "w" }, at: "2026-10-01T00:00:00Z", side: "body" }),
     ct.span(day("2026-10-05", LA), day("2026-10-15", LA), { unit: "weeks" }),
     ct.expandRecurrence({ rrule: "FREQ=DAILY", dtstart: "2026-10-06T18:00", zone: LA, from: "2026-10-01", to: "2026-12-31" }),
-    ct.fiscalPeriod({ date: day("2026-10-05", HFX), body: "nobody", view: testView() }),
+    ct.fiscalPeriod({ date: day("2026-10-05", LA), body: "nobody", view: firstView() }),
   ];
   for (const n of nos) {
     assert.ok(n && (n.undetermined === true || (typeof n.refused === "string" && /^[A-Z_]+$/.test(n.refused))), JSON.stringify(n));

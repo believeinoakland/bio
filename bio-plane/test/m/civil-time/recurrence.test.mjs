@@ -48,6 +48,16 @@ test("R20 MONTHLY with ordinal BYDAY, BYMONTHDAY (negative too) and BYSETPOS; YE
   assert.match(gap.trace.notes.join(" "), /does not occur/);
 });
 
+test("R20 the test profile's stated meeting schedules (its recurrences) expand in its zone", () => {
+  const t = testView();
+  const sb = t.recurrences.find((r) => r.body === "Port Ellery Selectboard");
+  assert.deepEqual(values(ex(sb.rrule, sb.dtstart, t.time_zone.value, "2026-10-01", "2026-12-31")), ["2026-10-13T19:00", "2026-11-10T19:00", "2026-12-08T19:00"]);
+  const hd = t.recurrences.find((r) => r.body === "Port Ellery Harbour District");
+  const r = ex(hd.rrule, hd.dtstart, t.time_zone.value, "2026-12-01", "2027-03-01");
+  /* fortnightly from Thu 01-08; its UNTIL (2026-12-31) ends it before 2027 */
+  assert.deepEqual(values(r), ["2026-12-10T10:00", "2026-12-24T10:00"]);
+});
+
 test("R20 EXDATE and UNTIL; at most 24 months after from or 500 instances, whichever first, truncated: true", () => {
   assert.deepEqual(values(ex("FREQ=WEEKLY;BYDAY=TU;EXDATE=20261013T180000", "2026-10-06T18:00", LA, "2026-10-01", "2026-10-31")),
     ["2026-10-06T18:00", "2026-10-20T18:00", "2026-10-27T18:00"]);
@@ -89,25 +99,28 @@ test("R20 any other part is refused RRULE_UNSUPPORTED, naming it; a malformed ru
 
 test("R21 fiscalPeriod: the fiscal year holding a date under the body's fiscal_year fact, with start and end days; none held, or a band across two, undetermined", () => {
   const v = firstView(), t = testView();
-  assert.deepEqual(fiscalPeriod({ date: day("2026-10-05", LA), body: "Oakland City Council", view: v }), { label: "FY2026-27", start: "2026-07-01", end: "2027-06-30" });
-  assert.deepEqual(fiscalPeriod({ date: day("2026-06-30", LA), body: "Oakland City Council", view: v }), { label: "FY2025-26", start: "2025-07-01", end: "2026-06-30" });
-  assert.deepEqual(fiscalPeriod({ date: "2026-07-01", body: "any body", view: v }), { label: "FY2026-27", start: "2026-07-01", end: "2027-06-30" });
-  /* the local day governs: 2026-07-01T05:00Z is still 06-30 in LA */
-  assert.equal(fiscalPeriod({ date: { value: "2026-07-01T05:00:00", precision: "second", zone: "UTC" }, body: "x", view: v }).label, "FY2026-27");
-  assert.equal(fiscalPeriod({ date: minute("2026-06-30T22:00", LA), body: "x", view: v }).label, "FY2025-26");
-  /* the test profile: April, named by its start, for the Selectboard only */
-  assert.deepEqual(fiscalPeriod({ date: day("2026-03-31", HFX), body: "Port Ellery Selectboard", view: t }), { label: "FY2025", start: "2025-04-01", end: "2026-03-31" });
-  assert.deepEqual(fiscalPeriod({ date: day("2026-04-01", HFX), body: "Port Ellery Selectboard", view: t }), { label: "FY2026", start: "2026-04-01", end: "2027-03-31" });
-  const none = fiscalPeriod({ date: day("2026-04-01", HFX), body: "Port Ellery Harbour District", view: t });
-  assert.equal(none.undetermined, true);
-  assert.match(none.why, /fiscal year for Port Ellery Harbour District/);
+  /* the first profile holds no fiscal_year: undetermined, never a guessed year */
+  const none1 = fiscalPeriod({ date: day("2026-10-05", LA), body: "Oakland City Council", view: v });
+  assert.equal(none1.undetermined, true);
+  assert.match(none1.why, /fiscal year for Oakland City Council is not held/);
+  /* the test profile: every body from April, named by its start; the Harbour District from October, named by its end */
+  const SB = "Port Ellery Selectboard", HD = "Port Ellery Harbour District";
+  assert.deepEqual(fiscalPeriod({ date: day("2026-03-31", HFX), body: SB, view: t }), { label: "FY2025-26", start: "2025-04-01", end: "2026-03-31" });
+  assert.deepEqual(fiscalPeriod({ date: day("2026-04-01", HFX), body: SB, view: t }), { label: "FY2026-27", start: "2026-04-01", end: "2027-03-31" });
+  assert.deepEqual(fiscalPeriod({ date: "2026-04-01", body: "any body", view: t }), { label: "FY2026-27", start: "2026-04-01", end: "2027-03-31" });
+  assert.deepEqual(fiscalPeriod({ date: day("2026-10-05", HFX), body: HD, view: t }), { label: "HD2027", start: "2026-10-01", end: "2027-09-30" });
+  assert.deepEqual(fiscalPeriod({ date: day("2026-09-30", HFX), body: HD, view: t }), { label: "HD2026", start: "2025-10-01", end: "2026-09-30" });
+  /* the local day governs: 2026-04-01T02:00Z is still 03-31 in Halifax */
+  assert.equal(fiscalPeriod({ date: { value: "2026-04-01T02:00:00", precision: "second", zone: HFX }, body: SB, view: t }).label, "FY2026-27");
+  assert.equal(fiscalPeriod({ date: { value: "2026-04-01T02:00:00", precision: "second", zone: "UTC" }, body: SB, view: t }).label, "FY2026-27");
+  assert.equal(fiscalPeriod({ date: minute("2026-03-31T22:00", HFX), body: SB, view: t }).label, "FY2025-26");
   /* EDTF across two fiscal years */
-  const two = fiscalPeriod({ date: { value: "2026", precision: "edtf", zone: LA }, body: "x", view: v });
+  const two = fiscalPeriod({ date: { value: "2026", precision: "edtf", zone: HFX }, body: SB, view: t });
   assert.equal(two.undetermined, true);
   assert.deepEqual(two.candidates.map((c) => c.label), ["FY2025-26", "FY2026-27"]);
-  assert.equal(fiscalPeriod({ date: { value: "2026-08", precision: "edtf", zone: LA }, body: "x", view: v }).label, "FY2026-27");
+  assert.equal(fiscalPeriod({ date: { value: "2026-08", precision: "edtf", zone: HFX }, body: SB, view: t }).label, "FY2026-27");
   /* withheld as a conflict */
-  const c = firstView(); delete c.fiscal_year; c.conflicts = [{ at: "fiscal_year", values: [], says: "disagree" }];
-  assert.match(fiscalPeriod({ date: day("2026-10-05", LA), body: "x", view: c }).why, /withheld/);
+  const c = testView(); delete c.fiscal_year; c.conflicts = [{ at: "fiscal_year", values: [], says: "disagree" }];
+  assert.match(fiscalPeriod({ date: day("2026-10-05", HFX), body: SB, view: c }).why, /withheld/);
   assert.throws(() => fiscalPeriod({ date: day("2026-10-05", LA), view: v }), TypeError);
 });

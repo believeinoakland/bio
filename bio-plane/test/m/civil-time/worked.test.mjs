@@ -67,11 +67,11 @@ test("R29 E2 (negative only): 30 days then CCP § 1010.6's 2 court days, counted
 });
 
 test("R29 R1: six months from the mailing of a rejection on 2023-11-17 is 2024-05-17 (Gov. Code § 945.6(a)(1))", () => {
-  row("R1", ruleOf(firstView(), "government_claim"), day("2023-11-17", Z), "2024-05-17", "2024-05-18");
+  row("R1", ruleOf(firstView(), "claim_suit_after_rejection"), day("2023-11-17", Z), "2024-05-17", "2024-05-18");
 });
 
 test("R29 C1: a special meeting on Mon 2026-10-19 is timely noticed by noon on Fri 2026-10-16; 12:01 is late (OMC 2.20.070(C))", () => {
-  const r = row("C1", ruleOf(firstView(), "omc_special_meeting_notice_monday"), minute("2026-10-19T18:00", Z), "2026-10-16T12:00");
+  const r = row("C1", ruleOf(firstView(), "omc_special_meeting_monday"), minute("2026-10-19T18:00", Z), "2026-10-16T12:00");
   assert.equal(r.due.precision, "minute");
   assert.notEqual(r.due.value, "2026-10-16T12:01");
 });
@@ -112,7 +112,7 @@ test("R29 F3 (derived row): FOIA from Wed 2026-11-04, Veterans Day and Thanksgiv
 });
 
 test("R29 derived timed check: the Brown Act's 72 hours before a regular meeting on Tue 2026-10-20 18:00 is Sat 2026-10-17 18:00 (not 18:01)", () => {
-  const r = row("Brown", ruleOf(firstView(), "brown_act_regular_agenda"), minute("2026-10-20T18:00", Z), "2026-10-17T18:00", "2026-10-17T18:01");
+  const r = row("Brown", ruleOf(firstView(), "agenda_posting_regular"), minute("2026-10-20T18:00", Z), "2026-10-17T18:00", "2026-10-17T18:01");
   assert.equal(r.due.precision, "minute");
 });
 

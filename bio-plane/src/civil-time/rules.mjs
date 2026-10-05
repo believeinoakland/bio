@@ -44,7 +44,6 @@ export function readRule(rule) {
   if (ext !== undefined && ext !== null) {
     if (typeof ext !== "object" || !Number.isInteger(ext.days) || ext.days <= 0) return ruleInvalid("extension", "has no positive whole number of days");
     if (ext.count !== undefined && ext.count !== "calendar" && ext.count !== "business") return ruleInvalid("extension", `count '${ext.count}' is neither calendar nor business`);
-    if (ext.from !== undefined && ext.from !== "rolled" && ext.from !== "unrolled") return ruleInvalid("extension", `from '${ext.from}' is neither rolled nor unrolled`);
   }
   return { units, amount, direction, count, roll: rule.roll === true, closures: rule.closures ?? null };
 }
@@ -297,19 +296,15 @@ function evaluateOn(r, rule, anchor, view, office, tolled, factOf, list, zone) {
   return { due, trace, results, cal };
 }
 
-/* R12: the extension counted from the original due, as R9–R10 count; both readings where the sources leave its start
-   open (from day n before the roll or after it), unless the profile states `from`. */
+/* R12: the extension counted from the original due, as R9–R10 count; both readings, since the sources leave its start
+   open (from day n before the roll or after it); where they agree, one date (K1504 (2)). */
 function extend(r, rule, base, view, office, tolled, zone, trace) {
   const ext = rule.extension;
   const er = { ...r, units: "days", amount: ext.days, count: ext.count || r.count || "calendar" };
   const dir = r.direction === "backward" ? -1 : 1;
   const cal = base.cal;
   const starts = [];
-  for (const x of base.results) {
-    if (ext.from === "unrolled") starts.push(x.unrolled);
-    else if (ext.from === "rolled") starts.push(x.day);
-    else starts.push(x.unrolled, x.day);
-  }
+  for (const x of base.results) starts.push(x.unrolled, x.day);
   const t = { skipped: [], roll: [], notes: [] };
   const days = [];
   for (const s of [...new Set(starts)]) {
@@ -321,7 +316,7 @@ function extend(r, rule, base, view, office, tolled, zone, trace) {
   }
   days.sort((x, y) => x - y);
   const lo = days[0], hi = days[days.length - 1];
-  if (ext.from === undefined && lo !== hi)
+  if (lo !== hi)
     t.notes.push("the sources leave open whether the extension counts from the period's last day before or after its roll: both readings are kept (K1504 (2))");
   trace.extension = { days: ext.days, count: er.count, when: ext.when ?? null, citation: ext.citation ?? null, ...t };
   return lo === hi ? dueAtTime(rule, lo, zone, view, office, trace) : { candidates: [dayDt(lo, zone), dayDt(hi, zone)] };
