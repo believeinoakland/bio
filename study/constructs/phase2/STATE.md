@@ -22,9 +22,9 @@
 | M2 | prompts/M2.txt | notes/M2.md | done |  |
 | M3 | prompts/M3.txt | notes/M3.md | done |  |
 | M4 | prompts/M4.txt | notes/M4.md | done |  |
-| M5 | prompts/M5.txt | notes/M5.md | partial | affordances.txt: not started; op-declarations.txt: not started; wizard-scripts.txt: not started; tasks.txt: not started; queue.txt: not started; control-plane.txt: not started; publication.txt: not started; corpus-export.txt: not started; final section not written |
-| M6 | prompts/M6.txt | notes/M6.md | partial | contradiction.txt: not started; case-authoring.txt: not started; promotion.txt: not started; docket.txt: not started; case-grammar.txt: not started; case-import.txt: not started; case-disclosures.txt: not started; queue-producers.txt: not started; final section not written |
-| M7 | prompts/M7.txt | notes/M7.md | missing |  |
+| M5 | prompts/M5.txt | notes/M5.md | done |  |
+| M6 | prompts/M6.txt | notes/M6.md | done |  |
+| M7 | prompts/M7.txt | notes/M7.md | partial | record-core.txt: not started; provenance.txt: not started; membership.txt: not started; instance-setup.txt: not started; text-chain.txt: not started; reading-pipeline.txt: not started; ratification.txt: not started; review.txt: not started; project-stage.txt: not started; final section not written |
 | X-REGISTER | prompts/X-REGISTER.txt | digest/DOCTRINE-REGISTER.md | missing |  |
 | A-EVENTS | prompts/A-EVENTS.txt | studies/EVENTS.md | missing |  |
 | A-INTEGRATION | prompts/A-INTEGRATION.txt | studies/INTEGRATION.md | missing |  |
