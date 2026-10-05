@@ -1,6 +1,6 @@
 # sheet-worker (T33)
 
-**Status** · session_01DytKFDiU55w9sQyB8CR7kJ · depth 2 · WORKING · handled B2
+**Status** · session_01DytKFDiU55w9sQyB8CR7kJ · depth 2 · RUNNING until 2026-10-05T23:10:45Z (corpus re-measurement: 289 workbooks through the engine (R14 bounds, R15 figures)) · handled B2
 
 ## J1 · QUESTION
 
