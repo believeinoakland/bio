@@ -25,4 +25,4 @@ Every unit's prompt is `prompts/<id>.txt`. `python3 status.py` reads each unit's
 7. **If usage runs out**, Bob starts a BOB on his other account (as for the first study, `../RESUME.md` "Between the two accounts"); that BOB reads this file and `STATE.md`.
 
 ## State
-- 2026-10-05: protocols written; phase 1 started (23 readers).
+- 2026-10-05 ~15:35 UTC: protocols written; phase 1 started: C1–C14, D1, D2, M1–M4 running (20, the session's limit); M5, M6, M7 start as readers finish.
