@@ -34,3 +34,11 @@ Two points on R9–R11/R17 that depend on `jurisdictions` (T33-2), with my best 
 - With `doctypes`' `paths`/`tests` set as above in a scratch `modules.json` (not committed): `architecture.mjs … doctypes` · 23 product files, 47 relative imports; 0 failures. `coverage.mjs … doctypes` · 24 of 24 live ids named by a test; 0 failures. `ownership.mjs … doctypes tranche/T33` · 24 files changed; 0 failures. With the registered empty paths, architecture and coverage see no files (BOB's merge step).
 
 Size (session_01XZrZmtoRays9vT3h9cANPd): test runs 21, module lines 2614
+
+## J2 · REPORT
+
+For `jurisdictions` (T33-2, not yet merged), before its merge; the error is mine, from J1.
+1. The first profile's `omc` `sections.markers` is `["letter","numeral","paren_letter"]`, which J1 proposed. The captured code prints `A.`, `1.`, `a.`, `i.`, `(1)` (8.22.070 B.5.d.1; `doctypes/test/fixtures/codifier.json`), so the measured order is `["letter","numeral","letter","roman","paren_numeral"]` (doctypes reads `letter` in either case, the level's first value setting it). As held, a reading under the held view misses every `a.` and `i.` level.
+2. The Charter has no `codes` entry on that branch (K1514 said it would). Measured: number `\d{3,4}` (`Section 200.`), no separators, markers `["paren_letter","paren_numeral","paren_letter","roman"]`. That branch's `validate` may refuse an empty `separators`.
+doctypes' own tests lay these facts on the view (`CODIFIER_SECTIONS`, `CHARTER`), so they pass either way; with that branch merged into a scratch copy, doctypes' suite is 25 pass, 0 fail.
+3. No module yet turns the codifier's JSON (one document per section, time-law §4) into text; doctypes' tests do it in a helper. A later entry's.
