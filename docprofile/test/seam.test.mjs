@@ -126,3 +126,14 @@ test("R37 readText hands the reader the supplied structure as ctx.supplied, unch
   readText(sheet, {});
   assert.equal(seen.supplied, sheet);
 });
+
+test("R36 the shared helper practiceValue carries the unit a profile counts in, so no reader counts business days as calendar days", () => {
+  const view = (fact) => ({ practice: { minutes_due_days: fact } });
+  assert.deepEqual(dp.practiceValue({ view: view({ value: 10, count: "business", basis: "OMC 2.20.160" }) }, "minutes_due_days"),
+                   { value: 10, basis: "OMC 2.20.160", count: "business" });
+  assert.deepEqual(dp.practiceValue({ view: view({ value: 21, basis: "m" }) }, "minutes_due_days"),
+                   { value: 21, basis: "m", count: null }, "no stated unit is stated as none, never assumed");
+  for (const bad of [{ value: 0 }, { value: 2.5 }, { value: "10" }, null])
+    assert.equal(dp.practiceValue({ view: view(bad) }, "minutes_due_days"), null);
+  assert.equal(dp.practiceValue({ view: {} }, "minutes_due_days"), null);
+});
