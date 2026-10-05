@@ -22,7 +22,7 @@
     {"id": "text-chain", "layer": 1, "paths": ["bio-plane/src/textchain.mjs"], "tests": ["bio-plane/test/m/text-chain/"], "uses": ["record-grammar"]},
     {"id": "site-profiles", "layer": 1, "paths": ["site-profiles/"], "tests": ["site-profiles/test/"], "uses": []},
     {"id": "docprofile", "layer": 1, "paths": ["docprofile/"], "tests": ["docprofile/test/"], "uses": ["jurisdictions", "site-profiles"]},
-    {"id": "doctypes", "layer": 1, "paths": ["doctypes/"], "tests": ["doctypes/test/"], "uses": ["docprofile", "jurisdictions", "site-profiles"]},
+    {"id": "doctypes", "layer": 1, "paths": ["doctypes/"], "tests": ["doctypes/test/"], "uses": ["civil-time", "docprofile", "jurisdictions", "site-profiles"]},
     {"id": "legistar-reader", "layer": 1, "paths": ["legistar-reader/"], "tests": ["legistar-reader/test/"], "uses": ["docprofile"]},
     {"id": "roster-reader", "layer": 1, "paths": ["roster-reader/"], "tests": ["roster-reader/test/"], "uses": ["docprofile"]},
     {"id": "court-doctypes", "layer": 1, "paths": ["court-doctypes/"], "tests": ["court-doctypes/test/"], "uses": ["docprofile", "id-spaces", "jurisdictions"]},
