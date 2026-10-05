@@ -267,17 +267,16 @@ test("R3 R8 the minutes-due date is the profile's practice counted by civil-time
   delete noWeekend.weekend;
   assert.equal(due("3/2/2026", view(noWeekend)).expected_by, null);
   assert.match(due("3/2/2026", view(noWeekend)).why, /weekend/);
-  // the held first profile: 10 business days (OMC 2.20.160). Its practice names no closure list, and it holds its
-  // closures only as named lists, so the count is not made and says why (reported, jurisdictions R7) …
-  const held = due("10/13/2026", HELD);
-  assert.equal(held.expected_by, null);
-  assert.match(held.why, /10 business days could not be counted/);
-  // … and with the list its ordinances count on named (the City's, K1504 (5)), Tuesday 13 October 2026 gives 27 October
-  const named = structuredClone(HELD);
-  named.practice.minutes_due_days.closures = "city";
-  assert.equal(due("10/13/2026", named).expected_by, "2026-10-27");
-  // Thanksgiving and the day after are the City's closures: 19 November 2026 gives 7 December
-  assert.equal(due("11/19/2026", named).expected_by, "2026-12-07");
+  // the held first profile: 10 business days (OMC 2.20.160) on the City's holiday list (K1504 (5)), as its practice names.
+  // Tuesday 13 October 2026 gives 27 October; 19 November gives 7 December (Thanksgiving and the day after skipped)
+  assert.equal(due("10/13/2026", HELD).expected_by, "2026-10-27");
+  assert.match(due("10/13/2026", HELD).why, /more than 10 business days ago/);
+  assert.equal(due("11/19/2026", HELD).expected_by, "2026-12-07");
+  // the same practice naming no closure list, in a view holding its closures only as named lists: not counted, and why
+  const unnamed = structuredClone(HELD);
+  delete unnamed.practice.minutes_due_days.closures;
+  assert.equal(due("10/13/2026", unnamed).expected_by, null);
+  assert.match(due("10/13/2026", unnamed).why, /10 business days could not be counted/);
 });
 
 /* --------------------------------------------------------------------- R18 */
