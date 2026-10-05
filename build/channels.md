@@ -4,5 +4,5 @@ The participants of the cross-account channel (bio K954). Each writes only its o
 
 | name | account | mail branch | outbox | letter | writes |
 | --- | --- | --- | --- | --- | --- |
-| `BOB` | secondary | `mail/BOB` | `mail/BOB.md` | B | BOB and its successors |
+| `BOB` | primary | `mail/BOB` | `mail/BOB.md` | B | BOB and its successors |
 | `UX-DESIGN` | primary | `mail/UX-DESIGN` | `mail/UX-DESIGN.md` | U | the UX design session and its successors |
