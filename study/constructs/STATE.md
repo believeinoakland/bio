@@ -30,7 +30,7 @@
 | A-QUESTIONS | prompts/A-QUESTIONS.txt | studies/QUESTIONS.md | done |  |
 | A-TIME | prompts/A-TIME.txt | studies/TIME.md | done |  |
 | R-1 | prompts/R-1.txt | reviews/R-1.md | missing |  |
-| R-2 | prompts/R-2.txt | reviews/R-2.md | missing |  |
+| R-2 | prompts/R-2.txt | reviews/R-2.md | done |  |
 | R-3 | prompts/R-3.txt | reviews/R-3.md | missing |  |
 | S-SYNTHESIS | prompts/S-SYNTHESIS.txt | synthesis/constructs.md | missing |  |
 
