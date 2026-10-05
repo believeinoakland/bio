@@ -78,6 +78,7 @@ import {
   withContainerImages,
 } from "./ooxml.mjs";
 import { linkWrapper } from "./subresources.mjs";
+import { withMetadata } from "./docx.mjs";
 
 const UTF8 = new TextDecoder("utf-8", { fatal: false });
 
@@ -618,6 +619,46 @@ function cellValue(c, sharedStrings) {
   return { value: c.v };
 }
 
+/* R30 (C:A-3; K1448) — THE TYPED CELL. The type is read ONLY from what the
+ * file declares in `t` (ECMA-376 ST_CellType); a date a cell's style implies
+ * is not inferred, and nothing is recalculated: a formula's cached <v> is the
+ * file's statement, held beside the formula as R10's item holds it. A token
+ * outside the format's list is named, never mapped to a guess (R22). */
+const CELL_TYPES = { n: "number", s: "text", str: "text", inlineStr: "text", b: "boolean", d: "date", e: "error" };
+
+/** One walked cell -> `{ cell, undetermined? }`. `value` is the lexical value
+ *  as stored (the <v>, an inline string's text, a resolved shared string),
+ *  never re-rendered through a float; null when it cannot be resolved. */
+function typedCell(c, sheetName, sharedStrings) {
+  const type = c.t == null ? "number" : (CELL_TYPES[c.t] ?? null);
+  let value = c.t === "inlineStr" ? (c.is ?? c.v) : c.v;
+  let why = type == null ? "cell_type_unknown" : null;
+  if (c.t === "s") {
+    const r = cellValue(c, sharedStrings);
+    value = r.undetermined ? null : r.value;
+    if (r.undetermined) why = r.undetermined;
+  }
+  const formula = c.f != null;
+  return {
+    cell: { source: c.cell ? sheetCellRef(sheetName, c.cell) : null, value: value ?? null, type,
+      declared: c.t ?? null, cached: formula ? c.v : null, formula: formula ? c.f : null },
+    why,
+  };
+}
+
+/** R30's order: row, then column. A cell with no readable `r` keeps the place
+ *  of the cell before it (sorted stably), never a guessed address. */
+function rowColumnOrder(entries) {
+  let last = [0, 0];
+  const keyed = entries.map((e, i) => {
+    const corner = a1Corner(e.ref ?? "");
+    if (corner) last = [corner.row, corner.col];
+    return { e, k: last, i };
+  });
+  keyed.sort((a, b) => a.k[0] - b.k[0] || a.k[1] - b.k[1] || a.i - b.i);
+  return keyed.map((x) => x.e);
+}
+
 /* ------------------------------------------------------------------ *
  * structure(parts) -> the I2 shape (+ the IC-2 evidentiary envelope)
  * ------------------------------------------------------------------ */
@@ -877,17 +918,24 @@ function xlsxText(parts) {
          holds nothing", which is the one thing an unread sheet cannot say. */
       outSheets.push({ sheet: sheet.index, name: sheet.name, hidden: sheet.hidden,
         rows: XLSX_GRID_ROWS, cols: XLSX_GRID_COLS, usedRows: null, usedCols: null,
-        range: null, text: "", undetermined: [marker] });
+        range: null, text: "", cells: null, undetermined: [marker] });
       allUndetermined.push(marker);
       continue;
     }
     const walked = walkSheetXml(sheet.xml);
     const undetermined = [];
     const lines = [];
+    const typed = [];
     for (const row of walked.rows) {
       const vals = [];
       for (const c of row.cells) {
         if (c.f != null) formulaCount++;
+        /* R30: every cell holding a value or a formula, typed as declared. */
+        if (c.v != null || c.f != null || (c.t === "inlineStr" && c.is != null)) {
+          const tc = typedCell(c, sheet.name, sharedStrings);
+          typed.push({ ref: c.cell, cell: tc.cell });
+          if (tc.why === "cell_type_unknown") undetermined.push({ sheet: sheet.index, cell: c.cell, reason: tc.why });
+        }
         const r = cellValue(c, sharedStrings);
         if (r.undetermined) {
           undetermined.push({ sheet: sheet.index, cell: c.cell, reason: r.undetermined });
@@ -910,7 +958,7 @@ function xlsxText(parts) {
       usedRows: walked.usedRows, usedCols: walked.usedCols,
       /* FW-19 / IC-124: the sheet as a `sheet-range` unit, or NULL. */
       range: usedSheetRange(sheet.name, walked.usedRows, walked.usedCols),
-      text, undetermined });
+      text, cells: rowColumnOrder(typed).map((x) => x.cell), undetermined });
     for (const u of undetermined) allUndetermined.push(u);
   }
 
@@ -975,6 +1023,6 @@ export const xlsxEntry = {
       ? await xlsxParts(partsOrBytes)
       : partsOrBytes;
     /* FW-19 / IC-124: `images` under xl/media/, exhaustive or NULL. */
-    return withContainerImages(xlsxText(parts), parts, "xl/media/");
+    return withContainerImages(withMetadata(xlsxText(parts), parts), parts, "xl/media/");
   },
 };

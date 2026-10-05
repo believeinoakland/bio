@@ -21,10 +21,20 @@
  * writing anything — verification never writes. One expression of the render
  * lives here; the gate imports it rather than restating the header string,
  * which is how the two would drift.
+ *
+ * THE PAGE'S ID PATTERN IS REGENERATED HERE, never edited by hand (R42; S0-13,
+ * K1470). The page checks a notice's or case's id with its own copy of the
+ * pattern the plane's `noticeStatement` and `docketStatement` use, and that
+ * pattern's counter is `record-grammar`'s. `syncIdPattern` writes the plane's
+ * `OPAQUE_ID_RE` (derived from `record-grammar` in `src/sshsig.mjs`) over the
+ * page's `const OPAQUE_ID_RE = /…/;` line; `main` saves the page when that
+ * changed it, then renders. The module's tests require the committed page to be
+ * a fixed point of `syncIdPattern`, so a hand edit or a stale copy is red.
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import path from "node:path";
+import { OPAQUE_ID_RE } from "../src/sshsig.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const SIGNPAGE_SRC = path.resolve(here, "../src/sign-release.html");
@@ -39,8 +49,22 @@ export function renderSignpage(html) {
     + `export const SIGN_HTML = ${JSON.stringify(html)};\n`;
 }
 
+const ID_LINE = /^const OPAQUE_ID_RE = \/.*\/;$/m;
+
+/** The page with its id pattern's copy replaced by the plane's (R42). */
+export function syncIdPattern(html) {
+  const lines = html.match(new RegExp(ID_LINE.source, "gm")) || [];
+  if (lines.length !== 1) throw new Error(`signing page does not look right: ${lines.length} OPAQUE_ID_RE lines, expected 1`);
+  return html.replace(ID_LINE, () => `const OPAQUE_ID_RE = ${OPAQUE_ID_RE};`);
+}
+
 function main() {
-  const html = readFileSync(SIGNPAGE_SRC, "utf8");
+  const was = readFileSync(SIGNPAGE_SRC, "utf8");
+  const html = syncIdPattern(was);
+  if (html !== was) {
+    writeFileSync(SIGNPAGE_SRC, html);
+    console.log(`regenerated the page's id pattern from record-grammar: ${OPAQUE_ID_RE}`);
+  }
   writeFileSync(SIGNPAGE_OUT, renderSignpage(html));
   console.log(`embedded the signing page, ${html.length} chars, into src/signpage.mjs`);
 }
