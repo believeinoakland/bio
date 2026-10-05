@@ -39,7 +39,7 @@
  *           sheets:[{sheet, name, sheetId, state, hidden}], links, counts,
  *           evidentiary, notes};
  *           text(): {ok, container:"ods", document, sheets:[{sheet, name,
- *           hidden, text, undetermined}], rangeUnits, rangeUnitsSkipped,
+ *           hidden, text, undetermined, cells}], rangeUnits, rangeUnitsSkipped,
  *           undetermined, counts:{chars, cells, formulas, undetermined}}.
  *           Element references are IC-1's `sheet-cell` and `sheet-range`,
  *           built by IMPORTING `sheetCellRef`, `usedSheetRange` and
@@ -1301,6 +1301,52 @@ function columnName(i) {
   return out;
 }
 
+/* R46 (C:A-4) — TYPED CELLS, in `office-readers` R30's contract. ODF states a
+ * cell's type in `office:value-type` and its value in the attribute that type
+ * names, written as the file writes it; both are taken as written, never
+ * re-rendered through a binary float, and nothing is recalculated. */
+const VALUE_ATTR = Object.freeze({ float: "value", percentage: "value", currency: "value",
+  date: "date-value", time: "time-value", boolean: "boolean-value", string: "string-value" });
+const CELL_TYPE = Object.freeze({ float: "number", percentage: "number", currency: "number",
+  date: "date", time: "time", boolean: "boolean", string: "text" });
+const VALUE_ATTRS = ["value", "date-value", "time-value", "boolean-value", "string-value"];
+
+/** The cell's value attribute as written: the one its declared type names,
+ *  else the first one it carries, else null. */
+function valueAttrOf(attrs) {
+  const own = VALUE_ATTR[attrs["value-type"]];
+  if (own && attrs[own] != null) return attrs[own];
+  for (const a of VALUE_ATTRS) if (attrs[a] != null) return attrs[a];
+  return null;
+}
+
+/** A sheet's `cells` (R46): one per cell holding a value or a formula, in row
+ *  then column order, a repeated cell once at each address `walkSheet` gave
+ *  it (within R45's bound, which `walkSheet` already paid). A value type this
+ *  table does not know types nothing: `type` is null, `declared` says what
+ *  the file wrote. */
+function typedCells(sheetName, rows) {
+  const out = [];
+  for (const row of rows) {
+    for (const c of row.cells) {
+      const value = c.value ?? (c.display !== "" ? c.display : null);
+      if (c.formula == null && (value == null || value === "")) continue;
+      const type = c.valueType != null
+        ? (CELL_TYPE[c.valueType] ?? null)
+        : (c.display !== "" ? "text" : null);
+      out.push({
+        source: sheetCellRef(sheetName, c.cell),
+        value,
+        type,
+        declared: c.valueType,
+        cached: c.formula != null ? c.value : null,
+        formula: c.formula,
+      });
+    }
+  }
+  return out;
+}
+
 /** One sheet's rows and cells. ODF compresses runs with
  *  `table:number-columns-repeated` / `table:number-rows-repeated`, so a cell's
  *  ADDRESS cannot be counted off the element index — it must be accumulated
@@ -1360,8 +1406,7 @@ function walkSheet(tableXml) {
            `<text:p>` children, which is the analogue of xlsx's cached <v>. */
         const display = elementsNested(cell.inner, "p").map((p) => visibleText(p.inner)).join("\n");
         const spaces = meter.units - before;
-        const value = cell.attrs.value ?? cell.attrs["string-value"] ?? cell.attrs["date-value"]
-          ?? cell.attrs["time-value"] ?? cell.attrs["boolean-value"] ?? null;
+        const value = valueAttrOf(cell.attrs);
         const hrefs = hrefsIn(cell.inner);
         const chars = display !== "" ? display.length : (value ?? "").length;
         spend(nCols);
@@ -1700,7 +1745,9 @@ function odsText(parts) {
       rows: null, cols: null, usedRows, usedCols,
       /* FW-19 / IC-124: the sheet as a `sheet-range` unit, or NULL. */
       range: usedSheetRange(sheet.name, usedRows, usedCols),
-      text, undetermined: [] });
+      text, undetermined: [],
+      /* R46: the typed cells, `office-readers` R30's contract field for field. */
+      cells: typedCells(sheet.name, walked.rows) });
   }
   const document = outSheets.map((s) => s.text).filter((t) => t.length).join("\n");
   return {

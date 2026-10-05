@@ -2,7 +2,7 @@
 /* record-grammar: the record's shared grammar, below every module that reads or writes a document (layer 1, first in
    the order). Pure: no store, no network, no clock (R24). This is the module's one entry; each part is in its own
    file. */
-export { BUNDLE_ID_RE, ANN_ID_RE, FILENAME_RE, ISO_TS_RE } from './ids.mjs';
+export { BUNDLE_ID_RE, ANN_ID_RE, FILENAME_RE, ISO_TS_RE, ID_TABLE, idPattern, isHypothesisId } from './ids.mjs';
 export { OBJECT_TYPES, LEGACY_TYPE_ALIASES, normalizeType } from './types.mjs';
 export { CORE_FIELDS, FORBIDDEN_ALIASES, parseFrontmatter } from './frontmatter.mjs';
 export { canonicalJson } from './json.mjs';
