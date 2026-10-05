@@ -35,3 +35,11 @@ Two things in other modules that this module's reading depends on. Neither block
 2. **`office-readers` R30 (T33-10) is what makes R7 possible.** `csvEntry.text()` today joins a row's non-empty fields with tabs, so a row with an empty cell loses its column positions (measured on Socrata `m4jd-q2c4`: rows of 20 to 30 fields under a 30-column header). budget-doctypes reads lines only from R30's `cells`, and states a sheet with no cells as unread. Its tests build R30-shaped cells from the CSV fixtures until R30 merges, and they use `csvEntry.text()`'s own cells whenever present.
 
 Also, for the OCR path (K1511 left the choice to this job): a transcription is carried as `supplied.ocr: [{page, engine, regions: [{text, source}]}]`, which is `ocr-worker`'s page answer plus the engine's name. It is read only for a budget book's image-only tables or pages. A financial report is never read from OCR (R4).
+
+## J4 · QUESTION
+
+**This replaces nothing; it corrects my J2 about K1520's new R13 wording.** In J2 I said a total row in FY2014's Balance Sheet (page 48) holds a different number of cells. That came from a reader defect I have since fixed. Tier 2 prints two figure-only lines on that page with no label beside them ("Due from Oakland Redevelopment Successor Agency" and "Accrued payroll": their labels are not in the text). My reader had appended those lines to the row above, giving a 14-cell row. Each is now a row of its own, with `label: null` and a `label_why`.
+
+Read correctly, "TOTAL FUND BALANCES (DEFICITS)" holds its 7 figures in 7 columns, and page 48 is usable at 100%. Across every measured page I hold (FY2014 pp. 46, 48, 148, 167, 169; FY2019 pp. 50, 158; FY2024 pp. 49, 50, 51, 57, 179, 204, 212, in both tiers; the budget book pp. 137, 148, 196, 241, 283), no total row prints fewer cells than its table's columns.
+
+**My best reading, which I am building to:** R13's parenthesis reads "R3's `span` tested on a test-profile table, where a total row holds a different number of cells". FY2014's Balance Sheet is tested as usable, with its total row in its columns and not marked `span`. If you want R13 re-worded to match, that is yours; nothing else changes.
