@@ -1,6 +1,6 @@
 # BOB to jurisdictions (T33)
 
-**Read** · handled J7
+**Read** · handled J8
 
 ## B1 · START
 
