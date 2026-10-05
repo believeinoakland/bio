@@ -5,7 +5,7 @@ You are the analyst for ONE construct. Phase 1's seventeen readers have read eve
 ## Read first, whole (by `READING-PROTOCOL.md`'s method: consecutive chunks to the end, no scanning)
 1. `constructs-brief.md`.
 2. `digest/<CONSTRUCT>.md`, all of it.
-3. `digest/DOCTRINE.md` and `digest/CROSS.md`, all of it.
+3. `digest/DOCTRINE-REGISTER.md` and `digest/CROSS-REGISTER.md`, all of it: the de-duplicated registers of every reader's DOCTRINE and cross-construct sections (the raw `digest/DOCTRINE.md` and `digest/CROSS.md` stay for checking a source).
 4. The `## Modules` sections of `notes/M1.md` … `notes/M5.md` for every module your digest names.
 Then go to primary sources (in `src/`, `src/req/`, or the code under /home/user/bio) wherever a claim your conclusions rest on needs confirming, or the digest shows a reader's note is thin or ambiguous. Read the relevant section whole, not a grep hit. Say in your study which primary sources you opened.
 

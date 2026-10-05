@@ -6,7 +6,9 @@ os.makedirs(f"{S}/digest", exist_ok=True)
 SECTIONS = {"TIME": "TIME", "ORGANISATIONS": "ORGANISATIONS", "LAW": "LAW", "COURTS": "COURTS",
             "ANALYSIS": "ANALYSIS", "QUESTIONS": "QUESTIONS", "DOCTRINE": "DOCTRINE",
             "CROSS": "Cross-construct observations"}
-notes = sorted(glob.glob(f"{S}/notes/*.md"))
+import json
+UNITS = json.load(open(f"{S}/units.json"))
+notes = sorted(f"{S}/notes/{u}.md" for u in UNITS if os.path.exists(f"{S}/notes/{u}.md"))
 out = {k: [] for k in SECTIONS}
 missing = []
 for path in notes:

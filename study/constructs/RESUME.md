@@ -19,6 +19,7 @@ It began as the design session's question U41 (`mail/UX-DESIGN`, entry U41). Its
 |---|---|---|---|
 | 1 Reading | C1–C10, D1, D2 (canon and design documents); M1–M5 (module requirements, verified against code) | `notes/<id>.md` | `READING-PROTOCOL.md` (+ `READING-PROTOCOL-MODULES.md` for M) |
 | 1→2 Digest | script | `digest/<CONSTRUCT>.md`, `DOCTRINE.md`, `CROSS.md` | `python3 build-digests.py` |
+| 1→2 Registers | X-REGISTER | `digest/DOCTRINE-REGISTER.md`, `digest/CROSS-REGISTER.md` (the shared doctrine and cross-construct sections, de-duplicated once so six analysts need not each read 400 KB) | `prompts/X-REGISTER.txt` |
 | 2 Analysis | A-TIME, A-ORGANISATIONS, A-LAW, A-COURTS, A-ANALYSIS, A-QUESTIONS | `studies/<CONSTRUCT>.md` | `ANALYSIS-PROTOCOL.md` |
 | 3 Review | R-* (written when phase 2 starts) | `reviews/R-<id>.md` | `REVIEW-PROTOCOL.md` |
 | 4 Synthesis | BOB itself | `synthesis/constructs.md` and a rendered page for Bob | below |
@@ -31,7 +32,7 @@ Every unit's exact prompt is `prompts/<id>.txt`. `python3 status.py` reads each 
 3. `python3 status.py`. Find the earliest phase with a unit not `done`.
 4. For each such unit, start a background worker (Agent tool, general-purpose) whose prompt is `prompts/<id>.txt`, with "the study folder (…)" replaced by its absolute path. Units of one phase run in parallel. A `partial` unit resumes itself: the protocols' checkpoint rule tells the worker to keep what its output holds and continue from the first range or step not done.
 5. Commit and push the study folder after each unit completes (`sh sync.sh <the study folder> <a git worktree of study/constructs>`, or plain git), so another switch loses nothing.
-6. When phase 1 is all `done`: `python3 build-digests.py`, push, then phase 2. When phase 2 is done: phase 3, then phase 4.
+6. When phase 1 is all `done`: `python3 build-digests.py`, then X-REGISTER, push, then phase 2. When phase 2 is done: phase 3, then phase 4.
 
 ## Phase 4, the synthesis (BOB's own work)
 Read every `studies/*.md` and `reviews/*.md` whole. Write `synthesis/constructs.md`:

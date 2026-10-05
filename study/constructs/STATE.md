@@ -22,14 +22,15 @@
 | M3 | prompts/M3.txt | notes/M3.md | done |  |
 | M4 | prompts/M4.txt | notes/M4.md | done |  |
 | M5 | prompts/M5.txt | notes/M5.md | done |  |
-| R-1 | prompts/R-1.txt | reviews/R-1.md | missing |  |
-| R-2 | prompts/R-2.txt | reviews/R-2.md | missing |  |
-| R-3 | prompts/R-3.txt | reviews/R-3.md | missing |  |
+| X-REGISTER | prompts/X-REGISTER.txt | digest/DOCTRINE-REGISTER.md | missing |  |
 | A-ANALYSIS | prompts/A-ANALYSIS.txt | studies/ANALYSIS.md | missing |  |
 | A-COURTS | prompts/A-COURTS.txt | studies/COURTS.md | missing |  |
 | A-LAW | prompts/A-LAW.txt | studies/LAW.md | missing |  |
 | A-ORGANISATIONS | prompts/A-ORGANISATIONS.txt | studies/ORGANISATIONS.md | missing |  |
 | A-QUESTIONS | prompts/A-QUESTIONS.txt | studies/QUESTIONS.md | missing |  |
 | A-TIME | prompts/A-TIME.txt | studies/TIME.md | missing |  |
+| R-1 | prompts/R-1.txt | reviews/R-1.md | missing |  |
+| R-2 | prompts/R-2.txt | reviews/R-2.md | missing |  |
+| R-3 | prompts/R-3.txt | reviews/R-3.md | missing |  |
 
-Digests built: none
+Digests built: ANALYSIS.md, COURTS.md, CROSS.md, DOCTRINE.md, LAW.md, ORGANISATIONS.md, QUESTIONS.md, TIME.md
