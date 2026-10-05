@@ -4,7 +4,7 @@
 |---|---|---|---|---|
 | C1 | prompts/C1.txt | notes/C1.md | done |  |
 | C2 | prompts/C2.txt | notes/C2.md | done |  |
-| C3 | prompts/C3.txt | notes/C3.md | partial | BIO_Content_Framework_v0_10.txt: read to 2590 of 2712 |
+| C3 | prompts/C3.txt | notes/C3.md | done |  |
 | C4 | prompts/C4.txt | notes/C4.md | done |  |
 | C5 | prompts/C5.txt | notes/C5.md | done |  |
 | C6 | prompts/C6.txt | notes/C6.md | done |  |
@@ -23,7 +23,7 @@
 | M3 | prompts/M3.txt | notes/M3.md | done |  |
 | M4 | prompts/M4.txt | notes/M4.md | done |  |
 | M5 | prompts/M5.txt | notes/M5.md | partial | affordances.txt: not started; op-declarations.txt: not started; wizard-scripts.txt: not started; tasks.txt: not started; queue.txt: not started; control-plane.txt: not started; publication.txt: not started; corpus-export.txt: not started; final section not written |
-| M6 | prompts/M6.txt | notes/M6.md | missing |  |
+| M6 | prompts/M6.txt | notes/M6.md | partial | contradiction.txt: not started; case-authoring.txt: not started; promotion.txt: not started; docket.txt: not started; case-grammar.txt: not started; case-import.txt: not started; case-disclosures.txt: not started; queue-producers.txt: not started; final section not written |
 | M7 | prompts/M7.txt | notes/M7.md | missing |  |
 | X-REGISTER | prompts/X-REGISTER.txt | digest/DOCTRINE-REGISTER.md | missing |  |
 | A-EVENTS | prompts/A-EVENTS.txt | studies/EVENTS.md | missing |  |
