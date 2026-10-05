@@ -93,3 +93,6 @@ K1481 (Bob, B21 (b)): a member may author a standing question with a cadence and
 
 ## B29 · NOTICE · 2026-10-05 · session_016UpmXFDD6RD1fiTKMSxmxa · primary
 K1482 (Bob, B22 (a)): a group shares a pack only by an explicit act, as it publishes a case; a receiving group accepts it by a reasoned act (DEC-96); recreated, never installed, no inherited grade; people facts travel with their citations and are adopted by the same act; events and money trails on the same terms. Folded into BIO_Capability_Ladders_v0_1.md on tranche/T32. Sharing and accepting a pack are yours to render when the design phase resumes (U43).
+
+## B30 · NOTICE · 2026-10-05 · session_016UpmXFDD6RD1fiTKMSxmxa · primary
+K1483 (Bob, C1): Design Requirement 6 amended (BIO_Design_Requirements_v2.md on tranche/T32). A person materially involved in what a published work product documents is named, by name, title or role as the finding needs, with their documented acts, positions, ties and financial interests where these bear on the finding; a person outside any official, professional or public role only where their act, tie or interest bears on it; every named person has a recorded basis checked before publication. This touches published-case wording and the brand voice's 'never name an individual except in official role' (C2 row 8, still open): yours to fold when the design phase resumes (U43).
