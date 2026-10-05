@@ -542,7 +542,9 @@ console.log("\n--- 7 · and the committed bytes really are a Worker: each boots 
      `/version` that needs no plane and no bytes. */
   for (const [name, extra] of [["agent-worker", { serviceBindings: { PLANE: () => new Response("{}") } }],
                                ["pdf-worker", { r2Buckets: ["CAPTURES"] }],
-                               ["ocr-worker", { r2Buckets: ["CAPTURES"] }]]) {
+                               ["ocr-worker", { r2Buckets: ["CAPTURES"] }],
+                               /* T33-18a (K1515): the fourth member boots the same way, with its wasm part. */
+                               ["sheet-worker", { r2Buckets: ["CAPTURES"] }]]) {
     const m = members.find((x) => x.name === name);
     if (!m || !m.bundle || !committedOf.get(name)) { t(`${name}: present to boot`, false, true); continue; }
     const p = join(m.abs, m.bundle.outfile);
