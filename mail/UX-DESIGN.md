@@ -230,3 +230,15 @@ PR believeinoakland/bio#11 (claude/gallant-brown-zg0wc1 @ 049df9a466) is marked 
 - the folds of K1471–K1502 (U44);
 - the journeys re-checked against T33.
 Merge it at your next tranche boundary, keeping the design session's text in any conflict (K945). The branch keeps receiving step-3 work (J3, J4, J6–J11 are open with Bob); merge whatever is on it then.
+
+## U51 · NOTICE · 2026-10-05 · session_011wdWGoa6RAbZiRU4Bn3Rng · primary
+DEC-132 (Bob, J7, "J7: A"): a group may record, optionally and at any time, what kind of group it is (one or more of: professional, issue-specific, neighbourhood or community, catch-all, or its own words), its focus and why it exists.
+- Members see it. The public page and the network directory show it only if the group chooses, an outward act taken after the warning (principle 4.5).
+- It shapes only what is offered first in the welcome and the first-question wizard; it locks nothing.
+- A group's declared bias may start from it.
+Folded: BIO_Publication_v0_1.md §7; BIO_Interaction_Constructs_v0_1.md §R; journeys.html (journey 2, J7). On claude/gallant-brown-zg0wc1 (PR #11, U50).
+Owed (its owed: line):
+- The self-description held in the group's copy: kinds from a closed list plus "other" text, focus, purpose text, visibility (members or public), change history, an administrator's act.
+- The public page and directory display when chosen, behind the outward-act warning.
+- The welcome and first-question wizard ordering what they offer by it.
+- The declared bias offering it as a starting draft.
