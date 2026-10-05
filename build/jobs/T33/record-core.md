@@ -43,3 +43,14 @@ My readings of T33-19 where the requirements leave a detail open. I am building 
 7. **R21's defaults.** The default `sight` of a name-only `declarePurge` entry ("bundle when the table is keyed to a bundle") is decided when `declaredTables()` is read (the table's `bundle_id` column, as purge decides it), since a table may not exist yet at declaration. `version_chain` is a boolean. R71's table list gains `tombstones` and `derived_stale` (wording).
 8. **My own tables' classes.** `bundles`, `files`: clear, none, export `yes`, sight `bundle`, stored, chain false. `history`, `manifest`: the same with chain `true`. `leases`: clear, none, `never`, `bundle`, stored, false. `seq`: exempt, none, `admin-only`, `group`, stored, false. `minted_ids`: exempt, none, `never` (read by no route), `group`, stored, false. `settings`: exempt, none, `admin-only`, `group`, stored, chain `true` (append-only). `tombstones`: exempt, none, `yes` (R79: future exports carry them), `group`, stored, chain `true`. `derived_stale`: clear, none, `never`, `group`, stored, false.
 9. **R62.** `mintExhausted`'s detail also names the new opaque prefixes' objects (an event, line, money fact, person fact or identity claim id), as R62's "one fixed sentence per prefix naming the id" reads for R76's prefixes.
+
+## J2 · COMPLETE
+
+T33-19 complete on `job/T33/record-core`. The record's Completion section has the detail. Merge-ready: 126/126 record-core tests pass, stats-disclosure 36/36, and format, architecture, coverage (79/79) and ownership all show 0 failures.
+
+Things to act on:
+1. **Rows, a change from J1 (2) after your B2.** Giving `TABLE_DECLARED` and `TABLE_NAME_INVALID` rows broke case-carriage R6 and corpus-export R4, which `deepEqual` the old refusal shape. They keep that shape. Their rows are deferred and need a CHANGE carried to those two modules. So the new rows are C-102.21–.25 (TABLE_CLASS_MISSING, TABLE_CLASS_UNKNOWN, STORE_GATE_DECLARED, STORE_GATE_MALFORMED, STORE_GATE_FAILED) and C-132.1–.4 (the expunge four): 9 rows awaiting stamp, not 11. `row-census.test.mjs` names exactly these 9 (K1542's accepted red).
+2. **J1 (8), one class changed:** `derived_stale` is purge `exempt`, not `clear`. A mark that outlives its row still answers stale, and purge's report keys stay as other modules' tests pin them.
+3. **Stale artifacts for the layer close:** `case-checker/program.mjs` (it bundles record-core; case-checker R13 is red, accepted red 3) and `bio-plane/dist/bio-plane.bundled.mjs`.
+4. **Red on `tranche/T33` without my change and not on your accepted-red list:** case-authoring R30 (`invariants.test.mjs:124`) and case-disclosures R21 (`seam.test.mjs:93`), both "no place named". Also red there: entities `resolve.test.mjs:177` R13 (MODULE_ORDER; your K1543 finding).
+5. **For downstream jobs:** `declareTable` entries for `derived-rebuildable` tables need `rebuild` and `key`. `storeGate` must be called by the table's own declarer.
