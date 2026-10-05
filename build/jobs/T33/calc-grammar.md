@@ -2,6 +2,28 @@
 
 **Status** · session_01C7SS6rSXVbm5YnkpKzX2FE · depth 2 · WORKING · handled B1
 
+## Completion
+
+**State of the work.** Built and tested on my readings in J1; one step remains before COMPLETE: re-running R7's date tests and R9's span test on civil-time's own code once CIVIL-TIME merges (until then they ran against a local, uncommitted stand-in of `compare` and `span`, never pushed).
+
+**Entries applied.** T33-4 whole: the figure parser moved from `consequences/figures.mjs` by copy (C:A-11; R1–R3); exact decimals (`add`, `subtract`, `multiply`, `divide`, `round`; R4, R5); the closed `bio-calc/1` grammar with its twelve ops and `checkRecipe` (R6); `evaluate` with `select`, `count`, `sum`, `difference`, `ratio`, `share`, `group`, `span`, `compare`, `round`, `join` (resolver from the caller, choice 4) and `sort` by a stated quantity (R7–R12); the summation refusals by name (R13); the trace (R14); `resultKey` (R15); recorded draws and the exact hypergeometric interval (R16, R17, C §(c)); no eval, pure and exact (R18–R20).
+
+**Paths for `modules.json`.** `paths`: `bio-plane/src/calc-grammar/`; `tests`: `bio-plane/test/m/calc-grammar/`. Final `uses`: `record-grammar` (`canonicalJson`, `sha256HexSync`: R15, R16) and `civil-time` (`compare`, `span`: R7, R9, R12), unchanged from the declared row.
+
+**Choices made (the Suggestions and J1).** Figures: `$` reads as USD, `€` EUR, `£` GBP, `¥` JPY, a three-letter upper-case code as itself; qualifiers about, approximately, approx., nearly, over, `~`; scale words thousand(s), million(s), billion(s), trillion(s), k, m, mm, mn, b, bn, tn; a range takes a scale word, currency or `%` stated on one side for both; a qualified range keeps `approximate: true` beside `precision: range`. One difference from consequences' parser, by R1: `(-5)` carries two signs and is refused (consequences read it as −5); R3's test enumerates the old grammar and names that case. Ratios and shares default to 12 places, `half_even` (Suggestions). `compare` and `select` read a rounded figure as half a unit either side of its last printed place and an approximate one as settling no comparison. A `sort` orders by the stated value, sets aside a range or an undetermined cell, and keeps an undecided date pair in input order. Draws hash `seed + "\n" + key`; frame hash over the canonical JSON of the sorted frame. A recipe's inputs are `[{name, kind}]`; a table's rows are objects keyed by field name, a numeric cell a figure, a string read by `parseFigure`, or a safe integer (a float is never read, R19); a date field may carry `zone` (default UTC).
+
+**Deferred.** None.
+
+**Found in another module.** None. (consequences' own parser stays until its L9 job, T33-71, re-points to this module.)
+
+**Runs** (from `bio-plane/`): `node --test test/m/calc-grammar/`: tests 29, pass 29, fail 0 (with civil-time's stand-in). Layer tests: none named in `build/manifest.md`.
+
+**Checks** (process repository, with this module's row's paths filled in a local, uncommitted copy of `modules.json`, since BOB writes them at merge):
+- `format: 126 modules, 125 requirements files; 0 failures`
+- `architecture: 13 product files, 19 relative imports (1 naming no tracked file, not judged); 0 failures` (the one is civil-time, not yet merged)
+- `coverage: 1 modules, 20 of 20 live requirement ids named by a test; 0 failures`
+- `ownership: 14 files changed by calc-grammar between tranche/T33 and HEAD; 0 failures`
+
 ## J1 · QUESTION
 
 Readings I am building on (no answer needed unless one is wrong):
