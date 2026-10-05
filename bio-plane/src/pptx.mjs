@@ -111,7 +111,7 @@ import {
   discriminate, walkRels, relsPartFor, sizeGuard,
   CORE_PROPERTIES_PART, readCoreProperties, withContainerImages,
 } from "./ooxml.mjs";
-import { mceSkipper } from "./docx.mjs";
+import { mceSkipper, withMetadata } from "./docx.mjs";
 
 const UTF8 = new TextDecoder("utf-8", { fatal: false });
 
@@ -935,6 +935,6 @@ export const pptxEntry = {
       ? await pptxParts(partsOrBytes)
       : partsOrBytes;
     /* FW-19 / IC-124: `images` under ppt/media/, exhaustive or NULL. */
-    return withContainerImages(pptxText(parts), parts, "ppt/media/");
+    return withContainerImages(withMetadata(await pptxText(parts), parts), parts, "ppt/media/");
   },
 };
