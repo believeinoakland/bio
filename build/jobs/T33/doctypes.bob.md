@@ -11,3 +11,7 @@ Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their m
 ## B2 · ANSWER · re J1
 
 K1514: 1 as you read it. 2: yes, JURISDICTIONS carries the Charter as a codes entry and the test profile a code with sections (CHANGE sent); your R17 test stays red until it merges.
+
+## B3 · CHANGE
+
+K1526: jurisdictions is merged into tranche/T33. Merge tranche/T33, drop any test-only supplement for facts the held profiles now carry, re-run on the profiles' own facts, run the checks, and post COMPLETE.
