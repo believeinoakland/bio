@@ -140,7 +140,7 @@ export function addressOf(ctx, key, label) {
   let r;
   try { r = systemOf(readerView(ctx), [locator]); } catch { r = { origin: null, why: "its address could not be read" }; }
   if (r && r.origin === key) return { ok: true, name: r.name || key };
-  if (r && r.origin) return { ok: false, why: `its address is ${r.name || r.origin}'s, not an address the active profiles name for ${label}` };
+  if (r && r.origin) return { ok: false, why: `its address is one of ${r.name || r.origin}, not an address the active profiles name for ${label}` };
   return { ok: false, why: `no active profile names its address as ${label}'s (${(r && r.why) || "no system matches"})` };
 }
 

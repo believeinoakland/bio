@@ -38,6 +38,14 @@
 
 Size (session_01UL3CanLegQc1bhXUiyGG9N): test runs 12, module lines 873
 
+## Completion after B3 (CHANGE, K1526)
+
+I merged `tranche/T33`, which now carries jurisdictions and id-spaces, and dropped the test-only supplement. `test/helpers.mjs` now uses `combine` of each profile with the profile's own facts: its three `systems` under these keys, and its `proceeding` forms. A view may only have facts removed, never supplied. The test profile's locators are now addresses of that profile's own systems. One why was reworded ("its address is one of <system>, not an address the active profiles name for …"), and the test that matched the old fixture name now matches the wording.
+- `node --test court-doctypes/test/`: tests 24, pass 24, fail 0. The R3 red has cleared because id-spaces' `proceeding` space is merged.
+- Checks, with the `modules.json` row above set locally: format (126 modules, 125 requirements files), architecture (19 product files, 17 relative imports), coverage (17 of 17), ownership (20 files): 0 failures each.
+
+Size (session_01UL3CanLegQc1bhXUiyGG9N): test runs 15, module lines 873
+
 ## J1 · QUESTION
 
 Four points where my requirements leave a choice. I am building on my best reading of each now; only (1) and (2) change what a profile or a caller must supply.

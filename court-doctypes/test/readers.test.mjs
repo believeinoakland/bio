@@ -54,7 +54,7 @@ test("R1 R15 R17: the same page at an address no active profile names under the 
   /* an address of one type's system is not another type's */
   const crossed = CL.detect(ctxFor(P2, { view: VIEWS[FIRST], locator: LOCATORS[FIRST].documents }));
   assert.equal(crossed.confidence, "likely");
-  assert.match(crossed.why, /CPUC/);
+  assert.match(crossed.why, /its address is one of .+, not an address the active profiles name for a CourtListener docket/);
 });
 
 test("R1 R17: a page of the right address without the register's structure is not matched, with which kind of page it is", () => {
@@ -147,8 +147,8 @@ test("R3 R16 R17: the proceeding as each page states it, its number recognised t
     assert.match(r.proceeding.why.number, /has the shape of no form of the active profiles' proceeding space/);
   }
   /* and a number in the test profile's own form is recognised there */
-  const mc = EC.parse(ctxFor(ROA.replace("24CV000123", "MC-2024-0123"), { view: VIEWS[TEST], locator: LOCATORS[TEST].ecourt, origin: "member" }));
-  assert.deepEqual(mc.proceeding.number, recognise(VIEWS[TEST], "proceeding", "MC-2024-0123"));
+  const mc = EC.parse(ctxFor(ROA.replace("24CV000123", "MC-24-0123"), { view: VIEWS[TEST], locator: LOCATORS[TEST].ecourt, origin: "member" }));
+  assert.deepEqual(mc.proceeding.number, recognise(VIEWS[TEST], "proceeding", "MC-24-0123"));
   assert.ok(mc.proceeding.number);
 });
 
