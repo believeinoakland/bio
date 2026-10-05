@@ -13,9 +13,9 @@ A standalone Cloudflare Worker, reached only through the plane's `SHEET_WORKER` 
 ### Provides
 
 **POST /recompute**: body `{capture_sha, store}` → `{ok, ...}`.
-- **R1** Request checks, as `ocr-worker` R1–R3 and R5: `capture_sha` exactly 64 hex characters (lower-cased) or `BAD_SHA` (400); `store` a string or `BAD_STORE` (400); `store` exactly `"bio"` or `"scratch"` or `NAMESPACE_UNKNOWN` (400), before R2 is addressed; no `CAPTURES` binding gives `R2_NOT_CONFIGURED` (503); no bytes at `${store}/captures/${sha}` gives `NOT_FOUND` (404). *(not yet met: T33-18)*
-- **R2** Inactive until enabled: unless the instance setting `SHEET_RECOMPUTE` is exactly `"on"`, every well-formed request is answered `NOT_ENABLED` (200, `ok: false`) before any bytes are read. The member's committed configuration sets it off; an administrator turns it on after the release deploys the member (K1501). *(not yet met: T33-18)*
-- **R3** A workbook is refused, in this order, the first that applies being the one reported, each `200` with `ok: false`, `not_recomputed: "not recomputed here"` and `why`: *(not yet met: T33-18)*
+- **R1** Request checks, as `ocr-worker` R1–R3 and R5: `capture_sha` exactly 64 hex characters (lower-cased) or `BAD_SHA` (400); `store` a string or `BAD_STORE` (400); `store` exactly `"bio"` or `"scratch"` or `NAMESPACE_UNKNOWN` (400), before R2 is addressed; no `CAPTURES` binding gives `R2_NOT_CONFIGURED` (503); no bytes at `${store}/captures/${sha}` gives `NOT_FOUND` (404).
+- **R2** Inactive until enabled: unless the instance setting `SHEET_RECOMPUTE` is exactly `"on"`, every well-formed request is answered `NOT_ENABLED` (200, `ok: false`) before any bytes are read. The member's committed configuration sets it off; an administrator turns it on after the release deploys the member (K1501).
+- **R3** A workbook is refused, in this order, the first that applies being the one reported, each `200` with `ok: false`, `not_recomputed: "not recomputed here"` and `why`:
   1. `ENGINE_ABSENT`: the wasm did not load as the pinned build (R13);
   2. `NOT_A_WORKBOOK`: the bytes are not an OOXML spreadsheet container;
   3. `OVER_BOUND`: its unzipped size exceeds `MAX_UNZIPPED_BYTES` or its cells exceed `MAX_CELLS`, naming the measured value and the bound;
@@ -24,16 +24,16 @@ A standalone Cloudflare Worker, reached only through the plane's `SHEET_WORKER` 
   6. `TIME_LIMIT`: loading took longer than `TIME_BUDGET_MS`, so evaluation was not started.
 
   Checks 2–4 run before the engine loads the workbook.
-- **R4** A recomputed workbook answers `ok: true` with `engine` (`"ironcalc"`), `engine_version` (the pinned commit), `wasm_sha256`, `macros_present`, `counts` (`formula_cells`, `errors`, `volatile`), `notes`, and `cells`: one entry per formula cell, in sheet then row then column order, `{source, formula, value, type, error?, cause?, volatile}`. `source` is the cell's `sheet-cell` reference in `office-readers`' form (its R17), so a caller can pair it with that cell's cached value. `value` is the engine's result, a number written as the shortest decimal that reads back to the engine's value, never rounded further. *(not yet met: T33-18)*
-- **R5** A cell whose result is an error value has `type: "error"`, `error` the engine's code (`#VALUE!`, `#N/A`, `#NAME?`, `#CIRC!`, `#N/IMPL!`, …) and `cause`: `unsupported_function` (the formula names a function the engine does not hold, named), `implicit_intersection` (an `@` over a range), `circular` (a circular reference, as an iterating workbook gives), `not_implemented`, or `undetermined`. The answer marks each such cell "not recomputed here" and never calls it a disagreement. *(not yet met: T33-18)*
-- **R6** A cell whose formula calls a volatile function (`NOW`, `TODAY`, `RAND`, `RANDBETWEEN`, `OFFSET`, `INDIRECT`, `CELL`, `INFO`) is marked `volatile: true`. *(not yet met: T33-18)*
-- **R7** Macros are never run. A workbook carrying a VBA project is recomputed by its formulas alone, with `macros_present: true` and a note saying so. *(not yet met: T33-18)*
+- **R4** A recomputed workbook answers `ok: true` with `engine` (`"ironcalc"`), `engine_version` (the pinned commit), `wasm_sha256`, `macros_present`, `counts` (`formula_cells`, `errors`, `volatile`), `notes`, and `cells`: one entry per formula cell, in sheet then row then column order, `{source, formula, value, type, error?, cause?, volatile}`. `source` is the cell's `sheet-cell` reference in `office-readers`' form (its R17), so a caller can pair it with that cell's cached value. `value` is the engine's result, a number written as the shortest decimal that reads back to the engine's value, never rounded further.
+- **R5** A cell whose result is an error value has `type: "error"`, `error` the engine's code (`#VALUE!`, `#N/A`, `#NAME?`, `#CIRC!`, `#N/IMPL!`, …) and `cause`: `unsupported_function` (the formula names a function the engine does not hold, named), `implicit_intersection` (an `@` over a range), `circular` (a circular reference, as an iterating workbook gives), `not_implemented`, or `undetermined`. The answer marks each such cell "not recomputed here" and never calls it a disagreement.
+- **R6** A cell whose formula calls a volatile function (`NOW`, `TODAY`, `RAND`, `RANDBETWEEN`, `OFFSET`, `INDIRECT`, `CELL`, `INFO`) is marked `volatile: true`.
+- **R7** Macros are never run. A workbook carrying a VBA project is recomputed by its formulas alone, with `macros_present: true` and a note saying so.
 
 **GET /version** → `{ok: true, name: "sheet-worker", version, engine, engine_version, wasm_bytes, wasm_sha256, engine_loaded, engine_unavailable?, enabled, bounds: {max_unzipped_bytes, max_cells, time_budget_ms}}`.
-- **R8** `version` is read from the running build's `env.VERSION`. `engine_loaded` is asked, never assumed (R13), and `engine_unavailable` says why when it is false. `enabled` is R2's state. `bounds` are the limits R3 applies. *(not yet met: T33-18)*
+- **R8** `version` is read from the running build's `env.VERSION`. `engine_loaded` is asked, never assumed (R13), and `engine_unavailable` says why when it is false. `enabled` is R2's state. `bounds` are the limits R3 applies.
 
 **Any other method or path**
-- **R9** Refused `{ok: false, reason: "UNKNOWN"}` with HTTP 404. *(not yet met: T33-18)*
+- **R9** Refused `{ok: false, reason: "UNKNOWN"}` with HTTP 404.
 
 ## Private
 
@@ -45,13 +45,13 @@ A standalone Cloudflare Worker, reached only through the plane's `SHEET_WORKER` 
 
 ### Invariants
 
-- **R10** Writes nothing: no write or delete call on any binding appears in its sources; it holds no Durable Object or `PUBLISHED` binding; the bucket is unchanged after any sequence of calls (as `ocr-worker` R15). *(not yet met: T33-18)*
-- **R11** The namespace set is exactly `["bio", "scratch"]`, fixed in its source and exported frozen as `NAMESPACES`, with `PLANE_OPS` (empty) for `control-plane` to pin (as `ocr-worker` R16, R22). *(not yet met: T33-18)*
-- **R12** The answer is a function of the workbook's bytes, the pinned engine and the instance settings (`SHEET_RECOMPUTE`, the bounds); no state is kept between calls; the only read is `CAPTURES.get`; no other network or storage call is made. *(not yet met: T33-18)*
-- **R13** The engine is IronCalc built from a pinned commit with its `xlsx` feature (the npm package cannot read XLSX), vendored in the member's `assets/`, its byte length and SHA-256 fixed constants, and its bytes pinned by the bundle manifest (bundler R4). The member checks before any workbook that the wasm loaded as a compiled `WebAssembly.Module` of that length, and otherwise refuses `ENGINE_ABSENT`. *(not yet met: T33-18)*
-- **R14** `MAX_UNZIPPED_BYTES`, `MAX_CELLS` and `TIME_BUDGET_MS` are fixed constants measured at the job on the deployed runtime's limits, and the member's configuration declares its CPU limit (bundler R15). A workbook above a bound is refused, never partly recomputed. *(not yet met: T33-18)*
-- **R15** Tested on corpus workbooks (`measures-T33/courts-workbooks.md` §3): workbooks with no external links that agree whole, give every value equal to the cached one (numbers to a relative 1e-9); one fixture per refusal (an external link, over a bound) and per `cause` (`HYPERLINK`, an `@` range, an iterating workbook, array-lifted `TRIM` in `SUMPRODUCT`). The job re-measures cell and workbook agreement on the 111 link-free workbooks with this build and records the figures for `workbooks`' method note. *(not yet met: T33-18)*
-- **R16** No place is named in this module's behaviour; the same bytes and settings give the same answer in any instance. *(not yet met: T33-18)*
+- **R10** Writes nothing: no write or delete call on any binding appears in its sources; it holds no Durable Object or `PUBLISHED` binding; the bucket is unchanged after any sequence of calls (as `ocr-worker` R15).
+- **R11** The namespace set is exactly `["bio", "scratch"]`, fixed in its source and exported frozen as `NAMESPACES`, with `PLANE_OPS` (empty) for `control-plane` to pin (as `ocr-worker` R16, R22).
+- **R12** The answer is a function of the workbook's bytes, the pinned engine and the instance settings (`SHEET_RECOMPUTE`, the bounds); no state is kept between calls; the only read is `CAPTURES.get`; no other network or storage call is made.
+- **R13** The engine is IronCalc built from a pinned commit with its `xlsx` feature (the npm package cannot read XLSX), vendored in the member's `assets/`, its byte length and SHA-256 fixed constants, and its bytes pinned by the bundle manifest (bundler R4). The member checks before any workbook that the wasm loaded as a compiled `WebAssembly.Module` of that length, and otherwise refuses `ENGINE_ABSENT`.
+- **R14** `MAX_UNZIPPED_BYTES`, `MAX_CELLS` and `TIME_BUDGET_MS` are fixed constants measured at the job on the deployed runtime's limits, and the member's configuration declares its CPU limit (bundler R15). A workbook above a bound is refused, never partly recomputed.
+- **R15** Tested on corpus workbooks (`measures-T33/courts-workbooks.md` §3): workbooks with no external links that agree whole, give every value equal to the cached one (numbers to a relative 1e-9); one fixture per refusal (an external link, over a bound) and per `cause` (`HYPERLINK`, an `@` range, an iterating workbook, array-lifted `TRIM` in `SUMPRODUCT`). The job re-measures cell and workbook agreement on the 111 link-free workbooks with this build and records the figures for `workbooks`' method note.
+- **R16** No place is named in this module's behaviour; the same bytes and settings give the same answer in any instance.
 
 ### Satisfies
 
