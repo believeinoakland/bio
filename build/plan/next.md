@@ -1,12 +1,11 @@
-# Plan: next (T33)
+# Plan: next (T34)
 
-**Status** · Entries for the tranche after T32, written as T32 runs (P18). Started at T32's opening by BOB #109, 2026-10-03.
+**Status** · Entries for the tranche after T33, written as T33 runs (P18). Started at T33's opening by BOB #114, 2026-10-05.
 
 ## Entries
 
-- N540 · **a live acquisition** on the deployed copy against the sources measured before, after the first deploy carrying the Civicsmith user agent (K1365 (8)). **Hard reason:** a deployment.
-- N538 (4) · the served addresses and what waits on them. **Hard reason:** Bob's domains.
+None yet. T33's release at its close (K1501) runs the deployment-gated measurements; the work they unlock is written here then.
 
-## Carried from T32
+## Carried from T33
 
-The left-out table of `current.md` (T32), unchanged until re-read at T33's opening.
+The left-out table of `current.md` (T33), unchanged until re-read at T34's opening.
