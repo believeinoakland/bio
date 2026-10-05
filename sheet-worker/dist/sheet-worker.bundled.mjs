@@ -48,9 +48,9 @@ var ENGINE_EXPORTS = Object.freeze([
   "engine_commit",
   "__wbg_book_free"
 ]);
-var MAX_UNZIPPED_BYTES = 8e6;
-var MAX_CELLS = 2e5;
-var TIME_BUDGET_MS = 6e4;
+var MAX_UNZIPPED_BYTES = 9e6;
+var MAX_CELLS = 25e4;
+var TIME_BUDGET_MS = 12e4;
 var SETTING = "SHEET_RECOMPUTE";
 var enabledIn = (env) => (env && env[SETTING]) === "on";
 var NAMESPACES = Object.freeze(["bio", "scratch"]);

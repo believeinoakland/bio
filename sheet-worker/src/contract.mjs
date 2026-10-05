@@ -18,14 +18,23 @@ export const ENGINE_SECTION = "bio-engine";
 export const ENGINE_EXPORTS = Object.freeze(["memory", "book_load", "book_evaluate", "inspect", "engine_commit",
   "__wbg_book_free"]);
 
-/* ---- the bounds (R3, R14) ------------------------------------------------------------------------------------ */
+/* ---- the bounds (R3, R14) ------------------------------------------------------------------------------------ *
+ * Measured by SHEET-WORKER #1 (T33, 2026-10-05) running this engine build over the 288 corpus workbooks
+ * (courts-workbooks.md §3) in V8 (node), the engine Workers run, against the platform's limits: 128 MB per isolate and
+ * the 300,000 ms CPU ceiling the configuration declares. Memory binds first: the instance's linear memory runs at
+ * 3 to 7 times a workbook's unzipped size. Under these bounds the largest memory measured was 59.2 MB (8.85 MB
+ * unzipped, 17,823 formulas; the largest frame ocr-worker measured completing in an isolate is 61.3 MB) and the
+ * longest load plus evaluation 13.3 s. Above them sit the 10.3 MB Annual Progress Reports (74-75 MB, about 57 s) and
+ * five workbooks of 14-30 MB that did not finish in 600 s. The job's record holds the full figures. */
 
 /** Unzipped bytes of every part of the package, counted as they decompress. */
-export const MAX_UNZIPPED_BYTES = 8_000_000;
+export const MAX_UNZIPPED_BYTES = 9_000_000;
 /** `<c>` elements across the worksheets. */
-export const MAX_CELLS = 200_000;
-/** Milliseconds the engine may spend loading before evaluation is not started. */
-export const TIME_BUDGET_MS = 60_000;
+export const MAX_CELLS = 250_000;
+/** Milliseconds the engine may spend loading before evaluation is not started: a backstop, since every load under the
+ *  bounds took at most 6.3 s, and evaluation took at most 1.1 times its load, so a load within this leaves evaluation
+ *  inside the CPU ceiling. Read after a turn boundary (workerd advances its clock only between turns). */
+export const TIME_BUDGET_MS = 120_000;
 
 /* ---- the switch (R2) ------------------------------------------------------------------------------------------ */
 
