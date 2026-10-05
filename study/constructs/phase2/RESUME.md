@@ -26,3 +26,4 @@ Every unit's prompt is `prompts/<id>.txt`. `python3 status.py` reads each unit's
 
 ## State
 - 2026-10-05 ~15:35 UTC: protocols written; phase 1 started: C1–C14, D1, D2, M1–M4 running (20, the session's limit); M5, M6, M7 start as readers finish. K1460: protocols extended (system requirements; design for the whole; R-3 architecture review); running readers told.
+- 2026-10-05 ~15:45 UTC: phase 1 done (23 notes); digests built; the register step split in two workers (doctrine, cross), running.
