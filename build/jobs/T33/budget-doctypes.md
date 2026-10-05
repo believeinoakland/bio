@@ -2,6 +2,39 @@
 
 **Status** · session_01KjUzvZtRDGcKxhimDx7Tpo · depth 2 · WORKING · handled B3
 
+## Completion
+
+**Paths and uses (for `modules.json`).** paths `["budget-doctypes/"]`, tests `["budget-doctypes/test/"]`. Final uses: `jurisdictions`, `docprofile`, `office-readers` and `pdf-reader`. `jurisdictions` is added because the tests read the test profile and the first profile through `combine` (R12). `pdf-reader` stays: its output shape (I2 pages, `no_text_layer` and `image_unread` markers, R16 `images`) is read, and nothing is imported from it. The architecture check passes with these uses and fails without `jurisdictions`.
+
+**Entries applied.** T33-17, the whole module, new: R1–R14.
+- `index.mjs`: the three types `financial_report`, `budget_book` and `budget_table` (`contract: SUBSTANCE`), `BUDGET_TYPES` in registration order, and `registerBudgetTypes(register)`, which registers each type once per register function. Detection (R1): for a PDF, its own title words from the view in its opening 4,000 characters, plus a structural floor of 10 lines bearing a figure. For a sheet, a header row naming a fund or org column and an amount column by the view's header words, read from R30 cells, or from the text's first lines when no cells are supplied.
+- `figures.mjs`: the place-free print conventions. A figure is a token as printed; a lone `$`, `-$` or `%` split off by the text layer is rejoined. Trailing figures are cells, and a figure inside a label stays in the label. Also here: the chart-label shape (R5), the wrapped-label rule (R3), the scale phrases (R2), and the table captions and sentence rules.
+- `tables.mjs`: R2–R6. The reader works over `ctx.text`, with every row's `source` from `ctx.locate`. Table regions run between sentences and headings. The header is read from the lines above a table, and the title, period and scale from the lines above or below it. Usability is measured at the 85% modal share and needs headers. A total row whose figure count differs from the modal count is marked `span`. A figure-only line with no label read beside it is its own row, with `label: null` and a `label_why`. `pages_unread` lists the pages with no text layer, and `unread` lists image-only tables: a captioned page with no table read under a painted image.
+- OCR (R6, the choice K1511 left to this job; carriage as BOB accepted in B3): `ctx.supplied.ocr` is `[{page, engine, regions}]`, read only for a budget book's image-only table or text-less page, and marked `method: "ocr"` with its `engine`. A financial report never reads OCR (R4).
+- `lines.mjs`: R7 and R8, from `office-readers` R30 cells only. Codes are read by the view's `classification_schemes` forms; a code with no matching form is kept as written, with `form: null` and why. A wide table (one amount column per period) takes each amount's period and phase from its column header, as written. A row with no fund or org code goes to `unread`, with why. The key is fund, org, program, project, account, period and phase, as written, with a repeat numbered. Groupings are per department and period, never carried or merged across periods.
+- `assess.mjs`: R9. PDF tables are matched by title and page and rows by label; budget lines are matched by key. Events come only from the catalogue (`outcome_changed`, `item_added`, `delisted`, and `item_changed` for an org moved within a period). A reading with nothing read on either side is a failed read (`meaningful: null`).
+- `view.mjs`: every word comes from the view under K1513's keys (`jurisdictions` R6, R52). Header matching tolerates letter spacing such as "Gove rnme nt" (M-M0c's defect).
+- Fixtures (R13): pages of the four measured PDFs (ACFR FY2014, FY2019 and FY2024; budget book FY2023-25), as tier 2 supplies them, with tier 1's images and tier 1's own text of three FY2024 pages. Also the M-M1 200-figure CSV, and two cycles of Socrata line items (FY2013-15 `vmzx-e5fe`, FY2019-21 `m4jd-q2c4`). `test/fixtures/build.mjs` rebuilds the PDF fixtures, and `test/fixtures/README.md` gives each fixture's provenance. Tier 1 cannot decode FY2014 (no `/ToUnicode`), FY2019 (encrypted) or the budget book's page 137, which is why the fixtures use tier 2.
+
+**Measured results.** Every measured ACFR table is usable: FY2014 pp. 46, 48, 148, 167, 169; FY2024 pp. 49, 51, 179, 204, 212, in both tiers; FY2019 pp. 50, 158. Each is at 94–100%, above M-55's shares. That includes FY2014's Balance Sheet (82% in M-55, 100% here) and S1 FY2024 (72% in M-55, 100% here: each subtotal row's ten figures sit in its ten columns, K1520). Budget book: pp. 196, 241, 283 and 148 are usable; p148 has its 9 chart-label pairs in `skipped`; p17 is `unread` with its image's rectangle. All 200 figures of M-M1 are found exactly as printed (182 of 200 on tier 1's text; the 18 missed are p137, which tier 1 cannot decode). FY2024 p50 (Statement of Activities) reads not usable at 60%: it prints blank cells with no dash, so this is stated, not forced.
+
+**Deferred.**
+- Header alignment: `columns` holds the header lines as written. Matching each header word to a cell's column cannot be read from either tier's text: both give one line per header row with single spaces, or one word per line. Deferred until a producer gives positions. Usability does not depend on it.
+- J4 (open): R13's parenthesis names FY2014's Balance Sheet as a `span` case. Read correctly, that page has no span (its total row holds all 7 cells), so `span` is tested on a test-profile table. If BOB re-words R13, nothing in the code changes.
+
+**Found in other modules** (reported).
+- `jurisdictions` lacked the keys this module reads. J1 was answered by K1513, and JURISDICTIONS has the CHANGE. Until its merge, the tests add those keys to the views only where the profile does not yet hold them.
+- `docprofile` `readText` did not hand a type the supplied structure (J3). It is now R37 (K1520), not yet met. Until then a caller passes `ctx.supplied`, and `pipeline.assess` reads only `text`, so a budget table compared there is stated as a failed read.
+- `office-readers` R30 was needed for column positions (J3). It is merged, and the tests use its cells.
+- Generated artifacts: none stale. This module is in no bundle.
+
+**Tests and checks run** (on 6a977869d6 and its successor, after merging `tranche/T33` @ B3):
+- `node --test budget-doctypes/test/`: tests 27, pass 27, fail 0. Every live id R1–R14 is named in a test's title.
+- Layer tests: none (manifest). No service I provide is used by another module yet.
+- `format`: 126 modules, 125 requirements files; 0 failures. `architecture budget-doctypes`: 17 product files, 20 relative imports; 0 failures. `coverage budget-doctypes`: 14 of 14 live requirement ids named by a test; 0 failures. `ownership budget-doctypes tranche/T33`: 18 files changed; 0 failures. The architecture, coverage and ownership checks were run with the paths and uses above written into a scratch copy of `modules.json`, not committed, because the module's row is empty until BOB writes it at merge.
+
+Size (session_01KjUzvZtRDGcKxhimDx7Tpo): test runs 12, module lines 1777
+
 ## J1 · QUESTION
 
 **The profile keys my R1, R7 and R12 read do not exist in `jurisdictions`' requirements.** budget-doctypes R1 and R12 take report titles, statement and schedule headings, fiscal-year forms and header words from "the view (`jurisdictions` vocabulary under this module's keys)", and R7 reads codes "by the forms of the view's classification scheme (`fund`, `org`, `program`, `project`, `account`)". But `jurisdictions` R6's `vocabulary` is a closed key set that names keys for doctypes, legistar-reader and roster-reader only, so a profile carrying budget keys is refused `UNKNOWN_VOCABULARY`. And R52's `classification_schemes` (`{scheme, label, kind, codes?, basis}`, kinds `fund organisation account object program function`) has no code form and no `project` kind.

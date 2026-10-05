@@ -172,6 +172,10 @@ test("R3: wrapped labels merge, a dash is a cell, a spanning total row is kept u
   assert.ok(t.rows.filter((x) => x !== total).every((x) => x.span === false));
   /* 6 of 7 rows at the modal 3 cells: 0.857, usable. */
   assert.equal(t.modal_share, 0.857); assert.equal(t.usable, true); assert.equal(t.why, null);
+  /* Blank lines inside a page leave its table whole. */
+  const spaced = financialReport.parse(ctxFor(testPdf([COVER, STATEMENT.replace(/\n(?=Prepaid|Land)/g, "\n\n")]), TESTV));
+  assert.equal(spaced.tables.length, 1);
+  assert.deepEqual(spaced.tables[0].rows.map((x) => x.label), t.rows.map((x) => x.label));
   /* Under 85%: not usable, with the share and why. */
   const rough = financialReport.parse(ctxFor(testPdf([COVER, ROUGH]), TESTV)).tables[0];
   assert.equal(rough.usable, false); assert.equal(rough.modal_share, 0.4); assert.match(rough.why, /modal/);

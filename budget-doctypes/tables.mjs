@@ -41,12 +41,13 @@ export function linesOf(ctx) {
   const text = typeof ctx.text === "string" ? ctx.text : "";
   const locate = typeof ctx.locate === "function" ? ctx.locate : () => null;
   const out = [];
-  let offset = 0;
+  let offset = 0, page = null;
   for (const raw of text.split("\n")) {
     const lead = raw.length - raw.trimStart().length;
+    /* A blank line is placed nowhere, and stays with the page around it. */
     const source = raw.trim() ? locate(offset + lead) : null;
-    out.push({ text: raw, offset: offset + lead, source: source || null,
-               page: source && Number.isInteger(source.page) ? source.page : null });
+    if (raw.trim()) page = source && Number.isInteger(source.page) ? source.page : null;
+    out.push({ text: raw, offset: offset + lead, source: source || null, page });
     offset += raw.length + 1;
   }
   return out;

@@ -8,7 +8,7 @@
  * (a dollar sign before or after, parentheses, a leading minus, a dash for nil,
  * a percent sign), measured on the documents `measures-T33/money-people.md` §4
  * and §7 name (the FY2014 Distiller ACFR prints `282,216$`; the FY2024 Wdesk
- * ACFR prints `$ 1,405,595`; the OpenGov budget pages print `-$9,794,467` and
+ * ACFR prints `$ 1,405,595`; a rendered budget page prints `-$9,794,467` and
  * `$308,925,155 (36.5%)`). */
 
 const NUM = String.raw`(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?|\.\d+`;
@@ -98,7 +98,7 @@ export function wraps(label, next, nextIsRow = false) {
   if (/^[a-z(]/.test(next.trim())) return true;
   /* A long label left without figures, then a row whose own label is a word or
      two: one label wrapped onto the row's line (a budget's fund table prints
-     "… Oakland Parks and Recreation" over "Department $3,957,409 …"). A
+     "… Parks and Recreation" over "Department $3,957,409 …"). A
      section's name is short, in capitals or closed by a colon, and is not. */
   const words = label.trim().split(/\s+/);
   return nextIsRow && words.length >= 4 && !/:$/.test(label.trim()) && label !== label.toUpperCase()
