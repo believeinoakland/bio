@@ -85,3 +85,36 @@ T33-17 is applied: R1–R14, the whole module. The details are under "Completion
 - **Measured:** every measured ACFR table is usable (FY2014, FY2019 and FY2024, in both tiers). Budget book pp. 196, 241, 283 and 148 are usable, with p148's chart labels skipped. p17 is unread. All 200 M-M1 figures are found as printed. Two Socrata cycles give their groupings per period.
 - **Open:** J4. R13's parenthesis names FY2014 p48 as a span case, but read correctly that page has none. I test `span` on a test-profile table. If you re-word R13, no code changes.
 - **Merge order:** after `jurisdictions` (K1513's keys; until then the tests add the keys to the views only where the profile lacks them). It does not wait on docprofile's R37: until R37 is met, a caller passes `ctx.supplied`.
+
+## J6 · BLOCKED
+
+**BLOCKED (cause: tests): the first profile's `budget_headers` cannot read the measured budget line-item tables.** I applied B4: merged `tranche/T33`, dropped every test-only supplement (the views are now `combine` of the two profiles, nothing added), and re-ran on the profiles' own facts. Result: 24 tests pass and 3 fail. All three fail on one fact in `jurisdictions`' first-profile data, not on this module's code:
+- R1 "a budget line-item sheet is matched…"
+- R7 "each budget line keyed on fund and org…"
+- R13 "a budget line-item table of each of two cycles gives its departments' groupings"
+
+**The fact.** `oakland-alameda`'s `budget_headers` hold `^Fund$`, `^Org$`, `^Program$`, `^Account$`, `^Project$` and `^Department$`, and **no `amount` column**. So R1's header test (a fund or org column *and* an amount column) can never pass on the first profile. Also, the measured tables are the Socrata line items (`money-people.md` §2; `legistar-events.md` §3), and their headers are written differently:
+- FY2013-15 `vmzx-e5fe`: `budget, department, org_code, fund_code, project_code, program_code, account_code, amount`.
+- FY2015-17 `urid-amga`: `budget_year_name, department, org, fund, project, program, account, amt`.
+- FY2019-21 `m4jd-q2c4`: `department, fund, org, project, prog, acct`, and one amount column per period: `fy17_18_actuals_final_year`, `fy18_19_midcycle_adopted`, `fy19_20_biennial_working`, and the rest.
+
+**What would make the three pass** (first-profile data, the jurisdictions job's): `budget_headers` gain
+- `amount`: `^(?:amount|amt)$` and `^fy\d{2}_\d{2}_[a-z0-9_]+$`;
+- `period`: `^(?:budget|budget_year_name)$`;
+- `fund`, `org`, `program`, `project`, `account` widened to the `_code` forms and to `prog` and `acct`.
+
+The org scheme's forms need the pre-2019 bare codes (`^\d{2,5}$`: FY2013-15 writes org `11`, `1111`). Without them those orgs are read with `form: null` and why, which R7 allows, so this is not a blocker.
+
+**Not failing, but thinner readings on the first profile's facts** (for the same job if you wish):
+- no form for a dated heading ("June 30, 2024"), so the ACFR tables' `period_as_written` is null;
+- no heading for the budget book's "General Purpose Fund Revenue" or "Expenditures By Fund", so those titles are null with `title_why`;
+- the "Citywide Classification Summary" pattern cannot match the text's broken "fi" ligature (`Classi\u0000cation`).
+
+**Code changes in this round:**
+- a scheme's listed `codes` now count as forms (the test profile's funds are a code list);
+- `department_code` reads forms of kind `organisation` (the first profile files its `DP…` department codes there; R52 has no department kind);
+- a caption ("SCHEDULE 1") and a dated line ("June 30, 2024") now describe a table and never become a row. Before, they were rows only when a view heading did not cover them.
+
+The checks (format, architecture, coverage 14/14, ownership) all report 0 failures, run against a scratch `modules.json` as before. Pushed at 91925e1f86.
+
+I need the jurisdictions CHANGE above, or your reading if you see it otherwise. The rest of the job is done, and I will re-run and post COMPLETE when the profile changes.
