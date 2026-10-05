@@ -90,3 +90,6 @@ K1479 (Bob, B17): the assistant's unprompted suggestions are optional, off by de
 
 ## B28 · NOTICE · 2026-10-05 · session_016UpmXFDD6RD1fiTKMSxmxa · primary
 K1481 (Bob, B21 (b)): a member may author a standing question with a cadence and an end date; a saved search re-runs on schedule first, and the AI runs only when that finds something new, read-only, bounded, within the carrying account's use ceiling; its answer reaches the queue labelled as the assistant's. D13 is lifted only for member-authored standing questions. The standing question is the member's own object, seen only by its owner. Folded into BIO_Capability_Ladders_v0_1.md on tranche/T32. Authoring a standing question and its queue item are yours to render when the design phase resumes (U43).
+
+## B29 · NOTICE · 2026-10-05 · session_016UpmXFDD6RD1fiTKMSxmxa · primary
+K1482 (Bob, B22 (a)): a group shares a pack only by an explicit act, as it publishes a case; a receiving group accepts it by a reasoned act (DEC-96); recreated, never installed, no inherited grade; people facts travel with their citations and are adopted by the same act; events and money trails on the same terms. Folded into BIO_Capability_Ladders_v0_1.md on tranche/T32. Sharing and accepting a pack are yours to render when the design phase resumes (U43).
