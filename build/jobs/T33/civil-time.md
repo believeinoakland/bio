@@ -15,3 +15,7 @@ Q3 (rule fields R26 does not name; replaces nothing, adds to J1). Three things m
 (b) C1, OMC 2.20.070(C) (Monday special meeting: timely if made by noon on the preceding Friday): a second deadline entry with `applies_on: ["mon"]` (the anchor's local weekday it applies to; on any other weekday evaluateRule refuses RULE_INVALID naming `applies_on`... no: answers undetermined, why "the rule applies only to a meeting on mon"), `units: "days"`, `amount: 3`, `count: "calendar"`, `direction: "backward"`, `due_at: "12:00"`. A caller answers both entries; the later of the two is the safe harbour.
 (c) R15 cutoff/receipt: read from the `venue` of the `action_kinds` entry the rule's `applies_to` names (R48), so evaluateRule needs no new argument.
 If BOB or JURISDICTIONS prefer other names or shapes, one ANSWER and I follow.
+
+## J3 · REPORT
+
+For jurisdictions (T33-2), its R57 fixture (K1505 (16)): time-law.md §3's derived OMC row ("meeting Wed 2026-10-14 18:00 → Fri 2026-10-09 18:00; negative Mon 10-12 18:00") is inverted on the code's plain text. 48 hours "excluding Saturdays, Sundays and holidays" back from Wed 18:00 is Wed 0–18 (18 h) + Tue (24 h) + Mon 10-12 18:00–24:00 (6 h) = Mon 2026-10-12 18:00 when 10-12 is not a City holiday (it is not on M-190's list). Fri 10-09 18:00 would be the answer only if 10-12 were a holiday (or for 72 business hours). civil-time tests the derived row as Mon 2026-10-12 18:00, negative Fri 10-09 18:00, labelled derived; the jurisdictions job's re-derivation should agree or tell me.
