@@ -77,7 +77,7 @@ set a credential.
   for every `env`, whatever it carries, `INSTANCE_CLAUDE_TOKEN` included: the group's copy binds no Claude
   credential, and `detail` says that each member who wants the assistant connects their own Claude account
   or API key (`credentials`). It reads no binding for a Claude credential, and `INSTANCE_CLAUDE_BINDING` is
-  no longer exported. *(not yet met: T33-6)*
+  no longer exported.
 - **R14** *(retired: K1502, T33-6; the instance-level Claude credential is retired and R13 answers every `env` alike)*
 - **R15** *(retired: K1502, T33-6; no `env` gives `configured: true`, R13)*
 - **R16** `detail` is `null` exactly when `configured` is `true`, otherwise a string; the return value
@@ -87,7 +87,7 @@ set a credential.
 **instanceClaudeToken(env) → Promise\<string | null\>**
 - **R17** (K1502) Returns `null` for every `env`, `INSTANCE_CLAUDE_TOKEN` included: computed from
   `instanceClaudeStatus`'s own answer (R13), so the two can never disagree, and no Claude credential is ever
-  read from the copy's bindings. *(not yet met: T33-6)*
+  read from the copy's bindings.
 - Errors: never throws.
 
 **instanceAiCredential(env) → Promise\<{token, reason}\>**
@@ -127,7 +127,7 @@ set a credential.
   only by already being present on the `env` object the caller passes at each call; nothing exported here
   can create, change or clear it (DS-3, D-260 §6: minting and setting an account credential is a member act
   elsewhere, never a plane write path). No Claude credential is read from `env` at all (R13, R17; K1502): a
-  member's own account reference is `credentials`'. *(not yet met: T33-6)*
+  member's own account reference is `credentials`'.
 - **R24** `report()` never states a duration for synchronous work: `measured_ms` is always `null`, and
   `note` says why, rather than reporting a zero that would read as a measurement.
 - **R25** No place is named in this module (`build/layers.md`, "No jurisdiction in the product"). It holds

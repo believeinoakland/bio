@@ -37,97 +37,69 @@ export async function liveToken(v) {
 }
 
 /* ---------------------------------------------------------------------------
- * DS-3 — THE ACCOUNT CASCADE'S THIRD LEVEL: the instance's own Claude account.
+ * DS-3 — THE ACCOUNT CASCADE'S INSTANCE LEVEL, RETIRED (K1502, T33-6).
  *
- * FL-6 resolves member -> project -> instance at runtime and records WHICH
- * level paid. The first two are rows a member wrote, read from the record. This
- * is the third, and it is CONFIGURATION rather than record: one Claude account
- * the whole instance falls back to when no member or project account answers.
+ * There is no group-wide or project-wide Claude account. The terms Anthropic publishes let a subscription serve
+ * only its own holder, so each member who wants the assistant connects their own Claude account or API key, held
+ * by `credentials` under that member, and a member with neither has no assistant. The group's copy therefore binds
+ * no Claude credential: the instance level always answers NONE, the same answer whatever `env` carries, and the
+ * former binding (`INSTANCE_CLAUDE_TOKEN`) is not read at all — not even to test it — so a value an old install
+ * left behind can never be spent.
  *
- * DO NOT CONFUSE IT WITH THE `ai` CREDENTIAL (`aik-…`, PL-11). That is BIO's own
- * credential, which an agent presents TO the plane and which the plane resolves
- * against the record. This is an ANTHROPIC credential the instance presents to
- * CLAUDE, and it decides who PAYS for a run. They travel in opposite directions
- * and the names in this repository are close enough that the distinction is
- * written here rather than assumed: `instance-level credential` elsewhere in
- * this source means the shared machine token (`class:member`), a third thing
- * again.
+ * DO NOT CONFUSE THIS WITH THE `ai` CREDENTIAL BELOW (`aik-…`, PL-11). That is BIO's own credential, which an agent
+ * presents TO the plane; a Claude account is Anthropic's, which a run presents to Claude. They travel in opposite
+ * directions, and only the second is retired here.
  *
- * IT HAS NO WRITE PATH, AND THAT IS THE ENFORCEMENT RATHER THAN A CONVENTION.
- * D-199 (3): minting and setting an account credential is a MEMBER act. So there
- * is deliberately no op, no store row and no setter here — the value arrives as
- * a Worker secret binding placed by the operator through the deploy or install
- * path, and nothing an agent can call reaches it. An agent-initiated scope
- * widening is refused because there is nothing to widen: the surface does not
- * exist. `bio-plane/test/m/runtime-limits/runtime-limits.test.mjs` (R23) pins
- * this module's export surface and that no service writes to the `env` it is
- * given, so adding a setter here fails that test instead of quietly becoming
- * possible.
- *
- * SHAPE IS DELIBERATELY NOT CHECKED. `AI_TOKEN_SHAPE` pins `aik-[0-9a-f]{64}`
- * because WE mint that and know its shape. This credential is Anthropic's, and
- * a vendor's format is their claim and not our measurement (CLAUDE.md) — a
- * regex guessed here would one day refuse a perfectly good key on a format
- * change nobody told us about, and would do it as a silent UNAVAILABLE. So the
- * only questions asked are the two this repository can actually answer: is
- * there a value, and has that value been published.
+ * The two services stay exported so their callers keep a stated answer until their own jobs re-point them to the
+ * member's reference; a later change may remove them.
  */
 
-export const INSTANCE_CLAUDE_BINDING = "INSTANCE_CLAUDE_TOKEN";
-
-/** The stated reasons. A caller renders these; it never invents one. */
+/** The stated reasons. A caller renders these; it never invents one. `CASCADE_PUBLISHED` is kept, stable, for the
+ *  callers and records that name it; no service here gives it any longer (R13). */
 export const CASCADE_UNSET = "NO_INSTANCE_ACCOUNT";
 export const CASCADE_PUBLISHED = "INSTANCE_ACCOUNT_REVOKED_BY_PUBLICATION";
 
+const NO_INSTANCE_ACCOUNT_DETAIL = "This group's copy holds no Claude account, and none can be set for it: a Claude "
+  + "subscription serves only its own holder. Each member who wants the assistant connects their own Claude account "
+  + "or API key, which serves only that member's own asks.";
+
 /**
- * The instance level's STATUS, carrying no secret. This is the shape a surface,
- * a log line or a run record may hold: it answers configured/unavailable and
- * says WHY, and it cannot leak a credential because it never holds one.
- * An honest absence is STATED (CLAUDE.md) — never an empty success, because a
- * silent no-op is indistinguishable from a run that found nothing (FL-6).
+ * The instance level's STATUS: always not configured, `CASCADE_UNSET`, with a detail saying where an account comes
+ * from instead. `env` is accepted for the callers' sake and never read (K1502). An honest absence is STATED
+ * (CLAUDE.md) — never an empty success.
  */
-export async function instanceClaudeStatus(env) {
-  const v = env?.[INSTANCE_CLAUDE_BINDING];
-  if (typeof v !== "string" || v.length === 0) {
-    return { level: "instance", configured: false, reason: CASCADE_UNSET,
-      detail: "This instance has no Claude account configured, so it cannot pay for a run "
-        + "that no member or project account covers. An operator sets it; an agent cannot." };
-  }
-  if (PUBLISHED_TOKEN_HASHES.has(await sha256hex(v))) {
-    return { level: "instance", configured: false, reason: CASCADE_PUBLISHED,
-      detail: "The configured value has been published in this repository and is therefore "
-        + "treated as NOT SET. Publication is revocation here; rotate the credential." };
-  }
-  return { level: "instance", configured: true, reason: null, detail: null };
+export async function instanceClaudeStatus(_env) {
+  return { level: "instance", configured: false, reason: CASCADE_UNSET, detail: NO_INSTANCE_ACCOUNT_DETAIL };
 }
 
 /**
- * The instance level's TOKEN, for the one caller that must actually spend it.
- * Returns null whenever `instanceClaudeStatus` would report unavailable, so the
- * two can never disagree — the status is derived from this function's own test,
- * not from a second reading of the environment.
+ * The instance level's TOKEN: always `null`. Computed from `instanceClaudeStatus`'s own answer, so the two can
+ * never disagree, and no Claude credential is ever read from the copy's bindings.
  */
 export async function instanceClaudeToken(env) {
-  const st = await instanceClaudeStatus(env);
-  return st.configured ? env[INSTANCE_CLAUDE_BINDING] : null;
+  // The status is the one answer and it is never `configured`, so there is no value to return, ever.
+  await instanceClaudeStatus(env);
+  return null;
 }
 
 /* ---------------------------------------------------------------------------
  * D-260 — THE INSTANCE'S ORGANISATION-PRINCIPAL `ai` CREDENTIAL (BOB #22, 2026-09-21;
  * `BIO_Assistant_and_AI_Roles_v0_1.md` §6).
  *
- * THE SECOND INSTANCE-LEVEL SECRET, AND IT TRAVELS THE OTHER WAY FROM THE ONE ABOVE. `INSTANCE_CLAUDE_TOKEN`
- * is Anthropic's credential and decides who PAYS; this is BIO's own `aik-…` credential, which `agent-worker`
- * presents TO the plane when the plane hands it a woken run to resume. The ruling: an instance MAY hold ONE
+ * THE ONE INSTANCE-LEVEL SECRET THIS MODULE STILL ANSWERS FOR (the Claude account above is retired, K1502). It is
+ * BIO's own `aik-…` credential, which `agent-worker` presents TO the plane when the plane hands it a woken run to
+ * resume. The ruling: an instance MAY hold ONE
  * organisation-principal `ai` credential as a deploy secret, `DAEMON_TOKEN`'s precedent one class over — minted by
  * a member (DEC-55 (3)) and resolved through its `ai_credentials` row like any other. So this module says only
  * whether a value is present and not published; WHICH principal it is, and whether it is still standing, is the
  * RECORD's answer, asked by the one caller (`Store#aiRunResumer`) at the row.
  *
- * IT HAS NO WRITE PATH, for DS-3's reason above: the value arrives as a Worker secret an operator places through
- * install or update (DIST's half of D-260), and nothing an agent can call reaches it. The same R23 test that
- * fences the Claude binding above fences this one. PUBLICATION IS REVOCATION, as for every token here: a value on
- * `PUBLISHED_TOKEN_HASHES` is NOT SET.
+ * IT HAS NO WRITE PATH, AND THAT IS THE ENFORCEMENT RATHER THAN A CONVENTION. D-199 (3): minting and setting an
+ * account credential is a MEMBER act, so there is no op, no store row and no setter here: the value arrives as a
+ * Worker secret an operator places through install or update (DIST's half of D-260), and nothing an agent can call
+ * reaches it. `bio-plane/test/m/runtime-limits/` (R23) pins this module's export surface and that no service writes
+ * to the `env` it is given, so adding a setter here fails that test instead of quietly becoming possible.
+ * PUBLICATION IS REVOCATION, as for every token here: a value on `PUBLISHED_TOKEN_HASHES` is NOT SET.
  */
 export const INSTANCE_AI_BINDING = "INSTANCE_AI_TOKEN";
 
