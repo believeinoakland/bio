@@ -82,3 +82,7 @@ The method-note figure for `workbooks`: "98.9% of cells and 73% of workbooks who
 - With the paths above filled in locally (not committed): `architecture` 0 failures (35 product files); `coverage` 16 of 16 ids named, 0 failures; `ownership` 36 files, 0 failures.
 
 Size (session_01DytKFDiU55w9sQyB8CR7kJ): test runs 14, module lines 1,270 (plus 449 generated glue lines and 884 test lines)
+
+## J2 · REPORT
+
+Found in other modules (details in my record's Completion): (1) bundler: `bio-plane/test/system/resolveversion.test.mjs` ARM 7b pins "the plane and all THREE members (8 sites)" and reads 10 with sheet-worker; T33-18a names only fleetbundles.test.mjs's list and GUARDED_FLOOR, and it needs this test-only change too. fleetbundles.test.mjs fails only its pinned list, as planned; every sheet-worker arm passes. (2) When the plane binds SHEET_WORKER (T33-42/T33-91): instance-setup's FLEET_BINDINGS, control-plane's members-pin.test.mjs (my NAMESPACES/PLANE_OPS, R11) and bundler's deploybindings.test.mjs gain this member. (3) manifest.md's generated-artifacts table can gain sheet-worker's row (in my record).
