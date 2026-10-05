@@ -1,6 +1,6 @@
 # budget-doctypes (T33)
 
-**Status** · session_01KjUzvZtRDGcKxhimDx7Tpo · depth 2 · WAITING ON BOB (J6) · handled B5
+**Status** · session_01KjUzvZtRDGcKxhimDx7Tpo · depth 2 · WORKING · handled B5
 
 ## Completion
 
