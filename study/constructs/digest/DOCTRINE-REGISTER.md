@@ -4,7 +4,9 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 
 **Notation.** `d123` = line 123 of `digest/DOCTRINE.md` (the bullet that reports the rule; open it to reach the reader's source and line). Reader ids (C1–C13, D1, D2, M1–M5) are phase-1 readers; reader D1/D2 are not register entries D1/D2. Constructs in *Binds*: TIME, ORGANISATIONS (ORG), LAW, COURTS, ANALYSIS, QUESTIONS (the assistant and AI roles). *Home* is where the rule lives as the readers cite it (canon §, requirement R id, DEC or K number); RM = Roadmap v5, DR = Design Requirements v2, FA = Functional Architecture v3, SD = System Design, AC = Action design (BIO_Action_v0_1), CF = Content Framework v0.10, IC = Interaction Constructs, AIR = Assistant and AI Roles, DB = Declared Bias, TAD = Technical Architecture Decisions, OLD = Observation-log design, PS = Practice survey, CON = CONSTRUCTS, MS = MILESTONES, UK = UI-KICKOFF.
 
-**Progress (resume note).** DOCTRINE.md read: 1–230, 231–450, 451–670, 671–890, 891–1143. A resumed worker keeps every entry and continues from the first line not listed.
+**Progress (resume note).** DOCTRINE.md read: 1–230, 231–450, 451–670, 671–890, 891–1143. A resumed worker keeps every entry and continues from the first line not listed. Working store: `regwork/state.json` with the chunk scripts `regwork/d*.py`, `regwork/x*.py` and the renderer `regwork/reg.py` (which also verifies every Quote verbatim against the digest and maps every bullet).
+
+**Contents.** The machine's role D1–D54 · Grades and undetermined D55–D135 · Counts and disclosure D136–D155 · People and privacy D156–D177 · Relations and traversal D178–D195 · Jurisdiction-free product D196–D212 · Layer order and module size D213–D233 · Time D234–D252 · Law and venues D253–D282 · Publication and reproducibility D283–D312 · Naming clashes D313–D325 · Other D326–D388 · Conflicts · Coverage check
 
 ## The machine's role
 
@@ -59,7 +61,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 
 ### D8 · A machine credential MAY declare relations, resolve references and thread progressions, but the record names the machine principal, the statement is visibly machine-attributed, grades stay earned and a hunch stays a member act
 - **Home:** DEC-52 (closed via REC-65; carries DEC-55 det 4 / D-199.4, D-82, §8.1); sharpened by DEC-60; DEC-53 (answered 2026-08-10 resting on DEC-52)
-- **Quote:** "The earlier provisional (sidebar approval as the act of record) is SUPERSEDED as a gate"
+- **Quote:** "allowing the machine to rule doesn't go against doctrine. So it can rule"
 - **Binds:** ORG, LAW, COURTS, QUESTIONS
 - **Reported by:** C12 (d155, d156, d157); C2 (d267, d268); M2 (d1039)
 - **Notes:** Moves the DEC-24 boundary for these acts; the six fields' comments that claimed "a member's constitutive statement" were corrected to match code. `strengthBarSet` still refuses MACHINE_CANNOT_DECLARE (store.mjs:5119). Any reading that relations are member-only must be checked against this ruling (see D178). DEC-53: the machine may propose Grade A/B candidates a member accepts as ESTABLISHED in one act; `op=resolve` is the only grader. C2 flags the brief's "machine never concludes or attests" as needing DEC-52's exact scope (Conflicts). In conflict or tension: see Conflicts #5, #12.
@@ -87,7 +89,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 
 ### D12 · Attribution is never invented: a field whose meaning is that a member (or nobody) said something never carries a machine stamp (mint a third, undetermined state instead), an absent identity is never called a machine one, and a sweep is never attributed to a person
 - **Home:** DEC-65; DB REC-207 (a sweep settles with no actor and no reason; machine credential refused by SHAPE, C-26.15)
-- **Quote:** "a field that overclaims, in the direction this project ranks worst"
+- **Quote:** "it would make the record say a machine claimed this about a value whose whole meaning is that nobody did."
 - **Binds:** QUESTIONS, ANALYSIS
 - **Reported by:** C12 (d172, d174); C4 (d449); C7 (d658); M2 (d1039); M3 (d1080); M4 (d1100)
 - **Notes:** Adding `none:` to MACHINE_STAMP_PREFIXES is recorded as the wrong fail-closed shortcut. Changes to a landed check go through the item that owns the files. MA §7.1: no invented names on the record (a machine-created project has no owner).
@@ -185,7 +187,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 
 ### D26 · Machine proposals are REVERSIBLE and bind nothing (`suggest`, `extractpropose`, `contradictionpropose`, `standardpropose`, `comparisonpropose`, `theorypropose`, `actionriskpropose`, `actionlawspropose`, `filingprepare`); member claims others rely on are REASONED and corrected only forward (`entitycreate`, `standarddeclare`, `standardadopt`, `consequencerecord`, `progressiondefine`, `filingsent`, `escalationopen`, `counselpacket`, `attribute`); `escalationend` and `filingapprove` are TERMINAL
 - **Home:** DEC-88 (Bob 2026-09-29: 57 undetermined acts banded)
-- **Quote:** "REVERSIBLE 26 (machine proposals bind nothing:"
+- **Quote:** "57 undetermined acts banded: REVERSIBLE 26 (machine proposals bind nothing: `suggest`, `extractpropose`, `contradictionpropose`, `standardpropose`, `comparisonpropose`, `theorypropose`, `actionriskpropose`, `actionlawspropose`, `filingprepare`, …)"
 - **Binds:** LAW, ORG, ANALYSIS, COURTS, QUESTIONS
 - **Reported by:** C2 (d290)
 - **Notes:** Six judgement calls carry high friction: `attribute`, `leadshare`, `entitycreate` ("a person named in the registry"), `strengthbar`, `filingapprove`, `workobjective` (lightest).
@@ -404,7 +406,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 
 ### D57 · A refused or silent read is UNDETERMINED, never absence
 - **Home:** planning skill R51
-- **Quote:** "never as absence"
+- **Quote:** "refused or silent reads = UNDETERMINED, "never as absence""
 - **Binds:** QUESTIONS, ANALYSIS, LAW
 - **Reported by:** C13 (d192); C6 (d557, d569, d577); M5 (d1139)
 - **Notes:** Pub §4 (UI-35..40): "a plane refusal must never render as a substantive negative". Pub §7: "when the record does not answer it says it could not read the group, never that none is recorded". Intake §2a (REC-52): a store that does not answer is reported as silence, never as a rate refusal. control-plane R23: a store non-answer "is never read as an absence, a refusal or a success" (System Design §2).
@@ -1108,7 +1110,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 
 ### D157 · Open residual: a bare `scrutiny` bias statement naming a NATURAL PERSON with no citations is admitted; doctrine about named individuals is Bob's, triggered by the first such statement challenged as a verdict
 - **Home:** DEC-6 (residual, OPEN); DB §The residual (DB 256–263)
-- **Quote:** "Doctrine about named individuals is Bob's."
+- **Quote:** "The sharpest edge is a bare `scrutiny` statement naming a NATURAL PERSON with a justification and no citations. It is admitted here."
 - **Binds:** ORG, QUESTIONS
 - **Reported by:** C11 (d103); C4 (d397, d399)
 - **Notes:** In conflict or tension: see Conflicts #18.
@@ -1376,7 +1378,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 
 ### D195 · Open: `intent` R4 (layer 7) follows a declared relation exactly one hop to scope an objective's instances, the one place a constitutive relation is followed
 - **Home:** intent R4 (intent.txt:79); code intent/index.mjs:384–400
-- **Quote:** "the code takes exactly one hop"
+- **Quote:** "it is the one place a constitutive relation is followed"
 - **Binds:** ORG, ANALYSIS, QUESTIONS
 - **Reported by:** M2 (d1065); M4 (d1128)
 - **Notes:** Not a contradiction of entities R26's letter (scoping is neither resolving a reference, answering R15 nor forming a connection), but whether it is allowed is open (D178; Conflicts). In conflict or tension: see Conflicts #49.
@@ -1810,11 +1812,11 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Notes:** Built outward texts: filing drafts, counsel packets, available-actions block (`TIER_WORDS`, `COUNSEL_SENTENCE`).
 
 ### D256 · Layer 9 contract: an action rests on the record; one asserting a breach rests on a published finding and a standard held in the record; the AI proposes and prepares, never files or sends; every deadline names the statute, order or commitment it comes from
-- **Home:** build/layers.md layer 9 (new contract, action-design deltas §1: rulings 1, 5, 10, D1)
-- **Quote:** "new layer 9 contract (rulings 1, 5, 10, D1), quoted under LAW."
+- **Home:** build/layers.md layer 9 contract (new contract per action-design deltas §1: rulings 1, 5, 10, D1; K590); implemented in conformance R14, actions R8, filings R16 and action-clocks R7; carried in every layer-9 module's Satisfies
+- **Quote:** "an action rests on the record; a breach rests on a published finding and a held standard; the AI proposes and prepares and never files or sends; every deadline names its source."
 - **Binds:** LAW, TIME, COURTS, ORG
 - **Reported by:** C13 (d227, d235); C9 (d738); D2 (d927); M1 (d961, d983)
-- **Notes:** Contract text from constructs-brief.md; the C13 bullet points to its LAW section for the quotation. Build state §2(a): the contract is "enforced **fully only on the determination chain**"; on the action object it binds only `breach: true` actions.
+- **Notes:** Build state §2(a): the contract is "enforced **fully only on the determination chain**"; on the action object it binds only `breach: true` actions. The deltas loosen the contract toward pre-publication action: "An action rests on the record" and only breach assertions need a published finding and a held standard (see CROSS-REGISTER).
 
 ### D257 · A breach assertion on a hypothetical (unestablished) subject is refused by default; an override with a stated reason labels everything that rests on it "rests on an unestablished premise" and is disclosed
 - **Home:** Bob 2026-09-30; actions R8, R24 (action-design deltas §2–3)
@@ -2220,11 +2222,11 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 - **Notes:** none
 
 ### D314 · "Obligation" is a taken word: in NOTIFICATIONS/queue-producers an OBLIGATION is a member's queue item (`template-review-requested`, `local-fact-due`), while DEC-107 reserves it for a public body's duty
-- **Home:** queue-producers R20–R21; NOTIFICATIONS; DEC-107 (per brief); DEC-107 (Bob 2026-10-01: "Obligation" reserved on member and reader screens for a public body's duty; the queue's to-do class shown as "To do"); queue R48 (DEC-107)
+- **Home:** queue-producers R20–R21; NOTIFICATIONS (37 kinds, 6 of class OBLIGATION); DEC-107 (Bob 2026-10-01: "Obligation" reserved on member and reader screens for a public body's duty; the queue's to-do class shown as "To do"); queue R48
 - **Quote:** ""OBLIGATIONs" here are member queue items (`template-review-requested`, `local-fact-due`)"
 - **Binds:** ORG, LAW, TIME
 - **Reported by:** C13 (d207); C2 (d308, d311); C9 (d754, d782); M5 (d1138)
-- **Notes:** In conflict or tension: see Conflicts #37.
+- **Notes:** Other uses of the word in the doctrine: DEC-70's re-evaluation duty and reevaluation's "The obligation is a query" (D89); DEC-84's RECORD duty, "an unmutable obligation for joined members" (D298); MA §7.9's "implementation obligation" (D147); contradiction's `obligation_against_act` kind routed to conformance (D93). In conflict or tension: see Conflicts #37.
 
 ### D315 · "Matter" names what a plan addresses; "Subject" is used only for an entity
 - **Home:** DEC-114
@@ -2545,7 +2547,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 
 ### D360 · Raw bytes are never rewritten; classification is reversible and carries a basis and a date
 - **Home:** CF §2 invariants 1–2
-- **Quote:** "A proposal that violates one of these is wrong, not novel"
+- **Quote:** "(1) raw bytes never rewritten; (2) classification reversible, "a basis and a date""
 - **Binds:** all six
 - **Reported by:** C3 (d343); C8 (d689); M4 (d1122)
 - **Notes:** acquisition R25–R28: "No intake path writes live state"; raw bytes are primary evidence, never rewritten.
@@ -2566,7 +2568,7 @@ Every distinct rule, principle or ruling the phase-1 readers recorded that const
 
 ### D363 · Status marks: BUILT (in `main`, driven by the battery), DESIGNED, GESTURED, ABSENT; the ownership ladder runs bytes, structure, content, intent, record, retrieval, claim
 - **Home:** CF Part II intro
-- **Quote:** "(bytes, structure, content, intent, record, retrieval, claim)"
+- **Quote:** "BUILT ("in `main`, driven by the battery"), DESIGNED, GESTURED, ABSENT"
 - **Binds:** all six
 - **Reported by:** C3 (d371)
 - **Notes:** none
@@ -2787,25 +2789,26 @@ Every pair of rules or sources that disagree, as the readers recorded them, with
 35. Case Making is canon "whole" in requirements/README.md vs its own 2026-08-10 status: non-authoritative, "several body sentences are now false as written" (D326). C9 d717, d751; C4 d400.
 36. Publication's bar table "strictest wins" vs DEC-72, which removed composition across projects (D74). C9 d752.
 37. Name collisions in the action design: act vs action; OBLIGATION; consequence (DEC-14 own outcome vs breach harm); rung ladder; finding (D325, D314). C9 d754.
-38. Design Requirement 7 ("mechanical: when trigger conditions are met, the next stage activates") vs Functional Architecture ("if the group chooses to pursue it") and the journeys ("a proposed stage, never advanced") (D272). C9 d761; D1 d858, d885.
+38. Design Requirement 7 ("mechanical: when trigger conditions are met, the next stage activates") vs Functional Architecture ("if the group chooses to pursue it") and the journeys ("a proposed stage, never advanced") (D272). C9 d761; reader D1 d858, d885.
 39. "Layer 3": Functional Architecture's Layer 3 is Action, its 2026-07-27 addition says "Layer 3 is the UI surfaces", and build/layers.md numbers Action as layer 9 (D213). C9 d766; C1 d50.
 40. Action plan scope: a plan triggered by nonconformity vs Functional Architecture's Layer 3 over findings generally; the resolution vocabulary fits only request and breach actions (D271). C9 d767.
 41. NOTIFICATIONS: the body and table say `per-item` is "[DESIGNED-not-built]: it exists nowhere in `bio-plane/src/`" vs the status "The **per-item weight is [BUILT]** (D-126, 2026-09-23, IC-235)"; the Incomplete section admits the body was not rewritten (D383). C9 d795.
-42. Register observation: DEC-102 "identity buys strength" (anonymous testimony weaker; C2 d303) vs audiences "Identity disclosure must never become a component of strength" (D1 d818). Reconcilable only if "identity" means corroborability of the source rather than disclosure of a member's name; an analyst must cite both (D164).
-43. Register observation: UC-071 "A declared bar beside the strength reached, never a gate on the pair" (D1 d844) vs DEC-17's refusal of a shortfall at pre-flight (`BELOW_PROJECT_STRENGTH`, C11 d120) and DEC-72's "all load-bearing findings must meet the bar" (C2 d252) (D74).
-44. Register observation: UC-097 "exclusion acknowledgement disclosed, never required" (D1 d855) vs Case Making's gate "has the author stated what was excluded, and why" (C4 d417–d418); possibly two different objects (acknowledgement vs exclusion statement) (D306).
-45. Register observation: UC-061 says "a hunch still counts at its stated grade in strength (R5 not yet met)" (D1 d840) vs DEC-104 "a hunch never lifts strength" (C2 d305): the build lags the ruling (D62).
-46. Wizard filling: DEC-90 and UC-092 "a wizard step highlights the real control and never fills it" (C2 d292; D1 d853) vs DEC-120's labelled draft in a field and the journeys' "what it puts in a field is a labelled draft until the member keeps it" (D1 d805) (D14).
-47. Design views' approval status: surface rules call plan-page.html "approved by Bob, K608 (4)" but surfaces.html, matter-page.html and start-and-send.html "design view, not stated as approved" (design HANDOFF: bound sketches honoured with later rulings applied) (D387). D2 d956.
+42. Register observation: DEC-102 "identity buys strength" (anonymous testimony weaker; C2 d303) vs audiences "Identity disclosure must never become a component of strength" (reader D1 d818). Reconcilable only if "identity" means corroborability of the source rather than disclosure of a member's name; an analyst must cite both (D164).
+43. Register observation: UC-071 "A declared bar beside the strength reached, never a gate on the pair" (reader D1 d844) vs DEC-17's refusal of a shortfall at pre-flight (`BELOW_PROJECT_STRENGTH`, C11 d120) and DEC-72's "all load-bearing findings must meet the bar" (C2 d252) (D74).
+44. Register observation: UC-097 "exclusion acknowledgement disclosed, never required" (reader D1 d855) vs Case Making's gate "has the author stated what was excluded, and why" (C4 d417–d418); possibly two different objects (acknowledgement vs exclusion statement) (D306).
+45. Register observation: UC-061 says "a hunch still counts at its stated grade in strength (R5 not yet met)" (reader D1 d840) vs DEC-104 "a hunch never lifts strength" (C2 d305): the build lags the ruling (D62).
+46. Wizard filling: DEC-90 and UC-092 "a wizard step highlights the real control and never fills it" (C2 d292; reader D1 d853) vs DEC-120's labelled draft in a field and the journeys' "what it puts in a field is a labelled draft until the member keeps it" (reader D1 d805) (D14).
+47. Design views' approval status: surface rules call plan-page.html "approved by Bob, K608 (4)" but surfaces.html, matter-page.html and start-and-send.html "design view, not stated as approved" (design HANDOFF: bound sketches honoured with later rulings applied) (D387). reader D2 d956.
 48. `action-clocks/index.mjs:744` `computeDeadline` hard-codes Saturday and Sunday as non-business days vs "No jurisdiction in the product" and jurisdictions R44 (calendar facts need a researched or ruled basis) (D211, D196, D249). M1 d964.
 49. `intent` R4 and `intent/index.mjs:384–400` follow a declared (constitutive) relation one hop to widen what an objective measures vs entities R26 ("never traversed to resolve a reference or to answer R15, and never forms a connection") and the brief's "never traversed"; not a breach of R26's letter, open for an analyst (D195, D178). M2 d1065; M4 d1128.
 50. Register observation: inquiry-grammar R11 / strength R33 "the edition's grades stand as published: DEC-96 item 1" (M3 d1086) vs DEC-40 det. 4 and DEC-45 (an imported published case is re-graded in its new context, no inherited standing; C12 d143, d149). Reconcilable if the published grades stand as facts about the edition while the importing project regrades its own use (D289).
-51. Register observation: strength R5 "hunch legs inert and counted" (M3 d1083) and UC-061 (D1 d840) vs DEC-104 "a hunch never lifts strength" (C2 d305) (D62).
+51. Register observation: strength R5 "hunch legs inert and counted" (M3 d1083) and UC-061 (reader D1 d840) vs DEC-104 "a hunch never lifts strength" (C2 d305) (D62).
 52. Register observation: DEC-122 puts terminal, attested and irreversible acts on a larger screen (C2 d324) while affordances R36 makes the phone flag advisory, "nothing refuses by device" (M5 d1142): consistent if the screen rule is guidance, not a refusal (D356).
 
 ## Coverage check
 
-- Bullets in `digest/DOCTRINE.md`: 1055 (lines beginning `- ` or `<n>. `, top-level or nested), of which 1055 lie in the ranges read so far.
+- Bullets in `digest/DOCTRINE.md`: 1055 (lines beginning `- ` or `<n>. `, top-level or nested); the file was read in full, in chunks 1–230, 231–450, 451–670, 671–890, 891–1143.
 - Register entries: 388.
 - Every bullet in the ranges read maps to at least one entry (its line appears in that entry's *Reported by*); a bullet carrying several rules is cited under each. No bullet was dropped: exact duplicates are merged into the entry they repeat and listed there by reader id.
 - Bullets per reader: C1 54, C10 29, C11 37, C12 42, C13 55, C2 82, C3 60, C4 89, C5 49, C6 74, C7 56, C8 24, C9 94, D1 97, D2 54, M1 27, M2 64, M3 19, M4 37, M5 12.
+- Non-bullet lines in `digest/DOCTRINE.md` are only the file's intro line, the per-reader `## From` headings, C13's and M2's `###` file sub-headings and D1's four italic file sub-headings (d800, d814, d825, d878); nested sub-bullets (e.g. d977–d978, d980–d987, d1072–d1075) are counted as bullets and mapped.

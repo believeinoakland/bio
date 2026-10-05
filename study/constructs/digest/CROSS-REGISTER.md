@@ -4,7 +4,9 @@ Every distinct observation the phase-1 readers recorded about how time, organisa
 
 **Notation.** `x123` = line 123 of `digest/CROSS.md`. Reader ids as in the doctrine register; `D<n>` refers to an entry of `digest/DOCTRINE-REGISTER.md`. Constructs: TIME, ORG (organisations and obligations), LAW, COURTS, ANALYSIS, QUESTIONS (the assistant).
 
-**Progress (resume note).** CROSS.md read: 1–170, 171–328, 329–478, 479–635. A resumed worker keeps every entry and continues from the first line not listed.
+**Progress (resume note).** CROSS.md read: 1–170, 171–328, 329–478, 479–635. A resumed worker keeps every entry and continues from the first line not listed. Working store: `regwork/` (as for the doctrine register).
+
+**Contents.** Layer-order evidence X1–X27 · Obligations: organisations × law × time X28–X34 · Time with law and organisations: deadlines, calendars, versions in force X35–X51 · Where time lives now X52–X66 · Law across constructs X67–X79 · Organisations, entities and relations X80–X103 · Courts X104–X111 · Analysis across constructs X112–X132 · Questions and the assistant X133–X155 · Jurisdiction profiles and identifier spaces X156–X159 · Shared mechanisms any construct would reuse X160–X166 · Doctrine binding every construct X167–X177 · Naming clashes across constructs X178–X182 · Other X183–X191 · Coverage check
 
 ## Layer-order evidence
 
@@ -43,17 +45,19 @@ Every distinct observation the phase-1 readers recorded about how time, organisa
 - **Evidence:** draft-planning-skill R47, R51, L21, L26 (`standards.standardRead`, `conformance.determinationRead`, consequences, `filings.availableActions`, `jurisdictions.combine`); action-plans placement
 - **Reported by:** C13 (x70, x80); M3 (x598)
 - **Constructs joined:** LAW, TIME, ANALYSIS, QUESTIONS
-- **Notes:** Direct evidence for the brief's structural observation: the AI needs law, consequences and deadlines, and today gets them only at the plane boundary and only for planning (after publication).
+- **Notes:** Direct evidence for the brief's structural observation: the AI needs law, consequences and deadlines, and today gets them only at the plane boundary and only for planning (after publication). Doctrine: D214.
 
 ### X8 · Layer 9 may read layer 6, so planning can begin during investigation (a suspected subject is an inquiry), but nothing provides the reverse: no inquiry, layer-6 assistant or entities can use `standards`, `local-facts`, `consequences` or `action-clocks`
 - **Evidence:** action-plans R1, R5; HANDOFF rulings 1–10 ("a plan may open when an inquiry begins"); draft-planning-skill R51; ai-runs R47
 - **Reported by:** C13 (x88); C9 (x279)
 - **Constructs joined:** LAW, TIME, ANALYSIS, ORG, QUESTIONS
+- **Notes:** Doctrine: D213, D21.
 
 ### X9 · `local-facts`, the module that makes calendars trustworthy (researched → unconfirmed → confirmed/corrected/disputed, with lapse horizons and a queue item), sits first in layer 9, so only `action-clocks` and `filings` read calendar status, though it is generic by key and could carry office and legal facts if placed where investigation can read it
 - **Evidence:** draft-filing-templates §3, L98 (K921); local-facts R1–R5; research-oakland-calendar Summary ("Generic by key so any `UNMEASURED` fact (an office, a deadline) can later be confirmed the same way")
 - **Reported by:** C13 (x72, x89)
 - **Constructs joined:** TIME, ORG, LAW
+- **Notes:** Doctrine: D15, D215, D232.
 
 ### X10 · Determinations are keyed by government act (`conformance.determinationsFor({act})`), joining inquiry (layer 6) to conformance (layer 9) only from the layer-9 side
 - **Evidence:** action-plans R5
@@ -79,7 +83,7 @@ Every distinct observation the phase-1 readers recorded about how time, organisa
 - **Evidence:** DEC-76/76.3 (src 1252); DEC-77; DEC-84.10 (src 1387); CM §CONTRADICTION + DEC-76 (CM 826–882); CM §THE ACTION PLAN 1 (CM 881–923); CONTRADICTION-IDENTIFY K4 (src 82: a regulation as doctype, an entity resolved at document grain and document dates, in layer 6 `contradiction` without `standards`); M3: `NORM_CANONS` (higher over lower, later over earlier, specific over general) and kinds `obligation_against_act` and `conflict_of_norms` presuppose norm hierarchy, effective dates and obligations that nothing in layer 6 can supply or check; a member names the canon by hand
 - **Reported by:** C2 (x97, x104); C4 (x140, x142); C5 (x181); M3 (x607)
 - **Constructs joined:** LAW, TIME, ORG, ANALYSIS
-- **Notes:** C4: a conflict of norms needs reconciliation canons (lex specialis etc. implied), law-structure knowledge the plane does not encode. C5: the design already wants rule-vs-act and statement-vs-later-statement comparisons during investigation, before publication.
+- **Notes:** C4: a conflict of norms needs reconciliation canons (lex specialis etc. implied), law-structure knowledge the plane does not encode. C5: the design already wants rule-vs-act and statement-vs-later-statement comparisons during investigation, before publication. Doctrine: D93, D98.
 
 ### X15 · The Content Framework puts investigation-time time support in the MEANING layer (progressions with `within` intervals, overdue/missing findings, temporal connections with due dates), organisations in entities and the subject registry, law only as the C.M.S. recogniser, and analysis's designed home in the intent layer; none depends on or mentions layer-9 `standards`, `conformance` or `action-clocks`
 - **Evidence:** CF §8, §8.2, §8.3 (`idspaces.mjs`), §12 (layer 7 `intent`)
@@ -131,11 +135,13 @@ Every distinct observation the phase-1 readers recorded about how time, organisa
 - **Evidence:** M1 (layer-9 requirements)
 - **Reported by:** M1 (x577)
 - **Constructs joined:** LAW, TIME, ANALYSIS, QUESTIONS
+- **Notes:** Doctrine: D53, D56, D235.
 
 ### X25 · The profile data are already low but consumed only high: `jurisdictions` (layer 1) carries deadlines, holidays, hours, time zone, standard sources, records laws, code-citation patterns and counterparties, but its R23–R45 sections are "the action sections ... for layer 9" and its only layer 5–8 user is `entities` (search terms, identifier spaces); no inquiry, ai-runs, skills, agent-worker, intent or reevaluation module uses it, so an investigation cannot ask when something is due, which law governs or which office; the fix need not move `jurisdictions` but needs a layer-5/6 consumer (progressions reading profile deadlines and holidays, or the assistant reading standard sources)
 - **Evidence:** jurisdictions l.32; modules.json
 - **Reported by:** M2 (x581, x590)
 - **Constructs joined:** TIME, LAW, ORG, QUESTIONS
+- **Notes:** Doctrine: D196, D213.
 
 ### X26 · A lower-layer module can consume later layers by op at runtime without breaking P4 (op-time, not import-time): agent-worker R51's plan mode reads deadlines, venues, `legal_organisations`, standards, determinations, consequences and available actions over plane ops, while the deployed `check` mode reads only `meaningrows`, `search`, `versionchain` and `basisversions`; the barrier is less the layer order than which ops a deployed mode's table and the sub-session's single tool may call
 - **Evidence:** agent-worker R51; M3
@@ -146,6 +152,7 @@ Every distinct observation the phase-1 readers recorded about how time, organisa
 - **Evidence:** retrieval R53, R55, R62; reevaluation R8; query-language Suggestions (query-language.txt:76)
 - **Reported by:** M4 (x614)
 - **Constructs joined:** LAW, TIME, ANALYSIS, QUESTIONS
+- **Notes:** Doctrine: D214.
 
 ## Obligations: organisations × law × time
 
@@ -163,7 +170,7 @@ Every distinct observation the phase-1 readers recorded about how time, organisa
 - **Evidence:** action-design PATH §1, §3; UX-ANSWERS OQ-25; CM §THE ACTION PLAN (CM 906–994: statutory deadlines, filing windows, outcomes keyed to "ignored past the statutory deadline", standing, grand-jury referral)
 - **Reported by:** C13 (x75, x90); C4 (x141); C9 (x298)
 - **Constructs joined:** ORG, TIME, LAW, COURTS
-- **Notes:** C9 (canon-constructs line 98): the progression (what a government body is supposed to do, its declared flow) vs the plan (what we intend) is the time construct's key distinction and an organisations one: the obligation-with-a-deadline Bob asks for already exists as `progressions` (layer 5).
+- **Notes:** C9 (canon-constructs line 98): the progression (what a government body is supposed to do, its declared flow) vs the plan (what we intend) is the time construct's key distinction and an organisations one: the obligation-with-a-deadline Bob asks for already exists as `progressions` (layer 5). Doctrine: D234, D314.
 
 ### X31 · Time, organisations and law meet in an action-plan option (addressee by role and organisation, regulated dates with basis, a tier), but only at layer 9
 - **Evidence:** action-design PATH steps 4–9
@@ -201,6 +208,7 @@ Every distinct observation the phase-1 readers recorded about how time, organisa
 - **Evidence:** DEC-10 ("the due-by was AUTHORED"); DEC-13 (right-of-reply window modelled on GAGAS audit practice)
 - **Reported by:** C11 (x39, x40)
 - **Constructs joined:** TIME, LAW, ORG, COURTS
+- **Notes:** Doctrine: D245, D250.
 
 ### X38 · Templates for as-of reasoning exist: every derived claim is tied to a fixed version and a date, change over time is reported as dated sequence, never inferred cause, and the session's "in force at open vs now" for the bias lens is a pattern for law in force at the time of the act
 - **Evidence:** DEC-12 (editions; a citation pins an edition; supersession surfaced, not followed); DEC-14; IS §11 (src 836–840, 876–889); D-219/D-256 ("A stored string is a fact about when it was written"); D-203 (a weaker past check "STATED beside the state, never reverted"); SR §8 (checks apply only to bundles whose schema stamp declares a version carrying the rule); D2: law in force on a date (view F "In force on" selector L10; SR L1605), captures superseded by newer captures (SR L58, L904; VF L16), question versions with CURRENT and conclusion history (SR L443), case editions with supersession (SR L2605), the lens "in force" (SR L978); M4: Memento (acquisition R32) can ask an archive for a document at a date but the code always asks "now" and only for unreachable sources; reevaluation's version reasoning (edition in force, frozen pair, `since` after `last_updated`) applies to evidence and case editions, not law in force
@@ -223,7 +231,7 @@ Every distinct observation the phase-1 readers recorded about how time, organisa
 - **Evidence:** action-plans Terms, R18; SR §4.4, I-11 (Action `clock[]` {text, description, date, basis, status}; basis free text, e.g. "Gov. Code 7922.535"); I-20 (`deadline-recheck` flips status, never derives a date); src 1806 (counterparty "an office by role and body"); M1: a deadline's basis is always a citation string — profile `deadlines` (jurisdictions R26), `clock[].basis`, `due_cite`, an action-plans regulated-date `basis` — and the only time construct using standards is a standard's own in-force period, so "every deadline names the statute, order or commitment it comes from" is met by a string, not a link to the law's text or version in force; M5: laws on an action are free-text `{level, citation}` rows, not links to `standards`
 - **Reported by:** C13 (x78); C7 (x201, x219); M1 (x570, x571, x572); M5 (x630)
 - **Constructs joined:** TIME, LAW, COURTS
-- **Notes:** C7: the Action clock is the one structure where time, law and organisations meet; its basis links to no captured provision, version in force, computation rule (calendar vs business days, holidays, zone, tolling) or obliged body, and the obligation it tracks is spread across counterparty, basis and date with no obligation record.
+- **Notes:** C7: the Action clock is the one structure where time, law and organisations meet; its basis links to no captured provision, version in force, computation rule (calendar vs business days, holidays, zone, tolling) or obliged body, and the obligation it tracks is spread across counterparty, basis and date with no obligation record. Doctrine: D256, D250.
 
 ### X42 · Time granularity mismatch: the profile is to carry an IANA zone and office hours (needed for "received after close"), and court e-filing has outages and an unknown "deemed filed" cut-off, yet a regulated date is `YYYY-MM-DD` and a checkpoint is `{after_days}` in calendar days
 - **Evidence:** research-oakland-calendar M-NEW-7; draft-filing-templates §2 L71; jurisdictions R41–R42; action-plans Terms L15
@@ -244,11 +252,13 @@ Every distinct observation the phase-1 readers recorded about how time, organisa
 - **Evidence:** DP L332–334; layer 9 contract
 - **Reported by:** C8 (x231, x232, x233, x234)
 - **Constructs joined:** TIME, LAW
+- **Notes:** Doctrine: D241, D256.
 
 ### X46 · UTC is used throughout and the jurisdiction's zone is unused where checked: `observed_at` is a date or UTC instant, the calendar parser reads M/D/YYYY into UTC and `deadline-recheck` marks overdue on the UTC day, while the profile carries `time_zone: America/Los_Angeles`; a deadline on a local evening could flip a day (inferred from code)
 - **Evidence:** MKD L77; monitoring/index.mjs:2746, 2783; oakland-alameda.mjs:184; design-journeys §6 "Meetings and time" (days counted in UTC; time zone and office hours stored but unused; no recurring-meeting model); M1: actions R12, action-clocks Terms (UTC and date-only; profile zone and office hours researched, confirmed and lapsed by local-facts but never applied; a fixed Saturday–Sunday weekend); M4: monitoring marks deadlines overdue at the UTC midnight after the date (`monitoring/index.mjs`:2747–2756, 2791–2813), acquisition renders in UTC (`render.mjs`:60–61), query ranges compare strings, ageing is 30 calendar days; M5: time as built is a member-typed date plus a UTC "today" comparison, holidays and hours exist only as unconfirmed profile facts
 - **Reported by:** C8 (x235, x236, x237, x238); D1 (x332); M1 (x573, x574, x575); M4 (x615); M5 (x629)
 - **Constructs joined:** TIME
+- **Notes:** Doctrine: D211, D249, D196.
 
 ### X47 · An action plan binds time to law: regulated dates must name a statute, order or commitment while checkpoints are relative durations of the group's own, and the machine must compute whether a regulated date is reachable within a scenario, a date-arithmetic need inside layer 9
 - **Evidence:** ACTION-PLAN A4, A10, A14
@@ -322,7 +332,7 @@ Every distinct observation the phase-1 readers recorded about how time, organisa
 - **Evidence:** INVENTORY lines 35, 59, 61, 68; canon-constructs lines 106–112, 156; build-state lines 326, 358; NOTIFICATIONS line 4; code lines 98, 109, 152, 228; D-86 ("two schedulers would be two sets of bugs about one thing", canon-constructs line 109); M2: three places that do not share a clock — docprofile (meeting dates, minutes `expected_by`, UTC, assess-only), progressions (declared `within`, calendar UTC, anchored on capture time), action-clocks (statutory deadlines, business days, per-office holidays, UTC years); none reads the profile's `time_zone` and none takes a document's own date from its text
 - **Reported by:** C9 (x272, x283, x299, x316, x317); M2 (x591)
 - **Constructs joined:** TIME, LAW, ORG
-- **Notes:** Doctrine pulls toward one engine while requiring two kinds of time never mixed: our intentions vs a body's or the law's dates (ACTION-PLAN A10; DEC-107 "our plan's checkpoint" / "the city's deadline").
+- **Notes:** Doctrine pulls toward one engine while requiring two kinds of time never mixed: our intentions vs a body's or the law's dates (ACTION-PLAN A10; DEC-107 "our plan's checkpoint" / "the city's deadline"). Doctrine: D245.
 
 ### X61 · Time answers only on demand: the MATRIX "Track" column is uniformly "Wiring" (derived when read, never pushed); the overdue mark is never computed in production, the queue has no kind for it and the scheduler does not reach layer 9; the remedy is spread across `monitoring`, `scheduler`, `queue` and profile holidays and deadlines
 - **Evidence:** MATRIX (Track column); build-state lines 370–378
@@ -371,6 +381,7 @@ Every distinct observation the phase-1 readers recorded about how time, organisa
 - **Evidence:** DEC-54 (countable/uncountable warning: 4 of 5 verification failures had countable rules satisfied); IS §13 (src 1169–1173: pinned at publication, layer 8, not available to the session); `BELOW_PROJECT_STRENGTH`
 - **Reported by:** C12 (x57); C5 (x169)
 - **Constructs joined:** LAW, TIME, ANALYSIS
+- **Notes:** Doctrine: D16, D85, D264.
 
 ### X70 · The CCCER finding form (Criteria = law/standard, Condition = act, Cause, Effect, Recommendation) joins law, the acting organisation and effect quantification in one published form; CAUSE has no requirement
 - **Evidence:** DEC-77.2; DEC-84.10; canon-mission line 170 (DEC-77 item 2: the GAGAS audit-standard structure for "an obligation-against-act finding", tying criteria, a body's obligation, measured effect and condition at a date); surface rules L1640, L2636 ("Cause (only when evidenced, else 'cause not established')"); DEC-84 (10); principles L20 (members include auditors, accountants, lawyers)
@@ -465,7 +476,7 @@ Every distinct observation the phase-1 readers recorded about how time, organisa
 - **Evidence:** DEC-78.5; DEC-116.4; DEC-88; DEC-102; Design Requirement 6 (audiences L1259: accountability "belongs to the role and institution"; individuals named "only in official capacity in connection with specific documented acts"); actions R9 (ADDRESSEE_REFUSED); consequences R10; UC-018 (no adversarial attribute)
 - **Reported by:** C2 (x108); C9 (x280); D1 (x357)
 - **Constructs joined:** ORG, QUESTIONS, COURTS
-- **Notes:** D1: any office-holder-over-time model must stay role-centred under these rules.
+- **Notes:** D1: any office-holder-over-time model must stay role-centred under these rules. Doctrine: D156, D176, D163, D173.
 
 ### X88 · ENTITY spans organisations (body, person), law (ordinance, contract) and analysis (fund, parcel) in one undifferentiated type resolved across documents with a grade
 - **Evidence:** CF §3 src 404–409; DEC-114
@@ -501,11 +512,13 @@ Every distinct observation the phase-1 readers recorded about how time, organisa
 - **Evidence:** SR §5.1, §5.2, §5.4 (src 1018–1056); MA §7.9/§11.1; entities R26
 - **Reported by:** C7 (x204, x221)
 - **Constructs joined:** ORG, LAW, COURTS, TIME
+- **Notes:** Doctrine: D189, D191, D147, D178, D179.
 
 ### X95 · Two worked templates exist for positions versus holders over time: Membership (office separate from person; roles held by handles; votes with deciders and reason; dated append-only settings, latest current; one row per claim per member with declare/confirm/withdraw timestamps) and `sources` (a dated, evidenced, append-only disclosure history; an attribute `occupation, employer, role`; claims that never merge; an as-of read `publishableAt({at})`; the source as it stood at capture beside the current history); entities offer only `proxy_for`, `member_of` and `overlaps`
 - **Evidence:** MA §7.14, §10, §9; BOB #35 (`invited_by` its own fact); sources R1–R9 (M4; scoped to protecting private sources)
 - **Reported by:** C7 (x205); M4 (x616)
 - **Constructs joined:** ORG, TIME
+- **Notes:** Doctrine: D163, D176.
 
 ### X96 · Stated vs built relation vocabulary: the built vocabulary adds `links_to` (a source-asserted relation, absent from State Rules) and `responds_to`; `action_basis` is built as a frontmatter leg list, not a §5.1 edge; the amendment's `references` is not in `REL_VOCAB`; `REL-` ids are allocated in `entities`
 - **Evidence:** `bio-plane/src/record-grammar/bundle.mjs:416`; `action-grammar/grammar.mjs:141`; `entities/index.mjs:396` (C7 code check)
@@ -526,6 +539,7 @@ Every distinct observation the phase-1 readers recorded about how time, organisa
 - **Evidence:** UC-018, UC-019, UC-160; design-journeys §6 L533, §3 L98, L110 ("Is the hauler delivering what the franchise requires, and is the city enforcing it?"); journeyExperience (c), (k); UC-117; UC-169
 - **Reported by:** D1 (x334, x335, x336, x337)
 - **Constructs joined:** ORG, LAW, TIME
+- **Notes:** Doctrine: D178, D196.
 
 ### X100 · The doctrine is role, never person, yet the designs need office holders over time: "a public statement by an office holder" recorded as pressure, and a plan check for "a lobbying option whose target is superseded"; there is "no holder-of-role over time"
 - **Evidence:** brand L136; surface rules L1660, L1712, L1727, L3020, L3390; view matter-page L33, L61; design HANDOFF L69 (second-hand); actions R9
@@ -541,6 +555,7 @@ Every distinct observation the phase-1 readers recorded about how time, organisa
 - **Evidence:** entities R26; connections R34; the registry's ten kinds and three relations
 - **Reported by:** M2 (x587, x592)
 - **Constructs joined:** ORG, LAW, TIME, QUESTIONS
+- **Notes:** Doctrine: D178, D186, D195, D135.
 
 ### X103 · `connections` joins organisations to evidence (any two documents naming one office are connected) but never through a declared relation, and only for the first 32–100 documents per entity; agenda→file containment is the only machine-derived legislative-history link, and docprofile's temporal "expected by" connections have no home there
 - **Evidence:** connections R34
@@ -553,7 +568,7 @@ Every distinct observation the phase-1 readers recorded about how time, organisa
 - **Evidence:** AC L20, rule 13, §5 row 7; DR §8; FA L132–133; RM §1, App A/B; C9: a standard kind `court` (build-state line 49), a venue `court` (line 325), correspondence stages `court_filing`/`court_decision`/`appeal_decision` (code line 125), Tier 2/3 profile kinds (records_petition, taxpayer_action, consent_decree_motion, constitutional_claim; code lines 252–258), the counsel packet with "a chronology" and "the claim deadlines" (line 205), the DEC-61 hold; no court case, docket, party, order or judgment is a record; D1: no use case, experience journey or audience follows a court case or administrative proceeding; courts appear only as places the group's own action goes (Tier 1–2 filings, Tier 3 counsel packet, venue standards, stage 7 oversight bodies, AI-proposed legal theories UC-116); journeys §3 L106, L111 add court cases and regulatory proceedings as front doors, supported only by capturing filings and watching a docket page; §6 "Following a court case": "Nothing tracks a case's filings, rulings and appeals, or links a decision to the rule it interprets."; M5: courts appear only as correspondence stages and a litigation hold; docket and case-import must not be counted as court support
 - **Reported by:** C1 (x11); C9 (x274, x288, x297); D1 (x343); M5 (x631)
 - **Constructs joined:** COURTS, LAW, ORG
-- **Notes:** D1: the last clause ties courts to law through interpretation of a provision.
+- **Notes:** D1: the last clause ties courts to law through interpretation of a provision. Doctrine: D321, D313.
 
 ### X105 · Court vocabulary meets the grade system only through standards of proof ("beyond a reasonable doubt", "convincing") left to the group, and the venue's evidence standard joining capture grades (layer 3) to court rules held as profile words
 - **Evidence:** DEC-17; action-design deltas R48, R39; DEC-105 (Pub L730–736: audience standards "a sourced fact in the jurisdiction profile", on the form ruled for legal venues K597 (3), K600 (b)); DEC-81/Action §4 rule 13 ("the venue sets the standard of evidence"; Grade A only a ceiling, Int L6, L344–348); OQ-22 (no catalogue of what grade a court, auditor or journalist expects; jurisdictions R39 drafts "the venue's standard")
@@ -606,7 +621,7 @@ Every distinct observation the phase-1 readers recorded about how time, organisa
 - **Evidence:** OLD (BOB #15; BOB #32; REC-110); PS V3, V4, V6 (SK-3 built); MA (BOB #15/#16; D-464 counts through the viewer's predicate; D-447 "an ORDER, never a score"; D-479/D-480 a bounded read publishes its bound and a measured `truncated` — "the BOUND is an answer"; D-158, M-68 `undetermined` a literal answer)
 - **Reported by:** C10 (x25); C7 (x206)
 - **Constructs joined:** ANALYSIS, QUESTIONS
-- **Notes:** C7: any aggregate a member or AI run is shown (budget totals, counts of filings, chronologies) must be computed through `viewerPredicate`/`hiddenSets` and state its bound.
+- **Notes:** C7: any aggregate a member or AI run is shown (budget totals, counts of filings, chronologies) must be computed through `viewerPredicate`/`hiddenSets` and state its bound. Doctrine: D136, D147, D144, D146.
 
 ### X115 · Any figure is bounded by its capture: a number extracted from an image is bounded by transcription fidelity (only member attestation of the cited region lifts it), PDF tables lose cell boundaries and OCR digits carry only agreement, so a derived number from a scanned or PDF financial table inherits an undetermined or capped grade
 - **Evidence:** DEC-4; CF §16 src 2195–2197, 2241–2249; CF §14.2 (weakest link)
@@ -622,6 +637,7 @@ Every distinct observation the phase-1 readers recorded about how time, organisa
 - **Evidence:** DEC-58, DEC-64, DEC-57, DEC-60, DEC-44, DEC-35/42, DEC-65 (PL-20), DEC-32, DEC-104, DEC-53, DEC-75, DEC-82, DEC-92, DEC-111, DEC-89, DEC-112; DEC-40; IS §12 (src 1123–1132); MKD §5 (a count subtracts hidden projects and leads); EBD §5.2 (one name, one quantity; a same-named field counting different things is a false comparison); CSD UI-62 (no proportions over a sample; denominator named in the heading; SAMPLE stated); CSD D-391 (give a range when inputs disagree); CSD REC-115
 - **Reported by:** C12 (x59); C2 (x107); C5 (x170); C8 (x243, x244, x245, x246, x247, x248)
 - **Constructs joined:** ANALYSIS, QUESTIONS
+- **Notes:** Doctrine: D65, D90, D94, D78, D132.
 
 ### X118 · The independence check on OR-branches is a provenance-derived relation between sources (shared upstream origin) that informs grade and depends on knowing which bodies or pipelines produced the evidence
 - **Evidence:** DEC-32 (src 692–703, D-195)
@@ -633,7 +649,7 @@ Every distinct observation the phase-1 readers recorded about how time, organisa
 - **Evidence:** DEC-112; Pub §5C L399–408 (grade recomputed by hand; open spec and standalone checker; import recomputes each grade: Recreated / in part / Did not recreate); rule 17 (D-470, check catalogue versioned); rule 16 (renderings verified by pixels)
 - **Reported by:** C2 (x101); C6 (x193)
 - **Constructs joined:** ANALYSIS, COURTS
-- **Notes:** C6: any calculation, dataset filter or chart a case relies on must meet the same bar (method versioned, inputs whole and fingerprinted, recomputable outside the product). The founding evidence is financial (sewer-fund transfers across auditor report, fund statements, budget, OpenGov), yet Intake's only analysis constructs are the fact/analysis/judgment classification and "the normalized dataset with its content hash"; extraction and normalisation standards per document type are not yet forced, and "Accuracy and credence are separate questions the catalog does not yet model".
+- **Notes:** C6: any calculation, dataset filter or chart a case relies on must meet the same bar (method versioned, inputs whole and fingerprinted, recomputable outside the product). The founding evidence is financial (sewer-fund transfers across auditor report, fund statements, budget, OpenGov), yet Intake's only analysis constructs are the fact/analysis/judgment classification and "the normalized dataset with its content hash"; extraction and normalisation standards per document type are not yet forced, and "Accuracy and credence are separate questions the catalog does not yet model". Doctrine: D304, D202.
 
 ### X120 · The satisfaction condition is the framework's only design for member-defined computation over progressions and funds, and it is deferred behind the intent-layer trigger
 - **Evidence:** CF §12 src 1199–1216 (Incomplete §12)
@@ -766,6 +782,7 @@ Every distinct observation the phase-1 readers recorded about how time, organisa
 - **Evidence:** ASSISTANT-PILOT (whole; DEC-60, src 9)
 - **Reported by:** C5 (x177)
 - **Constructs joined:** QUESTIONS, TIME, ORG, LAW, COURTS, ANALYSIS
+- **Notes:** Doctrine: D47, D48.
 
 ### X146 · INTERPRET names "the people and bodies named" in a question, linking questions to organisations and the entities layer, and through the private-individual rules to doctrine on persons
 - **Evidence:** ASSISTANT-PILOT §2 INTERPRET (src 94–96); actions R9
@@ -796,6 +813,7 @@ Every distinct observation the phase-1 readers recorded about how time, organisa
 - **Evidence:** code lines 44, 234, 236; build-state line 160; `standards/index.mjs:13`; MATRIX §5 line 71 (an action-planning skill for BOB to build); skill §5, `filings` R23
 - **Reported by:** C9 (x275, x287, x320); M1 (x558, x560)
 - **Constructs joined:** QUESTIONS, LAW, TIME
+- **Notes:** Doctrine: D53, D26.
 
 ### X152 · The Assistant and AI Roles document never mentions actions: the action boundary lives in module requirements (`filings`), so the assistant's role in law and courts work is defined bottom-up per module rather than in AIR
 - **Evidence:** AIR; `filings` R23
@@ -811,12 +829,13 @@ Every distinct observation the phase-1 readers recorded about how time, organisa
 - **Evidence:** design-journeys §6; audiences L1554
 - **Reported by:** D1 (x356)
 - **Constructs joined:** QUESTIONS, LAW, ORG, ANALYSIS
+- **Notes:** Doctrine: D274, D255.
 
 ### X155 · The assistant is designed across every construct but deployed for none: designs have it propose standards, plan options, filing text, clarifier recommendations and translations, with natural-language FIND/CREATE/ACT as the question model, but only the `check` mode is deployed (plan mode `deployed: false`), no plane path starts a first segment, the UI never opens a run, the installer sets no model key and there is no member-facing panel; as built the assistant is a bounded, adversarial evidence-checker that writes suggested basis versions and answers no question in prose
 - **Evidence:** view F L20; surface rules L662, L2412, L2471–2498, L2540, L2663, L2912, L3251, L3256; view start-and-send L50; brand V4; design HANDOFF L77; agent-worker R37, R51; M1 (standards R9, conformance R12, filings R14, R23, filing-templates R6 have no AI caller); M3 (model turns marked unmet while code runs them; contradiction recommender prompt unmeasured)
 - **Reported by:** D2 (x540); M1 (x558, x559, x560); M3 (x599, x600, x601, x602, x603, x604, x605, x606)
 - **Constructs joined:** QUESTIONS, LAW, TIME, ANALYSIS, ORG
-- **Notes:** M3: Bob's belief that the system "could do [natural-language questions] through the assistant" is not supported by layer 6. D2: any question-answering assistant inherits the same bounds plus "Never drop qualifiers when compressing" and the look-state vocabulary for absence.
+- **Notes:** M3: Bob's belief that the system "could do [natural-language questions] through the assistant" is not supported by layer 6. D2: any question-answering assistant inherits the same bounds plus "Never drop qualifiers when compressing" and the look-state vocabulary for absence. Doctrine: D47, D44, D13.
 
 ## Jurisdiction profiles and identifier spaces
 
@@ -824,12 +843,13 @@ Every distinct observation the phase-1 readers recorded about how time, organisa
 - **Evidence:** RM, MS (Gov. Code sections, Prop 218, Legistar, OpenGov); DR §15; AC rule 11; TAD (CPRA, OMC, sewer fund); CON (C.M.S.); DIST; REC-64 ("freeze the sentence at ITS build"); Int L428–430 (Cal. Gov. Code 54953.5), CP tiers (CPRA, Brown Act, Prop 218, CCP §526a); Pub §8 (tier words and `risk_tier` only, D-182); INVENTORY line 29 / canon-mission line 219 ("Every named action, venue and deadline is Californian"); canon line 145/148 (Gov. Code 7922.535; GAGAS/GAO 7–30 days); D2: holidays (principles L157; brand L44), state-code matching of standards (VF L14), action-kind clocks ("the profile states none", VS L26), venues and legal organisations (SR L1911, L3045), venue evidentiary standards (SR L3358; VS L58), filing-window advisories (VF L31) and claim deadlines (VF L50) all come from the profile (K1)
 - **Reported by:** C1 (x14); C10 (x29); C6 (x191); C9 (x277, x284, x311); D1 (x358); D2 (x541)
 - **Constructs joined:** LAW, ORG, TIME, COURTS
-- **Notes:** D1: governing records law, deadlines and holidays, action kinds and tiers, venues and their standards, legal organisations and filing templates all come from the jurisdiction profile, so much law, time and courts support is a profile-data problem as well as a code problem. D2: richer construct support implies a much richer profile schema, or profile-like shared data.
+- **Notes:** D1: governing records law, deadlines and holidays, action kinds and tiers, venues and their standards, legal organisations and filing templates all come from the jurisdiction profile, so much law, time and courts support is a profile-data problem as well as a code problem. D2: richer construct support implies a much richer profile schema, or profile-like shared data. Doctrine: D196, D197.
 
 ### X157 · Identifier spaces bridge organisations, law, analysis and time (Legistar resolution and C.M.S. numbers; fund codes and project numbers; contract and PO numbers; concurrent forms, vintages, roll years), each shared identifier raising a progression from C to B, yet the construct stays ABSENT, the origin system has no object, and the Oakland-specific recognisers sit in product code
 - **Evidence:** CON Step 5a / M-119 (header l.11); CF §8.3 src 1027–1117 (BOB #35: origin a member's attributed per-document declaration); `idspaces.mjs`; CF Incomplete §8.3; M2 (id-spaces): an identifier joins two records only if published by independent offices (coverage floors, parcel roll years); the product's only machine join between public records by key; it never reads what the enactment says
 - **Reported by:** C10 (x22); C3 (x119, x133); M2 (x582)
 - **Constructs joined:** ORG, LAW, ANALYSIS, TIME
+- **Notes:** Doctrine: D207, D184, D188.
 
 ### X158 · Jurisdiction ties law, organisation (venue) and calendar together in a filing template, but only as profile data with free-text citations; a template's use under another jurisdiction must be stated
 - **Evidence:** draft-filing-templates L17, L71, L186
@@ -867,7 +887,7 @@ Every distinct observation the phase-1 readers recorded about how time, organisa
 - **Evidence:** CM §2 (CM 273–279), §What is missing 3 (CM 435–438) (D-128); IC §QUEUE domains (IC 110–115); NOTIFICATIONS lines 14, 80–109 (Bob 2026-08-01: "Obligations are the flows (edges) that go on in a living civic system", declared vs observed, D-128 designed-not-built, M4, open); DEC-107 (line 94–96: "a public body's own duty only"); canon-constructs line 98 (progression vs plan)
 - **Reported by:** C4 (x139, x147, x154); C9 (x273, x298, x302, x321)
 - **Constructs joined:** ORG, LAW, TIME, ANALYSIS
-- **Notes:** C9: the obligation construct Bob asks for was named on 2026-08-01; its only built part is progressions' missing-predecessor and overdue-successor generators.
+- **Notes:** C9: the obligation construct Bob asks for was named on 2026-08-01; its only built part is progressions' missing-predecessor and overdue-successor generators. Doctrine: D314, D241.
 
 ### X165 · None of organisations, law or courts is a record object type (`OBJECT_TYPES {information, inquiry, project, action}`): they enter the record only as information or through later-layer modules
 - **Evidence:** IS src 281; SR §1.1–1.2 (src 284–308: INFO, PROB/Focus, PROJ, ACTN; no type for organisation, person, provision, case, deadline or dataset); SR src 1060–1063 (outside bodies only as free text `source.authority`, `counterparty`); MA §7.9 (`ENT` and `REL` objects in the shared corpus, src 913–915, 956)
@@ -885,21 +905,25 @@ Every distinct observation the phase-1 readers recorded about how time, organisa
 - **Evidence:** FA L338–341; AC L21, row 10, rule 11; SD L111, row 9; MS M9; M4: undetermined stated by name in query-language R5, observation-log R11–R12, intent R3–R4, reevaluation R21, monitoring R5 and R14, acquisition R11 and R15
 - **Reported by:** C1 (x15); C6 (x196); M4 (x623)
 - **Constructs joined:** TIME, LAW, ORG, ANALYSIS, QUESTIONS
+- **Notes:** Doctrine: D55, D56, D96.
 
 ### X168 · Any computed legal or time rule (a deadline, a notice period, a conformance check) is computed once by the plane and rendered, never re-derived in a surface or held by the assistant: the assistant relays the plane's single authority and holds no copy
 - **Evidence:** DEC-8; DEC-27 ("gets its understanding of the rules from the server"); IC §P + §U (IC 514–613)
 - **Reported by:** C11 (x36, x51); C4 (x149)
 - **Constructs joined:** LAW, TIME, QUESTIONS, ANALYSIS
+- **Notes:** Doctrine: D22, D81, D48.
 
 ### X169 · The hunch lifecycle opens investigation-time reasoning that is not yet evidenced (a provisional reading of which office is responsible or which provision applies), provided it is visibly a hunch and cannot survive publication
 - **Evidence:** DEC-15
 - **Reported by:** C11 (x43)
 - **Constructs joined:** ORG, LAW, QUESTIONS
+- **Notes:** Doctrine: D60, D61.
 
 ### X170 · Two machine-authority regimes must not be merged: a machine credential may write relations, aliases, resolutions and progressions directly, machine-attributed (so the organisation/time substrate may be machine-built), while a machine's claims and legs are only suggestions and grades stay earned (so the reasoning layer stays member-accepted); DEC-52 changes who may constitute a relation, not whether the record computes over relations
 - **Evidence:** DEC-52 (2026-08-07); DEC-60/62/65
 - **Reported by:** C12 (x56)
 - **Constructs joined:** ORG, TIME, QUESTIONS, LAW
+- **Notes:** Doctrine: D8, D5, D3.
 
 ### X171 · Any construct support must be justified by the member's path (the journeys), not by completeness
 - **Evidence:** DEC-48 (src 1081–1083)
@@ -915,6 +939,7 @@ Every distinct observation the phase-1 readers recorded about how time, organisa
 - **Evidence:** DEC-77.3, DEC-95.3, DEC-101, DEC-116.3, DEC-120, DEC-127, DEC-52/53, DEC-84.5, DEC-92, DEC-121, DEC-111; CF (assistant focus, hunch, EXTRACT row, theme proposal, carry-forward candidate, idmatch referent); Publication/Intake/A&T: drafting "what changed" (DEC-101), suggesting outside responses under the six guards (DEC-95 (3)), resolving undetermined authority as "a human or an AI" (A&T L84–87), flagging redaction candidates, proposing gathering requests, a labelled machine gatekeeper; release and actions are member acts (Int §4a, §9); NOTIFICATIONS "Analysis (M4)" items are machine-derived proposals a member adopts, defers or dismisses; M3: any construct support offered to the assistant must pass the same plane-side verdicts (no unearned grade; `derived` labelling as in run-productions R5; absence by level; the skill pack's "no single confidence score" and "no significance, no score"); M4: in all nine modules the machine proposes and never adopts, enables, regrades or advances
 - **Reported by:** C2 (x106); C3 (x132); C6 (x194, x196); C7 (x210); C9 (x325); M3 (x610); M4 (x623)
 - **Constructs joined:** QUESTIONS, TIME, ORG, LAW, ANALYSIS
+- **Notes:** Doctrine: D4, D27, D14.
 
 ### X174 · A fact is recorded because it is true and dated, not because it is explained: a public body's intent is not inferred; with the rest of the shared doctrine (undetermined stated, never back-filled; neither more nor less than the record holds; no gate pressuring an invented value; exact-match attribution; bad actors by evidence; the machine never releases, files or concludes)
 - **Evidence:** SOURCE-ACCESS L136–138, L233–235; Pub rules 13, 14, 15(d), L247–248, L593–595, §6A.4; A&T L97–99, L258–265, L280–281; Int §4a, §8 (D-533), §9
@@ -925,6 +950,7 @@ Every distinct observation the phase-1 readers recorded about how time, organisa
 - **Evidence:** NOTIFICATIONS rule 3 (lines 313–317)
 - **Reported by:** C9 (x326)
 - **Constructs joined:** TIME, ORG, ANALYSIS, LAW
+- **Notes:** Doctrine: D78, D241.
 
 ### X176 · Time notifications (deadlines approaching or overdue) are bound by the no-nag doctrine: threshold crossings told once, per-member mute, the finding stands
 - **Evidence:** DEC-10; DEC-69 (canon-constructs line 113; canon-mission line 49)
@@ -942,6 +968,7 @@ Every distinct observation the phase-1 readers recorded about how time, organisa
 - **Evidence:** DEC-34–46, DEC-44; IS src 217–224, §7–7.1; DEC-17/21; DEC-72 ("a case is a production of a project"; `case_id`, `case_edition`, `published_case_members`); actions R4, R10 (court-related kinds `grand_jury`, `litigation_support`, `controller_referral` moved to profile data); code line 235 (evidence-strength standard in agent-worker vs legal standard in layer 9); D2: "Standard" carries three senses — a legal standard (VF L9–18; SR L1605), the group's own rule ("The group's standard is that a breach claim rests on a published finding", VS L38) and a venue's evidentiary bar ("The venue's standard: accepts B co-attested", VS L58; SR L3358) — beside the project's evidence "bar" (MS L65)
 - **Reported by:** C12 (x62); C5 (x160, x166); C7 (x209); C9 (x319); D2 (x542); M5 (x631)
 - **Constructs joined:** COURTS, LAW, ANALYSIS
+- **Notes:** Doctrine: D313, D321.
 
 ### X179 · "Version" is overloaded six ways, and a correct count depends on recognising versions of one source, so any version-in-force design must name its sense
 - **Evidence:** IS src 226–245, 150–156 (D-220)
@@ -952,6 +979,7 @@ Every distinct observation the phase-1 readers recorded about how time, organisa
 - **Evidence:** action-design PATH §1, deltas §4, filing-templates queue-producers R20–R21; DEC-107; SCH L175; canon-constructs line 170 ("OBLIGATION ... means the body's civic duty (NOTIFICATIONS, Bob)"; queue label collision open, OQ-25); ACTION-PLAN A10; D1: three senses in the design sources — the queue's OBLIGATION, a task addressed to a member (UC-040, UC-041; (d)); "OBLIGATION as declared flow" (UC-024, D-128); "obligation against act", a contradiction resolution kind routed to conformance (UC-069, UC-070); Bob's sense (who owes what to whom by when under what authority) has no construct; D2: SR's queue classes ("obligation (do / forward / resolve), queue finding …, condition", SR L13, queue R1, R12) and VF's labels ("obligation", "obligation · ours", VF L61–69); only "obligation-against-act finding" (SR L1640) and "counterparty's deadline" (SR L73) mean a public body's duty
 - **Reported by:** C13 (x75, x90); C8 (x256); C9 (x302, x322); D1 (x338, x339, x340, x341, x342); D2 (x542)
 - **Constructs joined:** ORG, LAW, TIME
+- **Notes:** Doctrine: D314.
 
 ### X181 · "Condition" is the audit-finding word for "what happened" (Criteria, Condition, Cause, Effect), reserved for findings about bodies, so signals about the group's machinery must not borrow it (hence "Signal" replaced "Condition")
 - **Evidence:** NOTIFICATIONS line 159; DEC-110; DEC-77
@@ -1014,7 +1042,7 @@ Every distinct observation the phase-1 readers recorded about how time, organisa
 
 ## Coverage check
 
-- Bullets in `digest/CROSS.md`: 417 (lines beginning `- ` or `<n>. `, top-level or nested), of which 417 lie in the ranges read so far.
+- Bullets in `digest/CROSS.md`: 417 (lines beginning `- ` or `<n>. `, top-level or nested); the file was read in full, in chunks 1–170, 171–328, 329–478, 479–635.
 - Register entries: 191.
 - Every bullet in the ranges read maps to at least one entry (its line appears in that entry's *Reported by*); a bullet carrying several rules is cited under each. No bullet was dropped: exact duplicates are merged into the entry they repeat and listed there by reader id.
 - Bullets per reader: C1 10, C10 11, C11 19, C12 8, C13 24, C2 17, C3 20, C4 20, C5 26, C6 9, C7 22, C8 41, C9 57, D1 45, D2 13, M1 30, M2 14, M3 12, M4 11, M5 8.
