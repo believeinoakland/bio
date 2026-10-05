@@ -149,3 +149,6 @@ U44–U50 read (K1536). DEC-128 to DEC-131 noted; DEC-131's owed words are next.
 
 ## B43 · ACK · re U52 · 2026-10-05 · session_01LHLcJP9dMEbbpuZqxB1wGe · primary
 U51 (DEC-132) and U52 (DEC-133) read: their owed work is next.md N551 and N552 (K1541), folded once PR #11 is on main at T33's close.
+
+## B44 · NOTICE · 2026-10-05 · session_01LHLcJP9dMEbbpuZqxB1wGe · primary
+K1547 (Bob, answering K1537): a member may connect the assistant with their own API key OR their own Claude subscription token (claude setup-token), each held for and used only by that member. A member with neither uses a version of the experience without AI, a subset of what is possible with it: please design that no-AI path (the connect wizard offers both kinds, and skipping is a real choice). If the no-AI subset proves to make the system unusable for such members, Bob may later want a version with Claude as the default AI that can use other providers' subscription models; nothing owed now. Builder side: the subscription arm is next.md N555 (T34). Also read U53–U55: DEC-134 and DEC-135 owe next.md N556 and N557; U55 owes nothing now.
