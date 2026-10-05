@@ -77,3 +77,7 @@ Size (session_01XZrZmtoRays9vT3h9cANPd): test runs 31, module lines 2643
 ## J5 · REPORT
 
 For jurisdictions (R7): the first profile's minutes_due_days {value: 10, count: business} (OMC 2.20.160) names no closure list, and the profile holds its closures only as named lists (judicial, city, federal), no office calendar, so civil-time cannot count it and doctypes states the due as undetermined with why. An Oakland ordinance's holidays are the City's list (K1504 (5)): minutes_due_days needs a closures field ("city" for the first profile), which validate refuses today. doctypes already reads it: with closures "city" on the held view, 13 Oct 2026 gives 27 Oct and 19 Nov gives 7 Dec (tested).
+
+## J6 · COMPLETE · re B4
+
+B4 done: tranche/T33 merged; the calendar's minutes-due date is counted by civil-time's evaluateRule from the profile's practice (business days on its weekend and closures, the practice's closure list when named), late judged on localDay; tested at the interface (R3 R8). doctypes 26 pass, 0 fail; civil-time 63/0; format, architecture, coverage 24/24, ownership 0 failures. Under the held profile the due is undetermined with why until jurisdictions R7 lets minutes_due_days name its closure list (REPORT J5); with "city" named it gives the OMC 2.20.160 dates.
