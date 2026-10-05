@@ -95,7 +95,16 @@ a{color:var(--accent)}
     <p><b>Your sense is right on all six.</b> The product today supports each of these areas only at its lowest levels, and a member can reach even less than is built. No member can ask the assistant a question in plain words, on any copy.</p>
     <p><b>One thread joins them:</b> what a body owes, to whom, by when, under which authority. Organisations supply who owes it. Law supplies the authority. Time supplies the due date. Courts supply orders and reports that create duties. Analysis measures performance against a bar. Questions read all of it.</p>
     <p><b>The structural finding.</b> Law, local calendars, deadlines and calculation all sit in layer 9, after Publication. So investigation, where the work happens, cannot use any of them. The recommended architecture moves the record's <i>understanding</i> down into layer 5 and leaves <i>acting</i> where it is. A determination still rests on a published finding, and the machine still never concludes.</p>
-    <p><b>Before any of it reaches members</b>, two things outside the modules are needed: the screens, from the design stream; and an assistant that can run at all, which needs a Console API key, not a Claude subscription.</p>
+    <p><b>The substrate comes first.</b> Each stage builds services, not screens, and publishes them so the design work knows what it can do and continues on top of them. Any help from the assistant also waits on one fix: it must run on the group's own Claude account, which the design already allows and the code does not yet.</p>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Your corrections, applied</span>
+  <div class="box" style="display:flex;flex-direction:column;gap:8px">
+    <p><b>The assistant runs on a Claude subscription (K1429).</b> You settled this at DEC-55 in August, and Anthropic's own pages confirm it today: the Agent SDK and apps built on it draw on a subscription's usage limits. The first version of this page said the opposite. A reviewer misread the 15 June pause, which only withdrew a planned separate credit, and I did not check the reading against DEC-55. The setup page's wording stands. The fault is in the code: it accepts only an API key, so it gains a subscription path, with an API key kept as an option.</p>
+    <p><b>Substrate first (K1430).</b> The stages below are the substrate. A screen is never a precondition of a stage; the UX work continues on what each stage publishes.</p>
+    <p><b>Dates that follow from dependencies (K1431).</b> A budget must be in place before its year begins; a report must be out before the meeting that decides on it. A due date's basis can now be a rule, a body's commitment, a dependency (the event it must precede, and why), or the group's own window. A dependency date moves with the event it serves. Missing one is a dated fact about sequence ("the report was posted two hours before the vote"), never a violation unless a rule also applies.</p>
   </div>
 </section>
 
@@ -126,7 +135,7 @@ a{color:var(--accent)}
   <div class="grid">
     <div class="card"><h3>Time</h3>
       <p><span class="k today">Today</span><br>Typed dates on an action, and "overdue" findings measured from when the group captured a document, not from the meeting. The one deadline calculator has three defects (see Corrections).</p>
-      <p><span class="k">Needs</span><br>One correct calendar engine; a body's duties tracked before publication; meeting schedules; a document's own dates; "as of a date".</p></div>
+      <p><span class="k">Needs</span><br>One correct calendar engine; dates that come from rules, commitments and dependencies alike; a body's duties tracked before publication; meeting schedules; a document's own dates; "as of a date".</p></div>
     <div class="card"><h3>Organisations</h3>
       <p><span class="k today">Today</span><br>A subject registry with three undated relations. No "who held the office when", no reporting, oversight or contract lines, no obligation object.</p>
       <p><span class="k">Needs</span><br>Dated, sourced lines between bodies and offices; holders over time; one held object for what a body owes.</p></div>
@@ -140,7 +149,7 @@ a{color:var(--accent)}
       <p><span class="k today">Today</span><br>The only calculation runs after a breach is determined. A cited spreadsheet cell is a pointer whose value the record cannot read back.</p>
       <p><span class="k">Needs</span><br>One calculation construct, two engines: recipes the system computes, and the member's own spreadsheets, bound to their sources and recomputed.</p></div>
     <div class="card"><h3>Questions</h3>
-      <p><span class="k today">Today</span><br>Nothing to ask into. Only the evidence checker is deployed, the installer sets no model key, and the setup page names the wrong account.</p>
+      <p><span class="k today">Today</span><br>Nothing to ask into. Only the evidence checker is deployed, the installer carries no account, and the code accepts only an API key, not the group's Claude subscription.</p>
       <p><span class="k">Needs</span><br>First an assistant that runs; then "ask the record", whose answers the system checks; later, answers that apply law, deadlines and figures from the system, never from the model's memory.</p></div>
   </div>
 </section>
@@ -157,7 +166,7 @@ a{color:var(--accent)}
   </div>
   <div class="legend"><span><i class="sw" style="background:var(--accent-soft);border-color:var(--accent)"></i>new module</span><span><i class="sw" style="background:var(--today-soft);border-color:var(--today)"></i>moved down from layer 9</span></div>
   <div class="box" style="display:flex;flex-direction:column;gap:8px">
-    <p><b>The obligation, once.</b> Three studies designed the same thing in three places. It becomes one record in one module (<code>duties</code>). Members see your word "obligation" (DEC-107) for a body's duty and "power" for what an office may do. Each obligation names who owes it (an office or body, never a private person), to whom, what, its source in force (a law, an order, a contract clause or a commitment), and how its due date is computed. Whether each occurrence was met, late or overdue is worked out when read, never stored. "Overdue" raises a question; it never asserts a violation.</p>
+    <p><b>The obligation, once.</b> Three studies designed the same thing in three places. It becomes one record in one module (<code>duties</code>). Members see your word "obligation" (DEC-107) for a body's duty and "power" for what an office may do. Each obligation names who owes it (an office or body, never a private person), to whom, what, its source in force (a law, an order, a contract clause or a commitment), and how its due date is computed: from a rule, from the body's own commitment, or from the event it must precede, such as a report needed before a vote. Whether each occurrence was met, late or overdue is worked out when read, never stored. "Overdue" raises a question; it never asserts a violation.</p>
     <p><b>One way to ask "as of a date".</b> Laws in force, who held an office, what a line between bodies was, and a proceeding's status are all read the same way, and each answer says "undetermined" when the dates don't settle it.</p>
   </div>
 </section>
@@ -165,9 +174,9 @@ a{color:var(--accent)}
 <section>
   <span class="eyebrow">How to proceed</span>
   <h2>Five stages, in dependency order</h2>
-  <p class="muted" style="max-width:66ch">These describe what each stage unlocks, not a tranche plan: none is opened or planned until you say so (K1425). Every stage measures first and needs the design stream's screens.</p>
+  <p class="muted" style="max-width:66ch">These describe what each stage unlocks, not a tranche plan: none is opened or planned until you say so (K1425). Every stage measures first. Each builds the substrate and publishes its services; the design stream then designs the screens against them.</p>
   <div class="stages">
-    <div class="stage"><div class="n">0</div><div><h3>Runnable and correct</h3><p>Make any assistant runnable (the right key, deployed, with caching, usage recorded and a spend ceiling), and fix the defects that need no new module. Nothing new for members, but no more false "overdue" marks, and every AI stage becomes testable.</p></div></div>
+    <div class="stage"><div class="n">0</div><div><h3>Runnable and correct</h3><p>Make the assistant runnable on the group's or a member's own Claude account (a subscription, or an API key as an option), deployed, with usage recorded and a use ceiling, and fix the defects that need no new module. Nothing new for members, but no more false "overdue" marks, and every AI stage becomes testable.</p></div></div>
     <div class="stage"><div class="n">1</div><div><h3>The shared ground</h3><p>The calendar engine, organisational lines, calculation, the answer checks; law and local facts moved down. <b>Unlocks:</b> a records request due date from the law; the office that holds the records; finding the city's own standard and declaring each requirement; checking the 90% pothole claim against the city's data; budget against actuals for one year; "ask the record" in plain words. About 5 new modules and 200 requirements, by the studies' own estimates.</p></div></div>
     <div class="stage"><div class="n">2</div><div><h3>What bodies owe, their meetings, their proceedings</h3><p><code>duties</code>, a document's own dates, the spreadsheet engine. <b>Unlocks:</b> watching a body's meetings and minutes; "Waiting on the City Clerk's reply, due 14 October" from data; franchise and contract duties; following a court case or a rate case; grand jury and audit follow-up; "what did this section say on that date"; a member's own workbook in the record.</p></div></div>
     <div class="stage"><div class="n">3</div><div><h3>Applied and assisted</h3><p>The assistant applies law, deadlines and figures from the system; explaining a charge or a rule; precedent; multi-year fund cases like the founding case's nine fiscal years; charts. Waits on the investigate and extract modes being deployed and measured.</p></div></div>
@@ -195,7 +204,7 @@ a{color:var(--accent)}
     <p class="rec"><b>Recommend all.</b> Each is a distinct concern and fits in one reading. Folding them into existing modules was considered and rejected for each: it would breach the size limit, mix kinds of relation your doctrine keeps apart, or put them where investigation cannot see them. A separate "proceedings" module is held back until the court facet needs its own acts.</p></article>
 
   <article class="dec"><header><span class="num">B4</span><div><h3>The obligation</h3><span class="kind">Requirement meaning · doctrine</span></div></header>
-    <ul class="opts"><li>(i) One held object for what a body owes, as you defined the flow model on 1 August.</li><li>(ii) Who may owe one: (A) public bodies only; (B) public bodies, and bodies acting for one under a law, contract, franchise or grant; (C) any organisation.</li><li>(iii) A duty computed from a profile rule, or proposed by the machine, stays a proposal until a member adopts it; from then it is tracked and told once.</li></ul>
+    <ul class="opts"><li>(i) One held object for what a body owes, as you defined the flow model on 1 August.</li><li>(ii) Who may owe one: (A) public bodies only; (B) public bodies, and bodies acting for one under a law, contract, franchise or grant; (C) any organisation.</li><li>(iii) A duty computed from a profile rule or a dependency, or proposed by the machine, stays a proposal until a member adopts it; from then it is tracked and told once.</li></ul>
     <p class="rec"><b>Recommend yes to (i), (B) for (ii), yes to (iii).</b> Your definition of nonconformity reaches "action by some other person or organization", and the franchise journey needs it. A private person is never an obligor, and a contractor's breach is addressed to the office that enforces the contract.</p></article>
 
   <article class="dec"><header><span class="num">B5</span><div><h3>New kinds in the registry</h3><span class="kind">Doctrine: closed vocabularies</span></div></header>
@@ -219,7 +228,7 @@ a{color:var(--accent)}
     <p class="rec"><b>Recommend (b), yes, yes.</b> Erring early makes premature claims about public bodies, the overclaim the doctrine ranks worst. Today a typed deadline of 30 March marks the City late at 5 pm Pacific that day.</p></article>
 
   <article class="dec"><header><span class="num">B10</span><div><h3>Profiles that hold sourced rules</h3><span class="kind">Requirement scope · doctrine</span></div></header>
-    <ul class="opts"><li>(a) The jurisdiction profile holds, as data, the rules groups need (notice periods counted backward, hours-based rules, tolling, start events, meeting schedules, fiscal years, the weekend, law ranks, case-number forms), each cited, with a status, confirmed locally; a rule with no primary source never applies.</li><li>(b) Keep the profile to calendars and citations; members type every rule.</li></ul>
+    <ul class="opts"><li>(a) The jurisdiction profile holds, as data, the rules groups need (notice periods counted backward, hours-based rules, tolling, start events, meeting schedules, fiscal years, the weekend, the lead times a body sets for itself, law ranks, case-number forms), each cited, with a status, confirmed locally; a rule with no primary source never applies.</li><li>(b) Keep the profile to calendars and citations; members type every rule.</li></ul>
     <p class="rec"><b>Recommend (a).</b> The fear in D-149 is a rule that goes stale silently; the citation, the status, the confirmation horizon and a member's adoption (B4) contain it. Oakland's one deadline rule is unsourced today and must be sourced before it applies.</p></article>
 
   <article class="dec"><header><span class="num">B11</span><div><h3>The model of law</h3><span class="kind">Requirements</span></div></header>
@@ -242,10 +251,10 @@ a{color:var(--accent)}
     <ul class="opts"><li>(a) Public sources needing no key by default: code publishers' pages, Legistar, eCFR, CourtListener's public pages.</li><li>(b) Fee-bearing or account-gated records (PACER, state court portals) only by a member's own act, with their own login, the price shown first, never in an unattended run.</li><li>(c) Keyed services (Open States, a CourtListener token, legal databases) on the group's key, only when a group asks.</li><li>(d) A group-level paid account the system uses unattended.</li></ul>
     <p class="rec"><b>Recommend (a) and (b) now, (c) on request, reject (d).</b> No vendor key is ever required to run Civicsmith.</p></article>
 
-  <article class="dec"><header><span class="num">B16</span><div><h3>The assistant's account and spending</h3><span class="kind">Policy · UX</span></div></header>
-    <p>The account is a fact, not a choice: the code needs an Anthropic API key from the Claude Console, paid per use. Anthropic's terms do not allow a Claude subscription (on any plan, Team and Enterprise included) to power a product like this.</p>
-    <ul class="opts"><li>(i) The assistant is optional, offered at setup; the administrator is told then that questions, and the material read to answer them, go to Anthropic under the group's key.</li><li>(ii) The group's key pays; a project's or member's own API key takes precedence where set.</li><li>(iii) A spend ceiling per group per month and per member per day, refused in plain words when reached.</li><li>(iv) Administrators see monthly use per mode; members see no per-answer cost.</li></ul>
-    <p class="rec"><b>Recommend all four.</b> For scale: five members asking five questions a day would cost about $55–135 a month on Sonnet 5.5 once caching is built, and 1.4 to 1.75 times that as the code stands. These are estimates; stage 0 measures them.</p></article>
+  <article class="dec"><header><span class="num">B16</span><div><h3>The assistant's account and use</h3><span class="kind">Policy · UX</span></div></header>
+    <p>Settled: the assistant runs on the group's or a member's own Claude account, a subscription or an API key (DEC-55, K1429). Anthropic's conditions: the account is signed in through Anthropic's own sign-in, and Civicsmith never stores a Claude password or session; Pro and Max limits assume one person's ordinary use, so a group sharing one assistant fits a Team plan or members' own plans.</p>
+    <ul class="opts"><li>(i) The assistant is optional, offered at setup; the administrator is told then that questions, and the material read to answer them, go to Anthropic under the group's account.</li><li>(ii) The group's account serves everyone; a project's or member's own account takes precedence where set.</li><li>(iii) A use ceiling per group and per member per day, so one member cannot exhaust the group's plan limits, refused in plain words when reached.</li><li>(iv) Administrators see use per mode each month.</li></ul>
+    <p class="rec"><b>Recommend all four.</b> On a subscription the cost is the plan's price; the open question is whether a group's use fits its limits, which stage 0 measures.</p></article>
 
   <article class="dec"><header><span class="num">B17</span><div><h3>What the assistant may read, suggest and keep</h3><span class="kind">Doctrine</span></div></header>
     <ul class="opts"><li>(i) Widen what the assistant may read to law, profiles, the registry, lines and duties. Sources' identities, members' search history and admin stay closed.</li><li>(ii) Suggestions: (a) structure only what the member said; (b) labelled suggestions drawn only from material the member brought or chose, each adopted by the member; (c) free suggestions.</li><li>(iii) What is kept: (a) nothing in the record (a transcript on the member's device, counts without names); (b) each question logged as a search in the record.</li></ul>
@@ -276,7 +285,7 @@ a{color:var(--accent)}
     <li><b>Impossible dates such as 31 February are accepted.</b></li>
     <li><b>The Oakland profile ships its deadline rule and its five offices without a source.</b></li>
     <li><b>The add flow's named addressee</b> conflicts with the rule that an addressee is an office.</li>
-    <li><b>The setup page and the architecture text ask for a Claude subscription;</b> the code needs an API key. The subscription idea rested on an Agent SDK credit Anthropic paused on 15 June.</li>
+    <li><b>The code cannot use the account the design names.</b> The setup page rightly asks for a Claude subscription; the assistant code accepts only an API key. It gains a subscription path through Anthropic's Agent SDK, run in a container.</li>
     <li><b>The code and its own header disagree</b> about whether the assistant runs model turns at all, and planning mode would switch itself on.</li>
     <li><b>The model calls have no caching, no usage record and no spending bound.</b></li>
     <li><b>The architecture text says "never a spreadsheet"</b> as an input; the retired design it came from does not bind.</li>
@@ -290,7 +299,7 @@ a{color:var(--accent)}
     <div class="box"><p><b>Names and order.</b> Module names (<code>civil-time</code>, <code>lines</code>, <code>duties</code>, <code>chronology</code>, <code>calc-grammar</code>, <code>calculations</code>, <code>sheet-worker</code>, <code>answers</code>); positions within layer 5; the queue keeps its internal code and uses the slot it already reserves; <code>docprofile</code> is split before the court readers land.</p></div>
     <div class="box"><p><b>Time.</b> Recurring meetings use the iCalendar rule standard (a subset); imprecise dates use the Library of Congress's standard; the engine never reads the clock itself; vendor quirks such as "- CANCELLED" live in data, never code.</p></div>
     <div class="box"><p><b>Organisations and courts.</b> Lines are graded on two counts: who asserts them, and how surely each end is identified. Walks stop at six steps. A proceeding is named by court, number and a neutral description. Citations are "verified" only against a held copy.</p></div>
-    <div class="box"><p><b>Analysis and questions.</b> Tables are CSV with a schema, fingerprinted. Results are stored, not recomputed on every read. IronCalc is a candidate engine only, adopted if it passes its measure. The model is chosen per mode by measurement.</p></div>
+    <div class="box"><p><b>Analysis and questions.</b> Tables are CSV with a schema, fingerprinted. Results are stored, not recomputed on every read. IronCalc is a candidate engine only, adopted if it passes its measure. The model is chosen per mode by measurement. The assistant runner moves into a container so it can sign in with a subscription.</p></div>
   </div>
 </section>
 

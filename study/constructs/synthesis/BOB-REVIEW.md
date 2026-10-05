@@ -17,3 +17,9 @@
 ## Left as the draft has it, noted
 - **Stage 1's size** (5 new modules, about 195–225 requirements) is a sum of the studies' own estimates, not a measurement. It is a description, not a plan (K1425).
 - **B2 recommends moving now** rather than the registration bridge, because B13 (iii) (a leg on a held standard) needs `standards` below `inquiry` in code from stage 1. This is consistent with R-2 L-E6, which asked only that Bob be shown the alternative.
+
+## Corrected after Bob's review (2026-10-05)
+Bob corrected three points, recorded as K1429–K1431 on `tranche/T32`, and the synthesis is amended to match:
+1. **K1429, the account.** A Claude subscription can run the assistant, as Bob established at DEC-55 (2026-08-04). Anthropic's Agent SDK article (Agent SDK and third-party app usage "still draw from your subscription's usage limits") and its legal-and-compliance page confirm it. R-3 read the 15 June pause as withdrawing subscription use; it withdrew only a planned separate credit. My review should have caught this against DEC-55 and did not. The defect is in the code (an API key only), not in the setup page. The subscription path runs through the Agent SDK in a container.
+2. **K1430, substrate first.** The stages build services, not screens; the design stream designs against them once they are in. A screen is never a precondition of a stage.
+3. **K1431, dates from dependencies.** A due date's basis may be a rule, a commitment, a dependency (the event it must precede, and why) or the group's window. A dependency date is derived from the event it serves, and missing it is a dated fact about sequence, never a violation.
