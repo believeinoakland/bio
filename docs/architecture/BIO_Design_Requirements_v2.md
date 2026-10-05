@@ -146,14 +146,27 @@ analyzed; status (draft, published, challenged, updated) with links to
 any challenges or updates from other groups; point of contact for
 questions; and references to related work products from any group.
 
-Work products document institutional actions and compliance. Individuals
-are named only in their official capacity in connection with specific
-documented actions (e.g., "the Finance Director certified the ACFR" or
-"the City Administrator signed the directive"). Accountability belongs
-to the role and the institution. Staff turnover does not extinguish
-institutional accountability. If the institution cannot answer for
-actions taken by predecessor occupants of a role, that failure of
-institutional recordkeeping is itself a compliance issue.
+**Amended by Bob, 2026-10-05** (`build/rulings.md` K1483, C1): Work products
+document institutional actions and compliance, and the people who carried
+them out. A person materially involved in what a work product documents is
+named, by name, by title or role, or both, as the finding needs, together
+with their documented acts (deciding, authoring, signing, approving,
+awarding, implementing), the positions they held, and their ties and
+financial interests where these bear on the finding (e.g., "Finance
+Director Jane Doe certified the ACFR"; "the order was signed by Deputy
+Director John Roe, contrary to policy §4.2"; "Public Works Director Ann Lee
+approved the award in 2022 and joined the winning contractor in 2023").
+Naming people consistently is what lets a reader, or another group, see
+that the same person, or people with material ties, figure in cases that
+seem unconnected. Accountability belongs to the role and the institution,
+and also to the person who acted; staff turnover does not extinguish
+either. If the institution cannot answer for actions taken by predecessor
+occupants of a role, that failure of institutional recordkeeping is itself
+a compliance issue. A person outside any official, professional or public
+role is identified only where their documented act, tie or interest bears
+on the finding. Every person a work product names has a recorded basis,
+checked before publication; the documents it relies on travel whole and
+unredacted.
 
 # Escalation
 
