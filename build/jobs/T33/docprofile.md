@@ -88,3 +88,7 @@ B4-B6 done: tranche/T33 merged; seeded meeting_calendar = doctypes' line for lin
 - `format`, `architecture`, `coverage` (26 of 26) and `ownership`: 0 failures each.
 
 Size (session_01HaSoeitaf5svNuEMw8yMQN): test runs 14, module lines 5,184
+
+## J6 · COMPLETE
+
+B7 done: tranche/T33 merged; seed still identical to doctypes'. R6 test expects the held profile's OMC 2.20.160 dates on 'city' (2026-03-02 -> 2026-03-16 with and without a view; 2026-11-19 -> 2026-12-07) and keeps the undetermined case on a view with no closure list named. docprofile 56/56; format, architecture, coverage 26/26, ownership 0 failures. Neighbours 429/430: the one red is doctypes' own 'R3 R8 the minutes-due date…' test, which still asserts the held profile undetermined (red by design under K1538, doctypes' to update).
