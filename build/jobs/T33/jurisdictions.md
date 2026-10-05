@@ -78,3 +78,7 @@ B6 read (B3–B5 already applied in J5, with K1514's Monday rule shape and monda
 ## J7 · COMPLETE
 
 B8 applied (dd992d436e, tranche/T33 merged): budget_headers read all three measured Socrata cycles (amount: amount|amt and fy\d{2}_\d{2}_*; period: budget|budget_year_name; fund/org/program/project/account with _code forms, prog, acct); oakland_org takes bare ^\d{2,5}$; financial_headings gain 'General Purpose Fund Revenue' and 'Expenditures By Fund'. Not added: a 'June 30, 2024' column form, which the research files do not hold. Tested at the interface on every measured header. jurisdictions 81/81; format, architecture, coverage 57/57, ownership: 0 failures. Users 1,316 pass / 7 fail: J3's six, plus entities idmatch.test.mjs R20 (expects 4 spaces; id-spaces now lists nine, R1), which fails with tranche/T33's own jurisdictions too, so it is not from this change. Size: test runs 32, module lines 4884.
+
+## J8 · COMPLETE
+
+B8 and B9 applied (0f053b9689, tranche/T33 merged). B9: R7's minutes_due_days.closures validated (names a closure list of the profile, else VALUE_INVALID) and part of its one value in combine; oakland-alameda names city, the test profile town. B8 as in J7. jurisdictions 81/81; format, architecture, coverage 57/57, ownership: 0 failures. Users 1,317 pass / 7 fail: J3's six and entities idmatch R20 (id-spaces' nine spaces; red with tranche/T33's own jurisdictions too). Size: test runs 32, module lines 4884.
