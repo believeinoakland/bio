@@ -238,6 +238,48 @@ test("R8 the calendar's forward-looking connection reads ctx.now when given, the
   assert.deepEqual(at("2026-03-20T12:00:00Z"), at("2026-03-20T12:00:00Z"));
 });
 
+test("R3 R8 the minutes-due date is the profile's practice counted by civil-time: business days on the profile's own closures", () => {
+  const cal = typeOf("meeting_calendar");
+  const due = (date, v, now = "2026-12-20T12:00:00Z") => {
+    const p = cal.parse({ text: calendarHtml([["7", "Harbor Commission", date]]) });
+    return cal.connections(p, p, { now, view: v }).find((c) => c.relation === "minutes_not_yet_published");
+  };
+  // a made-up profile counting business days on its own weekend and office calendar (no Port Alder holiday is Oakland's)
+  const BUSINESS = { ...structuredClone(PORT_ALDER), id: "port-alder-business-test",
+    practice: { minutes_due_days: { value: 10, count: "business", basis: "TEST" } },
+    weekend: { days: ["sat", "sun"], citation: "Port Alder Code § 1-01", status: "researched", basis: "TEST" },
+    holidays: [{ year: 2026, days: [{ date: "2026-03-09", name: "Harbor Day" }], status: "researched", basis: "TEST" }] };
+  const bv = view(BUSINESS);
+  // Monday 2 March: ten business days, skipping two weekends and Harbor Day, end Tuesday 17 March
+  const b = due("3/2/2026", bv);
+  assert.equal(b.expected_by, "2026-03-17");
+  assert.match(b.why, /more than 10 business days ago/);
+  assert.equal(due("3/2/2026", bv, "2026-03-17T12:00:00Z").why, "this meeting has taken place and no minutes are offered yet",
+    "on the due day itself, not yet late");
+  // the same period in calendar days is not the same date
+  assert.equal(due("3/2/2026", PA).expected_by, "2026-03-12");
+  // a year the profile's closures do not cover: not counted, and why, never counted as though it had no holidays
+  const late = due("12/28/2026", bv, "2027-02-01T12:00:00Z");
+  assert.equal(late.expected_by, null);
+  assert.match(late.why, /could not be counted.*2027/);
+  // no weekend stated: a business count is not made (the weekend is never assumed)
+  const noWeekend = { ...structuredClone(BUSINESS), id: "port-alder-noweekend-test" };
+  delete noWeekend.weekend;
+  assert.equal(due("3/2/2026", view(noWeekend)).expected_by, null);
+  assert.match(due("3/2/2026", view(noWeekend)).why, /weekend/);
+  // the held first profile: 10 business days (OMC 2.20.160). Its practice names no closure list, and it holds its
+  // closures only as named lists, so the count is not made and says why (reported, jurisdictions R7) …
+  const held = due("10/13/2026", HELD);
+  assert.equal(held.expected_by, null);
+  assert.match(held.why, /10 business days could not be counted/);
+  // … and with the list its ordinances count on named (the City's, K1504 (5)), Tuesday 13 October 2026 gives 27 October
+  const named = structuredClone(HELD);
+  named.practice.minutes_due_days.closures = "city";
+  assert.equal(due("10/13/2026", named).expected_by, "2026-10-27");
+  // Thanksgiving and the day after are the City's closures: 19 November 2026 gives 7 December
+  assert.equal(due("11/19/2026", named).expected_by, "2026-12-07");
+});
+
 /* --------------------------------------------------------------------- R18 */
 
 test("R18 the existing fixtures of every type give the verdicts docprofile gave, apart from the added readings", () => {
@@ -313,7 +355,7 @@ test("R21 deterministic over its inputs apart from R8, and nothing reads a store
     const src = fs.readFileSync(new URL(`../${f}`, import.meta.url), "utf8").replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, "");
     assert.ok(!/\bfetch\s*\(|node:(?:fs|net|http)|\bD1\b|\.prepare\s*\(|indexedDB|localStorage/.test(src), `${f} reads no store or network`);
     for (const m of src.matchAll(/from\s+"([^"]+)"/g))
-      assert.ok(/^\.\/|^\.\.\/(?:docprofile|site-profiles|jurisdictions)\//.test(m[1]), `${f} imports only its declared uses: ${m[1]}`);
+      assert.ok(/^\.\/|^\.\.\/(?:docprofile|site-profiles|jurisdictions|bio-plane\/src\/civil-time)\//.test(m[1]), `${f} imports only its declared uses: ${m[1]}`);
   }
 });
 

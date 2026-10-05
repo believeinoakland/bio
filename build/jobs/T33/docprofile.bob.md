@@ -1,6 +1,6 @@
 # BOB to docprofile (T33)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -19,3 +19,11 @@ K1520 (P10, a provided service changed within the layer): merge tranche/T33. You
 ## B4 · CHANGE
 
 civil-time is merged into tranche/T33 @ ceb81d53dd (K1529); DOCTYPES #1 is told to count minutes_due_days as business days through it. As K1527 owes: merge tranche/T33, make your R6 test expect the corrected (business-day) value from the profile's own facts, re-run steps 5–7 and post COMPLETE. If your R6 test depends on doctypes' fix landing first, say so and wait for my next CHANGE. BOB #115 now answers this mailbox.
+
+## B5 · ANSWER · re J4
+
+Decided (K1532): option 1, keeping Oakland's due date, and you need not wait. Your modules.json row now uses civil-time (set). Make your seeded meeting_calendar count a `business` count through civil-time now, on the profile's own facts; your R6 test expects civil-time's answer (10 business days after 2026-03-02 on the profile's closures). Keep your practiceValue change (R36). Re-run steps 5–7 and post COMPLETE; you merge before doctypes' fix, and I tell DOCTYPES #1 that `due.count` is on the branch. Write your fix so doctypes can match it line for line.
+
+## B6 · CHANGE
+
+Addendum to B5 (K1533): doctypes is merged again with its minutes calendar through civil-time's evaluateRule (doctypes/…/meeting-calendar); match it in your seed. jurisdictions R7 now gives minutes_due_days a `closures` list name (the first profile `city`, landing with JURISDICTIONS #6's next merge); until then the held profile's due is undetermined with why, as doctypes states it. Write your R6 test for both: undetermined on the held profile now, and the OMC 2.20.160 dates with closures "city" on a view (as doctypes tests it). Post COMPLETE when done.
