@@ -1,6 +1,6 @@
 # BIO Capability Ladders v0.1: time, organisations and obligations, law, courts, analysis and questions
 
-**Status.** Written 2026-10-05 for BOB #111 from the constructs study (K1426–K1432); the study's full evidence is on branch `study/constructs`, tag `constructs-study-2026-10-05`. The targets are Bob's (B1 (c), K1432): every construct reaches L5, staged by dependency, within realistic resources and without slowing everyday use. Rungs not yet built are planned, not held; each is re-verified against the code and the world when its stage is planned. Facts about the product are as of `tranche/T32` @ 84e7cd321d. (The studies cite `09837e3ddc`, the reviews `6645f2ea04` and the synthesis's module order `8fa5ab4e3d`; a `git diff` from each of those to 84e7cd321d over `bio-plane/src`, `build/requirements`, `build/modules.json`, `agent-worker`, `newgroup` and `civicos-ui` shows no change.)
+**Status.** Written 2026-10-05 for BOB #111 from the constructs study (K1426–K1432); the study's full evidence is on branch `study/constructs`, commit `892fca16c4` (never deleted, K1433). The targets are Bob's (B1 (c), K1432): every construct reaches L5, staged by dependency, within realistic resources and without slowing everyday use. Rungs not yet built are planned, not held; each is re-verified against the code and the world when its stage is planned. Facts about the product are as of `tranche/T32` @ 84e7cd321d. (The studies cite `09837e3ddc`, the reviews `6645f2ea04` and the synthesis's module order `8fa5ab4e3d`; a `git diff` from each of those to 84e7cd321d over `bio-plane/src`, `build/requirements`, `build/modules.json`, `agent-worker`, `newgroup` and `civicos-ui` shows no change.)
 
 **Why it exists.** Bob, 2026-10-05: "The required capabilities is certain to expand. When I discover the need for that expansion is less certain. So while meeting the targets you've identified for today sounds appropriate, the understanding from this study should be preserved in a way that supports later situation when the need for greater capabilities is identified." Bob then ruled decision B1 as option (c) (K1432): every construct is to reach its full ladder, L5, within what is realistically doable with the resources available and without slowing the system's everyday use for members. This document is the plan's reference: for each construct, every rung, its evidence, its design, what must exist first, what is realistic today, and the decisions it raises. The study's synthesis (`synthesis/constructs.md` on the study branch, cited here as "synthesis §n") holds the full argument.
 
@@ -701,7 +701,7 @@ Also binding, and often met by the planned rungs: measure before widening (D40);
 
 ## 11. Where the evidence is
 
-All of this is on branch `study/constructs`, tag `constructs-study-2026-10-05`, in the study folder.
+All of this is on branch `study/constructs`, commit `892fca16c4` (never deleted, K1433), in the study folder.
 
 | role | files |
 |---|---|
