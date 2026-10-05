@@ -16,7 +16,7 @@
 | C12 | prompts/C12.txt | notes/C12.md | done |  |
 | C13 | prompts/C13.txt | notes/C13.md | done |  |
 | C14 | prompts/C14.txt | notes/C14.md | done |  |
-| D1 | prompts/D1.txt | notes/D1.md | partial | final section not written |
+| D1 | prompts/D1.txt | notes/D1.md | done |  |
 | D2 | prompts/D2.txt | notes/D2.md | done |  |
 | M1 | prompts/M1.txt | notes/M1.md | done |  |
 | M2 | prompts/M2.txt | notes/M2.md | done |  |
