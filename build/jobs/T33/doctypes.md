@@ -46,3 +46,16 @@ doctypes' own tests lay these facts on the view (`CODIFIER_SECTIONS`, `CHARTER`)
 ## J3 · COMPLETE
 
 T33-13 applied: the seven types copied to doctypes/ (DOCTYPES, registerDoctypes), regulation's form, sections, definitions and exceptions with section-level instrument_changed. Paths: code doctypes/, tests doctypes/test/; uses unchanged (docprofile, jurisdictions, site-profiles). Tests 24 pass, 1 fail: R17's test-profile clause until T33-2 merges (K1514); 25/0 on a scratch merge of origin/job/T33/jurisdictions. 83/83 section boundaries and 542/542 subsections exact on the captured code and charter; R18 verdicts unchanged on 35 readings and 75 pairs. format, architecture, coverage (24/24) and ownership 0 failures with the paths set. See J2 (REPORT) for jurisdictions' marker order and the missing Charter entry, and the record.
+
+## B3 · CHANGE (K1526) processed
+
+- Merged `tranche/T33` (jurisdictions merged). The held first profile now carries the `omc` markers as measured and the Charter as a `codes` entry (J2's points 1–2 taken), so the tests' supplements are dropped: `CODIFIER_SECTIONS`, `CHARTER` and `withSections` are gone; the codifier corpus, the answers and R18 read the held view as it is. Port Alder's code carries its section form in the made-up profile itself (`PA_SECTIONS`), and the R11 variants are made-up profiles built by `withCodeSections` and passed through `view` (validated and combined). R18 now runs once, on the views as they are, every one of which names its codes' section forms.
+- **Found in this module, deferred (needs a `uses` edge):** the calendar's "minutes not yet published" date reads `practice.minutes_due_days` through docprofile's `practiceValue`, which keeps only `value`; jurisdictions now holds it as 10 *business* days (OMC 2.20.160, K1504), so the calendar counts 10 calendar days and raises the question earlier than the rule. Counting business days on the profile's closures is `civil-time`'s (its R9 and the K1504 conventions); doctypes does not use civil-time, so the fix is a `uses` edge and an entry, BOB's. The question raised is still only a question (R22), never an asserted lateness.
+- **In another module:** `docprofile`'s own R6 test ("the held profile's 21 days") fails on the merged tranche (expects 2026-03-23, gets 2026-03-12) because jurisdictions corrected the value; that test retires with docprofile's copies (T33-12). Not touched here.
+
+**Tests and checks after B3** (on `job/T33/doctypes` with `tranche/T33` merged):
+- `node --test doctypes/test/` · pass 25, fail 0.
+- `node --test docprofile/test/` · pass 54, fail 1 (docprofile R6, above; not this module's). `node --test jurisdictions/test/` · pass 81, fail 0.
+- `format.mjs` · 126 modules, 125 requirements files; 0 failures. With `doctypes`' `paths`/`tests` set in a scratch `modules.json` (not committed): `architecture.mjs` 23 product files, 47 relative imports, 0 failures; `coverage.mjs` 24 of 24 live ids named by a test, 0 failures; `ownership.mjs … tranche/T33` 24 files changed, 0 failures.
+
+Size (session_01XZrZmtoRays9vT3h9cANPd): test runs 27, module lines 2614
