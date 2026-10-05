@@ -1,0 +1,312 @@
+<title>The Constructs Study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap">
+<style>
+/* Layout: one reading column; a ladder chart and a layer strip as the two figures; decisions as a numbered register. */
+:root{
+  --bg:#f3f6f7; --surface:#ffffff; --ink:#15232c; --muted:#56656e; --rule:#d5dee2;
+  --accent:#1d6a86; --accent-soft:#dcecf2; --today:#b5791b; --today-soft:#f6ead4; --built:#8ea3ae;
+  --display:"IBM Plex Serif",Georgia,"Times New Roman",serif;
+  --body:"IBM Plex Sans",-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f171c; --surface:#16222a; --ink:#e3ebef; --muted:#9aaab3; --rule:#2a3a44;
+  --accent:#5fb4d3; --accent-soft:#18394a; --today:#e0a64a; --today-soft:#3a2c14; --built:#5d7380; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f171c; --surface:#16222a; --ink:#e3ebef; --muted:#9aaab3; --rule:#2a3a44;
+  --accent:#5fb4d3; --accent-soft:#18394a; --today:#e0a64a; --today-soft:#3a2c14; --built:#5d7380; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font:16px/1.6 var(--body);}
+.wrap{max-width:860px;margin:0 auto;padding-inline:16px;padding-block:32px 64px;display:flex;flex-direction:column;gap:44px}
+h1,h2,h3{font-family:var(--display);font-weight:600;line-height:1.2;text-wrap:balance;margin:0}
+h1{font-size:2.1rem} h2{font-size:1.45rem} h3{font-size:1.08rem}
+p{margin:0} .muted{color:var(--muted)}
+.eyebrow{font:500 .74rem/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+section{display:flex;flex-direction:column;gap:16px}
+.lede{font-size:1.08rem;max-width:66ch}
+.box{background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:18px 20px}
+code,.id{font-family:var(--mono);font-size:.86em}
+ul{margin:0;padding-left:1.2em} li+li{margin-top:4px}
+.answer{border-left:3px solid var(--accent);padding:4px 0 4px 18px;display:flex;flex-direction:column;gap:10px;max-width:68ch}
+/* ladder */
+.ladder{overflow-x:auto}
+.ladder table{border-collapse:separate;border-spacing:4px;min-width:560px;width:100%}
+.ladder th{font:500 .78rem var(--mono);color:var(--muted);text-align:center;padding:0 0 4px}
+.ladder th.row{text-align:left;font:600 .9rem var(--body);color:var(--ink);padding-right:8px;white-space:nowrap}
+.ladder td{height:30px;border-radius:3px;border:1px solid var(--rule);background:transparent;position:relative}
+.ladder td.u{background:var(--today);border-color:var(--today)}
+.ladder td.b{background:var(--built);border-color:var(--built)}
+.ladder td.h{background:linear-gradient(90deg,var(--built) 50%,transparent 50%);border-color:var(--built)}
+.ladder td.t{box-shadow:inset 0 0 0 2px var(--accent)}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:.85rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:16px;height:12px;border-radius:2px;border:1px solid var(--rule);display:inline-block}
+.sw.u{background:var(--today);border-color:var(--today)} .sw.b{background:var(--built);border-color:var(--built)}
+.sw.t{box-shadow:inset 0 0 0 2px var(--accent)}
+/* construct grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.card h3{font-size:1rem}
+.k{font:500 .72rem var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.today{color:var(--today)}
+/* layers */
+.layers{display:flex;flex-direction:column;gap:6px}
+.layer{display:grid;grid-template-columns:150px 1fr;gap:12px;align-items:start;background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:10px 14px}
+.layer .ln{font:600 .88rem var(--body)} .layer .ln small{display:block;font:400 .78rem var(--mono);color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;min-width:0}
+.chip{font:500 .8rem var(--mono);padding:2px 8px;border-radius:999px;border:1px solid var(--rule);color:var(--muted)}
+.chip.new{background:var(--accent-soft);border-color:var(--accent);color:var(--ink)}
+.chip.moved{background:var(--today-soft);border-color:var(--today);color:var(--ink)}
+.chip.gone{text-decoration:line-through;opacity:.6}
+@media (max-width:520px){.layer{grid-template-columns:1fr}}
+/* stages */
+.stages{display:flex;flex-direction:column;gap:10px}
+.stage{display:grid;grid-template-columns:64px 1fr;gap:14px;background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:14px 16px}
+.stage .n{font:600 1.5rem var(--display);color:var(--accent)}
+.stage div{min-width:0}
+/* decisions */
+.dec{background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.dec header{display:flex;gap:12px;align-items:baseline}
+.dec .num{font:600 .9rem var(--mono);color:var(--accent);flex:none}
+.dec h3{font-size:1.05rem}
+.kind{font:500 .7rem var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.opts{margin:0;padding-left:1.2em}
+.rec{background:var(--accent-soft);border-radius:4px;padding:10px 12px}
+.rec b{color:var(--accent)}
+.how{border:2px solid var(--accent);border-radius:6px;padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+ol.corr{margin:0;padding-left:1.4em} ol.corr li+li{margin-top:6px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+footer{font-size:.85rem;color:var(--muted)}
+a{color:var(--accent)}
+</style>
+
+<div class="wrap">
+
+<header style="display:flex;flex-direction:column;gap:12px">
+  <span class="eyebrow">Constructs study · BOB #111 · 5 October 2026</span>
+  <h1>The Constructs Study</h1>
+  <p class="lede">You asked whether Civicsmith understands time, organisations, law, court cases, analysis and plain-language questions well enough for the work groups will bring to it. Twenty readers, six analysts and three reviewers read the canon, your rulings, the design session's journeys and the code, and checked them against how watchdogs, auditors and courts actually work. This page is the answer, with the twenty decisions that are yours.</p>
+</header>
+
+<section>
+  <span class="eyebrow">The answer</span>
+  <div class="answer">
+    <p><b>Your sense is right on all six.</b> The product today supports each of these areas only at its lowest levels, and a member can reach even less than is built. No member can ask the assistant a question in plain words, on any copy.</p>
+    <p><b>One thread joins them:</b> what a body owes, to whom, by when, under which authority. Organisations supply who owes it. Law supplies the authority. Time supplies the due date. Courts supply orders and reports that create duties. Analysis measures performance against a bar. Questions read all of it.</p>
+    <p><b>The structural finding.</b> Law, local calendars, deadlines and calculation all sit in layer 9, after Publication. So investigation, where the work happens, cannot use any of them. The recommended architecture moves the record's <i>understanding</i> down into layer 5 and leaves <i>acting</i> where it is. A determination still rests on a published finding, and the machine still never concludes.</p>
+    <p><b>Before any of it reaches members</b>, two things outside the modules are needed: the screens, from the design stream; and an assistant that can run at all, which needs a Console API key, not a Claude subscription.</p>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Where each area stands</span>
+  <h2>Six ladders</h2>
+  <p class="muted" style="max-width:66ch">Each area was given its own ladder of levels, L0 to L5, defined by what a member can do. The fill shows what a member can use today and what is built but unreachable; the outline shows the level recommended as the target (B1).</p>
+  <div class="ladder">
+    <table aria-label="Levels per construct">
+      <thead><tr><th></th><th>L0</th><th>L1</th><th>L2</th><th>L3</th><th>L4</th><th>L5</th></tr></thead>
+      <tbody>
+        <tr><th class="row" scope="row">Time</th><td class="u t"></td><td class="u t"></td><td class="h t" title="about half built"></td><td class="t"></td><td class="t" title="L4 for document dates, chronology, as-of"></td><td></td></tr>
+        <tr><th class="row" scope="row">Organisations</th><td class="u t"></td><td class="u t"></td><td class="t"></td><td class="t"></td><td class="t"></td><td></td></tr>
+        <tr><th class="row" scope="row">Law</th><td class="u t"></td><td class="u t"></td><td class="b t"></td><td class="t"></td><td class="t" title="L4 in what the AI prepares"></td><td></td></tr>
+        <tr><th class="row" scope="row">Courts</th><td class="u t"></td><td class="h t" title="a slice built"></td><td class="t"></td><td class="t"></td><td></td><td></td></tr>
+        <tr><th class="row" scope="row">Analysis</th><td class="u t"></td><td class="b t" title="only after a breach is determined"></td><td class="t"></td><td class="t"></td><td></td><td></td></tr>
+        <tr><th class="row" scope="row">Questions</th><td class="u t"></td><td class="t"></td><td class="t"></td><td class="t"></td><td></td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="legend">
+    <span><i class="sw u"></i>usable by a member today</span>
+    <span><i class="sw b"></i>built, not reachable</span>
+    <span><i class="sw" style="background:linear-gradient(90deg,var(--built) 50%,transparent 50%)"></i>partly built</span>
+    <span><i class="sw t"></i>recommended target</span>
+  </div>
+
+  <div class="grid">
+    <div class="card"><h3>Time</h3>
+      <p><span class="k today">Today</span><br>Typed dates on an action, and "overdue" findings measured from when the group captured a document, not from the meeting. The one deadline calculator has three defects (see Corrections).</p>
+      <p><span class="k">Needs</span><br>One correct calendar engine; a body's duties tracked before publication; meeting schedules; a document's own dates; "as of a date".</p></div>
+    <div class="card"><h3>Organisations</h3>
+      <p><span class="k today">Today</span><br>A subject registry with three undated relations. No "who held the office when", no reporting, oversight or contract lines, no obligation object.</p>
+      <p><span class="k">Needs</span><br>Dated, sourced lines between bodies and offices; holders over time; one held object for what a body owes.</p></div>
+    <div class="card"><h3>Law</h3>
+      <p><span class="k today">Today</span><br>Standards and determinations are built but sit in layer 9 with no screen. A member can only type citation strings on an action.</p>
+      <p><span class="k">Needs</span><br>Law held where investigation runs, at the version in force on the date of the act and at section level, with the AI proposing only from captured text.</p></div>
+    <div class="card"><h3>Courts</h3>
+      <p><span class="k today">Today</span><br>No object of its own. A member can capture, cite and record correspondence, but cannot switch on a watch of a court page.</p>
+      <p><span class="k">Needs</span><br>Follow a proceeding (court, number, parties, register, stages); track the duties orders and reports impose; verify citations.</p></div>
+    <div class="card"><h3>Analysis</h3>
+      <p><span class="k today">Today</span><br>The only calculation runs after a breach is determined. A cited spreadsheet cell is a pointer whose value the record cannot read back.</p>
+      <p><span class="k">Needs</span><br>One calculation construct, two engines: recipes the system computes, and the member's own spreadsheets, bound to their sources and recomputed.</p></div>
+    <div class="card"><h3>Questions</h3>
+      <p><span class="k today">Today</span><br>Nothing to ask into. Only the evidence checker is deployed, the installer sets no model key, and the setup page names the wrong account.</p>
+      <p><span class="k">Needs</span><br>First an assistant that runs; then "ask the record", whose answers the system checks; later, answers that apply law, deadlines and figures from the system, never from the model's memory.</p></div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">The architecture</span>
+  <h2>What moves, what is new</h2>
+  <p class="muted" style="max-width:66ch">The modules are in one order, and a module may use only those before it. Moving <code>standards</code> and <code>local-facts</code> breaks no dependency: everything they use is earlier, and everything that uses them is later. <code>conformance</code>, <code>consequences</code> and <code>action-clocks</code> stay in layer 9, because they depend on Publication.</p>
+  <div class="layers" aria-label="Layers with new and moved modules">
+    <div class="layer"><div class="ln">Layer 1<small>Foundations</small></div><div class="chips"><span class="chip">jurisdictions</span><span class="chip new">civil-time</span><span class="chip new">calc-grammar</span><span class="chip">id-spaces</span><span class="chip">docprofile</span><span class="chip new">sheet-worker</span></div></div>
+    <div class="layer"><div class="ln">Layer 5<small>Meaning and retrieval</small></div><div class="chips"><span class="chip">entities</span><span class="chip new">lines</span><span class="chip moved">local-facts</span><span class="chip">connections</span><span class="chip moved">standards</span><span class="chip new">chronology</span><span class="chip">progressions</span><span class="chip new">duties</span><span class="chip">bias</span><span class="chip">observation-log</span><span class="chip">query-language</span><span class="chip">retrieval</span><span class="chip new">calculations</span></div></div>
+    <div class="layer"><div class="ln">Layer 6<small>Inquiry and the assistant</small></div><div class="chips"><span class="chip">inquiry</span><span class="chip">skills</span><span class="chip new">answers</span><span class="chip">agent-worker (split)</span></div></div>
+    <div class="layer"><div class="ln">Layer 9<small>Action</small></div><div class="chips"><span class="chip gone">local-facts</span><span class="chip gone">standards</span><span class="chip">conformance</span><span class="chip">consequences</span><span class="chip">action-clocks</span><span class="chip">filings</span><span class="chip">escalation</span></div></div>
+  </div>
+  <div class="legend"><span><i class="sw" style="background:var(--accent-soft);border-color:var(--accent)"></i>new module</span><span><i class="sw" style="background:var(--today-soft);border-color:var(--today)"></i>moved down from layer 9</span></div>
+  <div class="box" style="display:flex;flex-direction:column;gap:8px">
+    <p><b>The obligation, once.</b> Three studies designed the same thing in three places. It becomes one record in one module (<code>duties</code>). Members see your word "obligation" (DEC-107) for a body's duty and "power" for what an office may do. Each obligation names who owes it (an office or body, never a private person), to whom, what, its source in force (a law, an order, a contract clause or a commitment), and how its due date is computed. Whether each occurrence was met, late or overdue is worked out when read, never stored. "Overdue" raises a question; it never asserts a violation.</p>
+    <p><b>One way to ask "as of a date".</b> Laws in force, who held an office, what a line between bodies was, and a proceeding's status are all read the same way, and each answer says "undetermined" when the dates don't settle it.</p>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">How to proceed</span>
+  <h2>Five stages, in dependency order</h2>
+  <p class="muted" style="max-width:66ch">These describe what each stage unlocks, not a tranche plan: none is opened or planned until you say so (K1425). Every stage measures first and needs the design stream's screens.</p>
+  <div class="stages">
+    <div class="stage"><div class="n">0</div><div><h3>Runnable and correct</h3><p>Make any assistant runnable (the right key, deployed, with caching, usage recorded and a spend ceiling), and fix the defects that need no new module. Nothing new for members, but no more false "overdue" marks, and every AI stage becomes testable.</p></div></div>
+    <div class="stage"><div class="n">1</div><div><h3>The shared ground</h3><p>The calendar engine, organisational lines, calculation, the answer checks; law and local facts moved down. <b>Unlocks:</b> a records request due date from the law; the office that holds the records; finding the city's own standard and declaring each requirement; checking the 90% pothole claim against the city's data; budget against actuals for one year; "ask the record" in plain words. About 5 new modules and 200 requirements, by the studies' own estimates.</p></div></div>
+    <div class="stage"><div class="n">2</div><div><h3>What bodies owe, their meetings, their proceedings</h3><p><code>duties</code>, a document's own dates, the spreadsheet engine. <b>Unlocks:</b> watching a body's meetings and minutes; "Waiting on the City Clerk's reply, due 14 October" from data; franchise and contract duties; following a court case or a rate case; grand jury and audit follow-up; "what did this section say on that date"; a member's own workbook in the record.</p></div></div>
+    <div class="stage"><div class="n">3</div><div><h3>Applied and assisted</h3><p>The assistant applies law, deadlines and figures from the system; explaining a charge or a rule; precedent; multi-year fund cases like the founding case's nine fiscal years; charts. Waits on the investigate and extract modes being deployed and measured.</p></div></div>
+    <div class="stage"><div class="n">4</div><div><h3>Network and imports</h3><p>Shared structure and law packs between groups; state and federal code imports. Waits on a group asking.</p></div></div>
+  </div>
+</section>
+
+<section id="decisions">
+  <span class="eyebrow">Your decisions</span>
+  <h2>Twenty decisions</h2>
+  <div class="how">
+    <p><b>How to answer.</b> Reply in this session, for example "All as recommended", or "All as recommended except B8 (b)". I record each ruling once, answer the design session's question U41 on the channel with them, and report back. Everything below the level of these questions I have decided and recorded; it is listed further down.</p>
+  </div>
+
+  <article class="dec"><header><span class="num">B1</span><div><h3>How far each area should go</h3><span class="kind">Requirement scope</span></div></header>
+    <ul class="opts"><li>(a) Fix the defects only.</li><li>(b) The target levels shown in the ladders.</li><li>(c) Everything, including network sharing and imports, now.</li></ul>
+    <p class="rec"><b>Recommend (b).</b> Time L3 (L4 for document dates and "as of"); Organisations L4 for one city; Law L3 in the record and L4 in what the AI prepares, both during investigation; Courts L3; Analysis L2 then L3; Questions L3. Each is the lowest level that serves the core work you described.</p></article>
+
+  <article class="dec"><header><span class="num">B2</span><div><h3>Move law and local facts below Publication</h3><span class="kind">Layers</span></div></header>
+    <ul class="opts"><li>(a) Stay in layer 9.</li><li>(b) Move <code>standards</code> and <code>local-facts</code> to layer 5 now; conformance, consequences and the group's own clocks stay in layer 9.</li><li>(c) Bridge the first stage by registering data into search, and move later when code must call them.</li><li>(d) As (b), and also split the comparison out of conformance now.</li></ul>
+    <p class="rec"><b>Recommend (b).</b> The canon puts law inside investigation, no dependency breaks, and a question resting on a held standard (B13) needs it in code from the first stage, so (c) would build a bridge to throw away. A determination still rests on a published finding (K102 stands; nothing is asked there). (d) unlocks nothing yet.</p></article>
+
+  <article class="dec"><header><span class="num">B3</span><div><h3>Eight new product modules and one split</h3><span class="kind">Architecture</span></div></header>
+    <ul class="opts"><li>Stage 1: <code>civil-time</code> (one calendar engine), <code>calc-grammar</code> (the pure calculation rules), <code>lines</code> (dated links between bodies and offices), <code>calculations</code>, <code>answers</code> (checks what the assistant says); and splitting <code>agent-worker</code>, which is near the size limit.</li><li>Stage 2: <code>chronology</code> (a document's own dates), <code>duties</code> (the obligation), <code>sheet-worker</code> (recomputes spreadsheets).</li></ul>
+    <p class="rec"><b>Recommend all.</b> Each is a distinct concern and fits in one reading. Folding them into existing modules was considered and rejected for each: it would breach the size limit, mix kinds of relation your doctrine keeps apart, or put them where investigation cannot see them. A separate "proceedings" module is held back until the court facet needs its own acts.</p></article>
+
+  <article class="dec"><header><span class="num">B4</span><div><h3>The obligation</h3><span class="kind">Requirement meaning · doctrine</span></div></header>
+    <ul class="opts"><li>(i) One held object for what a body owes, as you defined the flow model on 1 August.</li><li>(ii) Who may owe one: (A) public bodies only; (B) public bodies, and bodies acting for one under a law, contract, franchise or grant; (C) any organisation.</li><li>(iii) A duty computed from a profile rule, or proposed by the machine, stays a proposal until a member adopts it; from then it is tracked and told once.</li></ul>
+    <p class="rec"><b>Recommend yes to (i), (B) for (ii), yes to (iii).</b> Your definition of nonconformity reaches "action by some other person or organization", and the franchise journey needs it. A private person is never an obligor, and a contractor's breach is addressed to the office that enforces the contract.</p></article>
+
+  <article class="dec"><header><span class="num">B5</span><div><h3>New kinds in the registry</h3><span class="kind">Doctrine: closed vocabularies</span></div></header>
+    <ul class="opts"><li>Subject kinds: add <i>program</i> (a program, service or function), <i>place</i> (a district or division) and <i>proceeding</i>.</li><li>Line kinds, a closed list: part of, post in, holds, reports to, oversees, appoints, seat on, funds, contracts with, acts for, responsible for, custodian of, successor of; and for proceedings: party to, appeal of, consolidated with, remanded to, arises from.</li><li>Alternatives: no new subject kinds; or lines without the proceeding kinds.</li></ul>
+    <p class="rec"><b>Recommend as listed.</b> Responsibility, funding and consequences already name programs; a proceeding needs a stable identity across captures. Adding a kind is a doctrine change, so all of them come to you at once.</p></article>
+
+  <article class="dec"><header><span class="num">B6</span><div><h3>Walking the lines, and powers without verdicts</h3><span class="kind">Doctrine</span></div></header>
+    <ul class="opts"><li>(a) Dated, graded, cited lines may be walked: bounded, as of a date, the weakest link governs, "undetermined" when the walk runs out, no ranking. Declared relations stay untraversed.</li><li>(b) Single hops only.</li></ul>
+    <p class="rec"><b>Recommend (a).</b> "Who answers for this" and escalation are chains, and DEC-16 already rules a bounded walk. You should see the counter-precedent too: DEC-60 says the intelligence never goes "into relationships the record computes over"; I read it as aimed at inference, not at cited structure. Within (a), the machine only says which powers are in force and from which instrument. It never treats a reporting line as delegation, and never says whether an act was within powers; that stays a member's determination.</p></article>
+
+  <article class="dec"><header><span class="num">B7</span><div><h3>What the machine may write without a member</h3><span class="kind">Doctrine</span></div></header>
+    <ul class="opts"><li>(A) Only facts from source data with identifiers at both ends, attributed to the machine and shown for review: council and committee seats from Legistar; the profile's offices seeded at setup; a proceeding registered from its captured court register; dates a reader states, with its method. Everything else is proposed; duties and powers are always proposals.</li><li>(B) Everything proposed.</li><li>(C) The machine writes everything.</li></ul>
+    <p class="rec"><b>Recommend (A).</b> It extends DEC-52 exactly as far as its reasoning goes, while reading law into a duty stays a member's act ("propose, never install").</p></article>
+
+  <article class="dec"><header><span class="num">B8</span><div><h3>Private individuals</h3><span class="kind">Doctrine · people outside the project</span></div></header>
+    <ul class="opts"><li>(a) One rule everywhere: office holders recorded only for offices the group registers, each tenure cited, nothing beyond role, dates and status; bulk import only for elected and appointed officials and office heads, with contact details dropped; other staff only when a documented act names them in official capacity; a private party to a lawsuit appears only as "a private party", and a proceeding is never named by its caption; calculations group by office or class, never by person; person-level rows travel in a published case only redacted or aggregated.</li><li>(b) Allow any public employee a document names, and per-person figures for officials.</li><li>(c) Leave it to each group's editorial policy.</li></ul>
+    <p class="rec"><b>Recommend (a).</b> It carries Design Requirement 6 and the personal-data rules into the new areas. (b) builds the work-pattern profile DEC-11 warned of.</p></article>
+
+  <article class="dec"><header><span class="num">B9</span><div><h3>What the record may claim about time</h3><span class="kind">Doctrine · requirement meaning</span></div></header>
+    <ul class="opts"><li>(i) When a date is uncertain: (a) always err early (K941); (b) direction-aware: the group's own deadlines use the earliest possible date, and a body is "overdue" only after the latest, with "possibly overdue: undetermined, because …" between; (c) undetermined whenever any input is uncertain.</li><li>(ii) A body's overdue duty runs from the event's own date (the meeting, the act), never from when the group captured the document.</li><li>(iii) A deadline's day is the local day of the office's jurisdiction, not the UTC day the requirement says today; "by close of business" uses the office's hours.</li></ul>
+    <p class="rec"><b>Recommend (b), yes, yes.</b> Erring early makes premature claims about public bodies, the overclaim the doctrine ranks worst. Today a typed deadline of 30 March marks the City late at 5 pm Pacific that day.</p></article>
+
+  <article class="dec"><header><span class="num">B10</span><div><h3>Profiles that hold sourced rules</h3><span class="kind">Requirement scope · doctrine</span></div></header>
+    <ul class="opts"><li>(a) The jurisdiction profile holds, as data, the rules groups need (notice periods counted backward, hours-based rules, tolling, start events, meeting schedules, fiscal years, the weekend, law ranks, case-number forms), each cited, with a status, confirmed locally; a rule with no primary source never applies.</li><li>(b) Keep the profile to calendars and citations; members type every rule.</li></ul>
+    <p class="rec"><b>Recommend (a).</b> The fear in D-149 is a rule that goes stale silently; the citation, the status, the confirmation horizon and a member's adoption (B4) contain it. Oakland's one deadline rule is unsourced today and must be sourced before it applies.</p></article>
+
+  <article class="dec"><header><span class="num">B11</span><div><h3>The model of law</h3><span class="kind">Requirements</span></div></header>
+    <ul class="opts"><li>(i) An instrument, its versions over time and its sections, with amendment, repeal and recodification as links that cite the amending text (the model Akoma Ntoso and legislatures use), instead of whole-standard replacement only.</li><li>(ii) A governing law, a records-request law and a deadline's basis may name a held standard; the member's citation stays their statement.</li></ul>
+    <p class="rec"><b>Recommend both, staged.</b> "The law in force on the date of the act" is the core need, and one fact belongs in one place.</p></article>
+
+  <article class="dec"><header><span class="num">B12</span><div><h3>What the machine may say about law and rulings</h3><span class="kind">Doctrine · the line on practising law</span></div></header>
+    <ul class="opts"><li>(i) Closed book: no fact and no rule from the model's own knowledge; where nothing is held it says "not held" and offers the act that would find it.</li><li>(ii) Explaining: (a) quote only; (b) a labelled, cited reading of held text, quoted beside it, stating its limits and "legal information, not legal advice", never "the law is", a member's rights, a likely outcome or what to file; (c) free explanation.</li><li>(iii) Procedural facts from the profile (which form, which venue, which deadline) shown as facts, never as recommendations.</li></ul>
+    <p class="rec"><b>Recommend (i) yes; (ii)(b) for statutes, ordinances and policies, with rulings quote-only until acceptance is measured; (iii) yes.</b> Legal research tools built on retrieval are still wrong one time in six or more, and New York City's chatbot taught businesses illegal practice. An attorney-supervised mode waits until a group with a lawyer member asks.</p></article>
+
+  <article class="dec"><header><span class="num">B13</span><div><h3>What a finding may rest on</h3><span class="kind">Requirement meaning</span></div></header>
+    <ul class="opts"><li>(i) An occurrence of a sourced duty (its source in force, trigger date, due date and where the system looked) as evidence, from stage 2.</li><li>(ii) A calculation as evidence, graded by its weakest input; a spreadsheet engine's values count as a measured step; the method is disclosed, not graded.</li><li>(iii) A question may rest on a held standard, from stage 1, so each requirement in a code section becomes a question.</li></ul>
+    <p class="rec"><b>Recommend all three.</b> DEC-14 already makes a body's non-response a dated, first-party fact. An action is never evidence for a finding.</p></article>
+
+  <article class="dec"><header><span class="num">B14</span><div><h3>Calculation</h3><span class="kind">Requirements · doctrine</span></div></header>
+    <ul class="opts"><li>(i) One construct, two engines: recipes first, members' spreadsheets after.</li><li>(ii) A consequence may use a calculation's result.</li><li>(iii) The offline case checker: (a) ships a spreadsheet engine beside it, changing its "one self-contained file" requirement; (b) stays one file, recomputes recipes only, and a workbook says "recomputed by the instance's engine; open it in any spreadsheet program".</li><li>(iv) A second member's check is shown, never required.</li><li>(v) At publication, a calculation that fails to recompute is disclosed, and only an undisclosed difference is refused.</li><li>(vi) Samples: counts with denominators now; from stage 3, an estimate only from a random, recorded draw the system makes, which decides what members go and visit (touching "the machine does not choose what to look into").</li><li>(vii) A comparison against a bar is a computed fact, never a finding of breach.</li></ul>
+    <p class="rec"><b>Recommend yes to all, with (b) for (iii) until the engine passes its measure, and the draw in (vi) allowed as a mechanical act, not a choice.</b> "A group may be one person", so a second check cannot be a gate.</p></article>
+
+  <article class="dec"><header><span class="num">B15</span><div><h3>Outside and paid sources</h3><span class="kind">Policy · sovereignty</span></div></header>
+    <ul class="opts"><li>(a) Public sources needing no key by default: code publishers' pages, Legistar, eCFR, CourtListener's public pages.</li><li>(b) Fee-bearing or account-gated records (PACER, state court portals) only by a member's own act, with their own login, the price shown first, never in an unattended run.</li><li>(c) Keyed services (Open States, a CourtListener token, legal databases) on the group's key, only when a group asks.</li><li>(d) A group-level paid account the system uses unattended.</li></ul>
+    <p class="rec"><b>Recommend (a) and (b) now, (c) on request, reject (d).</b> No vendor key is ever required to run Civicsmith.</p></article>
+
+  <article class="dec"><header><span class="num">B16</span><div><h3>The assistant's account and spending</h3><span class="kind">Policy · UX</span></div></header>
+    <p>The account is a fact, not a choice: the code needs an Anthropic API key from the Claude Console, paid per use. Anthropic's terms do not allow a Claude subscription (on any plan, Team and Enterprise included) to power a product like this.</p>
+    <ul class="opts"><li>(i) The assistant is optional, offered at setup; the administrator is told then that questions, and the material read to answer them, go to Anthropic under the group's key.</li><li>(ii) The group's key pays; a project's or member's own API key takes precedence where set.</li><li>(iii) A spend ceiling per group per month and per member per day, refused in plain words when reached.</li><li>(iv) Administrators see monthly use per mode; members see no per-answer cost.</li></ul>
+    <p class="rec"><b>Recommend all four.</b> For scale: five members asking five questions a day would cost about $55–135 a month on Sonnet 5.5 once caching is built, and 1.4 to 1.75 times that as the code stands. These are estimates; stage 0 measures them.</p></article>
+
+  <article class="dec"><header><span class="num">B17</span><div><h3>What the assistant may read, suggest and keep</h3><span class="kind">Doctrine</span></div></header>
+    <ul class="opts"><li>(i) Widen what the assistant may read to law, profiles, the registry, lines and duties. Sources' identities, members' search history and admin stay closed.</li><li>(ii) Suggestions: (a) structure only what the member said; (b) labelled suggestions drawn only from material the member brought or chose, each adopted by the member; (c) free suggestions.</li><li>(iii) What is kept: (a) nothing in the record (a transcript on the member's device, counts without names); (b) each question logged as a search in the record.</li></ul>
+    <p class="rec"><b>Recommend yes to (i), recorded as a widening; (b) for (ii); (a) for (iii).</b> The journeys promise "one question per requirement in a code section". A log of members' questions is something legal process can reach.</p></article>
+
+  <article class="dec"><header><span class="num">B18</span><div><h3>A court order to remove or redact a published case</h3><span class="kind">Policy</span></div></header>
+    <ul class="opts"><li>(a) Defer the path until the first such order is served on a group, and record the principle now: an order addressed to the group is complied with, never silently; the order is captured, a signed docket entry names it, and the edition is stamped.</li><li>(b) Design the path now.</li></ul>
+    <p class="rec"><b>Recommend (a).</b> Material that a court later seals, or unseals, joins the same principle when it arises.</p></article>
+
+  <article class="dec"><header><span class="num">B19</span><div><h3>Exporting deadlines to a calendar</h3><span class="kind">Policy</span></div></header>
+    <ul class="opts"><li>(a) None.</li><li>(b) A one-off download of a member's own deadlines, which reaches no one who has not opened Civicsmith.</li><li>(c) A subscription feed, which is an outside channel.</li></ul>
+    <p class="rec"><b>Recommend (a) now, (b) when members ask, reject (c)</b> under your rule of no outside channels (DEC-94).</p></article>
+
+  <article class="dec"><header><span class="num">B20</span><div><h3>Where members meet all this, and the words they see</h3><span class="kind">UX</span></div></header>
+    <ul class="opts"><li><b>Places,</b> all inside existing screens: due dates written out with their time zone on the queue, action and plan; a "Calendar facts" place to confirm holidays and hours; an <i>office page</i> (holders over time, lines as of a date, obligations and powers with sources); a body's "Expected" list (next meeting, agenda, minutes due); a <i>proceeding page</i> with the court's register and "the court's date, not ours"; a Standards register with "declare from this passage" and an "in force on" selector; a "Work it out" step in the question workspace (compute from the record, bring my spreadsheet, ask the assistant); timelines; the answer panel (a one-line answer, where it looked and its limit always shown, quotes one tap away).</li><li><b>Words:</b> "obligation" and "power"; "lines" for the structure, with verbs ("reports to", "held by"); "standard" for law, policy or a commitment held, "requirement" for one thing it requires, and "bar" always for the group's evidence threshold; "proceeding" and "register" for court matters, never "case" or "docket".</li></ul>
+    <p class="rec"><b>Recommend all,</b> for the design stream to render.</p></article>
+</section>
+
+<section>
+  <span class="eyebrow">Not choices</span>
+  <h2>Corrections to make</h2>
+  <p class="muted" style="max-width:66ch">Defects and wrong wording the study found. I will fix these; they are listed so you know.</p>
+  <ol class="corr">
+    <li><b>The deadline calculator counts from the wrong receipt.</b> The records law counts from when the City received the request, but the code counts from when the group received a reply. So Oakland's one deadline rule never computes when the City says nothing, the case it exists for.</li>
+    <li><b>No roll-forward past weekends and holidays,</b> and the weekend is written into the code instead of the profile. A request received Thursday 19 March would be due Sunday 29 March, not Monday the 30th. No member can reach this yet.</li>
+    <li><b>"Overdue" is marked on the UTC day,</b> seven to eight hours early for a California office. This one members can reach today; its fix follows your ruling on B9 (iii).</li>
+    <li><b>Search date ranges drop the last day,</b> and "overdue" in search reads a stored flag without saying so.</li>
+    <li><b>Impossible dates such as 31 February are accepted.</b></li>
+    <li><b>The Oakland profile ships its deadline rule and its five offices without a source.</b></li>
+    <li><b>The add flow's named addressee</b> conflicts with the rule that an addressee is an office.</li>
+    <li><b>The setup page and the architecture text ask for a Claude subscription;</b> the code needs an API key. The subscription idea rested on an Agent SDK credit Anthropic paused on 15 June.</li>
+    <li><b>The code and its own header disagree</b> about whether the assistant runs model turns at all, and planning mode would switch itself on.</li>
+    <li><b>The model calls have no caching, no usage record and no spending bound.</b></li>
+    <li><b>The architecture text says "never a spreadsheet"</b> as an input; the retired design it came from does not bind.</li>
+  </ol>
+</section>
+
+<section>
+  <span class="eyebrow">Decided at my level</span>
+  <h2>Already decided, reported</h2>
+  <div class="cols">
+    <div class="box"><p><b>Names and order.</b> Module names (<code>civil-time</code>, <code>lines</code>, <code>duties</code>, <code>chronology</code>, <code>calc-grammar</code>, <code>calculations</code>, <code>sheet-worker</code>, <code>answers</code>); positions within layer 5; the queue keeps its internal code and uses the slot it already reserves; <code>docprofile</code> is split before the court readers land.</p></div>
+    <div class="box"><p><b>Time.</b> Recurring meetings use the iCalendar rule standard (a subset); imprecise dates use the Library of Congress's standard; the engine never reads the clock itself; vendor quirks such as "- CANCELLED" live in data, never code.</p></div>
+    <div class="box"><p><b>Organisations and courts.</b> Lines are graded on two counts: who asserts them, and how surely each end is identified. Walks stop at six steps. A proceeding is named by court, number and a neutral description. Citations are "verified" only against a held copy.</p></div>
+    <div class="box"><p><b>Analysis and questions.</b> Tables are CSV with a schema, fingerprinted. Results are stored, not recomputed on every read. IronCalc is a candidate engine only, adopted if it passes its measure. The model is chosen per mode by measurement.</p></div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">The design session</span>
+  <h2>Its question U41</h2>
+  <p style="max-width:68ch">The design session asked the same six questions on 5 October. Its reading of what is built is confirmed in every area, with the limits above added. Once you rule, I answer it on the channel with your rulings, so it can show members each capability, and its honest limits, on the screens.</p>
+</section>
+
+<section>
+  <span class="eyebrow">Still open</span>
+  <div class="box" style="display:flex;flex-direction:column;gap:6px">
+    <p><b>Only measurement can settle:</b> the true cost per question; whether the date API works on Cloudflare; whether the spreadsheet engine agrees with Excel on real workbooks; whether court registers can be followed without a login; how accurate machine-read dates and duties are.</p>
+    <p><b>Only a real group can settle:</b> how many proceedings it follows, whether members bring their own spreadsheets, what spending it accepts.</p>
+  </div>
+</section>
+
+<footer>Study materials: branch <code>study/constructs</code> of the bio repository: six studies, three reviews, the synthesis and my review of it. No tranche is open or planned (K1425).</footer>
+</div>
