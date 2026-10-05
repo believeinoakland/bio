@@ -5700,8 +5700,8 @@
     {
      "name": "CONDITION",
      "meaning": "status signal; only muted",
-     "memberWord": "Signal",
-     "memberWordSrc": "docs/architecture/BIO_Interaction_Constructs_v0_1.md §revised set (QUEUE) ('a CONDITION is a signal')"
+     "memberWord": "Status",
+     "memberWordSrc": "DEC-131 (2026-10-05, replacing DEC-110's 'Signal', which K1473 now uses for the machine's judgment scores); docs/architecture/BIO_Interaction_Constructs_v0_1.md §revised set (QUEUE)"
     },
     {
      "name": "muted / snoozed",

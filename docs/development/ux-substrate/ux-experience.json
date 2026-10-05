@@ -1344,14 +1344,14 @@
     ],
     "stakes": [
      {
-      "text": "Individuals are named only in official capacity in connection with specific documented acts; accountability belongs to the role and institution.",
+      "text": "A person materially involved in what a published case documents is named, by name, title or role as the finding needs, with their documented acts, positions, ties and financial interests where these bear on it; a person outside any official, professional or public role only where their own documented act, tie or interest bears on the finding; every named person has a recorded basis checked before publication. Accountability belongs to the role and the institution, and also to the person who acted.",
       "basis": "fixed",
-      "src": "Design Requirement 6"
+      "src": "Design Requirement 6 as amended by Bob, 2026-10-05 (K1483)"
      },
      {
-      "text": "Consequences never name an individual.",
+      "text": "A harmed party may be a person a document names; published text names them only with their consent or where Design Requirement 6 allows, and otherwise counts them as a class. A whistleblower who is a source stays protected.",
       "basis": "fixed",
-      "src": "consequences R10"
+      "src": "K1484 row 7 (replaces consequences R10's 'never a person'); DEC-78"
      }
     ]
    },
@@ -6255,7 +6255,7 @@
      "decisionTheyMake": "Computed, assessed or undetermined; causation.",
      "whatCanGoWrong": [
       "NOT_NONCOMPLIANT.",
-      "A part naming an individual: refused.",
+      "A part naming a person: held only where a document names them; published only with their consent or where Design Requirement 6 allows (K1484 row 7).",
       "Totals only within one state."
      ],
      "howLong": "Hours.",
@@ -6285,7 +6285,7 @@
      "whatTheyKnow": "The determination is live and noncompliant.",
      "decisionTheyMake": "Why the group is not pursuing it now, in their own words.",
      "whatCanGoWrong": [
-      "Nothing may be recorded as significance, severity, priority, urgency or rank (conformance R8, escalation R19)."
+      "Nothing may be recorded as significance, severity, priority, urgency or rank (conformance R8, escalation R19); a machine's judgment signal (members see a 'hint') lives only in the hypothesis layer, labelled, never on the determination (K1473)."
      ],
      "howLong": "Minutes.",
      "handoffTo": "the group; a later escalation, opened with its own reason, supersedes it and both stay readable",
@@ -8832,9 +8832,9 @@
      "src": "build/plan/action-design/matter-page.html (design view, not stated as approved); docs/architecture/BIO_Action_v0_1.md (canon whole, K608 (1)) §4 rule 3"
     },
     {
-     "text": "On the matter page (design view, not stated as approved): consequences by class, never singling out a person; undetermined never read as zero.",
+     "text": "On the matter page (design view, not stated as approved): consequences by class, or a harmed person a document names where K1484 row 7 allows; undetermined never read as zero.",
      "basis": "fixed",
-     "src": "build/plan/action-design/matter-page.html (design view, not stated as approved); consequences"
+     "src": "build/plan/action-design/matter-page.html (design view, not stated as approved); consequences; K1484 row 7"
     },
     {
      "text": "On the matter page (design view, not stated as approved): the proposed stage with its trigger's age; advance, or decline with a reason; exit conditions each shown.",
@@ -8849,14 +8849,14 @@
    ],
    "mustNeverShowOrDo": [
     {
-     "text": "Never a significance, severity, priority, urgency, rank or score.",
+     "text": "Never a significance, severity, priority or urgency recorded as a fact, and never a score standing for a judgment. A ranking by a stated, measured quantity is analysis (K1471); a machine's judgment signal ('hint') shows only in the hypothesis layer with its method and false-alarm rate, never here as a fact (K1473).",
      "basis": "fixed",
-     "src": "conformance R8; consequences R11; escalation R19"
+     "src": "conformance R8; consequences R11; escalation R19; K1471; K1473"
     },
     {
-     "text": "Never name an individual except in official role.",
+     "text": "In Civicsmith's own words and on published surfaces, name a person only as Design Requirement 6 (amended) allows; members' screens show people as the record holds them.",
      "basis": "fixed",
-     "src": "consequences R10; Design Requirement 6"
+     "src": "consequences R10; Design Requirement 6; K1483; K1485 (C2 row 8)"
     },
     {
      "text": "Never advance a stage by machine; a proposal is never an advance.",
@@ -8879,7 +8879,7 @@
      "src": "actions R7, R26"
     },
     {
-     "text": "On the matter page (design view, not stated as approved): a significance, severity, priority or score.",
+     "text": "On the matter page (design view, not stated as approved): a significance, severity, priority or score recorded as a fact (a machine 'hint' appears only in the hypothesis layer, K1473).",
      "basis": "fixed",
      "src": "conformance R8; escalation R19"
     }
@@ -11134,9 +11134,11 @@
     "rulings": [
      "DEC-89",
      "action-plans R13",
-     "escalation R13"
+     "escalation R13",
+     "K1471",
+     "K1473"
     ],
-    "decided": "Whether a matter is worth pursuing is recorded only in acts and their reasons, never in a score. Opening an escalation takes a written reason. 'Decline to escalate' on a live noncompliant determination records, in the member's own words, why the group is not pursuing it now: reasoned, attributed and dated, corrected only forward (a later escalation, opened with its own reason, supersedes it and both stay readable). In an action plan, not pursuing a matter is an option declined with a short reason. No field, value or vocabulary for significance, severity, priority, urgency or rank exists anywhere. Any joined member who may open an escalation may decline one.",
+    "decided": "Whether a matter is worth pursuing is recorded only in acts and their reasons, never in a score. Opening an escalation takes a written reason. 'Decline to escalate' on a live noncompliant determination records, in the member's own words, why the group is not pursuing it now: reasoned, attributed and dated, corrected only forward (a later escalation, opened with its own reason, supersedes it and both stay readable). In an action plan, not pursuing a matter is an option declined with a short reason. No field, value or vocabulary for significance, severity, priority, urgency or rank exists anywhere. Any joined member who may open an escalation may decline one. Amended 2026-10-05 (K1473, K1471): a measured ranking is analysis, and the machine may raise a judgment signal (members see a 'hint') only in the hypothesis layer, with its method, inputs and measured false-alarm rate; it is never cited, never moves a grade or a finding, and is never recorded on a determination.",
     "status": "ruled",
     "title": "Where the judgement to pursue a matter, or not, is recorded"
    }
@@ -15741,11 +15743,12 @@
     "rulings": [
      "K356",
      "DEC-107",
-     "DEC-110"
+     "DEC-110",
+     "DEC-131"
     ],
     "status": "ruled",
     "title": "The queue's three kinds of item: names, treatment, sorting",
-    "decided": "The queue is one list. Members see its three kinds as 'To do', 'Noticed' and 'Signal', each with its own icon, wording, buttons and an 'Open…' link to its home (until the flow model and the signal history exist, the link goes to the thing the item concerns). The default order is grouped by case, with to-dos, then noticed items, then signals; a member may re-sort by time added, time due, case or kind, and when sorted by case or kind the list folds into collapsible groups so a member can focus on one. The detailed look is Design's."
+    "decided": "The queue is one list. Members see its three kinds as 'To do', 'Noticed' and 'Status', each with its own icon, wording, buttons and an 'Open…' link to its home (until the flow model and the status history exist, the link goes to the thing the item concerns). The default order is grouped by case, with to-dos, then noticed items, then status items; a member may re-sort by time added, time due, case or kind, and when sorted by case or kind the list folds into collapsible groups so a member can focus on one. The detailed look is Design's. Renamed 2026-10-05 (DEC-131): the third kind is 'Status', since K1473 uses 'signal' for the machine's judgment scores, which members see as 'hints'."
    }
   },
   {
@@ -17565,11 +17568,13 @@
     "by": "Bob",
     "rulings": [
      "DEC-100",
-     "DEC-116"
+     "DEC-116",
+     "K1480",
+     "K1493"
     ],
     "status": "ruled",
     "title": "After publication: a case's docket, outside responses, and withdrawing a case",
-    "decided": "Each case has a docket: dated entries, each naming the edition it concerns, growing while the signed editions never change. The named subject has party-like standing, and a group may grant the same standing to others by a signed entry with a reason (permanent for what they already submitted). There are no confidential entries; only the submitter redacts, and the group may decline redacted submissions. Three shelves: what the group stands behind as accurately listed; 'Reactions elsewhere' ('Listed by the group. Not evidence. Not endorsed.'); and 'In our record only', never published. Checks are on form, never merit, and an entry never makes anything evidence. Required on the first shelf, each a To-do for the project's manager: every response the subject sends; the subject's public statements the group has captured, a press release included; a newer edition with its 'What changed' statement; a withdrawal; anything that would have had to be disclosed at signing. Outside responses are found by a pasted link, a standing watch or a labelled suggestion; captured and co-archived; linked to an edition; and a member chooses, with a reason, record only, public or both. A public reaction shows date, source, links to the original and the archived copy, and a short summary in the group's words, never the whole article. A reply naming a private person is listed as received, without its text, and the subject is asked to resend it without the name. Any member files to the record; only the manager signs an entry into public view; an entry is taken back by a later one, never deleted. Withdrawal is the manager's signed, final entry naming an edition or all, with a published reason: the edition stays readable under a stamp, re-evaluation notices go to everything resting on it, it is never lifted, and nothing is erased. The docket travels by pull: the public page, a feed per case, citing groups' copies and the directory; a copy that cannot reach it says 'Could not read the publisher's docket'."
+    "decided": "Each case has a docket: dated entries, each naming the edition it concerns, growing while the signed editions never change. The named subject has party-like standing, and a group may grant the same standing to others by a signed entry with a reason (permanent for what they already submitted). There are no confidential entries; only the submitter redacts, and the group may decline redacted submissions. Three shelves: what the group stands behind as accurately listed; 'Reactions elsewhere' ('Listed by the group. Not evidence. Not endorsed.'); and 'In our record only', never published. Checks are on form, never merit, and an entry never makes anything evidence. Required on the first shelf, each a To-do for the project's manager: every response the subject sends; the subject's public statements the group has captured, a press release included; a newer edition with its 'What changed' statement; a withdrawal; anything that would have had to be disclosed at signing. Outside responses are found by a pasted link, a standing watch or a labelled suggestion; captured and co-archived; linked to an edition; and a member chooses, with a reason, record only, public or both. A public reaction shows date, source, links to the original and the archived copy, and a short summary in the group's words, never the whole article. A reply naming a private person is listed as received, without its text, and the subject is asked to resend it without the name. Any member files to the record; only the manager signs an entry into public view; an entry is taken back by a later one, never deleted. Withdrawal is the manager's signed, final entry naming an edition or all, with a published reason: the edition stays readable under a stamp, re-evaluation notices go to everything resting on it, it is never lifted, and nothing is erased. The docket travels by pull: the public page, a feed per case, citing groups' copies and the directory; a copy that cannot reach it says 'Could not read the publisher's docket'. Amended 2026-10-05 (K1480, K1493): a court order to remove or redact is complied with openly, never silently: the order is captured, a signed docket entry names it, and the edition is stamped; sealing and unsealing orders follow the same principle. Otherwise a personal fact is removed, with a marker, only when unlawful to hold, confidential, under a recorded court order, or under a lawful demand the jurisdiction profile lists; past editions stay as published and a later edition states the correction."
    }
   }
  ],
