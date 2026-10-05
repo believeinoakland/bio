@@ -81,3 +81,13 @@ For jurisdictions (R7): the first profile's minutes_due_days {value: 10, count: 
 ## J6 · COMPLETE · re B4
 
 B4 done: tranche/T33 merged; the calendar's minutes-due date is counted by civil-time's evaluateRule from the profile's practice (business days on its weekend and closures, the practice's closure list when named), late judged on localDay; tested at the interface (R3 R8). doctypes 26 pass, 0 fail; civil-time 63/0; format, architecture, coverage 24/24, ownership 0 failures. Under the held profile the due is undetermined with why until jurisdictions R7 lets minutes_due_days name its closure list (REPORT J5); with "city" named it gives the OMC 2.20.160 dates.
+
+## B5, B6 · CHANGE (K1532, K1538) processed
+
+- Merged `tranche/T33` (docprofile's `practiceValue` now returns `count`; jurisdictions R7's `minutes_due_days` carries `closures`, the first profile naming `city`). `minutesDue` reads the period and its unit through `practiceValue`, as docprofile's own seed does, and the closure list from the same practice entry, and counts through civil-time.
+- The test now expects the OMC 2.20.160 dates on the held profile as it is (13 Oct 2026 → 27 Oct; 19 Nov → 7 Dec, Thanksgiving and the day after skipped) and keeps the undetermined case on a view whose practice names no closure list.
+- `docprofile/test/` on the merged tranche: 55 pass, 1 fail (docprofile's own R6, its own copy of the calendar, which retires with T33-12; not this module's).
+
+**Tests and checks after B6:** `node --test doctypes/test/` 26 pass, 0 fail. `format` 0 failures; `architecture` 23 product files, 48 relative imports, 0 failures; `coverage` 24 of 24, 0 failures; `ownership … tranche/T33` 3 files changed, 0 failures.
+
+Size (session_01XZrZmtoRays9vT3h9cANPd): test runs 34, module lines 2646
