@@ -35,3 +35,4 @@ Every unit's prompt is `prompts/<id>.txt`. `python3 status.py` reads each unit's
 - 2026-10-05: synthesis done and reviewed by BOB (K1470; C12 withdrawn); page for Bob https://claude.ai/artifact/QYMteP7CMTieHJDBDZ5m7Q (source synthesis/page-for-bob-2.html); the ladder amendments being applied by a worker (synthesis/ladders-amended.md); C1–C11 await Bob.
 - 2026-10-05: ladders amended and committed to the canon (K1472). Waiting on Bob's C1–C11.
 - 2026-10-05: Bob asked why the machine may not produce combined scores or importance/suspicion/causal signals; BOB put it to him as C12 (machine signals, in the hypothesis layer), page v3. Waiting on C1–C12.
+- 2026-10-05: Bob ruled C12 (a) (K1473); ladders and page updated. Waiting on C1–C11.

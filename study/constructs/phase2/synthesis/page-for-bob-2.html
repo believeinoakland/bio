@@ -200,6 +200,7 @@ a{color:var(--accent)}
       <li><b>Hunches (K1467):</b> they have a place, but are never facts. This is already how the strength code treats a hunch, so the synthesis's question C12 was withdrawn.</li>
       <li><b>Extraction (K1468):</b> targeted and ongoing, at a member's request.</li>
       <li><b>Connections (K1469):</b> the heart of the architecture.</li>
+      <li><b>Machine signals (K1473):</b> combined scores and suggestions of importance, suspicion or a possible cause, held as hypotheses, never as facts or evidence.</li>
       <li><b>Rankings (K1471):</b> rankings by a measured quantity are analysis, stored and kept up to date. Scores standing for a judgment stay out.</li>
     </ul>
   </div>
@@ -207,7 +208,7 @@ a{color:var(--accent)}
 
 <section id="decisions">
   <span class="eyebrow">Your decisions</span>
-  <h2>Twelve decisions</h2>
+  <h2>Eleven decisions left, one ruled</h2>
   <div class="how"><p><b>How to answer.</b> Reply in the session, for example "All as recommended", or "All as recommended except C5 (a)". C1 and C2 together answer your question about Design Requirement 6 and the rules on naming people.</p></div>
 
   <article class="dec"><header><span class="num">C1</span><div><h3>Design Requirement 6, refined</h3><span class="kind">Requirement meaning</span></div></header>
@@ -221,7 +222,7 @@ a{color:var(--accent)}
       <thead><tr><th>#</th><th>The rule today</th><th>What it protects</th><th>Recommend</th></tr></thead>
       <tbody>
         <tr><td class="n">1</td><td>Design Requirement 6: name individuals only in official capacity for documented actions</td><td>Readers and the people named</td><td><span class="verdict">Replace</span> by C1</td></tr>
-        <tr><td class="n">2</td><td>"No attribute of a person gates, filters or orders anything" (Action design rule 10; your DEC-17, DEC-54)</td><td>Members treated by their work, never by who they are</td><td><span class="verdict">Narrow</span> to members and users. A member may search and sort the people the record holds by any held fact. Rankings by a measured quantity are allowed as analysis (K1471). No score ever stands for importance, suspicion or connectedness.</td></tr>
+        <tr><td class="n">2</td><td>"No attribute of a person gates, filters or orders anything" (Action design rule 10; your DEC-17, DEC-54)</td><td>Members treated by their work, never by who they are</td><td><span class="verdict">Narrow</span> to members and users. A member may search and sort the people the record holds by any held fact. Rankings by a measured quantity are allowed as analysis (K1471). A judgment score (importance, suspicion, connectedness) appears only as a signal in the hypothesis layer (K1473).</td></tr>
         <tr><td class="n">3</td><td>No prior by role, no suspicion flag (DEC-54; Case Making §4)</td><td>People from prejudgment</td><td><span class="verdict">Keep</span></td></tr>
         <tr><td class="n">4</td><td>A planning run reads no person's attributes</td><td>Plans steered by evidence</td><td><span class="verdict">Keep</span></td></tr>
         <tr><td class="n">5</td><td>The group's action is addressed to an office, "never a private individual"</td><td>The group acts on institutions and never targets a person</td><td><span class="verdict">Keep, narrowed</span> The action may show who holds the office on the day, but is never addressed to a person.</td></tr>
@@ -232,7 +233,7 @@ a{color:var(--accent)}
         <tr><td class="n">10</td><td>A court case's caption is never a searchable name</td><td>A private party's name being indexed</td><td><span class="verdict">Already retired</span> (K1456)</td></tr>
         <tr><td class="n">11</td><td>A watch's subject "is an address, never a person"</td><td>No unattended surveillance of a person</td><td><span class="verdict">Narrow</span> A member may name a register query for a person (a filer id, a licence number). Never an unattended crawl of a person.</td></tr>
         <tr><td class="n">12</td><td>The staff directory is keyed by e-mail address, "never the name"</td><td>Identity on a stable key</td><td><span class="verdict">Narrow</span> The address stays the key. The name is also read, as a match graded C.</td></tr>
-        <tr><td class="n">13</td><td>No score, rank or centrality; never "knows"</td><td>People never judged by a score or declared acquainted</td><td><span class="verdict">Narrow</span> (K1471): no score standing for importance, suspicion or connectedness, and never "knows". Fact-based rankings ("most contracts from Public Works, FY2019–2025") are analysis and allowed.</td></tr>
+        <tr><td class="n">13</td><td>No score, rank or centrality; never "knows"</td><td>People never judged by a score or declared acquainted</td><td><span class="verdict">Narrow</span> (K1471, K1473): never "knows". Fact-based rankings ("most contracts from Public Works, FY2019–2025") are analysis. Judgment scores, network measures included, are signals in the hypothesis layer only, never facts and never labels on a person.</td></tr>
         <tr><td class="n">14</td><td>Third parties' names and words leave only by their own act (your DEC-116 (4))</td><td>People who never chose to speak publicly</td><td><span class="verdict">Keep</span>, aligned with C1</td></tr>
         <tr><td class="n">15</td><td>Never redact what others submit; relied-on material travels whole (your DEC-100, DEC-112)</td><td>Reproducibility and honesty</td><td><span class="verdict">Keep</span> C1 governs the group's own words.</td></tr>
         <tr><td class="n">16</td><td>Indexing builds profiles of people (DEC-11's warning)</td><td>The cost of holding: legal reach, reversal</td><td><span class="verdict">Retire as a limit</span>. Kept as a design constraint, through sight, removal and export classes.</td></tr>
@@ -291,7 +292,7 @@ a{color:var(--accent)}
 
   <article class="dec"><header><span class="num">C8</span><div><h3>Questions the machine raises about people and money</h3><span class="kind">Doctrine</span></div></header>
     <p class="q"><b>The question.</b> Should the machine ever put "worth a look" in the queue? Examples: a councilmember voting on a contract with a firm that paid her; contracts clustered just under a bid threshold; payments past a commitment. It would catch what members miss, but your rulings say the machine does not choose what to look into, and such items can read as accusations.</p>
-    <ul class="opts"><li>(a) Only checks a member declares for people, and detectors a member switches on for money. Each is defined by its data and states its denominator ("41% of Public Works' payments in FY2024 went to one vendor"). Each raises "Noticed" with its cited derivation, never "conflict" and never a judgment score. None is shown before a measured false-alarm test.</li><li>(b) The machine raises them on its own.</li><li>(c) None.</li></ul>
+    <ul class="opts"><li>(a) Only checks a member declares for people, and detectors a member switches on for money. Each is defined by its data and states its denominator ("41% of Public Works' payments in FY2024 went to one vendor"). Each raises "Noticed" with its cited derivation, never "conflict". The machine may also raise signals on its own (K1473), always as hypotheses with their method and false-alarm rate, never as facts. None is shown before a measured false-alarm test.</li><li>(b) The machine raises them on its own.</li><li>(c) None.</li></ul>
     <p class="rec"><b>Recommend (a).</b></p></article>
 
   <article class="dec"><header><span class="num">C9</span><div><h3>How the group looks people up</h3><span class="kind">Policy</span></div></header>
@@ -309,27 +310,8 @@ a{color:var(--accent)}
     <ul class="opts"><li>(a) Yes. It is frozen at signing, each item shows its source, the two lanes are never mixed, and people appear as C1 rules.</li><li>(b) No; members write sequence in prose.</li></ul>
     <p class="rec"><b>Recommend (a).</b></p></article>
 
-  <article class="dec newd"><header><span class="num">C12</span><div><h3>Machine signals: combined scores, importance, suspicion and possible causes</h3><span class="kind">Doctrine · new, from your question</span></div></header>
-    <p class="q"><b>The question.</b> Your rulings forbid the machine one combined score (DEC-82, DEC-92), any importance, suspicion or significance score (DEC-89), and choosing what the group looks into (DEC-22). They guard against a number read as a verdict, hidden weights posing as evidence, and a machine steering the work. But a ban throws away real signals that investigators use: procurement red-flag indices (single bidder, bids just under a threshold, rushed awards, the same winner again and again), or a suggestion that an appointment enabled a later decision. Should the machine produce such signals, and on what terms? Facts and analysis must not be judged, but they must not be ignored as signals for hunches either.</p>
-    <ul class="opts">
-      <li>(a) Two kinds, kept apart.
-        <ul>
-          <li><b>A combined measure with a stated formula is a computed fact.</b> For example, a department's contract-concentration index, shown with its parts. It is analysis, like the rankings you allowed (K1471).</li>
-          <li><b>A score standing for a judgment is a signal.</b> Importance, suspicion, significance, and "this may have been a factor in that" are examples. The machine may produce signals, but they live only in the hypothesis and lead layer (K1467).</li>
-        </ul>
-        Each signal works the same way:
-        <ul>
-          <li>it shows its method, its inputs and how much each input contributed;</li>
-          <li>it states its measured false-alarm rate, and is shown only after passing a false-alarm test;</li>
-          <li>a member may take it up as a hunch or hypothesis and look for facts that support or refute it;</li>
-          <li>it is never cited by a claim, never moves a grade or a finding, and never appears in a published case unless a member proves the point with evidence;</li>
-          <li>a suggested cause stays "proposed: may have been a factor", with the facts it rests on, until evidence makes it a cause (DEC-84 (10));</li>
-          <li>a signal attaches to a pattern or a transaction, and a person appears only as part of it; "suspicion" is never stored as a label on a person.</li>
-        </ul></li>
-      <li>(b) Keep the current rules: computed facts and fact-based rankings only, no signals.</li>
-      <li>(c) Signals allowed as computed facts in the record, with no separate layer.</li>
-    </ul>
-    <p class="rec"><b>Recommend (a).</b> It gives members the signals investigators rely on, while keeping your line that hunches and hypotheses are never facts or evidence. It reverses parts of DEC-22, DEC-82, DEC-89 and DEC-92, so it is yours. If you choose (a), C2's rows 2 and 13 and C8 are reworded to allow signals in this form.</p></article>
+  <article class="dec ruled"><header><span class="num">C12</span><div><h3>Machine signals: combined scores, importance, suspicion and possible causes</h3><span class="kind">ruled by you, 5 October (K1473)</span></div></header>
+    <p class="rec"><b>Ruled (a).</b> A combined measure with a stated formula is a computed fact. A score standing for a judgment (importance, suspicion, significance, "this may have been a factor in that") is a signal, held in the hypothesis layer. Each signal shows its method, its inputs, each input's contribution and its false-alarm rate. A member may take it up as a hunch or hypothesis. It never supports a claim, moves a grade or a finding, or appears in a published case unless a member proves the point with evidence. A signal attaches to a pattern or a transaction, never as a label on a person.</p></article>
 </section>
 
 <section>
