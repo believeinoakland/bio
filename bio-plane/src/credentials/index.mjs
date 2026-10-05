@@ -1,7 +1,9 @@
 /* credentials — the credentials a member or the instance acts by: the founder's password and claim, members' passwords
- * and sessions, the signer keys whose signatures the record accepts, and the credentials AI work runs under.
+ * and sessions, the signer keys whose signatures the record accepts, the credentials AI work runs under, each
+ * member's own Claude account reference and the short-lived grant an ask reads under, and the group's own keys for
+ * keyed outside services (T33-20).
  *
- * Requirements: build/requirements/credentials.md (R1–R21). Split from `membership` (K617, K636 BOB-1, K637; T19 layer
+ * Requirements: build/requirements/credentials.md (R1–R30). Split from `membership` (K617, K636 BOB-1, K637; T19 layer
  * 2, CREDENTIALS #1): the code is copied from `membership/index.mjs` and `schema.mjs`, without change of meaning, and
  * reads `members` only through membership's services (`memberFacts`, `sessionRights`, `isAdministrator`,
  * `activeAdmins`, `notAnAdmin`), never by SQL. Who the members are, and what each may do, is membership's; this module
@@ -10,17 +12,38 @@
  *
  * SHAPE (K61). `credentialsOf(ctx)` answers the one instance for a Durable Object's storage, over `ctx.storage.sql`,
  * reaching record-core by `recordOf(ctx)` and membership by `membershipOf(ctx)` on the same `ctx`; a test may pass its
- * own as `credentialsOf(ctx, { record, membership })`. Its first construction is this module's start: it registers
+ * own as `credentialsOf(ctx, { record, membership })`, and the composition root passes the Worker's seal secret
+ * (`sealSecret`, R23, R29) on the first call. Its first construction is this module's start: it registers
  * the revocation listener (R16) and the claim fact (R17) with membership. Every refusal names its reason; no service
  * throws.
  */
 import { MACHINE_CLASS_PREFIX, isMachineIdentity } from "../record-grammar/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { Membership, membershipOf, notAnAdmin } from "../membership/index.mjs";
-import { CREDENTIALS_SCHEMA, CREDENTIALS_ADDITIVE_COLUMNS, CREDENTIALS_EXEMPT_TABLES } from "./schema.mjs";
-export { CREDENTIALS_EXEMPT_TABLES } from "./schema.mjs";
-import { CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS } from "./checks.mjs";
-export { CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS } from "./checks.mjs";
+import { CREDENTIALS_SCHEMA, CREDENTIALS_ADDITIVE_COLUMNS, CREDENTIALS_TABLES } from "./schema.mjs";
+export { CREDENTIALS_EXEMPT_TABLES, CREDENTIALS_TABLES } from "./schema.mjs";
+import { CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, ACCOUNT_CHECKS,
+         KEYED_SERVICE_CHECKS } from "./checks.mjs";
+export { CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, ACCOUNT_CHECKS,
+         KEYED_SERVICE_CHECKS } from "./checks.mjs";
+
+/* R22 (K1537): the kinds of a member's own Claude account reference this copy holds. `subscription` (the member's
+   `claude setup-token` output) is held back until Bob rules on Anthropic's terms (K1537), and is refused by name. */
+export const ACCOUNT_KINDS = Object.freeze(["apikey"]);
+const HELD_BACK_KINDS = Object.freeze(["subscription"]);
+/* R25 (K1479, K1500): the member's two switches. */
+export const ACCOUNT_SWITCHES = Object.freeze(["suggestions", "standing"]);
+/* R27: an ask grant's life, in seconds (it also ends with the member's session). */
+export const AI_GRANT_TTL_SECONDS = 900;
+/* R28 (K1505 (14)): the ask's op allow-list, held by the grant's class. `answers`' `ASK_SCOPE` (its R1) is held equal
+   to it, both ways, by answers' copy test. Every op here is a read; a grant admits no write. */
+export const AI_GRANT_OPS = Object.freeze([
+  "calculations", "careerof", "committedagainstpaid", "duties", "entity", "entitybyalias", "eventsfor", "explore",
+  "frontier", "holderat", "lines", "meaningrows", "moneyfacts", "moneyof", "occurrences", "profiles", "relation",
+  "resolutions", "search", "searchfields", "standard", "standardinforce", "standards", "strengthbarof", "timeline",
+]);
+/* R29 (K1449): the keyed outside services the group may hold a key for; CourtListener's lookup first. */
+export const KEYED_SERVICES = Object.freeze(["courtlistener"]);
 
 /* A whole-second instant, the record's `…:00Z` spelling. */
 const stampSecond = (when = Date.now()) => new Date(when).toISOString().replace(/\.\d+Z$/, "Z");
@@ -29,11 +52,13 @@ const stampSecond = (when = Date.now()) => new Date(when).toISOString().replace(
 const ROOT = Membership.ROOT_ADMIN;
 
 export class Credentials {
-  constructor({ sql, core = null, membership = null } = {}) {
+  constructor({ sql, core = null, membership = null, sealSecret = null } = {}) {
     this.sql = sql;
     this.core = core;
     this.membership = membership;
+    this.#sealSecret = typeof sealSecret === "string" && sealSecret !== "" ? sealSecret : null;
   }
+  #sealSecret;
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
@@ -65,6 +90,7 @@ export class Credentials {
   #memberRevoked({ memberId, by = null, at = null } = {}) {
     if (typeof memberId !== "string" || memberId === "") return;
     this.sql.exec(`DELETE FROM sessions WHERE role=?`, `member:${memberId}`);
+    this.sql.exec(`DELETE FROM ai_grants WHERE member_id=?`, memberId);   /* R27: their grants end with their sessions */
     /* REC-159: the cascade is the revoking act's, so the keys it revokes name its actor. R21: a key it revokes takes
        the act's own time (the notice's `at`) as `status_at`; a key already revoked keeps its own. */
     this.sql.exec(
@@ -93,19 +119,14 @@ export class Credentials {
     this.declareTables();
   }
 
-  /* R18, through record-core's `declarePurge` (its R21): every table here is exempt. Each is declared on its own so
-     that, while membership still declares a table this module took from it (until membership's deletion drops it from
-     `MEMBERSHIP_EXEMPT_TABLES`, K637), that table stays exempt under membership's declaration and the rest are this
-     module's. Any other refusal is thrown: a purge that silently cleared a credential would revoke authority as a side
-     effect of resetting the corpus. */
+  /* R18, R30, through record-core's `declareTable` (its R21): every table declared explicitly with its classes, each
+     purge-exempt. A refusal is thrown: a purge that silently cleared a credential would revoke authority as a side
+     effect of resetting the corpus, and an export that carried a secret would publish it. */
   declareTables() {
     if (this.#declared) return false;
-    for (const name of CREDENTIALS_EXEMPT_TABLES) {
-      const answer = this.core.declarePurge("credentials", [], { exempt: [name] });
-      if (answer && answer.ok === false
-          && !(answer.reason === "TABLE_DECLARED" && answer.declaredBy === "membership"))
-        throw new Error(`credentials: record-core refused its purge declaration: ${answer.reason} (${answer.table})`);
-    }
+    const answer = this.core.declareTable("credentials", CREDENTIALS_TABLES.map((t) => ({ ...t })));
+    if (answer && answer.ok === false)
+      throw new Error(`credentials: record-core refused its table declaration: ${answer.reason} (${answer.table})`);
     this.#declared = true;
     return true;
   }
@@ -667,18 +688,333 @@ export class Credentials {
              revoked: !!row.revoked_at,
              confinedTo: row.confined_to || null };
   }
+
+  /* ===== EACH MEMBER'S OWN CLAUDE ACCOUNT (R22–R26; T33-20, K1502, K1503) =====
+   *
+   * There is no group-wide, project-wide or instance Claude account (K1502): a member who wants the assistant brings
+   * their own, and it serves only that member's own asks, runs and standing questions. The reference is held only by
+   * the member's own act, SEALED at rest under that member (R23), and never shown, listed, logged or exported: no
+   * answer below carries the secret or a digest of it, except R24's, which unseals it for the one call it serves. */
+
+  /* The member an actor or viewer names: `member:<id>` or a bare member id; null for anything else. */
+  static #memberOf(x) {
+    if (typeof x !== "string") return null;
+    const id = x.startsWith("member:") ? x.slice(7) : x;
+    return id !== "" ? id : null;
+  }
+
+  static #row(table, code, detail, extra) {
+    const r = table[code];
+    return { ok: false, reason: code, code, check: r.check, translation: r.translation, detail, ...(extra || {}) };
+  }
+
+  /* R22, R26: who may act on `member`'s reference, asked first by every act on it and by the grant's mint (R27).
+     Answers null when `by` is that member's own act and the member is active. */
+  #accountBar(member, by, level = null) {
+    const refuse = (code, detail) => Credentials.#row(ACCOUNT_CHECKS, code, detail);
+    /* DEC-49 REGION is-account-own-act */
+    if (by === null || by === undefined || by === "" || isMachineIdentity(by))
+      return refuse("MACHINE_CANNOT_HOLD_ACCOUNT", "a member's Claude account is held only by that member's own act, "
+        + "from their own signed-in session; this caller has no member behind it. Nothing was written.");
+    if ((level !== null && level !== undefined && level !== "member")
+        || typeof member !== "string" || member === "organisation" || member.startsWith(MACHINE_CLASS_PREFIX)
+        || /^PROJ-/.test(member))
+      return refuse("ACCOUNT_LEVEL_MEMBER_ONLY", "a Claude account reference is held for one member only; there is no "
+        + "group, project or instance level. Nothing was written.");
+    const id = Credentials.#memberOf(member);
+    if (id === null || Credentials.#memberOf(by) !== id)
+      return Credentials.#notYours("a member's Claude account is acted on only by that member; another member, an "
+        + "administrator or the founder cannot. Nothing was written.");
+    if (this.#memberFacts(id)?.status !== "active")
+      return refuse("ACCOUNT_MEMBER_NOT_ACTIVE", "only an active member holds a Claude account reference. Nothing was "
+        + "written.");
+    /* END DEC-49 REGION is-account-own-act */
+    return null;
+  }
+
+  /* R22–R24, R27: NOT_YOUR_ACCOUNT, minted here alone; `detail` is the asking act's fixed sentence. */
+  static #notYours(detail) {
+    /* DEC-49 REGION is-account-theirs */
+    return Credentials.#row(ACCOUNT_CHECKS, "NOT_YOUR_ACCOUNT", detail);
+    /* END DEC-49 REGION is-account-theirs */
+  }
+
+  #noAccount(member) {
+    /* DEC-49 REGION is-account-held */
+    return Credentials.#row(ACCOUNT_CHECKS, "NO_ACCOUNT", "this member holds no Claude account reference, so there is "
+      + "no assistant for them. Nothing was used.", { member });
+    /* END DEC-49 REGION is-account-held */
+  }
+
+  /* R23, R29: THE SEAL. AES-256-GCM under a key derived (HKDF-SHA-256) from the Worker's seal secret, the owner as salt
+     (`member:<id>` or `group:<service>`), so the key is never stored beside the row and no other owner's key opens it.
+     The AAD binds the ciphertext to its owner and kind, so a row moved to another owner does not open. Answers
+     `{sealed, iv}` (base64), or the refusal when no secret is bound. */
+  static #b64(bytes) { let s = ""; for (const b of bytes) s += String.fromCharCode(b); return btoa(s); }
+  static #unb64(s) { return Uint8Array.from(atob(s), (c) => c.charCodeAt(0)); }
+
+  async #sealKey(owner) {
+    const base = await crypto.subtle.importKey("raw", Credentials.#enc.encode(this.#sealSecret), "HKDF", false,
+      ["deriveKey"]);
+    return crypto.subtle.deriveKey(
+      { name: "HKDF", hash: "SHA-256", salt: Credentials.#enc.encode(owner),
+        info: Credentials.#enc.encode("bio-credentials-seal/1") },
+      base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+  }
+
+  static #sealRefusal(detail) {
+    /* DEC-49 REGION is-seal-bound */
+    return Credentials.#row(ACCOUNT_CHECKS, "ACCOUNT_SEAL_UNAVAILABLE", detail);
+    /* END DEC-49 REGION is-seal-bound */
+  }
+
+  #seal() {
+    return this.#sealSecret === null ? Credentials.#sealRefusal("this copy has no seal secret bound, so a key cannot "
+      + "be kept sealed or read. Nothing was stored or read.") : null;
+  }
+
+  async #encrypt(owner, kind, secret) {
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv, additionalData: Credentials.#enc.encode(`${owner}|${kind}`) },
+      await this.#sealKey(owner), Credentials.#enc.encode(secret));
+    return { sealed: Credentials.#b64(new Uint8Array(ct)), iv: Credentials.#b64(iv) };
+  }
+
+  /* Null when the row does not open (the seal secret changed): the caller answers ACCOUNT_SEAL_UNAVAILABLE. */
+  async #decrypt(owner, kind, sealed, iv) {
+    try {
+      const pt = await crypto.subtle.decrypt(
+        { name: "AES-GCM", iv: Credentials.#unb64(iv), additionalData: Credentials.#enc.encode(`${owner}|${kind}`) },
+        await this.#sealKey(owner), Credentials.#unb64(sealed));
+      return new TextDecoder().decode(pt);
+    } catch { return null; }
+  }
+
+  /* R22: one reference for `member`, replacing any earlier one, by that member's own act. Answers `{ok, kind, set_at}`
+     and never the secret. A replacement keeps the member's switches (R25); only removal turns them off. */
+  async accountReferenceSet({ member = null, kind = null, secret = null, by = null, level = null } = {}) {
+    const bar = this.#accountBar(member, by, level);
+    if (bar) return bar;
+    const refuse = (code, detail) => Credentials.#row(ACCOUNT_CHECKS, code, detail);
+    /* DEC-49 REGION is-account-kind */
+    if (HELD_BACK_KINDS.includes(kind))
+      return refuse("ACCOUNT_KIND_NOT_OFFERED", "this copy does not hold a Claude subscription token (held back, K1537); "
+        + "connect your own API key. Nothing was written.");
+    if (!ACCOUNT_KINDS.includes(kind))
+      return refuse("UNKNOWN_ACCOUNT_KIND", `the kinds this copy holds are ${ACCOUNT_KINDS.join(", ")}. Nothing was `
+        + "written.");
+    if (typeof secret !== "string" || secret.trim() === "")
+      return refuse("NO_SECRET", "no key was given. Nothing was written.");
+    /* END DEC-49 REGION is-account-kind */
+    const unsealable = this.#seal();
+    if (unsealable) return unsealable;
+    const id = Credentials.#memberOf(member);
+    const { sealed, iv } = await this.#encrypt(`member:${id}`, kind, secret);
+    const setAt = stampSecond();
+    this.sql.exec(
+      `INSERT INTO account_references (member_id, kind, sealed, iv, set_at) VALUES (?,?,?,?,?)
+       ON CONFLICT(member_id) DO UPDATE SET kind=excluded.kind, sealed=excluded.sealed, iv=excluded.iv,
+         set_at=excluded.set_at`, id, kind, sealed, iv, setAt);
+    return { ok: true, kind, set_at: setAt };
+  }
+
+  /* R22, R25: the member removes their reference, which turns both switches off; with none, `removed: false`. */
+  accountReferenceRemove({ member = null, by = null, level = null } = {}) {
+    const bar = this.#accountBar(member, by, level);
+    if (bar) return bar;
+    const id = Credentials.#memberOf(member);
+    const held = !!this.#one(`SELECT member_id FROM account_references WHERE member_id=?`, id);
+    if (held) this.sql.exec(`DELETE FROM account_references WHERE member_id=?`, id);
+    return { ok: true, removed: held };
+  }
+
+  /* R23: what the member may read back of their own reference, to them alone; never the secret. */
+  accountReferenceState({ member = null, viewer = null } = {}) {
+    const id = Credentials.#memberOf(member);
+    if (id === null || typeof member !== "string" || Credentials.#memberOf(viewer) !== id || isMachineIdentity(viewer))
+      return Credentials.#notYours("a member's Claude account is seen only by that "
+        + "member. Nothing was read.");
+    const r = this.#one(`SELECT kind, set_at, suggestions, standing FROM account_references WHERE member_id=?`, id);
+    return { ok: true, held: !!r, kind: r ? r.kind : null, set_at: r ? r.set_at : null,
+             suggestions: !!(r && r.suggestions), standing: !!(r && r.standing) };
+  }
+
+  /* R24: unseals the member's reference only for that member's own ask, run or standing question, for the one call it
+     serves; the caller keeps nothing (agent-model R8). */
+  async accountReferenceFor({ member = null, act = null } = {}) {
+    const id = Credentials.#memberOf(member);
+    const actKind = act && typeof act === "object" ? act.kind : null;
+    if (id === null || !["ask", "run", "standing"].includes(actKind) || Credentials.#memberOf(act.member) !== id
+        || isMachineIdentity(act.member))
+      return Credentials.#notYours("a member's Claude account serves only that member's "
+        + "own asks, runs and standing questions. Nothing was used.");
+    const r = this.#one(`SELECT kind, sealed, iv FROM account_references WHERE member_id=?`, id);
+    if (!r) return this.#noAccount(id);
+    const unsealable = this.#seal();
+    if (unsealable) return unsealable;
+    const secret = await this.#decrypt(`member:${id}`, r.kind, r.sealed, r.iv);
+    if (secret === null)
+      return Credentials.#sealRefusal("the reference does not open under this "
+        + "copy's seal secret, which has changed; the member connects their account again. Nothing was used.");
+    return { ok: true, kind: r.kind, secret };
+  }
+
+  /* R25: the member's own switches, each off by default; they belong to the reference, so a member with none is
+     answered NO_ACCOUNT. */
+  accountSwitchSet({ member = null, switch: name = null, on = false, by = null } = {}) {
+    const bar = this.#accountBar(member, by);
+    if (bar) return bar;
+    /* DEC-49 REGION is-account-switch */
+    if (!ACCOUNT_SWITCHES.includes(name))
+      return Credentials.#row(ACCOUNT_CHECKS, "UNKNOWN_SWITCH", `the switches are ${ACCOUNT_SWITCHES.join(" and ")}. `
+        + "Nothing was written.", { switch: typeof name === "string" ? name.slice(0, 40) : null });
+    /* END DEC-49 REGION is-account-switch */
+    const id = Credentials.#memberOf(member);
+    if (!this.#one(`SELECT member_id FROM account_references WHERE member_id=?`, id)) return this.#noAccount(id);
+    this.sql.exec(`UPDATE account_references SET ${name}=? WHERE member_id=?`, on === true ? 1 : 0, id);
+    return { ok: true, switch: name, on: on === true };
+  }
+
+  /* ===== THE ASK GRANT (R27, R28; Q1-3, K1450, K1505 (14)) =====
+   *
+   * A short-lived, read-only `ai` grant whose viewer is the member, minted at their own act under their own live
+   * session. Only its token's SHA-256 is kept; it writes no run row and no observation row and keeps no read log
+   * (K1450). It ends at `AI_GRANT_TTL_SECONDS`, or with the session it was minted under, whichever is first, so a
+   * revoked member's grants end with their sessions (R16). */
+  static async #sha256(text) {
+    const d = await crypto.subtle.digest("SHA-256", Credentials.#enc.encode(text));
+    return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("");
+  }
+
+  async aiGrantMint({ member = null, by = null, session = null } = {}) {
+    const bar = this.#accountBar(member, by);
+    if (bar) return bar;
+    const id = Credentials.#memberOf(member);
+    const s = typeof session === "string" && session !== ""
+      ? this.#one(`SELECT role, expires FROM sessions WHERE token=?`, session) : null;
+    if (!s || s.role !== `member:${id}` || s.expires < Date.now())
+      return Credentials.#notYours("an ask's grant is minted only under the member's own "
+        + "live session. Nothing was minted.");
+    if (!this.#one(`SELECT member_id FROM account_references WHERE member_id=?`, id)) return this.#noAccount(id);
+    const token = Credentials.#rand(32);
+    const expires = Math.min(Date.now() + AI_GRANT_TTL_SECONDS * 1000, s.expires);
+    this.sql.exec(`DELETE FROM ai_grants WHERE expires < ?`, Date.now());
+    this.sql.exec(`INSERT INTO ai_grants (grant_sha, member_id, session, expires) VALUES (?,?,?,?)`,
+      await Credentials.#sha256(token), id, session, expires);
+    return { ok: true, token, expires };
+  }
+
+  /* R28: a request under a grant is admitted only for an op on `AI_GRANT_OPS`, only as a read, while the grant and its
+     session live. Answers `{ok, member, viewer, expires}`; writes nothing. */
+  async aiGrantAdmit({ token = null, op = null, write = false } = {}) {
+    const refuse = (code, detail, extra) => Credentials.#row(ACCOUNT_CHECKS, code, detail, extra);
+    const g = typeof token === "string" && token !== ""
+      ? this.#one(`SELECT member_id, session, expires FROM ai_grants WHERE grant_sha=?`, await Credentials.#sha256(token))
+      : null;
+    const s = g ? this.#one(`SELECT role, expires FROM sessions WHERE token=?`, g.session) : null;
+    const now = Date.now();
+    /* DEC-49 REGION is-grant-op */
+    if (!g || g.expires < now || !s || s.expires < now || s.role !== `member:${g.member_id}`)
+      return refuse("GRANT_NOT_HELD", "no live grant answers to this token: it expired, its session ended, or it never "
+        + "existed. Nothing was read.");
+    if (write !== false || typeof op !== "string" || !AI_GRANT_OPS.includes(op))
+      return refuse("GRANT_OP_REFUSED", `an ask's grant admits only the reads on its list, and '${String(op ?? "")
+        .slice(0, 40)}'${write !== false ? " as a write" : ""} is not one. Nothing was read.`,
+        { op: typeof op === "string" ? op.slice(0, 40) : null });
+    /* END DEC-49 REGION is-grant-op */
+    return { ok: true, member: g.member_id, viewer: `member:${g.member_id}`, expires: g.expires };
+  }
+
+  /* ===== THE GROUP'S KEYED SERVICES (R29; K1449) =====
+   *
+   * The group's own key for a keyed outside service, set by an administrator, sealed as a member's reference is, off
+   * by default and off while it holds no key. No key is ever required for the copy to work (D201): an in-plane caller
+   * that is refused answers without the service. A paid account is not a keyed service (K1449; `sources`). */
+  #keyedService(service) {
+    /* DEC-49 REGION is-keyed-service */
+    if (!KEYED_SERVICES.includes(service))
+      return Credentials.#row(KEYED_SERVICE_CHECKS, "UNKNOWN_KEYED_SERVICE", `the keyed services are `
+        + `${KEYED_SERVICES.join(", ")}. Nothing was changed.`, { service: typeof service === "string" ? service.slice(0, 40) : null });
+    return null;
+    /* END DEC-49 REGION is-keyed-service */
+  }
+
+  #adminBar(by, act) {
+    const who = Credentials.#memberOf(by);
+    return who !== null && !isMachineIdentity(by) && this.membership.isAdministrator(who) ? null : notAnAdmin(by ?? null, act);
+  }
+
+  async keyedServiceSet({ service = null, key = null, by = null } = {}) {
+    const bar = this.#adminBar(by, "setting the group's key for an outside service");
+    if (bar) return bar;
+    const unknown = this.#keyedService(service);
+    if (unknown) return unknown;
+    /* DEC-49 REGION is-keyed-service-key */
+    if (typeof key !== "string" || key.trim() === "")
+      return Credentials.#row(KEYED_SERVICE_CHECKS, "KEYED_SERVICE_NO_KEY", "no key was given. Nothing was changed.");
+    /* END DEC-49 REGION is-keyed-service-key */
+    const unsealable = this.#seal();
+    if (unsealable) return unsealable;
+    const { sealed, iv } = await this.#encrypt(`group:${service}`, "key", key);
+    const setAt = stampSecond();
+    this.sql.exec(
+      `INSERT INTO keyed_services (service, sealed, iv, is_on, set_by, set_at) VALUES (?,?,?,0,?,?)
+       ON CONFLICT(service) DO UPDATE SET sealed=excluded.sealed, iv=excluded.iv, set_by=excluded.set_by,
+         set_at=excluded.set_at`, service, sealed, iv, Credentials.#memberOf(by), setAt);
+    return { ok: true, service, held: true, set_at: setAt };
+  }
+
+  keyedServiceSwitch({ service = null, on = false, by = null } = {}) {
+    const bar = this.#adminBar(by, "switching the group's key for an outside service");
+    if (bar) return bar;
+    const unknown = this.#keyedService(service);
+    if (unknown) return unknown;
+    this.sql.exec(`INSERT INTO keyed_services (service, is_on) VALUES (?,?)
+                   ON CONFLICT(service) DO UPDATE SET is_on=excluded.is_on`, service, on === true ? 1 : 0);
+    return { ok: true, ...this.#keyedState(service) };
+  }
+
+  /* A service is on only while it is switched on AND holds a key. */
+  #keyedState(service) {
+    const r = this.#one(`SELECT sealed, is_on, set_by, set_at FROM keyed_services WHERE service=?`, service);
+    const held = !!(r && r.sealed);
+    return { service, held, on: held && !!r.is_on, set_by: r?.set_by ?? null, set_at: r?.set_at ?? null };
+  }
+
+  keyedServices() {
+    return { services: KEYED_SERVICES.map((s) => this.#keyedState(s)) };
+  }
+
+  /* The key, to its in-plane caller only while the service is on; never routed. */
+  async keyedServiceFor({ service = null } = {}) {
+    const unknown = this.#keyedService(service);
+    if (unknown) return unknown;
+    const off = () => Credentials.#row(KEYED_SERVICE_CHECKS, "KEYED_SERVICE_OFF", "the group's key for this service is "
+      + "off or not held; the caller goes on without it.", { service });
+    /* DEC-49 REGION is-keyed-service-on */
+    if (!this.#keyedState(service).on) return off();
+    /* END DEC-49 REGION is-keyed-service-on */
+    const unsealable = this.#seal();
+    if (unsealable) return unsealable;
+    const r = this.#one(`SELECT sealed, iv FROM keyed_services WHERE service=?`, service);
+    const key = await this.#decrypt(`group:${service}`, "key", r.sealed, r.iv);
+    if (key === null)
+      return Credentials.#sealRefusal("the key does not open under this copy's "
+        + "seal secret, which has changed; an administrator sets it again. Nothing was used.");
+    return { ok: true, service, key };
+  }
 }
 
 /* K61: the one Credentials of a Durable Object's storage, made on first use over its `sql`, reaching record-core and
    membership by their factories on the same `ctx`; its first construction registers the seam (R16, R17). `record` and
    `membership` (a test's own) are read on the first call only. */
 const OF = new WeakMap();
-export function credentialsOf(ctx, { record = null, membership = null } = {}) {
+export function credentialsOf(ctx, { record = null, membership = null, sealSecret = null } = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
   let c = OF.get(storage);
   if (!c) {
     c = new Credentials({ sql: storage.sql, core: record ?? recordOf(ctx),
-                          membership: membership ?? membershipOf(ctx, { record }) });
+                          membership: membership ?? membershipOf(ctx, { record }), sealSecret });
     OF.set(storage, c);
     c.start();
   }
@@ -715,5 +1051,19 @@ export function credentialsOps(c, url, body, env) {
     signeradd: () => c.signerAdd({ ...(body || {}), by: url.searchParams.get("by") }),
     signerlist: () => c.signerList(),
     signerset: () => c.signerSet({ ...(body || {}), by: url.searchParams.get("by") }),
+    /* T33-20 (R22–R29): the member's own account and the ask grant, `by` and `viewer` the control plane's stamps and the
+       session the one it authenticated (`session`, its stamp); a secret only ever in the body, never the query. The
+       in-plane reads (`accountReferenceFor`, `aiGrantAdmit`, `keyedServiceFor`) are not routed. Which credential
+       reaches each op is op-declarations' and control-plane's (Q0-10). */
+    accountreferenceset: () => c.accountReferenceSet({ ...(body || {}), by: url.searchParams.get("by") }),
+    accountreferenceremove: () => c.accountReferenceRemove({ ...(body || {}), by: url.searchParams.get("by") }),
+    accountreference: () => c.accountReferenceState({ member: url.searchParams.get("member"),
+                                                      viewer: url.searchParams.get("viewer") }),
+    accountswitchset: () => c.accountSwitchSet({ ...(body || {}), by: url.searchParams.get("by") }),
+    aigrantmint: () => c.aiGrantMint({ member: url.searchParams.get("member"), by: url.searchParams.get("by"),
+                                       session: url.searchParams.get("session") }),
+    keyedserviceset: () => c.keyedServiceSet({ ...(body || {}), by: url.searchParams.get("by") }),
+    keyedserviceswitch: () => c.keyedServiceSwitch({ ...(body || {}), by: url.searchParams.get("by") }),
+    keyedservices: () => c.keyedServices(),
   };
 }

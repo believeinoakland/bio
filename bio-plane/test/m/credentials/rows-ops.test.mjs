@@ -79,6 +79,62 @@ test("R12 R15 the AI credential routes: `who` and `secretSha` from the query ove
   assert.deepEqual(w.ops("limit=1").aicredentials().limit, 1);
   assert.equal(w.ops("tokenId=t1&who=class:ai", { who: "ann" }).aicredentialrevoke().reason, "AI_CREDENTIAL_REVOKE_NOT_A_MEMBER");
   assert.equal(w.ops("tokenId=t1&who=ann").aicredentialrevoke().already, false);
-  assert.deepEqual(Object.keys(w.ops()).sort(), ["aicredentiallook", "aicredentialmint", "aicredentialrevoke", "aicredentials",
-    "bootstrap", "claim", "login", "session", "setpassword", "signeradd", "signerlist", "signerset"]);
+  assert.deepEqual(Object.keys(w.ops()).sort(), ["accountreference", "accountreferenceremove", "accountreferenceset",
+    "accountswitchset", "aicredentiallook", "aicredentialmint", "aicredentialrevoke", "aicredentials", "aigrantmint",
+    "bootstrap", "claim", "keyedservices", "keyedserviceset", "keyedserviceswitch", "login", "session", "setpassword",
+    "signeradd", "signerlist", "signerset"]);
+});
+
+test("R22 R23 R24 R25 R26 R27 R28 R29 the T33-20 rows: each id once, across every family, each where naming its one site, frozen", async () => {
+  const { ACCOUNT_CHECKS, KEYED_SERVICE_CHECKS } = await import("../../../src/credentials/index.mjs");
+  const want = {
+    MACHINE_CANNOT_HOLD_ACCOUNT: ["C-29.13", W("#accountBar", "is-account-own-act")],
+    NOT_YOUR_ACCOUNT: ["C-29.14", W("#notYours", "is-account-theirs")],
+    ACCOUNT_MEMBER_NOT_ACTIVE: ["C-29.15", W("#accountBar", "is-account-own-act")],
+    ACCOUNT_LEVEL_MEMBER_ONLY: ["C-29.16", W("#accountBar", "is-account-own-act")],
+    UNKNOWN_ACCOUNT_KIND: ["C-29.17", W("accountReferenceSet", "is-account-kind")],
+    ACCOUNT_KIND_NOT_OFFERED: ["C-29.18", W("accountReferenceSet", "is-account-kind")],
+    NO_SECRET: ["C-29.19", W("accountReferenceSet", "is-account-kind")],
+    NO_ACCOUNT: ["C-29.20", W("#noAccount", "is-account-held")],
+    UNKNOWN_SWITCH: ["C-29.21", W("accountSwitchSet", "is-account-switch")],
+    ACCOUNT_SEAL_UNAVAILABLE: ["C-29.22", W("#sealRefusal", "is-seal-bound")],
+    GRANT_OP_REFUSED: ["C-29.23", W("aiGrantAdmit", "is-grant-op")],
+    GRANT_NOT_HELD: ["C-29.24", W("aiGrantAdmit", "is-grant-op")],
+    UNKNOWN_KEYED_SERVICE: ["C-96.19", W("#keyedService", "is-keyed-service")],
+    KEYED_SERVICE_NO_KEY: ["C-96.20", W("keyedServiceSet", "is-keyed-service-key")],
+    KEYED_SERVICE_OFF: ["C-96.21", W("keyedServiceFor", "is-keyed-service-on")],
+  };
+  const fresh = [ACCOUNT_CHECKS, KEYED_SERVICE_CHECKS];
+  assert.deepEqual(fresh.flatMap((f) => Object.keys(f)).sort(), Object.keys(want).sort());
+  for (const f of fresh) {
+    assert.ok(Object.isFrozen(f));
+    for (const [code, r] of Object.entries(f)) {
+      assert.ok(Object.isFrozen(r), code);
+      assert.deepEqual(Object.keys(r).sort(), ["check", "translation", "where"], code);
+      assert.deepEqual([r.check, r.where], want[code], code);
+      assert.match(r.translation, /\.$/, code);
+    }
+  }
+  const ids = [SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, CREDENTIALS_CHECKS, ...fresh].flatMap((f) => Object.values(f).map((r) => r.check));
+  assert.equal(new Set(ids).size, ids.length, "one row per id across the module");
+});
+
+test("R22 R23 R25 R27 R29 the T33-20 routes: `by`, `viewer`, `member` and `session` from the query over the body; the secret from the body only; never answered back", async () => {
+  const w = await world().group("ann");
+  const set = await w.ops("by=ann", { member: "ann", kind: "apikey", secret: "sk-route", by: "admin" }).accountreferenceset();
+  assert.equal(set.ok, true);
+  assert.equal((await w.ops("by=second", { member: "ann", kind: "apikey", secret: "x", by: "ann" }).accountreferenceset()).reason,
+    "NOT_YOUR_ACCOUNT", "the stamp wins over the body's `by`");
+  assert.equal(w.ops("member=ann&viewer=member:ann").accountreference().held, true);
+  assert.equal(w.ops("member=ann&viewer=member:second").accountreference().reason, "NOT_YOUR_ACCOUNT");
+  assert.equal(w.ops("by=ann", { member: "ann", switch: "standing", on: true }).accountswitchset().on, true);
+  const tok = (await w.c.login({ role: "member:ann", password: PASSWORD("ann") })).token;
+  const g = await w.ops(`member=ann&by=ann&session=${tok}`).aigrantmint();
+  assert.equal((await w.c.aiGrantAdmit({ token: g.token, op: "search" })).member, "ann");
+  assert.equal((await w.ops("by=ann", { service: "courtlistener", key: "k" }).keyedserviceset()).reason, "NOT_AN_ADMIN");
+  assert.equal((await w.ops("by=admin", { service: "courtlistener", key: "k" }).keyedserviceset()).ok, true);
+  assert.equal(w.ops("by=admin", { service: "courtlistener", on: true }).keyedserviceswitch().on, true);
+  assert.deepEqual(w.ops().keyedservices(), w.c.keyedServices());
+  assert.equal(w.ops("by=ann", { member: "ann" }).accountreferenceremove().removed, true);
+  assert.ok(!JSON.stringify([set, g]).includes("sk-route"));
 });

@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, realWorld, PASSWORD } from "./fixture.mjs";
-import { credentialsOf, CREDENTIALS_EXEMPT_TABLES } from "../../../src/credentials/index.mjs";
+import { credentialsOf, CREDENTIALS_EXEMPT_TABLES, CREDENTIALS_TABLES } from "../../../src/credentials/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 
 const sessionsOf = (w, id) => w.rows(`SELECT token FROM sessions WHERE role=?`, `member:${id}`).length;
@@ -104,10 +104,14 @@ test("R18 every credentials table is declared exempt from purge, and a whole-sto
   assert.equal((await w.c.login({ role: "member:second", password: PASSWORD("second") })).ok, true);
   w.c.signerAdd({ keyB64: "AAAAsecond", memberId: "second", by: "admin" });
   w.c.aiCredentialMint({ tokenId: "t1", secretSha: "a".repeat(64), principalKind: "member", who: "second" });
+  assert.equal((await w.c.accountReferenceSet({ member: "second", kind: "apikey", secret: "sk-test", by: "second" })).ok, true);
+  assert.equal((await w.c.keyedServiceSet({ service: "courtlistener", key: "cl-key", by: "second" })).ok, true);
+  const sess = w.row(`SELECT token FROM sessions WHERE role='member:second'`).token;
+  assert.equal((await w.c.aiGrantMint({ member: "second", by: "second", session: sess })).ok, true);
   const count = () => Object.fromEntries(CREDENTIALS_EXEMPT_TABLES.map((t) => [t, w.row(`SELECT COUNT(*) AS n FROM ${t}`).n]));
   const before = count();
-  assert.deepEqual(before, { credentials: 2, sessions: 1, bootstrap: 1, signers: 1, ai_credentials: 1 });
-  assert.deepEqual(CREDENTIALS_EXEMPT_TABLES, ["credentials", "sessions", "bootstrap", "signers", "ai_credentials"]);
+  assert.deepEqual(before, { credentials: 2, sessions: 1, bootstrap: 1, signers: 1, ai_credentials: 1,
+    account_references: 1, keyed_services: 1, ai_grants: 1 });
   assert.equal(w.rc.purge({}).ok, true);
   assert.deepEqual(count(), before, "a whole-store purge clears none of them");
   assert.equal(w.rc.purge({ bundleId: "second" }).ok, true);
@@ -115,34 +119,29 @@ test("R18 every credentials table is declared exempt from purge, and a whole-sto
   assert.equal((await w.c.login({ role: "member:second", password: PASSWORD("second") })).ok, true);
 });
 
-test("R18 the declaration: each table exempt, declared by credentials unless membership still holds it; any other refusal is thrown", () => {
-  /* membership still declaring a table (the copy period): it stays exempt under membership's declaration */
+test("R18 R30 the declaration: every table declared once by credentials through declareTable, with its classes; any refusal is thrown", () => {
   const w = world();
-  for (const t of CREDENTIALS_EXEMPT_TABLES) {
-    const d = w.core.declared.get(t);
-    assert.equal(d.exempt, true, t);
-    assert.ok(["membership", "credentials"].includes(d.module), t);
-  }
-  /* alone, every table is credentials' and exempt; declaring is once */
-  const declared = new Map();
-  const core = { declarePurge(module, tables, { exempt = [] } = {}) {
-    for (const n of exempt) { if (declared.has(n)) return { ok: false, reason: "TABLE_DECLARED", table: n, declaredBy: declared.get(n).module };
-                              declared.set(n, { module, exempt: true, tables }); }
-    return { ok: true }; } };
+  const mine = [...w.core.declared.entries()].filter(([, d]) => d.module === "credentials");
+  assert.deepEqual(mine.map(([n]) => n).sort(), [...CREDENTIALS_EXEMPT_TABLES].sort(), "every table this module owns, and only those");
+  const cls = Object.fromEntries(mine.map(([n, d]) => [n, d.classes]));
+  for (const t of CREDENTIALS_EXEMPT_TABLES)
+    assert.deepEqual([cls[t].purge, cls[t].expunge, cls[t].derive, cls[t].version_chain], ["exempt", "none", "stored", false], t);
+  /* R30: account references, keyed-service keys, password hashes, sessions and AI credentials (and the ask grants) never
+     exported; account references seen by their owner alone */
+  for (const t of ["account_references", "keyed_services", "credentials", "sessions", "ai_credentials", "ai_grants"])
+    assert.equal(cls[t].export, "never", t);
+  assert.equal(cls.account_references.sight, "owner");
+  assert.deepEqual(CREDENTIALS_TABLES.map((t) => t.name), CREDENTIALS_EXEMPT_TABLES);
+  /* once */
+  assert.equal(w.c.declareTables(), false, "once");
+  /* a refusal is a fault: thrown, never silently left purgeable or exportable */
   const sqlStub = { exec() { return []; } };
   const membership = { onRevoked() { return { ok: true }; }, registerClaimed() { return { ok: true }; } };
-  const c = credentialsOf({ storage: { sql: sqlStub } }, { record: core, membership });
-  assert.equal(c.declareTables(), true);
-  assert.equal(c.declareTables(), false, "once");
-  assert.deepEqual([...declared.entries()].map(([n, d]) => [n, d.module, d.exempt, d.tables]),
-    CREDENTIALS_EXEMPT_TABLES.map((n) => [n, "credentials", true, []]));
-  /* a table another module (not membership) holds is a fault: thrown, never silently left purgeable */
-  const held = { declarePurge(module, tables, { exempt = [] } = {}) {
-    return exempt[0] === "signers" ? { ok: false, reason: "TABLE_DECLARED", table: "signers", declaredBy: "capture" } : { ok: true }; } };
-  const c2 = credentialsOf({ storage: { sql: sqlStub } }, { record: held, membership });
-  assert.throws(() => c2.declareTables(), /refused its purge declaration: TABLE_DECLARED \(signers\)/);
-  const bad = { declarePurge() { return { ok: false, reason: "TABLE_NAME_INVALID", table: "x" }; } };
-  assert.throws(() => credentialsOf({ storage: { sql: sqlStub } }, { record: bad, membership }).declareTables(), /TABLE_NAME_INVALID/);
+  const held = { declareTable() { return { ok: false, reason: "TABLE_DECLARED", table: "signers", declaredBy: "membership" }; } };
+  assert.throws(() => credentialsOf({ storage: { sql: sqlStub } }, { record: held, membership }).declareTables(),
+    /refused its table declaration: TABLE_DECLARED \(signers\)/);
+  const bad = { declareTable() { return { ok: false, reason: "TABLE_CLASS_UNKNOWN", table: "x" }; } };
+  assert.throws(() => credentialsOf({ storage: { sql: sqlStub } }, { record: bad, membership }).declareTables(), /TABLE_CLASS_UNKNOWN/);
 });
 
 test("R16 R17 credentialsOf over a ctx reaches membership's own instance on that ctx, so the listener and the fact are that membership's", () => {

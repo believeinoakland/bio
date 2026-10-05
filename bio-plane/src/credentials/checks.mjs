@@ -102,3 +102,86 @@ export const CREDENTIALS_CHECKS = Object.freeze({
       + 'Nothing was changed.',
   }),
 });
+
+/* T33-20 (K1502, K1450, K1449): each member's own Claude account reference (R22–R26), the ask grant (R27–R28) and the
+   group's keyed services (R29). New rows, stamped by promotion in T34 (plan T33, "Choices settled"). The account
+   refusals R22 names are minted in one region, `#accountBar`, which every act on a reference and the grant's mint
+   consume. */
+export const ACCOUNT_CHECKS = Object.freeze({
+  MACHINE_CANNOT_HOLD_ACCOUNT: Object.freeze({
+    check: 'C-29.13', where: at("#accountBar", "is-account-own-act"),
+    translation: 'A Claude account is connected by the member it belongs to, from their own signed-in session. The '
+      + 'credential that asked has no member behind it: it is an automated one, the operator\'s token, or a call with '
+      + 'nobody signed in. Nothing was changed.',
+  }),
+  NOT_YOUR_ACCOUNT: Object.freeze({
+    check: 'C-29.14', where: at("#notYours", "is-account-theirs"),
+    translation: 'A member\'s Claude account is theirs alone: only they can connect it, change it, see it or use it, '
+      + 'and an administrator cannot either. Nothing was changed.',
+  }),
+  ACCOUNT_MEMBER_NOT_ACTIVE: Object.freeze({
+    check: 'C-29.15', where: at("#accountBar", "is-account-own-act"),
+    translation: 'Only an active member of this group can connect a Claude account. Nothing was changed.',
+  }),
+  ACCOUNT_LEVEL_MEMBER_ONLY: Object.freeze({
+    check: 'C-29.16', where: at("#accountBar", "is-account-own-act"),
+    translation: 'A Claude account is held by one member for their own questions. There is no account for the whole '
+      + 'group, a project or this copy of the software. Nothing was changed.',
+  }),
+  UNKNOWN_ACCOUNT_KIND: Object.freeze({
+    check: 'C-29.17', where: at("accountReferenceSet", "is-account-kind"),
+    translation: 'That is not a kind of Claude account this group can hold. Connect your own API key. Nothing was '
+      + 'changed.',
+  }),
+  ACCOUNT_KIND_NOT_OFFERED: Object.freeze({
+    check: 'C-29.18', where: at("accountReferenceSet", "is-account-kind"),
+    translation: 'This copy does not hold a Claude subscription token. Connect your own API key instead. Nothing was '
+      + 'changed.',
+  }),
+  NO_SECRET: Object.freeze({
+    check: 'C-29.19', where: at("accountReferenceSet", "is-account-kind"),
+    translation: 'No key was given, so there is nothing to connect. Nothing was changed.',
+  }),
+  NO_ACCOUNT: Object.freeze({
+    check: 'C-29.20', where: at("#noAccount", "is-account-held"),
+    translation: 'You have not connected a Claude account, so the assistant cannot work for you. Connect your own API '
+      + 'key to use it. Nothing was changed.',
+  }),
+  UNKNOWN_SWITCH: Object.freeze({
+    check: 'C-29.21', where: at("accountSwitchSet", "is-account-switch"),
+    translation: 'That is not one of your assistant\'s switches. There are two: suggestions, and standing questions. '
+      + 'Nothing was changed.',
+  }),
+  ACCOUNT_SEAL_UNAVAILABLE: Object.freeze({
+    check: 'C-29.22', where: at("#sealRefusal", "is-seal-bound"),
+    translation: 'This copy cannot keep a key sealed right now, because its sealing secret is not set or has changed. '
+      + 'Nothing was stored or read. Ask whoever hosts this copy to set it.',
+  }),
+  GRANT_OP_REFUSED: Object.freeze({
+    check: 'C-29.23', where: at("aiGrantAdmit", "is-grant-op"),
+    translation: 'An answer to your question may only read the record through the reads an ask allows, and never '
+      + 'change anything. This request was outside them. Nothing was read or changed.',
+  }),
+  GRANT_NOT_HELD: Object.freeze({
+    check: 'C-29.24', where: at("aiGrantAdmit", "is-grant-op"),
+    translation: 'This ask\'s permission to read has ended: it lasts a short while, and ends when you sign out. Ask '
+      + 'again. Nothing was read.',
+  }),
+});
+
+/* R29 (K1449): the group's keys for keyed outside services. */
+export const KEYED_SERVICE_CHECKS = Object.freeze({
+  UNKNOWN_KEYED_SERVICE: Object.freeze({
+    check: 'C-96.19', where: at("#keyedService", "is-keyed-service"),
+    translation: 'That is not an outside service this group can hold a key for. Nothing was changed.',
+  }),
+  KEYED_SERVICE_NO_KEY: Object.freeze({
+    check: 'C-96.20', where: at("keyedServiceSet", "is-keyed-service-key"),
+    translation: 'No key was given for the service, so there is nothing to hold. Nothing was changed.',
+  }),
+  KEYED_SERVICE_OFF: Object.freeze({
+    check: 'C-96.21', where: at("keyedServiceFor", "is-keyed-service-on"),
+    translation: 'The group\'s key for this outside service is switched off, or no key is held, so it was not used. '
+      + 'Everything still works without it.',
+  }),
+});
