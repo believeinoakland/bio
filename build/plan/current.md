@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #114 · session_01MWqyw89yDMqxpG2iqqSom6 · depth 1
 
-**Jobs** · record-grammar: RECORD-GRAMMAR #8 session_013Mm1CuEimicgaJCPS4wXSM; jurisdictions: JURISDICTIONS #6 session_016rKi7FqGrzSeDuh4w2sUJ7; civil-time: CIVIL-TIME #1 session_01NSP5WdNfdnMBpVCnGYLjPh; calc-grammar: CALC-GRAMMAR #1 session_01C7SS6rSXVbm5YnkpKzX2FE; connection-grammar: CONNECTION-GRAMMAR #1 session_01HtVdRtx6MjGMmTyLt1m2Ai; runtime-limits: RUNTIME-LIMITS #4 session_01MsnfffgQ6VggcGRSweB1wW; signatures: SIGNATURES #9 session_01Rj1YY4SJGHnLERzjPXfZoY; id-spaces: ID-SPACES #3 session_015zS8AH6HPe7cvTXdZEZsTf; office-readers: OFFICE-READERS #5 session_01QtEmE6Gh2wQSGswWajw28K; odf-reader: ODF-READER #4 session_01Ybi2T2Cypoam3N29qB6CKE; docprofile: DOCPROFILE #4 session_01HaSoeitaf5svNuEMw8yMQN; doctypes: DOCTYPES #1 session_01XZrZmtoRays9vT3h9cANPd; legistar-reader: LEGISTAR-READER #1 session_01Mr47bi897kmqem6V1yfAdg; roster-reader: ROSTER-READER #1 session_01Qp9gyE9dgpPJuAa5rXEJrc; court-citations: COURT-CITATIONS #1 session_01RW5iwkQepeVVJUAjHfuPiQ; court-doctypes: COURT-DOCTYPES #1 session_01UL3CanLegQc1bhXUiyGG9N; budget-doctypes: BUDGET-DOCTYPES #1 session_01KjUzvZtRDGcKxhimDx7Tpo; sheet-worker: SHEET-WORKER #1 session_01DytKFDiU55w9sQyB8CR7kJ
+**Jobs** · record-grammar: RECORD-GRAMMAR #8 session_013Mm1CuEimicgaJCPS4wXSM; jurisdictions: JURISDICTIONS #6 session_016rKi7FqGrzSeDuh4w2sUJ7; civil-time: CIVIL-TIME #1 session_01NSP5WdNfdnMBpVCnGYLjPh; calc-grammar: CALC-GRAMMAR #1 session_01C7SS6rSXVbm5YnkpKzX2FE; connection-grammar: CONNECTION-GRAMMAR #1 session_01HtVdRtx6MjGMmTyLt1m2Ai; runtime-limits: RUNTIME-LIMITS #4 session_01MsnfffgQ6VggcGRSweB1wW; signatures: SIGNATURES #9 session_01Rj1YY4SJGHnLERzjPXfZoY; id-spaces: ID-SPACES #3 session_015zS8AH6HPe7cvTXdZEZsTf; office-readers: OFFICE-READERS #5 session_01QtEmE6Gh2wQSGswWajw28K; odf-reader: ODF-READER #4 session_01Ybi2T2Cypoam3N29qB6CKE; docprofile: DOCPROFILE #4 session_01HaSoeitaf5svNuEMw8yMQN; doctypes: DOCTYPES #1 session_01XZrZmtoRays9vT3h9cANPd; legistar-reader: LEGISTAR-READER #1 session_01Mr47bi897kmqem6V1yfAdg; roster-reader: ROSTER-READER #1 session_01Qp9gyE9dgpPJuAa5rXEJrc; court-citations: COURT-CITATIONS #1 session_01RW5iwkQepeVVJUAjHfuPiQ; court-doctypes: COURT-DOCTYPES #1 session_01UL3CanLegQc1bhXUiyGG9N; budget-doctypes: BUDGET-DOCTYPES #1 session_01KjUzvZtRDGcKxhimDx7Tpo; sheet-worker: SHEET-WORKER #1 session_01DytKFDiU55w9sQyB8CR7kJ; bundler: BUNDLER #7 session_01DSV3uLxG8oafXGYk7RWyay
 
 **Sources** · BOB's scope decisions `plan/draft-T33-scope.md` (they win over the drafts, then the rulings); the entry drafts `draft-T33-entries-A.md` ("A", cited by construct and module, e.g. "A TIME jurisdictions"), `-B.md` ("B", ids B0.n, B1a.n, B1b.n, B2b.1) and `-C.md` ("C", ids S0-n, C-n, Q0-n, C:A-n, Q1-n, C:B-n; the `C:` prefix marks C's own A-/B- ids); the canon audit's 20 requirement changes ("audit", `draft-T33-canon-audit.md`, "Requirements whose meaning changes"); T32's carried table (`archive/T32.md`); rulings K1429–K1501. A job's START expands each entry from the draft ids it cites.
 
@@ -73,7 +73,7 @@
 
 ## Roster (by layer)
 
-**L1** · 18 jobs. Merge order: record-grammar → jurisdictions → civil-time → calc-grammar → connection-grammar first, because every later entry reads `ID_TABLE`, the profile, or the three engines. Then `modules.json` order, except **doctypes before docprofile** (the copy before the deletion).
+**L1** · 19 jobs (bundler added, K1513). Merge order: record-grammar → jurisdictions → civil-time → calc-grammar → connection-grammar first, because every later entry reads `ID_TABLE`, the profile, or the three engines. Then `modules.json` order, except **doctypes before docprofile** (the copy before the deletion).
 **L2** · 3 jobs: record-core first (the id allocator and `declareTable`), then membership, then credentials.
 **L3** · 2 jobs: acquisition, then sources.
 **L4** · 2 jobs: reading-pipeline (the `onRead` hook), then content.
@@ -109,6 +109,8 @@ Each line is one job (P8): every T33 entry for that module. Fields: what (draft 
 - **T33-16 · court-doctypes** *(new; GO, K1506)* · The three register doctypes (Alameda eCourt, a CourtListener docket page, a CPUC card) and the register row diff (A COURTS 2a) · K1443, K1480 · est 8 · uses docprofile, id-spaces · depends T33-9, T33-12.
 - **T33-17 · budget-doctypes** *(new; GO, K1506)* · Budget and financial-report readers; departments as dated groupings, keyed on org and fund codes (legistar-events, budget codes) (C §(c) ANALYSIS L4) · K1468, K1471 · est 8 · uses docprofile, office-readers, pdf-reader · depends T33-10, T33-12.
 - **T33-18 · sheet-worker** *(new fleet Worker; GO, K1506)* · IronCalc wasm. Recomputes a workbook and returns values with the engine version. Inert until the release (the ocr-worker precedent). Built with bundler's `writeMember` as ocr-worker is (C §(c) ANALYSIS L3) · K1448 · est 12 · uses runtime-limits, bundler, test-support · depends —.
+
+- **T33-18a · bundler** *(added under P10's exception, K1513)* · A test-only change: `fleetbundles.test.mjs`'s pinned member list gains `sheet-worker` and `GUARDED_FLOOR` goes to 4, merged right after sheet-worker (T33-18), so the new fleet member is guarded from its merge. No requirement changes meaning.
 
 ### L2
 
