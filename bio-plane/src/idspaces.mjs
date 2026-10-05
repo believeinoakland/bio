@@ -20,12 +20,14 @@
  * WHAT IT CANNOT DO, stated: it cannot READ a referent. Agreement is either a determinate check (the fund
  * NAME, compared normalised) or a reading the caller supplies, returned labelled as theirs.
  *
- * It imports nothing: the view's shape is `jurisdictions.combine`'s, which the caller makes. (R26, the
+ * It imports only `court-citations`' reporter data: the view's shape is `jurisdictions.combine`'s, which the caller makes. (R26, the
  * legacy adapter under the old names, is retired: entry N105, K143.)
  *
  * It also RECOGNISES court citations (R27–R29): volume, reporter, page, the reporter known only from the
  * reporter data `court-citations` holds (or the same data passed in). A citation recognised is a spelling
  * recognised, never a case resolved. */
+
+import * as CourtCitations from "../../court-citations/index.mjs";
 
 /* The nine spaces, in R1's order, their generic labels (used only when the view gives none) and what their
    referent is. `account`, `object` and `vendor` are the money record's identifiers; `proceeding` a proceeding's
@@ -429,28 +431,33 @@ export function judgePair(v, space, a, b, reading = null) {
 
 /* ---------------------------------------------------------------- recogniseCitations (R27–R29) */
 
-/* The reporter data this module reads when the caller passes none: `court-citations`' exports, once that
-   module is built (R27). Until then none is held, and R28 answers. */
-const HELD_REPORTERS = null;
+/* The reporter data this module reads when the caller passes none: `court-citations`' exports (R27; K1513,
+   K1518). Data, never code: no reporter is named here (R29). */
+const HELD_REPORTERS = CourtCitations;
 
-/* A spelling's lookup key: white space removed, so "F. Supp." and "F.Supp." meet (as `court-citations`
-   R7 folds them). Letter case and every other character are kept. */
+/* A spelling's folded key: white space removed, so "F. Supp." and "F.Supp." meet (as `court-citations` R7
+   folds them). Letter case and every other character are kept. A spelling is looked up as written first, and
+   folded only when no spelling is held as written, so two reporters' spellings that differ only by spacing
+   ("B.R.", "B. R.") stay apart. */
 const spellingKey = (s) => String(s).replace(/\s+/g, "");
 
-/* The reporter data compiled once per data object: the lookup (key → the spellings, and the reporters and
-   editions it stands for) and the most words a spelling can be written in. Data in neither of
+/* The reporter data compiled once per data object: the lookups (as written, and folded; each → the reporters
+   and editions a spelling stands for) and the most words a spelling can be written in. Data in neither of
    court-citations' shapes (`VARIANTS`, `REPORTERS`) compiles to null. */
 const DATA = new WeakMap();
 function compileReporters(data) {
   if (!isObj(data)) return null;
   if (DATA.has(data)) return DATA.get(data);
-  const lookup = new Map();
+  const exact = new Map(), lookup = new Map();
   let words = 1;
+  const put = (map, k, reporter, edition) => {
+    if (!map.has(k)) map.set(k, new Map());
+    map.get(k).set(`${reporter}\u0000${edition ?? ""}`, { reporter, edition: typeof edition === "string" ? edition : null });
+  };
   const add = (spelling, reporter, edition) => {
     if (typeof spelling !== "string" || !spelling.trim() || typeof reporter !== "string" || !reporter) return;
-    const k = spellingKey(spelling);
-    if (!lookup.has(k)) lookup.set(k, new Map());
-    lookup.get(k).set(`${reporter}\u0000${edition ?? ""}`, { reporter, edition: typeof edition === "string" ? edition : null });
+    put(exact, spelling.trim(), reporter, edition);
+    put(lookup, spellingKey(spelling), reporter, edition);
     /* written with a space after every period, a spelling has at most this many words */
     words = Math.max(words, spelling.trim().replace(/\.(?=\S)/g, ". ").split(/\s+/).length);
   };
@@ -469,7 +476,7 @@ function compileReporters(data) {
       if (isObj(r.variations)) for (const sp of Object.keys(r.variations)) add(sp, r.key, r.variations[sp]);
     }
   } catch { lookup.clear(); }
-  const out = lookup.size ? { lookup, words } : null;
+  const out = lookup.size ? { exact, lookup, words } : null;
   DATA.set(data, out);
   return out;
 }
@@ -491,7 +498,7 @@ function findCitations(t, data) {
       const page = PAGE.exec(words[k].s);
       if (!page) continue;
       const variant = t.slice(words[0].start, words[k - 1].end);
-      const hit = data.lookup.get(spellingKey(variant));
+      const hit = data.exact.get(variant) ?? data.lookup.get(spellingKey(variant));
       if (!hit) continue;
       let end = words[k].start + page[0].length;
       const pin = PIN.exec(t.slice(end, end + 32));
@@ -530,8 +537,8 @@ export function recogniseCitations(text, reporters = undefined) {
       return { citations: [], undetermined: { why: "no text was given (not a string), so nothing was read: whether it cites anything is undetermined" } };
     if (!data) {
       const why = passed
-        ? "the reporter data passed is in neither of court-citations' shapes (VARIANTS or REPORTERS), so no reporter is known"
-        : "no reporter data is held (the court-citations module is not built here, and none was passed)";
+        ? "no reporter data is held for this reading: the data passed is in neither of court-citations' shapes (VARIANTS or REPORTERS)"
+        : "no reporter data is held (court-citations' data is not readable here, and none was passed)";
       const unrecognised = shapes(t);
       return { citations: [], undetermined: { why: `${why}: no citation can be recognised, and finding none says nothing about `
         + "what the text cites", ...(unrecognised.length ? { unrecognised } : {}) } };

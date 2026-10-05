@@ -4,6 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as M from "../../../src/idspaces.mjs";
+import * as CC from "../../../../court-citations/index.mjs";
 import { HARBOR, LAKESHORE, DISSENT, UNMEASURED, NEW_SPACES, REPORTERS, combine, viewOf, withNewSpaces } from "./fixtures.mjs";
 
 const { spaces, recognise, reach, parcelStanding, systemOf, judgePair, recogniseCitations } = M;
@@ -616,27 +617,56 @@ test("R27 recogniseCitations finds every volume-reporter-page citation the repor
   for (const c of r.citations) assert.deepEqual(Object.keys(c).filter((k) => !["volume", "reporter", "variant", "page", "pin", "start", "end"].includes(k)), []);
 });
 
-test("R28 with no reporter data the answer is undetermined, never 'cites nothing'; an unnamed reporter is listed, never dropped or guessed", () => {
-  const text = "Compare 347 Rep. 483, 12 Zz. Ct. 5 and 9 ABC 10.";
-  for (const r of [recogniseCitations(text), recogniseCitations(text, undefined), recogniseCitations(text, null)]) {
-    assert.deepEqual(r.citations, []);
-    assert.match(r.undetermined.why, /no reporter data is held/);
-    assert.match(r.undetermined.why, /finding none says nothing about what the text cites/);
-    assert.deepEqual(r.undetermined.unrecognised.map((u) => [u.text, text.slice(u.start, u.end)]),
-      [["347 Rep. 483", "347 Rep. 483"], ["12 Zz. Ct. 5", "12 Zz. Ct. 5"], ["9 ABC 10", "9 ABC 10"]]);
+test("R27 with no reporters passed, every spelling court-citations holds is recognised from its data, as the reporter it names", () => {
+  const spellings = Object.keys(CC.VARIANTS);
+  assert.equal(spellings.length > 2369, true, "every variant and every standard abbreviation");
+  let recognised = 0, ambiguous = 0;
+  for (const sp of spellings) {
+    const text = `In 12 ${sp} 345, 350 (1999).`;
+    const held = recogniseCitations(text);
+    assert.deepEqual(held, recogniseCitations(text, CC), `${sp}: the held data is court-citations' own`);
+    const named = [...new Set(CC.VARIANTS[sp].map((x) => x.reporter))].sort();
+    if (named.length === 1) {
+      assert.deepEqual(held.citations.map((c) => [c.volume, c.reporter, c.variant, c.page, c.pin, text.slice(c.start, c.end)]),
+        [[12, named[0], sp, 345, 350, `12 ${sp} 345, 350`]], sp);
+      recognised++;
+    } else {
+      assert.deepEqual(held.citations, [], `${sp}: never one reporter chosen of ${named.join(", ")}`);
+      assert.deepEqual(held.undetermined.ambiguous.map((a) => [a.variant, a.reporters]), [[sp, named]], sp);
+      ambiguous++;
+    }
   }
-  assert.match(recogniseCitations("no citation here").undetermined.why, /no reporter data is held/, "even with nothing shaped like one");
+  assert.equal(recognised + ambiguous, spellings.length);
+  const r = recogniseCitations("Brown, 347 U.S. 483, 495 (1954); Roe, 410 U. S. 113; 5 F.3d 100; 12 U.S.C. 1983.");
+  assert.deepEqual(r.citations.map((c) => [c.volume, c.reporter, c.variant, c.page, c.pin ?? null]),
+    [[347, "U.S.", "U.S.", 483, 495], [410, "U.S.", "U. S.", 113, null], [5, "F.", "F.3d", 100, null]]);
+  assert.deepEqual(r.undetermined.unrecognised.map((u) => u.text), ["12 U.S.C. 1983"], "a statute's shape is listed, not read as a reporter");
+});
+
+test("R28 with no reporter data the answer is undetermined, never 'cites nothing'; an unnamed reporter is listed, never dropped or guessed", () => {
+  /* court-citations is built, so its data is held; data passed in neither of its shapes holds none for that reading */
+  const text = "Compare 347 Rep. 483, 12 Zz. Ct. 5 and 9 ABC 10, and 347 U.S. 483.";
   for (const bad of [{}, { VARIANTS: {} }, { REPORTERS: [] }, 5, "x", [], { VARIANTS: { "A.": 3 } }]) {
     const r = recogniseCitations(text, bad);
     assert.deepEqual(r.citations, [], JSON.stringify(bad));
+    assert.match(r.undetermined.why, /no reporter data is held/);
     assert.match(r.undetermined.why, /neither of court-citations' shapes/);
+    assert.match(r.undetermined.why, /finding none says nothing about what the text cites/);
+    assert.deepEqual(r.undetermined.unrecognised.map((u) => [u.text, text.slice(u.start, u.end)]),
+      [["347 Rep. 483", "347 Rep. 483"], ["12 Zz. Ct. 5", "12 Zz. Ct. 5"], ["9 ABC 10", "9 ABC 10"], ["347 U.S. 483", "347 U.S. 483"]]);
+    assert.match(recogniseCitations("no citation here", bad).undetermined.why, /no reporter data is held/, "even with nothing shaped like one");
   }
+  for (const none of [undefined, null]) assert.equal(recogniseCitations("347 U.S. 483", none).citations[0].reporter, "U.S.",
+    "with none passed, the held data is read");
   /* with data: every volume-reporter-page run no variant names is listed with its offsets */
+  {
+  const text = "Compare 347 Rep. 483, 12 Zz. Ct. 5 and 9 ABC 10.";
   const withData = recogniseCitations(text, REPORTERS);
   assert.deepEqual(withData.citations.map((c) => c.reporter), ["Rep."]);
   assert.deepEqual(withData.undetermined.unrecognised.map((u) => [u.text, u.start, u.end]),
     [["12 Zz. Ct. 5", text.indexOf("12 Zz"), text.indexOf("12 Zz") + 12], ["9 ABC 10", text.indexOf("9 ABC"), text.indexOf("9 ABC") + 8]]);
   assert.match(withData.undetermined.why, /never dropped and never guessed/);
+  }
   /* a spelling the data gives to two reporters is listed with both */
   const amb = recogniseCitations("5 R. 6", REPORTERS);
   assert.deepEqual([amb.citations, amb.undetermined.ambiguous.map((a) => [a.text, a.reporters])], [[], [["5 R. 6", ["Rep.", "Tst."]]]]);
@@ -646,9 +676,12 @@ test("R28 with no reporter data the answer is undetermined, never 'cites nothing
 });
 
 test("R29 pure and place-free: reporters are data only, the same inputs give the same answer, and no text makes it throw", () => {
-  /* the module knows no reporter of its own: real-world spellings meet nothing without data, and any data's spellings are read */
-  for (const text of ["347 U.S. 483", "5 F.3d 100", "20 Cal. 4th 1", "1 Rep. 2"])
-    assert.deepEqual(recogniseCitations(text).citations, [], text);
+  /* the module knows no reporter of its own: passed data replaces the held data whole, and any data's spellings are read */
+  for (const text of ["347 U.S. 483", "5 F.3d 100", "20 Cal. 4th 1"]) {
+    assert.equal(recogniseCitations(text).citations.length, 1, `${text}: in court-citations' data`);
+    assert.deepEqual(recogniseCitations(text, REPORTERS).citations, [], `${text}: not in the data passed`);
+  }
+  assert.deepEqual(recogniseCitations("1 Rep. 2").citations, [], "the fixture's made-up reporter is in no held data");
   const other = { VARIANTS: { "Qx. Rpt.": { reporter: "Qx. Rpt.", edition: "Qx. Rpt." } } };
   assert.deepEqual(recogniseCitations("4 Qx. Rpt. 5", other).citations.map((c) => c.reporter), ["Qx. Rpt."]);
   assert.deepEqual(recogniseCitations("4 Rep. 5", other).citations, [], "one data set's reporters are not another's");
