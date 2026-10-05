@@ -14,7 +14,7 @@
 | C10 | prompts/C10.txt | notes/C10.md | done |  |
 | C11 | prompts/C11.txt | notes/C11.md | done |  |
 | C12 | prompts/C12.txt | notes/C12.md | done |  |
-| C13 | prompts/C13.txt | notes/C13.md | partial | action-design_HANDOFF.txt: read to 0 of 47; action-design_PATH.txt: read to 0 of 42; action-design_UX-ANSWERS.txt: read to 0 of 27; action-design_action-plans.txt: read to 0 of 115; action-design_deltas.txt: read to 0 of 62; action-design_tests.txt: read to 0 of 74; draft-filing-templates.txt: read to 0 of 196 |
+| C13 | prompts/C13.txt | notes/C13.md | partial | action-design_HANDOFF.txt: read to 0 of 47; action-design_deltas.txt: read to 0 of 62; action-design_tests.txt: read to 0 of 74 |
 | D1 | prompts/D1.txt | notes/D1.md | done |  |
 | D2 | prompts/D2.txt | notes/D2.md | done |  |
 | M1 | prompts/M1.txt | notes/M1.md | done |  |
