@@ -14,7 +14,7 @@
 
 **Deferred.** None.
 
-**Found in other modules** (REPORT J2):
+**Found in other modules** (REPORT J1; COMPLETE J2 says "the entities red in J2", meaning this J1):
 - **entities**: `test/m/entities/resolve.test.mjs:177` ("R13 (N202) … the listeners run in the modules' total order") hard-codes `["connections", "progressions", "observation-log"]` as the total order. Under T33's order, `observation-log` precedes `progressions`, so the test now fails: actual `[50, 53, 51]`, expected sorted. Entities' code orders correctly through `MODULE_ORDER`; only the test's expected list is stale. It is red from this merge until entities' job (T33-25), or until BOB routes it there by CHANGE. It is green on `tranche/T33` without my change (9/9).
 - **Generated artifact made stale:** `bio-plane/dist/bio-plane.bundled.mjs` and its `.bundle.json` (owner `not_product`). The bundle inlines membership's `index.mjs`, which this change edits. BOB regenerates it at layer close (§14). Nothing else is stale: `program.mjs` and the other bundles do not include membership.
 
