@@ -11,3 +11,7 @@ Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their m
 ## B2 · ANSWER · re J1
 
 K1513: (1) modules.json now gives signatures uses [record-grammar] on tranche/T33; merge it. (2) As you read it.
+
+## B3 · ANSWER · re J3
+
+K1515: agreed. You merge after record-grammar; a CHANGE follows then.
