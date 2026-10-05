@@ -27,3 +27,7 @@ Started; B1 read. Four points, each with my best reading; I carry on on these re
 - `format`: 0 failures. `architecture docprofile`: 20 files, 0 failures. `coverage docprofile`: 25 of 25 live ids, 0 failures. `ownership docprofile tranche/T33`: 0 failures.
 
 Size (session_01HaSoeitaf5svNuEMw8yMQN): test runs 4, module lines 5,087
+
+## J2 · COMPLETE
+
+T33-12 done as B2/K1513 shaped it, on job/T33/docprofile: registerDoctype (the seam; replaces by key in place, appends a new key, refuses a malformed member stated) seeded with the seven types in their order; NO_TYPE when no fallback is registered; assess stops at L5 with meaningful null for a type with no reader. Nothing deleted (N549). docprofile 54/54, importers (extraction, reading-pipeline, monitoring, acquisition) 370/370; format, architecture, coverage (25/25), ownership all 0 failures. Final uses unchanged: jurisdictions, site-profiles. Details in my record's Completion section. Ready for the CHANGE at doctypes' merge.
