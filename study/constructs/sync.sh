@@ -4,7 +4,7 @@
 S=${1:?study folder}; W=${2:?worktree}; D="$W/study/constructs"
 mkdir -p "$D" "$D/prior"
 python3 "$S/status.py" >/dev/null 2>&1
-for f in RESUME.md STATE.md constructs-brief.md READING-PROTOCOL.md READING-PROTOCOL-MODULES.md ANALYSIS-PROTOCOL.md REVIEW-PROTOCOL.md make-src.sh status.py build-digests.py sync.sh units.json; do
+for f in RESUME.md STATE.md constructs-brief.md READING-PROTOCOL.md READING-PROTOCOL-MODULES.md ANALYSIS-PROTOCOL.md REVIEW-PROTOCOL.md SYNTHESIS-PROTOCOL.md U41.md NEXT-BOB-PROMPT.md make-src.sh status.py build-digests.py sync.sh units.json; do
   [ -f "$S/$f" ] && cp "$S/$f" "$D/$f"
 done
 for d in prompts notes digest studies reviews synthesis; do
@@ -17,6 +17,6 @@ if git diff --cached --quiet; then exit 0; fi
 git commit -q -m "study/constructs: checkpoint $(date -u +%H:%MZ) — $(grep -c '| done |' study/constructs/STATE.md) units done
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
-Claude-Session: https://claude.ai/code/session_01BPKKPrYLqxMefuVNm32WWf"
+Claude-Session: https://claude.ai/code/session_011hHu2q95wRxsT1o7P9BR46"
 for i in 1 2 3 4; do git push -q -u origin study/constructs && exit 0; sleep $((i*2)); done
 echo "push failed" >&2; exit 1
