@@ -59,3 +59,7 @@ T33-13 applied: the seven types copied to doctypes/ (DOCTYPES, registerDoctypes)
 - `format.mjs` · 126 modules, 125 requirements files; 0 failures. With `doctypes`' `paths`/`tests` set in a scratch `modules.json` (not committed): `architecture.mjs` 23 product files, 47 relative imports, 0 failures; `coverage.mjs` 24 of 24 live ids named by a test, 0 failures; `ownership.mjs … tranche/T33` 24 files changed, 0 failures.
 
 Size (session_01XZrZmtoRays9vT3h9cANPd): test runs 27, module lines 2614
+
+## J4 · COMPLETE · re B3
+
+B3 done: tranche/T33 merged; test supplements dropped, the codifier corpus, answers and R18 read the held profiles' own section forms (omc markers and Charter as J2 asked). doctypes 25 pass, 0 fail; format, architecture, coverage 24/24, ownership 0 failures (paths doctypes/, doctypes/test/). Two findings in the record: (1) this module's calendar counts minutes_due_days as calendar days though jurisdictions now holds 10 business days; the fix needs a civil-time uses edge, BOB's, deferred; (2) docprofile's own R6 test fails on the merged tranche on the corrected value (retires with T33-12).
