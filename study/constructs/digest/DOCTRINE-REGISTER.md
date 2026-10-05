@@ -2805,7 +2805,7 @@ Every pair of rules or sources that disagree, as the readers recorded them, with
 
 ## Coverage check
 
-- Bullets in `digest/DOCTRINE.md`: 1055 (lines beginning `- `, top-level or nested), of which 1055 lie in the ranges read so far.
+- Bullets in `digest/DOCTRINE.md`: 1055 (lines beginning `- ` or `<n>. `, top-level or nested), of which 1055 lie in the ranges read so far.
 - Register entries: 388.
 - Every bullet in the ranges read maps to at least one entry (its line appears in that entry's *Reported by*); a bullet carrying several rules is cited under each. No bullet was dropped: exact duplicates are merged into the entry they repeat and listed there by reader id.
 - Bullets per reader: C1 54, C10 29, C11 37, C12 42, C13 55, C2 82, C3 60, C4 89, C5 49, C6 74, C7 56, C8 24, C9 94, D1 97, D2 54, M1 27, M2 64, M3 19, M4 37, M5 12.
