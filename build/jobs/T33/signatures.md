@@ -1,6 +1,6 @@
 # signatures (T33)
 
-**Status** · session_01Rj1YY4SJGHnLERzjPXfZoY · depth 2 · COMPLETE · handled B2
+**Status** · session_01Rj1YY4SJGHnLERzjPXfZoY · depth 2 · COMPLETE · handled B4
 
 ## J1 · QUESTION
 
@@ -48,3 +48,16 @@ Generated artifacts made stale by T33-7 (sshsig.mjs now imports record-grammar/i
 ## J3 · COMPLETE
 
 T33-7 applied; record's Completion section. Signatures tests 76/0 were run against a local stand-in for record-grammar R46/R47, because ID_TABLE is not yet pushed by RECORD-GRAMMAR #8. Until T33-1 merges this module does not load, so merge it after record-grammar, and send a CHANGE once that is on the tranche: I re-run the tests and, if the sequential form differs, re-run embed:sign. Checks: format, architecture, coverage, ownership all 0 failures. Final uses: record-grammar.
+
+## Re-run on CHANGE B4 (K1516)
+
+Merged `tranche/T33` with record-grammar's T33-1. The real `ID_TABLE` gives 46 sequential prefixes; the first is `INFO`, and `idPattern('INFO')` is `/^INFO-\d{4}-\d{4,}$/`. That is the same form the stand-in assumed. `npm run embed:sign` changed nothing: the committed page and render already match.
+- signatures: tests 76, pass 76, fail 0, skipped 0, on the real `ID_TABLE`.
+- Users: network-notices 68/0, docket 43/0, capture 118/0. case-checker 28/1: R13, the stale `program.mjs` reported in J2.
+- Checks: format 0 failures; architecture 8 files, 10 imports, 0 failures; coverage 42 of 42, 0 failures; ownership 0 failures.
+
+Size (session_01Rj1YY4SJGHnLERzjPXfZoY): test runs 10, module lines 1373
+
+## J4 · COMPLETE · re B4
+
+Re-run on the real ID_TABLE (tranche/T33 merged): its sequential form is ^INFO-\d{4}-\d{4,}$, identical to the reading, so embed:sign changed nothing. signatures 76/0, no skips. Checks: format, architecture, coverage (42/42), ownership all 0 failures. case-checker R13 is still red on the stale program.mjs (J2). Record: section 'Re-run on CHANGE B4'.

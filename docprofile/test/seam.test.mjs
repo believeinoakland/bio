@@ -90,3 +90,39 @@ test("R4 R13 R19 R35 with no fallback registered, doctypeFor answers the stated 
   assert.match(a.why, /declares no reader/);
   assert.equal(a.stopped_at, "L5_meaning");
 });
+
+test("R37 readText hands the reader the supplied structure as ctx.supplied, unchanged: pages (an empty one included), markers, images, ocr, typed cells; null for a bare string", () => {
+  let seen = null;
+  assert.equal(registerDoctype(stub("stub_structure", "STRUCT-STUB", {
+    parse: (ctx) => { seen = ctx; return { entities: [], facts: {} }; } })).ok, true);
+  const supplied = {
+    document: "STRUCT-STUB page one",
+    pages: [{ page: 0, text: "STRUCT-STUB page one", undetermined: [] },
+            { page: 1, text: "", undetermined: [{ reason: "no_text_layer", count: 1 }] }],
+    undetermined: [{ reason: "no_text_layer", count: 1, page: 1 }],
+    images: [{ page: 1, width: 1700, height: 2200 }],
+    ocr: { pages: [{ page: 1, text: "Fund 1010 General Purpose" }], engine: "tesseract" },
+    cells: [{ sheet: "Budget", ref: "B2", type: "n", value: "1250.00", formula: "SUM(B3:B9)", cached: "1250.00" }],
+    counts: { chars: 20, undetermined: 1 },
+  };
+  const frozen = JSON.stringify(supplied);
+  const r = readText(supplied, {});
+  assert.equal(r.determined, true);
+  assert.equal(r.doctype.type.key, "stub_structure");
+  assert.equal(seen.supplied, supplied, "the very object the caller gave");
+  assert.equal(JSON.stringify(seen.supplied), frozen, "unchanged");
+  assert.equal(seen.supplied.pages[1].text, "", "the page with no text layer is there");
+  for (const k of ["undetermined", "images", "ocr", "cells"]) assert.deepEqual(seen.supplied[k], JSON.parse(frozen)[k], k);
+  assert.equal(seen.text, "STRUCT-STUB page one");
+  assert.equal(typeof seen.locate, "function");
+  // a caller's own ctx.supplied never stands in for the text's structure
+  readText(supplied, { supplied: { forged: true } });
+  assert.equal(seen.supplied, supplied);
+  // a bare string carries no structure
+  readText("STRUCT-STUB plain", { supplied: { forged: true } });
+  assert.equal(seen.supplied, null);
+  // a sheet's paragraphs-only shape too
+  const sheet = { paragraphs: [{ para: 0, text: "STRUCT-STUB" }], cells: supplied.cells };
+  readText(sheet, {});
+  assert.equal(seen.supplied, sheet);
+});

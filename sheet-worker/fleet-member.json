@@ -1,0 +1,15 @@
+{
+  "name": "sheet-worker",
+  "entry": "src/index.mjs",
+  "surface": "SURFACE",
+  "testDir": "test",
+  "bundle": {
+    "entry": "src/index.mjs",
+    "outfile": "dist/sheet-worker.bundled.mjs",
+    "manifest": "dist/sheet-worker.bundle.json",
+    "external": ["cloudflare:workers", "node:*", "../assets/sheet-engine.wasm"],
+    "assets": ["assets/sheet-engine.wasm"],
+    "note": "The engine wasm is an upload part, not bundled: Workers compile wasm only at upload, so it arrives as a CompiledWasm module. `assets` makes the bundle manifest hash its bytes (bundler R4), so a different engine under the same source is stale. One build input is another tree's: ../bio-plane/src/cpu.mjs (runtime-limits' makeMeter). The wasm itself is built from engine/ by scripts/build-engine.mjs and committed (PROCESS-MECHANICS §14)."
+  },
+  "note": "The fleet-member marker, found by bundler's discoverMembers. The suite (test/) boots the committed bundle under miniflare, a devDependency, so `npm test` needs `npm ci` here first."
+}

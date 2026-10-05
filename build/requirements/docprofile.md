@@ -92,6 +92,7 @@ whatever the caller knows (locator, headers, content type, `at`) plus, for the d
 - **R20** The content type's reader is handed a total `locate(offset)` function built from the
   supplied text's own segment map (R23); it may place a reference only where `locate` says,
   never at a position it composed itself. (The content types' own share: `doctypes` R7.)
+- **R37** (K1520) `readText` hands the content type's reader the supplied text's structure as `ctx.supplied` beside `text` and `locate`: its pages (a page with no text layer included), `undetermined` markers, `images`, an `ocr` transcription where the caller supplied one, and a sheet's typed `cells` (`office-readers` R30), unchanged.
 - Errors: never throws; a content type's `parse` throwing is caught and reported as `parse_error`.
 
 **`flattenText(supplied) → {text, source, chars, undetermined, reasons, segments, position_why}`**
