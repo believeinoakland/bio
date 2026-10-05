@@ -37,6 +37,6 @@ Each bundles `sshsig.mjs`, which now imports `record-grammar/index.mjs`.
 - format: 126 modules, 125 requirements files; 0 failures
 - architecture: 8 product files, 10 relative imports; 0 failures
 - coverage: 42 of 42 live requirement ids named by a test; 0 failures
-- ownership: run below, after the commit
+- ownership: 6 files changed by signatures between tranche/T33 and HEAD; 0 failures
 
 Size (session_01Rj1YY4SJGHnLERzjPXfZoY): test runs 8, module lines 1373
