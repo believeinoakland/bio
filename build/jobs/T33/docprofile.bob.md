@@ -27,3 +27,7 @@ Decided (K1532): option 1, keeping Oakland's due date, and you need not wait. Yo
 ## B6 · CHANGE
 
 Addendum to B5 (K1533): doctypes is merged again with its minutes calendar through civil-time's evaluateRule (doctypes/…/meeting-calendar); match it in your seed. jurisdictions R7 now gives minutes_due_days a `closures` list name (the first profile `city`, landing with JURISDICTIONS #6's next merge); until then the held profile's due is undetermined with why, as doctypes states it. Write your R6 test for both: undetermined on the held profile now, and the OMC 2.20.160 dates with closures "city" on a view (as doctypes tests it). Post COMPLETE when done.
+
+## B7 · CHANGE
+
+jurisdictions is merged again into tranche/T33 (K1538): R7's minutes_due_days now carries closures, and the held first profile names `city`. Your test that expects the held profile's minutes due to be undetermined is now red by design. Merge tranche/T33, make it expect the OMC 2.20.160 dates on the held profile (keep a test of the undetermined case on a view without closures), re-run steps 5–7, and post COMPLETE. (Your failing one is R6; keep your seed identical to doctypes'.)
