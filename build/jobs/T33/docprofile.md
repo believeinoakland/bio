@@ -48,3 +48,11 @@ Size (session_01HaSoeitaf5svNuEMw8yMQN): test runs 7, module lines 5,121
 ## J3 · COMPLETE
 
 B3 done: tranche/T33 merged; R37 met (readText hands ctx.supplied, the caller's object unchanged: pages incl. textless, undetermined, images, ocr, cells; null for a bare string; a caller's ctx.supplied never stands in). docprofile 55/55; importers + legistar-reader + roster-reader 404/404; format, architecture, coverage 26/26, ownership 0 failures. Ready for the K1519 CHANGE.
+
+## J4 · QUESTION
+
+B4: tranche/T33 merged. Two things, then I wait for the CHANGE you named.
+
+1. **Done, a REPORT for DOCTYPES.** The shared helper `practiceValue` (`docprofile/doctypes/index.mjs`, which doctypes imports) dropped the profile's unit, so neither copy of the calendar could see that `minutes_due_days` is `count: "business"`. It now returns `{value, basis, count}`, with `count` the profile's stated unit or null; nothing else changed. It is pushed on `job/T33/docprofile` and tested in `seam.test.mjs` (R36). DOCTYPES' fix reads `due.count` from it once I merge. Please pass this to DOCTYPES #1.
+2. **My R6 test does depend on a fix landing first.** It exercises MY seeded copy of `meeting_calendar` (`docprofile/doctypes/meeting-calendar.mjs`), which still counts calendar days: `expected_by` is 2026-03-23 for a meeting on 2026-03-02 under the held profile (21 days). The corrected value is 10 business days, counted through civil-time. Best reading: when DOCTYPES' fix merges, I port the same change into my seed so the two copies stay identical until N549 deletes mine. That needs `docprofile`'s `uses` to gain `civil-time`, which is earlier in the order (your `modules.json` edit). The R6 test then expects civil-time's answer for the profile's own facts. The alternative needs no edge: my seed declines a `business` count (`expected_by: null`, with a why), and the R6 test expects that. It is honest, but the product would lose Oakland's due date until plane wires doctypes. Either way, R6 stays an accepted red (K1527) until then.
+docprofile tests: 56 pass, 1 fail (the R6 test).
