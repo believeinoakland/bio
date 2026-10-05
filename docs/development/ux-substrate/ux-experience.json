@@ -363,6 +363,73 @@
    "ring": "members"
   },
   {
+   "name": "Newsroom staff (a group of journalists)",
+   "ring": "members",
+   "whoTheyAre": [
+    {
+     "text": "Reporters, editors, researchers and fact-checkers running their own group's copy; a core audience.",
+     "basis": "fixed",
+     "src": "Bob, 2026-10-05 (DEC-128 as amended)"
+    }
+   ],
+   "goals": [
+    {
+     "text": "Investigate to deadline, protect sources, put a case through editorial and legal review, and publish the evidence behind their own stories.",
+     "basis": "fixed",
+     "src": "Bob, 2026-10-05 (DEC-128 as amended)"
+    }
+   ],
+   "whatTheyAlreadyKnow": [
+    {
+     "text": "Records requests, sourcing and verification practice, and their outlet's own legal review; not Civicsmith's grades or acts.",
+     "basis": "open"
+    }
+   ],
+   "context": {
+    "device": [
+     {
+      "text": "Desk and phone; reading and capturing in the field (DEC-122).",
+      "basis": "fixed",
+      "src": "DEC-122"
+     }
+    ],
+    "timePressure": [
+     {
+      "text": "Deadlines; releasing a case when its story runs is not yet possible (journeys page, section 6).",
+      "basis": "open"
+     }
+    ],
+    "frequency": [
+     {
+      "text": "Daily during an investigation.",
+      "basis": "open"
+     }
+    ],
+    "stakes": [
+     {
+      "text": "Source protection is paramount; a newsroom may rely on protections such as shield laws, and its administrator chooses what members are told about court orders (J11, pending).",
+      "basis": "open"
+     }
+    ]
+   },
+   "trustConcerns": [
+    {
+     "text": "Sources' identities kept in their own narrowest place, never exported or published.",
+     "basis": "fixed",
+     "src": "K1489; Intake Doctrine §2a"
+    }
+   ],
+   "whatTheyMustNeverSee": [
+    {
+     "text": "Another group's unpublished work, or a source's identity they were not given.",
+     "basis": "fixed",
+     "src": "Membership v2 §7.9; K1489"
+    }
+   ],
+   "src": "Bob, 2026-10-05; journeys.html §1",
+   "basis": "mixed (see each line)"
+  },
+  {
    "name": "Member, newcomer (no civic engagement experience)",
    "whoTheyAre": [
     {
@@ -1125,7 +1192,7 @@
    "ring": "outside"
   },
   {
-   "name": "Journalist or media",
+   "name": "Journalist or media outside the group",
    "whoTheyAre": [
     {
      "text": "One of the named audiences of a published case: reporting.",

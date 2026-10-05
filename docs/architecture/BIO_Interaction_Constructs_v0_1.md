@@ -740,12 +740,13 @@ redesign's, within this rule.
 
 ## R · WHO WE DESIGN FOR, AND THE WIDE PATH (Bob, 2026-10-04, DEC-128, DEC-129)
 
-**RULED 2026-10-04 by Bob (DEC-128): three rings of audience.** *Inside the group, members:* the newcomer member (the centre of
+**RULED 2026-10-04 by Bob (DEC-128): three rings of audience.** *Inside the group, members:* newsroom staff running their own group's copy (a core audience, Bob, 2026-10-05: reporters,
+editors, researchers, fact-checkers), the newcomer member (the centre of
 gravity: a community activist or volunteer with no civic-records experience), the experienced investigator, the professional
 member (journalist, lawyer, accountant, auditor, engineer, policy analyst; declared expertise gates nothing), the project owner,
 the administrator, and the group's future members. *Invited in:* the outside reviewer of a review copy and the group's lawyer
 receiving a counsel packet. *Outside the group:* someone handing over material through the doorbell, the public reader,
-journalists, partner groups (work flows both ways), government offices and officials, and oversight bodies. The installer and the
+journalists outside the group, partner groups (work flows both ways), government offices and officials, and oversight bodies. The installer and the
 founder are moments of the administrator's role; project participant and member outside a project are states; the assistant is an
 actor, not an audience; residents addressed by an action meet the group's words, not its screens. Across every ring: members who
 read in another language, screen-reader and keyboard users, and people working from a phone. Groups differ too (professional,
