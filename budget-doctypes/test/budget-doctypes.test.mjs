@@ -124,7 +124,7 @@ test("R2: each table has its fields, every figure as printed and unscaled, each 
   const r = readPdf("a24", financialReport);
   assert.ok(r.tables.length >= 6);
   for (const t of r.tables) {
-    assert.deepEqual(Object.keys(t).filter((k) => !["engine", "title_why"].includes(k)).sort(),
+    assert.deepEqual(Object.keys(t).filter((k) => !["engine", "title_why", "period_why"].includes(k)).sort(),
       ["columns", "method", "modal_share", "page", "period_as_written", "rows", "scale", "title", "usable", "why"]);
     for (const row of t.rows) {
       assert.deepEqual(Object.keys(row).filter((k) => k !== "label_why").sort(), ["cells", "label", "source", "span"]);
@@ -137,7 +137,7 @@ test("R2: each table has its fields, every figure as printed and unscaled, each 
   assert.equal(net.title, "Statement of Net Position");
   assert.equal(net.scale, "In thousands");
   /* The first profile holds no form for a dated heading ("June 30, 2024"): no period. */
-  assert.equal(net.period_as_written, null);
+  assert.equal(net.period_as_written, null); assert.match(net.period_why, /fiscal-year form/);
   assert.ok(net.columns.join(" ").includes("Port of"));
   const cash = net.rows.find((x) => x.label === "Cash and investments");
   assert.deepEqual(cash.cells.map((c) => c.as_read), ["$ 1,405,595", "$ 99,327", "$ 1,504,922", "$ 678,654"]);
@@ -225,8 +225,7 @@ test("R5: a budget book sets aside the chart-label block, listed with its page a
   assert.deepEqual(skipped[0].lines, ["Property Tax", "$308,925,155 (36.5%)"]);
   const [t] = onPage(r, 148);
   assert.equal(t.usable, true);
-  /* The first profile names no heading for this page: no title, with why. */
-  assert.equal(t.title, null); assert.match(t.title_why, /no heading/);
+  assert.equal(t.title, "GENERAL PURPOSE FUND REVENUE");
   const cells = allCells(t);
   for (const share of ["(36.5%)", "(15.1%)", "(7.3%)", "(14.7%)"]) assert.ok(!cells.includes(share), share);
   assert.equal(t.rows.find((x) => x.label === "Property Tax").cells.length, 4);
@@ -274,7 +273,7 @@ test("R7: each budget line keyed on fund and org, with its codes read by the vie
   const row = r.rows[0];
   assert.deepEqual(Object.keys(row).sort(), ["account", "amount", "department", "department_code", "fund", "key", "org",
     "period_as_written", "phase_as_written", "program", "project", "source"]);
-  assert.deepEqual(row.fund, { as_written: "1010", form: String.raw`FD_\d{4}|\d{4}`, scheme: "fund" });
+  assert.deepEqual(row.fund, { as_written: "1010", form: String.raw`^\d{4}$`, scheme: "oakland_fund" });
   assert.equal(row.org.as_written, "11");
   assert.equal(row.period_as_written, "FY13-14");
   assert.deepEqual(row.amount, { value: "84669", type: "text", declared: null,
@@ -547,6 +546,7 @@ test("R14: every no says which kind of no and why", async () => {
   for (const key of ["a24", "a14"]) for (const t of readPdf(key, financialReport).tables) {
     if (!t.usable) assert.ok(t.why);
     if (!t.title) assert.ok(t.title_why);
+    if (!t.period_as_written) assert.ok(t.period_why);
     for (const r of t.rows) if (r.label === null) assert.ok(r.label_why);
   }
   const lines = budgetTable.parse(ctxFor(await csvSupplied(fixture("fy2013-15-adopted.csv")), FIRST, { content_type: "text/csv" }));

@@ -254,6 +254,8 @@ function buildTable(ctx, page, live, reg, prevEnd, nextStart, method, engine) {
   };
   if (engine) t.engine = engine;
   if (!t.title) t.title_why = "no heading the view names, and no table caption, was read above or below the table";
+  if (!t.period_as_written)
+    t.period_why = "no fiscal-year form the view holds was read above, below or in the header of the table";
   return t;
 }
 
