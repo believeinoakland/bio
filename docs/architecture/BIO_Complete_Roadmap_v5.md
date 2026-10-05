@@ -434,7 +434,10 @@ AI-executable.
 No canonical source of truth. Distributed evaluation.
 
 **Requirement 6: Standardized metadata** on every work product.
-Institutional framing: roles, not individuals.
+People materially involved are named, with their documented acts,
+positions, ties and financial interests where these bear on the finding;
+accountability belongs to the role, the institution and the person who
+acted (Design Requirement 6 as amended 2026-10-05, K1483).
 
 ### Escalation
 

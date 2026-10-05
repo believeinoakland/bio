@@ -1223,6 +1223,8 @@ The rules that make the loop safe:
 
 ### An assistant may open a focus unattended
 
+*Superseded by Bob's K1481 (2026-10-05): every AI run but a member-authored standing question starts at a member's act; nothing here opens a focus or runs unattended.*
+
 RULED by Bob, 2026-07-30. This level of support is central to what a member should
 expect from BIO, and it is safe for a specific structural reason: **a focus is
 informative, advisory and supportive of a project's development. It commits nobody.**
@@ -1440,8 +1442,13 @@ two subjects are related is **constitutive** rather than evidentiary: it is not 
 about the world that could be checked, it is the group fixing what its own statements
 mean. Constitutive acts carry an author and a justification like everything else, and
 they sit outside the A-to-D scale.
+Bob, 2026-10-05 (K1487): such groupings are often evidentiary in fact; in exploration a
+declared relation without a source is walked as a hop marked "declared, not evidenced" at
+the lowest grade, upgraded by attaching a source. It still never resolves a reference.
 
 ### An assistant working unattended works under a lens
+
+*Superseded by Bob's K1481 (2026-10-05): every AI run but a member-authored standing question starts at a member's act; nothing here opens a focus or runs unattended.*
 
 Bob ruled this session that an assistant may open a focus without a member. The
 doctrine says any BIO work done under bias carries the fully declared bias as part of

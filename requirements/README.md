@@ -31,7 +31,7 @@
 | `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` | §3 onward | the record's shape and rules: ids, schemas, state machines, relationships, invariants I-1…I-20 |
 | `docs/architecture/BIO_Technical_Architecture_Decisions_v10.md` | the general rules, not the mechanisms | the technology decisions that remain live |
 | `docs/architecture/BIO_Bundle_Skill_Composite_Design_v1_7.md` | the bundle format, promotion semantics and C-series checks | the format the plane must still satisfy |
-| `docs/architecture/BIO_Capability_Ladders_v0_1.md` | whole; a rung not yet built is a planned design, re-verified when its stage is planned (K1432) | the capability ladders of time, organisations and obligations, law, courts, analysis and questions: every need found, every rung L0–L5 with its design, what must exist first, realism and performance, and the decisions it raises; every construct to L5 (B1 (c)) |
+| `docs/architecture/BIO_Capability_Ladders_v0_1.md` | whole; a rung not yet built is a planned design, re-verified when its stage is planned (K1432) | the capability ladders of time, organisations and obligations, people, events, money, law, courts, analysis and questions: every need found, every rung L0–L5 with its design, what must exist first, realism and performance, and the decisions it raises (all ruled, K1494; the backward question deferred by Bob, D-165); every construct to L5 (B1 (c)) |
 
 **Construct detail (level 2)**
 

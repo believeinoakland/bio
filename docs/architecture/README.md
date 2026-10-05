@@ -25,9 +25,11 @@ not deliver while these documents lived on one person's machine.
 **Nothing here is secret.** The corpus was checked before publication for
 credential material, contact details, named private individuals, and
 confidentiality markings, and contains none. Design Requirement 6 fixes the
-naming policy the documents follow: individuals appear only in their
-official capacity in connection with specific documented actions, and
-accountability belongs to the role and the institution.
+naming policy the documents follow (amended 2026-10-05, K1483): a person
+materially involved is named, by name, title or role as the finding needs,
+with their documented acts, positions, ties and financial interests where
+these bear on the finding; accountability belongs to the role, the
+institution and the person who acted.
 
 **Markdown is the source of truth.** Decided July 24, 2026. These documents
 were authored in Word and converted once; the `.docx` originals were removed
