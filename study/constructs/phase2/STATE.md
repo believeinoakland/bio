@@ -2,24 +2,24 @@
 
 | unit | prompt | output | state | note |
 |---|---|---|---|---|
-| C1 | prompts/C1.txt | notes/C1.md | partial | BIO_Functional_Architecture_v3.txt: read to 0 of 613; BIO_System_Design.txt: read to 0 of 315; BIO_Action_v0_1.txt: read to 0 of 100; MILESTONES.txt: read to 0 of 602; UI-KICKOFF.txt: read to 0 of 229 |
-| C2 | prompts/C2.txt | notes/C2.md | partial | DECISIONS-design-branch.txt: read to 1378 of 2085 |
-| C3 | prompts/C3.txt | notes/C3.md | partial | BIO_Content_Framework_v0_10.txt: read to 1100 of 2712 |
-| C4 | prompts/C4.txt | notes/C4.md | partial | BIO_Declared_Bias_v0_1.txt: read to 500 of 610; BIO_Interaction_Constructs_v0_1.txt: read to 0 of 737; BIO_Assistant_and_AI_Roles_v0_1.txt: read to 0 of 179 |
-| C5 | prompts/C5.txt | notes/C5.md | partial | INVESTIGATIVE-SESSION.txt: read to 1530 of 1850; ASSISTANT-PILOT.txt: read to 0 of 230; RETRIEVAL-SUBSTRATE.txt: read to 0 of 392; CONTRADICTION-IDENTIFY-DESIGN.txt: read to 0 of 195; FINDINGS-WORKPLAN.txt: read to 0 of 130; RETRIEVAL-PROBE.txt: read to 0 of 197 |
-| C6 | prompts/C6.txt | notes/C6.md | partial | BIO_Intake_Doctrine_v1_1.txt: read to 150 of 909; SOURCE-ACCESS.txt: read to 0 of 312; AUTHORITY-AND-TRUST.txt: read to 0 of 284; BIO_Communications_Platforms.txt: read to 0 of 353 |
-| C7 | prompts/C7.txt | notes/C7.md | partial | BIO_Membership_Architecture_v2.txt: read to 500 of 1565 |
-| C8 | prompts/C8.txt | notes/C8.md | partial | SCHEDULER.txt: read to 0 of 205; final section not written |
-| C9 | prompts/C9.txt | notes/C9.md | partial | sources_canon-constructs.md.txt: read to 0 of 215; sources_canon-mission.md.txt: read to 0 of 222; sources_code.md.txt: read to 0 of 297; NOTIFICATIONS.txt: read to 0 of 441 |
-| C10 | prompts/C10.txt | notes/C10.md | partial | CONSTRUCTS.txt: read to 120 of 331; final section not written |
-| C11 | prompts/C11.txt | notes/C11.md | partial | DECISIONS-archive-part1.txt: read to 1500 of 2056 |
-| C12 | prompts/C12.txt | notes/C12.md | partial | DECISIONS-archive-part2.txt: read to 1500 of 2037 |
-| C13 | prompts/C13.txt | notes/C13.md | partial | draft-planning-skill.txt: not started; research-oakland-calendar.txt: not started |
+| C1 | prompts/C1.txt | notes/C1.md | partial | BIO_System_Design.txt: read to 0 of 315; BIO_Action_v0_1.txt: read to 0 of 100; MILESTONES.txt: read to 0 of 602; UI-KICKOFF.txt: read to 0 of 229 |
+| C2 | prompts/C2.txt | notes/C2.md | partial | DECISIONS-design-branch.txt: read to 1697 of 2085 |
+| C3 | prompts/C3.txt | notes/C3.md | partial | BIO_Content_Framework_v0_10.txt: read to 1600 of 2712 |
+| C4 | prompts/C4.txt | notes/C4.md | partial | BIO_Interaction_Constructs_v0_1.txt: read to 500 of 737; BIO_Assistant_and_AI_Roles_v0_1.txt: read to 0 of 179 |
+| C5 | prompts/C5.txt | notes/C5.md | partial | RETRIEVAL-SUBSTRATE.txt: read to 0 of 392; CONTRADICTION-IDENTIFY-DESIGN.txt: read to 0 of 195; FINDINGS-WORKPLAN.txt: read to 0 of 130; RETRIEVAL-PROBE.txt: read to 0 of 197 |
+| C6 | prompts/C6.txt | notes/C6.md | partial | BIO_Intake_Doctrine_v1_1.txt: read to 550 of 909; SOURCE-ACCESS.txt: read to 0 of 312; AUTHORITY-AND-TRUST.txt: read to 0 of 284; BIO_Communications_Platforms.txt: read to 0 of 353 |
+| C7 | prompts/C7.txt | notes/C7.md | partial | BIO_Membership_Architecture_v2.txt: read to 1500 of 1565 |
+| C8 | prompts/C8.txt | notes/C8.md | done |  |
+| C9 | prompts/C9.txt | notes/C9.md | partial | sources_code.md.txt: read to 0 of 297; NOTIFICATIONS.txt: read to 0 of 441 |
+| C10 | prompts/C10.txt | notes/C10.md | done |  |
+| C11 | prompts/C11.txt | notes/C11.md | done |  |
+| C12 | prompts/C12.txt | notes/C12.md | done |  |
+| C13 | prompts/C13.txt | notes/C13.md | done |  |
 | C14 | prompts/C14.txt | notes/C14.md | done |  |
-| D1 | prompts/D1.txt | notes/D1.md | partial | design-ux-useCases.txt: read to 1899 of 4020; design-ux-journeyExperience.txt: read to 0 of 1379; final section not written |
-| D2 | prompts/D2.txt | notes/D2.md | partial | design-ux-surfaceRules.txt: read to 500 of 3473 |
-| M1 | prompts/M1.txt | notes/M1.md | partial | filings.txt: read to 0 of 135; escalation.txt: read to 0 of 130; action-plans.txt: read to 0 of 153 |
-| M2 | prompts/M2.txt | notes/M2.md | partial | entities.txt: not started; connections.txt: not started; progressions.txt: not started; bias.txt: not started |
+| D1 | prompts/D1.txt | notes/D1.md | partial | design-ux-useCases.txt: read to 3399 of 4020; design-ux-journeyExperience.txt: read to 0 of 1379; final section not written |
+| D2 | prompts/D2.txt | notes/D2.md | partial | design-ux-surfaceRules.txt: read to 1500 of 3473 |
+| M1 | prompts/M1.txt | notes/M1.md | partial | action-plans.txt: read to 0 of 153 |
+| M2 | prompts/M2.txt | notes/M2.md | partial | connections.txt: not started; progressions.txt: not started; bias.txt: not started |
 | M3 | prompts/M3.txt | notes/M3.md | partial | final section not written |
 | M4 | prompts/M4.txt | notes/M4.md | partial | final section not written |
 | M5 | prompts/M5.txt | notes/M5.md | missing |  |
