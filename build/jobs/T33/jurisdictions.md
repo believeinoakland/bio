@@ -2,6 +2,29 @@
 
 **Status** · session_016rKi7FqGrzSeDuh4w2sUJ7 · depth 2 · WORKING · handled B1
 
+## Completion
+
+**Entries applied (T33-2; K1431, K1444, K1445, K1446, K1452, K1493, K1504, K1505 (10), (16)).**
+- R26 widened as data: `units` (days, hours, business_hours, months, years) and `amount`, an entry written `days: n` read as days (the view gives `units`, `amount` and `days`); `count` with days only; `direction`; `starts` gains `entered`, `served`, `hearing`; `roll`; `closures` (a list, R47); `computation` (R46); `extension` with `citation`, computed by civil-time; `tolling`; `observed` (R47); `status` with a sourced basis (R44).
+- R28's T33 codes: UNIT_UNKNOWN, DIRECTION_UNKNOWN, ANCHOR_UNKNOWN, CLOSURES_UNKNOWN, COMPUTATION_UNKNOWN, WEEKEND_INVALID, CHANNEL_INVALID, FISCAL_YEAR_INVALID, RANK_INVALID, COPY_UNKNOWN, FLOW_INVALID, SCHEME_INVALID, DEMAND_INVALID, RECURRENCE_INVALID. R44 extended to deadlines and every T33 calendar fact (UNMEASURED refused).
+- R3 spaces `account`, `object`, `vendor`, `proceeding`, `person`; R6 `codes` `copy` and `sections`, and the keys `amending`, `meeting_markers`, `body_variants`, `roster_words`, `roster_headers`, `staff_titles`; R7 `minutes_due_days.count`.
+- R46 `weekend`, `computation`; R47 closure lists (`list`, `citation`; a year once per list and offices); R48 a venue's `cutoff`, `outages`, `receipt`; R49 `fiscal_year`; R50 `law_ranks`, `instrument_key`, a standard source's `key`; R51 `proceeding_kinds`, `proceeding_flows`; R52 `identifier_schemes`, `classification_schemes`; R53 `lawful_demands`; R54 `recurrences` (civil-time's RRULE subset); R55 their combination (one value per key, or unioned).
+- R56 (first profile): CPRA (10 days, CCP §12, rolling on the §135 list, 14-day extension, the City list observed beside it), the Immediate Disclosure Request (OMC 2.20.230), the Brown Act's 72 h and 24 h, OMC 2.20.070's 48 business hours with its Monday rule, the Claims Act (§911.2(a) six months and one year; §945.6(a)(1)), FOIA (20 working days, +10, tolling); `weekend`; CCP §12's computation; the closure lists `judicial` (CCP §135, M-189's days), `city` (M-190) and `federal` (5 U.S.C. §6103(a)); the portal's receipt rule (City Attorney's guide, 2025-04-29); the five counterparties and both records venues re-based on their primary sources; `minutes_due_days` 10 business days (OMC 2.20.160); records laws gain the Sunshine Ordinance and FOIA, standard sources the CCP and FOIA; the K1493 lawful demand (Gov. Code §7928.215); the OMC's copy (`codifier`) and section shape; Legistar's meeting markers and body variants; a `person` space and the Legistar PersonId scheme.
+- R57: the test profile supplies every T33 section and field; `test/fixtures/time-law.mjs` holds the 20 rows of time-law §3 with their sources and negatives (E1, E2 negative only; F1–F3 labelled derived), the OMC 48-business-hour row re-derived (Mon 2026-10-12 18:00; K1505 (16)) and the Brown Act timed row.
+
+**Readings pending BOB's answer (J2, replacing J1):** the court-procedure fixtures carry their own rule; `applies_to: public_comment` and `starts: act` for a body's meeting notice; the Monday rule as a `computation` rule `monday_prior_friday_noon` (R46 widened); the federal 2026 list held from §6103(a).
+
+**Deferred.** The CCP §135 lists for 2018, 2020 and 2024 (fixtures P1, P2, P5, P6, E1, E2, R1): no source in hand, so not held; the R57 test names exactly these gaps (J2 (1)). In the first profile, no `fiscal_year`, `law_ranks`, `instrument_key`, proceedings, classification schemes, recurrences, amending vocabulary or roster words: unsourced, absent (R27).
+
+**Found in other modules (J3).** action-clocks `calendar.test.mjs` R10 ×3 and filings `packet.test.mjs` R9, R30 read R47's closure-list entries as all-office calendars; docprofile `docprofile.test.mjs` R6 expects the 21-day minutes period. All six pass on `tranche/T33` and fail with this data; each module's T33 job re-points. P6: the jurisdictions path is 4,519 lines, past 4,000 (BOB's split). No generated artifact reads this module.
+
+**Tests and checks run** (on the commit below):
+- `node --test jurisdictions/test/`: tests 76, pass 76, fail 0.
+- Every user of jurisdictions (id-spaces, docprofile, acquisition, capture, reading-pipeline, extraction, entities, local-facts, standards, action-grammar, actions, action-clocks, filing-templates, filings, escalation, action-plans, monitoring, affordances, instance-setup, installer): pass 1,309, fail 6 (J3; 45/45 on `tranche/T33` for the three files).
+- `format`: 126 modules, 124 requirements files; 0 failures. `architecture jurisdictions`: 7 product files, 9 relative imports; 0 failures. `coverage jurisdictions`: 57 of 57 live ids named by a test; 0 failures. `ownership jurisdictions tranche/T33`: 0 failures.
+
+Size (session_016rKi7FqGrzSeDuh4w2sUJ7): test runs 14, module lines 4519
+
 ## J1 · QUESTION
 
 Four points where R26/R46/R56/R57 leave a choice; I carry on with my best reading of each and will bring the work in line with your answer.

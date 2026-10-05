@@ -5,7 +5,9 @@
  * which the first profile has none of. Its calendar (R41–R44, R45) has a holiday year for every office with
  * entries of that year for one office and for one venue, hours on an office and a venue, and both statuses.
  * Modules that take local facts are tested against it (`build/layers.md`, "No jurisdiction in the product",
- * rule 3). */
+ * rule 3). T33's sections and fields (R57) are here too, with values unlike the first profile's: two closure lists
+ * with a rule naming one and observing the other, a one-day weekend, a venue's cutoff, outages and receipt rule,
+ * every unit, direction and anchor, fiscal years, law ranks, proceedings, schemes, a lawful demand, recurrences. */
 const R = String.raw;
 
 /* R40: a template's whole attribution, as filing-templates reads a profile template (its R15); every blank in
@@ -51,6 +53,18 @@ export default {
           clean: { spaces: "remove" }, basis: "TEST" },
       ],
     },
+    account: { label: "ledger account", forms: [
+      { form: "A-####", pattern: { re: R`^A-?(\d{4})$`, flags: "i" }, normal: ["A-", { group: 1 }], clean: { spaces: "remove" }, basis: "TEST" }] },
+    object: { label: "spending object", forms: [
+      { form: "OBJ##", pattern: { re: R`^OBJ(\d{2})$`, flags: "i" }, normal: ["OBJ", { group: 1 }], clean: { spaces: "remove", upper: true }, basis: "TEST" }] },
+    vendor: { label: "supplier number", forms: [
+      { form: "S-#####", pattern: { re: R`^S-?0*(\d{1,5})$`, flags: "i" }, normal: ["S-", { group: 1, unpad: true }], clean: { spaces: "remove" }, basis: "TEST" }] },
+    proceeding: { label: "court file number", forms: [
+      { form: "MC-yy-####", pattern: { re: R`^MC-(\d{2})-(\d{4})$`, flags: "i" }, normal: ["MC-", { group: 1 }, "-", { group: 2 }],
+        clean: { spaces: "remove", upper: true }, basis: "TEST" }] },
+    person: { label: "registered person number", forms: [
+      { form: "minute-person", pattern: { re: R`^P(\d{3})$`, flags: "i" }, normal: ["P", { group: 1 }], clean: { spaces: "remove", upper: true }, basis: "TEST" },
+      { form: "bar-number", pattern: { re: R`^BAR(\d{5})$`, flags: "i" }, normal: ["BAR", { group: 1 }], clean: { spaces: "remove", upper: true }, basis: "TEST" }] },
     parcel: {
       label: "lot and block number",
       forms: [
@@ -100,7 +114,8 @@ export default {
       { pattern: { re: R`P\.?E\.?`, flags: "i" }, basis: "TEST" },
     ],
     codes: [
-      { key: "pebl", label: "P.E. Bylaws", pattern: { re: R`Port\s+Ellery\s+Bylaws|P\.?E\.?B\.?L\.?`, flags: "i" }, basis: "TEST" },
+      { key: "pebl", label: "P.E. Bylaws", pattern: { re: R`Port\s+Ellery\s+Bylaws|P\.?E\.?B\.?L\.?`, flags: "i" },
+        copy: "official", sections: { number: { re: R`\d+-\d+` }, separators: "-", markers: ["paren_numeral", "paren_letter", "roman"] }, basis: "TEST" },
     ],
     file_numbers: [
       { pattern: { re: R`M\d{3}\/\d{2}` }, system: "ellery.minutes", basis: "TEST" },
@@ -119,9 +134,35 @@ export default {
     template_blanks: [
       { pattern: { re: R`\[INSERT\s+[A-Z ]+\]`, flags: "i" }, basis: "TEST" },
     ],
+    amending: [
+      { pattern: { re: R`\bis\s+hereby\s+varied\b`, flags: "i" }, relation: "amends", basis: "TEST" },
+      { pattern: { re: R`\bis\s+hereby\s+inserted\b`, flags: "i" }, relation: "adds", basis: "TEST" },
+      { pattern: { re: R`\bis\s+hereby\s+revoked\b`, flags: "i" }, relation: "repeals", basis: "TEST" },
+      { pattern: { re: R`\bshall\s+be\s+renumbered\b`, flags: "i" }, relation: "renumbers", basis: "TEST" },
+      { pattern: { re: R`\bis\s+consolidated\s+into\b`, flags: "i" }, relation: "recodifies", basis: "TEST" },
+    ],
+    meeting_markers: [
+      { marker: "cancelled", pattern: { re: R`\(POSTPONED\)\s*$`, flags: "i" }, basis: "TEST" },
+      { marker: "special", pattern: { re: R`\bExtraordinary\b`, flags: "i" }, basis: "TEST" },
+      { marker: "concurrent", pattern: { re: R`\bJoint\s+Sitting\b`, flags: "i" }, basis: "TEST" },
+    ],
+    body_variants: [
+      { pattern: { re: R`^(?:The\s+)?Selectboard(?:\s+of\s+Port\s+Ellery)?\b`, flags: "i" }, organisation: "selectboard", basis: "TEST" },
+      { pattern: { re: R`Harbour\s+(?:Commission|Commissioners)`, flags: "i" }, organisation: "harbour_commission", basis: "TEST" },
+    ],
+    roster_words: [
+      { pattern: { re: R`\bList\s+of\s+Officers\b`, flags: "i" }, basis: "TEST" },
+      { pattern: { re: R`\bWho'?s\s+Who\s+at\s+Town\s+Hall\b`, flags: "i" }, basis: "TEST" },
+    ],
+    roster_headers: [
+      { pattern: { re: R`^Officer\s+\|\s+Post$`, flags: "i" }, basis: "TEST" },
+    ],
+    staff_titles: [
+      { pattern: { re: R`\b(?:Town\s+Reeve|Harbour\s+Master|Deputy\s+Clerk)\b`, flags: "i" }, basis: "TEST" },
+    ],
   },
 
-  practice: { minutes_due_days: { value: 30, basis: "TEST" } },
+  practice: { minutes_due_days: { value: 30, count: "calendar", basis: "TEST" } },
   locale: { value: "en-GB", basis: "TEST" },
   time_zone: { value: "America/Halifax", status: "researched", basis: "TEST" },
   search_terms: [{ term: "harbour", basis: "TEST" }],
@@ -133,7 +174,7 @@ export default {
 
   standard_sources: [
     { source: "Port Ellery Bylaws", kind: "ordinance", issuer: "Port Ellery Selectboard",
-      level: "city", cite: { re: R`\bP\.?E\.?B\.?L\.?\s*§\s*\d+`, flags: "i" }, code: "pebl", basis: "TEST" },
+      level: "city", cite: { re: R`\bP\.?E\.?B\.?L\.?\s*§\s*\d+`, flags: "i" }, code: "pebl", key: "selectboard", basis: "TEST" },
     { source: "Marlow County Budget Commitments", kind: "commitment", issuer: "Marlow County Commission", level: "county",
       cite: { re: R`\bMCBC\s+\d{4}-\d+` }, basis: "TEST" },
   ],
@@ -151,6 +192,9 @@ export default {
     { kind: "records_request", label: "request under the records act", tier: 2,
       laws: ["Freedom of Records Act (test)", "Port Ellery Open Government Bylaw"],
       venue: { name: "the Town Clerk's office", how: "email", basis: "TEST",
+        cutoff: { time: "16:30", citation: "Test Stat. § 1.105", status: "ruled", basis: "TEST" },
+        outages: [{ from: "2026-03-02T09:00:00-04:00", to: "2026-03-02T13:30:00-04:00", status: "researched", basis: "TEST" }],
+        receipt: { rule: "next_business_day", citation: "P.E.B.L. § 4(2)", status: "researched", basis: "TEST" },
         hours: { weekly: ["mon", "tue", "wed", "thu", "fri"].map((day) => ({ day, open: "08:00", close: "18:00" })),
           status: "ruled", basis: "TEST" } },
       template: attributed("TPL-test-records-request", "file", "To the {{counterparty_role}}: under {{law}}, {{group}} asks for the records described below.",
@@ -173,11 +217,69 @@ export default {
       basis: "TEST" },
   ],
   deadlines: [
-    { rule: "records_answer", applies_to: "records_request", days: 5, count: "business", starts: "received",
-      extension: { days: 5, count: "business", when: "the records are held off site" },
-      citation: "Test Stat. § 1.140", basis: "TEST" },
-    { rule: "claim_notice", applies_to: "claim", days: 90, count: "calendar", starts: "known",
-      citation: "Test Stat. § 9.20", basis: "TEST" },
+    /* the pre-T33 form, `days: n`, read as units: days, amount: n */
+    { rule: "records_answer", applies_to: "records_request", days: 5, count: "business", starts: "received", closures: "town",
+      extension: { days: 5, count: "business", when: "the records are held off site", citation: "Test Stat. § 1.141" },
+      observed: { closures: "court", status: "researched", basis: "TEST" },
+      citation: "Test Stat. § 1.140", status: "researched", basis: "TEST" },
+    { rule: "claim_notice", applies_to: "claim", units: "days", amount: 90, count: "calendar", direction: "forward", starts: "known",
+      roll: true, closures: "court", computation: "clear_days",
+      tolling: [{ when: "the claimant is a minor", citation: "Test Stat. § 9.22" }],
+      citation: "Test Stat. § 9.20", status: "ruled", basis: "TEST" },
+    { rule: "notice_of_sitting", applies_to: "bylaw_complaint", units: "hours", amount: 36, direction: "backward", starts: "act",
+      citation: "P.E.B.L. § 7", status: "researched", basis: "TEST" },
+    { rule: "harbour_notice", applies_to: "bylaw_complaint", units: "business_hours", amount: 16, direction: "backward", starts: "hearing",
+      closures: "town", citation: "P.E.B.L. § 8", status: "researched", basis: "TEST" },
+    { rule: "appeal_window", applies_to: "commitment_claim", units: "months", amount: 2, direction: "forward", starts: "entered",
+      roll: true, closures: "court", citation: "Marlow Ct. R. 30.1", status: "researched", basis: "TEST" },
+    { rule: "service_lapse", applies_to: "commitment_claim", units: "years", amount: 2, direction: "forward", starts: "served",
+      citation: "Marlow Ct. R. 30.9", status: "researched", basis: "TEST" },
+    { rule: "filing_reply", applies_to: "commitment_claim", units: "days", amount: 7, count: "calendar", direction: "backward", starts: "filed",
+      roll: true, closures: "court", computation: "clear_days", citation: "Marlow Ct. R. 31.2", status: "researched", basis: "TEST" },
+  ],
+  weekend: { days: ["sun"], citation: "Test Stat. § 0.12", status: "researched", basis: "TEST" },
+  computation: [
+    { key: "clear_days", rule: "exclude_first_include_last", citation: "Test Stat. § 0.10", status: "ruled", basis: "TEST" },
+  ],
+  fiscal_year: [
+    { body: "*", start: "04-01", named_by: "start", label: "FY{start}-{end2}", status: "researched", basis: "TEST" },
+    { body: "Port Ellery Harbour District", start: "10-01", named_by: "end", label: "HD{end}", status: "ruled", basis: "TEST" },
+  ],
+  law_ranks: [
+    { kind: "statute", level: "state", rank: 1, basis: "TEST" },
+    { kind: "ordinance", level: "city", rank: 2, basis: "TEST" },
+    { kind: "commitment", level: "county", rank: 3, basis: "TEST" },
+  ],
+  instrument_key: { jurisdiction: "xx-port-ellery", basis: "TEST" },
+  proceeding_kinds: [
+    { kind: "commitment_suit", label: "suit on a budget commitment", forum_kind: "court", basis: "TEST" },
+    { kind: "harbour_inquiry", label: "harbour commission inquiry", forum_kind: "commission", basis: "TEST" },
+  ],
+  proceeding_flows: [
+    { kind: "commitment_suit", stages: [
+      { stage: "filed", label: "filed", reached_by: ["filing"] },
+      { stage: "heard", label: "heard", reached_by: ["hearing"] },
+      { stage: "decided", label: "decided", reached_by: ["judgment", "dismissal"] }],
+      citation: "Marlow Ct. R. 2", basis: "TEST" },
+  ],
+  identifier_schemes: [
+    { scheme: "ellery_person", label: "minute-book person number", entity_kinds: ["person"], space: "person", form: "minute-person",
+      systems: ["ellery.minutes"], basis: "TEST" },
+    { scheme: "marlow_bar", label: "Marlow bar number", entity_kinds: ["person"], space: "person", form: "bar-number", basis: "TEST" },
+  ],
+  classification_schemes: [
+    { scheme: "ellery_funds", label: "ledger funds", kind: "fund", codes: [{ code: "100-01", label: "General" }, { code: "200-01", label: "Harbour" }], basis: "TEST" },
+    { scheme: "ellery_objects", label: "spending objects", kind: "object", basis: "TEST" },
+  ],
+  lawful_demands: [
+    { kind: "officer_privacy", label: "an officer's demand to remove their home details", covers: ["home_address", "other"],
+      within: { amount: 5, units: "days" }, citation: "Test Stat. § 12.4", status: "researched", basis: "TEST" },
+  ],
+  recurrences: [
+    { body: "Port Ellery Selectboard", rrule: "FREQ=MONTHLY;BYDAY=2TU", dtstart: "2026-01-13T19:00", citation: "P.E.B.L. § 6",
+      status: "researched", basis: "TEST" },
+    { body: "Port Ellery Harbour District", rrule: "FREQ=WEEKLY;INTERVAL=2;BYDAY=TH;UNTIL=20261231", dtstart: "2026-01-08T10:00",
+      citation: "P.E.B.L. § 6A", status: "ruled", basis: "TEST" },
   ],
   legal_organisations: [
     { name: "Marlow Commons Legal Society (test)", evaluates: ["commitment_claim"],
@@ -198,6 +300,15 @@ export default {
     { year: 2027, days: [
       { date: "2027-01-01", name: "New Year's Day" }, { date: "2027-03-17", name: "Harbour Day" },
       { date: "2027-12-24", name: "Christmas Day (observed)" }],
+      status: "researched", basis: "TEST" },
+    /* Two closure lists (R47): the court's, which a rule counts on, and the town's, observed beside it. */
+    { year: 2026, list: "court", citation: "Marlow Ct. R. 1.4", days: [
+      { date: "2026-01-01", name: "New Year's Day" }, { date: "2026-08-31", name: "Court vacation day" },
+      { date: "2026-12-24", name: "Court closed" }, { date: "2026-12-25", name: "Christmas Day" }],
+      status: "ruled", basis: "TEST" },
+    { year: 2026, list: "town", citation: "P.E.B.L. § 3", days: [
+      { date: "2026-01-01", name: "New Year's Day" }, { date: "2026-03-17", name: "Harbour Day" },
+      { date: "2026-12-25", name: "Christmas Day" }],
       status: "researched", basis: "TEST" },
   ],
 };

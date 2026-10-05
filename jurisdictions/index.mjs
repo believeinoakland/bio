@@ -16,10 +16,16 @@ import { BASIS_GRADES } from "../bio-plane/src/record-grammar/index.mjs";
 
 export const SECTIONS = Object.freeze(["id", "name", "covers", "test", "spaces", "systems", "mixed_hosts",
   "crosswalks", "vocabulary", "practice", "search_terms", "records_laws", "standard_sources",
-  "counterparties", "action_kinds", "deadlines", "legal_organisations", "holidays", "locale", "time_zone"]);
-export const SPACES = Object.freeze(["enactment", "project", "fund", "parcel"]);
+  "counterparties", "action_kinds", "deadlines", "legal_organisations", "holidays", "locale", "time_zone",
+  /* T33 (R46–R54) */
+  "weekend", "computation", "fiscal_year", "law_ranks", "instrument_key", "proceeding_kinds", "proceeding_flows",
+  "identifier_schemes", "classification_schemes", "lawful_demands", "recurrences"]);
+/* R3: `account`, `object`, `vendor`, `proceeding` (K1452) and `person` (one form per person scheme) are T33's. */
+export const SPACES = Object.freeze(["enactment", "project", "fund", "parcel", "account", "object", "vendor", "proceeding", "person"]);
 export const VOCABULARY = Object.freeze(["furniture", "bodies", "member_titles", "enactment_markers", "codes",
-  "file_numbers", "report_titles", "report_sections", "recommendation_openers", "template_blanks"]);
+  "file_numbers", "report_titles", "report_sections", "recommendation_openers", "template_blanks",
+  /* T33 (R6): LAW's amending clauses, Legistar's markers and body-variant map, the roster words */
+  "amending", "meeting_markers", "body_variants", "roster_words", "roster_headers", "staff_titles"]);
 /* R31: the one vocabulary of a law's level, for records laws, standard sources and an action's governing
    laws. An office's level (R24) is not a law's level and keeps its own. */
 export const LAW_LEVELS = Object.freeze(["federal", "state", "county", "city"]);
@@ -27,7 +33,31 @@ export const COUNTERPARTY_LEVELS = Object.freeze(["state", "county", "city", "di
 export const SOURCE_KINDS = Object.freeze(["statute", "regulation", "ordinance", "court", "policy", "commitment"]);
 export const VENUE_HOW = Object.freeze(["portal", "mail", "email", "in_person", "court"]);
 export const COUNTS = Object.freeze(["calendar", "business"]);
-export const STARTS = Object.freeze(["received", "filed", "act", "known"]);
+/* R26: the event a period runs from; `entered`, `served` and `hearing` are COURTS'. `received` is the counterparty's
+   receipt of the group's request, counted from the group's own `sent` entry (§7 item 1). */
+export const STARTS = Object.freeze(["received", "filed", "act", "known", "entered", "served", "hearing"]);
+export const UNITS = Object.freeze(["days", "hours", "business_hours", "months", "years"]);
+export const DIRECTIONS = Object.freeze(["forward", "backward"]);
+/* R46: how a period is computed: CCP §12 (Gov. Code §6800); and, on BOB's reading of J1 (3) pending, a meeting
+   notice's Monday rule, timely when made by noon on the preceding Friday (OMC 2.20.070(C)). */
+export const COMPUTATION_RULES = Object.freeze(["exclude_first_include_last", "monday_prior_friday_noon"]);
+/* R48: the receipt conventions a sourced local rule may state (K1504 (3)). */
+export const RECEIPT_RULES = Object.freeze(["next_business_day"]);
+/* R6 (T33): a code's served copy (K1446), its subsection markers, an amending clause's relation, a meeting marker. */
+export const CODE_COPIES = Object.freeze(["official", "codifier", "undetermined"]);
+export const SECTION_MARKERS = Object.freeze(["letter", "numeral", "paren_letter", "paren_numeral", "roman"]);
+export const AMENDING_RELATIONS = Object.freeze(["amends", "adds", "repeals", "renumbers", "recodifies"]);
+export const MEETING_MARKERS = Object.freeze(["cancelled", "special", "concurrent"]);
+/* R49: a fiscal year's name, and the placeholders its label template may use. */
+export const FISCAL_NAMED_BY = Object.freeze(["start", "end"]);
+const FISCAL_PLACEHOLDERS = ["{start}", "{end}", "{start2}", "{end2}"];
+/* R51, R52, R53 */
+export const FORUM_KINDS = Object.freeze(["court", "commission", "grand_jury", "auditor", "other"]);
+export const CLASSIFICATION_KINDS = Object.freeze(["fund", "organisation", "account", "object", "program", "function"]);
+export const DEMAND_COVERS = Object.freeze(["home_address", "phone", "other"]);
+/* R54: `civil-time`'s RFC 5545 subset (its R20). */
+export const RRULE_PARTS = Object.freeze(["FREQ", "INTERVAL", "BYDAY", "BYMONTHDAY", "BYSETPOS", "UNTIL"]);
+const RRULE_FREQS = ["WEEKLY", "MONTHLY", "YEARLY"];
 export const TIERS = Object.freeze([1, 2, 3]);
 export const CONTACT_HOW = Object.freeze(["web", "email", "phone", "mail"]);
 /* R39: a venue's evidence standard is named in at most this many characters; the grades it admits are
@@ -51,6 +81,11 @@ const HEX64 = /^[0-9a-f]{64}$/i;
 const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
 const TEMPLATE_ID_RE = /^TPL-[a-z0-9][a-z0-9-]*$/;
 const HHMM_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
+const MMDD_RE = /^(\d{2})-(\d{2})$/;
+/* An instant: a date, a time, and an offset or Z (R48's outages). */
+const INSTANT_RE = /^(\d{4}-\d{2}-\d{2})T([01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d+)?)?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/;
+/* A local date-time with no zone (R54's dtstart, read in the profile's time_zone). */
+const LOCAL_DT_RE = /^(\d{4}-\d{2}-\d{2})T([01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/;
 /* R41: an IANA name, `Area/Location` (possibly deeper) or `UTC`. */
 const TZ_RE = /^(?:UTC|[A-Z][A-Za-z_-]*(?:\/[A-Za-z0-9_+-]+)+)$/;
 /* R2: a basis names a measurement (`M-157`, or a dated entry `2026-07-30`) or a ruling (`D-149`,
@@ -83,6 +118,17 @@ function isTimeZone(v) {
   if (typeof v !== "string" || !TZ_RE.test(v)) return false;
   try { new Intl.DateTimeFormat("en", { timeZone: v }); return true; } catch { return false; }
 }
+/** The epoch milliseconds of an instant written with its offset, or null (R48). Reads no clock. */
+function instant(v) {
+  const m = typeof v === "string" && INSTANT_RE.exec(v);
+  if (!m || !isDate(m[1])) return null;
+  const t = Date.parse(v);
+  return Number.isNaN(t) ? null : t;
+}
+/** A local date-time with no zone, on a real date (R54). */
+const isLocalDateTime = (v) => { const m = typeof v === "string" && LOCAL_DT_RE.exec(v); return !!m && isDate(m[1]); };
+/** A month and day `MM-DD` that some year has (R49). */
+const isMonthDay = (v) => { const m = typeof v === "string" && MMDD_RE.exec(v); return !!m && isDate(`2000-${m[1]}-${m[2]}`); };
 /** Minutes since midnight of an `HH:MM`, or null (R42). */
 function minutes(v) {
   const m = typeof v === "string" && HHMM_RE.exec(v);
@@ -223,6 +269,42 @@ function validateInto(p, errors) {
       });
     }
     statusBasis(path, h);
+  };
+  /* R48: a venue's channel facts. A malformed one is CHANNEL_INVALID; its status and basis are R44's. */
+  const channel = (path, v) => {
+    if (own(v, "cutoff")) {
+      const c = v.cutoff, ca = `${path}.cutoff`;
+      if (!isObj(c)) err(ca, "CHANNEL_INVALID", "cutoff is {time, citation, status, basis}");
+      else {
+        fields(ca, c, ["time", "citation", "status", "basis"]);
+        if (minutes(c.time) === null) err(`${ca}.time`, "CHANNEL_INVALID", "time is HH:MM, 24-hour");
+        if (!isStr(c.citation)) err(`${ca}.citation`, "CHANNEL_INVALID", "a cutoff cites its source");
+        statusBasis(ca, c);
+      }
+    }
+    if (own(v, "outages")) {
+      if (!Array.isArray(v.outages)) err(`${path}.outages`, "CHANNEL_INVALID", "outages is a list of {from, to, status, basis}");
+      else v.outages.forEach((o, j) => {
+        const oa = `${path}.outages[${j}]`;
+        if (!isObj(o)) { err(oa, "CHANNEL_INVALID", "an outage is {from, to, status, basis}"); return; }
+        fields(oa, o, ["from", "to", "status", "basis"]);
+        const [f, t] = [instant(o.from), instant(o.to)];
+        if (f === null) err(`${oa}.from`, "CHANNEL_INVALID", "from is an instant with its offset (YYYY-MM-DDTHH:MM[:SS]Z or ±HH:MM)");
+        if (t === null) err(`${oa}.to`, "CHANNEL_INVALID", "to is an instant with its offset");
+        if (f !== null && t !== null && !(f < t)) err(oa, "CHANNEL_INVALID", "an outage ends after it starts");
+        statusBasis(oa, o);
+      });
+    }
+    if (own(v, "receipt")) {
+      const r = v.receipt, ra = `${path}.receipt`;
+      if (!isObj(r)) err(ra, "CHANNEL_INVALID", "receipt is {rule, citation, status, basis}");
+      else {
+        fields(ra, r, ["rule", "citation", "status", "basis"]);
+        if (!RECEIPT_RULES.includes(r.rule)) err(`${ra}.rule`, "CHANNEL_INVALID", `rule is one of ${RECEIPT_RULES.join(", ")}`);
+        if (!isStr(r.citation)) err(`${ra}.citation`, "CHANNEL_INVALID", "a receipt rule cites the local rule that states it");
+        statusBasis(ra, r);
+      }
+    }
   };
   const pattern = (path, v) => { if (!compile(v)) err(path, "PATTERN_INVALID", "a pattern is {re, flags?}: a regular expression that compiles, flags from i and u"); };
   const fields = (path, o, allowed) => {
@@ -374,8 +456,33 @@ function validateInto(p, errors) {
         const ea = `${at}[${i}]`;
         if (!entry(ea, e)) return;
         if (key === "codes") {
-          fields(ea, e, ["key", "label", "pattern", "basis"]);
+          fields(ea, e, ["key", "label", "pattern", "copy", "sections", "basis"]);
           str(`${ea}.key`, e.key, "key"); str(`${ea}.label`, e.label, "label");
+          /* T33 (K1446): which copy is served, and the shape of a section number and its subsection markers. */
+          if (own(e, "copy") && !CODE_COPIES.includes(e.copy)) err(`${ea}.copy`, "COPY_UNKNOWN", `copy is one of ${CODE_COPIES.join(", ")}`);
+          if (own(e, "sections")) {
+            const sc = e.sections;
+            if (!isObj(sc)) err(`${ea}.sections`, "VALUE_INVALID", "sections is {number, separators, markers}");
+            else {
+              fields(`${ea}.sections`, sc, ["number", "separators", "markers"]);
+              pattern(`${ea}.sections.number`, sc.number);
+              if (typeof sc.separators !== "string" || !sc.separators.length || /\s/.test(sc.separators))
+                err(`${ea}.sections.separators`, "VALUE_INVALID", "separators are the characters between a section number's parts");
+              if (!Array.isArray(sc.markers) || !sc.markers.length || !sc.markers.every((m) => SECTION_MARKERS.includes(m))
+                  || new Set(sc.markers).size !== sc.markers.length)
+                err(`${ea}.sections.markers`, "VALUE_INVALID", `markers is the order of subsection markers, each once, from ${SECTION_MARKERS.join(", ")}`);
+            }
+          }
+        } else if (key === "amending") {
+          fields(ea, e, ["pattern", "relation", "basis"]);
+          if (!AMENDING_RELATIONS.includes(e.relation)) err(`${ea}.relation`, "VALUE_INVALID", `relation is one of ${AMENDING_RELATIONS.join(", ")}`);
+        } else if (key === "meeting_markers") {
+          fields(ea, e, ["marker", "pattern", "basis"]);
+          if (!MEETING_MARKERS.includes(e.marker)) err(`${ea}.marker`, "VALUE_INVALID", `marker is one of ${MEETING_MARKERS.join(", ")}`);
+        } else if (key === "body_variants") {
+          fields(ea, e, ["pattern", "organisation", "basis"]);
+          if (typeof e.organisation !== "string" || !KIND_RE.test(e.organisation))
+            err(`${ea}.organisation`, "VALUE_INVALID", "organisation is a key matching ^[a-z][a-z0-9_]*$");
         } else if (key === "file_numbers") {
           fields(ea, e, ["pattern", "system", "basis"]);
           if (!isStr(e.system) || !origins.has(e.system)) err(`${ea}.system`, "SYSTEM_UNKNOWN", `no system of this profile has origin '${String(e.system)}'`);
@@ -394,8 +501,9 @@ function validateInto(p, errors) {
         const m = p.practice.minutes_due_days;
         if (!isObj(m)) err("practice.minutes_due_days", "VALUE_INVALID", "{value, basis}");
         else {
-          fields("practice.minutes_due_days", m, ["value", "basis"]);
+          fields("practice.minutes_due_days", m, ["value", "count", "basis"]);
           if (!isPosInt(m.value)) err("practice.minutes_due_days.value", "VALUE_INVALID", "a positive integer");
+          if (own(m, "count") && !COUNTS.includes(m.count)) err("practice.minutes_due_days.count", "COUNT_UNKNOWN", "count is calendar or business");
           basis("practice.minutes_due_days", m);
         }
       }
@@ -438,13 +546,42 @@ function validateInto(p, errors) {
     }
   }
 
+  /* R46: how a day period is computed; R47: the named closure lists. Read first: rules name them. */
+  const computationKeys = new Set();
+  if (own(p, "computation")) list("computation", p.computation).forEach((c, i) => {
+    const at = `computation[${i}]`;
+    if (!entry(at, c)) return;
+    fields(at, c, ["key", "rule", "citation", "status", "basis"]);
+    if (typeof c.key !== "string" || !KIND_RE.test(c.key)) err(`${at}.key`, "VALUE_INVALID", "key matches ^[a-z][a-z0-9_]*$");
+    else if (computationKeys.has(c.key)) err(`${at}.key`, "VALUE_INVALID", `'${c.key}' is given twice`);
+    else computationKeys.add(c.key);
+    if (!COMPUTATION_RULES.includes(c.rule)) err(`${at}.rule`, "VALUE_INVALID", `rule is one of ${COMPUTATION_RULES.join(", ")}`);
+    str(`${at}.citation`, c.citation, "citation");
+    statusBasis(at, c);
+  });
+  const closureLists = new Set(own(p, "holidays") && Array.isArray(p.holidays)
+    ? p.holidays.filter((h) => isObj(h) && typeof h.list === "string" && KIND_RE.test(h.list)).map((h) => h.list) : []);
+  if (own(p, "weekend")) {
+    const w = p.weekend;
+    if (!isObj(w)) err("weekend", "WEEKEND_INVALID", "weekend is {days, citation, status, basis}");
+    else {
+      fields("weekend", w, ["days", "citation", "status", "basis"]);
+      if (!Array.isArray(w.days) || !w.days.length || !w.days.every((d) => WEEKDAYS.includes(d)) || new Set(w.days).size !== w.days.length)
+        err("weekend.days", "WEEKEND_INVALID", `days is a non-empty list of ${WEEKDAYS.join(", ")}, each once`);
+      else if (w.days.length === WEEKDAYS.length) err("weekend.days", "WEEKEND_INVALID", "a weekend leaves some day open");
+      str("weekend.citation", w.citation, "citation");
+      statusBasis("weekend", w);
+    }
+  }
+
   /* The action sections (R23–R26, R28, R31–R33, R35, R39–R44). */
   const codeKeys = new Set(own(p, "vocabulary") && isObj(p.vocabulary) && Array.isArray(p.vocabulary.codes)
     ? p.vocabulary.codes.filter(isObj).map((c) => c.key) : []);
   if (own(p, "standard_sources")) list("standard_sources", p.standard_sources).forEach((s, i) => {
     const at = `standard_sources[${i}]`;
     if (!entry(at, s)) return;
-    fields(at, s, ["source", "kind", "issuer", "level", "cite", "code", "basis"]);
+    fields(at, s, ["source", "kind", "issuer", "level", "cite", "code", "key", "basis"]);
+    if (own(s, "key") && (typeof s.key !== "string" || !ID_RE.test(s.key))) err(`${at}.key`, "VALUE_INVALID", "key is an issuer's segment, matching ^[a-z0-9][a-z0-9-]*$");
     str(`${at}.source`, s.source, "source"); str(`${at}.issuer`, s.issuer, "issuer");
     if (isStr(s.source)) lawNames.add(s.source);
     if (!SOURCE_KINDS.includes(s.kind)) err(`${at}.kind`, "SOURCE_KIND_UNKNOWN", `kind is one of ${SOURCE_KINDS.join(", ")}`);
@@ -454,12 +591,14 @@ function validateInto(p, errors) {
     basis(at, s);
   });
   const roles = new Set();
+  const bodies = new Set();
   if (own(p, "counterparties")) list("counterparties", p.counterparties).forEach((c, i) => {
     const at = `counterparties[${i}]`;
     if (!entry(at, c)) return;
     fields(at, c, ["role", "body", "level", "elected", "oversight", "hours", "basis"]);
     str(`${at}.role`, c.role, "role"); str(`${at}.body`, c.body, "body");
     if (isStr(c.role)) roles.add(c.role);
+    if (isStr(c.body)) bodies.add(c.body);
     if (own(c, "hours")) hours(`${at}.hours`, c.hours);
     if (!COUNTERPARTY_LEVELS.includes(c.level)) err(`${at}.level`, "LEVEL_UNKNOWN", `level is one of ${COUNTERPARTY_LEVELS.join(", ")}`);
     if (typeof c.elected !== "boolean") err(`${at}.elected`, "VALUE_INVALID", "elected is true or false");
@@ -486,10 +625,11 @@ function validateInto(p, errors) {
       const v = k.venue;
       if (!isObj(v)) err(`${at}.venue`, "VALUE_INVALID", "a venue is {name, how, basis}");
       else {
-        fields(`${at}.venue`, v, ["name", "how", "hours", "basis"]);
+        fields(`${at}.venue`, v, ["name", "how", "hours", "cutoff", "outages", "receipt", "basis"]);
         str(`${at}.venue.name`, v.name, "name");
         if (!VENUE_HOW.includes(v.how)) err(`${at}.venue.how`, "VALUE_INVALID", `how is one of ${VENUE_HOW.join(", ")}`);
         if (own(v, "hours")) hours(`${at}.venue.hours`, v.hours);
+        channel(`${at}.venue`, v);
         basis(`${at}.venue`, v);
         if (typeof k.kind === "string") venueKinds.add(k.kind);
       }
@@ -574,28 +714,65 @@ function validateInto(p, errors) {
     }
     basis(at, k);
   });
+  /* R26 (T33): a period as data only; civil-time counts it. An entry written `days: n` with no `units` reads as
+     `units: "days", amount: n` (R26 before T33). Every entry carries `status` and a sourced basis (R44, K1445). */
   if (own(p, "deadlines")) list("deadlines", p.deadlines).forEach((d, i) => {
     const at = `deadlines[${i}]`;
     if (!entry(at, d)) return;
-    fields(at, d, ["rule", "applies_to", "days", "count", "starts", "extension", "citation", "basis"]);
+    fields(at, d, ["rule", "applies_to", "units", "amount", "days", "count", "direction", "starts", "roll", "closures",
+      "computation", "extension", "tolling", "observed", "citation", "status", "basis"]);
     str(`${at}.rule`, d.rule, "rule");
     if (d.applies_to !== "claim" && !kinds.has(d.applies_to))
       err(`${at}.applies_to`, "DEADLINE_KIND_UNKNOWN", `'${String(d.applies_to)}' is neither claim nor a kind of this profile`);
-    if (!isPosInt(d.days)) err(`${at}.days`, "VALUE_INVALID", "days is a positive integer");
-    if (!COUNTS.includes(d.count)) err(`${at}.count`, "COUNT_UNKNOWN", "count is calendar or business");
-    if (!STARTS.includes(d.starts)) err(`${at}.starts`, "VALUE_INVALID", `starts is one of ${STARTS.join(", ")}`);
+    const legacy = own(d, "days") && !own(d, "units") && !own(d, "amount");
+    if (legacy) { if (!isPosInt(d.days)) err(`${at}.days`, "VALUE_INVALID", "days is a positive integer"); }
+    else {
+      if (own(d, "days")) err(`${at}.days`, "VALUE_INVALID", "days is the pre-T33 form of units and amount; give one form, not both");
+      if (!UNITS.includes(d.units)) err(`${at}.units`, "UNIT_UNKNOWN", `units is one of ${UNITS.join(", ")}`);
+      if (!isPosInt(d.amount)) err(`${at}.amount`, "VALUE_INVALID", "amount is a positive integer");
+    }
+    const units = legacy ? "days" : d.units;
+    if (own(d, "count")) {
+      if (!COUNTS.includes(d.count)) err(`${at}.count`, "COUNT_UNKNOWN", "count is calendar or business");
+      else if (units !== "days") err(`${at}.count`, "UNIT_UNKNOWN", "count is given with units: days only");
+    }
+    if (own(d, "direction") && !DIRECTIONS.includes(d.direction)) err(`${at}.direction`, "DIRECTION_UNKNOWN", `direction is ${DIRECTIONS.join(" or ")}`);
+    if (!STARTS.includes(d.starts)) err(`${at}.starts`, "ANCHOR_UNKNOWN", `starts is one of ${STARTS.join(", ")}`);
+    if (own(d, "roll") && typeof d.roll !== "boolean") err(`${at}.roll`, "VALUE_INVALID", "roll is true or false");
+    if (own(d, "closures") && !closureLists.has(d.closures))
+      err(`${at}.closures`, "CLOSURES_UNKNOWN", `no holidays entry of this profile is in a list named '${String(d.closures)}'`);
+    if (own(d, "computation") && !computationKeys.has(d.computation))
+      err(`${at}.computation`, "COMPUTATION_UNKNOWN", `no computation entry of this profile has key '${String(d.computation)}'`);
     if (own(d, "extension")) {
       const x = d.extension;
-      if (!isObj(x)) err(`${at}.extension`, "VALUE_INVALID", "an extension is {days, count, when}");
+      if (!isObj(x)) err(`${at}.extension`, "VALUE_INVALID", "an extension is {days, count, when, citation?}");
       else {
-        fields(`${at}.extension`, x, ["days", "count", "when"]);
+        fields(`${at}.extension`, x, ["days", "count", "when", "citation"]);
         if (!isPosInt(x.days)) err(`${at}.extension.days`, "VALUE_INVALID", "days is a positive integer");
         if (!COUNTS.includes(x.count)) err(`${at}.extension.count`, "COUNT_UNKNOWN", "count is calendar or business");
         str(`${at}.extension.when`, x.when, "when");
+        if (own(x, "citation")) str(`${at}.extension.citation`, x.citation, "citation");
+      }
+    }
+    if (own(d, "tolling")) list(`${at}.tolling`, d.tolling).forEach((t, j) => {
+      const ta = `${at}.tolling[${j}]`;
+      if (!entry(ta, t)) return;
+      fields(ta, t, ["when", "citation"]);
+      str(`${ta}.when`, t.when, "when"); str(`${ta}.citation`, t.citation, "citation");
+    });
+    /* R47: a body's observed practice, held beside the rule and never as it (K1504 (1)). */
+    if (own(d, "observed")) {
+      const o = d.observed;
+      if (!isObj(o)) err(`${at}.observed`, "VALUE_INVALID", "observed is {closures, status, basis}");
+      else {
+        fields(`${at}.observed`, o, ["closures", "status", "basis"]);
+        if (!closureLists.has(o.closures))
+          err(`${at}.observed.closures`, "CLOSURES_UNKNOWN", `no holidays entry of this profile is in a list named '${String(o.closures)}'`);
+        statusBasis(`${at}.observed`, o);
       }
     }
     str(`${at}.citation`, d.citation, "citation");
-    basis(at, d);
+    statusBasis(at, d);
   });
 
   if (own(p, "legal_organisations")) list("legal_organisations", p.legal_organisations).forEach((o, i) => {
@@ -624,8 +801,13 @@ function validateInto(p, errors) {
     list("holidays", p.holidays).forEach((h, i) => {
       const at = `holidays[${i}]`;
       if (!entry(at, h)) return;
-      fields(at, h, ["year", "offices", "days", "status", "basis"]);
+      fields(at, h, ["year", "list", "citation", "offices", "days", "status", "basis"]);
+      /* R47: the closure list the entry belongs to, with the provision that makes it. */
       let key = "";
+      if (own(h, "list")) {
+        if (typeof h.list !== "string" || !KIND_RE.test(h.list)) err(`${at}.list`, "HOLIDAY_INVALID", "list is a name matching ^[a-z][a-z0-9_]*$");
+        str(`${at}.citation`, h.citation, "citation");
+      } else if (own(h, "citation")) str(`${at}.citation`, h.citation, "citation");
       if (own(h, "offices")) {
         if (!Array.isArray(h.offices) || !h.offices.length) {
           err(`${at}.offices`, "HOLIDAY_INVALID", "offices is a non-empty list of roles or {venue: <kind>}");
@@ -646,9 +828,10 @@ function validateInto(p, errors) {
           key = officesKey(h.offices);
         }
       }
+      key = `${listKey(h)}\u0003${key}`;
       if (!isYear(h.year)) err(`${at}.year`, "HOLIDAY_INVALID", "year is a four-digit year");
       else if (years.has(`${h.year}\u0000${key}`)) err(`${at}.year`, "HOLIDAY_INVALID",
-        `${h.year} is listed twice for ${key ? "the same offices" : "all offices"}`);
+        `${h.year} is listed twice for ${own(h, "list") ? `the list ${String(h.list)} and ` : ""}${own(h, "offices") ? "the same offices" : "all offices"}`);
       else years.add(`${h.year}\u0000${key}`);
       const dates = new Set();
       list(`${at}.days`, h.days).forEach((d, j) => {
@@ -664,6 +847,200 @@ function validateInto(p, errors) {
       statusBasis(at, h);
     });
   }
+
+  /* R49: a fiscal year per body that keeps one. */
+  if (own(p, "fiscal_year")) {
+    const seen = new Set();
+    list("fiscal_year", p.fiscal_year).forEach((f, i) => {
+      const at = `fiscal_year[${i}]`;
+      if (!entry(at, f)) return;
+      fields(at, f, ["body", "start", "named_by", "label", "status", "basis"]);
+      if (f.body !== "*" && !bodies.has(f.body)) err(`${at}.body`, "FISCAL_YEAR_INVALID", `body is a counterparty body of this profile, or * for every body`);
+      else if (seen.has(f.body)) err(`${at}.body`, "FISCAL_YEAR_INVALID", `${f.body} keeps one fiscal year`);
+      else seen.add(f.body);
+      if (!isMonthDay(f.start)) err(`${at}.start`, "FISCAL_YEAR_INVALID", "start is the first day, MM-DD");
+      if (!FISCAL_NAMED_BY.includes(f.named_by)) err(`${at}.named_by`, "FISCAL_YEAR_INVALID", `named_by is ${FISCAL_NAMED_BY.join(" or ")}`);
+      if (!isStr(f.label) || !FISCAL_PLACEHOLDERS.some((x) => f.label.includes(x))
+          || (f.label.match(/\{[^}]*\}/g) || []).some((x) => !FISCAL_PLACEHOLDERS.includes(x)))
+        err(`${at}.label`, "FISCAL_YEAR_INVALID", `label is a template using ${FISCAL_PLACEHOLDERS.join(", ")}`);
+      statusBasis(at, f);
+    });
+  }
+
+  /* R50: the rank of a source kind at a law level, and the instrument key's first segment. */
+  if (own(p, "law_ranks")) {
+    const seen = new Set();
+    list("law_ranks", p.law_ranks).forEach((r, i) => {
+      const at = `law_ranks[${i}]`;
+      if (!entry(at, r)) return;
+      fields(at, r, ["kind", "level", "rank", "basis"]);
+      if (!SOURCE_KINDS.includes(r.kind)) err(`${at}.kind`, "RANK_INVALID", `kind is one of ${SOURCE_KINDS.join(", ")}`);
+      if (!LAW_LEVELS.includes(r.level)) err(`${at}.level`, "RANK_INVALID", `level is one of ${LAW_LEVELS.join(", ")}`);
+      if (!isPosInt(r.rank)) err(`${at}.rank`, "RANK_INVALID", "rank is a positive integer, 1 the highest");
+      const k = `${r.kind}\u0000${r.level}`;
+      if (seen.has(k)) err(at, "RANK_INVALID", `${r.kind} at ${r.level} is ranked twice`);
+      seen.add(k);
+      basis(at, r);
+    });
+  }
+  if (own(p, "instrument_key")) {
+    const k = p.instrument_key;
+    if (!isObj(k)) err("instrument_key", "VALUE_INVALID", "instrument_key is {jurisdiction, basis}");
+    else {
+      fields("instrument_key", k, ["jurisdiction", "basis"]);
+      if (typeof k.jurisdiction !== "string" || !ID_RE.test(k.jurisdiction))
+        err("instrument_key.jurisdiction", "VALUE_INVALID", "jurisdiction is a segment matching ^[a-z0-9][a-z0-9-]*$");
+      basis("instrument_key", k);
+    }
+  }
+
+  /* R51: the kinds of proceeding the forums hold, and each kind's ordered stages. */
+  const proceedingKinds = new Set();
+  if (own(p, "proceeding_kinds")) list("proceeding_kinds", p.proceeding_kinds).forEach((k, i) => {
+    const at = `proceeding_kinds[${i}]`;
+    if (!entry(at, k)) return;
+    fields(at, k, ["kind", "label", "forum_kind", "basis"]);
+    if (typeof k.kind !== "string" || !KIND_RE.test(k.kind)) err(`${at}.kind`, "KIND_INVALID", "kind matches ^[a-z][a-z0-9_]*$");
+    else if (proceedingKinds.has(k.kind)) err(`${at}.kind`, "DUPLICATE_KIND", `'${k.kind}' is given twice`);
+    else proceedingKinds.add(k.kind);
+    str(`${at}.label`, k.label, "label");
+    if (!FORUM_KINDS.includes(k.forum_kind)) err(`${at}.forum_kind`, "VALUE_INVALID", `forum_kind is one of ${FORUM_KINDS.join(", ")}`);
+    basis(at, k);
+  });
+  if (own(p, "proceeding_flows")) {
+    const flowed = new Set();
+    list("proceeding_flows", p.proceeding_flows).forEach((f, i) => {
+      const at = `proceeding_flows[${i}]`;
+      if (!entry(at, f)) return;
+      fields(at, f, ["kind", "stages", "citation", "basis"]);
+      if (!proceedingKinds.has(f.kind)) err(`${at}.kind`, "FLOW_INVALID", `'${String(f.kind)}' is no kind of proceeding_kinds`);
+      else if (flowed.has(f.kind)) err(`${at}.kind`, "FLOW_INVALID", `${f.kind} has one flow`);
+      else flowed.add(f.kind);
+      if (!Array.isArray(f.stages) || !f.stages.length) err(`${at}.stages`, "FLOW_INVALID", "stages is a non-empty ordered list of {stage, label, reached_by}");
+      else {
+        const stages = new Set();
+        f.stages.forEach((st, j) => {
+          const sa = `${at}.stages[${j}]`;
+          if (!isObj(st)) { err(sa, "FLOW_INVALID", "a stage is {stage, label, reached_by}"); return; }
+          fields(sa, st, ["stage", "label", "reached_by"]);
+          if (typeof st.stage !== "string" || !KIND_RE.test(st.stage)) err(`${sa}.stage`, "FLOW_INVALID", "stage matches ^[a-z][a-z0-9_]*$");
+          else if (stages.has(st.stage)) err(`${sa}.stage`, "FLOW_INVALID", `the stage ${st.stage} is given twice`);
+          else stages.add(st.stage);
+          if (!isStr(st.label)) err(`${sa}.label`, "FLOW_INVALID", "a stage has a label");
+          if (!Array.isArray(st.reached_by) || !st.reached_by.length || !st.reached_by.every((e) => typeof e === "string" && KIND_RE.test(e)))
+            err(`${sa}.reached_by`, "FLOW_INVALID", "reached_by is a non-empty list of event kinds");
+        });
+      }
+      str(`${at}.citation`, f.citation, "citation");
+      basis(at, f);
+    });
+  }
+
+  /* R52: the schemes a registry identifier is in, and the codes a budget or ledger classifies by. */
+  if (own(p, "identifier_schemes")) {
+    const seen = new Set();
+    list("identifier_schemes", p.identifier_schemes).forEach((x, i) => {
+      const at = `identifier_schemes[${i}]`;
+      if (!entry(at, x)) return;
+      fields(at, x, ["scheme", "label", "entity_kinds", "space", "form", "systems", "basis"]);
+      if (!isStr(x.scheme)) err(`${at}.scheme`, "SCHEME_INVALID", "scheme is a non-empty name");
+      else if (seen.has(x.scheme)) err(`${at}.scheme`, "SCHEME_INVALID", `${x.scheme} is given twice`);
+      else seen.add(x.scheme);
+      str(`${at}.label`, x.label, "label");
+      if (!Array.isArray(x.entity_kinds) || !x.entity_kinds.length || !x.entity_kinds.every((k) => typeof k === "string" && KIND_RE.test(k)))
+        err(`${at}.entity_kinds`, "SCHEME_INVALID", "entity_kinds is a non-empty list of entity kinds");
+      if (!spaceForms[x.space]) err(`${at}.space`, "SCHEME_INVALID", `this profile has no space '${String(x.space)}'`);
+      else if (own(x, "form") && !spaceForms[x.space].has(x.form)) err(`${at}.form`, "SCHEME_INVALID", `the space ${x.space} has no form '${String(x.form)}'`);
+      if (own(x, "systems")) {
+        if (!Array.isArray(x.systems)) err(`${at}.systems`, "SCHEME_INVALID", "systems is a list of origins");
+        else x.systems.forEach((o, j) => { if (!origins.has(o)) err(`${at}.systems[${j}]`, "SCHEME_INVALID", `no system of this profile has origin '${String(o)}'`); });
+      }
+      basis(at, x);
+    });
+  }
+  if (own(p, "classification_schemes")) {
+    const seen = new Set();
+    list("classification_schemes", p.classification_schemes).forEach((x, i) => {
+      const at = `classification_schemes[${i}]`;
+      if (!entry(at, x)) return;
+      fields(at, x, ["scheme", "label", "kind", "codes", "basis"]);
+      if (!isStr(x.scheme)) err(`${at}.scheme`, "SCHEME_INVALID", "scheme is a non-empty name");
+      else if (seen.has(x.scheme)) err(`${at}.scheme`, "SCHEME_INVALID", `${x.scheme} is given twice`);
+      else seen.add(x.scheme);
+      str(`${at}.label`, x.label, "label");
+      if (!CLASSIFICATION_KINDS.includes(x.kind)) err(`${at}.kind`, "SCHEME_INVALID", `kind is one of ${CLASSIFICATION_KINDS.join(", ")}`);
+      if (own(x, "codes")) {
+        if (!Array.isArray(x.codes)) err(`${at}.codes`, "SCHEME_INVALID", "codes is a list of {code, label}");
+        else {
+          const cs = new Set();
+          x.codes.forEach((c, j) => {
+            const ca = `${at}.codes[${j}]`;
+            if (!isObj(c) || !isStr(c.code) || !isStr(c.label) || Object.keys(c).some((k) => k !== "code" && k !== "label"))
+              { err(ca, "SCHEME_INVALID", "a code is {code, label}"); return; }
+            if (cs.has(c.code)) err(`${ca}.code`, "SCHEME_INVALID", `${c.code} is given twice`);
+            cs.add(c.code);
+          });
+        }
+      }
+      basis(at, x);
+    });
+  }
+
+  /* R53: the lawful demands to remove a personal fact (K1493). */
+  if (own(p, "lawful_demands")) {
+    const seen = new Set();
+    list("lawful_demands", p.lawful_demands).forEach((d, i) => {
+      const at = `lawful_demands[${i}]`;
+      if (!entry(at, d)) return;
+      fields(at, d, ["kind", "label", "covers", "within", "citation", "status", "basis"]);
+      if (typeof d.kind !== "string" || !KIND_RE.test(d.kind)) err(`${at}.kind`, "DEMAND_INVALID", "kind matches ^[a-z][a-z0-9_]*$");
+      else if (seen.has(d.kind)) err(`${at}.kind`, "DEMAND_INVALID", `'${d.kind}' is given twice`);
+      else seen.add(d.kind);
+      str(`${at}.label`, d.label, "label");
+      if (!Array.isArray(d.covers) || !d.covers.length || !d.covers.every((c) => DEMAND_COVERS.includes(c)) || new Set(d.covers).size !== d.covers.length)
+        err(`${at}.covers`, "DEMAND_INVALID", `covers is a non-empty list from ${DEMAND_COVERS.join(", ")}`);
+      const w = d.within;
+      if (!isObj(w) || Object.keys(w).some((k) => k !== "amount" && k !== "units") || !isPosInt(w.amount) || !UNITS.includes(w.units))
+        err(`${at}.within`, "DEMAND_INVALID", `within is {amount, units}, units one of ${UNITS.join(", ")}`);
+      str(`${at}.citation`, d.citation, "citation");
+      statusBasis(at, d);
+    });
+  }
+
+  /* R54: a body's stated meeting schedule, in civil-time's RFC 5545 subset (its R20). */
+  if (own(p, "recurrences")) list("recurrences", p.recurrences).forEach((r, i) => {
+    const at = `recurrences[${i}]`;
+    if (!entry(at, r)) return;
+    fields(at, r, ["body", "rrule", "dtstart", "citation", "status", "basis"]);
+    str(`${at}.body`, r.body, "body");
+    const why = rruleFault(r.rrule);
+    if (why) err(`${at}.rrule`, "RECURRENCE_INVALID", why);
+    if (!isLocalDateTime(r.dtstart)) err(`${at}.dtstart`, "RECURRENCE_INVALID", "dtstart is a local date-time YYYY-MM-DDTHH:MM[:SS], read in the profile's time_zone");
+    str(`${at}.citation`, r.citation, "citation");
+    statusBasis(at, r);
+  });
+}
+
+/* Why an RRULE is outside civil-time's subset (its R20), or null. `EXDATE` is a property of its own, not a part. */
+const BYDAY_RE = /^(?:[+-]?(?:[1-9]|[1-4]\d|5[0-3]))?(?:MO|TU|WE|TH|FR|SA|SU)$/;
+function rruleFault(v) {
+  if (typeof v !== "string" || !v.trim()) return "rrule is a non-empty RFC 5545 rule";
+  const parts = new Map();
+  for (const kv of v.replace(/^RRULE:/, "").split(";")) {
+    const m = /^([A-Z]+)=(.+)$/.exec(kv);
+    if (!m) return `'${kv}' is not NAME=value`;
+    if (!RRULE_PARTS.includes(m[1])) return `${m[1]} is outside civil-time's subset (${RRULE_PARTS.join(", ")})`;
+    if (parts.has(m[1])) return `${m[1]} is given twice`;
+    parts.set(m[1], m[2]);
+  }
+  if (!RRULE_FREQS.includes(parts.get("FREQ"))) return `FREQ is one of ${RRULE_FREQS.join(", ")}`;
+  const ints = (x, lo, hi) => x.split(",").every((n) => /^[+-]?\d+$/.test(n) && Math.abs(Number(n)) >= lo && Math.abs(Number(n)) <= hi);
+  if (parts.has("INTERVAL") && !/^[1-9]\d*$/.test(parts.get("INTERVAL"))) return "INTERVAL is a positive integer";
+  if (parts.has("BYDAY") && !parts.get("BYDAY").split(",").every((d) => BYDAY_RE.test(d))) return "BYDAY lists days, each with an optional ordinal";
+  if (parts.has("BYMONTHDAY") && !ints(parts.get("BYMONTHDAY"), 1, 31)) return "BYMONTHDAY lists days of the month";
+  if (parts.has("BYSETPOS") && !ints(parts.get("BYSETPOS"), 1, 366)) return "BYSETPOS lists positions";
+  if (parts.has("UNTIL") && !/^\d{8}(?:T\d{6}Z?)?$/.test(parts.get("UNTIL"))) return "UNTIL is a date or date-time";
+  return null;
 }
 
 /* An office a holiday entry names, as a key: a counterparty role or a kind's venue (R43). */
@@ -672,6 +1049,8 @@ function officeKey(o) {
   if (isObj(o) && typeof o.venue === "string") return `venue:${o.venue}`;
   return `?:${JSON.stringify(o)}`;
 }
+/* The closure list a holiday entry belongs to ("" for the office calendar, R47). */
+const listKey = (h) => (isObj(h) && typeof h.list === "string" ? h.list : "");
 /* The key of an `offices` list: its offices, in no order ("" for every office). */
 const officesKey = (offices) => (Array.isArray(offices) ? [...new Set(offices.map(officeKey))].sort().join("\u0001") : "");
 
@@ -883,13 +1262,15 @@ function merge(profiles) {
 
   if (has("practice")) {
     view.practice = {};
+    /* the value and its count (calendar when absent, R7) are one fact */
     const given = profiles.filter((p) => p.practice && p.practice.minutes_due_days)
-      .map((p) => ({ profile: p.id, value: p.practice.minutes_due_days.value, basis: p.practice.minutes_due_days.basis }));
-    if (given.length && agree(given))
-      view.practice.minutes_due_days = { value: given[0].value, basis: given[0].basis, profile: given[0].profile,
-        bases: given.map((g) => ({ profile: g.profile, basis: g.basis })) };
+      .map((p) => ({ profile: p.id, value: p.practice.minutes_due_days.value, count: p.practice.minutes_due_days.count || "calendar",
+        written: p.practice.minutes_due_days, basis: p.practice.minutes_due_days.basis }));
+    if (given.length && agree(given.map((g) => ({ value: [g.value, g.count] }))))
+      view.practice.minutes_due_days = { value: given[0].value, ...(own(given[0].written, "count") ? { count: given[0].count } : {}),
+        basis: given[0].basis, profile: given[0].profile, bases: given.map((g) => ({ profile: g.profile, basis: g.basis })) };
     else if (given.length)
-      conflict("practice.minutes_due_days", given,
+      conflict("practice.minutes_due_days", given.map(({ written, ...g }) => g),
         "the active profiles give different periods after which absent minutes raise a question, so none is given");
   }
 
@@ -962,7 +1343,7 @@ function merge(profiles) {
         const carriesBasis = f === "venue" || f === "evidence" || f === "template";
         const vals = given.filter((g) => own(g.k, f)).map((g) => {
           let value = clone(g.k[f]);
-          if (f === "venue" && isObj(value)) { const { hours, ...rest } = value; value = rest; }
+          if (f === "venue" && isObj(value)) { const { hours, cutoff, receipt, outages, ...rest } = value; value = rest; }
           return { profile: g.profile, value, basis: carriesBasis ? g.k[f].basis : g.k.basis };
         });
         if (!vals.length) continue;
@@ -971,11 +1352,21 @@ function merge(profiles) {
           + (f === "evidence" ? ": the venue's standard is undetermined" : ""));
       }
       if (e.venue) {
-        const hrs = given.filter((g) => isObj(g.k.venue) && own(g.k.venue, "hours"))
-          .map((g) => ({ profile: g.profile, value: g.k.venue.hours, basis: g.k.venue.hours.basis }));
-        if (hrs.length && agree(hrs)) e.venue.hours = keep(hrs);
-        else if (hrs.length) conflict(`action_kinds[${kind}].venue.hours`, hrs,
-          `the active profiles give different hours for ${kind}'s venue, so its hours are undetermined`);
+        /* hours (R42), and the channel's cutoff and receipt rule (R48, R55), are one value each; outages are unioned. */
+        const SAYS = { hours: "its hours are undetermined", cutoff: "its cutoff is undetermined",
+          receipt: "receipt on a closed day stays the actual day only where no profile states otherwise; here it is undetermined" };
+        for (const f of ["hours", "cutoff", "receipt"]) {
+          const vs = given.filter((g) => isObj(g.k.venue) && own(g.k.venue, f))
+            .map((g) => ({ profile: g.profile, value: g.k.venue[f], basis: g.k.venue[f].basis }));
+          if (vs.length && agree(vs)) e.venue[f] = keep(vs);
+          else if (vs.length) conflict(`action_kinds[${kind}].venue.${f}`, vs,
+            `the active profiles give different ${f === "hours" ? "hours" : f === "cutoff" ? "cutoffs" : "receipt rules"} for ${kind}'s venue, so ${SAYS[f]}`);
+        }
+        if (given.some((g) => isObj(g.k.venue) && own(g.k.venue, "outages"))) {
+          const o = [];
+          for (const g of given) if (isObj(g.k.venue)) union(o, g.k.venue.outages, g.profile);
+          e.venue.outages = strip(o);
+        }
       }
       e.basis = given[0].k.basis;
       e.profile = given[0].profile;
@@ -984,24 +1375,29 @@ function merge(profiles) {
     }
   }
 
-  /* deadlines, keyed by rule and what they apply to: days, count and starts are one value each (R29). */
+  /* deadlines, keyed by rule and what they apply to: every field but the citation is one value each (R29, R55). An
+     entry written `days: n` reads as `units: "days", amount: n` (R26); the view gives both forms for a day period. */
   if (has("deadlines")) {
     const byRule = new Map();
     for (const p of profiles) for (const d of p.deadlines || []) {
       const k = `${d.rule}\u0000${d.applies_to}`;
       if (!byRule.has(k)) byRule.set(k, []);
-      byRule.get(k).push({ profile: p.id, d });
+      byRule.get(k).push({ profile: p.id, d: normalDeadline(d) });
     }
     view.deadlines = [];
     for (const given of byRule.values()) {
       const { rule, applies_to } = given[0].d;
       const e = { rule, applies_to };
-      for (const f of ["days", "count", "starts", "extension"]) {
+      for (const f of DEADLINE_ONE_VALUE) {
         const vals = given.filter((g) => own(g.d, f)).map((g) => ({ profile: g.profile, value: clone(g.d[f]), basis: g.d.basis }));
         if (!vals.length) continue;
-        if (agree(vals)) e[f] = vals[0].value;
-        else conflict(`deadlines[${rule}/${applies_to}].${f}`, vals, `the active profiles disagree on the ${f} of ${rule} for ${applies_to}, so it is withheld: the deadline is undetermined`);
+        if (!agree(vals)) {
+          conflict(`deadlines[${rule}/${applies_to}].${f}`, vals, `the active profiles disagree on the ${f} of ${rule} for ${applies_to}, so it is withheld: the deadline is undetermined`);
+          continue;
+        }
+        e[f] = f === "observed" ? keep(vals.map((v) => ({ ...v, basis: v.value.basis }))) : vals[0].value;
       }
+      if (e.units === "days" && own(e, "amount")) e.days = e.amount;
       e.citation = [...new Set(given.map((g) => g.d.citation))].join("; ");
       e.basis = given[0].d.basis;
       e.profile = given[0].profile;
@@ -1016,24 +1412,71 @@ function merge(profiles) {
     const byKey = new Map();
     const byDate = (a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
     for (const p of profiles) for (const h of p.holidays || []) {
-      const k = `${h.year}\u0000${officesKey(h.offices)}`;
+      const k = `${h.year}\u0000${listKey(h)}\u0000${officesKey(h.offices)}`;
       if (!byKey.has(k)) byKey.set(k, []);
-      byKey.get(k).push({ profile: p.id, h, value: h.days.slice().sort(byDate), status: h.status, basis: h.basis });
+      byKey.get(k).push({ profile: p.id, h, value: h.days.slice().sort(byDate), status: h.status, citation: h.citation, basis: h.basis });
     }
     view.holidays = [];
     for (const given of byKey.values()) {
-      const { year, offices } = given[0].h;
-      if (!agree(given.map((g) => ({ value: { days: g.value, status: g.status } })))) {
+      const { year, offices, list: named } = given[0].h;
+      if (!agree(given.map((g) => ({ value: { days: g.value, status: g.status, citation: g.citation } })))) {
         const whose = offices ? ` for ${offices.map((o) => (typeof o === "string" ? o : `${o.venue}'s venue`)).join(", ")}` : "";
-        conflict(`holidays[${year}${offices ? ` offices=${officesKey(offices).replace(/\u0001/g, ",")}` : ""}]`,
+        conflict(`holidays[${year}${named ? ` list=${named}` : ""}${offices ? ` offices=${officesKey(offices).replace(/\u0001/g, ",")}` : ""}]`,
           given.map((g) => ({ profile: g.profile, value: g.value, status: g.status, basis: g.basis })),
           `the active profiles list different closure days for ${year}${whose}, so the year is withheld there: a business-day count reaching into it is undetermined`);
         continue;
       }
-      view.holidays.push({ year, ...(offices ? { offices: clone(offices) } : {}), days: clone(given[0].value), status: given[0].status,
+      view.holidays.push({ year, ...(named ? { list: named, citation: given[0].citation } : given[0].citation ? { citation: given[0].citation } : {}),
+        ...(offices ? { offices: clone(offices) } : {}), days: clone(given[0].value), status: given[0].status,
         basis: given[0].basis, profile: given[0].profile, bases: given.map((g) => ({ profile: g.profile, basis: g.basis })) });
     }
   }
 
+  /* T33's sections (R55). One value: the weekend and the instrument key; one value per key: a computation, a
+     fiscal year, a law rank, a proceeding flow and a lawful demand. Unioned: proceeding kinds, the schemes and the
+     recurrences. Each one-value fact is kept whole as its first giver wrote it, tagged with every giver's basis. */
+  for (const sec of ["weekend", "instrument_key"]) {
+    if (!has(sec)) continue;
+    const given = profiles.filter((p) => p[sec]).map((p) => ({ profile: p.id, value: p[sec], basis: p[sec].basis }));
+    if (agree(given)) view[sec] = keep(given);
+    else conflict(sec, given, sec === "weekend"
+      ? "the active profiles name different weekends, so none is given: a business-day count or a roll is undetermined"
+      : "the active profiles give different instrument-key segments, so no key is composed");
+  }
+  for (const [sec, keyOf, what] of ONE_PER_KEY) {
+    if (!has(sec)) continue;
+    const byKey = new Map();
+    for (const p of profiles) for (const e of p[sec] || []) {
+      const k = keyOf(e);
+      if (!byKey.has(k)) byKey.set(k, []);
+      byKey.get(k).push({ profile: p.id, value: e, basis: e.basis });
+    }
+    view[sec] = [];
+    for (const [k, given] of byKey) {
+      if (agree(given)) view[sec].push(keep(given));
+      else conflict(`${sec}[${k.replace(/\u0000/g, "/")}]`, given, `the active profiles give different ${what} for ${k.replace(/\u0000/g, " at ")}, so it is withheld: it is undetermined`);
+    }
+  }
+  for (const sec of ["proceeding_kinds", "identifier_schemes", "classification_schemes", "recurrences"])
+    if (has(sec)) { const v = []; for (const p of profiles) union(v, p[sec], p.id); view[sec] = strip(v); }
+
   return { view, conflicts };
 }
+
+/* R29, R55: a deadline's fields that hold one value under its rule and what it applies to. */
+const DEADLINE_ONE_VALUE = ["units", "amount", "count", "direction", "starts", "roll", "closures", "computation",
+  "extension", "tolling", "observed", "status"];
+/** A deadline as R26 reads it: `days: n` with no units is `units: "days", amount: n`. */
+function normalDeadline(d) {
+  if (!own(d, "days") || own(d, "units")) return d;
+  const { days, ...rest } = d;
+  return { ...rest, units: "days", amount: days };
+}
+/* R55: the sections whose entries are one value per key, with the key and how a conflict names what differs. */
+const ONE_PER_KEY = [
+  ["computation", (e) => e.key, "computations"],
+  ["fiscal_year", (e) => e.body, "fiscal years"],
+  ["law_ranks", (e) => `${e.kind}\u0000${e.level}`, "ranks"],
+  ["proceeding_flows", (e) => e.kind, "proceeding flows"],
+  ["lawful_demands", (e) => e.kind, "lawful demands"],
+];

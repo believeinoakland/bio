@@ -74,7 +74,7 @@ function sample() {
       { kind: "records_petition", label: "petition", tier: 2, laws: ["Records Law"], advisory: "Have it reviewed first.", basis: "M-8" },
     ],
     deadlines: [{ rule: "answer", applies_to: "records_request", days: 10, count: "calendar", starts: "received",
-      extension: { days: 5, count: "business", when: "busy" }, citation: "RL § 2", basis: "M-9" }],
+      extension: { days: 5, count: "business", when: "busy" }, citation: "RL § 2", status: "researched", basis: "M-9" }],
     legal_organisations: [{ name: "Town Law Centre", evaluates: ["code_complaint"],
       contacts: [{ how: "email", value: "help@law.sample.example" }, { how: "mail", value: "1 Main St" }], basis: "M-11" }],
     holidays: [{ year: 2026, days: [{ date: "2026-01-01", name: "New Year" }, { date: "2026-07-04", name: "Summer" }], status: "researched", basis: "M-12" },
@@ -358,7 +358,7 @@ test("R25 action_kinds: kind form, label, tier 1–3, laws, venue {name, how, ba
 
 test("R26 deadlines: rule, applies_to, days, count, starts, extension, citation", () => {
   for (const starts of ["received", "filed", "act", "known"]) assert.ok(breakIt((p) => { p.deadlines[0].starts = starts; }).ok);
-  assert.ok(hasError(breakIt((p) => { p.deadlines[0].starts = "noticed"; }), "VALUE_INVALID", "deadlines[0].starts"));
+  assert.ok(hasError(breakIt((p) => { p.deadlines[0].starts = "noticed"; }), "ANCHOR_UNKNOWN", "deadlines[0].starts"));
   for (const days of [0, -1, 2.5, "10"]) assert.ok(hasError(breakIt((p) => { p.deadlines[0].days = days; }), "VALUE_INVALID", "deadlines[0].days"));
   assert.ok(hasError(breakIt((p) => { delete p.deadlines[0].citation; }), "VALUE_INVALID", "deadlines[0].citation"));
   assert.ok(hasError(breakIt((p) => { p.deadlines[0].extension.days = 0; }), "VALUE_INVALID", "deadlines[0].extension.days"));
@@ -521,13 +521,14 @@ test("R29 action facts with one value per key: a kind's tier, venue, template; a
   b.action_kinds[0].template = tpl({ text: "Kindly send the records under {{law}}." });
   b.deadlines[0].days = 20; b.deadlines[0].count = "business"; b.deadlines[0].starts = "filed";
   const c = combine([a, b]);
+  /* `days: n` reads as units: days, amount: n (R26), so a different number of days is a different amount */
   assert.deepEqual(c.conflicts.map((x) => x.at).sort(), ["action_kinds[records_request].template", "action_kinds[records_request].tier",
-    "action_kinds[records_request].venue", "deadlines[answer/records_request].count", "deadlines[answer/records_request].days",
+    "action_kinds[records_request].venue", "deadlines[answer/records_request].amount", "deadlines[answer/records_request].count",
     "deadlines[answer/records_request].starts"]);
   const k = c.view.action_kinds.find((x) => x.kind === "records_request");
   for (const f of ["tier", "venue", "template"]) assert.equal(k[f], undefined, f);
   const d = c.view.deadlines.find((x) => x.rule === "answer");
-  for (const f of ["days", "count", "starts"]) assert.equal(d[f], undefined, f);
+  for (const f of ["days", "amount", "count", "starts"]) assert.equal(d[f], undefined, f);
   /* the other kind agrees and keeps its facts */
   const other = c.view.action_kinds.find((x) => x.kind === "code_complaint");
   assert.equal(other.tier, 3); assert.equal(other.venue.how, "court");
@@ -600,7 +601,8 @@ test("R21 the first profile holds every local fact of the snapshot's code, and m
   assert.deepEqual(f.covers, ["City of Oakland", "Alameda County"]);
   assert.equal(f.test, false);
   /* spaces: labels, forms, kinds, floors with their system */
-  assert.deepEqual(Object.keys(f.spaces).sort(), ["enactment", "fund", "parcel", "project"]);
+  /* the snapshot's four spaces, and T33's person scheme for Legistar's PersonId (R3) */
+  assert.deepEqual(Object.keys(f.spaces).sort(), ["enactment", "fund", "parcel", "person", "project"]);
   for (const [sp, old] of [["enactment", "cms"], ["project", "project"], ["fund", "fund"], ["parcel", "apn"]]) {
     assert.equal(f.spaces[sp].label, legacy.ID_SPACES[old].label, sp);
     assert.deepEqual(f.spaces[sp].forms.map((x) => x.form), legacy.ID_SPACES[old].forms.map((x) => x.form), sp);
@@ -646,9 +648,13 @@ test("R21 the first profile holds every local fact of the snapshot's code, and m
   assert.deepEqual(f.vocabulary.codes.map((c) => [c.key, c.label]), [["omc", "O.M.C."]]);
   assert.deepEqual(f.vocabulary.file_numbers.map((x) => x.system), ["oakland.legistar"]);
   /* practice, search terms, records law */
-  assert.deepEqual(f.practice.minutes_due_days, { value: legacy.MINUTES_DUE_DAYS, basis: "UNMEASURED" });
+  /* the snapshot's 21 days on no measurement, corrected to OMC 2.20.160's ten business days (R21, R56; K1504) */
+  assert.notEqual(legacy.MINUTES_DUE_DAYS, 10);
+  assert.deepEqual(f.practice.minutes_due_days, { value: 10, count: "business", basis: "2026-10-05 time-law" });
   assert.deepEqual(f.search_terms.map((t) => t.term), legacy.SEARCH_TERMS);
-  assert.deepEqual(f.records_laws.map((l) => [l.level, l.name]), [["state", "California Public Records Act"]]);
+  /* the snapshot's records law first; T33's sourced rule set adds the City's and the federal one (R56) */
+  assert.deepEqual(f.records_laws.map((l) => [l.level, l.name]), [["state", "California Public Records Act"],
+    ["city", "Oakland Sunshine Ordinance"], ["federal", "Freedom of Information Act"]]);
   assert.equal(f.records_laws[0].basis, "D-149");
   /* every basis names a measurement or ruling, or says UNMEASURED */
   walkFacts(f, (fact, path) => assert.match(fact.basis, /^(UNMEASURED|(M-\d+|\d{4}-\d{2}-\d{2}|D-\d+|DEC-\d+|K\d+)( [^\s,;]+)?([,;] (M-\d+|\d{4}-\d{2}-\d{2}|D-\d+|DEC-\d+|K\d+)( [^\s,;]+)?)*)$/, path));
@@ -682,7 +688,7 @@ test("R22 the test profile: test true, every basis TEST, every section and vocab
   for (const h of hosts(t)) assert.ok(!fh.has(h), h);
   for (const c of t.covers) assert.ok(!f.covers.includes(c));
   /* combining the two gives no conflict: they share nothing */
-  assert.deepEqual(combine([FIRST, TEST]).conflicts.filter((c) => !c.at.startsWith("practice") && c.at !== "locale" && c.at !== "time_zone"
+  assert.deepEqual(combine([FIRST, TEST]).conflicts.filter((c) => !c.at.startsWith("practice") && !["locale", "time_zone", "weekend"].includes(c.at)
     && !c.at.startsWith("action_kinds[records_request]")), []);
 });
 
@@ -700,10 +706,12 @@ test("R30 the first profile's action sections: the snapshot's action kinds renam
     media: 1, litigation_support: undefined, request_for_comment: undefined, other: undefined });
   for (const k of f.action_kinds) if (k.tier !== undefined) assert.equal(k.basis, "D-182", k.kind);
   const rr = f.action_kinds.find((k) => k.kind === "records_request");
-  assert.deepEqual(rr.laws, ["California Public Records Act"]);
-  const d = f.deadlines.find((x) => x.applies_to === "records_request");
-  assert.deepEqual([d.days, d.count, d.starts, d.citation], [10, "calendar", "received", "Cal. Gov. Code § 7922.535"]);
-  assert.equal(d.basis, "UNMEASURED");
+  assert.deepEqual(rr.laws, ["California Public Records Act", "Oakland Sunshine Ordinance"]);
+  const d = f.deadlines.find((x) => x.rule === "records_response");
+  assert.deepEqual([d.applies_to, d.units, d.amount, d.count, d.starts, d.citation], ["records_request", "days", 10, "calendar", "received", "Cal. Gov. Code § 7922.535(a)"]);
+  /* from T33 no deadline or counterparty rests on UNMEASURED: each is sourced (R44, R56; K1445) */
+  for (const x of [...f.deadlines, ...f.counterparties]) assert.notEqual(x.basis, "UNMEASURED", x.rule || x.role);
+  for (const x of f.deadlines) assert.equal(x.status, "researched", x.rule);
   assert.ok(f.counterparties.length >= 3);
   for (const c of f.counterparties) assert.ok(!/\b[A-Z][a-z]+ [A-Z][a-z]+\b/.test(c.role) || /Controller|Council|Grand Jury|Auditor/.test(c.role), `role names an office: ${c.role}`);
   const bodies = f.counterparties.map((c) => c.body).join(" | ");
@@ -931,7 +939,8 @@ test("R36 the test profile supplies R31's levels, oversight, a Tier 2 advisory, 
   assert.ok(f.counterparties.filter((c) => c.oversight !== true).every((c) => c.oversight === undefined));
   /* no measurement names any of its venues' evidence standards: absent, never guessed (its calendar is R45's) */
   assert.ok(f.action_kinds.every((k) => k.evidence === undefined));
-  for (const c of f.counterparties.filter((x) => x.oversight)) assert.equal(c.basis, "UNMEASURED", c.role);
+  /* re-based on their primary sources in T33 (R30, R56) */
+  for (const c of f.counterparties.filter((x) => x.oversight)) assert.equal(c.basis, "2026-10-05 time-law", c.role);
 });
 
 /* ============================================================================================== */
@@ -1308,7 +1317,8 @@ test("R45 the test profile supplies R40–R44; the first holds the calendar only
     { day: "fri", open: "08:30", close: "14:00" }], status: "researched", basis: "M-193" });
   assert.equal(f.action_kinds.find((k) => k.kind === "records_request").venue.hours, undefined, "the portal: none researched");
   const dates = (h) => h.days.map((d) => d.date.slice(5));
-  const byBasis = Object.fromEntries(f.holidays.map((h) => [h.basis, h]));
+  /* the office calendars (K925); T33's closure lists (R47) are R56's and tested there */
+  const byBasis = Object.fromEntries(f.holidays.filter((h) => !h.list).map((h) => [h.basis, h]));
   assert.deepEqual(Object.keys(byBasis).sort(), ["M-189", "M-190", "M-191"], "M-188 (county) governs no profile office");
   assert.ok(f.holidays.every((h) => h.year === 2026 && h.status === "researched"), "2026 only, researched; 2027 not published");
   assert.deepEqual(byBasis["M-189"].offices, [{ venue: "records_petition" }]);
@@ -1318,14 +1328,14 @@ test("R45 the test profile supplies R40–R44; the first holds the calendar only
     "09-09 and 11-11 ((HVA) If applicable) left out, undetermined (K925 (3)); 07-04 with no weekday in its place");
   assert.deepEqual(byBasis["M-191"].offices, ["State Controller"]);
   assert.deepEqual(dates(byBasis["M-191"]), ["01-01", "01-19", "02-16", "03-31", "05-25", "07-04", "09-07", "11-11", "11-26", "11-27", "12-25"]);
-  assert.ok(!f.holidays.some((h) => !h.offices), "no entry closes every office");
-  assert.ok(!f.holidays.some((h) => h.offices.includes("Civil Grand Jury")), "the grand jury's list is undetermined");
+  assert.ok(!f.holidays.some((h) => !h.offices && !h.list), "no entry closes every office");
+  assert.ok(!f.holidays.some((h) => h.offices && h.offices.includes("Civil Grand Jury")), "the grand jury's list is undetermined");
   /* each reads back through combine with its status and basis */
   const fv = combine([FIRST]).view;
   assert.deepEqual([fv.time_zone.status, fv.time_zone.basis, fv.time_zone.profile], ["researched", "M-187", FIRST]);
   assert.deepEqual(fv.counterparties.find((c) => c.role === "City Auditor").hours.bases, [{ profile: FIRST, basis: "M-192" }]);
   assert.deepEqual(fv.action_kinds.find((k) => k.kind === "records_petition").venue.hours.basis, "M-193");
-  assert.deepEqual(fv.holidays.map((h) => [h.basis, h.status, h.profile]), [["M-189", "researched", FIRST], ["M-190", "researched", FIRST], ["M-191", "researched", FIRST]]);
+  assert.deepEqual(fv.holidays.filter((h) => !h.list).map((h) => [h.basis, h.status, h.profile]), [["M-189", "researched", FIRST], ["M-190", "researched", FIRST], ["M-191", "researched", FIRST]]);
 });
 
 test("R29 R40 R42 a kind's template, an office's hours and a venue's hours are one value per key", () => {
