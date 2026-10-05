@@ -35,7 +35,7 @@ Four points on T33-20. I am building on the reading given for each and will carr
 **Deferred.**
 - R22's `subscription` arm (K1537). It is refused `ACCOUNT_KIND_NOT_OFFERED` until Bob rules. When he does: add `subscription` to `ACCOUNT_KINDS`, drop it from `HELD_BACK_KINDS`, and turn the test's refusal arm into an acceptance.
 
-**Found in other modules (REPORT J3).**
+**Found in other modules (REPORT J2).**
 1. **instance-setup** `test/m/instance-setup/keys.test.mjs:34`. Its record-core stub has `declarePurge` only. Credentials now declares through `declareTable` (record-core R21; credentials R30), so its four R44 tests fail once credentials merges. The fix is one stub method in instance-setup's T33 job; until then it is an accepted red by name. Measured with credentials over the T33 tranche plus a local `declareTable` shim: instance-setup 90/4.
 2. **plane, bundler, installer: the seal secret** (J1 (3), K1541). Composition must pass the Worker secret `ACCOUNT_SEAL_SECRET` to `credentialsOf(ctx, {sealSecret})` on first construction. Deployment and the installer must bind it as a secret. Without it, account references and keyed-service keys are refused `ACCOUNT_SEAL_UNAVAILABLE`. Rotating it orphans every stored reference: members reconnect, administrators reset keys.
 3. **record-core.** My two tests over the real record-core (`seam.test.mjs` R18 and the `credentialsOf`-over-ctx test) need its `declareTable` (T33-19). They are red on this branch until RECORD-CORE #16 merges, and pass with it (shim measured: 54/54). Credentials merges after record-core, as the order says.
