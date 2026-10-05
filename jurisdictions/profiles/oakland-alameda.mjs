@@ -184,14 +184,17 @@ export default {
     ],
     codes: [
       /* The code is served by its codifier (Municode), 230 days behind the record at Supp. 103; one doc per section,
-         headed `2.20.070 - Title.`, its subsections marked `A.`, `1.`, `(a)` (time-law §4–§5). */
+         headed `2.20.070 - Title.` (time-law §4–§5); its subsections print `A.`, `1.`, `a.`, `i.`, `(1)` (doctypes'
+         codifier fixtures, K1521). */
       { key: "omc", label: "O.M.C.", pattern: { re: R`O\.?M\.?C\.?|Oakland\s+Municipal\s+Code`, flags: "i" },
-        copy: "codifier", sections: { number: { re: R`\d+\.\d+\.\d+[A-Z]?` }, separators: ".", markers: ["letter", "numeral", "paren_letter"] },
-        basis: "M-24, 2026-10-05 time-law" },
-      /* The City Charter, served by the same codifier as article-level docs; its sections are numbered 200, 403, 504
-         and so on, with no subsection marker order measured (time-law §2, §4; K1514). */
+        copy: "codifier", sections: { number: { re: R`\d+\.\d+\.\d+[A-Z]?` }, separators: ".",
+          markers: ["letter", "numeral", "letter", "roman", "paren_numeral"] },
+        basis: "M-24, 2026-10-05 time-law, 2026-10-05 doctypes" },
+      /* The City Charter, served by the same codifier as article-level docs; its sections print `Section 200.`, one
+         part, their subsections `(a)`, `(1)`, `(a)`, `i.` (time-law §2, §4; K1514, K1521). */
       { key: "charter", label: "Oakland City Charter", pattern: { re: R`(?:Oakland\s+)?City\s+Charter`, flags: "i" },
-        copy: "codifier", sections: { number: { re: R`\d{3,4}` }, separators: ".", markers: [] }, basis: "2026-10-05 time-law" },
+        copy: "codifier", sections: { number: { re: R`\d{3,4}` }, separators: "", markers: ["paren_letter", "paren_numeral", "paren_letter", "roman"] },
+        basis: "2026-10-05 time-law, 2026-10-05 doctypes" },
     ],
     file_numbers: [
       { pattern: { re: R`\d{2}-\d{4}` }, system: "oakland.legistar", basis: "2026-08-03, M-24" },

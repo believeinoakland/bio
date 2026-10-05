@@ -49,11 +49,14 @@ test("R6 T33 vocabulary: a code's copy and sections; amending, meeting_markers, 
   for (const bad of ["unofficial", "", 1]) assert.ok(hasError(breakT((p) => { p.vocabulary.codes[0].copy = bad; }), "COPY_UNKNOWN", `${C}.copy`), String(bad));
   assert.ok(breakT((p) => { delete p.vocabulary.codes[0].copy; delete p.vocabulary.codes[0].sections; }).ok, "both optional");
   for (const markers of [["letter"], ["roman", "paren_numeral", "numeral", "paren_letter", "letter"]]) assert.ok(breakT((p) => { p.vocabulary.codes[0].sections.markers = markers; }).ok);
-  assert.ok(breakT((p) => { p.vocabulary.codes[0].sections.markers = []; }).ok, "no markers: a charter's sections (K1514)");
-  for (const markers of [["letter", "letter"], ["bullet"], "letter"])
+  assert.ok(breakT((p) => { p.vocabulary.codes[0].sections.markers = []; }).ok, "no markers");
+  assert.ok(breakT((p) => { p.vocabulary.codes[0].sections.markers = ["letter", "numeral", "letter", "roman", "paren_numeral"]; }).ok,
+    "a kind recurs at a deeper level (K1521)");
+  assert.ok(breakT((p) => { p.vocabulary.codes[0].sections.separators = ""; }).ok, "a one-part number (K1521)");
+  for (const markers of [["bullet"], "letter", ["letter", 1]])
     assert.ok(hasError(breakT((p) => { p.vocabulary.codes[0].sections.markers = markers; }), "VALUE_INVALID", `${C}.sections.markers`), JSON.stringify(markers));
   assert.ok(hasError(breakT((p) => { p.vocabulary.codes[0].sections.number = { re: "(" }; }), "PATTERN_INVALID", `${C}.sections.number`));
-  for (const sep of ["", " ", 3]) assert.ok(hasError(breakT((p) => { p.vocabulary.codes[0].sections.separators = sep; }), "VALUE_INVALID", `${C}.sections.separators`));
+  for (const sep of [" ", "- ", 3]) assert.ok(hasError(breakT((p) => { p.vocabulary.codes[0].sections.separators = sep; }), "VALUE_INVALID", `${C}.sections.separators`));
   assert.ok(hasError(breakT((p) => { p.vocabulary.codes[0].sections.depth = 3; }), "UNKNOWN_SECTION", `${C}.sections.depth`));
   assert.ok(hasError(breakT((p) => { p.vocabulary.codes[0].sections = "1.2.3"; }), "VALUE_INVALID", `${C}.sections`));
   for (const relation of ["amends", "adds", "repeals", "renumbers", "recodifies"]) assert.ok(breakT((p) => { p.vocabulary.amending[0].relation = relation; }).ok);
@@ -79,6 +82,11 @@ test("R6 T33 vocabulary: a code's copy and sections; amending, meeting_markers, 
   assert.equal(org("Office of the Mayor Annual Recess Agenda"), undefined);
   assert.equal(get(FIRST).vocabulary.codes[0].copy, "codifier", "the OMC is served by its codifier (time-law §4)");
   assert.ok(new RegExp(`^(?:${get(FIRST).vocabulary.codes[0].sections.number.re})$`).test("2.20.070"));
+  /* the printed orders doctypes measured (K1521) */
+  const codes = Object.fromEntries(get(FIRST).vocabulary.codes.map((c) => [c.key, c.sections]));
+  assert.deepEqual(codes.omc.markers, ["letter", "numeral", "letter", "roman", "paren_numeral"]);
+  assert.deepEqual([codes.charter.separators, codes.charter.markers], ["", ["paren_letter", "paren_numeral", "paren_letter", "roman"]]);
+  assert.ok(new RegExp(`^(?:${codes.charter.number.re})$`).test("200"));
 });
 
 test("R7 T33 practice: minutes_due_days with count calendar (absent) or business; the first profile's OMC 2.20.160", () => {

@@ -472,12 +472,12 @@ function validateInto(p, errors) {
             else {
               fields(`${ea}.sections`, sc, ["number", "separators", "markers"]);
               pattern(`${ea}.sections.number`, sc.number);
-              if (typeof sc.separators !== "string" || !sc.separators.length || /\s/.test(sc.separators))
-                err(`${ea}.sections.separators`, "VALUE_INVALID", "separators are the characters between a section number's parts");
-              /* an empty list: the code's sections carry no subsection markers (a charter, K1514) */
-              if (!Array.isArray(sc.markers) || !sc.markers.every((m) => SECTION_MARKERS.includes(m))
-                  || new Set(sc.markers).size !== sc.markers.length)
-                err(`${ea}.sections.markers`, "VALUE_INVALID", `markers is the order of subsection markers, each once, from ${SECTION_MARKERS.join(", ")}`);
+              /* empty: a number of one part (a charter's `Section 200.`, K1521) */
+              if (typeof sc.separators !== "string" || /\s/.test(sc.separators))
+                err(`${ea}.sections.separators`, "VALUE_INVALID", "separators are the characters between a section number's parts, possibly none");
+              /* the order of subsection levels; a kind may recur at a deeper level (`A.`, `1.`, `a.`: letter, numeral, letter; K1521) */
+              if (!Array.isArray(sc.markers) || !sc.markers.every((m) => SECTION_MARKERS.includes(m)))
+                err(`${ea}.sections.markers`, "VALUE_INVALID", `markers is the order of subsection markers, from ${SECTION_MARKERS.join(", ")}`);
             }
           }
         } else if (key === "amending") {

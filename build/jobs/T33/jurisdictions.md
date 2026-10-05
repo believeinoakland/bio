@@ -16,18 +16,19 @@
 - B2 (K1513): J1 (1)–(4) as read. B4 (1) replaces J1 (3): OMC 2.20.070(C) is its own rule `omc_special_meeting_monday` (`applies_on: ["mon"]`, 3 calendar days backward, `due_at: "12:00"`); R26 gains `applies_on` and `due_at` (validated; one value per key in combine); the `monday_prior_friday_noon` computation rule is withdrawn.
 - B4 (2): the Charter as its own `codes` entry (`charter`, sections `\d{3,4}`, no markers; `markers` may now be empty). B4 (3): systems `courtlistener_docket`, `cpuc_proceeding`, `ecourt_roa` and the proceeding number forms (Alameda civil and legacy, federal district, docket core, CPUC) in the first profile; equivalents on made-up hosts in the test profile. B4 (4): `holidays-extra.md` judged adequate (two published lists agreeing; Columbus Day then a judicial holiday, as P6 needs): the 2018 and 2020 judicial lists are held, and the federal 2026 list gains the observed 07-03.
 - B3 (K1513): `roster_headers` carry `role`; the budget keys `financial_report_titles`, `budget_book_titles`, `financial_headings` (whitespace-tolerant: the letter-spaced ACFR headers), `fiscal_year_forms`, `budget_headers` (`column`); `classification_schemes` gain `forms` and kind `project`. First profile: the ACFR and budget-book words, the budget headers, and fund/org/department/program/account/project schemes (money-people §1c, §3, §4, §7; legistar-events §3). Test profile: an equivalent set, every role and column.
+- B6 (K1519): read; B3–B5 were already applied (J5). B7 (K1521, doctypes' codifier measurement): the OMC's markers `letter, numeral, letter, roman, paren_numeral`; the Charter's number one part (`separators: ""`), markers `paren_letter, paren_numeral, paren_letter, roman`; validate now accepts an empty `separators` and a marker kind recurring at a deeper level.
 - B5 (K1517): `roster_words` `kind`; the first profile's roster words, staff titles and roster headers from roster-reader's 15 fixtures (basis `2026-10-05 roster-reader`), a term column left unnamed.
 
 **Deferred.** The CCP §135 list for 2024 (fixture R1's roll check): not measured, not held; the R57 test names exactly this gap. In the first profile, no `fiscal_year`, `law_ranks`, `instrument_key`, proceeding kinds or flows, recurrences or amending vocabulary: unsourced, absent (R27).
 
-**Found in other modules (J3).** action-clocks `calendar.test.mjs` R10 ×3 and filings `packet.test.mjs` R9, R30 read R47's closure-list entries as all-office calendars; docprofile `docprofile.test.mjs` R6 expects the 21-day minutes period. All six pass on `tranche/T33` and fail with this data; each module's T33 job re-points. P6: the jurisdictions path is 4,836 lines, past 4,000 (BOB's split). No generated artifact reads this module.
+**Found in other modules (J3).** action-clocks `calendar.test.mjs` R10 ×3 and filings `packet.test.mjs` R9, R30 read R47's closure-list entries as all-office calendars; docprofile `docprofile.test.mjs` R6 expects the 21-day minutes period. All six pass on `tranche/T33` and fail with this data; each module's T33 job re-points. P6: the path is 4,847 lines; BOB measures P6 on source (~2,230 lines), so no split (K1519). No generated artifact reads this module.
 
 **Tests and checks run** (on the commit below):
 - `node --test jurisdictions/test/`: tests 81, pass 81, fail 0.
 - Every user of jurisdictions (id-spaces, docprofile, acquisition, capture, reading-pipeline, extraction, entities, local-facts, standards, action-grammar, actions, action-clocks, filing-templates, filings, escalation, action-plans, monitoring, affordances, instance-setup, installer): pass 1,311, fail 6 (the same six, J3; 45/45 on `tranche/T33` for the three files). affordances' R25 place check passes (a test-profile system name carrying "(test)" was renamed).
 - `format`: 126 modules, 125 requirements files; 0 failures. `architecture jurisdictions`: 7 product files, 9 relative imports; 0 failures. `coverage jurisdictions`: 57 of 57 live ids named by a test; 0 failures. `ownership jurisdictions tranche/T33`: 0 failures.
 
-Size (session_016rKi7FqGrzSeDuh4w2sUJ7): test runs 22, module lines 4836
+Size (session_016rKi7FqGrzSeDuh4w2sUJ7): test runs 25, module lines 4847
 
 ## J1 · QUESTION
 
