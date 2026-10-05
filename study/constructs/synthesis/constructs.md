@@ -552,6 +552,8 @@ Bob: "B2: You're much more qualified to answer this question than I am. B3: too 
 
 Their product work stays owed here until K1425 is lifted.
 
+**B8 ruled by Bob (K1452):** people are tracked as a construct of their own, to L5 (positions, career, credentials, memberships, statements, interests, who knows who), and organisations of every kind. BOB's design follows (K1453; capability ladders §5A). Publication is unchanged (Design Requirement 6). **New for Bob: B8a** (family members, minors and sensitive personal facts); recommend (b): family ties when a cited document states them; minors only as "a minor"; sensitive facts only with a member's recorded reason, never imported in bulk.
+
 ## 6. Decided at BOB's level
 
 These are recorded once in `build/rulings.md` when acted on, and reported to Bob as done.
