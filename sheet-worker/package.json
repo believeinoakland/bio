@@ -1,0 +1,15 @@
+{
+  "name": "sheet-worker",
+  "private": true,
+  "type": "module",
+  "version": "0.79.0",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "build:engine": "node scripts/build-engine.mjs",
+    "test": "node --test test/"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12",
+    "miniflare": "4.20260730.0"
+  }
+}

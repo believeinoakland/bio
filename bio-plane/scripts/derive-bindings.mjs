@@ -43,13 +43,13 @@ const KNOWN_BINDING_KEYS = [
  * `version` comes from the deploy argument (resolve-version has already
  * refused any skew against the config's own vars.VERSION, so the two agree
  * by the time this runs — the argument is used because it is the one the
- * rollout gate waits for). `instanceClaudeToken` is DS-3's cascade value,
- * included only when the operator's environment carries it. `instanceAiToken` is
+ * rollout gate waits for). It never carries a Claude credential (K1502): the
+ * instance binds no Claude account, so no argument can add one. `instanceAiToken` is
  * D-260's organisation `ai` credential (DIST-9), carried the same way and NEVER
  * generated here: a member mints it on the instance, so a deploy only carries
  * the value the operator's environment holds.
  */
-export function deriveBindings(cfg, { slug, version, instanceClaudeToken, instanceAiToken } = {}) {
+export function deriveBindings(cfg, { slug, version, instanceAiToken } = {}) {
   if (!slug) throw new Error("REFUSED [NO_SLUG]: the binding derivation needs the instance slug — a default would be the hardcoded name D-292 exists to forbid.");
   if (!version) throw new Error("REFUSED [NO_VERSION]: the binding derivation needs the version the rollout gate will wait for.");
 
@@ -88,9 +88,6 @@ export function deriveBindings(cfg, { slug, version, instanceClaudeToken, instan
     if (!cfg.browser || typeof cfg.browser.binding !== "string" || !cfg.browser.binding)
       throw new Error("REFUSED [BROWSER_BINDING_UNNAMED]: wrangler.jsonc declares `browser` without a `binding` name.");
     bindings.push({ type: "browser", name: cfg.browser.binding });
-  }
-  if (instanceClaudeToken) {
-    bindings.push({ type: "secret_text", name: "INSTANCE_CLAUDE_TOKEN", text: instanceClaudeToken });
   }
   if (instanceAiToken) {
     bindings.push({ type: "secret_text", name: "INSTANCE_AI_TOKEN", text: instanceAiToken });

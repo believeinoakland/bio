@@ -93,7 +93,15 @@ test("R7 T33 practice: minutes_due_days with count calendar (absent) or business
   for (const count of ["calendar", "business"]) assert.ok(breakT((p) => { p.practice.minutes_due_days.count = count; }).ok, count);
   assert.ok(breakT((p) => { delete p.practice.minutes_due_days.count; }).ok, "count is optional: calendar");
   for (const bad of ["working", "", 1]) assert.ok(hasError(breakT((p) => { p.practice.minutes_due_days.count = bad; }), "COUNT_UNKNOWN", "practice.minutes_due_days.count"));
-  assert.deepEqual(get(FIRST).practice.minutes_due_days, { value: 10, count: "business", basis: "2026-10-05 time-law" });
+  assert.deepEqual(get(FIRST).practice.minutes_due_days, { value: 10, count: "business", closures: "city", basis: "2026-10-05 time-law" });
+  /* K1533: closures names one of the profile's closure lists */
+  assert.ok(breakT((p) => { p.practice.minutes_due_days.closures = "court"; }).ok);
+  assert.ok(breakT((p) => { delete p.practice.minutes_due_days.closures; }).ok, "absent: a business count's due is undetermined");
+  for (const bad of ["nowhere", "", 3]) assert.ok(hasError(breakT((p) => { p.practice.minutes_due_days.closures = bad; }), "VALUE_INVALID", "practice.minutes_due_days.closures"), String(bad));
+  assert.ok(hasError(breakT((p) => { p.holidays = p.holidays.filter((h) => h.list !== "town"); }), "VALUE_INVALID", "practice.minutes_due_days.closures"));
+  assert.equal(combine([FIRST]).view.practice.minutes_due_days.closures, "city");
+  const cl = combine([TEST, other((b) => { b.practice.minutes_due_days.closures = "court"; })]);
+  assert.ok(cl.conflicts.some((x) => x.at === "practice.minutes_due_days"), "one value, its closures part of it");
   /* one value, its count part of it */
   const c = combine([TEST, other((b) => { b.practice.minutes_due_days.count = "business"; })]);
   assert.deepEqual(c.conflicts.map((x) => x.at), ["practice.minutes_due_days"]);
@@ -620,7 +628,19 @@ test("R6 K1513 K1517 roster words with a kind, roster headers with a role, and t
   assert.ok(any("budget_book_titles", "FY 2023-25 Adopted Policy Budget").length);
   assert.ok(any("financial_headings", "Primary Gove rnme nt Statement of Ne t Position").length, "letter-spaced headings");
   assert.ok(any("fiscal_year_forms", "FY13-15").length && any("fiscal_year_forms", "FY2024").length);
-  assert.deepEqual(v.budget_headers.map((h) => h.column), ["fund", "org", "program", "account", "project", "department"]);
+  /* the measured Socrata line items' headers, three cycles (B8; money-people §2, legistar-events §3) */
+  const column = (h) => (v.budget_headers.find((e) => rx(e).test(h)) || {}).column;
+  const cycles = {
+    "FY2013-15": [["budget", "period"], ["department", "department"], ["org_code", "org"], ["fund_code", "fund"], ["project_code", "project"],
+      ["program_code", "program"], ["account_code", "account"], ["amount", "amount"]],
+    "FY2015-17": [["budget_year_name", "period"], ["org", "org"], ["fund", "fund"], ["project", "project"], ["program", "program"],
+      ["account", "account"], ["amt", "amount"]],
+    "FY2019-21": [["fund", "fund"], ["prog", "program"], ["acct", "account"], ["fy17_18_actuals_final_year", "amount"],
+      ["fy18_19_midcycle_adopted", "amount"], ["fy19_20_biennial_working", "amount"]],
+  };
+  for (const [cycle, rows] of Object.entries(cycles)) for (const [h, want] of rows) assert.equal(column(h), want, `${cycle} ${h}`);
+  for (const h of ["description", "fund_name", "fy2019", "budgets"]) assert.equal(column(h), undefined, h);
+  for (const h of ["General Purpose Fund Revenue", "Expenditures By Fund"]) assert.ok(any("financial_headings", h).length, h);
 });
 
 test("R52 K1513 classification_schemes: forms and the project kind; the first profile's fund, org, department, program, account and project codes", () => {
@@ -634,6 +654,7 @@ test("R52 K1513 classification_schemes: forms and the project kind; the first pr
   const reads = (scheme, value) => f.find((x) => x.scheme === scheme).forms.some((p) => new RegExp(p.re, p.flags || "").test(value));
   assert.ok(reads("oakland_fund", "FD_1010") && reads("oakland_fund", "1010"));
   assert.ok(reads("oakland_org", "OR_01111") && reads("oakland_program", "PG_IP01") && reads("oakland_account", "51111"));
+  assert.ok(reads("oakland_org", "11") && reads("oakland_org", "1111") && !reads("oakland_org", "1") && !reads("oakland_org", "OR_1"), "FY2013-15's bare org codes");
   assert.ok(reads("oakland_project", "PJ_1000001") && reads("oakland_project", "1003439"));
   assert.ok(reads("oakland_department", "DP1000") && reads("oakland_department", "DPCC0") && !reads("oakland_department", "DP1"));
   assert.equal(f[0].codes.find((c) => c.code === "1010").label, "General Purpose Fund");
