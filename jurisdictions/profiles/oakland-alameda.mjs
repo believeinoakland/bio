@@ -271,6 +271,8 @@ export default {
     financial_headings: [
       "Statement of Net Position", "Statement of Activities", "Statement of Cash Flows", "Balance Sheet", "Budget and Actual",
       "Summary Table By Fund", "Citywide Classification Summary", "Property Tax Levies and Collections",
+      /* the budget book's OpenGov-rendered pages (BB23 p148; the department pages, p283) */
+      "General Purpose Fund Revenue", "Expenditures By Fund",
     ].map((h) => ({ pattern: { re: h.replace(/ /g, "").split("").join(R`\s*`), flags: "i" }, basis: "2026-10-05 money-people" })),
     fiscal_year_forms: [
       /* a biennial budget: FY13-15, FY2023-25, FY25-27 */
@@ -278,20 +280,28 @@ export default {
       /* an ACFR's year: FY2024 */
       { pattern: { re: R`\bFY\s?(\d{4})\b(?!-)`, flags: "i" }, basis: "2026-10-05 money-people" },
     ],
+    /* The headers of the Socrata budget line items, FY2013-15 `vmzx-e5fe` (budget, department, org_code, fund_code,
+       project_code, program_code, account_code, amount), FY2015-17 `urid-amga` (budget_year_name, …, org, fund, amt) and
+       FY2019-21 `m4jd-q2c4` (prog, acct, and one amount column per period such as fy18_19_midcycle_adopted)
+       (money-people §2, legistar-events §3; read by BUDGET-DOCTYPES, P9). */
     budget_headers: [
-      { column: "fund", pattern: { re: R`^Fund$`, flags: "i" }, basis: "2026-10-05 money-people" },
-      { column: "org", pattern: { re: R`^Org$`, flags: "i" }, basis: "2026-10-05 money-people" },
-      { column: "program", pattern: { re: R`^Program$`, flags: "i" }, basis: "2026-10-05 money-people" },
-      { column: "account", pattern: { re: R`^Account$`, flags: "i" }, basis: "2026-10-05 money-people" },
-      { column: "project", pattern: { re: R`^Project$`, flags: "i" }, basis: "2026-10-05 money-people" },
-      { column: "department", pattern: { re: R`^Department$`, flags: "i" }, basis: "2026-10-05 legistar-events" },
+      { column: "fund", pattern: { re: R`^fund(?:_code)?$`, flags: "i" }, basis: "2026-10-05 money-people, 2026-10-05 legistar-events" },
+      { column: "org", pattern: { re: R`^org(?:_code)?$`, flags: "i" }, basis: "2026-10-05 money-people, 2026-10-05 legistar-events" },
+      { column: "program", pattern: { re: R`^(?:program(?:_code)?|prog)$`, flags: "i" }, basis: "2026-10-05 money-people, 2026-10-05 legistar-events" },
+      { column: "account", pattern: { re: R`^(?:account(?:_code)?|acct)$`, flags: "i" }, basis: "2026-10-05 money-people, 2026-10-05 legistar-events" },
+      { column: "project", pattern: { re: R`^project(?:_code)?$`, flags: "i" }, basis: "2026-10-05 money-people, 2026-10-05 legistar-events" },
+      { column: "department", pattern: { re: R`^department$`, flags: "i" }, basis: "2026-10-05 legistar-events" },
+      { column: "amount", pattern: { re: R`^(?:amount|amt)$`, flags: "i" }, basis: "2026-10-05 money-people, 2026-10-05 legistar-events" },
+      { column: "amount", pattern: { re: R`^fy\d{2}_\d{2}_[a-z0-9_]+$`, flags: "i" }, basis: "2026-10-05 money-people, 2026-10-05 legistar-events" },
+      { column: "period", pattern: { re: R`^(?:budget|budget_year_name)$`, flags: "i" }, basis: "2026-10-05 money-people, 2026-10-05 legistar-events" },
     ],
   },
 
   practice: {
     /* A threshold for raising a question, never for asserting a violation: OMC 2.20.160's draft minutes, "no later
-       than ten business days after the meeting" (time-law §2; K1504), correcting the code's earlier 21 days. */
-    minutes_due_days: { value: 10, count: "business", basis: "2026-10-05 time-law" },
+       than ten business days after the meeting" (time-law §2; K1504), correcting the code's earlier 21 days; an ordinance's
+       business days skip the City's list (K1504 (5), K1533). */
+    minutes_due_days: { value: 10, count: "business", closures: "city", basis: "2026-10-05 time-law" },
   },
   locale: { value: "en-US", basis: "UNMEASURED" },
   /* California's statutory time (Gov. Code § 6808), by its IANA name. */
@@ -432,7 +442,9 @@ export default {
   classification_schemes: [
     { scheme: "oakland_fund", label: "fund", kind: "fund", forms: [{ re: R`^FD_\d{4}$` }, { re: R`^\d{4}$` }],
       codes: [{ code: "1010", label: "General Purpose Fund" }], basis: "2026-10-05 money-people, 2026-10-05 legistar-events" },
-    { scheme: "oakland_org", label: "organisation (org)", kind: "organisation", forms: [{ re: R`^OR_\d{5}$` }], basis: "2026-10-05 money-people" },
+    /* `OR_01111` in the budget tables; the FY2013-15 line items write the bare code (`11`, `1111`) */
+    { scheme: "oakland_org", label: "organisation (org)", kind: "organisation", forms: [{ re: R`^OR_\d{5}$` }, { re: R`^\d{2,5}$` }],
+      basis: "2026-10-05 money-people, 2026-10-05 legistar-events" },
     { scheme: "oakland_department", label: "department", kind: "organisation", forms: [{ re: R`^DP(?:\d{3,4}|CC0)$` }],
       codes: [{ code: "DP010", label: "Mayor" }, { code: "DP1000", label: "Police" }, { code: "DP350", label: "Transportation" },
         { code: "DP660", label: "Police Commission" }, { code: "DP700", label: "Violence Prevention" }, { code: "DPCC0", label: "Council" }],
