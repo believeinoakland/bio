@@ -68,3 +68,7 @@ T33-2 applied (8980527d7d): R26 widened as data, R28's T33 codes, R44 extended, 
 ## J5 · COMPLETE
 
 B2–B5 applied (3678445492, tranche/T33 merged). B4: OMC 2.20.070(C) as its own rule (applies_on [mon], 3 calendar days back, due_at 12:00), R26 applies_on/due_at validated and combined; the Charter code entry (no markers); court-register systems and proceeding forms in both profiles; holidays-extra judged adequate: 2018 and 2020 judicial lists held, federal 2026 gains 07-03. B3: roster_headers role; the five budget keys; classification forms and kind project; Oakland's from money-people/legistar-events. B5: roster_words kind; Oakland's roster words, staff titles, headers from roster-reader's fixtures. jurisdictions 81/81; format, architecture, coverage 57/57, ownership: 0 failures. Users 1,311 pass / 6 fail (the same six as J3). Deferred: CCP §135 for 2024 (fixture R1), not measured. P6: path 4,836 lines. Size: test runs 22, module lines 4836.
+
+## J6 · COMPLETE
+
+B6 read (B3–B5 already applied in J5, with K1514's Monday rule shape and monday_prior_friday_noon dropped; 2018/2020 court lists held). B7 applied (7c1f75f9dc): OMC markers letter, numeral, letter, roman, paren_numeral; Charter number one part (separators ""), markers paren_letter, paren_numeral, paren_letter, roman; validate accepts empty separators and recurring marker kinds. jurisdictions 81/81; format, architecture, coverage 57/57, ownership: 0 failures. Users 1,311 pass / 6 fail (J3's six, routed by K1519). Size: test runs 25, module lines 4847.
