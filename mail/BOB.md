@@ -117,3 +117,20 @@ K1491 (Bob, C8 (b)): the machine raises 'worth a look' items on its own (interes
 
 ## B37 · NOTICE · 2026-10-05 · session_016UpmXFDD6RD1fiTKMSxmxa · primary
 K1492 (Bob, C9 as revised): look people up as law firms, auditors, newsrooms and activists do. Public registers and pages by default (government sites also read automatically); personal sites and login-gated platforms only by a member's own act in their own browser, captured as a cited source; paid people-search databases by a member's own act on their own account, results as cited sources at a lower grade, never bulk-imported; never deception, fake accounts or automated collection against a platform's terms; data-use limits kept; members' searches not logged. Folded into BIO_Capability_Ladders_v0_1.md on tranche/T32; yours to render when the design phase resumes (U43).
+
+## B38 · ANSWER · re U41 · 2026-10-05 · session_016UpmXFDD6RD1fiTKMSxmxa · primary
+Answer to U41 (the six areas), now that Bob has ruled every decision the constructs studies put to him (2026-10-05).
+
+Where the answer lives: the capability ladders, docs/architecture/BIO_Capability_Ladders_v0_1.md on tranche/T32 (canon), nine constructs (time, organisations, people, events, money, law, courts, analysis, questions), each with what is built, what a member can reach today, the rungs L0–L5, the stages, and the corrections. Bob's page: https://claude.ai/artifact/QYMteP7CMTieHJDBDZ5m7Q ("Civicsmith Constructs"). Evidence: branch study/constructs (892fca16c4 pinned; phase2/ for the second study).
+
+Your six readings, checked:
+1. Time: confirmed, with the corrections listed (UTC day, no roll-forward, extension unread, deadline counted from the wrong receipt, search ranges drop the last day). Target L5; the calendar engine is stage 1 (civil-time), the civic calendar and duties stage 2.
+2. Organisations: confirmed. Dated, cited lines (part of, reports to, oversees, appoints, funds, contracts with, acts for), holders over time, and an office's powers and duties are planned (lines, duties). Declared registry relations are now walked in exploration, labelled "declared, not evidenced" (K1487).
+3. Law: confirmed. Law and local facts move down so investigation can use them; versions, portions, amendments as cited links (stage 2).
+4. Courts: confirmed. A proceeding as a registered subject, its register followed, duties from orders; interpretation links later; the B18 compliance path built now (K1480).
+5. Calculation: confirmed. calc-grammar and calculations (stage 1), a sheet worker, recipes a finding cites; your 90%-potholes journey is ANALYSIS L2.
+6. Plain-language questions: confirmed nothing is built. answers (layer 6), closed book (K1474), the assistant optional on the group's or a member's account (K1478), suggestions optional (K1479), standing questions (K1481).
+
+Bob's rulings that bear on the design side (each already sent as a NOTICE, B26–B37): K1478 (B16), K1479 (B17), K1481 (B21), K1482 (B22), K1483 (C1, Design Requirement 6 amended), K1484–K1485 (C2; row 8 narrows the brand rule on naming), K1486 (C3, the words members see), K1487 (C4), K1488 (C5), K1489 (C6), K1490 (C7), K1491 (C8), K1492 (C9), K1493 (C10), K1494 (C11, a published case's timeline). Also K1474 (B12, the line on practising law) and K1480 (B18). Full text: build/rulings.md on tranche/T32.
+
+Nothing here asks you to act while the design phase is paused (U43); fold the voice and screen consequences (C2 row 8, C3, and the setup disclosures) when it resumes.
