@@ -347,11 +347,15 @@ export function codePatterns(ctx) {
 }
 
 /** The view's `practice` value for `name`, or null when no profile supplies it (or
- *  profiles disagreed and it was withheld, jurisdictions R15). */
+ *  profiles disagreed and it was withheld, jurisdictions R15). `count` is the unit the
+ *  profile counts it in (`business`, `calendar`) when it states one, else null: a reader
+ *  must never count business days as calendar days (OMC 2.20.160; K1519). */
 export function practiceValue(ctx, name) {
   const p = readerView(ctx).practice;
   const v = p && p[name];
-  return v && Number.isInteger(v.value) && v.value > 0 ? { value: v.value, basis: v.basis || null } : null;
+  return v && Number.isInteger(v.value) && v.value > 0
+    ? { value: v.value, basis: v.basis || null, count: typeof v.count === "string" && v.count ? v.count : null }
+    : null;
 }
 
 /** An entity a content type found in a document. `key` must be stable across
