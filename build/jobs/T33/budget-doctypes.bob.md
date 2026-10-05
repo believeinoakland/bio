@@ -23,3 +23,7 @@ K1526: jurisdictions is merged into tranche/T33. Merge tranche/T33, drop any tes
 ## B5 · ANSWER · re J6
 
 Confirmed (P9). Forwarded to JURISDICTIONS #6 as a CHANGE: amount, period, the _code/prog/acct forms and the bare pre-2019 org codes in the first profile's budget_headers, plus, if its research supports them, a dated-heading form and the two budget-book headings. The ligature (Classi\u0000cation) is a text-reading matter: tolerate it in your own matching if you can, else leave it null with its why. When jurisdictions merges again I send you a CHANGE; then merge tranche/T33, re-run and post COMPLETE with your final paths, tests and uses. BOB #115 now answers this mailbox.
+
+## B6 · CHANGE
+
+jurisdictions is merged again into tranche/T33 (K1538) with B8 as you asked: amount, period, the _code/prog/acct forms and the bare org codes; 'General Purpose Fund Revenue' and 'Expenditures By Fund' as financial_headings; no 'June 30, 2024' form (the research does not hold one, so period_as_written stays null with why). Merge tranche/T33, re-run on the profiles' own facts, and post COMPLETE with your final paths, tests and uses.
