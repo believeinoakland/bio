@@ -22,7 +22,7 @@ It began as the design session's question U41 (`mail/UX-DESIGN`, entry U41). Its
 | 1→2 Registers | X-REGISTER | `digest/DOCTRINE-REGISTER.md`, `digest/CROSS-REGISTER.md` (the shared doctrine and cross-construct sections, de-duplicated once so six analysts need not each read 400 KB) | `prompts/X-REGISTER.txt` |
 | 2 Analysis | A-TIME, A-ORGANISATIONS, A-LAW, A-COURTS, A-ANALYSIS, A-QUESTIONS | `studies/<CONSTRUCT>.md` | `ANALYSIS-PROTOCOL.md` |
 | 3 Review | R-* (written when phase 2 starts) | `reviews/R-<id>.md` | `REVIEW-PROTOCOL.md` |
-| 4 Synthesis | BOB itself | `synthesis/constructs.md` and a rendered page for Bob | below |
+| 4 Synthesis | S-SYNTHESIS drafts; BOB reviews it against the studies, then renders it for Bob | `synthesis/constructs.md`, then a rendered page | `SYNTHESIS-PROTOCOL.md`, and below |
 
 Every unit's exact prompt is `prompts/<id>.txt`. `python3 status.py` reads each unit's state from its output alone (missing, partial, done) and rewrites `STATE.md`.
 
@@ -35,7 +35,7 @@ Every unit's exact prompt is `prompts/<id>.txt`. `python3 status.py` reads each 
 6. When phase 1 is all `done`: `python3 build-digests.py`, then X-REGISTER, push, then phase 2. When phase 2 is done: phase 3, then phase 4.
 
 ## Phase 4, the synthesis (BOB's own work)
-Read every `studies/*.md` and `reviews/*.md` whole. Write `synthesis/constructs.md`:
+A synthesis worker (S-SYNTHESIS) reads every `studies/*.md` and `reviews/*.md` whole and drafts `synthesis/constructs.md` (P13 and mechanics §5.9: bulk reading goes to a short-lived worker whose output BOB reviews). BOB then reviews the draft against the studies, corrects it, and renders it. The draft covers:
 - per construct, the levels of support, where the system stands (built, and reachable by a member), the target and the architecture, and how to proceed in stages;
 - the architecture across constructs: obligations (who owes what to whom, by when, under which authority) as the thread joining organisations, law, time and courts; where `standards`, `consequences`, `action-clocks` and `local-facts` sit in the total order (today layer 9, after Publication, so neither inquiry nor the assistant can use them); where the assistant's question-answering sits;
 - the decisions that are Bob's (P17: policy and doctrine, requirements' meaning, layers and product modules, UX), each with options and a recommendation; everything lower-level stated as decided.
@@ -51,3 +51,8 @@ Sessions on one account cannot see, message, archive or wake sessions on the oth
 - Process history (TRANSITION, VERIFICATION, ORCHESTRATION, PARALLELISM, WORK-PIPELINE, UI-PLAN, CORPUS-STANDARD, the old placement table on `coord`), tranche plan drafts `build/plan/draft-T*.md`, `t*-*.md` notes, `approvals-study/`, `action-fold/`: their substance is folded into the requirements the M readers read.
 - Raw logs and inventories (MEASUREMENTS 1.4 MB, INTERFACES, INTERFACE-CHANGES, CIVICOS_UI_STATE; the design branch's `ux-substrate-v2.json` and `openQuestions`): derived from sources read whole; open questions' rulings are in the DEC ledgers.
 - Requirements of the ~50 modules outside the constructs (capture, signatures, record core, publication internals, distribution).
+
+**If a worker's file write is refused** (one analyst's Write was refused as "subagents should return findings as text"), it returns the full text instead: save it to the unit's output path yourself (BOB #110 did this for `studies/ANALYSIS.md`, keeping the worker's summary as `studies/ANALYSIS.summary.md`).
+
+## State at handoff (BOB #110, 2026-10-05 ~02:30 UTC, usage at 99%)
+Phase 1 (20 readers), the registers and phase 2 (six studies) are done. Phase 3 had started: R-1, R-2 and R-3 were stopped mid-review to save usage; resume each from its `reviews/R-<n>.md` if present (checkpoint rule), else start it fresh. Then S-SYNTHESIS, then BOB's review and the rendered page. `NEXT-BOB-PROMPT.md` is the prompt Bob uses to start the successor. Findings BOB #110 had already told Bob: the assistant takes no plain-language question today; law, deadlines and calculation sit after Publication; the deadline calculator rolls nothing past weekends or holidays and counts in UTC (a correction to make, not a decision); the setup page asks for a "Claude subscription" while the code needs an API key (R-3 was to verify the terms and the cost estimate before it goes to Bob).

@@ -1,0 +1,1 @@
+You are the synthesis worker in a study for BOB, the architecture session of the Civicsmith product. Work in the study folder (this folder: the one holding READING-PROTOCOL.md). Read SYNTHESIS-PROTOCOL.md there whole and follow it exactly. Write synthesis/constructs.md.

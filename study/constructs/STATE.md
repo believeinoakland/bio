@@ -23,7 +23,7 @@
 | M4 | prompts/M4.txt | notes/M4.md | done |  |
 | M5 | prompts/M5.txt | notes/M5.md | done |  |
 | X-REGISTER | prompts/X-REGISTER.txt | digest/DOCTRINE-REGISTER.md | done |  |
-| A-ANALYSIS | prompts/A-ANALYSIS.txt | studies/ANALYSIS.md | partial | working files only: ANALYSIS.md.work |
+| A-ANALYSIS | prompts/A-ANALYSIS.txt | studies/ANALYSIS.md | done |  |
 | A-COURTS | prompts/A-COURTS.txt | studies/COURTS.md | done |  |
 | A-LAW | prompts/A-LAW.txt | studies/LAW.md | done |  |
 | A-ORGANISATIONS | prompts/A-ORGANISATIONS.txt | studies/ORGANISATIONS.md | done |  |
@@ -32,5 +32,6 @@
 | R-1 | prompts/R-1.txt | reviews/R-1.md | missing |  |
 | R-2 | prompts/R-2.txt | reviews/R-2.md | missing |  |
 | R-3 | prompts/R-3.txt | reviews/R-3.md | missing |  |
+| S-SYNTHESIS | prompts/S-SYNTHESIS.txt | synthesis/constructs.md | missing |  |
 
 Digests built: ANALYSIS.md, COURTS.md, CROSS-REGISTER.md, CROSS.md, DOCTRINE-REGISTER.md, DOCTRINE.md, LAW.md, ORGANISATIONS.md, QUESTIONS.md, TIME.md

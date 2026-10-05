@@ -7,6 +7,7 @@ UNITS = json.load(open(f"{S}/units.json")) if os.path.exists(f"{S}/units.json") 
 def out_path(uid):
     if uid.startswith("A-"): return f"studies/{uid[2:]}.md"
     if uid == "X-REGISTER": return "digest/DOCTRINE-REGISTER.md"
+    if uid == "S-SYNTHESIS": return "synthesis/constructs.md"
     if uid == "X-REGISTER":
         c = f"{S}/digest/CROSS-REGISTER.md"
         ok = "## Coverage check" in t and os.path.exists(c) and "## Coverage check" in open(c, encoding="utf-8").read()
@@ -25,6 +26,8 @@ def state(uid):
         c = f"{S}/digest/CROSS-REGISTER.md"
         ok = "## Coverage check" in t and os.path.exists(c) and "## Coverage check" in open(c, encoding="utf-8").read()
         return ("done", "") if ok else ("partial", "registers unfinished")
+    if uid == "S-SYNTHESIS":
+        return ("done", "") if re.search(r"^## 6\.?\s|^## Sources", t, re.M) else ("partial", "sections 1-6 not all written")
     if uid.startswith("R-"):
         return ("done", "") if "## Verdict" in t else ("partial", "no verdict yet")
     cert = re.search(r"^## Reading certificate\n(.*?)(?=^## )", t, re.S | re.M)
@@ -43,7 +46,7 @@ def state(uid):
     if "## Cross-construct observations" not in t: problems.append("final section not written")
     return ("done", "") if not problems else ("partial", "; ".join(problems)[:400])
 units = sorted(os.path.basename(p)[:-4] for p in glob.glob(f"{S}/prompts/*.txt"))
-order = lambda u: (u.startswith("X-") or u.startswith("A-") or u.startswith("R-"), u.startswith("A-") or u.startswith("R-"), u.startswith("R-"), u[0], int(re.sub(r"\D", "", u) or 0), u)
+order = lambda u: (u[:2] in ("X-","A-","R-","S-"), u[:2] in ("A-","R-","S-"), u[:2] in ("R-","S-"), u.startswith("S-"), u[0], int(re.sub(r"\D", "", u) or 0), u)
 rows = [(u, *state(u)) for u in sorted(units, key=order)]
 digests = sorted(os.path.basename(p) for p in glob.glob(f"{S}/digest/*.md"))
 with open(f"{S}/STATE.md", "w", encoding="utf-8") as f:
