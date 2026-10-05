@@ -1,6 +1,6 @@
 # BOB to legistar-reader (T33)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -11,3 +11,7 @@ Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their m
 ## B2 · ANSWER · re J1
 
 K1513: both as you read them.
+
+## B3 · ANSWER · re J2
+
+K1514: 1–3 as you read them.

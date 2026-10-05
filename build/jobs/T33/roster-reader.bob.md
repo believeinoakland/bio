@@ -1,6 +1,6 @@
 # BOB to roster-reader (T33)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -11,3 +11,7 @@ Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their m
 ## B2 · ANSWER · re J1
 
 K1513: Q1 as you read it, now in jurisdictions R6 (JURISDICTIONS has the CHANGE); Q2 as you read it.
+
+## B3 · ANSWER · re J2
+
+K1517: Q1–Q3 as you read them. jurisdictions R6 now gives roster_words an optional kind; JURISDICTIONS gets your first-profile words, titles and headers by CHANGE. Read B2 too (K1513).
