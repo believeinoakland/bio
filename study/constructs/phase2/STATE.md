@@ -2,12 +2,12 @@
 
 | unit | prompt | output | state | note |
 |---|---|---|---|---|
-| C1 | prompts/C1.txt | notes/C1.md | partial | BIO_Action_v0_1.txt: read to 0 of 100; MILESTONES.txt: read to 0 of 602; UI-KICKOFF.txt: read to 0 of 229 |
-| C2 | prompts/C2.txt | notes/C2.md | partial | DECISIONS-design-branch.txt: read to 1897 of 2085 |
-| C3 | prompts/C3.txt | notes/C3.md | partial | BIO_Content_Framework_v0_10.txt: read to 2000 of 2712 |
+| C1 | prompts/C1.txt | notes/C1.md | partial | MILESTONES.txt: read to 0 of 602; UI-KICKOFF.txt: read to 0 of 229 |
+| C2 | prompts/C2.txt | notes/C2.md | done |  |
+| C3 | prompts/C3.txt | notes/C3.md | partial | BIO_Content_Framework_v0_10.txt: read to 2150 of 2712 |
 | C4 | prompts/C4.txt | notes/C4.md | done |  |
 | C5 | prompts/C5.txt | notes/C5.md | partial | CONTRADICTION-IDENTIFY-DESIGN.txt: read to 0 of 195; FINDINGS-WORKPLAN.txt: read to 0 of 130; RETRIEVAL-PROBE.txt: read to 0 of 197 |
-| C6 | prompts/C6.txt | notes/C6.md | partial | SOURCE-ACCESS.txt: read to 160 of 312; AUTHORITY-AND-TRUST.txt: read to 0 of 284; BIO_Communications_Platforms.txt: read to 0 of 353 |
+| C6 | prompts/C6.txt | notes/C6.md | partial | AUTHORITY-AND-TRUST.txt: read to 0 of 284; BIO_Communications_Platforms.txt: read to 0 of 353 |
 | C7 | prompts/C7.txt | notes/C7.md | done |  |
 | C8 | prompts/C8.txt | notes/C8.md | done |  |
 | C9 | prompts/C9.txt | notes/C9.md | partial | NOTIFICATIONS.txt: read to 0 of 441 |
@@ -16,10 +16,10 @@
 | C12 | prompts/C12.txt | notes/C12.md | done |  |
 | C13 | prompts/C13.txt | notes/C13.md | done |  |
 | C14 | prompts/C14.txt | notes/C14.md | done |  |
-| D1 | prompts/D1.txt | notes/D1.md | partial | design-ux-journeyExperience.txt: read to 460 of 1379; final section not written |
-| D2 | prompts/D2.txt | notes/D2.md | partial | design-ux-surfaceRules.txt: read to 2500 of 3473 |
+| D1 | prompts/D1.txt | notes/D1.md | partial | design-ux-journeyExperience.txt: read to 920 of 1379; final section not written |
+| D2 | prompts/D2.txt | notes/D2.md | partial | design-ux-surfaceRules.txt: read to 3000 of 3473 |
 | M1 | prompts/M1.txt | notes/M1.md | done |  |
-| M2 | prompts/M2.txt | notes/M2.md | partial | bias.txt: not started |
+| M2 | prompts/M2.txt | notes/M2.md | done |  |
 | M3 | prompts/M3.txt | notes/M3.md | partial | final section not written |
 | M4 | prompts/M4.txt | notes/M4.md | partial | final section not written |
 | M5 | prompts/M5.txt | notes/M5.md | partial | affordances.txt: not started; op-declarations.txt: not started; wizard-scripts.txt: not started; tasks.txt: not started; queue.txt: not started; control-plane.txt: not started; publication.txt: not started; corpus-export.txt: not started; final section not written |
