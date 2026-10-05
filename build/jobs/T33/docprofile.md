@@ -10,3 +10,20 @@ Started; B1 read. Four points, each with my best reading; I carry on on these re
 2. **The seam.** `docprofile/registry.mjs` exports `registerDoctype(type)` (the `register` that `doctypes.registerDoctypes(register)` is handed, doctypes R2), idempotent by `key` (a second registration of a key registers nothing and returns the one already held), refusing a member with no `key` or no `detect` (stated, never thrown). `plane` (T33-90) calls `registerDoctypes(registerDoctype)` at composition.
 3. **The interim, a REPORT more than a question.** No code outside `docprofile/` imports a type (only `doctypes()` in my own tests, and `meetingCalendarType`, which nothing imports, so it goes with no read-through: a re-export of `doctypes` from here would be an import of a later module and fail the architecture check). But from my merge until plane's T33-90 merges, the product registers no type: `acquisition`, `monitoring`, `extraction` and `reading-pipeline` (all through `registry.mjs`) read every document as unrecognised, and their tests that expect a recognised type go red (I will list them by name at COMPLETE: at least `bio-plane/test/m/extraction/read.test.mjs` and `reading-pipeline/read.test.mjs`). Best reading: an accepted red under Rules (9) item 4, cleared by T33-90; the alternative is that each of those tests registers `doctypes`' types itself (a `uses` edge to doctypes for those modules), which is their jobs' and yours.
 4. **Shared helpers stay at `docprofile/doctypes/index.mjs`** (doctypes R3/Uses import them there), with `CONTRACT` and `CONFIDENCE`; `docprofile/doctypes/registry.mjs` keeps `doctypeFor`, `alsoFor`, `doctypes()` and the seam. My tests then exercise R4, R5, R11–R20, R29–R36 with stub types registered through the seam, never `doctypes`' (a later module).
+
+## Completion (T33-12, as answered by B2 / K1513)
+
+**Entries applied.** T33-12, as K1513 reshaped it: the registry seam and the no-type answer; the seven types stay registered by default; nothing is deleted.
+- `docprofile/doctypes/registry.mjs` (re-exported by `docprofile/registry.mjs`): `registerDoctype(type)` is the `register` that `doctypes.registerDoctypes` is handed. `plane` (T33-90) calls `registerDoctypes(registerDoctype)`. A held key is replaced in its own slot, so the load-bearing order is kept and `doctypes`' copies take over the seeds. A new key is appended. A member with no string key or no `detect` is refused with `{ok:false, why}`, never thrown. The registry is seeded with this module's seven types in their old order.
+- `NO_TYPE` (key `unregistered`, frozen, `fallback: true`, `SUBSTANCE`, no detect, parse or assess) is what `doctypeFor` gives, at NONE with its own `why`, when no registered type is a fallback. It also stops the shared engine's last resort, the last member, from standing as a type that recognised nothing. `readText` states `parse_error` "declares no reader". `assess` (`pipeline.mjs`) now stops at L5 with `changed` and `meaningful: null` for a type with no `parse` or `assess`; before, it reached the same answer through a caught TypeError.
+
+**Deferred.** Deleting this module's copies, and so the rest of R36 ("holds no content type"; the static imports gone), is N549 next tranche (K1513; hard reason: order). R29–R31's "not yet met: T33-12" parts are the types' and wait with it. At doctypes' merge a CHANGE merges `tranche/T33` here (B2).
+
+**Found in other modules.** None. No importer outside `docprofile/` uses a type directly, and the meaning of every service they use is unchanged.
+
+**Tests and checks.**
+- `node --test docprofile/test/*.test.mjs`: tests 54, pass 54, fail 0. New: `seam.test.mjs`, covering R36 and R4/R13/R19/R35 on the no-type path, with stub types only.
+- Importers: `bio-plane/test/m/{extraction,reading-pipeline,monitoring,acquisition}`: tests 370, pass 370, fail 0.
+- `format`: 0 failures. `architecture docprofile`: 20 files, 0 failures. `coverage docprofile`: 25 of 25 live ids, 0 failures. `ownership docprofile tranche/T33`: 0 failures.
+
+Size (session_01HaSoeitaf5svNuEMw8yMQN): test runs 4, module lines 5,087
