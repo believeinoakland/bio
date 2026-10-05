@@ -524,6 +524,26 @@ Each item below is policy, doctrine, the meaning of a requirement, layers and pr
 - **Words:** "obligation" for a body's duty and "power" for what an office may do; "lines" for the structure, with verbs ("reports to", "held by", "acts for"); "standard" for law, policy or a commitment held, "requirement" for one thing it requires, and "bar" always for the group's evidence threshold (view start-and-send's "The group's standard is…" changes); "proceeding" and "register" for court matters, never "case" or "docket".
 - **Recommend all,** for the design stream to render.
 
+## 5A. After Bob's ruling on B1 (K1432, 2026-10-05)
+
+**B1 ruled (c).** Every construct reaches L5, its full ladder, staged by dependency, "within what is realistically doable with the resources available and without slowing the system's everyday use". Bob: "I don't want to repeatedly find myself in real-world situations using the tool where the tool says, 'Oh sorry, I can't do that yet.'" Stage 4 (§4) no longer waits on a group asking; it follows stage 3 in dependency order. The capability ladders are preserved in the requirements canon as `docs/architecture/BIO_Capability_Ladders_v0_1.md`.
+
+**Recommendations revised by BOB #111.**
+- **B8:** the rule also governs sharing between groups (B22): a shared pack carries offices and lines, and holders only with their cited tenures.
+- **B12 (iv), new:** procedural reasoning for the group's own situation (COURTS L5; D-165's backward question). The machine lays out each condition with its source and the facts in the record that bear on it, marked met, unmet or undetermined as computed facts. It never says "you have standing" or what to file, and it routes to counsel. Recommend offering it on these terms. Rulings stay quote-only until their accuracy is measured (a quality gate, not a missing capability).
+- **B15 (c):** keyed services (Open States, a CourtListener token, regulations.gov) are built into every copy, off by default, and switched on by a group with its own key. No vendor key is ever required; (d) stays rejected.
+- **B18:** now recommend (b): design and build the path now.
+- **B19:** now recommend (b) now; (c) stays rejected under DEC-94 (3) unless Bob lifts it.
+
+**New decisions.**
+- **B21 · Standing questions (doctrine; QUESTIONS L5 against D13).** (a) Keep D13: standing questions are watched mechanically only. (b) A member authors a standing question with a cadence and an end date; a saved search re-runs on the scheduler first; the AI runs only when that finds something new, read-only, bounded, within the use ceiling; its answer reaches the queue once, labelled. (c) Unrestricted standing AI runs. **Recommend (b).**
+- **B22 · Sharing between groups (policy; ORGANISATIONS L5, LAW L5).** (a) Share a pack only by an explicit act; the receiving group accepts by a reasoned act (DEC-96); recreated, never installed, no inherited grade; holders only under B8. (b) Automatic sharing within a coalition. (c) No sharing. **Recommend (a).**
+
+**How Bob's two limits are kept (BOB's, decided and reported).**
+- *Everyday speed:* search, the queue, opening a question and reading the record each get a measured response budget, held by a test that fails any capability that breaks it. Heavy work (imports, large recomputation, watching registers, standing questions) runs in the background and stores its results; it never runs while a member waits.
+- *Realistic resources:* every capability is in every copy. Those that cost money or plan limits (keyed services, standing questions, the spreadsheet engine) are switched on per group. Each has a measured budget before it ships. At a limit the system says what it could not do, why, and what would do it.
+- *Where the world limits a rung,* it is built on the path that exists and says so: state courts offer no push alerts, so registers are read on a schedule; most city codes exist only on codifier sites, so they are captured section by section, while federal law and some states can be imported; PDF tables stay on checked transcription until a reader passes its measure.
+
 ## 6. Decided at BOB's level
 
 These are recorded once in `build/rulings.md` when acted on, and reported to Bob as done.
