@@ -1,0 +1,356 @@
+{
+ "source": "build/plan/measures-T33/legistar-events.md §5 (M-V3), read 2026-10-05; each start checked there against its agenda PDF masthead",
+ "zone": "America/Los_Angeles",
+ "events": [
+  {
+   "n": 1,
+   "body": "*Finance and Management Committee - CANCELLED",
+   "kind": "cancelled",
+   "start": "2024-01-09T09:30:00-08:00",
+   "EventId": 9016
+  },
+  {
+   "n": 2,
+   "body": "* Public Works And Transportation Committee",
+   "kind": "regular",
+   "start": "2024-03-26T11:30:00-07:00",
+   "EventId": 9077
+  },
+  {
+   "n": 3,
+   "body": "*Special Rules and Legislation Committee",
+   "kind": "special",
+   "start": "2024-03-28T10:00:00-07:00",
+   "EventId": 9098
+  },
+  {
+   "n": 4,
+   "body": "*Public Safety Committee",
+   "kind": "regular",
+   "start": "2024-04-09T18:00:00-07:00",
+   "EventId": 9087
+  },
+  {
+   "n": 5,
+   "body": "*Life Enrichment Committee",
+   "kind": "regular",
+   "start": "2024-04-23T16:00:00-07:00",
+   "EventId": 9095
+  },
+  {
+   "n": 6,
+   "body": "Special Concurrent Meeting of the Education Partnership Committee and the Oakland Unified School District Board of Education",
+   "kind": "special",
+   "start": "2024-05-06T16:30:00-07:00",
+   "EventId": 9117
+  },
+  {
+   "n": 7,
+   "body": "Concurrent Meeting of the Oakland Redevelopment Successor Agency/City Council/Geologic Hazard Abatement District Board",
+   "kind": "concurrent",
+   "start": "2024-06-04T15:30:00-07:00",
+   "EventId": 9121
+  },
+  {
+   "n": 8,
+   "body": "*Special Concurrent Meeting of the Oakland Redevelopment Agency/City Council",
+   "kind": "special",
+   "start": "2024-06-12T15:00:00-07:00",
+   "EventId": 9119
+  },
+  {
+   "n": 9,
+   "body": "*Finance & Management Committee",
+   "kind": "regular",
+   "start": "2024-07-09T09:30:00-07:00",
+   "EventId": 9145
+  },
+  {
+   "n": 10,
+   "body": "*Life Enrichment Committee - CANCELLED",
+   "kind": "cancelled",
+   "start": "2024-07-09T16:00:00-07:00",
+   "EventId": 9148
+  },
+  {
+   "n": 11,
+   "body": "*Community and Economic Development Committee - CANCELLED",
+   "kind": "cancelled",
+   "start": "2024-07-09T13:30:00-07:00",
+   "EventId": 9161
+  },
+  {
+   "n": 12,
+   "body": "Office of the Mayor Annual Recess Agenda",
+   "kind": "special",
+   "start": "2024-08-20T08:30:00-07:00",
+   "EventId": 9168
+  },
+  {
+   "n": 13,
+   "body": "*Special Concurrent Meeting of the Oakland Redevelopment Agency/City Council",
+   "kind": "special",
+   "start": "2024-10-07T09:30:00-07:00",
+   "EventId": 9205
+  },
+  {
+   "n": 14,
+   "body": "*Finance and Management Committee - CANCELLED",
+   "kind": "cancelled",
+   "start": "2024-10-22T09:30:00-07:00",
+   "EventId": 9210
+  },
+  {
+   "n": 15,
+   "body": "*Special Finance & Management Committee",
+   "kind": "special",
+   "start": "2024-10-22T09:00:00-07:00",
+   "EventId": 9197
+  },
+  {
+   "n": 16,
+   "body": "* Special Concurrent Meeting of the Oakland City Council, SSOC, CPAB, and Police Commission",
+   "kind": "special",
+   "start": "2024-10-29T18:00:00-07:00",
+   "EventId": 9206
+  },
+  {
+   "n": 17,
+   "body": "* Concurrent Meeting of the Oakland Redevelopment Successor Agency and the City Council",
+   "kind": "concurrent",
+   "start": "2024-11-12T15:30:00-08:00",
+   "EventId": 9215
+  },
+  {
+   "n": 18,
+   "body": "*Special Finance & Management Committee",
+   "kind": "special",
+   "start": "2024-11-19T08:30:00-08:00",
+   "EventId": 9217
+  },
+  {
+   "n": 19,
+   "body": "*Rules and Legislation Committee - CANCELLED",
+   "kind": "cancelled",
+   "start": "2024-11-28T10:30:00-08:00",
+   "EventId": 9235
+  },
+  {
+   "n": 20,
+   "body": "*Public Works And Transportation Committee - CANCELLED",
+   "kind": "cancelled",
+   "start": "2024-12-10T11:30:00-08:00",
+   "EventId": 9240
+  },
+  {
+   "n": 21,
+   "body": "*Special Community & Economic Development Committee",
+   "kind": "special",
+   "start": "2024-12-10T13:00:00-08:00",
+   "EventId": 9229
+  },
+  {
+   "n": 22,
+   "body": "* Special Public Works And Transportation Committee",
+   "kind": "special",
+   "start": "2024-12-10T10:00:00-08:00",
+   "EventId": 9228
+  },
+  {
+   "n": 23,
+   "body": "*Rules & Legislation Committee",
+   "kind": "regular",
+   "start": "2025-01-30T10:30:00-08:00",
+   "EventId": 9269
+  },
+  {
+   "n": 24,
+   "body": "*Special Public Safety Committee",
+   "kind": "special",
+   "start": "2025-02-25T16:00:00-08:00",
+   "EventId": 9285
+  },
+  {
+   "n": 25,
+   "body": "Meeting of the Oakland City Council  - CANCELLATION",
+   "kind": "cancelled",
+   "start": "2025-04-01T15:30:00-07:00",
+   "EventId": 9309
+  },
+  {
+   "n": 26,
+   "body": "*Public Safety Committee - CANCELLED",
+   "kind": "cancelled",
+   "start": "2025-04-08T18:00:00-07:00",
+   "EventId": 9315
+  },
+  {
+   "n": 27,
+   "body": "Meeting of the Oakland City Council  - CANCELLATION",
+   "kind": "cancelled",
+   "start": "2025-05-20T15:30:00-07:00",
+   "EventId": 9338
+  },
+  {
+   "n": 28,
+   "body": "*Public Works And Transportation Committee - CANCELLED",
+   "kind": "cancelled",
+   "start": "2025-07-08T11:30:00-07:00",
+   "EventId": 9378
+  },
+  {
+   "n": 29,
+   "body": "*Community & Economic Development Committee",
+   "kind": "regular",
+   "start": "2025-07-22T13:30:00-07:00",
+   "EventId": 9381
+  },
+  {
+   "n": 30,
+   "body": "Office of the Mayor Annual Recess Agenda",
+   "kind": "special",
+   "start": "2025-08-19T08:30:00-07:00",
+   "EventId": 9388
+  },
+  {
+   "n": 31,
+   "body": "Special Concurrent Meeting of the Oakland Redevelopment Successor Agency/City Council",
+   "kind": "special",
+   "start": "2025-09-15T09:30:00-07:00",
+   "EventId": 9391
+  },
+  {
+   "n": 32,
+   "body": "*Special Education Partnership Committee",
+   "kind": "special",
+   "start": "2025-09-22T15:30:00-07:00",
+   "EventId": 9393
+  },
+  {
+   "n": 33,
+   "body": "* Special Public Works And Transportation Committee",
+   "kind": "special",
+   "start": "2025-09-30T11:30:00-07:00",
+   "EventId": 9402
+  },
+  {
+   "n": 34,
+   "body": "*Life Enrichment Committee - CANCELLED",
+   "kind": "cancelled",
+   "start": "2025-10-28T16:00:00-07:00",
+   "EventId": 9418
+  },
+  {
+   "n": 35,
+   "body": "*Rules & Legislation Committee",
+   "kind": "regular",
+   "start": "2025-11-06T10:30:00-08:00",
+   "EventId": 9422
+  },
+  {
+   "n": 36,
+   "body": "*Special Life Enrichment Committee",
+   "kind": "special",
+   "start": "2025-11-18T16:00:00-08:00",
+   "EventId": 9428
+  },
+  {
+   "n": 37,
+   "body": "*Rules and Legislation Committee - CANCELLED",
+   "kind": "cancelled",
+   "start": "2025-11-27T10:30:00-08:00",
+   "EventId": 9441
+  },
+  {
+   "n": 38,
+   "body": "Special Concurrent Meeting of the Oakland Redevelopment Successor Agency/City Council",
+   "kind": "special",
+   "start": "2025-12-16T13:00:00-08:00",
+   "EventId": 9450
+  },
+  {
+   "n": 39,
+   "body": "* Concurrent Meeting of the Oakland Redevelopment Successor Agency and the City Council",
+   "kind": "concurrent",
+   "start": "2026-01-06T15:30:00-08:00",
+   "EventId": 9451
+  },
+  {
+   "n": 40,
+   "body": "*Life Enrichment Committee",
+   "kind": "regular",
+   "start": "2026-01-13T16:00:00-08:00",
+   "EventId": 9457
+  },
+  {
+   "n": 41,
+   "body": "*Public Safety Committee - CANCELLED",
+   "kind": "cancelled",
+   "start": "2026-01-27T18:00:00-08:00",
+   "EventId": 9469
+  },
+  {
+   "n": 42,
+   "body": "*Community and Economic Development Committee - CANCELLED",
+   "kind": "cancelled",
+   "start": "2026-01-27T13:30:00-08:00",
+   "EventId": 9465
+  },
+  {
+   "n": 43,
+   "body": "* Public Works And Transportation Committee",
+   "kind": "regular",
+   "start": "2026-02-10T11:30:00-08:00",
+   "EventId": 9473
+  },
+  {
+   "n": 44,
+   "body": "*Public Safety Committee",
+   "kind": "regular",
+   "start": "2026-03-10T18:00:00-07:00",
+   "EventId": 9492
+  },
+  {
+   "n": 45,
+   "body": "*Special Rules and Legislation Committee",
+   "kind": "special",
+   "start": "2026-03-12T09:00:00-07:00",
+   "EventId": 9506
+  },
+  {
+   "n": 46,
+   "body": "*Community & Economic Development Committee",
+   "kind": "regular",
+   "start": "2026-03-24T13:30:00-07:00",
+   "EventId": 9498
+  },
+  {
+   "n": 47,
+   "body": "*Special Community & Economic Development Committee",
+   "kind": "special",
+   "start": "2026-04-21T13:30:00-07:00",
+   "EventId": 9518
+  },
+  {
+   "n": 48,
+   "body": "*Special Public Safety Committee",
+   "kind": "special",
+   "start": "2026-04-21T18:00:00-07:00",
+   "EventId": 9520
+  },
+  {
+   "n": 49,
+   "body": "Concurrent Meeting of the Oakland Redevelopment Successor Agency/City Council/Geologic Hazard Abatement District Board",
+   "kind": "concurrent",
+   "start": "2026-07-07T15:30:00-07:00",
+   "EventId": 9559
+  },
+  {
+   "n": 50,
+   "body": "*Finance & Management Committee",
+   "kind": "regular",
+   "start": "2026-09-22T09:30:00-07:00",
+   "EventId": 9580
+  }
+ ]
+}
