@@ -23,7 +23,7 @@ Sources: the digest (`digest/QUESTIONS.md`, cited by reader and source line), th
 | D.3 | What a term means | "What's a 'controlled audit' versus the audit that's required?" | regular | DEC-27 CREATE example; D273 ("Undetermined, because the city does not define it") |
 | **E** | **Time and obligations** | | | |
 | E.1 | When something is due, from whom | "When is the Clerk's reply to our records request due?" | core | RM CPRA example (X35); DEC-98 "every wait says what, from whom, by when" |
-| E.2 | What is late | "Which council minutes are overdue?" | regular | progressions overdue-successor (C.3 §8.2); docprofile `minutes_due_days` |
+| E.2 | What is late | "Which council minutes are overdue?" | regular | progressions overdue-successor (C3 §8.2); docprofile `minutes_due_days` |
 | E.3 | What's coming | "When does this come back to council?" | occasional (no meeting model) | journeys §6 "Meetings and time" |
 | **F** | **Organisations** | "Who is responsible for street repair, and who held that office in 2023?" | regular | journeys §6 "Offices and who held them"; actions R9 (an office, never a person) |
 | **G** | **Courts and proceedings** | "What's been filed in the city's lawsuit since we last looked?" | occasional | journeys §3 court/regulatory rows; §6 "Following a court case" |

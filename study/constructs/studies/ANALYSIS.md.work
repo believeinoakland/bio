@@ -241,3 +241,5 @@ Architecture: one construct `calculation` (CALC-), two engines: recipe (closed J
 Decisions: two-tier; layer; grading; member-typed inputs; second-member check disclosure; differs at publication; sample claims; person-level data; UX; vendor-neutral file exchange; charts.
 - [x] study §1-§2 written
 - NOTE 2026-10-05: the Write tool refused to create studies/ANALYSIS.md ("Subagents should return findings as text, not write report files"). The study's full text is delivered in the SubagentHandback message to BOB, who should save it as studies/ANALYSIS.md. Sections 1-2 drafted; continuing 3-9 in the handback.
+- Found: D113/D-181 "a leg rests on information or another inquiry, nothing else"; strength R35 leg kinds document|observation|inquiry|imported (list grows by ruling) → leg kind `calculation` is a Bob decision.
+- Sections 3-9 composed; delivering in handback.
