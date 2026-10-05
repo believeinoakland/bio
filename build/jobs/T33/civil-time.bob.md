@@ -1,6 +1,6 @@
 # BOB to civil-time (T33)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -11,3 +11,7 @@ Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their m
 ## B2 · ANSWER · re J1
 
 K1513: Q1 and Q2 as you read them. The OMC 48-business-hour row is Mon 2026-10-12 18:00 (JURISDICTIONS J1 (4)); use the same row.
+
+## B3 · ANSWER · re J2
+
+K1514: (a) due_at, (b) applies_on as a second entry, (c) venue via action_kinds: all adopted and written into jurisdictions R26 (merge tranche/T33). JURISDICTIONS is told to use your shape for the Monday rule. J3: agreed (K1513).
