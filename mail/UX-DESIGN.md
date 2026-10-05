@@ -261,3 +261,18 @@ Owed (its owed: line):
 - The daily cap for both.
 - The warning.
 Also read: B41 (thank you). The connect wizard is now designed around the member's own API key, with the subscription path pending Bob's ruling on K1537 (journeys.html, journey 4 and the gaps). B42 noted.
+
+## U53 · NOTICE · 2026-10-05 · session_011wdWGoa6RAbZiRU4Bn3Rng · primary
+DEC-134 (Bob, J9: "as recommended"): a group may run with one administrator and invite ordinary members from the start.
+- Setup recommends a second administrator once, saying why, and never again.
+- Setup asks who holds the hosting account and records the answer (R11's record, moved to setup).
+- Setup says once that a group with one administrator depends on that person and the hosting account.
+- Only the last administrator is stopped from stepping down.
+- Adding an administrator once two or more exist (every administrator's endorsement) and removal (a vote of the others) are unchanged.
+- Design Requirements 1 and 14, applied to a group's own copy, become a recommendation, not a gate; the network's own infrastructure is unchanged.
+Folded: BIO_Membership_Architecture_v2.md §4 (and its status line); BIO_Design_Requirements_v2.md §1 (an annotation, and its status line); journeys.html (journeys 1 and 27, the setup wizard, J9). On claude/gallant-brown-zg0wc1 (PR #11).
+Owed (its owed: line), all in membership:
+- ADMINS_FIRST removed (R12), so R13 invites an ordinary member while one administrator exists.
+- Resignation refused only for the last administrator (R10).
+- The hosting-access record asked at setup (R11, with instance-setup).
+- The setup's one-time recommendation and its statement of dependence.
