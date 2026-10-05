@@ -1,0 +1,69 @@
+{
+ "note": "The pinned Free Law Project packages the build reads (court-citations R3, R4). Each file is the wheel's own, unchanged, at the path it has in the wheel; the build refuses any file whose SHA-256 differs. Re-fetch: download the wheel, check its SHA-256, unpack it, and copy these files.",
+ "packages": [
+  {
+   "package": "reporters-db",
+   "version": "3.2.66",
+   "dir": "reporters-db-3.2.66",
+   "url": "https://pypi.org/project/reporters-db/3.2.66/",
+   "project": "https://github.com/freelawproject/reporters-db",
+   "wheel": {
+    "url": "https://files.pythonhosted.org/packages/9d/27/a4bd481f261428c9110c887a660bd30397f71627ab6e019536485b0faac9/reporters_db-3.2.66-py3-none-any.whl",
+    "sha256": "4627537cb6a9da321f10aaf06981c01b5312d665aa2a083cf5b26c875918aa83"
+   },
+   "licence": "BSD-2-Clause",
+   "licence_file": "reporters_db-3.2.66.dist-info/licenses/LICENSE",
+   "files": {
+    "reporters_db-3.2.66.dist-info/licenses/LICENSE": "a84c58fa06060e74682fe4808403a082a3472fc39e6e4ac299241df9f9c7f1be",
+    "reporters_db/data/regexes.json": "c91ff836e1b73d75b3546448c324d77bee338d9014637c738efd16fcb75ea47a",
+    "reporters_db/data/reporters.json": "2b20c0ff414a8003b1c164904e5f1db8ee2504a81ef49fba69c4413a83e3f10a"
+   }
+  },
+  {
+   "package": "courts-db",
+   "version": "0.10.27",
+   "dir": "courts-db-0.10.27",
+   "url": "https://pypi.org/project/courts-db/0.10.27/",
+   "project": "https://github.com/freelawproject/courts-db",
+   "wheel": {
+    "url": "https://files.pythonhosted.org/packages/4c/79/c0c10e34711f13258ab0f4299b1cd1eef4253298bb1e9f9131650a08ab87/courts_db-0.10.27-py3-none-any.whl",
+    "sha256": "3b47638caeaa30222231e754af3472273dfe8056d0fbd73da7f5d6857b99f27c"
+   },
+   "licence": "BSD-2-Clause",
+   "licence_file": "courts_db-0.10.27.dist-info/licenses/LICENSE",
+   "files": {
+    "courts_db-0.10.27.dist-info/licenses/LICENSE": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
+    "courts_db/data/courts.json": "89bc649f9cf2f99d40eb82577ffb642a734376b712cef8d3ae86daedbb188ac3",
+    "courts_db/data/places/al_counties.txt": "7a1434ef444792c32f37f67aa4618c54037dce54d7da9ecdab483a6a3ec37fe9",
+    "courts_db/data/places/al_districts.txt": "5d52c300e9d8a47357fade46b2842668bd3cb0ddf734495bb79eccea7ad18618",
+    "courts_db/data/places/al_municipals.txt": "463a5112b8113cf8315a843e8edb83942020de061dc2c57d4649cf6f445adcbd",
+    "courts_db/data/places/al_probates.txt": "5d52c300e9d8a47357fade46b2842668bd3cb0ddf734495bb79eccea7ad18618",
+    "courts_db/data/places/ar_circuits.txt": "a04dc6af9272c3235d20d2c92837a6dd05a4fac0912837a3f5312f54c6046840",
+    "courts_db/data/places/ar_cities.txt": "60e103307373eefcc66e8694a5b91391ee963fb0d491b84af785476add83ebf4",
+    "courts_db/data/places/ar_districts.txt": "ee29407ee9a4b94c9904bd8e98311c9368c3803ec6bcc4be997a6e6b8b9267f8",
+    "courts_db/data/places/az_cities.txt": "cfa43aefceae54938e35cc865dbcfeac2436c7589c071bc12b4263159ce98143",
+    "courts_db/data/places/az_superior_cts.txt": "e777090845fe5e3ea60020ad08ab55db1f7dc96d4cebbe6cfd282aa2cabe52fc",
+    "courts_db/data/places/ca_counties.txt": "98f79257319783bcf95a37580a22a0747cb4733098d9c10f79380b5ac9ef8404",
+    "courts_db/data/places/co_counties.txt": "c5dda4daeace847f1d749b173e49eab447ace62417c911252f25bd0506cc0008",
+    "courts_db/data/places/co_munis.txt": "2f973b99c53bbcbcb420975625d2aa68ee88e04f052d0fccdbb84d821a0e9fc7",
+    "courts_db/data/places/ct_superior.txt": "3309c4575d78ec9831808ff937b2e1e6633a16d8b35668bb72ea24a15167f9d7",
+    "courts_db/data/places/fl_counties.txt": "6e710b106c5aec7a50d41a2b5d70674205ba289a93bcc2d2aa7da39020bc5fd3",
+    "courts_db/data/places/ga_juvenile.txt": "874e5d297628072cd0c42b5d362f2d8c510d884b394292937ae310636c1a7e87",
+    "courts_db/data/places/ga_magistrates.txt": "874e5d297628072cd0c42b5d362f2d8c510d884b394292937ae310636c1a7e87",
+    "courts_db/data/places/ga_probates.txt": "874e5d297628072cd0c42b5d362f2d8c510d884b394292937ae310636c1a7e87",
+    "courts_db/data/places/ga_state_ct.txt": "4c085cc06eb851c448275dfe7f6f20ea5e4c9bb4dd31bceb60ba7cba014a8983",
+    "courts_db/data/places/gand_divisions.txt": "505aaa1c7aa8eb2a6ef02214019e7488c875872734c9cff09df02edb996664fa",
+    "courts_db/data/places/md_circuits.txt": "0f8cd2faba6cea58c1a05e0e9391689287ca38f6be371f4ee83630569e717021",
+    "courts_db/data/places/nj_counties.txt": "7ddc65efee09b432cc97c7e5a143bd9697fac9ef1f6c143594bf5bc7f4649681",
+    "courts_db/data/places/ny_cities.txt": "047a91d7bf0cb0db56be0c935c0de1e3c2b8c8b02f22de9a9dd2d62dee74e754",
+    "courts_db/data/places/ny_counties.txt": "84505e24901473b80af21037f6fdf519c8c721ece7ec22f96e3333586229c125",
+    "courts_db/data/places/ny_towns.txt": "0c2f381744a6307357c221098ebac7ea4d54b92b1ddc88d32bd5a63f5fb01d9a",
+    "courts_db/data/places/oh_counties.txt": "2adc0f3cf23a21837f24f2074469e8c4713a313a67c598192e6118ef27e7bb1e",
+    "courts_db/data/places/pa_places.txt": "d32c5c27bd3564ae370aaa04cdafee654dfb54f57bcab171e095faa6440713c4",
+    "courts_db/data/places/va_circuits.txt": "f75711b52e993cedb4b490fa4cde353bcb49be8d527c148306ca7ccab8085925",
+    "courts_db/data/places/va_cities.txt": "20b10d558d20a5aefffde1e35934a7364bdd84a6913ddacdfd18f5b70d1252b8",
+    "courts_db/data/variables.json": "3bfec2910df7681dfbc8cf53515fde477008dd7b1f80d95390790560c40d3d55"
+   }
+  }
+ ]
+}
