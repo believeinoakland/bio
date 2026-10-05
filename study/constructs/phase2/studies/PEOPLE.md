@@ -240,3 +240,125 @@ Strained, and how it is contained:
 *Founding case reads (X13):* "Who held Finance Director, Controller, City Administrator and Auditor while the sewer-fund transfers ran, FY2012–2021?" is `holderAt` per post per fiscal year (40 reads, each a handful of indexed rows), with RM App A's approximate tenures held as EDTF (`~2011/2014`) and "undetermined" where two lines overlap or none covers a year, never the profile's office as the holder. "Courtney Ruby, CPA, CFE" is two `credentialed_by` lines as the documents state them, unverified (D73). "Michael Houston was Whistleblower Program Manager during the investigation, then Auditor" is two `holds` lines, and an overlap with the investigation's events by date, never a claim about what he knew.
 
 *Everyday path:* a person page is one entity read, at most 500 lines by an index on `from`, at most 500 events by participant, and a resolutions count: bounded reads in the tens of milliseconds at these volumes, to be measured before stage 1 requirements are drafted (the measured precedent: retrieval at 20,000 documents under ~46 ms, D177). `overlaps(a, b)` reads a's and b's lines (dozens) and, per shared entity, its set size from an index: bounded. A shared employer of 5,000 is named "too common to walk" rather than expanded.
+
+## 5a. System requirements
+
+| requirement (brief) | how the design meets it, or where it strains and how that is contained |
+|---|---|
+| DR1, DR14 (no single person essential; shared administration) | Person data lives in the group's instance like every record; no person is an administrator by being in the registry; member ties are visible to administrators only (two-administrator floor unchanged) |
+| DR2 (works at every scale; one person with a few hours a week) | Nothing is typed by hand that a register supplies: seats, filers, licences arrive with identifiers (L5) or are seeded at A (K1443); a one-person group uses L1–L2 without the interest checks |
+| DR4 (quality by standards and reproducibility) | Every person fact cites its passage and grade; an overlap is its cited lines; nothing is computed from a person's reputation |
+| DR5 (each group keeps its own body of work; no canonical source) | The registry is per instance; no shared person register across groups (D189); sharing only by explicit act under B22 (Bob's, open) |
+| DR6 (metadata; individuals only in official capacity; disclosure of members' relationships) | The DR6 filter in `case-disclosures` (§5.8, P-B5); member ties disclosed at the member's chosen level (P-B3); predecessor accountability by `holderAt` |
+| DR8 (evidence apart from legal strategy) | Counsel packets may name holders as documented; risk to people (defamation by misidentification) is reduced by graded identity and the filter, not by legal advice |
+| DR11, DR13 (security guide; active opposition) | Pressure by named people recorded as evidence (actions R48) with the person resolvable; members' searches still unrecorded (D68); looking a person up outward is a tell, said at the act (UK DR-13) |
+| DR12 (AI advisory, no gate) | AI proposes people and lines; writes only identifier-backed rows, machine-attributed; never a gate |
+| DR15 (any jurisdiction) | Identifier schemes, register shapes, capacities and Form 700 schedules are profile data; the plane names no place (D99); tests use the test profile and no personal record (D86) |
+| Mission values and OP1, OP5, OP8 | No characterising word in Civicsmith's voice (brand §3); bad actors by evidence, never by role or person (D64); credentials stated, never weight (OP5); pressure as evidence (OP8) |
+| TAD and runtime (Workers, DO SQLite 10 GB, CPU, subrequests, one alarm) | §5.8 and §5.9: tens of thousands of lines under 100 MB; bounded indexed reads; imports and extraction on the one alarm in batches; no cron, no new Worker |
+| Everyday path (K1432) | Person reads are bounded single-index reads; overlaps are per request on two people; heavy work (imports, extraction, interest-check sweeps) in the background, results stored; queue producers for interest checks are bounded per read (X108: every producer adds to every queue read, so the interest-check producer reads a stored "new matches" table filled by the scheduler, never re-derives on the queue read) |
+| Security (least privilege, stamps, no dispatch) | Every author a stamp; member ties by the member's own session only; the asking grant reads person facts under the asker's view; `sources*` and member ties excluded from it |
+| Privacy and safety of people in the record | K1455 holds them fully; the protections are sight (project fence for testimony), the publication filter, expunge for what may not be held, no automated collection from terms-forbidden platforms (P-B8), and the root-of-trust exposure stated, not hidden (D185) |
+| Sovereignty, no required vendor key (D201) | Every adopted register is free and keyless or free-keyed per group, off by default (K1449); no people-search vendor |
+| Reproducibility, recreatability without Civicsmith (DEC-112) | A published case carries the person facts it relies on as cited legs; `corpus-export` widened to module tables (§5.4) so a group's people record leaves with it |
+| Publication rules | DR6 filter; sources by consent; third parties by their own act (D82); no redaction of carried materials (DEC-100 (2)) |
+| Module size and order (P4, P6) | `people` ~1,800–2,400 lines, after `events`; `lines` grows by kinds (ORGANISATIONS estimated ~1,800; with people's kinds ~2,300); the filter in `case-disclosures`, not `ratification` (3,987) or `publication` (4,619, already over) |
+| Testability (P7) | Every requirement with a negative control: a same-name pair that must not merge; a `not_same_as` that stops a proposal; an `ENT-` id past 9,999 accepted by inquiry, bias and actions; a hidden project's testimony line absent to an outsider; an overlap through a hub named "too common"; a DR6 pre-flight refusal; fixtures synthetic, never a real person's record (D86) |
+
+## 6. How to proceed
+
+Stages follow the first study's (synthesis §4) and Bob's K1432; nothing is planned until a tranche opens (K1425). Each "measure first" becomes an `M-<n>` before requirements are drafted (D141).
+
+**Stage 0 (runnable and correct).** Fix the `ENT-` width (§3; three grammars plus `record-core`) and test past 9,999; the add flow's named addressee (synthesis §7 item 8) is already listed. *Unlocks:* nothing new; removes a volume ceiling. *Size:* 3–5 requirement changes.
+
+**Stage 1 (the shared ground, with ORGANISATIONS O1 and TIME T1): L1 complete, L2 positions.** Scheme identifiers on entities; identity claims (`same_as`, `not_same_as`) and their reads; `holds` widened (capacity, organisation end); Legistar `Persons`/`OfficeRecords` seeding of seats and holders (machine-written at A); `holderAt`, `personAt`, `careerOf` (positions only), `staffingAt` over lines; the roster and org-chart reader emitting person references; minutes' movers and votes as references; `people` module created after `events` is placed (if `events` is a stage-2 module, `people` lands with its stage-1 reads only and gains `statementsOf` in stage 2; its position is fixed now so nothing moves later); query fields `person:`, `holder:`, `post:`; `corpus-export` widened; the DR6 filter (it guards every later rung, so it comes first). *Unlocks:* "who is the deputy director of planning, and who held it before" for any post a document names; "offices and who held them" beyond seats; the founding case's office holders by fiscal year; journey 13's addressee with its holder shown; predecessor accountability. *Size:* `people` new (or its first half), `entities`, `lines`, `docprofile`, `extraction`, `query-language`, `retrieval`, `case-disclosures`, `corpus-export` extended; about 35–45 requirements. *Measure first:* M-P1 distinct people and turnover in ten payroll years; M-P2 Legistar `Persons`/`OfficeRecords` coverage by body and year (seats only, R-1 O-E2); the share of person resolutions at A, B, C, D on the corpus; how many person entities a group creates in a month of real work; the person-page read time at 50,000 lines; the false-merge rate of same-person proposals on a synthetic fixture, gate set before measuring (D167).
+
+**Stage 2 (what bodies owe, events, money): L2 complete, L3.** `educated_at`, `credentialed_by`, `belongs_to`, `owns_interest_in`, `related_to`, `associate_of`; person facts; `statementsOf` over `events`; Form 700 and lobbyist registration as person duties (`duties`); interests read from Form 700 schedules (B: filer id); contributions as MONEY facts with person payers; member ties and their disclosure (P-B3); the source↔person link; interest checks (P-B6); `strength` independence by person; expunge (P-B9); `monitoring` watches of a person's register by named request. *Unlocks:* "did she disclose an interest in the contractor?"; "everything he said about the sewer fund, in order"; DR6's disclosure clause met; a whistleblower later identified handled without exposure. *Size:* about 40–50 requirements across `lines`, `people`, `duties`, `money`, `strength`, `record-core`, `monitoring`, `case-disclosures`, `queue-producers`, `affordances`, `op-declarations`. *Hard reasons it is not stage 1:* `events`, `duties` and `money` are stage-2 modules; Form 700 readers need a measured parse of the FPPC filings (M-P3); expunge needs I-19's open staging-vs-expunge point (Intake §10) settled.
+
+**Stage 3 (applied and assisted): L4, L5's assistance.** `overlaps`, `pathBetween` with set sizes and the hub bound; revolving-door patterns as calculations with denominators; EXTRACT proposals of people and lines; FIND over person reads in `answers`. *Hard reasons:* extract and investigate deployed with acceptance measured (first study); the hub bound measured (M-P4: the set-size distribution of shared entities). *Size:* about 20–25 requirements.
+
+**Stage 4 (network and imports): L5.** Bulk imports of CAL-ACCESS, NetFile, OpenFEC, DCA licence files, OpenCorporates officers, each a capture processed in the background, keyed services off by default with the group's own key (K1449); Popolo and FtM export; sharing people under B22. *Size:* about 15–20 requirements.
+
+| risk | containment |
+|---|---|
+| Misidentification published (defamation; TransUnion) | Graded identity, no name-only merge, `not_same_as`, the DR6 filter's per-person basis, expunge, corrections forward with notice (reevaluation) |
+| A surveillance tool against public employees or private people | DR6 at publication; no ranking or "knows"; rosters stay tables; interest checks only member-declared; collection conduct (P-B8); the purpose limit on FEC data kept in its import |
+| Legal process or breach reaches everything held (D185) | Stated to the group at setup (D311's pattern); member ties and source links in their narrowest sight; nothing kept of members' searching; litigation hold applies (DEC-113) |
+| Members will not type careers | Registers with identifiers (L5) and seeding (K1443); EXTRACT proposals (stage 3) |
+| Volume (common names, hub employers, 10,000+ entities) | `ENT-` fix; set sizes and the hub bound; entities minted on demand; D-224 reopened for people at its trigger |
+| Two homes for one fact (holds vs employed_by; contributions in lines and money) | §5.2's ownership table; the kind list cut (§5) |
+
+## 7. Interfaces with the other constructs
+
+| construct | PEOPLE needs from it | PEOPLE supplies to it |
+|---|---|---|
+| TIME | `civil-time`: EDTF tenures, `validAt`, three-valued interval intersection for overlaps; the governing day; fiscal years for "who held it in FY22" | dated positions and life facts; a person's timeline; the holder on a deadline's date |
+| ORGANISATIONS | the registry, scheme identifiers, `lines` (`holds`, `acts_for`, two-axis grading, bounded walks), `sector`, offices and units as line ends, `duties` with a person obligor | holders by name over time; staffing; who acted for a body; organisations of every sector reached through people (a company through its officers) |
+| EVENTS | events with participants and roles (speaker, author, mover, voter, recipient); a statement as an event with its passage | people as participants, resolved; who was present or copied (EVENTS' "who knew what" rests on resolved participants) |
+| MONEY | money facts with a person payer or payee (contributions, gifts, payments, salaries as tables) | payees and donors who are people, with their identifiers and positions at the payment's date |
+| LAW | the laws that bind a person (disclosure, lobbying registration, licensing) as held standards, the source of person duties | filers, registrants and licensees as obligors |
+| COURTS | parties, judges, counsel and monitors as person entities with roles (K1456) | a party's other roles and career; identity across proceedings |
+| ANALYSIS | tables keyed by person through identifiers or crosswalks; patterns with denominators (revolving door, lateness by holder) | person keys, set sizes for denominators |
+| QUESTIONS | INTERPRET resolving names to registry candidates, labelled; person reads in the asking scope; the closed-book rule | cited answers about a person with grade, as-of and level; `sources*` and member ties stay out of the scope |
+
+## 8. Decisions for Bob
+
+Only policy and doctrine, the meaning of requirements, and UX. Everything else is decided below them.
+
+**P-B1 · How a person's identity is established (doctrine: grading, CF §8.1, entities R34).** People rarely carry an identifier in a document, so under today's rule nearly every person match is C (name) or D (a member's word) and never "established".
+- (a) Keep the rule: established only with an identifier at both ends; a member's confirmation stays D.
+- (b) Add one evidentiary tier: a name match corroborated by a cited fact that holds at both documents' dates (the same post held on a cited `holds` line, the same licence or filer number) earns B, as a recorded claim with its legs; the weaker of the two grades governs; no other inference.
+- (c) A member's confirmation counts as established.
+- **Recommend (b).** It is how investigators identify people in practice (corroborating attributes, Fellegi–Sunter's logic), it keeps every step cited and graded, and it refuses the name-only match TransUnion shows is harmful. (c) would make "established" mean "someone said so".
+
+**P-B2 · Who inside the group sees person facts (policy; OBS L47 open).**
+- (a) The registry and every person fact are instance-wide, like evidence.
+- (b) The registry is instance-wide; facts from captured public documents follow their capture's sight (K102 split); a member's testimony, identity claims and interest checks inside a hidden project are fenced by that project.
+- (c) Every person fact is project-scoped.
+- **Recommend (b).** One identity per human needs one registry; a project's hypotheses about a person ("these two are the same", "he is her associate") are its thinking (D-486); (c) would split one person into many.
+
+**P-B3 · The group's own members and the people it examines (doctrine and requirement meaning: DR6's disclosure clause, Membership §3, DEC-102).**
+- (a) A member declares their own ties to entities (employer, relative, business); only they and administrators see them; a case that concerns the entity discloses the tie at the attribution level the member chooses (group, project, cover, name); a member is linked to a person entity only by their own act.
+- (b) Administrators may record members' ties.
+- (c) No tie model; disclosure by prose.
+- **Recommend (a).** It meets DR6's "disclosure of any relationships between the producing group or its members and … officials" without deanonymising a member (D84, DEC-73); (b) puts a member's civil ties on the record by someone else's act.
+
+**P-B4 · Person exclusions in the Action layer (meaning of requirements: conformance R1, consequences R10; actions R9).**
+- (a) Keep: act actors and affected parties are never persons.
+- (b) The record may name the person who held the acting office (an optional `holder` beside the office actor) and an affected named individual; the determination stays against the office, outward and published text passes the DR6 filter; actions R9 (the group addresses offices) unchanged.
+- **Recommend (b).** These rules restate the set-aside "offices, never private individuals" inside the record (K1452 replaced it); DR6's own example ("the Finance Director certified the ACFR") names the holder in official capacity.
+
+**P-B5 · DR6's home and reach (meaning of a requirement).**
+- (a) One filter in `case-disclosures`: every person a case's authored statements, subjects, published bias lens and docket name needs a recorded basis (official capacity on a documented act, consent or prior publication, or withheld as "a private individual"); carried materials travel whole and unredacted (DEC-100 (2), DEC-5), because DR6 governs the group's own words and fields, not public records it carries.
+- (b) The filter also screens materials, withholding any that name a private person.
+- (c) No filter; the publisher's judgment.
+- **Recommend (a).** It gives DR6 the enforcing home it lacks (X27), keeps "everything a conclusion rests on travels whole" (DEC-112), and resolves conflict A10 in favour of the existing no-redaction rulings.
+
+**P-B6 · Surfacing a possible conflict of interest (doctrine: D7, DEC-24 rule 2).**
+- (a) Only interest checks a member declares (scope, condition, reason) raise "Noticed" items, each with its cited derivation and never the word "conflict".
+- (b) The machine raises possible conflicts on its own.
+- (c) None; members look by hand.
+- **Recommend (a).** The question stays the member's, as a declared progression's does; (b) is the recommendation engine DEC-24 refused and would read as an accusation.
+
+**P-B7 · Reading "no attribute of a person gates, filters or orders anything" and the voice rules (doctrine).** Action §4 rule 10 (D64), brand §5 ("offices by role, never a private person"), surfaceRules l.1711 ("never name an individual except in official role").
+- **Recommend:** rule 10 binds gates, bars, priors, suspicion flags, machine runs and the group's own processes, not a member's own query over held facts ordered by date or name; brand §5 and surfaceRules l.1711 govern Civicsmith's own voice and outward and published surfaces, while member-only screens show people as the record holds them. Alternative: keep the literal reading, which makes K1452's reads unbuildable.
+
+**P-B8 · How the group may look people up (policy; DEC-47 left it to build-time conduct).**
+- (a) Keyless public registers and public pages by default; a private individual's own site or a login-gated platform only by a member's own act in their own browser, never by automated or unattended collection, never against a platform's terms; the tell said at the act.
+- (b) Allow automated collection of public profiles.
+- **Recommend (a)** (hiQ v. LinkedIn; DR-13; K1449's pattern).
+
+**P-B9 · Removing a personal fact (policy; I-19, B18).**
+- (a) Expunge only for the I-19 classes (unlawful to hold, confidential, a recorded decision such as a court order), with a tombstone; a wrong match or a person's request is corrected forward (defect, `not_same_as`, superseding fact) and reaches findings by notice.
+- (b) Also expunge on a person's request.
+- **Recommend (a).** K1455 holds any cited fact; forward correction keeps the record honest; a court order follows B18.
+
+**P-B10 · Members' words and where they meet people (UX, for the design stream).** Recommend "people" for those the record is about, "members" and "sources" as today; "position" for a post held, "career" for its sequence; "ties" for stated personal relationships and "overlaps" for shared context derived from the record (never "connections", taken for document co-mention, nor "relations", taken for entities' constitutive relations, nor "network"); a **person page** on Subjects (identity and its claims, positions over time, credentials, memberships, interests, ties, statements in order, overlaps on request) and the office page showing holders by name.
+
+**Decided at BOB's level (reported, not asked).** `people` in layer 5 after `events` (corrects K1453's "after `lines`"); ids `IDC-`, `PFA-`, `MTI-`, `CHK-`; the line kinds and the widened `holds` with `capacity` (§5.3), replacing K1453's `employed_by`, `served_in`, `officer_of`, `gave_to`, `received_from`, `lobbies_for`; `associate_of` added; rosters stay tables; overlap set sizes and the hub bound (measured, M-P4); identifier schemes as profile data; the `ENT-` width fix; `corpus-export` widened with paging; the source↔person link protected under `sources` R5 (DEC-78 and K1455 read together: the fact of being a source is protected, a person's public facts are not); the DR6 filter's home in `case-disclosures`; Fellegi–Sunter's field comparison as the explanation shape, no score shown, Splink not run in the plane; same-person detectors gated by a false-merge fixture (D167); `strength` R12 widened to a shared person; machine writes only from identifier-backed registers (K1443). **Bearing on Bob's open items:** B12 (what the machine may say) applies to persons (no characterisation); B17 (ii) (suggestions) bears on EXTRACT proposals of people; B22 (sharing) must say whether shared packs carry people; B18 (court-ordered removal) is P-B9's legal arm.
+
+## 9. Sources opened
+
+*Primary (repository, `tranche/T32`, read-only):* `build/rulings.md` 1439–1463 (K1437–K1461, whole entries); `build/requirements/entities.md` (whole); `build/requirements/sources.md` (whole); `bio-plane/src/entities/schema.mjs` (whole); `bio-plane/src/record-core/index.mjs` 385–425 (`allocId`, `#nextSeq`); `bio-plane/src/entities/index.mjs:330`; `bio-plane/src/inquiry-grammar/grammar.mjs:42–45, 335`; `bio-plane/src/bias/checks.mjs:13, 165`; `bio-plane/src/action-grammar/checks.mjs:43, 528`; `bio-plane/src/corpus-export/index.mjs:73–112`; `build/modules.json` (positions and layers); study copy `src/BIO_Design_Requirements_v2.txt` 135–158 (Requirement 6, whole).
+
+*External:* https://followthemoney.tech/explorer/schemata/ · https://followthemoney.tech/explorer/schemata/Family/ · https://followthemoney.tech/explorer/schemata/Directorship/ · https://www.popoloproject.com/specs/ · https://www.wikidata.org/wiki/Wikidata:WikiProject_every_politician/P39_model · https://littlesis.org/help/relationships · https://www.opensanctions.org/docs/identifiers/ · https://github.com/opensanctions/nomenklatura · https://www.jmir.org/2022/9/e33775 · https://github.com/moj-analytical-services/splink · https://openaleph.org/docs/user-guide/103/cross-reference/ · https://gijn.org/resource/using-aleph/ · https://gijn.org/resource/introduction-investigative-journalism-finding-sources-backgrounding/ · https://www.fppc.ca.gov/transparency/form-700-filed-by-public-officials/form700-search.html · https://public.netfile.com/pub2/?aid=COAK · https://www.oaklandca.gov/Government/Boards-Commissions/Public-Ethics-Commission/Lobbyist-Disclosure · https://www.sos.ca.gov/campaign-lobbying/helpful-resources/raw-data-campaign-finance-and-lobbying-activity · https://api.open.fec.gov/developers/ · https://www.ecfr.gov/current/title-11/chapter-I/subchapter-A/part-104/section-104.15 · https://search.dca.ca.gov/api · https://www.dca.ca.gov/data/index.shtml · https://opencorporates.com/pricing/ · https://webapi.legistar.com/Help/Api/GET-v1-Client-Persons-PersonId-OfficeRecords · https://transparentcalifornia.com/salaries/2024/oakland · https://supreme.justia.com/cases/federal/us/594/20-297/ · https://www.zwillgen.com/alternative-data/hiq-v-linkedin-wrapped-up-web-scraping-lessons-learned/ · https://california.public.law/codes/government_code_section_7928.205 · https://legalclarity.org/does-the-california-consumer-privacy-act-apply-to-nonprofits/ · https://iapp.org/news/a/cacpa-clarify-exemptions-and-fix-some-technical-errors-but-significant-work-remains · https://ukmedialawpocketbook.com/2021/12/03/chapter-nineteen-data-protection-law-for-journalists/ · https://developers.cloudflare.com/changelog/post/2025-04-07-sqlite-in-durable-objects-ga/
