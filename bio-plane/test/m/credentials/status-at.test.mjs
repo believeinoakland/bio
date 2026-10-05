@@ -160,7 +160,7 @@ test("R21 R8 a key registered before status_at existed reads null, never back-fi
            ('AAAAold1', 'ann', 'active', '2026-01-01T00:00:00.000Z'), ('AAAAold2', 'ann', 'revoked', '2026-01-02T00:00:00.000Z')`);
   const sql = sqlOver(db);
   const ctx = { storage: { sql } };
-  const core = { declarePurge() { return { ok: true }; }, bundleInfo() { return null; } };
+  const core = { declarePurge() { return { ok: true }; }, declareTable() { return { ok: true }; }, bundleInfo() { return null; } };
   const m = membershipOf(ctx, { record: core });
   m.migrate();
   const c = credentialsOf(ctx, { record: core, membership: m });

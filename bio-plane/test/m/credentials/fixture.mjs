@@ -22,8 +22,11 @@ export function sqlOver(db) {
 export const PASSWORD = (id) => `${id}-passphrase-x`;
 export const FOUNDER_PASSWORD = "founder-passphrase-1";
 
-/* A record-core stub whose `declarePurge` answers as record-core's R21 does: a table declared twice, or by two
-   modules, is refused naming its holder, and a refused declaration declares nothing. */
+/* A record-core stub whose `declarePurge` and `declareTable` answer as record-core's R21 does: a table declared twice,
+   or by two modules, is refused naming its holder; an entry missing a class, or with a value outside R21's, is
+   refused naming the table and the class; a refused declaration declares nothing. */
+const TABLE_CLASSES = { purge: ["clear", "exempt"], expunge: ["tombstone", "none"], export: ["yes", "admin-only", "never"],
+  sight: ["group", "bundle", "source", "owner"], derive: ["stored", "derived-rebuildable"], version_chain: [true, false] };
 function stubCore(db) {
   const declared = new Map();
   return {
@@ -40,10 +43,24 @@ function stubCore(db) {
       for (const n of exempt) declared.set(n, { module, exempt: true });
       return { ok: true };
     },
+    declareTable(module, entries = []) {
+      for (const e of entries) {
+        if (declared.has(e.name)) return { ok: false, reason: "TABLE_DECLARED", table: e.name, module, declaredBy: declared.get(e.name).module };
+        for (const [cls, values] of Object.entries(TABLE_CLASSES)) {
+          if (!(cls in e)) return { ok: false, reason: "TABLE_CLASS_MISSING", table: e.name, class: cls };
+          if (!values.includes(e[cls])) return { ok: false, reason: "TABLE_CLASS_UNKNOWN", table: e.name, class: cls };
+        }
+      }
+      for (const e of entries) declared.set(e.name, { module, exempt: e.purge === "exempt", classes: { ...e } });
+      return { ok: true };
+    },
   };
 }
 
-export function world() {
+/* The seal secret the composition root hands in (R23, R29); a test world binds one unless told not to. */
+export const SEAL = "test-seal-secret-0123456789";
+
+export function world({ sealSecret = SEAL } = {}) {
   const db = new DatabaseSync(":memory:");
   db.exec(`CREATE TABLE bundles (bundle_id TEXT PRIMARY KEY, object_type TEXT NOT NULL, title TEXT)`);
   const core = stubCore(db);
@@ -51,7 +68,7 @@ export function world() {
   const ctx = { storage: { sql } };
   const m = membershipOf(ctx, { record: core });
   m.migrate();
-  const c = credentialsOf(ctx, { record: core, membership: m });
+  const c = credentialsOf(ctx, { record: core, membership: m, sealSecret });
   if (credentialsOf(ctx) !== c) throw new Error("credentialsOf answers one instance per storage");
   c.migrate();
   const w = {
@@ -103,7 +120,7 @@ export function realWorld() {
   if (typeof rc.migrate === "function") rc.migrate();
   const m = membershipOf(ctx);
   m.migrate();
-  const c = credentialsOf(ctx);
+  const c = credentialsOf(ctx, { sealSecret: SEAL });
   c.migrate();
   return { db, sql, ctx, rc, m, c, row(q, ...a) { return sql.exec(q, ...a)[0] ?? null; } };
 }
