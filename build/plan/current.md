@@ -76,7 +76,7 @@
 **L1** · 19 jobs (bundler added, K1513). Merge order: record-grammar → jurisdictions → civil-time → calc-grammar → connection-grammar first, because every later entry reads `ID_TABLE`, the profile, or the three engines. Then `modules.json` order, except **doctypes before docprofile** (the copy before the deletion).
 **L2** · 3 jobs: record-core first (the id allocator and `declareTable`), then membership, then credentials.
 **L3** · 2 jobs: acquisition, then sources.
-**L4** · 2 jobs: reading-pipeline (the `onRead` hook), then content.
+**L4** · 3 jobs: reading-pipeline (the `onRead` hook), then extraction (its caller, K1521), then content.
 **L5** · 18 jobs. Merge order: entities → **events → lines → money → money-checks → duties → people → explore**, then local-facts, connections, observation-log, standards, progressions, bias, query-language, retrieval, calculations, [workbooks]. standards merges before money. All L5 jobs run at once (P10); a downstream job codes against approved requirements and merges after its upstream.
 **L6** · 15 jobs. Merge order: inquiry-grammar first; **leg-earning before inquiry** (the copy before the deletion); hypotheses after inquiry; strength and contradiction next; run-rules → ai-runs; skills → answers; **agent-harness → agent-model → agent-runner before agent-worker** (the copies before the deletion; answers before agent-worker's `/ask`).
 **L7** · 2 jobs: intent, reevaluation.
@@ -127,6 +127,8 @@ Each line is one job (P8): every T33 entry for that module. Fields: what (draft 
 
 - **T33-23 · reading-pipeline** · B1a.4: the opt-in after-read hook `onRead(module, fn, {captureClasses})`, run after commit in `MODULE_ORDER`, refusing through `listenerRefusal` · K1468, D177 · est 4 · uses — · depends —.
 - **T33-24 · content** · C:A-5: a cell's or range's value is readable through its table (`heldTextAt`). P6: wiring only · K1448 · est 2 · uses — · depends T33-10, T33-11.
+
+- **T33-23a · extraction** *(added under P10's exception, K1521)* · Calls reading-pipeline's new after-read hook (`onRead`, T33-23) after its commit, in `MODULE_ORDER`, for the capture classes a module opted into (K1468); the hook is a provided service whose one caller is extraction. No other change.
 
 ### L5
 
@@ -191,8 +193,8 @@ Each line is one job (P8): every T33 entry for that module. Fields: what (draft 
 - **T33-71 · consequences** · B1b.6 (money operands through calc-grammar). C:A-11 (R2 accepts calculation outputs; its own parser deleted). R10 per audit (a person a document names may be a harmed party; published only with consent or as DR6 allows) · K1448, K1484 · est 8 · uses **money, calc-grammar, calculations** · depends T33-70.
 - **T33-72 · action-grammar** · S0-10/B0.8 · K1470 · est 1 · uses — · depends —.
 - **T33-73 · actions** · S0-5/B0.9. C-3: R12 on the local day (audit). R15's calendar dates. An addressee suggested from `custodian_of`/`responsible_for`. R9 narrowed: addressed to an office by role and body, showing the holder on the date, never a person (B1a.14; K1484 row 5); `entity_id` filled from the bridge. C-8 plane half: the refusal reaches the caller visibly. A governing law and a records-request law may name a held standard (K1446). The `proceeding` link (C1). `registerEventSource` ("what we did"). Fills duties' `registerTriggerSource` · K1444, K1446, K1484 · est 16 · uses **civil-time, lines, events, standards, duties** · depends T33-72.
-- **T33-74 · action-clocks** · C-1 (`received` from `sent`; `clocks.test.mjs:166–179` corrected). C-2 and C-4: `computeDeadline` delegates to civil-time (roll, weekend from the profile, extension, hours). R7: basis kinds; a deadline may name a held standard. A computed deadline is adopted in one member act. The `.ics` one-off download (K1451). The cross-action lateness index over the group's own clocks, never a finding about government (D234) · K1431, K1440, K1444, K1446, K1451 · est 11 · uses **civil-time, standards, calc-grammar** · depends T33-73.
-- **T33-75 · filings** · The chronology as a timeline read (events; B §(d)) · K1494 · est 2 · uses **events** · depends T33-74.
+- **T33-74 · action-clocks** · C-1 (`received` from `sent`; `clocks.test.mjs:166–179` corrected). C-2 and C-4: `computeDeadline` delegates to civil-time (roll, weekend from the profile, extension, hours). R7: basis kinds; a deadline may name a held standard. A computed deadline is adopted in one member act. The `.ics` one-off download (K1451). The cross-action lateness index over the group's own clocks, never a finding about government (D234) · K1431, K1440, K1444, K1446, K1451 · est 11 · uses **civil-time, standards, calc-grammar** · depends T33-73. **K1519:** `calendar.test.mjs` R10 (×3) reads every `holidays` entry without `offices` as the office calendar; jurisdictions R47's closure lists (`list` set) are skipped there (only a rule's `closures` names them). Red from jurisdictions' merge until this job (accepted by name).
+- **T33-75 · filings** · The chronology as a timeline read (events; B §(d)) · K1494 · est 2 · uses **events** · depends T33-74. **K1519:** `packet.test.mjs` R9, R30: the same closure-list skip; red from jurisdictions' merge until this job (accepted by name).
 - **T33-76 · escalation** · R12 targets follow `oversees`/`appoints` lines, with the profile flag as fallback. R4's actor resolved to its entity. `registerEventSource` · K1442 · est 3 · uses **entities, lines, events** · depends T33-75.
 - **T33-77 · action-plans** · A step may be conditioned on a duty occurrence's state (met, met late, overdue, undetermined), so an overdue response activates the next step; the group's own missed checkpoint stays never a finding (R23) · K1466 · est 3 · uses **duties** · depends T33-76.
 

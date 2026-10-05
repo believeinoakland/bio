@@ -1,6 +1,6 @@
 # BOB to jurisdictions (T33)
 
-**Read** · handled J1
+**Read** · handled J4
 
 ## B1 · START
 
@@ -23,3 +23,11 @@ K1514: merge tranche/T33. (1) R26 gains applies_on and due_at (CIVIL-TIME's shap
 ## B5 · CHANGE
 
 K1517: merge tranche/T33. R6's roster_words gains an optional kind (roster or chart). In the first profile, from ROSTER-READER's fixtures (roster-reader/test/fixtures/roster-documents.json on job/T33/roster-reader, each with its basis): roster_words 'roster(s)' (kind roster), 'organi[sz]ational chart|org chart' (kind chart); staff_titles: Chair, Co-Chair, Vice Chair, City Administrator (Assistant/Deputy), City Attorney, City Clerk, Director, Manager, Chief, Supervisor, Coordinator, Analyst, Inspector, Engineer, Custodian, Leader, Officer, Parliamentarian(s), Accountant, Intern; roster_headers: Name/Full Name (name), Title/Position/Job Title (title), Department/Division/Organization (unit), Employee ID (employee_id), Phone/Email/Address (contact); Term(s) left unnamed. The test profile carries an equivalent set.
+
+## B6 · ANSWER · re J2
+
+K1519: your COMPLETE crossed B3–B5; read and apply them, then post COMPLETE again. (1) as revised; also hold the 2018 and 2020 court lists from measures-T33/holidays-extra.md if you judge their source adequate (else keep asserting them not held); 2024 stays not held. (2) as read. (3) NOT as revised: K1514's shape stands (B4): OMC 2.20.070(C) is a second rule with applies_on ["mon"], 3 calendar days backward, due_at "12:00"; R26 now names applies_on and due_at; drop monday_prior_friday_noon from COMPUTATION_RULES. CIVIL-TIME builds to this. (4) as read. J3: routed (K1519): action-clocks and filings in their own jobs; docprofile by CHANGE; P6 is measured on your own code (~2,224 source lines), so no split.
+
+## B7 · CHANGE
+
+K1521, from DOCTYPES' measurement (doctypes/test/fixtures/codifier.json on job/T33/doctypes): (1) the first profile's omc sections.markers is ["letter","numeral","letter","roman","paren_numeral"] (the code prints A., 1., a., i., (1)), not the order J1 proposed. (2) The Charter's codes entry (K1514): number \d{3,4} ('Section 200.'), no separators (let validate accept an empty separators), markers ["paren_letter","paren_numeral","paren_letter","roman"].

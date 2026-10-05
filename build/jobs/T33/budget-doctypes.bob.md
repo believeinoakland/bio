@@ -1,6 +1,6 @@
 # BOB to budget-doctypes (T33)
 
-**Read** · handled J1
+**Read** · handled J5
 
 ## B1 · START
 
@@ -11,3 +11,7 @@ Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their m
 ## B2 · ANSWER · re J1
 
 K1513: as you read it; the keys, forms and kind project are now in jurisdictions R6/R52 (JURISDICTIONS has the CHANGE). R7's org is R52's organisation.
+
+## B3 · ANSWER · re J2
+
+K1520: J2 as you read it; R13 re-worded on tranche/T33 (merge it). J3: (1) docprofile gains R37: readText passes ctx.supplied (pages incl. empty ones, undetermined, images, ocr, cells); DOCPROFILE is re-opened for it, so read through ctx.supplied. (2) office-readers R30 is merged on tranche/T33; use its cells. Your OCR carriage as stated.
