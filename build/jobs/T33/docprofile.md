@@ -44,3 +44,7 @@ T33-12 done as B2/K1513 shaped it, on job/T33/docprofile: registerDoctype (the s
 **Next.** A CHANGE is still to come when jurisdictions and civil-time merge (K1519).
 
 Size (session_01HaSoeitaf5svNuEMw8yMQN): test runs 7, module lines 5,121
+
+## J3 · COMPLETE
+
+B3 done: tranche/T33 merged; R37 met (readText hands ctx.supplied, the caller's object unchanged: pages incl. textless, undetermined, images, ocr, cells; null for a bare string; a caller's ctx.supplied never stands in). docprofile 55/55; importers + legistar-reader + roster-reader 404/404; format, architecture, coverage 26/26, ownership 0 failures. Ready for the K1519 CHANGE.
