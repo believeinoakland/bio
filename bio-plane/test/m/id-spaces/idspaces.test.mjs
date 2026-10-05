@@ -4,14 +4,16 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as M from "../../../src/idspaces.mjs";
-import { HARBOR, LAKESHORE, DISSENT, UNMEASURED, combine, viewOf } from "./fixtures.mjs";
+import { HARBOR, LAKESHORE, DISSENT, UNMEASURED, NEW_SPACES, REPORTERS, combine, viewOf, withNewSpaces } from "./fixtures.mjs";
 
-const { spaces, recognise, reach, parcelStanding, systemOf, judgePair } = M;
+const { spaces, recognise, reach, parcelStanding, systemOf, judgePair, recogniseCitations } = M;
 const H = viewOf(HARBOR);
 const L = viewOf(LAKESHORE);
 const HL = viewOf(HARBOR, LAKESHORE);
 const EMPTY = viewOf();
-const SPACE_NAMES = ["enactment", "project", "fund", "parcel"];
+const SPACE_NAMES = ["enactment", "project", "fund", "parcel", "account", "object", "vendor", "proceeding", "person"];
+const HN = withNewSpaces(H);
+const LN = withNewSpaces(L, { person: { label: "registrant number", forms: [{ form: "reg", pattern: { re: "R(\\d{4})" }, normal: ["R", { group: 1 }], basis: "TEST" }] } });
 const JUNK = [undefined, null, 0, 1, "", "x", [], {}, NaN, Symbol("s"), () => 1, new Map(), { spaces: 5, systems: "x" },
   { spaces: { enactment: { forms: [null, 3, { form: "bad", pattern: { re: "(" } }], kinds: [null, { kind: 3 }] } } }];
 
@@ -31,8 +33,8 @@ const end = (view, space, value, address, name) => ({ rec: recognise(view, space
 
 /* ---------------------------------------------------------------- spaces */
 
-test("R1 spaces lists the four spaces, each with the forms the view supplies and its referent", () => {
-  for (const view of [H, L, HL, EMPTY]) {
+test("R1 spaces lists the nine spaces in order, each with the forms the view supplies and its referent", () => {
+  for (const view of [H, L, HL, EMPTY, HN, LN]) {
     const s = spaces(view);
     assert.deepEqual(s.map((x) => x.space), SPACE_NAMES);
     for (const x of s) {
@@ -46,8 +48,43 @@ test("R1 spaces lists the four spaces, each with the forms the view supplies and
   assert.equal(spaces(H).find((x) => x.space === "project").label, "project or capital improvement number");
   assert.equal(spaces(HL).find((x) => x.space === "project").label, "project or capital improvement number; works number");
   assert.deepEqual(spaces(L).find((x) => x.space === "fund").forms, [], "a space with no form in the view is listed with forms: []");
+  for (const sp of ["account", "object", "vendor", "proceeding", "person"]) {
+    assert.deepEqual(spaces(H).find((x) => x.space === sp).forms, [], `${sp}: no form in a view that gives none`);
+    assert.equal(spaces(HN).find((x) => x.space === sp).label, NEW_SPACES[sp].label, `${sp}: the view's label`);
+  }
   for (const j of JUNK) assert.deepEqual(spaces(j).map((x) => [x.space, x.forms.length > 0 || x.forms.length === 0]),
     SPACE_NAMES.map((n) => [n, true]), "never throws");
+});
+
+test("R1 the money, proceeding and person spaces recognise from the view's forms; one person scheme never joins another", () => {
+  const cases = [["account", "acct. 41100", "acct-5", "41100"], ["object", "e5310", "obj-4", "E5310"], ["vendor", "v-000123", "V-######", "V-123"],
+    ["proceeding", "rg21 123456", "court-case", "RG21-123456"], ["proceeding", "A.24-07-012", "commission-docket", "A.24-07-012"],
+    ["person", "PID 0042", "roster-person", "PID42"], ["person", "filer 1234567", "filer", "FILER1234567"],
+    ["person", "LIC A123456", "licence", "LICA123456"], ["person", "Bar No. SBN 042", "bar", "SBN42"]];
+  for (const [sp, v, form, normal] of cases) {
+    const r = recognise(HN, sp, v);
+    assert.deepEqual([r.space, r.form, r.normal], [sp, form, normal], `${sp} ${v}`);
+    assert.ok(!("kind" in r) && !("reach" in r), "only an enactment carries a kind and a reach");
+    assert.equal(recognise(H, sp, v), null, `${sp}: a view with no form for it recognises nothing`);
+  }
+  assert.deepEqual(spaces(HN).find((x) => x.space === "person").forms.map((f) => f.form), ["roster-person", "filer", "licence", "bar"],
+    "one form per person scheme");
+  /* the person schemes are forms: two schemes' numbers never join without a crosswalk, whatever the digits */
+  const auditor = "https://auditor.harbor.test/1";
+  const pe = (v, addr) => ({ rec: recognise(HN, "person", v), system: systemOf(HN, [addr]) });
+  for (const [a, b] of [["PID 42", "SBN 42"], ["PID 123456", "SBN 123456"], ["filer 1234567", "PID 1234567".slice(0, 9)]]) {
+    const r = judgePair(HN, "person", pe(a, A.legis), pe(b, auditor), "agrees");
+    assert.deepEqual([r.verdict, r.counts], ["FORMS_UNJOINED", false], `${a} / ${b}`);
+  }
+  const same = judgePair(HN, "person", pe("PID 42", A.legis), pe("pid0042", auditor), "agrees");
+  assert.deepEqual([same.verdict, same.counts], ["SHARED", true], "one scheme's number in two independent systems counts on a reading");
+  const crosswalked = { ...HN, crosswalks: [{ space: "person", forms: ["roster-person", "bar"], pairs: [["PID42", "SBN99"]], source: "b".repeat(64), basis: "TEST" }] };
+  const cw = (v, addr) => ({ rec: recognise(crosswalked, "person", v), system: systemOf(crosswalked, [addr]) });
+  assert.equal(judgePair(crosswalked, "person", cw("PID42", A.legis), cw("SBN99", auditor), "agrees").verdict, "SHARED",
+    "only a captured crosswalk joins two schemes");
+  const proc = judgePair(HN, "proceeding", { rec: recognise(HN, "proceeding", "RG21123456"), system: systemOf(HN, [A.legis]) },
+    { rec: recognise(HN, "proceeding", "rg21-123456"), system: systemOf(HN, [auditor]) });
+  assert.equal(proc.verdict, "REFERENT_UNREAD", "a proceeding number is judged like any other space");
 });
 
 test("R2 a space has several forms at once, told apart by the value's shape alone", () => {
@@ -402,9 +439,10 @@ test("R21 otherwise the referent: unread, disagrees, or SHARED on the caller's r
 
 test("R22 counts is true only for SHARED", () => {
   const seen = new Map();
-  const views = [H, L, HL];
+  const views = [H, L, HL, HN];
   const vals = { enactment: ["87551", "087551", "87552", "Ordinance No. 12274", "LS-42"], project: ["C329142", "1003439", "W-10001", "07-001"],
-                 fund: ["3100", "3101"], parcel: ["11-836-17", "011-0836-017-00", "123 456 789"] };
+                 fund: ["3100", "3101"], parcel: ["11-836-17", "011-0836-017-00", "123 456 789"], account: ["41100", "41101"], object: ["E5310"],
+                 vendor: ["V-12", "V-012", "V-13"], proceeding: ["RG21-123456", "A.24-07-012"], person: ["PID42", "SBN42", "PID042"] };
   const addrs = [A.legis, A.budget, A.budget2, A.portal, A.county, A.www, "https://clerk.lakeshore.test/", "https://finance.lakeshore.test/"];
   for (const view of views) for (const sp of SPACE_NAMES) for (const a of vals[sp]) for (const b of vals[sp]) {
     const ra = recognise(view, sp, a), rb = recognise(view, sp, b);
@@ -434,6 +472,7 @@ test("R16 R22 judgePair throws TypeError when an end is unrecognised or not in t
 test("R23 pure: no store, no network, no clock; the same inputs give the same answer and are not changed", () => {
   const deepFreeze = (o) => { if (o && typeof o === "object" && !Object.isFrozen(o)) { Object.freeze(o); Object.values(o).forEach(deepFreeze); } return o; };
   const frozen = deepFreeze(viewOf(HARBOR, LAKESHORE, DISSENT));
+  const frozenReporters = deepFreeze(structuredClone(REPORTERS));
   const snapshot = JSON.stringify(frozen);
   const run = (frozen) => JSON.stringify([
     spaces(frozen),
@@ -442,6 +481,7 @@ test("R23 pure: no store, no network, no clock; the same inputs give the same an
     parcelStanding("11-836-17-0", { lineage, vintages: ["v"] }),
     Object.values(A).map((a) => systemOf(frozen, [a])),
     judgePair(frozen, "project", end(frozen, "project", "C329142", A.budget), end(frozen, "project", "C329142", A.legis), "agrees"),
+    recogniseCitations("12 Rep. 2d 34, 36; 5 Zz. 6", frozenReporters), recogniseCitations("12 Rep. 2d 34"),
   ]);
   const saved = { fetch: globalThis.fetch, Date: globalThis.Date, random: Math.random, perf: globalThis.performance };
   const boom = (what) => () => { throw new Error(`id-spaces used ${what}`); };
@@ -465,7 +505,7 @@ test("R24 no place is named in the module: every service answers from the view a
   /* with no profile, the module knows no space's form, no kind, no floor, no system, no mixed host */
   for (const sp of SPACE_NAMES) for (const v of ["87551", "C.M.S. 87551", "C329142", "1003439", "3100", "011-0836-017-00", "LS-42", "W-10001"])
     assert.equal(recognise(EMPTY, sp, v), null, `${sp} ${v}`);
-  assert.deepEqual(spaces(EMPTY).map((s) => s.forms), [[], [], [], []]);
+  assert.deepEqual(spaces(EMPTY).map((s) => s.forms), SPACE_NAMES.map(() => []));
   for (const kind of [undefined, "ordinance", "resolution"]) assert.equal(reach(EMPTY, 50000, kind).reach, "UNDETERMINED");
   const knownElsewhere = ["https://webapi.legistar.com/v1/oakland/matters/1", "https://oakland.legistar.com/x", "https://data.oaklandca.gov/resource/vmzx-e5fe.csv",
     "https://www.oaklandca.gov/documents/x.pdf", ...Object.values(A)];
@@ -479,12 +519,12 @@ test("R24 no place is named in the module: every service answers from the view a
   assert.equal(systemOf(L, [A.legis]).origin, null);
   const lr = judgePair(L, "parcel", end(L, "parcel", "123 456 789", "https://clerk.lakeshore.test/"), end(L, "parcel", "123456789".replace(/(...)(...)(...)/, "$1 $2 $3"), "https://finance.lakeshore.test/"), "agrees");
   assert.equal(lr.verdict, "SHARED");
-  /* the labels are the view's, and every jurisdiction's space names are the same four */
+  /* the labels are the view's, and every jurisdiction's space names are the same nine */
   assert.equal(spaces(L).find((s) => s.space === "enactment").label, "bylaw number");
   assert.deepEqual(spaces(L).map((s) => s.space), spaces(H).map((s) => s.space));
-  /* no built-in view survives: the module exports its six services only (the old adapter under the old names is retired: N105),
+  /* no built-in view survives: the module exports its seven services only (the old adapter under the old names is retired: N105),
      and the old call shapes, which answered over the held profiles, now meet no view */
-  assert.deepEqual(Object.keys(M).sort(), ["judgePair", "parcelStanding", "reach", "recognise", "spaces", "systemOf"]);
+  assert.deepEqual(Object.keys(M).sort(), ["judgePair", "parcelStanding", "reach", "recognise", "recogniseCitations", "spaces", "systemOf"]);
   for (const old of ["cms", "project", "fund", "apn"]) for (const v of ["87551", "C329142", "3100", "011-0836-017-00"])
     assert.equal(recognise(old, v), null, `${old} ${v}`);
   const oldEnd = { rec: { space: "project", value: "C329142", form: "C#####", normal: "C329142" }, system: { origin: "x" } };
@@ -517,5 +557,116 @@ test("R25 every no says which kind of no, and absence is never reported as non-e
     const text = r.says || r.why;
     assert.ok(typeof text === "string" && text.length > 20, JSON.stringify(r));
     assert.doesNotMatch(text.replace(/never "not found"/g, ""), /\bnot found\b|\bno such\b|does not exist|never existed/i, text);
+  }
+});
+
+/* ---------------------------------------------------------------- recogniseCitations */
+
+/* court-citations' VARIANTS (its R1) derived from the fixture's REPORTERS: every variant and every standard
+   abbreviation, each to every {reporter, edition} it stands for. */
+function variantsOf(data) {
+  const V = {};
+  const add = (sp, reporter, edition) => { (V[sp] ||= []).push({ reporter, edition }); };
+  for (const r of data.REPORTERS) {
+    add(r.key, r.key, r.key);
+    for (const e of r.editions) if (e.key !== r.key) add(e.key, r.key, e.key);
+    for (const [sp, ed] of Object.entries(r.variations)) add(sp, r.key, ed);
+  }
+  return V;
+}
+const VARIANTS = variantsOf(REPORTERS);
+const reportersOf = (sp) => [...new Set(VARIANTS[sp].map((x) => x.reporter))].sort();
+
+test("R27 recogniseCitations finds every volume-reporter-page citation the reporter data names, in reading order, with offsets", () => {
+  for (const data of [REPORTERS, { VARIANTS }, VARIANTS, { ...REPORTERS, VARIANTS }]) {
+    /* every spelling the data holds, as written and with its white space varied */
+    for (const sp of Object.keys(VARIANTS)) for (const written of [sp, sp.replace(/\. /g, "."), sp.replace(/ /g, "  ")]) {
+      const text = `As held in 12 ${written} 345, 350 (2001).`;
+      const r = recogniseCitations(text, data);
+      const named = reportersOf(sp);
+      if (named.length === 1) {
+        assert.equal(r.citations.length, 1, `${written}: ${JSON.stringify(r)}`);
+        const c = r.citations[0];
+        assert.deepEqual([c.volume, c.reporter, c.variant, c.page, c.pin], [12, named[0], written, 345, 350], written);
+        assert.equal(text.slice(c.start, c.end), `12 ${written} 345, 350`);
+        assert.equal(r.undetermined, undefined, "nothing undetermined when every citation is recognised");
+      } else {
+        assert.deepEqual(r.citations, [], `${written}: a spelling the data gives to several reporters is never one chosen`);
+        assert.deepEqual(r.undetermined.ambiguous.map((x) => [x.variant, x.reporters]), [[written, named]]);
+      }
+    }
+  }
+  const text = "See 1 Rep. 2 and 30 T. Supp. 3d 400; also 7 Rep. 2nd 8, 9 and 4 Tst. 55.";
+  const r = recogniseCitations(text, REPORTERS);
+  assert.deepEqual(r.citations.map((c) => [c.volume, c.reporter, c.variant, c.page, c.pin ?? null, text.slice(c.start, c.end)]), [
+    [1, "Rep.", "Rep.", 2, null, "1 Rep. 2"], [30, "T. Supp.", "T. Supp. 3d", 400, null, "30 T. Supp. 3d 400"],
+    [7, "Rep.", "Rep. 2nd", 8, 9, "7 Rep. 2nd 8, 9"], [4, "Tst.", "Tst.", 55, null, "4 Tst. 55"]], "in reading order");
+  assert.ok(r.citations.every((c, i, all) => i === 0 || all[i - 1].end <= c.start));
+  /* a pin is a page after a comma, never the volume of the next citation */
+  const two = recogniseCitations("1 Rep. 2, 3 Tst. 4", REPORTERS).citations;
+  assert.deepEqual(two.map((c) => [c.volume, c.reporter, c.page, "pin" in c]), [[1, "Rep.", 2, false], [3, "Tst.", 4, false]]);
+  /* the longest spelling the data holds is the one read */
+  assert.equal(recogniseCitations("8 T. Supp. 3d 9", REPORTERS).citations[0].variant, "T. Supp. 3d");
+  /* passed data takes precedence: a spelling it lacks is not recognised, whatever else may be held */
+  const only = { VARIANTS: { "Tst.": { reporter: "Tst.", edition: "Tst." } } };
+  const p = recogniseCitations("1 Rep. 2 and 3 Tst. 4", only);
+  assert.deepEqual(p.citations.map((c) => c.reporter), ["Tst."]);
+  assert.deepEqual(p.undetermined.unrecognised.map((u) => u.text), ["1 Rep. 2"]);
+  /* a reading is a spelling recognised, never a resolution: nothing says the case is real or verified */
+  for (const c of r.citations) assert.deepEqual(Object.keys(c).filter((k) => !["volume", "reporter", "variant", "page", "pin", "start", "end"].includes(k)), []);
+});
+
+test("R28 with no reporter data the answer is undetermined, never 'cites nothing'; an unnamed reporter is listed, never dropped or guessed", () => {
+  const text = "Compare 347 Rep. 483, 12 Zz. Ct. 5 and 9 ABC 10.";
+  for (const r of [recogniseCitations(text), recogniseCitations(text, undefined), recogniseCitations(text, null)]) {
+    assert.deepEqual(r.citations, []);
+    assert.match(r.undetermined.why, /no reporter data is held/);
+    assert.match(r.undetermined.why, /finding none says nothing about what the text cites/);
+    assert.deepEqual(r.undetermined.unrecognised.map((u) => [u.text, text.slice(u.start, u.end)]),
+      [["347 Rep. 483", "347 Rep. 483"], ["12 Zz. Ct. 5", "12 Zz. Ct. 5"], ["9 ABC 10", "9 ABC 10"]]);
+  }
+  assert.match(recogniseCitations("no citation here").undetermined.why, /no reporter data is held/, "even with nothing shaped like one");
+  for (const bad of [{}, { VARIANTS: {} }, { REPORTERS: [] }, 5, "x", [], { VARIANTS: { "A.": 3 } }]) {
+    const r = recogniseCitations(text, bad);
+    assert.deepEqual(r.citations, [], JSON.stringify(bad));
+    assert.match(r.undetermined.why, /neither of court-citations' shapes/);
+  }
+  /* with data: every volume-reporter-page run no variant names is listed with its offsets */
+  const withData = recogniseCitations(text, REPORTERS);
+  assert.deepEqual(withData.citations.map((c) => c.reporter), ["Rep."]);
+  assert.deepEqual(withData.undetermined.unrecognised.map((u) => [u.text, u.start, u.end]),
+    [["12 Zz. Ct. 5", text.indexOf("12 Zz"), text.indexOf("12 Zz") + 12], ["9 ABC 10", text.indexOf("9 ABC"), text.indexOf("9 ABC") + 8]]);
+  assert.match(withData.undetermined.why, /never dropped and never guessed/);
+  /* a spelling the data gives to two reporters is listed with both */
+  const amb = recogniseCitations("5 R. 6", REPORTERS);
+  assert.deepEqual([amb.citations, amb.undetermined.ambiguous.map((a) => [a.text, a.reporters])], [[], [["5 R. 6", ["Rep.", "Tst."]]]]);
+  assert.match(amb.undetermined.why, /more than one reporter: listed with each, never one chosen/);
+  /* plain prose is not a citation's shape */
+  assert.deepEqual(recogniseCitations("In 2019 the Council met 3 times and Congress acted 4 times.", REPORTERS), { citations: [] });
+});
+
+test("R29 pure and place-free: reporters are data only, the same inputs give the same answer, and no text makes it throw", () => {
+  /* the module knows no reporter of its own: real-world spellings meet nothing without data, and any data's spellings are read */
+  for (const text of ["347 U.S. 483", "5 F.3d 100", "20 Cal. 4th 1", "1 Rep. 2"])
+    assert.deepEqual(recogniseCitations(text).citations, [], text);
+  const other = { VARIANTS: { "Qx. Rpt.": { reporter: "Qx. Rpt.", edition: "Qx. Rpt." } } };
+  assert.deepEqual(recogniseCitations("4 Qx. Rpt. 5", other).citations.map((c) => c.reporter), ["Qx. Rpt."]);
+  assert.deepEqual(recogniseCitations("4 Rep. 5", other).citations, [], "one data set's reporters are not another's");
+  const deepFreeze = (o) => { if (o && typeof o === "object" && !Object.isFrozen(o)) { Object.freeze(o); Object.values(o).forEach(deepFreeze); } return o; };
+  const data = deepFreeze(structuredClone(REPORTERS));
+  const before = JSON.stringify(data);
+  const text = "1 Rep. 2, 3; 4 Zz. 5; 6 R. 7";
+  assert.equal(JSON.stringify(recogniseCitations(text, data)), JSON.stringify(recogniseCitations(text, structuredClone(REPORTERS))));
+  assert.equal(JSON.stringify(data), before, "the data is not changed");
+  const huge = "1 Rep. 2 ".repeat(5000) + "x".repeat(100000);
+  assert.equal(recogniseCitations(huge, REPORTERS).citations.length, 5000);
+  const junkText = [undefined, null, 0, 5, {}, [], Symbol("s"), () => 1, new String("1 Rep. 2"), "\u0000￿\uD800", "9".repeat(10000),
+    "1 ".repeat(5000) + "Rep.", "(?<x>" + "1 Rep. 2".repeat(3)];
+  const junkData = [undefined, null, 1, "x", [], {}, { VARIANTS: null }, { VARIANTS: [1, 2] }, { REPORTERS: [null, { key: 5 }, { key: "K.", editions: 3, variations: 7 }] },
+    { get VARIANTS() { throw new Error("boom"); } }, new Proxy({}, { ownKeys() { throw new Error("boom"); } }), REPORTERS];
+  for (const t of junkText) for (const d of junkData) {
+    const r = recogniseCitations(t, d);
+    assert.ok(Array.isArray(r.citations), "never throws");
+    if (typeof t !== "string") assert.match(r.undetermined.why, /no text was given/);
   }
 });

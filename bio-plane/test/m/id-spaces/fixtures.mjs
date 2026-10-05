@@ -102,3 +102,43 @@ export function viewOf(...profiles) {
   if (!c.ok) throw new Error(`a test profile fails jurisdictions.combine: ${JSON.stringify(c.errors)}`);
   return { ...c.view, conflicts: c.conflicts };
 }
+
+/* The five spaces T33 added (R1): the money record's identifiers, a proceeding's number and the person
+ * schemes, one form per scheme. They are grafted onto a combined view, in the view's own shape, because the
+ * jurisdictions job that teaches `combine` these spaces (its R3, T33-2) merges in this tranche; once it
+ * has, `withNewSpaces` is equivalent to combining a profile that holds them. */
+export const NEW_SPACES = {
+  account: { label: "general ledger account", forms: [{ form: "acct-5", pattern: P("(\\d{5})"), normal: [{ group: 1 }], clean: { strip: [P("acct\\.?", "i")], spaces: "remove" }, basis: T }] },
+  object: { label: "object code", forms: [{ form: "obj-4", pattern: P("([A-Z]?\\d{4})"), normal: [{ group: 1 }], clean: { spaces: "remove", upper: true }, basis: T }] },
+  vendor: { label: "supplier number", forms: [{ form: "V-######", pattern: P("V-?(\\d{1,6})"), normal: ["V-", { group: 1, unpad: true }], clean: { spaces: "remove", upper: true }, basis: T }] },
+  proceeding: {
+    label: "case number",
+    forms: [
+      { form: "court-case", pattern: P("([A-Z]{2})(\\d{2})-?(\\d{6})"), normal: [{ group: 1 }, { group: 2 }, "-", { group: 3 }], clean: { spaces: "remove", upper: true }, basis: T },
+      { form: "commission-docket", pattern: P("([A-Z])\\.?(\\d{2})-(\\d{2})-(\\d{3})"), normal: [{ group: 1 }, ".", { group: 2 }, "-", { group: 3 }, "-", { group: 4 }], clean: { spaces: "remove", upper: true }, basis: T },
+    ],
+  },
+  person: {
+    label: "person scheme identifier",
+    forms: [
+      { form: "roster-person", pattern: P("PID(\\d{1,6})"), normal: ["PID", { group: 1, unpad: true }], clean: { spaces: "remove", upper: true }, basis: T },
+      { form: "filer", pattern: P("FILER(\\d{7})"), normal: ["FILER", { group: 1 }], clean: { spaces: "remove", upper: true }, basis: T },
+      { form: "licence", pattern: P("LIC([A-Z]\\d{6})"), normal: ["LIC", { group: 1 }], clean: { spaces: "remove", upper: true }, basis: T },
+      { form: "bar", pattern: P("SBN(\\d{1,6})"), normal: ["SBN", { group: 1, unpad: true }], clean: { strip: [P("bar\\s*no\\.?", "i")], spaces: "remove", upper: true }, basis: T },
+    ],
+  },
+};
+export function withNewSpaces(view, spaces = NEW_SPACES) {
+  return { ...view, spaces: { ...(view.spaces || {}), ...spaces } };
+}
+
+/* Reporter data in court-citations' shape (its R1): a few made-up reporters for the recogniser's tests
+ * (R27), passed as `reporters`. Real data is court-citations' own; the module holds no reporter in code. */
+export const REPORTERS = {
+  REPORTERS: [
+    { key: "Rep.", name: "Test Reporter", cite_type: "state", editions: [{ key: "Rep.", start: null, end: null }, { key: "Rep. 2d", start: null, end: null }],
+      variations: { "Rep. 2nd": "Rep. 2d", "R.": "Rep." } },
+    { key: "T. Supp.", name: "Test Supplement", cite_type: "federal", editions: [{ key: "T. Supp.", start: null, end: null }, { key: "T. Supp. 3d", start: null, end: null }], variations: {} },
+    { key: "Tst.", name: "Test", cite_type: "state", editions: [{ key: "Tst.", start: null, end: null }], variations: { "R.": "Tst." } },
+  ],
+};
