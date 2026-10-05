@@ -4,7 +4,7 @@
   "modules": [
     {"id": "record-grammar", "layer": 1, "paths": ["bio-plane/src/record-grammar/"], "tests": ["bio-plane/test/m/record-grammar/"], "uses": []},
     {"id": "jurisdictions", "layer": 1, "paths": ["jurisdictions/"], "tests": ["jurisdictions/test/"], "uses": ["record-grammar"]},
-    {"id": "civil-time", "layer": 1, "paths": [], "tests": [], "uses": ["record-grammar", "jurisdictions"]},
+    {"id": "civil-time", "layer": 1, "paths": ["bio-plane/src/civil-time/"], "tests": ["bio-plane/test/m/civil-time/"], "uses": ["record-grammar", "jurisdictions"]},
     {"id": "calc-grammar", "layer": 1, "paths": [], "tests": [], "uses": ["record-grammar", "civil-time"]},
     {"id": "connection-grammar", "layer": 1, "paths": [], "tests": [], "uses": ["record-grammar", "civil-time"]},
     {"id": "test-support", "layer": 1, "paths": ["bio-plane/test/sandbox.mjs", "bio-plane/test/stdio.mjs", "pdf-worker/test/make-pdf.mjs"], "tests": ["bio-plane/test/m/test-support/"], "uses": []},
