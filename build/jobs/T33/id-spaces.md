@@ -1,6 +1,6 @@
 # id-spaces (T33)
 
-**Status** · session_015zS8AH6HPe7cvTXdZEZsTf · depth 2 · WORKING · handled B3
+**Status** · session_015zS8AH6HPe7cvTXdZEZsTf · depth 2 · WAITING ON BOB (J1) · handled B3
 
 ## J1 · QUESTION
 
