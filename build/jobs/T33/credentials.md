@@ -84,3 +84,7 @@ Size (session_018b8BSawtGnkrtBHccW88jV): test runs 14, module lines 1428
 ## J2 · REPORT
 
 Found in other modules (record, 'Found in other modules'): (1) instance-setup keys.test.mjs:34's record-core stub lacks declareTable (record-core R21); its 4 R44 tests red once credentials merges, until instance-setup's T33 job. (2) plane/bundler/installer must bind and pass ACCOUNT_SEAL_SECRET as credentialsOf(ctx, {sealSecret}) (K1541); without it account references and keyed keys are refused ACCOUNT_SEAL_UNAVAILABLE. (3) my two real-record-core tests need record-core's declareTable (T33-19); 54/54 with it. (4) bio-plane/dist/bio-plane.bundled.mjs stale (not_product). (5) wiring owed: op-declarations/control-plane route the 8 new ops and call aiGrantAdmit; answers ASK_SCOPE = AI_GRANT_OPS; acquisition reads keyedServiceFor; agent-model/ai-runs/agent-worker read accountReferenceFor.
+
+## J3 · COMPLETE
+
+T33-20 applied: R22-R30 met except R22's subscription arm (held, K1537). Module tests 52/54 here, 54/54 with record-core's declareTable (merges first). Format, architecture, coverage (30/30), ownership 0 failures. Final uses unchanged (record-grammar, record-core, membership). Findings in REPORT J2. Record: build/jobs/T33/credentials.md on job/T33/credentials.
