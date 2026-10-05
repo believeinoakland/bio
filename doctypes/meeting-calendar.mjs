@@ -28,7 +28,7 @@
  * the most valuable thing this type produces. Minutes that have not appeared three
  * weeks after a meeting are a fact about the body, not a gap in the record.
  */
-import { CONFIDENCE, CONTRACT, entity, referential, temporal, diffEntities, readerView } from "../docprofile/doctypes/index.mjs";
+import { CONFIDENCE, CONTRACT, entity, referential, temporal, diffEntities, readerView, practiceValue } from "../docprofile/doctypes/index.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity, unescapeHtml } from "../site-profiles/index.mjs";
 import { evaluateRule, localDay } from "../bio-plane/src/civil-time/index.mjs";
 
@@ -46,15 +46,18 @@ import { evaluateRule, localDay } from "../bio-plane/src/civil-time/index.mjs";
  *  cannot be made (no weekend stated, a year the closures do not cover), never a guess. */
 function minutesDue(ctx, day) {
   const view = readerView(ctx);
-  const p = view.practice && view.practice.minutes_due_days;
-  if (!p || !Number.isInteger(p.value) || p.value <= 0)
-    return { due: null, why: "no active jurisdiction profile states how long minutes usually take" };
+  /* The period and its unit through docprofile's shared reader (as docprofile's own seed
+     reads it); the closure list it counts on from the view's same entry (jurisdictions R7). */
+  const p = practiceValue(ctx, "minutes_due_days");
+  if (!p) return { due: null, why: "no active jurisdiction profile states how long minutes usually take" };
+  const entry = view.practice && view.practice.minutes_due_days;
+  const closures = entry && typeof entry.closures === "string" ? entry.closures : null;
   const count = p.count === "business" ? "business" : "calendar";
   const zone = view.time_zone && typeof view.time_zone.value === "string" ? view.time_zone.value : "UTC";
   /* The closures a business count skips are the profile's own: the list the practice names
      (`closures`) when it names one, else the office calendar (civil-time R9). */
   const rule = { rule: "minutes_due_days", units: "days", amount: p.value, count, direction: "forward",
-                 basis: p.basis || null, starts: "act", ...(typeof p.closures === "string" ? { closures: p.closures } : {}) };
+                 basis: p.basis || null, starts: "act", ...(closures ? { closures } : {}) };
   let r;
   try { r = evaluateRule({ rule, anchor: { value: day, precision: "day", zone }, view }); }
   catch (e) { return { due: null, why: `the period could not be counted: ${String((e && e.message) || e)}` }; }
