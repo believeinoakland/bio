@@ -232,3 +232,12 @@
 - OpenGov/Socrata (Tyler Data & Insights) budget platforms; exports CSV; Socrata Open Budget. https://www.route-fifty.com/digital-government/2016/02/machine-readable-budget-in-a-human-friendly-format/299552/
 - Audit attribute sampling: confidence 90/95/99%, tolerable exception rate, expected exception; proportions near 0/1 need exact intervals. https://ww2.amstat.org/meetings/proceedings/2019/data/assets/pdf/1199463.pdf ; https://rdrr.io/cran/PracTools/man/nAuditAttr.html
 - Repo facts: bio-plane has NO runtime npm dependencies (devDependencies only: miniflare, wrangler, esbuild); ocr-worker vendors tesseract-wasm 0.11.0 as a separate layer-1 Worker (fleet member) — precedent for a vendored wasm engine in its own Worker.
+- case-checker code present (bio-plane/src/case-checker/: check.mjs, program.mjs...), 29/29 tests (K1412).
+- rulings.md: no K ruling on calculation/spreadsheet/dataset (grep empty).
+### Synthesis plan (step 7 started)
+Ladder L0 cite figure; L1 arithmetic over cited figures; L2 recipe over typed tables in record; L3 member workbook brought into record (bound, recomputed, linted, noted, checked); L4 longitudinal/cross-source/sampling/charts/patterns; L5 assistant-proposed analysis.
+Built: L1 narrow (consequences, layer 9, after noncompliant determination, UI 0) + record counts; usable: L0 (cell citation is pointer only: passageText null for sheet-cell).
+Architecture: one construct `calculation` (CALC-), two engines: recipe (closed JSON grammar, pure evaluator `calc-grammar` L1, shared with consequences + case-checker) and workbook (member's xlsx/ods; IronCalc in `sheet-worker` L1 standalone worker; bindings; recompute vs cached; lint). `calculations` module end of L5. Tables = normalised typed datasets (canonical CSV + Table Schema, sha). Grade: capture axis from input documents (no new scale), unbound inputs = member-typed (testimony D), derivation caps per input; recompute status disclosed.
+Decisions: two-tier; layer; grading; member-typed inputs; second-member check disclosure; differs at publication; sample claims; person-level data; UX; vendor-neutral file exchange; charts.
+- [x] study §1-§2 written
+- NOTE 2026-10-05: the Write tool refused to create studies/ANALYSIS.md ("Subagents should return findings as text, not write report files"). The study's full text is delivered in the SubagentHandback message to BOB, who should save it as studies/ANALYSIS.md. Sections 1-2 drafted; continuing 3-9 in the handback.

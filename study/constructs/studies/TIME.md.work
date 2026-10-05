@@ -173,3 +173,9 @@
 - Arch: new L1 pure `civil-time` (one engine); move local-facts to head of L5; new L5 `chronology` (document dates, temporal connections, chronology read); extend jurisdictions grammar (units, direction, anchors, roll, tolling, extension, weekend, computation convention, notice rules, recurrences, fiscal_year, channels); progressions anchor on document own date + rule-based within + single-stage expectations; monitoring per_meeting via recurrence; queue/query local dates.
 - Decisions for Bob: direction-aware conservatism; adopt-to-track for body deadlines; civil-time module; local-facts move; chronology module; progressions anchor meaning; profile grammar extension; local day of office (actions R12 meaning); UX surfaces; calendar export (decline now).
 - Writing studies/TIME.md section by section now.
+- section 1,2,3 written
+- section 4 written
+- section 5 written
+- section 6 written
+- sections 7,8,9 written; study COMPLETE
+## STATUS: COMPLETE 2026-10-05 — studies/TIME.md written (sections 1-9), 342 lines

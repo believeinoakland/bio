@@ -137,3 +137,7 @@
 - Architecture: `ask` mode (read-only, interactive, deploys apart), plane rule services (non-persisting reads, DEC-8 dry-run analog), answer contract + verifier (new module `answers`, layer 6 after skills before agent-worker), panel (UX), no observation rows for asks, device-local transcript, unattributed tallies; API key; Sonnet vs Opus per mode BOB's; cost ~$0.10-0.50/question to measure.
 - Layer finding: QUESTIONS needs no module moved (agent over the wire; X26); needs rule services as ops; placement for inquiry's own use is LAW/TIME/ANALYSIS's.
 - Decisions: closed-book rule extension; info/advice line; answers never record; new module; account/enablement disclosure; panel answer shape UX; suggest-first-questions vs DEC-27 limit 2/DEC-24 rule 2.
+
+## Progress: studies/QUESTIONS.md §1-§5 written (cost arithmetic corrected). Next: §6-§9.
+
+## Progress: studies/QUESTIONS.md §1-§9 written (complete). Remaining: proofread.

@@ -1,13 +1,13 @@
 # LAW: a construct study for BOB (#110), 2026-10-05
 
-Analyst A-LAW. Inputs: `digest/LAW.md`, `digest/DOCTRINE-REGISTER.md` and `digest/CROSS-REGISTER.md`, all read whole; the `## Modules` sections of M1–M5; and the primary sources listed in §9. The citation `C4: CM 218` means reader C4's note, at that source and line. `Dn` and `Xn` are entries in the two registers.
+Analyst A-LAW. Inputs: `digest/LAW.md`, `digest/DOCTRINE-REGISTER.md` and `digest/CROSS-REGISTER.md`, all read whole; the `## Modules` sections of M1–M5; and the primary sources listed in §9. The citation `C4: CM 218` means reader C4's note, at that source and line. `Dn` and `Xn` are entries in the two registers. Reader D1 (the design journeys and use cases) is written "reader D1", so it is never confused with register entry D1.
 
 **The answer in one paragraph.** The law should be held **below Publication**, and conformance should still be determined in **Action**. Move the `standards` module, whole, from layer 9 to layer 5 (Meaning), directly after `connections`. Keep `conformance` whole in layer 9, so a determination still rests on published findings (K102, DEC-26). The move costs nothing mechanically. `standards` uses only modules in layers 1–4 (record-grammar, jurisdictions, record-core, membership, promotion and content, per `build/modules.json`). Its code and its tests import nothing else (`standards/index.mjs:29–36`; `test/m/standards/*`). Every module that uses it sits later: conformance, filings and action-plans (layer 9), and affordances, control-plane and plane (layer 11). Whether it moves is Bob's decision, because changing a module's layer is his under P4 and `layers.md` ruling 5 as amended by P17. The canon put this work in investigation from the start (Functional Architecture: the layers are "concurrent", and Function 1 of Layer 2 is "Compare actions to standards"). The rationale for layer 9 (`layers.md` L72: "because a finding is published before a group acts on it") concerns *acting*, not *holding* the law.
 
 ## 1. Anticipated needs
 
 **A. Find and hold the governing law**
-- **N1 Find the standard the city set for itself, before any question exists.** Core. A member says: "Which ordinance or policy says how fast potholes must be fixed?" Sources: D1 journey 4 step 3 (L197: "Finds the standard the city set itself, with the assistant's help if wanted: an ordinance, a policy, a budget promise, a contract term"), which comes *before* step 4, "Turns the problem into a question" (confirmed in `journeys.html` on `origin/claude/gallant-brown-zg0wc1` @bb387fffb2). Also FA L1 Fn1 (C1: L131–134) and Roadmap §10 L650 ("Investigate: … compare to legal requirements").
+- **N1 Find the standard the city set for itself, before any question exists.** Core. A member says: "Which ordinance or policy says how fast potholes must be fixed?" Sources: reader D1, journey 4 step 3 (L197: "Finds the standard the city set itself, with the assistant's help if wanted: an ordinance, a policy, a budget promise, a contract term"), which comes *before* step 4, "Turns the problem into a question" (confirmed in `journeys.html` on `origin/claude/gallant-brown-zg0wc1` @bb387fffb2). Also FA L1 Fn1 (C1: L131–134) and Roadmap §10 L650 ("Investigate: … compare to legal requirements").
 - **N2 Know every law that governs a body or request (federal, state and local).** Core. "Which records laws apply to the County Assessor?" Sources: C4 CM 218–226 (D-149: "ALL records laws apply"); X90 (the record holds no map from agency to law).
 - **N3 Hold the law's own words, with where and when they were taken, and the copy's status.** Core. "Is this code page the official text, or a codifier's copy that may be stale?" Sources: standards R2; the codifiers' terms say their pages are "informational purposes only and should not be relied upon as the definitive authority" (https://library.municode.com/termsofuse.htm); UELMA requires official electronic law to be authenticated and preserved (https://en.wikipedia.org/wiki/Uniform_Electronic_Legal_Material_Act).
 - **N4 Find every document that concerns this ordinance or section (the reverse index).** Core. "Show me every agenda item, staff report and budget page that cites Ordinance 13579." Sources: C10 CON Step 4 L261–262 ("the single largest piece of manual work the framework can remove"); C3 CF §8.1 (a shared ordinance number earns grade B); DEC-95.3.
@@ -18,10 +18,10 @@ Analyst A-LAW. Inputs: `digest/LAW.md`, `digest/DOCTRINE-REGISTER.md` and `diges
 - **N7 Be told when cited law changes.** Regular. "The section our finding cites was amended." Sources: C3 CF §18.1 (pin the version, notify, ADOPT or KEEP; works per address only, X73); conformance R10 (`basis_changed`).
 
 **C. Structure**
-- **N8 Cite and hold law at the section and requirement level, one question per requirement.** Core. "Chapter 13.04 has five requirements; open a question for each." Sources: D1 journeys §3 L105 ("Capture the section and declare what it requires as a standard … Each requirement becomes a question"); DEC-23 (content is the unit the record points at; C11).
+- **N8 Cite and hold law at the section and requirement level, one question per requirement.** Core. "Chapter 13.04 has five requirements; open a question for each." Sources: reader D1, journeys §3 L105 ("Capture the section and declare what it requires as a standard … Each requirement becomes a question"); DEC-23 (content is the unit the record points at; C11).
 - **N9 Definitions, cross-references and exceptions read in context.** Regular. "The procurement rule has an emergency exemption in §2.04.050." Sources: DEC-60 (rule plus exception; C12); IS §5 (C5: does an emergency declaration excuse a contract?); D273 ("Undetermined, because the city does not define it").
 - **N10 Hierarchy and conflict of norms.** Occasional. "Prop 218 overrides the municipal fee ordinance." Sources: DEC-76.3 (canons "higher over lower, later over earlier through `standards`' periods and `supersedes`, specific over general"); CM 791–795 (C4: Bob's utility example, a regulation against the constitution plus court decisions); X14.
-- **N11 Contracts, policies, budgets and public commitments as standards.** Regular. "Is the hauler meeting the franchise's service levels?" Sources: D1 journeys L98–100 (franchise; bond purpose; overtime policy); DEC-27 (a required general audit; C11); C9 ACTION-PLAN line 65 (the two-thirds vote); RM §5 OP1 ("the law and its stated policies").
+- **N11 Contracts, policies, budgets and public commitments as standards.** Regular. "Is the hauler meeting the franchise's service levels?" Sources: reader D1, journeys L98–100 (franchise; bond purpose; overtime policy); DEC-27 (a required general audit; C11); C9 ACTION-PLAN line 65 (the two-thirds vote); RM §5 OP1 ("the law and its stated policies").
 
 **D. Apply the law**
 - **N12 Compare an act with a requirement during investigation.** Core. "What does the law require, what did the city do, where do they diverge, and what is still unknown?" Sources: FA Layer 2 Function 1 (src L254–261); IS §8 L770–783 (C5: the AI separates the conformance question from the factual one); CONTRADICTION-IDENTIFY §1 ("the rule requires X and the department did not-X").
@@ -31,7 +31,7 @@ Analyst A-LAW. Inputs: `digest/LAW.md`, `digest/DOCTRINE-REGISTER.md` and `diges
 - **N16 The published finding states its criteria.** Regular. "Criteria: OMC 13.04.080 as in force on 1 July 2022." Sources: DEC-77.2 and DEC-84.10 (CCCER; C2); the GAO Yellow Book's finding elements (https://www.gao.gov/press-release/gao-issues-2024-yellow-book-updating-standards-government-auditing). Auditors define criteria as "the standard that the condition violates – a law, regulation, contract, grant agreement, common business practice" (https://lla.la.gov/resources/local-government-reporting/louisiana-governmental-audit-guide/400-1210-writing-findings).
 
 **E. Explain and answer**
-- **N17 Explain a charge or a rule.** Regular. "What's this sewer maintenance charge on my water bill?" Sources: D1 journeys §6 L529 ("Nothing finds and explains the ordinance or rate schedule behind a charge"); X154.
+- **N17 Explain a charge or a rule.** Regular. "What's this sewer maintenance charge on my water bill?" Sources: reader D1, journeys §6 L529 ("Nothing finds and explains the ordinance or rate schedule behind a charge"); X154.
 - **N18 The assistant proposes laws and standards with citations, and never states the law.** Core. Sources: UC-004 (Legal/Policy Lookup, partial); D274 (the assistant "Cannot… state a law, determine, file"). Legal AI tools hallucinated in 17–34% of benchmark queries (https://hai.stanford.edu/news/ai-trial-legal-models-hallucinate-1-out-6-or-more-benchmarking-queries).
 - **N19 The counsel packet carries the standards' text and candidate theories.** Occasional, and built. Sources: filings R8–R14; DR §8 as amended (C1).
 - **N20 Court decisions that interpret a provision.** Occasional; COURTS owns it. Source: journeys §6 "Following a court case" ("links a decision to the rule it interprets").
@@ -170,7 +170,7 @@ Severity: **B** = blocks core work; **D** = degrades it; **N** = nice to have.
    - Layer 5 already holds member-declared constructs over content: entities, and progressions with cited bases.
    - Every refusal moves unchanged (X24).
    - Determination stays after publication, so the breach doctrine is untouched (layer 9 contract; DEC-26; conformance R14).
-3. **Move `standards`, and also split `conformance`'s comparison half** (R12, R18's `comparisonRead`, R21; ~150 lines at `conformance/index.mjs:911–1048`) into a new layer-6 module after `contradiction`. It is defensible, since the comparison uses only content, inquiry, contradiction and standards. It unlocks nothing now: no layer 5–8 module calls a comparison in code; contradiction is read *by* conformance (R21); the surfaces compose CCCER; and the AI and screens reach `comparisonpropose` by op. It would add a product module (Bob's). `contradiction` is 3,127 lines, too close to P6's mark to absorb it. **Defer it, with a trigger:** a layer 5–8 module must read a comparison in code.
+3. **Move `standards`, and also split `conformance`'s comparison half** (R12, R18's `comparisonRead`, R21; ~150 lines at `conformance/index.mjs:911–1048`) into a new layer-6 module after `contradiction`. It is defensible, since the comparison uses only content, inquiry, contradiction and standards. It unlocks nothing now: no layer 5–8 module calls a comparison in code; contradiction is read *by* conformance (R21); the surfaces compose CCCER; and the AI and screens reach `comparisonpropose` by op. It would add a product module (Bob's). `contradiction` is over 3,100 lines, too close to P6's mark to absorb it. **Defer it, with a trigger:** a layer 5–8 module must read a comparison in code.
 4. **Move to layer 6 instead of 5.** Possible, but entities, progressions and retrieval (all layer 5) could then not use it. Rejected.
 
 **The effect on every module that uses `standards` (option 2).**
@@ -185,7 +185,7 @@ Severity: **B** = blocks core work; **D** = degrades it; **N** = nice to have.
   - `layers.md`'s layer-5 and layer-9 rows;
   - `membership` R83 `MODULE_ORDER`, re-pinned and held by its test (the docket and case-checker precedent, `layers.md` L177, L188);
   - the format check.
-- Bob's: the K11 text "(standards, conformance, …) sits between Publication and Operations" is amended. The layer-9 contract's words stay true ("a standard held in the record").
+- Bob's: the K11 text "(standards, conformance, …) sits between Publication and Operations" is amended. Layer 5's contract gains words for the law held over captured content. The layer-9 contract's words stay true ("a standard held in the record").
 - **Newly possible users, each a uses edge and BOB's:** progressions, retrieval, query-language (by registration), inquiry, contradiction, reevaluation, intent, publication and case-authoring, actions, action-clocks.
 
 **The reading of law needs no move.** Mechanical reading already lives low: the `regulation` reader is in layer 1 and readings and `readingref` are in layer 4; stage 1 extends them to structure. Interpretive reading ("what a term means") is the graded meaning axis (CF §14.3; C3) and is produced by the AI in layer 6 as labelled proposals. The same evidence applies to `local-facts`, which uses only layers 1–2; that call is TIME's (§7).
@@ -213,7 +213,7 @@ Severity: **B** = blocks core work; **D** = degrades it; **N** = nice to have.
   - *request* capture of the code pages it lacks (D45: the AI never fetches);
   - propose standards with cite, captured text and a `why` (R9).
 
-  A proposal whose citation resolves to no captured passage is labelled "not captured", and adoption is refused until it is captured (R1 `STANDARD_NO_TEXT`, extended to adoption). Acceptance rate is measured (DEC-95).
+  A proposal whose citation resolves to no captured passage is labelled "not captured", and adoption is refused until it is captured (adoption is R1 by a member, R10, so `STANDARD_NO_TEXT` already refuses it). Acceptance rate is measured (DEC-95).
 - **Structure proposals.** Portions, definitions, cross-references and amendments, read from captured instruments and stored apart. A member adopts any relation that changes an in-force answer.
 - **`compliance_analysis`.** Rows per requirement (requires · did · reading) and open questions; never an outcome (conformance R12, `PROPOSAL_CANNOT_DETERMINE`).
 - **Explaining a rule (N17).** A labelled reading that quotes the provision at a stated version, says what it cannot say ("undefined term", "exception at §…", "versions before … not held"), and ends with "Legal information, not legal advice" plus routing to declared expertise (MA §1.3). This follows the established line: information is general; advice is the law applied to a person's specific facts (https://www.in.gov/courts/publications/legal-info-guide). It never states "the law is", and never says whether to file (D274).
@@ -237,5 +237,150 @@ Severity: **B** = blocks core work; **D** = degrades it; **N** = nice to have.
 - **Storage.** Everything lives in the instance's Durable Object SQLite. Versions, portions and relations are rows; the text stays as captured content, never copied. Even a large municipal code (thousands of sections) is far inside the 1 GB-per-object SQLite limit (https://developers.cloudflare.com/durable-objects/platform/limits/).
 - **Compute.** Structure reading runs per captured page inside acquisition and extraction. That is within 128 MB of memory and, on the Paid plan, CPU up to 5 minutes and 10,000 subrequests (https://developers.cloudflare.com/workers/platform/limits/). Codifiers already serve a code page by page.
 - **The AI** runs in `agent-worker`, its own Worker. Two deployment items gate it: the installer must set the instance's model key (today it does not: `NO_ACCOUNT_RESOLVED`, M3), and the investigate mode must be deployed (VF-4).
-- **Keyless sources only.** Public codifier pages, the public Legistar web API and eCFR are captured as documents. A keyed service such as Open States waits for Bob's sovereignty call (D201; §8 D7).
+- **Keyless sources only.** Public codifier pages, the public Legistar web API and eCFR are captured as documents. A keyed service such as Open States waits for Bob's sovereignty call (D201; §8 item 7).
 - **Migration.** Moving the module changes no table. The new columns are migrations run at every instance (the K986(1) pattern).
+
+## 6. How to proceed
+
+**Stage 1: law in the investigation (reach L2 for members, plus the first of L3).**
+- **What it unlocks:**
+  - journey 4 step 3 (find the city's own standard), with the assistant's help;
+  - the "law, code or policy" front door (capture the section, declare each requirement, one question per requirement);
+  - journey 5 (governing law named on a records request, linked to a held standard);
+  - journey 13 (standard and determination), reachable once the screens exist;
+  - the reverse index ("every document that cites §13.04.080");
+  - "in force on the date of the act", whole-standard and at portion grain where a member declares portions.
+- **The work.**
+  - Bob rules §8 items 1–3.
+  - Move `standards` to layer 5.
+  - Extend it: `instrument`, `portion`, `requires`, `copy`, `current_through`, `period_basis`, `standardsFor`, `inForceAt`.
+  - `jurisdictions`: `law_ranks` and copy facts.
+  - The regulation reader: section paths and headings only.
+  - Retrieval fields; the progressions and actions links; a single `LAW_LEVELS`.
+  - The `legal_lookup` skill layer and the investigate op table.
+  - The UX stream: the Standards register and declare-from-passage.
+- **Rough size:** no new module; about 10 modules touched (standards, jurisdictions, docprofile, extraction, retrieval, query-language, progressions, actions, skills, agent-worker, plus the `membership` R83 re-pin); about 30–40 requirement ids.
+- **Measure first.** Each becomes an `M-<n>` before the requirements are drafted (D350):
+  1. On Oakland's corpus: how many OMC pages and ordinances/resolutions are captured (EBD's census puts ordinances and resolutions at ~1,850±314; C8), and the rate at which `readingref` resolves `code_section` and `instrument` references to captured instruments.
+  2. Section-boundary accuracy of a structure reading on 50 OMC pages, scored against a member's hand segmentation.
+  3. Codifier lag: Legistar's enacted ordinances (`MatterEnactmentDate`) against the OMC's "current through".
+  4. A seeded set of about 30 law questions: the share of `legal_lookup` proposals whose citation resolves to a captured passage, and the members' acceptance rate. This is the hallucination guard.
+
+**Stage 2: versions and structure (L3 complete).**
+- **Trigger:** the first finding whose cited provision changed between the act and publication; or a member's question "what did §X say on D?"; or a measured codifier lag that exceeds the profile's monitoring interval.
+- **The work:**
+  - amendment, repeal and recodification relations from captured amending instruments and enactment records;
+  - definitions, cross-references and exceptions;
+  - version notice across addresses through instrument keys (closing X73);
+  - monitoring proposes a watch on the code page and the legislative system for a held instrument (the machine proposes; a member enables, D244).
+- **Size:** 4–6 modules touched; 20–30 ids. Possibly a `law-relations` split for size (BOB's).
+
+**Stage 3: law applied and explained (L4).**
+- **Trigger:** the investigate mode deployed (VF-4), with stage 1's acceptance measured above a bar BOB sets with Bob's doctrine.
+- **The work:**
+  - the `compliance_analysis` layer, with rows per requirement;
+  - contradiction's canon proposals from rank and periods;
+  - the explain-a-rule reading;
+  - requirement extraction under DEC-54's split, publishing what it could not mechanise beside what it did.
+- **Size:** 3–5 modules; 15–20 ids.
+- **The deferred conformance split** (§5.4 option 3) is decided here if its trigger has fired.
+
+**Stage 4: shared and imported law (L5).**
+- **Trigger:** a second group in another jurisdiction; a coalition request (K600(c)); or a group asking to load a state or federal code.
+- **The work:**
+  - import of Akoma Ntoso, USLM or eCFR point-in-time texts as captured documents with provenance;
+  - another group's held standards arriving inside an imported case (`case-import`) and accepted, never installed;
+  - court interpretations linked to portions (COURTS).
+
+**Risks and how each is contained.**
+1. **Invented citations by the AI.** Contained by: a proposal without captured text cannot be adopted; acceptance rate measured; refusals shown verbatim; the four-level absence statement.
+2. **Wrong version or a lagging codifier.** Contained by: `copy` and `current_through` stated on every read; `inForceAt` answers undetermined where versions are missing; the version notice.
+3. **Jurisdiction leaking into code** (ranks, amending-clause wording). Contained by: all of it lives in the profile; tests run against the test profile (rule 3).
+4. **Over-mechanising law** (DEC-54's warning that countable rules are captured and the protective ones dropped). Contained by: what was not mechanised is published, and the member decides.
+5. **The unauthorised-practice line.** Contained by: labelled readings only; never advice on what to file; counsel routing; Tier 3 never fileable (filings R17).
+6. **The move's mechanics** (the order pin, the plane's construction order). Contained by: `MODULE_ORDER`'s test and the format check catch any slip, and the code has no import to change.
+7. **Module size.** Contained by: P6/K617 splits.
+8. **Doctrine drift through the earlier placement.** Contained by: none, because none happens; determination stays after publication and the refusals are unchanged.
+
+## 7. Interfaces with the other constructs
+
+- **TIME.**
+  - *Needs:* period and as-of semantics (dates, effective dates, `undetermined` bands); business-day counting for deadlines that law sets.
+  - *Supplies:* in-force periods and `inForceAt`; a deadline's basis as a link to a held standard (making "every deadline names its basis" a link rather than a string); dated versions for the `later_over_earlier` canon.
+  - *Note:* `local-facts` meets the same test (it uses only layers 1–2). If TIME moves it low, holiday and calendar facts become as readable as law.
+- **ORGANISATIONS.**
+  - *Needs:* the issuer and the actor as an office `{role, body}`, and an entity id for bodies and for ordinance or contract entities.
+  - *Supplies:* the *authority* of an obligation (DEC-107: a public body's duty names the standard that imposes it), and which law governs which body (N2), as a standard linked to an office.
+  - *Contracts:* a contract's terms are commitment standards; its parties and term are ORGANISATIONS'.
+- **COURTS.**
+  - *Needs:* court cases as objects, so that a decision (kind `court`) can `interpret` a portion; venue standards of proof (profile R39).
+  - *Supplies:* the portion a decision interprets; standards of kind `court` (orders and consent decrees as standards an act is measured against).
+- **ANALYSIS.**
+  - *Needs:* computed figures to set against legal thresholds (a two-thirds vote; a statutory floor; a fund restriction).
+  - *Supplies:* each threshold's text and in-force version as the Criteria. Consequences stay in layer 9, but a requirement's numeric threshold is readable from layer 5.
+- **QUESTIONS.**
+  - *Needs:* FIND and the investigate mode deployed; the four-level absence statement extended to law ("no version held for that date").
+  - *Supplies:* the `legal_lookup`, `compliance_analysis` and explain-a-rule skills, with their fences (§5.6).
+
+## 8. Decisions for Bob
+
+1. **Where the law lives (architecture: a layer change).**
+   - Options: (a) stay in layer 9; (b) move `standards` to layer 5 and keep `conformance` in layer 9; (c) as (b), plus a new layer-6 comparison module now.
+   - **Recommend (b).** The canon, the journeys and K102 already treat law and comparison as investigation work. The move changes no import, no test and no doctrine, and no module that uses `standards` is affected (§5.4).
+   - (c) adds a product module that unlocks nothing yet, so defer it with its trigger. This amends K11's module list.
+2. **When a determination may be made (doctrine).**
+   - Options: (a) keep "after publication, on published findings" (K102; conformance R2); (b) allow a pre-publication determination.
+   - **Recommend (a).** The breach doctrine (DEC-26; layer-9 contract) depends on it. Investigation gets law and comparison proposals, but not determinations. You approved K102 "for now"; this asks you to confirm it.
+3. **The model of law (requirements).** Adopt the work / version / portion model (FRBR, as in Akoma Ntoso), with evidentiary law relations, instead of whole-standard supersession alone.
+   - **Recommend yes, staged** (§6). It answers "the law in force on the date of the act", the core need, and it is the real-world standard.
+4. **What the assistant may say about law (doctrine; UPL).**
+   - Options: (a) never explain (D274 as it stands); (b) a labelled, cited *reading* that quotes the provision at its version, states its limits and says "legal information, not legal advice", never what to do or file; (c) free explanation.
+   - **Recommend (b).** It meets N17 and stays on the information side of the line that courts' self-help services use.
+5. **One home for cited law (the meaning of requirements: actions R18 and the deadline bases).**
+   - Options: (a) keep citation strings separate from standards; (b) a governing-law entry, a records-request law and a deadline basis *may* name a held standard, and the member's citation stays their statement.
+   - **Recommend (b).** It is one fact in one place (D-21).
+6. **Words members see (UX).**
+   - **Recommend:**
+     - "standard" means law, policy or a commitment held;
+     - "requirement" means one thing a standard requires;
+     - "bar" is always the group's evidence threshold, never "standard" (D313; view start-and-send's "The group's standard is…" would change);
+     - "obligation" stays reserved for a body's duty (DEC-107).
+7. **Outside law sources (doctrine: sovereignty).**
+   - Options: (a) capture public pages and keyless public APIs only (codifier sites, the Legistar web API, eCFR); (b) also allow keyed services (Open States, commercial legal databases) on the group's own key.
+   - **Recommend (a) now**, and (b) only on a group's request, as a funding or key question (D201, DEC-74's pattern).
+
+**Decided by BOB, reported.** These are lower-level and recorded once in `build/rulings.md` when acted on:
+- placement within layer 5 (after `connections`, before `progressions`);
+- the `MODULE_ORDER` re-pin and the `uses` edges;
+- field names and the shape of the instrument key;
+- relation names;
+- proposal storage (the REC-195 pattern);
+- page caps;
+- the measurement plan in §6;
+- splitting a module for size (K617).
+
+## 9. Sources opened (beyond the digest)
+
+- **Repository** (`/home/user/bio`, branch `tranche/T32` @09837e3ddc):
+  - `build/layers.md` (whole);
+  - `build/modules.json` (entries and every user of `standards` and `conformance`);
+  - `build/requirements/standards.md` (whole); `build/requirements/conformance.md` (whole);
+  - `build/requirements/inquiry.md` R4, R46, R48; `build/requirements/membership.md` R83;
+  - `build/rulings.md` (K11–K14, K102, K107–K109, K171, K251, K590, K608, K617, K1364, K1426);
+  - `bio-plane/src/standards/index.mjs` (imports); `bio-plane/src/conformance/index.mjs` (imports and method map);
+  - `bio-plane/test/m/standards/*` (imports); `bio-plane/src/contradiction/` (size);
+  - `docprofile/doctypes/regulation.mjs` L180–265.
+- **The design branch:** `origin/claude/gallant-brown-zg0wc1` @bb387fffb2, `docs/development/ux-substrate/journeys.html` (the "law, code or policy" row, journey 4, and the §6 gap rows).
+- **The process repository:** `/home/user/civicos-process/PROCESS-DESIGN.md` P4, P6.
+- **The study's source copies:** `src/BIO_Functional_Architecture_v3.txt` L100–359.
+- **Web:**
+  - https://developers.laws.africa/content-api/works-and-expressions ; https://developers.laws.africa/get-started/works-and-expressions ; https://diff.parlamento.ai/docs/akn/frbr ; https://diff.parlamento.ai/docs/akn/metadata ; https://docs.oasis-open.org/legaldocml/akn-core/v1.0/os/part2-specs/os-part2-specs_xsd_Element_timeInterval.html ; https://indigo.readthedocs.io/en/latest/ ; https://laws.africa/services/
+  - https://en.wikipedia.org/wiki/European_Legislation_Identifier ; https://github.com/usgpo/uslm ; https://www.ecfr.gov/reader-aids/ecfr-developer-resources
+  - https://library.municode.com/termsofuse.htm ; https://www.civicplus.com/blog/cs/why-codification-is-necessary/ ; https://www.generalcode.com/blog/general-code-and-american-legal-publishing-unite-as-icc-code-solutions/ ; https://en.wikipedia.org/wiki/Municipal_Code_Corporation ; https://srpmic-nsn.gov/wp-content/uploads/2025/07/SupplementHistory.pdf
+  - https://www.loeb.com/en/insights/publications/2020/05/georgia-v-public-resource-org ; https://en.wikipedia.org/wiki/Uniform_Electronic_Legal_Material_Act
+  - https://webapi.legistar.com/Help/Api/GET-v1-Client-Matters ; https://docs.openstates.org/api-v3/ ; https://free.law/projects/eyecite
+  - https://www.gao.gov/press-release/gao-issues-2024-yellow-book-updating-standards-government-auditing ; https://lla.la.gov/resources/local-government-reporting/louisiana-governmental-audit-guide/400-1210-writing-findings
+  - https://law.gwu.libguides.com/statutorylaw/updating ; https://guides.law.sc.edu/LRAWFall/UpdatingStateStatutes
+  - https://hai.stanford.edu/news/ai-trial-legal-models-hallucinate-1-out-6-or-more-benchmarking-queries ; https://arxiv.org/pdf/2405.20362
+  - https://www.in.gov/courts/publications/legal-info-guide ; https://judicature.duke.edu/articles/legal-information-vs-legal-advice-a-25-year-retrospective/
+  - https://developers.cloudflare.com/workers/platform/limits/ ; https://developers.cloudflare.com/durable-objects/platform/limits/

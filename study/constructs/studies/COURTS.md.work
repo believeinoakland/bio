@@ -7,7 +7,7 @@
 - [x] notes/M1..M5 ## Modules (M1 76-269, M2 28-136, M3 30-167, M4 28-110, M5 24-107) complete
 - [x] primary sources (standards.md whole; progressions.md whole; filings.md whole; jurisdictions.md whole; entities.md whole; layers.md whole; modules.json L3-10 order/uses; monitoring.md R14/R30/R52/R67-68 + status; capture-sources.md R55-R63 + code check credentials.mjs, capture-requests/index.mjs:782; design-journeys.txt §3 L88-127, §6 L512-541; Roadmap §1 L248-307, App B L1068-1106; rulings.md grep)
 - [x] web research (searches below)
-- [ ] study sections 1-9
+- [x] study sections 1-9 (studies/COURTS.md, 295 lines, reviewed whole)
 ## Findings
 
 ### Digest COURTS key findings
@@ -162,3 +162,6 @@
 - Decisions for Bob: scope/target; A vs B; private parties; fee-bearing sources & credentials; machine quote-only on rulings; compelled removal (defer w/ trigger); UX home of proceeding.
 ## Study writing progress
 - sections 1-4 written
+- section 5 written
+- sections 6-9 written; study complete pending review
+- COMPLETE 2026-10-05: study written and reviewed; summary returned to caller.

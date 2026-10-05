@@ -95,3 +95,201 @@ COURTS has no object of its own: "No op in the 446 names a court case, docket of
 | D4 | litigation hold built at the plane, device half (N521) and every member door missing | **degrades** |
 | E1 | Grade A deferred (DEC-81 (4)) | **nice to have** until its trigger |
 | D5 | no path for a court-ordered removal or redaction of a published case | **nice to have** now; policy (§8) |
+
+## 5. Proposed architecture
+
+**Target: L3**, with L1's citation discipline and L4's links held as data; L4's assistance and L5 later. Why: the founding case's own material is L3 work (the Auditor's February 2022 recommendations, a grand jury complaint, a records petition; C1: RM §1 L250–258), the journeys' court and regulatory rows need L2 (§3 L106, L111), and Bob put court cases at the heart of the work. L5 waits on Bob's own deferral of the backward question (CM §6b L1098–1118, D-165: "a capability added later to a structure that already exists").
+
+**Adopted from practice, and why.**
+- *OASIS ECF 5.0 (NIEM 4.0)* for names, not for exchange: case type, the docket entry ("an entry in the docket or register of actions for a case"), party roles (https://docs.oasis-open.org/legalxml-courtfiling/ecf/v5.0/cs01/model/niem-mapping.html). The group never files electronically (D295), so the XML is not needed; the vocabulary avoids inventing.
+- *CourtListener's split* (docket → entries → documents; opinion → citations) as the shape, and as an optional source: public pages and RECAP PDFs need no key; its API's default 5/min, 50/hour, 125/day (https://wiki.free.law/c/courtlistener/help/api/rest/v4/overview) suits a member's lookups, not instance-wide polling.
+- *eyecite's citation forms* (full, short, supra, id.) and *reporters-db* (1,167 reporters, 2,102 variants, JSON; https://free.law/projects/reporters-db) and *courts-db*, held as **profile data** read by a pattern recogniser, the way `vocabulary.codes` is (jurisdictions R6): they are U.S. facts, so they live in a profile, not in code (layers.md rule 1).
+- *Reported status, quoted*: a monitor's Preliminary/Secondary/Full, an auditor's Implemented/In process, a respondent's 933.05 answer are someone's statements, held as written with their source (D67, D95); a fixed legal response vocabulary (933.05's four answers) is profile data.
+- *CPUC service-list roles* (party, information only) among party roles, so the group's own standing in another's proceeding is expressible.
+
+**Data model.** No new record object type; every object is append-only, dated and attributed.
+
+| object | shape | where it lives |
+| --- | --- | --- |
+| **proceeding** | an entity of a new kind `proceeding` (entities R1's closed list revised) with a facet: `forum` (entity id: a court, commission, grand jury or auditor, kinds `institution`/`body`/`office`), `forum_kind` (court, tribunal, commission, grand_jury, audit, inspector_general, other), `number` (an alias; recognised by a profile space `proceeding` with forms per forum, so a capture whose reading carries the number resolves at A, entities R9), `kind` (profile vocabulary `proceeding_kinds`), `title` (the caption's extent, never retyped) | `entities` (5) |
+| **parties and links** | ORGANISATIONS' evidentiary relation (X102: graded, cited, dated, never constitutive): `party_to {role}` from an office, body or institution (roles petitioner, respondent, plaintiff, defendant, intervenor, amicus, monitor, party, information_only); a private party only as the class "a private party" (§8 D-C3); `appeal_of`, `consolidated_with`, `remanded_to`, `arises_from` between proceedings; `enforces` from a proceeding to the decree held as a `court` standard | ORGANISATIONS' relation home (layer 5) |
+| **register entries** | not a store: a `court_register` reader turns each capture of a register page (state register of actions, CourtListener docket page, CPUC docket card) into rows `{date as written, text as written, filer as written, document link?}` as content extents; rows absent from the previous capture are the new entries (monitoring's existing assess); a row says what the register showed at retrieval and is never a finding (D76) | `docprofile` (1), `content` (4), `monitoring` (10) |
+| **stages** | a progression per proceeding kind (CF §8.2: a new flow is data, D225), offered from profile `proceeding_flows` and adopted by a member (DEC-54, D16); instance = (flow, proceeding); orders, judgments and notices threaded into it; status (pending, decided, on appeal, closed, undetermined) derived on read as of a date (progressions R24) | `progressions` (5), `jurisdictions` (1) |
+| **dates** | `{date, what, basis}` where basis is the extent of the order, notice or register row, or a profile rule; rule-computed dates from profile `deadlines` whose `starts` gains `entered`, `served`, `hearing` (jurisdictions R26), on the venue's calendar (R43); never invented (D250) | TIME's construct; `progressions` gains a document's own date (its CF §8.2 trigger) and a stage due on an absolute date |
+| **the group's own proceeding** | `actions` gains `proceeding` (entity id) on the action and on its `court_filing`/`court_decision` correspondence entries | `actions` (9) |
+| **duties (L3)** | ORGANISATIONS/LAW's obligation record `{owed_by office, owed_to, act, by (date or rule), authority (a `court` standard for an order or decree paragraph; a `statute` standard for a mandated response) + extent, arising_in (proceeding)}`; **reported status** `{reported_by office, status as written, as_of, extent}`; the group's own reading remains a conformance determination (layer-9 contract) | ORGANISATIONS/LAW's home; `conformance` (9) |
+| **decision → provision (L4)** | relation `interprets`, `applies` or `holds_invalid` from an extent of a `court` standard to an extent of a statute or ordinance standard; **treatment** rows (`reversed`, `vacated`, `depublished`, `overruled`, `affirmed`) each citing the later decision's extent; "still standing on date D" derived, undetermined where unread (D134) | LAW's provision structure; `standards` |
+
+**Module changes (recommended, Option A: no new module).** `entities` +kind `proceeding` and its facet (≈6 requirements); `jurisdictions` +`spaces.proceeding`, `vocabulary.proceeding_kinds`, `reporters` and `courts` data, `proceeding_flows`, the new `starts` (≈6); `docprofile` +doctypes `court_register`, `court_order` (orders, opinions, judgments: caption, number, date entered, numbered paragraphs, citations) and `oversight_report` (numbered findings and recommendations, required responses) (≈8); `progressions` +document-own date anchor and absolute due date with basis (≈3); `actions` +`proceeding` link (≈2); a **citation check** (≈3): a citation resolves to a held opinion capture or is answered "not verified", judged as identifiers are (`id-spaces` pattern, layer 1) and read in layer 5 so `run-productions` (6) and `filings` (9) can use it. About 28 requirements, six modules, nothing moves.
+- **Option B**: a new product module `proceedings` in layer 5 directly after `progressions` (before `bias`): the proceeding facet, register rows joined across captures, derived status, the action link's read. Uses record-grammar, record-core, membership, promotion, provenance, extraction, content, entities, connections, progressions; used by retrieval (registered facts), actions, filings (related proceedings in a packet), monitoring, affordances, control-plane, plane. No module moves and no edge is lost (`modules.json` checked); membership's `MODULE_ORDER` is re-pinned as for `docket` (layers.md L177). Choose B when the facet needs its own acts and tables beyond registration (members annotating entries, for example) or `entities` (1,326 lines) nears 4,000 (P6).
+- **Layer order.** COURTS needs no move of its own. It depends on LAW's answer to the structural observation: while `standards` stays in layer 9, a decision is law only after publication, and inside an inquiry it is a document and a leg (X16, X23). COURTS supports making `standards` readable at or below layer 6.
+
+**The AI's role.**
+- *May do, machine-attributed* (DEC-52, D8): register a proceeding from a captured register or caption, add its number as alias, resolve captures to it, thread an instance.
+- *Proposes, stored apart and labelled* (REC-195/D53; reversible, DEC-88): parties and links, a flow to adopt, dates with their basis, duties from an order's paragraphs, interprets links and treatment, related proceedings and precedent (as capture requests, D45), candidate theories (filings R14, exists).
+- *Never*: states what a ruling holds, what the law is, or whether the city complied, as its own sentence; it points at and quotes extents (D274, D117, D47, D275); enters a deadline nobody adopted (an authored deadline is the licence for tracking, X37); spends a member's fee-bearing credential or runs unattended (D13, D206); registers a private party (actions R9, D176); recommends a legal step (D279, D255).
+- *Fence in code* (D44): any citation in machine output, a proposal or a packet section that does not resolve to a held opinion is labelled "not verified" (refusing nothing, D88), the guardrail practice uses (https://free.law/2024/04/16/citation-lookup-api/).
+- *Skills and run modes*: pack layers `court_reading` (run mode `extract`) and `legal_lookup` (run mode `investigate`, the Legal/Policy Lookup skill standards R9 names); member-launched only (D13). Watching registers is `monitoring`'s daemon work, never an AI run.
+
+**Doctrine kept.** Members decide; the machine finds, proposes and prepares and never attests or concludes (layer 6 and 9 contracts; D1, D3). Labelled drafts (K1364, D14). Undetermined first-class and never defaulted (D55, D56); absence stated by level (D59); silence earned (D134). A grade states checkability, not truth (D95); two publications of one opinion are one source (D102); a court's number matches another system's id only through a captured crosswalk (D184). Declared relations constitutive and never traversed (entities R26, D178), so party and appeal links are evidentiary, not entity relations; Declared Bias safeguard 4 untouched (D186). Addressees are offices, never private individuals (actions R9, D156), personal data under D-77 and invariant 7 (D160), individuals named only in official capacity (D176). Every deadline names its basis and none is invented (layer-9 contract, D250, D256); the group's own checkpoint is never a finding about the government (D234). The venue sets the evidence standard (Action §4 rule 13, D282). Nothing leaves by a system path (D295); requests are not disguised (D375). No jurisdiction in product code (layers.md rule 1, D196); profile facts sourced to primary pages (D197). Sovereign instance, never a required vendor key (D201; SCHEDULER L150–154); paid outside services only on a real trigger (DEC-74, D206). A capability serves the path and takes a place in an existing construct (DEC-48 D224, D231).
+
+**Runtime and deployment.**
+- Polling: one register read per followed proceeding per authored cadence (daily by default) inside monitoring's tick (at most 50 subjects per tick, monitoring R19); each read is one subrequest (Workers Paid: 10,000 per invocation by default, CPU 30 s default and up to 5 min, waiting on fetch not counted; https://developers.cloudflare.com/workers/platform/limits). Thirty proceedings is under one tick.
+- Portals needing cookies or script go through the renderer (capture-sources R19–R25); a register that refuses is "unreachable from this vantage" (D376), never "no new filings"; a member's upload stays the fallback.
+- Fee-bearing records (PACER $0.10/page, $3 cap, waived at $30/quarter; Alameda $1/page, $50 cap) only by a member's act, price shown first (D20), with the member's own credential (capture-sources R55–R63, K103), the capture marked not reproducible by the public. Never in an unattended run.
+- Optional CourtListener token as an `other` credential for its host; Citation Lookup takes 64,000 characters, 250 citations a request, 60 a minute, token required (https://wiki.free.law/c/courtlistener/help/api/rest/v4/citation-lookup).
+- Orders and opinions are PDFs, often scanned: existing `pdf-worker` and `ocr-worker`, OCR labelled (D69).
+- Deployment: per jurisdiction, researched profile facts (case-number forms per court, register addresses, court holidays per year (Oakland holds 2026 only), rule start events), each with its measurement (D197); a fictional court in the test profile (layers.md rule 3).
+
+## 6. How to proceed
+
+**Stage 1 · Follow a proceeding (L1 and L2).**
+- *Unlocks:* the journeys' "court case" and "regulatory proceeding" ways in (§3 L106, L111, leading into journeys 7, 13, 14), removing the §6 L531 gap; needs A1–A5, A7, C1 (with LAW's surface), C3's verification half, D1, D2; F once QUESTIONS' cited read lands.
+- *Size:* no new module (Option A); six modules touched (entities, jurisdictions, docprofile, progressions, actions, the citation check's two homes); about 28 requirements; profile research for the first profile.
+- *Measure first* (D350):
+  1. Capture three real registers whole and read them: the Alameda eCourt register of actions by case number, a CourtListener federal docket page, a CPUC docket card. Does each capture without a login or script, and does a reader recover the rows?
+  2. The number forms of those three forums, as `M-NEW` measurements.
+  3. Ask the group how many proceedings it would follow, and how often, to size the cadence.
+  4. Whether ORGANISATIONS' evidentiary relation lands in the same tranche. If not, parties stay the captured caption, stated.
+
+**Stage 2 · Duties from proceedings (L3).**
+- *Trigger:* Stage 1 in use; ORGANISATIONS' and LAW's obligation construct decided; `standards` readable from investigation; a group starts on a decree, a grand jury report or an audit follow-up. The founding case's February 2022 recommendations already qualify.
+- *Unlocks:* B1–B3; A6 once ANALYSIS holds amounts as values (A37).
+- *Size:* about 15–20 requirements across the obligation home, progressions' response clock and docprofile's `oversight_report` paragraphs. Conformance per standard already exists (conformance R4).
+
+**Stage 3 · Precedent and assistance (L4).**
+- *Trigger:* `extract` and `investigate` deployed (VF-4's chain); LAW's provision structure built; members linking decisions to provisions by hand (count them).
+- *Unlocks:* C2, C3's finding half, D3, B4.
+- *Size:* treatment rows and the `interprets` relation (≈6 requirements), two skill layers.
+
+**L5.** *Triggers:* D-165's own trigger (members answering the backward question by hand; CM status L25); amounts as values; a group asking for cross-proceeding patterns.
+
+**Risks and how each is contained.**
+1. *Private persons in filings.* Only offices, bodies and institutions are registered as parties; names stay in the captured bytes (D360), never extracted as subjects or published by the group's act (D165, D168).
+2. *Fees and accounts.* Only by a member's act, the price shown first; no unattended spend; no required vendor key.
+3. *Fragile or blocking portals.* Unreachable is stated per vantage (D376); a member's upload stays; CourtListener/RECAP is the federal alternative; the user agent is never disguised (D375).
+4. *Hallucinated or misread law.* The machine quotes, never paraphrases a holding; the citation check is code; proposals are labelled.
+5. *Read as legal advice.* Applying law to someone's own facts is advice (https://judicature.duke.edu/articles/legal-information-vs-legal-advice-a-25-year-retrospective/). The packet's "Not legal advice" marking (filings R10) stays, and legal tools are shown as facts (D279).
+6. *Drift into case management.* No assignees, budgets or billing (D258's pattern).
+7. *California facts leaking into code.* Every form, kind, flow and response vocabulary is profile data; the test profile has a fictional court.
+8. *Word clashes.* "Proceeding" and "register", never "case" or "docket", on member surfaces (D320).
+9. *Sealed material and compelled removal.* §8 D-C6.
+10. *Adverse precedent from the group's own suit.* The tiers are unchanged (D-182).
+
+## 7. Interfaces with the other constructs
+
+| construct | COURTS needs from it | COURTS supplies to it |
+| --- | --- | --- |
+| TIME | absolute dates with a basis extent; a document's own date; court calendars per venue (exists, jurisdictions R43); rule computation with `entered`, `served`, `hearing` starts; response clocks (60/90 days) | court-set deadlines and hearings, register dates, stage timelines for chronologies (filings R9) |
+| ORGANISATIONS | an evidentiary relation type (graded, cited, dated) for `party_to {role}`, `appeal_of`, `enforces`; the obligation record (owed by, owed to, act, by when, authority); a forum as institution or body; offices over time where a party is an office | proceedings as sources of duties and of relations (who is party, who monitors whom), reported-status rows |
+| LAW | `standards` readable during investigation; provision structure with extents (for `interprets`); treatment history beyond one `supersedes` | decisions and orders as `court` standards; decree paragraphs as standards; AG opinions as persuasive readings; `interprets` links |
+| ANALYSIS | amounts as values (A37) for settlements and judgments; viewer-gated counts across proceedings (X114) | settlement and judgment figures with their basis; response and compliance data for patterns |
+| QUESTIONS | the cited read with its level (FIND); `extract` and `investigate` modes; a pack layer per stage | the proceeding as a subject to ask about; the citation check, reusable for any legal citation in an answer |
+
+## 8. Decisions for Bob
+
+Each is policy, doctrine, a requirement's meaning, architecture at the module level, or UX. Lower-level choices are BOB's and stated as decided after the list.
+
+- **D-C1 · Scope and target level.** Should Civicsmith follow proceedings others bring (the city as a party, regulatory proceedings, decrees, grand jury and audit follow-up) as first-class work?
+  - (a) Stay at L0: court material is documents.
+  - (b) L2: follow proceedings, no duties.
+  - (c) **L3, recommended:** follow proceedings and track the duties they impose. L4's links are held as data, the assistance comes later, and L5 waits.
+  - *Why (c):* the founding case's own material is L3 work (B3, B2), and Bob placed court cases "at the very heart". Doctrine permits it unchanged.
+- **D-C2 · Architecture: where a proceeding lives** (a product module or layer change is Bob's, layers.md ruling 5).
+  - (A) **Recommended:** no new module. `proceeding` becomes an entity kind, and `jurisdictions`, `docprofile`, `progressions` and `actions` are extended.
+  - (B) A new layer-5 module `proceedings`, directly after `progressions`.
+  - (C) A home in layer 9 beside `actions`. Rejected: investigation could not read it (X8).
+  - *Why (A):* it uses the Content Framework's own extension path (a flow is data, a new kind is a registry revision; D225, D231) and adds no module. Move to (B) when the facet needs its own acts or tables, or `entities` nears P6's mark.
+- **D-C3 · Doctrine: private persons in court records.** Parties to suits against the city are often private individuals.
+  - (a) **Recommended:** parties are registered only as offices, bodies or institutions; a private party is the class "a private party". Names stay in the captured bytes and are never extracted as a subject, indexed by name or published by the group's act.
+  - (b) As (a), but a person named in an official capacity is registered as that office (D176). **Recommended together with (a).**
+  - (c) Leave it to each group's editorial policy (D169).
+  - *Why (a)+(b):* it carries actions R9 and D-77 into a domain full of private names without losing what watchdogs need: which office, which proceeding.
+- **D-C4 · Policy: fee-bearing and account-gated court sources** (PACER, state portals).
+  - (a) **Recommended:** a member may use their own credential (the K103 path) and fetch a fee-bearing record only by their own act, the price shown first. Never in an unattended run, and no vendor key is ever required.
+  - (b) Refuse fee-bearing sources; members upload by hand.
+  - (c) A group-level paid account used by the daemon. Rejected: DEC-74's trigger and D13.
+- **D-C5 · Doctrine: what the machine may say about a ruling or an order.**
+  - (a) **Recommended:** it points at and quotes extents, and proposes labelled links (interprets, duty, date). It never writes a holding, the law or compliance as its own sentence.
+  - (b) Labelled summaries as K1364 drafts a member may keep.
+  - *Why (a):* "the assistant cannot … state a law" (D274), and the pilot's no-own-propositions rule (D47). Revisit (b) only after acceptance is measured (D40).
+- **D-C6 · Policy: a court order to remove or redact a published case** (DEC-116.7 left it "a separate question").
+  - (a) **Recommended:** defer, with the trigger "the first such order served on a group", and record the principle now. An order addressed to the group is complied with, never silently: the order is captured, a signed docket entry names it, and the edition is stamped. CourtListener's practice is the model.
+  - (b) Design the path now.
+- **D-C7 · UX: where a member meets a proceeding.**
+  - **Recommended:** a subject page for the proceeding, reached from the subject list and from the matter page. Its register is shown as rows with new ones marked, and its dates are marked "the court's date, not ours" (D234). It is a place in existing constructs, not a new screen family (D231).
+
+*Decided by BOB (reported, not asked):*
+- The names `proceeding` and `register`.
+- Party roles taken from ECF and the CPUC service list.
+- reporters-db and courts-db held as profile data.
+- The citation check is plane-side, labelling and never refusing.
+- A followed register's default cadence is daily.
+- Reported statuses are quoted claims, never grades (D67, D95).
+- Option A's file split, and Stage 1's measurements before any requirement is drafted.
+
+## 9. Sources opened
+
+**Study files, whole:** `ANALYSIS-PROTOCOL.md`, `constructs-brief.md`, `READING-PROTOCOL.md`, `prompts/A-COURTS.txt`, `digest/COURTS.md` (1–462), `digest/DOCTRINE-REGISTER.md` (1–2815), `digest/CROSS-REGISTER.md` (1–1049), and the `## Modules` sections of `notes/M1.md` (76–269), `M2.md` (28–136), `M3.md` (30–167), `M4.md` (28–110) and `M5.md` (24–107).
+
+**Primary sources (bio @ `09837e3ddc`, read-only):**
+- Whole: `build/requirements/standards.md`, `progressions.md`, `filings.md`, `jurisdictions.md`, `entities.md`; `build/layers.md`.
+- In part:
+  - `build/modules.json`: order and uses, layers 3–10.
+  - `build/requirements/monitoring.md`: Status, R14, R15, R30, R52, R67, R68.
+  - `build/requirements/capture-sources.md`: R55–R63.
+  - `build/rulings.md`: searched for court-related rulings.
+  - Code: `bio-plane/src/capture-sources/credentials.mjs`, `capture-requests/index.mjs`:782 and `civicos-ui/app.html`:3313.
+- Canon text copies (`src/`):
+  - `design-journeys.txt` §3 L88–127 and §6 L512–541.
+  - `BIO_Complete_Roadmap_v5.txt` L248–307 and L1068–1106.
+  - `BIO_Case_Making_v0_1.txt` §6b L1073–1127.
+  - `SCHEDULER.txt` L140–164.
+
+**External:**
+- Free Law Project:
+  - https://wiki.free.law/c/courtlistener/help/api/rest/v4/overview
+  - https://wiki.free.law/c/courtlistener/help/api/rest/v4/recap
+  - https://wiki.free.law/c/courtlistener/help/api/rest/v4/citation-lookup
+  - https://wiki.free.law/c/courtlistener/help/alerts/docket-alerts-for-pacer
+  - https://www.lawnext.com/2025/06/courtlistener-launches-recap-search-alerts-for-pacer-filings-google-alerts-for-federal-courts.html
+  - https://free.law/2024/04/16/citation-lookup-api/
+  - https://free.law/2018/08/21/announcing-pacer-docket-alerts-for-journalists-lawyers-researchers-and-the-public/
+  - https://free.law/projects/reporters-db
+  - https://pypi.org/project/courts-db/0.10.24
+  - https://pypi.org/project/eyecite/2.0.0
+  - https://free.law/projects/juriscraper
+  - https://wiki.free.law/c/terms/courtlistener/courtlistenercom-content-removal-policy
+- PACER and court access:
+  - https://pacer.uscourts.gov/help/faqs/how-much-does-it-cost-access-documents-using-pacer
+  - https://courts.ca.gov/cms/rules/index/two/rule2_503
+  - https://eportal.alameda.courts.ca.gov/?q=node/388
+- Case law: https://www.lawnext.com/2024/03/event-tomorrow-marks-the-end-of-commercial-restrictions-on-the-caselaw-access-project-that-digitized-all-u-s-case-law.html
+- Court filing standard:
+  - https://docs.oasis-open.org/legalxml-courtfiling/ecf/v5.0/cs01/model/niem-mapping.html
+  - https://niem.gov/node/708
+- Grand juries:
+  - https://california.public.law/codes/penal_code_section_933.05
+  - https://www.santacruzcountyca.gov/Portals/0/County/GrandJury/GJ2009_responses/Instructions.htm
+  - https://www.placer.courts.ca.gov/sites/default/files/Response%20Report%20for%202022-2023.pdf
+- Consent decrees:
+  - https://www.oaklandca.gov/Public-Safety-Streets/Police/OPD-Policies-and-Resources/OPD-Independent-Monitor-Report-2010-2025
+  - https://www.kqed.org/news/12101833/a-new-beginning-oakland-police-to-exit-federal-oversight-after-23-years
+  - https://www.justice.gov/crt/case-document/file/1365081/download
+  - https://news.wttw.com/2022/12/16/chicago-police-must-significantly-improve-community-partnership-efforts-independent (search summary; the page refused a direct fetch)
+- Regulatory proceedings:
+  - https://webproda.cpuc.ca.gov/about-cpuc/divisions/news-and-public-information-office/public-advisors-office/tracking-issues-of-interest
+  - https://www.cpuc.ca.gov/-/media/cpuc-website/files/legacyfiles/h/11314-how-to-become-a-party-in-a-cpuc-proceeding.pdf
+  - https://open.gsa.gov/api/regulationsgov/
+- Audit follow-up:
+  - https://seattle.gov/documents/Departments/CityAuditor/auditreports/RecFollowUp2021_FINAL.pdf
+  - https://www.sandiego.gov/auditor/reports/recommendation-follow-dashboard
+- AG opinions:
+  - https://oag.ca.gov/node/6
+  - https://hooperlundy.com/news-pdf/?pdf=929
+- Watchdog practice:
+  - https://www.kuow.org/stories/tracking-police-misconduct-settlements-that-cost-cities-millions
+  - https://www.openphilanthropy.org/wp-content/uploads/Court_Watch_NOLA_CDC_Annual_Report_2016.pdf
+  - https://journalistsresource.org/?p=75500
+- Legal information and advice: https://judicature.duke.edu/articles/legal-information-vs-legal-advice-a-25-year-retrospective/
+- Runtime: https://developers.cloudflare.com/workers/platform/limits
