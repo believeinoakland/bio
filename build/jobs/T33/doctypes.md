@@ -91,3 +91,7 @@ B4 done: tranche/T33 merged; the calendar's minutes-due date is counted by civil
 **Tests and checks after B6:** `node --test doctypes/test/` 26 pass, 0 fail. `format` 0 failures; `architecture` 23 product files, 48 relative imports, 0 failures; `coverage` 24 of 24, 0 failures; `ownership … tranche/T33` 3 files changed, 0 failures.
 
 Size (session_01XZrZmtoRays9vT3h9cANPd): test runs 34, module lines 2646
+
+## J7 · COMPLETE · re B6
+
+B5 and B6 done: tranche/T33 merged; the calendar reads minutes_due_days through docprofile's practiceValue (count) and the practice's closures, counted by civil-time. The held profile now gives the OMC 2.20.160 dates (13 Oct 2026 -> 27 Oct; 19 Nov -> 7 Dec); the undetermined case is kept on a view naming no closure list. doctypes 26 pass, 0 fail; format, architecture, coverage 24/24, ownership 0 failures. docprofile's own R6 test still fails on its own calendar copy (retires with T33-12).
