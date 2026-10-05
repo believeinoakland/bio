@@ -3,8 +3,8 @@
 - [x] ANALYSIS-PROTOCOL.md, constructs-brief.md read whole
 - [x] digest/ANALYSIS.md (830 lines) read whole
 - [x] digest/DOCTRINE-REGISTER.md (2814) read whole
-- [ ] digest/CROSS-REGISTER.md (1049) read
-- [ ] notes M1..M5 ## Modules for named modules
+- [x] digest/CROSS-REGISTER.md (1049) read whole
+- [x] notes M1..M5 ## Modules read (M1 76-269, M2 28-136, M3 30-167, M4 28-110, M5 24-107)
 - [ ] primary sources
 - [ ] web research
 - [ ] write sections 1-9
@@ -126,3 +126,69 @@
 - X5 backward question deferred. X6 investigative session layer 6 cannot see layer-9 standards/consequences/action-clocks. X7 workaround: layer-6 AI reaches layer 9 only via plane ops declared in op-declarations under run credential; planning only. X8 layer 9 reads 6 but not reverse. X13 DEC-33 substrate first. X14 contradiction RESOLVE needs Effect from consequences (CCCER) — layer 9. X15 CF puts analysis's designed home in intent layer (7). X18 SR: every calculation-bearing type (CONS-) in Action layer. X20 consequences accepts only live noncompliant outcome. X21 members need law/time/analysis during investigation; "only calculation comes after breach". X22 question workspace lists no figure or calculation; design HANDOFF L61. X23 modules.json: consequences used only by layer 9-11 (affordances, queue-producers, control-plane, plane, monitoring, wizard-scripts, instance-setup). X24 moving layer-9 services lower would carry refusals unchanged. X26 lower module can consume later layers by OP at runtime (op-time not import-time): agent-worker R51 plan mode reads consequences etc. over plane ops; deployed check mode reads only meaningrows/search/versionchain/basisversions; barrier is which ops a deployed mode's table may call. X27 higher-layer facts reach lower only by registration (retrieval.registerActionFacts, registerLegGrades, registerField; reevaluation.onBasisChanged) — data not services.
 - X28-X34 obligations; X55 progression where time/org/law/analysis (amounts, thresholds, cardinality) meet; junction checks where amounts meet contracts.
 - X56 out-of-order blocked on extracting document's own date (layer 4).
+### CROSS-REGISTER 350-699 (X64-X129)
+- X69 DEC-54 template: machine reads rulebook, splits gates vs disclosed. X70 CCCER needs measured condition and quantified effect (GAGAS); auditors/accountants among members. X74 legal rules held by neither assistant nor plane. X76 standards inForce. X81 edit instants aggregated across docs (DEC-5). X88 ENTITY spans fund, parcel (analysis). X91 DEC-60 preference for intelligence in composition over rich relationship calculus. 
+- X112 analysis between extraction and law. X113 retired substrate's spreadsheet/Python decisions don't carry over; spreadsheets only output; Workers Paid, subrequest ceiling 10000, wall-clock/CPU termination bound in-code analysis; NOTHING designs where spreadsheet-scale analysis would run (C10). X114 counting disclosure & signed claim. X115 figure bounded by capture. X116 calc construct must say which axis output grade falls on and how inputs compose. X117 coherent number doctrine. X118 independence check blind to org common source. X119 DEC-112 any derived number must be re-runnable from case file without product; C6: any calculation, dataset filter or chart a case relies on must meet same bar (method versioned, inputs whole and fingerprinted, recomputable outside). X120 satisfaction condition only design for member-defined computation, deferred. X121 measurable form deferred. X122 no file provides calc over datasets; "proposed table structure" unbuilt. X123 selection stability: reproducible calc over selection needs same stability guarantee and must state the set. X124 typed number/figure model would let precision be decided partly in code. X125 citation register basis but NO record of calculation itself. X126 analysis supported as citation of figures, not calculation; BOB #32 plan/actuals type distinction; envelope not searchable. X127 grades age. X128 analysis minimal and breach-bound.
+### CROSS-REGISTER 699-1049 (X129-X191) — COMPLETE
+- X130 "Check a claim" main journey + overtime, bond, budget, dataset entry points need computation over datasets. X131 derived number has no scale of its own: four evidence scales; computed figure inherits capture grade ("grade B co-attested"); must fit pair or new scale under DEC-82. X132 fiscal/fund material no surface; no budget reader; plans' never-budget concerns group's own work.
+- X133 assistant edges reach only Retrieval/Capture, not calculation. X135 one org-principal AI credential; analysis-heavy QA defaults to interactive sessions. X136 AI roles FIND/PURSUE/EXTRACT/CHECK; none computes. X138 conversation not permanent record; answer to keep must become suggestion/version. X144 aggregates at inquiry grain. X145 FIND not built; no calc step. X149 legal/financial questions routed to humans by expertise. X150 query language structured not NL. X151 questions→law bridge missing skill not ops. X153 NL questions promised uncovered. X155 assistant deployed only check mode.
+- X157 identifier spaces bridge (fund codes, project numbers, contract & PO numbers, parcel roll years) — join keys for datasets; only machine join between public records by key.
+- X160 recogniser shape. X164 FLOW MODEL declared vs observed; analytic product is the delta. X165 OBJECT_TYPES {information, inquiry, project, action} — no dataset type. X166 spreadsheet → reader text/cell refs (L1) → content extents (L4) → passageText → consequences (L9), nothing between L4-L9 holds number as value.
+- X168 computed rule computed once by plane, rendered. X170 two machine-authority regimes. X171 DEC-48 justified by path. X172 analysis acts comparisonpropose/consequencerecord. X173 machine permitted shape uniform. X175 derived claim shows derivation.
+- X183 no Bob ruling on datasets, spreadsheets, budgets-vs-actuals, charts.
+- X187 UC-027 classify fact/analysis/judgment no req; UC-076 regrade no.
+- X188 journeys "Gaps to close" (proposed 5 Oct, nothing decided): calculating over a dataset — waits on the 5 October capability question (this study).
+- X189: J4 step 4 time-bound question: evaluation needs calculation; J6 steps 2-6 period, timestamps, calculation w/ method, sample, counts: gap. Partner group reproducible analysis: open.
+- X190 matter page: 30-day rule met on day 21; two-thirds vs 61.8%; consequence computed from resolution and bond schedule grade B. Not approved.
+- X191 ~115 layer-9 ops; member interface calls only actionmove, actioncorrespond, actionlaws, actionrisktier; consequences 0 UI calls.
+### notes/M1.md ## Modules (76-269) read
+- consequences (layer 9; 1,105 lines). Uses: record-grammar, record-core, membership, promotion, provenance, content, inquiry, strength, conformance. Used by: filings, escalation (9); affordances, control-plane, plane (11). R2 computed; R3 assessed; R4; R7; R8 basis_changed; R11. Built (all ids tested); consequenceRecord :363, consequenceRevise :367, consequencesOf :683, addressedRecord :712, addressed :741; figures.mjs. Code limits: verbatim figure (passageHolds); no percent; count = operands; one op; 15 sig digits. Reached: ops consequencerecord, consequencerevise, addressedrecord, consequence, consequencesof, addressed — UI calls 0. AI: Suggestions "An AI run may prepare computed parts" but no agent-worker op writes; plan mode (not deployed) reads consequencesof. Status T32 A37.
+- conformance (1,539 lines) uses inquiry, strength, contradiction, reevaluation, publication, standards...; comparisonPropose :911 UI 0.
+- standards (849 lines) UI 0; no agent caller.
+- actions only layer-9 module reachable; actionquotes UI 0.
+- action-plans R26 no cost/budget/score; plan mode deployed:false (run-rules/deployment.mjs:110).
+- filings R25 grades vs venue standard; dates.mjs reuses action-clocks.computeDeadline.
+- action-clocks: weekend hard-coded; UTC.
+### notes/M2.md ## Modules (28-136) read (branch tranche/T32 @ 31f30a6c7d)
+- jurisdictions L1: no layer 6-8 uses it. Profile has no fiscal year facts. "budget data set" named system R21.
+- id-spaces L1 (416 lines): fund joins R20, near misses; reached only via op=idmatch UI 0.
+- office-readers L1 (3,520 lines: docx, pptx, formats-xlsx, csv). Used by odf-reader, format-registry (L1), extraction (L4). rangeUnits (formats-xlsx.mjs:341); MEASURED_CSV_TEXT_BOUND_BYTES = OOXML bound (csv.mjs:207). Envelope extent citable (content R33) not indexed. No op; inside acquire. AI none. T32 B1 CSV bound.
+- odf-reader L1 (2,258 lines) ODF_REPEAT_EXPANSION_MAX 262144.
+- extraction L4 (2,679 lines): reading's `at` is capture retrieved instant — no document date. AI EXTRACT extractpropose called by agent worker.
+- content L4 (3,526 lines): used by 22 modules incl. consequences; ANALYSIS R1/R7 sheet extents, R46 passageText; content ops UI 0.
+- entities L5: ENTITY_KINDS incl fund/parcel; RELATION_KINDS 3. AI_RUN_ACTIONS = airunopen/tick/close, suggest, capturerequest, extractpropose, contradictionpropose, contradictionrecommend.
+- progressions L5 (1,669 lines): R32 junction checks no code; T32 A37.
+- bias L5: UI 0.
+### notes/M3.md ## Modules (30-167) read
+- Run modes check/investigate/extract/plan; only check deployed (deployment.mjs:144-150). One model call site agent-worker/src/model.mjs (Anthropic Messages API, DEFAULT_MODEL claude-opus-5). Installer-made instance has no Claude account (NO_ACCOUNT_RESOLVED). Plane calls agent-worker only from ai-runs wake(); no op starts first segment; AGENT_WORKER binding "INERT UNTIL DIST DEPLOYS THE MEMBER". Cost bounds counts; per call max_tokens 16,000; 12 turns/conversation; resumable state ≤262,144 bytes. Skill pack investigative-session; action_planning layer names propose acts incl comparisonpropose. PLANE_OPS writes only suggest, capturerequest, optionpropose, airuntick, airunclose.
+- strength L6 (2,220 lines): GRADING_METHOD_VERSION = "bio-grading/1" (strength/method.mjs:16) — precedent for a calculation method version. R31/R32/R35 reproducible arithmetic; recomputePair. strengthbar UI 0.
+- run-productions L6: suggest, EXTRACT; R5 fields record/derived/call.
+- agent-worker L6 (3,766 lines): R51 PLAN_READS; runtime only over the wire (R44).
+- ai-runs: airunopen UI 0.
+### notes/M4.md + M5.md ## Modules read
+- retrieval L5 (2,347 lines): R6/R7/R14/R18-20/R25/R39/R59/R60. register* hooks retrieval/index.mjs:214-279. UI: search 24, select 20, searchfields 15, meaningrows 4, selection 4; selectionlist 0. AI: agent-worker op=search, op=meaningrows (model writes q).
+- query-language L5 (2,736 lines, query.mjs): time fields as strings; R12 bounds; R14/16 count/facets; used by retrieval and agent-worker only. No arithmetic.
+- observation-log L5.
+- intent L7 (1,943 lines): R4 share satisfied = meeting/matched ≥ share; three-valued; 18 ops UI 0; workObjective opens ai-runs run contextType project; objective-gap FINDING queue items visible.
+- reevaluation L7: onBasisChanged for later modules (conformance listens).
+- monitoring L10: no analysis.
+- scheduler L10 19 consumers; no cron.
+- acquisition L3: Memento always now; render UTC.
+- affordances L11 (3,362 lines): VOCABULARIES entity_kinds incl fund, parcel, contract; ACTS 32 object-directed acts only for information, inquiry, action, project; layer-9 acts NON_ACTS never offered per object (T32 C5).
+- op-declarations: 446 ops; SESSION_OPS.member 290.
+- wizard-scripts: SCREENS empty; library empty.
+- queue L11.
+- publication L8 (4,619 lines): R26 no case-level strength; R30 not met D-246 (T32 A41 nothing publishes a rendering).
+- corpus-export L8 (359 lines): whole-corpus export, admin only; verified import R3 (verifyCorpusExport); writing into receiving store not stated.
+- Member reach ANALYSIS (34 ops; called 10): search, searchfields, meaningrows, select, selection, projection, list, inquirystrength, versionstrength, partitionindependence. Not called: consequence*, comparison*, selectionlist, stats, objectivegaps/progress, strengthbar, contentaxis, extractpropose... No op takes a natural-language question.
+### Primary sources opened (step 5)
+- build/requirements/consequences.md (whole, 90 lines): R2 computed {op, operands}; machine may record computed part labelled; Suggestions sheet-range/doc-table natural operand; budget reader belongs to extraction/docprofile. Status: "The record holds no amounts or fund figures as values".
+- bio-plane/src/consequences/figures.mjs (whole, 93 lines): OPS sum/difference/count/product/ratio; FIGURE regex (no %); passageHolds = fold(text).includes(fold(figure)) — figure must appear ANYWHERE in passage text (not a cell position); count = operands.length; sum/diff to decimals; product/ratio 15 sig digits.
+- consequences/index.mjs 230-300: #passageText via content.passageText.
+- build/requirements/content.md (whole, 154 lines): R1 extents incl sheet-cell, sheet-range; R46 passageText → null when no unit at exactly that extent.
+- content/index.mjs:1264 passageText; content/notice.mjs heldTextAt: "the record holds no text at exactly ... (only whole indexed units — a PDF page, a paragraph, a slide — carry text)". FINDING: a sheet-cell operand → passageText null → consequence part undetermined. reading-pipeline R15: one unit per SHEET (its used sheet-range) (D-672); unit capped 128 KiB (extraction R22) → large sheet truncated → null. So consequences' "natural operand" works only for (a) a whole-sheet range under 128 KiB, where passageHolds checks the figure appears anywhere in the sheet's tab-joined text (position not pinned), or (b) a member's typed transcription (content R24). The cell-level operand path is effectively unbuilt.
+- build/requirements/office-readers.md 1-230: R10 formula envelope {kind:formula, source, formula, value}; R11 xlsx document tab-joined; sheets list; csv row 1 is row 1; R9 rangeUnits (defined names, tables); R12 20 MiB guard; R14 dialect; R17/R18 refs. No cell typing.
+- build/modules.json: 98 entries; consequences layer 9 uses [... content, inquiry, strength, conformance]; used by filings, escalation, affordances, control-plane, plane. content used by 22 incl query-language, retrieval, inquiry. runtime-limits used by ai-runs, agent-worker...
+- build/layers.md (whole, 274 lines): layer contracts; layer 5 "Everything derived over content, with its grade"; layer 9 consequences row; P17 ruling 5 amended: adding/removing product module or layer change → Bob; uses/order within layer/file ownership → BOB. accepted-work pattern (layer 6 registration facade filled by layer-8 case-import) — precedent for lower read of later data. case-checker: pure function + standalone offline program with readable format spec, recomputes grades at stated method version. Layer 7 Beyond MVP Discovery.
+- build/requirements/runtime-limits.md (whole): Workers freeze Date.now during sync execution; counts not times; cpuProbe finds ceiling.
+- journeys.html (design branch) journey 6 text confirmed (lines 154-165 of extracted text); §6 "Calculating over a dataset" row (line 369); police overtime/bond/budget/dataset front doors (60-75).

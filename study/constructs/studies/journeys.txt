@@ -1,0 +1,411 @@
+Civicsmith Journeys
+Design phase · step 3 of 5 · draft for Bob, 4 October 2026, revised 5 October
+Civicsmith journeys
+Who we design for, the paths they take through Civicsmith from first contact to finished work, and where a wizard walks them. Your test runs through all of it: the name points at expert civic work, so the path there must be wide and welcoming for everyone.
+What it builds onThe approved design principles and brand and voice; the eleven journeys and twenty audiences already gathered from the requirements; your rulings on wizards, phones, translation and imported cases.
+What changedAudiences reconciled into three rings; where members start, problems first; seventeen journeys (seven new, six amended, one folded in); eleven wizards outlined, three of them required.
+How to answerComment on any line, or reply to the open questions at the end (J1, J2 and J5 are answered; J10 and J11 are new).
+WhoThe wide pathWhere members startJourneysWizardsGaps to closeQuestions
+ Show sources
+1. Who we design for
+The original brief named five audiences in order of how often they use the product; the requirements gathered twenty. Here they are reconciled into three rings. The newcomer member stays the centre of gravity.
+Inside the group: members
+Everyone who belongs to the group and works in its copy. They hold different roles at different moments; one person may be several of these.
+Newcomer memberA community activist or volunteer, not a technologist, often with no civic-records experience. The interface is built around them.UI-KICKOFF audience 1; ux-experience audiences
+Experienced investigatorWorks questions, cites evidence, runs checks and prepares cases; includes the member who vouches for a document at the release moment.UI-KICKOFF audience 2
+Professional memberA journalist, lawyer, accountant, auditor, engineer or policy analyst who joins a group. Declares expertise so the group knows whom to ask; an administrator may confirm it, which gates nothing.Bob's comment on the principles page, 2 October; Membership v2 §1.3
+Project ownerRuns a project: its objective, its bar, its participants, and publishing its cases.UI-KICKOFF audience 3
+AdministratorKeeps the roster, capabilities, keys and the group's identity. The person who installs the copy and the founder who claims it are administrators at their first moment.UI-KICKOFF audience 4; ux-experience: operator, founder, administrator
+The group's future membersWhoever picks up this record years later. Dead ends and reasons are kept for them.ux-experience audiences
+Invited in
+People outside the group given a named, revocable view of something.
+Outside reviewerReads a review copy of a case before it is published, comments, and acknowledges what it leaves out.Publication §6A
+The group's lawyerReceives a counsel packet for a serious matter: facts with citations, chronology, the standard.Design Requirement 8
+Outside the group
+People who meet the group's work without an account.
+Someone handing over materialAnyone, possibly a whistleblower, who gives the group documents through its doorbell, with no account.Intake Doctrine §2a
+Public readerA stranger who reads a published case and can check it without the group's help or permission.UI-KICKOFF audience 5; Publication §5C
+JournalistReceives, checks and cites the group's cases.Case Making audience table
+Partner groupAnother group, often running its own copy. Work flows both ways: this group imports and builds on its cases, and it imports and builds on this group's.Roadmap §11; DEC-112; Bob's comment on this page, 4 October
+Government office or officialReceives requests, filings and cases, and answers them.actions, filings
+Oversight bodyA grand jury, controller or auditor receiving referrals.Design Requirement 8
+Folded in, not separate audiences:
+Group operator, founder: moments of the administrator's role, kept as steps in journey 1.
+Project participant, member outside a project: states any member can be in, not separate audiences.
+Residents addressed by an action: the people an awareness action speaks to; they meet the group's words, not its screens.
+The assistant: an actor that works for members, not an audience; it appears in the journeys where it acts.
+Across every ring: members who read in another language, screen-reader and keyboard users, and people working from a phone. These are not separate audiences; every journey must work for them.
+Kinds of group
+Groups differ as much as members do. Your examples, 4 October:
+ProfessionalA newsroom or journalist, a law firm, an inside or outside auditor.
+Issue-specificLibraries, labor, a ballot measure, schools.
+Neighbourhood or communityA neighbourhood, a business community, parents.
+Catch-allA whole city, a single agency, a county.
+An inside auditor is worth noting: it means a public body itself may run a copy. The design must not assume the group always stands outside government. A group says which kind it is in journey 2.
+2. The wide path
+Your words, 3 October: the path to success must be "wide enough and inclusive enough for all audiences". Proposed as eight rules every journey is checked against.
+A front door in every journeyEach journey has a first step a newcomer can take alone, with no prior knowledge, and the screen shows where it starts.
+Wizards on the main roads, never gatesThe main journeys can be walked with a wizard. Nothing is locked behind one, and anyone can leave it at any step: stopping is a non-event.
+You can always see where you areEvery journey shows its stage and what comes next, so a newcomer never wonders whether they are done.
+Explained where it appears, and findable againA term is explained the first time a member meets it, at that spot, in plain words. After that it is never pushed again, but the explanation is always one hover, focus or tap away on the term itself, and in one list of every term, for when a member forgets.
+Heavier steps slow you downFriction rises with an act's weight, so no one stumbles into anything permanent, signed or outward.
+Any order, and pick up where you left offSteps can be taken in whatever order the work allows; only a step that truly needs another first waits for it. A member can leave a journey for other work at any point, and come back at any time to find it exactly as they left it, with their unfinished work listed where they will see it.
+Many front doorsA member can start from whatever drew them in: most often a problem they live with, or else a code section, a court case, a news story, a budget, a meeting, something they experienced, a tip. Civicsmith offers a sensible first step from each, and no journey assumes everyone starts from a question.
+Fast for those who knowProfessionals and experienced members move quickly: search, keyboard, acting on many items at once, no repeated teaching.
+3. Where members start
+Most people come to this work because something in their own lives isn't working: the street outside, the block they live on, the bill they pay, the services they were promised. Others come through something they read: a code chapter, a court case, a news story. Each can be a member's first motivating interest, and each needs a sensible first step. No journey should assume everyone starts from a question.
+A problem they live with
+The most common way in. At the city auditor's open forum you attended (4 October), these were the reasons people gave most often for coming. Each is a frustration; Civicsmith's job is to help turn it into a question about the city's own standards that the record can answer.
+The problemAs people put itThe first stepThe question it becomes
+PotholesThe streets in their neighbourhood go unrepaired.Find the city's claim or target ("90% of reported potholes filled") and its own records of every report. Members' photos are a sample that tests those records, not a count of every pothole.Do the city's own records support its claim, and do members' spot-checks show that "closed" means "repaired"? (journey 6)
+Illegal dumpingDumped furniture and trash keep reappearing on their block.Find the city's cleanup target and its records of reports; members record sightings on their own blocks with place, date and photo, a sample that tests the records.Are reports cleared as the city says, and do the same places keep coming back? (journey 6)
+A franchise the city holdsThe city's franchise with its waste hauler.Capture the agreement and declare its service levels, rates and fees as standards.Is the hauler delivering what the franchise requires, and is the city enforcing it? (journeys 13 and 8).
+Police overtimeOvertime costs that keep running past the budget.Capture the adopted budget, the actual spending, and any overtime policy or audit.How do the actuals compare with what was budgeted and what policy allows? An accountant member checks (journeys 8 and 7).
+Services moved onto bond measuresServices the general fund used to pay for, now proposed for funding through a bond measure.Capture past budgets, the measure's own text, and the city's statements about it.Do the city's statements match its own records? Civicsmith checks the city's claims against its records; campaigning for or against a measure is outside what a group's record prepares (journeys 7 and 16).
+Something they read
+The other ways in, each with a real example, the first step Civicsmith offers from it, and where it leads.
+Way inFor exampleThe first stepWhere it leads
+A law, code or policyReading the municipal code chapter that governs the city's sewer utility.Capture the section and declare what it requires as a standard the city must meet.Each requirement becomes a question: is the city meeting it? Then evidence of compliance (journeys 7 and 13).
+A court case or legal proceedingReading about a lawsuit the city is a party to.Capture the filings, name the parties and offices involved, and watch the court's docket page for new filings.Questions about what the filings show; the case's deadlines kept in view (journeys 7 and 14).
+A news storyAn article reports cost overruns on a capital project.Capture the article and mark the claims it makes.Look for the primary records behind each claim, found online or requested (journeys 5 and 7).
+A budget, audit or financial reportThe annual financial report shows an unexplained fund transfer.Capture the report and point at the passage.A question, and a check from an accountant member (journeys 8 and 7).
+A public meetingAn agenda item, the minutes, a recording, or public comment someone gave.Capture the agenda or minutes; record what a member heard there, in their own words.Watch for the next agenda; questions from what was said or decided (journeys 7 and 14).
+A contract, franchise or agreementThe city's franchise agreement with a utility contractor.Capture it and declare its obligations and deadlines as standards.Track each deadline and what the parties delivered (journey 13).
+A regulatory proceedingA utility's rate case before a state commission.Capture the filings and follow the proceeding's docket.Questions on the record as it builds; filing deadlines in the plan (journeys 13 and 14).
+A dataset or a records answerThe city's open data on service requests; records returned from a request.Capture it as received, fingerprinted.Compare it with what was promised or required (journeys 7 and 5).
+A tip or handed-over materialSomeone gives the group documents through its doorbell.Read it in the inbox; move it into the record or set it aside.Journey 11, then wherever the material leads.
+Another group's caseA partner group's published case on a related matter.Import it and let Civicsmith recreate its findings.Journey 15; build on what recreated.
+What this means for the design:
+Frustration is welcome and the record stays disciplined: a member's own notes can say how angry they are; the question, the evidence and the case say what the documents show.
+Civicsmith holds the city to its own laws, standards and statements. It takes no side on what policy should be, including on a ballot measure, while still checking the city's claims about one.
+Every kind of document is captured, pointed at and cited the same way: a code section, a court filing, an article, a budget, minutes, a contract, a dataset.
+The group's home asks "What brought you here?" and every empty project offers "Start from…", with a problem the member lives with first and these documents after; none is the "right" way in.
+The assistant can suggest first questions from whatever the member starts with, such as one question per requirement in a code section, each labelled as a suggestion.
+Professionals bring their own angles: lawyers start from filings, accountants from financial reports, policy analysts from codes and rates. Their journey (8) routes questions to them.
+4. Seventeen journeys
+In the order people meet them, from a group's first day to a stranger reading its case. Each card says who takes the journey, its newcomer's front door, its wizard, and what changed from the list gathered earlier. Open "Steps" for the path: steps are listed in their usual order, but members may take them in any order the work allows, leave, and come back later. Marked steps are the heavy ones: permanent, signed, outward (the world sees it), reasoned, terminal or irreversible.
+1A group gets goingAmended
+A group installs its own copy of Civicsmith, claims it, says who it is, and sets up its administrators. Who: the person installing it, the founder, administrators.
+Front doorThe setup wizard walks every step; the first screen says plainly what is needed before starting.
+WizardSet up and claim (required)
+What changedAdds the group's logo and its members' languages. The hardest step for a non-technical group is the accounts it needs first (Cloudflare to host the copy, and a Claude subscription for the assistant), so the wizard says exactly what is needed before anything starts. The short name's permanence is said at the moment it is chosen.
+Steps (8)installerChecks what is needed before starting: a Cloudflare account with a payment method, a Claude subscription account for the assistant, and about twenty minutes.
+installerChooses the group's short name, which appears in addresses and signatures.Permanent
+installerInstalls the signed release into the group's own account; it tests itself.
+founderClaims the copy with the one-time password and chooses a password.
+founderNames the group; adds its logo if it has one; verifies its web address; chooses the places whose rules apply and the languages its members use.
+founderRecords who holds the hosting account, and may add a second administrator: recommended, so the group is never stuck if one person is away, but not required (pending your answer to J9).
+administratorInvites the first members.
+administratorIs offered an optional side trip: say what kind of group this is and why it exists (journey 2), now or later.
+ux-experience journey (a) steps 1–6; installer; instance-setup; DEC-121, DEC-125, DEC-127
+2The group says who it is and whyNew (optional, separate from setup)
+A group says what kind of group it is and what moved its members to start it, so Civicsmith can welcome each member in a way that fits. Who: administrators, on the group's behalf.
+Front doorOffered as an optional side trip at the end of the setup wizard, returning to setup when done; also run on its own at any time from the group's settings. Never required.
+WizardSay who your group is (optional)
+What changedAdded after your suggestion (4 October): groups have different motivations, and saying them lets the front door fit the people coming through it. It shapes suggestions only; every member can still do everything their capabilities allow.
+Steps (8)administratorChooses the kind of group it is: professional, issue-specific, neighbourhood or community, or catch-all (or describes another). A group may pick more than one.
+administratorNames what it focuses on: issues, places, offices or agencies it watches.
+administratorWrites in the group's own words why it exists, as long or short as it likes.
+administratorChooses who sees it: members only (the default) or also the public page and the network directory. A group that wants to stay unnamed keeps it to members.
+membersFrom then on the welcome fits the group: "What brought you here?" offers its focus first, and the standards and wizards offered first match its kind. Nothing is locked or hidden by it.
+administratorWhere the group has a stake in what it investigates, its declared bias, which every published case already carries, can start from what it wrote here.
+administratorSays how people come to join: by an administrator's invitation, or through the group's own website, which decides who may apply and then asks Civicsmith for an invitation link that brings the approved person straight into joining (journey 3). Civicsmith itself has no "request to join" screen.
+administratorChanges any of it at any time.
+Bob, 4 October; Declared Bias (instance level); Action §1 (a group with a stake discloses it); principle 1.2 (defaults visible and changeable)
+3A member joins and finds their footingNew (split from 1)
+From an invitation link to a member's first useful act. Who: a newcomer member.
+Front doorThe invitation link itself, opening in the member's chosen language; the welcome wizard picks up from there.
+WizardWelcome a new member (required; outline now, final design once the redesign has settled)
+What changedSplit from journey 1 so a member's first session is designed on its own. Onboarding stays deferred until the new screens settle, as you ruled; only its outline is drawn now, because you also made the welcome wizard required.
+Steps (6)inviteeOpens the invitation and first chooses their language, offered from the device's own setting and changeable, so everything after is read in it.
+inviteeChooses a handle, the name the record shows on their work. The screen explains that it needn't be their legal name, and the trade-offs: a name people know lends their work personal credibility and lets reporters reach them, but puts that name on public cases; a pen name shields them from pressure, while the group's administrators still know who they are. It also says that, act by act, they may choose to be credited only as the group, and that a finding resting on such testimony needs an independent source before it can be signed.
+inviteeChooses a password.
+memberLands on the group's home: what the group is working on, and what is waiting on them.
+memberMeets the two things a newcomer needs first: a question's strength against its project's bar, and "Undetermined".
+memberTakes a first act: joins a project, captures a document, or records what they saw.
+ux-experience journey (a) step 7; DEC-82 (what a newcomer meets first); DEC-91; DEC-121
+4From a problem to a questionNew: the most common front door
+Someone joins because something in their life isn't working. Civicsmith helps turn that frustration into a question about the city's own standards that the record can answer. Who: any member, often a newcomer.
+Front doorThe group's home asks "What brought you here?"; describing a problem in one's own words is a complete first step.
+WizardYour first question, starting from "A problem I live with"
+What changedAdded after your report from the city auditor's open forum: the most common reasons people came were problems they live with. This journey turns a frustration into a checkable question about the city's own standards, without asking anyone to hide how they feel.
+Steps (6)memberDescribes the problem in their own words, in a private note; it can say exactly how they feel.
+memberRecords what they have seen: where, when, photos, in their own words.
+memberFinds the standard the city set itself, with the assistant's help if wanted: an ordinance, a policy, a budget promise, a contract term, a published service target.
+memberTurns the problem into a question the record can answer, for example: is the city repairing reported potholes within the time its own policy sets?
+memberFinds the records online, or requests them (journey 5).
+memberJoins a project already working on it, or starts one, and sees whether other groups in the network are working on the same thing.
+Bob, 4 October; Roadmap §5 (output disciplined, humans can be human); Action §1 (the doctrine's limits)
+5Getting a record: find it, or ask for itAmended, now a front door
+Getting a government record: often it is already public and only needs finding; when it is not, asking the office for it under the law that requires it to answer. Who: a member, often a newcomer; the office that holds the records.
+Front doorThis is the most common first action a newcomer takes, so it gets its own wizard, which starts by looking for the record before asking for it.
+WizardGet a record (optional, offered first)
+What changedPromoted to a front door, the step most likely to bring a newcomer in. After your comment it starts with the self-serve route: many records are already online, on the government's site or elsewhere, and only need capturing; a request is made only when they are not.
+Steps (8)memberLooks first where the record may already be public: the office's website, a public portal, or elsewhere online.
+memberIf it is there, captures it from its address. A copy fetched from the office's own site holds up better than one found elsewhere; capturing through a public archive tells that archive what the group is looking at, and the screen says so at that moment.
+memberIf it is not public, chooses the office and says plainly what records they want.
+memberThe wizard drafts the request under the governing law from the group's profile, labelled as a draft.
+memberEdits the draft and sends it, after a warning that this tells the office what the group is looking at.Outward
+memberRecords it sent; the due date is set from the law and shows in the queue.
+memberRecords what came back: records, a fee quote, a denial, or nothing.
+memberIf it is overdue, the queue says so once, and the plan suggests the next step (journey 13).
+ux-experience journey (h); Case Making §2; principle 6.6
+6Checking a claim about the city's performanceNew
+The city says it filled 90% of reported potholes this year. Is that true? Civicsmith does not count potholes itself; it holds the claim, the city's own records, members' spot-checks and the reasoning together, so anyone can check the answer. Who: members; often an analyst or accountant member.
+Front doorMost members start with "is that really true?"; capturing the claim is a complete first step, and the journey explains what Civicsmith can and cannot check.
+WizardCheck a claim (optional)
+What changedAdded after your question (4 October): a newcomer will wonder what Civicsmith can really do about potholes or dumping. The honest answer is that it checks the city's claims against the city's own records and members' spot-checks; it is not a system for logging every pothole. One gap: Civicsmith can capture and read a spreadsheet, but the requirements show no way to compute over one inside the product, so for now the calculation is the assistant's or a member's, shown with its method. A built-in, repeatable calculation step may be needed.
+Steps (7)memberCaptures the claim where the city made it: a budget, a report to council, a press release.
+memberPins down what it means in the city's own words: what counts as reported, as filled, and over what period. If the city never says, that itself is recorded as "Undetermined, because the city does not define it".
+memberGets the city's own records of every report, from its open-data portal or by request (journey 5): when each was reported, when it was closed, and why.
+memberWorks out whether the records support the claim, with the method shown: the assistant's calculation labelled as machine work, or a member's own, checked by a second member.Reasoned
+membersSpot-check a sample: visit closed reports and record what they find, with place, date and photo. A sample tests whether "closed" means "repaired"; it never claims to cover every pothole.
+memberConcludes with what the evidence supports, for example: "the city's records show 90% closed; of 40 closed reports members visited, 11 were not repaired". Its strength is shown against the project's bar.Reasoned
+ownerPublishes the case or acts on it (journeys 7 and 13).
+Bob, 4 October; office-readers (CSV and spreadsheets read); strength and Undetermined (measures map)
+7From a question to a published caseConfirmed
+The core of Civicsmith: evidence gathered, a question answered, a case signed and published. Who: members; the project owner; outside reviewers.
+Front doorCapturing one document or recording one observation needs nothing else first.
+WizardYour first question (optional); Publication ceremony (required)
+What changedUnchanged in substance; now walked with the two wizards, and the reader's side moves to journey 16.
+Steps (10)memberCaptures a public document, or records what they saw or heard.
+memberVouches for the document (releases it), standing behind the capture.Signed
+memberOpens a question, or the assistant suggests one.
+memberCites what supports it and what cuts against it.
+participantConcludes, saying what would change the conclusion.Reasoned
+ownerChecks strength against the project's bar; clears hunches.
+ownerShares a review copy with outside readers, if wanted (journey 12).
+ownerPrepares the case: scope, statement, what it leaves out, declared bias.
+ownerGoes through the publication ceremony and signs in the browser.Irreversible
+anyoneReads the case and checks it (journey 16).
+ux-experience journey (b); DEC-72; Publication
+8A professional lends expertiseNew
+A lawyer, accountant, auditor, engineer or journalist joins, says what they know, and is asked to check work in their field. Who: a professional member; project owners.
+Front doorDeclaring expertise is one field at joining; everything else is the ordinary member's path.
+WizardNone needed; professionals move fast
+What changedAdded at your request (2 October): professional members are an audience, and their journey is routing expertise to the questions that need it.
+Steps (5)professionalJoins like any member and declares their expertise ("CPA", "land-use lawyer").
+administratorMay confirm it. Confirmation gates nothing; it tells the group whether it is trusting a self-report or a checked one.
+project ownerAsks for a check from someone with that expertise; it reaches them as a to-do.
+professionalReads the finding and its evidence, and records a check or a reasoned concern.Reasoned
+professionalTheir declared expertise shows beside their checks, so readers know who looked.
+Membership v2 §1.3; Bob's comment on the principles page
+9Working with the assistantAmended
+Asking the assistant to find, pursue, extract and check, and deciding what to keep. Who: a member; the assistant.
+Front doorOpening the panel and asking in plain words; no setup for the member when the group's key is set.
+WizardThe assistant walks wizards; it has none of its own
+What changedSetting the key moves out of the member's path (an administrator sets the group's once), so a newcomer starts by asking. Adds how it speaks, wizards it can walk or plan, and translation drafts.
+Steps (6)memberOpens the assistant panel beside the work. The key it runs on is set once for the group, a project or the member.
+memberAsks it to find, pursue, extract or check; it answers as "I".
+assistantRequests captures it needs; they arrive over time.
+assistantSuggests documents, versions and questions, each labelled as machine work with who asked.
+memberAccepts or rejects each one; the assistant never concludes, signs or sends.
+memberMay ask it to walk a wizard, plan one, or draft a translation.
+ux-experience journey (e); AI Roles; DEC-90, DEC-120, DEC-125, DEC-127
+10The daily queueAmended
+What is waiting on a member today, in one list. Who: every member.
+Front doorThe queue opens with a one-line explanation of its three kinds, shown once.
+WizardNone; it is a daily habit
+What changedAdds the rulings since it was written: the three kinds' names, sorting and folding, the reminder for an unsent wizard draft, and watched cases.
+Steps (7)memberOpens the queue: To do, Noticed and Signal, grouped by case.
+memberRe-sorts by time added, time due, case or kind, and folds groups away to focus.
+memberSees each item's options with their weight before acting.
+memberActs, forwards, or defers and dismisses with a reason.Reasoned
+memberDecides on newer versions of what they cited: adopt or keep.
+memberIs offered to finish, keep or cancel a wizard draft they left unsent.
+memberSees updates on another group's case they are watching.
+ux-experience journey (d); DEC-110; K1364; K1366
+11From a knock to the recordConfirmed
+Material handed in through the group's doorbell becomes evidence, or is set aside. Who: someone handing over material; members.
+Front doorThe doorbell page is the whole journey for the outsider: one page, plain words.
+WizardNone for the outsider; the page must need none
+What changedUnchanged; the doorbell page's words follow brand and voice (calm, plain, nothing alarming).
+Steps (3)someoneHands over material on the doorbell page, with no account; the page says what will happen to it.
+memberReads the inbox and moves the material into the record, or discards it, with a reason.Reasoned
+memberRecords what becomes known about the source, from "unknown" to "known to the group", never revealing it first.
+ux-experience journey (f); Intake Doctrine §2a; measures map (source identity)
+12A review copy, out and backConfirmed
+Showing a draft case to named outsiders before publishing. Who: project editors, the owner, an outside reviewer.
+Front doorThe reviewer needs no account and is told plainly what they are reading and for how long.
+WizardNone
+What changedUnchanged.
+Steps (3)ownerGrants a named reader a revocable view of the draft.
+reviewerReads, comments, and acknowledges what the case leaves out.
+ownerRevises, then publishes, naming the draft that was reviewed.Irreversible
+ux-experience journey (g); Publication §6A
+13From suspicion to a closed planAmended (absorbs the old journey "acting on a finding")
+Deciding what to do about a problem, doing it, following it to an outcome, and closing the plan. Who: members; outside offices, reporters, groups, counsel.
+Front doorA plan can be opened from any question with one act; the plan page explains itself.
+WizardStart and send (optional), from the approved sketch
+What changedThe older journey "acting on a finding" (standards, determinations, escalation stages, counsel packet) is folded in as the plan's "advance" steps, so members learn one path instead of two.
+Steps (9)memberOpens a plan while the inquiry is still young, and sees what it rests on.
+memberGets suggestions from the assistant and adds options of their own.
+memberChooses an option and says when to be reminded; lays out a scenario with checkpoints.Reasoned
+memberRecords the standard broken and the determination against it, where an action needs one.Reasoned
+memberStarts the option: a filing, an escalation to the office, or an awareness action.
+memberPrepares what is sent (the assistant may draft), and sends it.Outward
+memberTracks responses and clocks; judges each checkpoint from the queue.
+memberAdvances (legal tools, political accountability, a counsel packet for a serious matter) or declines, saying why not now.Reasoned
+memberRecords the outcome, closes the action, then the plan.Terminal
+ux-experience journeys (c) and (k); plan page; start-and-send sketch; DEC-114
+14A source changes after publishingConfirmed
+A document a published case rests on changes or disappears. Who: members; readers.
+Front doorMembers meet this only through the queue; nothing new to learn.
+WizardNone
+What changedAdds that groups watching the case are told (journey 15).
+Steps (3)systemMonitoring notices a changed or removed source and keeps both versions.
+memberSees which findings are affected, and the version notices.
+ownerReopens the case and publishes a new edition; the old one stays, with the correction on the docket.Irreversible
+ux-experience journey (i); reevaluation; DEC-12
+15Exchanging cases with other groupsNew
+Work flows both ways: this group brings in, checks and builds on other groups' cases, and other groups do the same with this group's. Who: members; partner groups.
+Front doorImporting from a link is one act; the read-only band says whose case it is.
+WizardUse another group's case (optional)
+What changedAdded from the rulings on import, recreation, acceptance and watching, which had no journey; written both ways after your comment that the exchange of work goes in both directions.
+Steps (6)memberFinds the case through the network directory or a link, and imports it into its own read-only project.
+memberCivicsmith recreates each finding from the case file; each shows Recreated, Recreated in part, or Did not recreate.
+memberAccepts what was recreated, with a reason.Reasoned
+memberWatches the publisher's docket; a new edition or a withdrawal reaches everything that relies on it.
+other groupImports and checks this group's published case the same way. Nothing is sent to this group when that happens: watching is a quiet daily read of its docket.
+ownerPublishes a new edition or a correction; every group relying on the case is told when its copy next reads the docket.Irreversible
+DEC-96, DEC-112; K1366; principle 5.4
+16Reading and checking a caseNew
+A stranger reads a published case, understands its strength, and checks it for themselves. Who: public readers, journalists, officials.
+Front doorThe public page explains itself from zero; nothing assumes an account.
+WizardNone; the page itself must teach
+What changedAdded so the outside audiences have a journey of their own; before, reading was the last step of journey 7.
+Steps (5)readerOpens the public page: the group's name at the head, "Made with Civicsmith" at the foot.
+readerReads each finding and its two strengths in plain words, opening layers as far as they want.
+readerOpens the evidence behind any finding.
+readerChecks the signature, or recreates the case with the open checker, without the group's help.
+readerCites the edition, and follows corrections on the docket; may read an unofficial translation.
+Publication §5C; principles 8.7, 8.5
+17Changing the administratorsConfirmed
+Adding a third administrator, or removing one. Who: administrators.
+Front doorAdministrators only.
+WizardNone
+What changedUnchanged.
+Steps (2)administratorProposes a new administrator, or a removal with a reason.Reasoned
+administratorsEndorse, or vote; refusals explain the arithmetic.
+ux-experience journey (j); membership R5–R14
+5. Wizards
+Outlines only: what each wizard covers, where it starts, and its steps. A step may offer an optional side trip into another wizard; when that wizard finishes, or is stopped, the member returns to the step they left. Any wizard reachable as a side trip can also be run on its own later. Each step says what to do and why; a wizard points at the real control and never presses it; what it puts in a field is a labelled draft until the member keeps it; stopping is fine. The three required wizards must always work, or the release is held.
+RequiredSet up and claim
+Starts at: The installer page, then the setup pageChoose your language, from the languages Civicsmith comes with.
+Before you start: a Cloudflare account with a payment method, a Claude subscription account, about twenty minutes.
+Choose the short name. Why: it appears in addresses and signatures, and can never change; a group that wants to stay unnamed picks one that reveals nothing.
+Install and let it test itself.
+Claim it with the one-time password; choose your password.
+Name the group, add a logo if you have one, verify your web address, choose your places and languages.
+Record who holds the hosting account. Optionally add a second administrator. Why: so the group is never stuck if one person is away.
+Optional side trip: say who your group is (its own wizard), then come back here to finish. You can also do it later.
+Required · outline only for nowWelcome a new member
+Starts at: The invitation linkChoose your language. Why: everything that follows, including what your choices mean, should be in words you read easily; it starts from your device's setting.
+Choose a handle. Why: the record shows it on your work. It needn't be your legal name. A name people know lends your work credibility and lets reporters reach you, but puts it on public cases; a pen name shields you from pressure, and your administrators still know who you are. You can also choose, act by act, to be credited only as the group.
+This is your group's home: what it is working on, and what is waiting on you.
+Two things to know first: a question's strength against its project's bar, and "Undetermined".
+Your first act: join a project, capture a document, or record what you saw.
+RequiredPublication ceremony
+Starts at: A case ready to publishWhat you are publishing: the case, its edition, its scope.
+Check: each finding's strength against the bar; anything still open.
+What the case leaves out, and who acknowledged it.
+The group's declared bias.
+Preview the public page, as a stranger will see it.
+Sign with your key. Why: publishing is permanent; corrections come as a new edition.
+Optional · offer firstGet a record
+Starts at: Any office, or a question that needs recordsLook first: is it already public? Search the office's site and other public sources; if you find it, capture it here and you are done.
+If not: which office holds the records.
+What records, in plain words.
+The law it goes under, from your group's profile.
+Your draft, labelled as a draft: edit it until it is yours.
+Send it. Why the warning: this tells the office what you are looking at.
+The due date is set and shows in your queue.
+OptionalCheck a claim
+Starts at: A claim the city made, capturedWhat exactly does the city claim, and where did it say so?
+What do its words mean: what counts, over what period? If it never says, record that.
+Get the city's own records behind the claim: online, or by request.
+Work out whether they support it, with the method shown, and have a second member check.
+Plan a spot-check: which sample of records members will visit, and how they record what they find.
+Optional · offer firstYour first question
+Starts at: A project pageWhat drew you in? A problem you live with (a street, a service, a bill), or something you read: a law or code, a court case, a news story, a budget, a meeting, a tip. Start from there.
+What do you want to know? Say it as a question; the assistant can suggest some from what you started with.
+Find or capture a document that bears on it.
+Point at the passage that matters.
+Say whether it supports the question or cuts against it.
+See the question's strength against the project's bar, and what would raise it.
+OptionalSay who your group is
+Starts at: The end of setup, or the group's settings at any timeWhat kind of group are you? Pick one or more, or describe your own.
+What do you focus on: issues, places, offices or agencies?
+Why does the group exist, in your own words?
+Who should see this: members only, or also your public page and the network directory?
+OptionalInvite a member
+Starts at: The rosterWho: their handle, and the cover the group knows them by (not a legal name).
+What they may do: contribute, by default.
+Send the link; it waits for them.
+OptionalUse another group's case
+Starts at: A link to a published case, or the directoryImport the case into a read-only project.
+Let Civicsmith recreate each finding.
+Accept what recreated, with a reason.
+Watch the publisher's docket for new editions.
+OptionalTranslate the interface
+Starts at: Settings, for administrators or members given the grantChoose the language.
+See the words still untranslated.
+Ask the assistant to draft them; each is marked "Draft".
+Check and adopt each one, or type it yourself.
+OptionalStart and send
+Starts at: An option on a planThe option you chose and why.
+Prepare what is sent; the assistant may draft it.
+Approve it and send it, after the outward-act warning.
+The clock and the next checkpoint go into the queue.
+Sources: DEC-120 and DEC-121 (wizards, their libraries, required ones), K1364 (the member's words; drafts; stopping is a non-event), DEC-91 (onboarding deferred until the redesign settles).
+6. Gaps to close
+Proposed, 5 October. What these journeys need that Civicsmith does not do today, found while writing them. Each row says which journey needs it, what exists today, and where it goes next. Some wait on your answers above; most wait on the development process's answer to the capability question you sent it on 5 October. Nothing here is decided.
+The gapWhere the journeys need itWhat exists todayWhere it goes
+Invitation links for the group's websiteJourneys 2 and 3; question J8Only an administrator, or a machine credential acting for one, can create an invitation. No credential is limited to issuing invitations, and nothing sets one up for a website.A requirement for the development process, if you confirm J8
+One administratorJourney 1; question J9Ordinary members can't be added until two administrators exist, and an administrator can't resign while only two remain.A rule change for the development process, if you confirm J9
+What kind of group this is, and why it existsJourney 2; question J7The group's copy holds its short name, display name and web address only. No kind, focus or purpose is kept, and nothing adjusts the welcome to them.A requirement for the development process, if you confirm J7
+A member's private noteJourney 4, step 1A member can record a firsthand observation, but it is shared material in the record. Nothing holds a note only its author sees.A question for you (J11)
+Asking an expert for a checkJourney 8, step 3A task can be assigned to a member and appears as To do, and members declare expertise. Nothing finds members by expertise or marks a task as a request for a check.A requirement for the development process, if you confirm J4
+Calculating over a datasetJourney 6; the police-overtime and bond-measure rowsSpreadsheets are read as text and structure; their formulas are kept but not worked out. The only calculation in the product comes after a breach has been determined.Waiting on the development process's answer to the capability question you sent
+Explaining a charge or a ruleJourney 4; the sewer-utility row ("What's this sewer maintenance charge on my water bill?")A question can be about anything, and the assistant's flow from a question to a search is designed but not built. Nothing finds and explains the ordinance or rate schedule behind a charge.Waiting on the same answer
+A code's structureThe "law, code or policy" rowEach requirement is declared as its own standard, with its citation and text. There is no chapter-and-section structure, and no amendment history beyond what members record.Waiting on the same answer
+Following a court caseThe "court case" and "regulatory proceeding" rowsA court filing can be captured and a docket page watched for changes. Nothing tracks a case's filings, rulings and appeals, or links a decision to the rule it interprets.Waiting on the same answer
+Meetings and timeThe "public meeting" row; every deadlineDeadlines count calendar or business days against the group's holidays. There is no model of a recurring meeting, days are counted in universal time, and the group's time zone and office hours are stored but not used.Waiting on the same answer
+Offices and who held themThe "court case" row; journey 13Subjects are registered with three relations (stands in for, is part of, overlaps). There is no "reports to" or "contracts with", and no record of who held a role when.Waiting on the same answer
+The account the assistant runs onJourney 1, step 1; the setup wizard's first screenThe requirements say the assistant runs on a group's, project's or member's Claude account, and that the account pays for its work. They don't say whether a Claude subscription is enough or a paid developer account is needed. The page now says "Claude subscription".A fact to confirm with the development process before the setup wizard is written
+Until a gap closes, the journey states the limit honestly at the step where a member meets it. For example, journey 6 says that the calculation is the assistant's or a member's, shown with its method.
+Questions for you
+J1. Who we design for
+Answered 4 October: yes. Approve the reconciled audiences: three rings (members, invited in, outside), with the installer and founder as moments of the administrator's role, participants as states, and the assistant as an actor, not an audience.
+Answer: "J1: yes", or your changes.
+J2. The wide path
+Answered 4 October: yes. Adopt the eight rules above as the test every journey and screen passes, alongside the design principles.
+Answer: "J2: yes", or your changes.
+J3. One action journey, not two
+Fold the older "acting on a finding" into the plan journey (13), so members learn one path from suspicion to outcome.
+Answer: "J3: yes" or "J3: keep both".
+J4. The journeys
+Confirm the seventeen journeys as listed: seven new (2, 3, 4, 6, 8, 15, 16), six amended, the rest confirmed.
+Answer: "J4: yes", or name any to change.
+J5. Write every wizard
+Your answer, 4 October: why delay the optional ones? Writing them tests whether the wizard module can meet real-world needs. So all eleven wizards are written in step 5, walked through the mockups, and any limit they hit goes to the development process. The welcome wizard is written too; only its final words wait for the redesign to settle, as you ruled for onboarding.
+Answer: "J5: yes".
+J6. Where members start
+Adopt section 3: problems members live with come first, then the documents they read; the home asks "What brought you here?", every kind of document is handled alike, and the first-question wizard begins by asking what drew the member in.
+Answer: "J6: yes", or angles to add or change.
+J7. Who the group is
+Adopt journey 2: optional and separate from setup; a group picks one or more kinds (professional, issue-specific, neighbourhood or community, catch-all, or its own), names its focus and says why it exists; members see it, and the public too only if the group chooses; it shapes what members are offered first and can seed the group's declared bias; it never locks anything.
+Answer: "J7: yes", or your changes.
+J8. Invitation links for the group's website
+Your direction, 4 October: requests to join belong to the group's own website, which controls who may apply; Civicsmith only provides a way for that website to obtain an invitation link for an approved person, leading into the joining journey. The cover name an invitation needs comes with the website's request, and an administrator can change it. This is a new capability, so it goes to the development process as a requirement.
+Answer: "J8: yes", or your changes.
+J9. One administrator is enough
+The membership rules now require two administrators before a group can add ordinary members, and stop an administrator resigning when only two remain. Draft ruling: a group may run with one administrator; members can be added from the start; Civicsmith recommends a second administrator once, at setup, saying why, and never again; only the last administrator is stopped from resigning. Votes to remove an administrator still need enough administrators to vote, as today. This changes the membership rules, so it goes to the development process.
+Answer: "J9: yes", or your changes.
+J10. Keep a list of gaps
+Keep section 6 on this page and carry it into each later step. Each gap stays listed until it closes or you set it aside, so the journeys never promise what Civicsmith can't yet do. Gaps waiting on the capability question come back to you with the development process's answer.
+Answer: "J10: yes", or "J10: no".
+J11. Where a problem starts
+Journey 4 begins with a member describing a problem in their own words, saying exactly how they feel. Today the only place for that is a firsthand observation, which the project's members can see. Draft ruling: a member may keep notes that only they can see, never cited and never published, and turn a note into an observation or a question when they choose. The alternative is to start from an observation the group sees from the outset, which keeps everything in the shared record but asks members to write for the group from their first words.
+Answer: "J11: private notes", or "J11: observations only".
+Drawn from the journeys and audiences gathered from the requirements (ux-experience.json), the original interface brief (UI-KICKOFF), the approved design principles (DEC-123) and brand and voice (DEC-125 to DEC-127), and your rulings on wizards (DEC-120, DEC-121, K1364), phones (DEC-122), imported cases (DEC-96, DEC-112, K1366), the queue (DEC-110) and onboarding (DEC-91). Kept in the repository at docs/development/ux-substrate/journeys.html.

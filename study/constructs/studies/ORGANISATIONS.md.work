@@ -6,7 +6,7 @@
 - [x] digest/DOCTRINE-REGISTER.md (2814 lines) read 1-2814 COMPLETE
 - [x] digest/CROSS-REGISTER.md (1049 lines) read 1-1049 COMPLETE
 - [x] M1..M5 ## Modules sections read whole (M1 76-269, M2 28-136, M3 30-167, M4 28-110, M5 24-107)
-- [ ] primary sources
+- [x] primary sources (see list)
 - [ ] web research
 - [ ] study sections 1-9
 ## Findings
@@ -118,3 +118,13 @@
 - build/requirements/progressions.md WHOLE (118 lines): Purpose l.11 group's declared flow, instance threads by following one entity; stage {stage_key, stage_no, label, after_stage, cardinality, within_interval, required}; required always/usually/sometimes/never/unless_exception; R2/R4 versions with basis+citation; R6 NOT_CONCERNED; R11 missing_predecessor, discharged_skip; R14 discharge exception doc with citation; R16 overdue only if within parses, no deadline invented; R20 DEFINITION_MOVED; R24 derived never stored; R25 finding reports not decides; R26 every author is control plane's stamp "never a body's"; R32 junction checks deferred (no amounts); Suggestions l.113 deferred "a definition scoped to an institution, when a placed document carries its own date". NB: no obligor/beneficiary/authority field on a stage; instance keyed (progression, entity) only.
 - build/requirements/jurisdictions.md WHOLE (108 lines): R4 systems; R6 bodies/member_titles; R23 standard_sources issuer; R24 counterparties {role, body, level, elected, basis} + oversight; level state/county/city/district; R26 deadlines {rule, applies_to, days, count, starts, extension, citation}; R31 office level != law level; R32 legal_organisations; R42 hours on counterparty; R43 holidays offices = counterparty role; R44 calendar status; R15 combine never chooses; R17 pure; R20 no service treats profile by identity; R27 absent -> undetermined.
 - build/layers.md WHOLE (274 lines): layer contracts table l.5-17; layer 5 contract "Everything derived over content, with its grade; the four-level search"; layer 9 contract l.15/l.74; "No jurisdiction" rules 1-6 l.19-30; Bob's rulings l.44-51: rule 5 amended 2026-09-26 by P17 -- change to a layer or adding/removing a product module comes to Bob; uses edges, order within layer BOB's. Layer 9 "Where it sits" l.72 rationale: after publication because finding published before action. Layer 7 note l.66 Discovery candidate. accepted-work (l.190-198) is precedent: a registration seam module placed low so lower modules can read later module's data (P4 workaround).
+
+- build/modules.json checked: entities idx 36 (L5) uses only L1-L4 + record-core/membership; standards (L9) uses only record-grammar, jurisdictions, record-core, membership, promotion, content (all <= L4) -> could move to L5 with NO uses change; local-facts uses record-grammar, jurisdictions, record-core, membership (<= L2) -> could move low with no uses change. Users of standards: conformance, filings, action-plans, affordances, control-plane, plane (all later). Users of local-facts: action-clocks, filings, affordances, queue-producers, control-plane, plane. So moving both down breaks no user.
+- build/requirements/actions.md R9 (l.26) exact; R7, R8; R45 contact. conformance Terms l.18 act {id?, description, actor {role, body}, at|period, evidence}.
+- Case Making src 408-438 (What is missing 3 FLOW MODEL D-128) read.
+- NOTIFICATIONS src 70-149 read (Bob quote, civic obligation vs member task, DEC-107 ruled, delta, flow model home).
+- DECISIONS-design-branch src 1740-1752 DEC-107 read (response: "Obligation" used on members' and readers' screens only for a public body's duty).
+- Declared Bias src 148-170 safeguard 4 read.
+- Content Framework src 780-809 (connection table, asserted_by three values, rule vs instance) and 834-973 (§8.2 progressions, missing predecessor, exception docs, junction checks, threaded by entities, declared flow D-128, deferred institution scoping) read.
+- design-journeys src 60-129 (kinds of group; §3 where members start incl. franchise, contract "declare its obligations and deadlines as standards", court case parties and offices), 330-369 (journey 13), 505-536 (§6 gaps incl. "Offices and who held them") read; branch origin/claude/gallant-brown-zg0wc1 @ bb387fffb2 same text.
+- Code: entities/index.mjs:25-31 kinds+relations; entities/schema.mjs:42-56 entity_relations has NO valid_from/valid_to (only at, withdrawn_*); entities/index.mjs 1,113 lines; progressions/index.mjs 1,189 lines. jurisdictions/profiles/oakland-alameda.mjs:207-217 five counterparties. docprofile/doctypes/staff-directory.mjs header (FW-20, M-121).
