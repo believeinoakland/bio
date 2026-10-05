@@ -1,8 +1,8 @@
-# BIO Capability Ladders v0.1: time, organisations and obligations, people, law, courts, analysis and questions
+# BIO Capability Ladders v0.1: time, organisations and obligations, people, events, money, law, courts, analysis and questions
 
 **Status.** Written 2026-10-05 for BOB #111 from the constructs study (K1426–K1432); the study's full evidence is on branch `study/constructs`, commit `892fca16c4` (never deleted, K1433). The targets are Bob's (B1 (c), K1432): every construct reaches L5, staged by dependency, within realistic resources and without slowing everyday use. Rungs not yet built are planned, not held; each is re-verified against the code and the world when its stage is planned. Facts about the product are as of `tranche/T32` @ 84e7cd321d. (The studies cite `09837e3ddc`, the reviews `6645f2ea04` and the synthesis's module order `8fa5ab4e3d`; a `git diff` from each of those to 84e7cd321d over `bio-plane/src`, `build/requirements`, `build/modules.json`, `agent-worker`, `newgroup` and `civicos-ui` shows no change.)
 
-**Amended 2026-10-05 by BOB #112 (K1452, K1453, K1455).** Bob ruled B8: tracking people is essential to investigation. §5A PEOPLE is added; §5.1 reaches organisations of every kind; the doctrine row "Offices, never private individuals" (§10) is replaced; Design Requirement 6 still governs publication.
+**Amended 2026-10-05 by BOB #112 (K1452, K1453, K1455; K1457, K1458).** Bob named two more constructs: EVENTS (what happens in the world and how events relate; §5B) and MONEY (where it comes from and goes, the rules on its movement, commitments, what it buys and delivers; §5C). `chronology` is widened and renamed `events`; a new module `money` follows `calculations`. Bob ruled B8: tracking people is essential to investigation. §5A PEOPLE is added; §5.1 reaches organisations of every kind; the doctrine row "Offices, never private individuals" (§10) is replaced; Design Requirement 6 still governs publication.
 
 **Why it exists.** Bob, 2026-10-05: "The required capabilities is certain to expand. When I discover the need for that expansion is less certain. So while meeting the targets you've identified for today sounds appropriate, the understanding from this study should be preserved in a way that supports later situation when the need for greater capabilities is identified." Bob then ruled decision B1 as option (c) (K1432): every construct is to reach its full ladder, L5, within what is realistically doable with the resources available and without slowing the system's everyday use for members. This document is the plan's reference: for each construct, every rung, its evidence, its design, what must exist first, what is realistic today, and the decisions it raises. The study's synthesis (`synthesis/constructs.md` on the study branch, cited here as "synthesis §n") holds the full argument.
 
@@ -11,7 +11,7 @@
 ## 1. How to use this document
 
 **When planning a stage.**
-1. **Take the stage's rungs.** Synthesis §4 orders the stages by dependency (stage 0: runnable and correct; stage 1: the shared ground; stage 2: what bodies owe, their meetings and proceedings; stage 3: applied and assisted; stage 4: network and imports). Each construct's ladder table (§4.3–§9.3, and §5A.3 for PEOPLE) names the stage that carries each rung; rungs beyond stage 3 are the "Later rungs, planned" of §4.5–§9.5 (PEOPLE's are in §5A.3). A stage opens only when Bob says a tranche may open (K1425).
+1. **Take the stage's rungs.** Synthesis §4 orders the stages by dependency (stage 0: runnable and correct; stage 1: the shared ground; stage 2: what bodies owe, their meetings and proceedings; stage 3: applied and assisted; stage 4: network and imports). Each construct's ladder table (§4.3–§9.3, and §5A.3–§5C.3 for PEOPLE, EVENTS and MONEY) names the stage that carries each rung; rungs beyond stage 3 are the "Later rungs, planned" of §4.5–§9.5 (PEOPLE's, EVENTS' and MONEY's are in their §5A.3–§5C.3). A stage opens only when Bob says a tranche may open (K1425).
 2. **Read each rung's entry and the rungs below it.** An entry gives what a member can do, its state on 2026-10-05, the design, what must exist first, realism and performance, the decisions it raises, and risks. A rung assumes every rung below it.
 3. **Check what must exist first.** Prerequisite rungs, modules, deployments and measurements. A rung whose prerequisites are not in place is not in the stage; say which one is missing (P19).
 4. **Re-verify.** The product facts here are as of 84e7cd321d; check each cited file, requirement and line again. The world sources date: standards are revised, APIs change their limits and prices, vendors change terms (the study saw a tzdata release this month and an Anthropic terms reading withdrawn within a day, K1429). Fetch every URL the rung depends on again and note what changed.
@@ -20,7 +20,7 @@
 7. **Draft requirements citing this document by section** (for example "BIO_Capability_Ladders_v0_1 §7.5, COURTS L5"), with each "measure first" item made an `M-<n>` before the requirements are drafted (D350), and every requirement given a negative control (P7).
 
 **When a member's real situation shows a gap no rung covers.** The need may come from a group's request, a job's report, the design session, a measurement, or questions members keep asking (the assistant's unattributed tallies, B17 (iii), are built to show this).
-1. Look for it in the construct's needs register (§4.2–§9.2, §5A.2) and the rung that serves it. If it is there, plan that rung as above.
+1. Look for it in the construct's needs register (§4.2–§9.2, §5A.2–§5C.2) and the rung that serves it. If it is there, plan that rung as above.
 2. If it is not, the ladder itself is extended here: add the need to the register in the same form (id, a member's words, centrality, evidence); place it on the rung that serves it, or add a rung where no rung serves it; write the rung's design, what must exist first, realism and performance, decisions and risks; update §2 if the new rung needs a substrate choice made earlier; and update the interfaces table.
 3. Keep the registers whole: a need is retired only with the reason stated. Update a rung's state when it is built.
 
@@ -52,10 +52,23 @@
 **PEOPLE (§5A; K1452, K1453, K1455).**
 - *One entity per person across every role,* with identifiers `{scheme, id, basis}` (Legistar `PersonId`, licence numbers, campaign filer ids), so an import at L5 matches at grade A. *Blocks:* a person re-created per source or per role.
 - *Every fact about a person is a dated, cited line* (career, credentials, memberships, interests, money, family; K1453's kinds), so a career is a read, not a document. *Blocks:* a free-text biography field.
-- *Statements are `chronology`'s dated acts that name the person,* so "everything he said about the sewer fund, in order" is a query over the record.
+- *Statements are `events`'s dated acts that name the person,* so "everything he said about the sewer fund, in order" is a query over the record.
 - *Overlaps are derived on read, never stored,* from lines with validity: a connection is shown as its cited facts, never as acquaintance, never ranked (DEC-60; D181). *Blocks:* a stored "knows" edge or a connectedness score.
 - *Identity is never merged without evidence;* a disputed match is undetermined (entities R26). *Blocks:* name-only merges, which would poison every overlap above them.
 - *Publication filters; the record does not* (Design Requirement 6): a case names an individual only in official capacity, while the record holds what cited documents state (K1455).
+
+**EVENTS (§5B; K1457, K1458).**
+- *One event store,* `events` (formerly `chronology`), so a document's own date, a vote, a payment and a statement are the same kind of object. *Blocks:* a second home for dated acts in `progressions` or `money`.
+- *Every event's date is EDTF with its basis;* sequence is computed by `civil-time`, three-valued, never stored. *Blocks:* stored "before" edges that go stale when a date is corrected.
+- *Participants and concerns are registry entities* (organisations, people, contracts, funds), so "who knew what" and "what happened to this contract" are reads. *Blocks:* participants as text.
+- *Event relations are a closed, cited list kept apart from `lines` and law relations* (D192), and `causes` is held only as a cited statement or a member's labelled hypothesis (DEC-77 (10)). *Blocks:* a generic "related" edge, or a machine-inferred cause.
+
+**MONEY (§5C; K1457, K1458).**
+- *Every amount carries its stage* (budgeted, appropriated, committed, spent, received, transferred, owed, written off) and its period, and amounts at different stages are never summed. *Blocks:* a single amount field, after which "budget" and "spent" can never be told apart again.
+- *Exact decimals and a currency on every amount;* totals are calculations (§8) with their stage and period. *Blocks:* floating-point sums.
+- *Funds and accounts are entities with scheme identifiers,* so flows join by identifier (D184). *Blocks:* fund names as text, which break at the first renumbering.
+- *Ledgers stay tables; a money fact may reference a row,* so a checkbook of 40,000 payments is not copied into 40,000 objects. *Blocks:* a store that cannot hold a city's year.
+- *Commitments are duties with money terms; rules of movement are standards or duties;* a check of a flow against them raises a question, never a verdict. *Blocks:* a second commitments object, or "improper" as a stored state.
 
 **LAW.**
 - *Work, version and portion* (FRBR, as Akoma Ntoso uses it), with an instrument key shaped like ELI and composed only from profile data (LAW §5.2–5.3; B11). Imports at L5 (Akoma Ntoso, USLM, eCFR) land on the same keys. *Blocks:* whole-standard supersession as the only version model, or place names in code.
@@ -94,13 +107,13 @@
 
 ## 3. The common thread
 
-**What joins the constructs is the obligation: who owes what, to whom, by when, under which authority.** It is held once, as `duties`/`DUT-` in layer 5 (synthesis §3.1). Members see "obligation" for a duty or prohibition and "power" for what an office may do (DEC-107; B20). ORGANISATIONS supplies the obligor (an office or body, or a person where a law binds them by name or role; K1453) and the lines between bodies; PEOPLE supplies who held each office and who acted, with their careers, interests and overlaps (§5A); LAW supplies the authority (a held standard at its version in force); TIME supplies the due date, computed by `civil-time` and anchored on a document's own date from `chronology`; COURTS supplies orders, decree paragraphs, grand jury and audit recommendations as sources, with `arising_in` and quoted `reported_status`; ANALYSIS supplies measured performance (a calculation output as the evidence of an occurrence); QUESTIONS reads all of it in plain words.
+**What joins the constructs is the obligation: who owes what, to whom, by when, under which authority.** It is held once, as `duties`/`DUT-` in layer 5 (synthesis §3.1). Members see "obligation" for a duty or prohibition and "power" for what an office may do (DEC-107; B20). ORGANISATIONS supplies the obligor (an office or body, or a person where a law binds them by name or role; K1453) and the lines between bodies; PEOPLE supplies who held each office and who acted, with their careers, interests and overlaps (§5A); EVENTS supplies what actually happened, so an occurrence is matched to the events that discharge it (§5B); MONEY supplies what was committed and what was paid, so a commitment is a duty with money terms (§5C); LAW supplies the authority (a held standard at its version in force); TIME supplies the due date, computed by `civil-time` and anchored on a document's own date from `events`; COURTS supplies orders, decree paragraphs, grand jury and audit recommendations as sources, with `arising_in` and quoted `reported_status`; ANALYSIS supplies measured performance (a calculation output as the evidence of an occurrence); QUESTIONS reads all of it in plain words.
 
 **A due date's basis is one of four kinds (K1431):** a `rule` (a law or order, cited), a `commitment` (the body's own stated date, cited), a `dependency` (the event it must precede, the lead, and why; derived from that event's date and recomputed if the event moves), or the group's own `window`. Only `rule` may be called a deadline the law sets. A missed dependency date is a dated fact about sequence ("the report was published after the vote"), never a violation unless a rule also applies. Occurrences are derived on read (`met`, `met_late`, `overdue`, `pending`, `discharged`, `undetermined`); "overdue" raises a question and never asserts a violation (D241). Its queue item is the reserved FINDING kind `temporal-expectation-due` (`queuestate.mjs:164`), shown as "Noticed". The queue's internal code `OBLIGATION` (a member's to-do) is unchanged, as DEC-107 says.
 
 **What moved below Publication, and why.** Every piece of the thread sat in layer 9 or nowhere, so investigation could use none of it. The architecture puts the record's understanding low and leaves acting where it is (synthesis §3.2):
 - layer 1 gains the pure engines `civil-time` and `calc-grammar` (and, at stage 2, the fleet Worker `sheet-worker`);
-- layer 5 runs `entities`, `lines` (new), `people` (new, K1453), `local-facts` (moved from layer 9), `connections`, `standards` (moved from layer 9), `chronology` (new), `progressions`, `duties` (new), `bias`, `observation-log`, `query-language`, `retrieval`, `calculations` (new);
+- layer 5 runs `entities`, `lines` (new), `people` (new, K1453), `local-facts` (moved from layer 9), `connections`, `standards` (moved from layer 9), `events` (new), `progressions`, `duties` (new), `bias`, `observation-log`, `query-language`, `retrieval`, `calculations` (new), `money` (new, K1458);
 - layer 6 gains `answers` after `skills` and before `agent-worker`;
 - `conformance`, `consequences` and `action-clocks` stay in layer 9, because a determination rests on published findings (K102, DEC-26) and they use `publication` or `conformance`.
 
@@ -158,7 +171,7 @@ Centrality: core, regular, occasional (TIME §1). Rung: the lowest that serves t
 
 ### 4.4 Rungs in the first stages
 
-Bob's decisions these rungs rest on (synthesis §5): B1 (c) (every construct to L5), B2 (`local-facts` to layer 5), B3 (`civil-time`, `chronology`), B4 (iii) (a member adopts a body's clock), B9 (what the record may claim about time; the governing day), B10 (sourced profile rules), B20 (where members meet dates). The synthesis's stage labels (T1–T4) are stages, not rungs.
+Bob's decisions these rungs rest on (synthesis §5): B1 (c) (every construct to L5), B2 (`local-facts` to layer 5), B3 (`civil-time`, `events`), B4 (iii) (a member adopts a body's clock), B9 (what the record may claim about time; the governing day), B10 (sourced profile rules), B20 (where members meet dates). The synthesis's stage labels (T1–T4) are stages, not rungs.
 
 **L1 and L2: correct clocks, usable (synthesis stage 1, "T1").**
 - *Design:* New `civil-time` in layer 1 directly after `jurisdictions` (1,500–2,500 lines): local day from an instant and a zone; EDTF level-1 parsing and three-valued comparison; time-rule evaluation (units including hours and business hours, forward and backward, roll past closed days, extension, tolling); bounded RRULE expansion; fiscal-period mapping; `validAt`; every answer with a trace (rule, citation, days skipped and why, tz/ICU version); "now" only from its caller, never `Temporal.Now` (R-1 T-E9). `jurisdictions` R26 widened as data (units, direction, anchors, roll, closures, extension, tolling; facts `weekend` and `computation` citing CCP §§12, 12a; channel `cutoff`/`outages`; `received` defined once as the counterparty's receipt of the group's request). The twelve day computations delegate. `local-facts` moves to layer 5. `clockPropose` gains an op; query ranges become inclusive local days with an `asOf` note. A first sourced rule set: CPRA with extension, Brown Act, OMC 48 business hours, Government Claims Act 6 and 12 months, FOIA 20 working days, each only with a primary source (B10).
@@ -168,14 +181,14 @@ Bob's decisions these rungs rest on (synthesis §5): B1 (c) (every construct to 
 - *Measure first:* `Intl` zones and `Temporal` presence on the deployed plane; 20 published worked deadline examples, each with a negative control; how many typed clocks differ from the rule's computation.
 
 **L3: what a body owes, and its meetings (stage 2, "T2").**
-- *Design:* New `chronology` in layer 5 (after `standards`, before `progressions`): a document's own dated facts `{capture, extent, kind, value, method, grade}`, read by `ownDate`, `datesOf`, `chronology({scope})`; first writer the reading pipeline at read time, plus a re-read job (R-1 T-Feasibility). `progressions` R16 anchors on the event's own date; without one, undetermined with the capture instant as a bound (B9 (ii)). Profile recurrences (RRULE subset: WEEKLY, MONTHLY, YEARLY; BYDAY with ordinal; BYMONTHDAY; BYSETPOS; EXDATE; UNTIL; at most 24 months or 500 instances) and observed meetings in the OCD Event shape from Legistar `Events`; vendor encodings ("- CANCELLED", special-meeting bodies, zone-less `EventDate`) normalised as profile or site data (R-1 T-O4). `monitoring`'s `per_meeting` captures at the meeting time minus the notice period and states the alarm's lateness. `fiscal_year` in the profile. A body's duty is a `duties` occurrence (§5), not a TIME object.
+- *Design:* New `events` in layer 5 (after `standards`, before `progressions`): a document's own dated facts `{capture, extent, kind, value, method, grade}`, read by `ownDate`, `datesOf`, `chronology({scope})`; first writer the reading pipeline at read time, plus a re-read job (R-1 T-Feasibility). `progressions` R16 anchors on the event's own date; without one, undetermined with the capture instant as a bound (B9 (ii)). Profile recurrences (RRULE subset: WEEKLY, MONTHLY, YEARLY; BYDAY with ordinal; BYMONTHDAY; BYSETPOS; EXDATE; UNTIL; at most 24 months or 500 instances) and observed meetings in the OCD Event shape from Legistar `Events`; vendor encodings ("- CANCELLED", special-meeting bodies, zone-less `EventDate`) normalised as profile or site data (R-1 T-O4). `monitoring`'s `per_meeting` captures at the meeting time minus the notice period and states the alarm's lateness. `fiscal_year` in the profile. A body's duty is a `duties` occurrence (§5), not a TIME object.
 - *The AI's part:* EXTRACT later proposes dated facts.
 - *Size:* about 35–45 requirements.
 - *Measure first:* date accuracy of the calendar, agenda and minutes readers on three bodies. Oakland's minutes lag is already measured from Legistar: 2026 to date, 130 events, 24 cancelled; 105 with minutes, median 15 days to last publication, 33 over 21 days; 29 of 106 agendas last published under 72 hours before the meeting day, which must not be read as notice violations, because "last published" is only an upper bound (R-1 T-O3).
 
 **L4: as-of reads and patterns (stage 3, "T3").**
 - *Design:* `validAt` across standards, tenures and relations; recodification across addresses (with LAW); Memento asked for a past date; the lateness pattern with its denominator and a cross-action lateness index; the timeline view (DEC-77.2); the counsel packet's chronology widened to a project.
-- *What must exist first:* stage 2's `chronology` and event-anchored progressions; LAW's versions (stage 2) for recodification. Planned in stage 3 (B1 (c)). No new module expected.
+- *What must exist first:* stage 2's `events` and event-anchored progressions; LAW's versions (stage 2) for recodification. Planned in stage 3 (B1 (c)). No new module expected.
 
 **L5: assisted (stage 3, "T4").**
 - *Design:* EXTRACT proposes dated facts and imprecise dates, graded no higher than the method earns (temporal taggers normalise about 70–78% correctly, https://aclweb.org/aclwiki/Temporal_Information_Extraction_(State_of_the_art)); FIND answers time questions as cited reads and states the window used; plan mode proposes clock entries from profile rules. Never invents a rule (D250), confirms a calendar fact (D15) or runs on a schedule (D13).
@@ -226,6 +239,8 @@ TIME's six rungs are all carried by stages 1–3 (§4.3). Planned beyond them ar
 | COURTS | court calendars and clerk channels (cut-offs, outages); `entered`, `served`, `hearing` anchors; register dates | the rule engine and band rule for court dates; a proceeding's chronology; limitation windows for the counsel packet |
 | ANALYSIS | per-record timestamps from datasets; lateness rates computed as calculations | `span`, fiscal-period mapping, local-day bucketing; denominators of "due in period"; dataset vintages (generalising `id-spaces` `roll_year`) |
 | QUESTIONS | plain-language interpretation of time phrases; FIND deployed | `deadlinecompute` and `validAt` as plane reads, each with basis and undetermined stated |
+| EVENTS | dated events and document dates (`events`) | EDTF, sequence and as-of for every event |
+| MONEY | amounts with their periods | fiscal periods and `span` |
 
 ## 5. ORGANISATIONS AND OBLIGATIONS
 
@@ -294,7 +309,7 @@ Bob's decisions these rungs rest on: B3 (`lines`, `duties`), B4 (one obligation 
 - *Measure first:* Legistar seats by body and year; offices concerned by more than 32 documents (D-224's trigger); whether budget department codes stay stable across two fiscal years; the directories in the corpus (about 395 ± 272); the distribution of line grades; the bridge's resolution rate.
 
 **L3 to L4: obligations (stage 2, "O2").**
-- *Design:* New `duties` in layer 5 after `progressions` (synthesis §3.1): `DUT-` with `modality` (duty, prohibition, power), `obligor` (an office or body, or a person where a law binds them by name or role, K1453), `obligee`, `performance`, `source` (held standard at its version; court standard paragraph; labelled practice; labelled dependency), `trigger`, `time` (computed by `civil-time`, never stored), `exceptions`, `enforcer` (a contractor's breach is routed to its enforcing office), `observed_by`, `arising_in`, `reported_status[]`, `in_force` (derived). Occurrences derived on read, dated from `chronology`, never from capture time (R-1 O-O3). A profile deadline is a generic duty ("the agency asked"), so a records request's clock is one occurrence of the addressed office's duty. `powersOf({office, at})` lists the powers in force with their instruments and any delegation instrument held; never within or not within (B6). `progressions` may store a `DUT-` id as data but never reads `duties`. `strength` R12 treats `part_of` and `acts_for` as one issuing source (closing X118).
+- *Design:* New `duties` in layer 5 after `progressions` (synthesis §3.1): `DUT-` with `modality` (duty, prohibition, power), `obligor` (an office or body, or a person where a law binds them by name or role, K1453), `obligee`, `performance`, `source` (held standard at its version; court standard paragraph; labelled practice; labelled dependency), `trigger`, `time` (computed by `civil-time`, never stored), `exceptions`, `enforcer` (a contractor's breach is routed to its enforcing office), `observed_by`, `arising_in`, `reported_status[]`, `in_force` (derived). Occurrences derived on read, dated from `events`, never from capture time (R-1 O-O3). A profile deadline is a generic duty ("the agency asked"), so a records request's clock is one occurrence of the addressed office's duty. `powersOf({office, at})` lists the powers in force with their instruments and any delegation instrument held; never within or not within (B6). `progressions` may store a `DUT-` id as data but never reads `duties`. `strength` R12 treats `part_of` and `acts_for` as one issuing source (closing X118).
 - *The AI's part:* proposes duties and powers from charters, codes, contracts, orders and budgets, always adopted by a member naming the clause (B7).
 - *Size:* about 60 requirements.
 - *Measure first:* a hand-built gold set (one code chapter, one franchise, one consent decree) for EXTRACT's precision; contract-obligation extraction reaches at best 70.56% (https://fse.studenttheses.ub.rug.nl/34210).
@@ -314,14 +329,18 @@ Bob's decisions these rungs rest on: B3 (`lines`, `duties`), B4 (one obligation 
 
 | construct | ORGANISATIONS needs from it | ORGANISATIONS supplies to it |
 |---|---|---|
-| TIME | `civil-time` (business days by an office's calendar, recurrences, `validAt`, zone); `chronology` for a deliverable's own date | which office and parent a clock runs for; every wait's "from whom"; occurrences for TIME's notices |
+| TIME | `civil-time` (business days by an office's calendar, recurrences, `validAt`, zone); `events` for a deliverable's own date | which office and parent a clock runs for; every wait's "from whom"; occurrences for TIME's notices |
 | LAW | `standards` in layer 5 at portion and version, as a duty's source; issuers as entities | duties as the structured reading of provisions; which law governs which body (D-149) |
 | COURTS | courts and forums as bodies; parties with roles; orders and decrees as sources | `lines` party and proceeding families; enforcers and oversight lines; `duties` with `arising_in` |
 | PEOPLE | holders by name, with tenures; staffing; interests that bear on a duty | offices, bodies and units as the ends of every career line; organisations of every sector |
 | ANALYSIS | performance measures as calculations; registry-scoped denominators | fund, program and department keys for joins; occurrence counts per office and period |
 | QUESTIONS | INTERPRET resolving named bodies to the registry; FIND calling the new reads | cited, as-of answers on holders, lines, duties, powers and late occurrences, each with grade and level |
+| EVENTS | the events that discharge or miss an occurrence | participants and what should have happened (`duties`) |
+| MONEY | flows between bodies and funds | funds, programs and commitments as `duties` with money terms |
 
 ## 5A. PEOPLE
+
+> **Provisional (K1459).** Drafted from targeted reading, not from the full study Bob requires. A second constructs study (PEOPLE, EVENTS, MONEY, and their effect on every other construct) replaces this section; nothing here is planned or folded into requirements until it does.
 
 *Added 2026-10-05 by BOB #112 on Bob's ruling of B8 (K1452, K1453). Not from the study: its needs register is Bob's statement and the practice of investigation; each rung is re-verified when its stage is planned.*
 
@@ -339,7 +358,7 @@ Bob, 2026-10-05: "Tracking the activities, statements, and connections between i
 | P4 | Education, degrees, licences, military service and other credentials, with the issuing body and status | "Where did they go to school? Is their engineering licence current?" | core | L2 | Bob, 2026-10-05 |
 | P5 | Memberships: associations, clubs, political organisations, boards | "Which boards and associations does she sit on?" | regular | L2 | Bob, 2026-10-05 |
 | P6 | An organisation's staffing, today and in the past | "Who worked in Public Works' contracting unit in 2021?" | core | L2 | Bob, 2026-10-05 |
-| P7 | A person's statements and acts across documents, dated | "Everything he said about the sewer fund, in order." | core | L2 | Bob, 2026-10-05 ("activities, statements"); TIME `chronology` |
+| P7 | A person's statements and acts across documents, dated | "Everything he said about the sewer fund, in order." | core | L2 | Bob, 2026-10-05 ("activities, statements"); TIME `events` |
 | P8 | Financial interests, gifts, money given and received, lobbying, company officer roles | "Did the councilmember disclose an interest in the contractor?" | core | L3 | statements of economic interests, campaign finance and lobbying registers (profile data per jurisdiction) |
 | P9 | A possible conflict surfaced as a question, never a verdict | "She voted on a contract with a firm her former employer owns: worth a look." | core | L3 | Doctrine §10 (the machine never concludes) |
 | P10 | Who knows who: evidenced overlaps between two people over time | "Did the planning director and the developer's lobbyist ever work, study or serve together?" | core | L4 | Bob, 2026-10-05 |
@@ -359,7 +378,7 @@ Bob, 2026-10-05: "Tracking the activities, statements, and connections between i
 
 ### 5A.4 Design, at BOB's level (K1453)
 
-- **Where it lives.** A person is an `entities` entity of kind `person` (it exists). Facts about a person are `lines` from the person (B5's list gains the family below) and statements are `chronology` dated acts that name the person. A new product module **`people`**, in layer 5 after `lines`, composes them: `personAt({person, at})` (posts, employers, memberships in force), `careerOf(person)` (every line, in date order, each cited), `credentialsOf(person)`, `staffingAt({body, at})`, `overlaps({a, b, window})` and a bounded `path({a, b, at, maxHops})`. About 40 requirements at L2 and L4; interests (L3) add about 20.
+- **Where it lives.** A person is an `entities` entity of kind `person` (it exists). Facts about a person are `lines` from the person (B5's list gains the family below) and statements are `events` dated acts that name the person. A new product module **`people`**, in layer 5 after `lines`, composes them: `personAt({person, at})` (posts, employers, memberships in force), `careerOf(person)` (every line, in date order, each cited), `credentialsOf(person)`, `staffingAt({body, at})`, `overlaps({a, b, window})` and a bounded `path({a, b, at, maxHops})`. About 40 requirements at L2 and L4; interests (L3) add about 20.
 - **Line kinds added (closed, revised only by spec):** career and credentials: `employed_by` (with title and unit), `educated_at` (with degree and years), `credentialed_by` (licence or certificate, number, status), `served_in` (military service, branch, years), `belongs_to` (associations, clubs, political organisations); interests and money: `officer_of`, `owns_interest_in`, `gave_to` and `received_from` (contributions, gifts), `lobbies_for`; personal: `related_to` (family ties; B8a ruled (a), K1455: any family tie or personal fact a cited document states may be held, with no special rule).
 - **Organisations of every kind.** An organisation's kind (`institution`, `body`, `movement`) gains a closed `sector`: government, company, nonprofit, association, political, religious, education, other. The registry holds any organisation a document puts in the work, not only governments.
 - **Who knows who, without concluding.** An overlap is a set of cited, dated facts (two people on the same board in the same years), shown as such; the machine never says that two people know each other, never ranks people by how connected they are, and never infers a tie no document states. Walks follow §10's rule for evidenced lines (bounded, as of a date, weakest hop governing, undetermined on exhaustion).
@@ -373,11 +392,136 @@ Bob, 2026-10-05: "Tracking the activities, statements, and connections between i
 | construct | PEOPLE needs from it | PEOPLE supplies to it |
 |---|---|---|
 | ORGANISATIONS | bodies, offices and units as line ends; `holds` for posts | holders by name; staffing as of a date |
-| TIME | `civil-time` and `chronology` for every dated fact and statement | dated career events for timelines |
+| TIME | `civil-time` and `events` for every dated fact and statement | dated career events for timelines |
 | LAW | the laws that oblige filers and registrants | filers and registrants as obligors |
 | COURTS | parties as people where a document names them | a party's other roles |
 | ANALYSIS | contributions and interests as datasets; denominators | person-keyed rows for patterns |
 | QUESTIONS | INTERPRET resolving names to people | cited answers about a person, with grade and level |
+| EVENTS | acts and statements with the person as participant | people as participants; who knew what |
+| MONEY | money given and received | payees and donors who are people |
+
+## 5B. EVENTS
+
+> **Provisional (K1459).** Drafted from targeted reading, not from the full study Bob requires. A second constructs study (PEOPLE, EVENTS, MONEY, and their effect on every other construct) replaces this section; nothing here is planned or folded into requirements until it does.
+
+*Added 2026-10-05 by BOB #112 on Bob's statement of the construct (K1457, K1458). Not from the study: its needs register is Bob's statement and the practice of investigation; each rung is re-verified when its stage is planned. Bob's word was "actions"; this document says **events**, because "action" is already the group's own act in response to a finding (`BIO_Action_v0_1.md`). The members' word is the design stream's (B20).*
+
+### 5B.1 Purpose
+
+Bob, 2026-10-05: "Understanding how actions are related is another important construct … the series of things that happen in the world and the relationships between these events that investigations must understand." This construct holds what happened: a meeting held, a vote taken, a contract signed, a payment made, an email sent, a statement made, a report filed, a permit issued, an inspection done. Each event has its date (exact or approximate), its place, its participants (people and organisations, §5, §5A), the things it concerns (a contract, a fund, an ordinance, a parcel), its sources and its grade. It holds how events relate: before and after, part of a larger process, one authorising another, one answering another, and cause where a document states it or a member hypothesises it. It is where an investigation reconstructs who did what, when, in what order, and what should have happened but did not. It replaces the narrower `chronology` (a document's own dates), which becomes one part of it.
+
+### 5B.2 Needs register
+
+| id | need | in a member's words | centrality | rung | evidence |
+|---|---|---|---|---|---|
+| V1 | Hold an event from a document: what, when, where, who, concerning what | "Council approved the hauler's contract on 12 March 2019 (minutes, item 7)." | core | L1 | Bob, 2026-10-05 |
+| V2 | A document's own dates (meeting, adoption, effective, hearing, period covered, edits) | "The figure changed three days before publication." | core | L1 | TIME G1 |
+| V3 | Approximate and uncertain dates, graded | "Sometime in spring 2021, per two accounts." | core | L1 | TIME G2; EDTF (§2 TIME) |
+| V4 | A cited timeline across documents | "Everything that happened on the sewer fund, in order." | core | L2 | TIME G3; IS §5 |
+| V5 | Sequence questions answered, or undetermined | "Was the emergency declared before or after the contract was signed?" | core | L2 | TIME G3; DEC-77.2 |
+| V6 | An event as part of a larger process | "Solicitation, bids, award, signing, first payment: one procurement." | core | L2 | Bob, 2026-10-05 |
+| V7 | One event authorising, answering, amending or reversing another | "This payment was made under that resolution." "This letter answers our request." | core | L3 | Bob, 2026-10-05 |
+| V8 | Cause, as a document states it or as a member hypothesises it, never as the machine concludes | "The audit says the transfer covered the deficit." | core | L3 | DEC-77 (10) |
+| V9 | What should have happened against what did | "The contract required a monthly report; four of twelve were filed." | core | L3 | §5 C3; `duties` |
+| V10 | Who knew what, and when | "The director was copied on the 3 May email, before the vote." | core | L4 | Bob, 2026-10-05; §5A |
+| V11 | Anomalies of sequence and patterns across many processes | "Payments before approval in 14 of 220 contracts." | regular | L4 | Bob, 2026-10-05 |
+| V12 | Ask what happened; events proposed from documents; told of new ones | "What happened between the audit and the budget vote?" | regular | L5 | B1 (c), K1432 |
+
+### 5B.3 The ladder
+
+| rung | a member can | example | state on 2026-10-05 | stage |
+|---|---|---|---|---|
+| L0 Dates in text | Find dates as strings; every capture is timestamped | "What did the page say on 3 March?" | **Usable today** (acquisition, version history) | foundation |
+| L1 Events held | Record an event from a cited passage: what, when (EDTF, approximate allowed), where, participants, what it concerns, its grade; a document's own dates | "Event: contract signed, 12 March 2019, City and Acme Hauling (the contract's signature page)." | **Not built**; `chronology` was planned for document dates only (K1439) | stage 2 |
+| L2 Sequence and process | Cited timelines across documents; before, after, during, or undetermined; events grouped into a process with its parts | "Award 2 April, signing 9 April, first payment 1 March: payment before award." | **Not built** | stage 2 |
+| L3 Relations between events | Authorises, answers, amends, reverses, part of; cause only as a cited statement or a member's labelled hypothesis; what should have happened (from `duties` and declared flows) against what did | "Payment of 1 March: no authorising event held." | **Not built** | stage 2 |
+| L4 Reconstruction and patterns | Who knew what and when; gaps where an expected event is missing; anomalies of sequence; patterns across many processes, with denominators; each raised as a question, never a verdict | "Noticed: 14 of 220 contracts show a payment before approval; derivation shown." | **Not built** | stage 3 |
+| L5 Assisted and watched | The assistant proposes events and relations from documents, labelled, for a member to adopt; ask what happened in plain words; new events from watched sources | "Proposed (labelled): 6 events from the grand jury report." | **Not built** | stages 3–4 |
+
+### 5B.4 Design, at BOB's level (K1458)
+
+- **Where it lives.** `chronology` (K1439) is widened and renamed **`events`**, layer 5, after `standards`, before `progressions`. An event is `EVT-` `{kind, when (EDTF, with its basis), where?, participants [{entity, role}], concerns [entity], sources [extent], grade, asserted_by}`; a document's own date is an event of the document. Kinds are a closed list revised by spec (meeting, vote, adoption, signing, award, payment, transfer, filing, publication, statement, communication, inspection, appointment, departure, order, hearing, other).
+- **Relations between events** are evidentiary, cited and graded, in a closed list: `part_of`, `authorises`, `answers`, `amends`, `reverses`, `follows_from` (a procedure's next step), and `causes`, which is held only as a cited statement (a document says so) or as a member's hypothesis, labelled and never published as established (DEC-77 (10)). Sequence (`before`, `after`, `during`) is never stored: it is computed from dates by `civil-time`, three-valued. Event relations are kept apart from `lines` (structure) and law relations (D192).
+- **What should have happened.** An occurrence of a duty (§5) is matched to the events that discharge it; a missing one is "not found at level n" (D59), never "did not happen".
+- **Who knew what.** A communication event's recipients are participants, so "who had seen it before the vote" is a read over participants and sequence, each fact cited.
+- **The machine never concludes.** It shows sequence and cited relations, proposes events and relations labelled as its own (B7), and never asserts that one event caused another.
+- **Size.** About 50 requirements at L1–L3 (`chronology` was estimated at about 25).
+
+### 5B.5 Interfaces
+
+| construct | EVENTS needs from it | EVENTS supplies to it |
+|---|---|---|
+| TIME | `civil-time` (EDTF comparison, sequence, as-of) | every dated event; timelines |
+| ORGANISATIONS | bodies as participants; `duties` for what should have happened | the events that discharge or miss an occurrence |
+| PEOPLE | people as participants | a person's acts and statements in order; who knew what, when |
+| MONEY | — | payments, transfers, awards and approvals as events a flow is anchored on |
+| LAW | adoptions, amendments and repeals as events | when a law was enacted, amended, in force |
+| COURTS | filings, orders and hearings as events | a proceeding's chronology |
+| ANALYSIS | counts over events with denominators | patterns of sequence |
+| QUESTIONS | INTERPRET resolving "before the vote" to an event | "what happened between X and Y", cited |
+
+## 5C. MONEY
+
+> **Provisional (K1459).** Drafted from targeted reading, not from the full study Bob requires. A second constructs study (PEOPLE, EVENTS, MONEY, and their effect on every other construct) replaces this section; nothing here is planned or folded into requirements until it does.
+
+*Added 2026-10-05 by BOB #112 on Bob's statement of the construct (K1457, K1458). Not from the study: its needs register is Bob's statement, the founding case and the practice of public-finance investigation; each rung is re-verified when its stage is planned.*
+
+### 5C.1 Purpose
+
+Bob, 2026-10-05: "Another very important construct is money: where it comes from and where it goes, but also the rules that govern its movement, the commitments made, the things it buys and the amount produced for goods and services." This construct holds money as facts: an amount, its currency, its date or period, who paid and who received it, the fund and account it moved from and to, its **stage** (budgeted, appropriated, committed, spent, received, transferred, owed), its purpose, the authority it moved under, and its source and grade. On those facts it traces flows from their sources (taxes, fees, grants, bonds, settlements) through funds and transfers to payees; holds the rules that govern movement (restricted funds, fee limits, procurement thresholds, transfer authority, grant conditions); tracks commitments (budgets, contracts, encumbrances, grants, debt, promises) against what was actually paid; and records what the money bought and what was delivered for it, so unit costs and value can be measured. The founding case is a money case: "$52.6 million diverted over nine fiscal years" (§8 B2).
+
+### 5C.2 Needs register
+
+| id | need | in a member's words | centrality | rung | evidence |
+|---|---|---|---|---|---|
+| M1 | Hold an amount with its stage, period, payer, payee, fund and source | "FY22: $6.1M transferred from the Sewer Service Fund to the General Purpose Fund (ACFR p. 112)." | core | L1 | RM §1 L235–239; Bob, 2026-10-05 |
+| M2 | Never confuse budgeted, committed and spent | "That's the adopted budget, not what was spent." | core | L1 | Bob, 2026-10-05 ("commitments made") |
+| M3 | Where money comes from: taxes, fees, grants, bonds, settlements | "How much of the sewer fund comes from ratepayers?" | core | L2 | Bob, 2026-10-05 |
+| M4 | Where it goes: transfers, payees, programs | "Where did the transferred money go?" | core | L2 | §8 B2; ORGANISATIONS B6 |
+| M5 | The chain of authority for a payment: appropriation, contract, invoice, payment | "Which appropriation and contract does this payment rest on?" | core | L2 | §5B V7 |
+| M6 | Rules that govern movement: restricted funds, fee limits, procurement thresholds, transfer authority, grant conditions | "Sewer fees may only be spent on the sewer system." | core | L3 | Bob, 2026-10-05; RM §1; LAW N11 |
+| M7 | A flow that may break a rule, raised as a question | "Noticed: a transfer out of a restricted fund; no authorising action held." | core | L3 | Doctrine §10 |
+| M8 | Commitments tracked against payments: contracts, change orders, encumbrances, grants, debt, promises | "The contract was $2M; we've found $3.4M paid." | core | L3 | Bob, 2026-10-05; §5 C1 |
+| M9 | What money buys: goods, services, deliverables, quantities | "What did the $3.4M buy?" | core | L4 | Bob, 2026-10-05 |
+| M10 | Delivered for the money: outputs and unit costs, across years and against peers | "Cost per pothole filled, 2019 to 2025." | core | L4 | Bob, 2026-10-05; §8 |
+| M11 | Budget against actuals, fund balances and flows across fiscal years | "Overtime ran past budget every year: by how much?" | core | L4 | §8 B1, B2 |
+| M12 | Patterns: split contracts under a threshold, change-order growth, vendor concentration | "Six contracts at $49,900 under a $50,000 bid threshold." | regular | L4 | Bob, 2026-10-05 |
+| M13 | Import ledgers, checkbooks, contract and grant registers, campaign finance; be told of new payments | "Load the city's checkbook for FY2024." | regular | L5 | B1 (c), K1432 |
+
+### 5C.3 The ladder
+
+| rung | a member can | example | state on 2026-10-05 | stage |
+|---|---|---|---|---|
+| L0 Figures cited | Cite a passage, cell or table that holds an amount | "Cite the ACFR's transfer figure on page 112." | **Usable today** | foundation |
+| L1 Money facts held | Record an amount with currency, date or period, stage, payer, payee, fund and account, purpose, authority, source and grade; amounts at different stages are never added together | "Appropriated $4.0M; committed $3.8M; spent $3.1M (FY23, fund 3100), each cited." | **Not built**; `consequences` holds figures only after a determination (consequences R2) | stage 1 |
+| L2 Flows traced | Follow money from source through funds and transfers to payees, as of a period; a payment's chain of authority (appropriation, contract, invoice, payment); fund balances | "Sewer Service Fund FY2014–2022: $52.6M out to the General Purpose Fund; each transfer and its resolution." | **Not built** | stage 1 |
+| L3 Rules and commitments | Hold the rules governing movement as standards and duties; commitments against payments; a flow against a rule, or a payment beyond its commitment, raised as a question, never a violation | "Noticed: $3.4M paid on a $2.0M contract; two change orders held, $0.6M; $0.8M unexplained at level 2." | **Not built** | stage 2 |
+| L4 What money buys and delivers | Goods and services bought, with quantities; outputs delivered; unit costs over years and against peers; budget against actuals; patterns with denominators | "Cost per pothole filled rose from $310 to $560, 2019–2025 (the city's work orders and payments)." | **Not built** | stage 3 |
+| L5 Imported, assisted, watched | Import ledgers, checkbooks, contract and grant registers and campaign finance in standard forms; the assistant proposes flows from budget books, labelled; new payments from watched sources | "Imported: FY2024 checkbook, 41,203 payments; 12 to vendors in this question." | **Not built** | stage 4 |
+
+### 5C.4 Design, at BOB's level (K1458)
+
+- **Where it lives.** A new product module **`money`**, layer 5, after `calculations` (it uses `entities`, `lines`, `people`, `standards`, `events`, `duties` and `calculations`). A money fact is `MNY-` `{amount (exact decimal), currency, when (date or period, EDTF; fiscal periods from `civil-time` and the profile), stage, from {entity, fund, account}, to {entity, fund, account}, purpose, buys? [{item, quantity, unit}], authority [event, DUT-, standard portion or contract], source extent or table row, grade}`. Large ledgers stay tables in `calculations` (canonical CSV, hashed); a money fact may stand for a table row by reference, so a checkbook is not copied fact by fact.
+- **Stages are a closed list** (budgeted, appropriated, committed, spent, received, transferred, owed, written off); amounts at different stages are never summed together, and every total names its stage and period. *Blocks if careless:* one "amount" field.
+- **Funds and accounts are entities** (kind `fund` exists; accounts as aliases with a scheme), so flows join through identifiers, never by name (D184). The `funds` line kind (§5) stays for standing funding relationships; flows are money facts.
+- **Rules governing movement** are held standards at their version (§6) or duties with modality prohibition or power (§5); checking a flow against them is a comparison that raises a question (D241; D275), never "unlawful".
+- **Commitments** are duties with money terms (a contract's price, a grant's award, a debt's schedule, a body's promise), so "committed against paid" is one read across `duties` and `money`.
+- **What it buys and delivers.** `buys` holds what a payment was for; outputs delivered are counts over events or datasets; unit cost is a calculation (§8) whose inputs are money facts and outputs, graded by its weakest input.
+- **The machine never concludes.** It traces, totals and compares; it proposes flows from budget books labelled as its own (B7); it never calls a transfer a diversion or a payment improper.
+- **Size.** About 55 requirements at L1–L3.
+
+### 5C.5 Interfaces
+
+| construct | MONEY needs from it | MONEY supplies to it |
+|---|---|---|
+| TIME | fiscal periods, `span`, as-of | dated flows for timelines |
+| ORGANISATIONS | bodies, funds, programs as entities; commitments as `duties` | who pays and receives; fund flows between bodies |
+| PEOPLE | payees and donors who are people | money given and received by a person (§5A L3) |
+| EVENTS | payments, transfers, awards and approvals as events; the authorising event | the amounts those events moved |
+| LAW | rules of movement as held standards (fee limits, restricted funds, thresholds) | flows to set against them |
+| COURTS | settlements and judgments | amounts paid under orders and settlements |
+| ANALYSIS | tables, recipes and calculations | money facts as inputs; totals by stage |
+| QUESTIONS | INTERPRET resolving funds, vendors and periods | cited answers on where money came from and went |
 
 ## 6. LAW
 
@@ -465,6 +609,8 @@ Bob's decisions these rungs rest on: B2 (the move), B11 (the model of law; one h
 | COURTS | proceedings as objects, so a `court` standard can `interpret` a portion | `court` standards (orders, decrees, decree paragraphs); the citation resolver; `interprets`, `applies`, `holds_invalid` and treatment rows |
 | ANALYSIS | computed figures to set against legal thresholds | each threshold's text and in-force version as the Criteria (a calculation may cite a held standard as a threshold) |
 | QUESTIONS | FIND and investigate deployed; four-level absence extended to law | `legal_lookup`, `compliance_analysis`, the explain-a-rule reading, all fenced by `answers` |
+| EVENTS | enactments, amendments and repeals as events | when a provision was in force for an event's date |
+| MONEY | flows to set against rules of movement | fee limits, restricted funds, thresholds and grant conditions as held standards |
 
 ## 7. COURTS
 
@@ -560,6 +706,8 @@ Bob's decisions these rungs rest on: B1 (c) (COURTS to L5), B5 (the kind `procee
 | LAW | `standards` in layer 5; portions for `interprets`; treatment beyond one `supersedes` | `court` standards; decree paragraphs as standards; AG opinions as persuasive readings; `interprets` links; the citation resolver |
 | ANALYSIS | amounts as values for settlements and judgments; viewer-gated counts (X114) | settlement and judgment figures with their basis; response and compliance data for patterns |
 | QUESTIONS | the cited read with its level; `extract` and `investigate` modes | the proceeding as a subject to ask about; the citation check, reusable for any legal citation in an answer |
+| EVENTS | filings, orders and hearings as events | a proceeding's events, related across proceedings |
+| MONEY | amounts paid under settlements and judgments | settlements and judgments as money facts |
 
 ## 8. ANALYSIS
 
@@ -656,6 +804,8 @@ Bob's decisions these rungs rest on: B3 (`calc-grammar`, `calculations`, `sheet-
 | LAW | thresholds and defined terms citable during investigation (a held standard at its version) | the measured Condition for conformance; the Effect for the audit-style finding; three-valued threshold tests |
 | COURTS | settlement and decree-monitor figures as inputs | computed figures for the counsel packet and compliance under a decree |
 | QUESTIONS | a run mode with propose ops; a tool that reads tables and calculations | computable, cited answers to "how many, how much, what share", with level and bound; a non-persisting recipe evaluation as a rule service |
+| EVENTS | events to count, with denominators | patterns of sequence |
+| MONEY | money facts and ledgers as inputs | totals by stage and period; unit costs; budget against actuals |
 
 ## 9. QUESTIONS (the assistant)
 
@@ -752,6 +902,8 @@ Cost (B16, information for Bob): on a subscription the cost is the plan's flat p
 | COURTS | proceeding and register reads | plain questions over filings; a ruling applied as a rule only when held as a `court` standard |
 | ANALYSIS | a non-persisting calculation over cited figures and tables | the member's question turned into a proposed recipe, labelled; the assistant never computes a number itself |
 | all | (the DEC-8/DEC-27 rule binds every construct's machine help) | the `answers` checks, the one fence any construct's prose can reuse (LAW's readings, ANALYSIS's method text) |
+| EVENTS | event and timeline reads | "what happened between X and Y", cited |
+| MONEY | flow, stage and commitment reads | "where did the money come from and go", cited |
 
 ## 10. Doctrine every rung keeps
 
@@ -766,6 +918,8 @@ Each rule binds every rung of every construct, including the planned ones. Where
 | No jurisdiction in product code | Rules, holidays, weekends, ranks, case-number forms, reporters, flows, vocabularies and vendor encodings are profile or site data with citations; tests run against a fictional test profile | D196; `layers.md` rules 1–6; standards R13; D197 (profile facts sourced to primary pages) |
 | Relations constitutive and untraversed; lines evidentiary | `entities`' declared relations (`proxy_for`, `member_of`, `overlaps`) are never traversed; `lines` and law relations are claims about the world, cited and graded, and may be walked only bounded, as of a date, weakest hop governing, with no ranking; temporal and referential relations are never one edge type; identity resolution never traverses a relation | entities R26; D178; CF §13; D179, D191; D181; D183; D192; B6; DEC-16; DEC-60 (read as applying to inference, not cited structure) |
 | People are tracked; publication names them only in office | The record holds people and their positions, careers, credentials, memberships, statements, interests and overlaps, every fact cited, dated and graded; the machine never concludes about a person, never asserts that two people know each other, and never ranks people by connection; same-name people are never merged without evidence. Actors and addressees of the group's own actions are offices or bodies (actions R9). A published work product names an individual only in official capacity in connection with a documented act | Bob, B8 (K1452); K1453; Design Requirement 6 (D176); actions R9; entities R26 |
+| Cause is stated or hypothesised, never inferred | A causal relation between events is held only as a cited statement or a member's labelled hypothesis, which is never published as established; the machine shows sequence and may propose, labelled | DEC-77 (10); K1458 |
+| Every amount names its stage | An amount carries its stage, currency and period; amounts at different stages are never summed; a flow set against a rule or a commitment raises a question, never a violation | K1458; D241; D275 |
 | One total order | Every module has one position; a module uses only modules before it; a layer change is Bob's, positions within a layer are BOB's; `MODULE_ORDER` is re-pinned and tested | P4; `build/modules.json`; `layers.md` (ruling 5 as amended by P17); membership R83 |
 | A module fits in one reading | Size is a metric reported near about 4,000 lines; a module nearing it is split (a split for size is BOB's) | P6; K617; `layers.md` ruling 1 |
 | No standing AI run | AI runs only at a member's act; periodic work is mechanical, on the one scheduler alarm, never a cron and never a second alarm | D13; DEC-24 rule 2; AIR §7.3 point 7; SCHEDULER |
