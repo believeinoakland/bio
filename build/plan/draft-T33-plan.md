@@ -12,6 +12,8 @@
 |---|---|---|
 | **legacy-ui** (`civicos-ui/`) | stays | Bob's (UX): K633; design paused (K1475). Its half of §7 item 8 (`app.html:19983` sends `{state:"named", name}`) goes to UX-DESIGN by NOTICE; `actions` (T33-61) makes the refusal reach the caller visibly. |
 
+**Measured GO (K1506).** Every conditional row reads GO and is in T33 with its conditions: `sheet-worker` ships inactive until the release, builds its own IronCalc wasm with the `xlsx` feature, holds a size and time limit, refuses external links, and records a failed workbook as "not recomputed here", never as a gate; `court-doctypes` reads the CourtListener docket page and the CPUC card, takes Alameda eCourt only as a member's own capture (K1492) with its row shape provisional, and keys the row diff per register; `court-citations` translates reporters-db and courts-db (BSD-2) to JS at build; `budget-doctypes` reads ACFRs from their text layer and budget books with chart labels skipped and image tables through the OCR path or marked unread.
+
 ## Rules at the opening
 
 1. T32's rules hold. Merge order within a layer is `modules.json` order, except where the Roster says otherwise: an upstream engine merges first, and a split's new module merges before its source's deletion job (K1347, K624 (1)).
@@ -31,13 +33,13 @@
 | civil-time | 1 | pure time engine: local day, precision, EDTF bands, time rules, RRULE subset, fiscal periods, `validAt`, trace (K1439, K1444) | record-grammar, jurisdictions |
 | calc-grammar | 1 | figure parser, exact decimals, closed recipe grammar and evaluator, summation refusals, recorded random draws (K1448, K1463, K1471) | record-grammar, civil-time |
 | connection-grammar | 1 | connection shape, kind registry, **owner registry** (option (ii)), walk bounds and semantics, owner conformance battery (K1470, K1486, K1487) | record-grammar, civil-time |
-| court-citations *(COND)* | 1 | reporters-db and courts-db as data, for the citation recogniser | — |
+| court-citations | 1 | reporters-db and courts-db as data, for the citation recogniser | — |
 | doctypes | 1 | the seven doctypes, split from docprofile by copy (K617) | docprofile, and docprofile's current uses that the doctypes need |
 | legistar-reader | 1 | Legistar Web API JSON as content: bodies, persons, office records (seats only), events, items, votes | docprofile |
 | roster-reader | 1 | roster, org-chart and staff-directory readers (C2 row 12) | docprofile |
-| court-doctypes *(COND)* | 1 | the three court-register doctypes and the register row diff | docprofile, id-spaces |
-| budget-doctypes *(COND)* | 1 | budget and financial-report readers | docprofile, office-readers, pdf-reader |
-| sheet-worker *(COND)* | 1 | IronCalc wasm fleet Worker: recompute a workbook | runtime-limits, bundler, test-support |
+| court-doctypes | 1 | the three court-register doctypes and the register row diff | docprofile, id-spaces |
+| budget-doctypes | 1 | budget and financial-report readers | docprofile, office-readers, pdf-reader |
+| sheet-worker | 1 | IronCalc wasm fleet Worker: recompute a workbook | runtime-limits, bundler, test-support |
 | events | 5 | dated facts, `EVT-`, participants, `when_cache`, relations, timeline and sequence, Legistar following | record-grammar, jurisdictions, civil-time, connection-grammar, record-core, membership, promotion, provenance, reading-pipeline, extraction, content, entities, legistar-reader |
 | lines | 5 | `LIN-` dated lines (structure, people, party and proceeding families), `structureAt`, `holderAt` (its one home) | record-grammar, civil-time, connection-grammar, record-core, membership, promotion, provenance, entities, events |
 | money | 5 | `MNY-` facts, parties and funds, `MSR-` trails, `reconcile`, `committedAgainstPaid`, `authorityChain` | record-grammar, civil-time, calc-grammar, connection-grammar, record-core, membership, promotion, provenance, content, extraction, entities, events, lines, standards, progressions |
@@ -46,7 +48,7 @@
 | people | 5 | `IDC-` identity claims, `PFA-` person facts, the identity cluster, `MTI-` ties, `CHK-` interest checks, `personAt`, `careerOf`, `staffingAt` | record-grammar, civil-time, connection-grammar, record-core, membership, promotion, provenance, content, sources, entities, events, lines, money, duties |
 | explore | 5 | bounded walk over the owner registry, presets as kind sets (B2b.1) | connection-grammar, observation-log, civil-time, entities, events, lines, standards, progressions, money, duties, people, connections |
 | calculations | 5 | `CALC-` objects over declared tables, results by key, money ingest writer, patterns and rankings (C:A-2) | record-grammar, calc-grammar, civil-time, id-spaces, record-core, membership, promotion, provenance, content, entities, events, lines, standards, money, duties, people |
-| workbooks *(COND)* | 5 | the workbook path: binding, recompute, lint, method note, second member's check, export | calculations, calc-grammar, office-readers |
+| workbooks | 5 | the workbook path: binding, recompute, lint, method note, second member's check, export | calculations, calc-grammar, office-readers |
 | leg-earning | 6 | the earned registry and resting-on reads, split from inquiry by copy | inquiry-grammar, and inquiry's current uses that these reads need |
 | hypotheses | 6 | `HYP-` rows held and labelled, hunch hops, store-side refusals (K1467, K1487) | record-grammar, record-core, membership, inquiry, connection-grammar |
 | answers | 6 | the ask contract and checks, Q3 rule services, standing questions (K1450, K1474, K1481) | retrieval, query-language, observation-log, strength, inquiry, skills, run-rules, ai-runs, calculations, standards, lines, events, money, duties, people, explore, jurisdictions |
@@ -58,7 +60,7 @@
 | notice-producers | 11 | the new FINDING producers: interest checks, money detectors, standing answers, duty occurrences, dated waits | queue-producers, people, money-checks, duties, answers, inquiry |
 
 4. **Requirement texts.** Each new module's requirements are drafted before the opening (`plan/draft-T33-req/`, settled by K1505) and become `build/requirements/<module>.md` with its `modules.json` row; every entry's changes to an existing module, the audit's 20 included, are folded into that module's file before its layer starts (§5.3, §5.9). A module created by a copy-split numbers its requirements afresh from R1, each moved one marked `(was <source> R<n>)`, and the source marks the moved ids retired, naming the new home (the link-sweep precedent; K1505).
-5. **Measurements read at the opening** (see Measurements). Each CONDITIONAL row enters only when its file reads GO. When a file reads NO-GO, the row moves to the Left-out table with that NO-GO as its reason, and its module is not added (rule 2).
+5. **Measurements** (see Measurements): every conditional row read GO before the opening (K1506); their sub-items in T33-26 and T33-79 are in.
 6. **Table classes (S0-14).** `record-core` keeps `declarePurge` as the default-class form of `declareTable`. A module with a T33 job declares its tables explicitly. Every other module keeps the defaults until its next job, so no sweep job runs (P8). Census: 52 modules, 280 tables (`measures-T33/assistant-substrate.md` #6).
 7. **Gates built switched off.** Interest checks, money detectors, the sequence-anomaly, lateness and revolving-door patterns are all shown only after their false-alarm rate is measured on a gold set (K1491, K1473), with the gate value set before measuring. The AI half of standing questions is off until the 150-question bar is met (K1481).
 8. **Canon item 12 (C-12).** If K1500 did not already amend TAD §8.3 and §9 ("spreadsheets only as OUTPUT"), BOB makes that canon edit at the opening, citing X113 and X135.
@@ -71,11 +73,11 @@
 
 ## Roster (by layer)
 
-**L1** · 14 jobs (+4 CONDITIONAL). Merge order: record-grammar → jurisdictions → civil-time → calc-grammar → connection-grammar first, because every later entry reads `ID_TABLE`, the profile, or the three engines. Then `modules.json` order, except **doctypes before docprofile** (the copy before the deletion).
+**L1** · 18 jobs. Merge order: record-grammar → jurisdictions → civil-time → calc-grammar → connection-grammar first, because every later entry reads `ID_TABLE`, the profile, or the three engines. Then `modules.json` order, except **doctypes before docprofile** (the copy before the deletion).
 **L2** · 3 jobs: record-core first (the id allocator and `declareTable`), then membership, then credentials.
 **L3** · 2 jobs: acquisition, then sources.
 **L4** · 2 jobs: reading-pipeline (the `onRead` hook), then content.
-**L5** · 17 jobs (+1 CONDITIONAL). Merge order: entities → **events → lines → money → money-checks → duties → people → explore**, then local-facts, connections, observation-log, standards, progressions, bias, query-language, retrieval, calculations, [workbooks]. standards merges before money. All L5 jobs run at once (P10); a downstream job codes against approved requirements and merges after its upstream.
+**L5** · 18 jobs. Merge order: entities → **events → lines → money → money-checks → duties → people → explore**, then local-facts, connections, observation-log, standards, progressions, bias, query-language, retrieval, calculations, [workbooks]. standards merges before money. All L5 jobs run at once (P10); a downstream job codes against approved requirements and merges after its upstream.
 **L6** · 15 jobs. Merge order: inquiry-grammar first; **leg-earning before inquiry** (the copy before the deletion); hypotheses after inquiry; strength and contradiction next; run-rules → ai-runs; skills → answers; **agent-harness → agent-model → agent-runner before agent-worker** (the copies before the deletion; answers before agent-worker's `/ask`).
 **L7** · 2 jobs: intent, reevaluation.
 **L8** · 10 jobs. Merge order: case-grammar first (C:A-12, the timeline shape), corpus-export, **case-tensions before publication** (the copy before the deletion), docket after publication, then public-read, case-checker, case-import, case-disclosures, case-authoring.
@@ -96,7 +98,7 @@ Each line is one job (P8): every T33 entry for that module. Fields: what (draft 
 - **T33-5 · connection-grammar** *(new)* · B1a.1: the shape, the kind registry with the members' words, the **owner registry** `registerOwner({owner, kinds, neighbours})` that every owner at any layer registers into (B §(b) option (ii)), bounds (depth 8, at most 10; fan-out 1,000; 5,000 nodes; time budget), walk semantics (weakest hop; as of a date; truncated plus undetermined; a "lead" label), derived ids, hub contract, the exported owner-conformance battery · K1442, K1470, K1486, K1487 · est 18 · uses record-grammar, civil-time · depends T33-3.
 - **T33-6 · runtime-limits** · `INSTANCE_CLAUDE_TOKEN` retired: R13 and R17 are amended, and the copy binds no Claude credential (K1502) · K1502 · est 2 · uses — · depends —.
 - **T33-7 · signatures** · S0-13/B0.2: `sshsig.mjs:357` and `sign-release.html:466` read `ID_TABLE` · K1470 · est 1 · uses **record-grammar** · depends T33-1.
-- **T33-8 · court-citations** *(new; CONDITIONAL on `measures-T33/courts-workbooks.md` GO)* · reporters-db (1,167 reporters, 2,102 variants) and courts-db as versioned data, with their licence and source named (A COURTS 2a) · K1449 · est 5 · uses — · depends —.
+- **T33-8 · court-citations** *(new; GO, K1506)* · reporters-db (1,167 reporters, 2,102 variants) and courts-db as versioned data, with their licence and source named (A COURTS 2a) · K1449 · est 5 · uses — · depends —.
 - **T33-9 · id-spaces** · B1b.3: spaces `account`, `object`, `vendor`; person schemes (Legistar `PersonId`, filer id, licence, bar number); the profile `proceeding` space (case-number forms; K1452); the **citation recogniser** (C1), reading court-citations when present · K1441, K1452 · est 7 · uses court-citations *(if GO)* · depends T33-2, T33-8 *(if GO)*.
 - **T33-10 · office-readers** · C:A-3: typed cells (value, type, cached value and formula kept; R10 never recalculates). Office metadata (author, created, modified) exposed for edit acts (B §(d) EVENTS 3). P6: wiring only (Notes) · K1448 · est 4 · uses — · depends —.
 - **T33-11 · odf-reader** · C:A-4: typed cells, the same contract · K1448 · est 2 · uses — · depends T33-10.
@@ -104,9 +106,9 @@ Each line is one job (P8): every T33 entry for that module. Fields: what (draft 
 - **T33-13 · doctypes** *(new, by copy)* · The seven doctypes. The `regulation` reader gains section paths and headings (`portion` extents), and definitions and exceptions (A LAW 1a, 2) · K617, K1446 · est 8 · uses docprofile · depends T33-2.
 - **T33-14 · legistar-reader** *(new)* · Legistar JSON as a generic content type: `bodies`, `persons`, `officerecords` (seats only; contact fields dropped, K1485 row 9; paged at 1,000), `events`, `eventitems`, `votes`, the posting times (`EventAgendaLastPublishedUTC`), and the matter enactment fields. Output is a system-rule assertion (DEC-52; K1443). Tested against captured fixtures (A ORG 1b doctypes; B §(d) EVENTS 2a; legistar-events) · K1443, K1468 · est 8 · uses docprofile · depends T33-12.
 - **T33-15 · roster-reader** *(new)* · Roster, org-chart and staff-directory readers, feeding `people.staffingAt` through `registerRosterSource`. A staff-directory name is read as a grade-C person reference (C2 row 12; B §(d) PEOPLE 2b) · K1452, K1484 · est 6 · uses docprofile · depends T33-12.
-- **T33-16 · court-doctypes** *(new; CONDITIONAL on courts-workbooks GO)* · The three register doctypes (Alameda eCourt, a CourtListener docket page, a CPUC card) and the register row diff (A COURTS 2a) · K1443, K1480 · est 8 · uses docprofile, id-spaces · depends T33-9, T33-12.
-- **T33-17 · budget-doctypes** *(new; CONDITIONAL on courts-workbooks GO for IronCalc and money-people GO for M-55)* · Budget and financial-report readers; departments as dated groupings, keyed on org and fund codes (legistar-events, budget codes) (C §(c) ANALYSIS L4) · K1468, K1471 · est 8 · uses docprofile, office-readers, pdf-reader · depends T33-10, T33-12.
-- **T33-18 · sheet-worker** *(new fleet Worker; CONDITIONAL on courts-workbooks GO for IronCalc)* · IronCalc wasm. Recomputes a workbook and returns values with the engine version. Inert until the release (the ocr-worker precedent). Built with bundler's `writeMember` as ocr-worker is (C §(c) ANALYSIS L3) · K1448 · est 12 · uses runtime-limits, bundler, test-support · depends —.
+- **T33-16 · court-doctypes** *(new; GO, K1506)* · The three register doctypes (Alameda eCourt, a CourtListener docket page, a CPUC card) and the register row diff (A COURTS 2a) · K1443, K1480 · est 8 · uses docprofile, id-spaces · depends T33-9, T33-12.
+- **T33-17 · budget-doctypes** *(new; GO, K1506)* · Budget and financial-report readers; departments as dated groupings, keyed on org and fund codes (legistar-events, budget codes) (C §(c) ANALYSIS L4) · K1468, K1471 · est 8 · uses docprofile, office-readers, pdf-reader · depends T33-10, T33-12.
+- **T33-18 · sheet-worker** *(new fleet Worker; GO, K1506)* · IronCalc wasm. Recomputes a workbook and returns values with the engine version. Inert until the release (the ocr-worker precedent). Built with bundler's `writeMember` as ocr-worker is (C §(c) ANALYSIS L3) · K1448 · est 12 · uses runtime-limits, bundler, test-support · depends —.
 
 ### L2
 
@@ -143,7 +145,7 @@ Each line is one job (P8): every T33 entry for that module. Fields: what (draft 
 - **T33-39 · query-language** · C-5a (`overdue:` with an `asOf` note); C-5b (inclusive local-day ranges); fields `standard:`, `cites:`, `person:`, `holder:`, `post:`, money fields, `event:`, `occurred:`, `obligor:`, `owed_to:`; the saved-query form for standing questions (A TIME, A LAW, A ORG; B1b.7; C §(c) L5) · K1444, K1481 · est 16 · uses **civil-time, standards, lines, events, money, duties, people** · depends T33-37.
 - **T33-40 · retrieval** · The R2 projection for T33-39's fields. The saved query is the member's own object, seen only by its owner (K1481) · K1450, K1481 · est 6 · uses **standards, lines, events, money, duties, people** · depends T33-39.
 - **T33-41 · calculations** *(new)* · C:A-2 whole; C:B-1 (money totals as recipes; the money ingest writer at a member's request; B1b.5); C:B-2 (person-keyed joins only through an id space or crosswalk). Fills `registerOccurrenceEvidence` and the roster source. Counts over the record. `buys`, unit cost, budget against actuals across years, and rankings (K1471). Sequence-anomaly and lateness patterns, and patterns about an office and across proceedings with denominators (display gated). Dataset vintages through `validAt`. Recorded draws through calc-grammar · K1447, K1448, K1468, K1471, K1491 · est 50 · uses (new) · depends T33-4, T33-35, T33-36, T33-40.
-- **T33-42 · workbooks** *(new; CONDITIONAL on courts-workbooks GO for IronCalc)* · Binding, recompute through sheet-worker, lint, method note, the second member's check (disclosed, never a gate), export recipe→XLSX (C §(c) ANALYSIS L3) · K1448 · est 15 · uses calculations, calc-grammar, office-readers · depends T33-18, T33-41.
+- **T33-42 · workbooks** *(new; GO, K1506)* · Binding, recompute through sheet-worker, lint, method note, the second member's check (disclosed, never a gate), export recipe→XLSX (C §(c) ANALYSIS L3) · K1448 · est 15 · uses calculations, calc-grammar, office-readers · depends T33-18, T33-41.
 
 ### L6
 
@@ -217,7 +219,7 @@ Each line is one job (P8): every T33 entry for that module. Fields: what (draft 
 **Desk, before the opening** (`build/plan/measures-T33/`):
 - `assistant-substrate.md` (exists) feeds T33-1 (16-char tail), T33-6, T33-20, T33-53 (the 150-question set and bar), T33-55, T33-56 (M-Q4: relay), T33-91 (M-Q8: scope), and Rule 6 (the table census). Its M-Q5 verdict was settled by Bob's K1502.
 - `legistar-events.md` (exists) feeds T33-3 (zone join), T33-14, T33-26 (M-V1, M-V2, M-V3), T33-27 (dated seats), T33-29 (M-P4 hubs), T33-87 (bridge rate), and T33-17 (budget codes).
-- `courts-workbooks.md` (to come) decides T33-8, T33-16, T33-18 and T33-42, the CONDITIONAL sub-items of T33-26 and T33-79, and half of T33-17. It covers the three registers captured whole with their number forms, and IronCalc's functions, agreement and wasm size over the 288 workbooks.
+- `courts-workbooks.md` (GO, K1506) decided T33-8, T33-16, T33-18 and T33-42, the CONDITIONAL sub-items of T33-26 and T33-79, and half of T33-17. It covers the three registers captured whole with their number forms, and IronCalc's functions, agreement and wasm size over the 288 workbooks.
 - `money-people.md` (to come) decides the rest of T33-17 (M-55). It feeds T33-33 (M-M0a–c, M-M2, M-M3, and the M-M1 fixture), T33-36 (M-P1, M-P3, M-P7) and T33-41 (the dataset census and recipe coverage).
 - `time-law.md` (exists) feeds T33-2, T33-3 and T33-74 (the 20 worked examples, primary sources, C-7). It feeds T33-13 (section-boundary accuracy on 50 OMC pages) and T33-31 (codifier lag, how the code is served).
 
@@ -333,7 +335,7 @@ T32's A37 (progressions R32) leaves the table. Money L2–L3 is built in T33, so
 
 ## Totals
 
-Jobs per layer: L1 14 (+4 conditional), L2 3, L3 2, L4 2, L5 17 (+1), L6 15, L7 2, L8 10, L9 8, L10 3, L11 11. **87 jobs** (92 if every conditional row reads GO). **About 950 requirements new or changed** (about 1,000 with the conditional rows); L5 carries about 450. **New modules: 23** (civil-time, calc-grammar, connection-grammar, doctypes, legistar-reader, roster-reader; events, lines, money, money-checks, duties, people, explore, calculations; leg-earning, hypotheses, answers, agent-harness, agent-model, agent-runner; case-tensions; following; notice-producers), plus up to 5 conditional (court-citations, court-doctypes, budget-doctypes, sheet-worker, workbooks). **Moves: 3** (standards and local-facts L9 → L5; observation-log within L5). **Splits: 7**. Four are by copy with a deletion job: docprofile→doctypes, agent-worker→agent-harness and agent-model, inquiry→leg-earning, publication→case-tensions. Three are new-module seams with no copy: money→money-checks, monitoring→following, queue-producers→notice-producers.
+Jobs per layer: L1 18, L2 3, L3 2, L4 2, L5 18, L6 15, L7 2, L8 10, L9 8, L10 3, L11 11. **92 jobs** (every conditional row read GO, K1506). **About 950 requirements new or changed** (about 1,000 with the conditional rows); L5 carries about 450. **New modules: 23** (civil-time, calc-grammar, connection-grammar, doctypes, legistar-reader, roster-reader; events, lines, money, money-checks, duties, people, explore, calculations; leg-earning, hypotheses, answers, agent-harness, agent-model, agent-runner; case-tensions; following; notice-producers), plus up to 5 conditional (court-citations, court-doctypes, budget-doctypes, sheet-worker, workbooks). **Moves: 3** (standards and local-facts L9 → L5; observation-log within L5). **Splits: 7**. Four are by copy with a deletion job: docprofile→doctypes, agent-worker→agent-harness and agent-model, inquiry→leg-earning, publication→case-tensions. Three are new-module seams with no copy: money→money-checks, monitoring→following, queue-producers→notice-producers.
 
 ## Choices settled (K1504)
 
