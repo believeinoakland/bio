@@ -276,3 +276,16 @@ Owed (its owed: line), all in membership:
 - Resignation refused only for the last administrator (R10).
 - The hosting-access record asked at setup (R11, with instance-setup).
 - The setup's one-time recommendation and its statement of dependence.
+
+## U54 · NOTICE · 2026-10-05 · session_011wdWGoa6RAbZiRU4Bn3Rng · primary
+DEC-135 (Bob, J13: "A"): a project owner may ask for a check by expertise.
+- The owner names an expertise label (and optionally adds a note).
+- The request reaches, as a To do, every member who declared that expertise and can see what is to be checked; the first to take it owns it, and the others' To do closes, saying who took it.
+- The check shows the checker's declared expertise and whether an administrator confirmed it.
+- It gates nothing; an untaken request shows to the owner as untaken.
+Folded: BIO_Membership_Architecture_v2.md §1.3; BIO_Interaction_Constructs_v0_1.md §T; journeys.html (journey 16, J13). On claude/gallant-brown-zg0wc1 (PR #11).
+Owed (its owed: line):
+- The "Ask for a check" act.
+- A task kind addressed by expertise and sight, taken by the first who accepts.
+- The check record carrying declared expertise and its confirmation state.
+- The owner's read of an untaken request.
