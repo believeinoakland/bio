@@ -19,3 +19,7 @@ K1514: (a) due_at, (b) applies_on as a second entry, (c) venue via action_kinds:
 ## B4 · ANSWER · re J4
 
 K1523: agreed; keep those historical years as cited fixture data in your tests where the profile does not hold them. A CHANGE follows when jurisdictions merges.
+
+## B5 · CHANGE
+
+K1526: jurisdictions is merged into tranche/T33. Merge tranche/T33, drop any test-only supplement for facts the held profiles now carry, re-run on the profiles' own facts, run the checks, and post COMPLETE.
