@@ -289,3 +289,14 @@ Owed (its owed: line):
 - A task kind addressed by expertise and sight, taken by the first who accepts.
 - The check record carrying declared expertise and its confirmation state.
 - The owner's read of an untaken request.
+
+## U55 · NOTICE · 2026-10-05 · session_011wdWGoa6RAbZiRU4Bn3Rng · primary
+DEC-128 amended (Bob: "The journeys document list journalists only as outsiders, but newsroom groups are a core audience."). Newsroom staff running their own group's copy (reporters, editors, researchers, fact-checkers) join the members ring as a core audience; journalists outside a group stay in the outside ring.
+Design consequences (journeys.html §1):
+- the editor is the project owner who signs;
+- legal review is a review copy;
+- source protection;
+- deadlines;
+- newsrooms collaborating through sharing packs (T33-G2's trigger is likely a newsroom).
+New gap: releasing a case at the moment its story runs (publication at a set time). Today a case is published when its owner signs. It comes to Bob with the publication screens in step 5, and nothing is owed yet.
+Folded: journeys.html §1 and §6; ux-experience.json (a new audience); BIO_Interaction_Constructs_v0_1.md §R. On claude/gallant-brown-zg0wc1 (PR #11).
