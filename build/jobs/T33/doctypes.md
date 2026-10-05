@@ -1,6 +1,6 @@
 # doctypes (T33)
 
-**Status** · session_01XZrZmtoRays9vT3h9cANPd · depth 2 · WAITING ON BOB (J6) · handled B5
+**Status** · session_01XZrZmtoRays9vT3h9cANPd · depth 2 · WORKING · handled B5
 
 ## J1 · QUESTION
 
