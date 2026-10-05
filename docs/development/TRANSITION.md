@@ -174,6 +174,8 @@ Replaced at each handoff; the progress log (§4) is the history; the rulings are
 
 **Timers.** `WATCH #114` (`trig_019svgusL541pPYuDcTkG3aK`, into ROOT #5, due 23:23) and the backstop (`trig_0111hq6XAMYG7BjsyQVZHapu`, into BOB #114, 22:43): delete both at takeover and arm your own (§5.1 (4)–(5)).
 
+**Your own context (§2, P13; K1528).** At every backstop check, read your `context_usage` with `get_session` and refresh (§5.8) once it passes about 2–3 times your working set (BOB #114 let it reach ~604k before Bob asked).
+
 **Next steps, in order.** (1) Take over (§5.1): archive BOB #114 once idle and write its `BOB-final` row under T33. (2) Run L1 to its close as above. (3) Run L2–L11 (§5.3–§5.6); the plan's Roster gives each layer's merge order. (4) Close T33 (§5.7), cut the release (K1501) and run the deployment-gated measurements; write T34 from them and open it (K1507).
 
 **Reviewed acts.** Fast-forwarding `main` at T33's close: ordered by §5.7 (3); refused once (K1454), done K1508 and before (K1216 … K1433). The design PR: merged at a boundary on UX-DESIGN's MERGE (standing list K1261; Bob's direction in CLAUDE.md). Pushing a tag: refused twice (K1433, K1436); a release needing it goes to Bob under §16. A signature only Bob's release key can make is his act.
