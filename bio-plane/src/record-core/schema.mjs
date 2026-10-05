@@ -1,5 +1,5 @@
 /* record-core: the DDL of the module's own tables (bundles, files, history, manifest, leases,
-   seq, minted_ids, settings), run by this module's own `migrate()`, first (R71). Whole-line
+   seq, minted_ids, settings, and T33's tombstones and derived_stale), run by this module's own `migrate()`, first (R71). Whole-line
    `--` comments only and no semicolon inside a comment: `migrate` strips comment lines and splits
    the text on semicolons. */
 export const RECORD_SCHEMA = `CREATE TABLE IF NOT EXISTS bundles (
@@ -110,6 +110,7 @@ CREATE TABLE IF NOT EXISTS seq (
 --            'live'     learned at boot from a live row of its kind
 --            'counter'  learned at boot from seq, an id the counter issued before REC-151
 --            'chosen'   recorded by record-core recordOpaqueId, an id its caller chose (R75)
+--            'opaque'   allocated by record-core allocId for an opaque ID_TABLE prefix, its 16-character tail (R76)
 CREATE TABLE IF NOT EXISTS minted_ids (
   id           TEXT PRIMARY KEY,
   recorded_at  TEXT NOT NULL,
@@ -126,4 +127,36 @@ CREATE TABLE IF NOT EXISTS settings (
   set_at  TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS settings_name ON settings(name);
+
+
+-- R79 (K1493, State Rules I-19): THE TOMBSTONES OF EXPUNGE, the sanctioned exception to append-only. One row per
+-- expunge, naming the table, the key of the removed rows, the ground and who asked, and holding none of the removed
+-- content. APPEND-ONLY: no service removes or changes one, neither form of purge clears it (exempt, R23), and expunge
+-- cannot reach it (declared expunge none). seq is its order, the cursor tombstones() pages by.
+--   key_json     the key as a JSON list of [column, value] pairs in column order
+--   court_order  the recorded order, for the ground court_order only
+--   demand_kind  the profile's demand kind, for the ground lawful_demand only
+CREATE TABLE IF NOT EXISTS tombstones (
+  seq          INTEGER PRIMARY KEY,
+  module       TEXT NOT NULL,
+  table_name   TEXT NOT NULL,
+  key_json     TEXT NOT NULL,
+  ground       TEXT NOT NULL,
+  court_order  TEXT,
+  demand_kind  TEXT,
+  by_actor     TEXT NOT NULL,
+  at           TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS tombstones_table ON tombstones(table_name, seq);
+
+-- R77 (S0-3): THE STALE MARKS OF THE DERIVED-CACHE CONVENTION. A row of a table declared derived-rebuildable that
+-- markStale named, by its key (key_json, as tombstones hold one), is answered stale by readDerived until
+-- rebuildDerived rebuilds it. Exempt from purge: a mark that outlives its row still answers stale, never a value.
+CREATE TABLE IF NOT EXISTS derived_stale (
+  module      TEXT NOT NULL,
+  table_name  TEXT NOT NULL,
+  key_json    TEXT NOT NULL,
+  marked_at   TEXT NOT NULL,
+  PRIMARY KEY (module, table_name, key_json)
+);
 `;
