@@ -7,7 +7,7 @@
 | C3 | prompts/C3.txt | notes/C3.md | partial | BIO_Content_Framework_v0_10.txt: read to 2590 of 2712 |
 | C4 | prompts/C4.txt | notes/C4.md | done |  |
 | C5 | prompts/C5.txt | notes/C5.md | done |  |
-| C6 | prompts/C6.txt | notes/C6.md | partial | BIO_Communications_Platforms.txt: read to 0 of 353 |
+| C6 | prompts/C6.txt | notes/C6.md | partial | BIO_Communications_Platforms.txt: read to 180 of 353 |
 | C7 | prompts/C7.txt | notes/C7.md | done |  |
 | C8 | prompts/C8.txt | notes/C8.md | done |  |
 | C9 | prompts/C9.txt | notes/C9.md | done |  |
