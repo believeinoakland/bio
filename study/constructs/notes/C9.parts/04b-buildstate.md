@@ -11,9 +11,9 @@
 - [BUILT] build-state §2(c), line 354 — profile `deadlines` (R26) "including `applies_to: claim` for the counsel packet".
 - [BUILT] build-state §2(c), line 358 — "`holidays` (R33): a complete year, for business-day counts. A count into an unlisted year is undetermined."
 - [DOCTRINE] build-state §2(c), line 350 — "An absent section is answered as undetermined, never defaulted (jur R27; std R13; fil R20; esc R20; act R39)."
-- [BUILT] build-state §2(d) Monitoring, line 366 — "R34/R44: a mechanical `deadline-recheck` marks `pending→overdue` only, reading `actions.pendingClocks`, and \"its action's members are told\"."; line 367 R35: after overdue/response asks `escalationsDue`, "It never advances."
+- [BUILT] build-state §2(d) Monitoring, line 366 — "R34/R44: a mechanical `deadline-recheck` marks `pending→overdue` only, reading `actions.pendingClocks`, and "its action's members are told"."; line 367 R35: after overdue/response asks `escalationsDue`, "It never advances."
 - [GAP] build-state §2(d), line 370 — "`deadlineRecheck` (1967) and `escalationsSeen` exist, but **nothing in `src/` calls `deadlineRecheck`**. Only `test/m/monitoring/understanding.test.mjs` does. So the overdue mark and the escalation ask are not wired into any tick on this checkout."
-- [GAP] build-state §2(d) Queue, lines 373-375 — "`escalationsSeen()` \"names none of R31's four kinds; no item is minted from it until a kind is catalogued\""; "`queuestate.mjs` has **no** kind for an overdue action clock or a due escalation."; "\"members are told\" (mon R34) and a proposed stage reaching a member's queue have **no delivery path yet**. There is no open N-entry for it."
+- [GAP] build-state §2(d) Queue, lines 373-375 — "`escalationsSeen()` "names none of R31's four kinds; no item is minted from it until a kind is catalogued""; "`queuestate.mjs` has **no** kind for an overdue action clock or a due escalation."; ""members are told" (mon R34) and a proposed stage reaching a member's queue have **no delivery path yet**. There is no open N-entry for it."
 - [BUILT] build-state §2(d) Scheduler, line 378 — "No layer-9 dependency. Its uses do not include actions or escalation (MJ line 73). It reaches monitoring only."
 - [BUILT] build-state §2(e), line 391 — "The one machine write to a clock is the mechanical `deadline-recheck` pending→overdue (act R33; mon R44)."
 - [BUILT] build-state §1.5 Record, line 222 — `CPK-` packet versioned, flagged `basis_changed`.
@@ -24,7 +24,7 @@
 - [BUILT] build-state §2(c), line 357 — "`legal_organisations` (R32): `{name, evaluates (Tier 3 kinds), contacts}`"; line 361 first profile "names HJTA and the First Amendment Coalition (R30, R36; K283 (2))".
 - [BUILT] build-state §2(b) stage 7, line 342 — purposes ∈ {official_request, oversight_request, audit_request, testimony, enforcing_legislation}; "`official_request` needs an office not marked `elected: false`; oversight and audit requests need one not marked `oversight: false` (R12)" — the only organisational attributes used in logic (elected, oversight).
 - [BUILT] build-state §2(b) stage 1→2, line 336 — trigger "the determination is live and the actor is an office (R4)"; stage 2 line 337 "a breach action addressed to the actor's office".
-- [GAP] build-state §3 table, line 409 — "One instance is one producing group (instance-setup Purpose). Members differ only by `admin` role, capabilities `contribute`/`publish`/`create_projects`, and declared expertise (membership R4, R12). No group type or actor type exists anywhere in `build/requirements/` (grep for journalist, lawyer, auditor, union, activist, press: no hits)." Lawyers "external named counsel, \"not a member of the instance\""; auditors "only as a **counterparty office** marked `oversight`".
+- [GAP] build-state §3 table, line 409 — "One instance is one producing group (instance-setup Purpose). Members differ only by `admin` role, capabilities `contribute`/`publish`/`create_projects`, and declared expertise (membership R4, R12). No group type or actor type exists anywhere in `build/requirements/` (grep for journalist, lawyer, auditor, union, activist, press: no hits)." Lawyers "external named counsel, "not a member of the instance""; auditors "only as a **counterparty office** marked `oversight`".
 - [GAP] build-state §3 table, line 410 — "No spokesperson, legal lead, approver or reviewer role exists."; layer-9 routes all need `contribute` (K312).
 - [GAP] build-state §3 table, line 413 — "the counterparty must be a government office (act R9; jur R24), so a newspaper or journalist cannot be addressed as a counterparty."
 - [DESIGN] build-state §2(a), line 298 — actions do not require a joined project participant; conformance, consequences, escalation do.
@@ -43,7 +43,7 @@
 - [BUILT] build-state §2(b) Exit, line 344 — "a live `compliant` determination of the same act for every pursued standard, **and** `consequences.addressed = addressed`. `undetermined` gives `CONSEQUENCES_UNDETERMINED` (K172)." "Policy advocacy and candidate support have no purpose value (R12; K14)."
 - [BUILT] build-state §1.6, line 249 — escalation ends only when compliance restored and consequences addressed (Operational Principle 6).
 - [BUILT] build-state §1.5, line 225 — "**Governing tier** is the stricter of the profile kind's tier and the action's tier. It is undetermined when the action's tier is, and then the filing is refused".
-- [DOCTRINE] build-state §2(c), line 361 — "No module names a place (L \"No jurisdiction in the product\")."
+- [DOCTRINE] build-state §2(c), line 361 — "No module names a place (L "No jurisdiction in the product")."
 @@COURTS
 - [BUILT] build-state §2(b), line 325 — "**Venue means:** portal, mail, email, in_person, court (jur R25)."
 - [BUILT] build-state §1.5 Record, lines 221-228 — `FIL-` draft → approval (SHA-256) → one sending; `CPK-` packet versioned with exports; theory proposals; filled blank `{name, value, source}` or `[UNFILLED: name]` (R3); packet marking "Prepared for review by … Not legal advice. Not for filing." "It has no caption, venue, signature or prayer (R10)."
@@ -64,7 +64,7 @@
 @@QUESTIONS
 - [DOCTRINE] build-state §2(e) "A machine may", lines 384-391 — propose a standard (std R9); propose a comparison "with rows and questions but never an outcome (conf R12)"; record a computed consequence part; propose risk tier, governing laws or a clock entry (act R19, R28, R32); prepare filing drafts and counsel packets' candidate theories (fil R5, R14, R16).
 - [DOCTRINE] build-state §2(e) "A machine may never", lines 393-399 — declare a standard (std R11); determine (conf R13); assess or address a consequence (cons R3, R9); move an action, correspond, set tier, laws, records law, or edit the clock (act R33); approve, send, name counsel or export (fil R16); open, attach, evaluate, advance, decline, suspend or end an escalation (esc R17).
-- [DESIGN] build-state §2(e), line 401 — "Escalation proposals are the protocol's derivation, \"never an act\" (esc R17)." "The Escalation Protocol skill explains; a member acts (esc Suggestions)."
+- [DESIGN] build-state §2(e), line 401 — "Escalation proposals are the protocol's derivation, "never an act" (esc R17)." "The Escalation Protocol skill explains; a member acts (esc Suggestions)."
 - [BUILT] build-state §2(b), line 346 — proposal labels: machine_proposed, member_proposed, unstated, keyed governing_laws, standard, comparison, filing_draft, theory (K171 (2)).
 - [BUILT] build-state §1.5, line 227 — labels `proposalLabel(...,"filing_draft"|"theory")` (R5, R14).
 @@DOCTRINE

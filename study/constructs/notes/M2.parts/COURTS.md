@@ -15,3 +15,6 @@
 - none in connections.txt
 - none in progressions.txt (a court proceeding's stages could be a declared flow, but nothing in the file says so)
 - none in bias.txt
+### from the repository check (Modules)
+- [BUILT] oakland-alameda.mjs:231–244 — `records_petition` "court petition to enforce a public records request", Tier 2, venue "Alameda County Superior Court" (`how: court`), civil clerk's hours (M-193), advisory text; Tier 3 kinds include `consent_decree_motion` ("motion under a federal consent decree"), `taxpayer_action` ("Code of Civil Procedure § 526a"), `assessment_challenge`, `constitutional_claim`; no `claim` limitation deadline held
+- [GAP] (observation across all eleven modules) none models a court case, docket, party, filing, order or judgment; courts appear only as a profile venue, a standard-source kind and Tier 2/3 action kinds; a court order would enter only as a captured document (content extents, entity kind `institution`/`body`)

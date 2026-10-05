@@ -53,3 +53,8 @@
 - [DESIGN] progressions R2, R4, l.21–23 (DEC-88; K1025) — a definition carries a basis statement (required at version 1: status l.5 "not yet met (T22)") and a citation (required for a revision) — the place a group cites the law that prescribes a procedure; the law itself is not modelled
 - [GAP] progressions R32, l.102 — junction checks "(one response, a signed amount differing from the award, amendments past a threshold, payments past the term)" — "*(not yet met: no row; deferred by K102 until the record holds amounts and funds as values ...)*"
 - none in bias.txt (its policy reader parses an outside organisation's evidentiary policy, not a government's law or policy)
+### from the repository check (Modules)
+- [BUILT] oakland-alameda.mjs:189–203 — `records_laws`: California Public Records Act (D-149); `standard_sources`: Oakland Municipal Code (cite pattern "O.M.C./Oakland Municipal Code Section|Chapter n", M-24), the Council's ordinances and resolutions ("Ordinance|Resolution No. n C.M.S."), California Government Code (`UNMEASURED`) — citation patterns only
+- [BUILT] docprofile regulation.mjs:254–258, staff-report.mjs:295–301 — readers emit `instrument` (Ordinance/Resolution No.), `code_section` (code key + section) and `legislation` (file number) references, positioned; these feed `op=readingref` and entities
+- [GAP] docprofile regulation.mjs:188–191 — "it does not decide whether the instrument was ADOPTED. A proposed ordinance and an enacted one read the same at this grain ... `enacted` is not a fact here" (no enactment status, effective date or amendment relation is read)
+- [GAP] the agenda→file containment ops (`filemembershipstore`, `filemembership`, `filemembershipjudge`) and `dangling` have UI 0 (built, unreachable by a member)

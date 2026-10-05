@@ -28,7 +28,7 @@
 @@LAW
 - [BUILT] code §1.1, lines 26-44 — standards: 811 lines source, tests 815; services `standardDeclare`, `standardRead`, `inForce`, `standardsIn`, `standardPropose`, `standardAdopt`, `sourceOf` :131 ("finds the profile's `standard_sources` entry for a cite"), `check`, `noSuchStandard`; record `STD-<year>-NNNN-<kind>` "promoted outside any project"; tables `standards`, `standard_texts`, `standard_proposals`, `standard_adoptions`.
 - [BUILT] code §1.1, line 40 — "`STANDARD_KINDS = SOURCE_KINDS` = statute, regulation, ordinance, court, policy, commitment (`jurisdictions/index.mjs:26`)"; bounds cite 200, why 240.
-- [GAP] code §1.1, line 44 — "the header (:13) names \"the Legal/Policy Lookup skill\" as the source of proposals. No such skill exists (§6)."
+- [GAP] code §1.1, line 44 — "the header (:13) names "the Legal/Policy Lookup skill" as the source of proposals. No such skill exists (§6)."
 - [BUILT] code §1.2, lines 46-64 — conformance 1,256 lines source; `determine` :446 "a member judges an act compliant, noncompliant or unclear against each named standard, resting on published findings"; `comparisonPropose` :750 "the machine's or a member's comparison, which is not a determination"; tables incl. `determination_rows`, `comparison_proposals`; `OUTCOMES`, `READINGS` = aligns, diverges, open; `SIGNIFICANCE_KEYS` refused.
 - [BUILT] code §1.2, line 63 — "**Hard prerequisite:** a determination rests on at least one finding **published in a ratified case edition of the same project**. Otherwise it is refused `NO_FINDINGS` or `FINDING_NOT_PUBLISHED` (`#pinFindings` :272-296)."
 - [BUILT] code §1.4, lines 104, 106 — `actionLaws` :1199 member states governing laws; `actionLawsPropose` :1504 proposals "from any credential".

@@ -71,3 +71,6 @@
 - [GAP] bias Suggestions, l.113 — "The regrade and the cross-group rerun ("Differential traversal") come last in the doctrine's own sequencing and are not this module's today."
 - [RULING] bias R11, R12, R29, l.34–35 (DEC-88, K1025) — adopter's reason required (`BIAS_ADOPTION_NO_REASON`, C-26.21); status l.5 "not yet met (T22)"
 - [OPEN] (observation) none of my files quotes Declared Bias safeguard 4 verbatim; entities Satisfies l.115 paraphrases it as "the registry, aliases, justified and citable relations; every registry kind a legal subject", and entities R26 states "never traversed" — the exact canon text must come from the Declared Bias reader
+### from the repository check (Modules)
+- [OPEN] intent R4 (layer 7) uses one hop of a declared relation to scope an objective's instances, while entities R26 says a relation is "never traversed to resolve a reference or to answer R15, and never forms a connection": not a contradiction of R26's letter (scoping is neither), but it is the one place a constitutive relation is followed; Declared Bias safeguard 4's exact text decides whether that is allowed
+- [BUILT] bias/index.mjs:504–560 — the code names R24's interactions "safeguard 3" and R25's unregistered subjects "safeguard 4" ("listed for the same review ... It refuses nothing")

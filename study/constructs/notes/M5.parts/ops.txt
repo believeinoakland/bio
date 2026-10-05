@@ -1,0 +1,446 @@
+acquire W  mem 
+action R  - ACTIONS_READS,ACTION_LAYER_READS
+actioncorrespond W  mem ACTION_ACTIONS
+actioncreate W  mem ACTIONS_ACTIONS,ACTION_LAYER_ACTIONS,QUERY_AUTHOR_ACTIONS
+actionhold W  mem ACTIONS_ACTIONS,ACTION_LAYER_ACTIONS,QUERY_AUTHOR_ACTIONS
+actionholdpreview R  mem ACTIONS_READS,ACTION_LAYER_READS
+actionholdrelease W  mem ACTIONS_ACTIONS,ACTION_LAYER_ACTIONS,QUERY_AUTHOR_ACTIONS
+actionkinds R  - 
+actionlaws W  mem ACTION_ACTIONS
+actionlawspropose W  mem 
+actionmove W  mem ACTION_ACTIONS
+actionpressure W  mem ACTIONS_ACTIONS,ACTION_LAYER_ACTIONS,QUERY_AUTHOR_ACTIONS
+actionquotes R  mem 
+actionriskpropose W  mem 
+actionrisktier W  mem ACTION_ACTIONS
+actions R  - ACTIONS_READS,ACTION_LAYER_READS
+activitymethod R public - NETWORK_NOTICES_PUBLIC_READS
+addressed R  - ACTION_LAYER_READS,CONSEQUENCES_READS
+addressedrecord W  mem ACTION_LAYER_ACTIONS,CONSEQUENCES_ACTIONS,QUERY_AUTHOR_ACTIONS
+addressfrequencyset W  mem ACTION_LAYER_ACTIONS,MONITORING_ACTIONS,QUERY_AUTHOR_ACTIONS
+adminarith R  - 
+adminendorse W  mem GOVERNANCE_ACTIONS
+adminremove W  mem GOVERNANCE_ACTIONS
+adminresign W  mem ROSTER_SELF_ACTIONS
+affordances R  - 
+aicredentialmint W  mem 
+aicredentialrevoke W  mem 
+aicredentials R  - 
+airun R  - 
+airunclose W  mem AI_RUN_ACTIONS,RUN_VERB_ACTIONS
+airunlog R  - 
+airunopen W  mem AI_RUN_ACTIONS,RUN_VERB_ACTIONS
+airuns R  - 
+airunspawn R  - 
+airuntick W  mem AI_RUN_ACTIONS,RUN_VERB_ACTIONS
+aliaswithdraw W  mem REGISTRY_ACTIONS
+allocid W  mem 
+archivelookup R  - 
+aspirationcontacts R  - INTENT_READS
+aspirationdeadend W  mem INTENT_ACTIONS
+aspirationdeclare W  mem INTENT_ACTIONS
+aspirationdepart W  mem INTENT_ACTIONS
+aspirationretire W  mem INTENT_ACTIONS
+aspirations R  - INTENT_READS
+attest W  mem 
+attesttext W  mem 
+attribute W  mem 
+audit R  mem 
+availableactions R  - ACTION_LAYER_READS,FILINGS_READS
+backlinks R  - 
+basisversions R  - 
+biasadopt W  mem BIAS_ACTIONS,POSITIONAL_ACTS
+biasdebt R  - 
+biasdebtresolve W  mem BIAS_DEBT_ACTIONS
+biasinhale R  - 
+biasmanifest R  - 
+bootstrap R public - 
+calibrate W  mem CALIBRATION_WRITE_ACTIONS
+calibrationdrift R  - 
+calibrations R  - 
+calibrationsignal W  mem CALIBRATION_WRITE_ACTIONS
+calibrationsubject W  mem CALIBRATION_WRITE_ACTIONS
+capture W  mem 
+captureaccount W  mem CAPTURE_MEMBER_ACTIONS
+captureaccounts R  - 
+captureprogressions R  mem PROGRESSION_ACTIONS
+capturerequest W  mem AI_RUN_ACTIONS,RUN_PRODUCTION_ACTIONS
+capturerequestdrain W  - 
+capturerequestretry W  mem 
+capturerequests R  - 
+casechecker R public - CASE_CHECKER_PUBLIC_READS
+casedocument R public - 
+casedraft W  mem 
+casedrafts R  - 
+casefilespec R public - CASE_CHECKER_PUBLIC_READS
+caseflags R public - 
+caseimport W  mem CASE_IMPORT_ACTIONS,CASE_IMPORT_BY
+caseimportdocument W  mem CASE_IMPORT_ACTIONS,CASE_IMPORT_BY
+caseratify W  mem 
+changedfromaudit R  - 
+checkpointrecord W  mem ACTION_LAYER_ACTIONS,ACTION_PLANS_ACTIONS,QUERY_AUTHOR_ACTIONS
+cite W  mem EDGE_ACTIONS,POSITIONAL_ACTS
+claim W public - 
+communicationprepare W  mem ACTION_LAYER_ACTIONS,FILINGS_ACTIONS,QUERY_AUTHOR_ACTIONS
+comparison R  - ACTION_LAYER_READS,CONFORMANCE_READS
+comparisonfacts R  - ACTION_LAYER_READS,CONFORMANCE_READS
+comparisonpropose W  mem ACTION_LAYER_ACTIONS,CONFORMANCE_ACTIONS,QUERY_AUTHOR_ACTIONS
+concerns R  mem RECOGNISER_ACTIONS
+conclude W  mem POSITIONAL_ACTS,STATE_ACTIONS
+connect W  mem PROGRESSION_ACTIONS
+connectionassert W  mem 
+connectionchoose W  mem 
+connections R  mem PROGRESSION_ACTIONS
+connectionsasserted R  - 
+consequence R  - ACTION_LAYER_READS,CONSEQUENCES_READS
+consequencerecord W  mem ACTION_LAYER_ACTIONS,CONSEQUENCES_ACTIONS,QUERY_AUTHOR_ACTIONS
+consequencerevise W  mem ACTION_LAYER_ACTIONS,CONSEQUENCES_ACTIONS,QUERY_AUTHOR_ACTIONS
+consequencesof R  - ACTION_LAYER_READS,CONSEQUENCES_READS
+content R  - 
+contentaxis R  - 
+contentcrop R  - 
+contentmint W  mem 
+contradictioncandidates R  - CONTRADICTION_READS
+contradictionclarify W  mem CONTRADICTION_ACTIONS
+contradictiondismiss W  mem CONTRADICTION_ACTIONS
+contradictionfacts R  - CONTRADICTION_READS
+contradictionnotices R  - CONTRADICTION_READS
+contradictionoptin W  mem CONTRADICTION_ACTIONS
+contradictionpairs R  mem 
+contradictionpropose W  mem AI_RUN_ACTIONS,RUN_PRODUCTION_ACTIONS
+contradictionrecommend W  mem AI_RUN_ACTIONS,RUN_PRODUCTION_ACTIONS
+contradictionresolve W  mem CONTRADICTION_ACTIONS
+contradictionrespond W  mem CONTRADICTION_ACTIONS
+contradictionresponses R  - CONTRADICTION_READS
+contradictiontakeup W  mem CONTRADICTION_ACTIONS
+contradictiontensions R  - CONTRADICTION_READS
+counselpacket W  mem ACTION_LAYER_ACTIONS,FILINGS_ACTIONS,QUERY_AUTHOR_ACTIONS
+counselpacketexport W  mem ACTION_LAYER_ACTIONS,FILINGS_ACTIONS,QUERY_AUTHOR_ACTIONS
+counselpacketread R  - ACTION_LAYER_READS,FILINGS_READS
+cpuprobe W  - 
+dangling R  - 
+declinetoescalate W  mem ACTION_LAYER_ACTIONS,ESCALATION_ACTIONS,QUERY_AUTHOR_ACTIONS
+determination R  - ACTION_LAYER_READS,CONFORMANCE_READS
+determinations R  - ACTION_LAYER_READS,CONFORMANCE_READS
+determine W  mem ACTION_LAYER_ACTIONS,CONFORMANCE_ACTIONS,QUERY_AUTHOR_ACTIONS
+digestcensus R  - 
+directorysubmission R  mem NETWORK_NOTICES_READS
+discharge W  mem PROGRESSION_ACTIONS
+dispose W  mem STATE_ACTIONS
+docket R  mem DOCKET_READS
+docketdecline W  mem DOCKET_ACTIONS,DOCKET_BY
+docketfeed R public - DOCKET_PUBLIC_READS
+docketfile W  mem DOCKET_ACTIONS,DOCKET_AUTHOR
+docketinvitation R  mem DOCKET_READS
+docketpost W  mem DOCKET_ACTIONS,DOCKET_BY
+docketprepare R  mem DOCKET_BY,DOCKET_READS
+docketpressure W  mem DOCKET_ACTIONS,DOCKET_AUTHOR
+docketpublic R public - DOCKET_PUBLIC_READS
+doorbelltally R  mem CAPTURE_READS
+driveshells R  - 
+earnedbasis R  - 
+enroll W public - 
+entity R  mem REGISTRY_ACTIONS
+entityalias W  mem REGISTRY_ACTIONS
+entitybyalias R  mem REGISTRY_ACTIONS
+entitycreate W  mem REGISTRY_ACTIONS
+escalation R  - ACTION_LAYER_READS,ESCALATION_READS
+escalationadvance W  mem ACTION_LAYER_ACTIONS,ESCALATION_ACTIONS,QUERY_AUTHOR_ACTIONS
+escalationattach W  mem ACTION_LAYER_ACTIONS,ESCALATION_ACTIONS,QUERY_AUTHOR_ACTIONS
+escalationdecline W  mem ACTION_LAYER_ACTIONS,ESCALATION_ACTIONS,QUERY_AUTHOR_ACTIONS
+escalationend W  mem ACTION_LAYER_ACTIONS,ESCALATION_ACTIONS,QUERY_AUTHOR_ACTIONS
+escalationevaluate W  mem ACTION_LAYER_ACTIONS,ESCALATION_ACTIONS,QUERY_AUTHOR_ACTIONS
+escalationopen W  mem ACTION_LAYER_ACTIONS,ESCALATION_ACTIONS,QUERY_AUTHOR_ACTIONS
+escalationreasondraft R  mem ACTION_LAYER_READS,ESCALATION_READS
+escalationresume W  mem ACTION_LAYER_ACTIONS,ESCALATION_ACTIONS,QUERY_AUTHOR_ACTIONS
+escalationsdue R  - ACTION_LAYER_READS,ESCALATION_READS
+escalationstatus R  mem ACTION_LAYER_READS,ESCALATION_READS
+escalationsuspend W  mem ACTION_LAYER_ACTIONS,ESCALATION_ACTIONS,QUERY_AUTHOR_ACTIONS
+exceptions R  mem PROGRESSION_ACTIONS
+excludedby R  - 
+expertiseconfirm W  mem EXPERTISE_ACTIONS
+expertisedeclare W  mem EXPERTISE_ACTIONS
+expertiselist R  - 
+export W  - 
+exportlog R  - 
+extractproposals R  mem 
+extractpropose W  mem AI_RUN_ACTIONS,RUN_PRODUCTION_ACTIONS
+factconfirm W  mem ACTION_LAYER_ACTIONS,LOCAL_FACTS_ACTIONS
+factsdue R  mem ACTION_LAYER_READS,LOCAL_FACTS_READS
+factstatus R  mem ACTION_LAYER_READS,LOCAL_FACTS_READS
+file R  - 
+filemembership R  - 
+filemembershipjudge W  mem 
+filemembershipstore W  mem 
+filingapprove W  mem ACTION_LAYER_ACTIONS,FILINGS_ACTIONS,QUERY_AUTHOR_ACTIONS
+filingprepare W  mem ACTION_LAYER_ACTIONS,FILINGS_ACTIONS,QUERY_AUTHOR_ACTIONS
+filingsent W  mem ACTION_LAYER_ACTIONS,FILINGS_ACTIONS,QUERY_AUTHOR_ACTIONS
+filingsfor R  - ACTION_LAYER_READS,FILINGS_READS
+frontier R  - 
+goal R  - INTENT_READS
+goalclose W  mem INTENT_ACTIONS
+goaldeclare W  mem INTENT_ACTIONS
+goallink W  mem INTENT_ACTIONS
+governorconfig W  - 
+governorstate R  mem 
+gradenote R  mem CAPTURE_READS
+groupdomainset W  mem IDENTITY_ACTIONS
+groupidentity R public - 
+groupkeyspublic R public - NETWORK_NOTICES_PUBLIC_READS
+groupnameset W  mem IDENTITY_ACTIONS
+heldcaptures R  mem CAPTURE_READS
+heldrestore W  mem CAPTURE_MEMBER_ACTIONS,CAPTURE_VIEWER_ACTIONS
+heldsetaside W  mem CAPTURE_MEMBER_ACTIONS,CAPTURE_VIEWER_ACTIONS
+homecensus R  - 
+hostingaccess R  - 
+hostingaccessset W  mem ROSTER_SELF_ACTIONS
+idmatch R  - 
+image R  - 
+importaccept W  mem CASE_IMPORT_ACTIONS,CASE_IMPORT_BY
+importacceptwithdraw W  mem CASE_IMPORT_ACTIONS,CASE_IMPORT_BY
+importedcase R  mem CASE_IMPORT_READS
+importedcases R  mem CASE_IMPORT_READS
+importflag W  mem CASE_IMPORT_ACTIONS,CASE_IMPORT_BY
+importflagclear W  mem CASE_IMPORT_ACTIONS,CASE_IMPORT_BY
+importunwatch W  mem CASE_IMPORT_ACTIONS,CASE_IMPORT_BY
+importwatch W  mem CASE_IMPORT_ACTIONS,CASE_IMPORT_BY
+inbox R  mem 
+inboxget R  mem 
+inboxpull W  mem CAPTURE_MEMBER_ACTIONS
+inboxresolve W  mem 
+index R  - 
+inquirydivide W  mem STATE_ACTIONS
+inquiryground W  mem STRUCTURE_ACTIONS
+inquirystrength R  - 
+instance R  mem PROGRESSION_ACTIONS
+instancegroup R public - 
+instancegroupseed W  - 
+intentproposals R  - INTENT_READS
+invitelook R public - 
+knock W public - 
+knockerconsent W public - 
+knocksof R  - 
+lateattestations R  - 
+lead W  mem 
+leadlist R  - 
+leadlook W  mem 
+leadread R  - 
+leadshare W  mem 
+lease W  mem 
+linkproject W  mem EDGE_ACTIONS,POSITIONAL_ACTS
+links R  - 
+list R  - 
+livefire W  - 
+login R public - 
+meaningrows R  mem RETRIEVAL_READS
+memberadd W  mem CUSTODIAL_ACTIONS
+membercaps W  mem GOVERNANCE_ACTIONS
+memberlist R  - 
+memberpairings R  - 
+memberpairingset W  mem ROSTER_SELF_ACTIONS
+memberset W  mem CUSTODIAL_ACTIONS
+monitor W  mem 
+monitoring R  - 
+monitorpause W  mem 
+monitorslate R  - 
+narrow W  mem 
+narrowcandidates R  mem 
+noticepost W  mem NETWORK_NOTICES_ACTIONS,NETWORK_NOTICES_BY
+noticeprepare R  mem NETWORK_NOTICES_BY,NETWORK_NOTICES_READS
+notices R  mem NETWORK_NOTICES_READS
+noticespublic R public - NETWORK_NOTICES_PUBLIC_READS
+objectivecondition W  mem INTENT_ACTIONS
+objectivegaps R  - INTENT_READS
+objectiveprogress R  - INTENT_READS
+optionadd W  mem ACTION_LAYER_ACTIONS,ACTION_PLANS_ACTIONS,QUERY_AUTHOR_ACTIONS
+optionadopt W  mem ACTION_LAYER_ACTIONS,ACTION_PLANS_ACTIONS,QUERY_AUTHOR_ACTIONS
+optiondispose W  mem ACTION_LAYER_ACTIONS,ACTION_PLANS_ACTIONS,QUERY_AUTHOR_ACTIONS
+optionpropose W  mem ACTION_LAYER_ACTIONS,PLAN_PROPOSAL_ACTIONS
+optionrevise W  mem ACTION_LAYER_ACTIONS,ACTION_PLANS_ACTIONS,QUERY_AUTHOR_ACTIONS
+optionstart W  mem ACTION_LAYER_ACTIONS,ACTION_PLANS_ACTIONS,QUERY_AUTHOR_ACTIONS
+optionstartpreview R  mem ACTION_LAYER_ACTIONS,ACTION_PLANS_PREVIEWS,QUERY_AUTHOR_ACTIONS
+partitionindependence R  - 
+pdfstructure R  - 
+plan R  - ACTION_LAYER_READS,ACTION_PLANS_READS
+planclose W  mem ACTION_LAYER_ACTIONS,ACTION_PLANS_ACTIONS,QUERY_AUTHOR_ACTIONS
+planopen W  mem ACTION_LAYER_ACTIONS,ACTION_PLANS_ACTIONS,QUERY_AUTHOR_ACTIONS
+planproposals R  - ACTION_LAYER_READS,ACTION_PLANS_READS
+plans R  - ACTION_LAYER_READS,ACTION_PLANS_READS
+plansubjectadd W  mem ACTION_LAYER_ACTIONS,ACTION_PLANS_ACTIONS,QUERY_AUTHOR_ACTIONS
+plansubjectremove W  mem ACTION_LAYER_ACTIONS,ACTION_PLANS_ACTIONS,QUERY_AUTHOR_ACTIONS
+profiles R  - 
+profilesset W  mem 
+progression R  mem PROGRESSION_ACTIONS
+progressiondefine W  mem PROGRESSION_ACTIONS
+projectdirectory R  - 
+projectfork W  mem PROJECT_ACTIONS
+projectholds R  mem ACTIONS_READS,ACTION_LAYER_READS
+projectinvite W  mem PROJECT_ACTIONS
+projection R  - 
+projectjoin W  mem PROJECT_ACTIONS
+projectleave W  mem PROJECT_ACTIONS
+projectowneradd W  mem PROJECT_ACTIONS
+projectownerarith R  - 
+projectownerremove W  mem PROJECT_ACTIONS
+projectownerrescue W  mem PROJECT_ACTIONS
+projectparticipants R  - 
+projectremove W  mem PROJECT_ACTIONS
+projectrequest W  mem PROJECT_ACTIONS
+projectrequestanswer W  mem PROJECT_ACTIONS
+projectrequests R  - 
+projectrequestwithdraw W  mem PROJECT_ACTIONS
+projectstage R  - 
+projectvisibility R  - 
+projectvisibilityset W  mem PROJECT_ACTIONS
+promote W  mem 
+proposals R  mem PROGRESSION_ACTIONS
+proposedispose W  mem POSITIONAL_ACTS,PROGRESSION_ACTIONS
+provenancechain W  mem PROVENANCE_JUDGEMENT_ACTIONS
+provenanceroute W  mem PROVENANCE_JUDGEMENT_ACTIONS
+provenanceroutes R  - 
+publicread R public - 
+publish W  mem STATE_ACTIONS
+publishedbytes R public - 
+publishedcase R public - 
+publishededitions R  - 
+publishedlist R  - 
+publishedmanifest R public - 
+publishpreflight R  - 
+publishtensions R  - 
+pulledknocks R  - 
+purge W  - 
+pursuit R  - INTENT_READS
+queue R  - 
+queuemute W  mem QUEUE_ACTIONS
+queuesnooze W  mem QUEUE_ACTIONS
+ratify W  mem 
+reading R  mem READING_READS
+readingname R  mem READING_READS
+readingref R  mem READING_READS
+reattest W  mem CAPTURE_MEMBER_ACTIONS
+reevaluationchanges R  - 
+reevaluationnotices R  - 
+reevaluationraise W  - 
+reevaluationrecord W  mem REEVALUATION_ACTIONS
+reevaluations R  - 
+registeraudit R  - 
+reinstate W  mem EDGE_ACTIONS,POSITIONAL_ACTS
+relation R  mem REGISTRY_ACTIONS
+relationdeclare W  mem REGISTRY_ACTIONS
+relationwithdraw W  mem REGISTRY_ACTIONS
+release W  mem STATE_ACTIONS
+reminderanswer W  mem ACTION_CLOCKS_ACTIONS,ACTION_LAYER_ACTIONS,QUERY_AUTHOR_ACTIONS
+reminderset W  mem ACTION_CLOCKS_ACTIONS,ACTION_LAYER_ACTIONS,QUERY_AUTHOR_ACTIONS
+reopen W  mem STATE_ACTIONS
+reproject W  - 
+resolutiondefect W  mem REGISTRY_ACTIONS
+resolutions R  mem RECOGNISER_ACTIONS
+resolve W  mem RECOGNISER_ACTIONS
+resolvetestify W  mem RECOGNISER_ACTIONS
+retire W  mem STATE_ACTIONS
+reviewcomment W public - 
+reviewcopy R public - 
+reviewgrant W  mem GRANT_SECRET_ACTIONS
+reviewrevoke W  mem 
+runtime R  - 
+scenarioset W  mem ACTION_LAYER_ACTIONS,ACTION_PLANS_ACTIONS,QUERY_AUTHOR_ACTIONS
+search R  mem RETRIEVAL_READS
+searchfields R  mem RETRIEVAL_READS
+searchindexcheck R  mem RETRIEVAL_READS
+select W  mem 
+selection R  mem RETRIEVAL_READS
+selectionlist R  mem RETRIEVAL_READS
+selectionrelease W  mem 
+selftest R  - 
+sever W  mem EDGE_ACTIONS,POSITIONAL_ACTS
+signeradd W  mem CUSTODIAL_ACTIONS
+signerlist R  - 
+signerregister W  mem OWN_KEY_ACTIONS
+signerrevoke W  mem OWN_KEY_ACTIONS
+signerset W  mem CUSTODIAL_ACTIONS
+snapkeycensus R  - 
+sourceconsent W  mem SOURCE_ACTIONS
+sourceconsentwithdraw W  mem SOURCE_ACTIONS
+sourcedisclose W  mem SOURCE_ACTIONS
+sourcelink W  mem SOURCE_ACTIONS
+sourceof R  - SOURCE_READS
+sourcepublishable R  - 
+sourcereach R  - 
+sourcereadlog R  - SOURCE_READS
+sourcerung R  - SOURCE_READS
+standard R  - ACTION_LAYER_READS,STANDARDS_READS
+standardadopt W  mem ACTION_LAYER_ACTIONS,STANDARDS_ACTIONS
+standarddeclare W  mem ACTION_LAYER_ACTIONS,STANDARDS_ACTIONS
+standardinforce R  - ACTION_LAYER_READS,STANDARDS_READS
+standardpropose W  mem ACTION_LAYER_ACTIONS,STANDARDS_ACTIONS
+standards R  - ACTION_LAYER_READS,STANDARDS_READS
+statementack W public - 
+stats R  - 
+strengthbar W  mem DECLARATION_ACTIONS
+strengthbarof R  - 
+suggest W  mem AI_RUN_ACTIONS,RUN_PRODUCTION_ACTIONS
+sweeps R  mem ACTION_LAYER_READS,LINK_SWEEP_READS
+taskdrain W  - 
+taskforward W  mem TASK_ACTIONS
+taskresolve W  mem TASK_ACTIONS
+tasks R  - 
+templateapprove W  mem ACTION_LAYER_ACTIONS,FILING_TEMPLATES_ACTIONS,QUERY_AUTHOR_ACTIONS
+templatecomment W public mem TEMPLATE_DOOR_ACTIONS
+templatecomments R public mem TEMPLATE_DOOR_READS
+templatedraft W  mem ACTION_LAYER_ACTIONS,FILING_TEMPLATES_ACTIONS,QUERY_AUTHOR_ACTIONS
+templategrantrevoke W  mem ACTION_LAYER_ACTIONS,FILING_TEMPLATES_ACTIONS,QUERY_AUTHOR_ACTIONS
+templatepropose W  mem ACTION_LAYER_ACTIONS,TEMPLATE_PROPOSAL_ACTIONS
+templateread R public mem TEMPLATE_DOOR_READS
+templateretire W  mem ACTION_LAYER_ACTIONS,FILING_TEMPLATES_ACTIONS,QUERY_AUTHOR_ACTIONS
+templatereview W public mem TEMPLATE_DOOR_ACTIONS
+templatereviewgrant W  mem ACTION_LAYER_ACTIONS,FILING_TEMPLATES_ACTIONS,GRANT_SECRET_ACTIONS,QUERY_AUTHOR_ACTIONS
+templaterevise W  mem ACTION_LAYER_ACTIONS,FILING_TEMPLATES_ACTIONS,QUERY_AUTHOR_ACTIONS
+templates R  mem ACTION_LAYER_READS,FILING_TEMPLATES_READS
+templatesave W  mem ACTION_LAYER_ACTIONS,FILINGS_ACTIONS,QUERY_AUTHOR_ACTIONS
+templatesubmit W  mem ACTION_LAYER_ACTIONS,FILING_TEMPLATES_ACTIONS,QUERY_AUTHOR_ACTIONS
+testify W  mem 
+textattest R  mem READING_READS
+textprovenance R  mem READING_READS
+themedeclare W  mem 
+themeplace W  mem 
+themepropose W  mem 
+themeread R  - 
+themewithdraw W  mem 
+theorypropose W  mem ACTION_LAYER_ACTIONS,FILINGS_ACTIONS,QUERY_AUTHOR_ACTIONS
+thread W  mem PROGRESSION_ACTIONS
+transcribe W  mem 
+transcription R  - 
+transcriptionattest W  mem 
+triage W  mem INTENT_ACTIONS
+verify R public - 
+versionaccept W  mem VERSION_ACTIONS
+versionadopt W  mem REEVALUATION_ACTIONS
+versionchain R  - 
+versionconsider W  mem VERSION_ACTIONS
+versioncurrent W  mem POSITIONAL_ACTS,VERSION_ACTIONS
+versionhide W  mem VERSION_ACTIONS
+versionkeep W  mem REEVALUATION_ACTIONS
+versionnotice R  mem 
+versionreject W  mem VERSION_ACTIONS
+versionrevert W  mem VERSION_ACTIONS
+versionstrength R  - 
+whatchangeddrafts R  mem WHAT_CHANGED_READS
+whatchangedpropose W  mem WHAT_CHANGED_PROPOSAL_ACTIONS
+whoami R  - 
+withdrawconclusion W  mem POSITIONAL_ACTS,STATE_ACTIONS
+wizardapprove W  mem WIZARD_SCRIPTS_ACTIONS,WIZARD_SCRIPTS_BY
+wizardcandidates R  mem WIZARD_SCRIPTS_READS
+wizardcheck R  mem WIZARD_CHECK_READS
+wizarddraft W  mem WIZARD_SCRIPTS_ACTIONS,WIZARD_SCRIPTS_AUTHOR
+wizardeditorgrant W  mem WIZARD_SCRIPTS_BY
+wizardeditorrevoke W  mem WIZARD_SCRIPTS_BY
+wizardprogress W  mem WIZARD_PROGRESS_ACTIONS
+wizardpropose W  mem WIZARD_PROPOSAL_ACTIONS,WIZARD_SCRIPTS_ACTIONS
+wizardread R  mem WIZARD_SCRIPTS_READS
+wizardretire W  mem WIZARD_SCRIPTS_ACTIONS,WIZARD_SCRIPTS_BY
+wizardrevise W  mem WIZARD_SCRIPTS_ACTIONS,WIZARD_SCRIPTS_AUTHOR
+wizards R  mem WIZARD_SCRIPTS_READS
+wizardsat R  mem WIZARD_SCRIPTS_READS
+wizardsubmit W  mem WIZARD_SCRIPTS_ACTIONS,WIZARD_SCRIPTS_AUTHOR
+wizarduse R  mem WIZARD_SCRIPTS_READS
+workobjective W  mem INTENT_ACTIONS

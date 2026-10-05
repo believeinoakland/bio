@@ -52,3 +52,8 @@
 ### from bias.txt
 - [DESIGN] bias Purpose and R19–R21, l.13, l.46–48 — `biasInhale` "reads an outside organisation's policy into a proposal without ever installing it" (an outside body's evidentiary policy as input)
 - [DESIGN] bias R3, l.22 — every statement's subject must be a registry key `ENT-YYYY-NNNN` (bias attaches to the same entities registry as ORGANISATIONS)
+### from the repository check (Modules)
+- [BUILT] oakland-alameda.mjs:207–217 — five counterparties (Controller/Finance Department, City Council, Civil Grand Jury `oversight`, City Auditor `oversight` with hours, State Controller), all basis `UNMEASURED`: the only list of public offices the product holds
+- [BUILT] entities/index.mjs:28–31 — the ten kinds and three relation kinds as required; nothing richer in code
+- [GAP] entity correction and defect acts `aliaswithdraw`, `relationwithdraw`, `resolutiondefect`, the `relation` read and `idmatch` are declared ops with UI 0 (built, unreachable by a member)
+- [DESIGN] intent R4 (build/requirements/intent.md:27, layer 7) — an objective's matched instances are those "whose entity is the condition's entity or stands in its `relation` to it (`entities`)": one hop of a declared relation used for scoping, with walk bound 1,000 (entities R39)

@@ -2,7 +2,7 @@
 @@WHAT
 - ACTION-PLAN (src/action-design/ACTION-PLAN.md.txt): DRAFT design by ACTION_DESIGN #1, 2026-09-29, for a new layer-9 module `action-plans`, recording Bob's ten rulings of 2026-09-29 plus D1-D6 (agreed 2026-09-30) and rules A1-A17. A plan addresses "subjects" (suspected = open inquiry; determined = a conformance determination outcome), holds options (categorised), up to three scenarios laid out in phases/checkpoints, and starts Actions. Not build state until Bob approves the module and BOB folds the requirements (line 3). Contains a worked example (school bond certification).
 @@TIME
-- [DESIGN] ACTION-PLAN A8, line 42 — scenarios lay out chosen options in phases; a phase starts at plan start, after another phase, or when a condition is met; checkpoint set relative to the phase's own start — "it may carry a checkpoint set relative to its own start (\"8 weeks into mitigation\")"
+- [DESIGN] ACTION-PLAN A8, line 42 — scenarios lay out chosen options in phases; a phase starts at plan start, after another phase, or when a condition is met; checkpoint set relative to the phase's own start — "it may carry a checkpoint set relative to its own start ("8 weeks into mitigation")"
 - [DESIGN] ACTION-PLAN A9, line 43 — a condition is words judged by a member; system reminds once per checkpoint and never judges — "The system reminds once at each checkpoint and never judges a condition."
 - [DOCTRINE] ACTION-PLAN A10, line 44 — two kinds of time that never mix: group's own intentions (checkpoints) vs regulated dates with a named basis; a missed checkpoint is never a finding about the government — "There are two kinds of time, and they never mix. A plan's checkpoints are the group's own intentions: a missed one is never shown as a finding about the government."
 - [DESIGN] ACTION-PLAN A10, line 44 — "A regulated date belongs to an option or an action and names its basis."
@@ -30,7 +30,7 @@
 - [RULING] ACTION-PLAN ruling 4, line 10 — "One plan may address several related broken rules", an option may serve several at once.
 - [DESIGN] ACTION-PLAN A5, line 37 — suggestions from "the standards' text, the recorded consequences ... and earlier plans in this instance that addressed similar standards" (needs similarity between standards).
 - [DESIGN] ACTION-PLAN A12, line 48 — gate at the act (DEC-26): evidence-seeking option may start on a suspected subject; "an action asserting a breach needs a live noncompliant determination, as `actions` already requires."
-- [DESIGN] ACTION-PLAN §Where it sits, line 73 — layer contract widens: "\"An action rests on a published finding\" gives way to \"an action rests on the record, and one asserting a breach rests on a published finding and a standard\"."
+- [DESIGN] ACTION-PLAN §Where it sits, line 73 — layer contract widens: ""An action rests on a published finding" gives way to "an action rests on the record, and one asserting a breach rests on a published finding and a standard"."
 - [EXAMPLE] ACTION-PLAN worked example, line 65 — two standards: the two-thirds vote requirement for a bond measure; the requirement that bond proceeds serve the voter-approved purpose; "They are two government acts, so there are two determinations".
 @@COURTS
 - [EXAMPLE] ACTION-PLAN worked example, line 67 — legal options: "an election contest or court petition (legal, subject 1 ...)"; "a referral to the county grand jury (legal, Tier 1, both)".

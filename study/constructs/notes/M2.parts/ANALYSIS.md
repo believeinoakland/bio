@@ -59,3 +59,7 @@
 - [DESIGN] bias R6, l.25 (DEC-17) — "text setting a threshold (a count of sources, a grade floor): a bar, not a lens" is refused (C-26.6); a bar is `required_strength`
 - [DESIGN] bias R17, l.42 — `statements_sha` over the whole effective set before paging — "so two computations of one lens give one hash whatever the page" (a reproducibility hash)
 - [DESIGN] bias R20, l.47 — `coverage` states how many policy sentences were read, of how many (≤500), and whether the input was cut
+### from the repository check (Modules)
+- [BUILT] consequences/index.mjs:27–28, :247 — layer-9 calculation reads its operands' figures through `content.passageText` (content R46), so a cell or range cited from a captured spreadsheet can be an operand; nothing at layers 4–8 computes over cell values
+- [GAP] content's own ops (`content`, `contentmint`, `textattest`, `transcribe` …) have UI 0: a member cites a sheet range only inside a citing act, with no screen of its own
+- [GAP] T32 left-out B1 — the CSV text bound (20 MiB) is unmeasured until a deployed plane (DIST-14); A37 — progressions R32 junction checks wait for "amounts or funds as values"

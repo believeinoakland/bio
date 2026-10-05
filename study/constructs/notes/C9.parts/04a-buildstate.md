@@ -4,7 +4,7 @@
 @@TIME
 - [BUILT] build-state §1.1 standards Purpose, line 35 — standards hold "the period it was in force. It answers which standards were in force at a date."
 - [BUILT] build-state §1.1 Services, lines 40-41 — `standardsIn`: "optionally the standards in force at a date (R8)"; "`inForce(id, date)`: `in_force | not_in_force | undetermined` (R7)."
-- [BUILT] build-state §1.1 Record, line 49 — "`period {from,to}` (null means \"not stated\", never \"always\")", "`supersedes` (at most one successor, R6)".
+- [BUILT] build-state §1.1 Record, line 49 — "`period {from,to}` (null means "not stated", never "always")", "`supersedes` (at most one successor, R6)".
 - [BUILT] build-state §1.2 conformance Record, line 82 — Act: "`{id?, description, actor: {role, body}, at | period, evidence}`" — an act is dated by instant or period.
 - [BUILT] build-state §1.2, line 87 — "`live` holds until the determination is superseded. `basis_changed` is a notice only (R10)." (as-of / supersession over time).
 - [BUILT] build-state §1.3 consequences Purpose/Record, lines 105, 121 — consequence records "the period"; measure unit ∈ {money, benefits, services, time, count}.
@@ -21,7 +21,7 @@
 - [BUILT] build-state §1.5 filings Purpose, line 205 — counsel packet holds "a chronology" and "the claim deadlines" (limitation windows).
 - [BUILT] build-state §0, line 24 — monitoring `deadlineRecheck`, `escalationsSeen` built though marked R34/R35 not yet met.
 @@ORGANISATIONS
-- [BUILT] build-state §1.2 conformance Record, line 82 — "**Act:** `{id?, description, actor: {role, body}, at | period, evidence}`. The actor is an office, never a person. The first determination mints the `ACT-` id, and \"the same act\" means the same id".
+- [BUILT] build-state §1.2 conformance Record, line 82 — "**Act:** `{id?, description, actor: {role, body}, at | period, evidence}`. The actor is an office, never a person. The first determination mints the `ACT-` id, and "the same act" means the same id".
 - [BUILT] build-state §1.3 consequences Record, line 120 — "**Affected** `{kind, description, role?}`. `kind` ∈ {class, fund, program, service, body, other}. There is **no person kind**: people appear as a class or as an office `{role, body}` (Terms; R10)."
 - [BUILT] build-state §1.4 actions, line 179 — "Counterparty: `{state: named, role, body, level?, entity_id?}` or `{state: undetermined, basis}`. It is an **office, never a person** (R9; jur R24)." (note optional `entity_id` link to entities module and `level`).
 - [BUILT] build-state §1.1 standards, lines 35, 49-50 — a standard has an `issuer`; source match carries `{state: matched, source, kind, issuer, level, profile, basis}`.

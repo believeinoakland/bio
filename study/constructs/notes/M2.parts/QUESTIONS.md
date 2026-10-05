@@ -46,3 +46,7 @@
 - [DESIGN] bias Suggestions, l.113 — "The run's bias block (`#biasForRun`) is `ai-runs`', calling R18" (every AI run carries the lens in force); the published case's frozen manifest is `publication`'s
 - [DESIGN] bias R21, l.48 — inhale answers `installed: false`, `adopted: false`, `writes: 0`, statements `proposed: true, authored: false`
 - [DESIGN] bias R15, l.40 — with nothing in force: "no manifest was in force", "never an empty lens"
+### from the repository check (Modules)
+- [BUILT] op-declarations/index.mjs:1181–1202 — the AI run's acts are `airunopen`, `airuntick`, `airunclose`, `suggest`, `capturerequest`, `extractpropose`, `contradictionpropose`, `contradictionrecommend`: no AI act touches entities, connections, progressions or bias; the agent worker reads layer-5 meaning through retrieval's `op=meaningrows` (21 sites) and calls `op=extractpropose` (2)
+- [BUILT] agent-worker R51 (build/requirements/agent-worker.md:55) — the action-plan run reads "the profile's `deadlines`, venues and `legal_organisations` (`jurisdictions.combine`)"; "A refused or silent read is carried as UNDETERMINED ... never as absence"
+- [GAP] bias ops (`biasmanifest`, `biasadopt`, `biasinhale`, `biasdebt`, `biasdebtresolve`) UI 0: the lens an answer was made under cannot be shown or adopted from civicos-ui (Bob's UX stream)

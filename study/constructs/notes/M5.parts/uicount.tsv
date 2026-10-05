@@ -1,0 +1,446 @@
+acquire	W	 mem 	13	10
+action	R	 - ACTIONS_READS,ACTION_LAYER_READS	120	0
+actioncorrespond	W	 mem ACTION_ACTIONS	6	3
+actioncreate	W	 mem ACTIONS_ACTIONS,ACTION_LAYER_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+actionhold	W	 mem ACTIONS_ACTIONS,ACTION_LAYER_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+actionholdpreview	R	 mem ACTIONS_READS,ACTION_LAYER_READS	0	0
+actionholdrelease	W	 mem ACTIONS_ACTIONS,ACTION_LAYER_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+actionkinds	R	 - 	0	0
+actionlaws	W	 mem ACTION_ACTIONS	9	5
+actionlawspropose	W	 mem 	1	1
+actionmove	W	 mem ACTION_ACTIONS	8	5
+actionpressure	W	 mem ACTIONS_ACTIONS,ACTION_LAYER_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+actionquotes	R	 mem 	0	0
+actionriskpropose	W	 mem 	0	0
+actionrisktier	W	 mem ACTION_ACTIONS	6	2
+actions	R	 - ACTIONS_READS,ACTION_LAYER_READS	13	0
+activitymethod	R	public - NETWORK_NOTICES_PUBLIC_READS	0	0
+addressed	R	 - ACTION_LAYER_READS,CONSEQUENCES_READS	22	0
+addressedrecord	W	 mem ACTION_LAYER_ACTIONS,CONSEQUENCES_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+addressfrequencyset	W	 mem ACTION_LAYER_ACTIONS,MONITORING_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+adminarith	R	 - 	7	7
+adminendorse	W	 mem GOVERNANCE_ACTIONS	0	0
+adminremove	W	 mem GOVERNANCE_ACTIONS	0	0
+adminresign	W	 mem ROSTER_SELF_ACTIONS	0	0
+affordances	R	 - 	70	51
+aicredentialmint	W	 mem 	0	0
+aicredentialrevoke	W	 mem 	0	0
+aicredentials	R	 - 	0	0
+airun	R	 - 	20	13
+airunclose	W	 mem AI_RUN_ACTIONS,RUN_VERB_ACTIONS	0	0
+airunlog	R	 - 	4	4
+airunopen	W	 mem AI_RUN_ACTIONS,RUN_VERB_ACTIONS	2	2
+airuns	R	 - 	5	3
+airunspawn	R	 - 	1	0
+airuntick	W	 mem AI_RUN_ACTIONS,RUN_VERB_ACTIONS	0	0
+aliaswithdraw	W	 mem REGISTRY_ACTIONS	0	0
+allocid	W	 mem 	4	2
+archivelookup	R	 - 	1	0
+aspirationcontacts	R	 - INTENT_READS	0	0
+aspirationdeadend	W	 mem INTENT_ACTIONS	0	0
+aspirationdeclare	W	 mem INTENT_ACTIONS	0	0
+aspirationdepart	W	 mem INTENT_ACTIONS	0	0
+aspirationretire	W	 mem INTENT_ACTIONS	0	0
+aspirations	R	 - INTENT_READS	0	0
+attest	W	 mem 	33	13
+attesttext	W	 mem 	0	0
+attribute	W	 mem 	16	0
+audit	R	 mem 	3	0
+availableactions	R	 - ACTION_LAYER_READS,FILINGS_READS	0	0
+backlinks	R	 - 	20	13
+basisversions	R	 - 	19	14
+biasadopt	W	 mem BIAS_ACTIONS,POSITIONAL_ACTS	0	0
+biasdebt	R	 - 	0	0
+biasdebtresolve	W	 mem BIAS_DEBT_ACTIONS	0	0
+biasinhale	R	 - 	0	0
+biasmanifest	R	 - 	0	0
+bootstrap	R	public - 	1	1
+calibrate	W	 mem CALIBRATION_WRITE_ACTIONS	0	0
+calibrationdrift	R	 - 	0	0
+calibrations	R	 - 	0	0
+calibrationsignal	W	 mem CALIBRATION_WRITE_ACTIONS	0	0
+calibrationsubject	W	 mem CALIBRATION_WRITE_ACTIONS	0	0
+capture	W	 mem 	217	5
+captureaccount	W	 mem CAPTURE_MEMBER_ACTIONS	0	0
+captureaccounts	R	 - 	0	0
+captureprogressions	R	 mem PROGRESSION_ACTIONS	4	3
+capturerequest	W	 mem AI_RUN_ACTIONS,RUN_PRODUCTION_ACTIONS	0	0
+capturerequestdrain	W	 - 	0	0
+capturerequestretry	W	 mem 	0	0
+capturerequests	R	 - 	0	0
+casechecker	R	public - CASE_CHECKER_PUBLIC_READS	0	0
+casedocument	R	public - 	0	0
+casedraft	W	 mem 	5	3
+casedrafts	R	 - 	4	2
+casefilespec	R	public - CASE_CHECKER_PUBLIC_READS	0	0
+caseflags	R	public - 	0	0
+caseimport	W	 mem CASE_IMPORT_ACTIONS,CASE_IMPORT_BY	0	0
+caseimportdocument	W	 mem CASE_IMPORT_ACTIONS,CASE_IMPORT_BY	0	0
+caseratify	W	 mem 	1	1
+changedfromaudit	R	 - 	0	0
+checkpointrecord	W	 mem ACTION_LAYER_ACTIONS,ACTION_PLANS_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+cite	W	 mem EDGE_ACTIONS,POSITIONAL_ACTS	79	10
+claim	W	public - 	180	0
+communicationprepare	W	 mem ACTION_LAYER_ACTIONS,FILINGS_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+comparison	R	 - ACTION_LAYER_READS,CONFORMANCE_READS	23	0
+comparisonfacts	R	 - ACTION_LAYER_READS,CONFORMANCE_READS	0	0
+comparisonpropose	W	 mem ACTION_LAYER_ACTIONS,CONFORMANCE_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+concerns	R	 mem RECOGNISER_ACTIONS	45	28
+conclude	W	 mem POSITIONAL_ACTS,STATE_ACTIONS	30	8
+connect	W	 mem PROGRESSION_ACTIONS	13	4
+connectionassert	W	 mem 	0	0
+connectionchoose	W	 mem 	2	2
+connections	R	 mem PROGRESSION_ACTIONS	63	15
+connectionsasserted	R	 - 	0	0
+consequence	R	 - ACTION_LAYER_READS,CONSEQUENCES_READS	16	0
+consequencerecord	W	 mem ACTION_LAYER_ACTIONS,CONSEQUENCES_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+consequencerevise	W	 mem ACTION_LAYER_ACTIONS,CONSEQUENCES_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+consequencesof	R	 - ACTION_LAYER_READS,CONSEQUENCES_READS	0	0
+content	R	 - 	193	0
+contentaxis	R	 - 	0	0
+contentcrop	R	 - 	0	0
+contentmint	W	 mem 	0	0
+contradictioncandidates	R	 - CONTRADICTION_READS	0	0
+contradictionclarify	W	 mem CONTRADICTION_ACTIONS	0	0
+contradictiondismiss	W	 mem CONTRADICTION_ACTIONS	0	0
+contradictionfacts	R	 - CONTRADICTION_READS	0	0
+contradictionnotices	R	 - CONTRADICTION_READS	0	0
+contradictionoptin	W	 mem CONTRADICTION_ACTIONS	0	0
+contradictionpairs	R	 mem 	0	0
+contradictionpropose	W	 mem AI_RUN_ACTIONS,RUN_PRODUCTION_ACTIONS	0	0
+contradictionrecommend	W	 mem AI_RUN_ACTIONS,RUN_PRODUCTION_ACTIONS	0	0
+contradictionresolve	W	 mem CONTRADICTION_ACTIONS	0	0
+contradictionrespond	W	 mem CONTRADICTION_ACTIONS	0	0
+contradictionresponses	R	 - CONTRADICTION_READS	0	0
+contradictiontakeup	W	 mem CONTRADICTION_ACTIONS	0	0
+contradictiontensions	R	 - CONTRADICTION_READS	0	0
+counselpacket	W	 mem ACTION_LAYER_ACTIONS,FILINGS_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+counselpacketexport	W	 mem ACTION_LAYER_ACTIONS,FILINGS_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+counselpacketread	R	 - ACTION_LAYER_READS,FILINGS_READS	0	0
+cpuprobe	W	 - 	0	0
+dangling	R	 - 	0	0
+declinetoescalate	W	 mem ACTION_LAYER_ACTIONS,ESCALATION_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+determination	R	 - ACTION_LAYER_READS,CONFORMANCE_READS	4	0
+determinations	R	 - ACTION_LAYER_READS,CONFORMANCE_READS	1	0
+determine	W	 mem ACTION_LAYER_ACTIONS,CONFORMANCE_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+digestcensus	R	 - 	0	0
+directorysubmission	R	 mem NETWORK_NOTICES_READS	0	0
+discharge	W	 mem PROGRESSION_ACTIONS	6	1
+dispose	W	 mem STATE_ACTIONS	23	9
+docket	R	 mem DOCKET_READS	0	0
+docketdecline	W	 mem DOCKET_ACTIONS,DOCKET_BY	0	0
+docketfeed	R	public - DOCKET_PUBLIC_READS	0	0
+docketfile	W	 mem DOCKET_ACTIONS,DOCKET_AUTHOR	0	0
+docketinvitation	R	 mem DOCKET_READS	0	0
+docketpost	W	 mem DOCKET_ACTIONS,DOCKET_BY	0	0
+docketprepare	R	 mem DOCKET_BY,DOCKET_READS	0	0
+docketpressure	W	 mem DOCKET_ACTIONS,DOCKET_AUTHOR	0	0
+docketpublic	R	public - DOCKET_PUBLIC_READS	0	0
+doorbelltally	R	 mem CAPTURE_READS	0	0
+driveshells	R	 - 	0	0
+earnedbasis	R	 - 	4	4
+enroll	W	public - 	0	0
+entity	R	 mem REGISTRY_ACTIONS	97	5
+entityalias	W	 mem REGISTRY_ACTIONS	6	2
+entitybyalias	R	 mem REGISTRY_ACTIONS	8	7
+entitycreate	W	 mem REGISTRY_ACTIONS	7	2
+escalation	R	 - ACTION_LAYER_READS,ESCALATION_READS	1	0
+escalationadvance	W	 mem ACTION_LAYER_ACTIONS,ESCALATION_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+escalationattach	W	 mem ACTION_LAYER_ACTIONS,ESCALATION_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+escalationdecline	W	 mem ACTION_LAYER_ACTIONS,ESCALATION_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+escalationend	W	 mem ACTION_LAYER_ACTIONS,ESCALATION_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+escalationevaluate	W	 mem ACTION_LAYER_ACTIONS,ESCALATION_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+escalationopen	W	 mem ACTION_LAYER_ACTIONS,ESCALATION_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+escalationreasondraft	R	 mem ACTION_LAYER_READS,ESCALATION_READS	0	0
+escalationresume	W	 mem ACTION_LAYER_ACTIONS,ESCALATION_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+escalationsdue	R	 - ACTION_LAYER_READS,ESCALATION_READS	0	0
+escalationstatus	R	 mem ACTION_LAYER_READS,ESCALATION_READS	0	0
+escalationsuspend	W	 mem ACTION_LAYER_ACTIONS,ESCALATION_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+exceptions	R	 mem PROGRESSION_ACTIONS	2	0
+excludedby	R	 - 	0	0
+expertiseconfirm	W	 mem EXPERTISE_ACTIONS	0	0
+expertisedeclare	W	 mem EXPERTISE_ACTIONS	0	0
+expertiselist	R	 - 	0	0
+export	W	 - 	9	0
+exportlog	R	 - 	0	0
+extractproposals	R	 mem 	0	0
+extractpropose	W	 mem AI_RUN_ACTIONS,RUN_PRODUCTION_ACTIONS	0	0
+factconfirm	W	 mem ACTION_LAYER_ACTIONS,LOCAL_FACTS_ACTIONS	0	0
+factsdue	R	 mem ACTION_LAYER_READS,LOCAL_FACTS_READS	0	0
+factstatus	R	 mem ACTION_LAYER_READS,LOCAL_FACTS_READS	0	0
+file	R	 - 	218	0
+filemembership	R	 - 	0	0
+filemembershipjudge	W	 mem 	0	0
+filemembershipstore	W	 mem 	0	0
+filingapprove	W	 mem ACTION_LAYER_ACTIONS,FILINGS_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+filingprepare	W	 mem ACTION_LAYER_ACTIONS,FILINGS_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+filingsent	W	 mem ACTION_LAYER_ACTIONS,FILINGS_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+filingsfor	R	 - ACTION_LAYER_READS,FILINGS_READS	0	0
+frontier	R	 - 	1	0
+goal	R	 - INTENT_READS	3	0
+goalclose	W	 mem INTENT_ACTIONS	0	0
+goaldeclare	W	 mem INTENT_ACTIONS	0	0
+goallink	W	 mem INTENT_ACTIONS	0	0
+governorconfig	W	 - 	1	0
+governorstate	R	 mem 	1	0
+gradenote	R	 mem CAPTURE_READS	0	0
+groupdomainset	W	 mem IDENTITY_ACTIONS	0	0
+groupidentity	R	public - 	4	5
+groupkeyspublic	R	public - NETWORK_NOTICES_PUBLIC_READS	0	0
+groupnameset	W	 mem IDENTITY_ACTIONS	0	0
+heldcaptures	R	 mem CAPTURE_READS	0	0
+heldrestore	W	 mem CAPTURE_MEMBER_ACTIONS,CAPTURE_VIEWER_ACTIONS	0	0
+heldsetaside	W	 mem CAPTURE_MEMBER_ACTIONS,CAPTURE_VIEWER_ACTIONS	0	0
+homecensus	R	 - 	0	0
+hostingaccess	R	 - 	0	0
+hostingaccessset	W	 mem ROSTER_SELF_ACTIONS	0	0
+idmatch	R	 - 	0	0
+image	R	 - 	22	10
+importaccept	W	 mem CASE_IMPORT_ACTIONS,CASE_IMPORT_BY	0	0
+importacceptwithdraw	W	 mem CASE_IMPORT_ACTIONS,CASE_IMPORT_BY	0	0
+importedcase	R	 mem CASE_IMPORT_READS	0	0
+importedcases	R	 mem CASE_IMPORT_READS	0	0
+importflag	W	 mem CASE_IMPORT_ACTIONS,CASE_IMPORT_BY	0	0
+importflagclear	W	 mem CASE_IMPORT_ACTIONS,CASE_IMPORT_BY	0	0
+importunwatch	W	 mem CASE_IMPORT_ACTIONS,CASE_IMPORT_BY	0	0
+importwatch	W	 mem CASE_IMPORT_ACTIONS,CASE_IMPORT_BY	0	0
+inbox	R	 mem 	2	0
+inboxget	R	 mem 	0	0
+inboxpull	W	 mem CAPTURE_MEMBER_ACTIONS	0	0
+inboxresolve	W	 mem 	0	0
+index	R	 - 	101	0
+inquirydivide	W	 mem STATE_ACTIONS	1	0
+inquiryground	W	 mem STRUCTURE_ACTIONS	5	2
+inquirystrength	R	 - 	5	4
+instance	R	 mem PROGRESSION_ACTIONS	66	6
+instancegroup	R	public - 	2	2
+instancegroupseed	W	 - 	0	0
+intentproposals	R	 - INTENT_READS	0	0
+invitelook	R	public - 	0	0
+knock	W	public - 	0	0
+knockerconsent	W	public - 	0	0
+knocksof	R	 - 	0	0
+lateattestations	R	 - 	0	0
+lead	W	 mem 	14	0
+leadlist	R	 - 	0	0
+leadlook	W	 mem 	0	0
+leadread	R	 - 	0	0
+leadshare	W	 mem 	0	0
+lease	W	 mem 	20	1
+linkproject	W	 mem EDGE_ACTIONS,POSITIONAL_ACTS	2	1
+links	R	 - 	46	5
+list	R	 - 	351	16
+livefire	W	 - 	0	0
+login	R	public - 	8	7
+meaningrows	R	 mem RETRIEVAL_READS	6	5
+memberadd	W	 mem CUSTODIAL_ACTIONS	8	2
+membercaps	W	 mem GOVERNANCE_ACTIONS	0	0
+memberlist	R	 - 	14	13
+memberpairings	R	 - 	0	0
+memberpairingset	W	 mem ROSTER_SELF_ACTIONS	0	0
+memberset	W	 mem CUSTODIAL_ACTIONS	6	2
+monitor	W	 mem 	13	0
+monitoring	R	 - 	14	0
+monitorpause	W	 mem 	0	0
+monitorslate	R	 - 	0	0
+narrow	W	 mem 	9	0
+narrowcandidates	R	 mem 	0	0
+noticepost	W	 mem NETWORK_NOTICES_ACTIONS,NETWORK_NOTICES_BY	0	0
+noticeprepare	R	 mem NETWORK_NOTICES_BY,NETWORK_NOTICES_READS	0	0
+notices	R	 mem NETWORK_NOTICES_READS	6	0
+noticespublic	R	public - NETWORK_NOTICES_PUBLIC_READS	0	0
+objectivecondition	W	 mem INTENT_ACTIONS	0	0
+objectivegaps	R	 - INTENT_READS	0	0
+objectiveprogress	R	 - INTENT_READS	0	0
+optionadd	W	 mem ACTION_LAYER_ACTIONS,ACTION_PLANS_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+optionadopt	W	 mem ACTION_LAYER_ACTIONS,ACTION_PLANS_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+optiondispose	W	 mem ACTION_LAYER_ACTIONS,ACTION_PLANS_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+optionpropose	W	 mem ACTION_LAYER_ACTIONS,PLAN_PROPOSAL_ACTIONS	0	0
+optionrevise	W	 mem ACTION_LAYER_ACTIONS,ACTION_PLANS_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+optionstart	W	 mem ACTION_LAYER_ACTIONS,ACTION_PLANS_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+optionstartpreview	R	 mem ACTION_LAYER_ACTIONS,ACTION_PLANS_PREVIEWS,QUERY_AUTHOR_ACTIONS	0	0
+partitionindependence	R	 - 	7	5
+pdfstructure	R	 - 	1	0
+plan	R	 - ACTION_LAYER_READS,ACTION_PLANS_READS	37	0
+planclose	W	 mem ACTION_LAYER_ACTIONS,ACTION_PLANS_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+planopen	W	 mem ACTION_LAYER_ACTIONS,ACTION_PLANS_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+planproposals	R	 - ACTION_LAYER_READS,ACTION_PLANS_READS	0	0
+plans	R	 - ACTION_LAYER_READS,ACTION_PLANS_READS	0	0
+plansubjectadd	W	 mem ACTION_LAYER_ACTIONS,ACTION_PLANS_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+plansubjectremove	W	 mem ACTION_LAYER_ACTIONS,ACTION_PLANS_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+profiles	R	 - 	0	0
+profilesset	W	 mem 	0	0
+progression	R	 mem PROGRESSION_ACTIONS	47	5
+progressiondefine	W	 mem PROGRESSION_ACTIONS	7	1
+projectdirectory	R	 - 	0	0
+projectfork	W	 mem PROJECT_ACTIONS	2	2
+projectholds	R	 mem ACTIONS_READS,ACTION_LAYER_READS	0	0
+projectinvite	W	 mem PROJECT_ACTIONS	3	2
+projection	R	 - 	32	15
+projectjoin	W	 mem PROJECT_ACTIONS	3	2
+projectleave	W	 mem PROJECT_ACTIONS	3	2
+projectowneradd	W	 mem PROJECT_ACTIONS	3	2
+projectownerarith	R	 - 	12	11
+projectownerremove	W	 mem PROJECT_ACTIONS	5	4
+projectownerrescue	W	 mem PROJECT_ACTIONS	3	2
+projectparticipants	R	 - 	14	12
+projectremove	W	 mem PROJECT_ACTIONS	3	2
+projectrequest	W	 mem PROJECT_ACTIONS	0	0
+projectrequestanswer	W	 mem PROJECT_ACTIONS	0	0
+projectrequests	R	 - 	0	0
+projectrequestwithdraw	W	 mem PROJECT_ACTIONS	0	0
+projectstage	R	 - 	0	0
+projectvisibility	R	 - 	3	2
+projectvisibilityset	W	 mem PROJECT_ACTIONS	2	1
+promote	W	 mem 	22	13
+proposals	R	 mem PROGRESSION_ACTIONS	19	7
+proposedispose	W	 mem POSITIONAL_ACTS,PROGRESSION_ACTIONS	21	11
+provenancechain	W	 mem PROVENANCE_JUDGEMENT_ACTIONS	0	0
+provenanceroute	W	 mem PROVENANCE_JUDGEMENT_ACTIONS	0	0
+provenanceroutes	R	 - 	0	0
+publicread	R	public - 	0	0
+publish	W	 mem STATE_ACTIONS	65	4
+publishedbytes	R	public - 	15	15
+publishedcase	R	public - 	22	12
+publishededitions	R	 - 	0	0
+publishedlist	R	 - 	0	0
+publishedmanifest	R	public - 	12	10
+publishpreflight	R	 - 	0	0
+publishtensions	R	 - 	0	0
+pulledknocks	R	 - 	0	0
+purge	W	 - 	0	0
+pursuit	R	 - INTENT_READS	0	0
+queue	R	 - 	97	25
+queuemute	W	 mem QUEUE_ACTIONS	9	8
+queuesnooze	W	 mem QUEUE_ACTIONS	0	0
+ratify	W	 mem 	1	0
+reading	R	 mem READING_READS	230	1
+readingname	R	 mem READING_READS	7	7
+readingref	R	 mem READING_READS	1	2
+reattest	W	 mem CAPTURE_MEMBER_ACTIONS	0	0
+reevaluationchanges	R	 - 	0	0
+reevaluationnotices	R	 - 	0	0
+reevaluationraise	W	 - 	0	0
+reevaluationrecord	W	 mem REEVALUATION_ACTIONS	0	0
+reevaluations	R	 - 	1	1
+registeraudit	R	 - 	0	0
+reinstate	W	 mem EDGE_ACTIONS,POSITIONAL_ACTS	9	0
+relation	R	 mem REGISTRY_ACTIONS	21	0
+relationdeclare	W	 mem REGISTRY_ACTIONS	8	2
+relationwithdraw	W	 mem REGISTRY_ACTIONS	0	0
+release	W	 mem STATE_ACTIONS	40	6
+reminderanswer	W	 mem ACTION_CLOCKS_ACTIONS,ACTION_LAYER_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+reminderset	W	 mem ACTION_CLOCKS_ACTIONS,ACTION_LAYER_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+reopen	W	 mem STATE_ACTIONS	4	0
+reproject	W	 - 	0	0
+resolutiondefect	W	 mem REGISTRY_ACTIONS	0	0
+resolutions	R	 mem RECOGNISER_ACTIONS	41	8
+resolve	W	 mem RECOGNISER_ACTIONS	35	5
+resolvetestify	W	 mem RECOGNISER_ACTIONS	7	2
+retire	W	 mem STATE_ACTIONS	16	2
+reviewcomment	W	public - 	5	4
+reviewcopy	R	public - 	15	8
+reviewgrant	W	 mem GRANT_SECRET_ACTIONS	4	2
+reviewrevoke	W	 mem 	3	2
+runtime	R	 - 	12	0
+scenarioset	W	 mem ACTION_LAYER_ACTIONS,ACTION_PLANS_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+search	R	 mem RETRIEVAL_READS	83	25
+searchfields	R	 mem RETRIEVAL_READS	18	16
+searchindexcheck	R	 mem RETRIEVAL_READS	0	0
+select	W	 mem 	72	20
+selection	R	 mem RETRIEVAL_READS	90	4
+selectionlist	R	 mem RETRIEVAL_READS	0	0
+selectionrelease	W	 mem 	1	1
+selftest	R	 - 	0	0
+sever	W	 mem EDGE_ACTIONS,POSITIONAL_ACTS	9	0
+signeradd	W	 mem CUSTODIAL_ACTIONS	7	3
+signerlist	R	 - 	2	1
+signerregister	W	 mem OWN_KEY_ACTIONS	0	0
+signerrevoke	W	 mem OWN_KEY_ACTIONS	0	0
+signerset	W	 mem CUSTODIAL_ACTIONS	6	2
+snapkeycensus	R	 - 	0	0
+sourceconsent	W	 mem SOURCE_ACTIONS	0	0
+sourceconsentwithdraw	W	 mem SOURCE_ACTIONS	0	0
+sourcedisclose	W	 mem SOURCE_ACTIONS	0	0
+sourcelink	W	 mem SOURCE_ACTIONS	0	0
+sourceof	R	 - SOURCE_READS	0	0
+sourcepublishable	R	 - 	0	0
+sourcereach	R	 - 	0	0
+sourcereadlog	R	 - SOURCE_READS	0	0
+sourcerung	R	 - SOURCE_READS	0	0
+standard	R	 - ACTION_LAYER_READS,STANDARDS_READS	25	0
+standardadopt	W	 mem ACTION_LAYER_ACTIONS,STANDARDS_ACTIONS	0	0
+standarddeclare	W	 mem ACTION_LAYER_ACTIONS,STANDARDS_ACTIONS	0	0
+standardinforce	R	 - ACTION_LAYER_READS,STANDARDS_READS	0	0
+standardpropose	W	 mem ACTION_LAYER_ACTIONS,STANDARDS_ACTIONS	0	0
+standards	R	 - ACTION_LAYER_READS,STANDARDS_READS	3	0
+statementack	W	public - 	5	4
+stats	R	 - 	0	0
+strengthbar	W	 mem DECLARATION_ACTIONS	0	0
+strengthbarof	R	 - 	0	0
+suggest	W	 mem AI_RUN_ACTIONS,RUN_PRODUCTION_ACTIONS	0	0
+sweeps	R	 mem ACTION_LAYER_READS,LINK_SWEEP_READS	4	0
+taskdrain	W	 - 	0	0
+taskforward	W	 mem TASK_ACTIONS	10	5
+taskresolve	W	 mem TASK_ACTIONS	8	3
+tasks	R	 - 	17	6
+templateapprove	W	 mem ACTION_LAYER_ACTIONS,FILING_TEMPLATES_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+templatecomment	W	public mem TEMPLATE_DOOR_ACTIONS	0	0
+templatecomments	R	public mem TEMPLATE_DOOR_READS	0	0
+templatedraft	W	 mem ACTION_LAYER_ACTIONS,FILING_TEMPLATES_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+templategrantrevoke	W	 mem ACTION_LAYER_ACTIONS,FILING_TEMPLATES_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+templatepropose	W	 mem ACTION_LAYER_ACTIONS,TEMPLATE_PROPOSAL_ACTIONS	0	0
+templateread	R	public mem TEMPLATE_DOOR_READS	0	0
+templateretire	W	 mem ACTION_LAYER_ACTIONS,FILING_TEMPLATES_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+templatereview	W	public mem TEMPLATE_DOOR_ACTIONS	0	0
+templatereviewgrant	W	 mem ACTION_LAYER_ACTIONS,FILING_TEMPLATES_ACTIONS,GRANT_SECRET_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+templaterevise	W	 mem ACTION_LAYER_ACTIONS,FILING_TEMPLATES_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+templates	R	 mem ACTION_LAYER_READS,FILING_TEMPLATES_READS	0	0
+templatesave	W	 mem ACTION_LAYER_ACTIONS,FILINGS_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+templatesubmit	W	 mem ACTION_LAYER_ACTIONS,FILING_TEMPLATES_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+testify	W	 mem 	8	0
+textattest	R	 mem READING_READS	0	0
+textprovenance	R	 mem READING_READS	0	0
+themedeclare	W	 mem 	3	2
+themeplace	W	 mem 	5	4
+themepropose	W	 mem 	1	1
+themeread	R	 - 	6	5
+themewithdraw	W	 mem 	0	0
+theorypropose	W	 mem ACTION_LAYER_ACTIONS,FILINGS_ACTIONS,QUERY_AUTHOR_ACTIONS	0	0
+thread	W	 mem PROGRESSION_ACTIONS	9	1
+transcribe	W	 mem 	0	0
+transcription	R	 - 	1	0
+transcriptionattest	W	 mem 	0	0
+triage	W	 mem INTENT_ACTIONS	4	0
+verify	R	public - 	26	6
+versionaccept	W	 mem VERSION_ACTIONS	3	0
+versionadopt	W	 mem REEVALUATION_ACTIONS	1	1
+versionchain	R	 - 	3	3
+versionconsider	W	 mem VERSION_ACTIONS	2	0
+versioncurrent	W	 mem POSITIONAL_ACTS,VERSION_ACTIONS	10	4
+versionhide	W	 mem VERSION_ACTIONS	7	1
+versionkeep	W	 mem REEVALUATION_ACTIONS	1	0
+versionnotice	R	 mem 	2	2
+versionreject	W	 mem VERSION_ACTIONS	2	0
+versionrevert	W	 mem VERSION_ACTIONS	2	0
+versionstrength	R	 - 	3	2
+whatchangeddrafts	R	 mem WHAT_CHANGED_READS	0	0
+whatchangedpropose	W	 mem WHAT_CHANGED_PROPOSAL_ACTIONS	0	0
+whoami	R	 - 	20	13
+withdrawconclusion	W	 mem POSITIONAL_ACTS,STATE_ACTIONS	5	3
+wizardapprove	W	 mem WIZARD_SCRIPTS_ACTIONS,WIZARD_SCRIPTS_BY	0	0
+wizardcandidates	R	 mem WIZARD_SCRIPTS_READS	0	0
+wizardcheck	R	 mem WIZARD_CHECK_READS	0	0
+wizarddraft	W	 mem WIZARD_SCRIPTS_ACTIONS,WIZARD_SCRIPTS_AUTHOR	0	0
+wizardeditorgrant	W	 mem WIZARD_SCRIPTS_BY	0	0
+wizardeditorrevoke	W	 mem WIZARD_SCRIPTS_BY	0	0
+wizardprogress	W	 mem WIZARD_PROGRESS_ACTIONS	0	0
+wizardpropose	W	 mem WIZARD_PROPOSAL_ACTIONS,WIZARD_SCRIPTS_ACTIONS	0	0
+wizardread	R	 mem WIZARD_SCRIPTS_READS	0	0
+wizardretire	W	 mem WIZARD_SCRIPTS_ACTIONS,WIZARD_SCRIPTS_BY	0	0
+wizardrevise	W	 mem WIZARD_SCRIPTS_ACTIONS,WIZARD_SCRIPTS_AUTHOR	0	0
+wizards	R	 mem WIZARD_SCRIPTS_READS	0	0
+wizardsat	R	 mem WIZARD_SCRIPTS_READS	0	0
+wizardsubmit	W	 mem WIZARD_SCRIPTS_ACTIONS,WIZARD_SCRIPTS_AUTHOR	0	0
+wizarduse	R	 mem WIZARD_SCRIPTS_READS	0	0
+workobjective	W	 mem INTENT_ACTIONS	0	0

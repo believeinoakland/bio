@@ -10,19 +10,19 @@
 - [GAP] INVENTORY §4 escalation row, line 54 — "Nothing tells a member a stage is due."
 - [GAP] INVENTORY §4 "Nothing is pushed", line 59 — "Monitoring's deadline recheck is never called, and the queue has no kind for an overdue clock or a due escalation. Both answer when asked; neither tells anyone."
 - [GAP] INVENTORY §4, line 61 — real profile has "13 action kinds, 5 offices (all unmeasured), 1 deadline, no holidays and no templates".
-- [CONFLICT] INVENTORY §5 item 4, line 68 — "Clocks stored or derived. State Rules makes the clock \"the authoritative deadline register\", marked overdue by a machine (I-11, I-20); Case Making says \"the clock is never encoded\" and status is derived when read."
+- [CONFLICT] INVENTORY §5 item 4, line 68 — "Clocks stored or derived. State Rules makes the clock "the authoritative deadline register", marked overdue by a machine (I-11, I-20); Case Making says "the clock is never encoded" and status is derived when read."
 - [GAP] INVENTORY §6 BOB's to plan, lines 100, 103 — "Schedule monitoring's deadline recheck; give the queue kinds for an overdue clock and a due escalation." "Profile data: templates, holidays, measured offices and deadlines."
 - [BUILT] INVENTORY §4 standards row, line 49 — standards carry "period in force".
 @@ORGANISATIONS
 - [DESIGN] INVENTORY §1 item 2, line 8 — built model is narrow: "one group whose members all stand alike, acting against a government office, because of a breach."
 - [GAP] INVENTORY §1 item 4, line 10 — "No record holds a kind of actor. No role says who may send or speak for the group." "an action has one addressee".
-- [GAP] INVENTORY §2 table, line 17 — group kinds (activists, journalists, lawyers, auditors, unions) "Recognised in words, never as data"; Case Making frame "media report, activists fix, administrators respond, lawyers support or change a claim (\"the list is open\")"; DEC-27; Roadmap §12 group "type" field with no stated effect; requirements: "Not modelled. One instance is one group."; code: "No group type anywhere."
+- [GAP] INVENTORY §2 table, line 17 — group kinds (activists, journalists, lawyers, auditors, unions) "Recognised in words, never as data"; Case Making frame "media report, activists fix, administrators respond, lawyers support or change a claim ("the list is open")"; DEC-27; Roadmap §12 group "type" field with no stated effect; requirements: "Not modelled. One instance is one group."; code: "No group type anywhere."
 - [GAP] INVENTORY §2 roles row, line 18 — four capabilities (contribute, publish, create projects, administer); project owner, joined, invited; declared expertise "gates nothing"; requirements: any member with `contribute` may take every layer-9 act; "Nothing says who drafts, approves, sends or speaks for the group."
 - [GAP] INVENTORY §2 communications row, line 22 — "An addressee must be a government office, so a journalist or newspaper cannot be one."
 - [DESIGN] INVENTORY §2 lawyers row, line 23 — lawyers: Tier 3 counsel, legal organisations; requirements: "Outside named counsel only (the counsel packet); profile legal organisations." Verdict "Partly covered, as a recipient only."
 - [GAP] INVENTORY §2 auditors row, line 24 — auditors "Only as venues and addressees (City Auditor complaints, grand jury, State Controller)"; requirements "An office marked `oversight`; stage 7's audit request"; "Gap as actors. They exist only as offices."
 - [GAP] INVENTORY §2 unions row, line 25 — unions/special interests never actors; Roadmap §1 "protection network"; handled by disclosure (Requirement 6) and declared bias; "Gap, and a doctrine question".
-- [DOCTRINE] INVENTORY §3 Addressees, line 37 — "an office, named in its official capacity, never a person (Requirement 6: \"Accountability belongs to the role and the institution\")."
+- [DOCTRINE] INVENTORY §3 Addressees, line 37 — "an office, named in its official capacity, never a person (Requirement 6: "Accountability belongs to the role and the institution")."
 - [BUILT] INVENTORY §4 actions row, line 52 — Action object holds "addressee office"; consequences row line 51: to whom "(a class, fund, program, service or body, never a person)".
 - [GAP] INVENTORY §4, line 61 — real profile "5 offices (all unmeasured)".
 - [CONFLICT] INVENTORY §5 item 5, line 69 — "Addressee shape. State Rules shows a free string; the requirements refuse it and require an office by role and body."
