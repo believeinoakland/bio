@@ -27,10 +27,10 @@
 | M7 | prompts/M7.txt | notes/M7.md | done |  |
 | X-REGISTER | prompts/X-REGISTER.txt | digest/DOCTRINE-REGISTER.md | done |  |
 | A-EVENTS | prompts/A-EVENTS.txt | studies/EVENTS.md | done |  |
-| A-INTEGRATION | prompts/A-INTEGRATION.txt | studies/INTEGRATION.md | missing |  |
+| A-INTEGRATION | prompts/A-INTEGRATION.txt | studies/INTEGRATION.md | partial | working files only: INTEGRATION.md.work |
 | A-MONEY | prompts/A-MONEY.txt | studies/MONEY.md | done |  |
 | A-PEOPLE | prompts/A-PEOPLE.txt | studies/PEOPLE.md | done |  |
-| R-1 | prompts/R-1.txt | reviews/R-1.md | missing |  |
+| R-1 | prompts/R-1.txt | reviews/R-1.md | done |  |
 | R-2 | prompts/R-2.txt | reviews/R-2.md | missing |  |
 | R-3 | prompts/R-3.txt | reviews/R-3.md | missing |  |
 | S-SYNTHESIS | prompts/S-SYNTHESIS.txt | synthesis/constructs-2.md | missing |  |
