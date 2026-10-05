@@ -40,3 +40,7 @@ Found while doing T33-1 (details in my record, "Found in other modules"):
 (2) The readers of `OBJECT_TYPES[id.split('-')[0]]` (strength, basis-versions, actions, inquiry, citation, content, case-authoring, ai-runs, run-productions, action-grammar, inquiry-grammar) now type an `EVT-`/`HYP-`/… target as its new type, where they had none before. Their equality tests are unchanged. Worth a line in the new owners' STARTs.
 (3) `skills`' planning test "R28 the action_planning layer" is red on tranche/T33 without my change. It is not on the accepted-red list.
 (4) The callers' `\d{4}-\d{4}` copies still refuse `…-10000` until their own T33 entries.
+
+## J3 · COMPLETE
+
+T33-1 applied. `ID_TABLE` (51 rows), `idPattern`, `isHypothesisId`; R1 built from `idPattern` (counters `\d{4,}`); R3's twelve new types, with `checkBundle` admitting bundle types only. Module tests: 71 pass. Every user's tests (whole `test/m`): 5960 pass, 6 fail. Five are reds already on the tranche (four accepted red 2, plus skills R28, REPORT J3); the sixth is case-checker R13 (accepted red 3). Checks format, architecture, coverage (46/46) and ownership: 0 failures. Final uses: none. Commit 95325e10cc on job/T33/record-grammar; record updated.
