@@ -1,3 +1,14 @@
 # court-doctypes (T33)
 
 **Status** · session_01UL3CanLegQc1bhXUiyGG9N · depth 2 · WORKING · handled B1
+
+## J1 · QUESTION
+
+Four points where my requirements leave a choice. I am building on my best reading of each now; only (1) and (2) change what a profile or a caller must supply.
+
+1. **Where the "publishing-system address shapes, under this module's keys" live (R1, R15).** `jurisdictions` R6's vocabulary is a closed set with no key for them, and T33-2's entry adds none. **Best reading:** they are `view.systems` entries (jurisdictions R4: `hosts`, optional `path`) whose `origin` is the type's key (`courtlistener_docket`, `cpuc_proceeding`, `ecourt_roa`), and I match a locator through `id-spaces.systemOf(view, locator)` (its R13), so the address is the view's and never code's. No profile holds such entries today, and T33-2 does not add them, so in production nothing reaches CERTAIN until a profile does: on structure alone `detect` gives LIKELY, with why. **Asks:** confirm the shape; and say who adds the three systems (and the measured `proceeding` forms of `courts-workbooks.md` §1) to the first and test profiles — the jurisdictions job (a CHANGE to T33-2), or a later entry. My tests build their view as `combine` of the test profile and of the first profile, each extended in the test with these entries as fixture data, labelled so.
+2. **`ctx.origin` (R2).** Not yet in docprofile's ctx (my Suggestions). **Best reading:** `ctx.origin` is the string `member` for a member's own capture made in their own browser; anything else (absent, `fetch`, `daemon`) is not a member's capture and `ecourt_roa` does not match, with K1492's why. Name the value if `docprofile`/`acquisition` will spell it otherwise.
+3. **CourtListener's unnumbered entries (R6).** On the page they are `div#minute-entry-<n>` with an empty number cell; `<n>` is CourtListener's own row id, not an entry number. **Best reading:** `entry_id: null` for them (R6 "the entry number CourtListener assigns"), keyed by date and text as R6 says; so only numbered entries become events (`events` R38). Two unnumbered rows with the same date and text on one reading are told apart by their order among those twins (stated in `key_basis`); likewise identical CPUC composites.
+4. **`docket_number_core` (R3).** The docket HTML page does not carry it (only the API JSON does; checked on 4214664's pages). **Best reading:** `proceeding.docket_number_core` is given as written when the capture states it, else `null` with why ("the docket page does not state it; the API does").
+
+Also for the record: I captured the fixtures myself today (CourtListener 4214664 pages 2 and 4, which hold unnumbered, sealed and unsealed rows; CPUC A2106021 card and documents page 1, "1 - 100 of 590"); `uses` at COMPLETE will be docprofile, id-spaces and jurisdictions (tests: the test and first profiles, R15); court-citations is not used.
