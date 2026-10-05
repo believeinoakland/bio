@@ -525,7 +525,7 @@ This construct holds what happened in the world: a meeting held or cancelled, a 
 
 ### 5B.4 Rungs in the first stages
 
-Bob's decisions these rungs rest on: K1462 (`events`, "timeline"), K1464 (zone), K1465 (deciders and signers), K1467 (hypotheses), K1468 (targeted extraction); C3 (members' words) and C11 (a timeline in a published case), open. EVENTS E2, E3, E4 and E6 are BOB's (constructs-2 §7).
+Bob's decisions these rungs rest on: K1462 (`events`, "timeline"), K1464 (zone), K1465 (deciders and signers), K1467 (hypotheses), K1468 (targeted extraction), K1486 (C3, members' words); C11 (a timeline in a published case), open. EVENTS E2, E3, E4 and E6 are BOB's (constructs-2 §7).
 
 **L1, the core (stage 1a).**
 - *Design:* New `events` in layer 5 directly after `entities` (replacing the ruled `chronology`, K1462; about 2,400–2,900 lines at full size), using record-grammar, jurisdictions, civil-time, record-core, membership, promotion, provenance, extraction, content and entities. Two objects: the **dated fact** `{capture, extent, kind, value (date-time with precision and zone; EDTF bands), method, grade}`, kinds closed (meeting, adopted, effective, signed, entered, issued, published, received, hearing, period_covered, edited); and the **event** `EVT-` `{kind, status, when, where?, participants, concerns, within?, attestations}`, kinds closed (meeting, vote, adoption, enactment, signing, award, payment, transfer, filing, order, hearing, issuance, publication, statement, communication, appointment, departure, inspection, other), statuses from schema.org (a cancelled meeting is one event, never a missing one). `when` derives from the governing attestation into a `when_cache` (start, end, precision, zone) rebuilt in the same transaction, read fail-closed when stale. Participants `{entity, role, attestation}`, roles as §2 EVENTS lists, deciders, authors and implementers included (K1465); a participant re-resolved is corrected forward and its dependants noticed. `onWhenChanged(module, fn)` lets every owner of event-bounded rows move its `bound_cache` in the same transaction (R-3 I-1). `conformance`'s `ACT-` ids become aliases of events and `conformance.determine` takes `act: {event}`. A dated fact is materialised when a capture is cited or requested, through a new opt-in after-read hook on `reading-pipeline` (none exists today, R-3 I-7) or a member's act (K1468).
@@ -551,7 +551,7 @@ Bob's decisions these rungs rest on: K1462 (`events`, "timeline"), K1464 (zone),
 - *Design:* `whoWasSent` ("sent to", "copied", "present", never "knew"); statements in order; sequence anomalies and lateness as calculations with registry denominators, raised as "Noticed", never as violations; edit acts from office metadata; a published case's timeline, frozen at signing, each item with its attestation, the two lanes never interleaved, people as Design Requirement 6 allows (recommended; Bob's C11); EXTRACT proposals of events, participants and relations at a member's request, labelled.
 - *What must exist first:* stages 2a–2b; extract deployed and measured on a gold set that scores extents strictly and roles softly (guideline-driven LLM extraction trails supervised systems by about 42 F1 on strict argument matching, while o3-mini reaches 70.8 F1 with soft matching; R-1 V-E5). *Size:* about 25–30 requirements.
 - *Realism and performance:* Oakland's Legistar held 186 meetings in 2025 with about 20 items each, about 32,000 event rows a year; pattern scans over a city decade run on the alarm in slices.
-- *Decisions for Bob:* C11 (a timeline in a published case; recommended (a)); C3 (members' words: "event", "timeline", the lanes, "placed nowhere" for undated items).
+- *Ruled:* C3 (K1486): "events and timeline", with two lanes, "what they did" and "what we did"; "placed nowhere" for undated items. *Decisions for Bob:* C11 (a timeline in a published case; recommended (a)).
 - *Risks:* sequence read as cause (contained: no machine cause, `stated_cause` only as a source's claim); a missing record read as a missing event (four-level absence); machine extraction taken as fact (labels, member adoption).
 
 **L5: assisted, imported, watched (stages 3–4).**
@@ -636,7 +636,7 @@ This construct holds money as **stated amounts** (money facts): each one a readi
 
 ### 5C.4 Rungs in the first stages
 
-Bob's decisions these rungs rest on: K1457, K1463, K1464, K1466 and K1468 (ruled); K1483 (C1: a private payee is named where the payment bears on the finding, else "a private party" with the amount); C3 (members' words for money) and C8 (detectors), open. MONEY M-B1 is withdrawn by K1463.
+Bob's decisions these rungs rest on: K1457, K1463, K1464, K1466 and K1468 (ruled); K1483 (C1: a private payee is named where the payment bears on the finding, else "a private party" with the amount); K1486 (C3, members' words for money); C8 (detectors), open. MONEY M-B1 is withdrawn by K1463.
 
 **Stage 0, measure first.** Oakland's OpenGov export format and basis statement; whether any vendor ledger exists at all (no vendor-payment ledger is published; R-2 M-E7); which ACFR years carry a text layer.
 
@@ -660,7 +660,7 @@ Bob's decisions these rungs rest on: K1457, K1463, K1464, K1466 and K1468 (ruled
 - *Design:* budget and financial-report readers (office and CSV first; PDF only after M-55 is re-measured); `buys`; unit cost and budget against actuals across years as calculations; detectors a member switches on per project, each data-defined with its denominator, raising "Noticed" with its derivation, never "conflict", never a score standing for a judgment, none shown before a measured false-alarm gate (recommended; Bob's C8); a ranking by a stated, measured quantity (the largest expenses in a budget; the contractor with the most Public Works business) is analysis and allowed as a calculation that names its quantity, scope and period (K1471); EXTRACT proposals of money facts, column roles and trail inclusions at a member's request, labelled (K1468: never swept over every budget book).
 - *What must exist first:* L1–L3; `sheet-worker`; extraction measured on 10 budget books and 5 ACFRs. *Size:* about 25 requirements.
 - *Realism and performance:* ACFRs stay PDFs for years; figures from PDFs enter as typed transcriptions attested by a second member until a re-measure says GO; heavy scans run off the object or on the alarm in slices with a stated budget, because the Durable Object is single-threaded.
-- *Decisions for Bob:* C8 (detectors; recommended (a)); C3 (words: "committed", "spent", "paid", "money trail", "counted toward this contract"; never "ledger", "obligation", "diverted" or "misused" in Civicsmith's own words).
+- *Decisions for Bob:* C8 (detectors; recommended (a)). *Ruled:* C3 (K1486; words: "committed", "spent", "paid", "money trail", "counted toward this contract"; never "ledger", "obligation", "diverted" or "misused" in Civicsmith's own words).
 - *Risks:* false contradictions between sources (contained by `reconcile` and the three axes); a pattern read as proof (denominators, questions not verdicts).
 
 **L5: captured, assisted, watched (stage 4).**
