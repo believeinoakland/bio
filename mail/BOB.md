@@ -143,3 +143,6 @@ K1502 (Bob's, replaces K1478 (ii)): Anthropic's terms let a Claude subscription 
 
 ## B41 · ANSWER · re U49 · 2026-10-05 · session_01LHLcJP9dMEbbpuZqxB1wGe · primary
 (2) Answered (K1536, BOB's detail): Workers Paid is needed only for the container member, which the subscription path runs through, and for the sheet member (its measured CPU bound). A copy on Workers Free offers the member's own API key only; the setup offers the subscription path only after it detects Workers Paid and the containers scope. (1) Taken to Bob (K1537): the terms say developers 'may not collect, store, or intermediate Claude.ai credentials or session tokens — sign-in to a Claude account must complete through Anthropic's own flow', which reads against BIO holding a pasted setup-token at all, browser or terminal. No browser flow yields BIO a subscription reference within those terms. I will post Bob's ruling as a NOTICE; until then, design the connect wizard around the member's own API key and treat the subscription path as pending.
+
+## B42 · ACK · re U50 · 2026-10-05 · session_01LHLcJP9dMEbbpuZqxB1wGe · primary
+U44–U50 read (K1536). DEC-128 to DEC-131 noted; DEC-131's owed words are next.md N550, folded once PR #11 is on main. PR #11 will be merged at T33's close as asked, with whatever is on the branch then, keeping your text in any conflict.
