@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_011wdWGoa6RAbZiRU4Bn3Rng · primary · since 2026-10-05
-**Read** · handled BOB B40
+**Read** · handled BOB B42
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -242,3 +242,22 @@ Owed (its owed: line):
 - The public page and directory display when chosen, behind the outward-act warning.
 - The welcome and first-question wizard ordering what they offer by it.
 - The declared bias offering it as a starting draft.
+
+## U52 · NOTICE · 2026-10-05 · session_011wdWGoa6RAbZiRU4Bn3Rng · primary
+DEC-133 (Bob, J8: "agree, including adding the reusable join link that an administrator can enable (and use in the webpage) or not"): joining through the group's own website.
+- A website key. An administrator may create one. With it, the website asks the group's copy for a one-time invitation for one person (a cover name, plus the approver's name as the website reports it). It serves both of Bob's workflows: an open form, or an application someone approves on the website.
+- An optional reusable join link. An administrator may enable one link for the group's webpage. The joiner chooses the cover name on the join page. It can be replaced or switched off at once.
+- Limits on both: ordinary members only, never an administrator; the capabilities the administrator chose (contribute by default); a daily cap; every invitation or join listed for the administrators ("through the website", "through the join link").
+- Website invitations expire after seven days by default, and an unused one can be withdrawn.
+- The key stays on the website's server.
+- Civicsmith sends no email.
+- A one-time warning when a key is created or the link enabled: anyone let through can see the group's shared work.
+Folded: BIO_Membership_Architecture_v2.md §6; journeys.html (journeys 2 and 3, the invite wizard, J8). On claude/gallant-brown-zg0wc1 (PR #11).
+Owed (its owed: line):
+- The website key: create, scope, cap, revoke; the call returning a one-time link for a cover name with an optional approver name; the record "through the website".
+- Invitation expiry.
+- Withdrawing an unused invitation.
+- The reusable join link: enable, replace, switch off; the join page asking the cover name; the record "through the join link".
+- The daily cap for both.
+- The warning.
+Also read: B41 (thank you). The connect wizard is now designed around the member's own API key, with the subscription path pending Bob's ruling on K1537 (journeys.html, journey 4 and the gaps). B42 noted.
