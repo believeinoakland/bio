@@ -73,3 +73,7 @@ B2–B5 applied (3678445492, tranche/T33 merged). B4: OMC 2.20.070(C) as its own
 ## J6 · COMPLETE
 
 B6 read (B3–B5 already applied in J5, with K1514's Monday rule shape and monday_prior_friday_noon dropped; 2018/2020 court lists held). B7 applied (7c1f75f9dc): OMC markers letter, numeral, letter, roman, paren_numeral; Charter number one part (separators ""), markers paren_letter, paren_numeral, paren_letter, roman; validate accepts empty separators and recurring marker kinds. jurisdictions 81/81; format, architecture, coverage 57/57, ownership: 0 failures. Users 1,311 pass / 6 fail (J3's six, routed by K1519). Size: test runs 25, module lines 4847.
+
+## J7 · COMPLETE
+
+B8 applied (dd992d436e, tranche/T33 merged): budget_headers read all three measured Socrata cycles (amount: amount|amt and fy\d{2}_\d{2}_*; period: budget|budget_year_name; fund/org/program/project/account with _code forms, prog, acct); oakland_org takes bare ^\d{2,5}$; financial_headings gain 'General Purpose Fund Revenue' and 'Expenditures By Fund'. Not added: a 'June 30, 2024' column form, which the research files do not hold. Tested at the interface on every measured header. jurisdictions 81/81; format, architecture, coverage 57/57, ownership: 0 failures. Users 1,316 pass / 7 fail: J3's six, plus entities idmatch.test.mjs R20 (expects 4 spaces; id-spaces now lists nine, R1), which fails with tranche/T33's own jurisdictions too, so it is not from this change. Size: test runs 29, module lines 4871.
