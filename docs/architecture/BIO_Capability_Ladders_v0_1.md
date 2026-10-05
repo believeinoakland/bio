@@ -450,7 +450,7 @@ Bob's decisions these rungs rest on: K1452, K1455 and K1465 (ruled); C1 (Design 
 - *Design:* registers captured whole and read on request: CAL-ACCESS, NetFile, OpenFEC (its purpose limit kept, 11 CFR 104.15), DCA licence files, OpenCorporates officers, and Wikidata P39 and OpenSanctions PEP data as keyless identifier seeds (R-1 P-O); a watch of a person's register only by a named request (a filer id, a licence number), never an unattended crawl of a person (recommended; Bob's C2 row 11); Popolo and FollowTheMoney exports; sharing under B22.
 - *What must exist first:* L1–L4; the import path as background capture; keyed services built in, off by default, switched on with the group's own key (K1449). *Size:* about 15–20 requirements.
 - *Realism and performance:* imports are captures processed in the background on the alarm in slices; nothing on members' reads.
-- *Decisions for Bob:* B21 (standing watches), B22 (whether shared packs carry people), C9 (lookup conduct: keyless public registers and public pages by default; a private individual's own site or a login-gated platform only by a member's own act; recommended (a)).
+- *Ruled:* B21 (standing questions, K1481). *Decisions for Bob:* B22 (whether shared packs carry people), C9 (lookup conduct: keyless public registers and public pages by default; a private individual's own site or a login-gated platform only by a member's own act; recommended (a)).
 - *Risks:* a dossier under legal process or seizure (DR13; contained by C6's sight, the sensitive tables' export classes, and the exposure stated at setup, D185).
 
 ### 5A.6 Interfaces
@@ -558,7 +558,7 @@ Bob's decisions these rungs rest on: K1462 (`events`, "timeline"), K1464 (zone),
 - *Design:* "what happened between X and Y" as an `answers` rule service with level and bound (stage 3); OCD and Open States imports, FtM `Event` and OCEL 2.0 exports, standing watches (B21), events in shared packs (B22) (stage 4).
 - *What must exist first:* L1–L4; `answers`. *Size:* about 12–18 requirements at stage 4.
 - *Realism and performance:* imports run as background captures; nothing on members' reads.
-- *Decisions for Bob:* B21, B22.
+- *Ruled:* B21 (K1481). *Decisions for Bob:* B22.
 - *Risks:* re-evaluation fan-out when a re-import moves thousands of event dates (TAD §10.7's cascade-before-change ordering; TAD §12's dependency-depth question answered for `event_changed` before stage 2a; constructs-2 §9).
 
 ### 5B.6 Interfaces
@@ -667,7 +667,7 @@ Bob's decisions these rungs rest on: K1457, K1463, K1464, K1466 and K1468 (ruled
 - *Design:* captured checkbooks, payroll, contract and grant registers, Forms 460, 700 and 803, OpenFEC and USAspending, as hashed tables partitioned under 20 MiB, read into facts only on request (K1468); FtM, OCDS and Fiscal Data Package exports; watched sources told once.
 - *What must exist first:* L1–L4; the import path as background capture; keyed services (OpenFEC) built in, off by default, with the group's own key (K1449). *Size:* about 20 requirements.
 - *Realism and performance:* comparable cities publish 100,000–450,000 payments a year (San Francisco 8.2M rows since FY2007); held as tables, they never enter member reads unless asked.
-- *Decisions for Bob:* B21 (watches), B22 (whether shared packs carry money trails).
+- *Ruled:* B21 (watches, K1481). *Decisions for Bob:* B22 (whether shared packs carry money trails).
 - *Risks:* machine bulk extraction (contained by K1468's "when"); vendors matched by name (identifiers at both ends, or a member's attribution graded D).
 
 ### 5C.6 Interfaces
@@ -1050,7 +1050,7 @@ Cost (B16, information for Bob): on a subscription the cost is the plan's flat p
 - *Design:* a member authors a standing question: a saved question with a cadence and an end date (no open-ended standing question), owned by that member and ended by them at any time. A mechanical check runs first: the saved query, which the assistant wrote and showed when the question was first asked, is re-run by the scheduler at the cadence, under the member's view. It is cheap and involves no model. Only when the mechanical check finds something new (a new matching document, an occurrence changing state, a register row) does the AI run, read-only, bounded per ask, within the group's and member's use ceiling, under a short-lived grant scoped as an ask. Its answer, with the same `answers` checks, reaches the queue as one labelled item ("machine work, from your standing question"), told once (DEC-94; D252), and nothing else enters the record. Fan-out to outside sources is not part of it.
 - *What must exist first:* Q1 (`answers` and the asking grant), Q3 (rule services), a saved-query form in `query-language` and `retrieval`, a scheduler consumer, the use ceiling and `usage` (stage 0), and a queue item kind for a standing answer. Size: not studied.
 - *Realism and performance:* the mechanical re-run is a bounded query on the one scheduler alarm, as `monitoring`'s watches and the overdue scans already are; the AI is called only on a change, so its cost scales with what changes, not with the cadence, and the ceiling caps it. Off the everyday path entirely: it runs on the scheduler, and members see only a queue item. A per-group switch, because it spends the group's account.
-- *Decisions for Bob:* (doctrine, B21, recommended by BOB in this form) **it conflicts with D13** (no standing or automatic AI run; DEC-24 rule 2), which AIR §7.3 point 7 keeps as a provisional NO. Bob decides whether an AI run triggered by a member-authored standing question, mechanical-first, read-only, bounded and capped, may run without the member's act at that moment. (Doctrine) what is kept: a standing question is a saved object of the member's, while B17 (iii) recommends that asks leave nothing in the record; where it is stored and who can see it is Bob's. (Policy) outside sources stay excluded unless B15 says otherwise.
+- *Ruled:* (doctrine, B21 (b), K1481) D13 (no standing or automatic AI run; DEC-24 rule 2) is lifted only for a member-authored standing question: the member sets its cadence and end date; a saved search re-runs on the schedule first; the AI runs only when that finds something new, read-only, bounded, within the use ceiling of the account that carries the assistant (K1450, K1478), and its answer reaches the queue labelled as the assistant's. Every other AI run still starts only at a member's act. What is kept (BOB's reading, K1481): the standing question is the member's own saved object, seen only by its owner, the one exception to K1450's "nothing kept" for asks. (Policy) outside sources stay excluded unless B15 says otherwise.
 - *Risks:* unattended spend (contained by the ceiling, the change condition and the end date); noise (one item per new finding, DEC-10's relevance filter); injection from captured documents (the grant is read-only and writes nothing); surveillance of members (the standing question is visible only as its owner's object, under B17's ruling).
 
 ### 9.6 Interfaces
