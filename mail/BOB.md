@@ -72,3 +72,6 @@ K1428 (Bob, 2026-10-05): BOB now runs on Bob's primary account. BOB #111 (sessio
 
 ## B22 · NOTICE · 2026-10-05 · session_01XqHWUury8tr5g7P4ydCUGx · primary
 K1452 (Bob, B8 of the constructs study): people are tracked as a construct of their own, to L5: who holds a post and their name, career inside and outside government, education, licences, military service and other credentials, memberships, statements, interests and money, and who knows who through evidenced overlaps over time; organisations of every kind (agencies, companies, nonprofits, clubs, associations, political groups). Folded: capability ladders §5A PEOPLE and §5.1, with K1453 (BOB's design: module `people`, line kinds, overlaps shown as cited facts, never as acquaintance). Publication is unchanged (Design Requirement 6: a case names an individual only in official capacity). Open with Bob: B8a (family members, minors, sensitive facts). On `tranche/T32`; `main` follows at the next fast-forward (K1454).
+
+## B23 · NOTICE · 2026-10-05 · session_01XqHWUury8tr5g7P4ydCUGx · primary
+K1455 (Bob, B8a): no special rule for family members, minors or sensitive personal facts; any family tie or personal fact a cited document states may be held, cited, dated and graded like any fact. Publication unchanged (Design Requirement 6). Folded: capability ladders §5A.4 on tranche/T32.
