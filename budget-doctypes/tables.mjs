@@ -89,12 +89,13 @@ export function readPage(ctx, page, lines, { chartSkip = false, method = "text-l
   for (let i = 0; i + 1 < live.length; i++)
     if (live[i].c.kind === "years" && live[i].c.cells.length === 1 && live[i + 1].c.kind === "figures")
       live[i].c = { kind: "text", label: live[i].c.cells[0], cells: [] };
-  /* A heading, a scale or a dated line ("June 30, 2024") is the table's
-     description, not a row, even where it ends on a figure: it ends a table. */
+  /* A heading, a caption ("Schedule 1"), a scale or a dated line ("June 30,
+     2024") is the table's description, not a row, even where it ends on a
+     figure: it ends a table. */
   for (const l of live) {
     const t = l.text.trim();
     if (l.c.cells.length > 1 || l.c.kind === "years") continue;
-    if (matchIn(ctx, KEYS.HEADINGS, t) || scaleIn(t)
+    if (l.c.dated || matchIn(ctx, KEYS.HEADINGS, t) || CAPTION.test(t) || scaleIn(t)
         || (t.split(/\s+/).length <= 6 && matchIn(ctx, KEYS.FISCAL_YEARS, t))) {
       l.c = { kind: "text", label: t, cells: [] };
       l.meta = true;

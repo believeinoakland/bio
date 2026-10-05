@@ -30,9 +30,9 @@ function testPdf(pages) {
   supplied.document = supplied.pages.map((p) => p.text).filter((t) => t.length).join("\n");
   return supplied;
 }
-const COVER = "Harbour Authority of Port Ellery\nAnnual Financial Statements\nYE 2025";
+const COVER = "Harbour Authority of Port Ellery\nStatement of Accounts\nYear 2025/26";
 const STATEMENT = [
-  "Exhibit A", "Fund Position", "YE 2025", "(in thousands)",
+  "Exhibit A", "Harbour Revenue Account", "Year 2025/26", "(in thousands)",
   "General Harbour Total",
   "Cash on hand 1,200 300 1,500",
   "Amounts receivable from the Marlow County Commission (net of",
@@ -42,7 +42,7 @@ const STATEMENT = [
   "Equipment 900 100 1,000",
   "Land 600 — 600",
   "Total assets 3,168 407",
-  "These statements are part of the annual financial statements of the authority.",
+  "These statements are part of the statement of accounts of the authority for the year.",
 ].join("\n");
 const ROUGH = [
   "Exhibit B", "General Harbour Total",
@@ -136,7 +136,8 @@ test("R2: each table has its fields, every figure as printed and unscaled, each 
   const [net] = onPage(r, 49);
   assert.equal(net.title, "Statement of Net Position");
   assert.equal(net.scale, "In thousands");
-  assert.equal(net.period_as_written, "June 30, 2024");
+  /* The first profile holds no form for a dated heading ("June 30, 2024"): no period. */
+  assert.equal(net.period_as_written, null);
   assert.ok(net.columns.join(" ").includes("Port of"));
   const cash = net.rows.find((x) => x.label === "Cash and investments");
   assert.deepEqual(cash.cells.map((c) => c.as_read), ["$ 1,405,595", "$ 99,327", "$ 1,504,922", "$ 678,654"]);
@@ -159,9 +160,9 @@ test("R3: wrapped labels merge, a dash is a cell, a spanning total row is kept u
   const ctx = ctxFor(testPdf([COVER, STATEMENT]), TESTV);
   const r = financialReport.parse(ctx);
   const [t] = r.tables;
-  assert.equal(t.title, "Exhibit A");
+  assert.equal(t.title, "Harbour Revenue Account");
   assert.equal(t.scale, "in thousands");
-  assert.equal(t.period_as_written, "YE 2025");
+  assert.equal(t.period_as_written, "Year 2025/26");
   assert.deepEqual(t.columns, ["General Harbour Total"]);
   const wrapped = t.rows.find((x) => x.label.startsWith("Amounts receivable"));
   assert.equal(wrapped.label, "Amounts receivable from the Marlow County Commission (net of doubtful accounts)");
@@ -224,7 +225,8 @@ test("R5: a budget book sets aside the chart-label block, listed with its page a
   assert.deepEqual(skipped[0].lines, ["Property Tax", "$308,925,155 (36.5%)"]);
   const [t] = onPage(r, 148);
   assert.equal(t.usable, true);
-  assert.equal(t.title, "GENERAL PURPOSE FUND REVENUE");
+  /* The first profile names no heading for this page: no title, with why. */
+  assert.equal(t.title, null); assert.match(t.title_why, /no heading/);
   const cells = allCells(t);
   for (const share of ["(36.5%)", "(15.1%)", "(7.3%)", "(14.7%)"]) assert.ok(!cells.includes(share), share);
   assert.equal(t.rows.find((x) => x.label === "Property Tax").cells.length, 4);
@@ -293,17 +295,21 @@ test("R7: each budget line keyed on fund and org, with its codes read by the vie
 });
 
 test("R7: test profile: codes by its forms, a row with no fund or org unread, a code of no form stated, a sheet without cells unread", async () => {
-  const csv = "Fund,Cost Centre,Division,Division Code,Object,Year,Stage,Amount\n"
-    + "F-100,CC1001,Harbour Works,DV01,5100,YE 2025,approved,\"* 5,632,522\"\n"
-    + "F-100,,Harbour Works,DV01,5100,YE 2025,approved,10\n"
-    + "F-100,CC1002,Harbour Works,DV1,5200,YE 2025,approved,(12)\n";
+  const csv = "Ledger,Cost Centre,Service,Service Code,Works Order,Nominal,Year,Stage,Sum\n"
+    + "100-01,CC1001,Harbour Works,DV01,WO-1234,5100,Year 2025/26,approved,\"* 5,632,522\"\n"
+    + "100-01,,Harbour Works,DV01,WO-1234,5100,Year 2025/26,approved,10\n"
+    + "300-01,CC1002,Harbour Works,DV1,WO12,5200,Year 2025/26,approved,(12)\n";
   const r = budgetTable.parse(ctxFor(await csvSupplied(csv), TESTV, { content_type: "text/csv" }));
   assert.equal(r.rows.length, 2);
   assert.equal(r.rows[0].amount.value, "* 5,632,522");
   assert.equal(r.rows[0].phase_as_written, "approved");
-  assert.deepEqual(r.rows[0].department_code, { as_written: "DV01", form: String.raw`DV\d{2}`, scheme: "div" });
-  assert.deepEqual(r.rows[1].department_code.form, null);
-  assert.match(r.rows[1].department_code.why, /no form of the view's department_code/);
+  /* A code the scheme lists, and a code of a form it holds. */
+  assert.deepEqual(r.rows[0].fund, { as_written: "100-01", form: "code 100-01", scheme: "ellery_funds" });
+  assert.deepEqual(r.rows[0].project, { as_written: "WO-1234", form: String.raw`^WO-?\d{4}$`, scheme: "ellery_works" });
+  /* A code no form matches, and a code of a kind the view holds no form for. */
+  assert.equal(r.rows[1].fund.form, null); assert.match(r.rows[1].fund.why, /no form of the view's fund/);
+  assert.equal(r.rows[1].project.form, null); assert.match(r.rows[1].project.why, /no form of the view's project/);
+  assert.equal(r.rows[0].department_code.form, null); assert.match(r.rows[0].department_code.why, /holds no form/);
   assert.equal(r.unread.length, 1);
   assert.equal(r.unread[0].why, "the row holds no org code");
   assert.deepEqual(r.unread[0].source, { kind: "sheet-cell", ref: "csv!A3", sheet: "csv", cell: "A3" });
@@ -315,16 +321,16 @@ test("R7: test profile: codes by its forms, a row with no fund or org unread, a 
 // ---------------------------------------------------------------- R8
 
 test("R8: departments are groupings per period of the org codes placed under them, never carried or merged across periods", async () => {
-  const csv = "Fund,Cost Centre,Division,Object,Year,Amount\n"
-    + "F-100,CC1001,Harbour Works,5100,YE 2024,1\n"
-    + "F-100,CC1002,Harbour Works,5100,YE 2024,2\n"
-    + "F-100,CC1001,Harbour Works,5100,YE 2025,3\n"
-    + "F-100,CC1002,Port Services,5100,YE 2025,4\n";
+  const csv = "Ledger,Cost Centre,Service,Nominal,Year,Sum\n"
+    + "100-01,CC1001,Harbour Works,5100,Year 2024/25,1\n"
+    + "100-01,CC1002,Harbour Works,5100,Year 2024/25,2\n"
+    + "100-01,CC1001,Harbour Works,5100,Year 2025/26,3\n"
+    + "100-01,CC1002,Port Services,5100,Year 2025/26,4\n";
   const r = budgetTable.parse(ctxFor(await csvSupplied(csv), TESTV, { content_type: "text/csv" }));
   assert.deepEqual(r.groupings, [
-    { department: "Harbour Works", department_code: null, period_as_written: "YE 2024", orgs: ["CC1001", "CC1002"] },
-    { department: "Harbour Works", department_code: null, period_as_written: "YE 2025", orgs: ["CC1001"] },
-    { department: "Port Services", department_code: null, period_as_written: "YE 2025", orgs: ["CC1002"] },
+    { department: "Harbour Works", department_code: null, period_as_written: "Year 2024/25", orgs: ["CC1001", "CC1002"] },
+    { department: "Harbour Works", department_code: null, period_as_written: "Year 2025/26", orgs: ["CC1001"] },
+    { department: "Port Services", department_code: null, period_as_written: "Year 2025/26", orgs: ["CC1002"] },
   ]);
 });
 
@@ -342,7 +348,8 @@ test("R9: two PDF readings compared by table and row: a figure changed, a row an
   const m = financialReport.assess(before, after);
   const oc = m.events.filter((e) => e.type === "outcome_changed");
   assert.deepEqual(oc.map((e) => [e.table, e.row, e.column, e.before, e.after]), [
-    ["Exhibit A @ page 2", "Cash on hand", 1, "1,200", "1,250"], ["Exhibit A @ page 2", "Cash on hand", 3, "1,500", "1,550"]]);
+    ["Harbour Revenue Account @ page 2", "Cash on hand", 1, "1,200", "1,250"],
+    ["Harbour Revenue Account @ page 2", "Cash on hand", 3, "1,500", "1,550"]]);
   assert.ok(m.events.some((e) => e.type === "delisted" && e.row === "Land"));
   assert.equal(m.meaningful, true);
   const plus = financialReport.parse(ctxFor(testPdf([COVER, STATEMENT, "Exhibit D\nGeneral Total\nBonds 1 2 3\nNotes 4 5 6"]), TESTV));
@@ -365,20 +372,20 @@ test("R9: a reading in which no table was read is a failed read, never a documen
 });
 
 test("R9: two budget-table readings compared by R7's key: an amount changed, a line added or gone, an org moved within a period", async () => {
-  const head = "Fund,Cost Centre,Division,Object,Year,Amount\n";
-  const a = head + "F-100,CC1001,Harbour Works,5100,YE 2025,1\nF-100,CC1002,Harbour Works,5100,YE 2025,2\nF-100,CC1003,Harbour Works,5100,YE 2025,3\n";
-  const b = head + "F-100,CC1001,Harbour Works,5100,YE 2025,1\nF-100,CC1002,Port Services,5100,YE 2025,20\nF-100,CC1004,Harbour Works,5100,YE 2025,4\n";
+  const head = "Ledger,Cost Centre,Service,Nominal,Year,Sum\n";
+  const a = head + "100-01,CC1001,Harbour Works,5100,Year 2025/26,1\n100-01,CC1002,Harbour Works,5100,Year 2025/26,2\n100-01,CC1003,Harbour Works,5100,Year 2025/26,3\n";
+  const b = head + "100-01,CC1001,Harbour Works,5100,Year 2025/26,1\n100-01,CC1002,Port Services,5100,Year 2025/26,20\n100-01,CC1004,Harbour Works,5100,Year 2025/26,4\n";
   const read = async (csv) => budgetTable.parse(ctxFor(await csvSupplied(csv), TESTV, { content_type: "text/csv" }));
   const m = budgetTable.assess(await read(a), await read(b));
   assert.deepEqual(m.events.map((e) => e.type).sort(), ["delisted", "item_added", "item_changed", "outcome_changed"]);
   const oc = m.events.find((e) => e.type === "outcome_changed");
-  assert.deepEqual([oc.row, oc.column, oc.before, oc.after], ["F-100|CC1002|||5100|YE 2025|", "amount", "2", "20"]);
+  assert.deepEqual([oc.row, oc.column, oc.before, oc.after], ["100-01|CC1002|||5100|Year 2025/26|", "amount", "2", "20"]);
   const ic = m.events.find((e) => e.type === "item_changed");
-  assert.deepEqual([ic.org, ic.period_as_written, ic.before, ic.after], ["CC1002", "YE 2025", "Harbour Works", "Port Services"]);
+  assert.deepEqual([ic.org, ic.period_as_written, ic.before, ic.after], ["CC1002", "Year 2025/26", "Harbour Works", "Port Services"]);
   assert.equal(m.meaningful, true);
   assert.equal(m.confirmed.count, 1);
   /* A department renamed in a later period is not a move: periods are never merged. */
-  const c = head + "F-100,CC1001,Harbour Works,5100,YE 2026,1\n";
+  const c = head + "100-01,CC1001,Harbour Works,5100,Year 2026/27,1\n";
   assert.ok(!budgetTable.assess(await read(a), await read(a + c.slice(head.length))).events.some((e) => e.type === "item_changed"));
   const none = await read(head);
   const f = budgetTable.assess(await read(a), none);
@@ -432,12 +439,12 @@ test("R12: pure, and every title, heading, header word and code form is the view
   assert.equal(financialReport.detect(ctxFor(pdfFixture("a24").supplied, TESTV)).match, false);
   /* Headings: the title is the view's heading; with no heading in the view, none. */
   const u = ctxFor(testPdf([COVER, STATEMENT.replace("Exhibit A\n", "")]), TESTV);
-  assert.equal(financialReport.parse(u).tables[0].title, "Fund Position");
+  assert.equal(financialReport.parse(u).tables[0].title, "Harbour Revenue Account");
   const noHeadings = { ...TESTV, vocabulary: { ...TESTV.vocabulary, financial_headings: [] } };
   const [untitled] = financialReport.parse({ ...u, view: noHeadings }).tables;
   assert.equal(untitled.title, null); assert.match(untitled.title_why, /no heading/);
   /* Header words and code forms: with none in the view, no line is read. */
-  const csv = "Fund,Cost Centre,Object,Year,Amount\nF-100,CC1001,5100,YE 2025,1\n";
+  const csv = "Ledger,Cost Centre,Nominal,Year,Sum\n100-01,CC1001,5100,Year 2025/26,1\n";
   const sheet = await csvSupplied(csv);
   assert.equal(budgetTable.parse(ctxFor(sheet, TESTV, { content_type: "text/csv" })).rows.length, 1);
   const bare = { ...TESTV, vocabulary: { ...TESTV.vocabulary, budget_headers: [] }, classification_schemes: [] };

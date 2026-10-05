@@ -64,22 +64,31 @@ export function headerWords(ctx) {
 }
 
 /* `jurisdictions` R52 names a classification's kind `organisation`; R7 calls
-   the column `org`. */
+   the column `org`. A department is an organisational unit too: R52 has no
+   kind of its own for it, and a profile holds a department's code forms under
+   `organisation` (K1513). */
 const KIND_OF = { fund: "fund", org: "organisation", program: "program", project: "project", account: "account",
-                  department_code: "department" };
+                  department_code: "organisation" };
+
+const escape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /** The code forms of the view's classification scheme for one column, each
- *  `{scheme, re, label}`. */
+ *  `{scheme, re, label}`: its `forms`, and each code it lists (`codes`), which
+ *  is a form of exactly that code. */
 export function codeForms(ctx, column) {
   const kind = KIND_OF[column];
   const schemes = readerView(ctx).classification_schemes;
   const out = [];
   if (!kind || !Array.isArray(schemes)) return out;
   for (const s of schemes) {
-    if (!s || s.kind !== kind || !Array.isArray(s.forms)) continue;
-    for (const f of s.forms) {
+    if (!s || s.kind !== kind) continue;
+    for (const f of Array.isArray(s.forms) ? s.forms : []) {
       const re = vocabRegex(f, (src) => `^(?:${src})$`, "");
       if (re) out.push({ scheme: s.scheme || null, re, label: f.re });
+    }
+    for (const c of Array.isArray(s.codes) ? s.codes : []) {
+      if (!c || typeof c.code !== "string" || !c.code) continue;
+      out.push({ scheme: s.scheme || null, re: new RegExp(`^${escape(c.code)}$`), label: `code ${c.code}` });
     }
   }
   return out;

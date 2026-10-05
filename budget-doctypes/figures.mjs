@@ -23,6 +23,10 @@ const YEAR = /^(?:19|20)\d\d$/;
    the block a rendered budget page prints above its table's header row. */
 const CHART_LABEL = /^(.*?)\s*(-?\$\s?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?)\s*\((\d+(?:\.\d+)?\s?%)\)\s*$/;
 
+/* A date as a heading prints it ("June 30, 2024"): its year is no figure of a
+   table. Month names are place-free language. */
+const DATED = /\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?\s+\d{1,2},?$/i;
+
 export function isFigure(tok) { return typeof tok === "string" && FIGURE.test(tok); }
 export function isYear(tok) { return typeof tok === "string" && YEAR.test(tok); }
 
@@ -80,7 +84,9 @@ export function classify(line) {
     if (cells.every(isYear)) return { kind: "years", label: "", cells };
     return { kind: "figures", label: "", cells };
   }
-  return { kind: "row", label: toks.slice(0, k).join(" "), cells };
+  const label = toks.slice(0, k).join(" ");
+  if (cells.length === 1 && isYear(cells[0]) && DATED.test(label)) return { kind: "text", label: s, cells: [], dated: true };
+  return { kind: "row", label, cells };
 }
 
 /** Words a wrapped label ends on, place-free: a label that ends here continues
