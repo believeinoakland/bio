@@ -151,3 +151,4 @@ Terms. **I2 text** is the text shape format entries and the two members return (
 ## Open for Bob
 
 None: answered by Bob 2026-09-26 (K102).
+- **R65** (T33-23a, K1521) After a reading's commit, `extraction` calls `reading-pipeline.afterRead({captureSha, captureClass, reading, committed: true})` once, so every listener opted into that capture class runs in `MODULE_ORDER`; a listener's refusal is reported with the reading and never undoes the committed reading. *(not yet met: T33-23a)*
