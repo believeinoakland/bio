@@ -15,7 +15,7 @@ A standalone Cloudflare Worker, reached only through the plane's `SHEET_WORKER` 
 **POST /recompute**: body `{capture_sha, store}` → `{ok, ...}`.
 - **R1** Request checks, as `ocr-worker` R1–R3 and R5: `capture_sha` exactly 64 hex characters (lower-cased) or `BAD_SHA` (400); `store` a string or `BAD_STORE` (400); `store` exactly `"bio"` or `"scratch"` or `NAMESPACE_UNKNOWN` (400), before R2 is addressed; no `CAPTURES` binding gives `R2_NOT_CONFIGURED` (503); no bytes at `${store}/captures/${sha}` gives `NOT_FOUND` (404). *(not yet met: T33-18)*
 - **R2** Inactive until enabled: unless the instance setting `SHEET_RECOMPUTE` is exactly `"on"`, every well-formed request is answered `NOT_ENABLED` (200, `ok: false`) before any bytes are read. The member's committed configuration sets it off; an administrator turns it on after the release deploys the member (K1501). *(not yet met: T33-18)*
-- **R3** A workbook is refused, in this order, the first that applies being the one reported, each `200` with `ok: false`, `not_recomputed: "not recomputed here"` and `why`:
+- **R3** A workbook is refused, in this order, the first that applies being the one reported, each `200` with `ok: false`, `not_recomputed: "not recomputed here"` and `why`: *(not yet met: T33-18)*
   1. `ENGINE_ABSENT`: the wasm did not load as the pinned build (R13);
   2. `NOT_A_WORKBOOK`: the bytes are not an OOXML spreadsheet container;
   3. `OVER_BOUND`: its unzipped size exceeds `MAX_UNZIPPED_BYTES` or its cells exceed `MAX_CELLS`, naming the measured value and the bound;
@@ -23,7 +23,7 @@ A standalone Cloudflare Worker, reached only through the plane's `SHEET_WORKER` 
   5. `ENGINE_FAILED`: the engine refused or threw while loading or evaluating, with the engine's own message;
   6. `TIME_LIMIT`: loading took longer than `TIME_BUDGET_MS`, so evaluation was not started.
 
-  Checks 2–4 run before the engine loads the workbook. *(not yet met: T33-18)*
+  Checks 2–4 run before the engine loads the workbook.
 - **R4** A recomputed workbook answers `ok: true` with `engine` (`"ironcalc"`), `engine_version` (the pinned commit), `wasm_sha256`, `macros_present`, `counts` (`formula_cells`, `errors`, `volatile`), `notes`, and `cells`: one entry per formula cell, in sheet then row then column order, `{source, formula, value, type, error?, cause?, volatile}`. `source` is the cell's `sheet-cell` reference in `office-readers`' form (its R17), so a caller can pair it with that cell's cached value. `value` is the engine's result, a number written as the shortest decimal that reads back to the engine's value, never rounded further. *(not yet met: T33-18)*
 - **R5** A cell whose result is an error value has `type: "error"`, `error` the engine's code (`#VALUE!`, `#N/A`, `#NAME?`, `#CIRC!`, `#N/IMPL!`, …) and `cause`: `unsupported_function` (the formula names a function the engine does not hold, named), `implicit_intersection` (an `@` over a range), `circular` (a circular reference, as an iterating workbook gives), `not_implemented`, or `undetermined`. The answer marks each such cell "not recomputed here" and never calls it a disagreement. *(not yet met: T33-18)*
 - **R6** A cell whose formula calls a volatile function (`NOW`, `TODAY`, `RAND`, `RANDBETWEEN`, `OFFSET`, `INDIRECT`, `CELL`, `INFO`) is marked `volatile: true`. *(not yet met: T33-18)*
