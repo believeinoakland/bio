@@ -299,8 +299,9 @@ export default {
 
   practice: {
     /* A threshold for raising a question, never for asserting a violation: OMC 2.20.160's draft minutes, "no later
-       than ten business days after the meeting" (time-law §2; K1504), correcting the code's earlier 21 days. */
-    minutes_due_days: { value: 10, count: "business", basis: "2026-10-05 time-law" },
+       than ten business days after the meeting" (time-law §2; K1504), correcting the code's earlier 21 days; an ordinance's
+       business days skip the City's list (K1504 (5), K1533). */
+    minutes_due_days: { value: 10, count: "business", closures: "city", basis: "2026-10-05 time-law" },
   },
   locale: { value: "en-US", basis: "UNMEASURED" },
   /* California's statutory time (Gov. Code § 6808), by its IANA name. */

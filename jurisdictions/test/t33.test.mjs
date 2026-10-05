@@ -93,7 +93,15 @@ test("R7 T33 practice: minutes_due_days with count calendar (absent) or business
   for (const count of ["calendar", "business"]) assert.ok(breakT((p) => { p.practice.minutes_due_days.count = count; }).ok, count);
   assert.ok(breakT((p) => { delete p.practice.minutes_due_days.count; }).ok, "count is optional: calendar");
   for (const bad of ["working", "", 1]) assert.ok(hasError(breakT((p) => { p.practice.minutes_due_days.count = bad; }), "COUNT_UNKNOWN", "practice.minutes_due_days.count"));
-  assert.deepEqual(get(FIRST).practice.minutes_due_days, { value: 10, count: "business", basis: "2026-10-05 time-law" });
+  assert.deepEqual(get(FIRST).practice.minutes_due_days, { value: 10, count: "business", closures: "city", basis: "2026-10-05 time-law" });
+  /* K1533: closures names one of the profile's closure lists */
+  assert.ok(breakT((p) => { p.practice.minutes_due_days.closures = "court"; }).ok);
+  assert.ok(breakT((p) => { delete p.practice.minutes_due_days.closures; }).ok, "absent: a business count's due is undetermined");
+  for (const bad of ["nowhere", "", 3]) assert.ok(hasError(breakT((p) => { p.practice.minutes_due_days.closures = bad; }), "VALUE_INVALID", "practice.minutes_due_days.closures"), String(bad));
+  assert.ok(hasError(breakT((p) => { p.holidays = p.holidays.filter((h) => h.list !== "town"); }), "VALUE_INVALID", "practice.minutes_due_days.closures"));
+  assert.equal(combine([FIRST]).view.practice.minutes_due_days.closures, "city");
+  const cl = combine([TEST, other((b) => { b.practice.minutes_due_days.closures = "court"; })]);
+  assert.ok(cl.conflicts.some((x) => x.at === "practice.minutes_due_days"), "one value, its closures part of it");
   /* one value, its count part of it */
   const c = combine([TEST, other((b) => { b.practice.minutes_due_days.count = "business"; })]);
   assert.deepEqual(c.conflicts.map((x) => x.at), ["practice.minutes_due_days"]);

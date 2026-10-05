@@ -204,7 +204,7 @@ export default {
     ],
   },
 
-  practice: { minutes_due_days: { value: 30, count: "calendar", basis: "TEST" } },
+  practice: { minutes_due_days: { value: 30, count: "calendar", closures: "town", basis: "TEST" } },
   locale: { value: "en-GB", basis: "TEST" },
   time_zone: { value: "America/Halifax", status: "researched", basis: "TEST" },
   search_terms: [{ term: "harbour", basis: "TEST" }],

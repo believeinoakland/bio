@@ -653,7 +653,7 @@ test("R21 the first profile holds every local fact of the snapshot's code, and m
   /* practice, search terms, records law */
   /* the snapshot's 21 days on no measurement, corrected to OMC 2.20.160's ten business days (R21, R56; K1504) */
   assert.notEqual(legacy.MINUTES_DUE_DAYS, 10);
-  assert.deepEqual(f.practice.minutes_due_days, { value: 10, count: "business", basis: "2026-10-05 time-law" });
+  assert.deepEqual(f.practice.minutes_due_days, { value: 10, count: "business", closures: "city", basis: "2026-10-05 time-law" });
   assert.deepEqual(f.search_terms.map((t) => t.term), legacy.SEARCH_TERMS);
   /* the snapshot's records law first; T33's sourced rule set adds the City's and the federal one (R56) */
   assert.deepEqual(f.records_laws.map((l) => [l.level, l.name]), [["state", "California Public Records Act"],
