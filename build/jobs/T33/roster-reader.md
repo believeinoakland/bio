@@ -38,3 +38,7 @@ My best reading, on which I am building now: each `roster_headers` entry is `{ro
 - With `paths`/`tests` set in a scratch copy of `modules.json` (empty until BOB's merge): `architecture.mjs`: 12 product files, 19 relative imports; 0 failures. `coverage.mjs`: 11 of 11 live ids named by a test; 0 failures. `ownership.mjs … tranche/T33`: 13 files; 0 failures. With the registered empty paths, coverage sees 0 of 11 (the accepted red until the merge).
 
 Size (session_01Qp9gyE9dgpPJuAa5rXEJrc): test runs 12, module lines 808
+
+## J3 · COMPLETE
+
+T33-15 applied: new module roster-reader (808 lines): staff_roster and org_chart through the seam, rosterColumns, directoryPersonRefs (grade C). 16 tests pass (negative control run); format, architecture, coverage (11/11) and ownership 0 failures, the last three with my paths set in a scratch modules.json. For modules.json: paths ["roster-reader/"], tests ["roster-reader/test/"], uses ["docprofile"]. Readings per B2/B3 (K1513, K1517). Deferred: an R8 test over the HELD profiles once jurisdictions T33-2 lands the roster keys (today on hand-built views of the J2 proposal). REPORT in the record: docprofile registerDoctype appends new keys after generic (harmless; docprofile’s call). Fifteen real fixtures captured through the plane. Record’s Completion section has the rest.
