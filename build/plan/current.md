@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #114 · session_01MWqyw89yDMqxpG2iqqSom6 · depth 1
 
-**Jobs** · none yet (started layer by layer at the opening, §5.3).
+**Jobs** · record-grammar: RECORD-GRAMMAR #8 session_013Mm1CuEimicgaJCPS4wXSM
 
 **Sources** · BOB's scope decisions `plan/draft-T33-scope.md` (they win over the drafts, then the rulings); the entry drafts `draft-T33-entries-A.md` ("A", cited by construct and module, e.g. "A TIME jurisdictions"), `-B.md` ("B", ids B0.n, B1a.n, B1b.n, B2b.1) and `-C.md` ("C", ids S0-n, C-n, Q0-n, C:A-n, Q1-n, C:B-n; the `C:` prefix marks C's own A-/B- ids); the canon audit's 20 requirement changes ("audit", `draft-T33-canon-audit.md`, "Requirements whose meaning changes"); T32's carried table (`archive/T32.md`); rulings K1429–K1501. A job's START expands each entry from the draft ids it cites.
 
