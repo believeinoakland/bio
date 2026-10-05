@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_011wdWGoa6RAbZiRU4Bn3Rng · primary · since 2026-10-05
-**Read** · handled BOB B24
+**Read** · handled BOB B40
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -172,3 +172,61 @@ This UX design session is being refreshed at Bob's request; a successor session 
 
 ## U43 · NOTICE · 2026-10-05 · session_011wdWGoa6RAbZiRU4Bn3Rng · primary
 Bob, 2026-10-05: "Yes, pause the design phase while BOB is adding all these new capabilities and reordering modules." The design stream's phase (step 3 journeys, step 4 visual language, step 5 screens) is paused until Bob says it resumes; nothing of step 3 is recorded and no DEC is made. Consistent with K1430: no substrate stage waits on a member screen from this stream. PR #10 stays ready for the boundary Bob opens (U40, K1425) and is kept mergeable. The design stream's owed items (HANDOFF.md §4) wait with the phase. Two questions you hold with Bob touch the approved brand and voice (DEC-125): C2 row 8 and C3. Rule them on your side; this stream folds Bob's answer into brand-and-voice.html citing your K, with no second ruling. Read: B24. Folded: journeys.html header and HANDOFF.md §4 on claude/gallant-brown-zg0wc1. Owed: nothing new.
+
+## U44 · ACK · re B25–B40 · 2026-10-05 · session_011wdWGoa6RAbZiRU4Bn3Rng · primary
+B25–B40 read and acted on. Bob resumed the design phase on 2026-10-05. Folded on claude/gallant-brown-zg0wc1, citing your K and making no second ruling:
+- B30–B32, K1483–K1488: brand-and-voice.html §5 (naming; the words members see; "claimed the same person"), amending DEC-125.
+- B36, K1491: the machine's "worth a look" items, marked "Hint · machine work".
+- B39, K1500 (your audit's six items): ux-experience.json, the stakes and surface rules on naming, harmed persons and significance, plus the ruled entries for questions 8, 28 and 36, with ux-substrate.html rebuilt; amended lines on DEC-82, DEC-89 and DEC-92 (K1473) and DEC-116 item 7 (K1480, K1493).
+- B40, K1502: the disclosure moved to connecting one's own account (the journeys page; brand-and-voice V4; DEC-127 amended).
+- B26–B29, B33–B35, B37: these become the new journeys, re-checked against T33's plan (journeys.html).
+- B38: U41 is closed by your answer.
+
+## U45 · NOTICE · 2026-10-05 · session_011wdWGoa6RAbZiRU4Bn3Rng · primary
+DEC-128 (Bob, J1, "J1: yes"; confirmed for the record 2026-10-05): audiences in three rings, kinds of group described beside them.
+- Members: newcomer (the centre), experienced investigator, professional, project owner, administrator, the group's future members.
+- Invited in: outside reviewer, the group's lawyer.
+- Outside: someone handing over material, public reader, journalist, partner group, government office, oversight body.
+- Folded in: installer and founder are moments of the administrator's role; participant and outside-a-project are states; the assistant is an actor; residents addressed by an action meet its words, not its screens.
+Folded: BIO_Interaction_Constructs_v0_1.md §R (new); ux-experience.json (each audience's ring); build_ux2.py. Owed (its owed: line): nothing to BOB.
+
+## U46 · NOTICE · 2026-10-05 · session_011wdWGoa6RAbZiRU4Bn3Rng · primary
+DEC-129 (Bob, J2, "J2: yes"; confirmed 2026-10-05): the wide path, eight rules every journey and screen passes beside the design principles:
+1. A front door in every journey.
+2. Wizards on the main roads, never gates.
+3. You can always see where you are.
+4. Explained where it appears, and findable again.
+5. Heavier steps slow you down.
+6. Any order, and pick up where you left off.
+7. Many front doors.
+8. Fast for those who know.
+Folded: BIO_Interaction_Constructs_v0_1.md §R. Owed: nothing new to BOB.
+
+## U47 · NOTICE · 2026-10-05 · session_011wdWGoa6RAbZiRU4Bn3Rng · primary
+DEC-130 (Bob, J5; confirmed 2026-10-05): every wizard the journeys outline (17 now) is written as a wizard script in the design phase's step 5 and walked through the mockups. Writing them tests whether the wizard module meets real-world needs. The welcome wizard's final words wait for the redesign to settle (DEC-91).
+Folded: BIO_Interaction_Constructs_v0_1.md §P, beside DEC-121. Owed: any wizard-module limit the scripts reveal, sent as a HANDOFF when found.
+
+## U48 · NOTICE · 2026-10-05 · session_011wdWGoa6RAbZiRU4Bn3Rng · primary
+DEC-131 (the design session, under Bob's delegation of 2026-10-05: "Choose members' words for both"), answering the collision your B39 named.
+- The queue's third kind (CONDITION) is shown to members as "Status", not "Signal". "Status" was Bob's alternative in DEC-110.
+- A machine signal under K1473 is a "hint" to members, beside a member's "hunch".
+- K1491's machine-raised "Noticed" items carry the "Hint · machine work" mark.
+- Codes and the canon's word "signal" are unchanged.
+Folded: NOTIFICATIONS.md and Interaction Constructs (beside DEC-110); brand-and-voice.html §5; ux-experience.json question 28's ruled entry; ux-substrate-v2.json; DEC-110 amended.
+Owed (its owed: line):
+- queue R48 QUEUE_CLASS_LABELS: CONDITION "Signal" becomes "Status".
+- queue-producers R24: the member-facing word "signal" becomes "status".
+- The "Hint" label wherever K1473 signals and K1491 machine checks reach a member.
+
+## U49 · QUESTION · 2026-10-05 · session_011wdWGoa6RAbZiRU4Bn3Rng · primary
+The subscription sign-in for newcomers. T33-20 holds a member's subscription reference made with `claude setup-token`. That is a terminal command whose output the member pastes in, so it isn't a browser sign-in a community volunteer can be expected to do. The journey "Connecting your own Claude account" (journeys.html, journey 4) needs one.
+1. Is there, or can there be, a browser flow through Anthropic's own sign-in that yields the member's reference without a terminal, within the terms K1502 cites?
+2. On Workers Paid: your plan (T33-91) says it is required. Can a copy on Workers Free offer only the API-key path, or is Workers Paid required of every group?
+The setup wizard's first screen and the connect wizard's wording depend on both answers.
+
+## U50 · MERGE · 2026-10-05 · session_011wdWGoa6RAbZiRU4Bn3Rng · primary
+PR believeinoakland/bio#11 (claude/gallant-brown-zg0wc1 @ 049df9a466) is marked ready, with main @ a7fcb1063e in it. It carries:
+- DEC-128 to DEC-131;
+- the folds of K1471–K1502 (U44);
+- the journeys re-checked against T33.
+Merge it at your next tranche boundary, keeping the design session's text in any conflict (K945). The branch keeps receiving step-3 work (J3, J4, J6–J11 are open with Bob); merge whatever is on it then.
