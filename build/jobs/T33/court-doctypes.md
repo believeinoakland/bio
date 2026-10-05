@@ -68,3 +68,7 @@ Found in other modules (also in my record's Completion):
 
 T33-16 done, R1–R17, on K1514's readings. Code `court-doctypes/`, tests `court-doctypes/test/`. Final uses: docprofile, id-spaces, jurisdictions (court-citations unused). Row for `modules.json`: `{"paths": ["court-doctypes/"], "tests": ["court-doctypes/test/"], "uses": ["docprofile", "id-spaces", "jurisdictions"]}`.
 Tests: 24, 23 pass, 1 red (R3, until id-spaces' `proceeding` space merges; J2). With that space: 24/24. Checks (with that row set locally): format, architecture, coverage (17/17), ownership: 0 failures. I captured the fixtures myself on 2026-10-05: CourtListener 4214664 pages 2 and 4, CPUC A2106021 card and documents page 1, real sign-in, 404 and search pages, and the FICTIONAL eCourt register. Their addresses are in the fixtures README. Details are in my record's Completion section.
+
+## J4 · COMPLETE
+
+B3 done: I merged tranche/T33 and removed the test supplement. The tests now run on the held profiles' own court systems and proceeding forms. Tests: 24 of 24 pass (the R3 red cleared with id-spaces' merge). Checks: format, architecture, coverage (17/17) and ownership, 0 failures. They ran with my modules.json row set locally: paths court-doctypes/, tests court-doctypes/test/, uses docprofile, id-spaces, jurisdictions.
