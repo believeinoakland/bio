@@ -101,13 +101,16 @@ const show = (findings) => { for (const f of findings) console.log(`         ! $
    the Tier-3 OCR path). Moved to a figure a green run PRINTED and in the SAME
    turn as the member that invalidates it, which is the rule a floor with slack
    breaks. */
-const GUARDED_FLOOR = 3;
+/* MOVED 2026-10-05 by BUNDLER #7 (T33-18a, K1513): 3 -> 4, the fleet's fourth
+   member (`sheet-worker`, T33-18, the IronCalc recompute), in the same merge
+   window as the member, by the same rule. */
+const GUARDED_FLOOR = 4;
 
 const members = discoverMembers(REPO_ROOT);
 
 console.log("\n--- 1 · every fleet member is DISCOVERED, and every one of them is GUARDED ---");
 t("members discovered by their own marker file, never a list kept here",
-  members.map((m) => m.name), ["agent-worker", "ocr-worker", "pdf-worker"]);
+  members.map((m) => m.name), ["agent-worker", "ocr-worker", "pdf-worker", "sheet-worker"]);
 
 /* D-238. `git stash` is REPOSITORY-WIDE across every worktree and `push -u`
    carries untracked files, so a `pop` can deposit a whole fleet directory —
