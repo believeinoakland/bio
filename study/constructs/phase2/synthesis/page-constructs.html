@@ -1,0 +1,468 @@
+<title>Civicsmith Constructs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap">
+<style>
+/* Layout: one reading column, the first study's tokens; a connection chain and a layer strip as the figures; decisions as a numbered register. */
+:root{
+  --bg:#f3f6f7; --surface:#ffffff; --ink:#15232c; --muted:#56656e; --rule:#d5dee2;
+  --accent:#1d6a86; --accent-soft:#dcecf2; --today:#b5791b; --today-soft:#f6ead4; --built:#8ea3ae;
+  --display:"IBM Plex Serif",Georgia,"Times New Roman",serif;
+  --body:"IBM Plex Sans",-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f171c; --surface:#16222a; --ink:#e3ebef; --muted:#9aaab3; --rule:#2a3a44;
+  --accent:#5fb4d3; --accent-soft:#18394a; --today:#e0a64a; --today-soft:#3a2c14; --built:#5d7380; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f171c; --surface:#16222a; --ink:#e3ebef; --muted:#9aaab3; --rule:#2a3a44;
+  --accent:#5fb4d3; --accent-soft:#18394a; --today:#e0a64a; --today-soft:#3a2c14; --built:#5d7380; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font:16px/1.6 var(--body);}
+.wrap{max-width:860px;margin:0 auto;padding-inline:16px;padding-block:32px 64px;display:flex;flex-direction:column;gap:44px}
+h1,h2,h3{font-family:var(--display);font-weight:600;line-height:1.2;text-wrap:balance;margin:0}
+h1{font-size:2.1rem} h2{font-size:1.45rem} h3{font-size:1.08rem}
+p{margin:0} .muted{color:var(--muted)}
+.eyebrow{font:500 .74rem/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+section{display:flex;flex-direction:column;gap:16px}
+.lede{font-size:1.08rem;max-width:66ch}
+.box{background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:18px 20px}
+code,.id{font-family:var(--mono);font-size:.86em}
+ul{margin:0;padding-left:1.2em} li+li{margin-top:4px}
+.answer{border-left:3px solid var(--accent);padding:4px 0 4px 18px;display:flex;flex-direction:column;gap:10px;max-width:68ch}
+/* ladder */
+.ladder{overflow-x:auto}
+.ladder table{border-collapse:separate;border-spacing:4px;min-width:560px;width:100%}
+.ladder th{font:500 .78rem var(--mono);color:var(--muted);text-align:center;padding:0 0 4px}
+.ladder th.row{text-align:left;font:600 .9rem var(--body);color:var(--ink);padding-right:8px;white-space:nowrap}
+.ladder td{height:30px;border-radius:3px;border:1px solid var(--rule);background:transparent;position:relative}
+.ladder td.u{background:var(--today);border-color:var(--today)}
+.ladder td.b{background:var(--built);border-color:var(--built)}
+.ladder td.h{background:linear-gradient(90deg,var(--built) 50%,transparent 50%);border-color:var(--built)}
+.ladder td.t{box-shadow:inset 0 0 0 2px var(--accent)}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:.85rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:16px;height:12px;border-radius:2px;border:1px solid var(--rule);display:inline-block}
+.sw.u{background:var(--today);border-color:var(--today)} .sw.b{background:var(--built);border-color:var(--built)}
+.sw.t{box-shadow:inset 0 0 0 2px var(--accent)}
+/* construct grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.card h3{font-size:1rem}
+.k{font:500 .72rem var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.today{color:var(--today)}
+/* layers */
+.layers{display:flex;flex-direction:column;gap:6px}
+.layer{display:grid;grid-template-columns:150px 1fr;gap:12px;align-items:start;background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:10px 14px}
+.layer .ln{font:600 .88rem var(--body)} .layer .ln small{display:block;font:400 .78rem var(--mono);color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;min-width:0}
+.chip{font:500 .8rem var(--mono);padding:2px 8px;border-radius:999px;border:1px solid var(--rule);color:var(--muted)}
+.chip.new{background:var(--accent-soft);border-color:var(--accent);color:var(--ink)}
+.chip.moved{background:var(--today-soft);border-color:var(--today);color:var(--ink)}
+.chip.gone{text-decoration:line-through;opacity:.6}
+@media (max-width:520px){.layer{grid-template-columns:1fr}}
+/* stages */
+.stages{display:flex;flex-direction:column;gap:10px}
+.stage{display:grid;grid-template-columns:64px 1fr;gap:14px;background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:14px 16px}
+.stage .n{font:600 1.5rem var(--display);color:var(--accent)}
+.stage div{min-width:0}
+/* decisions */
+.dec{background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.dec header{display:flex;gap:12px;align-items:baseline}
+.dec .num{font:600 .9rem var(--mono);color:var(--accent);flex:none}
+.dec h3{font-size:1.05rem}
+.kind{font:500 .7rem var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.opts{margin:0;padding-left:1.2em}
+.rec{background:var(--accent-soft);border-radius:4px;padding:10px 12px}
+.rec b{color:var(--accent)}
+.dec.ruled{border-color:var(--accent);border-width:2px}
+.dec.newd{border-left:3px solid var(--today)}
+.q{font-size:1.02rem}
+.chg{background:var(--today-soft);border-radius:4px;padding:10px 12px}
+.how{border:2px solid var(--accent);border-radius:6px;padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+ol.corr{margin:0;padding-left:1.4em} ol.corr li+li{margin-top:6px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+footer{font-size:.85rem;color:var(--muted)}
+a{color:var(--accent)}
+/* rungs */
+.rungset{display:flex;flex-direction:column;gap:8px}
+.rungs{display:flex;flex-direction:column;gap:6px}
+.rung{display:grid;grid-template-columns:40px 1fr 170px;gap:12px;align-items:start;background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:10px 14px}
+.rung.tg{border-left:3px solid var(--accent)}
+.rung .lv{font:600 .9rem var(--mono);color:var(--accent);padding-top:2px}
+.rung .rb{min-width:0;display:flex;flex-direction:column;gap:4px}
+.rung .ex{color:var(--muted);font-style:italic;font-size:.94rem}
+.rung .st{display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+.rung .st small{color:var(--muted);font-size:.8rem;line-height:1.4}
+.pill{font:500 .72rem var(--mono);padding:2px 8px;border-radius:999px;border:1px solid var(--rule);color:var(--muted);white-space:nowrap}
+.pill.usable{background:var(--today);border-color:var(--today);color:var(--bg)}
+.pill.built{background:var(--built);border-color:var(--built);color:var(--bg)}
+.pill.part{background:linear-gradient(90deg,var(--built) 50%,transparent 50%);border-color:var(--built);color:var(--ink)}
+.pill.tgt{border-color:var(--accent);color:var(--accent)}
+@media (max-width:620px){.rung{grid-template-columns:36px 1fr}.rung .st{grid-column:2;flex-direction:row;flex-wrap:wrap}}
+</style>
+<style>
+.chain{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.node{font:500 .82rem var(--body);padding:6px 10px;border:1px solid var(--rule);border-radius:4px;background:var(--surface)}
+.edge{font:500 .7rem var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:.04em}
+.tbl{overflow-x:auto}
+.tbl table{border-collapse:collapse;width:100%;min-width:640px;font-size:.88rem}
+.tbl th,.tbl td{border-bottom:1px solid var(--rule);padding:8px 10px;text-align:left;vertical-align:top}
+.tbl th{font:500 .72rem var(--mono);text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.tbl td.n{font-family:var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.verdict{font:600 .72rem var(--mono);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+.q{font-size:1.02rem}
+.ruled-list li+li{margin-top:6px}
+</style>
+<div class="wrap">
+
+<header style="display:flex;flex-direction:column;gap:12px">
+  <span class="eyebrow">Capability architecture · BOB #112 · 5 October 2026</span>
+  <h1>Civicsmith Constructs</h1>
+  <p class="lede">What Civicsmith must understand to support the work groups bring to it: time, organisations and their obligations, people, events, money, law, courts, analysis, and questions in plain words. For each: where it stands today, the full ladder of capability it is to reach, one architecture that carries all nine, the stages in which to build it, and the decisions that are yours.</p>
+</header>
+
+<section>
+  <span class="eyebrow">How this was established</span>
+  <div class="box" style="display:flex;flex-direction:column;gap:8px">
+    <p>Readers read every source whole: the canon, all your rulings, the design stream's journeys and use cases, and the requirements of every module that bears on these constructs, each checked against the code. Analysts researched how investigators, auditors, journalists and watchdog groups actually do this work, and the standards they use. One analyst modelled the constructs as one system. Reviewers checked every claim against the sources, the code and the web, and walked real cases end to end: the sewer-fund transfers over nine fiscal years (FY 2012–2021); a councilmember's career meeting a contract's award, change orders and payments, with a family tie; and the police consent decree's tasks tracked through events and payments. The evidence is on branch <code>study/constructs</code>. The canon form is the capability ladders document.</p>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">The answer</span>
+  <div class="answer">
+    <p><b>Today Civicsmith supports each of these only at its lowest levels,</b> and a member can reach even less than is built. No member can yet ask the assistant a question in plain words.</p>
+    <p><b>Connections are the heart of an investigation.</b> A donation, a vote, an award, a payment, a post held, a family tie, an act against a rule: every kind of relationship keeps one home. All of them share one shape and one way to explore them. Each step is cited and graded, and the weakest step governs. The machine never asserts a connection on its own and never scores anyone for being "connected". A chain like this one is one exploration:</p>
+    <div class="chain" aria-label="An example chain of connections">
+      <span class="node">Donor</span><span class="edge">gave to</span>
+      <span class="node">Campaign committee</span><span class="edge">acts for</span>
+      <span class="node">Councilmember</span><span class="edge">voted aye</span>
+      <span class="node">Vote</span><span class="edge">authorised</span>
+      <span class="node">Award</span><span class="edge">concerns</span>
+      <span class="node">Contract</span><span class="edge">paid under</span>
+      <span class="node">Payments from Fund 1010</span>
+    </div>
+    <p><b>One thread runs through the civic record:</b> what a body owes, to whom, by when, under which authority. Organisations and people say who owes it and who acted. Law supplies the authority. Time supplies the due date. Events say what actually happened. Money says what was promised and paid. Courts supply orders that create duties. Analysis measures performance. Questions read all of it.</p>
+    <p><b>The substrate comes first.</b> Each stage builds services, not screens, and publishes them so the design work knows what it can build on.</p>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Where each construct stands</span>
+  <h2>Nine ladders</h2>
+  <p class="muted" style="max-width:66ch">Each construct has its own ladder, L0 to L5, defined by what a member can do. The fill shows what a member can use today and what is built but unreachable. The outline marks the target: every rung. <a href="#ladders">Each rung is explained below.</a></p>
+  <div class="ladder">
+    <table aria-label="Levels per construct">
+      <thead><tr><th></th><th>L0</th><th>L1</th><th>L2</th><th>L3</th><th>L4</th><th>L5</th></tr></thead>
+      <tbody>
+        <tr><th class="row" scope="row">Time</th><td class="u t"></td><td class="u t"></td><td class="h t"></td><td class="t"></td><td class="t"></td><td class="t"></td></tr>
+        <tr><th class="row" scope="row">Organisations</th><td class="u t"></td><td class="u t"></td><td class="t"></td><td class="t"></td><td class="t"></td><td class="t"></td></tr>
+        <tr><th class="row" scope="row">People</th><td class="u t"></td><td class="h t"></td><td class="t"></td><td class="t"></td><td class="t"></td><td class="t"></td></tr>
+        <tr><th class="row" scope="row">Events</th><td class="u t"></td><td class="t"></td><td class="t"></td><td class="t"></td><td class="t"></td><td class="t"></td></tr>
+        <tr><th class="row" scope="row">Money</th><td class="u t"></td><td class="b t"></td><td class="t"></td><td class="t"></td><td class="t"></td><td class="t"></td></tr>
+        <tr><th class="row" scope="row">Law</th><td class="u t"></td><td class="u t"></td><td class="b t"></td><td class="t"></td><td class="t"></td><td class="t"></td></tr>
+        <tr><th class="row" scope="row">Courts</th><td class="u t"></td><td class="h t"></td><td class="t"></td><td class="t"></td><td class="t"></td><td class="t"></td></tr>
+        <tr><th class="row" scope="row">Analysis</th><td class="u t"></td><td class="b t"></td><td class="t"></td><td class="t"></td><td class="t"></td><td class="t"></td></tr>
+        <tr><th class="row" scope="row">Questions</th><td class="u t"></td><td class="t"></td><td class="t"></td><td class="t"></td><td class="t"></td><td class="t"></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="legend">
+    <span><i class="sw u"></i>usable by a member today</span>
+    <span><i class="sw b"></i>built, not reachable</span>
+    <span><i class="sw" style="background:linear-gradient(90deg,var(--built) 50%,transparent 50%)"></i>partly built</span>
+    <span><i class="sw t"></i>target: every rung</span>
+  </div>
+</section>
+
+<section id="ladders">
+  <span class="eyebrow">The ladders, rung by rung</span>
+  <h2>How to read a ladder</h2>
+  <div class="box" style="display:flex;flex-direction:column;gap:8px">
+    <p><b>Each rung is defined by what a member can do,</b> so climbing a rung means a new kind of work a group can finish. Rungs build on each other. <i>Built</i> means the code exists and passes its tests; <i>usable today</i> means a member can do it through today's screens. Every construct is to reach L5, in dependency order, within realistic resources and without slowing everyday use.</p>
+  </div>
+<div class="rungset"><h3>Time</h3><p class="muted">Target: L5. The first stages reach L3, and L4 for document dates and timelines; L5 follows once the assistant runs.</p><div class="rungs">
+    <div class="rung tg"><div class="lv">L0</div><div class="rb"><p><b>Record time.</b> Prove what existed when. Every capture is timestamped, every version of a page is kept, and the record&#x27;s own history is dated and never rewritten.</p><p class="ex">&quot;What did the budget page say when we captured it on 3 March?&quot;</p></div><div class="st"><span class="pill usable">Usable today</span><span class="pill tgt">Target</span></div></div>
+    <div class="rung tg"><div class="lv">L1</div><div class="rb"><p><b>Stated dates.</b> Type a date, with its reason, on the group&#x27;s own action. The system marks it overdue the day after and reminds you only when you asked.</p><p class="ex">&quot;Remind me on 14 October that the Clerk&#x27;s reply is due.&quot;</p></div><div class="st"><span class="pill usable">Usable today</span><span class="pill tgt">Target</span><small>Overdue is marked on the UTC day, hours early: a correction.</small></div></div>
+    <div class="rung tg"><div class="lv">L2</div><div class="rb"><p><b>Computed deadlines on the local calendar.</b> The system proposes the due date and counts it the way the rule does. That covers calendar or business days, the office&#x27;s own holidays, time zone and hours, and rolling past a weekend. It covers extensions, and periods counted back from an event or in hours. It also counts dates derived from the event they must precede (K1431). Where the calendar cannot settle it, it says &quot;undetermined, because…&quot;.</p><p class="ex">&quot;Our records request went in Thursday 19 March. When is the City late?&quot; Answer: Monday 30 March, ten days, rolled past Sunday, per CCP §12.</p></div><div class="st"><span class="pill part">Partly built</span><span class="pill tgt">Target</span><small>Business days and office holidays are built, none of it is reachable, and the roll-forward, the local day and extensions are missing.</small></div></div>
+    <div class="rung tg"><div class="lv">L3</div><div class="rb"><p><b>The civic calendar and what bodies owe.</b> Before anything is published, follow a body&#x27;s meeting schedule. Track what it owes: the agenda before a meeting, the minutes after, reports, budgets before their fiscal year, promised dates, contract dates. Each is measured from the real event&#x27;s date. Fiscal years. Which law was in force, and who held an office, on a given date.</p><p class="ex">&quot;Minutes for the 28 July committee meeting were due 18 August and aren&#x27;t up.&quot; &quot;The staff report has to be out before the 12 June vote.&quot;</p></div><div class="st"><span class="pill part">Partly built</span><span class="pill tgt">Target</span><small>Only fragments: overdue findings measured from when the group captured a document, not from the meeting.</small></div></div>
+    <div class="rung tg"><div class="lv">L4</div><div class="rb"><p><b>Time as evidence.</b> Use a document&#x27;s own dates, including approximate ones (&quot;about 2019–2021&quot;), as graded evidence. Build a cited timeline across documents. Tell legitimate change over time from contradiction. Measure lateness as a pattern with its denominator. Read a page or a search as it stood on a date.</p><p class="ex">&quot;Minutes were late at 38 of 41 meetings since January 2024.&quot; &quot;The emergency was declared two weeks after the contract was signed.&quot;</p></div><div class="st"><span class="pill part">Partly built</span><span class="pill tgt">Target</span><small>Only the version history of pages, and one action&#x27;s chronology in the counsel packet.</small></div></div>
+    <div class="rung tg"><div class="lv">L5</div><div class="rb"><p><b>Assisted.</b> Ask in plain words and get cited answers. Proposed dates are labelled as the machine&#x27;s, for a member to adopt.</p><p class="ex">&quot;What is due this week?&quot; &quot;What was in force when the contract was signed?&quot;</p></div><div class="st"><span class="pill later">Not built</span><span class="pill tgt">Target</span></div></div>
+  </div></div>
+  <div class="rungset"><h3>Organisations</h3><p class="muted">Target: L5. The first stages reach L4 for one city&#x27;s bodies; sharing between groups follows (B22).</p><div class="rungs">
+    <div class="rung tg"><div class="lv">L0</div><div class="rb"><p><b>Free text.</b> A body or office is only a name typed into a field.</p><p class="ex">The capture says &quot;City of Oakland&quot;.</p></div><div class="st"><span class="pill usable">Usable today</span><span class="pill tgt">Target</span></div></div>
+    <div class="rung tg"><div class="lv">L1</div><div class="rb"><p><b>A registry.</b> Register bodies, offices, people, funds and contracts, with their other names. Documents are matched to them with a grade saying how sure the match is. &quot;Everything about X&quot;. Address an action to an office.</p><p class="ex">&quot;Show me everything we hold about the Controller&#x27;s Bureau.&quot;</p></div><div class="st"><span class="pill usable">Usable today</span><span class="pill tgt">Target</span><small>The correction acts have no screen.</small></div></div>
+    <div class="rung tg"><div class="lv">L2</div><div class="rb"><p><b>Structure as of a date.</b> Dated, sourced lines between bodies and offices: part of, reports to, oversees, appoints, funds, contracts with or acts for, responsible for, holds the records of. Who held each office, and when. Renames and mergers. The identifiers source systems use.</p><p class="ex">&quot;Who was Finance Director when the 2022 ACFR was certified?&quot; &quot;Who audits the Port?&quot;</p></div><div class="st"><span class="pill none">Not built</span><span class="pill tgt">Target</span><small>Only an undated &quot;member of&quot; exists.</small></div></div>
+    <div class="rung tg"><div class="lv">L3</div><div class="rb"><p><b>Obligations held.</b> Who owes what to whom, by when, and on what authority: a law, an order, a contract clause, a commitment, or the event it must precede. Duties, prohibitions and powers, each with its source in force. An office&#x27;s duties and powers in one place.</p><p class="ex">&quot;The franchise says the hauler must report tonnage monthly. Hold that as an obligation.&quot;</p></div><div class="st"><span class="pill none">Not built</span><span class="pill tgt">Target</span><small>Declared flows exist, but with no one who owes and no source.</small></div></div>
+    <div class="rung tg"><div class="lv">L4</div><div class="rb"><p><b>Declared against observed.</b> The system works out each obligation&#x27;s occurrences: met, late, overdue, discharged or undetermined, and why. An overdue one raises a question in the queue, never a verdict. It reads which powers are in force, walks chains of accountability as of a date, and counts patterns.</p><p class="ex">&quot;Minutes for the 4 August meeting are 21 days overdue.&quot; &quot;Who answers for this, then and now?&quot;</p></div><div class="st"><span class="pill part">Partly built</span><span class="pill tgt">Target</span><small>A fragment only: progression overdue findings.</small></div></div>
+    <div class="rung tg"><div class="lv">L5</div><div class="rb"><p><b>A shared civic model.</b> Structure and obligation registers shared between groups, in standard formats.</p><p class="ex">&quot;Every group working on the Port uses the same map of who reports to whom.&quot;</p></div><div class="st"><span class="pill later">Not built</span><span class="pill tgt">Target</span></div></div>
+  </div></div>
+  <div class="rungset"><h3>People</h3><p class="muted">Target: L5. Positions and careers come with organisational lines in stage 1; interests, money and connections in stage 2; imports and watching in stage 4.</p><div class="rungs">
+    <div class="rung tg"><div class="lv">L0</div><div class="rb"><p><b>Names in text.</b> A person is a name found in documents.</p><p class="ex">Searching for &quot;Jane Doe&quot;.</p></div><div class="st"><span class="pill usable">Usable today</span><span class="pill tgt">Target</span></div></div>
+    <div class="rung tg"><div class="lv">L1</div><div class="rb"><p><b>A registry of people.</b> Register a person with their other names; documents are matched to them with a grade saying how sure the match is; &quot;everything about this person&quot;.</p><p class="ex">&quot;Everything we hold about Jane Doe, each match graded.&quot;</p></div><div class="st"><span class="pill part">Partly built</span><span class="pill tgt">Target</span><small>The person kind exists on the Subjects screen; nothing reads a person as a person.</small></div></div>
+    <div class="rung tg"><div class="lv">L2</div><div class="rb"><p><b>Positions, career, credentials, statements.</b> Who holds each post, by name, and who held it before. Jobs inside and outside government; schools and degrees; licences with their status; military service; memberships of associations, clubs and political groups. An organisation&#x27;s staffing on any date. Everything a person said or did, in date order. Each fact cited and dated.</p><p class="ex">&quot;Who is the deputy director of city planning, and what did they do before?&quot;</p></div><div class="st"><span class="pill none">Not built</span><span class="pill tgt">Target</span></div></div>
+    <div class="rung tg"><div class="lv">L3</div><div class="rb"><p><b>Interests and money.</b> Statements of economic interests, gifts, campaign contributions given and received, lobbying registrations, company officer roles. A possible conflict raises a question in the queue, never a verdict.</p><p class="ex">&quot;The councilmember reported income from Acme in 2023 and voted on Acme&#x27;s contract in 2024: worth a look.&quot;</p></div><div class="st"><span class="pill none">Not built</span><span class="pill tgt">Target</span></div></div>
+    <div class="rung tg"><div class="lv">L4</div><div class="rb"><p><b>Who knows who.</b> Overlaps between people over time: the same employer, unit, board, school and years, campaign or address, each cited. Shown as facts, never as &quot;they know each other&quot;, and never as a ranking of who is most connected. Patterns such as regulators moving to the companies they regulated.</p><p class="ex">&quot;The planning director and the lobbyist both worked at Smith &amp; Co. from 2015 to 2018.&quot;</p></div><div class="st"><span class="pill none">Not built</span><span class="pill tgt">Target</span></div></div>
+    <div class="rung tg"><div class="lv">L5</div><div class="rb"><p><b>Assisted, imported, watched.</b> Ask about a person in plain words; import public registers (campaign finance, lobbying, licensing, company filings); be told when a watched register changes.</p><p class="ex">&quot;Tell me if she files a new statement of interests.&quot;</p></div><div class="st"><span class="pill later">Not built</span><span class="pill tgt">Target</span></div></div>
+  </div></div>
+  <div class="rungset"><h3>Events</h3><p class="muted">Target: L5. A minimal store of events comes first, because law, organisations and money point at events; timelines and duties met by events follow; relations between events and patterns after.</p><div class="rungs">
+    <div class="rung tg"><div class="lv">L0</div><div class="rb"><p><b>Dates in documents.</b> Dates are text; every capture is timestamped; the group's own histories are dated.</p><p class="ex">&quot;What did the page say on 3 March?&quot;</p></div><div class="st"><span class="pill usable">Usable today</span><span class="pill tgt">Target</span></div></div>
+    <div class="rung tg"><div class="lv">L1</div><div class="rb"><p><b>Events held.</b> Record what happened from cited passages: a meeting, vote, signing, award, payment, order or statement, with its date-time and precision, place, participants by role (including who decided, wrote, signed or carried it out) and what it concerns. Several documents can attest one event. A document's own dates are held separately from the events they may attest.</p><p class="ex">&quot;Council approved the hauler's contract on 12 March 2019 (minutes, item 7).&quot;</p></div><div class="st"><span class="pill none">Not built</span><span class="pill tgt">Target</span><small>Fragments only: the government act judged in a determination; votes left as text in minutes.</small></div></div>
+    <div class="rung tg"><div class="lv">L2</div><div class="rb"><p><b>Timelines and process.</b> A cited timeline for any scope, with &quot;before&quot;, &quot;after&quot; or &quot;undetermined&quot;; events placed on a declared process so missing, overdue and out-of-order steps count from the event's own date.</p><p class="ex">&quot;Was the emergency declared before or after the contract was signed?&quot;</p></div><div class="st"><span class="pill none">Not built</span><span class="pill tgt">Target</span><small>&quot;Overdue&quot; is counted today from when the group captured a document.</small></div></div>
+    <div class="rung tg"><div class="lv">L3</div><div class="rb"><p><b>Relations and what should have happened.</b> One event authorising, answering, amending or reversing another, each cited and graded; cause only as a source states it; a duty's due date matched to the events that met it, recorded as met or overdue.</p><p class="ex">&quot;This payment was made under that resolution.&quot;</p></div><div class="st"><span class="pill none">Not built</span><span class="pill tgt">Target</span></div></div>
+    <div class="rung tg"><div class="lv">L4</div><div class="rb"><p><b>Reconstruction and patterns.</b> Who was sent, copied or present, and when; statements in order; anomalies of sequence and lateness with their denominators, raised as questions; a timeline in a published case.</p><p class="ex">&quot;Minutes were late at 38 of 41 meetings since January 2024.&quot;</p></div><div class="st"><span class="pill later">Not built</span><span class="pill tgt">Target</span></div></div>
+    <div class="rung tg"><div class="lv">L5</div><div class="rb"><p><b>Assisted, imported, watched.</b> Events and relations proposed from documents, labelled, at a member's request; &quot;what happened between X and Y&quot; in plain words; imports from structured sources.</p><p class="ex">&quot;What happened between the audit and the budget vote?&quot;</p></div><div class="st"><span class="pill later">Not built</span><span class="pill tgt">Target</span></div></div>
+  </div></div>
+  <div class="rungset"><h3>Money</h3><p class="muted">Target: L5. Money facts come early, with calculation; trails, reconciliation, rules and commitments next; what money buys and delivers after.</p><div class="rungs">
+    <div class="rung tg"><div class="lv">L0</div><div class="rb"><p><b>Figures cited.</b> Cite the passage, cell, range or table that holds an amount; formulas and hidden sheets are evidence.</p><p class="ex">&quot;Cite the ACFR's transfer figure.&quot;</p></div><div class="st"><span class="pill usable">Usable today</span><span class="pill tgt">Target</span></div></div>
+    <div class="rung tg"><div class="lv">L1</div><div class="rb"><p><b>Money facts held.</b> An amount as its source states it, with its kind (revenue, spending, transfer, payment, contribution and others), how far it got (proposed, adopted, committed, paid), its accounting basis, period, payer, payee and fund, one source and a grade. Totals only within one kind, stage, basis and period.</p><p class="ex">&quot;FY2023-24: $2.1M transferred from the Sewer Service Fund to the General Purpose Fund.&quot;</p></div><div class="st"><span class="pill built">Built, not reachable</span><span class="pill tgt">Target</span><small>Only figures after a determination, and fee quotes.</small></div></div>
+    <div class="rung tg"><div class="lv">L2</div><div class="rb"><p><b>Flows and trails.</b> Money followed from its sources through funds to payees; a money trail a member follows across fiscal years and changes of label; a payment's chain of authority; two sources of one figure reconciled, naming the difference (basis, period, rounding).</p><p class="ex">&quot;Do the transfers after FY2021 continue the franchise fee under new labels?&quot;</p></div><div class="st"><span class="pill none">Not built</span><span class="pill tgt">Target</span></div></div>
+    <div class="rung tg"><div class="lv">L3</div><div class="rb"><p><b>Rules and commitments.</b> Restricted funds, fee limits, thresholds and transfer authority held as law; commitments set against payments, change orders included; any mismatch raised as a question, never a violation.</p><p class="ex">&quot;The contract was $2.0M; we've found $3.4M paid; $0.6M of change orders held.&quot;</p></div><div class="st"><span class="pill none">Not built</span><span class="pill tgt">Target</span></div></div>
+    <div class="rung tg"><div class="lv">L4</div><div class="rb"><p><b>What money buys and delivers.</b> Purchases and quantities; unit costs over years; budget against actuals across years; patterns with denominators; fact-based rankings.</p><p class="ex">&quot;Cost per pothole filled, 2019 to 2025.&quot;</p></div><div class="st"><span class="pill later">Not built</span><span class="pill tgt">Target</span></div></div>
+    <div class="rung tg"><div class="lv">L5</div><div class="rb"><p><b>Captured, assisted, watched.</b> Whole ledgers and registers captured as tables and read into facts when a member asks; proposals from budget books, labelled; told when a watched source changes.</p><p class="ex">&quot;Where did the sewer fund's money go in FY23?&quot;</p></div><div class="st"><span class="pill later">Not built</span><span class="pill tgt">Target</span></div></div>
+  </div></div>
+  <div class="rungset"><h3>Law</h3><p class="muted">Target: L5. The first stages reach L3 in the record and L4 in what the AI prepares; imports and legislative watching follow.</p><div class="rungs">
+    <div class="rung tg"><div class="lv">L0</div><div class="rb"><p><b>Law as plain evidence.</b> Capture a code page, an ordinance or a contract and cite passages, like any document. Nothing knows it is law.</p><p class="ex">&quot;Cite paragraph (b) of this captured page.&quot;</p></div><div class="st"><span class="pill usable">Usable today</span><span class="pill tgt">Target</span></div></div>
+    <div class="rung tg"><div class="lv">L1</div><div class="rb"><p><b>Law named.</b> Type citations: an action&#x27;s governing laws, a deadline&#x27;s basis. Ordinance numbers and code sections are recognised inside documents. Find every document that cites a section.</p><p class="ex">&quot;Every agenda item and staff report that cites Ordinance 13579.&quot;</p></div><div class="st"><span class="pill usable">Usable today</span><span class="pill tgt">Target</span><small>Only just: citation strings on actions, and references and backlinks.</small></div></div>
+    <div class="rung tg"><div class="lv">L2</div><div class="rb"><p><b>Law held, during investigation.</b> Declare a standard from its captured text: citation, issuer, level, the period it was in force, and what replaced it. Ask &quot;was it in force on this date?&quot; A question, a flow or a deadline can cite a held standard. The assistant proposes candidate standards, with their captured text.</p><p class="ex">&quot;Which ordinance says how fast potholes must be fixed? Hold it as our standard.&quot;</p></div><div class="st"><span class="pill built">Built, not reachable</span><span class="pill tgt">Target</span><small>Built, but after Publication: no screen, and investigation cannot use it.</small></div></div>
+    <div class="rung tg"><div class="lv">L3</div><div class="rb"><p><b>Law structured and versioned.</b> An ordinance&#x27;s versions over time, and its sections. Amendments, repeals and recodification are links that cite the amending text. Definitions and cross-references. Which law ranks above which. How far behind the code publisher is, stated.</p><p class="ex">&quot;The transfer was in FY22. What did §13.04.080 say then, and what changed it?&quot;</p></div><div class="st"><span class="pill none">Not built</span><span class="pill tgt">Target</span></div></div>
+    <div class="rung tg"><div class="lv">L4</div><div class="rb"><p><b>Law applied and explained.</b> The assistant prepares a side-by-side for a member to evaluate: what the law requires, what the city did, what is unknown. It proposes which rule may prevail and gives a labelled reading of a rule or a charge. Determinations come after publication, then breach actions.</p><p class="ex">&quot;What&#x27;s this sewer maintenance charge on my water bill?&quot;</p></div><div class="st"><span class="pill part">Partly built</span><span class="pill tgt">Target</span><small>Determinations and the comparison store are built, with no screen and no AI caller.</small></div></div>
+    <div class="rung tg"><div class="lv">L5</div><div class="rb"><p><b>Law shared and watched.</b> Import state and federal law, watch legislatures for amendments, and link court interpretations.</p><p class="ex">&quot;Tell us when Council amends the section our finding cites.&quot;</p></div><div class="st"><span class="pill later">Not built</span><span class="pill tgt">Target</span></div></div>
+  </div></div>
+  <div class="rungset"><h3>Courts</h3><p class="muted">Target: L5. The first stages reach L3; precedent and procedural reasoning (B12 (iv)) follow.</p><div class="rungs">
+    <div class="rung tg"><div class="lv">L0</div><div class="rb"><p><b>Documents.</b> Capture any court document and cite a passage. Record the group&#x27;s own filing, or a decision, as correspondence on its action.</p><p class="ex">&quot;Attach the judge&#x27;s order to our petition.&quot;</p></div><div class="st"><span class="pill usable">Usable today</span><span class="pill tgt">Target</span><small>Watching a court page is built but cannot be switched on.</small></div></div>
+    <div class="rung tg"><div class="lv">L1</div><div class="rb"><p><b>Court-aware reading.</b> Court documents are read by type: a register of actions, an order, an opinion, a grand jury or audit report with its findings and recommendations. Case numbers and citations are recognised. A citation is verified against a held copy, or marked &quot;not verified&quot;. A decision can be held as a standard.</p><p class="ex">&quot;Paragraph 12 of the order says the City must produce within 30 days.&quot;</p></div><div class="st"><span class="pill part">Partly built</span><span class="pill tgt">Target</span><small>A decision can be held as a standard, with pin cites, but nothing is reachable.</small></div></div>
+    <div class="rung tg"><div class="lv">L2</div><div class="rb"><p><b>A proceeding followed.</b> A proceeding is a subject: court, number, kind, and parties by role (bodies and people, each with their role). Related cases are linked. Each capture of the court&#x27;s register flags new entries. Stages are tracked, with missing and overdue. Dates carry the order that set them. The group&#x27;s own action links to its proceeding.</p><p class="ex">&quot;The city is a defendant in the sewer-fee suit. Where does it stand? Tell me when the judge rules.&quot;</p></div><div class="st"><span class="pill none">Not built</span><span class="pill tgt">Target</span></div></div>
+    <div class="rung tg"><div class="lv">L3</div><div class="rb"><p><b>Duties from proceedings.</b> Paragraphs of orders and decrees, and grand jury and audit recommendations, are held as obligations an office owes by a date. Required replies, such as a grand jury response within 60 or 90 days, run on a clock. A monitor&#x27;s or auditor&#x27;s reported status is quoted beside the group&#x27;s own reading.</p><p class="ex">&quot;Did the Council answer the grand jury within 90 days, and did it do what it said?&quot;</p></div><div class="st"><span class="pill none">Not built</span><span class="pill tgt">Target</span></div></div>
+    <div class="rung tg"><div class="lv">L4</div><div class="rb"><p><b>Interpretation and precedent.</b> A decision is linked to the provision it interprets, with its later history (reversed, vacated). The assistant proposes precedent, labelled.</p><p class="ex">&quot;Is this case still good law, and which provision did it read?&quot;</p></div><div class="st"><span class="pill later">Not built</span><span class="pill tgt">Target</span></div></div>
+    <div class="rung tg"><div class="lv">L5</div><div class="rb"><p><b>Procedural reasoning and patterns.</b> Filing windows and standing questions. Patterns across proceedings.</p><p class="ex">&quot;What has the city paid in settlements since 2019?&quot;</p></div><div class="st"><span class="pill later">Not built</span><span class="pill tgt">Target</span></div></div>
+  </div></div>
+  <div class="rungset"><h3>Analysis</h3><p class="muted">Target: L5. L2 first, then L3, then L4 and L5.</p><div class="rungs">
+    <div class="rung tg"><div class="lv">L0</div><div class="rb"><p><b>Cite a figure.</b> Point at the passage, cell, range or table that holds a number. Formulas and hidden sheets are visible as evidence.</p><p class="ex">&quot;Cite the ACFR&#x27;s transfer figure on page 112.&quot;</p></div><div class="st"><span class="pill usable">Usable today</span><span class="pill tgt">Target</span></div></div>
+    <div class="rung tg"><div class="lv">L1</div><div class="rb"><p><b>Arithmetic over cited figures.</b> Sum, difference, count, product and ratio over cited figures. The system computes them and grades each result by its weakest input.</p><p class="ex">&quot;$100 million of bond debt authorised, from the resolution and the bond schedule.&quot;</p></div><div class="st"><span class="pill built">Built, not reachable</span><span class="pill tgt">Target</span><small>Only after a breach has been determined, and with no screen.</small></div></div>
+    <div class="rung tg"><div class="lv">L2</div><div class="rb"><p><b>A reproducible calculation over a dataset.</b> A captured CSV, workbook or portal export becomes a typed table. Filter, count, total, group, take shares, date spans and threshold tests, in a recipe a finding cites. It is recomputed when its inputs change, and carried in the case so any stranger can recompute it.</p><p class="ex">&quot;The city says it filled 90% of reported potholes. Is that true, by its own records?&quot;</p></div><div class="st"><span class="pill none">Not built</span><span class="pill tgt">Target</span></div></div>
+    <div class="rung tg"><div class="lv">L3</div><div class="rb"><p><b>Spreadsheet analysis in the record.</b> Bring your own workbook. Its inputs are bound to captured sources, its formulas are recomputed and checked, and defects are flagged, such as a range that stops short of the data. The method is noted, a second member&#x27;s check is shown, and the workbook travels whole.</p><p class="ex">&quot;Our accountant&#x27;s overtime analysis, checked and cited in the finding.&quot;</p></div><div class="st"><span class="pill none">Not built</span><span class="pill tgt">Target</span></div></div>
+    <div class="rung tg"><div class="lv">L4</div><div class="rb"><p><b>Across years and sources.</b> Budget against actuals across fiscal years by fund and program. Reconcile two sources. Follow a dataset&#x27;s revisions. Draw random samples. Charts in the published case.</p><p class="ex">&quot;$52.6 million diverted over nine fiscal years, about 10% of sewer revenue.&quot;</p></div><div class="st"><span class="pill later">Not built</span><span class="pill tgt">Target</span></div></div>
+    <div class="rung tg"><div class="lv">L5</div><div class="rb"><p><b>Assisted.</b> Ask in plain words. The assistant proposes a recipe, and the member adopts it.</p><p class="ex">&quot;How do overtime actuals compare with the budget for FY24?&quot;</p></div><div class="st"><span class="pill later">Not built</span><span class="pill tgt">Target</span></div></div>
+  </div></div>
+  <div class="rungset"><h3>Questions</h3><p class="muted">Target: L5. L1 to L3 first, then L4 and standing questions (B21).</p><div class="rungs">
+    <div class="rung tg"><div class="lv">L0</div><div class="rb"><p><b>Typed search.</b> Type words or the query grammar. Results say at which level absence was found.</p><p class="ex">Typing &quot;franchise fee&quot; into search.</p></div><div class="st"><span class="pill usable">Usable today</span><span class="pill tgt">Target</span></div></div>
+    <div class="rung tg"><div class="lv">L1</div><div class="rb"><p><b>Ask the record.</b> Ask in plain words, typed or spoken. The answer cites the record, says where it looked and what is withheld, and shows the query it ran. It explains a screen, a word or a refusal. Read-only.</p><p class="ex">&quot;Which of our documents mention the franchise fee, and which haven&#x27;t been read?&quot; &quot;Why won&#x27;t it let me publish?&quot;</p></div><div class="st"><span class="pill part">Partly built</span><span class="pill tgt">Target</span><small>Pieces exist underneath (search, and turning intent into queries), but there is nothing to ask into.</small></div></div>
+    <div class="rung tg"><div class="lv">L2</div><div class="rb"><p><b>Ask it to set things up.</b> It turns your words into a proposed project, question or claims, walks you through the screens placing labelled drafts, suggests first questions from material you brought, and starts runs at your word.</p><p class="ex">&quot;Help me open a project to explore this tip.&quot;</p></div><div class="st"><span class="pill none">Not built</span><span class="pill tgt">Target</span></div></div>
+    <div class="rung tg"><div class="lv">L3</div><div class="rb"><p><b>Answers that apply rules.</b> When an answer needs a rule, it uses the system&#x27;s own services: law held and in force on a date, deadlines computed from the profile, offices from the registry, arithmetic over cited figures. Each comes with its basis. It says &quot;not held&quot; where the system has no rule, and never states law from the model&#x27;s memory.</p><p class="ex">&quot;When is the Clerk&#x27;s reply due?&quot; &quot;What&#x27;s this sewer charge on my bill?&quot;</p></div><div class="st"><span class="pill none">Not built</span><span class="pill tgt">Target</span></div></div>
+    <div class="rung tg"><div class="lv">L4</div><div class="rb"><p><b>Investigative questions.</b> A question the record cannot answer becomes a bounded run. It searches all four levels, requests captures, and returns leads and gaps.</p><p class="ex">&quot;What has been filed in the city&#x27;s lawsuit since we last looked?&quot;</p></div><div class="st"><span class="pill part">Partly built</span><span class="pill tgt">Target</span><small>The evidence-checking run exists; it answers no questions.</small></div></div>
+    <div class="rung tg"><div class="lv">L5</div><div class="rb"><p><b>Standing questions.</b> The AI watches on its own schedule and tells you.</p><p class="ex">&quot;Tell me if the Clerk misses this date.&quot;</p></div><div class="st"><span class="pill later">Not built</span><span class="pill tgt">Target</span><small>Needs B21: today&#x27;s rule is that no AI run starts on its own (D13).</small></div></div>
+  </div></div>
+</section>
+
+<section>
+  <span class="eyebrow">The architecture</span>
+  <h2>One architecture for all nine</h2>
+  <p class="muted" style="max-width:66ch">The modules are in one order, and a module may use only those before it. Where a later module needs to feed an earlier one, it registers with it. Law, local calendars and calculation move down from the Action layer, so investigation can use them.</p>
+  <div class="layers" aria-label="Layers with new and moved modules">
+    <div class="layer"><div class="ln">Layer 1<small>Foundations</small></div><div class="chips"><span class="chip">jurisdictions</span><span class="chip new">civil-time</span><span class="chip new">calc-grammar</span><span class="chip new">connection-grammar</span><span class="chip">id-spaces</span><span class="chip">docprofile</span><span class="chip new">sheet-worker</span></div></div>
+    <div class="layer"><div class="ln">Layer 5<small>Meaning, in order</small></div><div class="chips"><span class="chip">entities</span><span class="chip new">events</span><span class="chip new">lines</span><span class="chip moved">local-facts</span><span class="chip">connections</span><span class="chip">observation-log</span><span class="chip moved">standards</span><span class="chip">progressions</span><span class="chip new">money</span><span class="chip new">duties</span><span class="chip new">people</span><span class="chip new">explore</span><span class="chip">bias</span><span class="chip">query-language</span><span class="chip">retrieval</span><span class="chip new">calculations</span></div></div>
+    <div class="layer"><div class="ln">Layer 6<small>Inquiry and the assistant</small></div><div class="chips"><span class="chip">inquiry</span><span class="chip">skills</span><span class="chip new">answers</span><span class="chip">agent-worker (split)</span></div></div>
+    <div class="layer"><div class="ln">Layer 9<small>Action</small></div><div class="chips"><span class="chip">conformance</span><span class="chip">consequences</span><span class="chip">action-clocks</span><span class="chip">actions</span><span class="chip">filings</span><span class="chip">escalation</span><span class="chip">action-plans</span></div></div>
+  </div>
+  <div class="legend"><span><i class="sw" style="background:var(--accent-soft);border-color:var(--accent)"></i>new module</span><span><i class="sw" style="background:var(--today-soft);border-color:var(--today)"></i>moved down from the Action layer</span></div>
+  <div class="cols">
+    <div class="box"><p><b>One home per fact.</b> Each fact lives in exactly one place, enforced by checks in the store itself. Payer and payee live on the money fact; a duty cites amounts and never holds one; a total is a calculation and never a stored fact; a document's own date and an event are two things.</p></div>
+    <div class="box"><p><b>Shared models.</b> One registry of subjects, where records are linked and never merged. One way of saying when something was true, as a date-time with its precision and zone, or as a pointer to an event. One grade family. One id scheme. One table declaration that governs export and removal.</p></div>
+    <div class="box"><p><b>Hunches and signals.</b> Hunches, hypotheses and the machine's signals (importance, suspicion, a possible cause, combined scores) live in their own layer, labelled, each showing its method. Members may build on them, but they are never facts or evidence and never move a finding.</p></div>
+    <div class="box"><p><b>Built for real volumes.</b> For one city: about 190 meetings and 850 matters a year, a payroll of about 5,000, and 100,000 to 450,000 payments a year in comparable cities. Ledgers stay captured tables and are read when a member asks. Heavy work runs in slices or off to the side, so members are never slowed.</p></div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">How to proceed</span>
+  <h2>Stages, in dependency order</h2>
+  <p class="muted" style="max-width:66ch">Stages, not a tranche plan: none opens until you say so. Each stage measures first and builds services that the design work then builds screens on.</p>
+  <div class="stages">
+    <div class="stage"><div class="n">0</div><div><h3>Runnable and correct</h3><p>The assistant runs on the group's or a member's own Claude account, with usage recorded and a ceiling. The defects below are fixed, ids no longer break past 9,999 a year, and every module's tables travel with a group's export. Measurements first: money sources, how well dates are read, real chains of connections.</p></div></div>
+    <div class="stage"><div class="n">1</div><div><h3>The shared ground, identity and amounts</h3><p>The calendar engine, calculation, the connection grammar, a minimal store of events, dated lines between bodies, offices and people, and law and local facts moved down. One rule for naming people in published work. Then people's posts and careers, and money facts. <b>Unlocks:</b> a records request's due date from the law; who decided and signed an act; "who is the deputy director of planning, and who held it before"; the founding case's transfers held with stage and basis; "ask the record" in plain words.</p></div></div>
+    <div class="stage"><div class="n">2</div><div><h3>What bodies owe, timelines, trails and connections</h3><p>Duties met or missed, with a plan step that fires when a reply is overdue. Timelines and a body's meetings and votes. Following a court case. Money trails, reconciliation, rules and commitments. Interests and ties. The one exploration of connections. <b>Unlocks:</b> "was the transfer authorised?"; committed against paid on a contract; a donation-to-fund chain as one exploration; a member's own workbook in the record.</p></div></div>
+    <div class="stage"><div class="n">3</div><div><h3>Applied and assisted</h3><p>The assistant applies law, deadlines and figures from the system, and proposes people, events and figures at a member's request. Patterns, budget and financial-report readers, unit costs, precedent, charts.</p></div></div>
+    <div class="stage"><div class="n">4</div><div><h3>Exchange</h3><p>Importing public registers (campaign finance, lobbying, licences, company filings) and state and federal law. Standing questions. Sharing between groups.</p></div></div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Not choices</span>
+  <h2>Corrections to make</h2>
+  <p class="muted" style="max-width:66ch">Defects and wrong wording found along the way. None needs your decision. Each becomes an entry for the first tranche you open.</p>
+  <ol class="corr">
+    <li><b>The deadline calculator counts from the wrong receipt,</b> so Oakland's one deadline rule never computes when the City says nothing.</li>
+    <li><b>No roll-forward past weekends and holidays,</b> and the weekend is written into the code instead of the jurisdiction profile.</li>
+    <li><b>"Overdue" is marked on the UTC day,</b> seven to eight hours early for a California office. It should use the office's local day.</li>
+    <li><b>"Overdue" in progressions counts from when the group captured a document,</b> not from the event.</li>
+    <li><b>Search date ranges drop the last day; impossible dates such as 31 February are accepted.</b></li>
+    <li><b>The Oakland profile ships its deadline rule and its five offices without a source.</b></li>
+    <li><b>Record ids break past 9,999 a year:</b> twelve checks in the code refuse the 10,000th id.</li>
+    <li><b>A group's export leaves module tables behind,</b> including the registry of people, so a case cannot yet be fully recreated without Civicsmith.</li>
+    <li><b>The assistant code accepts only an API key,</b> though the setup page rightly asks for a Claude subscription; its model calls have no caching, usage record or spending bound.</li>
+    <li><b>Some canon documents still cite California law directly,</b> which belongs in jurisdiction profiles.</li>
+  </ol>
+</section>
+
+<section>
+  <span class="eyebrow">Already ruled</span>
+  <div class="box">
+    <ul class="ruled-list">
+      <li><b>Scope:</b> every construct reaches L5, staged by dependency, within realistic resources and without slowing everyday use.</li>
+      <li><b>People:</b> tracked fully, including careers, credentials, memberships, interests and ties, with no special rule for family or sensitive facts. Who decided, wrote, signed or carried out an act is recorded.</li>
+      <li><b>Names:</b> events and timeline; members, sources, people; the construct called money.</li>
+      <li><b>Money:</b> followed whoever's it is, the group's own included, with no mark that it is the group's.</li>
+      <li><b>Time:</b> every world fact is a date-time with its precision; due dates may follow from dependencies, and are recorded as met or not, so a plan step can wait on them.</li>
+      <li><b>Hunches and signals:</b> hunches, hypotheses and the machine's signals have a place, labelled, but are never facts or evidence.</li>
+      <li><b>Rankings:</b> rankings by a measured quantity are analysis, stored and kept up to date.</li>
+      <li><b>Extraction:</b> targeted, at a member's request, and ongoing.</li>
+      <li><b>Connections:</b> the heart of the architecture.</li>
+      <li><b>The assistant</b> can run on a Claude subscription; the substrate comes first.</li>
+      <li><b>Decided at my level, under your delegation:</b> the layers and modules; law and local facts moved down; the obligation object; the registry's kinds; walking dated lines within bounds; what the machine may write; what the record may claim about time; sourced profile rules; the model of law; what a finding may rest on; calculation; outside and paid sources; the assistant's use ceiling, reach and memory; a one-off calendar download.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="decisions">
+  <span class="eyebrow">Your decisions</span>
+  <h2>Seventeen open decisions</h2>
+  <div class="how"><p><b>How to answer.</b> Reply in the session, for example "All as recommended", or "All as recommended except C5 (a)". The B and C numbers are kept so earlier references still point to the right item.</p></div>
+
+  <article class="dec"><header><span class="num">B12</span><div><h3>What the machine may say about law and rulings</h3><span class="kind">Doctrine · the line on practising law</span></div></header>
+    <p class="q"><b>The question.</b> Members will ask what the law means for them: "Can the City charge this fee?" "Do we still have time to sue?" How far may the assistant go in answering? If it says too little, it is useless for the core work. If it goes too far, it gives legal advice it has no standing to give, and a confident wrong answer could cost a group its case or a deadline. Option (iv) concerns the hardest form of this question: reasoning about the group's own legal position.</p>
+    <ul class="opts"><li>(i) Closed book: no fact and no rule from the model's own knowledge; where nothing is held it says "not held" and offers the act that would find it.</li><li>(ii) Explaining: (a) quote only; (b) a labelled, cited reading of held text, quoted beside it, stating its limits and "legal information, not legal advice", never "the law is", a member's rights, a likely outcome or what to file; (c) free explanation.</li><li>(iii) Procedural facts from the profile (which form, which venue, which deadline) shown as facts, never as recommendations.</li></ul>
+    <ul class="opts"><li>(iv) <b>New with L5:</b> procedural reasoning for the group's own situation (can we still file, do we have standing, have we exhausted the remedies first). The machine lays out each condition with its source and the facts in the record that bear on it, each marked met, unmet or undetermined as a computed fact (a filing window counted from dates). It never says "you have standing" or what to file, and it points to counsel.</li></ul>
+    <p class="rec"><b>Recommend (i) yes; (ii)(b) for statutes, ordinances and policies, with rulings quote-only until acceptance is measured; (iii) yes; (iv) yes, on those terms.</b> Legal research tools built on retrieval are still wrong one time in six or more, and New York City's chatbot taught businesses illegal practice. An attorney-supervised mode waits until a group with a lawyer member asks.</p></article>
+
+  <article class="dec"><header><span class="num">B16</span><div><h3>The assistant's account: optional, and whose</h3><span class="kind">Policy · UX</span></div></header>
+    <p class="q"><b>The question.</b> The assistant sends each question, and the material it reads to answer it, to Anthropic, under a Claude account that someone pays for. Must every group use the assistant, or does each group choose at setup? And whose account carries the group's use: one account for the group, or each member's own?</p>
+    <p>Settled: the assistant runs on the group's or a member's own Claude account, a subscription or an API key (DEC-55, K1429). Anthropic's conditions: the account is signed in through Anthropic's own sign-in, and Civicsmith never stores a Claude password or session; Pro and Max limits assume one person's ordinary use, so a group sharing one assistant fits a Team plan or members' own plans.</p>
+    <ul class="opts"><li>(i) The assistant is optional, offered at setup; the administrator is told then that questions, and the material read to answer them, go to Anthropic under the group's account.</li><li>(ii) The group's account serves everyone; a project's or member's own account takes precedence where set.</li></ul>
+    <p class="rec"><b>Recommend both.</b> (The daily use ceiling and the administrator's monthly view I have decided: K1450.) On a subscription the cost is the plan's price; the open question is whether a group's use fits its limits, which stage 0 measures.</p></article>
+
+  <article class="dec"><header><span class="num">B17</span><div><h3>What the assistant may suggest</h3><span class="kind">Doctrine</span></div></header>
+    <p class="q"><b>The question.</b> While a member works, may the assistant propose things the member did not ask for? For example: "this code section sets four requirements; here is a question to test each one". Your rule DEC-27 lets it only organise what the member has said. Loosening it makes the assistant far more useful. It also moves the assistant closer to steering what a group looks into, which your doctrine keeps for members.</p>
+    <ul class="opts"><li>(ii) Suggestions: (a) structure only what the member said; (b) labelled suggestions drawn only from material the member brought or chose, each adopted by the member; (c) free suggestions.</li></ul>
+    <p class="rec"><b>Recommend (b).</b> The journeys promise "one question per requirement in a code section", which (a) cannot give; (b) keeps every suggestion tied to material the member chose, and the member adopts it. This loosens DEC-27, your rule, so it is yours. (What the assistant may read, and that nothing is kept, I have decided: K1450.)</p></article>
+
+  <article class="dec"><header><span class="num">B18</span><div><h3>A court order to remove or redact a published case</h3><span class="kind">Policy</span></div></header>
+    <p class="q"><b>The question.</b> A court may order a group to take down or redact a case it has published, for example on a defamation claim or a privacy order. A published case is signed and meant to stay fixed. Should the product have a built way to comply with such an order (take the case down or redact it, openly, with a record of why), and should it be built now or only when the first order arrives?</p>
+    <ul class="opts"><li>(a) Defer the path until the first such order is served on a group, and record the principle now: an order addressed to the group is complied with, never silently; the order is captured, a signed docket entry names it, and the edition is stamped.</li><li>(b) Design the path now.</li></ul>
+    <p class="rec"><b>Recommend (b).</b> Material that a court later seals, or unseals, joins the same principle.</p></article>
+
+  <article class="dec"><header><span class="num">B21</span><div><h3>Standing questions: the AI on a schedule</h3><span class="kind">Doctrine</span></div></header>
+    <p class="q"><b>The question.</b> May the AI run on a schedule, with no member asking at that moment? Your current rule (D13) says it never starts on its own.</p>
+    <p>Questions L5 is "tell me if the Clerk misses this date" or "tell me when anything new bears on this question". Your provisional rule today is that no AI run starts on its own (D13).</p>
+    <ul class="opts"><li>(a) Keep D13: standing questions are watched mechanically only (saved searches and the queue), and the AI runs when a member opens the result.</li><li>(b) A member authors a standing question with a cadence and an end date. A saved search re-runs on the schedule first, which costs almost nothing; the AI runs only when that finds something new, read-only, bounded, within the group's use ceiling, and its answer reaches the queue labelled as the assistant's.</li><li>(c) Standing AI runs without these limits.</li></ul>
+    <p class="rec"><b>Recommend (b).</b> It gives the capability you want while keeping cost and speed in hand: most scheduled checks never wake the AI. It lifts D13 only for questions a member wrote, and only to read.</p></article>
+
+  <article class="dec"><header><span class="num">B22</span><div><h3>Sharing between groups</h3><span class="kind">Policy</span></div></header>
+    <p class="q"><b>The question.</b> Once one group has mapped how a body is organised, or entered a city's code as law, may another group reuse that work, and on what terms? Sharing saves real effort. But taking another group's unchecked work as true could carry its errors into your own findings.</p>
+    <p>Organisations L5, People L5 and Law L5 let groups share what they have built: the structure of a body (who reports to whom, who holds what), what is known about people, registers of obligations, and held law.</p>
+    <ul class="opts"><li>(a) A group shares a pack only by an explicit act, as it publishes a case; a receiving group accepts it by a reasoned act (DEC-96), and the pack is recreated in the receiving record, never installed, with no inherited grade; what it holds about people travels with it, each fact with its citation, and the receiving group adopts it by the same reasoned act.</li><li>(b) Automatic sharing within a coalition.</li><li>(c) No sharing.</li></ul>
+    <p class="rec"><b>Recommend (a).</b> It is how cases already move between groups, so it adds a capability without a new trust model.</p></article>
+
+  <article class="dec"><header><span class="num">C1</span><div><h3>Design Requirement 6, refined</h3><span class="kind">Requirement meaning</span></div></header>
+    <p class="q"><b>The question.</b> Design Requirement 6 lets a published case name individuals "only in their official capacity in connection with specific documented actions", but its examples name only the role ("the Finance Director certified the ACFR"). The record now holds who decided, signed or carried out each act. So may a published case give the person's name, or only the title? And what about people outside any public role, such as a relative, a settlement payee or a sole-proprietor vendor? On one side: accountability that survives staff turnover, and the fact you singled out, that someone signed an order against policy. On the other: defamation if the wrong person is named, and the safety of people who hold no public role.</p>
+    <ul class="opts"><li>(a) Adopt the draft: <i>"Work products document institutional actions and compliance, and the people who carried them out. A person is named, by name and role, in connection with a specific documented act they performed or took part in: deciding, authoring, signing, approving, implementing (e.g., "Finance Director Jane Doe certified the ACFR"; "the order was signed by Deputy Director John Roe, contrary to policy §4.2"). Accountability belongs to the role and the institution, and also to the person who acted; staff turnover does not extinguish either. If the institution cannot answer for actions taken by predecessor occupants of a role, that failure of institutional recordkeeping is itself a compliance issue. A person outside any official, professional or public role is identified in a published work product only where a documented act of theirs bears on the finding."</i></li><li>(b) Title by default. Name only elected and appointed officials and department heads, or where the source itself names the person in the act.</li><li>(c) Leave the requirement unchanged.</li></ul>
+    <p class="rec"><b>Recommend (a), with two additions to confirm.</b> First, a person in a public or professional role may also be named for a documented position or tie that bears on the finding, not only an act. For example: the councilmember's brother who directs the hauler's parent company, or a registered lobbyist for a client. Otherwise such a person reads only as "a relative of the councilmember". Second, the rest of the requirement stands: the metadata, and disclosing the group's and members' ties to those it examines. One filter checks every person a case names before publication and asks for the basis. Documents the case relies on travel whole and unredacted, as your rulings already require.</p></article>
+
+  <article class="dec"><header><span class="num">C2</span><div><h3>The rules on people's attributes and naming private people</h3><span class="kind">Doctrine</span></div></header>
+    <p class="q"><b>The question.</b> You asked to see every rule saying that no attribute of a person may filter or order anything, or that restricts naming a private person. Read literally, some now forbid what you have ruled: staffing by post, careers, who signed an order. Each was written to protect something real. For each: keep it, narrow it, or retire it?</p>
+    <div class="tbl"><table>
+      <thead><tr><th>#</th><th>The rule today</th><th>What it protects</th><th>Recommend</th></tr></thead>
+      <tbody>
+        <tr><td class="n">1</td><td>Design Requirement 6: name individuals only in official capacity for documented actions</td><td>Readers and the people named</td><td><span class="verdict">Replace</span> by C1</td></tr>
+        <tr><td class="n">2</td><td>"No attribute of a person gates, filters or orders anything" (Action design rule 10; your DEC-17, DEC-54)</td><td>Members treated by their work, never by who they are</td><td><span class="verdict">Narrow</span> to members and users. A member may search and sort the people the record holds by any held fact. Rankings by a measured quantity are allowed as analysis (K1471). A judgment score (importance, suspicion, connectedness) appears only as a signal in the hypothesis layer (K1473).</td></tr>
+        <tr><td class="n">3</td><td>No prior by role, no suspicion flag (DEC-54; Case Making §4)</td><td>People from prejudgment</td><td><span class="verdict">Keep</span></td></tr>
+        <tr><td class="n">4</td><td>A planning run reads no person's attributes</td><td>Plans steered by evidence</td><td><span class="verdict">Keep</span></td></tr>
+        <tr><td class="n">5</td><td>The group's action is addressed to an office, "never a private individual"</td><td>The group acts on institutions and never targets a person</td><td><span class="verdict">Keep, narrowed</span> The action may show who holds the office on the day, but is never addressed to a person.</td></tr>
+        <tr><td class="n">6</td><td>A government act's actor is an office, "never by a person"</td><td>Accountability fixed on the institution</td><td><span class="verdict">Retire</span> for the record: deciders and signers are recorded (K1465). The determination still judges the office's duty.</td></tr>
+        <tr><td class="n">7</td><td>A harmed party is "never a person"; people harmed "counted as a class"</td><td>People harmed are not exposed</td><td><span class="verdict">Narrow</span> The record may name an affected person a document names. Published text counts them as a class unless they consent or C1 allows.</td></tr>
+        <tr><td class="n">8</td><td>Brand and screen rules: "never name an individual except in official role"</td><td>Civicsmith's own voice never accuses a person</td><td><span class="verdict">Narrow</span> to Civicsmith's own voice and published surfaces. Members' screens show people as the record holds them.</td></tr>
+        <tr><td class="n">9</td><td>Earlier limits on people: holders only of registered offices; per-person rows only aggregated</td><td>Against building profiles of people</td><td><span class="verdict">Retire</span> (K1452, K1455), keeping one part: imports never bulk-copy home addresses or phone numbers.</td></tr>
+        <tr><td class="n">10</td><td>A court case's caption is never a searchable name</td><td>A private party's name being indexed</td><td><span class="verdict">Already retired</span> (K1456)</td></tr>
+        <tr><td class="n">11</td><td>A watch's subject "is an address, never a person"</td><td>No unattended surveillance of a person</td><td><span class="verdict">Narrow</span> A member may name a register query for a person (a filer id, a licence number). Never an unattended crawl of a person.</td></tr>
+        <tr><td class="n">12</td><td>The staff directory is keyed by e-mail address, "never the name"</td><td>Identity on a stable key</td><td><span class="verdict">Narrow</span> The address stays the key. The name is also read, as a match graded C.</td></tr>
+        <tr><td class="n">13</td><td>No score, rank or centrality; never "knows"</td><td>People never judged by a score or declared acquainted</td><td><span class="verdict">Narrow</span> (K1471, K1473): never "knows". Fact-based rankings ("most contracts from Public Works, FY2019–2025") are analysis. Judgment scores, network measures included, are signals in the hypothesis layer only, never facts and never labels on a person.</td></tr>
+        <tr><td class="n">14</td><td>Third parties' names and words leave only by their own act (your DEC-116 (4))</td><td>People who never chose to speak publicly</td><td><span class="verdict">Keep</span>, aligned with C1</td></tr>
+        <tr><td class="n">15</td><td>Never redact what others submit; relied-on material travels whole (your DEC-100, DEC-112)</td><td>Reproducibility and honesty</td><td><span class="verdict">Keep</span> C1 governs the group's own words.</td></tr>
+        <tr><td class="n">16</td><td>Indexing builds profiles of people (DEC-11's warning)</td><td>The cost of holding: legal reach, reversal</td><td><span class="verdict">Retire as a limit</span>. Kept as a design constraint, through sight, removal and export classes.</td></tr>
+        <tr><td class="n">17</td><td>A private individual's own website is where "public" stops (your DEC-47)</td><td>Conduct when looking people up</td><td><span class="verdict">Replace</span> by C9</td></tr>
+        <tr><td class="n">18</td><td>Sources and whistleblowers are protected (your DEC-78)</td><td>Sources</td><td><span class="verdict">Keep</span> Being a source stays protected. A source's public facts as a person are ordinary.</td></tr>
+        <tr><td class="n">19</td><td>No legal name for members</td><td>Members' anonymity</td><td><span class="verdict">Keep</span> Members' ties only by their own act (C7).</td></tr>
+        <tr><td class="n">20</td><td>Material that may not be held (unlawful, confidential)</td><td>Legal exposure</td><td><span class="verdict">Keep and widen</span> by C10's lawful demands</td></tr>
+        <tr><td class="n">21</td><td>Your open DEC-6 question: a bare scrutiny statement naming a person</td><td>No verdict on a person through bias</td><td><span class="verdict">Keep open</span> on its own trigger</td></tr>
+        <tr><td class="n">22</td><td>The ladders' summary row on people</td><td>The summary of all the above</td><td><span class="verdict">Reword</span> to match</td></tr>
+      </tbody>
+    </table></div>
+    <p class="rec"><b>Recommend each row as shown.</b></p></article>
+
+  <article class="dec"><header><span class="num">C3</span><div><h3>The words members see</h3><span class="kind">UX</span></div></header>
+    <p class="q"><b>The question.</b> Members need plain words for what they will now see, and several obvious words are taken ("action", "case", "docket", "obligation", "ledger", "budget"). A clashing word misleads members and the readers of published cases.</p>
+    <ul class="opts">
+      <li><b>Connections</b> is the umbrella, with these kinds:
+        <ul>
+          <li>positions and memberships</li>
+          <li>ties (family, partners, associates a document states)</li>
+          <li>took part (voted, signed, decided, wrote, carried out, was copied)</li>
+          <li>money (paid, gave, received, transferred)</li>
+          <li>event links (authorised, answered, amended, reversed, gave as the cause)</li>
+          <li>law links</li>
+          <li>owes</li>
+          <li>mentioned together</li>
+          <li>same person?</li>
+          <li>overlaps ("both on the 7-member Police Commission, 2019")</li>
+        </ul>
+        Each page about a subject, person, fund, contract or proceeding has a "Connections" place and an "Explore connections" act. "Most" and "largest" are fine when they name the quantity ("most contracts by count, FY2019–2025"). Never "knows", "network", "conflict", "suspicious" or "most connected".</li>
+      <li><b>Events and timeline</b>, with two lanes: "what they did" and "what we did".</li>
+      <li><b>Money</b> words by context: proposed, adopted and amended for budgets; committed, spent and paid for spending; billed and collected for revenue. A member's followed flow is a "money trail". Never "ledger", "diverted" or "misused" in Civicsmith's own words.</li>
+      <li><b>People</b>, members and sources (already ruled). Position, career, credentials, memberships, interests, and a person page.</li>
+    </ul>
+    <p class="rec"><b>Recommend all,</b> for the design stream to render.</p></article>
+
+  <article class="dec"><header><span class="num">C4</span><div><h3>What exploring connections may pass through</h3><span class="kind">Doctrine</span></div></header>
+    <p class="q"><b>The question.</b> The registry's declared groupings ("stands in for", "is part of", "overlaps") are, by a standing rule, never walked, so that a label cannot stand in for evidence. Some connections are computed rather than held: "mentioned together", "met by this event", "in force on that date". Walking a declared grouping could chain into paths no document supports. Leaving out the computed kinds breaks chains like "this payment, under this resolution, against this restriction".</p>
+    <ul class="opts"><li>(a) Walk every evidenced kind and the computed kinds, each showing how it was derived. Declared groupings are shown beside a node but never walked. Hypotheses are never steps.</li><li>(b) Also walk declared groupings.</li><li>(c) Held kinds only.</li></ul>
+    <p class="rec"><b>Recommend (a).</b> It keeps the reason for the old rule and gives you your chains.</p></article>
+
+  <article class="dec"><header><span class="num">C5</span><div><h3>How a person's identity is established</h3><span class="kind">Doctrine</span></div></header>
+    <p class="q"><b>The question.</b> People rarely carry an identifier in a document. Under today's rule nearly every person match is grade C (a name) or D (a member's word). What may establish that two records are the same person? Published, a wrong link is defamation. Never being able to say "this is the same Michael Houston" leaves careers and connections unusable.</p>
+    <ul class="opts"><li>(a) Only an identifier at both ends.</li><li>(b) Also a name match corroborated by a cited fact true at both documents' dates (the same post, the same licence or filer number) earns grade B. It is a recorded claim with its evidence, linked and never merged. A member's word stays D.</li><li>(c) A member's confirmation counts as established.</li></ul>
+    <p class="rec"><b>Recommend (b).</b> It is how investigators identify people. Civicsmith's own words never say "is the same person", only "claimed the same person, grade B, because …".</p></article>
+
+  <article class="dec"><header><span class="num">C6</span><div><h3>Who inside the group sees facts about people</h3><span class="kind">Policy · safety</span></div></header>
+    <p class="q"><b>The question.</b> Facts read from public documents are shared evidence. A member's testimony, identity claims and interest checks inside a hidden project are that project's own thinking. Who sees which? A member who joined to infiltrate the group would see every person fact shared group-wide. Scoping everything to projects would split one person into many records.</p>
+    <ul class="opts"><li>(a) Everything group-wide.</li><li>(b) The registry is group-wide. Facts from public documents follow their document's visibility. Testimony, claims, checks and hypotheses inside a hidden project stay fenced and uncounted. Members' ties and the link from a source to a person get their own narrowest visibility. The exposure is explained at setup.</li><li>(c) Every person fact limited to its project.</li></ul>
+    <p class="rec"><b>Recommend (b).</b></p></article>
+
+  <article class="dec"><header><span class="num">C7</span><div><h3>Members' own ties</h3><span class="kind">Requirement meaning</span></div></header>
+    <p class="q"><b>The question.</b> Design Requirement 6 requires disclosing ties between the group or its members and those it examines. But members are pseudonymous, and nothing holds their ties today. How are they recorded and disclosed? Honest disclosure is at stake on one side, a member's safety on the other.</p>
+    <ul class="opts"><li>(a) Each member declares their own ties (employer, relative, business), seen by them and administrators. A case concerning that entity discloses the tie at the attribution level the member chooses. Each publishing member attests at publication that they have no undeclared tie, vendors named in the money included.</li><li>(b) Administrators may record members' ties.</li><li>(c) No model; disclosure in prose.</li></ul>
+    <p class="rec"><b>Recommend (a).</b></p></article>
+
+  <article class="dec"><header><span class="num">C8</span><div><h3>Questions the machine raises about people and money</h3><span class="kind">Doctrine</span></div></header>
+    <p class="q"><b>The question.</b> Should the machine ever put "worth a look" in the queue? Examples: a councilmember voting on a contract with a firm that paid her; contracts clustered just under a bid threshold; payments past a commitment. It would catch what members miss, but your rulings say the machine does not choose what to look into, and such items can read as accusations.</p>
+    <ul class="opts"><li>(a) Only checks a member declares for people, and detectors a member switches on for money. Each is defined by its data and states its denominator ("41% of Public Works' payments in FY2024 went to one vendor"). Each raises "Noticed" with its cited derivation, never "conflict". The machine may also raise signals on its own (K1473), always as hypotheses with their method and false-alarm rate, never as facts. None is shown before a measured false-alarm test.</li><li>(b) The machine raises them on its own.</li><li>(c) None.</li></ul>
+    <p class="rec"><b>Recommend (a).</b></p></article>
+
+  <article class="dec"><header><span class="num">C9</span><div><h3>How the group looks people up</h3><span class="kind">Policy</span></div></header>
+    <p class="q"><b>The question.</b> Much of a career lives on people's own pages and on login-gated platforms. Looking someone up can tip them off. Automated scraping against LinkedIn's terms ended in a permanent injunction and $500,000 (hiQ v. LinkedIn). Complete careers are at stake on one side, legal exposure and the group's safety on the other.</p>
+    <ul class="opts"><li>(a) Public registers and public pages by default. A private individual's own site or a login-gated platform only by a member's own act in their own browser. Never automated collection against a platform's terms. No paid people-search vendor. Data-use limits kept (FEC). Members' lookups never logged.</li><li>(b) Allow automated collection of public profiles.</li></ul>
+    <p class="rec"><b>Recommend (a).</b></p></article>
+
+  <article class="dec"><header><span class="num">C10</span><div><h3>Removing a personal fact, and lawful demands</h3><span class="kind">Policy</span></div></header>
+    <p class="q"><b>The question.</b> The record may hold any cited personal fact (K1455), and it is append-only and published in signed editions. What may remove a fact, and how far does removal reach? California's Gov. Code 7928.215 requires any person or association to take down an official's home address or phone number within 48 hours of the official's written demand.</p>
+    <ul class="opts"><li>(a) Remove, leaving a marker, only material that is unlawful to hold, confidential material, a recorded court order, or a lawful demand of a kind the jurisdiction profile lists. Addresses and phone numbers are never published. A wrong match or a person's request is otherwise corrected forward, with notice. Removal reaches this instance, future exports and future editions. Past published editions stay as they are, and a later edition states the correction.</li><li>(b) Also remove on any person's request.</li><li>(c) Also withdraw published editions.</li></ul>
+    <p class="rec"><b>Recommend (a).</b> It mirrors your open B18 (an order is complied with, never silently).</p></article>
+
+  <article class="dec"><header><span class="num">C11</span><div><h3>A timeline in a published case</h3><span class="kind">Requirement scope</span></div></header>
+    <p class="q"><b>The question.</b> Should a published case carry the timeline of its findings? A timeline helps readers understand sequence. But it names people in a sequence, and must be reproducible.</p>
+    <ul class="opts"><li>(a) Yes. It is frozen at signing, each item shows its source, the two lanes are never mixed, and people appear as C1 rules.</li><li>(b) No; members write sequence in prose.</li></ul>
+    <p class="rec"><b>Recommend (a).</b></p></article>
+
+</section>
+
+<footer>The canon form of this page is the capability ladders document (<code>docs/architecture/BIO_Capability_Ladders_v0_1.md</code>). The evidence is on branch <code>study/constructs</code>. No tranche is open or planned until you say so.</footer>
+</div>
