@@ -25,7 +25,9 @@ export const SPACES = Object.freeze(["enactment", "project", "fund", "parcel", "
 export const VOCABULARY = Object.freeze(["furniture", "bodies", "member_titles", "enactment_markers", "codes",
   "file_numbers", "report_titles", "report_sections", "recommendation_openers", "template_blanks",
   /* T33 (R6): LAW's amending clauses, Legistar's markers and body-variant map, the roster words */
-  "amending", "meeting_markers", "body_variants", "roster_words", "roster_headers", "staff_titles"]);
+  "amending", "meeting_markers", "body_variants", "roster_words", "roster_headers", "staff_titles",
+  /* (K1513) the budget and financial-report readers' words */
+  "financial_report_titles", "budget_book_titles", "financial_headings", "fiscal_year_forms", "budget_headers"]);
 /* R31: the one vocabulary of a law's level, for records laws, standard sources and an action's governing
    laws. An office's level (R24) is not a law's level and keeps its own. */
 export const LAW_LEVELS = Object.freeze(["federal", "state", "county", "city"]);
@@ -38,9 +40,8 @@ export const COUNTS = Object.freeze(["calendar", "business"]);
 export const STARTS = Object.freeze(["received", "filed", "act", "known", "entered", "served", "hearing"]);
 export const UNITS = Object.freeze(["days", "hours", "business_hours", "months", "years"]);
 export const DIRECTIONS = Object.freeze(["forward", "backward"]);
-/* R46: how a period is computed: CCP §12 (Gov. Code §6800); and, on BOB's reading of J1 (3) pending, a meeting
-   notice's Monday rule, timely when made by noon on the preceding Friday (OMC 2.20.070(C)). */
-export const COMPUTATION_RULES = Object.freeze(["exclude_first_include_last", "monday_prior_friday_noon"]);
+/* R46: how a day period is computed (CCP §12, Gov. Code §6800). */
+export const COMPUTATION_RULES = Object.freeze(["exclude_first_include_last"]);
 /* R48: the receipt conventions a sourced local rule may state (K1504 (3)). */
 export const RECEIPT_RULES = Object.freeze(["next_business_day"]);
 /* R6 (T33): a code's served copy (K1446), its subsection markers, an amending clause's relation, a meeting marker. */
@@ -48,12 +49,17 @@ export const CODE_COPIES = Object.freeze(["official", "codifier", "undetermined"
 export const SECTION_MARKERS = Object.freeze(["letter", "numeral", "paren_letter", "paren_numeral", "roman"]);
 export const AMENDING_RELATIONS = Object.freeze(["amends", "adds", "repeals", "renumbers", "recodifies"]);
 export const MEETING_MARKERS = Object.freeze(["cancelled", "special", "concurrent"]);
+/* R6 (K1513, K1517): what a roster word names, the role a roster header plays, the column a budget header heads. */
+export const ROSTER_KINDS = Object.freeze(["roster", "chart"]);
+export const ROSTER_ROLES = Object.freeze(["name", "title", "unit", "start", "end", "as_of", "employee_id", "contact"]);
+export const BUDGET_COLUMNS = Object.freeze(["fund", "org", "department", "department_code", "program", "project", "account",
+  "amount", "period", "phase"]);
 /* R49: a fiscal year's name, and the placeholders its label template may use. */
 export const FISCAL_NAMED_BY = Object.freeze(["start", "end"]);
 const FISCAL_PLACEHOLDERS = ["{start}", "{end}", "{start2}", "{end2}"];
 /* R51, R52, R53 */
 export const FORUM_KINDS = Object.freeze(["court", "commission", "grand_jury", "auditor", "other"]);
-export const CLASSIFICATION_KINDS = Object.freeze(["fund", "organisation", "account", "object", "program", "function"]);
+export const CLASSIFICATION_KINDS = Object.freeze(["fund", "organisation", "account", "object", "program", "project", "function"]);
 export const DEMAND_COVERS = Object.freeze(["home_address", "phone", "other"]);
 /* R54: `civil-time`'s RFC 5545 subset (its R20). */
 export const RRULE_PARTS = Object.freeze(["FREQ", "INTERVAL", "BYDAY", "BYMONTHDAY", "BYSETPOS", "UNTIL"]);
@@ -468,7 +474,8 @@ function validateInto(p, errors) {
               pattern(`${ea}.sections.number`, sc.number);
               if (typeof sc.separators !== "string" || !sc.separators.length || /\s/.test(sc.separators))
                 err(`${ea}.sections.separators`, "VALUE_INVALID", "separators are the characters between a section number's parts");
-              if (!Array.isArray(sc.markers) || !sc.markers.length || !sc.markers.every((m) => SECTION_MARKERS.includes(m))
+              /* an empty list: the code's sections carry no subsection markers (a charter, K1514) */
+              if (!Array.isArray(sc.markers) || !sc.markers.every((m) => SECTION_MARKERS.includes(m))
                   || new Set(sc.markers).size !== sc.markers.length)
                 err(`${ea}.sections.markers`, "VALUE_INVALID", `markers is the order of subsection markers, each once, from ${SECTION_MARKERS.join(", ")}`);
             }
@@ -483,6 +490,15 @@ function validateInto(p, errors) {
           fields(ea, e, ["pattern", "organisation", "basis"]);
           if (typeof e.organisation !== "string" || !KIND_RE.test(e.organisation))
             err(`${ea}.organisation`, "VALUE_INVALID", "organisation is a key matching ^[a-z][a-z0-9_]*$");
+        } else if (key === "roster_words") {
+          fields(ea, e, ["pattern", "kind", "basis"]);
+          if (own(e, "kind") && !ROSTER_KINDS.includes(e.kind)) err(`${ea}.kind`, "VALUE_INVALID", `kind is ${ROSTER_KINDS.join(" or ")} (absent: both)`);
+        } else if (key === "roster_headers") {
+          fields(ea, e, ["role", "pattern", "basis"]);
+          if (!ROSTER_ROLES.includes(e.role)) err(`${ea}.role`, "VALUE_INVALID", `role is one of ${ROSTER_ROLES.join(", ")}`);
+        } else if (key === "budget_headers") {
+          fields(ea, e, ["column", "pattern", "basis"]);
+          if (!BUDGET_COLUMNS.includes(e.column)) err(`${ea}.column`, "VALUE_INVALID", `column is one of ${BUDGET_COLUMNS.join(", ")}`);
         } else if (key === "file_numbers") {
           fields(ea, e, ["pattern", "system", "basis"]);
           if (!isStr(e.system) || !origins.has(e.system)) err(`${ea}.system`, "SYSTEM_UNKNOWN", `no system of this profile has origin '${String(e.system)}'`);
@@ -720,7 +736,7 @@ function validateInto(p, errors) {
     const at = `deadlines[${i}]`;
     if (!entry(at, d)) return;
     fields(at, d, ["rule", "applies_to", "units", "amount", "days", "count", "direction", "starts", "roll", "closures",
-      "computation", "extension", "tolling", "observed", "citation", "status", "basis"]);
+      "computation", "extension", "tolling", "observed", "applies_on", "due_at", "citation", "status", "basis"]);
     str(`${at}.rule`, d.rule, "rule");
     if (d.applies_to !== "claim" && !kinds.has(d.applies_to))
       err(`${at}.applies_to`, "DEADLINE_KIND_UNKNOWN", `'${String(d.applies_to)}' is neither claim nor a kind of this profile`);
@@ -771,6 +787,12 @@ function validateInto(p, errors) {
         statusBasis(`${at}.observed`, o);
       }
     }
+    /* K1514: the anchor's weekdays a rule applies to, and the time of day it is due at */
+    if (own(d, "applies_on") && (!Array.isArray(d.applies_on) || !d.applies_on.length
+        || !d.applies_on.every((x) => WEEKDAYS.includes(x)) || new Set(d.applies_on).size !== d.applies_on.length))
+      err(`${at}.applies_on`, "VALUE_INVALID", `applies_on is a non-empty list of ${WEEKDAYS.join(", ")}, each once`);
+    if (own(d, "due_at") && d.due_at !== "close_of_business" && minutes(d.due_at) === null)
+      err(`${at}.due_at`, "VALUE_INVALID", "due_at is close_of_business or HH:MM");
     str(`${at}.citation`, d.citation, "citation");
     statusBasis(at, d);
   });
@@ -963,7 +985,11 @@ function validateInto(p, errors) {
     list("classification_schemes", p.classification_schemes).forEach((x, i) => {
       const at = `classification_schemes[${i}]`;
       if (!entry(at, x)) return;
-      fields(at, x, ["scheme", "label", "kind", "codes", "basis"]);
+      fields(at, x, ["scheme", "label", "kind", "codes", "forms", "basis"]);
+      if (own(x, "forms")) {
+        if (!Array.isArray(x.forms) || !x.forms.length) err(`${at}.forms`, "SCHEME_INVALID", "forms is a non-empty list of patterns");
+        else x.forms.forEach((f, j) => { if (!compile(f)) err(`${at}.forms[${j}]`, "SCHEME_INVALID", "a form is a pattern {re, flags?}"); });
+      }
       if (!isStr(x.scheme)) err(`${at}.scheme`, "SCHEME_INVALID", "scheme is a non-empty name");
       else if (seen.has(x.scheme)) err(`${at}.scheme`, "SCHEME_INVALID", `${x.scheme} is given twice`);
       else seen.add(x.scheme);
@@ -1465,7 +1491,7 @@ function merge(profiles) {
 
 /* R29, R55: a deadline's fields that hold one value under its rule and what it applies to. */
 const DEADLINE_ONE_VALUE = ["units", "amount", "count", "direction", "starts", "roll", "closures", "computation",
-  "extension", "tolling", "observed", "status"];
+  "extension", "tolling", "observed", "applies_on", "due_at", "status"];
 /** A deadline as R26 reads it: `days: n` with no units is `units: "days", amount: n`. */
 function normalDeadline(d) {
   if (!own(d, "days") || own(d, "units")) return d;

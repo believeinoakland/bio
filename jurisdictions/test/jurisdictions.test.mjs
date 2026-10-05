@@ -601,8 +601,8 @@ test("R21 the first profile holds every local fact of the snapshot's code, and m
   assert.deepEqual(f.covers, ["City of Oakland", "Alameda County"]);
   assert.equal(f.test, false);
   /* spaces: labels, forms, kinds, floors with their system */
-  /* the snapshot's four spaces, and T33's person scheme for Legistar's PersonId (R3) */
-  assert.deepEqual(Object.keys(f.spaces).sort(), ["enactment", "fund", "parcel", "person", "project"]);
+  /* the snapshot's four spaces, and T33's person scheme for Legistar's PersonId and proceeding numbers (R3) */
+  assert.deepEqual(Object.keys(f.spaces).sort(), ["enactment", "fund", "parcel", "person", "proceeding", "project"]);
   for (const [sp, old] of [["enactment", "cms"], ["project", "project"], ["fund", "fund"], ["parcel", "apn"]]) {
     assert.equal(f.spaces[sp].label, legacy.ID_SPACES[old].label, sp);
     assert.deepEqual(f.spaces[sp].forms.map((x) => x.form), legacy.ID_SPACES[old].forms.map((x) => x.form), sp);
@@ -628,7 +628,9 @@ test("R21 the first profile holds every local fact of the snapshot's code, and m
     }
   assert.ok(matched > 500, `${matched}`);
   /* systems: every legacy entry, in order, with the same answers for their addresses */
-  assert.equal(f.systems.length, legacy.ID_SYSTEMS.length);
+  /* the snapshot's systems first; T33 adds the three court registers (K1514), on hosts the snapshot never named */
+  assert.equal(f.systems.length, legacy.ID_SYSTEMS.length + 3);
+  assert.deepEqual(f.systems.slice(legacy.ID_SYSTEMS.length).map((s) => s.origin), ["courtlistener_docket", "cpuc_proceeding", "ecourt_roa"]);
   for (const address of legacy.addresses()) {
     const was = legacy.systemOfAddress(address);
     const now = systemOf(view, address);
@@ -645,7 +647,8 @@ test("R21 the first profile holds every local fact of the snapshot's code, and m
       assert.equal(hit, expect, `${key}: ${JSON.stringify(line)}`);
     }
   }
-  assert.deepEqual(f.vocabulary.codes.map((c) => [c.key, c.label]), [["omc", "O.M.C."]]);
+  /* the snapshot's code, then T33's charter (K1514) */
+  assert.deepEqual(f.vocabulary.codes.map((c) => [c.key, c.label]), [["omc", "O.M.C."], ["charter", "Oakland City Charter"]]);
   assert.deepEqual(f.vocabulary.file_numbers.map((x) => x.system), ["oakland.legistar"]);
   /* practice, search terms, records law */
   /* the snapshot's 21 days on no measurement, corrected to OMC 2.20.160's ten business days (R21, R56; K1504) */
@@ -835,7 +838,8 @@ test("R33 holidays: a four-digit year, its closure days {date, name} within it, 
   const v = combine([TEST]).view;
   assert.deepEqual(v.holidays.map((h) => h.year), get(TEST).holidays.map((h) => h.year));
   assert.equal(v.holidays.find((h) => h.year === 2025), undefined);
-  assert.deepEqual([...new Set(combine([FIRST]).view.holidays.map((h) => h.year))], [2026], "the first profile lists only 2026, the year published");
+  assert.deepEqual([...new Set(combine([FIRST]).view.holidays.filter((h) => !h.list).map((h) => h.year))], [2026],
+    "the first profile's office calendars list only 2026, the year published (its closure lists are R47's)");
 });
 
 test("R34 combine: legal organisations unioned; a year's holidays one value, withheld and reported when profiles disagree", () => {
@@ -1320,7 +1324,7 @@ test("R45 the test profile supplies R40–R44; the first holds the calendar only
   /* the office calendars (K925); T33's closure lists (R47) are R56's and tested there */
   const byBasis = Object.fromEntries(f.holidays.filter((h) => !h.list).map((h) => [h.basis, h]));
   assert.deepEqual(Object.keys(byBasis).sort(), ["M-189", "M-190", "M-191"], "M-188 (county) governs no profile office");
-  assert.ok(f.holidays.every((h) => h.year === 2026 && h.status === "researched"), "2026 only, researched; 2027 not published");
+  assert.ok(f.holidays.filter((h) => !h.list).every((h) => h.year === 2026 && h.status === "researched"), "2026 only, researched; 2027 not published");
   assert.deepEqual(byBasis["M-189"].offices, [{ venue: "records_petition" }]);
   assert.deepEqual(dates(byBasis["M-189"]), ["01-01", "01-19", "02-12", "02-16", "03-31", "05-25", "06-19", "07-03", "09-07", "09-25", "11-11", "11-26", "11-27", "12-25"]);
   assert.deepEqual(byBasis["M-190"].offices, ["Controller", "City Council", "City Auditor"]);

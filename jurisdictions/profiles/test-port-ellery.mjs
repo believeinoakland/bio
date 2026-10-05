@@ -61,7 +61,10 @@ export default {
       { form: "S-#####", pattern: { re: R`^S-?0*(\d{1,5})$`, flags: "i" }, normal: ["S-", { group: 1, unpad: true }], clean: { spaces: "remove" }, basis: "TEST" }] },
     proceeding: { label: "court file number", forms: [
       { form: "MC-yy-####", pattern: { re: R`^MC-(\d{2})-(\d{4})$`, flags: "i" }, normal: ["MC-", { group: 1 }, "-", { group: 2 }],
-        clean: { spaces: "remove", upper: true }, basis: "TEST" }] },
+        clean: { spaces: "remove", upper: true }, basis: "TEST" },
+      { form: "UB/yyyy/##", pattern: { re: R`^UB\/(\d{4})\/(\d{2})$`, flags: "i" }, normal: ["UB/", { group: 1 }, "/", { group: 2 }],
+        clean: { spaces: "remove", upper: true }, basis: "TEST" },
+      { form: "docket-####", pattern: { re: R`^D(\d{6})$`, flags: "i" }, normal: ["D", { group: 1 }], clean: { spaces: "remove", upper: true }, basis: "TEST" }] },
     person: { label: "registered person number", forms: [
       { form: "minute-person", pattern: { re: R`^P(\d{3})$`, flags: "i" }, normal: ["P", { group: 1 }], clean: { spaces: "remove", upper: true }, basis: "TEST" },
       { form: "bar-number", pattern: { re: R`^BAR(\d{5})$`, flags: "i" }, normal: ["BAR", { group: 1 }], clean: { spaces: "remove", upper: true }, basis: "TEST" }] },
@@ -88,6 +91,12 @@ export default {
       republishes: true, provenance_stated: false, basis: "TEST" },
     { origin: "marlow.lands", name: "the Marlow County lands register",
       hosts: ["lands.marlow-county.example"], basis: "TEST" },
+    /* the court-register origins court-doctypes reads (K1514), on made-up hosts */
+    { origin: "courtlistener_docket", name: "the national docket mirror", hosts: ["dockets.registry.example"],
+      path: { re: R`^\/case\/\d+$` }, basis: "TEST" },
+    { origin: "cpuc_proceeding", name: "the Marlow utilities board's proceeding cards", hosts: ["board.marlow-county.example"],
+      path: { re: R`^\/proceeding\/` }, basis: "TEST" },
+    { origin: "ecourt_roa", name: "the Marlow County Court's register of actions", hosts: ["court.marlow-county.example"], basis: "TEST" },
   ],
   mixed_hosts: [
     { host: "www.port-ellery.example", why: "the city's general website, serving every department", basis: "TEST" },
@@ -151,11 +160,44 @@ export default {
       { pattern: { re: R`Harbour\s+(?:Commission|Commissioners)`, flags: "i" }, organisation: "harbour_commission", basis: "TEST" },
     ],
     roster_words: [
-      { pattern: { re: R`\bList\s+of\s+Officers\b`, flags: "i" }, basis: "TEST" },
+      { pattern: { re: R`\bList\s+of\s+Officers\b`, flags: "i" }, kind: "roster", basis: "TEST" },
       { pattern: { re: R`\bWho'?s\s+Who\s+at\s+Town\s+Hall\b`, flags: "i" }, basis: "TEST" },
+      { pattern: { re: R`\bTable\s+of\s+Offices\b`, flags: "i" }, kind: "chart", basis: "TEST" },
     ],
     roster_headers: [
-      { pattern: { re: R`^Officer\s+\|\s+Post$`, flags: "i" }, basis: "TEST" },
+      { role: "name", pattern: { re: R`^Officer$`, flags: "i" }, basis: "TEST" },
+      { role: "title", pattern: { re: R`^Post$`, flags: "i" }, basis: "TEST" },
+      { role: "unit", pattern: { re: R`^Office$`, flags: "i" }, basis: "TEST" },
+      { role: "start", pattern: { re: R`^Sworn$`, flags: "i" }, basis: "TEST" },
+      { role: "end", pattern: { re: R`^Retires$`, flags: "i" }, basis: "TEST" },
+      { role: "as_of", pattern: { re: R`^Correct\s+at$`, flags: "i" }, basis: "TEST" },
+      { role: "employee_id", pattern: { re: R`^Payroll\s+No\.?$`, flags: "i" }, basis: "TEST" },
+      { role: "contact", pattern: { re: R`^Extension$`, flags: "i" }, basis: "TEST" },
+    ],
+    financial_report_titles: [
+      { pattern: { re: R`\bStatement\s+of\s+Accounts\b`, flags: "i" }, basis: "TEST" },
+    ],
+    budget_book_titles: [
+      { pattern: { re: R`\bEstimates\s+Book\b`, flags: "i" }, basis: "TEST" },
+    ],
+    financial_headings: [
+      { pattern: { re: R`^Harbour\s+Revenue\s+Account$`, flags: "i" }, basis: "TEST" },
+      { pattern: { re: R`^Schedule\s+of\s+Reserves$`, flags: "i" }, basis: "TEST" },
+    ],
+    fiscal_year_forms: [
+      { pattern: { re: R`\bYear\s+(\d{4})\/(\d{2})\b`, flags: "i" }, basis: "TEST" },
+    ],
+    budget_headers: [
+      { column: "fund", pattern: { re: R`^Ledger$`, flags: "i" }, basis: "TEST" },
+      { column: "org", pattern: { re: R`^Cost\s+Centre$`, flags: "i" }, basis: "TEST" },
+      { column: "department", pattern: { re: R`^Service$`, flags: "i" }, basis: "TEST" },
+      { column: "department_code", pattern: { re: R`^Service\s+Code$`, flags: "i" }, basis: "TEST" },
+      { column: "program", pattern: { re: R`^Activity$`, flags: "i" }, basis: "TEST" },
+      { column: "project", pattern: { re: R`^Works\s+Order$`, flags: "i" }, basis: "TEST" },
+      { column: "account", pattern: { re: R`^Nominal$`, flags: "i" }, basis: "TEST" },
+      { column: "amount", pattern: { re: R`^Sum$`, flags: "i" }, basis: "TEST" },
+      { column: "period", pattern: { re: R`^Year$`, flags: "i" }, basis: "TEST" },
+      { column: "phase", pattern: { re: R`^Stage$`, flags: "i" }, basis: "TEST" },
     ],
     staff_titles: [
       { pattern: { re: R`\b(?:Town\s+Reeve|Harbour\s+Master|Deputy\s+Clerk)\b`, flags: "i" }, basis: "TEST" },
@@ -232,6 +274,11 @@ export default {
       closures: "town", citation: "P.E.B.L. § 8", status: "researched", basis: "TEST" },
     { rule: "appeal_window", applies_to: "commitment_claim", units: "months", amount: 2, direction: "forward", starts: "entered",
       roll: true, closures: "court", citation: "Marlow Ct. R. 30.1", status: "researched", basis: "TEST" },
+    /* K1514: a rule for one weekday's anchor, due at a stated time (the Monday safe harbour's shape) */
+    { rule: "notice_of_sitting_friday", applies_to: "bylaw_complaint", units: "days", amount: 2, count: "calendar", direction: "backward",
+      starts: "act", applies_on: ["fri", "sat"], due_at: "15:00", citation: "P.E.B.L. § 7(2)", status: "researched", basis: "TEST" },
+    { rule: "registry_answer", applies_to: "commitment_claim", units: "days", amount: 4, count: "business", starts: "filed",
+      closures: "court", due_at: "close_of_business", citation: "Marlow Ct. R. 12", status: "ruled", basis: "TEST" },
     { rule: "service_lapse", applies_to: "commitment_claim", units: "years", amount: 2, direction: "forward", starts: "served",
       citation: "Marlow Ct. R. 30.9", status: "researched", basis: "TEST" },
     { rule: "filing_reply", applies_to: "commitment_claim", units: "days", amount: 7, count: "calendar", direction: "backward", starts: "filed",
@@ -270,6 +317,7 @@ export default {
   classification_schemes: [
     { scheme: "ellery_funds", label: "ledger funds", kind: "fund", codes: [{ code: "100-01", label: "General" }, { code: "200-01", label: "Harbour" }], basis: "TEST" },
     { scheme: "ellery_objects", label: "spending objects", kind: "object", basis: "TEST" },
+    { scheme: "ellery_works", label: "works orders", kind: "project", forms: [{ re: R`^WO-?\d{4}$`, flags: "i" }], basis: "TEST" },
   ],
   lawful_demands: [
     { kind: "officer_privacy", label: "an officer's demand to remove their home details", covers: ["home_address", "other"],

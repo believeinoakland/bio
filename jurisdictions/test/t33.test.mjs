@@ -49,7 +49,8 @@ test("R6 T33 vocabulary: a code's copy and sections; amending, meeting_markers, 
   for (const bad of ["unofficial", "", 1]) assert.ok(hasError(breakT((p) => { p.vocabulary.codes[0].copy = bad; }), "COPY_UNKNOWN", `${C}.copy`), String(bad));
   assert.ok(breakT((p) => { delete p.vocabulary.codes[0].copy; delete p.vocabulary.codes[0].sections; }).ok, "both optional");
   for (const markers of [["letter"], ["roman", "paren_numeral", "numeral", "paren_letter", "letter"]]) assert.ok(breakT((p) => { p.vocabulary.codes[0].sections.markers = markers; }).ok);
-  for (const markers of [[], ["letter", "letter"], ["bullet"], "letter"])
+  assert.ok(breakT((p) => { p.vocabulary.codes[0].sections.markers = []; }).ok, "no markers: a charter's sections (K1514)");
+  for (const markers of [["letter", "letter"], ["bullet"], "letter"])
     assert.ok(hasError(breakT((p) => { p.vocabulary.codes[0].sections.markers = markers; }), "VALUE_INVALID", `${C}.sections.markers`), JSON.stringify(markers));
   assert.ok(hasError(breakT((p) => { p.vocabulary.codes[0].sections.number = { re: "(" }; }), "PATTERN_INVALID", `${C}.sections.number`));
   for (const sep of ["", " ", 3]) assert.ok(hasError(breakT((p) => { p.vocabulary.codes[0].sections.separators = sep; }), "VALUE_INVALID", `${C}.sections.separators`));
@@ -210,10 +211,10 @@ test("R46 weekend {days, citation, status, basis} and computation [{key, rule, c
   for (const bad of ["CCP-12", "", "1x"]) assert.ok(hasError(breakT((p) => { p.computation[0].key = bad; }), "VALUE_INVALID", "computation[0].key"));
   assert.ok(hasError(breakT((p) => { p.computation.push({ ...p.computation[0] }); }), "VALUE_INVALID", "computation[1].key"), "a key twice");
   assert.ok(hasError(breakT((p) => { delete p.computation[0].citation; }), "VALUE_INVALID", "computation[0].citation"));
-  assert.ok(breakT((p) => { p.computation[0].rule = "monday_prior_friday_noon"; }).ok);
+  /* the Monday safe harbour is a rule of its own (applies_on, due_at; K1514), never a computation */
+  assert.ok(hasError(breakT((p) => { p.computation[0].rule = "monday_prior_friday_noon"; }), "VALUE_INVALID", "computation[0].rule"));
   assert.deepEqual(get(FIRST).computation.map((c) => [c.key, c.rule, c.citation]),
-    [["ccp_12", "exclude_first_include_last", "Cal. Code Civ. Proc. § 12; Cal. Gov. Code § 6800"],
-     ["omc_monday_special", "monday_prior_friday_noon", "Oakland Mun. Code § 2.20.070(C)"]]);
+    [["ccp_12", "exclude_first_include_last", "Cal. Code Civ. Proc. § 12; Cal. Gov. Code § 6800"]]);
 });
 
 test("R47 closure lists: a holiday entry's list and citation; a year once per list and offices; a rule's closures and observed name lists", () => {
@@ -234,8 +235,8 @@ test("R47 closure lists: a holiday entry's list and citation; a year once per li
   /* the view keeps each list's year, with its list and citation */
   const v = combine([FIRST]).view;
   const lists = v.holidays.filter((h) => h.list).map((h) => [h.list, h.year, h.citation]);
-  assert.deepEqual(lists.map((x) => x[0]), ["judicial", "city", "federal"]);
-  assert.ok(lists.every((x) => x[1] === 2026 && typeof x[2] === "string" && x[2].length));
+  assert.deepEqual(lists.map((x) => `${x[0]} ${x[1]}`), ["judicial 2026", "city 2026", "federal 2026", "judicial 2018", "judicial 2020"]);
+  assert.ok(lists.every((x) => typeof x[2] === "string" && x[2].length));
   assert.deepEqual(v.deadlines.find((d) => d.rule === "records_response").observed.closures, "city");
 });
 
@@ -397,8 +398,9 @@ test("R55 combine: T33's one-value facts withheld and reported when profiles dis
   assert.deepEqual(u.conflicts, []);
   const uv = u.view;
   assert.equal(uv.action_kinds.find((k) => k.kind === "records_request").venue.outages.length, 2);
-  assert.equal(uv.proceeding_kinds.length, 3); assert.equal(uv.identifier_schemes.length, 3);
-  assert.equal(uv.classification_schemes.length, 3); assert.equal(uv.recurrences.length, 3);
+  const t0 = get(TEST);
+  for (const sec of ["proceeding_kinds", "identifier_schemes", "classification_schemes", "recurrences"])
+    assert.equal(uv[sec].length, t0[sec].length + 1, sec);
   assert.equal(uv.vocabulary.roster_words.length, get(TEST).vocabulary.roster_words.length + 1);
   /* a deadline written `days: n` and one written `units: days, amount: n` agree (R26) */
   const legacy = combine([TEST, other((b) => { const r = dl(b, "records_answer"); delete r.days; r.units = "days"; r.amount = 5; })]);
@@ -420,7 +422,8 @@ test("R56 the first profile's sourced rule set: each rule with its primary sourc
     immediate_disclosure: ["records_request", "days", 3, "business", "forward", "received", /2\.20\.230/],
     agenda_posting_regular: ["public_comment", "hours", 72, undefined, "backward", "act", /54954\.2\(a\)\(1\)/],
     special_meeting_notice: ["public_comment", "hours", 24, undefined, "backward", "act", /54956\(a\)/],
-    omc_special_meeting_notice: ["public_comment", "business_hours", 48, undefined, "backward", "act", /2\.20\.070/],
+    omc_special_meeting_notice: ["public_comment", "business_hours", 48, undefined, "backward", "act", /2\.20\.070$/],
+    omc_special_meeting_monday: ["public_comment", "days", 3, "calendar", "backward", "act", /2\.20\.070\(C\)/],
     claim_presentation_injury: ["claim", "months", 6, undefined, "forward", "act", /911\.2\(a\)/],
     claim_presentation_other: ["claim", "years", 1, undefined, "forward", "act", /911\.2\(a\)/],
     claim_suit_after_rejection: ["claim", "months", 6, undefined, "forward", "served", /945\.6\(a\)\(1\)/],
@@ -441,13 +444,14 @@ test("R56 the first profile's sourced rule set: each rule with its primary sourc
   assert.match(cpra.extension.citation, /7922\.535\(b\)/);
   assert.equal(cpra.observed.closures, "city");
   assert.equal(rows.omc_special_meeting_notice.closures, "city", "an Oakland ordinance's holidays are the City's list (K1504 (5))");
-  assert.equal(rows.omc_special_meeting_notice.computation, "omc_monday_special", "its Monday rule (OMC 2.20.070(C))");
+  /* its Monday safe harbour: its own entry, for a Monday meeting, due at noon (K1514) */
+  assert.deepEqual([rows.omc_special_meeting_monday.applies_on, rows.omc_special_meeting_monday.due_at], [["mon"], "12:00"]);
   assert.equal(rows.immediate_disclosure.closures, "city");
   assert.deepEqual([rows.foia_response.closures, rows.foia_response.extension.days, rows.foia_response.extension.count], ["federal", 10, "business"]);
   assert.equal(rows.foia_response.tolling.length, 2);
   for (const r of ["agenda_posting_regular", "special_meeting_notice"]) assert.equal(rows[r].roll, undefined, `${r}: clock hours do not roll`);
   /* the closure lists, the weekend and the computation, each cited */
-  const lists = Object.fromEntries(f.holidays.filter((h) => h.list).map((h) => [h.list, h]));
+  const lists = Object.fromEntries(f.holidays.filter((h) => h.list && h.year === 2026).map((h) => [h.list, h]));
   assert.match(lists.judicial.citation, /§ 135/);
   assert.match(lists.federal.citation, /6103\(a\)/);
   const dates = (h) => h.days.map((d) => d.date.slice(5));
@@ -521,8 +525,8 @@ test("R57 the worked fixtures: held with their sources; the first profile suppli
       for (const y of n.years) if (!listYears(n.closures).includes(y)) gaps.push(`${x.id} ${n.closures} ${y}`);
     }
   }
-  assert.deepEqual(gaps, ["P1 judicial 2018", "P2 judicial 2018", "P5 judicial 2020", "P6 judicial 2020", "E1 judicial 2020", "E2 judicial 2020", "R1 judicial 2024"],
-    "the years still to be measured (reported to BOB); every other fact is held");
+  /* 2018 and 2020 are held from the courts' published lists (holidays-extra; K1514); 2024 is not yet measured */
+  assert.deepEqual(gaps, ["R1 judicial 2024"], "the year still to be measured (reported to BOB); every other fact is held");
   /* the records venue's receipt rule, for a request arriving on a closed day (K1504 (3)) */
   assert.equal(venue(f).receipt.rule, "next_business_day");
 });
@@ -551,4 +555,130 @@ test("R57 the OMC 48-business-hour fixture, re-derived from the code's text and 
   /* had 10-12 been a holiday, time-law's Friday would follow: the difference is that one day */
   city.add("2026-10-12");
   assert.equal(openHours(OMC_48.negatives[0].at, OMC_48.start), 48);
+});
+
+/* ============================================================================================== */
+/* K1513, K1514, K1517: the clarifications BOB folded during the job.                              */
+
+test("R26 K1514 applies_on (the anchor's weekdays) and due_at (close_of_business or HH:MM); one value per key in combine", () => {
+  const i = get(TEST).deadlines.findIndex((d) => d.rule === "notice_of_sitting_friday");
+  const D = `deadlines[${i}]`;
+  for (const on of [["mon"], ["sat", "sun"], ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]]) assert.ok(breakT((p) => { p.deadlines[i].applies_on = on; }).ok, on.join());
+  for (const bad of [[], ["Mon"], ["mon", "mon"], "mon", null])
+    assert.ok(hasError(breakT((p) => { p.deadlines[i].applies_on = bad; }), "VALUE_INVALID", `${D}.applies_on`), JSON.stringify(bad));
+  for (const at of ["close_of_business", "00:00", "12:00", "23:59"]) assert.ok(breakT((p) => { p.deadlines[i].due_at = at; }).ok, at);
+  for (const bad of ["noon", "12", "24:00", "close of business", 12, null])
+    assert.ok(hasError(breakT((p) => { p.deadlines[i].due_at = bad; }), "VALUE_INVALID", `${D}.due_at`), String(bad));
+  assert.ok(breakT((p) => { delete p.deadlines[i].applies_on; delete p.deadlines[i].due_at; }).ok, "both optional");
+  for (const [f, v] of [["applies_on", ["fri"]], ["due_at", "16:00"]]) {
+    const c = combine([TEST, other((b) => { dl(b, "notice_of_sitting_friday")[f] = v; })]);
+    assert.ok(c.conflicts.some((x) => x.at === `deadlines[notice_of_sitting_friday/bylaw_complaint].${f}`), f);
+    assert.equal(c.view.deadlines.find((d) => d.rule === "notice_of_sitting_friday")[f], undefined, f);
+  }
+  /* OMC 2.20.070(C) held as its own entry beside the general rule; C1 counts on it */
+  const f = get(FIRST);
+  const mon = dl(f, "omc_special_meeting_monday");
+  assert.deepEqual([mon.units, mon.amount, mon.count, mon.direction, mon.applies_on, mon.due_at], ["days", 3, "calendar", "backward", ["mon"], "12:00"]);
+  assert.ok(dl(f, "omc_special_meeting_notice"), "the general rule stands beside it");
+  assert.equal(FIXTURES.find((x) => x.id === "C1").rule, "omc_special_meeting_monday");
+});
+
+test("R6 K1513 K1517 roster words with a kind, roster headers with a role, and the budget readers' keys", () => {
+  for (const kind of ["roster", "chart"]) assert.ok(breakT((p) => { p.vocabulary.roster_words[0].kind = kind; }).ok, kind);
+  assert.ok(breakT((p) => { delete p.vocabulary.roster_words[0].kind; }).ok, "absent: both");
+  assert.ok(hasError(breakT((p) => { p.vocabulary.roster_words[0].kind = "list"; }), "VALUE_INVALID", "vocabulary.roster_words[0].kind"));
+  for (const role of ["name", "title", "unit", "start", "end", "as_of", "employee_id", "contact"]) assert.ok(breakT((p) => { p.vocabulary.roster_headers[0].role = role; }).ok, role);
+  for (const bad of ["term", "", undefined]) assert.ok(hasError(breakT((p) => { p.vocabulary.roster_headers[0].role = bad; }), "VALUE_INVALID", "vocabulary.roster_headers[0].role"));
+  for (const col of ["fund", "org", "department", "department_code", "program", "project", "account", "amount", "period", "phase"])
+    assert.ok(breakT((p) => { p.vocabulary.budget_headers[0].column = col; }).ok, col);
+  for (const bad of ["total", "", undefined]) assert.ok(hasError(breakT((p) => { p.vocabulary.budget_headers[0].column = bad; }), "VALUE_INVALID", "vocabulary.budget_headers[0].column"));
+  for (const key of ["financial_report_titles", "budget_book_titles", "financial_headings", "fiscal_year_forms", "budget_headers"]) {
+    assert.ok(get(TEST).vocabulary[key].length && get(FIRST).vocabulary[key].length, key);
+    assert.ok(hasError(breakT((p) => { p.vocabulary[key][0].pattern = { re: "(" }; }), "PATTERN_INVALID", `vocabulary.${key}[0].pattern`), key);
+  }
+  assert.deepEqual([...new Set(get(TEST).vocabulary.roster_headers.map((h) => h.role))].sort(), ["as_of", "contact", "employee_id", "end", "name", "start", "title", "unit"]);
+  /* the first profile reads the City's own documents (K1513, K1517) */
+  const v = get(FIRST).vocabulary;
+  const rx = (e) => new RegExp(e.pattern.re, e.pattern.flags || "");
+  const any = (key, line) => v[key].filter((e) => rx(e).test(line));
+  assert.deepEqual(any("roster_words", "COMMITTEE MEMBER ROSTER AND ASSIGNED STAFF").map((e) => e.kind), ["roster"]);
+  assert.deepEqual(any("roster_words", "Organizational Chart").map((e) => e.kind), ["chart"]);
+  for (const t of ["Vice Chair", "Co-Chair", "Assistant City Administrator", "City Clerk", "Parliamentarians", "Intern"]) assert.ok(any("staff_titles", t).length, t);
+  assert.equal(any("staff_titles", "Councilmember").length, 0);
+  const role = (h) => (v.roster_headers.find((e) => rx(e).test(h)) || {}).role;
+  assert.deepEqual(["Full Name", "Job Title", "Division", "Employee ID", "Email", "Term"].map(role), ["name", "title", "unit", "employee_id", "contact", undefined]);
+  assert.ok(any("financial_report_titles", "2024 Annual Comprehensive Financial Report").length);
+  assert.ok(any("financial_report_titles", "Comprehensive Annual Financial Report 2012").length);
+  assert.ok(any("budget_book_titles", "FY 2023-25 Adopted Policy Budget").length);
+  assert.ok(any("financial_headings", "Primary Gove rnme nt Statement of Ne t Position").length, "letter-spaced headings");
+  assert.ok(any("fiscal_year_forms", "FY13-15").length && any("fiscal_year_forms", "FY2024").length);
+  assert.deepEqual(v.budget_headers.map((h) => h.column), ["fund", "org", "program", "account", "project", "department"]);
+});
+
+test("R52 K1513 classification_schemes: forms and the project kind; the first profile's fund, org, department, program, account and project codes", () => {
+  const i = get(TEST).classification_schemes.findIndex((x) => x.kind === "project");
+  assert.ok(i >= 0, "a project scheme");
+  const C = `classification_schemes[${i}]`;
+  for (const bad of [[], [{ re: "(" }], "WO"]) assert.ok(hasError(breakT((p) => { p.classification_schemes[i].forms = bad; }), "SCHEME_INVALID"), JSON.stringify(bad));
+  assert.ok(hasError(breakT((p) => { p.classification_schemes[i].forms = [{ re: "(" }]; }), "SCHEME_INVALID", `${C}.forms[0]`));
+  const f = get(FIRST).classification_schemes;
+  assert.deepEqual(f.map((x) => x.kind), ["fund", "organisation", "organisation", "program", "account", "project"]);
+  const reads = (scheme, value) => f.find((x) => x.scheme === scheme).forms.some((p) => new RegExp(p.re, p.flags || "").test(value));
+  assert.ok(reads("oakland_fund", "FD_1010") && reads("oakland_fund", "1010"));
+  assert.ok(reads("oakland_org", "OR_01111") && reads("oakland_program", "PG_IP01") && reads("oakland_account", "51111"));
+  assert.ok(reads("oakland_project", "PJ_1000001") && reads("oakland_project", "1003439"));
+  assert.ok(reads("oakland_department", "DP1000") && reads("oakland_department", "DPCC0") && !reads("oakland_department", "DP1"));
+  assert.equal(f[0].codes.find((c) => c.code === "1010").label, "General Purpose Fund");
+});
+
+test("R4 R3 K1514 the court registers as systems, with their proceeding number forms, in both profiles", () => {
+  for (const id of [FIRST, TEST]) {
+    const p = get(id);
+    assert.deepEqual(["courtlistener_docket", "cpuc_proceeding", "ecourt_roa"].filter((o) => p.systems.some((s) => s.origin === o)),
+      ["courtlistener_docket", "cpuc_proceeding", "ecourt_roa"], id);
+    assert.ok(p.spaces.proceeding.forms.length >= 3, id);
+  }
+  const view = combine([FIRST]).view;
+  const sys = (url) => { const u = new URL(url); return (view.systems.find((s) => s.hosts.includes(u.hostname) && (!s.path || new RegExp(s.path.re, s.path.flags || "").test(u.pathname + u.search))) || {}).origin; };
+  assert.equal(sys("https://www.courtlistener.com/docket/4214664/some-case/"), "courtlistener_docket");
+  assert.equal(sys("https://www.courtlistener.com/opinion/1/x/"), undefined);
+  assert.equal(sys("https://apps.cpuc.ca.gov/apex/f?p=401:56:0::NO:RP,57,RIR:P5_PROCEEDING_SELECT:A2106021"), "cpuc_proceeding");
+  assert.equal(sys("https://eportal.alameda.courts.ca.gov/?q=node/388"), "ecourt_roa");
+  const forms = view.spaces.proceeding.forms;
+  const read = (value) => (forms.find((f) => new RegExp(f.pattern.re, f.pattern.flags || "").test(value)) || {}).form || null;
+  assert.equal(read("22CV013018"), "alameda-civil");
+  assert.equal(read("RG21105389"), "alameda-legacy");
+  assert.equal(read("3:20-cv-05640-EMC"), "federal-district");
+  assert.equal(read("A2106021"), "cpuc");
+  assert.equal(read("A.21-06-021"), "cpuc");
+  assert.equal(read("CV013018"), null);
+});
+
+test("R47 R57 K1514 the judicial lists of 2018 and 2020 (courts' published lists): Columbus Day then a judicial holiday", () => {
+  const f = get(FIRST);
+  const year = (y) => f.holidays.find((h) => h.list === "judicial" && h.year === y);
+  for (const y of [2018, 2020]) {
+    assert.ok(year(y), String(y));
+    assert.match(year(y).citation, /§ 135/);
+    assert.deepEqual([year(y).status, year(y).basis], ["researched", "2026-10-05 holidays-extra"]);
+  }
+  const dates = (y) => new Set(year(y).days.map((d) => d.date));
+  assert.ok(dates(2018).has("2018-05-28"), "P1's Memorial Day");
+  assert.ok(dates(2020).has("2020-10-12"), "P6: Columbus Day 2020");
+  assert.ok(!dates(2026).has("2026-10-12"));
+  /* P1 and P6 against the held lists: an oracle over the profile's facts, not the module's count (civil-time's) */
+  const weekend = new Set(f.weekend.days);
+  const back = (from, n, y) => {
+    let d = new Date(`${from}T00:00Z`), k = 0;
+    while (k < n) { d = new Date(d.getTime() - 864e5); const iso = d.toISOString().slice(0, 10);
+      if (!weekend.has(["sun", "mon", "tue", "wed", "thu", "fri", "sat"][d.getUTCDay()]) && !dates(y).has(iso)) k++; }
+    return d.toISOString().slice(0, 10);
+  };
+  for (const id of ["P1", "P6"]) {
+    const x = FIXTURES.find((r) => r.id === id);
+    assert.equal(back(x.start, 16, Number(x.start.slice(0, 4))), x.expected, id);
+  }
+  /* the federal 2026 list: Independence Day falls on Saturday and is observed Friday (5 U.S.C. § 6103(b)) */
+  const fed = new Set(f.holidays.find((h) => h.list === "federal").days.map((d) => d.date));
+  assert.ok(fed.has("2026-07-03") && fed.has("2026-10-12") && fed.has("2026-11-11"));
 });

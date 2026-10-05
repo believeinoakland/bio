@@ -83,6 +83,23 @@ export default {
           basis: "2026-10-05 legistar-events" },
       ],
     },
+    /* A proceeding's number in its forum's forms (courts-workbooks §1; K1452): the Superior Court's current and legacy
+       civil numbers, a federal district docket number and CourtListener's docket_number_core, a CPUC proceeding. */
+    proceeding: {
+      label: "proceeding or case number",
+      forms: [
+        { form: "alameda-civil", pattern: { re: R`^(\d{2}CV\d{6})$` }, normal: [{ group: 1 }], clean: { spaces: "remove", upper: true },
+          basis: "2026-10-05 courts-workbooks" },
+        { form: "alameda-legacy", pattern: { re: R`^((?:RG|HG)\d{8})$` }, normal: [{ group: 1 }], clean: { spaces: "remove", upper: true },
+          basis: "2026-10-05 courts-workbooks" },
+        { form: "federal-district", pattern: { re: R`^(\d):(\d{2})-(cv|cr|mc|md|mj|bk|ap)-(\d{5})((?:-[A-Z]{2,4})*)$` },
+          normal: [{ group: 1 }, ":", { group: 2 }, "-", { group: 3 }, "-", { group: 4 }, { group: 5, default: "" }], clean: { spaces: "remove" },
+          basis: "2026-10-05 courts-workbooks" },
+        { form: "docket-core", pattern: { re: R`^(\d{7,8})$` }, normal: [{ group: 1 }], clean: { spaces: "remove" }, basis: "2026-10-05 courts-workbooks" },
+        { form: "cpuc", pattern: { re: R`^([ARICPK])\.?(\d{2})-?(\d{2})-?(\d{3})$` },
+          normal: [{ group: 1 }, { group: 2 }, { group: 3 }, { group: 4 }], clean: { spaces: "remove", upper: true }, basis: "2026-10-05 courts-workbooks" },
+      ],
+    },
     parcel: {
       label: "assessor's parcel number (APN)",
       /* Book (digits with an optional letter, or a bare letter), page, parcel (optional letter),
@@ -123,6 +140,14 @@ export default {
       hosts: ["aca-prod.accela.com"], path: { re: R`\/OAKLAND\/`, flags: "i" }, basis: "M-157 (1)" },
     { origin: "oakland.auditor", name: "the Office of the City Auditor",
       hosts: ["www.oaklandauditor.com"], basis: "M-119 AUD" },
+    /* The three court registers (courts-workbooks §1): a CourtListener docket page, a CPUC proceeding card and its
+       documents report, and the Superior Court's eCourt portal (login-gated; a member's own capture, K1492). */
+    { origin: "courtlistener_docket", name: "CourtListener docket pages (Free Law Project)", hosts: ["www.courtlistener.com"],
+      path: { re: R`^\/docket\/\d+\/` }, basis: "2026-10-05 courts-workbooks" },
+    { origin: "cpuc_proceeding", name: "the California Public Utilities Commission's proceeding cards", hosts: ["apps.cpuc.ca.gov"],
+      path: { re: R`^\/apex\/f\?p=401:5[67]:` }, basis: "2026-10-05 courts-workbooks" },
+    { origin: "ecourt_roa", name: "the Alameda County Superior Court's eCourt public portal", hosts: ["eportal.alameda.courts.ca.gov"],
+      basis: "2026-10-05 courts-workbooks" },
   ],
   mixed_hosts: [
     { host: "www.oaklandca.gov", why: "the City's general website, serving many offices' publications",
@@ -163,6 +188,10 @@ export default {
       { key: "omc", label: "O.M.C.", pattern: { re: R`O\.?M\.?C\.?|Oakland\s+Municipal\s+Code`, flags: "i" },
         copy: "codifier", sections: { number: { re: R`\d+\.\d+\.\d+[A-Z]?` }, separators: ".", markers: ["letter", "numeral", "paren_letter"] },
         basis: "M-24, 2026-10-05 time-law" },
+      /* The City Charter, served by the same codifier as article-level docs; its sections are numbered 200, 403, 504
+         and so on, with no subsection marker order measured (time-law §2, §4; K1514). */
+      { key: "charter", label: "Oakland City Charter", pattern: { re: R`(?:Oakland\s+)?City\s+Charter`, flags: "i" },
+        copy: "codifier", sections: { number: { re: R`\d{3,4}` }, separators: ".", markers: [] }, basis: "2026-10-05 time-law" },
     ],
     file_numbers: [
       { pattern: { re: R`\d{2}-\d{4}` }, system: "oakland.legistar", basis: "2026-08-03, M-24" },
@@ -207,6 +236,52 @@ export default {
       { pattern: { re: R`Public\s+Safety\s+Committee`, flags: "i" }, organisation: "public_safety_committee", basis: "2026-10-05 legistar-events" },
       { pattern: { re: R`Life\s+Enrichment\s+Committee`, flags: "i" }, organisation: "life_enrichment_committee", basis: "2026-10-05 legistar-events" },
       { pattern: { re: R`Public\s+Works\s+(?:(?:&|and)\s+Transportation\s+)?Committee`, flags: "i" }, organisation: "public_works_committee", basis: "2026-10-05 legistar-events" },
+    ],
+    /* The City's own rosters and organisation charts (roster-reader's fixtures, 15 documents read 2026-10-05; K1517).
+       A term column's header is left unnamed. */
+    roster_words: [
+      { pattern: { re: R`\brosters?\b`, flags: "i" }, kind: "roster", basis: "2026-10-05 roster-reader" },
+      { pattern: { re: R`\borgani[sz]ational\s+chart\b|\borg\s+chart\b`, flags: "i" }, kind: "chart", basis: "2026-10-05 roster-reader" },
+    ],
+    staff_titles: [
+      { pattern: { re: R`\b(?:Co-|Vice\s+)?Chair\b`, flags: "i" }, basis: "2026-10-05 roster-reader" },
+      { pattern: { re: R`\b(?:(?:Assistant|Deputy)\s+)?City\s+Administrator\b`, flags: "i" }, basis: "2026-10-05 roster-reader" },
+      { pattern: { re: R`\bCity\s+(?:Attorney|Clerk)\b`, flags: "i" }, basis: "2026-10-05 roster-reader" },
+      { pattern: { re: R`\b(?:Director|Manager|Chief|Supervisor|Coordinator|Analyst|Inspector|Engineer|Custodian|Leader|Officer|Parliamentarians?|Accountant|Intern)\b`, flags: "i" },
+        basis: "2026-10-05 roster-reader" },
+    ],
+    roster_headers: [
+      { role: "name", pattern: { re: R`^(?:Full\s+)?Name$`, flags: "i" }, basis: "2026-10-05 roster-reader" },
+      { role: "title", pattern: { re: R`^(?:Title|Position|Job\s+Title)$`, flags: "i" }, basis: "2026-10-05 roster-reader" },
+      { role: "unit", pattern: { re: R`^(?:Department|Division|Organization)$`, flags: "i" }, basis: "2026-10-05 roster-reader" },
+      { role: "employee_id", pattern: { re: R`^Employee\s+ID$`, flags: "i" }, basis: "2026-10-05 roster-reader" },
+      { role: "contact", pattern: { re: R`^(?:Phone|Email|Address)$`, flags: "i" }, basis: "2026-10-05 roster-reader" },
+    ],
+    /* The ACFRs (FY2012–FY2025) and the adopted budget books (money-people §1c, §4, §7; K1513). Some years' headings
+       are letter-spaced ("Primary Gove rnme nt"), so headings match whitespace-tolerantly. */
+    financial_report_titles: [
+      { pattern: { re: R`\b(?:Annual\s+Comprehensive|Comprehensive\s+Annual)\s+Financial\s+Report\b`, flags: "i" }, basis: "2026-10-05 money-people" },
+    ],
+    budget_book_titles: [
+      { pattern: { re: R`\b(?:Adopted|Proposed)\s+(?:Policy\s+)?Budget\b`, flags: "i" }, basis: "2026-10-05 money-people" },
+    ],
+    financial_headings: [
+      "Statement of Net Position", "Statement of Activities", "Statement of Cash Flows", "Balance Sheet", "Budget and Actual",
+      "Summary Table By Fund", "Citywide Classification Summary", "Property Tax Levies and Collections",
+    ].map((h) => ({ pattern: { re: h.replace(/ /g, "").split("").join(R`\s*`), flags: "i" }, basis: "2026-10-05 money-people" })),
+    fiscal_year_forms: [
+      /* a biennial budget: FY13-15, FY2023-25, FY25-27 */
+      { pattern: { re: R`\bFY\s?(\d{2}|\d{4})-(\d{2})\b`, flags: "i" }, basis: "2026-10-05 money-people, 2026-10-05 legistar-events" },
+      /* an ACFR's year: FY2024 */
+      { pattern: { re: R`\bFY\s?(\d{4})\b(?!-)`, flags: "i" }, basis: "2026-10-05 money-people" },
+    ],
+    budget_headers: [
+      { column: "fund", pattern: { re: R`^Fund$`, flags: "i" }, basis: "2026-10-05 money-people" },
+      { column: "org", pattern: { re: R`^Org$`, flags: "i" }, basis: "2026-10-05 money-people" },
+      { column: "program", pattern: { re: R`^Program$`, flags: "i" }, basis: "2026-10-05 money-people" },
+      { column: "account", pattern: { re: R`^Account$`, flags: "i" }, basis: "2026-10-05 money-people" },
+      { column: "project", pattern: { re: R`^Project$`, flags: "i" }, basis: "2026-10-05 money-people" },
+      { column: "department", pattern: { re: R`^Department$`, flags: "i" }, basis: "2026-10-05 legistar-events" },
     ],
   },
 
@@ -316,8 +391,12 @@ export default {
       citation: "Cal. Gov. Code § 54956(a)", status: "researched", basis: "2026-10-05 time-law" },
     /* "at least forty-eight (48) hours (excluding Saturdays, Sundays and holidays) before the time of the meeting". */
     { rule: "omc_special_meeting_notice", applies_to: "public_comment", units: "business_hours", amount: 48, direction: "backward",
-      starts: "act", closures: "city", computation: "omc_monday_special", citation: "Oakland Mun. Code § 2.20.070",
-      status: "researched", basis: "2026-10-05 time-law" },
+      starts: "act", closures: "city", citation: "Oakland Mun. Code § 2.20.070", status: "researched", basis: "2026-10-05 time-law" },
+    /* (C): "if a special meeting is called for a Monday, notice shall be deemed timely made if … made no later than
+       12:00 p.m. (noon) on the preceding Friday". Held beside the general rule; the later answer is the safe harbour
+       (K1514). */
+    { rule: "omc_special_meeting_monday", applies_to: "public_comment", units: "days", amount: 3, count: "calendar", direction: "backward",
+      starts: "act", applies_on: ["mon"], due_at: "12:00", citation: "Oakland Mun. Code § 2.20.070(C)", status: "researched", basis: "2026-10-05 time-law" },
     { rule: "claim_presentation_injury", applies_to: "claim", units: "months", amount: 6, direction: "forward", starts: "act",
       roll: true, closures: "judicial",
       citation: "Cal. Gov. Code § 911.2(a) (death, personal injury, personal property, growing crops)", status: "researched", basis: "2026-10-05 time-law" },
@@ -339,15 +418,25 @@ export default {
   computation: [
     { key: "ccp_12", rule: "exclude_first_include_last", citation: "Cal. Code Civ. Proc. § 12; Cal. Gov. Code § 6800",
       status: "researched", basis: "2026-10-05 time-law" },
-    /* "if a special meeting is called for a Monday, notice shall be deemed timely made if … made no later than 12:00
-       p.m. (noon) on the preceding Friday" */
-    { key: "omc_monday_special", rule: "monday_prior_friday_noon", citation: "Oakland Mun. Code § 2.20.070(C)",
-      status: "researched", basis: "2026-10-05 time-law" },
   ],
   /* Legistar's PersonId, the register that issues it (legistar-events §1; B1b.4). */
   identifier_schemes: [
     { scheme: "legistar_person_id", label: "Legistar PersonId", entity_kinds: ["person"], space: "person", form: "legistar-person",
       systems: ["oakland.legistar"], basis: "2026-10-05 legistar-events" },
+  ],
+  /* The budget's keys (money-people §3; legistar-events §3): fund and org codes stable cycle to cycle, departments a
+     dated grouping recoded as DP codes from FY19-21. */
+  classification_schemes: [
+    { scheme: "oakland_fund", label: "fund", kind: "fund", forms: [{ re: R`^FD_\d{4}$` }, { re: R`^\d{4}$` }],
+      codes: [{ code: "1010", label: "General Purpose Fund" }], basis: "2026-10-05 money-people, 2026-10-05 legistar-events" },
+    { scheme: "oakland_org", label: "organisation (org)", kind: "organisation", forms: [{ re: R`^OR_\d{5}$` }], basis: "2026-10-05 money-people" },
+    { scheme: "oakland_department", label: "department", kind: "organisation", forms: [{ re: R`^DP(?:\d{3,4}|CC0)$` }],
+      codes: [{ code: "DP010", label: "Mayor" }, { code: "DP1000", label: "Police" }, { code: "DP350", label: "Transportation" },
+        { code: "DP660", label: "Police Commission" }, { code: "DP700", label: "Violence Prevention" }, { code: "DPCC0", label: "Council" }],
+      basis: "2026-10-05 legistar-events" },
+    { scheme: "oakland_program", label: "program", kind: "program", forms: [{ re: R`^PG_[A-Z0-9]+$` }], basis: "2026-10-05 money-people" },
+    { scheme: "oakland_account", label: "account", kind: "account", forms: [{ re: R`^\d{5}$` }], basis: "2026-10-05 money-people" },
+    { scheme: "oakland_project", label: "project", kind: "project", forms: [{ re: R`^PJ_\d{7}$` }, { re: R`^100\d{4}$` }], basis: "2026-10-05 money-people" },
   ],
   /* K1493: a public official's home address or telephone number, removed within 48 hours of a written demand. */
   lawful_demands: [
@@ -419,10 +508,30 @@ export default {
     { year: 2026, list: "federal", citation: "5 U.S.C. § 6103(a)", days: [
       { date: "2026-01-01", name: "New Year's Day" }, { date: "2026-01-19", name: "Birthday of Martin Luther King, Jr." },
       { date: "2026-02-16", name: "Washington's Birthday" }, { date: "2026-05-25", name: "Memorial Day" },
-      { date: "2026-06-19", name: "Juneteenth National Independence Day" }, { date: "2026-07-04", name: "Independence Day" },
-      { date: "2026-09-07", name: "Labor Day" }, { date: "2026-10-12", name: "Columbus Day" },
+      { date: "2026-06-19", name: "Juneteenth National Independence Day" }, { date: "2026-07-03", name: "Independence Day (observed, 5 U.S.C. § 6103(b))" },
+      { date: "2026-07-04", name: "Independence Day" }, { date: "2026-09-07", name: "Labor Day" }, { date: "2026-10-12", name: "Columbus Day" },
       { date: "2026-11-11", name: "Veterans Day" }, { date: "2026-11-26", name: "Thanksgiving Day" },
       { date: "2026-12-25", name: "Christmas Day" }],
-      status: "researched", basis: "2026-10-05 time-law" },
+      status: "researched", basis: "2026-10-05 time-law; 2026-10-05 holidays-extra" },
+    /* The judicial holidays of 2018 and 2020, as the superior courts published them (San Diego Superior Court's
+       schedules, agreeing with a statewide calendar; holidays-extra): Columbus Day was then a judicial holiday. */
+    { year: 2018, list: "judicial", citation: "Cal. Code Civ. Proc. § 135 (as in force in 2018); San Diego Super. Ct. holiday schedule 2018", days: [
+      { date: "2018-01-01", name: "New Year's Day" }, { date: "2018-01-15", name: "Martin Luther King Jr. Day" },
+      { date: "2018-02-12", name: "Lincoln's Birthday" }, { date: "2018-02-19", name: "Presidents' Day" },
+      { date: "2018-03-30", name: "Cesar Chavez Day (observed)" }, { date: "2018-05-28", name: "Memorial Day" },
+      { date: "2018-07-04", name: "Independence Day" }, { date: "2018-09-03", name: "Labor Day" },
+      { date: "2018-10-08", name: "Columbus Day" }, { date: "2018-11-12", name: "Veterans Day (observed)" },
+      { date: "2018-11-22", name: "Thanksgiving" }, { date: "2018-11-23", name: "Day after Thanksgiving" },
+      { date: "2018-12-25", name: "Christmas Day" }],
+      status: "researched", basis: "2026-10-05 holidays-extra" },
+    { year: 2020, list: "judicial", citation: "Cal. Code Civ. Proc. § 135 (as in force in 2020); San Diego Super. Ct. holiday schedule 2020", days: [
+      { date: "2020-01-01", name: "New Year's Day" }, { date: "2020-01-20", name: "Martin Luther King Jr. Day" },
+      { date: "2020-02-12", name: "Lincoln's Birthday" }, { date: "2020-02-17", name: "Presidents' Day" },
+      { date: "2020-03-31", name: "Cesar Chavez Day" }, { date: "2020-05-25", name: "Memorial Day" },
+      { date: "2020-07-03", name: "Independence Day (observed)" }, { date: "2020-09-07", name: "Labor Day" },
+      { date: "2020-10-12", name: "Columbus Day" }, { date: "2020-11-11", name: "Veterans Day" },
+      { date: "2020-11-26", name: "Thanksgiving" }, { date: "2020-11-27", name: "Day after Thanksgiving" },
+      { date: "2020-12-25", name: "Christmas Day" }],
+      status: "researched", basis: "2026-10-05 holidays-extra" },
   ],
 };
