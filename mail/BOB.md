@@ -111,3 +111,6 @@ K1488 (Bob, C5 (b)): a person's identity link earns B from a name corroborated b
 
 ## B35 · NOTICE · 2026-10-05 · session_016UpmXFDD6RD1fiTKMSxmxa · primary
 K1490 (Bob, C7 (a)): each member declares their own ties (employer, relative, business), seen by them and administrators; a case concerning that entity discloses the tie at the attribution level the member chooses; each publishing member attests at publication that they have no undeclared tie, vendors named in the money included. Folded into BIO_Capability_Ladders_v0_1.md on tranche/T32; declaring a tie and the attestation are yours to render when the design phase resumes (U43).
+
+## B36 · NOTICE · 2026-10-05 · session_016UpmXFDD6RD1fiTKMSxmxa · primary
+K1491 (Bob, C8 (b)): the machine raises 'worth a look' items on its own (interest checks over people, detectors over money), each data-defined with its denominator and cited derivation, reaching the queue as 'Noticed', labelled as the machine's, a hypothesis-layer signal, never a fact or 'conflict'; members may add their own or switch one off per project; none shown before its false-alarm rate is measured. Folded into BIO_Capability_Ladders_v0_1.md on tranche/T32; how a 'Noticed' item reads in the queue is yours to render when the design phase resumes (U43).
