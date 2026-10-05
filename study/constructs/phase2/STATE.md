@@ -2,22 +2,22 @@
 
 | unit | prompt | output | state | note |
 |---|---|---|---|---|
-| C1 | prompts/C1.txt | notes/C1.md | partial | MILESTONES.txt: read to 0 of 602; UI-KICKOFF.txt: read to 0 of 229 |
+| C1 | prompts/C1.txt | notes/C1.md | partial | MILESTONES.txt: read to 300 of 602; UI-KICKOFF.txt: read to 0 of 229 |
 | C2 | prompts/C2.txt | notes/C2.md | done |  |
-| C3 | prompts/C3.txt | notes/C3.md | partial | BIO_Content_Framework_v0_10.txt: read to 2150 of 2712 |
+| C3 | prompts/C3.txt | notes/C3.md | partial | BIO_Content_Framework_v0_10.txt: read to 2450 of 2712 |
 | C4 | prompts/C4.txt | notes/C4.md | done |  |
-| C5 | prompts/C5.txt | notes/C5.md | partial | CONTRADICTION-IDENTIFY-DESIGN.txt: read to 0 of 195; FINDINGS-WORKPLAN.txt: read to 0 of 130; RETRIEVAL-PROBE.txt: read to 0 of 197 |
-| C6 | prompts/C6.txt | notes/C6.md | partial | AUTHORITY-AND-TRUST.txt: read to 0 of 284; BIO_Communications_Platforms.txt: read to 0 of 353 |
+| C5 | prompts/C5.txt | notes/C5.md | partial | FINDINGS-WORKPLAN.txt: read to 0 of 130; RETRIEVAL-PROBE.txt: read to 0 of 197 |
+| C6 | prompts/C6.txt | notes/C6.md | partial | AUTHORITY-AND-TRUST.txt: read to 140 of 284; BIO_Communications_Platforms.txt: read to 0 of 353 |
 | C7 | prompts/C7.txt | notes/C7.md | done |  |
 | C8 | prompts/C8.txt | notes/C8.md | done |  |
-| C9 | prompts/C9.txt | notes/C9.md | partial | NOTIFICATIONS.txt: read to 0 of 441 |
+| C9 | prompts/C9.txt | notes/C9.md | partial | NOTIFICATIONS.txt: read to 220 of 441 |
 | C10 | prompts/C10.txt | notes/C10.md | done |  |
 | C11 | prompts/C11.txt | notes/C11.md | done |  |
 | C12 | prompts/C12.txt | notes/C12.md | done |  |
 | C13 | prompts/C13.txt | notes/C13.md | done |  |
 | C14 | prompts/C14.txt | notes/C14.md | done |  |
-| D1 | prompts/D1.txt | notes/D1.md | partial | design-ux-journeyExperience.txt: read to 920 of 1379; final section not written |
-| D2 | prompts/D2.txt | notes/D2.md | partial | design-ux-surfaceRules.txt: read to 3000 of 3473 |
+| D1 | prompts/D1.txt | notes/D1.md | partial | final section not written |
+| D2 | prompts/D2.txt | notes/D2.md | done |  |
 | M1 | prompts/M1.txt | notes/M1.md | done |  |
 | M2 | prompts/M2.txt | notes/M2.md | done |  |
 | M3 | prompts/M3.txt | notes/M3.md | partial | final section not written |

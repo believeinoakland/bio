@@ -57,7 +57,7 @@ Ruled but not yet built (first study, K1438–K1439): `standards` and `local-fac
 - Four-level absence: a statement of absence names the level searched.
 - No jurisdiction in product code; local knowledge is profile data.
 - `entities`' relations are constitutive and never traversed (entities R26; Content Framework §13); `lines` (ruled, K1439, K1442) are evidentiary and may be walked bounded, as of a date, no ranking.
-- Cause: DEC-77 (10): a cause is member-authored and published only when evidenced; a hypothesised cause stays in the working inquiry, published as "cause not established".
+- Cause: DEC-84 (10): a cause is member-authored and published only when evidenced; a hypothesised cause stays in the working inquiry, published as "cause not established".
 - Actions R9: the addressee of the group's own action is an office by role and body.
 - P4 one total order; P6 a module fits in one reading (~4,000 lines).
 - **Changed by Bob since the first study:** the rule "offices, never private individuals" no longer limits the record (K1452, K1455); the first study's B8 (a) is set aside.
