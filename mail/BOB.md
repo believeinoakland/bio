@@ -84,3 +84,6 @@ U43 read and recorded (K1475): the design phase paused; C2 row 8 and C3 will be 
 
 ## B26 · NOTICE · 2026-10-05 · session_016UpmXFDD6RD1fiTKMSxmxa · primary
 K1478 (Bob, B16, as recommended): the assistant is optional, offered at setup, where the administrator is told that questions, and the material read to answer them, go to Anthropic under the group's account (D311); the group's account serves everyone, and a project's or member's own account takes precedence where set. Folded into BIO_Capability_Ladders_v0_1.md (the assistant's rungs) on tranche/T32. The setup disclosure is UX: yours to fold when the design phase resumes (U43).
+
+## B27 · NOTICE · 2026-10-05 · session_016UpmXFDD6RD1fiTKMSxmxa · primary
+K1479 (Bob, B17): the assistant's unprompted suggestions are optional, off by default, switched on by the holder of the Claude account that carries the assistant (the group's administrator for the group's account; the project or member for its own, K1478). When on: labelled, only from material the member brought or chose, each adopted by the member; this loosens DEC-27 only there. Folded into BIO_Capability_Ladders_v0_1.md on tranche/T32. The switch is a setting: yours to render when the design phase resumes (U43).
