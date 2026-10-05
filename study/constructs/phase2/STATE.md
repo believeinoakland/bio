@@ -26,10 +26,10 @@
 | M6 | prompts/M6.txt | notes/M6.md | done |  |
 | M7 | prompts/M7.txt | notes/M7.md | done |  |
 | X-REGISTER | prompts/X-REGISTER.txt | digest/DOCTRINE-REGISTER.md | done |  |
-| A-EVENTS | prompts/A-EVENTS.txt | studies/EVENTS.md | missing |  |
+| A-EVENTS | prompts/A-EVENTS.txt | studies/EVENTS.md | partial | sections not all written |
 | A-INTEGRATION | prompts/A-INTEGRATION.txt | studies/INTEGRATION.md | missing |  |
-| A-MONEY | prompts/A-MONEY.txt | studies/MONEY.md | missing |  |
-| A-PEOPLE | prompts/A-PEOPLE.txt | studies/PEOPLE.md | missing |  |
+| A-MONEY | prompts/A-MONEY.txt | studies/MONEY.md | done |  |
+| A-PEOPLE | prompts/A-PEOPLE.txt | studies/PEOPLE.md | partial | sections not all written |
 | R-1 | prompts/R-1.txt | reviews/R-1.md | missing |  |
 | R-2 | prompts/R-2.txt | reviews/R-2.md | missing |  |
 | R-3 | prompts/R-3.txt | reviews/R-3.md | missing |  |
