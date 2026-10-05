@@ -31,3 +31,16 @@ Size (session_01HaSoeitaf5svNuEMw8yMQN): test runs 4, module lines 5,087
 ## J2 · COMPLETE
 
 T33-12 done as B2/K1513 shaped it, on job/T33/docprofile: registerDoctype (the seam; replaces by key in place, appends a new key, refuses a malformed member stated) seeded with the seven types in their order; NO_TYPE when no fallback is registered; assess stops at L5 with meaningful null for a type with no reader. Nothing deleted (N549). docprofile 54/54, importers (extraction, reading-pipeline, monitoring, acquisition) 370/370; format, architecture, coverage (25/25), ownership all 0 failures. Final uses unchanged: jurisdictions, site-profiles. Details in my record's Completion section. Ready for the CHANGE at doctypes' merge.
+
+## Completion of B3 (CHANGE, K1520): R37
+
+**Applied.** I merged `tranche/T33`. `readText` now hands the content type's reader `ctx.supplied`: the very object the caller supplied, unchanged. That covers its pages (a page with no text layer included), `undetermined`, `images`, `ocr` and typed `cells`. A bare string carries no structure (R21), so it gives `null`. A caller's own `ctx.supplied` never stands in for it.
+
+**Tests and checks.**
+- `node --test docprofile/test/*.test.mjs`: tests 55, pass 55, fail 0. New: R37 in `seam.test.mjs`.
+- Importers, with legistar-reader and roster-reader: tests 404, pass 404, fail 0.
+- `format`, `architecture`, `coverage` (26 of 26) and `ownership`: 0 failures each.
+
+**Next.** A CHANGE is still to come when jurisdictions and civil-time merge (K1519).
+
+Size (session_01HaSoeitaf5svNuEMw8yMQN): test runs 7, module lines 5,121
