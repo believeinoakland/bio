@@ -38,3 +38,7 @@ Replaces J1 (points 1 and 2 unchanged; point 3 added).
 - With `legistar-reader`'s `paths`/`tests` set in a scratch copy of `modules.json` (they are empty until BOB writes them at the merge): `architecture.mjs`: 64 product files, 3 relative imports; 0 failures. `coverage.mjs`: 16 of 16 live ids named by a test; 0 failures. `ownership.mjs … tranche/T33`: 65 files; 0 failures. With the registered empty paths, architecture and coverage see no files (coverage: 0 of 16, the accepted red until the merge).
 
 Size (session_01Mr47bi897kmqem6V1yfAdg): test runs 2, module lines 526
+
+## J3 · COMPLETE
+
+T33-14 applied; 18 tests pass; format, architecture, coverage (16/16) and ownership 0 failures (the last three with my paths set in a scratch modules.json). For modules.json: paths ["legistar-reader/"], tests ["legistar-reader/test/"], uses ["docprofile"]. J1's readings applied (K1513). J2 point 3 (vocabulary keys `meeting_markers`/`body_variants` read top-level as jurisdictions R6 defines them) is unanswered: answer only if wrong; it is a two-line change. Record's Completion section has the rest.
