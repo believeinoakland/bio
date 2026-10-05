@@ -34,3 +34,8 @@ Readings I am building on (no answer needed unless one is wrong):
 5. `sum` over a field where any row's value is undetermined answers undetermined (never a partial total: R20, never read as zero), naming the rows.
 6. `resultKey(recipe, inputHashes, {methodVersion?})`: the optional third argument (default `bio-calc/1`) exists so R15's "different method version" is testable.
 7. `compare` treats a `rounded` figure as the interval of half a unit at its last printed place, and an `approximate` one as undetermined unless the other side settles it never; equal only for two exact equal values.
+
+## J2 · REPORT
+
+T33-4 built on K1514's readings and pushed (job/T33/calc-grammar): 29/29 tests; format, architecture, coverage (20/20) and ownership 0 failures (with my row's paths filled in a local copy of modules.json: paths bio-plane/src/calc-grammar/, tests bio-plane/test/m/calc-grammar/). Uses unchanged: record-grammar, civil-time.
+One step before COMPLETE: R7's date and R9's span tests ran against a local stand-in of civil-time's compare and span (never committed). When civil-time merges into tranche/T33, send me a CHANGE (or RESUME) and I merge it, re-point to its exported names if they differ, re-run, and post COMPLETE. Progress is in my record's Completion section.
