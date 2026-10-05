@@ -34,7 +34,7 @@ const firstRefusal = (r, extra = {}) => {
 };
 const checks = (res) => [...new Set(res.failures.map((f) => f.check))];
 
-test("R6 items are the owner's own connections in the shape, at the node, evaluated at the date, paged within the fan-out", () => {
+test("R6 R19 items are the owner's own connections in the shape, at the node, evaluated at the date, paged within the fan-out", () => {
   const r = withOwner();
   const items = all(r);
   const ids = items.map((i) => i.id);
@@ -62,7 +62,7 @@ test("R6 items are the owner's own connections in the shape, at the node, evalua
   assert.equal(seen[0].viewer, args.viewer, "unchanged, the same value");
 });
 
-test("R6 an answer that breaks the contract is refused whole as OWNER_NONCONFORMING, never trimmed", () => {
+test("R19 R6 an answer that breaks the contract is refused whole as OWNER_NONCONFORMING, naming the check, never trimmed; a missing owner or a throw is refused", () => {
   for (const [broken, check] of [["out", "at"], ["unmarked", "at"], ["kinds", "kinds"], ["foreign", "kinds"], ["nodeless", "node"],
     ["partialhub", "hub"], ["fanout", "fanout"], ["derived", "derived_id"], ["label", "label"], ["async", "answer"]]) {
     const r = withOwner(broken);
@@ -94,7 +94,7 @@ test("R7 sight: a fenced item reaches only the viewer who may see it, uncounted 
     assert.equal(a.refused, "VIEWER_MISSING");
     assert.ok(a.why.length);
   }
-  assert.equal(called, 0, "no owner is read for a missing viewer");
+  assert.equal(called, 0, "no owner is read for a missing viewer (R19)");
   // The battery holds every owner to the same: the owner's own sight, and its own refusal of a missing viewer.
   assert.ok(checks(ownerConformance({ owner: "sample", kinds: KINDS, neighbours: makeNeighbours("sight"), fixture: fixture() })).includes("sight"));
   assert.ok(checks(ownerConformance({ owner: "sample", kinds: KINDS, neighbours: makeNeighbours("viewer"), fixture: fixture() })).includes("sight"));

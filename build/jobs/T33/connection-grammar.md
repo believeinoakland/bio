@@ -2,6 +2,30 @@
 
 **Status** · session_01HtVdRtx6MjGMmTyLt1m2Ai · depth 2 · WORKING · handled B1
 
+## Completion
+
+**Entries applied.** T33-5 (B1a.1) in full: the connection shape and `checkConnection` (R1), the owner registry with the members' words (R2–R5, option (ii)), the `neighbours` contract (R6–R8), the registry's pass-through `neighbours` (R19, K1513), the exported battery `ownerConformance` (R9), `BOUNDS` and `depthOf` (R10), `derivedId` (R11), the walk semantics `chainGrade`, `chainLabel`, `orderPaths` and `exhausted` (R12–R15), and the invariants (R16–R18). All of it follows J1's readings as answered in B2 (K1513).
+
+**Paths.** Code: `bio-plane/src/connection-grammar/` (7 files: `index.mjs`, `shape.mjs`, `registry.mjs`, `reads.mjs`, `bounds.mjs`, `walk.mjs`, `conformance.mjs`). Tests: `bio-plane/test/m/connection-grammar/` (5 test files and `fixtures/owner.mjs`, a sample owner with one switch per broken rule). **Final `uses`:** record-grammar, civil-time (unchanged).
+
+**Interfaces relied on, not yet built upstream.** record-grammar `idPattern` (R47, T33-1), with `BASIS_GRADES`, `canonicalJson` and `sha256HexSync`. civil-time `validAt({valid, basis}, date)` (R22–R23) and `compare(a, b)` (R5), which answer `'before'`, `'after'` or an undetermined object (T33-3). The read's `at` goes to `validAt` unchanged as its date. Until T33-1 and T33-3 merge, the tests ran against local stand-ins written from those requirements, never committed (J1 Q6). After their merges, the job merges `tranche/T33` and re-runs steps 5–7 on the real modules at BOB's CHANGE.
+
+**Beyond R19's list.** The pass-through also refuses an `out` item, an undetermined item left unmarked, and a hunch returned outside its scope. Those are the R6 and R8 rules a caller can check, judged by the same code as the battery. A throwing owner is refused `OWNER_FAILED`, and an unregistered one `OWNER_UNKNOWN`.
+
+**Deferred.** None.
+
+**Found in other modules.** None.
+
+**Tests and checks run** (after merging `tranche/T33` with K1513's R19):
+- `node --test test/m/connection-grammar/` (from `bio-plane/`): tests 26, pass 26, fail 0. The battery was also run over each broken sample owner (out, unmarked, sight, viewer, scope, paging, fanout, hub, partial hub, kinds, foreign kind, nodeless, derived id, label, nondeterministic, async, throws). Each fails with its check named.
+- `node checks/format.mjs`: 126 modules, 125 requirements files; 0 failures.
+- `node checks/architecture.mjs … connection-grammar`: 14 product files, 32 relative imports (3 naming no tracked file, not judged: the civil-time import, until T33-3 merges); 0 failures.
+- `node checks/coverage.mjs … connection-grammar`: 19 of 19 live requirement ids named by a test; 0 failures.
+- `node checks/ownership.mjs … connection-grammar tranche/T33`: 15 files; 0 failures.
+- The architecture, coverage and ownership checks ran with my paths written into `modules.json` locally, uncommitted (BOB writes them at the merge).
+
+Size (session_01HtVdRtx6MjGMmTyLt1m2Ai): test runs 6, module lines 606
+
 ## J1 · QUESTION
 
 My readings; I am building on them now. Only Q1 and Q2 change the interface others code against.
