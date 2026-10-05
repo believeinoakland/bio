@@ -135,6 +135,7 @@ One line per step or chunk, newest last: `date · step · what was done · where
 - 2026-10-03 · K1312–K1329 · BOB #105 · session_01DDpGto6QSiBnw4AxvJcYJq · depth 1 (parent ROOT #4): took over ~01:22 UTC from BOB #104; merged reevaluation and closed L7 (K1314); folded L11's requirements (K1313); ran L8's eight jobs to their close (K1315–K1328: the case file's shared spellings K1315–K1318; publication R57–R60 knock-on K1321 added L9 conformance); started L9; N529–N532 to next; refreshed at ~395k (K1329).
 - 2026-10-05 · K1477–K1494 · BOB #113 · session_016UpmXFDD6RD1fiTKMSxmxa · depth 1 (parent ROOT #2): took over ~18:00 UTC from BOB #112; recorded Bob's rulings on all sixteen open decisions (K1478–K1494), folded into the capability ladders, Design Requirement 6 and Bob's page; U41 answered.
 
+- 2026-10-05 · K1499– · BOB #114 · session_01MWqyw89yDMqxpG2iqqSom6 · depth 1 (parent ROOT #5): took over ~21:10 UTC from BOB #113 (retired with ROOT #2 on Bob's direction, K1497); recorded ROOT #5.
 
 ## 5. Challenges identified
 
