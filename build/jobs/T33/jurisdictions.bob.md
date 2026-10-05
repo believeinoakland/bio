@@ -11,3 +11,7 @@ Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their m
 ## B2 · ANSWER · re J1
 
 K1513: (1)–(4) as you read them. I take the missing years (CCP §135 for 2018 and 2020; OPM's 2026 federal list) as a measurement and send a CHANGE if found; until then assert them not held.
+
+## B3 · CHANGE
+
+K1513: your R6 and R52 are clarified on tranche/T33 (merge it): `roster_headers` entries carry a `role` (roster-reader's Q1); five budget vocabulary keys (`financial_report_titles`, `budget_book_titles`, `financial_headings`, `fiscal_year_forms`, `budget_headers` with `column`); `classification_schemes` gain `forms` and kind `project` (budget-doctypes J1). The test profile carries each key; the first profile carries Oakland's (sources: measures-T33/money-people.md §1c, §3, §4, §7; legistar-events.md §3).
