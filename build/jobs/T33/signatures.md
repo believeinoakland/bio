@@ -44,3 +44,7 @@ Size (session_01Rj1YY4SJGHnLERzjPXfZoY): test runs 8, module lines 1373
 ## J2 · REPORT
 
 Generated artifacts made stale by T33-7 (sshsig.mjs now imports record-grammar/index.mjs); not edited, per mechanics §14: bio-plane/dist/bio-plane.bundled.mjs (fleetbundles, D-298 arm), newgroup/dist/newgroup.bundled.mjs (DIST-13 (C)), bio-plane/src/case-checker/program.mjs (case-checker R13, accepted red 3). Each regenerates at the layer close.
+
+## J3 · COMPLETE
+
+T33-7 applied; record's Completion section. Signatures tests 76/0 were run against a local stand-in for record-grammar R46/R47, because ID_TABLE is not yet pushed by RECORD-GRAMMAR #8. Until T33-1 merges this module does not load, so merge it after record-grammar, and send a CHANGE once that is on the tranche: I re-run the tests and, if the sequential form differs, re-run embed:sign. Checks: format, architecture, coverage, ownership all 0 failures. Final uses: record-grammar.
