@@ -23,3 +23,7 @@
 - `checks/format.mjs`: 126 modules, 125 requirements files; 0 failures. `checks/architecture.mjs odf-reader`: 10 product files, 37 relative imports; 0 failures. `checks/coverage.mjs odf-reader`: 46 of 46 live requirement ids named by a test; 0 failures. `checks/ownership.mjs odf-reader tranche/T33`: 0 failures.
 
 Size (session_01Ybi2T2Cypoam3N29qB6CKE): test runs 6, module lines 2305
+
+## J1 · COMPLETE
+
+T33-11 applied: R46 typed cells in odsEntry.text() (office-readers R30's contract). odf-reader tests 62/62; format-registry, acquisition, capture tests green; format, architecture, coverage (46/46), ownership checks 0 failures. Readings (no question needed): over guard/repeat bound sheets is [] so no cells list stands; unknown value type gives type null. Stale artifact: bio-plane/dist/bio-plane.bundled.mjs (not_product, regenerated at layer close). Uses unchanged. Details in my record.
