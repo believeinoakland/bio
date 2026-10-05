@@ -517,7 +517,10 @@ function validateInto(p, errors) {
         const m = p.practice.minutes_due_days;
         if (!isObj(m)) err("practice.minutes_due_days", "VALUE_INVALID", "{value, basis}");
         else {
-          fields("practice.minutes_due_days", m, ["value", "count", "basis"]);
+          fields("practice.minutes_due_days", m, ["value", "count", "closures", "basis"]);
+          /* K1533: the closure list a business count skips; with none, the due is undetermined */
+          if (own(m, "closures") && !(own(p, "holidays") && Array.isArray(p.holidays) && p.holidays.some((h) => isObj(h) && h.list === m.closures)))
+            err("practice.minutes_due_days.closures", "VALUE_INVALID", `no holidays entry of this profile is in a list named '${String(m.closures)}'`);
           if (!isPosInt(m.value)) err("practice.minutes_due_days.value", "VALUE_INVALID", "a positive integer");
           if (own(m, "count") && !COUNTS.includes(m.count)) err("practice.minutes_due_days.count", "COUNT_UNKNOWN", "count is calendar or business");
           basis("practice.minutes_due_days", m);
@@ -1291,9 +1294,10 @@ function merge(profiles) {
     /* the value and its count (calendar when absent, R7) are one fact */
     const given = profiles.filter((p) => p.practice && p.practice.minutes_due_days)
       .map((p) => ({ profile: p.id, value: p.practice.minutes_due_days.value, count: p.practice.minutes_due_days.count || "calendar",
-        written: p.practice.minutes_due_days, basis: p.practice.minutes_due_days.basis }));
-    if (given.length && agree(given.map((g) => ({ value: [g.value, g.count] }))))
+        closures: p.practice.minutes_due_days.closures, written: p.practice.minutes_due_days, basis: p.practice.minutes_due_days.basis }));
+    if (given.length && agree(given.map((g) => ({ value: [g.value, g.count, g.closures ?? null] }))))
       view.practice.minutes_due_days = { value: given[0].value, ...(own(given[0].written, "count") ? { count: given[0].count } : {}),
+        ...(own(given[0].written, "closures") ? { closures: given[0].closures } : {}),
         basis: given[0].basis, profile: given[0].profile, bases: given.map((g) => ({ profile: g.profile, basis: g.basis })) };
     else if (given.length)
       conflict("practice.minutes_due_days", given.map(({ written, ...g }) => g),

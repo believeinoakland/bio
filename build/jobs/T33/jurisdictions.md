@@ -1,6 +1,6 @@
 # jurisdictions (T33)
 
-**Status** · session_016rKi7FqGrzSeDuh4w2sUJ7 · depth 2 · COMPLETE · handled B7
+**Status** · session_016rKi7FqGrzSeDuh4w2sUJ7 · depth 2 · COMPLETE · handled B9
 
 ## Completion
 
@@ -17,6 +17,8 @@
 - B4 (2): the Charter as its own `codes` entry (`charter`, sections `\d{3,4}`, no markers; `markers` may now be empty). B4 (3): systems `courtlistener_docket`, `cpuc_proceeding`, `ecourt_roa` and the proceeding number forms (Alameda civil and legacy, federal district, docket core, CPUC) in the first profile; equivalents on made-up hosts in the test profile. B4 (4): `holidays-extra.md` judged adequate (two published lists agreeing; Columbus Day then a judicial holiday, as P6 needs): the 2018 and 2020 judicial lists are held, and the federal 2026 list gains the observed 07-03.
 - B3 (K1513): `roster_headers` carry `role`; the budget keys `financial_report_titles`, `budget_book_titles`, `financial_headings` (whitespace-tolerant: the letter-spaced ACFR headers), `fiscal_year_forms`, `budget_headers` (`column`); `classification_schemes` gain `forms` and kind `project`. First profile: the ACFR and budget-book words, the budget headers, and fund/org/department/program/account/project schemes (money-people §1c, §3, §4, §7; legistar-events §3). Test profile: an equivalent set, every role and column.
 - B6 (K1519): read; B3–B5 were already applied (J5). B7 (K1521, doctypes' codifier measurement): the OMC's markers `letter, numeral, letter, roman, paren_numeral`; the Charter's number one part (`separators: ""`), markers `paren_letter, paren_numeral, paren_letter, roman`; validate now accepts an empty `separators` and a marker kind recurring at a deeper level.
+- B8 (P9, from BUDGET-DOCTYPES #1 J6): the first profile's `budget_headers` read the three measured Socrata line-item cycles: `amount` (`amount|amt`, `fy\d{2}_\d{2}_…`), `period` (`budget|budget_year_name`), and fund, org, program, project, account widened to their `_code` forms and `prog`/`acct`; the org scheme takes FY2013-15's bare codes (`^\d{2,5}$`); `financial_headings` gain the budget book's "General Purpose Fund Revenue" and "Expenditures By Fund". Not added: a dated column form for "June 30, 2024": the research files hold no such heading (only a file name, `ye-6.30.2019`).
+- B9 (K1533): R7's `minutes_due_days.closures` validated (a list of the profile, else VALUE_INVALID) and part of the one value in combine; the first profile names `city`, the test profile `town`.
 - B5 (K1517): `roster_words` `kind`; the first profile's roster words, staff titles and roster headers from roster-reader's 15 fixtures (basis `2026-10-05 roster-reader`), a term column left unnamed.
 
 **Deferred.** The CCP §135 list for 2024 (fixture R1's roll check): not measured, not held; the R57 test names exactly this gap. In the first profile, no `fiscal_year`, `law_ranks`, `instrument_key`, proceeding kinds or flows, recurrences or amending vocabulary: unsourced, absent (R27).
@@ -28,7 +30,7 @@
 - Every user of jurisdictions (id-spaces, docprofile, acquisition, capture, reading-pipeline, extraction, entities, local-facts, standards, action-grammar, actions, action-clocks, filing-templates, filings, escalation, action-plans, monitoring, affordances, instance-setup, installer): pass 1,311, fail 6 (the same six, J3; 45/45 on `tranche/T33` for the three files). affordances' R25 place check passes (a test-profile system name carrying "(test)" was renamed).
 - `format`: 126 modules, 125 requirements files; 0 failures. `architecture jurisdictions`: 7 product files, 9 relative imports; 0 failures. `coverage jurisdictions`: 57 of 57 live ids named by a test; 0 failures. `ownership jurisdictions tranche/T33`: 0 failures.
 
-Size (session_016rKi7FqGrzSeDuh4w2sUJ7): test runs 25, module lines 4847
+Size (session_016rKi7FqGrzSeDuh4w2sUJ7): test runs 32, module lines 4884
 
 ## J1 · QUESTION
 
@@ -72,3 +74,11 @@ B2–B5 applied (3678445492, tranche/T33 merged). B4: OMC 2.20.070(C) as its own
 ## J6 · COMPLETE
 
 B6 read (B3–B5 already applied in J5, with K1514's Monday rule shape and monday_prior_friday_noon dropped; 2018/2020 court lists held). B7 applied (7c1f75f9dc): OMC markers letter, numeral, letter, roman, paren_numeral; Charter number one part (separators ""), markers paren_letter, paren_numeral, paren_letter, roman; validate accepts empty separators and recurring marker kinds. jurisdictions 81/81; format, architecture, coverage 57/57, ownership: 0 failures. Users 1,311 pass / 6 fail (J3's six, routed by K1519). Size: test runs 25, module lines 4847.
+
+## J7 · COMPLETE
+
+B8 applied (dd992d436e, tranche/T33 merged): budget_headers read all three measured Socrata cycles (amount: amount|amt and fy\d{2}_\d{2}_*; period: budget|budget_year_name; fund/org/program/project/account with _code forms, prog, acct); oakland_org takes bare ^\d{2,5}$; financial_headings gain 'General Purpose Fund Revenue' and 'Expenditures By Fund'. Not added: a 'June 30, 2024' column form, which the research files do not hold. Tested at the interface on every measured header. jurisdictions 81/81; format, architecture, coverage 57/57, ownership: 0 failures. Users 1,316 pass / 7 fail: J3's six, plus entities idmatch.test.mjs R20 (expects 4 spaces; id-spaces now lists nine, R1), which fails with tranche/T33's own jurisdictions too, so it is not from this change. Size: test runs 32, module lines 4884.
+
+## J8 · COMPLETE
+
+B8 and B9 applied (0f053b9689, tranche/T33 merged). B9: R7's minutes_due_days.closures validated (names a closure list of the profile, else VALUE_INVALID) and part of its one value in combine; oakland-alameda names city, the test profile town. B8 as in J7. jurisdictions 81/81; format, architecture, coverage 57/57, ownership: 0 failures. Users 1,317 pass / 7 fail: J3's six and entities idmatch R20 (id-spaces' nine spaces; red with tranche/T33's own jurisdictions too). Size: test runs 32, module lines 4884.

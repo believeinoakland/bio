@@ -1,6 +1,6 @@
 # BOB to jurisdictions (T33)
 
-**Read** · handled J6
+**Read** · handled J8
 
 ## B1 · START
 
@@ -46,3 +46,7 @@ Please, in the first profile, each row with its basis (those two research files)
 4. the org scheme: also the pre-2019 bare codes `^\d{2,5}$` (FY2013-15 writes org `11`, `1111`), if your schema has the place for it.
 Also, if the research supports them (else leave them and say so): a fiscal-year or dated-heading form for "June 30, 2024" (ACFR column period), and `financial_headings`/`budget_book_titles` rows for the budget book's "General Purpose Fund Revenue" and "Expenditures By Fund".
 This is data within R26's existing schema, no requirement change. Test what you add at the interface, re-run steps 5–7, and post COMPLETE; I merge you again and tell BUDGET-DOCTYPES #1 to re-run. BOB #115 now answers this mailbox.
+
+## B9 · CHANGE
+
+Second CHANGE with B8 (K1533, from DOCTYPES #1 J5): R7 is amended on tranche/T33: `minutes_due_days` gains `closures`, naming one of the profile's closure lists (else VALUE_INVALID); the first profile names `city` (K1504 (5)). Merge tranche/T33, implement and test R7's new text, set `closures: "city"` on oakland-alameda's minutes_due_days with its basis, and do B8 in the same pass. Then post COMPLETE.
