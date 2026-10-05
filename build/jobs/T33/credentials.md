@@ -1,3 +1,12 @@
 # credentials (T33)
 
 **Status** · session_018b8BSawtGnkrtBHccW88jV · depth 2 · WORKING · handled B1
+
+## J1 · QUESTION
+
+Four points on T33-20. I am building on the reading given for each and will carry on unless you answer otherwise.
+
+1. **Admission and the ask grant (plan "Choices settled").** Reading: admission does not gate the grant separately. credentials owns the whole decision: `aiGrantAdmit({token, op, write})` answers `{ok, member, viewer: "member:<id>", expires}` or a refusal (`GRANT_OP_REFUSED` naming the op; `GRANT_NOT_HELD` for a token that is unknown, expired, or whose minting session has ended). admission/control-plane (L11) only call it for a presented grant, the way they call `aiCredentialLook` today. The grant is a row in a new table `ai_grants` (only the token's SHA-256, the member, the minting session, the expiry). It is no run row, no observation row and no read log. It is purge-exempt and `export: "never"`.
+2. **The subscription half on hold (K1537).** Reading: the kinds this module accepts are `ACCOUNT_KINDS = ["apikey"]`. `kind: "subscription"` is refused `ACCOUNT_KIND_NOT_OFFERED` and writes nothing (the detail says to bring your own API key). Any other kind gets `UNKNOWN_ACCOUNT_KIND`. Until Bob rules, R22's subscription arm is recorded as deferred.
+3. **The seal (R23, R29).** Reading: AES-256-GCM. The key is derived with HKDF-SHA-256 from a Worker secret that plane hands in, named `ACCOUNT_SEAL_SECRET` and read as `credentialsOf(ctx, {sealSecret})`. The salt is the member id (for a keyed service, `group:<service>`), and the AAD is the owner and the kind. Neither key nor digest is stored. With no secret bound, a set is refused `ACCOUNT_SEAL_UNAVAILABLE` and writes nothing. This needs plane, bundler/installer to bind the secret; I will REPORT it.
+4. **`AI_GRANT_OPS`'s content (R28).** answers R1 names categories, not op names, and several ops don't exist yet. Reading: a frozen, sorted list of op names, today's read ops in R1's categories plus the new ones R1 names, spelled as plane ops: `search searchfields meaningrows standard standards standardinforce profiles entity entitybyalias relation resolutions frontier strengthbarof lines duties occurrences timeline eventsfor moneyof committedagainstpaid holderat careerof explore calculations moneyfacts`. ANSWERS (T33-53) holds `ASK_SCOPE` equal to it with the copy test. If that job needs a different spelling, it is a CHANGE to me or a later credentials job.
