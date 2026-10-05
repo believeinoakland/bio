@@ -24,11 +24,11 @@
 | M5 | prompts/M5.txt | notes/M5.md | done |  |
 | X-REGISTER | prompts/X-REGISTER.txt | digest/DOCTRINE-REGISTER.md | done |  |
 | A-ANALYSIS | prompts/A-ANALYSIS.txt | studies/ANALYSIS.md | partial | working files only: ANALYSIS.md.work |
-| A-COURTS | prompts/A-COURTS.txt | studies/COURTS.md | partial | working files only: COURTS.md.work |
-| A-LAW | prompts/A-LAW.txt | studies/LAW.md | partial | working files only: LAW.md.work |
+| A-COURTS | prompts/A-COURTS.txt | studies/COURTS.md | partial | sections 1-9 not all written |
+| A-LAW | prompts/A-LAW.txt | studies/LAW.md | partial | sections 1-9 not all written |
 | A-ORGANISATIONS | prompts/A-ORGANISATIONS.txt | studies/ORGANISATIONS.md | partial | working files only: ORGANISATIONS.md.work |
-| A-QUESTIONS | prompts/A-QUESTIONS.txt | studies/QUESTIONS.md | partial | working files only: QUESTIONS.md.work |
-| A-TIME | prompts/A-TIME.txt | studies/TIME.md | partial | working files only: TIME.md.work |
+| A-QUESTIONS | prompts/A-QUESTIONS.txt | studies/QUESTIONS.md | partial | sections 1-9 not all written |
+| A-TIME | prompts/A-TIME.txt | studies/TIME.md | partial | sections 1-9 not all written |
 | R-1 | prompts/R-1.txt | reviews/R-1.md | missing |  |
 | R-2 | prompts/R-2.txt | reviews/R-2.md | missing |  |
 | R-3 | prompts/R-3.txt | reviews/R-3.md | missing |  |

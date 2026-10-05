@@ -148,3 +148,17 @@
 - Journalists: docket alerts, RECAP; sealed docs not in PACER, motions to unseal. https://free.law/2018/08/21/announcing-pacer-docket-alerts-for-journalists-lawyers-researchers-and-the-public/ ; https://journalistsresource.org/?p=75500 ; https://foreignpress.org/journalism-resources/mining-court-dockets-is-a-valuable-journalistic-skill
 - UPL: legal information vs advice (applying law to a person's facts). https://judicature.duke.edu/articles/legal-information-vs-legal-advice-a-25-year-retrospective/
 - Cloudflare Workers Paid: 10,000 subrequests default, up to 10M configurable; CPU 30s default up to 5 min; waiting on fetch not CPU. https://developers.cloudflare.com/workers/platform/limits ; https://developers.cloudflare.com/changelog/2026-02-11-subrequests-limit
+
+### Additional checks
+- SCHEDULER L150-154: "Never a vendor key and never a second account ... a capability that required somebody else's credential is not one this project can ship (D-115's class, DEC-35's own argument)". => no REQUIRED CourtListener/PACER key; optional member credential via capture-sources R55 (K103) is a different path.
+- CM §6b L1098-1118 (D-165): preconditions deferred; three inputs: evidence gathered, mechanical means (filing window vs date, standing vs who group is, exhaustion vs actions recorded), AI support for procedural knowledge; lesson L1085-1092: open list over premature schema.
+- Names free in build/requirements: proceeding, forum, tribunal, register of actions, party_to, appeal_of, interprets.
+- Legacy UI add flow writes `monitoring: enabled: false, frequency: none` (app.html:3313); monitoring R14-R15 authored frequency per address.
+
+### Analysis plan (decided)
+- Ladder L0 documents; L1 court-aware reading & citation; L2 proceeding followed; L3 duties from proceedings; L4 interpretation & precedent; L5 procedural reasoning & patterns.
+- Built: L0 + slice of L1. Usable: L0.
+- Target L3 (+L1 citation discipline, L4 links as data). Option A (entities kind `proceeding` + extend jurisdictions/docprofile/progressions/actions) recommended; Option B new L5 module `proceedings` after progressions on trigger.
+- Decisions for Bob: scope/target; A vs B; private parties; fee-bearing sources & credentials; machine quote-only on rulings; compelled removal (defer w/ trigger); UX home of proceeding.
+## Study writing progress
+- sections 1-4 written

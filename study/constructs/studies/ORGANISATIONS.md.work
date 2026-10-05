@@ -146,3 +146,15 @@
 14. Legistar Web API https://webapi.legistar.com/Help : Bodies, BodyTypes, Persons, OfficeRecords (OfficeRecordStartDate/EndDate/Title/MemberType/BodyId/PersonId); TAD already measured unauthenticated OData (C10 digest l.73).
 15. Cloudflare DO limits https://developers.cloudflare.com/durable-objects/platform/limits : SQLite DO 10 GB on Paid; CPU 30 s default, configurable to 5 min per invocation.
 16. GIJN citizen investigation guide https://gijn.org/citizen-investigation-guide/ : map of who is affected/interested; bureaucrats not just elected.
+
+17. Obligation extraction accuracy: Geerligs 2024 thesis https://fse.studenttheses.ub.rug.nl/34210 (contract obligations best 70.56%; DORA template 97.71%); EPA obligation-level audit https://arxiv.org/pdf/2608.10329 (modal-lexicon structural extraction + LLM-as-judge verification; fields agent, action, condition, deadline).
+18. JPA definition https://www.law.cornell.edu/wex/joint_powers_agreement (separate legal entity; cooperative powers).
+- [x] web research done (18 items)
+
+### Design decisions drafted (for study §5/§8)
+- Ladder L0-L5 (free text / registry / structure as-of / obligations held / observed vs declared + chains / network-scale shared).
+- Two new L5 modules: `lines` (evidenced, dated, graded org lines + occupancy) after entities; `obligations` after progressions, needing standards+local-facts moved to L5 (both use only <=L4: no uses change; users all later).
+- Obligation object: modality obligation|prohibition|power; obligor office/body (never private individual); obligee; performance; source (standard in force + clause content) or practice; trigger (event|recurrence|date|request); time rule (TIME); in-force; exceptions/discharge; enforcer/venue; observed_by (progression stage | watch | resolution kind); versioned append-only; occurrences derived on read (met / met late / overdue / pending / discharged / undetermined + why); delta findings as "Noticed"; never asserts violation.
+- Bob decisions: (1) obligation word scope incl. private bodies under public instruments; (2) holders policy; (3) traversable evidenced lines doctrine; (4) machine authority (A/B source-native written machine-attributed; obligations proposed only); (5) modules + layer moves; (6) entity kinds program, place; (7) member words obligation/power/lines; office page UX; (8) D-181 absence-of-performance as a graded leg.
+- BOB decided: internal names (lines LIN-, OBL-), queue internal OBLIGATION code -> TODO; RRULE subset with TIME; walk depth 6/fan-out 1000; identifiers with scheme; Legistar/roster reader generic; occurrences derived; D-224 reopened for office-kind entities.
+- [ ] writing study sections
