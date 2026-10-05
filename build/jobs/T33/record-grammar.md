@@ -32,3 +32,11 @@ Size (session_013Mm1CuEimicgaJCPS4wXSM): test runs 7, module lines 2368
 ## J1 · QUESTION
 
 R46 says "the job's START lists them from the code"; B1 does not list them. My reading, built on in the code: the census in my record (Completion, "The census"), 37 prefixes beyond the new 12, all sequential. Owner = the module whose object the id names and that asks for the mint. Where several modules mint one prefix, it is the type's owner: INFO capture, INQ/PROB/FOCUS inquiry, PROJ promotion. `CALSIG-<ts>`, `CR-<ts>` and `KNOCK-<date>` are left out (not `<P>-<yyyy>-<counter>`). If you want other owners or a different set, answer with the rows to change. Each one is a one-line edit to `ID_TABLE` and its pinned test.
+
+## J2 · REPORT
+
+Found while doing T33-1 (details in my record, "Found in other modules"):
+(1) I staled `bio-plane/dist/bio-plane.bundled.mjs` (fleetbundles D-298) and `case-checker/program.mjs` (R13, accepted red 3). Both are yours to regenerate at the layer close.
+(2) The readers of `OBJECT_TYPES[id.split('-')[0]]` (strength, basis-versions, actions, inquiry, citation, content, case-authoring, ai-runs, run-productions, action-grammar, inquiry-grammar) now type an `EVT-`/`HYP-`/… target as its new type, where they had none before. Their equality tests are unchanged. Worth a line in the new owners' STARTs.
+(3) `skills`' planning test "R28 the action_planning layer" is red on tranche/T33 without my change. It is not on the accepted-red list.
+(4) The callers' `\d{4}-\d{4}` copies still refuse `…-10000` until their own T33 entries.
