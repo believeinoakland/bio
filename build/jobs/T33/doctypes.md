@@ -42,3 +42,7 @@ For `jurisdictions` (T33-2, not yet merged), before its merge; the error is mine
 2. The Charter has no `codes` entry on that branch (K1514 said it would). Measured: number `\d{3,4}` (`Section 200.`), no separators, markers `["paren_letter","paren_numeral","paren_letter","roman"]`. That branch's `validate` may refuse an empty `separators`.
 doctypes' own tests lay these facts on the view (`CODIFIER_SECTIONS`, `CHARTER`), so they pass either way; with that branch merged into a scratch copy, doctypes' suite is 25 pass, 0 fail.
 3. No module yet turns the codifier's JSON (one document per section, time-law §4) into text; doctypes' tests do it in a helper. A later entry's.
+
+## J3 · COMPLETE
+
+T33-13 applied: the seven types copied to doctypes/ (DOCTYPES, registerDoctypes), regulation's form, sections, definitions and exceptions with section-level instrument_changed. Paths: code doctypes/, tests doctypes/test/; uses unchanged (docprofile, jurisdictions, site-profiles). Tests 24 pass, 1 fail: R17's test-profile clause until T33-2 merges (K1514); 25/0 on a scratch merge of origin/job/T33/jurisdictions. 83/83 section boundaries and 542/542 subsections exact on the captured code and charter; R18 verdicts unchanged on 35 readings and 75 pairs. format, architecture, coverage (24/24) and ownership 0 failures with the paths set. See J2 (REPORT) for jurisdictions' marker order and the missing Charter entry, and the record.
