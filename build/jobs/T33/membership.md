@@ -26,3 +26,9 @@
 - `format`: 126 modules, 125 requirements files; 0 failures. `architecture membership`: 23 product files, 59 relative imports; 0 failures. `coverage membership`: 79 of 79 live requirement ids named by a test; 0 failures. `ownership membership tranche/T33`: 3 files changed; 0 failures.
 
 Size (session_0177vLzjSyU8nj98B8SxWTmZ): test runs 8, module lines 3356
+
+## J1 · REPORT
+
+Found in other modules by T33-19a (record, Completion):
+1. entities: test/m/entities/resolve.test.mjs:177 (R13, N202) hard-codes the total order as [connections, progressions, observation-log]. Under T33's order (Rules (2)), observation-log precedes progressions, so the test fails after this merge: actual [50, 53, 51] where it expects them sorted. Entities' code orders correctly through MODULE_ORDER; only the test's expected list is stale. It is green on tranche/T33 without my change (9/9). It is for entities' job (T33-25), or a CHANGE to it. Until then it is red by name.
+2. Generated artifact made stale: bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (owner not_product), which inline membership's index.mjs. Regenerate at the layer close (§14). No other artifact includes membership.
