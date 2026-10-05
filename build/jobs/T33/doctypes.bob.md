@@ -23,3 +23,7 @@ civil-time is merged into tranche/T33 @ ceb81d53dd (K1529), and your modules.jso
 ## B5 · CHANGE
 
 Addendum to B4 (K1532): DOCPROFILE #4 fixed the shared `practiceValue` (docprofile/doctypes/index.mjs, which you import) to return `{value, basis, count}`; before, the unit was dropped. It merges into tranche/T33 before your fix; I will send a CHANGE when it has. Then merge tranche/T33, read `due.count` (`business`) and count through civil-time, matching docprofile's seed. Until then carry on with the rest against that reading.
+
+## B6 · CHANGE
+
+jurisdictions is merged again into tranche/T33 (K1538): R7's minutes_due_days now carries closures, and the held first profile names `city`. Your test that expects the held profile's minutes due to be undetermined is now red by design. Merge tranche/T33, make it expect the OMC 2.20.160 dates on the held profile (keep a test of the undetermined case on a view without closures), re-run steps 5–7, and post COMPLETE.
