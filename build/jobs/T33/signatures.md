@@ -57,3 +57,7 @@ Merged `tranche/T33` with record-grammar's T33-1. The real `ID_TABLE` gives 46 s
 - Checks: format 0 failures; architecture 8 files, 10 imports, 0 failures; coverage 42 of 42, 0 failures; ownership 0 failures.
 
 Size (session_01Rj1YY4SJGHnLERzjPXfZoY): test runs 10, module lines 1373
+
+## J4 · COMPLETE · re B4
+
+Re-run on the real ID_TABLE (tranche/T33 merged): its sequential form is ^INFO-\d{4}-\d{4,}$, identical to the reading, so embed:sign changed nothing. signatures 76/0, no skips. Checks: format, architecture, coverage (42/42), ownership all 0 failures. case-checker R13 is still red on the stale program.mjs (J2). Record: section 'Re-run on CHANGE B4'.
