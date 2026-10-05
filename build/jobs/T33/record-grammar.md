@@ -28,3 +28,7 @@
 - Final `uses`: none (unchanged).
 
 Size (session_013Mm1CuEimicgaJCPS4wXSM): test runs 7, module lines 2368
+
+## J1 · QUESTION
+
+R46 says "the job's START lists them from the code"; B1 does not list them. My reading, built on in the code: the census in my record (Completion, "The census"), 37 prefixes beyond the new 12, all sequential. Owner = the module whose object the id names and that asks for the mint. Where several modules mint one prefix, it is the type's owner: INFO capture, INQ/PROB/FOCUS inquiry, PROJ promotion. `CALSIG-<ts>`, `CR-<ts>` and `KNOCK-<date>` are left out (not `<P>-<yyyy>-<counter>`). If you want other owners or a different set, answer with the rows to change. Each one is a one-line edit to `ID_TABLE` and its pinned test.
