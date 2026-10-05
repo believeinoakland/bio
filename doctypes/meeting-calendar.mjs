@@ -28,15 +28,43 @@
  * the most valuable thing this type produces. Minutes that have not appeared three
  * weeks after a meeting are a fact about the body, not a gap in the record.
  */
-import { CONFIDENCE, CONTRACT, entity, referential, temporal, diffEntities, practiceValue } from "../docprofile/doctypes/index.mjs";
+import { CONFIDENCE, CONTRACT, entity, referential, temporal, diffEntities, readerView } from "../docprofile/doctypes/index.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity, unescapeHtml } from "../site-profiles/index.mjs";
+import { evaluateRule, localDay } from "../bio-plane/src/civil-time/index.mjs";
 
 /* How long after a meeting minutes stop being merely late is the JURISDICTION'S
    practice, not this reader's: it is the view's `practice.minutes_due_days`, with the
    measurement it rests on (N3). It is a threshold for RAISING A QUESTION, never for
    asserting a violation, and with no profile supplying it no date is set at all: the
    absence is still stated, and when the minutes are due is said to be unknown. */
-const DAY = 86400000;
+
+/** When minutes of a meeting held on `day` are due, by the view's practice (T33 B4, K1527):
+ *  the period counted the way the profile states it (`count: business` on the profile's own
+ *  weekend and closures, else calendar days) by civil-time, the one engine for counting days,
+ *  from the meeting's day in the profile's time zone.
+ *  `{due, unit}`, or `{due: null, why}` when no profile states the practice or the count
+ *  cannot be made (no weekend stated, a year the closures do not cover), never a guess. */
+function minutesDue(ctx, day) {
+  const view = readerView(ctx);
+  const p = view.practice && view.practice.minutes_due_days;
+  if (!p || !Number.isInteger(p.value) || p.value <= 0)
+    return { due: null, why: "no active jurisdiction profile states how long minutes usually take" };
+  const count = p.count === "business" ? "business" : "calendar";
+  const zone = view.time_zone && typeof view.time_zone.value === "string" ? view.time_zone.value : "UTC";
+  /* The closures a business count skips are the profile's own: the list the practice names
+     (`closures`) when it names one, else the office calendar (civil-time R9). */
+  const rule = { rule: "minutes_due_days", units: "days", amount: p.value, count, direction: "forward",
+                 basis: p.basis || null, starts: "act", ...(typeof p.closures === "string" ? { closures: p.closures } : {}) };
+  let r;
+  try { r = evaluateRule({ rule, anchor: { value: day, precision: "day", zone }, view }); }
+  catch (e) { return { due: null, why: `the period could not be counted: ${String((e && e.message) || e)}` }; }
+  const unit = count === "business" ? "business days" : "days";
+  if (!r || r.refused || r.undetermined || !r.due)
+    return { due: null, unit, why: `the jurisdiction's ${p.value} ${unit} could not be counted from this meeting: ${(r && r.why) || "no due day"}` };
+  /* An uncertain due is the body's latest candidate: lateness is only raised after it (K1444 (i)). */
+  const d = r.due.candidates ? r.due.candidates[r.due.candidates.length - 1] : r.due;
+  return { due: String(d.value).slice(0, 10), unit, amount: p.value, zone };
+}
 
 const parseDate = (s) => {
   const m = /(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(String(s || ""));
@@ -261,7 +289,6 @@ export default {
   connections(a, b, ctx) {
     const out = [];
     const now = ctx.now ? Date.parse(ctx.now) : Date.now();
-    const due = practiceValue(ctx, "minutes_due_days");
     for (const m of b.entities) {
       const self = `meeting:${m.key}`;
       /* REFERENTIAL: a document belongs to a meeting, and a meeting belongs to a
@@ -285,16 +312,18 @@ export default {
       if (m.facts.minutes)
         out.push(temporal(self, `document:${m.facts.minutes}`, "minutes_published_after",
           { at: m.facts.date, why: "minutes for this meeting exist, so the meeting was recorded" }));
-      else if (when < now)
+      else if (when < now) {
+        const due = minutesDue(ctx, m.facts.date);
+        const today = due.due ? localDay(new Date(now).toISOString().replace(/\.\d{3}Z$/, "Z"), due.zone) : null;
         out.push(temporal(self, null, "minutes_not_yet_published",
-          { at: m.facts.date, expected_by: due ? iso(when + due.value * DAY) : null,
-            why: !due
-              ? "this meeting has taken place and no minutes are offered yet; when they are due is not known, "
-                + "because no active jurisdiction profile states how long minutes usually take"
-              : now - when > due.value * DAY
-              ? `this meeting was held more than ${due.value} days ago, longer than minutes usually take here `
+          { at: m.facts.date, expected_by: due.due,
+            why: !due.due
+              ? `this meeting has taken place and no minutes are offered yet; when they are due is not known, because ${due.why}`
+              : typeof today === "string" && today > due.due
+              ? `this meeting was held more than ${due.amount} ${due.unit} ago, longer than minutes usually take here `
                 + "(the jurisdiction's measured practice), and this calendar still offers no minutes"
               : "this meeting has taken place and no minutes are offered yet" }));
+      }
       if (!m.facts.agenda && when > now)
         out.push(temporal(self, null, "agenda_not_yet_published",
           { at: m.facts.date, expected_by: m.facts.date,
