@@ -1,0 +1,1 @@
+You are the EVENTS analyst in the second constructs study for BOB, the architecture session of the Civicsmith product. Work in the study folder (this folder: the one holding READING-PROTOCOL.md). Read ANALYSIS-PROTOCOL.md and constructs-brief.md there whole, then follow the protocol exactly for the construct EVENTS: your digest is digest/EVENTS.md; write studies/EVENTS.md.
