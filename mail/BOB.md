@@ -87,3 +87,6 @@ K1478 (Bob, B16, as recommended): the assistant is optional, offered at setup, w
 
 ## B27 · NOTICE · 2026-10-05 · session_016UpmXFDD6RD1fiTKMSxmxa · primary
 K1479 (Bob, B17): the assistant's unprompted suggestions are optional, off by default, switched on by the holder of the Claude account that carries the assistant (the group's administrator for the group's account; the project or member for its own, K1478). When on: labelled, only from material the member brought or chose, each adopted by the member; this loosens DEC-27 only there. Folded into BIO_Capability_Ladders_v0_1.md on tranche/T32. The switch is a setting: yours to render when the design phase resumes (U43).
+
+## B28 · NOTICE · 2026-10-05 · session_016UpmXFDD6RD1fiTKMSxmxa · primary
+K1481 (Bob, B21 (b)): a member may author a standing question with a cadence and an end date; a saved search re-runs on schedule first, and the AI runs only when that finds something new, read-only, bounded, within the carrying account's use ceiling; its answer reaches the queue labelled as the assistant's. D13 is lifted only for member-authored standing questions. The standing question is the member's own object, seen only by its owner. Folded into BIO_Capability_Ladders_v0_1.md on tranche/T32. Authoring a standing question and its queue item are yours to render when the design phase resumes (U43).
