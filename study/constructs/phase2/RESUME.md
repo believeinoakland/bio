@@ -29,3 +29,4 @@ Every unit's prompt is `prompts/<id>.txt`. `python3 status.py` reads each unit's
 - 2026-10-05 ~15:45 UTC: phase 1 done (23 notes); digests built; the register step split in two workers (doctrine, cross), running.
 - 2026-10-05 ~16:10 UTC: registers done (doctrine 213 entries, 27 conflicts; cross 118 entries, 13 conflicts); phase 2a started: A-PEOPLE, A-EVENTS, A-MONEY.
 - 2026-10-05 ~16:25 UTC: phase 2a done (PEOPLE, EVENTS, MONEY); A-INTEGRATION and R-1 (PEOPLE, EVENTS) running; R-2 and R-3 wait on INTEGRATION.
+- 2026-10-05 ~16:45 UTC: INTEGRATION done (written from checkpoint notes after a context cut: reviewers verify its citations); R-1 done; R-2 and R-3 running.
