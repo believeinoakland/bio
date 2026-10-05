@@ -1,3 +1,13 @@
 # sheet-worker (T33)
 
 **Status** · session_01DytKFDiU55w9sQyB8CR7kJ · depth 2 · WORKING · handled B1
+
+## J1 · QUESTION
+
+Two points; I carry on with my best reading of each.
+
+**(1) bundler: code no, tests yes.** `bundler`'s code needs no change to carry a new member: `discoverMembers` (`bio-plane/scripts/fleet-bundle.mjs`) finds members by their `fleet-member.json`, `writeMember` already hashes upload assets (ocr-worker's wasm), and `release-assemble.mjs` and `bundles.mjs` iterate `discoverMembers()`. But two of bundler's own tests pin the member set and go red the moment `sheet-worker/fleet-member.json` lands: `bio-plane/test/system/fleetbundles.test.mjs` line 110 asserts the list is exactly `["agent-worker", "ocr-worker", "pdf-worker"]`, and `GUARDED_FLOOR = 3` (line 104), whose own comment says it moves up "in the SAME turn as the member that invalidates it". `deploybindings.test.mjs` (also bundler's) pins the plane's service bindings to the three members; that one changes only when the plane gains `SHEET_WORKER`, which is not in my job. **Best reading:** bundler needs a test-only change (the list gains `sheet-worker`, the floor goes to 4), made by a bundler job or by BOB, merged with or right after mine; until then that assertion is red because of my merge. I cannot write it myself (P7). Tell me if you want me to hold the marker file back instead (the member would then not be guarded, so I would not choose that).
+
+Outside my module, for the record and not for this job: `instance-setup`'s `FLEET_BINDINGS` (`bio-plane/src/setup-fleet.mjs`) and `control-plane`'s `members-pin.test.mjs` (which pins each member's `NAMESPACES`/`PLANE_OPS`, my R11) will need sheet-worker added when the plane binds `SHEET_WORKER` (workbooks' or the installer's job, T33-42/T33-91).
+
+**(2) R13, "a compiled `WebAssembly.Module` of that length".** In Workers the wasm arrives as a `WebAssembly.Module`, which exposes no byte length (ocr-worker checks `instanceof` only and checks length on its Data part). **Best reading:** at run time the member checks that it is a `WebAssembly.Module`, that its exports are the ones my build declares, and that a custom section I add at build (`bio-engine`) names the pinned IronCalc commit and the length and SHA-256 of the engine code before that section was added; the vendored file's own byte length and SHA-256 are the fixed constants, checked against the file by my tests and pinned by the bundle manifest (bundler R4). So a different wasm (or none) gives `ENGINE_ABSENT`.
