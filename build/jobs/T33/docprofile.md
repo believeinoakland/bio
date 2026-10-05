@@ -70,3 +70,7 @@ docprofile tests: 56 pass, 1 fail (the R6 test).
 - `format`, `architecture`, `coverage` (26 of 26) and `ownership`: 0 failures each.
 
 Size (session_01HaSoeitaf5svNuEMw8yMQN): test runs 11, module lines 5,180
+
+## J5 · COMPLETE
+
+B4-B6 done: tranche/T33 merged; seeded meeting_calendar = doctypes' line for line (only import paths differ), counting minutes_due_days through civil-time evaluateRule; practiceValue carries count (R36, kept). R6 test: held profile (and no view) expected_by null, '10 business days could not be counted'; with closures 'city', 2026-03-02 -> 2026-03-16 and 2026-11-19 -> 2026-12-07. docprofile 56/56; importers + legistar-reader + roster-reader + doctypes 430/430; format, architecture, coverage 26/26, ownership 0 failures. Record's completion section updated.
