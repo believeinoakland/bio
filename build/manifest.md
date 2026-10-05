@@ -14,6 +14,7 @@
 | the running tranche's plan, the next one, the finished ones | `build/plan/current.md`, `build/plan/next.md`, `build/plan/archive/T<n>.md` |
 | what each coming extraction moves out of a legacy module (P18) | `build/extraction/<module>.md` |
 | one record per module job | `build/jobs/T<n>/<module>.md` |
+| the capability ladders: what each construct can do at each rung L0–L5, every need found, and what each later rung takes (read before planning a stage that adds capability, or when a member's situation shows a gap) | `docs/architecture/BIO_Capability_Ladders_v0_1.md` (canon); the study's full evidence on branch `study/constructs`, tag `constructs-study-2026-10-05` |
 | every ruling, one line each | `build/rulings.md` |
 | tokens processed per session | `build/metrics/T<n>.csv` (transition sessions under `T0`) |
 | the transition to this process: plan, log, challenges, latest handoff | `docs/development/TRANSITION.md` |

@@ -1,6 +1,6 @@
 # The requirements canon
 
-**Status** · APPROVED by Bob 2026-09-25 (TRANSITION.md T3), as drafted by BOB #37 the same day, including its three calls: unreviewed drafts are canon as they stand, a document named by section is canon only there, and Bob's DEC rulings are canon. The canon is the one place every module's requirements cite, by section (PROCESS-MECHANICS §1, P5). Files stay where they are until T8 moves them here. A document listed "by section" is canon only in the sections named; the rest is history. AMENDED at T18's opening by a worker for BOB #75, 2026-09-30 (K608 (1)): `BIO_Action_v0_1.md` listed as canon (whole), and Case Making's canon part narrowed as its §6 says.
+**Status** · APPROVED by Bob 2026-09-25 (TRANSITION.md T3), as drafted by BOB #37 the same day, including its three calls: unreviewed drafts are canon as they stand, a document named by section is canon only there, and Bob's DEC rulings are canon. The canon is the one place every module's requirements cite, by section (PROCESS-MECHANICS §1, P5). Files stay where they are until T8 moves them here. A document listed "by section" is canon only in the sections named; the rest is history. AMENDED at T18's opening by a worker for BOB #75, 2026-09-30 (K608 (1)): `BIO_Action_v0_1.md` listed as canon (whole), and Case Making's canon part narrowed as its §6 says. AMENDED 2026-10-05 by BOB #111 (K1432): `BIO_Capability_Ladders_v0_1.md` listed as canon (whole).
 
 ## Canon
 
@@ -31,6 +31,7 @@
 | `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` | §3 onward | the record's shape and rules: ids, schemas, state machines, relationships, invariants I-1…I-20 |
 | `docs/architecture/BIO_Technical_Architecture_Decisions_v10.md` | the general rules, not the mechanisms | the technology decisions that remain live |
 | `docs/architecture/BIO_Bundle_Skill_Composite_Design_v1_7.md` | the bundle format, promotion semantics and C-series checks | the format the plane must still satisfy |
+| `docs/architecture/BIO_Capability_Ladders_v0_1.md` | whole; a rung not yet built is a planned design, re-verified when its stage is planned (K1432) | the capability ladders of time, organisations and obligations, law, courts, analysis and questions: every need found, every rung L0–L5 with its design, what must exist first, realism and performance, and the decisions it raises; every construct to L5 (B1 (c)) |
 
 **Construct detail (level 2)**
 
