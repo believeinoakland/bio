@@ -1,0 +1,1803 @@
+{
+ "note": "What a member reads in each codifier capture (doctypes R17); see make-codifier-answers.mjs.",
+ "reviewed": [
+  "8.22.020: \"Board\" and \"Residential Rent Adjustment Board\" means … defines both terms.",
+  "8.22.020: \"Base occupancy level\" is defined twice (its own entry, and \"base occupancy level\" for a unit with a lease limit): two entries.",
+  "8.22.020: \"Covered Unit\" means … and \"Covered Unit\" includes … are two definitional passages: two entries.",
+  "2.20.130 B.1: \"If notwithstanding the final approval …\" is in the exceptive voice R14 names, and is listed.",
+  "8.22.020: the exceptive passage inside \"CPI Rent Adjustment\" is listed (\"except as\" …)."
+ ],
+ "documents": {
+  "TIT2ADPE_CH2.20PUMEPURE_ARTIINGE_2.20.010FIPU": {
+   "title": "2.20.010 - Findings and purpose.",
+   "sections": [
+    {
+     "number": "2.20.010",
+     "heading": "Findings and purpose",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "2.20.010|A",
+    "2.20.010|B",
+    "2.20.010|C"
+   ],
+   "definitions": [],
+   "exceptions": []
+  },
+  "TIT2ADPE_CH2.20PUMEPURE_ARTIINGE_2.20.020CI": {
+   "title": "2.20.020 - Citation.",
+   "sections": [
+    {
+     "number": "2.20.020",
+     "heading": "Citation",
+     "para": 0
+    }
+   ],
+   "subsections": [],
+   "definitions": [],
+   "exceptions": []
+  },
+  "TIT2ADPE_CH2.20PUMEPURE_ARTIIPUACME_2.20.030DE": {
+   "title": "2.20.030 - Definitions.",
+   "sections": [
+    {
+     "number": "2.20.030",
+     "heading": "Definitions",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "2.20.030|A",
+    "2.20.030|B",
+    "2.20.030|B.1",
+    "2.20.030|B.2",
+    "2.20.030|C",
+    "2.20.030|D",
+    "2.20.030|E",
+    "2.20.030|E.1",
+    "2.20.030|E.2",
+    "2.20.030|E.3",
+    "2.20.030|E.4",
+    "2.20.030|F",
+    "2.20.030|F.1",
+    "2.20.030|F.2",
+    "2.20.030|F.3",
+    "2.20.030|F.3.a",
+    "2.20.030|F.3.b",
+    "2.20.030|F.3.c",
+    "2.20.030|F.3.d",
+    "2.20.030|F.3.e",
+    "2.20.030|F.3.f",
+    "2.20.030|G",
+    "2.20.030|H",
+    "2.20.030|I",
+    "2.20.030|J"
+   ],
+   "definitions": [
+    {
+     "term": "Agenda",
+     "section": "2.20.030.A"
+    },
+    {
+     "term": "Agenda-related materials",
+     "section": "2.20.030.B"
+    },
+    {
+     "term": "Agenda subscriber",
+     "section": "2.20.030.C"
+    },
+    {
+     "term": "City",
+     "section": "2.20.030.D"
+    },
+    {
+     "term": "Local body",
+     "section": "2.20.030.E"
+    },
+    {
+     "term": "Meeting",
+     "section": "2.20.030.F"
+    },
+    {
+     "term": "Notice",
+     "section": "2.20.030.G"
+    },
+    {
+     "term": "On-line",
+     "section": "2.20.030.H"
+    },
+    {
+     "term": "Software or hardware impairment",
+     "section": "2.20.030.I"
+    },
+    {
+     "term": "Standing committee",
+     "section": "2.20.030.J"
+    }
+   ],
+   "exceptions": [
+    {
+     "opens": "Notwithstanding the foregoing, agenda related materials",
+     "section": "2.20.030.B",
+     "cites": []
+    }
+   ]
+  },
+  "TIT2ADPE_CH2.20PUMEPURE_ARTIIPUACME_2.20.040COMEADBOCOCH": {
+   "title": "2.20.040 - Conduct of meetings for additional bodies covered by the chapter.",
+   "sections": [
+    {
+     "number": "2.20.040",
+     "heading": "Conduct of meetings for additional bodies covered by the chapter",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "2.20.040|A",
+    "2.20.040|B",
+    "2.20.040|B.1",
+    "2.20.040|B.2",
+    "2.20.040|B.3",
+    "2.20.040|B.4"
+   ],
+   "definitions": [],
+   "exceptions": []
+  },
+  "TIT2ADPE_CH2.20PUMEPURE_ARTIIPUACME_2.20.050MEBEOPPUAPBRAC": {
+   "title": "2.20.050 - Meetings to be open and public: Application of Brown Act.",
+   "sections": [
+    {
+     "number": "2.20.050",
+     "heading": "Meetings to be open and public: Application of Brown Act",
+     "para": 0
+    }
+   ],
+   "subsections": [],
+   "definitions": [],
+   "exceptions": []
+  },
+  "TIT2ADPE_CH2.20PUMEPURE_ARTIIPUACME_2.20.060COBUTIPLME": {
+   "title": "2.20.060 - Conduct of business: Time and place for meetings.",
+   "sections": [
+    {
+     "number": "2.20.060",
+     "heading": "Conduct of business: Time and place for meetings",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "2.20.060|A",
+    "2.20.060|B",
+    "2.20.060|B.1",
+    "2.20.060|B.2",
+    "2.20.060|B.3",
+    "2.20.060|B.4",
+    "2.20.060|C",
+    "2.20.060|D",
+    "2.20.060|E"
+   ],
+   "definitions": [],
+   "exceptions": []
+  },
+  "TIT2ADPE_CH2.20PUMEPURE_ARTIIPUACME_2.20.070NOAGRESPME": {
+   "title": "2.20.070 - Notice and agenda requirements: Special meetings.",
+   "sections": [
+    {
+     "number": "2.20.070",
+     "heading": "Notice and agenda requirements: Special meetings",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "2.20.070|A",
+    "2.20.070|A.1",
+    "2.20.070|A.2",
+    "2.20.070|A.3",
+    "2.20.070|B",
+    "2.20.070|C",
+    "2.20.070|D",
+    "2.20.070|E",
+    "2.20.070|F"
+   ],
+   "definitions": [],
+   "exceptions": [
+    {
+     "opens": "Notwithstanding the requirements of 2.20.070 (A)",
+     "section": "2.20.070.C",
+     "cites": [
+      "2.20.070"
+     ]
+    },
+    {
+     "opens": "This ten day notice requirement shall",
+     "section": "2.20.070.D",
+     "cites": []
+    }
+   ]
+  },
+  "TIT2ADPE_CH2.20PUMEPURE_ARTIIPUACME_2.20.080NOAGREREME": {
+   "title": "2.20.080 - Notice and agenda requirements: Regular meetings.",
+   "sections": [
+    {
+     "number": "2.20.080",
+     "heading": "Notice and agenda requirements: Regular meetings",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "2.20.080|A",
+    "2.20.080|A.1",
+    "2.20.080|A.2",
+    "2.20.080|A.3",
+    "2.20.080|B",
+    "2.20.080|B.1",
+    "2.20.080|B.2",
+    "2.20.080|B.3",
+    "2.20.080|B.4",
+    "2.20.080|B.5",
+    "2.20.080|B.6",
+    "2.20.080|B.7",
+    "2.20.080|B.8",
+    "2.20.080|C",
+    "2.20.080|D",
+    "2.20.080|D.1",
+    "2.20.080|D.2",
+    "2.20.080|D.2.a",
+    "2.20.080|D.2.b",
+    "2.20.080|D.2.c",
+    "2.20.080|E",
+    "2.20.080|E.1",
+    "2.20.080|E.2",
+    "2.20.080|E.2.a",
+    "2.20.080|E.2.b",
+    "2.20.080|E.2.c",
+    "2.20.080|F",
+    "2.20.080|G",
+    "2.20.080|H"
+   ],
+   "definitions": [],
+   "exceptions": [
+    {
+     "opens": "Notwithstanding Section 2.20.080 (D), the failure",
+     "section": "2.20.080.A.3",
+     "cites": [
+      "2.20.080",
+      "2.20.030"
+     ]
+    },
+    {
+     "opens": "Notwithstanding the notice provisions of 2.20.080",
+     "section": "2.20.080.B",
+     "cites": [
+      "2.20.080"
+     ]
+    },
+    {
+     "opens": "Notwithstanding the provisions of this subsection,",
+     "section": "2.20.080.D.2.c",
+     "cites": [
+      "2.20.080",
+      "2.220.030"
+     ]
+    },
+    {
+     "opens": "Notwithstanding subsection (D) of this section,",
+     "section": "2.20.080.E",
+     "cites": []
+    },
+    {
+     "opens": "This subsection shall not apply to",
+     "section": "2.20.080.H",
+     "cites": []
+    }
+   ]
+  },
+  "TIT2ADPE_CH2.20PUMEPURE_ARTIIPUACME_2.20.090AGLAMAPUREAGSU": {
+   "title": "2.20.090 - Agenda-related materials as public records: Agenda subscribers.",
+   "sections": [
+    {
+     "number": "2.20.090",
+     "heading": "Agenda-related materials as public records: Agenda subscribers",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "2.20.090|A",
+    "2.20.090|B",
+    "2.20.090|C",
+    "2.20.090|D"
+   ],
+   "definitions": [],
+   "exceptions": [
+    {
+     "opens": "Notwithstanding any other provision of this",
+     "section": "2.20.090.D",
+     "cites": []
+    }
+   ]
+  },
+  "TIT2ADPE_CH2.20PUMEPURE_ARTIIPUACME_2.20.100AGORDICLSE": {
+   "title": "2.20.100 - Agenda and oral disclosures: Closed sessions.",
+   "sections": [
+    {
+     "number": "2.20.100",
+     "heading": "Agenda and oral disclosures: Closed sessions",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "2.20.100|A",
+    "2.20.100|B"
+   ],
+   "definitions": [],
+   "exceptions": []
+  },
+  "TIT2ADPE_CH2.20PUMEPURE_ARTIIPUACME_2.20.110STRECLSE": {
+   "title": "2.20.110 - Statement of reasons for closed sessions.",
+   "sections": [
+    {
+     "number": "2.20.110",
+     "heading": "Statement of reasons for closed sessions",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "2.20.110|A",
+    "2.20.110|B",
+    "2.20.110|C",
+    "2.20.110|D",
+    "2.20.110|E"
+   ],
+   "definitions": [],
+   "exceptions": []
+  },
+  "TIT2ADPE_CH2.20PUMEPURE_ARTIIPUACME_2.20.120COCLSE": {
+   "title": "2.20.120 - Conduct of closed session.",
+   "sections": [
+    {
+     "number": "2.20.120",
+     "heading": "Conduct of closed session",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "2.20.120|A",
+    "2.20.120|B",
+    "2.20.120|C",
+    "2.20.120|D",
+    "2.20.120|E"
+   ],
+   "definitions": [],
+   "exceptions": [
+    {
+     "opens": "This requirement shall not apply if",
+     "section": "2.20.120.B",
+     "cites": []
+    }
+   ]
+  },
+  "TIT2ADPE_CH2.20PUMEPURE_ARTIIPUACME_2.20.130DICLSEDIAC": {
+   "title": "2.20.130 - Disclosure of closed session discussions and actions.",
+   "sections": [
+    {
+     "number": "2.20.130",
+     "heading": "Disclosure of closed session discussions and actions",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "2.20.130|A",
+    "2.20.130|B",
+    "2.20.130|B.1",
+    "2.20.130|B.2",
+    "2.20.130|B.3",
+    "2.20.130|C",
+    "2.20.130|D",
+    "2.20.130|E"
+   ],
+   "definitions": [],
+   "exceptions": [
+    {
+     "opens": "If notwithstanding the final approval there",
+     "section": "2.20.130.B.1",
+     "cites": []
+    }
+   ]
+  },
+  "TIT2ADPE_CH2.20PUMEPURE_ARTIIPUACME_2.20.140BAATPR": {
+   "title": "2.20.140 - Barriers to attendance prohibited.",
+   "sections": [
+    {
+     "number": "2.20.140",
+     "heading": "Barriers to attendance prohibited",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "2.20.140|A",
+    "2.20.140|B"
+   ],
+   "definitions": [],
+   "exceptions": []
+  },
+  "TIT2ADPE_CH2.20PUMEPURE_ARTIIPUACME_2.20.150PUTERESPME": {
+   "title": "2.20.150 - Public testimony at regular and special meetings.",
+   "sections": [
+    {
+     "number": "2.20.150",
+     "heading": "Public testimony at regular and special meetings",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "2.20.150|A",
+    "2.20.150|B",
+    "2.20.150|C",
+    "2.20.150|D"
+   ],
+   "definitions": [],
+   "exceptions": []
+  },
+  "TIT2ADPE_CH2.20PUMEPURE_ARTIIPUACME_2.20.160MIRE": {
+   "title": "2.20.160 - Minutes and recordings.",
+   "sections": [
+    {
+     "number": "2.20.160",
+     "heading": "Minutes and recordings",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "2.20.160|A",
+    "2.20.160|B"
+   ],
+   "definitions": [],
+   "exceptions": [
+    {
+     "opens": "Notwithstanding any other provision of law,",
+     "section": "2.20.160.B",
+     "cites": [
+      "2.20.030"
+     ]
+    }
+   ]
+  },
+  "TIT2ADPE_CH2.20PUMEPURE_ARTIIPUACME_2.20.170PUCOMELOBO": {
+   "title": "2.20.170 - Public comment by members of local bodies.",
+   "sections": [
+    {
+     "number": "2.20.170",
+     "heading": "Public comment by members of local bodies",
+     "para": 0
+    }
+   ],
+   "subsections": [],
+   "definitions": [],
+   "exceptions": []
+  },
+  "TIT2ADPE_CH2.20PUMEPURE_ARTIIIPUIN_2.20.180DE": {
+   "title": "2.20.180 - Definitions.",
+   "sections": [
+    {
+     "number": "2.20.180",
+     "heading": "Definitions",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "2.20.180|A",
+    "2.20.180|B",
+    "2.20.180|C"
+   ],
+   "definitions": [
+    {
+     "term": "Agency",
+     "section": "2.20.180.A"
+    },
+    {
+     "term": "Department",
+     "section": "2.20.180.B"
+    },
+    {
+     "term": "Public information",
+     "section": "2.20.180.C"
+    }
+   ],
+   "exceptions": []
+  },
+  "TIT2ADPE_CH2.20PUMEPURE_ARTIIIPUIN_2.20.190REDOPUIN": {
+   "title": "2.20.190 - Release of documentary public information.",
+   "sections": [
+    {
+     "number": "2.20.190",
+     "heading": "Release of documentary public information",
+     "para": 0
+    }
+   ],
+   "subsections": [],
+   "definitions": [],
+   "exceptions": []
+  },
+  "TIT2ADPE_CH2.20PUMEPURE_ARTIIIPUIN_2.20.200REORPUIN": {
+   "title": "2.20.200 - Release of oral public information.",
+   "sections": [
+    {
+     "number": "2.20.200",
+     "heading": "Release of oral public information",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "2.20.200|A",
+    "2.20.200|B",
+    "2.20.200|C"
+   ],
+   "definitions": [],
+   "exceptions": []
+  },
+  "TIT2ADPE_CH2.20PUMEPURE_ARTIIIPUIN_2.20.210PUREFIOLBOCO": {
+   "title": "2.20.210 - Public review file—Policy body communications.",
+   "sections": [
+    {
+     "number": "2.20.210",
+     "heading": "Public review file—Policy body communications",
+     "para": 0
+    }
+   ],
+   "subsections": [],
+   "definitions": [],
+   "exceptions": []
+  },
+  "TIT2ADPE_CH2.20PUMEPURE_ARTIIIPUIN_2.20.220NEMPUIN": {
+   "title": "2.20.220 - Non-exempt public information.",
+   "sections": [
+    {
+     "number": "2.20.220",
+     "heading": "Non-exempt public information",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "2.20.220|A",
+    "2.20.220|B",
+    "2.20.220|C",
+    "2.20.220|C.1",
+    "2.20.220|C.1.a",
+    "2.20.220|C.1.b",
+    "2.20.220|C.1.c",
+    "2.20.220|C.1.d",
+    "2.20.220|C.1.e",
+    "2.20.220|C.2",
+    "2.20.220|C.3",
+    "2.20.220|C.4",
+    "2.20.220|C.5",
+    "2.20.220|D",
+    "2.20.220|D.a",
+    "2.20.220|D.b",
+    "2.20.220|D.c",
+    "2.20.220|D.d",
+    "2.20.220|D.e",
+    "2.20.220|D.f",
+    "2.20.220|D.2",
+    "2.20.220|E",
+    "2.20.220|F",
+    "2.20.220|F.1",
+    "2.20.220|F.2"
+   ],
+   "definitions": [],
+   "exceptions": [
+    {
+     "opens": "Notwithstanding any right or duty to",
+     "section": "2.20.220",
+     "cites": []
+    }
+   ]
+  },
+  "TIT2ADPE_CH2.20PUMEPURE_ARTIIIPUIN_2.20.230IMDIRE": {
+   "title": "2.20.230 - Immediate disclosure request.",
+   "sections": [
+    {
+     "number": "2.20.230",
+     "heading": "Immediate disclosure request",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "2.20.230|A",
+    "2.20.230|A.1",
+    "2.20.230|A.2",
+    "2.20.230|A.3",
+    "2.20.230|A.4",
+    "2.20.230|A.5",
+    "2.20.230|A.6",
+    "2.20.230|B",
+    "2.20.230|C",
+    "2.20.230|D"
+   ],
+   "definitions": [],
+   "exceptions": [
+    {
+     "opens": "Notwithstanding any other provision of law",
+     "section": "2.20.230.A",
+     "cites": []
+    }
+   ]
+  },
+  "TIT2ADPE_CH2.20PUMEPURE_ARTIIIPUIN_2.20.240MIWI": {
+   "title": "2.20.240 - Minimum withholding.",
+   "sections": [
+    {
+     "number": "2.20.240",
+     "heading": "Minimum withholding",
+     "para": 0
+    }
+   ],
+   "subsections": [],
+   "definitions": [],
+   "exceptions": []
+  },
+  "TIT2ADPE_CH2.20PUMEPURE_ARTIIIPUIN_2.20.250JUWI": {
+   "title": "2.20.250 - Justification for withholding.",
+   "sections": [
+    {
+     "number": "2.20.250",
+     "heading": "Justification for withholding",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "2.20.250|A",
+    "2.20.250|B",
+    "2.20.250|C"
+   ],
+   "definitions": [],
+   "exceptions": []
+  },
+  "TIT2ADPE_CH2.20PUMEPURE_ARTIIIPUIN_2.20.260FEDU": {
+   "title": "2.20.260 - Fees for duplication.",
+   "sections": [
+    {
+     "number": "2.20.260",
+     "heading": "Fees for duplication",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "2.20.260|A",
+    "2.20.260|B",
+    "2.20.260|C",
+    "2.20.260|D",
+    "2.20.260|E",
+    "2.20.260|F",
+    "2.20.260|G"
+   ],
+   "definitions": [],
+   "exceptions": []
+  },
+  "TIT2ADPE_CH2.20PUMEPURE_ARTIVPOIM_2.20.270CIOAPUETCO": {
+   "title": "2.20.270 - City of Oakland Public Ethics Commission.",
+   "sections": [
+    {
+     "number": "2.20.270",
+     "heading": "City of Oakland Public Ethics Commission",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "2.20.270|A",
+    "2.20.270|A.1",
+    "2.20.270|A.2",
+    "2.20.270|A.3",
+    "2.20.270|A.4",
+    "2.20.270|A.5",
+    "2.20.270|B",
+    "2.20.270|B.1",
+    "2.20.270|B.2",
+    "2.20.270|B.3",
+    "2.20.270|C",
+    "2.20.270|C.1",
+    "2.20.270|C.2",
+    "2.20.270|C.3",
+    "2.20.270|D",
+    "2.20.270|D.1",
+    "2.20.270|D.2",
+    "2.20.270|E",
+    "2.20.270|F"
+   ],
+   "definitions": [],
+   "exceptions": [
+    {
+     "opens": "Notwithstanding any other provision of law,",
+     "section": "2.20.270.C.1",
+     "cites": []
+    }
+   ]
+  },
+  "TIT2ADPE_CH2.20PUMEPURE_ARTIVPOIM_2.20.280READ": {
+   "title": "2.20.280 - Responsibility for administration.",
+   "sections": [
+    {
+     "number": "2.20.280",
+     "heading": "Responsibility for administration",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "2.20.280|A",
+    "2.20.280|B",
+    "2.20.280|C"
+   ],
+   "definitions": [],
+   "exceptions": []
+  },
+  "TIT2ADPE_CH2.20PUMEPURE_ARTIVPOIM_2.20.290SE": {
+   "title": "2.20.290 - Severability.",
+   "sections": [
+    {
+     "number": "2.20.290",
+     "heading": "Severability",
+     "para": 0
+    }
+   ],
+   "subsections": [],
+   "definitions": [],
+   "exceptions": []
+  },
+  "TIT2ADPE_CH2.20PUMEPURE_ARTIVPOIM_2.20.300EFDA": {
+   "title": "2.20.300 - Effective date.",
+   "sections": [
+    {
+     "number": "2.20.300",
+     "heading": "Effective date",
+     "para": 0
+    }
+   ],
+   "subsections": [],
+   "definitions": [],
+   "exceptions": []
+  },
+  "TIT8HESA_CH8.22REREADEV_ARTIREREADPR_8.22.010FIPU": {
+   "title": "8.22.010 - Findings and purpose.",
+   "sections": [
+    {
+     "number": "8.22.010",
+     "heading": "Findings and purpose",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "8.22.010|A",
+    "8.22.010|B",
+    "8.22.010|C",
+    "8.22.010|D",
+    "8.22.010|E",
+    "8.22.010|F"
+   ],
+   "definitions": [],
+   "exceptions": []
+  },
+  "TIT8HESA_CH8.22REREADEV_ARTIREREADPR_8.22.020DE": {
+   "title": "8.22.020 - Definitions.",
+   "sections": [
+    {
+     "number": "8.22.020",
+     "heading": "Definitions",
+     "para": 0
+    }
+   ],
+   "subsections": [],
+   "definitions": [
+    {
+     "term": "1946 Notice",
+     "section": "8.22.020"
+    },
+    {
+     "term": "1946 Termination of Tenancy",
+     "section": "8.22.020"
+    },
+    {
+     "term": "Additional occupant",
+     "section": "8.22.020"
+    },
+    {
+     "term": "Appeal Panel",
+     "section": "8.22.020"
+    },
+    {
+     "term": "Banking",
+     "section": "8.22.020"
+    },
+    {
+     "term": "Base occupancy level",
+     "section": "8.22.020"
+    },
+    {
+     "term": "base occupancy level",
+     "section": "8.22.020"
+    },
+    {
+     "term": "Board",
+     "section": "8.22.020"
+    },
+    {
+     "term": "Residential Rent Adjustment Board",
+     "section": "8.22.020"
+    },
+    {
+     "term": "Capital Improvements",
+     "section": "8.22.020"
+    },
+    {
+     "term": "Costa-Hawkins",
+     "section": "8.22.020"
+    },
+    {
+     "term": "Covered Unit",
+     "section": "8.22.020"
+    },
+    {
+     "term": "Covered Unit",
+     "section": "8.22.020"
+    },
+    {
+     "term": "CPI—All items",
+     "section": "8.22.020"
+    },
+    {
+     "term": "CPI—Less Shelter",
+     "section": "8.22.020"
+    },
+    {
+     "term": "CPI Rent Adjustment",
+     "section": "8.22.020"
+    },
+    {
+     "term": "Current Business Tax Certificate",
+     "section": "8.22.020"
+    },
+    {
+     "term": "Ellis Act Ordinance",
+     "section": "8.22.020"
+    },
+    {
+     "term": "Fee",
+     "section": "8.22.020"
+    },
+    {
+     "term": "Housing services",
+     "section": "8.22.020"
+    },
+    {
+     "term": "Just Cause for Eviction Ordinance",
+     "section": "8.22.020"
+    },
+    {
+     "term": "Mandatory Seismic Capital Improvement",
+     "section": "8.22.020"
+    },
+    {
+     "term": "Owner",
+     "section": "8.22.020"
+    },
+    {
+     "term": "Owner of Record",
+     "section": "8.22.020"
+    },
+    {
+     "term": "Regulations",
+     "section": "8.22.020"
+    },
+    {
+     "term": "Rent",
+     "section": "8.22.020"
+    },
+    {
+     "term": "Rent Adjustment Program",
+     "section": "8.22.020"
+    },
+    {
+     "term": "Security Deposit",
+     "section": "8.22.020"
+    },
+    {
+     "term": "Tenant",
+     "section": "8.22.020"
+    },
+    {
+     "term": "Uninsured Repairs",
+     "section": "8.22.020"
+    },
+    {
+     "term": "Voluntary Seismic Capital Improvement",
+     "section": "8.22.020"
+    }
+   ],
+   "exceptions": [
+    {
+     "opens": "\"CPI Rent Adjustment\" means the maximum",
+     "section": "8.22.020",
+     "cites": [
+      "8.22.070"
+     ]
+    }
+   ]
+  },
+  "TIT8HESA_CH8.22REREADEV_ARTIREREADPR_8.22.030EX": {
+   "title": "8.22.030 - Exemptions.",
+   "sections": [
+    {
+     "number": "8.22.030",
+     "heading": "Exemptions",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "8.22.030|A",
+    "8.22.030|A.1",
+    "8.22.030|A.2",
+    "8.22.030|A.3",
+    "8.22.030|A.4",
+    "8.22.030|A.5",
+    "8.22.030|A.6",
+    "8.22.030|A.7",
+    "8.22.030|B",
+    "8.22.030|B.1",
+    "8.22.030|B.1.a",
+    "8.22.030|B.1.b",
+    "8.22.030|B.1.c",
+    "8.22.030|B.2",
+    "8.22.030|C"
+   ],
+   "definitions": [],
+   "exceptions": [
+    {
+     "opens": "This exemption does not apply to",
+     "section": "8.22.030.A.5",
+     "cites": [
+      "8.22.400"
+     ]
+    }
+   ]
+  },
+  "TIT8HESA_CH8.22REREADEV_ARTIREREADPR_8.22.040COFUBO": {
+   "title": "8.22.040 - Composition and functions of the Board.",
+   "sections": [
+    {
+     "number": "8.22.040",
+     "heading": "Composition and functions of the Board",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "8.22.040|A",
+    "8.22.040|A.1",
+    "8.22.040|A.2",
+    "8.22.040|A.3",
+    "8.22.040|B",
+    "8.22.040|B.1",
+    "8.22.040|B.2",
+    "8.22.040|B.3",
+    "8.22.040|C",
+    "8.22.040|C.1",
+    "8.22.040|C.2",
+    "8.22.040|D",
+    "8.22.040|D.1",
+    "8.22.040|D.2",
+    "8.22.040|D.3",
+    "8.22.040|D.4",
+    "8.22.040|D.5",
+    "8.22.040|D.6",
+    "8.22.040|E",
+    "8.22.040|E.1",
+    "8.22.040|E.2",
+    "8.22.040|E.3",
+    "8.22.040|E.4",
+    "8.22.040|F",
+    "8.22.040|F.1",
+    "8.22.040|F.2"
+   ],
+   "definitions": [],
+   "exceptions": []
+  },
+  "TIT8HESA_CH8.22REREADEV_ARTIREREADPR_8.22.050SUNORECHARI": {
+   "title": "8.22.050 - Summary of notices required by this Chapter, Article I.",
+   "sections": [
+    {
+     "number": "8.22.050",
+     "heading": "Summary of notices required by this Chapter, Article I",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "8.22.050|A",
+    "8.22.050|B"
+   ],
+   "definitions": [],
+   "exceptions": []
+  },
+  "TIT8HESA_CH8.22REREADEV_ARTIREREADPR_8.22.060NOEXCHRECOTE": {
+   "title": "8.22.060 - Notice of the existence of this Chapter required at commencement of tenancy.",
+   "sections": [
+    {
+     "number": "8.22.060",
+     "heading": "Notice of the existence of this Chapter required at commencement of tenancy",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "8.22.060|A",
+    "8.22.060|A.1",
+    "8.22.060|A.1.a",
+    "8.22.060|A.1.b",
+    "8.22.060|A.1.c",
+    "8.22.060|A.1.d",
+    "8.22.060|A.2",
+    "8.22.060|B",
+    "8.22.060|C"
+   ],
+   "definitions": [],
+   "exceptions": []
+  },
+  "TIT8HESA_CH8.22REREADEV_ARTIREREADPR_8.22.065READGE": {
+   "title": "8.22.065 - Rent adjustments in general.",
+   "sections": [
+    {
+     "number": "8.22.065",
+     "heading": "Rent adjustments in general",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "8.22.065|A",
+    "8.22.065|B",
+    "8.22.065|C"
+   ],
+   "definitions": [],
+   "exceptions": [
+    {
+     "opens": "Notwithstanding any other provision of this",
+     "section": "8.22.065.A",
+     "cites": []
+    }
+   ]
+  },
+  "TIT8HESA_CH8.22REREADEV_ARTIREREADPR_8.22.070READOCCOUN": {
+   "title": "8.22.070 - Rent adjustments for occupied covered units.",
+   "sections": [
+    {
+     "number": "8.22.070",
+     "heading": "Rent adjustments for occupied covered units",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "8.22.070|A",
+    "8.22.070|A.1",
+    "8.22.070|A.1.a",
+    "8.22.070|A.1.b",
+    "8.22.070|A.1.b.i",
+    "8.22.070|A.1.b.ii",
+    "8.22.070|A.2",
+    "8.22.070|A.3",
+    "8.22.070|A.3.a",
+    "8.22.070|A.3.b",
+    "8.22.070|A.4",
+    "8.22.070|B",
+    "8.22.070|B.1",
+    "8.22.070|B.2",
+    "8.22.070|B.2.a",
+    "8.22.070|B.2.b",
+    "8.22.070|B.2.c",
+    "8.22.070|B.2.d",
+    "8.22.070|B.2.e",
+    "8.22.070|B.2.f",
+    "8.22.070|B.2.g",
+    "8.22.070|B.2.h",
+    "8.22.070|B.3",
+    "8.22.070|B.4",
+    "8.22.070|B.5",
+    "8.22.070|B.5.a",
+    "8.22.070|B.5.b",
+    "8.22.070|B.5.c",
+    "8.22.070|B.5.d",
+    "8.22.070|B.5.d.1",
+    "8.22.070|B.5.d.2",
+    "8.22.070|B.6",
+    "8.22.070|B.6.a",
+    "8.22.070|B.6.b",
+    "8.22.070|B.6.c",
+    "8.22.070|B.6.d",
+    "8.22.070|C",
+    "8.22.070|C.1",
+    "8.22.070|C.1.a",
+    "8.22.070|C.1.b",
+    "8.22.070|C.1.c",
+    "8.22.070|C.1.d",
+    "8.22.070|C.1.e",
+    "8.22.070|C.1.f",
+    "8.22.070|C.2",
+    "8.22.070|D",
+    "8.22.070|D.1",
+    "8.22.070|D.2",
+    "8.22.070|D.2.a",
+    "8.22.070|D.2.b",
+    "8.22.070|D.2.c",
+    "8.22.070|D.2.d",
+    "8.22.070|D.2.e",
+    "8.22.070|D.3",
+    "8.22.070|D.3.a",
+    "8.22.070|D.3.a.i",
+    "8.22.070|D.3.a.ii",
+    "8.22.070|D.3.b",
+    "8.22.070|D.4",
+    "8.22.070|D.5",
+    "8.22.070|D.5.a",
+    "8.22.070|D.5.b",
+    "8.22.070|D.5.c",
+    "8.22.070|D.6",
+    "8.22.070|E",
+    "8.22.070|F",
+    "8.22.070|G",
+    "8.22.070|H",
+    "8.22.070|H.1",
+    "8.22.070|H.1.a",
+    "8.22.070|H.1.b",
+    "8.22.070|H.2",
+    "8.22.070|H.2.a",
+    "8.22.070|H.2.b",
+    "8.22.070|H.2.c",
+    "8.22.070|H.2.c.i",
+    "8.22.070|H.2.c.ii",
+    "8.22.070|H.3",
+    "8.22.070|H.3.a",
+    "8.22.070|H.3.b",
+    "8.22.070|H.4",
+    "8.22.070|H.5",
+    "8.22.070|H.6",
+    "8.22.070|I",
+    "8.22.070|I.1",
+    "8.22.070|I.2"
+   ],
+   "definitions": [],
+   "exceptions": [
+    {
+     "opens": "Except as provided in Paragraph b",
+     "section": "8.22.070.A.1.a",
+     "cites": []
+    }
+   ]
+  },
+  "TIT8HESA_CH8.22REREADEV_ARTIREREADPR_8.22.080REINFOVA": {
+   "title": "8.22.080 - Rent increases following vacancies.",
+   "sections": [
+    {
+     "number": "8.22.080",
+     "heading": "Rent increases following vacancies",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "8.22.080|A",
+    "8.22.080|B",
+    "8.22.080|C",
+    "8.22.080|C.1",
+    "8.22.080|C.2",
+    "8.22.080|C.3",
+    "8.22.080|C.4",
+    "8.22.080|C.5",
+    "8.22.080|D",
+    "8.22.080|E",
+    "8.22.080|F",
+    "8.22.080|F.1",
+    "8.22.080|F.2",
+    "8.22.080|G",
+    "8.22.080|H"
+   ],
+   "definitions": [],
+   "exceptions": []
+  },
+  "TIT8HESA_CH8.22REREADEV_ARTIREREADPR_8.22.090PEREFIPR": {
+   "title": "8.22.090 - Petition and response to filing procedures.",
+   "sections": [
+    {
+     "number": "8.22.090",
+     "heading": "Petition and response to filing procedures",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "8.22.090|A",
+    "8.22.090|A.1",
+    "8.22.090|A.1.a",
+    "8.22.090|A.1.b",
+    "8.22.090|A.1.c",
+    "8.22.090|A.1.d",
+    "8.22.090|A.1.e",
+    "8.22.090|A.1.f",
+    "8.22.090|A.1.g",
+    "8.22.090|A.1.h",
+    "8.22.090|A.1.i",
+    "8.22.090|A.1.j",
+    "8.22.090|A.1.k",
+    "8.22.090|A.1.l",
+    "8.22.090|A.1.m",
+    "8.22.090|A.1.n",
+    "8.22.090|A.1.o",
+    "8.22.090|A.2",
+    "8.22.090|A.2.a",
+    "8.22.090|A.2.b",
+    "8.22.090|A.3",
+    "8.22.090|A.3.a",
+    "8.22.090|A.3.a.i",
+    "8.22.090|A.3.a.ii",
+    "8.22.090|A.3.b",
+    "8.22.090|A.4",
+    "8.22.090|A.4.a",
+    "8.22.090|A.4.b",
+    "8.22.090|A.4.c",
+    "8.22.090|A.4.d",
+    "8.22.090|A.4.e",
+    "8.22.090|A.5",
+    "8.22.090|B",
+    "8.22.090|B.1",
+    "8.22.090|B.1.a",
+    "8.22.090|B.1.b",
+    "8.22.090|B.1.c",
+    "8.22.090|B.1.c.i",
+    "8.22.090|B.1.c.ii",
+    "8.22.090|B.1.d",
+    "8.22.090|B.1.e",
+    "8.22.090|B.1.f",
+    "8.22.090|B.2",
+    "8.22.090|B.3"
+   ],
+   "definitions": [],
+   "exceptions": [
+    {
+     "opens": "Subsection 8.22.090 B. shall not apply",
+     "section": "8.22.090.B.3",
+     "cites": [
+      "8.22.090"
+     ]
+    }
+   ]
+  },
+  "TIT8HESA_CH8.22REREADEV_ARTIREREADPR_8.22.100MEREDI": {
+   "title": "8.22.100 - Mediation of rent disputes.",
+   "sections": [
+    {
+     "number": "8.22.100",
+     "heading": "Mediation of rent disputes",
+     "para": 0
+    }
+   ],
+   "subsections": [],
+   "definitions": [],
+   "exceptions": []
+  },
+  "TIT8HESA_CH8.22REREADEV_ARTIREREADPR_8.22.110HEPR": {
+   "title": "8.22.110 - Hearing procedures.",
+   "sections": [
+    {
+     "number": "8.22.110",
+     "heading": "Hearing procedures",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "8.22.110|A",
+    "8.22.110|B",
+    "8.22.110|B.1",
+    "8.22.110|B.2",
+    "8.22.110|C",
+    "8.22.110|D",
+    "8.22.110|D.1",
+    "8.22.110|D.2",
+    "8.22.110|D.3",
+    "8.22.110|E",
+    "8.22.110|F",
+    "8.22.110|F.1",
+    "8.22.110|F.1.a",
+    "8.22.110|F.1.b",
+    "8.22.110|F.1.c",
+    "8.22.110|F.1.d",
+    "8.22.110|F.1.e",
+    "8.22.110|F.2",
+    "8.22.110|G"
+   ],
+   "definitions": [],
+   "exceptions": [
+    {
+     "opens": "Notwithstanding the acceptance of a petition",
+     "section": "8.22.110.F.1",
+     "cites": []
+    }
+   ]
+  },
+  "TIT8HESA_CH8.22REREADEV_ARTIREREADPR_8.22.120APPR": {
+   "title": "8.22.120 - Appeal procedure.",
+   "sections": [
+    {
+     "number": "8.22.120",
+     "heading": "Appeal procedure",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "8.22.120|A",
+    "8.22.120|A.1",
+    "8.22.120|A.2",
+    "8.22.120|B",
+    "8.22.120|B.1",
+    "8.22.120|B.2",
+    "8.22.120|B.3",
+    "8.22.120|C",
+    "8.22.120|C.1",
+    "8.22.120|C.2",
+    "8.22.120|C.3",
+    "8.22.120|C.4",
+    "8.22.120|C.5",
+    "8.22.120|D",
+    "8.22.120|E"
+   ],
+   "definitions": [],
+   "exceptions": []
+  },
+  "TIT8HESA_CH8.22REREADEV_ARTIREREADPR_8.22.130REEV": {
+   "title": "8.22.130 - Retaliatory evictions.",
+   "sections": [
+    {
+     "number": "8.22.130",
+     "heading": "Retaliatory evictions",
+     "para": 0
+    }
+   ],
+   "subsections": [],
+   "definitions": [],
+   "exceptions": []
+  },
+  "TIT8HESA_CH8.22REREADEV_ARTIREREADPR_8.22.140VOMEEV": {
+   "title": "8.22.140 - Voluntary mediation of evictions.",
+   "sections": [
+    {
+     "number": "8.22.140",
+     "heading": "Voluntary mediation of evictions",
+     "para": 0
+    }
+   ],
+   "subsections": [],
+   "definitions": [],
+   "exceptions": []
+  },
+  "TIT8HESA_CH8.22REREADEV_ARTIREREADPR_8.22.150GERE": {
+   "title": "8.22.150 - General remedies.",
+   "sections": [
+    {
+     "number": "8.22.150",
+     "heading": "General remedies",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "8.22.150|A",
+    "8.22.150|A.1",
+    "8.22.150|A.2",
+    "8.22.150|A.3",
+    "8.22.150|A.4",
+    "8.22.150|A.5",
+    "8.22.150|B",
+    "8.22.150|B.1",
+    "8.22.150|B.2",
+    "8.22.150|B.3",
+    "8.22.150|B.4",
+    "8.22.150|C"
+   ],
+   "definitions": [],
+   "exceptions": []
+  },
+  "TIT8HESA_CH8.22REREADEV_ARTIREREADPR_8.22.160COTI": {
+   "title": "8.22.160 - Computation of time.",
+   "sections": [
+    {
+     "number": "8.22.160",
+     "heading": "Computation of time",
+     "para": 0
+    }
+   ],
+   "subsections": [],
+   "definitions": [],
+   "exceptions": []
+  },
+  "TIT8HESA_CH8.22REREADEV_ARTIREREADPR_8.22.170SE": {
+   "title": "8.22.170 - Severability.",
+   "sections": [
+    {
+     "number": "8.22.170",
+     "heading": "Severability",
+     "para": 0
+    }
+   ],
+   "subsections": [],
+   "definitions": [],
+   "exceptions": []
+  },
+  "TIT8HESA_CH8.22REREADEV_ARTIREREADPR_8.22.180NIV": {
+   "title": "8.22.180 - Non-waiverability.",
+   "sections": [
+    {
+     "number": "8.22.180",
+     "heading": "Non-waiverability",
+     "para": 0
+    }
+   ],
+   "subsections": [],
+   "definitions": [],
+   "exceptions": []
+  },
+  "TIT8HESA_CH8.22REREADEV_ARTIREREADPR_8.22.185MI": {
+   "title": "8.22.185 - Miscellaneous.",
+   "sections": [
+    {
+     "number": "8.22.185",
+     "heading": "Miscellaneous",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "8.22.185|A",
+    "8.22.185|B",
+    "8.22.185|C",
+    "8.22.185|D"
+   ],
+   "definitions": [],
+   "exceptions": []
+  },
+  "TIT8HESA_CH8.22REREADEV_ARTIREREADPR_8.22.190APFFDACH": {
+   "title": "8.22.190 - Applicability—Effective date of chapter.",
+   "sections": [
+    {
+     "number": "8.22.190",
+     "heading": "Applicability—Effective date of chapter",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "8.22.190|A",
+    "8.22.190|B",
+    "8.22.190|C"
+   ],
+   "definitions": [],
+   "exceptions": []
+  },
+  "TIT8HESA_CH8.22REREADEV_ARTIREREADPR_8.22.200REREDIVI": {
+   "title": "8.22.200 - Reduced rents to disaster victims.",
+   "sections": [
+    {
+     "number": "8.22.200",
+     "heading": "Reduced rents to disaster victims",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "8.22.200|A",
+    "8.22.200|B",
+    "8.22.200|C",
+    "8.22.200|D",
+    "8.22.200|D.1",
+    "8.22.200|D.2",
+    "8.22.200|D.3",
+    "8.22.200|D.4",
+    "8.22.200|E",
+    "8.22.200|F",
+    "8.22.200|F.1",
+    "8.22.200|G",
+    "8.22.200|H"
+   ],
+   "definitions": [
+    {
+     "term": "displacee",
+     "section": "8.22.200.F.1"
+    }
+   ],
+   "exceptions": []
+  },
+  "TIT8HESA_CH8.22REREADEV_ARTIREREADPR_8.22.250ADRENOOWTE": {
+   "title": "8.22.250 - Administration, Reports, and Notices to Owners and Tenants.",
+   "sections": [
+    {
+     "number": "8.22.250",
+     "heading": "Administration, Reports, and Notices to Owners and Tenants",
+     "para": 0
+    }
+   ],
+   "subsections": [
+    "8.22.250|A",
+    "8.22.250|A.1",
+    "8.22.250|A.2",
+    "8.22.250|A.3",
+    "8.22.250|A.4",
+    "8.22.250|A.5",
+    "8.22.250|A.6",
+    "8.22.250|A.7",
+    "8.22.250|B",
+    "8.22.250|C",
+    "8.22.250|D",
+    "8.22.250|D.1",
+    "8.22.250|D.2"
+   ],
+   "definitions": [],
+   "exceptions": []
+  },
+  "THCHOA_ARTIPOFOGO": {
+   "title": "ARTICLE I - POWERS AND FORM OF GOVERNMENT",
+   "sections": [
+    {
+     "number": "100",
+     "heading": "Name",
+     "para": 1
+    },
+    {
+     "number": "101",
+     "heading": "Boundaries",
+     "para": 2
+    },
+    {
+     "number": "102",
+     "heading": "Rights in Succession",
+     "para": 3
+    },
+    {
+     "number": "103",
+     "heading": "Continuance of Laws",
+     "para": 4
+    },
+    {
+     "number": "104",
+     "heading": "Continuance of Officers and Employees",
+     "para": 5
+    },
+    {
+     "number": "105",
+     "heading": "Transfer of Records and Property",
+     "para": 6
+    },
+    {
+     "number": "106",
+     "heading": "General Powers",
+     "para": 7
+    },
+    {
+     "number": "107",
+     "heading": "Form of Government",
+     "para": 9
+    }
+   ],
+   "subsections": [],
+   "definitions": [],
+   "exceptions": []
+  },
+  "THCHOA_ARTIITHCO": {
+   "title": "ARTICLE II - THE COUNCIL",
+   "sections": [
+    {
+     "number": "200",
+     "heading": "Composition of the Council",
+     "para": 1
+    },
+    {
+     "number": "201",
+     "heading": "Qualifications",
+     "para": 4
+    },
+    {
+     "number": "202",
+     "heading": "Council Salaries",
+     "para": 7
+    },
+    {
+     "number": "203",
+     "heading": "Nomination and Election of Councilmembers",
+     "para": 10
+    },
+    {
+     "number": "204",
+     "heading": "Term of Office, Term Limits, Council",
+     "para": 13
+    },
+    {
+     "number": "205",
+     "heading": "Vacancy, Filling of",
+     "para": 20
+    },
+    {
+     "number": "206",
+     "heading": "Vacancy, What Constitutes",
+     "para": 23
+    },
+    {
+     "number": "207",
+     "heading": "Powers of the Council",
+     "para": 26
+    },
+    {
+     "number": "208",
+     "heading": "Meetings of the Council",
+     "para": 28
+    },
+    {
+     "number": "209",
+     "heading": "Quorum",
+     "para": 31
+    },
+    {
+     "number": "210",
+     "heading": "Council Action",
+     "para": 32
+    },
+    {
+     "number": "211",
+     "heading": "Enactment of Ordinances",
+     "para": 33
+    },
+    {
+     "number": "212",
+     "heading": "Adoption and Amendment of Ordinances",
+     "para": 34
+    },
+    {
+     "number": "213",
+     "heading": "Emergency Ordinances",
+     "para": 35
+    },
+    {
+     "number": "214",
+     "heading": "Publication",
+     "para": 36
+    },
+    {
+     "number": "215",
+     "heading": "Codification",
+     "para": 37
+    },
+    {
+     "number": "216",
+     "heading": "Effective Date of Ordinance",
+     "para": 38
+    },
+    {
+     "number": "217",
+     "heading": "Penalty for Violation of Ordinances",
+     "para": 41
+    },
+    {
+     "number": "218",
+     "heading": "Non-Interference in Administrative Affairs",
+     "para": 43
+    },
+    {
+     "number": "219",
+     "heading": "Ordinance: When Required",
+     "para": 46
+    },
+    {
+     "number": "220",
+     "heading": "Redistricting of City Council and School Board Districts",
+     "para": 62
+    },
+    {
+     "number": "221",
+     "heading": "Hearings Required for Certain Ballot Measures Proposed by the Council",
+     "para": 189
+    }
+   ],
+   "subsections": [
+    "204|a",
+    "204|b",
+    "219|1",
+    "219|2",
+    "219|3",
+    "219|4",
+    "219|5",
+    "219|6",
+    "219|7",
+    "220|A",
+    "220|A.1",
+    "220|A.2",
+    "220|A.3",
+    "220|B",
+    "220|C",
+    "220|C.1",
+    "220|C.2",
+    "220|C.3",
+    "220|D",
+    "220|D.1",
+    "220|D.2",
+    "220|D.3",
+    "220|D.4",
+    "220|E",
+    "220|E.1",
+    "220|E.2",
+    "220|E.3",
+    "220|E.4",
+    "220|E.5",
+    "220|E.6",
+    "220|E.7",
+    "220|F",
+    "220|G",
+    "220|G.1",
+    "220|G.2",
+    "220|H",
+    "220|I",
+    "220|J",
+    "220|J.1",
+    "220|J.2",
+    "220|J.3",
+    "220|J.3.a",
+    "220|J.3.b",
+    "220|J.3.c",
+    "220|J.3.d",
+    "220|J.4",
+    "220|J.5",
+    "220|J.5.a",
+    "220|J.5.b",
+    "220|J.5.c",
+    "220|J.5.d",
+    "220|J.5.d.i",
+    "220|J.5.d.ii",
+    "220|J.5.d.iii",
+    "220|J.5.d.iv",
+    "220|J.5.d.v",
+    "220|J.5.e",
+    "220|J.6",
+    "220|J.7",
+    "220|J.8",
+    "220|J.9",
+    "220|J.10",
+    "220|K",
+    "220|K.1",
+    "220|K.2",
+    "220|L",
+    "220|L.1",
+    "220|L.2",
+    "220|L.3",
+    "220|L.4",
+    "220|L.5"
+   ],
+   "definitions": [],
+   "exceptions": [
+    {
+     "opens": "Notwithstanding any other provision of this",
+     "section": "205",
+     "cites": [
+      "205",
+      "303",
+      "304"
+     ]
+    },
+    {
+     "opens": "The Council shall fix the compensation",
+     "section": "207",
+     "cites": []
+    },
+    {
+     "opens": "The affirmative vote of five members",
+     "section": "210",
+     "cites": []
+    },
+    {
+     "opens": "Levy taxes except as otherwise provided",
+     "section": "219.3",
+     "cites": []
+    },
+    {
+     "opens": "Authorize the borrowing of money except",
+     "section": "219.5",
+     "cites": [
+      "812"
+     ]
+    }
+   ]
+  }
+ }
+}

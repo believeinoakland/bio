@@ -36,7 +36,8 @@
  * probably looks like is a type that reassures people about things it has not
  * understood. The generic type reports change without describing it, which is noisy and
  * honest, and the noise is the prompt to go and measure. */
-import { makeRegistry } from "../../site-profiles/index.mjs";
+import { makeRegistry, CONFIDENCE } from "../../site-profiles/index.mjs";
+import { CONTRACT } from "./index.mjs";
 import meetingCalendar from "./meeting-calendar.mjs";
 import meetingAgenda from "./meeting-agenda.mjs";
 import meetingMinutes from "./meeting-minutes.mjs";
@@ -45,10 +46,21 @@ import regulation from "./regulation.mjs";
 import staffDirectory from "./staff-directory.mjs";
 import generic from "./generic.mjs";
 
-/* generic carries `fallback: true`, so the shared registry returns it when nothing
-   detects — same mechanism as the conservative handler on the stack axis. */
-const types = makeRegistry();
-types.register(meetingCalendar);
+/* THE SEAM (T33-12; K1513). The registry is SEEDED with this module's own seven types,
+   in the order below, and `registerDoctype` (exported further down) is how a composer
+   registers types into it: `doctypes`' `registerDoctypes(registerDoctype)`, wired by
+   `plane`. A type whose key is already held REPLACES it in its own slot, so the copies
+   `doctypes` registers take over these seeds without moving the load-bearing order, and
+   no module reads documents as unrecognised before `plane` wires them. Deleting the
+   seeds is the next tranche's (N549).
+
+   generic carries `fallback: true`, so the registry answers it when nothing detects —
+   same mechanism as the conservative handler on the stack axis. */
+const members = [];
+let types = makeRegistry();
+const rebuild = () => { types = makeRegistry(); for (const m of members) types.register(m); };
+const seed = (m) => { members.push(m); types.register(m); };
+seed(meetingCalendar);
 /* meeting_minutes (FW-18) is registered BEFORE meeting_agenda, and the order is
    load-bearing rather than alphabetical. `recognise` walks in registration order and
    BREAKS ON THE FIRST CERTAIN detection, so when two types are both certain the
@@ -59,18 +71,18 @@ types.register(meetingCalendar);
    agenda's own masthead rate then decides. Neither type rests on this order for
    correctness -- each was corrected until it separates the two measured documents on
    its own evidence -- and `alsoSatisfies` below reports what the break hid. */
-types.register(meetingMinutes);
+seed(meetingMinutes);
 /* meeting_agenda (FW-15) is the SECOND measured type, written from a real
    Legistar agenda packet's Tier-1 text — the first content type reached through
    text a non-HTML container produced, which is the FORMAT-axis uniformity claim
    exercised on the content axis. */
-types.register(meetingAgenda);
+seed(meetingAgenda);
 /* staff_report and regulation (FW-18), classes 2 and 3 of M0-32's order. Both are
    SUBSTANCE contracts and both read documents published by the City of Oakland rather
    than by Legistar, which is why both match over flattened text: that producer's
    Tier-1 output breaks phrases across lines (see `flatten` in ./index.mjs). */
-types.register(staffReport);
-types.register(regulation);
+seed(staffReport);
+seed(regulation);
 /* staff_directory (FW-20), class 4 of M0-32's order (~395 items, the smallest class).
    FW-18 withheld it (D-376) because every directory it fetched was Tier-1 UNDECODABLE,
    and read that as a tier-3 gap. FW-20 re-took the census through the plane with its
@@ -82,8 +94,33 @@ types.register(regulation);
    Registered AFTER the three substance types: `recognise` breaks on the first CERTAIN,
    and a report or an instrument that happens to carry a contact block is that document
    first; `also` then says it is a directory too. */
-types.register(staffDirectory);
-types.register(generic);
+seed(staffDirectory);
+seed(generic);
+
+/* THE NO-TYPE ANSWER (K1513 (1)): what `doctypeFor` gives when no registered type
+   carries `fallback: true` (none registered, or the fallback replaced by a type that is
+   not one). It is not a content type: it detects, reads and judges nothing, so
+   `readText` states that it has no reader and `assess` claims nothing about what changed
+   (R13). R4's "always returns a type" holds, and R35's no says which no. */
+export const NO_TYPE = Object.freeze({
+  key: "unregistered", label: "no content type is registered", version: 0, fallback: true,
+  contract: CONTRACT.SUBSTANCE,
+});
+
+/** Register one content type into the seam. A type whose `key` is held already
+ *  replaces it in its slot (the order is load-bearing, R4); a new key is appended. A
+ *  member with no string `key` or no `detect` function is refused, stated, never
+ *  thrown. Returns `{ok:true, key, replaced}` or `{ok:false, why}`. */
+export function registerDoctype(type) {
+  if (!type || typeof type !== "object" || typeof type.key !== "string" || !type.key)
+    return { ok: false, why: "a content type is registered by its key, and this one carries no key" };
+  if (typeof type.detect !== "function")
+    return { ok: false, why: `the ${type.key} content type has no detect function, so it could never recognise a document` };
+  const i = members.findIndex((m) => m.key === type.key);
+  if (i >= 0) members[i] = type; else members.push(type);
+  rebuild();
+  return { ok: true, key: type.key, replaced: i >= 0 };
+}
 
 export function doctypes() { return types.all(); }
 
@@ -109,10 +146,16 @@ export function doctypes() { return types.all(); }
  *  recogniser that cannot answer is a different fact from one that answered no. */
 export function doctypeFor(ctx) {
   const r = types.recognise(ctx);
+  /* The shared engine's last resort is the LAST member when none is a fallback; here
+     an unrecognised document is never read as a type that did not recognise it. */
+  if (!r.matched) r.member = types.all().find((m) => m.fallback === true) || NO_TYPE;
   const out = { type: r.member, confidence: r.confidence, signals: r.signals, considered: r.considered,
                 also: alsoFor(ctx, r.member.key) };
   /* A "no" says which no (R35): nothing recognised, and so the generic reading. */
-  if (!r.matched)
+  if (r.member === NO_TYPE)
+    out.why = "no content type is registered to recognise documents, so this one is not read as any type: "
+            + "nothing is read from it and what changes in it is not described";
+  else if (!r.matched)
     out.why = "no registered content type recognised this document, so it is read as a document of no "
             + "recognised type: any substantive difference is reported and not described";
   return out;
