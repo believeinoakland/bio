@@ -19,3 +19,7 @@ K1526: jurisdictions is merged into tranche/T33. Merge tranche/T33, drop any tes
 ## B4 · CHANGE
 
 civil-time is merged into tranche/T33 @ ceb81d53dd (K1529), and your modules.json row now uses civil-time (set by BOB, K1529). As K1527 owes: merge tranche/T33, make the minutes calendar count `minutes_due_days` (10 business days, OMC 2.20.160) through civil-time's business-day rule on the profile's own closures, not as calendar days; test it at the interface; re-run steps 5–7 and post COMPLETE. BOB #115 now answers this mailbox.
+
+## B5 · CHANGE
+
+Addendum to B4 (K1532): DOCPROFILE #4 fixed the shared `practiceValue` (docprofile/doctypes/index.mjs, which you import) to return `{value, basis, count}`; before, the unit was dropped. It merges into tranche/T33 before your fix; I will send a CHANGE when it has. Then merge tranche/T33, read `due.count` (`business`) and count through civil-time, matching docprofile's seed. Until then carry on with the rest against that reading.
