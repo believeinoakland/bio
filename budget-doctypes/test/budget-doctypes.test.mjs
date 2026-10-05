@@ -492,6 +492,9 @@ test("R13: the budget book's pages 196, 241 and 283 are usable, 148 read with it
   }
   assert.equal(r.skipped.filter((s) => s.page === 147).length, 9);
   assert.deepEqual(r.unread.map((u) => u.page), [16]);
+  /* A heading whose "fi" ligature the text layer left undecoded still matches,
+     and is given as read. */
+  assert.equal(onPage(r, 196)[0].title, "Citywide Classi\u0000cation Summary");
 });
 
 test("R13: on the 200-figure fixture, every figure's as_read appears exactly in its table's cell", () => {

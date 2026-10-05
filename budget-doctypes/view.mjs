@@ -49,8 +49,20 @@ export function matchIn(ctx, key, line) {
     try { re = new RegExp(p.re.source.replace(/\\s[+*]?|\s+/g, ""), p.re.flags); } catch { continue; }
     if (re.test(squeezed)) return { text: s.trim(), entry: p.entry };
   }
+  /* A ligature the text layer could not decode ("Classi\u0000cation": the "fi"
+     of a font with no mapping for it) is tried as each Latin ligature it may
+     stand for; the line is still given as read. */
+  if (UNDECODED.test(s))
+    for (const lig of LIGATURES) {
+      const m = matchIn(ctx, key, s.replace(UNDECODED_ALL, lig));
+      if (m) return { text: s.trim(), entry: m.entry };
+    }
   return null;
 }
+
+const UNDECODED = /[\u0000\uFFFD]/;
+const UNDECODED_ALL = /[\u0000\uFFFD]/g;
+const LIGATURES = ["fi", "fl", "ff", "ffi", "ffl"];
 
 /** The view's budget header words, `[{column, re}]`, in the profile's order. */
 export function headerWords(ctx) {
