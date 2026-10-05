@@ -7,7 +7,7 @@
 - [x] digest/CROSS-REGISTER.md (1049 lines) read 1-1049 COMPLETE
 - [x] M1..M5 ## Modules sections read whole (M1 76-269, M2 28-136, M3 30-167, M4 28-110, M5 24-107)
 - [x] primary sources (see list)
-- [ ] web research
+- [~] web research (16 items so far)
 - [ ] study sections 1-9
 ## Findings
 
@@ -128,3 +128,21 @@
 - Content Framework src 780-809 (connection table, asserted_by three values, rule vs instance) and 834-973 (§8.2 progressions, missing predecessor, exception docs, junction checks, threaded by entities, declared flow D-128, deferred institution scoping) read.
 - design-journeys src 60-129 (kinds of group; §3 where members start incl. franchise, contract "declare its obligations and deadlines as standards", court case parties and offices), 330-369 (journey 13), 505-536 (§6 gaps incl. "Offices and who held them") read; branch origin/claude/gallant-brown-zg0wc1 @ bb387fffb2 same text.
 - Code: entities/index.mjs:25-31 kinds+relations; entities/schema.mjs:42-56 entity_relations has NO valid_from/valid_to (only at, withdrawn_*); entities/index.mjs 1,113 lines; progressions/index.mjs 1,189 lines. jurisdictions/profiles/oakland-alameda.mjs:207-217 five counterparties. docprofile/doctypes/staff-directory.mjs header (FW-20, M-121).
+
+### Web research (step 6) -- searches run & findings
+1. Popolo spec https://www.popoloproject.com/specs/ : Person, Organization, Post ("position in an organization that exists independently of the person holding it"), Membership (start_date/end_date, role, organization_id, post_id, on_behalf_of_id), Organization founding_date/dissolution_date, parent_id, classification; Area, Event.
+2. FollowTheMoney https://followthemoney.tech/explorer/schemata/ : PublicBody, Position, Occupancy, Membership, Directorship, Ownership, Employment, Representation, Succession, ContractAward, Payment, UnknownLink, Interval (71 schemata). Occupancy https://followthemoney.tech/explorer/schemata/Occupancy/ : holder, post, startDate/endDate, periodStart/periodEnd, status, constituency; edge.
+3. W3C ORG https://www.w3.org/TR/vocab-org/ (Rec 16 Jan 2014): Post, holds/heldBy, reportsTo (agents or posts, incl dotted-line), subOrganizationOf, Membership n-ary, memberDuring interval, ChangeEvent/originalOrganization/resultedFrom, OrganizationalCollaboration, Role, purpose, classification.
+4. OCDS https://standard.open-contracting.org/latest/en/schema/reference/ ; buyers/suppliers guidance https://standard.open-contracting.org/latest/en/guidance/map/buyers_suppliers/ : parties with roles (buyer, procuringEntity, supplier, tenderer, payer, payee...), identifier {scheme,id} from org-id lists; Milestone {id,title,type,dueDate,dateMet,status}; implementation transactions payer/payee.
+5. OCD-IDs https://open-civic-data-docs.readthedocs.io/en/latest/ocdids.html : ocd-division/country:us/state:ca/place:oakland; ocd-jurisdiction/<division>/<type> (council, legislature); jurisdiction = "logical unit of governance" incl school system.
+6. org-id.guide https://org-id.guide/list/US-COA (chart of accounts codes as agency identifiers), US-USAGOV, US-EIN.
+7. LegalRuleML (OASIS) https://www.oasis-open.org/?p=7617 ; arXiv https://arxiv.org/pdf/1711.06128 : deontic obligation/permission/prohibition/right, bearer, penalty/reparation (suborder list).
+8. NYC obligation registers: Searchlight/Citizens Union https://searchlight.citizensunion.org/unfunded-and-unfinished-how-council-mandates-slow-the-city-down/ -- Legislation Implementation Tracker: 8,185 obligations from 2,138 local laws since 2014; fields who/what/by when/how often; 1,543 reports, 850 recur annually; 155 sunsets; of 728 verifiable reports 214 never filed, 143 overdue. Gotham Gazette https://www.gothamgazette.com/city/8765-new-york-city-government-reporting-required-gaps-in-reporting -- DORIS required reports list: 842 reports, 490 not received; fields agency, frequency, legal mandate, last publication date.
+9. LittleSis https://littlesis.org/help/relationships : 12 relationship categories incl Position (place in org hierarchy w title); dated; open source/API.
+10. OpenSanctions PEP https://www.opensanctions.org/docs/coverage/pep/methodology/ : Position/Occupancy/Person; topics role (gov.executive, legislative, judicial, security, financial, soe) and jurisdiction (gov.national, state, muni, igo); municipal only where reliable sources; missing end dates.
+11. Wikidata P39 qualifiers start time P580, end time P582, replaces P1365, replaced by P1366 (search result).
+12. Google Civic Information API Representatives endpoint turned down 30 Apr 2025 https://groups.google.com/g/google-civicinfo-api/c/9fwFn-dhktA/m/ftUoL83mAwAJ ; guidance: Divisions API for OCD-ID then commercial providers (BallotReady, Cicero, Ballotpedia).
+13. Census of Governments: 90,837 local governments 2022, 91,438 in 2025 https://www.census.gov/library/publications/2026/econ/govtorg2225.html ; special districts 39,313 in 2022 (census visualization https://www.census.gov/content/dam/Census/library/visualizations/2023/econ/special-district-governments-by-function.pdf, via search); Individual unit file / public use files https://www.census.gov/programs-surveys/gus/data/datasets.html .
+14. Legistar Web API https://webapi.legistar.com/Help : Bodies, BodyTypes, Persons, OfficeRecords (OfficeRecordStartDate/EndDate/Title/MemberType/BodyId/PersonId); TAD already measured unauthenticated OData (C10 digest l.73).
+15. Cloudflare DO limits https://developers.cloudflare.com/durable-objects/platform/limits : SQLite DO 10 GB on Paid; CPU 30 s default, configurable to 5 min per invocation.
+16. GIJN citizen investigation guide https://gijn.org/citizen-investigation-guide/ : map of who is affected/interested; bureaucrats not just elected.

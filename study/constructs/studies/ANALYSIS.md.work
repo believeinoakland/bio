@@ -5,8 +5,8 @@
 - [x] digest/DOCTRINE-REGISTER.md (2814) read whole
 - [x] digest/CROSS-REGISTER.md (1049) read whole
 - [x] notes M1..M5 ## Modules read (M1 76-269, M2 28-136, M3 30-167, M4 28-110, M5 24-107)
-- [ ] primary sources
-- [ ] web research
+- [x] primary sources (see list)
+- [x] web research (see list)
 - [ ] write sections 1-9
 ## Findings
 ### digest/ANALYSIS.md 1-150 (C1, C10, C11, C12 partial)
@@ -192,3 +192,43 @@
 - build/layers.md (whole, 274 lines): layer contracts; layer 5 "Everything derived over content, with its grade"; layer 9 consequences row; P17 ruling 5 amended: adding/removing product module or layer change → Bob; uses/order within layer/file ownership → BOB. accepted-work pattern (layer 6 registration facade filled by layer-8 case-import) — precedent for lower read of later data. case-checker: pure function + standalone offline program with readable format spec, recomputes grades at stated method version. Layer 7 Beyond MVP Discovery.
 - build/requirements/runtime-limits.md (whole): Workers freeze Date.now during sync execution; counts not times; cpuProbe finds ceiling.
 - journeys.html (design branch) journey 6 text confirmed (lines 154-165 of extracted text); §6 "Calculating over a dataset" row (line 369); police overtime/bond/budget/dataset front doors (60-75).
+- intent.md R2-R5, Bounds (read): condition {progression, entity, relation, filter, required {grade, stages}, satisfied {share}}; only filter key evaluated = entity_kind; others -> undetermined; satisfied three-valued; >1,000 matched -> null. No amounts.
+- case-checker.md (whole, 85 lines): pure checkCaseFile + standalone program (R13: one self-contained file, no install, no network, same build same bytes, carries own SHA-256); R5 grades recomputed by strength.recomputePair at stated version; UNKNOWN_METHOD_VERSION → missing; R16 same args same answer byte-identical on copy and standalone; Suggestions: import only pure code (strength/arithmetic.mjs). → TEMPLATE for calculation recompute.
+- strength.md R31 GRADING_METHOD_VERSION changes whenever arithmetic changes; gradingMethodText complete enough to recompute by hand; R32 recomputePair answers for every published version; method.mjs: "live walk resolves each leg against the record and then composes here, and recomputePair resolves each leg from the case file's facts and composes here, so a grade recomputes the same by construction". → TEMPLATE.
+- EXTRACTION-BREADTH-DESIGN.txt §2-§4 (lines 40-122): row 5 budget or dataset (two arms) and row 6 financial report (BOB #32: budget is plan; statement reports actuals; separate types); "No reader is written from this". §3.1 table structure in office = cells; PDF table(engine) derivation calibrated like OCR. §3.3 PDF tables NO-GO M-55. §4 EXTRACT productions incl "proposed table structure (once GO)", "cleaned/normalised text: derivation; NOT a transcription — a person supplies text, a machine only transforms it".
+- OFFICE-FORMATS.txt 95-139: formula vs result; "the DERIVATION is frequently the finding"; hidden sheets; "A formula is structure; whether a formula matters is content."
+- record-grammar/types.mjs:20 OBJECT_TYPES: information, inquiry, project, action, bias, standard, determination, consequence, escalation, aspiration, goal, action_plan — no dataset or calculation type.
+- build/plan/archive/T32.md: A37 progressions R32 "no amounts or funds as values"; B1 CSV bound DIST-14; C2 plan mode; A41 publication R30.
+- u41-area5-6.md AREA 5 (lines 1-60): prior check; G5.1-G5.4; suggested home: split figures.mjs into small module used by consequences and inquiry; derivation step in text-chain.
+### Web research (step 6)
+- HyperFormula: GPLv3 or commercial (Handsontable); 380+ functions; Excel/Sheets syntax. https://hyperformula.handsontable.com/docs/ ; https://cdn.jsdelivr.net/npm/hyperformula@3.2.0/README.md  → GPLv3 problematic for a group's instance? (GPL is fine to distribute w/ source; but product license? check repo license) — note.
+- IronCalc: Rust, wasm, MIT/Apache-2.0, 300+ Excel-compatible functions, xlsx import/export; ironcalc_base embeddable. https://github.com/ironcalc/IronCalc
+- ProPublica bulletproofing: raw file untouched copy, data log/journal, methodology, spot-checks. https://www.ire.org/?p=44398 ; https://www.propublica.org/nerds/what-i-learned-from-my-fellowship-at-propublica
+- Socrata SoQL $group with $select aggregates sum/count/avg/min/max. https://dev.socrata.com/docs/queries/group
+- Cloudflare Workers Paid: 128 MB memory per isolate; CPU 30 s default, max 5 min; subrequests 10,000; script 64 MiB. https://developers.cloudflare.com/workers/platform/limits/
+- DO SQLite: 10 GB/object; 100 columns/table; 2 MB max string/BLOB/row; 100 KB SQL statement; 100 bound params; 32 args/function; CPU 30 s/5 min. https://developers.cloudflare.com/durable-objects/platform/limits/
+- GAO-20-283G Assessing Data Reliability (Dec 2019): accuracy, completeness, applicability; risk-based; report language. https://www.gao.gov/products/gao-20-283g
+- GAGAS audit documentation: "sufficient detail to enable an experienced auditor, having no previous connection to the audit, to understand ... nature, timing, extent, and results of audit procedures performed; the evidence obtained; and its source and the conclusions reached". https://gaoinnovations.gov/yellowbook/2024/audit-documentation-1.html
+- Reinhart-Rogoff: averaged rows 30-44 not 30-49; five countries excluded; 2.2% vs -0.1%; found by replication from the shared spreadsheet (Herndon, Ash, Pollin). https://retractionwatch.com/2013/04/18/influential-reinhart-rogoff-economics-paper-suffers-database-error/
+- Panko: ~94% of field-audited spreadsheets have errors; cell error rate ~1-5% of formula cells. https://arxiv.org/pdf/0801.3114.pdf ; https://mba.tuck.dartmouth.edu/spreadsheet/product_pubs_files/Errors.pdf
+- Ziemann 2016: ~1/5 of papers with Excel gene lists had autoconversion errors (704 articles). https://genomebiology.biomedcentral.com/track/pdf/10.1186/s13059-016-1044-7
+- Frictionless Data: resource hash "sha256:..." in Data Package; Table Schema for field types. https://framework.frictionlessdata.io/docs/resources/table.html
+- W3C CSVW (4 Recommendations, 17 Dec 2015): metadata vocabulary for tabular data, datatypes, cell level. https://www.w3.org/TR/tabular-metadata/
+- Fiscal Data Package (Frictionless; OKI/GIFT/World Bank): columnTypes administrative/functional/economic classification code/label; phases Plan/Actual ("approved", "executed"). https://specs.frictionlessdata.io/fiscal-data-package/ ; https://fiscaltransparency.net/open-fiscal-data-package/
+- FDTA (P.L. 117-263, Dec 2022): Phase 1 joint final rule published 8 June 2026; Phase 2 SEC deadline 1 Oct 2028; MSRB no deadline; compliance date unknown → machine-readable muni financial statements are years away. https://www.gfoa.org/fdta
+- Datasette: SQLite publishing; canned queries; shareable query URLs; Baltimore Sun salaries. https://feeds.simonwillison.net/tags/datasette/?page=47 (weak source; prefer docs) 
+- Datasette canned queries: named SQL in metadata with :params; shareable query URLs. https://docs.datasette.io/en/stable/sql_queries.html
+- ArcGIS REST query: resultOffset/resultRecordCount paging, exceededTransferLimit, outStatistics, returnCountOnly (approximate counts in some cases). https://www.fairfaxcounty.gov/gisint1/rest/services/PLUS/PLUSGISRecords/FeatureServer/0/query?f=help
+- CKAN DataStore: datastore_search (filters, q, limit, offset), datastore_search_sql (SELECT, aggregation). https://docs.ckan.org/en/ckan-2.1.5/datastore.html
+- PDF tables: arXiv 2410.09871 compares Camelot, pdfplumber, PyMuPDF, Tabula, TATR; rule-based tools category-dependent; TATR best in Financial table detection; academic benchmark (2303.09957) Camelot F1 0.30, Tabula 0.28, Adobe 0.47. https://arxiv.org/abs/2410.09871 ; https://arxiv.org/pdf/2303.09957 — consistent with M-55 NO-GO.
+- Formula.js MIT (Excel functions in JS). https://npmjs.com/package/formulajs
+- The Markup Method: Build, Bulletproof, Show your work (datasets+code published). https://themarkup.org/about
+- Vega-Lite: declarative JSON spec mapping data fields to channels → fits description-as-truth (SR §2.3). https://vega.github.io/vega-lite/ (via archive) / https://www.microsoft.com/en-us/research/?p=449646
+- W3C PROV-O REC 30 Apr 2013: Entity/Activity/Agent; used, wasGeneratedBy, wasDerivedFrom. https://www.w3.org/TR/prov-o/
+- OpenFormula ISO/IEC 26300-2:2015: interoperable recalculated formulas "will produce equivalent results if given equivalent inputs". https://www.iso.org/standard/88132.html (search result)
+- SheetJS CE Apache 2.0; cell .v .w .t .f. https://git.sheetjs.com/It/sheetjs (search result)
+- DuckDB-Wasm: in-process analytical SQL in browser/Node, CSV/Parquet/JSON. https://duckdb.org/2021/10/29/duckdb-wasm.html
+- Spreadsheet engines differ: IEEE-754 doubles; Excel "close to zero" heuristic inconsistently applied (SUM); LibreOffice accumulates rounding. https://exceljet.net/articles/floating-point-errors-in-excel ; https://help.libreoffice.org/latest/om/text/scalc/01/calculation_accuracy.html
+- OpenGov/Socrata (Tyler Data & Insights) budget platforms; exports CSV; Socrata Open Budget. https://www.route-fifty.com/digital-government/2016/02/machine-readable-budget-in-a-human-friendly-format/299552/
+- Audit attribute sampling: confidence 90/95/99%, tolerable exception rate, expected exception; proportions near 0/1 need exact intervals. https://ww2.amstat.org/meetings/proceedings/2019/data/assets/pdf/1199463.pdf ; https://rdrr.io/cran/PracTools/man/nAuditAttr.html
+- Repo facts: bio-plane has NO runtime npm dependencies (devDependencies only: miniflare, wrangler, esbuild); ocr-worker vendors tesseract-wasm 0.11.0 as a separate layer-1 Worker (fleet member) — precedent for a vendored wasm engine in its own Worker.
