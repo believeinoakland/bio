@@ -556,3 +556,30 @@ test("R39: the T33 services are the instance's methods, and their registrations 
   assert.equal(recordOf({ storage: storage() }).storeGate("m", "g", {}, "insert"), null);
   void RecordCore;
 });
+
+test("R31 (K1542): a table another module declared is reached only as its declaration says; an undeclared one never", () => {
+  const { s, rc } = fresh();
+  s.db.exec(`CREATE TABLE stored_t (bundle_id TEXT, k TEXT); CREATE TABLE undeclared_t (bundle_id TEXT, k TEXT);
+             CREATE TABLE tomb_t (k TEXT); CREATE TABLE cache_t (k TEXT, v TEXT)`);
+  rc.declareTable("m", [entry("stored_t"), entry("tomb_t", { expunge: "tombstone" }),
+    entry("cache_t", { derive: "derived-rebuildable", key: ["k"], rebuild: () => [{ k: "a", v: "1" }] })]);
+  for (const t of ["stored_t", "undeclared_t"]) s.sql.exec(`INSERT INTO ${t} VALUES ('B1', 'a')`);
+  s.sql.exec(`INSERT INTO tomb_t VALUES ('a')`); s.sql.exec(`INSERT INTO cache_t VALUES ('a', '1')`);
+  const snap = (t) => JSON.stringify(rows(s, `SELECT * FROM ${t}`));
+  const before = { stored: snap("stored_t"), undeclared: snap("undeclared_t") };
+  /* expunge reaches only a tombstone table; the derived services only a derived-rebuildable one */
+  for (const table of ["stored_t", "undeclared_t", "cache_t"])
+    assert.equal(rc.expunge({ module: "m", table, key: { k: "a" }, ground: "unlawful", by: "member:iris" }).code, "EXPUNGE_NOT_DECLARED", table);
+  for (const table of ["stored_t", "undeclared_t", "tomb_t"]) {
+    assert.throws(() => rc.rebuildDerived("m", table), TypeError);
+    assert.throws(() => rc.readDerived("m", table, "a"), TypeError);
+  }
+  assert.equal(rc.storeGate("m", "undeclared_t", { k: "a" }, "insert"), null, "the gate reads no table at all");
+  assert.equal(snap("stored_t"), before.stored); assert.equal(snap("undeclared_t"), before.undeclared);
+  /* and each declared way does what its declaration says */
+  assert.equal(rc.expunge({ module: "m", table: "tomb_t", key: { k: "a" }, ground: "unlawful", by: "member:iris" }).removed, 1);
+  assert.deepEqual(rc.rebuildAndCompare("m", "cache_t"), { same: true });
+  rc.purge({ bundleId: "B1" });
+  assert.equal(rows(s, `SELECT COUNT(*) AS n FROM stored_t`)[0].n, 0, "purge clears the declared table by its keying");
+  assert.equal(snap("undeclared_t"), before.undeclared, "and never the undeclared one");
+});

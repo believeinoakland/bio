@@ -2,6 +2,34 @@
 
 **Status** · session_01LVDHdXdGUfEWUkozc8q4Wf · depth 2 · WORKING · handled B2
 
+## Completion (RECORD-CORE #16)
+
+**Entry applied: T33-19** (S0-2, S0-3, B0.12; K1470, K1489, K1493; R1, R21, R29, R40, R46 amended; R76–R79 new; readings J1, accepted by K1542).
+- **Ids from `ID_TABLE` (R1, R2, R76, R40, R62).** `allocId` reads record-grammar's `ID_TABLE`. A sequential prefix (and one the table does not hold) steps its counter with no ceiling: the 10,000th is `…-10000`. An opaque prefix (`EVT LIN MNY PFA IDC`) gets a 16-character `[a-z0-9]` tail. Each character is drawn from the CSPRNG by rejection sampling (a byte ≥ 252 is drawn again). The id is checked against `minted_ids` and recorded there in the caller's transaction (source `opaque`), so a hit is a retry. After 64 hits it answers R62's `MINT_EXHAUSTED`. `allocIdOp` answers the same for an opaque prefix. `seedMintLedger` drops the 9,999 cap on the counter's range; live ids of both forms are seeded whole. `mintExhausted` names the new objects (event, line, money fact, person fact, identity claim).
+- **`declareTable` (R21, R46).** Each entry has six classes: purge, expunge, export, sight, derive, version_chain. Refusals: `TABLE_CLASS_MISSING` (also used for a derived table with no `rebuild` or `key`) and `TABLE_CLASS_UNKNOWN`, each naming the table and the class; nothing is registered. `declarePurge` is its default form. A default entry's sight is decided when the declarations are read. `declaredTables()` lists every declaration in order. record-core declares its own ten tables with the classes of J1 item 8. One change from J1: `derived_stale` is **exempt**, not clear. A mark that outlives its row still answers stale, and the purge report's keys stay as other modules' tests pin them.
+- **Derived caches (R77).** New: `markStale`, `readDerived` (fails closed), `rebuildDerived` (the rebuild that clears marks) and `rebuildAndCompare`. The comparison builds a scratch table inside a savepoint that is always rolled back, then walks held and rebuilt rows in key order. A table not declared derived-rebuildable by that module is a TypeError. The marks are kept in the new `derived_stale` table.
+- **Store gate (R78).** `registerStoreGate` and `storeGate` (fail closed), as in J1 item 5.
+- **Expunge (R79, R29).** `expunge` and `tombstones()`, as in J1 item 6. Tombstones go in the new `tombstones` table, which is exempt from purge and declared `expunge: none`. `history` and `manifest` are declared `none`, so they can never be expunged.
+- **Measured in the job:** the 10,000th id of all 46 sequential prefixes, really allocated: about 9 s for 460,000 ids, about 0.2 s per prefix. R77's byte comparison is checked against a value, a type (blob versus text), a missing row, an extra row and a renamed key.
+
+**Rows — a change from J1 item 2, made after B2.** Giving `TABLE_DECLARED` and `TABLE_NAME_INVALID` rows changes refusal shapes that case-carriage R6 and corpus-export R4 pin exactly (`deepEqual`). That turned both modules' tests red. So both refusals keep their old row-less shape, and the new rows are numbered from C-102.21. Rows **awaiting stamp** (promotion's next stamp, next.md N553; `row-census.test.mjs` accepted red by K1542): C-102.21 TABLE_CLASS_MISSING, C-102.22 TABLE_CLASS_UNKNOWN, C-102.23 STORE_GATE_DECLARED, C-102.24 STORE_GATE_MALFORMED, C-102.25 STORE_GATE_FAILED, C-132.1 EXPUNGE_GROUND_UNKNOWN, C-132.2 EXPUNGE_NOT_DECLARED, C-132.3 EXPUNGE_NOT_A_MEMBER, C-132.4 EXPUNGE_NOTHING. The census names exactly these 9 arrivals.
+
+**Deferred:** rows for `TABLE_DECLARED` and `TABLE_NAME_INVALID` (DEC-49), and `ANONYMOUS_LEASE` and the `SETTING_*` refusals, which also have none. Giving them rows needs case-carriage's and corpus-export's tests to follow in the same change. That needs a CHANGE carried to those modules, so it is not done in this job.
+
+**Found in other modules** (REPORT in COMPLETE):
+1. Stale generated artifacts: `bio-plane/src/case-checker/program.mjs` (it bundles record-core's three files; case-checker R13 is red from my change, already accepted as red 3) and `bio-plane/dist/bio-plane.bundled.mjs` (the plane bundles record-core). Both are BOB's to regenerate at the layer close.
+2. `entities/resolve.test.mjs:177` (R13, listeners in `MODULE_ORDER`) is red on `tranche/T33` at `3cd15e8626` without my change (K1543's finding for entities' START). It is not mine.
+3. `case-authoring` R30 (`invariants.test.mjs:124`) and `case-disclosures` R21 (`seam.test.mjs:93`), both "no place named", are red on `tranche/T33` without my change. They are not on the plan's accepted-red list.
+
+**Tests and checks**
+- `node --test bio-plane/test/m/record-core/`: 126 pass, 0 fail (`record-core.test.mjs` 99, `t33.test.mjs` 27). `node bio-plane/test/stats-disclosure.test.mjs`: 36 pass, 0 fail.
+- Every module that uses record-core (`npm test` in `bio-plane`, after merging `tranche/T33` @ 3cd15e8626): 6142 tests, 6119 pass, 12 fail. Eleven are red on the tranche without my change: action-clocks calendar R10 ×3 and filings packet R9, R30 (K1519), ai-runs R18 (K1514), entities idmatch R20 (K1515) and resolve R13 (K1543), skills R28 (K1516), case-authoring R30 and case-disclosures R21 (item 3). The twelfth is case-checker R13 (accepted red 3, item 1).
+- `test/system/row-census.test.mjs`: 7 pass, 1 fail, naming exactly the 9 rows above (accepted, K1542).
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs … record-core`: 0 failures. `checks/coverage.mjs … record-core`: 79 of 79 live ids named, 0 failures. `checks/ownership.mjs … record-core tranche/T33`: 0 failures.
+- Final `uses`: record-grammar (now also `ID_TABLE`), id-spaces and test-support. Unchanged.
+
+Size (session_01LVDHdXdGUfEWUkozc8q4Wf): test runs 16, module lines 2222
+
 ## J1 · QUESTION
 
 My readings of T33-19 where the requirements leave a detail open. I am building on them now; none blocks me. Answer only the ones you want otherwise.
