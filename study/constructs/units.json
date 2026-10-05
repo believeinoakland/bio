@@ -146,5 +146,16 @@
  ],
  "C12": [
   "DECISIONS-archive-part2.txt"
+ ],
+ "C13": [
+  "plan/action-design_HANDOFF.txt",
+  "plan/action-design_PATH.txt",
+  "plan/action-design_UX-ANSWERS.txt",
+  "plan/action-design_action-plans.txt",
+  "plan/action-design_deltas.txt",
+  "plan/action-design_tests.txt",
+  "plan/draft-filing-templates.txt",
+  "plan/draft-planning-skill.txt",
+  "plan/research-oakland-calendar.txt"
  ]
 }

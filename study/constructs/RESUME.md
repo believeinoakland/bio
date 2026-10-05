@@ -42,3 +42,11 @@ Show it to Bob rendered (an Artifact page), never as Markdown. Then answer the d
 
 ## Between the two accounts
 Sessions on one account cannot see, message, archive or wake sessions on the other: the repository is the only meeting place. Don't touch ROOT #4 or BOB #110 (both secondary). Only one BOB works the study at a time: if `git log origin/study/constructs` shows pushes from BOB #110 within the last 15 minutes, it is still working; ask Bob before starting.
+
+## Coverage: what phase 1 reads, and what it leaves out and why
+**Read whole** (20 units, `units.json`): the canon's mission and product requirements, all construct designs and level-2 details that bear on the six constructs; all of Bob's rulings (DEC-1–67 from the archived ledger on `coord`, DEC-68–127 from the design branch); the practice survey and CONSTRUCTS; the Action design papers on both sides (`docs/development/action-design/`, `build/plan/action-design/`), the planning-skill and filing-template drafts and the meeting-calendar research; the design session's journeys, use cases, audiences, experience steps, surface rules, principles, brand and voice, measures and views; and the requirements of the 49 modules that touch the constructs, checked against code.
+**Left out, with the reason:**
+- Capture and storage mechanics (LINK-FIDELITY, ARCHIVE-FALLBACK, CAPTURE-FIDELITY, CAPTURE-SCALING, CLIENT-RENDERED, GRADE-A-CAPTURE, INBOX-GRAMMAR, MULTI-INSTANCE-ISOLATION, CONTENT-EXTENT-DESIGN-SPACE, STORE-AS-CACHE, TREE-SHARING) and the bundle format: they govern how bytes enter and are stored, not the six constructs.
+- Process history (TRANSITION, VERIFICATION, ORCHESTRATION, PARALLELISM, WORK-PIPELINE, UI-PLAN, CORPUS-STANDARD, the old placement table on `coord`), tranche plan drafts `build/plan/draft-T*.md`, `t*-*.md` notes, `approvals-study/`, `action-fold/`: their substance is folded into the requirements the M readers read.
+- Raw logs and inventories (MEASUREMENTS 1.4 MB, INTERFACES, INTERFACE-CHANGES, CIVICOS_UI_STATE; the design branch's `ux-substrate-v2.json` and `openQuestions`): derived from sources read whole; open questions' rulings are in the DEC ledgers.
+- Requirements of the ~50 modules outside the constructs (capture, signatures, record core, publication internals, distribution).

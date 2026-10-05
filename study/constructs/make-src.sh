@@ -34,4 +34,8 @@ git fetch -q origin coord || true
 C=5393f63ea5700a8efae2f98cc44efdf3bd238e78
 show $C docs/archive/ledgers/DECISIONS-2026-08.md | fold -s -w 900 > "$S/src/.dec-archive"
 head -n 2056 "$S/src/.dec-archive" > "$S/src/DECISIONS-archive-part1.txt"; tail -n +2057 "$S/src/.dec-archive" > "$S/src/DECISIONS-archive-part2.txt"; rm -f "$S/src/.dec-archive"
+# Build-side Action design papers and research (reader C13).
+mkdir -p "$S/src/plan"
+for f in build/plan/research-oakland-calendar.md build/plan/draft-planning-skill.md build/plan/draft-filing-templates.md build/plan/action-design/PATH.md build/plan/action-design/UX-ANSWERS.md build/plan/action-design/action-plans.md build/plan/action-design/deltas.md build/plan/action-design/HANDOFF.md build/plan/action-design/tests.md; do
+  n=$(echo "${f#build/plan/}" | tr / _); show $P "$f" | fold -s -w 900 > "$S/src/plan/${n%.md}.txt"; done
 echo "src rebuilt: $(find "$S/src" -type f | wc -l) files"

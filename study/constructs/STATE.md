@@ -12,15 +12,19 @@
 | C8 | prompts/C8.txt | notes/C8.md | done |  |
 | C9 | prompts/C9.txt | notes/C9.md | done |  |
 | C10 | prompts/C10.txt | notes/C10.md | done |  |
-| C11 | prompts/C11.txt | notes/C11.md | partial | DECISIONS-archive-part1.txt: read to 1000 of 2056 |
-| C12 | prompts/C12.txt | notes/C12.md | partial | DECISIONS-archive-part2.txt: read to 1250 of 2037 |
+| C11 | prompts/C11.txt | notes/C11.md | done |  |
+| C12 | prompts/C12.txt | notes/C12.md | done |  |
+| C13 | prompts/C13.txt | notes/C13.md | partial | action-design_HANDOFF.txt: read to 0 of 47; action-design_PATH.txt: read to 0 of 42; action-design_UX-ANSWERS.txt: read to 0 of 27; action-design_action-plans.txt: read to 0 of 115; action-design_deltas.txt: read to 0 of 62; action-design_tests.txt: read to 0 of 74; draft-filing-templates.txt: read to 0 of 196 |
 | D1 | prompts/D1.txt | notes/D1.md | done |  |
 | D2 | prompts/D2.txt | notes/D2.md | done |  |
-| M1 | prompts/M1.txt | notes/M1.md | partial | local-facts.txt: not started; standards.txt: not started; conformance.txt: not started; consequences.txt: not started; action-grammar.txt: not started; actions.txt: not started; action-clocks.txt: not started; filing-templates.txt: not started; filings.txt: not started; escalation.txt: not started; action-plans.txt: not started; final section not written |
+| M1 | prompts/M1.txt | notes/M1.md | done |  |
 | M2 | prompts/M2.txt | notes/M2.md | done |  |
 | M3 | prompts/M3.txt | notes/M3.md | done |  |
 | M4 | prompts/M4.txt | notes/M4.md | done |  |
 | M5 | prompts/M5.txt | notes/M5.md | done |  |
+| R-1 | prompts/R-1.txt | reviews/R-1.md | missing |  |
+| R-2 | prompts/R-2.txt | reviews/R-2.md | missing |  |
+| R-3 | prompts/R-3.txt | reviews/R-3.md | missing |  |
 | A-ANALYSIS | prompts/A-ANALYSIS.txt | studies/ANALYSIS.md | missing |  |
 | A-COURTS | prompts/A-COURTS.txt | studies/COURTS.md | missing |  |
 | A-LAW | prompts/A-LAW.txt | studies/LAW.md | missing |  |

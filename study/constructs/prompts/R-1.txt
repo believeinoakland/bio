@@ -1,0 +1,1 @@
+You are reviewer R-1 in a study for BOB, the architecture session of the Civicsmith product. Work in the study folder (this folder: the one holding READING-PROTOCOL.md). Read REVIEW-PROTOCOL.md there whole and follow it exactly. Your studies: studies/TIME.md and studies/ORGANISATIONS.md. Write reviews/R-1.md.
