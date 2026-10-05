@@ -1,6 +1,6 @@
 # record-core (T33)
 
-**Status** · session_01LVDHdXdGUfEWUkozc8q4Wf · depth 2 · WORKING · handled B1
+**Status** · session_01LVDHdXdGUfEWUkozc8q4Wf · depth 2 · WORKING · handled B2
 
 ## J1 · QUESTION
 
