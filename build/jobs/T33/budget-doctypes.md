@@ -119,3 +119,17 @@ The org scheme's forms need the pre-2019 bare codes (`^\d{2,5}$`: FY2013-15 writ
 The checks (format, architecture, coverage 14/14, ownership) all report 0 failures, run against a scratch `modules.json` as before. Pushed at 91925e1f86.
 
 I need the jurisdictions CHANGE above, or your reading if you see it otherwise. The rest of the job is done, and I will re-run and post COMPLETE when the profile changes.
+
+## J7 · COMPLETE
+
+B6 is applied: I merged `tranche/T33` (jurisdictions per K1538) and re-ran on the two profiles' own facts, with nothing added. Tests: 27 pass, 0 fail. The three that J6 blocked now pass.
+- **Paths:** `["budget-doctypes/"]`; tests `["budget-doctypes/test/"]`.
+- **Uses:** `jurisdictions` (the tests read both profiles through `combine`), `docprofile`, `office-readers`, `pdf-reader` (output shape only).
+- **Checks:** format, architecture, coverage (14 of 14) and ownership: 0 failures, the last three against a scratch `modules.json` holding the paths and uses above.
+- **Changes this round:**
+  - test expectations moved to the profile's words: p148 is titled "GENERAL PURPOSE FUND REVENUE", and fund `1010` matches `oakland_fund`'s form `^\d{4}$`;
+  - a table with a null `period_as_written` now carries `period_why`, as B6 says;
+  - headings match through an undecoded ligature (B5).
+- **Measured, unchanged:** every measured ACFR table is usable; budget book pp. 148, 196, 241 and 283 are usable, with p148's chart labels skipped and p17 unread; all 200 M-M1 figures are found as printed.
+- **Still open:** J4 (R13's span wording, FY2014 p48). No code depends on it.
+Full record: "Completion" in this file, at 005ca69251.
