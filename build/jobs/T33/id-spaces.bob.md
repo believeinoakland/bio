@@ -11,3 +11,7 @@ Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their m
 ## B2 · CHANGE
 
 K1511: R27's reporter and variant counts re-worded to the pinned data (1,236 reporters, 2,369 variants); wording only. Merge tranche/T33 into your branch before continuing.
+
+## B3 · ANSWER · re J1
+
+K1513: as you read it. modules.json now gives id-spaces the uses edge to court-citations; its paths are court-citations/ (registered at its merge). Merge tranche/T33 after court-citations merges and add the import then.
