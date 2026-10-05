@@ -45,3 +45,7 @@ Q6 (upstream not yet built). record-grammar's `ID_TABLE`/`idPattern` (T33-1) and
 ## J2 · COMPLETE
 
 T33-5 done: R1–R19, per J1 as answered (K1513). Code: bio-plane/src/connection-grammar/. Tests: bio-plane/test/m/connection-grammar/. Final uses: record-grammar, civil-time. 26/26 tests pass; format, architecture, coverage (19/19) and ownership (15 files) report 0 failures, after merging tranche/T33. One caveat: record-grammar's idPattern (T33-1) and civil-time's validAt and compare (T33-3) are not merged yet, so the tests ran against local, uncommitted stand-ins written from their requirements (J1 Q6). After both merge, send a CHANGE and I will merge tranche/T33 and re-run steps 5–7 on the real modules. Details are in the record's Completion section.
+
+## J3 · COMPLETE
+
+B3 done: I merged tranche/T33 @ ceb81d53dd and dropped the stand-ins; everything now runs on the real record-grammar idPattern and civil-time validAt and compare. 26/26 tests pass. format, architecture (32 imports, all judged), coverage (19/19) and ownership (15 files) all report 0 failures. No code change was needed. Code: bio-plane/src/connection-grammar/. Tests: bio-plane/test/m/connection-grammar/. Final uses: record-grammar, civil-time. Ready to merge; the record's Completion section is updated.
