@@ -22,3 +22,7 @@
 - `node checks/ownership.mjs … runtime-limits tranche/T33`: 3 files changed; 0 failures.
 
 Size (session_01MsnfffgQ6VggcGRSweB1wW): test runs 2, module lines 278
+
+## J1 · REPORT
+
+Found in other modules (record, 'Found in other modules'): (1) ai-runs: index.mjs:1579 forwards claude_accounts.instance from instanceClaudeToken, now always null (K1502); its R18 test (scheduler.test.mjs:123) fails 1 of 56, expecting the INSTANCE_CLAUDE_TOKEN value. T33-50 does not name the re-point. (2) Stale generated artifacts from tokens.mjs, not rebuilt by me (§14): agent-worker/dist/agent-worker.bundled.mjs (agent-worker's requirements test fails on STALE BUNDLE, 272/273) and bio-plane/dist/bio-plane.bundled.mjs; pdf-worker is fresh. (3) bio-plane/scripts/deploy.mjs:235 and derive-bindings.mjs:92 (with bundler's release.test.mjs and system/deploybindings.test.mjs) and newgroup/src/release.mjs still bind INSTANCE_CLAUDE_TOKEN; T33-91 covers the installer, no T33 entry names the scripts' half.
