@@ -44,6 +44,8 @@ Committed files built by `bundler` (`bio-plane/scripts/fleet-bundle.mjs`, `write
 | `court-citations/court-data.mjs` (reporters-db and courts-db, translated) | `court-citations` | repository root: `node court-citations/build.mjs` (check: `--check`) | the vendored, pinned packages under `court-citations/vendor/` (K1518) |
 | `sheet-worker/dist/sheet-worker.bundled.mjs`, `.bundle.json` | `sheet-worker` | `sheet-worker/`: `npm run build` (the vendored engine `assets/sheet-engine.wasm` is rebuilt only by `npm run build:engine`, which needs rustup's `wasm32-unknown-unknown` target and `wasm-bindgen-cli` 0.2.126; K1531) | `sheet-worker`, and `runtime-limits`' `cpu.mjs` |
 
+**Order (K1540):** regenerate `program.mjs` and `court-data.mjs` first, then the bundles with `node bio-plane/scripts/bundles.mjs` from the repository root (it rebuilds every stale bundle; the plane bundles `program.mjs`), then `newgroup`.
+
 **Verify, after regenerating:** `node --test bio-plane/test/system/fleetbundles.test.mjs` from the repository root (`verifyStatic` and `verifyFresh` over every member: input hashes, byte identity, externals). Also `node --test bio-plane/test/system/newgroup-bundle-fresh.test.mjs` for the installer's bundle. Each must print `0 fail` with no `SKIP`; a `SKIP` means a member's `node_modules` is missing (`npm ci` there first). Baseline on `tranche/T1` @ BOB #40's takeover: 96 pass, 0 fail, no skip.
 
 ## Parallel work: the UX design stream (Bob, 2026-10-01; K945)
