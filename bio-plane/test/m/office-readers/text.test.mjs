@@ -127,7 +127,7 @@ test("R11 xlsx text: tab-joined rows, newline-joined across rows and sheets; the
   });
   const t = await xlsxEntry.text(b);
   assert.equal(t.document, "zero\t3.5\tTRUE\ninline\t#DIV/0!\nzero!\nhidden text");
-  assert.deepEqual(t.sheets.map(({ text, ...s }) => s), [
+  assert.deepEqual(t.sheets.map(({ text, cells, ...s }) => s), [
     { sheet: 0, name: "One", hidden: false, rows: 1048576, cols: 16384, usedRows: 3, usedCols: 4, range: { kind: "sheet-range", ref: "One!A1:D3", sheet: "One", range: "A1:D3" }, undetermined: [{ sheet: 0, cell: "A2", reason: "shared_string_index_out_of_range" }] },
     { sheet: 1, name: "Two", hidden: "hidden", rows: 1048576, cols: 16384, usedRows: 2, usedCols: 2, range: { kind: "sheet-range", ref: "Two!A1:B2", sheet: "Two", range: "A1:B2" }, undetermined: [] },
     { sheet: 2, name: "Empty", hidden: false, rows: 1048576, cols: 16384, usedRows: 0, usedCols: 0, range: null, undetermined: [] },
@@ -136,14 +136,14 @@ test("R11 xlsx text: tab-joined rows, newline-joined across rows and sheets; the
   const noSst = await xlsxEntry.text(F.xlsx({ sheets: [{ name: "S", data: { rows: [{ r: 1, cells: [{ r: "A1", t: "s", v: "0" }] }] } }], sharedStrings: F.sst(["x"]), sharedStringsCd: F.CORRUPT }));
   assert.deepEqual(noSst.undetermined, [{ sheet: 0, cell: "A1", reason: "shared_strings_unreadable" }]);
   const unread = await xlsxEntry.text(F.xlsx({ sheets: [{ name: "S", data: {}, cd: F.CORRUPT }] }));
-  assert.deepEqual(unread.sheets[0], { sheet: 0, name: "S", hidden: false, rows: 1048576, cols: 16384, usedRows: null, usedCols: null, range: null, text: "", undetermined: [{ sheet: 0, cell: null, reason: "crc_mismatch" }] });
+  assert.deepEqual(unread.sheets[0], { sheet: 0, name: "S", hidden: false, rows: 1048576, cols: 16384, usedRows: null, usedCols: null, range: null, text: "", cells: null, undetermined: [{ sheet: 0, cell: null, reason: "crc_mismatch" }] });
 });
 
 test("R11 csv text: one sheet, null bound, row 1 is row 1, empty fields are measured emptiness, quoted fields per RFC 4180", async () => {
   const t = await csvEntry.text(F.enc('name,note\r\n"Smith, J","said ""hi"""\r\n,x\r\n\r\nlast,row'));
   assert.equal(t.dialect.delimiter, "comma");
   assert.equal(t.document, 'name\tnote\nSmith, J\tsaid "hi"\nx\nlast\trow');
-  assert.deepEqual(t.sheets, [{ sheet: 0, name: CSV_SHEET_NAME, hidden: false, rows: null, cols: null, usedRows: 5, usedCols: 2,
+  assert.deepEqual(t.sheets.map(({ cells, ...s }) => s), [{ sheet: 0, name: CSV_SHEET_NAME, hidden: false, rows: null, cols: null, usedRows: 5, usedCols: 2,
     range: { kind: "sheet-range", ref: `${CSV_SHEET_NAME}!A1:B5`, sheet: CSV_SHEET_NAME, range: "A1:B5" }, text: t.document, undetermined: [] }]);
   assert.deepEqual(t.undetermined, []);
   assert.equal(t.counts.cells, 7);
