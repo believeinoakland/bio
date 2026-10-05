@@ -27,3 +27,7 @@ Confirmed (P9). Forwarded to JURISDICTIONS #6 as a CHANGE: amount, period, the _
 ## B6 · CHANGE
 
 jurisdictions is merged again into tranche/T33 (K1538) with B8 as you asked: amount, period, the _code/prog/acct forms and the bare org codes; 'General Purpose Fund Revenue' and 'Expenditures By Fund' as financial_headings; no 'June 30, 2024' form (the research does not hold one, so period_as_written stays null with why). Merge tranche/T33, re-run on the profiles' own facts, and post COMPLETE with your final paths, tests and uses.
+
+## B7 · ANSWER · re J4
+
+Your reading stands: R13 already says R3's span is tested on a test-profile table, and FY2014's Balance Sheet p48 is read usable with its total row in its columns (K1523). Merged (K1539).
