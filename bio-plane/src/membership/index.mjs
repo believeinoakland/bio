@@ -1,6 +1,7 @@
 /* membership — who the members are and what each may do; projects as working groups, sight, and the fence.
  *
- * Requirements: build/requirements/membership.md (R4–R96; T32's R83 order (wizard-scripts, N544, K1396); T28's R83
+ * Requirements: build/requirements/membership.md (R4–R96; T33's R83 order (T33-19a: plan T33's Rules (2), K1438, K1504);
+ * T32's R83 order (wizard-scripts, N544, K1396); T28's R83
  * order (accepted-work, case-checker, case-import; K1292, K1299); T27's R83 order (docket, N520, K1256); T25's R83 order (attestation, provenance-routes,
  * reading-pipeline; N512, N513, K1219); T24's R83 order (link-sweep, K1185); T23's R83 order (corpus-export,
  * network-notices); T21's N453 deletions (the signer-key copies, K910); T20's N445 deletions and R96's figure source,
@@ -166,27 +167,35 @@ export function notAParticipant(projectId, by, extra = null) {
 /* R83 (K289): the modules' total order, `build/modules.json`'s ids in the file's order (which is its layer order, K270).
    Product code cannot read `build/` at run time, so it is held here, the one list every module orders its listeners by
    (this module's R79; promotion, provenance and the later modules import it); this module's R83 test holds it equal to
-   the file, so a change there fails the suite until the list follows. */
+   the file, so a change there fails the suite until the list follows. T33-19a (K1438, K1504): re-pinned to plan T33's
+   Rules (2), its new modules in their places, `local-facts` and `standards` in layer 5 and `observation-log` after
+   `connections`. A module the file lists before its job has built it is held here in its place all the same, so its
+   listeners order correctly from the day it registers; R83's test names it as not yet built until its merge. */
 export const MODULE_ORDER = Object.freeze([
-  /* 1 */ "record-grammar", "jurisdictions", "test-support", "runtime-limits", "signatures", "bundler",
-          "id-spaces", "subresources", "ooxml", "office-readers", "odf-reader", "pdf-reader", "format-registry",
-          "text-chain", "site-profiles", "docprofile", "image-codecs", "pdf-pixels", "pdf-worker", "ocr-worker",
+  /* 1 */ "record-grammar", "jurisdictions", "civil-time", "calc-grammar", "connection-grammar", "test-support",
+          "runtime-limits", "signatures", "bundler", "court-citations", "id-spaces", "subresources", "ooxml",
+          "office-readers", "odf-reader", "pdf-reader", "format-registry", "text-chain", "site-profiles", "docprofile",
+          "doctypes", "legistar-reader", "roster-reader", "court-doctypes", "budget-doctypes", "image-codecs",
+          "pdf-pixels", "pdf-worker", "ocr-worker", "sheet-worker",
   /* 2 */ "record-core", "membership", "credentials", "promotion",
-  /* 3 */ "host-governor", "provenance", "attestation", "provenance-routes", "capture-sources", "acquisition", "capture",
-          "sources",
+  /* 3 */ "host-governor", "provenance", "attestation", "provenance-routes", "capture-sources", "acquisition",
+          "capture", "sources",
   /* 4 */ "calibration", "reading-pipeline", "extraction", "content",
-  /* 5 */ "entities", "connections", "progressions", "bias", "observation-log", "query-language", "retrieval",
-  /* 6 */ "inquiry-grammar", "accepted-work", "inquiry", "citation", "basis-versions", "strength", "contradiction",
-          "run-rules", "ai-runs", "run-productions", "capture-requests", "skills", "agent-worker",
+  /* 5 */ "entities", "events", "lines", "local-facts", "connections", "observation-log", "standards", "progressions",
+          "money", "money-checks", "duties", "people", "explore", "bias", "query-language", "retrieval", "calculations",
+          "workbooks",
+  /* 6 */ "inquiry-grammar", "accepted-work", "leg-earning", "inquiry", "hypotheses", "citation", "basis-versions",
+          "strength", "contradiction", "run-rules", "ai-runs", "run-productions", "capture-requests", "skills",
+          "answers", "agent-harness", "agent-model", "agent-runner", "agent-worker",
   /* 7 */ "intent", "reevaluation",
-  /* 8 */ "case-grammar", "corpus-export", "case-carriage", "publication", "docket", "public-read", "project-stage",
-          "network-notices", "ratification", "case-checker", "case-import", "case-disclosures", "case-authoring",
-          "review",
-  /* 9 */ "local-facts", "standards", "conformance", "consequences", "action-grammar", "actions", "action-clocks",
-          "filing-templates", "filings", "escalation", "action-plans",
-  /* 10 */ "monitoring", "link-sweep", "scheduler",
-  /* 11 */ "wizard-scripts", "affordances", "tasks", "queue-producers", "queue", "instance-setup", "op-declarations", "admission",
-           "control-plane", "plane", "legacy-ui", "installer",
+  /* 8 */ "case-grammar", "corpus-export", "case-carriage", "case-tensions", "publication", "docket", "public-read",
+          "project-stage", "network-notices", "ratification", "case-checker", "case-import", "case-disclosures",
+          "case-authoring", "review",
+  /* 9 */ "conformance", "consequences", "action-grammar", "actions", "action-clocks", "filing-templates", "filings",
+          "escalation", "action-plans",
+  /* 10 */ "monitoring", "following", "link-sweep", "scheduler",
+  /* 11 */ "wizard-scripts", "affordances", "tasks", "queue-producers", "notice-producers", "queue", "instance-setup",
+           "op-declarations", "admission", "control-plane", "plane", "legacy-ui", "installer",
 ]);
 
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
