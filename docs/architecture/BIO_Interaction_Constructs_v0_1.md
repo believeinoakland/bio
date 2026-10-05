@@ -1,6 +1,6 @@
 # BIO interaction constructs — v0.2 (v0.1 derivation retained below)
 
-**Status** · The member-facing interaction shapes for M8: QUEUE and ACT as the two constructs, the rung ladder of authored acts, UNDETERMINED as a display primitive, and the v0.1 derivation of seven candidates retained below as the TYPES inside the two. "v0.2 (v0.1 derivation retained below)", "Written 2026-07-31 (session BOB) at Bob's direction"; revision 0.2 was the session's same-day answer to Bob's challenge on construct count, not a ruling; four dated rulings are embedded (DEC-8, DEC-16, DEC-27, DEC-36) plus DEC-19's correction and FW-14's. Partially complete: the v0.2 shape is stated, its falsifier ("build T and one act, then re-read this") has no recorded re-read, and the filename says v0_1 while the body says v0.2. §P's accountability rule is BUILT for an agent-surfaced QUESTION (D-82, 2026-09-23: one marker wherever a question is listed or shown), beside UI-5's derived marker for a finding. §S's bulk half is BUILT for the acts whose items are NOT bundles, as ONE call carrying the member's enumerated set under the `per-item` weight — the queue's (D-126, IC-235) and `op=resolve` over captured documents (D-291, IC-247, on BOB #32's ruling of 2026-09-23 23:30Z naming §S); §S's body still describes only the bundle LEASE (`op=select`) and says nothing of that second shape. **§M GAINED THE MEASURES MAP (Bob, 2026-09-29, DEC-82): letters grade evidence, bars show progress, weights mark acts.** **§U GAINED ITS TREATMENT (DEC-86): one "Undetermined" component with a mandatory reason, four visibly distinct neighbours.** **§F GAINED FRICTION MATCHES WEIGHT (DEC-87): friction escalates with an act's rung.** **§U GAINED EMPTY, LOADING, FAILED AND WAITING (DEC-98): one vocabulary everywhere.** **§L ADDED, ACCESS AND LANGUAGE (DEC-99): WCAG 2.2 AA for every screen and the published case.** **§W ADDED, WORKING AND PUBLISHED (DEC-106): two spaces, in-between items banded, a path marker on each item.** as of 2026-10-01.
+**Status** · The member-facing interaction shapes for M8: QUEUE and ACT as the two constructs, the rung ladder of authored acts, UNDETERMINED as a display primitive, and the v0.1 derivation of seven candidates retained below as the TYPES inside the two. "v0.2 (v0.1 derivation retained below)", "Written 2026-07-31 (session BOB) at Bob's direction"; revision 0.2 was the session's same-day answer to Bob's challenge on construct count, not a ruling; four dated rulings are embedded (DEC-8, DEC-16, DEC-27, DEC-36) plus DEC-19's correction and FW-14's. Partially complete: the v0.2 shape is stated, its falsifier ("build T and one act, then re-read this") has no recorded re-read, and the filename says v0_1 while the body says v0.2. §P's accountability rule is BUILT for an agent-surfaced QUESTION (D-82, 2026-09-23: one marker wherever a question is listed or shown), beside UI-5's derived marker for a finding. §S's bulk half is BUILT for the acts whose items are NOT bundles, as ONE call carrying the member's enumerated set under the `per-item` weight — the queue's (D-126, IC-235) and `op=resolve` over captured documents (D-291, IC-247, on BOB #32's ruling of 2026-09-23 23:30Z naming §S); §S's body still describes only the bundle LEASE (`op=select`) and says nothing of that second shape. **§M GAINED THE MEASURES MAP (Bob, 2026-09-29, DEC-82): letters grade evidence, bars show progress, weights mark acts.** **§U GAINED ITS TREATMENT (DEC-86): one "Undetermined" component with a mandatory reason, four visibly distinct neighbours.** **§F GAINED FRICTION MATCHES WEIGHT (DEC-87): friction escalates with an act's rung.** **§U GAINED EMPTY, LOADING, FAILED AND WAITING (DEC-98): one vocabulary everywhere.** **§L ADDED, ACCESS AND LANGUAGE (DEC-99): WCAG 2.2 AA for every screen and the published case.** **§W ADDED, WORKING AND PUBLISHED (DEC-106): two spaces, in-between items banded, a path marker on each item.** **BRAND AND VOICE APPROVED (DEC-125): pointer beside the design principles.** **§L GAINED TRANSLATION BY GROUPS (DEC-127).** as of 2026-10-04.
 
 **Place in the system** · Owns construct 12 of `BIO_System_Design.md` §3 (member surfaces): it governs M8 (`docs/development/MILESTONES.md`; the UI area's governing design per `QUEUE.md`), hands queue content to `docs/development/NOTIFICATIONS.md`, and its pre-flight rule (DEC-8) is what the assistant construct and every act surface rest on. Distinct from `CONSTRUCTS.md`, the content inventory — the name collision is stated in the document.
 
@@ -687,6 +687,18 @@ place's languages, named by its jurisdiction profile, is a later decision.
 it is marked as an unofficial translation and names the signed original. Whether and how a group issues translations through
 Civicsmith is decided when a group asks to publish one.
 
+**Translation by groups (RULED 2026-10-04 by Bob, DEC-127).** Each member chooses their language; screens show in it wherever
+a translation exists and in English otherwise, word by word, never blank. Civicsmith's translations come with releases, and a
+group may add a language its members need, or improve a translation, in its own copy; each fixed term (the grades,
+"Undetermined", the queue's kinds, the acts' names) carries a note on what it means, so every language says the same thing.
+Renaming words within a language stays out. The group's own writing (notes, questions, findings, notices) can be read in a
+member's language on request: the assistant drafts the translation, labelled "Machine translation · original in English",
+with the original one tap away; it never replaces the original. Signed and published records stay in the language they were
+signed in. Administrators, or members given the grant, have a translation workspace listing every interface word beside the
+group's language, gaps marked; the assistant drafts the missing ones as labelled drafts, a member who knows the language
+checks and adopts each, and without the assistant members type them. Later, a group may offer its translation to Civicsmith's
+library, reviewed first.
+
 **Devices, themes and nothing from outside (RULED 2026-10-03 by Bob, DEC-122).** On a phone a member reads everything and
 does everyday acts (reversible and reasoned), including capturing a document; signing, publishing and sending happen on a
 larger screen for now, and the phone says where to finish. Member screens come in light and dark, following the device, with
@@ -697,6 +709,11 @@ copy: no outside fonts, analytics or trackers, on member screens or the public c
 **The design principles (APPROVED 2026-10-03 by Bob, DEC-123).** Every ruled UX principle is stated once, in plain words, in
 `docs/development/ux-substrate/design-principles.html` (published at https://claude.ai/artifact/MvsMPnJnk3o32FBeqgdxT1),
 the yardstick every screen and wizard script of the redesign is checked against.
+
+**Brand and voice (APPROVED 2026-10-04 by Bob, DEC-125).** Who speaks, how the names are written, Civicsmith's voice, tone by
+moment and the words to use and avoid are set in `docs/development/ux-substrate/brand-and-voice.html` (published at
+https://claude.ai/artifact/EipzYKnNxe5LG3YwWnTkpv), the standard every screen's words are checked against. Its V1 (the mark)
+and V4 (translation) are still with Bob.
 
 ## W · WORKING AND PUBLISHED — the fence a member can always see (Bob, 2026-10-01, DEC-106)
 
