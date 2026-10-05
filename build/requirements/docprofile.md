@@ -1,6 +1,6 @@
 # docprofile — requirements
 
-**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code: `docprofile/` (pipeline, registry, readtext, doctypes; index, recogniser, events and handlers moved to site-profiles in T19, K746). R6 and R30 built in T2 (N3): every local fact comes from the jurisdiction view; the no-view fallback (K39) is permanent behaviour (Bob, K880; N21 struck). Every id met and tested in T2 (2026-09-26; `build/plan/archive/T2.md`). SPLIT on `tranche/T19`, 2026-10-01, by a worker for BOB #80 (K617, K653 BOB-2): the host-stack axis, the shared registry and ladder, the digests, fidelity, the profile record and the event catalogue moved to `site-profiles` (R1–R3, R7–R10, R26–R28 retired here, moved without change of meaning); `docprofile/registry.mjs` stays this module's facade and re-exports `site-profiles`' names, so its importers need no re-point; references to the moved services name `site-profiles`, no meaning changed.
+**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code: `docprofile/` (pipeline, registry, readtext, doctypes; index, recogniser, events and handlers moved to site-profiles in T19, K746). R6 and R30 built in T2 (N3): every local fact comes from the jurisdiction view; the no-view fallback (K39) is permanent behaviour (Bob, K880; N21 struck). Every id met and tested in T2 (2026-09-26; `build/plan/archive/T2.md`). SPLIT on `tranche/T19`, 2026-10-01, by a worker for BOB #80 (K617, K653 BOB-2): the host-stack axis, the shared registry and ladder, the digests, fidelity, the profile record and the event catalogue moved to `site-profiles` (R1–R3, R7–R10, R26–R28 retired here, moved without change of meaning); `docprofile/registry.mjs` stays this module's facade and re-exports `site-profiles`' names, so its importers need no re-point; references to the moved services name `site-profiles`, no meaning changed. SPLIT again for T33, by a requirements worker for BOB #114 on `tranche/T32`, 2026-10-05, from plan entry T33-12 (K617; K1505 (1), plan Rules (4)): the seven content types move by copy to `doctypes` (T33-13), which numbers afresh and marks each moved id "was". R6, wholly the types', is retired as moved to `doctypes` R3. The others `doctypes` copies apply here to this module's own code too, so they stay, each naming the types' share's new home: R29 and R30 amended (the declaration per type and the per-type tests moved to `doctypes` R4 and R20), R31 amended (the calendar's exception moved to `doctypes` R8; this module's own code has none), and R14, R15, R20, R32 and R34 name `doctypes` R5, R6, R7 and R22 as the types' share, wording only. R33 and R35 hold here unchanged (`doctypes` R23 and R24 are copies). R36 (this module holds no content type; the registration is wired by `plane`) added. Not yet met (T33-12), merged after `doctypes` (the copy before the deletion); importers read through this module's re-export until re-pointed (Rules (9) item 4).
 
 ## Public
 
@@ -35,15 +35,7 @@ profiles that `jurisdictions.combine` gives.
   states all of them rather than letting the first match stand for the whole document. A type
   whose `detect` throws during this pass is reported as an error entry in `also`, never dropped
   and never propagated.
-- **R6** Every registered content type's own `detect`/`parse`/`assess` takes
-  every LOCAL fact it tests for (furniture, bodies, member titles, enactment kinds, forms and
-  markers, codes, file numbers, report titles and sections, recommendation openers, template
-  blanks, practice deadlines) from `ctx.view`, under the keys `jurisdictions` defines (its R6–R7),
-  and holds none fixed in its own code. Place-free language (English and parliamentary words),
-  a publishing system's own page and link shapes, and measured structural floors stay in code.
-  When `ctx.view` is absent (a caller with no jurisdiction profile set, as `acquisition` and
-  `monitoring` pass none by design; K39, K880), the view is `jurisdictions.combine` of every
-  non-test profile `jurisdictions` holds. This is permanent behaviour (Bob, K880).
+- **R6** *(retired: moved to `doctypes` R3, K617, K1505 (1), T33-12)*
 - Errors: never throws, provided no registered type's own `detect` throws outside the `also` pass
   (R5 states what happens there).
 
@@ -71,11 +63,11 @@ captures of one address. `ctx` carries `locator`, `headers`, `sha256`, and optio
 - **R14** `events[]` is drawn from the one significance-graded catalogue (`site-profiles` R13) (`event`,
   `notice`, `routine`; a type naming an event kind the catalogue does not hold is a defect in
   that type, caught by the catalogue itself). `meaningful` is always
-  `worstSignificance(events) === "event"`; it is never a second fact carried beside the events.
+  `worstSignificance(events) === "event"`; it is never a second fact carried beside the events. (The content types' own share: `doctypes` R5.)
 - **R15** `connections[]` entries are either `referential`
   (`{connection:"referential", from, to, relation, why}`) or `temporal`
   (`{connection:"temporal", from, to, relation, at, expected_by, why}`) — the two are never
-  collapsed into one shape.
+  collapsed into one shape. (The content types' own share: `doctypes` R6.)
 - **R16** `confirmation` states what was verified UNCHANGED whenever anything was, even alongside
   `changed`/`routine` events on the same result, and is `null` only when nothing was confirmed. A
   read that FOUND NOTHING on either side is reported as a failed reader (`meaningful: null`, a
@@ -99,7 +91,7 @@ whatever the caller knows (locator, headers, content type, `at`) plus, for the d
   whether the supplied text carried enough structure to place a reference at all.
 - **R20** The content type's reader is handed a total `locate(offset)` function built from the
   supplied text's own segment map (R23); it may place a reference only where `locate` says,
-  never at a position it composed itself.
+  never at a position it composed itself. (The content types' own share: `doctypes` R7.)
 - Errors: never throws; a content type's `parse` throwing is caught and reported as `parse_error`.
 
 **`flattenText(supplied) → {text, source, chars, undetermined, reasons, segments, position_why}`**
@@ -130,7 +122,8 @@ whatever the caller knows (locator, headers, content type, `at`) plus, for the d
 type: `SUBSTANCE` (watch the evidentiary digest; any change is an event, furniture moving a
 notice), `MEMBERSHIP` (watch which entries are present and whether each still says what it said),
 `UNMONITORABLE` (a shell; nothing is watched, and the absence is stated rather than silently
-reported "unchanged") (**R29**).
+reported "unchanged") (**R29**). This module holds and exports `CONTRACT` and its three values; each
+content type's own declaration of its contract is `doctypes` R4 (T33-12). *(not yet met: T33-12)*
 
 ## Private
 
@@ -187,27 +180,34 @@ reported "unchanged") (**R29**).
 
 ### Invariants
 
-- **R30** No place is named in this module's own code. Every local fact a
-  content type tests for (R6) comes from the active jurisdiction profiles; the tests include at
-  least one profile that is not Oakland's, for every content type. The four stack handlers
-  (`site-profiles`', its R16) hold no such facts and need none, because they recognise technology,
-  never place.
+- **R30** No place is named in this module's own code (the pipeline, `readText`, the shared helpers
+  and the registry seam). That every local fact a content type tests for comes from the active
+  profiles, tested with a profile that is not the first for every type, moved with the types to
+  `doctypes` R3 and R20 (T33-12). The four stack handlers (`site-profiles`', its R16) hold no such
+  facts and need none, because they recognise technology, never place. *(not yet met: T33-12)*
 - **R31** Deterministic over its inputs: the same `bytes`/`text` and the same `ctx` values always
-  give the same answer. The one exception is a content type's own forward-looking connections
-  (the calendar's "minutes not yet published" fact), which read `ctx.now` when given and the wall
-  clock only when it is not; nothing in this module reads a store or the network.
+  give the same answer, with no exception in this module's own code: the calendar's forward-looking
+  connection, which reads the wall clock when `ctx.now` is absent, moved with the types to `doctypes`
+  R8 (T33-12). Nothing in this module reads a store or the network. *(not yet met: T33-12)*
 - **R32** The failure asymmetry governs every default: an unrecognised document is never assumed
   decorated (`site-profiles`' `conservative` treats almost nothing as machinery and nothing as furniture, so any
   byte difference is reported), and a recogniser applied without CERTAIN confidence never asserts
-  "unchanged" — only `conservative`'s own narrowing is trusted without certainty.
+  "unchanged" — only `conservative`'s own narrowing is trusted without certainty. (The content types' own share: `doctypes` R22.)
 - **R33** A reading, or a diff of two readings, that found NOTHING is a failed reader stated as
   such, never an emptied or unchanged document; a mass removal is never reported from a failed
   read.
 - **R34** An entity's position (`source`) is only ever what `ctx.locate` returned for the offset
   the reader actually read it at — never composed, never guessed — and is absent, not invented,
-  when the supplied text carried no structure to place it in. A reference read more than once is one entity, `source` its first sighting's, carrying `occurrences`: every place it was read, in reading order, the first included, each what `ctx.locate` returned for that read (null where it could not say); a reference read once carries no `occurrences` (D-454; K754).
+  when the supplied text carried no structure to place it in. A reference read more than once is one entity, `source` its first sighting's, carrying `occurrences`: every place it was read, in reading order, the first included, each what `ctx.locate` returned for that read (null where it could not say); a reference read once carries no `occurrences` (D-454; K754). (A content type's own reading: `doctypes` R7.)
 - **R35** Every "no" (no match, no confidence, no position, no digest, no meaningful change) says
   which kind of no and why; absence is never reported as sameness and never as non-existence.
+- **R36** (T33-12; K617; A §(c)) This module holds no content type in its own code: the seven types
+  are `doctypes`' (its R1), registered into this module's registry at composition through `doctypes`'
+  `registerDoctypes`, which `plane` wires; `doctypes/registry.mjs`'s static imports of the types are
+  gone. Its pipeline, `readText`, the shared helpers `doctypes` imports (`readerView`, `vocabulary`,
+  `CONTRACT`, `entity`, `referential`, `temporal` and the rest its Uses lists) and the registry seam
+  stay, with their meaning unchanged; a name it re-exports for an importer not yet re-pointed reads
+  through to `doctypes` until that importer moves (plan T33, Rules (9) item 4). *(not yet met: T33-12)*
 
 ### Satisfies
 
@@ -235,6 +235,10 @@ reported "unchanged") (**R29**).
   directly (`tools/bundle-docprofile.mjs`'s flattened build), which is real use of `site-profiles` R11 (was R26) from outside
   `bio-plane/src` — but `build/modules.json`'s `legacy-ui` entry declares `uses: ["legacy-checks"]`
   only, not `docprofile`. Worth BOB's attention as a missing `uses` edge; not settled here.
+- **The T33 split (T33-12).** `doctypes` merges first, then this module's job deletes its copies. R4's
+  "always returns a type" assumes `generic` (now `doctypes`') is registered; a test of this module
+  registers `doctypes`' types, or a stub fallback, before asking. How `doctypeFor` answers with no type
+  registered at all is the job's START to name (BOB's).
 - For the module job: the recogniser-vocabulary section most naturally keys each kind of fact by
   the content type's own `key` (`meeting_minutes`, `meeting_agenda`, `regulation`, `staff_report`,
   `staff_directory`, `meeting_calendar`), since that is how `doctypes/registry.mjs` already

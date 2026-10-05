@@ -3,7 +3,7 @@
 **Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code today: `bio-plane/src/cpu.mjs`,
 `bio-plane/src/tokens.mjs`. No row of the old plan and no entry in `build/plan/next.md` targets this
 module; every requirement below is met by the code as it stands. N63 folded by a drafting worker for BOB #43,
-2026-09-26: R26 (`unattendedCredential`, K90 (2)); met by RUNTIME-LIMITS #2 (T8, K227).
+2026-09-26: R26 (`unattendedCredential`, K90 (2)); met by RUNTIME-LIMITS #2 (T8, K227). T33's fold, by a requirements worker for BOB #114 on `tranche/T32`, 2026-10-05, from plan entry T33-6 (entry C Q0-7 as K1502 re-scoped it): there is no group-wide Claude account, so the copy binds no Claude credential and `INSTANCE_CLAUDE_TOKEN` is retired. R13, R17 and R23 amended; R14 and R15 retired (R13 now answers every `env` alike, so neither can hold); not yet met (T33-6).
 
 ## Public
 
@@ -15,8 +15,8 @@ and it counts calls and bytes instead of fabricating a millisecond figure; it al
 the runtime enforces, by a stepped probe that checkpoints after every step so the trail survives the
 isolate being killed mid-probe. `tokens.mjs` is token hygiene: whether a secret value is live rather than
 a value that has ever been published in this repository, and the status of the two instance-level
-credentials an instance may hold as deploy secrets (the Anthropic account that pays for a run, and BIO's
-own `ai` credential that resumes one), and which bound credential the instance's unattended work spends.
+credentials an instance may hold as deploy secrets (BIO's own `ai` credential that resumes a run; the
+group's copy holds no Claude account, K1502, so the instance-level Claude status always answers none), and which bound credential the instance's unattended work spends.
 Neither half holds a store, reads the network, or has any way to
 set a credential.
 
@@ -73,21 +73,21 @@ set a credential.
   `liveToken(v)` would give.
 
 **instanceClaudeStatus(env) → Promise\<{level: "instance", configured, reason, detail}\>**
-- **R13** Reads `env.INSTANCE_CLAUDE_TOKEN` (the name is also exported as `INSTANCE_CLAUDE_BINDING`).
-  Missing, or the empty string: `{level: "instance", configured: false, reason: CASCADE_UNSET, detail:
-  <string>}`.
-- **R14** A non-empty string whose hash is in `PUBLISHED_TOKEN_HASHES`: `{level: "instance", configured:
-  false, reason: CASCADE_PUBLISHED, detail: <string>}`.
-- **R15** Any other non-empty string: `{level: "instance", configured: true, reason: null, detail:
-  null}`. No shape or format of the value is checked beyond presence and non-publication.
+- **R13** (K1502) Answers `{level: "instance", configured: false, reason: CASCADE_UNSET, detail: <string>}`
+  for every `env`, whatever it carries, `INSTANCE_CLAUDE_TOKEN` included: the group's copy binds no Claude
+  credential, and `detail` says that each member who wants the assistant connects their own Claude account
+  or API key (`credentials`). It reads no binding for a Claude credential, and `INSTANCE_CLAUDE_BINDING` is
+  no longer exported. *(not yet met: T33-6)*
+- **R14** *(retired: K1502, T33-6; the instance-level Claude credential is retired and R13 answers every `env` alike)*
+- **R15** *(retired: K1502, T33-6; no `env` gives `configured: true`, R13)*
 - **R16** `detail` is `null` exactly when `configured` is `true`, otherwise a string; the return value
   never carries the configured value itself.
 - Errors: never throws.
 
 **instanceClaudeToken(env) → Promise\<string | null\>**
-- **R17** Returns `env.INSTANCE_CLAUDE_TOKEN` when `(await instanceClaudeStatus(env)).configured` is
-  `true`, and `null` in every other case. Computed from `instanceClaudeStatus`'s own test, so the two can
-  never disagree about the same `env`.
+- **R17** (K1502) Returns `null` for every `env`, `INSTANCE_CLAUDE_TOKEN` included: computed from
+  `instanceClaudeStatus`'s own answer (R13), so the two can never disagree, and no Claude credential is ever
+  read from the copy's bindings. *(not yet met: T33-6)*
 - Errors: never throws.
 
 **instanceAiCredential(env) → Promise\<{token, reason}\>**
@@ -123,10 +123,11 @@ set a credential.
 - **R22** Pure: no store, no network fetch, and (outside `cpuProbe`'s own injectable `now`) no clock.
   Every service gives the same answer for the same inputs; `cpuProbe`'s `elapsed_ms` is the one exception,
   since it depends on when it runs.
-- **R23** No function here accepts or sets a credential. `env.INSTANCE_CLAUDE_TOKEN` and
-  `env.INSTANCE_AI_TOKEN` reach this module only by already being present on the `env` object the caller
-  passes at each call; nothing exported here can create, change or clear either one (DS-3, D-260 §6:
-  minting and setting an account credential is a member act elsewhere, never a plane write path).
+- **R23** No function here accepts or sets a credential. `env.INSTANCE_AI_TOKEN` reaches this module
+  only by already being present on the `env` object the caller passes at each call; nothing exported here
+  can create, change or clear it (DS-3, D-260 §6: minting and setting an account credential is a member act
+  elsewhere, never a plane write path). No Claude credential is read from `env` at all (R13, R17; K1502): a
+  member's own account reference is `credentials`'. *(not yet met: T33-6)*
 - **R24** `report()` never states a duration for synchronous work: `measured_ms` is always `null`, and
   `note` says why, rather than reporting a zero that would read as a measurement.
 - **R25** No place is named in this module (`build/layers.md`, "No jurisdiction in the product"). It holds
@@ -142,6 +143,8 @@ of either file — this module owns no C-numbered check today.
   publication like every other token.
 - `BIO_Assistant_and_AI_Roles_v0_1.md` §6, D-260 (RULED by BOB #22, 2026-09-21): publication of a
   credential's value is revocation.
+- K1502 and K1503 (`BIO_Assistant_and_AI_Roles_v0_1.md` §6 as amended): no group-wide or project-wide
+  Claude account; the group's copy binds no Claude credential (R13, R17, R23).
 - The CPU-measurement half (`makeMeter`, `burn`, `cpuProbe`) rests on no canon design section; it is
   runtime instrumentation the code itself records discovering (2026-07-29: a Worker cannot time its own
   synchronous compute, so consumption is counted in work and the ceiling is found by a checkpointed
@@ -158,7 +161,10 @@ of either file — this module owns no C-numbered check today.
   `MONITOR_NO_LIVE_CREDENTIAL` sentence for a `token()` of `null`.
 - Today's callers: `subresources` uses `makeMeter`; `legacy-index` uses `cpuProbe`, `liveToken` (to admit
   `ADMIN_TOKEN`/`MEMBER_TOKEN`/`PROBE_TOKEN`/`DAEMON_TOKEN`) and re-exports `PUBLISHED_TOKEN_HASHES`;
-  `legacy-store` uses `liveToken`, `sha256hex`, `instanceAiCredential` and `instanceClaudeToken`;
+  `legacy-store` uses `liveToken`, `sha256hex`, `instanceAiCredential` and `instanceClaudeToken`
+  (after K1502 the last always answers `null`; its callers, `agent-worker`'s cascade among them, re-point to
+  the member's own reference in their T33 jobs, and the two Claude services may then be removed by a later
+  change);
   `legacy-index`'s `livefire.mjs` checks configured bindings directly against `PUBLISHED_TOKEN_HASHES`.
   None of this module's own tests may depend on those legacy files; test each service directly.
 - A caller combining this module's `cpuProbe`/meter output with other runtimes limits (for example the
