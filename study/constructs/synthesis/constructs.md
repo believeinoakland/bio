@@ -544,6 +544,14 @@ Each item below is policy, doctrine, the meaning of a requirement, layers and pr
 - *Realistic resources:* every capability is in every copy. Those that cost money or plan limits (keyed services, standing questions, the spreadsheet engine) are switched on per group. Each has a measured budget before it ships. At a limit the system says what it could not do, why, and what would do it.
 - *Where the world limits a rung,* it is built on the path that exists and says so: state courts offer no push alerts, so registers are read on a schedule; most city codes exist only on codifier sites, so they are captured section by section, while federal law and some states can be imported; PDF tables stay on checked transcription until a reader passes its measure.
 
+## 5B. Bob hands B2 onward to BOB where BOB is better placed (K1437, 2026-10-05)
+
+Bob: "B2: You're much more qualified to answer this question than I am. B3: too low level. I need you to go through all the questions, B2 onward, to consider which you're more qualified/informed to answer than I am." BOB #112 ruled every decision that follows from canon and Bob's existing rulings or is technical, each as recommended in §5 and §5A: B2 (K1438), B3 (K1439), B4 (K1440), B5 (K1441), B6 (K1442), B7 (K1443), B9 (K1444), B10 (K1445), B11 (K1446), B13 (K1447), B14 (K1448), B15 as revised in §5A (K1449), B16 (iii)–(iv) and B17 (i), (iii) (K1450), B19 as revised in §5A (K1451).
+
+**Still Bob's:** B8 (private individuals), B12 (what the machine may say about law, with (iv)), B16 (i)–(ii) (the assistant optional at setup; whose account), B17 (ii) (suggestions; loosens DEC-27), B18 (now recommend (b)), B21 (loosens D13), B22; B20 is UX, for the design stream. Each weighs values, legal exposure, money or how real groups behave, or loosens a rule of Bob's.
+
+Their product work stays owed here until K1425 is lifted.
+
 ## 6. Decided at BOB's level
 
 These are recorded once in `build/rulings.md` when acted on, and reported to Bob as done.
