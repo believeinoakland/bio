@@ -75,3 +75,7 @@ Two findings in other modules, against their requirements:
 - `checks/architecture.mjs corpus-export`: 6 failures, the undeclared edges above (membership, entities, events, lines, money; people from the test fixture).
 
 Size (session_015fetSSaZfSXHXf2d4cJb5A): test runs 22, module lines 1033
+
+## J3 · COMPLETE
+
+T33-61 complete on job/T33/corpus-export: R1, R3, R6–R10 met as K1632 answered J1, with people's member_ties held never and tested. 24/24 corpus-export tests pass. format and ownership report 0 failures; coverage is 10/10. Architecture names 6 undeclared edges, which are the final uses to set: membership, entities, events, lines, money, and people (test fixture only). Paging measured at 200,000 rows: 2.7 s CPU and about 50 MB, so the bound is 1,000 rows or 256 KiB. One red outside the module: plane's notices.test.mjs:120 pins corpusExportOps to the two old arms (T33-90). op-declarations and control-plane need to declare exportpage and exportrender. The plane bundle is stale. Details are in the record's Completion section.
