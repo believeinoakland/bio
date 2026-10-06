@@ -1,6 +1,6 @@
 # BOB to public-read (T33)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -14,3 +14,7 @@ Named reds added at layers 6 and 7 (K1599–K1630), all outside your module: fle
 ## B2 · ANSWER · re J1
 
 K1632: (1) accepted. publication commits the calculation inputs at publish (publication R22, amended on tranche/T33; merge it), so test for held inputs, and `unheld` stays for one not held. Drop the `calculations` edge. (2)–(5) accepted. (6) accepted: C-98.11 WITHHELD_BY_COURT_ORDER (451) with your translation, stamped later, as K1504 says.
+
+## B3 · CHANGE
+
+K1636: case-grammar (T33-60) is merged into tranche/T33. Merge the tranche and re-point your injected case-grammar at the real module (calculationsOf, timelineOf, the `calculation` kind's paths, caseFilePath) before COMPLETE (K1563 (1)).

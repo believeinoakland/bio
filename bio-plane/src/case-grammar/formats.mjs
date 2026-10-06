@@ -19,7 +19,10 @@
    exactly as written.
    DEC-124 (K1365 (1)): THE FORMAT MOVES TO /7, FOR ONE REASON ONLY. The product is renamed Civicsmith, and a /6 case
    file's complete edition must re-render byte for byte, so the name it prints is chosen by the format: /6 and earlier
-   print "CivicOS", /7 prints "Civicsmith". /7 states exactly what /6 states. op=publish authors /7 only. */
+   print "CivicOS", /7 prints "Civicsmith". /7 states exactly what /6 states. op=publish authors /7 only.
+   T33-60 (C:A-12, C11; K1448, K1494): R18's `calculations:` and R20's `timeline:` blocks JOIN /7, with no /8, on R1's
+   precedent. Neither is required: a document without either reads "none" from its reader, which is true of every
+   document stored before T33, when no case could carry a calculation or a timeline. */
 export const CASE_DOCUMENT_FORMAT = "bio-case-document/7";
 /* DEC-112 (3): /6 states the method and materials blocks; /7 is identical to it in fields. */
 export const CASE_DOCUMENT_FORMAT_V6 = "bio-case-document/6";

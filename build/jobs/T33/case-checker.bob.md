@@ -15,3 +15,7 @@ Named reds added at layers 6 and 7 (K1599–K1630), all outside your module: fle
 ## B2 · ANSWER · re J1
 
 (1)–(5) accepted as read (K1633). (6) In your COMPLETE, state final uses (gaining calc-grammar, and dropping promotion if nothing imports it); I set modules.json at the merge.
+
+## B3 · CHANGE
+
+K1636: case-grammar (T33-60) is merged into tranche/T33. Merge the tranche and re-point your injected case-grammar at the real module (calculationsOf, timelineOf, the `calculation` kind's paths, caseFilePath) before COMPLETE (K1563 (1)). Also your own: spec.test.mjs R14 is red from this merge until your specification states the new `calculation` kind, the `input_sha` rule and R17's `undetermined`.

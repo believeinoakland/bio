@@ -21,13 +21,17 @@ import { caseDocumentRequiresMaterials } from "./formats.mjs";
 
 /** R17: the fields of a `grading_facts:` row (strength R35's per leg, after `finding` and `ord`), in order. */
 export const GRADING_FACT_FIELDS = Object.freeze(["finding", "ord", "target", "kind", "role", "grade", "grade_axis",
-  "grade_source", "ground", "target_edition", "answer", "origins", "origins_complete", "captures", "author_key"]);
+  "grade_source", "ground", "target_edition", "answer", "origins", "origins_complete", "captures", "author_key",
+  /* K1608 (strength R35): a calculation, standard or occurrence leg's reason its capture grade is undetermined. Last, so
+     a row written before it reads it null, undetermined. */
+  "undetermined"]);
 /** R17: the fields of a `passages:` row, in order. */
 export const PASSAGE_FIELDS = Object.freeze(["finding", "ord", "content_id", "capture_sha", "extent", "chain", "quoted"]);
 
 const objects = (xs) => (Array.isArray(xs) ? xs.filter((x) => x && typeof x === "object" && !Array.isArray(x)) : []);
-/* One value on one line, exactly (above). */
-const exact = (v) => {
+/* One value on one line, exactly (above). Shared with R18's and R20's blocks (`./calculations.mjs`, `./timeline.mjs`),
+   which carry their values the same way; `./index.mjs` does not re-export them. */
+export const exact = (v) => {
   if (v === null || v === undefined) return "null";
   if (typeof v === "boolean" || (typeof v === "number" && Number.isFinite(v))) return String(v);
   let json;
@@ -35,12 +39,12 @@ const exact = (v) => {
   return json === undefined ? "null" : `'${json.replace(/'/g, "\\u0027")}'`;
 };
 /* A value read back: a parsed JSON value from its quoted form, a number or boolean as the grammar read it, else null. */
-const unexact = (v) => {
+export const unexact = (v) => {
   if (v === null || v === undefined || typeof v === "number" || typeof v === "boolean") return v ?? null;
   if (typeof v !== "string") return null;
   try { return JSON.parse(v); } catch { return null; }
 };
-const rowsBlock = (key, rows, fields) => (rows.length
+export const exactRowsBlock = (key, rows, fields) => (rows.length
   ? [`${key}:`, ...rows.flatMap((r) => fields.map((f, i) => `${i ? "   " : "  -"} ${f}: ${exact(r[f])}`))]
   : [`${key}: []`]);
 const ordOf = (r) => (Number.isSafeInteger(r.ord) ? r.ord : Number.POSITIVE_INFINITY);
@@ -59,16 +63,17 @@ const readBlock = (fm, key, fields) => {
 };
 
 /** R17: the `grading_facts:` block's lines, from rows `{finding, ord, target, kind, role, grade, grade_axis,
- *  grade_source, ground, target_edition, answer, origins, origins_complete, captures, author_key}`, in the order given;
+ *  grade_source, ground, target_edition, answer, origins, origins_complete, captures, author_key, undetermined}`, in the
+ *  order given;
  *  a field not handed is written null. `grading_facts: []` when there are none. */
 export function gradingFactsLines(rows) {
-  return rowsBlock("grading_facts", objects(rows), GRADING_FACT_FIELDS);
+  return exactRowsBlock("grading_facts", objects(rows), GRADING_FACT_FIELDS);
 }
 
 /** R17: the `passages:` block's lines, from rows `{finding, ord, content_id, capture_sha, extent, chain, quoted}`, in the
  *  order given; `chain` null when none. `passages: []` when there are none. */
 export function passagesLines(rows) {
-  return rowsBlock("passages", objects(rows), PASSAGE_FIELDS);
+  return exactRowsBlock("passages", objects(rows), PASSAGE_FIELDS);
 }
 
 /** R17: the `grading_facts:` block read back from a `/6` document's front matter: `{[finding]: [row, …]}`, findings in
