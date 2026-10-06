@@ -2,6 +2,12 @@
 
 **Status** · session_019WZS24Hy714ZhHvn9X7j5A · depth 2 · WORKING · handled B4
 
+## Progress
+
+- **Done** (on K1633, K1634): R30's red fixed through `jurisdictions.list()`; R56's async gather `calculationsAtPublication` before the act (ops `publishcase`, `publishpreflight` async), its judgment in R55's order (`CALCULATION_NOT_DISCLOSED`, C-136.1; `CALCULATIONS_UNREAD` without the gathered facts), the `calculations:` block and a body section; R57's `timeline:` block and body section; R55's people and tie steps and R34's new blockers; R8/R55 through a `caseTensions` dep. Tests: `calculations.test.mjs`, `timeline.test.mjs`, and the touched arms; 137/137.
+- **Upstreams held as injected deps (K1563 (1)):** case-grammar's `calculationsLines`/`timelineLines` (`test/m/case-authoring/upstream.mjs`, used only where the real module lacks the name), case-disclosures' R24–R28 (`withPeople`), case-tensions (publication's re-export).
+- **Next:** on each upstream's merge (CHANGE), merge `tranche/T33`, point `caseTensions` at `caseTensionsOf`, drop `upstream.mjs`'s stand-ins, re-point the fixture at the real modules (and build `entities`/`connections` on the host, K1619, if the fixture is touched), re-run steps 5–7, post COMPLETE with final uses: calculations, workbooks, events, case-tensions, inquiry-grammar, jurisdictions.
+
 ## J1 · QUESTION
 
 Four points from reading T33-69 against the code. My best reading is stated on each; I am building on it now and stop only if you answer otherwise.
