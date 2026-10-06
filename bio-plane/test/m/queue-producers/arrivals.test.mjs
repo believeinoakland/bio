@@ -60,7 +60,8 @@ test("R38: one CONDITION place-profile-arrived per arrival, keyed CONDITION::pla
   assert.deepEqual(placeItems(w.read("ada")), []);
 });
 
-/* R39: the shape read here is wizard-scripts R26's, as BOB was asked to confirm (QUEUE-PRODUCERS #13 J1 (2)). */
+/* R39: a fake in wizard-scripts R26's shape (B2; K1861 (1)) for the cases the real read cannot make cheaply (a hidden
+   project, paging); `wizard.test.mjs` drives R39 through the real `baseUpdates`. */
 const update = (over = {}) => ({ copy: "WIZ-C", copy_version: "WIZ-C@1", name: "File it our way", project: "PRJ-1",
   base: "WIZ-B", base_name: "File a records request", based_on: "WIZ-B@1", base_version: "WIZ-B@2", found_at: iso(NOW - 600000),
   recipients: ["ed", "eve"], steps: { copy: [{ screen: "s", act: "a" }], base: [{ screen: "s", act: "a" }, { screen: "s", act: "b" }] },
