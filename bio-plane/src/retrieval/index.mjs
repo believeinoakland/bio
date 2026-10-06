@@ -20,8 +20,11 @@ import { observationLogOf, OBSERVATION_STATES, DEFINITIVE_STATES, CONTENT_AXIS_S
          INTERNET_EVIDENCE_IS_ONE_SIDED, INTERNET_FRONTIER_EMPTY_CAUSES, LEAD_VOCABULARY,
          DOCUMENT_EVIDENCE_IS_ONE_SIDED, contentAxisFor, observationCoverage, causesNotRuledOut, missingCause }
   from "../observation-log/index.mjs";
+import * as QL from "../query.mjs";
 import { compile, textOf, FTS_COLUMNS, GATE_MARK, FIELDS, DEFAULT_FACETS, IDS_MAX,
          meaningVocabulary, MEANING, cachedNotes, MEANING_AXIS_CAP } from "../query.mjs";
+import { localFactsOf } from "../local-facts/index.mjs";
+import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 import { normalizeType } from "../record-grammar/types.mjs";
 import { routeFinding } from "../provenance-routes/index.mjs";
 import { MEANING_READ_CHECKS, SELECTION_CHECKS } from "./checks.mjs";
@@ -30,13 +33,15 @@ import { meaningLevels } from "./levels.mjs";
 import { PROJECTION_COLUMNS, PROJECTION_INDEXED, PROJECTION_TABLE, PROJECTION_RELATION, PROJECTION_SCHEMA, FTS_SCHEMA,
          SELECTION_SCHEMA, RETRIEVAL_PURGE, SELECTION_ID_CHUNK } from "./schema.mjs";
 import { Frontier, FRONTIER_LIMIT_DEFAULT, FRONTIER_LIMIT_MAX, FRONTIER_INTERNET_NOTE } from "./frontier.mjs";
+import { FIELD_VIEWS, FIELD_VIEW_PREFIX, TERMS_TABLE, TERMS_SCHEMA, TERM_FIELDS, fieldRelation, termRows } from "./fields.mjs";
 
 export { MEANING_READ_CHECKS, SELECTION_CHECKS } from "./checks.mjs";
 export { projectionOf, PROJECTION_COLS, PROJECTION_LIMIT_DEFAULT, PROJECTION_LIMIT_MAX } from "./projection.mjs";
 export { meaningLevels } from "./levels.mjs";
 export { SELECTION_ID_CHUNK, PROJECTION_TABLE, PROJECTION_RELATION } from "./schema.mjs";
-/* R33: the names of the tables this module declares to purge. */
-export const RETRIEVAL_TABLES = Object.freeze(RETRIEVAL_PURGE.map((t) => t.name));
+export { FIELD_VIEWS, FIELD_VIEW_PREFIX, TERMS_TABLE, TERM_FIELDS } from "./fields.mjs";
+/* R33, R71: the names of the tables this module declares. */
+export const RETRIEVAL_TABLES = Object.freeze([...RETRIEVAL_PURGE.map((t) => t.name), TERMS_TABLE]);
 export { FRONTIER_LIMIT_DEFAULT, FRONTIER_LIMIT_MAX, FRONTIER_INTERNET_NOTE };
 
 /* ---- S-10 step 5: selections ----
@@ -50,6 +55,8 @@ export const SELECTION_MAX_ITEMS = 10000;   // an enumeration above this is REFU
 export const SELECTION_MAX_PER_OWNER = 32;
 /* R51: the sweep's wake is the lifetime plus this margin after `now`. */
 export const SELECTION_SWEEP_MARGIN_MS = 30000;
+/* R70: the ids a saved query's run answers by default. */
+export const SAVED_LIMIT_DEFAULT = 200;
 
 /* Facet counts, two ways, because which is faster is a measurement (D-32). `scan` is the default: the bench measures
    it faster on every shape at 20,000 bundles. Both are kept and asserted to agree exactly (R7). */
@@ -118,9 +125,14 @@ export class Retrieval {
      relation (query-language R25), and each registered field through its owner's (its R26). */
   #via = Object.freeze({ projection: PROJECTION_RELATION });
   #stepped = false;
+  /* R68: the T33 fields whose view exists, field → relation, and the providers of the projected ones. */
+  #live = new Map();
+  #terms = null;
+  /* R69: where the governing time zone is read (local-facts R2; jurisdictions R41 as its fallback). */
+  #localFacts; #combine; #host;
 
   constructor({ storage, record, membership, promotion, extraction, observation = null, now = null, selectionNow = null,
-                order = null }) {
+                order = null, terms = null, localFacts = undefined, combine = combineProfiles, host = null }) {
     this.#storage = storage;
     this.#sql = storage.sql;
     this.record = record;
@@ -133,6 +145,11 @@ export class Retrieval {
     /* The modules' total order listeners and decorations run in: membership's `MODULE_ORDER` (its R83), unless a test
        hands its own. */
     this.#order = Array.isArray(order) ? order : MODULE_ORDER;
+    this.#terms = terms && typeof terms === "object" ? Object.freeze({ ...terms }) : null;
+    /* `undefined`: the host's own local-facts, made when first asked (R69); `null`: none. */
+    this.#localFacts = localFacts;
+    this.#host = host;
+    this.#combine = typeof combine === "function" ? combine : null;
     this.frontierReader = new Frontier(this);
   }
 
@@ -170,6 +187,8 @@ export class Retrieval {
       });
     } else this.#sql.exec(FTS_SCHEMA);
     for (const s of SELECTION_SCHEMA) this.#sql.exec(s);
+    for (const s of TERMS_SCHEMA) this.#sql.exec(s);
+    this.#fieldViews(true);
     /* Backfill. Rows written before these columns existed carry an empty projection. Re-derive from the stored
        bundle.md, which is the authority anyway. Bounded per start because a Durable Object has a CPU budget: a large
        store finishes over successive starts rather than timing out on one. */
@@ -204,6 +223,7 @@ export class Retrieval {
       const md = (files || []).find((f) => f && f.path === "bundle.md");
       this.#writeProjection(bundleId, md && typeof md.text === "string" ? md.text : null);
       this.#writeText(bundleId, files || []);
+      this.#writeTerms(bundleId, files || []);
       return null;
     } });
     this.#stepped = !(r && r.ok === false);
@@ -308,6 +328,94 @@ export class Retrieval {
     return { ok: true, module };
   }
 
+  /* ---- the T33 fields, the local day, the compile (R68, R69) ---- */
+
+  /** R68: makes the view of every T33 field whose relation can now exist, and answers the fields that are live. A
+   *  field is live when `query-language` knows it (its `FIELDS`), every table and column its view reads exists, and,
+   *  for a projected field, a provider was handed (else nothing would ever fill it, and a relation that is always
+   *  empty would read as "no bundle has it" rather than as unavailable). `force` re-creates the live views (at
+   *  `migrate()`, so a changed body replaces the old). A view that cannot be created leaves its field unavailable. */
+  #fieldViews(force = false) {
+    for (const v of FIELD_VIEWS) {
+      if (!Object.prototype.hasOwnProperty.call(FIELDS, v.field)) continue;
+      if (this.#live.has(v.field) && !force) continue;
+      if (v.route === "projected" && !(this.#terms && typeof this.#terms[v.field] === "function")) continue;
+      let ok = true;
+      for (const [table, cols] of Object.entries(v.needs)) {
+        const have = new Set(this.#rows(`PRAGMA table_info(${table})`).map((r) => r.name));
+        if (!cols.every((c) => have.has(c))) { ok = false; break; }
+      }
+      if (!ok) { this.#live.delete(v.field); continue; }
+      try {
+        this.#sql.exec(`DROP VIEW IF EXISTS ${FIELD_VIEW_PREFIX}${v.field}`);
+        this.#sql.exec(`CREATE VIEW ${FIELD_VIEW_PREFIX}${v.field} AS ${v.sql}`);
+        this.#live.set(v.field, fieldRelation(v.field));
+      } catch { this.#live.delete(v.field); }
+    }
+    return this.#live;
+  }
+
+  /** R68: one bundle's projected values, from the providers (the owners' own rules), as rows of `bundle_terms`. */
+  #termRowsOf(bundleId, files) {
+    return termRows(bundleId, this.#terms, { bundleId, files });
+  }
+
+  /* R68: a bundle's projected values replace its rows, in the caller's transaction (the promotion's, or reproject's). */
+  #writeTerms(bundleId, files) {
+    if (!this.#terms) return 0;
+    const rows = this.#termRowsOf(bundleId, files);
+    this.#sql.exec(`DELETE FROM ${TERMS_TABLE} WHERE bundle_id=?`, bundleId);
+    for (const r of rows)
+      this.#sql.exec(`INSERT OR IGNORE INTO ${TERMS_TABLE} (bundle_id, field, value) VALUES (?,?,?)`, r.bundle_id, r.field, r.value);
+    return rows.length;
+  }
+
+  /** R69: the time zone that governs on this instance: local-facts' governing value (its R2) for the active profiles'
+   *  `time_zone`, else the active profiles' own (`jurisdictions` R41, through their combined view), else null. Two
+   *  profiles governing different zones govern none. Never throws. */
+  zone() {
+    let ids = null;
+    try { ids = this.record.getSetting("jurisdiction_profiles"); } catch { ids = null; }
+    if (!Array.isArray(ids) || !ids.length) return null;
+    const ok = (z) => (typeof z === "string" && z !== "" ? z : null);
+    try {
+      if (this.#localFacts === undefined) {
+        this.#localFacts = null;
+        if (this.#host) this.#localFacts = localFactsOf(this.#host);
+      }
+      const lf = this.#localFacts;
+      if (lf && typeof lf.factStatus === "function") {
+        const zones = new Set();
+        for (const id of ids) {
+          const r = typeof id === "string" ? lf.factStatus({ path: `${id}/time_zone` }) : null;
+          const z = r && r.ok !== false && r.governs ? ok(r.governs.value) : null;
+          if (z) zones.add(z);
+        }
+        if (zones.size === 1) return [...zones][0];
+        if (zones.size > 1) return null;
+      }
+    } catch { /* fall through to the profiles */ }
+    try {
+      const c = this.#combine ? this.#combine(ids) : null;
+      return c && c.ok && c.view && c.view.time_zone ? ok(c.view.time_zone.value) : null;
+    } catch { return null; }
+  }
+
+  /** R61, R62, R68: the relations every compile names: the projection, each registered field (R62), and each live T33
+   *  field no registration holds (R68). */
+  #relations() {
+    const live = this.#fieldViews(false);
+    if (!live.size) return this.#via;
+    const fields = { ...Object.fromEntries([...live].filter(([f]) => !(this.#via.fields && this.#via.fields[f]))),
+                     ...(this.#via.fields || {}) };
+    return Object.freeze({ projection: PROJECTION_RELATION, fields: Object.freeze(fields) });
+  }
+
+  /** R68, R69: every compile this module runs: the relations, and the governing zone (`query-language` R27). */
+  #compile(input) {
+    return compile({ ...input, zone: this.zone() }, this.#relations());
+  }
+
   /* ---- sight ---- */
 
   /** Whether `viewer` may see bundle `id` (membership R43), memoised per call site. A machine credential sees every
@@ -393,11 +501,51 @@ export class Retrieval {
       const files = this.#filesOf(r.bundle_id);
       const md = files.find((f) => f.path === "bundle.md");
       if (!md || md.text === null) continue;
-      if (r.need_proj) { this.#writeProjection(r.bundle_id, md.text); n++; }
+      if (r.need_proj) { this.#writeProjection(r.bundle_id, md.text); this.#writeTerms(r.bundle_id, files); n++; }
       if (r.need_text) { this.#writeText(r.bundle_id, files); t++; }
     }
     return { reprojected: n, reindexed: t, limit: cap,
              remaining: this.#one(`SELECT count(*) c ${STALE}`).c };
+  }
+
+  /* ---- R71: the derived tables' rebuilds (record-core R77) ----
+   *
+   * Each answers the rows its table should hold for `scope` (null: every bundle; `{bundle_id}`: one), from the stored
+   * files alone, as R3's `reproject` derives them, so record-core's `rebuildAndCompare` holds them equal to what the
+   * promotion wrote. The text-index key is an allocation, not a derivation (R1: allocated once, never reassigned), so
+   * the projection's `fts_id` is the one held and the index's rows are the bundles that hold one, each under its key
+   * (`rowid`, which a rebuild keeps and the comparison does not read); a bundle with no key yet is `reproject`'s. */
+  #rebuildScope(scope) {
+    const id = scope && typeof scope === "object" ? scope.bundle_id : null;
+    return this.#rows(`SELECT b.bundle_id, p.fts_id FROM bundles b LEFT JOIN ${PROJECTION_TABLE} p ON p.bundle_id = b.bundle_id
+                        ${id != null ? "WHERE b.bundle_id = ?" : ""} ORDER BY b.bundle_id`, ...(id != null ? [id] : []));
+  }
+
+  rebuildProjection(scope = null) {
+    const out = [];
+    for (const r of this.#rebuildScope(scope)) {
+      const md = this.#filesOf(r.bundle_id).find((f) => f.path === "bundle.md");
+      if (!md || md.text === null) continue;
+      const p = this.projectionOf(md.text, this.nowMs());
+      out.push({ bundle_id: r.bundle_id, ...Object.fromEntries(PROJECTION_COLS.map((c) => [c, p[c]])), fts_id: r.fts_id ?? null });
+    }
+    return out;
+  }
+
+  rebuildText(scope = null) {
+    const out = [];
+    for (const r of this.#rebuildScope(scope)) {
+      if (r.fts_id === null || r.fts_id === undefined) continue;
+      const t = textOf(r.bundle_id, this.#filesOf(r.bundle_id));
+      out.push({ rowid: r.fts_id, ...Object.fromEntries(FTS_COLUMNS.map((c) => [c, t[c]])), bundle_id: r.bundle_id });
+    }
+    return out;
+  }
+
+  rebuildTerms(scope = null) {
+    const out = [];
+    for (const r of this.#rebuildScope(scope)) out.push(...this.#termRowsOf(r.bundle_id, this.#filesOf(r.bundle_id)));
+    return out;
   }
 
   /** R4: EXPLAIN QUERY PLAN for representative filters, so a test can assert the index is USED rather than trusting
@@ -416,6 +564,9 @@ export class Retrieval {
     const set = PROJECTION_COLS.map((c) => `${c}=NULL`).join(", ");
     if (bundleId) this.#sql.exec(`UPDATE ${PROJECTION_TABLE} SET ${set} WHERE bundle_id=?`, bundleId);
     else this.#sql.exec(`UPDATE ${PROJECTION_TABLE} SET ${set}`);
+    /* R68: the projected values go with the projection, and `reproject` writes them back with it. */
+    if (bundleId) this.#sql.exec(`DELETE FROM ${TERMS_TABLE} WHERE bundle_id=?`, bundleId);
+    else this.#sql.exec(`DELETE FROM ${TERMS_TABLE}`);
     if (text) {
       if (bundleId) {
         const r = this.#one(`SELECT fts_id FROM ${PROJECTION_TABLE} WHERE bundle_id=?`, bundleId);
@@ -497,7 +648,7 @@ export class Retrieval {
   /** R6–R9: `op=search`. */
   search(input = {}) {
     const mode = input.mode === "ids" ? "ids" : input.mode === "count" ? "count" : "page";
-    const plan = compile(input, this.#via);
+    const plan = this.#compile(input);
     const tally = { applied: 0 };
     const total = this.runQuery(plan.statements.count(), tally)[0]?.n ?? 0;
     const out = {
@@ -526,7 +677,7 @@ export class Retrieval {
        is offered. It costs one extra query only in the case that already returned nothing. */
     out.widen = null;
     if (total === 0 && plan.widenable && input.widen !== false) {
-      const or = compile({ ...input, implicitOp: "or" }, this.#via);
+      const or = this.#compile({ ...input, implicitOp: "or" });
       const n = this.runQuery(or.statements.count(), tally)[0]?.n ?? 0;
       if (n > 0) out.widen = { interpretation: "OR", total: n, q: String(input.q ?? ""),
                                detail: "no record matches all of these terms; this many match any of them" };
@@ -588,11 +739,11 @@ export class Retrieval {
       return refuse("MEANING_ROWS_UNKNOWN_ARM",
         `no meaning of the kind ${JSON.stringify(asked)} is held. The kinds that are: `
         + known.map((k) => `${k} (${MEANING[k].rowGrain})`).join("; "));
-    const plan = compile({
+    const plan = this.#compile({
       q: String(input.q ?? ""), viewer: input.viewer ?? null,
       ids: Array.isArray(input.ids) && input.ids.length ? input.ids : null,
       rows: asked, rowLimit: input.limit, rowOffset: input.offset,
-    }, this.#via);
+    });
     const tally = { applied: 0 };
     /* The count FIRST, so a statement that somehow lost the gate throws before any row is assembled. */
     const total = this.runQuery(plan.statements.meaning({ mode: "count" }), tally)[0]?.n ?? 0;
@@ -696,9 +847,16 @@ export class Retrieval {
   /** R16: the fields the surface knows, so a UI builds its own controls from the plane's vocabulary rather than a copy
    *  of it that drifts; the meaning arms DERIVED from the compiler's registry; and the syntax sentences. */
   searchFields() {
+    /* R68: a T33 field says whether it is available here, and if so by which route (`read contract` or
+       `projected`); every other field is read where it stands and is always available. */
+    const live = this.#relations().fields || {};
+    const t33 = new Map(FIELD_VIEWS.map((v) => [v.field, v]));
     return {
       fields: Object.fromEntries(Object.entries(FIELDS).map(([k, f]) =>
-        [k, { type: f.type, freeText: !!f.fts, column: f.col }])),
+        [k, { type: f.type, freeText: !!f.fts, column: f.col,
+              ...(t33.has(k) ? { available: !!live[k],
+                                 route: this.#via.fields && this.#via.fields[k] ? "registered" : live[k] ? t33.get(k).route : null }
+                             : { available: true }) }])),
       ftsColumns: FTS_COLUMNS, defaultFacets: DEFAULT_FACETS, idsMax: IDS_MAX,
       meaning: meaningVocabulary(),
       syntax: [
@@ -950,11 +1108,11 @@ export class Retrieval {
       /* Chunked, because SQLite bounds how many variables one statement binds. Every chunk still goes through compile()
          and therefore through the viewer gate: an id the viewer may not see never enters the selection. */
       for (let i = 0; i < list.length; i += SELECTION_ID_CHUNK) {
-        const plan = compile({ q, viewer, sort, dir, ids: list.slice(i, i + SELECTION_ID_CHUNK) }, this.#via);
+        const plan = this.#compile({ q, viewer, sort, dir, ids: list.slice(i, i + SELECTION_ID_CHUNK) });
         members.push(...this.runQuery(plan.statements.snapshot(), tally));
       }
     } else {
-      const plan = compile({ q, viewer, sort, dir }, this.#via);
+      const plan = this.#compile({ q, viewer, sort, dir });
       members = this.runQuery(plan.statements.snapshot(), tally);
     }
     const handle = "sel-" + rand(12);
@@ -1029,8 +1187,8 @@ export class Retrieval {
       const visible = new Map();
       const idList = stored.map((r) => r.bundle_id);
       for (let i = 0; i < idList.length; i += SELECTION_ID_CHUNK) {
-        const plan = compile({ q: "", viewer, sort: sel.sort_field, dir: sel.sort_dir,
-                               ids: idList.slice(i, i + SELECTION_ID_CHUNK) }, this.#via);
+        const plan = this.#compile({ q: "", viewer, sort: sel.sort_field, dir: sel.sort_dir,
+                               ids: idList.slice(i, i + SELECTION_ID_CHUNK) });
         for (const r of this.runQuery(plan.statements.snapshot(), tally)) visible.set(r.bundle_id, r.bundle_sha);
       }
       members = [];
@@ -1048,7 +1206,7 @@ export class Retrieval {
       drift.removed = drift.purged.length + drift.hidden.length;
       /* Never added: the operator picked items, not a criterion. */
     } else {
-      const plan = compile({ q: sel.q, viewer, sort: sel.sort_field, dir: sel.sort_dir }, this.#via);
+      const plan = this.#compile({ q: sel.q, viewer, sort: sel.sort_field, dir: sel.sort_dir });
       members = this.runQuery(plan.statements.snapshot(), tally);
       const digest = digestOf(members.map((m) => m.bundle_id));
       if (digest !== sel.digest) {
@@ -1114,6 +1272,37 @@ export class Retrieval {
       }
     });
     return { ok: true, released: before - this.#one(`SELECT count(*) c FROM selections WHERE owner=?`, owner).c };
+  }
+
+  /* ---- the saved query (R70; K1481) ---- */
+
+  /** R70: runs a saved-query form (`query-language` R30) for its owner, under that member's sight now, and answers
+   *  `{ok, ids, total, truncated, limit, digest, at}`: the ids in the compiler's order (its R10), at most `limit` (200 by
+   *  default, at most `IDS_MAX`), `total` the gated count, `truncated` when `total` exceeds the ids given, and `digest`
+   *  R20's digest of the whole ordered set (every id the select-all reaches), so a caller tells a changed answer. A
+   *  viewer that is not the owner (an administrator, a machine, another member) is refused `NOT_YOUR_QUERY` exactly as
+   *  an absent query is, before anything runs. A form that does not compile as saved is refused with
+   *  `query-language`'s refusal. It writes nothing: no selection, no observation, no row of its own (R32). */
+  runSaved({ form = null, owner = null, viewer = null, limit = null } = {}) {
+    const notYours = { ok: false, reason: "NOT_YOUR_QUERY", code: "NOT_YOUR_QUERY",
+                       detail: "no saved query of yours answers to that" };
+    const isForm = !!form && typeof form === "object" && !Array.isArray(form) && form.v === 1 && typeof form.q === "string";
+    if (!isForm || typeof owner !== "string" || !owner || typeof viewer !== "string" || viewer !== owner) return notYours;
+    const saved = typeof QL.savedForm === "function"
+      ? QL.savedForm({ q: form.q, implicitOp: form.implicitOp, sort: form.sort, dir: form.dir })
+      : { ok: true };
+    if (!saved || saved.ok !== true) return saved && typeof saved === "object" ? saved : notYours;
+    const asked = Number(limit);
+    const cap = limit == null || !Number.isFinite(asked) || asked < 1 ? SAVED_LIMIT_DEFAULT
+      : Math.min(IDS_MAX, Math.floor(asked));
+    const plan = this.#compile({ q: form.q, implicitOp: form.implicitOp === "or" ? "or" : undefined,
+                                 sort: form.sort ?? null, dir: form.dir ?? null, viewer });
+    const tally = { applied: 0 };
+    const total = this.runQuery(plan.statements.count(), tally)[0]?.n ?? 0;
+    const all = this.runQuery(plan.statements.ids(), tally).map((r) => r.bundle_id);
+    const ids = all.slice(0, cap);
+    return { ok: true, ids, total, truncated: total > ids.length, limit: cap, digest: digestOf(all),
+             at: new Date(this.nowMs()).toISOString(), warnings: plan.warnings };
   }
 
   /* ---- the content axis of one capture (R23–R27, K73) ---- */
@@ -1256,15 +1445,35 @@ export function retrievalOf(host, deps) {
     const extraction = d.extraction || extractionOf(host);
     const storage = d.storage || (host.storage ?? host);
     const observation = d.observation || observationOf(observationLogOf(host), storage.sql);
-    r = new Retrieval({ ...d, storage, record, membership, promotion, extraction, observation });
+    r = new Retrieval({ ...d, storage, record, membership, promotion, extraction, observation, host });
     instances.set(host, r);
-    const answer = record.declarePurge("retrieval", RETRIEVAL_PURGE);
+    const answer = typeof record.declareTable === "function"
+      ? record.declareTable("retrieval", retrievalTables(r))
+      : record.declarePurge("retrieval", RETRIEVAL_PURGE);
     if (answer && answer.ok === false)
-      throw new Error(`retrieval: record-core refused its purge declaration: ${answer.reason} (${answer.table})`);
+      throw new Error(`retrieval: record-core refused its table declaration: ${answer.reason} (${answer.table})`);
     r.joinPromotion();
     registerFigures(r);
   }
   return r;
+}
+
+/** R33, R61, R71 (plan T33, Rules (6)): every table this module holds, declared explicitly through record-core's
+ *  `declareTable` (its R21), keyed as R33 keys them: the projection, R68's projected values and the text index
+ *  derived-rebuildable (R30), each rebuilt from the stored files (`rebuildProjection`, `rebuildTerms`, `rebuildText`)
+ *  and seen with the bundle it names; the selections and their items stored, seen by their owner alone (R18), cleared
+ *  only by the whole-store purge. The classes R71 does not name are `declarePurge`'s defaults. */
+export function retrievalTables(r) {
+  const base = { purge: "clear", expunge: "none", export: "admin-only", version_chain: false };
+  const derived = (name, rebuild, key) => ({ ...base, name, keys: ["bundle_id"], sight: "bundle",
+                                             derive: "derived-rebuildable", rebuild, key });
+  return [
+    derived(PROJECTION_TABLE, (scope) => r.rebuildProjection(scope), ["bundle_id"]),
+    derived("bundles_fts", (scope) => r.rebuildText(scope), ["bundle_id"]),
+    { ...base, name: "selection_items", keys: [], sight: "owner", derive: "stored" },
+    { ...base, name: "selections", keys: [], sight: "owner", derive: "stored" },
+    derived(TERMS_TABLE, (scope) => r.rebuildTerms(scope), ["bundle_id", "field", "value"]),
+  ];
 }
 
 /* R67: the figures R60 answers, registered with record-core's `registerCounts` (its R63) under these names, once per

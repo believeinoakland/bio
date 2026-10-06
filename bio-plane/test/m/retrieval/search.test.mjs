@@ -2,7 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE } from "./fixture.mjs";
-import { PROJECTION_RELATION } from "../../../src/retrieval/index.mjs";
+import { PROJECTION_RELATION, FIELD_VIEWS } from "../../../src/retrieval/index.mjs";
 import { FIELDS, FTS_COLUMNS, DEFAULT_FACETS, IDS_MAX, PROVENANCE_COLS, cachedNotes, compile, meaningVocabulary }
   from "../../../src/query.mjs";
 
@@ -131,7 +131,14 @@ test("R16: searchFields publishes the fields {type, freeText, column}, ftsColumn
   const { w } = corpus();
   const f = w.retrieval.searchFields();
   assert.deepEqual(Object.keys(f.fields), Object.keys(FIELDS));
-  for (const [k, def] of Object.entries(FIELDS)) assert.deepEqual(f.fields[k], { type: def.type, freeText: !!def.fts, column: def.col });
+  /* R68: a T33 field also says whether it is available here and by which route (fields.test.mjs); every other is. */
+  const t33 = new Set(FIELD_VIEWS.map((v) => v.field));
+  for (const [k, def] of Object.entries(FIELDS)) {
+    const { available, route, ...rest } = f.fields[k];
+    assert.deepEqual(rest, { type: def.type, freeText: !!def.fts, column: def.col });
+    if (!t33.has(k)) assert.deepEqual([available, route], [true, undefined], k);
+    else assert.equal(typeof available, "boolean", k);
+  }
   assert.deepEqual([f.ftsColumns, f.defaultFacets, f.idsMax], [FTS_COLUMNS, DEFAULT_FACETS, IDS_MAX]);
   assert.deepEqual(f.meaning, meaningVocabulary());
   assert.ok(f.syntax.every((s) => typeof s === "string" && s.length));
