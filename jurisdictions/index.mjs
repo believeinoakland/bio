@@ -22,7 +22,7 @@ export const SECTIONS = Object.freeze(["id", "name", "covers", "test", "spaces",
   "identifier_schemes", "classification_schemes", "lawful_demands", "recurrences"]);
 /* R3: `account`, `object`, `vendor`, `proceeding` (K1452) and `person` (one form per person scheme) are T33's; `body` and
    `office` (a legislative system's body and office-record numbers, N569, N613) T34's, and `institution` (one form per
-   institution scheme, N574) this job's reading, put to BOB. */
+   institution scheme, N574, K1729). */
 export const SPACES = Object.freeze(["enactment", "project", "fund", "parcel", "account", "object", "vendor", "proceeding", "person",
   "body", "office", "institution"]);
 export const VOCABULARY = Object.freeze(["furniture", "bodies", "member_titles", "enactment_markers", "codes",
@@ -35,7 +35,7 @@ export const VOCABULARY = Object.freeze(["furniture", "bodies", "member_titles",
   "vote_values", "response_statuses", "member_types"]);
 /* R58, R60: the vocabulary keys whose entries carry no pattern, with each entry's fields. */
 const DATA_VOCABULARY = Object.freeze({ vote_values: ["value", "label", "citation", "basis"],
-  response_statuses: ["status", "label", "citation", "basis"], member_types: ["member_type", "capacity", "basis"] });
+  response_statuses: ["status", "label", "citation", "basis"], member_types: ["member_type", "capacity", "organisation", "basis"] });
 /* R60: the capacity a MemberType maps to. */
 export const MEMBER_CAPACITIES = Object.freeze(["elected", "appointed"]);
 /* R31: the one vocabulary of a law's level, for records laws, standard sources and an action's governing
@@ -463,6 +463,10 @@ function validateInto(p, errors) {
     basis(at, x);
   });
 
+  /* R59, R60: the organisation keys the body-variant map names */
+  const variantOrgs = new Set(own(p, "vocabulary") && isObj(p.vocabulary) && Array.isArray(p.vocabulary.body_variants)
+    ? p.vocabulary.body_variants.filter(isObj).map((v) => v.organisation).filter((o) => typeof o === "string" && KIND_RE.test(o)) : []);
+  const variantOrg = (o) => typeof o === "string" && variantOrgs.has(o);
   if (own(p, "vocabulary")) {
     if (!isObj(p.vocabulary)) err("vocabulary", "VALUE_INVALID", "vocabulary is an object keyed by vocabulary key");
     else for (const [key, entries] of Object.entries(p.vocabulary)) {
@@ -476,12 +480,17 @@ function validateInto(p, errors) {
           fields(ea, e, DATA_VOCABULARY[key]);
           const name = DATA_VOCABULARY[key][0];
           const v = e[name];
+          /* R60 (K1729): a MemberType once per body-variant organisation, and once for all bodies */
+          const k = key === "member_types" ? memberTypeKey(e) : v;
           if (key === "member_types" ? !isStr(v) : (typeof v !== "string" || !KIND_RE.test(v)))
             err(`${ea}.${name}`, "VALUE_INVALID", key === "member_types" ? "member_type is the MemberType as written, non-empty" : `${name} matches ^[a-z][a-z0-9_]*$`);
-          else if (once.has(v)) err(`${ea}.${name}`, "VALUE_INVALID", `'${v}' is given twice`);
-          else once.add(v);
+          else if (once.has(k)) err(`${ea}.${name}`, "VALUE_INVALID", key === "member_types"
+            ? `'${v}' is given twice ${own(e, "organisation") ? `for ${String(e.organisation)}` : "for all bodies"}` : `'${v}' is given twice`);
+          else once.add(k);
           if (key === "member_types") {
             if (!MEMBER_CAPACITIES.includes(e.capacity)) err(`${ea}.capacity`, "VALUE_INVALID", `capacity is ${MEMBER_CAPACITIES.join(" or ")}`);
+            if (own(e, "organisation") && !variantOrg(e.organisation))
+              err(`${ea}.organisation`, "VALUE_INVALID", `organisation is a key the body-variant map names, not '${String(e.organisation)}'`);
           } else { str(`${ea}.label`, e.label, "label"); str(`${ea}.citation`, e.citation, "citation"); }
           basis(ea, e);
           return;
@@ -637,11 +646,9 @@ function validateInto(p, errors) {
   const roles = new Set();
   const bodies = new Set();
   /* R59: the schemes an office's, a body's or its organisation's identifier may be in (R52's, read here: a scheme is
-     judged where it is given), and the organisation keys the body-variant map names. */
+     judged where it is given). */
   const schemeKinds = new Map(own(p, "identifier_schemes") && Array.isArray(p.identifier_schemes)
     ? p.identifier_schemes.filter((x) => isObj(x) && isStr(x.scheme) && Array.isArray(x.entity_kinds)).map((x) => [x.scheme, x.entity_kinds]) : []);
-  const variantOrgs = new Set(own(p, "vocabulary") && isObj(p.vocabulary) && Array.isArray(p.vocabulary.body_variants)
-    ? p.vocabulary.body_variants.filter(isObj).map((v) => v.organisation) : []);
   const identifier = (path, x, kind) => {
     if (!isObj(x)) { err(path, "SCHEME_INVALID", "an identifier is {scheme, id}"); return; }
     fields(path, x, ["scheme", "id"]);
@@ -671,7 +678,7 @@ function validateInto(p, errors) {
     }
     if (own(c, "organisation")) {
       if (typeof c.organisation !== "string" || !KIND_RE.test(c.organisation)) err(`${at}.organisation`, "VALUE_INVALID", "organisation is a key matching ^[a-z][a-z0-9_]*$");
-      else if (!variantOrgs.has(c.organisation)) err(`${at}.organisation`, "VALUE_INVALID", `the body-variant map names no organisation '${c.organisation}'`);
+      else if (!variantOrg(c.organisation)) err(`${at}.organisation`, "VALUE_INVALID", `the body-variant map names no organisation '${c.organisation}'`);
     }
     str(`${at}.role`, c.role, "role"); str(`${at}.body`, c.body, "body");
     if (isStr(c.role)) roles.add(c.role);
@@ -1130,6 +1137,9 @@ function rruleFault(v) {
   return null;
 }
 
+/* R60: a MemberType entry's key, its type and the body it is for ("" for all bodies). */
+const memberTypeKey = (e) => `${isObj(e) ? String(e.member_type) : ""}\u0000${isObj(e) && typeof e.organisation === "string" ? e.organisation : ""}`;
+
 /* An office a holiday entry names, as a key: a counterparty role or a kind's venue (R43). */
 function officeKey(o) {
   if (typeof o === "string") return `role:${o}`;
@@ -1343,12 +1353,14 @@ function merge(profiles) {
       if (!profiles.some((p) => p.vocabulary && own(p.vocabulary, key))) continue;
       const v = [];
       for (const p of profiles) union(v, p.vocabulary && p.vocabulary[key], p.id);
-      /* R60: a MemberType's capacity is one value per key; profiles that disagree have the type withheld */
-      if (key === "member_types") for (const t of [...new Set(v.map((e) => e.member_type))]) {
-        const given = v.filter((e) => e.member_type === t);
+      /* R60: a MemberType's capacity, for one body or for all (K1729), is one value per key; profiles that disagree have
+         it withheld */
+      if (key === "member_types") for (const k of [...new Set(v.map(memberTypeKey))]) {
+        const given = v.filter((e) => memberTypeKey(e) === k);
         if (given.length < 2) continue;
-        conflict(`vocabulary.member_types[${t}]`, given.flatMap((e) => e.bases.map((b) => ({ profile: b.profile, value: e.capacity, basis: b.basis }))),
-          `the active profiles map the MemberType '${t}' to different capacities, so it maps to none: a seat's capacity is undetermined`);
+        const { member_type: t, organisation: o } = given[0];
+        conflict(`vocabulary.member_types[${t}${o ? `/${o}` : ""}]`, given.flatMap((e) => e.bases.map((b) => ({ profile: b.profile, value: e.capacity, basis: b.basis }))),
+          `the active profiles map the MemberType '${t}'${o ? ` on ${o}` : ""} to different capacities, so it maps to none there: a seat's capacity is undetermined`);
         for (const e of given) v.splice(v.indexOf(e), 1);
       }
       view.vocabulary[key] = strip(v);

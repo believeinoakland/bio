@@ -225,6 +225,8 @@ export default {
     member_types: [
       { member_type: "Selectperson", capacity: "elected", basis: "TEST" },
       { member_type: "Co-opted Member", capacity: "appointed", basis: "TEST" },
+      /* for one body only, read before the entry for all bodies (K1729) */
+      { member_type: "Co-opted Member", organisation: "harbour_commission", capacity: "elected", basis: "TEST" },
     ],
   },
 
@@ -252,7 +254,7 @@ export default {
       basis: "TEST" },
     { role: "Selectboard", body: "Port Ellery Selectboard", level: "city", elected: true,
       ids: { office: { scheme: "ellery_seat", id: "SEAT-001" }, body: { scheme: "ellery_body", id: "B-01" } },
-      within: { label: "City of Port Ellery", kind: "institution", ids: [{ scheme: "marlow_registry", id: "MR0001" }] },
+      within: { label: "City of Port Ellery", kind: "institution", ids: [{ scheme: "port_ellery_registry", id: "MR0001" }] },
       organisation: "selectboard", basis: "TEST" },
     { role: "Harbour District Board", body: "Port Ellery Harbour District", level: "district", elected: true, oversight: false, basis: "TEST" },
     { role: "Examiner of Accounts", body: "Marlow County Audit Office", level: "county", elected: false, oversight: true, basis: "TEST" },
@@ -345,7 +347,7 @@ export default {
     { scheme: "ellery_seat", label: "minute-book seat number", entity_kinds: ["office"], space: "office", form: "minute-seat",
       systems: ["ellery.minutes"], basis: "TEST" },
     /* N574: an issuer of credentials, held through entities R43 */
-    { scheme: "marlow_registry", label: "Marlow County registry of institutions", entity_kinds: ["institution"], space: "institution",
+    { scheme: "port_ellery_registry", label: "Marlow County registry of institutions", entity_kinds: ["institution"], space: "institution",
       form: "marlow-registry", basis: "TEST" },
   ],
   classification_schemes: [

@@ -185,7 +185,7 @@ test("R59 combine: a counterparty's ids, within and organisation under one role 
 /* ============================================================================================== */
 /* R60: the MemberType map.                                                                        */
 
-test("R60 member_types [{member_type, capacity, basis}]: as written, none twice, capacity elected or appointed; one value per type in combine", () => {
+test("R60 member_types [{member_type, capacity, organisation?, basis}]: as written, once per body and once for all, capacity elected or appointed; one value per type and body in combine", () => {
   const at = "vocabulary.member_types[0]";
   assert.ok(VOCABULARY.includes("member_types"));
   for (const capacity of ["elected", "appointed"]) assert.ok(breakT((p) => { p.vocabulary.member_types[0].capacity = capacity; }).ok, capacity);
@@ -213,6 +213,20 @@ test("R60 member_types [{member_type, capacity, basis}]: as written, none twice,
   assert.ok(/undetermined/.test(c.conflicts[0].says));
   assert.equal(c.view.vocabulary.member_types.find((e) => e.member_type === type), undefined, "withheld, never chosen");
   assert.equal(c.view.vocabulary.member_types.length, get(TEST).vocabulary.member_types.length - 1);
+  /* (K1729) an entry may be for one body, a body-variant key; a type once per body and once for all bodies */
+  const O = (p) => p.vocabulary.member_types.findIndex((e) => e.organisation);
+  const oi = O(get(TEST));
+  assert.ok(oi >= 0, "the test profile maps a type for one body");
+  assert.ok(breakT((p) => { p.vocabulary.member_types[oi].organisation = "selectboard"; }).ok);
+  for (const bad of ["Harbour Commission", "town_meeting", "", 3, null])
+    assert.ok(hasError(breakT((p) => { p.vocabulary.member_types[oi].organisation = bad; }), "VALUE_INVALID", `vocabulary.member_types[${oi}].organisation`), String(bad));
+  assert.ok(hasError(breakT((p) => { p.vocabulary.member_types.push({ ...p.vocabulary.member_types[oi], capacity: "appointed" }); }), "VALUE_INVALID",
+    `vocabulary.member_types[${get(TEST).vocabulary.member_types.length}].member_type`), "a type twice for one body");
+  const tt = get(TEST).vocabulary.member_types[oi].member_type;
+  assert.ok(get(TEST).vocabulary.member_types.some((e) => e.member_type === tt && !e.organisation), "the same type for all bodies stands beside it");
+  const ob = combine([TEST, other((b) => { b.vocabulary.member_types[oi].capacity = "appointed"; })]);
+  assert.deepEqual(ob.conflicts.map((x) => x.at), [`vocabulary.member_types[${tt}/harbour_commission]`], "keyed by type and body");
+  assert.ok(ob.view.vocabulary.member_types.some((e) => e.member_type === tt && !e.organisation), "the all-bodies entry stands");
   /* a type only one profile gives is kept */
   const add = combine([TEST, other((b) => { b.vocabulary.member_types.push({ member_type: "Alternate", capacity: "appointed", basis: "TEST" }); })]);
   assert.deepEqual(add.conflicts, []);
@@ -280,33 +294,47 @@ test("R61 the first profile's counterparties: Legistar BodyIds, the Auditor and 
   assert.deepEqual(v.counterparties.find((c) => c.role === "City Council").ids.body.id, "1");
 });
 
-test("R61 the first profile's member_types: only what the measured office records support", () => {
-  /* The captured office records' MemberTypes (2026-10-05) */
+test("R61 the first profile's member_types: Member and Chair on city_council, elected, and nothing for any other body (K1729)", () => {
+  const f = get(FIRST);
+  const rx = (e) => new RegExp(e.pattern.re, e.pattern.flags || "");
+  const orgOf = (bodyName) => (f.vocabulary.body_variants.find((e) => rx(e).test(bodyName)) || {}).organisation;
+  /* the captured office records' MemberTypes (2026-10-05) */
   const types = new Set(OFFICE_RECORDS.map((r) => r.OfficeRecordMemberType).filter((t) => t != null));
   assert.deepEqual([...types].sort(), ["Chair", "Member"]);
-  /* A type maps to one capacity only if every holder recorded under it holds the seat in that capacity. The same types
-     sit on the Council's own body (elected councilmembers, Charter §200) and on bodies whose holders include people the
-     Council's records never list (Port commissioners on the City/Port Liaison Committee, school board members on the
-     Education Partnership Committee, county supervisors), so neither maps to one capacity: none is held. */
+  assert.deepEqual(f.vocabulary.member_types.map((e) => [e.member_type, e.organisation, e.capacity]),
+    [["Member", "city_council", "elected"], ["Chair", "city_council", "elected"]]);
+  for (const e of f.vocabulary.member_types) assert.match(e.basis, /2026-10-05 legistar-events/);
+  /* on the Council's bodies every holder is a councilmember, seated on the Council's own body (BodyId 1; Charter §200) */
   const council = new Set(OFFICE_RECORDS.filter((r) => r.OfficeRecordBodyId === 1).map((r) => r.OfficeRecordPersonId));
-  for (const t of types) {
-    const outside = OFFICE_RECORDS.filter((r) => r.OfficeRecordMemberType === t && !council.has(r.OfficeRecordPersonId));
-    assert.ok(outside.length > 0, `${t} is recorded for holders who never sat on the Council`);
+  const onCouncil = OFFICE_RECORDS.filter((r) => orgOf(r.OfficeRecordBodyName) === "city_council");
+  assert.ok(onCouncil.length > 0);
+  for (const r of onCouncil) {
+    assert.ok(council.has(r.OfficeRecordPersonId), `${r.OfficeRecordFullName} on ${r.OfficeRecordBodyName}`);
+    assert.ok(f.vocabulary.member_types.some((e) => e.member_type === r.OfficeRecordMemberType && e.organisation === "city_council"),
+      `${r.OfficeRecordMemberType} on the Council maps`);
   }
-  const held = get(FIRST).vocabulary.member_types || [];
-  for (const e of held) assert.ok(types.has(e.member_type), `${e.member_type} is a measured type`);
-  assert.deepEqual(held, [], "no measured type maps to one capacity");
+  /* elsewhere the same types carry people the Council's records never list, so no entry for all bodies or any other */
+  for (const t of types)
+    assert.ok(OFFICE_RECORDS.some((r) => r.OfficeRecordMemberType === t && !council.has(r.OfficeRecordPersonId)), `${t} is recorded for non-councilmembers`);
+  assert.ok(f.vocabulary.member_types.every((e) => e.organisation === "city_council"), "no entry for all bodies");
+  assert.deepEqual(combine([FIRST]).view.vocabulary.member_types.map((e) => [e.member_type, e.organisation]),
+    [["Member", "city_council"], ["Chair", "city_council"]]);
 });
 
-test("R61 N574 each held profile holds an identifier scheme for institutions, in a space of R3 with its form", () => {
-  for (const id of [FIRST, TEST]) {
-    const p = get(id);
-    const x = (p.identifier_schemes || []).find((s) => s.entity_kinds.includes("institution"));
-    assert.ok(x, `${id}: an institution scheme`);
-    assert.ok(SPACES.includes(x.space) && p.spaces[x.space], `${id}: its space`);
-    assert.ok(x.form && p.spaces[x.space].forms.some((f) => f.form === x.form), `${id}: its form`);
-    assert.ok(validate(p).ok, id);
-  }
+test("R61 N574 the test profile holds an institution scheme in the institution space; the first holds none until a registry is measured (N632, K1729)", () => {
+  assert.ok(SPACES.includes("institution"));
+  const t = get(TEST);
+  const x = t.identifier_schemes.find((s) => s.entity_kinds.includes("institution"));
+  assert.deepEqual([x.scheme, x.space], ["port_ellery_registry", "institution"]);
+  assert.ok(x.form && t.spaces.institution.forms.some((f) => f.form === x.form));
+  assert.equal(applyForm(t.spaces.institution.forms.find((f) => f.form === x.form), "mr 0001"), "MR0001");
+  assert.ok(hasError(breakT((p) => { p.spaces.institution.forms[0].pattern = { re: "(" }; }), "PATTERN_INVALID", "spaces.institution.forms[0].pattern"));
+  /* the view carries it, so entities R43 can hold an issuer's identifier in it */
+  const v = combine([TEST]).view;
+  assert.ok(v.spaces.institution && v.identifier_schemes.some((s) => s.scheme === "port_ellery_registry"));
+  const f = get(FIRST);
+  assert.equal(f.spaces.institution, undefined);
+  assert.ok(!f.identifier_schemes.some((s) => s.entity_kinds.includes("institution")), "absent, never invented");
 });
 
 /* ============================================================================================== */

@@ -28,10 +28,11 @@
  *   meeting markers, body variants Legistar's own body names (`measures-T33/legistar-events.md` §1–§2, 2026-10-05)
  *   lawful_demands                 Gov. Code §7928.215 as K1493 rules it (R53)
  *   Legistar's ids (T34)           the `body` and `office` spaces, their schemes and the counterparties' BodyIds, from
- *                                  legistar-reader's captured `bodies` and `officerecords` (2026-10-05; R61). No
- *                                  `member_types`: the measured MemberTypes (Member, Chair) sit on elected and
- *                                  appointed holders alike, so none maps to one capacity (R60, R27). No `vote_values`:
- *                                  two captured roll calls show only Aye and Excused, not the whole set (R58).
+ *                                  legistar-reader's captured `bodies` and `officerecords` (2026-10-05; R61). The
+ *                                  MemberTypes measured (Member, Chair) mapped on the Council only: elsewhere they sit
+ *                                  on elected and appointed holders alike (R60, K1729). No `vote_values`: two captured
+ *                                  roll calls show only Aye and Excused, not the whole set (R58). No institution scheme
+ *                                  until a registry is measured (N632, K1729).
  *
  * Plain data: patterns are `{re, flags?}` with a JavaScript regular-expression source. */
 const R = String.raw;
@@ -262,6 +263,13 @@ export default {
       { pattern: { re: R`Public\s+Safety\s+Committee`, flags: "i" }, organisation: "public_safety_committee", basis: "2026-10-05 legistar-events" },
       { pattern: { re: R`Life\s+Enrichment\s+Committee`, flags: "i" }, organisation: "life_enrichment_committee", basis: "2026-10-05 legistar-events" },
       { pattern: { re: R`Public\s+Works\s+(?:(?:&|and)\s+Transportation\s+)?Committee`, flags: "i" }, organisation: "public_works_committee", basis: "2026-10-05 legistar-events" },
+    ],
+    /* Legistar's office records (1,262, read 2026-10-05): MemberType `Member` 1,135, `Chair` 126. On the Council's own body
+       every holder is a councilmember, elected (Charter §200); on other bodies the same types carry councilmembers, other
+       bodies' members and appointees alike (the Port's, the school board's, the county's), so no entry there (K1729). */
+    member_types: [
+      { member_type: "Member", organisation: "city_council", capacity: "elected", basis: "2026-10-05 legistar-events, 2026-10-05 time-law" },
+      { member_type: "Chair", organisation: "city_council", capacity: "elected", basis: "2026-10-05 legistar-events, 2026-10-05 time-law" },
     ],
     /* The City's own rosters and organisation charts (roster-reader's fixtures, 15 documents read 2026-10-05; K1517).
        A term column's header is left unnamed. */

@@ -681,10 +681,12 @@ test("R22 the test profile: test true, every basis TEST, every section and vocab
     for (const form of t.spaces[sp].forms) assert.ok(!f.spaces[sp].forms.some((x) => x.form === form.form || x.pattern.re === form.pattern.re), `${sp} ${form.form}`);
   }
   assert.ok(t.spaces.enactment.kinds.length);
+  /* a pattern key's entries differ in their patterns; a data key's (R58, R60) in their values */
+  const differs = (e) => (e.pattern ? e.pattern.re : JSON.stringify({ ...e, basis: undefined }));
   for (const key of Object.keys(f.vocabulary)) {
     assert.ok(t.vocabulary[key] && t.vocabulary[key].length, key);
-    const fr = new Set(f.vocabulary[key].map((e) => e.pattern.re));
-    for (const e of t.vocabulary[key]) assert.ok(!fr.has(e.pattern.re), `${key} ${e.pattern.re}`);
+    const fr = new Set(f.vocabulary[key].map(differs));
+    for (const e of t.vocabulary[key]) assert.ok(!fr.has(differs(e)), `${key} ${differs(e)}`);
   }
   assert.notEqual(t.practice.minutes_due_days.value, f.practice.minutes_due_days.value);
   const hosts = (p) => new Set([...p.systems.flatMap((s) => s.hosts), ...p.mixed_hosts.map((m) => m.host)]);
