@@ -1,6 +1,6 @@
 # roster-reader (T34)
 
-**Status** · session_0126RaWsKDwYb2AVQaFGQ3gF · depth 2 · COMPLETE · handled B1
+**Status** · session_0126RaWsKDwYb2AVQaFGQ3gF · depth 2 · COMPLETE · handled B2
 
 
 ## Completion (ROSTER-READER #2)
