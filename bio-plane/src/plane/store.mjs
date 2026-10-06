@@ -207,6 +207,8 @@ export class Store extends DurableObject {
     answersOf(ctx, { standards, content: contentOf(ctx), events, entities: entitiesOf(ctx), lines, people, duties,
       calculations, retrieval, credentials: credentialsOf(ctx), relations: () => ({ projection: PROJECTION_RELATION }),
       ceilingRefusal: (member, at) => aiRunsOf(ctx, env).aiUseCheck({ member, at }),
+      /* K1690 (instance-setup R55): the copy's assistant switch, read before any model turn. */
+      assistantGate: () => instanceSetupOf(ctx, env).assistantGate(),
       /* R24 (Q1-7): the screens registry the plane carries, for its explain read. */
       screens: SCREENS });
     /* reevaluation before actions: actions reaches conformance, which reaches reevaluation, and a factory reads its

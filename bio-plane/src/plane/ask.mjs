@@ -5,6 +5,7 @@
    the grant and the account. agent-worker's answer (its NDJSON stream, or its plain refusal) is handed back unchanged.
    The secret leaves the object only in that one call and is kept nowhere; every refusal is its owner's, in its words. */
 import { credentialsOf } from "../credentials/index.mjs";
+import { instanceSetupOf } from "../setup.mjs";
 
 const json = (body, status) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 const idOf = (m) => (typeof m === "string" && m.startsWith("member:") ? m.slice(7) : m);
@@ -33,6 +34,10 @@ export async function askOnObject(ctx, env, { member, session = null, grant = nu
   const w = env && env.AGENT_WORKER;
   if (!w || typeof w.fetch !== "function")
     return json({ ok: false, reason: "AGENT_WORKER_UNBOUND", detail: "no assistant member is bound to this plane. Nothing was asked." }, 503);
+  /* K1690 (instance-setup R55): while the copy's assistant is off, every ask is refused ASSISTANT_OFF, before any grant
+     is minted or any account read. */
+  const off = instanceSetupOf(ctx, env).assistantGate();
+  if (off) return json(off, 403);
   const c = credentialsOf(ctx);
   let token = grant;
   if (!token) {

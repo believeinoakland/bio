@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { store } from "./fixture.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { askOp } from "../../../src/plane/ask.mjs";
+import { instanceSetupOf } from "../../../src/setup.mjs";
 
 const SEAL = "a-long-seal-secret-for-the-test-only";
 const SESSION = "s".repeat(64);
@@ -20,6 +21,11 @@ async function world({ account = true, worker = true } = {}) {
                         { status: 200, headers: { "content-type": "application/x-ndjson" } }); } };
   const x = await store({ env });
   const sql = x.ctx.storage.sql;
+  /* the copy's assistant switched on by an administrator (instance-setup R53) */
+  sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
+            VALUES ('ada', 'Cover ada', 'h_ada', 'admin', 'active', '["contribute"]', 't', 't')`);
+  const on = instanceSetupOf(x.ctx).assistantSet({ on: true, by: "ada" });
+  assert.equal(on.ok, true, JSON.stringify(on));
   sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
             VALUES ('ann', 'Cover ann', 'h_ann', 'member', 'active', '["contribute"]', 't', 't')`);
   sql.exec(`INSERT INTO sessions (token, role, expires, created) VALUES (?, 'member:ann', ?, 'x')`, SESSION, Date.now() + 3600e3);
@@ -78,6 +84,16 @@ test("B2 negative controls: no account, another's session, and no assistant memb
   assert.equal(r3.status, 503);
   assert.equal((await r3.json()).reason, "AGENT_WORKER_UNBOUND");
   assert.equal(none.asks.length + x.asks.length + unbound.asks.length, 0, "nothing reached agent-worker");
+});
+
+test("B7 (K1690; instance-setup R55): while the copy's assistant is off, an ask is refused ASSISTANT_OFF before any grant is minted or any account read", async () => {
+  const x = await world();
+  assert.equal(instanceSetupOf(x.ctx).assistantSet({ on: false, by: "ada" }).ok, true);
+  const r = await x.s.ask({ member: "member:ann", session: SESSION, question: "q" });
+  assert.equal(r.status, 403);
+  assert.equal((await r.json()).reason, "ASSISTANT_OFF");
+  assert.equal(x.asks.length, 0, "nothing reached agent-worker");
+  assert.equal([...x.ctx.storage.sql.exec(`SELECT count(*) c FROM ai_grants`)][0].c, 0, "no grant minted");
 });
 
 test("B2 (control-plane R53): the door's arm asks the bio object only for a member's own session or a presented grant's member; any other caller is refused", async () => {
