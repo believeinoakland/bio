@@ -83,7 +83,7 @@
  * ("bind-town:AGENT_WORKER->agent-worker") and SELF lost. A5 FAILED NARROWER THAN DECLARED (the install arms were
  * declared to fail): the install's SELF-retry re-uploads with only the members present, so it RECOVERS the order
  * defect at the cost of SELF — recorded, not smoothed; (A6) a failed member upload not named at verify -> 182/2, both
- * "missing binding NAMED" arms (the install reads "Your copy is running." over a failed ocr-worker); (A7) the update's
+ * "missing binding NAMED" arms (the install reads "Your group's Civicsmith is running." over a failed ocr-worker); (A7) the update's
  * first upload restates no member -> 180/4, the kept-bindings arm and the D-297-population arms. `newgroup/src/index.mjs`
  * restored after each by cp from a per-arm pristine copy and verified by sha256 AND byte compare (83b6af0d…).
  *
@@ -239,14 +239,14 @@ console.log("\n--- front page and begin ---");
 {
   const home = await req("/");
   const homeBody = await home.text();
-  t("GET / is the wizard", homeBody.includes("Set up your group's copy"), true);
+  t("GET / is the wizard", homeBody.includes("Set up your group's Civicsmith"), true);
   t("the front page offers no mode choice", homeBody.includes('name="mode"'), false);
   t("the front page is hard-wired to install", homeBody.includes('mode:"install"'), true);
   t("it points elsewhere for updates", homeBody.includes('href="/update"'), true);
 
   const up = await req("/update");
   const upBody = await up.text();
-  t("GET /update is the update page", upBody.includes("Update your copy"), true);
+  t("GET /update is the update page", upBody.includes("Update your group's Civicsmith"), true);
   t("the update page is hard-wired to update", upBody.includes('mode:"update"'), true);
   t("the update page offers no mode choice", upBody.includes('name="mode"'), false);
 
@@ -556,7 +556,7 @@ console.log("\n--- release: a copy that fails verification is never installed --
     t("VERSION stays the built-in", (await metadataOf(put)).bindings.find((b) => b.name === "VERSION").text, RELEASE_VERSION);
   } else {
     t("R20: the built-in states no limits, so nothing installs, and the page says why",
-      [put === undefined, body.includes("states no limits for the plane")], [true, true]);
+      [put === undefined, body.includes("states no limits for your group's Civicsmith")], [true, true]);
   }
   t("the page says the check failed and was not used", body.includes("did not pass its integrity check"), true);
   globalThis.fetch = realFetch;
@@ -762,7 +762,7 @@ console.log("\n--- update: unconfirmed version is named, patiently, and not repo
   globalThis.setTimeout = realTimeout;
   t("the outcome is NOT presented as an update done (D-116)", /<b>Updated (from|to)/.test(body), false);
   t("it says the upload happened, over what", body.includes(`Uploaded ${CUR_VER} over 0.0.1`), true);
-  t("and NAMES the part that lags, with what it answers", body.includes("your copy&#39;s address answers 0.0.1"), true);
+  t("and NAMES the part that lags, with what it answers", body.includes("the address of your group&#39;s Civicsmith answers 0.0.1"), true);
   t("the note is patient, not alarming", body.includes("can take a few minutes"), true);
   t("no failure framing anywhere", /failed|broken/i.test(body), false);
   t("the verify step is not marked done", body.includes('ok("verify"'), false);
@@ -1103,7 +1103,7 @@ t("ARMED: the built-in release carries IC-172, so an update from 0.70.0 CROSSES 
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
   t("CROSSING (0.70.0 -> this release): the update lands as an update", body.includes(`Updated from 0.70.0 to ${CUR_VER}`), true);
   t("and it TELLS the one act left to the operator, saying why from the version it read",
-    [body.includes("One thing this update does not do for you"), body.includes("Your copy ran 0.70.0 before this update")],
+    [body.includes("One thing this update does not do for you"), body.includes("Your group&#39;s Civicsmith ran 0.70.0 before this update")],
     [true, true]);
   t("naming what is refused until it is done, and by which code", body.includes("GROUP_UNDETERMINED"), true);
   t("naming the act that settles it — the root of trust's seed, for the record AND for scratch",
@@ -1164,7 +1164,7 @@ t("ARMED: the built-in release carries IC-172, so an update from 0.70.0 CROSSES 
   const body = await (await callback(`code=C&state=${state}`, cookie)).text();
   t("VERSION BEFORE UNKNOWN: the update lands", body.includes(`Updated to ${CUR_VER}`), true);
   t("and the telling is CONDITIONAL, saying the installer could not read what ran before — undetermined, stated",
-    [body.includes("could not read which version your copy ran"), body.includes("op=instancegroupseed")], [true, true]);
+    [body.includes("could not read which version your group&#39;s Civicsmith ran"), body.includes("op=instancegroupseed")], [true, true]);
   t("and never seeds, nor asks op=instancegroup", groupCalls(calls), []);
   globalThis.fetch = realFetch;
 }
@@ -1230,20 +1230,20 @@ async function d116Update(slug, after) {
   t("ARMED: the capable release was the one installed, with its member", [r.memberPut, r.askedMembers], [true, true]);
   t("ALL ON THE RELEASE: the update is reported done", r.body.includes(`Updated from 0.1.0 to ${FLEET_VER}`), true);
   t("and says what was confirmed — every part, not only the address",
-    r.body.includes(`Every part of your copy answers ${FLEET_VER}`), true);
+    r.body.includes(`Every part of your group's Civicsmith answers ${FLEET_VER}`), true);
   t("and names no lag", r.body.includes("not yet confirmed"), false);
 }
 {
   const r = await d116Update("stale-store", { storeVersion: "0.1.0",
     memberVersions: { "agent-worker": SERVING(FLEET_VER), ...OTHERS } });
   t("A STALE DURABLE OBJECT under a current address is NAMED, with the build it runs",
-    r.body.includes("your copy&#39;s record store still runs 0.1.0"), true);
+    r.body.includes("the record store of your group&#39;s Civicsmith still runs 0.1.0"), true);
   t("and the update is NOT reported done", [/<b>Updated (from|to)/.test(r.body), r.body.includes("not yet confirmed")], [false, true]);
 }
 {
   const r = await d116Update("old-store", { memberVersions: { "agent-worker": SERVING(FLEET_VER), ...OTHERS } });
   t("A DO STILL ON PRE-D-116 CODE (no storeVersion at all, after a release that has it) is named, not taken as absent",
-    [r.body.includes("record store has not reported its version"), /<b>Updated (from|to)/.test(r.body)], [true, false]);
+    [r.body.includes("record store of your group&#39;s Civicsmith has not reported its version"), /<b>Updated (from|to)/.test(r.body)], [true, false]);
 }
 {
   const r = await d116Update("stale-member", { storeVersion: FLEET_VER,
@@ -1255,7 +1255,7 @@ async function d116Update(slug, after) {
   const r = await d116Update("loose-member", { storeVersion: FLEET_VER,
     memberVersions: { "agent-worker": { binding: "AGENT_WORKER", state: "UNBOUND" }, ...OTHERS } });
   t("A MEMBER THIS STEP INSTALLED but the plane cannot reach is NAMED — uploaded is not usable",
-    [r.body.includes("agent-worker was installed, but your copy holds no connection to it"), /<b>Updated (from|to)/.test(r.body)],
+    [r.body.includes("agent-worker was installed, but your group&#39;s Civicsmith holds no connection to it"), /<b>Updated (from|to)/.test(r.body)],
     [true, false]);
 }
 {
@@ -1281,13 +1281,13 @@ async function d116Update(slug, after) {
   globalThis.fetch = realFetch;
   if (!reportsBuilds(RELEASE_SOURCE)) {
     t("A RELEASE THAT CANNOT REPORT BUILDS: the address is confirmed and the rest is STATED undetermined, not claimed",
-      [body.includes(`Updated from 0.1.0 to ${CUR_VER}`), body.includes("cannot report which version your copy&#39;s record store")],
+      [body.includes(`Updated from 0.1.0 to ${CUR_VER}`), body.includes("cannot report which version the record store of your group&#39;s Civicsmith")],
       [true, true]);
   } else {
     /* Once DIST cuts a release carrying D-116 and embeds it, the built-in release CAN report, and this fixture (which
        serves no storeVersion) is a stale DO — which is named. Both branches are asserted so the arm survives the cut. */
     t("THE BUILT-IN RELEASE CAN REPORT BUILDS: a copy answering no storeVersion after it is a stale DO, named",
-      body.includes("record store has not reported its version"), true);
+      body.includes("record store of your group&#39;s Civicsmith has not reported its version"), true);
   }
 }
 console.log("\n--- D-116: an INSTALL names a part not on the release, and still hands over the credentials ---");
@@ -1313,11 +1313,11 @@ async function d116Install(slug, reply) {
 {
   const ok = await d116Install("fresh-all", { version: FLEET_VER, storeVersion: FLEET_VER,
     memberVersions: { "agent-worker": SERVING(FLEET_VER), ...OTHERS } });
-  t("INSTALL, every part on the release: \"Your copy is running\"", ok.includes("Your copy is running."), true);
+  t("INSTALL, every part on the release: \"Your group's Civicsmith is running\"", ok.includes("Your group's Civicsmith is running."), true);
   const lag = await d116Install("fresh-loose", { version: FLEET_VER, storeVersion: FLEET_VER,
     memberVersions: { "agent-worker": { binding: "AGENT_WORKER", state: "UNBOUND" }, ...OTHERS } });
   t("INSTALL with an installed member the plane cannot reach: NOT \"running\", and the member NAMED",
-    [lag.includes("Your copy is running."), lag.includes("agent-worker was installed, but your copy holds no connection to it")],
+    [lag.includes("Your group's Civicsmith is running."), lag.includes("agent-worker was installed, but your group&#39;s Civicsmith holds no connection to it")],
     [false, true]);
   t("and the credentials are still handed over — a lag never costs a group its only sight of them",
     [lag.includes('id=\\"out-member\\"'), lag.includes('id=\\"out-probe\\"')], [true, true]);
@@ -1437,7 +1437,7 @@ const oldMember = [{ type: "plain_text", name: "VERSION", text: "0.1.0" }];
     r.planePuts[0]?.find((b) => b.name === "DAEMON_TOKEN")?.text === r.planePuts.at(-1)?.find((b) => b.name === "DAEMON_TOKEN")?.text,
     true);
   t("INSTALL: the page reports the copy running, and says it was connected",
-    [r.body.includes("Your copy is running."), r.body.includes("Your copy is connected to")], [true, true]);
+    [r.body.includes("Your group's Civicsmith is running."), r.body.includes("Your group's Civicsmith is connected to")], [true, true]);
 }
 {
   const r = await dist6("unbound-town", { mode: "update", pre: { "unbound-town": planeBase("unbound-town") } });
@@ -1470,14 +1470,14 @@ const oldMember = [{ type: "plain_text", name: "VERSION", text: "0.1.0" }];
     r.targets, { ...RIGHT, OCR_WORKER: null });
   t("and nothing was refused: no binding to a worker that is not there", r.refused, []);
   t("and the page NAMES the missing binding and does NOT report the copy running",
-    [r.body.includes("ocr-worker could not be installed, so your copy has no OCR_WORKER connection"),
-     r.body.includes("Your copy is running.")], [true, false]);
+    [r.body.includes("ocr-worker could not be installed, so your group&#39;s Civicsmith has no OCR_WORKER connection"),
+     r.body.includes("Your group's Civicsmith is running.")], [true, false]);
 }
 {
   const r = await dist6("broken-agent-up", { mode: "update", broken: "agent-worker",
     pre: { "broken-agent-up": planeBase("broken-agent-up") } });
   t("UPDATE, agent-worker's upload FAILED: AGENT_WORKER unbound, the missing binding NAMED, the update NOT reported done",
-    [r.svc("AGENT_WORKER"), r.body.includes("agent-worker could not be installed, so your copy has no AGENT_WORKER connection"),
+    [r.svc("AGENT_WORKER"), r.body.includes("agent-worker could not be installed, so your group&#39;s Civicsmith has no AGENT_WORKER connection"),
      /<b>Updated (from|to)/.test(r.body)], [null, true, false]);
 }
 
@@ -1517,7 +1517,7 @@ console.log("\n--- DIST-9: the organisation ai credential is carried when suppli
     (await sentIn(i0.calls, "ai-none-install")).length, 0);
   t("DIST-9 NO-INVENTION (install): and the copy holds none after the whole act", aiOf(i0.planePuts.at(-1)).length, 0);
   t("DIST-9 (install): the absence is STATED on the page, not left silent",
-    i0.body.includes("No organisation AI credential was given, so your copy has none"), true);
+    i0.body.includes("No organisation AI credential was given, so your group's Civicsmith has none"), true);
 
   const u1 = await dist6("ai-update", { mode: "update", ai: AI, pre: { "ai-update": planeBase("ai-update") } });
   t("DIST-9 UPDATE, supplied: a copy that held none now holds EXACTLY the operator's value",

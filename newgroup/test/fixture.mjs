@@ -133,14 +133,16 @@ export const RUNNER = "agent-runner";
 
 /* `members`: the fleet's member names (default: the three the plane binds). Options drop the fleet signature, sign it
    over another set, tamper with a member's bytes, name an unknown part type, or leave the fleet out. `container` adds
-   the container member agent-runner with `descriptor` (an object, or raw text) as its `Container` part. */
+   the container member agent-runner with `descriptor` (an object, or raw text) as its `Container` part. `memberSrc`
+   gives a member its own bundle text (R39: one stating its limits), hashed into the signed statement like any. */
 export async function release({ version, src = CAPABLE_SRC, members = FLEET_BINDINGS.map(([m]) => m), sig = "good",
   fleet = true, fleetSig = "good", tamper = null, badType = null, missing = null, signedMembers = null,
-  container = false, descriptor = DESCRIPTOR } = {}) {
+  container = false, descriptor = DESCRIPTOR, memberSrc = {} } = {}) {
   const planeSha = await sha(src);
   const boxText = typeof descriptor === "string" ? descriptor : JSON.stringify(descriptor);
-  const entry = async (member) => ({ member, asset: `${member}.bundled.mjs`, sha256: await sha(MEMBER_SRC),
-    bytes: MEMBER_SRC.length, compat: { date: "2026-07-01", flags: [] },
+  const srcOf = (member) => memberSrc[member] ?? MEMBER_SRC;
+  const entry = async (member) => ({ member, asset: `${member}.bundled.mjs`, sha256: await sha(srcOf(member)),
+    bytes: srcOf(member).length, compat: { date: "2026-07-01", flags: [] },
     services: member === "agent-worker" ? [{ binding: "PLANE", service: "bio-plane" }] : [],
     parts: member === "ocr-worker" ? [{ path: "assets/x.wasm", type: badType === member ? "Mystery" : "CompiledWasm",
       sha256: await sha(WASM), bytes: WASM.length }]
@@ -156,7 +158,7 @@ export async function release({ version, src = CAPABLE_SRC, members = FLEET_BIND
     ...(fleet && fleetSig === "good" ? { fleetSig: await SIGNER.sign(fleetStatement({ version, plane, members: signedList }), NS_FLEET) } : {}) };
   const assets = { "bio-plane.bundled.mjs": src };
   for (const m of list) {
-    assets[m.asset] = m.member === tamper ? "tampered" : MEMBER_SRC;
+    assets[m.asset] = m.member === tamper ? "tampered" : srcOf(m.member);
     if (m.member === missing) delete assets[m.asset];
     for (const p of m.parts) assets[`${m.member}/${p.path}`] = p.type === "Container" ? boxText : WASM;
   }
