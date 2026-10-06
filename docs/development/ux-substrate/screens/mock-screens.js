@@ -270,7 +270,7 @@ SCR.timeline = c => ({ rail: 'projects', title: 'Timeline', crumbs: ['The Colise
   ${acts(btn('createevent', 'Record an event', { tone: 'primary' }), btn('addparticipant', 'Add who took part'), btn('relate', 'Link events'), btn('recorddatedfact', 'Record a dated fact'), btn('hypothesishold', 'Keep a suspected cause as a hunch'))}` });
 
 SCR.money = c => ({ rail: 'projects', title: 'Money trail', crumbs: ['Sewer fund transfers', 'Money trail'], main: `
-  ${h1('Sewer fund transfers, FY2022', 'A money trail · 4 figures · started by Ana')}
+  ${h1('Sewer fund transfers, FY2022', 'A money trail · 3 figures · started by Ana')}
   <div class="tw"><table class="mk-table"><thead><tr><th>Figure</th><th>Stage</th><th>Period</th><th>Amount</th><th>Source</th><th></th></tr></thead><tbody>
    <tr><td>Transfer out, Sewer Fund 3100</td><td>adopted</td><td>FY2022</td><td class="num">$4,200,000</td><td>${grade('capture', 'B')}</td><td>included · "the transfer we ask about"</td></tr>
    <tr><td>Transfer out, Sewer Fund 3100</td><td>actual (paid)</td><td>FY2022</td><td class="num">$4,750,000</td><td>${grade('capture', 'B')}</td><td>included</td></tr>
@@ -304,7 +304,7 @@ SCR.proceeding = c => ({ rail: 'projects', title: 'Proceeding', crumbs: ['The Co
 
 SCR['due-date'] = c => ({ rail: 'queue', title: 'Due date', crumbs: ['Records request', 'Due date'], main: `
   ${h1('Due 14 October 2026', 'The City Clerk\'s reply to your records request')}
-  ${sec('How this was worked out', `<ol class="mk-list"><li>Basis: the public records law your group's profile names, the 10-day response window. <span class="muted">(cited)</span></li><li>Received by the office: 2 October 2026 (you recorded sending it that day).</li><li>Counted 10 calendar days: to 12 October.</li><li>12 October is a Sunday and 13 October a city holiday (your profile): rolled to 14 October, close of business.</li></ol>${acts(btn('deadlinecompute', 'Work it out again'))}`)}
+  ${sec('How this was worked out', `<ol class="mk-list"><li>Basis: the public records law your group's profile names, the 10-day response window. <span class="muted">(cited)</span></li><li>Received by the office: 2 October 2026 (you recorded sending it that day).</li><li>Counted 10 calendar days: to 12 October.</li><li>12 October is a city holiday (Indigenous Peoples' Day) and 13 October a city furlough day, both from your profile: rolled to 14 October, close of business.</li></ol>${acts(btn('deadlinecompute', 'Work it out again'))}`)}
   ${acts(btn('clockadopt', 'Confirm this due date', { tone: 'primary' }), btn('reminderset', 'Remind me'), link('Download to my calendar', 'clock'))}
   ${note('Once confirmed it goes into your queue. If no reply comes by then, the queue says so once.')}` });
 
