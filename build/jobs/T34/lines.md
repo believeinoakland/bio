@@ -28,3 +28,7 @@
 - `ownership lines tranche/T34`: 5 files changed; 0 failures.
 
 Size (session_01AGXhmTcPinYjVwtRPVtzRJ): test runs 22, module lines 956
+
+## J1 · COMPLETE
+
+T34-18 applied on job/T34/lines: a holds line carries its title as written (R1 BAD_TITLE, R9; an added column for older stores). lines 30/30; users of lines green apart from the four inherited reds named in B1; format, architecture, coverage (21/21), ownership: 0 failures. Three items for BOB are in the record: no length bound for a title (a requirement question), the plane bundle is stale (BOB's at the layer close), and neighbours does not carry the title. Record: build/jobs/T34/lines.md.
