@@ -8,8 +8,9 @@ import * as CG from "../../../src/case-grammar/index.mjs";
 import { canonicalJson } from "../../../src/record-grammar/json.mjs";
 import { CATALOG_VERSION } from "../../../src/gate.mjs";
 import { GRADING_METHOD_VERSIONS } from "../../../src/strength/method.mjs";
+import { METHOD as CALC_METHOD } from "../../../src/calc-grammar/index.mjs";
 import { captureAccountStatement, ratifyStatement, NS_RELEASE } from "../../../src/sshsig.mjs";
-import { caseFile, caseFiles, gradingFacts, byId, sha, keyFor, A, B, C, MINUTES, MEMO, MEMO_BYTES, MEMO_ACCOUNT, MINUTES_BYTES, REF, GROUP, CASE } from "./fixture.mjs";
+import { caseFile, caseFiles, gradingFacts, byId, sha, keyFor, calcRow, CALC, CALC_INPUT, CALC_INPUT_SHA, A, B, C, MINUTES, MEMO, MEMO_BYTES, MEMO_ACCOUNT, MINUTES_BYTES, REF, GROUP, CASE } from "./fixture.mjs";
 
 const passagesOfFixture = () => Object.fromEntries([A, B, C].map((id) => [id, JSON.parse(caseFiles().texts.get(CG.caseFilePath("passages", id)))]));
 const check = (opts = {}, args = {}) => CC.checkCaseFile({ parts: caseFile(opts).parts, ...args });
@@ -20,10 +21,11 @@ const has = (list, check, re) => list.some((e) => e.check === check && re.test(e
 test("R1 R11: a clean case file recreates every finding, members and the finding a member's chain reaches, with the answer's whole shape", async () => {
   for (const parts of [1, 2, 3]) {
     const r = await check({ parts });
-    assert.deepEqual(Object.keys(r).sort(), ["case", "checker", "complete_edition", "edition", "findings", "format", "group", "integrity",
+    assert.deepEqual(Object.keys(r).sort(), ["calculations", "case", "checker", "complete_edition", "edition", "findings", "format", "group", "integrity",
       "publication_checks", "rests_on_another_group", "rests_on_another_group_statement", "signatures", "statement"]);
     assert.equal(r.format, "bio-case-file/1"); assert.equal(r.case, CASE); assert.equal(r.edition, 2); assert.equal(r.group, GROUP);
-    assert.deepEqual(r.checker, { grading_versions: [...GRADING_METHOD_VERSIONS], checks_version: CATALOG_VERSION });
+    assert.deepEqual(r.checker, { grading_versions: [...GRADING_METHOD_VERSIONS], checks_version: CATALOG_VERSION, calc_versions: [CALC_METHOD] });
+    assert.deepEqual(r.calculations, []);
     assert.deepEqual(results(r), ALL_RECREATED, `${parts} part(s)`);
     for (const f of r.findings) {
       assert.deepEqual(Object.keys(f), ["finding", "role", "result", "missing", "differs", "pair", "bar_met"]);
@@ -228,7 +230,12 @@ test("R5: each pair recomputes at the stated method version; a changed recorded 
   const lied = await check({ mutate: (t) => t.set(CG.caseFilePath("grading_facts", C), JSON.stringify({ legs: [] })) });
   assert.ok(has(byId(lied)[C].differs, "grade", /carried grading facts are not the facts the signed case document states/));
   /* a version this checker does not hold */
-  const unknown = await check({ mutate: (t) => t.set(CG.caseFilePath("case_document"), t.get(CG.caseFilePath("case_document")).replace("grading: \"bio-grading/1\"", "grading: \"bio-grading/99\"")) });
+  /* the version the case file states is replaced, whichever it is (strength R31 moves the current one) */
+  const unknown = await check({ mutate: (t) => {
+    const doc = t.get(CG.caseFilePath("case_document"));
+    assert.match(doc, /grading: "bio-grading\/\d+"/);
+    t.set(CG.caseFilePath("case_document"), doc.replace(/grading: "bio-grading\/\d+"/, 'grading: "bio-grading/99"'));
+  } });
   for (const f of unknown.findings) {
     assert.ok(f.missing.some((e) => e.check === "grade" && e.version === "bio-grading/99" && /does not hold/.test(e.detail)), f.finding);
     assert.equal(f.pair, null);
@@ -381,4 +388,87 @@ test("R18: a finding resting on another group's accepted finding recreates up to
   assert.equal(byId(off)[A].result, "did_not_recreate");
   /* with no imported leg, nothing is listed */
   assert.deepEqual((await check()).rests_on_another_group, []);
+});
+
+test("R20 R11 R1: each calculation recomputes by calc-grammar's evaluator over its carried inputs; a finding resting on one that agrees recreates", async () => {
+  const r = await check({ withCalculation: true });
+  assert.deepEqual(r.calculations.map((c) => [c.calc, c.result, c.differs, c.missing]), [[CALC, "agrees", [], []]]);
+  assert.deepEqual(results(r), ALL_RECREATED);
+  assert.deepEqual(r.checker.calc_versions, [CALC_METHOD]);
+  /* R16: the same arguments, the same answer */
+  assert.equal(canonicalJson(r), canonicalJson(await check({ withCalculation: true })));
+});
+
+test("R20 R11: a stated result or result key that recomputes differently differs, naming the result, the stated and the recomputed value; the finding resting on it does not recreate", async () => {
+  const row = calcRow();
+  const wrong = await check({ withCalculation: true, calcRow: { results: { [row.result_key]: { value: "3", sign: "+", precision: "exact" } } } });
+  const c = wrong.calculations[0];
+  assert.equal(c.result, "differs");
+  assert.deepEqual([c.differs[0].result, c.differs[0].stated.value, c.differs[0].recomputed.value], [row.result_key, "3", "2"]);
+  assert.equal(byId(wrong)[A].result, "did_not_recreate");
+  assert.ok(has(byId(wrong)[A].differs, "calculation", /result is stated as .*"3".* and it recomputes to .*"2"/));
+  assert.equal(byId(wrong)[C].result, "recreated");      /* C's chain rests on no calculation */
+  const key = await check({ withCalculation: true, calcRow: { result_key: sha("another key"), results: { [sha("another key")]: row.results[row.result_key] } } });
+  assert.ok(key.calculations[0].differs.some((e) => e.result === "result_key" && e.stated === sha("another key") && e.recomputed === row.result_key));
+  assert.equal(byId(key)[A].result, "did_not_recreate");
+  /* a recipe the evaluator refuses does not recompute */
+  const bad = await check({ withCalculation: true, calcRow: { recipe: { ...row.recipe, steps: [{ op: "eval", as: "n" }] } } });
+  assert.equal(bad.calculations[0].result, "differs");
+  assert.ok(has(bad.calculations[0].differs, "calculation", /refuses it \(RECIPE_INVALID/));
+});
+
+test("R20 R11: an input absent or whose bytes differ from its hash, or a method version not held, is missing; the finding resting on it is recreated_in_part", async () => {
+  const gone = await check({ withCalculation: true, dropCalcInput: true });
+  /* an input the manifest does not list at all */
+  assert.equal(gone.calculations[0].result, "not_recomputed");
+  assert.ok(gone.calculations[0].missing.some((e) => e.input === "pay" && e.sha256 === CALC_INPUT_SHA && /fetch the file whose SHA-256 is/.test(e.detail)));
+  assert.equal(byId(gone)[A].result, "recreated_in_part");
+  assert.equal(byId(gone)[C].result, "recreated");
+  /* listed, but its carried bytes are not the bytes its hash names */
+  const changed = await check({ withCalculation: true, calcInput: CALC_INPUT.replace('"60"', '"6"') });
+  assert.ok(changed.calculations[0].missing.some((e) => e.input === "pay"));
+  assert.notEqual(byId(changed)[A].result, "recreated");
+  /* a method version this checker does not hold */
+  const later = await check({ withCalculation: true, calcRow: { method_version: "bio-calc/9" } });
+  assert.ok(later.calculations[0].missing.some((e) => e.version === "bio-calc/9" && /does not hold/.test(e.detail)));
+  assert.equal(byId(later)[A].result, "recreated_in_part");
+  /* a document supplied later that is the input completes it (R9) */
+  const cf = caseFile({ withCalculation: true, edit: (b) => { for (const k of [...b.keys()]) if (k.includes(CALC_INPUT_SHA)) b.delete(k); } });
+  const before = await CC.checkCaseFile({ parts: cf.parts });
+  assert.equal(before.calculations[0].result, "not_recomputed");
+  const after = await CC.checkCaseFile({ parts: cf.parts, documents: [Buffer.from(CALC_INPUT)] });
+  assert.equal(after.calculations[0].result, "agrees");
+  assert.deepEqual(results(after), ALL_RECREATED);
+});
+
+test("R20: a row the document discloses as differing or unbound is answered with that disclosure and is not a differs entry for being so; undisclosed, it is", async () => {
+  const row = calcRow();
+  const off = { results: { [row.result_key]: { value: "3", sign: "+", precision: "exact" } } };
+  const disclosed = await check({ withCalculation: true, calcRow: { ...off, recompute: "differs", disclosed: "Our count differs from the office's published count." } });
+  const c = disclosed.calculations[0];
+  assert.equal(c.disclosed, "Our count differs from the office's published count.");
+  assert.deepEqual([c.differs, c.missing], [[], []]);
+  assert.deepEqual(results(disclosed), ALL_RECREATED);
+  const unbound = await check({ withCalculation: true, dropCalcInput: true, calcRow: { recompute: "unbound", disclosed: "The input was not published." } });
+  assert.deepEqual([unbound.calculations[0].differs, unbound.calculations[0].missing], [[], []]);
+  assert.equal(unbound.calculations[0].disclosed, "The input was not published.");
+  /* a status recorded without a disclosure is checked like any row */
+  const undisclosed = await check({ withCalculation: true, calcRow: { ...off, recompute: "differs", disclosed: null } });
+  assert.equal(undisclosed.calculations[0].result, "differs");
+  assert.equal(byId(undisclosed)[A].result, "did_not_recreate");
+});
+
+test("R20 (K1448): a workbook, or a value from a third party's engine, is not_recomputed with the sentence that the publishing copy's engine recomputed it, never as agreeing", async () => {
+  for (const over of [{ recipe: { kind: "workbook", sheet: "Totals", cell: "B4" }, method_version: "ironcalc/0.5" },
+                      { method_version: "ironcalc/0.5" }]) {
+    const r = await check({ withCalculation: true, calcRow: over });
+    const c = r.calculations[0];
+    assert.equal(c.result, "not_recomputed");
+    assert.equal(c.statement, CC.NOT_RECOMPUTED_STATEMENT);
+    assert.match(c.statement, /recomputed by the publishing copy's engine/);
+    assert.deepEqual([c.differs, c.missing], [[], []]);
+  }
+  /* a chain resting on a calculation the document does not list differs */
+  const unlisted = await check({ withCalculation: true, calculations: [] });
+  assert.ok(has(byId(unlisted)[A].differs, "calculation", /rests on calculation CALC-2026-0001-late, which the case document's calculations do not list/));
 });

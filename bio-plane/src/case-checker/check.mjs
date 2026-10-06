@@ -4,9 +4,10 @@
  * `checkCaseFile({parts, documents?, keys?})` reads a case file's parts and recreates each finding from what they carry:
  * the integrity of every part and file (R2), the signatures and attestations (R3), the passages (R4), each grade
  * recomputed at the stated method version (R5), the bar (R6), the publication checks (R7), presentability (R8),
- * completion by documents supplied later (R9) and the complete edition (R10), composed into one result per finding
- * (R11). It is built only from pure code: `case-grammar`'s format, `ratification`'s case-document checks
- * (`checks.mjs`), `strength`'s method (`method.mjs`), `content`'s extent grammar and `signatures`' verifier, so the
+ * completion by documents supplied later (R9), the complete edition (R10) and each calculation recomputed by
+ * `calc-grammar`'s evaluator (R20), composed into one result per finding (R11). It is built only from pure code: `case-grammar`'s format, `ratification`'s case-document checks
+ * (`checks.mjs`), `strength`'s method (`method.mjs`), `content`'s extent grammar, `signatures`' verifier and
+ * `calc-grammar`'s evaluator, so the
  * standalone program (R13) is this file and those, bundled. It reads nothing but its arguments, writes nothing, makes
  * no request and never throws (R1, R16); it answers a promise because a signature is verified by WebCrypto.
  *
@@ -25,6 +26,8 @@ import { checkCaseDocument } from "../ratification/checks.mjs";
 import { caseFileManifestCheck, caseFileEntryOf, casePartDigest, CASE_FILE_MANIFEST_PATH, methodOf, materialsOf,
          acceptedWorkOf, standingOf, completeEditionOf, gradingFactsOf, passagesOf, GRADING_FACT_FIELDS,
          PASSAGE_FIELDS } from "../case-grammar/index.mjs";
+import * as caseGrammar from "../case-grammar/index.mjs";
+import { evaluate, resultKey, METHOD as CALC_METHOD } from "../calc-grammar/index.mjs";
 import { CATALOG_VERSION } from "../gate.mjs";
 import { readStoredZip, asBytes } from "./zip.mjs";
 
@@ -43,13 +46,23 @@ export const KEYS_NOT_CHECKED_STATEMENT = "The signing keys were not checked aga
 export const CHECKS_VERSION_STATEMENT = (stated, own) => `The publication checks ran at this checker's version, ${own}, `
   + `not at the version the case states, ${stated === null ? "none" : stated}.`;
 
+/** R20 (K1448): the sentence beside a calculation this checker does not recompute (a workbook, or a value from a third
+ *  party's engine). The UX stream's words, later. */
+export const NOT_RECOMPUTED_STATEMENT = "This value was recomputed by the publishing copy's engine, not by this checker, "
+  + "so it is not shown here to agree.";
+/** R20: the three answers for a calculation. */
+export const CALCULATION_RESULTS = Object.freeze(["agrees", "differs", "not_recomputed"]);
+
 /** R1: the three results. */
 export const RESULTS = Object.freeze(["recreated", "recreated_in_part", "did_not_recreate"]);
 /** R13: each result in words, as the standalone program prints it. The UX stream's words, when it gives them. */
 export const RESULT_WORDS = Object.freeze({ recreated: "Recreated", recreated_in_part: "Recreated in part",
                                             did_not_recreate: "Did not recreate" });
 /** R1: the checker's versions, stated in every answer. */
-export const CHECKER_VERSIONS = Object.freeze({ grading_versions: [...GRADING_METHOD_VERSIONS], checks_version: CATALOG_VERSION });
+export const CHECKER_VERSIONS = Object.freeze({ grading_versions: [...GRADING_METHOD_VERSIONS], checks_version: CATALOG_VERSION,
+                                                calc_versions: [CALC_METHOD] });
+const versionsOut = () => ({ ...CHECKER_VERSIONS, grading_versions: [...CHECKER_VERSIONS.grading_versions],
+                             calc_versions: [...CHECKER_VERSIONS.calc_versions] });
 
 /* R3: the account statement a capturing member signs is `signatures.captureAccountStatement` (its R41), the one
    spelling `capture` signs and checks too (N530); it is pure, so the standalone program carries it. Stated in this
@@ -230,10 +243,11 @@ function malformed(departures, manifest) {
   const members = Array.isArray(m.files) ? [...new Set(m.files.filter((f) => isObj(f) && f.kind === "finding" && typeof f.finding === "string").map((f) => f.finding))] : [];
   return {
     format: str(m.format), case: str(m.case), edition: Number.isInteger(m.edition) ? m.edition : null, group: str(m.group),
-    checker: { ...CHECKER_VERSIONS, grading_versions: [...CHECKER_VERSIONS.grading_versions] },
+    checker: versionsOut(),
     integrity: { intact: false, departures, parts: [], files: [], documents: { used: [], unmatched: [] } },
     signatures: { case: null, findings: [], attestations: [], keys_checked: false, keys_statement: KEYS_NOT_CHECKED_STATEMENT },
     publication_checks: { ran: false, findings: [], unasked: [], stated_version: null, checker_version: CATALOG_VERSION, statement: null },
+    calculations: [],
     findings: members.map((f) => ({ finding: f, role: null, result: "did_not_recreate", missing: [],
       differs: departures.map((d) => entry("integrity", "case file", d)), pair: null, bar_met: null })),
     complete_edition: { equal: null, detail: "the case file could not be read, so its complete edition was not compared" },
@@ -384,13 +398,14 @@ async function check({ parts, documents = [], keys = null }) {
   const materialOfLeg = (leg) => materials.find((x) => x.ref === leg.target)
     || materials.find((x) => Array.isArray(leg.captures) && leg.captures.includes(x.sha)) || null;
   function chainOf(id, seen = new Set()) {
-    if (seen.has(id)) return { mats: [], refs: [], unlisted: [] };
+    if (seen.has(id)) return { mats: [], refs: [], unlisted: [], calcs: [] };
     seen.add(id);
-    const out = { mats: [], refs: [], unlisted: [] };
+    const out = { mats: [], refs: [], unlisted: [], calcs: [] };
     const fx = facts.get(id);
     for (const leg of fx ? fx.legs.filter(isObj) : []) {
       if (leg.kind === "imported") { out.refs.push({ from: id, leg }); continue; }   /* R18: not followed past */
-      if (leg.kind === "inquiry") { const c = chainOf(String(leg.target ?? ""), seen); out.mats.push(...c.mats); out.refs.push(...c.refs); out.unlisted.push(...c.unlisted); continue; }
+      if (leg.kind === "inquiry") { const c = chainOf(String(leg.target ?? ""), seen); out.mats.push(...c.mats); out.refs.push(...c.refs); out.unlisted.push(...c.unlisted); out.calcs.push(...c.calcs); continue; }
+      if (leg.kind === "calculation") { const t = String(leg.target ?? ""); if (!out.calcs.includes(t)) out.calcs.push(t); continue; }   /* R20 */
       if (leg.kind === "document" || leg.kind === "observation") {
         const mat = materialOfLeg(leg);
         if (mat) { if (!out.mats.includes(mat)) out.mats.push(mat); }
@@ -484,6 +499,9 @@ async function check({ parts, documents = [], keys = null }) {
       if (!complete_edition.equal) caseLevel.differs.push(entry("complete_edition", ceFile.path, complete_edition.detail));
     }
   }
+
+  /* ---------------------------------------------------------- R20: the calculations */
+  const calculations = fm ? await recomputeCalculations(fm, files) : [];
 
   /* ---------------------------------------------------------- per finding */
   const bar = fm && isObj(fm.required_strength) ? fm.required_strength : null;
@@ -620,6 +638,13 @@ async function check({ parts, documents = [], keys = null }) {
       for (const e of attestationFails.get(mat.ref) || []) differs.push({ ...e, about: id });
       for (const e of attestationGaps.get(mat.ref) || []) missing.push({ ...e, about: id });
     }
+    /* R20, R11: a calculation its chain rests on gives it that calculation's entries. */
+    for (const calc of chain.calcs) {
+      const c = calculations.find((x) => x.calc === calc);
+      if (!c) { differs.push(entry("calculation", id, `${id}'s chain rests on calculation ${calc}, which the case document's calculations do not list`)); continue; }
+      for (const e of c.differs) differs.push({ ...e, about: id });
+      for (const e of c.missing) missing.push({ ...e, about: id });
+    }
     /* R18: another group's finding, recreated up to that leg. */
     for (const { leg } of chain.refs) {
       const row = acceptedRows.find((r) => r.ref === leg.target) || null;
@@ -639,7 +664,7 @@ async function check({ parts, documents = [], keys = null }) {
 
   return {
     format: str(m.format), case: str(m.case), edition: Number.isInteger(m.edition) ? m.edition : null, group: str(m.group),
-    checker: { ...CHECKER_VERSIONS, grading_versions: [...CHECKER_VERSIONS.grading_versions] },
+    checker: versionsOut(),
     integrity: { intact: !read.departures.length && files.every((f) => f.state === "intact" || f.state === "supplied"),
       departures: read.departures, parts: read.parts,
       files: files.map((f) => ({ path: f.path, kind: f.kind, sha256: f.sha256, state: f.state })),
@@ -650,6 +675,7 @@ async function check({ parts, documents = [], keys = null }) {
       findings: findingSigs, attestations: attestationAnswers, keys_checked: !!published,
       keys_statement: published ? null : KEYS_NOT_CHECKED_STATEMENT },
     publication_checks,
+    calculations,
     findings: findingsOut.map((f) => ({ finding: f.finding, role: f.role, result: f.result, missing: f.missing, differs: f.differs, pair: f.pair, bar_met: f.bar_met })),
     complete_edition,
     rests_on_another_group: restsOn, rests_on_another_group_statement: REST_ON_ANOTHER_GROUP_STATEMENT,
@@ -657,3 +683,98 @@ async function check({ parts, documents = [], keys = null }) {
   };
 }
 const dedupe = (list) => { const seen = new Set(); return list.filter((e) => { const k = canonicalJson(e); if (seen.has(k)) return false; seen.add(k); return true; }); };
+
+/* ============================================================ the calculations (R20) */
+
+/* R20: the case document's `calculations:` rows (`case-grammar` R18), each list or map field read back from the canonical
+   JSON its flat row carries. `case-grammar.calculationsOf` is the one reader; until that module's T33 job is merged, the
+   same reading of its R18 is done here (K1563 (1)). */
+function calculationRows(fm) {
+  let rows;
+  if (typeof caseGrammar.calculationsOf === "function") rows = caseGrammar.calculationsOf(fm);
+  else rows = Array.isArray(fm.calculations) ? fm.calculations : [];
+  const list = Array.isArray(rows) ? rows : isObj(rows) && Array.isArray(rows.rows) ? rows.rows : [];
+  return list.filter(isObj).map((r) => {
+    const out = { ...r };
+    for (const k of ["recipe", "inputs", "results"])
+      if (typeof out[k] === "string" && /^[[{]/.test(out[k].trim())) { try { out[k] = JSON.parse(out[k]); } catch { /* kept as given */ } }
+    return out;
+  });
+}
+
+/* R20: a row's inputs as `{name: sha256}`, from a map or a list of `{name, sha256}`; null when unreadable. */
+function inputHashesOf(inputs) {
+  if (isObj(inputs)) return Object.fromEntries(Object.entries(inputs).map(([k, v]) => [k, str(v) || (isObj(v) ? str(v.sha256) : null)]));
+  if (Array.isArray(inputs)) {
+    const out = {};
+    for (const i of inputs) { if (!isObj(i) || !str(i.name)) return null; out[i.name] = str(i.sha256) || str(i.sha); }
+    return out;
+  }
+  return null;
+}
+
+const BIO_CALC = /^bio-calc\/\d+$/;
+
+/** R20: each calculation recomputed by `calc-grammar.evaluate` over the inputs the case file carries, at the method version
+ *  its row states. Answers `[{calc, result, differs[], missing[], disclosed?, statement?}]`. Pure; never throws. */
+async function recomputeCalculations(fm, files) {
+  const out = [];
+  for (const row of calculationRows(fm)) {
+    const calc = str(row.calc) || String(row.calc ?? "");
+    const differs = [], missing = [];
+    const a = { calc, result: "agrees", differs, missing };
+    const disclosed = row.disclosed != null && row.disclosed !== "" && (row.recompute === "differs" || row.recompute === "unbound")
+      ? row.disclosed : null;
+    if (disclosed !== null) a.disclosed = disclosed;
+    const recipe = row.recipe;
+    const version = str(row.method_version);
+    const recipeMethod = isObj(recipe) ? str(recipe.method) : null;
+    /* A workbook, or a value from another engine: recomputed by the publishing copy's engine, never shown to agree. */
+    if (!isObj(recipe) || !BIO_CALC.test(recipeMethod || "") || (version !== null && !BIO_CALC.test(version))) {
+      out.push({ ...a, result: "not_recomputed", statement: NOT_RECOMPUTED_STATEMENT });
+      continue;
+    }
+    const held = [version ?? recipeMethod, recipeMethod].find((v) => v !== CALC_METHOD) ?? null;
+    if (held !== null) {
+      missing.push(entry("calculation", calc, `calculation ${calc} was computed by calculation method ${held}, which this checker does not hold (it holds ${CALC_METHOD})`, { calc, version: held }));
+      out.push(settle(a, disclosed));
+      continue;
+    }
+    const hashes = inputHashesOf(row.inputs);
+    if (!hashes) { differs.push(entry("calculation", calc, `calculation ${calc}'s inputs cannot be read`, { calc })); out.push(settle(a, disclosed)); continue; }
+    const bound = {};
+    for (const [name, sha] of Object.entries(hashes)) {
+      const f = sha ? files.find((x) => x.kind === "calculation" && x.sha256 === sha) : null;
+      const b = f && f.content ? f.content : null;
+      if (!b || shaOf(b) !== sha) {
+        missing.push(entry("calculation", calc, `input ${name} of calculation ${calc} is not carried${f && f.state === "differs" ? " as the bytes its hash names" : ""}; fetch the file whose SHA-256 is ${sha}`, { calc, input: name, sha256: sha }));
+        continue;
+      }
+      const v = jsonOf(b);
+      if (v === undefined || v === null) { differs.push(entry("calculation", calc, `input ${name} of calculation ${calc} is not a table or figure this checker can read`, { calc, input: name })); continue; }
+      bound[name] = v;
+    }
+    if (missing.length || differs.length) { out.push(settle(a, disclosed)); continue; }
+    let key = null;
+    try { key = resultKey(recipe, hashes, { methodVersion: CALC_METHOD }); } catch { key = null; }
+    if (key !== row.result_key)
+      differs.push(entry("calculation", calc, `calculation ${calc}'s result key is stated as ${String(row.result_key)}, and it recomputes to ${key}`, { calc, result: "result_key", stated: row.result_key ?? null, recomputed: key }));
+    let r;
+    try { r = evaluate(recipe, bound); } catch (e) { r = { refused: "EVALUATE_FAILED", why: String(e && e.message ? e.message : e).slice(0, 200) }; }
+    const stated = isObj(row.results) && typeof row.result_key === "string" ? row.results[row.result_key] : undefined;
+    if (r && typeof r.refused === "string")
+      differs.push(entry("calculation", calc, `calculation ${calc} does not recompute: the evaluator refuses it (${r.refused}: ${r.why})`, { calc, result: row.result_key ?? null, stated: stated ?? null, recomputed: null }));
+    else if (stated === undefined || canonicalJson(stated) !== canonicalJson(r.result))
+      differs.push(entry("calculation", calc, `calculation ${calc}'s result is stated as ${stated === undefined ? "nothing" : canonicalJson(stated)}, and it recomputes to ${canonicalJson(r.result)}`, { calc, result: row.result_key ?? null, stated: stated ?? null, recomputed: r.result }));
+    out.push(settle(a, disclosed));
+  }
+  return out;
+}
+
+/* R20: a calculation's answer from its entries. A row the document discloses as differing or unbound is answered with that
+   disclosure: what it disclosed is not a `differs` (or `missing`) entry for being so. */
+function settle(a, disclosed) {
+  const result = a.differs.length ? "differs" : a.missing.length ? "not_recomputed" : "agrees";
+  if (disclosed !== null && result !== "agrees") return { ...a, result, disclosed_entries: { differs: a.differs, missing: a.missing }, differs: [], missing: [] };
+  return { ...a, result };
+}

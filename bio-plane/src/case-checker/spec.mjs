@@ -45,6 +45,7 @@ Each kind is carried at one path, so a file's path says which finding or materia
 - \`extracted_text\` at \`materials/<ref>/extracted.txt\`: a document's extracted text, the canonical JSON of its reading's units in order, each \`{extent, ref, text}\`. Its SHA-256 is the material's \`text_sha\`.
 - \`observation\` at \`materials/<ref>/observation.md\`: an observation's text, whole.
 - \`attestation\` at \`attestations/<ref>/<name>\`: a signed account, a timestamp token or a co-archive record.
+- \`calculation\` at \`calculations/<calc>/<sha256>\`: one input of a calculation a member's chain reaches, as the canonical JSON the calculation engine evaluates (a table \`{fields, rows}\` or a figure); its SHA-256 is the input's hash in the calculation's row (section 4).
 
 \`<finding>\` is a finding's id and \`<ref>\` a material's \`ref\` (section 4).
 
@@ -61,6 +62,7 @@ The case document is text: a front matter between two lines \`---\`, in the reco
 - \`capture_accounts:\` each signed account \`{capture, by, at, text_b64, signature_b64}\`: the account's text and its signature, each base64.
 - \`observation_attributions:\` per observation (or attested capture, by its SHA-256 as \`capture\`) the attribution \`level\` in force, which the grading method reads.
 - \`grading_facts:\` one row per leg of each finding a member's chain reaches, \`{finding, ord}\` and the leg's fields (section 3), and \`passages:\` one row per relied-on passage, \`{finding, ord, content_id, capture_sha, extent, chain, quoted}\`. Each value that is not null, a number or a boolean is its canonical JSON in one single-quoted value. These blocks are what a grade is recomputed from and where a passage is said to be: the manifest is not signed, so a finding's \`grading_facts\` and \`passages\` files must say the same, row for row in \`ord\` order.
+- \`calculations:\` one row per calculation any member's chain reaches, \`{calc, recipe, inputs, method_version, results, result_key, recompute, disclosed}\`: \`recipe\` the recipe in the closed grammar \`bio-calc/1\` (its canonical JSON in one single-quoted value); \`inputs\` each input's name and SHA-256; \`method_version\` the engine's version; \`results\` the stored results by key; \`result_key\` the SHA-256 of the canonical JSON of \`{recipe, inputs, method_version}\`; \`recompute\` the status recorded at the act (\`agrees\`, \`differs\` or \`unbound\`); \`disclosed\` the publisher's disclosure of a differing or unbound calculation, or null. A grading leg of kind \`calculation\` names its row by \`calc\`.
 - \`accepted_work:\` one row per member and leg resting on another group's finding, \`{member, leg_of, ref, group, case, edition, finding, manifest_sha, pair, result, gaps, accepted_by, accepted_at, reason}\`.
 
 ## 5. Signatures
@@ -110,6 +112,7 @@ A checker answers, for each finding (a member, or a finding a member's chain rea
 8. Completion. Bytes supplied later whose SHA-256 is a missing file's fingerprint fill that gap; other bytes are named and never used.
 9. The complete edition. The carried complete edition equals the one rendered from the rest of the case file, or differs.
 10. Another group's work. A leg on another group's finding (\`imported\`) is recreated up to that leg: its grade is the \`accepted_work:\` row's \`pair\`, passages and material are not followed past it, it adds nothing missing, and the answer names that group's case file (group, case, edition, finding and manifest SHA-256) as the place to check it.
+11. Calculations. Each \`calculations:\` row is recomputed by the \`bio-calc/1\` engine over the inputs the case file carries, each first checked against its SHA-256, at the method version the row states, and answered \`agrees\`, \`differs\` or \`not_recomputed\`. A result or result key that recomputes differently differs, naming the result, the stated and the recomputed value; an input absent or unlike its hash, or a method version the checker does not hold, is missing. A row the document discloses as differing or unbound is answered with that disclosure, and is not counted as differing for being so. A workbook, or a value from another engine, is answered \`not_recomputed\`, recomputed by the publishing copy's engine, never as agreeing. A finding whose chain rests on a calculation takes its entries.
 `;
 
 /** R14: every specification held, by the format it specifies. */

@@ -7,6 +7,7 @@ import * as CG from "../../../src/case-grammar/index.mjs";
 import { canonicalJson } from "../../../src/record-grammar/json.mjs";
 import { contentIdFor } from "../../../src/content/extent.mjs";
 import { recomputePair, GRADING_METHOD_VERSION } from "../../../src/strength/method.mjs";
+import { evaluate, resultKey, METHOD as CALC_METHOD } from "../../../src/calc-grammar/index.mjs";
 import { CATALOG_VERSION } from "../../../src/gate.mjs";
 import { serialiseContainer } from "../../../src/container.mjs";
 import { ratifyStatement, caseRatifyStatement, captureAccountStatement, NS_RATIFY } from "../../../src/sshsig.mjs";
@@ -41,6 +42,26 @@ export const MEMO_BYTES = "%PDF-1.7 the memo a clerk handed over";
 export const OBS_TEXT = "I watched the board vote by a show of hands.";
 export const MINUTES_SHA = sha(MINUTES_BYTES), MEMO_SHA = sha(MEMO_BYTES), OBS_SHA = sha(OBS_TEXT);
 export const REF = `imported:${sha("an import")}/INQ-2026-0042-lease`;
+/* R20: one calculation A's chain rests on (a count of late payments), with its one input carried as a table. */
+export const CALC = "CALC-2026-0001-late";
+export const CALC_RECIPE = { method: "bio-calc/1", inputs: [{ name: "pay", kind: "table" }],
+  steps: [{ op: "select", as: "late", from: "pay", where: [{ field: "days", test: "gt", value: 30 }] }, { op: "count", as: "n", from: "late" }],
+  output: "n" };
+export const CALC_INPUT = canonicalJson({ fields: [{ name: "days", type: "integer" }], rows: [{ days: "10" }, { days: "45" }, { days: "60" }] });
+export const CALC_INPUT_SHA = sha(CALC_INPUT);
+/** R20: the path a calculation's input travels at (`case-grammar` R13's `calculation` kind). */
+export const calcInputPath = (calc, inputSha) => CG.caseFilePath("calculation", [calc, inputSha]) ?? `calculations/${calc}/${inputSha}`;
+/** R20: a calculation's row as `case-grammar` R18 states it, as the act computed it. `over` changes one field. */
+export function calcRow(over = {}) {
+  const inputs = { pay: CALC_INPUT_SHA };
+  const key = resultKey(CALC_RECIPE, inputs, { methodVersion: CALC_METHOD });
+  const result = evaluate(CALC_RECIPE, { pay: JSON.parse(CALC_INPUT) }).result;
+  return { calc: CALC, recipe: CALC_RECIPE, inputs, method_version: CALC_METHOD, results: { [key]: result }, result_key: key,
+           recompute: "agrees", disclosed: null, ...over };
+}
+const calcLines = (list) => (typeof CG.calculationsLines === "function" ? CG.calculationsLines(list)
+  : list.length ? ["calculations:", ...list.flatMap((r) => Object.entries(r).map(([k, v], i) =>
+      `${i ? "   " : "  -"} ${k}: ${v === null ? "null" : typeof v === "object" ? `'${canonicalJson(v)}'` : q(v)}`))] : []);
 export const ACCOUNT = "I pulled it from the records office's box on the 3rd.";
 export const MEMO_ACCOUNT = "A clerk handed me this memo in person.";
 
@@ -53,7 +74,7 @@ const PAIR_AXES = ["capture", "connection", "testimony"];
 const pairOf = (r) => Object.fromEntries(PAIR_AXES.map((a) => [a, { state: r[a].state, grade: r[a].grade ?? null }]));
 
 /** The grading facts of each finding, and each pair as the act computed it. */
-export function gradingFacts({ withImported = false } = {}) {
+export function gradingFacts({ withImported = false, withCalculation = false } = {}) {
   const B_legs = [
     { target: MINUTES, kind: "document", role: "supports", grade: "B", grade_axis: "capture", grade_source: "capture", ground: null, captures: [MINUTES_SHA] },
     { target: MEMO, kind: "document", role: "supports", grade: "B", grade_axis: "connection", grade_source: "resolution", ground: null, captures: [MEMO_SHA] }];
@@ -61,6 +82,7 @@ export function gradingFacts({ withImported = false } = {}) {
   const A_legs = [
     { target: MINUTES, kind: "document", role: "supports", grade: "B", grade_axis: "capture", grade_source: "capture", ground: null, captures: [MINUTES_SHA] },
     { target: B, kind: "inquiry", role: "supports", grade: null, grade_axis: null, grade_source: "inherited", ground: null, answer: Bpair },
+    ...(withCalculation ? [{ target: CALC, kind: "calculation", role: "supports", grade: "B", grade_axis: "capture", grade_source: "derived", ground: null }] : []),
     ...(withImported ? [{ target: REF, kind: "imported", role: "supports", grade: null, grade_axis: null, grade_source: "inherited", ground: null }] : [])];
   const C_legs = [{ target: OBS, kind: "observation", role: "supports", grade: "D", grade_axis: "testimony", grade_source: "testimony", ground: null }];
   return { [A]: { legs: A_legs }, [B]: { legs: B_legs }, [C]: { legs: C_legs } };
@@ -82,7 +104,7 @@ const rows = (key, list) => (list.length ? [`${key}:`, ...list.flatMap((r) => Ob
 /** The case document's text, `/6` unless `format` names another (`/7`, T31). */
 export function caseDocument({ format = "bio-case-document/6", pairs, bar = { declared: true, capture: "B", connection: "C" }, findings = { [A]: "load_bearing", [C]: "supporting" },
                               pins, materials, attestations, accounts, accepted = [], edition = 2, recorded = null,
-                              facts = {}, passages = {} } = {}) {
+                              facts = {}, passages = {}, calculations = [] } = {}) {
   const roster = Object.keys(findings);
   const rec = recorded || pairs;
   const fm = [
@@ -103,6 +125,7 @@ export function caseDocument({ format = "bio-case-document/6", pairs, bar = { de
     ...CG.materialBlockLines({ materials, attestations }),
     ...CG.acceptedWorkBlockLines({ rows: accepted, flags: [] }),
     ...CG.gradingFactsLines(Object.entries(facts).flatMap(([finding, f]) => f.legs.map((l, ord) => ({ finding, ord, ...l })))),
+    ...calcLines(calculations),
     ...CG.passagesLines(Object.entries(passages).flatMap(([finding, list]) => list.map((p, ord) => ({ finding, ord, ...p })))),
     "completeness:", '  statement: "the 2019 permits are not covered"', "  author: alice", "  statement_by: bob",
     '  at: "2026-09-28T00:00:00Z"', "  subject_position: not_sought", '  subject_justification: "the office is closed until October"',
@@ -149,6 +172,8 @@ export function caseFiles(opts = {}) {
   put("document", MEMO, MEMO_BYTES);
   put("extracted_text", MEMO, extracted(MEMO_UNITS));
   put("observation", OBS, OBS_TEXT);
+  const calculations = opts.calculations || (opts.withCalculation ? [calcRow(opts.calcRow)] : []);
+  if (calculations.length && !opts.dropCalcInput) texts.set(calcInputPath(CALC, CALC_INPUT_SHA), opts.calcInput ?? CALC_INPUT);
   const materials = [
     { ref: MINUTES, kind: "document", sha: MINUTES_SHA, text_sha: sha(extracted(MINUTES_UNITS)), origin: "https://records.example/minutes.pdf",
       archived_copy: "https://archive.example/minutes", included: true, rests_under: "load_bearing" },
@@ -169,7 +194,8 @@ export function caseFiles(opts = {}) {
     { ref: MEMO, by_kind: "group", by: GROUP },
     { ref: OBS, by_kind: "member", by: null, level: "group", at: NOW }];
   const doc = caseDocument({ format: opts.format, pairs, findings, pins, materials, attestations, accounts, accepted, bar: opts.bar,
-    recorded: opts.recorded ? opts.recorded(pairs) : null, facts: opts.signedFacts || facts, passages: opts.signedPassages || passages });
+    recorded: opts.recorded ? opts.recorded(pairs) : null, facts: opts.signedFacts || facts, passages: opts.signedPassages || passages,
+    calculations });
   put("case_document", null, doc);
   put("case_signature", null, sign(opts.caseSigner || "group", caseRatifyStatement(CASE, 2, sha(doc))));
   if (opts.mutate) opts.mutate(texts);
@@ -196,7 +222,7 @@ export function caseFile(opts = {}) {
   const n = opts.parts || 1;
   const bytesOf = new Map([...texts].map(([p, t]) => [p, Buffer.from(t, "utf8")]));
   const listedOf = () => [...bytesOf.keys()].sort().map((path, i) => ({ path, sha256: sha(bytesOf.get(path)), bytes: bytesOf.get(path).length,
-    part: (i % n) + 1, kind: CG.caseFileEntryOf(path).kind }));
+    part: (i % n) + 1, kind: (CG.caseFileEntryOf(path) || { kind: "calculation" }).kind }));
   const pre = manifestFor(listedOf(), opts);
   const ce = CG.completeEditionOf({ format: pre.format, group: pre.group, case: pre.case, edition: pre.edition,
     case_document_sha: pre.case_document_sha, keys: pre.keys,
