@@ -9,7 +9,8 @@
  *                  `bio-calc/1` recipe), `inputs` (each input's name and the SHA-256 of the canonical bytes
  *                  `calc-grammar` evaluates, `{name: sha256}`), `method_version` (the engine's), `results` (the stored
  *                  results by key), `result_key` (`calc-grammar.resultKey(recipe, inputs)` at `method_version`),
- *                  `recompute` (`agrees`, `differs` or `unbound`, as recorded at the act) and `disclosed` (the
+ *                  `recompute` (`agrees`, `differs` or `unbound`, as recorded at the act; a workbook row may state
+ *                  `not_recomputed`, K1639) and `disclosed` (the
  *                  publisher's disclosure of a differing or unbound load-bearing calculation, null when none was needed).
  *
  * ONE VALUE, EXACTLY: every value is written as R17's are (`./facts.mjs`), its canonical JSON in one quoted value, so
@@ -28,7 +29,10 @@ import { unexact, exactRowsBlock } from "./facts.mjs";
 export const CALCULATION_FIELDS = Object.freeze(["calc", "recipe", "inputs", "method_version", "results", "result_key",
   "recompute", "disclosed"]);
 /** R18: the recompute statuses recorded at the act. */
-export const RECOMPUTE_STATUSES = Object.freeze(["agrees", "differs", "unbound"]);
+export const RECOMPUTE_STATUSES = Object.freeze(["agrees", "differs", "unbound",
+  /* K1639 (workbooks R7, K1506): a workbook the instance's engine did not recompute. Never a gate. A workbook row's
+     `calc` is its capture's SHA-256, its `inputs` empty and its `result_key` null (it carries no recipe to key). */
+  "not_recomputed"]);
 
 const HEX64 = /^[0-9a-f]{64}$/;
 const plain = (v) => v !== null && typeof v === "object" && !Array.isArray(v);

@@ -4,7 +4,8 @@
  * co-attestation, and the owner's acknowledgement of a self-attested one (R2, R3); what may be said of a source (R4); the
  * method the case is signed under (R5); every document and observation a finding's chain reaches, with what this copy
  * holds whole and who attests it (R6–R12); another group's work it rests on, with its acceptance and open flags (R13,
- * R14); each reached finding's grading facts and passages (R15); and hunch debt (R16). Each judgment answers its
+ * R14); each reached finding's grading facts and passages (R15); hunch debt (R16); and the people it names, each with a
+ * recorded basis, and each signer's attestation of no undeclared tie (R24–R28). Each judgment answers its
  * refusals in order and the rows the case document writes; `case-authoring`'s `publishCase` asks them in its order (its
  * R55), answers the first refusal, and writes the rows through this module's renderers (`./document.mjs`).
  *
@@ -32,13 +33,20 @@
  *   extraction           `unitsOf` (its R36; R6, R15).
  *   promotion            the fact `producingGroup` (R7's group row); `CATALOG_VERSION` is imported (R5).
  *   caseImport           `acceptanceOf`, `openFlagsOn`, `importedCase` (its R4, R9; R13, R14).
+ *   entities             `readEntity` (a referenced entity's kind; R24).
+ *   events               `readEvent` (a timeline item's participants, an act's date; R24, R25).
+ *   lines                `readLine`, `structureAt` (a basis' line and its validity at the act's date; R25).
+ *   money                `readFact` (a cited money fact's parties; R24).
+ *   people               `identityOf`, `interestsOf`, `personAt`, `tiesConcerning` (its R5, R15, R14, R20; R24–R27).
+ *   membership           `memberFacts` (a signer's cover or handle, at the level they chose; R27).
+ *   now                  the judgment's instant, for the day `personAt` is read at (R26).
  *
  * READ CONTRACTS it joins in its own SQL, each named at its statement: record-core's `bundles` (R37); inquiry's
  * `inquiry_basis` (R40); content's `content` (R45); provenance's `register` and `captured_locators` (R48). Sight is
  * membership's one rule (`viewerPredicate`, its R43). */
 
 import { recordOf } from "../record-core/index.mjs";
-import { viewerPredicate } from "../membership/index.mjs";
+import { viewerPredicate, membershipOf } from "../membership/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { strengthOf, DEPTH_BOUND, GRADING_METHOD_VERSION } from "../strength/index.mjs";
 import { extractionOf } from "../extraction/index.mjs";
@@ -54,12 +62,20 @@ import { sourcesOf } from "../sources/index.mjs";
 import { parseFrontmatter, normalizeType, EARNED_CAPTURE_CEILING, canonicalJson,
          createSha256 } from "../record-grammar/index.mjs";
 import { extractedTextOf, sourceRowWithheld } from "../case-grammar/index.mjs";
+import { entitiesOf } from "../entities/index.mjs";
+import { eventsOf } from "../events/index.mjs";
+import { linesOf } from "../lines/index.mjs";
+import { moneyOf } from "../money/index.mjs";
+import { peopleOf as peopleModuleOf } from "../people/index.mjs";
 import { CASE_DISCLOSURE_CHECKS } from "./checks.mjs";
+import { basesListed, basisCitation, placesStated, PERSON_PLACES, TIE_LINE_KINDS, TIE_ANONYMOUS_LEVELS } from "./people.mjs";
 import { chainsOf, materialHeld, materialRows } from "./materials.mjs";
 import { flagsListed, flagsJudged, acceptedWorkRow } from "./accepted.mjs";
 import { NOT_SHOWN_WORDS, tensionSide, SELF_ATTESTED_SENTENCE } from "./document.mjs";
 
 export { CASE_DISCLOSURE_CHECKS } from "./checks.mjs";
+export { PERSON_BASES, PERSON_PLACES, TIE_LINE_KINDS, TIE_ANONYMOUS_LEVELS, basesListed, basisCitation, placesStated,
+         peopleLines, memberTieLines, peopleOf, memberTiesOf } from "./people.mjs";
 export { chainsOf, materialHeld, materialRows } from "./materials.mjs";
 export { flagsListed, acceptedWorkRow, FLAG_SENTENCE, FLAGS_SAY } from "./accepted.mjs";
 export { SELF_ATTESTED_SENTENCE, TENSION_TEMPLATES, HIGHLIGHT_SENTENCE, NOT_SHOWN_WORDS, TENSIONS_DEPTH_STATED,
@@ -85,15 +101,18 @@ const disclosureRefusal = (key, extra) => refusal(CASE_DISCLOSURE_CHECKS, key, e
 
 export class CaseDisclosures {
   #deps;
+  #now;
 
   constructor({ storage, record, host = null, inquiry = null, strength = null, contradiction = null, provenance = null,
                 attestation = null, capture = null, sources = null, extraction = null, caseImport = null,
-                promotion = null } = {}) {
+                promotion = null, entities = null, events = null, lines = null, money = null, people = null,
+                membership = null, now = null } = {}) {
     this.sql = storage.sql;
     this.storage = storage;
     this.record = record;
     this.#deps = { host, inquiry, strength, contradiction, provenance, attestation, capture, sources, extraction,
-                   caseImport, promotion };
+                   caseImport, promotion, entities, events, lines, money, people, membership };
+    this.#now = typeof now === "function" ? now : () => new Date().toISOString();
   }
 
   /* The modules reached lazily: each is created on the same host on first use, unless a test passed its own. */
@@ -109,6 +128,13 @@ export class CaseDisclosures {
   /* R13, R14: `case-import`'s reads (its R4, R9). A read that throws fails closed here: a leg on another group's
      finding is not in force (C-120.10), its flags undetermined (C-120.12). */
   get caseImport() { return this.#deps.caseImport ||= caseImportOf(this.#deps.host); }
+  /* R24–R27 (T33-68): the people a case names, through the modules that hold them. */
+  get entities() { return this.#deps.entities ||= entitiesOf(this.#deps.host); }
+  get events() { return this.#deps.events ||= eventsOf(this.#deps.host); }
+  get lines() { return this.#deps.lines ||= linesOf(this.#deps.host); }
+  get money() { return this.#deps.money ||= moneyOf(this.#deps.host); }
+  get people() { return this.#deps.people ||= peopleModuleOf(this.#deps.host); }
+  get membership() { return this.#deps.membership ||= membershipOf(this.#deps.host); }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { for (const r of this.sql.exec(q, ...a)) return r; return null; }
@@ -545,6 +571,315 @@ export class CaseDisclosures {
     return rows.filter((r) => { const k = JSON.stringify([r.capture, r.stated, r.basis]); return once.has(k) ? false : once.add(k); });
   }
 
+  /** R24 (Design Requirement 6 as amended, K1483; K1494): EVERY PERSON THE CASE NAMES, EACH ONCE, WITH EVERY PLACE IT IS
+   *  NAMED. The places are each finding's subject (`inquiry.subjectEntityOf`, read from `prepared`) and the caller's
+   *  `parts`, `[{place, where, people?, event?, fact?}]` (`PERSON_PLACES`): an authored statement or claim, the published
+   *  lens or a docket entry names `people` (entity ids); a timeline item names its `event`, whose participants are read
+   *  (`events.readEvent`, superseded rows left out); a cited money `fact` names its payer and payee (`money.readFact`).
+   *  A person is a `person` entity (`entities.readEntity`) with its identity cluster (`people.identityOf`, `linked`), so
+   *  one person under two references is one, keyed by its least member id. A reference the record does not resolve to
+   *  a person entity, where a person was named, is answered in `unresolved` with where it is, never dropped; so is a
+   *  timeline item or money fact that cannot be read, and a party named by its words only. Answers `{named: [{person,
+   *  members, places}], unresolved, entities, money_parties}`: `entities` every registered entity the case names, any
+   *  kind, and `money_parties` the payers' and payees' entity ids, which R27 takes. Writes nothing, never throws (R23). */
+  peopleNamed(prepared, parts, viewer) {
+    const safe = (fn) => { try { return fn(); } catch { return null; } };
+    const refs = [], unresolved = [];
+    const moneyParties = new Set();
+    for (const p of Array.isArray(prepared) ? prepared : []) {
+      const s = p && typeof p.id === "string" ? safe(() => this.inquiry.subjectEntityOf(p.id)) : null;
+      if (typeof s === "string" && s) refs.push({ id: s, place: "subject", where: p.id, person: false });
+    }
+    for (const part of Array.isArray(parts) ? parts : []) {
+      const place = part && typeof part === "object" ? part.place ?? null : null;
+      const where = part && part.where != null ? String(part.where) : null;
+      if (!PERSON_PLACES.includes(place)) { unresolved.push({ place, where, ref: null, why: "not a place of a case document" }); continue; }
+      if (place === "timeline") {
+        const ev = typeof part.event === "string" && part.event ? safe(() => this.events.readEvent({ eventId: part.event, viewer })) : null;
+        if (!ev || ev.ok === false || !ev.found || !ev.event) {
+          unresolved.push({ place, where, ref: part.event ?? null, why: "the timeline item's event could not be read" });
+          continue;
+        }
+        for (const x of Array.isArray(ev.event.participants) ? ev.event.participants : [])
+          if (x && !x.superseded && typeof x.entity_id === "string")
+            refs.push({ id: x.entity_id, place, where, person: false, role: x.role ?? null });
+      } else if (place === "money") {
+        const f = typeof part.fact === "string" && part.fact ? safe(() => this.money.readFact({ factId: part.fact, viewer })) : null;
+        if (!f || f.ok === false || !f.found || !f.fact) {
+          unresolved.push({ place, where, ref: part.fact ?? null, why: "the cited money fact could not be read" });
+          continue;
+        }
+        for (const side of ["from", "to"]) {
+          const party = f.fact[side];
+          if (party && typeof party.entity === "string" && party.entity) {
+            moneyParties.add(party.entity);
+            refs.push({ id: party.entity, place, where, person: false, side });
+          } else if (party && !party.fund)
+            unresolved.push({ place, where, ref: part.fact, side, why: "a party the record names by its words only, resolved to no registered entity" });
+        }
+      } else {
+        const named = Array.isArray(part.people) ? part.people : [];
+        for (const r of named)
+          if (typeof r === "string" && r.trim()) refs.push({ id: r.trim(), place, where, person: true });
+          else unresolved.push({ place, where, ref: r ?? null, why: "a reference to a person that names no entity id" });
+      }
+    }
+    /* each reference's kind, once; a person's cluster, once */
+    const kinds = new Map(), clusters = new Map();
+    const kindOf = (id) => {
+      if (!kinds.has(id)) {
+        const e = safe(() => this.entities.readEntity({ entityId: id, viewer }));
+        kinds.set(id, e && e.ok !== false && e.found && e.entity ? e.entity.kind ?? null : undefined);
+      }
+      return kinds.get(id);
+    };
+    const clusterOf = (id) => {
+      if (!clusters.has(id)) {
+        const c = safe(() => this.people.identityOf({ entityId: id, viewer }));
+        const members = c && c.ok !== false && c.found && c.state === "linked" && Array.isArray(c.members)
+          ? c.members.map((m) => (typeof m === "string" ? m : m && m.entity_id)).filter((m) => typeof m === "string" && m) : [];
+        clusters.set(id, [...new Set([id, ...members])]);
+      }
+      return clusters.get(id);
+    };
+    const entities = new Set();
+    const parent = new Map();
+    const find = (x) => { while (parent.get(x) !== x) { parent.set(x, parent.get(parent.get(x))); x = parent.get(x); } return x; };
+    const union = (a, b) => { const ra = find(a), rb = find(b); if (ra !== rb) parent.set(ra < rb ? rb : ra, ra < rb ? ra : rb); };
+    const personRefs = [];
+    for (const r of refs) {
+      const kind = kindOf(r.id);
+      if (kind === undefined) {
+        unresolved.push({ place: r.place, where: r.where, ref: r.id, ...(r.side ? { side: r.side } : {}),
+                          why: "the record holds no registered entity under this id" });
+        continue;
+      }
+      entities.add(r.id);
+      if (kind !== "person") {
+        if (r.person) unresolved.push({ place: r.place, where: r.where, ref: r.id, why: `names an entity of kind ${kind}, not a person` });
+        continue;
+      }
+      const members = clusterOf(r.id);
+      for (const m of members) { entities.add(m); if (!parent.has(m)) parent.set(m, m); }
+      for (const m of members) union(members[0], m);
+      personRefs.push(r);
+    }
+    const byKey = new Map();
+    for (const r of personRefs) {
+      const key = find(r.id);
+      if (!byKey.has(key)) byKey.set(key, { person: key, places: [], seen: new Set() });
+      const held = byKey.get(key);
+      const place = { place: r.place, where: r.where, ref: r.id, ...(r.role ? { role: r.role } : {}), ...(r.side ? { side: r.side } : {}) };
+      const k = JSON.stringify(place);
+      if (!held.seen.has(k)) { held.seen.add(k); held.places.push(place); }
+    }
+    const named = [...byKey.values()].sort((a, b) => (a.person < b.person ? -1 : a.person > b.person ? 1 : 0))
+      .map((h) => ({ person: h.person, members: [...parent.keys()].filter((m) => find(m) === h.person).sort(), places: h.places }));
+    return { named, unresolved, entities: [...entities].sort(), money_parties: [...moneyParties].sort() };
+  }
+
+  /** R25, R26 (K1483, K1493): `peopleBases: [{person, basis, ref, words?}]`, the owner's recorded basis for each person
+   *  R24 named, judged against the record at the act. A listed person is matched to a named one through its identity
+   *  cluster (any member's id). Answers `{refusals, rows}`. Refusals, in order: a malformed list `BAD_COMPLETENESS` naming
+   *  the field, alone (words carrying a named person's address or phone number, R26, are malformed words); C-120.14,
+   *  naming each named person the list gives no basis; C-120.15, naming each listed basis whose `ref` the record does not
+   *  hold or, for `act_or_position`, whose line is not valid at the event's date. These name a person to the publisher's
+   *  act only and are never written into the document. `rows` are the `people:` block's rows (R28), one per named person
+   *  whose basis stands: the places named, the basis kind and its citation, the owner's words; never a judgment of the
+   *  person, never a person fact. */
+  peopleJudged(named, peopleBases, viewer) {
+    const listed = basesListed(peopleBases);
+    if (listed.ok === false) return { refusals: [listed], rows: [] };
+    const persons = named && Array.isArray(named.named) ? named.named : [];
+    const keyOf = new Map();
+    for (const p of persons) for (const m of [p.person, ...(Array.isArray(p.members) ? p.members : [])]) keyOf.set(m, p.person);
+    const basisOf = new Map();
+    for (const d of listed.byPerson.values()) {
+      const key = keyOf.get(d.person);
+      if (key !== undefined && !basisOf.has(key)) basisOf.set(key, d);
+    }
+    /* R26: the owner's words never carry a named person's home address or phone number */
+    const contacts = this.#contactValues(persons, viewer);
+    for (const d of basisOf.values()) {
+      const words = d.words ? d.words.toLowerCase() : "";
+      if (words && contacts.some((v) => words.includes(v)))
+        return { refusals: [{ ok: false, reason: "BAD_COMPLETENESS", field: `peopleBases[${d.ord}].words`,
+          detail: `peopleBases[${d.ord}].words carries a person's address or phone number as the record holds it, and a case `
+            + `never publishes either (K1493). Say why the person is named without it.` }], rows: [] };
+    }
+    const unrecorded = persons.filter((p) => !basisOf.has(p.person));
+    const standing = new Map(), notStanding = [];
+    for (const p of persons) {
+      const d = basisOf.get(p.person);
+      if (!d) continue;
+      const why = this.#basisStanding(p, d, viewer);
+      if (why === null) standing.set(p.person, d);
+      else notStanding.push({ person: p.person, ord: d.ord, basis: d.basis, ref: d.ref, why });
+    }
+    const refusals = [];
+    /* DEC-49 REGION is-person-basis-recorded */
+    if (unrecorded.length)
+      refusals.push(disclosureRefusal("PERSON_BASIS_UNRECORDED", {
+        unrecorded: unrecorded.map((p) => ({ person: p.person, places: p.places })),
+        detail: `${unrecorded.length} person(s) this case names have no recorded basis (`
+              + unrecorded.map((p) => `${p.person}, named in ${placesStated(p.places) || "the case"}`).join("; ")
+              + `). Every person a case names is named on a basis the record holds (Design Requirement 6): list each in `
+              + `peopleBases with its basis and reference. Nothing was written.` }));
+    /* END DEC-49 REGION is-person-basis-recorded */
+    /* DEC-49 REGION is-person-basis-standing */
+    if (notStanding.length)
+      refusals.push(disclosureRefusal("PERSON_BASIS_NOT_STANDING", { not_standing: notStanding,
+        detail: notStanding.map((x) => `peopleBases[${x.ord}] (${x.person}, ${x.basis}): ${x.why}`).join("; ")
+              + `. A basis stands only on what the record holds. Read the list again. Nothing was written.` }));
+    /* END DEC-49 REGION is-person-basis-standing */
+    const rows = persons.filter((p) => standing.has(p.person)).map((p) => {
+      const d = standing.get(p.person);
+      return { person: p.person, places: placesStated(p.places), basis: d.basis, citation: basisCitation(d.basis, d.ref),
+               words: d.words };
+    });
+    return { refusals, rows };
+  }
+
+  /* R25: why a listed basis does not stand, or null when the record holds what it cites. Never throws: a read that
+     fails holds nothing, so the basis does not stand. */
+  #basisStanding(p, d, viewer) {
+    const members = new Set([p.person, ...(Array.isArray(p.members) ? p.members : [])]);
+    const safe = (fn) => { try { return fn(); } catch { return null; } };
+    const liveLine = (id) => {
+      const r = safe(() => this.lines.readLine({ lineId: id, viewer }));
+      return r && r.ok !== false && r.found && r.line && !r.line.withdrawn ? r.line : null;
+    };
+    switch (d.basis) {
+      case "act_or_position": {
+        const line = liveLine(d.ref.line);
+        if (!line) return `${d.ref.line} is not a line the record holds`;
+        if (line.kind !== "holds" || !members.has(line.from)) return `${d.ref.line} is not a post this person holds`;
+        const ev = safe(() => this.events.readEvent({ eventId: d.ref.event, viewer }));
+        if (!ev || ev.ok === false || !ev.found || !ev.event) return `${d.ref.event} is not an event the record holds`;
+        const when = ev.event.when;
+        if (!when || typeof when !== "object" || typeof when.value !== "string")
+          return `${d.ref.event} is placed at no date the record settles, so the post cannot be judged held then`;
+        const at = { value: when.value, precision: when.precision ?? null, zone: when.zone ?? null };
+        const s = safe(() => this.lines.structureAt({ entity: line.from, at, kinds: ["holds"], viewer }));
+        if (!s || s.ok === false) return `whether ${d.ref.line} was held on the date of ${d.ref.event} could not be read`;
+        if ((s.held || []).some((l) => l && l.line_id === line.line_id)) return null;
+        const u = (s.undetermined || []).find((x) => x && x.line && x.line.line_id === line.line_id);
+        return u ? `whether ${d.ref.line} was held on the date of ${d.ref.event} is not settled (${u.why})`
+                 : `${d.ref.line} was not held on the date of ${d.ref.event}`;
+      }
+      case "tie": {
+        const line = liveLine(d.ref);
+        if (!line) return `${d.ref} is not a line the record holds`;
+        if (!TIE_LINE_KINDS.includes(line.kind) || !(members.has(line.from) || members.has(line.to)))
+          return `${d.ref} is not a tie of this person's`;
+        return null;
+      }
+      case "interest": {
+        for (const m of members) {
+          const r = safe(() => this.people.interestsOf({ entityId: m, viewer }));
+          if (!r || r.ok === false) continue;
+          if ((r.interests || []).some((l) => l && l.line_id === d.ref) || (r.money || []).some((f) => f && f.fact_id === d.ref)) return null;
+        }
+        return `${d.ref} is not an interest the record holds of this person`;
+      }
+      case "consent": case "prior_publication":
+        return this.#captureSeen(d.ref, viewer) ? null : `capture ${d.ref} is not one the record holds`;
+      case "private_party":
+        return d.words ? null : "a private person is named only with the words saying why";
+      default:
+        return "not a basis";
+    }
+  }
+
+  /* R25: a capture the record registers in a bundle `viewer` may see (provenance R48's `register`, sight by membership
+     R43); one that cannot be seen is as one not held. */
+  #captureSeen(sha, viewer) {
+    const gate = viewerPredicate(viewer);
+    if (gate.scope === "DENY") return false;
+    return !!this.#one(`SELECT 1 AS x FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id WHERE r.capture_sha=?
+                        AND (${gate.sql}) LIMIT 1`, sha, ...gate.args);
+  }
+
+  /* R26: the values of the named persons' address and contact facts the viewer may read (`people.personAt` marks them
+     `publishable: false`), lower-cased, held or undetermined at the judgment's day; used only to keep them out. */
+  #contactValues(persons, viewer) {
+    const day = String(this.#now()).slice(0, 10);
+    const out = new Set();
+    for (const p of persons)
+      for (const m of new Set([p.person, ...(Array.isArray(p.members) ? p.members : [])])) {
+        let r = null;
+        try { r = this.people.personAt({ entityId: m, at: day, viewer }); } catch { r = null; }
+        if (!r || r.ok === false) continue;
+        for (const f of [...(r.facts || []), ...(r.undetermined || [])])
+          if (f && f.publishable === false && f.value != null) {
+            const v = String(f.value).trim().toLowerCase();
+            if (v.length >= 3) out.add(v);
+          }
+      }
+    return [...out];
+  }
+
+  /** R27 (K1490): each member who signs the case attests that they hold no undeclared tie to any entity the case names,
+   *  the payers and payees of its money facts included. `signers` are the signing members' ids; `named` R24's answer (its
+   *  `entities`, every person's cluster with them); `moneyParties` the money facts' parties (R24's `money_parties`);
+   *  `attested: [{signer, at}]` the attestations the caller stamped. A signer with none is C-120.16, named to themself
+   *  only: the refusal names a missing signer when `viewer` is that signer, and counts the others. For each tie a signer
+   *  declared to such an entity (`people.tiesConcerning`, its R20, read as that signer), a `member_ties:` row at the level
+   *  the member chose for it: at `group` or `project` with no handle, key or signature; at `cover` or `name` with their
+   *  cover or handle (R10's levels). Each attestation is its own row, with its signer and instant, in the document they
+   *  sign (no table here, R23). A ties read that fails is answered in `undetermined`, never filled (R18). Answers
+   *  `{refusals, rows, undetermined}`. */
+  tieAttestationJudged(signers, named, moneyParties, attested, viewer) {
+    const bad = (field, detail) => ({ refusals: [{ ok: false, reason: "BAD_COMPLETENESS", field, detail }], rows: [], undetermined: [] });
+    const bare = (s) => (typeof s === "string" ? s.trim().replace(/^member:/, "") : "");
+    if (!Array.isArray(signers) || signers.some((s) => !bare(s))) return bad("signers", "signers is a list of the signing members' ids");
+    const by = new Map();
+    if (attested != null) {
+      if (!Array.isArray(attested)) return bad("attested", "attested is a list of {signer, at}, one per signer's attestation");
+      for (let i = 0; i < attested.length; i++) {
+        const a = attested[i];
+        if (!a || typeof a !== "object" || Array.isArray(a) || !bare(a.signer) || (a.at != null && typeof a.at !== "string"))
+          return bad(`attested[${i}]`, `attested[${i}] is not {signer, at} naming a signer`);
+        if (!by.has(bare(a.signer))) by.set(bare(a.signer), { signer: bare(a.signer), at: a.at ?? null });
+      }
+    }
+    const who = [...new Set(signers.map(bare))];
+    const ids = new Set([...(named && Array.isArray(named.entities) ? named.entities : []),
+                         ...(named && Array.isArray(named.named) ? named.named.flatMap((p) => [p.person, ...(p.members || [])]) : []),
+                         ...(Array.isArray(moneyParties) ? moneyParties : [])].filter((x) => typeof x === "string" && x));
+    const me = bare(typeof viewer === "string" ? viewer : "");
+    const missing = who.filter((s) => !by.has(s));
+    const refusals = [];
+    /* DEC-49 REGION is-tie-attested */
+    if (missing.length) {
+      const mine = missing.filter((s) => s === me);
+      refusals.push(disclosureRefusal("TIE_ATTESTATION_MISSING", { missing: mine, others_missing: missing.length - mine.length,
+        detail: (mine.length ? `You have not attested that you hold no undeclared tie to anyone or anything this case names. ` : "")
+              + (missing.length - mine.length ? `${missing.length - mine.length} other signer(s) have not attested. ` : "")
+              + `Each signer attests before the case is signed, or declares the tie first (op=membertie). Nothing was written.` }));
+    }
+    /* END DEC-49 REGION is-tie-attested */
+    const rows = [], undetermined = [];
+    for (const s of who) {
+      if (by.has(s)) rows.push({ row: "attestation", signer: s, at: by.get(s).at, entity: null, kind: null, level: null, shown: null });
+      if (!ids.size) continue;
+      let t = null;
+      try { t = this.people.tiesConcerning({ entities: [...ids], member: s, viewer: `member:${s}` }); }
+      catch (e) { t = { ok: false, reason: String(e && e.message || e).slice(0, 160) }; }
+      if (!t || t.ok === false || !Array.isArray(t.ties)) { undetermined.push({ signer: s, why: t ? t.reason ?? "the read failed" : "no answer" }); continue; }
+      let facts = null;
+      for (const tie of t.ties) {
+        const level = tie.attribution ?? null;
+        /* R10's levels: a handle only at `cover` or `name`; at `group`, `project` or none, nobody is shown */
+        const open = !TIE_ANONYMOUS_LEVELS.includes(level) && (level === "cover" || level === "name");
+        if (open && facts === null) { try { facts = this.membership.memberFacts(s) || {}; } catch { facts = {}; } }
+        const shown = !open ? null : level === "cover" ? facts.cover ?? null : facts.handle ?? null;
+        rows.push({ row: "tie", signer: null, at: null, entity: tie.entity, kind: tie.kind, level, shown });
+      }
+    }
+    return { refusals, rows, undetermined };
+  }
+
   /** R1's input: `tensionsDisclosed`, `[{candidate, words?}]`, as a map by candidate (a candidate listed twice is
    *  disclosed once, its first words kept). Absent or null is none. Any malformed shape is `BAD_COMPLETENESS`
    *  (`case-authoring` R3's code) naming the field (K498): a list that is not one, an entry that is not an object naming a `candidate` string, and
@@ -632,7 +967,7 @@ export class CaseDisclosures {
    *  are those answers as the caller holds them: `resting` (R2's captures), `facts` (a map of R2's facts by capture,
    *  extended here by every document R6 reached), `selfAttested` (R2's judgment, or its `byCapture`), `reached` (R6's
    *  judgment), `flags` (R14's judgment), `withheld` (R4's off-the-record captures, `withheldOf`), `attributionOf` (the
-   *  attribution rows by capture or observation, `publication.attributionStatements`), `project`, and the act's
+   *  attribution rows by capture or observation, `case-tensions.attributionStatements`, its R5 and R7), `project`, and the act's
    *  `author` stamp and instant `at`. Answers `{captures, materials: {rows, attestations}, flags, group}`:
    *  - `captures`: one row per (member, capture), R2's facts with `self_attested_only` and, on an acknowledged capture's
    *    rows, `{reason, acknowledged_by, at, sentence}` (R3); each capture's signed accounts on its first row only, an

@@ -21,7 +21,7 @@ const KEY = (c) => resultKey(c.recipe, c.inputs, { methodVersion: c.method_versi
 test("R18 the calculations: block round-trips every row exactly, its recipe as canonical JSON, its inputs by name and SHA-256, its results by key, and its result key calc-grammar's", () => {
   assert.deepEqual([...CG.CALCULATION_FIELDS], ["calc", "recipe", "inputs", "method_version", "results", "result_key",
     "recompute", "disclosed"]);
-  assert.deepEqual([...CG.RECOMPUTE_STATUSES], ["agrees", "differs", "unbound"]);
+  assert.deepEqual([...CG.RECOMPUTE_STATUSES], ["agrees", "differs", "unbound", "not_recomputed"]);
   const rows = [
     ...CALCS,
     { calc: "CALC-2026-0002", recipe: { ...RECIPE, steps: [{ op: "count", as: "n", from: "payments" }], output: "n" },
@@ -161,4 +161,22 @@ test("R13 the calculation kind: the row, each input named by its hash, and the P
   assert.equal(CG.caseFileManifestCheck(wrong).some((d) => d.rule === "input_sha" && d.at === `files[${i}].sha256`), true);
   const kindWrong = manifestFor(manifest.files.map((f, j) => (j === i ? { ...f, kind: "document" } : f)));
   assert.equal(CG.caseFileManifestCheck(kindWrong).some((d) => d.rule === "path_kind"), true);
+});
+
+test("R18 K1639 a workbook row states recompute: not_recomputed, its calc the capture's SHA-256, its inputs empty and its result key null; written, read back and rendered", () => {
+  const capture = sha("the workbook's bytes");
+  const workbook = { calc: capture, recipe: null, inputs: {}, method_version: "ironcalc/0.5", results: { "Sheet1!B7": "14.75" },
+                     recompute: "not_recomputed", disclosed: null };
+  const lines = CG.calculationsLines([workbook, CALCS[0]]);
+  assert.equal(lines.includes("    recompute: '\"not_recomputed\"'"), true, "written");
+  const back = CG.calculationsOf(fmOf(doc(V7, lines)));
+  assert.deepEqual(back[0], { ...workbook, result_key: null }, "read back, its key null");
+  assert.equal(back[1].recompute, CALCS[0].recompute, "beside a recipe row, each as written");
+  /* its file in a case file is at its capture's SHA-256 */
+  assert.equal(CG.caseFilePath("calculation", capture), `calculations/${capture}/calculation.json`);
+  assert.deepEqual(JSON.parse(CG.calculationFileText(workbook)), { ...workbook, result_key: null });
+  /* the complete edition states it in words, and it is never a gate: the row is rendered like any other */
+  assert.equal(CG.RECOMPUTE_WORDS.not_recomputed.startsWith("not recomputed here"), true);
+  /* negative control: a status outside the five words still reads null */
+  assert.equal(CG.calculationsOf(fmOf(doc(V7, CG.calculationsLines([{ ...workbook, recompute: "not recomputed" }]))))[0].recompute, null);
 });
