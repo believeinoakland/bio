@@ -144,7 +144,7 @@ wizard-scripts T34 complete on `job/T34/wizard-scripts`. I applied T34-52, T34-8
   - control-plane: 181 pass, 1 fail. That test (R2, R41, the unaccounted acts) also fails on `tranche/T34` @ the merged head, so it is not this job's.
 - Process checks: format, architecture and ownership all pass with 0 failures; coverage, 27 of 27 live ids.
 
-Size (session_0115AZ1UBhQP27WSj9Lbgs8E): test runs 31, module lines 2,268
+Size (session_0115AZ1UBhQP27WSj9Lbgs8E): test runs 31, module lines 2,271
 
 ## J4 · COMPLETE
 
