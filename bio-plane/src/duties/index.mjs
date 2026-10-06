@@ -512,7 +512,7 @@ export class Duties {
       if (!alloc || !alloc.id) return alloc;
       const id = alloc.id;
       let g = this.#write("duties", { duty_id: id, modality: fields.modality, obligor: fields.obligor, obligee: fields.obligee ?? null,
-                                      enforcer: fields.enforcer ?? null, version: 1, adopted_by: by, adopted_at: at, clause: clause.trim(),
+                                      enforcer: fields.enforcer ?? null, arising_in: Duties.capturedIn(fields), version: 1, adopted_by: by, adopted_at: at, clause: clause.trim(),
                                       proposal_id: proposal });
       if (g) return g;
       g = this.#write("duty_versions", { duty_id: id, version: 1, fields_json: canonicalJson(fields), reason: null, by_member: by, at });
@@ -549,8 +549,8 @@ export class Duties {
       const v = d.version + 1;
       const g = this.#write("duty_versions", { duty_id: d.duty_id, version: v, fields_json: canonicalJson(next), reason: b.reason.trim(), by_member: str(b.by), at });
       if (g) return g;
-      this.sql.exec(`UPDATE duties SET version=?, obligee=?, enforcer=?, obligor=?, modality=? WHERE duty_id=?`,
-                    v, next.obligee ?? null, next.enforcer ?? null, next.obligor, next.modality, d.duty_id);
+      this.sql.exec(`UPDATE duties SET version=?, obligee=?, enforcer=?, obligor=?, modality=?, arising_in=? WHERE duty_id=?`,
+                    v, next.obligee ?? null, next.enforcer ?? null, next.obligor, next.modality, Duties.capturedIn(next), d.duty_id);
       return { ok: true, duty_id: d.duty_id, version: v, prior_version: d.version, by: str(b.by), at, reason: b.reason.trim() };
     });
   }
@@ -572,6 +572,11 @@ export class Duties {
                     at, str(b.by), b.reason.trim(), d.duty_id);
       return { ok: true, duty_id: d.duty_id, withdrawn_at: at, withdrawn_by: str(b.by), reason: b.reason.trim() };
     });
+  }
+
+  /** R20 (K1563): the capture a duty's source item rests on, for the read contract's `arising_in`; else null. */
+  static capturedIn(fields) {
+    return said(fields.arising_in) && /^[0-9a-f]{64}$/.test(fields.arising_in) ? fields.arising_in : null;
   }
 
   #fieldsOf(dutyId, version) {
@@ -1153,16 +1158,6 @@ export class Duties {
     const next = offset + BOUNDS.fanout < items.length ? offset + BOUNDS.fanout : undefined;
     return next === undefined ? { items: page } : { items: page, next };
   }
-
-  /* ===================================================================== *
-   * R20: the read contract's tables, for a test or a reader to name
-   * ===================================================================== */
-  static readContract() {
-    return Object.freeze({
-      duties: Object.freeze(["duty_id", "modality", "obligor", "obligee", "version", "withdrawn_at"]),
-      duty_transitions: Object.freeze(["duty_id", "occurrence_key", "state", "as_of", "at", "cause", "by_member"]),
-    });
-  }
 }
 
 /** The viewer an internal caller (the scheduler's consumer) reads as: every duty, nothing fenced. Never sent by a
@@ -1199,6 +1194,21 @@ export function dutiesOps(s, url, body) {
 }
 
 const instances = new WeakMap();
+const live = new Set();
+
+/** R18 (K1563 (1)): the read registered at load. With `host` it answers that host's instance; without one, the
+ *  registering instance when it registered into a registry of its own, else the isolate's one instance; else it
+ *  refuses OWNER_HOST_AMBIGUOUS, never guessing a store. */
+function neighboursRead(bound) {
+  return (args) => {
+    const a = isObj(args) ? args : {};
+    const { host, ...rest } = a;
+    const s = host !== undefined && host !== null ? instances.get(host) : bound || (live.size === 1 ? [...live][0] : null);
+    if (!s) return { refused: "OWNER_HOST_AMBIGUOUS", why: host !== undefined && host !== null
+      ? "no duties instance answers for the host named" : "several stores hold duties in this isolate; the read names its host" };
+    return s.neighbours(rest);
+  };
+}
 
 /** K61: the one instance per host, created on the first call with `deps`: its tables created and declared (R22), its
  *  store gates registered (R21) and its connection owner registered once (R18). */
@@ -1211,11 +1221,12 @@ export function dutiesOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     s = new Duties({ ...d, storage, record, membership });
     instances.set(host, s);
+    if (s.registry === defaultRegistry) live.add(s);   /* the plane's instances, which the default registry serves */
     record.declareTable(MODULE, DUTIES_TABLES.map((t) => ({ ...t })));
     for (const t of DUTIES_TABLES) record.registerStoreGate(MODULE, t.name, (row, ctx) => s.oneHome(row, ctx));
     const reg = s.registry;
     if (reg && typeof reg.registerOwner === "function" && !(reg.owners().some((o) => o.owner === MODULE)))
-      reg.registerOwner({ owner: MODULE, kinds: CONNECTION_KINDS.map((k) => ({ ...k })), neighbours: (args) => s.neighbours(args) });
+      reg.registerOwner({ owner: MODULE, kinds: CONNECTION_KINDS.map((k) => ({ ...k })), neighbours: neighboursRead(reg === defaultRegistry ? null : s) });
   }
   return s;
 }

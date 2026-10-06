@@ -13,13 +13,15 @@ CREATE TABLE IF NOT EXISTS duty_proposals (
   at            TEXT NOT NULL,
   adopted_duty  TEXT
 );
--- R3, R20: one row per adopted duty, its summary columns for the read contract (obligor:, owed_to:).
+-- R3, R20: one row per adopted duty, its summary columns for the read contract (obligor:, owed_to:); arising_in is
+-- the capture the duty's source item rests on (its arising_in when that is a capture), else NULL (K1563).
 CREATE TABLE IF NOT EXISTS duties (
   duty_id        TEXT PRIMARY KEY,
   modality       TEXT NOT NULL,
   obligor        TEXT NOT NULL,
   obligee        TEXT,
   enforcer       TEXT,
+  arising_in     TEXT,
   version        INTEGER NOT NULL,
   adopted_by     TEXT NOT NULL,
   adopted_at     TEXT NOT NULL,

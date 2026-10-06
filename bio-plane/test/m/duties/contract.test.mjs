@@ -1,10 +1,10 @@
 /* duties: the connection owner (R18), the ops map (R19), the read contract (R20) and the invariants (R21–R23). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { world, fictionalView, E, BOB, CAROL, MACHINE, evt, ZONE } from "./fixture.mjs";
+import { world, fictionalView, E, BOB, CAROL, MACHINE, evt, ZONE, SHA } from "./fixture.mjs";
 import { DUTIES_CHECKS, DUTIES_TABLES, CONNECTION_KINDS, MODALITIES, SOURCE_KINDS, TRIGGER_KINDS, BASIS_KINDS, OCCURRENCE_STATES,
          dutiesOps } from "../../../src/duties/index.mjs";
-import { ownerConformance, derivedId, BOUNDS } from "../../../src/connection-grammar/index.mjs";
+import { ownerConformance, derivedId, BOUNDS, defaultRegistry } from "../../../src/connection-grammar/index.mjs";
 import { list as profiles, get as profile } from "../../../../jurisdictions/index.mjs";
 
 const AT = { value: "2026-03-01", precision: "day", zone: ZONE };
@@ -67,6 +67,21 @@ test("R18 a node past the hub bound is answered as a hub with no items, never a 
   assert.equal(r.hub.set_size, BOUNDS.hub + 1);
 });
 
+test("R18 the read registered at load takes an optional host, else the isolate's one instance, else refuses OWNER_HOST_AMBIGUOUS (K1563 (1))", () => {
+  const ask = (extra = {}) => defaultRegistry.neighbours({ owner: "duties", node: E.clerk, kinds: ["owes"], at: { ...AT, value: "2026-03-05" }, viewer: BOB, scope: null, ...extra });
+  const one = world({ deps: { registry: defaultRegistry } });
+  one.declare();
+  assert.equal(ask().items.length, 1, "one instance in the isolate: it answers");
+  const two = world({ deps: { registry: defaultRegistry } });
+  two.declare();
+  two.declare();
+  assert.equal(ask().refused, "OWNER_HOST_AMBIGUOUS");
+  assert.equal(ask({ host: one.host }).items.length, 1);
+  assert.equal(ask({ host: two.host }).items.length, 2);
+  assert.equal(ask({ host: {} }).refused, "OWNER_HOST_AMBIGUOUS", "a host with no duties instance");
+  assert.equal(defaultRegistry.owners().filter((o) => o.owner === "duties").length, 1, "registered once");
+});
+
 test("R19 dutiesOps publishes one route arm per act and read, with the control plane's stamps from the query, never the body", () => {
   const w = world();
   const ops = w.ops("by=member:bob&viewer=member:bob", {});
@@ -100,11 +115,20 @@ test("R20 the duties and transitions tables are a stated read contract; every wr
   const w = world();
   w.declare();
   const cols = (t) => w.sqlRows(`PRAGMA table_info(${t})`).map((c) => c.name);
-  for (const c of ["duty_id", "modality", "obligor", "obligee", "version", "withdrawn_at", "withdrawn_by", "withdraw_reason"]) assert.ok(cols("duties").includes(c), c);
+  for (const c of ["duty_id", "modality", "obligor", "obligee", "arising_in", "version", "withdrawn_at", "withdrawn_by", "withdraw_reason"]) assert.ok(cols("duties").includes(c), c);
   for (const c of ["duty_id", "occurrence_key", "state", "as_of", "at", "cause", "evidence_json", "by_member"]) assert.ok(cols("duty_transitions").includes(c), c);
   /* a later module joins them in its own SQL: obligor:, owed_to: */
   assert.deepEqual(w.sqlRows(`SELECT duty_id, modality, obligor, obligee, version FROM duties WHERE obligor=?`, E.clerk),
     [{ duty_id: "DUT-2026-0001", modality: "duty", obligor: E.clerk, obligee: E.group, version: 1 }]);
+  /* arising_in (K1563): the capture the duty's source item rests on, else null; it follows a revision */
+  const sha = SHA("audit report");
+  w.homes.set(sha, "INFO-2026-0009-audit");
+  const a = w.declare({ arising_in: sha });
+  const p = w.declare({ arising_in: E.case });
+  const col = (id) => w.sqlRows(`SELECT arising_in FROM duties WHERE duty_id=?`, id)[0].arising_in;
+  assert.deepEqual([col("DUT-2026-0001"), col(a.duty_id), col(p.duty_id)], [null, sha, null]);
+  w.duties.revise({ dutyId: p.duty_id, arising_in: sha, reason: "it arises in the audit's capture", by: BOB });
+  assert.equal(col(p.duty_id), sha);
   /* a write through the store gate by another module is refused */
   assert.equal(w.record.storeGate("money", "duties", { duty_id: "x" }, "insert").reason, "STORE_GATE_MALFORMED");
 });
