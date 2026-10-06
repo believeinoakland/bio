@@ -69,6 +69,7 @@ import { detectFormat } from "../formats.mjs";
 import { normalizeAddress } from "../subresources.mjs";
 import { identify, doctypeFor, assess, CONTRACT } from "../../../docprofile/registry.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
+import { localDay, dayRange } from "../civil-time/index.mjs";
 import { parseFrontmatter, isPublicHttpsLocator, createSha256, MACHINE_CLASS_PREFIX, MACHINE_AUTHOR_PREFIX,
          isMachineIdentity } from "../record-grammar/index.mjs";
 import { checkGatheringGrammar, DRIVE_TICK_CHECKS, GATHERING_CHECKS, frequencyRefusal } from "./checks.mjs";
@@ -272,7 +273,10 @@ export const DEADLINE_RECHECK_MAX = 500;
 export const DEADLINE_RECHECK_PAGES = 100;
 /* R50: a `before` no clock date reaches, so `pendingClocks` answers every pending entry, past or not. */
 const PENDING_ANY_DATE = "9999-12-31";
-const DAY_MS = 86400000;
+/** R34, R50 (K1444 (iii)): what `deadlineRecheck` says when no zone is held for the actions' jurisdiction. */
+export const DEADLINE_NO_ZONE = "no time zone is held for the actions' jurisdiction (the active profiles give none, or "
+  + "disagree), so no clock entry has passed on its local day (actions R33) and nothing is marked; the UTC day is never "
+  + "used in its place";
 
 /** R67 (N534): a watched docket is read once a day (R14's `daily`), at most this many bytes of its answer per read. */
 export const DOCKET_READ_INTERVAL_MS = MONITOR_CADENCE_MS.daily;
@@ -423,6 +427,21 @@ function settingView(x) {
            author: x.author, at: x.at };
 }
 
+/* R34 (civil-time R1): the local day (`YYYY-MM-DD`) of the instant `ms` in `zone`; null when it cannot be read. */
+function localDayOf(ms, zone) {
+  let d = null;
+  try { d = localDay(stampInstant("second", ms), zone); } catch { d = null; }
+  return typeof d === "string" ? d : null;
+}
+/* R50 (civil-time R7): the instant, in milliseconds, the local day after `day` starts in `zone`; null when it cannot be
+   read (a day civil-time refuses, an unknown zone). */
+function startOfDayAfter(day, zone) {
+  let r = null;
+  try { r = dayRange(day, day, zone); } catch { r = null; }
+  const t = r && typeof r.end === "string" ? Date.parse(r.end) : NaN;
+  return Number.isFinite(t) ? t : null;
+}
+
 const clampLimit = (v, dflt, max) => { const n = Math.floor(Number(v)); return Number.isFinite(n) && n > 0 ? Math.min(n, max) : dflt; };
 
 export class Monitoring {
@@ -491,6 +510,17 @@ export class Monitoring {
     if (ids == null) return undefined;
     const c = combine(ids);
     return c.ok ? c.view : undefined;
+  }
+
+  /** R34, R50 (K1444 (iii)): the zone a clock entry's day is read in, as `actions` R12 and its R33 write bound read it:
+   *  the active profiles' combined view's `time_zone`, or null when none is held or the view cannot be read (the
+   *  profiles disagree, so it is withheld). Never the UTC day in its place. Never throws. */
+  #zone() {
+    let v;
+    try { v = this.#view(); } catch { return null; }
+    const tz = v && typeof v === "object" ? v.time_zone : null;
+    const z = tz && typeof tz === "object" ? tz.value : tz;
+    return typeof z === "string" && z.trim() ? z.trim() : null;
   }
 
   /* Ask `assess` about one tick (R6). The before-side is the BASELINE'S OWN BYTES, read back from
@@ -2737,15 +2767,22 @@ export class Monitoring {
       instances: [{ bundle: b.bundle, documents: [b.bundle] }], surfaced_by: "machine" }));
   }
 
-  /** R34, R44: every `pending` clock entry of an action whose date has passed (action-clocks R1's `pendingClocks`, read as
-   *  this module's machine viewer) is marked `overdue` by one mechanical `deadline-recheck` promotion per action,
+  /** R34, R44: every `pending` clock entry of an action whose date has passed, before the local day of the actions'
+   *  jurisdiction (`#zone`, as actions R12 reads it, through `civil-time.localDay`; never the UTC day), read through
+   *  action-clocks R1's `pendingClocks` as this module's machine viewer, is marked `overdue` by one mechanical `deadline-recheck` promotion per action,
    *  changing only `clock[].status` (pending to overdue, nothing else) and `last_updated`, with its Session Log entry.
    *  R35: then asks `escalation` which stages' triggers are met, so the next stage is proposed; it advances none.
-   *  Answers `{ok, at, marked: [{action, ords, revision}], failed: [{action, reason}], escalations, truncated}`. */
+   *  Answers `{ok, at, zone, day, marked: [{action, ords, dates, revision}], failed: [{action, reason}], escalations,
+   *  truncated}`; with no zone held, nothing is marked and `undetermined` says why (`DEADLINE_NO_ZONE`). */
   async deadlineRecheck(now = null) {
     const nowMs = Number.isFinite(Number(now)) && now !== null ? Number(now) : this.now();
-    const today = new Date(nowMs).toISOString().slice(0, 10);
     const at = stampInstant("second", nowMs);
+    /* R34 (K1444 (iii)): "passed" is read on the local day of the actions' jurisdiction (civil-time R1), never the UTC
+       day; with no zone held no entry has passed (actions R33), and that is said. */
+    const zone = this.#zone();
+    const today = zone ? localDayOf(nowMs, zone) : null;
+    if (!today)
+      return { ok: true, at, zone, marked: [], failed: [], truncated: false, escalations: null, undetermined: DEADLINE_NO_ZONE };
     let items = [], truncated = false;
     try {
       const p = this.actionClocks.pendingClocks({ before: today, limit: DEADLINE_RECHECK_MAX, viewer: MONITOR_VIEWER });
@@ -2766,30 +2803,34 @@ export class Monitoring {
       const r = await this.#markOverdue(action, entries, at);
       (r.ok ? marked : failed).push(r.ok ? { action, ords: r.ords, dates: r.dates, revision: r.revision }
                                          : { action, reason: r.reason, ...(r.detail ? { detail: r.detail } : {}) });
-      /* R50 (N429): a failed mark holds its action's entries out of the wake until the next UTC day; a mark that
-         lands releases them. */
+      /* R50 (N429): a failed mark holds its action's entries out of the wake until the start of the local day after
+         the failure (civil-time R7); a mark that lands releases them. */
       if (r.ok) this.#markFailed.delete(action);
-      else this.#markFailed.set(action, Math.floor(nowMs / DAY_MS) * DAY_MS + DAY_MS);
+      else this.#markFailed.set(action, startOfDayAfter(today, zone) ?? Number.POSITIVE_INFINITY);
     }
     /* R35: a clock marked overdue can meet an escalation stage's trigger; escalation proposes the next stage and a
        member advances it. Asked with this module's own viewer (conformance answers a call with no viewer as unseen). */
     const escalations = marked.length ? this.escalationsDue(nowMs) : null;
     if (escalations) this.#escalated = { at, action: marked.map((x) => x.action).join(", "), answer: escalations };
-    return { ok: true, at, marked, failed, truncated, escalations };
+    return { ok: true, at, zone, day: today, marked, failed, truncated, escalations };
   }
 
-  /** R50: the start of the UTC day after the earliest date among the `pending` clock entries of the actions this module
-   *  sees (action-clocks R1's `pendingClocks`, read as its machine viewer, every page by its cursor), or null when none is
-   *  pending: so `scheduler`'s `deadline-recheck` consumer runs R34 on the first alarm of the day an entry passes (an
-   *  entry dated D is past from D + 1, R34's rule), and an instance with no pending entry holds no wake. A read that
-   *  fails holds no wake either: it is asked again at the scheduler's next reconcile.
+  /** R50: the start of the local day (R34's zone, `civil-time.dayRange`) after the earliest date among the `pending`
+   *  clock entries of the actions this module sees (action-clocks R1's `pendingClocks`, read as its machine viewer, every
+   *  page by its cursor), or null when none is pending: so `scheduler`'s `deadline-recheck` consumer runs R34 on the
+   *  first alarm of the day an entry passes (an entry dated D is past from the start of D + 1 in that zone, R34's rule),
+   *  and an instance with no pending entry holds no wake. A read that fails holds no wake either: it is asked again at the
+   *  scheduler's next reconcile. With no zone held nothing can pass (R34), so no wake is held.
    *  N429 (K719): an entry of an action whose last R34 mark failed is left out of that earliest date until the start of
-   *  the UTC day after the failure, and holds the wake no earlier than that instant, so a mark that keeps failing is
+   *  the local day after the failure, and holds the wake no earlier than that instant, so a mark that keeps failing is
    *  asked again once a day and never holds the wake in the past for the entries that can be marked. What failed is
    *  held in memory, for the life of this instance: a restarted instance asks such an entry again at once, one more
    *  re-check, never a loop. */
   deadlineRecheckWake(now = null) {
     const nowMs = Number.isFinite(Number(now)) && now !== null ? Number(now) : this.now();
+    const zone = this.#zone();
+    if (!zone) return null;
+    const dayAfter = new Map();
     let wake = null, after = null;
     try {
       for (let pages = 0; pages < DEADLINE_RECHECK_PAGES; pages++) {
@@ -2798,9 +2839,9 @@ export class Monitoring {
         if (!p || p.ok === false) return null;
         for (const it of Array.isArray(p.items) ? p.items : []) {
           if (!it || typeof it.date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(it.date)) continue;
-          const day = Date.parse(`${it.date}T00:00:00Z`);
-          if (!Number.isFinite(day)) continue;
-          let at = day + DAY_MS;
+          if (!dayAfter.has(it.date)) dayAfter.set(it.date, startOfDayAfter(it.date, zone));
+          let at = dayAfter.get(it.date);
+          if (at === null) continue;
           const held = this.#markFailed.get(it.action);
           if (held !== undefined && nowMs < held && at < held) at = held;
           if (wake === null || at < wake) wake = at;
@@ -2819,7 +2860,7 @@ export class Monitoring {
     return at !== null && at <= nowMs ? at : null;
   }
 
-  /* R50 (N429): each action whose last R34 mark failed, with the start of the UTC day after the failure. */
+  /* R50 (N429): each action whose last R34 mark failed, with the start of the local day after the failure. */
   #markFailed = new Map();
 
   async #markOverdue(action, entries, at) {
