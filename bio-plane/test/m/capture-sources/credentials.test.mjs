@@ -381,6 +381,14 @@ test("R61: credentials never enter a bundle, a manifest, a snapshot or the recor
   const bundleTables = ["files", "history", "manifest", "bundles"].flatMap((t) => w.db.prepare(`SELECT * FROM ${t}`).all());
   assert.ok(!JSON.stringify(bundleTables).includes("CRED-"));
   assert.equal(w.rc.bundleInfo(w.raw()[0].credential_id), null);
+  /* N577: the table is declared to record-core with its classes, never exported, so an export of the record
+     (corpus-export, which reads `declaredTables()`) names it and carries none of its rows. */
+  const decl = w.rc.declaredTables().filter((d) => d.name === CREDENTIALS_TABLE);
+  assert.equal(decl.length, 1);
+  assert.deepEqual({ module: decl[0].module, purge: decl[0].purge, expunge: decl[0].expunge, export: decl[0].export,
+                     sight: decl[0].sight, derive: decl[0].derive, version_chain: decl[0].version_chain },
+    { module: "capture-sources", purge: "clear", expunge: "none", export: "never", sight: "bundle", derive: "stored",
+      version_chain: false });
 });
 
 test("R62: host, scope and project are fixed at supply; the ciphertext is bound to its row, scope and project", async () => {
