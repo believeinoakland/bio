@@ -69,6 +69,25 @@ All are earlier in the order. Until they are set in `modules.json`, the architec
 
 Size (session_01BLy9wpCWCj7n1UuSHwbkir): test runs 13, module lines 2914
 
+## After B4 (CHANGE, K1689)
+
+**What changed:**
+- Merged `tranche/T33`, which now includes the control-plane merge.
+- `exportpage` and `moneydetectorsrun` now carry present null NEEDS rows, because affordances grades both.
+- My R3 test now allows an op that is unattended by a recorded decision to carry a null row.
+- `capturerequestplatformhosts` keeps its name.
+
+**control-plane's `totality.test.mjs:13`:** my two stale keys are gone. What remains is affordances':
+- `platformhosts` reads stale; it is to be re-keyed to `capturerequestplatformhosts`.
+- Unpublished: `ask`, `assistantstate`, `capturerequestplatformhosts`, `disclosureof`, `disclosureshown`, `seatsseed`, `standardinforce`. The four instance-setup ops arrived with K1683; `standardinforce` has R18's null row.
+- Unranked: `ask`, `askusage`, `disclosureshown`, `seatsseed`.
+
+**Tests and checks:**
+- Module 69/69.
+- control-plane 166/2: `totality.test.mjs:13` as above, and `catalogue-end.test.mjs:15`. The second is red without my change too: `NO_STATEMENT` now reads C-134.5's row where C-33.14 was pinned.
+- affordances 192/0.
+- format, architecture, coverage (20/20) and ownership: 0 failures each. Architecture is 0 now that the uses edges are set.
+
 ## J1 · QUESTION
 
 My readings, on which I am building now (none stops me):

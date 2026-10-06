@@ -75,7 +75,9 @@ test("R3: SESSION_OPS is {member, admin}, two sets of op names each with a spec;
     /* A session reaches an op in its set, a read its classes admit, and a public read (every caller, R10's). */
     const reached = inSession(op) || (!OPS[op].mutating && (OPS[op].classes === null
       || OPS[op].classes.includes("member") || OPS[op].classes.includes("admin")));
-    assert.ok(reached, `${op} is in NEEDS and no session reaches it`);
+    /* An op unattended by a recorded decision may carry a present null row, for affordances' grading of it (K1689). */
+    const unattendedNull = Object.hasOwn(UNATTENDED_BY_DECISION, op) && need === null;
+    assert.ok(reached || unattendedNull, `${op} is in NEEDS and no session reaches it`);
   }
   for (const op of new Set([...SESSION_OPS.member, ...SESSION_OPS.admin]))
     if (OPS[op].mutating) assert.ok(Object.hasOwn(NEEDS, op), `${op}: a session reaches this mutating op and NEEDS has no row`);
