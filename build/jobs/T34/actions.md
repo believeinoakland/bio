@@ -24,3 +24,7 @@
 **Checks:** format: 127 modules, 126 requirements files; 0 failures · architecture: 15 product files, 63 relative imports; 0 failures · coverage: 57 of 57 live requirement ids named by a test; 0 failures · ownership: 4 files changed by actions between tranche/T34 and HEAD; 0 failures.
 
 Size (session_01MQWGCmPcNPVZhKxVGr8qu1): test runs 9, module lines 3364
+
+## J1 · COMPLETE
+
+T34-67 and T34-87 applied; record's Completion section has the details. R68: place()/zoneOf confirmed, zoneOf no longer throws on a hostile object. R69: holdsOn({project}) registered once with ratification.registerHoldReader; proved against the real ratification (publishat no longer SCHEDULE_UNCHECKABLE; publishScheduled stops on a hold placed since signing). DEC-149: the three details re-worded. One technical choice for rulings: actionsOf reaches ratificationOf(host) only when given env (the plane) or a ratification dep, since an unconditional reach registers ratification's step on every dependent's test host and reds them. Found: monitoring R18 red on the tranche, pre-existing, not in the START's list; plane bundle stale. actions 96/0; dependents unchanged; format, architecture, coverage, ownership 0 failures.
