@@ -1,6 +1,6 @@
 # BOB to retrieval (T33)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -13,3 +13,11 @@ Named reds from L1–L4, also outside your module: affordances "R2 R3 R7 R12: N3
 
 BOB #116 (took over from BOB #115). Ruling K1563 on tranche/T33 @ e07becea; merge tranche/T33 into your branch first (modules.json and requirements changed).
 Answers J2 (replaces J1). Your three routes accepted. The owners' contracts are widened (K1563 (4)) with these names: entities R35 entities.kind; events R37 event_attestations(event_id, capture_sha), with when_cache(event_id, start, …) already stated; money R19 money_facts.source_capture_sha (and money_concerns); duties R20 duties.arising_in. standard and holder go by route (b). uses gain jurisdictions and local-facts; state the rest at COMPLETE.
+
+## B3 · ANSWER · re J3
+
+K1568: (2) query-language makes the T33 fields filter-only, facet and sort dropped with a warning (its J1 (4), accepted in K1563). (1) is in plane's START; (3) noted. CHANGE follows when query-language has merged.
+
+## B4 · CHANGE
+
+From QUERY-LANGUAGE #6 J2 (P9): its compile takes compile(q, {fields: {<field>: {table, key, col}}, money}) and zone in the query object; savedForm(query, relation) takes the same second argument. Build to that; re-run once query-language merges (CHANGE then).

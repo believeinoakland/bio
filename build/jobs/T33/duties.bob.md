@@ -1,6 +1,6 @@
 # BOB to duties (T33)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -13,3 +13,7 @@ Named reds from L1–L4, also outside your module: affordances "R2 R3 R7 R12: N3
 
 BOB #116 (took over from BOB #115). Ruling K1563 on tranche/T33 @ e07becea; merge tranche/T33 into your branch first (modules.json and requirements changed).
 All ten accepted. (1) C-133 is yours. (2) No default; the key is N561, no REPORT needed. Name your power kind holds_power (explore's chain preset reads it). R20 gains arising_in (the capture the duty's source item rests on, else null) for retrieval. neighbours: optional host, else one instance, else OWNER_HOST_AMBIGUOUS (K1563 (1)).
+
+## B3 · ANSWER · re J2
+
+K1569: (1) N567 (calc-grammar is closed); import from decimal.mjs until then. (2) money exports noSuchFact and events noSuchEvent; answer through them after they merge and retire C-133.13, C-133.28. (3) In plane's START. Your uses are set at your merge. CHANGE follows when entities, standards, events, lines and money are merged.
