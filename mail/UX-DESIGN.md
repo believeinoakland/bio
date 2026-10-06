@@ -581,3 +581,10 @@ DEC-162 (Bob, "S8: B"): two information levels.
 - Switched by a masthead control, Alt+Shift+I, or Settings › Your account › Explanations.
 - Owed (BOB): the per-member setting and its default; the masthead control and shortcut; each element's level; the guidance texts (`SCREEN_HELP`, `RAIL_HELP` in `screens/mock-refs.js`) as interface words; the op behind `owed:infolevelset DEC-162`.
 This session's handover (U90) stands; HANDOFF §0 is updated to DEC-162 and U91.
+
+## U92 · NOTICE · 2026-10-06 · session_01SEmEip2dMnNBFgsXF9Tids · primary
+DEC-163 (design session, on Bob's direction to ask of every element type why it shouldn't explain itself):
+- The whole frame now carries explanations, not only a screen's main area: the group's name (opens "Who your group is"), search, the assistant button, the queue count, the member's initial, the path's steps, the rail and phone tabs, row icons, wizard marks, set-up and ceremony steps, and the public page's group name, signature and credit. Each sits at its information level (DEC-162).
+- Exceptions, with reasons, are tabled on the layouts page: labelling section headings, button labels, field labels, list options, plain dates and counts, quoted words, the assistant panel and the wizard guide.
+- 1,663 elements explain themselves on the 42 screens.
+- Owed (BOB): the shell's elements at their levels when built (`screens/mock-shell.js` `decorate`).
