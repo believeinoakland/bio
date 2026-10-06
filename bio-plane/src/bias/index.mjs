@@ -7,6 +7,8 @@
  *   biasManifest  the EFFECTIVE SET in force for a scope, its hash, and what it does NOT enforce (R13–R18, R24, R25).
  *   biasInhale    reading an outside policy: it SPLITS bars from bias, PUBLISHES the residue, and PROPOSES, never
  *                 installs (R19–R21). It holds no write path at all: no SQL, no transaction, no promotion.
+ *   descriptionDraft  the group's own self-description (membership R110), offered to an active member as the opening
+ *                 text of a declared bias; it proposes no statement and writes nothing (R48; DEC-132 (5)).
  *   the promotion step: a malformed set never lands (R9), and the statements are projected and the pins moved to an
  *                 adopted revision in the promotion's own transaction (R10). The state edge is promotion's (its R15).
  *   the bias debt: work products later modules register (R33), swept against the lens now in force, settled by one
@@ -647,6 +649,60 @@ class Bias {
       pin: { source_url: source ? String(source) : null, retrieved: retrieved ? String(retrieved) : null },
       limit: cap,
       truncated: bars.length > cap || statements.length > cap || residue.length > cap,
+    };
+  }
+
+  /* ---------------------------------------------------------------- R48: the group's self-description as a draft */
+
+  /* Who R48 offers the draft to: a member whose status is `active` (membership R68), or the founder, in either of
+     R43's spellings, exactly while the instance is claimed (membership R64). Everyone else, a machine credential
+     included, is answered as if no description were held. */
+  #activeMember(viewer) {
+    const v = typeof viewer === "string" ? viewer : "";
+    if (v === "admin") return this.#membership.isAdministrator("admin");
+    const id = this.#membership.positionalMember(v);
+    if (!id) return false;
+    if (id === "admin") return this.#membership.isAdministrator("admin");
+    const facts = this.#membership.memberFacts(id);
+    return !!facts && facts.status === "active";
+  }
+
+  /** R48 (DEC-132 (5); N551, K1541) — THE GROUP'S OWN WORDS, OFFERED AS WHERE A DECLARED BIAS MAY START. Where the
+   *  group has a stake in what it investigates, its declared bias can start from what it wrote about itself
+   *  (membership R110's latest record), and it stays the group's own act: this proposes no statement, subject or
+   *  justification (R2–R7 are the member's to write) and moves nothing along R8's machine or R11's adoption. It
+   *  writes nothing, installs and adopts nothing, never changes a lens in force, and never throws. A viewer who is
+   *  not an active member is answered exactly as if no description were held, so the answer says nothing about
+   *  whether one exists. */
+  descriptionDraft({ viewer = null } = {}) {
+    const none = {
+      ok: true, description: null, offered: false, proposed: false, authored: false, statements: [],
+      installed: false, adopted: false, writes: 0,
+      stated: "there is no description of the group to start a declared bias from: a member writes the set's "
+            + "statements, each with its subject and justification, from the beginning",
+    };
+    let d = null;
+    try {
+      if (!this.#activeMember(viewer)) return none;
+      const got = this.#membership.groupDescription({ viewer });
+      d = got && isObj(got.description) ? got.description : null;
+    } catch { return none; }
+    if (!d) return none;
+    const text = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
+    const description = {
+      kinds: Array.isArray(d.kinds) ? d.kinds.filter((k) => typeof k === "string") : [],
+      otherKind: text(d.otherKind), focus: text(d.focus), purpose: text(d.purpose),
+      by: typeof d.by === "string" ? d.by : null, at: typeof d.at === "string" ? d.at : null,
+    };
+    return {
+      ok: true, description, offered: true, proposed: true, authored: false, statements: [],
+      installed: false, adopted: false, writes: 0,
+      label: "what the group wrote about itself",
+      offers: "the opening text of a new bias set the member authors",
+      stated: "this is the group's own description of itself, offered as the opening text of a declared bias. "
+            + "Nothing here is a statement: a member writes each statement, names its subject in the registry and "
+            + "justifies it, offers the set as 'proposed', and the group adopts it with a member's name on it. "
+            + "Nothing has been written and no lens has changed.",
     };
   }
 
