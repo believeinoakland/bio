@@ -572,3 +572,12 @@ DEC-160 amended (Bob: "far more elements should be mouseovers and clickovers …
 
 ## U90 · HANDOFF · 2026-10-06 · session_01SEmEip2dMnNBFgsXF9Tids · primary
 This session is handing over at Bob's request (context refresh). State at handover: `docs/development/ux-substrate/HANDOFF.md` §0 on the branch. B64–B67 read (K1818, K1819 noted). The successor rewrites the Writer line at takeover.
+
+## U91 · NOTICE · 2026-10-06 · session_01SEmEip2dMnNBFgsXF9Tids · primary
+DEC-162 (Bob, "S8: B"): two information levels.
+- Marks and names, always on: every mark's meaning and every reference's card.
+- Guidance: what each screen, section and rail entry is and what a member can do there.
+- New members start with guidance; after a month Civicsmith asks once whether to keep it.
+- Switched by a masthead control, Alt+Shift+I, or Settings › Your account › Explanations.
+- Owed (BOB): the per-member setting and its default; the masthead control and shortcut; each element's level; the guidance texts (`SCREEN_HELP`, `RAIL_HELP` in `screens/mock-refs.js`) as interface words; the op behind `owed:infolevelset DEC-162`.
+This session's handover (U90) stands; HANDOFF §0 is updated to DEC-162 and U91.
