@@ -183,8 +183,13 @@ for r in x.get("surfaceRules", []):
 <h4>Must show</h4>{bl(r.get("mustShow"))}<h4>Must never show or do</h4>{bl(r.get("mustNeverShowOrDo"))}<h4>States to design</h4>{bl(r.get("statesToDesign"))}
 {("<h4>Primary acts</h4>" + bl(r.get("primaryActs"))) if r.get("primaryActs") else ""}{("<h4>Access and language</h4>" + bl(r.get("accessibilityAndLanguage"))) if r.get("accessibilityAndLanguage") else ""}<p>{src(r.get("src"))}</p></div></details>'''
 # ---------- experience sections ----------
-aud = "".join(f'''<article class="aud"><h3>{e(a["name"])}</h3>{bl(a.get("whoTheyAre"))}<h4>Goals</h4>{bl(a.get("goals"))}<h4>Already knows</h4>{bl(a.get("whatTheyAlreadyKnow"))}<h4>Context</h4>{bl(a.get("context"))}
-<h4>Trust concerns</h4>{bl(a.get("trustConcerns"))}<h4>Must never see or do</h4>{bl(a.get("whatTheyMustNeverSee"))}<p>{basis(a.get("basis"))} {src(a.get("src"))}</p></article>''' for a in x.get("audiences", []))
+def _aud(a): return f'''<article class="aud"><h3>{e(a["name"])}</h3>{("<p class=note><b>Folded in:</b> " + e(a["foldedNote"]) + "</p>") if a.get("foldedNote") else ""}{bl(a.get("whoTheyAre"))}<h4>Goals</h4>{bl(a.get("goals"))}<h4>Already knows</h4>{bl(a.get("whatTheyAlreadyKnow"))}<h4>Context</h4>{bl(a.get("context"))}
+<h4>Trust concerns</h4>{bl(a.get("trustConcerns"))}<h4>Must never see or do</h4>{bl(a.get("whatTheyMustNeverSee"))}<p>{basis(a.get("basis"))} {src(a.get("src"))}</p></article>'''
+RINGS = [("members", "Inside the group: members", "Everyone who belongs to the group and works in its copy; one person may hold several of these roles. The newcomer member stays the centre of gravity."),
+         ("invited", "Invited in", "People outside the group given a named, revocable view of something."),
+         ("outside", "Outside the group", "People who meet the group's work without an account."),
+         ("folded", "Folded in", "Moments, states or actors gathered from the requirements that are not separate audiences.")]
+aud = "".join(f'<h3 style="margin-top:22px">{e(t)}</h3><p class=note>{e(blurb)}</p><div class="auds">' + "".join(_aud(a) for a in x.get("audiences", []) if a.get("ring", "members") == k) + "</div>" for k, t, blurb in RINGS)
 uc_rows = "".join(f'<tr><td><span class=note>{e(u.get("id"))}</span> <b>{e(u.get("name"))}</b><div class=note>{e(u.get("goal"))}</div></td><td>{e(u.get("audience") or u.get("audiences"))}</td><td>{e(u.get("trigger"))}</td><td>{e(u.get("outcome"))}</td><td><span class="cov cov-{e(str(u.get("coveredByRequirements","")).split(" ")[0])}">{e(u.get("coveredByRequirements"))}</span>{("<div class=note>" + e(u["coverageNote"]) + "</div>") if u.get("coverageNote") else ""}</td><td>{src(u.get("src"))}</td></tr>' for u in x.get("useCases", []))
 ucs = x.get("useCases", [])
 uc_no = [u for u in ucs if str(u.get("coveredByRequirements", "")).startswith("no")]
@@ -309,8 +314,8 @@ exp_block = ""
 if x:
     exp_block = f'''
 <h2 id="audiences">Who meets it</h2>
-<p>Everyone who uses Civicsmith or reads what it produces, inside and outside the group: what they want, what they already know, the conditions they meet it in, and what they must never see or be able to do.</p>
-<div class="auds">{aud}</div>
+<p>Everyone who uses Civicsmith or reads what it produces, inside and outside the group: what they want, what they already know, the conditions they meet it in, and what they must never see or be able to do. Grouped in three rings, as Bob approved on 4 October 2026 (DEC-128). Across every ring: members who read in another language, screen-reader and keyboard users, and people working from a phone; every journey must work for them.</p>
+{aud}
 <h2 id="usecases">Use cases</h2>
 <p>The full catalogue: every function the Functional Architecture says a group needs, and what the construct designs add. <b>{len(ucs)}</b> use cases; <b>{len(uc_no)}</b> have no requirement behind them yet, so no module builds them.</p>
 <div class="tw"><table class="uc"><thead><tr><th>Use case</th><th>Who</th><th>Starts when</th><th>Ends with</th><th>Covered</th><th class=srccol>Source</th></tr></thead><tbody>{uc_rows}</tbody></table></div>

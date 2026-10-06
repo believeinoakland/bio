@@ -1,0 +1,307 @@
+{
+ "_note": "Civicsmith's colour tokens (DEC-138). The one source: civicsmith.css is checked against this file by check_contrast.py. Every text pair listed in 'pairs' must reach 4.5:1 (WCAG 2.2 AA, 1.4.3) and every graphic pair 3:1 (1.4.11), in both themes.",
+ "light": {
+  "ground": "#EDEFE9",
+  "ground-2": "#E3E7DF",
+  "surface": "#F8F9F5",
+  "sheet": "#FDFDFB",
+  "ink": "#15222C",
+  "ink-2": "#334149",
+  "muted": "#55635E",
+  "rule": "#C3C9BE",
+  "rule-strong": "#7E877C",
+  "accent": "#2B6A5D",
+  "accent-strong": "#1D4E44",
+  "accent-tint": "#E2EEE9",
+  "on-accent": "#FFFFFF",
+  "signal": "#A23B19",
+  "signal-tint": "#F7E9E2",
+  "capture": "#1F5C9E",
+  "capture-tint": "#E3ECF7",
+  "connection": "#8A2F6E",
+  "connection-tint": "#F4E4EF",
+  "testimony": "#865300",
+  "testimony-tint": "#F7ECD9",
+  "subject": "#55621A",
+  "subject-tint": "#EDF0DC",
+  "stage": "#3A587F",
+  "ready": "#2E6E4A",
+  "ident": "#9B3355",
+  "machine": "#4A5560",
+  "machine-tint": "#ECEEF0",
+  "elsewhere": "#4B4F7A",
+  "elsewhere-tint": "#E8E9F2",
+  "focus": "#1D4E44"
+ },
+ "dark": {
+  "ground": "#11181C",
+  "ground-2": "#172026",
+  "surface": "#1A242A",
+  "sheet": "#1E2930",
+  "ink": "#E3E9E4",
+  "ink-2": "#C3CCC6",
+  "muted": "#9AA7A1",
+  "rule": "#33414A",
+  "rule-strong": "#73817A",
+  "accent": "#74C2AE",
+  "accent-strong": "#9AD8C7",
+  "accent-tint": "#1C332D",
+  "on-accent": "#0D1A16",
+  "signal": "#EE9874",
+  "signal-tint": "#3A231A",
+  "capture": "#8DB9EE",
+  "capture-tint": "#1B2B40",
+  "connection": "#E39BCB",
+  "connection-tint": "#36202F",
+  "testimony": "#E7B865",
+  "testimony-tint": "#352A15",
+  "subject": "#BACB6B",
+  "subject-tint": "#2A3016",
+  "stage": "#93B1DC",
+  "ready": "#7FCB9E",
+  "ident": "#EC93AE",
+  "machine": "#AEB8C2",
+  "machine-tint": "#232B32",
+  "elsewhere": "#AEB2E6",
+  "elsewhere-tint": "#24263B",
+  "focus": "#9AD8C7"
+ },
+ "pairs": {
+  "text": [
+   [
+    "ink",
+    "ground"
+   ],
+   [
+    "ink",
+    "surface"
+   ],
+   [
+    "ink",
+    "sheet"
+   ],
+   [
+    "ink-2",
+    "ground"
+   ],
+   [
+    "ink-2",
+    "surface"
+   ],
+   [
+    "muted",
+    "ground"
+   ],
+   [
+    "muted",
+    "surface"
+   ],
+   [
+    "muted",
+    "sheet"
+   ],
+   [
+    "muted",
+    "ground-2"
+   ],
+   [
+    "accent",
+    "ground"
+   ],
+   [
+    "accent",
+    "surface"
+   ],
+   [
+    "accent",
+    "sheet"
+   ],
+   [
+    "accent",
+    "accent-tint"
+   ],
+   [
+    "accent-strong",
+    "accent-tint"
+   ],
+   [
+    "on-accent",
+    "accent"
+   ],
+   [
+    "on-accent",
+    "accent-strong"
+   ],
+   [
+    "signal",
+    "ground"
+   ],
+   [
+    "signal",
+    "surface"
+   ],
+   [
+    "signal",
+    "signal-tint"
+   ],
+   [
+    "signal",
+    "sheet"
+   ],
+   [
+    "capture",
+    "capture-tint"
+   ],
+   [
+    "capture",
+    "surface"
+   ],
+   [
+    "connection",
+    "connection-tint"
+   ],
+   [
+    "connection",
+    "surface"
+   ],
+   [
+    "testimony",
+    "testimony-tint"
+   ],
+   [
+    "testimony",
+    "surface"
+   ],
+   [
+    "subject",
+    "subject-tint"
+   ],
+   [
+    "subject",
+    "surface"
+   ],
+   [
+    "machine",
+    "machine-tint"
+   ],
+   [
+    "machine",
+    "surface"
+   ],
+   [
+    "elsewhere",
+    "elsewhere-tint"
+   ],
+   [
+    "elsewhere",
+    "surface"
+   ],
+   [
+    "ink",
+    "ground-2"
+   ],
+   [
+    "ink",
+    "accent-tint"
+   ],
+   [
+    "ink",
+    "signal-tint"
+   ],
+   [
+    "ink",
+    "machine-tint"
+   ],
+   [
+    "ink",
+    "elsewhere-tint"
+   ],
+   [
+    "sheet",
+    "signal"
+   ],
+   [
+    "ink",
+    "capture-tint"
+   ],
+   [
+    "muted",
+    "machine-tint"
+   ],
+   [
+    "ink-2",
+    "signal-tint"
+   ],
+   [
+    "ink",
+    "elsewhere-tint"
+   ]
+  ],
+  "graphic": [
+   [
+    "rule-strong",
+    "surface"
+   ],
+   [
+    "rule-strong",
+    "ground"
+   ],
+   [
+    "focus",
+    "ground"
+   ],
+   [
+    "focus",
+    "surface"
+   ],
+   [
+    "stage",
+    "surface"
+   ],
+   [
+    "ready",
+    "surface"
+   ],
+   [
+    "ident",
+    "surface"
+   ],
+   [
+    "accent",
+    "surface"
+   ],
+   [
+    "capture",
+    "surface"
+   ],
+   [
+    "connection",
+    "surface"
+   ],
+   [
+    "testimony",
+    "surface"
+   ],
+   [
+    "subject",
+    "surface"
+   ],
+   [
+    "machine",
+    "surface"
+   ],
+   [
+    "elsewhere",
+    "surface"
+   ],
+   [
+    "signal",
+    "surface"
+   ],
+   [
+    "muted",
+    "surface"
+   ]
+  ]
+ }
+}

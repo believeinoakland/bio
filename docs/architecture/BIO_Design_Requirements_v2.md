@@ -1,6 +1,6 @@
 # BIO Design Requirements
 
-**Status** · The fifteen design requirements in eight categories, each derived from the core values; "the system fails if any requirement is violated." Self-described as "Consolidated Version — April 2026 (v2, June 2026)"; the June revision was editorial ("No requirement was added, removed, or substantively changed"); no ratification is stated and none is needed — the Roadmap calls them "15, finalized" and every architecture document cites them by number. Complete at its level. One dated addendum (July 27, 2026, declared bias) follows the body and its middle clause is SUPERSEDED by DEC-20. **§10 GAINED DEC-111 (Bob, 2026-10-01): the directory moves to believeincities.org/<place> and carries signed "working on" notices.** as of 2026-10-01.
+**Status** · The fifteen design requirements in eight categories, each derived from the core values; "the system fails if any requirement is violated." Self-described as "Consolidated Version — April 2026 (v2, June 2026)"; the June revision was editorial ("No requirement was added, removed, or substantively changed"); no ratification is stated and none is needed — the Roadmap calls them "15, finalized" and every architecture document cites them by number. Complete at its level. One dated addendum (July 27, 2026, declared bias) follows the body and its middle clause is SUPERSEDED by DEC-20. **§10 GAINED DEC-111 (Bob, 2026-10-01): the directory moves to believeincities.org/<place> and carries signed "working on" notices.** **§1 ANNOTATED BY DEC-134 (Bob, 2026-10-05): on a group's own copy, two administrators are recommended, not required.** as of 2026-10-05.
 
 **Place in the system** · The engineering baseline of the mission level (`BIO_System_Design.md` §2): "If any text in this roadmap conflicts with the Design Requirements document, the Design Requirements document governs", and the Technical Architecture Decisions defer to it likewise. Requirements 1, 2, 13 and 14 are cited by name across the corpus; Requirement 1's "at least two individuals" is realised as Membership v2's two-administrator floor; Requirement 6 fixes the naming policy the whole corpus follows.
 
@@ -77,7 +77,10 @@ Administrative responsibilities for ongoing infrastructure maintenance
 any willing participant, an existing nonprofit, think tank, or community
 organization, or distributed among multiple individuals. Administrative
 access to critical infrastructure is shared among at least two
-individuals and can be transferred. Administrators are custodians of
+individuals and can be transferred. *(Applied to a group's own copy of Civicsmith, this and
+Requirement 14 are a recommendation the setup makes, not a gate: a group may run with one administrator and is told once why a
+second is wise, with the hosting account's holder recorded. Bob, 2026-10-05, DEC-134. The network's own infrastructure is
+unchanged.)* Administrators are custodians of
 shared infrastructure, not authorities over the network's content,
 direction, or work products.
 

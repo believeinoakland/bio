@@ -1,6 +1,6 @@
 # BIO interaction constructs — v0.2 (v0.1 derivation retained below)
 
-**Status** · The member-facing interaction shapes for M8: QUEUE and ACT as the two constructs, the rung ladder of authored acts, UNDETERMINED as a display primitive, and the v0.1 derivation of seven candidates retained below as the TYPES inside the two. "v0.2 (v0.1 derivation retained below)", "Written 2026-07-31 (session BOB) at Bob's direction"; revision 0.2 was the session's same-day answer to Bob's challenge on construct count, not a ruling; four dated rulings are embedded (DEC-8, DEC-16, DEC-27, DEC-36) plus DEC-19's correction and FW-14's. Partially complete: the v0.2 shape is stated, its falsifier ("build T and one act, then re-read this") has no recorded re-read, and the filename says v0_1 while the body says v0.2. §P's accountability rule is BUILT for an agent-surfaced QUESTION (D-82, 2026-09-23: one marker wherever a question is listed or shown), beside UI-5's derived marker for a finding. §S's bulk half is BUILT for the acts whose items are NOT bundles, as ONE call carrying the member's enumerated set under the `per-item` weight — the queue's (D-126, IC-235) and `op=resolve` over captured documents (D-291, IC-247, on BOB #32's ruling of 2026-09-23 23:30Z naming §S); §S's body still describes only the bundle LEASE (`op=select`) and says nothing of that second shape. **§M GAINED THE MEASURES MAP (Bob, 2026-09-29, DEC-82): letters grade evidence, bars show progress, weights mark acts.** **§U GAINED ITS TREATMENT (DEC-86): one "Undetermined" component with a mandatory reason, four visibly distinct neighbours.** **§F GAINED FRICTION MATCHES WEIGHT (DEC-87): friction escalates with an act's rung.** **§U GAINED EMPTY, LOADING, FAILED AND WAITING (DEC-98): one vocabulary everywhere.** **§L ADDED, ACCESS AND LANGUAGE (DEC-99): WCAG 2.2 AA for every screen and the published case.** **§W ADDED, WORKING AND PUBLISHED (DEC-106): two spaces, in-between items banded, a path marker on each item.** **BRAND AND VOICE APPROVED (DEC-125): pointer beside the design principles.** **§L GAINED TRANSLATION BY GROUPS (DEC-127).** as of 2026-10-04.
+**Status** · The member-facing interaction shapes for M8: QUEUE and ACT as the two constructs, the rung ladder of authored acts, UNDETERMINED as a display primitive, and the v0.1 derivation of seven candidates retained below as the TYPES inside the two. "v0.2 (v0.1 derivation retained below)", "Written 2026-07-31 (session BOB) at Bob's direction"; revision 0.2 was the session's same-day answer to Bob's challenge on construct count, not a ruling; four dated rulings are embedded (DEC-8, DEC-16, DEC-27, DEC-36) plus DEC-19's correction and FW-14's. Partially complete: the v0.2 shape is stated, its falsifier ("build T and one act, then re-read this") has no recorded re-read, and the filename says v0_1 while the body says v0.2. §P's accountability rule is BUILT for an agent-surfaced QUESTION (D-82, 2026-09-23: one marker wherever a question is listed or shown), beside UI-5's derived marker for a finding. §S's bulk half is BUILT for the acts whose items are NOT bundles, as ONE call carrying the member's enumerated set under the `per-item` weight — the queue's (D-126, IC-235) and `op=resolve` over captured documents (D-291, IC-247, on BOB #32's ruling of 2026-09-23 23:30Z naming §S); §S's body still describes only the bundle LEASE (`op=select`) and says nothing of that second shape. **§M GAINED THE MEASURES MAP (Bob, 2026-09-29, DEC-82): letters grade evidence, bars show progress, weights mark acts.** **§U GAINED ITS TREATMENT (DEC-86): one "Undetermined" component with a mandatory reason, four visibly distinct neighbours.** **§F GAINED FRICTION MATCHES WEIGHT (DEC-87): friction escalates with an act's rung.** **§U GAINED EMPTY, LOADING, FAILED AND WAITING (DEC-98): one vocabulary everywhere.** **§L ADDED, ACCESS AND LANGUAGE (DEC-99): WCAG 2.2 AA for every screen and the published case.** **§W ADDED, WORKING AND PUBLISHED (DEC-106): two spaces, in-between items banded, a path marker on each item.** **BRAND AND VOICE APPROVED (DEC-125): pointer beside the design principles.** **§L GAINED TRANSLATION BY GROUPS (DEC-127).** **§R ADDED, WHO WE DESIGN FOR AND THE WIDE PATH (DEC-128, DEC-129), THE WELCOME FITS THE GROUP (DEC-132); §T GAINED A CHECK ASKED BY EXPERTISE (DEC-135); §R GAINED WHAT A COURT CAN REACH AND MEMBERS' NOTES (DEC-136) AND THE PRODUCT WITHOUT THE ASSISTANT (K1547); EVERY WIZARD WRITTEN (DEC-130, beside DEC-121); THE QUEUE'S THIRD KIND IS "STATUS" AND A MACHINE SIGNAL IS A "HINT" (DEC-131); A WIZARD PLANNED BY THE ASSISTANT RUNS ON THE MEMBER'S OWN CLAUDE ACCOUNT (K1502); §V ADDED, THE VISUAL LANGUAGE (DEC-138); THE WIZARD LIBRARY WRITTEN AND THE RULES WITHOUT THE ASSISTANT (DEC-139).** as of 2026-10-06.
 
 **Place in the system** · Owns construct 12 of `BIO_System_Design.md` §3 (member surfaces): it governs M8 (`docs/development/MILESTONES.md`; the UI area's governing design per `QUEUE.md`), hands queue content to `docs/development/NOTIFICATIONS.md`, and its pre-flight rule (DEC-8) is what the assistant construct and every act surface rest on. Distinct from `CONSTRUCTS.md`, the content inventory — the name collision is stated in the document.
 
@@ -34,6 +34,7 @@
 - [M · THE MEASURES MAP — how every scale reads, approved by Bob 2026-09-29 (DEC-82)](#m-the-measures-map-how-every-scale-reads-approved-by-bob-2026-09-29-dec-82)
 - [L · ACCESS AND LANGUAGE — the standard every screen meets (Bob, 2026-10-01, DEC-99)](#l-access-and-language-the-standard-every-screen-meets-bob-2026-10-01-dec-99)
 - [W · WORKING AND PUBLISHED — the fence a member can always see (Bob, 2026-10-01, DEC-106)](#w-working-and-published-the-fence-a-member-can-always-see-bob-2026-10-01-dec-106)
+- [V · THE VISUAL LANGUAGE — one look for every screen and the published case (the design session, 2026-10-06, DEC-138)](#v-the-visual-language-one-look-for-every-screen-and-the-published-case-the-design-session-2026-10-06-dec-138)
 - [What this changes about how M8 is built](#what-this-changes-about-how-m8-is-built)
 
 ---
@@ -111,6 +112,10 @@ declared flow, whose delta against the observed flow is the analytic product (D-
 with three dispositions — recorded (never surfaces), noticed (status where the thing lives), actionable (earns
 a queue item). So each has its own HOME beyond the queue — a case, a flow model, a signal history — while the
 QUEUE stays ONE surface reaching into all three. One thing to learn; three places the work lives.
+
+**RULED 2026-10-05 (DEC-131, the design session under Bob's delegation): members see a CONDITION as "Status", not "Signal".** K1473
+now uses "signal" for the machine's judgment scores, which members see as a **"hint"** (beside a member's "hunch" and a
+"hypothesis"; never evidence). The internal word "signal" in this section is unchanged; its member-facing home is the status history.
 
 **NAMING COLLISION, corrected 2026-08-01.** This document called the ladder WEIGHT. The plane already
 uses `weight` for something orthogonal and older: `selectionResolve({ …, weight = "report" })` in
@@ -321,6 +326,10 @@ own surface, where the context is.
                         (and a SELECTION-SCOPED ACTION is how any of them goes bulk)
 
 ## T · TASK — an obligation with an assignee, and sometimes a clock
+
+**RULED 2026-10-05 by Bob (DEC-135): a task can be addressed by expertise.** "Ask for a check" sends one request to every member
+who declared an expertise and can see the thing to be checked; the first to take it owns it and the others' To do closes, saying
+who took it (Membership v2 §1.3).
 
 **Already half-built in the plane** (D-98, 0.49.0): `tasks`, `taskforward`,
 `taskresolve`, routing through `member_expertise` to the project manager falling back
@@ -553,7 +562,7 @@ next; the assistant checks and advances.
 
 **RULED 2026-10-02 by Bob (DEC-120): wizards, wizard scripts, and drafts in fields.** Any multi-step journey can be
 walked with a wizard (Bob, 2026-10-03: "Let's call guided flows wizards"). A wizard runs from a **wizard script** (the authored step list this design first called a
-recipe) for every group, with no AI and no key; where a group has set a key, the assistant may also plan a wizard on the fly.
+recipe) for every group, with no AI and no key; where a group has set a key, the assistant may also plan a wizard on the fly (since K1502, 2026-10-05: where the member has connected their own Claude account; there is no group-wide account).
 Either way the member works on the real screens, the guide sitting in the docked panel (DEC-90). A step may place a
 **labelled draft** in a field for the member to edit and adopt (as DEC-101 and K1019 allow); the member alone presses the
 act's button, and the act still runs its four beats.
@@ -568,6 +577,19 @@ publication ceremony) are the Civicsmith library's and a failing one blocks the 
 until fixed, its owner told. Wherever wizards begin, a standard mark in a standard place shows them on hover or tap, starts one
 on click, or records a new one from there. Groups may share approved scripts as signed files or through the network directory;
 an importing group approves them before use.
+
+**RULED 2026-10-04 by Bob (DEC-130): every outlined wizard is written now.** Not only the three required ones: writing every
+wizard the journeys outline (`docs/development/ux-substrate/journeys.html` §5) tests whether the wizard module meets real-world
+needs. Each is written as a wizard script in the design phase's step 5 and walked through the mockups; any limit a script hits
+goes to the development process. The welcome wizard is written too, its final words waiting for the redesign to settle (DEC-91).
+
+**WRITTEN 2026-10-06 by the design session (DEC-139): the Civicsmith library's seventeen scripts and the screen registry.** The
+library is `docs/development/ux-substrate/screens/library.json` (three required: set up and claim, welcome a new member, the
+publication ceremony), each script in `wizard-scripts` R1/R2 form; the registry its steps name is `screens/registry.json` (42 screens,
+192 acts). `screens/check_library.py` checks both against the requirements (every act an op, a requirement function, or owed by a
+named ruling; R12's shape) and `screens/check_walk.mjs` walks every step through the mockups and proves the control it names is drawn.
+A step may offer a side trip into another wizard and return (`via`, an addition owed to R2). The library ships only once Bob approves
+it (DEC-121 (1)); asked as S2 on the layouts page.
 
 **THE ASSISTANT HOLDS NO COPY OF THE RULES -- it asks the plane, and DEC-8 already governs
 this.** *A surface may render a refusal it received from the plane; it may never compute one*,
@@ -724,6 +746,88 @@ with a band saying what it is and who can see it ("Shared for review: 2 people o
 and case also carries a small **path-to-publication marker** showing where it stands (for example "working → shared for review →
 published"). Publishing remains the only crossing, through the ceremony. Frames, colours, bands and the marker's look are the
 redesign's, within this rule.
+
+## R · WHO WE DESIGN FOR, AND THE WIDE PATH (Bob, 2026-10-04, DEC-128, DEC-129)
+
+**RULED 2026-10-04 by Bob (DEC-128): three rings of audience.** *Inside the group, members:* newsroom staff running their own group's copy (a core audience, Bob, 2026-10-05: reporters,
+editors, researchers, fact-checkers), the newcomer member (the centre of
+gravity: a community activist or volunteer with no civic-records experience), the experienced investigator, the professional
+member (journalist, lawyer, accountant, auditor, engineer, policy analyst; declared expertise gates nothing), the project owner,
+the administrator, and the group's future members. *Invited in:* the outside reviewer of a review copy and the group's lawyer
+receiving a counsel packet. *Outside the group:* someone handing over material through the doorbell, the public reader,
+journalists outside the group, partner groups (work flows both ways), government offices and officials, and oversight bodies. The installer and the
+founder are moments of the administrator's role; project participant and member outside a project are states; the assistant is an
+actor, not an audience; residents addressed by an action meet the group's words, not its screens. Across every ring: members who
+read in another language, screen-reader and keyboard users, and people working from a phone. Groups differ too (professional,
+issue-specific, neighbourhood or community, catch-all), and a public body may itself run a copy, so the design never assumes the
+group stands outside government.
+
+**RULED 2026-10-04 by Bob (DEC-129): the wide path, eight rules every journey and screen passes, beside the design principles.**
+Bob, 2026-10-03: the path to success must be "wide enough and inclusive enough for all audiences".
+1. *A front door in every journey:* a first step a newcomer can take alone, and the screen shows where it starts.
+2. *Wizards on the main roads, never gates:* nothing is locked behind one, and leaving one at any step is a non-event.
+3. *You can always see where you are:* each journey shows its stage and what comes next.
+4. *Explained where it appears, and findable again:* a term is explained the first time a member meets it, never pushed again,
+   and its explanation stays one hover, focus or tap away, and in one list of every term.
+5. *Heavier steps slow you down:* friction rises with an act's weight (§F).
+6. *Any order, and pick up where you left off:* steps in whatever order the work allows; unfinished work is found exactly as left,
+   listed where the member will see it.
+7. *Many front doors:* a member starts from whatever drew them in, most often a problem they live with; no journey assumes
+   everyone starts from a question.
+8. *Fast for those who know:* search, keyboard, acting on many items at once, no repeated teaching.
+
+**RULED 2026-10-05 by Bob (DEC-132): the welcome fits the group.** Where a group has said what kind of group it is and what it
+focuses on (optional; Publication §7), "What brought you here?" and the first-question wizard offer its focus first, and standards
+and wizards matching its kind are suggested first. Nothing is locked or hidden by it.
+
+**RULED 2026-10-06 by Bob (DEC-136): what a court can reach, and members' own notes.** Civicsmith never claims more protection
+than there is (design principle 3.11): what it keeps from the public and from the people a group examines is said plainly, the
+explanation one hover away wherever something is marked not public, never "secret" or "confidential". Each group's administrator
+chooses whether members are also told, once at joining and once at the first non-public act of each kind, that a court order the
+group cannot defeat can still require it to be shown. Members may keep their own notes, seen only by them, never cited or
+published, turned into an observation, hunch or question by their own act.
+
+**Civicsmith without the assistant (Bob, 2026-10-05, K1547).** A member connects the assistant with their own API key or their own
+subscription token, or skips; skipping is a real choice. Every journey and screen is designed for both: without the assistant a
+member walks the same journeys, with the assistant's steps left out.
+
+**RULED 2026-10-06 by the design session, under Bob's delegation (DEC-139; K1547 left the no-assistant path to design): the rules
+of Civicsmith without the assistant.** (1) Absent, not greyed: no assistant button, panel, tray or "suggested" section appears for a
+member with no account of their own, and nothing invites them again; their settings say "not connected" in one line. (2) "Ask"
+becomes "Find and count": search, and counts that show their method. (3) Drafts come from the group's own templates, labelled the same
+way, in the same field. (4) A standing question still runs: its search re-runs on schedule and new matches reach the member's queue
+once, as a list, unread by any machine. (5) Every wizard runs the same, from its script. (6) What such a member cannot do (ask in
+plain words, suggestions, reading and summarising, drafting translations or "what changed") each has a member's own way to do the
+same work. Every journey is drawn both ways in `docs/development/ux-substrate/layouts.html`.
+
+The journeys themselves (step 3 of the design phase, settled 2026-10-06: DEC-128 to DEC-137) are in `docs/development/ux-substrate/journeys.html`.
+
+## V · THE VISUAL LANGUAGE — one look for every screen and the published case (the design session, 2026-10-06, DEC-138)
+
+**RULED 2026-10-06 by the design session, under Bob's delegation (DEC-138): the design phase's step 4.** One visual language replaces
+the three that grew up apart (`civicos-ui/tokens.css`, whose source `BIO_Design_Language_v0_2.md` is lost; the action-design sketches'
+look; the measures map's placeholder colours). Its source is `docs/development/ux-substrate/visual-language/` (`palette.json` and
+`check_contrast.py`, `tokens.head.css` and `components.css` built by `build.py` into `civicsmith.css`, `faces.css` and `fonts/`,
+`icons.svg`); it is shown, rendered, in `docs/development/ux-substrate/visual-language.html`. Its rules:
+1. **Colour always means something.** Verdigris (the patina on a brass plumb bob, DEC-126) is the one colour for acting and for
+   Civicsmith itself; rust is attention only (a clock, a changed source, a refusal, something visible outside the group); each evidence
+   scale has its own hue (capture blue, connection plum, testimony ochre, subject match olive; §M: colour names the scale, never the
+   value); machine work and another group's work carry no hue and are told apart by edge (dotted; double), mark and word (§P, DEC-92).
+2. **Three voices in type**, one open-licensed family shipped inside the group's copy (principle 9.6): a serif for words people wrote
+   (the group's questions, findings and cases; quoted passages), a sans for Civicsmith's own words, a monospaced face only for
+   identifiers a machine checks. Sixteen pixels is the working default and the size of every field; numbers are tabular.
+3. **Lines before shadows; nearly square corners; no pill.** A shadow means lifted above the work: a dialog, a menu, the hold strip.
+4. **Still until the member is needed** (principle 7.2): state changes take 120–200 ms; the one movement is a wizard's ring drawn once
+   onto the control it points at; none at all under reduced motion.
+5. **Never colour alone** (principle 8.2): every colour has a word or an icon; every pairing meets WCAG 2.2 AA in light and dark (§L),
+   checked by `check_contrast.py` whenever a colour changes.
+
+The marks each have one form: grades and strength (§M); the five gaps, each its own outline and sentence (§U); the ordinary states (§U);
+the origin family and recreation status (§P, DEC-92, DEC-112); the queue's To do, Noticed and Status, the hint and the hunch (DEC-110,
+DEC-131); due dates, which change display as they near, and "Overdue" said once (DEC-94); changed and in-tension marks; the three
+ladders' hues and textures (§M); the hold strip (§S); the wizard mark, a walked path (never a gear), the docked guide and its ring
+(DEC-121); a labelled draft's dashed field (DEC-120 G5); every button's weight, pips and name (§F); the three frames and the
+path-to-publication marker (§W). Exact screens are the design phase's step 5.
 
 ## What this changes about how M8 is built
 
