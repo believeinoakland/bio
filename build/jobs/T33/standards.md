@@ -1,6 +1,6 @@
 # standards (T33)
 
-**Status** · session_01K6bPyjeg2L6kvnBumSsfb9 · depth 2 · WAITING ON BOB (J2) · handled B2
+**Status** · session_01K6bPyjeg2L6kvnBumSsfb9 · depth 2 · WAITING ON BOB (J2) · handled B3
 
 ## J1 · QUESTION
 
