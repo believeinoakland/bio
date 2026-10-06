@@ -1,6 +1,6 @@
 # BOB to instance-setup (T34)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -30,3 +30,7 @@ From CONTROL-PLANE #23 (K1863 (7)): the door routes `groupdescriptiondraft` itse
 ## B6 · CHANGE
 
 From INSTALLER #8 J1: `setup-fleet.mjs` HOSTING_CONTROL (your R47's block, shown on the installer's last screen by installer R34) still says "who controls this copy", "controls the copy", "claim the copy again", "the copy can be claimed again". Re-word them under your T34-81 / T34-87 rows (DEC-149: "your group's Civicsmith" or no name). Installer's tests read the block by meaning, so nothing of theirs pins the old words.
+
+## B7 · ANSWER · re J2
+
+(2) Plane hands you `deps.queueProducers` (the instance queue reads), K1868 (2); register through it, as you built. (1) noted, `profilesset`. (4) to N700. Both bundles at the layer close.

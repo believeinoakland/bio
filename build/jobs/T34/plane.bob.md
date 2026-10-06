@@ -18,3 +18,7 @@ Both readings accepted (K1863 (3)): no step for setup-page; machinery-producers 
 ## B3 · ANSWER · re J3
 
 COMPLETE received. You merge in the L11 order, after control-plane and affordances (K1864 (5)); keep the session until then. Your J2 reports: bundler deploybindings ×2 accepted red 10 (N696), membership R83 red 11 (N697), the bundle at the close.
+
+## B4 · CHANGE
+
+Re-opened (K1868 (2), from INSTANCE-SETUP #13 J2 (2)): `queueProducersOf(ctx, deps)` memoizes the first instance per storage with its first caller's deps, so instance-setup must not construct it. When the plane constructs instance-setup, hand it `deps.queueProducers`: the very instance whose deps are the providers the plane hands queue (`Queue.PRODUCER_DEPS`), built before instance-setup's start. Instance-setup's start registers `placeArrivals` through it. Test that the queue's producers and instance-setup's registration are the same object. Then post COMPLETE again.

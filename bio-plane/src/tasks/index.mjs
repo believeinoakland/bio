@@ -1,4 +1,4 @@
-/* tasks — the obligation inbox (requirements: `build/requirements/tasks.md`, R1–R12).
+/* tasks — the obligation inbox and "Ask for a check" (requirements: `build/requirements/tasks.md`, R1–R17).
  * Split out of `queue` at T16 (N363; Bob's K507, seams K531, `build/plan/draft-N363-queue-split.md`): tasks routed from
  * captures whose authority is undetermined, drained from capture's queue under the task grammar (C-19.1), listed to the
  * members who may see their subjects, and forwarded or resolved by their assignee, anyone when unassigned, or an
@@ -7,6 +7,10 @@
  *   taskDrain, taskList, taskForward, taskResolve   the inbox (R1–R3); the task grammar C-19.1 at the write, in the audit
  *                  and at the drain (R4); the `tasks` figure and the TASK ledger's seed (R5).
  *   recentTasks, resolvedTasks, taskExists           the three reads `queue`'s feed makes of the inbox (R6).
+ *   checkRequest, checkTake, checkRecord             "Ask for a check" (T34, N557; DEC-135, Bob's): the owner's request,
+ *                  addressed by expertise and sight (membership R106) or to a named member, each addressee's To do,
+ *                  the first take, and the check or reasoned concern (R13–R15, R17).
+ *   checkRequests, checksOf                          the requester's read of their requests, and the checks on a target (R16).
  *
  * REACHED as `tasksOf(ctx, deps)` (K61): one instance per Durable Object storage, created on the first call. At that
  * call it seeds its TASK ledger row (R5) and declares its table to record-core's purge (R8). When the declaration holds,
@@ -31,11 +35,11 @@ import { captureOf } from "../capture/index.mjs";
 import { connectionsOf } from "../connections/index.mjs";
 import { schedulerOf } from "../scheduler/index.mjs";
 import { PER_ITEM_ACTS, PER_ITEM_MAX } from "../affordances.mjs";
-import { TASKS_SCHEMA } from "./schema.mjs";
-import { QUEUE_MACHINE_CHECKS, TASK_ACTOR_CHECKS, QUEUE_INBOX_CHECKS, checkInboxGrammar } from "./checks.mjs";
+import { TASKS_SCHEMA, TASKS_TABLES } from "./schema.mjs";
+import { QUEUE_MACHINE_CHECKS, TASK_ACTOR_CHECKS, QUEUE_INBOX_CHECKS, CHECK_REQUEST_CHECKS, checkInboxGrammar } from "./checks.mjs";
 
 export { TASKS_SCHEMA, TASKS_TABLES, tasksOwns } from "./schema.mjs";
-export { QUEUE_MACHINE_CHECKS, TASK_ACTOR_CHECKS, QUEUE_INBOX_CHECKS, checkInboxGrammar } from "./checks.mjs";
+export { QUEUE_MACHINE_CHECKS, TASK_ACTOR_CHECKS, QUEUE_INBOX_CHECKS, CHECK_REQUEST_CHECKS, checkInboxGrammar } from "./checks.mjs";
 
 /* The id suffix the TASK grammar requires: lowercase alphanumeric groups joined
    by single dashes, never empty, never leading or trailing dashes. Derived from
@@ -53,10 +57,27 @@ const clampLimit = (limit, dflt, max) => {
 /* R6: a read's argument as an object; anything else (null, a bare id) is an empty query, which the gate denies. */
 const asQuery = (q) => (q && typeof q === "object" && !Array.isArray(q) ? q : {});
 
+/* R13–R17 (DEC-135): the task kind a check request's To do carries; the verdicts R15 records; the bounds R13 and R15 set. */
+export const CHECK_TASK_KIND = "check-requested";
+const CHECK_VERDICTS = Object.freeze(["check", "concern"]);
+const CHECK_NOTE_MAX = 1000, CHECK_REASON_MAX = 4000;
+/* membership R21's normalisation of a label (trimmed, whitespace collapsed, at most 120), so the label recorded on a
+   request is the one membership R106 addressed by. */
+const normLabel = (label) => String(label ?? "").trim().replace(/\s+/g, " ").slice(0, 120);
+/* A text the member wrote, trimmed; empty reads as null. */
+const trimmed = (v) => { const t = v === null || v === undefined ? "" : String(v).trim(); return t || null; };
+/* An opaque id for a request or a check: 16 characters drawn at random, telling no reader how many exist. */
+const opaque = (prefix) => {
+  const A = "abcdefghijklmnopqrstuvwxyz0123456789", u = new Uint8Array(16);
+  crypto.getRandomValues(u);
+  return `${prefix}-${[...u].map((b) => A[b % 36]).join("")}`;
+};
+
 export class Tasks {
-  #host; #deps; #env; #clock;
+  #host; #deps; #env; #clock; #storage;
   constructor({ host, storage, deps = {} } = {}) {
     this.#host = host;
+    this.#storage = storage;
     this.sql = storage.sql;
     this.#deps = deps || {};
     this.#env = (deps && deps.env) || {};
@@ -561,6 +582,13 @@ export class Tasks {
     /* END DEC-49 REGION is-machine-forward */
     const row = this.#one(`SELECT * FROM tasks WHERE id=?`, id);
     if (!row) return { ok: false, reason: "NO_SUCH_TASK" };
+    /* R3 (DEC-135 (2), (6)): a check request is addressed by expertise and sight, or to a member its requester names,
+       and is never reassigned. */
+    if (row.kind === CHECK_TASK_KIND)
+      /* DEC-49 REGION is-check-not-forwarded */
+      return Tasks.#checkRefusal("CHECK_NOT_FORWARDED",
+        "a request for a check is never forwarded: anyone who can see its subject may take it; nothing was changed");
+      /* END DEC-49 REGION is-check-not-forwarded */
     if (row.status === "resolved") return { ok: false, reason: "ALREADY_RESOLVED", detail: "a resolved task is not forwarded; a new determination opens a new task" };
     const fenced = this.#refuseNotYours(row, actor, "forward");
     if (fenced) return fenced;
@@ -614,6 +642,20 @@ export class Tasks {
     const fenced = this.#refuseNotYours(row, actor, "resolve");
     if (fenced) return fenced;
     const at = now && ISO_INSTANT.test(now) ? now : stampInstant("second", this.#nowMs());
+    /* R3 (DEC-135 (3)): a check request's To do. The taker's closes only by R15's record; an addressee who has not taken
+       it closes their own To do and nothing else, the request staying open to the others. It is no C-19.1 task (that
+       grammar is the drained inbox's), so it is written here directly. */
+    if (row.kind === CHECK_TASK_KIND) {
+      const link = this.#one(`SELECT c.request, k.taker FROM check_todos c LEFT JOIN check_takes k ON k.request = c.request
+                                WHERE c.task=?`, id);
+      if (link && link.taker && link.taker === row.assignee)
+        /* DEC-49 REGION is-check-closes-by-record */
+        return Tasks.#checkRefusal("CHECK_CLOSES_BY_RECORD",
+          "this To do is the check its holder took, and it closes when the check or a concern is recorded; nothing was changed");
+        /* END DEC-49 REGION is-check-closes-by-record */
+      this.#closeTodo({ task: id, history: row.history }, { at, event: "resolved", actor });
+      return { ok: true, id, status: "resolved", resolved_at: at };
+    }
     const task = this.#taskOf(row);
     task.history.push({ at, event: "resolved", actor });
     task.status = "resolved";
@@ -623,6 +665,278 @@ export class Tasks {
     this.sql.exec(`UPDATE tasks SET status=?, resolved_at=?, history=? WHERE id=?`,
       task.status, at, JSON.stringify(task.history), id);
     return { ok: true, id, status: "resolved", resolved_at: at };
+  }
+
+  /* ------------------------------------------------------------------ "Ask for a check" (R13–R17; DEC-135, Bob's)
+     A request (R13) is addressed at its instant to every member membership R106 answers for its label and target, or to
+     the one member its owner names; each addressee holds a To do, a task of kind `check-requested` on the target (R14),
+     which R2 and R6 answer as any task, behind the same gate (R9). The first take wins; the others' To do closes naming
+     the taker. The taker records a check or a reasoned concern (R15), which gates nothing. Every row is appended in this
+     module's own tables and never overwritten (R17). Sight is membership R80's `inSight`, for `by` as `member:<by>`. */
+
+  /** One refusal of C-138 (R17), with its row's check and translation (DEC-49). */
+  static #checkRefusal(code, detail, extra = {}) {
+    const row = CHECK_REQUEST_CHECKS[code];
+    return { ...extra, ok: false, reason: code, code, check: row.check, translation: row.translation, detail };
+  }
+
+  /** R13–R15, Design Requirement 12: only a member asks, takes or checks. An empty `by` or a machine stamp is refused by
+   *  shape, before anything is read. */
+  #refuseMachineCheck(by) {
+    if (typeof by === "string" && by && !isMachineStamp(by)) return null;
+    /* DEC-49 REGION is-machine-check */
+    return Tasks.#checkRefusal("MACHINE_CANNOT_CHECK",
+      "asking for a check, taking one and recording one are a member's acts, and this caller is no member's session");
+    /* END DEC-49 REGION is-machine-check */
+  }
+
+  /** R14, R15: the request `request` names, when it exists, `by` is an active member and the target is in `by`'s sight;
+   *  else `NO_SUCH_CHECK_REQUEST`, one answer for each. */
+  #requestFor(request, by) {
+    const row = typeof request === "string" && request ? this.#one(`SELECT * FROM check_requests WHERE request=?`, request) : null;
+    const facts = row ? this.#membership.memberFacts(by) : null;
+    if (row && facts && facts.status === "active" && this.#membership.inSight(row.target, `member:${by}`)) return { row, facts };
+    /* DEC-49 REGION is-check-request */
+    return { refused: Tasks.#checkRefusal("NO_SUCH_CHECK_REQUEST",
+      "no request for a check answers to that id that you can act on; nothing was written") };
+    /* END DEC-49 REGION is-check-request */
+  }
+
+  /** The instant an act is at: the given one when it is an ISO instant, else the instance's clock. */
+  #instant(now) { return now && ISO_INSTANT.test(now) ? now : stampInstant("second", this.#nowMs()); }
+
+  /** One synchronous unit: the storage's transaction when it has one (a Durable Object's), else the call itself. */
+  #atomically(fn) {
+    return this.#storage && typeof this.#storage.transactionSync === "function" ? this.#storage.transactionSync(fn) : fn();
+  }
+
+  /** R14: a To do for `member` on the request: a task of kind `check-requested` on the target, open, role `member`,
+   *  linked to the request. Throws a MINT_EXHAUSTED marker when no TASK id can be drawn, which the caller's transaction
+   *  turns into R62's answer with nothing written. */
+  #addTodo(req, member, at) {
+    this.seedLedger();
+    const id = this.#record.mintOpaqueId("TASK", at.slice(0, 4), "-check",
+      (x) => !!this.#one(`SELECT 1 AS x FROM tasks WHERE id=?`, x));
+    if (!id) throw Object.assign(new Error("MINT_EXHAUSTED"), { exhausted: true });
+    const subject = req.label ? `A check is asked: ${req.label}` : "A check is asked of you by name";
+    this.sql.exec(
+      `INSERT INTO tasks (id, kind, refers_to, capture_sha, subject_text, subject_desc, locators,
+                          assignee, assignee_role, status, created, resolved_at, history)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      id, CHECK_TASK_KIND, req.target, null, subject, req.note ?? null, null, member, "member", "open", at, null,
+      JSON.stringify([{ at, event: "created", actor: req.by }]));
+    this.sql.exec(`INSERT INTO check_todos (request, member, task, at) VALUES (?,?,?,?)`, req.request, member, id, at);
+    return id;
+  }
+
+  /** R14, R15: the request's To dos that are still open, each `{task, member, history}`. */
+  #openTodos(request) {
+    return this.#rows(`SELECT t.id AS task, c.member AS member, t.history AS history FROM check_todos c
+                         JOIN tasks t ON t.id = c.task WHERE c.request=? AND t.status <> 'resolved' ORDER BY t.id`, request);
+  }
+
+  /** Close one To do, appending `entry` to its history (R14's `taken`, R15's `resolved`). */
+  #closeTodo(todo, entry) {
+    let history = [];
+    try { history = JSON.parse(todo.history); } catch { history = []; }
+    history.push(entry);
+    this.sql.exec(`UPDATE tasks SET status='resolved', resolved_at=?, history=? WHERE id=?`, entry.at, JSON.stringify(history), todo.task);
+  }
+
+  /** R13: ask for a check on `target`, by expertise `label` or of the named `member`, with an optional `note`. */
+  checkRequest({ target = null, label, member, note = null, by = null, now = null } = {}) {
+    const machine = this.#refuseMachineCheck(by);
+    if (machine) return machine;
+    const info = typeof target === "string" && target ? this.#record.bundleInfo(target) : null;
+    if (!info || !this.#membership.inSight(target, `member:${by}`))
+      /* DEC-49 REGION is-check-target */
+      return Tasks.#checkRefusal("NO_SUCH_CHECK_TARGET",
+        "no item you can see answers to that id, so there is nothing to ask a check on; nothing was written");
+      /* END DEC-49 REGION is-check-target */
+    const project = info.type === "project" ? target : info.project;
+    if (!project || !this.#membership.isProjectOwner(project, by))
+      /* DEC-49 REGION is-check-owner */
+      return Tasks.#checkRefusal("CHECK_NOT_AN_OWNER",
+        "a check is asked by an owner of the project the item belongs to; nothing was written");
+      /* END DEC-49 REGION is-check-owner */
+    const byLabel = label !== null && label !== undefined, byName = member !== null && member !== undefined;
+    if (byLabel === byName)
+      /* DEC-49 REGION is-check-address */
+      return Tasks.#checkRefusal("CHECK_ADDRESS_ONE",
+        "a check is addressed by an expertise label or to one named member, exactly one of the two; nothing was written");
+      /* END DEC-49 REGION is-check-address */
+    let addressees;
+    if (byLabel) {
+      /* membership R106: who the label reaches among those who can see the target; its own refusal of an empty label. */
+      const found = this.#membership.checkAddressees({ target, label });
+      if (!Array.isArray(found)) return found;
+      addressees = found.map((a) => a.memberId);
+    } else {
+      const facts = typeof member === "string" && member ? this.#membership.memberFacts(member) : null;
+      if (!facts || facts.status !== "active" || !this.#membership.inSight(target, `member:${member}`))
+        /* DEC-49 REGION is-check-member */
+        return Tasks.#checkRefusal("CHECK_MEMBER_REFUSED",
+          "the member named is not an active member who can see the item; nothing was written");
+        /* END DEC-49 REGION is-check-member */
+      addressees = [member];
+    }
+    const text = trimmed(note);
+    if (text && text.length > CHECK_NOTE_MAX)
+      /* DEC-49 REGION is-check-note */
+      return Tasks.#checkRefusal("CHECK_NOTE_TOO_LONG",
+        `the note is over ${CHECK_NOTE_MAX} characters once trimmed; nothing was written`, { max: CHECK_NOTE_MAX });
+      /* END DEC-49 REGION is-check-note */
+    const at = this.#instant(now);
+    const req = { request: opaque("chkreq"), target, label: byLabel ? normLabel(label) : null, member: byName ? member : null,
+                  note: text, by, at };
+    try {
+      this.#atomically(() => {
+        this.sql.exec(`INSERT INTO check_requests (request, target, label, member, note, by, at, addressed) VALUES (?,?,?,?,?,?,?,?)`,
+          req.request, req.target, req.label, req.member, req.note, req.by, req.at, addressees.length);
+        for (const m of addressees) this.#addTodo(req, m, at);
+      });
+    } catch (e) {
+      if (e && e.exhausted) return mintExhausted("TASK");
+      throw e;
+    }
+    /* the number addressed, never who (R13) */
+    return { ok: true, request: req.request, at, addressed: addressees.length };
+  }
+
+  /** R14: take the request. Exactly one take succeeds: the take is one conditional write under the request's key. */
+  checkTake({ request = null, by = null, now = null } = {}) {
+    const machine = this.#refuseMachineCheck(by);
+    if (machine) return machine;
+    const { row: req, facts, refused } = this.#requestFor(request, by);
+    if (refused) return refused;
+    const held = this.#one(`SELECT taker, handle, at FROM check_takes WHERE request=?`, req.request);
+    if (held && held.taker === by) return { ok: true, already: true, request: req.request, taken: { handle: held.handle, at: held.at } };
+    if (held)
+      /* DEC-49 REGION is-check-taken */
+      return Tasks.#checkRefusal("CHECK_ALREADY_TAKEN", `this check was taken by ${held.handle ?? "another member"} at ${held.at}`,
+        { taken: { handle: held.handle ?? null, at: held.at } });
+      /* END DEC-49 REGION is-check-taken */
+    const at = this.#instant(now);
+    const handle = facts.handle ?? null;
+    let todo = null;
+    try {
+      todo = this.#atomically(() => {
+        this.sql.exec(`INSERT OR IGNORE INTO check_takes (request, taker, handle, at) VALUES (?,?,?,?)`, req.request, by, handle, at);
+        const won = this.#one(`SELECT taker FROM check_takes WHERE request=?`, req.request);
+        if (!won || won.taker !== by) return null;
+        let mine = null;
+        for (const t of this.#openTodos(req.request)) {
+          if (t.member === by) { mine = mine || t.task; continue; }
+          /* the others' To do closes in the same act, its history naming the taker (DEC-135 (3)) */
+          this.#closeTodo(t, { at, event: "taken", actor: by, handle });
+        }
+        return mine || this.#addTodo({ ...req }, by, at);
+      });
+    } catch (e) {
+      if (e && e.exhausted) return mintExhausted("TASK");
+      throw e;
+    }
+    if (!todo) return this.checkTake({ request, by, now });     /* another take landed first: answer as it stands */
+    return { ok: true, request: req.request, target: req.target, taken: { handle, at }, todo };
+  }
+
+  /** R15: the taker records a check or a reasoned concern; one record per request; it gates nothing. */
+  checkRecord({ request = null, verdict = null, reason = null, by = null, now = null } = {}) {
+    const machine = this.#refuseMachineCheck(by);
+    if (machine) return machine;
+    const { row: req, facts, refused } = this.#requestFor(request, by);
+    if (refused) return refused;
+    const take = this.#one(`SELECT taker FROM check_takes WHERE request=?`, req.request);
+    if (!take || take.taker !== by)
+      /* DEC-49 REGION is-check-taker */
+      return Tasks.#checkRefusal("CHECK_NOT_YOURS", "a check is recorded by the member who took the request; nothing was written");
+      /* END DEC-49 REGION is-check-taker */
+    if (!CHECK_VERDICTS.includes(verdict))
+      /* DEC-49 REGION is-check-verdict */
+      return Tasks.#checkRefusal("CHECK_VERDICT_UNKNOWN", "the verdict is `check` or `concern`; nothing was written",
+        { verdicts: [...CHECK_VERDICTS] });
+      /* END DEC-49 REGION is-check-verdict */
+    const why = trimmed(reason);
+    if (verdict === "concern" && !why)
+      /* DEC-49 REGION is-check-reason */
+      return Tasks.#checkRefusal("CHECK_NO_REASON", "a concern is recorded with its reason; nothing was written");
+      /* END DEC-49 REGION is-check-reason */
+    if (why && why.length > CHECK_REASON_MAX)
+      /* DEC-49 REGION is-check-reason-length */
+      return Tasks.#checkRefusal("CHECK_REASON_TOO_LONG",
+        `the reason is over ${CHECK_REASON_MAX} characters once trimmed; nothing was written`, { max: CHECK_REASON_MAX });
+      /* END DEC-49 REGION is-check-reason-length */
+    const first = this.#one(`SELECT * FROM check_records WHERE request=?`, req.request);
+    if (first)
+      /* DEC-49 REGION is-check-recorded */
+      return Tasks.#checkRefusal("CHECK_ALREADY_RECORDED", "this request's check is already recorded; nothing was written",
+        { record: Tasks.#recordOf(first) });
+      /* END DEC-49 REGION is-check-recorded */
+    const at = this.#instant(now);
+    /* membership R24: the checker's current state for the label at this instant; a named-member request has no label */
+    let expertise = null;
+    if (req.label) {
+      const list = this.#membership.expertiseList({ memberId: by });
+      const cur = list && Array.isArray(list.expertise) ? list.expertise.find((x) => x.label === req.label) : null;
+      expertise = cur && cur.state === "confirmed" ? "confirmed" : cur && cur.state === "declared" ? "self-declared" : null;
+    }
+    const rec = { check: opaque("chk"), request: req.request, target: req.target, checker: by, handle: facts.handle ?? null,
+                  label: req.label ?? null, expertise, verdict, reason: why, at };
+    this.#atomically(() => {
+      this.sql.exec(`INSERT INTO check_records (check_id, request, target, checker, handle, label, expertise, verdict, reason, at)
+                     VALUES (?,?,?,?,?,?,?,?,?,?)`, rec.check, rec.request, rec.target, rec.checker, rec.handle, rec.label,
+        rec.expertise, rec.verdict, rec.reason, rec.at);
+      /* the taker's To do closes by this record (R15) */
+      for (const t of this.#openTodos(req.request))
+        if (t.member === by) this.#closeTodo(t, { at, event: "resolved", actor: by });
+    });
+    return { ok: true, ...rec };
+  }
+
+  static #recordOf(r) {
+    return { check: r.check_id, request: r.request, target: r.target, checker: r.checker, handle: r.handle ?? null,
+             label: r.label ?? null, expertise: r.expertise ?? null, verdict: r.verdict, reason: r.reason ?? null, at: r.at };
+  }
+
+  /** R16: the requests the viewer made, newest first, those whose target the viewer may no longer see left out and not
+   *  counted, at most `limit` (1–500, default 200) with `truncated` and `next` (the id to pass as `after`). */
+  checkRequests(q = {}) {
+    const { viewer = null, after = null, limit = 200 } = asQuery(q);
+    const cap = clampLimit(limit, 200, 500);
+    const none = { ok: true, requests: [], limit: cap, truncated: false, next: null };
+    try {
+      const me = viewerPredicate(viewer).member;
+      if (!me) return none;
+      let rows = this.#rows(`SELECT * FROM check_requests WHERE by=? ORDER BY at DESC, request DESC`, me);
+      if (typeof after === "string" && after) {
+        const i = rows.findIndex((r) => r.request === after);
+        rows = i >= 0 ? rows.slice(i + 1) : [];
+      }
+      const seen = [];
+      for (const r of rows) {
+        if (!this.#membership.inSight(r.target, viewer)) continue;
+        seen.push(r);
+        if (seen.length > cap) break;
+      }
+      const page = seen.slice(0, cap);
+      return { ok: true, limit: cap, truncated: seen.length > cap, next: seen.length > cap ? page[page.length - 1].request : null,
+        requests: page.map((r) => {
+          const take = this.#one(`SELECT handle, at FROM check_takes WHERE request=?`, r.request);
+          const rec = this.#one(`SELECT * FROM check_records WHERE request=?`, r.request);
+          return { request: r.request, target: r.target, label: r.label ?? null, member: r.member ?? null, note: r.note ?? null,
+                   at: r.at, addressed: Number(r.addressed), taken: take ? { handle: take.handle ?? null, at: take.at } : null,
+                   check: rec ? Tasks.#recordOf(rec) : null };
+        }) };
+    } catch { return none; }
+  }
+
+  /** R16: every check recorded on `target`, oldest first; a target the viewer may not see answers `[]`. */
+  checksOf(q = {}) {
+    const { target = null, viewer = null } = asQuery(q);
+    try {
+      if (!this.#membership.inSight(target, viewer)) return [];
+      return this.#rows(`SELECT * FROM check_records WHERE target=? ORDER BY at, check_id`, target).map((r) => Tasks.#recordOf(r));
+    } catch { return []; }
   }
 
   static PER_ITEM_MAX = PER_ITEM_MAX;   /* affordances.mjs: ONE number, published as set_acts[].max_items */
@@ -672,7 +986,8 @@ export function tasksOf(ctx, deps = {}) {
     OF.set(storage, t);
     const record = (deps && deps.record) || recordOf(ctx);
     t.seedLedger();
-    const held = record.declarePurge("tasks", [{ name: "tasks", keys: [] }]);
+    /* R8, R17: every table of this module, the inbox and the check tables, to the whole-store purge only. */
+    const held = record.declarePurge("tasks", TASKS_TABLES.map((name) => ({ name, keys: [] })));
     if (held && held.ok === true) {
       record.registerCounts("tasks", [...Tasks.COUNT_KEYS], (hid) => t.counts(hid));
       record.registerAuditCheck("tasks", (image) => t.audit(image));
@@ -692,7 +1007,7 @@ export function tasksOf(ctx, deps = {}) {
 
 /* The ops this module answers, as entries of the plane's one op map (K3), which control-plane's routes spread in
    (`control-plane/dispatch.mjs`). `viewer` is the control plane's stamp, read from the URL so a body never supplies one
-   (R10); the actor rides in the body, stamped there by the control plane. */
+   (R10); the task acts' actor rides in the body, stamped there by the control plane; the check acts' `by` is the URL's. */
 export function tasksOps(t, url, body) {
   const s = (k) => url.searchParams.get(k);
   return {
@@ -701,5 +1016,13 @@ export function tasksOps(t, url, body) {
                               limit: s("limit"), viewer: s("viewer") }),
     taskforward: () => t.taskForward(body || {}),
     taskresolve: () => t.taskResolve(body || {}),
+    /* R13–R16 (T34; DEC-135): the stamps (`by`, `viewer`) from the query, read after the body so a body's copy never wins
+       (R10); the request's own fields from the body. op-declarations R23 declares these and control-plane R55 routes them. */
+    checkrequest: () => t.checkRequest({ target: body?.target, label: body?.label, member: body?.member, note: body?.note,
+                                         by: s("by"), viewer: s("viewer") }),
+    checktake: () => t.checkTake({ request: body?.request, by: s("by") }),
+    checkrecord: () => t.checkRecord({ request: body?.request, verdict: body?.verdict, reason: body?.reason, by: s("by") }),
+    checkrequests: () => t.checkRequests({ viewer: s("viewer"), after: s("after"), limit: s("limit") }),
+    checksof: () => t.checksOf({ target: s("target"), viewer: s("viewer") }),
   };
 }
