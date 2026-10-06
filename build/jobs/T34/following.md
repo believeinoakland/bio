@@ -25,3 +25,7 @@ T34-70: two more of my refusal codes are already held by other families, so givi
 - `checks/format.mjs`: 129 modules, 128 requirements files; 0 failures. `checks/architecture.mjs … following`: 13 product files, 40 relative imports; 0 failures. `checks/coverage.mjs … following`: 19 of 19 live requirement ids named by a test; 0 failures. `checks/ownership.mjs … following tranche/T34`: 8 files changed; 0 failures.
 
 Size (session_01PHvCR5g2gvUo33ZsaVz5zA): test runs 12, module lines 1109
+
+## J2 · COMPLETE
+
+T34-70 applied: C-137 (20 rows, `following/checks.mjs`, `FOLLOWING_CHECKS`), every refusal carrying its row; `NO_SUCH_ADDRESS` → `NO_SUCH_MEETING_ADDRESS`, `BAD_CADENCE` → `BAD_FOLLOW_CADENCE`, `MEMBER_ACT_ONLY` → `NOT_THE_FOLLOWER` (K1836, K1855 (2)); rows awaiting stamp. K1738 red cleared (body space; and the profile's vote labels, events R11). B3 applied after merging tranche/T34. following 44/44; scheduler 81/1 (inherited R12, K1708, unchanged); format, architecture, coverage (19/19), ownership (8 files) 0 failures. Expected reds: control-plane families.test totality (K1836, until T34-60), row census C-137 arrivals (Rules (5) 4). Details in the record.
