@@ -38,3 +38,7 @@ Found outside network-notices (record's Completion): (1) docket checks.mjs:101, 
 ## J3 · COMPLETE
 
 T34-87 applied: C-127.4, .5, .12 translations, NOTICE_NO_INSTANCE_KEY's detail (both sites) and R21's key label no longer say 'this copy'/'instance'; words.test.mjs names each (R1, R4, R21; 0/4 before, 4/4 after). Module 72/72; ratification, case-authoring, queue-producers green; scheduler, control-plane reds are the START's named ones; plane's one red is pre-existing (J2). format, architecture, coverage (30/30), ownership 0 failures. The label rests on J1's reading. Rows awaiting stamp named in the record.
+
+## J4 · COMPLETE
+
+B2 applied (K1833): COPY_KEY_LABEL is "this group's Civicsmith key"; tranche/T34 merged (R21's re-wording); words.test.mjs updated. Module 72/72; format, architecture, coverage (30/30), ownership 0 failures. Record's Completion updated; J2's findings stand.
