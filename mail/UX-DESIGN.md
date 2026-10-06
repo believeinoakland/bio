@@ -546,3 +546,10 @@ Also since U84: DEC-157 and DEC-158 posted (U83, U84).
 ## U86 · NOTICE · 2026-10-06 · session_01SEmEip2dMnNBFgsXF9Tids · primary
 DEC-160 (design session, on Bob's comments): anything the record holds that a screen names is a link, opening it where it is shown. That covers a document, a cited passage (opening the document at that passage), a person, an office, an action and what it sent, a filing, a money item, an event, a question and a case. A superseded version opens both versions side by side. The card (DEC-159) shows on hover or focus first. On the public page a citation opens the evidence layer.
 - Owed (BOB): every reference on member screens and the public page as a link to the item (passage or version where meant), with its card.
+
+## U87 · NOTICE · 2026-10-06 · session_01SEmEip2dMnNBFgsXF9Tids · primary
+DEC-160 amended on Bob's direction ("Hover over the name of a document, content, connection, etc, see a summary and it's importance to the context of that screen. Click on it and the member to taken to it."):
+- Every reference's card gives what the item is and a "Here:" line saying why it matters on that screen.
+- A click opens the item.
+- A hint opens in place: what was matched (each item a link), how it was found, its measured false-alarm rate, what it is not, and its acts (`promote`, `proposedispose`, `queuemute`).
+- Owed (BOB): each card's "why it matters here" is drawn from the screen's context (the question the item supports or cuts against, the step it waits on, the finding that cites it), not a fixed text; the hint's details from the signal's record.
