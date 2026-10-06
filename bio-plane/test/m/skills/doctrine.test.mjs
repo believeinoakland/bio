@@ -132,7 +132,7 @@ test("R17 five prohibitions, each text and because verbatim in its source, named
   assert.equal(layer.permitted_auto_composition, PERMITTED_AUTO_COMPOSITION);
 });
 
-test("R18 R29 the deployment sequence is run-rules' own, re-exported unchanged: check, investigate, extract, plan last, check first, unverified, enforced by the plane's C-109.1, holding no flag, predicate or decision; the gate is agent-worker's", () => {
+test("R18 R29 the deployment sequence is run-rules' own, re-exported unchanged: check, investigate, extract, plan last, check first, unverified, enforced by the plane's C-109.1, holding no flag, predicate or decision; the gate is agent-worker's, at its address in agent-harness' files", () => {
   for (const k of ["DEPLOYMENT_SEQUENCE", "GATE_ADDRESS", "SEQUENCING_SOURCE", "SEQUENCING_ALSO_NAMED_IN"])
     assert.equal(doctrine[k], deployment[k], `${k} is run-rules' own export, not a copy`);
   assert.deepEqual(DEPLOYMENT_SEQUENCE.order, ["check", "investigate", "extract", "plan"]);
@@ -157,12 +157,14 @@ test("R18 R29 the deployment sequence is run-rules' own, re-exported unchanged: 
   };
   walk(DEPLOYMENT_SEQUENCE, "DEPLOYMENT_SEQUENCE");
   walk(GATE_ADDRESS, "GATE_ADDRESS");
-  assert.equal(GATE_ADDRESS.file, "agent-worker/src/harness.mjs");
+  /* The address names agent-harness' file, which holds the control-flow table agent-worker runs (N586, K1615): a
+     string pinned here, never read, since agent-harness is later in the order (P4). */
+  assert.equal(GATE_ADDRESS.file, "agent-harness/src/harness.mjs");
   assert.equal(GATE_ADDRESS.modes_export, "MODES");
   assert.equal(GATE_ADDRESS.table_export, "CONTROL_FLOW");
   assert.equal(GATE_ADDRESS.row, "gate-mode");
   assert.equal(DEPLOYMENT_SEQUENCE.gate, GATE_ADDRESS);
-  assert.equal(DEPLOYMENT_SEQUENCE.enforced_by_row, 'agent-worker/src/harness.mjs:CONTROL_FLOW["gate-mode"]');
+  assert.equal(DEPLOYMENT_SEQUENCE.enforced_by_row, 'agent-harness/src/harness.mjs:CONTROL_FLOW["gate-mode"]');
   assert.ok(foundIn(read(SEQUENCING_SOURCE), DEPLOYMENT_SEQUENCE.text), "§2's ruling, verbatim");
 });
 
