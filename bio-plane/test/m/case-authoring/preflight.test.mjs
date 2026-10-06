@@ -242,14 +242,14 @@ test("R55 (case-disclosures R2): an empty reason is SELF_ATTESTED_NO_REASON (C-1
   assert.equal(caseDocumentBlocks(docOf(w, ok).text).captures.find((c) => c.capture === b).acknowledgement.reason, REASON);
 });
 
-test("R55 (case-disclosures R3): an acknowledged capture is marked self_attested_only with {reason, acknowledged_by (the author stamp), at} and capture.captureAccountsOf's signed accounts, exact, and its block carries DEC-81 item 3's sentence", () => {
+test("R55 (case-disclosures R3): an acknowledged capture is marked self_attested_only with {reason, acknowledged_by (the author stamp), at} and capture.captureAccountsOf's signed accounts, exact, and its block carries DEC-81 item 3's sentence", async () => {
   const { w, P, b } = setup();
   const text = "I saved it from the council page myself.\nThe archive refused it that day.";
   const signature = "-----BEGIN SSH SIGNATURE-----\nU1NIU0lH\n-----END SSH SIGNATURE-----";
   w.st.sql.exec(`INSERT INTO capture_accounts (capture_sha, seq, by, text, signature, key_b64, at) VALUES (?, 1, 'alice', ?, ?, 'AAAA', ?)`,
                 b, text, signature, "2026-09-27T12:00:00Z");
   const url = new URL(`http://do/publishcase?author=alice&viewer=${encodeURIComponent(V("alice"))}&project=${P}`);
-  const r = caseAuthoringOps(w.ca, url, { ...AUTH, targets: [Q], roles: { [Q]: "load_bearing" }, author: "bo",
+  const r = await caseAuthoringOps(w.ca, url, { ...AUTH, targets: [Q], roles: { [Q]: "load_bearing" }, author: "bo",
                                          selfAttested: [{ capture: b, reason: REASON }] }).publishcase();
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
   const doc = docOf(w, r).text;
@@ -416,7 +416,7 @@ test("R34: steps gives the five steps' content — what becomes permanent; what 
   assert.ok(Array.isArray(no.steps[2].tensions.candidates), "R32's read is still carried");
 });
 
-test("R34: it raises no re-evaluation for a member's new edition (R15's listeners are never told of an edition a rolled-back run made), and op=publishpreflight takes its stamps from the query after the body", () => {
+test("R34: it raises no re-evaluation for a member's new edition (R15's listeners are never told of an edition a rolled-back run made), and op=publishpreflight takes its stamps from the query after the body", async () => {
   const { w, P, b } = setup({ ratification: ratifyWith({ ok: true, ready: true, refusals: [] }) });
   const sa = { selfAttested: [{ capture: b, reason: REASON }] };
   const a1 = w.publish(P, "alice", [Q], sa); w.ratify(a1);
@@ -435,7 +435,7 @@ test("R34: it raises no re-evaluation for a member's new edition (R15's listener
   assert.deepEqual(w.snapshot(), before);
   /* the op: author and viewer stamped from the query; a body's own are overwritten */
   const url = new URL(`http://do/publishpreflight?author=alice&viewer=${encodeURIComponent(V("alice"))}&project=${P}&caseId=${a1.caseId}`);
-  const viaOp = caseAuthoringOps(w.ca, url, { ...AUTH, ...fresh, ...sa, targets: [Q], roles: { [Q]: "load_bearing" },
+  const viaOp = await caseAuthoringOps(w.ca, url, { ...AUTH, ...fresh, ...sa, targets: [Q], roles: { [Q]: "load_bearing" },
                                              author: "bo", viewer: V("bo") }).publishpreflight();
   assert.deepEqual([viaOp.ready, viaOp.steps[4].signer], [true, "alice"]);
   const pub = w.publish(P, "alice", [Q], { caseId: a1.caseId, ...fresh, ...sa });
@@ -464,7 +464,7 @@ test("R34: against the real ratification R18, its list is read over the text op=
   assert.equal(pre.ready, direct.refusals.length === 0);
 });
 
-test("R34 (N435): an agent credential's stamp — {stamp, aiCred}, as the door stamps a minted agent's — is carried whole to ratification R18, so its machine fences hold the agent whatever its viewer stamp; the act and every other read are asked as the stamp; op=publishpreflight reads the door's aiCred beside viewer, and one that does not parse still fences", () => {
+test("R34 (N435): an agent credential's stamp — {stamp, aiCred}, as the door stamps a minted agent's — is carried whole to ratification R18, so its machine fences hold the agent whatever its viewer stamp; the act and every other read are asked as the stamp; op=publishpreflight reads the door's aiCred beside viewer, and one that does not parse still fences", async () => {
   const { w, P, b } = setup();
   /* a member-scoped agent credential alice mints: its viewer stamp is alice's own (membership R28's principal) */
   const mint = w.credentials.aiCredentialMint({ who: "alice", tokenId: "AIC-0001", secretSha: sha("the agent's secret"),
@@ -492,10 +492,10 @@ test("R34 (N435): an agent credential's stamp — {stamp, aiCred}, as the door s
   /* the route: the door's aiCred beside viewer; absent, the stamp alone; unparsable, still an agent's */
   const route = (extra) => caseAuthoringOps(w.ca, new URL(`http://do/publishpreflight?author=alice&viewer=${
     encodeURIComponent(V("alice"))}&project=${P}${extra}`), { ...a, viewer: V("bo"), author: "bo" }).publishpreflight();
-  const viaDoor = route(`&aiCred=${encodeURIComponent(JSON.stringify(aiCred))}`);
+  const viaDoor = await route(`&aiCred=${encodeURIComponent(JSON.stringify(aiCred))}`);
   assert.deepEqual(reasons(viaDoor), reasons(agent));
-  assert.deepEqual(reasons(route("")), reasons(member));
-  assert.deepEqual(reasons(route("&aiCred=not-json")).filter((x) => fenced.includes(x)), fenced, "fails closed");
+  assert.deepEqual(reasons(await route("")), reasons(member));
+  assert.deepEqual(reasons(await route("&aiCred=not-json")).filter((x) => fenced.includes(x)), fenced, "fails closed");
   /* last, since it stores a preparation: exactly as ratification answers that viewer over the text op=publish then stores, but for the minted case id */
   const r = w.ca.publishCase(a);
   const direct = w.ratification.caseRatifyPreflight({ text: docOf(w, r).text, signer: "alice",

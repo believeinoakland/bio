@@ -184,7 +184,9 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
                                    citations = [], attributions = [], tensions = [],
                                    tensionsUnread = [], captures = [], sources = [], whatChanged = null,
                                    lens: lensRead = null, method = null, materials = null, group = null,
-                                   accepted = null, grading = null, passages = null }) {
+                                   accepted = null, grading = null, passages = null,
+                                   calculations = [], calculationsBlock = [], timeline = [], timelineLeftOut = 0,
+                                   timelineBlock = [], peopleBlock = [], memberTiesBlock = [] }) {
   const roleOf = new Map((roles || []).map((r) => [r.target, r.role]));
   const lens = manifest && manifest.in_force === true ? manifest
     : { in_force: manifest && manifest.in_force === null ? null : false,
@@ -275,6 +277,14 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
     /* R55, `case-disclosures` R15 (K1315): each reached finding's grading facts and relied-on passages, signed with the document. */
     ...(grading ? gradingFactsLines(grading) : []),
     ...(passages ? passagesLines(passages) : []),
+    /* R56 (C:A-15): every calculation and workbook a chain reaches, its state at this act and the owner's words where a
+       disclosure was needed; R57 (C11): the timeline, two lanes never mixed; R55 (case-disclosures R28): the people the
+       case names with each one's basis, and each signer's declared ties. Each block is its owner's one spelling, rendered
+       by the caller. */
+    ...calculationsBlock,
+    ...timelineBlock,
+    ...peopleBlock,
+    ...memberTiesBlock,
     "completeness:",
     `  statement: "${fmSafe(statement)}"`,
     `  subject_position: ${position}`,
@@ -424,6 +434,8 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
     ...(materials ? carriesBodyLines(method, materials, group) : []),
     ...acceptedBodyLines(accepted),
     ...(attributions.length ? attributionBodyLines(attributions) : []),
+    ...calculationBodyLines(calculations),
+    ...timelineBodyLines(timeline, timelineLeftOut),
     "## What This Excludes",
     "",
     statement,
@@ -566,4 +578,40 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
     "",
   ];
   return fm.join("\n") + body.join("\n");
+}
+
+/** R56 (C:A-15; DEC-76.4): the calculations section, in words a reader reads: each calculation and workbook the case's
+ *  findings rest on, what this instance's recompute found at publication, and the owner's words where one differs or
+ *  rests on an unbound input. No section when the findings reach none. */
+export const CALCULATION_STATE_WORDS = Object.freeze({
+  agrees: "recomputed at publication, and the result agrees with the one stored",
+  differs: "recomputed at publication, and the result DIFFERS from the one stored",
+  unbound: "recomputed at publication; at least one input was typed in with no source, and is testimony",
+  not_recomputed: "not recomputed here",
+});
+export function calculationBodyLines(rows) {
+  if (!rows || !rows.length) return [];
+  return ["## Calculations This Case Rests On", "",
+    "Each calculation below was recomputed by this instance when the case was published, never on a later read. A "
+    + "result that differs, or an input typed in with no source, is disclosed here by the group and does not stop "
+    + "publication.", "",
+    ...rows.map((r) => `- ${r.calc}: ${CALCULATION_STATE_WORDS[r.recompute] ?? r.recompute}.`
+      + (r.disclosed != null ? ` Disclosed by the group${r.disclosed ? `: ${r.disclosed}` : "."}` : "")),
+    ""];
+}
+
+/** R57 (C11; K1494): the timeline, in words: what the world did and what the group did, as two lists, never one; each
+ *  item with the source it rests on; how many items had no source and were left out. */
+export function timelineBodyLines(rows, leftOut = 0) {
+  if ((!rows || !rows.length) && !leftOut) return [];
+  const lane = (name, title) => {
+    const items = (rows || []).filter((r) => r.lane === name);
+    return [title, "", ...(items.length ? items.map((r) => `${r.ord}. ${r.when} — ${r.label ?? r.ref} (${r.ref}; source ${r.source})`)
+      : ["Nothing in this lane."]), ""];
+  };
+  return ["## Timeline", "",
+    "Frozen when this case was published. What happened in the world and what the group did are two lists and are never "
+    + "merged into one.", "",
+    ...lane("they_did", "### What they did"), ...lane("we_did", "### What we did"),
+    ...(leftOut ? [`${leftOut} item(s) had no source this record could cite and are left out.`, ""] : [])];
 }

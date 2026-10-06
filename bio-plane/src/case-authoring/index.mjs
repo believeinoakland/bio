@@ -68,6 +68,13 @@ import { networkNoticesOf } from "../network-notices/index.mjs";
 import { parseFrontmatter, normalizeType, isMachineIdentity, OBJECT_TYPES, BASIS_GRADES,
          isPublicHttpsLocator, proposalLabel } from "../record-grammar/index.mjs";
 import { SECTIONS } from "../case-grammar/index.mjs";
+/* R56, R57 (T33): case-grammar's `calculationsLines` and `timelineLines` (its R18, R20) and case-disclosures' people
+   renderers (its R28), read through the namespace so a name an upstream job has not yet merged is a dependency injected
+   by the composition (K1563 (1)), never a load failure. */
+import * as caseGrammar from "../case-grammar/index.mjs";
+import { calculationsOf } from "../calculations/index.mjs";
+import { workbooksOf } from "../workbooks/index.mjs";
+import { eventsOf } from "../events/index.mjs";
 import { caseDisclosuresOf, FLAGS_SAY, SELF_ATTESTED_SENTENCE, TENSIONS_DEPTH_STATED } from "../case-disclosures/index.mjs";
 import { PUBLISH_ACT_CHECKS, CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS } from "./checks.mjs";
 import { CASE_AUTHORING_TABLES, migrateCaseAuthoring } from "./schema.mjs";
@@ -125,6 +132,19 @@ const LENS_PAGE = 2000;
 const PUBLISHED_TARGETS_CHUNK = 200;
 
 const str = (v) => String(v ?? "").trim();
+/** R56: how deep a member's chain is followed through inquiry legs to the calculations it reaches. */
+const CHAIN_DEPTH_MAX = 16;
+/* R3's set: `targets` as a list, a comma-separated string, or the one `target`. */
+const membersOf = (targets, target) => [...new Set((Array.isArray(targets) ? targets
+  : typeof targets === "string" && targets.trim() ? targets.split(",") : target ? [target] : [])
+  .map((x) => str(x)).filter(Boolean))];
+/* R57: an item's `when` as events holds it (case-grammar R20): its value, which carries its precision; `undetermined`
+   with its bounds; or `nowhere`. No zone is written (R30). */
+function whenWords(when, why) {
+  if (when && typeof when === "object" && when.value != null) return String(when.value);
+  if (when === "undetermined" || why) return when && when.start ? `undetermined ${when.start}..${when.end}` : "undetermined";
+  return "nowhere";
+}
 /** R34: what the pre-flight throws to roll back its run of op=publish (record-core R32). */
 const PREFLIGHT_ROLLBACK = Symbol("case-authoring pre-flight rollback");
 
@@ -144,13 +164,14 @@ export class CaseAuthoring {
 
   constructor({ storage, record, membership, host = null, inquiry = null, basisVersions = null, strength = null,
                 bias = null, observations = null, reevaluation = null, publication = null, ratification = null,
-                networkNotices = null, disclosures = null, now = null } = {}) {
+                networkNotices = null, disclosures = null, calculations = null, workbooks = null, events = null,
+                caseTensions = null, grammar = null, now = null } = {}) {
     this.sql = storage.sql;
     this.storage = storage;
     this.record = record;
     this.membership = membership;
     this.#deps = { host, inquiry, basisVersions, strength, bias, observations, reevaluation, publication, ratification,
-                   networkNotices, disclosures };
+                   networkNotices, disclosures, calculations, workbooks, events, caseTensions, grammar };
     this.now = typeof now === "function" ? now : (precision) => stampInstant(precision);
   }
 
@@ -167,6 +188,17 @@ export class CaseAuthoring {
   /* R55 (N529, K1333): `case-disclosures`, the one instance on this host, asked in R55's order. The composition builds
      it with what it reads (N536: `plane` composes `caseDisclosuresOf(ctx, {attestation})` first, K1355). */
   get disclosures() { return this.#deps.disclosures ||= caseDisclosuresOf(this.#deps.host); }
+  /* R56: the calculations a member's chain reaches, recomputed and read at publication (calculations R8–R10), and the
+     workbooks among its captures (workbooks R2; K1570, K1594). */
+  get calculations() { return this.#deps.calculations ||= calculationsOf(this.#deps.host); }
+  get workbooks() { return this.#deps.workbooks ||= workbooksOf(this.#deps.host); }
+  /* R57: the timeline of the members' subjects and the events their legs cite (events R28–R30). */
+  get events() { return this.#deps.events ||= eventsOf(this.#deps.host); }
+  /* R8, R55 (T33-62): `caseRelation` and `attributionStatements` are `case-tensions`' (its R1, R5), reached through
+     publication's re-export until that split merges (plan Rules (9) item 4); the composition hands in the one instance. */
+  get caseTensions() { return this.#deps.caseTensions ||= this.publication; }
+  /* R56, R57: case-grammar's renderers (its R18, R20), the one spelling of each block. */
+  get grammar() { return this.#deps.grammar ||= caseGrammar; }
 
   migrate() { migrateCaseAuthoring(this.sql); }
 
@@ -195,8 +227,210 @@ export class CaseAuthoring {
    * an id was drawn takes the id back and writes nothing (R11), and a caller's own transaction may roll the whole act
    * back (R18: the review copy's dry run).
    * ========================================================================================================== */
-  publishCase(args = {}) {
-    return this.record.transact(() => this.#publishCase(args));
+  publishCase(args = {}, calculationFacts = null) {
+    return this.record.transact(() => this.#publishCase(args, { calculationFacts }));
+  }
+
+  /* ==========================================================================================================
+   * R56 AT PUBLICATION, BEFORE THE ACT: the calculations a member's chain reaches, recomputed and read, and the
+   * workbooks among the captures it rests on, read (J2 (1)). `calculations` and `workbooks` answer promises (their
+   * tables' bytes come from the evidence store), and `publishCase` is synchronous inside its caller's transaction (R18),
+   * so the async half runs here, before the act, and hands the act what it found. The recompute writes only
+   * calculations' own recompute status (its R8: "recomputed … at publication"); a workbook is read, never recomputed
+   * (workbooks R8). Nothing of the case is written here.
+   * ========================================================================================================== */
+  /** R56: `{calculations: [{calc, members, recomputed, read}], workbooks: [{capture, members, read}]}` for `publishCase`'s
+   *  inputs, or both empty when R1, R2 or R4 would refuse first (the act then answers that refusal). Never throws for a
+   *  calculation or workbook it cannot read: what it could not read is carried as it answered, and judged so. */
+  async calculationsAtPublication(args = {}) {
+    const a = args && typeof args === "object" ? args : {};
+    const empty = { calculations: [], workbooks: [] };
+    const who = str(a.author);
+    if (!who || isMachineIdentity(who)) return empty;
+    const viewer = a.viewer && typeof a.viewer === "object" ? a.viewer.stamp ?? null : a.viewer ?? null;
+    const auth = this.#authority(a.project ?? null, viewer, who);
+    if (auth.ok === false) return empty;
+    const judged = this.#judgeMembers(membersOf(a.targets, a.target), auth.proj, viewer, auth.gate);
+    if (judged.ok === false) return empty;
+    const calculations = [];
+    for (const [calc, members] of this.#calculationsReached(judged.prepared)) {
+      let read = null, recomputed = null;
+      try { read = await this.calculations.read({ calcId: calc, viewer }); }
+      catch (e) { read = { ok: false, reason: "CALCULATION_UNREAD", detail: String(e && e.message || e).slice(0, 200) }; }
+      /* calculations R10: one the viewer may not see is withheld whole, and is neither recomputed nor judged here. */
+      if (read && read.ok !== false && read.found !== false) {
+        try { recomputed = await this.calculations.recompute({ calcId: calc }); }
+        catch (e) { recomputed = { ok: false, reason: "RECOMPUTE_FAILED", detail: String(e && e.message || e).slice(0, 200) }; }
+      }
+      calculations.push({ calc, members, read, recomputed });
+    }
+    const byCapture = new Map();
+    for (const r of this.disclosures.restingCaptures(judged.prepared))
+      byCapture.set(r.capture, [...new Set([...(byCapture.get(r.capture) || []), r.member])]);
+    const workbooks = [];
+    for (const [capture, members] of byCapture) {
+      let read = null;
+      try { read = await this.workbooks.readWorkbook({ captureSha: capture, project: auth.proj, viewer }); } catch { read = null; }
+      if (read && read.ok !== false && read.workbook) workbooks.push({ capture, members, read });
+    }
+    return { calculations, workbooks };
+  }
+
+  /** R56: each calculation a member's chain reaches through its `calculation` legs (inquiry-grammar R14), followed
+   *  through inquiry legs (`inquiry.basisFor`), each finding once, at most `CHAIN_DEPTH_MAX` deep: a Map from calculation
+   *  id to the members whose chain reaches it, in member order. */
+  #calculationsReached(prepared) {
+    const out = new Map();
+    const kindOf = (t) => normalizeType(OBJECT_TYPES[String(t).split("-")[0]]);
+    for (const p of prepared) {
+      const seen = new Set([p.id]);
+      let frontier = [p.id];
+      for (let depth = 0; frontier.length && depth < CHAIN_DEPTH_MAX; depth++) {
+        const next = [];
+        for (const id of frontier) {
+          const basis = this.inquiry.basisFor(id);
+          for (const leg of (basis && basis.ok !== false && Array.isArray(basis.legs) ? basis.legs : [])) {
+            const t = str(leg.target_id);
+            if (!t) continue;
+            const kind = kindOf(t);
+            if (kind === "calculation") out.set(t, [...new Set([...(out.get(t) || []), p.id])]);
+            else if (kind === "inquiry" && !seen.has(t)) { seen.add(t); next.push(t); }
+          }
+        }
+        frontier = next;
+      }
+    }
+    return out;
+  }
+
+  /** R56: `{refusal?, rows, money}` — the `calculations:` rows (case-grammar R18) for every calculation and workbook the
+   *  gather read, each with its state at this act and the owner's words where a disclosure was needed, and the first
+   *  refusal: `calculationsDisclosed` malformed is R3's `BAD_COMPLETENESS` naming the field; facts never gathered while a
+   *  chain reaches a calculation is `CALCULATIONS_UNREAD` (a dry run never reads an unread calculation as agreeing);
+   *  a load-bearing member's calculation or workbook that differs or is unbound and is not listed is
+   *  `CALCULATION_NOT_DISCLOSED`, naming each and its members. No other state refuses (D370). `money` is the money facts
+   *  the calculations cite (case-disclosures R27). */
+  #calculationsJudged(prepared, memberRoles, calculationsDisclosed, facts) {
+    const bad = (field) => ({ refusal: { ok: false, reason: "BAD_COMPLETENESS", field,
+      detail: `${field} is a list of {calc, words?}: each names a calculation (or a workbook's capture) by its id, and its `
+            + `words, when given, are at most ${COMPLETENESS_MAX} characters with no quote, backslash or line break` } });
+    const listed = new Map();
+    if (calculationsDisclosed != null) {
+      if (!Array.isArray(calculationsDisclosed)) return bad("calculationsDisclosed");
+      for (let i = 0; i < calculationsDisclosed.length; i++) {
+        const e = calculationsDisclosed[i];
+        if (!e || typeof e !== "object" || Array.isArray(e) || !str(e.calc)) return bad(`calculationsDisclosed[${i}]`);
+        if (e.words !== undefined && e.words !== null
+            && (typeof e.words !== "string" || e.words.length > COMPLETENESS_MAX || /["\\\r\n]/.test(e.words)))
+          return bad(`calculationsDisclosed[${i}].words`);
+        const k = str(e.calc);
+        if (!listed.has(k)) listed.set(k, e.words == null ? "" : String(e.words).trim());
+      }
+    }
+    const reached = this.#calculationsReached(prepared);
+    if (!facts && reached.size)
+      return { refusal: { ok: false, reason: "CALCULATIONS_UNREAD", calculations: [...reached.keys()],
+        detail: "this act was asked without the calculations its findings rest on having been recomputed and read, so "
+              + "whether one differs or rests on an unbound input is not known here. Publish through op=publish, which "
+              + "recomputes them first. Nothing was written." } };
+    const roleOf = new Map(memberRoles.map((m) => [m.target, m.role]));
+    const loadBearing = (members) => members.some((m) => roleOf.get(m) === "load_bearing");
+    const rows = [], undisclosed = [], money = [];
+    const judge = (calc, members, state, row) => {
+      const needs = loadBearing(members) && (state === "differs" || state === "unbound");
+      if (needs && !listed.has(calc)) undisclosed.push({ calc, members, recompute: state });
+      rows.push({ calc, ...row, recompute: state, disclosed: needs && listed.has(calc) ? listed.get(calc) : null });
+    };
+    for (const f of (facts && facts.calculations) || []) {
+      const r = f.read;
+      if (!r || r.ok === false || r.found === false) continue;   /* withheld whole (calculations R10): not written */
+      const differs = !f.recomputed || f.recomputed.ok === false || f.recomputed.agrees !== true;
+      const unbound = ((r.grade && Array.isArray(r.grade.inputs)) ? r.grade.inputs : []).some((x) => x && x.unbound === true);
+      const inputs = (Array.isArray(r.inputs) ? r.inputs : []).filter((x) => x && typeof x === "object");
+      for (const x of inputs) if (x.money !== undefined) money.push(...(Array.isArray(x.money) ? x.money : [x.money]));
+      judge(f.calc, f.members, differs ? "differs" : unbound ? "unbound" : "agrees", {
+        recipe: r.calculation ? r.calculation.recipe ?? null : null,
+        inputs: inputs.map((x) => ({ name: x.name ?? null, sha: typeof x.table === "string" ? x.table : null })),
+        method_version: r.method_version ?? null,
+        results: r.calculation ? r.calculation.results ?? null : null,
+        result_key: r.result_key ?? null });
+    }
+    for (const f of (facts && facts.workbooks) || []) {
+      const r = f.read;
+      const status = r.recompute ? r.recompute.status ?? null : null;
+      const differs = status === "differs" || (Array.isArray(r.bindings) ? r.bindings : []).some((b) => b && b.agrees === false);
+      const unbound = (Array.isArray(r.inputs) ? r.inputs : []).some((x) => x && x.bound === false);
+      judge(f.capture, f.members, differs ? "differs" : unbound ? "unbound" : status === "agrees" ? "agrees" : "not_recomputed", {
+        recipe: null, inputs: [], method_version: r.recompute ? [r.recompute.engine, r.recompute.engine_version]
+          .filter(Boolean).join(" ") || null : null, results: null, result_key: null });
+    }
+    /* DEC-49 REGION is-calculation-disclosed */
+    if (undisclosed.length)
+      return { refusal: actRefusal("CALCULATION_NOT_DISCLOSED", { calculations: undisclosed,
+        detail: `${undisclosed.map((u) => `${u.calc} (${u.recompute}; ${u.members.join(", ")})`).join("; ")}: a load-bearing `
+              + "finding rests on a calculation that gives a different result when this instance recomputes it, or on "
+              + "an input typed with no source, and this act does not disclose it. List each in calculationsDisclosed, "
+              + "with your own words if you choose, and the published case states it. A disclosed one never blocks "
+              + "(DEC-76 item 4). Nothing was written." }), rows, money };
+    /* END DEC-49 REGION is-calculation-disclosed */
+    return { rows, money: [...new Set(money)] };
+  }
+
+  /** R55 (case-disclosures R24): the parts this act assembles that may name a person — the authored sentences, the
+   *  conclusions, the members' subjects, the lens, R57's timeline with each event's participants, and the money facts the
+   *  calculations cite — and the people they name. Asked by `op=publish` and by R34's pre-flight alike. */
+  #namedInCase(prepared, proj, viewer, authored, money) {
+    const timeline = this.#timelineOf(prepared, viewer);
+    const lens = this.#lensStatements(proj);
+    const named = this.disclosures.peopleNamed(prepared, { ...authored,
+      conclusions: prepared.map((p) => ({ target: p.id, ...p.conclusion })),
+      subjects: prepared.map((p) => ({ target: p.id, entity: this.inquiry.subjectEntityOf(p.id) })).filter((x) => x.entity),
+      lens: lens.statements, timeline: timeline.rows.map((r) => ({ ...r, participants: timeline.participants.get(r.ref) || [] })),
+      money }, viewer);
+    return { timeline, lens, named };
+  }
+
+  /** R57 (C11; K1494): the timeline of the members' subject entities (`inquiry.subjectEntityOf`) and the events their
+   *  legs cite, read through `events.timeline` (its R28–R30) as the publisher sees the record at the act: the world's
+   *  lane (`they_did`) and the registered sources' lane (`we_did`) apart, each in its own order, each item with its
+   *  source; an item with no source is left out and counted. `participants` maps an event to the entities named in it,
+   *  for `case-disclosures` R24; no row names a person (R55: people are named only as its R25 passes them). */
+  #timelineOf(prepared, viewer) {
+    const set = [];
+    for (const p of prepared) {
+      const subject = this.inquiry.subjectEntityOf(p.id);
+      if (subject) set.push(subject);
+      const basis = this.inquiry.basisFor(p.id);
+      for (const leg of (basis && basis.ok !== false && Array.isArray(basis.legs) ? basis.legs : []))
+        if (normalizeType(OBJECT_TYPES[str(leg.target_id).split("-")[0]]) === "event") set.push(str(leg.target_id));
+    }
+    const ids = [...new Set(set)];
+    const out = { set: ids, rows: [], left_out: 0, participants: new Map() };
+    if (!ids.length) return out;
+    const read = this.events.timeline({ set: ids, viewer });
+    if (!read || read.ok === false) return { ...out, unread: read ? read.reason ?? "TIMELINE_UNREAD" : "TIMELINE_UNREAD" };
+    let ord = 0;
+    for (const it of [...((read.world && read.world.items) || []), ...((read.world && read.world.placed_nowhere) || [])]) {
+      const ev = this.events.readEvent({ eventId: it.event_id, viewer });
+      const e = ev && ev.ok !== false && ev.found ? ev.event : null;
+      const atts = e && Array.isArray(e.attestations) ? e.attestations : [];
+      const att = atts.find((x) => x.attestation_id === e.governing) || atts.find((x) => x.capture_sha) || atts[0] || null;
+      const source = att ? att.capture_sha || `event_attestation:${att.attestation_id}` : null;
+      if (!source) { out.left_out += 1; continue; }
+      if (e) out.participants.set(it.event_id, [...new Set(e.participants.map((x) => x.entity_id).filter(Boolean))]);
+      out.rows.push({ lane: "they_did", ord: ++ord, when: whenWords(it.when, it.why), label: [it.kind, it.status]
+        .filter(Boolean).join(", "), ref: it.event_id, source });
+    }
+    ord = 0;
+    for (const src of (read.ours && read.ours.sources) || []) {
+      if (src.error) { out.left_out += 1; continue; }
+      for (const it of src.items || []) {
+        if (!str(it.ref)) { out.left_out += 1; continue; }
+        out.rows.push({ lane: "we_did", ord: ++ord, when: it.placed_nowhere || !it.at ? "nowhere" : String(it.at),
+                        label: it.label ?? it.kind ?? null, ref: str(it.ref), source: `${src.source}:${str(it.ref)}` });
+      }
+    }
+    return out;
   }
 
   /* `run` is the pre-flight's (R34): `preflight` skips reevaluation's raise, whose listeners are told synchronously and
@@ -205,7 +439,7 @@ export class CaseAuthoring {
                  statement = "", excluded = null, subjectPosition = "",
                  subjectJustification = "", biasAcknowledgement = "",
                  project = null, roles = null, draft = null, tensionsDisclosed = null, selfAttested = null,
-                 flagsDisclosed = null,
+                 flagsDisclosed = null, calculationsDisclosed = null, peopleBases = null, tieAttested = null,
                  whatChanged = undefined, viewer = null, author = null } = {}, run = {}) {
     const seen = run.seen || {};
     const who = str(author);
@@ -363,10 +597,23 @@ export class CaseAuthoring {
       if (accepted.refusals.length) return { refusal: accepted.refusals[0] };
       const flagsJ = D.flagsJudged(accepted.editions, flagsDisclosed);
       if (flagsJ.refusals.length) return { refusal: flagsJ.refusals[0] };
-      return { tensionsJ, resting, facts, selfJ, reached, accepted, flagsJ };
+      /* R56: each calculation and workbook a chain reaches, as the gather recomputed and read it before the act */
+      const calcJ = this.#calculationsJudged(prepared, memberRoles, calculationsDisclosed, run.calculationFacts ?? null);
+      if (calcJ.refusal) return { refusal: calcJ.refusal };
+      /* R57's timeline, composed here so its participants are among the people the case names; the people the case
+         names, over the parts this act assembles, and the basis the owner gives each (its R24, R25) */
+      const { timeline, lens, named } = this.#namedInCase(prepared, proj, viewer,
+        { statement: stmt, scope: scp, justification: just, bias: back, excluded: rows }, calcJ.money);
+      const peopleJ = D.peopleJudged(named, peopleBases, viewer);
+      if (peopleJ.refusals.length) return { refusal: peopleJ.refusals[0] };
+      /* each signer's attestation of no undeclared tie, the money's payers and payees included (its R27) */
+      const tiesJ = D.tieAttestationJudged([who], named, calcJ.money, tieAttested, viewer);
+      if (tiesJ.refusals.length) return { refusal: tiesJ.refusals[0] };
+      return { tensionsJ, resting, facts, selfJ, reached, accepted, flagsJ, calcJ, timeline, lens, peopleJ, tiesJ };
     })();
     if (disclosed.refusal) return disclosed.refusal;
-    const { tensionsJ, resting, facts, selfJ, reached, accepted, flagsJ } = disclosed;
+    const { tensionsJ, resting, facts, selfJ, reached, accepted, flagsJ, calcJ, timeline, lens: lensRead, peopleJ, tiesJ }
+      = disclosed;
     const read = { entries: tensionsJ.entries, unread: tensionsJ.unread };
     const listed = { byCandidate: tensionsJ.byCandidate };
 
@@ -630,7 +877,7 @@ export class CaseAuthoring {
        is reached. */
     const reach = this.basisVersions.testimonyReach(members);
     const observations = [...new Set([...reach.self, ...reach.via.map((v) => v.observation)])];
-    const attributions = this.publication.attributionStatements(theCase, edition, proj,
+    const attributions = this.caseTensions.attributionStatements(theCase, edition, proj,
       [...observations, ...documentsReached.filter((sha) => withheld.has(sha))]);
     const attributionOf = new Map((Array.isArray(attributions) ? attributions : [])
       .map((r) => [r.capture ?? r.observation, r]));
@@ -667,7 +914,7 @@ export class CaseAuthoring {
                        pinned_state: x.pinned_state ?? null })),
     };
     /* R40 — DEC-103: the lens it was produced under, every statement of the manifest frozen above, read at this act. */
-    const lensStatements = this.#lensStatements(proj);
+    const lensStatements = lensRead;
     /* R16 — REC-219 / D-579(a): the project's citation edges, with the version each was made against. */
     const citations = this.#caseCitations(proj);
     /* R21 — REC-212 / §3 rule 13: WHO WROTE THE SENTENCE, established before the list is read, because it decides what
@@ -703,6 +950,10 @@ export class CaseAuthoring {
       /* R55: `case-disclosures` R7, R13, R14, R15. */
       materials: materialBlocks, group, accepted: { rows: accepted.rows, flags: flagRows },
       grading: findingFacts.grading, passages: findingFacts.passages,
+      /* R56, R57: case-grammar's blocks (its R18, R20); R55: case-disclosures' people and member-ties blocks (its R28). */
+      calculations: calcJ.rows, calculationsBlock: this.grammar.calculationsLines(calcJ.rows),
+      timeline: timeline.rows, timelineLeftOut: timeline.left_out, timelineBlock: this.grammar.timelineLines(timeline.rows),
+      peopleBlock: D.peopleLines(peopleJ.rows), memberTiesBlock: D.memberTieLines(tiesJ.rows),
     });
     const docBytes = new TextEncoder().encode(docText);
     /* publication R21: stored unsigned, replacing an unsigned document of this case edition and never a signed one; the
@@ -965,7 +1216,7 @@ export class CaseAuthoring {
         /* R8 — REC-157 / §7.1 item 9: a finding in a case at its current bytes is asked whether some edition pinning
            them ALREADY RECORDS the conclusion this act would record, compared on the SAME answer the gate above was
            decided on (`conc`, never re-read). The refusal itself is asked below, once the case is known (D-442). */
-        const rel = this.publication.caseRelation(id);
+        const rel = this.caseTensions.caseRelation(id);
         const recorded = rel && rel.member ? this.ratification.editionsRecordingConclusion(id, rel, conc) : null;
         prepared.push({ id, b, fm, bundleSha: head ? head.bundleSha : null, conclusion: conc, warrant: recorded,
                         preparedIn: rel && rel.prepared ? rel.prepared.case_id ?? null : null });
@@ -1104,7 +1355,7 @@ export class CaseAuthoring {
    *  `viewer` is the control plane's stamp, or `{stamp, aiCred}` when it stamps the caller's minted agent credential
    *  (N435, N407's other half): the act and every read here are asked as `stamp`, and ratification's pre-flight is
    *  given the whole, so its machine fences (its R18) hold an agent whatever its viewer stamp. */
-  publishPreflight(args = {}) {
+  publishPreflight(args = {}, calculationFacts = null) {
     const given = args && typeof args === "object" ? args : {};
     const carried = given.viewer && typeof given.viewer === "object" ? given.viewer : null;
     const a = carried ? { ...given, viewer: carried.stamp ?? null } : given;
@@ -1112,7 +1363,7 @@ export class CaseAuthoring {
     let answer = null, text = null;
     try {
       this.record.transact(() => {
-        answer = this.#publishCase(a, { preflight: true, seen });
+        answer = this.#publishCase(a, { preflight: true, seen, calculationFacts });
         if (answer && answer.ok === true) {
           const d = this.#one(`SELECT text FROM case_documents WHERE case_id=? AND edition=?`, answer.caseId, answer.edition);
           text = d ? d.text : null;
@@ -1154,6 +1405,15 @@ export class CaseAuthoring {
           const flags = D.flagsJudged(accepted.editions, a.flagsDisclosed ?? null);
           found.push(...flags.refusals);
           rests = { accepted: accepted.rows, flags };
+          /* R56's undisclosed calculations, and its R25's and R27's people and signers (R34), as op=publish asks them. */
+          const calc = this.#calculationsJudged(judged.prepared, partition.memberRoles, a.calculationsDisclosed ?? null,
+                                                calculationFacts);
+          if (calc.refusal) found.push(calc.refusal);
+          const authored = { statement: str(a.statement), scope: str(a.scope), justification: str(a.subjectJustification),
+                             bias: str(a.biasAcknowledgement), excluded: Array.isArray(a.excluded) ? a.excluded : [] };
+          const { named } = this.#namedInCase(judged.prepared, auth.proj, a.viewer ?? null, authored, calc.money || []);
+          found.push(...D.peopleJudged(named, a.peopleBases ?? null, a.viewer ?? null).refusals);
+          found.push(...D.tieAttestationJudged([who], named, calc.money || [], a.tieAttested ?? null, a.viewer ?? null).refusals);
         }
         tensions = D.tensionsJudged(judged.prepared, a.viewer ?? null, a.tensionsDisclosed ?? null);
         found.push(...tensions.refusals);
@@ -1951,6 +2211,12 @@ export function caseAuthoringOwns(t) {
   return CASE_AUTHORING_TABLES.some((x) => x.name === name);
 }
 
+/* R56 (J2 (1)): an op that authors or pre-flights a case first gathers the calculations its chains reach (async), then
+   runs the synchronous act with what it found. The facts are this arm's own: no body field can supply them. */
+async function gathered(c, args, act) {
+  return act(args, await c.calculationsAtPublication(args));
+}
+
 /** The module's ops (K3), as entries of the plane's op map (`plane/store.mjs`). `viewer` and `author` are the control plane's stamps,
  *  read from the query and spread AFTER the body, so a caller's own copy is overwritten, never honoured. */
 export function caseAuthoringOps(c, url, body) {
@@ -1960,7 +2226,7 @@ export function caseAuthoringOps(c, url, body) {
     /* R1–R18. The BODY carries the authored material (an exclusion list and the roles map are what a query string
        cannot express honestly); `targets`, `caseId`, `project` and `draft` also arrive on the query as the one-line
        form a probe can reach, and `newCase` from either, its string forms spelled out so `newCase=false` means false. */
-    publishcase: () => c.publishCase({ ...b,
+    publishcase: () => gathered(c, { ...b,
       target: q("target") || b.target,
       targets: b.targets || q("targets") || null,
       caseId: q("caseId") || b.caseId || null,
@@ -1971,7 +2237,7 @@ export function caseAuthoringOps(c, url, body) {
       project: q("project") || b.project || null,
       draft: q("draft") || b.draft || null,
       viewer: q("viewer"),
-      author: q("author") }),
+      author: q("author") }, (a, f) => c.publishCase(a, f)),
     /* R32 (N345): the ceremony's read before op=publish; `viewer` and `author` are the stamps, as op=publish's. */
     publishtensions: () => c.tensionsToDisclose({ ...b,
       target: q("target") || b.target,
@@ -1982,7 +2248,7 @@ export function caseAuthoringOps(c, url, body) {
     /* R34 (N364): the ceremony's pre-flight, over op=publish's own arguments and stamps; it writes nothing. The door
        stamps `aiCred` (the minted agent credential's token id and principal) beside `viewer` for an agent (N435); one
        that does not parse is still an agent's, so ratification's fences hold (fail closed). */
-    publishpreflight: () => c.publishPreflight({ ...b,
+    publishpreflight: () => gathered(c, { ...b,
       target: q("target") || b.target,
       targets: b.targets || q("targets") || null,
       caseId: q("caseId") || b.caseId || null,
@@ -1995,7 +2261,7 @@ export function caseAuthoringOps(c, url, body) {
       viewer: q("aiCred") ? { stamp: q("viewer"), aiCred: (() => {
         try { const v = JSON.parse(q("aiCred")); return v && typeof v === "object" ? v : {}; } catch { return {}; }
       })() } : q("viewer"),
-      author: q("author") }),
+      author: q("author") }, (a, f) => c.publishPreflight(a, f)),
     /* R39: a draft of a new edition's statement of what changed. The words come in the body (a statement of up to
        8,000 characters is not a query parameter), the case from either; `proposedBy` is the `author` stamp. */
     whatchangedpropose: () => c.proposeWhatChanged({ case: q("case") || b.case || null,

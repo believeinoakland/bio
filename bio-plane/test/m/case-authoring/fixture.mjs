@@ -32,6 +32,7 @@ import { caseDisclosuresOf } from "../../../src/case-disclosures/index.mjs";
 import { parseImportedFindingRef, importedFindingRef } from "../../../src/inquiry-grammar/index.mjs";
 import { caseImportOf } from "../../../src/case-import/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
+import { grammar, withPeople } from "./upstream.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -251,13 +252,18 @@ export function world({ group = "test-group", provider = true, now = null, recor
   const READ_BY_DISCLOSURES = ["contradiction", "provenance", "attestation", "capture", "sources", "extraction",
                                "caseImport", "promotion", "inquiry", "strength"];
   const given = (k) => Object.fromEntries(Object.entries(deps).filter(([d]) => k(d)));
-  caseDisclosuresOf(host, { storage: st, record: caseRecord, contradiction, provenance: prov, attestation, capture, sources,
+  /* R55 (T33): case-disclosures' R24–R28 and case-grammar's R18 and R20, the stand-ins of `./upstream.mjs` until those
+     jobs merge (K1563 (1)); `w.people` is the test's control of what the people judgments answer. */
+  const people = { named: [], asked: [], tiesRequired: false };
+  const disclosures = caseDisclosuresOf(host, { storage: st, record: caseRecord, contradiction, provenance: prov, attestation, capture, sources,
     extraction: ex, caseImport: imports, promotion, inquiry, strength,
     ...given((d) => READ_BY_DISCLOSURES.includes(d)) });
   w.ca = caseAuthoringOf(host, { record: caseRecord, membership, inquiry, basisVersions,
     strength, bias, observations, reevaluation, publication, ratification: ratWrap ? ratWrap(ratification) : ratification,
     networkNotices, now: now || ((p) => (p === "millisecond" ? clock.ms : clock.now)),
+    disclosures: withPeople(disclosures, people), grammar,
     ...given((d) => !READ_BY_DISCLOSURES.includes(d) || d === "inquiry" || d === "strength") });
+  w.people = people;
   let n = 0;
   Object.assign(w, {
     text: (id) => record.readFile(id, "bundle.md")?.text ?? null,
