@@ -40,3 +40,4 @@
 - **conformance (L9)** (K1610, from CONTRADICTION #8 J2): contradiction R9 reads a document's date from `events`' dated facts only, so conformance `contradiction-cause.test.mjs:206` (R21) is red until its fixture holds the date as a `dated_facts` row for the capture (contradiction's fixture `dated()` shows the shape).
 - **scheduler (L10)** (K1610, from AI-RUNS #10 J2): ai-runs R52 refuses an open with no member account (`AI_NO_ACCOUNT`); scheduler `plane.test.mjs` "R12: a run waiting on a request that reaches expired" opens one; connect the opener's account and name the member.
 - **op-declarations, control-plane (L11)** (K1610): ai-runs' `aiUseCheck` and `providerLimit` are answers' and agent-worker's; specs for `aiusage`, `aiceilingset`, `aicopyceilingset` as K1601.
+- **op-declarations, control-plane (L11)** (K1612, from AI-RUNS #10 J3): also `airunverify` (`by` stamped).
