@@ -17,3 +17,15 @@ N631 is done and green on `job/T34/promotion` @ `99d13d07ac` (pushed), ready for
 - (2) R34: N631 changes what C-20.1 judges, so it moves `CATALOG_VERSION`. I have **not** moved it in this commit. Moving it renames the census fixture named in `modules.json` (`row-census-1.60.0.jsonl`) and stales case-checker's `program.mjs`, which embeds `CATALOG_VERSION`; neither is mine to write. The change is recorded and versioned in this job's stamp (1.61.0, "changed in what the gates run"). If 0.80.1 is cut from 0.80.0 plus this commit alone, its ratifications carry 1.60.0 with C-20.1 changed. Whether the cut takes a version move is yours.
 
 Next: the stamp (N553, N601) over what is on `tranche/T34` now.
+
+## J2 · QUESTION
+
+**N601 (C-124.32), where its translation is written.** T34-12 says C-124.32 PHASE_MALFORMED's re-worded translation "is re-stamped here, with control-plane's pinned digest (`rows-before-r43.json`) moved with it". The row lives in `bio-plane/src/action-plans/checks.mjs` (action-plans, L9). The pin lives in `bio-plane/test/m/control-plane/rows-before-r43.json` (control-plane, L11). Neither is in my paths, and on `tranche/T34` the translation is still the 1.60.0 text, so the census sees no change in it.
+
+**My best reading (I am carrying on with it).** I neither reword the row nor move the pin (P7). I give the wording here so the owners apply it as written. Action-plans' T34-61 changes the row ("C-124.32's translation as T34-12 stamps it"), and control-plane's L11 job moves its pinned digest in the same tranche. Because both jobs come after L2, the changed line stays `awaiting stamp` until T35's promotion job (plan Rules (5) 4). My 1.61.0 stamp therefore carries C-124.32 as it stands. The wording, R14 and R38 as action-plans states them, changing only the list of starts:
+
+> A phase has an id, a name, the chosen options it holds, when it starts (at the plan's start, after another phase, on one outcome of another phase's checkpoint, when another matter's track reaches a point, or when an obligation's occurrence reaches a state: met, met late, overdue or undetermined), and may have a checkpoint after 1 to 3,650 days, a condition of up to 500 characters and the phase each judgement leads to. The phase named was not so. Nothing was written.
+
+If you mean instead that I own the line's stamp in T34, that needs action-plans' job to merge before mine, which inverts the layer order. Say so and I will stamp it on a CHANGE after that merge.
+
+**The stamp's shape (stated, not asked).** I move `CATALOG_VERSION` once for T34, 1.60.0 → 1.61.0 (MINOR: arrivals, and C-20.1's changed judgement, N631). I re-pin `ROW_CENSUS` and write `fixtures/row-census-1.61.0.jsonl` in place at each CHANGE until my COMPLETE, so T34 names one catalogue. **You swap my `tests` entry** in `modules.json` from `row-census-1.60.0.jsonl` to `row-census-1.61.0.jsonl` (K1027's form, as in T32). After the stamp, case-checker's `program.mjs` (it embeds `CATALOG_VERSION`) and the plane bundle are stale; both are yours to regenerate.
