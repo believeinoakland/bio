@@ -57,3 +57,29 @@ Three readings for you to check:
 3. **Aliases are copied here, not imported.** The alias table can only be held here as data, because `OP_ALIASES` is in op-declarations, which comes later. control-plane's totality test is what catches the two tables drifting apart.
 
 Still open: the `writingHelpRefused()` read, waiting on the CHANGE after wizard-scripts merges.
+
+## J5 · COMPLETE
+
+**Entries applied**
+- **T34-75.**
+  - `JUSTIFICATION_REFUSALS` gains `HYPOTHESIS_NO_REASON` and `DUTY_NO_REASON` (R43; K1805, K1807). The three accepted reds are cleared: `t33-backing.test.mjs`:122, :212 and `t33.test.mjs`:135.
+  - The note ops: `notewrite` and `noteturn` are `caller-owned`, and `notes` is a read.
+  - R42: `publishat` and `publishatmove` are `irreversible`, and `publishatcancel` is `reversible`. Each has its `NON_ACTS` reason, and `publishschedule` is a read. R19 is amended to match.
+  - N630 was measured (J2). The door now asks its two store questions together, which saves one store round trip per call. The rest went to N695 and control-plane (B4).
+- **T34-87 (DEC-149).** `RUNG_ABSENCE_GROUNDS.undetermined` now reads "no refusal establishes one", and a test names it. The other 29 rows stay as ruled (K1849 (7)).
+- **T34-91 and T34-90's op (R44).** `groupdescriptiondraft` and `writinghelp` are in `NON_ACTS` with their sentence. Neither is in `MACHINE_REFUSALS`. The no-target answer's `writing_help_refused` is read through `op=affordancescreens` from `wizardScripts().writingHelpRefused()`, the very list, and is tested against the real module (B7). R37's `baseupdates` is a read.
+- **R45 (B3, B5; K1864).** T34's declared ops are graded in `affordances/t34.mjs` with the grades accepted in B4. `CHECK_NO_REASON` joins the family. The 29 aliases come from one frozen `{alias: op}` table, each alias holding its op's very value. The P6 trim (K1864 (1)) cut the superseded FW-14, REC-24, REC-35 and D-310 to D-311 comments to their ruling lines.
+
+**Deferred:** none in this module. `checkrecord`'s R19 drive is tasks' own R15 test (K1867 (2)).
+
+**Found in other modules (reported)**
+- J2: control-plane's pack and fences make up 75% of the answer, and its indented JSON adds 63 KB (now N695 and control-plane's work).
+- J2: answers' C-135.6 and C-135.8 say "this copy" (T35's sweep).
+- J4: control-plane's totality test reads the new ops as unaccounted until affordances merges.
+- Now: plane's `SCREEN_REGISTRY` gap. A library wizard step names the screen `capture`, which the plane does not publish, so in the running plane `renderPack` throws and the untargeted answer carries `pack_absent`. That is the red `plane.test.mjs`:317 shows; plane's fix clears it (B7).
+
+**Tests and checks**
+- `node --test test/m/affordances/`: tests 203, pass 202, fail 1 (`plane.test.mjs`:317 R17/R37, `pack_absent`, plane's, per B7).
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs bio affordances`: 20 product files, 0 failures. `checks/coverage.mjs bio affordances`: 45 of 45, 0 failures. `checks/ownership.mjs bio affordances tranche/T34`: 13 files, 0 failures.
+
+Size (session_01D46sKU6GQxJsbHFhXN1a2o): test runs 22, module lines 3945
