@@ -1,8 +1,8 @@
 /* plane R21–R23 (T33-90): the small adapters the composition root hands the modules T33 adds, held apart from the class
    so each is tested at the interface without the Durable Object runtime. None holds a construct: each is the port one
    module's requirements name, answered by the module that owns the answer (R9). */
-import { registerDoctype, generic } from "../../../docprofile/registry.mjs";
-import { registerDoctypes } from "../../../doctypes/index.mjs";
+import { registerDoctype } from "../../../docprofile/registry.mjs";
+import { registerDoctypes, generic } from "../../../doctypes/index.mjs";
 import { registerLegistar } from "../../../legistar-reader/index.mjs";
 import { registerRosterTypes, ROSTER_TYPES } from "../../../roster-reader/index.mjs";
 import { registerCourtTypes } from "../../../court-doctypes/index.mjs";

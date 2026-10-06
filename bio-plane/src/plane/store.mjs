@@ -69,6 +69,7 @@ import { dispatch, controlPlaneRoutes } from "../control-plane/dispatch.mjs";
 import { promotionStep } from "../control-plane/step.mjs";
 import { registerOwnersCounts, registerStats } from "./stats.mjs";
 import { wizardRegistration } from "./wizards.mjs";
+import { SCREENS } from "./screens.mjs";
 import { eventsOf, eventsOps } from "../events/index.mjs";
 import { linesOf, linesOps } from "../lines/index.mjs";
 import { moneyOf, moneyOps } from "../money/index.mjs";
@@ -203,7 +204,9 @@ export class Store extends DurableObject {
        reads, the relation the saved form is checked against (retrieval's projection, K1609) and ai-runs' ceiling. */
     answersOf(ctx, { standards, content: contentOf(ctx), events, entities: entitiesOf(ctx), lines, people, duties,
       calculations, retrieval, credentials: credentialsOf(ctx), relations: () => ({ projection: PROJECTION_RELATION }),
-      ceilingRefusal: (member, at) => aiRunsOf(ctx, env).aiUseCheck({ member, at }) });
+      ceilingRefusal: (member, at) => aiRunsOf(ctx, env).aiUseCheck({ member, at }),
+      /* R24 (Q1-7): the screens registry the plane carries, for its explain read. */
+      screens: SCREENS });
     /* reevaluation before actions: actions reaches conformance, which reaches reevaluation, and a factory reads its
        `deps` on the first call only, so created there it would never see `env` (its R25). */
     reevaluationOf(ctx, { env, acceptedWork, calculations });

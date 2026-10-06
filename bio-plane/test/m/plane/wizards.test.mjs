@@ -87,7 +87,7 @@ test("R19: before the first request it is registered once with the bundle's scre
     assert.ok(!c.includes("WIZARD_DRAFT_REFUSED") && !c.includes("WIZARD_STEP_CONCLUDES"), `${op}: ${c}`);
   }
   assert.ok((await check([step({ draft: { machine: "zz-not-a-draft" } })])).includes("WIZARD_DRAFT_REFUSED"));
-  /* the screens: none registered until the interface ships one, so every screen is unknown */
+  /* the screens: one the registry does not hold is unknown, never guessed (R24) */
   assert.ok((await check([step({})])).includes("WIZARD_SCREEN_UNKNOWN"));
 });
 
