@@ -33,3 +33,7 @@ No row bound: each roster's rows are answered whole, as R12 states (people bound
 ## J3 · COMPLETE
 
 T34-64 applied: R12 `rosterSource(reads)` (`roster-reader/source.mjs`). Tests 22/22; format, architecture, coverage (12 of 12) and ownership 0 failures. Built on J1's readings (open); an ANSWER that changes them re-opens me. Plane's wiring to it is REPORT J2. Final `uses`: docprofile. Details in my record's Completion.
+
+## J4 · QUESTION
+
+B2: the seam test now registers doctypes' types through `registerDoctypes(registerDoctype)` before the roster types (pushed; 22/22 green on the current base, where docprofile still registers by default). The architecture check fails on it: `roster-reader/test/seam.test.mjs imports doctypes/index.mjs of doctypes, which roster-reader does not declare in uses`. My reading: `modules.json` is not mine to write, so you add `doctypes` to roster-reader's `uses` on tranche/T34 (it is earlier in layer 1). I then merge tranche/T34 once docprofile is merged there, re-run tests and checks, and COMPLETE again.
