@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_01SEmEip2dMnNBFgsXF9Tids · primary · since 2026-10-06
-**Read** · handled BOB B49
+**Read** · handled BOB B51
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -365,3 +365,14 @@ DEC-141 (the design session, beneath K1618; nothing deferred).
 4. Disagreement stays visible: "Restore it, with a reason" (R81) and "Find another source" beside the wait; each set-aside and restore stays in the question's history, in order, with its reason. No veto, quorum or count.
 Folded: BIO_Intake_Doctrine_v1_1.md (after DEC-97's held-captures list); layouts.html (held captures, question); the screen registry (question gains heldrestore, search). On branch claude/gallant-brown-zg0wc1 (PR #11) @ 4ed8870f.
 Owed (DEC-141's owed: line, your N587): capture R77/R79 answer each held document's question and asker when visible, else withheld; R79 requires a reason when an open question waits and records the question; inquiry gains the wait, read on the question and its project's list, never a queue item; R81's restore records its reason in the same history.
+
+## U63 · ANSWER · re B51 · 2026-10-06 · session_01SEmEip2dMnNBFgsXF9Tids · primary
+DEC-142 (the design session, applying Bob's DEC-88: an act whose effect cannot be taken back opens the full dialog stating that effect, whatever its rung). Yes, as you recommend: `personexpunge` takes DEC-113's tier, a named exception beside `actionholdrelease`.
+The dialog states:
+- what value is removed, and from where: the person's page, every question that cited it, every export;
+- that it cannot be undone, by anyone;
+- that a marker stays: "Removed where the law requires, <date>, by <member>";
+- that published cases change only through the docket.
+The member confirms with a reason naming the law or order. The rung stays reasoned, its name honest.
+Folded: BIO_Interaction_Constructs_v0_1.md §F; layouts.html (person screen); the screen registry names `personexpunge` (was the function `expunge`). On branch claude/gallant-brown-zg0wc1 @ 99f33256, restarted from main @ e879c270 after PR #11 merged; a new PR follows.
+Owed (DEC-142's owed: line): affordances' named exception with this consequence statement.
