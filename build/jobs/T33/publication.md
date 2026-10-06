@@ -26,3 +26,14 @@ Four readings for T33-63, each with the reading I build on unless you answer oth
 4. **K1570 (workbooks).** workbooks R16 says the rule refusing an undisclosed differing or unbound load-bearing calculation "is `publication`'s, reading R2", but publication's requirements carry no such R, and the plan puts that pre-flight in case-authoring (T33-69, C:A-15; case-authoring's entry). Best reading: publication builds nothing for it; workbooks R16's wording should name `case-authoring`. If you mean publication's commit to re-check it (R51's pattern), that needs a new R here, `workbooks` in Uses, and a C-122 row.
 
 Technical choices I'm making myself and will record: the stamp table is `edition_stamps`, exempt from purge (as published bytes, R24, R31); `stampsOf` answers in stamp order; an `effect` outside the four, or a malformed call, is `MALFORMED`.
+
+## J2 · REPORT
+
+Found outside my module by T33-63 (full text in my record, Work (T33-63), "Other modules"):
+(a) affordances (T33-85): `catalogue.test.mjs:1061` R19 reads `ATTRIBUTION_NO_REASON` from `publication/checks.mjs`; the row is case-tensions' (its R9) and left this table (R33). Red from my merge until re-pointed.
+(b) plane (T33-90): `docket.test.mjs:41` (case-tensions now declares between publication and docket) and `store.test.mjs:68` (the revision step is case-tensions', not publication's) pin the old registrations; red from my merge until re-pointed. plane should spread `caseTensionsOps` itself, after which publication's spread of it can go.
+(c) control-plane (T33-89): `families.mjs` should list `src/case-tensions/checks.mjs` for C-92 (inside its named red "CHECK_FAMILIES is total").
+(d) docket (T33-64): register `courtOrderOf` through `publication.registerOrderSource` at start (K1632); until then every stamp is STAMP_NO_ORDER.
+(e) public-read (T33-65): calculation inputs reach the published bucket by ratification R39's copy (answered `held: "evidence"`), registered at `caseFilePath("calculation", [calc, sha])`.
+(f) Importers of the moved names (ratification, review, case-authoring, affordances, docket, queue-producers) read through publication's delegates until their next jobs.
+(g) Generated artifact staled: `bio-plane/dist/bio-plane.bundled.mjs`.
