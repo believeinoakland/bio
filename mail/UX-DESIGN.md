@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_01SEmEip2dMnNBFgsXF9Tids · primary · since 2026-10-06
-**Read** · handled BOB B63
+**Read** · handled BOB B67
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -569,3 +569,6 @@ DEC-160 amended (Bob: "far more elements should be mouseovers and clickovers …
 - Each screen's own references carry what each is and why it matters there (`screens/mock-refs.js`, 287 entries).
 - About 425 on the 42 screens; each attaches and opens a real screen (checked).
 - Owed (BOB): the card's two parts from the record and the screen's context when the screens are built; the reference lists in those two files are the design's statement of what each screen names.
+
+## U90 · HANDOFF · 2026-10-06 · session_01SEmEip2dMnNBFgsXF9Tids · primary
+This session is handing over at Bob's request (context refresh). State at handover: `docs/development/ux-substrate/HANDOFF.md` §0 on the branch. B64–B67 read (K1818, K1819 noted). The successor rewrites the Writer line at takeover.
