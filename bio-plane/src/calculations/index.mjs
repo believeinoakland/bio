@@ -920,7 +920,9 @@ export class Calculations {
   }
 
   /* R10: may `viewer` see every input (and the project) of this calculation? */
-  async #visible(c, viewer, memo = new Map()) {
+  /* Synchronous, so a registration asked synchronously (duties R12) can use it; a port answering a promise is read as
+     not seen (fail closed). */
+  #visible(c, viewer, memo = new Map()) {
     if (memo.has(c.calc_id)) return memo.get(c.calc_id);
     memo.set(c.calc_id, false);
     if (!stamped(viewer)) return false;
@@ -930,9 +932,9 @@ export class Calculations {
       let ok = false;
       if (i.input_kind === "table") { const t = this.#one(`SELECT bundle_id FROM calc_tables WHERE sha=?`, i.ref); ok = !!t && this.#sees(t.bundle_id, viewer); }
       else if (i.input_kind === "money") {
-        try { const f = money ? await money.readFact({ factId: i.ref, viewer }) : null; ok = !!f && f.ok !== false && f.found !== false; } catch { ok = false; }
+        try { const f = money ? money.readFact({ factId: i.ref, viewer }) : null; ok = !!f && typeof f.then !== "function" && f.ok !== false && f.found !== false; } catch { ok = false; }
       } else if (i.input_kind === "figure") { const r = this.content.contentRow(i.ref); ok = !!r && this.#sees(r.bundle_id, viewer); }
-      else if (i.input_kind === "calculation") { const o = this.#one(`SELECT * FROM calculations WHERE calc_id=?`, i.ref); ok = !!o && await this.#visible(o, viewer, memo); }
+      else if (i.input_kind === "calculation") { const o = this.#one(`SELECT * FROM calculations WHERE calc_id=?`, i.ref); ok = !!o && this.#visible(o, viewer, memo); }
       else if (i.input_kind === "set") { const s = this.#one(`SELECT project, ids_json FROM calc_sets WHERE set_sha=?`, i.ref); ok = !!s && this.#sees(s.project, viewer) && (parse(s.ids_json) || []).every((id) => this.#sees(id, viewer)); }
       else if (i.input_kind === "draw") {
         const d = this.#one(`SELECT project, set_kind, set_sha, sample_json FROM calc_draws WHERE draw_key=?`, i.ref);
@@ -946,7 +948,7 @@ export class Calculations {
   }
 
   /* R9 (K1447 (ii)): the grade facts, from the inputs as held. */
-  async #gradeFacts(c) {
+  #gradeFacts(c) {
     const inputs = parse(c.inputs_json) || [];
     const per = [];
     const money = this.dep("money");
@@ -968,7 +970,8 @@ export class Calculations {
         let grade = null;
         for (const id of Array.isArray(inp.money) ? inp.money : [inp.money]) {
           let f = null;
-          try { f = money ? await money.readFact({ factId: id, viewer: INGEST_STAMP }) : null; } catch { f = null; }
+          try { f = money ? money.readFact({ factId: id, viewer: INGEST_STAMP }) : null; } catch { f = null; }
+          if (f && typeof f.then === "function") f = null;
           const fact = f && f.ok !== false && f.found !== false ? (f.fact || f) : null;
           const r = fact && plain(fact.grade) ? fact.grade.reading : fact ? fact.grade : null;
           grade = isGrade(r) ? (grade ? weaker(grade, r) : r) : grade;
@@ -977,7 +980,7 @@ export class Calculations {
       }
       if (inp.calculation !== undefined) {
         const o = this.#one(`SELECT * FROM calculations WHERE calc_id=?`, inp.calculation);
-        const g = o ? (await this.#gradeFacts(o)).capture : { grade: null, why: "not held" };
+        const g = o ? this.#gradeFacts(o).capture : { grade: null, why: "not held" };
         per.push({ name: inp.name, kind: "calculation", ref: inp.calculation, grade: g.grade, why: `its own capture axis: ${g.why}` }); continue;
       }
       per.push({ name: inp.name, kind: inp.set !== undefined ? "set" : "draw", ref: inp.set ?? inp.draw, grade: null, not_graded: true,
@@ -1280,7 +1283,7 @@ export class Calculations {
    * ===================================================================== */
 
   /** R19: `duties.registerOccurrenceEvidence`'s answer: the accepted calculations naming the occurrence in `evidences`. */
-  async occurrenceEvidence({ duty = null, occurrence = null, viewer = null } = {}) {
+  occurrenceEvidence({ duty = null, occurrence = null, viewer = null } = {}) {
     const dutyId = plain(duty) ? (duty.duty_id ?? duty.dutyId ?? null) : duty;
     const key = plain(occurrence) ? (occurrence.key ?? occurrence.occurrence_key ?? null) : occurrence;
     if (!str(dutyId) || !str(key)) return [];
@@ -1288,10 +1291,14 @@ export class Calculations {
     for (const c of this.#rows(`SELECT * FROM calculations WHERE accepted_by IS NOT NULL AND evidences_json IS NOT NULL ORDER BY calc_id`)) {
       const ev = parse(c.evidences_json) || [];
       if (!ev.some((e) => e.duty === dutyId && e.occurrence === key)) continue;
-      if (viewer !== null && !(await this.#visible(c, viewer))) { out.push({ withheld: true, says: "a calculation measuring this occurrence rests on an input you may not see, and is withheld whole" }); continue; }
-      const g = await this.#gradeFacts(c);
-      out.push({ calc_id: c.calc_id, kind: c.kind, results: parse(c.results_json), grade: g.capture, state: c.recompute_status === "stale" ? "stale" : "current",
-        cited_as: "measured evidence (a calculation output)", accepted_by: c.accepted_by, accepted_at: c.accepted_at });
+      if (viewer !== null && !this.#visible(c, viewer)) { out.push({ withheld: true, evidence: null, says: "a calculation measuring this occurrence rests on an input you may not see, and is withheld whole" }); continue; }
+      const g = this.#gradeFacts(c);
+      const terms = parse(c.terms_json) || {};
+      const item = { calc_id: c.calc_id, kind: c.kind, results: parse(c.results_json), grade: g.capture, state: c.recompute_status === "stale" ? "stale" : "current",
+        cited_as: "measured evidence (a calculation output)", accepted_by: c.accepted_by, accepted_at: c.accepted_at };
+      /* duties R12 reads an item's `when` as the match's date: only a date the calculation's terms state it measures */
+      const when = typeof terms.met_on === "string" && isCalendarDate(terms.met_on) ? { value: terms.met_on, precision: "day", zone: "UTC" } : null;
+      out.push({ ...item, evidence: { ...item }, ...(when ? { when } : {}) });
     }
     return out;
   }
@@ -1343,7 +1350,7 @@ export class Calculations {
     let i = cur ? cur.next_index : 0;
     let evaluated = 0;
     const deps = { money: this.dep("money"), duties: this.dep("duties"), events: this.dep("events"), progressions: this.dep("progressions"),
-      viewer: INGEST_STAMP, now: this.now(), view: this.#view() };
+      viewer: INGEST_STAMP, now: String(this.now()).replace(/\.\d+Z$/, "Z"), view: this.#view() };   /* an instant at seconds, as duties' asOf is */
     while (i < PATTERNS.length) {
       if (evaluated > 0 && this.clock() - start >= budget) break;
       const p = PATTERNS[i];

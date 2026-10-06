@@ -14,6 +14,7 @@ import { entitiesOf } from "../../../src/entities/index.mjs";
 import { eventsOf } from "../../../src/events/index.mjs";
 import { standardsOf } from "../../../src/standards/index.mjs";
 import { moneyOf } from "../../../src/money/index.mjs";
+import { dutiesOf } from "../../../src/duties/index.mjs";
 import { calculationsOf } from "../../../src/calculations/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(s, "utf8").digest("hex");
@@ -87,27 +88,6 @@ export function retrievalProvider() {
     } };
 }
 
-/** duties (its R7, R9, R12, R13): duties, occurrences and transitions the test holds. */
-export function dutiesProvider() {
-  const duties = new Map(), occurrences = new Map(), transitions = [], evidence = [];
-  return { duties, occurrences, transitions, evidence,
-    registerOccurrenceEvidence(module, fn) {
-      const r = listenerRefusal(evidence, module, fn);
-      if (r) return r;
-      evidence.push({ module, fn });
-      return { ok: true };
-    },
-    readDuty({ dutyId, viewer }) {
-      const d = duties.get(dutyId);
-      if (!d) return { ok: true, found: false };
-      if (Array.isArray(d.visibleTo) && !/^class:/.test(viewer || "") && !d.visibleTo.includes(viewer)) return { ok: true, found: false };
-      return { ok: true, found: true, ...d };
-    },
-    occurrencesOf({ dutyId }) { return { ok: true, occurrences: occurrences.get(dutyId) || [] }; },
-    transitionsOf() { return { ok: true, transitions: transitions.slice() }; },
-  };
-}
-
 /** people (its R19): `registerRosterSource(module, source)`. */
 export function peopleProvider() {
   const sources = [];
@@ -174,7 +154,9 @@ export function world({ now = NOW, construct = true, profiles = [PROFILE], evide
     onFactChanged: (m, fn) => realMoney.onFactChanged(m, fn),
     withdrawFact: (a) => realMoney.withdrawFact(a),
   };
-  const retrieval = retrievalProvider(), duties = dutiesProvider(), people = peopleProvider(),
+  const duties = dutiesOf(host, { record, membership, entities, standards, events, money: realMoney, provenance: prov, content, now: () => clock.now });
+  if (typeof duties.migrate === "function") duties.migrate();
+  const retrieval = retrievalProvider(), people = peopleProvider(),
     progressions = progressionsProvider();
   const deps = { record, membership, content, provenance: prov, money, entities, standards, retrieval, duties, people, events,
     progressions, now: () => clock.now, clock: () => clock.ms };
@@ -259,6 +241,24 @@ export function world({ now = NOW, construct = true, profiles = [PROFILE], evide
     },
     /** The payer and payee the default facts name. */
     parties() { if (!parties) w.fact({}); return parties; },
+    /** An obligation declared by bob (duties R3): owed by `obligor`, triggered on `trigger`, due on `due` (a commitment),
+     *  held as measured practice; filed in `project` when given (its sight). Its id and its one occurrence's key. */
+    duty({ obligor, trigger = "2026-01-05", due = "2026-01-10", project = null, arising_in = null } = {}) {
+      const r = duties.declare({ modality: "duty", obligor, performance: { act: "post the minutes" },
+        source: { kind: "practice", statement: "the clerk posts the minutes within five days, as measured" },
+        trigger: { kind: "date", date: trigger }, time: { basis: "commitment", date: due, citation: "the clerk's stated practice" },
+        ...(project ? { project } : {}), ...(arising_in ? { arising_in } : {}), clause: "the practice as measured", by: V(project ? "alice" : "bob") });
+      if (!r.ok) throw new Error(`fixture duty refused: ${JSON.stringify(r).slice(0, 400)}`);
+      const o = duties.occurrencesOf({ dutyId: r.duty_id, asOf: "2026-06-01T00:00:00Z", viewer: "class:daemon" });
+      if (!o.ok || !o.occurrences.length) throw new Error(`fixture occurrence missing: ${JSON.stringify(o).slice(0, 400)}`);
+      return { dutyId: r.duty_id, key: o.occurrences[0].key };
+    },
+    /** A recorded transition of an occurrence (duties R13), as a member records it. */
+    transition(d, state, asOf) {
+      const r = duties.recordTransition({ dutyId: d.dutyId, occurrenceKey: d.key, state, asOf, cause: "as the minutes show", by: V("alice") });
+      if (!r.ok) throw new Error(`fixture transition refused: ${JSON.stringify(r).slice(0, 400)}`);
+      return r;
+    },
     /** A standard declared by bob (standards R1) over a fresh passage, in force over `period`: its id. */
     standard(period) {
       const r = standards.standardDeclare({ cite: `Test Bylaw § ${++n}`, kind: "ordinance", issuer: "The Selectboard", text: [w.passage(`bylaw ${n}`)],

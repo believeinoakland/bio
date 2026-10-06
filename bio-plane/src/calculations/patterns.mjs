@@ -32,7 +32,8 @@ const plain = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 const list = (v, ...keys) => (Array.isArray(v) ? v : plain(v) ? (keys.map((k) => v[k]).find(Array.isArray) || []) : []);
 const found = (r) => !!r && r.ok !== false && r.found !== false;
 const dayOf = (v) => {
-  const s = typeof v === "string" ? v : plain(v) ? (typeof v.value === "string" ? v.value : plain(v.due) ? v.due.value : typeof v.start === "string" ? v.start : null) : null;
+  const s = typeof v === "string" ? v : plain(v) ? (typeof v.value === "string" ? v.value : plain(v.date) ? v.date.value
+    : plain(v.due) ? v.due.value : typeof v.start === "string" ? v.start : null) : null;
   return typeof s === "string" && /^\d{4}-\d{2}-\d{2}/.test(s) ? s : null;
 };
 const recipe = (steps, output) => ({ method: METHOD, inputs: [{ name: "t", kind: "table" }], steps, output });

@@ -9,36 +9,42 @@ const PERIOD = { from: "2025-07-01", to: "2026-06-30" };
 
 test("R19 at start it registers with duties.registerOccurrenceEvidence; asked {duty, occurrence}, an accepted calculation naming that occurrence in evidences is answered as its evidence with its results and grade facts; a stale or withheld one is answered as such", async () => {
   const w = seeded();
-  assert.deepEqual(w.duties.evidence.map((e) => e.module), ["calculations"], "registered once, at start");
-  const ask = w.duties.evidence[0].fn;
-  const t = await w.table("days\n12\n", [{ name: "days", type: "integer" }]);
+  const office = w.entity("Town Clerk", "office");
+  const d = w.duty({ obligor: office });
+  const occ = () => w.duties.occurrencesOf({ dutyId: d.dutyId, asOf: "2026-06-01T00:00:00Z", viewer: V("bob") }).occurrences[0];
+  const measured = () => occ().evidence.filter((e) => e.kind === "measured" && e.source === "calculations");
+  const t = await w.table("days\n3\n", [{ name: "days", type: "integer" }]);
   const sumDays = R([{ op: "sum", from: "t", field: "days", as: "s" }], "s");
-  const ev = [{ duty: "DUT-2026-0001", occurrence: "occ-1" }];
-  const c = await w.c.create({ question: "Days to post the minutes?", period: PERIOD, kind: "span", inputs: [{ name: "t", table: t.sha }], recipe: sumDays, evidences: ev, by: V("bob") });
-  assert.deepEqual(await ask({ duty: "DUT-2026-0001", occurrence: "occ-1" }), [], "not yet accepted: no evidence");
+  const c = await w.c.create({ question: "Days to post the minutes?", terms: { met_on: "2026-01-08" }, period: PERIOD, kind: "span",
+    inputs: [{ name: "t", table: t.sha }], recipe: sumDays, evidences: [{ duty: d.dutyId, occurrence: d.key }], by: V("bob") });
+  assert.deepEqual(measured(), [], "not yet accepted: no evidence");
+  assert.equal(occ().state, "overdue");
   await w.c.accept({ calcId: c.calc_id, by: V("carol") });
-  const got = await ask({ duty: { duty_id: "DUT-2026-0001" }, occurrence: { key: "occ-1" } });
-  assert.equal(got.length, 1);
-  assert.equal(got[0].calc_id, c.calc_id);
-  assert.equal(got[0].results.output.value, "12");
-  assert.equal(got[0].grade.grade, "B");
-  assert.equal(got[0].state, "current");
-  assert.deepEqual(await ask({ duty: "DUT-2026-0001", occurrence: "occ-2" }), [], "another occurrence");
+  const got = measured();
+  assert.equal(got.length, 1, "registered at start, and asked by duties' own read");
+  assert.equal(got[0].evidence.calc_id, c.calc_id);
+  assert.equal(got[0].evidence.results.output.value, "3");
+  assert.equal(got[0].evidence.grade.grade, "B");
+  assert.equal(got[0].evidence.state, "current");
+  assert.equal(occ().state, "met", "duties reads the measured evidence as the match (its R10)");
+  const other = w.duty({ obligor: office, trigger: "2026-02-02", due: "2026-02-09" });
+  assert.deepEqual(w.duties.occurrencesOf({ dutyId: other.dutyId, asOf: "2026-06-01T00:00:00Z", viewer: V("bob") }).occurrences[0].evidence.filter((e) => e.source === "calculations"), [], "another occurrence");
   /* stale */
   const f = w.fact({ amount: "3" });
-  const m = await w.c.create({ question: "Q", period: PERIOD, kind: "total", inputs: [{ name: "t", money: [f] }], recipe: R([{ op: "sum", from: "t", field: "amount", as: "s" }], "s"), evidences: [{ duty: "DUT-2026-0002", occurrence: "o" }], by: V("bob") });
+  const m = await w.c.create({ question: "Q", period: PERIOD, kind: "total", inputs: [{ name: "t", money: [f] }], recipe: R([{ op: "sum", from: "t", field: "amount", as: "s" }], "s"),
+    evidences: [{ duty: other.dutyId, occurrence: other.key }], by: V("bob") });
   await w.c.accept({ calcId: m.calc_id, by: V("carol") });
   w.fact({ adjusts: f, amount: "1", sign: "-" });
-  assert.equal((await ask({ duty: "DUT-2026-0002", occurrence: "o" }))[0].state, "stale");
+  assert.equal(w.c.occurrenceEvidence({ duty: other.dutyId, occurrence: other.key })[0].state, "stale");
   /* withheld from a viewer who may not see an input */
   const P = w.project("Closed", "alice");
   const hidden = await w.table("days\n4\n", [{ name: "days", type: "integer" }], { by: V("alice") }, { project: P });
-  const h = await w.c.create({ question: "Q", period: PERIOD, kind: "span", inputs: [{ name: "t", table: hidden.sha }], recipe: sumDays, evidences: [{ duty: "DUT-2026-0003", occurrence: "o" }], by: V("alice") });
+  const h = await w.c.create({ question: "Q", period: PERIOD, kind: "span", inputs: [{ name: "t", table: hidden.sha }], recipe: sumDays, evidences: [{ duty: d.dutyId, occurrence: d.key }], by: V("alice") });
   await w.c.accept({ calcId: h.calc_id, by: V("alice") });
-  const seen = await ask({ duty: "DUT-2026-0003", occurrence: "o", viewer: V("carol") });
-  assert.deepEqual(seen, [{ withheld: true, says: seen[0].says }]);
-  assert.equal("results" in seen[0], false, "withheld whole");
-  assert.equal((await ask({ duty: "DUT-2026-0003", occurrence: "o", viewer: V("alice") }))[0].calc_id, h.calc_id);
+  const seen = w.c.occurrenceEvidence({ duty: d.dutyId, occurrence: d.key, viewer: V("carol") });
+  assert.deepEqual(seen.map((x) => !!x.withheld), [false, true]);
+  assert.equal("results" in seen[1], false, "withheld whole");
+  assert.equal(w.c.occurrenceEvidence({ duty: d.dutyId, occurrence: d.key, viewer: V("alice") })[1].calc_id, h.calc_id);
 });
 
 test("R20 at start it registers with people.registerRosterSource: for an organisation and a date it answers the rows of tables with roster roles valid at that date, by person key, with the table's sha, and reads no row into a line", async () => {
@@ -70,19 +76,22 @@ function lateness(w) {
   const meeting = w.event("meeting", "2026-01-15T18:00", { concerns: [office] });
   const posting = w.event("publication", "2026-01-13T09:00", { concerns: [office], dkind: "published" });
   w.within(posting, meeting);
-  w.duties.duties.set("DUT-2026-0001", { duty_id: "DUT-2026-0001", obligor: office, arising_in: proceeding });
-  w.duties.duties.set("DUT-2026-0002", { duty_id: "DUT-2026-0002", obligor: office, arising_in: null, visibleTo: [V("alice")] });
-  w.duties.transitions.push(
-    { duty_id: "DUT-2026-0001", occurrence_key: "a", state: "met_late", as_of: "2026-01-20", at: "2026-01-20T00:00:00Z" },
-    { duty_id: "DUT-2026-0001", occurrence_key: "b", state: "met", as_of: "2026-02-20", at: "2026-02-20T00:00:00Z" },
-    { duty_id: "DUT-2026-0002", occurrence_key: "c", state: "met", as_of: "2026-03-20", at: "2026-03-20T00:00:00Z" },
-    { duty_id: "DUT-2026-0002", occurrence_key: "d", state: "overdue", as_of: "2026-03-20", at: "2026-03-20T00:00:00Z" });
-  w.duties.occurrences.set("DUT-2026-0001", [{ key: "a", due: { due: { value: "2026-01-10", precision: "day", zone: "UTC" } }, evidence: [{ event_id: meeting.eventId, when: { value: "2026-01-15", precision: "day", zone: "UTC" } }] }]);
+  const P = w.project("Clerk's ledger", "alice");
+  const late = w.duty({ obligor: office, arising_in: proceeding, trigger: "2026-01-05", due: "2026-01-10" });
+  const onTime = w.duty({ obligor: office, arising_in: proceeding, trigger: "2026-02-01", due: "2026-02-10" });
+  const hidden = w.duty({ obligor: office, trigger: "2026-03-01", due: "2026-03-10", project: P });
+  const open = w.duty({ obligor: office, trigger: "2026-03-02", due: "2026-03-11" });
+  const m = w.duties.matchEvent({ dutyId: late.dutyId, occurrenceKey: late.key, eventId: meeting.eventId, reason: "posted at the meeting", by: V("alice") });
+  if (!m.ok) throw new Error(JSON.stringify(m));
+  w.transition(late, "met_late", "2026-01-20T00:00:00Z");
+  w.transition(onTime, "met", "2026-02-20T00:00:00Z");
+  w.transition(hidden, "met", "2026-03-20T00:00:00Z");
+  w.transition(open, "overdue", "2026-03-20T00:00:00Z");
   w.progressions.feed.instances = [
     { progression_key: "contracting", entity_id: "ENT-2026-0300", findings: [{ kind: "out_of_order", stage_key: "payment", after_stage: "award", placements: [{ bundle_id: null }] }] },
     { progression_key: "contracting", entity_id: "ENT-2026-0301", findings: [{ kind: "missing_predecessor", stage_key: "award" }] },
   ];
-  return { office, proceeding, meeting, posting };
+  return { office, proceeding, meeting, posting, late, onTime, hidden, open };
 }
 
 test("R22 the shipped, data-defined patterns (sequence anomalies, lateness per occurrence and per meeting's posting, and patterns about an office and across proceedings) each carry a denominator and cited derivation; runPatterns evaluates them within the budget into their own result table, never onto a person or entity row, and answers {evaluated, remaining}", async () => {
@@ -113,7 +122,7 @@ test("R22 the shipped, data-defined patterns (sequence anomalies, lateness per o
   assert.equal(late.length, 1);
   assert.deepEqual(late[0].value.days_late, { value: "5", sign: "+", precision: "exact", unit: "days" }, "days late, through calc-grammar's span");
   assert.equal(late[0].d.n, 3, "over the occurrences recorded met or met late");
-  assert.deepEqual(late[0].rests, ["DUT-2026-0001", L.meeting.eventId], "its cited derivation");
+  assert.deepEqual(late[0].rests, [L.late.dutyId, L.meeting.eventId], "its cited derivation");
   const posting = of("posting_lateness");
   assert.equal(posting.length, 1);
   assert.equal(posting[0].value.hours_before.value, "57");
