@@ -944,14 +944,18 @@ export class Publication {
     if (!owner)
       this.sql.exec(`INSERT INTO cases (case_id,project_id,opened) VALUES (?,?,?) ON CONFLICT(case_id) DO NOTHING`,
                     id, project ?? null, when);
+    /* R70, R40 (DEC-147 (5); K1826): when it was signed beside when it is published, on the row: a set time's signing
+       (R66), else this commit's instant; published at this commit. */
+    const signedAt = schedule.signedAtFor(this, id, ed, when);
     this.sql.exec(
-      `INSERT INTO published_cases (case_id,edition,scope,completeness,bias_acknowledgement,bar,opened)
-       VALUES (?,?,?,?,?,?,?)
+      `INSERT INTO published_cases (case_id,edition,scope,completeness,bias_acknowledgement,bar,opened,signed_at,published_at)
+       VALUES (?,?,?,?,?,?,?,?,?)
        ON CONFLICT(case_id,edition) DO UPDATE SET scope=excluded.scope,
-         completeness=excluded.completeness, bias_acknowledgement=excluded.bias_acknowledgement, bar=excluded.bar`,
+         completeness=excluded.completeness, bias_acknowledgement=excluded.bias_acknowledgement, bar=excluded.bar,
+         signed_at=excluded.signed_at, published_at=excluded.published_at`,
       id, ed, typeof scope === "string" ? scope : null, completeness ? JSON.stringify(completeness) : null,
       typeof biasAcknowledgement === "string" ? biasAcknowledgement : null,
-      bar && typeof bar === "object" ? JSON.stringify(bar) : null, when);
+      bar && typeof bar === "object" ? JSON.stringify(bar) : null, when, signedAt, when);
     /* THE ROSTER AND THE PINS, IN ONE ACT: the publisher authored all N pins in one document and a member signed it,
        so the freeze is one statement somebody made. The ordinal is the roster's own order. */
     members.forEach((m, i) => {
@@ -964,12 +968,10 @@ export class Publication {
     });
     /* REC-128: `deliveredBy` is the control plane's reading of the SESSION, written as handed — never defaulted to
        the signer. */
-    /* R70 (DEC-147 (5)): when it was signed beside when it is published: a set time's signing (R66), else this commit. */
     this.sql.exec(
       `UPDATE case_documents SET sig_armored=?, attestor_key=?, attestor_member=?, gate_version=?, delivered_by=?,
-         ratified_at=?, signed_at=? WHERE case_id=? AND edition=? AND sig_armored IS NULL`,
-      sigArmored, attestorKey, attestorMember ?? null, gateVersion, deliveredBy ?? null, when,
-      schedule.signedAtFor(this, id, ed, when), id, ed);
+         ratified_at=? WHERE case_id=? AND edition=? AND sig_armored IS NULL`,
+      sigArmored, attestorKey, attestorMember ?? null, gateVersion, deliveredBy ?? null, when, id, ed);
     /* D-734 (BOB #36, D-731 (b); BIO_Publication_v0_1.md §4): THE SIGNED DOCUMENT'S OWN HASH IS PUBLISHED, in the same
        act and transaction that signs it, so op=verify answers for the one hash a member signed here. */
     registerCaseDocumentSha(this.sql, id, ed, doc.doc_sha, doc.text, when);
@@ -1414,7 +1416,7 @@ export class Publication {
     if (!id || !Number.isInteger(ed) || ed < 1) return { ok: false, reason: "MALFORMED" };
     const doc = this.#one(
       `SELECT case_id, edition, doc_sha, text, authored_at, authored_by,
-              sig_armored, attestor_key, attestor_member, delivered_by, gate_version, ratified_at, signed_at
+              sig_armored, attestor_key, attestor_member, delivered_by, gate_version, ratified_at
          FROM case_documents WHERE case_id=? AND edition=?`, id, ed);
     if (!doc) return noCaseDocument(id, ed);
     /* REC-130 / IC-141, 2026-09-18 — AN UNSIGNED CASE DOCUMENT IS WORKING
@@ -1613,7 +1615,8 @@ export class Publication {
                 rather than inferred from a null. */
              ratified: !!d.ratified_at, ratified_at: d.ratified_at ?? null,
              /* R70: when a published edition was signed and when it was published; null while unsigned. */
-             signed_at: d.ratified_at ? d.signed_at ?? d.ratified_at : null, published_at: d.ratified_at ?? null,
+             ...(d.ratified_at ? this.#editionDates(d.case_id, d.edition, d.ratified_at)
+                               : { signed_at: null, published_at: null }),
              sig_armored: d.sig_armored ?? null, attestor_member: d.attestor_member ?? null,
              /* REC-128: who DELIVERED the signature, beside who MADE it. Null
                 while the document is unsigned — there is no delivery yet, which
@@ -1798,8 +1801,8 @@ export class Publication {
                 stranger to check in it. */
              document: (() => {
                const d = this.#one(
-                 `SELECT doc_sha, text, sig_armored, attestor_key, attestor_member, delivered_by, gate_version, ratified_at,
-                         signed_at FROM case_documents WHERE case_id=? AND edition=? AND ratified_at IS NOT NULL`,
+                 `SELECT doc_sha, text, sig_armored, attestor_key, attestor_member, delivered_by, gate_version, ratified_at
+                    FROM case_documents WHERE case_id=? AND edition=? AND ratified_at IS NOT NULL`,
                  caseId, ed);
                /* R70 (DEC-147 (5)): `signed_at` the signature's instant at the ceremony, `published_at` the commit's; one
                   instant for both when published at signing or committed before T34. */
@@ -1807,7 +1810,7 @@ export class Publication {
                             attestor: { member: d.attestor_member, key_b64: d.attestor_key },
                             delivered_by: this.#deliveredBy(d),
                             gate_version: d.gate_version, ratified_at: d.ratified_at,
-                            signed_at: d.signed_at ?? d.ratified_at, published_at: d.ratified_at } : null;
+                            ...this.#editionDates(caseId, ed, d.ratified_at) } : null;
              })(),
              /* REC-47 / DEC-46 (a): the bias the case was produced under travels
                 with it, on every surface that serves the case block. DEC-20 is
@@ -1971,6 +1974,14 @@ export class Publication {
       out[nameOnly ? "name" : "serve"]++;
     }
     return out;
+  }
+
+  /* R70 (K1826): a published edition's two instants, from its `published_cases` row; a row this boot's migration has
+     not yet filled (none in a running store) reads as its document's ratification instant, never null. */
+  #editionDates(caseId, edition, fallback) {
+    const r = this.#one(`SELECT signed_at, published_at FROM published_cases WHERE case_id=? AND edition=?`,
+                        caseId, Number(edition));
+    return { signed_at: (r && r.signed_at) || fallback, published_at: (r && r.published_at) || fallback };
   }
 
   /* REC-128 — THE ONE READ CHOKEPOINT FOR WHO DELIVERED A RATIFICATION. Every

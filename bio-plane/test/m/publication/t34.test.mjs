@@ -7,6 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { planeWorld as world, V, SIG, KEY, NOW, MACHINE } from "./fixture.mjs";
 import { publicationOps, SCHEDULED_EDITIONS_MAX, SCHEDULED_CHECK_UNAVAILABLE } from "../../../src/publication/index.mjs";
+import { migratePublication } from "../../../src/publication/schema.mjs";
 import { caseTensionsOps } from "../../../src/case-tensions/index.mjs";
 
 const F = "INQ-2026-0001", CASE = "CASE-2026-0001", CASE2 = "CASE-2026-0002";
@@ -193,12 +194,12 @@ test("R67 publishWake answers the earliest waiting publish_at or null; publishDu
   assert.deepEqual(w.p.registerScheduledPublisher("ratification", pub), { ok: true, module: "ratification" });
   assert.equal(w.p.registerScheduledPublisher("other", pub).reason, "PROVIDER_DECLARED");
   /* not yet due: nothing taken */
-  assert.deepEqual(w.p.publishDue("2026-10-01T11:59:59Z"), { ok: true, taken: [] });
+  assert.deepEqual(await w.p.publishDue("2026-10-01T11:59:59Z"), { ok: true, taken: [] });
   assert.equal(pub.calls.length, 0);
   /* a late alarm: taken when checked, both instants kept; an instant spelled with milliseconds compares as an instant */
   const late = "2026-10-01T15:30:00.000Z";
   w.clock.now = late;
-  const out = w.p.publishDue(late);
+  const out = await w.p.publishDue(late);
   assert.deepEqual(out.taken, [{ case: CASE, edition: 1, state: "published", published_at: late }], "only the due one");
   assert.equal(pub.calls.length, 1);
   assert.deepEqual([pub.calls[0].now, pub.calls[0].entry.checked, pub.calls[0].entry.signature, pub.calls[0].entry.doc_sha,
@@ -208,7 +209,7 @@ test("R67 publishWake answers the earliest waiting publish_at or null; publishDu
   assert.equal(docOf(w).sig_armored, SIG(1), "committed through R22");
   assert.equal(w.p.publishWake(), "2026-10-02T12:00:00Z");
   /* never tried again */
-  w.p.publishDue("2026-10-01T23:00:00Z");
+  await w.p.publishDue("2026-10-01T23:00:00Z");
   assert.equal(pub.calls.length, 1);
   /* both due at once: taken in publish_at order */
   const order = [];
@@ -216,11 +217,43 @@ test("R67 publishWake answers the earliest waiting publish_at or null; publishDu
   sched(w2.w, { at: { date: "2026-10-01", time: "10:00" } }, CASE);
   sched(w2.w, { at: { date: "2026-10-01", time: "08:00" } }, CASE2);
   w2.w.p.registerScheduledPublisher({ publishScheduled: (en) => { order.push(en.case); return { stopped: [{ code: "X", translation: "x" }] }; } });
-  w2.w.p.publishDue("2026-10-02T00:00:00Z");
+  await w2.w.p.publishDue("2026-10-02T00:00:00Z");
   assert.deepEqual(order, [CASE2, CASE]);
 });
 
-test("R67 with no publisher, a publisher that throws, or one that gives neither answer, a due edition is stopped SCHEDULED_CHECK_UNAVAILABLE and never published unchecked; a publisher's stop is kept with its reasons; a stopped edition committed nothing and is never tried again", () => {
+test("R67 (K1832) the publisher may answer with a Promise: publishDue awaits each answer before taking the next edition, hands it the entry R66 recorded with its held signature, and an alarm overlapping one still awaiting never takes the same edition twice", async () => {
+  const { w, proj, roles } = base({ cases: [CASE, CASE2] });
+  sched(w, { at: { date: "2026-10-01", time: "10:00" } }, CASE);
+  sched(w, { at: { date: "2026-10-01", time: "08:00" } }, CASE2);
+  const log = [];
+  const sync = publisher(w, proj, roles);
+  let release;
+  const gate = new Promise((r) => { release = r; });
+  w.p.registerScheduledPublisher("ratification", { async publishScheduled(entry, now) {
+    log.push(`start ${entry.case}`);
+    if (entry.case === CASE2) await gate;
+    const a = sync.publishScheduled(entry, now);
+    log.push(`end ${entry.case}`);
+    return a;
+  } });
+  const first = w.p.publishDue("2026-10-02T00:00:00Z");
+  await new Promise((r) => setImmediate(r));
+  assert.deepEqual(log, [`start ${CASE2}`], "the next is not taken while one is awaited");
+  const overlap = await w.p.publishDue("2026-10-02T00:00:00Z");
+  assert.deepEqual(overlap.taken.map((t) => t.case), [CASE], "the edition being awaited is not taken twice");
+  release();
+  const out = await first;
+  assert.deepEqual(out.taken.map((t) => [t.case, t.state]), [[CASE2, "published"]]);
+  assert.deepEqual(log, [`start ${CASE2}`, `start ${CASE}`, `end ${CASE}`, `end ${CASE2}`]);
+  assert.equal(sync.calls.find((c) => c.entry.case === CASE2).entry.signature, SIG(1), "the held signature");
+  /* a Promise that rejects is a throw: stopped, never published unchecked */
+  const b = base();
+  sched(b.w);
+  b.w.p.registerScheduledPublisher("ratification", { publishScheduled: async () => { throw new Error("verify failed"); } });
+  assert.deepEqual((await b.w.p.publishDue("2026-10-01T12:00:00Z")).taken[0].reasons, [SCHEDULED_CHECK_UNAVAILABLE]);
+});
+
+test("R67 with no publisher, a publisher that throws, or one that gives neither answer, a due edition is stopped SCHEDULED_CHECK_UNAVAILABLE and never published unchecked; a publisher's stop is kept with its reasons; a stopped edition committed nothing and is never tried again", async () => {
   const cases = [
     [null, [SCHEDULED_CHECK_UNAVAILABLE]],
     [{ publishScheduled() { throw new Error("boom"); } }, [SCHEDULED_CHECK_UNAVAILABLE]],
@@ -234,13 +267,13 @@ test("R67 with no publisher, a publisher that throws, or one that gives neither 
     sched(w);
     if (pub) w.p.registerScheduledPublisher("ratification", pub);
     const before = w.snapshot(["case_documents", "published_cases", "published_case_members", "published_shas", "cases"]);
-    const out = w.p.publishDue("2026-10-01T12:00:00Z");
+    const out = await w.p.publishDue("2026-10-01T12:00:00Z");
     assert.deepEqual(out.taken, [{ case: CASE, edition: 1, state: "stopped", reasons }]);
     assert.deepEqual(w.snapshot(["case_documents", "published_cases", "published_case_members", "published_shas", "cases"]), before,
                      "nothing committed");
     const e = w.p.scheduledEditions({}).editions[0];
     assert.deepEqual([e.state, e.reasons, e.outcome_at], ["stopped", reasons, "2026-10-01T12:00:00Z"]);
-    assert.deepEqual(w.p.publishDue("2026-10-09T00:00:00Z").taken, [], "never tried again");
+    assert.deepEqual((await w.p.publishDue("2026-10-09T00:00:00Z")).taken, [], "never tried again");
     assert.equal(w.p.publishWake(), null);
   }
   assert.equal(typeof SCHEDULED_CHECK_UNAVAILABLE.translation, "string");
@@ -251,7 +284,7 @@ test("R67 with no publisher, a publisher that throws, or one that gives neither 
 
 /* ---------------------------------------------------------------- R68 */
 
-test("R68 publishAtMove and publishAtCancel refuse, in order and each writing nothing: MACHINE_CANNOT_SCHEDULE_PUBLISH, NOT_WAITING (one answer without standing; naming the state once it no longer waits or its time has come), NOT_A_CASE_OWNER, and for a move R66's refusals of at", () => {
+test("R68 publishAtMove and publishAtCancel refuse, in order and each writing nothing: MACHINE_CANNOT_SCHEDULE_PUBLISH, NOT_WAITING (one answer without standing; naming the state once it no longer waits or its time has come), NOT_A_CASE_OWNER, and for a move R66's refusals of at", async () => {
   const { w } = base();
   const none = w.p.publishAtCancel({ case: CASE, edition: 1, by: V("olive") });
   assert.equal(none.reason, "NOT_WAITING");
@@ -276,7 +309,7 @@ test("R68 publishAtMove and publishAtCancel refuse, in order and each writing no
   w.clock.now = "2026-10-01T12:00:00Z";
   const come = w.p.publishAtCancel({ case: CASE, edition: 1, by: V("olive") });
   assert.deepEqual([come.reason, come.state], ["NOT_WAITING", "waiting"]);
-  w.p.publishDue("2026-10-01T12:00:00Z");
+  await w.p.publishDue("2026-10-01T12:00:00Z");
   const gone = w.p.publishAtMove({ case: CASE, edition: 1, at: AT, by: V("olive") });
   assert.deepEqual([gone.reason, gone.state], ["NOT_WAITING", "stopped"]);
 });
@@ -348,7 +381,7 @@ test("R69 scheduledEditions answers each edition's state, signer, setter, both t
 
 /* ---------------------------------------------------------------- R70 */
 
-test("R70 every published case edition answers signed_at and published_at in R53's document and R1's answer: one instant for an edition published at signing or committed before T34; the ceremony's and the commit's for one published at a set time", () => {
+test("R70 R40 every published case edition answers signed_at and published_at in R53's document and R1's answer: one instant for an edition published at signing or committed before T34; the ceremony's and the commit's for one published at a set time", async () => {
   const { w, proj, roles } = base({ cases: [CASE, CASE2] });
   const roster = roles.map((r) => ({ bundle_id: r.target, version_sha: r.version_sha }));
   /* published at signing */
@@ -361,16 +394,28 @@ test("R70 every published case edition answers signed_at and published_at in R53
   /* published at a set time: signed at the ceremony, published at the commit */
   sched(w, {}, CASE2);
   w.p.registerScheduledPublisher("ratification", publisher(w, proj, roles));
-  w.p.publishDue("2026-10-01T12:00:05Z");
+  await w.p.publishDue("2026-10-01T12:00:05Z");
   const d2 = w.p.caseEditionState(CASE2, 1).document;
   assert.deepEqual([d2.signed_at, d2.published_at], [NOW, "2026-10-01T12:00:05Z"]);
   assert.deepEqual([w.p.caseDocument(CASE2, 1, null).signed_at, w.p.caseDocument(CASE2, 1, null).published_at], [NOW, "2026-10-01T12:00:05Z"]);
-  /* committed before T34: no signed_at recorded, read as its ratification instant */
+  /* R40 (K1826): both held on the edition's published_cases row, never null */
+  assert.deepEqual(w.rows(`SELECT case_id, signed_at, published_at FROM published_cases ORDER BY case_id`),
+                   [{ case_id: CASE, signed_at: "2026-09-28T02:00:00Z", published_at: "2026-09-28T02:00:00Z" },
+                    { case_id: CASE2, signed_at: NOW, published_at: "2026-10-01T12:00:05Z" }]);
+  /* committed before T34: the migration fills its row with its ratification instant in both */
   w.prepare(CASE, 2, { project: proj, roles });
   w.signLegacy(CASE, 2, { project: proj, roster, at: "2026-01-01T00:00:00Z" });
-  w.st.sql.exec(`UPDATE case_documents SET signed_at=NULL WHERE case_id=? AND edition=2`, CASE);
+  w.st.sql.exec(`UPDATE published_cases SET ratified_at=? WHERE case_id=? AND edition=2`, "2026-01-02T00:00:00Z", CASE);
+  assert.deepEqual(w.row(`SELECT signed_at, published_at FROM published_cases WHERE case_id=? AND edition=2`, CASE),
+                   { signed_at: null, published_at: null }, "the control: as an old store holds it");
+  migratePublication(w.st.sql);
+  assert.deepEqual(w.row(`SELECT signed_at, published_at FROM published_cases WHERE case_id=? AND edition=2`, CASE),
+                   { signed_at: "2026-01-02T00:00:00Z", published_at: "2026-01-02T00:00:00Z" });
   const d3 = w.p.caseDocument(CASE, 2, null);
-  assert.deepEqual([d3.signed_at, d3.published_at], ["2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z"]);
+  assert.deepEqual([d3.signed_at, d3.published_at], ["2026-01-02T00:00:00Z", "2026-01-02T00:00:00Z"]);
+  assert.equal(w.row(`SELECT COUNT(*) AS n FROM published_cases WHERE signed_at IS NULL OR published_at IS NULL`).n, 0);
+  migratePublication(w.st.sql);
+  assert.deepEqual(w.p.caseDocument(CASE, 2, null), d3, "every later boot changes nothing");
 });
 
 /* ---------------------------------------------------------------- R71 */
@@ -410,7 +455,7 @@ test("R71 onPublishScheduled: one registration per module, refused through membe
   w.p.registerScheduledPublisher("ratification", publisher(w, proj, roles));
   const n = heard.length;
   const before = w.snapshot();
-  w.p.publishDue("2026-10-02T12:00:00Z");
+  await w.p.publishDue("2026-10-02T12:00:00Z");
   assert.deepEqual(heard.slice(n), [{ publishAt: null }], "once per edition taken, none waiting now");
   assert.notDeepEqual(w.snapshot(), before);
   /* a refused act tells nobody */
@@ -421,12 +466,12 @@ test("R71 onPublishScheduled: one registration per module, refused through membe
 
 /* ---------------------------------------------------------------- R31 for the new table */
 
-test("R31 R66 a waiting, stopped or cancelled edition is working material, cleared by the whole-store purge with its unsigned document; a published one keeps when it was signed", () => {
+test("R31 R66 a waiting, stopped or cancelled edition is working material, cleared by the whole-store purge with its unsigned document; a published one keeps when it was signed", async () => {
   const { w, proj, roles } = base({ cases: [CASE, CASE2] });
   sched(w, {}, CASE2);
   sched(w, { at: { date: "2026-10-05", time: "09:00" } }, CASE);
   w.p.registerScheduledPublisher("ratification", publisher(w, proj, roles));
-  w.p.publishDue("2026-10-01T12:00:00Z");
+  await w.p.publishDue("2026-10-01T12:00:00Z");
   assert.deepEqual(w.rows(`SELECT case_id, state FROM scheduled_editions ORDER BY case_id`),
                    [{ case_id: CASE, state: "waiting" }, { case_id: CASE2, state: "published" }]);
   w.record.purge({});

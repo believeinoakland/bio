@@ -135,35 +135,53 @@ export function publishWake(p) {
   return r ? r.publish_at : null;
 }
 
-/** R67: take each waiting edition whose time has come, in `publish_at` order, and hand it to the registered publisher. */
-export function publishDue(p, now) {
+/* R67: the editions a `publishDue` is taking now, per instance, so an alarm overlapping an earlier one awaiting its
+   publisher never takes the same edition twice. */
+const TAKING = new WeakMap();
+
+/** R67 (K1832): take each waiting edition whose time has come, in `publish_at` order, and hand it to the registered
+ *  publisher, awaiting each answer (it may be a Promise) before taking the next. Answers a Promise of `{ok, taken}`. */
+export async function publishDue(p, now) {
   const at = str(now) || clock(p);
+  if (!TAKING.has(p)) TAKING.set(p, new Set());
+  const busy = TAKING.get(p);
   const due = rows(p, `SELECT * FROM scheduled_editions WHERE state='waiting' ORDER BY publish_at, seq`)
-    .filter((r) => ms(r.publish_at) <= ms(at));
+    .filter((r) => ms(r.publish_at) <= ms(at) && !busy.has(r.seq));
   const taken = [];
   for (const r of due) {
-    const entry = { ...entryOf(p, r), doc_sha: r.doc_sha, signature: r.sig_armored, delivered_by: r.delivered_by ?? null,
-                    checked: safeJson(r.checked, null) };
-    let answer = null;
-    const pub = p.scheduledPublisher();
-    if (pub) { try { answer = pub.publishScheduled(entry, at); } catch { answer = null; } }
-    /* What the store holds decides: published only when the document is signed at the waiting bytes (R22's commit). */
-    const signed = one(p, `SELECT ratified_at FROM case_documents WHERE case_id=? AND edition=? AND doc_sha=?
-                            AND sig_armored IS NOT NULL`, r.case_id, Number(r.edition), r.doc_sha);
-    const stops = answer && Array.isArray(answer.stopped) && answer.stopped.length
-      ? answer.stopped.map((s) => ({ code: String(s && s.code || ""), translation: String(s && s.translation || ""),
-                                     ...(s && s.check ? { check: String(s.check) } : {}),
-                                     ...(s && s.cause ? { cause: s.cause } : {}) }))
-      : [{ ...SCHEDULED_CHECK_UNAVAILABLE }];
-    const state = signed ? "published" : "stopped";
-    p.record.transact(() => p.sql.exec(
-      `UPDATE scheduled_editions SET state=?, outcome_at=?, reasons=? WHERE seq=? AND state='waiting'`,
-      state, signed ? signed.ratified_at : at, signed ? null : JSON.stringify(stops), r.seq));
-    taken.push({ case: r.case_id, edition: Number(r.edition), state,
-                 ...(signed ? { published_at: signed.ratified_at } : { reasons: stops }) });
-    tell(p);
+    /* settled by another take meanwhile, or being taken: never handed twice */
+    if (busy.has(r.seq) || !one(p, `SELECT 1 AS w FROM scheduled_editions WHERE seq=? AND state='waiting'`, r.seq)) continue;
+    busy.add(r.seq);
+    try { taken.push(await takeOne(p, r, at)); } finally { busy.delete(r.seq); }
   }
   return { ok: true, taken };
+}
+
+/* R67: one due edition, handed with the entry R66 recorded (its held signature included) and settled once. */
+async function takeOne(p, r, at) {
+  const entry = { ...entryOf(p, r), doc_sha: r.doc_sha, signature: r.sig_armored, delivered_by: r.delivered_by ?? null,
+                  checked: safeJson(r.checked, null) };
+  let answer = null;
+  const pub = p.scheduledPublisher();
+  if (pub) { try { answer = await pub.publishScheduled(entry, at); } catch { answer = null; } }
+  /* Settled once: a row no longer waiting (a cancel cannot reach a due one; this is defence) is answered as it is. */
+  const now = one(p, `SELECT state FROM scheduled_editions WHERE seq=?`, r.seq);
+  if (!now || now.state !== "waiting") return { case: r.case_id, edition: Number(r.edition), state: now ? now.state : null };
+  /* What the store holds decides: published only when the document is signed at the waiting bytes (R22's commit). */
+  const signed = one(p, `SELECT ratified_at FROM case_documents WHERE case_id=? AND edition=? AND doc_sha=?
+                          AND sig_armored IS NOT NULL`, r.case_id, Number(r.edition), r.doc_sha);
+  const stops = answer && Array.isArray(answer.stopped) && answer.stopped.length
+    ? answer.stopped.map((s) => ({ code: String(s && s.code || ""), translation: String(s && s.translation || ""),
+                                   ...(s && s.check ? { check: String(s.check) } : {}),
+                                   ...(s && s.cause ? { cause: s.cause } : {}) }))
+    : [{ ...SCHEDULED_CHECK_UNAVAILABLE }];
+  const state = signed ? "published" : "stopped";
+  p.record.transact(() => p.sql.exec(
+    `UPDATE scheduled_editions SET state=?, outcome_at=?, reasons=? WHERE seq=? AND state='waiting'`,
+    state, signed ? signed.ratified_at : at, signed ? null : JSON.stringify(stops), r.seq));
+  tell(p);
+  return { case: r.case_id, edition: Number(r.edition), state,
+           ...(signed ? { published_at: signed.ratified_at } : { reasons: stops }) };
 }
 
 /* R68: the common fence of a move and a cancel, in R68's order; the waiting row, or a refusal. */
