@@ -25,3 +25,7 @@ BOB regenerates both at the layer close (K1540's order).
 **Deferred.** Nothing. P6: the module is now 2,148 lines, under 4,000.
 
 Size (session_01UbNSaW5ZKNVsroGALhrqr4): test runs 7, module lines 2148
+
+## J1 · COMPLETE
+
+T34-88 done: R21 in new people.mjs (peopleLines, memberTieLines, peopleOf, memberTiesOf), byte-identical to case-disclosures R28 for every input it could write, and never throwing; test people.test.mjs pins one document of each block both ways. T34-87's row: complete.mjs RECOMPUTE_WORDS.not_recomputed now says 'this group's Civicsmith' (K1821), with a named R14 test. case-grammar 81/0; public-read, case-disclosures, case-import green; format, architecture, coverage (21/21), ownership: 0 failures. Stale generated artifacts (not regenerated, mechanics §14): case-checker program.mjs (its R13 now red, inherited per START/K1824 (6)) and bio-plane dist bundle. Ready for merge first in L8; record on job/T34/case-grammar.
