@@ -11,3 +11,33 @@ Readings for T33-58 (R4, R31); I am building on them now, and none of them block
 (4) **Sight (R5: counts are the same for every reader).** The total is taken under the plane's sight (`class:daemon`), so `matched`, `meeting` and the rest do not change with the viewer. Beside each instance the answer gives `amount: {total, currency, facts, passes, why?}`. A fact the viewer may not see is listed as null, as R5 does for bundle ids.
 (5) **Shape at setCondition (R2's `CONDITION_UNREADABLE`).** `amount` is a map of `min?`, `max?`, `currency` (required), `kinds?` (money's closed kinds), `phases?` (money's closed phases) and `period?` (money's period fields). `min` and `max` are exact decimal strings or safe integers, never other numbers. At least one bound is required, and `min` ≤ `max`. Anything else gets CONDITION_UNREADABLE, the same code with a fuller detail. It is stored flat under `objective_condition` as `amount_*` keys, because the front matter has only one level of map, so it can never collide with a member's `filter_*` key.
 (6) **The named red (K1568, K1586).** The fixture gives the plane-built world a stand-in for `events` (`datedFactsFor` in its R27 shape) and a `zoneOf`, so the need is dated by its own dated fact, not a reading. Separately, intent's proposal basis now carries progressions' `overdue_count` and `overdue_undetermined_count` beside `overdue`, so an undetermined overdue never reads as "not overdue".
+
+## Record of completion (INTENT #12)
+
+**Entries applied (T33-58; K1471, K1522; J1 readings as B2 answered, K1625):** R4 (the record evaluates two filter keys: `entity_kind` and `amount`; any other key is kept and makes the instance undetermined, never excluded). R31 (`filter.amount: {min?, max?, currency, kinds?, phases?, period?}`):
+- For each matched instance the module reads `money.moneyOf` for the instance's entity, under the plane's sight so every reader's counts are the same (R5), with the named kinds, phases and period and limit 500. It asks `money.summable`, totals with calc-grammar's `add` in exact decimals, and compares inclusively with the bounds.
+- The comparison uses calc-grammar's own reading of a figure (`readingOf`, `cmpD`, `dec` from `calc-grammar/decimal.mjs`), not `relate` as J1 said. `relate` answers "undetermined" for a range that only touches an inclusive bound. The rules are the ones J1 stated: a rounded total is read across its half-unit, an approximate one settles nothing, and a range is added as a range.
+- The instance passes when the total's reading lies within the bounds. It is excluded when the reading lies outside them. It is undetermined, with why, never excluded and never zero, when `summable` refuses (its code is carried), a fact's period has no end, `moneyOf` cuts or refuses (for example `BAD_PERIOD`), the currency differs, the total is approximate, the reading lies across a bound, or no fact is held.
+- `amount: {currency, min, max, total, facts, passes, why?, code?}` is answered beside the instance. A fact the viewer may not see is null. Nothing is stored (R19).
+- R2's `CONDITION_UNREADABLE` covers the amount's shape: at least one bound, each an exact decimal string or a safe integer, `min` ≤ `max`, money's closed kinds and phases, and money's period fields. The refusal carries `amount_why`. The amount is written flat as `amount_*` keys under `objective_condition` and reads back unchanged.
+
+**The named red (K1568, K1586):** `invariants.test.mjs` "R15 R16 (N179)" is green. The fixture now builds the real `events`, with extraction and content under it, and the test profile `test-port-ellery`, whose zone progressions reads through local-facts (no stub `zoneOf`). The need is dated by a dated fact recorded through `events.recordDatedFact`. A new arm shows an undated need's award is counted `overdue_undetermined_count: 1`, never "not overdue".
+
+**Improvement in my module:** the proposal basis carries progressions' `overdue_count` and `overdue_undetermined_count` beside `overdue` (B2 (6)). `overdue` is now `g.overdue === true` rather than a truthiness test.
+
+**Deferred:** none.
+
+**Found in other modules:** none. The six failures in the users' tests are all on BOB's named list (below).
+
+**Final uses:** record-grammar, record-core, membership, promotion, provenance, entities, progressions, retrieval, inquiry, ai-runs, capture-requests, credentials (unchanged), plus:
+- **money** and **calc-grammar**, imported by the code (B2 (1)).
+- **events**, **extraction** and **content**, imported only by `fixture.mjs`, so the real events dates a stage (B2 (6)) and money's facts are recorded over the real modules.
+
+Architecture's 7 failures are these five edges, until they are set at the merge.
+
+**Tests and checks (on `job/T33/intent` @ 610d8c466c):**
+- intent: 73/73 pass, three runs in a row. `amount.test.mjs` adds 8 tests over the real money.
+- Users of intent (monitoring, scheduler, affordances, queue-producers, control-plane, plane): 662/668. All six failures are on the START's named list: affordances `catalogue.test.mjs` "62 ops" and "N364's ops"; control-plane R43 pin, R26 sources' ops and `families.test.mjs` "CHECK_FAMILIES is total"; scheduler R12 (capture-requests `plane.test.mjs`, AI_NO_ACCOUNT).
+- `format`: 0 failures. `architecture`: 7 failures (the edges above). `coverage`: 31 of 31 live ids. `ownership`: 0 failures.
+
+Size (session_01HwKBgK9AA2JTXEF7K2WRpT): test runs 24, module lines 2119
