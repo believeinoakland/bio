@@ -19,6 +19,6 @@
 - `format`: 127 modules, 126 requirements files; 0 failures.
 - `architecture case-carriage`: 6 product files, 24 relative imports; 0 failures.
 - `coverage case-carriage`: 7 of 7 live requirement ids named by a test; 0 failures.
-- `ownership case-carriage tranche/T34`: run after the commit, result below.
+- `ownership case-carriage tranche/T34`: 4 files changed; 0 failures.
 
 Size (session_0156fAY8XA6y75Um2sHFrXS6): test runs 3, module lines 341
