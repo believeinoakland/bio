@@ -7,14 +7,16 @@
    read contract (R19). One home per fact is checked at the store's gate (R20); a fact follows its source's sight
    (R21). No field marks a fact as the group's own (R6, K1463).
 
-   Reached through `moneyOf(ctx, opts)` (K61). `events`, `lines` and `calculations` are reached through the ports
-   `opts.events`, `opts.lines` and `opts.calculations` (their `has`, `eventsFor`, `readEvent`, `bindingOf`; K1563 (1),
-   (6)): absent, money fails closed where it needs them. */
+   Reached through `moneyOf(ctx, opts)` (K61). `events` and `lines` are their modules' instances for `ctx` unless given
+   (`eventsOf`, `linesOf`); `calculations`, which comes after money in the order, is the injected port
+   `opts.calculations` (its `bindingOf`, K1563 (6)): absent, money fails closed where it needs it. */
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { entitiesOf, noEntity, noSuchEntity, gradeRank } from "../entities/index.mjs";
 import { checkContentExtent, canonicalExtent, describeExtent } from "../content/index.mjs";
+import { eventsOf, noSuchEvent } from "../events/index.mjs";
+import { linesOf } from "../lines/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { isHypothesisId, canonicalJson, sha256HexSync } from "../record-grammar/index.mjs";
 import { bounds, compare, fiscalPeriod, validAt } from "../civil-time/index.mjs";
@@ -107,7 +109,9 @@ export function moneyOf(ctx, opts = {}) {
     const membership = opts.membership ?? membershipOf(ctx, { record });
     m = new Money(storage, { ...opts, record, membership,
       entities: opts.entities ?? (() => entitiesOf(ctx, { record, membership })),
-      provenance: opts.provenance ?? (() => provenanceOf(ctx)) });
+      provenance: opts.provenance ?? (() => provenanceOf(ctx)),
+      events: opts.events ?? (() => eventsOf(ctx, { record, membership })),
+      lines: opts.lines ?? (() => linesOf(ctx, { record })) });
     instances.set(storage, m);
   }
   return m;
@@ -134,6 +138,8 @@ export class Money {
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
   #ent() { return typeof this.#entities === "function" ? (this.#entities = this.#entities()) : this.#entities; }
   #prov() { return typeof this.#provenance === "function" ? (this.#provenance = this.#provenance()) : this.#provenance; }
+  #ev() { return typeof this.#events === "function" ? (this.#events = this.#events()) : this.#events; }
+  #ln() { return typeof this.#lines === "function" ? (this.#lines = this.#lines()) : this.#lines; }
 
   /* ---- boot ---- */
 
@@ -363,8 +369,8 @@ export class Money {
       if (id.startsWith("DUT-")) { refs.push({ id, kind: "duty" }); continue; }
       if (isHypothesisId(id)) { refs.push({ id, kind: "hypothesis" }); continue; }
       if (id.startsWith("EVT-")) {
-        if (!this.#events || typeof this.#events.has !== "function" || !this.#events.has(id))
-          return refusal("NO_SUCH_EVENT", `${id} is not an event the record holds${this.#events ? "" : " (events is not wired here)"}`, { event_id: id });
+        const ev = this.#ev();
+        if (!ev || typeof ev.has !== "function" || !ev.has(id)) return noSuchEvent(id, { end: "concerns" });
         refs.push({ id, kind: "event" });
       } else if (id.startsWith("ENT-")) {
         if (!ent.has(id)) return noSuchEntityAt(ent, id, "concerns");
@@ -373,8 +379,11 @@ export class Money {
           return refusal("CONCERNS_KIND", `a money fact concerns an entity of kind ${list(CONCERNS_KINDS)}; ${id} is a ${k}`, { entity_id: id });
         refs.push({ id, kind: "entity" });
       } else if (id.startsWith("LIN-")) {
-        if (!this.#lines || typeof this.#lines.has !== "function" || !this.#lines.has(id))
-          return refusal("NO_SUCH_LINE", `${id} is not a line the record holds${this.#lines ? "" : " (lines is not wired here)"}`, { line_id: id });
+        const ln = this.#ln();
+        let held = false;
+        try { held = !!ln && typeof ln.readLine === "function" && ln.readLine({ lineId: id, viewer: who ?? "" }).found === true; }
+        catch { held = false; }
+        if (!held) return refusal("NO_SUCH_LINE", `${id} is not a line the record holds that the writer can see`, { line_id: id });
         refs.push({ id, kind: "line" });
       } else {
         return refusal("CONCERNS_UNKNOWN", "a money fact concerns events, entities of kind contract, fund, program or "
@@ -860,9 +869,11 @@ export class Money {
         WHERE c.concerns=? AND f.phase='actual' AND f.stage=? ORDER BY f.period_start, f.fact_id`, refId, stage)
       .filter((r) => live(r) && this.#visibleBundle(r.sight_bundle, v));
     let committed;
-    if (!this.#events) committed = { undetermined: true, why: "events is not wired here, so the award and its change orders are not read" };
+    const ev = this.#ev();
+    if (!ev) committed = { undetermined: true, why: "events is not wired here, so the award and its change orders are not read" };
     else {
-      const awards = (this.#events.eventsFor({ entity: contract, kinds: ["award"], limit: LIST_LIMIT_MAX, viewer: v })?.events || []).map((e) => e.event_id);
+      const got = ev.eventsFor({ entity: contract, kinds: ["award"], limit: LIST_LIMIT_MAX, viewer: v }) || {};
+      const awards = [...(got.events || []), ...(got.placed_nowhere || [])].map((e) => e.event_id);
       const rows = [], seen = new Set();
       const take = (r, label) => { if (!seen.has(r.fact_id)) { seen.add(r.fact_id); rows.push({ r, label }); } };
       for (const award of awards) {
@@ -909,9 +920,10 @@ export class Money {
   }
   /* Events' relations of one kind at an event, from its read (events R26): in or out. */
   #relations(eventId, kind, direction, viewer) {
-    if (!this.#events || typeof this.#events.readEvent !== "function") return [];
+    const ev = this.#ev();
+    if (!ev || typeof ev.readEvent !== "function") return [];
     let r;
-    try { r = this.#events.readEvent({ eventId, viewer }); } catch { return []; }
+    try { r = ev.readEvent({ eventId, viewer }); } catch { return []; }
     const rels = r && r.found && r.event && Array.isArray(r.event.relations) ? r.event.relations : [];
     return rels.filter((x) => x && x.kind === kind && x.direction === direction && !x.withdrawn);
   }
@@ -924,7 +936,7 @@ export class Money {
     if (!row) return { ok: true, found: false, fact_id: factId };
     const events = this.#rows(`SELECT concerns FROM money_concerns WHERE fact_id=? AND ref_kind='event' ORDER BY concerns`, row.fact_id).map((r) => r.concerns);
     if (!events.length) return { ok: true, found: true, fact_id: row.fact_id, chains: [], says: "the fact concerns no event, so no chain of authority is read" };
-    if (!this.#events) return { ok: true, found: true, fact_id: row.fact_id, chains: [], undetermined: true, why: "events is not wired here" };
+    if (!this.#ev()) return { ok: true, found: true, fact_id: row.fact_id, chains: [], undetermined: true, why: "events is not wired here" };
     const chains = events.map((e) => this.#walk(e, viewer ?? ""));
     return { ok: true, found: true, fact_id: row.fact_id, chains };
   }

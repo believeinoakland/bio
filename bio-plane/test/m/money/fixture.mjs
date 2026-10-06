@@ -1,16 +1,18 @@
 /* money's test fixture: a Durable Object storage stand-in over node:sqlite (`sql.exec` answering a cursor,
    `transactionSync` nesting as savepoints) with the real modules money uses — record-core, membership, provenance,
-   entities (the registry and its `resolutions` table) and the fictional test profile through jurisdictions. `events`
-   and `lines` are not merged yet (T33-26, T33-27): they are stand-ins written to their approved requirements (events
-   R6, R17, R26, R27; lines' `has`), and so are entities' T33 `entityByIdentifier` (its R44) and `calculations`'
-   `bindingOf` (K1563 (6); calculations merges after money), until those jobs merge.
-   Every test drives `money` at its interface. */
+   content, entities (the registry, its scheme identifiers and `resolutions`), events and lines — and the fictional test
+   profile through jurisdictions. Only `calculations`' `bindingOf` is a stand-in, to its K1563 (6) shape, because
+   calculations merges after money. Every test drives `money` at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
+import { contentOf } from "../../../src/content/index.mjs";
 import { Entities } from "../../../src/entities/index.mjs";
+import { eventsOf } from "../../../src/events/index.mjs";
+import { Lines } from "../../../src/lines/index.mjs";
+import { createRegistry } from "../../../src/connection-grammar/index.mjs";
 import { Money } from "../../../src/money/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(String(s)).digest("hex");
@@ -51,27 +53,6 @@ export function storage() {
   };
 }
 
-/* events, to its approved requirements: events held with their kind, what they concern, and relations (R17, R26:
-   each relation answered in and out on its event's read, entities R5's pattern). */
-export function eventsStandIn() {
-  const events = new Map();
-  const ev = {
-    events,
-    add(id, kind, concerns = []) { events.set(id, { event_id: id, kind, concerns, relations: [] }); return id; },
-    relate(from, to, kind, n) {
-      const r = { relation_id: `ERL-${n}`, kind, from, to, attestation: { capture_sha: sha(`att-${n}`), extent: { kind: "document" } },
-                  grade: { assertion: "B", ends: ["B", "B"] } };
-      events.get(from).relations.push({ ...r, direction: "out" });
-      events.get(to).relations.push({ ...r, direction: "in" });
-    },
-    has: (id) => events.has(id),
-    eventsFor: ({ entity, kinds }) => ({ ok: true, events: [...events.values()]
-      .filter((e) => e.concerns.includes(entity) && (!kinds || kinds.includes(e.kind))).map((e) => ({ event_id: e.event_id, kind: e.kind })) }),
-    readEvent: ({ eventId }) => (events.has(eventId) ? { ok: true, found: true, event: { ...events.get(eventId) } } : { ok: true, found: false }),
-  };
-  return ev;
-}
-
 export function world({ events = true, lines = true, calculations = true, now = null } = {}) {
   const st = storage();
   const host = { storage: st };
@@ -83,26 +64,45 @@ export function world({ events = true, lines = true, calculations = true, now = 
   const prov = provenanceOf(host, { record, membership, promotion, now: () => "2026-09-27T00:00:00Z" });
   prov.migrate();
   record.setSetting("jurisdiction_profiles", ["test-port-ellery"], "test");
+  const content = contentOf(host, { record, membership, provenance: prov });
+  content.extraction.migrate();
+  content.migrate();
   const e = new Entities(st, { record, membership, provenance: prov });
   e.migrate();
-  /* entities R44 (T33-25, not merged): the scheme identifiers a test holds. */
-  const identifiers = new Map();
-  const entities = new Proxy(e, { get(t, k) {
-    if (k === "entityByIdentifier") return ({ scheme, id }) => identifiers.get(`${scheme}\u0000${id}`) ?? null;
-    const v = t[k]; return typeof v === "function" ? v.bind(t) : v;
-  } });
-  const ev = events ? eventsStandIn() : null;
-  const heldLines = new Set();
-  const ln = lines ? { has: (id) => heldLines.has(id) } : null;
+  let tick = 0;
+  const evClock = () => new Date(Date.UTC(2026, 9, 1, 0, 0, tick++)).toISOString();
+  const ev = eventsOf(host, { record, membership, provenance: prov, content, extraction: content.extraction, entities: e, now: evClock });
+  ev.migrate();
+  const ln = new Lines(st, { record, provenance: prov, content, entities: e, events: ev, registry: createRegistry(), now: evClock });
+  ln.migrate();
   /* calculations' bindings, K1563 (6): bindingOf(key) → {adopted, table, roles, capture_sha} | null. */
   const bindings = new Map();
   const calc = calculations ? { bindingOf: (key) => bindings.get(key) ?? null } : null;
   let clock = 0;
-  const m = new Money(st, { record, membership, entities, provenance: prov, events: ev, lines: ln, calculations: calc,
+  const m = new Money(st, { record, membership, entities: e, provenance: prov, events: events ? ev : null, lines: lines ? ln : null, calculations: calc,
     now: now || (() => new Date(Date.UTC(2026, 9, 6, 0, 0, clock++)).toISOString().replace(/\.\d{3}Z$/, "Z")) });
   m.migrate();
   const w = {
-    st, host, record, membership, prov, e, entities, events: ev, lines: heldLines, m, identifiers, bindings,
+    st, host, record, membership, prov, e, ev, ln, m, bindings,
+    /* A real event, attested by a member's testimony, concerning `concerns`; a real cited relation between two. */
+    event(kind, concerns = []) {
+      const r = ev.createEvent({ kind, concerns, attestations: [{ testimony: `I saw the ${kind}` }], by: ANN });
+      if (!r.ok) throw new Error(`fixture event refused: ${r.reason}: ${r.detail}`);
+      return r.event_id ?? r.event?.event_id;
+    },
+    relate(from, to, kind) {
+      const r = ev.relate({ from, to, kind, attestation: { testimony: `the minutes say the ${kind}` }, by: ANN });
+      if (!r.ok) throw new Error(`fixture relation refused: ${r.reason}: ${r.detail}`);
+      return r.relation.relation_id;
+    },
+    /* A real line: a person holding an office. */
+    line() {
+      const p = w.entity("person", `Holder ${tick}`), o = w.entity("office", `Office ${tick}`);
+      const r = ln.recordLine({ kind: "holds", from: p, to: o, capacity: "appointed", valid: { from: "2019-01-01", to: "2020-12-31" },
+                                basis: { statement: "I attended the swearing-in" }, by: ANN });
+      if (!r.ok) throw new Error(`fixture line refused: ${r.reason}: ${r.detail}`);
+      return r.line_id;
+    },
     rows: (q, ...a) => [...st.sql.exec(q, ...a)], one: (q, ...a) => [...st.sql.exec(q, ...a)][0] || null,
     bundle(id, { type = "information", project = null } = {}) {
       st.sql.exec(`INSERT OR IGNORE INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha, row_version, project)
@@ -128,7 +128,12 @@ export function world({ events = true, lines = true, calculations = true, now = 
       return id;
     },
     entity(kind, label) { return e.createEntity({ kind, label, note: "registered by the money tests", declaredBy: ANN }).entity_id; },
-    identify(entityId, scheme, id) { identifiers.set(`${scheme}\u0000${id}`, { entity_id: entityId }); return { scheme, id }; },
+    /* A scheme identifier held by entities' own act (its R43). */
+    identify(entityId, scheme, id) {
+      const r = e.addIdentifier({ entityId, scheme, id: String(id), basis: "the test's cited source", by: ANN });
+      if (!r.ok) throw new Error(`fixture addIdentifier refused: ${r.reason}: ${r.detail}`);
+      return { scheme, id: String(id) };
+    },
     resolution(captureSha, entityId, grade) {
       st.sql.exec(`INSERT INTO resolutions (capture_sha, bundle_id, ref, entity_id, grade, method, basis, established, resolved_by, at)
                    VALUES (?, 'INFO-1', ?, ?, ?, 'test', 'test', ?, 'test', '2026-09-27T00:00:00Z')`, captureSha, `r-${entityId}-${grade}`, entityId, grade,

@@ -118,9 +118,9 @@ test("R1 balance_class is read against the family of the fund's held type (GASB 
 
 test("R1 concerns: events, entities of kind contract, fund, program or proceeding, and lines; never another kind", () => {
   const s = seeded();
-  const award = s.events.add("EVT-2026-award00000000001", "award", [s.contract]);
-  s.lines.add("LIN-2026-line000000000001");
-  assert.equal(s.m.recordFact(s.fact({ concerns: [award, s.contract, s.general, "LIN-2026-line000000000001"] })).ok, true);
+  const award = s.event("award", [s.contract]);
+  const line = s.line();
+  assert.equal(s.m.recordFact(s.fact({ concerns: [award, s.contract, s.general, line] })).ok, true);
   assert.equal(s.m.recordFact(s.fact({ concerns: [s.city] })).reason, "CONCERNS_KIND");
   assert.equal(s.m.recordFact(s.fact({ concerns: ["LIN-2026-nope000000000001"] })).reason, "NO_SUCH_LINE");
   assert.equal(s.m.recordFact(s.fact({ concerns: ["SRC-2026-0001"] })).reason, "CONCERNS_UNKNOWN");
@@ -196,8 +196,9 @@ test("R4 the machine writes only from a canonical table row read through a bindi
   assert.equal(machine({ source: { capture_sha: s.cap } }).reason, "MACHINE_NEEDS_IDENTIFIERS");
   assert.equal(machine({ to: { as_written: "Harbour Dredging Co" } }).reason, "MACHINE_NEEDS_IDENTIFIERS");
   assert.equal(machine({ to: null }).reason, "MACHINE_NEEDS_IDENTIFIERS");
-  const idf = s.identify(s.vendor, "ellery_person", "P-2");
-  assert.equal(machine({ to: { entity: s.vendor, identifier: idf } }).ok, true);
+  const payee = s.entity("person", "Pat Payee");
+  const idf = s.identify(payee, "ellery_person", "P002");
+  assert.equal(machine({ to: { entity: payee, identifier: idf } }).ok, true);
   assert.equal(machine({ from: { entity: s.city, identifier: idf } }).reason, "MACHINE_NEEDS_IDENTIFIERS");
   assert.equal(machine({ source: { ...row, binding: "BND-2" } }).reason, "SOURCE_NOT_HELD", "a binding no member adopted");
   assert.equal(machine({ source: { ...row, binding: "BND-9" } }).reason, "SOURCE_NOT_HELD");

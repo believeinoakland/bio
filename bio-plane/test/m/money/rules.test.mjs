@@ -77,9 +77,9 @@ test("R11 reconcile names each dimension that differs, with the values on each s
 /* A contract with its award, a change order amending it, commitments and payments, one attributed by a member. */
 function contracted() {
   const s = seeded();
-  const award = s.events.add("EVT-2026-award00000000001", "award", [s.contract]);
-  const change = s.events.add("EVT-2026-change0000000001", "other", []);
-  s.events.relate(change, award, "amends", 1);
+  const award = s.event("award", [s.contract]);
+  const change = s.event("other", []);
+  s.relate(change, award, "amends");
   const commit = s.rec({ stage: "encumbered", amount: "1000000", as_read: "$1,000,000", concerns: [award] });
   const co = s.rec({ stage: "encumbered", amount: "150000", as_read: "$150,000", concerns: [change] });
   const paid1 = s.rec({ stage: "paid", amount: "600000", as_read: "$600,000", concerns: [s.contract] });
@@ -132,22 +132,27 @@ test("R14 without events wired the committed side is undetermined, never zero", 
 
 test("R15 authorityChain walks the authorises relations toward the fact's event, each hop with its citation and grades", () => {
   const s = seeded();
-  const pay = s.events.add("EVT-2026-payment000000001", "payment");
-  const award = s.events.add("EVT-2026-award00000000001", "award");
-  const approp = s.events.add("EVT-2026-approp0000000001", "adoption");
-  s.events.relate(award, pay, "authorises", 1);
-  s.events.relate(approp, award, "authorises", 2);
+  const pay = s.event("payment");
+  const award = s.event("award");
+  const approp = s.event("adoption");
+  s.relate(award, pay, "authorises");
+  s.relate(approp, award, "authorises");
   const id = s.rec({ concerns: [pay] });
   const r = s.m.authorityChain({ factId: id, viewer: ANN });
   assert.equal(r.chains.length, 1);
   assert.deepEqual(r.chains[0].hops.map((h) => [h.from, h.to]), [[award, pay], [approp, award]]);
-  for (const h of r.chains[0].hops) { assert.ok(h.citation.capture_sha); assert.deepEqual(h.grade, { assertion: "B", ends: ["B", "B"] }); }
+  for (const h of r.chains[0].hops) {
+    assert.ok(h.citation, "each hop carries its relation's attestation");
+    assert.equal(typeof h.relation_id, "number");
+    assert.equal(h.grade.assertion, "D", "a member's testimony is graded D (events R7)");
+    assert.equal(h.grade.ends.length, 2);
+  }
   assert.equal(r.chains[0].authorising_held, true);
 });
 
 test("R15 where no authorising event is held it says so, never 'unauthorised'; a fact concerning no event; the walk's bounds", () => {
   const s = seeded();
-  const pay = s.events.add("EVT-2026-payment000000001", "payment");
+  const pay = s.event("payment");
   const id = s.rec({ concerns: [pay] });
   const r = s.m.authorityChain({ factId: id, viewer: ANN });
   assert.deepEqual([r.chains[0].authorising_held, r.chains[0].says], [false, "no authorising event is held for this event"]);
@@ -158,8 +163,8 @@ test("R15 where no authorising event is held it says so, never 'unauthorised'; a
   // a chain deeper than the walk's depth bound answers truncated and undetermined
   let prev = pay;
   for (let i = 0; i < BOUNDS.depth_default + 2; i++) {
-    const e = s.events.add(`EVT-2026-chain${String(i).padStart(11, "0")}`, "adoption");
-    s.events.relate(e, prev, "authorises", 100 + i);
+    const e = s.event("adoption");
+    s.relate(e, prev, "authorises");
     prev = e;
   }
   const deep = s.m.authorityChain({ factId: id, viewer: ANN }).chains[0];
