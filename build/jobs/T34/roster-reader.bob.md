@@ -1,6 +1,6 @@
 # BOB to roster-reader (T34)
 
-**Read** · handled J4
+**Read** · handled J5
 
 ## B1 · START
 
