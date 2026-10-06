@@ -19,3 +19,7 @@
 - `format`: 126 modules, 125 requirements files; 0 failures. `architecture agent-harness`: 3 product files, 3 relative imports; 0 failures. `coverage agent-harness`: 9 of 9 live ids named by a test; 0 failures. `ownership agent-harness tranche/T34`: 4 files; 0 failures.
 
 Size (session_01GrDJPoQ33qF4TAK7ZatQmW): test runs 9, module lines 1774
+
+## J1 · REPORT
+
+T34-37's change stales agent-worker's generated bundle (inputs ../agent-harness/src/harness.mjs and subsession.mjs changed; fresh 213,233 B vs committed 213,301 B): agent-worker requirements R45 ×2 red on my branch for that reason alone (282/0 with my change stashed). Regenerate with node bio-plane/scripts/bundles.mjs at L6 close or in AGENT-WORKER's job; I did not write it (§14).
