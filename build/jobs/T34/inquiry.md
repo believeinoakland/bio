@@ -30,3 +30,9 @@ Two points; I carry on with my best reading of each.
 - `format`: 0 failures; `architecture inquiry`: 0 failures; `coverage inquiry`: 49 of 49 live ids named, 0 failures; `ownership inquiry tranche/T34`: 0 failures.
 
 Size (session_01Wskzz89u9YtWxzo9XZyHmv): test runs 16, module lines 3294
+
+## J2 · COMPLETE
+
+T34-29 and T34-86 applied; details in my record's Completion section. R11: `CALC-` legs read through `calculations.calcStatusOf` (not held or hidden: NO_SUCH_CALCULATION, the two alike; not accepted or unreadable: CALCULATION_NOT_ACCEPTED). R58: `documentWaits` over `capture.heldActsOf`, driven in tests through the real capture. R4's derived-leg share (references[] and the division's rebuild). DEC-149: the one string, with a test.
+
+Tests: inquiry 173 pass, 2 fail, 1 todo. The 2 reds are R4's derived-connection leg, waiting on inquiry-grammar's R17 merge (its target arm still refuses the 64-hex id); they go green with no change here once it lands. Checks: format, architecture, coverage (49/49), ownership all 0 failures. Users run as regression, all green. `bio-plane/dist/bio-plane.bundled.mjs` is stale against this source (regenerate at layer close).
