@@ -22,3 +22,7 @@ K1573, from MONEY #1: your ingest writer sends method: "table_binding" beside so
 ## B4 · ANSWER · re J2
 
 K1576: (2) R1's bound is now 500,000 cells (or 20 MiB); merge tranche/T33 and test the new bound. A streaming evaluate is N571. (1) CALC opaque is N570 (record-grammar closed). Re-point now at entities and events (both merged); CHANGEs follow for money, duties, people, standards, progressions and retrieval as they merge.
+
+## B5 · CHANGE
+
+K1578: entities, events, lines and standards are merged on tranche/T33; re-point at those now. money, duties, people, progressions and retrieval follow.
