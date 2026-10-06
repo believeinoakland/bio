@@ -14,6 +14,7 @@ import { contentOf } from "../../../src/content/index.mjs";
 import { standardsOf } from "../../../src/standards/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/frontmatter.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
+import { EXTRACTION_SCHEMA } from "../../../src/extraction/schema.mjs";
 
 export const sha = (s) => createHash("sha256").update(s, "utf8").digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -89,11 +90,15 @@ export const src = (source, re, extra = {}) => ({ source, kind: "statute", issue
 /** `written`: profile objects the test wrote, which the instance setting names by id; `jurisdictions.combine` (the
  *  real one) is handed the object for such an id and the id itself for a held profile. `combine` replaces it with a
  *  provider the test controls. */
-export function world({ now = NOW, profiles = [TEST_PROFILE], written = [], construct = true, combine: combineWith = null } = {}) {
+export function world({ now = NOW, profiles = [TEST_PROFILE], written = [], construct = true, combine: combineWith = null,
+                        events = null, keyedStore = null, citationLookup = null } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const t of bare.split(";")) if (t.trim()) st.db.exec(t);
+  /* extraction's `reading_refs`, under its read contract (extraction R58), which R21 reads; the fixture writes its rows */
+  const refsTable = /CREATE TABLE IF NOT EXISTS reading_refs \([\s\S]*?\n\);/.exec(EXTRACTION_SCHEMA)[0].replace(/--[^\n]*/g, "");
+  st.db.exec(refsTable);
   const clock = { now };
   const record = recordOf(host, { evidence: null, evidencePrefix: "bio/captures/" });
   record.migrate();
@@ -122,7 +127,9 @@ export function world({ now = NOW, profiles = [TEST_PROFILE], written = [], cons
   const byId = new Map(written.map((p) => [p.id, p]));
   /* R16: the instance is constructed and never migrated by its caller. `construct: false` leaves it to the test. */
   const build = () => standardsOf(host, { record, membership, promotion, content, now: () => clock.now,
-                                          combine: combineWith || ((ids) => combine(ids.map((id) => byId.get(id) ?? id))) });
+                                          combine: combineWith || ((ids) => combine(ids.map((id) => byId.get(id) ?? id))),
+                                          ...(events ? { events } : {}), ...(keyedStore ? { keyedStore } : {}),
+                                          ...(citationLookup ? { citationLookup } : {}) });
   const s = construct ? build() : null;
   let n = 0;
   const w = {
@@ -142,7 +149,7 @@ export function world({ now = NOW, profiles = [TEST_PROFILE], written = [], cons
     },
     /** A captured document (an information bundle holding one capture), read with a text layer, and a passage of it
      *  minted as content: its content id. `project` files the document in that project instead. */
-    passage(name = `doc${++n}`, { page = 0, address = null, retrieved = "2026-09-01T00:00:00Z" } = {}) {
+    passage(name = `doc${++n}`, { page = 0, address = null, retrieved = "2026-09-01T00:00:00Z", text: words = null } = {}) {
       const text = `bytes of ${name}`, capSha = sha(text), id = `INFO-2026-${String(++n).padStart(4, "0")}-${name}`;
       const r = promotion.promote({ bundleId: id, base: null, snapKey: `k${n}`, author: V("alice"),
         files: [{ path: "bundle.md", text: infoMd(id) }, { path: `snapshots/${name}.txt`, text },
@@ -151,10 +158,17 @@ export function world({ now = NOW, profiles = [TEST_PROFILE], written = [], cons
         register: [{ sha256: capSha, path: `snapshots/${name}.txt`, encoding: "utf8", bytes: Buffer.byteLength(text) }] });
       if (!r.ok) throw new Error(`fixture document refused: ${JSON.stringify(r).slice(0, 400)}`);
       ex.readings[capSha] = { chain: LAYER, pageCount: 3 };
+      /* the passage's words, indexed whole at its page, so `content.passageText` reads them (R19, R25) */
+      if (words !== null) ex.units[capSha] = { units: [{ extent: { kind: "pdf-page", page }, text: words, seq: 0 }], state: "whole" };
       if (address) prov.recordReceipt({ address, addressNorm: address.replace(/^https?:\/\//, ""), captureSha: capSha, retrieved });
       const m = content.mint({ bundleId: id, captureSha: capSha, extent: { kind: "pdf-page", page }, mintedBy: V("alice") });
       if (!m.ok) throw new Error(`fixture mint refused: ${JSON.stringify(m).slice(0, 400)}`);
       return { contentId: m.content_id, bundleId: id, capSha };
+    },
+    /** A reference a reading of `capSha` (in `bundleId`) carries, under extraction's read contract (R21). */
+    ref(capSha, bundleId, { ref, ref_kind = null, ref_key = null, label = null }) {
+      st.sql.exec(`INSERT INTO reading_refs (capture_sha, bundle_id, ref, ref_kind, ref_key, label) VALUES (?,?,?,?,?,?)`,
+                  capSha, bundleId, ref, ref_kind, ref_key, label);
     },
     /** A project owned by `owner`, through promotion. */
     project(title, owner) {

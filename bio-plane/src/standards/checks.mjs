@@ -7,7 +7,8 @@
  * and stamped by 1.53.0, as was C-112.17's re-wording (the record now holds the declarer's reason). No translation
  * names a place (R13, `layers.md` rule 1), and none speaks of a standard's merit (R12). */
 
-const at = (fn, region) => `src/standards/index.mjs ${fn} > ${region}`;
+const at = (fn, region, file = "index.mjs") => `src/standards/${file} ${fn} > ${region}`;
+const law = (fn, region) => at(fn, region, "law.mjs");
 
 export const STANDARDS_CHECKS = Object.freeze({
   MACHINE_CANNOT_DECLARE_STANDARD: {
@@ -105,6 +106,67 @@ export const STANDARDS_CHECKS = Object.freeze({
     check: 'C-112.20', where: at("#declareRefusal", "is-standard-reason"),
     translation: 'A standard is recorded with your reason: in your own words, why the group holds its government to '
       + 'it, in at most 2,000 characters. None was given, or it is not words, or it is too long. Nothing was written.',
+  },
+  /* T33-31 (R18–R27; K1438, K1442, K1446, K1447, K1449): rows minted in T33, awaiting promotion's stamp (T34). */
+  STANDARD_FIELD_INVALID: {
+    check: 'C-112.21', where: at("#lawFields", "is-standard-law-field"),
+    translation: 'A field that says where this standard sits in its law (its instrument, portion, the passages it '
+      + 'requires, its copy, how current the copy is, or what its period rests on) is not in the form it takes. The '
+      + 'answer names the field. Nothing was written.',
+  },
+  STANDARD_PORTION_NOT_IN_TEXT: {
+    check: 'C-112.22', where: at("#lawFields", "is-portion-in-text"),
+    translation: 'A portion of a standard is one of the passages recorded as its own words. The passage named is not '
+      + 'one of them. Nothing was written.',
+  },
+  MACHINE_CANNOT_RELATE: {
+    check: 'C-112.23', where: law("machineRelate", "is-law-member"),
+    translation: 'Recording how one law bears on another, or how a court treated a decision, is a member\'s act. An '
+      + 'assistant may propose one for members to consider; it may not record one. Nothing was written.',
+  },
+  LAW_RELATION_UNKNOWN: {
+    check: 'C-112.24', where: law("refuseRelationUnknown", "is-law-relation-type"),
+    translation: 'That is not a relation this record holds between laws. The answer lists the ones it holds. Nothing '
+      + 'was written.',
+  },
+  PORTION_UNKNOWN: {
+    check: 'C-112.25', where: law("refusePortionUnknown", "is-portion-held"),
+    translation: 'The portion named is not a portion recorded for that standard. Name the portion as it was recorded, '
+      + 'or none. Nothing was written.',
+  },
+  LAW_RELATION_NO_CITATION: {
+    check: 'C-112.26', where: law("refuseNoCitation", "is-law-relation-cited"),
+    translation: 'A relation between laws is recorded with the passage that makes it: the amending or referring words, '
+      + 'or the court\'s words, as captured among the standard\'s own text. None of those was named. Nothing was '
+      + 'written.',
+  },
+  LAW_RELATION_NO_EFFECTIVE: {
+    check: 'C-112.27', where: law("#relateRefusal", "is-temporal-effective"),
+    translation: 'An amendment, repeal, renumbering or recodification is recorded with when it took effect: a date, or '
+      + 'the recorded event that enacted it. None was given, or it is not in that form. Nothing was written.',
+  },
+  NOT_A_COURT_STANDARD: {
+    check: 'C-112.28', where: law("refuseNotCourt", "is-court-standard"),
+    translation: 'This act is about a court decision or order, and the standard named is not one. Nothing was written.',
+  },
+  COURT_LINK_TARGET_NOT_LAW: {
+    check: 'C-112.29', where: law("#linkRefusal", "is-link-target-law"),
+    translation: 'A court\'s reading is linked to a portion of a statute, regulation or ordinance, and the standard '
+      + 'named is none of these. Nothing was written.',
+  },
+  TREATMENT_UNKNOWN: {
+    check: 'C-112.30', where: law("#treatRefusal", "is-treatment-known"),
+    translation: 'A later decision\'s treatment of a decision is recorded as reversed, vacated, depublished, overruled '
+      + 'or affirmed. This one names none of them. Nothing was written.',
+  },
+  NO_SUCH_LAW_ITEM: {
+    check: 'C-112.31', where: law("lawWithdraw", "is-law-item-held"),
+    translation: 'No law relation, court link or treatment answers to that id here. Nothing was written.',
+  },
+  LAW_RELATION_SELF: {
+    check: 'C-112.32', where: law("#relateRefusal", "is-relation-two-ends"),
+    translation: 'A relation joins two different standards or portions, and both ends named are the same. Nothing was '
+      + 'written.',
   },
 });
 

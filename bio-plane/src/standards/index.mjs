@@ -24,7 +24,20 @@
  *   record, membership, promotion, content   the modules it uses, through their factories on the same host unless a
  *                test passes its own (`content` is reached lazily, on first use).
  *   combine      `jurisdictions.combine` (default); a test passes its own, which resolves profiles it wrote by id.
- *   now          the module's clock, an ISO instant (default: the wall clock). */
+ *   now          the module's clock, an ISO instant (default: the wall clock).
+ *   events       `events`' instance, or a function answering it (R19, R20, R28: an event's `when`, through its
+ *                `readEvent({eventId, viewer})`, events R26). `events` is built in the same layer (T33-26): until one is
+ *                wired, an event bound or node answers undetermined, saying so, never a default.
+ *   keyedStore   the store `acquisition.citationLookup` reads the group's key through (R25: `{credentials, env,
+ *                governor}`), or a function answering it; absent, the keyed lookup answers that it is off.
+ *   citationLookup, recognise   test seams: `acquisition.citationLookup` and `id-spaces.recogniseCitations` by default.
+ *
+ * T33 (T33-31; K1438, K1442, K1446, K1447, K1449): the module moved to layer 5. A declaration may name where the
+ * standard sits in its law (R18, R19): its instrument key (composed only from profile data, `./instrument.mjs`), a
+ * portion, the passages it requires, its copy, how current the copy is and what its period rests on. In force at a date
+ * is R20's `inForceAt`, through `civil-time.validAt` over each version's period, bounded by adopted temporal relations
+ * and by a codifier copy's lag; `inForce` stays its alias (Choices 18). Law relations, court links and treatment rows,
+ * the citation resolver and the connection owner are `./law.mjs`'s. */
 
 import { isMachineIdentity } from "../record-grammar/actors.mjs";
 import { normalizeType } from "../record-grammar/types.mjs";
@@ -34,11 +47,20 @@ import { membershipOf, viewerPredicate } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { contentOf } from "../content/index.mjs";
 import { combine as combineProfiles, SOURCE_KINDS } from "../../../jurisdictions/index.mjs";
+import { validAt } from "../civil-time/index.mjs";
+import { registerOwner, isRecordId } from "../connection-grammar/index.mjs";
+import { citationLookup as acquisitionCitationLookup } from "../acquisition/index.mjs";
+import { recogniseCitations } from "../idspaces.mjs";
 import { STANDARDS_CHECKS, refusal } from "./checks.mjs";
 import { STANDARDS_TABLES, migrateStandards } from "./schema.mjs";
+import { instrumentKey, matchSource, referenceKey, sourceCopy, foldCite } from "./instrument.mjs";
+import { LawRecords, LAW_RELATIONS, COURT_LINKS, TREATMENTS, CONNECTION_KINDS, CONNECTION_OWNER, IN_FORCE_METHOD,
+         weakestCeiling } from "./law.mjs";
 
 export { STANDARDS_CHECKS } from "./checks.mjs";
 export { STANDARDS_SCHEMA, STANDARDS_TABLES } from "./schema.mjs";
+export { instrumentKey, referenceKey } from "./instrument.mjs";
+export { LAW_RELATIONS, COURT_LINKS, TREATMENTS, CONNECTION_KINDS, CONNECTION_OWNER, IN_FORCE_METHOD };
 
 export const STANDARD = "standard";
 /** R1, R12: the six kinds, `jurisdictions`' own list (its R23), never a copy: the whole vocabulary of a standard. */
@@ -50,8 +72,14 @@ export const IN_FORCE_STATES = Object.freeze(["in_force", "not_in_force", "undet
 export const CITE_MAX = 200, WHY_MAX = 240, PAGE_MAX = 200, TEXTS_MAX = 50, ACT_MAX = 200, REASON_MAX = 2000;
 /** R12: the fields each act takes. Anything else is refused by name, never ignored: a field silently dropped is a view
  *  the caller believes was recorded. */
-const DECLARE_KEYS = Object.freeze(["cite", "kind", "issuer", "reason", "text", "period", "supersedes", "author",
-                                    "viewer"]);
+const DECLARE_KEYS = Object.freeze(["cite", "kind", "issuer", "reason", "text", "period", "supersedes", "instrument",
+                                    "portion", "requires", "copy", "current_through", "period_basis", "author", "viewer"]);
+/** R19: a copy's statuses (`jurisdictions` R6). */
+export const COPY_STATES = Object.freeze(["official", "codifier", "undetermined"]);
+/** R21: the reverse index's page, clamped. */
+export const FOR_LIMIT_MAX = 500, FOR_LIMIT_DEFAULT = 100;
+/* R21: the most reference rows one reverse read scans; past it the answer says it is truncated. */
+const SCAN_FOR = 5000;
 const PROPOSE_KEYS = Object.freeze(["cite", "kind", "issuer", "text", "why", "act", "proposer", "viewer"]);
 const ADOPT_KEYS = Object.freeze([...DECLARE_KEYS, "proposal"]);
 
@@ -82,9 +110,10 @@ export function isDate(v) {
   return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v;
 }
 
-/** R7: a period against a date, with why. `not_in_force` only when a stated bound excludes the date; `undetermined`
- *  when a bound needed to decide is null; never a default. Bounds are inclusive. */
-export function inForceAt(period, date) {
+/** R7: a stated period against a date, with why, as R20 answers it with no event bound, relation or copy to read: the
+ *  state is `civil-time.validAt`'s (`in`, `out`, undetermined). `not_in_force` only when a stated bound excludes the
+ *  date; `undetermined` when a bound needed to decide is null; never a default. Bounds are inclusive. */
+export function periodInForce(period, date) {
   const from = period ? period.from ?? null : null, to = period ? period.to ?? null : null;
   if (from !== null && date < from)
     return { state: "not_in_force", why: `the period in force starts ${from}, after ${date}` };
@@ -100,8 +129,11 @@ export function inForceAt(period, date) {
 
 export class Standards {
   #writing = null;   // the standard this module is promoting, for its own check (R11)
+  #law;              // R22–R28: `./law.mjs`, over this instance's internal reads
 
-  constructor({ storage, record, membership, promotion, content = null, combine = combineProfiles, now = null } = {}) {
+  constructor({ storage, record, membership, promotion, content = null, combine = combineProfiles, now = null,
+                events = null, keyedStore = null, citationLookup = acquisitionCitationLookup,
+                recognise = recogniseCitations } = {}) {
     this.storage = storage;
     this.sql = storage.sql;
     this.record = record;
@@ -109,14 +141,50 @@ export class Standards {
     this.promotion = promotion;
     this.contentRef = content;
     this.combine = combine;
+    this.eventsRef = events;
+    this.keyedStoreRef = keyedStore;
+    this.lookupFn = citationLookup;
+    this.recognise = recognise;
     this.now = typeof now === "function" ? now : () => new Date().toISOString();
     migrateStandards(this.sql);   // R16: the tables exist once the instance does, so no caller migrates (N220, N267)
+    this.#law = new LawRecords(this.#internal());
   }
 
   #rows(qs, ...a) { return [...this.sql.exec(qs, ...a)]; }
   #one(qs, ...a) { const r = this.#rows(qs, ...a); return r.length ? r[0] : null; }
   get content() { return typeof this.contentRef === "function" ? this.contentRef() : this.contentRef; }
+  get events() { return typeof this.eventsRef === "function" ? this.eventsRef() : this.eventsRef; }
   #when() { return stampInstant("second", Date.parse(this.now())); }
+
+  /* The reads `./law.mjs` works through: this instance's tables and the modules it uses, never a copy of them. */
+  #internal() {
+    return {
+      sql: this.sql, record: this.record, membership: this.membership,
+      rows: (q, ...a) => this.#rows(q, ...a), one: (q, ...a) => this.#one(q, ...a),
+      row: (id) => this.#row(id), texts: (id) => this.#texts(id), readable: (id, v) => this.#readable(id, v),
+      content: () => this.content, when: () => this.#when(), nonce: () => rand(8),
+      noSuchStandard, refuseNoId, refuseDateInvalid, refuseFieldUnknown, refuseReason: refuseLawReason,
+      refuseNoSuchProposal, refuseProposalAdopted, refuseProposerUnnamed, refuseWhyInvalid,
+      inForceAt: (a) => this.inForceAt(a), periodOf: (row) => this.#periodOf(row, null),
+      eventDay: (event, edge, viewer) => this.#eventDay(event, edge, viewer),
+      eventWhen: (event, viewer) => { const d = this.#eventDay(event, "start", viewer); return d.day ? d : null; },
+      gradeOf: (ids) => weakestCeiling(ids.length ? this.content.standings(ids) : {}, ids), zone: () => this.#zone(),
+      recognise: (t) => this.recognise(t),
+      citationLookup: ({ text, viewer }) => this.lookupFn(
+        (typeof this.keyedStoreRef === "function" ? this.keyedStoreRef() : this.keyedStoreRef) || {}, { text, viewer }),
+    };
+  }
+
+  #texts(id) {
+    return this.#rows(`SELECT content_id FROM standard_texts WHERE standard_id=? ORDER BY ord`, id).map((t) => t.content_id);
+  }
+
+  /* The zone a day is compared in: the view's `time_zone`. Two calendar days compared in one zone compare alike in
+     every zone, so with none stated the days are compared in UTC and nothing depends on it. */
+  #zone() {
+    const { view } = this.#view();
+    return view && view.time_zone && typeof view.time_zone.value === "string" ? view.time_zone.value : "UTC";
+  }
 
   /** The module's tables (R14), created at construction (R16); kept, idempotent, for a caller that still calls it. */
   migrate() { migrateStandards(this.sql); }
@@ -259,7 +327,92 @@ export class Standards {
                        + "written.", { supersedes, superseded_by: later });
       /* END DEC-49 REGION is-supersession-once */
     }
-    return { ok: true, fields: { cite, kind: a.kind, issuer, reason: a.reason, texts, period, supersedes } };
+    const law = this.#lawFields(a, cite, texts, period, a.viewer ?? null);
+    if (law.ok === false) return law;
+    return { ok: true, fields: { cite, kind: a.kind, issuer, reason: a.reason, texts, period, supersedes, ...law.fields } };
+  }
+
+  /* R18, R19: where the standard sits in its law, each field checked, in the order R18–R19 name them; `{ok: true,
+     fields}` when none is malformed. The instrument key is composed, never typed: a declared one must be the key the
+     profiles compose. */
+  #lawFields(a, cite, texts, period, viewer) {
+    const { view } = this.#view();
+    const key = instrumentKey({ cite, view });
+    const bad = (field, why) => {
+      /* DEC-49 REGION is-standard-law-field */
+      return refusal("STANDARD_FIELD_INVALID", `${field} ${why}. Nothing was written.`, { field });
+      /* END DEC-49 REGION is-standard-law-field */
+    };
+    if (a.instrument != null && a.instrument !== "" && a.instrument !== key.key)
+      return bad("instrument", key.key ? `is composed from the profiles as ${key.key}, and a different key was given`
+                                       : `cannot be given: ${key.why}`);
+    let portion = null;
+    if (a.portion != null) {
+      const p = a.portion;
+      if (!isObj(p) || Object.keys(p).some((k) => k !== "path" && k !== "content_id") || typeof p.path !== "string"
+          || !p.path.trim() || p.path.length > 200 || typeof p.content_id !== "string")
+        return bad("portion", "is {path, content_id}: a path within the instrument of at most 200 characters and the "
+                   + "content id of its extent");
+      /* DEC-49 REGION is-portion-in-text */
+      if (!texts.includes(p.content_id.trim()))
+        return refusal("STANDARD_PORTION_NOT_IN_TEXT", `${p.content_id.slice(0, 80)} is not one of this standard's text `
+                       + "passages. Nothing was written.", { content_id: p.content_id.slice(0, 80) });
+      /* END DEC-49 REGION is-portion-in-text */
+      portion = { path: p.path.trim(), content_id: p.content_id.trim() };
+    }
+    let requires = [];
+    if (a.requires != null) {
+      const r = textIds(a.requires);
+      if (!r || !r.length || r.length > TEXTS_MAX || r.some((c) => !texts.includes(c)))
+        return bad("requires", "is a list of the standard's own text passages (content ids among its text), quoted as "
+                   + "captured, never paraphrased");
+      requires = r;
+    }
+    const m = matchSource(view, cite);
+    const sourceCopyIs = m ? sourceCopy(view, m.entry) : "undetermined";
+    if (a.copy != null && !COPY_STATES.includes(a.copy)) return bad("copy", `is one of ${COPY_STATES.join(", ")}`);
+    const copy = a.copy ?? sourceCopyIs;
+    const copyAnswer = { copy, source_copy: sourceCopyIs, declared: a.copy != null,
+                         ...(a.copy != null && a.copy !== sourceCopyIs
+                           ? { says: `recorded as declared; the matched source's code states ${sourceCopyIs}` } : {}) };
+    let currentThrough = null;
+    if (a.current_through != null) {
+      const c = a.current_through;
+      if (!isObj(c) || !isDate(c.date) || typeof c.basis !== "string" || !this.#heldFor(c.basis, viewer))
+        return bad("current_through", "is {date, basis}: the date the copy states it is current through (YYYY-MM-DD) "
+                   + "and the captured passage stating it, which you may read");
+      currentThrough = { date: c.date, basis: c.basis.trim() };
+    }
+    let periodBasis = null;
+    if (a.period_basis != null) {
+      const pb = a.period_basis;
+      if (!isObj(pb) || Object.keys(pb).some((k) => k !== "from" && k !== "to"))
+        return bad("period_basis", "is {from?, to?}, each a cited passage {passage} or an enactment event {event, edge}");
+      periodBasis = {};
+      for (const side of ["from", "to"]) {
+        const b = pb[side];
+        if (b == null) continue;
+        if (isObj(b) && typeof b.passage === "string" && Object.keys(b).length === 1 && this.#heldFor(b.passage, viewer))
+          periodBasis[side] = { passage: b.passage.trim() };
+        else if (isObj(b) && typeof b.event === "string" && /^EVT-/.test(b.event) && isRecordId(b.event)
+                 && (b.edge === "start" || b.edge === "end") && Object.keys(b).length === 2) {
+          if (period[side] !== null)
+            return bad("period_basis", `gives an event for the period's ${side}, which also states a date: a bound is a date `
+                       + "or an event, never both");
+          periodBasis[side] = { event: b.event, edge: b.edge };
+        } else return bad("period_basis", `'s ${side} is a held passage {passage: content id} or an enactment event `
+                          + "{event: EVT-…, edge: start or end}");
+      }
+    }
+    return { ok: true, fields: { instrument: key, portion, requires, copy: copyAnswer, current_through: currentThrough,
+                                 period_basis: periodBasis } };
+  }
+
+  /* A content id `content` holds, in a document the viewer may see. */
+  #heldFor(contentId, viewer) {
+    if (typeof contentId !== "string" || !contentId.trim()) return false;
+    const row = this.content.contentRow(contentId.trim());
+    return !!row && (viewer === null || this.membership.inSight(row.bundle_id, viewer));
   }
 
   /* R2: the first named content id `content.contentRow` does not hold (or, for a viewer, whose document the viewer
@@ -290,9 +443,15 @@ export class Standards {
       } finally { this.#writing = null; }
       if (!r || !r.ok) return r;
       this.sql.exec(`INSERT INTO standards (standard_id, cite, kind, issuer, period_from, period_to, supersedes,
-                       source_json, proposal_id, declared_by, declared_at, reason) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+                       source_json, proposal_id, declared_by, declared_at, reason, instrument, instrument_json, portion_path,
+                       portion_content, requires_json, copy, copy_json, current_through, current_through_basis,
+                       period_basis_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
                     id, f.cite, f.kind, f.issuer, f.period.from, f.period.to, f.supersedes, JSON.stringify(source),
-                    proposalId, author, at, f.reason);
+                    proposalId, author, at, f.reason, f.instrument.key, JSON.stringify(f.instrument),
+                    f.portion ? f.portion.path : null, f.portion ? f.portion.content_id : null, JSON.stringify(f.requires),
+                    f.copy.copy, JSON.stringify(f.copy), f.current_through ? f.current_through.date : null,
+                    f.current_through ? f.current_through.basis : null,
+                    f.period_basis ? JSON.stringify(f.period_basis) : null);
       f.texts.forEach((c, i) => this.sql.exec(`INSERT INTO standard_texts (standard_id, ord, content_id) VALUES (?,?,?)`,
                                               id, i, c));
       if (proposalId)
@@ -324,7 +483,21 @@ export class Standards {
              text: texts,
              period: { from: row.period_from ?? null, to: row.period_to ?? null }, source: safeJson(row.source_json),
              declared_by: row.declared_by, declared_at: row.declared_at, supersedes: row.supersedes ?? null,
-             superseded_by: this.#successorOf(row.standard_id), proposal: row.proposal_id ?? null };
+             superseded_by: this.#successorOf(row.standard_id), proposal: row.proposal_id ?? null,
+             ...this.#lawAnswer(row) };
+  }
+
+  /* R18, R19 as read back: a standard recorded before them states none (its key undetermined, said so). */
+  #lawAnswer(row) {
+    const instrument = safeJson(row.instrument_json)
+      || { state: "undetermined", key: null, why: "recorded before instrument keys were composed" };
+    return { instrument,
+             portion: row.portion_path ? { path: row.portion_path, content_id: row.portion_content } : null,
+             requires: safeJson(row.requires_json) || [],
+             copy: safeJson(row.copy_json) || { copy: "undetermined", source_copy: null, declared: false,
+                                                 says: "recorded before a copy status was recorded" },
+             current_through: row.current_through ? { date: row.current_through, basis: row.current_through_basis } : null,
+             period_basis: safeJson(row.period_basis_json) };
   }
 
   /** R5: one standard, with each text passage's standing and whether a newer capture of its document holds it. */
@@ -337,7 +510,8 @@ export class Standards {
     const standings = this.content.standings(a.text);
     const texts = a.text.map((contentId) => ({ content_id: contentId, standing: standings[contentId] ?? null,
                                                newer: this.content.passageNotice({ contentId, viewer }) }));
-    return { ok: true, ...a, texts,
+    const quoted = a.requires.map((contentId) => ({ content_id: contentId, text: this.content.passageText(contentId) }));
+    return { ok: true, ...a, texts, requires_quoted: quoted,
              says: "a standard as the record holds it: what it is and where it comes from, never whether it is a good "
                  + "one. Each passage of its text says whether a newer capture of its document still holds it; "
                  + "nothing is moved." };
@@ -347,17 +521,143 @@ export class Standards {
      credential and the founder see it; any other viewer, and none, is answered as for an absent standard. */
   #readable(id, viewer) { return viewer !== null && viewer !== undefined && this.membership.inSight(id, viewer); }
 
-  /** R7: whether a standard was in force on a date, with why. */
+  /** R7: whether a standard was in force on a date, with why: the alias of R20's `inForceAt({standard: id, date})`,
+   *  answering exactly its state and why (Choices 18), so its callers need no change. */
   inForce(id, date) {
     if (!str(id)) return refuseNoId("standardinforce");
     if (!isDate(date)) return refuseDateInvalid(date);
-    const row = this.#row(str(id));
-    if (!row) return refuseNoSuchStandard(str(id));
-    return { ok: true, id: row.standard_id, date, ...inForceAt({ from: row.period_from, to: row.period_to }, date) };
+    const r = this.inForceAt({ standard: str(id), date });
+    if (r.ok === false) return r;
+    return { ok: true, id: str(id), date, state: r.state, why: r.why };
+  }
+
+  /* ===================================================================== *
+   * R20: IN FORCE AT A DATE
+   * ===================================================================== */
+
+  /* A day an event's `when` gives at `edge` (events R9, R26), or why there is none. */
+  #eventDay(eventId, edge, viewer) {
+    const ev = this.events;
+    if (!ev || typeof ev.readEvent !== "function")
+      return { day: null, why: `the event ${eventId} cannot be read here: the events module is not wired to standards` };
+    let r;
+    try { r = ev.readEvent({ eventId, viewer: viewer ?? undefined }); } catch { r = null; }
+    if (!r || r.ok === false || r.found === false)
+      return { day: null, why: `the event ${eventId} is not held, or may not be read` };
+    const w = r.when !== undefined ? r.when : r.event ? r.event.when : undefined;
+    if (!w || w === "undetermined" || w.undetermined)
+      return { day: null, why: `the event ${eventId} has no when the record can read (${w && w.why ? w.why : "placed nowhere"})` };
+    if (w.precision === "edtf") return { day: null, why: `the event ${eventId}'s when is a band (${w.start}), not a day` };
+    const v = edge === "end" ? w.end ?? w.start : w.start;
+    const d = typeof v === "string" ? v.slice(0, 10) : null;
+    return isDate(d) ? { day: d, why: null } : { day: null, why: `the event ${eventId}'s when states no day at its ${edge}` };
+  }
+
+  /* R20: a version's period as the record states it: its stated bounds, a bound given as an event read from that
+     event's when, and its end bounded by each adopted temporal relation that amends, repeals, renumbers or recodifies it
+     (the day before its effective date). `{from, to, why: {from?, to?}, bound_by}`; a bound that cannot be read is
+     null with why. */
+  #periodOf(row, viewer) {
+    const out = { from: row.period_from ?? null, to: row.period_to ?? null, why: {}, bound_by: [] };
+    const basis = safeJson(row.period_basis_json) || {};
+    for (const side of ["from", "to"]) {
+      const b = basis[side];
+      if (!b || !b.event) continue;
+      const d = this.#eventDay(b.event, b.edge, viewer);
+      if (d.day) out[side] = d.day; else out.why[side] = d.why;
+    }
+    for (const r of this.#law.boundsOn(row.standard_id)) {
+      const eff = r.effective_date ? { day: r.effective_date } : this.#eventDay(r.effective_event, r.effective_edge, viewer);
+      if (!eff.day) { out.why.to = `${r.relation_id} (${r.type}) bounds it, and ${eff.why}`; out.unread = true; continue; }
+      const end = new Date(Date.parse(`${eff.day}T00:00:00Z`) - 86400000).toISOString().slice(0, 10);
+      if (out.to === null || end < out.to) out.to = end;
+      out.bound_by.push({ relation: r.relation_id, type: r.type, effective: eff.day });
+    }
+    return out;
+  }
+
+  /* R20: one version against a date: civil-time.validAt over its period, then a codifier copy's lag. */
+  #versionAt(row, date, viewer) {
+    const p = this.#periodOf(row, viewer);
+    const zone = this.#zone();
+    const bound = (side) => (p[side] !== null ? p[side] : p.why[side] ? { event: "unread", edge: side } : null);
+    let v;
+    try {
+      v = validAt({ valid: { from: bound("from"), to: p.unread && p.to === null ? { event: "unread", edge: "to" } : bound("to"),
+                             precision: "day", zone } }, { value: date, precision: "day", zone });
+    } catch { v = { undetermined: true, why: "the period could not be read" }; }
+    const by = p.bound_by.length ? ` (bounded by ${p.bound_by.map((b) => `${b.relation}, which ${b.type.replace(/s$/, "s")} it `
+                                                     + `effective ${b.effective}`).join("; ")})` : "";
+    let state, why;
+    if (v === "out") {
+      state = "not_in_force";
+      why = p.from !== null && date < p.from ? `the period in force starts ${p.from}, after ${date}${by}`
+        : `the period in force ended ${p.to}, before ${date}${by}`;
+    } else if (v === "in") {
+      state = "in_force"; why = `${date} lies within the period in force, ${p.from} to ${p.to}${by}`;
+    } else {
+      state = "undetermined";
+      const missing = [p.from === null ? p.why.from || "when it came into force" : null,
+                       p.to === null ? p.why.to || "when it ceased to be in force" : null].filter(Boolean);
+      why = missing.length && !p.why.from && !p.why.to
+        ? `the record does not state ${missing.join(" or ")}, so whether it was in force on ${date} is undetermined`
+        : missing.length ? `${missing.join("; ")}, so whether it was in force on ${date} is undetermined`
+        : (v && v.why) || `whether it was in force on ${date} is undetermined`;
+    }
+    /* codifier lag (`measures-T33/time-law.md` §4): a codifier's copy speaks only through its current-through date */
+    if (state !== "not_in_force" && row.copy === "codifier" && row.current_through && date > row.current_through) {
+      const later = row.instrument ? this.#one(`SELECT standard_id FROM standards WHERE instrument=? AND standard_id<>?
+                                                 AND period_from IS NOT NULL AND period_from > ? LIMIT 1`,
+                                               row.instrument, row.standard_id, row.current_through) : null;
+      if (!later) { state = "undetermined"; why = `versions after ${row.current_through} not held: this copy is a codifier's, `
+                                                 + `current through ${row.current_through}, and ${date} is after it`; }
+    }
+    return { state, why, period: { from: p.from, to: p.to }, bound_by: p.bound_by };
+  }
+
+  /** R20: `inForceAt({key | standard, portion?, date, viewer?})` → `{state, why, standard, version}`. With a standard,
+   *  that version; with a key, the version whose period covers the date, two that both cover it or none deciding it
+   *  answering undetermined naming them (never the later one preferred). Writes nothing and never throws. */
+  inForceAt({ key = null, standard = null, portion = null, date = null, viewer = null } = {}) {
+    try {
+      if (!str(key) && !str(standard)) return refuseNoId("inforceat");
+      if (!isDate(date)) return refuseDateInvalid(date);
+      if (str(standard)) {
+        const row = this.#row(str(standard));
+        if (!row || (viewer !== null && !this.#readable(row.standard_id, viewer))) return refuseNoSuchStandard(str(standard));
+        const v = this.#versionAt(row, date, viewer);
+        return { ok: true, date, state: v.state, why: v.why, standard: row.standard_id,
+                 version: { standard: row.standard_id, ...v.period, bound_by: v.bound_by } };
+      }
+      const p = portion == null || portion === "" ? null : String(portion);
+      const rows = this.#rows(`SELECT * FROM standards WHERE instrument=? ${p !== null ? "AND portion_path=?" : ""}
+                               ORDER BY standard_id LIMIT ?`, ...(p !== null ? [str(key), p] : [str(key)]), PAGE_MAX + 1);
+      const base = { ok: true, date, key: str(key), portion: p };
+      if (!rows.length)
+        return { ...base, state: "undetermined", standard: null, version: null,
+                 why: `no version of ${str(key)}${p !== null ? ` at ${p}` : ""} is held, so whether it was in force is undetermined` };
+      const vs = rows.slice(0, PAGE_MAX).map((r) => ({ id: r.standard_id, ...this.#versionAt(r, date, viewer) }));
+      const inn = vs.filter((v) => v.state === "in_force"), unsure = vs.filter((v) => v.state === "undetermined");
+      if (inn.length === 1 && !unsure.length)
+        return { ...base, state: "in_force", why: inn[0].why, standard: inn[0].id, version: { standard: inn[0].id, ...inn[0].period } };
+      if (inn.length > 1)
+        return { ...base, state: "undetermined", standard: null, version: null, versions: inn.map((v) => v.id),
+                 why: `${inn.map((v) => v.id).join(" and ")} each cover ${date}; none is preferred, so which was in force is undetermined` };
+      if (unsure.length)
+        return { ...base, state: "undetermined", standard: null, version: null, versions: [...inn, ...unsure].map((v) => v.id),
+                 why: `no held version decides ${date}: ${unsure.map((v) => `${v.id}: ${v.why}`).join("; ")}` };
+      return { ...base, state: "not_in_force", standard: null, version: null, versions: vs.map((v) => v.id),
+               why: `every held version's period excludes ${date}: ${vs.map((v) => `${v.id}: ${v.why}`).join("; ")}`,
+               ...(rows.length > PAGE_MAX ? { truncated: true } : {}) };
+    } catch {
+      return { ok: true, date, state: "undetermined", standard: null, version: null, why: "the versions could not be read" };
+    }
   }
 
   /** R8: the standards the filters admit, in id order, at most `PAGE_MAX` per page; with `at`, each with R7's answer
-   *  and the ones not in force left out. Every filter is applied in SQL, so the page and its cut are exact. */
+   *  and the ones not in force left out. The stated period filters in SQL (a superset: a stated bound that excludes
+   *  the date excludes it in R7 too), then R7 (with its relations and event bounds) is asked of each row, reading on
+   *  until the page and the row past it are found, so the page and its cut are exact. */
   standardsIn({ at = null, kind = null, source = null, cite = null, after = null, limit = null, viewer = null } = {}) {
     const date = at == null || at === "" ? null : at;
     if (date !== null && !isDate(date)) return refuseDateInvalid(date);
@@ -372,19 +672,119 @@ export class Standards {
     if (str(cite)) { where.push("instr(lower(s.cite), lower(?)) > 0"); args.push(str(cite)); }
     if (date) { where.push("NOT ((s.period_from IS NOT NULL AND s.period_from > ?) OR (s.period_to IS NOT NULL AND s.period_to < ?))");
                 args.push(date, date); }
-    if (str(after)) { where.push("s.standard_id > ?"); args.push(str(after)); }
-    const rows = this.#rows(`SELECT s.* FROM standards s JOIN bundles b ON b.bundle_id = s.standard_id
-                              WHERE ${where.join(" AND ")} ORDER BY s.standard_id LIMIT ?`, ...args, n + 1);
-    const truncated = rows.length > n;
-    const page = rows.slice(0, n);
-    const items = page.map((r) => ({ ...this.#answer(r),
-      ...(date ? { in_force: inForceAt({ from: r.period_from, to: r.period_to }, date) } : {}) }));
+    const kept = [];
+    let cursor = str(after) || null;
+    for (;;) {
+      const page = this.#rows(`SELECT s.* FROM standards s JOIN bundles b ON b.bundle_id = s.standard_id
+                                WHERE ${[...where, ...(cursor ? ["s.standard_id > ?"] : [])].join(" AND ")}
+                                ORDER BY s.standard_id LIMIT ?`, ...args, ...(cursor ? [cursor] : []), n + 1);
+      for (const r of page) {
+        const f = date ? this.#versionAt(r, date, viewer) : null;
+        if (f && f.state === "not_in_force") continue;
+        kept.push({ r, f });
+        if (kept.length > n) break;
+      }
+      if (kept.length > n || page.length < n + 1) break;
+      cursor = page[page.length - 1].standard_id;
+    }
+    const truncated = kept.length > n;
+    const page = kept.slice(0, n);
+    const items = page.map(({ r, f }) => ({ ...this.#answer(r), ...(f ? { in_force: { state: f.state, why: f.why } } : {}) }));
     return { ok: true, items, count: items.length, limit: n, truncated,
-             cursor: truncated ? page[page.length - 1].standard_id : null,
+             cursor: truncated ? page[page.length - 1].r.standard_id : null,
              ...(date ? { at: date, says: `standards in force on ${date}, or whose period does not decide it (stated `
-                                          + "undetermined); a standard whose stated period excludes the date is left out" }
+                                          + "undetermined); a standard whose period excludes the date is left out" }
                       : {}) };
   }
+
+  /* ===================================================================== *
+   * R21: THE REVERSE INDEX (LAW N4)
+   * ===================================================================== */
+
+  /** R21: `standardsFor({target, limit, viewer})`: for a held standard, or an instrument key (`/eli/…`, or `{key,
+   *  portion?}`), every document whose reading cites it (a reference `extraction` holds whose recognised key or cite
+   *  matches, by R3's patterns); for a document (a bundle id or a capture digest), the held standards its readings
+   *  cite. Each item says how it matched. A document the viewer may not see is neither answered nor counted. Reads
+   *  `extraction`'s `reading_refs` under its read contract (R58 there). Writes nothing and never throws. */
+  standardsFor({ target = null, limit = null, viewer = null } = {}) {
+    const n = Number.isInteger(Number(limit)) && limit !== null && limit !== ""
+      ? Math.min(FOR_LIMIT_MAX, Math.max(1, Number(limit))) : FOR_LIMIT_DEFAULT;
+    const t = isObj(target) ? str(target.key) : str(target);
+    if (!t) return refuseNoId("standardsfor");
+    try {
+      const { view } = this.#view();
+      const row = this.#row(t);
+      if (row || t.startsWith("/eli/")) {
+        if (row && !this.#readable(row.standard_id, viewer)) return refuseNoSuchStandard(t);
+        const key = row ? row.instrument ?? null : t;
+        const cite = row ? foldCite(row.cite) : null;
+        const probe = key ? key.slice(key.lastIndexOf("/") + 1) : cite;
+        const refs = this.#rows(`SELECT DISTINCT capture_sha, bundle_id, ref, ref_kind, ref_key, label FROM reading_refs
+                                 WHERE instr(lower(coalesce(label,'') || ' ' || coalesce(ref_key,'') || ' ' || ref), lower(?)) > 0
+                                 ORDER BY capture_sha, ref LIMIT ?`, probe, SCAN_FOR);
+        const docs = new Map();
+        for (const r of refs) {
+          const rk = key ? referenceKey(view, r) : null;
+          const how = rk && rk.key === key ? rk.how
+            : cite && [r.label, r.ref_key, r.ref].some((x) => typeof x === "string" && foldCite(x) === cite) ? "cite" : null;
+          if (!how) continue;
+          if (!docs.has(r.capture_sha)) {
+            if (!this.membership.inSight(r.bundle_id, viewer)) continue;
+            if (docs.size > n) break;
+            docs.set(r.capture_sha, { capture_sha: r.capture_sha, bundle_id: r.bundle_id, references: [] });
+          }
+          docs.get(r.capture_sha).references.push({ ref: r.ref, label: r.label ?? null, how });
+        }
+        const items = [...docs.values()].slice(0, n);
+        return { ok: true, target: t, of: row ? "standard" : "instrument", key, items, count: items.length, limit: n,
+                 truncated: docs.size > n || refs.length >= SCAN_FOR,
+                 says: "documents whose readings cite it, as the readings state their references; a document you may not "
+                     + "see is neither answered nor counted" };
+      }
+      const byCapture = /^[0-9a-f]{64}$/.test(t);
+      const refs = this.#rows(`SELECT DISTINCT capture_sha, bundle_id, ref, ref_kind, ref_key, label FROM reading_refs
+                               WHERE ${byCapture ? "capture_sha" : "bundle_id"}=? ORDER BY ref LIMIT ?`, t, SCAN_FOR);
+      const visible = refs.filter((r) => this.membership.inSight(r.bundle_id, viewer));
+      const found = new Map();
+      for (const r of visible) {
+        const rk = referenceKey(view, r);
+        const byKey = rk ? this.#rows(`SELECT standard_id FROM standards WHERE instrument=? ORDER BY standard_id LIMIT ?`,
+                                      rk.key, n + 1).map((x) => [x.standard_id, rk.how]) : [];
+        const byCite = [r.label, r.ref_key].filter((x) => typeof x === "string" && x.trim()).flatMap((x) =>
+          this.#rows(`SELECT standard_id FROM standards WHERE lower(cite)=? ORDER BY standard_id LIMIT ?`, foldCite(x), n + 1)
+            .map((y) => [y.standard_id, "cite"]));
+        for (const [sid, how] of [...byKey, ...byCite]) {
+          if (!found.has(sid)) found.set(sid, { standard: sid, references: [] });
+          const e = found.get(sid);
+          if (!e.references.some((x) => x.ref === r.ref && x.how === how)) e.references.push({ ref: r.ref, label: r.label ?? null, how });
+        }
+      }
+      const all = [...found.values()].sort((a, b) => (a.standard < b.standard ? -1 : 1));
+      const items = all.slice(0, n).map((e) => ({ ...e, cite: this.#row(e.standard).cite }));
+      return { ok: true, target: t, of: "document", items, count: items.length, limit: n,
+               truncated: all.length > n || refs.length >= SCAN_FOR,
+               says: visible.length || !refs.length ? "the held standards this document's readings cite"
+                 : "no document you may see answers to that id" };
+    } catch {
+      return { ok: true, target: t, items: [], count: 0, limit: n, truncated: false,
+               undetermined: { why: "the readings' references could not be read here, so what cites what is undetermined" } };
+    }
+  }
+
+  /* ===================================================================== *
+   * R22–R28: LAW RELATIONS, COURT LINKS, TREATMENTS, THE RESOLVER, THE OWNER (`./law.mjs`)
+   * ===================================================================== */
+
+  lawRelate(args) { return this.#law.lawRelate(args); }
+  lawRelationsOf(args) { return this.#law.lawRelationsOf(args); }
+  lawWithdraw(args) { return this.#law.lawWithdraw(args); }
+  lawPropose(args) { return this.#law.lawPropose(args); }
+  courtLink(args) { return this.#law.courtLink(args); }
+  courtTreat(args) { return this.#law.courtTreat(args); }
+  stillStanding(args) { return this.#law.stillStanding(args); }
+  addressesOf(args) { return this.#law.addressesOf(args); }
+  resolveCourtCitation(args) { return this.#law.resolveCourtCitation(args); }
+  neighbours(args) { return this.#law.neighbours(args); }
 
   /* ===================================================================== *
    * PROPOSALS (R9, R10)
@@ -559,6 +959,37 @@ function refuseFieldUnknown(a, keys) {
   return null;
 }
 
+/* R23, R26, R27, R30: the refusals `./law.mjs`'s acts share with R1, R9 and R10, each minted as theirs are. */
+function refuseLawReason(fault) {
+  /* DEC-49 REGION is-standard-reason */
+  return refusal("STANDARD_NO_REASON", `this act ${fault}. The reason is the member's own words on why the record holds `
+                 + "this row. Nothing was written.", { max_chars: REASON_MAX });
+  /* END DEC-49 REGION is-standard-reason */
+}
+function refuseNoSuchProposal(id) {
+  /* DEC-49 REGION is-proposal-held */
+  return refusal("STANDARD_NO_SUCH_PROPOSAL", "no proposal of that kind answers to that id here. Nothing was written.",
+                 { proposal: id });
+  /* END DEC-49 REGION is-proposal-held */
+}
+function refuseProposalAdopted(id, as) {
+  /* DEC-49 REGION is-proposal-open */
+  return refusal("STANDARD_PROPOSAL_ADOPTED", `${id} was adopted as ${as}. Nothing was written.`, { proposal: id, adopted_as: as });
+  /* END DEC-49 REGION is-proposal-open */
+}
+function refuseProposerUnnamed() {
+  /* DEC-49 REGION is-proposer-named */
+  return refusal("STANDARD_PROPOSER_UNNAMED", "the plane stamps the proposer from the credential that asked, and this call "
+                 + "carries nobody. Nothing was written.");
+  /* END DEC-49 REGION is-proposer-named */
+}
+function refuseWhyInvalid() {
+  /* DEC-49 REGION is-proposal-why */
+  return refusal("STANDARD_WHY_INVALID", `a proposal says why, in 1 to ${WHY_MAX} characters. Nothing was written.`,
+                 { max: WHY_MAX });
+  /* END DEC-49 REGION is-proposal-why */
+}
+
 function refuseNoCite(length) {
   /* DEC-49 REGION is-standard-cited */
   return refusal("STANDARD_NO_CITE", length ? `a citation is at most ${CITE_MAX} characters, and this one is ${length}. `
@@ -637,10 +1068,34 @@ export function standardsOps(s, url, body) {
     standardinforce: () => s.inForce(qp("id"), qp("date")),
     standardpropose: () => s.standardPropose({ ...b, viewer: qp("viewer") }),
     standardadopt: () => s.standardAdopt({ ...b, viewer: qp("viewer") }),
+    /* T33-31: R20, R21, R23–R27 (the ops are declared by op-declarations, T33-88) */
+    inforceat: () => s.inForceAt({ key: qp("key"), standard: qp("id"), portion: qp("portion"), date: qp("date"),
+                                   viewer: qp("viewer") }),
+    standardsfor: () => s.standardsFor({ target: qp("target"), limit: qp("limit"), viewer: qp("viewer") }),
+    lawrelate: () => s.lawRelate({ ...b, viewer: qp("viewer") }),
+    lawrelations: () => s.lawRelationsOf({ standard: qp("id"), viewer: qp("viewer") }),
+    lawwithdraw: () => s.lawWithdraw({ relation: b.relation ?? null, reason: b.reason ?? null, author: b.author ?? null }),
+    lawpropose: () => s.lawPropose({ ...b, viewer: qp("viewer") }),
+    lawaddresses: () => s.addressesOf({ key: qp("key"), portion: qp("portion"), viewer: qp("viewer") }),
+    courtlink: () => s.courtLink({ ...b, viewer: qp("viewer") }),
+    courttreat: () => s.courtTreat({ ...b, viewer: qp("viewer") }),
+    stillstanding: () => s.stillStanding({ decision: qp("id"), date: qp("date"), viewer: qp("viewer") }),
+    citationresolve: () => s.resolveCourtCitation({ citation: qp("citation"), lookup: qp("lookup") === "1",
+                                                   viewer: qp("viewer") }),
   };
 }
 
 const instances = new WeakMap();
+/* R28: the instance the module's one registration in connection-grammar's default registry reads: the latest
+   constructed (one per Durable Object, K61). */
+let current = null;
+/** R28: the owner's registration (`connection-grammar` R2), over an instance, for a registry a caller holds. */
+export const connectionOwnerOf = (s) => ({ owner: CONNECTION_OWNER, kinds: CONNECTION_KINDS.map((k) => ({ ...k })),
+                                          neighbours: (a) => s.neighbours(a) });
+/* R28: registered once at load as a connection owner. */
+registerOwner({ owner: CONNECTION_OWNER, kinds: CONNECTION_KINDS.map((k) => ({ ...k })),
+  neighbours: (a) => (current ? current.neighbours(a)
+    : { refused: "OWNER_NOT_READY", why: "no standards instance is constructed on this host yet" }) });
 
 /** K61: the one instance per host, created on the first call with `deps`. Its tables are created with it (R16); it
  *  registers its check with promotion (R39, for R11) and its tables with purge (R14). */
@@ -653,9 +1108,11 @@ export function standardsOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     s = new Standards({ ...d, storage, record, membership, promotion,
-                        content: d.content || (() => contentOf(host, { record, membership })) });
+                        content: d.content || (() => contentOf(host, { record, membership })),
+                        events: d.events || null });
     instances.set(host, s);
-    record.declarePurge("standards", STANDARDS_TABLES);
+    current = s;
+    record.declareTable("standards", STANDARDS_TABLES.map((t) => ({ ...t })));
     promotion.registerStep("standards", { check: (c) => s.check(c) });
   }
   return s;
