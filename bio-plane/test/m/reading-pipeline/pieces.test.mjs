@@ -10,6 +10,12 @@ import { createHash } from "node:crypto";
 import * as rp from "../../../src/reading-pipeline/index.mjs";
 import { fresh, bucket, evidenceStore, hold, doc, member, withEntry, i2, noText, unreadImage, ocrAnswer, calibration } from "./fixture.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
+import { registerDoctype } from "../../../../docprofile/registry.mjs";
+import { registerDoctypes } from "../../../../doctypes/index.mjs";
+
+/* K1737: docprofile registers no content type of its own, so this suite registers doctypes' readers, as the plane's
+   store does. */
+registerDoctypes(registerDoctype);
 
 const hex = (s) => createHash("sha256").update(s).digest("hex");
 const { tier2Escalate, decodeView, pageBoxesFrom, needsTier3, tier3Extend, tier3SeedFrom, layerChainFor, readingFromWire,

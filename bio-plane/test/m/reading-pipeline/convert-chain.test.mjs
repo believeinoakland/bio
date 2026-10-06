@@ -17,6 +17,12 @@ import { deflateRawSync } from "node:zlib";
 import { fresh, hold, doc, sha } from "./fixture.mjs";
 import { readDriveAddress, driveHop, driveConvertStep } from "../../../src/drive.mjs";
 import { archiveHop } from "../../../src/cdx.mjs";
+import { registerDoctype } from "../../../../docprofile/registry.mjs";
+import { registerDoctypes } from "../../../../doctypes/index.mjs";
+
+/* K1737: docprofile registers no content type of its own, so this suite registers doctypes' readers, as the plane's
+   store does. */
+registerDoctypes(registerDoctype);
 /* The ODF media types (OpenDocument v1.2 part 3, the mimetype each package declares). */
 const ODT_CONTENT_TYPE = "application/vnd.oasis.opendocument.text";
 const ODS_CONTENT_TYPE = "application/vnd.oasis.opendocument.spreadsheet";

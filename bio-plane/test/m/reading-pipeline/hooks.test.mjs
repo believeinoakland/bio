@@ -6,6 +6,12 @@ import assert from "node:assert/strict";
 import { ReadHooks, readHooksOf } from "../../../src/reading-pipeline/index.mjs";
 import { listenerRefusal, MODULE_ORDER } from "../../../src/membership/index.mjs";
 import { fresh, hold, doc, member, withEntry, i2, noText, ocrAnswer } from "./fixture.mjs";
+import { registerDoctype } from "../../../../docprofile/registry.mjs";
+import { registerDoctypes } from "../../../../doctypes/index.mjs";
+
+/* K1737: docprofile registers no content type of its own, so this suite registers doctypes' readers, as the plane's
+   store does. */
+registerDoctypes(registerDoctype);
 
 const noop = () => {};
 /* The refusal membership's R81 answers for the same registration, so this module mints neither code itself. */

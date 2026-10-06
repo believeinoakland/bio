@@ -13,6 +13,12 @@ import pdfWorker from "../../../../pdf-worker/src/index.mjs";
 import { getFormat } from "../../../src/formats.mjs";
 import { mergeTier2Text, tier2Note, glyphCount } from "../../../src/textchain.mjs";
 import { tier2Escalate, decodeView, LAYER_FIDELITY_SOURCE, NAMED_ENGINE_SOURCE } from "../../../src/reading-pipeline/index.mjs";
+import { registerDoctype } from "../../../../docprofile/registry.mjs";
+import { registerDoctypes } from "../../../../doctypes/index.mjs";
+
+/* K1737: docprofile registers no content type of its own, so this suite registers doctypes' readers, as the plane's
+   store does. */
+registerDoctypes(registerDoctype);
 
 const CPDF20 = (f) => new Uint8Array(readFileSync(new URL(`../../fixtures/cpdf20/${f}`, import.meta.url)));
 const MIXED = CPDF20("legistar-73545.pdf");     // 7 pages: 0-5 to tier 2, 6 kept at tier 1

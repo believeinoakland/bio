@@ -6,9 +6,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bucket, hold, doc, member, withEntry, i2, noText, folio, unreadImage, ocrAnswer, calibration, sha, EVIDENCE_PREFIX } from "./fixture.mjs";
-import { identify, doctypeFor } from "../../../../docprofile/registry.mjs";
+import { identify, doctypeFor, registerDoctype } from "../../../../docprofile/registry.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 import { OCR_INVOCATIONS_PER_REQUEST, ACQUIRE_TEXT_UNITS_BUDGET, ACQUIRE_TEXT_UNIT_ENVELOPE, CAPTURE_TEXT_UNIT_CAP } from "../../../src/reading-pipeline/index.mjs";
+import { registerDoctypes } from "../../../../doctypes/index.mjs";
+
+/* K1737: docprofile registers no content type of its own, so this suite registers doctypes' readers, as the plane's
+   store does. */
+registerDoctypes(registerDoctype);
 
 const ROW = (id, name, date) => `<tr><td><a href="MeetingDetail.aspx?ID=${id}&GUID=X">${name}</a></td><td>${date}</td><td><a href="View.ashx?M=A&ID=5${id}">Agenda</a></td></tr>`;
 const CAL = (rows) => ['<!DOCTYPE html><html><head><title>Council Calendar</title></head><body><form id="aspnetForm" method="post">',
