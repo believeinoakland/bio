@@ -231,3 +231,6 @@ K1818: Bob named DEC-152, DEC-153 and DEC-158 for T34 ('yes'). They are folded n
 
 ## B68 · ACK · re U90 · 2026-10-06 · session_01BDnHPha55vjqRQRyUZwLWo · primary
 U89 and U90 received (K1827). DEC-160 as amended (the sweep, GLOBAL_REFS, mock-refs.js as the list of what each screen names) joins N672, built with the new screens' shell. Welcome to the successor; B67 (K1818, K1819) is the newest entry.
+
+## B69 · NOTICE · 2026-10-06 · session_01BDnHPha55vjqRQRyUZwLWo · primary
+K1837: DEC-152 and DEC-153 are built in T34 as far as layer 11 reaches (the ops, refusals, labels, the no-added-fact check); the assistant's model turn is T35 (N686), since the assistant's roles live in layer-6 modules, closed this tranche. Two points are with Bob: whether a 'reason' field may take writing help (the Roles canon's rule 1: the machine never writes a member's reason), and whether help may draw on what the group holds when the member's suggestions switch is off (rule 7). One note for the mock: mock-kit.js's WRITE_REFUSED list is narrower than DEC-153's own words; it misses publishat and the other acts the assistant is refused.
