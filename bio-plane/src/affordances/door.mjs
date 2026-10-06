@@ -17,6 +17,8 @@
  * (R12, R24), so `rung: null` is always accompanied by a non-null `rung_absence`. */
 
 import { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, PER_ITEM_MAX, deriveActs, decorate, vocabulariesFor } from "../affordances.mjs";
+/* K1601 (SKILLS #12 J1 (1)): `answers`' check family, which skills' `ask` layer carries in the pack. */
+import { ANSWERS_CHECKS } from "../answers/index.mjs";
 
 const CATALOGUE_DETAIL = "pass target=<record id> for the acts available on that object right now; "
   + "rung is the weight ladder (vocabularies.rung_ladder, low to high, IRREVERSIBLE "
@@ -55,6 +57,8 @@ export function affordancesAnswer({ target = null, facts = null, kinds, gate, sc
        each as `wizard-scripts` answered it; a list always, `[]` when none is registered or offered. */
     screens: Array.isArray(screens) ? screens : [],
     wizard_scripts: Array.isArray(wizard_scripts) ? wizard_scripts : [],
+    /* K1601: `answers`' check family `{CODE: {check, translation}}`, the very object its table holds, for the pack. */
+    answer_checks: ANSWERS_CHECKS,
   };
   if (!facts || facts.ok !== true) return { ok: false, ...facts };
   return { target: facts.target, object_type: facts.object_type, current_state: facts.current_state,

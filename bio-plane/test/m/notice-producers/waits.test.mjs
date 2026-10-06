@@ -74,3 +74,22 @@ test("R6: an inquiry the viewer may not see raises nothing", () => {
   w.st.sql.exec(`UPDATE bundles SET project=? WHERE bundle_id=?`, P, Q);
   assert.deepEqual(ofKind(read("alice", { now: "2026-10-11T00:00:00Z" }), KIND), []);
 });
+
+test("R6: its age runs from the start of the wait's local day in inquiry's zone, never the UTC midnight (K1444 (iii), K1688): west of UTC, at the day boundary", () => {
+  const { read } = setup();
+  const at = (now) => ofKind(read("alice", { now }), KIND)[0].age;
+  assert.deepEqual(at("2026-10-10T07:00:00Z"), { state: "determined", since: "2026-10-10", ms: 0 }, "local midnight in Los Angeles");
+  assert.equal(at("2026-10-10T08:00:00Z").ms, 3_600_000, "one hour, not the eight a UTC midnight would give");
+  assert.equal(at("2026-10-11T07:00:00Z").ms, 86_400_000);
+});
+
+test("R6: with no zone in inquiry's answer, the age is undetermined, never computed on the UTC day", async () => {
+  const { w } = setup();
+  const { fresh } = await import("./fixture.mjs");
+  const n = fresh(w.host, { membership: w.membership, inquiry: { datedWaits: ({ member }) => ({ ok: true, member, zone: null,
+    waits: [{ inquiry: Q, index: 0, text: "records reply", description: "from the clerk", date: "2026-10-10", set_by: member, state: "due" }] }) } });
+  const it = ofKind(reader(n).read("alice", { now: "2026-10-11T00:00:00Z" }), KIND)[0];
+  assert.equal(it.age.state, "undetermined");
+  assert.equal(it.age.reason, "no_zone");
+  assert.equal(it.due, "2026-10-10");
+});

@@ -31,16 +31,26 @@ import * as EXTRACTION from "../extraction/checks.mjs";
 import * as CONTENT from "../content/checks.mjs";
 import * as CONTENT_EXTENT from "../content/extent.mjs";
 import * as ENTITIES from "../entities/checks.mjs";
+/* T33-89 (K1581, K1585, K1607, K1609, K1643): T33's new families, each in its module's place: events', money-checks' and
+   duties' (C-133) in layer 5, hypotheses' (C-134) and answers' (C-135) in layer 6, case-tensions' C-92 (moved from
+   publication) in layer 8; and the order T33 gave layer 5 (local-facts and standards moved in, observation-log after
+   connections). */
+import * as EVENTS from "../events/checks.mjs";
+import * as LOCAL_FACTS from "../local-facts/checks.mjs";
 import * as CONNECTIONS from "../connections/checks.mjs";
 import * as CONNECTIONS_THEMES from "../connections/themes.mjs";
-import * as PROGRESSIONS from "../progressions/checks.mjs";
-import * as BIAS from "../bias/checks.mjs";
 import * as OBSERVATION_LOG from "../observation-log/checks.mjs";
+import * as STANDARDS from "../standards/checks.mjs";
+import * as PROGRESSIONS from "../progressions/checks.mjs";
+import * as MONEY_CHECKS from "../money-checks/checks.mjs";
+import * as DUTIES from "../duties/checks.mjs";
+import * as BIAS from "../bias/checks.mjs";
 import * as RETRIEVAL from "../retrieval/checks.mjs";
 import * as INQUIRY_GRAMMAR from "../inquiry-grammar/checks.mjs";
 /* R43 (N522, K1310): accepted-work's C-21.4 and C-21.5, in its place in the module order (after inquiry-grammar). */
 import * as ACCEPTED_WORK from "../accepted-work/checks.mjs";
 import * as INQUIRY from "../inquiry/index.mjs";
+import * as HYPOTHESES from "../hypotheses/checks.mjs";
 import * as CITATION from "../citation/checks.mjs";
 import * as BASIS_VERSIONS from "../basis-versions/checks.mjs";
 import * as STRENGTH from "../strength/checks.mjs";
@@ -49,8 +59,10 @@ import * as RUN_RULES from "../run-rules/checks.mjs";
 import * as RUN_PRODUCTIONS from "../run-productions/checks.mjs";
 import * as CAPTURE_REQUESTS from "../capture-requests/checks.mjs";
 import * as SKILLS from "../skilldoctrine.mjs";
+import * as ANSWERS from "../answers/checks.mjs";
 import * as INTENT from "../intent/checks.mjs";
 import * as REEVALUATION from "../reevaluation/checks.mjs";
+import * as CASE_TENSIONS from "../case-tensions/checks.mjs";
 import * as PUBLICATION from "../publication/checks.mjs";
 /* K1280, N526, N533, K1331 (R43): docket's C-129, in its place in the module order (directly after publication). Its
    pressure codes are its own since N526 and N533 (`MACHINE_CANNOT_MARK_DOCKET_PRESSURE`, `DOCKET_PRESSURE_MARKED`,
@@ -69,8 +81,6 @@ import * as CASE_IMPORT from "../case-import/checks.mjs";
 import * as CASE_DISCLOSURES from "../case-disclosures/checks.mjs";
 import * as CASE_AUTHORING from "../case-authoring/checks.mjs";
 import * as REVIEW from "../review/checks.mjs";
-import * as LOCAL_FACTS from "../local-facts/checks.mjs";
-import * as STANDARDS from "../standards/checks.mjs";
 import * as CONFORMANCE from "../conformance/checks.mjs";
 import * as CONSEQUENCES from "../consequences/checks.mjs";
 /* K835, K837, K914: the action layer's eight families are action-grammar's, read from there; `actions` holds no file of
@@ -114,15 +124,21 @@ export const CHECK_FAMILY_FILES = Object.freeze([
   ["src/content/checks.mjs", CONTENT],
   ["src/content/extent.mjs", CONTENT_EXTENT],
   ["src/entities/checks.mjs", ENTITIES],
+  ["src/events/checks.mjs", EVENTS],
+  ["src/local-facts/checks.mjs", LOCAL_FACTS],
   ["src/connections/checks.mjs", CONNECTIONS],
   ["src/connections/themes.mjs", CONNECTIONS_THEMES],
-  ["src/progressions/checks.mjs", PROGRESSIONS],
-  ["src/bias/checks.mjs", BIAS],
   ["src/observation-log/checks.mjs", OBSERVATION_LOG],
+  ["src/standards/checks.mjs", STANDARDS],
+  ["src/progressions/checks.mjs", PROGRESSIONS],
+  ["src/money-checks/checks.mjs", MONEY_CHECKS],
+  ["src/duties/checks.mjs", DUTIES],
+  ["src/bias/checks.mjs", BIAS],
   ["src/retrieval/checks.mjs", RETRIEVAL],
   ["src/inquiry-grammar/checks.mjs", INQUIRY_GRAMMAR],
   ["src/accepted-work/checks.mjs", ACCEPTED_WORK],
   ["src/inquiry/index.mjs", INQUIRY],
+  ["src/hypotheses/checks.mjs", HYPOTHESES],
   ["src/citation/checks.mjs", CITATION],
   ["src/basis-versions/checks.mjs", BASIS_VERSIONS],
   ["src/strength/checks.mjs", STRENGTH],
@@ -131,8 +147,10 @@ export const CHECK_FAMILY_FILES = Object.freeze([
   ["src/run-productions/checks.mjs", RUN_PRODUCTIONS],
   ["src/capture-requests/checks.mjs", CAPTURE_REQUESTS],
   ["src/skilldoctrine.mjs", SKILLS],
+  ["src/answers/checks.mjs", ANSWERS],
   ["src/intent/checks.mjs", INTENT],
   ["src/reevaluation/checks.mjs", REEVALUATION],
+  ["src/case-tensions/checks.mjs", CASE_TENSIONS],
   ["src/publication/checks.mjs", PUBLICATION],
   ["src/docket/checks.mjs", DOCKET],
   ["src/public-read/checks.mjs", PUBLIC_READ],
@@ -142,8 +160,6 @@ export const CHECK_FAMILY_FILES = Object.freeze([
   ["src/case-disclosures/checks.mjs", CASE_DISCLOSURES],
   ["src/case-authoring/checks.mjs", CASE_AUTHORING],
   ["src/review/checks.mjs", REVIEW],
-  ["src/local-facts/checks.mjs", LOCAL_FACTS],
-  ["src/standards/checks.mjs", STANDARDS],
   ["src/conformance/checks.mjs", CONFORMANCE],
   ["src/consequences/checks.mjs", CONSEQUENCES],
   ["src/action-grammar/checks.mjs", ACTION_GRAMMAR],

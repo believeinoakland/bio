@@ -42,6 +42,7 @@ import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { ratificationOf } from "../ratification/index.mjs";
 import { contradictionOf } from "../contradiction/index.mjs";
 import { wizardScriptsOf } from "../wizard-scripts/index.mjs";
+import { explainRefusal } from "../affordances.mjs";
 
 class AffordanceFacts {
   constructor(host, deps) {
@@ -234,6 +235,20 @@ class AffordanceFacts {
              basis_versions: versions.filter((v) => v && typeof v === "object").length,
              cites_in: { confirmed: citesIn.confirmed.length, severed: citesIn.severed.length },
              cites_out: citesOut, cited_by_case: citedByCase };
+  }
+
+  /** R41 (Q1-7): a refusal an op gave, explained from its catalogue row (`rowOf`, handed in) and, with a target, a dry
+   *  run of the acts this caller may take on it now: R13–R14's facts asked as the acts would be, `deriveActs` over them,
+   *  nothing performed. Never throws. */
+  explainRefusal(arg) {
+    const { op = null, code = null, target = null, viewer = null, identity = null, author = null, by = null, gate = null,
+            rowOf = null } = arg && typeof arg === "object" ? arg : {};
+    let facts = null;
+    if (target) {
+      try { facts = this.affordanceFacts({ target, viewer, identity, author, by }); }
+      catch { facts = { ok: false, reason: "NO_SUCH_BUNDLE" }; }
+    }
+    return explainRefusal({ op, code, facts, gate, rowOf });
   }
 
   /** R37 (DEC-120, DEC-121; N528): the screen registry as `wizard-scripts` registered it (its R13, `[]` before

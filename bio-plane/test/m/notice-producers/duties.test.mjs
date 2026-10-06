@@ -112,3 +112,10 @@ test("R5: recipients: the adopting member, else the duty's project's owners, els
   assert.deepEqual(who(duty("class:ai", "PROJ-2026-0001-own")), ["olga"]);
   assert.deepEqual(who(duty("class:ai", null)), ["ada"]);
 });
+
+test("R5: its age runs from the start of the due day in the due's own zone, never the UTC midnight (K1444 (iii), K1688)", () => {
+  const { w, read } = setup();
+  w.declare();                                               /* due 2026-02-12 in America/Halifax (UTC-4 in February) */
+  const it = ofKind(read("bob", { now: "2026-02-13T04:00:00Z" }), KIND)[0];
+  assert.deepEqual(it.age, { state: "determined", since: "2026-02-12", ms: 86_400_000 }, "from 04:00Z, Halifax's midnight");
+});

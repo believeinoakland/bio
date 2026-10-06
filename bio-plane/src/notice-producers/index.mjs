@@ -25,7 +25,7 @@ import { normalizeType } from "../record-grammar/types.mjs";
 import { STATES, vocabFor } from "../record-grammar/document.mjs";
 import { MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../record-grammar/actors.mjs";
 import { membershipOf, viewerPredicate } from "../membership/index.mjs";
-import { overdueOn } from "../civil-time/index.mjs";
+import { overdueOn, dayRange } from "../civil-time/index.mjs";
 import { peopleOf } from "../people/index.mjs";
 import { moneyChecksOf } from "../money-checks/index.mjs";
 import { dutiesOf } from "../duties/index.mjs";
@@ -64,10 +64,21 @@ const bare = (m) => { const t = typeof m === "string" ? m.trim() : ""; const x =
 const isMachine = (m) => typeof m === "string" && (m.startsWith(MACHINE_AUTHOR_PREFIX) || m.startsWith(MACHINE_CLASS_PREFIX));
 const instantOf = (ms) => new Date(ms).toISOString().replace(/\.\d{3}Z$/, "Z");
 const dayOf = (v) => { const d = typeof v === "string" ? v.slice(0, 10) : ""; return /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : null; };
-const ageFrom = (since, now, reason) => {
-  const ms = filled(since) ? Date.parse(/^\d{4}-\d{2}-\d{2}$/.test(since) ? `${since}T00:00:00Z` : since) : NaN;
+/* An item's age from an instant, or from a day: a day starts at its local midnight in `zone` (civil-time.dayRange),
+   never the UTC midnight (K1444 (iii), K1688); with no zone held, a day's age is undetermined. */
+const ageFrom = (since, now, reason, zone = null) => {
+  const undetermined = (why, detail) => ({ state: "undetermined", reason: why, detail });
+  if (!filled(since)) return undetermined(reason, "the provider states no instant this producer can read");
+  let ms = NaN;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(since)) {
+    if (!filled(zone)) return undetermined("no_zone", "no time zone is held for this day, so when it began is not read (never as the UTC day)");
+    let r = null;
+    try { r = dayRange(since, since, zone); } catch { r = null; }
+    if (!r || !filled(r.start)) return undetermined("no_zone", `the day ${since} could not be read in the zone ${zone}`);
+    ms = Date.parse(r.start);
+  } else ms = Date.parse(since);
   return Number.isFinite(ms) ? { state: "determined", since, ms: Math.max(0, now - ms) }
-    : { state: "undetermined", reason, detail: "the provider states no instant this producer can read" };
+    : undetermined(reason, "the provider states no instant this producer can read");
 };
 
 export class NoticeProducers {
@@ -410,6 +421,7 @@ export class NoticeProducers {
     const words = due && Array.isArray(due.candidates) ? `between ${due.candidates.map((c) => c.value).join(" and ")}` : `by ${dueDay ?? "its due date"}`;
     const act = d.performance && d.performance.act ? d.performance.act : "what it names";
     const sinceDay = state === "overdue" ? dueDay : first && typeof first === "object" ? dayOf(first.value) : null;
+    const sinceZone = state === "overdue" ? (body && typeof body === "object" ? body.zone : null) : (first && typeof first === "object" ? first.zone : null);
     return {
       /* K1676: the key carries the occurrence's state as duties answers it, so possibly overdue becoming overdue is new */
       id: `FINDING::temporal-expectation-due::${d.duty_id}::${occ.key}::${state === "overdue" ? "overdue" : "undetermined"}`,
@@ -431,7 +443,7 @@ export class NoticeProducers {
                recipients_rule: to.rule,
                detail: "an occurrence's state is duties' (its R9–R11), derived on read as of this read's instant; a "
                      + "body is overdue only after the latest candidate due date, possibly overdue between (K1444 (i))." },
-      age: ageFrom(sinceDay, now, "no_due_day"),
+      age: ageFrom(sinceDay, now, "no_due_day", sinceZone),
       assignee: null, assignee_role: null,
       recipients: to.members,
       options: this.#optionsOf([d.duty_id]),
@@ -469,7 +481,7 @@ export class NoticeProducers {
                  detail: "a dated wait is inquiry's (its R54–R57), due from the start of its local day; it goes to the "
                        + "member who set it and to nobody else, and leaves when they look, re-date or remove it, or the "
                        + "question concludes." },
-        age: ageFrom(w.date, now, "no_wait_day"),
+        age: ageFrom(w.date, now, "no_wait_day", r.zone),        /* the local day in inquiry's zone (K1688) */
         assignee: null, assignee_role: null,
         recipients: [me],
         options: [WAIT_LOOK, ...this.#optionsOf([w.inquiry])],
