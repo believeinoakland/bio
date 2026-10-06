@@ -145,3 +145,7 @@ T33-20 applied: R22-R30 met except R22's subscription arm (held, K1537). Module 
 - `node checks/ownership.mjs … credentials tranche/T33`: 5 files changed; 0 failures.
 
 Size (session_013T4X8GZR5tPXAUia6wASQV): test runs 5, module lines 1421
+
+## J4 · REPORT
+
+Found in other modules (record, CREDENTIALS #4 'Found in other modules'): (1) agent-model, ai-runs, agent-worker (L6): accountReferenceFor now also answers kind "subscription"; they must use a subscription token as such (agent-runner path, Workers Paid and containers scope, K1536 U49 (2)), not as an API key. (2) the member's account UI can now offer the subscription token beside the API key (UX-DESIGN's words). (3) bio-plane/dist/bio-plane.bundled.mjs (not_product) still carries the retired C-29.18 row and HELD_BACK_KINDS: stale from credentials' source, not rebuilt by me.
