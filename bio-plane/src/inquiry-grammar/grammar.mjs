@@ -1,5 +1,5 @@
 /* inquiry-grammar — THE GRAMMAR OF AN INQUIRY DOCUMENT (requirements: `build/requirements/inquiry-grammar.md` R1–R5,
- * R8–R11; T19 layer 6, K766; R11 at T28, N522).
+ * R8–R17; T19 layer 6, K766; R11 at T28, N522; R12–R16 at T33; R17 at T34, N582).
  *
  * MOVED FROM THE CHECK CATALOGUE (`checks/bio-checks.mjs`, legacy-checks) UNCHANGED: the C-2.8 entry arm and the
  * division block (`checkInquiryExtension`, `checkDividedExtension`), the recheck coverage (C-15.1,
@@ -17,7 +17,12 @@
  *   - `text-chain`: the extent kinds the repair sentence lists (`CONTENT_EXTENT_KINDS`, its R92);
  *   - `connections`: `themeLegFindings` (C-81.1, its R46), asked of each leg before any other complaint about it;
  *   - `observation-log`: `LEAD_ID_RE`, a lead id's shape (its R14);
- *   - `civil-time`: `isCalendarDate`, whether a `YYYY-MM-DD` names a real day (its R6; R3 and the hunch's date, T33-43).
+ *   - `civil-time`: `isCalendarDate`, whether a `YYYY-MM-DD` names a real day (its R6; R3 and the hunch's date, T33-43);
+ *   - `standards`: `isPortionPath` and `PORTION_PATH_MAX`, a portion path's form (its R31; R13, N583);
+ *   - `duties`: `OCCURRENCE_KEY_RE`, an occurrence key's form (its R24; R15, N583);
+ *   - `connection-grammar`: `derivedId`, a derived connection's id (its R11; R17, N582).
+ * Each of the last three is read from the file that states it and imports nothing of the record, so this grammar stays
+ * pure and the standalone case checker that bundles it carries no store code.
  *
  * Pure (R9): nothing here reads or writes the record, the clock or the network; every function never throws on a
  * document it is handed, and the facts a check needs (the published and earned registries) are handed to it. */
@@ -30,6 +35,9 @@ import { checkContentExtent, legExtent, legHasAuthoredExtent, CONTENT_ID_RE, CON
 import { CONTENT_EXTENT_KINDS } from "../textchain.mjs";
 import { themeLegFindings } from "../connections/checks.mjs";
 import { LEAD_ID_RE } from "../observation-log/checks.mjs";
+import { isPortionPath, PORTION_PATH_MAX } from "../standards/instrument.mjs";
+import { OCCURRENCE_KEY_RE } from "../duties/index.mjs";
+import { derivedId } from "../connection-grammar/shape.mjs";
 import { LEAD_CHECKS, INQUIRY_GRAMMAR_CHECKS } from "./checks.mjs";
 
 /** A finding, record-grammar's shape (its R11), with the optional `code` (REC-56 / D-206): a discriminator within a
@@ -610,12 +618,14 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
        note and grounds are asked as of any leg. The grade, axis, source, hunch, testimony, earned, inherited and
        extent arms stay silent: every field they judge is already one C-21.3 departure on such a leg, and a second
        complaint about one broken field helps nobody. */
-    /* R14, R15 (T33-43): a leg on a calculation or on a duty occurrence is judged by its own arm in the same place and
-       on the same terms: its grades are derived (strength, K1447), so every field the grade and extent arms judge is
-       already one departure here. Neither is a reference (K1601), so C-6.3 asks neither. */
-    const imported = importedLegFindings(`basis[${i}]`, leg, findings);
-    const calculation = !imported && calculationLegFindings(`basis[${i}]`, leg, findings);
-    if (imported || calculation || occurrenceLegFindings(`basis[${i}]`, leg, findings)) {
+    /* R14, R15 (T33-43), R17 (N582): a leg on a calculation, a duty occurrence or a derived connection is judged by its
+       own arm in the same place and on the same terms: its grades are derived (strength, K1447; a derived connection's
+       is its chain's), so every field the grade and extent arms judge is already one departure here. None is a
+       reference (K1601), so C-6.3 asks none. */
+    const label = `basis[${i}]`;
+    const derivedKind = importedLegFindings(label, leg, findings) || calculationLegFindings(label, leg, findings)
+      || occurrenceLegFindings(label, leg, findings) || derivedConnectionLegFindings(label, leg, findings);
+    if (derivedKind) {
       if (!BASIS_ROLES.includes(leg.role)) {
         findings.push(f('C-2.8', 'error', `basis[${i}].role '${leg.role}' is not one of: ${BASIS_ROLES.join(', ')}`));
       }
@@ -1445,16 +1455,14 @@ function importedReferenceFindings(fm, findings) {
  * never a leg target (D113).
  * ===================================================================== */
 
-/* standards' portion path (its R18): a path within the instrument, at most 200 characters. */
-const PORTION_MAX = 200;
-
-/** R13: a leg on a held standard. A `target_portion` that is not a portion path is one C-2.8 error. A `connection` or
+/** R13: a leg on a held standard. A `target_portion` that is not a portion path (`standards.isPortionPath`, its R31,
+ *  never spelled here; N583) is one C-2.8 error. A `connection` or
  *  `testimony` axis, or a `hunch` source, is one C-2.8 error STANDARD_LEG_AXIS naming the leg, and the answer is true
  *  (the caller keeps its grade arms silent on that leg); otherwise false. Pure; never throws. */
 function standardLegFindings(label, leg, findings) {
   const p = leg.target_portion;
-  if (carries(p) && (typeof p !== 'string' || p.trim() === '' || p.length > PORTION_MAX)) {
-    findings.push(f('C-2.8', 'error', `${label}.target_portion '${String(p).slice(0, 40)}' is not a portion path: it names a section within the standard's instrument, as text of at most ${PORTION_MAX} characters`,
+  if (carries(p) && !isPortionPath(p)) {
+    findings.push(f('C-2.8', 'error', `${label}.target_portion '${String(p).slice(0, 40)}' is not a portion path: it names a section within the standard's instrument, as text of at most ${PORTION_PATH_MAX} characters`,
       [`name the portion's path on ${label}`, 'or drop target_portion — the leg then rests on the whole standard']));
   }
   const wrong = [];
@@ -1476,10 +1484,10 @@ function standardLegRefusal(message, repairs) {
   /* END DEC-49 REGION is-standard-leg-axis */
 }
 
-/* The fields a derived leg (R14, R15) states none of, in the order a departure is named: its grade, then its part. */
+/* The fields a derived leg (R14, R15, R17) states none of, in the order a departure is named: its grade, then its part. */
 const DERIVED_LEG_GRADE = ['grade', 'grade_axis', 'grade_source'];
 
-/** R14, R15: one departure each for a grade field, a content id, an extent and an extent capture on a derived leg. */
+/** R14, R15, R17: one departure each for a grade field, a content id, an extent and an extent capture on a derived leg. */
 function derivedLegDepartures(label, l, what, why, refusal) {
   for (const field of DERIVED_LEG_GRADE) {
     if (carries(l[field])) {
@@ -1526,9 +1534,9 @@ function calculationLegRefusal(message, repairs) {
 }
 
 const DUTY_CORE = idPattern('DUT').source.slice(1, -1);
-/* duties' occurrence key (its R9): `OCC-` and 32 lowercase hexadecimal digits, deterministic from the duty, its version
-   and its trigger instance. */
-const OCCURRENCE_KEY = 'OCC-[0-9a-f]{32}';
+/* duties' occurrence key (its R9), in the form `duties` states it (`OCCURRENCE_KEY_RE`, its R24; N583): imported, its
+   anchors dropped so it sits inside the ref's pattern, and never spelled here. */
+const OCCURRENCE_KEY = OCCURRENCE_KEY_RE.source.replace(/^\^/, '').replace(/\$$/, '');
 
 /** R15: exactly `occurrence:<DUT id>/<key>`; capture 1 is the duty, the last capture the key. */
 export const OCCURRENCE_REF_RE = new RegExp(`^occurrence:(${DUTY_CORE})/(${OCCURRENCE_KEY})$`);
@@ -1580,4 +1588,59 @@ function occurrenceReferenceFindings(fm, findings) {
     findings.push(occurrenceLegRefusal(`references[${i}].target names an occurrence of a duty (${r.target.trim()}): a leg on it is not a reference, so references[] does not list it`,
       [`remove references[${i}]; the basis leg alone names that occurrence`]));
   });
+}
+
+
+/* =====================================================================
+ * T34-28 (N582; K1607) — A DERIVED CONNECTION, NAMED (R17).
+ *
+ * A derived connection is not stored: it is formed over the record by a stated method as of a stated time, and named by
+ * its id, the SHA-256 of its five fields (`connection-grammar.derivedId`, its R11). So a leg on one carries the five
+ * flat, as `derivation_*` scalars (a document's list item holds scalars only), and its target must be the id they give:
+ * a leg whose fields and id disagree names two different connections. Like a calculation and an occurrence it is
+ * derived, so it states no grade (its grade is its chain's, `connection-grammar` R12) and no part, and it is not a
+ * reference: it names a connection, not a bundle. Whether it re-derives today, and whether its chain carries a declared
+ * or hunch hop, is `hypotheses` R6's store-side check (through `explore.rederive`); this arm judges only the form.
+ * ===================================================================== */
+
+/** R17: a derived connection's id, 64 lowercase hexadecimal digits (`connection-grammar.derivedId`'s answer). */
+export const DERIVED_CONNECTION_ID_RE = /^[0-9a-f]{64}$/;
+
+/** R17: the five fields a leg on a derived connection carries, in `derivedId`'s order: `derivation_<k>` for its `<k>`. */
+export const DERIVATION_FIELDS = Object.freeze(['kind', 'from', 'to', 'as_of', 'method'].map((k) => `derivation_${k}`));
+
+/** R17: a leg whose target is a derived connection's id gains one C-2.8 error DERIVED_LEG_MALFORMED per departure,
+ *  naming the field: a `derivation_*` field missing or empty; a target that is not `derivedId` of the five (asked only
+ *  when all five are stated); a grade, axis or source; a content id, extent or extent capture. The answer is true; any
+ *  other leg (a non-object read as an empty one) gains nothing and the answer is false. Pure; never throws. */
+export function derivedConnectionLegFindings(label, leg, findings) {
+  const l = leg && typeof leg === 'object' ? leg : {};
+  if (typeof l.target !== 'string' || !DERIVED_CONNECTION_ID_RE.test(l.target)) return false;
+  const refuse = (message, repairs) => findings.push(derivedLegRefusal(message, repairs));
+  const missing = DERIVATION_FIELDS.filter((k) => typeof l[k] !== 'string' || l[k].trim() === '');
+  for (const k of missing) {
+    refuse(`${label}.${k} is missing or empty on a leg on a derived connection (${l.target}): the leg carries the five fields the connection was derived from (${DERIVATION_FIELDS.join(', ')}), each a non-empty string, so a reader can derive it again`,
+      [`state ${k} on ${label}, as the connection's derivation gives it`]);
+  }
+  if (!missing.length) {
+    const id = derivedId({ kind: l.derivation_kind, from: l.derivation_from, to: l.derivation_to,
+                           as_of: l.derivation_as_of, method: l.derivation_method });
+    if (id !== l.target) {
+      refuse(`${label}.target ${l.target} is not the id of the derivation the leg carries (${id}): a derived connection is named by the SHA-256 of its five fields, so a leg whose target and fields disagree names two different connections`,
+        [`set ${label}.target to ${id}, the id its derivation_* fields give`,
+         `or correct the derivation_* fields on ${label} to the connection its target names`]);
+    }
+  }
+  derivedLegDepartures(label, l, `a derived connection (${l.target})`,
+    'its grade is its chain\'s, the weakest hop of the derivation, and never authored', refuse);
+  return true;
+}
+
+/** R16: the one site DERIVED_LEG_MALFORMED is minted. */
+function derivedLegRefusal(message, repairs) {
+  /* The family helper, by name: DEC-49's guard judges `refusal("CODE"` at the site. */
+  const refusal = (code) => f(INQUIRY_GRAMMAR_CHECKS[code].check, 'error', message, repairs, code);
+  /* DEC-49 REGION is-derived-leg-form */
+  return refusal("DERIVED_LEG_MALFORMED");
+  /* END DEC-49 REGION is-derived-leg-form */
 }

@@ -1,5 +1,5 @@
 /* inquiry-grammar — the module's one public face (requirements: `build/requirements/inquiry-grammar.md`; T19 layer 6,
- * K766). The grammar of an inquiry document as the record checks it (`./grammar.mjs`, R1–R5, R11–R15), its rows
+ * K766). The grammar of an inquiry document as the record checks it (`./grammar.mjs`, R1–R5, R11–R15, R17), its rows
  * (`./checks.mjs`, R7, R16), and its registration with record-core's grammar seam (R6, below). Pure (R9): apart from
  * `registerInquiryGrammar`, nothing here reads or writes the record, the clock or the network. */
 
@@ -9,7 +9,8 @@ import { supersedesEdgeFindings, divisionDisclosureFindings, checkRecheckCoverag
 export { checkInquiryExtension, checkRecheckCoverage, checkInquiryBasis, checkLegExtentGrammar, supersedesEdgeFindings,
          divisionDisclosureFindings, leadLegFindings, GROUND_LABEL_RE, EARNED_SOURCE_AXIS, IMPORTED_FINDING_RE,
          importedFindingRef, parseImportedFindingRef, importedLegFindings, CALCULATION_REF_RE, calculationLegFindings,
-         OCCURRENCE_REF_RE, occurrenceRef, parseOccurrenceRef, occurrenceLegFindings } from "./grammar.mjs";
+         OCCURRENCE_REF_RE, occurrenceRef, parseOccurrenceRef, occurrenceLegFindings, DERIVED_CONNECTION_ID_RE,
+         DERIVATION_FIELDS, derivedConnectionLegFindings } from "./grammar.mjs";
 export { LEAD_CHECKS, INQUIRY_GRAMMAR_CHECKS } from "./checks.mjs";
 
 /** R6 (C-6.1): the supersession and division arm, record-grammar R28's `checkSupersession` slot: for every document, at
