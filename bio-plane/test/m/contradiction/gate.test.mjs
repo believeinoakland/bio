@@ -95,7 +95,7 @@ test("R57, R11: an empty record is no rate — the gate refuses NOTHING_COMPARED
   const m = measure({ read, gold: new Map(), sideOf: () => ({}), judge: judgeBaseline });
   assert.deepEqual(gate(m), { pass: false, fails: ["NOTHING_COMPARED"] });
   assert.equal(m.empty.case, "a");
-  assert.deepEqual(m.empty.levels, { K1: "inquiry", K2: "inquiry", K3: "inquiry", K4: "content", K5: "inquiry" });
+  assert.deepEqual(m.empty.levels, { K1: "inquiry", K2: "inquiry", K3: "inquiry", K4: "content", K5: "inquiry", K6: "money_fact" });
   assert.match(m.empty.says, /NOTHING WAS COMPARED/);
 });
 
