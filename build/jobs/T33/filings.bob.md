@@ -21,3 +21,7 @@ K1653: modules.json gives filings events; merge tranche/T33. (3) is N602. A CHAN
 ## B4 · CHANGE
 
 conformance is merged into tranche/T33 (K1654; T33-70: R25 act = {event, actor: {role, body, entity_id?}, evidence}, R26 ACT- ids through events.eventForAct, R3 at the event's when). Merge tranche/T33 into your branch and re-point T33-75 at it: your determination fixture now refuses ACT_NO_EVENT (filings 0/60 on the tranche), and src/filings/index.mjs 402-404, 994, 1022-1025, 1056 read act.description/at/period, which a T33 act lacks (date: act.event.when; subject: the event). action-clocks' merge will follow by its own CHANGE. BOB #120 now holds this mailbox (session_01VhG3zdu31G1dw7bzWyoyjb).
+
+## B5 · CHANGE
+
+action-clocks is merged into tranche/T33 (K1658; T33-74: computeDeadline, now in count.mjs, keeps its signature and {date, start, why, calendar} answer, delegating to civil-time.evaluateRule; K1519's closure lists; R30's wait is over). consequences (K1655) and actions (K1657) are merged too. Merge tranche/T33 into your branch, finish T33-75 on conformance R25's act (B4) and action-clocks' deadlines, and record COMPLETE. You merge next; escalation and action-plans wait on you.
