@@ -54,6 +54,14 @@
 
 - N575 · `bundler` · re-pin `bio-plane/test/system/fleetbundles.test.mjs` "agent-worker's 13 inputs" to the 14 its committed manifest records: observation-log's `checks.mjs` now imports record-grammar's `ids.mjs` (T33-30), so the member's build carries it (K1598). **Hard reason:** the order: bundler (L1) is closed.
 
+- N576 · `calculations` · a synchronous read for the synchronous checks that read it: `gradeFactsOf({calcId, viewer})` → R9's grade facts `{found, accepted, capture: {grade, why}, inputs, method}` with R10's withholding, and a status read `{held, visible, accepted}` (its internals are synchronous; `read` is `async`). Until it lands, inquiry R11 refuses a `CALC-` leg fail-closed as unconfirmable, strength R36 answers it undetermined, hypotheses R6's calculation arm asks nothing (STRENGTH #12 J2, INQUIRY #14 J1 (1), HYPOTHESES #1 J1 (3); K1601). Then re-point those three. **Hard reason:** the order: calculations (L5) is closed.
+
+- N577 · `capture-sources` · its `capture_credentials` declared explicitly with `export: "never"` (capture-requests R47's supplied secrets; CAPTURE-REQUESTS #11 J1 (2); K1601). **Hard reason:** the order: capture-sources (L3) is closed.
+
+- N578 · `bundler` · container fleet members: a `fleet-member.json` with `"kind": "container"` and an `image` block is discovered and listed, not bundle-guarded, so `fleetbundles.test.mjs`'s member list and "every discovered member declares one" admit agent-runner (AGENT-RUNNER #1 J1 (2); K1601); with N575. **Hard reason:** the order: bundler (L1) is closed.
+
+- N579 · `contradiction` · a measured prompt arm for K6 (money) pairs, as K5's: until measured K6 is formed and counted but `not_shown` (CONTRADICTION #8 J1 (4); K1601). **Hard reason:** a measurement (the prompt arm is measured before it is shown).
+
 Otherwise none yet. T33's release at its close (K1501) runs the deployment-gated measurements; the work they unlock is written here then.
 
 ## Carried from T33
