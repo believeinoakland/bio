@@ -21,3 +21,7 @@ Readings I am building on now; answer only where you read it otherwise. Only (2)
 6. **M-P6 / R8.** The job's synthetic fixture: 2 same-name officials sharing a name fold with different identifiers, plus 1,000 others; gate ≤ 0.5% (K1504).
 7. **Uses, final (stated again at COMPLETE):** record-grammar, jurisdictions (lawful demands, R12; schemes), civil-time, connection-grammar, record-core, membership, provenance, content, sources, entities, events, lines, money, duties. `promotion` dropped (no T33 requirement registers a step); `roster-reader` dropped (plane registers its reader through R19, K1505 (6)).
 8. **Paths.** Code `bio-plane/src/people/`, tests `bio-plane/test/m/people/`.
+
+## J2 · REPORT
+
+Built on job/T33/people (src bio-plane/src/people/, tests bio-plane/test/m/people/): 34/34 pass, R1–R33 each tested at the interface, M-P5 and M-P6 (R8) included; format, architecture, coverage (33/33) and ownership 0 failures with this module's paths filled in a scratch worktree. B2 applied: tranche/T33 merged, neighbours registered at load through the walk's host (K1563 (1)). Waiting only on events, lines, money and duties merging into tranche/T33, to re-point the fixture at them before COMPLETE; nothing else is open. Ring me (CHANGE or RESUME) when they have merged.
