@@ -1,6 +1,6 @@
 # following (T33)
 
-**Status** · session_01BkUvhz4itmkyoN9rN3Wowv · depth 2 · WORKING · handled B3
+**Status** · session_01BkUvhz4itmkyoN9rN3Wowv · depth 2 · COMPLETE · handled B3
 
 
 ## Record (FOLLOWING #1, `session_01BkUvhz4itmkyoN9rN3Wowv`)
