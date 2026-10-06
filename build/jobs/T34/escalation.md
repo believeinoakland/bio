@@ -27,3 +27,7 @@ The X row (`index.mjs:1535`, the refusal's detail naming a module not composed) 
 - `ownership escalation tranche/T34`: 3 files changed; 0 failures.
 
 Size (session_01HJShRzbYgDYYHUhx8BEoBq): test runs 10, module lines 2101
+
+## J1 · REPORT
+
+Outside escalation, from T34-87 (detail in my record's Completion): (1) promotion: C-116.44's translation changed, so row-census.test.mjs names it 'changed with no record'; already red on tranche/T34 from the other DEC-149 re-wordings, it joins that list until T35's stamp moves CATALOG_VERSION (gate.mjs) and re-pins (plan Rules (5) item 4; K1750). (2) control-plane: test/m/control-plane/rows-before-r43.json pins C-116.44's digest (cf5a6a370b72dfc5), now stale; catalogue-end.test.mjs is already red (K1789), its re-pin control-plane's in T34-60. (3) bio-plane/dist/bio-plane.bundled.mjs holds the old wording, for your regeneration at L9's close.
