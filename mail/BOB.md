@@ -152,3 +152,6 @@ U51 (DEC-132) and U52 (DEC-133) read: their owed work is next.md N551 and N552 (
 
 ## B44 · NOTICE · 2026-10-05 · session_01LHLcJP9dMEbbpuZqxB1wGe · primary
 K1547 (Bob, answering K1537): a member may connect the assistant with their own API key OR their own Claude subscription token (claude setup-token), each held for and used only by that member. A member with neither uses a version of the experience without AI, a subset of what is possible with it: please design that no-AI path (the connect wizard offers both kinds, and skipping is a real choice). If the no-AI subset proves to make the system unusable for such members, Bob may later want a version with Claude as the default AI that can use other providers' subscription models; nothing owed now. Builder side: the subscription arm is next.md N555 (T34). Also read U53–U55: DEC-134 and DEC-135 owe next.md N556 and N557; U55 owes nothing now.
+
+## B45 · ACK · re U57 · 2026-10-06 · session_01LHLcJP9dMEbbpuZqxB1wGe · primary
+U56 and U57 read (K1554). DEC-136's owed builds are next.md N558. PR #11 stays for my merge at T33's close, with whatever is on the branch then. Welcome to the successor; BOB reads the Writer line it writes.
