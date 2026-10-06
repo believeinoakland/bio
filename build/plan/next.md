@@ -30,6 +30,22 @@
 
 - N563 · `money-checks` · M-C8, the shipped detectors' measurement, on a gold set of payments. **Hard reason:** no gold set exists (K1506: no Oakland payment ledger); runs when one is captured.
 
+- N564 · `wizard-scripts`, `op-declarations`, `answers` (BOB names the module that holds the screen registry at T34's opening) · DEC-139 (UX-DESIGN U59; K1565), folded once PR #11 is on `main`: the screen registry `docs/development/ux-substrate/screens/registry.json` registered (42 screens, 192 acts), its 69 requirement functions' ops declared by lowercased name; wizard-scripts R2 gains an optional `via` (a side trip into another wizard, returning to the step left); answers' standing question runs for a member with no account of their own, its matches arriving unread; the Civicsmith library as its data file only once Bob approves it (S2). **Hard reason it is not in T33:** DEC-139 is not on `main` until T33's close (§13.1 (5)), and the library waits on Bob.
+
+- N565 · `civil-time` · cache `offsetAt`'s zone offsets (per zone, keyed by its transitions or the hour): `formatToParts` per call is most of an explore walk's time, every item judged twice (EXPLORE #1 J2 (1); K1566). **Hard reason:** the order: civil-time (L1) is closed.
+
+- N566 · `connection-grammar`, `explore` · M-X1a's hub bound: a period walk over a council member with more than 1,000 votes in the window is cut at the hub (`LOOKED_INDETERMINATE`); a bound per kind or a narrower window is decided on real council volumes measured at T33's release (EXPLORE #1 J2 (2); K1566). **Hard reason:** a deployment measurement.
+
+- N567 · `calc-grammar` · export `relate` (R10's comparison of two figures) from its index, so `duties` imports it there and not from `decimal.mjs` (DUTIES #1 J2 (1); K1569). **Hard reason:** the order: calc-grammar (L1) is closed.
+
+- N568 · `record-grammar` · a `law_relation` subject in `PROPOSAL_STATES` (law relations, court links, treatments), so `standards`' `lawPropose` labels through it instead of the `standard` subject (STANDARDS #7 J2 (4); K1571). **Hard reason:** the order: record-grammar (L1) is closed.
+
+- N569 · `id-spaces`, `jurisdictions` · a `body` id space, and the Oakland profile's Legistar `PersonId` and `BodyId` schemes (numeric forms), so events R22's Legistar following resolves rows in a deployed copy; today no profile holds either scheme and `SPACE_NAMES` has no `body` (EVENTS #1 J3 (2); K1574). **Hard reason:** the order: id-spaces and jurisdictions (L1) are closed.
+
+- N570 · `record-grammar` · `CALC` minted opaque, as `EVT` and `MNY` are: a sequential `CALC-` counter tells a reader how many calculations were minted before, withheld ones included (DEC-36's withheld-as-absent; CALCULATIONS #1 J2 (1); K1576). **Hard reason:** the order: record-grammar (L1) is closed.
+
+- N571 · `calc-grammar`, `calculations` · a streaming evaluate over a table (not row objects), then calculations R1's cell bound back to about 1,000,000 (CALCULATIONS #1 J2 (2); K1576). **Hard reason:** the order: calc-grammar (L1) is closed.
+
 Otherwise none yet. T33's release at its close (K1501) runs the deployment-gated measurements; the work they unlock is written here then.
 
 ## Carried from T33

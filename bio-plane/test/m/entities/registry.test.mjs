@@ -174,7 +174,9 @@ test("R5 readEntity: NO_ENTITY for an empty id, found:false for an absent one; a
   assert.equal(got.found, true);
   const ent = got.entity;
   assert.deepEqual(Object.keys(ent).sort(), ["aliases", "aliases_truncated", "at", "declared_by", "defect_count", "defects",
-    "defects_truncated", "entity_id", "kind", "label", "limit", "note", "relations", "relations_limit", "relations_truncated"]);
+    "defects_truncated", "entity_id", "identifiers", "identifiers_truncated", "kind", "label", "limit", "note", "proceeding",
+    "relations", "relations_limit", "relations_truncated", "sector", "sector_history", "sector_history_truncated"]);
+  assert.deepEqual([ent.sector, ent.sector_history, ent.identifiers, ent.proceeding], [null, [], [], null], "an office: no sector, no identifier, no facet");
   assert.deepEqual(ent.aliases.map((x) => [x.alias, x.canonical]), [["Zed", true], ["alpha", false]]);
   for (const x of ent.aliases) assert.ok(x.declared_by === "member:ann" && x.at);
   assert.deepEqual(ent.relations.map((r) => [r.relation_id, r.direction]), [[r1, "out"], [r2, "in"]]);
@@ -201,10 +203,12 @@ test("R7 has answers whether the registry holds the id; kinds and relationKinds 
   assert.equal(e.has("ENT-2026-0404"), false);
   assert.equal(e.has(""), false);
   assert.equal(e.has(null), false);
-  assert.deepEqual(e.kinds(), ["source", "institution", "office", "movement", "person", "body", "ordinance", "parcel", "contract", "fund"]);
+  assert.deepEqual(e.kinds(), ["source", "institution", "office", "movement", "person", "body", "ordinance", "parcel", "contract", "fund",
+    "program", "place", "proceeding"], "with program, place and proceeding (K1441)");
   assert.deepEqual(e.relationKinds(), ["proxy_for", "member_of", "overlaps"]);
   e.kinds().push("theme");
-  assert.equal(e.kinds().length, 10, "a caller cannot widen the list");
+  assert.equal(e.kinds().length, 13, "a caller cannot widen the list");
+  for (const k of ["program", "place"]) assert.equal(e.createEntity({ note: "a subject the test registers", kind: k, label: `A ${k}` }).ok, true, k);
 });
 
 test("R8 an alias or a relation is withdrawn, never erased: NO_REASON, NO_SUCH_ALIAS, NO_SUCH_RELATION, a repeat already:true; hidden from new matches and R6, still read as withdrawn; resolutions through it kept and marked", () => {
@@ -254,7 +258,7 @@ test("R8 an alias or a relation is withdrawn, never erased: NO_REASON, NO_SUCH_A
   assert.equal(rows(`SELECT COUNT(*) AS n FROM entity_relations`)[0].n, 1, "nothing is deleted");
 });
 
-test("R26 a declared relation carries no grade and is never traversed to resolve a reference or to answer concerns", () => {
+test("R26 a declared relation carries no grade and is never traversed to resolve a reference or to answer concerns (its walk as a declared hop is R47's test)", () => {
   const { e, read } = world();
   const a = e.createEntity({ note: "a subject the test registers", kind: "office", label: "Alpha Office" }).entity_id;
   const p = e.createEntity({ note: "a subject the test registers", kind: "body", label: "Proxy Body" }).entity_id;
@@ -280,10 +284,15 @@ test("R30 purge: the registry is cleared by the whole-store purge only; resoluti
   assert.equal(one.removed.resolutions, 1);
   assert.equal(one.removed.resolution_defects, 1, "a defect report is keyed to its bundle");
   assert.deepEqual(rows(`SELECT capture_sha FROM resolution_defects`).map((r) => r.capture_sha), [sha("p2")]);
-  for (const t of ["entities", "entity_aliases", "entity_relations"]) assert.equal(one.removed[t], 0, t);
+  for (const t of ["entities", "entity_aliases", "entity_relations", "entity_sectors", "entity_identifiers", "entity_proceedings"])
+    assert.equal(one.removed[t] ?? 0, 0, t);
   assert.equal(rows(`SELECT COUNT(*) AS n FROM entities`)[0].n, 2);
+  e.setSector({ entityId: e.createEntity({ note: "n", kind: "body", label: "Board" }).entity_id, sector: "government", note: "n" });
+  assert.equal(record.purge({ bundleId: "INFO-2" }).removed.entity_sectors ?? 0, 0, "a bundle's purge leaves the registry");
+  assert.equal(rows(`SELECT COUNT(*) AS n FROM entity_sectors`)[0].n, 1);
   const all = record.purge({});
-  for (const t of ["resolution_defects", "resolutions", "entities", "entity_aliases", "entity_relations"]) assert.ok(t in all.removed, t);
-  for (const t of ["resolution_defects", "resolutions", "entities", "entity_aliases", "entity_relations"])
-    assert.equal(rows(`SELECT COUNT(*) AS n FROM ${t}`)[0].n, 0, t);
+  const tables = ["resolution_defects", "resolutions", "entities", "entity_aliases", "entity_relations", "entity_sectors",
+                  "entity_identifiers", "entity_proceedings"];
+  for (const t of tables) assert.ok(t in all.removed, t);
+  for (const t of tables) assert.equal(rows(`SELECT COUNT(*) AS n FROM ${t}`)[0].n, 0, t);
 });
