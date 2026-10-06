@@ -37,3 +37,7 @@ Three readings, each my best; I am building on them now and stop only if you ans
 - With `paths`/`tests`/`uses` set in a scratch copy of `modules.json` (empty until BOB's merge): `architecture.mjs`: 5 product files, 6 relative imports; 0 failures. `coverage.mjs`: 10 of 10 live ids named by a test; 0 failures. `ownership.mjs … tranche/T33`: 6 files; 0 failures. With the registered empty paths, coverage and ownership fail only for that reason.
 
 Size (session_01SuuRCrY43CWCyUZPXPCtAs): test runs 5, module lines 576
+
+## J2 · COMPLETE
+
+T33-55 applied: new module agent-model (576 lines): providers per the member's reference (Messages API with cache_control; agent-runner over the K1600 wire with the relay), usage on every outcome, MODEL_FOR_MODE (provisional until M-Q9). Paths `agent-model/`, tests `agent-model/test/`, uses none. 10/10 tests (negative controls run); format, architecture, coverage (10/10) and ownership 0 failures, the last three with my paths set in a scratch modules.json. REPORT for AGENT-WORKER (T33-57) in my record: converse/modelCall now take reference, runner and mode; DEFAULT_MODEL gone. Details in my record's Completion.
