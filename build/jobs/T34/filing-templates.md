@@ -32,3 +32,7 @@ Size (session_01ArRabMRmWtTqbg1miUXqa9): test runs 10, module lines 1719
 ## J1 · REPORT
 
 Outside filing-templates, from T34-87 (detail in my record's Completion). (1) promotion: C-125.3 and C-125.15 translations changed, so row-census.test.mjs names them 'changed with no record'; that test was already red on tranche/T34 from other modules' DEC-149 rewordings, and these two join it until T35's promotion stamp moves CATALOG_VERSION (gate.mjs) and re-pins (plan Rules (5) item 4). No control-plane catalogue-end pin names a C-125 row. (2) bio-plane/dist/bio-plane.bundled.mjs is stale from this change, for your regeneration at the layer's close.
+
+## J2 · COMPLETE
+
+T34-87 applied: C-125.3 TEMPLATE_PROFILE_UNKNOWN and C-125.15 GRANT_NO_SECRET say "your group's Civicsmith"; also GRANT_NO_SECRET's detail (was "the control plane makes the secret"), an improvement in my module. A new R23 (DEC-149) test in invariants.test.mjs names each changed string (fails on the old wording). filing-templates 48/48; users' reds are only K1795/K1805/K1807's named ones; format, architecture, coverage (25/25), ownership: 0 failures. Nothing deferred. Branch job/T34/filing-templates; record has the summary lines and Size.
