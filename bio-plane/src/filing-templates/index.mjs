@@ -743,7 +743,7 @@ export class FilingTemplates {
                     { max: GRANT_FIELD_MAX });
     const s = typeof secretSha === "string" ? secretSha.trim() : "";
     if (!SHA_RE.test(s) || this.#one(`SELECT 1 AS x FROM tpl_grants WHERE secret_sha=?`, s))
-      return refuse("GRANT_NO_SECRET", "no fresh secret digest was stamped for this grant: the control plane makes the secret");
+      return refuse("GRANT_NO_SECRET", "no fresh secret digest was stamped for this grant: your group's Civicsmith makes the secret");
     /* END DEC-49 REGION is-template-grant */
     const at = this.#when();
     return this.record.transact(() => {

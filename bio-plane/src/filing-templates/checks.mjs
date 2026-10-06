@@ -56,8 +56,8 @@ export const FILING_TEMPLATE_CHECKS = Object.freeze({
   },
   TEMPLATE_PROFILE_UNKNOWN: {
     check: "C-125.3", where: at("#shapeRefusal", "is-template-shape"),
-    translation: "A template is written for jurisdiction profiles this instance holds, or for none in particular "
-      + "(general), and a profile named is not held.",
+    translation: "A template is written for jurisdiction profiles your group's Civicsmith holds, or for none in "
+      + "particular (general), and a profile named is not held.",
   },
   TEMPLATE_BLANK_UNKNOWN: {
     check: "C-125.4", where: at("#textRefusal", "is-template-text"),
@@ -110,8 +110,8 @@ export const FILING_TEMPLATE_CHECKS = Object.freeze({
   },
   GRANT_NO_SECRET: {
     check: "C-125.15", where: at("templateReviewGrant", "is-template-grant"),
-    translation: "A review grant opens by a secret link the instance makes, and none was made for this request. "
-      + "Nothing was granted.",
+    translation: "A review grant opens by a secret link your group's Civicsmith makes, and none was made for this "
+      + "request. Nothing was granted.",
   },
   NO_SUCH_GRANT: {
     check: "C-125.16", where: at("templateGrantRevoke", "is-template-grant-revoke"),

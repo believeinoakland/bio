@@ -210,3 +210,23 @@ test("the ops map: each op reads the control plane's stamps from the query, neve
   assert.equal(op("templategrantrevoke", { author: A, viewer: A }, { grant: g }).existed, false);
   assert.equal(op("templateretire", { author: A, viewer: A }, { template: d.template, reason: "r" }).ok, true);
 });
+
+test("R23 (DEC-149) a member reads the group's Civicsmith by its name: C-125.3 TEMPLATE_PROFILE_UNKNOWN and C-125.15 GRANT_NO_SECRET say \"your group's Civicsmith\", and no row's translation or answered refusal calls it this or the instance, copy or plane", () => {
+  const rows = ft.FILING_TEMPLATE_CHECKS;
+  assert.equal(rows.TEMPLATE_PROFILE_UNKNOWN.translation, "A template is written for jurisdiction profiles your group's Civicsmith "
+    + "holds, or for none in particular (general), and a profile named is not held.");
+  assert.equal(rows.GRANT_NO_SECRET.translation, "A review grant opens by a secret link your group's Civicsmith makes, and none "
+    + "was made for this request. Nothing was granted.");
+  const old = /\b(this|the|your|our)\s+(control\s+)?(instance|copy|plane)\b/i;
+  for (const [c, r] of Object.entries(rows)) assert.doesNotMatch(r.translation, old, c);
+  /* as answered: each changed refusal carries its new translation, and its detail names no instance, copy or plane */
+  const w = seeded();
+  const p = w.ft.templateDraft({ project: w.P, kind: "records_request", use: "file", profiles: ["nowhere"], name: "N", text: TEXT,
+                                 author: A, viewer: A });
+  const d = draft(w);
+  const g = w.ft.templateReviewGrant({ version: d.version, recipient: "R", organisation: "O", secretSha: "", by: A, viewer: A });
+  assert.deepEqual([p.reason, p.translation], ["TEMPLATE_PROFILE_UNKNOWN", rows.TEMPLATE_PROFILE_UNKNOWN.translation]);
+  assert.deepEqual([g.reason, g.translation], ["GRANT_NO_SECRET", rows.GRANT_NO_SECRET.translation]);
+  assert.equal(g.detail, "no fresh secret digest was stamped for this grant: your group's Civicsmith makes the secret");
+  for (const r of [p, g, ft.noTemplateGrant()]) assert.doesNotMatch(JSON.stringify(r), old, r.reason);
+});
