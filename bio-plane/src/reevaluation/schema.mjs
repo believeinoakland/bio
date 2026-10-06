@@ -1,4 +1,4 @@
-/* reevaluation's tables (requirements: `build/requirements/reevaluation.md`, R14–R16, R18, R25, R26, R28, R29, R32). The obligation itself is a
+/* reevaluation's tables (requirements: `build/requirements/reevaluation.md`, R14–R16, R18, R25, R26, R28, R29, R32, R34–R36). The obligation itself is a
  * query and has no table (R18, P-64); these hold only what a member's act or the pushed notice writes. Each is keyed by
  * the bundle it is about and declared to record-core's purge (K23), so a purge of that bundle clears its rows; the sweep's
  * position (R25) is about no bundle and is cleared by a whole-store purge only. */
@@ -128,6 +128,32 @@ CREATE TABLE IF NOT EXISTS reevaluation_capture_level_moves (
   at           TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS reevaluation_capture_level_moves_capture ON reevaluation_capture_level_moves (capture_sha, at);
+-- R34 (B1a.11, K1470): AN EVENT'S CHANGE HEARD FROM events.onEventChanged
+-- (its R16): one row per telling of when_moved or participant_re_resolved,
+-- the event, which of the two changed, and the instant this module heard it
+-- (the telling carries none). Kept only when some basis leg names the event,
+-- or an ACT- id aliasing it, when it is told: a telling nothing rests on could
+-- never raise a cause, since the cause needs the telling later than the
+-- dependent's last write. No value is held. Append-only.
+CREATE TABLE IF NOT EXISTS reevaluation_event_changes (
+  change_id    INTEGER PRIMARY KEY AUTOINCREMENT,
+  event_id     TEXT NOT NULL,
+  change       TEXT NOT NULL,
+  at           TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS reevaluation_event_changes_event ON reevaluation_event_changes (event_id, at);
+-- R35 (C:A-10): A CALCULATION'S INPUT CHANGE HEARD FROM
+-- calculations.onInputChanged (its R11): one row per telling, the
+-- calculation, the input that changed, and the instant this module heard it.
+-- Kept only when some basis leg names the calculation, as R34's. No value is
+-- held, and nothing is recomputed here. Append-only.
+CREATE TABLE IF NOT EXISTS reevaluation_input_changes (
+  change_id    INTEGER PRIMARY KEY AUTOINCREMENT,
+  calc_id      TEXT NOT NULL,
+  input        TEXT,
+  at           TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS reevaluation_input_changes_calc ON reevaluation_input_changes (calc_id, at);
 -- R25 (N178): WHERE THE NOTICE SWEEP'S PASS STANDS. One row (id 1): the cursor
 -- of the pass part-way (after the last leg a batch read), when that pass began
 -- and when the last complete one began, and the receipt mark: receipt_seq is
@@ -159,12 +185,24 @@ export const REEVALUATION_TABLES = Object.freeze([
   { name: "reevaluation_level_moves", keys: ["observation"] },
   /* R32: a capture is no bundle, so a single-bundle purge never names one; a whole-store purge clears these. */
   { name: "reevaluation_capture_level_moves", keys: [] },
+  /* R34, R35: an event and a calculation are rows, not bundles, so only a whole-store purge clears these. */
+  { name: "reevaluation_event_changes", keys: [] },
+  { name: "reevaluation_input_changes", keys: [] },
   /* R25: the sweep's one position row is about no bundle, so only a whole-store purge clears it. */
   { name: "reevaluation_sweep", keys: [] },
 ]);
+
+/** R36 (X73): the columns a notice raised across addresses adds to R14's notices, each added to a table created before
+ *  it and never filled for a notice raised within one address: `newer_content` the content row of the passage at the new
+ *  address (the reference adoptVersion re-pins to), `across` the standards, key, portion and relation that link the two
+ *  addresses (JSON). */
+const NOTICE_COLUMNS = Object.freeze([["newer_content", "TEXT"], ["across", "TEXT"]]);
 
 /** Creates the tables; idempotent. */
 export function migrateReevaluation(sql) {
   const bare = REEVALUATION_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const s of bare.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
+  const have = new Set([...sql.exec(`PRAGMA table_info(reevaluation_notices)`)].map((c) => c.name));
+  for (const [name, type] of NOTICE_COLUMNS)
+    if (!have.has(name)) sql.exec(`ALTER TABLE reevaluation_notices ADD COLUMN ${name} ${type}`);
 }

@@ -19,6 +19,9 @@ import { strengthOf } from "../../../src/strength/index.mjs";
 import { contradictionOf, inquiryServices } from "../../../src/contradiction/index.mjs";
 import { sourcesOf } from "../../../src/sources/index.mjs";
 import { reevaluationOf } from "../../../src/reevaluation/index.mjs";
+import { eventsOf } from "../../../src/events/index.mjs";
+import { calculationsOf } from "../../../src/calculations/index.mjs";
+import { standardsOf } from "../../../src/standards/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
@@ -84,7 +87,38 @@ function readings() {
   return r;
 }
 
-export function world({ caseMembers = new Set(), group = "test-group", earnedOverride = null } = {}) {
+/** R34, R35, R36: what events, calculations and standards answer when a test does not build the real one: no event
+ *  is aliased or read, and no standard is held. Each registration is kept so a test can see it was made. */
+export function quietUpstreams() {
+  const reg = { events: [], calculations: [] };
+  return {
+    reg,
+    events: { onEventChanged: (m, fn) => (reg.events.push({ m, fn }), { ok: true }), eventForAct: () => ({ ok: true, found: false }),
+              readEvent: () => ({ ok: true, found: false }) },
+    calculations: { onInputChanged: (m, fn) => (reg.calculations.push({ m, fn }), { ok: true }) },
+    standards: { standardsIn: () => ({ ok: true, items: [], truncated: false, cursor: null }),
+                 addressesOf: () => ({ ok: true, addresses: [], truncated: false }) },
+  };
+}
+
+/** R34–R36: the real events, calculations and standards, built over the fixture's host (a `world({upstreams})`
+ *  argument): events over the test profile (its zone, read from the instance's active profiles), reading no captures (a test attests by testimony); standards over the
+ *  test profile (its instrument keys); calculations with no money, duties or people registered (a test lays a held
+ *  calculation down and tells it through `moneyChanged`, calculations R11). Each is built before reevaluation, so its
+ *  factory's registrations land on them. */
+export function realUpstreams(h) {
+  h.record.setSetting("jurisdiction_profiles", ["test-port-ellery"], "admin");
+  const events = eventsOf(h.host, { record: h.record, membership: h.membership, provenance: h.prov, content: h.content,
+                                    entities: h.entities, extraction: {}, now: () => h.clock.now });
+  events.migrate();
+  const standards = standardsOf(h.host, { record: h.record, membership: h.membership, promotion: h.promotion,
+                                          content: h.content, events: () => events, now: () => h.clock.now });
+  const calculations = calculationsOf(h.host, { record: h.record, membership: h.membership, content: h.content,
+                                                provenance: h.prov, now: () => h.clock.now });
+  return { events, standards, calculations };
+}
+
+export function world({ caseMembers = new Set(), group = "test-group", earnedOverride = null, upstreams = null } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -147,12 +181,17 @@ export function world({ caseMembers = new Set(), group = "test-group", earnedOve
   const knocks = new Map();
   const sources = sourcesOf(host, { record, membership, capture: { pulledKnocksOf: (s) => knocks.get(s) || [] },
                                     now: () => Date.parse(clock.now) });
+  /* events, calculations and standards (R34–R36): quiet stand-ins unless a test passes its own, built over this host */
+  const quiet = quietUpstreams();
+  const up = typeof upstreams === "function" ? upstreams({ host, record, membership, promotion, content, prov, entities, clock }) : {};
   const r = reevaluationOf(host, { record, membership, promotion, inquiry, content, provenance: prov, strength,
-                                   basisVersions, contradiction: c, sources, now: () => clock.now });
+                                   basisVersions, contradiction: c, sources, now: () => clock.now,
+                                   events: up.events ?? quiet.events, calculations: up.calculations ?? quiet.calculations,
+                                   standards: up.standards ?? quiet.standards });
   let n = 0;
   const w = {
     st, host, record, membership, promotion, prov, content, entities, connections, k, basisVersions, strength, c, r,
-    clock, ex, selections, caseMembers, published, sources, knocks,
+    clock, ex, selections, caseMembers, published, sources, knocks, quiet, up,
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a),
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
@@ -265,6 +304,26 @@ export function world({ caseMembers = new Set(), group = "test-group", earnedOve
                                            sight: ["bob"], by: "bob", ...fields });
       if (!e.ok) throw new Error(`fixture disclosure refused: ${JSON.stringify(e).slice(0, 300)}`);
       return e;
+    },
+    /** R34, R35: an inquiry resting on ids no checked leg admits today (an event, an act, a calculation), laid down by a
+     *  replayed promotion, as a legacy or replayed document holds one (K1624). */
+    replayed(id, legs, { updated = null } = {}) {
+      const head = record.head(id);
+      let text = inquiryMd(id, { legs, refs: [] });
+      if (updated) text = text.replace(`last_updated: "2026-09-27T00:00:00Z"`, `last_updated: "${updated}"`);
+      const res = promotion.promote({ bundleId: id, base: head ? head.bundleSha : null, snapKey: `k${++n}`, author: "member:alice",
+        files: [{ path: "bundle.md", text }], meta: { object_type: "inquiry" }, replay: true });
+      if (!res.ok) throw new Error(`fixture replay refused: ${JSON.stringify(res).slice(0, 400)}`);
+      return res;
+    },
+    /** R35: a held calculation naming money fact `fact` as its input, laid down in calculations' own tables (its R4's
+     *  write, without the money module this fixture does not build). */
+    calculation(calcId, fact) {
+      st.sql.exec(`INSERT INTO calculations (calc_id, project, question, period_json, kind, recipe_json, inputs_json, method_version,
+                     result_key, results_json, computed_at, recompute_status, created_by, created_at)
+                   VALUES (?, NULL, 'How much was paid?', '{}', 'total', '{}', ?, 'bio-calc/1', 'k', '{}', ?, 'current', 'member:bob', ?)`,
+                   calcId, JSON.stringify([{ name: "t", money: [fact] }]), clock.now, clock.now);
+      st.sql.exec(`INSERT INTO calc_inputs (calc_id, project, input_name, input_kind, ref) VALUES (?, NULL, 't', 'money', ?)`, calcId, fact);
     },
     /** A published edition of `id` in the registry the store provides (promotion's fact). */
     publish(id, edition, { capture = null, connection = null, testimony = null, at = "2026-09-27T12:00:00Z" } = {}) {
