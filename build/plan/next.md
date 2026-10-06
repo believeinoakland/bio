@@ -68,6 +68,8 @@
 
 - N582 · `explore`, `inquiry-grammar` · a leg on a derived connection: `explore.rederive` reads a derivation's ends with the leg's inquiry as `scope` (or answers an input it cannot read as undetermined, refused), so a derived connection resting on a hunch is seen as a lead (hypotheses R6); and inquiry-grammar's leg arm admits a derived-id target with its five `derivation_*` fields. Until both, such a leg is refused by inquiry-grammar as an unknown target, so no derived connection passes as evidence (HYPOTHESES #1 J2 (1), (3); K1607). **Hard reason:** the order: explore (L5) is closed; inquiry-grammar's T33 job is running on its own entries.
 
+- N583 · `duties`, `standards`, `inquiry-grammar` · one home for two forms inquiry-grammar spells itself: duties exports its occurrence key's pattern (`OCC-` + 32 hex, R9), standards a portion-path predicate (R18); inquiry-grammar R13, R15 import them (INQUIRY-GRAMMAR #6 J2 (5); K1608). **Hard reason:** the order: duties, standards (L5) are closed.
+
 Otherwise none yet. T33's release at its close (K1501) runs the deployment-gated measurements; the work they unlock is written here then.
 
 ## Carried from T33
