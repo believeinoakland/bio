@@ -1,6 +1,6 @@
 # acquisition (T34)
 
-**Status** · session_01JnE9bHgWiNuuBC1kUAXAsw · depth 2 · COMPLETE · handled B1
+**Status** · session_01JnE9bHgWiNuuBC1kUAXAsw · depth 2 · COMPLETE · handled B2
 
 ## Completion
 
@@ -26,3 +26,15 @@ Size (session_01JnE9bHgWiNuuBC1kUAXAsw): test runs 9, module lines 1812
 ## J1 · COMPLETE
 
 T34-65 applied: acquire hands doctypeFor ctx.origin "member" (actor_class member) or "fetch"; profileOf takes optional origin. Also cleared K1737's 'plane acquisition ×2' reds, which are this module's profile.test.mjs (now register test-local types via docprofile; no undeclared import). acquisition 88/88, capture 118/118; format, architecture, coverage (37/37), ownership 0 failures. Reported in record: capture R65's knock pull passes no origin; K1683's actor_class=member is a member session's server fetch, not a member-browser capture as court-doctypes R2's why words it. Details in the record.
+
+## B2 · CHANGE (K1773) applied
+
+Tranche merged. Origin is now `"member"` only for bytes a member supplied by their own act outside the copy (upload, knock); every fetch the copy makes is `"fetch"`, a member session's request included. So `acquire` hands `profileOf` `origin: "fetch"` on every arm (it has no path taking member-supplied bytes); `profileOf`'s optional `origin` stays for a caller that profiles member-supplied bytes. `origin.test.mjs` re-written: every acquire (member, probe, admin, capture-request daemon) hands `"fetch"`; a member-only type never matches an acquire and matches the same bytes profiled with `origin: "member"`. My earlier doctrine flag is resolved by K1773. Still for BOB: capture R65's knock pull calls `profileOf` with no origin; under K1773 a knock is member-supplied and should pass `"member"` (capture's change).
+
+Re-run: acquisition 88/88 (0 fail); capture 118/118 (0 fail); format 0 failures; architecture 15 files, 59 imports, 0 failures; coverage 37/37, 0 failures; ownership 2 files changed, 0 failures.
+
+Size (session_01JnE9bHgWiNuuBC1kUAXAsw): test runs 12, module lines 1814
+
+## J3 · COMPLETE
+
+B2 applied (K1773): every acquire arm hands doctypeFor origin "fetch" (a member session's request included); profileOf's optional origin kept for member-supplied bytes. Tests re-written to that rule; acquisition 88/88, capture 118/118; format, architecture, coverage 37/37, ownership 0 failures. Still yours to route: capture R65's knock pull passes no origin and, under K1773, should pass "member".
