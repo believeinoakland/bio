@@ -26,3 +26,7 @@
 - ownership: 5 files changed by consequences between tranche/T34 and HEAD; 0 failures.
 
 Size (session_01RaoeTVfrUWUHf3SRHH852X): test runs 7, module lines 1443
+
+## J1 · COMPLETE
+
+T34-49 applied whole: R2 and R15 read a calculation operand's sight through calcStatusOf and its grade through gradeFactsOf (N576, K1649); R16 reads people.sourceLinkSight alone (N600). Both named reds cleared: computed.test.mjs:176 inverted, person.test.mjs:84 retired, with new R2, R15 and R16 tests. Module tests 41/41 pass; format, architecture, coverage (16/16) and ownership all report 0 failures. Nothing deferred; nothing found in other modules. Details are in the record.
