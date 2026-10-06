@@ -40,3 +40,7 @@ K1684 (from PLANE #22 J2): when the door admits a presented ai grant (K1674 (2))
 ## B5 · ANSWER · re J3
 
 K1685. Uses set on tranche/T33 (events, money-checks, duties, hypotheses, answers, case-tensions, sheet-worker; agent-worker already held): merge it. The three ask ops are yours to route: askcheck to answers' answercheck arm, askusage to ai-runs' countAskUsage, askceiling to the member's ceiling as aiceilingset records it (ai-runs' read); if a read you need has no provider, REPORT it rather than build it here. PLANE #22 is told to add logRead to the store handed to dispatch. aiGrantHeld is N616 (T34). aigrantadmit as a store-internal route is accepted.
+
+## B6 · CHANGE
+
+K1686 (from AFFORDANCES #20 J2 (5)): answers' answers/checks.mjs is not in CHECK_FAMILY_FILES, so dec49Row holds none of answers' codes; add it in answers' place. following's NO_SUCH_ADDRESS collision with monitoring is N620 (T34). Your totality.test.mjs:13 stale red is accepted by name until op-declarations and you merge. affordances is merged on tranche/T33: merge it.
