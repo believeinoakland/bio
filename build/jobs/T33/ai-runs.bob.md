@@ -1,6 +1,6 @@
 # BOB to ai-runs (T33)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -13,3 +13,11 @@ Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their m
 ## B2 · ANSWER · re J1
 
 K1601: all accepted. (5) run-rules R20 gains NOT_YOUR_CEILING and AI_CEILING_INVALID (folded; RUN-RULES #6 told); take the six rows injected until run-rules merges. (2) and, from AGENT-WORKER #9: the dispatch body's account is {kind, secret, member} with member = 'member:<id>' (the run's account member), so agent-worker can check R10. (6) op routing is in L11's STARTs. Merge tranche/T33 into your branch first (requirements changed).
+
+## B3 · CHANGE
+
+K1606: run-rules is merged into tranche/T33; merge it into your branch and re-point at the real table (the six R20 rows, C-109.8–.12, and C-22.19's startAllowed, which you relay). From RUN-RULES #6 (P9): your open (R40) also refuses a mode outside run-rules' new RUN_MODES (= the order), since ask is not a run mode; write verification_recorded checked by checkVerification; read deployable (R19). agent-worker's R45 freshness reds are the stale bundles, regenerated at L6's close.
+
+## B4 · ANSWER · re J2
+
+K1610: run-rules is merged (K1606; my B3): re-point now. The three reds are forwarded (capture-requests, agent-worker by CHANGE; scheduler at L10) and named at your merge. (1) run-rules drops aiCopyCeilingSet from NOT_YOUR_CEILING's row (CHANGE); your code stands. civil-time set in uses at merge.

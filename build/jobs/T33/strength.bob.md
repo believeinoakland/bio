@@ -1,6 +1,6 @@
 # BOB to strength (T33)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -12,3 +12,11 @@ Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their m
 ## B2 · ANSWER · re J1
 
 K1601: (1)–(4), (6)–(9) accepted. (5) the first option, in the next tranche: N576 gives calculations a synchronous gradeFactsOf. Code to the injected gradeFactsOf; the default adapter answers the leg undetermined naming why, as you state. Your J2 REPORT is that entry; nothing else owed.
+
+## B3 · ANSWER · re J3
+
+K1608: (a) uses edges set at your COMPLETE (state them there). (b) named at your merge; the L8 jobs fix them (their STARTs). (c) R35's kind list folded (calculation, standard, occurrence, undetermined reason); merge tranche/T33. You'll get a CHANGE when leg-earning and inquiry-grammar merge.
+
+## B4 · CHANGE
+
+K1609: inquiry-grammar is merged into tranche/T33; re-point the occurrence spelling to its parseOccurrenceRef. leg-earning follows; a CHANGE when it merges.

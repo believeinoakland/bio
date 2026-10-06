@@ -1,6 +1,6 @@
 # BOB to capture-requests (T33)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -12,3 +12,7 @@ Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their m
 ## B2 · ANSWER · re J1
 
 K1601: both readings accepted. capture-sources' export never is N577 (next tranche); op routing is in L11's STARTs. No REPORT needed for either.
+
+## B3 · CHANGE
+
+K1610 (P9, from AI-RUNS #10): ai-runs R52 now refuses an open whose run member has no connected account (AI_NO_ACCOUNT). Your plane.test.mjs opens as RUTH with none (line 74): R30; R16 R31 R14; R19 R42 R38; R14 (N295). When ai-runs merges, merge tranche/T33, connect the opener's account (credentials' accountReferenceSet) and name the member in those tests; run; COMPLETE. You may prepare it now against job/T33/ai-runs.
