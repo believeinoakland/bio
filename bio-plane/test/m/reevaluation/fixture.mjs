@@ -96,7 +96,8 @@ export function quietUpstreams() {
     events: { onEventChanged: (m, fn) => (reg.events.push({ m, fn }), { ok: true }), eventForAct: () => ({ ok: true, found: false }),
               readEvent: () => ({ ok: true, found: false }) },
     calculations: { onInputChanged: (m, fn) => (reg.calculations.push({ m, fn }), { ok: true }) },
-    standards: { standardsIn: () => ({ ok: true, items: [], truncated: false, cursor: null }),
+    standards: { standardsAt: () => ({ ok: true, items: [], truncated: false }),
+                 standardsWithPortion: () => ({ ok: true, items: [], truncated: false }),
                  addressesOf: () => ({ ok: true, addresses: [], truncated: false }) },
   };
 }

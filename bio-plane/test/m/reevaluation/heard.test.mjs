@@ -92,6 +92,37 @@ test("R34 R18: a telling of a change events does not name (merged, split), or ab
   assert.equal(told.filter((t) => t.kind === EVENT_CHANGED).length, 1);
 });
 
+test("R34 N591: since is the instant events' telling states (its R16 at, the write that made the change), never this module's clock at the telling: kept on the row and compared with the dependent's last write", () => {
+  const { w, ev, E, told } = eventWorld();
+  const CHANGED = "2026-10-01T00:00:00Z", BETWEEN = "2026-10-01T12:00:00Z", HEARD = "2026-10-02T00:00:00Z";
+  /* events states its own instant: the one its write stamped, the same for every listener */
+  moveWhen(w, ev, E, CHANGED);
+  const real = told.filter((t) => t.kind === EVENT_CHANGED);
+  assert.deepEqual(real.map((t) => t.since), [CHANGED]);
+  assert.deepEqual(w.rows(`SELECT at FROM reevaluation_event_changes`).map((r) => r.at), [CHANGED]);
+  /* a telling heard later than the change it states: QA is written between the two, so it already saw the change */
+  w.replayed(QA, [{ target: ACT }], { updated: BETWEEN });
+  w.clock.now = HEARD;
+  const e = w.r.eventChanged({ eventId: E, change: "participant_re_resolved", at: CHANGED });
+  assert.deepEqual([e.kept, e.at], [true, CHANGED]);
+  assert.deepEqual(w.rows(`SELECT change, at FROM reevaluation_event_changes ORDER BY change_id`).map((r) => [r.change, r.at]),
+                   [["when_moved", CHANGED], ["participant_re_resolved", CHANGED]], "never the clock at the telling");
+  assert.equal(told.filter((t) => t.kind === EVENT_CHANGED).at(-1).since, CHANGED);
+  const byDep = Object.fromEntries(w.r.reevaluations({ viewer: ADMIN }).obligations.map((o) => [o.bundle_id, o]));
+  assert.deepEqual(byDep[Q].causes.map((c) => c.since), [CHANGED, CHANGED], "Q was written before the change");
+  assert.equal(byDep[QA], undefined, "QA was written after the change, though before it was heard: no cause");
+});
+
+test("R34 R21: a telling that states no instant it can order (events R16 states one) is not kept and says why; nothing is told", () => {
+  const { w, E, told } = eventWorld();
+  for (const at of [undefined, null, "", "not a time"]) {
+    const e = w.r.eventChanged({ eventId: E, change: "when_moved", at });
+    assert.deepEqual([e.ok, e.kept, typeof e.why], [true, false, "string"]);
+  }
+  assert.equal(w.count("reevaluation_event_changes"), 0);
+  assert.equal(told.filter((t) => t.kind === EVENT_CHANGED).length, 0);
+});
+
 test("R34 R9 R16: changesOf answers the cause on the finding; a member's recorded re-evaluation closes it until the event changes again", () => {
   const { w, ev, E } = eventWorld();
   moveWhen(w, ev, E);
@@ -176,8 +207,8 @@ test("R34 R35 R8: the factory registers once on events.onEventChanged and calcul
   w.r.onBasisChanged("broken", () => { throw new Error("listener down"); });
   w.replayed(Q, [{ target: "EVT-2026-aaaaaaaaaaaaaaaa" }, { target: "CALC-2026-0009" }]);
   w.clock.now = LATER;
-  w.quiet.reg.events[0].fn({ eventId: "EVT-2026-aaaaaaaaaaaaaaaa", change: "when_moved" });
-  const e = w.r.eventChanged({ eventId: "EVT-2026-aaaaaaaaaaaaaaaa", change: "when_moved" });
+  w.quiet.reg.events[0].fn({ eventId: "EVT-2026-aaaaaaaaaaaaaaaa", change: "when_moved", at: LATER });
+  const e = w.r.eventChanged({ eventId: "EVT-2026-aaaaaaaaaaaaaaaa", change: "when_moved", at: LATER });
   assert.deepEqual([e.kept, e.dependents, e.listeners_failed], [true, 1, ["broken"]]);
   const c = w.r.inputChanged({ calcId: "CALC-2026-0009", input: "MNY-2026-0002-x", cause: "calculation_input_changed" });
   assert.deepEqual([c.kept, c.dependents, c.listeners_failed], [true, 1, ["broken"]]);

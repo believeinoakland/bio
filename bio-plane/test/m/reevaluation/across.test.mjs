@@ -1,11 +1,13 @@
 /* reevaluation: R14's notice across addresses (R36; X73, K1446): a reference pinned to a held standard's portion is
    told of a newer version of the same work and portion that the real `standards` holds at another address (the same
-   instrument key), or at the address a member-recorded recodification names (its `addressesOf`, R24); graded
-   UNDETERMINED by name (R21), since content compares a passage only along one address's chain; closed as R15 closes any
-   notice, `adoptVersion` re-pinning the leg to the passage at the new address. */
+   instrument key), or at the address a member-recorded recodification names (its `addressesOf`, R24), the standards read
+   through its `standardsWithPortion` and `standardsAt` (R32; N590), never by paging `standardsIn`; graded by content's
+   comparison of the two captures (`passageAcross`, its R55; N589), and UNDETERMINED by name (R21) where content gives no
+   answer or a capture's text is not held; closed as R15 closes any notice, `adoptVersion` re-pinning the leg to the
+   passage at the new address. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, realUpstreams, V } from "./fixture.mjs";
+import { world, realUpstreams, V, U } from "./fixture.mjs";
 import { ACROSS_UNDETERMINED_WHY } from "../../../src/reevaluation/index.mjs";
 
 const Q = "INQ-2026-0001-q";
@@ -36,7 +38,7 @@ function lawWorld() {
   return { w, s, law, relate };
 }
 
-test("R36 R14 R21: a reference pinned to a held standard's portion raises one notice per newer version held at another address, under the same instrument key or at a recodification's address; each graded UNDETERMINED by name, never A or B", () => {
+test("R36 R14 R21: a reference pinned to a held standard's portion raises one notice per newer version held at another address, under the same instrument key or at a recodification's address; with neither capture's text held, each graded UNDETERMINED by name with content's reason, never A or B", () => {
   const { w, law, relate } = lawWorld();
   const a = law("INFO-2026-0001-a", "PEBL § 100", "100(a)", "codes.example/a", "2026-09-27T01:00:00Z");
   const b = law("INFO-2026-0002-b", "PEBL § 100", "100(a)", "codes.example/b", "2026-09-28T01:00:00Z");
@@ -53,6 +55,8 @@ test("R36 R14 R21: a reference pinned to a held standard's portion raises one no
   for (const x of r.raised) {
     assert.deepEqual([x.holder, x.ord, x.content_id, x.capture_sha, x.grade, x.affects], [Q, 0, a.cid, a.cap, "UNDETERMINED", "undetermined"]);
     assert.equal(x.across.from_standard, a.id);
+    /* content compared the two captures (R55) and could not grade them: its reason and why are kept, by name */
+    assert.deepEqual([x.across.compared, typeof x.across.reason, typeof x.across.why], [true, "string", "string"]);
   }
   assert.deepEqual([byCap[b.cap].newer_content, byCap[b.cap].across.standard, byCap[b.cap].across.key, byCap[b.cap].across.via.type],
                    [b.cid, b.id, KEY100, "same_instrument"]);
@@ -68,7 +72,6 @@ test("R36 R14 R21: a reference pinned to a held standard's portion raises one no
   const listed = w.r.notices({ viewer: V("alice") }).notices;
   assert.deepEqual(listed.map((n) => n.newer_content).sort(), [b.cid, c.cid].sort());
   assert.ok(listed.every((n) => n.across && n.across.from_standard === a.id));
-  assert.ok(ACROSS_UNDETERMINED_WHY.includes("undetermined"));
 });
 
 test("R36: an address is never matched by text: a provision held under another key with no recorded relation (its words alike), a version at an address the pinned capture is also held at (R14's own, along that chain), one retrieved no later, and a relation that is withdrawn raise nothing", () => {
@@ -130,4 +133,72 @@ test("R36 R20: a viewer who does not see the capture at the new address is given
   w.st.sql.exec(`UPDATE bundles SET project=? WHERE bundle_id='INFO-2026-0002-b'`, P);
   const hid = w.r.notices({ viewer: V("alice") }).notices[0];
   assert.deepEqual([hid.newer_capture, hid.newer_content, hid.grade, hid.affects], [null, null, null, null]);
+  assert.deepEqual([hid.across.compared, hid.across.reason, hid.across.why], [null, null, null], "content's reading of that version too");
+});
+
+/** Every unit of a whole document's text, page by page. */
+const read = (w, cap, ...texts) => w.read(cap, texts.map((t, i) => U(i, t)));
+
+test("R36 R14 N589: the notice's grade is content's comparison of the two captures (passageAcross, its R55): a version at another address whose text is byte-identical grades A and raises nothing; one whose text changed is graded as content grades it, affected, its reason kept", () => {
+  const { w, law, relate } = lawWorld();
+  const a = law("INFO-2026-0001-a", "PEBL § 100", "100(a)", "codes.example/a", "2026-09-27T01:00:00Z");
+  const b = law("INFO-2026-0002-b", "PEBL § 100", "100(a)", "codes.example/b", "2026-09-28T01:00:00Z");
+  const c = law("INFO-2026-0003-c", "PEBL § 101", "101(a)", "codes.example/c", "2026-09-29T01:00:00Z");
+  relate("recodifies", c, a);
+  read(w, a.cap, "Section 100.", "The fee is ten dollars.");
+  read(w, b.cap, "Section 100.", "The fee is ten dollars.");
+  read(w, c.cap, "Section 101.", "Permits are issued by the clerk on application.");
+  w.inquiry(Q, { legs: [{ target: a.doc, content_id: a.cid }] });
+  const row = w.row(`SELECT content_id, capture_sha, bundle_id, extent_kind, extent, ref, cited_as FROM content WHERE content_id=?`, a.cid);
+  const toB = w.content.passageAcross(row, b.cap), toC = w.content.passageAcross(row, c.cap);
+  assert.deepEqual([toB.grade, toB.affects], ["A", "unaffected"], "content reads b's text as the same");
+  assert.equal(toC.affects, "affected");
+  const r = w.r.raiseNotices({});
+  assert.deepEqual(r.raised.map((x) => x.newer_capture), [c.cap], "A raises nothing (R14); only the changed version is told");
+  const [x] = r.raised;
+  assert.deepEqual([x.grade, x.affects, x.across.compared, x.across.reason, x.across.why], [toC.grade, "affected", true, toC.grade_reason, toC.grade_why]);
+  assert.deepEqual(w.rows(`SELECT grade, affects FROM reevaluation_notices`).map((n) => [n.grade, n.affects]), [[toC.grade, "affected"]]);
+  assert.equal(w.r.notices({ viewer: V("alice") }).notices[0].across.reason, toC.grade_reason);
+});
+
+test("R36 R21 N589: where content's comparison gives no answer (passageAcross answers null), the notice is raised UNDETERMINED by name with why, never A, B or absent", () => {
+  const { w, law } = lawWorld();
+  const a = law("INFO-2026-0001-a", "PEBL § 100", "100(a)", "codes.example/a", "2026-09-27T01:00:00Z");
+  const b = law("INFO-2026-0002-b", "PEBL § 100", "100(a)", "codes.example/b", "2026-09-28T01:00:00Z");
+  read(w, a.cap, "Section 100.", "The fee is ten dollars.");
+  read(w, b.cap, "Section 100.", "The fee is ten dollars.");
+  w.inquiry(Q, { legs: [{ target: a.doc, content_id: a.cid }] });
+  const asked = [];
+  w.content.passageAcross = (row, cap) => { asked.push([row.content_id, cap]); return null; };
+  const r = w.r.raiseNotices({});
+  assert.deepEqual(asked, [[a.cid, b.cap]]);
+  assert.deepEqual(r.raised.map((x) => [x.newer_capture, x.grade, x.affects, x.across.compared, x.across.why]),
+                   [[b.cap, "UNDETERMINED", "undetermined", false, ACROSS_UNDETERMINED_WHY]]);
+  assert.ok(ACROSS_UNDETERMINED_WHY.includes("undetermined"));
+});
+
+test("R36 N590: the held standards are read through standards.standardsWithPortion and standardsAt (its R32), never by paging standardsIn; an answer marked truncated leaves the sweep saying by name that a notice may be missing (R21), and still raises what it reached", () => {
+  const { w, s, law } = lawWorld();
+  const a = law("INFO-2026-0001-a", "PEBL § 100", "100(a)", "codes.example/a", "2026-09-27T01:00:00Z");
+  const b = law("INFO-2026-0002-b", "PEBL § 100", "100(a)", "codes.example/b", "2026-09-28T01:00:00Z");
+  w.inquiry(Q, { legs: [{ target: a.doc, content_id: a.cid }] });
+  const calls = [];
+  const realAt = s.standardsAt.bind(s), realWith = s.standardsWithPortion.bind(s);
+  s.standardsIn = () => { calls.push("standardsIn"); throw new Error("never paged"); };
+  s.standardsWithPortion = (x) => { calls.push(["with", x.contentId]); return realWith(x); };
+  s.standardsAt = (x) => { calls.push(["at", x.key, x.portion]); return realAt(x); };
+  const r = w.r.raiseNotices({});
+  assert.deepEqual(r.raised.map((x) => x.newer_capture), [b.cap]);
+  assert.equal("standards_read" in r, false);
+  assert.ok(!calls.includes("standardsIn"));
+  assert.deepEqual(calls, [["with", a.cid], ["at", KEY100, "100(a)"]]);
+  /* truncated: the sweep names what it could not read */
+  w.st.sql.exec(`DELETE FROM reevaluation_notices`);
+  s.standardsAt = (x) => ({ ...realAt(x), truncated: true });
+  const t = w.r.raiseNotices({});
+  assert.deepEqual([t.standards_read, typeof t.standards_why, t.raised.map((x) => x.newer_capture)], [false, "string", [b.cap]]);
+  s.standardsWithPortion = () => { throw new Error("down"); };
+  w.st.sql.exec(`DELETE FROM reevaluation_notices`);
+  const f = w.r.raiseNotices({});
+  assert.deepEqual([f.standards_read, f.count], [false, 0]);
 });

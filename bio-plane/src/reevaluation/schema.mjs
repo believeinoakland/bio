@@ -130,8 +130,8 @@ CREATE TABLE IF NOT EXISTS reevaluation_capture_level_moves (
 CREATE INDEX IF NOT EXISTS reevaluation_capture_level_moves_capture ON reevaluation_capture_level_moves (capture_sha, at);
 -- R34 (B1a.11, K1470): AN EVENT'S CHANGE HEARD FROM events.onEventChanged
 -- (its R16): one row per telling of when_moved or participant_re_resolved,
--- the event, which of the two changed, and the instant this module heard it
--- (the telling carries none). Kept only when some basis leg names the event,
+-- the event, which of the two changed, and the instant the telling states
+-- (events' at, the write that made the change; N591). Kept only when some basis leg names the event,
 -- or an ACT- id aliasing it, when it is told: a telling nothing rests on could
 -- never raise a cause, since the cause needs the telling later than the
 -- dependent's last write. No value is held. Append-only.
