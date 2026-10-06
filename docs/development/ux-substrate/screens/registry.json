@@ -164,6 +164,11 @@
      "modules": [
       "membership"
      ]
+    },
+    {
+     "op": "owed:groupdescriptiondraft DEC-152",
+     "label": "Ask the assistant to help write it",
+     "status": "owed"
     }
    ],
    "journeys": [

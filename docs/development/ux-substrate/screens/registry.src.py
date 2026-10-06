@@ -15,7 +15,7 @@ screen('setup', 'Become your group\'s first administrator', 'setup', 'The founde
    ('officesseed','Review offices and seats'),('entitycreate','Add an office yourself'),('owed:placewanted DEC-150','Name a place not yet listed'),('assistantset','Choose how members reach the assistant'),('groupkeyset','Hold the group\'s API key'),('groupkeyswitch','Switch the group\'s key on or off'),('aicopyceilingset','Set the group\'s daily limit'),('courtnoticeset','Choose whether members are told what a court can reach'),
    ('hostingaccess','Record who holds the hosting account'),('memberadd','Invite a member or a second administrator')], [1])
 screen('group-identity', 'Who your group is', 'working', 'Kinds, focus and purpose, and who sees them (DEC-132).',
-  [('groupdescriptionset','Save who your group is, and who sees it')], [2])
+  [('groupdescriptionset','Save who your group is, and who sees it'),('owed:groupdescriptiondraft DEC-152','Ask the assistant to help write it')], [2])
 screen('join', 'Your invitation', 'setup', 'The invitation link opens here: language, handle, password.',
   [('invitelook','Read the invitation'),('owed:memberlanguageset DEC-127','Choose your language'),('enroll','Join with a handle and password')], [3])
 screen('home', 'Your group\'s home', 'working', 'What the group is working on, what waits on you, and "What brought you here?".',

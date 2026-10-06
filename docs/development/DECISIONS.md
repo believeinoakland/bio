@@ -2401,3 +2401,17 @@ response: **Bob, 2026-10-06: "S5: A for now, but the B capabilities should be re
 decided: 2026-10-06 · Bob
 reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (section 7, S5); `journeys.html` §6 (the gap list).
 owed: (BOB) (2) recorded as work for after the first public release, wherever BOB keeps such work, to be worded as a requirement then; nothing for the release now.
+
+### DEC-152 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (Bob's comment on the layouts page's "Who your group is" screen)
+for: bob
+question: Whether an administrator may ask the assistant to help write the group's focus and reasons for existing (DEC-132), which the group gives in its own words.
+why it is Bob's: what the assistant may do (P17); Bob directed it.
+provisional: the assistant drafts only translations (DEC-127) and the drafts wizard-scripts R13 lists; DEC-132 asks for the group's own words; K1364: a draft is labelled until the member keeps it.
+alternative: no assistant help on this screen.
+recommendation: as Bob directed.
+reversal cost: low.
+response: **Bob, 2026-10-06:** "Can the administrator use the assistant to help compose the text asked for on this screen? I hope so." Ruled as he directs. **Design session's details (P17), Bob may change any:** where a member reaches the assistant, "Who your group is" offers "Ask the assistant to help write this"; it asks the administrator a few questions, then drafts the focus and the reasons into their fields, each labelled "Draft · the assistant's, asked by <handle>"; nothing is saved until the administrator edits and keeps it, and once kept the words are the group's (K1364); without the assistant the screen is unchanged. It runs on the account that serves the administrator (K1755) and within its daily limit.
+decided: 2026-10-06 · Bob
+reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (the "Who your group is" screen).
+owed: (BOB) the assistant's draft for the group's description (an op behind the registry's `owed:groupdescriptiondraft DEC-152`, a machine draft per wizard-scripts R13 and the assistant's roles), labelled and kept only by the administrator's act.
