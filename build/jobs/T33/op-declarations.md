@@ -1,6 +1,6 @@
 # op-declarations (T33)
 
-**Status** · session_01BLy9wpCWCj7n1UuSHwbkir · depth 2 · WORKING · handled B1
+**Status** · session_01BLy9wpCWCj7n1UuSHwbkir · depth 2 · COMPLETE · handled B1
 
 ## Completion (OP-DECLARATIONS #10)
 
