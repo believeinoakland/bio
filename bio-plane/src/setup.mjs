@@ -3343,16 +3343,15 @@ export class InstanceSetup {
     try { got = await turn({ answers: given.map((a) => ({ question: a.question, text: a.text })), account, holdings: suggestions }); }
     catch { got = null; }
     if (!got || typeof got !== "object") return unavailable();
-    const told = given.map((a) => a.text).join("\n");
+    const told = given.map((a) => a.text);
     const readLog = Array.isArray(got.readLog) ? got.readLog : [];
-    const label = { kind: "machine", asked_by: by };
     const out = { ok: true, withheld: [] };
     for (const [field, max] of [["focus", GROUP_FOCUS_MAX], ["purpose", GROUP_PURPOSE_MAX]]) {
       const text = typeof got[field] === "string" ? got[field] : "";
-      const checked = wizardScripts.checkDraft(text, { told, readLog, firsthand: false, suggestions });
+      const checked = wizardScripts.checkDraft(text, { told, readLog, firsthand: false, suggestions, askedBy: by });
       if (!checked || checked.ok !== true) return draftRefused(checked);
       if ([...checked.text].length > max) return unavailable();
-      out[field] = { text: checked.text, label };
+      out[field] = { text: checked.text, label: { kind: "machine", asked_by: by } };
       out.withheld.push(...(checked.withheld || []).map((w) => ({ field, ...w })));
     }
     out.note = "a draft: nothing is saved until you edit it and keep it, and then the words are your group's.";
