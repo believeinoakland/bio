@@ -3,7 +3,7 @@
    local-facts R2); and the local facts a live deadline reads (R11). On the test profile (its weekend Sunday alone),
    on a variant of it whose deadlines name no closure list (`officeCalendarProfile`), and on the first profile's
    office-specific 2026 entries (M-189–M-191; K936). K1519: a closure list's entries (jurisdictions R47) are never read
-   as the office calendar, and never a local fact. */
+   as the office calendar; each is a local fact at its own path (R12, N562; local-facts R6). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE, actionMd, CLK, officeCalendarProfile } from "./fixture.mjs";
@@ -57,19 +57,50 @@ test("R10 a business count reads the holiday entries for all offices and those n
     "a named non-office and a kind with no venue are no office");
 });
 
-test("R10 a rule that names a closure list counts on that list alone and states it as the profile holds it: a list is not confirmed on this instance, so the count reads unconfirmed, saying so", () => {
+test("R10 R12 a rule that names a closure list counts on that list alone, and the list's entry is read at its own local-facts path (list=<name>), stated by its own status apart from the office calendar's: unconfirmed, confirmed, corrected (counted on, naming its member and date, and still counted on once confirmed, N603) and disputed (N562)", () => {
   const w = world();
   w.action(A, CPL("Town Clerk", "City of Port Ellery"));
   w.actions.actionCorrespond({ target: A, direction: "sent", at: "2026-08-12", account: "sent", viewer: M, author: M });
-  const p = w.c.clockPropose({ target: A, rule: "records_answer", proposer: M, viewer: M }).proposal;
-  /* the 'town' list closes no day in the period, so the Clerk's own 14 August does not move it: Thu 13 … Tue 18. */
+  const propose = () => w.c.clockPropose({ target: A, rule: "records_answer", proposer: M, viewer: M }).proposal;
+  const town = TEST.holidays.find((h) => h.list === "town" && h.year === 2026);
+  const townPath = factPath({ profile: town.profile, fact: "holidays", year: 2026, list: "town" });
+  assert.match(townPath, /list=town/);
+  assert.notEqual(townPath, pathOf(TEST, 2026), "never the office calendar's path for the same year and offices");
+  const act = (path, a, x = {}) => {
+    const r = w.localFacts.factConfirm({ path, act: a, how: "the town's published list", by: M, viewer: M, ...x });
+    assert.equal(r.ok, true, JSON.stringify(r)); return r;
+  };
+  /* unconfirmed: the 'town' list closes no day in the period, so the Clerk's own 14 August does not move it: Thu 13 … Tue 18. */
+  let p = propose();
   assert.equal(p.entry.date, "2026-08-18");
-  assert.deepEqual(p.calendar.years.map((y) => [y.year, y.list, y.status, y.path]), [[2026, "town", "profile_list", null]]);
+  assert.deepEqual(p.calendar.years.map((y) => [y.year, y.list, y.status, y.path]), [[2026, "town", "unconfirmed", townPath]]);
   assert.equal(p.calendar.status, "unconfirmed");
-  assert.deepEqual(p.calendar.says, ["counted on the closure list 'town' for 2026 as the profile holds it (TEST); a closure list is not confirmed on this instance"]);
-  /* the local-facts reader never answers a list entry as an office-calendar fact (its path would collide with one). */
-  const list = TEST.holidays.find((h) => h.list === "town");
-  assert.deepEqual(clocks.factReader(w.localFacts, M)(list), { path: null, status: "absent", why: "a closure list's entry is not a local fact" });
+  assert.deepEqual(p.calendar.says, ["counted on an unconfirmed calendar (TEST, never confirmed here): the closure list 'town', 2026"]);
+  /* the reader answers the list's entry at its own path, as any holiday year. */
+  const read = clocks.factReader(w.localFacts, M);
+  assert.deepEqual([read(town).path, read(town).status], [townPath, "unconfirmed"]);
+  /* confirming the office calendar does not confirm the list, nor the list the office calendar. */
+  act(pathOf(TEST, 2026), "confirm");
+  assert.equal(propose().calendar.status, "unconfirmed");
+  act(townPath, "confirm");
+  p = propose();
+  assert.deepEqual([p.calendar.status, p.calendar.says, p.calendar.years[0].status], ["confirmed", [], "confirmed"]);
+  assert.equal(read(TEST.holidays.find((h) => h.year === 2026 && !h.list && h.offices)).status, "unconfirmed", "the Clerk's office entry is its own fact");
+  /* corrected: the town closes 14 August too; the count counts on the correction (Thu 13, (Fri 14), Sat 15 … Wed 19). */
+  const c = act(townPath, "correct", { by: BOB, viewer: BOB, value: [...town.days, { date: "2026-08-14", name: "Harbour Fair" }],
+                                        source: "the town's notice of 2026-08-01" });
+  p = propose();
+  assert.deepEqual([p.entry.date, p.calendar.status], ["2026-08-19", "corrected"]);
+  assert.deepEqual([p.calendar.years[0].corrected_by, p.calendar.years[0].corrected_at], [BOB, c.at.slice(0, 10)]);
+  assert.deepEqual(p.calendar.says, [`counted on a calendar corrected locally by ${BOB}, ${c.at.slice(0, 10)}: the closure list 'town', 2026`]);
+  /* N603: a correction since confirmed still governs, and the count reads confirmed. */
+  act(townPath, "confirm");
+  p = propose();
+  assert.deepEqual([p.entry.date, p.calendar.status, p.calendar.says], ["2026-08-19", "confirmed", []]);
+  /* disputed: undetermined, with why; nothing is counted. */
+  act(townPath, "dispute", { by: BOB, viewer: BOB });
+  p = propose();
+  assert.equal(p.entry.date, null); assert.match(p.undetermined, /closure list 'town'.*disputed/);
 });
 
 test("R10 on the first profile's office-specific 2026 entries (M-189–M-191): each office counts on its own entry; an office no entry names, with no entry for all offices, leaves the year undetermined", () => {

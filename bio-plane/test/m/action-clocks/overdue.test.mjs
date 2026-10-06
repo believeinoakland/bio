@@ -30,7 +30,8 @@ test("R3 overdueClocks lists every overdue or past pending entry of open visible
   const r = w.c.overdueClocks({ viewer: M });
   assert.deepEqual(r.items.map(key), [`${A}:0`, `${A}:3`, `${D}:0`]);
   assert.deepEqual(r.items[0], { action: A, ord: 0, date: "2026-09-01", basis: "Act s.2", text: "t", status: "pending", past: true,
-                                 project: null, created_by: M, basis_of: { kind: null, citation: "Act s.2" }, local_day: "2026-09-28" });
+                                 project: null, created_by: M, basis_of: { kind: null, citation: "Act s.2" }, local_day: "2026-09-28",
+                                 zone: "America/Halifax" });
   assert.equal(r.items[0].created_by, M, "the creator, not the later reviser");
   assert.deepEqual([r.as_of, r.limit, r.actions_limit, r.truncated, r.cursor, r.zone_undetermined], ["2026-09-28", 500, 500, false, null, 0]);
   assert.deepEqual(counts(w), before, "writes nothing");
@@ -56,7 +57,24 @@ test("R3 a pending entry is past from the local day after its date in the action
   const x = world({ override: { "test-port-ellery": noZone } });
   x.action(A, ["clock:", ...CLK("2026-09-01"), ...CLK("2026-09-02", "overdue")]);
   const r = x.c.overdueClocks({ viewer: M });
-  assert.deepEqual([r.items.map((i) => [i.ord, i.status, i.past]), r.zone_undetermined], [[[1, "overdue", null]], 1]);
+  assert.deepEqual([r.items.map((i) => [i.ord, i.status, i.past, i.zone, i.local_day]), r.zone_undetermined], [[[1, "overdue", null, null, null]], 1]);
+});
+
+test("R3 (N609) each item carries `zone`, the zone whose local day it was judged on: the addressed office's profile zone first, else the view's time_zone (actions R12), so its reader dates and ages it in the zone this module counted in", () => {
+  /* the view's time_zone a variant's (UTC+14); the Town Clerk's office zone the test profile's own (America/Halifax). */
+  const variant = structuredClone(profile("test-port-ellery"));
+  variant.time_zone = { ...variant.time_zone, value: "Pacific/Kiritimati" };
+  const w = world({ override: { "test-port-ellery": variant } });
+  w.promote(A, actionMd(A, ["counterparty:", "  state: named", "  role: Town Clerk", "  body: City of Port Ellery",
+    "action_kind: records_request", "clock:", ...CLK("2026-09-28")]));
+  w.promote(C, actionMd(C, ["counterparty:", "  state: audience", "  description: residents", "action_kind: other", "clock:", ...CLK("2026-09-28")]));
+  /* 2026-09-28T10:00Z: the 29th at UTC+14 and still the 28th at UTC−3. */
+  const r = w.c.overdueClocks({ viewer: M, now: Date.parse("2026-09-28T10:00:00Z") });
+  assert.deepEqual(r.items.map((x) => [x.action, x.zone, x.local_day, x.past]), [[C, "Pacific/Kiritimati", "2026-09-29", true]],
+    "no office: the view's zone, where it is past; the Clerk's entry is not yet past in the office's zone");
+  const later = w.c.overdueClocks({ viewer: M, now: Date.parse("2026-09-29T04:00:00Z") });
+  assert.deepEqual(later.items.map((x) => [x.action, x.zone, x.local_day]),
+    [[A, "America/Halifax", "2026-09-29"], [C, "Pacific/Kiritimati", "2026-09-29"]], "each in the zone it was judged in");
 });
 
 test("R3 pages run in (action, position) order, at most 500 entries and 500 actions a page, `cursor` and `truncated` as R1's; every entry is reached", () => {

@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { world, V, MACHINE, actionMd, CP, CLK } from "./fixture.mjs";
 import * as clocks from "../../../src/action-clocks/index.mjs";
 import * as actions from "../../../src/actions/index.mjs";
+import { get as profile } from "../../../../jurisdictions/index.mjs";
 
 const M = V("alice"), BOB = V("bob");
 const A = "ACTN-2026-0001-a", B = "ACTN-2026-0002-b";
@@ -113,7 +114,7 @@ test("R5 remindersDue lists each unanswered reminder whose day has come, on a pe
   assert.deepEqual(at("2026-09-29T02:59:59Z").items, [], "not on the UTC day: the action's local day is still the 28th");
   const d = at("2026-09-29T03:00:00Z");
   assert.deepEqual(d.items, [{ action: A, ord: 0, date: "2026-09-01", basis: "Act s.2", text: "t", on: "2026-09-29", set_by: BOB,
-                               project: null }]);
+                               project: null, zone: "America/Halifax" }], "N609: the zone its reminder was judged due in");
   assert.deepEqual(at("2026-10-01T08:00:00Z").items.map((x) => [x.ord, x.on]), [[0, "2026-09-29"], [1, "2026-10-01"]]);
   /* answered: gone. */
   w.clock.ms = Date.parse("2026-10-01T09:00:00Z");
@@ -129,6 +130,20 @@ test("R5 remindersDue lists each unanswered reminder whose day has come, on a pe
   assert.equal(x.c.remindersDue({ viewer: M }).items.length, 1, "at the instance clock when no nowMs is named");
   x.actions.actionMove({ target: A, to: "abandoned", reason: "dropped", viewer: M, author: M });
   assert.equal(x.c.remindersDue({ viewer: M }).items.length, 0);
+});
+
+test("R5 (N609) each due item carries `zone`, the zone whose local day its reminder was judged due on; an action whose zone is not held is never due, so carries none", () => {
+  const w = setUp();
+  set(w, { entry: 0, on: "2026-09-29" });
+  const at = (iso) => w.c.remindersDue({ nowMs: Date.parse(iso), viewer: M }).items.map((x) => [x.on, x.zone]);
+  assert.deepEqual(at("2026-09-29T02:59:59Z"), [], "not yet the 29th in America/Halifax");
+  assert.deepEqual(at("2026-09-29T03:00:00Z"), [["2026-09-29", "America/Halifax"]]);
+  const noZone = structuredClone(profile("test-port-ellery"));
+  delete noZone.time_zone;
+  const x = world({ override: { "test-port-ellery": noZone } });
+  x.action(A, ["clock:", ...CLK("2026-09-01")]);
+  x.c.reminderSet({ target: A, entry: 0, on: "2026-09-01", author: M, viewer: M });
+  assert.deepEqual(x.c.remindersDue({ viewer: M, nowMs: Date.parse("2027-01-01T00:00:00Z") }).items, []);
 });
 
 test("R5 pages run in (action, entry, day) order, at most 500, `cursor` and `truncated` as R1's; every due reminder is reached once; writes nothing", () => {
