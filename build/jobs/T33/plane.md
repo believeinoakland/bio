@@ -25,3 +25,15 @@ T33-90 readings. I am building on each reading now; please answer any you rule d
 9. **duties' `view`.** duties' default is already the active combined view. Reading: plane passes `factOf` (local-facts through action-clocks' `factReader`, with a closure-list entry answered `profile_list`) and leaves `view` to that default.
 
 10. **B2 (op=ask).** Taken; built with T33-90.
+
+## J2 · QUESTION
+
+B2 (K1674, op=ask): my readings. I am building on them now.
+
+1. **Where the secret is handled.** The door runs in the Worker. Credentials' `accountReferenceFor` (the unseal) is in-plane only and deliberately unrouted, and the plane holds no route (R5, R9). Reading:
+   - `gatedOp`'s `ask` arm calls one Durable Object RPC method on the plane's class, `ask({member, session, question, conversation, store})`, on the `bio` object, which is where credentials live. It is a method, not a route, like `schedAlarmAt`.
+   - In-process, it mints the member's grant (`credentials.aiGrantMint({member, by, session})`, R27), unseals the account (`accountReferenceFor({member, act: {kind: "ask", member}})`) and reads the suggestions switch (`accountReferenceState`).
+   - It then POSTs `{question, conversation?, store?, grant, account: {kind, secret, member, suggestions}}` to `AGENT_WORKER /ask` and hands back agent-worker's answer (an NDJSON stream or a plain refusal) unchanged. The secret never leaves the object except in that one call, as ai-runs' `/run` dispatch does.
+   - Refusals come in the owners' words: `NO_ACCOUNT` and the seal refusals from credentials. Without the binding it answers 503 `AGENT_WORKER_UNBOUND`, ai-runs' word. The ceiling is agent-worker's `askceiling`, so the plane does not check it.
+2. **"Or a presented ai grant."** `gatedOp` today gets no field saying a grant was presented. Reading: when control-plane hands `gatedOp` the grant's member (I code against `grantMember`, a `member:<id>` stamp; please confirm control-plane's name), the arm forwards the presented token as `grant` and mints none. Every other caller is refused 403 `ASK_NOT_A_MEMBER` before anything is read.
+3. **Not mine.** Who answers `askceiling`, `askcheck` and `askusage`, and in which namespace an ask's reads and its check land, is control-plane's and op-declarations' (their J1). The read log is answers' in-memory map on one object.
