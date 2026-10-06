@@ -153,4 +153,7 @@ export function migrateStandards(sql) {
   const cols = [...sql.exec(`PRAGMA table_info(standards)`)].map((c) => c.name);
   if (!cols.includes("reason")) sql.exec(`ALTER TABLE standards ADD COLUMN reason TEXT`);
   for (const [c, type] of T33_COLUMNS) if (!cols.includes(c)) sql.exec(`ALTER TABLE standards ADD COLUMN ${c} ${type}`);
+  /* R32: the reads by instrument key and portion, and by a portion's content id */
+  sql.exec(`CREATE INDEX IF NOT EXISTS standards_instrument ON standards(instrument, portion_path, standard_id)`);
+  sql.exec(`CREATE INDEX IF NOT EXISTS standards_portion_content ON standards(portion_content, standard_id)`);
 }
