@@ -19,9 +19,20 @@ test("R12 memberAdd: NOT_AN_ADMIN for a non-administrator member, a machine cred
   assert.equal((await w.m.memberAdd({ memberId: "ann", cover: "c", by: "admin" })).reason, "EXISTS");
   assert.equal((await w.m.memberAdd({ memberId: "ok2", cover: "c", expertise: ["CPA"], by: "admin" })).reason,
     "EXPERTISE_IS_NOT_ASSIGNED");
+  /* R97's BAD_EXPIRY last: after EXPERTISE_IS_NOT_ASSIGNED, and before anything is written. */
+  assert.equal((await w.m.memberAdd({ memberId: "ok2", cover: "c", expertise: ["CPA"], expiresInDays: 0, by: "admin" })).reason,
+    "EXPERTISE_IS_NOT_ASSIGNED");
+  assert.equal((await w.m.memberAdd({ memberId: "ann", cover: "c", expiresInDays: 0, by: "admin" })).reason, "EXISTS");
+  const bad = await w.m.memberAdd({ memberId: "ok3", cover: "c", expiresInDays: 31, by: "admin" });
+  assert.deepEqual([bad.reason, bad.code, bad.check], ["BAD_EXPIRY", "BAD_EXPIRY", "C-96.23"]);
+  assert.equal(w.row(`SELECT member_id FROM members WHERE member_id='ok3'`), null);
+  /* DEC-134 (1): ADMINS_FIRST is retired: with one administrator an ordinary member is invited. */
   const early = world();
   await early.claim();
-  assert.equal((await early.m.memberAdd({ memberId: "ee", cover: "c", by: "admin" })).reason, "ADMINS_FIRST");
+  const ee = await early.m.memberAdd({ memberId: "ee", cover: "c", by: "admin" });
+  assert.deepEqual([ee.ok, ee.role], [true, "member"]);
+  assert.equal("ADMINS_FIRST" in CUSTODIAL_CHECKS, false, "the code is retired");
+  assert.equal(Object.values(CUSTODIAL_CHECKS).some((x) => x.check === "C-96.5"), false, "its row never reused");
 });
 
 test("R13 an ordinary member (or an admin below two) is invited once: invited_by, status_by, capabilities, hash only", async () => {

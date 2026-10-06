@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
 import { Membership } from "../../../src/membership/index.mjs";
-import { CUSTODIAL_CHECKS } from "../../../src/membership/checks.mjs";
+import { CUSTODIAL_CHECKS, MEMBERSHIP_CHECKS } from "../../../src/membership/checks.mjs";
 
 /* founder + second + third (a proposed third needs both to endorse) */
 async function threeAdmins() {
@@ -90,41 +90,60 @@ test("R9 memberCaps: refusals in order and exact replacement", async () => {
   assert.deepEqual(w.m.memberList({}).members.find((x) => x.member_id === "ann").capabilities, ["publish"]);
 });
 
-test("R10 an administrator (not the founder) resigns while more than two exist; at two refused", async () => {
+test("R10 an administrator (not the founder) resigns unless they are the last one R86 lists; LAST_ADMIN (C-96.22) for the last; RESIGN_AT_TWO retired", async () => {
   const w = await threeAdmins();
   await w.enrol("ann");
   assert.equal(w.m.adminResign({ by: "admin" }).reason, "ROOT_OF_TRUST");
+  assert.match(w.m.adminResign({ by: "admin" }).detail, /hosting account/);
   assert.equal(w.m.adminResign({ by: "ann" }).reason, "NOT_AN_ADMIN");
   const r = w.m.adminResign({ by: "third" });
   assert.deepEqual([r.ok, r.role, r.administrators], [true, "member", 2]);
-  assert.deepEqual(w.row(`SELECT role, status, status_by FROM members WHERE member_id='third'`),
-    { role: "member", status: "active", status_by: "third" });
+  assert.deepEqual(w.row(`SELECT role, status, status_by, capabilities FROM members WHERE member_id='third'`),
+    { role: "member", status: "active", status_by: "third", capabilities: JSON.stringify(["contribute"]) },
+    "an ordinary member, keeping the capabilities last set");
   assert.equal(w.m.isAdministrator("third"), false);
+  /* DEC-134 (4): at two (the founder and second) the second may step down: the founder is counted once claimed. */
   const two = w.m.adminResign({ by: "second" });
-  assert.deepEqual([two.reason, two.administrators], ["RESIGN_AT_TWO", 2]);
-  assert.deepEqual([two.code, two.check, two.translation], ["RESIGN_AT_TWO", "C-96.10", CUSTODIAL_CHECKS.RESIGN_AT_TWO.translation]);
-  assert.equal(w.m.isAdministrator("second"), true);
-  assert.equal(w.ops("by=second").adminresign().reason, "RESIGN_AT_TWO");
+  assert.deepEqual([two.ok, two.administrators], [true, 1]);
+  assert.equal(w.m.isAdministrator("second"), false);
+  /* An unclaimed group with one administrator: the last one is refused, its row C-96.22. */
+  const v = world({ omit: ["claimed"] });
+  await v.enrol("solo", "admin", "class:admin");
+  await v.enrol("bob", "member", "solo");
+  const before = v.rows(`SELECT * FROM members ORDER BY member_id`);
+  const last = v.m.adminResign({ by: "solo" });
+  assert.deepEqual([last.ok, last.reason, last.code, last.check, last.translation, last.administrators],
+    [false, "LAST_ADMIN", "LAST_ADMIN", "C-96.22", MEMBERSHIP_CHECKS.LAST_ADMIN.translation, 1]);
+  assert.deepEqual(v.rows(`SELECT * FROM members ORDER BY member_id`), before, "nothing written");
+  assert.equal(v.ops("by=solo").adminresign().reason, "LAST_ADMIN");
+  /* retired, never reused */
+  assert.equal("RESIGN_AT_TWO" in CUSTODIAL_CHECKS, false);
+  assert.equal(Object.values({ ...CUSTODIAL_CHECKS, ...MEMBERSHIP_CHECKS }).some((x) => x.check === "C-96.10"), false);
+  assert.equal(MEMBERSHIP_CHECKS.LAST_ADMIN.where, "src/membership/index.mjs adminResign > is-admin-resign-last");
 });
 
-test("R11 adding the second administrator asks who holds hosting access; the record keeps the answer", async () => {
+test("R11 the hosting-access record is asked at setup, never on adding an administrator; the record keeps the answer", async () => {
   const w = world();
   await w.claim();
   const second = await w.m.memberAdd({ memberId: "second", cover: "c2", role: "admin", by: "admin" });
-  assert.equal(second.hostingAccess.asked, true);
-  assert.match(second.hostingAccess.question, /hosting/);
+  assert.equal(second.ok, true);
+  assert.equal("hostingAccess" in second, false, "no hosting-access question on adding the second administrator");
   await w.m.enroll({ invite: second.invite, handle: "second", password: "second-passphrase-x" });
   const ann = await w.m.memberAdd({ memberId: "ann", cover: "ca", by: "admin" });
-  assert.equal(ann.hostingAccess, undefined, "asked at the second administrator, not at every addition");
-  assert.equal(w.m.hostingAccessSet({ holders: "x", by: "ann" }).reason, "NOT_AN_ADMIN");
+  assert.equal("hostingAccess" in ann, false);
+  for (const by of ["ann", null, "class:admin"])
+    assert.equal(w.m.hostingAccessSet({ holders: "x", by }).reason, "NOT_AN_ADMIN", String(by));
   const none = w.m.hostingAccessSet({ holders: " ", by: "admin" });
   assert.deepEqual([none.ok, none.reason, none.code, none.check, none.translation],
     [false, "NO_HOLDERS", "NO_HOLDERS", "C-96.11", CUSTODIAL_CHECKS.NO_HOLDERS.translation]);
   assert.equal(w.m.hostingAccess().recorded, false, "nothing written");
+  assert.deepEqual(w.m.hostingAccess().current, null);
   const s = w.m.hostingAccessSet({ holders: "admin and second", note: "both have the login", by: "second" });
-  assert.equal(s.ok, true);
+  assert.deepEqual([s.ok, s.holders, s.note, s.recorded_by], [true, "admin and second", "both have the login", "second"]);
+  assert.match(s.at, /^\d{4}-/);
   w.ops("by=admin", { holders: "admin only" }).hostingaccessset();
   const h = w.ops().hostingaccess();
+  assert.deepEqual(Object.keys(h).sort(), ["current", "history", "limit", "ok", "recorded", "truncated"]);
   assert.equal(h.recorded, true);
   assert.equal(h.current.holders, "admin only");
   assert.deepEqual(h.history.map((x) => [x.holders, x.recorded_by]), [["admin and second", "second"], ["admin only", "admin"]]);
