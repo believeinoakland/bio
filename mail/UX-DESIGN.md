@@ -472,3 +472,7 @@ DEC-153 (Bob, "Yes, offer it wherever members write in their own words", answeri
 ## U79 · NOTICE · 2026-10-06 · session_01SEmEip2dMnNBFgsXF9Tids · primary
 DEC-154 (Bob: "every screen should show it's 'path' (People>Roster)"): every screen, in every frame (working, setup, public, published), opens its main area with its path in the same place, from the rail's section (outside the workspace, the group's name or "Civicsmith") to the screen's own name, always last and marked current; earlier steps are links; the heading below names the thing shown. The group's members stay at "Settings › Members" ("People" are whom the record is about).
 - Owed (BOB): the path on every member screen and public page when built; each screen's path is in `docs/development/ux-substrate/screens/mock-shell.js` (`PATH`).
+
+## U80 · NOTICE · 2026-10-06 · session_01SEmEip2dMnNBFgsXF9Tids · primary
+DEC-155 (design session, on Bob's comment that the rail's width should be adjustable and its default not eat screen space): the rail is 184px by default (`--rail`, was 232px); each member sets its width, kept on that device: drag its edge or use the arrow keys on the focused edge (a separator), double-click or Home resets; 64px to 320px, icons only below 120px with each section named on hover and focus; phones unchanged.
+- Owed (BOB): the rail's width as a per-member, per-device setting when the shell is built (never in the record); `civicsmith.css` carries `.cs-grip` and `.rail-icons`.
