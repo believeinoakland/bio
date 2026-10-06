@@ -2,7 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, ANN, OUTSIDER, INQ, E1, E2, E3 } from "./fixture.mjs";
-import { HYPOTHESIS_KINDS } from "../../../src/hypotheses/index.mjs";
+import { HYPOTHESIS_KINDS, HYPOTHESES_CHECKS } from "../../../src/hypotheses/index.mjs";
 
 test("R1 hold records one HYP- in an inquiry, of each of the five kinds, with the member's statement and nodes, and answers {ok, hypothesis_id, kind, label, at}", () => {
   const w = world();
@@ -29,7 +29,7 @@ test("R1 hold records one HYP- in an inquiry, of each of the five kinds, with th
   assert.equal(w.h.hold({ inquiry: INQ, kind: "flow", statement: "Money moved.", about: { from: E1, to: "INFO-2026-0001-doc" }, by: ANN }).ok, true);
 });
 
-test("R1 hold's refusals, in order: NO_SUCH_BUNDLE (absent or invisible, one answer), NOT_AN_INQUIRY, MACHINE_CANNOT_HYPOTHESISE, UNKNOWN_HYPOTHESIS_KIND naming the five, NO_STATEMENT, BAD_ABOUT naming the node; nothing is written", () => {
+test("R1 hold's refusals, in order: NO_SUCH_BUNDLE (absent or invisible, one answer), NOT_AN_INQUIRY, MACHINE_CANNOT_HYPOTHESISE, UNKNOWN_HYPOTHESIS_KIND naming the five, HYPOTHESIS_NO_STATEMENT (its own code, row C-134.5), BAD_ABOUT naming the node; nothing is written", () => {
   const w = world();
   w.bundle(INQ);
   w.fenced("INQ-2026-0009-hidden");
@@ -48,7 +48,11 @@ test("R1 hold's refusals, in order: NO_SUCH_BUNDLE (absent or invisible, one ans
   assert.equal(k.reason, "UNKNOWN_HYPOTHESIS_KIND");
   assert.deepEqual(k.kinds, ["cause", "identity", "relation", "flow", "other"]);
   for (const kind of ["cause", "identity", "relation", "flow", "other"]) assert.ok(k.detail.includes(kind));
-  for (const statement of ["", "   ", null, 7]) assert.equal(w.h.hold({ ...ok, statement, about: null }).reason, "NO_STATEMENT");
+  for (const statement of ["", "   ", null, 7]) {
+    const r = w.h.hold({ ...ok, statement, about: null });
+    assert.deepEqual([r.reason, r.code, r.check], ["HYPOTHESIS_NO_STATEMENT", "HYPOTHESIS_NO_STATEMENT", "C-134.5"]);
+    assert.equal(r.translation, "Say what you think, in your own words. Nothing was written.", "the row's translation is unchanged");
+  }
   const bad = [
     [{ from: E1, to: "not-an-id" }, "not-an-id"], [{ from: E1 }, null], [{ from: E1, to: E1 }, E1],
     [[E1, E2], undefined], [null, undefined],
@@ -66,7 +70,7 @@ test("R1 hold's refusals, in order: NO_SUCH_BUNDLE (absent or invisible, one ans
   assert.equal(w.h.hold(ok).ok, true, "the negative control holds");
 });
 
-test("R2 a hypothesis is never edited in place: revise appends a revision, withdraw marks it withdrawn, each with who, when and why; every read shows its history; NO_REASON and NO_SUCH_HYPOTHESIS refuse", () => {
+test("R2 a hypothesis is never edited in place: revise appends a revision, withdraw marks it withdrawn, each with who, when and why; every read shows its history; HYPOTHESIS_NO_REASON (its own code, row C-134.7), HYPOTHESIS_NO_STATEMENT for an empty revised statement, and NO_SUCH_HYPOTHESIS refuse; no refusal answers NO_STATEMENT or NO_REASON", () => {
   const w = world();
   w.bundle(INQ);
   const id = w.hold();
@@ -74,8 +78,17 @@ test("R2 a hypothesis is never edited in place: revise appends a revision, withd
   assert.deepEqual([rev.ok, rev.hypothesis_id, rev.label], [true, id, "hypothesis"]);
   const only = w.h.revise({ hypothesisId: id, reason: "Same words, noted.", by: ANN });
   assert.equal(only.ok, true, "a revision may change neither statement nor nodes");
-  assert.equal(w.h.revise({ hypothesisId: id, statement: "x", by: ANN }).reason, "NO_REASON");
-  assert.equal(w.h.withdraw({ hypothesisId: id, reason: "  ", by: ANN }).reason, "NO_REASON");
+  for (const r of [w.h.revise({ hypothesisId: id, statement: "x", by: ANN }), w.h.withdraw({ hypothesisId: id, reason: "  ", by: ANN })]) {
+    assert.deepEqual([r.reason, r.code, r.check], ["HYPOTHESIS_NO_REASON", "HYPOTHESIS_NO_REASON", "C-134.7"]);
+    assert.equal(r.translation, "Say why you are changing or withdrawing this hypothesis. Nothing was written.", "the row's translation is unchanged");
+  }
+  for (const statement of ["", "  "]) {
+    const r = w.h.revise({ hypothesisId: id, statement, reason: "r", by: ANN });
+    assert.deepEqual([r.reason, r.check], ["HYPOTHESIS_NO_STATEMENT", "C-134.5"], "a revision with an empty statement");
+  }
+  /* no refusal of this module answers the shared codes, and no row holds them */
+  assert.ok(!("NO_STATEMENT" in HYPOTHESES_CHECKS) && !("NO_REASON" in HYPOTHESES_CHECKS));
+  assert.ok(Object.entries(HYPOTHESES_CHECKS).every(([code]) => code !== "NO_STATEMENT" && code !== "NO_REASON"));
   for (const hypothesisId of ["HYP-2026-0404", "nope", null])
     for (const act of ["revise", "withdraw"]) assert.equal(w.h[act]({ hypothesisId, reason: "r", by: ANN }).reason, "NO_SUCH_HYPOTHESIS");
   assert.equal(w.h.revise({ hypothesisId: id, about: [E1, E2], reason: "r", by: ANN }).reason, "BAD_ABOUT", "a relation keeps its two nodes");

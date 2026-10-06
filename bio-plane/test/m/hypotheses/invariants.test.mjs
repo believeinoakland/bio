@@ -2,16 +2,16 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, ANN, OUTSIDER, INQ, E1, E2, E3 } from "./fixture.mjs";
-import { hypothesesOps, HYPOTHESES_CHECKS } from "../../../src/hypotheses/index.mjs";
+import { hypothesesOps, HYPOTHESES_CHECKS, HYPOTHESES_TABLES } from "../../../src/hypotheses/index.mjs";
 
 const url = (op, q = {}) => { const u = new URL(`https://plane.example/?op=${op}`); for (const [k, v] of Object.entries(q)) u.searchParams.set(k, v); return u; };
 
-test("R7 hypothesesOps answers route arms for hypothesishold, hypothesisrevise, hypothesiswithdraw and hypotheses; a read's viewer comes from the query, never the body", () => {
+test("R7 hypothesesOps answers route arms for hypothesishold, hypothesisrevise, hypothesiswithdraw and hypotheses (and the notes' notewrite, notes, noteturn); a read's viewer comes from the query, never the body", () => {
   const w = world();
   w.bundle(INQ);
   const hidden = w.fenced("INQ-2026-0009-hidden");
   const arms = hypothesesOps(w.h, url("x"), {});
-  assert.deepEqual(Object.keys(arms).sort(), ["hypotheses", "hypothesishold", "hypothesisrevise", "hypothesiswithdraw"]);
+  assert.deepEqual(Object.keys(arms).sort(), ["hypotheses", "hypothesishold", "hypothesisrevise", "hypothesiswithdraw", "notes", "noteturn", "notewrite"]);
   const held = hypothesesOps(w.h, url("hypothesishold"), { inquiry: INQ, kind: "identity", statement: "Same person.", about: { from: E1, to: E2 }, by: ANN }).hypothesishold();
   assert.equal(held.ok, true);
   const id = held.hypothesis_id;
@@ -57,7 +57,7 @@ test("R10 hypotheses and their revisions are declared with record-core, keyed by
   const a = w.hold();
   w.h.revise({ hypothesisId: a, statement: "s2", reason: "r", by: ANN });
   const b = w.hold({ inquiry: other });
-  const mine = w.record.declaredTables().filter((d) => d.module === "hypotheses");
+  const mine = w.record.declaredTables().filter((d) => d.module === "hypotheses" && HYPOTHESES_TABLES.includes(d.name));
   assert.deepEqual(mine.map((d) => d.name), ["hypotheses", "hypothesis_revisions"]);
   for (const d of mine)
     assert.deepEqual([d.keys, d.purge, d.expunge, d.export, d.sight, d.derive, d.version_chain],
