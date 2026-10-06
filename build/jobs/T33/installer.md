@@ -17,3 +17,15 @@ Five readings I am building on now (T33-91); each is mine to change if you answe
 (5) **Workers Paid on an update (R38 with R17).** An update runs no plan check today ("an update never grows a new refusal"). Mine runs R6's probe only when a container member would otherwise install (the scope granted, a verified descriptor). It uses the answer only to leave the container out: Free or unknown means "left out, named". It never refuses the update.
 
 The scope comes from the token response's `scope`. When the response states none, one `GET /accounts/<id>/containers/applications` decides: 2xx means held, anything else means not held, named.
+
+## J2 · REPORT
+
+T33-91 is built to K1678 and green on my branch (7bfd49a664): embed 23/0, wizard 208/0, requirements 37 pass with 2 todo (R13, R24, not T33's), bundle-fresh 1/0, and the four checks clean. I hold COMPLETE only for the re-point: instance-setup's `FLEET_BINDINGS` (it gains sheet-worker and agent-runner). My tests already derive every member count from it. I rehearsed them locally against a five-member list, and all pass. Found outside my module, for routing:
+
+(1) **The OAuth client's registered scopes must gain `containers.write` before this installer is deployed.** That is client `1c2fdba3fc71cf88d26fcd7b90df95de` on account 20b5…7f72, an act at the release (T33-D1). Until the client carries it, every install and update asking the four scopes is refused by Cloudflare at the consent screen. That refusal happens before any installer page can explain it, the failure DEPLOY.md step 4 warns about. DEPLOY.md's scope list (step 4) is mine: I will update it in this job.
+
+(2) **A member's own limits are not in the signed release.** sheet-worker's `wrangler.jsonc` sets `limits.cpu_ms` 300,000 (K1536). The fleet statement and `RELEASE.json`'s `fleet[]` carry no limits. So the installer uploads every member with none, and the copy's sheet-worker runs under the default CPU limit. A proposal on R20's model: the member states its limits in its own bundle as one string (`bio-member-limits/1 cpu_ms=300000`), which the signed bytes already cover, and the installer sends exactly that. That needs a sheet-worker change and an installer requirement, so it is a T34 row (not built here).
+
+(3) **agent-runner's image repository is `docker.io/civicos/agent-runner`** (`agent-runner/fleet-member.json`). A group sees that name in its own Cloudflare dashboard, and it carries the product's old name (DEC-124). It is the release's to choose before the image is first published.
+
+(4) **The Containers API calls are wrangler's own, and deploy-gated, like SELF.** They are: the namespaces list, `POST /containers/applications`, and `POST …/applications/<id>/rollouts`. The first real install at the release confirms them. M-Q2's run can do that.
