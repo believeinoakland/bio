@@ -118,8 +118,40 @@ export const FIELDS = {
   risk:           { col: "action_risk_tier",            type: "number", proj: true },
   addressee:      { col: "action_counterparty_state",   type: "text", lower: true, proj: true },
   resolution:     { col: "action_resolution",           type: "text", lower: true, proj: true },
-  due:            { col: "action_clock_next",           type: "time", proj: true },
-  overdue:        { col: "action_clock_overdue",        type: "bool", proj: true },
+  /* R17 (C-5a): both are the action's clock AS OF ITS LAST WRITE, so both carry the cached marker and a plan that
+     reaches either says so. `due` holds the clock's next date as a local day (`actions` R12), never an instant, so
+     a date compares with it as a day (`day`, R27). */
+  due:            { col: "action_clock_next",           type: "time", day: true, proj: true,
+                    asOf: "each action's LAST WRITE",
+                    authority: "the action's own read (actions R25)",
+                    why: "the clock's next date is projected when the action is written, and an entry met, waived"
+                       + " or added since is not in it until the next write" },
+  overdue:        { col: "action_clock_overdue",        type: "bool", proj: true,
+                    asOf: "each action's LAST WRITE",
+                    authority: "the action's own read (actions R25)",
+                    why: "the flag was computed on the local day of that write, so an action whose date has passed"
+                       + " since reads not overdue here; the action's own read derives it on today's local day" },
+  /* R28 (T33-39): the T33 fields. Each is held by its OWNER in a relation of its own and is read ONLY through the
+     relation the caller names for it (`rel`, R29): never off `bundles`, so with none named the term is dropped and
+     says so. A bundle can hold MANY values of each (it cites several standards, concerns several people), so they
+     filter and never sort or facet: one value per bundle would be an arbitrary pick among its values. `col` is the
+     plan's name for the field; the column read is the relation's. */
+  standard:       { col: "standard_id",  type: "text", rel: true },
+  cites:          { col: "cited_key",    type: "text", rel: true },
+  person:         { col: "person_id",    type: "text", rel: true },
+  holder:         { col: "holder_id",    type: "text", rel: true },
+  post:           { col: "post_id",      type: "text", rel: true },
+  kind:           { col: "money_kind",   type: "text", lower: true, rel: true },
+  phase:          { col: "money_phase",  type: "text", lower: true, rel: true },
+  stage:          { col: "money_stage",  type: "text", lower: true, rel: true },
+  basis:          { col: "money_basis",  type: "text", lower: true, rel: true },
+  period:         { col: "money_period", type: "text", rel: true },
+  fund:           { col: "money_fund",   type: "text", rel: true },
+  party:          { col: "money_party",  type: "text", rel: true },
+  event:          { col: "event_id",     type: "text", rel: true },
+  occurred:       { col: "event_when",   type: "time", rel: true },
+  obligor:        { col: "duty_obligor", type: "text", rel: true },
+  owed_to:        { col: "duty_owed_to", type: "text", rel: true },
 };
 
 /* ---------------------------------------------------------------------------
@@ -1016,14 +1048,18 @@ import { STEP_KINDS, CHAIN_KIND_MIXED, MACHINE_READ_KINDS } from "./textchain.mj
    unchanged. This module interpolates the ONE compiled predicate into every statement
    and mints none of its own (R8, R21). */
 import { viewerPredicate, GATE_MARK } from "./membership/index.mjs";
+/* R27 (T33-39): a date on a time field is a local day in the caller's zone, its bounds `civil-time`'s. */
+import { isCalendarDate, dayRange } from "./civil-time/index.mjs";
 export { viewerPredicate, GATE_MARK };
 
 export const FTS_COLUMNS = ["title", "body", "meta", "locator", "authority"];
 
 /* Sorting is offered on every projected field plus relevance. Naming them
-   explicitly is what stops a caller putting arbitrary SQL in an ORDER BY. */
+   explicitly is what stops a caller putting arbitrary SQL in an ORDER BY.
+   A field a bundle can hold many values of (`rel`, R28) is not a sort key: one
+   order per bundle would rest on an arbitrary pick among its values. */
 export const SORTABLE = { relevance: null, ...Object.fromEntries(
-  Object.entries(FIELDS).map(([k, f]) => [k, f.col])) };
+  Object.entries(FIELDS).filter(([, f]) => !f.rel).map(([k, f]) => [k, f.col])) };
 
 /* Facets the sidebar counts unless the caller names others. Every one is an
    indexed enumeration, which is why the count is an aggregate the measurements
@@ -1438,7 +1474,8 @@ function selector(tok, ctx) {
        projection that has not been rewritten. */
     if (v in MEANING) return { op: "meaning", arm: v, col: null, cmp: "present", value: null };
     const f = FIELDS[v];
-    if (!f) { ctx.warnings.push(`has: unknown field ${JSON.stringify(tok.value)}`); return null; }
+    if (!f) { drop(ctx, `has: unknown field ${JSON.stringify(tok.value)}`); return null; }
+    if (!available(v, f, ctx)) return null;
     return { op: "meta", col: f.col, cmp: "present", value: null };
   }
   /* `sort:` is a directive, not a predicate. Consumed here so it never becomes
@@ -1454,7 +1491,7 @@ function selector(tok, ctx) {
     const path = at < 0 ? tok.value : tok.value.slice(0, at);
     const val = at < 0 ? null : tok.value.slice(at + 1);
     if (!/^[A-Za-z0-9_.[\]]{1,120}$/.test(path)) {
-      ctx.warnings.push(`fm: path ${JSON.stringify(path)} is not a frontmatter path`);
+      drop(ctx, `fm: path ${JSON.stringify(path)} is not a frontmatter path`);
       return null;
     }
     return val === null
@@ -1471,9 +1508,10 @@ function selector(tok, ctx) {
        typing `sewer:fund` meant to search, and answering "no such field" for a
        string that is obviously a search is the control feeling broken. The
        warning still says what happened. */
-    ctx.warnings.push(`unknown field ${JSON.stringify(tok.field)}; read as free text`);
+    drop(ctx, `unknown field ${JSON.stringify(tok.field)}; read as free text`);
     return textAtom(null, `${tok.field} ${tok.value}`.trim(), true, ctx);
   }
+  if (!available(name, f, ctx)) return null;
   let raw = String(tok.value);
   /* The type renames (normalisation site 4 of 4, REC-10): the projection
      stores canonical types only, so the legacy spellings `problem` and
@@ -1484,13 +1522,17 @@ function selector(tok, ctx) {
   /* Comparisons and ranges are metadata predicates on every field, including the
      free-text ones: `created:>2026-01-01` is an ordering question and MATCH
      cannot answer it. */
-  const range = raw.split("..");
-  if (range.length === 2 && range[0] !== "" && range[1] !== "" && (f.type === "time" || f.type === "number")) {
-    return { op: "and", kids: [
-      { op: "meta", col: f.col, cmp: ">=", value: coerce(f, range[0]) },
-      { op: "meta", col: f.col, cmp: "<=", value: coerce(f, range[1]) },
-    ] };
+  /* R27: a date on a time field is a local day; `timeAtom` answers it, or `undefined` for a value with no date in
+     it, which compiles below exactly as before. */
+  if (f.type === "time") {
+    const t = timeAtom(name, f, raw, ctx);
+    if (t !== undefined) return t;
   }
+  /* A range is ONE node over one column (`span`), so a field held in a relation of many rows per bundle asks both
+     bounds of the same row, never one row for each. */
+  const range = raw.split("..");
+  if (range.length === 2 && range[0] !== "" && range[1] !== "" && (f.type === "time" || f.type === "number"))
+    return span(f.col, [">=", coerce(f, range[0])], ["<=", coerce(f, range[1])]);
   for (const [lead, cmp] of CMP)
     if (raw.startsWith(lead)) return { op: "meta", col: f.col, cmp, value: coerce(f, raw.slice(lead.length)) };
   if (raw === "" || raw === "*") return { op: "meta", col: f.col, cmp: "present", value: null };
@@ -1554,7 +1596,7 @@ function meaningAtom(arm, tok, ctx) {
       /* A comparison against nothing. DROPPED WITH A WARNING, in the visible
          direction this function already chose twice: compiling it would be a
          predicate no row satisfies, which is the silent narrowing above. */
-      ctx.warnings.push(`${arm}: ${JSON.stringify(String(tok.value))} compares ${subName} against nothing`);
+      drop(ctx, `${arm}: ${JSON.stringify(String(tok.value))} compares ${subName} against nothing`);
       return null;
     }
   }
@@ -1571,7 +1613,7 @@ function meaningAtom(arm, tok, ctx) {
          failure that overclaims coverage is the one this item was raised to
          close, so the arm fails in the visible direction. Same shape as `has:`
          above, for the same reason. */
-      ctx.warnings.push(`${arm}: unknown sub-field ${JSON.stringify(lhs)}; known: ${Object.keys(m.sub).join(", ")}`);
+      drop(ctx, `${arm}: unknown sub-field ${JSON.stringify(lhs)}; known: ${Object.keys(m.sub).join(", ")}`);
       return null;
     }
   }
@@ -1586,7 +1628,7 @@ function meaningAtom(arm, tok, ctx) {
          visible direction as the unknown sub-field above: the arm is dropped,
          which widens, rather than compiled to one reading, which would answer
          confidently and wrongly. */
-      ctx.warnings.push(`${arm}: ${JSON.stringify(raw)} is both ${claims.join(" and ")}; `
+      drop(ctx, `${arm}: ${JSON.stringify(raw)} is both ${claims.join(" and ")}; `
         + `say ${claims.map((c) => `${arm}:${c}=${raw}`).join(" or ")}`);
       return null;
     }
@@ -1619,7 +1661,7 @@ function meaningAtom(arm, tok, ctx) {
        MATCH, and compiling it to one anyway would answer a question the member
        did not ask. */
     if (subCmp || CMP.some(([lead]) => raw.startsWith(lead))) {
-      ctx.warnings.push(`${arm}: ${JSON.stringify(String(tok.value))} compares a full-text field; `
+      drop(ctx, `${arm}: ${JSON.stringify(String(tok.value))} compares a full-text field; `
         + `${arm}: matches text and does not order it`);
       return null;
     }
@@ -1659,7 +1701,7 @@ function meaningAtom(arm, tok, ctx) {
       /* `textAtom` refuses a term with no letter or digit in it, because an
          FTS5 literal built from punctuation matches no row and would silently
          empty an otherwise good query. Dropped and SAID, which widens. */
-      ctx.warnings.push(`${arm}: ${JSON.stringify(raw)} has no word in it to match`);
+      drop(ctx, `${arm}: ${JSON.stringify(raw)} has no word in it to match`);
       return null;
     }
     return matchNode(atom);
@@ -1690,6 +1732,86 @@ function meaningAtom(arm, tok, ctx) {
   return { op: "meaning", arm, field: subName, col: sub.col, cmp: "=", value: norm(raw) };
 }
 
+/* A dropped term or field: said in `warnings`, and recorded apart in `drops` so a caller can tell a term that was
+   DROPPED (the answer is wider than what was typed) from a note about how one was read (R30 refuses to save the
+   first). */
+function drop(ctx, msg) {
+  ctx.warnings.push(msg);
+  ctx.drops.push(msg);
+}
+
+/* R29: a T33 field is read only through the relation its caller names for it; with none, the term is dropped and
+   said, never read from a column of `bundles`. */
+function available(name, f, ctx) {
+  if (!f.rel || ctx.frs.has(f.col)) return true;
+  drop(ctx, `${JSON.stringify(name)} is not available here; read as nothing`);
+  return false;
+}
+
+/* Both bounds of a range on one column, as one node. `ops` are the compiler's own two operators, never the
+   member's. */
+const span = (col, lo, hi) => ({ op: "meta", col, cmp: "span", ops: [lo[0], hi[0]], value: [lo[1], hi[1]] });
+
+/* ---------------------------------------------------------------------------
+ * R27 (C-5b) — A DATE ON A TIME FIELD IS A LOCAL DAY, AND A RANGE OF DATES HOLDS BOTH OF ITS DAYS.
+ *
+ * `created:2026-03-01..2026-03-31` read as text compared the instant `2026-03-31T14:00:00Z` with the string
+ * `2026-03-31` and found it AFTER the bound, so the last day of the range held nothing, and every day was a UTC day
+ * besides. A date is now the local day in the caller's `zone`, its first instant and the first instant of the next
+ * day computed by `civil-time` (its `dayRange`, which validates the calendar and knows a day can last 23 or 25
+ * hours), and the column is compared half-open against them:
+ *   `d`, `a..b`   start(a) <= col < end(b)        `>d`   col >= end(d)      `>=d`   col >= start(d)
+ *   `<d`          col < start(d)                  `<=d`  col < end(d)
+ * A bound is bound WITHOUT its trailing `Z`, so a stored `…:SSZ` and a stored `…:SS.mmmZ` both compare right at the
+ * boundary instant itself (`.` and `Z` sort either side of the end of the shorter string).
+ *
+ * DROPPED WITH A WARNING, NEVER GUESSED: an impossible date (2026-02-31); a date with no `zone` (never read as a UTC
+ * day); a zone `civil-time` refuses; a range that ends before it starts. Each widens the answer, R5's direction.
+ * A column that holds LOCAL DAYS already (`day`: `due`, the clock's date) compares a date as a day, inclusive, and
+ * needs no zone: its days are the office's own. A value written as an instant compiles as before (`undefined`).
+ * ------------------------------------------------------------------------- */
+const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
+const noZ = (instant) => instant.replace(/Z$/, "");
+function timeAtom(name, f, raw, ctx) {
+  let cmp = "=", a = raw, b = null;
+  const range = raw.split("..");
+  if (range.length === 2 && range[0] !== "" && range[1] !== "") { cmp = ".."; [a, b] = range; }
+  else for (const [lead, c] of CMP) if (raw.startsWith(lead)) { cmp = c; a = raw.slice(lead.length); break; }
+  const days = [a, b].filter((x) => x !== null && DAY_RE.test(x));
+  if (!days.length) return undefined;
+  const bad = days.find((d) => !isCalendarDate(d));
+  if (bad !== undefined) { drop(ctx, `${name}: ${JSON.stringify(bad)} is not a calendar date; dropped`); return null; }
+  let lo = null, hi = null;
+  if (f.day) {
+    if (cmp === "..") { lo = [">=", a]; hi = ["<=", b]; }
+    else return { op: "meta", col: f.col, cmp, value: a };
+  } else {
+    if (typeof ctx.zone !== "string" || ctx.zone === "") {
+      drop(ctx, `${name}: ${JSON.stringify(raw)} names a local day and no time zone is given; dropped`);
+      return null;
+    }
+    const bounds = {};
+    for (const d of days) {
+      const r = dayRange(d, d, ctx.zone);
+      if (r.refused) { drop(ctx, `${name}: ${JSON.stringify(raw)}: ${r.why}; dropped`); return null; }
+      bounds[d] = { start: noZ(r.start), end: noZ(r.end) };
+    }
+    const isDay = (x) => x !== null && DAY_RE.test(x);
+    if (cmp === "=") return span(f.col, [">=", bounds[a].start], ["<", bounds[a].end]);
+    if (cmp === ">") return { op: "meta", col: f.col, cmp: ">=", value: bounds[a].end };
+    if (cmp === ">=") return { op: "meta", col: f.col, cmp: ">=", value: bounds[a].start };
+    if (cmp === "<") return { op: "meta", col: f.col, cmp: "<", value: bounds[a].start };
+    if (cmp === "<=") return { op: "meta", col: f.col, cmp: "<", value: bounds[a].end };
+    lo = isDay(a) ? [">=", bounds[a].start] : [">=", a];
+    hi = isDay(b) ? ["<", bounds[b].end] : ["<=", b];
+  }
+  if (lo[1] > hi[1] || (lo[1] === hi[1] && hi[0] === "<")) {
+    drop(ctx, `${name}: ${JSON.stringify(raw)} ends before it starts; dropped`);
+    return null;
+  }
+  return span(f.col, lo, hi);
+}
+
 function coerce(f, v) {
   if (f.type === "number") { const n = Number(v); return Number.isFinite(n) ? n : v; }
   if (f.type === "bool") return /^(1|true|yes|y|on)$/i.test(v) ? 1 : /^(0|false|no|n|off)$/i.test(v) ? 0 : v;
@@ -1707,7 +1829,8 @@ function applySort(spec, ctx) {
   const [name, tail] = s.split(":");
   if (tail) dir = /^d/i.test(tail) ? "DESC" : "ASC";
   const key = String(name || "").toLowerCase();
-  if (!(key in SORTABLE)) { ctx.warnings.push(`sort: unknown field ${JSON.stringify(name)}`); return; }
+  if (FIELDS[key]?.rel) { drop(ctx, `sort: ${JSON.stringify(name)} can hold many values per record; not a sort`); return; }
+  if (!(key in SORTABLE)) { drop(ctx, `sort: unknown field ${JSON.stringify(name)}`); return; }
   ctx.sort = { field: key, dir: dir || (key === "relevance" ? "ASC" : "DESC") };
 }
 
@@ -1928,10 +2051,15 @@ function metaSql(node, rel, frs) {
   /* R26: a field read through its relation is the bundles whose key the relation holds with the value, as a set
      keyed on `fts_id` like every other leaf. */
   const fr = node.col && frs ? frs.get(node.col) : null;
+  /* A range's two bounds on one column (`span`, R27): the operators are the compiler's, the bounds arguments. */
+  const cmpOn = (lhs) => node.cmp === "span"
+    ? { sql: `${lhs} ${node.ops[0]} ? AND ${lhs} ${node.ops[1]} ?`, args: [...node.value] }
+    : { sql: `${lhs} ${node.cmp} ?`, args: [node.value] };
   if (fr) {
+    const c = cmpOn(fr.col);
     const inner = node.cmp === "present"
       ? { sql: `SELECT ${fr.key} FROM ${fr.table} WHERE ${fr.col} IS NOT NULL AND ${fr.col} <> ''`, args: [] }
-      : { sql: `SELECT ${fr.key} FROM ${fr.table} WHERE ${fr.col} ${node.cmp} ?`, args: [node.value] };
+      : { sql: `SELECT ${fr.key} FROM ${fr.table} WHERE ${c.sql}`, args: c.args };
     return { sql: rel ? `SELECT fts_id AS fid FROM ${rel.table} WHERE fts_id IS NOT NULL AND ${rel.key} IN (${inner.sql})`
                       : `SELECT fts_id AS fid FROM bundles WHERE fts_id IS NOT NULL AND bundle_id IN (${inner.sql})`,
              args: inner.args };
@@ -1942,7 +2070,9 @@ function metaSql(node, rel, frs) {
   if (node.cmp === "present")
     return { sql: keysWhere(rel, `${lhs} IS NOT NULL AND ${lhs} <> ''`, fromProj),
              args: node.json ? [node.json, node.json] : [] };
-  return { sql: keysWhere(rel, `${lhs} ${node.cmp} ?`, fromProj), args: [...args, node.value] };
+  const c = cmpOn(lhs);
+  return { sql: keysWhere(rel, c.sql, fromProj),
+           args: [...args, ...c.args] };   // an `fm:` node is never a span, so its path is bound once
 }
 
 /* A meaning arm, compiled to the SAME SHAPE every other leaf has: a set of
@@ -2078,12 +2208,15 @@ export const MEANING_LIMIT_DEFAULT = 200, MEANING_LIMIT_MAX = 1000;
 export function compile({ q = "", viewer = null, sort = null, dir = null,
                           limit = LIMIT_DEFAULT, offset = 0, ids = null,
                           facets = null, implicitOp = "and", snippetChars = 12,
-                          rows = null, rowLimit = MEANING_LIMIT_DEFAULT, rowOffset = 0 } = {}, relation = null) {
+                          rows = null, rowLimit = MEANING_LIMIT_DEFAULT, rowOffset = 0, zone = null } = {},
+                        relation = null) {
   /* REC-92: `passageTerms` is the FTS5 expression of every `passage:` selector
      this query compiled, kept APART from `textAtoms` because the two are terms
      over different FTS tables — see the note in `meaningAtom`. It is the input
      to the row projection's MATCH and `snippet()`, and to nothing else. */
-  const ctx = { warnings: [], textAtoms: [], sort: null, meaningArms: [], passageTerms: [] };
+  /* `drops` holds the warnings that DROPPED a term (R30); `zone` is the caller's, for R27's local days. */
+  const ctx = { warnings: [], drops: [], textAtoms: [], sort: null, meaningArms: [], passageTerms: [],
+                zone: typeof zone === "string" ? zone : null, frs: null };
   /* R25: the relation the projection is read through, `compile(query, {projection: {table, key}})`. */
   const rel = relationOf(relation, ctx.warnings);
   /* A bundle's row in every statement: `bundles b`, and the projection's relation `bp` beside it. */
@@ -2093,6 +2226,7 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
   /* R26: the fields the caller names a relation for, read through it wherever the plan filters (`metaSql`),
      facets or sorts (`fieldRef`) by them. */
   const frs = fieldRelationsOf(relation, ctx.warnings);
+  ctx.frs = frs;
   const fieldRef = (col) => (frs.has(col) ? fieldValue(frs.get(col)) : ref(col));
   const ast = parseTokens(tokenize(q), implicitOp === "or" ? "or" : "and", ctx);
   /* An explicit sort parameter outranks a `sort:` token in the query string:
@@ -2302,7 +2436,12 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
                 + `WHERE ${gate.sql}\nORDER BY ${order} LIMIT ?`, args: [...c.args, ...gate.args, IDS_MAX] };
   };
   const facetList = (Array.isArray(facets) && facets.length ? facets : DEFAULT_FACETS)
-    .map((f) => String(f).toLowerCase()).filter((f) => f in FIELDS);
+    .map((f) => String(f).toLowerCase()).filter((f) => {
+      if (!(f in FIELDS)) return false;
+      /* A field a bundle can hold many values of (R28) is not a facet: it is said, and the rest are counted. */
+      if (FIELDS[f].rel) { ctx.warnings.push(`facets: ${JSON.stringify(f)} can hold many values per record; not a facet`); return false; }
+      return true;
+    });
   /* ALL the facets in ONE statement. The first version ran one statement per
      field, so a six-facet sidebar rebuilt the scope six times and measured 283ms
      at 20,000 bundles. MATERIALIZED tells SQLite to compute the scope once and
@@ -2652,7 +2791,7 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
   };
 
   return {
-    ast, warnings: ctx.warnings, gate: gate.scope, viewer: gate.viewer,
+    ast, warnings: ctx.warnings, drops: ctx.drops, gate: gate.scope, viewer: gate.viewer,
     sort: { field: sortField, dir: sortDir }, limit: lim, offset: off,
     match: rank, terms: ctx.textAtoms.map((a) => a.value), widenable,
     /* D-222 option A: which meaning arms this query compiled, in order. */
@@ -2733,4 +2872,51 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
     restricted: Array.isArray(ids) && ids.length > 0,
     statements: { page, count, ids: idsStmt, snapshot, facets: facets_, facetScan, meaning },
   };
+}
+
+/* ---------------------------------------------------------------------------
+ * R30 (K1481; `answers` R15) — THE SAVED-QUERY FORM A STANDING QUESTION KEEPS.
+ *
+ * A standing question re-runs a member's search on a schedule, under its owner's sight AT THAT MOMENT, so what is
+ * kept is the query and how it is read, never a viewer, a limit, an offset or a selection: `{v: 1, q, implicitOp,
+ * sort, dir}`. `compile` given the same form and the same viewer answers the same plan every time.
+ *
+ * WHAT IS SAVED IS WHAT RUNS. A query that compiles only by DROPPING a term or a field (an unknown field read as
+ * text, a meaning spelling refused, a date with no day, a field not available here: `plan.drops`) is refused
+ * `SAVED_QUERY_DROPS`, naming each drop, because a question kept in a wider form than the member typed would report,
+ * every time it ran, on something nobody asked. A note on how a term was read (an unclosed parenthesis, a NEAR
+ * distance clamped) is not a drop. `SAVED_QUERY_EMPTY` is a query in which no term compiles; `SAVED_QUERY_SELECTION`
+ * one carrying `ids`, which is a selection rather than a search.
+ *
+ * Its second argument is `compile`'s (the relations, R25, R26, R29), and `zone` may ride on the query (R27), so the
+ * check is made against what the caller will run it with: a T33 field the caller can read is not a drop. Neither is
+ * kept in the form. Pure; never throws.
+ * ------------------------------------------------------------------------- */
+export function savedForm(query = {}, relation = null) {
+  const refuse = (reason, detail, warnings = []) => ({ ok: false, reason, detail, warnings });
+  try {
+    const o = query && typeof query === "object" ? query : {};
+    if (Array.isArray(o.ids) ? o.ids.length > 0 : o.ids !== undefined && o.ids !== null)
+      return refuse("SAVED_QUERY_SELECTION", "it carries ids: a selection, not a search, and a selection is not re-run");
+    const q = typeof o.q === "string" ? o.q : "";
+    const implicitOp = o.implicitOp === "or" ? "or" : "and";
+    const drops = [];
+    let sort = null, dir = null;
+    if (o.sort !== undefined && o.sort !== null && o.sort !== "") {
+      const key = String(o.sort).toLowerCase();
+      if (!(key in SORTABLE)) drops.push(`sort: ${JSON.stringify(String(o.sort))} is not a sort key`);
+      else { sort = key; dir = /^d/i.test(String(o.dir ?? "")) ? "desc" : o.dir ? "asc" : null; }
+    }
+    const plan = compile({ q, implicitOp, zone: o.zone ?? null }, relation);
+    drops.push(...plan.drops);
+    if (drops.length)
+      return refuse("SAVED_QUERY_DROPS", `compiling it drops ${drops.length === 1 ? "a term" : `${drops.length} terms`}, `
+        + "so what would be saved is not what would run", drops);
+    if (plan.ast === null) return refuse("SAVED_QUERY_EMPTY", "no term of it compiles");
+    return { ok: true, form: { v: 1, q, implicitOp, sort, dir } };
+  } catch {
+    /* A `sort` or `dir` whose own `toString` throws is the one way here; it is refused, never thrown on. */
+    return refuse("SAVED_QUERY_DROPS", "its sort cannot be read, so what would be saved is not what would run",
+                  ["sort: not readable"]);
+  }
 }
