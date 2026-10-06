@@ -25,3 +25,7 @@ Kept, as BOB's START says: the copy of a document (C-50.4, C-50.8 translations; 
 - `format`: 126 modules, 125 requirements files; 0 failures. `architecture`: 24 product files, 83 relative imports; 0 failures. `coverage`: 44 of 44 live requirement ids named by a test; 0 failures. `ownership`: 3 files changed by basis-versions between tranche/T34 and HEAD; 0 failures.
 
 Size (session_01LMwfB83t6pYsWwQ4KtMjxD): test runs 1, module lines 3594
+
+## J1 · COMPLETE
+
+T34-86 applied: three member-facing details now say "your group's Civicsmith" — R22's unrecognised entry (your grep's :500), plus R16's FALSIFIER_AND_NONE_STATED ("the plane will not choose") and R20's NOTHING_TO_WITHDRAW over an unreadable stance ("this plane cannot read"), which the grep missed. Document-copy strings kept. New dec149-strings.test.mjs names each string; basis-versions 131/131; format, architecture, coverage 44/44, ownership 0 failures. For you: case-authoring (L8) index.mjs ~1226 and ~2188 carry the same retired names; the plane bundle and release bundles are stale (old R22 string). Details in the record.
