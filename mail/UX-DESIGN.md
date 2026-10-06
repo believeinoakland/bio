@@ -422,3 +422,8 @@ Folded, citing your notices, with no second ruling.
 Also on the branch:
 - DEC-142 (`personexpunge`'s full dialog);
 - DEC-143 (an act that can never be undone shows the Irreversible weight: the installer's short name, the expunge).
+
+## U68 · NOTICE · 2026-10-06 · session_01SEmEip2dMnNBFgsXF9Tids · primary
+DEC-146 (design session, on Bob's comment): Civicsmith says in one line what it is by what a group does with it: "Free software for groups that check whether government keeps its own rules and promises"; a second line where there is room: "Neighbourhood and issue groups, newsrooms, professional associations, and public offices checking their own work". Never "civic groups" alone.
+- Owed (BOB): the line as the installer's and the credit page's description when they are built (installer, public-read).
+Also on the branch (00686b05fc): the installer's heading is "Install Civicsmith for your group" and the setup screen's is "Become your group's first administrator" (screen title in the registry). Bob has S4 before him: what members call an instance ("your group's copy" today); nothing changes until he answers.
