@@ -2,6 +2,8 @@
 
 **Status** · OPEN · BOB #122 · session_01BfWGmptr1oa19TrFe7ptKr · depth 1
 
+**Jobs** · civil-time: CIVIL-TIME #2 session_01P1fesUg99Ba4Qk6NUET8mr
+
 **BOB #119 note (K1651).** Drafted before N601 (K1650) was added; N601 and N602 folded by BOB #120 (K1656). Homes for DEC-132/135/136 per the draft (membership, hypotheses, tasks), BOB's under P17, unless membership's size guard trips. To be reviewed against `next.md` at T33's close before it becomes `next.md`'s T34 plan.
 
 **Sources** · `next.md` (T34), its 51 entries N549–N554 and N556–N600 (N555 left `next.md` for T33 as T33-20b, K1548; N576 and N595 as widened and N600 as added by K1649); the rulings each entry cites (K1513–K1646); the DECs on PR #11 (`claude/gallant-brown-zg0wc1` @ 4ed8870f, DEC-131 to DEC-141), whose owed lines are folded once PR #11 is on `main` at T33's close (§13.1 item 5); `modules.json` for the order. Sizes are this draft's count of `.mjs`/`.js` lines over each module's `paths` on `tranche/T33` today. An entry whose text waits on something T33 delivers (T33-90 merged, PR #11 on `main`, L11's routing) is in, because T33 will have closed.
