@@ -21,3 +21,29 @@ Built on J1's readings and pushed (`job/T33/public-read`; module 122/122; format
 2. **Row census.** C-98.11 `WITHHELD_BY_COURT_ORDER` (J1 (6)) joins `test/system/row-census.test.mjs`'s rows awaiting promotion's stamp (named red class, K1542). Otherwise the dependent suites I ran (control-plane routes and families, filings, network-notices, op-declarations, plane, publication, ratification, review, case-checker spec, mk6) fail exactly as `tranche/T33` does today: families "CHECK_FAMILIES is total" (K1581), filings R9/R30 (K1519), row-census.
 3. **Generated artifact staled.** `bio-plane/dist/bio-plane.bundled.mjs` (the plane's source changed); regenerated at the layer close.
 4. **R17's text** lists C-98.1–C-98.10; with J1 (6) accepted it gains C-98.11 (wording yours).
+
+## J3 · COMPLETE
+
+T33-65 complete on `job/T33/public-read`, re-pointed at the merged case-grammar (K1636) and publication (K1643). docket brings nothing new to this entry (R20, R21, R25 unchanged; `docket-real.test.mjs` already reads the real module); merge after docket as B4 says.
+
+**Entries applied (J1 readings, accepted K1632):**
+- R26: `publishedCase.calculations`, from `case-grammar.calculationsOf`: each output a computed fact, a share's numerator and denominator beside it (none stated: `denominator: null` with its sentence), method version, recompute status, the publisher's disclosure beside a differing or unbound one; nothing recomputed; `[]` without the block.
+- R27: `publishedCase.timeline` from `case-grammar.timelineOf`: lanes apart, items placed nowhere listed apart (`placed_nowhere`), `when` and `source` as signed.
+- R23: the case file carries each calculation (`calculationFileText`) at `caseFilePath("calculation", calc)`, each held input at `caseFilePath("calculation", [calc, sha])`, and `calculations/prov.jsonld` (`provOf`) once; an input not held at its hash is named in `unheld`. The end-to-end manifest passes `caseFileManifestCheck`. No `calculations` edge (uses unchanged).
+- R28: `court_orders` and `withheld` on `publishedCase`, from `publication.stampsOf`. `remove`/`seal` withhold, `unseal` ends a seal only, and `redact` withholds nothing. Withholding is by hash wherever the bytes would be served: the document and everything read from it, finding bodies (Worker), files, manifest, a successor's quoted statement, and the rows of `publishedmanifest`, `publishedlist` and `publishededitions`. `op=publishedbytes` answers C-98.11 `WITHHELD_BY_COURT_ORDER` (451), a zip carrying a withheld file likewise. New internal store op `withheld`. Each order is linked to its docket entry `{seq, id: <case>#<seq>, digest: null (publication's stamp records only the seq), docket: op=docketpublic&case=}`.
+- Improvement in my module: `publishedCase.files` now lists a case file's `manifest.files` (it listed `manifest.parts`, the part digests, for a `/6` case file).
+
+**Deferred:** none.
+
+**Found in other modules (also J2):**
+- Generated artifact `bio-plane/dist/bio-plane.bundled.mjs` is staled.
+- C-98.11 joins row-census's rows awaiting stamp.
+- Wording only: R17's list should name C-98.11; R16 and Uses should name `publication.stampsOf` (R62), which R28 reads. My R16 test now allows it.
+- Efficiency: R28's index calls `stampsOf` once per published case edition on each public read (it opens only stamped editions). A set-wide `stampedEditions()` read in publication would make that one query; fine at today's volumes.
+
+**Tests and checks:**
+- `node --test bio-plane/test/m/public-read/`: tests 123, pass 123, fail 0.
+- Dependent suites (case-checker spec, control-plane, filings, network-notices, op-declarations, plane, publication, ratification, review, docket, mk6, row-census): pass 805, fail 11. These are the same 11 as on `tranche/T33` @ f3c5790+, all named reds: families, control-plane R26/R43, filings R9/R30, plane R2/R5, docket R15 order, case-checker R14 spec, row-census.
+- `checks/format.mjs`: 126 modules, 0 failures. `checks/architecture.mjs . public-read`: 0 failures. `checks/coverage.mjs . public-read`: 28 of 28. `checks/ownership.mjs . public-read tranche/T33`: 0 failures.
+
+Size (session_01FpBN8hkUyqmxvtFg3izFyL): test runs 16, module lines 3277
