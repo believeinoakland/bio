@@ -22,3 +22,30 @@ One more reading (R35), separate from J1, which B2 answered.
 R35 says: "The `ask` and every other layer carry, unconditionally, DEC-27's clause." My reading: the clause, "The assistant may only structure what the member SAID" (Roles §3 rule 7), is one object. It is carried in the `ask` layer's clauses and in the `suggestions` layer's clauses, and it is carried whether or not any switch is on. The suggestions layer's note says it governs wherever the switch is off.
 
 I am not adding it to the bodies of the judgement, planning, filing, edition, wizard and legal-lookup layers. Two reasons: those are run modes, where DEC-60 supersedes DEC-27 for the investigative session (Roles §3 rule 7's own last sentence), and R2 fixes the resident layer's five keys. If you meant every disclosed layer's body, say so and I will add the clause to each one.
+
+## Completion (T33-52)
+
+**Entries applied.**
+- **K1516, the red "R28 the action_planning layer":** the cause was K1500's re-wording of Action §4 rules 6 and 10, not the code. `ACTION_RULES` re-quotes both from the canon as it now stands. This changes wording only; R28's meaning is unchanged (accepted in K1601).
+- **R33, the `legal_lookup` layer:** placed after `wizard_authoring`; `authored`. Its body quotes the ladders' §6.4 skill text whole, §6.4's "The AI's part", and §10's closed-book row. Its acts are `standardpropose` and `standardadopt` (R28's selectors, shared, so each id is still one literal) and `capturerequest` (capture-requests R30), each read by id from `published.catalog`. With `standardpropose` published, a missing act throws (R1). With none published, the layer is a stated absence. The mode it is deployable in is read from run-rules' order (`LEGAL_LOOKUP_MODE`). While that mode is not in `DEPLOYED_MODES`, `load_when` says so.
+- **R34, the `ask` layer:** placed after `legal_lookup`. Its body quotes the ladders' §9.4 (the answer contract, the interpretation shape, the checks' limit, record content treated as data, the legal-information line) and §10 (the closed book, four-level absence), plus DEC-27's limit (Roles §3 rule 7). It carries `published.answer_checks` unchanged and types no code. Next acts are named by their catalogue ids, which the layer reads from the `acts` layer. With no checks published, the layer is a stated absence (K1601).
+- **R35, the `suggestions` layer:** placed after `ask`. It quotes the ladders' §2 suggestion switch and DEC-27's limit. DEC-27's limit is one shared clause, carried in `ask` and `suggestions` only (K1602). The pack reads no switch, so it is identical for every member.
+- `SOURCING` gains the new layers' labels.
+
+**Deferred.** None.
+
+**Found in another module.**
+- `bio-plane/dist/bio-plane.bundled.mjs` (and `release/bio-plane.bundled.mjs`) bundle `skillpack.mjs`/`skilldoctrine.mjs` and are stale after this job. BOB regenerates them at layer close (§14).
+- The `ask` layer stays absent until affordances publishes `answer_checks` in its no-target answer. BOB says this is in affordances' L11 START (B2).
+
+**Uses.** No change: record-grammar, observation-log, strength, run-productions (doctrine), basis-versions, inquiry-grammar, run-rules, contradiction. Newly imported from run-rules: `DEPLOYED_MODES`.
+
+**Tests and checks**, on `job/T33/skills` after merging `tranche/T33`:
+- `node --test bio-plane/test/m/skills/`: tests 67, pass 67, fail 0 (new: `lookup.test.mjs`, `ask.test.mjs`).
+- The tests of the users of the pack (agent-worker requirements and wire-vocabulary; affordances plane; ai-runs converts; control-plane catalogue-end and affordances-pack; system fleetbundles): pass 42, fail 2. These are the same two failures as before this job, both named accepted reds: control-plane's "R43, R22 … every published fence" (K1572) and fleetbundles' "agent-worker's 13 inputs" (K1598).
+- `format`: 126 modules, 125 requirements files; 0 failures.
+- `architecture`: 0 failures.
+- `coverage`: 35 of 35 live requirement ids named by a test; 0 failures.
+- `ownership`: 9 files changed by skills; 0 failures.
+
+Size (session_01GmSBs9c4ZXTh8Wo9f4QZWg): test runs 10, module lines 2192
