@@ -2,14 +2,30 @@
 
 **Status** · session_01Y1URYHRYBVXZLpDjSMzS7r · depth 2 · WAITING ON BOB (J4) · handled B4
 
-## Progress (T33-67)
+## Completion (T33-67)
 
-- **Applied** (commit on `job/T33/case-import`): R21, R3's per-calculation record, and R4's calculation bullet. Each row of the case document's `calculations:` block is recreated by `calc-grammar` (`evaluate`, `resultKey`, `METHOD`) over the carried inputs, found by the SHA-256 the row states and checked against it. It is recorded `recreated`, `differs` (naming each result: the source's value and the recomputed one) or `not_recreated` (each missing input, an input differing from its hash, an unheld method version, or an evaluation calc-grammar refuses). This runs at the import and at each completion, in a new table, `case_import_calculations`, declared to the purge with the others (R12, R13). Beside each one sit the source's statement, labelled as the source's (`SOURCE_CALCULATION`), and case-checker's own R20 answer with `agrees_with_this_copy`. A missing input is a missing material for R5. No record row, `CALC-` or money fact is written (tested by a snapshot of every table outside the module's own). Readings J1 (1) and (2) accepted by BOB (B2, K1633).
-- **Waiting on upstream merges (K1563 (1)):** `case-grammar` (T33-60: `calculationsOf`, the `calculation` kind's path) and `case-checker` (T33-66: R20's `calculations`). Until then the module reads R18's rows with its own `calculationRowsOf`, which is coded to R18. When `case-grammar.calculationsOf` exists the module uses it automatically. The fixture carries inputs at `caseFilePath("calculation", …)` once that path is spelled. After both merge: merge `tranche/T33`, re-run the tests on the real modules (add a `realChecker` case with calculations), then COMPLETE.
-- **B3 (K1636) applied:** merged `tranche/T33`. The module now reads `case-grammar.calculationsOf` itself; the stand-in `calculationRowsOf` and its injected dep are gone. The fixture writes the block in case-grammar's spelling (`CALCULATION_FIELDS`, each value as quoted canonical JSON) and carries each input at `calculations/<calc>/inputs/<sha256>` (`caseFilePath("calculation", [calc, sha])`), which a test asserts. `timelineOf` is not used: no case-import requirement reads the timeline. Still waiting: `case-checker` (T33-66), for a real-checker case with R20's `calculations`.
-- **B4 (K1642) applied:** merged `tranche/T33` (R18's `recompute: not_recomputed` for a workbook row). A test asserts that such a row reads `not_recreated` here, with the source's `not_recomputed` held as its statement. Still waiting on `case-checker` (T33-66).
-- **Tests so far:** `node --test bio-plane/test/m/case-import/` 83 pass, 0 fail (on the real case-grammar after B3). Users' tests (plane watch/accepted, case-disclosures, case-authoring, control-plane r49/r52, op-declarations t28/t31, affordances t31): unchanged before and after, only the named reds (case-disclosures R21, case-authoring R30).
-- **Checks:** format 0 failures; coverage 21/21, 0 failures; ownership 0 failures; architecture 2 failures, both the `calc-grammar` edge (the module and its calculations test), not yet in `uses`: BOB sets it at the merge, K1633.
+- **Entries applied:** T33-67 (C:A-14; K1448, DEC-112, D312), on the readings in J1 that BOB accepted (B2, K1633).
+  - **R21:** each row of the case document's `calculations:` block (`case-grammar.calculationsOf`) is recreated by `calc-grammar` (`evaluate`, `resultKey`, `METHOD`), never trusted. Each input is found by the SHA-256 its row states, among the case file's files (case-grammar R13's `calculations/<calc>/inputs/<sha256>`) and the documents supplied later, and checked against that hash first. Each calculation is recorded as one of:
+    - `recreated`;
+    - `differs`: naming each result, with the source's value and the recomputed one. The result is the one stored under the row's result key, as case-checker R20 reads it, plus the result key itself;
+    - `not_recreated`: naming each input that is missing or differs from its hash, an unheld method version (a workbook row's `not_recomputed` included, B4), or a recipe the evaluator refuses.
+
+    The source's stated values are held only as its statement. No `CALC-`, money fact or record row is written; a test snapshots every table outside the module's own.
+  - **R3:** recorded per calculation at the import and at each completion, in `case_import_calculations` (append-only, declared to the purge with the module's other tables). The checker's `calc_versions` is kept with its other versions.
+  - **R4:** `importedCase` answers each calculation with its recreated result, beside the source's value labelled `SOURCE_CALCULATION`, and case-checker's own R20 answer with `agrees_with_this_copy`.
+  - **R5:** a calculation's missing input is a missing material, so bytes matching it complete it.
+- **CHANGEs applied:** B3 (K1636) and B4 (K1642): case-grammar merged; the module and its tests read the real `calculationsOf` and paths, and the stand-in reader is removed. B5 (K1644): case-checker merged; the real-checker case was added.
+- **Deferred:** nothing.
+- **Found in another module (REPORT, for BOB):** case-checker's R9 fills only materials from `documents`, and its R20 recomputes only over inputs the case file carries. So after a completion that supplies a calculation's missing input, case-import (R5, R21) records `recreated` while the checker still answers `not_recomputed`; this is recorded as `agrees_with_this_copy: false`. This is within case-checker's requirements as written. If its R9 should fill a calculation's inputs too, that is case-checker's. A test asserts the current behaviour (`real.test.mjs`).
+- **Generated artifact:** the plane bundle (`bio-plane/dist/bio-plane.bundled.mjs`, owned by `not_product`) carries case-import's source, so this job stales it, for regeneration at the layer close.
+- **Final `uses`:** record-grammar, record-core, membership, strength, case-grammar, case-checker, inquiry-grammar, accepted-work, reevaluation, signatures, docket, and **calc-grammar** (added, K1633). `calculations` is not used.
+- **Tests:** `node --test bio-plane/test/m/case-import/`: 84 pass, 0 fail. Users' tests (plane watch and accepted, case-disclosures, case-authoring, control-plane r49 and r52, op-declarations t28 and t31, affordances t31): 220 pass, 3 fail, the same three as on `tranche/T33` without this job (case-disclosures R29, case-authoring R29 and R30, all outside this module). No layer tests are named.
+- **Checks:**
+  - `format`: 126 modules, 0 failures.
+  - `coverage`: 21 of 21 live ids, 0 failures.
+  - `ownership`: 6 files, 0 failures.
+  - `architecture`: 2 failures, both the `calc-grammar` edge (the module and `calculations.test.mjs`), which BOB adds to `uses` at the merge (K1633).
+- Size (session_01Y1URYHRYBVXZLpDjSMzS7r): test runs 24, module lines 1852
 
 ## J1 · QUESTION
 
