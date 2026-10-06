@@ -1151,8 +1151,8 @@ export function promotionOf(host, deps) {
     p = new Promotion({ ...(deps || {}), record, membership: (deps && deps.membership) || membershipOf(host, { record }) });
     instances.set(host, p);
     /* record-core R59: the moved checks join the audit, with the caller's release registry from its context. */
-    record.registerAuditCheck("promotion", ({ folderName, files, sha256 }, context) =>
-      recordChecks({ folderName, files, releaseRegistry: (context && context.releaseRegistry) || null, sha256 }));
+    record.registerAuditCheck("promotion", ({ folderName, files, raw, sha256 }, context) =>
+      recordChecks({ folderName, files, raw, releaseRegistry: (context && context.releaseRegistry) || null, sha256 }));
     registerInfo2Grammar(record);
   }
   return p;

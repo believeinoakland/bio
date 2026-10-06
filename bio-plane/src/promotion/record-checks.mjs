@@ -5,9 +5,10 @@ import { parseFrontmatter } from "../record-grammar/index.mjs";
 import { checkStateHistory, checkMechanicalConformance, checkDivergence } from "./history.mjs";
 import { checkReleaseSignature } from "./release.mjs";
 
-/** `{folderName, files (path → text), releaseRegistry, sha256}` → the moved checks' findings, `{check, severity,
- *  message, repairs?}`, in the order `checkBundle` ran them. */
-export async function recordChecks({ folderName, files, releaseRegistry = null, sha256 }) {
+/** `{folderName, files (path → text), raw?, releaseRegistry, sha256}` → the moved checks' findings, `{check, severity,
+ *  message, repairs?}`, in the order `checkBundle` ran them. `raw`, optional, is the image as given (its blob
+ *  references, C-20.1's held copies, R30). */
+export async function recordChecks({ folderName, files, raw = null, releaseRegistry = null, sha256 }) {
   const findings = [];
   const md = files.get("bundle.md");
   if (md != null) {
@@ -15,7 +16,7 @@ export async function recordChecks({ folderName, files, releaseRegistry = null, 
     const fm = fm0 && typeof fm0 === "object" ? fm0 : null;
     checkStateHistory({ fm, files }, findings);
     findings.push(...await checkReleaseSignature({ folderName, fm, files, releaseRegistry, sha256 }));
-    await checkMechanicalConformance({ files, sha256 }, findings);
+    await checkMechanicalConformance({ files, raw, sha256 }, findings);
   }
   await checkDivergence({ files, sha256 }, findings);
   return findings;

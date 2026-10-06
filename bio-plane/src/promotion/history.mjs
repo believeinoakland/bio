@@ -84,9 +84,37 @@ function bodySections(body) {
   return out;
 }
 
+/* R30 (N631, K1718): whether promotion `e` wrote `name`, judged against e's own pre-image snapshot alone (the live
+   files R3 copied into history under e's key), never against the previous promotion's recorded entry. `wrote` when
+   the name is absent from that snapshot (new) or its copy's digest differs from the digest e's record states;
+   `carried` when they agree; `undetermined` (R37) when a side cannot be read: the snapshot lists the name but the
+   image holds no copy, or no digest of the copy or of what e wrote is stated. A copy held as a blob is compared by
+   its stated digest (`raw`, the image's reference), never fetched. */
+/* A file's copy under snap key K, as record-core R15 names it in the image: the key in the file name, before the
+   extension (`data/dataset.json` → `_history/data/dataset_K.json`), the form C-12.2 reads. */
+const snapCopyPath = (path, key) => {
+  const cut = path.lastIndexOf("/"), dir = path.slice(0, cut + 1), name = path.slice(cut + 1), dot = name.lastIndexOf(".");
+  return dot === -1 ? `_history/${dir}${name}_${key}` : `_history/${dir}${name.slice(0, dot)}_${key}${name.slice(dot)}`;
+};
+async function writtenBy(e, x, { files, raw, sha256 }) {
+  const name = x && x.name;
+  const copy = snapCopyPath(String(name), e.key);
+  const listed = Array.isArray(e.snapshotted) ? e.snapshotted.includes(name) : null;
+  const ref = raw && raw[copy] && typeof raw[copy] === "object" ? raw[copy] : null;
+  const held = files.has(copy) || ref !== null;
+  if (!held) return listed ? { undetermined: "the pre-image snapshot lists it, but the image holds no copy" } : { wrote: true };
+  const was = files.has(copy) ? await sha256(files.get(copy)) : (ref.sha256 || ref.blobSha || null);
+  const now = typeof x.sha256 === "string" && x.sha256 ? x.sha256 : null;
+  if (!was) return { undetermined: "its pre-image copy states no digest" };
+  if (!now) return { undetermined: "the promotion's record states no digest for it" };
+  return was.toLowerCase() === now.toLowerCase() ? { carried: true } : { wrote: true };
+}
+
 /** C-20.1 (R30): every mechanical promotion with a recoverable pre-image stays within its operation's declared field
- *  set, touches only the Session Log in the body, and writes only inside the mechanical envelope. */
-export async function checkMechanicalConformance({ files, sha256 }, findings) {
+ *  set, touches only the Session Log in the body, and writes only inside the mechanical envelope; a file it carried
+ *  unchanged from its own pre-image is not written (N631). `raw`, optional, is the image as given, whose blob
+ *  references state a held copy's digest. */
+export async function checkMechanicalConformance({ files, raw = null, sha256 }, findings) {
   const man = readJson(files, "_history/manifest.json");
   if (!man.value) return;
   const { order, entries } = historyWriteOrder(man.value.entries);
@@ -147,10 +175,18 @@ export async function checkMechanicalConformance({ files, sha256 }, findings) {
         findings.push(f("C-20.1", "error", `mechanical '${op}' promotion '${e.key}' changed body section '${h}'; a mechanical writer touches only the Session Log`,
           ["revert the body change outside the Session Log"]));
     }
-    for (const name of (Array.isArray(man2.files) ? man2.files.map((x) => x && x.name) : []))
-      if (!(name === "bundle.md" || String(name).startsWith("snapshots/") || MECHANICAL_APPEND_FILES.includes(name)))
+    for (const x of (Array.isArray(man2.files) ? man2.files.map((x) => (typeof x === "string" ? { name: x } : x)) : [])) {
+      const name = x && x.name;
+      if (name === "bundle.md" || String(name).startsWith("snapshots/") || MECHANICAL_APPEND_FILES.includes(name)) continue;
+      const w = await writtenBy(e, x, { files, raw, sha256 });
+      if (w.carried) continue;
+      if (w.undetermined)
+        findings.push(f("C-20.1", "warn", `mechanical '${op}' promotion '${e.key}' named '${name}', outside the mechanical envelope, and whether it wrote it is undetermined: ${w.undetermined}`,
+          ["re-export the record with the pre-image copy and the promotion's per-file digests, so the carry can be compared"]));
+      else
         findings.push(f("C-20.1", "error", `mechanical '${op}' promotion '${e.key}' wrote '${name}', outside the mechanical envelope (bundle.md, snapshots/, ${MECHANICAL_APPEND_FILES.join(", ")})`,
           ["revert the out-of-envelope write"]));
+    }
   }
 }
 

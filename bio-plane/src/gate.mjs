@@ -898,7 +898,7 @@ export async function runGate({ bundleId, image, knownIds, hasCapture, registers
   }, { grammars });
   /* R30–R32 (K64): the checks that read a bundle's record of promotions and its release signatures (C-4.2, C-17.2,
      C-18.8, C-20.1) left the catalogue for this module, and run here, after it, over the same image. */
-  const findings = [...catalogue, ...await recordChecks({ folderName: bundleId, files,
+  const findings = [...catalogue, ...await recordChecks({ folderName: bundleId, files, raw: image || null,
                                                            releaseRegistry: releaseRegistry || null, sha256 })];
 
   const errors = findings
