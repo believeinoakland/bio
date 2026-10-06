@@ -26,3 +26,6 @@
 
 Size (session_015nfoizo1p2YDa9AM8MBLGz): test runs 3, module lines 2188
 
+## J1 · COMPLETE
+
+T34-35 done on job/T34/skills. The R18 test now pins GATE_ADDRESS.file to agent-harness/src/harness.mjs, and enforced_by_row to match. The SK-4 comment in skilldoctrine.mjs now says where the gate lives. That test is red until run-rules' T34-32 changes GATE_ADDRESS; this fits L6's order, where run-rules merges first. With that one line applied locally, skills is 67/67; on this branch it is 66/67. format, architecture, coverage (35/35) and ownership (3 files): 0 failures each. bio-plane.bundled.mjs is stale because of a comment change; BOB regenerates it at layer close. Details are in the record's Completion section.
