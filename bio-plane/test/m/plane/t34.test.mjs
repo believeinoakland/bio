@@ -40,3 +40,18 @@ test("K1788, K1803 (answers R15; retrieval R72): answers reads retrieval's relat
   assert.deepEqual(a.relations(), r.relations());
   assert.equal(a.zone(), r.zone());
 });
+
+test("K1868 (2) (queue-producers R38; instance-setup R62): the queue's producers are the one instance the plane builds with the providers it hands queue, and instance-setup's start registers its place arrivals through that same instance", async () => {
+  const { queueProducersOf } = await import("../../../src/queue-producers/index.mjs");
+  const x = await store();
+  const qp = queueProducersOf(x.ctx);
+  /* the registration instance-setup's start made is held on that instance: a second is refused */
+  const again = qp.registerPlaceArrivals(() => ({ arrivals: [] }));
+  assert.equal(again.ok, false, JSON.stringify(again));
+  assert.equal(again.reason, "PLACE_ARRIVALS_REGISTERED");
+  /* and it is the instance queue reads: a later caller asking for it with other deps gets the same one */
+  assert.equal(queueProducersOf(x.ctx, { docket: {} }), qp);
+  /* negative control: a bare instance on another storage holds no registration */
+  const { storage } = await import("./fixture.mjs");
+  assert.equal(queueProducersOf(storage().ctx).registerPlaceArrivals(() => ({ arrivals: [] })).ok, true);
+});

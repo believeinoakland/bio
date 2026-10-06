@@ -61,7 +61,8 @@ import { biasOf, biasOps } from "../bias/index.mjs";
 import { aiRunsOf, aiRunsOps } from "../ai-runs/index.mjs";
 import { contentOf, contentOps } from "../content/index.mjs";
 import { retrievalOf, retrievalRoutes } from "../retrieval/index.mjs";
-import { queueOf } from "../queue/index.mjs";
+import { queueOf, Queue } from "../queue/index.mjs";
+import { queueProducersOf } from "../queue-producers/index.mjs";
 import { tasksOf } from "../tasks/index.mjs";
 import { wizardScriptsOf, wizardScriptsOps } from "../wizard-scripts/index.mjs";
 import { instanceSetupOf, instanceSetupOps } from "../setup.mjs";
@@ -321,10 +322,19 @@ export class Store extends DurableObject {
        queue-producers' deps. */
     const noticeProducers = noticeProducersOf(ctx, { membership: membershipOf(ctx), people, moneyChecks: moneyChecksOf(ctx), duties,
                                                      answers: answersOf(ctx), inquiry: inquiryOf(ctx) });
-    queueOf(ctx, { env, filingTemplates, localFacts, docket, caseImport, noticeProducers }).migrate();
+    /* K1868 (2): queue-producers' one instance per storage, built here with the providers queue would hand it
+       (`Queue.PRODUCER_DEPS`), since its factory reads its deps on the first call only; handed to queue as its producers
+       and to instance-setup, whose start registers `placeArrivals` through it (instance-setup R62, queue-producers R38),
+       so neither builds it bare. */
+    const queueDeps = { env, filingTemplates, localFacts, docket, caseImport, noticeProducers };
+    const queueProducers = queueProducersOf(ctx, Object.fromEntries(
+      Queue.PRODUCER_DEPS.filter((k) => queueDeps[k] !== undefined).map((k) => [k, queueDeps[k]])));
+    queueOf(ctx, { ...queueDeps, producers: queueProducers }).migrate();
     tasksOf(ctx, { env }).migrate();
-    /* R1: instance-setup started once per object (its `start` is idempotent on one storage). */
-    ctx.blockConcurrencyWhile(async () => instanceSetupOf(ctx, env).start());
+    /* R1: instance-setup started once per object (its `start` is idempotent on one storage), built here first, with the
+       queue's producers (K1868 (2)). */
+    const instanceSetup = instanceSetupOf(ctx, env, { queueProducers });
+    ctx.blockConcurrencyWhile(async () => instanceSetup.start());
   }
 
   /* R3: record-core's `RECORD_SCHEMA` first, then each owner's `migrate()` in this order. */

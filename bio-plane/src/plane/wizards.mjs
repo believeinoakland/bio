@@ -1,6 +1,7 @@
 /* plane R19 (N528; DEC-120, DEC-121 (5); K1396): the registration the plane makes with `wizard-scripts` at start (its
-   R13), held apart from the class so the release suite reads the same parts without the Durable Object runtime. */
-import { CIVICSMITH_LIBRARY } from "../wizard-scripts/index.mjs";
+   R13), held apart from the class so the release suite reads the same parts without the Durable Object runtime; and
+   R24's check of the plane's own `SCREENS`, the registry `answers`' explain read is handed. */
+import { CIVICSMITH_LIBRARY, SCREEN_REGISTRY } from "../wizard-scripts/index.mjs";
 import { MACHINE_REFUSALS, RUNGS } from "../affordances.mjs";
 import { OPS } from "../op-declarations/index.mjs";
 import { SCREENS } from "./screens.mjs";
@@ -16,10 +17,12 @@ export const MACHINE_DRAFTS = Object.freeze(["whatchangedpropose", "escalationre
 export const irreversibleActs = (rungs = RUNGS) => Object.keys(rungs).filter((op) => rungs[op] === "irreversible");
 
 /** R19 (N528; DEC-121 (5); T34, K1818): what the plane registers with `wizard-scripts` at start (its R13), and what the
- *  release suite holds `requiredFailures` empty for: the screen registry and the Civicsmith library the bundle carries,
+ *  release suite holds `requiredFailures` empty for: the screen registry (`wizard-scripts`' `SCREEN_REGISTRY`, the design
+ *  stream's `registry.json` it carries, so the required flows walk the registry's screens; K1869 (2)) and the Civicsmith
+ *  library the bundle carries,
  *  the member op table (`op-declarations`), the acts a machine is refused (`affordances`' `MACHINE_REFUSALS`), the
  *  labelled machine drafts and the irreversible acts (`wizard-scripts` R24's refused set). */
-export const wizardRegistration = () => ({ screens: SCREENS, ops: OPS, machineRefused: Object.keys(MACHINE_REFUSALS),
+export const wizardRegistration = () => ({ screens: SCREEN_REGISTRY, ops: OPS, machineRefused: Object.keys(MACHINE_REFUSALS),
                                            machineDrafts: MACHINE_DRAFTS, irreversible: irreversibleActs(),
                                            library: CIVICSMITH_LIBRARY });
 
