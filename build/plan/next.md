@@ -32,6 +32,10 @@
 
 - N564 · `wizard-scripts`, `op-declarations`, `answers` (BOB names the module that holds the screen registry at T34's opening) · DEC-139 (UX-DESIGN U59; K1565), folded once PR #11 is on `main`: the screen registry `docs/development/ux-substrate/screens/registry.json` registered (42 screens, 192 acts), its 69 requirement functions' ops declared by lowercased name; wizard-scripts R2 gains an optional `via` (a side trip into another wizard, returning to the step left); answers' standing question runs for a member with no account of their own, its matches arriving unread; the Civicsmith library as its data file only once Bob approves it (S2). **Hard reason it is not in T33:** DEC-139 is not on `main` until T33's close (§13.1 (5)), and the library waits on Bob.
 
+- N565 · `civil-time` · cache `offsetAt`'s zone offsets (per zone, keyed by its transitions or the hour): `formatToParts` per call is most of an explore walk's time, every item judged twice (EXPLORE #1 J2 (1); K1566). **Hard reason:** the order: civil-time (L1) is closed.
+
+- N566 · `connection-grammar`, `explore` · M-X1a's hub bound: a period walk over a council member with more than 1,000 votes in the window is cut at the hub (`LOOKED_INDETERMINATE`); a bound per kind or a narrower window is decided on real council volumes measured at T33's release (EXPLORE #1 J2 (2); K1566). **Hard reason:** a deployment measurement.
+
 Otherwise none yet. T33's release at its close (K1501) runs the deployment-gated measurements; the work they unlock is written here then.
 
 ## Carried from T33
