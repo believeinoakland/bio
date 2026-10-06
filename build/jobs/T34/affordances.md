@@ -108,3 +108,13 @@ Re-opened by B9 and done. `tranche/T34` @ a6c22ceb7e is merged, and nothing in a
 - format: 0 failures. architecture: 20 product files, 0 failures. coverage: 45 of 45, 0 failures. ownership: 1 file (the merge), 0 failures.
 
 Size (session_01D46sKU6GQxJsbHFhXN1a2o): test runs 24, module lines 3945
+
+## J8 · REPORT
+
+B10 is applied (K1883 (1)). `courtnotice` has left `NON_ACTS` and is graded nowhere: it is a plain public read, and R45's test now holds it beside `groupdescription` as ungated. That is committed and pushed.
+
+**control-plane's `totality.test.mjs` is still red after this, and the cause is that test.** With the tranche merged, `unaccounted` over its table answers `stale: [29 aliases]` (`addparticipant` … `withdrawtie`). Line 12 builds the table without the aliases ("an alias is its op, … so the table reads each op once"): `.filter(([op]) => !Object.hasOwn(O.OP_ALIASES, op))`. But `OPS` carries each alias's row (op-declarations `aliasRows`, R21), and affordances R45 (K1864) grades each alias through one frozen table. So filtering the aliases out makes every graded alias read stale.
+
+I ran `unaccounted` over the whole of `O.OPS`, aliases included and nothing filtered. It answers `{unpublished: [], unranked: [], stale: []}`. The fix is control-plane's: drop the alias filter at `totality.test.mjs`:12, and the test goes green with no change here. If you would rather the aliases stay out of both tables, that is an R45 change: affordances drops its alias table, and R45's wording goes with it. Yours to rule. I build to R45 as worded.
+
+My one red remains `plane.test.mjs`:317, `pack_absent`, which is wizard-scripts' (R11, re-opened; J6).
