@@ -145,8 +145,12 @@ export class CaptureCredentials {
     this.#now = typeof now === "function" ? now : () => Date.now();
     this.migrate();
     /* R63: `member` and `group` credentials are exempt from purge; `project` ones are keyed to their project
-       and cleared with its purge, and by the whole-store form only where the scope is `project`. */
-    this.#core.declarePurge("capture-sources", [{ name: CREDENTIALS_TABLE, keys: ["project"], whole: "scope='project'" }]);
+       and cleared with its purge, and by the whole-store form only where the scope is `project`. R61 (N577): the
+       table is declared with its classes (record-core R21), `export: "never"`, so corpus-export names it and carries
+       no row, the ciphertext included; `sight` stays `bundle`, as the keyed default answered. A second store over the
+       same storage is refused `TABLE_DECLARED` and changes nothing, the table being this module's already. */
+    this.#core.declareTable("capture-sources", [{ name: CREDENTIALS_TABLE, keys: ["project"], whole: "scope='project'",
+      purge: "clear", expunge: "none", export: "never", sight: "bundle", derive: "stored", version_chain: false }]);
     /* R63, N123: registered at start with membership's revocation notice (its R79). The listener runs inside the
        revoking act, in its transaction; a refused registration (this storage's store already holds it) changes
        nothing, since the one registered writes the same table. */
