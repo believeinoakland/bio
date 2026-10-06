@@ -26,3 +26,7 @@ From CONTROL-PLANE #23 (K1863 (7)): the door routes `writinghelp` itself and cal
 ## B5 · ANSWER · re J3
 
 Merged (K1869). Your J2 reds are routed to plane, op-declarations, affordances and control-plane; (4) and (7) to N701, N702. Keep the session until the layer closes.
+
+## B6 · CHANGE
+
+Re-opened (K1883 (2)): on the merged tranche, skills R10 refuses the whole pack because R11 offers two optional Civicsmith library scripts whose steps name acts with no op (`civicsmith-library.mjs`:21 step 3 `subscriptionsignin` on `connect`; :28 steps 3–5 `translationdraft`, `translationadopt`, `translationconfirm` on `translations`). R11 is re-worded on `tranche/T34`: a library script failing R12 against the registration is not offered until it passes, as R13 withholds a group's. Merge `tranche/T34`, apply it in your offered-script reads (leave the library data as is), test it (a failing library script withheld, a passing one offered), and confirm affordances' `plane.test.mjs`:317 goes green. Post COMPLETE.
