@@ -25,6 +25,6 @@
 - `node --test bio-plane/test/m/answers/`: pass 34, fail 0 (was 30 pass, 1 fail: the R1 copy test). New tests named R26, R27, R15 (N584); R1 and R19 rewritten to the new contract; R21 admits retrieval's `relations`/`zone` reads (they read no record).
 - Users of answers, before and after identical (the reds are the inherited ones B1 lists): scheduler 81/1 (R12), affordances 191/1, notice-producers 34/5 (K1795 detectors), op-declarations 68/1 (K1764 t33 R19/R6), control-plane 167/1 (R43), plane 110/0; agent-worker 7/2 files (K1708 REC100, K1764 R55).
 - Layer tests: none named in `build/manifest.md`.
-- `format`: 126 modules, 125 requirements files; 0 failures. `architecture`: 15 product files, 50 relative imports; 0 failures. `coverage`: 27 of 27 live requirement ids named by a test; 0 failures. `ownership`: see J1.
+- `format`: 126 modules, 125 requirements files; 0 failures. `architecture`: 15 product files, 50 relative imports; 0 failures. `coverage`: 27 of 27 live requirement ids named by a test; 0 failures. `ownership`: 8 files changed by answers between tranche/T34 and HEAD; 0 failures.
 
 Size (session_01Ya6c1GwmcFiEnh99zBxMdo): test runs 12, module lines 1380
