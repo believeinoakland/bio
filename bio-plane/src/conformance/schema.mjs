@@ -7,9 +7,13 @@
 export const CONFORMANCE_SCHEMA = `
 -- R1, R7, R17: ONE ROW PER DETERMINATION. determination_id is the id of its
 -- record object (a CONF- bundle promoted through promotion, R17). The act is
--- stored on the determination (K171 (6)): act_id is minted (ACT-) by the first
--- determination of an act and copied by every later one, with the act's parts
--- as the first determination recorded them. The project is the publishing
+-- stored on the determination. From T33 (R25, R26) it is an event: act_id and
+-- act_event are its EVT- id (an ACT- alias resolved), act_entity the actor's
+-- office entity (null when none is held) and act_when the event's when as the
+-- author read it, which R3 measured; act_description is empty. Before T33 an
+-- act_id was minted (ACT-) by the first determination of an act and copied by
+-- every later one, with its description, date and period (K171 (6)); those
+-- rows stay as written, act_event null. The project is the publishing
 -- project's (the one whose case editions the findings are pinned in, R2).
 -- proposal_id is the comparison it drew on, when it names one (R12).
 CREATE TABLE IF NOT EXISTS determinations (
@@ -163,8 +167,13 @@ export const CONFORMANCE_TABLES = Object.freeze([
   { name: "comparison_proposal_contradictions", keys: ["proposal_id", "inquiry_id"] },
 ]);
 
-/** Creates the tables; idempotent. */
+/* R25 (T33-70): the act's columns added to a store made before T33; its rows keep null in them. */
+const ADDITIVE = Object.freeze([["act_event", "TEXT"], ["act_entity", "TEXT"], ["act_when", "TEXT"]]);
+
+/** Creates the tables, and the columns a store made before T33 lacks; idempotent. */
 export function migrateConformance(sql) {
   const bare = CONFORMANCE_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const s of bare.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
+  const have = [...sql.exec(`PRAGMA table_info(determinations)`)].map((r) => r.name);
+  for (const [column, decl] of ADDITIVE) if (!have.includes(column)) sql.exec(`ALTER TABLE determinations ADD COLUMN ${column} ${decl}`);
 }
