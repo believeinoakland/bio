@@ -22,6 +22,16 @@
 
 - N559 · the UI's module that serves the member screens (BOB names it and the placement when those screens are built) · DEC-138 (UX-DESIGN U58; K1559): `visual-language/civicsmith.css`, `faces.css`, `fonts/` (with their OFL licences) and `icons.svg` replace `civicos-ui/tokens.css` as the screens' one stylesheet, served from the group's copy, never from outside (principle 9.6); `check_contrast.py` runs whenever a colour changes. **Hard reason it is not in T33:** DEC-138 is not on `main` until PR #11 merges at T33's close, and the new member screens are not yet built (the UX stream's step 5).
 
+- N560 · `connection-grammar` · R9's `ownerConformance` takes the owner's declaration that its kinds are undated (no `valid` stated, so `at` is inapplicable) or group-wide (no fenced item, so `sight` is inapplicable) and reports those checks `inapplicable` instead of failing; the `neighbours` contract states the optional `unread: [{what, why}]` an owner may add (explore R8). Owners' tests then assert `ok` whole. (ENTITIES #9 J1, CONNECTIONS #12 J1, EXPLORE #1 J1; K1563.) **Hard reason it is not in T33:** the order: connection-grammar (L1) is closed.
+
+- N561 · `jurisdictions` · two profile vocabulary keys with validate and combine: `vote_values` (`[{value, label, citation}]`, events R11) and `response_statuses` (`[{status, label, citation, basis}]`, duties R1, R4); never a default list. (EVENTS #1 J1, DUTIES #1 J1; K1563.) **Hard reason:** the order: jurisdictions (L1) is closed.
+
+- N562 · `local-facts`, `action-clocks` · R6 names a profile's named closure-list holiday entries (`list=<name>`), so members can confirm a court's judicial holidays; action-clocks' `factOf` per calendar entry uses it. (LOCAL-FACTS #3 J2 (6); K1563.) **Hard reason:** a requirement change for both modules; action-clocks (L9) reads it, and local-facts' T33 job is past its plan.
+
+- N563 · `money-checks` · M-C8, the shipped detectors' measurement, on a gold set of payments. **Hard reason:** no gold set exists (K1506: no Oakland payment ledger); runs when one is captured.
+
+- N564 · `wizard-scripts`, `op-declarations`, `answers` (BOB names the module that holds the screen registry at T34's opening) · DEC-139 (UX-DESIGN U59; K1565), folded once PR #11 is on `main`: the screen registry `docs/development/ux-substrate/screens/registry.json` registered (42 screens, 192 acts), its 69 requirement functions' ops declared by lowercased name; wizard-scripts R2 gains an optional `via` (a side trip into another wizard, returning to the step left); answers' standing question runs for a member with no account of their own, its matches arriving unread; the Civicsmith library as its data file only once Bob approves it (S2). **Hard reason it is not in T33:** DEC-139 is not on `main` until T33's close (§13.1 (5)), and the library waits on Bob.
+
 Otherwise none yet. T33's release at its close (K1501) runs the deployment-gated measurements; the work they unlock is written here then.
 
 ## Carried from T33

@@ -1083,10 +1083,25 @@ class Bias {
   }
 }
 
+/* R30, R47 (plan T33, Rules (6); T33-38): this module's five tables, declared explicitly through record-core's
+   `declareTable` (its R21). The statements and the adoptions are keyed to their bundle (an adoption also to its
+   project) and carry that bundle's sight; the debt, its settlements and the sweep's place are whole-store, group-wide,
+   the sweep's place exempt from purge (an instance setting). The other classes are the ones `declarePurge`'s default
+   form gave them, so purge clears exactly what it cleared before. */
+const declared = (name, cls) => Object.freeze({ name, purge: "clear", expunge: "none", export: "admin-only",
+                                                derive: "stored", version_chain: false, ...cls });
+export const BIAS_TABLE_DECLARATIONS = Object.freeze([
+  declared("bias_statements", { keys: ["bundle_id"], sight: "bundle" }),
+  declared("bias_adoptions", { keys: ["bundle_id", "scope_id"], sight: "bundle" }),
+  declared("bias_debts", { keys: [], sight: "group" }),
+  declared("bias_debt_settlements", { keys: [], sight: "group" }),
+  declared("bias_debt_sweeps", { purge: "exempt", sight: "group" }),
+]);
+
 const OF = new WeakMap();
 
 /** K61: the one bias instance for this Durable Object's storage (`ctx`, or the storage itself). On first reaching
- *  it, its tables are declared to record-core's purge (R30), its figures registered with record-core's counts (R46,
+ *  it, its tables are declared to record-core (R30, R47), its figures registered with record-core's counts (R46,
  *  record-core R63), its step and post-commit notice registered with promotion (R8–R10, R23), and its checks with
  *  record-core's audit (R1–R7, record-core R59). A record with no `registerCounts` (a test's stand-in) is not asked. */
 export function biasOf(ctx, deps = {}) {
@@ -1099,12 +1114,7 @@ export function biasOf(ctx, deps = {}) {
     const entities = deps && deps.entities !== undefined ? deps.entities : entitiesOf(ctx, { record, membership });
     b = new Bias({ sql: storage.sql, record, membership, entities, env: deps && deps.env });
     OF.set(storage, b);
-    record.declarePurge("bias", [
-      "bias_statements",
-      { name: "bias_adoptions", keys: ["bundle_id", "scope_id"] },
-      { name: "bias_debts", keys: [] },
-      { name: "bias_debt_settlements", keys: [] },
-    ], { exempt: ["bias_debt_sweeps"] });
+    record.declareTable("bias", BIAS_TABLE_DECLARATIONS);
     if (typeof record.registerCounts === "function")
       record.registerCounts("bias", [...BIAS_COUNT_KEYS], (hid) => b.counts(hid));
     promotion.registerStep("bias", { check: (c) => b.promotionCheck(c), project: (c) => b.promotionProjection(c) });
