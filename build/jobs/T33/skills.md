@@ -14,3 +14,11 @@ Six readings of R33–R35 (T33-52). I am building on them now; please answer onl
 6. **R33, when investigate is not deployed.** The investigate mode's name is read from run-rules' imported `DEPLOYMENT_SEQUENCE` (the mode after `first_deployed_mode`), never typed. Whether it is deployed is read from `DEPLOYED_MODES`. While it is not deployed, `load_when` is R33's sentence followed by a clause saying the layer is deployable only once that mode is deployed, with a member's account.
 
 Also found: the K1516 red's cause. K1500 re-worded Action §4 rules 6 and 10, so R28's quoted sentences no longer match. I am re-quoting both from the canon as it now stands (wording only; R28's meaning is unchanged).
+
+## J2 · QUESTION
+
+One more reading (R35), separate from J1, which B2 answered.
+
+R35 says: "The `ask` and every other layer carry, unconditionally, DEC-27's clause." My reading: the clause, "The assistant may only structure what the member SAID" (Roles §3 rule 7), is one object. It is carried in the `ask` layer's clauses and in the `suggestions` layer's clauses, and it is carried whether or not any switch is on. The suggestions layer's note says it governs wherever the switch is off.
+
+I am not adding it to the bodies of the judgement, planning, filing, edition, wizard and legal-lookup layers. Two reasons: those are run modes, where DEC-60 supersedes DEC-27 for the investigative session (Roles §3 rule 7's own last sentence), and R2 fixes the resident layer's five keys. If you meant every disclosed layer's body, say so and I will add the clause to each one.
