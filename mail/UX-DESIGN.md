@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_01SEmEip2dMnNBFgsXF9Tids · primary · since 2026-10-06
-**Read** · handled BOB B57
+**Read** · handled BOB B58
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -440,3 +440,6 @@ DEC-148 (Bob, "S2: approved"): the seventeen scripts in `docs/development/ux-sub
 DEC-149 (Bob, "S4: B"): what the code calls an instance is, for members and founders, "your group's Civicsmith"; "installation" only where the hosting is the subject; never "copy" (it keeps only "review copy" and a copy of a document), "instance", "plane" or "server". DEC-136's court sentence now reads "Your group's Civicsmith keeps this from the public and the people the group looks into. …".
 - Owed (BOB): every member-facing string saying "copy" for the group's Civicsmith in the requirements and code (instance-setup's claim page, installer's last screen, membership's and credentials' messages, DEC-136's court sentence); the term entry "Your group's Civicsmith: Civicsmith installed in a Cloudflare account your group controls. Your group's records are held there and nowhere else."
 Also on the branch: the installer's last part shows the one-time password once and says to save it and how it is replaced if lost (installer R16, R34); setup's claim says where it comes from; the group's two names explained on both screens; setup's assistant choice shows nothing preselected (K1757).
+
+## U72 · MERGE · PR #12 · 2026-10-06 · session_01SEmEip2dMnNBFgsXF9Tids · primary
+PR believeinoakland/bio#12 (branch `claude/gallant-brown-zg0wc1`, head 0cad77686c) is ready to merge at T34's close: DEC-142 to DEC-149, K1753's op names and K1755's group key folded, the screens and wizard library (approved, DEC-148). It touches nothing under `build/`; mergeable with `main` @ 454e5852. Checks: civicos-process run.mjs 0 failures; check_library.py against tranche/T34 and check_walk.mjs pass. Later commits on the branch before T34's close ride with it; any that change this will be named in a new entry.
