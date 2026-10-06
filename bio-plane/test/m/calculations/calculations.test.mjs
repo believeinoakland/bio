@@ -1,8 +1,9 @@
 /* calculations: creating, evaluating, accepting, recomputing and reading a calculation (R4–R11). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { seeded, V, MACHINE, R, saved } from "./fixture.mjs";
-import { resultKey, METHOD } from "../../../src/calc-grammar/index.mjs";
+import { seeded, V, MACHINE, R, saved, sha } from "./fixture.mjs";
+import { resultKey, METHOD, evaluate } from "../../../src/calc-grammar/index.mjs";
+import { idPattern } from "../../../src/record-grammar/index.mjs";
 import { INPUT_CHANGED, RECOMPUTE_STATES } from "../../../src/calculations/index.mjs";
 
 const code = (r) => (r && r.ok === false ? r.reason : "ok");
@@ -46,7 +47,60 @@ test("R4 create's refusals in order, each with a negative control: NO_QUESTION, 
   assert.deepEqual(calcRows(w), before, "no refusal wrote a row");
   const ok = await w.c.create(good);
   assert.equal(ok.ok, true, "the negative control");
-  assert.match(ok.calc_id, /^CALC-2026-\d{4,}$/);
+});
+
+test("R4 a CALC- id is minted in record-grammar's ID_TABLE form for CALC, opaque: nothing in it counts the calculations minted; an id minted earlier in the sequential form is still read", async () => {
+  const w = seeded();
+  const t = await w.table("dept,amount,status\nparks,100,awarded\nroads,250,awarded\n", F);
+  const good = { question: "How much?", period: PERIOD, kind: "total", inputs: [{ name: "t", table: t.sha }], recipe: SUM, by: V("bob") };
+  const ids = [];
+  for (let i = 0; i < 3; i++) ids.push((await w.c.create({ ...good, question: `Q${i}` })).calc_id);
+  for (const id of ids) {
+    assert.match(id, idPattern("CALC"), "record-grammar's form for CALC");
+    assert.match(id, /^CALC-2026-[a-z0-9]{16}$/, "opaque: a 16-character tail, no counter");
+  }
+  assert.equal(new Set(ids).size, 3);
+  assert.notDeepEqual([...ids].sort(), ids.map((_, i) => `CALC-2026-${String(i + 1).padStart(4, "0")}`), "no sequence");
+  /* a calculation held under the sequential form (as minted before T34, with no input hashes recorded) is read */
+  const legacy = "CALC-2026-0001";
+  for (const t of ["calculations", "calc_inputs", "calc_recomputes"]) w.st.sql.exec(`UPDATE ${t} SET calc_id=? WHERE calc_id=?`, legacy, ids[0]);
+  w.st.sql.exec(`UPDATE calculations SET input_shas_json=NULL WHERE calc_id=?`, legacy);
+  const r = await w.c.read({ calcId: legacy, viewer: V("carol") });
+  assert.equal(r.found, true);
+  assert.equal(r.calc_id, legacy);
+  assert.equal(r.calculation.inputs[0].sha, good.inputs[0].table, "a table input's sha is its own, recorded or not");
+  assert.equal(w.c.calcStatusOf({ calcId: legacy, viewer: V("carol") }).held, true);
+  assert.equal(w.c.gradeFactsOf({ calcId: legacy, viewer: V("carol") }).found, true);
+  const use = await w.c.create({ question: "Rounded?", period: PERIOD, kind: "total", inputs: [{ name: "x", calculation: legacy }],
+    recipe: R([{ op: "round", of: "x", places: 0, mode: "half_even", as: "r" }], "r", [{ name: "x", kind: "figure" }]), by: V("bob") });
+  assert.equal(code(use), "ok", "and taken as another calculation's input");
+  assert.equal((await w.c.accept({ calcId: legacy, by: V("carol") })).ok, true);
+});
+
+test("R4 a table result calc-grammar answers streamed is stored and answered as the same table the row-object answer holds, so what is stored does not depend on how an input was bound (K1734)", async () => {
+  const w = seeded();
+  const { t } = await base(w);
+  const recipes = {
+    select: R([{ op: "select", from: "t", where: [{ field: "status", test: "eq", value: "awarded" }], as: "s" }], "s"),
+    group: R([{ op: "group", from: "t", by: ["dept"], measure: { op: "sum", field: "amount" }, as: "g" }], "g"),
+    sort: R([{ op: "select", from: "t", where: [{ field: "amount", test: "gt", value: 0 }], as: "s" }, { op: "sort", from: "s", by: "amount", order: "desc", as: "o" }], "o"),
+  };
+  const held = (await w.c.readTable({ sha: t.sha, viewer: V("bob") })).table;
+  for (const [name, recipe] of Object.entries(recipes)) {
+    const asObjects = evaluate(recipe, { t: { fields: held.fields, rows: held.rows } });
+    const c = await w.c.create({ question: name, period: PERIOD, kind: "total", inputs: [{ name: "t", table: t.sha }], recipe, by: V("bob") });
+    assert.equal(c.ok, true, name);
+    assert.ok(Array.isArray(c.results.output.rows), `${name}: rows, not a function`);
+    assert.deepEqual(c.results.output, JSON.parse(JSON.stringify(asObjects.result)), `${name}: the row-object answer's table`);
+    const read = await w.c.read({ calcId: c.calc_id, viewer: V("carol") });
+    assert.deepEqual(read.results.output, c.results.output, `${name}: stored and answered alike`);
+    const e = await w.c.evaluate({ recipe, inputs: [{ name: "t", table: t.sha }], viewer: V("carol") });
+    assert.deepEqual(e.results.output, c.results.output, `${name}: evaluate alike`);
+    /* and a later calculation takes the stored table as its input */
+    const next = await w.c.create({ question: `${name} counted`, period: PERIOD, kind: "count", inputs: [{ name: "x", calculation: c.calc_id }],
+      recipe: R([{ op: "count", from: "x", as: "n" }], "n", [{ name: "x", kind: "table" }]), by: V("bob") });
+    assert.equal(next.results.output.value, String(c.results.output.rows.length), name);
+  }
 });
 
 test("R4 create records the calculation with its question, terms, period, inputs, recipe, kind, method version, method note and project, evaluated through calc-grammar and stored under calc-grammar.resultKey", async () => {
@@ -71,7 +125,9 @@ test("R4 create records the calculation with its question, terms, period, inputs
   const withFig = await w.c.create({ ...good, kind: "difference", inputs: [...good.inputs, { name: "k", figure: fig }],
     recipe: R([{ op: "sum", from: "t", field: "amount", as: "s" }, { op: "round", of: "k", places: 0, mode: "half_even", as: "k0" }], "k0", [{ name: "t", kind: "table" }, { name: "k", kind: "figure" }]) });
   const rf = await w.c.read({ calcId: withFig.calc_id, viewer: V("bob") });
-  assert.deepEqual(rf.calculation.inputs[1], { name: "k", kind: "figure", figure: { value: "12", sign: "+", precision: "exact", currency: "USD" }, content_id: fig });
+  const { sha: figSha, ...k } = rf.calculation.inputs[1];
+  assert.deepEqual(k, { name: "k", kind: "figure", figure: { value: "12", sign: "+", precision: "exact", currency: "USD" }, content_id: fig });
+  assert.match(figSha, /^[0-9a-f]{64}$/, "with its bytes' SHA-256 (R9)");
   assert.deepEqual(Object.keys(rf.calculation.results), ["s", "k0"]);
   const n = w.rows(`SELECT * FROM calc_inputs WHERE calc_id=?`, r.calc_id);
   assert.deepEqual(n.map((x) => [x.input_name, x.input_kind, x.ref]), [["t", "table", t.sha]]);
@@ -156,7 +212,7 @@ test("R7 evaluate answers what create would store and writes nothing", async () 
   assert.equal(code(await w.c.evaluate({ recipe: good.recipe, inputs: good.inputs })), "NO_VIEWER");
 });
 
-test("R8 results are recomputed at accept and by recompute, never on a read: read answers the stored results with computed_at and the method version; accept is refused CALC_RECOMPUTE_DIFFERS naming the differing result when a stored result was tampered; recompute answers {agrees, results} and writes only the recompute status", async () => {
+test("R8 results are recomputed at accept and by recompute, never on a read: read answers the stored results with computed_at and the method version; accept is refused CALC_RECOMPUTE_DIFFERS naming the differing result when a stored result was tampered, and a refused accept, by this or any other refusal, writes nothing, its recompute status and record included; recompute answers {agrees, results} and writes only the recompute status", async () => {
   const w = seeded();
   const t = await w.table("dept,amount,status\nparks,100,awarded\nroads,250,awarded\n", F);
   const c = await w.c.create({ question: "Total?", period: PERIOD, kind: "total", inputs: [{ name: "t", table: t.sha }], recipe: SUM, by: V("bob") });
@@ -170,6 +226,15 @@ test("R8 results are recomputed at accept and by recompute, never on a read: rea
   assert.equal(read.results.output.value, "999", "the read never recomputes");
   assert.equal(read.computed_at, "2026-10-06T01:00:00.000Z");
   assert.equal(read.method_version, METHOD);
+  /* a refused accept writes nothing (N619): the recompute differs, a machine asks, the calculation is withheld */
+  const untouched = w.snapshot();
+  const acc = await w.c.accept({ calcId: c.calc_id, by: V("carol") });
+  assert.equal(code(acc), "CALC_RECOMPUTE_DIFFERS");
+  assert.equal(acc.differing.path, "results.output.value", "names the differing result");
+  assert.match(acc.detail, /Nothing was written/);
+  assert.equal(code(await w.c.accept({ calcId: c.calc_id, by: MACHINE })), "MEMBER_ACT_ONLY");
+  assert.equal(code(await w.c.accept({ calcId: "CALC-2026-aaaaaaaaaaaaaaaa", by: V("carol") })), "NO_SUCH_CALCULATION");
+  assert.deepEqual(w.snapshot(), untouched, "no refused accept wrote anything: no recompute status, no recompute record, no acceptance");
   const before = w.snapshot();
   const rc = await w.c.recompute({ calcId: c.calc_id });
   assert.equal(rc.agrees, false);
@@ -180,9 +245,6 @@ test("R8 results are recomputed at accept and by recompute, never on a read: rea
   const changed = Object.keys(after.calculations[0]).filter((k) => JSON.stringify(after.calculations[0][k]) !== JSON.stringify(before.calculations[0][k]));
   assert.deepEqual(changed.sort(), ["recompute_json", "recompute_status"], "recompute writes only the recompute status");
   assert.equal(after.calculations[0].recompute_status, "differs");
-  const acc = await w.c.accept({ calcId: c.calc_id, by: V("carol") });
-  assert.equal(code(acc), "CALC_RECOMPUTE_DIFFERS");
-  assert.equal(acc.differing.path, "results.output.value", "names the differing result");
   assert.equal(w.rows(`SELECT accepted_by FROM calculations WHERE calc_id=?`, c.calc_id)[0].accepted_by, null);
   /* the untampered one agrees and is accepted, once */
   const d = await w.c.create({ question: "Total again?", period: PERIOD, kind: "total", inputs: [{ name: "t", table: t.sha }], recipe: SUM, by: V("bob") });
@@ -190,6 +252,9 @@ test("R8 results are recomputed at accept and by recompute, never on a read: rea
   const ok = await w.c.accept({ calcId: d.calc_id, by: V("carol") });
   assert.equal(ok.ok, true);
   assert.equal(ok.recompute_status, "agrees");
+  assert.deepEqual(w.rows(`SELECT recompute_status, accepted_by FROM calculations WHERE calc_id=?`, d.calc_id)[0], { recompute_status: "agrees", accepted_by: V("carol") },
+    "an accepted one records its agreeing recompute with the acceptance");
+  assert.deepEqual(w.rows(`SELECT status FROM calc_recomputes WHERE calc_id=? ORDER BY seq`, d.calc_id).map((x) => x.status), ["created", "agrees", "accepted"]);
   assert.equal((await w.c.accept({ calcId: d.calc_id, by: V("carol") })).already, true);
   const r2 = await w.c.recompute({ calcId: d.calc_id });
   assert.equal(r2.agrees, true);
@@ -224,6 +289,59 @@ test("R9 read answers the grade facts: per input its capture grade capped by its
   g = (await w.c.read({ calcId: n.calc_id, viewer: V("bob") })).grade;
   assert.equal(g.capture.grade, null);
   assert.match(g.capture.why, /undetermined/);
+});
+
+test("R9 each input read answers states sha, the lowercase hex SHA-256 of that input's canonical bytes as the calculation was computed over them: a table's canonical CSV, and equally a figure, a typed value, money facts, another calculation, a frozen set, a draw and a threshold, each one's bytes held so a case file names them and the result key is calc-grammar.resultKey over them", async () => {
+  const w = seeded();
+  const t = await w.table("dept,amount,status\nparks,100,awarded\n", F);
+  /* every input's sha: hex, the SHA-256 of bytes held in the evidence store, and the result key over them */
+  const check = async (calcId, kinds) => {
+    const r = await w.c.read({ calcId, viewer: V("bob") });
+    assert.equal(r.found, true);
+    const ins = r.calculation.inputs;
+    assert.deepEqual(ins.map((i) => i.kind), kinds);
+    for (const i of ins) {
+      assert.match(i.sha, /^[0-9a-f]{64}$/, `${i.name}: lowercase hex SHA-256`);
+      const bytes = w.ev.m.get(i.sha);
+      assert.ok(bytes, `${i.name}: its canonical bytes are held`);
+      assert.equal(sha(new TextDecoder().decode(bytes)), i.sha, `${i.name}: the SHA-256 of those bytes`);
+    }
+    assert.equal(resultKey(r.calculation.recipe, Object.fromEntries(ins.map((i) => [i.name, i.sha]))), r.result_key,
+      "the result key is calc-grammar's over exactly these hashes");
+    return ins;
+  };
+  /* a table, a cited figure, a typed value and a threshold */
+  const fig = w.passage("$40");
+  const rec = R([{ op: "sum", from: "t", field: "amount", as: "s" }, { op: "difference", a: "s", b: "k", as: "d" }, { op: "difference", a: "d", b: "v", as: "e" },
+    { op: "compare", a: "e", b: "threshold", as: "c" }], "c", [{ name: "t", kind: "table" }, { name: "k", kind: "figure" }, { name: "v", kind: "figure" }, { name: "threshold", kind: "figure" }]);
+  const a = await w.c.create({ question: "Q", period: PERIOD, kind: "comparison", inputs: [{ name: "t", table: t.sha }, { name: "k", figure: fig }, { name: "v", value: "$5" }],
+    threshold: { value: "$50" }, recipe: rec, by: V("bob") });
+  assert.equal(a.ok, true, JSON.stringify(a).slice(0, 300));
+  const ins = await check(a.calc_id, ["table", "figure", "figure", "threshold"]);
+  assert.equal(ins[0].sha, t.sha, "a table's is its canonical CSV's sha256 (R1)");
+  assert.equal(new TextDecoder().decode(w.ev.m.get(t.sha)), "dept,amount,status\r\nparks,100,awarded\r\n");
+  /* money facts */
+  const m = await w.c.create({ question: "Q", period: PERIOD, kind: "total", inputs: [{ name: "t", money: [w.fact({ amount: "10" }), w.fact({ amount: "5" })] }], recipe: SUM, by: V("bob") });
+  await check(m.calc_id, ["money"]);
+  /* another calculation */
+  const c = await w.c.create({ question: "Q", period: PERIOD, kind: "total", inputs: [{ name: "x", calculation: m.calc_id }],
+    recipe: R([{ op: "round", of: "x", places: 0, mode: "half_even", as: "r" }], "r", [{ name: "x", kind: "figure" }]), by: V("bob") });
+  const [x] = await check(c.calc_id, ["calculation"]);
+  assert.equal(x.sha, m.result_key, "another calculation's bytes are those its own result key is the SHA-256 of");
+  /* a frozen set and a draw */
+  ["one", "two", "three"].forEach((n) => w.document(n, { title: `Quoll ${n}` }));
+  const set = await w.c.freezeSet({ query: saved("quoll"), by: V("bob") });
+  const s = await w.c.create({ question: "Q", period: PERIOD, kind: "count", inputs: [{ name: "s", set: set.set }], recipe: R([{ op: "count", from: "s", as: "n" }], "n", [{ name: "s", kind: "table" }]), by: V("bob") });
+  const [si] = await check(s.calc_id, ["set"]);
+  assert.equal(si.sha, set.set, "a frozen set's is its own sha");
+  const d = w.c.draw({ set: t.sha, n: 1, seed: "s", by: V("bob") });
+  const e = await w.c.create({ question: "Q", period: PERIOD, kind: "estimate", inputs: [{ name: "s", draw: d.draw }], recipe: R([{ op: "count", from: "s", as: "n" }], "n", [{ name: "s", kind: "table" }]), by: V("bob") });
+  assert.equal(e.ok, true, JSON.stringify(e).slice(0, 300));
+  const [di] = await check(e.calc_id, ["draw"]);
+  assert.equal(di.sha, d.draw, "a draw's is its own key");
+  /* the same inputs give the same hashes: recomputable from what the case file names */
+  const again = await w.c.create({ question: "Q again", period: PERIOD, kind: "total", inputs: [{ name: "t", money: (await w.c.read({ calcId: m.calc_id, viewer: V("bob") })).inputs[0].money }], recipe: SUM, by: V("bob") });
+  assert.equal((await w.c.read({ calcId: again.calc_id, viewer: V("bob") })).calculation.inputs[0].sha, (await w.c.read({ calcId: m.calc_id, viewer: V("bob") })).calculation.inputs[0].sha);
 });
 
 test("R10 a calculation any of whose inputs the viewer may not see is withheld whole: every read answers it exactly as an absent one (DEC-36, DEC-85)", async () => {
@@ -286,4 +404,63 @@ test("R11 onInputChanged takes one registration per module (membership's listene
   assert.deepEqual(told.at(-1), { calcId: t.calc_id, input: v1.sha, cause: INPUT_CHANGED });
   assert.equal(told.length, 2);
   assert.equal((await w.c.readTable({ sha: v1.sha, viewer: V("bob") })).superseded_by, v2.sha);
+});
+
+test("R30 gradeFactsOf answers synchronously R9's grade facts {found: true, accepted, capture, inputs, method}, equal to what read answers for the same calculation and viewer; not held, withheld from the viewer (R10) and no viewer each answer {found: false}, identically; it recomputes nothing, writes nothing and never throws", async () => {
+  const w = seeded();
+  const P = w.project("Closed", "alice");
+  const hidden = await w.table("dept,amount,status\nparks,7,awarded\n", F, { by: V("alice") }, { project: P });
+  const open = await w.table("dept,amount,status\nparks,9,awarded\n", F);
+  const fig = w.passage("$3");
+  const c = await w.c.create({ question: "Q", period: PERIOD, kind: "difference", inputs: [{ name: "t", table: open.sha }, { name: "k", figure: fig }, { name: "v", value: "$2" }],
+    recipe: R([{ op: "sum", from: "t", field: "amount", as: "s" }, { op: "difference", a: "s", b: "k", as: "d" }, { op: "difference", a: "d", b: "v", as: "e" }], "e",
+      [{ name: "t", kind: "table" }, { name: "k", kind: "figure" }, { name: "v", kind: "figure" }]), by: V("bob") });
+  const h = await w.c.create({ question: "Q", period: PERIOD, kind: "total", inputs: [{ name: "t", table: hidden.sha }], recipe: SUM, by: V("alice") });
+  const before = w.snapshot();
+  const g = w.c.gradeFactsOf({ calcId: c.calc_id, viewer: V("carol") });
+  assert.equal(typeof g.then, "undefined", "synchronous: an answer, not a promise");
+  const read = await w.c.read({ calcId: c.calc_id, viewer: V("carol") });
+  assert.deepEqual(g, { found: true, accepted: false, capture: read.grade.capture, inputs: read.grade.inputs, method: read.grade.method }, "equal to read's grade facts");
+  assert.deepEqual(g.inputs.map((i) => [i.name, i.kind, i.ref, i.grade, typeof i.why]), [["t", "table", open.sha, "B", "string"], ["k", "figure", fig, "B", "string"], ["v", "value", "$2", "D", "string"]],
+    "each input's name, kind, reference and grade with why");
+  assert.deepEqual(g.capture, { grade: "D", why: g.capture.why }, "the capture axis is the weakest input's: an unbound value is testimony");
+  assert.deepEqual({ recipe: g.method.recipe, version: g.method.version, graded: g.method.graded }, { recipe: read.calculation.recipe, version: METHOD, graded: false });
+  /* the tampered results are not seen: nothing is recomputed */
+  w.st.sql.exec(`UPDATE calculations SET results_json='{"output":{"value":"999"}}' WHERE calc_id=?`, h.calc_id);
+  assert.equal(w.c.gradeFactsOf({ calcId: h.calc_id, viewer: V("alice") }).found, true);
+  w.st.sql.exec(`UPDATE calculations SET results_json=? WHERE calc_id=?`, before.calculations.find((x) => x.calc_id === h.calc_id).results_json, h.calc_id);
+  /* found: false, identically, for not held, withheld and no viewer */
+  const absent = w.c.gradeFactsOf({ calcId: "CALC-2026-aaaaaaaaaaaaaaaa", viewer: V("carol") });
+  assert.deepEqual(absent, { found: false });
+  assert.deepEqual(w.c.gradeFactsOf({ calcId: h.calc_id, viewer: V("carol") }), absent, "withheld from carol (R10): as an absent one");
+  assert.deepEqual(w.c.gradeFactsOf({ calcId: c.calc_id, viewer: null }), absent, "no viewer");
+  assert.deepEqual(w.c.gradeFactsOf({ calcId: c.calc_id }), absent);
+  for (const bad of [undefined, null, "x", 5, { calcId: {} }, { calcId: c.calc_id, viewer: {} }]) assert.deepEqual(w.c.gradeFactsOf(bad), absent, `never throws: ${JSON.stringify(bad)}`);
+  assert.deepEqual(w.snapshot(), before, "writes nothing");
+  /* accepted: whether the acceptance is recorded */
+  await w.c.accept({ calcId: c.calc_id, by: V("bob") });
+  assert.equal(w.c.gradeFactsOf({ calcId: c.calc_id, viewer: V("carol") }).accepted, true);
+});
+
+test("R31 calcStatusOf answers synchronously {held, visible, accepted}: held whether a CALC- of that id is held; visible whether R10 admits the viewer (false without one); accepted whether its acceptance is recorded, false when not visible; writes nothing, never throws", async () => {
+  const w = seeded();
+  const P = w.project("Closed", "alice");
+  const hidden = await w.table("dept,amount,status\nparks,7,awarded\n", F, { by: V("alice") }, { project: P });
+  const open = await w.table("dept,amount,status\nparks,9,awarded\n", F);
+  const c = await w.c.create({ question: "Q", period: PERIOD, kind: "total", inputs: [{ name: "t", table: open.sha }], recipe: SUM, by: V("bob") });
+  const h = await w.c.create({ question: "Q", period: PERIOD, kind: "total", inputs: [{ name: "t", table: hidden.sha }], recipe: SUM, by: V("alice") });
+  const st = (calcId, viewer) => w.c.calcStatusOf({ calcId, viewer });
+  const s = st(c.calc_id, V("carol"));
+  assert.equal(typeof s.then, "undefined", "synchronous");
+  assert.deepEqual(s, { held: true, visible: true, accepted: false });
+  assert.deepEqual(st("CALC-2026-aaaaaaaaaaaaaaaa", V("carol")), { held: false, visible: false, accepted: false });
+  assert.deepEqual(st(c.calc_id, null), { held: true, visible: false, accepted: false }, "no viewer sees nothing");
+  await w.c.accept({ calcId: c.calc_id, by: V("carol") });
+  await w.c.accept({ calcId: h.calc_id, by: V("alice") });
+  assert.deepEqual(st(c.calc_id, V("carol")), { held: true, visible: true, accepted: true });
+  assert.deepEqual(st(h.calc_id, V("alice")), { held: true, visible: true, accepted: true });
+  assert.deepEqual(st(h.calc_id, V("carol")), { held: true, visible: false, accepted: false }, "an input carol may not see: not visible, and so not accepted for her");
+  const before = w.snapshot();
+  for (const bad of [undefined, null, 7, { calcId: [] }, { calcId: c.calc_id, viewer: 3 }]) assert.deepEqual(w.c.calcStatusOf(bad), { held: !!bad && bad.calcId === c.calc_id, visible: false, accepted: false }, `never throws: ${JSON.stringify(bad)}`);
+  assert.deepEqual(w.snapshot(), before, "writes nothing");
 });

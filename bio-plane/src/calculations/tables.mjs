@@ -8,9 +8,10 @@ import { FIELD_TYPES, parseFigure } from "../calc-grammar/index.mjs";
 import { isCalendarDate } from "../civil-time/index.mjs";
 import { sha256HexSync, createSha256 } from "../record-grammar/index.mjs";
 
-/** R1: the bounds of a table, in bytes of canonical CSV and in cells. */
+/** R1: the bounds of a table, in bytes of canonical CSV and in cells (N571: a held table is evaluated as calc-grammar's
+ *  streamed table, its R22, read row by row from its canonical text, so 1,000,000 cells fit a Worker's heap). */
 export const TABLE_MAX_BYTES = 20 * 1024 * 1024;
-export const TABLE_MAX_CELLS = 500_000;
+export const TABLE_MAX_CELLS = 1_000_000;
 /** R1: how many undetermined cells a declaration lists by place (the count is always whole). */
 export const UNDETERMINED_LISTED = 200;
 
@@ -32,10 +33,9 @@ const SHA = /^[0-9a-f]{64}$/;
 
 // ---- RFC 4180 ----
 
-/** Reads CSV text row by row (RFC 4180: quoted fields, doubled quotes, CRLF or LF line ends, a leading BOM dropped),
- *  handing each row, a list of strings, to `onRow` as it is read, so a large table is never held twice. `{rows}` (the
- *  count) or `{error}` naming the first fault. Never throws, unless `onRow` does. */
-export function scanCsv(text, onRow) {
+/* The rows of CSV text, one array of strings at a time (RFC 4180: quoted fields, doubled quotes, CRLF or LF line ends,
+   a leading BOM dropped); its return value is `{rows}` (the count) or `{error}` naming the first fault. */
+function* csvScan(text) {
   if (typeof text !== "string") return { error: "the source is not text" };
   const s = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
   const n = s.length;
@@ -70,17 +70,28 @@ export function scanCsv(text, onRow) {
       i = j;
     }
     row.push(field);
-    if (i >= n) { onRow(row); return { rows: count + 1 }; }
+    if (i >= n) { yield row; return { rows: count + 1 }; }
     if (s.charCodeAt(i) === 44) {
       i++;
-      if (i >= n) { row.push(""); onRow(row); return { rows: count + 1 }; }
+      if (i >= n) { row.push(""); yield row; return { rows: count + 1 }; }
       continue;
     }
     i += s.charCodeAt(i) === 13 && s.charCodeAt(i + 1) === 10 ? 2 : 1;
-    onRow(row);
+    yield row;
     count++;
     row = [];
     if (i >= n) return { rows: count };
+  }
+}
+
+/** Reads CSV text row by row, handing each row, a list of strings, to `onRow` as it is read, so a large table is never
+ *  held twice. `{rows}` (the count) or `{error}` naming the first fault. Never throws, unless `onRow` does. */
+export function scanCsv(text, onRow) {
+  const it = csvScan(text);
+  for (;;) {
+    const s = it.next();
+    if (s.done) return s.value;
+    onRow(s.value);
   }
 }
 
@@ -276,16 +287,29 @@ export function tableBuilder(header, fields, { maxCells = TABLE_MAX_CELLS, maxBy
   };
 }
 
-/** A held table's rows as calc-grammar reads a table: `{fields, rows: [{<name>: cell}]}`. */
-export function asGrammarTable(fields, rows, from = 0) {
-  const names = fields.map((f) => f.name);
-  const out = new Array(Math.max(0, rows.length - from));
-  for (let i = from; i < rows.length; i++) {
-    const r = rows[i], o = {};
-    for (let k = 0; k < names.length; k++) o[names[k]] = r[k] ?? "";
-    out[i - from] = o;
-    rows[i] = null;   /* each source row is let go as its object is made, so the two are never held whole at once */
+/* A field as calc-grammar's table holds it. */
+const grammarField = (f) => ({ name: f.name, type: f.type, ...(f.unit && { unit: f.unit }), ...(f.currency && { currency: f.currency }),
+  ...(f.zone && { zone: f.zone }) });
+
+/** R1, R4: a held table read from its canonical text (`canonicalCsv`'s, whose first line is the header), never held as
+ *  row objects: `arrays()` and `objects()` iterate its data rows, each pass reading the text again; `streamed()` binds
+ *  it as calc-grammar's streamed table (its R22). `size` is its count of data rows. */
+export function textTable(fields, text, size) {
+  const held = fields.map(grammarField);
+  const names = held.map((f) => f.name);
+  function* arrays() {
+    let header = true;
+    for (const row of csvScan(text)) {
+      if (header) { header = false; continue; }
+      yield row;
+    }
   }
-  return { fields: fields.map((f) => ({ name: f.name, type: f.type, ...(f.unit && { unit: f.unit }),
-    ...(f.currency && { currency: f.currency }), ...(f.zone && { zone: f.zone }) })), rows: out };
+  function* objects() {
+    for (const row of arrays()) {
+      const o = {};
+      for (let k = 0; k < names.length; k++) o[names[k]] = row[k] ?? "";
+      yield o;
+    }
+  }
+  return { fields: held, size, text, arrays, objects, streamed: () => ({ fields: held, rows: arrays }) };
 }

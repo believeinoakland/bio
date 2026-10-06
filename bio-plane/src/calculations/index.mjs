@@ -35,7 +35,7 @@ import { provenanceOf } from "../provenance/index.mjs";
 import { combine as combineProfiles, SPACES } from "../../../jurisdictions/index.mjs";
 import { CALCULATIONS_TABLES, migrateCalculations } from "./schema.mjs";
 import { TABLE_MAX_BYTES, TABLE_MAX_CELLS, MONEY_ROLES, scanCsv, shaOf, schemaFault, readHeader, rolesFault,
-  vintageFault, tableBuilder, asGrammarTable } from "./tables.mjs";
+  vintageFault, tableBuilder, textTable } from "./tables.mjs";
 import { PATTERNS, GATE_MAX_RATE, runPattern } from "./patterns.mjs";
 
 export { CALCULATIONS_SCHEMA, CALCULATIONS_TABLES } from "./schema.mjs";
@@ -64,7 +64,7 @@ const SHA = /^[0-9a-f]{64}$/;
 const CALC_RE = idPattern("CALC");
 const MONEY_RE = idPattern("MNY");
 const READ_LIMIT_MAX = 1000;
-const TABLE_CACHE = 8;
+const TABLE_CACHE_CHARS = 24 * 1024 * 1024;   /* the held tables' text kept at hand, at most (R1: one 20 MiB table fits) */
 const TEXT_CHUNK = 512 * 1024;   /* characters per row of calc_table_bytes, under a Durable Object row's 2 MB */
 
 const str = (v) => (typeof v === "string" ? v.trim() : "");
@@ -168,6 +168,20 @@ function lineage(recipe) {
   return of;
 }
 
+/* R4 (K1734): a table calc-grammar answers streamed (`{fields, rows}`, `rows` a function answering arrays of cells in
+   `fields` order, its R22) as the same table of row objects; any other value as it is. */
+function rowObjects(v) {
+  if (!plain(v) || !Array.isArray(v.fields) || typeof v.rows !== "function") return v;
+  const names = v.fields.map((f) => f.name);
+  const rows = [];
+  for (const row of v.rows()) {
+    const o = {};
+    for (let k = 0; k < names.length; k++) o[names[k]] = row[k];
+    rows.push(o);
+  }
+  return { fields: v.fields, rows };
+}
+
 /* The first path at which two results differ, for CALC_RECOMPUTE_DIFFERS (R8). */
 function firstDifference(a, b, path = "results") {
   if (canonicalJson(a ?? null) === canonicalJson(b ?? null)) return null;
@@ -186,7 +200,7 @@ function firstDifference(a, b, path = "results") {
 export class Calculations {
   #inputListeners = [];     // R11: {module, fn}
   #patternListeners = [];   // R23: {module, fn}
-  #tableCache = new Map();  // sha → grammar table, the last few read
+  #tableCache = new Map();  // sha → held table (`textTable`), the last few read, within TABLE_CACHE_CHARS
 
   constructor({ storage, record, membership, content, provenance, combine = combineProfiles, now = null,
                 clock = null, ...upstream } = {}) {
@@ -311,7 +325,7 @@ export class Calculations {
     const held = this.#one(`SELECT sha FROM calc_tables WHERE sha=?`, tableSha);
     if (held) return { ok: true, already: true, ...this.#tableAnswer(this.#one(`SELECT * FROM calc_tables WHERE sha=?`, tableSha)) };
     const ev = this.record.evidenceStore();
-    if (!ev) return no("NO_EVIDENCE_STORE", "this instance has no evidence store bound, so a table's bytes cannot be held. Nothing was written.");
+    if (!ev) return no("NO_EVIDENCE_STORE", "your group's Civicsmith has no evidence store bound, so a table's bytes cannot be held. Nothing was written.");
     try { await ev.put(tableSha, bytes); } catch (e) { return no("EVIDENCE_WRITE_FAILED", `the table's bytes could not be stored: ${String(e && e.message || e).slice(0, 200)}. Nothing was written.`); }
     const at = this.now();
     const superseded = vintage && vintage.supersedes ? vintage.supersedes : null;
@@ -343,30 +357,22 @@ export class Calculations {
       declared_by: r.declared_by, declared_at: r.declared_at };
   }
 
-  /* A held table's rows as calc-grammar reads them, from the evidence store (cached). */
-  /* A held table's rows from its text (calc-grammar's table shape), or null. */
+  /* A held table from its canonical text (`textTable`: read row by row, never held as row objects), or null. */
   #fromText(tableSha, text) {
-    const r = this.#one(`SELECT schema_json FROM calc_tables WHERE sha=?`, tableSha);
+    const r = this.#one(`SELECT schema_json, rows FROM calc_tables WHERE sha=?`, tableSha);
     if (!r || typeof text !== "string" || shaOf(text) !== tableSha) return null;
-    const fields = parse(r.schema_json).fields;
-    const names = fields.map((f) => f.name);
-    const rows = [];
-    let header = true;
-    const sc = scanCsv(text, (row) => {
-      if (header) { header = false; return; }
-      const o = {};
-      for (let k = 0; k < names.length; k++) o[names[k]] = row[k] ?? "";
-      rows.push(o);
-    });
-    if (sc.error) return null;
-    const t = { ...asGrammarTable(fields, []), rows };
+    const t = textTable(parse(r.schema_json).fields, text, r.rows);
     this.#tableCache.set(tableSha, t);
-    while (this.#tableCache.size > TABLE_CACHE) this.#tableCache.delete(this.#tableCache.keys().next().value);
+    let chars = 0;
+    for (const k of [...this.#tableCache.keys()].reverse()) {
+      chars += this.#tableCache.get(k).text.length;
+      if (chars > TABLE_CACHE_CHARS && k !== tableSha) this.#tableCache.delete(k);
+    }
     return t;
   }
 
-  /* A held table's rows, synchronously: the cache, else the record's chunked copy of its canonical bytes. */
-  #grammarTableSync(tableSha) {
+  /* A held table, synchronously: the cache, else the record's chunked copy of its canonical bytes. */
+  #heldTableSync(tableSha) {
     if (this.#tableCache.has(tableSha)) {
       const t = this.#tableCache.get(tableSha);
       this.#tableCache.delete(tableSha); this.#tableCache.set(tableSha, t);
@@ -376,9 +382,9 @@ export class Calculations {
     return chunks.length ? this.#fromText(tableSha, chunks.map((c) => c.chunk).join("")) : null;
   }
 
-  /* A held table's rows: synchronously when held so, else from the evidence store (its bytes, checked by their sha). */
-  async #grammarTable(tableSha) {
-    const t = this.#grammarTableSync(tableSha);
+  /* A held table: synchronously when held so, else from the evidence store (its bytes, checked by their sha). */
+  async #heldTable(tableSha) {
+    const t = this.#heldTableSync(tableSha);
     if (t) return t;
     const ev = this.record.evidenceStore();
     let text = null;
@@ -397,19 +403,20 @@ export class Calculations {
     if (!r || !this.#sees(r.bundle_id, viewer)) return { ok: true, found: false, sha: str(tableSha) };
     const lim = Math.max(1, Math.min(READ_LIMIT_MAX, Number.isInteger(Number(limit)) ? Number(limit) : 100));
     const from = Math.max(0, Number.isInteger(Number(after)) ? Number(after) : 0);
-    const t = await this.#grammarTable(r.sha);
+    const t = await this.#heldTable(r.sha);
     const header = parse(r.header_json);
+    const rows = t ? [...t.objects()].map((x) => Object.fromEntries(header.map((h) => [h, String(x[h] ?? "")]))) : null;
     const src = parse(r.source_json);
     const crow = src ? this.content.contentRow(src.content_id) : null;
     let cg = null;
     try { cg = crow ? this.provenance.captureGrade(crow.capture_sha) : null; } catch { cg = null; }
     const g = crow ? this.#contentGrade(crow) : { grade: null, why: "the table's source is not held" };
     return { ok: true, found: true, ...this.#tableAnswer(r),
-      table: { sha: r.sha, fields: parse(r.schema_json).fields, rows: t ? t.rows.map((x) => Object.fromEntries(header.map((h) => [h, String(x[h] ?? "")]))) : null,
+      table: { sha: r.sha, fields: parse(r.schema_json).fields, rows,
         grade_facts: { capture_grade: cg && isGrade(cg.grade) ? cg.grade : null, derivation: crow && isGrade(crow.derivation_cap) ? crow.derivation_cap : null,
           grade: g.grade, why: g.why } },
-      page: t ? { after: from, limit: lim, rows: t.rows.slice(from, from + lim).map((x) => header.map((h) => x[h])),
-        truncated: from + lim < t.rows.length } : { rows: null, why: "the table's bytes are not held in the evidence store" } };
+      page: t ? { after: from, limit: lim, rows: rows.slice(from, from + lim).map((x) => header.map((h) => x[h])),
+        truncated: from + lim < rows.length } : { rows: null, why: "the table's bytes are not held in the evidence store" } };
   }
 
   /** R3: `tablesAt({key, at, viewer})`: the vintage under `key` valid at `at` (`civil-time.validAt`), or undetermined
@@ -483,10 +490,11 @@ export class Calculations {
       const r = plain(f.grade) ? f.grade.reading : f.grade;
       return isGrade(r) ? (g === null ? r : weaker(g, r)) : g === null ? undefined : g;
     }, null);
-    const hash = sha({ facts: facts.map((f) => ({ id: f.fact_id, amount: figureOfFact(f), currency: f.currency ?? null,
+    /* R9: the money input's canonical bytes are the canonical JSON of this, as the calculation is computed over it */
+    const held = { facts: facts.map((f) => ({ id: f.fact_id, amount: figureOfFact(f), currency: f.currency ?? null,
       kind: f.kind ?? null, phase: f.phase ?? null, stage: f.stage ?? null, basis: f.basis ?? null, period: f.period ?? null,
-      buys: buys(f) })), withdrawn: withdrawn.map((w) => w.fact_id) });
-    return { table, facts, withdrawn, hash, grade: grade === undefined ? null : grade, currencies };
+      buys: buys(f) })), withdrawn: withdrawn.map((w) => w.fact_id) };
+    return { table, facts, withdrawn, held, grade: grade === undefined ? null : grade, currencies };
   }
 
   /* A content row's capture grade, capped by its derivation (K1447 (ii)). */
@@ -501,14 +509,16 @@ export class Calculations {
     return { grade, why };
   }
 
-  /* R4: each input bound for `viewer`. `{ok: false}` with NO_SUCH_INPUT or HYPOTHESIS_NOT_A_FACT, or
-     `{bound, hashes, refs, inputs, apart}`. */
+  /* R4, R9: each input bound for `viewer`. `{ok: false}` with NO_SUCH_INPUT or HYPOTHESIS_NOT_A_FACT, or
+     `{bound, hashes, canon, refs, inputs, apart}`: `hashes` each input's SHA-256 of its canonical bytes as it was
+     computed over (a table's canonical CSV; else the canonical JSON `canon` holds, null where it cannot be rebuilt). */
   async #bind(inputs, viewer, { threshold = null } = {}) {
     const KINDS = ["table", "money", "figure", "value", "calculation", "set", "draw"];
     const hyps = [];
     for (const inp of inputs) for (const s of stringsIn(inp)) if (isHypothesisId(s)) hyps.push(s);
     if (threshold) for (const s of stringsIn(threshold)) if (isHypothesisId(s)) hyps.push(s);
-    const bound = {}, hashes = {}, refs = [], described = [], apart = { withdrawn: [], out_of_view: [] };
+    const bound = {}, hashes = {}, canon = {}, refs = [], described = [], apart = { withdrawn: [], out_of_view: [] };
+    const held = (name, v) => { canon[name] = canonicalJson(v); hashes[name] = sha256HexSync(canon[name]); };
     const names = new Set();
     let refused = null;
     const missing = (name, ref) => { if (!refused) refused = no("NO_SUCH_INPUT", `the input "${name}"${ref ? ` names ${ref}, which` : ""} is not held, or is not one you may see. Nothing was written.`, { input: name, ...(ref ? { ref } : {}) }); };
@@ -523,12 +533,13 @@ export class Calculations {
       if (kind === "table") {
         const r = typeof ref === "string" ? this.#one(`SELECT sha, bundle_id, source_json, roles_json FROM calc_tables WHERE sha=?`, ref) : null;
         if (!r || !this.#sees(r.bundle_id, viewer)) { missing(inp.name, String(ref)); break; }
-        const t = await this.#grammarTable(r.sha);
+        const t = await this.#heldTable(r.sha);
         if (!t) { missing(inp.name, r.sha); break; }
         const src = parse(r.source_json);
         const crow = this.content.contentRow(src.content_id);
         const g = crow ? this.#contentGrade(crow) : { grade: null, why: "the source's content row is not held" };
-        bound[inp.name] = t; hashes[inp.name] = r.sha; refs.push({ name: inp.name, kind, ref: r.sha });
+        /* R1, R4: bound as calc-grammar's streamed table (its R22), its bytes the table's own canonical CSV */
+        bound[inp.name] = t.streamed(); hashes[inp.name] = r.sha; refs.push({ name: inp.name, kind, ref: r.sha });
         described.push({ name: inp.name, kind, ref: r.sha, grade: g.grade, why: g.why, roles: parse(r.roles_json) });
       } else if (kind === "money") {
         const ids = Array.isArray(ref) ? ref : [ref];
@@ -536,7 +547,7 @@ export class Calculations {
         let first = null;
         const m = await this.#moneyInput(ids, viewer, (id) => { first = first || id; });
         if (first) { missing(inp.name, first); break; }
-        bound[inp.name] = m.table; hashes[inp.name] = m.hash;
+        bound[inp.name] = m.table; held(inp.name, m.held);
         for (const id of ids) refs.push({ name: inp.name, kind, ref: id });
         apart.withdrawn.push(...m.withdrawn.map((w) => ({ input: inp.name, ...w })));
         described.push({ name: inp.name, kind, ref: ids, facts: m.facts.map((f) => f.fact_id), grade: m.grade,
@@ -551,18 +562,18 @@ export class Calculations {
         if (f.refused) { refused = no("FIGURE_NOT_READ", `the input "${inp.name}" cites a passage that does not read as one figure: ${f.why}. Nothing was written.`, { input: inp.name, ref }); break; }
         const fig = { ...f }; delete fig.as_read;
         const g = this.#contentGrade(row);
-        bound[inp.name] = fig; hashes[inp.name] = sha({ content: ref, figure: fig }); refs.push({ name: inp.name, kind, ref });
+        bound[inp.name] = fig; held(inp.name, { content: ref, figure: fig }); refs.push({ name: inp.name, kind, ref });
         described.push({ name: inp.name, kind, ref, as_read: f.as_read, grade: g.grade, why: g.why });
       } else if (kind === "value") {
         const f = typeof ref === "string" ? parseFigure(ref) : { refused: "FIGURE_INVALID", why: "a typed figure is text" };
         if (f.refused) { refused = no("FIGURE_NOT_READ", `the input "${inp.name}" is not a figure: ${f.why}. Nothing was written.`, { input: inp.name }); break; }
         const fig = { ...f }; delete fig.as_read;
-        bound[inp.name] = fig; hashes[inp.name] = sha({ value: fig });
+        bound[inp.name] = fig; held(inp.name, { value: fig });
         described.push({ name: inp.name, kind, ref, as_read: f.as_read, grade: TESTIMONY, unbound: true,
           why: "a figure typed with no cited source is unbound, and an unbound input is testimony (D)" });
       } else if (kind === "calculation") {
         const c = typeof ref === "string" && CALC_RE.test(ref) ? this.#one(`SELECT * FROM calculations WHERE calc_id=?`, ref) : null;
-        if (!c || !(await this.#visible(c, viewer))) { missing(inp.name, String(ref)); break; }
+        if (!c || !this.#visible(c, viewer)) { missing(inp.name, String(ref)); break; }
         const out = parse(c.results_json);
         const v = out ? out.output : null;
         let b = null;
@@ -570,8 +581,12 @@ export class Calculations {
         else if (plain(v) && plain(v.value) && v.numerator !== undefined) b = v.value;
         else if (plain(v) && (typeof v.value === "string" || typeof v.low === "string" || v.undetermined)) b = v;
         if (!b) { refused = no("FIGURE_NOT_READ", `the calculation "${ref}" answers no figure or table an input can take. Nothing was written.`, { input: inp.name, ref }); break; }
-        const axis = await this.#gradeFacts(c, viewer);
-        bound[inp.name] = b; hashes[inp.name] = c.result_key; refs.push({ name: inp.name, kind, ref });
+        const axis = this.#gradeFacts(c);
+        /* its bytes: the canonical JSON its result key is the SHA-256 of (calc-grammar R15), from its own inputs' hashes */
+        const pre = parse(c.input_shas_json);
+        const text = pre ? canonicalJson({ recipe: parse(c.recipe_json), inputs: pre, method_version: c.method_version }) : null;
+        bound[inp.name] = b; hashes[inp.name] = c.result_key; canon[inp.name] = text && sha256HexSync(text) === c.result_key ? text : null;
+        refs.push({ name: inp.name, kind, ref });
         described.push({ name: inp.name, kind, ref, grade: axis.capture.grade, why: `its own capture axis: ${axis.capture.why}` });
       } else if (kind === "set") {
         const s = typeof ref === "string" ? this.#one(`SELECT * FROM calc_sets WHERE set_sha=?`, ref) : null;
@@ -580,7 +595,9 @@ export class Calculations {
         const seen = ids.filter((id) => this.#sees(id, viewer));
         if (seen.length !== ids.length) apart.out_of_view.push({ input: inp.name, count: ids.length - seen.length, why: "members of the frozen set out of your view at evaluation, counted apart and never as zero" });
         bound[inp.name] = { fields: [{ name: "id", type: "string" }], rows: seen.map((id) => ({ id })) };
-        hashes[inp.name] = s.set_sha; refs.push({ name: inp.name, kind, ref: s.set_sha });
+        held(inp.name, ids);
+        if (hashes[inp.name] !== s.set_sha) { hashes[inp.name] = s.set_sha; canon[inp.name] = null; }
+        refs.push({ name: inp.name, kind, ref: s.set_sha });
         described.push({ name: inp.name, kind, ref: s.set_sha, n: ids.length, grade: null, not_graded: true,
           why: "a frozen set of the record's own ids carries no capture grade; the method that froze it is disclosed" });
       } else {
@@ -590,22 +607,27 @@ export class Calculations {
         let table;
         if (d.set_kind === "table") {
           const r = this.#one(`SELECT bundle_id FROM calc_tables WHERE sha=?`, d.set_sha);
-          const t = r && this.#sees(r.bundle_id, viewer) ? await this.#grammarTable(d.set_sha) : null;
+          const t = r && this.#sees(r.bundle_id, viewer) ? await this.#heldTable(d.set_sha) : null;
           if (!t) { missing(inp.name, d.set_sha); break; }
-          table = { fields: t.fields, rows: sample.map((k) => t.rows[Number(k)]).filter(Boolean) };
+          const at = new Map(sample.map((k) => [Number(k), null]));
+          let i = 0;
+          for (const o of t.objects()) { if (at.has(i)) at.set(i, o); i++; }
+          table = { fields: t.fields, rows: sample.map((k) => at.get(Number(k))).filter(Boolean) };
         } else {
           const seen = sample.filter((id) => this.#sees(id, viewer));
           if (seen.length !== sample.length) apart.out_of_view.push({ input: inp.name, count: sample.length - seen.length, why: "drawn members out of your view at evaluation, counted apart" });
           table = { fields: [{ name: "id", type: "string" }], rows: seen.map((id) => ({ id })) };
         }
-        bound[inp.name] = table; hashes[inp.name] = d.draw_key; refs.push({ name: inp.name, kind, ref: d.draw_key });
+        bound[inp.name] = table; held(inp.name, { set: d.set_sha, kind: d.set_kind, seed: d.seed, n: d.n, method: d.method });
+        if (hashes[inp.name] !== d.draw_key) { hashes[inp.name] = d.draw_key; canon[inp.name] = null; }
+        refs.push({ name: inp.name, kind, ref: d.draw_key });
         described.push({ name: inp.name, kind, ref: d.draw_key, draw: { frame_size: d.frame_size, n: d.n, seed: d.seed, method: d.method, set: d.set_sha },
           grade: null, not_graded: true, why: "a recorded draw is graded as the set it was drawn from; the draw itself is a mechanical, reproducible step" });
       }
     }
     if (refused) return refused;
     if (hyps.length) return no("HYPOTHESIS_NOT_A_FACT", `"${hyps[0]}" is a hypothesis: hunches and hypotheses are held in the working inquiry and are never a calculation's input or threshold (K1467). Nothing was written.`, { hypothesis: hyps[0] });
-    return { ok: true, bound, hashes, refs, inputs: described, apart };
+    return { ok: true, bound, hashes, canon, refs, inputs: described, apart };
   }
 
   /* R6: the threshold, as a figure bound under the name `threshold`, with its standing. */
@@ -737,10 +759,16 @@ export class Calculations {
     const prefix = { ...recipe, steps: recipe.steps.slice(0, recipe.steps.indexOf(group)), output: group.from };
     let t = bound[group.from];
     if (!t && prefix.steps.length) { const r = evaluateRecipe(prefix, bound, opts); t = r && r.result; }
-    if (!t || !Array.isArray(t.rows)) return null;
+    if (!t || !Array.isArray(t.fields) || !(Array.isArray(t.rows) || typeof t.rows === "function")) return null;
     for (const f of LINK_KIND_FIELDS) {
-      if (!t.fields.some((x) => x.name === f) || group.by.includes(f)) continue;
-      const kinds = [...new Set(t.rows.map((r) => r[f]).filter((v) => v !== "" && v != null).map(String))];
+      const k = t.fields.findIndex((x) => x.name === f);
+      if (k < 0 || group.by.includes(f)) continue;
+      const seen = new Set();
+      for (const r of Array.isArray(t.rows) ? t.rows : t.rows()) {
+        const v = Array.isArray(t.rows) ? r[f] : r[k];
+        if (v !== "" && v != null) seen.add(String(v));
+      }
+      const kinds = [...seen];
       if (kinds.length > 1)
         return no("SCORE_NOT_A_FACT", `the ranking counts rows of ${kinds.length} kinds (${kinds.slice(0, 5).join(", ")}) as one measure; a measure across mixed kinds of link is refused, a count of one kind is a fact (K1471). Nothing was written.`, { field: f });
     }
@@ -769,7 +797,8 @@ export class Calculations {
     }
     const bound = { ...b.bound };
     const hashes = { ...b.hashes };
-    if (th.figure) { bound.threshold = th.figure; hashes.threshold = sha({ threshold: th.held }); }
+    const canon = { ...b.canon };
+    if (th.figure) { bound.threshold = th.figure; canon.threshold = canonicalJson({ threshold: th.held }); hashes.threshold = sha256HexSync(canon.threshold); }
     const view = this.#view();
     const opts = { resolveId: (space, v) => { const rec = recognise(view, space, String(v)); return rec ? rec.normal : null; }, ...(view && { view }) };
     if (kind === "ranking") { const mk = this.#mixedKinds(r, bound, opts); if (mk) return mk; }
@@ -788,6 +817,8 @@ export class Calculations {
         says: "the total includes transfers between funds, flagged so a total across funds can net them" });
     }
     const e = evaluateRecipe(r, bound, opts);
+    /* R4 (K1734): a table result answered streamed is stored and answered as the same table of row objects */
+    if (!e.refused) e.result = rowObjects(e.result);
     if (e.refused) return no(e.refused, `calc-grammar refused the recipe: ${e.why}${e.step ? ` (step ${e.step})` : ""}. Nothing was written.`, { step: e.step ?? null, ...(e.errors ? { errors: e.errors } : {}) });
     const counted = e.trace.filter((t) => t.undetermined.length).map((t) => ({ step: t.step, op: t.op, rows: t.undetermined.length, set_aside: t.undetermined.slice(0, 50) }));
     const steps = Object.fromEntries(e.trace.map((t) => [t.step, t.step === r.output ? e.result : t.output]));
@@ -823,7 +854,7 @@ export class Calculations {
     const figures = Object.fromEntries(b.inputs.filter((d) => d.kind === "figure" || d.kind === "value").map((d) => [d.name, bound[d.name]]));
     if (Object.keys(figures).length) results.inputs_bound = figures;
     const key = resultKey(r, hashes);
-    return { ok: true, recipe: r, results, result_key: key, inputs: b.inputs, refs: b.refs, threshold: th.held ?? null };
+    return { ok: true, recipe: r, results, result_key: key, hashes, canon, inputs: b.inputs, refs: b.refs, threshold: th.held ?? null };
   }
 
   /* ===================================================================== *
@@ -845,6 +876,16 @@ export class Calculations {
       return no("NO_SUCH_PROJECT", "no project answers to that id here, or it is not one you may see. Nothing was written.", { project });
     if (evidences !== null && evidences !== undefined && !(Array.isArray(evidences) && evidences.every((x) => plain(x) && str(x.duty) && str(x.occurrence))))
       return no("BAD_EVIDENCES", "evidences name the duty occurrences a calculation measures, each {duty, occurrence}. Nothing was written.");
+    /* R9: each input's canonical bytes in the evidence store under their SHA-256, beside a table's, so a case file can
+       name them and publication commit them (its R22). Content-addressed: a byte string put again is the same object. */
+    const ev = this.record.evidenceStore();
+    if (ev) {
+      for (const [name, text] of Object.entries(c.canon)) {
+        if (typeof text !== "string") continue;
+        try { await ev.put(c.hashes[name], new TextEncoder().encode(text)); }
+        catch (e) { return no("EVIDENCE_WRITE_FAILED", `the input "${name}"'s bytes could not be stored: ${String(e && e.message || e).slice(0, 200)}. Nothing was written.`, { input: name }); }
+      }
+    }
     const at = this.now();
     const year = at.slice(0, 4);
     let calcId = null;
@@ -854,11 +895,11 @@ export class Calculations {
       calcId = id.id;
       this.sql.exec(`INSERT INTO calculations (calc_id, project, question, terms_json, period_json, kind, recipe_json, inputs_json,
                        threshold_json, method_version, method_note, evidences_json, result_key, results_json, computed_at,
-                       recompute_status, recompute_json, accepted_by, accepted_at, created_by, created_at)
-                     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'unchecked',NULL,NULL,NULL,?,?)`,
+                       recompute_status, recompute_json, accepted_by, accepted_at, created_by, created_at, input_shas_json)
+                     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'unchecked',NULL,NULL,NULL,?,?,?)`,
         calcId, project ? str(project) : null, str(question), json(terms), json(p), kind, json(c.recipe), json(inputs),
         c.threshold ? json(c.threshold) : null, METHOD, str(methodNote) || null, evidences ? json(evidences) : null,
-        c.result_key, json(c.results), at, by, at);
+        c.result_key, json(c.results), at, by, at, json(c.hashes));
       for (const ref of c.refs)
         this.sql.exec(`INSERT OR IGNORE INTO calc_inputs (calc_id, project, input_name, input_kind, ref) VALUES (?,?,?,?,?)`,
           calcId, project ? str(project) : null, ref.name, ref.kind, ref.ref);
@@ -918,20 +959,26 @@ export class Calculations {
   }
 
   /** R8: `accept({calcId, by})`: a member's act; recomputes first and is refused CALC_RECOMPUTE_DIFFERS, naming the
-   *  differing result, when the recompute differs from what is stored. */
+   *  differing result, when the recompute differs from what is stored. A refused accept writes nothing, its recompute
+   *  status and recompute record included (N619); an agreeing one writes the recompute and the acceptance at once. */
   async accept({ calcId = null, by = null } = {}) {
     if (!stamped(by) || isMachine(by)) return no("MEMBER_ACT_ONLY", "accepting a calculation is a member's act. Nothing was written.");
     const c = str(calcId) ? this.#one(`SELECT * FROM calculations WHERE calc_id=?`, str(calcId)) : null;
-    if (!c || !(await this.#visible(c, by))) return no("NO_SUCH_CALCULATION", "no calculation answers to that id here, or it is not one you may see. Nothing was written.");
+    if (!c || !this.#visible(c, by)) return no("NO_SUCH_CALCULATION", "no calculation answers to that id here, or it is not one you may see. Nothing was written.");
     if (c.accepted_by) return { ok: true, already: true, calc_id: c.calc_id, accepted_by: c.accepted_by, accepted_at: c.accepted_at };
-    const r = await this.recompute({ calcId: c.calc_id });
-    if (!r.agrees) return no("CALC_RECOMPUTE_DIFFERS", `the recompute differs from what is stored at ${r.differing ? r.differing.path : "its results"}, so the calculation is not accepted. Nothing was accepted.`, { calc_id: c.calc_id, differing: r.differing ?? null });
+    const r = await this.#recomputeRow(c);
+    if (!r.agrees) return no("CALC_RECOMPUTE_DIFFERS", `the recompute differs from what is stored at ${r.differing ? r.differing.path : "its results"}, so the calculation is not accepted. Nothing was written.`, { calc_id: c.calc_id, differing: r.differing ?? null });
     const at = this.now();
-    this.record.transact(() => {
-      this.sql.exec(`UPDATE calculations SET accepted_by=?, accepted_at=? WHERE calc_id=? AND accepted_by IS NULL`, by, at, c.calc_id);
+    const out = this.record.transact(() => {
+      const now = this.#one(`SELECT accepted_by, accepted_at FROM calculations WHERE calc_id=?`, c.calc_id);
+      if (now && now.accepted_by) return { ok: true, already: now };
+      this.sql.exec(`UPDATE calculations SET recompute_status='agrees', recompute_json=?, accepted_by=?, accepted_at=? WHERE calc_id=?`,
+        json({ at, result_key: r.result_key ?? null, differing: null }), by, at, c.calc_id);
+      this.#appendRecompute(c.calc_id, c.project, "agrees", r.result_key ?? null, null, at);
       this.#appendRecompute(c.calc_id, c.project, "accepted", c.result_key, { by }, at);
       return { ok: true };
     });
+    if (out.already) return { ok: true, already: true, calc_id: c.calc_id, accepted_by: out.already.accepted_by, accepted_at: out.already.accepted_at };
     return { ok: true, calc_id: c.calc_id, accepted_by: by, accepted_at: at, recompute_status: "agrees" };
   }
 
@@ -970,7 +1017,7 @@ export class Calculations {
     const money = this.dep("money");
     for (const inp of inputs) {
       if (!plain(inp)) continue;
-      if (inp.value !== undefined) { per.push({ name: inp.name, kind: "value", grade: TESTIMONY, unbound: true, why: "an unbound input is testimony (D)" }); continue; }
+      if (inp.value !== undefined) { per.push({ name: inp.name, kind: "value", ref: inp.value, grade: TESTIMONY, unbound: true, why: "an unbound input is testimony (D)" }); continue; }
       if (inp.table !== undefined) {
         const t = this.#one(`SELECT source_json FROM calc_tables WHERE sha=?`, inp.table);
         const row = t ? this.content.contentRow(parse(t.source_json).content_id) : null;
@@ -1020,17 +1067,22 @@ export class Calculations {
   async read({ calcId = null, viewer = null } = {}) {
     if (!str(calcId)) return no("NO_CALC", "a calculation is read by its id.");
     const c = this.#one(`SELECT * FROM calculations WHERE calc_id=?`, str(calcId));
-    if (!c || !(await this.#visible(c, viewer))) return { ok: true, found: false, calc_id: str(calcId) };
+    if (!c || !this.#visible(c, viewer)) return { ok: true, found: false, calc_id: str(calcId) };
     const results = parse(c.results_json);
+    /* R9: each input's SHA-256 of its canonical bytes as the calculation was computed over them (a table's is its sha;
+       a calculation created before T34 recorded no other, so it answers null) */
+    const shas = parse(c.input_shas_json) || {};
+    const shaOfInput = (name, fallback = null) => (typeof shas[name] === "string" ? shas[name] : fallback);
     const inputs = (parse(c.inputs_json) || []).map((i) => {
-      if (i.table !== undefined) return { name: i.name, kind: "table", sha: i.table };
+      if (i.table !== undefined) return { name: i.name, kind: "table", sha: shaOfInput(i.name, i.table) };
       if (i.figure !== undefined || i.value !== undefined) {
         const step = (results && results.inputs_bound && results.inputs_bound[i.name]) || null;
-        return { name: i.name, kind: "figure", figure: step, ...(i.figure !== undefined ? { content_id: i.figure } : { as_read: i.value }) };
+        return { name: i.name, kind: "figure", figure: step, ...(i.figure !== undefined ? { content_id: i.figure } : { as_read: i.value }), sha: shaOfInput(i.name) };
       }
       const kind = ["money", "calculation", "set", "draw"].find((k) => i[k] !== undefined);
-      return { name: i.name, kind, [kind]: i[kind] };
+      return { name: i.name, kind, [kind]: i[kind], sha: shaOfInput(i.name) };
     });
+    if (typeof shas.threshold === "string") inputs.push({ name: "threshold", kind: "threshold", sha: shas.threshold });
     const calculation = { calc_id: c.calc_id, question: c.question, period: parse(c.period_json), recipe: parse(c.recipe_json),
       method_version: c.method_version, result_key: c.result_key, inputs, results: results ? results.steps || {} : {} };
     return { ok: true, found: true, calculation, calc_id: c.calc_id, project: c.project, question: c.question, terms: parse(c.terms_json),
@@ -1038,8 +1090,36 @@ export class Calculations {
       evidences: parse(c.evidences_json), result_key: c.result_key, results: parse(c.results_json), computed_at: c.computed_at,
       method_version: c.method_version, method_note: c.method_note ?? null, recompute_status: c.recompute_status,
       recompute: parse(c.recompute_json), accepted_by: c.accepted_by ?? null, accepted_at: c.accepted_at ?? null,
-      created_by: c.created_by, created_at: c.created_at, grade: await this.#gradeFacts(c),
+      created_by: c.created_by, created_at: c.created_at, grade: this.#gradeFacts(c),
       says: "results are recomputed at acceptance, at publication and in the checker, never on a read" };
+  }
+
+  /** R30 (N576): `gradeFactsOf({calcId, viewer})`, synchronously: R9's grade facts as `read` answers them, with whether
+   *  the acceptance is recorded: `{found: true, accepted, capture, inputs, method}`. A calculation not held, one R10
+   *  withholds from the viewer, and a call without a viewer each answer `{found: false}`, identically. Recomputes
+   *  nothing, writes nothing, never throws. */
+  gradeFactsOf(args = {}) {
+    try {
+      const { calcId = null, viewer = null } = plain(args) ? args : {};
+      const c = str(calcId) && stamped(viewer) ? this.#one(`SELECT * FROM calculations WHERE calc_id=?`, str(calcId)) : null;
+      if (!c || !this.#visible(c, viewer)) return { found: false };
+      const g = this.#gradeFacts(c);
+      return { found: true, accepted: !!c.accepted_by, capture: g.capture, inputs: g.inputs, method: g.method };
+    } catch { return { found: false }; }
+  }
+
+  /** R31 (N576): `calcStatusOf({calcId, viewer})`, synchronously: `{held, visible, accepted}`, for other modules'
+   *  synchronous checks. `visible` is R10's admission of the viewer (false without one); `accepted` is false when not
+   *  visible. A caller answers a viewer a calculation not `visible` exactly as one not `held`. Writes nothing; never
+   *  throws. */
+  calcStatusOf(args = {}) {
+    try {
+      const { calcId = null, viewer = null } = plain(args) ? args : {};
+      const c = str(calcId) ? this.#one(`SELECT * FROM calculations WHERE calc_id=?`, str(calcId)) : null;
+      if (!c) return { held: false, visible: false, accepted: false };
+      const visible = stamped(viewer) && this.#visible(c, viewer) === true;
+      return { held: true, visible, accepted: visible && !!c.accepted_by };
+    } catch { return { held: false, visible: false, accepted: false }; }
   }
 
   /* ===================================================================== *
@@ -1064,8 +1144,9 @@ export class Calculations {
   #stale(ref, cause) {
     try {
       const at = this.now();
-      const calcs = this.#rows(`SELECT DISTINCT i.calc_id, c.project, c.recompute_status FROM calc_inputs i
-                                 JOIN calculations c ON c.calc_id = i.calc_id WHERE i.ref=? ORDER BY i.calc_id`, ref);
+      /* in the order they were created: a CALC- id is opaque (R4), so it orders nothing */
+      const calcs = this.#rows(`SELECT c.calc_id, c.project, c.recompute_status FROM calculations c
+                                 WHERE c.calc_id IN (SELECT calc_id FROM calc_inputs WHERE ref=?) ORDER BY c.created_at, c.rowid`, ref);
       for (const c of calcs) {
         this.sql.exec(`UPDATE calculations SET recompute_status='stale' WHERE calc_id=?`, c.calc_id);
         this.#appendRecompute(c.calc_id, c.project, "stale", null, { input: ref, cause }, at);
@@ -1146,8 +1227,9 @@ export class Calculations {
       return id ? { entity: id } : { why: `"${String(value).slice(0, 64)}" resolves to no registered entity through the scheme ${spec.scheme}` };
     }
     if (spec.crosswalk) {
-      const t = this.#grammarTableSync(spec.crosswalk.table);
-      const hit = t ? t.rows.filter((r) => String(r[spec.crosswalk.from]).trim() === String(value).trim()).map((r) => String(r[spec.crosswalk.to]).trim()) : [];
+      const t = this.#heldTableSync(spec.crosswalk.table);
+      const hit = [];
+      if (t) for (const r of t.objects()) if (String(r[spec.crosswalk.from]).trim() === String(value).trim()) hit.push(String(r[spec.crosswalk.to]).trim());
       const ids = [...new Set(hit)];
       if (ids.length === 1 && idPattern("ENT").test(ids[0])) return { entity: ids[0] };
       return { why: ids.length > 1 ? `"${String(value).slice(0, 64)}" maps to ${ids.length} entities in the crosswalk` : `"${String(value).slice(0, 64)}" is not in the crosswalk, or maps to no entity id` };
@@ -1162,12 +1244,12 @@ export class Calculations {
     if (!stamped(by) || isMachine(by)) return no("MEMBER_ACT_ONLY", "money facts are read from a table only at a member's request (K1468). Nothing was written.");
     const b = typeof binding === "string" ? this.#one(`SELECT * FROM calc_bindings WHERE binding_key=?`, binding) : null;
     if (!b || !this.#sees(b.bundle_id, by)) return no("NO_SUCH_BINDING", "no adopted binding answers to that key here, or it is not one you may see. Nothing was written.");
-    const t = await this.#grammarTable(b.table_sha);
+    const t = await this.#heldTable(b.table_sha);
     if (!t) return no("NO_SUCH_TABLE", "the binding's table bytes are not held. Nothing was written.");
     let picked;
     if (rows === "all") {
       if (!str(reason)) return no("NO_REASON", "taking every row of a table is the rare case; state the reason (K1468). Nothing was written.");
-      picked = t.rows.map((_, i) => i);
+      picked = Array.from({ length: t.size }, (_, i) => i);
     } else if (Array.isArray(rows) && rows.length && rows.every((n) => Number.isSafeInteger(n) && n >= 0)) picked = [...new Set(rows)].sort((x, y) => x - y);
     else return no("NO_ROWS", "name the rows to read into money facts, by number, or every row with rows: \"all\" and a reason. Nothing was written.");
     const money = this.dep("money");
@@ -1176,8 +1258,13 @@ export class Calculations {
     const declared = parse(this.#one(`SELECT roles_json FROM calc_tables WHERE sha=?`, b.table_sha).roles_json) || {};
     const val = (row, role) => (typeof roles[role] === "string" ? String(row[roles[role]] ?? "").trim() : roles[role] ? roles[role].value : null);
     const written = [], notWritten = [];
+    /* the picked rows, read in one pass over the held table (ascending, as picked is) */
+    const want = new Set(picked);
+    const rowAt = new Map();
+    let n = 0;
+    for (const o of t.objects()) { if (want.has(n)) rowAt.set(n, o); n++; }
     for (const i of picked) {
-      const row = t.rows[i];
+      const row = rowAt.get(i);
       if (!row) { notWritten.push({ row: i, reason: "NO_SUCH_ROW", detail: "the table holds no such row" }); continue; }
       const payer = this.#resolveParty(declared[roles.payer] || {}, row[roles.payer]);
       if (!payer.entity) { notWritten.push({ row: i, reason: "PAYER_NOT_IDENTIFIED", detail: payer.why }); continue; }
@@ -1305,7 +1392,8 @@ export class Calculations {
     const key = plain(occurrence) ? (occurrence.key ?? occurrence.occurrence_key ?? null) : occurrence;
     if (!str(dutyId) || !str(key)) return [];
     const out = [];
-    for (const c of this.#rows(`SELECT * FROM calculations WHERE accepted_by IS NOT NULL AND evidences_json IS NOT NULL ORDER BY calc_id`)) {
+    /* in the order they were created: a CALC- id is opaque (R4), so it orders nothing */
+    for (const c of this.#rows(`SELECT * FROM calculations WHERE accepted_by IS NOT NULL AND evidences_json IS NOT NULL ORDER BY created_at, rowid`)) {
       const ev = parse(c.evidences_json) || [];
       if (!ev.some((e) => e.duty === dutyId && e.occurrence === key)) continue;
       if (viewer !== null && !this.#visible(c, viewer)) { out.push({ withheld: true, evidence: null, says: "a calculation measuring this occurrence rests on an input you may not see, and is withheld whole" }); continue; }
@@ -1339,12 +1427,13 @@ export class Calculations {
       if (v) { try { a = validAt({ valid: { from: v.valid.from ?? null, to: v.valid.to ?? null, precision: "day", zone: "UTC" }, basis: v.basis ?? null }, { value: day, precision: "day", zone: "UTC" }, { view }); } catch { a = "undetermined"; } }
       if (a === "out") continue;
       if (a !== "in") { notRead.push({ table: t.sha, why: v ? `whether its vintage was valid on ${day} is undetermined${a && a.why ? `: ${a.why}` : ""}` : "the table states no vintage, so its validity is not stated" }); continue; }
-      const g = this.#grammarTableSync(t.sha);
+      const g = this.#heldTableSync(t.sha);
       if (!g) { notRead.push({ table: t.sha, why: "the table's bytes are not held" }); continue; }
       tables.push(t.sha);
       const post = col("roster_post"), period = col("roster_period");
-      for (let i = 0; i < g.rows.length; i++) {
-        const r = g.rows[i];
+      let i = -1;
+      for (const r of g.objects()) {
+        i++;
         const o = this.#resolveParty(roles[org], r[org]);
         if (!o.entity) { if (String(r[org] ?? "").trim()) notRead.push({ table: t.sha, row: i, why: o.why }); continue; }
         if (o.entity !== str(organisation)) continue;

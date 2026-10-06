@@ -78,7 +78,10 @@ CREATE TABLE IF NOT EXISTS calculations (
   accepted_by   TEXT,
   accepted_at   TEXT,
   created_by    TEXT NOT NULL,
-  created_at    TEXT NOT NULL
+  created_at    TEXT NOT NULL,
+  -- R9: each input's SHA-256 of its canonical bytes, by name, as the result key was computed over them (T34; null on
+  -- a calculation created before)
+  input_shas_json TEXT
 );
 -- R11, R19: what each calculation names, for the change notices and the occurrence evidence.
 CREATE TABLE IF NOT EXISTS calc_inputs (
@@ -195,8 +198,15 @@ export const CALCULATIONS_TABLES = Object.freeze([
   cls("calc_pattern_cursor", { export: "never", sight: "group", keys: [] }),
 ]);
 
-/** Creates the tables where absent. Idempotent. */
+/* Columns added to a table after it was first made: [table, column, declaration]. */
+const ADDED = Object.freeze([["calculations", "input_shas_json", "TEXT"]]);
+
+/** Creates the tables where absent, and adds a column added since a table was made. Idempotent. */
 export function migrateCalculations(sql) {
   const bare = CALCULATIONS_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const s of bare.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
+  for (const [table, column, decl] of ADDED) {
+    const have = [...sql.exec(`PRAGMA table_info(${table})`)].map((r) => r.name);
+    if (have.length && !have.includes(column)) sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
+  }
 }
