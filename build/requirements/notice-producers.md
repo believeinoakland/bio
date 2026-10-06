@@ -2,7 +2,7 @@
 
 > **DRAFT by a requirements-drafting worker for BOB #114, not reviewed.** 2026-10-05, on `tranche/T32` (P18), for T33's opening (§5.9). Not yet in `build/requirements/`.
 
-**Status** · New module, a new seam after `queue-producers` with no copy (K617; `plan/draft-T33-plan.md` T33-82, Choices 8 and 23; scope §2: queue-producers, 3,875 lines, is split before any new producer). No `queue-producers` requirement moves; its R8's read stays, and `queue` reads this module beside it (T33-83). Layer 11, after `queue-producers`, before `queue`. Its meaning is the ladders' (§2 "Cross-cutting rulings": machine checks, standing questions, sight; §9.5 L5; §10 rows "A due threshold raises a question, never a violation", "Machine signals live in the hypothesis layer") and K1444 (i), K1466, K1473, K1481, K1489, K1491, K1504. All requirements are new and not yet met (T33-82). Interest-check and money-detector items are built and shown only once their gate opens (Rule 7).
+**Status** · New module, a new seam after `queue-producers` with no copy (K617; `plan/draft-T33-plan.md` T33-82, Choices 8 and 23; scope §2: queue-producers, 3,875 lines, is split before any new producer). No `queue-producers` requirement moves; its R8's read stays, and `queue` reads this module beside it (T33-83). Layer 11, after `queue-producers`, before `queue`. Its meaning is the ladders' (§2 "Cross-cutting rulings": machine checks, standing questions, sight; §9.5 L5; §10 rows "A due threshold raises a question, never a violation", "Machine signals live in the hypothesis layer") and K1444 (i), K1466, K1473, K1481, K1489, K1491, K1504. All requirements are new and not yet met (T33-82). Interest-check and money-detector items are built and shown only once their gate opens (Rule 7). T34's fold, by a requirements worker for BOB #123 on `tranche/T34`, 2026-10-06, from plan entry T34-55 (N550; DEC-131; K1536): R11 added (R2's and R3's items, the machine checks of K1491, are marked "Hint · machine work" in member text and called a "hint", never a "signal"; `label`, kinds and keys unchanged); BOB's wording of DEC-131, no new meaning; not yet met (T34).
 
 **Size (P6).** About 600–1,000 lines (T33-82, est 10 requirements).
 
@@ -39,6 +39,7 @@ Rule 3's list: `queue-producers` (the item shape and homes, as its R8), `people`
 - **R8** (K1491, K1473, K1467) An item of R2 or R3 is never stored on a person, never moves a grade or a finding, and is never offered as a citation for a claim; its only acts are to dispose of it or take it up as a member's hunch or hypothesis.
 - **R9** (Rule 7; K1504) While a check's or detector's gate is closed, R2 and R3 raise no item for it and count none: switching display on is the gate's opening, never a parameter of this read.
 - **R10** No place is named in this module's behaviour or outward text.
+- **R11** (DEC-131; K1473, K1491; K1536) Every member-facing sentence this module answers for an item of R2 or R3 (its `summary` and `detail`, and the words of its options) marks it "Hint · machine work" and calls what the machine raised a "hint", never a "signal" (DEC-131: "Signal" leaves member text). The `label` value `noticed`, the kinds and the item keys are unchanged. R4's, R5's and R6's items are not hints and carry no such mark. *(not yet met: T34)*
 
 ### Satisfies
 

@@ -23,7 +23,11 @@
  * the store gate's registration and its failed check (R78). (The declaration's older refusals, TABLE_DECLARED and
  * TABLE_NAME_INVALID, keep their row-less shape, which other modules' tests pin; their rows are deferred.) C-132 is a
  * new family, expunge with a tombstone (R79), whose refusals a member's act meets. All are `awaiting stamp`: promotion,
- * which stamps rows, has no T33 job (T34's layer 2). */
+ * which stamps rows, has no T33 job (T34's layer 2).
+ *
+ * T34 (RECORD-CORE #17, T34-9; N554, K1545, DEC-49): C-102.26–.27 are new, the declaration's two older refusals,
+ * TABLE_NAME_INVALID and TABLE_DECLARED, now answered with their rows (R80), beside C-102.21–.22; `awaiting stamp` for
+ * promotion's T34 layer-2 stamp (T34-12). */
 
 const at = (fn, region) => `src/record-core/index.mjs ${fn} > ${region}`;
 const BUILD_FAULT = 'This is a fault in how the instance was built, not in the record, and nothing in the record changed.';
@@ -135,6 +139,17 @@ export const RECORD_CORE_CHECKS = Object.freeze({
     check: 'C-102.22', where: at("#declare", "is-table-declaration"),
     translation: 'A part of this instance tried to declare a table with a class the record does not know, so nothing was '
       + 'declared. ' + BUILD_FAULT,
+  }),
+  /* New (T34, R80; N554): the declaration's two older refusals, given their rows. */
+  TABLE_NAME_INVALID: Object.freeze({
+    check: 'C-102.26', where: at("#declare", "is-table-declaration"),
+    translation: 'A part of this instance tried to declare a table whose name, or a column or table its declaration names, '
+      + 'is not a plain name, so nothing was declared. ' + BUILD_FAULT,
+  }),
+  TABLE_DECLARED: Object.freeze({
+    check: 'C-102.27', where: at("#declare", "is-table-declaration"),
+    translation: 'A part of this instance tried to declare a table that is already declared, by itself or by another part, '
+      + 'so the second declaration was refused and the first still stands. ' + BUILD_FAULT,
   }),
   /* New (T33, R78; S0-3): the store gate, one table's one-home and shape checks. */
   STORE_GATE_DECLARED: Object.freeze({

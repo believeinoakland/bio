@@ -1,7 +1,8 @@
 /* record-core T33 (T33-19; S0-2, S0-3, B0.12; K1470, K1489, K1493): requirement-named tests at the module's interface
    for the ids minted from record-grammar's `ID_TABLE` (R1, R40, R62, R76), `declareTable` with its classes (R21, R46),
-   the derived-cache convention (R77), the store gate (R78) and expunge with a tombstone (R79, R29). Over `storage.mjs`,
-   a fresh storage per test. No network. */
+   the derived-cache convention (R77), the store gate (R78) and expunge with a tombstone (R79, R29). T34 (T34-9; N554,
+   N593, K1728): `CALC` minted opaque (R62, R76), a derived-rebuildable table's `from` (R77), and the declaration's two
+   older refusals with their rows (R80). Over `storage.mjs`, a fresh storage per test. No network. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
@@ -65,7 +66,7 @@ test("R1 R2: the sequential step is the same inside a caller's transaction, and 
 });
 
 test("R76: allocId for every opaque prefix of ID_TABLE answers <prefix>-<year>-<16 of [a-z0-9]>, and allocIdOp the same; the counter is not stepped", () => {
-  assert.deepEqual(OPAQUE.sort(), ["EVT", "IDC", "LIN", "MNY", "PFA"]);
+  assert.deepEqual([...OPAQUE].sort(), ["CALC", "EVT", "IDC", "LIN", "MNY", "PFA"]);
   const { s, rc } = fresh();
   for (const p of OPAQUE) {
     const seen = new Set();
@@ -80,6 +81,32 @@ test("R76: allocId for every opaque prefix of ID_TABLE answers <prefix>-<year>-<
     assert.ok(idPattern(p).test(op.id), "allocIdOp answers R76's id for an opaque prefix");
   }
   assert.deepEqual(rows(s, `SELECT scope FROM seq`), [], "no counter was read or stepped");
+});
+
+test("R76 (K1728): CALC, whose ID_TABLE row also carries legacy: 'sequential', is minted opaque by its form alone: its counter is neither read nor stepped, and its sequential ids minted before stay held and readable", () => {
+  const row = ID_TABLE.find((e) => e.prefix === "CALC");
+  assert.deepEqual([row.form, row.legacy], ["opaque", "sequential"], "the row this test turns on");
+  const { s, rc } = fresh();
+  /* a store that minted CALC off the counter before T34: its counter and a live sequential id */
+  s.sql.exec(`INSERT INTO seq (scope,next) VALUES ('CALC-2026', 43)`);
+  s.db.exec(`CREATE TABLE calculations (calc_id TEXT)`);
+  s.sql.exec(`INSERT INTO calculations VALUES ('CALC-2026-0042')`);
+  const seqBefore = JSON.stringify(rows(s, `SELECT * FROM seq ORDER BY scope`));
+  for (const mint of [() => rc.allocId("CALC", "2026"), () => rc.allocIdOp("CALC", "2026"), () => rc.transact(() => rc.allocId("CALC", "2027"))]) {
+    const { id } = mint();
+    assert.match(id, /^CALC-\d{4}-[a-z0-9]{16}$/, "the opaque form, never the counter's");
+    assert.ok(idPattern("CALC").test(id));
+    assert.ok(ledger(s).some(([x, src]) => x === id && src === "opaque"), "recorded in the opaque-id ledger");
+  }
+  assert.equal(JSON.stringify(rows(s, `SELECT * FROM seq ORDER BY scope`)), seqBefore, "the CALC counter was neither stepped nor started");
+  assert.ok(idPattern("CALC").test("CALC-2026-0042"), "a sequential CALC id minted before is still read as valid");
+  assert.deepEqual(rows(s, `SELECT calc_id FROM calculations`).map((r) => r.calc_id), ["CALC-2026-0042"], "and still held");
+  /* the controls: a purely sequential prefix still steps its counter; a draw of 64 hits answers R62 for CALC */
+  assert.equal(rc.allocId("INFO", "2026").id, "INFO-2026-0001");
+  const tail = "ffffffffffffffff";
+  draws(bytesFor(tail), () => rc.allocId("CALC", "2026"));
+  const r = draws(Array.from({ length: 64 }, () => bytesFor(tail)).flat(), () => rc.allocId("CALC", "2026"));
+  assert.deepEqual(r, mintExhausted("CALC"));
 });
 
 test("R76: each tail character is drawn uniformly by rejection sampling over the CSPRNG: bytes of 252 and above are drawn again", () => {
@@ -131,14 +158,16 @@ test("R76 R62: after 64 hits in a row allocId answers MINT_EXHAUSTED for the pre
   assert.equal(rc.allocIdOp("PFA", "2026").ok, undefined, "a fresh draw succeeds again");
 });
 
-test("R62: mintExhausted names each opaque prefix's object, one fixed sentence per prefix", () => {
-  const names = { EVT: "event", LIN: "line", MNY: "money fact", PFA: "person fact", IDC: "identity claim" };
+test("R62 (K1728): mintExhausted names each opaque prefix's object, a calculation's among them, one fixed sentence per prefix", () => {
+  const names = { EVT: "event", LIN: "line", MNY: "money fact", PFA: "person fact", IDC: "identity claim", CALC: "calculation" };
   assert.deepEqual(Object.keys(names).sort(), [...OPAQUE].sort());
   for (const [p, what] of Object.entries(names)) {
     const r = mintExhausted(p);
     assert.deepEqual([r.ok, r.code, r.check, r.prefix], [false, "MINT_EXHAUSTED", "C-59.6", p]);
     assert.equal(r.detail, `the plane could not find a free ${what} id: every one it drew was already taken. Nothing was written.`);
   }
+  const all = [...Object.keys(names), ...RecordCore.GATED_ID_PREFIXES, "SRC"].map((p) => mintExhausted(p).detail);
+  assert.equal(new Set(all).size, all.length, "one sentence per prefix, none shared");
 });
 
 test("R40 R28: seedMintLedger seeds both ID_TABLE forms: counters of any width, the counter's range past 9,999, and opaque tails", () => {
@@ -177,7 +206,7 @@ test("R21: declareTable takes one entry per table with its six classes, and decl
   assert.deepEqual(mine, [
     { module: "events", name: "events", ...CLASSES, export: "yes", sight: "source", version_chain: true },
     { module: "events", name: "event_people", ...CLASSES, purge: "exempt", expunge: "tombstone", export: "never", sight: "owner" },
-    { module: "events", name: "when_cache", ...CLASSES, derive: "derived-rebuildable", sight: "group", key: ["event_id"] }]);
+    { module: "events", name: "when_cache", ...CLASSES, derive: "derived-rebuildable", sight: "group", key: ["event_id"], from: null }]);
   assert.deepEqual(all.slice(-3).map((d) => d.name), ["events", "event_people", "when_cache"], "declaration order, after record-core's own");
   all[0].purge = "x"; assert.notEqual(rc.declaredTables()[0].purge, "x", "a fresh list each call");
 });
@@ -221,18 +250,130 @@ test("R21: an entry missing a class is TABLE_CLASS_MISSING, one outside it TABLE
   for (const code of ["TABLE_CLASS_MISSING", "TABLE_CLASS_UNKNOWN"]) assert.ok(RECORD_CORE_CHECKS[code].translation.endsWith(BUILD_FAULT));
 });
 
-test("R21: a table declared twice or by two modules is TABLE_DECLARED, a bad name TABLE_NAME_INVALID, under declareTable and declarePurge alike; a refused declaration declares nothing", () => {
+test("R21 R80: a table declared twice or by two modules is TABLE_DECLARED, a bad name TABLE_NAME_INVALID, under declareTable and declarePurge alike; a refused declaration declares nothing", () => {
   const { rc } = fresh();
   assert.deepEqual(rc.declareTable("a", [entry("t1")]), { ok: true });
   const n = rc.declaredTables().length;
-  assert.deepEqual(rc.declareTable("b", [entry("t1")]), { ok: false, reason: "TABLE_DECLARED", table: "t1", module: "b", declaredBy: "a" });
-  assert.deepEqual(rc.declarePurge("b", ["t1"]), { ok: false, reason: "TABLE_DECLARED", table: "t1", module: "b", declaredBy: "a" });
+  assert.deepEqual(declaredRefusal(rc.declareTable("b", [entry("t1")])), { ...TABLE_DECLARED_SHAPE, table: "t1", module: "b", declaredBy: "a" });
+  assert.deepEqual(declaredRefusal(rc.declarePurge("b", ["t1"])), { ...TABLE_DECLARED_SHAPE, table: "t1", module: "b", declaredBy: "a" });
   assert.deepEqual(rc.declarePurge("a", [], { exempt: ["t1"] }).declaredBy, "a");
-  assert.deepEqual(rc.declareTable("c", [entry("t2"), entry("t2")]), { ok: false, reason: "TABLE_DECLARED", table: "t2", module: "c", declaredBy: "c" });
+  assert.deepEqual(declaredRefusal(rc.declareTable("c", [entry("t2"), entry("t2")])), { ...TABLE_DECLARED_SHAPE, table: "t2", module: "c", declaredBy: "c" });
   for (const bad of [entry("bad name"), entry("t3", { keys: ["x y"] }), entry("t3", { clears: "lead" }), entry("t3", { key: ["1x"] })])
     assert.equal(rc.declareTable("c", [bad]).reason, "TABLE_NAME_INVALID");
   assert.equal(rc.declarePurge("c", ["bad name"]).reason, "TABLE_NAME_INVALID");
   assert.equal(rc.declaredTables().length, n, "nothing more was declared");
+});
+
+/* ---- R80: the declaration's two older refusals, with their rows (N554, DEC-49) ---- */
+
+const TABLE_DECLARED_SHAPE = { ok: false, reason: "TABLE_DECLARED", code: "TABLE_DECLARED", check: "C-102.27",
+                               translation: RECORD_CORE_CHECKS.TABLE_DECLARED.translation, detail: "<sentence>" };
+const TABLE_NAME_INVALID_SHAPE = { ok: false, reason: "TABLE_NAME_INVALID", code: "TABLE_NAME_INVALID", check: "C-102.26",
+                                   translation: RECORD_CORE_CHECKS.TABLE_NAME_INVALID.translation, detail: "<sentence>" };
+/* A refusal with its detail checked and set aside: one sentence naming the table and saying nothing was declared. */
+function declaredRefusal(r) {
+  assert.equal(typeof r.detail, "string");
+  assert.ok(r.detail.includes(String(r.table)), `the detail names the table: ${r.detail}`);
+  assert.match(r.detail, /nothing was declared\.$/);
+  assert.equal(r.detail.split(". ").length, 1, "one sentence");
+  return { ...r, detail: "<sentence>" };
+}
+
+test("R80: TABLE_NAME_INVALID (C-102.26) and TABLE_DECLARED (C-102.27) are this module's rows, beside C-102.21 and C-102.22, each where naming the declaration's region", () => {
+  for (const [code, check] of [["TABLE_NAME_INVALID", "C-102.26"], ["TABLE_DECLARED", "C-102.27"]]) {
+    const row = RECORD_CORE_CHECKS[code];
+    assert.deepEqual([row.check, row.where], [check, "src/record-core/index.mjs #declare > is-table-declaration"], code);
+    assert.ok(Object.isFrozen(row) && row.translation.endsWith(BUILD_FAULT), `${code}: a build fault, worded for a member`);
+    assert.ok(!/TABLE_|C-102/.test(row.translation));
+  }
+  for (const [code, check] of [["TABLE_CLASS_MISSING", "C-102.21"], ["TABLE_CLASS_UNKNOWN", "C-102.22"]])
+    assert.equal(RECORD_CORE_CHECKS[code].where, RECORD_CORE_CHECKS.TABLE_DECLARED.where, `${code} (${check}) is refused at the same site`);
+  const checks = Object.values(RECORD_CORE_CHECKS).map((r) => r.check);
+  assert.equal(new Set(checks).size, checks.length, "no number is held twice");
+});
+
+test("R80: every TABLE_NAME_INVALID answers {ok, reason, code, check, translation, detail, table, module}, under declareTable and declarePurge, for a name, keys, clears, key or from that is not a plain identifier; nothing is declared", () => {
+  const { s, rc } = fresh();
+  const n = rc.declaredTables().length;
+  const derived = (more) => entry("d1", { derive: "derived-rebuildable", rebuild: () => [], key: ["k"], ...more });
+  const cases = [
+    ["bad name", () => rc.declareTable("m", [entry("t_ok"), entry("bad name")])],
+    ["1x", () => rc.declareTable("m", [entry("1x")])],
+    ["t; DROP", () => rc.declareTable("m", [entry("t; DROP")])],
+    ["undefined", () => rc.declareTable("m", [entry(undefined)])],
+    ["7", () => rc.declareTable("m", [entry(7)])],
+    ["t3", () => rc.declareTable("m", [entry("t3", { keys: ["x y"] })])],
+    ["t3", () => rc.declareTable("m", [entry("t3", { keys: [7] })])],
+    ["t3", () => rc.declareTable("m", [entry("t3", { clears: "lead" })])],
+    ["t3", () => rc.declareTable("m", [entry("t3", { clears: ["a", "b c"] })])],
+    ["d1", () => rc.declareTable("m", [derived({ key: ["1x"] })])],
+    ["d1", () => rc.declareTable("m", [derived({ from: [] })])],
+    ["d1", () => rc.declareTable("m", [derived({ from: "events" })])],
+    ["d1", () => rc.declareTable("m", [derived({ from: ["events", "bad table"] })])],
+    ["d1", () => rc.declareTable("m", [derived({ from: [["events"]] })])],
+    ["d1", () => rc.declareTable("m", [derived({ from: [7] })])],
+    ["t4", () => rc.declareTable("m", [entry("t4", { from: ["x y"] })])],
+    ["bad name", () => rc.declarePurge("m", ["t_ok2", "bad name"])],
+    ["t5", () => rc.declarePurge("m", [{ name: "t5", keys: ["x y"] }])],
+    ["t6", () => rc.declarePurge("m", [{ name: "t6", clears: ["bad col"] }])],
+    ["bad name", () => rc.declarePurge("m", [], { exempt: ["bad name"] })],
+  ];
+  const before = JSON.stringify(rows(s, `SELECT name FROM sqlite_master ORDER BY name`));
+  for (const [table, call] of cases)
+    assert.deepEqual(declaredRefusal(call()), { ...TABLE_NAME_INVALID_SHAPE, table, module: "m" }, table);
+  assert.equal(rc.declaredTables().length, n, "nothing declared, not even a well-formed entry beside the refused one");
+  assert.equal(JSON.stringify(rows(s, `SELECT name FROM sqlite_master ORDER BY name`)), before, "and nothing written");
+  assert.deepEqual(Object.keys(rc.declareTable("m", [entry("x y")])).sort(), ["check", "code", "detail", "module", "ok", "reason", "table", "translation"]);
+  /* the controls: the same entries, plainly named, are declared */
+  assert.deepEqual(rc.declareTable("m", [entry("t_ok"), entry("t3", { keys: ["x"], clears: ["a"] }), derived({ from: ["events", "event_people"] })]), { ok: true });
+});
+
+test("R80: every TABLE_DECLARED answers its row with table, module and declaredBy, whether the table is held by this module, another or named twice in one call; nothing is declared", () => {
+  const { rc } = fresh();
+  assert.deepEqual(rc.declareTable("events", [entry("ev")]), { ok: true });
+  const n = rc.declaredTables().length;
+  const cases = [
+    [() => rc.declareTable("money", [entry("ev")]), { table: "ev", module: "money", declaredBy: "events" }],
+    [() => rc.declareTable("events", [entry("ev")]), { table: "ev", module: "events", declaredBy: "events" }],
+    [() => rc.declarePurge("money", ["ev"]), { table: "ev", module: "money", declaredBy: "events" }],
+    [() => rc.declarePurge("money", [], { exempt: ["ev"] }), { table: "ev", module: "money", declaredBy: "events" }],
+    [() => rc.declareTable("money", [entry("m1"), entry("bundles")]), { table: "bundles", module: "money", declaredBy: "record-core" }],
+    [() => rc.declarePurge("money", ["minted_ids"]), { table: "minted_ids", module: "money", declaredBy: "record-core" }],
+    [() => rc.declareTable("money", [entry("m2"), entry("m2")]), { table: "m2", module: "money", declaredBy: "money" }],
+    [() => rc.declarePurge("money", ["m3"], { exempt: ["m3"] }), { table: "m3", module: "money", declaredBy: "money" }],
+  ];
+  for (const [call, named] of cases) {
+    const r = call();
+    assert.deepEqual(declaredRefusal(r), { ...TABLE_DECLARED_SHAPE, ...named }, JSON.stringify(named));
+    assert.ok(r.detail.includes(named.declaredBy), "the detail names the holder");
+  }
+  assert.equal(rc.declaredTables().length, n, "nothing more was declared");
+  assert.deepEqual(rc.declareTable("money", [entry("m1"), entry("m2"), entry("m3")]), { ok: true }, "the control: the refused calls held nothing");
+});
+
+/* ---- R77 (N593): a derived-rebuildable table's `from` ---- */
+
+test("R77: declareTable keeps a derived-rebuildable table's from, and declaredTables answers it as given, a fresh list each call; one declared without it answers from: null; a stored table answers no from", () => {
+  const { rc } = fresh();
+  const given = ["events", "event_people"];
+  assert.deepEqual(rc.declareTable("events", [entry("events"), entry("event_people"),
+    entry("when_cache", { derive: "derived-rebuildable", rebuild: () => [], key: ["event_id"], from: given }),
+    entry("bound_cache", { derive: "derived-rebuildable", rebuild: () => [], key: ["event_id"] }),
+    entry("cluster", { derive: "derived-rebuildable", rebuild: () => [], key: ["k"], from: null }),
+    entry("stored_with_from", { from: ["events"] })]), { ok: true });
+  const by = Object.fromEntries(rc.declaredTables().filter((d) => d.module === "events").map((d) => [d.name, d]));
+  assert.deepEqual(by.when_cache.from, ["events", "event_people"], "as given, in order");
+  assert.deepEqual(by.bound_cache.from, null, "declared without one: null, not stated");
+  assert.deepEqual(by.cluster.from, null, "an explicit null: not stated");
+  for (const t of ["events", "event_people", "stored_with_from"]) assert.ok(!("from" in by[t]), `${t} is stored: no from`);
+  assert.ok(rc.declaredTables().filter((d) => d.derive === "stored").every((d) => !("from" in d)), "no stored table, record-core's own included, answers from");
+  /* kept as given: the caller's list changed afterwards, or the answer changed, moves nothing held */
+  given.push("later"); by.when_cache.from.push("x");
+  assert.deepEqual(rc.declaredTables().find((d) => d.name === "when_cache").from, ["events", "event_people"]);
+  assert.notEqual(rc.declaredTables().find((d) => d.name === "when_cache").from, rc.declaredTables().find((d) => d.name === "when_cache").from, "a fresh list each call");
+  /* the derived services are unchanged by it */
+  assert.deepEqual(rc.declaredTables().find((d) => d.name === "when_cache"),
+    { module: "events", name: "when_cache", ...CLASSES, derive: "derived-rebuildable", key: ["event_id"], from: ["events", "event_people"] });
 });
 
 test("R21 R46: declarePurge is declareTable's default form: purge by exempt, expunge none, export admin-only, derive stored, no chain, and sight bundle when keyed to a bundle, else group", () => {

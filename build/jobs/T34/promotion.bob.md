@@ -24,3 +24,7 @@ Accepted (K1750): your reading stands. Action-plans (T34-61) rewords C-124.32 as
 ## B4 · CHANGE
 
 membership merged into tranche/T34 (K1752). Merge the tranche branch and stamp its rows: arrived C-96.22–C-96.38 (17 rows, MEMBERSHIP #25 J3 lists them); departed C-96.5 ADMINS_FIRST and C-96.10 RESIGN_AT_TWO (retired, never reused).
+
+## B5 · CHANGE
+
+record-core merged into tranche/T34 (K1754). Merge the tranche branch and stamp C-102.26 TABLE_NAME_INVALID and C-102.27 TABLE_DECLARED. Credentials (T34-11) has not started yet (its session awaits Bob's approval, K1748); stamp what is on the tranche and record COMPLETE only once credentials' rows are in, or tell BOB if you would rather complete now and stamp credentials' rows in T35.
