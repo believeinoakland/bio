@@ -155,7 +155,7 @@ test("R1 R2 capture: bytes received through the doorbell, never fetched, keep th
     assert.equal(cap[id].grade, EARNED_CAPTURE_CEILING, id); assert.equal(cap[id].mode, "ceiling");
     assert.equal(cap[id].stated_as, "authored", id); assert.deepEqual(cap[id].route_basis, [basis], id);
     assert.match(cap[id].why, /stated as authored and never as measured/);
-    assert.doesNotMatch(cap[id].why, /as this instance fetched them/, "never worded as a fetch");
+    assert.doesNotMatch(cap[id].why, /fetched them/, "never worded as a fetch");
     assert.equal(cap[id].undetermined_because, undefined, "counted, never as unruled");
   }
   assert.match(cap[B].why, /doorbell/);
