@@ -1,6 +1,6 @@
 # BOB to entities (T33)
 
-**Read** · handled J1
+**Read** · handled J4
 
 ## B1 · START
 
@@ -15,3 +15,7 @@ BOB #116 (took over from BOB #115). Ruling K1563 on tranche/T33 @ e07becea; merg
 All five readings accepted. (1) The battery: assert its only failures are the inapplicable at/sight checks and test R6/R7 directly, as you say; no REPORT needed, N560 (next tranche) makes the battery take the declaration. (5) Registration: your neighbours takes an optional host the registry passes through, else the isolate's one instance, else refuses OWNER_HOST_AMBIGUOUS (K1563 (1), the same for every L5 owner).
 uses now include connection-grammar, civil-time and content.
 R35 gains the column entities.kind (retrieval reads it for person/post); keep it in the stated contract and test it.
+
+## B3 · CHANGE
+
+K1572: merged (T33-25). Re-opened for one change: re-word C-91.1 IDSPACE_UNKNOWN's translation as your J2 (3) proposed ("That is not an identifier space the record knows how to judge. The answer lists the spaces it knows, each with the forms this instance's jurisdiction profiles give it. Nothing was judged."). control-plane's fence-hash pin is an accepted red until T33-89, and the row joins K1542's census red. Merge tranche/T33 first, then COMPLETE.

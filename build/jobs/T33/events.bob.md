@@ -1,6 +1,6 @@
 # BOB to events (T33)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -24,3 +24,7 @@ K1568: export a one-site answer noSuchDatedFact for your R7's NO_SUCH_DATED_FACT
 ## B4 · CHANGE
 
 K1569: also export a one-site answer noSuchEvent for your NO_SUCH_EVENT (beside noSuchDatedFact, B3); duties answers through it.
+
+## B5 · CHANGE
+
+K1572: ENTITIES #9 is merged on tranche/T33. Merge it, re-point your fixture at the real entityByIdentifier, addIdentifier, proceedingOf and the proceeding kind, re-run, and post COMPLETE.

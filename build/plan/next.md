@@ -40,6 +40,8 @@
 
 - N568 · `record-grammar` · a `law_relation` subject in `PROPOSAL_STATES` (law relations, court links, treatments), so `standards`' `lawPropose` labels through it instead of the `standard` subject (STANDARDS #7 J2 (4); K1571). **Hard reason:** the order: record-grammar (L1) is closed.
 
+- N569 · `id-spaces`, `jurisdictions` · a `body` id space, and the Oakland profile's Legistar `PersonId` and `BodyId` schemes (numeric forms), so events R22's Legistar following resolves rows in a deployed copy; today no profile holds either scheme and `SPACE_NAMES` has no `body` (EVENTS #1 J3 (2); K1574). **Hard reason:** the order: id-spaces and jurisdictions (L1) are closed.
+
 Otherwise none yet. T33's release at its close (K1501) runs the deployment-gated measurements; the work they unlock is written here then.
 
 ## Carried from T33
