@@ -32,8 +32,8 @@ export const CASE_IMPORT_CHECKS = Object.freeze({
   },
   IMPORT_NOT_A_CASE_FILE: {
     check: "C-130.3", where: FILE,
-    translation: "What was given is not a case file this copy can read: each way it departs from the case-file format "
-      + "is named. Nothing was imported.",
+    translation: "What was given is not a case file your group's Civicsmith can read: each way it departs from the case-file "
+      + "format is named. Nothing was imported.",
   },
   IMPORT_PART_TOO_LARGE: {
     check: "C-130.4", where: FILE,
@@ -42,8 +42,8 @@ export const CASE_IMPORT_CHECKS = Object.freeze({
   },
   IMPORT_EDITION_DIFFERS: {
     check: "C-130.5", where: FILE,
-    translation: "This copy already holds this edition of the case, and the case file given differs from it. An edition "
-      + "never changes, so both fingerprints are named for you to compare. Nothing was imported.",
+    translation: "Your group's Civicsmith already holds this edition of the case, and the case file given differs from it. An "
+      + "edition never changes, so both fingerprints are named for you to compare. Nothing was imported.",
   },
   IMPORT_DOCUMENT_NOT_MISSING: {
     check: "C-130.6", where: DOCUMENT,
@@ -52,7 +52,7 @@ export const CASE_IMPORT_CHECKS = Object.freeze({
   },
   IMPORT_NO_SUCH_EDITION: {
     check: "C-130.7", where: EDITION,
-    translation: "This copy holds no imported edition by that name. Nothing was written.",
+    translation: "Your group's Civicsmith holds no imported edition by that name. Nothing was written.",
   },
   IMPORT_ACCEPT_NO_REASON: {
     check: "C-130.8", where: ACCEPT,

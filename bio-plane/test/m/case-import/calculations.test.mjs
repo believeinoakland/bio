@@ -130,6 +130,32 @@ test("R21 R5 bytes matching a calculation's missing input complete it: the editi
   assert.equal(no.reason, "IMPORT_DOCUMENT_NOT_MISSING");
 });
 
+test("R5 R21 an input carried with bytes that differ from its stated hash is missing: bytes matching the hash complete it and the calculation recreates; the carried bytes themselves do not", async () => {
+  const w = seeded();
+  const tampered = bytes(canonicalJson({ ...TABLE, rows: TABLE.rows.map((x) => ({ ...x, amount: "1" })) }));
+  const r = await imp(w, withCalcs([row()], [{ name: "payments", bytes: tampered, listedAs: TABLE_BYTES }]));
+  const [c] = r.recreation.calculations;
+  assert.equal(c.result, "not_recreated");
+  assert.equal(c.missing[0].sha, TABLE_SHA);
+  assert.match(c.missing[0].why, /differs from its hash/, "carried, with other bytes than its hash");
+  assert.match(c.missing[0].detail, new RegExp(sha(tampered)));
+  /* the negative control: the bytes the case file carries match no missing material */
+  const before = w.snapshot();
+  const no = await w.ci.completeImportedDocument({ import: r.import, edition: 1, bytes: tampered, by: V("alice"), viewer: V("alice") });
+  assert.equal(no.reason, "IMPORT_DOCUMENT_NOT_MISSING");
+  assert.equal(no.fingerprint, sha(tampered));
+  assert.deepEqual(w.snapshot(), before, "nothing written");
+  /* the bytes matching the stated hash complete it */
+  const done = await w.ci.completeImportedDocument({ import: r.import, edition: 1, bytes: TABLE_BYTES, by: V("alice"), viewer: V("alice") });
+  assert.equal(done.ok, true, JSON.stringify(done).slice(0, 300));
+  assert.equal(done.document, TABLE_SHA);
+  assert.equal(done.recreation.calculations[0].result, "recreated");
+  assert.equal(done.recreation.calculations[0].recomputed.output.value, "1500.50");
+  /* once completed, the same bytes are no longer missing */
+  const again = await w.ci.completeImportedDocument({ import: r.import, edition: 1, bytes: TABLE_BYTES, by: V("alice"), viewer: V("alice") });
+  assert.equal(again.reason, "IMPORT_DOCUMENT_NOT_MISSING");
+});
+
 test("R21 the source's stated results are held only as its statement: the import writes no CALC-, no money fact and no record row from them", async () => {
   const w = seeded();
   const outside = () => Object.fromEntries(Object.entries(w.snapshot()).filter(([t]) => !t.startsWith("case_import") && t !== "sqlite_sequence"));
