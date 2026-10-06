@@ -1,170 +1,180 @@
 /* content: what an office capture's reading states about itself (R52 `cellsAt`, R53 `officeMetadataOf`), R46's sheet
-   arm (`passageText` over typed cells) and R31's grade of a sheet passage across versions. The typed cells are the real
-   CSV reader's output (`office-readers` R30, field for field) and, for the formula fields, an xlsx-shaped list stated
-   here; they reach this module through extraction's reading (its R30 `readingOf`), the provider the test controls.
-   Reads only: every table is byte-identical across each call. */
+   arm (`passageText` over typed cells) and R31's grade of a sheet passage across versions, over REAL readings (B3,
+   K1557): a workbook assembled here, read by the real format entry through the real `reading-pipeline.read` (its R28
+   carries `cells` and `metadata`), and handed to content as extraction's `readingOf` answers the persisted reading (its
+   R19, R30; `./realread.mjs`). A hand-stated reading stands only for what the pipeline no longer writes: a reading
+   stored before R28 (no `cells`, no `metadata`) and a sheet over its reader's guard (`cells` null). Reads only: every
+   table is byte-identical across each call. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, LAYER } from "./fixture.mjs";
-import { csvEntry } from "../../../src/csv.mjs";
+import { world, V } from "./fixture.mjs";
+import { xlsx, readReal, readingFacts } from "./realread.mjs";
 
 const DOC = "INFO-2026-0001-a", NEW = "INFO-2026-0002-b";
-const GRID = { container: "csv", levels: ["sheets"], sheets: [{ name: "csv", rows: 1048576, cols: 16384, usedRows: 3, usedCols: 3 },
-                                                               { name: "Other", rows: 1048576, cols: 16384, usedRows: 1, usedCols: 1 }] };
-const cellOf = (sheet, cell, value, extra = {}) => ({ source: { kind: "sheet-cell", ref: `${sheet}!${cell}`, sheet, cell },
-  value, type: "number", declared: "n", cached: null, formula: null, ...extra });
+const XLSX = { format: "xlsx", ct: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" };
+const CORE = { creator: "A. Clerk", lastModifiedBy: "B. Editor", created: "2026-01-02T03:04:05Z", modified: "2026-02-03T04:05:06Z" };
 
-async function csvCells(text) {
-  const t = await csvEntry.text(new TextEncoder().encode(text));
-  return { cells: { [t.sheets[0].name]: t.sheets[0].cells }, metadata: t.metadata };
-}
+/** A budget workbook: a shared-string label column, a stored decimal, a formula whose cached value is the file's own
+ *  (999, not the 0.30 a recalculation would give), an empty cell inside the used range, and a second sheet. */
+const budget = (b1 = "0.10", { core = CORE } = {}) => xlsx({
+  sheets: [
+    { name: "Budget", rows: [[{ r: "A1", t: "s", v: 0 }, { r: "B1", v: b1 }],
+                             [{ r: "A2", t: "s", v: 1 }, { r: "B2", v: "0.20" }],
+                             [{ r: "A3", t: "s", v: 2 }, { r: "B3", f: "B1+B2", v: "999" }],
+                             [{ r: "B4", v: "7" }]] },
+    { name: "Notes", rows: [[{ r: "A1", t: "s", v: 3 }]] },
+  ],
+  shared: ["Parks", "Library", "Total", "unaudited"], core,
+});
 
-/** A workbook capture whose reading holds `reading` (its `cells` and `metadata`, as extraction persists them). */
-function setup(reading, { captureFormat = "csv", containerExtent = GRID } = {}) {
-  const w = world();
-  const a = w.cap("a", "a,b,c\n1,0.10,x\n,,z\n");
-  w.doc(DOC, [a]);
-  w.read(a.sha, { chain: LAYER, captureFormat, containerExtent, reading });
+/** A world holding capture `bytes` of DOC, read through the real pipeline; the reading's units indexed as written. */
+async function real(bytes, { id = DOC, w = world(), fmt = XLSX } = {}) {
+  const out = await readReal(bytes, fmt);
+  const cap = { path: `snapshots/${out.digest.slice(0, 8)}.bin`, text: `capture ${out.digest}`, sha: out.digest };
+  w.doc(id, [cap]);
+  w.ex.readings[cap.sha] = readingFacts(out.reading, fmt.format);
+  w.ex.units[cap.sha] = { units: (out.text_units || []).map((u) => ({ extent: u.extent, ref: `unit ${u.seq}`, text: u.text,
+                                                                     truncated: !!u.truncated })), state: "whole" };
   const cite = (extent) => {
-    const m = w.content.mint({ bundleId: DOC, captureSha: a.sha, extent, mintedBy: V("bo") });
+    const m = w.content.mint({ bundleId: id, captureSha: cap.sha, extent, mintedBy: V("bo") });
     assert.equal(m.ok, true, JSON.stringify(m));
     return m.content_id;
   };
-  const quiet = (fn) => { const before = w.snapshot(); const out = fn(); assert.deepEqual(w.snapshot(), before, "writes nothing"); return out; };
-  return { w, a, cite, quiet };
+  const quiet = (fn) => { const before = w.snapshot(); const r = fn(); assert.deepEqual(w.snapshot(), before, "writes nothing"); return r; };
+  return { w, sha: cap.sha, reading: out.reading, cite, quiet };
 }
 
 test("R52: cellsAt answers a sheet-cell or sheet-range row's typed cells inside its extent, field for field as the reader states them, in row then column order", async () => {
-  const held = await csvCells("a,b,c\n1,0.10,x\n,,z\n");
-  const { w, cite, quiet } = setup(held);
-  const all = held.cells.csv;
-  /* A range: exactly the held cells inside it, in row then column order, each field as the reader gave it. */
-  const rid = cite({ kind: "sheet-range", sheet: "csv", range: "B1:C3" });
+  const { w, reading, cite, quiet } = await real(budget());
+  const all = reading.cells.Budget;
+  assert.ok(Array.isArray(all) && all.length === 7, "control: the real reading holds the sheet's typed cells");
+  const rid = cite({ kind: "sheet-range", sheet: "Budget", range: "B1:B4" });
   const r = quiet(() => w.content.cellsAt(rid));
-  assert.deepEqual(r.cells, all.filter((c) => /^[BC]/.test(c.source.cell)));
-  assert.deepEqual(r.cells.map((c) => c.source.cell), ["B1", "C1", "B2", "C2", "C3"]);
+  assert.deepEqual(r.cells, all.filter((c) => c.source.cell.startsWith("B")), "field for field, as the reader states them");
+  assert.deepEqual(r.cells.map((c) => c.source.cell), ["B1", "B2", "B3", "B4"]);
   assert.equal(r.extent_kind, "sheet-range");
-  /* The stored lexical value, never re-rendered through a float. */
-  const one = w.content.cellsAt(cite({ kind: "sheet-cell", sheet: "csv", cell: "B2" }));
-  assert.deepEqual(one.cells, [all.find((c) => c.source.cell === "B2")]);
-  assert.equal(one.cells[0].value, "0.10");
-  /* A range spelled bottom-right first names the same cells, in the same order. */
-  assert.deepEqual(w.content.cellsAt(cite({ kind: "sheet-range", sheet: "csv", range: "$C$3:b1" })).cells, r.cells);
-  /* An empty cell inside a read sheet is a measured empty list, not undetermined. */
-  assert.deepEqual(w.content.cellsAt(cite({ kind: "sheet-cell", sheet: "csv", cell: "A3" })).cells, []);
+  /* The stored lexical value, never re-rendered through a float; a shared string resolved by the reader. */
+  const b1 = w.content.cellsAt(cite({ kind: "sheet-cell", sheet: "Budget", cell: "B1" })).cells;
+  assert.deepEqual([b1.length, b1[0].value, b1[0].type], [1, "0.10", "number"]);
+  assert.equal(w.content.cellsAt(cite({ kind: "sheet-cell", sheet: "Budget", cell: "A2" })).cells[0].value, "Library");
+  /* A range spelled bottom-right first names the same cells, in the same order; a block reads row then column. */
+  assert.deepEqual(w.content.cellsAt(cite({ kind: "sheet-range", sheet: "Budget", range: "$B$4:b1" })).cells, r.cells);
+  assert.deepEqual(w.content.cellsAt(cite({ kind: "sheet-range", sheet: "Budget", range: "A1:B2" })).cells.map((c) => c.source.cell),
+                   ["A1", "B1", "A2", "B2"]);
+  /* An empty cell inside a read sheet is a measured empty list, not undetermined; another sheet reads its own cells. */
+  assert.deepEqual(w.content.cellsAt(cite({ kind: "sheet-cell", sheet: "Budget", cell: "A4" })).cells, []);
+  assert.equal(w.content.cellsAt(cite({ kind: "sheet-cell", sheet: "Notes", cell: "A1" })).cells[0].value, "unaudited");
 });
 
-test("R52: a formula's cached value is the file's statement and nothing is recalculated", () => {
-  const cells = [cellOf("Budget", "A1", "2"), cellOf("Budget", "A2", "3"),
-                 cellOf("Budget", "A3", "999", { formula: "SUM(A1:A2)", cached: "999" })];
-  const { w, cite } = setup({ cells: { Budget: cells }, metadata: null }, { captureFormat: "xlsx",
-    containerExtent: { container: "xlsx", levels: ["sheets"], sheets: [{ name: "Budget", rows: 1048576, cols: 16384 }] } });
-  const got = w.content.cellsAt(cite({ kind: "sheet-cell", sheet: "Budget", cell: "A3" }));
-  assert.deepEqual(got.cells, [cells[2]], "the cached 999 stands, never 5");
-  assert.equal(w.content.passageText(cite({ kind: "sheet-cell", sheet: "Budget", cell: "A3" })), "999");
+test("R52: a formula's cached value is the file's statement and nothing is recalculated", async () => {
+  const { w, cite } = await real(budget());
+  const got = w.content.cellsAt(cite({ kind: "sheet-cell", sheet: "Budget", cell: "B3" })).cells;
+  assert.deepEqual([got[0].formula, got[0].cached, got[0].value], ["B1+B2", "999", "999"], "the cached 999 stands, never 0.30");
+  assert.equal(w.content.passageText(cite({ kind: "sheet-cell", sheet: "Budget", cell: "B3" })), "999");
 });
 
 test("R52: null with its reason for a row not held, stale, of another kind, or whose reading holds no typed cells for that sheet — never an empty list", async () => {
-  const held = await csvCells("a,b\n1,2\n");
-  const { w, a, cite, quiet } = setup(held);
   const no = (got, reason) => { assert.equal(got.cells, null); assert.equal(got.reason, reason); assert.equal(typeof got.why, "string"); };
-  no(quiet(() => w.content.cellsAt("f".repeat(64))), "not_held");
+  const { w, sha, reading, cite } = await real(budget());
+  no(w.content.cellsAt("f".repeat(64)), "not_held");
   no(w.content.cellsAt(null), "not_held");
   no(w.content.cellsAt(cite({ kind: "document" })), "not_a_sheet_extent");
-  /* A sheet the reading holds no cells for (here: no such map entry) is not read, never []. */
-  no(w.content.cellsAt(cite({ kind: "sheet-cell", sheet: "Other", cell: "A1" })), "cells_not_held");
-  /* Over the reader's guard the sheet's cells are null: not read. */
-  const { w: w2, cite: c2 } = setup({ cells: { csv: null }, metadata: null });
-  no(w2.content.cellsAt(c2({ kind: "sheet-range", sheet: "csv", range: "A1:B2" })), "cells_not_held");
-  /* A reading that holds no cells at all. */
-  const { w: w3, cite: c3 } = setup({});
-  no(w3.content.cellsAt(c3({ kind: "sheet-cell", sheet: "csv", cell: "A1" })), "cells_not_held");
   /* Stale (R22): the cells held now are the newer reading's. */
-  const id = cite({ kind: "sheet-cell", sheet: "csv", cell: "A2" });
+  const id = cite({ kind: "sheet-cell", sheet: "Budget", cell: "B2" });
   assert.equal(w.content.cellsAt(id).cells.length, 1, "control: read before the re-read");
-  w.content.markStale(a.sha, [{ step: "layer", tier: 1, container: "csv", cap: null }]);
+  w.content.markStale(sha, [{ step: "layer", tier: 1, container: "xlsx", cap: null, mark: "re-read" }]);
   no(w.content.cellsAt(id), "stale");
+  /* A sheet over its reader's guard (cells null), and a reading stored before R28 (no cells at all): not read, never []. */
+  for (const stored of [{ ...reading, cells: { ...reading.cells, Budget: null } }, (({ cells, ...rest }) => rest)(reading)]) {
+    const v = await real(budget("0.11"), { id: "INFO-2026-0003-c" });
+    v.w.ex.readings[v.sha] = readingFacts(stored, "xlsx");
+    no(v.w.content.cellsAt(v.cite({ kind: "sheet-range", sheet: "Budget", range: "A1:B2" })), "cells_not_held");
+  }
 });
 
 test("R46: a sheet-cell row's text is its typed cell's stored value; a sheet-range's the values inside it, one per line; a cell not held is null", async () => {
-  const held = await csvCells("a,b,c\n1,0.10,x\n,,z\n");
-  const { w, a, cite, quiet } = setup(held);
-  /* The sheet's indexed unit (tab-joined rows) is the fallback only where no typed cells are held; here they are. */
-  w.ex.units[a.sha] = { units: [{ extent: JSON.stringify({ kind: "sheet-range", range: "A1:C3", sheet: "csv" }), ref: "csv!A1:C3",
-                                  text: "a\tb\tc\n1\t0.10\tx\nz", truncated: false }], state: "whole" };
-  const b2 = cite({ kind: "sheet-cell", sheet: "csv", cell: "B2" });
-  assert.equal(quiet(() => w.content.passageText(b2)), "0.10");
-  assert.equal(w.content.passageText(cite({ kind: "sheet-range", sheet: "csv", range: "A1:C3" })), "a\nb\nc\n1\n0.10\nx\nz");
-  assert.equal(w.content.passageText(cite({ kind: "sheet-range", sheet: "csv", range: "B2:C3" })), "0.10\nx\nz");
+  const { w, cite, quiet } = await real(budget());
+  const b1 = cite({ kind: "sheet-cell", sheet: "Budget", cell: "B1" });
+  assert.equal(quiet(() => w.content.passageText(b1)), "0.10");
+  assert.equal(w.content.passageText(cite({ kind: "sheet-range", sheet: "Budget", range: "A1:B4" })),
+               "Parks\n0.10\nLibrary\n0.20\nTotal\n999\n7");
+  /* The whole used range: the cells, one per line, never the index unit's tab-joined rows. */
+  assert.equal(w.content.passageText(cite({ kind: "sheet-range", sheet: "Notes", range: "A1:A1" })), "unaudited");
   /* A cell the reading does not hold: null, never "". */
-  assert.equal(w.content.passageText(cite({ kind: "sheet-cell", sheet: "csv", cell: "A3" })), null);
-  /* A held cell whose value its reader left undetermined: null. */
-  const { w: w2, cite: c2 } = setup({ cells: { csv: [cellOf("csv", "A1", null, { type: "text" })] } });
-  assert.equal(w2.content.passageText(c2({ kind: "sheet-cell", sheet: "csv", cell: "A1" })), null);
-  assert.equal(w2.content.passageText(c2({ kind: "sheet-range", sheet: "csv", range: "A1:A1" })), null);
-  /* Negative control: without typed cells, the indexed unit at exactly the extent is the text (the units rule). */
-  const { w: w3, a: a3, cite: c3 } = setup({});
-  w3.ex.units[a3.sha] = w.ex.units[a.sha];
-  assert.equal(w3.content.passageText(c3({ kind: "sheet-range", sheet: "csv", range: "A1:C3" })), "a\tb\tc\n1\t0.10\tx\nz");
-  assert.equal(w3.content.passageText(c3({ kind: "sheet-cell", sheet: "csv", cell: "B2" })), null);
+  assert.equal(w.content.passageText(cite({ kind: "sheet-cell", sheet: "Budget", cell: "A4" })), null);
+  /* Negative control: a reading stored before R28 holds no cells, and the indexed unit at exactly the extent is the
+     text (the units rule, unchanged): the sheet unit's tab-joined rows, and no text for a single cell. */
+  const v = await real(budget());
+  const { cells, ...before } = v.reading;
+  v.w.ex.readings[v.sha] = readingFacts(before, "xlsx");
+  assert.equal(v.w.content.passageText(v.cite({ kind: "sheet-range", sheet: "Budget", range: "A1:B4" })),
+               "Parks\t0.10\nLibrary\t0.20\nTotal\t999\n7");
+  assert.equal(v.w.content.passageText(v.cite({ kind: "sheet-cell", sheet: "Budget", cell: "B1" })), null);
 });
 
-test("R53: officeMetadataOf answers the metadata an office capture's reading holds, as the file writes it, or null with the reason", () => {
-  const meta = { author: "A. Clerk", lastModifiedBy: "B. Editor", created: "2026-01-02T03:04:05Z", modified: "2026-02-03T04:05:06Z",
-                 source: "docProps/core.xml" };
-  const docx = (reading, captureFormat = "docx") => {
-    const w = world(); const a = w.cap("d");
-    w.doc(DOC, [a]); w.read(a.sha, { chain: LAYER, captureFormat, reading });
-    return { w, a };
-  };
-  {
-    const { w, a } = docx({ metadata: meta });
-    const before = w.snapshot();
-    const got = w.content.officeMetadataOf(a.sha);
-    assert.deepEqual(w.snapshot(), before, "writes nothing");
-    assert.deepEqual(got, { capture_sha: a.sha, metadata: meta }, "W3CDTF strings unchanged");
-  }
-  {
-    /* A field the file does not write is null, never invented. */
-    const { w, a } = docx({ metadata: { author: "A. Clerk", lastModifiedBy: null, created: null, modified: null, source: "docProps/core.xml" } });
-    assert.deepEqual(w.content.officeMetadataOf(a.sha).metadata,
-      { author: "A. Clerk", lastModifiedBy: null, created: null, modified: null, source: "docProps/core.xml" });
-  }
+test("R46: a held cell whose value its reader left undetermined has no text", async () => {
+  /* A shared-string index the table does not hold: the reader keeps the cell with value null (office-readers R30). */
+  const bytes = xlsx({ sheets: [{ name: "S", rows: [[{ r: "A1", t: "s", v: 9 }, { r: "B1", v: "1" }]] }], shared: ["only"] });
+  const { w, reading, cite } = await real(bytes);
+  assert.equal(reading.cells.S.find((c) => c.source.cell === "A1").value, null, "control: the reader left A1's value undetermined");
+  assert.equal(w.content.passageText(cite({ kind: "sheet-cell", sheet: "S", cell: "A1" })), null);
+  assert.equal(w.content.passageText(cite({ kind: "sheet-range", sheet: "S", range: "A1:B1" })), null);
+  assert.equal(w.content.passageText(cite({ kind: "sheet-cell", sheet: "S", cell: "B1" })), "1");
+});
+
+test("R53: officeMetadataOf answers the metadata an office capture's reading holds, as the file writes it, or null with the reason", async () => {
   const no = (got, reason) => { assert.equal(got.metadata, null); assert.equal(got.reason, reason); assert.equal(typeof got.why, "string"); };
-  { const { w } = docx({ metadata: meta }); no(w.content.officeMetadataOf("e".repeat(64)), "never_read"); no(w.content.officeMetadataOf(null), "never_read"); }
-  { const { w, a } = docx({ metadata: null }); no(w.content.officeMetadataOf(a.sha), "none_held"); }
-  { const { w, a } = docx({}); no(w.content.officeMetadataOf(a.sha), "none_held"); }
-  { const { w, a } = docx({}, "pdf"); no(w.content.officeMetadataOf(a.sha), "not_office"); }
+  {
+    const { w, sha, quiet } = await real(budget());
+    const got = quiet(() => w.content.officeMetadataOf(sha));
+    assert.deepEqual(got, { capture_sha: sha, metadata: { author: "A. Clerk", lastModifiedBy: "B. Editor",
+      created: "2026-01-02T03:04:05Z", modified: "2026-02-03T04:05:06Z", source: "docProps/core.xml" } }, "W3CDTF strings unchanged");
+    no(w.content.officeMetadataOf("e".repeat(64)), "never_read");
+    no(w.content.officeMetadataOf(null), "never_read");
+  }
+  {
+    /* An office file with no core-properties part: its reading holds none. */
+    const { w, sha, reading } = await real(budget("0.10", { core: null }));
+    assert.equal(reading.metadata, null, "control");
+    no(w.content.officeMetadataOf(sha), "none_held");
+  }
+  {
+    /* A CSV walks parts in the format registry (R42's office), and its format carries no metadata: none held. */
+    const { w, sha, reading } = await real("name,amount\nAna,0.1\n", { fmt: { format: "csv", ct: "text/csv" } });
+    assert.equal(reading.metadata, null, "control");
+    no(w.content.officeMetadataOf(sha), "none_held");
+  }
+  {
+    /* A web page is not an office document. */
+    const { w, sha, reading } = await real("<html><body><p>The council met.</p></body></html>",
+                                           { fmt: { format: "html", ct: "text/html", fromText: true } });
+    assert.equal(reading.metadata, null, "control");
+    no(w.content.officeMetadataOf(sha), "not_office");
+  }
 });
 
 test("R31: a sheet passage is graded across versions on its typed cells where both readings hold them, and on the units otherwise", async () => {
-  const run = async (oldText, newText, { newCells = true } = {}) => {
+  const versions = async (newer, { newCells = true } = {}) => {
     const w = world();
-    const a = w.cap("a", `old ${oldText}`), b = w.cap("b", `new ${newText}`);
-    const unit = (text) => [{ extent: JSON.stringify({ kind: "sheet-range", range: "A1:C3", sheet: "csv" }), ref: "csv!A1:C3",
-                              text, truncated: false }];
-    w.doc(DOC, [a]);
-    w.read(a.sha, { chain: LAYER, captureFormat: "csv", containerExtent: GRID, reading: await csvCells(oldText) });
-    w.ex.units[a.sha] = { units: unit(oldText.replace(/,/g, "\t").trim()), state: "whole" };
-    w.prov.recordReceipt({ address: "https://ex.org/t.csv", addressNorm: "ex.org/t.csv", captureSha: a.sha, retrieved: "2026-09-01T00:00:00Z" });
-    w.doc(NEW, [b]);
-    w.read(b.sha, { chain: LAYER, captureFormat: "csv", containerExtent: GRID, reading: newCells ? await csvCells(newText) : {} });
-    w.ex.units[b.sha] = { units: unit(newText.replace(/,/g, "\t").trim()), state: "whole" };
-    w.prov.recordReceipt({ address: "https://ex.org/t.csv", addressNorm: "ex.org/t.csv", captureSha: b.sha, retrieved: "2026-09-20T00:00:00Z" });
-    const id = (e) => w.content.mint({ bundleId: DOC, captureSha: a.sha, extent: e, mintedBy: V("bo") }).content_id;
-    return (e) => w.content.passageNotice({ contentId: id(e), viewer: V("bo") }).candidates[0];
+    const a = await real(budget(), { w });
+    const b = await real(newer, { w, id: NEW });
+    if (!newCells) { const { cells, ...rest } = b.reading; w.ex.readings[b.sha] = readingFacts(rest, "xlsx"); }
+    w.prov.recordReceipt({ address: "https://ex.org/b.xlsx", addressNorm: "ex.org/b.xlsx", captureSha: a.sha, retrieved: "2026-09-01T00:00:00Z" });
+    w.prov.recordReceipt({ address: "https://ex.org/b.xlsx", addressNorm: "ex.org/b.xlsx", captureSha: b.sha, retrieved: "2026-09-20T00:00:00Z" });
+    return (extent) => w.content.passageNotice({ contentId: a.cite(extent), viewer: V("bo") }).candidates[0];
   };
-  const same = await run("a,b,c\n1,0.10,x\n,,z\n", "a,b,c\n1,0.10,x\n,,z\n");
-  assert.deepEqual([same({ kind: "sheet-cell", sheet: "csv", cell: "B2" }).grade,
-                    same({ kind: "sheet-range", sheet: "csv", range: "A1:C3" }).grade], ["A", "A"], "unchanged cells are unaffected");
-  const edited = await run("a,b,c\n1,0.10,x\n,,z\n", "a,b,c\n1,0.25,x\n,,z\n");
-  assert.equal(edited({ kind: "sheet-cell", sheet: "csv", cell: "B2" }).grade, "NOT_FOUND");
-  assert.equal(edited({ kind: "sheet-cell", sheet: "csv", cell: "C2" }).grade, "A", "a cell the edit did not touch");
-  assert.equal(edited({ kind: "sheet-range", sheet: "csv", range: "A1:C3" }).affects, "affected");
-  const cleared = await run("a,b,c\n1,0.10,x\n,,z\n", "a,b,c\n1,,x\n,,z\n");
-  assert.equal(cleared({ kind: "sheet-cell", sheet: "csv", cell: "B2" }).grade, "NOT_FOUND", "a cleared cell in a held sheet");
+  const same = await versions(budget("0.10", { core: { ...CORE, modified: "2026-03-01T00:00:00Z" } }));
+  assert.deepEqual([same({ kind: "sheet-cell", sheet: "Budget", cell: "B1" }).grade,
+                    same({ kind: "sheet-range", sheet: "Budget", range: "A1:B4" }).grade], ["A", "A"], "unchanged cells are unaffected");
+  const edited = await versions(budget("0.15"));
+  assert.equal(edited({ kind: "sheet-cell", sheet: "Budget", cell: "B1" }).grade, "NOT_FOUND");
+  assert.equal(edited({ kind: "sheet-cell", sheet: "Budget", cell: "B2" }).grade, "A", "a cell the edit did not touch");
+  assert.equal(edited({ kind: "sheet-range", sheet: "Budget", range: "A1:B4" }).affects, "affected");
+  const cleared = await versions(xlsx({ sheets: [{ name: "Budget", rows: [[{ r: "A1", t: "s", v: 0 }], [{ r: "B2", v: "0.20" }]] }],
+                                        shared: ["Parks"] }));
+  assert.equal(cleared({ kind: "sheet-cell", sheet: "Budget", cell: "B1" }).grade, "NOT_FOUND", "a cleared cell in a held sheet");
   /* Negative control: the newer reading holds no typed cells, so both sides are graded on the units (never cells
-     against a unit's tab-joined rows): the whole unchanged range is still A. */
-  const unitsOnly = await run("a,b,c\n1,0.10,x\n,,z\n", "a,b,c\n1,0.10,x\n,,z\n", { newCells: false });
-  assert.equal(unitsOnly({ kind: "sheet-range", sheet: "csv", range: "A1:C3" }).grade, "A");
+     against a unit's tab-joined rows): the whole unchanged sheet is still A. */
+  const unitsOnly = await versions(budget("0.10", { core: { ...CORE, modified: "2026-03-01T00:00:00Z" } }), { newCells: false });
+  assert.equal(unitsOnly({ kind: "sheet-range", sheet: "Budget", range: "A1:B4" }).grade, "A");
 });
