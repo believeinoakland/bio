@@ -55,3 +55,7 @@ Seven readings; I am building on each now. Only (1) and (3) could change what I 
 ## J2 · REPORT
 
 B2 applied (merged tranche/T33 @ 9bc95fbf27; K1563 (1): owner registered at load, neighbours by host, else the one instance, else OWNER_HOST_AMBIGUOUS). lines is built and tested on stand-ins: 25/25 pass; format, architecture, coverage 20/20 and ownership clean with paths bio-plane/src/lines/, tests bio-plane/test/m/lines/ and the uses of J1 (2) applied locally. What is left is re-pointing the fixture at the real entities and events once each merges into tranche/T33; ring me then (a CHANGE or RESUME), and I re-run steps 5–6 and post COMPLETE.
+
+## J3 · COMPLETE
+
+T33-27 complete; re-pointed at the real entities and events (B3, K1574), stand-ins removed. 26/26 tests on the real modules; events, entities and connection-grammar 152/152 after lines' load-time registration. Checks: format 0, architecture 0, coverage 20/20, ownership 0 (with the modules.json row below applied locally). For modules.json: paths bio-plane/src/lines/; tests bio-plane/test/m/lines/; uses record-grammar, jurisdictions, civil-time, connection-grammar, record-core, membership, provenance, content, entities, events. The record's Completion section lists the refusals added (HOLDER_NOT_A_PERSON, NO_BY, BAD_DIRECTION, LINE_HOLDS_NO_AMOUNT, LINE_NO_HYPOTHESIS), what is deferred (the upper-bound edge end to end, current_through, M-P2's staleness rule), and one finding: events answers an unknown host OWNER_HOST_UNKNOWN where K1563 (1) names OWNER_HOST_AMBIGUOUS.
