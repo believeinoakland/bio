@@ -64,3 +64,20 @@ Tests and checks:
 - `format`: 126 modules, 0 failures. `architecture hypotheses`: 9 files, 29 imports, 0 failures. `coverage hypotheses`: 15 of 15 live ids named, 0 failures. `ownership hypotheses tranche/T34`: 10 files, 0 failures.
 
 Size (session_012e5rWA13zjo2PKghCh3QRg): test runs 12, module lines 697
+
+## J4 · COMPLETE
+
+Completion again after B3 (K1807). Merged `tranche/T34` (`37e35545a6`); code in `cfd5f682e6`.
+
+- **R13 (K1807).** Turning a note into a hunch now checks the note's length first. A note whose text, trimmed as R1 trims it, is longer than R1's statement bound (`STATEMENT_MAX`, 4,000 characters) is refused `NOTE_TOO_LONG_FOR_HUNCH`, never cut. The refusal names the bound (`max_characters`, `characters`, and the detail) and writes nothing. The check runs after `NOTE_TURN_UNKNOWN` and before `hold`. The same note may still become an observation or a question. A note exactly at the bound is held whole.
+- **New row.** C-134.19 NOTE_TOO_LONG_FOR_HUNCH — awaiting stamp (plan Rules (5) item 4), beside J3's C-134.5, C-134.7 and C-134.13–C-134.18.
+- **Tests.** R13's test names the refusal, its row, the bound, that nothing is recorded on the note, and the at-the-bound control.
+
+Tests and checks:
+- `node --test bio-plane/test/m/hypotheses/`: 22 pass, 0 fail.
+- Users of this service (affordances, op-declarations, control-plane, plane): 533 pass, 6 fail. These are the 3 reds routed from J2 (T34-75, -58, -60) and the 3 inherited reds, the same set as at J3.
+- `format`: 0 failures. `architecture hypotheses`: 0 failures. `coverage hypotheses`: 15 of 15 live ids named. `ownership hypotheses tranche/T34`: 10 files, 0 failures.
+
+Everything else is as in J3.
+
+Size (session_012e5rWA13zjo2PKghCh3QRg): test runs 16, module lines 705
