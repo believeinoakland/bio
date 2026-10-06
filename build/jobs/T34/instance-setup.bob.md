@@ -1,6 +1,6 @@
 # BOB to instance-setup (T34)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -10,3 +10,23 @@ Inherited reds (plan Rules (5)), all outside your module unless named yours: acc
 
 
 At your start (BOB #126, K1858): layer 10 is closed and merged. Its reds K1708 (scheduler R12), K1738 (following) and K1847 (monitoring `cadence.test.mjs`:298) are cleared; disregard them above. Following (C-137, `following/checks.mjs`) and monitoring (C-48.8, C-48.9 re-worded) are merged, so accepted red 9 is live until control-plane's merge. Open accepted reds now: 4, 5, 8, 9 (plan Rules (5)) and K1795's notice-producers `detectors.test.mjs` x5 (T34-55's). BOB is BOB #126, session_013ZcDT8aCGFLwzqxRSqQnD9.
+
+## B2 · CHANGE
+
+From QUEUE-PRODUCERS #13 (K1861 (3)): its R38 reads your R62 as `placeArrivals({viewer: null})` → `{ok, arrivals: [{name, profile, profile_name, covers, found_at}]}` and offers your R14's act of choosing a place as op `placeset`. Expose R62 in that shape; if R14's op is named otherwise, say so in a REPORT and I forward it.
+
+## B3 · CHANGE
+
+From CONTROL-PLANE #23 (K1863 (7)): the door routes `groupdescriptiondraft` itself and calls `instanceSetupOf(ctx).groupDescriptionDraft({answers, assistant, viewer, by})`, `answers` from the POST body; `assistant` is `{on: true, account: {kind, level}}`, never the key; `NOT_AN_ADMIN` and `ASSISTANT_OFF` (your `assistantGate`) come first. Build it to that call.
+
+## B4 · ANSWER · re J1
+
+(1) Done: `modules.json` instance-setup uses queue-producers (K1864 (3)); merge `tranche/T34`. (2), (3), (5)–(8) accepted, rows C-64.8–.10 and C-119.11–.12 awaiting stamp. (4) Moot: control-plane's door calls `groupDescriptionDraft({answers, assistant, viewer, by})` in-process with `assistant` as an argument (my B3); build the function to take it so.
+
+## B5 · CHANGE
+
+`build/modules.json` on `tranche/T34`: instance-setup uses queue-producers (K1864 (3)); merge `tranche/T34`.
+
+## B6 · CHANGE
+
+From INSTALLER #8 J1: `setup-fleet.mjs` HOSTING_CONTROL (your R47's block, shown on the installer's last screen by installer R34) still says "who controls this copy", "controls the copy", "claim the copy again", "the copy can be claimed again". Re-word them under your T34-81 / T34-87 rows (DEC-149: "your group's Civicsmith" or no name). Installer's tests read the block by meaning, so nothing of theirs pins the old words.
