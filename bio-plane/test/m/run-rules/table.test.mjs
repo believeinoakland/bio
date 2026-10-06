@@ -25,7 +25,10 @@ const MINTED_HERE = {
   AI_ASK_BOUND_ABOVE_CEILING: ["C-22.21", "src/run-rules/rules.mjs checkAskBounds"],
 };
 /** R20's rows, minted by ai-runs (its R50, R52) and answers, read here by key. */
-const USE = { AI_USE_CEILING_REACHED: "C-109.8", AI_USE_COPY_CEILING_REACHED: "C-109.9", AI_NO_ACCOUNT: "C-109.10" };
+const USE = { AI_USE_CEILING_REACHED: "C-109.8", AI_USE_COPY_CEILING_REACHED: "C-109.9", AI_NO_ACCOUNT: "C-109.10",
+              NOT_YOUR_CEILING: "C-109.11", AI_CEILING_INVALID: "C-109.12" };
+/** Of R20's rows, those that set a ceiling rather than hold a run or ask back. */
+const SETTING = ["NOT_YOUR_CEILING", "AI_CEILING_INVALID"];
 /** R11's rows minted by ai-runs and read here by key. */
 const AI_RUNS_ACTS = {
   AI_RUN_CAPABILITY_UNAVAILABLE: "C-33.29", AI_RUN_NO_CONTEXT: "C-33.30", AI_RUN_ALREADY_OPEN: "C-33.31",
@@ -132,14 +135,15 @@ test("R12: no place is named in the module's behaviour or outward text — its r
   assert.equal(PLACE.test("the City of Anywhere"), true);
 });
 
-test("R20: the ceiling refusals AI_USE_CEILING_REACHED, AI_USE_COPY_CEILING_REACHED, AI_NO_ACCOUNT and R18's AI_RUN_NOT_A_MEMBER_ACT are rows of the table, each with its number and a plain-words translation naming no cost per answer; minted by ai-runs and answers and read here by key", () => {
+test("R20: the ceiling refusals AI_USE_CEILING_REACHED, AI_USE_COPY_CEILING_REACHED, AI_NO_ACCOUNT, R18's AI_RUN_NOT_A_MEMBER_ACT, NOT_YOUR_CEILING and AI_CEILING_INVALID are rows of the table, each with its number and a plain-words translation naming no cost per answer; minted by ai-runs and answers and read here by key", () => {
   assert.deepEqual(Object.fromEntries(Object.entries(AI_USE_CHECKS).map(([c, r]) => [c, r.check])), USE);
   const all = { ...AI_USE_CHECKS, AI_RUN_NOT_A_MEMBER_ACT: AI_RUN_OWN_CHECKS.AI_RUN_NOT_A_MEMBER_ACT };
   for (const [code, row] of Object.entries(all)) {
     wellFormed(code, row);
     assert.equal(AI_RUN_CHECKS[code], row, code);
     assert.equal(translationOf(code), row.translation, code);
-    assert.match(row.translation, /^Nothing was (run|started), because /, `${code}: says nothing ran`);
+    assert.match(row.translation, SETTING.includes(code) ? /^Nothing was changed, because / : /^Nothing was (run|started), because /,
+                 `${code}: says nothing ran or changed`);
     /* K1450: members see no cost per answer, so no translation names a price, a charge or a figure of money */
     assert.doesNotMatch(row.translation, /\$|\bcost|\bprice|\bcharge|\bdollar|\bspend|\bbill|\btokens?\b|\bcredit/i, code);
     assert.doesNotMatch(row.translation, /\b[A-Z][A-Z_]{3,}\b/, `${code}: plain words, no machine word`);
@@ -150,6 +154,8 @@ test("R20: the ceiling refusals AI_USE_CEILING_REACHED, AI_USE_COPY_CEILING_REAC
   assert.match(AI_USE_CHECKS.AI_USE_CEILING_REACHED.translation, /your own daily limit/);
   assert.match(AI_USE_CHECKS.AI_USE_COPY_CEILING_REACHED.translation, /administrator/);
   assert.match(AI_USE_CHECKS.AI_NO_ACCOUNT.translation, /Claude account or an API key of your own/);
+  assert.match(AI_USE_CHECKS.NOT_YOUR_CEILING.translation, /theirs alone to set or look at.*only by an administrator/);
+  assert.match(AI_USE_CHECKS.AI_CEILING_INVALID.translation, /a whole number of one or more, or no limit/);
   const texts = Object.values(all).map((r) => r.translation);
   assert.equal(new Set(texts).size, texts.length);
   /* control: the cost pattern does catch a cost */

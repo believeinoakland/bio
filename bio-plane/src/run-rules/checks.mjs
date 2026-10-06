@@ -588,8 +588,8 @@ export const AI_RUN_PLAN_CHECKS = {
   },
 };
 
-/* R20 (Q0-5; K1450, K1502; D79) / C-109.8–.10 — WHAT HOLDS AN AI RUN OR ASK BACK BEFORE IT STARTS: the member's use
- * ceiling, the copy's lower one, and no account of the member's own. `ai-runs` mints each at its open and tick (its R50,
+/* R20 (Q0-5; K1450, K1502, K1601; D79) / C-109.8–.12 — WHAT HOLDS AN AI RUN OR ASK BACK BEFORE IT STARTS: the member's
+ * use ceiling, the copy's lower one, and no account of the member's own; and the two refusals of setting a ceiling. `ai-runs` mints each at its open and tick (its R50,
  * R52) and `answers` before any model call of an ask; both read the rows here by key, as R11's `ai-runs` rows are. They
  * join C-109, the open's family, after the planning run's rows. Each is said in plain words and names no cost: members
  * see no cost per answer (K1450). */
@@ -614,6 +614,20 @@ export const AI_USE_CHECKS = {
     where: 'src/ai-runs/index.mjs open and the ask\'s account, reached from op=airunopen and an ask',
     translation: 'Nothing was run, because you have not connected a Claude account or an API key of your own. The '
       + 'assistant works only on the account of the member who asks; connect yours to use it.',
+  },
+  /* R50 (K1601): a member's ceiling is that member's own to set and read; the copy's lower one an administrator's. */
+  NOT_YOUR_CEILING: {
+    check: 'C-109.11',
+    where: 'src/ai-runs/index.mjs aiCeilingSet, aiCopyCeilingSet and the ceiling\'s reads',
+    translation: 'Nothing was changed, because a member\'s daily limit on the assistant is theirs alone to set or look '
+      + 'at, and the limit for the whole group\'s copy is set only by an administrator.',
+  },
+  /* R50 (K1601): a ceiling's figure is a whole number of one or more, or none at all (null: no ceiling of one's own). */
+  AI_CEILING_INVALID: {
+    check: 'C-109.12',
+    where: 'src/ai-runs/index.mjs aiCeilingSet and aiCopyCeilingSet',
+    translation: 'Nothing was changed, because a daily limit on the assistant is a whole number of one or more, or no '
+      + 'limit of your own at all. Give a whole number, or clear the limit.',
   },
 };
 
