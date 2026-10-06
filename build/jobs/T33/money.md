@@ -27,3 +27,22 @@ Built and green against stand-ins; COMPLETE waits only on K1563 (1)'s re-pointin
 ## J3 · REPORT
 
 B3 done (K1569): module-level noSuchFact(factId, extra?) exported from bio-plane/src/money/index.mjs, the one NO_SUCH_FACT answer ({ok:false, reason, code, fact_id, detail} fixed, extra beside); withdrawFact, summable, reconcile, include/exclude and proposeInclusion answer through it, a hidden fact answered alike. Test named R7; 52 pass, 0 fail; format, architecture, coverage, ownership pass. Pushed. Still waiting on entities, events and lines to merge before re-pointing and COMPLETE (J2).
+
+## J4 · COMPLETE
+
+**Entries applied.** T33-33 whole (B1b.2 and L2–L3): the full `MNY-` row at one append site (R1–R6), withdrawal and reads (R7–R9), the summation rule with interfund flags (R10), `reconcile` (R11), `MSR-` trails and attribution sets with machine proposals held apart (R12–R13), `committedAgainstPaid` with change orders by `amends` (R14), `authorityChain` within the walk bounds (R15), the connection owner (R16), the closed lists (R17), `moneyOps` (R18), the read contract (R19, K1563's names), the store gate (R20), sight (R21), the words rule (R22), `onFactChanged` (R23). Settlements are money facts of kind `settlement` concerning a proceeding (A COURTS A6). BOB's additions: K1563 (R19's names, R9 by any concerned id, the machine's table-row source through `calculations.bindingOf`, module-level lists, the owner registered at load with `host`), K1569 (`noSuchFact`), K1577 (real events and lines as defaults).
+
+**Paths** `bio-plane/src/money/` (index.mjs, schema.mjs, vocab.mjs); **tests** `bio-plane/test/m/money/` (fixture, 7 test files, `mm1-figures.csv`). **Final uses:** record-grammar, jurisdictions, civil-time, calc-grammar, connection-grammar, record-core, membership, promotion, provenance, content, entities, events, lines. Dropped from the opening row: extraction, standards, progressions, observation-log (nothing calls them). `calculations` is an injected port (later in the order), not a `uses` edge.
+
+**Measurement.** M-M1 on the 200 figures of `money-people.md` §4: all 200 read and scaled exactly by calc-grammar; the 178 USD figures recorded and read back with amount, sign and `as_read` unchanged.
+
+**Deferred, with why.** None in money. Requirement texts keep their *(not yet met)* marks and DRAFT banner for BOB to strike at merge.
+
+**Found in other modules (also in J2).** plane/control-plane: wire `moneyOps` and its op declarations (T33-88), call `money.migrate()` and `money.joinPromotion(promotion)` at start; `calculations`: its ingest writer sends `source {table, row, binding}`, `by: class:daemon`, `method: "table_binding"`, and its `bindingOf(key)` answers `{adopted, table, roles, capture_sha}`. No generated artifact made stale (money is not in a bundle's inputs yet).
+
+**Tests and checks** (on `job/T33/money` after merging `tranche/T33` with entities, events, lines merged):
+- `node --test bio-plane/test/m/money/` → tests 52, pass 52, fail 0 (on the real entities, events and lines; only `calculations.bindingOf` is a stand-in).
+- Upstream suites unchanged: events 44/0, lines 26/0, entities 82/0. No layer tests are named in the manifest.
+- With money's paths set in a scratch `modules.json` (not committed): `format` 0 failures; `architecture money` 12 files, 39 imports, 0 failures; `coverage money` 23 of 23 live ids named, 0 failures; `ownership money tranche/T33` 13 files, 0 failures.
+
+Size (session_013XEfBDcF3imn5eAk9jBUWV): test runs 22, module lines 1285
