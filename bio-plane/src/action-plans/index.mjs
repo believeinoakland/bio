@@ -40,7 +40,8 @@
  *   clocks         action-clocks' `reminderSet` and `reminderRefused` (its R4; R18, R29).
  *   escalation     `escalationsFor`, `escalationRead` (R6, R15).
  *   filings        `availableActions` (shown beside legal options).
- *   duties         `occurrencesOf`, `transitionsOf`, `readDuty` (R38: a phase started by a duty occurrence's state).
+ *   duties         `occurrencesOf`, `transitionsOf`, `readDuty` (R38: a phase started by a duty occurrence's state); its
+ *                  `noSuchDuty` (its R25; R38, N601).
  *   aiRuns         `registerOpenCheck`, `onRunOpened`, `runFor`, `read`, `boundOf`, `consumeBound` (R30–R32).
  *   now            the instance clock, an ISO string (default: the wall clock, to the second). */
 
@@ -55,7 +56,7 @@ import { actionsOf, contactNotAMember, contactId } from "../actions/index.mjs";
 import { actionClocksOf, reminderRefused } from "../action-clocks/index.mjs";
 import { escalationOf } from "../escalation/index.mjs";
 import { filingsOf } from "../filings/index.mjs";
-import { dutiesOf, INTERNAL as DUTIES_INTERNAL } from "../duties/index.mjs";
+import { dutiesOf, noSuchDuty, INTERNAL as DUTIES_INTERNAL } from "../duties/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
 import { runPrincipalGate } from "../run-rules/index.mjs";
 import { isMachineIdentity, proposalLabel, normalizeType } from "../record-grammar/index.mjs";
@@ -1067,20 +1068,23 @@ export class ActionPlans {
     /* END DEC-49 REGION is-phase-acyclic */
   }
 
-  /* R38: each phase started by a duty occurrence's state names a held duty the author may see, answered through
-     duties' own refusal (NO_SUCH_DUTY, one answer for absent and unseen), and an occurrence named is one of its own
-     (else R14's malformed fault, minted at its one site). `{phases}`, duties' refusal, or a fault. */
+  /* R38: each phase started by a duty occurrence's state names a held duty the author may see, else NO_SUCH_DUTY,
+     answered through duties' own site (`noSuchDuty`, its R25; N601), one answer for absent and unseen, with the phase's
+     index; and an occurrence named is one of its own (else R14's malformed fault, minted at its one site). `{phases}`,
+     a refusal, or a fault. */
   #dutyPhases(phases, viewer) {
     const asOf = this.now();
     for (let i = 0; i < phases.length; i++) {
       const s = phases[i].starts;
       if (!isObj(s) || !s.when_duty) continue;
       const { duty, occurrence } = s.when_duty;
+      const held = this.duties.readDuty({ dutyId: duty, viewer: dutyViewer(viewer) });
+      if (!ok(held) || held.found !== true) return noSuchDuty(duty, { index: i });
+      if (occurrence === undefined) continue;
       /* the window reaches two years ahead, so a key of an instance already dated in the record (a dated trigger, a
          recurrence) is one of its own before it falls due */
       const r = this.duties.occurrencesOf({ dutyId: duty, asOf, to: dayOf(msOf(asOf) + 731 * DAY_MS), viewer: dutyViewer(viewer) });
-      if (!ok(r)) return r;
-      if (occurrence === undefined) continue;
+      if (!ok(r)) return r.code === "NO_SUCH_DUTY" ? noSuchDuty(duty, { index: i }) : r;
       const keys = new Set((r.occurrences || []).map((x) => x.key));
       for (const t of (this.duties.transitionsOf({ dutyId: duty, viewer: dutyViewer(viewer) }) || {}).transitions || []) keys.add(t.occurrence_key);
       if (!keys.has(occurrence))

@@ -122,3 +122,17 @@ test("R6 R30: a provider this host has not been given answers PROVIDER_UNAVAILAB
   const w3 = world({ omit: ["aiRuns"] });
   assert.equal(w3.reg.checks.length, 0);
 });
+
+test("R6 R30 (DEC-149): PLAN_PROVIDER_UNAVAILABLE's translation, C-124.57, says your group's Civicsmith; no translation calls it this instance, copy or plane", () => {
+  const w = seeded({ omit: ["conformance"] });
+  const r = w.ap.planOpen({ project: w.P, subjects: [w.S1], title: "t", ...by("bob") });
+  assert.equal(code(r), "PLAN_PROVIDER_UNAVAILABLE");
+  assert.equal(r.check, "C-124.57");
+  assert.equal(r.translation, "An action plan reads matters, actions and runs held by other parts of the record, and one of them "
+    + "is not in your group's Civicsmith yet, so the plan is not answered in part. Nothing was written.");
+  for (const [k, row] of Object.entries(ACTION_PLAN_CHECKS))
+    assert.doesNotMatch(row.translation, /\b(this|the|your|our|its)( group's)? (instance|copy|plane)\b/i, k);
+  /* negative control: a host with every provider answers the act, not the refusal */
+  const full = seeded();
+  assert.equal(full.ap.planOpen({ project: full.P, subjects: [full.S1], title: "t", ...by("bob") }).ok, true);
+});

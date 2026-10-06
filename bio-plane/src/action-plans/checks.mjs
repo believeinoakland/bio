@@ -171,9 +171,10 @@ export const ACTION_PLAN_CHECKS = Object.freeze({
   PHASE_MALFORMED: {
     check: 'C-124.32', where: at("#scenarioPhases", "is-phase-shaped"),
     translation: 'A phase has an id, a name, the chosen options it holds, when it starts (at the plan\'s start, after '
-      + 'another phase, on one outcome of another phase\'s checkpoint, or when another matter\'s track reaches a point), '
-      + 'and may have a checkpoint after 1 to 3,650 days, a condition of up to 500 characters and the phase each '
-      + 'judgement leads to. The phase named was not so. Nothing was written.',
+      + 'another phase, on one outcome of another phase\'s checkpoint, when another matter\'s track reaches a point, or '
+      + 'when an obligation\'s occurrence reaches a state: met, met late, overdue or undetermined), and may have a '
+      + 'checkpoint after 1 to 3,650 days, a condition of up to 500 characters and the phase each judgement leads to. '
+      + 'The phase named was not so. Nothing was written.',
   },
   PHASE_OPTION_NOT_CHOSEN: {
     check: 'C-124.33', where: at("#scenarioPhases", "is-phase-option-chosen"),
@@ -298,7 +299,7 @@ export const ACTION_PLAN_CHECKS = Object.freeze({
   PLAN_PROVIDER_UNAVAILABLE: {
     check: 'C-124.57', where: at("refuseProviderUnavailable", "is-provider-present"),
     translation: 'An action plan reads matters, actions and runs held by other parts of the record, and one of them '
-      + 'is not on this instance yet, so the plan is not answered in part. Nothing was written.',
+      + 'is not in your group\'s Civicsmith yet, so the plan is not answered in part. Nothing was written.',
   },
 });
 
