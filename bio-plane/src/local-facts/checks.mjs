@@ -14,8 +14,9 @@ export const LOCAL_FACTS_CHECKS = Object.freeze({
   },
   NO_SUCH_FACT: {
     check: "C-126.2", where: at("noSuchFact", "is-fact-named"),
-    translation: "No local fact of this instance's active jurisdiction profiles answers to that path. A path names "
-      + "one profile's holiday year, an office's hours or the time zone. Nothing was written.",
+    translation: "No local fact of the active jurisdiction profiles answers to that path. A path names one "
+      + "profile's holiday year (of its office calendar or of a named closure list), an office's hours or the time "
+      + "zone. Nothing was written.",
   },
   FACT_ACT_REFUSED: {
     check: "C-126.3", where: at("factConfirm", "is-fact-act"),

@@ -50,13 +50,15 @@ export const V = (id) => `member:${id}`;
 export const MACHINE = "class:ai";
 export const NOW = "2026-09-28T01:00:00.000Z";
 export const TP = "test-port-ellery";
-/** The test profile's seven facts, by their paths (R6). */
+/** The test profile's nine facts, by their paths (R6): two of them a named closure list's year (jurisdictions R47). */
 export const P = Object.freeze({
   tz: `${TP}/time_zone`,
   y2026: `${TP}/holidays/2026`,
   y2026clerk: `${TP}/holidays/2026/role=Town%20Clerk`,
   y2026court: `${TP}/holidays/2026/venue=commitment_claim`,
   y2027: `${TP}/holidays/2027`,
+  y2026courtList: `${TP}/holidays/2026/list=court`,
+  y2026townList: `${TP}/holidays/2026/list=town`,
   clerkHours: `${TP}/hours/role=Town%20Clerk,body=City%20of%20Port%20Ellery`,
   venueHours: `${TP}/hours/venue=records_request`,
 });
