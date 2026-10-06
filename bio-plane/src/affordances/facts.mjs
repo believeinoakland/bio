@@ -262,7 +262,9 @@ class AffordanceFacts {
       const at = w.wizardsAt({ screen: id, viewer });
       for (const s of (at && Array.isArray(at.scripts) ? at.scripts : [])) if (s.draft !== true) wizard_scripts.push(s);
     }
-    return { ok: true, screens, wizard_scripts };
+    /* R44 (K1861 (1)): the acts on which writing help is refused, as `wizard-scripts` R24 holds and registers them,
+       passed through unchanged (its named list and the registered sets; `[]` before registration). */
+    return { ok: true, screens, wizard_scripts, writing_help_refused: w.writingHelpRefused() };
   }
 }
 
