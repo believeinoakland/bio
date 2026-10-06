@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { rowOk, seeded, V } from "./fixture.mjs";
-import { caseFile, MEMO, MEMO_BYTES, MINUTES, A, C, GROUP, CASE } from "../case-checker/fixture.mjs";
+import { caseFile, MEMO, MEMO_BYTES, MINUTES, A, C, GROUP, CASE, CALC, CALC_INPUT, CALC_INPUT_SHA, calcRow } from "../case-checker/fixture.mjs";
 import { caseFilePath } from "../../../src/case-grammar/index.mjs";
 import { checkCaseFile } from "../../../src/case-checker/index.mjs";
 import { importedFindingRef } from "../../../src/inquiry-grammar/index.mjs";
@@ -24,7 +24,8 @@ test("R1 R3 a clean case file, checked by the real case-checker, recreates every
     assert.deepEqual(r.recreation.findings.map(({ finding, role, result, missing, differs, pair }) => ({ finding, role, result, missing, differs, pair })),
                      direct.findings.map(({ finding, role, result, missing, differs, pair }) => ({ finding, role, result, missing, differs, pair })),
                      "what the checker answered is what is recorded");
-    assert.deepEqual(r.recreation.checker, { grading_versions: direct.checker.grading_versions, checks_version: direct.checker.checks_version });
+    assert.deepEqual(r.recreation.checker, { grading_versions: direct.checker.grading_versions, checks_version: direct.checker.checks_version,
+                                             calc_versions: direct.checker.calc_versions });
     for (const f of r.recreation.findings) assert.equal(f.result, "recreated", `${f.finding} (${parts} part(s))`);
     const e = w.ci.importedCase({ import: r.import, viewer: V("bob") }).edition;
     assert.equal(e.findings[0].origin.another_groups.signature_verified, true);
@@ -71,4 +72,40 @@ test("R6 a tampered file does not recreate under the real checker, and that find
   const refused = w.ci.acceptImported({ import: r.import, edition: 2, findings: [A], checked: "c", reason: "r", by: V("alice"), viewer: V("alice") });
   rowOk(refused, "IMPORT_ACCEPT_NOT_RECREATED");
   assert.deepEqual(refused.findings, [A]);
+});
+
+test("R21 R3 R5 under the real case-checker: a carried calculation recreates here as the checker recomputes it; a forged result differs for both; a missing input is completed", async () => {
+  /* clean */
+  const w = seeded({ realChecker: true });
+  const r = await imp(w, caseFile({ withCalculation: true }));
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+  const [c] = r.recreation.calculations;
+  assert.equal(c.calc, CALC);
+  assert.equal(c.result, "recreated");
+  assert.equal(c.recomputed.output.value, "2", "two of the three payments are over 30 days late");
+  assert.deepEqual(c.checker, { result: "agrees", agrees_with_this_copy: true });
+  /* a forged result: the signed row states 9 under its key */
+  const w2 = seeded({ realChecker: true });
+  const good = calcRow();
+  const forged = { ...good.results[good.result_key], value: "9" };
+  const r2 = await imp(w2, caseFile({ withCalculation: true, calcRow: { results: { [good.result_key]: forged } } }));
+  const [d] = r2.recreation.calculations;
+  assert.equal(d.result, "differs");
+  assert.deepEqual(d.differs.map((x) => [x.result, x.source.value, x.recomputed.value]), [["output", "9", "2"]]);
+  assert.deepEqual(d.checker, { result: "differs", agrees_with_this_copy: true });
+  /* the input left out: not recreated by either; the fetched input completes it */
+  const w3 = seeded({ realChecker: true });
+  const r3 = await imp(w3, caseFile({ withCalculation: true, dropCalcInput: true }));
+  assert.equal(r3.ok, true, JSON.stringify(r3).slice(0, 300));
+  const [m] = r3.recreation.calculations;
+  assert.equal(m.result, "not_recreated");
+  assert.deepEqual(m.missing.map((x) => [x.input, x.sha]), [["pay", CALC_INPUT_SHA]]);
+  assert.deepEqual(m.checker, { result: "not_recomputed", agrees_with_this_copy: true });
+  const done = await w3.ci.completeImportedDocument({ import: r3.import, edition: 2, bytes: new TextEncoder().encode(CALC_INPUT),
+                                                      by: V("bob"), viewer: V("bob") });
+  assert.equal(done.ok, true, JSON.stringify(done).slice(0, 300));
+  /* recreated here; case-checker R20 recomputes only over inputs the case file carries (its R9 fills materials, not a
+     calculation's inputs), so its answer stays not_recomputed and is recorded as not agreeing with this copy's */
+  assert.equal(done.recreation.calculations[0].result, "recreated");
+  assert.deepEqual(done.recreation.calculations[0].checker, { result: "not_recomputed", agrees_with_this_copy: false });
 });

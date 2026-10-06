@@ -204,11 +204,18 @@ function inputsOfRow(v) {
   return list && list.every((x) => x && x.name) && new Set(list.map((x) => x.name)).size === list.length ? list : null;
 }
 
-/* R21: the source's stated values, compared by name: `output` and each named step (`calculations` R4's stored shape), or,
-   for results stated as a plain map, each key as a step of that name. */
-function statedValues(results) {
+/* R21: the source's stated values, compared by name. `case-grammar` R18's "results by key": the result stored under the
+   row's result key, compared as its output, as `case-checker` R20 reads it (a key-addressed map without that key states
+   no result). Else `calculations` R4's stored shape, `output` and each named step, or a plain map read as steps of those
+   names. */
+function statedValues(results, resultKeyStated) {
   if (!isObj(results)) return null;
   const out = new Map();
+  const keys = Object.keys(results);
+  if (keys.length && keys.every((k) => isSha(k))) {
+    out.set("output", typeof resultKeyStated === "string" && Object.hasOwn(results, resultKeyStated) ? results[resultKeyStated] : undefined);
+    return out;
+  }
   if ("output" in results || isObj(results.steps)) {
     if ("output" in results) out.set("output", results.output);
     if (isObj(results.steps)) for (const [k, v] of Object.entries(results.steps)) out.set(`steps.${k}`, v);
@@ -303,14 +310,14 @@ function recreateOne(row, ord, byContent, byStated) {
   const differs = [];
   if (row.result_key !== null && row.result_key !== undefined && row.result_key !== key)
     differs.push({ result: "result_key", source: row.result_key, recomputed: key });
-  const values = statedValues(row.results);
+  const values = statedValues(row.results, row.result_key);
   if (!values && (row.result_key === null || row.result_key === undefined)) {
     missing.push({ what: "results", why: "the case states no result and no result key to recreate" });
     return done("not_recreated", [], recomputed);
   }
   for (const [name, v] of values || []) {
-    const r = name === "output" ? e.result : Object.prototype.hasOwnProperty.call(steps, name.slice(6)) ? steps[name.slice(6)] : undefined;
-    if (r === undefined || canonicalJson(r) !== canonicalJson(v)) differs.push({ result: name, source: v, recomputed: r ?? null });
+    const r = name === "output" ? e.result : name.startsWith("steps.") && Object.hasOwn(steps, name.slice(6)) ? steps[name.slice(6)] : undefined;
+    if (v === undefined || r === undefined || canonicalJson(r) !== canonicalJson(v)) differs.push({ result: name, source: v ?? null, recomputed: r ?? null });
   }
   return done(differs.length ? "differs" : "recreated", differs, recomputed);
 }

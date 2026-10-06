@@ -18,12 +18,14 @@ const RECIPE = { method: METHOD, inputs: [{ name: "payments", kind: "table" }],
                  steps: [{ op: "select", from: "payments", where: [{ field: "vendor", test: "eq", value: "Acme" }], as: "acme" },
                          { op: "sum", from: "acme", field: "amount", as: "total" }], output: "total" };
 
-/* What a publishing copy states for a recipe over its inputs: `calculations` R4's stored shape. */
+/* What a publishing copy states for a recipe over its inputs: `case-grammar` R18's results by key, the result under its
+   result key. */
 function stated(recipe = RECIPE, inputs = { payments: TABLE }, hashes = { payments: TABLE_SHA }) {
   const e = evaluate(recipe, inputs, {});
   assert.ok(!e.refused, JSON.stringify(e));
   const steps = Object.fromEntries(e.trace.map((t) => [t.step, t.step === recipe.output ? e.result : t.output]));
-  return { results: { output: e.result, steps }, result_key: resultKey(recipe, hashes), output: e.result };
+  const key = resultKey(recipe, hashes);
+  return { results: { [key]: e.result }, result_key: key, output: e.result, steps };
 }
 function row(over = {}) {
   const s = stated();
@@ -57,10 +59,10 @@ test("R21 a stated result that recomputes differently is `differs`, naming the r
   const w = seeded();
   const s = stated();
   const forged = { ...s.output, value: "9999.00" };
-  const r = await imp(w, withCalcs([row({ results: { output: forged, steps: { ...s.results.steps, total: forged } }, recompute: "agrees" })]));
+  const r = await imp(w, withCalcs([row({ results: { [s.result_key]: forged }, recompute: "agrees" })]));
   const [c] = r.recreation.calculations;
   assert.equal(c.result, "differs");
-  assert.deepEqual(c.differs.map((d) => d.result).sort(), ["output", "steps.total"]);
+  assert.deepEqual(c.differs.map((d) => d.result), ["output"]);
   const out = c.differs.find((d) => d.result === "output");
   assert.equal(out.source.value, "9999.00");
   assert.equal(out.recomputed.value, "1500.50");
@@ -70,7 +72,9 @@ test("R21 a stated result that recomputes differently is `differs`, naming the r
   const r2 = await imp(w2, withCalcs([row({ result_key: "f".repeat(64) })]));
   const [k] = r2.recreation.calculations;
   assert.equal(k.result, "differs");
-  assert.deepEqual(k.differs, [{ result: "result_key", source: "f".repeat(64), recomputed: s.result_key }]);
+  assert.deepEqual(k.differs[0], { result: "result_key", source: "f".repeat(64), recomputed: s.result_key });
+  assert.deepEqual(k.differs[1], { result: "output", source: null, recomputed: s.output },
+                   "no result is stated under the key the row names, so none agrees");
   /* the negative control: the same case, untouched, recreates */
   const w3 = seeded();
   assert.equal((await imp(w3, withCalcs([row()]))).recreation.calculations[0].result, "recreated");
@@ -147,7 +151,7 @@ test("R4 R21 importedCase answers each calculation the edition carries with its 
   const w = seeded();
   const s = stated();
   const forged = { ...s.output, value: "1.00" };
-  const r = await imp(w, withCalcs([row(), row({ calc: "CALC-2026-0009", results: { output: forged } })]));
+  const r = await imp(w, withCalcs([row(), row({ calc: "CALC-2026-0009", results: { [s.result_key]: forged } })]));
   const ed = editionOf(w, r);
   assert.deepEqual(ed.calculations.map((c) => [c.calc, c.result]), [["CALC-2026-0007", "recreated"], ["CALC-2026-0009", "differs"]]);
   for (const c of ed.calculations) {
@@ -156,7 +160,7 @@ test("R4 R21 importedCase answers each calculation the edition carries with its 
     assert.equal(c.source.method_version, METHOD);
   }
   const d = ed.calculations[1];
-  assert.equal(d.source.results.output.value, "1.00", "the source's value, as it states it");
+  assert.equal(d.source.results[s.result_key].value, "1.00", "the source's value, as it states it");
   assert.equal(d.recomputed.output.value, "1500.50", "beside the value recreated here");
   /* a case with no calculations block answers an empty list */
   const w2 = seeded();
@@ -172,7 +176,7 @@ test("R21 the checker's own answer for each calculation (case-checker R20) is re
   const w = seeded();
   w.checker.calculations = [{ calc: "CALC-2026-0007", result: "agrees" }, { calc: "CALC-2026-0009", result: "agrees" }];
   const s = stated();
-  const r = await imp(w, withCalcs([row(), row({ calc: "CALC-2026-0009", results: { output: { ...s.output, value: "2.00" } } })]));
+  const r = await imp(w, withCalcs([row(), row({ calc: "CALC-2026-0009", results: { [s.result_key]: { ...s.output, value: "2.00" } } })]));
   const ed = editionOf(w, r);
   assert.deepEqual(ed.calculations[0].checker, { result: "agrees", agrees_with_this_copy: true });
   assert.deepEqual(ed.calculations[1].checker, { result: "agrees", agrees_with_this_copy: false },
