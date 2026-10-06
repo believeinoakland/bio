@@ -1,0 +1,61 @@
+/* notice-producers over the real modules it reads (K1563 (1)): each test file builds the provider's own test world
+   (people's, money-checks', duties', answers' and inquiry's fixtures: their real modules on a real SQLite database at
+   the plane's storage shape) and this module on the same host, the real provider handed in and every other provider a
+   stand-in answering nothing, in the shape its requirements publish. `homesOf` and `optionsOf` are queue's (its R7,
+   R12), passed in by R1; here they record what they were asked and answer a walk that finds nothing above the subjects,
+   so a home set is the item's own cases. Every test drives `noticeItems` at its interface. */
+import { noticeProducersOf, NoticeProducers } from "../../../src/notice-producers/index.mjs";
+
+/** Providers answering nothing, each in its requirements' shape. */
+export const NONE = Object.freeze({
+  people: { checkResults: () => ({ ok: true, checks: [] }), listChecks: () => ({ ok: true, checks: [] }) },
+  moneyChecks: { noticed: ({ project }) => ({ ok: true, project, label: "Noticed", items: [], truncated: false }) },
+  duties: { dutiesOf: ({ entity, as }) => ({ ok: true, entity, as, duties: [], count: 0, limit: 500, truncated: false }),
+            occurrencesOf: ({ dutyId }) => ({ ok: true, duty_id: dutyId, occurrences: [] }) },
+  answers: { standingAnswersFor: () => ({ ok: true, entries: [], cursor: null }) },
+  inquiry: { datedWaits: ({ member }) => ({ ok: true, member, waits: [] }) },
+});
+
+/** This module on `host`, with `real` providers and the rest answering nothing. */
+export function producers(host, real = {}) {
+  return noticeProducersOf(host, { ...NONE, ...real });
+}
+
+/** A fresh instance on `host` (the factory keeps one per storage), for a test that lays other providers on one world. */
+export function fresh(host, real = {}) {
+  return new NoticeProducers({ host, storage: host.storage, deps: { ...NONE, ...real } });
+}
+
+/** R1's read, as queue makes it: `homesOf` and `optionsOf` recorded in `asked`. */
+export function reader(n) {
+  const asked = { homes: [], options: [] };
+  const read = (member, { viewer = member ? `member:${member}` : "class:admin", now, homes = true, options = true } = {}) =>
+    n.noticeItems({ member, viewer, now: typeof now === "string" ? Date.parse(now) : now, identity: member ? `member:${member}` : null,
+      homesOf: homes ? (s) => { asked.homes.push([...s]); return { state: "determined", ungrouped: true, reasons: [], depth_bound: 6, ancestors: [] }; } : undefined,
+      optionsOf: options ? (s) => { asked.options.push([...s]); return s.length ? [{ id: "opt", on: [...s] }] : []; } : undefined });
+  return { read, asked };
+}
+
+/** The items of a read by id. */
+export const byId = (r) => Object.fromEntries(r.items.map((i) => [i.id, i]));
+export const ofKind = (r, kind) => r.items.filter((i) => i.kind === kind);
+
+/** Every string an answer carries, keys included (the words a member could be shown). */
+export function texts(v, out = []) {
+  if (typeof v === "string") out.push(v);
+  else if (Array.isArray(v)) v.forEach((x) => texts(x, out));
+  else if (v && typeof v === "object") for (const [k, x] of Object.entries(v)) { out.push(k); texts(x, out); }
+  return out;
+}
+/** The member-facing sentences of an item: its summary, its detail and its options' labels. */
+export const sentences = (i) => [i.summary, i.detail, ...(i.options || []).map((o) => o.label)].filter((s) => typeof s === "string");
+/** R2, R3 (K1473, K1491): words a machine-noticed item never says of a person. */
+export const JUDGMENT = /\b(conflict|conflicted|suspicio\w*|corrupt\w*|violat\w*|breach\w*|wrongdoing|guilty)\b/i;
+
+/** Every table's rows, to show a read wrote nothing. */
+export function snapshot(sqlExec) {
+  const rows = (q) => [...sqlExec(q)];
+  const out = {};
+  for (const { name } of rows(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`)) out[name] = JSON.stringify(rows(`SELECT * FROM "${name}"`));
+  return out;
+}
