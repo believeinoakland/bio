@@ -68,3 +68,26 @@ Size (session_01VhQZpv5UDgJCR2CivgwuJZ): test runs 16, module lines 3024
 ## J4 · COMPLETE
 
 T34-58, T34-83, T34-90–T34-92 applied; R6, R15, R20–R29 met; K1764's red cleared. op-declarations 84/0; format, architecture, coverage (29/29), ownership 0 failures. One new red outside my module: control-plane's affordances totality (R2, R41), the gap J2 reported (affordances T34-75; control-plane T34-60 routes the new OP_STAMPS ops). Edges: membership, tasks, publication, ratification (K1864). The five unserved registry functions and every finding are in my record's Completion. Plane bundle stale.
+
+## Completion after B5 (CHANGE, K1869 (2))
+
+- Merged `tranche/T34` (wizard-scripts and tasks merged).
+- **R15's test** (`t31.test.mjs`) now checks wizard-scripts' map: R15's fifteen beside its T34 family (`startfrom`, `baseupdates`), each specced and stamped. R15's requirement text names its ops and states no count, so it needs no re-wording.
+- **R6's test** (`t33.test.mjs`) no longer lists the tasks ops or `startfrom`/`baseupdates` as served elsewhere; their owners serve them now. `writinghelp` stays named as served elsewhere: the door routes it itself and calls wizard-scripts' `writingHelp` (K1863 (7)), so it is control-plane's (T34-60). `groupdescriptiondraft` stays named as instance-setup's until that merge.
+
+**Tests.**
+- op-declarations: `ℹ pass 84`, `ℹ fail 0`.
+- Users of op-declarations, mine against the current tranche:
+  - admission 19/0 (same); wizard-scripts 62/0; tasks 95/0.
+  - control-plane 162/6. `r53-routes.test.mjs`:58 (K1807) goes green. Two new reds:
+    - `r53-routes.test.mjs`:75 drives the T34 `OP_STAMPS` ops, such as `websiteinvite`, which control-plane routes in T34-60.
+    - `totality.test.mjs`:13 is the affordances totality, accepted by name at my merge (B4).
+  - affordances 187/5 and plane 107/3, the tranche's own reds, unchanged.
+
+**Checks.**
+- `format: 129 modules, 128 requirements files; 0 failures`.
+- `architecture: 11 product files, 57 relative imports (1 naming no tracked file, not judged); 0 failures`.
+- `coverage: 1 modules, 29 of 29 live requirement ids named by a test; 0 failures`.
+- `ownership: 6 files changed by op-declarations between tranche/T34 and HEAD; 0 failures`.
+
+Size (session_01VhQZpv5UDgJCR2CivgwuJZ): test runs 22, module lines 3024
