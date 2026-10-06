@@ -13,13 +13,12 @@
  * ===================== WHY THE PLANE HERE IS REAL =====================
  * `bio-plane/src/index.mjs` runs under miniflare. Members enrol through the real ops; a project is promoted, two
  * members joined; a lens is written, adopted and REVISED through the real doors; runs are opened through
- * `op=airunopen`; the bias-debt sweep is fired through the Durable Object's `onAlarm` (as `d86-bias-debt.test.mjs`
+ * `op=airunopen` by a member who connected her own account first (`op=accountreferenceset`); the bias-debt sweep is fired through the Durable Object's `onAlarm` (as `d86-bias-debt.test.mjs`
  * does — `alarm()` is workerd's reserved entry). The recipients rendered are the ones `#biasDebtRecipients` named —
  * no fixture of the op's answer exists in this file.
  *
  * ================= HOW A LIAR WOULD MAKE THIS SUITE GREEN =================
- *  (1) DROP THE "NOBODY" SENTENCE EVERYWHERE — it would pass every named arm. §3 drives a run the producer could name
- *      nobody for, where the sentence is TRUE and must stay.
+ *  (1) [RETIRED 2026-10-06, see below: §3 and its run are gone, so dropping the "nobody" sentence is no longer seen here.]
  *  (2) PRINT THE VIEWER AS THE RECIPIENT — §1 renders for ruth an item naming alice AND ruth; both must appear, in
  *      the record's order, and only ruth marked "(you)".
  *  (3) ANSWER FROM AN ATTRIBUTE — the member ids are not in the item's published id or in any sentence the producer
@@ -29,8 +28,13 @@
  *  - The DOM is a stub, the reach every civicos-ui suite has; the rendered HTML is read as text.
  *  - An item carrying BOTH an `assignee` and `recipients`: no producer publishes one (measured: `recipients` is
  *    written by `#obligationsBiasDebt` alone). The branch exists and is not driven here.
+ *  - An item with NEITHER (the "not addressed to anybody" line). RETIRED 2026-10-06 (LEGACY-UI #2, T34-77, N628; K1708):
+ *    §3 and its fixture opened a run with the machine credential, and under K1481 every AI run starts at a member's
+ *    act (ai-runs R52: a run carries the account of the member who opened it), so the plane refuses that run
+ *    (C-22.19, AI_RUN_NOT_A_MEMBER_ACT) and no run exists that names nobody. The page's "nobody" branch stays and is
+ *    not driven here. For the same reason alice connects her own account before she opens her runs.
  *
- * NEGATIVE CONTROL: arms declared and run in `queue-recipients.control.mjs` (deleted in T20); results recorded on the line below.
+ * NEGATIVE CONTROL (before §3's retirement; the counts below include it): arms declared and run in `queue-recipients.control.mjs` (deleted in T20); results recorded on the line below.
  * CONTROL RESULT 2026-09-24 (D-528 worker), `node civicos-ui/test/queue-recipients.control.mjs`, every arm armed alone
  * on the EXTRACTED script (app.html never edited, nothing to restore), each splice asserted to match exactly once:
  *   baseline      exit 0 · 15 pass / 0 fail.
@@ -72,7 +76,8 @@ const mf = new Miniflare({
   durableObjects: { STORE: { className: "Store", useSQLite: true } },
   r2Buckets: ["CAPTURES", "PUBLISHED"],
   /* pinned an hour out so the only alarm that fires is the one this suite fires by hand */
-  bindings: { ADMIN_TOKEN: ADM, MEMBER_TOKEN: "mem-d528", VERSION: "test", BIAS_DEBT_DELAY_MS: "3600000" },
+  bindings: { ADMIN_TOKEN: ADM, MEMBER_TOKEN: "mem-d528", VERSION: "test", BIAS_DEBT_DELAY_MS: "3600000",
+              ACCOUNT_SEAL_SECRET: "d528-seal-secret" },   /* a member's account reference is kept sealed (credentials R23) */
 });
 const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
 const POST = async (q, body) => rP(await (await mf.dispatchFetch(`http://x/api/?${q}`,
@@ -82,7 +87,7 @@ const E = encodeURIComponent;
 
 try {
 /* ============================================================ 0. THE GROUND */
-console.log("\n--- 0. the ground: a project run and a question run whose lens moved, and one run nobody can be named for ---");
+console.log("\n--- 0. the ground: a project run and a question run whose lens moved ---");
 const enrol = async (id, caps, role = "member") => {
   const add = await POST(`op=memberadd&token=${ADM}`, { memberId: id, cover: `cover for ${id}`, role, capabilities: caps });
   const en = await POST("op=enroll", { invite: add?.invite, handle: id, password: `${id}-passphrase-1` });
@@ -167,33 +172,29 @@ const openAs = async (tok, contextId, contextType) => {
     bounds: [{ bound: "fetches", allowed: 50, unit: "requests" }], leaseMs: 30 * 86400000 });
   return { run, started: r?.started === true, r };
 };
+/* ai-runs R52 (K1481, K1755): a run carries the account of the member whose act opened it, so alice connects her own
+   account first, through the op the plane routes (credentials R22), never by writing the store. */
+const acct = await POST(`op=accountreferenceset&token=${ALICE}`, { member: "alice", kind: "apikey", secret: "sk-d528-alice" });
 const MOV = await openAs(ALICE, P, "project");   // recipients: alice (principal) and ruth (the project's owner)
 const QMOV = await openAs(ALICE, Q, "inquiry");  // recipients: alice alone
-const NOBODY = await openAs(ADM, Q, "inquiry");  // the machine credential: no person behind it, nobody named
 lensOk.push(await writeBias("adopted", TEXT2));
 const ns = await mf.getDurableObjectNamespace("STORE");
 const obj = ns.get(ns.idFromName("bio"));
 const tick = await obj.onAlarm(Date.now() + 10 * 86400000);
 const raised = [...(tick?.biasdebt?.raised ?? [])].sort();
-ok("FIXTURE: the lens was adopted and revised through the real doors, the three runs opened, and the sweep raised "
-   + "ONE bias-debt obligation for each",
-   lensOk.every(Boolean) && MOV.started && QMOV.started && NOBODY.started
-   && JSON.stringify(raised) === JSON.stringify([MOV.run, QMOV.run, NOBODY.run].sort()),
-   JSON.stringify({ lensOk, started: [MOV.started, QMOV.started, NOBODY.started], nobody: NOBODY.r, raised }));
+ok("FIXTURE: alice connected her own account, the lens was adopted and revised through the real doors, the two runs "
+   + "opened, and the sweep raised ONE bias-debt obligation for each",
+   acct?.ok === true && lensOk.every(Boolean) && MOV.started && QMOV.started
+   && JSON.stringify(raised) === JSON.stringify([MOV.run, QMOV.run].sort()),
+   JSON.stringify({ acct, lensOk, started: [MOV.started, QMOV.started], refused: [MOV.r, QMOV.r].filter((r) => r?.started !== true), raised }));
 
 /* What the PLANE published, read once so every arm below can say which answer it rendered. */
 const planeItem = async (tok, run) => ((await GET(`op=queue&token=${tok}&limit=500`))?.items || [])
   .find((i) => i && i.kind === "bias-debt" && i.subject?.id === run) || null;
 const pMovRuth = await planeItem(RUTH, MOV.run);
-const pNobody = await planeItem(CORA, NOBODY.run);
 ok("FIXTURE: the plane NAMED alice and ruth on the project run, and left `assignee` null — the shape this item is about",
    JSON.stringify(pMovRuth?.recipients) === JSON.stringify(["alice", "ruth"]) && pMovRuth?.assignee === null,
    JSON.stringify(pMovRuth && { recipients: pMovRuth.recipients, assignee: pMovRuth.assignee }));
-ok("FIXTURE: the plane could name NOBODY on the machine credential's run, said so in its own sentence, and offers it "
-   + "to every reader (cora, named on nothing, is shown it)",
-   !!pNobody && Array.isArray(pNobody.recipients) && pNobody.recipients.length === 0 && pNobody.assignee === null
-   && typeof pNobody.recipients_stated === "string" && pNobody.recipients_stated.length > 0,
-   JSON.stringify(pNobody && { recipients: pNobody.recipients, stated: pNobody.recipients_stated }));
 /* THE INSTRUMENT: the member ids appear nowhere else the item publishes — not its id, not a sentence — so a phrase
    naming them on the page can only have come from the assignee line. */
 ok("§0 INSTRUMENT: no member id appears in the item's id, summary, basis or subject, so no other renderer answers for it",
@@ -259,17 +260,12 @@ console.log("\n--- 2. alice, the run's principal, sees both of her runs addresse
   ok("§2 and neither says it is addressed to nobody", !!bm && !!bq && !bm.includes(NOBODY_SAID) && !bq.includes(NOBODY_SAID));
 }
 
-/* ============================================================ 3. THE ONE CASE THE OLD SENTENCE IS TRUE OF */
-console.log("\n--- 3. cora sees the run nobody could be named for: THERE the item is addressed to nobody ---");
+/* ============================================================ 3. A MEMBER NAMED ON NOTHING */
+console.log("\n--- 3. cora, joined and named on nothing, is not shown the obligations that named others ---");
 {
   const html = await as("cora", CORA);
-  const bn = block(html, NOBODY.run);
-  ok("§3 cora, named on nothing, is shown the run nobody could be named for, and NOT the two that named others",
-     !!bn && !block(html, MOV.run) && !block(html, QMOV.run));
-  ok("§3 WITH BOTH `assignee` AND `recipients` EMPTY, the line still says the item is addressed to nobody",
-     !!bn && bn.includes(NOBODY_SAID) && !bn.includes("Addressed to <b>"), bn);
-  ok("§3 and the plane's own sentence about its reach is on the page beside it, verbatim",
-     !!bn && bn.includes(pNobody.recipients_stated), bn);
+  ok("§3 cora's queue holds neither run's obligation: each named its recipients, and she is not one",
+     !block(html, MOV.run) && !block(html, QMOV.run));
 }
 } finally {
   await mf.dispose();

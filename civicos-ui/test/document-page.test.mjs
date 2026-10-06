@@ -138,7 +138,7 @@ const sumIdx = html.indexOf(">Summary</h2>");
 if(sumIdx<0 || html.lastIndexOf('class="csec closed"', sumIdx) > html.lastIndexOf('class="csec"', sumIdx)) throw new Error("Summary must open expanded");
 const misses = must.filter(([n,pat])=>!html.includes(pat));
 if(misses.length) throw new Error("document page missing: "+misses.map(m=>m[0]).join("; ")+"\n---\n"+html.slice(0,600));
-if(html.includes("Could not reach the plane")) throw new Error("errPane rendered");
+if(html.includes("Could not reach this group's Civicsmith")) throw new Error("errPane rendered");   /* DEC-149 (T34-87; K1821 (2)): errPane's words */
 const headEnd = html.indexOf('id="docscroll"');
 if(html.slice(0,headEnd).includes('section class="stratum"')) throw new Error("a stratum leaked above the scroll box");
 if(!html.slice(headEnd).includes('id="s1"')||!html.slice(headEnd).includes('id="s4"')) throw new Error("strata not inside the scroll box");

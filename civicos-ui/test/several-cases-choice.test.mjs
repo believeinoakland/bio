@@ -205,9 +205,13 @@ const V1 = { name: "paper trail", claim: "The transfer followed the process the 
 const V2 = { name: "the audit", claim: "The transfer bypassed the council vote the adopted process requires.",
   description: "The audit shows the transfer happened without the required vote.", grounds: ["the audit"],
   legs: [{ target: AUDIT, ground: "the audit", grade: "A" }] };
+/* RE-ANCHORED 2026-10-06 (LEGACY-UI #2, T34-77, N628; K1708): Q no longer states `basis: [LEDGER]`. A case relies on
+   its load-bearing finding's basis, and a `collected` capture registered by hash alone is not held whole, so C-120.8
+   (RELIED_ON_NOT_PRESENTABLE) refused case X; nothing here is about presentability. And the signer attests no undeclared
+   tie (`tieAttested: true`, case-authoring R55), the act's own attestation. */
 const Q = "INQ-2026-8180-shared";
 await must(`promote ${Q}`, await promote(Q, inquiryMd(Q, { title: "Did the transfer follow the process?",
-  versions: [V1, V2], basis: [LEDGER] }), "inquiry"));
+  versions: [V1, V2] }), "inquiry"));
 const A = await createProject("oversight", projectMd("Oversight", [Q]));
 const B = await createProject("neighbours", projectMd("Neighbours", [Q]));
 const act = (verb, target, version, extra = "") =>
@@ -220,7 +224,8 @@ const publish = (project, extra = {}) => { const n = ++pubSeq; return POST(`op=p
   statement: `This case does not cover the 2025 transfers (publication ${n}).`, subjectPosition: "sought_no_answer",
   subjectJustification: `The subject was asked and declined to comment (publication ${n}).`,
   biasAcknowledgement: `The publishing project is funded by a party with an interest (publication ${n}).`,
-  excluded: [{ target: null, description: `The 2025 transfers (publication ${n})`, reason: "Out of scope." }], ...extra }); };
+  excluded: [{ target: null, description: `The 2025 transfers (publication ${n})`, reason: "Out of scope." }],
+  tieAttested: true, ...extra }); };
 const ratifyQ = (bundleSha) => POST(`op=ratify&token=${IRIS}`, { bundleId: Q, expectedSha: bundleSha, sig: signRatify(Q, bundleSha) });
 
 await must("A stands on reading 1", await act("current", Q, V1.name, `&project=${enc(A)}`));
