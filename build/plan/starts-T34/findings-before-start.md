@@ -41,3 +41,5 @@
 - publication (T34-79): calculations R9's input bytes are now also put in the evidence store at create (for publication R22), with a new column `calculations.input_shas_json` (CALCULATIONS #2).
 - control-plane (T34-60): `askusage` (`dispatch.mjs`:294) passes only `b.usage`; pass `calls: b.calls` too (ai-runs R48; agent-worker's ask sends it), K1798.
 - case-authoring (T34-48): DEC-149: `index.mjs` ~:1226 and ~:2188 carry "this plane"/"this copy" for the group's Civicsmith (BASIS-VERSIONS #12), K1799.
+- plane (T34-76): answers reads retrieval's `relations()` and `zone()` itself (ANSWERS #2): drop the `relations` dep `store.mjs` ~:207 hands it (replaces K1788's wiring line), K1803.
+- scheduler (T34-51): register with answers' `onStandingSet` (its R27) to re-arm `standing-questions` at once (ANSWERS #2), K1803.
