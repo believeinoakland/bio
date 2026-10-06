@@ -30,3 +30,7 @@ Size (session_01QNQot9KaFLXjjqCENA7QuC): test runs 10, module lines 3576
 ## J2 · REPORT
 
 acquisition (wording only): profileOf's comment and origin.test.mjs's header say "member" is for bytes a member supplied by their own act, "an upload or a knock". Under K1773 (B3) no knock is a member's own act under their session today (op=knock carries no session, capture R30), so capture's pull passes "fetch". The comment should drop "or a knock", or name the case where a knock would be one. No behaviour is affected.
+
+## J3 · COMPLETE
+
+T34-14 applied (R77, R79, R81, R83, R84; K1770's reading) and B3 (knock pull origin "fetch"). capture 129/129 pass. Users' tests: the same 14 inherited reds as tranche/T34, none new. format, architecture, coverage (57/57) and ownership: 0 failures. Record: build/jobs/T34/capture.md, Completion. 3,576 module lines.
