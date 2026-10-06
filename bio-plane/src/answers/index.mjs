@@ -1,0 +1,294 @@
+/* answers — the plane's half of the assistant (requirements: `build/requirements/answers.md`; T33-53; K1450, K1474,
+ * K1479, K1481, K1502, K1505 (14)). What an ask may read (R1, R2: `./scope.mjs`), what an answer must look like and the
+ * checks every answer passes before a member sees it (R3–R6, R22: `./check.mjs`), the rule services every rule comes
+ * from (R7–R12: `./rules.mjs`), the unattributed tallies (R13, R14), and a member's standing questions (R15–R21:
+ * `./standing.mjs`). The model only understands the member's words, writes queries, quotes and translates; it never
+ * answers from its own knowledge.
+ *
+ * REACHED as `answersOf(host, deps)`: one instance per host, created on the first call with `deps`, its tables made
+ * and declared (R23). `deps` (each an object, or a function answering one, reached lazily; an absent one answers
+ * `not_held` or is skipped where a read needs it):
+ *   record, membership   record-core and membership on the same host unless a test passes its own.
+ *   standards, content, events, entities, lines, people, duties, calculations   the owners the rule services read.
+ *   retrieval            the saved query's runner (its R70); query   query-language's `savedForm` (its R30).
+ *   relations            the relations retrieval compiles with (its R68), for R15's saved-form check.
+ *   credentials          the author's account and standing switch (its R23, R25).
+ *   ceilingRefusal       `(member, at)` → null or ai-runs' ceiling refusal (its R50), until ai-runs merges.
+ *   combine              `jurisdictions.combine` (default), over the active profiles (`record-core` R26).
+ *   now                  the module's clock, an ISO instant (default: the wall clock).
+ *
+ * No place is named here (R25): zones and rules are profile data. */
+
+import { sha256HexSync } from "../record-grammar/index.mjs";
+import { localDay, dayRange } from "../civil-time/index.mjs";
+import { recordOf } from "../record-core/index.mjs";
+import { membershipOf, listenerRefusal, notAnAdmin } from "../membership/index.mjs";
+import { AI_GRANT_TTL_SECONDS } from "../credentials/index.mjs";
+import { savedForm } from "../query.mjs";
+import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
+import { ANSWERS_TABLES, migrateAnswers } from "./schema.mjs";
+import { refusal } from "./checks.mjs";
+import { askAdmits, scrubRead } from "./scope.mjs";
+import { ReadLog } from "./readlog.mjs";
+import { checkAnswer } from "./check.mjs";
+import { BUILT_IN_SERVICES, notHeld } from "./rules.mjs";
+import * as S from "./standing.mjs";
+
+export { ANSWERS_CHECKS, refusal } from "./checks.mjs";
+export { ASK_SCOPE, askAdmits, scrubRead } from "./scope.mjs";
+export { ReadLog, textOf } from "./readlog.mjs";
+export { checkAnswer, shapeRefusal, figuresIn, ANSWER_FIELDS, SENTENCE_KINDS, RULE_LABELS, ANSWER_LABEL, LEVELS,
+         ABSENCE_TERMS } from "./check.mjs";
+export { BUILT_IN_SERVICES, RULE_SERVICE_NAMES } from "./rules.mjs";
+export { CADENCES, STANDING_TICK_MAX, STANDING_ANSWERS_MAX, STANDING_LABEL, STANDING_AI_SETTING, nextDueDay, memberOf }
+  from "./standing.mjs";
+export { ANSWERS_SCHEMA, ANSWERS_TABLES } from "./schema.mjs";
+
+/** J1 (2), K1505 (14): the copy's switch for the rule services (off until M-Q9's bar is met). */
+export const RULE_SERVICES_SETTING = "answers_rule_services";
+/** R13: the modes a tally is kept per. */
+export const ASK_MODES = Object.freeze(["ask", "standing"]);
+/** The most read logs held at once (each lives at most a grant's life). */
+const LOGS_MAX = 512;
+
+const plain = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+const filled = (v) => typeof v === "string" && v.trim() !== "";
+
+export class Answers {
+  constructor({ storage, record, membership, ...deps }) {
+    this.sql = storage.sql;
+    this.record = record;
+    this.membership = membership;
+    this.deps = deps;
+    this.resolved = new Map();
+    this.logs = new Map();
+    this.services = new Map();
+    this.answerer = null;
+    migrateAnswers(this.sql);
+  }
+
+  rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
+  one(q, ...a) { const r = this.rows(q, ...a); return r.length ? r[0] : null; }
+
+  /** A dependency named in `deps`: an object, or a function answering one, read once. */
+  dep(name) {
+    if (name === "query") return this.deps.query ?? { savedForm };
+    if (name === "ceilingRefusal") return this.deps.ceilingRefusal ?? null;
+    if (this.resolved.has(name)) return this.resolved.get(name);
+    const d = this.deps[name];
+    let v = null;
+    try { v = typeof d === "function" ? d() : d ?? null; } catch { v = null; }
+    if (v) this.resolved.set(name, v);
+    return v;
+  }
+
+  now() {
+    const n = this.deps.now;
+    const v = typeof n === "function" ? n() : n;
+    return typeof v === "string" ? v : new Date().toISOString();
+  }
+
+  /** The active profiles' combined view (`record-core` R26), or null. */
+  view() {
+    const list = this.record.getSetting("jurisdiction_profiles");
+    const comb = this.deps.combine || combineProfiles;
+    const r = comb(Array.isArray(list) ? list : []);
+    return r && r.ok ? r.view : null;
+  }
+  /** The governing time zone (`jurisdictions` R41), or null. */
+  zone() { const v = this.view(); return v && v.time_zone && filled(v.time_zone.value) ? v.time_zone.value : null; }
+  relations() { const r = this.deps.relations; try { return typeof r === "function" ? r() : r ?? null; } catch { return null; } }
+  dayStart(day, zone) { try { const r = dayRange(day, day, zone); return r && r.start ? r.start : null; } catch { return null; } }
+
+  /* ===================================================================== *
+   * THE READ LOG (R1, R2; J1 (4))
+   * ===================================================================== */
+
+  #key(grant) { return filled(grant) ? sha256HexSync(grant) : null; }
+  #sweepLogs(nowMs) {
+    for (const [k, l] of this.logs) if (l.expires !== null && l.expires <= nowMs) this.logs.delete(k);
+    while (this.logs.size > LOGS_MAX) this.logs.delete(this.logs.keys().next().value);
+  }
+  holdLog(log) { log.expires = null; this.logs.set(this.#key(log.grant), log); }
+  dropLog(grant) { const k = this.#key(grant); if (k) this.logs.delete(k); }
+
+  /** The read log of a grant (an empty one when it has read nothing). */
+  readLog(grant) {
+    this.#sweepLogs(Date.parse(this.now()));
+    const k = this.#key(grant);
+    return (k && this.logs.get(k)) || new ReadLog({ grant: grant ?? null });
+  }
+
+  #logFor(grant, viewer) {
+    const k = this.#key(grant);
+    if (!k || !filled(viewer)) return null;
+    const nowMs = Date.parse(this.now());
+    this.#sweepLogs(nowMs);
+    let l = this.logs.get(k);
+    if (!l) {
+      l = new ReadLog({ grant, viewer, at: this.now() });
+      l.expires = nowMs + AI_GRANT_TTL_SECONDS * 1000;
+      this.logs.set(k, l);
+    }
+    return l.viewer === viewer ? l : null;
+  }
+
+  /** R2: whether an id names a held bundle the viewer may not see. */
+  hidden(viewer) {
+    return (id) => {
+      if (typeof this.record.bundleInfo !== "function" || !this.record.bundleInfo(id)) return false;
+      return !this.membership.inSight(id, viewer);
+    };
+  }
+
+  /** R1, R2: a read served under a grant: refused outside ASK_SCOPE; otherwise its answer scrubbed of ties, source
+   *  links and hidden rows, recorded in the grant's read log, and answered as recorded. Writes no row (R14). */
+  logRead({ grant = null, op = null, args = null, answer = null, viewer = null } = {}) {
+    if (!askAdmits(op)) return { ok: false, reason: "GRANT_OP_REFUSED", code: "GRANT_OP_REFUSED", op: op ?? null,
+                                 detail: "an ask reads only the asking scope's reads" };
+    const log = this.#logFor(grant, viewer);
+    if (!log) return { ok: false, reason: "GRANT_OP_REFUSED", code: "GRANT_OP_REFUSED", op,
+                       detail: "a read under a grant names the grant and its member" };
+    const clean = scrubRead(answer, this.hidden(viewer));
+    log.add(op, args, clean, this.now());
+    return clean;
+  }
+
+  /* ===================================================================== *
+   * THE RULE SERVICES (R7–R12)
+   * ===================================================================== */
+
+  /** R12: a later module's rule service, once per name, at start. */
+  registerRuleService(name, fn) {
+    const bad = listenerRefusal(null, filled(name) ? name : "", fn);
+    if (bad && bad.reason === "LISTENER_MALFORMED") return bad;
+    if (name in BUILT_IN_SERVICES || this.services.has(name))
+      return refusal("RULE_SERVICE_EXISTS", `a rule service named ${name} is already held; the first stays`, { service: name });
+    this.services.set(name, fn);
+    return { ok: true, service: name };
+  }
+
+  /** J1 (2): the administrator's switch for the rule services. */
+  ruleServicesSwitch({ on = null, by = null } = {}) {
+    const m = S.memberOf(by);
+    if (!m || !this.membership.isAdministrator(m)) return notAnAdmin(by ?? null, "switching the rule services");
+    this.record.setSetting(RULE_SERVICES_SETTING, on === true, by);
+    return { ok: true, on: on === true };
+  }
+
+  /** R7: one rule service's answer, as of `at` (now when absent), recorded in the read log of the grant it was asked
+   *  under. Non-mutating; never throws. */
+  async ruleAnswer({ service = null, args = null, viewer = null, at = null, grant = null } = {}) {
+    if (this.record.getSetting(RULE_SERVICES_SETTING) !== true)
+      return refusal("RULE_SERVICES_OFF", "the rule services are switched off in this copy");
+    const fn = BUILT_IN_SERVICES[service] || this.services.get(service);
+    if (typeof fn !== "function" || !Object.hasOwn(BUILT_IN_SERVICES, service) && !this.services.has(service))
+      return refusal("RULE_SERVICE_UNKNOWN", `no rule service is named ${service}`, { service: service ?? null });
+    const asOf = filled(at) ? at : this.now();
+    const ctx = { viewer, at: asOf, dep: (n) => this.dep(n), view: () => this.view() };
+    let r;
+    try { r = await fn(plain(args) ? args : {}, ctx); }
+    catch (e) { r = notHeld("meaning", `the service failed: ${String(e && e.message || e).slice(0, 200)}`); }
+    if (!plain(r)) r = notHeld("meaning", "the service gave no answer");
+    const answer = r.not_held ? { ok: true, service, not_held: r.not_held }
+      : { ok: true, service, value: r.value ?? null, basis: r.basis ?? null, grade: r.grade ?? null, status: r.status ?? null,
+          label: r.label ?? null, as_of: asOf,
+          ...(r.quote_only !== undefined ? { quote_only: r.quote_only } : {}), ...(r.limits ? { limits: r.limits } : {}) };
+    const log = grant ? this.#logFor(grant, viewer) : null;
+    if (log) return log.addRule(scrubRead(answer, this.hidden(viewer)), asOf);
+    return answer;
+  }
+
+  /* ===================================================================== *
+   * THE CHECK AND THE TALLIES (R4, R13, R14)
+   * ===================================================================== */
+
+  /** R4 over the grant's own read log, counted (R13). */
+  check({ answer = null, grant = null, viewer = null, mode = "ask" } = {}) {
+    const log = this.readLog(grant);
+    const r = checkAnswer(answer, { readLog: log.viewer === viewer ? log : null, viewer });
+    this.countAsk({ outcome: r.ok ? "answered" : "refused", codes: r.ok ? r.withheld.map((w) => w.code) : [r.code],
+                    mode, at: this.now() });
+    return r;
+  }
+
+  /** R13: adds to the counts per local day of the group's jurisdiction and per mode. Carries no member, viewer,
+   *  question, address or answer text. */
+  countAsk({ outcome = null, codes = [], mode = "ask", at = null } = {}) {
+    if (!["answered", "refused"].includes(outcome) || !ASK_MODES.includes(mode)) return { ok: false, reason: "BAD_TALLY",
+      detail: `outcome is answered or refused; mode is one of ${ASK_MODES.join(", ")}` };
+    const when = filled(at) ? at : this.now();
+    const zone = this.zone();
+    const d = localDay(when.replace(/\.\d+Z$/, "Z"), zone || "UTC");
+    const day = typeof d === "string" ? d : when.slice(0, 10);
+    const list = (Array.isArray(codes) ? codes : []).filter(filled).map((c) => c.slice(0, 64));
+    const add = (kind, code) => this.sql.exec(`INSERT INTO answers_tallies (day, zone, mode, kind, code, n) VALUES (?,?,?,?,?,1)
+      ON CONFLICT(day, mode, kind, code) DO UPDATE SET n = n + 1`, day, zone, mode, kind, code);
+    this.record.transact(() => {
+      if (outcome === "answered") { add("answered", ""); for (const c of list) add("withheld", c); }
+      else for (const c of list.length ? list : ["UNNAMED"]) add("refused", c);
+      return { ok: true };
+    });
+    return { ok: true, day, mode };
+  }
+
+  /** R13: the counts, to an administrator only. */
+  tallies({ viewer = null, from = null, to = null } = {}) {
+    const m = S.memberOf(viewer);
+    if (!m || !this.membership.isAdministrator(m)) return notAnAdmin(viewer ?? null, "reading the assistant's tallies");
+    const lo = filled(from) ? from : "0000-00-00", hi = filled(to) ? to : "9999-99-99";
+    const rows = this.rows(`SELECT day, zone, mode, kind, code, n FROM answers_tallies WHERE day >= ? AND day <= ?
+                            ORDER BY day, mode, kind, code`, lo, hi);
+    return { ok: true, from: from ?? null, to: to ?? null, tallies: rows };
+  }
+
+  /* ===================================================================== *
+   * STANDING QUESTIONS (R15–R21)
+   * ===================================================================== */
+
+  /** R19 (J1 (5)): the administrator's switch for the AI half of standing questions (off by default). */
+  standingAiSwitch({ on = null, by = null } = {}) {
+    const m = S.memberOf(by);
+    if (!m || !this.membership.isAdministrator(m)) return notAnAdmin(by ?? null, "switching the standing questions' AI half");
+    this.record.setSetting(S.STANDING_AI_SETTING, on === true, by);
+    return { ok: true, on: on === true };
+  }
+
+  /** R19 (J1 (5)): the one module that calls the model for a standing question's new finds (K31's pattern). */
+  registerStandingAnswerer(module, fn) {
+    const bad = listenerRefusal(this.answerer, module, fn);
+    if (bad) return bad;
+    this.answerer = { module, fn };
+    return { ok: true, module };
+  }
+
+  standingQuestionSet(a) { return S.standingQuestionSet(this, a); }
+  standingQuestionRead(a) { return S.standingQuestionRead(this, a); }
+  standingQuestionsOf(a) { return S.standingQuestionsOf(this, a); }
+  standingQuestionEnd(a) { return S.standingQuestionEnd(this, a); }
+  standingDue(now) { return S.standingDue(this, now ?? this.now()); }
+  standingWake(now) { return S.standingWake(this, now ?? this.now()); }
+  standingTick(now) { return S.standingTick(this, now ?? this.now()); }
+  standingAnswersFor(a) { return S.standingAnswersFor(this, a); }
+}
+
+/* One instance per host (R23: the tables are declared once). */
+const instances = new WeakMap();
+
+/** The module's instance for a host: created on the first call with `deps`, its tables made and declared. */
+export function answersOf(host, deps) {
+  const storage = host && host.storage ? host.storage : host;
+  let a = instances.get(storage);
+  if (!a) {
+    const d = deps || {};
+    const record = d.record || recordOf(host);
+    const membership = d.membership || membershipOf(host, { record });
+    a = new Answers({ ...d, storage: d.storage || storage, record, membership });
+    instances.set(storage, a);
+    const declared = record.declareTable("answers", ANSWERS_TABLES);
+    if (!declared || declared.ok === false) throw new Error(`answers' tables could not be declared: ${JSON.stringify(declared)}`);
+  }
+  return a;
+}
+
+export { answersOps } from "./ops.mjs";
