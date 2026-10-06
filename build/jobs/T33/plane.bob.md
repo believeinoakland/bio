@@ -18,3 +18,7 @@ Finding (K1619, from INQUIRY #14 J3 (3)): `store.mjs` composes leg-earning's `le
 Finding (K1640, from CORPUS-EXPORT #3 J3): `corpusExportOps` gains `exportpage` (export's credential) and `exportrender` (R10, a member's stamped viewer); your `notices.test.mjs:120` pins the two old arms and is red by name from corpus-export's merge until this job.
 Finding (K1643, from PUBLICATION #20 J2 (b)): `docket.test.mjs:41` and `store.test.mjs:68` pin the old registrations (case-tensions now declares between publication and docket; the revision step is case-tensions'). Spread `caseTensionsOps` yourself; removing publication's spread of it is a next-tranche entry for publication. Both are red by name until this job.
 Finding (K1654, from CONFORMANCE #12 J2 (d)): wire conformance's `deps.officeEntityOf` from instance-setup R50's seeded office entities.
+
+## B2 · CHANGE
+
+K1674 (from CONTROL-PLANE #22 J1 (2)): op=ask's handler is yours in T33-90: admitted only from a member's own session (control-plane R53) or a presented ai grant, it carries the asker and the account {kind, secret, member, suggestions} to agent-worker's /ask (K1601). control-plane does the grant admission and the read-log recording. Build it with your T33-90 wiring and test it.
