@@ -67,7 +67,7 @@ test("R1 R28 TEMPLATE_NOT_NAMED (never the retired KIND_NO_TEMPLATE) also when n
   const none = world({ profiles: [] });
   const r = prep(none, none.action());
   assert.equal(r.reason, "TEMPLATE_NOT_NAMED");
-  assert.match(r.detail, /no jurisdiction profile is active/);
+  assert.match(r.detail, /your group's Civicsmith has no active jurisdiction profile/);
   const x0 = world();
   const clash = rekind(x0, "test-filings-clash", { template: attributed("TPL-test-clash", "file", "A different template {{act}}.") });
   assert.equal(validate(clash).ok, true, JSON.stringify(validate(clash).errors));
@@ -316,5 +316,5 @@ test("R20 no place, law, venue or template is named in behaviour or outward text
   assert.equal(prep(none, none.action()).reason, "TEMPLATE_NOT_NAMED");
   const block = none.f.availableActions({ determination: none.D, viewer: V("olive") });
   assert.deepEqual(block.kinds, []);
-  assert.match(block.says, /no jurisdiction profile is active/);
+  assert.match(block.says, /^your group's Civicsmith has no active jurisdiction profile, so no kind is listed$/);
 });

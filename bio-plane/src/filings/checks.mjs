@@ -62,7 +62,7 @@ export const FILINGS_CHECKS = Object.freeze({
   },
   MACHINE_CANNOT_FILE: {
     check: "C-115.13", where: at("filingRecordSent", "is-filing-sent"),
-    translation: "Only a named member can record that a filing was sent. The instance sends nothing itself.",
+    translation: "Only a named member can record that a filing was sent. Your group's Civicsmith sends nothing itself.",
   },
   NOT_APPROVED: {
     check: "C-115.14", where: at("filingRecordSent", "is-filing-sent"),

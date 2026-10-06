@@ -41,10 +41,9 @@ test("R33 the chronology is events' timeline over the act's event, the counterpa
   /* the world's lane: events' own answer for that set and those dates, in its order, each item naming its source */
   const ids = ch.set.map((i) => i.id);
   const dated = x.events.timeline({ set: ids, from: "2026-03-02", to: "2026-09-28", limit: CHRONOLOGY_MAX, viewer: V("olive") });
-  const loose = x.events.timeline({ set: ids, lanes: ["world"], limit: CHRONOLOGY_MAX, viewer: V("olive") });
   const w = ch.lanes.world;
   assert.deepEqual(w, { label: LANE_WORDS.world, items: dated.world.items.map((i) => ({ ...i, source: i.event_id })),
-                        placed_nowhere: loose.world.placed_nowhere.map((i) => ({ ...i, placed_nowhere: true, source: i.event_id })),
+                        placed_nowhere: dated.world.placed_nowhere.map((i) => ({ ...i, placed_nowhere: true, source: i.event_id })),
                         truncated: false });
   assert.deepEqual(w.items.map((i) => i.event_id), [ACT, e1, e2, e3], "events' order");
   assert.deepEqual(w.placed_nowhere.map((i) => i.event_id), [nowhere], "placed nowhere, listed apart");
@@ -60,7 +59,8 @@ test("R33 the chronology is events' timeline over the act's event, the counterpa
     { at: "2026-03-10", label: "a request sent", ref: "REF-1", kind: "sent", order: { undetermined: false }, source: "test-ours:REF-1" },
     { at: "2026-03-20", label: "a letter sent", ref: "REF-2", kind: "sent", order: { undetermined: false }, source: "test-ours:REF-2" },
     { at: null, label: "a note", ref: "REF-3", kind: "note", placed_nowhere: true, source: "test-ours:REF-3" }] });
-  assert.deepEqual(asked.at(-1), { set: ids, from: "2026-03-02", to: "2026-09-28", limit: CHRONOLOGY_MAX }, "asked for the same set and dates");
+  assert.deepEqual(asked.at(-1), { set: ids, from: "2026-03-02", to: "2026-09-28", limit: CHRONOLOGY_MAX, viewer: V("olive") },
+                   "asked for the same set and dates, with the packet's reader (events R30)");
   assert.deepEqual([ours["test-broken"].error, ours["test-broken"].items], ["the source is down", undefined]);
   assert.ok(ours.docket, "docket's registered source is answered beside the others");
   /* never interleaved: the world's lane holds events only, the sources' lane none */
@@ -145,4 +145,21 @@ test("R33 the chronology is assembled into the version and kept: a later event c
   const v2 = pack(x.f, A);
   assert.deepEqual([v2.version, v2.sections.chronology.lanes.world.items.map((i) => i.event_id)], [2, [x.ACT_EVENT, later]]);
   assert.ok(Filings.render(x.f.counselPacketRead({ id: v1.id, version: 1, viewer: V("olive") })).includes(later) === false);
+});
+
+test("R33 the chronology is one dated timeline read per reader (N602): every read names the act's date and the assembly, and the placed-nowhere items come from that same read, never from a second undated one", async () => {
+  const x = world();
+  const nowhere = x.event({ kind: "statement", concerns: [x.OFFICE] });
+  const A = x.action({ kind: "commitment_claim", counterparty: { ...OFFICE_ARM, entity_id: x.OFFICE } });
+  const reads = [];
+  const real = x.events;
+  const logged = { timeline: (q) => { reads.push(q); return real.timeline(q); }, readEvent: (q) => real.readEvent(q) };
+  const w = pack(x.filingsWith({ events: logged }), A).sections.chronology.lanes.world;
+  assert.deepEqual(w.placed_nowhere.map((i) => i.event_id), [nowhere]);
+  assert.ok(reads.length > 0 && reads.every((q) => q.from === "2026-03-02" && q.to === "2026-09-28"), JSON.stringify(reads));
+  assert.deepEqual(reads.map((q) => q.viewer), [V("olive"), "class:admin"], "one read as the reader, one as the plane (R27)");
+  /* negative control: a timeline that drops the placed-nowhere items from a dated read (as before N602) leaves none */
+  const dropping = { timeline: (q) => { const r = real.timeline(q); return q.from ? { ...r, world: { ...r.world, placed_nowhere: [] } } : r; },
+                     readEvent: (q) => real.readEvent(q) };
+  assert.deepEqual(pack(x.filingsWith({ events: dropping }), A).sections.chronology.lanes.world.placed_nowhere, []);
 });
