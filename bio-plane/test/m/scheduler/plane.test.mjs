@@ -109,9 +109,10 @@ test("R9: a resolution that marks an entity leaves the alarm armed at the connec
 test("R5, R9: a promotion that leaves an action holding a past-dated pending clock entry arms the deadline re-check, and the real alarm marks it overdue (monitoring R34, R50)", async () => {
   const obj = await store();
   const DAY = 86_400_000;
-  /* yesterday, UTC: R50's wake is the start of today, already passed, so the arm sets the real alarm and workerd fires
-     it; the plane's own clock judges the mark (actions R33), so the date must truly have passed */
-  const date = new Date(Math.floor(Date.now() / DAY) * DAY - DAY).toISOString().slice(0, 10);
+  /* two days ago, UTC: past in every zone the profile may name (the day is the group's local day, actions R12), so R50's
+     wake has passed, the arm sets the real alarm and workerd fires it; the plane's own clock judges the mark (actions
+     R33), so the date must truly have passed */
+  const date = new Date(Math.floor(Date.now() / DAY) * DAY - 2 * DAY).toISOString().slice(0, 10);
   const ACT = "ACTN-2026-0900-sched";
   const C = "2026-09-01T00:00:00Z";
   const md = ["---", `id: ${ACT}`, "object_type: action", `title: ${ACT}`, "current_state: planned", `created: "${C}"`,

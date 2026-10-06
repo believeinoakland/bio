@@ -17,6 +17,13 @@
  *  the queue re-notify's `queue`, the group-domain re-check's `instance-setup`) registers its consumer through
  *  `register` (R8). The producers' notices of the earlier modules are registered here, at
  *  construction (R9, the registration rule K206).
+ *
+ *  T33-80 (R21): six consumers of T33's new work close the registry. `follow`, `standing-questions` and `dated-waits`
+ *  are due and wake when their owners say. `duty-transitions`, `interest-checks` and `money-detectors` state no due or
+ *  wake of their own, so they run once per local day at the group's local day start (K1522), and again at the next
+ *  firing while their owner says its pass is not done (K1566); the day is `civil-time`'s in the active jurisdiction
+ *  view's time zone. Their one piece of state, the day each last finished a pass and the cursor of a pass under way, is
+ *  the storage value `sched_daily`, never a table (R18).
  * ========================================================================= */
 import { retrievalOf } from "../retrieval/index.mjs";
 import { connectionsOf } from "../connections/index.mjs";
@@ -33,6 +40,14 @@ import { monitoringOf } from "../monitoring/index.mjs";
 import { linkSweepOf } from "../link-sweep/index.mjs";
 import { entitiesOf } from "../entities/index.mjs";
 import { networkNoticesOf } from "../network-notices/index.mjs";
+import { dutiesOf } from "../duties/index.mjs";
+import { peopleOf } from "../people/index.mjs";
+import { moneyChecksOf } from "../money-checks/index.mjs";
+import { answersOf } from "../answers/index.mjs";
+import { inquiryOf } from "../inquiry/index.mjs";
+import { recordOf } from "../record-core/index.mjs";
+import { localDay, dayRange } from "../civil-time/index.mjs";
+import { combine } from "../../../jurisdictions/index.mjs";
 
 /** An alarm may fire a hair early: a consumer due within this window of the firing instant runs (R1). */
 export const SCHED_GRACE_MS = 250;
@@ -45,7 +60,8 @@ export const SCHEDULER_ORDER = Object.freeze([
   "selection-sweep", "task-drain", "archive-monitor", "connection-derive", "overdue-scan", "queue-renotify",
   "monitor-cadence", "gathering-sweep", "ai-run-reap", "capture-request-drain", "ai-run-wake", "calibration-reprobe",
   "group-domain-recheck", "bias-debt", "intent-age", "notice-sweep", "deadline-recheck", "working-on-seal",
-  "working-on-attest",
+  "working-on-attest", "follow", "duty-transitions", "interest-checks", "money-detectors", "standing-questions",
+  "dated-waits",
 ]);
 
 /** R2: each consumer's key in `onAlarm`'s answer. The task drain's counts are spread into the answer's own fields. */
@@ -55,22 +71,68 @@ export const SCHEDULER_KEYS = Object.freeze({
   "gathering-sweep": "gatheringsweep", "ai-run-reap": "airunreap", "capture-request-drain": "capturerequests", "ai-run-wake": "airunwake",
   "calibration-reprobe": "calibration", "group-domain-recheck": "groupdomain", "bias-debt": "biasdebt",
   "intent-age": "intentage", "notice-sweep": "noticesweep", "deadline-recheck": "deadlinerecheck",
-  "working-on-seal": "workingonseal", "working-on-attest": "workingonattest",
+  "working-on-seal": "workingonseal", "working-on-attest": "workingonattest", "follow": "follow",
+  "duty-transitions": "dutytransitions", "interest-checks": "interestchecks", "money-detectors": "moneydetectors",
+  "standing-questions": "standingquestions", "dated-waits": "datedwaits",
 });
 
 /** R6: due at every firing. Every other consumer is due only when its owner says so. */
 export const ALWAYS_DUE = Object.freeze(["selection-sweep", "task-drain", "archive-monitor", "connection-derive", "overdue-scan"]);
 
 /** R10: the batch-bounded ticks, which receive the rank with their `now`. */
-export const RANKED = Object.freeze(["monitor-cadence", "archive-monitor", "gathering-sweep", "capture-request-drain", "bias-debt"]);
+export const RANKED = Object.freeze(["monitor-cadence", "archive-monitor", "gathering-sweep", "capture-request-drain", "bias-debt",
+                                     "follow"]);
+
+/** R21 (K1522): the consumers whose owners state no due or wake: once per local day, and at every firing while a pass
+ *  is under way. */
+export const DAILY = Object.freeze(["duty-transitions", "interest-checks", "money-detectors"]);
+
+/** money-checks R6 takes a budget and states none; this is the one its sibling owners state as their default
+ *  (duties R13's and people R23's `budgetMs`, 1000 ms), passed until money-checks states its own (R7). */
+export const DETECTORS_BUDGET_MS = 1000;
 
 /* The answer's own fields (R2); a registered consumer's key may not take one. */
 const ANSWER_FIELDS = new Set(["swept", "drained", "created", "folded", "refused", "waiting", "remaining", "rearmed",
                                "nextAt", "probes"]);
 const DRAIN_ZERO = Object.freeze({ drained: 0, created: [], folded: [], refused: [], waiting: [], remaining: 0 });
 const PROBE_KEY = "sched_probe";
+const DAILY_KEY = "sched_daily";
 const DAY_MS = 86_400_000;
 const message = (e) => String((e && e.message) || e).slice(0, 500);
+/* An instant in ms as civil-time's instant text, at the second (ISO_TS_RE). */
+const instantText = (ms) => new Date(Math.floor(ms / 1000) * 1000).toISOString().replace(/\.\d{3}Z$/, "Z");
+/* An owner's instant: a number in ms, or instant text read to ms; anything else is none. */
+const msOf = (v) => (typeof v === "number" && Number.isFinite(v) ? v : typeof v === "string" && Number.isFinite(Date.parse(v)) ? Date.parse(v) : null);
+const nextDate = (date) => new Date(Date.parse(`${date}T00:00:00Z`) + DAY_MS).toISOString().slice(0, 10);
+
+/** The group's local day of `ms`: `{date, zone, start, next}` (`start` and `next` the instants in ms its day and the
+ *  next begin), through `civil-time.localDay` and `dayRange` in `zone`. With no zone, or one civil-time refuses, the UTC
+ *  day, answered with `zone: null` so the answer says which day it read. */
+export function localDayOf(ms, zone) {
+  if (typeof zone === "string" && zone) {
+    try {
+      const date = localDay(instantText(ms), zone);
+      if (typeof date === "string") {
+        const a = dayRange(date, date, zone), b = dayRange(nextDate(date), nextDate(date), zone);
+        if (a && typeof a.start === "string" && b && typeof b.start === "string")
+          return { date, zone, start: Date.parse(a.start), next: Date.parse(b.start) };
+      }
+    } catch { /* read as the UTC day below */ }
+  }
+  const start = Math.floor(ms / DAY_MS) * DAY_MS;
+  return { date: instantText(start).slice(0, 10), zone: null, start, next: start + DAY_MS };
+}
+
+/** The active jurisdiction view's time zone (record-core's `jurisdiction_profiles`, combined by `jurisdictions`), or
+ *  null when none is held. */
+export function viewZone(record) {
+  try {
+    const ids = record && typeof record.getSetting === "function" ? record.getSetting("jurisdiction_profiles") : null;
+    const c = Array.isArray(ids) && ids.length ? combine(ids) : null;
+    const z = c && c.ok && c.view && c.view.time_zone ? c.view.time_zone.value : null;
+    return typeof z === "string" && z ? z : null;
+  } catch { return null; }
+}
 
 /** R10: the rank. `items` are `{kind, id, waitingSince?, cadenceMs?}` (`kind` one of `address`, `bundle`, `request`,
  *  as intent's `servesOf` names subjects, or `sweep`, `"<bundle>#<id>"` (link-sweep R4), which serves what its
@@ -107,15 +169,59 @@ export class Scheduler {
   #storage; #env; #owners; #registered = new Map(); #registeredOrder = [];
   /* deadline-recheck: the firing instant of its last tick that marked nothing, or null (see the consumer). */
   #deadlineIdleAt = null;
+  /* R21, the daily consumers: `{[name]: {day, cursor, more}}` as the value `sched_daily` holds it (null until read),
+     and the names whose last pass found nothing to work over, which want no wake until the instance's next start. */
+  #daily = null; #dailyIdle = new Set(); #zone;
 
-  /** `storage` is the Durable Object's storage (its alarm, and the probe seam's one value); `owners` answers each
-   *  consumer's owner (`retrieval`, `monitoring`, `connections`, `progressions`, `aiRuns`, `captureRequests`,
-   *  `calibration`, `bias`, `intent`, `reevaluation`, `networkNotices`, `linkSweep`), each a function returning the owner, so an owner is reached
-   *  only when the registry is built. */
-  constructor({ storage, env = null, owners = {} } = {}) {
+  /** `storage` is the Durable Object's storage (its alarm, and the probe seam's and the daily consumers' values);
+   *  `owners` answers each consumer's owner (`retrieval`, `monitoring`, `connections`, `progressions`, `aiRuns`,
+   *  `captureRequests`, `calibration`, `bias`, `intent`, `reevaluation`, `networkNotices`, `linkSweep`, `following`,
+   *  `duties`, `people`, `moneyChecks`, `answers`, `inquiry`), each a function returning the owner, so an owner is
+   *  reached only when the registry is built; `zone()` answers the group's time zone or null (R21's local day). */
+  constructor({ storage, env = null, owners = {}, zone = null } = {}) {
     this.#storage = storage;
     this.#env = env || {};
     this.#owners = owners;
+    this.#zone = typeof zone === "function" ? zone : () => null;
+  }
+
+  #day(now) { let z = null; try { z = this.#zone(); } catch { z = null; } return localDayOf(now, z); }
+  #dailyOwned() { return DAILY_OWNER.some(([, o]) => this.#owners[o]); }
+  /* The daily consumers' state, read once per instance before a firing, an arm or the start reads a due or a wake. */
+  async #loadDaily() {
+    if (this.#daily || !this.#dailyOwned()) return;
+    let v = null;
+    try { v = typeof this.#storage.get === "function" ? await this.#storage.get(DAILY_KEY) : null; } catch { v = null; }
+    this.#daily = v && typeof v === "object" ? v : {};
+  }
+
+  /* R21: a consumer whose owner states no due or wake. `run(now, cursor)` calls the owner and answers its answer;
+     `read(answer)` answers `{more, cursor, nothing}`: whether the pass is under way, where it resumes, and whether it
+     found nothing at all to work over. Due at the local day's start until a pass finishes that day; due at every
+     firing while one is under way; a pass that throws or is refused counts the day as run, so it never spins (R3). */
+  #dailyConsumer(name, key, run, read) {
+    const st = () => (this.#daily && this.#daily[name]) || {};
+    const want = (now, today) => {
+      const s = st();
+      if (s.more) return now;
+      if (this.#dailyIdle.has(name)) return null;
+      return s.day === today.date ? null : today.start;
+    };
+    return {
+      due: (now) => want(now, this.#day(now)),
+      wake: (now) => { const today = this.#day(now); const w = want(now, today); return w !== null || this.#dailyIdle.has(name) ? w : today.next; },
+      tick: async (now) => {
+        const today = this.#day(now), s = st();
+        const settle = (v) => { this.#daily = { ...(this.#daily || {}), [name]: v }; };
+        let r;
+        try { r = await run(now, s.more ? s.cursor ?? null : null); }
+        catch (e) { settle({ day: today.date, cursor: null, more: false }); throw e; }
+        const ok = !(r && r.ok === false);
+        const { more = false, cursor = null, nothing = false } = ok ? read(r || {}) : {};
+        settle(more ? { day: s.day ?? null, cursor, more: true } : { day: today.date, cursor: null, more: false });
+        if (!more && nothing) this.#dailyIdle.add(name); else this.#dailyIdle.delete(name);
+        return { [key]: { ...(r && typeof r === "object" ? r : { answer: r }), local_day: { date: today.date, zone: today.zone } } };
+      } };
   }
 
   #owner(name) { const f = this.#owners[name]; return typeof f === "function" ? f() : null; }
@@ -198,6 +304,33 @@ export class Scheduler {
         due: (now) => instant(o("networkNotices").attestDue(now), now), wake: (now) => o("networkNotices").attestWake(now),
         tick: async (now) => ({ workingonattest: await o("networkNotices").attestTick(now) }) };
     }
+    /* ---- R21: the consumers of T33's new work ---- */
+    /* An owner's due as an instant: `true` is now, an instant (ms or text) is itself, anything else none. */
+    const dueOf = (v, now) => (v === true ? now : msOf(v));
+    /* answers R17's due is how many questions are due: any is now. */
+    const counted = (v, now) => (typeof v === "number" && v > 0 ? now : null);
+    if (this.#owners.following) c["follow"] = {   /* following R12, R13: batch-bounded, given the rank (R10) */
+      due: (now) => dueOf(o("following").followDue(now), now), wake: (now) => msOf(o("following").followWake(now)),
+      tick: async (now, rank) => ({ follow: await o("following").followTick(now, rank) }) };
+    if (this.#owners.duties) c["duty-transitions"] = this.#dailyConsumer("duty-transitions", "dutytransitions",   /* duties R13 */
+      (now, cursor) => o("duties").recordTransitions({ asOf: instantText(now), ...(cursor ? { cursor } : {}) }),
+      (r) => ({ more: r.done === false, cursor: r.cursor ?? null, nothing: r.duties_read === 0 }));
+    if (this.#owners.people) c["interest-checks"] = this.#dailyConsumer("interest-checks", "interestchecks",   /* people R23 */
+      () => o("people").evaluateChecks({}),   /* people holds its own cursor */
+      (r) => ({ more: r.remaining === true, cursor: null, nothing: r.evaluated === 0 }));
+    if (this.#owners.moneyChecks) c["money-detectors"] = this.#dailyConsumer("money-detectors", "moneydetectors",   /* money-checks R6 */
+      (now, cursor) => o("moneyChecks").runDetectors({ budgetMs: DETECTORS_BUDGET_MS, cursor }),
+      (r) => ({ more: r.remaining === true || !!r.cursor, cursor: r.cursor ?? null, nothing: r.detectors === 0 }));
+    /* answers R17 and inquiry R57 read `now` as instant text and answer wakes as instant text. A consumer due now
+       wants now, whatever its owner's wake says of later days. */
+    if (this.#owners.answers) c["standing-questions"] = {
+      due: (now) => counted(o("answers").standingDue(instantText(now)), now),
+      wake: (now) => (counted(o("answers").standingDue(instantText(now)), now) !== null ? now : msOf(o("answers").standingWake(instantText(now)))),
+      tick: async (now) => ({ standingquestions: await o("answers").standingTick(instantText(now)) }) };
+    if (this.#owners.inquiry) c["dated-waits"] = {
+      due: (now) => (o("inquiry").datedWaitsDue(instantText(now)) === true ? now : null),
+      wake: (now) => (o("inquiry").datedWaitsDue(instantText(now)) === true ? now : msOf(o("inquiry").datedWaitsWake(instantText(now)))),
+      tick: async (now) => ({ datedwaits: await o("inquiry").datedWaitsTick(instantText(now)) }) };
     return c;
   }
 
@@ -264,6 +397,7 @@ export class Scheduler {
 
   async onAlarm(now = Date.now()) {
     const probe = await this.#probeState(now, true);
+    await this.#loadDaily();
     const reg = this.registry(probe);
     const answers = {};
     const probes = [];
@@ -284,6 +418,10 @@ export class Scheduler {
        spent, so the fresh earliest wake is set outright (R1, R16). */
     const nextAt = await this.#reconcile(now, reg, true, answers);
     if (probe) await this.#storage.put(PROBE_KEY, probe);
+    if (this.#daily && DAILY.some((n) => reg.some((c) => c.name === n)) && typeof this.#storage.put === "function") {
+      /* a storage that cannot hold the value keeps it for this instance alone; the firing still answers */
+      try { await this.#storage.put(DAILY_KEY, this.#daily); } catch { /* kept in memory */ }
+    }
     /* R2: the drain's counts (zero when it did not tick); a drain that threw is answered under its key (R3). */
     const { swept = 0, drain = null, ...rest } = answers;
     const d = drain && !drain.error ? { ...DRAIN_ZERO, ...drain } : DRAIN_ZERO;
@@ -317,15 +455,19 @@ export class Scheduler {
    *  work; answers the alarm as it stands. */
   async arm(now = Date.now()) {
     const probe = await this.#probeState(now, true);
+    await this.#loadDaily();
     const at = await this.#reconcile(now, this.registry(probe), false);
     if (probe) await this.#storage.put(PROBE_KEY, probe);
     return at;
   }
 
   /** At the instance's start: reconciles as `arm` does, so an alarm lost to a failed firing or a reset is re-derived
-   *  from durable state. It starts no probe that was not already armed. */
+   *  from durable state. It starts no probe that was not already armed. A daily consumer found idle before is asked
+   *  again (R21): its owner's work may have grown since. */
   async start(now = Date.now()) {
     const probe = await this.#probeState(now, false);
+    this.#dailyIdle.clear();
+    await this.#loadDaily();
     return await this.#reconcile(now, this.registry(probe), false);
   }
 
@@ -358,8 +500,14 @@ export class Scheduler {
 
   /** Registers `arm` with each notice an earlier producer offers (K72 (9), K206). Each listener only schedules.
    *  Whether monitoring is configured is asked of the `monitoring` owner when a notice arrives. */
-  listenTo({ retrieval, bias, promotion, capture, progressions, calibration, aiRuns, captureRequests, entities } = {}) {
+  listenTo({ retrieval, bias, promotion, capture, progressions, calibration, aiRuns, captureRequests, entities, inquiry } = {}) {
     const arm = () => this.arm();
+    /* A notice told inside its owner's transaction, where no storage call may be awaited: the arm is deferred until
+       the transaction has returned, once however many notices it told. */
+    const deferred = () => {
+      let queued = null;
+      return () => { queued ||= Promise.resolve().then(() => { queued = null; return arm(); }).catch(() => null); return undefined; };
+    };
     const monitoring = (ask) => {
       if (!this.#owners.monitoring) return false;
       try { const m = this.#owner("monitoring"); return !!(m && ask(m)); } catch { return false; }
@@ -394,16 +542,16 @@ export class Scheduler {
     /* entities R13: its listeners run inside the resolving transaction, where no storage call may be awaited, so the
        arm is deferred until the transaction has returned, once however many resolutions it inserted or raised; the
        reconcile then reads connections' wake over the entity it marked (connections R17, R18). */
-    if (entities) {
-      let queued = null;
-      out.entities = entities.onResolved("scheduler", () => {
-        queued ||= Promise.resolve().then(() => { queued = null; return arm(); }).catch(() => null);
-        return undefined;
-      });
-    }
+    if (entities) out.entities = entities.onResolved("scheduler", deferred());
+    /* inquiry R54 (K1601): a dated wait set or re-dated, told inside the promotion's transaction; the reconcile then
+       reads the dated waits' wake (R21). */
+    if (inquiry) out.inquiry = inquiry.onWaitSet("scheduler", deferred());
     return out;
   }
 }
+
+/* R21: each daily consumer and the owner it calls. */
+const DAILY_OWNER = Object.freeze([["duty-transitions", "duties"], ["interest-checks", "people"], ["money-detectors", "moneyChecks"]]);
 
 const instances = new WeakMap();
 
@@ -417,13 +565,16 @@ export function schedulerOf(ctx, env = null, deps = {}) {
       aiRuns: () => aiRunsOf(ctx, e), captureRequests: () => captureRequestsOf(ctx), calibration: () => calibrationOf(ctx),
       bias: () => biasOf(ctx), intent: () => intentOf(ctx), reevaluation: () => reevaluationOf(ctx),
       networkNotices: () => networkNoticesOf(ctx, { env: e }), linkSweep: () => linkSweepOf(ctx),
+      duties: () => dutiesOf(ctx), people: () => peopleOf(ctx), moneyChecks: () => moneyChecksOf(ctx),
+      answers: () => answersOf(ctx), inquiry: () => inquiryOf(ctx),
     };
-    s = new Scheduler({ storage: deps.storage || ctx.storage, env: e, owners });
+    const zone = deps.zone || (() => viewZone(recordOf(ctx)));
+    s = new Scheduler({ storage: deps.storage || ctx.storage, env: e, owners, zone });
     instances.set(ctx, s);
     if (!deps.owners)
       s.listenTo({ retrieval: retrievalOf(ctx), bias: biasOf(ctx), promotion: promotionOf(ctx), capture: captureOf(ctx),
                    progressions: progressionsOf(ctx, { env: e }), calibration: calibrationOf(ctx), aiRuns: aiRunsOf(ctx, e),
-                   captureRequests: captureRequestsOf(ctx), entities: entitiesOf(ctx) });
+                   captureRequests: captureRequestsOf(ctx), entities: entitiesOf(ctx), inquiry: inquiryOf(ctx) });
   }
   return s;
 }
