@@ -32,3 +32,17 @@ Red in my suite now: "R43 … every published fence" (J2's two codes) and R53's 
 ## J4 · REPORT
 
 B6 (K1686): answers' answers/checks.mjs is already in CHECK_FAMILY_FILES on job/T33/control-plane (since 07b446fd7f, in answers' place after skills; all 12 ANSWERS_CHECKS rows decorate with their own check); affordances read tranche/T33, which does not carry my branch yet. Tranche (affordances) merged; totality.test.mjs red only on the ops op-declarations has not declared, as K1686 names. Still waiting on OP-DECLARATIONS #10's merge for R53's three tests.
+
+## J5 · COMPLETE
+
+T33-89 complete on `job/T33/control-plane` (merged with `tranche/T33` after op-declarations, K1687).
+
+**Applied.** R53 (K1122, K1674, K1684, K1685, K1687): T33's ops stamped from op-declarations' `OP_STAMPS` (`viewer`, `by`, `bodyBy`, `author`, `proposer`, `member`, `session`), each key set once from the credential after the caller's copy is deleted; standards' five T33 acts body-stamped as `STANDARDS_ACTIONS`; an ask's grant admitted through the store-internal `aigrantadmit` for `AI_GRANT_OPS` and the ask's four calls, `grant` stamped and `grantMember` handed to `gatedOp`; every read under a grant recorded through `store.logRead` in the store's door (fail closed); `askceiling`, `askusage`, `askcheck` routed to ai-runs and answers. R22/R43: `CHECK_FAMILIES` reads events', money-checks', duties' (C-133), hypotheses' (C-134), answers' (C-135) and case-tensions' (C-92) families, in `build/modules.json` order (local-facts, standards, observation-log as T33 placed them). Reds cleared: sources' R26 test (`sourcekeyed`), the fence-hash pin (C-91.1, C-113.5, C-114.4, C-114.7 re-pinned; C-114.5 retired), CHECK_FAMILIES is total, C-120.14–.16; `declarations.test.mjs` green. sheet-worker joins `members-pin.test.mjs` (K1531; my part only: instance-setup's `FLEET_BINDINGS` and bundler's `deploybindings.test.mjs` are theirs).
+
+**Deferred:** none of mine. **Size over the guard:** +94 lines (3,729 → 3,824), reported J3, accepted K1685.
+
+**Found in other modules.** (1) J2 (K1679, N608): duplicated codes; my "R43, R22 … every published fence" test is an accepted red on `NO_SUCH_PROPOSAL` and `NO_STATEMENT` only, until T34-22 and T34-30 merge. (2) **`totality.test.mjs` (R2, R41) is red on affordances' and op-declarations' disagreement, no code of mine**: stale `exportpage`, `moneydetectorsrun` (affordances' `NON_ACTS`, but op-declarations gives neither a `NEEDS` row) and `platformhosts` (affordances' name; op-declarations declares `capturerequestplatformhosts`); unpublished `ask`, `assistantstate`, `capturerequestplatformhosts`, `disclosureof`, `disclosureshown`, `seatsseed`, `standardinforce`; unranked `ask`, `askusage`, `disclosureshown`, `seatsseed`. The fix is affordances' tables (or op-declarations' names); I ask it be named a red until then. (3) PLANE #22 must hand `store.logRead` (K1685) and serve `op=ask` (K1674). (4) credentials: `aiGrantHeld` (N616).
+
+**Tests and checks.** `node --test test/m/control-plane/*.test.mjs`: tests 168, pass 166, fail 2 (the two above). `format`: 0 failures; `architecture control-plane`: 0 failures; `coverage control-plane`: 37 of 37 live ids named; `ownership control-plane tranche/T33`: 9 files, 0 failures.
+
+Size (session_01UETyjcyNgjnaiAejJzFVhk): test runs 16, module lines 3824
