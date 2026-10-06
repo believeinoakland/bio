@@ -48,6 +48,10 @@
 
 - N572 · the module that runs wizards (BOB names it when the wizard runner is built) · DEC-140 (UX-DESIGN U61; K1591): the wizard guide's "Show me where" on every step that names a control, shortcut Alt+Shift+W (changeable in the member's settings): scrolls the control into view, redraws the ring, moves keyboard focus; under reduced motion scrolls and focuses without animating. No requirement change. **Hard reason:** DEC-140 is not on `main` until PR #11 merges at T33's close, and the wizard runner is not yet built.
 
+- N573 · `lines`, `people` · a `holds` line carries the title as written (its cited document's words), so people R15's `careerOf` answers it; today it is always null (PEOPLE #2 J4 (1); K1592). **Hard reason:** arose in T33 L5 after lines' merge (P10: an entry arising during a tranche goes to the next plan).
+
+- N574 · `jurisdictions` (profile data) · an identifier scheme for institutions in the held profiles (test-port-ellery's and oakland-alameda's identify persons only), so people R15's issuer identifier on a `credentialed_by` line can be held through entities R43 (PEOPLE #2 J4 (2); K1592). **Hard reason:** the order: jurisdictions (L1) is closed.
+
 Otherwise none yet. T33's release at its close (K1501) runs the deployment-gated measurements; the work they unlock is written here then.
 
 ## Carried from T33
