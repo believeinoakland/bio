@@ -25,13 +25,22 @@
    (D-365): `bundles` (record-core R37), `content` (content R45), `readings.content_type` (extraction R58) and the
    reading's date through `extraction.readingOf` (R30), and `inquiry_basis`, `inquiry_bundle_facts.inquiry_subject_entity`
    (inquiry R40; on `bundles` until N136's rest moved it, T19), `inquiry_basis_versions`, `inquiry_basis_version_legs`
-   and `resolutions` as their owners' read contracts (CONTRADICTION #1 QUESTION J1). */
+   and `resolutions` as their owners' read contracts (CONTRADICTION #1 QUESTION J1).
+
+   T33-48 (K1470, K1487): K4's dates are the documents' own, as `events` holds them for each capture (its dated facts,
+   R27's `datedFactsFor`), compared by `civil-time.compare` and never as raw strings (R9); a sixth key, K6, pairs two
+   amounts `money` holds for one transfer (its read contract `money_facts`, R19 there, and `reconcile`, R11 there); the
+   module registers as a connection owner (`connection-grammar`, R58 here) and declares its tables explicitly (R59). */
 import { recordOf } from "../record-core/index.mjs";
 import { viewerPredicate, GATE_MARK, membershipOf, noSuchProject, notAParticipant } from "../membership/index.mjs";
 import { extractionOf } from "../extraction/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { entitiesOf } from "../entities/index.mjs";
 import { basisVersionsOf, versionsIn } from "../basis-versions/index.mjs";
+import { eventsOf } from "../events/index.mjs";
+import { moneyOf } from "../money/index.mjs";
+import { compare, bounds } from "../civil-time/index.mjs";
+import { defaultRegistry, derivedId, isRecordId, BOUNDS, LOWEST_GRADE } from "../connection-grammar/index.mjs";
 /* `inquiry`'s N345 services (its R46–R48) are read through the namespace, so a name its job has not yet exported reads
    `undefined` rather than failing the import: this module is built against their stated interface (START, K481). */
 import * as inquiryModule from "../inquiry/index.mjs";
@@ -43,13 +52,13 @@ import { CONTRADICTION_LABELS, JUDGEMENT_PROMPT, JUDGEMENT_PROMPT_SHA256, judgem
          renderJudgementInput, RECOMMEND_PROMPT, RECOMMEND_PROMPT_SHA256 } from "../contradiction.mjs";
 import { CONTRADICTION_SCHEMA, CONTRADICTION_COLUMNS } from "./schema.mjs";
 import { CONTRADICTION_PAIR_CHECKS, CONTRADICTION_CANDIDATE_CHECKS } from "./checks.mjs";
-import { WEIGHTS, STATES, K5_GATE_MEASURED, K5_UNSHOWN_WHY, weightOf, stateOf, isClosed, isProjectConflict,
-         isStanding } from "./derive.mjs";
+import { WEIGHTS, STATES, K5_GATE_MEASURED, K5_UNSHOWN_WHY, K6_GATE_MEASURED, K6_UNSHOWN_WHY, weightOf, stateOf, isClosed,
+         isProjectConflict, isStanding } from "./derive.mjs";
 import { fmSafe, setFrontmatterLines, appendSessionLog, setOrAddScalar, rand } from "./text.mjs";
 
 export { CONTRADICTION_LABELS, JUDGEMENT_PROMPT, JUDGEMENT_PROMPT_SHA256, judgementSide, renderJudgementInput,
          RECOMMEND_PROMPT, RECOMMEND_PROMPT_SHA256, CONTRADICTION_PAIR_CHECKS, CONTRADICTION_CANDIDATE_CHECKS,
-         CONTRADICTION_SCHEMA, WEIGHTS, STATES, K5_GATE_MEASURED };
+         CONTRADICTION_SCHEMA, WEIGHTS, STATES, K5_GATE_MEASURED, K6_GATE_MEASURED };
 
 /* R22, R47 (K23): the tables this module owns, each keyed to a bundle by both sides' (and, for an opt-in or a
    response, by its project too). */
@@ -108,6 +117,8 @@ export const NOTICE_SENTENCE = "Something this project rests on is in conflict w
    reach of a duty and a candidate's parties are about the record, never about who asks. What a viewer is then shown
    is gated separately. */
 const INTERNAL = "class:daemon";
+/* A side's home that is no longer held: seen by nobody (fail closed). */
+const MISSING = Symbol("missing");
 
 /** The keys, section 4, as the VOCABULARY rather than as four spellings in four places (PL-17's rule: the vocabulary
  *  travels with the answer). Section 4: *keys are ADDED, not tuned* (R18) — a fifth key is a design change and a new
@@ -134,11 +145,17 @@ export const CONTRADICTION_KEYS = Object.freeze({
   K5: Object.freeze({ key: "K5", name: "one question, two projects' conclusions", feeds: "record",
         join: "two projects whose stances on the SAME inquiry are both concluded, adopting claims whose text differs",
         why: "two projects answered one question differently" }),
+  /* T33-48 (ladders §5C.4): added, not tuned (R18). Two readings of the amount of one transfer: the same payer and
+     payee, kind and phase or stage, over overlapping periods, whose amounts `money.reconcile` does not find consistent. */
+  K6: Object.freeze({ key: "K6", name: "two amounts for one transfer", feeds: "world",
+        join: "two money facts naming the same payer and payee entities, the same kind and phase or stage, and periods "
+            + "that overlap, whose amounts money's reconciliation does not find consistent",
+        why: "two sources state different amounts for what reads as one transfer" }),
 });
 
 /* R11: each key's own last level, named when every rung of its ladder is present and the join still formed nothing. */
 const LAST_LEVEL = Object.freeze({ K1: "shared_side", K2: "shared_subject", K3: "shared_referent", K4: "discriminator",
-                                   K5: "shared_question" });
+                                   K5: "shared_question", K6: "shared_transfer" });
 
 /** R11: the sentence a member reads when a key found nothing. ONE place, so a surface renders what the plane holds
  *  and never composes this itself — the second place a distinction is made is the first place it can drift. */
@@ -193,9 +210,21 @@ export const CONTRADICTION_ABSENCE = Object.freeze({
                  + "agreement in the claims adopted, as far as their text goes, not a finding that they agree",
   shared_question: "projects have concluded with differing answers, but never on the SAME question. Each question "
                  + "has at most one concluded answer, so no question is answered two ways here",
+  money_fact: "no money fact you can see is held. K6 compares two amounts stated for one transfer, so there is "
+            + "nothing to compare until amounts are read from the record's sources",
+  same_parties: "money facts are held and no two of them name the same payer and the same payee entity. A fact "
+              + "whose payer or payee is a fund or an unresolved name is not compared here",
+  same_stage_period: "facts name the same payer and payee, and no two of them share a kind and a phase or stage over "
+                   + "periods that overlap. Amounts at different stages or for different periods are different "
+                   + "quantities, not two readings of one",
+  differing_amount: "facts read as one transfer, and none of them states an amount that differs from another's. "
+                  + "That is agreement in the figures as written, not a finding that the transfer is settled",
+  shared_transfer: "facts read as one transfer state different figures, and each pair agrees within the coarser "
+                 + "figure's precision, or its periods' ends are not stated. The counts beside this say which",
   discriminator: "documents sharing a subject were found and NOT ONE pair could be told apart by "
-               + "kind or by date. Either the readers state the same kind and the same date on "
-               + "both, or they state neither — and where a value is missing the pair was left "
+               + "kind or by date. Either their readers state the same kind and the record holds the same "
+               + "own date for both, or a kind or a date is not held, or the two dates cannot be put in order "
+               + "at the precision held — and where a value or an order is missing the pair was left "
                + "unformed rather than guessed. The counts beside this say which",
 });
 
@@ -207,12 +236,15 @@ const RUN_GATE_DECLARED = "RUN_GATE_DECLARED";
 const RUN_GATE_MALFORMED = "RUN_GATE_MALFORMED";
 
 const instances = new WeakMap();
+/* R58 (K1563 (1)): every instance this isolate made, so the owner registered at load finds the one there is when the
+   registry passes no host. */
+const live = new Set();
 
 /** K61: the one Contradiction for this object's storage. `opts` is read on the first call only: `record`
- *  (`recordOf(ctx)`), `extraction` (`extractionOf(ctx)`), `membership`, `promotion`, `entities`, `basisVersions`
- *  (each its module's factory), `inquiry` (inquiry's N345 services, R46–R48: by default its module's exports and its
- *  instance's `contradictionLink` and `inquiryOfCandidate`), `now` (a clock). Every service but `record` is reached on
- *  first use. A test may pass its own. The promotion check (R38) is registered here, once. */
+ *  (`recordOf(ctx)`), `extraction` (`extractionOf(ctx)`), `membership`, `promotion`, `entities`, `basisVersions`,
+ *  `events`, `money` (each its module's factory), `inquiry` (inquiry's N345 services, R46–R48: by default its module's
+ *  exports and its instance's `contradictionLink` and `inquiryOfCandidate`), `now` (a clock). Every service but
+ *  `record` is reached on first use. A test may pass its own. The promotion check (R38) is registered here, once. */
 export function contradictionOf(ctx, opts = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
   let c = instances.get(storage);
@@ -226,9 +258,12 @@ export function contradictionOf(ctx, opts = {}) {
       promotion: lazy(opts.promotion, () => promotionOf(ctx, { record })),
       entities: lazy(opts.entities, () => entitiesOf(ctx, { record })),
       basisVersions: lazy(opts.basisVersions, () => basisVersionsOf(ctx, { record })),
+      events: lazy(opts.events, () => eventsOf(ctx, { record })),
+      money: lazy(opts.money, () => moneyOf(ctx, { record })),
       inquiry: lazy(opts.inquiry, () => inquiryServices(ctx)),
     });
     instances.set(storage, c);
+    live.add(c);
     const promotion = typeof opts.promotion === "object" && opts.promotion ? opts.promotion : promotionOf(ctx, { record });
     if (promotion && typeof promotion.registerStep === "function")
       promotion.registerStep("contradiction", { check: (step) => c.promotionCheck(step) });
@@ -253,12 +288,46 @@ export function inquiryServices(ctx) {
   };
 }
 
+/* ---- R58: the connection owner (connection-grammar R2, R6–R9; K1487) ---- */
+
+/** R58: the owner, its one kind with the members' word (K1486) and its class (K1521). A candidate is the pairing's and a
+ *  run's derivation, labelled machine work; it is never evidence, and a chain through it is a lead. */
+export const CONNECTION_OWNER = "contradiction";
+export const CONNECTION_KIND = "in_tension_with";
+export const CONNECTION_KINDS = Object.freeze([Object.freeze({ kind: CONNECTION_KIND, word: "in tension with", class: "derived" })]);
+/* A candidate states no dates: its `valid` is unstated, so at any date asked it is undetermined, never out. The zone
+   names no place (R23); with no bound stated it is never read. */
+const UNDATED = Object.freeze({ from: null, to: null, precision: "day", zone: "UTC" });
+const UNDATED_WHY = "a candidate states no dates: when its two sides came to be in tension is not stated, so whether "
+  + "it holds at the date asked is undetermined, never out";
+
+/** R58 (K1563 (1)): the read the owner registers at load. The registry passes `host` through unchanged: with one, that
+ *  host's instance answers; without one, the isolate's one instance; otherwise `OWNER_HOST_AMBIGUOUS`. */
+export function ownerNeighbours(args) {
+  const a = args && typeof args === "object" && !Array.isArray(args) ? args : {};
+  const { host, ...rest } = a;
+  let c = null;
+  if (host !== undefined && host !== null) c = instances.get(host.storage ? host.storage : host) ?? null;
+  else if (live.size === 1) c = [...live][0];
+  if (!c) return { refused: "OWNER_HOST_AMBIGUOUS",
+                   why: host ? "no contradiction instance is made over that host"
+                     : `${live.size} contradiction instances are made in this isolate and the read names no host` };
+  return c.neighbours(rest);
+}
+/* R58: registered once, at load, into the registry the plane wires (connection-grammar R5). A refusal leaves the owner
+   unregistered, never the module unloaded. */
+export const OWNER_REGISTRATION = (() => {
+  try { return defaultRegistry.registerOwner({ owner: CONNECTION_OWNER, kinds: CONNECTION_KINDS.map((k) => ({ ...k })),
+                                               neighbours: ownerNeighbours }); }
+  catch (e) { return { refused: "OWNER_FAILED", why: String(e && e.message || e) }; }
+})();
+
 export class Contradiction {
   #sql; #record; #extraction; #now; #runGate = null; #declared = false;
-  #membership; #promotion; #entities; #bv; #inquiry;
+  #membership; #promotion; #entities; #bv; #inquiry; #events; #money;
 
   constructor(storage, { record, extraction = null, now = null, membership = null, promotion = null, entities = null,
-                         basisVersions = null, inquiry = null } = {}) {
+                         basisVersions = null, inquiry = null, events = null, money = null } = {}) {
     this.#sql = storage.sql;
     this.#record = record;
     this.#extraction = extraction;
@@ -267,6 +336,8 @@ export class Contradiction {
     this.#entities = entities;
     this.#bv = basisVersions;
     this.#inquiry = inquiry;
+    this.#events = events;
+    this.#money = money;
     this.#now = typeof now === "function" ? now : () => new Date().toISOString();
   }
 
@@ -279,11 +350,13 @@ export class Contradiction {
   #e() { return typeof this.#entities === "function" ? (this.#entities = this.#entities()) : this.#entities; }
   #b() { return typeof this.#bv === "function" ? (this.#bv = this.#bv()) : this.#bv; }
   #i() { return typeof this.#inquiry === "function" ? (this.#inquiry = this.#inquiry()) : (this.#inquiry || {}); }
+  #ev() { return typeof this.#events === "function" ? (this.#events = this.#events()) : this.#events; }
+  #mo() { return typeof this.#money === "function" ? (this.#money = this.#money()) : this.#money; }
 
   /* ---- boot (K4) ---- */
 
   /** This module's tables at every boot, idempotent (the columns added since a table was first created included),
-   *  and the purge declaration (R22, R47) once. */
+   *  and their declaration (R59) once. */
   migrate() {
     const bare = CONTRADICTION_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
     for (const st of bare.split(";")) { const t = st.trim(); if (t) this.#sql.exec(t); }
@@ -291,25 +364,32 @@ export class Contradiction {
       const held = this.#rows(`SELECT name FROM pragma_table_info(?)`, table).some((r) => r.name === col);
       if (!held) this.#sql.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${type}`);
     }
-    this.declarePurge();
+    this.declareTables();
   }
 
-  /** R17, R22, R47 (K23, record-core R21/R46): every row is keyed to the bundles both sides of its candidate live in,
-   *  so a purge of either end takes it (D-113), as connections do; an opt-in and a response also by their project.
-   *  Nothing else updates or deletes one. Once per instance. */
-  declarePurge() {
+  /** R59 (plan T33, Rules (6); record-core R21), keeping R17, R22 and R47 (K23, record-core R46): every table declared
+   *  explicitly, each row keyed to the bundles both sides of its candidate live in, so a purge of either end takes it
+   *  (D-113), and an opt-in and a response also by their project. Each is append-only (`version_chain: true`: nothing
+   *  updates or deletes a row but a purge, R17, R42) and seen with the sight of the bundles its keys name (R10: the
+   *  sides', and for an opt-in or a response its project's too). The other classes are `declarePurge`'s default form's.
+   *  Once per instance. */
+  declareTables() {
     if (this.#declared) return { ok: true, already: true };
     const both = ["a_bundle_id", "b_bundle_id"];
-    const r = this.#record.declarePurge("contradiction", [
-      { name: "contradiction_candidates", keys: both },
-      { name: "contradiction_acts", keys: both },
-      { name: "contradiction_recommendations", keys: both },
-      { name: "contradiction_optins", keys: [...both, "project_id"] },
-      { name: "contradiction_responses", keys: [...both, "project_id"] },
+    const cls = { purge: "clear", expunge: "none", export: "admin-only", sight: "bundle", derive: "stored", version_chain: true };
+    const r = this.#record.declareTable("contradiction", [
+      { name: "contradiction_candidates", keys: both, ...cls },
+      { name: "contradiction_acts", keys: both, ...cls },
+      { name: "contradiction_recommendations", keys: both, ...cls },
+      { name: "contradiction_optins", keys: [...both, "project_id"], ...cls },
+      { name: "contradiction_responses", keys: [...both, "project_id"], ...cls },
     ]);
     if (r && r.ok !== false) this.#declared = true;
     return r;
   }
+
+  /** The name this declaration had before R59; the same act. */
+  declarePurge() { return this.declareTables(); }
 
   /* ---- the run gate (R21, K31) ---- */
 
@@ -357,24 +437,63 @@ export class Contradiction {
     return `NOT EXISTS (SELECT 1 FROM bundles asp WHERE asp.bundle_id = ${col} AND asp.object_type = 'aspiration')`;
   }
 
-  /** R9: the doctype and the document DATE for one capture, AS THE READER STATES THEM — never as this module infers
-   *  them. BOTH ARE THREE-VALUED AND THE THIRD VALUE IS THE POINT (section 4): *a document date or a doctype that its
-   *  reader does not state is UNDETERMINED, and a pair that needs one is not formed on a guess.* So `null` here is
-   *  returned and counted, and `read` keeps apart a capture nobody has read from a reading that states no value.
+  /** R9: the doctype and the document's OWN DATE for one capture, never as this module infers them. BOTH ARE
+   *  THREE-VALUED AND THE THIRD VALUE IS THE POINT (section 4): *a document date or a doctype that is not stated is
+   *  UNDETERMINED, and a pair that needs one is not formed on a guess.* So `null` here is returned and counted, and
+   *  `read` keeps apart a capture nobody has read from a reading that states no value.
    *
-   *  The doctype is the reading's `content_type` (extraction R58); the date is the reading's own top-level `date`
-   *  (extraction R30's `readingOf`), where every doctype that has one puts it. A doctype that states none simply has
-   *  none, which is a fact about the READER — exactly why it may not be filled in from the content row's or the
-   *  capture's time. Those are facts about US. */
-  #doc(captureSha, memo) {
-    if (memo.has(captureSha)) return memo.get(captureSha);
+   *  The doctype is the reading's `content_type` (extraction R58), as its reader states it. The date is the document's
+   *  own, as `events` holds it for the capture (its dated facts, `datedFactsFor`, events R27), read under `viewer`:
+   *  one held is the date; several are the date when they agree, or else the one whose value the reading itself states
+   *  (extraction R30's `readingOf`) when exactly one does. An "on or before" bound (events R24) is a bound, not the
+   *  document's date. None held, or several the reading does not settle, is no date — never the content row's,
+   *  the capture's or the registration's time, which are facts about US. Answers `{read, doctype, date, dated}`:
+   *  `date` the value as stated, `dated` the civil-time value `{value, precision, zone}` it is compared as. */
+  #doc(captureSha, memo, viewer = INTERNAL) {
+    const k = `${captureSha}\u0000${viewer ?? ""}`;
+    if (memo.has(k)) return memo.get(k);
     const row = this.#one(`SELECT content_type FROM readings WHERE capture_sha=? LIMIT 1`, captureSha);
-    const held = row ? this.#x().readingOf(captureSha) : null;
-    const reading = held && held.reading && typeof held.reading === "object" ? held.reading : null;
     const s = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
-    const out = { read: !!row, doctype: row ? s(row.content_type) : null, date: reading ? s(reading.date) : null };
-    memo.set(captureSha, out);
+    const out = { read: !!row, doctype: row ? s(row.content_type) : null, date: null, dated: null };
+    const dated = this.#ownDate(captureSha, viewer, row);
+    if (dated) Object.assign(out, { date: dated.value, dated });
+    memo.set(k, out);
     return out;
+  }
+
+  /** R9: a capture's own date as `events` holds it, or null (see `#doc`). */
+  #ownDate(captureSha, viewer, readingRow) {
+    const ev = this.#ev();
+    if (!captureSha || !ev || typeof ev.datedFactsFor !== "function") return null;
+    let held;
+    try { held = ev.datedFactsFor({ captureSha, viewer }); } catch { return null; }
+    const facts = (held && held.ok !== false && Array.isArray(held.dated_facts) ? held.dated_facts : [])
+      .filter((f) => f && !f.upper_bound && typeof f.value === "string" && f.value.trim());
+    const val = (f) => ({ value: f.value.trim(), precision: f.precision, zone: f.zone ?? null });
+    const same = (x, y) => x.value === y.value && x.precision === y.precision && x.zone === y.zone;
+    if (!facts.length) return null;
+    const vs = facts.map(val);
+    if (vs.every((v) => same(v, vs[0]))) return vs[0];
+    let stated = null;
+    if (readingRow) {
+      const r = this.#x() && typeof this.#x().readingOf === "function" ? this.#x().readingOf(captureSha) : null;
+      const reading = r && r.reading && typeof r.reading === "object" ? r.reading : null;
+      stated = reading && typeof reading.date === "string" && reading.date.trim() ? reading.date.trim() : null;
+    }
+    const match = stated ? vs.filter((v) => v.value === stated) : [];
+    return match.length && match.every((v) => same(v, match[0])) ? match[0] : null;
+  }
+
+  /** R9: two own dates compared through `civil-time.compare` at their precision (never as raw strings): `before`,
+   *  `after`, `same` (one value at one precision and zone: the dates agree) or `undetermined` (a band, a coarser
+   *  precision, a zone not stated, or anything compare does not settle). */
+  static #order(x, y) {
+    if (!x || !y) return "undetermined";
+    if (x.value === y.value && x.precision === y.precision && x.zone === y.zone) return "same";
+    if (typeof x.zone !== "string" || typeof y.zone !== "string") return "undetermined";
+    let c;
+    try { c = compare(x, y); } catch { return "undetermined"; }
+    return c === "before" || c === "after" ? c : "undetermined";
   }
 
   /** R8: one leg's side of a pair, with the passage it rests on RESOLVED — the ref a member reads and the capture it
@@ -590,45 +709,49 @@ export class Contradiction {
     const truncated = rows.length > cap;
     const memo = new Map();
     const pairs = []; let undetermined = 0, indistinct = 0;
-    const missing = { never_read: 0, no_doctype: 0, no_date: 0 };
+    const missing = { never_read: 0, no_doctype: 0, no_date: 0, order_undetermined: 0 };
+    const side = (r, s, d) => ({ kind: "extent", content_id: r[`${s}_content`], capture_sha: r[`${s}_capture`], ref: r[`${s}_ref`],
+                                 extent_kind: r[`${s}_kind`], doctype: d.doctype, date: d.date,
+                                 ...(d.dated ? { date_precision: d.dated.precision, date_zone: d.dated.zone } : {}), read: d.read });
     for (const r of truncated ? rows.slice(0, cap) : rows) {
-      const da = this.#doc(r.a_capture, memo);
-      const db = this.#doc(r.b_capture, memo);
+      const da = this.#doc(r.a_capture, memo, viewer);
+      const db = this.#doc(r.b_capture, memo, viewer);
       const kindsKnown = !!da.doctype && !!db.doctype;
-      const datesKnown = !!da.date && !!db.date;
+      const datesKnown = !!da.dated && !!db.dated;
+      /* R9: the dates tell the two apart only when civil-time settles their order; equal values agree. */
+      const order = datesKnown ? Contradiction.#order(da.dated, db.dated) : null;
       const discriminator = kindsKnown && da.doctype !== db.doctype ? "doctype"
-                          : datesKnown && da.date !== db.date ? "date" : null;
+                          : order === "before" || order === "after" ? "date" : null;
       if (discriminator) {
         pairs.push({
-          key: "K4", entity_id: r.entity_id, discriminator,
-          a: { kind: "extent", content_id: r.a_content, capture_sha: r.a_capture, ref: r.a_ref,
-               extent_kind: r.a_kind, doctype: da.doctype, date: da.date, read: da.read },
-          b: { kind: "extent", content_id: r.b_content, capture_sha: r.b_capture, ref: r.b_ref,
-               extent_kind: r.b_kind, doctype: db.doctype, date: db.date, read: db.read },
+          key: "K4", entity_id: r.entity_id, discriminator, ...(discriminator === "date" ? { order: order === "before" ? "a_first" : "b_first" } : {}),
+          a: side(r, "a", da), b: side(r, "b", db),
           why: discriminator === "doctype"
             ? "two documents the record has established are about the same subject, of different kinds "
             + "as their readers state them — the shape of a rule against the act it governs"
-            : "two documents the record has established are about the same subject, dated differently "
-            + "as their readers state them — the shape of one body saying X then Y",
+            : "two documents the record has established are about the same subject, with own dates the record holds "
+            + "in a settled order — the shape of one body saying X then Y",
         });
         continue;
       }
-      if (kindsKnown && datesKnown) { indistinct += 1; continue; }
+      if (kindsKnown && order === "same") { indistinct += 1; continue; }
       /* UNDETERMINED, AND IT IS COUNTED RATHER THAN ROUNDED TO EITHER NEIGHBOUR (R9). Section 4: *a pair that needs a
-         date or a doctype its reader does not state is not formed on a guess*, and the count is what stops that
-         refusal reading as "these two agree". */
+         date or a doctype that is not stated is not formed on a guess*, and neither is one whose dates' order the
+         precision held does not settle. The count is what stops that refusal reading as "these two agree". */
       undetermined += 1;
       if (!da.read || !db.read) missing.never_read += 1;
       else if (!kindsKnown) missing.no_doctype += 1;
-      else missing.no_date += 1;
+      else if (!datesKnown) missing.no_date += 1;
+      else missing.order_undetermined += 1;
     }
     return { pairs, truncated, undetermined, indistinct, missing,
              notes: undetermined
-               ? [`${undetermined} candidate pair(s) were NOT formed because a doctype or a document `
-                + `date their readers never stated was needed to tell them apart `
+               ? [`${undetermined} candidate pair(s) were NOT formed because a doctype, a document's own date, or the `
+                + `order of two dates was needed to tell them apart and is not held `
                 + `(${missing.never_read} where a document has not been read at all, `
-                + `${missing.no_doctype} where a reader stated no kind, ${missing.no_date} where a `
-                + `reader stated no date). That is not evidence the two agree`]
+                + `${missing.no_doctype} where a reader stated no kind, ${missing.no_date} where the record holds no `
+                + `own date of the document, ${missing.order_undetermined} where the two dates cannot be put in order `
+                + `at the precision held). That is not evidence the two agree`]
                : [] };
   }
 
@@ -691,6 +814,90 @@ export class Contradiction {
                                  + `stopped: the questions after them were not compared`] : [] };
   }
 
+  /** Whether `money`'s read contract is held in this store (its R19): K6 compares nothing, and says so, without it. */
+  #moneyHeld() {
+    return !!this.#one(`SELECT 1 AS x FROM sqlite_master WHERE type='table' AND name='money_facts'`);
+  }
+
+  /** R8 K6 — two amounts for one transfer (ladders §5C.4). THE SQL FINDS CANDIDATES OVER MONEY'S READ CONTRACT (its R19)
+   *  AND MONEY DECIDES: two standing facts with the same payer and payee ENTITIES (a fund or an unresolved name is not
+   *  one), the same kind, phase and stage, and periods that overlap, both seen by the viewer through their source's
+   *  sight (`sight_bundle`, money R21; R10); `money.reconcile` then says whether the amounts differ beyond the coarser
+   *  figure's precision, and its differing dimensions travel with the pair as context (R28), so a member can see
+   *  whether a basis, period or rounding difference explains it. A period whose end is not stated does not settle an
+   *  overlap: the pair is not formed, and is counted. Bounded at the statement, over-fetching one (D-365, R7). */
+  #k6(viewer, cap) {
+    const empty = { pairs: [], truncated: false, notes: [] };
+    if (!this.#moneyHeld()) return { ...empty, notes: ["money's facts are not held in this store, so K6 compared nothing"] };
+    const mo = this.#mo();
+    if (!mo || typeof mo.reconcile !== "function")
+      return { ...empty, notes: ["money's reconciliation is not reachable here, so K6 compared nothing"] };
+    const ga = this.#gate("f1.sight_bundle", viewer);
+    const gb = this.#gate("f2.sight_bundle", viewer);
+    const rows = this.#rows(
+      `SELECT f1.fact_id AS a_fact, f2.fact_id AS b_fact, f1.from_entity AS payer, f1.to_entity AS payee,
+              f1.period_end AS a_end, f2.period_end AS b_end
+         FROM money_facts f1
+         JOIN money_facts f2 ON f2.from_entity = f1.from_entity AND f2.to_entity = f1.to_entity
+                            AND f2.kind = f1.kind AND f2.phase = f1.phase AND f2.stage IS f1.stage
+                            AND f2.fact_id > f1.fact_id
+        WHERE f1.withdrawn_at IS NULL AND f2.withdrawn_at IS NULL
+          AND f1.from_entity IS NOT NULL AND f1.to_entity IS NOT NULL
+          AND (f1.period_end IS NULL OR f1.period_end > f2.period_start)
+          AND (f2.period_end IS NULL OR f2.period_end > f1.period_start)
+          AND (${ga.sql}) AND (${gb.sql})
+        ORDER BY f1.from_entity, f1.to_entity, f1.fact_id, f2.fact_id
+        LIMIT ?`, ...ga.args, ...gb.args, cap + 1);
+    const truncated = rows.length > cap;
+    const pairs = [];
+    let openPeriod = 0, agreeing = 0;
+    for (const r of truncated ? rows.slice(0, cap) : rows) {
+      if (r.a_end === null || r.b_end === null) { openPeriod += 1; continue; }
+      let rec;
+      try { rec = mo.reconcile({ a: r.a_fact, b: r.b_fact, viewer }); } catch { rec = null; }
+      if (!rec || rec.ok === false || rec.consistent || rec.amounts !== "differ") { agreeing += 1; continue; }
+      pairs.push({
+        key: "K6", payer: r.payer, payee: r.payee,
+        a: this.#moneySide(r.a_fact), b: this.#moneySide(r.b_fact),
+        differs: rec.differs,
+        why: "two sources state amounts for what reads as one transfer — the same payer and payee, kind and phase or "
+           + "stage, over periods that overlap — and the amounts differ beyond the coarser figure's precision. Whether a "
+           + "basis, a period or rounding explains it is shown beside them",
+      });
+    }
+    const undetermined = openPeriod;
+    return { pairs, truncated, undetermined, consistent: agreeing,
+             notes: [
+               ...(openPeriod ? [`${openPeriod} candidate pair(s) were NOT formed because a fact's period states no end, `
+                                 + `so whether the two periods overlap is not settled. That is not evidence the amounts agree`] : []),
+               ...(agreeing ? [`${agreeing} candidate pair(s) were NOT formed because money's reconciliation finds their `
+                               + `amounts consistent within the coarser figure's precision`] : []) ] };
+  }
+
+  /** R8: a K6 side, `{kind: "money", fact, capture_sha, ref, amount, period, stage}`, from money's read contract (its
+   *  R19): the capture its source extent is in (through the facts it cites, at most 32 deep), the reference a member
+   *  reads, the figure as stated with its currency and precision, its accounting period and its stage. */
+  #moneySide(factId) {
+    const f = this.#one(`SELECT * FROM money_facts WHERE fact_id=?`, factId);
+    if (!f) return { kind: "money", fact: factId, capture_sha: null, ref: null, amount: null, period: null, stage: null };
+    let root = f, capture = f.source_capture_sha ?? null;
+    for (let i = 0; !capture && root && root.source_fact && i < 32; i++) {
+      root = this.#one(`SELECT * FROM money_facts WHERE fact_id=?`, root.source_fact);
+      capture = root ? root.source_capture_sha ?? null : null;
+    }
+    const content = f.source_content_id
+      ? this.#one(`SELECT ref FROM content WHERE content_id=?`, f.source_content_id) : null;
+    const ref = content ? content.ref
+      : f.source_table ? `row ${f.source_row} of the table ${f.source_table}`
+      : f.source_fact ? `money fact ${f.source_fact}` : null;
+    const amount = f.precision === "range"
+      ? { low: f.amount_low, high: f.amount_high, currency: f.currency, precision: f.precision, as_read: f.as_read }
+      : { value: f.amount, currency: f.currency, precision: f.precision, as_read: f.as_read };
+    return { kind: "money", fact: f.fact_id, capture_sha: capture, ref, amount,
+             period: { from: f.period_from, to: f.period_to, precision: f.period_precision, zone: f.period_zone },
+             stage: f.stage ?? null };
+  }
+
   /** R11: WHICH LEVEL WAS EMPTY, SAID RATHER THAN LEFT TO BE INFERRED. A LADDER OF EXISTENCE PROBES, and existence is
    *  deliberately not a count: a census would cost an unbounded scan per rung on the one surface whose subject is
    *  that the record is sparse. Each probe is `LIMIT 1` and rides the same viewer gate as the key's own join, so a
@@ -711,6 +918,7 @@ export class Contradiction {
               { level: "concluded_stances", present: !!f.concluded_stances },
               { level: "differing_claim", present: !!f.differing_claim }];
     }
+    if (key === "K6") return this.#moneyLadder(viewer);
     const gi = this.#gate("ib.bundle_id", viewer);
     const gv = this.#gate("v.bundle_id", viewer);
     const gs = this.#gate("s.bundle_id", viewer);
@@ -772,6 +980,34 @@ export class Contradiction {
     ];
   }
 
+  /** R11 K6's rungs, each an existence probe under the viewer gate on both facts' sight: a standing fact; two naming one
+   *  payer and one payee entity; two of those of one kind, phase and stage over periods that overlap (or whose ends are
+   *  not stated); two of those whose figures differ as stated. With every rung present and nothing formed, K6's own
+   *  last level names the join (money's reconciliation, or an unstated end). */
+  #moneyLadder(viewer) {
+    if (!this.#moneyHeld()) return [{ level: "viewer", present: true }, { level: "money_fact", present: false }];
+    const g1 = this.#gate("f1.sight_bundle", viewer);
+    const g2 = this.#gate("f2.sight_bundle", viewer);
+    const g = this.#gate("f.sight_bundle", viewer);
+    const pair = (extra) => !!this.#one(
+      `SELECT 1 AS x FROM money_facts f1
+         JOIN money_facts f2 ON f2.from_entity = f1.from_entity AND f2.to_entity = f1.to_entity AND f2.fact_id > f1.fact_id
+        WHERE f1.withdrawn_at IS NULL AND f2.withdrawn_at IS NULL
+          AND f1.from_entity IS NOT NULL AND f1.to_entity IS NOT NULL ${extra}
+          AND (${g1.sql}) AND (${g2.sql}) LIMIT 1`, ...g1.args, ...g2.args);
+    const same = `AND f2.kind = f1.kind AND f2.phase = f1.phase AND f2.stage IS f1.stage
+                  AND (f1.period_end IS NULL OR f1.period_end > f2.period_start)
+                  AND (f2.period_end IS NULL OR f2.period_end > f1.period_start)`;
+    return [
+      { level: "viewer", present: true },
+      { level: "money_fact", present: !!this.#one(`SELECT 1 AS x FROM money_facts f WHERE f.withdrawn_at IS NULL AND (${g.sql}) LIMIT 1`, ...g.args) },
+      { level: "same_parties", present: pair("") },
+      { level: "same_stage_period", present: pair(same) },
+      { level: "differing_amount", present: pair(`${same} AND (f1.amount IS NOT f2.amount OR f1.amount_low IS NOT f2.amount_low
+                                                     OR f1.amount_high IS NOT f2.amount_high)`) },
+    ];
+  }
+
   /** op=contradictionpairs — THE PAIRING READ (R5–R12). A READ: it judges nothing and writes nothing, and both are
    *  said in the answer: `judgement.state` is `HELD_APART` and `wrote` is false.
    *
@@ -815,6 +1051,7 @@ export class Contradiction {
         : name === "K2" ? this.#k2(viewer, cap)
         : name === "K3" ? this.#k3(viewer, cap)
         : name === "K4" ? this.#k4(viewer, cap)
+        : name === "K6" ? this.#k6(viewer, cap)
         : this.#k5(viewer, cap);
       pairs.push(...out.pairs);
       const ladder = this.#ladder(name, viewer, scope, out);
@@ -829,7 +1066,8 @@ export class Contradiction {
                                                          document: { formed: 0, truncated: false } } } : {}),
                ...(name === "K4" && !denied
                  ? { undetermined: out.undetermined, indistinct: out.indistinct, undetermined_detail: out.missing }
-                 : {}) };
+                 : {}),
+               ...(name === "K6" && !denied ? { undetermined: out.undetermined ?? 0, consistent: out.consistent ?? 0 } : {}) };
     });
 
     const formed = pairs.length;
@@ -854,8 +1092,8 @@ export class Contradiction {
         + "a reader, and none of them looked"
         : `${formed} candidate pair(s) over ${[...run].join(", ")}, each carrying the KEY that brought `
         + `its two sides together`
-        + (undetermined ? `; ${undetermined} further pair(s) were NOT formed because a date or a `
-                        + `doctype their readers never stated was needed to tell the two apart, and `
+        + (undetermined ? `; ${undetermined} further pair(s) were NOT formed because a value the record does not `
+                        + `hold, or an order it does not settle, was needed to tell the two apart, and `
                         + `that is COUNTED rather than rounded to agreement` : "")
         + `. Every key that formed nothing NAMES THE LEVEL that was empty: absence at one level is `
         + `never evidence of absence at the next, and a key with nothing to join says the record is `
@@ -882,6 +1120,14 @@ export class Contradiction {
       return { kind: "stance",
                ref: `${String(s.inquiry ?? "")}|${String(s.project ?? "")}|${String(s.version ?? "")}`,
                version: sha256HexSync(String(s.claim ?? "")), bundle: s.project == null ? null : String(s.project) };
+    /* K6 (T33-48): a money fact is its id, versioned by the digest of what was compared (its figure, period and
+       stage, as the plane read them); it lives where its source does (money R21), so that bundle's purge takes it. */
+    if (s && s.kind === "money") {
+      const f = s.fact == null ? null : this.#one(`SELECT sight_bundle FROM money_facts WHERE fact_id=?`, String(s.fact));
+      return { kind: "money", ref: String(s.fact ?? ""),
+               version: sha256HexSync(canonicalJson({ amount: s.amount ?? null, period: s.period ?? null, stage: s.stage ?? null })),
+               bundle: f ? f.sight_bundle : null };
+    }
     const cap = s?.capture_sha == null ? "" : String(s.capture_sha);
     const cid = s?.content_id == null || s.content_id === "" ? null : String(s.content_id);
     const home = cid ? this.#one(`SELECT bundle_id FROM content WHERE content_id=?`, cid)
@@ -1008,6 +1254,7 @@ export class Contradiction {
   #sees(bundleId, viewer) {
     const g = viewerPredicate(viewer);
     if (g.scope === "DENY") return false;
+    if (bundleId === MISSING) return false;
     if (g.scope === "member") return true;
     if (bundleId === null || bundleId === undefined || bundleId === "") return true;
     return !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id = ? AND (${g.sql})`, String(bundleId), ...g.args);
@@ -1026,6 +1273,11 @@ export class Contradiction {
     if (!side) return [];
     if (side.kind === "claim") return [side.inquiry];
     if (side.kind === "stance") return [side.inquiry, side.project];
+    /* K6: a money fact is seen as its source is (money R21); one no longer held is withheld (fail closed). */
+    if (side.kind === "money") {
+      const f = this.#moneyHeld() ? this.#one(`SELECT sight_bundle FROM money_facts WHERE fact_id=?`, String(side.fact ?? "")) : null;
+      return f ? [f.sight_bundle] : [MISSING];
+    }
     if (side.kind === "leg") return [side.inquiry, this.#contentHome(side.content_id)];
     return [this.#contentHome(side.content_id)];
   }
@@ -1104,11 +1356,15 @@ export class Contradiction {
     let inquiries = [];
     if (side.kind === "claim" || side.kind === "leg")
       inquiries = side.inquiry && this.#sees(side.inquiry, viewer) ? [side.inquiry] : [];
-    else if (side.content_id) {
+    else if (side.content_id || side.kind === "money") {
+      /* K6: a money fact reaches the inquiries resting on the passage it was read from (money R19's source extent). */
+      const cid = side.kind === "money"
+        ? (this.#moneyHeld() ? this.#one(`SELECT source_content_id AS c FROM money_facts WHERE fact_id=?`, String(side.fact ?? ""))?.c ?? null : null)
+        : side.content_id;
       const g = this.#gate("ib.bundle_id", viewer);
-      const rows = this.#rows(`SELECT DISTINCT ib.bundle_id AS bundle_id FROM inquiry_basis ib
+      const rows = cid ? this.#rows(`SELECT DISTINCT ib.bundle_id AS bundle_id FROM inquiry_basis ib
                                 WHERE ib.content_id=? AND (${g.sql}) ORDER BY ib.bundle_id LIMIT ?`,
-                              String(side.content_id), ...g.args, REACH_INQUIRIES_MAX + 1);
+                              String(cid), ...g.args, REACH_INQUIRIES_MAX + 1) : [];
       if (rows.length > REACH_INQUIRIES_MAX) out.truncated = true;
       inquiries = rows.slice(0, REACH_INQUIRIES_MAX).map((r) => r.bundle_id);
     }
@@ -1132,8 +1388,8 @@ export class Contradiction {
 
   /** The stated doctype and date of a capture (R9), as the pairing reads them. */
   #docOf(capture) {
-    if (!capture) return { read: false, doctype: null, date: null };
-    try { return this.#doc(capture, new Map()); } catch { return { read: false, doctype: null, date: null }; }
+    if (!capture) return { read: false, doctype: null, date: null, dated: null };
+    try { return this.#doc(capture, new Map()); } catch { return { read: false, doctype: null, date: null, dated: null }; }
   }
 
   /** A side as a member reads it (R25, R50): verbatim, with its source, stated date, doctype and capture, from what
@@ -1141,6 +1397,13 @@ export class Contradiction {
   #shown(side) {
     if (!side) return null;
     const { context: _c, ...s } = side;
+    if (s.kind === "money") {
+      const f = this.#moneyHeld() ? this.#one(`SELECT sight_bundle, source_content_id FROM money_facts WHERE fact_id=?`, String(s.fact ?? "")) : null;
+      return { ...s, text: s.amount && typeof s.amount.as_read === "string" ? s.amount.as_read : null,
+               source: { fact: s.fact ?? null, bundle: f ? f.sight_bundle : null, ref: s.ref ?? null,
+                         content_id: f ? f.source_content_id ?? null : null },
+               date: null, doctype: null, capture_sha: s.capture_sha ?? null };
+    }
     if (s.kind === "claim" || s.kind === "stance") {
       const t = s.inquiry ? this.#one(`SELECT title FROM bundles WHERE bundle_id=?`, s.inquiry) : null;
       return { ...s, text: s.claim ?? null, source: { inquiry: s.inquiry ?? null, title: t ? t.title : null,
@@ -1153,7 +1416,8 @@ export class Contradiction {
     const d = this.#docOf(capture);
     return { ...s, capture_sha: capture, ref: row ? row.ref : (s.ref ?? null),
              source: { bundle: row ? row.bundle_id : null, ref: row ? row.ref : (s.ref ?? null) },
-             date: d.date, doctype: d.doctype, stale: row ? !!row.stale : (s.stale ?? null) };
+             date: d.date, date_precision: d.dated ? d.dated.precision : null, date_zone: d.dated ? d.dated.zone : null,
+             doctype: d.doctype, stale: row ? !!row.stale : (s.stale ?? null) };
   }
 
   /** R37: the recommendations standing for a candidate now (its state open or explained), each labelled machine work. */
@@ -1291,8 +1555,9 @@ export class Contradiction {
       case "content": return q(`(json_extract(a_side, '$.content_id') = ? OR json_extract(b_side, '$.content_id') = ?
                                   OR (a_kind IN ('leg','extent') AND a_ref = ?) OR (b_kind IN ('leg','extent') AND b_ref = ?))`,
                                subject.id, subject.id, subject.id, subject.id);
-      case "entity": return q(`(json_extract(a_side, '$.context.subject_entity') = ? OR json_extract(a_side, '$.context.entity_id') = ?)`,
-                              subject.id, subject.id);
+      case "entity": return q(`(json_extract(a_side, '$.context.subject_entity') = ? OR json_extract(a_side, '$.context.entity_id') = ?
+                                 OR json_extract(a_side, '$.context.payer') = ? OR json_extract(a_side, '$.context.payee') = ?)`,
+                              subject.id, subject.id, subject.id, subject.id);
       case "bundle": return q(`(a_bundle_id = ? OR b_bundle_id = ? OR ${side("a_side")} = ? OR ${side("b_side")} = ?)`,
                               subject.id, subject.id, subject.id, subject.id);
       case "project": {
@@ -1327,6 +1592,47 @@ export class Contradiction {
     return out;
   }
 
+  /** R25 `{entity}` (R9): candidates in the own date of their earlier-dated side, read as R9 reads it and compared by
+   *  `civil-time.compare`, never as raw strings. A candidate with no own date on either side is undated; one whose
+   *  sides' order, or whose place beside its neighbour, compare does not settle is listed apart with them, never
+   *  placed by guess. Two at one value, precision and zone are at the same date (R9's agreeing dates), kept together
+   *  in candidate id order. Answers the ordered items then the rest, and both counts. */
+  #byOwnDate(items) {
+    const dt = (side) => { const v = this.#shown(side);
+      return v && typeof v.date === "string" && v.date_precision ? { value: v.date, precision: v.date_precision, zone: v.date_zone } : null; };
+    const dated = [], undated = [], apart = [];
+    for (const x of items) {
+      const a = dt(x.row.a), b = dt(x.row.b);
+      if (!a && !b) { undated.push(x); continue; }
+      const o = a && b ? Contradiction.#order(a, b) : a ? "before" : "after";
+      if (o === "undetermined") { apart.push(x); continue; }
+      const d = o === "after" ? b : a;
+      if (typeof d.zone !== "string") { apart.push(x); continue; }
+      let bd;
+      try { bd = bounds(d); } catch { bd = null; }
+      if (!bd || bd.refused || bd.undetermined || typeof bd.earliest !== "string") { apart.push(x); continue; }
+      dated.push({ ...x, d, lo: bd.earliest, hi: bd.latest ?? "" });
+    }
+    /* Sorted by the instants civil-time bounds each date by; every neighbour's order is then asked of compare. Of two
+       neighbours it does not settle, the coarser date (the wider span) leaves the line, or both when they are equally
+       wide, until every neighbour's order is settled. */
+    const width = (x) => (Date.parse(x.hi) || Infinity) - (Date.parse(x.lo) || 0);
+    let line = dated.sort((p, q) => (p.lo < q.lo ? -1 : p.lo > q.lo ? 1 : p.hi < q.hi ? -1 : p.hi > q.hi ? 1
+      : p.row.candidate < q.row.candidate ? -1 : 1));
+    for (let moved = true; moved;) {
+      moved = false;
+      const out = new Set();
+      for (let i = 0; i + 1 < line.length; i++) {
+        if (["before", "same"].includes(Contradiction.#order(line[i].d, line[i + 1].d))) continue;
+        const wa = width(line[i]), wb = width(line[i + 1]);
+        if (wa >= wb) out.add(i);
+        if (wb >= wa) out.add(i + 1);
+      }
+      if (out.size) { apart.push(...line.filter((_, i) => out.has(i))); line = line.filter((_, i) => !out.has(i)); moved = true; }
+    }
+    return { items: [...line, ...apart, ...undated], undated: undated.length, unordered: apart.length };
+  }
+
   /** op=contradictioncandidates — R25: the candidates shown to a viewer about one thing. */
   candidatesFor({ on = null, label = null, weight = null, state = null, after = null, limit = null, viewer = null } = {}) {
     try {
@@ -1348,7 +1654,8 @@ export class Contradiction {
       const ids = fenced ? [] : this.#candidatesNaming(subject);
       const scanCut = ids.length > CANDIDATES_SCAN_MAX;
       const notShown = { precision: 0, unrelated: 0 };
-      let unmeasured = 0, visible = 0, shown = 0;
+      const unmeasuredBy = { K5: 0, K6: 0 };
+      let visible = 0, shown = 0;
       let items = [];
       for (const id of ids.slice(0, CANDIDATES_SCAN_MAX)) {
         const row = this.#candidate(id);
@@ -1356,7 +1663,8 @@ export class Contradiction {
         visible += 1;
         const view = this.#view(row);
         if (view.weight === "not_shown") {
-          if (view.unshown_why === K5_UNSHOWN_WHY) unmeasured += 1;
+          if (view.unshown_why === K5_UNSHOWN_WHY) unmeasuredBy.K5 += 1;
+          else if (view.unshown_why === K6_UNSHOWN_WHY) unmeasuredBy.K6 += 1;
           else if (notShown[row.label] !== undefined) notShown[row.label] += 1;
           continue;
         }
@@ -1370,15 +1678,17 @@ export class Contradiction {
         if (state !== null && state !== undefined && state !== "" && view.state !== state) continue;
         items.push({ row, view });
       }
-      /* {entity}: in the stated date of the earlier-dated side (R9), undated last and counted, never placed by guess. */
-      let undated = 0;
+      /* K5 and K6 candidates withheld until their gate arms are measured: counted, by key, each with why. */
+      const unmeasured = unmeasuredBy.K5 + unmeasuredBy.K6;
+      const whys = [unmeasuredBy.K5 ? K5_UNSHOWN_WHY : null, unmeasuredBy.K6 ? K6_UNSHOWN_WHY : null].filter(Boolean);
+      const held = unmeasured ? { unmeasured, unmeasured_why: whys.length === 1 ? whys[0] : whys,
+                                  unmeasured_by_key: Object.fromEntries(Object.entries(unmeasuredBy).filter(([, n]) => n)) } : {};
+      /* {entity}: in the own date of the earlier-dated side (R9), undated last and counted, never placed by guess. */
+      let undated = 0, unordered = 0;
       if (subject.kind === "entity") {
-        const dateOf = (x) => { const ds = [this.#shown(x.row.a)?.date, this.#shown(x.row.b)?.date].filter(Boolean).sort(); return ds[0] ?? null; };
-        const dated = [], none = [];
-        for (const x of items) { const d = dateOf(x); if (d) dated.push({ ...x, d }); else none.push(x); }
-        dated.sort((p, q) => (p.d < q.d ? -1 : p.d > q.d ? 1 : 0));
-        undated = none.length;
-        items = [...dated, ...none];
+        const r = this.#byOwnDate(items);
+        undated = r.undated; unordered = r.unordered;
+        items = r.items;
       }
       if (typeof after === "string" && after) {
         const at = items.findIndex((x) => x.row.candidate === after);
@@ -1393,12 +1703,12 @@ export class Contradiction {
                                         + "Whether the pairing forms pairs here is the pairing read's answer" }
           : shown === 0
             ? { level: "none_shown", says: "candidates are held here, and each is one the record does not show as a tension",
-                not_shown: notShown, ...(unmeasured ? { unmeasured } : {}) }
+                not_shown: notShown, ...held }
             : { level: "none_matching", says: "candidates are shown here, and none matches the filters or follows the cursor asked" };
       return { ok: true, wrote: false, on: { [subject.kind]: subject.id }, limit: cap, truncated,
                cursor: candidates.length ? candidates[candidates.length - 1].candidate : null,
-               candidates, not_shown: notShown, ...(unmeasured ? { unmeasured, unmeasured_why: K5_UNSHOWN_WHY } : {}),
-               ...(subject.kind === "entity" ? { undated } : {}), empty };
+               candidates, not_shown: notShown, ...held,
+               ...(subject.kind === "entity" ? { undated, order_undetermined: unordered } : {}), empty };
     } catch (e) {
       return { ok: true, wrote: false, candidates: [], truncated: false, undetermined: true,
                empty: { level: "undetermined", says: `the read failed and nothing is claimed about it (${String(e && e.message || e).slice(0, 120)})` } };
@@ -1532,6 +1842,7 @@ export class Contradiction {
 
   /** R28's facts for a candidate, computed from what its sides already carry. */
   #facts(row) {
+    if (row.key === "K6") return this.#moneyFacts(row);
     const A = this.#shown(row.a), B = this.#shown(row.b);
     const isPart = (s) => s && (s.kind === "leg" || s.kind === "extent");
     const fact = (coordinate, name, a, b, whyA, whyB) => {
@@ -1565,6 +1876,39 @@ export class Contradiction {
       entities,
     ];
     if (row.key === "K5") facts.push(fact("scope", "project", A.project ?? null, B.project ?? null, "no project", "no project"));
+    return facts;
+  }
+
+  /** R28 for K6 (R8): the facts money holds for each side — its stated period, basis, figure as read with its precision,
+   *  capture and parties — and what `money.reconcile` says differs between them now, each labelled the record's. A fact
+   *  no longer held is undetermined, with why. */
+  #moneyFacts(row) {
+    const read = (side) => (this.#moneyHeld() ? this.#one(`SELECT * FROM money_facts WHERE fact_id=?`, String(side?.fact ?? "")) : null);
+    const fa = read(row.a), fb = read(row.b);
+    const fact = (coordinate, name, a, b) => {
+      const miss = [];
+      if (a === null || a === undefined) miss.push(`side A: ${fa ? "money states no value" : "the money fact is not held"}`);
+      if (b === null || b === undefined) miss.push(`side B: ${fb ? "money states no value" : "the money fact is not held"}`);
+      return { coordinate, fact: name, a: a ?? null, b: b ?? null, source: "record", machine_work: false,
+               ...(miss.length ? { undetermined: true, why: miss.join("; ") } : {}) };
+    };
+    const period = (f) => (f ? { from: f.period_from, to: f.period_to, precision: f.period_precision, zone: f.period_zone } : null);
+    const figure = (f) => (f ? { as_read: f.as_read, precision: f.precision, currency: f.currency } : null);
+    const parties = (f) => (f ? [f.from_entity, f.to_entity].filter(Boolean) : null);
+    const facts = [
+      fact("time_or_occasion", "accounting_period", period(fa), period(fb)),
+      fact("observer_or_method", "basis", fa ? fa.basis : null, fb ? fb.basis : null),
+      fact("meaning", "figure_as_read", figure(fa), figure(fb)),
+      fact("observer_or_method", "capture", this.#shown(row.a)?.capture_sha ?? null, this.#shown(row.b)?.capture_sha ?? null),
+      fact("subject", "parties", parties(fa), parties(fb)),
+    ];
+    let rec = null;
+    try { rec = fa && fb && this.#mo() ? this.#mo().reconcile({ a: fa.fact_id, b: fb.fact_id, viewer: INTERNAL }) : null; } catch { rec = null; }
+    facts.push(rec && rec.ok !== false
+      ? { coordinate: "scope", fact: "reconciliation", a: null, b: null, source: "record", machine_work: false,
+          consistent: !!rec.consistent, amounts: rec.amounts, differs: rec.differs ?? [] }
+      : { coordinate: "scope", fact: "reconciliation", a: null, b: null, source: "record", machine_work: false,
+          undetermined: true, why: rec && rec.reason ? `money's reconciliation refused: ${rec.reason}` : "money's reconciliation is not reachable" });
     return facts;
   }
 
@@ -1660,6 +2004,81 @@ export class Contradiction {
       return { ok: true, wrote: false, candidates: [], truncated: false, undetermined: true,
                why: String(e && e.message || e).slice(0, 160) };
     }
+  }
+
+  /* ===================================================================== *
+   * THE CONNECTION OWNER (T33-48; R58; connection-grammar R2, R6–R9, K1487).
+   * ===================================================================== */
+
+  /** R58: the node a side is presented at: a claim at its inquiry, a stance at its project, a leg or an extent at the
+   *  document its passage is filed in (a leg naming no held passage, at its target), a money side at its fact. */
+  #nodeOf(side) {
+    if (!side) return null;
+    if (side.kind === "claim") return side.inquiry ?? null;
+    if (side.kind === "stance") return side.project ?? null;
+    if (side.kind === "money") return side.fact ?? null;
+    return this.#contentHome(side.content_id) ?? (side.kind === "leg" ? side.target ?? null : null);
+  }
+
+  /** R58 (`connection-grammar`'s `neighbours` contract, its R6–R8): for a node that is a side's bundle (an inquiry, a
+   *  document) or a money fact, each candidate on it of weight other than `not_shown` and state other than `dismissed`
+   *  (R24, R26) whose both sides `viewer` may see (R10), as one derived connection "in tension with" between its two
+   *  sides' nodes. It is labelled machine work and graded the lowest grade: a candidate is a proposal, never evidence,
+   *  so a chain through it is a lead (connection-grammar R13) and never a basis. A candidate states no dates, so each
+   *  item is undetermined at any date asked; it holds no hunch, so `scope` changes nothing. A candidate the viewer may
+   *  not see is neither returned nor counted (connection-grammar R7). Writes nothing and records no reader. */
+  neighbours({ node = null, kinds = null, at: _at = null, page = null, viewer = null, scope: _scope = null } = {}) {
+    if (viewer === undefined || viewer === null || viewer === "")
+      return { refused: "VIEWER_MISSING", why: "a read names the member reading; an absent viewer is neither an administrator nor the public" };
+    if (Array.isArray(kinds) && !kinds.includes(CONNECTION_KIND)) return { items: [] };
+    if (typeof node !== "string" || !node.trim()) return { items: [] };
+    const n = node.trim();
+    const side = (col) => `json_extract(${col}, '$.inquiry') = ? OR json_extract(${col}, '$.project') = ?
+                           OR json_extract(${col}, '$.target') = ? OR json_extract(${col}, '$.fact') = ?`;
+    const ids = this.#rows(`SELECT candidate FROM contradiction_candidates
+                             WHERE a_bundle_id = ? OR b_bundle_id = ? OR ${side("a_side")} OR ${side("b_side")}
+                             ORDER BY candidate`, n, n, n, n, n, n, n, n, n, n).map((r) => r.candidate);
+    const items = [];
+    for (const id of ids) {
+      const row = this.#candidate(id);
+      if (!row || !this.#sideSeen(row.a, viewer) || !this.#sideSeen(row.b, viewer)) continue;
+      const from = this.#nodeOf(row.a), to = this.#nodeOf(row.b);
+      if (from !== n && to !== n) continue;
+      const view = this.#view(row);
+      if (view.weight === "not_shown" || view.state === "dismissed") continue;
+      const item = this.#connection(row, view, from, to);
+      if (item) items.push(item);
+    }
+    if (items.length > BOUNDS.hub)
+      return { items: [], hub: { set_size: items.length,
+               why: `more than ${BOUNDS.hub} candidates you can see are in tension with this node; it is named, never expanded` } };
+    items.sort((x, y) => (x.id < y.id ? -1 : x.id > y.id ? 1 : 0));
+    const after = page && typeof page === "object" && typeof page.after === "string" ? page.after : null;
+    const rest = after ? items.filter((i) => i.id > after) : items;
+    const shown = rest.slice(0, BOUNDS.fanout);
+    return { items: shown, ...(rest.length > shown.length ? { next: { after: shown[shown.length - 1].id } } : {}) };
+  }
+
+  /** R58: one candidate as a connection in `connection-grammar`'s shape (its R1, R11): its id `derivedId` of the kind,
+   *  the two nodes, the instant it was proposed and the method naming the key and the candidate (R15's id), so a leg
+   *  could cite it and a checker re-derive it. Null when a side has no node the id grammar names. */
+  #connection(row, view, from, to) {
+    if (!isRecordId(from) || !isRecordId(to) || typeof row.at !== "string" || !row.at) return null;
+    const method = `contradiction ${row.key}: candidate ${row.candidate}`;
+    const ref = (k) => ({ kind: row[`${k}_kind`], ref: row[`${k}_ref`], version: row[`${k}_version`] });
+    return {
+      id: derivedId({ kind: CONNECTION_KIND, from, to, as_of: row.at, method }),
+      from, to, kind: CONNECTION_KIND, owner: CONNECTION_OWNER, valid: { ...UNDATED }, evidence: [],
+      grade: { assertion: LOWEST_GRADE, ends: [LOWEST_GRADE, LOWEST_GRADE] },
+      derived: { method, as_of: row.at,
+                 inputs: [{ candidate: row.candidate, key: row.key, a: ref("a"), b: ref("b"), run: row.run, label: row.label }] },
+      candidate: row.candidate, key: row.key, weight: view.weight, state: view.state,
+      machine_work: true,
+      judgement: { label: row.label, reason: row.reason, run: row.run, proposed_by: row.proposed_by, origin: "machine" },
+      says: "two things paired by the record and labelled by a machine as worth comparing: a proposal, never evidence. "
+          + "A chain through it is a lead",
+      undetermined: { why: UNDATED_WHY },
+    };
   }
 
   /* ===================================================================== *
@@ -1968,8 +2387,13 @@ export class Contradiction {
     const i = this.#i();
     const title = typeof i.deriveInquiryTitle === "function" ? i.deriveInquiryTitle(question) : null;
     const leg = (side, name) => {
-      const target = side.kind === "claim" || side.kind === "stance" ? side.inquiry : this.#contentHome(side.content_id);
-      return { target, content_id: side.kind === "leg" || side.kind === "extent" ? side.content_id : null,
+      /* K6: a money side is a leg on the document its figure was read from, naming the passage when one is held. */
+      const fact = side.kind === "money" && this.#moneyHeld()
+        ? this.#one(`SELECT sight_bundle, source_content_id FROM money_facts WHERE fact_id=?`, String(side.fact ?? "")) : null;
+      const target = side.kind === "claim" || side.kind === "stance" ? side.inquiry
+        : side.kind === "money" ? (fact ? fact.sight_bundle : null) : this.#contentHome(side.content_id);
+      return { target, content_id: side.kind === "leg" || side.kind === "extent" ? side.content_id
+                 : side.kind === "money" && fact ? fact.source_content_id ?? null : null,
                note: `side ${name} of contradiction ${row.candidate}` };
     };
     const framed = frame === "a" ? leg(row.a, "a") : leg(row.b, "b");

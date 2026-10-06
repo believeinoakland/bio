@@ -19,7 +19,7 @@ function k1World(opts) {
   return w;
 }
 
-test("R5: key is trimmed and upper-cased; absent or blank runs all five keys; any other key is C-60.1 naming the keys held", () => {
+test("R5: key is trimmed and upper-cased; absent or blank runs all six keys (K6 since T33); any other key is C-60.1 naming the keys held", () => {
   const w = k1World();
   for (const key of [" k1 ", "K1", "k1"]) {
     const r = w.c.pairs({ key, viewer: MACHINE });
@@ -28,10 +28,11 @@ test("R5: key is trimmed and upper-cased; absent or blank runs all five keys; an
   }
   for (const key of [null, undefined, "", "   "]) {
     const r = w.c.pairs({ key, viewer: MACHINE });
-    assert.deepEqual(r.keys.filter((k) => k.ran).map((k) => k.key), ["K1", "K2", "K3", "K4", "K5"]);
+    assert.deepEqual(r.keys.filter((k) => k.ran).map((k) => k.key), ["K1", "K2", "K3", "K4", "K5", "K6"]);
   }
   assert.deepEqual(w.c.pairs({ key: " k5 ", viewer: MACHINE }).keys.filter((k) => k.ran).map((k) => k.key), ["K5"]);
-  for (const key of ["K6", "k 1", "all", 1]) {
+  assert.deepEqual(w.c.pairs({ key: "k6", viewer: MACHINE }).keys.filter((k) => k.ran).map((k) => k.key), ["K6"]);
+  for (const key of ["K7", "K0", "k 1", "all", 1]) {
     const r = w.c.pairs({ key, viewer: MACHINE });
     const row = CONTRADICTION_PAIR_CHECKS.CONTRADICTION_KEY_UNKNOWN;
     assert.equal(r.ok, false);
@@ -40,8 +41,8 @@ test("R5: key is trimmed and upper-cased; absent or blank runs all five keys; an
     assert.equal(r.check, "C-60.1");
     assert.equal(r.check, row.check);
     assert.equal(r.translation, row.translation);
-    assert.deepEqual(r.keys, ["K1", "K2", "K3", "K4", "K5"]);
-    assert.match(r.detail, /K1, K2, K3, K4, K5/);
+    assert.deepEqual(r.keys, ["K1", "K2", "K3", "K4", "K5", "K6"]);
+    assert.match(r.detail, /K1, K2, K3, K4, K5, K6/);
   }
 });
 
@@ -78,7 +79,7 @@ test("R7: each key answers ran, formed, limit, truncated observed past the bound
   assert.deepEqual([at2.formed, at2.truncated], [2, true]);
   assert.equal(w.c.pairs({ key: "K1", limit: 2, viewer: MACHINE }).pairs.length, 2);
   /* the unnamed keys */
-  for (const k of ["K2", "K3", "K4", "K5"]) {
+  for (const k of ["K2", "K3", "K4", "K5", "K6"]) {
     const e = byKey(at3, k);
     assert.equal(e.ran, false);
     assert.equal(e.formed, 0);
@@ -198,36 +199,76 @@ test("R8: K4 pairs two cited passages whose captures resolve, established, to on
   assert.equal(v.c.pairs({ key: "K4", viewer: MACHINE }).pairs.length, 1);
 });
 
-test("R9: K4 tells sources apart only by the doctype and date their readers state; unstated is undetermined, counted and split; agreeing is indistinct", () => {
+test("R9: K4 tells sources apart only by the doctype their readers state and the own dates events holds, compared by civil-time; unstated or unsettled is undetermined, counted and split; agreeing is indistinct", () => {
+  const D = { never_read: 0, no_doctype: 0, no_date: 0, order_undetermined: 0 };
   const cases = [
     [{ contentType: "rule", date: "2026-01-01" }, { contentType: "act", date: "2026-01-01" }, { formed: 1, disc: "doctype" }],
-    [{ contentType: "rule", date: "2026-03-01" }, { contentType: "rule", date: "2026-10-01" }, { formed: 1, disc: "date" }],
+    [{ contentType: "rule", date: "2026-03-01" }, { contentType: "rule", date: "2026-10-01" }, { formed: 1, disc: "date", order: "a_first" }],
+    [{ contentType: "rule", date: "2026-10-01" }, { contentType: "rule", date: "2026-03-01" }, { formed: 1, disc: "date", order: "b_first" }],
     [{ contentType: "rule", date: "2026-03-01" }, { contentType: "rule", date: "2026-03-01" }, { indistinct: 1 }],
-    [{ contentType: "rule" }, null, { undetermined: 1, detail: { never_read: 1, no_doctype: 0, no_date: 0 } }],
-    [{ contentType: null, date: "2026-03-01" }, { contentType: "rule", date: "2026-03-01" }, { undetermined: 1, detail: { never_read: 0, no_doctype: 1, no_date: 0 } }],
-    [{ contentType: "rule", date: "2026-03-01" }, { contentType: "rule" }, { undetermined: 1, detail: { never_read: 0, no_doctype: 0, no_date: 1 } }],
-    [{ contentType: "  ", date: " " }, { contentType: "rule", date: "2026-03-01" }, { undetermined: 1, detail: { never_read: 0, no_doctype: 1, no_date: 0 } }],
+    [{ contentType: "rule" }, null, { undetermined: 1, detail: { ...D, never_read: 1 } }],
+    [{ contentType: null, date: "2026-03-01" }, { contentType: "rule", date: "2026-03-01" }, { undetermined: 1, detail: { ...D, no_doctype: 1 } }],
+    [{ contentType: "rule", date: "2026-03-01" }, { contentType: "rule" }, { undetermined: 1, detail: { ...D, no_date: 1 } }],
+    [{ contentType: "  ", date: " " }, { contentType: "rule", date: "2026-03-01" }, { undetermined: 1, detail: { ...D, no_doctype: 1 } }],
+    /* a reading's own top-level date that events does not hold is no date (never read from the reading alone) */
+    [{ contentType: "rule", date: "2026-03-01", dated: false }, { contentType: "rule", date: "2026-10-01" }, { undetermined: 1, detail: { ...D, no_date: 1 } }],
+    /* never as raw strings: a coarser precision that does not settle the order, or a band, is undetermined */
+    [{ contentType: "rule", date: "2026", precision: "edtf" }, { contentType: "rule", date: "2026-03-01" }, { undetermined: 1, detail: { ...D, order_undetermined: 1 } }],
+    [{ contentType: "rule", date: "2026-03", precision: "edtf" }, { contentType: "rule", date: "2026-03", precision: "edtf" }, { indistinct: 1 }],
+    [{ contentType: "rule", date: "2025", precision: "edtf" }, { contentType: "rule", date: "2026-03-01" }, { formed: 1, disc: "date", order: "a_first" }],
+    /* zones count: the same day in two zones overlaps, never settled by the strings */
+    [{ contentType: "rule", date: "2026-03-01", zone: "America/Halifax" }, { contentType: "rule", date: "2026-03-01" }, { undetermined: 1, detail: { ...D, order_undetermined: 1 } }],
+    /* a string-order that is the wrong order: minute precision across zones */
+    [{ contentType: "rule", date: "2026-03-01T09:00", precision: "minute", zone: "Asia/Tokyo" }, { contentType: "rule", date: "2026-03-01T08:00", precision: "minute" },
+     { formed: 1, disc: "date", order: "a_first" }],
   ];
   for (const [a, b, want] of cases) {
     const w = k4World(a, b);
     const r = w.c.pairs({ key: "K4", viewer: MACHINE });
     const k = byKey(r, "K4");
-    assert.equal(k.formed, want.formed || 0, JSON.stringify([a, b]));
-    if (want.disc) assert.equal(r.pairs[0].discriminator, want.disc);
-    assert.equal(k.indistinct, want.indistinct || 0);
-    assert.equal(k.undetermined, want.undetermined || 0);
-    assert.deepEqual(k.undetermined_detail, want.detail || { never_read: 0, no_doctype: 0, no_date: 0 });
+    const what = JSON.stringify([a, b]);
+    assert.equal(k.formed, want.formed || 0, what);
+    if (want.disc) assert.equal(r.pairs[0].discriminator, want.disc, what);
+    if (want.order) assert.equal(r.pairs[0].order, want.order, what);
+    assert.equal(k.indistinct, want.indistinct || 0, what);
+    assert.equal(k.undetermined, want.undetermined || 0, what);
+    assert.deepEqual(k.undetermined_detail, want.detail || D, what);
     if (want.undetermined) {
       assert.equal(k.notes.length, 1);
       assert.match(k.notes[0], /NOT formed/);
-      assert.match(r.says, /NOT formed because a date or a doctype/);
+      assert.match(r.says, /NOT formed because a value the record does not hold, or an order it does not settle/);
     } else assert.deepEqual(k.notes, []);
   }
-  /* never from the content row's or the capture's own time: those instants differ and no reader states a date */
+  /* the side carries the date as stated and its precision and zone */
+  const d = k4World({ contentType: "rule", date: "2026-03", precision: "edtf" }, { contentType: "rule", date: "2026-10-01", zone: "America/Halifax" });
+  const p = d.c.pairs({ key: "K4", viewer: MACHINE }).pairs[0];
+  assert.deepEqual([p.a.date, p.a.date_precision, p.a.date_zone], ["2026-03", "edtf", "UTC"]);
+  assert.deepEqual([p.b.date, p.b.date_precision, p.b.date_zone], ["2026-10-01", "day", "America/Halifax"]);
+  /* several own dates: they agree, or the reading's stated one settles it; otherwise no date */
+  const several = (extra, readingDate) => {
+    const w = k4World({ contentType: "rule", date: readingDate, dated: false }, { contentType: "rule", date: "2026-12-01" });
+    for (const v of extra) w.dated("capA", "INFO-2026-0001", v, { kind: v.endsWith("01") ? "adopted" : "effective" });
+    return byKey(w.c.pairs({ key: "K4", viewer: MACHINE }), "K4");
+  };
+  assert.equal(several(["2026-02-01", "2026-02-01"], "2026-02-01").formed, 1);
+  assert.equal(several(["2026-02-01", "2026-02-15"], "2026-02-15").formed, 1);
+  assert.deepEqual([several(["2026-02-01", "2026-02-15"], "2026-02-20").undetermined_detail.no_date,
+                    several(["2026-02-01", "2026-02-15"], null).undetermined_detail.no_date], [1, 1]);
+  /* an "on or before" bound is a bound, not the document's date */
+  const ub = k4World({ contentType: "rule" }, { contentType: "rule", date: "2026-12-01" });
+  ub.dated("capA", "INFO-2026-0001", "2026-01-01", { kind: "published", upperBound: true });
+  assert.equal(byKey(ub.c.pairs({ key: "K4", viewer: MACHINE }), "K4").undetermined_detail.no_date, 1);
+  /* never from the content row's or the capture's own time: those instants differ and no own date is held */
   const w = k4World({ contentType: "rule" }, { contentType: "rule" });
   w.st.sql.exec(`UPDATE content SET at='2020-01-01' WHERE content_id='ca'`);
   const k = byKey(w.c.pairs({ key: "K4", viewer: MACHINE }), "K4");
   assert.deepEqual([k.formed, k.undetermined, k.undetermined_detail.no_date], [0, 1, 1]);
+  /* an own date held in a bundle the viewer may not see is not a date for that viewer */
+  const h = k4World({ contentType: "rule", date: "2026-01-01", dated: false }, { contentType: "rule", date: "2026-10-01" });
+  h.inquiry("PROJ-2026-0009", { project: true });
+  h.dated("capA", "PROJ-2026-0009", "2026-01-01");
+  assert.deepEqual([byKey(h.c.pairs({ key: "K4", viewer: MEMBER }), "K4").formed,
+                    byKey(h.c.pairs({ key: "K4", viewer: OUTSIDER }), "K4").undetermined_detail.no_date], [1, 1]);
 });
 
 test("R10: every side's bundle is one the viewer may see; an absent or unrecognised viewer compares nothing and says it is an outage", () => {
@@ -284,8 +325,10 @@ test("R11: a key that formed nothing names the first empty rung of its ladder, e
   assert.deepEqual(ladder(w0, "K3"), ["viewer", "inquiry", "reading", "claim", "referent"]);
   assert.deepEqual(ladder(w0, "K4"), ["viewer", "content", "cited", "resolution", "shared_entity"]);
   assert.deepEqual(ladder(w0, "K5"), ["viewer", "inquiry", "drawing_projects", "concluded_stances", "differing_claim"]);
+  assert.deepEqual(ladder(w0, "K6"), ["viewer", "money_fact", "same_parties", "same_stage_period", "differing_amount"]);
   for (const k of ["K1", "K2", "K3", "K5"]) assert.equal(level(w0, k), "inquiry");
   assert.equal(level(w0, "K4"), "content");
+  assert.equal(level(w0, "K6"), "money_fact");
 
   /* K1 */
   const a = world(); a.inquiry("INQ-2026-0001");
@@ -406,7 +449,7 @@ test("R12: the answer states wrote false, pairs_formed, the flat pairs, judgemen
   assert.equal(r.judgement.state, "HELD_APART");
   assert.equal(r.judgement.read, "candidatesFor");
   for (const f of ["by", "why"]) assert.equal(typeof r.judgement[f], "string");
-  assert.match(r.says, /^2 candidate pair\(s\) over K1, K2, K3, K4, K5/);
+  assert.match(r.says, /^2 candidate pair\(s\) over K1, K2, K3, K4, K5, K6/);
   assert.match(r.says, /The pairing answers pairs; a run's judgements over them are read through candidatesFor/);
   /* no label vocabulary: no list of labels and no field naming one, anywhere in the answer */
   const walk = (v, path = []) => {
@@ -432,7 +475,7 @@ test("R18: the pairing is deterministic — the same record and viewer give the 
   w.leg("INQ-2026-0002", 0, "supports", { content: "ca" }); w.leg("INQ-2026-0002", 1, "cuts_against", { content: "cb" });
   for (const viewer of [MACHINE, MEMBER, OUTSIDER, null])
     assert.deepEqual(w.c.pairs({ viewer }), w.c.pairs({ viewer }));
-  assert.deepEqual(Object.keys(CONTRADICTION_KEYS), ["K1", "K2", "K3", "K4", "K5"]);
+  assert.deepEqual(Object.keys(CONTRADICTION_KEYS), ["K1", "K2", "K3", "K4", "K5", "K6"]);
   assert.ok(Object.isFrozen(CONTRADICTION_KEYS) && Object.values(CONTRADICTION_KEYS).every(Object.isFrozen));
 });
 
