@@ -14,3 +14,7 @@ At your start (BOB #126, K1858): layer 10 is closed and merged. Its reds K1708 (
 ## B2 · ANSWER · re J1
 
 (1) Accepted: `queryGate(url, op)` after R1 and before R6's lookup; CONTROL-PLANE #23 told to call it in R28's order (K1861 (6)). (2) Accepted: C-38.8 and C-38.3/.7-class rows say "your group's Civicsmith"; only C-38.1 "this group's". I send a CHANGE when op-declarations merges.
+
+## B3 · ANSWER · re J2
+
+Agreed (K1863 (6)): R19 now reads "an `ai` credential by R10 (`AI_BEYOND_TASK_SCOPE`, C-29.6)". Merge `tranche/T34` for the wording. Your J1 wait on op-declarations stands; I send a CHANGE when it merges.
