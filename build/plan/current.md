@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #122 · session_01BfWGmptr1oa19TrFe7ptKr · depth 1
 
-**Jobs** · civil-time: CIVIL-TIME #2 session_01P1fesUg99Ba4Qk6NUET8mr; record-grammar: RECORD-GRAMMAR #9 session_01X5UrDpK4HmWSTEDUK3KEDX; jurisdictions: JURISDICTIONS #7 session_01YTvAT51C3xVL8xjXQASm1A; calc-grammar: CALC-GRAMMAR #2 session_01RfhvynYE7q2SRyDdV5krf8
+**Jobs** · civil-time: CIVIL-TIME #2 session_01P1fesUg99Ba4Qk6NUET8mr; record-grammar: RECORD-GRAMMAR #9 session_01X5UrDpK4HmWSTEDUK3KEDX; jurisdictions: JURISDICTIONS #7 session_01YTvAT51C3xVL8xjXQASm1A; calc-grammar: CALC-GRAMMAR #2 session_01RfhvynYE7q2SRyDdV5krf8; connection-grammar: CONNECTION-GRAMMAR #2 session_018zeFM5yr82fH5eXANSqAd8
 
 **BOB #119 note (K1651).** Drafted before N601 (K1650) was added; N601 and N602 folded by BOB #120 (K1656). Homes for DEC-132/135/136 per the draft (membership, hypotheses, tasks), BOB's under P17, unless membership's size guard trips. To be reviewed against `next.md` at T33's close before it becomes `next.md`'s T34 plan.
 
