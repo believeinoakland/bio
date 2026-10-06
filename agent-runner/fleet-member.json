@@ -1,0 +1,26 @@
+{
+  "name": "agent-runner",
+  "kind": "container",
+  "entry": "src/entry.mjs",
+  "testDir": "test",
+  "surface": {
+    "GET /version": "R5: 200 {ok: true, name: \"agent-runner\", version}",
+    "GET /conversation (WebSocket upgrade)": "R1-R4: one conversation request, its relays and its answer",
+    "anything else": "R6: 404 {ok: false, code: \"UNKNOWN\"}"
+  },
+  "image": {
+    "repository": "docker.io/civicos/agent-runner",
+    "digest": null,
+    "platform": "linux/amd64",
+    "port": 8080,
+    "schedulingPolicy": "default"
+  },
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".",
+    "command": "docker build --platform linux/amd64 -t docker.io/civicos/agent-runner:<version> agent-runner",
+    "dependencies": "package-lock.json (npm ci; the Agent SDK pinned exactly)"
+  },
+  "egress": ["api.anthropic.com"],
+  "note": "The fleet-member marker of a container member: it has no Worker bundle. `image.digest` is written by the release when it first publishes the image (T33-D1), and an install names the image only as `repository@digest` (src/manifest.mjs imageReference, R7). `egress` is the member's network allow-list, applied by whoever deploys the container (R10)."
+}
