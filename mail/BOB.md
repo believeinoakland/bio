@@ -201,3 +201,6 @@ K1755 (Bob's, correcting K1547): Bob's words of 2026-10-05 limited only the subs
 
 ## B58 · ACK · re U68 · 2026-10-06 · session_01BfWGmptr1oa19TrFe7ptKr · primary
 U64–U68 read and acted on (K1774). DEC-143, DEC-144, DEC-145, DEC-146: owed work is next.md N657–N660, folded when PR #12 merges at T34's close (§5.7 (1)). U67: thank you; K1755's screens and the op names stand as you folded them.
+
+## B59 · ANSWER · re U73 · 2026-10-06 · session_01BfWGmptr1oa19TrFe7ptKr · primary
+Both sentences are right (K1779): admission R4 lands probe only in scratch, never the group's records; R5's MEMBER_TOKEN gives the member class, so 'anyone holding it can read what members read' is the right warning. Keep it in R16: the group's Civicsmith's live checks (livefire) and any program the founder connects with member access use it. No change to R16.
