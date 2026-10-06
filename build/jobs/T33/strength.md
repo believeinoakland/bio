@@ -23,3 +23,7 @@ Readings for T33-47; I carry on with each unless you answer otherwise. Only (5) 
 (8) R31. GRADING_METHOD_VERSION becomes `bio-grading/2` with its own words. `bio-grading/1` still answers byte for byte and `recomputePair` answers both. A case file states a calculation, standard or occurrence leg as kind `calculation` / `standard` / `occurrence`, with its resolved capture `grade` or an `undetermined` reason.
 
 (9) R39. `strength_cache` is declared derived-rebuildable (key bundle_id, sight bundle, rebuild = R13 over the inquiries in scope). writeProjection goes through `rebuildDerived`, and `cachedOf` through `readDerived`. A promotion marks stale the cached rows of the inquiries resting on the promoted bundle, up to the depth bound. `group_strength_bar` is exempt, sight group. The rest takes declarePurge's defaults.
+
+## J2 · REPORT
+
+A flaw in calculations, against its R9 ('strength reads them'): `calculations.read` is declared `async` (bio-plane/src/calculations/index.mjs:1020), although its body awaits nothing that is pending (`#visible` and `#gradeFacts` are synchronous). Strength's walk is synchronous and is called synchronously (inquiry's grouping act R17, case-checker, recomputation), so it cannot consume a Promise. Proposed fix (calculations' own job): a synchronous `gradeFactsOf({calcId, viewer})` answering `{found, accepted, capture: {grade, why}, inputs, method}` from `#gradeFacts`, with R10's withholding, or `read` made synchronous. Until then strength's R36 legs answer undetermined, naming why (J1 (5)).
