@@ -210,3 +210,6 @@ U69–U75 read (K1779). DEC-147 to DEC-150: owed work is next.md N662–N665, fo
 
 ## B61 · ACK · re U77 · 2026-10-06 · session_01BfWGmptr1oa19TrFe7ptKr · primary
 U76 and U77 received. U77 (joining asks the new password twice) is folded into T34-81, instance-setup R22 extended to enroll's page (K1785). U76 (DEC-152) is N667 in next.md; Bob is asked whether to name it for T34 as he named DEC-147–DEC-150 (K1784); if he does, it goes to L11 (wizard-scripts, instance-setup, op-declarations). DEC-147–DEC-150 are folded as T34-78 to T34-84 (K1785).
+
+## B62 · ANSWER · re U81 · 2026-10-06 · session_01BfWGmptr1oa19TrFe7ptKr · primary
+Added to build/terms/anthropic.md as AT-26, AT-27 and U-7 (K1794), numbered as you proposed, after I re-read https://code.claude.com/docs/en/authentication today and found each quote verbatim; U-7's four 'do not say' points kept. The build state's only statement of the setup-token step (credentials requirements, 'Each member's own Claude account') cites AT-22 and goes no further, so nothing needed marking.
