@@ -6,8 +6,9 @@
    is a register row with its origin locator (provenance R48), homed on an Information bundle whose `data/provenance.json`
    states its co-archive and origin (attestation R7, acquisition R21), with its bytes in a stubbed evidence bucket.
    Neighbours are stand-ins the test controls, each answering exactly the service docket reads: `inquiry`'s
-   `subjectEntityOf` (its R43), `entities`' `readEntity` (its R5), `case-tensions`' `caseTensions` (its R4; injected
-   until T33-62 merges, K1563 (1)) and `publication`'s `stampEdition` (its R62; injected until T33-63 merges), a recorder
+   `subjectEntityOf` (its R43), `entities`' `readEntity` (its R5), `contradiction`'s `unresolvedRecordOn` (its R29), which
+   the real `case-tensions` reads for its `caseTensions` (its R4) through a publication provider standing in for the one
+   `publication` registers (its R61; until T33-63 merges, K1563 (1)), and `publication`'s `stampEdition` (its R62; injected until T33-63 merges), a recorder
    that checks its edition and order as R62 does and can be made to refuse or throw; and `reevaluation` is a recorder of
    `registerDocket` and `docketActed` (its R30), which can be made to throw. `events` is the real module (its R30). The group slug
    is the fact `producingGroup` (promotion R40), registered as instance-setup does. Every test drives `docket` at its
@@ -23,6 +24,7 @@ import { attestationOf } from "../../../src/attestation/index.mjs";
 import { publicationOf } from "../../../src/publication/index.mjs";
 import { docketOf } from "../../../src/docket/index.mjs";
 import { eventsOf } from "../../../src/events/index.mjs";
+import { caseTensionsOf } from "../../../src/case-tensions/index.mjs";
 import { signSshsig, signerPublicLine } from "../../../scripts/sign-sshsig.mjs";
 import { NS_DOCKET, docketStatement } from "../../../src/sshsig.mjs";
 import { canonicalJson } from "../../../src/record-grammar/json.mjs";
@@ -109,8 +111,23 @@ export function world({ slug = SLUG, before = null } = {}) {
         aliases: [{ alias: `alias of ${entityId}`, canonical: false }, { alias: names.get(entityId), canonical: true }] } }
     : { ok: true, found: false, entity_id: entityId, entity: null }) };
   const tensions = { list: [], asked: [] };
-  const caseTensions = { caseTensions: (q) => { tensions.asked.push(q);
-    return { ok: true, cases: tensions.list.length ? [{ case: CASE, edition: tensions.edition ?? 1, tensions: tensions.list }] : [], cursor: null }; } };
+  /* contradiction R29: the candidates `tensions.list` names on a finding, at whatever pin is asked. */
+  const contradiction = { unresolvedRecordOn: ({ finding }) => { tensions.asked.push(finding);
+    return { ok: true, candidates: tensions.list.filter((t) => t.member === finding).map((t) => ({ candidate: t.candidate, state: t.state })) }; } };
+  const rowsOf = (q, ...a) => [...st.sql.exec(q, ...a)];
+  const caseTensions = caseTensionsOf(host, { record, membership, promotion, contradiction, now: () => iso(clock.now) });
+  caseTensions.registerPublicationProvider("publication", {
+    pins: () => [], preparations: () => [], signedDocumentsNaming: () => [], reauthorSection: () => ({ ok: false }),
+    caseDocument: (caseId, edition) => {
+      const d = rowsOf(`SELECT d.case_id, d.edition, d.doc_sha, d.text, d.sig_armored, c.project_id FROM case_documents d
+                        JOIN cases c ON c.case_id = d.case_id WHERE d.case_id=? AND d.edition=?`, caseId, edition)[0];
+      return d ? { case_id: d.case_id, edition: Number(d.edition), doc_sha: d.doc_sha, text: d.text, signed: !!d.sig_armored, project_id: d.project_id } : null;
+    },
+    members: (caseId, edition) => rowsOf(`SELECT bundle_id, version_sha FROM published_case_members WHERE case_id=? AND edition=? ORDER BY ord`, caseId, edition),
+    latestRatified: ({ project, after, limit }) => rowsOf(`SELECT p.case_id, MAX(p.edition) AS edition, c.project_id FROM published_cases p
+        JOIN cases c ON c.case_id = p.case_id WHERE p.ratified_at IS NOT NULL AND (? IS NULL OR c.project_id = ?) AND p.case_id > ?
+        GROUP BY p.case_id ORDER BY p.case_id LIMIT ?`, project, project, after || "", limit).map((r) => ({ ...r, edition: Number(r.edition) })),
+  });
   /* publication R62 as its requirement words it (K1632): a stamp per named ratified edition, linked to a posted
      court-order entry of the case, which it reads through the one order source docket registers at start. */
   const stamps = { list: [], calls: [], refuse: null, throws: false, sources: [] };
@@ -134,7 +151,7 @@ export function world({ slug = SLUG, before = null } = {}) {
     docketActed(q) { reeval.acted.push(q); if (reeval.throws) throw new Error("listener down"); return { ok: true, told: true }; } };
   let n = 0;
   const w = {
-    st, host, record, membership, credentials, promotion, provenance, attestation, clock, evidence, subjects, names, tensions, reeval, stamps,
+    st, host, caseTensions, record, membership, credentials, promotion, provenance, attestation, clock, evidence, subjects, names, tensions, reeval, stamps,
     rows: (q, ...a) => [...st.sql.exec(q, ...a)],
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`).one().n,
     /** Every table's rows, for "nothing written" and "byte-identical" (the record's own and every module's here). */

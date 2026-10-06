@@ -31,8 +31,7 @@
  *   reevaluation  `registerDocket`, `docketActed` (its R30).
  *   publication   `stampEdition` (its R62, R25 here); its tables `cases`, `published_cases`, `published_case_members`
  *                 and `case_documents` under its R40.
- *   caseTensions  `caseTensions` (`case-tensions` R4, was `publication` R50; R9 (c)). Until `case-tensions` merges
- *                 (T33-62) it is taken as an injected dep, else `publication`'s own (K1563 (1)).
+ *   caseTensions  `case-tensions`' `caseTensions` (its R4, was `publication` R50; R9 (c)).
  *   events        `registerEventSource` (its R30; R26 here).
  *   now           the clock, milliseconds (default `env.BIO_NOW_MS`, else the wall clock).
  *
@@ -52,6 +51,7 @@ import { reevaluationOf } from "../reevaluation/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
 import { whatChangedOf } from "../case-grammar/index.mjs";
 import { eventsOf } from "../events/index.mjs";
+import { caseTensionsOf } from "../case-tensions/index.mjs";
 import { verifySshsig, NS_DOCKET, docketStatement } from "../sshsig.mjs";
 import { isMachineIdentity } from "../record-grammar/actors.mjs";
 import { canonicalJson } from "../record-grammar/json.mjs";
@@ -174,8 +174,8 @@ export class Docket {
   get inquiry() { return this.#deps.inquiry ||= inquiryOf(this.#deps.host, { record: this.record, membership: this.membership }); }
   get reevaluation() { return this.#deps.reevaluation ||= reevaluationOf(this.#deps.host, { record: this.record, membership: this.membership }); }
   get publication() { return this.#deps.publication ||= publicationOf(this.#deps.host, { record: this.record, membership: this.membership }); }
-  /* R9 (c): `case-tensions` R4; `publication`'s own until T33-62 merges (K1563 (1)). */
-  get caseTensions() { return this.#deps.caseTensions ||= this.publication; }
+  /* R9 (c): `case-tensions` R4. */
+  get caseTensions() { return this.#deps.caseTensions ||= caseTensionsOf(this.#deps.host, { record: this.record, membership: this.membership }); }
   get events() { return this.#deps.events ||= eventsOf(this.#deps.host, { record: this.record, membership: this.membership }); }
 
   migrate() { migrateDocket(this.sql); }
