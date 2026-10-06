@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { planeWorld as world, V, SIG } from "./fixture.mjs";
 import { publicationOps } from "../../../src/publication/index.mjs";
+import { caseTensionsOf, caseTensionsOps } from "../../../src/case-tensions/index.mjs";
 import { publicationDoorOp, PUBLICATION_DOOR_OPS } from "../../../src/publication/door.mjs";
 import { NS_RATIFY, caseRatifyStatement } from "../../../src/sshsig.mjs";
 
@@ -28,14 +29,15 @@ const storeSilent = (op, correlation = undefined) =>
   json({ ok: false, reason: "STORE_DID_NOT_ANSWER", op, detail: "the store did not answer", correlation }, 502);
 const sha256Hex = async (v) => createHash("sha256").update(String(v)).digest("hex");
 
-/* The record store's Durable Object: this module's op map over the world; every request it saw is kept. */
+/* The record store's Durable Object: the plane's op map over the world (case-tensions' ops spread beside this module's,
+   as the plane's since T33-90, N597); every request it saw is kept. */
 function stubOf(w) {
   const seen = [];
   return { seen, async fetch(req, init) {
     const r = typeof req === "string" ? new Request(req, init) : req;
     const url = new URL(r.url);
     seen.push(url);
-    const ops = publicationOps(w.p, url, null);
+    const ops = { ...caseTensionsOps(caseTensionsOf(w.host), url, null), ...publicationOps(w.p, url, null) };
     const op = url.pathname.slice(1);
     if (!ops[op]) return Response.json({ ok: false, error: `unknown op: ${op}` }, { status: 400 });
     return Response.json({ ok: true, result: await ops[op]() });

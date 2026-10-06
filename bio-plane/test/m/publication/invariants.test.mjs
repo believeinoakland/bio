@@ -62,7 +62,8 @@ test("R31 published bytes and the court-order stamps are exempt from purge; the 
     const got = declared[d.name];
     assert.deepEqual([got.purge, got.expunge, got.export, got.derive, got.version_chain],
                      [PUBLICATION_EXEMPT.includes(d.name) ? "exempt" : "clear", "none", "admin-only", "stored", false], d.name);
-    assert.equal(got.sight, ["case_documents", "case_exclusions", "published_cases", "cases", "edition_stamps"].includes(d.name)
+    assert.equal(got.sight, ["case_documents", "case_exclusions", "published_cases", "cases", "edition_stamps",
+                             "scheduled_editions"].includes(d.name)
       ? "group" : "bundle", `${d.name}'s sight`);
   }
   /* T33-63 (K1634): the flags and attributions are case-tensions', declared by it, created at this module's creation */
@@ -79,7 +80,8 @@ test("R31 published bytes and the court-order stamps are exempt from purge; the 
   assert.deepEqual([...CASE_CARRIAGE_EXEMPT].sort(), ["published_case_materials", "published_material_texts"]);
   for (const t of CASE_CARRIAGE_EXEMPT) assert.equal(publicationOwns(t), false, `${t} is case-carriage's`);
   assert.deepEqual(PUBLICATION_TABLES.map((t) => t.name || t).sort(),
-                   ["case_documents", "case_exclusions", "published_edges", "published_held_references"]);
+                   ["case_documents", "case_exclusions", "published_edges", "published_held_references",
+                    "scheduled_editions"]);
   assert.equal(publicationOwns("published_edges"), true);
   assert.equal(publicationOwns({ name: "export_log" }), false, "corpus-export's since K1024");
   assert.equal(publicationOwns("statement_acknowledgements"), false, "case-authoring's");
@@ -124,7 +126,7 @@ test("N483 N501 (K1119) this module answers no export: no op `export` or `export
   const w = world();
   const ops = Object.keys(publicationOps(w.p, new URL("http://do/x"), null));
   assert.deepEqual(ops.filter((k) => /export/i.test(k)), [], "no export op is this module's");
-  assert.ok(ops.includes("caseflags") && ops.includes("casedocument"), "the map itself is still answered");
+  assert.ok(ops.includes("casedocument") && ops.includes("excludedby"), "the map itself is still answered");
   for (const name of ["exportManifest", "exportLog"]) assert.equal(name in w.p, false, `${name}: no delegate`);
   assert.equal(w.p.corpusExport, corpusExportOf(w.host), "created at this module's creation, one per host");
   assert.equal(w.count("export_log"), 0, "export_log exists at boot");

@@ -27,6 +27,12 @@
  * creates it, registers with it the provider its moved code reads this module's tables and splice through (R61), and
  * keeps one-line delegates for every moved name, so importers read through it until re-pointed (plan Rules (9) item 4).
  *
+ * T34 (T34-44, T34-79): the set-wide read of the court-order stamps (R64), the group's self-description as the public is
+ * told it (R65), and publishing at a set time (R66–R71, `./schedule.mjs`, its table `scheduled_editions`): a signed
+ * edition waits with its signature held beside its document, is checked again at its time by the one publisher
+ * `ratification` registers, and is moved or cancelled by an owner until then. Case-tensions' ops are the plane's to
+ * spread since T33-90 (N597); this module's map no longer spreads them.
+ *
  * REACHED as `publicationOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the first
  * call with `deps`, returned to every later caller. At creation it creates its tables and declares them to
  * record-core (R31; plan T33 Rules (6): each with its classes), registers with record-core the published registry as
@@ -58,7 +64,7 @@
  * provenance's `register` (R42's captures). */
 
 import { recordOf, instantOrder } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, listenerRefusal } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
@@ -71,7 +77,8 @@ import { PUBLICATION_TABLES, PUBLICATION_EXEMPT, PUBLICATION_DECLARATIONS, migra
          registerCaseDocumentSha, caseDocumentPath } from "./schema.mjs";
 import { corpusExportOf } from "../corpus-export/index.mjs";
 import { caseCarriageOf } from "../case-carriage/index.mjs";
-import { caseTensionsOf, caseTensionsOps } from "../case-tensions/index.mjs";
+import { caseTensionsOf } from "../case-tensions/index.mjs";
+import * as schedule from "./schedule.mjs";
 /* The case document's grammar is `case-grammar`'s (K651): the formats and predicates, the /5 blocks and tension
    section, the attribution run's text, the section locators, the signed citations and the edge set a finding rests on.
    This module reads them from there and re-exports, unchanged, every name it exported before the split, so its
@@ -96,6 +103,7 @@ export { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V4,
          publishedGraphEdges } from "../case-grammar/index.mjs";
 export { PUBLICATION_SCHEMA, PUBLICATION_TABLES, PUBLICATION_EXEMPT, PUBLICATION_DECLARATIONS,
          caseDocumentPath } from "./schema.mjs";
+export { SCHEDULED_EDITIONS_MAX, SCHEDULE_STATES, SCHEDULED_CHECK_UNAVAILABLE } from "./schedule.mjs";
 
 /** R62 (K1480): the effects a court order may have on a ratified edition. */
 export const EDITION_STAMP_EFFECTS = Object.freeze(["remove", "redact", "seal", "unseal"]);
@@ -159,6 +167,8 @@ export class Publication {
   #deps;
   #review = null;        // R23: {module, ...doors}, filled once
   #orders = null;        // R62 (K1632): {module, courtOrderOf}, filled once by docket
+  #publisher = null;     // R67 (K1790): {module, publishScheduled}, filled once by ratification
+  #publishListeners = [];   // R71 (K1816): [{module, fn}], one per module
   purgeDeclaration = null;   // R31: record-core's answer to this module's purge declaration, set at creation
 
   constructor({ storage, record, membership, promotion, host = null, inquiry = null, basisVersions = null,
@@ -264,6 +274,61 @@ export class Publication {
   /** R62: whether a court-order source is registered, and by whom. */
   orderSource() { return this.#orders ? { registered: true, module: this.#orders.module } : { registered: false, module: null }; }
 
+  /* ---------------------------------------------------------------- R66–R71: publishing at a set time (./schedule.mjs) */
+
+  /** R67 (K1790): `ratification` fills, once at start, the one publisher of a waiting edition:
+   *  `publishScheduled(entry, now)` → `{published: true, published_at}` or `{stopped: [{code, translation}]}`. Called as
+   *  `registerScheduledPublisher(publisher)` or `registerScheduledPublisher(module, publisher)`; a second registration is
+   *  refused `PROVIDER_DECLARED`, one without the door `PROVIDER_MALFORMED`. With none, a due edition is stopped
+   *  `SCHEDULED_CHECK_UNAVAILABLE` and never published unchecked. */
+  registerScheduledPublisher(moduleOrPublisher, maybePublisher = undefined) {
+    const pub = typeof moduleOrPublisher === "string" ? maybePublisher : moduleOrPublisher;
+    const module = typeof moduleOrPublisher === "string" ? str(moduleOrPublisher) : str(pub && pub.module) || "unnamed";
+    if (!pub || typeof pub !== "object" || typeof pub.publishScheduled !== "function")
+      return { ok: false, reason: "PROVIDER_MALFORMED", detail: "the scheduled publisher gives the door publishScheduled" };
+    if (this.#publisher)
+      return { ok: false, reason: "PROVIDER_DECLARED", module: this.#publisher.module,
+               detail: `the scheduled publisher is already registered by ${this.#publisher.module}` };
+    this.#publisher = { module, publishScheduled: pub.publishScheduled };
+    return { ok: true, module };
+  }
+  /** R67: the registered publisher, or null. */
+  scheduledPublisher() { return this.#publisher; }
+
+  /** R71 (K1811, K1816; answers R27's model): one listener per module, refused through `membership.listenerRefusal`,
+   *  told `{publishAt}` (R67's `publishWake()` as it then stands) once after an edition is set to wait (R66), its time
+   *  moved or cancelled (R68), or a due edition taken (R67), so `scheduler` re-arms its alarm. Writes nothing. */
+  onPublishScheduled(module, fn) {
+    const bad = listenerRefusal(this.#publishListeners, module, fn);
+    if (bad) return bad;
+    this.#publishListeners.push({ module, fn });
+    return { ok: true, module };
+  }
+  /* R71: the listeners, for ./schedule.mjs. */
+  publishListeners() { return this.#publishListeners; }
+
+  scheduleEdition(a) { return schedule.scheduleEdition(this, a); }
+  publishWake() { return schedule.publishWake(this); }
+  publishDue(now) { return schedule.publishDue(this, now); }
+  publishAtMove(a) { return schedule.publishAtMove(this, a); }
+  publishAtCancel(a) { return schedule.publishAtCancel(this, a); }
+  scheduledEditions(a) { return schedule.scheduledEditions(this, a); }
+  /** R66: the group's time zone as R66 reads it, or null (for `ratification` R44's offer). */
+  groupZone() { return schedule.groupZone(this); }
+
+  /* ---------------------------------------------------------------- R65: the group's self-description, publicly */
+
+  /** R65 (DEC-132 (3); K1541): exactly what `membership.groupDescription` (its R110) answers the public: the four texts
+   *  while the group's latest chosen visibility is `public`, else `{description: null}`; never the history, who set it
+   *  or when. No credential and no viewer; writes nothing and never throws. */
+  publicGroupDescription() {
+    try {
+      const d = this.membership.groupDescription({ viewer: null });
+      const x = d && d.description && typeof d.description === "object" ? d.description : null;
+      return { description: x ? { kinds: x.kinds, otherKind: x.otherKind, focus: x.focus, purpose: x.purpose } : null };
+    } catch { return { description: null }; }
+  }
+
   /* R1, R2: whether a live review grant admits exactly this case edition. With no provider, none does. */
   #grantAdmitsCaseEdition(secretSha, caseId, edition) {
     if (!secretSha) return false;
@@ -273,7 +338,7 @@ export class Publication {
   /* ---------------------------------------------------------------- R21: the case document's writes */
 
   /** R21: store one case edition's UNSIGNED document, replacing an unsigned one of the same edition and never a signed
-   *  one, and project its exclusions (R3). Inside the caller's transaction; never throws on a signed document; answers
+   *  one (nor one waiting to be published at a set time, R66, which counts as signed), and project its exclusions (R3). Inside the caller's transaction; never throws on a signed document; answers
    *  what the store holds after the call, read back, so a caller sees a write that did not happen. */
   storeCaseDocument({ case: caseArg = null, caseId = null, edition = null, text = null, author = null, at = null,
                       draft = null } = {}) {
@@ -286,12 +351,13 @@ export class Publication {
        VALUES (?,?,?,?,?,?,?)
        ON CONFLICT(case_id,edition) DO UPDATE SET doc_sha=excluded.doc_sha, text=excluded.text,
          authored_at=excluded.authored_at, authored_by=excluded.authored_by, draft_id=excluded.draft_id
-       WHERE case_documents.sig_armored IS NULL`,
+       WHERE case_documents.sig_armored IS NULL AND NOT EXISTS (SELECT 1 FROM scheduled_editions s
+         WHERE s.case_id=case_documents.case_id AND s.edition=case_documents.edition AND s.state='waiting')`,
       id, ed, docSha, text, str(at) || this.#when(), author ?? null, draft ?? null);
     this.projectCaseExclusions(id, ed);
     const held = this.#one(`SELECT doc_sha, sig_armored FROM case_documents WHERE case_id=? AND edition=?`, id, ed);
     return { ok: true, case_id: id, edition: ed, doc_sha: held ? held.doc_sha : null,
-             stored: !!held && held.doc_sha === docSha && !held.sig_armored };
+             stored: !!held && held.doc_sha === docSha && !held.sig_armored && !schedule.isWaiting(this, id, ed) };
   }
 
   /** R21: replace one named section's lines (`attribution`, `acknowledgements`: SECTIONS above) of an UNSIGNED case
@@ -313,6 +379,9 @@ export class Publication {
     const held = { case_id: id, edition: ed, doc_sha: doc ? doc.doc_sha : null };
     if (!doc) return { ok: true, ...held, reauthored: false, why: "no case document is held for this edition" };
     if (doc.sig_armored) return { ok: true, ...held, reauthored: false, why: "this case document is signed, and a signed document never changes" };
+    /* R21, R66: a document waiting to be published at a set time is signed, and its signature is over these bytes. */
+    if (schedule.isWaiting(this, id, ed))
+      return { ok: true, ...held, reauthored: false, why: "this case document is signed and waits to be published at a set time" };
     if (str(docSha) && doc.doc_sha !== str(docSha))
       return { ok: true, ...held, reauthored: false, why: "this case document has moved since it was read, so nothing was spliced" };
     const all = doc.text.split("\n");
@@ -875,14 +944,18 @@ export class Publication {
     if (!owner)
       this.sql.exec(`INSERT INTO cases (case_id,project_id,opened) VALUES (?,?,?) ON CONFLICT(case_id) DO NOTHING`,
                     id, project ?? null, when);
+    /* R70, R40 (DEC-147 (5); K1826): when it was signed beside when it is published, on the row: a set time's signing
+       (R66), else this commit's instant; published at this commit. */
+    const signedAt = schedule.signedAtFor(this, id, ed, when);
     this.sql.exec(
-      `INSERT INTO published_cases (case_id,edition,scope,completeness,bias_acknowledgement,bar,opened)
-       VALUES (?,?,?,?,?,?,?)
+      `INSERT INTO published_cases (case_id,edition,scope,completeness,bias_acknowledgement,bar,opened,signed_at,published_at)
+       VALUES (?,?,?,?,?,?,?,?,?)
        ON CONFLICT(case_id,edition) DO UPDATE SET scope=excluded.scope,
-         completeness=excluded.completeness, bias_acknowledgement=excluded.bias_acknowledgement, bar=excluded.bar`,
+         completeness=excluded.completeness, bias_acknowledgement=excluded.bias_acknowledgement, bar=excluded.bar,
+         signed_at=excluded.signed_at, published_at=excluded.published_at`,
       id, ed, typeof scope === "string" ? scope : null, completeness ? JSON.stringify(completeness) : null,
       typeof biasAcknowledgement === "string" ? biasAcknowledgement : null,
-      bar && typeof bar === "object" ? JSON.stringify(bar) : null, when);
+      bar && typeof bar === "object" ? JSON.stringify(bar) : null, when, signedAt, when);
     /* THE ROSTER AND THE PINS, IN ONE ACT: the publisher authored all N pins in one document and a member signed it,
        so the freeze is one statement somebody made. The ordinal is the roster's own order. */
     members.forEach((m, i) => {
@@ -1039,6 +1112,24 @@ export class Publication {
       .map((r) => ({ case: r.case_id, edition: Number(r.edition), effect: r.effect, parts: safeJson(r.parts),
                      entry: Number(r.entry_seq), stamped_at: r.stamped_at }));
     return { ok: true, case: id, edition: ed, stamps };
+  }
+
+  /** R64 (N598, K1644): every edition holding at least one R62 stamp, in one read over the whole store, in case id and
+   *  edition order, each edition's `stamps` exactly as `stampsOf` answers them (in the order made): `{ok: true,
+   *  editions: [{case, edition, stamps}]}`. Takes no viewer, writes nothing and never throws. */
+  stampedEditions() {
+    try {
+      const editions = [];
+      for (const r of this.#rows(`SELECT case_id, edition, effect, parts, entry_seq, stamped_at FROM edition_stamps
+                                   ORDER BY case_id, edition, rowid`)) {
+        const s = { case: r.case_id, edition: Number(r.edition), effect: r.effect, parts: safeJson(r.parts),
+                    entry: Number(r.entry_seq), stamped_at: r.stamped_at };
+        const last = editions[editions.length - 1];
+        if (last && last.case === s.case && last.edition === s.edition) last.stamps.push(s);
+        else editions.push({ case: s.case, edition: s.edition, stamps: [s] });
+      }
+      return { ok: true, editions };
+    } catch { return { ok: true, editions: [] }; }
   }
 
   /* ---------------------------------------------------------------- R63: the published timeline, frozen at signing */
@@ -1523,6 +1614,9 @@ export class Publication {
                 record — a ceremony authored and not yet signed — and it is named
                 rather than inferred from a null. */
              ratified: !!d.ratified_at, ratified_at: d.ratified_at ?? null,
+             /* R70: when a published edition was signed and when it was published; null while unsigned. */
+             ...(d.ratified_at ? this.#editionDates(d.case_id, d.edition, d.ratified_at)
+                               : { signed_at: null, published_at: null }),
              sig_armored: d.sig_armored ?? null, attestor_member: d.attestor_member ?? null,
              /* REC-128: who DELIVERED the signature, beside who MADE it. Null
                 while the document is unsigned — there is no delivery yet, which
@@ -1710,10 +1804,13 @@ export class Publication {
                  `SELECT doc_sha, text, sig_armored, attestor_key, attestor_member, delivered_by, gate_version, ratified_at
                     FROM case_documents WHERE case_id=? AND edition=? AND ratified_at IS NOT NULL`,
                  caseId, ed);
+               /* R70 (DEC-147 (5)): `signed_at` the signature's instant at the ceremony, `published_at` the commit's; one
+                  instant for both when published at signing or committed before T34. */
                return d ? { doc_sha: d.doc_sha, text: d.text, sig_armored: d.sig_armored,
                             attestor: { member: d.attestor_member, key_b64: d.attestor_key },
                             delivered_by: this.#deliveredBy(d),
-                            gate_version: d.gate_version, ratified_at: d.ratified_at } : null;
+                            gate_version: d.gate_version, ratified_at: d.ratified_at,
+                            ...this.#editionDates(caseId, ed, d.ratified_at) } : null;
              })(),
              /* REC-47 / DEC-46 (a): the bias the case was produced under travels
                 with it, on every surface that serves the case block. DEC-20 is
@@ -1877,6 +1974,14 @@ export class Publication {
       out[nameOnly ? "name" : "serve"]++;
     }
     return out;
+  }
+
+  /* R70 (K1826): a published edition's two instants, from its `published_cases` row; a row this boot's migration has
+     not yet filled (none in a running store) reads as its document's ratification instant, never null. */
+  #editionDates(caseId, edition, fallback) {
+    const r = this.#one(`SELECT signed_at, published_at FROM published_cases WHERE case_id=? AND edition=?`,
+                        caseId, Number(edition));
+    return { signed_at: (r && r.signed_at) || fallback, published_at: (r && r.published_at) || fallback };
   }
 
   /* REC-128 — THE ONE READ CHOKEPOINT FOR WHO DELIVERED A RATIFICATION. Every
@@ -2306,9 +2411,8 @@ export function publicationOps(p, url, body) {
   const q = (k) => url.searchParams.get(k);
   const b = body && typeof body === "object" ? body : {};
   return {
-    /* `caseflags` and `attribute` are case-tensions' arms since T33 (its `caseTensionsOps`), spread here unchanged until
-       the plane's op map spreads them itself (plan Rules (9) item 4). */
-    ...caseTensionsOps(p.caseTensionsModule, url, body),
+    /* `caseflags` and `attribute` are case-tensions' arms (its `caseTensionsOps`), which the plane's op map spreads
+       itself since T33-90; this module no longer spreads them (N597). */
     /* REC-44: internal only, and no caller's op (R15). */
     recordcasemanifest: () => p.recordCaseManifest(b),
     publishedtargets: () => p.publishedTargets(q("ids")),
@@ -2318,5 +2422,11 @@ export function publicationOps(p, url, body) {
     casedocument: () => p.caseDocument(q("case"), q("edition"), q("viewer"), q("secretSha")),
     /* D-734: internal, the signed text behind a published case-document hash; the control plane re-hashes it. */
     publishedcasedoctext: () => p.publishedCaseDocumentText((q("sha256") || "").toLowerCase()),
+    /* R68, R69 (DEC-147): `by` and `viewer` the control plane's stamps; an absent viewer is no viewer at all, never the
+       plane's whole read. */
+    publishatmove: () => p.publishAtMove({ case: b.case, edition: b.edition, at: b.at, by: q("by") }),
+    publishatcancel: () => p.publishAtCancel({ case: b.case, edition: b.edition, by: q("by") }),
+    publishschedule: () => p.scheduledEditions({ case: q("case"), state: q("state"), after: q("after"),
+                                                 limit: q("limit"), viewer: q("viewer") || "" }),
   };
 }

@@ -17,6 +17,7 @@ import { reevaluationOf } from "../../../src/reevaluation/index.mjs";
 import { sourcesOf } from "../../../src/sources/index.mjs";
 import { publicationOf, publicationOps, captureBlockLines, sourceBlockLines } from "../../../src/publication/index.mjs";
 import { acceptedWorkOf } from "../../../src/accepted-work/index.mjs";
+import { caseTensionsOf, caseTensionsOps } from "../../../src/case-tensions/index.mjs";
 import { materialsLines, materialAttestationLines, acceptedWorkBlockLines, calculationsLines,
          timelineLines } from "../../../src/case-grammar/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
@@ -177,11 +178,12 @@ export function world({ group = "test-group", workerd = false, contradiction = n
         if (!tables || tables.includes(name)) out[name] = JSON.stringify(all(st.sql.exec(`SELECT * FROM "${name}"`)));
       return out;
     },
-    /** An op, as the plane's op map runs it: `query` the control plane's search params, `body` its JSON. */
+    /** An op, as the plane's op map runs it: `query` the control plane's search params, `body` its JSON. The map spreads
+     *  case-tensions' ops beside this module's, as the plane's does since T33-90 (N597). */
     op(name, query = {}, body = null) {
       const url = new URL(`http://do/${name}`);
       for (const [key, v] of Object.entries(query)) if (v != null) url.searchParams.set(key, String(v));
-      return publicationOps(p, url, body)[name]();
+      return { ...caseTensionsOps(caseTensionsOf(host), url, body), ...publicationOps(p, url, body) }[name]();
     },
     member(id, { role = "member", handle = `h_${id}`, cover = `Cover ${id}`, status = "active" } = {}) {
       st.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
