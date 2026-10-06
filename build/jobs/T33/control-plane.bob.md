@@ -28,3 +28,7 @@ Finding (K1658, from ACTION-CLOCKS #7 J2 (2)): `actionClocksOps` answers `clocka
 ## B2 · ANSWER · re J1
 
 K1674: (1) accepted as you state it: op-declarations exports one frozen OP_STAMPS (op -> keys from viewer, by, bodyBy, author, proposer, member, session); you implement each key once, with your values; OP-DECLARATIONS #10 is told. (2) Do the grant's admission (aigrantadmit) AND the read-log recording here (answers.logRead for each read under a grant, in dispatch.mjs), and report the size. op=ask's own handler is PLANE #22's (T33-90), which I have told.
+
+## B3 · ANSWER · re J2
+
+K1679. Confirmed and routed: duties, hypotheses and money-checks re-key in T34 (N608). Your R43 fence test is an accepted red on NO_SUCH_PROPOSAL and NO_STATEMENT only, until T34-22 and T34-30 merge; name it so in your COMPLETE. Nothing else changes for you.
