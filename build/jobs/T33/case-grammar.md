@@ -1,6 +1,6 @@
 # case-grammar (T33)
 
-**Status** · session_015oXG5f2GZVz111vShMPV1s · depth 2 · COMPLETE · handled B2
+**Status** · session_015oXG5f2GZVz111vShMPV1s · depth 2 · COMPLETE · handled B3
 
 ## J1 · QUESTION
 
