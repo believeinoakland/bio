@@ -327,3 +327,18 @@ test("R33 R25 the mechanical recheck and the lifecycle read on the office's loca
     "CLOCK_STATUS_NOT_MECHANICAL");
   assert.equal(nz.a.actionRead({ id: B, viewer: M }).clock_overdue, null, "R25: undetermined with no zone");
 });
+
+test("R51 the audit's arm is handed the zone of the action's office (ctx.zone): a pending entry is past its date only once that local day has ended; with no zone none is", () => {
+  const md = actionMd(A, [...CP, "action_kind: other", "clock:", '  - text: "t"', '    description: "d"', "    date: 2026-09-28",
+    "    basis: s", "    status: pending"]);
+  const pastDue = (w) => w.a.audit({ files: new Map([["bundle.md", md]]) }).some((f) => f.check === "C-11.1" && /past-due/.test(f.message));
+  const w = world();
+  /* 23:00 on the 28th in Halifax is 02:00 UTC on the 29th: the UTC day would report it past */
+  w.clock.ms = Date.parse("2026-09-29T02:00:00Z");
+  assert.equal(pastDue(w), false, "the office's local day has not ended");
+  w.clock.ms = Date.parse("2026-09-29T03:00:00Z");
+  assert.equal(pastDue(w), true, "the local day after");
+  const nz = world({ profiles: null });
+  nz.clock.ms = Date.parse("2026-12-01T00:00:00Z");
+  assert.equal(pastDue(nz), false, "no zone held: no entry is past its date");
+});
