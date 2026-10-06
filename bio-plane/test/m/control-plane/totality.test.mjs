@@ -8,8 +8,9 @@ import assert from "node:assert/strict";
 import { O } from "./harness.mjs";
 import { unaccounted, RUNGS, RUNG_ABSENT } from "../../../src/affordances.mjs";
 
-/* R55 (op-declarations R21): an alias is its op, published and ranked as that op, so the table reads each op once */
-const table = () => Object.entries(O.OPS).filter(([op]) => !Object.hasOwn(O.OP_ALIASES, op)).map(([op, spec]) => ({ op, mutating: spec?.mutating === true, gated: Object.hasOwn(O.NEEDS, op) }));
+/* R55 (op-declarations R21): an alias is an op of the door's table (routed to its op's handler), and affordances grades
+   it as its op (its R45), so the table carries every alias beside its op (K1879). */
+const table = () => Object.entries(O.OPS).map(([op, spec]) => ({ op, mutating: spec?.mutating === true, gated: Object.hasOwn(O.NEEDS, op) }));
 
 test("R2, R41 (DEC-8, FW-14; affordances R12): affordances' unaccounted over the door's op table names no unpublished act, no unranked mutating op and nothing stale (negative control: an op added to the table, or a rung the table no longer carries, is seen)", () => {
   const rows = table();
