@@ -143,7 +143,7 @@ export function eventsOf(ctx, opts = {}) {
 
 export class Events {
   #sql; #record; #membership; #now; #viewOpt; #deps;
-  #onWhen = []; #onChanged = []; #sources = []; #started = false; #migrated = false;
+  #onWhen = []; #onChanged = []; #sources = []; #started = false; #migrated = false; #actAt = null;
 
   constructor(storage, { record, membership = null, provenance = null, extraction = null, content = null,
                          entities = null, now = null, view = null } = {}) {
@@ -156,6 +156,8 @@ export class Events {
   }
 
   #rows(q, ...a) { return [...this.#sql.exec(q, ...a)]; }
+  /* R16: the one instant of the act running (every row it writes and every telling of it carry it), else the clock's. */
+  #instant() { return this.#actAt ?? this.#now(); }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
   #dep(name) { const d = this.#deps[name]; return typeof d === "function" ? (this.#deps[name] = d()) : d; }
   get #prov() { return this.#dep("provenance"); }
@@ -179,8 +181,9 @@ export class Events {
   }
 
   /** R40 (record-core R21, R77): every table declared with its classes. The tables of facts read from captures are
-   *  seen as their capture is (`source`); the `when_cache` is derived-rebuildable, its rule `#rebuildWhen`; the
-   *  opt-in set is group-wide; nothing here is expunged but by its capture's purge. */
+   *  seen as their capture is (`source`); the `when_cache` is derived-rebuildable, its rule `#rebuildWhen` over the tables
+   *  it names in `from` (record-core R77); the opt-in set is group-wide; nothing here is expunged but by its capture's
+   *  purge. */
   declareTables() {
     const t = (name, cls) => ({ name, purge: "clear", expunge: "none", export: "yes", sight: "source", derive: "stored",
                                 version_chain: false, ...cls });
@@ -191,7 +194,8 @@ export class Events {
       t("event_concerns", { keys: [] }),
       t("event_participants", { keys: [] }),
       t("event_relations", { keys: [] }),
-      t("event_when_cache", { keys: [], derive: "derived-rebuildable", key: ["event_id"], rebuild: (scope) => this.#rebuildWhen(scope) }),
+      t("event_when_cache", { keys: [], derive: "derived-rebuildable", key: ["event_id"], rebuild: (scope) => this.#rebuildWhen(scope),
+                              from: ["events", "event_attestations", "event_choices", "dated_facts"] }),
       t("event_choices", { keys: [], version_chain: true }),
       t("event_aliases", { keys: [], sight: "group" }),
       t("event_changes", { keys: [], version_chain: true }),
@@ -297,7 +301,7 @@ export class Events {
     if (prior) return { ok: true, already: true, dated_fact: this.#factView(prior) };
     const row = { dated_fact_id: id, capture_sha: sha, bundle_id: bundleId, extent: ext, source_row: sourceRow, kind,
                   value: date.value, precision: date.precision, zone: date.zone, method, grade: this.#captureGrade(sha),
-                  upper_bound: upperBound ? 1 : 0, by_actor: stamp(by), at: this.#now() };
+                  upper_bound: upperBound ? 1 : 0, by_actor: stamp(by), at: this.#instant() };
     this.#insert("dated_facts", row);
     return { ok: true, dated_fact: this.#factView(row) };
   }
@@ -325,7 +329,7 @@ export class Events {
     if (!Array.isArray(captureClasses) || !captureClasses.every(said))
       return refuse("NO_CLASSES", "the opt-in set is a list of capture classes (content-type keys), empty for none");
     const classes = [...new Set(captureClasses.map((c) => c.trim()))].sort();
-    const at = this.#now();
+    const at = this.#instant();
     this.#sql.exec(`INSERT INTO event_read_optin (classes, by_actor, at) VALUES (?,?,?)`, JSON.stringify(classes), stamp(by), at);
     return { ok: true, captureClasses: classes, by: stamp(by), at,
              unread: classes.filter((c) => !READ_DATE_CLASSES.includes(c)) };
@@ -457,7 +461,7 @@ export class Events {
   #addAttestation(eventId, row, by, serves = "event") {
     const { upper_bound, ...rest } = row;
     return this.#insert("event_attestations", { ...rest, event_id: serves === "relation" ? `relation:${eventId}` : eventId, serves,
-                                                by_actor: stamp(by), at: this.#now() });
+                                                by_actor: stamp(by), at: this.#instant() });
   }
 
   /* R6: a concerns end, an entity or another event; a hypothesis id is never held (R39). */
@@ -484,20 +488,27 @@ export class Events {
     return null;
   }
 
-  /* R11: the vote values the profile names; with none held, the value is kept as written and marked unchecked. */
-  #voteValues() {
-    const v = this.view();
-    const list = Array.isArray(v.vote_values) ? v.vote_values
-      : v.vocabulary && Array.isArray(v.vocabulary.vote_values) ? v.vocabulary.vote_values : null;
-    return list ? list.map((x) => (isObj(x) ? x.value : x)).filter(said) : null;
+  /* R11: the active profiles' vote values (`jurisdictions` R58, `vocabulary.vote_values`); null when none are held. This
+     module holds no list of its own. */
+  #voteEntries() {
+    const voc = this.view().vocabulary;
+    const list = isObj(voc) && Array.isArray(voc.vote_values) ? voc.vote_values.filter((x) => isObj(x) && said(x.value)) : [];
+    return list.length ? list : null;
   }
-  #voteRefusal(voteValue) {
+  #voteValues() { const e = this.#voteEntries(); return e ? e.map((x) => x.value) : null; }
+  /* R11: the value held for a vote, or a refusal. A member's value is matched on `value`; a value an import reads from a
+     source (`fromSource`, R22) that is no entry's `value` is matched exactly on an entry's `label`, and that entry's
+     `value` is held (K1788). With none held, the value is kept as written, unchecked. */
+  #voteMatch(voteValue, { fromSource = false } = {}) {
     if (!said(voteValue)) return refuse("NO_VOTE_VALUE", "a vote is held with the value the record states");
-    const values = this.#voteValues();
-    if (values && !values.includes(voteValue.trim()))
-      return refuse("UNKNOWN_VOTE_VALUE", `a vote value is one of the profile's: ${values.join(", ")}`, { values });
-    return null;
+    const v = voteValue.trim(), entries = this.#voteEntries();
+    if (!entries) return { ok: true, value: v };
+    const hit = entries.find((x) => x.value === v) || (fromSource ? entries.find((x) => x.label === v) : null);
+    if (hit) return { ok: true, value: hit.value };
+    const values = entries.map((x) => x.value);
+    return refuse("UNKNOWN_VOTE_VALUE", `a vote value is one of the profile's: ${values.join(", ")}`, { values });
   }
+  #voteRefusal(voteValue) { const m = this.#voteMatch(voteValue); return m.ok ? null : m; }
 
   /** R6: an event held with at least one attestation, its concerns and its participants, in one transaction. */
   createEvent({ kind, status = "EventScheduled", where = null, concerns = [], attestations, participants = [], by = null } = {}) {
@@ -517,7 +528,7 @@ export class Events {
         return refuse("NO_ATTESTATION", "a participant names the attestation that states it, by its index in attestations");
     }
     return this.#tx(() => {
-      const at = this.#now();
+      const at = this.#instant();
       const id = this.#record.allocId("EVT", at.slice(0, 4));
       if (!id || !id.id) return id;
       const eventId = id.id;
@@ -534,17 +545,22 @@ export class Events {
     });
   }
 
-  /* The transaction every act runs in: a store-gate refusal or a listener that throws fails the whole write. */
+  /* The transaction every act runs in: a store-gate refusal or a listener that throws fails the whole write. The act
+     takes one instant at its start (R16): its rows and every telling of it carry that instant. */
   #tx(fn) {
-    return this.#record.transact(() => {
-      try { return fn(); }
-      catch (e) {
-        if (e && e.refusal) return e.refusal;
-        if (e instanceof ListenerFailure)
-          return refuse("LISTENER_FAILED", `the write was undone because ${e.module}'s listener failed: ${e.message}`, { module: e.module });
-        throw e;
-      }
-    });
+    const outer = this.#actAt === null;
+    if (outer) this.#actAt = this.#now();
+    try {
+      return this.#record.transact(() => {
+        try { return fn(); }
+        catch (e) {
+          if (e && e.refusal) return e.refusal;
+          if (e instanceof ListenerFailure)
+            return refuse("LISTENER_FAILED", `the write was undone because ${e.module}'s listener failed: ${e.message}`, { module: e.module });
+          throw e;
+        }
+      });
+    } finally { if (outer) this.#actAt = null; }
   }
 
   /** R7: one more attestation of a held event. */
@@ -578,7 +594,7 @@ export class Events {
     if (a.value == null) return refuse("ATTESTATION_UNDATED", "an attestation with no date of its own cannot govern when the event happened");
     return this.#tx(() => {
       this.#sql.exec(`INSERT INTO event_choices (event_id, attestation_id, reason, by_actor, at) VALUES (?,?,?,?,?)`,
-                     id, a.attestation_id, said(reason) ? reason.trim().slice(0, REASON_MAX) : null, stamp(by), this.#now());
+                     id, a.attestation_id, said(reason) ? reason.trim().slice(0, REASON_MAX) : null, stamp(by), this.#instant());
       const w = this.#setWhen(id);
       return { ok: true, event_id: id, governing: Number(a.attestation_id), when: w.after };
     });
@@ -633,10 +649,12 @@ export class Events {
     }
     return { moved: true, after: a };
   }
+  /* R16: told after commit, with `at`, the instant of the write that made the change, the same for every listener. */
   #tell(change) {
     const fns = [...this.#onChanged];
     if (!fns.length) return;
-    this.#record.afterCommit(() => { for (const l of fns) { try { l.fn({ ...change }); } catch { /* R16: after commit, the write stands */ } } });
+    const told = { ...change, at: this.#instant() };
+    this.#record.afterCommit(() => { for (const l of fns) { try { l.fn({ ...told }); } catch { /* R16: after commit, the write stands */ } } });
   }
 
   /* R10: an event's when as read: the held cache, failing closed when it differs from its rebuild. */
@@ -680,7 +698,7 @@ export class Events {
       const aid = attId ?? this.#addAttestation(id, attRow, by);
       if (attId === null) this.#setWhen(id);
       const pid = this.#insert("event_participants", { event_id: id, entity_id: entityId, role,
-        vote_value: role === "voted" ? voteValue.trim() : null, attestation_id: aid, by_actor: stamp(by), at: this.#now() });
+        vote_value: role === "voted" ? voteValue.trim() : null, attestation_id: aid, by_actor: stamp(by), at: this.#instant() });
       return { ok: true, event_id: id, participant_id: pid, attestation_id: aid };
     });
   }
@@ -696,7 +714,7 @@ export class Events {
     if (isHypothesisId(entityId)) return refuse("HYPOTHESIS_ID", "a hypothesis is never a participant (K1467)");
     if (!this.#ents.has(entityId)) return noSuchEntity(entityId);
     return this.#tx(() => {
-      const at = this.#now();
+      const at = this.#instant();
       const pid = this.#insert("event_participants", { event_id: p.event_id, entity_id: entityId, role: p.role, vote_value: p.vote_value,
         attestation_id: p.attestation_id, by_actor: stamp(by), at });
       this.#sql.exec(`UPDATE event_participants SET superseded_by=?, superseded_actor=?, superseded_at=?, superseded_why=? WHERE participant_id=?`,
@@ -724,7 +742,7 @@ export class Events {
     if (!a) return noSuchEvent(absorb ?? null, { end: "absorb" });
     if (k === a) return refuse("SAME_EVENT", "an event is not merged into itself");
     return this.#tx(() => {
-      const at = this.#now(), why = reason.trim().slice(0, REASON_MAX);
+      const at = this.#instant(), why = reason.trim().slice(0, REASON_MAX);
       const g = this.#governing(k);
       if (g) this.#sql.exec(`INSERT INTO event_choices (event_id, attestation_id, reason, by_actor, at) VALUES (?,?,?,?,?)`,
                             k, g.attestation_id, "kept as governing when another event was merged into this one", stamp(by), at);
@@ -766,7 +784,7 @@ export class Events {
     if (left <= ids.length) return refuse("SPLIT_EMPTIES", "a split leaves at least one attestation on the event it splits");
     const ev = this.#one(`SELECT * FROM events WHERE event_id=?`, id);
     return this.#tx(() => {
-      const at = this.#now(), why = reason.trim().slice(0, REASON_MAX);
+      const at = this.#instant(), why = reason.trim().slice(0, REASON_MAX);
       const nid = this.#record.allocId("EVT", at.slice(0, 4));
       if (!nid || !nid.id) return nid;
       this.#insert("events", { event_id: nid.id, kind: ev.kind, status: ev.status, where_text: ev.where_text, by_actor: stamp(by), at, alias_of: null });
@@ -798,7 +816,7 @@ export class Events {
   }
   /** R15: run inside the transaction that changes an event's when_cache, with `{eventId, before, after}`. */
   onWhenChanged(module, fn) { return this.#listen(this.#onWhen, module, fn, { slot: "onWhenChanged" }); }
-  /** R16: run after commit, for `when_moved` and `participant_re_resolved` (and merges and splits). */
+  /** R16: run after commit, for `when_moved` and `participant_re_resolved` (and merges and splits), with `at`. */
   onEventChanged(module, fn) { return this.#listen(this.#onChanged, module, fn, { slot: "onEventChanged" }); }
   /** R30: a later module's own acts, read into the timeline's "what we did" lane. */
   registerEventSource(module, fn) { return this.#listen(this.#sources, module, fn, { slot: "registerEventSource" }); }
@@ -850,7 +868,7 @@ export class Events {
     if (prior) return { ok: true, already: true, relation_id: Number(prior.relation_id) };
     return this.#tx(() => {
       const aid = this.#addAttestation(f, x.row, by, "relation");
-      const rid = this.#insert("event_relations", { from_event: f, to_event: t, kind, attestation_id: aid, by_actor: stamp(by), at: this.#now() });
+      const rid = this.#insert("event_relations", { from_event: f, to_event: t, kind, attestation_id: aid, by_actor: stamp(by), at: this.#instant() });
       return { ok: true, relation: this.#relationView(this.#one(`SELECT * FROM event_relations WHERE relation_id=?`, rid), "class:admin") };
     });
   }
@@ -862,7 +880,7 @@ export class Events {
     if (!r) return refuse("NO_SUCH_RELATION", "no relation with that id is held");
     if (r.withdrawn_at) return { ok: true, already: true, relation: this.#relationView(r, "class:admin") };
     this.#sql.exec(`UPDATE event_relations SET withdrawn_actor=?, withdrawn_at=?, withdrawn_why=? WHERE relation_id=?`,
-                   stamp(by), this.#now(), reason.trim().slice(0, REASON_MAX), r.relation_id);
+                   stamp(by), this.#instant(), reason.trim().slice(0, REASON_MAX), r.relation_id);
     return { ok: true, relation: this.#relationView(this.#one(`SELECT * FROM event_relations WHERE relation_id=?`, r.relation_id), "class:admin") };
   }
 
@@ -890,7 +908,7 @@ export class Events {
     const held = this.#one(`SELECT event_id FROM event_aliases WHERE alias=?`, actId.trim());
     if (held && held.event_id === id) return { ok: true, already: true, act_id: actId.trim(), event_id: id };
     if (held) return refuse("ACT_ALIASED", "that act already names another event", { event_id: held.event_id });
-    this.#sql.exec(`INSERT INTO event_aliases (alias, event_id, by_actor, at) VALUES (?,?,?,?)`, actId.trim(), id, stamp(by), this.#now());
+    this.#sql.exec(`INSERT INTO event_aliases (alias, event_id, by_actor, at) VALUES (?,?,?,?)`, actId.trim(), id, stamp(by), this.#instant());
     return { ok: true, act_id: actId.trim(), event_id: id };
   }
   eventForAct(actId) {
@@ -932,10 +950,10 @@ export class Events {
   }
   #participantView(p, viewer, attById) {
     const a = attById.get(Number(p.attestation_id)) || this.#one(`SELECT * FROM event_attestations WHERE attestation_id=?`, p.attestation_id);
+    const checked = p.role === "voted" && this.#voteValues() !== null;
     return { participant_id: Number(p.participant_id), entity_id: p.entity_id, role: p.role,
-             ...(p.role === "voted" ? { vote_value: p.vote_value,
-                 vote_value_checked: this.#voteValues() !== null,
-                 ...(this.#voteValues() === null ? { vote_value_why: "no active jurisdiction profile names vote values, so the value is kept as the record writes it" } : {}) } : {}),
+             ...(p.role === "voted" ? { vote_value: p.vote_value, vote_value_checked: checked,
+                 ...(checked ? {} : { vote_value_why: "no active jurisdiction profile names vote values, so the value is kept as the record writes it" }) } : {}),
              attestation_id: Number(p.attestation_id),
              grades: { attestation: a ? a.grade : null, resolution: this.#resolutionGrade(p.entity_id, a) },
              by: p.by_actor, at: p.at,
@@ -1056,23 +1074,28 @@ export class Events {
                                           of: [...new Set([...held.of, id])] } : { ...it, of: [id] });
         }
       }
-      const r = this.#range([...items.values()], from, to);
+      /* R29: `from` and `to` bound the placed items only; every placed-nowhere item of the set is still listed apart */
+      const all = [...items.values()];
+      const r = this.#range(all.filter((i) => i.when), from, to);
       if (r.bad) return refuse("BAD_DATE", r.bad);
-      const b = this.#bounded(r.items, limit);
+      const b = this.#bounded([...r.items, ...all.filter((i) => !i.when)], limit);
       answer.world = { label: "what they did", items: b.items, placed_nowhere: b.placed_nowhere, limit: b.limit, truncated: b.truncated };
     }
     if (want.includes("ours")) {
       const cap = clamp(limit);
       answer.ours = { label: "what we did", sources: this.#sources.map((s) => {
         try {
-          const got = s.fn({ set: ids, from, to, limit: cap });
+          /* R30: the source is asked with the timeline's own viewer, unchanged, so one that fails closed answers what
+             the reader may see; its lane is truncated when it says so or when the limit cuts its items */
+          const got = s.fn({ set: ids, from, to, limit: cap, viewer });
           const list = Array.isArray(got) ? got : got && Array.isArray(got.items) ? got.items : [];
           const items = list.filter(isObj).map((x) => ({ at: x.at ?? null, label: x.label ?? null, ref: x.ref ?? null, kind: x.kind ?? null }));
           const zone = this.zone();
           const withWhen = items.map((x) => { const w = spanOfBound(x.at, zone); return { ...x, when: w && !w.bad ? w : null }; });
           const o = orderByWhen(withWhen, (x) => `${x.ref}`);
           const all = [...o.placed, ...o.nowhere.map((x) => ({ ...x, placed_nowhere: true }))];
-          return { source: s.module, items: all.slice(0, cap).map(({ when, ...x }) => x), truncated: all.length > cap };
+          return { source: s.module, items: all.slice(0, cap).map(({ when, ...x }) => x),
+                   truncated: all.length > cap || (isObj(got) && got.truncated === true) };
         } catch (e) { return { source: s.module, error: String(e && e.message || e).slice(0, 200) }; }
       }) };
     }
@@ -1169,7 +1192,7 @@ export class Events {
   /* What the following and owner files reach, and nothing else. */
   #kernel() {
     return {
-      rows: (q, ...a) => this.#rows(q, ...a), one: (q, ...a) => this.#one(q, ...a), now: () => this.#now(),
+      rows: (q, ...a) => this.#rows(q, ...a), one: (q, ...a) => this.#one(q, ...a), now: () => this.#instant(),
       view: () => this.view(), zone: () => this.zone(), extraction: this.#extraction, entities: this.#ents,
       record: this.#record, heldCapture: (s, by) => this.#heldCapture(s, by), sees: (b, v) => this.#sees(b, v),
       tx: (fn) => this.#tx(fn), holdFact: (x) => this.#holdFact(x), insert: (t, r) => this.#insert(t, r),
@@ -1177,7 +1200,7 @@ export class Events {
       setWhen: (e) => this.#setWhen(e), resolve: (e) => this.#resolve(e), governing: (e) => this.#governing(e),
       whenRead: (e) => this.#whenRead(e), visibleAttestations: (e, v) => this.#visibleAttestations(e, v),
       resolutionGrade: (en, a) => this.#resolutionGrade(en, a), captureGrade: (s) => this.#captureGrade(s),
-      voteRefusal: (v) => this.#voteRefusal(v), tell: (c) => this.#tell(c), allocEvent: () => this.#record.allocId("EVT", this.#now().slice(0, 4)),
+      voteMatch: (v) => this.#voteMatch(v, { fromSource: true }), tell: (c) => this.#tell(c), allocEvent: () => this.#record.allocId("EVT", this.#instant().slice(0, 4)),
     };
   }
 }

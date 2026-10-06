@@ -1,8 +1,9 @@
 /* events: what the machine writes (R4, R22–R25, R38). Only what a source identifies at both ends by its own ids is
    written: a meeting by its `EventId`, an item by its `EventItemId` within its meeting, a participant whose `PersonId`
    resolves to a registered entity through a scheme identifier (grade A). Nothing is inferred: no cause, no relation but
-   `within`, no participant from office holding (R41). Each row is stamped as the machine's, cites its capture, and is
-   correctable by a member (R13, R14, R20). An import is idempotent by source id (R25). */
+   `within`, no participant from office holding (R41). A meeting concerns the body it was imported for (R22). Each row
+   is stamped as the machine's, cites its capture, and is correctable by a member (R13, R14, R20). An import is
+   idempotent by source id (R25). */
 import { readDate } from "./time.mjs";
 import { noSha } from "../extraction/index.mjs";
 import { noEntity, noSuchEntity } from "../entities/index.mjs";
@@ -182,6 +183,10 @@ function meeting(k, held, row, f, scope, out) {
     else out.unchanged++;
     k.setWhen(eventId);
   }
+  /* R22 (N606): the meeting concerns the body it was imported for, so the followed body's events are read from it (R27);
+     a meeting held before T34 gains it at its next import */
+  if (!k.one(`SELECT 1 AS x FROM event_concerns WHERE event_id=? AND end_id=?`, eventId, scope.body))
+    k.insert("event_concerns", { event_id: eventId, end_id: scope.body, by_actor: MACHINE, at: k.now() });
   keepSource(k, row.key, "event", eventId, { ...facts, agenda: (prior && JSON.parse(prior.facts).agenda) || facts.agenda,
     minutes: (prior && JSON.parse(prior.facts).minutes) || facts.minutes }, held.sha);
   /* R24: a posting time is the agenda's or the minutes' publication, within the meeting, on or before the first value seen. */
@@ -245,10 +250,11 @@ function vote(k, held, row, f, out) {
   if (!eventId) { out.unresolved.push({ row: row.source, key: row.key, why: "its item is not held: import the items first" }); return; }
   const ent = Number.isInteger(f.PersonId) ? personOf(k, f.PersonId) : null;
   if (!ent) { out.unresolved.push({ row: row.source, key: row.key, source_row: { PersonId: f.PersonId ?? null }, why: "its PersonId resolves to no registered entity" }); return; }
-  const bad = k.voteRefusal(f.value);
-  if (bad) { out.unresolved.push({ row: row.source, key: row.key, why: bad.detail, refusal: bad.reason }); return; }
+  /* R11 (K1788): the source's value matched on an entry's value, else exactly on its label; the entry's value is held */
+  const m = k.voteMatch(typeof f.value === "string" ? f.value : f.value == null ? "" : String(f.value));
+  if (!m.ok) { out.unresolved.push({ row: row.source, key: row.key, why: m.detail, refusal: m.reason }); return; }
   const aid = rowAttestation(k, eventId, held, row);
-  const p = participant(k, eventId, ent, "voted", aid, String(f.value).trim());
+  const p = participant(k, eventId, ent, "voted", aid, m.value);
   if (p.added) out.written.push({ key: row.key, event_id: eventId, participant_id: p.id }); else out.unchanged++;
   keepSource(k, row.key, "participant", String(p.id), { value: f.value }, held.sha);
 }

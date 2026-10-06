@@ -21,8 +21,9 @@ function legistar(w, name, { body = null, locator = null, at = null } = {}) {
   const parsed = legistarParse({ locator: f.locator, text: JSON.stringify(f.body), view: MARKERS, at: f.captured_at });
   return w.capture(`legistar:${name}`, { contentType: "legistar_api", facts: parsed });
 }
-function setup({ zone = GOLD.zone } = {}) {
-  const view = testView({ legistar: true });
+/* The view holds no vote values unless a test gives them, as the first profile holds none today (R11). */
+function setup({ zone = GOLD.zone, votes = "none" } = {}) {
+  const view = testView({ legistar: true, votes });
   const w = world({ view: { ...view, time_zone: { value: zone, status: "researched", basis: "TEST" } } });
   const body = w.entity("A followed body", "body");
   return { w, body };
@@ -30,7 +31,7 @@ function setup({ zone = GOLD.zone } = {}) {
 const iso = (s) => new Date(s).toISOString().replace(/\.000Z$/, "Z");
 const eventOf = (w, id) => w.one(`SELECT target_id FROM event_sources WHERE source_key=?`, `legistar:event:${id}`)?.target_id ?? null;
 
-test("R22 followedImport refuses NO_BODY, NO_PERIOD, CAPTURE_NOT_HELD, NOT_LEGISTAR; writes only what source ids identify, each row the machine's, citing its capture; an unresolved participant answered with its source row", () => {
+test("R22 followedImport refuses NO_BODY, NO_PERIOD, CAPTURE_NOT_HELD, NOT_LEGISTAR; writes only what source ids identify, each row the machine's, citing its capture, each meeting concerning its followed body; an unresolved participant answered with its source row", () => {
   const { w, body } = setup();
   const ev = legistar(w, "events-3y");
   const html = w.capture("not-legistar");
@@ -51,6 +52,13 @@ test("R22 followedImport refuses NO_BODY, NO_PERIOD, CAPTURE_NOT_HELD, NOT_LEGIS
   const one = w.ev.readEvent({ eventId: r.written[0].event_id, viewer: MEMBER }).event;
   assert.equal(one.by, "class:daemon");
   assert.ok(one.attestations.every((a) => a.capture_sha === ev && a.by === "class:daemon" && Number.isInteger(a.source_row)));
+  /* each meeting written concerns the body it was imported for, once, so the body's events are read from it (R27) */
+  for (const x of r.written) assert.deepEqual(w.ev.readEvent({ eventId: x.event_id, viewer: MEMBER }).event.concerns, [body]);
+  const ofBody = w.ev.eventsFor({ entity: body, kinds: ["meeting"], limit: 500, viewer: MEMBER });
+  assert.deepEqual(ofBody.events.map((e) => e.event_id).concat(ofBody.placed_nowhere.map((e) => e.event_id)).sort(),
+                   r.written.map((x) => x.event_id).sort());
+  assert.ok(ofBody.events.every((e) => e.concerns === true));
+  assert.equal(w.rows(`SELECT * FROM event_concerns WHERE end_id=? AND by_actor='class:daemon'`, body).length, r.written.length);
   /* items within their meeting, and their movers and seconders whose PersonId resolves; the others answered unresolved */
   const p734 = w.entity("Person 734"), p1012 = w.entity("Person 1012");
   w.identify(p734, "legistar_person", 734);
@@ -75,9 +83,40 @@ test("R22 followedImport refuses NO_BODY, NO_PERIOD, CAPTURE_NOT_HELD, NOT_LEGIS
   assert.equal(votes.unresolved.length, vrows.length - votes.written.length);
   const voted = w.ev.readEvent({ eventId: ie, viewer: MEMBER }).event.participants.filter((p) => p.role === "voted");
   assert.deepEqual(voted.map((p) => p.vote_value), ["Aye", "Aye"]);
+  assert.ok(voted.every((p) => p.vote_value_checked === false), "no vote values held: kept as written, unchecked (R11)");
   /* votes for an item not held are answered unresolved, never written */
   const orphan = w.ev.followedImport({ captureSha: legistar(w, "votes-232594"), body, period: ALL });
   assert.equal(orphan.ok, true);
+  /* a re-import concerns the body once, never twice */
+  imp({});
+  assert.equal(w.rows(`SELECT * FROM event_concerns WHERE end_id=?`, body).length, w.rows(`SELECT * FROM events WHERE kind='meeting'`).length);
+  /* with the profile's own vote values held (R11), a source value that is no profile value is answered unresolved, never written */
+  const v2 = setup({ votes: null });
+  v2.w.identify(v2.body, "legistar_body", load("gold/9451").body.EventBodyId);
+  v2.w.identify(v2.w.entity("Person 734"), "legistar_person", 734);
+  v2.w.ev.followedImport({ captureSha: legistar(v2.w, "9451", { body: load("gold/9451").body, locator: load("gold/9451").locator }), body: v2.body, period: ALL });
+  v2.w.ev.followedImport({ captureSha: legistar(v2.w, "eventitems-9451"), body: v2.body, period: ALL });
+  const checked = v2.w.ev.followedImport({ captureSha: legistar(v2.w, "votes-232608"), body: v2.body, period: ALL });
+  assert.equal(checked.written.length, 0);
+  assert.ok(checked.unresolved.some((u) => u.refusal === "UNKNOWN_VOTE_VALUE"));
+  assert.equal(v2.w.rows(`SELECT * FROM event_participants WHERE role='voted'`).length, 0);
+  /* R11 (K1788): a source value that is no entry's value is matched exactly on an entry's label, and the value is held */
+  const v3 = setup({ votes: [{ value: "aye", label: "Aye", citation: "c", basis: "TEST" }, { value: "excused", label: "Excused", citation: "c", basis: "TEST" }] });
+  const g3 = load("gold/9451");
+  v3.w.identify(v3.body, "legistar_body", g3.body.EventBodyId);
+  for (const id of [734, 1012]) v3.w.identify(v3.w.entity(`Person ${id}`), "legistar_person", id);
+  v3.w.ev.followedImport({ captureSha: legistar(v3.w, "9451", { body: g3.body, locator: g3.locator }), body: v3.body, period: ALL });
+  v3.w.ev.followedImport({ captureSha: legistar(v3.w, "eventitems-9451"), body: v3.body, period: ALL });
+  const byLabel = v3.w.ev.followedImport({ captureSha: legistar(v3.w, "votes-232608"), body: v3.body, period: ALL });
+  const mine3 = load("votes-232608").body.filter((v) => [734, 1012].includes(v.VotePersonId));
+  assert.equal(byLabel.written.length, mine3.length);
+  assert.ok(!byLabel.unresolved.some((u) => u.refusal), "every value matched a label");
+  const held3 = v3.w.rows(`SELECT vote_value FROM event_participants WHERE role='voted' ORDER BY participant_id`).map((r) => r.vote_value);
+  assert.deepEqual(held3, mine3.map((v) => v.VoteValueName.toLowerCase()), "the entry's value is held, not the label");
+  const item3 = v3.w.one(`SELECT target_id FROM event_sources WHERE source_key='legistar:event_item:232608'`).target_id;
+  assert.ok(v3.w.ev.readEvent({ eventId: item3, viewer: MEMBER }).event.participants.filter((p) => p.role === "voted").every((p) => p.vote_value_checked === true));
+  /* the same votes again are unchanged */
+  assert.equal(v3.w.ev.followedImport({ captureSha: legistar(v3.w, "votes-232608"), body: v3.body, period: ALL }).written.length, 0);
 });
 
 test("R23 a meeting's start is the source day and local time joined in the profile's zone at minute precision (the 50-event gold set, both daylight-saving offsets); a cancelled row is one event, EventCancelled", () => {
