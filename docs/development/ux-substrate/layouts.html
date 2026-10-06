@@ -912,10 +912,10 @@ const WEIGHT = {
   standardadopt:2, lawrelate:2, casedraft:2, whatchangedpropose:1, statementack:2, attribute:2, reviewgrant:2, reviewcomment:1, caseimport:2,
   testify:2, acquire:2, capture:2, capturerequest:1, hypothesishold:1, connectionassert:2, projectinvite:2, adoptversion:2, reminderanswer:2,
   taskresolve:2, groupnameset:2, groupdomainset:2, profilesset:2, officesseed:2, assistantset:2, aicopyceilingset:2, hostingaccess:2, enroll:2,
-  bootstrap:2, selftest:1, setpassword:2, accountreferenceset:2, projectcreated:2, wizarddraft:2, wizardrevise:1, wizardsubmit:2, wizardapprove:2,
+  bootstrap:5, selftest:1, setpassword:2, accountreferenceset:2, projectcreated:2, wizarddraft:2, wizardrevise:1, wizardsubmit:2, wizardapprove:2,
   filingrecordsent:2, owed_groupprofileset:2, owed_groupprofilevisibility:2, owed_memberlanguageset:1, owed_websitekeymint:2, owed_joinlinkset:2,
   owed_noteadd:1, owed_noteconvert:2, owed_translationdraft:1, owed_translationadopt:2, owed_checkrequest:2, knock:2, sourcelink:2,
-  retire:3, planclose:3, filingapprove:3, personexpunge:2, adminremove:3, accountreferenceremove:3, reviewrevoke:3, escalationend:3, wizardretire:3,
+  retire:3, planclose:3, filingapprove:3, personexpunge:5, adminremove:3, accountreferenceremove:3, reviewrevoke:3, escalationend:3, wizardretire:3,
   signerrevokeown:3, importacceptwithdraw:3,
   release:4, attest:4, caseratify:4, docketpost:4, signerregisterown:4, claim:4, docketfile:2,
   publish:5,
@@ -970,7 +970,7 @@ SCR.install = c => ({ frame: 'setup', title: 'Install Civicsmith', main: `
   ${h1('Install your group\'s copy', 'Free software for civic groups. Your group\'s copy runs in your own Cloudflare account; nobody else holds your work.')}
   ${sec('Before you start', `<ul class="mk-list"><li>A Cloudflare account. The free plan works.</li><li>About twenty minutes.</li><li>Workers Paid ($5 a month, with a payment method) adds recomputing members' spreadsheets and signing in with a Claude subscription. You can add it later.</li><li>No Claude account is needed to set up.</li></ul>`)}
   ${sec('Your group\'s short name', `${field('mk-slug', 'Short name', 'lakeshore-tenants', { help: 'Lower-case letters, digits and hyphens. It appears in your addresses and beside every signature, and can never change. A group that wants to stay unnamed picks one that reveals nothing.' })}
-   ${acts(btn('bootstrap', 'Install with this short name', { tone: 'primary' }))}`)}
+   <div class="cs-dialog" style="max-width:none;box-shadow:none"><b>“lakeshore-tenants” is permanent</b><div class="ends">Your short name is in every address of your group's copy and beside every signature your members make. It can never be changed, by you or anyone, without starting a new copy.</div>${acts(btn('bootstrap', 'Install with this short name', { tone: 'primary' }))}</div>`)}
   ${sec('Testing itself', `<div class="cs-sheet">${row(I('accepted'), 'Signed release verified', '<span class="muted">0.9 s</span>')}${row(I('accepted'), 'Record store ready', '<span class="muted">1.2 s</span>')}${row(I('clock'), 'The assistant\'s container: allow it to run?', '')}</div>${acts(btn('selftest', 'Run the test again'))}`)}` });
 
 SCR.setup = c => ({ frame: 'setup', title: 'Set up', main: `

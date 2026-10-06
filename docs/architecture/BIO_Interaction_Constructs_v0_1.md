@@ -670,7 +670,10 @@ R12: a person's recorded value removed for good, only where the law requires) ke
 name honest) and, like DEC-113's hold release, opens the full dialog stating its effect: what value is removed, from where (the
 person's page, every question that cited it, every export), that it cannot be undone by anyone, that a marker stays in its place
 ("Removed where the law requires, <date>, by <member>"), and that published cases change only through the docket; the member then
-confirms with a reason naming the law or order.
+confirms with a reason naming the law or order. **Amended 2026-10-06 (DEC-143, Bob's comment):** an act that can never be undone shows the
+Irreversible weight on its button, whatever rung affordances gives it: the expunge, and the installer's choice of the group's short
+name (it is in every address and beside every signature, and never changes). Neither is a publication, so each opens the full dialog
+that says it is permanent rather than the ceremony.
 
 ## M · THE MEASURES MAP — how every scale reads, approved by Bob 2026-09-29 (DEC-82)
 

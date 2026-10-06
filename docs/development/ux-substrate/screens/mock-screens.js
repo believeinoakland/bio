@@ -11,7 +11,7 @@ SCR.install = c => ({ frame: 'setup', title: 'Install Civicsmith', main: `
   ${h1('Install your group\'s copy', 'Free software for civic groups. Your group\'s copy runs in your own Cloudflare account; nobody else holds your work.')}
   ${sec('Before you start', `<ul class="mk-list"><li>A Cloudflare account. The free plan works.</li><li>About twenty minutes.</li><li>Workers Paid ($5 a month, with a payment method) adds recomputing members' spreadsheets and signing in with a Claude subscription. You can add it later.</li><li>No Claude account is needed to set up.</li></ul>`)}
   ${sec('Your group\'s short name', `${field('mk-slug', 'Short name', 'lakeshore-tenants', { help: 'Lower-case letters, digits and hyphens. It appears in your addresses and beside every signature, and can never change. A group that wants to stay unnamed picks one that reveals nothing.' })}
-   ${acts(btn('bootstrap', 'Install with this short name', { tone: 'primary' }))}`)}
+   <div class="cs-dialog" style="max-width:none;box-shadow:none"><b>“lakeshore-tenants” is permanent</b><div class="ends">Your short name is in every address of your group's copy and beside every signature your members make. It can never be changed, by you or anyone, without starting a new copy.</div>${acts(btn('bootstrap', 'Install with this short name', { tone: 'primary' }))}</div>`)}
   ${sec('Testing itself', `<div class="cs-sheet">${row(I('accepted'), 'Signed release verified', '<span class="muted">0.9 s</span>')}${row(I('accepted'), 'Record store ready', '<span class="muted">1.2 s</span>')}${row(I('clock'), 'The assistant\'s container: allow it to run?', '')}</div>${acts(btn('selftest', 'Run the test again'))}`)}` });
 
 SCR.setup = c => ({ frame: 'setup', title: 'Set up', main: `

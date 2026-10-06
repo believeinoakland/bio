@@ -2260,6 +2260,7 @@ reasoning recorded in: this entry; `BIO_Intake_Doctrine_v1_1.md` (after DEC-97's
 owed: (BOB, N587) capture R77 and R79 answer, per held document, the question it was captured for and its asker (from capture-requests R8, R10) when the viewer may see the question, else that it is withheld; R79 requires a reason when an open question waits on the document and records the question; inquiry gains the wait "a document it waits on was set aside", read on the question and its project's list, never raised as a queue item; R81's restore records its reason in the same history.
 
 ### DEC-142 · answered
+amended: 2026-10-06 · DEC-143: the expunge's button shows the Irreversible weight.
 raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (BOB's B51, from AFFORDANCES #20, K1686)
 for: bob-session
 question: Should `personexpunge` (people R12: removes a person's recorded value; cannot be undone), graded reasoned by affordances R27, be a named exception that opens the full dialog stating its consequence, as DEC-113 made of `actionholdrelease`?
@@ -2272,3 +2273,17 @@ response: **Decided by the design session, 2026-10-06, applying DEC-88:** an exp
 decided: 2026-10-06 · the design session (P17)
 reasoning recorded in: this entry; `BIO_Interaction_Constructs_v0_1.md` §F; `layouts.html` (person); `screens/registry.src.py`.
 owed: (BOB) affordances: `personexpunge` a named exception beside DEC-113's `actionholdrelease`, with its consequence statement as above; the screen registry's person screen names `personexpunge` (was the function `expunge`).
+
+### DEC-143 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (Bob's comment on the layouts page, the installer's short-name button)
+for: bob-session
+question: Bob, 2026-10-06: "The group's short name isn't just reasoned - it's irreversable."
+why it is Bob's: it is not: the weight a button shows is design detail beneath DEC-87 (every act's button carries its weight) and DEC-88 (friction follows consequence in the world, the name kept honest); Bob's comment corrects a mockup, decided by the design session (P17).
+provisional: DEC-139's mockups (the short name shown as reasoned); DEC-142 (the expunge's rung kept as affordances grades it, reasoned).
+alternative: keep showing the rung affordances assigns.
+recommendation: as decided below.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-06, on Bob's comment:** an act that can never be undone shows the **Irreversible** weight (five pips) on its button, whatever rung it is otherwise given, so the button tells the member the truth. Two such acts lie outside the publication ceremony: the installer's choice of the group's short name (in every address and beside every signature, never changed without starting a new copy) and `personexpunge` (DEC-142). Neither is a publication, so each opens the full dialog stating that it is permanent, in place of the ceremony; DEC-87's rule that publishing goes only through the ceremony is unchanged. DEC-142 amended.
+decided: 2026-10-06 · the design session (P17)
+reasoning recorded in: this entry; `layouts.html` (install; person); `visual-language.html` (acts); `BIO_Interaction_Constructs_v0_1.md` §F.
+owed: (BOB) affordances shows `personexpunge`'s weight as irreversible (with DEC-142's consequence dialog); the installer's short-name step carries the irreversible weight and its permanence statement (installer, instance-setup).
