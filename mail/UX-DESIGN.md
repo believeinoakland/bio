@@ -553,3 +553,11 @@ DEC-160 amended on Bob's direction ("Hover over the name of a document, content,
 - A click opens the item.
 - A hint opens in place: what was matched (each item a link), how it was found, its measured false-alarm rate, what it is not, and its acts (`promote`, `proposedispose`, `queuemute`).
 - Owed (BOB): each card's "why it matters here" is drawn from the screen's context (the question the item supports or cuts against, the step it waits on, the finding that cites it), not a fixed text; the hint's details from the signal's record.
+
+## U88 · NOTICE · 2026-10-06 · session_01SEmEip2dMnNBFgsXF9Tids · primary
+DEC-161 (Bob: "I suggest we start with a 1/2 second delay, but if you can find best practices that give us a proven value then we can start there"):
+- On hover, an explanation or card shows after the pointer rests 0.5 s; it stays while the pointer is on the thing or on the tip; it closes 0.5 s after the pointer leaves both.
+- Keyboard focus and a tap show it at once; Escape closes it; one at a time.
+- Evidence: Nielsen Norman Group's timing guidelines for exposing hidden content (wait 0.3–0.5 s; keep it until the pointer has been away for more than 0.5 s); WCAG 2.2 SC 1.4.13 (dismissible, hoverable, persistent).
+- `.cs-tip` no longer passes the pointer through.
+- Owed (BOB): these timings and 1.4.13's conditions in the shell when built.
