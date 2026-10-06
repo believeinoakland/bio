@@ -60,3 +60,7 @@ Details I read the same way unless you say otherwise: (a) `ran` lists the module
 ## J2 · COMPLETE
 
 T33-23 applied (R25–R27, with K1555's accessor): `hooks.mjs` (`ReadHooks`, `readHooksOf(ctx)`), exported from the module. Tests 81/81 (new hooks.test.mjs, 4); format, architecture, coverage (27/27), ownership (4 files) all 0 failures. Final uses unchanged (membership now used). Stale for your layer close: bio-plane/dist/bio-plane.bundled.mjs (not_product). Nothing deferred. Details in the record's Completion section.
+
+## J3 · COMPLETE
+
+B3 applied: R28 met (K1556). The reading carries `metadata` (the entry's, or null; every reading) and, for a workbook, `cells` {sheet name: cells as emitted, or null}; neither altered. New piece `emittedFieldsOf(i2text)` for extraction's re-read to compose the same rule (EXTRACTION #13 may need it). The pieces pin test digests the answer less R28's two keys and asserts them. Tests 85/85; extraction's 112/112 (unchanged); format, architecture, coverage 28/28, ownership 6 files: 0 failures. Record: 'Completion of B3'.
