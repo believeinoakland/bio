@@ -16,6 +16,17 @@
 
 **Deferred.** Nothing in this module. For T33-45 (inquiry): drop `inquiry_basis` from `INQUIRY_TABLES`/`INQUIRY_PURGE` in the commit that re-points its projection to `writeBasis` (record-core refuses a table declared twice, `TABLE_DECLARED`, refusing the whole declaration).
 
+## Completion (B3, K1609)
+
+Merged `tranche/T33` with inquiry-grammar's T33-43; R9 now imports `parseOccurrenceRef` from `inquiry-grammar` (the injected dependency and the tests' stand-in dropped; the tests spell refs with its `occurrenceRef`). The "Waiting" paragraph above is done.
+
+- Entries applied: T33-44 whole (R1–R12). Deferred: none.
+- Found in other modules: `duties` `INTERNAL` reader gives no in-force answer (J2). `inquiry`'s own test `grammar.test.mjs:176` "R38 R4 the rows the module mints…" is red after T33-43 (inquiry-grammar's new rows, e.g. `CALCULATION_LEG_MALFORMED`), inquiry's job (T33-45), not this module.
+- Tests: `node --test bio-plane/test/m/leg-earning/` 45 pass, 0 fail. `bio-plane/test/m/inquiry/` 169 pass, 1 fail (the line above).
+- Checks (row applied locally, restored): format 0 failures; architecture 9 product files, 44 imports, 0 failures; coverage 12 of 12; ownership 10 files, 0 failures.
+- Final `modules.json` row: paths `bio-plane/src/leg-earning/`; tests `bio-plane/test/m/leg-earning/`; uses record-grammar, text-chain, record-core, membership, promotion, provenance, extraction, content, entities, connections, standards, duties, inquiry-grammar.
+- Size (session_01CungHbe3DYiUeE2x5T2Yr7): test runs 14, module lines 1349
+
 ## J1 · QUESTION
 
 **Seam confirmed against the code** (`bio-plane/src/inquiry/index.mjs` on `tranche/T33`): `legCapped` (l.121), `projectsDrawingOn` (1153), `restsOnLive` (1197), `earned` (2370), `earnedForDoc` (2713), `cyclePath` with `#basisReach` (2734), `basisFor` (2760), `restingOn` (2775), `earnedBasis` (2858) with what they need: `ensureLegContent` and `#backfillLegContent` (R3's backfill), `#legVersions` (REC-220), `AUTHORED_ROUTE_BASES`, `LEG_BACKFILL_MAX`, `EARNED_TARGETS_MAX`, `PROJECTS_DRAWING_MAX`; and, per K1505 (2), `inquiry_basis` (schema.mjs: the table, its four indexes, the additive `ground`/`content_id` columns) with its read contract and one write. Code: `bio-plane/src/leg-earning/` (index.mjs, schema.mjs); tests `bio-plane/test/m/leg-earning/`. Host factory `legEarningOf(host, deps)`. Inquiry is not touched (T33-45 deletes and re-points).
