@@ -2,8 +2,9 @@
  *
  * TWO MADE-UP JURISDICTIONS, neither of them Oakland (R30): Port Alder and Lakemont.
  * Each is a TEST profile in `jurisdictions`' shape (its R1–R7), every fact carrying
- * `basis: "TEST"`. They differ in every fact a content type reads, so a test can show
- * a reader following the view it is given and nothing else (R6).
+ * `basis: "TEST"`. They differ in every fact a reader takes from the view, so a test can
+ * show this module's shared helpers following the view they are given and nothing else
+ * (R30, R36).
  *
  * `view(...)` is `jurisdictions.combine` of the profiles given (its R12–R16): the
  * view a caller passes as `ctx.view`. Patterns are written the way the held profiles
@@ -92,123 +93,16 @@ export const HELD = (() => {
   return r.view;
 })();
 
-/* ---- documents written in Port Alder's vocabulary ---- */
+/* ---- a document written in Port Alder's vocabulary, for the stub readers (./stubs.mjs) ---- */
 
-/** An agenda: file numbers alone on their lines, item blocks, a masthead on every
- *  page, the jurisdiction's furniture between pages. */
-export const PA_AGENDA = [
-  "Tuesday, March 3, 2026",
-  "Harbor Commission",
-  "Agenda - FINAL",
-  "Roll Call",
-  "1",
-  "Call To Order And Welcome",
-  "PA-101",
-  "Subject:",
-  "Dock Fee Schedule",
-  "From:",
-  "Harbor Master",
-  "Recommendation: Adopt the dock fee schedule for the season",
-  "2.1",
-  "PA-102",
-  "Page 1",
-  "Town of Port Alder",
-  "Tuesday, March 3, 2026",
-  "Agenda - FINAL",
-  "Subject:",
-  "Mooring Permits",
-  "From:",
-  "Selectperson Reyes",
-  "Recommendation: Receive the report",
-  "2.2",
-  "PA-103",
-  "Page 2",
-  "Town of Port Alder",
-  "Agenda - FINAL",
-  "PA-101",
-].join("\n");
-
-/** Minutes: masthead at page rate, a motion with its vote, a roster, the frame. */
-export const PA_MINUTES = [
-  "Wednesday, March 4, 2026",
-  "Harbor Commission",
-  "Meeting Minutes - DRAFT",
-  "The Harbor Commission Convened At 6:30 P.M.",
-  "Ana Reyes, Bo Chen, and Cy Diaz",
-  "Present",
-  "3 -",
-  "Dee Park",
-  "Excused",
-  "1 -",
-  "3.1",
-  "Subject:",
-  "Dock Fee Schedule",
-  "From:",
-  "Harbor Master",
-  "PA-101",
-  "A motion was made by Ana Reyes, seconded by Bo Chen, that this matter be Approved. The motion carried by the following vote:",
-  "Aye:",
-  "Ana Reyes, Bo Chen, and Cy Diaz",
-  "3 -",
-  "Excused:",
-  "Dee Park",
-  "1 -",
-  "Page 1",
-  "Town of Port Alder",
-  "Wednesday, March 4, 2026",
-  "Harbor Commission",
-  "Meeting Minutes - DRAFT",
-  "3.2",
-  "Subject:",
-  "Mooring Permits",
-  "PA-103",
-  "This Informational Report be Received and Filed.",
-  "Page 2",
-  "Town of Port Alder",
-  "Wednesday, March 4, 2026",
-  "Harbor Commission",
-  "Meeting Minutes - DRAFT",
-  "There Being No Further Business, The Harbor Commission Adjourned The Meeting At 7:02 P.M.",
-].join("\n");
-
-/** A staff memo in the Port Alder template, citing a bylaw, the code and a file. */
-export const PA_REPORT = [
-  "MEMO TO THE BOARD",
-  "TO: Select Board FROM: Town Manager SUBJECT: Mooring Fees DATE: March 1, 2026",
-  "RECOMMENDATION",
-  "Adopt Bylaw No. 2041 T.B.S. amending P.A.C. Section 4.12 to set mooring fees.",
-  "SUMMARY",
-  "The fees were last set by Order No. 1990, under file PA-117.",
-  "COST",
-  "None to the general fund.",
-  "HISTORY",
-  "See P.A.C. Section 4.12 and Bylaw No. 2041.",
-  "Respectfully submitted,",
-  "Town Manager",
-].join("\n");
-
-/** A bylaw: body above its own blank caption, recitals, the operative voice. */
-export const PA_BYLAW = [
-  "HARBOR COMMISSION",
-  "BYLAW NO. ____ T.B.S.",
-  "SPONSOR: [NAME]",
-  "A BYLAW AMENDING THE TOWN CODE CHAPTER 4 TO SET MOORING FEES FOR THE TOWN HARBOR.",
-  "WHEREAS, Order No. 1990 set the mooring fees; and",
-  "WHEREAS, the fees no longer cover the harbor's costs; and",
-  "NOW, THEREFORE, THE HARBOR COMMISSION DOES ORDAIN AS FOLLOWS:",
-  "SECTION 1. P.A.C. Section 4.12 is hereby amended to read as set out below.",
-].join("\n");
-
-/** A directory: six addresses at one domain, a title line naming it. */
-export const PA_DIRECTORY = [
-  "Harbor Staff Directory",
-  "Ana Reyes, Harbor Master  areyes@portalder.test  555-201-0001",
-  "Bo Chen, Deputy  bchen@portalder.test  555-201-0002",
-  "Cy Diaz, Clerk  cdiaz@portalder.test  555-201-0003",
-  "Dee Park, Warden  dpark@portalder.test  555-201-0004",
-  "Eli Moss, Ranger  emoss@portalder.test  555-201-0005",
-  "Fay Lin, Engineer  flin@portalder.test  555-201-0006",
-].join("\n");
+/** Three pages of filed items, each opening with Port Alder's masthead (furniture, once per
+ *  page) and its furniture line; PA-101 is read on the first page and again on the third. */
+export const PA_ITEMS_PAGES = [
+  { page: 0, text: "MEMO TO THE BOARD\nTown of Port Alder\nDock fees, file PA-101\nMooring permits, file PA-102" },
+  { page: 1, text: "MEMO TO THE BOARD\nTown of Port Alder\nHarbor lights, file PA-103" },
+  { page: 2, text: "MEMO TO THE BOARD\nTown of Port Alder\nContinued: PA-101" },
+];
+export const PA_ITEMS = PA_ITEMS_PAGES.map((p) => p.text).join("\n");
 
 /* ---- HTML captures, for the layered pipeline ---- */
 
