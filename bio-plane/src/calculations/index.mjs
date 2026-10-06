@@ -50,6 +50,8 @@ export const CALCULATION_KINDS = Object.freeze(["count", "total", "share", "rati
 export const RECOMPUTE_STATES = Object.freeze(["unchecked", "agrees", "differs", "stale"]);
 /** R14: the machine's stamp on the money facts the ingest writer records at a member's request (DEC-52). */
 export const INGEST_STAMP = "class:daemon";
+/** R14 (K1573): the method a machine-written money fact names, money R3's "a figure read by a machine carries that method". */
+export const INGEST_METHOD = "table_binding";
 /** R11: the cause each listener is told. */
 export const INPUT_CHANGED = "calculation_input_changed";
 /** R17 (K1471, K1473): words naming a judgment, never a measured quantity a ranking may order by. */
@@ -1153,7 +1155,7 @@ export class Calculations {
         from: { entity: payer.entity, as_written: String(row[roles.payer]), ...(roles.fund ? { fund: val(row, "fund") } : {}),
           ...(roles.account ? { account: val(row, "account") } : {}) },
         to: { entity: payee.entity, as_written: String(row[roles.payee]) },
-        source: { table: b.table_sha, row: i, binding: b.binding_key }, by: INGEST_STAMP };
+        source: { table: b.table_sha, row: i, binding: b.binding_key }, method: INGEST_METHOD, by: INGEST_STAMP };
       let r;
       try { r = await money.recordFact(fact); } catch (e) { r = { ok: false, reason: "MONEY_THREW", detail: String(e && e.message || e).slice(0, 200) }; }
       if (r && r.ok !== false && (r.fact_id || r.factId)) written.push({ row: i, fact_id: r.fact_id ?? r.factId });

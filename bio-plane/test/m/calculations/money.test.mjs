@@ -103,6 +103,7 @@ test("R14 adoptBinding records a member's adoption of a table's money roles; ing
   assert.deepEqual(r.not_written.map((x) => [x.row, x.reason]), [[1, "PAYEE_NOT_IDENTIFIED"], [2, "PAYER_NOT_IDENTIFIED"], [3, "AMOUNT_NOT_READ"], [9, "NO_SUCH_ROW"]]);
   const fact = w.money.calls[0];
   assert.equal(fact.by, INGEST_STAMP, "machine-attributed");
+  assert.equal(fact.method, "table_binding", "with the machine's method (K1573)");
   assert.equal(r.asked_by, V("bob"), "at the member's request, recorded");
   assert.deepEqual({ amount: fact.amount, as_read: fact.as_read, currency: fact.currency, kind: fact.kind, phase: fact.phase, stage: fact.stage, basis: fact.basis, period: fact.period },
     { amount: "1000", as_read: "$1,000", currency: "USD", kind: "payment", phase: "actual", stage: "paid", basis: "cash", period: "FY2025-26" });
