@@ -75,9 +75,9 @@ test("R19 a machine writes only a proposal: it never drafts, revises, submits, a
   assert.equal(p.ok, true, "a proposal");
   /* no op of this module is a member's act on the record: the op table names only the library's own */
   const url = new URL("https://x/?viewer=member%3Afrank");
-  assert.deepEqual(Object.keys(wz.wizardScriptsOps(w.wz, url, {})).sort(), ["wizardapprove", "wizardcandidates", "wizardcheck", "wizarddraft",
-    "wizardeditorgrant", "wizardeditorrevoke", "wizardprogress", "wizardpropose", "wizardread", "wizardretire", "wizardrevise", "wizards",
-    "wizardsat", "wizardsubmit", "wizarduse"]);
+  assert.deepEqual(Object.keys(wz.wizardScriptsOps(w.wz, url, {})).sort(), ["baseupdates", "startfrom", "wizardapprove", "wizardcandidates",
+    "wizardcheck", "wizarddraft", "wizardeditorgrant", "wizardeditorrevoke", "wizardprogress", "wizardpropose", "wizardread", "wizardretire",
+    "wizardrevise", "wizards", "wizardsat", "wizardsubmit", "wizarduse"]);
   /* the stamps come from the query, never the body: a body naming an author does not act as one */
   const sneaky = wz.wizardScriptsOps(w.wz, new URL(`https://x/?author=${encodeURIComponent(MACHINE)}&viewer=${encodeURIComponent(MACHINE)}`),
                                      { version: d.version, author: F, by: F, steps: STEPS }).wizardsubmit();
@@ -121,7 +121,7 @@ test("R20 each refusal carries its row from this module's own family C-131, each
   for (const [code, r] of rows) {
     assert.match(r.check, /^C-131\.\d+$/, code);
     assert.ok(typeof r.translation === "string" && r.translation.length > 10, code);
-    assert.match(r.where, /^src\/wizard-scripts\/index\.mjs \S+ > is-[a-z-]+$/, code);
+    assert.match(r.where, /^src\/wizard-scripts\/(index|writing-help)\.mjs \S+ > is-[a-z-]+$/, code);
   }
   assert.equal(new Set(nums).size, nums.length, "each number once");
   assert.deepEqual(nums.map((c) => Number(c.split(".")[1])).sort((x, y) => x - y), nums.map((_, i) => i + 1));
