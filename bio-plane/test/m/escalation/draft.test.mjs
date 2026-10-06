@@ -134,7 +134,7 @@ test("R29 an action resting on the determination that the viewer may not see is 
   assert.deepEqual(alice.parts.filter((p) => p.id === hidden).map((p) => p.text), [
     `Action ${hidden} (request_for_comment) rests on the determination, addressed to Town Clerk, City of Port Ellery; its state is active.`,
     `Action ${hidden}'s clock entry "reply due" is due 2026-09-10, on the basis "the rule", pending.`,
-    `The date 2026-09-10 on action ${hidden} passed without a response: the entry is still pending on 2026-10-01.`]);
+    `The date 2026-09-10 on action ${hidden} passed without a response: the entry is still pending on 2026-09-30.`]);
   /* one actionsFor lists but actionRead refuses is left out the same way */
   const u = seeded();
   const only = u.action({ project: u.P, restsOn: [u.D] });
@@ -144,20 +144,26 @@ test("R29 an action resting on the determination that the viewer may not see is 
     "No consequence of the breach is recorded on the determination."]);
 });
 
-test("R29 every date passed without a response is read at nowMs by actions R12's rule: a pending entry is past once the UTC day after its date has begun, at the caller's nowMs, else the instance clock; an entry that is not pending, or due later, is never stated passed", () => {
+test("R29 every date passed without a response is read at nowMs by actions R12's rule: a pending entry is past once the office's local day after its date has begun (T33-73; the test profile's zone, America/Halifax), at the caller's nowMs, else the instance clock; an entry that is not pending, or due later, is never stated passed", () => {
   const w = seeded();
   const A = w.action({ project: w.P, restsOn: [w.D], clock: [
     { text: "reply due", date: "2026-09-20", basis: "the records rule" },
     { text: "second reply due", date: "2026-09-25", basis: "the records rule" },
     { text: "answered", date: "2026-09-01", basis: "the records rule", status: "met" }] });
   const passed = (r) => r.parts.filter((p) => p.text.startsWith("The date ")).map((p) => [p.id, p.text]);
-  /* at the end of the 20th it has not passed; at the start of the 21st it has; the met entry never does */
-  assert.deepEqual(passed(draftOf(w, { nowMs: ms("2026-09-20T23:59:59Z") })), []);
-  assert.deepEqual(passed(draftOf(w, { nowMs: ms("2026-09-21T00:00:00Z") })),
+  /* at the end of the 20th, local time (03:00Z less a second), it has not passed; at the start of the 21st it has; the
+     met entry never does; the UTC day is never the rule */
+  assert.deepEqual(passed(draftOf(w, { nowMs: ms("2026-09-21T02:59:59Z") })), []);
+  assert.deepEqual(passed(draftOf(w, { nowMs: ms("2026-09-21T03:00:00Z") })),
                    [[A, `The date 2026-09-20 on action ${A} passed without a response: the entry is still pending on 2026-09-21.`]]);
-  assert.deepEqual(passed(draftOf(w, { nowMs: ms("2026-09-26T00:00:00Z") })), [
+  assert.deepEqual(passed(draftOf(w, { nowMs: ms("2026-09-26T03:00:00Z") })), [
     [A, `The date 2026-09-20 on action ${A} passed without a response: the entry is still pending on 2026-09-26.`],
     [A, `The date 2026-09-25 on action ${A} passed without a response: the entry is still pending on 2026-09-26.`]]);
+  /* with no zone held for the office's local day, whether a date passed is undetermined, and said so */
+  w.record.setSetting("jurisdiction_profiles", [], "test");
+  assert.deepEqual(passed(draftOf(w, { nowMs: ms("2026-12-01T00:00:00Z") })), []);
+  assert.ok(draftOf(w, { nowMs: ms("2026-12-01T00:00:00Z") }).text.includes(`Whether the date 2026-09-20 on action ${A} has passed is undetermined`));
+  w.record.setSetting("jurisdiction_profiles", ["test-port-ellery"], "test");
   /* each clock entry stated, the met one with its status */
   assert.ok(draftOf(w).text.includes(`Action ${A}'s clock entry "answered" is due 2026-09-01, on the basis "the records rule", met.`));
   /* no nowMs: the instance clock, whatever it is when asked */
