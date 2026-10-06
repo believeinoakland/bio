@@ -31,3 +31,7 @@ Size (session_01DVTPBA7uYZBu2KWvjdwvsU): test runs 5, module lines 1739
 ## J1 · REPORT
 
 Found outside conformance (T34-87, DEC-149): (1) build/requirements/conformance.md R21's row table still quotes C-113.28's old translation ('The plane never chooses it.'); the code now says 'Your group's Civicsmith never chooses it.' and wants BOB's matching wording, no meaning change. (2) promotion row-census.test.mjs now also names 'changed with no record: C-113.28 STANDARD_SIDE_UNNAMED' (accepted red, plan Rules (5) item 4; my record names it awaiting stamp). (3) control-plane catalogue-end.test.mjs: rows-before-r43.json pins C-113.28's translation digest e2cea14e4398e83c, which this change moves; suite already red before (K1708's R43 red); re-pin with T34-60 as for C-91.1/.2 (K1789) and C-48.8/.9 (K1836). (4) Stale generated artifact: bio-plane/dist/bio-plane.bundled.mjs (lists src/conformance/); regenerated at L9's close.
+
+## J2 · COMPLETE
+
+T34-87 applied: C-113.28 STANDARD_SIDE_UNNAMED's translation and comparisonFacts' detail now say 'your group's Civicsmith' (DEC-149); dec149.test.mjs names both at the interface (red on the old strings). Row C-113.28 awaiting stamp. conformance 66/66; format, architecture, coverage (26/26), ownership (4 files): 0 failures. Nothing deferred. Findings outside the module in J1 (REPORT). Record: build/jobs/T34/conformance.md, Completion. Branch job/T34/conformance @ 759b3128e5 (+ mail commits).
