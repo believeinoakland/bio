@@ -4,7 +4,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
 import { DEPLOYMENT_SEQUENCE, GATE_ADDRESS, DEPLOYED_MODES, DEFAULT_MODE, AI_RUN_OPEN_CHECKS, AI_RUN_CHECKS,
-         RUN_ENDINGS } from "../../../src/run-rules/index.mjs";
+         RUN_ENDINGS, deployable } from "../../../src/run-rules/index.mjs";
 
 const ROOT = new URL("../../../../", import.meta.url);
 
@@ -31,12 +31,18 @@ test("R9: DEPLOYMENT_SEQUENCE is the one deployment order — its first member t
   assert.ok(Object.isFrozen(DEPLOYED_MODES));
 });
 
-test("R14: DEPLOYMENT_SEQUENCE.order is check, investigate, extract, plan; plan deploys apart from the chain and is not deployed today (control: check still deployed)", () => {
+test("R14: DEPLOYMENT_SEQUENCE.order is check, investigate, extract, plan; plan deploys apart from the chain, only by its own flag set by a reviewed act of its own, never as a side effect of model turns, and is not deployed today (control: check still deployed)", () => {
   assert.deepEqual(DEPLOYMENT_SEQUENCE.order, ["check", "investigate", "extract", "plan"]);
   assert.equal(DEPLOYMENT_SEQUENCE.order.at(-1), "plan");
   assert.deepEqual(Object.keys(DEPLOYMENT_SEQUENCE.deploys_apart), ["plan"]);
   assert.equal(DEPLOYMENT_SEQUENCE.deploys_apart.plan.deployed, false);
-  assert.match(DEPLOYMENT_SEQUENCE.deploys_apart.plan.when, /agent-worker runs model turns/);
+  assert.deepEqual(Object.keys(DEPLOYMENT_SEQUENCE.deploys_apart.plan), ["deployed", "when"]);
+  assert.match(DEPLOYMENT_SEQUENCE.deploys_apart.plan.when, /^only by an explicit reviewed change of its own/);
+  assert.match(DEPLOYMENT_SEQUENCE.deploys_apart.plan.when, /never as a side effect of model turns running/);
+  assert.match(DEPLOYMENT_SEQUENCE.deploys_apart.plan.when, /whether or not investigate or extract is deployed/);
+  /* investigate's and extract's state changes nothing for plan: the chain never decides it */
+  assert.equal(deployable("plan", []), true);
+  assert.equal(deployable("plan", [{ mode: "check", run: "R", verified_by: "member:ann", at: "t", evidence: "e" }]), true);
   assert.equal(DEPLOYED_MODES.includes("plan"), false, "an open in mode plan is refused by ai-runs R40 until then");
   for (const m of ["investigate", "extract"]) assert.equal(DEPLOYED_MODES.includes(m), false, m);
   /* control */

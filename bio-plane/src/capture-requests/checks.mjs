@@ -313,6 +313,39 @@ export const CAPTURE_REQUEST_CHECKS = Object.freeze({
       + 'ratified, is held, or does not reach this address. Nothing was fetched or filed under it. A request filed '
       + 'under a sweep answers to what members ratified for that sweep, so it is never stretched to fit.',
   },
+  /* R46 (T33-51; K1492 (2), (4); K1449: never unattended) — A PERSONAL SITE OR A LOGIN-GATED PLATFORM IS CAPTURED ONLY
+     BY A MEMBER'S OWN ACT IN THEIR OWN BROWSER. Bob's ruling (K1492): what law firms, newsrooms and activists do is read
+     public registers and public pages, and reach a private individual's own site or a person's page on a login-gated
+     platform only by their own hand; never by deception, a fake account or automated collection against a platform's
+     terms. So the daemon refuses such a page BY NAME and ROUTES it to the members (`route: "member"`) rather than
+     fetching it. Three sites answer with this code, all through ONE region (`memberCaptureOnly`): the door, for a
+     request whose run judged the address `personal` or `platform`; the drain, for a source asking a login on a host a
+     member has marked a platform; and the retry, which never sends a supplied login to such a host. New at T33. */
+  MEMBER_CAPTURE_ONLY: {
+    check: 'C-28.20',
+    where: 'src/capture-requests/index.mjs memberCaptureOnly > is-capture-member-only',
+    translation: 'This page is a private person\'s own site, or sits on a platform that asks for a login, and such a '
+      + 'page is captured only by a member, in their own browser, as their own act. This instance does not fetch it '
+      + 'unattended or sign in to it, so nothing was fetched; a member who wants it captures it themselves.',
+  },
+  /* R46: the run's judgement of the site is one of two words or none; any other value is refused by name rather than
+     read as none, so a request meant as "personal" under a misspelling is never fetched by the daemon. */
+  CAPTURE_REQUEST_SITE_KIND_UNKNOWN: {
+    check: 'C-28.21',
+    where: 'src/capture-requests/index.mjs captureRequest > is-capture-request',
+    translation: 'This request described the site it asks for in a way this instance does not recognise. It reads '
+      + 'site_kind: "personal" for a private person\'s own site, "platform" for a page on a platform that asks for a '
+      + 'login, or nothing for an ordinary public page. Nothing was queued.',
+  },
+  /* R46: how a member marks a host a login-gated platform (R41's scope record, kind `platform`), settled by this job:
+     a group-wide mark with no secret. Its one refusal: the act is a member's (or the administrator's), never a machine
+     class's, and it names a bare host. Minted at one region (`#platformRefused`). */
+  CAPTURE_PLATFORM_MARK_REFUSED: {
+    check: 'C-28.22',
+    where: 'src/capture-requests/index.mjs #platformRefused > is-capture-platform-mark',
+    translation: 'This mark could not be made or withdrawn. Marking a site as a platform that asks for a login is a '
+      + 'member\'s own act, and it names one site by its plain host name, such as www.example.org. Nothing was written.',
+  },
 });
 
 for (const row of Object.values(CAPTURE_REQUEST_CHECKS)) Object.freeze(row);
