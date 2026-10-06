@@ -2048,6 +2048,7 @@ reasoning recorded in: this entry; the brand-and-voice page (V1, options A to D 
 owed: (design session) the mark carried into step 4 (type, colour, small-size version) and the screens of step 5; (BOB) the mark as the product's browser icon, phone icon and credit mark when the interface is built, from the source file; (Bob) the mark included in the trademark clearance search with the name.
 
 ### DEC-127 · answered
+amended: 2026-10-06 · DEC-157: who may translate, the assistant's first cut as the second opinion, protected words, and local words.
 raised: 2026-10-04 · the UX design session with Bob on his primary account (session_01JZtUsAKpStQoiwF6rzqsyJ; the development process runs on his secondary account) (the brand-and-voice page's V4, recast as a draft ruling from Bob's direction on translation)
 for: bob
 question: Whether groups may change the interface's words, and how a group supports members who speak different languages.
@@ -2176,6 +2177,7 @@ reasoning recorded in: this entry; `docs/development/ux-substrate/journeys.html`
 owed: (BOB) the "Ask for a check" act (owner; target; expertise label; note); a task kind for a check request addressed by expertise and sight, taken by the first who accepts; the check record carrying the checker's declared expertise and its confirmation state; the owner's read of an untaken request. (Design session) the act's screen and the check's display in step 5.
 
 ### DEC-136 · answered
+amended: 2026-10-06 · DEC-149: the court sentence reads "Your group's Civicsmith keeps this from the public…" (Bob's S4: B).
 raised: 2026-10-04 · the UX design session with Bob on his primary account (session_011wdWGoa6RAbZiRU4Bn3Rng, carrying the journeys page drafted by session_01JZtUsAKpStQoiwF6rzqsyJ; the development process also runs on his primary account since K1428) (the design phase's step 3, journeys: question J11, where a member's first words go, widened by Bob to what a court can reach)
 for: bob
 question: Whether members may keep notes only they can see; and how Civicsmith tells members that a court order the group cannot defeat can expose anything in the group's copy that is not public.
@@ -2218,6 +2220,7 @@ reasoning recorded in: this entry; `docs/development/ux-substrate/visual-languag
 owed: (BOB) when the new member screens are built: `docs/development/ux-substrate/visual-language/civicsmith.css`, `faces.css`, `fonts/` (with their OFL licences) and `icons.svg` replace `civicos-ui/tokens.css` as the screens' one stylesheet, served from the group's copy, never from outside (principle 9.6); `check_contrast.py` runs whenever a colour changes (placement of the files and the check is BOB's). (Design session) step 5's layouts and key screens drawn in it; the measures map's specimens redrawn.
 
 ### DEC-139 · answered
+amended: 2026-10-06 · DEC-148: the library approved by Bob (S2); DEC-147 adds the ceremony's set-time step.
 raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (the design phase's step 5, layouts and key screens, which Bob asked the session on 2026-10-06 to carry out, every wizard written and walked through the mockups and every journey also drawn for a member without the assistant)
 for: bob-session
 question: The design detail of step 5: the frames, grid and phone and desktop layouts; the assistant panel; the screens the journeys walk; the screen registry and the Civicsmith wizard library in the form `wizard-scripts` sets; the rules of the product without the assistant (K1547 left that path to design, B44).
@@ -2258,3 +2261,373 @@ response: **Decided by the design session, 2026-10-06, beneath K1618:** (1) **Co
 decided: 2026-10-06 · the design session (P17)
 reasoning recorded in: this entry; `BIO_Intake_Doctrine_v1_1.md` (after DEC-97's held-captures list); `layouts.html` (held captures; question); `screens/registry.src.py` (question gains `heldrestore` and `search`).
 owed: (BOB, N587) capture R77 and R79 answer, per held document, the question it was captured for and its asker (from capture-requests R8, R10) when the viewer may see the question, else that it is withheld; R79 requires a reason when an open question waits on the document and records the question; inquiry gains the wait "a document it waits on was set aside", read on the question and its project's list, never raised as a queue item; R81's restore records its reason in the same history.
+
+### DEC-142 · answered
+amended: 2026-10-06 · DEC-143: the expunge's button shows the Irreversible weight.
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (BOB's B51, from AFFORDANCES #20, K1686)
+for: bob-session
+question: Should `personexpunge` (people R12: removes a person's recorded value; cannot be undone), graded reasoned by affordances R27, be a named exception that opens the full dialog stating its consequence, as DEC-113 made of `actionholdrelease`?
+why it is Bob's: it is not: Bob already ruled that an act whose effect cannot be taken back opens the full dialog stating that effect, whatever its rung, and that the rung's name stays honest (DEC-88; principle 4.4). Applying that rule to one act is design detail, decided by the design session (P17).
+provisional: affordances R27 (reasoned, from the owner's NO_REASON); DEC-113 (the hold release's consequence statement).
+alternative: a reason field in place only (the reasoned rung's ordinary friction).
+recommendation: as BOB recommends: yes, DEC-113's tier.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-06, applying DEC-88:** an expunge opens the full dialog, as DEC-113's hold release does. It states what value is removed and from where (the person's page, every question that cited it, every export); that it cannot be undone, by the member or anyone; that a marker stays in its place ("Removed where the law requires, <date>, by <member>"); and that published cases change only through the docket. The member confirms with a reason naming the law or order that requires it ("Remove it for good, with this reason"). The rung stays as affordances grades it (reasoned), its name honest; the button shows it. Drawn on the person screen of layouts.html; the screen registry now names the op `personexpunge`.
+decided: 2026-10-06 · the design session (P17)
+reasoning recorded in: this entry; `BIO_Interaction_Constructs_v0_1.md` §F; `layouts.html` (person); `screens/registry.src.py`.
+owed: (BOB) affordances: `personexpunge` a named exception beside DEC-113's `actionholdrelease`, with its consequence statement as above; the screen registry's person screen names `personexpunge` (was the function `expunge`).
+
+### DEC-143 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (Bob's comment on the layouts page, the installer's short-name button)
+for: bob-session
+question: Bob, 2026-10-06: "The group's short name isn't just reasoned - it's irreversable."
+why it is Bob's: it is not: the weight a button shows is design detail beneath DEC-87 (every act's button carries its weight) and DEC-88 (friction follows consequence in the world, the name kept honest); Bob's comment corrects a mockup, decided by the design session (P17).
+provisional: DEC-139's mockups (the short name shown as reasoned); DEC-142 (the expunge's rung kept as affordances grades it, reasoned).
+alternative: keep showing the rung affordances assigns.
+recommendation: as decided below.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-06, on Bob's comment:** an act that can never be undone shows the **Irreversible** weight (five pips) on its button, whatever rung it is otherwise given, so the button tells the member the truth. Two such acts lie outside the publication ceremony: the installer's choice of the group's short name (in every address and beside every signature, never changed without starting a new copy) and `personexpunge` (DEC-142). Neither is a publication, so each opens the full dialog stating that it is permanent, in place of the ceremony; DEC-87's rule that publishing goes only through the ceremony is unchanged. DEC-142 amended.
+decided: 2026-10-06 · the design session (P17)
+reasoning recorded in: this entry; `layouts.html` (install; person); `visual-language.html` (acts); `BIO_Interaction_Constructs_v0_1.md` §F.
+owed: (BOB) affordances shows `personexpunge`'s weight as irreversible (with DEC-142's consequence dialog); the installer's short-name step carries the irreversible weight and its permanence statement (installer, instance-setup).
+
+### DEC-144 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (BOB's B55)
+for: bob-session
+question: DEC-136 (3), members' own notes: may a member revise or delete their own note? (BOB worded hypotheses R11–R15, K1751, with neither.)
+why it is Bob's: it is not: detail beneath DEC-136, whose second point (Civicsmith holds as little as it can) answers it; decided by the design session (P17), as BOB recommends.
+provisional: hypotheses R11–R15 (write, read by its owner, turn).
+alternative: notes kept as written (no revise, no delete).
+recommendation: allow both.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-06, beneath DEC-136:** a member may **revise** their own note in place (it is theirs, never part of the record; no history is kept) and **delete** it for good, leaving no marker. Only the note's own member can do either; turning a note into an observation, hunch or question does not delete it (the member may then delete it). Drawn on the notes screen of layouts.html ("Revise", "Delete" beside each kept note).
+decided: 2026-10-06 · the design session (P17)
+reasoning recorded in: this entry; `BIO_Interaction_Constructs_v0_1.md` §R; `layouts.html` (notes); the screen registry (`owed:noterevise`, `owed:notedelete`).
+owed: (BOB) hypotheses gains a member's own revise and delete of their note (no history, no marker; only its member); the registry's owed acts take the ops BOB names.
+
+### DEC-145 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (BOB's B54: the words owed by Bob's rulings on policies and standards, K1713, K1722–K1724, K1727, K1739, K1740)
+for: bob-session
+question: The words members see for a provision's force; a benchmark beside a binding standard; "cited, not seen" and "not found"; a policy kept from the public by its source; a silent change noticed; a standard's access; a use of discretion with its reason; with care for "policy" (already the group's own, DEC-54) and "practice" (two meanings). And the journeys page's claim that policies are built.
+why it is Bob's: it is not: member words beneath his rulings, as DEC-131's were; decided by the design session (P17) and open to his comment on the brand page.
+provisional: Capability Ladders §6B POLICIES, §6C STANDARDS (tranche/T34); journeys.html §6 and journey 6.
+alternative: the canon's terms as written (requirement, recommendation, permission, mandatory, discretionary, benchmark, cited-not-seen, not-found).
+recommendation: as decided below.
+reversal cost: low (words held in one place, DEC-99).
+response: **Decided by the design session, 2026-10-06:** (1) **Force**, always beside the document's own words: "Requires", "Recommends", "Allows"; for a policy, "Required" or "At the discretion of <office>", with "criteria stated" or "no criteria stated". (2) **Binding or not:** "Standard · binds <body>" beside "Benchmark · not binding on <body>"; a finding against a benchmark says "slower than", "below", never "violated" or "nonconforming" (K1723). (3) **"Cited, not seen"** (who cited it, and where) and **"Looked for, not found"** (the searches made), each beside but never borrowing the look of "Nobody looked" (DEC-86). (4) **A policy kept from the public** (K1740): "Not public", with whose it is to release; never "confidential" (principle 3.11's words). (5) **A silent change** (K1727): a Noticed item, "Changed without notice: the text differs from the copy captured on <date>, and no amendment was announced". (6) **Access** (K1739): "Free to read", "Reading room only", "Behind a paywall". (7) **Discretion** (K1713): "Discretion used by <office>, <date>", with "stated reason: …" or "no reason stated"; patterns across uses are "a pattern in how discretion is used". (8) **"Policy"** always carries its owner ("Public Works policy", "the hauler's policy"); the group's own is "our group's policy". **"Practice"** is not used in Civicsmith's own words: "what the office does", or the pattern above. (9) journeys.html corrected: laws and codes are held section by section (built); policies and standards as kinds of their own are ruled and planned for a later stage.
+decided: 2026-10-06 · the design session (P17)
+reasoning recorded in: this entry; `brand-and-voice.html` §5 (Use, Avoid); `journeys.html` (journey 6; §6's code row).
+owed: (BOB) these words as the member-facing labels of §6B and §6C's constructs when they are built (T35); the queue's Noticed wording for a silent change.
+
+### DEC-146 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (Bob's comment on the layouts page's installer, on "Free software for civic groups": "'and other organizations'? What's the right description here?")
+for: bob-session
+question: The one line that says what Civicsmith is, on the installer and on the page "Made with Civicsmith" links to; "civic groups" leaves out newsrooms, professional associations and a public office checking its own work, all of whom DEC-128 names.
+why it is Bob's: it is not: words beneath his ruling on who Civicsmith is for (DEC-128, amended for newsrooms); decided by the design session (P17) and open to his comment.
+provisional: "Free software for civic groups" (brand-and-voice.html §2's credit; the installer mockup).
+alternative: "civic groups and other organisations" (names no one, and "organisations" reads as firms); a list of kinds alone (names who, not what for); "groups that hold government to account" (takes a side, and misfits an office checking itself).
+recommendation: as decided below.
+reversal cost: low (one line, held in one place, DEC-99).
+response: **Decided by the design session, 2026-10-06:** (1) Civicsmith is described by what a group does with it, not by what kind of group it is: **"Free software for groups that check whether government keeps its own rules and promises."** "Rules and promises" covers what journey 6 calls the standards government set itself (an ordinance, a policy, a budget promise, a contract term, a service target); "check" stays neutral on policy and fits a public office auditing itself (DEC-128). (2) Where there is room for a second line, it names who: **"Neighbourhood and issue groups, newsrooms, professional associations, and public offices checking their own work."** (3) The line is used on the installer, on the page the "Made with Civicsmith" credit links to, and wherever Civicsmith says in one line what it is; never "civic groups" alone, never "and other organisations".
+decided: 2026-10-06 · the design session (P17)
+reasoning recorded in: this entry; `brand-and-voice.html` §2 (the credit); the layouts page's installer (`screens/mock-screens.js`); BIO_Interaction_Constructs_v0_1.md §L (brand and voice).
+owed: (BOB) the line as the installer's and the credit page's description when they are built (installer, public-read).
+
+### DEC-147 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (the layouts page's question S1; the gap "publishing at a set time" in journeys.html §6, from DEC-128's amendment for newsrooms)
+for: bob
+question: May a group sign a case now and have it published later, at a time it sets, so a newsroom's case goes public when the story citing it runs?
+why it is Bob's: a new capability, and it changes when publishing happens (today the moment an owner signs; DEC-19, DEC-80) (P17).
+provisional: a case is public when its owner signs; an embargoed advance copy is a review copy that never leaves the group's Civicsmith (Publication §6A); signing needs a laptop or desktop (DEC-122).
+alternative: A, keep publishing at signing (a newsroom publishes early or someone is at a laptop at the hour); C, sign beforehand and release with one tap on a phone at the hour (someone must still act; widens what a phone may do beyond DEC-122).
+recommendation: B.
+reversal cost: medium (a new waiting state of a signed edition, its check and its notices).
+response: **Bob, 2026-10-06: "S1: B".** Ruled: (1) the publication ceremony's last step offers "Publish now" or "Publish at…" a date and local time the owner sets; (2) the signed edition waits in the group's Civicsmith, not public, and is shown as "Signed · publishes <date, time>" on the case and in the owner's queue; (3) at that time Civicsmith checks again, as at signing; if anything changed since signing (a source the case rests on, a publishing member's confirmation of no undeclared tie, a hold), it does not publish and tells the owner once; (4) until then the owner can cancel or move the time; (5) when it goes public the owner's queue says so once, and the public page shows when the edition was signed and when it was published. **Design session's details (P17), Bob may change any:** the time is the group's local time (civil-time); the set time is weighted Irreversible like publishing itself.
+decided: 2026-10-06 · Bob
+reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (the Publication ceremony screen and wizard; section 7); `journeys.html` (journey 15, the ceremony wizard, §6); BIO_Interaction_Constructs_v0_1.md §A.
+owed: (BOB) a requirement for publication (the scheduled edition: its state, the check at the set time, cancel and move, the two dates on the public page) and its queue items; the op the ceremony's set-time act names (`owed:publishat` in the screen registry).
+
+### DEC-148 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (the layouts page's question S2)
+for: bob
+question: Whether the seventeen wizard scripts of DEC-139 are the first Civicsmith library.
+why it is Bob's: the library Civicsmith ships with every release is approved by Bob; groups add their own but cannot change it (DEC-121 (1)) (P17).
+provisional: the scripts as data (`docs/development/ux-substrate/screens/library.json`), walked through the mockups (DEC-139).
+alternative: approve some and send the rest back.
+recommendation: approve, the welcome wizard as a first version.
+reversal cost: low (a script is revised as a new version, wizard-scripts R1).
+response: **Bob, 2026-10-06: "S2: approved".** The seventeen scripts as they stand on 6 October, including the day's changes from his comments (the group's two names, the one-time password saved and where it comes from, publishing at a set time, DEC-147), are the first Civicsmith library; the three required ones are Set up and claim, Welcome a new member and the Publication ceremony; the welcome wizard is approved as a first version, its final words revised once the new screens are in use (DEC-91).
+decided: 2026-10-06 · Bob
+reasoning recorded in: this entry; `screens/library.json` (its note); `layouts.html` section 7; BIO_Interaction_Constructs_v0_1.md §P.
+owed: (BOB) the library as the Civicsmith library wizard-scripts ships (origin `civicsmith`), with its owed acts declared as ops (the screen registry's `owed:` lines).
+
+### DEC-149 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (Bob's comments on the layouts page: "Is 'copy' the right word to use when referring to a group's instance?"; question S4)
+for: bob
+question: What members and founders call one group's own Civicsmith (an instance), in place of "your group's copy".
+why it is Bob's: the word is in the voice standard he approved (DEC-125, brand-and-voice §2.2) and in a sentence he approved word for word (DEC-136's court notice).
+provisional: "your group's copy (of Civicsmith)" (DEC-124, DEC-109, brand-and-voice §2.2).
+alternative: A, keep "copy" (it also means a review copy and, to a newsroom, a story's text); C, "workspace" (sounds hosted by a company; already names the working screens); D, "installation", "server" or "instance" (technical).
+recommendation: B, "your group's Civicsmith".
+reversal cost: low (words held in one place, DEC-99).
+response: **Bob, 2026-10-06: "S4: B".** Ruled: members and founders say **"your group's Civicsmith"** (as people say "our Slack"); "installation" only where the hosting is the subject (the installer, who holds the hosting account); never "copy", "instance", "plane" or "server" for it. "Copy" keeps only its other meanings: a review copy, a copy of a document. Where "Civicsmith" could mean the software or one group's installation, the sentence is reworded. DEC-136's court sentence reads: "Your group's Civicsmith keeps this from the public and the people the group looks into. A court order your group can't defeat could still require it to be shown. Write accordingly."
+decided: 2026-10-06 · Bob
+reasoning recorded in: this entry; brand-and-voice.html §2.2 and §5; every design page and the screens, wizards and registry in `docs/development/ux-substrate/`; BIO_Interaction_Constructs_v0_1.md §L.
+owed: (BOB) every member-facing string that says "copy" for the group's Civicsmith, in the requirements and the code (instance-setup's claim page, installer's last screen, membership's and credentials' messages, the court sentence of DEC-136's owed setting); the term entry: "Your group's Civicsmith: Civicsmith installed in a Cloudflare account your group controls. Your group's records are held there and nowhere else."
+
+### DEC-150 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (Bob's comment on the layouts page's setup screen, "Offices and seats, filled in for you")
+for: bob
+question: What a group whose place Civicsmith holds no rules for meets at setup, where the offices and seats would be filled in, and whether it is told when its place arrives.
+why it is Bob's: a new thing Civicsmith does (recording a place it does not hold and telling administrators when an update brings it) (P17); Bob directed it.
+provisional: instance-setup R12–R15 (the places are chosen among held profiles, none preselected; choosing none is allowed and stated); officesseed fills offices only from a held place.
+alternative: an empty list with no explanation; asking for the place outside the group (S5's C, an outward act).
+recommendation: as Bob directed.
+reversal cost: low.
+response: **Bob, 2026-10-06:** "If the user just specified a unique place civicsmith doesn't know anything about, then this list of offices and seats won't be populated yet. So there should be some fallback text that explains that and tells the new administrator that they'll received a notification once the system has this information for them to select from." Ruled as he directs. **Design session's details (P17), Bob may change any:** (1) under Places, a group whose place is not listed may name it (free text, optional), kept in its own Civicsmith, seen by administrators, never sent anywhere; (2) the offices section then says nothing is filled in because Civicsmith does not hold that place yet, and offers adding the group's offices itself (`entitycreate`), each marked as added by the group; (3) when an update brings a place matching the name, administrators are told once in their queue (Status) and can choose it under Places; offices the group added stay. Whether a group may write its own place's rules is S5, still with Bob.
+decided: 2026-10-06 · Bob
+reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (the setup screen; S5); `journeys.html` (journey 1).
+owed: (BOB) instance-setup: the named place (an administrator's act, held locally, never exported to the network) and the queue item when an installed update brings a held profile covering it; the op behind the registry's `owed:placewanted DEC-150`.
+
+### DEC-151 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (the layouts page's question S5, from Bob's comment "They can type in a different location, right?")
+for: bob
+question: May a group outside the places Civicsmith ships rules for write its own place's rules?
+why it is Bob's: a new capability, and it decides who may write the rules a group's due dates rest on (P17).
+provisional: places are chosen among held, researched profiles only (instance-setup R12–R15; jurisdictions R1, R44); choosing none is allowed; DEC-150 lets a group name its place and be told when an update brings it.
+alternative: B, a group writes its own place's rules now; C, a group asks the makers for its place (an outward act).
+recommendation: A for this release; B as the next requirement once a group outside Oakland asks.
+reversal cost: low (A changes nothing built).
+response: **Bob, 2026-10-06: "S5: A for now, but the B capabilities should be recorded as something to be done after the first public release goes out."** Ruled: (1) **now**: only the places Civicsmith ships, researched with their sources; a group elsewhere chooses none, names its place and is told when an update brings it (DEC-150); (2) **after the first public release**: a group may write its own place's rules inside its own Civicsmith (its records and open-meeting laws and their deadlines, holidays, office hours and time zone, offices, where records are published), each with its source, marked as the group's own research and never as Civicsmith's, serving only that group, and offerable later for a release.
+decided: 2026-10-06 · Bob
+reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (section 7, S5); `journeys.html` §6 (the gap list).
+owed: (BOB) (2) recorded as work for after the first public release, wherever BOB keeps such work, to be worded as a requirement then; nothing for the release now.
+
+### DEC-152 · answered
+amended: 2026-10-06 · DEC-153: the same help wherever members write in their own words.
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (Bob's comment on the layouts page's "Who your group is" screen)
+for: bob
+question: Whether an administrator may ask the assistant to help write the group's focus and reasons for existing (DEC-132), which the group gives in its own words.
+why it is Bob's: what the assistant may do (P17); Bob directed it.
+provisional: the assistant drafts only translations (DEC-127) and the drafts wizard-scripts R13 lists; DEC-132 asks for the group's own words; K1364: a draft is labelled until the member keeps it.
+alternative: no assistant help on this screen.
+recommendation: as Bob directed.
+reversal cost: low.
+response: **Bob, 2026-10-06:** "Can the administrator use the assistant to help compose the text asked for on this screen? I hope so." Ruled as he directs. **Design session's details (P17), Bob may change any:** where a member reaches the assistant, "Who your group is" offers "Ask the assistant to help write this"; it asks the administrator a few questions, then drafts the focus and the reasons into their fields, each labelled "Draft · the assistant's, asked by <handle>"; nothing is saved until the administrator edits and keeps it, and once kept the words are the group's (K1364); without the assistant the screen is unchanged. It runs on the account that serves the administrator (K1755) and within its daily limit.
+decided: 2026-10-06 · Bob
+reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (the "Who your group is" screen).
+owed: (BOB) the assistant's draft for the group's description (an op behind the registry's `owed:groupdescriptiondraft DEC-152`, a machine draft per wizard-scripts R13 and the assistant's roles), labelled and kept only by the administrator's act.
+
+### DEC-153 · answered
+amended: 2026-10-06 · K1841 (Bob, through the development process, on K1837's two points), folded by the design session `session_01NWPmrrYZbbF8Wkrvp5Y2vx`: (1) never in a field stating a member's reason for an act (the Roles canon's rule 1), so detail (1) drops "a reason" and the held list's "Why set it aside?" loses the help; (2) with the member's suggestions switch off the help works only from what the member typed, with it on it may also draw on what the group holds (rule 7), which narrows detail (2). The refused acts in (4) are the assistant's refusals (affordances R7) and every signed or irreversible act, including publishing at a set time (B69).
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (the design session's question on the layouts page, after DEC-152: "should the same help be offered wherever someone writes in their own words (a records request, an observation, a case's statement)? It would never apply where the assistant is refused: concluding, signing, publishing.")
+for: bob
+question: Whether the assistant's help with writing (DEC-152) is offered wherever members write in their own words.
+why it is Bob's: what the assistant may do (P17).
+provisional: DEC-152 (the group's description only); translations (DEC-127); the drafts wizard-scripts R13 lists.
+alternative: only on "Who your group is".
+recommendation: everywhere members write in their own words, never on an act the assistant is refused.
+reversal cost: low.
+response: **Bob, 2026-10-06: "Yes, offer it wherever members write in their own words".** Ruled, within the limits of the question he answered: never where the assistant is refused (concluding, signing, publishing). **Design session's details (P17), Bob may change any:** (1) wherever a field takes a member's own words (a note, an observation, a request, a case's scope, what changed; never a reason, K1841), "Help me write this" sits under it when the assistant is reachable for that member (K1755); (2) the help works only from what the member tells it and what the group holds, and never adds a fact; for a firsthand observation it only helps word what the member saw (testimony stays the witness's); (3) its words arrive in the field labelled "Draft · the assistant's, asked by <handle>"; nothing is saved until the member edits and keeps them (K1364), and kept words are the member's; (4) never on an act the assistant is refused or an irreversible one: vouching (release), concluding and withdrawing or reopening a conclusion, signing (caseratify), publishing, the expunge, the installer's short name; not where a labelled draft already fills the field; the group's own description keeps its guided draft (DEC-152); (5) without the assistant nothing appears.
+decided: 2026-10-06 · Bob
+reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (section 2; the notes, capture, held and case-editor screens); `screens/mock-kit.js` (the rule as code: `writeHelp`); BIO_Interaction_Constructs_v0_1.md §P.
+owed: (BOB) the assistant's writing help as an act (the op behind the registry's `owed:writinghelp DEC-153`): a machine draft into a member's own-words field, labelled, kept only by the member's act, refused on the acts named in (4), the facts it may use limited as in (2); the assistant's roles amended to allow it.
+
+### DEC-154 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (Bob's comment while reviewing the layouts page)
+for: bob
+question: Whether every screen shows its own name and where it sits, in the same place.
+why it is Bob's: UX (P17); Bob directed it.
+provisional: some screens carried breadcrumbs, others none; headings named the thing shown, not the screen.
+alternative: headings only.
+recommendation: as Bob directed.
+reversal cost: low.
+response: **Bob, 2026-10-06:** "I'm noticing that screens don't show their names. For example, 'The roster' doesn't say the roster. I think it would be orientating for users to see a screen name in the same place on every screen. Indeed, I think that every screen should show it's 'path' (People>Roster)." Ruled as he directs. **Design session's details (P17), Bob may change any:** (1) every screen, in every frame (working, setup, public, published), opens its main area with its path, at the same place: from the rail's section (or, outside the workspace, the group's name or "Civicsmith") to the screen's own name, always last, in the ink colour and semibold, marked as the current page; earlier steps are links; (2) the heading below names the thing shown (a question's words, a person's name), so the path names the screen and the heading the thing; (3) the group's own members stay under Settings ("Settings › Members"), because "People" names the people the record is about, never the group's members (brand and voice §5); (4) a phone shows the same path above the heading.
+decided: 2026-10-06 · Bob
+reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (every screen); `screens/mock-shell.js` (`PATH`, `pathNav`); BIO_Interaction_Constructs_v0_1.md §V.
+owed: (BOB) the path on every member screen and public page when the screens are built (each screen's path as in `screens/mock-shell.js` `PATH`).
+
+### DEC-155 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (Bob's comment on the layouts page's rail)
+for: bob-session
+question: The rail's width.
+why it is Bob's: it is not: layout beneath his direction; decided by the design session (P17) on his comment.
+provisional: a fixed rail of 232px (DEC-138's shell, `--rail`).
+alternative: a fixed narrower rail; a collapse toggle only.
+recommendation: as decided below.
+reversal cost: low.
+response: **Bob, 2026-10-06:** "The width of the rail should adjustable, and the default should be set to include enough whitespace but not eat up precious screen real estate." **Decided by the design session:** (1) the rail is 184px by default, room for every section's name, its count and whitespace; (2) each member sets its width, kept for them on that device: drag its edge, or focus the edge (a separator, named "Width of the sections list") and use the arrow keys in 16px steps; double-click or Home resets it; (3) from 64px to 320px; narrower than 120px it becomes icons only, each section named on hover and focus, and its counts hidden; (4) phones keep the tab bar, unchanged.
+decided: 2026-10-06 · the design session (P17)
+reasoning recorded in: this entry; `docs/development/ux-substrate/visual-language/components.css` and `tokens.head.css` (`--rail`, `.cs-grip`, `.rail-icons`); `layouts.html`; BIO_Interaction_Constructs_v0_1.md §V.
+owed: (BOB) the rail's width as a per-member, per-device setting when the shell is built (held on the device, never in the record).
+
+### DEC-156 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (Bob's comment on the connect screen: "It's completely unrealistic to ask a nontechnical member to open a terminal window! How do we fix this?"; question S6 on the layouts page)
+for: bob
+question: How a member connects their own Claude subscription without a command line.
+why it is Bob's: how Civicsmith is built and its relation to Anthropic's terms (P17).
+provisional: the member runs `claude setup-token` on their own computer and pastes the token (K1547, K1755; AT-22).
+alternative: A, keep the command line with plain steps; B, ask Anthropic first (the open points of U-7, answerable by Anthropic, AT-25); C, build the hosted sign-in without asking.
+recommendation: B (ask Anthropic first).
+reversal cost: medium.
+response: **Bob, 2026-10-06:** "S6: build the process that includes a link to the Claude page a member can use to authorize civicsmith to use of their CC account. I assume that this process will produce a token that the user can paste into a field in the civicsmith screen." And: "The questions you have about using this process relate to your not being certain that it will work. You're not concerned that asking a user to do this is in some way open to abuse or misuse. Once you add this process to real civicsmith screens I'll use the process to authorize my CC subscription to be used by my member account." Ruled: Civicsmith offers a member a link to Anthropic's sign-in page, where the member authorizes the use of their own Claude subscription; the page gives the member something to paste into a field on the Civicsmith screen, which connects the subscription to that member's account. **Design session's details (P17), Bob may change any:** the connect screen offers the subscription first ("sign in on Anthropic's page"), then an API key, then skip; four plain steps (open Anthropic's sign-in page in a new tab; sign in and approve; copy the code Anthropic's page shows; paste it and connect); the field is labelled "The code from Anthropic's page"; Civicsmith never sees the member's Claude password; it serves only that member and can be disconnected at any time; Pro or Max, and Workers Paid. **Recorded beside the ruling (K1762 (2), (3)):** what the page gives the member is, per Anthropic's own documentation, a login code entered at the hosted Claude Code's prompt (AT-26), not the one-year token `claude setup-token` prints (AT-22); and the four points the terms leave open (U-7 (a)–(d): taking the code in a Civicsmith field and passing it on, AT-17; a Civicsmith button starting Claude sign-in, AT-16 and AT-18; the binary's stored sign-in in the group's container, AT-17; who agrees to the Commercial Terms, AT-14) remain open: Bob's decision is to build, not a reading that the terms allow it.
+decided: 2026-10-06 · Bob
+reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (the connect screen and its wizard; S6); `journeys.html` (journey 4, the wizard card, §6); U81 (the register entries AT-26, AT-27, U-7).
+owed: (BOB) the subscription sign-in: the group's hosted, unmodified Claude Code's own sign-in started for the member (AT-14), Anthropic's sign-in address given to the member to open in their own browser, the code they paste delivered to that sign-in, the member's subscription then serving only that member (K1547, K1755); the op behind the registry's `owed:subscriptionsignin DEC-156`; the register's U-7 kept open; and Anthropic's Commercial Terms condition on running Claude Code in a product (AT-14), whoever must agree to it. Bob will use it to connect his own subscription to his member account once it is in real screens.
+
+### DEC-157 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (Bob's comment on the layouts page's Translations screen: "Is any member able to provide translations? I have some concerns about this being open to abuse. What are the proper limits and proper process to have?"; question S7)
+for: bob
+question: The limits and process for a group translating Civicsmith's words, and how local words are handled.
+why it is Bob's: who may change what other members read (policy, P17).
+provisional: DEC-127 (5): administrators or members given the grant; the assistant drafts; a member who knows the language checks and adopts each word, shown at once to every member reading that language.
+alternative: A, as DEC-127; C, administrators only.
+recommendation: B, as below.
+reversal cost: low.
+response: **Bob, 2026-10-06:** first "S7: If the/a administrator has assistant capabilities, couldn't the first cut of a translation be done by the assistant? In that case, the task left to an administrator or member who speaks the language would be reduced to identifying any errors. But another situation that may need to be dealt with is the translation of local words."; then, to the redrawn S7, **"S7: as you've just described"**. Ruled: (1) an administrator gives the grant to named members for a named language; (2) where the translator can reach the assistant, it drafts every missing word ("Draft · the assistant's"); a granted speaker reads each against the English and keeps or corrects it; without the assistant, the granted member types them; (3) ordinary words show once kept; (4) protected words (the fixed terms, the weights, every warning and dialog before an outward, signed or irreversible act, the court notice, every "who can see this" notice): kept as the assistant drafted them, they show once one speaker keeps them; changed from the draft, or typed without one, they show only after a second granted speaker confirms them, or an administrator confirms them after reading the assistant's translation of them back into English; until then members see the English; (5) every adopted word records who adopted it, when and what it replaced, and an administrator can undo it in one act; the English is one hover away for every word; any member can mark a word "this translation looks wrong", listed for the granted members and administrators; (6) local words: official names of offices, laws, programs and places stay as they are, with an explanation in the member's language beside them on first use and on hover; where the place publishes an official translation of a name, it is used with its source, held with the place's researched rules and arriving with releases; what goes to an office (a request, a letter, a filing) goes in the office's language, with a labelled translation beside it for the member; the group's own local words are its to translate as ordinary words.
+decided: 2026-10-06 · Bob
+reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (the Translations screen and wizard; S7); `journeys.html` (the wizard card); `brand-and-voice.html` (V4); BIO_Interaction_Constructs_v0_1.md §L.
+owed: (BOB) the translation layer's grant per language and member; the protected-word set and its second check (a second granted speaker, or an administrator with the assistant's back-translation); the record of each adopted word with one-act undo; members' "looks wrong" marks; local names held with their explanations and official translations in the place's rules (jurisdictions), never translated as ordinary words; outward communications in the office's language with a labelled translation for the member; the ops behind the registry's `owed:translationgrant`, `owed:translationconfirm` and `owed:translationrevert DEC-157`.
+
+### DEC-158 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (Bob's comment on the layouts page's Wizards screen: "Can/does it make sense for an existing wizard to be duplicated and modified?")
+for: bob-session
+question: Whether a group may copy a wizard, its own or Civicsmith's, and change the copy.
+why it is Bob's: it is not: design detail beneath DEC-121 (groups add their own wizards and cannot change Civicsmith's) and wizard-scripts R3 (a draft `from` an approved version the author may see, "a derivative"); decided by the design session (P17) and reported.
+provisional: wizard-scripts R3's `from`; DEC-121 (1), (9); DEC-148.
+alternative: no copying (a group re-records from nothing).
+recommendation: as decided below.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-06:** (1) yes: on the Wizards screen, "Copy a wizard to change it" starts a draft from any approved wizard the member may see, Civicsmith's or the group's; (2) the copy is the group's own wizard (`origin: group`), a draft until approved like any wizard the group writes, under the same editor grant and checks; (3) the original is unchanged and still offered; a required Civicsmith wizard stays the required one, and a group's copy never replaces it; (4) the copy shows what it is based on ("based on Civicsmith's 'Get a record'"); when the original gets a newer approved version, the group's wizard editors are told once and can see what changed and bring it across.
+decided: 2026-10-06 · the design session (P17)
+reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (the Wizards screen).
+owed: (BOB) confirm that R3's derivative of a Civicsmith script creates a new script with `origin: group` (never a version of the Civicsmith script), recording what it was based on; a notice to the group's wizard editors when the base gets a newer approved version.
+
+### DEC-159 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (Bob, 2026-10-06: "when going through the screens, I'm not seeing any mouseovers or other elements that support members and increase information density.")
+for: bob-session
+question: How the screens carry the explanations Bob's rulings already require (DEC-129 rule 4: explained where it appears, and findable again; DEC-82: every grade and bar step opens its meaning on hover, focus or tap, and a strength's hover names its weakest leg), which the mockups had not drawn.
+why it is Bob's: it is not: carrying out his rulings; decided by the design session (P17) and reported.
+provisional: the measures map (DEC-82); the wide path (DEC-129); the visual language's marks (DEC-138).
+alternative: a help page only; printed explanations under every mark (loses density).
+recommendation: as decided below.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-06:** (1) every mark explains itself on hover, keyboard focus or tap: grades (the scale, what A and D mean, "a grade never says whether something is true"), strengths (the weakest-thing rule, and the weakest part here with what would raise it), the five gaps, origin tags, the queue's kinds, due dates, hints and hunches, the outward tag, each button's weight, and each step of the path and the ladders; (2) names of people, offices and documents carry a dotted underline and open a card (who or what, where it came from, how much the group holds about it); (3) one explanation at a time, beside the thing and never over it, closed by Escape or moving away, announced to screen readers as the element's description; (4) the visual language gains the tip and the card (`.cs-tip`, `.cs-card`); (5) the mockups carry it on every screen (438 marks across 42, each with its text, checked).
+decided: 2026-10-06 · the design session (P17)
+reasoning recorded in: this entry; `visual-language/components.css` and `visual-language.html` §6a; `layouts.html` (every screen, and its "Explained where it appears" section); BIO_Interaction_Constructs_v0_1.md §V.
+owed: (BOB) the explanations as interface words (held with the translation layer, DEC-127, DEC-157), the tip and card on every member screen when built, and each card's facts from the record (an office's holder today, a person's position and source, a document's capture and citations).
+
+### DEC-160 · answered
+amended: 2026-10-06 · Bob: "far more elements should be mouseovers and clickovers … Look EVERYWHERE in all screens. Make smart decisions about what the user will benefit from if we properly increase the info density using invisible and appropriately lightweight elements". Every screen swept: references attach anywhere in a screen's text, every occurrence, including section headings (the queue's project names); things named on many screens share one card (`GLOBAL_REFS`); each screen's own references, with why each matters there, are in `screens/mock-refs.js` (287 entries); about 425 on the 42 screens, each attaching, each opening a real screen, checked.
+amended: 2026-10-06 · Bob: "What I'm suggesting is that a lot of references be hoverable. Hover over the name of a document, content, connection, etc, see a summary and it's importance to the context of that screen. Click on it and the member to taken to it." Every card now carries what the item is and a "Here:" line saying why it matters on that screen; references declared per screen (`screens/mock-shell.js` `REFS`). A hint opens in place: what was matched (each item a link), how it was found, how far to trust it (its measured false-alarm rate), what it is not, and its acts (open a question, dismiss with a reason, stop this kind for the project).
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (Bob's comments on the layouts page's queue: "Can the user click here to see the document or citation, as appropriate?" on "the 2024 lease amendment"; "Can the member go to the demand document by clicking here?" on "Demand to rescind")
+for: bob-session
+question: Whether everything the record holds that a screen names can be opened from where it is named.
+why it is Bob's: it is not: navigation beneath his rulings (DEC-82's "a click on a grade opens that scale's ladder"; DEC-159's cards); decided by the design session (P17) and reported.
+provisional: names drawn as plain text in the mockups.
+alternative: links only on detail screens.
+recommendation: as decided below.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-06:** (1) anything the record holds that a screen names (a document, a cited passage, a person, an office, an action and what it sent, a filing, a money item, an event, a question, a case) is a link: a click opens it where it is shown, a cited passage opening its document at that passage and a superseded version opening both versions side by side; (2) its card (DEC-159) shows on hover or focus first, so a member can see what it is without leaving; (3) links are underlined in the action colour, distinct from the dotted underline of a name that only opens a card; (4) on the public page the same holds for what the case discloses, a citation opening the evidence layer.
+decided: 2026-10-06 · the design session (P17)
+reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (the queue, the timeline, the exploration chain, the question's citation; `screens/mock-kit.js` `ref`).
+owed: (BOB) every reference on a member screen and the public page as a link to the item it names (with the passage or version where one is meant), with its card.
+
+### DEC-161 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (Bob, 2026-10-06, on the explanations of DEC-159 and DEC-160)
+for: bob
+question: How long an explanation waits before it appears on hover, and how it closes.
+why it is Bob's: he set it: "I suggest we start with a 1/2 second delay, but if you can find best practices that give us a proven value then we can start there."
+provisional: the mockups showed explanations at once on hover.
+alternative: Nielsen Norman Group's lower bound, 0.3 s.
+recommendation: 0.5 s, the upper end of Nielsen Norman Group's range, matching Bob's suggestion.
+reversal cost: low (one value).
+response: **Bob, 2026-10-06:** "Properly done, mouseovers cost nothing visually. One aspect of a mouseover that must be set properly is the delay between when the mouse is over the element and when the mouseover appears. Too short (as they are now in your screens document, and the user is left feeling that they even move the mouse around on the screen without one mouseover after another popping up. Not cool. I suggest we start with a 1/2 second delay, but if you can find best practices that give us a proven value then we can start there." Ruled as he suggests; the proven range agrees. **Evidence:** Nielsen Norman Group, "Timing Guidelines for Exposing Hidden Content" (https://www.nngroup.com/articles/timing-exposing-content): on hover, wait 0.3–0.5 s, show if the cursor stays, and keep the content until the cursor has left the target and the content for longer than 0.5 s; W3C, Understanding WCAG 2.2 SC 1.4.13 Content on Hover or Focus (https://www.w3.org/WAI/WCAG22/Understanding/content-on-hover-or-focus): such content is dismissible, hoverable and persistent. **Design session's details (P17), Bob may change any:** (1) on hover an explanation or card shows only after the pointer has rested 0.5 s on the thing; (2) it stays while the pointer is on the thing or on the explanation itself; (3) it closes 0.5 s after the pointer has left both; (4) keyboard focus and a tap show it at once; (5) Escape closes it; (6) one at a time.
+decided: 2026-10-06 · Bob
+reasoning recorded in: this entry; `visual-language/components.css` and `visual-language.html` §6a; `layouts.html` (the viewer's explanations).
+owed: (BOB) the timings and the three WCAG 1.4.13 conditions in the shell's explanation behaviour when the screens are built.
+
+### DEC-162 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (Bob's suggestion: "Maybe every element should have a 'information level'. Level 1s are always active, but those in other levels only when the user has selected an information level that includes them. The information level could be set in the member's settings, but maybe there's also a shortcut key, context menu option, or tag in the heading that they can use to easily switch info levels. Just brainstorming."; question S8)
+for: bob
+question: Whether explanations come in levels a member chooses, and how many.
+why it is Bob's: how Civicsmith teaches (UX) and a new member setting (P17).
+provisional: DEC-159 to DEC-161 (every mark and name explains itself after a 0.5 s rest); screen headings and rail entries gained guidance on 6 October.
+alternative: A, no levels; C, three levels adding "Teach me" (explanations in place, without hovering).
+recommendation: B.
+reversal cost: low.
+response: **Bob, 2026-10-06: "S8: B".** Ruled: (1) two levels: **Marks and names**, always on (every mark's meaning, every reference's card); **Guidance**, adding what each screen, section and rail entry is and what a member can do there; (2) a new member starts with guidance on; after their first month Civicsmith asks once whether to keep it; (3) a member switches with a control in the masthead showing the current level (one click), with Alt+Shift+I, or in Settings › Your account › Explanations; (4) a third level ("Teach me") may be added later if newcomers ask.
+decided: 2026-10-06 · Bob
+reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (the masthead control, the account setting, the viewer's switch; section 7, S8); `screens/mock-refs.js` (`SCREEN_HELP`, `RAIL_HELP`, level 2).
+owed: (BOB) the member's explanation level (a per-member setting, default Guidance, the one-month question); the masthead control and Alt+Shift+I; each element's level (marks and references 1, screen, section and rail guidance 2); the guidance texts as interface words (translation layer, DEC-157); the op behind the registry's `owed:infolevelset DEC-162`.
+
+### DEC-163 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (Bob: "why doesn't, for example, a mouseover of 'Lakeshore Tenants' show? … go through EVERY type of element, every context, and ask 'Why shouldn't there be a mouseover and/or clickover for this?'")
+for: bob-session
+question: Which types of element explain themselves or open something, at which information level (DEC-162), and why the rest do not.
+why it is Bob's: it is not: carrying out his direction and DEC-159 to DEC-162; decided by the design session (P17) and reported.
+provisional: explanations and references only in a screen's main area.
+alternative: everything explains itself (no reasons for exceptions).
+recommendation: as decided below.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-06**, element type by element type, the table on the layouts page ("Explained where it appears"): yes, at marks-and-names level, for the group's name (masthead and public page head, opening "Who your group is"), the queue count and the member's initial (opening their screens), the band, the path's steps (links with their cards), named things in any text, shared names, every mark and a button's weight pips, the public page's signature and credit; yes, at guidance level, for search, the assistant button and the guidance switch, the rail and phone tabs, the screen heading, row icons (what kind of thing), wizard marks and the steps of a set-up or ceremony; no, with the reason stated, for labelling section headings (the content is beneath), a button's label (label and pips say it; heavy acts open a dialog), field labels (help printed beneath), list options (browsers cannot), plain dates and counts (deadlines and data counts are already marks or names), the words of quotations and members' own words (evidence stays untouched; names in them still get cards), and the assistant panel and wizard guide (they are explanations). On the 42 screens, 1,663 elements explain themselves.
+decided: 2026-10-06 · the design session (P17)
+reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` ("Explained where it appears"); `screens/mock-shell.js` (`decorate`).
+owed: (BOB) the shell's elements as listed, at their levels, when the screens are built; the exceptions kept as stated.
+
+### DEC-164 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01NWPmrrYZbbF8Wkrvp5Y2vx; the development process also runs on his primary account since K1428) (Bob, 6 October: "Where in the UX does a member create content or ask for content to be identified in a document, set of documents, project, and so on?")
+for: bob-session
+question: Where a member asks for content to be found in a document, a set of documents or a project, and how a result becomes content.
+why it is Bob's: it is not: design detail beneath K1468 (extraction is targeted, at a member's request, tied to a basis or claim), K1627 (the machine proposes, a member accepts) and the assistant's roles (rules 3 and 4); decided by the design session (P17) and reported.
+provisional: creating spread across the type screens, by hand; finding through Find (search, hold together, see where nobody looked), Ask or Find and count, standing questions and hints; no single find on a document, a held set or a project.
+alternative: a find on each type screen separately (people on Person, figures on Money trail), which scatters one need over six screens.
+recommendation: as decided below.
+reversal cost: low (one owed act; every recording act already exists).
+response: **Decided by the design session, 2026-10-06.** (1) One control, "Find in this", the same on a document (Document), on the documents a member holds together (Find's hold strip, "Find in these") and on a project ("Find in this project"); its screen's "Look in" shows the scope, set by where it was opened. (2) The member picks what to find: people and offices the group already follows (by their held names), money figures, dates and deadlines, requirements (what someone shall or must do), events in minutes and agendas (the doctype readers' catalogue), a name or term. (3) Each result shows its words as written and its passage, labelled "Found by search" (a new origin mark, neutral, beside machine work and accepted); a table's date or amount columns are one result naming the table, counted through a calculation and never read in row by row (K1468); a kind with no result says "Nothing here" (DEC-98). (4) Finding records nothing. A result becomes content only by the act that already makes that kind of content, from that passage, by a member, at that act's weight: "Add a fact from this passage" (a person fact), "Record a dated fact", "Read into a money fact", "Hold this as a standard", "Cite in the question", "Declare the table"; a result already recorded shows who recorded it. (5) An optional "For which question" is kept with what is recorded from there, so others see why it was looked for (K1468's basis or claim). (6) "Keep finding this as documents arrive" is a standing question over the scope; new matches reach the queue once, as a list. (7) A name the group does not follow yet is found only as a word; the member adds the person from the passage. (8) The assistant's proposals of people, events and money figures that search cannot match are drawn as later ("Not in the first release"): switched on once measured (the capability ladders' extract rung), at a member's request for a question they name, labelled machine work, graded no higher than the method earns, accepted only by a member's act. (9) Walked in journeys 6 (on a document) and 10 (on a project); drawn with and without the assistant.
+decided: 2026-10-06 · the design session (P17)
+reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` ("Making content, and finding it in what you hold"; the screen "Find in this"); `screens/mock-screens.js` (`SCR['find-in']`); `BIO_Interaction_Constructs_v0_1.md` §S.
+owed: (BOB) the act behind the registry's `owed:findin DEC-164`: a find over a scope (a capture, a selection or enumerated set, a project's holdings, within the viewer's gate) by kind, returning each match with its extent and nothing recorded; `op=search` has no scope today and no recogniser for amounts, dates or requirement words in free text, so those matchers are new, deterministic, and held per language (DEC-99); names through `readingname` (entities R17); events through the doctype readers. A standing question over the same scope. Each recording act accepting the found extent as its citation (people R9, events R1, money R2, standards, `cite`), with the optional question kept beside it. The "Found by search" origin mark (`components.css`).
+
+### DEC-165 · answered
+amended: 2026-10-06 · DEC-166 (Bob, "S9: B"): counts by country for refused and blocked requests; never a member's own address.
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01NWPmrrYZbbF8Wkrvp5Y2vx; the development process also runs on his primary account since K1428) (Bob's direction through the development process, K1875: "Perhaps there should be a screen admins can go to to see a map of some kind indicating the level of 'attack' the instance experiences during a selectable quantum of time"; K1874 (Q5): notices only when risk is heightened; B74 hands the drawing to the design stream)
+for: bob-session
+question: How the administrators' security screen and its notice are drawn.
+why it is Bob's: it is not, except where marked: design detail beneath K1875 and K1874; decided by the design session (P17) and reported. Whether the screen may show where attempts come from is Bob's (who may see what) and is open as S9 on the layouts page.
+provisional: no screen; the security review proposed a daily count, which Bob declined (K1874).
+alternative: a geographic map of sources (held for S9).
+recommendation: as decided below.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-06.** (1) Settings › Security, seen only by administrators. (2) A period: the last hour, 24 hours, 7 days, 30 days, or set dates. (3) The level in a word, Ordinary, Raised or High, against the group's own usual (its median for the same hour over the four weeks before), with one plain sentence saying what happened and whether anything got through; Raised means well above the usual at some point and nothing got through; High means still going on, or something unusual got through. A new mark (`cs-risk`): rust outline for Raised, filled for High, a word always. (4) A grid of kinds by hour (by six hours or a day for longer periods): refused sign-ins; refused keys and links (an expired invitation, a wrong website key, a revoked agent credential); requests turned away for coming too fast; requests Cloudflare blocked, where the plan reports it; refused hand-overs at the doorbell. Each square names its count and the usual on hover, focus or tap; four steps (at or below the usual, up to 5 times, 5 to 50, over 50), the last textured as well as coloured (`cs-heat`). (5) Totals: the period's count, the usual, the busiest hour. (6) Counts only: nothing names who tried or where from (S9 open). (7) Administrators are told in their queue once, as "Noticed", when the level becomes high, and not again while it lasts; the notice opens the screen at that period (K1874). (8) What a member or administrator can do is named with links: change a password, turn off the join link or the group's key, tighten Cloudflare's settings in the hosting account.
+decided: 2026-10-06 · the design session (P17)
+reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (screen "Security"; section 6; S9 in section 7); `screens/mock-screens.js` (`SCR.security`); `visual-language/components.css` (`cs-risk`, `cs-heat`); `BIO_Interaction_Constructs_v0_1.md` §R.
+owed: (BOB, N703) the act behind `owed:securitymap K1875`: counts by kind and hour for a period, the group's usual, the level and its threshold, kept as counts only (no address, no handle) unless S9 rules otherwise; records of refused sign-ins and refused credentials (security review F9); Cloudflare's blocked-request counts where the plan supplies them (the study, K1875); the administrators' notice, once per episode, only when the level is high.
+
+### DEC-166 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01NWPmrrYZbbF8Wkrvp5Y2vx; the development process also runs on his primary account since K1428) (S9 on the layouts page, after DEC-165)
+for: bob
+question: Whether the administrators' security screen may show where attempts come from.
+why it is Bob's: who may see what: the record that places an attacker would also place the group's members.
+provisional: DEC-165, counts only.
+alternative: A, counts only; C, addresses and the handles tried, kept 30 days.
+recommendation: B, countries for refused and blocked requests, addresses never kept, a member's own sign-in never placed.
+reversal cost: low (counts by country can be dropped; nothing personal is kept).
+response: **Bob, 2026-10-06: "S9: B - but never the member's own address".** Ruled: (1) refused and blocked requests are counted by country, per hour, and shown for the chosen period as a ranked list with bars (the "where from" of the security screen), with the words "A country is not proof of who is behind an attempt"; (2) no request's address is ever kept or shown, a member's least of all: a member's address and anything derived from it (country, network) never appear on the screen or in a record; (3) so a refused sign-in for a member's handle that the member follows within an hour with their own successful sign-in is counted without a place, and a member's successful sign-ins are never counted by place; (4) countries come from Cloudflare's own label for the request, read and counted at once, the address discarded. Bob's words "never the member's own address" are read as covering both the member's network address and the whereabouts it reveals; he may narrow or widen that.
+decided: 2026-10-06 · Bob
+reasoning recorded in: this entry; S9 on `docs/development/ux-substrate/layouts.html`; `screens/mock-screens.js` (`SCR.security`, "Where from"); `BIO_Interaction_Constructs_v0_1.md` §R.
+owed: (BOB, N703) counts by country and hour for refused and blocked requests, from Cloudflare's country label, the address never stored; the one-hour rule that keeps a member's own refused sign-in followed by their sign-in from being placed; a member's successful sign-ins never counted by place.
+
+### DEC-167 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01NWPmrrYZbbF8Wkrvp5Y2vx; the development process also runs on his primary account since K1428) (B72: K1852's surfaces, "the archive's listing with each file's state (filed, or not filed and why), and files held for review beside their archive")
+for: bob-session
+question: How a captured archive and its files are shown to members.
+why it is Bob's: it is not: design detail beneath K1852 (Bob, "as recommended") and Intake §3 and §4; decided by the design session (P17) and reported.
+provisional: no surface for archives; the held list shows single captures.
+alternative: list an archive's files only on the held list, mixed with other captures (loses which archive each came from and why some were not filed).
+recommendation: as decided below.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-06.** (1) A captured archive has its own screen (Add › Held captures › the archive), with its grade and fingerprint, its entry count and size. (2) A summary line of what was found when it opened on capture: filed and held for review beside it, already held, not filed, folders. (3) Every entry listed with its state: filed and held for review, with the archive's capture grade (never stronger, never weaker); already held (the same bytes captured directly, kept as a second sighting, one home); a folder, listed; two entries sharing a name, each filed by its number; or not filed, with the reason named in plain words (locked by a password; over the limit for one file, with what to do instead; and the other refusals the development process names). (4) Names, folders and dates exactly as the archive states them, in the face for identifiers, never used as a place to write. (5) Members pick files and vouch for them or set them aside with one reason (the held list's acts); a filter shows only those not filed. (6) "A higher grade for one file" says a file earns one only by its own capture, landing beside the first; nothing is regraded. (7) An archive that cannot be opened unambiguously is refused whole, says why in one sentence, stays captured as it arrived, and can still show what it lists. (8) Held captures shows the archive as one row with its files waiting beside it; Add says a ZIP is opened as it is captured.
+decided: 2026-10-06 · the design session (P17)
+reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (screen "Archive"; section 6); `screens/mock-screens.js` (`SCR.archive`); `BIO_Interaction_Constructs_v0_1.md` §S.
+owed: (BOB, N688) the read behind `owed:archivelist K1852`: an archive's entries with each one's state and, when not filed, the refusal by name, in member words held for translation; the held list grouping an archive's files beside it; vouching and setting aside across an archive's picked files (the existing acts).

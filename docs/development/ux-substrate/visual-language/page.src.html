@@ -106,7 +106,7 @@ body:not(.show-src) .src { display: none; }
 <div class="meta3">
 <div><b>What it replaces</b>The old interface's look, the action plan sketches' look, and the placeholder colours on the measures map. Section 9 says what each one gave and what was let go.</div>
 <div><b>What it rests on</b>Your 58 design principles, brand and voice, the measures map, and your rulings on light and dark, nothing loaded from outside, accessibility, phones and the marks.</div>
-<div><b>Status</b>Decided as design detail beneath those rulings and recorded. Comment on anything you want changed. Step 5, the layouts and key screens, is drawn in it.</div>
+<div><b>Status</b>Decided as a working version beneath those rulings and recorded. It is tested by use: step 5's screens are drawn in it (the Civicsmith Screens page), and what those screens show will change it. Comment on anything here or there.</div>
 </div>
 </header>
 
@@ -122,7 +122,7 @@ body:not(.show-src) .src { display: none; }
 <p class="rec" style="font-size:var(--t-xl);line-height:1.45;max-width:none">A plumb bob hangs on a line and shows what is truly vertical. Builders use it to check work against a standard that does not bend. That is what a group does with its government's own rules, and it is how this look behaves: plain, upright, measured, and quiet until something needs the member.</p>
 <p style="color:var(--c-ink-2)">Its colour is verdigris, the green patina a brass plumb bob takes on with use. It marks Civicsmith itself and everything a member can do. Every other colour carries a meaning, and only that meaning.</p>
 </div>
-<div class="plumb" aria-hidden="true"><svg class="markbig" viewBox="20 2 60 90"><use href="#i-mark"/></svg></div>
+<div class="plumb" aria-hidden="true"><svg class="markbig" viewBox="0 0 60 90"><use href="#i-mark"/></svg></div>
 </div>
 <p class="intro" style="margin-top:14px">Five rules hold it together. Every screen in step 5 is checked against them.</p>
 <ol class="rules5">
@@ -136,7 +136,7 @@ body:not(.show-src) .src { display: none; }
 
 <section id="type">
 <h2>2. Type: three voices</h2>
-<p class="intro">Brand and voice says two voices speak on every screen: the group's and Civicsmith's. The type makes that visible. Three typefaces from one open-licensed family (Source Serif, Source Sans and Source Code), shipped inside the group's copy so no outside company learns who is reading.</p>
+<p class="intro">Brand and voice says two voices speak on every screen: the group's and Civicsmith's. The type makes that visible. Three typefaces from one open-licensed family (Source Serif, Source Sans and Source Code), shipped inside the group's Civicsmith so no outside company learns who is reading.</p>
 <div class="voices">
 <div class="voice"><div class="who"><b>Serif · words people wrote</b><span>Questions, findings, cases, notes, quoted passages</span></div><p class="rec" style="font-size:var(--t-xl);line-height:1.4;max-width:none">Were the FY2022 transfers out of the sewer fund authorized by a council resolution?</p></div>
 <div class="voice"><div class="who"><b>Sans · Civicsmith's words</b><span>Labels, explanations, refusals, the assistant</span></div><p style="font-size:var(--t-md);max-width:none">Relied on · meets this project's bar. Waiting on the City Clerk's reply, due 14 October 2026.</p></div>
@@ -240,7 +240,9 @@ body:not(.show-src) .src { display: none; }
 <span class="cs-origin" data-origin="unevaluated">{i:unevaluated}Not yet evaluated</span>
 <span class="cs-origin" data-origin="accepted">{i:accepted}Accepted by our group</span>
 <span class="cs-origin" data-origin="flagged">{i:flagged}Flagged by our group</span>
+<span class="cs-origin" data-origin="search">{i:search}Found by search</span>
 </div>
+<p class="cap">“Found by search” (DEC-164) marks a match Civicsmith found in what the group holds, by matching words, figures, dates or names it already follows. It is neutral on purpose: nothing is recorded until a member records it.</p>
 <div class="cols2">
 <div class="cs-edge" data-origin="machine" style="background:var(--c-surface);border:var(--hair);padding-block:12px;padding-right:12px"><p class="rec" style="font-size:var(--t-md)">I found three passages that may support this question. They're suggestions until you accept one.</p><p style="font-size:var(--t-xs);color:var(--c-machine);font-weight:600;margin-top:6px">Machine work · the assistant, at Rosa's request</p></div>
 <div class="cs-edge" data-origin="accepted" style="background:var(--c-surface);border:var(--hair);padding-block:12px;padding-right:12px"><p class="rec" style="font-size:var(--t-md)">The lease's rent schedule was amended twice without a council vote.</p><p style="font-size:var(--t-xs);color:var(--c-ink-2);margin-top:6px"><b>Accepted by our group</b> · West Oakland Neighbors' Edition 2 · by Dev, 2 October</p></div>
@@ -265,6 +267,13 @@ body:not(.show-src) .src { display: none; }
 <div class="row"><span class="cs-hunch">{i:hunch}Hunch · Mai's</span><span style="font-size:var(--t-sm);color:var(--c-ink-2)">A member's hunch is marked as theirs; a hint is the machine's. Neither is ever evidence.</span></div>
 <div class="row"><span class="cs-due">{i:clock}Due 14 October</span><span class="cs-due" data-due="near">{i:clock}Due in 2 days</span><span class="cs-due" data-due="overdue">{i:clock}Overdue since 9 October</span><span class="cs-due" data-due="met">{i:accepted}Met, 8 October</span><span class="cs-changed">{i:changed}Newer version</span></div>
 <p class="cap">The three kinds are told apart by icon and word, not colour, so the eye goes to the dates and the work. As a date nears its mark turns rust (display only); “Overdue” is the one thing said unasked, once.</p>
+</div>
+
+<h3>How hard the group is being tried: the level and the hour grid</h3>
+<div class="spec">
+<div class="row"><span class="cs-risk">Ordinary</span><span class="cs-risk" data-risk="raised">Raised</span><span class="cs-risk" data-risk="high">High</span></div>
+<div class="cs-heatkey"><span><i></i>at or below the usual</span><span><i style="background:color-mix(in srgb, var(--c-signal) 20%, var(--c-surface))"></i>up to 5 times the usual</span><span><i style="background:color-mix(in srgb, var(--c-signal) 50%, var(--c-surface))"></i>5 to 50 times</span><span><i style="background:var(--c-signal) repeating-linear-gradient(45deg, transparent 0 3px, color-mix(in srgb, var(--c-sheet) 40%, transparent) 3px 5px)"></i>over 50 times</span></div>
+<p class="cap">The security screen's two marks (DEC-165): the level always in a word, rust only when above the group's usual, filled when high; each hour's square names its count and the usual, and the highest step is textured as well as coloured, so colour is never the only signal.</p>
 </div>
 
 <h3>Bars show progress</h3>
@@ -319,6 +328,15 @@ body:not(.show-src) .src { display: none; }
 <p class="src">DEC-82, DEC-86, DEC-90, DEC-92, DEC-94, DEC-96, DEC-98, DEC-106, DEC-110, DEC-112, DEC-120, DEC-121, DEC-131; K1473, K1491; Interaction Constructs §S, §U</p>
 </section>
 
+<section id="explain">
+<h2>6a. Explained where it appears</h2>
+<p>Every mark above explains itself where a member meets it: a grade, a strength, a gap, an origin tag, a queue kind, a due date, a hint, a weight's pips, a step on the path or a ladder. Hover it, focus it with the keyboard, or tap it on a phone, and a short plain explanation opens beside it, never over the thing it explains. A strength also names its weakest part and what would raise it. Names of people, offices and documents carry a dotted underline and open a card: who or what it is, where that came from, and how much the group holds about it. One explanation is open at a time. It waits until the pointer has rested on the thing for half a second, so moving the mouse across a screen opens nothing. It stays while the pointer is on the thing or on the explanation itself, and closes half a second after the pointer leaves both. Keyboard focus and a tap open it at once, and Escape closes it. The timing follows Nielsen Norman Group's guidelines for exposing hidden content (wait 0.3 to 0.5 seconds; keep it until the pointer has been away for more than 0.5 seconds), and the behaviour meets WCAG 2.2's rule for content on hover or focus: dismissible, hoverable, persistent (DEC-161). This keeps screens dense, with the marks compact and the meaning one gesture away, and a member who forgets a term can always find it again (your ruling on the wide path, rule 4; the measures map's disclosure, DEC-82; DEC-159).</p>
+<div class="cs" style="margin-top:12px;display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start">
+<div class="cs-tip" style="position:static;pointer-events:auto"><b>Capture B</b>: how easily someone else could check that this copy is what its source published, unaltered. A is easiest to check; D rests on a person's word. A grade never says whether something is true.<span class="more">Click to see the whole scale.</span></div>
+<div><span class="cs-card">Asha Rao</span><div class="cs-tip" style="position:static;margin-top:6px;pointer-events:auto"><b>Asha Rao</b> · City Clerk since March 2021, from the city's roster. Cited in 3 documents your group holds.</div></div>
+</div>
+</section>
+
 <section id="acts">
 <h2>7. Acts: weight is read before the click</h2>
 <p class="intro">Every act's button carries its weight: the pips from the measures map and the weight's name. The friction then matches it: the heavier the act, the more it slows the member, even for a moment.</p>
@@ -327,7 +345,7 @@ body:not(.show-src) .src { display: none; }
 <div class="friction"><div class="k"><b>Reasoned</b><span>Opens a reason field in place</span></div><div class="btnstack"><div class="row"><button class="cs-btn" type="button" aria-expanded="true">Decline this option<span class="w"><span class="cs-pips"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span>Reasoned</span></button></div><div class="cs-reason"><div class="cs-field"><label for="vlWhy">Why not now?</label><textarea id="vlWhy" class="cs-input rec" style="min-height:64px">The records request should come first; a complaint without the work orders would be weak.</textarea></div><div class="row"><button class="cs-btn" data-tone="primary" type="button">Decline, with this reason<span class="w"><span class="cs-pips"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span>Reasoned</span></button><button class="cs-btn" data-tone="quiet" type="button">Cancel</button></div></div></div></div>
 <div class="friction"><div class="k"><b>Terminal and signed</b><span>A full dialog: what ends, who signs</span></div><div class="cs-dialog" role="group" aria-label="Example dialog"><b style="font-size:var(--t-lg)">Vouch for 12 documents</b><div class="ends">You stand behind each copy: it was captured as received and not altered. Each document gets its own entry in the record, signed with your name, Rosa. It can be corrected later, never silently undone.</div><div class="row"><button class="cs-btn" data-tone="primary" type="button">{i:signed}Vouch and sign<span class="w"><span class="cs-pips"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span>Signed</span></button><button class="cs-btn" data-tone="quiet" type="button">Cancel</button></div></div></div>
 <div class="friction"><div class="k"><b>Outward</b><span>Visible outside the group: says so at the act</span></div><div class="cs-dialog" role="group" aria-label="Example outward dialog"><span class="cs-tag-outward">{i:outward}Outward · seen outside your group</span><div class="ends">Sending this tells the City Clerk's office, and anyone it shares the request with, what your group is looking at.</div><div class="row"><button class="cs-btn" data-tone="primary" type="button">{i:outward}Send the request<span class="w"><span class="cs-pips"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span>Reasoned</span></button><button class="cs-btn" data-tone="quiet" type="button">Not yet</button></div></div></div>
-<div class="friction"><div class="k"><b>Irreversible</b><span>Only through the publication ceremony</span></div><div class="row"><button class="cs-btn" data-tone="primary" type="button">Begin publishing Edition 2<span class="w"><span class="cs-pips"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span>Irreversible</span></button></div></div>
+<div class="friction"><div class="k"><b>Irreversible</b><span>Through the publication ceremony; the two other acts that can never be undone (choosing the group's short name, removing a fact where the law requires) open a full dialog that says so</span></div><div class="row"><button class="cs-btn" data-tone="primary" type="button">Begin publishing Edition 2<span class="w"><span class="cs-pips"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span>Irreversible</span></button></div></div>
 </div>
 <p class="intro" style="margin-top:10px">Primary buttons are verdigris; the colour says “this is the act”, not how heavy it is. The weight is in the pips and the word. What a member cannot do is not on the screen at all (principle 1.4), so there are no greyed-out buttons in the ordinary course.</p>
 <p class="src">principles 1.4, 4.1–4.6; DEC-87, DEC-88; measures map (weights mark acts); K356</p>
@@ -355,7 +373,7 @@ body:not(.show-src) .src { display: none; }
 <div class="mini cs-frame" data-frame="published">
 <div class="cs-pubhead"><span class="grp" style="font-size:var(--t-2xl)">Lakeshore Tenants</span><p style="color:var(--c-ink-2);font-size:var(--t-sm);margin-top:4px">The Coliseum lease · Edition 2 · published 14 November 2026</p></div>
 <div class="body"><p class="rec" style="font-size:var(--t-lg)">We found that the 2024 rent adjustments were made without the council vote the lease requires.</p><p style="font-size:var(--t-sm);color:var(--c-ink-2)">Relied on · meets this project's bar (capture B, connection B)</p></div>
-<div class="cs-pubfoot"><span class="id">lakeshore-tenants · signed · 7c1e…a90b</span><span class="cs-credit">Made with <svg viewBox="20 2 60 90" aria-hidden="true"><use href="#i-mark"/></svg><b>Civicsmith</b></span></div>
+<div class="cs-pubfoot"><span class="id">lakeshore-tenants · signed · 7c1e…a90b</span><span class="cs-credit">Made with <svg viewBox="0 0 60 90" aria-hidden="true"><use href="#i-mark"/></svg><b>Civicsmith</b></span></div>
 </div>
 </div>
 <p class="src">principles 5.1–5.4, 9.3; DEC-106, DEC-112, DEC-118</p>
@@ -365,12 +383,12 @@ body:not(.show-src) .src { display: none; }
 <h2>9. The plumb bob in use</h2>
 <p class="intro">The mark you chose, drawn in verdigris, with the name always in words where it fits. The cap, collar and peg stay in every size: they are what make it a plumb bob.</p>
 <div class="cols3" style="margin-top:12px">
-<div class="cell"><h4>Browser tab</h4><div class="tabicon"><span class="fav"><svg viewBox="20 2 60 90" aria-hidden="true"><use href="#i-mark"/></svg></span>Lakeshore Tenants · Civicsmith</div></div>
-<div class="cell"><h4>Phone home screen</h4><div class="row"><span class="appicon"><svg viewBox="20 2 60 90" aria-hidden="true"><use href="#i-mark"/></svg></span><span style="font-size:var(--t-sm)">Civicsmith</span></div></div>
-<div class="cell"><h4>Foot of a published case</h4><span class="cs-credit">Made with <svg viewBox="20 2 60 90" aria-hidden="true"><use href="#i-mark"/></svg><b>Civicsmith</b></span></div>
-<div class="cell"><h4>Setting up a group's copy</h4><div class="row" style="gap:10px"><svg viewBox="20 2 60 90" style="height:36px;width:auto;color:var(--c-accent)" aria-hidden="true"><use href="#i-mark"/></svg><span style="font:600 26px var(--f-sans);letter-spacing:-.01em">Civicsmith</span></div><p>Set up your group's copy</p></div>
+<div class="cell"><h4>Browser tab</h4><div class="tabicon"><span class="fav"><svg viewBox="0 0 60 90" aria-hidden="true"><use href="#i-mark"/></svg></span>Lakeshore Tenants · Civicsmith</div></div>
+<div class="cell"><h4>Phone home screen</h4><div class="row"><span class="appicon"><svg viewBox="0 0 60 90" aria-hidden="true"><use href="#i-mark"/></svg></span><span style="font-size:var(--t-sm)">Civicsmith</span></div></div>
+<div class="cell"><h4>Foot of a published case</h4><span class="cs-credit">Made with <svg viewBox="0 0 60 90" aria-hidden="true"><use href="#i-mark"/></svg><b>Civicsmith</b></span></div>
+<div class="cell"><h4>Setting up a group's Civicsmith</h4><div class="row" style="gap:10px"><svg viewBox="0 0 60 90" style="height:36px;width:auto;color:var(--c-accent)" aria-hidden="true"><use href="#i-mark"/></svg><span style="font:600 26px var(--f-sans);letter-spacing:-.01em">Civicsmith</span></div><p>Install Civicsmith for your group</p></div>
 <div class="cell"><h4>The wordmark</h4><p>“Civicsmith” in the sans at semibold, tracked slightly tight, beside the mark at the height of its capital letters plus the peg. One colour, verdigris or ink, never both, never on a picture.</p></div>
-<div class="cell"><h4>A group's own logo</h4><p>Where an administrator adds one (your answer to V2), it sits beside the group's name in the masthead, at most 24 pixels tall, stored in the group's copy. The group's name is always in words too.</p></div>
+<div class="cell"><h4>A group's own logo</h4><p>Where an administrator adds one (your answer to V2), it sits beside the group's name in the masthead, at most 24 pixels tall, stored in the group's Civicsmith. The group's name is always in words too.</p></div>
 </div>
 <p class="src">DEC-126 (V1: D), DEC-125 (V2); marks/civicsmith-plumb-bob.svg; brand and voice §1</p>
 </section>
@@ -380,7 +398,7 @@ body:not(.show-src) .src { display: none; }
 <div class="tw" style="margin-top:12px"><table class="tbl">
 <thead><tr><th>The old look</th><th>What it gave this one</th><th>What was let go, and why</th></tr></thead>
 <tbody>
-<tr><td>The old interface's design language</td><td>Its best ideas: paper for working and a clean sheet for publishing; serif for judgement, sans for plain speech, mono for fact; verdigris as the signature; rust for attention only; square corners and no pills; calm motion; faces shipped inside the copy.</td><td>Its document (BIO_Design_Language_v0_2) is lost, so this page now is the source. Mono for every fact is narrowed to identifiers: dates and numbers read better in the sans with aligned figures. It had no dark theme, no marks for the five gaps, origins, the queue or wizards.</td></tr>
+<tr><td>The old interface's design language</td><td>Its best ideas: paper for working and a clean sheet for publishing; serif for judgement, sans for plain speech, mono for fact; verdigris as the signature; rust for attention only; square corners and no pills; calm motion; faces shipped inside the group's Civicsmith.</td><td>Its document (BIO_Design_Language_v0_2) is lost, so this page now is the source. Mono for every fact is narrowed to identifiers: dates and numbers read better in the sans with aligned figures. It had no dark theme, no marks for the five gaps, origins, the queue or wizards.</td></tr>
 <tr><td>The action plan sketches</td><td>The plan page's structure and words, which you approved and which bind (step 5 draws them in this look); purple for machine work showed it must be told apart.</td><td>A cool blue-grey look with a second family of typefaces loaded from outside. Purple for machine work is replaced by a hue-less dotted edge, so it never competes with the evidence colours.</td></tr>
 <tr><td>The measures map</td><td>Its rules, all kept: letters, bars and pips; colour names the scale, never the value; an icon per scale; a texture per ladder.</td><td>Its placeholder colours and typefaces. Connection moves from teal (too close to verdigris) to plum; the scales were re-chosen to be told apart by people who see colour differently.</td></tr>
 </tbody></table></div>
@@ -396,7 +414,7 @@ body:not(.show-src) .src { display: none; }
 <div class="cell"><h4>Beyond colour</h4><p>Every mark carries a word or an icon; the three ladders differ in texture as well as colour; dates and grades never rely on colour to be read.</p></div>
 <div class="cell"><h4>Keyboard, focus and touch</h4><p>Every control shows a focus ring; every explanation that opens on hover also opens on focus and tap; targets are 40 to 44 pixels.</p></div>
 <div class="cell"><h4>Reading</h4><p>Text sizes start at 16 pixels for work and 18 for reading, at most about 68 characters to a line; nothing is set in capitals except short labels, which screen readers read as words.</p></div>
-<div class="cell"><h4>Nothing from outside</h4><p>Typefaces and icons ship inside the group's copy, about 0.8 MB of open-licensed type covering Latin, extended Latin and Vietnamese. Other scripts use the device's own faces until a group adds a language that needs them.</p></div>
+<div class="cell"><h4>Nothing from outside</h4><p>Typefaces and icons ship inside the group's Civicsmith, about 0.8 MB of open-licensed type covering Latin, extended Latin and Vietnamese. Other scripts use the device's own faces until a group adds a language that needs them.</p></div>
 </div>
 <p class="src">DEC-99; principles 8.1–8.3, 9.6; check_contrast.py; palette.json</p>
 </section>

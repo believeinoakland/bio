@@ -1,6 +1,6 @@
 # BIO interaction constructs — v0.2 (v0.1 derivation retained below)
 
-**Status** · The member-facing interaction shapes for M8: QUEUE and ACT as the two constructs, the rung ladder of authored acts, UNDETERMINED as a display primitive, and the v0.1 derivation of seven candidates retained below as the TYPES inside the two. "v0.2 (v0.1 derivation retained below)", "Written 2026-07-31 (session BOB) at Bob's direction"; revision 0.2 was the session's same-day answer to Bob's challenge on construct count, not a ruling; four dated rulings are embedded (DEC-8, DEC-16, DEC-27, DEC-36) plus DEC-19's correction and FW-14's. Partially complete: the v0.2 shape is stated, its falsifier ("build T and one act, then re-read this") has no recorded re-read, and the filename says v0_1 while the body says v0.2. §P's accountability rule is BUILT for an agent-surfaced QUESTION (D-82, 2026-09-23: one marker wherever a question is listed or shown), beside UI-5's derived marker for a finding. §S's bulk half is BUILT for the acts whose items are NOT bundles, as ONE call carrying the member's enumerated set under the `per-item` weight — the queue's (D-126, IC-235) and `op=resolve` over captured documents (D-291, IC-247, on BOB #32's ruling of 2026-09-23 23:30Z naming §S); §S's body still describes only the bundle LEASE (`op=select`) and says nothing of that second shape. **§M GAINED THE MEASURES MAP (Bob, 2026-09-29, DEC-82): letters grade evidence, bars show progress, weights mark acts.** **§U GAINED ITS TREATMENT (DEC-86): one "Undetermined" component with a mandatory reason, four visibly distinct neighbours.** **§F GAINED FRICTION MATCHES WEIGHT (DEC-87): friction escalates with an act's rung.** **§U GAINED EMPTY, LOADING, FAILED AND WAITING (DEC-98): one vocabulary everywhere.** **§L ADDED, ACCESS AND LANGUAGE (DEC-99): WCAG 2.2 AA for every screen and the published case.** **§W ADDED, WORKING AND PUBLISHED (DEC-106): two spaces, in-between items banded, a path marker on each item.** **BRAND AND VOICE APPROVED (DEC-125): pointer beside the design principles.** **§L GAINED TRANSLATION BY GROUPS (DEC-127).** **§R ADDED, WHO WE DESIGN FOR AND THE WIDE PATH (DEC-128, DEC-129), THE WELCOME FITS THE GROUP (DEC-132); §T GAINED A CHECK ASKED BY EXPERTISE (DEC-135); §R GAINED WHAT A COURT CAN REACH AND MEMBERS' NOTES (DEC-136) AND THE PRODUCT WITHOUT THE ASSISTANT (K1547); EVERY WIZARD WRITTEN (DEC-130, beside DEC-121); THE QUEUE'S THIRD KIND IS "STATUS" AND A MACHINE SIGNAL IS A "HINT" (DEC-131); A WIZARD PLANNED BY THE ASSISTANT RUNS ON THE MEMBER'S OWN CLAUDE ACCOUNT (K1502); §V ADDED, THE VISUAL LANGUAGE (DEC-138); THE WIZARD LIBRARY WRITTEN AND THE RULES WITHOUT THE ASSISTANT (DEC-139).** as of 2026-10-06.
+**Status** · The member-facing interaction shapes for M8: QUEUE and ACT as the two constructs, the rung ladder of authored acts, UNDETERMINED as a display primitive, and the v0.1 derivation of seven candidates retained below as the TYPES inside the two. "v0.2 (v0.1 derivation retained below)", "Written 2026-07-31 (session BOB) at Bob's direction"; revision 0.2 was the session's same-day answer to Bob's challenge on construct count, not a ruling; four dated rulings are embedded (DEC-8, DEC-16, DEC-27, DEC-36) plus DEC-19's correction and FW-14's. Partially complete: the v0.2 shape is stated, its falsifier ("build T and one act, then re-read this") has no recorded re-read, and the filename says v0_1 while the body says v0.2. §P's accountability rule is BUILT for an agent-surfaced QUESTION (D-82, 2026-09-23: one marker wherever a question is listed or shown), beside UI-5's derived marker for a finding. §S's bulk half is BUILT for the acts whose items are NOT bundles, as ONE call carrying the member's enumerated set under the `per-item` weight — the queue's (D-126, IC-235) and `op=resolve` over captured documents (D-291, IC-247, on BOB #32's ruling of 2026-09-23 23:30Z naming §S); §S's body still describes only the bundle LEASE (`op=select`) and says nothing of that second shape. **§M GAINED THE MEASURES MAP (Bob, 2026-09-29, DEC-82): letters grade evidence, bars show progress, weights mark acts.** **§U GAINED ITS TREATMENT (DEC-86): one "Undetermined" component with a mandatory reason, four visibly distinct neighbours.** **§F GAINED FRICTION MATCHES WEIGHT (DEC-87): friction escalates with an act's rung.** **§U GAINED EMPTY, LOADING, FAILED AND WAITING (DEC-98): one vocabulary everywhere.** **§L ADDED, ACCESS AND LANGUAGE (DEC-99): WCAG 2.2 AA for every screen and the published case.** **§W ADDED, WORKING AND PUBLISHED (DEC-106): two spaces, in-between items banded, a path marker on each item.** **BRAND AND VOICE APPROVED (DEC-125): pointer beside the design principles.** **§L GAINED TRANSLATION BY GROUPS (DEC-127).** **§R ADDED, WHO WE DESIGN FOR AND THE WIDE PATH (DEC-128, DEC-129), THE WELCOME FITS THE GROUP (DEC-132); §T GAINED A CHECK ASKED BY EXPERTISE (DEC-135); §R GAINED WHAT A COURT CAN REACH AND MEMBERS' NOTES (DEC-136) AND THE PRODUCT WITHOUT THE ASSISTANT (K1547); EVERY WIZARD WRITTEN (DEC-130, beside DEC-121); THE QUEUE'S THIRD KIND IS "STATUS" AND A MACHINE SIGNAL IS A "HINT" (DEC-131); A WIZARD PLANNED BY THE ASSISTANT RUNS ON THE MEMBER'S OWN CLAUDE ACCOUNT (K1502); §V ADDED, THE VISUAL LANGUAGE (DEC-138); THE WIZARD LIBRARY WRITTEN AND THE RULES WITHOUT THE ASSISTANT (DEC-139); §F GAINED AN EXPUNGE'S FULL DIALOG (DEC-142); §R GAINED NOTES REVISED AND DELETED (DEC-144) AND THE GROUP'S API KEY (K1755); §A GAINED PUBLISHING AT A SET TIME (DEC-147); THE WIZARD LIBRARY APPROVED (DEC-148); A GROUP'S INSTANCE IS "YOUR GROUP'S CIVICSMITH" (DEC-149); §P GAINED HELP WITH WRITING (DEC-152, DEC-153); §V GAINED EVERY SCREEN'S PATH (DEC-154) AND THE RAIL'S WIDTH (DEC-155); §L GAINED THE TRANSLATION PROCESS AND LOCAL NAMES (DEC-157); §V GAINED EXPLANATIONS WHERE THEY APPEAR (DEC-159); §P'S HELP WITH WRITING NEVER WRITES A REASON (K1841); §S GAINED FIND IN THIS (DEC-164); §R GAINED THE SECURITY SCREEN (K1875, DEC-165) AND ITS COUNTS BY COUNTRY (DEC-166); §S GAINED A CAPTURED ARCHIVE'S FILES (K1852, DEC-167).** as of 2026-10-06.
 
 **Place in the system** · Owns construct 12 of `BIO_System_Design.md` §3 (member surfaces): it governs M8 (`docs/development/MILESTONES.md`; the UI area's governing design per `QUEUE.md`), hands queue content to `docs/development/NOTIFICATIONS.md`, and its pre-flight rule (DEC-8) is what the assistant construct and every act surface rest on. Distinct from `CONSTRUCTS.md`, the content inventory — the name collision is stated in the document.
 
@@ -492,6 +492,12 @@ route — **not** that the document is an authentic municipal record. A member w
 they are certifying authenticity has been misled by the surface, whatever the record
 says underneath.
 
+**Publishing at a set time (Bob, 2026-10-06, DEC-147, "S1: B").** The ceremony's last step offers "Publish now" or "Publish
+at…" a local date and time. The signed edition waits, not public, shown as "Signed · publishes <date, time>"; at that time
+Civicsmith checks again as at signing, and if anything changed since (a source, a publishing member's tie confirmation, a hold)
+it does not publish and tells the owner once. The owner may cancel or move the time until then. The public page shows when the
+edition was signed and when it was published. Publishing stays the one irreversible act, through the ceremony.
+
 ## S · SELECTION-SCOPED ACTION — how any act goes bulk, safely
 
 Not a fifth act but a MODIFIER on the others, and the plane already implements its hard
@@ -516,6 +522,29 @@ nothing in the set half-runs without saying so. Built: D-126's `#perItem` and `o
 selection is rejected doctrine (D-35): a selection records INTENT, and an action landing
 on rows the operator never saw is an accountability failure in a record whose purpose is
 attribution. Visibility may only ever SHRINK a selection.
+
+**Find in this: finding across a scope (the design session, 2026-10-06, DEC-164, on Bob's question of 6 October).** One
+control, the same on a document, a held set and a project. The member picks what to find: people and offices the group
+already follows, money figures, dates and deadlines, requirements ("shall", "must", "within"), events the city's own
+document types record, a name or term. Each result shows its words as written and its passage, labelled "Found by search";
+a table's columns are named, never read row by row. **Nothing is recorded by finding** (K1468: extraction is targeted, at
+a member's request, tied to a basis or claim). A result becomes a fact only through the act that already makes that kind
+of fact, from that passage, by a member, at that act's own weight: a person fact, a dated fact, a money fact, a standard, a
+citation; a table goes through a calculation. An optional "for which question" is kept with what is recorded from there.
+"Keep finding this" reruns it as documents join the scope, its new matches reaching the queue once, as a list. The
+assistant's proposals of people, events and money figures search cannot match come later, once measured (K1627; the
+capability ladders): at a member's request, for a question they name, labelled machine work, graded no higher than the
+method earns, accepted only by a member's act (the assistant's roles, rules 3 and 4).
+
+**A captured archive and its files (Bob's ruling K1852, drawn by the design session, 2026-10-06, DEC-167).** A captured ZIP
+has its own screen. It says what was found when the archive opened on capture ("36 files filed and held for review beside
+it, 1 already held, 2 not filed, 2 folders"), then lists every entry with its state: filed and held for review, carrying the
+archive's grade and co-attestation; already held (the same bytes captured directly, kept as a second sighting); a folder,
+listed; or not filed, with the reason named (locked by a password, over a limit, ambiguous). Names, folders and dates appear
+exactly as the archive states them and are never used as a place to write. Members pick files and vouch for them or set them
+aside with one reason, as on the held list (Intake §4); a file's higher grade comes only from its own capture, beside the
+first. An archive that cannot be opened unambiguously is refused whole, says why, and stays captured as it arrived. Held
+captures shows the archive with its files waiting beside it.
 
 ## P · THE ASSISTANT — one way in, on every surface
 
@@ -588,8 +617,17 @@ library is `docs/development/ux-substrate/screens/library.json` (three required:
 publication ceremony), each script in `wizard-scripts` R1/R2 form; the registry its steps name is `screens/registry.json` (42 screens,
 192 acts). `screens/check_library.py` checks both against the requirements (every act an op, a requirement function, or owed by a
 named ruling; R12's shape) and `screens/check_walk.mjs` walks every step through the mockups and proves the control it names is drawn.
-A step may offer a side trip into another wizard and return (`via`, an addition owed to R2). The library ships only once Bob approves
-it (DEC-121 (1)); asked as S2 on the layouts page.
+A step may offer a side trip into another wizard and return (`via`, an addition owed to R2). **APPROVED 2026-10-06 by Bob (DEC-148, "S2: approved")** as the
+first Civicsmith library (DEC-121 (1)), the welcome wizard as a first version.
+
+**Help with writing (Bob, 2026-10-06, DEC-152, DEC-153).** Wherever a member writes in their own words, the assistant, when
+reachable, offers "Help me write this": it works only from what the member tells it and what the group holds, never adds a fact
+(for an observation it only helps word what the member saw), and its words arrive labelled "Draft · the assistant's, asked by
+<handle>", saved only when the member keeps them. Never on an act the assistant is refused or an irreversible one.
+**RULED 2026-10-06 by Bob through the development process (K1841, folded here):** never in a field that states a member's
+reason for an act (the Roles canon's rule 1: the machine never writes a member's reason); offered in descriptive own-words
+fields (a note, an observation, a request, a scope, what changed). With the member's suggestions switch off it works only from
+what the member typed; with it on it may also draw on what the group holds (rule 7).
 
 **THE ASSISTANT HOLDS NO COPY OF THE RULES -- it asks the plane, and DEC-8 already governs
 this.** *A surface may render a refusal it received from the plane; it may never compute one*,
@@ -665,6 +703,16 @@ the record (a disclosure once read, a person named in the registry, a group-wide
 opens the full dialog that states that effect, whatever its rung, and the rung's name stays honest. The 57 acts that had no rung are
 assigned in DEC-88: 26 reversible, 29 reasoned, 2 terminal.
 
+**An expunge opens the full dialog (the design session, 2026-10-06, DEC-142, applying DEC-88; BOB's B51).** `personexpunge` (people
+R12: a person's recorded value removed for good, only where the law requires) keeps the rung affordances grades it (reasoned, the
+name honest) and, like DEC-113's hold release, opens the full dialog stating its effect: what value is removed, from where (the
+person's page, every question that cited it, every export), that it cannot be undone by anyone, that a marker stays in its place
+("Removed where the law requires, <date>, by <member>"), and that published cases change only through the docket; the member then
+confirms with a reason naming the law or order. **Amended 2026-10-06 (DEC-143, Bob's comment):** an act that can never be undone shows the
+Irreversible weight on its button, whatever rung affordances gives it: the expunge, and the installer's choice of the group's short
+name (it is in every address and beside every signature, and never changes). Neither is a publication, so each opens the full dialog
+that says it is permanent rather than the ceremony.
+
 ## M · THE MEASURES MAP — how every scale reads, approved by Bob 2026-09-29 (DEC-82)
 
 Every scale a member meets is placed on one page, `docs/development/ux-substrate/measures-map.html` (rendered at
@@ -735,7 +783,18 @@ the yardstick every screen and wizard script of the redesign is checked against.
 **Brand and voice (APPROVED 2026-10-04 by Bob, DEC-125).** Who speaks, how the names are written, Civicsmith's voice, tone by
 moment and the words to use and avoid are set in `docs/development/ux-substrate/brand-and-voice.html` (published at
 https://claude.ai/artifact/EipzYKnNxe5LG3YwWnTkpv), the standard every screen's words are checked against. Its V1 (the mark)
-and V4 (translation) are still with Bob.
+and V4 (translation) are still with Bob. **Added 2026-10-06 (DEC-146, the design session, on Bob's comment):** Civicsmith says
+in one line what it is by what a group does with it, never by a kind of group: "Free software for groups that check whether
+government keeps its own rules and promises"; a second line, where there is room, names who: "Neighbourhood and issue groups,
+newsrooms, professional associations, and public offices checking their own work". Never "civic groups" alone.
+**Translation (Bob, 2026-10-06, DEC-157, amending DEC-127).** An administrator grants translation per language to named members;
+the assistant drafts and a speaker finds its errors; a protected word (fixed terms, weights, warnings before outward, signed or
+irreversible acts, the court notice, "who can see this" notices) changed from the assistant's draft waits for a second speaker or an
+administrator reading the assistant's back-translation, members seeing the English meanwhile; every change is recorded and undoable;
+official local names stay as they are with an explanation beside them, and what goes to an office goes in the office's language.
+**Ruled 2026-10-06 by Bob (DEC-149, "S4: B"):** what the code calls an instance is, for members and founders, "your group's
+Civicsmith"; "installation" only where the hosting is the subject; never "copy" (which keeps only its meanings of a review copy
+and a copy of a document). Where this document says "the group's copy", members read "your group's Civicsmith".
 
 ## W · WORKING AND PUBLISHED — the fence a member can always see (Bob, 2026-10-01, DEC-106)
 
@@ -785,7 +844,13 @@ than there is (design principle 3.11): what it keeps from the public and from th
 explanation one hover away wherever something is marked not public, never "secret" or "confidential". Each group's administrator
 chooses whether members are also told, once at joining and once at the first non-public act of each kind, that a court order the
 group cannot defeat can still require it to be shown. Members may keep their own notes, seen only by them, never cited or
-published, turned into an observation, hunch or question by their own act.
+published, turned into an observation, hunch or question by their own act. **Its notes, revised and deleted (the design session, 2026-10-06, DEC-144; BOB's B55):** a member
+may revise their own note in place (it is theirs, not the record's; no history is kept) and delete it for good, leaving no marker,
+since Civicsmith holds as little as it can (DEC-136 (2)); turning a note into an observation, hunch or question does not delete it.
+**The group's API key (Bob, 2026-10-06, K1755, cited; no second ruling):** a group may hold one Anthropic API key, off by default,
+serving members with no account of their own, each told once before their first act under it; a member's own subscription token or API
+key comes first; a group may run without the assistant. Setup offers the group's key, members' own accounts, both, or none, nothing
+preselected; drawn in `layouts.html`.
 
 **Civicsmith without the assistant (Bob, 2026-10-05, K1547).** A member connects the assistant with their own API key or their own
 subscription token, or skips; skipping is a real choice. (K1755, 2026-10-06: a group may also hold one API key at the group level, serving members
@@ -802,6 +867,17 @@ plain words, suggestions, reading and summarising, drafting translations or "wha
 same work. Every journey is drawn both ways in `docs/development/ux-substrate/layouts.html`.
 
 The journeys themselves (step 3 of the design phase, settled 2026-10-06: DEC-128 to DEC-137) are in `docs/development/ux-substrate/journeys.html`.
+
+**The security screen (Bob's direction, 2026-10-06, K1875 and K1874 (Q5); drawn by the design session, DEC-165).** Settings ›
+Security, seen only by administrators. The administrator chooses a period (the last hour, 24 hours, 7 or 30 days, or set
+dates). The screen states the level in a word, Ordinary, Raised or High, against the group's own usual (its median for the
+same hour over the four weeks before), with one plain sentence saying what happened and whether anything got through. A grid
+shows each kind by hour: refused sign-ins, refused keys and links, requests turned away for coming too fast, requests
+Cloudflare blocked (where the plan reports it), refused hand-overs at the doorbell; each square names its count and the
+usual, and the highest step is textured as well as coloured. Totals give the period's count, the usual and the busiest hour.
+**Counts only, and countries** (RULED 2026-10-06 by Bob, DEC-166, "S9: B - but never the member's own address"): refused and blocked requests are also counted by country for the period, from Cloudflare's own label, the address discarded at once; no address is ever kept or shown, a member's least of all; a member's refused sign-in followed within an hour by their own sign-in is counted without a place, and their sign-ins never are; the screen says a country is not proof of who is behind an attempt. Administrators are told in
+their queue once, as "Noticed", when the level becomes high, and not again while it lasts; never as a routine count (K1874).
+What is counted, the usual and the threshold are the development process's to word (B74).
 
 ## V · THE VISUAL LANGUAGE — one look for every screen and the published case (the design session, 2026-10-06, DEC-138)
 
@@ -830,6 +906,12 @@ ladders' hues and textures (§M); the hold strip (§S); the wizard mark, a walke
 (DEC-121); a labelled draft's dashed field (DEC-120 G5); every button's weight, pips and name (§F); the three frames and the
 path-to-publication marker (§W). Exact screens are the design phase's step 5.
 
+
+**Every screen's path (Bob, 2026-10-06, DEC-154).** Every screen, in every frame, opens with its path in the same place: from
+the rail's section (outside the workspace, the group or "Civicsmith") to the screen's own name, always last; the heading below
+names the thing shown. The group's members sit under Settings, since "People" are whom the record is about. The rail is 184px by default and its width is each
+member's own, by dragging or the keyboard, down to icons only (DEC-155). Every mark explains itself on hover, focus or tap, a strength
+naming its weakest part, and names open a card (DEC-159, carrying out DEC-82 and DEC-129 rule 4).
 ## What this changes about how M8 is built
 
 **Build the constructs, then the capabilities arrive cheaply.** The order that follows:

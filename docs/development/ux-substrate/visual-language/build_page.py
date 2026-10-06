@@ -53,6 +53,7 @@ page = page.replace('{{FACES}}', P('faces.css').replace('url("fonts/', 'url("vis
 page = page.replace('{{SWATCHES}}', '\n'.join(sw)).replace('{{ICONS}}', '\n'.join(ic)).replace('{{CONTRAST}}', ct)
 page = re.sub(r'\{i:([a-z]+)\}', lambda m: f'<svg class="i" aria-hidden="true"><use href="#i-{m.group(1)}"/></svg>', page)
 assert '{{' not in page and '{i:' not in page
+assert not re.search(r'viewBox="20 2 60 90"[^>]*>\s*<use href="#i-mark"', page), 'an <svg> using the plumb bob must take viewBox="0 0 60 90"'
 missing = set(re.findall(r'href="#i-([a-z]+)"', page)) - set(ids)
 assert not missing, missing
 open(os.path.join(HERE, '..', 'visual-language.html'), 'w').write(page)

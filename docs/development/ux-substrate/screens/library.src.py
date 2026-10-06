@@ -18,15 +18,18 @@ def wiz(name, start, required, steps, journeys, note=''):
 
 wiz('Set up and claim', 'install', True, [
  ('install', None, 'Check you have what is needed: a Cloudflare account and about twenty minutes.', 'The free plan works. Workers Paid ($5 a month) adds recomputing spreadsheets and signing in with a Claude subscription. No Claude account is needed to set up.'),
- ('install', 'bootstrap', 'Choose your group\'s short name, then install.', 'It appears in addresses and signatures and can never change. A group that wants to stay unnamed picks one that reveals nothing.'),
- ('install', 'selftest', 'Let your copy test itself. Allow it to run the assistant\'s container if you are asked.', 'The test proves your copy works before anyone relies on it.'),
- ('setup', 'claim', 'Claim your copy with the one-time password, then choose your own password.', 'Only the person holding the one-time password can become the first administrator.'),
- ('setup', 'groupnameset', 'Name the group, and add its logo if it has one.', 'The group\'s name heads everything it publishes; Civicsmith is credited quietly at the foot.'),
- ('setup', 'groupdomainset', 'Verify the group\'s web address.', 'Readers can then confirm that a published case really comes from your group.'),
- ('setup', 'profilesset', 'Choose the places whose rules apply, and the languages your members use.', 'Deadlines, holidays and offices come from these places, never from Civicsmith itself.'),
+ ('install', 'bootstrap', 'Choose your group\'s short name, then install. It is not the group\'s name: you choose that next, and can change it.', 'The short name is the fixed label in your addresses and beside every signature, and can never change. A group that wants to stay unnamed picks one that reveals nothing.'),
+ ('install', 'selftest', 'Let your group\'s Civicsmith test itself. Allow it to run the assistant\'s container if you are asked.', 'The test proves it works before anyone relies on it.'),
+ ('install', None, 'Save the one-time password somewhere safe, such as a password manager, then continue.', 'It is shown once, and it is how you become the first administrator. Continuing fills it in; if it is lost before you claim, whoever can sign in to the Cloudflare account can set a new one.'),
+ ('setup', 'claim', 'Claim with the one-time password, then choose your own password. It is already filled in if you continued from the installer; otherwise type the one you saved.', 'Only the person holding the one-time password can become the first administrator. Once you claim, it is spent.'),
+ ('setup', 'groupnameset', 'Name the group as people should read it, and add its logo if it has one.', 'The group\'s name heads everything it publishes and can change at any time; the short name you chose at install stays fixed in addresses and signatures.'),
+ ('setup', 'groupdomainset', 'If your group has a website, verify its address (optional): place the small file Civicsmith gives you on the site.', 'Readers can then confirm that a published case really comes from your group. The public page names the site, so a group that wants to stay unnamed skips this.'),
+ ('setup', 'profilesset', 'Choose the places whose rules apply, and the languages your members use.', 'Deadlines, holidays and offices come from these places, never from Civicsmith itself. If yours is not listed, choose Other: everything else works, and you enter due dates yourself.'),
  ('setup', 'officesseed', 'Review the offices, seats and holders Civicsmith filled in. Each is marked with where it came from.', 'Requests go to offices by role, so correct anything before members rely on it.'),
  ('setup', None, 'Read who in the group will see facts about people.', 'Facts from public documents follow those documents; a project\'s own notes about a person stay inside the project.'),
- ('setup', 'assistantset', 'Decide whether to offer the assistant to your members.', 'Each member who wants it connects their own Claude account. Nothing is shared, and everything works without it.'),
+ ('setup', 'assistantset', 'Read what the assistant is (and open More about this if you want the detail), then choose: the group\'s API key, members\' own accounts, both, or none.', 'The group\'s key serves members with no account of their own, at the group\'s cost. A member\'s own account always comes first. Everything works without it.'),
+ ('setup', 'groupkeyset', 'If you chose the group\'s key: paste it here. It is never shown again.', 'It serves every member with no account of their own; each is told once, before their first question, that it goes to Anthropic under the group\'s account.'),
+ ('setup', 'courtnoticeset', 'Choose whether members are told what a court can reach.', 'A court order your group cannot defeat can require anything not public to be shown. Some groups want every member told; the explanation is always one tap away.'),
  ('setup', 'hostingaccess', 'Record who holds the hosting account.', 'If you are ever unreachable, this is how the group gets back in.'),
  ('setup', 'memberadd', 'Invite your first members, and a second administrator now or later.', 'With one administrator the group depends on one person. A second means it is never stuck.'),
  ('group-identity', None, 'Optional: say who your group is. You will come back here when you finish or stop.', 'It shapes how each member is welcomed. It locks nothing and is never required.', {'via': 'Say who your group is'}),
@@ -52,6 +55,7 @@ wiz('Publication ceremony', 'ceremony', True, [
  ('ceremony', None, 'Preview the public page as a stranger will see it.', 'This is how a reader with no account meets your work.'),
  ('ceremony', 'publish', 'Each member publishing confirms they have no undeclared tie to anyone the case concerns.', 'Including anyone paid in its money. A tie disclosed is a strength; one found later is not.'),
  ('ceremony', 'caseratify', 'Sign with your key.', 'Publishing is permanent. Corrections come as a new edition, never by changing this one.'),
+ ('ceremony', 'owed:publishat DEC-147', 'Publish now, or choose the time it becomes public, such as when a story citing it runs.', 'At that time Civicsmith checks again; if anything changed since you signed, it holds the case and tells you. You can cancel or move the time until then.'),
 ], [15, 24])
 
 wiz('Get a record', 'finder', False, [
@@ -88,33 +92,33 @@ wiz('Your first question', 'project', False, [
 ], [6, 15])
 
 wiz('Say who your group is', 'group-identity', False, [
- ('group-identity', 'owed:groupprofileset DEC-132', 'What kind of group are you? Pick one or more, or describe your own.', 'It shapes how each member is welcomed. It never limits what anyone can do.'),
- ('group-identity', 'owed:groupprofileset DEC-132', 'What do you focus on: issues, places, offices or agencies?', 'New members see your focus first when they choose where to start.'),
- ('group-identity', 'owed:groupprofileset DEC-132', 'Why does the group exist? Say it in your own words.', 'Your declared bias can start from what you write here.'),
- ('group-identity', 'owed:groupprofilevisibility DEC-132', 'Who should see this: members only, or also your public page and the network directory?', 'Members only is the default. A group that wants to stay unnamed keeps it that way.'),
+ ('group-identity', 'groupdescriptionset', 'What kind of group are you? Pick one or more, or describe your own.', 'It shapes how each member is welcomed. It never limits what anyone can do.'),
+ ('group-identity', 'groupdescriptionset', 'What do you focus on: issues, places, offices or agencies?', 'New members see your focus first when they choose where to start.'),
+ ('group-identity', 'groupdescriptionset', 'Why does the group exist? Say it in your own words.', 'Your declared bias can start from what you write here.'),
+ ('group-identity', 'groupdescriptionset', 'Who should see this: members only, or also your public page and the network directory?', 'Members only is the default. A group that wants to stay unnamed keeps it that way.'),
 ], [2])
 
 wiz('Invite a member', 'members', False, [
  ('members', 'memberadd', 'Who: their handle, and the cover the group knows them by. Not a legal name.', 'The record never needs a legal name. Administrators keep the cover so they know who is who.'),
  ('members', 'membercaps', 'What they may do. Contributing is the default.', 'Give only what the person needs; you can change it later.'),
  ('members', None, 'Send the link yourself. It works once and expires after seven days.', 'Civicsmith sends no email, so the link reaches them only through you.'),
- ('members', 'owed:websitekeymint DEC-133', 'Or let people join through your website: create a website key, or turn on the reusable join link.', 'Anyone let through can see the group\'s shared work, so each comes with limits and a daily cap.'),
+ ('members', 'websitekeycreate', 'Or let people join through your website: create a website key, or turn on the reusable join link.', 'Anyone let through can see the group\'s shared work, so each comes with limits and a daily cap.'),
 ], [3, 27])
 
 wiz('Connect your Claude account', 'connect', False, [
- ('connect', None, 'The assistant is optional, and serves only you.', 'It runs on your own Claude account, never the group\'s. Everything works without it.'),
+ ('connect', None, 'The assistant is optional. If your group offers its API key, you can use it already; your own account, if you connect one, always comes first.', 'Your own account serves only you. Everything works without the assistant.'),
  ('connect', 'disclosureshown', 'Read what connecting means.', 'Your questions, and what is read to answer them, go to Anthropic under your own account.'),
- ('connect', 'accountreferenceset', 'Connect with your own Claude API key or your own subscription token. Or skip.', 'Either serves only you. Skipping is a real choice: every journey stays open.'),
- ('connect', 'accountreferenceset', 'For a subscription token: on your own computer, open a terminal, run claude setup-token, sign in, and paste what it prints here.', 'The token is made by Anthropic\'s own sign-in on your computer. Civicsmith never sees your password.'),
- ('connect', 'aiceilingset', 'Set your daily limit.', 'It caps what the assistant can spend on your account each day. An administrator may set a lower one for the copy.'),
+ ('connect', 'owed:subscriptionsignin DEC-156', 'To connect your Claude subscription, open Anthropic\'s sign-in page, sign in and approve. Or use an API key, or skip.', 'You sign in on Anthropic\'s own page; Civicsmith never sees your Claude password. Skipping is a real choice: every journey stays open.'),
+ ('connect', 'accountreferenceset', 'Copy the code Anthropic\'s page shows you, paste it here, and connect.', 'Your subscription then serves only your own questions. You can disconnect at any time.'),
+ ('connect', 'aiceilingset', 'Set your daily limit.', 'It caps what the assistant can spend on your account each day. An administrator may set a lower one for the group.'),
  ('connect', 'accountswitchset', 'Choose whether the assistant may suggest things without being asked. It is off unless you turn it on.', 'Some members want suggestions; others want quiet.'),
- ('connect', 'accountreferenceremove', 'You can disconnect at any time, here.', 'Disconnecting removes the key or token from your group\'s copy.'),
+ ('connect', 'accountreferenceremove', 'You can disconnect at any time, here.', 'Disconnecting removes the key or token from your group\'s Civicsmith.'),
 ], [4, 17])
 
 wiz('Your ties', 'ties', False, [
  ('ties', 'declaretie', 'List your employer, relatives, and businesses you have an interest in.', 'A case concerning any of them can then disclose the tie honestly.'),
  ('ties', None, 'Only you and the administrators can see this.', 'Your ties never appear in a case unless one concerns it, and then only as you choose.'),
- ('ties', 'declaretie', 'For each tie, choose how it is disclosed when a case concerns it: under your handle, or as the group.', 'Disclosing as the group protects you while keeping the case honest.'),
+ ('ties', 'declaretie', 'For each tie, choose how a published case discloses it when the case concerns them: naming you by your handle, or as “a member of the group”.', 'Readers learn of the tie either way; not naming you protects you while keeping the case honest.'),
 ], [5])
 
 wiz('Follow a proceeding', 'capture', False, [
@@ -158,8 +162,9 @@ wiz('Use another group\'s case', 'imported', False, [
 wiz('Translate the interface', 'translations', False, [
  ('translations', None, 'Choose the language.', 'Civicsmith\'s own translations come with releases. Your group fills gaps and improves wording.'),
  ('translations', None, 'See the words still untranslated.', 'A missing word shows in English, never blank.'),
- ('translations', 'owed:translationdraft DEC-127', 'With your own Claude account connected, ask the assistant to draft them. Each is marked "Draft".', 'Without the assistant, type them yourself.'),
- ('translations', 'owed:translationadopt DEC-127', 'Check and adopt each one.', 'A word becomes the group\'s only when someone who knows the language adopts it.'),
+ ('translations', 'owed:translationdraft DEC-127', 'Where you can reach the assistant, ask it to draft them all. Each is marked "Draft · the assistant\'s".', 'Your task becomes finding its errors. Without the assistant, type them yourself.'),
+ ('translations', 'owed:translationadopt DEC-127', 'Read each draft against the English; keep it or correct it.', 'A word becomes the group\'s only when a granted member who knows the language keeps it.'),
+ ('translations', 'owed:translationconfirm DEC-157', 'A protected word you changed, or typed without a draft, waits for a second check.', 'A second granted speaker, or an administrator reading the assistant\'s back-translation, confirms it. Until then members see the English.'),
 ], [3])
 
 wiz('Start and send', 'plan', False, [
