@@ -1,6 +1,6 @@
 # money-checks — requirements
 
-**Status** · New product module, layer 5, directly after `money` and before `duties` (plan T33, Rules (2)); split from `money` at creation, with no copy (Choices 9; K1504). Its meaning is the ladders' and the rulings': `BIO_Capability_Ladders_v0_1.md` §5C.4 L3 (amount checks raised as questions), §5C.5 L4 (detectors the machine runs on its own), §2 "Cross-cutting rulings" (machine checks), §10 (machine signals live in the hypothesis layer; a due threshold raises a question), and rulings K1471, K1473, K1491, K1504 (gate: a false-alarm rate of at most 20% on its gold set). Plan entry T33-34, which also moves `progressions` R32 here (T32 A37; Choices 11). Display is gated (plan Rule 7): the checks and detectors are built and their results held, and none is shown before its rate is measured. Every requirement is new; all met at T33-34 (K1584). For BOB's review and Bob's approval (a product module, P17).
+**Status** · New product module, layer 5, directly after `money` and before `duties` (plan T33, Rules (2)); split from `money` at creation, with no copy (Choices 9; K1504). Its meaning is the ladders' and the rulings': `BIO_Capability_Ladders_v0_1.md` §5C.4 L3 (amount checks raised as questions), §5C.5 L4 (detectors the machine runs on its own), §2 "Cross-cutting rulings" (machine checks), §10 (machine signals live in the hypothesis layer; a due threshold raises a question), and rulings K1471, K1473, K1491, K1504 (gate: a false-alarm rate of at most 20% on its gold set). Plan entry T33-34, which also moves `progressions` R32 here (T32 A37; Choices 11). Display is gated (plan Rule 7): the checks and detectors are built and their results held, and none is shown before its rate is measured. Every requirement is new; all met at T33-34 (K1584). For BOB's review and Bob's approval (a product module, P17). T34's fold, by a requirements worker for BOB #123 on `tranche/T34`, 2026-10-06, from plan entry T34-63 (N604, N605, N607, N608, N618; K1666, K1668, K1679, K1686): R4 amended (a machine's definition refused `MEMBER_ACT_ONLY`, stated), R6 amended (a stated default budget of 1,000 ms; a detector switched on in no project skipped), R11 amended (`op=moneydetectorsrun` the machine's or an administrator's); R15 (its refusal rows: `NO_CITATION` re-keyed, `check` a catalogue id or null) and R16 (`onDetectorSwitchedOn`, the arming notice) added; not yet met (T34).
 
 **Size (P6).** About 600–1,000 lines (est. 15 requirements). Under 4,000.
 
@@ -22,11 +22,11 @@ Terms. A **detector** is `{detector_id, version, label, population, condition, d
 - **R3** A threshold or share a check reads is a parameter stated in the check's definition with its citation (a held standard or the member's own word), never a default the module assumes. A check with none answers `undetermined: "no threshold stated"`.
 
 **defineDetector({label, population, condition, denominator, derivation, by}), switchDetector({detectorId, project, on, by}), detectors({viewer})**
-- **R4** `defineDetector` refuses `NO_LABEL`, `NO_POPULATION`, `BAD_RECIPE` (`calc-grammar`'s refusal of the condition), `NO_DENOMINATOR`, `NO_DERIVATION`, and a condition or population naming a person entity as its subject (`SUBJECT_IS_PERSON`). A member's definition is recorded as theirs; a change is a new version, earlier versions kept. Shipped detectors are data, versioned the same way.
+- **R4** `defineDetector` refuses `NO_LABEL`, `NO_POPULATION`, `BAD_RECIPE` (`calc-grammar`'s refusal of the condition), `NO_DENOMINATOR`, `NO_DERIVATION`, and a condition or population naming a person entity as its subject (`SUBJECT_IS_PERSON`). A member's definition is recorded as theirs; a change is a new version, earlier versions kept. Shipped detectors are data, versioned the same way. `defineDetector` is a member's act: an author that is not a member (a machine credential, `class:<cls>`, or none) is refused `MEMBER_ACT_ONLY` before any other refusal, and nothing is written; shipped detectors are the module's own data and are not defined through it (N618). *(not yet met: T34)*
 - **R5** `switchDetector` is a member's act per project (`MEMBER_ACT_ONLY`; `NO_SUCH_DETECTOR`; `NO_PROJECT`); a detector switched off for a project raises nothing for it. `detectors` answers every detector with its versions, origin, gate and per-project switch.
 
-**runDetectors({budgetMs, cursor?})** (the scheduler's consumer, registered by `scheduler`, T33-80)
-- **R6** Runs each detector over the facts held, in slices within `budgetMs` on the one alarm, answering a cursor to resume; it is a computation, never a model run. Each run writes its results, keyed by (detector, version, subject, inputs), so a rerun over unchanged inputs writes nothing new.
+**runDetectors({budgetMs?, cursor?})** (the scheduler's consumer, registered by `scheduler`, T33-80)
+- **R6** Runs each detector over the facts held, in slices within `budgetMs` on the one alarm, answering a cursor to resume; it is a computation, never a model run. Each run writes its results, keyed by (detector, version, subject, inputs), so a rerun over unchanged inputs writes nothing new. Without `budgetMs` it runs within its stated default budget of 1,000 ms (as `duties` and `people` state theirs); a `budgetMs` that is given and is not a number above zero is refused `NO_BUDGET`, and nothing runs (N604). It runs only detectors switched on (R5) for at least one project: a detector switched on in no project is skipped, run over nothing and leaving no work due, so an instance where no project switches a detector on keeps no detector work for `scheduler` (N607). *(not yet met: T34)*
 - **R7** A result carries its numerator, denominator and derivation with each input cited; a result with no denominator is never written.
 
 **recordGate({detectorId, version, goldSet, falseAlarmRate, by}), noticed({project, viewer, limit})**
@@ -34,8 +34,14 @@ Terms. A **detector** is `{detector_id, version, label, population, condition, d
 - **R9** `noticed` answers, for a project, only the results of detector versions whose recorded rate is at most 20% (K1504) and that are switched on for it, each labelled as the machine's, "Noticed", with its derivation; every other result is withheld and not counted. Bounded 1–500 with `truncated`.
 - **R10** A result is never written on a person's or entity's row, never cited as a basis, never moves a grade or a finding, and no read answers it as a fact or as "conflict" (K1473, K1491).
 
+**Its refusal rows** (DEC-49 arm A: a code is held once; N608, K1679)
+- **R15** A missing citation (R3's threshold or share, a detector's parameter) is refused `MONEY_CHECK_NO_CITATION`, no longer `NO_CITATION`, which `record-grammar` holds; `MEMBER_ACT_ONLY` stays this module's, the first family to hold it. Every row of its refusals carries as `check` a catalogue id once `promotion` stamps it, and null until then, never a requirement's name such as `"money-checks R2"` (as `events`' rows). *(not yet met: T34)*
+
+**onDetectorSwitchedOn(module, fn)** (`scheduler` R9's notice; N605, K1666)
+- **R16** One registration per module (a malformed registration, or a second by the same module, refused through `membership`'s `listenerRefusal`, its R81). After `switchDetector` switches a detector on for a project, each registered `fn({detector_id, project})` is called once, after the act's transaction, so `scheduler` arms its `money-detectors` wake at once instead of at the next local day. A switch that leaves the detector as it was, or switches it off, notifies nobody. A throwing `fn` never undoes the act or stops another listener. *(not yet met: T34)*
+
 **The ops map**
-- **R11** The module publishes `moneyChecksOps(checks, url, body)`, one route arm per act and read above; one append site, stamped by the control plane.
+- **R11** The module publishes `moneyChecksOps(checks, url, body)`, one route arm per act and read above; one append site, stamped by the control plane. `op=moneydetectorsrun` runs R6 only for the machine (`class:daemon`) or an administrator; any other author is refused `NOT_AN_ADMIN` through `membership.notAnAdmin` (its R84), and nothing runs (N618). *(not yet met: T34)*
 
 ## Private
 
@@ -44,7 +50,7 @@ Terms. A **detector** is `{detector_id, version, label, population, condition, d
 - `record-grammar`: `isHypothesisId` (R12).
 - `calc-grammar`: recipes, comparison, exact decimals (R2, R4, R6).
 - `record-core`: `transact`, `declareTable` (R6, R13).
-- `membership`: `viewerPredicate`, projects (R5, R9, R13).
+- `membership`: `viewerPredicate`, projects (R5, R9, R13); `notAnAdmin` (R11), `listenerRefusal` (R16) (T34).
 - `progressions`: the instance read (R1).
 - `money`: facts, `summable`, `committedAgainstPaid`, the read contract (R1, R2, R6).
 - `events`, `civil-time` (not in the plan's list): sequence and dates for payments past the term and payments before approval (R1). *(new edges; BOB's)*
