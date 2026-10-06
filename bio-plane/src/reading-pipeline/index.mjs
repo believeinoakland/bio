@@ -1,11 +1,12 @@
-/* reading-pipeline (R1–R24): a capture's reading from its stored bytes, for `extraction`, which stores it. The tier
+/* reading-pipeline (R1–R27): a capture's reading from its stored bytes, for `extraction`, which stores it. The tier
    ladder, the chain composed as it goes, the content type's reader over the text, and the reading with its
    provenance, its container, its dialect and its text units; and the pieces of it `extraction`'s re-read (its
    R31–R35) composes (R23). Split from `extraction` by N513 with no change of meaning (its `pipeline.mjs`, which it
    took from the plane's old `index.mjs`), with the reasons kept where the reason is the code's; the rows applied here
    are named at their sites. It is pure: no record, no table, no catalogue row. It fetches nothing about the source:
    the bytes come from the evidence store the caller hands in (R24), and tiers 2 and 3 are reached only through their
-   bindings with the capture's digest (R16). */
+   bindings with the capture's digest (R16). T33-23 adds the opt-in after-read hook (R25–R27, `hooks.mjs`), which
+   `read` never reaches. */
 import { layerChain, appendStep, describeChain, checkChain, checkAnchor, applyConfidenceFloor, mergedChain,
          convertedChain, readingSource, mergeTier2Text, tier2Note, glyphCount, stepCovers } from "../textchain.mjs";
 import { getFormat, readingDialect } from "../formats.mjs";
@@ -14,6 +15,7 @@ import { driveConvertStep } from "../drive.mjs";
 import { readingProvenance, describePages } from "./readingprov.mjs";
 
 export { readingProvenance, compareProvenance, describePages, PROVENANCE_SCHEME } from "./readingprov.mjs";
+export { ReadHooks, readHooksOf } from "./hooks.mjs";
 
 /* ===================================================================== *
  * The bounds (R15).
