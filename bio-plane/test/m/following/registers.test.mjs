@@ -11,7 +11,7 @@ test("R7 followRegister records a member switching a watch on; refusals as R1's 
   assert.equal(w.f.followRegister({ address: REG, author: MACHINE }).reason, "MACHINE_CANNOT_FOLLOW");
   for (const a of ["http://registry.ellery.example/p", "https://localhost/p", "https://10.0.0.1/p", "", null])
     assert.equal(w.f.followRegister({ address: a, author: MEMBER, viewer: MEMBER }).reason, "NO_LOCATOR", String(a));
-  assert.equal(w.f.followRegister({ address: REG, author: MEMBER, viewer: MEMBER, cadence: "hourly" }).reason, "BAD_CADENCE");
+  assert.equal(w.f.followRegister({ address: REG, author: MEMBER, viewer: MEMBER, cadence: "hourly" }).reason, "BAD_FOLLOW_CADENCE");
   assert.equal(w.rows(`SELECT * FROM follows`).length, 0);
   const s = w.f.followRegister({ address: REG, author: MEMBER, viewer: MEMBER });
   assert.equal(s.ok, true);
@@ -54,8 +54,8 @@ test("R8 a register behind an account, or fee-bearing, is never read on the tick
   /* the refresh: only the following member, with their own credential; a fee only once its price is accepted */
   const cred = { kind: "login", credential: "CRD-1", supplied_by: MEMBER };
   assert.equal((await w.f.refreshRegister({ follow: pub, author: MEMBER })).reason, "NOT_GATED");
-  assert.equal((await w.f.refreshRegister({ follow: acc, author: BOB, credential: cred })).reason, "MEMBER_ACT_ONLY");
-  assert.equal((await w.f.refreshRegister({ follow: acc, author: MACHINE, credential: cred })).reason, "MEMBER_ACT_ONLY");
+  assert.equal((await w.f.refreshRegister({ follow: acc, author: BOB, credential: cred })).reason, "NOT_THE_FOLLOWER");
+  assert.equal((await w.f.refreshRegister({ follow: acc, author: MACHINE, credential: cred })).reason, "NOT_THE_FOLLOWER");
   assert.equal((await w.f.refreshRegister({ follow: acc, author: MEMBER })).reason, "NO_CREDENTIAL");
   const shown = await w.f.refreshRegister({ follow: fee, author: MEMBER });
   assert.equal(shown.reason, "PRICE_FIRST");
@@ -124,5 +124,5 @@ test("R15 nothing a member's credential or a fee would pay for is fetched unatte
     assert.equal(o.captureRequest.locator, `${REG}/open`);
   }
   /* only the member's own act carries a credential, and only from that member */
-  assert.equal((await w.f.refreshRegister({ follow: 1, author: OUTSIDER, credential: { kind: "login" } })).reason, "MEMBER_ACT_ONLY");
+  assert.equal((await w.f.refreshRegister({ follow: 1, author: OUTSIDER, credential: { kind: "login" } })).reason, "NOT_THE_FOLLOWER");
 });

@@ -62,12 +62,12 @@ test("R4 the link is a member's act on a watched address they may see, naming a 
   w.bundle("INFO-2026-0100-agenda");
   w.watched.push({ bundle: "INFO-2026-0100-agenda", address: AGENDA });
   assert.equal(w.f.perMeetingBody({ address: AGENDA, body: b, notice: "notice_of_sitting", author: MACHINE }).reason, "MACHINE_CANNOT_FOLLOW");
-  assert.equal(w.f.perMeetingBody({ address: "https://ellery.example/other", body: b, author: MEMBER, viewer: MEMBER }).reason, "NO_SUCH_ADDRESS");
+  assert.equal(w.f.perMeetingBody({ address: "https://ellery.example/other", body: b, author: MEMBER, viewer: MEMBER }).reason, "NO_SUCH_MEETING_ADDRESS");
   assert.equal(w.f.perMeetingBody({ address: AGENDA, body: "ENT-2026-9999", author: MEMBER, viewer: MEMBER }).reason, "NO_SUCH_BODY");
   /* a watch in a project the viewer is not part of is not theirs to see */
   w.project("PRJ-2026-0001-a");
   w.st.sql.exec(`UPDATE bundles SET project='PRJ-2026-0001-a' WHERE bundle_id='INFO-2026-0100-agenda'`);
-  assert.equal(w.f.perMeetingBody({ address: AGENDA, body: b, notice: "notice_of_sitting", author: OUTSIDER, viewer: OUTSIDER }).reason, "NO_SUCH_ADDRESS");
+  assert.equal(w.f.perMeetingBody({ address: AGENDA, body: b, notice: "notice_of_sitting", author: OUTSIDER, viewer: OUTSIDER }).reason, "NO_SUCH_MEETING_ADDRESS");
   assert.equal(w.rows(`SELECT * FROM per_meeting_links`).length, 0);
   assert.equal(w.f.perMeetingBody({ address: AGENDA, body: b, notice: "notice_of_sitting", author: MEMBER, viewer: MEMBER }).ok, true);
 });
