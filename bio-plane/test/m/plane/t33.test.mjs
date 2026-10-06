@@ -297,3 +297,24 @@ test("R23 (K1505 (3); publication R61): case-tensions holds publication's provid
   /* negative control: a second provider is refused, the plane's stands */
   assert.equal(ct.registerPublicationProvider("zz-probe", {}).ok, false);
 });
+
+test("R21 (queue R51; K1683): notice-producers is built over the plane's instances, and op=queue reads it beside queue-producers", async () => {
+  const { noticeProducersOf } = await import("../../../src/notice-producers/index.mjs");
+  const x = await store();
+  x.ctx.storage.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
+                          VALUES ('bob', 'Cover bob', 'h_bob', 'member', 'active', '["contribute"]', 't', 't')`);
+  const np = noticeProducersOf(x.ctx);
+  /* its providers answer: none fails on the plane's host */
+  const direct = np.noticeItems({ member: "bob", viewer: "member:bob", now: Date.now(), identity: "member:bob",
+                                  homesOf: () => null, optionsOf: () => [] });
+  assert.deepEqual(direct.facts.failed ?? [], [], JSON.stringify(direct.facts));
+  /* through the door, queue asks the plane's instance */
+  const asked = [];
+  const was = np.noticeItems.bind(np);
+  np.noticeItems = (a) => { asked.push(a.member); return was(a); };
+  try {
+    const r = await (await x.fetch("/queue?member=bob&viewer=member:bob")).json();
+    assert.equal(r.ok, true, JSON.stringify(r));
+    assert.deepEqual(asked, ["bob"], "queue read the plane's notice-producers");
+  } finally { np.noticeItems = was; }
+});

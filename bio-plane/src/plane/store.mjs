@@ -85,6 +85,8 @@ import { answersOf, answersOps } from "../answers/index.mjs";
 import { caseTensionsOf, caseTensionsOps } from "../case-tensions/index.mjs";
 import { followingOf, followingOps } from "../following/index.mjs";
 import { PROJECTION_RELATION } from "../retrieval/index.mjs";
+import { noticeProducersOf } from "../notice-producers/index.mjs";
+import { askOnObject } from "./ask.mjs";
 import { registerReaders, rosterSource, officePorts, dutiesFactOf, retrievalTerms, sheetRecompute } from "./wiring.mjs";
 
 /* The name control-plane's promotion step (its R42) is registered under. */
@@ -307,7 +309,11 @@ export class Store extends DurableObject {
     /* queue, then tasks, each creating its own tables (queue R36, tasks R8). R11: queue is handed the two modules
        `queue-producers` R20 and R21 read, R15 the docket its R30's items read (`Queue.PRODUCER_DEPS`), and R20 the
        case-import its R35's watch items read. */
-    queueOf(ctx, { env, filingTemplates, localFacts, docket, caseImport }).migrate();
+    /* R21 (T33-82; queue R51; K1683): notice-producers, over the instances it reads, handed to queue beside
+       queue-producers' deps. */
+    const noticeProducers = noticeProducersOf(ctx, { membership: membershipOf(ctx), people, moneyChecks: moneyChecksOf(ctx), duties,
+                                                     answers: answersOf(ctx), inquiry: inquiryOf(ctx) });
+    queueOf(ctx, { env, filingTemplates, localFacts, docket, caseImport, noticeProducers }).migrate();
     tasksOf(ctx, { env }).migrate();
     /* R1: instance-setup started once per object (its `start` is idempotent on one storage). */
     ctx.blockConcurrencyWhile(async () => instanceSetupOf(ctx, env).start());
@@ -384,6 +390,10 @@ export class Store extends DurableObject {
 
     recordOf(this.ctx).seedMintLedger(MINT_LEDGER_LIVE);
   }
+
+  /* B2 (K1674, K1684): `op=ask`'s work on the `bio` object, reached over the object's RPC from the door's arm (no route:
+     R5). */
+  async ask(args) { return askOnObject(this.ctx, this.env, args || {}); }
 
   /* R4: scheduler's. */
   async alarm() { await schedulerOf(this.ctx, this.env).alarm(); }

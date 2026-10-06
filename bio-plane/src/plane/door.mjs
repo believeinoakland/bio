@@ -20,6 +20,7 @@ import { EXTRACTION_OPS, extractionOp, acquireReadingOp } from "../extraction/op
 import { CONNECTIONS_OPS, connectionsOp } from "../connections/ops.mjs";
 import { ratificationOp } from "../ratification/ops.mjs";
 import { ACT_GATE } from "../op-declarations/index.mjs";
+import { askOp } from "./ask.mjs";
 import { json, doAnswer, storeSilent, storeRefusal, STORE_SILENT_REASON, STORE_SILENT_DETAIL, SCRATCH, sha256Hex,
          caseReader, captureKey, requiredArgument, storageAbsent } from "../control-plane/index.mjs";
 
@@ -35,7 +36,7 @@ export async function publicOp({ req, url, env, op, stub, fp, presentedAi }) {
 
 /* The admitted ops whose handler is a module's door; undefined for control-plane's generic forward. */
 export async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessViewer, sessIdentity, sessRights,
-                                sessCaps, aiCred, storeName, stub }) {
+                                sessCaps, aiCred, storeName, stub, grantMember }) {
   const store = () => env.STORE.get(env.STORE.idFromName(storeName));
   /* The stamps, from the authenticated caller: a session's member, viewer and identity; an `ai` credential's principal
      where the act reads its member (REC-134); a binding class as `class:<cls>`, or `token:<cls>` as an author (D-311). */
@@ -45,6 +46,8 @@ export async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, 
   const author = viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`;
   const by = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
 
+  /* B2 (K1674): the ask, a member's own act, carried to agent-worker with the grant and the member's account. */
+  if (op === "ask") return askOp({ req, url, env, viaSession, sessMember, grantMember });
   if (op === "affordances")
     return affordancesOp(url, store(), { json, doAnswer, storeSilent, storeRefusal, gate: ACT_GATE, viewer, identity, author,
       by, storeName, cls });
