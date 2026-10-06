@@ -1,6 +1,6 @@
 # BOB to publication (T33)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -24,3 +24,7 @@ K1634, from CASE-TENSIONS #1 J1: R61 is amended on tranche/T33 (merge it). Your 
 ## B4 · CHANGE
 
 K1636: case-grammar (T33-60) is merged into tranche/T33. Merge the tranche and re-point your injected case-grammar at the real module (calculationsOf, timelineOf, the `calculation` kind's paths, caseFilePath) before COMPLETE (K1563 (1)).
+
+## B5 · CHANGE
+
+K1637: case-tensions (T33-62) is merged into tranche/T33. Merge the tranche, then delete the moved code and re-point to case-tensions. Register your seven-door provider. In the same commit, drop the three tables, the caseMember fact and the revision step (K1634, R61).
