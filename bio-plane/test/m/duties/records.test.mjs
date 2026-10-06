@@ -1,7 +1,7 @@
 /* duties: recorded transitions (R13, R14), powers (R15) and money set against restrictions (R17). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { world, fictionalView, E, BOB, CAROL, MACHINE, evt, mny, ZONE } from "./fixture.mjs";
+import { world, fictionalView, E, BOB, CAROL, MACHINE, ZONE } from "./fixture.mjs";
 import { DUTIES_CHECKS, NEVER_SAID, SCHEDULER_STAMP, OCCURRENCE_STATES } from "../../../src/duties/index.mjs";
 
 const row = (r, code) => {
@@ -64,8 +64,8 @@ test("R13 recordTransition: a member's own recording, refusing UNKNOWN_STATE and
 
 test("R14 a recorded transition is never rewritten: 'overdue as known on 30 March' stays readable beside the current derivation", () => {
   const w = world();
-  w.event(evt("req"), { kind: "communication", when: day("2026-03-16"), concerns: [E.clerk] });
-  w.event(evt("resp"), { kind: "communication", when: day("2026-03-27"), concerns: [E.group] });
+  w.event({ value: day("2026-03-16"), concerns: [E.clerk] });
+  const resp = w.event({ value: day("2026-03-27"), concerns: [E.group] });
   const a = w.declare({ trigger: { kind: "event", event_kind: "communication", entity: E.clerk } });
   w.at("2026-03-30T12:00:00.000Z");
   w.duties.recordTransitions({ asOf: "2026-03-30T12:00:00Z", budgetMs: 100000 });
@@ -74,7 +74,7 @@ test("R14 a recorded transition is never rewritten: 'overdue as known on 30 Marc
   /* a later capture shows the response came earlier; a member matches it; the profile's rule changes */
   const key = recorded[0].occurrence_key;
   w.at("2026-04-02T12:00:00.000Z");
-  w.duties.matchEvent({ dutyId: a.duty_id, occurrenceKey: key, eventId: evt("resp"), reason: "a later capture of the letter", by: BOB });
+  w.duties.matchEvent({ dutyId: a.duty_id, occurrenceKey: key, eventId: resp, reason: "a later capture of the letter", by: BOB });
   w.setView(fictionalView({ deadlines: fictionalView().deadlines.map((d) => (d.rule === "records_response" ? { ...d, amount: 14 } : d)) }));
   w.duties.recordTransitions({ asOf: "2026-04-02T12:00:00Z", budgetMs: 100000 });
   const now = w.duties.occurrencesOf({ dutyId: a.duty_id, asOf: "2026-04-02T12:00:00Z", viewer: BOB }).occurrences[0];
@@ -93,25 +93,25 @@ test("R14 a recorded transition is never rewritten: 'overdue as known on 30 Marc
 
 test("R15 powersOf answers the powers in force with their instruments and delegations, undetermined ones apart; never whether an act was within one", () => {
   const w = world();
-  w.standard("STD-2026-0010-charter", { portion: "s502", period: { from: "2000-01-01", to: "2099-12-31" } });
-  w.standard("STD-2026-0011-old", { period: { from: "2000-01-01", to: "2020-12-31" } });
-  w.standard("STD-2026-0012-open", { period: { from: "2010-01-01", to: null } });
-  w.standard("STD-2026-0013-delegation", {});
+  const charter = w.standard({ cite: "Test Code § 502", portion: "s502" });
+  const old = w.standard({ cite: "Test Code § 11", portion: null, period: { from: "2000-01-01", to: "2020-12-31" } });
+  const open = w.standard({ cite: "Test Code § 12", portion: null, period: { from: "2010-01-01", to: null } });
+  const delegation = w.standard({ cite: "Test Code § 13", portion: null });
   const power = (source, over = {}) => w.declare({ modality: "power", obligee: null, performance: { act: "approve contracts under the limit" },
                                                   source, time: { basis: "window" }, ...over });
-  const p1 = power({ kind: "standard", standard: "STD-2026-0010-charter", portion: "s502" },
-                   { delegation: { kind: "standard", standard: "STD-2026-0013-delegation" } });
-  power({ kind: "standard", standard: "STD-2026-0011-old" });
-  const p3 = power({ kind: "standard", standard: "STD-2026-0012-open" });
+  const p1 = power({ kind: "standard", standard: charter, portion: "s502" }, { delegation: { kind: "standard", standard: delegation } });
+  power({ kind: "standard", standard: old });
+  const p3 = power({ kind: "standard", standard: open });
   w.declare({ obligor: E.clerk });
   row(w.duties.powersOf({ office: E.council, viewer: BOB }), "NOT_AN_OFFICE");
   assert.equal(w.duties.powersOf({ office: "ENT-2026-0099", viewer: BOB }).reason, "NO_SUCH_ENTITY");
   const r = w.duties.powersOf({ office: E.clerk, at: "2026-03-01", viewer: BOB });
   assert.deepEqual(r.powers.map((p) => p.duty_id), [p1.duty_id]);
-  assert.deepEqual(r.powers[0].instrument, { kind: "standard", standard: "STD-2026-0010-charter", portion: "s502",
-                                             cite: "Test Code STD-2026-0010-charter", instrument: "fiction/code/STD-2026-0010-charter" });
-  assert.equal(r.powers[0].delegation.standard, "STD-2026-0013-delegation");
-  assert.deepEqual(r.undetermined.map((p) => [p.duty_id, p.why]), [[p3.duty_id, "no end is stated"]]);
+  assert.deepEqual(r.powers[0].instrument, { kind: "standard", standard: charter, portion: "s502",
+                                             cite: "Test Code § 502", instrument: "/eli/xx-port-ellery/tc/502" });
+  assert.equal(r.powers[0].delegation.standard, delegation);
+  assert.deepEqual(r.undetermined.map((p) => p.duty_id), [p3.duty_id]);
+  assert.match(r.undetermined[0].why, /does not state when it ceased to be in force/);
   const text = JSON.stringify(r).toLowerCase();
   for (const word of NEVER_SAID) assert.ok(!text.includes(word), word);
   assert.match(r.says, /a member's determination/);
@@ -121,12 +121,16 @@ test("R15 powersOf answers the powers in force with their instruments and delega
 
 test("R17 setAgainst answers the money facts in scope and period, each compared to the cited term as a computed fact and a question", () => {
   const w = world();
-  w.fact(mny("cap"), { amount: "100000.00", kind: "allocation", concerns: [] });
-  w.fact(mny("pay1"), { amount: "40000.00", kind: "payment", from: { fund: E.fund } });
-  w.fact(mny("pay2"), { amount: "150000.00", kind: "payment", from: { fund: E.fund } });
-  w.fact(mny("pay3"), { amount: "100000.00", kind: "payment", from: { fund: E.fund } });
-  w.fact(mny("about"), { amount: "100000", precision: "approximate", kind: "payment", from: { fund: E.fund } });
-  w.fact(mny("other"), { amount: "1.00", kind: "payment", from: { entity: E.private } });
+  const F = {
+    cap: w.fact({ amount: "100000.00", from: { entity: E.council } }),
+    pay1: w.fact({ amount: "40000.00" }),
+    pay2: w.fact({ amount: "150000.00" }),
+    pay3: w.fact({ amount: "100000.00" }),
+    about: w.fact({ amount: "100000", precision: "approximate" }),
+    range: w.fact({ precision: "range", low: "90000.00", high: "110000.00" }),
+    other: w.fact({ amount: "1.00", from: { entity: E.private } }),
+  };
+  const mny = (k) => F[k];
   const proh = w.declare({ modality: "prohibition", performance: { act: "spend no more from the fund than appropriated", money_facts: [mny("cap")],
                                                                  scope: { funds: [E.fund] } }, time: { basis: "window" } });
   const plain = w.declare({});
@@ -139,6 +143,7 @@ test("R17 setAgainst answers the money facts in scope and period, each compared 
   assert.deepEqual(rel[mny("pay2")], { relation: "higher", label: "computed fact" });
   assert.deepEqual(rel[mny("pay3")], { relation: "equal", label: "computed fact" });
   assert.equal(rel[mny("about")].relation, "undetermined");
+  assert.equal(rel[mny("range")].relation, "undetermined", "a range straddling the term settles nothing");
   assert.ok(!(mny("other") in rel), "a fact outside the scope is not set against it");
   assert.ok(!(mny("cap") in rel), "the term is not set against itself");
   assert.ok(r.items.every((i) => /never a finding/.test(i.question)));
@@ -146,5 +151,5 @@ test("R17 setAgainst answers the money facts in scope and period, each compared 
   for (const word of NEVER_SAID) assert.ok(!text.includes(word), word);
   /* a threshold duty is set against as a prohibition is */
   const thr = w.declare({ performance: { act: "report any award over the threshold", threshold: true, money_facts: [mny("cap")], scope: { funds: [E.fund] } } });
-  assert.equal(w.duties.setAgainst({ dutyId: thr.duty_id, viewer: BOB }).items.length, 4);
+  assert.equal(w.duties.setAgainst({ dutyId: thr.duty_id, viewer: BOB }).items.length, 5);
 });

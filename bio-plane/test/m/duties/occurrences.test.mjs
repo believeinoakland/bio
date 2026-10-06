@@ -13,15 +13,19 @@ const row = (r, code) => {
 const day = (value) => ({ value, precision: "day", zone: ZONE });
 const AS_OF = "2026-03-09T12:00:00Z";
 
-/* A records-response duty triggered by each request (a `communication` concerning the clerk). */
+/* A records-response duty triggered by each request (a `communication` concerning the clerk), over real events: the
+   requests, the responses and an event dated only to its month. `X` maps each name to its real event id. */
+let X = {};
 function requests(w) {
-  w.event(evt("req1"), { kind: "communication", when: day("2026-02-02"), concerns: [E.clerk] });
-  w.event(evt("req2"), { kind: "communication", when: day("2026-02-16"), concerns: [E.clerk] });
-  w.event(evt("req3"), { kind: "communication", when: day("2026-03-02"), concerns: [E.clerk] });
-  w.event(evt("req4"), { kind: "communication", when: null, concerns: [E.clerk] });
-  w.event(evt("resp1"), { kind: "communication", when: day("2026-02-10"), concerns: [E.group] });
-  w.event(evt("resp2"), { kind: "communication", when: day("2026-02-27"), concerns: [E.group] });
-  w.event(evt("band"), { kind: "communication", when: { value: "2026-02", precision: "edtf", zone: ZONE }, concerns: [E.group] });
+  const day = (v) => ({ value: v, precision: "day", zone: ZONE });
+  X = {
+    req1: w.event({ value: day("2026-02-02"), concerns: [E.clerk] }),
+    req2: w.event({ value: day("2026-02-16"), concerns: [E.clerk] }),
+    req3: w.event({ value: day("2026-03-02"), concerns: [E.clerk] }),
+    resp1: w.event({ value: day("2026-02-10"), concerns: [E.group] }),
+    resp2: w.event({ value: day("2026-02-27"), concerns: [E.group] }),
+    band: w.event({ value: { value: "2026-02", precision: "edtf", zone: ZONE }, concerns: [E.group] }),
+  };
   const a = w.declare({ trigger: { kind: "event", event_kind: "communication", entity: E.clerk },
                         exceptions: [{ statement: "a request for exempt records", citation: "s7927" }] });
   return a.duty_id;
@@ -39,16 +43,16 @@ test("R9 each occurrence: a deterministic key, its trigger dated by the event (n
   row(w.duties.occurrencesOf({ dutyId: "DUT-2026-0099", asOf: AS_OF, viewer: BOB }), "NO_SUCH_DUTY");
   const o = occ(w, id);
   const r = byRef(o);
-  assert.deepEqual(Object.keys(r).sort(), [evt("req1"), evt("req2"), evt("req3"), evt("req4")].sort());
-  assert.equal(r[evt("req1")].key, Duties.occurrenceKey(id, 1, "event", evt("req1")));
+  assert.deepEqual(Object.keys(r).sort(), [X.req1, X.req2, X.req3].sort());
+  assert.equal(r[X.req1].key, Duties.occurrenceKey(id, 1, "event", X.req1));
   assert.equal(occ(w, id).occurrences[0].key, o.occurrences[0].key, "the same key on every read");
-  assert.match(r[evt("req1")].key, /^OCC-[0-9a-f]{32}$/);
-  assert.deepEqual(r[evt("req1")].trigger.date, day("2026-02-02"), "the event's own date");
-  assert.deepEqual(r[evt("req1")].due.date, day("2026-02-12"));
-  assert.equal(r[evt("req1")].due.basis_kind, "rule");
-  assert.equal(r[evt("req1")].due.trace.citation, "Test Code §7922");
+  assert.match(r[X.req1].key, /^OCC-[0-9a-f]{32}$/);
+  assert.deepEqual(r[X.req1].trigger.date, day("2026-02-02"), "the event's own date");
+  assert.deepEqual(r[X.req1].due.date, day("2026-02-12"));
+  assert.equal(r[X.req1].due.basis_kind, "rule");
+  assert.equal(r[X.req1].due.trace.citation, "Test Code §7922");
   /* the roll: 2026-03-02 + 10 = 03-12 (a Thursday); 02-16 + 10 = 02-26 */
-  assert.deepEqual(r[evt("req3")].due.date, day("2026-03-12"));
+  assert.deepEqual(r[X.req3].due.date, day("2026-03-12"));
   /* a recurrence's instances through civil-time's expandRecurrence, each its own key */
   const m = w.declare({ trigger: { kind: "recurrence", rrule: "FREQ=MONTHLY;BYMONTHDAY=15", dtstart: "2026-01-15" }, time: { basis: "commitment" } });
   const mo = occ(w, m.duty_id);
@@ -57,36 +61,42 @@ test("R9 each occurrence: a deterministic key, its trigger dated by the event (n
   /* a revision is a new version: the keys follow it */
   w.duties.revise({ dutyId: m.duty_id, performance: { act: "post the report" }, reason: "reworded", by: BOB });
   assert.notEqual(occ(w, m.duty_id).occurrences[0].key, mo.occurrences[0].key);
-  /* the events read were asked for the trigger's entity and kind */
-  assert.ok(w.calls.some(([f, e, k]) => f === "eventsFor" && e === E.clerk && k[0] === "communication"));
+  /* only the trigger's entity and kind: a communication concerning another entity, or a vote, starts nothing */
+  w.event({ value: day("2026-02-05"), concerns: [E.council] });
+  w.event({ kind: "vote", value: day("2026-02-06"), concerns: [E.clerk] });
+  assert.equal(occ(w, id).occurrences.length, 3);
 });
 
 test("R10 the states: met, met_late, discharged, pending, overdue and undetermined, each with why", () => {
   const w = world();
   const id = requests(w);
   const before = byRef(occ(w, id));
-  w.duties.matchEvent({ dutyId: id, occurrenceKey: before[evt("req1")].key, eventId: evt("resp1"), reason: "the response", by: BOB });
-  w.duties.matchEvent({ dutyId: id, occurrenceKey: before[evt("req2")].key, eventId: evt("resp2"), reason: "the late response", by: BOB });
-  w.duties.matchEvent({ dutyId: id, occurrenceKey: before[evt("req3")].key, exception: 0, reason: "the records asked are exempt", by: BOB });
+  w.duties.matchEvent({ dutyId: id, occurrenceKey: before[X.req1].key, eventId: X.resp1, reason: "the response", by: BOB });
+  w.duties.matchEvent({ dutyId: id, occurrenceKey: before[X.req2].key, eventId: X.resp2, reason: "the late response", by: BOB });
+  w.duties.matchEvent({ dutyId: id, occurrenceKey: before[X.req3].key, exception: 0, reason: "the records asked are exempt", by: BOB });
   const r = byRef(occ(w, id));
-  assert.equal(r[evt("req1")].state, "met");
-  assert.equal(r[evt("req2")].state, "met_late");
-  assert.equal(r[evt("req3")].state, "discharged");
-  assert.equal(r[evt("req4")].state, "undetermined");
-  assert.match(r[evt("req4")].why, /placed nowhere/);
+  assert.equal(r[X.req1].state, "met");
+  assert.equal(r[X.req2].state, "met_late");
+  assert.equal(r[X.req3].state, "discharged");
+  /* a trigger with no date (a source item the record places nowhere) leaves its occurrence undetermined */
+  w.duties.registerTriggerSource("actions", () => [{ ref: "ACT-2026-0009-undated" }]);
+  const nowhere = w.declare({ trigger: { kind: "source", source: "actions" } });
+  const u = occ(w, nowhere.duty_id).occurrences[0];
+  assert.equal(u.state, "undetermined");
+  assert.match(u.why, /placed nowhere/);
   for (const o of Object.values(r)) assert.ok(typeof o.why === "string" && o.why.length > 10, o.state);
   /* pending and overdue, on the day asked */
   const fresh = world();
   const fid = requests(fresh);
   const early = byRef(occ(fresh, fid, "2026-02-11T12:00:00Z"));
-  assert.equal(early[evt("req1")].state, "pending");
+  assert.equal(early[X.req1].state, "pending");
   const late = byRef(occ(fresh, fid, "2026-02-13T12:00:00Z"));
-  assert.equal(late[evt("req1")].state, "overdue");
+  assert.equal(late[X.req1].state, "overdue");
   /* on the due day's local evening the occurrence is still due that day (local day, not UTC) */
-  assert.equal(byRef(occ(fresh, fid, "2026-02-13T02:00:00Z"))[evt("req1")].state, "pending", "22:00 on the 12th in Halifax");
+  assert.equal(byRef(occ(fresh, fid, "2026-02-13T02:00:00Z"))[X.req1].state, "pending", "22:00 on the 12th in Halifax");
   /* a match whose date straddles the due date at its precision is undetermined */
-  fresh.duties.matchEvent({ dutyId: fid, occurrenceKey: early[evt("req1")].key, eventId: evt("band"), reason: "a response dated only February", by: BOB });
-  const band = byRef(occ(fresh, fid))[evt("req1")];
+  fresh.duties.matchEvent({ dutyId: fid, occurrenceKey: early[X.req1].key, eventId: X.band, reason: "a response dated only February", by: BOB });
+  const band = byRef(occ(fresh, fid))[X.req1];
   assert.equal(band.state, "undetermined");
   assert.match(band.why, /not settled/);
 });
@@ -105,7 +115,7 @@ test("R10 an uncertain due date: a body is overdue only after the latest candida
 
 test("R10 a missed dependency date is a fact about sequence, never a legal deadline; a missing rule leaves the due undetermined", () => {
   const w = world();
-  w.event(evt("vote"), { kind: "vote", when: day("2026-03-10"), concerns: [E.council] });
+  w.event({ kind: "vote", value: day("2026-03-10"), concerns: [E.council] });
   const dep = w.declare({ obligor: E.council, source: { kind: "dependency", why: "the report must precede the vote" },
                           trigger: { kind: "event", event_kind: "vote", entity: E.council },
                           time: { basis: "dependency", lead: 3, why: "published three days before the vote" } });
@@ -126,20 +136,20 @@ test("R11 overdue is answered as a question with its derivation; met with the sa
   const w = world();
   const id = requests(w);
   const keys = byRef(occ(w, id));
-  w.duties.matchEvent({ dutyId: id, occurrenceKey: keys[evt("req1")].key, eventId: evt("resp1"), reason: "the response", by: BOB });
+  w.duties.matchEvent({ dutyId: id, occurrenceKey: keys[X.req1].key, eventId: X.resp1, reason: "the response", by: BOB });
   const r = byRef(occ(w, id));
-  const over = r[evt("req3")];
-  assert.equal(r[evt("req2")].state, "overdue");
-  for (const o of [r[evt("req1")], r[evt("req2")]]) {
+  const over = r[X.req3];
+  assert.equal(r[X.req2].state, "overdue");
+  for (const o of [r[X.req1], r[X.req2]]) {
     assert.deepEqual(Object.keys(o.derivation).sort(), ["basis_kind", "due_date", "law_set", "level_says", "level_searched", "source_in_force", "trigger_date"]);
     assert.equal(o.derivation.level_searched, LEVEL_SEARCHED);
     assert.ok(LEVEL_SEARCHED in OBSERVATION_LEVELS, "a level of observation-log's vocabulary");
     assert.equal(o.derivation.source_in_force.state, "in_force");
     assert.deepEqual(o.derivation.trigger_date, o.trigger.date);
   }
-  assert.match(r[evt("req2")].question, /^Was "respond to the records request" done by 2026-02-26\?/);
-  assert.match(r[evt("req2")].question, /a question, not a finding/);
-  assert.equal(r[evt("req1")].question, undefined);
+  assert.match(r[X.req2].question, /^Was "respond to the records request" done by 2026-02-26\?/);
+  assert.match(r[X.req2].question, /a question, not a finding/);
+  assert.equal(r[X.req1].question, undefined);
   assert.equal(over.state, "pending");
   const text = JSON.stringify(occ(w, id)).toLowerCase();
   for (const word of NEVER_SAID) assert.ok(!text.includes(word), word);
@@ -148,8 +158,8 @@ test("R11 overdue is answered as a question with its derivation; met with the sa
 test("R12 matchEvent is a member's act, recorded with who, when and why, and correctable by a later act that keeps the earlier", () => {
   const w = world();
   const id = requests(w);
-  const k = byRef(occ(w, id))[evt("req1")].key;
-  const m = (over) => w.duties.matchEvent({ dutyId: id, occurrenceKey: k, eventId: evt("resp1"), reason: "the response", by: BOB, ...over });
+  const k = byRef(occ(w, id))[X.req1].key;
+  const m = (over) => w.duties.matchEvent({ dutyId: id, occurrenceKey: k, eventId: X.resp1, reason: "the response", by: BOB, ...over });
   row(m({ by: MACHINE }), "MEMBER_ACT_ONLY");
   row(m({ reason: "" }), "NO_REASON");
   row(m({ dutyId: "DUT-2026-0077" }), "NO_SUCH_DUTY");
@@ -158,20 +168,20 @@ test("R12 matchEvent is a member's act, recorded with who, when and why, and cor
   row(m({ exception: 5, eventId: null }), "NO_SUCH_EVENT");
   assert.equal(w.sqlRows(`SELECT COUNT(*) AS n FROM duty_matches`)[0].n, 0, "refusals write nothing");
   w.at("2026-03-03T12:00:00.000Z");
-  const first = m({ eventId: evt("resp2"), reason: "the first reading" });
-  assert.deepEqual(first, { ok: true, duty_id: id, occurrence_key: k, event_id: evt("resp2"), exception: null, by: BOB,
+  const first = m({ eventId: X.resp2, reason: "the first reading" });
+  assert.deepEqual(first, { ok: true, duty_id: id, occurrence_key: k, event_id: X.resp2, exception: null, by: BOB,
                             at: "2026-03-03T12:00:00Z", reason: "the first reading" });
-  assert.equal(byRef(occ(w, id))[evt("req1")].state, "met_late");
+  assert.equal(byRef(occ(w, id))[X.req1].state, "met_late");
   w.at("2026-03-04T12:00:00.000Z");
   m({ by: CAROL, reason: "the earlier letter is the response" });
-  const now = byRef(occ(w, id))[evt("req1")];
+  const now = byRef(occ(w, id))[X.req1];
   assert.equal(now.state, "met");
   assert.equal(now.evidence[0].by, CAROL);
   assert.equal(now.evidence[0].corrects.length, 1, "the earlier act is kept and named");
   assert.equal(w.sqlRows(`SELECT COUNT(*) AS n FROM duty_matches`)[0].n, 2);
   /* as known on an earlier day, the earlier act governs, and before any act none does */
-  assert.equal(byRef(occ(w, id, "2026-03-03T18:00:00Z"))[evt("req1")].state, "met_late");
-  assert.equal(byRef(occ(w, id, "2026-03-02T18:00:00Z"))[evt("req1")].state, "overdue");
+  assert.equal(byRef(occ(w, id, "2026-03-03T18:00:00Z"))[X.req1].state, "met_late");
+  assert.equal(byRef(occ(w, id, "2026-03-02T18:00:00Z"))[X.req1].state, "overdue");
 });
 
 test("R12 registerOccurrenceEvidence: once per module; measured evidence read as a match and cited as such", () => {
@@ -182,16 +192,16 @@ test("R12 registerOccurrenceEvidence: once per module; measured evidence read as
   const seen = [];
   assert.equal(w.duties.registerOccurrenceEvidence("calculations", ({ duty, occurrence }) => {
     seen.push([duty.duty_id, occurrence.key]);
-    return occurrence.trigger.ref === evt("req2") ? [{ evidence: "CALC-2026-0001", when: "2026-02-20" }] : [];
+    return occurrence.trigger.ref === X.req2 ? [{ evidence: "CALC-2026-0001", when: "2026-02-20" }] : [];
   }).ok, true);
   assert.equal(w.duties.registerOccurrenceEvidence("calculations", () => []).reason, "LISTENER_DECLARED");
   w.duties.registerOccurrenceEvidence("workbooks", () => { throw new Error("no workbook"); });
   const r = byRef(occ(w, id));
-  assert.equal(r[evt("req2")].state, "met");
-  assert.deepEqual(r[evt("req2")].evidence[0], { kind: "measured", source: "calculations", evidence: "CALC-2026-0001", when: day("2026-02-20"),
+  assert.equal(r[X.req2].state, "met");
+  assert.deepEqual(r[X.req2].evidence[0], { kind: "measured", source: "calculations", evidence: "CALC-2026-0001", when: day("2026-02-20"),
                                                  says: "measured evidence, cited as such" });
-  assert.ok(r[evt("req1")].evidence.some((e) => e.source === "workbooks" && /no workbook/.test(e.error)));
-  assert.equal(r[evt("req1")].state, "overdue", "a source that throws is not a match");
+  assert.ok(r[X.req1].evidence.some((e) => e.source === "workbooks" && /no workbook/.test(e.error)));
+  assert.equal(r[X.req1].state, "overdue", "a source that throws is not a match");
   assert.ok(seen.length >= 3);
 });
 

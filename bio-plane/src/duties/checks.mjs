@@ -1,8 +1,8 @@
 /* duties' refusal rows (requirements: `build/requirements/duties.md`). DEC-49: every refusal this module answers
  * carries its code, its row and the member's translation. A new module: its rows are a new family, C-133 (the next
  * free after record-core's C-132; asked of BOB in J1), awaiting promotion's stamp (row-census, plan T33 Rules (9)).
- * `NO_SUCH_ENTITY` and `NO_ENTITY` are `entities`' (its R36, R37) and `NO_SUCH_STANDARD` is `standards'` (its R17):
- * answered through their one functions, never minted here. No translation names a place (R23). */
+ * `NO_SUCH_ENTITY` and `NO_ENTITY` are `entities`' (its R36, R37), `NO_SUCH_STANDARD` is `standards'` (its R17),
+ * `NO_SUCH_FACT` `money`'s and `NO_SUCH_EVENT` `events`' (K1569): answered through their one functions, never minted here. No translation names a place (R23). */
 
 const at = (fn, region) => `src/duties/index.mjs ${fn} > ${region}`;
 const row = (n, fn, region, translation) => Object.freeze({ check: `C-133.${n}`, where: at(fn, region), translation });
@@ -45,8 +45,7 @@ export const DUTIES_CHECKS = Object.freeze({
   HOLDS_AMOUNT: row(12, "fieldRefusal", "is-duty-amount",
     "An obligation never holds an amount of money. A payment it requires cites the money facts the record holds. "
     + "Remove the amount and cite the facts. Nothing was written."),
-  NO_SUCH_FACT: row(13, "fieldRefusal", "is-duty-fact",
-    "A money fact this obligation cites is not one the record holds. Nothing was written."),
+  /* C-133.13 NO_SUCH_FACT: retired (K1569); answered through money's `noSuchFact`. The id is never reused. */
   UNKNOWN_REPORTED_STATUS: row(14, "fieldRefusal", "is-duty-reported",
     "A reported status is quoted from a report or response, in the words the jurisdiction's response vocabulary "
     + "uses. This one is not in that vocabulary, or the active jurisdiction profiles hold none. Nothing was written."),
@@ -82,8 +81,7 @@ export const DUTIES_CHECKS = Object.freeze({
   NO_AS_OF: row(27, "occurrencesOf", "is-duty-as-of",
     "Whether an occurrence was met is answered as known on a stated day. Name the day (an instant). Nothing was "
     + "written."),
-  NO_SUCH_EVENT: row(28, "matchEvent", "is-duty-event",
-    "No event you can see answers to that id. Nothing was written."),
+  /* C-133.28 NO_SUCH_EVENT: retired (K1569); answered through events' `noSuchEvent`. The id is never reused. */
   NO_SUCH_OCCURRENCE: row(29, "matchEvent", "is-duty-occurrence",
     "No occurrence of this obligation answers to that key. Nothing was written."),
   UNKNOWN_STATE: row(30, "recordTransition", "is-duty-state",

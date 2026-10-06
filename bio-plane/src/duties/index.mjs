@@ -25,8 +25,13 @@ import { isMachineIdentity } from "../record-grammar/actors.mjs";
 import { canonicalJson, isHypothesisId, sha256HexSync, ISO_TS_RE } from "../record-grammar/index.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
-import { noSuchEntity, noEntity } from "../entities/index.mjs";
-import { noSuchStandard } from "../standards/index.mjs";
+import { noSuchEntity, noEntity, entitiesOf } from "../entities/index.mjs";
+import { noSuchStandard, standardsOf } from "../standards/index.mjs";
+import { noSuchEvent, eventsOf } from "../events/index.mjs";
+import { linesOf } from "../lines/index.mjs";
+import { noSuchFact, moneyOf } from "../money/index.mjs";
+import { provenanceOf } from "../provenance/index.mjs";
+import { contentOf } from "../content/index.mjs";
 import { OBSERVATION_LEVELS } from "../observation-log/index.mjs";
 import { compare, bounds, due as civilDue, overdueOn, expandRecurrence, isCalendarDate, validAt as civilValidAt } from "../civil-time/index.mjs";
 import { defaultRegistry, derivedId, BOUNDS } from "../connection-grammar/index.mjs";
@@ -117,6 +122,7 @@ function noSuchDuty(dutyId) {
 
 export class Duties {
   #sources = [];   /* R16: [{module, fn}] */
+  #deps = {};      /* the used modules' services, each an instance or a function answering it on first use */
   #evidence = [];  /* R12: [{module, fn}] */
 
   constructor({ storage, record, membership = null, entities = null, standards = null, events = null, lines = null,
@@ -126,13 +132,7 @@ export class Duties {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
-    this.entities = entities;
-    this.standards = standards;
-    this.events = events;
-    this.lines = lines;
-    this.money = money;
-    this.provenance = provenance;
-    this.content = content;
+    this.#deps = { entities, standards, events, lines, money, provenance, content };
     this.registry = registry;
     this.factOf = typeof factOf === "function" ? factOf : null;
     this.viewFn = typeof view === "function" ? view : null;
@@ -140,6 +140,15 @@ export class Duties {
     this.clockMs = typeof clockMs === "function" ? clockMs : () => Date.now();
     migrateDuties(this.sql);
   }
+
+  #dep(name) { const d = this.#deps[name]; return typeof d === "function" ? (this.#deps[name] = d()) : d ?? null; }
+  get entities() { return this.#dep("entities"); }
+  get standards() { return this.#dep("standards"); }
+  get events() { return this.#dep("events"); }
+  get lines() { return this.#dep("lines"); }
+  get money() { return this.#dep("money"); }
+  get provenance() { return this.#dep("provenance"); }
+  get content() { return this.#dep("content"); }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { return this.#rows(q, ...a)[0] || null; }
@@ -170,6 +179,7 @@ export class Duties {
   #whenOf(ev) {
     const w = ev && ev.when;
     if (w === null || w === undefined) return null;
+    if (w === "undetermined") return { undetermined: true, why: ev.why || "the event's date is undetermined (cache stale)" };
     if (isUndet(w)) return { undetermined: true, why: w.why || "the event's date is undetermined" };
     if (typeof w === "string" || (isObj(w) && typeof w.value === "string")) return this.#dt(w, isObj(w) && w.zone ? w.zone : this.#zone());
     if (isObj(w) && typeof w.start === "string") {
@@ -184,19 +194,19 @@ export class Duties {
   /* ---- other modules' services, each optional: an absent one answers null ---- */
   #entity(id) {
     if (!said(id) || !this.entities) return null;
-    try { const r = this.entities.readEntity({ entityId: id }); return r && r.ok && r.found ? r.entity : null; } catch { return null; }
+    try { const r = this.entities.readEntity({ entityId: id, viewer: SYSTEM_VIEWER }); return r && r.ok && r.found ? r.entity : null; } catch { return null; }
   }
   #standard(id, viewer = null) {
     if (!said(id) || !this.standards) return null;
-    try { const r = this.standards.standardRead({ id, viewer }); return r && r.ok !== false ? r : null; } catch { return null; }
+    try { const r = this.standards.standardRead({ id, viewer: viewer ?? SYSTEM_VIEWER }); return r && r.ok !== false ? r : null; } catch { return null; }
   }
   #event(id, viewer = null) {
     if (!said(id) || !this.events) return null;
-    try { const r = this.events.readEvent({ eventId: id, viewer }); return r && r.ok !== false && r.found !== false ? (r.event || r) : null; } catch { return null; }
+    try { const r = this.events.readEvent({ eventId: id, viewer: viewer ?? SYSTEM_VIEWER }); return r && r.ok !== false && r.found !== false ? (r.event || r) : null; } catch { return null; }
   }
   #fact(id, viewer = null) {
     if (!said(id) || !this.money) return null;
-    try { const r = this.money.readFact({ factId: id, viewer }); return r && r.ok !== false && r.found !== false ? (r.fact || r) : null; } catch { return null; }
+    try { const r = this.money.readFact({ factId: id, viewer: viewer ?? SYSTEM_VIEWER }); return r && r.ok !== false && r.found !== false ? (r.fact || r) : null; } catch { return null; }
   }
   #isPublic(e) {
     if (!e) return false;
@@ -268,9 +278,7 @@ export class Duties {
     const a = this.#amountRefusal(f);
     if (a) return a;
     for (const id of Array.isArray(f.performance.money_facts) ? f.performance.money_facts : []) {
-      /* DEC-49 REGION is-duty-fact */
-      if (!this.#fact(id)) return refusal("NO_SUCH_FACT", "a cited money fact is not held.", { fact: typeof id === "string" ? id.slice(0, 80) : null });
-      /* END DEC-49 REGION is-duty-fact */
+      if (!this.#fact(id)) return noSuchFact(typeof id === "string" ? id.slice(0, 80) : null);
     }
     if (f.arising_in !== undefined && f.arising_in !== null) {
       const ai = f.arising_in;
@@ -303,7 +311,7 @@ export class Duties {
   #actingFor(entity) {
     if (!this.lines) return null;
     let r;
-    try { r = this.lines.linesOf({ entity, kinds: [...ACTING_LINES], direction: "both", limit: LIST_MAX }); } catch { return null; }
+    try { r = this.lines.linesOf({ entity, kinds: [...ACTING_LINES], direction: "both", limit: LIST_MAX, viewer: SYSTEM_VIEWER }); } catch { return null; }
     const lines = r && Array.isArray(r.lines) ? r.lines : r && Array.isArray(r.items) ? r.items : [];
     for (const l of lines) {
       if (!l || l.withdrawn || !ACTING_LINES.includes(l.kind)) continue;
@@ -324,7 +332,7 @@ export class Duties {
       if (!std) return noSuchStandard(said(src.standard) ? src.standard : null);
       if (src.kind === "court" && std.kind !== "court")
         return refusal("UNKNOWN_SOURCE_KIND", "a court source names a standard of kind court (an order, decree, or recommendation held as one).");
-      const held = said(std.portion) ? std.portion : null;
+      const held = said(std.portion) ? std.portion : std.portion && said(std.portion.path) ? std.portion.path : null;
       /* DEC-49 REGION is-duty-portion */
       if (src.portion !== undefined && src.portion !== null
           && (!said(src.portion) || (held && src.portion !== held && !src.portion.startsWith(`${held}/`))))
@@ -332,7 +340,7 @@ export class Duties {
       /* END DEC-49 REGION is-duty-portion */
       if (src.version !== undefined && src.version !== null) {
         const v = this.#standard(src.version);
-        const key = (x) => (x && said(x.instrument) ? x.instrument : null);
+        const key = (x) => (!x ? null : said(x.instrument) ? x.instrument : x.instrument && said(x.instrument.key) ? x.instrument.key : null);
         /* DEC-49 REGION is-duty-version */
         if (!v || (key(std) ? key(std) !== key(v) : src.version !== src.standard))
           return refusal("VERSION_NOT_HELD", "the version named is not a held version of the standard's instrument.", { version: said(src.version) ? src.version.slice(0, 80) : null });
@@ -709,8 +717,10 @@ export class Duties {
     };
     if (t.kind === "event") {
       let r = null;
-      try { r = this.events ? this.events.eventsFor({ entity: t.entity, kinds: [t.event_kind], from, to, limit: LIST_MAX, viewer }) : null; } catch (e) { errors.push({ source: "events", error: String(e && e.message || e).slice(0, 200) }); }
-      const evs = r ? (Array.isArray(r.events) ? r.events : Array.isArray(r.items) ? r.items : []) : [];
+      try { r = this.events ? this.events.eventsFor({ entity: t.entity, kinds: [t.event_kind], from, to, limit: LIST_MAX, viewer: viewer === INTERNAL || !viewer ? SYSTEM_VIEWER : viewer }) : null; } catch (e) { errors.push({ source: "events", error: String(e && e.message || e).slice(0, 200) }); }
+      const evs = r ? [...(Array.isArray(r.events) ? r.events : Array.isArray(r.items) ? r.items : []),
+                       ...(Array.isArray(r.placed_nowhere) ? r.placed_nowhere : [])] : [];
+      if (r && r.truncated) errors.push({ source: "events", error: `the events read stopped at its bound of ${r.limit ?? LIST_MAX}`, truncated: true });
       if (!this.events) errors.push({ source: "events", error: "the events service is not available" });
       for (const ev of evs) {
         if (ev.kind !== undefined && ev.kind !== t.event_kind) continue;
@@ -898,11 +908,8 @@ export class Duties {
     const fields = this.#fieldsOf(d.duty_id, d.version);
     const exception = b.exception === undefined || b.exception === null ? null : Number(b.exception);
     if (exception !== null && !(Number.isInteger(exception) && exception >= 0 && exception < (fields.exceptions || []).length))
-      return refusal("NO_SUCH_EVENT", "the exception named is not one the obligation holds.", { exception: b.exception });
-    /* DEC-49 REGION is-duty-event */
-    if (exception === null && !this.#event(b.eventId, b.viewer ?? null))
-      return refusal("NO_SUCH_EVENT", "no event you can see answers to that id.", { event_id: said(b.eventId) ? b.eventId.slice(0, 80) : null });
-    /* END DEC-49 REGION is-duty-event */
+      return noSuchEvent(null, { exception: b.exception });
+    if (exception === null && !this.#event(b.eventId, b.viewer ?? null)) return noSuchEvent(said(b.eventId) ? b.eventId.slice(0, 80) : null);
     const at = this.#stamp();
     /* DEC-49 REGION is-duty-occurrence */
     if (!said(b.occurrenceKey) || !this.#occurrenceAt(d, fields, b.occurrenceKey, at))
@@ -1029,7 +1036,7 @@ export class Duties {
         if (!isObj(x)) return null;
         const std = x.standard ? this.#standard(x.standard, b.viewer) : null;
         return { kind: x.kind ?? null, standard: x.standard ?? null, portion: x.portion ?? null, cite: std ? std.cite ?? null : null,
-                 instrument: std ? std.instrument ?? null : null };
+                 instrument: !std ? null : said(std.instrument) ? std.instrument : std.instrument && std.instrument.key ? std.instrument.key : null };
       };
       const item = { duty_id: d.duty_id, performance: fields.performance, instrument: instrument(fields.source),
                      delegation: fields.delegation ? instrument(fields.delegation) : null, in_force: inForce };
@@ -1066,7 +1073,7 @@ export class Duties {
     const items = [], undetermined = [];
     for (const ent of scope) {
       let r;
-      try { r = this.money.moneyOf({ entity: ent, period: b.period ?? null, limit: LIST_MAX, viewer: b.viewer }); } catch (e) { undetermined.push({ entity: ent, why: String(e && e.message || e).slice(0, 200) }); continue; }
+      try { r = this.money.moneyOf({ entity: ent, period: b.period ?? null, limit: LIST_MAX, viewer: b.viewer ?? SYSTEM_VIEWER }); } catch (e) { undetermined.push({ entity: ent, why: String(e && e.message || e).slice(0, 200) }); continue; }
       for (const f of r && Array.isArray(r.facts) ? r.facts : r && Array.isArray(r.items) ? r.items : []) {
         if (terms.includes(f.fact_id)) continue;
         for (const t of termFacts) {
@@ -1083,6 +1090,8 @@ export class Duties {
   /* calc-grammar's comparison of two money facts' figures (its R10): a labelled computed fact. */
   static #compareFacts(a, b) {
     const fig = (f) => {
+      if (isObj(f.amount)) return { precision: "range", sign: f.sign === "-" ? "-" : "+", low: String(f.amount.low), high: String(f.amount.high),
+                                    ...(f.currency ? { currency: f.currency } : {}) };
       const amt = String(f.amount ?? "");
       const neg = amt.startsWith("-") || f.sign === "-";
       const abs = amt.replace(/^[+-]/, "");
@@ -1160,6 +1169,10 @@ export class Duties {
   }
 }
 
+/** The stamp duties' own reads of other modules carry when no member is reading (a machine credential sees every bundle,
+ *  membership R43): the R1 checks at an act, and the scheduler's consumer. A member's read passes the member's own. */
+const SYSTEM_VIEWER = "class:daemon";
+
 /** The viewer an internal caller (the scheduler's consumer) reads as: every duty, nothing fenced. Never sent by a
  *  route: the ops map always passes the control plane's stamp. */
 export const INTERNAL = Symbol("duties-internal-reader");
@@ -1219,7 +1232,19 @@ export function dutiesOf(host, deps) {
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
-    s = new Duties({ ...d, storage, record, membership });
+    /* K1563 (1): the real modules by default, each reached on first use on the same host */
+    const real = {
+      entities: () => entitiesOf(host, { record, membership }),
+      standards: () => standardsOf(host, { record, membership }),
+      events: () => eventsOf(host, { record, membership }),
+      lines: () => linesOf(host, { record }),
+      money: () => moneyOf(host, { record, membership }),
+      provenance: () => provenanceOf(host, { record, membership }),
+      content: () => contentOf(host, { record, membership }),
+    };
+    const pick = (k) => (d[k] !== undefined ? d[k] : real[k]);
+    s = new Duties({ ...d, storage, record, membership, entities: pick("entities"), standards: pick("standards"), events: pick("events"),
+                     lines: pick("lines"), money: pick("money"), provenance: pick("provenance"), content: pick("content") });
     instances.set(host, s);
     if (s.registry === defaultRegistry) live.add(s);   /* the plane's instances, which the default registry serves */
     record.declareTable(MODULE, DUTIES_TABLES.map((t) => ({ ...t })));

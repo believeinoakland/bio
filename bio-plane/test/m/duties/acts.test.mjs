@@ -44,17 +44,18 @@ test("R1 refusals for a duty's fields, in order, each writing nothing, with a pa
   row(d({ obligor: E.private, enforcer: E.auditor }), "NOT_ACTING_FOR_PUBLIC");
   /* the source */
   row(d({ source: { kind: "rumour" } }), "UNKNOWN_SOURCE_KIND");
+  const law = w.fields().source.standard;
   row(d({ source: { kind: "standard", standard: "STD-2026-0099-none" } }), "NO_SUCH_STANDARD");
-  row(d({ source: { kind: "standard", standard: "STD-2026-0001-records-law", portion: "s9999" } }), "NO_PORTION");
-  assert.equal(d({ source: { kind: "standard", standard: "STD-2026-0001-records-law", portion: "s7922/a" } }).ok, true);
-  w.standard("STD-2026-0002-records-law", { portion: "s7922", instrument: "fiction/code/STD-2026-0001-records-law" });
-  w.standard("STD-2026-0003-other", { portion: "s1" });
-  row(d({ source: { kind: "standard", standard: "STD-2026-0001-records-law", version: "STD-2026-0003-other" } }), "VERSION_NOT_HELD");
-  row(d({ source: { kind: "standard", standard: "STD-2026-0001-records-law", version: "STD-2026-0099-none" } }), "VERSION_NOT_HELD");
-  assert.equal(d({ source: { kind: "standard", standard: "STD-2026-0001-records-law", version: "STD-2026-0002-records-law" } }).ok, true);
-  row(d({ source: { kind: "court", standard: "STD-2026-0001-records-law" } }), "UNKNOWN_SOURCE_KIND", "a court source names a court standard");
-  w.standard("STD-2026-0004-decree", { kind: "court" });
-  assert.equal(d({ source: { kind: "court", standard: "STD-2026-0004-decree" } }).ok, true);
+  row(d({ source: { kind: "standard", standard: law, portion: "s9999" } }), "NO_PORTION");
+  assert.equal(d({ source: { kind: "standard", standard: law, portion: "s7922/a" } }).ok, true);
+  const later = w.standard({ period: { from: "2027-01-01", to: "2099-12-31" } });   /* the same section's later version */
+  const other = w.standard({ cite: "Test Code § 1", portion: "s1" });
+  row(d({ source: { kind: "standard", standard: law, version: other } }), "VERSION_NOT_HELD");
+  row(d({ source: { kind: "standard", standard: law, version: "STD-2026-0099-none" } }), "VERSION_NOT_HELD");
+  assert.equal(d({ source: { kind: "standard", standard: law, version: later } }).ok, true);
+  row(d({ source: { kind: "court", standard: law } }), "UNKNOWN_SOURCE_KIND", "a court source names a court standard");
+  const decree = w.standard({ kind: "court", cite: "Decree ¶ 4", portion: null });
+  assert.equal(d({ source: { kind: "court", standard: decree } }).ok, true);
   assert.equal(d({ source: { kind: "practice", statement: "posted within a week, measured" } }).ok, true);
   assert.equal(d({ source: { kind: "dependency", why: "the budget must precede its year" } }).ok, true);
   /* the trigger */
@@ -71,16 +72,18 @@ test("R1 refusals for a duty's fields, in order, each writing nothing, with a pa
   /* amounts: never held; a pay duty cites money facts */
   row(d({ performance: { act: "pay the grant", amount: "5000.00" } }), "HOLDS_AMOUNT");
   row(d({ performance: { act: "pay", terms: [{ total: "1" }] } }), "HOLDS_AMOUNT");
-  row(d({ performance: { act: "pay the grant", money_facts: [mny("nope")] } }), "NO_SUCH_FACT");
-  w.fact(mny("grant"), { amount: "5000.00", kind: "allocation" });
-  assert.equal(d({ performance: { act: "pay the grant", money_facts: [mny("grant")] } }).ok, true);
+  const nope = d({ performance: { act: "pay the grant", money_facts: [mny("nope")] } });
+  assert.deepEqual([nope.reason, nope.check], ["NO_SUCH_FACT", undefined], "money's one answer (K1569)");
+  assert.equal(nope.fact_id, mny("nope"));
+  const grant = w.fact({ amount: "5000.00" });
+  assert.equal(d({ performance: { act: "pay the grant", money_facts: [grant] } }).ok, true);
   /* the reported status, from the profile's response vocabulary only */
-  w.rows.set("c1", { content_id: "c1", bundle_id: null });
-  row(d({ reported_status: [{ status: "done", extent: "c1" }] }), "UNKNOWN_REPORTED_STATUS");
-  assert.equal(d({ reported_status: [{ status: "implemented", extent: "c1" }] }).ok, true);
+  const c1 = w.passage().contentId;
+  row(d({ reported_status: [{ status: "done", extent: c1 }] }), "UNKNOWN_REPORTED_STATUS");
+  assert.equal(d({ reported_status: [{ status: "implemented", extent: c1 }] }).ok, true);
   const bare = world({ view: fictionalView({ response_statuses: undefined }) });
-  bare.rows.set("c1", { content_id: "c1", bundle_id: null });
-  const none = bare.duties.declare({ ...bare.fields({ reported_status: [{ status: "implemented", extent: "c1" }] }), clause: "c", by: BOB });
+  const bc = bare.passage().contentId;
+  const none = bare.duties.declare({ ...bare.fields({ reported_status: [{ status: "implemented", extent: bc }] }), clause: "c", by: BOB });
   row(none, "UNKNOWN_REPORTED_STATUS");
   assert.match(none.detail, /hold no response vocabulary/);
   /* nothing refused was written: count the accepted ones */
@@ -140,24 +143,18 @@ test("R3 a declaration is its adoption: DUT-<year>-NNNN with who, when and the c
 
 test("R4 a duty arising in a proceeding or report names it, and carries reported statuses only as quotes of cited extents", () => {
   const w = world();
-  const sha = SHA("grand jury report");
-  w.homes.set(sha, null);
-  w.rows.set("c-resp", { content_id: "c-resp", bundle_id: null });
+  const report = w.passage("grand-jury-report");          /* a captured report, held in its bundle */
+  const response = w.passage("response");                 /* the body's response: its quoted passage */
   row(w.declare({ arising_in: ent(55) }), "ARISING_IN_NOT_HELD");
   row(w.declare({ arising_in: E.clerk }), "ARISING_IN_NOT_HELD", "an entity that is not a proceeding");
-  row(w.declare({ arising_in: sha }), "ARISING_IN_NOT_HELD", "a capture the record does not hold");
-  row(w.declare({ arising_in: E.case, reported_status: [{ status: "implemented", extent: "c-none" }] }), "EXTENT_NOT_HELD");
-  const a = w.declare({ arising_in: E.case, reported_status: [{ status: "will_not_implement", extent: "c-resp" }] });
+  row(w.declare({ arising_in: SHA("a capture never held") }), "ARISING_IN_NOT_HELD", "a capture the record does not hold");
+  row(w.declare({ arising_in: E.case, reported_status: [{ status: "implemented", extent: SHA("no such passage") }] }), "EXTENT_NOT_HELD");
+  const a = w.declare({ arising_in: E.case, reported_status: [{ status: "will_not_implement", extent: response.contentId }] });
   assert.equal(a.ok, true);
-  w.homes.set(sha, "INFO-2026-0001-report");
-  w.record.transact(() => w.record.commit({ bundleId: "INFO-2026-0001-report", type: "information", title: "r", project: null, snapKey: "s0",
-    kind: "promotion", base: SHA(""), author: "x", writer: null, operation: null, files: [{ path: "bundle.md", text: "x", sha256: SHA("x"), bytes: 1 }],
-    state: "collected", priorState: null, group: "g", created: "2026-01-01T00:00:00Z", lastUpdated: "2026-01-01T00:00:00Z", criticality: null,
-    at: "2026-01-01T00:00:00Z" }));
-  assert.equal(w.declare({ arising_in: sha }).ok, true);
+  assert.equal(w.declare({ arising_in: report.capSha }).ok, true);
   const d = w.duties.readDuty({ dutyId: a.duty_id, viewer: BOB }).duty;
   assert.equal(d.arising_in, E.case);
-  assert.deepEqual(d.reported_status, [{ status: "will_not_implement", extent: "c-resp" }],
+  assert.deepEqual(d.reported_status, [{ status: "will_not_implement", extent: response.contentId }],
     "the status is the quote's, from the vocabulary, with its extent; nothing in the record's own words");
 });
 
@@ -166,10 +163,10 @@ test("R5 a profile deadline is held as a generic duty of the office the rule nam
   const sent = [{ ref: "ACT-2026-0001-request", date: "2026-02-02", label: "records request sent" },
                 { ref: "ACT-2026-0002-request", date: "2026-02-20", label: "second request" }];
   w.duties.registerTriggerSource("actions", ({ duty }) => (duty.obligor === E.clerk ? sent : []));
-  w.standard("STD-2026-0001-records-law", { portion: "s7922" });
+  const law = w.standard();
   row(w.duties.proposeFromRule({ rule: "no_such_rule", office: E.clerk, by: MACHINE }), "BAD_TIME");
   const p = w.duties.proposeFromRule({ rule: "records_response", applies_to: "records_request", office: E.clerk, obligee: E.group,
-    source: { kind: "standard", standard: "STD-2026-0001-records-law", portion: "s7922" }, trigger_source: "actions", by: MACHINE });
+    source: { kind: "standard", standard: law, portion: "s7922" }, trigger_source: "actions", by: MACHINE });
   assert.equal(p.ok, true);
   assert.equal(p.label.machine_work, true);
   const a = w.duties.adopt({ proposalId: p.proposal_id, clause: "the agency asked responds within 10 days", by: BOB });
@@ -225,7 +222,8 @@ test("R7 readDuty answers every field, its versions, proposal, adoption and in_f
   for (const k of ["duty_id", "modality", "obligor", "obligee", "performance", "source", "trigger", "time", "exceptions", "enforcer", "observed_by",
                    "version", "versions", "proposal", "adoption", "withdrawn", "in_force"])
     assert.ok(k in d, k);
-  assert.deepEqual(d.in_force, { date: "2026-03-01", state: "in_force", why: "within its period" });
+  assert.deepEqual([d.in_force.date, d.in_force.state], ["2026-03-01", "in_force"]);
+  assert.match(d.in_force.why, /lies within the period in force/);
   assert.equal(d.words, "obligation");
   for (let i = 0; i < 4; i++) w.declare({ obligee: E.council });
   assert.equal(w.duties.dutiesOf({ entity: E.clerk, viewer: BOB }).count, 4);
@@ -245,20 +243,21 @@ test("R7 readDuty answers every field, its versions, proposal, adoption and in_f
 
 test("R8 in_force is derived on each read, never stored: a standard's or court's through standards.inForceAt; practice and dependency held as such", () => {
   const w = world();
-  w.standard("STD-2026-0005-old", { period: { from: "2000-01-01", to: "2025-12-31" } });
-  w.standard("STD-2026-0006-open", { period: { from: "2020-01-01", to: null } });
-  const old = w.declare({ source: { kind: "standard", standard: "STD-2026-0005-old" } });
-  const open = w.declare({ source: { kind: "standard", standard: "STD-2026-0006-open" } });
+  const oldStd = w.standard({ period: { from: "2000-01-01", to: "2025-12-31" } });
+  const openStd = w.standard({ cite: "Test Code § 8", period: { from: "2020-01-01", to: null } });
+  const old = w.declare({ source: { kind: "standard", standard: oldStd } });
+  const open = w.declare({ source: { kind: "standard", standard: openStd } });
   const prac = w.declare({ source: { kind: "practice", statement: "minutes posted within a week, measured over a year" } });
   const dep = w.declare({ source: { kind: "dependency", why: "the report precedes the vote" } });
   const f = (id, at) => w.duties.readDuty({ dutyId: id, viewer: BOB, at }).duty.in_force;
-  assert.deepEqual(f(old.duty_id, "2025-06-01"), { date: "2025-06-01", state: "in_force", why: "within its period" });
-  assert.deepEqual(f(old.duty_id, "2026-06-01"), { date: "2026-06-01", state: "not_in_force", why: "after 2025-12-31" });
-  assert.deepEqual(f(open.duty_id, "2026-06-01"), { date: "2026-06-01", state: "undetermined", why: "no end is stated" }, "an undetermined answer carries its reason");
+  assert.deepEqual([f(old.duty_id, "2025-06-01").state, f(old.duty_id, "2025-06-01").date], ["in_force", "2025-06-01"]);
+  assert.equal(f(old.duty_id, "2026-06-01").state, "not_in_force");
+  const u = f(open.duty_id, "2026-06-01");
+  assert.equal(u.state, "undetermined");
+  assert.match(u.why, /does not state when it ceased to be in force/, "an undetermined answer carries its reason");
   assert.equal(f(prac.duty_id, "2026-06-01").state, "held as practice");
   assert.equal(f(dep.duty_id, "2026-06-01").state, "held as a dependency");
-  /* never stored: no column or field holds it, and a changed period moves the answer */
+  /* never stored: no column holds it, and no version holds it in its fields */
   assert.ok(!w.sqlRows(`PRAGMA table_info(duties)`).some((c) => /in_?force/.test(c.name)));
-  w.stds.get("STD-2026-0005-old").period.to = "2030-12-31";
-  assert.equal(f(old.duty_id, "2026-06-01").state, "in_force");
+  assert.ok(w.sqlRows(`SELECT fields_json FROM duty_versions`).every((r) => !/in_force|not_in_force/.test(r.fields_json)));
 });

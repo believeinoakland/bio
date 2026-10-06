@@ -18,11 +18,11 @@ const row = (r, code) => {
    no end stated: undetermined) and D (inside bob's project: fenced from carol). */
 function owners() {
   const w = world();
-  w.project("PROJ-2026-0001-inquiry", "bob");
+  const P = w.project("bob");
   const at = (iso, f) => { w.at(iso); return f(); };
   const A = at("2026-01-10T12:00:00.000Z", () => w.declare().duty_id);
   const C = at("2026-01-15T12:00:00.000Z", () => w.declare().duty_id);
-  const D = at("2026-01-20T12:00:00.000Z", () => w.declare({ project: "PROJ-2026-0001-inquiry" }).duty_id);
+  const D = at("2026-01-20T12:00:00.000Z", () => w.declare({ project: P }).duty_id);
   const B = at("2026-04-01T12:00:00.000Z", () => w.declare().duty_id);
   at("2026-06-01T12:00:00.000Z", () => { w.duties.withdraw({ dutyId: A, reason: "repealed", by: BOB }); w.duties.withdraw({ dutyId: D, reason: "repealed", by: BOB }); });
   return { w, A, B, C, D };
@@ -43,18 +43,18 @@ test("R18 the module registers once as a connection owner, and its neighbours pa
   const viaReg = w.registry.neighbours({ owner: "duties", node: E.group, kinds: ["owed_to"], at: AT, viewer: BOB, scope: null });
   assert.deepEqual(viaReg.items.map((i) => [i.id, i.from, i.to]), [[`${A}:owed_to`, A, E.group], [`${C}:owed_to`, C, E.group], [`${D}:owed_to`, D, E.group]]);
   assert.equal(w.registry.neighbours({ owner: "duties", node: E.group, kinds: ["owed_to"], at: AT, viewer: CAROL, scope: null }).items.length, 2);
-  w.event(evt("req"), { kind: "communication", when: { value: "2026-02-02", precision: "day", zone: ZONE }, concerns: [E.clerk] });
-  w.event(evt("resp"), { kind: "communication", when: { value: "2026-02-05", precision: "day", zone: ZONE }, concerns: [E.group] });
+  w.event({ value: { value: "2026-02-02", precision: "day", zone: ZONE }, concerns: [E.clerk] });
+  const resp = w.event({ value: { value: "2026-02-05", precision: "day", zone: ZONE }, concerns: [E.group] });
   w.at("2026-02-20T12:00:00.000Z");
   const e = w.declare({ trigger: { kind: "event", event_kind: "communication", entity: E.clerk } }).duty_id;
   const key = w.duties.occurrencesOf({ dutyId: e, asOf: "2026-02-20T12:00:00Z", viewer: BOB }).occurrences[0].key;
-  w.duties.matchEvent({ dutyId: e, occurrenceKey: key, eventId: evt("resp"), reason: "the reply", by: BOB });
-  const met = w.registry.neighbours({ owner: "duties", node: evt("resp"), kinds: ["met_by"], at: AT, viewer: BOB, scope: null });
+  w.duties.matchEvent({ dutyId: e, occurrenceKey: key, eventId: resp, reason: "the reply", by: BOB });
+  const met = w.registry.neighbours({ owner: "duties", node: resp, kinds: ["met_by"], at: AT, viewer: BOB, scope: null });
   assert.equal(met.items.length, 1);
   const m = met.items[0];
-  assert.equal(m.id, derivedId({ kind: "met_by", from: e, to: evt("resp"), as_of: "2026-03-01", method: m.derived.method }));
+  assert.equal(m.id, derivedId({ kind: "met_by", from: e, to: resp, as_of: "2026-03-01", method: m.derived.method }));
   assert.equal(w.registry.checkConnection(m).ok, true);
-  assert.equal(w.registry.neighbours({ owner: "duties", node: evt("resp"), kinds: ["met_by"], at: { ...AT, value: "2026-02-01" }, viewer: BOB, scope: null }).items.length, 0,
+  assert.equal(w.registry.neighbours({ owner: "duties", node: resp, kinds: ["met_by"], at: { ...AT, value: "2026-02-01" }, viewer: BOB, scope: null }).items.length, 0,
     "as of a day before the match, it is not met by the event");
   assert.equal(w.duties.neighbours({ node: E.clerk, at: AT }).refused, "VIEWER_MISSING");
 });
@@ -80,6 +80,19 @@ test("R18 the read registered at load takes an optional host, else the isolate's
   assert.equal(ask({ host: two.host }).items.length, 2);
   assert.equal(ask({ host: {} }).refused, "OWNER_HOST_AMBIGUOUS", "a host with no duties instance");
   assert.equal(defaultRegistry.owners().filter((o) => o.owner === "duties").length, 1, "registered once");
+});
+
+test("R19 with no service injected, duties reaches the real modules through their factories on its host (K1563 (1))", () => {
+  const none = { entities: undefined, standards: undefined, events: undefined, lines: undefined, money: undefined, provenance: undefined, content: undefined };
+  const w = world({ deps: none });
+  for (const k of Object.keys(none)) assert.equal(typeof w.duties[k], "object", k);
+  assert.equal(w.duties.events.constructor.name, "Events");
+  assert.equal(w.duties.money.constructor.name, "Money");
+  const req = w.event({ value: { value: "2026-02-02", precision: "day", zone: ZONE }, concerns: [E.clerk] });
+  const a = w.declare({ trigger: { kind: "event", event_kind: "communication", entity: E.clerk } });
+  assert.equal(a.ok, true, JSON.stringify(a).slice(0, 300));
+  const o = w.duties.occurrencesOf({ dutyId: a.duty_id, asOf: "2026-03-02T12:00:00Z", viewer: BOB }).occurrences;
+  assert.deepEqual(o.map((x) => [x.trigger.ref, x.due.date.value, x.state]), [[req, "2026-02-12", "overdue"]]);
 });
 
 test("R19 dutiesOps publishes one route arm per act and read, with the control plane's stamps from the query, never the body", () => {
@@ -121,8 +134,7 @@ test("R20 the duties and transitions tables are a stated read contract; every wr
   assert.deepEqual(w.sqlRows(`SELECT duty_id, modality, obligor, obligee, version FROM duties WHERE obligor=?`, E.clerk),
     [{ duty_id: "DUT-2026-0001", modality: "duty", obligor: E.clerk, obligee: E.group, version: 1 }]);
   /* arising_in (K1563): the capture the duty's source item rests on, else null; it follows a revision */
-  const sha = SHA("audit report");
-  w.homes.set(sha, "INFO-2026-0009-audit");
+  const sha = w.passage("audit-report").capSha;
   const a = w.declare({ arising_in: sha });
   const p = w.declare({ arising_in: E.case });
   const col = (id) => w.sqlRows(`SELECT arising_in FROM duties WHERE duty_id=?`, id)[0].arising_in;
@@ -154,9 +166,9 @@ test("R21 one home per fact at the store's gate: no amount, no HYP- id, no store
 
 test("R22 sight: a duty inside a hidden project stays fenced and uncounted; the tables are declared through record-core.declareTable", () => {
   const w = world();
-  w.project("PROJ-2026-0002-private", "bob");
+  const P = w.project("bob");
   const open = w.declare();
-  const fenced = w.declare({ project: "PROJ-2026-0002-private" });
+  const fenced = w.declare({ project: P });
   assert.equal(w.duties.readDuty({ dutyId: fenced.duty_id, viewer: BOB }).found, true);
   assert.deepEqual(w.duties.readDuty({ dutyId: fenced.duty_id, viewer: CAROL }), { ok: true, found: false, duty_id: fenced.duty_id });
   assert.equal(w.duties.readDuty({ dutyId: open.duty_id, viewer: CAROL }).found, true);
@@ -173,7 +185,7 @@ test("R22 sight: a duty inside a hidden project stays fenced and uncounted; the 
   for (const d of declared) assert.deepEqual([d.purge, d.expunge, d.derive], ["clear", "none", "stored"]);
   assert.deepEqual(declared.map((d) => d.sight), DUTIES_TABLES.map(() => "source"));
   /* transitions are never purged but with their duty: a bundle's purge leaves them, the whole-store purge takes both */
-  w.record.purge({ bundleId: "PROJ-2026-0002-private" });
+  w.record.purge({ bundleId: P });
   assert.equal(w.sqlRows(`SELECT COUNT(*) AS n FROM duty_transitions`)[0].n, 2);
   w.record.purge({});
   for (const t of DUTIES_TABLES) assert.equal(w.sqlRows(`SELECT COUNT(*) AS n FROM ${t.name}`)[0].n, 0, t.name);
