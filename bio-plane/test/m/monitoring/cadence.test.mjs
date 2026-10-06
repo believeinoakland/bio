@@ -369,3 +369,30 @@ test("R18 an authored frequency and an address's own are never lengthened, whate
   const back = w.m.schedule(NOW_MS).scheduled.concat(w.m.schedule(NOW_MS).due).find((r) => r.bundle === "INFO-2026-0421-own");
   assert.deepEqual([back.frequency_source, back.volatility.unchanged_checks, back.volatility.step, back.frequency], ["contract", 25, 1, "monthly"]);
 });
+
+test("R15 (K1484 C2 row 11) an address may be a public register's own query for one identifier a member names for a person: it is watched as any address is, its answer captured and compared, and the tick fetches that query alone, following no link out of its answer and searching nowhere else; what a caller adds never names what is fetched", async () => {
+  const w = world();
+  const id = "INFO-2026-0700-filer";
+  const query = "https://register.example.org/lookup?filer_id=1234567";
+  /* the answer links out: to the person's other filings, a search by name, and another register */
+  const answer = (v) => `<html><body><h1>Filer 1234567</h1><p>${v}</p>`
+    + `<a href="https://register.example.org/person?name=Jane+Doe">Jane Doe</a>`
+    + `<a href="https://register.example.org/lookup?filer_id=7654321">related filer</a>`
+    + `<a href="https://other-register.example.net/search?q=Jane+Doe">elsewhere</a></body></html>`;
+  w.monitored(id, query, answer("statement of 2026-09-01"), { freq: "daily" });
+  w.net.routes[query] = serve(answer("statement of 2026-09-01"), "text/html");
+  /* the query is one subject of the plan, an address like any other */
+  const row = w.m.monitoring({ viewer: DAEMON, now: NOW_MS }).items.find((r) => r.bundle === id);
+  assert.deepEqual([row.state, row.frequency], ["due", "daily"]);
+  const t = await w.m.cadenceTick(NOW_MS);
+  assert.deepEqual(t.ticked.map((x) => [x.bundle, x.status]), [[id, "unchanged"]], "compared, as any address");
+  assert.deepEqual(w.net.seen, [query], "the query alone: no link out of its answer was followed");
+  /* the answer changes: it is captured and compared, and still nothing else is fetched */
+  w.net.seen.length = 0;
+  w.net.routes[query] = serve(answer("statement of 2026-10-01"), "text/html");
+  const r = await w.m.monitor({ bundleId: id, viewer: DAEMON, actorClass: "machine", actor: DAEMON,
+                                person: "Jane Doe", name: "Jane Doe", locator: "https://other-register.example.net/search?q=Jane+Doe" });
+  assert.deepEqual([r.body.status, r.body.capture.registered, r.body.capture.fetched_address], ["modified", true, query]);
+  assert.deepEqual(w.net.seen, [query], "a caller's person, name or locator names nothing fetched (R36)");
+  assert.equal(w.looks().at(-1).subject, query, "the look is about the query's address");
+});
