@@ -13,7 +13,6 @@ import { promotionOf } from "../../../src/promotion/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
 import { standardsOf } from "../../../src/standards/index.mjs";
 import { eventsOf } from "../../../src/events/index.mjs";
-import { readHooksOf } from "../../../src/reading-pipeline/hooks.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/frontmatter.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 import { EXTRACTION_SCHEMA } from "../../../src/extraction/schema.mjs";
@@ -127,9 +126,9 @@ export function world({ now = NOW, profiles = [TEST_PROFILE], written = [], cons
   content.migrate();
   if (profiles !== null) record.setSetting("jurisdiction_profiles", profiles, "admin");
   const byId = new Map(written.map((p) => [p.id, p]));
-  /* the real events module over the same host (K1574); `events: "none"` wires none, to show what standards answers then */
+  /* the real events module over the same host (K1574), with no reading hook (standards reads no reading-pipeline); `events: "none"` wires none, to show what standards answers then */
   const ev = events === "none" ? null : events || eventsOf(host, { record, membership, content, extraction, provenance: prov,
-                                                                   readHooks: readHooksOf(host), now: () => clock.now });
+                                                                   readHooks: {}, now: () => clock.now });
   if (ev && ev !== events) ev.migrate();
   /* R16: the instance is constructed and never migrated by its caller. `construct: false` leaves it to the test. */
   const build = () => standardsOf(host, { record, membership, promotion, content, now: () => clock.now,
