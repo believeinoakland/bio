@@ -214,7 +214,7 @@ None: answered by Bob 2026-09-26 (K102).
 2. `testimonyReach` is `basis-versions`' (K94); this module calls it for R17.
 3. `#memberTextAtSha` becomes `record-core`'s `textAtSha` (K94); R2 and `ratification` read it.
 4. `#findingsExportPerformed` (N-1) is `queue`'s, reading R19 (K94), now `corpus-export` R2 (K1024).
-5. The case-document formats and their three predicates (bio-checks 11402–11460) are this module's (R20): `#caseDocMemberFrozen`, `#signedCitations` and `assembleCaseContainer` read them, and this module is the earliest of the three. The C-41 family and `checkCaseDocument` are `ratification`'s.
+5. The case-document formats and their three predicates (bio-checks 11402–11460) are this module's (R20): `#caseDocMemberFrozen`, `#signedCitations` and `assembleCaseContainer` read them, and this module is the earliest of the three. The C-41 family and `checkCaseDocument` are `case-catalogue`'s (moved from `ratification`, K1824).
 6. C-44.2 (`FINDING_IN_SEVERAL_CASES`, raised by `#resolveOneCase`) is this module's; C-44.1, C-44.3–C-44.5 are `case-authoring`'s. C-92.1–C-92.9 and C-92.13 are this module's; C-92.10–C-92.12 are `ratification`'s (rows follow their raising handlers, K93 (3)).
 7. The tables stay here; the other two write through R21 and R22.
 8. The review provider is one registration here (R23); `case-authoring` reads its draft door and dead answer through `reviewProvider()`.
