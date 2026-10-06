@@ -69,3 +69,7 @@ Findings in other modules:
 - `tieAttestationJudged([author], named, moneyFactIds, tieAttested, viewer)`: `tieAttested` is the act's body field, handed whole; `moneyParties` is the money fact ids (it resolves payer and payee).
 - `peopleLines(rows)` and `memberTieLines(rows)` are written after `timeline:` and before `completeness:`.
 The pre-flight asks all three over the same parts.
+
+## J4 · COMPLETE
+
+T33-69 complete on job/T33/case-authoring @ 29d3061ad0 (tranche merged @ K1643). R56, R57, R55's new steps, R34's blockers, R8/R55 through case-tensions; R30's and R29's reds fixed. 137/137; format, coverage 41/41, ownership 0; architecture fails only on the uses edges to add at the merge: calculations, workbooks, events, case-tensions, jurisdictions, and (fixture) entities, connections, lines, money, people. Details and Size line in the record's Completion section.
