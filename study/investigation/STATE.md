@@ -29,4 +29,4 @@
 | 3 | R-1 | done | `reviews/R-1.md` |
 | 3 | R-2 | done | `reviews/R-2.md` |
 | 3 | R-3 | done | `reviews/R-3.md` |
-| 4 | S-SYNTHESIS | missing | `synthesis/architecture.md` |
+| 4 | S-SYNTHESIS | partial | `synthesis/architecture.md` |
