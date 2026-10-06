@@ -1,6 +1,6 @@
 # case-authoring (T34)
 
-**Status** · session_014q5tbRsMqLZiMWfEsHugGb · depth 2 · WORKING · handled B1
+**Status** · session_014q5tbRsMqLZiMWfEsHugGb · depth 2 · COMPLETE · handled B1
 
 ## Completion (CASE-AUTHORING #18)
 
