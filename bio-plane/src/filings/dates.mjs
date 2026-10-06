@@ -19,9 +19,9 @@ export function realDate(v) {
 }
 
 /** `{state: "determined", date, counted, calendar?}` or `{state: "undetermined", why, calendar?}`. `view` is the
- *  combined profile view (its `holidays`, and its `action_kinds` for the venue an action is filed at; `holidays` alone
- *  stands for a view holding only those); `counterparty` and `kind` the action's, so a business count reads the
- *  holiday entries for all offices and those for the action's one office (`action-clocks` R10, K986); `factOf` each
+ *  combined profile view (its `holidays`, `weekend` and closure lists, and its `action_kinds` for the venue an action
+ *  is filed at; with no view no business day is counted, the weekend being the profile's, K1650); `counterparty` and
+ *  `kind` the action's, so a business count reads the holiday entries for all offices and those for the action's one office (`action-clocks` R10, K986); `factOf` each
  *  entry's confirmation (`action-clocks.factReader`, its R12). A business count reaching into a year the calendar
  *  does not list for that office, or reading an entry disputed or absent here, is undetermined, never counted as though that year had none
  *  (jurisdictions R33). The count itself is `action-clocks`' (its R2's `computeDeadline`, the one rule a clock entry's
@@ -29,8 +29,8 @@ export function realDate(v) {
  *  event), handed to it as the event its rule starts from, with the rest of the profile's `rule` as written (its
  *  `closures`, `roll` and the like: jurisdictions R26, R47, so a count reads the closure list its rule names and no
  *  other). `calendar` is its statement of the calendar it read (R30). */
-export function deadlineDate({ start = null, days = null, count = null, rule = null, holidays = null, view = null,
-                               counterparty = null, kind = null, factOf = null } = {}) {
+export function deadlineDate({ start = null, days = null, count = null, rule = null, view = null, counterparty = null,
+                               kind = null, factOf = null } = {}) {
   const from = realDate(start);
   if (!from) return { state: "undetermined", why: "no start event is recorded, so no date is computed from it" };
   if (!Number.isInteger(days) || days < 0)
@@ -39,7 +39,7 @@ export function deadlineDate({ start = null, days = null, count = null, rule = n
     return { state: "undetermined", why: "the rule states no count (calendar or business days), so no date is computed" };
   if (count === "business" && days > 2600)
     return { state: "undetermined", why: "the count runs past ten years" };
-  const v = view && typeof view === "object" ? view : { holidays: Array.isArray(holidays) ? holidays : [] };
+  const v = view && typeof view === "object" ? view : {};
   const c = computeDeadline({ ...(rule && typeof rule === "object" ? rule : {}), starts: "filed", days, count },
                             { correspondence: [{ direction: "sent", at: from }], counterparty, action_kind: kind }, v,
                             { factOf: typeof factOf === "function" ? factOf : null });

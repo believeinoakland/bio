@@ -223,12 +223,12 @@ test("R9 a claim deadline's date only from a recorded start event and its count:
   correspond(x, x.A, { direction: "sent", at: "2026-05-01", account: "letter" });
   const d2 = Object.fromEntries(pack(x).sections.deadlines.items.map((i) => [i.rule, i]));
   assert.deepEqual([d2.claim_filed.date.date, d2.claim_filed.start.source], ["2026-05-11", `${x.A}#0`]);
-  const hol = combine([PROFILE]).view.holidays;
-  assert.equal(deadlineDate({ start: "2026-03-13", days: 2, count: "business", holidays: hol }).date, "2026-03-18",
+  const view = combine([PROFILE]).view;
+  assert.equal(deadlineDate({ start: "2026-03-13", days: 2, count: "business", view }).date, "2026-03-18",
                "a Friday, then Monday 16th, Tuesday 17th a holiday, Wednesday 18th");
-  assert.equal(deadlineDate({ start: "2026-12-30", days: 3, count: "business", holidays: hol }).date, "2027-01-05",
+  assert.equal(deadlineDate({ start: "2026-12-30", days: 3, count: "business", view }).date, "2027-01-05",
                "31 Dec, 1 Jan a holiday, weekend, 4 and 5 Jan");
-  const past = deadlineDate({ start: "2027-12-30", days: 3, count: "business", holidays: hol });
+  const past = deadlineDate({ start: "2027-12-30", days: 3, count: "business", view });
   assert.equal(past.state, "undetermined");
   assert.match(past.why, /reaches into 2028/);
   assert.equal(deadlineDate({ start: "2026-01-31", days: 30, count: "calendar" }).date, "2026-03-02");
