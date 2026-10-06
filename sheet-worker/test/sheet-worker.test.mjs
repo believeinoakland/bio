@@ -7,6 +7,7 @@ import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { parseJsonc } from "../../bio-plane/scripts/jsonc.mjs";
 import * as contract from "../src/contract.mjs";
+import * as limits from "../src/limits.mjs";
 import { moduleCheck } from "../src/enginecore.mjs";
 import { withEngineSection } from "../scripts/build-engine.mjs";
 import { workbook, zip } from "./xlsx.mjs";
@@ -455,6 +456,37 @@ test("R14: the bounds are fixed positive constants, the configuration declares i
   assert.equal(cfg.limits.cpu_ms, 300000);
   assert.ok(TIME_BUDGET_MS < cfg.limits.cpu_ms);
   /* "refused whole" is asserted on every OVER_BOUND answer above (no `cells`) */
+});
+
+/** Every distinct limits statement a reader of the bundle's text finds: a quoted `bio-member-limits/1 …` string, read
+ *  as installer R20 reads the plane's (any quote, no quote or backslash inside). */
+const limitsStatements = (text) =>
+  [...new Set([...text.matchAll(/(["'`])(bio-member-limits\/1(?: [^"'`\\\n]*)?)\1/g)].map((m) => m[2]))];
+
+test("R17: the member states its limits in its committed bundle as exactly one distinct string bio-member-limits/1 key=n …, keys sorted, equal to its configuration's limits", () => {
+  const cfg = parseJsonc(readFileSync(`${MEMBER_DIR}wrangler.jsonc`, "utf8"), "wrangler.jsonc");
+  assert.ok(cfg.limits && typeof cfg.limits === "object" && Object.keys(cfg.limits).length, "the configuration states limits");
+  const keys = Object.keys(cfg.limits).sort();
+  assert.ok(keys.every((k) => Number.isInteger(cfg.limits[k]) && cfg.limits[k] > 0), "each limit is a positive integer");
+  const want = ["bio-member-limits/1", ...keys.map((k) => `${k}=${cfg.limits[k]}`)].join(" ");
+  /* the stated forms equal the configuration */
+  assert.equal(limits.MEMBER_LIMITS_STATEMENT, want);
+  assert.match(limits.MEMBER_LIMITS_STATEMENT, /^bio-member-limits\/1( [a-z_]+=[1-9][0-9]*)+$/);
+  assert.deepEqual({ ...limits.MEMBER_LIMITS }, cfg.limits); assert.ok(Object.isFrozen(limits.MEMBER_LIMITS));
+  assert.deepEqual(Object.fromEntries(limits.MEMBER_LIMITS_STATEMENT.split(" ").slice(1).map((kv) => kv.split("="))
+    .map(([k, v]) => [k, Number(v)])), { ...limits.MEMBER_LIMITS });
+  /* today's (K1536) */
+  assert.equal(want, "bio-member-limits/1 cpu_ms=300000");
+  /* the bundle a release signs states it exactly once, as written */
+  const bundle = readFileSync(`${MEMBER_DIR}dist/sheet-worker.bundled.mjs`, "utf8");
+  assert.deepEqual(limitsStatements(bundle), [want]);
+  /* and the manifest pins the bytes that hold it */
+  const manifest = JSON.parse(readFileSync(`${MEMBER_DIR}dist/sheet-worker.bundle.json`, "utf8"));
+  assert.equal(manifest.sha256, sha256(readFileSync(`${MEMBER_DIR}dist/sheet-worker.bundled.mjs`)));
+  /* negative controls: a second, different statement, or none, is not one distinct string */
+  assert.equal(limitsStatements(`${bundle}\nvar b = 'bio-member-limits/1 cpu_ms=30000';`).length, 2);
+  assert.equal(limitsStatements(bundle.split(want).join("")).length, 0);
+  assert.deepEqual(limitsStatements(`${bundle}\nvar c = \`${want}\`;`), [want], "the same statement twice is one distinct string");
 });
 
 test("R16: no place is named; the same bytes and settings give the same answer under any process time zone and instance", () => {

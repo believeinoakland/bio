@@ -33,8 +33,9 @@
      a 10-year store at 10^7 ids a year (`measures-T33/assistant-substrate.md` §5). A counted suffix tells its reader
      how many were minted before; a tail tells nothing.
    The census of what was minted or validated at T33's opening is in this module's T33 job record. `MTI CHK MSR HYP DUT
-   CALC STQ` are reserved now (P8), so no later tranche needs a record-grammar job to admit them. */
-const row = (prefix, owner, form = 'sequential') => Object.freeze({ prefix, owner, form });
+   CALC STQ` were reserved at T33 (P8), so no later tranche needs a record-grammar job to admit them. */
+const row = (prefix, owner, form = 'sequential', legacy) =>
+  Object.freeze(legacy ? { prefix, owner, form, legacy } : { prefix, owner, form });
 export const ID_TABLE = Object.freeze([
   /* R1's bundle prefixes, each with the module whose record it names. */
   row('INFO', 'capture'), row('PROB', 'inquiry'), row('FOCUS', 'inquiry'), row('INQ', 'inquiry'), row('PROJ', 'promotion'),
@@ -56,19 +57,32 @@ export const ID_TABLE = Object.freeze([
   row('PFA', 'people', 'opaque'), row('IDC', 'people', 'opaque'),
   /* Reserved now (P8), sequential. */
   row('MTI', 'people'), row('CHK', 'people'), row('MSR', 'money'), row('HYP', 'hypotheses'), row('DUT', 'duties'),
-  row('CALC', 'calculations'), row('STQ', 'answers'),
+  /* T34-1 (N570, K1576; DEC-36's withheld-as-absent): `CALC` is opaque, as `EVT` and `MNY` are. A sequential counter
+     told its reader how many calculations had been minted before it, withheld ones included, which is exactly what
+     withheld-as-absent forbids a reader to learn. Its row carries `legacy: 'sequential'` (K1728), the form still READ
+     as valid and never minted, as `STATES`' `legacy` states are read and never a destination: a copy on 0.80.0 holds
+     calculations minted sequentially, and every reader keeps reading them through `idPattern`. Minting follows `form`
+     alone (record-core). */
+  row('CALC', 'calculations', 'opaque', 'sequential'), row('STQ', 'answers'),
 ]);
 
 const YEAR = '\\d{4}';
 const CORE = { sequential: '\\d{4,}', opaque: '[a-z0-9]{16}' };
-const FORM = new Map(ID_TABLE.map((e) => [e.prefix, e.form]));
-const coreOf = (prefix) => `${prefix}-${YEAR}-${CORE[FORM.get(prefix)]}`;
+const ROW = new Map(ID_TABLE.map((e) => [e.prefix, e]));
+/* A row with `legacy` reads a core of either form (R47, K1728): the current form first, in one non-capturing group, so a
+   caller composing a slug after the core (or the core into a larger alternation) keeps its own groups' numbering. */
+const coreOf = (prefix) => {
+  const { form, legacy } = ROW.get(prefix);
+  return `${prefix}-${YEAR}-${legacy ? `(?:${CORE[form]}|${CORE[legacy]})` : CORE[form]}`;
+};
 
-/** R47: the anchored pattern of an id core of `prefix` in its `ID_TABLE` form, a new `RegExp` on every call (so no
- *  caller's `lastIndex` reaches another's), or `null` for a prefix the table does not hold. Its source is `^<core>$`, so
- *  a validator whose ids carry a slug composes it after the core (`source.slice(1, -1)`), keeping its own slug rule. */
+/** R47: the anchored pattern of an id core of `prefix` in its `ID_TABLE` form (and, for a row with `legacy`, in that
+ *  earlier form too), a new `RegExp` on every call (so no caller's `lastIndex` reaches another's), or `null` for a prefix
+ *  the table does not hold. Its source is `^<core>$`, so a validator whose ids carry a slug composes it after the core
+ *  (`source.slice(1, -1)`), keeping its own slug rule. A check that an id is freshly minted reads the row's `form`, not
+ *  this pattern. */
 export function idPattern(prefix) {
-  return typeof prefix === 'string' && FORM.has(prefix) ? new RegExp(`^${coreOf(prefix)}$`) : null;
+  return typeof prefix === 'string' && ROW.has(prefix) ? new RegExp(`^${coreOf(prefix)}$`) : null;
 }
 
 const HYP_RE = idPattern('HYP');
