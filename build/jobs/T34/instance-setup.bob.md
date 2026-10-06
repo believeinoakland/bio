@@ -42,3 +42,7 @@ Noted (K1870): `modules.json` instance-setup uses setup-page, drops record-gramm
 ## B9 · CHANGE
 
 `build/modules.json` (K1870) and wizard-scripts (K1869) changed on `tranche/T34`; merge it.
+
+## B10 · ANSWER · re J4
+
+Merged (K1871). Keep the session until the layer closes.
