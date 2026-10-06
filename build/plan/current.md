@@ -119,10 +119,10 @@ Each line is one job (P8): every T34 entry for that module. Fields: what (N-ids)
 
 ### L7
 
-- **T34-40 · intent** · (N587) named by the entry. Its owed work is not spelled out in N587, DEC-141 or K1618 (see Ambiguities). BOB states it in the START from intent's requirements, or drops the job if nothing is owed · K1618 · req: BOB's · depends T34-29.
+- **T34-40 · intent** · *Dropped by K1809: nothing is owed (intent's requirements carry no T34 mark; N587's document waits are inquiry R58 and capture's, met in L6; its "instance" strings name an objective's instance, not the group's Civicsmith).* (N587) named by the entry. Its owed work is not spelled out in N587, DEC-141 or K1618 (see Ambiguities). BOB states it in the START from intent's requirements, or drops the job if nothing is owed · K1618 · req: BOB's · depends T34-29.
 - **T34-41 · reevaluation** · (N589) grades R36's cross-address notice through content's comparison. (N590) R36 reads through standards' read by key and portion and by content id, instead of paging `standardsIn` per batch. (N591) R34 carries events' telling instant as `since` · K1624, K1626 · req: R34, R36, BOB's wording · depends T34-15, T34-21, T34-17. **P6:** 3,429 lines.
 
-**L7 merge order:** intent → reevaluation.
+**L7 merge order:** reevaluation alone (intent dropped, K1809).
 
 ### L8
 
@@ -209,7 +209,7 @@ membership 3,356 (four DECs; the guard in T34-10), publication 3,959 (T34-44), q
 
 ## Summary
 
-**Jobs per layer** (recounted by K1797 from the entries): L1 8, L2 4, L3 2, L4 1, L5 13, L6 16 (leg-earning and basis-versions added by K1797), L7 2, L8 8 (ratification added, K1790), L9 5, L10 2, L11 13. **Total 74 jobs.** Add one (affordances, L11) if BOB places the list of terms there, and drop one (intent) if its START finds nothing owed.
+**Jobs per layer** (recounted by K1797 from the entries): L1 8, L2 4, L3 2, L4 1, L5 13, L6 16 (leg-earning and basis-versions added by K1797), L7 1 (intent dropped, K1809), L8 8 (ratification added, K1790), L9 5, L10 2, L11 13. **Total 73 jobs.** Add one (affordances, L11) if BOB places the list of terms there, and drop one (intent) if its START finds nothing owed.
 
 **Entries carried:** 58 in `next.md` (50 at this draft's start; N600 added by K1649 while it was written; N601, N602 folded by BOB #120, K1656; N603, K1658; N604, N605, K1666; N606, N607, K1668; N608–N610, K1675–K1679; N611–N615, K1681–K1683; N616, K1685; N617–N621, K1686; N622, K1690). **48 wholly in T34**: N549, N550, N552–N554, N556–N558, N560–N562, N565, N567–N571, N573–N578, N580–N585, N587–N591, N593–N596, N598–N622. **4 in part**: N551, N564, N586, N597. **6 left out**: N559 and N572 (a dependency not yet built), N563 and N579 (a measurement), N566 (a measurement, unless the release measured it), N592 (a study, not a module job; Bob's ruling first).
 
