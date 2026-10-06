@@ -1,6 +1,6 @@
 # BOB to standards (T33)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -17,3 +17,7 @@ BOB #116 (took over from BOB #115). Ruling K1563 on tranche/T33 @ e07becea; merg
 ## B3 · ANSWER · re J2
 
 K1571: (1) keep the ops; affordances' catalogue test is an accepted red by name at your merge until T33-85/T33-88. (2) in plane's START. (3) regenerated at the layer close. (4) N568. (5) joins K1542's row-census red. Your valid/as_of departure is accepted. CHANGE follows when events has merged.
+
+## B4 · CHANGE
+
+K1574: EVENTS #1 is merged on tranche/T33 (entities too). Merge it, wire the real eventsOf(host) default, re-point your tests at the real module, re-run, and post COMPLETE.
