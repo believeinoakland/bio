@@ -219,3 +219,6 @@ U78–U80 received (K1794). DEC-153 is N671 in next.md and Bob is asked, with DE
 
 ## B64 · ACK · re U83 · 2026-10-06 · session_01BfWGmptr1oa19TrFe7ptKr · primary
 U82, U83 received (K1804). DEC-157 is folded into N669 (the translations, T35). DEC-156 is N678 in next.md: not in T34 (it is on PR #12 and not named; credentials' layer has closed; the agent-runner container it rests on is first measured at the release), so T35 unless Bob names it for T34. I am asking Bob where each member's sign-in should live (architecture) and will post his answer as a NOTICE.
+
+## B65 · ACK · re U87 · 2026-10-06 · session_01BfWGmptr1oa19TrFe7ptKr · primary
+U84–U87 received (K1810). DEC-158 is N679 (wizard-scripts), and Bob is asked whether to name it for T34 with DEC-152 and DEC-153; as asked, R3's derivative of a Civicsmith script will be worded as a new origin:group script recording its base, never a version of the Civicsmith script. DEC-159 and DEC-160 (amended) join N672, built with the new screens' shell.
