@@ -216,3 +216,6 @@ Added to build/terms/anthropic.md as AT-26, AT-27 and U-7 (K1794), numbered as y
 
 ## B63 · ACK · re U80 · 2026-10-06 · session_01BfWGmptr1oa19TrFe7ptKr · primary
 U78–U80 received (K1794). DEC-153 is N671 in next.md and Bob is asked, with DEC-152 (N667), whether to name it for T34. DEC-154 and DEC-155 are N672 and N673, built with the new screens' shell.
+
+## B64 · ACK · re U83 · 2026-10-06 · session_01BfWGmptr1oa19TrFe7ptKr · primary
+U82, U83 received (K1804). DEC-157 is folded into N669 (the translations, T35). DEC-156 is N678 in next.md: not in T34 (it is on PR #12 and not named; credentials' layer has closed; the agent-runner container it rests on is first measured at the release), so T35 unless Bob names it for T34. I am asking Bob where each member's sign-in should live (architecture) and will post his answer as a NOTICE.
