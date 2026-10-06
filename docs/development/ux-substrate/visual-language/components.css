@@ -80,7 +80,7 @@
    ============================================================ */
 .cs-btn { display: inline-flex; align-items: center; gap: var(--s-2); min-height: 40px; padding: 7px 14px;
           font: 600 var(--t-md)/1.2 var(--f-sans); border-radius: var(--r-1); border: 1.5px solid var(--c-ink);
-          background: transparent; color: var(--c-ink); cursor: pointer; text-decoration: none; white-space: nowrap;
+          background: transparent; color: var(--c-ink); cursor: pointer; text-decoration: none; text-align: left; flex-wrap: wrap; max-width: 100%;
           transition: background-color var(--d-1) var(--ease); }
 .cs-btn:hover { background: var(--c-ground-2); }
 .cs-btn[data-tone="primary"] { background: var(--c-accent); border-color: var(--c-accent); color: var(--c-on-accent); }
@@ -88,7 +88,7 @@
 .cs-btn[data-tone="quiet"] { border-color: transparent; color: var(--c-accent); padding-inline: 8px; }
 .cs-btn[data-tone="quiet"]:hover { background: var(--c-accent-tint); }
 .cs-btn[disabled] { opacity: 1; color: var(--c-muted); border-color: var(--c-rule-strong); background: transparent; cursor: not-allowed; }
-.cs-btn .w { display: inline-flex; align-items: center; gap: 5px; padding-left: var(--s-2); margin-left: 2px;
+.cs-btn .w { white-space: nowrap; display: inline-flex; align-items: center; gap: 5px; padding-left: var(--s-2); margin-left: 2px;
              border-left: 1px solid currentColor; font: 500 var(--t-xs)/1 var(--f-sans); letter-spacing: .02em; }
 .cs-btn[data-tone="primary"] .w { border-left-color: color-mix(in srgb, var(--c-on-accent) 55%, transparent); }
 .cs-pips { display: inline-flex; gap: 2px; }
@@ -253,7 +253,7 @@ textarea.cs-input { min-height: 96px; resize: vertical; }
 .cs-rail a { display: flex; align-items: center; gap: var(--s-2); padding: 8px 10px; color: var(--c-ink-2); text-decoration: none; border-radius: var(--r-1); font-weight: 500; }
 .cs-rail a[aria-current] { background: var(--c-surface); color: var(--c-ink); font-weight: 700; box-shadow: inset 3px 0 0 var(--c-accent); }
 .cs-rail a .count { margin-left: auto; font-size: var(--t-xs); color: var(--c-muted); }
-.cs-main { padding: var(--s-5) var(--s-5) var(--s-7); display: grid; gap: var(--s-5); align-content: start; min-width: 0; }
+.cs-main { padding: var(--s-5) var(--s-5) var(--s-7); display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-5); align-content: start; min-width: 0; }
 .cs-tabs { display: none; }
 @media (max-width: 760px) {
   .cs-shell, .cs-shell.with-dock { grid-template-columns: minmax(0,1fr); }

@@ -1,0 +1,368 @@
+<title>Civicsmith Screens</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400&family=Source+Sans+3:ital,wght@0,400..700;1,400&family=Source+Code+Pro:wght@400;500&display=swap">
+<style>
+{{FACES}}
+{{CSS}}
+/* Layout of this page: a reading document (the design-phase pages' order: what it is, the parts, the decisions, the
+   question) around one live viewer that draws any screen, journey step or wizard step in a desktop or phone frame. */
+html, body { background: var(--c-ground); }
+.doc { max-width: 1240px; margin: 0 auto; padding-inline: 20px; padding-block: 32px 80px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.doc > section, .doc > header { min-width: 0; }
+.doc .kicker { font: 600 var(--t-xs)/1.3 var(--f-sans); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--c-accent); }
+.doc h1.page { font: 600 clamp(32px, 5vw, 46px)/1.08 var(--f-serif); letter-spacing: -.015em; margin: 8px 0; }
+.doc .lede { font: 400 var(--t-lg)/1.55 var(--f-sans); color: var(--c-ink-2); max-width: 70ch; margin: 0; }
+.doc h2.sec { font: 600 26px/1.2 var(--f-serif); margin-top: 48px; padding-top: 14px; border-top: 2px solid var(--c-ink); }
+.doc h3.sub { font: 600 var(--t-lg)/1.3 var(--f-sans); margin-top: 20px; }
+.doc p { margin: 0; max-width: 72ch; }
+.doc .intro { color: var(--c-ink-2); margin-top: 6px; }
+.meta3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 12px; margin-top: 14px; }
+.meta3 > div { background: var(--c-surface); border: var(--hair); padding: 12px 14px; display: grid; gap: 4px; align-content: start; }
+.idx { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--c-ground); border-bottom: var(--hair); padding-block: 10px; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; font-size: var(--t-sm); font-weight: 600; margin-top: 20px; }
+.idx a { color: var(--c-accent); text-decoration: none; } .idx a:hover { text-decoration: underline; }
+.idx .opts { margin-left: auto; display: flex; gap: 12px; align-items: center; font-weight: 400; color: var(--c-muted); flex-wrap: wrap; }
+.seg { display: inline-flex; border: 1.5px solid var(--c-ink); border-radius: 2px; overflow: hidden; }
+.seg button { font: 600 var(--t-sm)/1 var(--f-sans); padding: 7px 10px; border: 0; background: transparent; color: var(--c-ink); cursor: pointer; min-height: 32px; }
+.seg button[aria-pressed="true"] { background: var(--c-ink); color: var(--c-sheet); }
+.cols2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 14px; margin-top: 12px; }
+.cell { background: var(--c-surface); border: var(--hair); padding: 14px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.cell h4 { margin: 0; font: 600 var(--t-md)/1.3 var(--f-sans); }
+.cell p, .cell li { font-size: var(--t-sm); color: var(--c-ink-2); }
+.cell ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.src { font: 12.5px/1.45 var(--f-mono); color: var(--c-muted); }
+body:not(.show-src) .src { display: none; }
+/* the viewer */
+.viewer { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 16px; margin-top: 14px; align-items: start; }
+@media (max-width: 900px) { .viewer { grid-template-columns: minmax(0, 1fr); } }
+.vlist { background: var(--c-surface); border: var(--hair); max-height: 820px; overflow: auto; position: sticky; top: 60px; }
+@media (max-width: 900px) { .vlist { position: static; max-height: 300px; } }
+.vlist h4 { margin: 0; padding: 10px 12px 6px; font: 600 var(--t-xs) var(--f-sans); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--c-muted); }
+.vlist button { display: grid; grid-template-columns: 26px 1fr; gap: 6px; width: 100%; text-align: left; padding: 7px 12px; border: 0; border-top: var(--hair); background: transparent; color: var(--c-ink); font: 500 var(--t-sm)/1.3 var(--f-sans); cursor: pointer; }
+.vlist button:hover { background: var(--c-ground-2); }
+.vlist button[aria-current="true"] { background: var(--c-accent-tint); box-shadow: inset 3px 0 0 var(--c-accent); font-weight: 700; }
+.vlist button .n { font: 600 var(--t-xs) var(--f-mono); color: var(--c-muted); padding-top: 2px; }
+.vtabs { display: flex; gap: 0; border-bottom: var(--hair); }
+.vtabs button { flex: 1; padding: 9px 6px; border: 0; background: transparent; font: 600 var(--t-sm) var(--f-sans); color: var(--c-ink-2); cursor: pointer; }
+.vtabs button[aria-selected="true"] { color: var(--c-ink); box-shadow: inset 0 -3px 0 var(--c-accent); }
+.vstage { display: grid; gap: 10px; min-width: 0; }
+.vhead { display: grid; gap: 4px; }
+.vhead .t { font: 600 var(--t-xl)/1.25 var(--f-serif); }
+.vhead .who { font-size: var(--t-sm); color: var(--c-muted); }
+.vnav { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.vnav .pos { font: 600 var(--t-sm) var(--f-sans); }
+.vdots { display: flex; flex-wrap: wrap; gap: 4px; }
+.vdots button { width: 26px; height: 26px; border: 1.5px solid var(--c-rule-strong); border-radius: 2px; background: var(--c-surface); font: 600 11px var(--f-sans); color: var(--c-ink-2); cursor: pointer; padding: 0; }
+.vdots button[aria-current="true"] { background: var(--c-ink); color: var(--c-sheet); border-color: var(--c-ink); }
+.vsay { background: var(--c-surface); border: var(--hair); border-left: 3px solid var(--c-ink); padding: 10px 12px; font-size: var(--t-md); min-height: 44px; }
+.vsay .noai { display: block; margin-top: 6px; font-size: var(--t-sm); color: var(--c-ink-2); }
+.vsay .noai::before { content: "Without the assistant: "; font-weight: 700; color: var(--c-ink); }
+.vsay .miss { color: var(--c-signal); font-weight: 600; }
+.mk-device { background: var(--c-ground-2); border: var(--hair-strong); padding: 10px; overflow: hidden; min-width: 0; }
+.mk-device[data-device="phone"] { justify-self: center; border-radius: 28px; padding: 14px 10px; background: var(--c-ink); }
+.mk-scaler { transform-origin: top left; }
+.mk-page { height: 100%; overflow: hidden; }
+/* ---------- inside the mock frames ---------- */
+.mk-page.cs-shell { display: grid; grid-template-rows: auto auto minmax(0, 1fr); }
+.mk-page.cs-shell > .cs-rail, .mk-page.cs-shell > .cs-main, .mk-page.cs-shell > .cs-dock { grid-row: 3; min-height: 0; }
+.mk-page .cs-main { overflow: auto; }
+.mk-page .cs-dock { overflow: hidden; }
+.mk-page .cs-tabs { display: none; }
+.mk-plain { display: grid; grid-template-columns: minmax(0, 1fr); background: var(--c-ground); }
+.mk-plain.with-dock { grid-template-columns: minmax(0, 1fr) var(--dock); }
+.mk-plainmain { overflow: auto; padding: 32px max(24px, calc((100% - 720px) / 2)); display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-content: start; min-height: 0; }
+.mk-pubmain { overflow: auto; padding: 24px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; align-content: start; max-height: calc(100% - 170px); }
+.mk-page[data-frame="published"] { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
+.mk-page[data-frame="published"] .mk-pubmain { max-height: none; min-height: 0; }
+.mk-h { display: grid; gap: 4px; }
+.mk-sub { color: var(--c-ink-2); margin: 0; }
+.mk-sec { margin-top: 4px; }
+.mk-note { font-size: var(--t-sm); color: var(--c-ink-2); margin: 0; max-width: 70ch; }
+.mk-small { font-size: var(--t-xs); margin: 0; }
+.mk-acts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.mk-list { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.mk-steps { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 4px; }
+.mk-steps li { padding: 4px 9px; border: 1.5px solid var(--c-rule); border-radius: 2px; font-size: var(--t-xs); font-weight: 600; color: var(--c-muted); }
+.mk-steps li.done { border-color: var(--c-accent); color: var(--c-accent); }
+.mk-steps li[aria-current] { border-color: var(--c-ink); color: var(--c-ink); background: var(--c-surface); }
+.mk-welcome { background: var(--c-surface); border: var(--hair); padding: 16px; display: grid; gap: 12px; }
+.mk-h2 { font: 600 var(--t-xl)/1.25 var(--f-sans); margin: 0; }
+.mk-doors { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; }
+.mk-door { display: grid; gap: 2px; text-align: left; padding: 10px 12px; border: 1.5px solid var(--c-rule-strong); border-radius: 2px; background: var(--c-sheet); color: var(--c-ink); cursor: pointer; font: 400 var(--t-sm)/1.3 var(--f-sans); }
+.mk-door b { font-size: var(--t-md); }
+.mk-door:first-child { border-color: var(--c-accent); box-shadow: inset 3px 0 0 var(--c-accent); }
+.mk-door span { color: var(--c-muted); }
+fieldset.mk-checks { border: 0; padding: 0; margin: 0; display: grid; gap: 6px; }
+fieldset.mk-checks legend { font-weight: 600; margin-bottom: 4px; padding: 0; }
+fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
+.mk-table { width: 100%; border-collapse: collapse; font-size: var(--t-sm); background: var(--c-surface); }
+.mk-table th, .mk-table td { text-align: left; padding: 7px 9px; border-bottom: var(--hair); vertical-align: top; }
+.mk-table th { font: 600 var(--t-xs) var(--f-sans); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--c-muted); }
+.mk-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.mk-draftcell { background: var(--c-machine-tint); }
+.mk-lanes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; }
+.mk-lanehead { font: 700 var(--t-xs) var(--f-sans); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--c-muted); border-bottom: 2px solid var(--c-ink); padding-bottom: 4px; }
+.mk-ev { display: grid; gap: 2px; padding: 8px 10px; background: var(--c-surface); border: var(--hair); font-size: var(--t-sm); }
+.mk-ev.us { border-left: 3px solid var(--c-accent); }
+.mk-ev b { font-weight: 600; }
+.mk-date { font: 600 var(--t-xs) var(--f-sans); color: var(--c-muted); }
+.mk-lanes.small .mk-ev { font-size: var(--t-xs); }
+.mk-passage { margin: 0; padding: 10px 14px; border-left: 3px solid var(--c-capture); background: var(--c-surface); font-size: var(--t-lg); line-height: 1.5; }
+.mk-search { display: flex; gap: 8px; align-items: center; } .mk-search .cs-input { flex: 1; }
+.cs-hold.mk-hold { box-shadow: none; }
+.mk-tabs2 { display: flex; gap: 0; border-bottom: var(--hair); }
+.mk-tabs2 span { padding: 8px 12px; font-weight: 600; font-size: var(--t-sm); color: var(--c-muted); }
+.mk-tabs2 span[aria-selected] { color: var(--c-ink); box-shadow: inset 0 -3px 0 var(--c-accent); }
+.mk-drop { border: 1.5px dashed var(--c-rule-strong); padding: 18px; text-align: center; color: var(--c-ink-2); display: flex; gap: 8px; align-items: center; justify-content: center; background: var(--c-surface); }
+.mk-dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 0; font-size: var(--t-sm); }
+.mk-dl dt { font-weight: 700; } .mk-dl dd { margin: 0; }
+.mk-bignum { display: grid; gap: 2px; padding: 14px; background: var(--c-surface); border: var(--hair); }
+.mk-bignum b { font: 600 34px/1.1 var(--f-sans); }
+.mk-titlerow { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: flex-start; justify-content: space-between; }
+.mk-grid2 { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+.mk-strengthbox { background: var(--c-surface); border: var(--hair); padding: 12px 14px; display: grid; gap: 8px; justify-items: start; }
+.mk-tray { border: 1px dotted var(--c-machine); background: var(--c-machine-tint); padding: 10px; display: grid; gap: 8px; }
+.mk-checks2 { background: var(--c-surface); border: var(--hair); border-left: 3px solid var(--c-ink); padding: 8px 12px; font-size: var(--t-sm); display: flex; gap: 6px; align-items: baseline; flex-wrap: wrap; }
+.mk-sortrow { font-size: var(--t-sm); gap: 6px; display: flex; }
+.mk-pubtitle h1 { font: 600 var(--t-3xl)/1.15 var(--f-serif); margin: 0; }
+.mk-pubtitle p { color: var(--c-ink-2); margin: 4px 0 0; }
+.mk-explain { background: var(--c-surface); border: var(--hair); padding: 10px 12px; font-size: var(--t-sm); margin: 0; }
+.mk-finding { display: grid; gap: 6px; padding-bottom: 14px; border-bottom: var(--hair); }
+.mk-fbody { font-size: var(--t-lg); line-height: 1.5; margin: 0; }
+.mk-setuphead { display: flex; align-items: center; gap: 10px; }
+.mk-setuphead svg { height: 34px; width: auto; color: var(--c-accent); }
+.mk-wordmark { font: 600 24px var(--f-sans); letter-spacing: -.01em; }
+.mk-grp { font: 600 var(--t-xl) var(--f-serif); }
+.mk-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--c-accent-tint); color: var(--c-accent-strong); display: grid; place-items: center; font-weight: 700; font-size: var(--t-sm); }
+.mk-mastsearch { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border: var(--hair-strong); border-radius: 2px; color: var(--c-muted); font-size: var(--t-sm); min-width: 180px; background: var(--c-sheet); }
+.mk-msg { padding: 8px 10px; border: var(--hair); background: var(--c-sheet); font-size: var(--t-sm); }
+.mk-msg.me { justify-self: end; max-width: 85%; }
+.cs-dock .cs-machinework p { margin: 0; font-size: var(--t-sm); }
+.mk-crumbs { font-size: var(--t-sm); color: var(--c-muted); } .mk-crumbs i { font-style: normal; padding: 0 2px; }
+.mk-more { font-weight: 600; font-size: var(--t-sm); }
+.mk-links { display: grid; gap: 6px; } .mk-links a { display: inline-flex; gap: 8px; align-items: center; }
+.mk-logo { display: inline-flex; gap: 6px; align-items: center; padding: 8px 10px; border: 1.5px dashed var(--c-rule-strong); color: var(--c-ink-2); font-size: var(--t-sm); justify-self: start; }
+.mk-details summary { cursor: pointer; font-weight: 600; color: var(--c-accent); }
+.mk-ringlabel { margin-left: 8px; }
+/* phone layout inside the phone frame */
+.mk-device[data-device="phone"] .mk-page.cs-shell { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr) auto auto; }
+.mk-device[data-device="phone"] .mk-page.cs-shell.with-dock { grid-template-columns: minmax(0, 1fr); }
+.mk-device[data-device="phone"] .cs-rail, .mk-device[data-device="phone"] .mk-hide-phone, .mk-device[data-device="phone"] .mk-mastsearch span { display: none; }
+.mk-device[data-device="phone"] .mk-mastsearch { min-width: 0; border: 0; background: none; }
+.mk-device[data-device="phone"] .cs-main { grid-row: 3; padding: 16px; }
+.mk-device[data-device="phone"] .cs-dock { grid-row: 4; border-left: 0; border-top: 3px solid var(--c-ink); max-height: 300px; }
+.mk-device[data-device="phone"] .cs-tabs { display: grid; grid-row: 5; grid-template-columns: repeat(5, 1fr); border-top: var(--hair); background: var(--c-ground-2); }
+.mk-device[data-device="phone"] .cs-tabs a { display: grid; justify-items: center; gap: 2px; padding: 6px 2px 8px; font-size: 11.5px; color: var(--c-ink-2); text-decoration: none; }
+.mk-device[data-device="phone"] .cs-tabs a[aria-current] { color: var(--c-ink); font-weight: 700; box-shadow: inset 0 3px 0 var(--c-accent); }
+.mk-device[data-device="phone"] .cs-band { font-size: var(--t-xs); padding: 4px 12px; }
+.mk-device[data-device="phone"] .mk-plain.with-dock { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
+.mk-device[data-device="phone"] .mk-plainmain { padding: 20px 16px; }
+.mk-device[data-device="phone"] .mk-plain .cs-dock { border-left: 0; border-top: 3px solid var(--c-ink); max-height: 300px; }
+.mk-device[data-device="phone"] .mk-lanes { grid-template-columns: 1fr; }
+.mk-device[data-device="phone"] .mk-grid2 { grid-template-columns: 1fr; }
+.mk-device[data-device="phone"] .cs-row { grid-template-columns: auto 1fr; }
+.mk-device[data-device="phone"] .cs-row > :nth-child(3) { grid-column: 2; }
+/* anatomy */
+.anat { display: grid; grid-template-columns: 200px minmax(0, 1fr) 240px; grid-template-rows: 36px 22px 230px; gap: 3px; font: 600 var(--t-xs)/1.3 var(--f-sans); margin-top: 10px; }
+.anat > div { background: var(--c-surface); border: 1.5px solid var(--c-rule-strong); padding: 6px 8px; color: var(--c-ink-2); display: grid; align-content: start; gap: 2px; }
+.anat > div b { color: var(--c-ink); }
+.anat .m { grid-column: 1 / -1; background: var(--c-ground-2); } .anat .b { grid-column: 1 / -1; background: var(--c-ground-2); padding: 2px 8px; }
+.anat .d { border-color: var(--c-machine); border-style: dotted; }
+@media (max-width: 700px) { .anat { grid-template-columns: 1fr; grid-template-rows: auto; } .anat .m, .anat .b { grid-column: auto; } }
+.qbrief { background: var(--c-surface); border: var(--hair); border-left: 4px solid var(--c-signal); padding: 18px; display: grid; gap: 12px; margin-top: 12px; }
+.qbrief h3 { margin: 0; font: 600 var(--t-xl)/1.25 var(--f-serif); }
+.qbrief h4 { margin: 6px 0 0; font: 700 var(--t-xs) var(--f-sans); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--c-muted); }
+.qopts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 10px; }
+.qopts > div { border: var(--hair-strong); padding: 10px 12px; background: var(--c-ground); display: grid; gap: 6px; align-content: start; font-size: var(--t-sm); }
+.qopts b { font: 600 var(--t-md) var(--f-serif); }
+.qrec { background: var(--c-accent-tint); padding: 10px 12px; }
+.answer { font: 600 var(--t-sm) var(--f-mono); color: var(--c-ink-2); }
+.tbl { width: 100%; border-collapse: collapse; font-size: var(--t-sm); background: var(--c-surface); min-width: 640px; }
+.tbl th, .tbl td { text-align: left; vertical-align: top; padding: 9px 10px; border-bottom: var(--hair); }
+.tbl th { font: 600 var(--t-xs) var(--f-sans); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--c-muted); }
+.tw { overflow-x: auto; }
+.foot { margin-top: 48px; padding-top: 14px; border-top: var(--hair); color: var(--c-muted); font-size: var(--t-sm); }
+</style>
+{{SPRITE}}
+<div class="cs"><div class="doc">
+<header>
+<p class="kicker">Design phase · step 5 of 5 · layouts and key screens · drafted 6 October 2026 · two things for you</p>
+<h1 class="page">Civicsmith screens</h1>
+<p class="lede">Every journey walked through the screens a member will use, drawn in the visual language, on a desktop and on a phone, with the assistant and without it. Each of the seventeen wizards is written and walked step by step: the guide docks beside the work and rings the real control it names.</p>
+<div class="meta3">
+<div><b>How to use it</b>Pick a journey, a wizard or a screen in the viewer below, then step through. Switch between with and without the assistant, desktop and phone, light and dark, at the top.</div>
+<div><b>What is real</b>Every button carries the act it would perform and its weight; every wizard step names a screen and an act from the requirements, checked. The data is invented: Lakeshore Tenants, its members Rosa, Dev, Mai, Ana and Teo.</div>
+<div><b>Status</b>Drafted; open to your comments. Two things are yours (section 7): releasing a case at the moment its story runs, and approving the wizard library. Everything else is design detail, decided and listed in section 6.</div>
+</div>
+</header>
+<nav class="idx" aria-label="Sections">
+<a href="#frames">Frames</a><a href="#assistant">The assistant</a><a href="#walk">Journeys and wizards</a><a href="#noai">Without the assistant</a><a href="#data">As data</a><a href="#decided6">Decided</a><a href="#question">For you</a><a href="#owed">Owed</a>
+<span class="opts">
+ <span class="seg" role="group" aria-label="The assistant"><button type="button" data-ai="1" aria-pressed="true">With the assistant</button><button type="button" data-ai="0" aria-pressed="false">Without</button></span>
+ <span class="seg" role="group" aria-label="Device"><button type="button" data-dev="desktop" aria-pressed="true">Desktop</button><button type="button" data-dev="phone" aria-pressed="false">Phone</button></span>
+ <span class="seg" role="group" aria-label="Theme"><button type="button" data-th="" aria-pressed="true">Auto</button><button type="button" data-th="light" aria-pressed="false">Light</button><button type="button" data-th="dark" aria-pressed="false">Dark</button></span>
+ <label for="srcToggle"><input type="checkbox" id="srcToggle"> Sources</label>
+</span>
+</nav>
+
+<section id="frames">
+<h2 class="sec">1. Frames, grid, desktop and phone</h2>
+<p class="intro">Every working screen has the same anatomy, so a member always knows where to look. Published pages and the pages for people without an account use their own frames.</p>
+<div class="anat" aria-label="The working frame's anatomy">
+ <div class="m"><b>Masthead</b>The group's name (it leads), search, the assistant (only if connected), the queue, you</div>
+ <div class="b"><b>Band</b> · working, not public · or: shared for review · or: another group's case</div>
+ <div><b>Rail</b>Home · Queue · Find · Add · Projects · People · Settings</div>
+ <div><b>The work</b>One column, at most about 68 characters of reading text; tables and timelines may use the full width</div>
+ <div class="d"><b>The dock</b>The assistant panel or a wizard's guide; never floating, never over the work. Widened by dragging; shrinks back when a wizard needs you to press something</div>
+</div>
+<div class="cols2">
+<div class="cell"><h4>Desktop and laptop</h4><ul><li>Rail 232 px, the work in the middle, the dock 380 px on the right when open.</li><li>Every list row has the same three columns: its mark, its words, its date or act.</li><li>Acts sit under what they act on, never in a distant toolbar.</li></ul></div>
+<div class="cell"><h4>Phone</h4><ul><li>The rail becomes five tabs at the bottom: Home, Queue, Add, Find, More.</li><li>The dock opens as a sheet above the tabs; some of the work always stays visible.</li><li>Everything can be read; everyday acts work, including capturing a photo. Signing, publishing and sending say where to finish, on a larger screen.</li></ul></div>
+</div>
+<p class="src">principles 5.1, 6.3, 8.6 (DEC-122 G1); DEC-90; DEC-106</p>
+</section>
+
+<section id="assistant">
+<h2 class="sec">2. The assistant panel</h2>
+<p class="intro">Drawn early, because every other screen leaves room for it. It docks beside the screen it serves, on the member's own Claude account, labelled as machine work in everything it produces, with the member's daily limit always in view. For a member who has not connected an account, it does not exist: no button, no empty panel, no reminder. Open any screen with “With the assistant” to see it; the question screen below opens with it.</p>
+<div class="cols2" style="margin-top:12px">
+ <div class="cell"><h4>With the assistant</h4><p>Docked right on a desktop, as a sheet on a phone. It answers only from what the group holds and says where it looked; about laws it gives legal information, never advice. Its drafts go into fields, labelled, until the member makes them theirs.</p><p><button type="button" class="cs-btn" data-open="screen:assistant:1">Show it beside a question</button></p></div>
+ <div class="cell"><h4>Without it</h4><p>“Ask” becomes “Find and count”: search, and counts that show their method. Drafts come from the group's own templates. Standing questions still run; their new matches arrive as a list.</p><p><button type="button" class="cs-btn" data-open="screen:assistant:0">Show the same screen without it</button></p></div>
+</div>
+</section>
+
+<section id="walk">
+<h2 class="sec">3. Journeys and wizards, walked</h2>
+<p class="intro">All twenty-seven journeys from step 3 and all seventeen wizards. A journey with a wizard is walked by its wizard, step for step as written; the guide docks on the right and rings the control the step names. Choose “Without” at the top to walk the same journey without the assistant.</p>
+<div class="viewer" id="viewer">
+ <div class="vlist" id="vlist"><div class="vtabs" role="tablist"><button type="button" role="tab" data-list="j" aria-selected="true">Journeys</button><button type="button" role="tab" data-list="w" aria-selected="false">Wizards</button><button type="button" role="tab" data-list="s" aria-selected="false">Screens</button></div><div id="vitems"></div></div>
+ <div class="vstage">
+  <div class="vhead"><span class="t" id="vt"></span><span class="who" id="vwho"></span></div>
+  <div class="vnav"><button type="button" class="cs-btn" id="vprev">Back</button><span class="pos" id="vpos"></span><button type="button" class="cs-btn" data-tone="primary" id="vnext">Next</button><span class="vdots" id="vdots"></span></div>
+  <div class="vsay" id="vsay" aria-live="polite"></div>
+  <div class="mk-device" id="vdev" data-device="desktop"><div class="mk-scaler" id="vscale"></div></div>
+ </div>
+</div>
+<p class="src">journeys.html (DEC-128 to DEC-137); screens/library.json (DEC-121 (9), DEC-130); screens/registry.json; check_walk.mjs proves every wizard step's control is on its screen</p>
+</section>
+
+<section id="noai">
+<h2 class="sec">4. Civicsmith without the assistant</h2>
+<p class="intro">Your ruling of 5 October: a member who connects no Claude account uses a version without the assistant. These are the rules every screen follows for that member, and they are drawn in every journey above.</p>
+<div class="cols2">
+<div class="cell"><h4>Absent, not greyed</h4><p>No assistant button, panel, tray or “suggested” section appears, and nothing invites them to connect again. Their own settings say “not connected” in one line, where they can change it.</p></div>
+<div class="cell"><h4>Ask becomes find and count</h4><p>The Ask screen is a search with counts that show their method. Everything the assistant would cite, the member can find and cite themselves.</p></div>
+<div class="cell"><h4>Drafts come from the group's templates</h4><p>A records request, a communication or a filing starts from the group's own template, labelled as a draft, exactly where the assistant's draft would go. Translations are typed by members.</p></div>
+<div class="cell"><h4>Standing questions still run</h4><p>The search re-runs on schedule and new matches reach the queue once, as a list, unread by any machine. (A member with the assistant gets them read and summarised.)</p></div>
+<div class="cell"><h4>Wizards are the same</h4><p>Every wizard runs from its script with no account. Only the assistant planning a new wizard on the fly needs one.</p></div>
+<div class="cell"><h4>What they cannot do</h4><p>Ask in plain words; receive suggestions; have documents read and summarised; have translations drafted; have “what changed” drafted. Each of these has a member's own way to do the same work.</p></div>
+</div>
+<p class="src">K1547 (B44); DEC-120 G4; principle 1.4</p>
+</section>
+
+<section id="data">
+<h2 class="sec">5. The screens, wizards and acts, as data</h2>
+<p class="intro">So the development process can build the wizard library from this step and not from pictures: a registry of 42 screens and the 192 acts they offer, and the seventeen wizard scripts in the form the requirements set. A check runs both against the requirements: every act is an existing act, a requirement whose act name the development process declares, or one a ruling of yours already owes.</p>
+{{REGSUMMARY}}
+</section>
+
+<section id="decided6">
+<h2 class="sec">6. Decided in this step</h2>
+<p class="intro">Design detail beneath your rulings, decided and recorded (DEC-139). Comment on anything you want changed.</p>
+<div class="tw" style="margin-top:12px"><table class="tbl"><thead><tr><th>What</th><th>Decided</th></tr></thead><tbody>
+<tr><td>The working frame</td><td>Masthead with the group's name, a standing band, a seven-place rail, one column of work, the dock on the right. On a phone, five tabs and the dock as a sheet.</td></tr>
+<tr><td>Where acts sit</td><td>Under what they act on, each carrying its weight; a heavy act's dialog in place, never a distant toolbar.</td></tr>
+<tr><td>Home</td><td>“What brought you here?” with five front doors, a problem first; then what waits on you; then the group's projects with their stages.</td></tr>
+<tr><td>The wizard guide</td><td>Docks where the assistant does; says step, what and why; rings the real control once; side trips return to the step left; “Stopping is fine” on every step.</td></tr>
+<tr><td>Side trips</td><td>A wizard step may start another wizard and return (journeys page). The script form needs one optional field for it; owed to the development process.</td></tr>
+<tr><td>Without the assistant</td><td>Section 4's six rules, including standing questions that still run and arrive as a list.</td></tr>
+<tr><td>Drafts without the assistant</td><td>From the group's own templates, labelled the same way, in the same field. No place, law or venue appears in Civicsmith's own wizard text: they come from the group's profile and templates.</td></tr>
+<tr><td>The plan page and start-and-send</td><td>Drawn as you approved them (the outline, the checks strip, the tray, the two steps of start and send), in the new look.</td></tr>
+<tr><td>Weights on every act</td><td>Every button in every mockup carries its pips and name; acts whose weight is not yet set are shown as reasoned.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="question">
+<h2 class="sec">7. Two things for you</h2>
+{{QUESTION}}
+</section>
+
+<section id="owed">
+<h2 class="sec">8. Owed to the development process</h2>
+<div class="cols2">
+<div class="cell"><h4>To build from this step</h4><ul><li>The screen registry (screens/registry.json) as the registry wizard-scripts registers, its acts' op names declared where they are requirement functions today.</li><li>The Civicsmith wizard library (screens/library.json): seventeen scripts, three required.</li><li>A step's optional side trip into another wizard (an addition to the wizard script's step).</li><li>A standing question that runs for a member without the assistant, its matches arriving unread.</li></ul></div>
+<div class="cell"><h4>Already owed by your earlier rulings, drawn here</h4><ul><li>Who the group is; the website key and join link; one administrator; asking for a check by expertise; members' own notes and what a court can reach.</li><li>Each member's language, and the group's translations.</li><li>The connect wizard's subscription-token guide (drawn on the Connect screen).</li></ul></div>
+</div>
+</section>
+<p class="foot">Kept in the repository at docs/development/ux-substrate/layouts.html, built by screens/build_page.py from the registry, the library and the mockup scripts beside it. Drawn in the visual language (DEC-138).</p>
+</div></div>
+<script>
+const LIB = {{LIB}};
+const REG = {{REG}};
+{{JS}}
+(function () {
+  const st = { ai: true, dev: 'desktop', list: 'j', mode: 'journey', id: 1, step: 0 };
+  try { const s = JSON.parse(localStorage.getItem('cs-screens') || '{}'); Object.assign(st, s); } catch (e) {}
+  const $ = id => document.getElementById(id);
+  const save = () => { try { localStorage.setItem('cs-screens', JSON.stringify(st)); } catch (e) {} };
+  function stepsNow() {
+    if (st.mode === 'journey') { const j = J.find(x => x.n === st.id) || J[0]; return journeySteps(j, st.ai); }
+    if (st.mode === 'wizard') { const w = LIB.find(x => x.id === st.id) || LIB[0]; const s = w.versions[0].steps; return s.map((x, i) => ({ s: x.screen, act: x.act, say: '', wizard: { name: w.name, i: i + 1, n: s.length, what: x.what, why: x.why, via: x.via, draft: x.draft } })); }
+    return [{ s: st.id, act: null, say: ((REG.find(r => r.id === st.id) || {}).purpose || '').replace(/\s*\((?:DEC|K)[^)]*\)+/g, '').replace(/\s*\([^()]*\b(?:DEC|K)-?\d[^()]*\)/g, ''), dock: st.id === 'assistant' }];
+  }
+  function list() {
+    const box = $('vitems');
+    let h = '';
+    if (st.list === 'j') h = J.map(j => `<button type="button" data-pick="journey:${j.n}" aria-current="${st.mode === 'journey' && st.id === j.n}"><span class="n">${j.n}</span><span>${esc(j.t)}${j.wiz ? ' ' + I('wizard') : ''}</span></button>`).join('');
+    if (st.list === 'w') h = LIB.map((w, i) => `<button type="button" data-pick="wizard:${w.id}" aria-current="${st.mode === 'wizard' && st.id === w.id}"><span class="n">${i + 1}</span><span>${esc(w.name)}${w.required ? ' · <b>required</b>' : ''}</span></button>`).join('');
+    if (st.list === 's') h = REG.map((r, i) => `<button type="button" data-pick="screen:${r.id}" aria-current="${st.mode === 'screen' && st.id === r.id}"><span class="n">${i + 1}</span><span>${esc(r.name)}</span></button>`).join('');
+    box.innerHTML = h;
+    document.querySelectorAll('.vtabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.list === st.list));
+  }
+  function fit() {
+    const dev = $('vdev'), sc = $('vscale');
+    const W = st.dev === 'phone' ? 390 : 1180, H = st.dev === 'phone' ? 780 : 760;
+    sc.style.width = W + 'px'; sc.style.height = H + 'px'; dev.style.width = '';
+    const avail = (dev.parentElement.clientWidth || 900) - 22;
+    const z = Math.min(1, avail / W);
+    sc.style.transform = `scale(${z})`;
+    dev.style.height = (H * z + (st.dev === 'phone' ? 28 : 20)) + 'px';
+    dev.style.width = st.dev === 'phone' ? (W * z + 20) + 'px' : '';
+  }
+  function draw() {
+    const steps = stepsNow(); if (st.step >= steps.length) st.step = steps.length - 1; if (st.step < 0) st.step = 0;
+    const x = steps[st.step];
+    let title = '', who = '', extra = '';
+    if (st.mode === 'journey') { const j = J.find(y => y.n === st.id); title = `Journey ${j.n}: ${j.t}`; who = `Who: ${j.who}${j.wiz ? ' · walked by the wizard “' + j.wiz + '”' : ''}`; if (!st.ai && j.noai) extra = `<span class="noai">${esc(j.noai)}</span>`; }
+    if (st.mode === 'wizard') { const w = LIB.find(y => y.id === st.id); title = `Wizard: ${w.name}${w.required ? ' (required)' : ''}`; who = `Starts at: ${(REG.find(r => r.id === w.start) || {}).name || w.start}${w.note ? ' · ' + w.note : ''}`; }
+    if (st.mode === 'screen') { const r = REG.find(y => y.id === st.id); title = `Screen: ${r.name}`; who = `${r.acts.length} acts · journeys ${r.journeys.join(', ') || '—'}`; }
+    $('vt').textContent = title; $('vwho').textContent = who;
+    $('vpos').textContent = `Step ${st.step + 1} of ${steps.length}`;
+    $('vdots').innerHTML = steps.map((_, i) => `<button type="button" data-step="${i}" aria-current="${i === st.step}" aria-label="Step ${i + 1}">${i + 1}</button>`).join('');
+    $('vprev').disabled = st.step === 0; $('vnext').disabled = st.step === steps.length - 1;
+    const c = { ai: st.ai, wizard: x.wizard, dockAssist: x.dock };
+    const sc = $('vscale'); sc.innerHTML = render(x.s, c);
+    $('vdev').dataset.device = st.dev;
+    fit();
+    const ok = ring(sc, x.act);
+    const say = x.wizard ? (x.wizard.via ? 'This step offers a side trip into another wizard.' : (x.act ? 'The guide rings the control this step names; the member presses it.' : 'This step explains the screen; there is nothing to press.')) : esc(x.say);
+    $('vsay').innerHTML = say + (ok ? '' : ` <span class="miss">(control not found)</span>`) + (st.step === 0 ? extra : '');
+    list(); save();
+  }
+  document.addEventListener('click', e => {
+    const p = e.target.closest('[data-pick]'); if (p) { const [m, id] = p.dataset.pick.split(':'); st.mode = m; st.id = m === 'journey' ? +id : id; st.step = 0; draw(); return; }
+    const t = e.target.closest('.vtabs button'); if (t) { st.list = t.dataset.list; list(); save(); return; }
+    const d = e.target.closest('[data-step]'); if (d) { st.step = +d.dataset.step; draw(); return; }
+    const o = e.target.closest('[data-open]'); if (o) { const [m, id, ai] = o.dataset.open.split(':'); st.mode = m; st.id = id; st.step = 0; st.list = 's'; st.ai = ai === '1'; syncSeg(); draw(); document.getElementById('walk').scrollIntoView(); return; }
+    const a = e.target.closest('[data-ai]'); if (a) { st.ai = a.dataset.ai === '1'; syncSeg(); draw(); return; }
+    const v = e.target.closest('[data-dev]'); if (v) { st.dev = v.dataset.dev; syncSeg(); draw(); return; }
+    const h = e.target.closest('[data-th]'); if (h) { if (h.dataset.th) document.documentElement.setAttribute('data-theme', h.dataset.th); else document.documentElement.removeAttribute('data-theme'); document.querySelectorAll('[data-th]').forEach(b => b.setAttribute('aria-pressed', b === h)); try { localStorage.setItem('cs-th', h.dataset.th); } catch (e) {} return; }
+  });
+  $('vprev').onclick = () => { st.step--; draw(); }; $('vnext').onclick = () => { st.step++; draw(); };
+  function syncSeg() { document.querySelectorAll('[data-ai]').forEach(b => b.setAttribute('aria-pressed', (b.dataset.ai === '1') === st.ai)); document.querySelectorAll('[data-dev]').forEach(b => b.setAttribute('aria-pressed', b.dataset.dev === st.dev)); }
+  const t = $('srcToggle'); t.addEventListener('change', () => document.body.classList.toggle('show-src', t.checked));
+  try { const th = localStorage.getItem('cs-th'); if (th) { document.documentElement.setAttribute('data-theme', th); document.querySelectorAll('[data-th]').forEach(b => b.setAttribute('aria-pressed', b.dataset.th === th)); } } catch (e) {}
+  window.addEventListener('resize', fit);
+  window.CS_WALK = { st, stepsNow, draw, render, ring };
+  syncSeg(); draw();
+})();
+</script>

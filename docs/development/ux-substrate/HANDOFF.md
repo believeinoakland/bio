@@ -110,6 +110,7 @@ You are the UX design session for Civicsmith (named CivicOS until DEC-124, 2026-
 | The new name (decided, DEC-124) | `new-name.html` | https://claude.ai/artifact/Fmr6rVd7GMifYDRaWcV7s8 |
 | Journeys (step 3, draft, partly answered) | `journeys.html` (edit it directly) | https://claude.ai/artifact/9hNPVCMcT8eyewWqKXfgSu |
 | Visual language (step 4, decided, DEC-138) | `visual-language.html`, built by `visual-language/build_page.py` | https://claude.ai/artifact/QuvX7DzX7XbxS6SQG4MtT1 |
+| Screens (step 5, drafted, DEC-139; S1, S2 open) | `layouts.html`, built by `screens/build_page.py` | https://claude.ai/artifact/WE1RL6GUUZX4dLeSzbFrbv |
 | Measures map (approved, DEC-82) | `measures-map.html` | https://claude.ai/artifact/TfqcXNaJQ86SZzUA8Xn6Ni |
 
 From a new session, `read` a page (Artifact `read` with its `url`) before republishing to it, then publish with `url`; and watch each page you will receive comments on (`ArtifactComments` `watch` with its `url`). The design-phase pages share one look (the old design language's tokens: paper ground, Source Serif 4 for judgement, Source Sans 3 for plain speech, Source Code Pro for fact) as a reading format only; step 4 decides the product's look.
