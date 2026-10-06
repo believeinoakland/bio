@@ -28,3 +28,7 @@
 - `ownership filing-templates tranche/T34`: 4 files changed by filing-templates between tranche/T34 and HEAD; 0 failures.
 
 Size (session_01ArRabMRmWtTqbg1miUXqa9): test runs 10, module lines 1719
+
+## J1 · REPORT
+
+Outside filing-templates, from T34-87 (detail in my record's Completion). (1) promotion: C-125.3 and C-125.15 translations changed, so row-census.test.mjs names them 'changed with no record'; that test was already red on tranche/T34 from other modules' DEC-149 rewordings, and these two join it until T35's promotion stamp moves CATALOG_VERSION (gate.mjs) and re-pins (plan Rules (5) item 4). No control-plane catalogue-end pin names a C-125 row. (2) bio-plane/dist/bio-plane.bundled.mjs is stale from this change, for your regeneration at the layer's close.
