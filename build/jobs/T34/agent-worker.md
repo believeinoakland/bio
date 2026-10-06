@@ -43,3 +43,7 @@ Two callers build the `/run` and `/ask` account without `level`, so under R6 as 
 1. **ai-runs** (`bio-plane/src/ai-runs/index.mjs:1713`, its T34-33 job): sends `{kind, secret, member, suggestions}` from `accountReferenceFor`; it owes K1798's `{kind, level, secret, member, suggestions?}` from `credentials.accountFor` (R35's `key` as `secret`), with the switch that governs that account (the group key's own, credentials R37, for a group-key act). K1798 already names it.
 2. **plane** (`bio-plane/src/plane/ask.mjs:48–54`, module `plane`, L11): the same shape gap, and it reads `accountReferenceFor`, not `accountFor`, so a member served only by the group's API key gets no ask (`NO_ACCOUNT`), against agent-worker R54 and answers R19's reading of K1755. Not in any T34 entry I can see.
 No test of either module is red today: none drives a live dispatch to this member.
+
+## J3 · COMPLETE
+
+T34-39 applied whole (K1755/K1757, K1798, N588, N585's share, the R55 START finding); record's Completion section on `job/T34/agent-worker`. Checks: format, architecture, coverage (50/50), ownership (13 files) all 0 failures. Suites: harness 261/0 (REC100 ×5 cleared), requirements 293/0, cascade 56/0, the rest green, except `ask.test.mjs` 53/4, which wait on upstream merges in L6's order: 3 arms on agent-model's `calls` (T34-38), 1 on answers' `ASK_SCOPE` (T34-36). Bundle rebuilt and fresh. REPORT J2: ai-runs' dispatch and the plane's ask must send K1798's account shape.
