@@ -28,3 +28,7 @@ Size (session_01DaJwApJLkJ5MRFQbPXN5ud): test runs 12, module lines 1412
 ## J1 · QUESTION
 
 R21's key label (index.mjs:101, COPY_KEY_LABEL) is read by the public with no credential (groupkeyspublic), so "your group's Civicsmith" would be wrong to a stranger and "this copy's key" is what DEC-149 removes. My reading, applied on job/T34/network-notices @ d1ad2668a9: "the group's Civicsmith key" (DEC-149: reword where "Civicsmith" could mean the software; here it names the group's own installation beside the answer's group slug). R21's requirement text still says "labelled as this copy's key"; its meaning is unchanged, so I read it as the label's meaning, not its words; the answer's field name `copy` is wire format and stays. Not blocking: the rest of the job is done on this reading; I complete on it unless you answer otherwise.
+
+## J2 · REPORT
+
+Found outside network-notices (record's Completion): (1) docket checks.mjs:101, :131 (C-129, its own T34-87 rows) mirror C-127.4 and C-127.12; suggest the same wording so the two read alike. (2) plane test/m/plane/store.test.mjs 'R2, R10 (K1416; control-plane R42): control-plane's step ranks …' fails on tranche/T34 with or without this change; not among the START's named reds. (3) Stale generated artifacts (§14): bio-plane/dist/bio-plane.bundled.mjs and release copies carry the old wording. (4) promotion's row-census now also lists C-127.4, .5, .12 changed; named awaiting stamp in my record.
