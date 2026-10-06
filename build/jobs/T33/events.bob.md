@@ -16,3 +16,7 @@ All four readings accepted. Vote values and response statuses: no default list; 
 R37 gains event_attestations(event_id, capture_sha): each capture an attestation of the event cites (retrieval's event/occurred fields join it). Build and test that table as stated.
 Shape money assumes from you (MONEY #1 J1): readEvent({eventId, viewer}) → {found, event:{relations:[{relation_id, kind, direction:"in"|"out", from, to, attestation, grade:{assertion, ends}}]}}, and eventsFor({entity, kinds, limit, viewer}) → {events:[…]}. Conform where your requirements allow; if yours differs, say so in COMPLETE and name the shape, and I forward it.
 Your neighbours takes an optional host passed through, else the isolate's one instance, else OWNER_HOST_AMBIGUOUS (K1563 (1)). Your factory is eventsOf(host).
+
+## B3 · CHANGE
+
+K1568: export a one-site answer noSuchDatedFact for your R7's NO_SUCH_DATED_FACT; progressions answers through it (one home for the code).
