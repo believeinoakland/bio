@@ -20,6 +20,8 @@
 
 - N558 · the group's settings module, `membership` (joining), the module that holds members' own notes (BOB names it at T34's opening), the list of terms · DEC-136 (UX-DESIGN U56; K1554): the administrator's setting "tell our members what a court can reach" (chosen at setup or in settings, nothing preselected) and the first-time statements it drives (once at joining, once at the first non-public act of each kind); a member's own notes, member-private, never cited, published, counted or shared, convertible by the member's act to an observation, hunch or question; the explanation of protection in the list of terms. **Hard reason it is not in T33:** DEC-136 is not on `main` until PR #11 merges at T33's close.
 
+- N559 · the UI's module that serves the member screens (BOB names it and the placement when those screens are built) · DEC-138 (UX-DESIGN U58; K1559): `visual-language/civicsmith.css`, `faces.css`, `fonts/` (with their OFL licences) and `icons.svg` replace `civicos-ui/tokens.css` as the screens' one stylesheet, served from the group's copy, never from outside (principle 9.6); `check_contrast.py` runs whenever a colour changes. **Hard reason it is not in T33:** DEC-138 is not on `main` until PR #11 merges at T33's close, and the new member screens are not yet built (the UX stream's step 5).
+
 Otherwise none yet. T33's release at its close (K1501) runs the deployment-gated measurements; the work they unlock is written here then.
 
 ## Carried from T33
