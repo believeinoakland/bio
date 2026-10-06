@@ -22,3 +22,7 @@
 - `ownership case-carriage tranche/T34`: 4 files changed; 0 failures.
 
 Size (session_0156fAY8XA6y75Um2sHFrXS6): test runs 3, module lines 341
+
+## J1 · COMPLETE
+
+T34-43 and T34-87 are applied on job/T34/case-carriage. R6's test now follows R80's TABLE_DECLARED shape, which clears red 5 (2) for case-carriage. The four DEC-149 strings say "your group's Civicsmith", and a new R1 test names each one; no check translation changed, so no catalogue move. Tests: 22/22 pass; publication's 97/97 pass. Checks: format, architecture, coverage (7/7) and ownership (4 files) all report 0 failures. Nothing deferred; nothing found in other modules. Details are in the record.
