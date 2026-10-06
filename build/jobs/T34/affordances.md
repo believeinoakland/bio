@@ -118,3 +118,13 @@ B10 is applied (K1883 (1)). `courtnotice` has left `NON_ACTS` and is graded nowh
 I ran `unaccounted` over the whole of `O.OPS`, aliases included and nothing filtered. It answers `{unpublished: [], unranked: [], stale: []}`. The fix is control-plane's: drop the alias filter at `totality.test.mjs`:12, and the test goes green with no change here. If you would rather the aliases stay out of both tables, that is an R45 change: affordances drops its alias table, and R45's wording goes with it. Yours to rule. I build to R45 as worded.
 
 My one red remains `plane.test.mjs`:317, `pack_absent`, which is wizard-scripts' (R11, re-opened; J6).
+
+## J9 · COMPLETE
+
+Re-opened by B10 and done. `courtnotice` has left `NON_ACTS` (K1883 (1)), with its test updated. control-plane's `totality.test.mjs` stays red because of its own line 12 alias filter (J8). With that filter dropped, the door's whole op table is clean against affordances.
+
+**Tests and checks**
+- `node --test test/m/affordances/`: tests 203, pass 202, fail 1 (`plane.test.mjs`:317, wizard-scripts' R11, J6).
+- format: 0 failures. architecture: 0 failures. coverage: 45 of 45. ownership: 0 failures.
+
+Size (session_01D46sKU6GQxJsbHFhXN1a2o): test runs 27, module lines 3944
