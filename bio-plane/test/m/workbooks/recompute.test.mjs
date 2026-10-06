@@ -10,7 +10,7 @@ import { fixture, makeMember, realEngine, bucket, post, call, ON } from "../../.
 /* `ctx.recompute` over the real member: it reads the capture from its own R2 stand-in, as the deployed member does. */
 function realRecompute(holder, { member = makeMember(realEngine()), env = ON } = {}) {
   return async (s) => {
-    const r2 = bucket({ [`bio/captures/${s}`]: holder.w.bytes.get(s) });
+    const r2 = bucket({ [`bio/captures/${s}`]: holder.w.ev.m.get(s) });
     return (await call(member, post({ capture_sha: s, store: "bio" }), { ...env, CAPTURES: r2.binding })).body;
   };
 }
@@ -48,7 +48,7 @@ test("R6 recompute pairs each recomputed formula cell with the file's cached val
   assert.deepEqual(y.differing.map((d) => d.cell), ["S!C1", "S!B2", "S!C2", "S!A3"], "in the engine's order; 3000000.000001 is within 1e-9; a number cached as text differs");
   assert.deepEqual(y.differing[3], { cell: "S!A3", cached: "3000000.01", cached_type: "number", engine_value: 3000000, engine_type: "number" });
   /* recorded, and read back */
-  assert.equal(w2.wb.readWorkbook({ ...w2.at, viewer: V("carol") }).recompute.differing.length, 4);
+  assert.equal((await w2.wb.readWorkbook({ ...w2.at, viewer: V("carol") })).recompute.differing.length, 4);
   assert.equal(w2.count("workbook_recomputes"), 1);
 });
 
@@ -107,11 +107,11 @@ const pick = (r) => [r.status, r.reason, r.why];
 
 test("R8 every answer stating a recompute calls it agreement between the two engines, never accuracy, with the disclosure naming the engine and version and its measured agreement on the corpus; results are recomputed only by the act", async () => {
   const w = await realSeeded(agreeing());
-  const before = w.wb.readWorkbook({ ...w.at, viewer: V("bob") });
+  const before = await w.wb.readWorkbook({ ...w.at, viewer: V("bob") });
   assert.equal(before.recompute, null, "nothing is recomputed on a read");
   const r = (await w.wb.recompute({ ...w.at, by: V("bob") })).recompute;
   const text = `recomputed by the instance's engine (${ENGINE_MEASURE.engine} ${ENGINE_MEASURE.engine_version}); open it in any spreadsheet program`;
-  for (const x of [r, w.wb.readWorkbook({ ...w.at, viewer: V("carol") }).recompute]) {
+  for (const x of [r, (await w.wb.readWorkbook({ ...w.at, viewer: V("carol") })).recompute]) {
     assert.equal(x.meaning, RECOMPUTE_MEANING);
     assert.match(x.meaning, /agreement between the file's engine and the instance's engine, never accuracy/);
     assert.equal(x.disclosure.text, text);
@@ -120,7 +120,7 @@ test("R8 every answer stating a recompute calls it agreement between the two eng
     assert.match(x.disclosure.measure.workbooks, /81 of 111/);
     assert.ok(!/accura(te|cy)/.test(JSON.stringify(x).split(RECOMPUTE_MEANING).join("")), "never called accurate");
   }
-  assert.equal(w.wb.readWorkbook({ ...w.at, viewer: V("bob") }).disclosure.text, text, "the workbook's read carries it");
+  assert.equal((await w.wb.readWorkbook({ ...w.at, viewer: V("bob") })).disclosure.text, text, "the workbook's read carries it");
   /* an engine build no measure was taken on says so */
   const other = await seeded({ recompute: async () => ({ ok: true, engine: "ironcalc", engine_version: "other", cells: [] }) });
   const o = (await other.wb.recompute({ ...other.at, by: V("bob") })).recompute;
@@ -129,10 +129,10 @@ test("R8 every answer stating a recompute calls it agreement between the two eng
   /* a refusal discloses "not recomputed here" */
   const off = await seeded();
   await off.wb.recompute({ ...off.at, by: V("bob") });
-  assert.match(off.wb.readWorkbook({ ...off.at, viewer: V("bob") }).disclosure.text, /^not recomputed here: no engine bound; open it in any spreadsheet program$/);
+  assert.match((await off.wb.readWorkbook({ ...off.at, viewer: V("bob") })).disclosure.text, /^not recomputed here: no engine bound; open it in any spreadsheet program$/);
   /* a second act is a second recompute, kept beside the first */
   await w.wb.recompute({ ...w.at, by: V("carol") });
   assert.equal(w.count("workbook_recomputes"), 2);
-  assert.equal(w.wb.readWorkbook({ ...w.at, viewer: V("bob") }).recompute.by, V("carol"), "the latest");
+  assert.equal((await w.wb.readWorkbook({ ...w.at, viewer: V("bob") })).recompute.by, V("carol"), "the latest");
   void sha; void world;
 });

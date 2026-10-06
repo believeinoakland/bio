@@ -31,8 +31,8 @@ export function workbooksOps(workbooks, url, body) {
                                                            sources: b.sources, steps: b.steps, limitations: b.limitations, by: b.by }),
     workbooksecondcheck: () => workbooks.recordCheck({ captureSha: b.captureSha, project: b.project, outcome: b.outcome, note: b.note, by: b.by }),
     /* the bytes travel as base64, never raw octets, as content's crop does (its R32) */
-    workbookexport: () => {
-      const r = workbooks.exportRecipe({ calcId: q("calc"), viewer: q("viewer") });
+    workbookexport: async () => {
+      const r = await workbooks.exportRecipe({ calcId: q("calc"), viewer: q("viewer") });
       if (!r || !r.found) return r;
       const { bytes, ...rest } = r;
       return { ...rest, bytes_base64: base64(bytes) };

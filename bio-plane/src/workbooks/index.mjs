@@ -129,9 +129,9 @@ export class Workbooks {
     return !!h && this.#sees(h.bundleId, viewer);
   }
 
-  #readTable(sha, viewer) {
+  async #readTable(sha, viewer) {
     if (!this.calculations || typeof this.calculations.readTable !== "function") return null;
-    try { return tableFrom(this.calculations.readTable({ sha, viewer })); } catch { return null; }
+    try { return tableFrom(await this.calculations.readTable({ sha, viewer, limit: 1 })); } catch { return null; }
   }
 
   #readExtent(id, viewer) {
@@ -142,21 +142,21 @@ export class Workbooks {
     } catch { return null; }
   }
 
-  #sourceSeen(input, viewer) {
-    if (input && input.table) return !!this.#readTable(input.table, viewer);
+  async #sourceSeen(input, viewer) {
+    if (input && input.table) return !!(await this.#readTable(input.table, viewer));
     if (input && input.extent) return !!this.#readExtent(input.extent, viewer);
     return false;
   }
 
   /** R13: the workbook row, or null when it is absent or withheld: its project, its capture, or any source it is bound
    *  to, out of the viewer's sight. Every read and act answers both alike. */
-  #workbook(captureSha, project, viewer) {
+  async #workbook(captureSha, project, viewer) {
     const sha = str(captureSha).toLowerCase(), p = str(project);
     if (!SHA_RE.test(sha) || !p) return null;
     const row = this.#one(`SELECT * FROM workbooks WHERE capture_sha=? AND project=?`, sha, p);
     if (!row || !this.#sees(p, viewer) || !this.#captureSeen(sha, viewer)) return null;
     for (const b of this.#rows(`SELECT input FROM workbook_bindings WHERE capture_sha=? AND project=?`, sha, p))
-      if (!this.#sourceSeen(parse(b.input), viewer)) return null;
+      if (!(await this.#sourceSeen(parse(b.input), viewer))) return null;
     return { ...row, period: parse(row.period), origin: parse(row.origin), facts: parse(row.facts) || {} };
   }
 
@@ -234,10 +234,10 @@ export class Workbooks {
   /* ================================================================ R3, R4 */
 
   /* A source's grid: `{rows, cols, at(r, c) → {kind, value, figure?}}` or a refusal's detail. */
-  #source(input, viewer) {
+  async #source(input, viewer) {
     if (input && typeof input.table === "string") {
-      const t = this.#readTable(input.table, viewer);
-      if (!t) return { why: "no declared table with this sha is held" };
+      const t = await this.#readTable(input.table, viewer);
+      if (!t || !Array.isArray(t.rows)) return { why: "no declared table with this sha is held" };
       const r = splitRange(`x!${input.range ?? ""}`);
       const a = r && a1Corner(r.a), b = r && a1Corner(r.b);
       if (!a || !b) return { why: "a table range is A1 over the table's fields (A the first) and data rows (1 the first)" };
@@ -259,8 +259,8 @@ export class Workbooks {
   }
 
   /** R3: bind a rectangle of input cells to a source. */
-  bind({ captureSha, project, range, input, by } = {}) {
-    const wb = this.#workbook(captureSha, project, by);
+  async bind({ captureSha, project, range, input, by } = {}) {
+    const wb = await this.#workbook(captureSha, project, by);
     if (!wb) return this.#absent(captureSha, project);
     const r = splitRange(range);
     const sheets = (wb.facts.sheets || []).map((s) => s.name);
@@ -276,42 +276,42 @@ export class Workbooks {
                                 wb.capture_sha, wb.project, sheet, p1.row, p2.row, p1.col, p2.col);
     if (formulas.length) return refusal("RANGE_HOLDS_FORMULAS", "an input is a constant, never a formula cell",
                                         { cells: formulas.map((x) => `${sheet}!${x.cell}`) });
-    const src = this.#source(input, by);
+    const src = await this.#source(input, by);
     if (src.why) return refusal("NO_SUCH_INPUT", src.why);
     const rows = p2.row - p1.row + 1, cols = p2.col - p1.col + 1;
     if (rows !== src.rows || cols !== src.cols)
       return refusal("SHAPE_MISMATCH", `the range is ${rows}×${cols} and the input ${src.rows}×${src.cols} (rows × columns)`);
     const stored = input.table ? { table: input.table, range: String(input.range).toUpperCase().replace(/\$/g, "") } : { extent: input.extent };
     const at = this.now();
-    return this.record.transact(() => {
+    const row = this.record.transact(() => {
       this.sql.exec(`INSERT INTO workbook_bindings (capture_sha, project, sheet, range, input, bound_by, bound_at) VALUES (?,?,?,?,?,?,?)`,
                     wb.capture_sha, wb.project, sheet, rect, json(stored), by, at);
-      const id = this.#one(`SELECT last_insert_rowid() AS id`).id;
-      const row = this.#one(`SELECT * FROM workbook_bindings WHERE binding_id=?`, id);
-      return { ok: true, binding: this.#bindingView(wb, row, by) };
+      return this.#one(`SELECT * FROM workbook_bindings WHERE binding_id=last_insert_rowid()`);
     });
+    return { ok: true, binding: await this.#bindingView(wb, row, by) };
   }
 
   /** R3: an unbound binding stays, shown with who, when and why. */
-  unbind({ bindingId, reason, by } = {}) {
+  async unbind({ bindingId, reason, by } = {}) {
     const row = Number.isSafeInteger(Number(bindingId)) ? this.#one(`SELECT * FROM workbook_bindings WHERE binding_id=?`, Number(bindingId)) : null;
-    const wb = row && this.#workbook(row.capture_sha, row.project, by);
+    const wb = row && await this.#workbook(row.capture_sha, row.project, by);
     if (!wb) return refusal("NO_SUCH_BINDING", "no binding with this id is held");
     if (!str(reason)) return refusal("NO_REASON", "say why the binding is taken back");
-    if (row.unbound_at) return { ok: true, already: true, binding: this.#bindingView(wb, row, by) };
+    if (row.unbound_at) return { ok: true, already: true, binding: await this.#bindingView(wb, row, by) };
     const at = this.now();
-    return this.record.transact(() => {
+    this.record.transact(() => {
       this.sql.exec(`UPDATE workbook_bindings SET unbound_by=?, unbound_at=?, unbind_reason=? WHERE binding_id=? AND unbound_at IS NULL`,
                     by, at, str(reason), row.binding_id);
-      return { ok: true, already: false, binding: this.#bindingView(wb, this.#one(`SELECT * FROM workbook_bindings WHERE binding_id=?`, row.binding_id), by) };
     });
+    const now = this.#one(`SELECT * FROM workbook_bindings WHERE binding_id=?`, row.binding_id);
+    return { ok: true, already: false, binding: await this.#bindingView(wb, now, by) };
   }
 
   /** R4: a binding compared with its source, cell for cell. */
-  #compare(wb, row, viewer) {
+  async #compare(wb, row, viewer) {
     const [ra, rb] = row.range.split(":");
     const p1 = cellAt(ra), p2 = cellAt(rb ?? ra);
-    const src = this.#source(parse(row.input), viewer);
+    const src = await this.#source(parse(row.input), viewer);
     if (src.why) return { agrees: false, compared: 0, differing: [], undetermined: src.why };
     const cells = new Map(this.#rows(`SELECT * FROM workbook_cells WHERE capture_sha=? AND project=? AND sheet=? AND r BETWEEN ? AND ?
                                        AND c BETWEEN ? AND ?`, wb.capture_sha, wb.project, row.sheet, p1.row, p2.row, p1.col, p2.col)
@@ -326,16 +326,18 @@ export class Workbooks {
     return { agrees: differing.length === 0, compared, differing };
   }
 
-  #bindingView(wb, row, viewer) {
+  async #bindingView(wb, row, viewer) {
     return { binding_id: row.binding_id, range: `${row.sheet}!${row.range}`, input: parse(row.input),
              bound_by: row.bound_by, bound_at: row.bound_at, state: row.unbound_at ? "unbound" : "bound",
              ...(row.unbound_at ? { unbound_by: row.unbound_by, unbound_at: row.unbound_at, unbind_reason: row.unbind_reason } : {}),
-             ...this.#compare(wb, row, viewer) };
+             ...(await this.#compare(wb, row, viewer)) };
   }
 
-  #bindings(wb, viewer) {
-    return this.#rows(`SELECT * FROM workbook_bindings WHERE capture_sha=? AND project=? ORDER BY binding_id`, wb.capture_sha, wb.project)
-      .map((r) => this.#bindingView(wb, r, viewer));
+  async #bindings(wb, viewer) {
+    const out = [];
+    for (const r of this.#rows(`SELECT * FROM workbook_bindings WHERE capture_sha=? AND project=? ORDER BY binding_id`, wb.capture_sha, wb.project))
+      out.push(await this.#bindingView(wb, r, viewer));
+    return out;
   }
 
   /* ================================================================ R5 */
@@ -356,8 +358,8 @@ export class Workbooks {
   }
 
   /** R5: every input cell, bound (naming its binding) or unbound (testimony, grade D). */
-  inputsOf({ captureSha, project, viewer } = {}) {
-    const wb = this.#workbook(captureSha, project, viewer);
+  async inputsOf({ captureSha, project, viewer } = {}) {
+    const wb = await this.#workbook(captureSha, project, viewer);
     if (!wb) return this.#absent(captureSha, project);
     const { list } = this.#inputs(wb, this.#cells(wb));
     return { ok: true, capture_sha: wb.capture_sha, project: wb.project, inputs: list,
@@ -368,7 +370,7 @@ export class Workbooks {
 
   /** R6, R7: recompute through the instance's engine and record the comparison. Results are recomputed only here. */
   async recompute({ captureSha, project, by } = {}) {
-    const wb = this.#workbook(captureSha, project, by);
+    const wb = await this.#workbook(captureSha, project, by);
     if (!wb) return this.#absent(captureSha, project);
     let answer = null, why = null, reason = null;
     if (!this.engine) { reason = "NO_ENGINE"; why = "no engine bound"; }
@@ -411,8 +413,8 @@ export class Workbooks {
   }
 
   /** R9: the lint findings, each with the notes members hold against it. Changes nothing, blocks nothing. */
-  lint({ captureSha, project, viewer } = {}) {
-    const wb = this.#workbook(captureSha, project, viewer);
+  async lint({ captureSha, project, viewer } = {}) {
+    const wb = await this.#workbook(captureSha, project, viewer);
     if (!wb) return this.#absent(captureSha, project);
     const findings = this.#lint(wb, this.#cells(wb));
     return { ok: true, capture_sha: wb.capture_sha, project: wb.project, findings,
@@ -420,8 +422,8 @@ export class Workbooks {
   }
 
   /** R9: a member's note against a finding (`{kind, cell}`), kept and never erased. */
-  explainLint({ captureSha, project, finding, note, by } = {}) {
-    const wb = this.#workbook(captureSha, project, by);
+  async explainLint({ captureSha, project, finding, note, by } = {}) {
+    const wb = await this.#workbook(captureSha, project, by);
     if (!wb) return this.#absent(captureSha, project);
     if (!str(note)) return refusal("NO_NOTE", "a note says what the member found; write it");
     const f = finding && typeof finding === "object" ? finding : {};
@@ -438,8 +440,8 @@ export class Workbooks {
   /* ================================================================ R10, R11 */
 
   /** R10: a method note, every field required; the latest stands and every note is kept. */
-  recordMethodNote({ captureSha, project, purpose, sources, steps, limitations, by } = {}) {
-    const wb = this.#workbook(captureSha, project, by);
+  async recordMethodNote({ captureSha, project, purpose, sources, steps, limitations, by } = {}) {
+    const wb = await this.#workbook(captureSha, project, by);
     if (!wb) return this.#absent(captureSha, project);
     const srcs = Array.isArray(sources) ? sources.map(str).filter(Boolean) : str(sources) ? [str(sources)] : [];
     if (!str(purpose)) return refusal("NO_PURPOSE", "say what the workbook is for");
@@ -461,8 +463,8 @@ export class Workbooks {
   }
 
   /** R11: a second member's check, disclosed on every read; nothing waits for one. */
-  recordCheck({ captureSha, project, outcome, note, by } = {}) {
-    const wb = this.#workbook(captureSha, project, by);
+  async recordCheck({ captureSha, project, outcome, note, by } = {}) {
+    const wb = await this.#workbook(captureSha, project, by);
     if (!wb) return this.#absent(captureSha, project);
     if (by === wb.author) return refusal("SELF_CHECK", "a check is a second member's; the workbook's author cannot check it");
     if (!CHECK_OUTCOMES.includes(outcome)) return refusal("UNKNOWN_OUTCOME", `an outcome is one of ${CHECK_OUTCOMES.join(", ")}`);
@@ -482,14 +484,14 @@ export class Workbooks {
   /* ================================================================ R2, R12 */
 
   /** R12: the grade facts (K1447 (ii)). */
-  #gradeFacts(wb, cells, inputs, bindings, viewer) {
+  async #gradeFacts(wb, cells, inputs, bindings, viewer) {
     const byBinding = new Map();
     for (const b of bindings) {
       if (b.state !== "bound") continue;
       const input = b.input || {};
       let capture = null, derivation = null, source = null;
       if (input.table) {
-        const t = this.#readTable(input.table, viewer);
+        const t = await this.#readTable(input.table, viewer);
         const g = t && t.grade_facts ? t.grade_facts : null;
         source = { table: input.table, range: input.range };
         capture = g ? g.capture_grade ?? g.grade ?? null : null;
@@ -516,12 +518,12 @@ export class Workbooks {
   }
 
   /** R2: the workbook whole. It never recomputes. */
-  readWorkbook({ captureSha, project, viewer } = {}) {
-    const wb = this.#workbook(captureSha, project, viewer);
+  async readWorkbook({ captureSha, project, viewer } = {}) {
+    const wb = await this.#workbook(captureSha, project, viewer);
     if (!wb) return this.#absent(captureSha, project);
     const cells = this.#cells(wb);
     const inputs = this.#inputs(wb, cells);
-    const bindings = this.#bindings(wb, viewer);
+    const bindings = await this.#bindings(wb, viewer);
     const recompute = this.#latestRecompute(wb);
     return {
       ok: true,
@@ -534,7 +536,7 @@ export class Workbooks {
       lint: this.#lint(wb, cells, inputs),
       method_notes: this.#methodNotes(wb),
       checks: this.#checks(wb),
-      grade_facts: this.#gradeFacts(wb, cells, inputs.list, bindings, viewer),
+      grade_facts: await this.#gradeFacts(wb, cells, inputs.list, bindings, viewer),
       disclosure: recompute ? recompute.disclosure : disclosure(null),
     };
   }
@@ -542,17 +544,17 @@ export class Workbooks {
   /* ================================================================ R14 */
 
   /** R14: a calculation the viewer may see, as an XLSX workbook. */
-  exportRecipe({ calcId, viewer } = {}) {
+  async exportRecipe({ calcId, viewer } = {}) {
     const absent = { ok: true, found: false };
     if (!this.calculations || typeof this.calculations.read !== "function" || typeof viewer !== "string" || !viewer) return absent;
     let calc;
-    try { calc = calculationFrom(this.calculations.read({ calcId, viewer })); } catch { calc = null; }
+    try { calc = calculationFrom(await this.calculations.read({ calcId, viewer })); } catch { calc = null; }
     if (!calc) return absent;
     const tables = {};
     for (const inp of calc.inputs) {
       if (inp.kind !== "table") continue;
-      const t = this.#readTable(inp.sha, viewer);
-      if (!t) return absent;
+      const t = await this.#readTable(inp.sha, viewer);
+      if (!t || !Array.isArray(t.rows)) return absent;
       tables[inp.name] = t;
     }
     const out = buildExport(calc, tables);

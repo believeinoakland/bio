@@ -1,8 +1,9 @@
 /* workbooks over the modules it uses, each the real one (record-core, membership, promotion, content with the
    provenance it builds on the same host), on a real SQLite database (node:sqlite) standing in for a Durable Object's
-   storage, at the plane's shape (`sql.exec` answers a cursor). `calculations` is a stand-in holding tables and
-   calculations in the answer shapes workbooks reads (J1), with a sight rule the test sets; the engine is a function
-   the test hands as `ctx.recompute`, or the real `sheet-worker` engine. Workbooks are built here as OOXML bytes, so
+   storage, at the plane's shape (`sql.exec` answers a cursor), with an evidence store in memory (R2's shape) holding
+   captures and tables. `calculations` is the real module (merged, K1595), its tables declared over captured CSVs and
+   its sight that of their sources; the engine is a function the test hands as `ctx.recompute`, or the real
+   `sheet-worker` engine. Workbooks are built here as OOXML bytes, so
    each fixture is readable where it is used. Every test drives `workbooks` at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
@@ -10,6 +11,7 @@ import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
+import { calculationsOf } from "../../../src/calculations/index.mjs";
 import { workbooksOf } from "../../../src/workbooks/index.mjs";
 import { zipStored } from "../../../src/workbooks/xlsxwrite.mjs";
 
@@ -119,34 +121,33 @@ export const BASIC = () => xlsx([{ name: "Model", cells: {
   B6: { f: "B5*1.1", v: "1760" },
 } }]);
 
-/* ---- the stand-in calculations ---- */
+/* ---- the evidence store ---- */
 
-export function calculationsStandIn() {
-  const tables = new Map(), calcs = new Map(), hidden = new Set();
-  const sees = (key, viewer) => typeof viewer === "string" && viewer !== "" && !hidden.has(`${key}|${viewer}`) && !hidden.has(`${key}|*`);
+/** An evidence bucket in memory, R2's shape: `get` answers an object with `text()` and `arrayBuffer()`, or null. */
+export function bucket() {
+  const m = new Map();
   return {
-    tables, calcs, hidden,
-    addTable(t) { tables.set(t.sha, t); return t.sha; },
-    hide(key, viewer = "*") { hidden.add(`${key}|${viewer}`); },
-    readTable({ sha: s, viewer }) {
-      const t = tables.get(s);
-      return t && sees(s, viewer) ? { ok: true, found: true, table: t } : { ok: true, found: false };
+    m,
+    async head(k) { return m.has(k) ? { key: k } : null; },
+    async get(k) {
+      if (!m.has(k)) return null;
+      const b = m.get(k);
+      return { text: async () => new TextDecoder().decode(b), arrayBuffer: async () => b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength) };
     },
-    read({ calcId, viewer }) {
-      const c = calcs.get(calcId);
-      return c && sees(calcId, viewer) ? { ok: true, found: true, calculation: c } : { ok: true, found: false };
-    },
+    async put(k, b) { m.set(k, b instanceof Uint8Array ? b : new TextEncoder().encode(String(b))); return { key: k }; },
   };
 }
+
+const csvField = (v) => { const x = v === null || v === undefined ? "" : String(v); return /[",\n\r]/.test(x) ? `"${x.replace(/"/g, '""')}"` : x; };
 
 export function world({ recompute = undefined, now = NOW } = {}) {
   const st = storage();
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const t of bare.split(";")) if (t.trim()) st.db.exec(t);
   const clock = { now };
-  const bytes = new Map();
+  const ev = bucket();
   const host = { storage: st, ...(recompute !== undefined ? { recompute } : {}) };
-  const record = recordOf(host, { evidence: null, evidencePrefix: "bio/captures/" });
+  const record = recordOf(host, { evidence: ev, evidencePrefix: "" });
   record.migrate();
   const membership = membershipOf(host, { record });
   membership.migrate();
@@ -169,12 +170,13 @@ export function world({ recompute = undefined, now = NOW } = {}) {
   const passages = new Map();
   const passageText = content.passageText.bind(content);
   content.passageText = (id) => (passages.has(id) ? passages.get(id) : passageText(id));
-  const calculations = calculationsStandIn();
-  const wb = workbooksOf(host, { record, membership, provenance: prov, content, calculations,
-                                 bytesOf: async (s) => bytes.get(s) || null, now: () => clock.now });
+  record.setSetting("jurisdiction_profiles", ["test-port-ellery"], "admin");
+  const calculations = calculationsOf(host, { record, membership, content, provenance: prov, now: () => clock.now });
+  const wb = workbooksOf(host, { record, membership, provenance: prov, content, calculations, now: () => clock.now });
   let n = 0;
+  const tablesHeld = new Map();
   const w = {
-    st, host, record, membership, promotion, prov, content, calculations, wb, clock, ex, bytes,
+    st, host, record, membership, promotion, prov, content, calculations, wb, clock, ex, ev,
     rows: (q, ...a) => st.rows(q, ...a),
     count: (t) => st.rows(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
     snapshot(prefix = "workbook") {
@@ -188,7 +190,7 @@ export function world({ recompute = undefined, now = NOW } = {}) {
                    VALUES (?, ?, ?, ?, 'active', '["contribute"]', 't', 't')`, id, `Cover ${id}`, `h_${id}`, role);
     },
     /** A captured document holding `data` (bytes or text), in `project` when given: its capture sha and bundle. */
-    capture(data, { name = `cap${++n}`, project = null } = {}) {
+    capture(data, { name = `cap${++n}`, project = null, direct = false, cap = null } = {}) {
       const buf = typeof data === "string" ? new TextEncoder().encode(data) : data;
       const capSha = sha(buf);
       const id = `INFO-2026-${String(++n).padStart(4, "0")}-${name}`;
@@ -199,8 +201,9 @@ export function world({ recompute = undefined, now = NOW } = {}) {
         meta: { object_type: "information" },
         register: [{ sha256: capSha, path: `snapshots/${name}.txt`, encoding: "utf8", bytes: buf.length }] });
       if (!r.ok) throw new Error(`fixture capture refused: ${JSON.stringify(r).slice(0, 400)}`);
-      bytes.set(capSha, buf);
-      ex.readings[capSha] = { chain: LAYER, pageCount: 3 };
+      ev.m.set(capSha, buf);
+      ex.readings[capSha] = { chain: cap ? [{ ...LAYER[0], cap }] : LAYER, pageCount: 3 };
+      if (direct) prov.recordReceipt({ address: `https://example.org/${name}`, addressNorm: `example.org/${name}`, captureSha: capSha, retrieved: "2026-09-01T00:00:00Z" });
       return { capSha, bundleId: id };
     },
     /** A cited figure: a passage whose text is `text`, minted as content; its content id. */
@@ -222,12 +225,27 @@ export function world({ recompute = undefined, now = NOW } = {}) {
       membership.reindexProjectSight(r.bundleId);
       return r.bundleId;
     },
-    /** A table held by the stand-in calculations: `fields` [[name, type]], rows as arrays. */
-    table(fields, rows, grade_facts = { capture_grade: "B", derivation: "B", grade: "B" }) {
-      const fs = fields.map(([name, type]) => ({ name, type }));
-      const t = { sha: sha(JSON.stringify([fields, rows, ++n])), fields: fs,
-                  rows: rows.map((r) => Object.fromEntries(fs.map((f, i) => [f.name, r[i]]))), grade_facts };
-      return calculations.addTable(t);
+    /** A table declared by bob through calculations over a captured CSV (filed in `project` when given): its sha.
+     *  `fields` [[name, type]], `rows` arrays of values as the CSV writes them. */
+    async table(fields, rows, { project = null, direct = false, cap = null } = {}) {
+      const key = JSON.stringify([fields, rows, project, direct, cap]);
+      if (tablesHeld.has(key)) return tablesHeld.get(key);
+      const text = [fields.map(([f]) => f), ...rows].map((r) => r.map(csvField).join(",")).join("\n") + "\n";
+      const { capSha, bundleId } = w.capture(`${text}`, { project, direct, cap });
+      const m = content.mint({ bundleId, captureSha: capSha, extent: { kind: "document" }, mintedBy: V("bob") });
+      if (!m.ok) throw new Error(`fixture mint refused: ${JSON.stringify(m).slice(0, 300)}`);
+      const r = await calculations.declareTable({ source: m.content_id, schema: { fields: fields.map(([name, type]) => ({ name, type })) },
+                                                 header: fields.map(([f]) => f), by: V("bob") });
+      if (!r.ok) throw new Error(`fixture table refused: ${JSON.stringify(r).slice(0, 300)}`);
+      tablesHeld.set(key, r.sha);
+      return r.sha;
+    },
+    /** A calculation created by bob through calculations: its id. */
+    async calc(fields) {
+      const r = await calculations.create({ question: "What is left of the budget?", period: { from: "2024-07-01", to: "2025-06-30" },
+                                            project: w.P, by: V("bob"), ...fields });
+      if (!r.ok) throw new Error(`fixture calculation refused: ${JSON.stringify(r).slice(0, 400)}`);
+      return r.calc_id;
     },
   };
   return w;

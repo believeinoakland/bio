@@ -7,7 +7,7 @@ import { LINT_KINDS } from "../../../src/workbooks/index.mjs";
 const tag = () => ({ Z99: { s: `${Math.random()}` } });
 async function lintOf(sheets, opts) {
   const w = await seeded({}, xlsx(sheets, opts));
-  const r = w.wb.lint({ ...w.at, viewer: V("bob") });
+  const r = await w.wb.lint({ ...w.at, viewer: V("bob") });
   assert.equal(r.ok, true);
   return { w, findings: r.findings, of: (kind) => r.findings.filter((f) => f.kind === kind).map((f) => f.cell) };
 }
@@ -72,7 +72,7 @@ test("R9 cross_foot: a block whose row totals and column totals do not sum to th
 test("R9 lint answers {kind, cell, detail} for the six kinds only, changes nothing and blocks nothing; explainLint holds a member's note against a finding (NO_NOTE when blank), kept and never erased", async () => {
   const w = await seeded();
   const before = w.snapshot();
-  const r = w.wb.lint({ ...w.at, viewer: V("bob") });
+  const r = await w.wb.lint({ ...w.at, viewer: V("bob") });
   assert.deepEqual(w.snapshot(), before, "lint writes nothing");
   for (const f of r.findings) {
     assert.ok(LINT_KINDS.includes(f.kind));
@@ -80,15 +80,15 @@ test("R9 lint answers {kind, cell, detail} for the six kinds only, changes nothi
   }
   assert.deepEqual(LINT_KINDS, ["short_range", "constant_in_formula", "hidden_input", "number_as_text", "error_value", "cross_foot"]);
   const finding = { kind: "constant_in_formula", cell: "Model!B6" };
-  for (const note of ["", "   ", undefined, null]) assert.equal(w.wb.explainLint({ ...w.at, finding, note, by: V("bob") }).reason, "NO_NOTE");
-  assert.equal(w.wb.explainLint({ ...w.at, finding: { kind: "error_value", cell: "Model!B6" }, note: "x", by: V("bob") }).reason, "NO_SUCH_FINDING");
+  for (const note of ["", "   ", undefined, null]) assert.equal((await w.wb.explainLint({ ...w.at, finding, note, by: V("bob") })).reason, "NO_NOTE");
+  assert.equal((await w.wb.explainLint({ ...w.at, finding: { kind: "error_value", cell: "Model!B6" }, note: "x", by: V("bob") })).reason, "NO_SUCH_FINDING");
   w.clock.now = "2026-10-06T07:00:00.000Z";
-  assert.equal(w.wb.explainLint({ ...w.at, finding, note: "the 10% markup the council adopted", by: V("bob") }).ok, true);
-  assert.equal(w.wb.explainLint({ ...w.at, finding, note: "checked against the ordinance", by: V("carol") }).ok, true);
-  const notes = w.wb.lint({ ...w.at, viewer: V("carol") }).findings.find((f) => f.cell === "Model!B6").notes;
+  assert.equal((await w.wb.explainLint({ ...w.at, finding, note: "the 10% markup the council adopted", by: V("bob") })).ok, true);
+  assert.equal((await w.wb.explainLint({ ...w.at, finding, note: "checked against the ordinance", by: V("carol") })).ok, true);
+  const notes = (await w.wb.lint({ ...w.at, viewer: V("carol") })).findings.find((f) => f.cell === "Model!B6").notes;
   assert.deepEqual(notes, [{ note: "the 10% markup the council adopted", by: V("bob"), at: "2026-10-06T07:00:00.000Z" },
                            { note: "checked against the ordinance", by: V("carol"), at: "2026-10-06T07:00:00.000Z" }]);
   /* a recompute and a bind leave the notes as they are */
   await w.wb.recompute({ ...w.at, by: V("bob") });
-  assert.equal(w.wb.readWorkbook({ ...w.at, viewer: V("bob") }).lint.find((f) => f.cell === "Model!B6").notes.length, 2);
+  assert.equal((await w.wb.readWorkbook({ ...w.at, viewer: V("bob") })).lint.find((f) => f.cell === "Model!B6").notes.length, 2);
 });

@@ -53,7 +53,7 @@ test("R1 addWorkbook refuses in order NO_SHA, CAPTURE_NOT_HELD, NOT_A_WORKBOOK, 
   assert.equal(r.ok, true);
   assert.equal(r.already, false);
   assert.equal(r.capture_sha, cap);
-  const read = w.wb.readWorkbook({ captureSha: cap, project: w.P, viewer: V("bob") });
+  const read = await w.wb.readWorkbook({ captureSha: cap, project: w.P, viewer: V("bob") });
   assert.equal(read.workbook.question, "What does it cost?");
   assert.equal(read.workbook.period, "FY2025");
   assert.equal(read.workbook.project, w.P);
@@ -66,24 +66,24 @@ test("R1 addWorkbook refuses in order NO_SHA, CAPTURE_NOT_HELD, NOT_A_WORKBOOK, 
   const cap2 = w.capture(BASIC()).capSha;
   const iv = await w.wb.addWorkbook({ ...good, captureSha: cap2, period: { from: "2024-07-01", to: "2025-06-30" } });
   assert.equal(iv.ok, true);
-  assert.deepEqual(w.wb.readWorkbook({ captureSha: cap2, project: w.P, viewer: V("bob") }).workbook.period, { from: "2024-07-01", to: "2025-06-30" });
+  assert.deepEqual((await w.wb.readWorkbook({ captureSha: cap2, project: w.P, viewer: V("bob") })).workbook.period, { from: "2024-07-01", to: "2025-06-30" });
 });
 
 test("R2 readWorkbook answers bindings, inputs, latest recompute, lint, method notes, checks, grade facts and the disclosure, and never recomputes", async () => {
   let calls = 0;
   const w = await seeded({ recompute: async () => { calls++; return { ok: false, reason: "NOT_ENABLED", why: "not enabled" }; } });
-  const r = w.wb.readWorkbook({ ...w.at, viewer: V("bob") });
+  const r = await w.wb.readWorkbook({ ...w.at, viewer: V("bob") });
   for (const k of ["workbook", "bindings", "inputs", "recompute", "lint", "method_notes", "checks", "grade_facts", "disclosure"])
     assert.ok(k in r, k);
   assert.equal(r.recompute, null);
   assert.match(r.disclosure.text, /^not recomputed here/);
   await w.wb.recompute({ ...w.at, by: V("bob") });
   assert.equal(calls, 1);
-  for (let i = 0; i < 3; i++) w.wb.readWorkbook({ ...w.at, viewer: V("carol") });
-  w.wb.inputsOf({ ...w.at, viewer: V("bob") });
-  w.wb.lint({ ...w.at, viewer: V("bob") });
+  for (let i = 0; i < 3; i++) await w.wb.readWorkbook({ ...w.at, viewer: V("carol") });
+  await w.wb.inputsOf({ ...w.at, viewer: V("bob") });
+  await w.wb.lint({ ...w.at, viewer: V("bob") });
   assert.equal(calls, 1, "no read asks the engine");
-  const again = w.wb.readWorkbook({ ...w.at, viewer: V("bob") });
+  const again = await w.wb.readWorkbook({ ...w.at, viewer: V("bob") });
   assert.equal(again.recompute.status, "not recomputed here", "the latest recompute");
   assert.equal(w.count("workbook_recomputes"), 1, "reads write nothing");
   assert.equal(again.inputs.length, 3);
@@ -92,48 +92,50 @@ test("R2 readWorkbook answers bindings, inputs, latest recompute, lint, method n
 
 test("R13 a workbook whose project, capture or any bound source the viewer may not see is withheld whole: every read and act answers it exactly as an absent one", async () => {
   const w = await seeded();
-  const t = w.table([["amount", "number"]], [["1200.50"], ["300"], ["99.5"]]);
-  assert.equal(w.wb.bind({ ...w.at, range: "Model!B2:B4", input: { table: t, range: "A1:A3" }, by: V("bob") }).ok, true);
+  const t = await w.table([["amount", "number"]], [["1200.50"], ["300"], ["99.5"]]);
+  assert.equal((await w.wb.bind({ ...w.at, range: "Model!B2:B4", input: { table: t, range: "A1:A3" }, by: V("bob") })).ok, true);
   const absentOf = (r) => { const { capture_sha, project, ...rest } = r; return rest; };
-  const absent = absentOf(w.wb.readWorkbook({ captureSha: "a".repeat(64), project: w.P, viewer: V("bob") }));
-  const reads = (viewer) => [
-    w.wb.readWorkbook({ ...w.at, viewer }), w.wb.inputsOf({ ...w.at, viewer }), w.wb.lint({ ...w.at, viewer }),
-    w.wb.bind({ ...w.at, range: "Model!B2:B2", input: { table: t, range: "A1:A1" }, by: viewer }),
-    w.wb.explainLint({ ...w.at, finding: { kind: "constant_in_formula", cell: "Model!B6" }, note: "n", by: viewer }),
-    w.wb.recordMethodNote({ ...w.at, purpose: "p", sources: ["s"], steps: "s", limitations: "l", by: viewer }),
-    w.wb.recordCheck({ ...w.at, outcome: "agrees", by: viewer }),
+  const absent = absentOf(await w.wb.readWorkbook({ captureSha: "a".repeat(64), project: w.P, viewer: V("bob") }));
+  const reads = async (viewer) => [
+    await w.wb.readWorkbook({ ...w.at, viewer }), await w.wb.inputsOf({ ...w.at, viewer }), await w.wb.lint({ ...w.at, viewer }),
+    await w.wb.bind({ ...w.at, range: "Model!B2:B2", input: { table: t, range: "A1:A1" }, by: viewer }),
+    await w.wb.explainLint({ ...w.at, finding: { kind: "constant_in_formula", cell: "Model!B6" }, note: "n", by: viewer }),
+    await w.wb.recordMethodNote({ ...w.at, purpose: "p", sources: ["s"], steps: "s", limitations: "l", by: viewer }),
+    await w.wb.recordCheck({ ...w.at, outcome: "agrees", by: viewer }),
   ];
   const absentAll = async (viewer, why) => {
-    for (const r of reads(viewer)) assert.deepEqual(absentOf(r), absent, `${why}: ${JSON.stringify(r).slice(0, 100)}`);
+    for (const r of await reads(viewer)) assert.deepEqual(absentOf(r), absent, `${why}: ${JSON.stringify(r).slice(0, 100)}`);
     assert.deepEqual(absentOf(await w.wb.recompute({ ...w.at, by: viewer })), absent, why);
   };
   /* the project: dave has not joined it */
   await absentAll(V("dave"), "a project out of sight");
   await absentAll(undefined, "no viewer");
   await absentAll("", "an empty viewer");
-  /* a bound source out of sight: carol may see the project, not the table */
-  for (const r of reads(V("carol")).slice(0, 3)) assert.equal(r.ok, true, "carol sees it while she sees the table");
-  w.calculations.hide(t, V("carol"));
+  /* a bound source out of sight: carol may see the project, not a table filed in bob's own project */
+  for (const r of (await reads(V("carol"))).slice(0, 3)) assert.equal(r.ok, true, "carol sees it while she sees every bound table");
+  const own = w.project("Bob's own", "bob");
+  const t2 = await w.table([["amount", "number"]], [["300"]], { project: own });
+  const b2 = await w.wb.bind({ ...w.at, range: "Model!B3", input: { table: t2, range: "A1" }, by: V("bob") });
+  assert.equal(b2.ok, true);
   await absentAll(V("carol"), "a bound table out of sight");
-  assert.equal(w.wb.readWorkbook({ ...w.at, viewer: V("bob") }).ok, true, "bob still sees it");
+  assert.equal((await w.wb.readWorkbook({ ...w.at, viewer: V("bob") })).ok, true, "bob still sees it");
   /* an unbound binding's source is still shown, so it still withholds */
-  const b = w.wb.readWorkbook({ ...w.at, viewer: V("bob") }).bindings[0];
-  assert.equal(w.wb.unbind({ bindingId: b.binding_id, reason: "wrong table", by: V("bob") }).ok, true);
+  assert.equal((await w.wb.unbind({ bindingId: b2.binding.binding_id, reason: "wrong table", by: V("bob") })).ok, true);
   await absentAll(V("carol"), "an unbound binding's source out of sight");
   /* an extent out of sight */
   const w2 = await seeded();
   const hiddenP = w2.project("Private", "alice");
   const fig = w2.figure("$1,200.50", { project: hiddenP });
-  assert.equal(w2.wb.bind({ ...w2.at, range: "Model!B2", input: { extent: fig.contentId }, by: V("alice") }).ok, true, "alice sees the extent");
-  for (const r of [w2.wb.readWorkbook({ ...w2.wb && w2.at, viewer: V("bob") }), w2.wb.inputsOf({ ...w2.at, viewer: V("bob") })])
+  assert.equal((await w2.wb.bind({ ...w2.at, range: "Model!B2", input: { extent: fig.contentId }, by: V("alice") })).ok, true, "alice sees the extent");
+  for (const r of [await w2.wb.readWorkbook({ ...w2.at, viewer: V("bob") }), await w2.wb.inputsOf({ ...w2.at, viewer: V("bob") })])
     assert.deepEqual(absentOf(r), absent, "bob may not see the bound extent");
   /* the capture: its home moved into a project bob may not see */
   const w3 = await seeded();
   w3.st.sql.exec(`UPDATE bundles SET project=? WHERE bundle_id=?`, w3.project("Private", "alice"), w3.prov.homeOf(w3.cap).bundleId);
   w3.membership.reindexProjectSight();
-  assert.deepEqual(absentOf(w3.wb.readWorkbook({ ...w3.at, viewer: V("carol") })), absent, "a capture out of sight");
+  assert.deepEqual(absentOf(await w3.wb.readWorkbook({ ...w3.at, viewer: V("carol") })), absent, "a capture out of sight");
   /* a machine viewer sees it */
-  assert.equal(w.wb.readWorkbook({ ...w.at, viewer: MACHINE }).ok, true);
+  assert.equal((await w.wb.readWorkbook({ ...w.at, viewer: MACHINE })).ok, true);
 });
 
 test("R18 the tables are declared through record-core.declareTable, export yes, keyed to their project for purge; a purge of the project clears them", async () => {
@@ -147,12 +149,12 @@ test("R18 the tables are declared through record-core.declareTable, export yes, 
     assert.deepEqual(d.keys, ["project"], d.name);
     assert.equal(d.purge, "clear", d.name);
   }
-  const t = w.table([["amount", "number"]], [["1"]]);
-  w.wb.bind({ ...w.at, range: "Model!B3", input: { table: t, range: "A1" }, by: V("bob") });
-  w.wb.recordMethodNote({ ...w.at, purpose: "p", sources: ["s"], steps: "s", limitations: "l", by: V("bob") });
-  w.wb.recordCheck({ ...w.at, outcome: "agrees", by: V("carol") });
+  const t = await w.table([["amount", "number"]], [["1"]]);
+  await w.wb.bind({ ...w.at, range: "Model!B3", input: { table: t, range: "A1" }, by: V("bob") });
+  await w.wb.recordMethodNote({ ...w.at, purpose: "p", sources: ["s"], steps: "s", limitations: "l", by: V("bob") });
+  await w.wb.recordCheck({ ...w.at, outcome: "agrees", by: V("carol") });
   await w.wb.recompute({ ...w.at, by: V("bob") });
-  w.wb.explainLint({ ...w.at, finding: { kind: "constant_in_formula", cell: "Model!B6" }, note: "a markup", by: V("bob") });
+  await w.wb.explainLint({ ...w.at, finding: { kind: "constant_in_formula", cell: "Model!B6" }, note: "a markup", by: V("bob") });
   const other = w.project("Other", "bob");
   const cap2 = w.capture(BASIC()).capSha;
   await w.wb.addWorkbook({ captureSha: cap2, question: "q", period: "p", project: other, by: V("bob") });

@@ -1,10 +1,10 @@
 /* workbooks: a recipe calculation exported to XLSX (R14), opened by office-readers and recomputed by the real
-   `sheet-worker` engine, as any spreadsheet program would recompute it. The stand-in calculations stores what
-   `calc-grammar` evaluates, as `calculations` does. */
+   `sheet-worker` engine, as any spreadsheet program would recompute it. The calculations are created through the
+   real `calculations`, which stores what `calc-grammar` evaluates. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { seeded, V, sha } from "./fixture.mjs";
-import { evaluate, resultKey, METHOD } from "../../../src/calc-grammar/index.mjs";
+import { seeded, V } from "./fixture.mjs";
+import { METHOD } from "../../../src/calc-grammar/index.mjs";
 import { xlsxEntry } from "../../../src/formats-xlsx.mjs";
 import { COMPUTED_LABEL, FORMULA_LABEL } from "../../../src/workbooks/index.mjs";
 import { makeMember, realEngine, recomputeVia } from "../../../../sheet-worker/test/helpers.mjs";
@@ -49,27 +49,22 @@ const RECIPE = {
   output: "left",
 };
 
-function holdCalc(w, { recipe = RECIPE, rows = ROWS } = {}) {
-  const t = w.table(FIELDS, rows);
-  const table = w.calculations.tables.get(t);
-  const budget = { value: "2000", sign: "+", precision: "exact" };
-  const run = evaluate(recipe, { pay: { fields: table.fields, rows: table.rows }, budget });
-  assert.ok(run.result !== undefined, `the recipe evaluates: ${JSON.stringify(run).slice(0, 200)}`);
-  const results = Object.fromEntries(run.trace.filter((s) => !s.output || s.output.rows === undefined).map((s) => [s.step, s.output]));
-  const calcId = `CALC-2026-${String(w.calculations.calcs.size + 1).padStart(4, "0")}`;
-  w.calculations.calcs.set(calcId, { calc_id: calcId, question: "What is left of the budget?", period: "FY2025", recipe,
-    method_version: METHOD, result_key: resultKey(recipe, { pay: t, budget: sha(JSON.stringify(budget)) }),
-    inputs: [{ name: "pay", kind: "table", sha: t }, { name: "budget", kind: "figure", figure: budget, sha: sha(JSON.stringify(budget)) }],
-    results });
-  return { calcId, t, results };
+/* A calculation created through calculations over a declared table (`project` files its CSV): its id, its table's sha
+   and its stored results, as calculations reads them back. */
+async function holdCalc(w, { recipe = RECIPE, rows = ROWS, kind = "difference", project = null } = {}) {
+  const t = await w.table(FIELDS, rows, { project });
+  const calcId = await w.calc({ inputs: [{ name: "pay", table: t }, { name: "budget", value: "2000" }], recipe, kind });
+  const read = await w.calculations.read({ calcId, viewer: V("bob") });
+  assert.equal(read.found, true);
+  return { calcId, t, results: read.calculation.results, calc: read.calculation };
 }
 
 const num = (f) => Number(`${f.sign === "-" ? "-" : ""}${f.value}`);
 
 test("R14 exportRecipe answers a workbook any spreadsheet program opens: one sheet per input table with typed cells, a results sheet and a method sheet; count, sum, difference, ratio and share results are formulas over the input sheets cached at the stored result, any other step a value labelled; recomputing the file gives the stored results", async () => {
   const w = await seeded();
-  const { calcId, t, results } = holdCalc(w);
-  const r = w.wb.exportRecipe({ calcId, viewer: V("bob") });
+  const { calcId, t, results, calc } = await holdCalc(w);
+  const r = await w.wb.exportRecipe({ calcId, viewer: V("bob") });
   assert.equal(r.found, true);
   assert.deepEqual(r.sheets, ["pay", "results", "method"]);
   assert.match(r.content_type, /spreadsheetml\.sheet/);
@@ -88,9 +83,9 @@ test("R14 exportRecipe answers a workbook any spreadsheet program opens: one she
   /* the method sheet */
   const method = Object.fromEntries(sheet("method").filter((c) => c.source.cell.startsWith("A")).map((c) => [c.value, at("method", `B${c.source.cell.slice(1)}`)?.value]));
   assert.equal(method.question, "What is left of the budget?");
-  assert.equal(method.period, "FY2025");
+  assert.deepEqual(JSON.parse(method.period), { from: "2024-07-01", to: "2025-06-30" });
   assert.equal(method["method version"], METHOD);
-  assert.equal(method["result key"], w.calculations.calcs.get(calcId).result_key);
+  assert.equal(method["result key"], calc.result_key);
   assert.deepEqual(JSON.parse(method.recipe), RECIPE);
   assert.equal(at("method", `C${sheet("method").find((c) => c.value === "pay" && c.source.cell.startsWith("A")).source.cell.slice(1)}`).value, t, "each input's sha256");
   /* the results sheet: which steps are formulas, which labelled values */
@@ -126,14 +121,16 @@ test("R14 exportRecipe answers a workbook any spreadsheet program opens: one she
 
 test("R14 a calculation the viewer may not see, or one with an input table out of sight, answers found: false, as an absent one", async () => {
   const w = await seeded();
-  const { calcId, t } = holdCalc(w);
-  assert.deepEqual(w.wb.exportRecipe({ calcId: "CALC-2026-9999", viewer: V("bob") }), { ok: true, found: false });
-  for (const viewer of [undefined, "", null]) assert.deepEqual(w.wb.exportRecipe({ calcId, viewer }), { ok: true, found: false });
-  w.calculations.hide(calcId, V("dave"));
-  assert.deepEqual(w.wb.exportRecipe({ calcId, viewer: V("dave") }), { ok: true, found: false });
-  w.calculations.hide(t, V("carol"));
-  assert.deepEqual(w.wb.exportRecipe({ calcId, viewer: V("carol") }), { ok: true, found: false });
-  assert.equal(w.wb.exportRecipe({ calcId, viewer: V("bob") }).found, true);
+  const { calcId } = await holdCalc(w);
+  assert.deepEqual(await w.wb.exportRecipe({ calcId: "CALC-2026-9999", viewer: V("bob") }), { ok: true, found: false });
+  for (const viewer of [undefined, "", null]) assert.deepEqual(await w.wb.exportRecipe({ calcId, viewer }), { ok: true, found: false });
+  assert.deepEqual(await w.wb.exportRecipe({ calcId, viewer: V("dave") }), { ok: true, found: false }, "dave may not see its project");
+  assert.equal((await w.wb.exportRecipe({ calcId, viewer: V("carol") })).found, true, "carol may");
+  /* an input table filed in bob's own project: carol may see the calculation's project, not its input */
+  const own = w.project("Bob's own", "bob");
+  const hidden = await holdCalc(w, { rows: ROWS.slice(1), project: own });
+  assert.deepEqual(await w.wb.exportRecipe({ calcId: hidden.calcId, viewer: V("carol") }), { ok: true, found: false });
+  assert.equal((await w.wb.exportRecipe({ calcId: hidden.calcId, viewer: V("bob") })).found, true);
 });
 
 test("R14 a ratio rounded half-even at a half-way tie, and a text match a case-blind spreadsheet test would widen, are written as labelled values, never as a formula that could disagree", async () => {
@@ -148,8 +145,8 @@ test("R14 a ratio rounded half-even at a half-way tie, and a text match a case-b
     { op: "ratio", as: "plain", numerator: "p", denominator: "n", places: 3, mode: "half_even" }],
     output: "plain" };
   const rows = [["Acme", "1", "true", "2025-01-01", "Parks"], ["acme", "2", "true", "2025-01-01", "Roads"]];
-  const { calcId } = holdCalc(w, { recipe, rows });
-  const r = w.wb.exportRecipe({ calcId, viewer: V("bob") });
+  const { calcId } = await holdCalc(w, { recipe, rows, kind: "ratio" });
+  const r = await w.wb.exportRecipe({ calcId, viewer: V("bob") });
   const res = (await xlsxEntry.text(r.bytes)).sheets.find((s) => s.name === "results").cells;
   const how = (step) => { const row = res.find((c) => c.value === step && c.source.cell.startsWith("A")).source.cell.slice(1); return res.find((c) => c.source.cell === `D${row}`).value; };
   assert.equal(how("k"), COMPUTED_LABEL, "Acme and acme: a case-blind test would count two");
