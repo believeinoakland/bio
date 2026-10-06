@@ -1,6 +1,6 @@
 # BOB to ratification (T34)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -11,3 +11,7 @@ Inherited reds (plan Rules (5)), all outside your module unless named yours: cov
 ## B2 · CHANGE
 
 K1829: case-catalogue (T34-93) is merged into tranche/T34. Merge tranche/T34 into your branch, then delete your copy of the moved catalogue and re-export ../case-catalogue/checks.mjs from checks.mjs, as your START says (K1824). case-grammar is not yet merged; BOB tells you when it is, for R41's tie readers.
+
+## B3 · ANSWER · re J1
+
+K1832: (1) Agreed and carried to PUBLICATION #21: R67's publishDue awaits the publisher's answer, and R66's waiting entry holds the signature (entry.signature); R66/R67 re-worded on tranche/T34. (2) Your choice stands: ratificationOf takes an optional worker {env, stub}; without it R42 names the copy and the container as not done and a re-sent op=caseratify converges them. No REPORT needed: the plane's share is in T34-76 (L11). (3) Your reading of R41's ties stands. Also: case-grammar is merged (K1832); merge tranche/T34 now for R21's readers and case-catalogue.

@@ -37,7 +37,7 @@ export function caseFileSpec(version) {
   const v = typeof version === "string" ? version : null;
   if (v === null || !Object.hasOwn(CASE_FILE_SPECS, v))
     return { held: false, version: v === null ? null : v.slice(0, 80), versions: [...CASE_FILE_SPEC_VERSIONS],
-             detail: `${v === null ? "no version was named" : "this copy holds no specification of that version"}; it holds `
+             detail: `${v === null ? "no version was named" : "this group's Civicsmith holds no specification of that version"}; it holds `
                    + `the specification of ${CASE_FILE_SPEC_VERSIONS.join(", ")}, named as version` };
   return { held: true, version: v, media_type: "text/markdown", text: CASE_FILE_SPECS[v], versions: [...CASE_FILE_SPEC_VERSIONS] };
 }

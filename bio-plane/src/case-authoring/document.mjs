@@ -186,6 +186,7 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
                                    lens: lensRead = null, method = null, materials = null, group = null,
                                    accepted = null, grading = null, passages = null,
                                    calculations = [], calculationsBlock = [], timeline = [], timelineLeftOut = 0,
+                                   timelineCut = [], timelineUnread = null,
                                    timelineBlock = [], peopleBlock = [], memberTiesBlock = [] }) {
   const roleOf = new Map((roles || []).map((r) => [r.target, r.role]));
   const lens = manifest && manifest.in_force === true ? manifest
@@ -435,7 +436,7 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
     ...acceptedBodyLines(accepted),
     ...(attributions.length ? attributionBodyLines(attributions) : []),
     ...calculationBodyLines(calculations),
-    ...timelineBodyLines(timeline, timelineLeftOut),
+    ...timelineBodyLines(timeline, timelineLeftOut, { cut: timelineCut, unread: timelineUnread }),
     "## What This Excludes",
     "",
     statement,
@@ -510,20 +511,20 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
     "",
     ...(lens.in_force
       ? [`This case was produced under the bias set in force for ${lens.scope_id} when it was published, `
-         + "computed by the plane and frozen here. A lens adopted afterwards does not change this "
+         + "computed then and frozen here. A lens adopted afterwards does not change this "
          + "document: the manifest names the revisions this case was made under, not the ones in force now.",
          "",
          ...lens.bundles.map((x) => `- ${x.bundle_id} (${x.scope}) at revision ${x.revision}`),
          "",
          `Hash of the effective statement set: ${lens.statements_sha}.`,
          ...(lens.lock_violations
-           ? ["", `${lens.lock_violations} project override(s) named a LOCKED instance statement and were `
-                 + "refused their effect; the instance statement stands in the set hashed above."]
+           ? ["", `${lens.lock_violations} project override(s) named a LOCKED group-wide statement and were `
+                 + "refused their effect; the group-wide statement stands in the set hashed above."]
            : [])]
       : lens.in_force === null
       ? [`THE MANIFEST IS UNDETERMINED for ${lens.scope_id}: ${lens.stated}. Nothing is claimed either way.`]
       : [`NO MANIFEST WAS IN FORCE for ${lens.scope_id} when this case was published: no bias set stood `
-         + "adopted for this instance or this project. That is stated, not left blank — it is a different "
+         + "adopted for the group or this project. That is stated, not left blank — it is a different "
          + "fact from a lens with nothing in it."]),
     /* REC-219 / §3 rule 18: the second fact, in prose, when there is something to say. */
     ...(pending.length
@@ -581,29 +582,49 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
 }
 
 /** R56 (C:A-15; DEC-76.4): the calculations section, in words a reader reads: each calculation and workbook the case's
- *  findings rest on, what this instance's recompute found at publication, and the owner's words where one differs or
- *  rests on an unbound input. No section when the findings reach none. */
+ *  findings rest on, what was found of it at publication, and the owner's words where one differs or rests on an unbound
+ *  input. A calculation is recomputed at publication; a workbook (its row's `calc` is its capture's SHA-256) is read and
+ *  never recomputed here, and its state is its own engine's latest recompute against the values the file stores:
+ *  agreement between two engines, never a check of accuracy (workbooks R8). No section when the findings reach none. */
 export const CALCULATION_STATE_WORDS = Object.freeze({
   agrees: "recomputed at publication, and the result agrees with the one stored",
   differs: "recomputed at publication, and the result DIFFERS from the one stored",
   unbound: "recomputed at publication; at least one input was typed in with no source, and is testimony",
   not_recomputed: "not recomputed here",
 });
+/** R56 (workbooks R8): the same states said of a workbook, which publication reads and never recomputes. */
+export const WORKBOOK_STATE_WORDS = Object.freeze({
+  agrees: "a workbook, read at publication: its engine's latest recompute agrees with the values the file stores",
+  differs: "a workbook, read at publication: its engine's latest recompute DIFFERS from the values the file stores",
+  unbound: "a workbook, read at publication: at least one input cell was typed in with no source, and is testimony",
+  not_recomputed: "a workbook, read at publication and not recomputed by any engine here",
+});
+const isWorkbookRow = (r) => /^[0-9a-f]{64}$/.test(String(r.calc));
 export function calculationBodyLines(rows) {
   if (!rows || !rows.length) return [];
+  const books = rows.some(isWorkbookRow);
   return ["## Calculations This Case Rests On", "",
-    "Each calculation below was recomputed by this instance when the case was published, never on a later read. A "
+    "Each calculation below was recomputed when the case was published, never on a later read. A "
     + "result that differs, or an input typed in with no source, is disclosed here by the group and does not stop "
     + "publication.", "",
-    ...rows.map((r) => `- ${r.calc}: ${CALCULATION_STATE_WORDS[r.recompute] ?? r.recompute}.`
+    ...(books ? ["Each workbook below was read when the case was published and not recomputed then. What is stated of it "
+      + "is its own engine's latest recompute against the values the file stores: agreement between two engines, never "
+      + "a check that the figures are right. Open it in any spreadsheet program.", ""] : []),
+    ...rows.map((r) => `- ${r.calc}: ${(isWorkbookRow(r) ? WORKBOOK_STATE_WORDS : CALCULATION_STATE_WORDS)[r.recompute]
+        ?? r.recompute}${isWorkbookRow(r) && r.method_version ? ` (${r.method_version})` : ""}.`
       + (r.disclosed != null ? ` Disclosed by the group: ${r.disclosed}` : "")),
     ""];
 }
 
 /** R57 (C11; K1494): the timeline, in words: what the world did and what the group did, as two lists, never one; each
- *  item with the source it rests on; how many items had no source and were left out. */
-export function timelineBodyLines(rows, leftOut = 0) {
-  if ((!rows || !rows.length) && !leftOut) return [];
+ *  item with the source it rests on; how many items had no source and were left out; each lane events cut at its limit
+ *  (`cut`: `they_did`, or `we_did:<source>`), so a cut list never reads as whole; and a read that failed (`unread`),
+ *  stated rather than read as an empty timeline (R26). */
+export function timelineBodyLines(rows, leftOut = 0, { cut = [], unread = null } = {}) {
+  if (unread) return ["## Timeline", "", `The timeline could not be read when this case was published (${unread}). It is `
+    + "stated as not read, not as empty: this case claims nothing about what happened or what the group did.", ""];
+  const cuts = Array.isArray(cut) ? cut : [];
+  if ((!rows || !rows.length) && !leftOut && !cuts.length) return [];
   const lane = (name, title) => {
     const items = (rows || []).filter((r) => r.lane === name);
     return [title, "", ...(items.length ? items.map((r) => `${r.ord}. ${r.when} — ${r.label ?? r.ref} (${r.ref}; source ${r.source})`)
@@ -613,5 +634,8 @@ export function timelineBodyLines(rows, leftOut = 0) {
     "Frozen when this case was published. What happened in the world and what the group did are two lists and are never "
     + "merged into one.", "",
     ...lane("they_did", "### What they did"), ...lane("we_did", "### What we did"),
-    ...(leftOut ? [`${leftOut} item(s) had no source this record could cite and are left out.`, ""] : [])];
+    ...(leftOut ? [`${leftOut} item(s) had no source this record could cite and are left out.`, ""] : []),
+    ...cuts.map((c) => (c === "they_did" ? "The list of what they did stops at its bound: the record holds more than this case lists."
+      : `What we did, from ${c.slice("we_did:".length)}, stops at its bound: that source holds more than this case lists.`)),
+    ...(cuts.length ? [""] : [])];
 }

@@ -14,8 +14,13 @@ test("R4 export_log is exempt from purge: the whole-store purge and a record's p
   assert.deepEqual([...CORPUS_EXPORT_EXEMPT], ["export_log"]);
   assert.equal(corpusExportOf(w.host), w.ce, "one instance per host (K61)");
   /* record-core holds the declaration under this module's name (a second one is refused and declares nothing) */
-  assert.deepEqual(w.record.declarePurge("probe", ["export_log"]),
-                   { ok: false, reason: "TABLE_DECLARED", table: "export_log", module: "probe", declaredBy: "corpus-export" });
+  /* (N554) record-core R80's refusal shape: its row's fields, the fields it answered before kept */
+  const again = w.record.declarePurge("probe", ["export_log"]);
+  const { translation, detail, ...named } = again;
+  assert.deepEqual(named, { ok: false, reason: "TABLE_DECLARED", code: "TABLE_DECLARED", check: "C-102.27",
+                            table: "export_log", module: "probe", declaredBy: "corpus-export" });
+  assert.equal(typeof translation, "string");
+  assert.match(detail, /export_log/);
   w.doc(A, ["the minutes, as captured"]);
   w.inquiry(B, { cites: [A] });
   w.ce.exportManifest({ note: "before the purge" });

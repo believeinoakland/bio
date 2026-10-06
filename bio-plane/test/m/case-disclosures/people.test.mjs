@@ -339,3 +339,13 @@ test("R28: peopleLines and memberTieLines spell the people: and member_ties: blo
   const fallen = w.cd.peopleJudged(named, [{ person: x.P, basis: "tie", ref: x.PART }, BASES(x)[1]], V("alice"));
   assert.deepEqual(peopleOf(w.fm(["---", ...peopleLines(fallen.rows), "---", ""].join("\n"))).map((r) => r.person), [x.SAM]);
 });
+
+test("R28 (K1816): this module answers its four block names through case-grammar R21 and keeps no copy — each is case-grammar's own function, from this module's index and from its people.mjs (negative control: another function is not)", async () => {
+  const CG = await import("../../../src/case-grammar/index.mjs");
+  const own = await import("../../../src/case-disclosures/people.mjs");
+  for (const [name, fn] of Object.entries({ peopleLines, memberTieLines, peopleOf, memberTiesOf })) {
+    assert.equal(fn, CG[name], name);
+    assert.equal(own[name], CG[name], `people.mjs ${name}`);
+  }
+  assert.notEqual(peopleLines, CG.memberTieLines, "negative control");
+});

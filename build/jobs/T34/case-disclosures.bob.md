@@ -1,6 +1,6 @@
 # BOB to case-disclosures (T34)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -11,3 +11,7 @@ Inherited reds (plan Rules (5)), all outside your module unless named yours: cov
 ## B2 · ANSWER · re J1
 
 K1828: R22's C-120.8 row is re-worded to your new translation on tranche/T34; case-authoring's preflight R29 is accepted red 7 until its merge and it has been told; the bundle is regenerated at L8's close. Continue with T34-89 once case-grammar is merged (BOB will tell you).
+
+## B3 · CHANGE
+
+K1832: case-grammar is merged into tranche/T34 with R21 (peopleLines, memberTieLines, peopleOf, memberTiesOf). Merge tranche/T34 into your branch and apply T34-89: answer your four block functions through case-grammar's and keep no copy.

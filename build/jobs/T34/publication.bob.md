@@ -11,3 +11,7 @@ Inherited reds (plan Rules (5)), all outside your module unless named yours: cov
 ## B2 · CHANGE
 
 K1826 (asked by PUBLIC-READ #12): R40 and R70 re-worded on tranche/T34. Hold R70's signed_at and published_at as columns of each published_cases row, named in R40's read contract, never null (a pre-T34 row holds its ratified_at in both, by your migration), so public-read lists them in its one query. R40 is now marked not yet met (T34), yours. Merge tranche/T34 into your branch before continuing.
+
+## B3 · CHANGE
+
+K1832 (asked by RATIFICATION #19): R66 and R67 re-worded on tranche/T34. R66's waiting entry records the held signature (field signature) beside doc_sha, and R67's publishDue awaits each publisher answer (it may be a Promise: the signature check is async WebCrypto) before taking the next edition, handing it the entry R66 recorded. Merge tranche/T34 (it also carries K1826's R40/R70 columns, and case-grammar's and corpus-export's merges).
