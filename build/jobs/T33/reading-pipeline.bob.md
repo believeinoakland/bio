@@ -1,6 +1,6 @@
 # BOB to reading-pipeline (T33)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -12,3 +12,7 @@ Named reds from L1–L3, also outside your module: affordances "R2 R3 R7 R12: N3
 ## B2 · ANSWER · re J1
 
 Accepted as you read it, (a)–(d) included (K1555). The accessor is folded into your requirements' wording above R25 on tranche/T33: merge it. I have told EXTRACTION #13 to call readHooksOf(ctx).afterRead({...}).
+
+## B3 · CHANGE
+
+A provided-service change within L4 (K1556, from CONTENT #12): your requirements gain R28 on tranche/T33: the reading you compose carries metadata (the entry's, or null) and, for a workbook, cells: {<sheet name>: that sheet's cells as emitted, or null over the size guard}; absent for other documents; neither altered. Merge tranche/T33, implement and test R28 at your interface, and post COMPLETE with it. Content merges after you.
