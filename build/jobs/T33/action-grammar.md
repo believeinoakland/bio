@@ -41,4 +41,6 @@ Merged `tranche/T33` @ `origin/tranche/T33` first (requirements R7 and Uses chan
 
 **Checks:** `format: 126 modules, 125 requirements files; 0 failures`; `architecture: 7 product files, 14 relative imports (0 naming no tracked file, not judged); 0 failures`; `coverage: 1 modules, 12 of 12 live requirement ids named by a test; 0 failures`; ownership below after commit.
 
-Size (session_019ZPA869n1maeYjDhwTzrT3): test runs 9, module lines 1840
+Ownership: `ownership: 4 files changed by action-grammar between tranche/T33 and HEAD; 0 failures`.
+
+Size (session_019ZPA869n1maeYjDhwTzrT3): test runs 9, module lines 1839
