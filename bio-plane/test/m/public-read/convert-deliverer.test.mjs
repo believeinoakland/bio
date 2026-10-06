@@ -151,7 +151,7 @@ test("R3 (deliverer) publishedCase states who delivered its case document and ea
   assert.deepEqual([kindOf(r.findings[0].delivered_by), kindOf(r.manifest.case_document.delivered_by)], ["member:gus", "founder"]);
 });
 
-test("R6 (deliverer) the container a stranger holds carries delivered_by beside every attestor, and its verify sentence says which field the signature covers and which is this instance's record", async () => {
+test("R6 (deliverer) the container a stranger holds carries delivered_by beside every attestor, and its verify sentence says which field the signature covers and which is this group's Civicsmith's record (T34-87, DEC-149: no \"this instance\")", async () => {
   const { w, env } = record();
   const readManifest = async (sha256) => {
     const zr = await route(w, env, "publishedbytes", { sha256, format: "zip" });
@@ -170,6 +170,10 @@ test("R6 (deliverer) the container a stranger holds carries delivered_by beside 
   assert.match(man.verify, /`delivered_by` is who DELIVERED/);
   assert.match(man.verify, /not covered by any\s+signature/i);
   assert.match(man.verify, /`undetermined` there means the delivery was not recorded; it never means the signer delivered it/);
+  /* T34-87 (DEC-149; K1821): the voice for a reader with no credential, at worker.mjs' three rows of this sentence */
+  assert.match(man.verify, /makes one detectable by anyone holding it, without the cooperation of this group's Civicsmith\. /);
+  assert.match(man.verify, /DELIVERED that signature to this group's Civicsmith — the authenticated session that performed the act, a member or its founder — and it is this group's Civicsmith's record, not covered by any signature/);
+  assert.doesNotMatch(man.verify, /this instance|the instance's|this copy|this plane/i);
   const legacy = await readManifest((await assemble(w, env, LEGACY_CASE)).manifest_sha);
   assert.equal(legacy.format, "bio-case-container/6");
   for (const d of [legacy.case_document, legacy.findings[0]]) {

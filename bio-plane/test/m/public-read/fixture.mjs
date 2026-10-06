@@ -112,7 +112,29 @@ export function legacyCaseCommit(w, { case: caseId, edition, project, roster, si
   return r;
 }
 
+/* STAND-INS until `publication`'s T34 job merges (it merges before this one; K1826), each a no-op once publication
+   provides it: its R70 columns `signed_at`, `published_at` on `published_cases` (held never null: the commit's instant
+   for both, as an edition published at signing answers), and its R64 `stampedEditions()`, answered from its own
+   `stampsOf` over every published case edition, in case and edition order. */
+export function publicationT34(w) {
+  const cols = [...w.st.sql.exec(`PRAGMA table_info(published_cases)`)].map((c) => c.name);
+  if (!cols.includes("signed_at")) {
+    w.st.sql.exec(`ALTER TABLE published_cases ADD COLUMN signed_at TEXT`);
+    w.st.sql.exec(`ALTER TABLE published_cases ADD COLUMN published_at TEXT`);
+    w.st.sql.exec(`CREATE TRIGGER IF NOT EXISTS t34_r70_stand_in AFTER INSERT ON published_cases
+                   BEGIN UPDATE published_cases SET signed_at=NEW.opened, published_at=NEW.opened
+                         WHERE case_id=NEW.case_id AND edition=NEW.edition AND signed_at IS NULL; END`);
+  }
+  if (typeof w.p.stampedEditions !== "function")
+    w.p.stampedEditions = () => ({ ok: true, editions: [...w.st.sql.exec(
+      `SELECT case_id, edition FROM published_cases ORDER BY case_id, edition`)]
+      .map((e) => ({ case: e.case_id, edition: Number(e.edition),
+                     stamps: w.p.stampsOf({ case: e.case_id, edition: Number(e.edition) }).stamps || [] }))
+      .filter((e) => e.stamps.length) });
+}
+
 function withRead(w, opts = {}) {
+  publicationT34(w);
   signAsOfItsFormat(w);
   w.docket = opts.docket || docketOn();
   w.pr = publicReadOf(w.host, { publication: w.p, docket: w.docket });
