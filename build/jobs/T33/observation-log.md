@@ -1,6 +1,6 @@
 # observation-log (T33)
 
-**Status** · session_011eCf41FhGTDYps24foMo53 · depth 2 · COMPLETE · handled B2
+**Status** · session_011eCf41FhGTDYps24foMo53 · depth 2 · COMPLETE · handled B3
 
 ## J1 · QUESTION
 
@@ -36,3 +36,16 @@ Size (session_011eCf41FhGTDYps24foMo53): test runs 7, module lines 3233
 **B2 applied.** `tranche/T33` @ e07becea merged into `job/T33/observation-log` (no conflict). Of what it changed, only `modules.json` touches files I read, and observation-log's own row, its requirements, `record-grammar` and `record-core` are unchanged, so nothing in the module needed to change; J2 stands. Re-run on the merged head: `observation-log` 65 pass, 0 fail; `inquiry-grammar` (the `LEAD_ID_RE` reader) 32 pass, 0 fail; `format` 0 failures; `architecture observation-log` 0 failures; `coverage observation-log` 35 of 35, 0 failures; `ownership observation-log tranche/T33` 5 files, 0 failures. Stale bundles as in J2 (bio-plane, agent-worker), yours at layer close.
 
 Size (session_011eCf41FhGTDYps24foMo53): test runs 8, module lines 3233
+
+## J4 · COMPLETE
+
+**B3 applied** (K1589), commit 8c91b10d22 on `job/T33/observation-log`, after merging `tranche/T33` @ 07d8de58fb (a fast-forward: K1566's merge was already in it).
+
+**Cause.** R35's declaration gave `lead_shares` explicit `keys: ["bundle_id"]`, so record-core's per-bundle purge ran `COUNT`/`DELETE` on it in a store that never created it. Before T33 the table was declared with no `keys`, and record-core read its keying off `PRAGMA table_info` (its R46), which answers nothing for a missing table, so the purge passed it over.
+**Fix (my module only).** `lead_shares` is declared with every class still explicit but no `keys`, so record-core reads its keying off its own `bundle_id` column as before T33. R23 is unchanged: a project's purge still clears that project's shares (tested). `observation_log` and `leads` keep `keys: []`, which the per-bundle purge skips without a query, as before T33.
+**New test** (`declarations.test.mjs`, R35 R23): a store that has declared observation-log's tables but never created them purges a bundle (ok, and the bundle is gone). Negative control: with the explicit key put back, this test fails (and so does the declaration test); restored, both pass.
+
+**Tests:** `observation-log` 66/0. `actions` 74/0 (69/5 without the fix). Every user of observation-log, with and without the fix: identical except actions. retrieval 123/0, inquiry-grammar 32/0, inquiry 170/0, run-rules 16/0, capture-requests 73/0, monitoring 111/0, link-sweep 29/0, queue 113/0, plane 85/0, conclude-project + migrate-released 2/0. Red in both runs, none in observation-log's code: ai-runs R18 (K1514), skills R28 (K1516), case-authoring R30 (K1545), affordances R2 R3 R7 R12 and control-plane R26 (K1550, sources' `sourcekeyed` op). Also red in both runs and **not named in B1**, all from other modules on `tranche/T33` as merged: affordances 'R3 R7 R12: layer 9's 41 mutating ops…'; control-plane R22 (CHECK_FAMILIES misses `events`', `money-checks`' and `duties`' check files); control-plane R43/R22 (`IDSPACE_UNKNOWN`'s C-91.1 translation hash moved).
+**Checks:** format 0 failures; architecture observation-log 0 failures; coverage observation-log 35 of 35, 0 failures; ownership observation-log tranche/T33 2 files, 0 failures. Bundles as in J2 (bio-plane, agent-worker), yours at layer close.
+
+Size (session_011eCf41FhGTDYps24foMo53): test runs 12, module lines 3235

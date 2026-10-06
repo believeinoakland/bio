@@ -138,16 +138,18 @@ CREATE INDEX IF NOT EXISTS lead_shares_bundle ON lead_shares(bundle_id);
 
 /** R35 (plan T33, Rules (6)): every table declared explicitly to record-core's `declareTable` (its R21, R46), with
  *  its classes. R22–R23: the log and the leads clear only with the whole store (`keys: []`, so a bundle's purge leaves
- *  them), the shares in both forms, keyed by the project they name. `version_chain` is true for the append-only log
- *  alone: nothing rewrites a lead or a share either, but neither is a chain of versions. Sight is never wider than this
+ *  them), the shares in both forms, keyed by the project they name (their `bundle_id` column). `version_chain` is
+ *  true for the append-only log alone: nothing rewrites a lead or a share either, but neither is a chain of versions. Sight is never wider than this
  *  module's own fences: the log's is the sight of the captures and bundles a row names (`source`; R13 withholds a
  *  lead's or an objective's row on top of it), a lead's and a share's its author's (`owner`; R15's reach through a
  *  share is this module's read, `leadReach`). The other classes are `declarePurge`'s default form: no expunge, export
  *  to administrators only, stored. */
 const DEFAULT_CLASSES = Object.freeze({ purge: "clear", expunge: "none", export: "admin-only", derive: "stored" });
 export const OBSERVATION_LOG_TABLES = Object.freeze([
-  Object.freeze({ name: "lead_shares", keys: Object.freeze(["bundle_id"]), ...DEFAULT_CLASSES, sight: "owner",
-                  version_chain: false }),
+  /* No `keys`: record-core reads the share's keying off the table's own `bundle_id` column (its R46), which is how it
+     was declared before T33, and so a store that never created this module's tables purges a bundle as it did then,
+     rather than failing on a table it does not hold (K1589). */
+  Object.freeze({ name: "lead_shares", ...DEFAULT_CLASSES, sight: "owner", version_chain: false }),
   Object.freeze({ name: "observation_log", keys: Object.freeze([]), ...DEFAULT_CLASSES, sight: "source",
                   version_chain: true }),
   Object.freeze({ name: "leads", keys: Object.freeze([]), ...DEFAULT_CLASSES, sight: "owner", version_chain: false }),

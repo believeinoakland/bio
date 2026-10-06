@@ -58,7 +58,7 @@ test("R35 R23 every table declared explicitly through record-core's declareTable
   const pick = (d) => ({ name: d.name, keys: d.keys, ...Object.fromEntries(CLASSES.map((c) => [c, d[c]])) });
   const base = { purge: "clear", expunge: "none", export: "admin-only", derive: "stored" };
   assert.deepEqual(mine.map(pick), [
-    { name: "lead_shares", keys: ["bundle_id"], ...base, sight: "owner", version_chain: false },
+    { name: "lead_shares", keys: undefined, ...base, sight: "owner", version_chain: false },
     { name: "observation_log", keys: [], ...base, sight: "source", version_chain: true },
     { name: "leads", keys: [], ...base, sight: "owner", version_chain: false },
   ]);
@@ -97,4 +97,20 @@ test("R35 a declaration record-core refuses is a defect of the wiring: the facto
   assert.throws(() => observationLogOf(h1, { record, membership, provenance: null, extraction: null }), /TABLE_DECLARED/,
     "no instance is held after the refusal: a second call is refused the same way");
   assert.equal(record.declaredTables().filter((d) => d.module === "observation-log").length, 0, "the refused call declared nothing");
+});
+
+test("R35 R23 a store that never created this module's tables purges as it did before T33: a bundle's purge passes over the absent tables and clears what the store holds (K1589)", () => {
+  const st = storage();
+  const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+  for (const t of bare.split(";")) if (t.trim()) st.db.exec(t);
+  const h = { storage: st };
+  const record = recordOf(h, { evidence: null, evidencePrefix: "bio/captures/" }); record.migrate();
+  const membership = membershipOf(h, { record }); membership.migrate();
+  observationLogOf(h, { record, membership, provenance: null, extraction: null });   // declared, never migrated
+  assert.equal(st.sql.exec(`SELECT COUNT(*) AS n FROM sqlite_master WHERE name IN ('observation_log', 'leads', 'lead_shares')`).one().n, 0);
+  st.sql.exec(`INSERT INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha)
+               VALUES ('PROJ-A', 'project', 'g', 't', 'forming', 't', 't', 'sha')`);
+  const r = recordCoreOps(record, new URL("http://x/?op=purge&bundleId=PROJ-A"), null).purge();
+  assert.equal(r.ok, true, JSON.stringify(r));
+  assert.equal(st.sql.exec(`SELECT COUNT(*) AS n FROM bundles WHERE bundle_id = 'PROJ-A'`).one().n, 0, "the bundle itself is purged");
 });
