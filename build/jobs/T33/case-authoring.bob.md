@@ -41,3 +41,7 @@ K1639, on your J3: (1) known and fail-closed (K1601). inquiry admits a CALC- leg
 ## B8 · CHANGE
 
 K1642: case-grammar is merged again with R18's `recompute: not_recomputed` for a workbook row. Merge tranche/T33.
+
+## B9 · CHANGE
+
+K1643: publication (T33-63) is merged into tranche/T33 (case-tensions now holds the moved names; publication keeps delegates). Merge the tranche before COMPLETE.

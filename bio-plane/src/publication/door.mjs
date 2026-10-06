@@ -1,5 +1,6 @@
 /* publication — the door's half of `op=caseflags` and `op=casedocument` (requirements: `build/requirements/publication.md`
- * R1, R6, R29). Moved from `src/index.mjs` (the legacy-index map's §4.4 move, K649 (7); §12.2), with their comments: the
+ * R1, R29; `op=caseflags` answers `case-tensions` R3, was this module's R6, through the store op this module spreads
+ * until the plane's op map spreads case-tensions' own). Moved from `src/index.mjs` (the legacy-index map's §4.4 move, K649 (7); §12.2), with their comments: the
  * two arms answer through this module's own store ops (`publicationOps`' `caseflags` and `casedocument`), pinned to `bio`
  * as before. The door keeps what is the door's and hands it in (control-plane, later in the order): its envelope
  * helpers (`json`, `storeSilent`, `storeRefusal`, `doAnswer`), the reader's stamp and its resolution (`readerOf`, the

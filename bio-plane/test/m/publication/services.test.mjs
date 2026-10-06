@@ -9,7 +9,7 @@ const F = "INQ-2026-0001", G = "INQ-2026-0002", DOC = "INFO-2026-0001-minutes";
 const CASE = "CASE-2026-0001";
 const roster = (roles) => roles.map((r) => ({ bundle_id: r.target, version_sha: r.version_sha, role: r.role ?? "load_bearing" }));
 const STATE_KEYS = ["awaiting", "bar", "bias_acknowledgement", "caseId", "complete", "completeness", "detail", "document",
-                    "edition", "findings", "group", "manifest_sha", "opened", "project", "ratified_at", "scope"].sort();
+                    "edition", "findings", "group", "manifest_sha", "opened", "project", "ratified_at", "scope", "timeline"].sort();
 
 /* CASE edition 1 over F (load-bearing, B/C in the document) and G (supporting, stated nothing), signed; nothing published. */
 function signed({ format = null, strength = [{ target: F, axis: "capture", grade: "B" }, { target: F, axis: "connection", grade: "C" }] } = {}) {
@@ -45,6 +45,7 @@ test("R53 caseEditionState answers null for no published case edition, else ever
                    [SIG(1), { member: "olive", key_b64: KEY }, { kind: "member", member: "olive" }, "plane-gate/test", NOW]);
   assert.equal(d.doc_sha, w.row(`SELECT doc_sha FROM case_documents`).doc_sha);
   assert.equal(typeof d.text, "string");
+  assert.deepEqual(s0.timeline, { they_did: [], we_did: [] }, "R63: a document without the block states both lanes empty");
   /* one member published: it is in findings with everything R53 names, the other still awaits */
   w.clock.now = "2026-09-28T02:00:00Z";
   assert.equal(w.signFinding(F, { sig: SIG(2), at: "2026-09-28T02:00:00Z" }).ok, true);
