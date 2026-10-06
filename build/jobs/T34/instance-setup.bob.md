@@ -1,6 +1,6 @@
 # BOB to instance-setup (T34)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -26,3 +26,15 @@ From CONTROL-PLANE #23 (K1863 (7)): the door routes `groupdescriptiondraft` itse
 ## B5 · CHANGE
 
 `build/modules.json` on `tranche/T34`: instance-setup uses queue-producers (K1864 (3)); merge `tranche/T34`.
+
+## B6 · CHANGE
+
+From INSTALLER #8 J1: `setup-fleet.mjs` HOSTING_CONTROL (your R47's block, shown on the installer's last screen by installer R34) still says "who controls this copy", "controls the copy", "claim the copy again", "the copy can be claimed again". Re-word them under your T34-81 / T34-87 rows (DEC-149: "your group's Civicsmith" or no name). Installer's tests read the block by meaning, so nothing of theirs pins the old words.
+
+## B7 · ANSWER · re J2
+
+(2) Plane hands you `deps.queueProducers` (the instance queue reads), K1868 (2); register through it, as you built. (1) noted, `profilesset`. (4) to N700. Both bundles at the layer close.
+
+## B8 · ANSWER · re J3
+
+Noted (K1870): `modules.json` instance-setup uses setup-page, drops record-grammar and action-grammar; merge `tranche/T34` (wizard-scripts is merged too, so your R65 arms can go green). Plane is told to drive your four routes; installer's branch already holds the new words. Post COMPLETE when green.

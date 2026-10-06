@@ -205,3 +205,52 @@ export function checkInboxGrammar(ctx, findings) {
     }
   }
 }
+
+/* ---------------------------------------------------------------------------------------------------------------
+ * C-138 — "Ask for a check" (T34, N557; DEC-135, Bob's; R3, R13–R17). This module's own family (R17): each refusal the
+ * five check acts answer, and the two R3 adds to the task acts, with its code, its row and the member's sentence (DEC-49).
+ * `EXPERTISE_NO_LABEL` is membership's row (its R21, R106), answered as membership gives it, so it has none here.
+ * --------------------------------------------------------------------------------------------------------------- */
+const checkRow = (n, fn, region, translation) => Object.freeze({ check: `C-138.${n}`, where: at(fn, region), translation });
+
+export const CHECK_REQUEST_CHECKS = Object.freeze({
+  MACHINE_CANNOT_CHECK: checkRow(1, "#refuseMachineCheck", "is-machine-check",
+    'Asking for a check, taking one and recording one are each a person\'s act, and the credential that asked here is '
+    + 'an automated one. Nothing was written. Sign in as a member to do this.'),
+  NO_SUCH_CHECK_TARGET: checkRow(2, "checkRequest", "is-check-target",
+    'There is nothing here you can ask a check on: the item is not in the group\'s record, or it is not one you can see. '
+    + 'Nothing was written.'),
+  CHECK_NOT_AN_OWNER: checkRow(3, "checkRequest", "is-check-owner",
+    'Only an owner of the project this item belongs to can ask for a check on it. Nothing was written. Ask one of the '
+    + 'project\'s owners to ask for it.'),
+  CHECK_ADDRESS_ONE: checkRow(4, "checkRequest", "is-check-address",
+    'A check is asked either of everyone who has declared an expertise, or of one member you name, and this request '
+    + 'named neither or both. Nothing was written. Choose one.'),
+  CHECK_MEMBER_REFUSED: checkRow(5, "checkRequest", "is-check-member",
+    'The member you named cannot be asked: they are not an active member, or they cannot see this item. Nothing was '
+    + 'written. Ask by expertise, or name another member.'),
+  CHECK_NOTE_TOO_LONG: checkRow(6, "checkRequest", "is-check-note",
+    'The note is longer than 1,000 characters. Nothing was written. Shorten it and ask again.'),
+  NO_SUCH_CHECK_REQUEST: checkRow(7, "#requestFor", "is-check-request",
+    'There is no request for a check here that you can act on. Nothing was written.'),
+  CHECK_ALREADY_TAKEN: checkRow(8, "checkTake", "is-check-taken",
+    'Someone else has already taken this check, so it is theirs now. Nothing was written. The answer says who took it '
+    + 'and when.'),
+  CHECK_NOT_YOURS: checkRow(9, "checkRecord", "is-check-taker",
+    'Only the member who took this check can record it. Nothing was written. Take it first if no one has.'),
+  CHECK_VERDICT_UNKNOWN: checkRow(10, "checkRecord", "is-check-verdict",
+    'A check is recorded either as checked or as a concern, and this was neither. Nothing was written.'),
+  CHECK_NO_REASON: checkRow(11, "checkRecord", "is-check-reason",
+    'A concern needs its reason, so the owner and the group can see what to look at. Nothing was written. Say what '
+    + 'concerns you and record it again.'),
+  CHECK_REASON_TOO_LONG: checkRow(12, "checkRecord", "is-check-reason-length",
+    'The reason is longer than 4,000 characters. Nothing was written. Shorten it and record it again.'),
+  CHECK_ALREADY_RECORDED: checkRow(13, "checkRecord", "is-check-recorded",
+    'This check has already been recorded, and a request holds one check. Nothing was written. The answer shows the '
+    + 'record that stands.'),
+  CHECK_NOT_FORWARDED: checkRow(14, "taskForward", "is-check-not-forwarded",
+    'A request for a check is not handed on: it goes to everyone with the expertise who can see the item, or to the '
+    + 'member its owner named. Nothing was changed. Anyone who can see the item may take it.'),
+  CHECK_CLOSES_BY_RECORD: checkRow(15, "taskResolve", "is-check-closes-by-record",
+    'You took this check, so this To do closes when you record the check or a concern. Nothing was changed.'),
+});
