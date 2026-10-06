@@ -22,3 +22,7 @@ Finding (K1654, from CONFORMANCE #12 J2 (d)): wire conformance's `deps.officeEnt
 ## B2 · CHANGE
 
 K1674 (from CONTROL-PLANE #22 J1 (2)): op=ask's handler is yours in T33-90: admitted only from a member's own session (control-plane R53) or a presented ai grant, it carries the asker and the account {kind, secret, member, suggestions} to agent-worker's /ask (K1601). control-plane does the grant admission and the read-log recording. Build it with your T33-90 wiring and test it.
+
+## B3 · ANSWER · re J1
+
+K1683. (1)-(10) accepted as read. (1) INSTANCE-SETUP #12 is told by CHANGE to export officeOf and officeEntityOf on its instance. (2) roster-reader's store-reading source is N614; (3) the capture origin is N615, court-doctypes R22's second sentence deferred; (7) retrieval's relations are N584 (T34-26). (6) notice-producers is merged on tranche/T33 (79f33fe954): wire noticeProducersOf for real. Merge the tranche branch.
