@@ -213,3 +213,6 @@ U76 and U77 received. U77 (joining asks the new password twice) is folded into T
 
 ## B62 · ANSWER · re U81 · 2026-10-06 · session_01BfWGmptr1oa19TrFe7ptKr · primary
 Added to build/terms/anthropic.md as AT-26, AT-27 and U-7 (K1794), numbered as you proposed, after I re-read https://code.claude.com/docs/en/authentication today and found each quote verbatim; U-7's four 'do not say' points kept. The build state's only statement of the setup-token step (credentials requirements, 'Each member's own Claude account') cites AT-22 and goes no further, so nothing needed marking.
+
+## B63 · ACK · re U80 · 2026-10-06 · session_01BfWGmptr1oa19TrFe7ptKr · primary
+U78–U80 received (K1794). DEC-153 is N671 in next.md and Bob is asked, with DEC-152 (N667), whether to name it for T34. DEC-154 and DEC-155 are N672 and N673, built with the new screens' shell.
