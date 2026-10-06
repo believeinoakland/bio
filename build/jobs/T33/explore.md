@@ -57,3 +57,7 @@ EXPLORE #1, built and tested on B2/K1563 (23/23; format, architecture, coverage 
 ## J3 · COMPLETE
 
 B4 applied: tranche/T33 merged at K1580; events and money are exploreOf(host)'s defaults; R13 re-pointed at the real events and money, plus a walk over the real registered owners (entities, events, lines, money). Presets now name the merged owners' real kinds (line:…, event_…); duties' holds_power is K1563 (8)'s name, unchecked until duties merges. explore 24/24. format, architecture (15 files), coverage 18/18, ownership (16 files): 0 failures each, with paths set locally. paths bio-plane/src/explore/, tests bio-plane/test/m/explore/, final uses civil-time, connection-grammar, observation-log, events, money. Record: build/jobs/T33/explore.md.
+
+## J4 · COMPLETE
+
+B5 applied: tranche/T33 merged after K1585. real-duties.test.mjs walks chain over the real duties owner: duties registers holds_power, chain names it, and a power is found from its office. No code change. explore 25/25; format, coverage 18/18, ownership (2 files): 0 failures. Architecture has 1 failure until you add duties to explore's uses (the test imports duties' test fixture; a test-only edge, earlier in the order). With it: 0 failures. Final uses: civil-time, connection-grammar, events, observation-log, money, duties.
