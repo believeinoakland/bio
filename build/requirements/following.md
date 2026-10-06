@@ -42,10 +42,11 @@ Terms. A **follow** is a member's standing act naming what is followed and for w
 - **R10** `followPortal({address, query, key, author, viewer})` follows a portal's dataset, keyed to its query (the address with its query parameters, normalised), with a declared key field. Each tick captures the dataset's answer as a snapshot, a capture like any other, and records it as a vintage whose validity is the capture instant (`civil-time` `validAt`). *(not yet met: T33-79)*
 - **R11** `snapshotDiff({follow, from, to})` answers, between two snapshots of one portal follow, the rows `added` and `removed` by key and, for a key in both, each `changed` field `{key, field, before, after}`. A key missing or repeated in either snapshot makes that row `undetermined` with its reason, never matched by position. It writes nothing; a difference is never a finding. *(not yet met: T33-79)*
 
-#### For `scheduler`: followDue(now), followWake(now), followTick(now, rank?)
+#### For `scheduler`: followDue(now), followWake(now), followTick(now, rank?), onFollowed(module, fn)
 
 - **R12** Due while any follow (R1, R7, R9, R10) is due by its cadence or any `per_meeting` capture (R4) is due; wake is the earliest instant one falls due, or null when none is. A body, register, person query or portal follow is due daily from its last read unless the follow names a longer cadence. *(not yet met: T33-79)*
 - **R13** A tick reads at most 50 due subjects, oldest due first (or in the rank's order when `scheduler` passes one, as `monitoring` R19), each claimed under the host's epoch so a retry never reads a subject twice (`monitoring` R21), and answers `{configured, at, epoch, read, captured, unscheduled, member_act_required, failed, paused}`. When the host is paused (`monitoring` R30) it reads nothing and says so. *(not yet met: T33-79)*
+- **R19** (K1666) `onFollowed(module, fn)`: one registration per module; after a follow is recorded, ended, or its next due instant changes (R1, R4, R7, R9, R10), `fn({follow, due})` is called once, after the act's transaction, with that follow's id and its next due instant (null when none), so `scheduler` re-arms its wake. A throwing `fn` never undoes the act. *(not yet met: T33-79)*
 - **R14** `follows({viewer})` answers every follow the viewer may see with its subject, author, period, cadence, last read, next due, and its `unscheduled` reason if any, so a follow that is not being read is visible without waiting for a tick. *(not yet met: T33-79)*
 
 ## Private

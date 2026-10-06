@@ -1,6 +1,6 @@
 # BOB to following (T33)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -9,3 +9,11 @@ From K1505: you hold a `per_meeting` watch's body link (15); your `uses` gain en
 Conventions (K1563 (1), `build/rulings.md`): a new module's host factory is `<camelName>Of(host)`; an upstream not yet merged is taken as an injected dep coded to its requirements, and you re-point your tests at the real module after that module merges, before COMPLETE; an owner's `neighbours` registered with connection-grammar takes an optional `host` passed through, else the isolate's one instance, else refuses `OWNER_HOST_AMBIGUOUS`.
 Merge order in L10: monitoring → following → scheduler (scheduler registers the new consumers, so it merges last); link-sweep has no T33 job. All L10 jobs run at once (P10): a downstream job codes against its upstream's approved requirements and merges after it.
 Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their merges), 2 (membership's order test, until T33-19a), 3 (case-checker R13's program SHA, until case-checker's job, T33-66), 4 (importers of a copy-split's source, until re-pointed), 5 (the UI's DEC-88 tests, Bob's). Named reds still open, all outside your module: monitoring `understanding.test.mjs:480` R50 (actions' local day, K1657, until T33-78); affordances "R2 R3 R7 R12: N364's ops" (K1550, until T33-85); affordances `catalogue.test.mjs` "R3 R7 R12 … 62 ops" (K1571, until T33-85 and T33-88) and `catalogue.test.mjs:1061` R19 (`ATTRIBUTION_NO_REASON` now case-tensions', K1643, until T33-85); control-plane's R26 test of sources' ops (K1550), its "R43, R22 … every published fence" hash pin (K1572, K1575), `families.test.mjs:48` "CHECK_FAMILIES is total" (K1581, K1585, K1643) and `families.test.mjs:245` (C-120's rows, K1638), all until T33-89; plane `notices.test.mjs:118–120` (corpus-export's new arms, K1640), `docket.test.mjs:41` and `store.test.mjs:68` (case-tensions' registrations, K1643), all until T33-90; instance-setup `keys.test.mjs` R44 ×4 (K1544, until T33-87); the AI_NO_ACCOUNT set: capture-requests' four plane tests, scheduler's R12 test and agent-worker `harness.test.mjs`'s five REC100 arms (K1614, K1621, until N585 in T34); fleetbundles' four (K1598, K1604, until the close); `test/system/row-census.test.mjs`, the rows awaiting promotion's stamp (N553): record-core's 9, C-112.21–C-112.32, C-91.1, C-133.1–C-133.36 less .13 and .28, C-129.27/.28, C-120.14–.16, C-98.11, C-113.29–.31, C-114.21/.22, C-117.26–.28, C-123.4–.6 and the changed C-113.5, C-114.4, C-114.7 (K1542, K1545, K1571, K1572, K1585, K1635, K1637, K1638, K1644, K1649, K1650, K1659).
+
+## B2 · ANSWER · re J1
+
+K1665: all six readings accepted as you state them. modules.json now sets your uses to record-grammar, jurisdictions, civil-time, legistar-reader, record-core, membership, capture, entities, events, monitoring (acquisition dropped; you reach it through capture). Merge tranche/T33 for it.
+
+## B3 · CHANGE
+
+K1666: your requirements gain R19 (mark T33-79): onFollowed(module, fn), one registration per module; after a follow is recorded, ended, or its next due instant changes (R1, R4, R7, R9, R10), fn({follow, due}) is called once after the act's transaction, with the follow's id and next due instant (null when none); a throwing fn never undoes the act. scheduler (SCHEDULER #27) registers it. Merge tranche/T33, build and test it.

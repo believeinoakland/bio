@@ -20,7 +20,7 @@
  * R27 answers a refused term with the row its finding carries. */
 
 import { isPublicHttpsLocator } from "../record-grammar/locator.mjs";
-import { ISO_TS_RE } from "../record-grammar/ids.mjs";
+import { ISO_TS_RE, idPattern } from "../record-grammar/ids.mjs";
 
 /* The catalogue's finding shape (legacy-checks' private `f`), for the check that moved here. */
 function f(check, severity, message, extra) {
@@ -128,7 +128,9 @@ export function frequencyRefusal(code, detail, extra) {
   return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...(extra || {}) };
 }
 
-export const GATH_ID_RE = /^GATH-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*$/;
+/* R69 (S0-6, B0.10): a gathering id is the core `record-grammar`'s one id table answers for `GATH` (its R46, R47: a
+   counter of four or more digits), then the request's slug; no pattern of this module's own. */
+export const GATH_ID_RE = new RegExp(`^${idPattern('GATH').source.slice(1, -1)}-[a-z0-9]+(-[a-z0-9]+)*$`);
 export const CRITICALITY_ENUM = ['crucial', 'supporting'];
 export const CADENCE_ENUM = ['hourly', 'daily', 'weekly', 'monthly', 'none'];
 export const GATH_STATUS_ENUM = ['open', 'captured', 'retired'];
