@@ -36,3 +36,14 @@
 **Tests and checks.** `node --test bio-plane/test/m/publication/`: 113 tests, 112 pass, 0 fail, 1 todo (R30). New `t34.test.mjs` (15 tests: N597, R64, R65, R66 ×2, R21, R67 ×3, R68 ×2, R69, R70 with R40, R71, R31 with R66); `fixture.mjs` and `door.test.mjs` build the op map as the plane does (N597); `invariants.test.mjs` names the new table. Dependent suites (docket, public-read, project-stage, network-notices, ratification, case-disclosures, case-authoring, review, conformance, filings, monitoring, affordances, queue-producers, control-plane, plane, system migrate-released), on this branch after merging `tranche/T34` @ 91a71abdab and on the tranche itself: identical, the tranche's own reds only (filings 1, monitoring 1, affordances 3, control-plane 2, plane 1; all inherited, none naming publication). No layer tests in the manifest. From the process repository: format 127 modules, 0 failures; architecture 0 failures; coverage 47 of 47; ownership 8 files, 0 failures.
 
 Size (session_018fH9gcTb8rPoU4TBHkufJK): test runs 20, module lines 3579
+
+## J1 · REPORT
+
+Found by T34-44/T34-79 (full text: my record, Work, 'Other modules'):
+(a) SCHEDULED_CHECK_UNAVAILABLE (R67) has a member translation but no catalogue row; R33 lists none. If it should be a row (C-122.5 here, or ratification's C-58), that is BOB's wording.
+(b) public-read (T34-46): R70's instants are published_cases.signed_at/.published_at (never null, K1826) and in R53's document; R64 stampedEditions() ready for its R28.
+(c) ratification (T34-85): scheduleEdition inside its transaction; registerScheduledPublisher (publishScheduled may return a Promise, K1832); groupZone() for R44. commitCaseEdition does not itself refuse a waiting edition, so op=caseratify on one must answer PUBLISH_AT_ALREADY_SET (its R3) or it would publish now.
+(d) scheduler (T34-51): onPublishScheduled(module, fn) -> fn({publishAt}); publishDue(now) answers a Promise of {ok, taken}.
+(e) op-declarations / admission / control-plane / affordances: new ops publishatmove, publishatcancel (body case, edition, at; stamp by), publishschedule (query case, state, after, limit; stamp viewer; absent viewer answers none).
+(f) queue-producers (T34-82): scheduledEditions({...}) with no viewer reads as the plane.
+(g) Generated artifact staled: bio-plane/dist/bio-plane.bundled.mjs.
