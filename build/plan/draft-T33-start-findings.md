@@ -34,3 +34,4 @@
 - **instance-setup (L11), and bundler's N578** (K1601, from AGENT-WORKER #9 J1 (6)): agent-worker binds agent-runner's Container Durable Object cross-script (`script_name: "agent-runner"`); `FLEET_BINDINGS` gains it.
 - **inquiry (T33-45, this layer)**: drops `inquiry_basis` from `INQUIRY_TABLES`/`INQUIRY_PURGE` in the commit that re-points to leg-earning (LEG-EARNING #1 J1 (2)).
 - **op-declarations, control-plane (L11)** (K1604, from INQUIRY #14 J2): declare and route `waitlook` (inquiry R56; the stamped member's own act).
+- **plane (L11), control-plane (L11)** (K1607, from HYPOTHESES #1 J3): plane composes `hypothesesOf(host)` at boot (its promotion step and the `hunch` owner) and routes `hypothesishold`, `hypothesisrevise`, `hypothesiswithdraw`, `hypotheses`; control-plane adds C-134 (hypotheses) and C-135 (answers) to `CHECK_FAMILIES`.
