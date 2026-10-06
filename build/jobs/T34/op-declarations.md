@@ -115,3 +115,7 @@ B5 done: merged tranche/T34; R15's and R6's tests read wizard-scripts' and tasks
 - `ownership: 3 files changed by op-declarations between tranche/T34 and HEAD; 0 failures`.
 
 Size (session_01VhQZpv5UDgJCR2CivgwuJZ): test runs 26, module lines 3024
+
+## J6 · COMPLETE
+
+B7 done: merged tranche/T34; checkrequests and checksof are ownread (admin, member; machineClasses []), a member session's only; R23's test checks no binding class without a session reaches any of the five (negative control: timeline admits them). op-declarations 84/0; tasks 95/0; admission 23/0; control-plane 163/5, as on the tranche. format, architecture, coverage 29/29, ownership 0 failures. Noted: plane door.test.mjs:105 (24 !== 20 routes) is red on the tranche itself, from instance-setup's merge.
