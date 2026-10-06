@@ -108,6 +108,108 @@ export const MEMBERSHIP_CHECKS = Object.freeze({
       + 'with none: every other owner has asked to leave, or there is no other owner. Add another owner first '
       + '— or stand the project down. Nothing was recorded.',
   },
+  /* ===== T34 (T34-10; DEC-132 to DEC-136, Bob's; K1745): the next free numbers of C-96, this module's family for the
+     acts on a member's row and the group's custodial acts (K107 (3), K174). C-96.19–.21 are credentials'. Each code is
+     minted at one site, the region its `where` names. ===== */
+  /* R10 (DEC-134 (4)): only the last administrator is stopped from stepping down. */
+  LAST_ADMIN: Object.freeze({
+    check: 'C-96.22', where: at("adminResign", "is-admin-resign-last"),
+    translation: 'You are the only administrator of this group, so you cannot step down: the group would be left '
+      + 'with nobody to run it. Nothing was changed. Add another administrator first, then resign.',
+  }),
+  /* R97 (DEC-133 (2)): an invitation lasts a whole number of days from 1 to 30, seven when not chosen. */
+  BAD_EXPIRY: Object.freeze({
+    check: 'C-96.23', where: at("#expiryRefusal", "is-invitation-expiry"),
+    translation: 'An invitation lasts a whole number of days, from 1 to 30, and seven when you choose none. The '
+      + 'number given is not one of those. Nothing was written.',
+  }),
+  /* R98 (DEC-133 (3)): only an unused invitation is withdrawn. */
+  NO_UNUSED_INVITATION: Object.freeze({
+    check: 'C-96.24', where: at("inviteWithdraw", "is-invitation-unused"),
+    translation: 'There is no unused invitation for this member to withdraw: they have already joined, their '
+      + 'invitation was already withdrawn, or none has been made yet. Nothing was changed.',
+  }),
+  /* R99 (DEC-133 (1)): at most one live website key. */
+  WEBSITE_KEY_EXISTS: Object.freeze({
+    check: 'C-96.25', where: at("websiteKeyCreate", "is-website-key-one"),
+    translation: 'Your group already has a live website key, and it holds one at a time. Nothing was created. '
+      + 'Change the live key\'s settings, or switch it off and create a new one.',
+  }),
+  /* R99, R100, R102, R103: the daily number of invitations a door may make, which the administrator sets. */
+  BAD_DAILY_CAP: Object.freeze({
+    check: 'C-96.26', where: at("#dailyCapRefusal", "is-door-daily-cap"),
+    translation: 'Say how many invitations it may make in a day: a whole number, at least 1. Nothing was changed.',
+  }),
+  /* R100: the acts on the live website key, when none is live. */
+  NO_WEBSITE_KEY: Object.freeze({
+    check: 'C-96.27', where: at("#liveWebsiteKey", "is-website-key-live"),
+    translation: 'Your group has no live website key, so there is none to change or switch off. Nothing was '
+      + 'changed. An administrator can create one.',
+  }),
+  /* R101: the website's call with a key never made, switched off or malformed: one answer for each. */
+  WEBSITE_KEY_UNKNOWN: Object.freeze({
+    check: 'C-96.28', where: at("websiteInvite", "is-website-key-known"),
+    translation: 'This website key does not open this group: it was never made, was switched off, or is not a '
+      + 'key at all, and the answer does not say which. Nothing was written.',
+  }),
+  /* R101: the key's daily cap reached. */
+  WEBSITE_DAILY_CAP: Object.freeze({
+    check: 'C-96.29', where: at("websiteInvite", "is-website-daily-cap"),
+    translation: 'The website has made as many invitations today as the group allows it in a day. Nothing was '
+      + 'written. Try again later, or ask an administrator to raise the daily number.',
+  }),
+  /* R102 (DEC-133 (6)): at most one live join link. */
+  JOIN_LINK_ON: Object.freeze({
+    check: 'C-96.30', where: at("joinLinkEnable", "is-join-link-one"),
+    translation: 'Your group\'s join link is already on, and it has one at a time. Nothing was changed. Change its '
+      + 'settings, replace it with a new link, or switch it off.',
+  }),
+  /* R103: the acts on the live join link, when none is live. */
+  JOIN_LINK_OFF: Object.freeze({
+    check: 'C-96.31', where: at("#liveJoinLink", "is-join-link-live"),
+    translation: 'Your group\'s join link is off, so there is none to change, replace or switch off. Nothing was '
+      + 'changed. An administrator can switch one on.',
+  }),
+  /* R104: the join page's call with a link never made, replaced, switched off or malformed: one answer for each. */
+  NO_SUCH_JOIN_LINK: Object.freeze({
+    check: 'C-96.32', where: at("joinLinkInvite", "is-join-link-known"),
+    translation: 'This join link does not work: it may have been replaced or switched off by the group. Ask the '
+      + 'group for its current link. Nothing was written.',
+  }),
+  /* R104: the link's daily cap reached. */
+  JOIN_LINK_DAILY_CAP: Object.freeze({
+    check: 'C-96.33', where: at("joinLinkInvite", "is-join-link-daily-cap"),
+    translation: 'This join link has let in as many people today as the group allows in a day. Nothing was '
+      + 'written. Try again tomorrow.',
+  }),
+  /* R107 (DEC-136 (1)): tell our members, or don't. */
+  COURT_NOTICE_UNKNOWN_CHOICE: Object.freeze({
+    check: 'C-96.34', where: at("courtNoticeSet", "is-court-notice-choice"),
+    translation: 'Choose whether your members are told what a court can reach: tell them, or don\'t. Nothing '
+      + 'was changed.',
+  }),
+  /* R109 (DEC-132 (2)): the group's kinds come from one closed list. */
+  GROUP_KIND_UNKNOWN: Object.freeze({
+    check: 'C-96.35', where: at("groupDescriptionSet", "is-group-description"),
+    translation: 'A group says what kind it is from the list: professional, issue-specific, neighbourhood or '
+      + 'community, catch-all, or one it describes itself, and may choose none. Something else was given. '
+      + 'Nothing was written.',
+  }),
+  GROUP_KIND_OTHER_EMPTY: Object.freeze({
+    check: 'C-96.36', where: at("groupDescriptionSet", "is-group-description"),
+    translation: 'You chose to describe your group\'s kind yourself and wrote nothing to describe it. Write it, '
+      + 'or leave that choice out. Nothing was written.',
+  }),
+  GROUP_DESCRIPTION_TOO_LONG: Object.freeze({
+    check: 'C-96.37', where: at("groupDescriptionSet", "is-group-description"),
+    translation: 'Part of what you wrote is longer than it may be: a kind you describe yourself is at most 120 '
+      + 'characters, the focus at most 1,000 and why the group exists at most 4,000. Nothing was written.',
+  }),
+  GROUP_VISIBILITY_UNKNOWN: Object.freeze({
+    check: 'C-96.38', where: at("groupDescriptionSet", "is-group-description"),
+    translation: 'Who sees what your group says about itself is your members only, or the public as well, and '
+      + 'nothing else. Nothing was written.',
+  }),
 });
 
 /* ===== T19 layer 2: membership's families, COPIED from the check catalogue with their names, ids, `where`s and
@@ -182,13 +284,7 @@ export const CUSTODIAL_CHECKS = {
     translation: 'That id is already taken in this record, so nothing new was created under it. Choose a '
       + 'different id.',
   },
-  ADMINS_FIRST: {
-    check: 'C-96.5',
-    where: 'src/membership/index.mjs memberAdd > is-admins-first',
-    translation: 'This group needs a second administrator before it has any ordinary members, so that '
-      + 'losing one person does not lose the group. Nothing was written. Invite this person as an '
-      + 'administrator, or invite a second administrator first.',
-  },
+  /* C-96.5 ADMINS_FIRST is retired (DEC-134 (1), R12) and never reused. */
   CONSENSUS_REQUIRED: {
     check: 'C-96.6',
     where: 'src/membership/index.mjs memberAdd > is-admin-consensus',
@@ -214,14 +310,7 @@ export const CUSTODIAL_CHECKS = {
      function also refuses with codes held elsewhere (NOT_AN_ADMIN, NO_SUCH_MEMBER), which a whole-function site
      would judge as not this family's. So each `where` names the DEC-49 region membership marks around its one
      refusal, and the control plane's `dec49Decorate` attaches the row at the wire. */
-  /* Membership R10 (§4.5, §4.2): an administrator resigns only while more than two exist. */
-  RESIGN_AT_TWO: {
-    check: 'C-96.10',
-    where: 'src/membership/index.mjs adminResign > is-admin-resign-floor',
-    translation: 'Administrative access here is always shared by at least two people, and there are no more '
-      + 'than two administrators now, so none of them can step down yet. Nothing was changed. Once a third '
-      + 'administrator has been added, you can resign and become an ordinary member.',
-  },
+  /* C-96.10 RESIGN_AT_TWO is retired (DEC-134 (4), R10) and never reused; LAST_ADMIN (C-96.22) takes its place. */
   /* Membership R11 (§4.8): the record of who holds hosting access names somebody. */
   NO_HOLDERS: {
     check: 'C-96.11',

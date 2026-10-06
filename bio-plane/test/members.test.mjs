@@ -285,9 +285,12 @@ t("session cannot livefire — still refused, under the code that carries §4.10
    by registering the key AS HER — the server's stamp, not anything she sent. A non-administrator's
    refusal, NOT_AN_ADMIN, is credentials' to grade (`test/m/credentials/keys.test.mjs`; it was `adminvote.test.mjs` §9
    until T20). */
-t("an enrolled administrator's session REACHES memberadd, and the store answers by the roster's own "
-+ "rule (4.2/4.3) rather than the gate calling the op somebody else's",
-  (await POST(`op=memberadd&${S}`, { memberId: "xo", cover: "xo" })).result?.reason, "ADMINS_FIRST");
+/* CORRECTED 2026-10-06 (T34-10, DEC-134 (1)), NEVER EXEMPTED: this pinned ADMINS_FIRST, the floor DEC-134 retired
+   (one administrator is enough, membership R12). The fact it existed for stands: the session REACHES the op and the
+   STORE answers by its own rule, here R97's expiry (an invitation lasts 1 to 30 days), so nothing is written. */
+t("an enrolled administrator's session REACHES memberadd, and the store answers by its own rule (R97's "
++ "expiry) rather than the gate calling the op somebody else's",
+  (await POST(`op=memberadd&${S}`, { memberId: "xo", cover: "xo", expiresInDays: 0 })).result?.reason, "BAD_EXPIRY");
 {
   const k = await POST(`op=signeradd&${S}&by=nobody`, { keyB64: "AAAAtest", memberId: "ruth", by: "nobody" });
   t("an enrolled administrator's session registers a key, attributed to HER by the server's stamp "
