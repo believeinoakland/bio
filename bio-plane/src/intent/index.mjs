@@ -26,6 +26,8 @@
  *                selection, K198); captureRequests `requestById`, one request's outcome by key (R14, its R43; N291),
  *                and `captureRequests` and `bundlesOf`, a request's address and target (R28). Each through its
  *                factory on the same host, reached lazily on first use, unless a test passes its own.
+ *   money        `moneyOf` and `summable` (R31: the `amount` filter over a matched instance's money facts), through
+ *                its factory on the same host, reached lazily on first use, unless a test passes its own.
  *   now          the module's clock, an ISO instant (default: the wall clock). */
 
 import { isMachineIdentity, normalizeType } from "../record-grammar/index.mjs";
@@ -38,12 +40,15 @@ import { inquiryOf } from "../inquiry/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
 import { retrievalOf } from "../retrieval/index.mjs";
 import { captureRequestsOf } from "../capture-requests/index.mjs";
+import { moneyOf, kinds as moneyKinds, phases as moneyPhases, LIST_LIMIT_MAX as MONEY_LIST_MAX } from "../money/index.mjs";
+import { add } from "../calc-grammar/index.mjs";
+import { dec, cmpD, readingOf } from "../calc-grammar/decimal.mjs";
 import { INTENT_CHECKS, refusal } from "./checks.mjs";
 import { INTENT_TABLES, migrateIntent } from "./schema.mjs";
 import { registerProjectGrammar } from "./grammar.mjs";
 import { ASPIRATION, GOAL, ASPIRATION_SCOPES, GRADES, TOKEN, quotable, q, parseFm, setField, removeBlock, setBlock,
          appendItem, appendHistory, readSection, setSection, appendSection, logEntry, deadEndsOf, aspirationDoc,
-         goalDoc, pursuitId, CONDITION_KEY, conditionLines, conditionOf } from "./doc.mjs";
+         goalDoc, pursuitId, CONDITION_KEY, AMOUNT_PERIOD_FIELDS, conditionLines, conditionOf } from "./doc.mjs";
 
 export { INTENT_CHECKS } from "./checks.mjs";
 export { INTENT_SCHEMA, INTENT_TABLES } from "./schema.mjs";
@@ -80,6 +85,9 @@ export const REASON_MAX = 160;
  *  whatever aspiration each names (R14); AGEING_READ_MAX: the questions at `surfaced` the ageing reads judge, those whose
  *  last entry is oldest first (R17, R27). ASPIRATIONS_MAX and CONTEXT_MAX count every aspiration read, held or retired,
  *  of any scope (R12, R13, R28). */
+/** R31: the money facts one instance's `amount` filter reads, money's own ceiling on `moneyOf` (its R9); a read it cuts
+ *  makes the instance undetermined, never totalled short. */
+export const AMOUNT_FACTS_MAX = MONEY_LIST_MAX;
 export const MEASURE_MAX = 1000, WATCH_LIMIT_MAX = 1000, DEPARTURES_MAX = 1000, GOALS_MAX = 200, TRIAGED_MAX = 1000,
              SET_ASIDE_MAX = 200, SERVES_MAX = 1000, ASPIRATIONS_MAX = 1000, CONTACTS_MAX = 1000, CONTEXT_MAX = 1000,
              PROJECTS_MAX = 1000, REQUESTS_MAX = 1000, GOALS_READ_MAX = 1000, AGEING_READ_MAX = 1000;
@@ -102,7 +110,7 @@ export class Intent {
   #sources = new Map();   // kind -> reader (R15)
 
   constructor({ storage, record, membership, promotion, entities, progressions, inquiry = null, aiRuns = null,
-                retrieval = null, captureRequests = null, now = null } = {}) {
+                retrieval = null, captureRequests = null, money = null, now = null } = {}) {
     this.storage = storage;
     this.sql = storage.sql;
     this.record = record;
@@ -114,6 +122,7 @@ export class Intent {
     this.aiRunsRef = aiRuns;
     this.retrievalRef = retrieval;
     this.captureRequests = captureRequests;
+    this.moneyRef = money;
     this.now = typeof now === "function" ? now : () => new Date().toISOString();
   }
 
@@ -123,6 +132,7 @@ export class Intent {
   /* N179: progressions as the host holds it, reached on first use, so the instance the plane builds with its `env`
      (progressions R16's configured clock) is the one read here, whichever module reached the host first. */
   get progressions() { return this.#lazy(this.progressionsRef); }
+  get money() { return this.#lazy(this.moneyRef); }
   #when() { return second(this.now()); }
 
   /** The module's tables (R24). */
@@ -295,14 +305,16 @@ export class Intent {
     const shaped = isObj(c) && TOKEN.test(str(c.progression)) && TOKEN.test(str(c.entity))
       && (c.relation == null || (typeof c.relation === "string" && this.entities.relationKinds().includes(c.relation)))
       && (c.filter == null || (isObj(c.filter) && Object.entries(c.filter).every(([k, v]) => /^[a-z][a-z0-9_]{0,39}$/.test(k)
-                                                                                      && TOKEN.test(String(v)))))
+                                                                && (k === "amount" ? amountShape(v).ok : TOKEN.test(String(v))))))
       && isObj(c.required) && (c.required.stages == null || (Array.isArray(c.required.stages)
                                                                && c.required.stages.every((s) => TOKEN.test(String(s)))))
       && isObj(c.satisfied);
     /* DEC-49 REGION is-condition-shaped */
     if (!shaped)
       return refusal("CONDITION_UNREADABLE", "a condition is {progression, entity, relation?, filter?, required: {grade?, "
-                     + "stages?}, satisfied: {share}}, each name a bare key or id. Nothing was written.");
+                     + "stages?}, satisfied: {share}}, each name a bare key or id; a filter's `amount` is {min?, max?, currency, "
+                     + "kinds?, phases?, period?}, with at least one bound, each an exact decimal. Nothing was written.",
+                     amountFault(c));
     /* END DEC-49 REGION is-condition-shaped */
     const def = this.progressions.readProgression({ progressionKey: str(c.progression) });
     if (!def || def.ok === false || !def.found)
@@ -368,6 +380,8 @@ export class Intent {
                                                                stages: condition.required.stages ?? [] } : condition.required,
           relation: condition.relation ?? null, filter: condition.filter ?? null };
     if (c) { const bad = this.#conditionRefusal(c); if (bad) return bad; }
+    /* R31: the amount filter held in its one written shape, so what is set reads back unchanged */
+    if (c && isObj(c.filter) && "amount" in c.filter) c.filter = { ...c.filter, amount: amountShape(c.filter.amount).amount };
     const at = this.#when();
     let text = removeBlock(p.doc.text, CONDITION_KEY);
     if (c) text = setBlock(text, CONDITION_KEY, conditionLines(c, str(author), at));
@@ -405,19 +419,27 @@ export class Intent {
     for (const eid of threaded) {
       const inst = this.progressions.readInstance({ progressionKey: key, entityId: eid, viewer });
       if (!inst || inst.ok === false || !inst.found) continue;
-      /* The filter: what the record can evaluate narrows; what it cannot makes the instance undetermined (R4). */
-      let unevaluable = null, passes = true;
-      for (const [k, v] of Object.entries(cond.filter || {})) {
+      /* The filter: what the record can evaluate narrows; what it cannot makes the instance undetermined (R4). The
+         keys it evaluates are `entity_kind` and `amount` (R31), the money read only once the kind has passed. */
+      let unevaluable = null, passes = true, amount = null;
+      const filter = isObj(cond.filter) ? cond.filter : {};
+      for (const [k, v] of Object.entries(filter)) {
         if (k === "entity_kind") { if (!inst.entity || inst.entity.kind !== String(v)) passes = false; }
-        else unevaluable = k;
+        else if (k !== "amount" && unevaluable === null)
+          unevaluable = `the record cannot evaluate the filter '${k}' on this instance`;
+      }
+      if (passes && "amount" in filter) {
+        amount = this.#amount(eid, filter.amount, viewer);
+        if (amount.passes === false) passes = false;
+        else if (amount.passes === null && unevaluable === null) unevaluable = `the amount filter is undetermined: ${amount.why}`;
       }
       if (!passes) continue;
       const row = { entity_id: eid, entity_label: inst.entity ? inst.entity.label : null,
                     grade: inst.grade ?? null, grade_determined: inst.grade_determined === true,
-                    definition_version: inst.definition_version };
+                    definition_version: inst.definition_version, ...(amount ? { amount } : {}) };
       matched.push(row);
       if (unevaluable) {
-        undetermined.push({ ...row, why: `the record cannot evaluate the filter '${unevaluable}' on this instance` });
+        undetermined.push({ ...row, why: unevaluable });
         continue;
       }
       const placed = new Set((inst.stages || []).filter((s) => s.present).map((s) => s.stage_key));
@@ -447,6 +469,71 @@ export class Intent {
       .map((s) => ({ stage_key: s.stage_key, documents: (s.documents || []).map((d) => ({ capture_sha: d.capture_sha,
                                                                                        bundle_id: d.bundle_id ?? null,
                                                                                        grade: d.grade ?? null })) }));
+  }
+
+  /* R31: one matched instance's `amount` filter, over the money facts `moneyOf` answers for its entity in the named
+     kinds, phases and period, totalled in calc-grammar's exact decimals and compared with the bounds, inclusive.
+     `passes` is true when the total's reading lies within them, false when it lies outside, and null with why when it
+     cannot be settled: a total `summable` refuses, a fact whose period is undetermined, a read `moneyOf` cuts or
+     refuses, a currency other than the filter's, an approximate total or a reading across a bound, or no fact held
+     (never counted as zero). The total is taken under the plane's sight, so every reader's counts are the same (R5); a
+     fact the viewer may not see is listed as null. Derived on read, never stored (R19). */
+  #amount(entityId, amount, viewer) {
+    const a = amountShape(amount).amount;
+    const base = { currency: a.currency, min: a.min ?? null, max: a.max ?? null, total: null, facts: [] };
+    const open = (why, extra = {}) => ({ ...base, ...extra, passes: null, why });
+    const ask = { entity: entityId, kinds: a.kinds, phases: a.phases, ...(a.period ? { period: a.period } : {}),
+                  limit: AMOUNT_FACTS_MAX };
+    let read;
+    try { read = this.money.moneyOf({ ...ask, viewer: PLANE_VIEWER }); }
+    catch (e) { return open(`money could not answer (${String(e && e.message || e).slice(0, 120)})`); }
+    if (!read || read.ok === false)
+      return open(`money refuses the read (${read ? read.reason : "no answer"}${read && read.detail ? `: ${read.detail}` : ""})`,
+                  read && read.reason ? { code: read.reason } : {});
+    const ids = (read.facts || []).map((f) => f.fact_id);
+    const shown = this.#factsSeen(ask, ids, viewer);
+    if (read.truncated)
+      return open(`more than ${AMOUNT_FACTS_MAX} money facts answer, and one read takes that many, so their total is not taken`,
+                  { facts: shown });
+    if ((read.undetermined || []).length)
+      return open(`${read.undetermined.length} money fact(s) state a period with no end, so whether they fall in the period `
+                  + "named is not settled", { facts: shown });
+    if (!ids.length)
+      return open("the record holds no money fact for this entity in the kinds, phases and period named, so its total is "
+                  + "not known; it is never taken as zero");
+    let sum;
+    try { sum = this.money.summable({ factIds: ids, viewer: PLANE_VIEWER }); }
+    catch (e) { return open(`money could not answer (${String(e && e.message || e).slice(0, 120)})`, { facts: shown }); }
+    if (!sum || sum.ok !== true)
+      return open(`these facts are not summed (${sum ? sum.reason : "no answer"}${sum && sum.detail ? `: ${sum.detail}` : ""})`,
+                  { facts: shown, ...(sum && sum.reason ? { code: sum.reason } : {}) });
+    let total = null;
+    for (const f of read.facts) {
+      const fig = figureOfFact(f);
+      total = total === null ? fig : add(total, fig);
+      if (total && total.refused) return open(`the facts' amounts do not add (${total.refused}: ${total.why})`, { facts: shown });
+    }
+    const out = { ...base, total, facts: shown };
+    if (total.currency !== a.currency)
+      return open(`the facts are in ${total.currency} and the filter names ${a.currency}, so they are not compared`,
+                  { total, facts: shown });
+    if (total.approximate || total.precision === "approximate")
+      return open("the total is approximate, and an approximate figure settles no comparison", { total, facts: shown });
+    const r = readingOf(total);
+    const below = a.min != null ? [cmpD(r.hi, dec(a.min)) < 0, cmpD(r.lo, dec(a.min)) >= 0] : [false, true];
+    const above = a.max != null ? [cmpD(r.lo, dec(a.max)) > 0, cmpD(r.hi, dec(a.max)) <= 0] : [false, true];
+    if (below[0] || above[0]) return { ...out, passes: false };
+    if (below[1] && above[1]) return { ...out, passes: true };
+    return open("the total's reading (a rounded figure or a range) lies across a bound", { total, facts: shown });
+  }
+
+  /* R5, R31: the fact ids beside an instance, each null when the viewer may not see that fact. */
+  #factsSeen(ask, ids, viewer) {
+    if (viewer == null || viewer === PLANE_VIEWER || !ids.length) return ids;
+    let seen;
+    try { seen = this.money.moneyOf({ ...ask, viewer }); } catch { seen = null; }
+    const visible = new Set([...((seen && seen.facts) || []), ...((seen && seen.undetermined) || [])].map((f) => f.fact_id));
+    return ids.map((id) => (visible.has(id) ? id : null));
   }
 
   /** R3–R5: progress on a project's objective, derived on read against its condition and never stored. */
@@ -1004,7 +1091,12 @@ export class Intent {
       out.push({ key: `progressions::${g.key}`, source: "progressions", source_key: g.key, kind: "missing_predecessor",
                  grade: g.grade ?? null, grade_determined: g.grade_determined === true,
                  basis: { progression_key: g.progression_key, stage_key: g.stage_key, required: g.required,
-                          definition_version: g.definition_version, overdue: !!g.overdue },
+                          definition_version: g.definition_version, overdue: g.overdue === true,
+                          /* progressions R16 (K1444 (ii)): an overdue it cannot settle is counted apart, never as not
+                             overdue */
+                          overdue_count: Number.isInteger(g.overdue_count) ? g.overdue_count : 0,
+                          overdue_undetermined_count: Number.isInteger(g.overdue_undetermined_count)
+                            ? g.overdue_undetermined_count : 0 },
                  instances: g.instances || [], surfaced_by: g.surfaced_by || "machine" });
     for (const [kind, reader] of this.#sources) {
       let got = [];
@@ -1419,6 +1511,69 @@ function captureRequestsNamed(basis) {
 
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
 
+/* R31: an exact decimal bound, written as a signed decimal string or a safe integer, never another number (a float is
+   not exact); its string, or null. */
+const BOUND = /^-?\d{1,40}(?:\.\d{1,20})?$/;
+const boundOf = (v) => (typeof v === "string" && BOUND.test(v.trim()) ? v.trim()
+                        : Number.isSafeInteger(v) ? String(v) : null);
+const AMOUNT_KEYS = Object.freeze(["min", "max", "currency", "kinds", "phases", "period"]);
+
+/** R31: whether a filter's `amount` has its shape, `{min?, max?, currency, kinds?, phases?, period?}`: at least one bound,
+ *  each an exact decimal, `min` no higher than `max`; the currency a bare key; the kinds and phases money's closed lists
+ *  (its R17); the period money's own fields (its R9 reads it), each a string the front matter holds. Answers `{ok,
+ *  amount}` in its one written shape (absent fields left out), or `{ok: false, why}`. */
+export function amountShape(v) {
+  const no = (why) => ({ ok: false, why });
+  if (!isObj(v)) return no("the amount filter is a map");
+  const extra = Object.keys(v).find((k) => !AMOUNT_KEYS.includes(k));
+  if (extra !== undefined) return no(`the amount filter has no field '${String(extra).slice(0, 40)}'`);
+  if (typeof v.currency !== "string" || !TOKEN.test(v.currency.trim())) return no("the amount filter names its currency");
+  const out = {};
+  for (const k of ["min", "max"]) {
+    if (v[k] == null) continue;
+    const b = boundOf(v[k]);
+    if (b === null) return no(`the amount filter's ${k} is an exact decimal, written as a string`);
+    out[k] = b;
+  }
+  if (out.min === undefined && out.max === undefined) return no("the amount filter states a min, a max or both");
+  if (out.min !== undefined && out.max !== undefined && cmpD(dec(out.min), dec(out.max)) > 0)
+    return no("the amount filter's min is above its max");
+  out.currency = v.currency.trim();
+  for (const [k, closed] of [["kinds", moneyKinds()], ["phases", moneyPhases()]]) {
+    if (v[k] == null) continue;
+    if (!Array.isArray(v[k]) || v[k].some((x) => !closed.includes(x)))
+      return no(`the amount filter's ${k} are a list of ${closed.join(", ")}`);
+    if (v[k].length) out[k] = [...new Set(v[k])];
+  }
+  if (v.period != null) {
+    if (!isObj(v.period) || !Object.keys(v.period).length) return no("the amount filter's period is a map of money's period fields");
+    const p = {};
+    for (const [k, x] of Object.entries(v.period)) {
+      if (!AMOUNT_PERIOD_FIELDS.includes(k)) return no(`a period has no field '${String(k).slice(0, 40)}'`);
+      if (typeof x !== "string" || !x.trim() || !quotable(x)) return no(`the period's ${k} is a string with no quote or line break`);
+    }
+    for (const k of AMOUNT_PERIOD_FIELDS) if (v.period[k] != null) p[k] = v.period[k].trim();
+    out.period = p;
+  }
+  return { ok: true, amount: out };
+}
+
+/* CONDITION_UNREADABLE's extra field: why the amount filter is unreadable, when it is. */
+function amountFault(c) {
+  const f = isObj(c) && isObj(c.filter) && "amount" in c.filter ? amountShape(c.filter.amount) : null;
+  return f && !f.ok ? { amount_why: f.why } : {};
+}
+
+/* R31: a money fact's amount as calc-grammar's figure, signed: a range's bounds (money answers them unsigned, the sign
+   apart) swap under a minus. */
+function figureOfFact(f) {
+  const neg = f.sign === "-";
+  if (isObj(f.amount))
+    return { low: neg ? `-${f.amount.high}` : f.amount.low, high: neg ? `-${f.amount.low}` : f.amount.high, sign: f.sign,
+             precision: "range", currency: f.currency };
+  return { value: f.amount, sign: f.sign, precision: f.precision, currency: f.currency };
+}
+
 /* R16: the question a proposal opens, in words a member can read; an obstacle reads as such (Suggestions). */
 function questionOf(p) {
   const b = isObj(p.basis) ? p.basis : {};
@@ -1475,7 +1630,8 @@ export function intentOf(host, deps) {
                      progressions: d.progressions || (() => progressionsOf(host, { record })),
                      inquiry: d.inquiry || (() => inquiryOf(host)), aiRuns: d.aiRuns || (() => aiRunsOf(host)),
                      retrieval: d.retrieval || (() => retrievalOf(host)),
-                     captureRequests: d.captureRequests || (() => captureRequestsOf(host)) });
+                     captureRequests: d.captureRequests || (() => captureRequestsOf(host)),
+                     money: d.money || (() => moneyOf(host)) });
     instances.set(host, i);
     record.declarePurge("intent", INTENT_TABLES);
     promotion.registerStep("intent", { check: (c) => i.check(c) });

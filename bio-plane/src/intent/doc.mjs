@@ -171,10 +171,21 @@ export function goalDoc({ id, statement, bounds, aspiration, author, at }) {
 
 export const CONDITION_KEY = "objective_condition";
 
-/** The condition's lines under `objective_condition:`. Every value was checked to be a bare token first. */
+/** R31: the period fields a filter's `amount` may carry (money's, its R9), in their written order. */
+export const AMOUNT_PERIOD_FIELDS = Object.freeze(["from", "to", "precision", "zone", "fiscal", "body"]);
+const AMOUNT_PREFIX = "amount_";
+
+/** The condition's lines under `objective_condition:`. Every value was checked to be a bare token first, or (the
+ *  `amount` filter, R31) a string the grammar holds between quotes. The front matter has one level of map, so the
+ *  amount is written flat as `amount_*` keys, apart from the `filter_*` keys a member's other filters take. */
 export function conditionLines(c, by, at) {
   const lines = [`  progression: ${c.progression}`, `  entity: ${c.entity}`, `  relation: ${c.relation ?? "null"}`];
-  for (const [k, v] of Object.entries(c.filter || {})) lines.push(`  filter_${k}: ${v}`);
+  for (const [k, v] of Object.entries(c.filter || {})) {
+    if (k !== "amount") { lines.push(`  filter_${k}: ${v}`); continue; }
+    for (const f of ["min", "max", "currency"]) if (v[f] != null) lines.push(`  ${AMOUNT_PREFIX}${f}: ${q(v[f])}`);
+    for (const f of ["kinds", "phases"]) if (v[f]) lines.push(`  ${AMOUNT_PREFIX}${f}: [${v[f].map(q).join(", ")}]`);
+    for (const f of AMOUNT_PERIOD_FIELDS) if (v.period && v.period[f] != null) lines.push(`  ${AMOUNT_PREFIX}period_${f}: ${q(v.period[f])}`);
+  }
   lines.push(`  required_grade: ${c.required.grade ?? "null"}`, `  required_stages: [${c.required.stages.join(", ")}]`,
              `  share: ${c.satisfied.share}`, `  set_by: ${TOKEN.test(by) ? by : q(by)}`, `  set_at: ${q(at)}`);
   return lines;
@@ -186,6 +197,15 @@ export function conditionOf(fm) {
   if (!b || typeof b !== "object" || Array.isArray(b)) return null;
   const filter = {};
   for (const [k, v] of Object.entries(b)) if (k.startsWith("filter_")) filter[k.slice(7)] = v;
+  /* R31: the amount filter, read back from its flat keys in the shape it was set in */
+  const amount = {}, period = {};
+  for (const [k, v] of Object.entries(b)) {
+    if (!k.startsWith(AMOUNT_PREFIX)) continue;
+    const f = k.slice(AMOUNT_PREFIX.length);
+    if (f.startsWith("period_")) period[f.slice(7)] = v; else amount[f] = v;
+  }
+  if (Object.keys(period).length) amount.period = period;
+  if (Object.keys(amount).length) filter.amount = amount;
   const stages = Array.isArray(b.required_stages) ? b.required_stages.map(String).filter((s) => s !== "") : [];
   return {
     condition: { progression: b.progression ?? null, entity: b.entity ?? null, relation: b.relation ?? null,

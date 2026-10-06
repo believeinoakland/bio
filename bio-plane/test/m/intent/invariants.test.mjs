@@ -198,9 +198,10 @@ test("R25 no place is named in this module's behaviour or outward text: its rows
 });
 
 test("R15 R16 (N179) built as the plane builds it, intent first and progressions after it with the plane's env, intent reads progressions' configured clock: an overdue finding is judged at BIO_NOW_MS, not the wall clock", async () => {
-  /* a flow whose award is due within 10 days of a need dated 2026-01-01: due 2026-01-11 */
-  const at = async (nowIso) => {
-    const w = world({ plane: { env: { BIO_NOW_MS: String(Date.parse(nowIso)) }, readingAt: "2026-01-01T00:00:00Z" } });
+  /* a flow whose award is due within 10 days of a need whose own date is 2026-01-01 (the dated fact events holds for its
+     capture, progressions R37, in the profile's zone): due 2026-01-11. `dated: false` threads a need with no own date. */
+  const at = async (nowIso, { dated = true } = {}) => {
+    const w = world({ plane: { env: { BIO_NOW_MS: String(Date.parse(nowIso)) } } });
     w.member("alice", { role: "admin" });
     w.member("bob");
     w.entity("ENT-1");
@@ -208,11 +209,23 @@ test("R15 R16 (N179) built as the plane builds it, intent first and progressions
       basis: "an award follows a need within ten days", stages: [
       { key: "need", cardinality: "1", required: "always" },
       { key: "award", after: "need", cardinality: "1", required: "always", within: "10 days" }] }).ok, true);
-    await w.thread("ENT-1", { need: "A" });
+    const need = dated ? w.dated("ent-1-need", "INFO-NEED", "2026-01-01") : w.held("ab".repeat(32), "INFO-NEED");
+    w.resolve(need, "INFO-NEED", "ENT-1", "A");
+    assert.equal((await w.progressions.threadInstance({ progressionKey: "proc", entityId: "ENT-1", threadedBy: V("alice"),
+                                                        placements: [{ stage: "need", captureSha: need }] })).ok, true);
     return w.i.proposals({ viewer: V("bob") }).proposals.find((p) => p.key === "progressions::proc::award");
   };
   const before = await at("2026-01-05T00:00:00Z");
   assert.ok(before, "the missing award is proposed");
   assert.equal(before.basis.overdue, false, "at the configured 2026-01-05 it is not yet due, though the wall clock is past it");
-  assert.equal((await at("2026-01-20T00:00:00Z")).basis.overdue, true, "at the configured 2026-01-20 it is overdue");
+  assert.equal(before.basis.overdue_undetermined_count, 0);
+  const after = await at("2026-01-20T00:00:00Z");
+  assert.equal(after.basis.overdue, true, "at the configured 2026-01-20 it is overdue");
+  assert.equal(after.basis.overdue_count, 1);
+  assert.equal(after.basis.overdue_undetermined_count, 0);
+  /* progressions R16 (K1444 (ii)): a need with no own date settles nothing; it is counted apart, never as not overdue */
+  const undated = await at("2026-01-20T00:00:00Z", { dated: false });
+  assert.equal(undated.basis.overdue, false);
+  assert.equal(undated.basis.overdue_count, 0);
+  assert.equal(undated.basis.overdue_undetermined_count, 1, "the undated need's award is counted as undetermined");
 });

@@ -1,5 +1,7 @@
 /* intent over the modules it uses, the real ones where they need no module outside intent's uses (record-core,
-   membership, credentials, promotion, entities, progressions), on a real SQLite database (node:sqlite) standing in for a Durable
+   membership, credentials, promotion, entities, progressions, provenance and money, whose facts R31 totals; and, under
+   them, events, whose dated facts give a stage document its own date (progressions R16, R37), with extraction and
+   content), and the fictional test profile through jurisdictions (its time zone governs the stage dates), on a real SQLite database (node:sqlite) standing in for a Durable
    Object's storage. Four are stand-ins in the shape of their Provides, which the test controls and records: inquiry's
    `dispose` (R20–R22: the selection resolved, each member moved to the disposition with its reason and author),
    retrieval's `selectionCreate` (R18), ai-runs' `open` (R9–R10) and capture-requests' reads (`captureRequests`, R23;
@@ -13,6 +15,11 @@ import { promotionOf } from "../../../src/promotion/index.mjs";
 import { entitiesOf } from "../../../src/entities/index.mjs";
 import { progressionsOf } from "../../../src/progressions/index.mjs";
 import { intentOf } from "../../../src/intent/index.mjs";
+import { provenanceOf } from "../../../src/provenance/index.mjs";
+import { extractionOf } from "../../../src/extraction/index.mjs";
+import { contentOf } from "../../../src/content/index.mjs";
+import { eventsOf } from "../../../src/events/index.mjs";
+import { Money } from "../../../src/money/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -65,10 +72,12 @@ export const V = (id) => `member:${id}`;
 export const MACHINE = "class:ai";
 export const NOW = "2026-09-28T01:00:00Z";
 export const DAY = 86400000;
+/** The fictional test profile's time zone (`test-port-ellery`), the one that governs here: stage dates and money periods. */
+export const ZONE = "America/Halifax";
 
 /** `plane`: build as the plane does (N179): intent first, reaching progressions through the host, and progressions
  *  after it with the plane's `env` (the plane's constructor builds `intentOf(ctx)` before the scheduler reaches
- *  `progressionsOf(ctx, {env})`), each capture's reading dated `plane.readingAt`. */
+ *  `progressionsOf(ctx, {env})`). */
 export function world({ now = NOW, plane = null } = {}) {
   const st = storage();
   const host = { storage: st };
@@ -87,9 +96,21 @@ export function world({ now = NOW, plane = null } = {}) {
   promotion.registerFact("producingGroup", "instance-setup", () => "test-group");
   const entities = entitiesOf(host, { record, membership, provenance: {}, now: () => clock.now });
   entities.migrate();
+  /* the fictional test profile: its time zone is the one local-facts governs, which progressions reads (its R16) */
+  record.setSetting("jurisdiction_profiles", ["test-port-ellery"], "test");
+  const provenance = provenanceOf(host, { record, membership, promotion });
+  provenance.migrate();
+  /* events (its R1, R27): a stage document's own date is the dated fact it holds for the capture (progressions R37);
+     it reads extents through content and readings through extraction, whose tables the plane's migration makes */
+  const extraction = extractionOf(host, { record, membership, promotion });
+  extraction.migrate();
+  const content = contentOf(host, { record, membership, provenance, extraction });
+  content.migrate();
+  const events = eventsOf(host, { record, membership, provenance, extraction, entities, now: () => clock.now });
+  events.migrate();
   const buildProgressions = () => {
     const p = progressionsOf(host, { record, entities, provenance: { homeOf: () => null }, now: () => clock.now,
-      extraction: { readingOf: () => (plane && plane.readingAt ? { reading: { at: plane.readingAt } } : null) },
+      extraction: { readingOf: () => null }, events,
       ...(plane ? { env: plane.env } : {}) });
     p.migrate();
     return p;
@@ -144,13 +165,36 @@ export function world({ now = NOW, plane = null } = {}) {
       return r && (!r.seenBy || r.seenBy.includes(a.viewer)) ? { ...r } : null;
     },
   };
+  /* money (R31) over the same storage, with provenance's register for its facts' sources; lines is not among intent's
+     uses, and no fact here needs it (money fails closed where it would) */
+  const money = new Money(st, { record, membership, entities, provenance, events, lines: null, now: () => clock.now });
+  money.migrate();
   const i = intentOf(host, { record, membership, promotion, entities, ...(plane ? {} : { progressions }), inquiry, retrieval,
-                             aiRuns, captureRequests, now: () => clock.now });
+                             aiRuns, captureRequests, money, now: () => clock.now });
   i.migrate();
   if (plane) progressions = buildProgressions();
   let n = 0;
   const w = {
-    st, host, record, membership, credentials, promotion, entities, progressions, i, clock, calls, requests,
+    st, host, record, membership, credentials, promotion, entities, progressions, i, clock, calls, requests, money,
+    events,
+    /** A capture held in `bundleId` whose own date is `day`: the one dated fact events holds for it, recorded by a
+     *  member (events R1; progressions R37). Answers the capture's digest. */
+    dated(name, bundleId, day) {
+      const sha = Buffer.from(String(name)).toString("hex").padEnd(64, "0").slice(0, 64);
+      w.held(sha, bundleId);
+      const r = events.recordDatedFact({ captureSha: sha, extent: { kind: "document" }, kind: "signed", value: day,
+                                         method: "read by a member", by: V("alice") });
+      if (!r.ok) throw new Error(`fixture dated fact refused: ${r.reason}: ${r.detail}`);
+      return sha;
+    },
+    /** A capture registered in `bundleId` (provenance's register, its R48), the bundle an information bundle row. */
+    held(sha, bundleId) {
+      st.sql.exec(`INSERT OR IGNORE INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha)
+                   VALUES (?, 'information', 'test-group', ?, 'collected', ?, ?, 'x')`, bundleId, bundleId, clock.now, clock.now);
+      st.sql.exec(`INSERT OR REPLACE INTO register (capture_sha, bundle_id, path, encoding, bytes, registered)
+                   VALUES (?, ?, 'snapshots/x', 'utf8', 1, ?)`, sha, bundleId, clock.now);
+      return sha;
+    },
     /** The four stand-ins intent was built with, so a test can make one answer otherwise. */
     stand: { inquiry, retrieval, aiRuns, captureRequests },
     rows: (q, ...a) => st.sql.exec(q, ...a).toArray(),
@@ -220,6 +264,19 @@ export function world({ now = NOW, plane = null } = {}) {
       const r = await progressions.threadInstance({ progressionKey: key, entityId, placements, threadedBy: V("alice") });
       if (!r.ok) throw new Error(`fixture thread refused: ${JSON.stringify(r).slice(0, 300)}`);
       return r;
+    },
+    /** A money fact (money R1) concerning `entity`, recorded by a member through money's one append site, its source a
+     *  capture held in `bundle` (a bundle in no project, seen by every member, unless one is named). `over` replaces
+     *  any field: an exact 2025-26 cash payment of `amount` dollars. */
+    fact(entity, amount, over = {}, { bundle = "INFO-LEDGER" } = {}) {
+      const sha = w.held((++n).toString(16).padStart(64, "f"), bundle);
+      const r = money.recordFact({ amount, as_read: `$${amount}`, currency: "USD", sign: "+", precision: "exact",
+        kind: "payment", phase: "actual", stage: "paid", basis: "cash",
+        period: { from: "2025-07-01", to: "2026-06-30", precision: "day", zone: ZONE },
+        from: { as_written: "the treasurer" }, to: { as_written: "a vendor" }, concerns: [entity],
+        source: { capture_sha: sha, extent: { kind: "pdf-page", page: 1 } }, by: V("alice"), ...over });
+      if (!r.ok) throw new Error(`fixture money fact refused: ${r.reason}: ${r.detail}`);
+      return r.fact_id;
     },
     /** An inquiry bundle created through promotion (the fixture's own author), for R17. */
     inquiry(id, { state = "surfaced", surfacedBy = "agent", author = MACHINE, created = clock.now } = {}) {
