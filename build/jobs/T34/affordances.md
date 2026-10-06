@@ -1,6 +1,6 @@
 # affordances (T34)
 
-**Status** · session_01D46sKU6GQxJsbHFhXN1a2o · depth 2 · COMPLETE · handled B9
+**Status** · session_01D46sKU6GQxJsbHFhXN1a2o · depth 2 · WORKING · handled B9
 
 ## J1 · QUESTION
 
