@@ -70,10 +70,12 @@ export function storage() {
 /** `capture`'s in-process arm as a script: each call is recorded; the answer is the next scripted one for the address,
  *  else a filed capture of the address's bytes. */
 export function fakeCapture() {
-  const calls = [], script = new Map();
+  const calls = [], script = new Map(), readers = [];
   let throwing = false;
   return {
-    calls, script,
+    calls, script, readers,
+    /* capture R83's slot as a stand-in: each registration recorded, the module's own `fn` kept to be driven. */
+    registerReader(slot, module, fn) { readers.push({ slot, module, fn }); return { ok: true, slot, module }; },
     throwNext() { throwing = true; },
     async acquire(body, opts) {
       calls.push({ body, opts });
