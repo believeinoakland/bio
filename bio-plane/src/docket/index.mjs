@@ -965,6 +965,17 @@ export class Docket {
       editions: o.editions, parts: Array.isArray(o.order.parts) ? o.order.parts : null, digest: o.row.digest }));
   }
 
+  /** R25 (K1632): the order source docket registers with `publication` (its R62): the posted `court-order` entry `entry`
+   *  (`<case>#<seq>`) of `case`, as `{seq, effect, editions, parts}` with the editions fixed at its post and `parts` null
+   *  when none; null for anything else. Read inside the post's own transaction, so the entry being posted is seen. */
+  courtOrderOf(caseId, entry) {
+    const id = str(caseId), e = str(entry);
+    if (!id || !e || !e.startsWith(`${id}#`)) return null;
+    const seq = int(e.slice(id.length + 1));
+    const o = seq === null ? null : this.#orders(id).find((x) => Number(x.row.seq) === seq);
+    return o ? { seq, effect: o.order.effect ?? null, editions: o.editions, parts: Array.isArray(o.order.parts) ? o.order.parts : null } : null;
+  }
+
   /** R13: each withdrawal, in case then seq order after `after` (`<case>#<seq>`), at most `limit`. */
   docketWithdrawals({ after = null, limit = null } = {}) {
     const cap = Math.min(Math.max(int(limit) ?? 200, 1), 1000);
@@ -1031,13 +1042,15 @@ export class Docket {
     return { items: items.slice(0, cap), truncated: items.length > cap };
   }
 
-  /** R13, R26: fills `reevaluation`'s docket registration (its R30) and registers the docket's event source with `events`
-   *  (its R30), each once; the answers are kept. */
+  /** R13, R25, R26: fills `reevaluation`'s docket registration (its R30), registers the order source with `publication`
+   *  (its R62; K1632) and the docket's event source with `events` (its R30), each once; the answers are kept. */
   start() {
     if (this.registration) return this.registration;
     this.registration = this.#call(() => this.reevaluation.registerDocket("docket", {
       withdrawals: (q) => this.docketWithdrawals(q || {}), contested: (q) => this.docketContested(q || {}) }),
       { ok: false, reason: "REGISTRATION_FAILED" });
+    this.orderSourceRegistration = this.#call(() => this.publication.registerOrderSource({
+      courtOrderOf: (caseId, entry) => this.courtOrderOf(caseId, entry) }), { ok: false, reason: "REGISTRATION_FAILED" });
     this.eventSourceRegistration = this.#call(() => this.events.registerEventSource("docket", (q) => this.docketEvents(q || {})),
       { ok: false, reason: "REGISTRATION_FAILED" });
     return this.registration;

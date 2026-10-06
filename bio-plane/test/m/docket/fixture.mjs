@@ -111,18 +111,21 @@ export function world({ slug = SLUG, before = null } = {}) {
   const tensions = { list: [], asked: [] };
   const caseTensions = { caseTensions: (q) => { tensions.asked.push(q);
     return { ok: true, cases: tensions.list.length ? [{ case: CASE, edition: tensions.edition ?? 1, tensions: tensions.list }] : [], cursor: null }; } };
-  /* publication R62 as its requirement words it: a stamp per named ratified edition, linked to a posted court-order
-     entry of the case, read inside the post's transaction (the entry's row is already written when it is called). */
-  const stamps = { list: [], calls: [], refuse: null, throws: false };
-  const publication = { stampEdition(q) {
+  /* publication R62 as its requirement words it (K1632): a stamp per named ratified edition, linked to a posted
+     court-order entry of the case, which it reads through the one order source docket registers at start. */
+  const stamps = { list: [], calls: [], refuse: null, throws: false, sources: [] };
+  const publication = { registerOrderSource(src) {
+    if (stamps.sources.length) return { ok: false, reason: "LISTENER_DECLARED" };
+    stamps.sources.push(src);
+    return { ok: true };
+  }, stampEdition(q) {
     stamps.calls.push(q);
     if (stamps.throws) throw new Error("stamp store down");
     if (stamps.refuse) return { ok: false, reason: stamps.refuse, detail: "refused by the stand-in" };
     const ratified = new Set([...st.sql.exec(`SELECT edition FROM published_cases WHERE case_id=? AND ratified_at IS NOT NULL`, q.case)].map((r) => Number(r.edition)));
     if (!Array.isArray(q.editions) || !q.editions.length || !q.editions.every((e) => ratified.has(e))) return { ok: false, reason: "NO_SUCH_CASE_EDITION" };
-    const seq = Number(String(q.entry).split("#").pop());
-    const row = [...st.sql.exec(`SELECT kind FROM docket_entries WHERE case_id=? AND seq=?`, q.case, seq)][0];
-    if (!row || row.kind !== "court-order") return { ok: false, reason: "STAMP_NO_ORDER" };
+    const o = stamps.sources.length ? stamps.sources[0].courtOrderOf(q.case, q.entry) : null;
+    if (!o || o.effect !== q.effect) return { ok: false, reason: "STAMP_NO_ORDER" };
     for (const edition of q.editions) stamps.list.push({ case: q.case, edition, effect: q.effect, parts: q.parts ?? null, entry: q.entry, stamped_at: iso(clock.now) });
     return { ok: true, stamped: q.editions.length };
   } };

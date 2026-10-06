@@ -229,3 +229,24 @@ test("R26 docketEvents: each public entry of a case whose named subjects are in 
   const t = w.events.timeline({ set: [SUBJECT], lanes: ["ours"], viewer: A });
   assert.equal(t.ours.sources[0].source, "docket");
 });
+
+test("R25 (K1632) at start the docket registers its order source with publication once; courtOrderOf answers a posted court-order entry, null otherwise", async () => {
+  const w = seeded();
+  assert.deepEqual(w.docket.orderSourceRegistration, { ok: true });
+  w.docket.start();
+  assert.equal(w.stamps.sources.length, 1, "once");
+  const src = w.stamps.sources[0];
+  assert.equal(src.courtOrderOf(CASE, `${CASE}#1`), null, "nothing posted yet");
+  const { posted } = await fileAndPlace(w);
+  w.publish(w.P, CASE, 2, [{ id: w.F1, role: "load_bearing" }]);
+  const o = await post(w, ORDER(w, { order: { effect: "seal", editions: "all", parts: ["Exhibit 3"] } }));
+  const r = await post(w, ORDER(w, { order: { effect: "remove", editions: [1] }, reason: "Remove edition 1." }));
+  const before = w.snapshot();
+  assert.deepEqual(src.courtOrderOf(CASE, `${CASE}#${o.seq}`), { seq: o.seq, effect: "seal", editions: [1, 2], parts: ["Exhibit 3"] });
+  assert.deepEqual(w.docket.courtOrderOf(CASE, `${CASE}#${r.seq}`), { seq: r.seq, effect: "remove", editions: [1], parts: null });
+  for (const [c, e] of [[CASE, `${CASE}#${posted.seq}`], [CASE, `${CASE}#9`], ["CASE-2026-9999", `${CASE}#${o.seq}`], [CASE, "x"], [null, null], [CASE, `${CASE}#`]])
+    assert.equal(w.docket.courtOrderOf(c, e), null, `${c} ${e}: not a posted court order of that case`);
+  assert.deepEqual(w.snapshot(), before, "writes nothing");
+  /* the stamp reads through it: each post above was stamped, linked to its entry */
+  assert.deepEqual(w.stamps.list.map((s) => [s.edition, s.entry]), [[1, `${CASE}#${o.seq}`], [2, `${CASE}#${o.seq}`], [1, `${CASE}#${r.seq}`]]);
+});
