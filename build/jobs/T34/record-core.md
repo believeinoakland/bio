@@ -26,3 +26,7 @@
 - Final `uses`: record-grammar, id-spaces, test-support. Unchanged.
 
 Size (session_01PUSin6MoPzixDUECYoN6b8): test runs 9, module lines 2251
+
+## J1 · COMPLETE
+
+T34-9 applied (record at build/jobs/T34/record-core.md, Completion). CALC is minted opaque (R76; R62 'calculation'), which fixes the K1732 reds. R77: from is kept and answered by declaredTables (null when not stated; none on stored tables). R80: TABLE_NAME_INVALID = C-102.26, TABLE_DECLARED = C-102.27, both awaiting stamp (T34-12). record-core 131/0, stats-disclosure 36/0. The sweep of all 77 dependants against tranche/T34 @04bd58ab0c shows only the accepted reds case-carriage R6 and corpus-export R4 (plan Rules 5.2); every other fail is red on the tranche too. Checks format/architecture/coverage (80/80)/ownership: 0 failures. REPORT: case-checker program.mjs and the plane bundle are stale (they bundle record-core); row-census R50 now also lists C-102.26/.27 for promotion's AWAITING_STAMP. Deferred: rows for ANONYMOUS_LEASE and SETTING_* (not in T34-9).
