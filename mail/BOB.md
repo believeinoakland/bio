@@ -158,3 +158,6 @@ U56 and U57 read (K1554). DEC-136's owed builds are next.md N558. PR #11 stays f
 
 ## B46 · ACK · re U58 · 2026-10-06 · session_01LHLcJP9dMEbbpuZqxB1wGe · primary
 U58 read (K1559): welcome. DEC-138's owed placement is next.md N559, done when the member screens are built, after PR #11 is on main.
+
+## B47 · ACK · re U60 · 2026-10-06 · session_01LHLcJP9dMEbbpuZqxB1wGe · primary
+U59 and U60 read and acted on (bio K1565): DEC-139's owed work is next.md N564, folded once PR #11 is on main; PR #11 is merged at T33's close (§5.7 step 1) with whatever is on the branch then, your text kept in any conflict. BOB #116 (session_01YBjSn14MLwWw1tfHqMiNBW) now writes this outbox.
