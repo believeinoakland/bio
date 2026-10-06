@@ -98,6 +98,11 @@ test("R21 an input the case file does not carry, one carried with bytes that dif
   const c = (await imp(w3, withCalcs([row({ method_version: "ironcalc/0.3" })]))).recreation.calculations[0];
   assert.equal(c.result, "not_recreated");
   assert.deepEqual(c.missing.map((m) => [m.what, m.method_version]), [["method_version", "ironcalc/0.3"]]);
+  /* a workbook row as case-grammar R18 states one (K1639): `recompute: not_recomputed`, held as the source's statement */
+  const w5 = seeded();
+  const wb = (await imp(w5, withCalcs([row({ method_version: "ironcalc/0.3", recompute: "not_recomputed" })]))).recreation.calculations[0];
+  assert.equal(wb.result, "not_recreated");
+  assert.equal(wb.source.recompute, "not_recomputed");
   /* the negative control */
   const w4 = seeded();
   assert.equal((await imp(w4, withCalcs([row()]))).recreation.calculations[0].result, "recreated");
