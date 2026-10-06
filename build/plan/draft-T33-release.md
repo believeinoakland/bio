@@ -65,7 +65,7 @@ Who: **S** = a session (BOB, or a worker BOB starts) can do it; **B** = only Bob
 | Pushing a release tag | Not needed; the proxy refuses it and no setting of Bob's changes it. Pin by branch | K1433, K1436 |
 | Merging the cut into `main` | Standing list covers the GitHub merge tool; a direct `git push` of `main` was refused once | K1454, K1497, K1261; CLAUDE.md |
 | Enabling Containers on `20b5…7f72` | Bob's, if `wrangler containers list` shows it off | plan :254; entries C (e) 2 |
-| His own Claude sign-in (`claude setup-token`) or API key, as a **member** of `biosmoke7`, through the member's connect flow (never a copy-wide token) | Bob's | K1502; plan :254 |
+| His own Claude sign-in (`claude setup-token`) or API key, as a **member** of `biosmoke7`, through the member's connect flow (never a copy-wide subscription token, by Bob's choice, K1547, K1755) | Bob's | K1502; plan :254 |
 | Console credit for the API-key path (M-Q1 comparison, M-Q9) | Bob's | plan :254; entries C (e) 2 |
 | Approving a deploy if the permission check refuses one | Bob's, typed in the refused session | §16; entries C (e) 3 |
 | Container registry account and credential (Docker Hub `civicos`, or a decision to use Cloudflare's registry) | Bob's to create/pay if Docker Hub; see G3 | M-Q8 (`measures-T33/assistant-substrate.md:185-196`) |

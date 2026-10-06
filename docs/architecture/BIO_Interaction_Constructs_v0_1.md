@@ -562,7 +562,7 @@ next; the assistant checks and advances.
 
 **RULED 2026-10-02 by Bob (DEC-120): wizards, wizard scripts, and drafts in fields.** Any multi-step journey can be
 walked with a wizard (Bob, 2026-10-03: "Let's call guided flows wizards"). A wizard runs from a **wizard script** (the authored step list this design first called a
-recipe) for every group, with no AI and no key; where a group has set a key, the assistant may also plan a wizard on the fly (since K1502, 2026-10-05, and K1755, 2026-10-06: where the member has connected their own Claude account or the group's API key, held by an administrator, is on; there is no group-wide subscription).
+recipe) for every group, with no AI and no key; where a group has set a key, the assistant may also plan a wizard on the fly (since K1502, 2026-10-05, and K1755, 2026-10-06: where the member has connected their own Claude account or the group's API key, held by an administrator, is on; there is no group-wide subscription, by Bob's choice, K1547, K1755).
 Either way the member works on the real screens, the guide sitting in the docked panel (DEC-90). A step may place a
 **labelled draft** in a field for the member to edit and adopt (as DEC-101 and K1019 allow); the member alone presses the
 act's button, and the act still runs its four beats.

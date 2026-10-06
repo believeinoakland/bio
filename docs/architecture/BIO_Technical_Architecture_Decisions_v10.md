@@ -617,6 +617,10 @@ points on a cost spectrum:
                                                   pay-as-you-go.
   -----------------------------------------------------------------------
 
+*(2026-10-06: the headless row's separate Agent SDK credit was paused
+before it took effect; Agent SDK and `claude -p` usage still draw from
+the subscription's usage limits, AT-23 in `build/terms/anthropic.md`.)*
+
 Interactive work is bounded by a clock (rate limits); agent work is
 bounded by a budget (a credit ceiling). An agent run carries a budget;
 an interactive run carries a clock.
@@ -671,8 +675,8 @@ interactive surfaces and the Agent SDK, so moving work between modes
 requires no rewrite. The cost-bounded, amateur-friendly onboarding path
 is to log into a Claude subscription; guided agentic setup comes first,
 with interactive mastery as a growth path. Raw API keys are
-advanced-only; a stray ANTHROPIC_API_KEY silently bills pay-as-you-go
-instead of the subscription.
+advanced-only; a stray ANTHROPIC_API_KEY bills pay-as-you-go
+instead of the subscription (AT-24 in `build/terms/anthropic.md`).
 
 **Decision.** The runtime unit is a Session (interactive chat,
 interactive agentic, or headless agent), unified by the three
@@ -1613,7 +1617,11 @@ public action.
     > apps driving a group's subscription-authenticated Agent SDK runs,
     > and whether scheduled/unattended runs are permitted under
     > subscription auth. The Section 10.4 headless-dispatch endpoint
-    > candidate depends on this answer before admission.
+    > candidate depends on this answer before admission. (2026-10-06:
+    > the change is paused, AT-23; a group's subscription serving its
+    > members is barred on Free, Pro and Max, AT-3, AT-16, and unstated
+    > for Team and Enterprise, U-1; unattended runs, U-5; all in
+    > `build/terms/anthropic.md`.)
 
 -   Work-product staleness (technical/UX): when a cited Information item
     > changes or an annotation invalidates a conclusion, is the Work

@@ -16,7 +16,7 @@ the runtime enforces, by a stepped probe that checkpoints after every step so th
 isolate being killed mid-probe. `tokens.mjs` is token hygiene: whether a secret value is live rather than
 a value that has ever been published in this repository, and the status of the two instance-level
 credentials an instance may hold as deploy secrets (BIO's own `ai` credential that resumes a run; the
-group's copy holds no Claude account, K1502, so the instance-level Claude status always answers none), and which bound credential the instance's unattended work spends.
+group's copy binds no Claude account as a deploy secret, K1502, K1755: the group's API key, when held, is in `credentials`' sealed table, never a binding, so the instance-level Claude status always answers none), and which bound credential the instance's unattended work spends.
 Neither half holds a store, reads the network, or has any way to
 set a credential.
 
