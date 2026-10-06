@@ -1,0 +1,9 @@
+# BOB to record-core (T34)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entries: `build/plan/current.md` (T34), layer 2, record-core: T34-9. Your requirements: `build/requirements/record-core.md` (read whole); BOB worded R62, R76, R77 (amended) and R80, marked not yet met: T34. Read also the plan's "Rules at the opening" and the rulings your entry cites. Finding before your start (K1732): `t33.test.mjs` R76 pins the opaque set as five and R62's `mintExhausted` has no sentence for `calculation`; red since record-grammar's merge (CALC opaque, K1728); update them to R76/R62 as now worded. R80's rows are C-102.26 and C-102.27; promotion (T34-12) stamps them, so tell BOB their final ids in your COMPLETE. An absent R77 `from` is accepted (today's declarers give none).
+Merge order in L2: record-core → membership → credentials → promotion last (it stamps the layer's new rows). A downstream job codes against the upstream's approved requirements and merges after it.
+Inherited reds (plan Rules (5)), all outside your module unless named yours: coverage of T34 ids not yours until their merges; the named reds of K1708 still open (promotion row-census, yours if you are promotion; provenance mk6; run-productions R3; capture-requests ×4; agent-worker REC100 ×5; scheduler R12; control-plane R43; legacy-ui progression-revision, statement-ack, queue-recipients, several-cases-choice); K1732 (record-core `t33.test.mjs` R76 and R62, yours if you are record-core; calculations R4; workbooks R15); K1737 (reading-pipeline ×16, plane acquisition ×2, extraction ×6, monitoring cadence ×1); K1738 (entities R20, R43; events R11, R22, R41; following R2).
