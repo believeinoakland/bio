@@ -183,3 +183,33 @@ test("R23 startFrom answers the offered scripts this viewer may start, the libra
   w2.wz.wizardRegister({ ops: ALL_OPS });
   assert.deepEqual(w2.wz.startFrom({ viewer: F }).scripts.map((s) => s.name), wz.CIVICSMITH_LIBRARY.filter((e) => !e.required).map((e) => e.name));
 });
+
+test("R11 (K1883) a library script that fails R12 against the registration is not offered until it passes, as R13 withholds a group's: absent from wizardsAt, the registry form, startFrom and the offered reads; a passing one offered; the library data unchanged", () => {
+  const name = (n) => wz.CIVICSMITH_LIBRARY.find((e) => e.name === n);
+  const reg = (ops) => { const w = world({ register: false }); w.member("frank"); w.member("erin", { role: "admin" }); w.wz.wizardRegister({ ops }); return w; };
+  const missing = ["subscriptionsignin", "translationdraft", "translationadopt", "translationconfirm"];
+  const w = reg(ALL_OPS.filter((o) => !missing.includes(o)));
+  const connect = name("Connect your Claude account"), translate = name("Translate the interface"), ties = name("Your ties");
+  for (const [e, screen] of [[connect, "connect"], [translate, "translations"]]) {
+    assert.ok(!w.wz.wizardsAt({ screen, viewer: F }).scripts.some((s) => s.id === e.id), `${e.name} withheld`);
+    assert.equal(w.wz.wizardRead({ script: e.id, viewer: F }).offered, false, "still readable, not offered");
+    assert.ok(!w.wz.wizardRegistry({ viewer: F }).screens.some((sc) => sc.scripts.some((x) => x.id === e.id)), "not in the registry form");
+    assert.ok(!w.wz.startFrom({ viewer: F }).scripts.some((s) => s.id === e.id));
+    assert.ok(!w.wz.wizards({ viewer: E }).scripts.some((s) => s.id === e.id), "not among the offered versions");
+  }
+  assert.ok(w.wz.wizardsAt({ screen: "ties", viewer: F }).scripts.some((s) => s.id === ties.id), "a passing one is offered");
+  /* a required flow is judged on its own steps: the welcome wizard stays offered though a script it visits is withheld */
+  assert.ok(w.wz.wizardsAt({ screen: "join", viewer: F }).scripts.some((s) => s.name === "Welcome a new member"));
+  /* the published scripts name only registered screens and acts (what skills R10 checks) */
+  const screens = new Map(w.wz.registeredScreens().map((s) => [s.id, new Set(s.acts)]));
+  for (const sc of w.wz.wizardRegistry({ viewer: F }).screens)
+    for (const x of sc.scripts) for (const t of x.steps) assert.ok(screens.has(t.screen) && (t.act === null || screens.get(t.screen).has(t.act)), `${x.name}: ${t.screen}/${t.act}`);
+  /* once the ops are declared, both are offered */
+  const all = reg(ALL_OPS);
+  assert.ok(all.wz.wizardsAt({ screen: "connect", viewer: F }).scripts.some((s) => s.id === connect.id));
+  assert.ok(all.wz.wizardsAt({ screen: "translations", viewer: F }).scripts.some((s) => s.id === translate.id));
+  /* a required flow failing on its own act is withheld too, and R14 names it */
+  const nol = reg(ALL_OPS.filter((o) => o !== "memberlanguageset"));
+  assert.ok(!nol.wz.wizardsAt({ screen: "join", viewer: F }).scripts.some((s) => s.name === "Welcome a new member"));
+  assert.equal(wz.CIVICSMITH_LIBRARY.length, 17, "the data is untouched");
+});
