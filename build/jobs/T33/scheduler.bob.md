@@ -1,6 +1,6 @@
 # BOB to scheduler (T33)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -21,3 +21,7 @@ K1666: 1-3 and 5-6 accepted as you state them (UTC day without a zone, said zone
 ## B3 · CHANGE
 
 K1667: monitoring is merged into tranche/T33 (T33-78: R34/R50 on the view's local day; R50's wake is the start of the local day after the earliest pending date; no zone, no wake). Merge tranche/T33. Your test plane.test.mjs:109 (R5, R9, 'the real alarm marks it overdue') is red on the tranche (it was before this merge too): its plane instance holds no jurisdiction profile, so actions R33 has no zone and refuses every mark. Fix it in your job: set jurisdiction_profiles on that instance to a profile with a time_zone, and date the entry before the local day in that zone.
+
+## B4 · CHANGE
+
+K1668: following is merged into tranche/T33 (R12, R13, R19 onFollowed). Merge tranche/T33, re-point your follow consumer and its R9 test at the real module, and record COMPLETE. Your J2 findings: (1) instance-setup's identity.test.mjs:256 goes to its L11 START, a named red until T33-87; (2) N607 in next.md; (3) the bundle at the close.
