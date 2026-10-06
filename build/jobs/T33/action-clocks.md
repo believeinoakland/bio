@@ -24,3 +24,28 @@ Findings outside action-clocks, for routing. None blocks this job.
 (3) **plane**: `bio-plane/dist/bio-plane.bundled.mjs` is stale (action-clocks gains `count.mjs` and `ics.mjs` and imports civil-time, standards and calc-grammar). Not touched (mechanics §14); regenerate at the layer close.
 (4) **queue-producers** (its R15, R18, through my R3, R5): `overdueClocks` and `remindersDue` now judge the action's local day (K1522); an action whose zone is not held has its pending entries left out of R3 (counted in `zone_undetermined`) and its reminders not due. R3's items gain `basis_of` (R7) and `local_day`. queue-producers' own tests pass unchanged (80/80).
 (5) **The profiles' calendars, for information** (jurisdictions, local-facts): every business-day deadline of both held profiles now names a closure list (R47), and a list entry is never a local fact, so `calendarFactsRead` (R11) answers only offices' `hours` on them: no deadline the profiles hold today reads an office-calendar holiday fact for members to confirm.
+
+## J3 · COMPLETE
+
+**Entries applied.** T33-74 in full, on the readings K1650 accepted (J1 1–9).
+- C-1, R2: `received` and `filed` are counted from the group's own first `sent` entry, never from a `received` entry; `clocks.test.mjs`'s old R2 test (counting from `received`) is corrected.
+- C-2, C-4, R2: `computeDeadline` (now `count.mjs`, same signature and `{date, start, why, calendar}` answer for filings) delegates to `civil-time.evaluateRule`: direction, calendar or business days, the weekend from the profile, the closure list a rule names, the roll, the extension (answered, both readings when open), hours and the close of business in the office's hours, the venue's receipt and cutoff. A start the ledger does not hold, an hours rule from a day, a year the calendar does not cover, and an `UNMEASURED` basis are undetermined with why (K1445). An uncertain date is offered with both candidates, `date` the earliest (K1444 (i)). The body's observed practice is answered beside the rule, labelled. The trace is answered and kept in `action_clock_proposals.trace_json`.
+- K1519: a closure-list entry is never read as the office calendar (count, `yearEntries`, R11) and never a local fact (`factReader` answers it absent); R10 states it `profile_list` and the count `unconfirmed`, saying so. The three named reds in `calendar.test.mjs` are green.
+- R10: a correction that governs is counted on even after a later confirm (local-facts R3); see J2 (1) for civil-time.
+- R3, R5, R6 (K1522, K1444 (iii)): judged on the local day of the action's zone (the addressed office's profile's `time_zone`, else the view's); no zone held: undetermined, left out (`zone_undetermined` on R3). R3's items gain `basis_of` and `local_day`.
+- R7: basis kinds `rule`, `commitment`, `dependency` (never a violation, said), `window`; a rule may name a held standard, its in-force state read through `standards.inForceAt`; an entry with no kind reads `kind: null`.
+- R8, R13: `clockAdopt` (`op=clockadopt`), a member's one act: lease, revision through promotion (actions' check judges it), entry with scalar basis keys and a one-line trace, proposal marked adopted (by, at, position). Refusals C-123.4–C-123.6, then `NO_SUCH_STANDARD`, `CLOCK_ENTRY_REFUSED`, the lease's and the promotion's.
+- R14: `clocksIcs` (`op=clocksics`): RFC 5545, all-day `VALUE=DATE` events, each zone's `VTIMEZONE`, stable UIDs, undated entries counted, at most 200 actions, nothing published.
+- R15: `lateness` (`op=clocklateness`): commitment/dependency/window entries in the period, through calc-grammar's `evaluate` (recipe and trace answered); met day from `met_on`, else the first version showing it met (its `last_updated`, local day); rule entries never counted, no counterparty named.
+- R9 / plan Rules (6): both tables declared with `declareTable` and their classes; the new columns added in place to held tables.
+- Tests: R2's acceptance tests are the 20 worked examples with negative controls (`worked.test.mjs`); new `adopt`, `ics`, `lateness` tests.
+
+**Final uses:** record-grammar, jurisdictions, record-core, membership, promotion, provenance, retrieval, conformance, actions, action-grammar, local-facts, civil-time, standards, calc-grammar (architecture fails only on the last three until modules.json gains them).
+
+**Deferred:** none.
+
+**Found elsewhere:** J2 (civil-time's corrected-then-confirmed value; the new ops' wiring and C-123.4–.6's stamp; plane's stale bundle; queue-producers' local-day consequences; the profiles' calendars).
+
+**Tests and checks.** action-clocks 51/51 (`node --test test/m/action-clocks/`). Users of this module, branch vs `tranche/T33` with identical failing sets: monitoring 111/111, queue-producers 80/80, action-plans 53/53, op-declarations 59/59; filings 0/60 on both (conformance's `ACT_NO_EVENT` in filings' fixture, not this job); plane 82 pass 3 fail, affordances 161/6, control-plane 155/4, all named reds. No layer tests named. format: 0 failures; architecture: 5 failures, all the uses edges above; coverage: 15 of 15 live ids named, 0 failures; ownership: 16 files, 0 failures.
+
+Size (session_01K45ZmiSS4ffxYuvfckoAxX): test runs 26, module lines 1602
