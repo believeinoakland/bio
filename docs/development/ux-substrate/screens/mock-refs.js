@@ -1,6 +1,9 @@
 /* The per-screen references (DEC-160, widened 6 October): for each screen, the things it names, what each is, and why it
    matters to what the member is doing there. Merged into REFS from mock-shell.js; GLOBAL_REFS cover things named everywhere. */
 const SCREEN_REFS = {
+  "archive": [
+    ["Sewer fund transfers","project","<b>Sewer fund transfers</b> · a project · where sewer-fee money moved between funds, FY2022 to FY2024 · owner: Ana","The project the packet was captured for."]
+  ],
   "find-in": [
     ["Report to council: street maintenance performance","document","<b>Report to council: street maintenance performance</b> · 2026 · capture B · the city's own account of its repair times","Where the money figure and the claim about closed reports were found."],
     ["Public Works work orders, FY2025","document","<b>Public Works work orders, FY2025</b> · CSV, 903 rows · captured from the city's open-data portal","A table: its dates are counted through a calculation, not recorded one by one."],
@@ -117,6 +120,7 @@ const SCREEN_REFS = {
     ["grade D",null,"<b>Grade D</b> · what rests on a person's word · A is easiest for someone else to check · a grade never says whether something is true","D does not mean doubtful: it tells a reader your account can be checked only by asking you."]
   ],
   "held": [
+    ["Agenda packet, City Council, 14 May 2024 (ZIP)","archive","<b>Agenda packet, City Council, 14 May 2024</b> · a ZIP archive · 41 entries · captured by Ana from the city's meeting site, capture B","Its 36 files wait here beside it; vouching for the archive does not vouch for them."],
     ["Photo · Seminary Ave at 60th","document","<b>Photo · Seminary Ave at 60th</b> · a held capture · taken 4 October · capture B · Pothole repairs","Picked for this batch: vouching for it lets it stand beside Mai's account of the unrepaired pothole."],
     ["Photo · Seminary Ave at 61st","document","<b>Photo · Seminary Ave at 61st</b> · a held capture · taken 4 October · capture B · Pothole repairs","Picked for this batch with the 60th Street photo; both are vouched for in one act."],
     ["vouched for",null,"<b>Vouching</b> · a member signs that a capture is what it says it is · until then it is held and counts toward nothing","Nothing on this list supports or cuts against any question until a member vouches for it."],
@@ -400,6 +404,7 @@ const SCREEN_HELP = {
   queue: 'Your queue: everything waiting on you, in one list. To do needs your act, Noticed is something new nobody has judged, and Status tells you where something stands.',
   finder: 'Find what your group holds, or look outside for something it doesn\'t yet. Capture what you find into the record.',
   capture: 'Add something to the record: a document from its address, a file, or what you saw yourself, in your own words.',
+  archive: 'One captured archive and every file in it: which are filed and held for review beside it, which were already held, and which were not filed and why.',
   held: 'Captures waiting for a member to vouch for them before they enter the record. Release them, or set them aside with a reason.',
   'find-in': 'Look through a document, the documents you are holding together, or a project for people, money, dates, requirements or a word. Each result shows its passage; you record what matters with the usual act.',
   document: 'One document as captured: its grade, its passages, its versions and what cites it. Cite a passage from here.',

@@ -49,6 +49,8 @@ screen('capture', 'Add', 'working', 'Capture a document from an address or a fil
   [('acquire','Capture from an address'),('capture','Capture a file or photo'),('testify','Record what you saw or heard'),('capturerequest','Ask for a capture later'),('monitor','Watch this address'),('owed:writinghelp DEC-153','Help me write this')], [6,7,9,15])
 screen('held', 'Held captures', 'working', 'Captures not yet vouched for, per member and project (DEC-97).',
   [('heldcaptures','See held captures'),('release','Vouch for them'),('heldsetaside','Set aside with a reason'),('heldrestore','Restore')], [15])
+screen('archive', 'Archive', 'working', 'A captured ZIP: every file with its state (filed with the archive\'s grade and held for review, already held, or not filed with its reason); vouching or setting files aside; an archive refused whole (K1852, DEC-167).',
+  [('gradenote','Read the grade note'),('owed:archivelist K1852','List the archive\'s files by state'),('heldsetaside','Set aside with a reason'),('release','Vouch for them')], [15])
 screen('document', 'Document', 'working', 'One captured document: its copy, grade note, passages, versions and what cites it.',
   [('gradenote','Read the grade note'),('release','Vouch for this copy'),('cite','Cite a passage'),('retire','Retire'),('attest','Attest'),('identityclaim','Claim the same person'),('monitor','Watch for changes'),('owed:findin DEC-164','Find in this')], [7,15,23])
 screen('find-in', 'Find in this', 'working', 'One control on a document, a held set or a project: pick what to find; each result cites its passage and becomes a fact only by a member\'s own act (DEC-164, K1468).',

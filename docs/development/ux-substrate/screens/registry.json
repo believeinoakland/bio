@@ -905,6 +905,47 @@
    ]
   },
   {
+   "id": "archive",
+   "name": "Archive",
+   "frame": "working",
+   "purpose": "A captured ZIP: every file with its state (filed with the archive's grade and held for review, already held, or not filed with its reason); vouching or setting files aside; an archive refused whole (K1852, DEC-167).",
+   "acts": [
+    {
+     "op": "gradenote",
+     "label": "Read the grade note",
+     "status": "declared",
+     "modules": [
+      "capture"
+     ]
+    },
+    {
+     "op": "owed:archivelist K1852",
+     "label": "List the archive's files by state",
+     "status": "owed"
+    },
+    {
+     "op": "heldsetaside",
+     "label": "Set aside with a reason",
+     "status": "declared",
+     "modules": [
+      "capture"
+     ]
+    },
+    {
+     "op": "release",
+     "label": "Vouch for them",
+     "status": "declared",
+     "modules": [
+      "capture",
+      "ratification"
+     ]
+    }
+   ],
+   "journeys": [
+    15
+   ]
+  },
+  {
    "id": "document",
    "name": "Document",
    "frame": "working",

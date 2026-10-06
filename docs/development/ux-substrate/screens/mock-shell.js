@@ -53,7 +53,7 @@ const PATH = {
   install: ['Civicsmith', 'Install'], setup: ['Set up', 'Places and languages'], join: ['Lakeshore Tenants', 'Your invitation'],
   doorbell: ['Lakeshore Tenants', 'Hand material over'], published: ['Lakeshore Tenants', 'Published cases', 'The Coliseum lease'],
   home: ['Home'], queue: ['Queue'], 'due-date': ['Queue', 'Due date'], inbox: ['Queue', 'Inbox'],
-  finder: ['Find'], capture: ['Add'], held: ['Add', 'Held captures'],
+  finder: ['Find'], capture: ['Add'], held: ['Add', 'Held captures'], archive: ['Add', 'Held captures', 'Archive'],
   'find-in': ['Projects', 'Pothole repairs', 'Find in this'],
   'group-identity': ['Settings', 'Who your group is'], members: ['Settings', 'Members'], security: ['Settings', 'Security'], account: ['Settings', 'Your account'],
   connect: ['Settings', 'The assistant and your account'], ties: ['Settings', 'Your ties'], notes: ['Settings', 'Your notes'],

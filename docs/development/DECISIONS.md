@@ -2617,3 +2617,17 @@ response: **Bob, 2026-10-06: "S9: B - but never the member's own address".** Rul
 decided: 2026-10-06 · Bob
 reasoning recorded in: this entry; S9 on `docs/development/ux-substrate/layouts.html`; `screens/mock-screens.js` (`SCR.security`, "Where from"); `BIO_Interaction_Constructs_v0_1.md` §R.
 owed: (BOB, N703) counts by country and hour for refused and blocked requests, from Cloudflare's country label, the address never stored; the one-hour rule that keeps a member's own refused sign-in followed by their sign-in from being placed; a member's successful sign-ins never counted by place.
+
+### DEC-167 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01NWPmrrYZbbF8Wkrvp5Y2vx; the development process also runs on his primary account since K1428) (B72: K1852's surfaces, "the archive's listing with each file's state (filed, or not filed and why), and files held for review beside their archive")
+for: bob-session
+question: How a captured archive and its files are shown to members.
+why it is Bob's: it is not: design detail beneath K1852 (Bob, "as recommended") and Intake §3 and §4; decided by the design session (P17) and reported.
+provisional: no surface for archives; the held list shows single captures.
+alternative: list an archive's files only on the held list, mixed with other captures (loses which archive each came from and why some were not filed).
+recommendation: as decided below.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-06.** (1) A captured archive has its own screen (Add › Held captures › the archive), with its grade and fingerprint, its entry count and size. (2) A summary line of what was found when it opened on capture: filed and held for review beside it, already held, not filed, folders. (3) Every entry listed with its state: filed and held for review, with the archive's capture grade (never stronger, never weaker); already held (the same bytes captured directly, kept as a second sighting, one home); a folder, listed; two entries sharing a name, each filed by its number; or not filed, with the reason named in plain words (locked by a password; over the limit for one file, with what to do instead; and the other refusals the development process names). (4) Names, folders and dates exactly as the archive states them, in the face for identifiers, never used as a place to write. (5) Members pick files and vouch for them or set them aside with one reason (the held list's acts); a filter shows only those not filed. (6) "A higher grade for one file" says a file earns one only by its own capture, landing beside the first; nothing is regraded. (7) An archive that cannot be opened unambiguously is refused whole, says why in one sentence, stays captured as it arrived, and can still show what it lists. (8) Held captures shows the archive as one row with its files waiting beside it; Add says a ZIP is opened as it is captured.
+decided: 2026-10-06 · the design session (P17)
+reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (screen "Archive"; section 6); `screens/mock-screens.js` (`SCR.archive`); `BIO_Interaction_Constructs_v0_1.md` §S.
+owed: (BOB, N688) the read behind `owed:archivelist K1852`: an archive's entries with each one's state and, when not filed, the refusal by name, in member words held for translation; the held list grouping an archive's files beside it; vouching and setting aside across an archive's picked files (the existing acts).

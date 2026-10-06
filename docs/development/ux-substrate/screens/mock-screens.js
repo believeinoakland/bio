@@ -1,4 +1,4 @@
-/* Civicsmith mockups: the 44 screens of the registry (registry.src.py), each a function of the context
+/* Civicsmith mockups: the 45 screens of the registry (registry.src.py), each a function of the context
    c = {ai: the member has connected their own Claude account, v: a variant name}. Sample data is invented:
    the group Lakeshore Tenants, its members Rosa (founder), Dev, Mai (new), Ana (an accountant) and Teo (a reporter). */
 'use strict';
@@ -232,7 +232,7 @@ SCR.capture = c => ({ rail: 'add', title: 'Add', main: `
   ${field('mk-url', 'Address', 'https://www.oaklandca.gov/resources/street-maintenance-report-2026', { act: 'acquire', help: 'A copy fetched from the office\'s own site holds up better than one found elsewhere.' })}
   ${acts(btn('acquire', 'Capture', { tone: 'primary' }), btn('capturerequest', 'Ask for this later'), btn('monitor', 'Watch this address for changes'))}
   ${note('Capturing through a public archive tells that archive what your group is looking at.')}
-  ${sec('A file or photo', `<div class="mk-drop">${I('camera')} Take a photo, or choose a file</div>${acts(btn('capture', 'Capture this file'))}`)}
+  ${sec('A file or photo', `<div class="mk-drop">${I('camera')} Take a photo, or choose a file</div>${acts(btn('capture', 'Capture this file'))}${note('A ZIP archive is opened as it is captured: its files are held for review beside it, each with the archive\'s grade.')}`)}
   ${sec('What I saw or heard', `${field('mk-obs', 'In your own words', 'On 4 October at 9:10 I visited 6012 Seminary Ave. The pothole reported on 12 September and marked closed on 15 September is still open, about 60 cm across.', { area: true, rec: true })}${field('mk-where', 'Where and when', '6012 Seminary Ave · 4 October 2026, 9:10')}${acts(btn('testify', 'Record what you saw', { tone: 'primary' }))}${note('Your account is testimony: always grade D, labelled as yours, and never discounted for it.')}`)}` });
 
 SCR.held = c => ({ rail: 'add', title: 'Held captures', crumbs: ['Add', 'Held captures'], main: `
@@ -242,9 +242,41 @@ SCR.held = c => ({ rail: 'add', title: 'Held captures', crumbs: ['Add', 'Held ca
     row('<input type="checkbox" checked aria-label="pick">', '<b>Photo · Seminary Ave at 61st</b><span class="meta">' + grade('capture', 'B') + ' 2 days old · Pothole repairs</span>', '') +
     row('<input type="checkbox" aria-label="pick">', '<b>City budget FY2024–25, adopted (PDF)</b><span class="meta">' + grade('capture', 'B') + ' 1 day old · Sewer fund transfers · <b>for Ana\'s question</b> <span class="rec">"Were the FY2022 transfers authorised?"</span></span>', '') +
     row('<input type="checkbox" aria-label="pick">', '<b>Council minutes, 14 May 2024</b><span class="meta">' + grade('capture', 'B') + ' 3 days old · ' + gapm('withheld', '<b>Withheld.</b> Captured for a question you may not see.') + '</span>', '') +
+    row('<input type="checkbox" aria-label="pick">', '<b>Agenda packet, City Council, 14 May 2024 (ZIP)</b><span class="meta">' + grade('capture', 'B') + ' 1 day old · Sewer fund transfers · <b>36 files held beside it</b> · 2 not filed</span>', '') +
     row('<input type="checkbox" disabled aria-label="not eligible">', '<b>Lease amendment, March 2024</b><span class="meta">' + gapm('refused', 'Not eligible for a batch: it is crucial to a finding. Vouch for it on its own.') + '</span>', ''))}
   <div class="cs-reason"><p class="mk-note"><b>Ana's question is waiting for the FY2024–25 budget.</b> Your reason is kept on the record and shown to Ana on her question.</p>${field('mk-sa', 'Why set it aside?', 'Wrong year: the question is about FY2022.', { rec: true, reason: true })}</div>
   <div class="cs-hold mk-hold">${I('hold')}<span><span class="n">2 captures picked</span></span><span class="acts">${btn('heldcaptures', 'Refresh the list')}${btn('heldsetaside', 'Set aside, with one reason')}${btn('heldrestore', 'Restore')}${btn('release', 'Vouch for both', { tone: 'primary' })}</span></div>` });
+
+/* K1852 (Bob, "as recommended"), drawn by DEC-167: a captured archive (a ZIP) opens on capture, within published limits.
+   Each file cut out unambiguously is filed as its own capture with the archive's grade, held for review beside it; any
+   other is listed, not filed, with its reason named. A higher grade comes only from capturing that file on its own. */
+const AZ = 'Agenda packet, City Council, 14 May 2024';
+const zrow = (name, meta, st, pick) => row(pick === false ? '<input type="checkbox" disabled aria-label="not filed">' : `<input type="checkbox"${pick ? ' checked' : ''} aria-label="pick">`, `<span class="id">${name}</span><span class="meta">${meta}</span>`, st);
+SCR.archive = c => { const st = c.v === 'refused' ? 'b' : 'a'; return { rail: 'add', title: 'Archive', st, main: `
+  <div class="mk-mockctl"><label for="mk-zst">In this mockup, show</label> <select id="mk-zst" class="cs-input" onchange="this.closest('main').dataset.st=this.value"><option value="a"${st === 'a' ? ' selected' : ''}>an archive that opened</option><option value="b"${st === 'b' ? ' selected' : ''}>an archive that could not be opened</option></select></div>
+  ${h1(`<span class="rec">${AZ} (ZIP)</span>`, 'Captured by Ana from the city\'s meeting site, 2 October 2026 · Sewer fund transfers')}
+  <div class="row">${grade('capture', 'B', 'Capture')}${btn('gradenote', 'Why B?')}<span class="id">fingerprint 91c4…7e02 · 41 entries · 182 MB</span></div>
+  <div class="st st-a"><div style="display:grid;gap:20px">
+   <div class="cs-sheet" style="padding:12px 14px;display:grid;gap:6px"><b>Opened when it was captured: 36 files filed and held for review beside it, 1 already held, 2 not filed, 2 folders.</b><span class="mk-small">Each filed file carries this archive's grade, B, and its co-attestation: never stronger, never weaker. Anyone can cut the same file out with ordinary tools and get the same fingerprint.</span></div>
+   ${sec('Files in it', sheet(
+     zrow('01_Agenda.pdf', 'Filed · held for review · capture B · 2 pages', '', true) +
+     zrow('02_Staff report - sewer fund transfers.pdf', 'Filed · held for review · capture B · 14 pages', '', true) +
+     zrow('03_Resolution 2024-118.pdf', `${origin('accepted', 'Already held')} the same file Ana captured directly on 28 September; this copy is kept as a second sighting of it`, '', false) +
+     zrow('04_Attachments/', 'A folder · its 31 files are listed and filed below it', '<span class="muted">listed</span>', false) +
+     zrow('05_Budget detail FY2022-24.xlsx', 'Filed · held for review · capture B · 6 sheets', '', true) +
+     zrow('06_Exhibit C.pdf <span class="muted">(entry 17)</span>', 'Filed · held for review · capture B · <b>2 entries share this name</b>; each is filed by its number', '') +
+     zrow('06_Exhibit C.pdf <span class="muted">(entry 18)</span>', 'Filed · held for review · capture B · 2 entries share this name', '') +
+     zrow('07_Closed session draft.pdf', gapm('refused', '<b>Not filed:</b> the archive locks this file with a password. It is listed, never opened.'), '', false) +
+     zrow('09_Meeting video.mp4', gapm('refused', '<b>Not filed:</b> 1.2 GB, over the 256 MB limit for one file. Capture the video from its own address.'), '', false)) +
+     note('Names, folders and dates are as the archive states them, kept exactly; a name is never trusted as a place to write.'))}
+   ${sec('A higher grade for one file', `<p class="mk-small">A file here can earn a higher grade only by being captured on its own, from its own source; the new capture lands beside this one, and nothing is regraded.</p>${acts(link('Capture a file on its own'))}`)}
+   <div class="cs-hold mk-hold">${I('hold')}<span><span class="n">3 files picked</span><span class="drift"> · held for review beside the archive</span></span><span class="acts">${btn('owed:archivelist K1852', 'Show only those not filed')}${btn('heldsetaside', 'Set aside, with one reason')}${btn('release', 'Vouch for these 3', { tone: 'primary' })}</span></div>
+  </div></div>
+  <div class="st st-b"><div style="display:grid;gap:14px">
+   ${gapm('refused', '<b>Could not open this archive, because two of its entries claim the same bytes.</b> Nothing in it is filed. The archive itself stays captured exactly as it arrived, with its grade, and anyone can check why it was refused.')}
+   ${note('A damaged or tampered archive is refused whole rather than filed in part. If the city has a clean copy, capture it again from its address; it lands beside this one.')}
+   ${acts(btn('owed:archivelist K1852', 'See what it lists'))}
+  </div></div>` }; };
 
 SCR.document = c => ({ rail: 'projects', title: 'Document', crumbs: ['Pothole repairs', 'Documents', 'Administrative Instruction 4.12'], main: `
   <div class="mk-doc-h">${h1('<span class="rec">Pothole repair policy, Administrative Instruction 4.12</span>', 'Public Works · revised 2023 · captured by Dev from oaklandca.gov, 2 October 2026')}${pathm(0)}</div>
