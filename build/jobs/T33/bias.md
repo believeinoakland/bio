@@ -21,3 +21,7 @@
 **For BOB.** R3's and R47's `*(not yet met: T33-38)*` marks in `build/requirements/bias.md` can be struck (BOB's file). Final `uses` unchanged: record-grammar, record-core, membership, promotion, entities, credentials. Nothing deferred; nothing found in another module.
 
 Size (session_01UoYr2kGcT4PB5AXrdUSnAZ): test runs 1, module lines 1859
+
+## J1 · COMPLETE
+
+T33-38 applied: R3 reads ENT- keys through record-grammar's idPattern("ENT") (no copy held); R47 declares the five tables explicitly through declareTable, R30's purge unchanged. bias tests 57 pass, 0 fail, 1 todo (R26, K102); format, architecture, coverage (47/47), ownership (6 files) 0 failures. Uses unchanged. R3/R47 marks can be struck. Record: build/jobs/T33/bias.md on job/T33/bias.
