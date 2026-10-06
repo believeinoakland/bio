@@ -5,7 +5,9 @@
  * change stamped by 1.49.0 (PROMOTION #20, T19 layer 2). `ai-runs`' own job deleted its copy after this module merged.
  * observation-log's C-22 rows (C-22.1–.4, .6, .9, .10, .17) are that module's; `./rules.mjs` answers `AI_RUN_CHECKS` as
  * those rows and this table's, one map. C-33's and C-66's other rows stay with their own families' owners (C-66.5
- * `inquiry`'s, C-66.6 `control-plane`'s). Tested in `test/m/run-rules/`. */
+ * `inquiry`'s, C-66.6 `control-plane`'s). Tested in `test/m/run-rules/`.
+ * DEC-149 (T34-86; K1784): a translation a member reads names the group's Civicsmith as "your group's Civicsmith", never
+ * "this instance", "the copy" or "the plane" (C-33.29, C-109.1, C-109.9). */
 
 /* C-22's run rows: C-22.5, .7, .8, .11–.16, .18, and T33's .19 (R18), .20 (R19) and .21 (R17). The family's history and its reason for being one row per code are in
  * observation-log's `AI_RUN_CHECKS` header (`../observation-log/checks.mjs`), which holds the log's rows. C-22.7 (`checkSkillVersion`'s, R8) is
@@ -312,7 +314,7 @@ export const AI_RUN_ACT_SHAPE_CHECKS = {
   AI_RUN_CAPABILITY_UNAVAILABLE: {
     check: 'C-33.29',
     where: 'src/ai-runs/index.mjs open > is-airun-open-capability, reached from op=airunopen',
-    translation: 'Nothing was run, because this instance could not find an account to run it under. '
+    translation: 'Nothing was run, because your group\'s Civicsmith could not find an account to run it under. '
       + 'That is a fact about our setup and not an answer about your question: no searching '
       + 'happened, so nothing here should be read as having looked and found nothing.',
   },
@@ -530,8 +532,8 @@ export const AI_RUN_OPEN_CHECKS = {
   AI_RUN_MODE_NOT_DEPLOYED: {
     check: 'C-109.1',
     where: 'src/ai-runs/index.mjs open > is-airun-open-mode, reached from op=airunopen',
-    translation: 'Nothing was run, because the kind of work this run asked for is not switched on for this '
-      + 'instance yet. Kinds of work are switched on one at a time, each only after the one before it has been '
+    translation: 'Nothing was run, because the kind of work this run asked for is not switched on for your '
+      + 'group\'s Civicsmith yet. Kinds of work are switched on one at a time, each only after the one before it has been '
       + 'checked in real use. Ask for a kind that is switched on, or leave the kind out to run the one that is.',
   },
 };
@@ -606,14 +608,16 @@ export const AI_USE_CHECKS = {
     check: 'C-109.9',
     where: 'src/ai-runs/index.mjs open, tick and the ask\'s ceiling, reached from op=airunopen, op=airuntick and an ask',
     translation: 'Nothing was run, because you have reached today\'s limit that this group\'s administrator set to keep '
-      + 'the group\'s copy from being overloaded. It resets at the start of tomorrow, or an administrator can raise it.',
+      + 'your group\'s Civicsmith from being overloaded. It resets at the start of tomorrow, or an administrator can raise it.',
   },
-  /* R52 (K1502, K1503): there is no group-wide account; each member brings their own. */
+  /* R52 (K1502, K1503; K1755): no account serves the member's act — none of their own connected (a subscription token
+     or an API key), and the group's API key, which an administrator may hold, not held or switched off. */
   AI_NO_ACCOUNT: {
     check: 'C-109.10',
     where: 'src/ai-runs/index.mjs open and the ask\'s account, reached from op=airunopen and an ask',
-    translation: 'Nothing was run, because you have not connected a Claude account or an API key of your own. The '
-      + 'assistant works only on the account of the member who asks; connect yours to use it.',
+    translation: 'Nothing was run, because no account serves your request: you have not connected a Claude account or '
+      + 'an API key of your own, and your group has no API key of its own switched on. Connect yours, or ask an '
+      + 'administrator about the group\'s.',
   },
   /* R50 (K1601, K1610): a member's ceiling is that member's own to set and read. The copy's ceiling is an
      administrator's, refused to anyone else by membership's NOT_AN_ADMIN, never by this row. */

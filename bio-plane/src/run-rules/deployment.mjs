@@ -9,10 +9,12 @@ import { AI_RUN_OWN_CHECKS } from "./checks.mjs";
 
 /** WHERE THE GATE ACTUALLY LIVES. An address, dereferenced by
  *  `test/m/run-rules/deployment.test.mjs` R9 (the file exists) — never an import,
- *  never a copy, and never a flag this file holds. */
+ *  never a copy, and never a flag this file holds. T34-32 (N586; K1603, K1615): the control-flow tables and their pure
+ *  rules moved from `agent-worker/src/harness.mjs` to `agent-harness` (T33-54, its R1–R8), which `agent-worker` runs;
+ *  the address names the file that holds them, not `agent-worker`'s re-export, which goes once no importer names it. */
 export const GATE_ADDRESS = {
-  file: "agent-worker/src/harness.mjs",
-  owned_by: "FL-3 (IS-9, the run harness) — landed, and outside this area's paths",
+  file: "agent-harness/src/harness.mjs",
+  owned_by: "FL-3 (IS-9, the run harness) — held by agent-harness and run by agent-worker, both outside this area's paths",
   modes_export: "MODES",
   table_export: "CONTROL_FLOW",
   row: "gate-mode",
