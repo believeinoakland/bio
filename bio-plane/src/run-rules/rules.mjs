@@ -525,7 +525,8 @@ export const PLANE_DECIDED_BOUNDS = Object.freeze(["lease"]);
  *  what its member allowed it — a fraction and a non-finite are not counts, and a string or `true` was coerced by
  *  `Number(v) || 0` into a figure nobody sent. Refused, never clamped: a clamp answers `ticked: true` over a spend that
  *  did not happen. */
-export function checkConsume(entries, { seed = false, allowance = false, map = false, list = false } = {}) {
+export function checkConsume(entries, opts) {
+  const { seed = false, allowance = false, map = false, list = false } = opts && typeof opts === "object" ? opts : {};
   /* REC-172 — THE OPEN'S DECLARATION, held to the tick's shape: with `list`, `entries` is `op=airunopen`'s own
      `bounds`, a LIST of `{ bound, allowed, consumed?, unit? }`; absent is a run declaring no bounds, as it always was.
      A map, and an entry that is not an object, are C-22.15 (each was DROPPED silently, so the member got a run without
@@ -623,6 +624,99 @@ export function checkRunState(state) {
   return refusal("AI_RUN_STATE_TOO_LARGE",
     `the run's state is ${bytes} bytes as JSON, over the ${AI_RUN_STATE_MAX_BYTES} a run may keep: \`state\` is the `
     + "run's resumable work list (§14b.7), not what it read. Nothing was written", { bytes, limit: AI_RUN_STATE_MAX_BYTES });
+}
+
+/* R17 (Q0-5; R-3 Q-E3; T33-49) — AN ASK'S OWN BOUNDS. An ask is no run (R16): it keeps no budget rows and no lease, so
+   it is bounded by what it declares when it starts, held by the caller that runs it (`agent-worker`'s `/ask`, and
+   `answers` for a standing question's AI half). Each bound's figure here is PROVISIONAL and is both the default an ask
+   declares when it has no other figure and the CEILING no ask may declare above (the job's reading, posted to BOB as J1): M-Q7 measures the
+   values at T33's release and replaces them. `turns` is `agent-worker`'s conversation limit; `bytes` the plane answers
+   an ask reads into the model; `wall_ms` the wall time from its start; `reads` the plane reads it makes. In order: the
+   order `askBoundReached` reports in, cheapest-to-explain first, as RUN_BOUNDS' tie-break. Frozen, every level. */
+export const ASK_BOUNDS = Object.freeze({
+  turns:   Object.freeze({ default: 12, means: "model turns one ask may take" }),
+  bytes:   Object.freeze({ default: 1048576, means: "bytes of the record's answers one ask may read into the model" }),
+  wall_ms: Object.freeze({ default: 180000, means: "milliseconds from the ask's start to its answer" }),
+  reads:   Object.freeze({ default: 40, means: "reads of the record one ask may make" }),
+});
+
+const isCount = (v) => typeof v === "number" && Number.isSafeInteger(v);
+
+/** R17 — MAY AN ASK START WITH THESE BOUNDS? `bounds` is a map naming every one of ASK_BOUNDS with a positive whole
+ *  figure at most its ceiling. Null when it does; else the refusal for the FIRST fault, R3's codes for R3's faults: a
+ *  shape that is not a map, or a name that is not an ask's bound, C-22.15; a bound left out, or a figure absent or zero,
+ *  C-22.16; a figure that is not a whole number of one or more, C-22.13; and above the ceiling, C-22.21 (no R3 code says
+ *  that truthfully). Names are judged in the order given, then the bounds left out in ASK_BOUNDS' order. Never throws. */
+export function checkAskBounds(bounds) {
+  if (bounds == null || typeof bounds !== "object" || Array.isArray(bounds))
+    return refusal("AI_RUN_BOUND_UNKNOWN",
+      `an ask's bounds were ${Array.isArray(bounds) ? "an array" : bounds == null ? "absent" : `a ${typeof bounds}`}: they are `
+      + `a map naming each of ${Object.keys(ASK_BOUNDS).join(", ")} with its figure. Nothing was asked`, { bound: null });
+  for (const [k, v] of Object.entries(bounds)) {
+    if (!Object.prototype.hasOwnProperty.call(ASK_BOUNDS, k))
+      return refusal("AI_RUN_BOUND_UNKNOWN",
+        `'${k === "" ? "(absent)" : k.slice(0, 60)}' is not a bound of an ask. An ask's bounds are `
+        + `${Object.keys(ASK_BOUNDS).join(", ")}. Nothing was asked`, { bound: k });
+    if (v == null || v === 0)
+      return refusal("AI_RUN_BOUND_NO_ALLOWANCE",
+        `'${k}' was given ${v == null ? "no figure" : "a figure of 0"}: an ask states how much of each bound it may use, a `
+        + "whole number of one or more. Nothing was asked", { bound: k });
+    if (!(isCount(v) && v > 0))
+      return refusal("AI_RUN_CONSUME_INVALID",
+        `'${k}' was given ${typeof v === "number" ? String(v) : (JSON.stringify(v) ?? String(v)).slice(0, 60)}: an ask's `
+        + "bound is a whole number of one or more. Nothing was asked", { bound: k });
+    if (v > ASK_BOUNDS[k].default)
+      return refusal("AI_ASK_BOUND_ABOVE_CEILING",
+        `'${k}' was given ${v}, above the ${ASK_BOUNDS[k].default} one ask may have (${ASK_BOUNDS[k].means}). Nothing was asked`,
+        { bound: k, limit: ASK_BOUNDS[k].default });
+  }
+  for (const k of Object.keys(ASK_BOUNDS))
+    if (!Object.prototype.hasOwnProperty.call(bounds, k))
+      return refusal("AI_RUN_BOUND_NO_ALLOWANCE",
+        `'${k}' was left out: an ask states each of its bounds when it starts (${ASK_BOUNDS[k].means}). Nothing was asked`,
+        { bound: k });
+  return null;
+}
+
+/** R17 — WHICH OF AN ASK'S BOUNDS IS REACHED? The first, in ASK_BOUNDS' order, whose `used` figure is at or past the
+ *  figure declared in `bounds`; null when none is. A declared figure that is not a positive whole number at most its
+ *  ceiling is read as the ceiling, and a `used` figure that is not a number of zero or more as 0 — so a malformed
+ *  declaration never lifts a bound and a malformed count never reaches one. Never throws. */
+export function askBoundReached(bounds, used) {
+  const b = bounds && typeof bounds === "object" ? bounds : {};
+  const u = used && typeof used === "object" ? used : {};
+  for (const [k, { default: ceiling }] of Object.entries(ASK_BOUNDS)) {
+    const declared = Object.prototype.hasOwnProperty.call(b, k) ? b[k] : undefined;
+    const limit = isCount(declared) && declared > 0 && declared <= ceiling ? declared : ceiling;
+    const spent = Object.prototype.hasOwnProperty.call(u, k) ? u[k] : undefined;
+    if (typeof spent === "number" && spent >= limit) return k;
+  }
+  return null;
+}
+
+/** R18 (K1481; the canon audit) — MAY THIS AI RUN OR ASK START? Only at a member's act: `startedBy`, the control plane's
+ *  stamp for whoever started it, names a member (`member:<id>`, or a credential that member minted, `member:<id>/<tok>`,
+ *  through `runPrincipalOf`). The ONE exception is the AI half of a standing question a member wrote (`answers` R19):
+ *  with no member's act, it starts only when `standing` names its author, a member, and the mode is `ask` (R16's
+ *  read-only reach; R17's bounds and the author's own account and ceiling are held by its callers). Anything else —
+ *  a token class, the scheduler, a blank or unrecognised stamp — is `AI_RUN_NOT_A_MEMBER_ACT` (C-22.19): fail closed.
+ *  Never throws. */
+export function startAllowed(asked) {
+  const { startedBy = null, mode = null, standing = null } = asked && typeof asked === "object" ? asked : {};
+  const memberOf = (who) => {
+    const p = runPrincipalOf(who);
+    return /^member:\S/.test(p) ? p : "";
+  };
+  if (memberOf(startedBy)) return { ok: true };
+  const author = standing && typeof standing === "object" ? memberOf(standing.author) : "";
+  const m = mode == null ? "" : String(mode).trim();
+  if (author && m === "ask") return { ok: true, exception: "standing_question", author };
+  return refusal("AI_RUN_NOT_A_MEMBER_ACT",
+    author
+      ? `a standing question starts only an ask, which reads and answers; it cannot start a run in mode `
+        + `${JSON.stringify(m.slice(0, 40))} (K1481). Nothing was started`
+      : "no member's act started this, and it is not the AI half of a standing question a member wrote (K1481). "
+        + "Nothing was started");
 }
 
 /* ------------------------------------------------- DEC-63's gate (PL-18)
@@ -743,8 +837,9 @@ export function runConsultsProjects(contextType) {
  *  something an outsider is not entitled to, and a refusal that leaks the
  *  roster of projects touching a question would be this gate defeating the
  *  visibility rule it sits beside. */
-export function projectGate({ actor = null, contextType = null, contextId = null,
-                              projects = [], projectsJoined = [] } = {}) {
+export function projectGate(asked) {
+  const { actor = null, contextType = null, contextId = null, projects = [], projectsJoined = [] } =
+    asked && typeof asked === "object" ? asked : {};
   const who = actor == null ? "" : String(actor).trim();
   const all = Array.isArray(projects) ? projects.map(String) : [];
   const mine = Array.isArray(projectsJoined) ? projectsJoined.map(String) : [];
@@ -817,7 +912,8 @@ export function projectGate({ actor = null, contextType = null, contextId = null
  *    4. Otherwise nothing here; `projectGate` then asks participation over a project the caller can SEE.
  *  The refusal for 2 and 3 is built ONLY from what the caller sent, so a mismatch, an absent id and a hidden one
  *  are one object. Rule 1's detail differs from it only by the word the caller sent, which reveals nothing. */
-export function checkRunContextKind({ contextType = null, contextId = null, found = null } = {}) {
+export function checkRunContextKind(asked) {
+  const { contextType = null, contextId = null, found = null } = asked && typeof asked === "object" ? asked : {};
   const said = String(contextType ?? "");
   const id = JSON.stringify(String(contextId ?? "").slice(0, 200));
   if (!Object.prototype.hasOwnProperty.call(RUN_CONTEXTS, said))
@@ -863,7 +959,8 @@ export function runPrincipalOf(principal) {
  *  else's run directs their work. NO EMPTY BYPASS either: a caller the control plane stamped with nothing
  *  matches nobody, which is the fail-closed direction (a run nobody may drive by hand still ends by its own
  *  lease and bounds, through the reaper, which asks nobody). */
-export function runPrincipalGate({ caller = null, principal = null, act = null } = {}) {
+export function runPrincipalGate(asked) {
+  const { caller = null, principal = null, act = null } = asked && typeof asked === "object" ? asked : {};
   const who = runPrincipalOf(caller), owner = runPrincipalOf(principal);
   if (who && owner && who === owner) return null;
   /* REC-165 (INVESTIGATIVE-SESSION.md §11 item 5, rule 1, BOB #25): the run's two PRODUCTIONS ask this too, and
@@ -890,7 +987,8 @@ export function runPrincipalGate({ caller = null, principal = null, act = null }
  *  lease there would name the symptom and hide the cause. Ties are broken by
  *  RUN_BOUNDS' declaration order so the answer is deterministic and a suite can
  *  pin it. */
-export function finishedBound(bounds, { expired = false, offered = null } = {}) {
+export function finishedBound(bounds, opts) {
+  const { expired = false, offered = null } = opts && typeof opts === "object" ? opts : {};
   if (offered != null && offered !== "") return String(offered);
   const rows = Array.isArray(bounds) ? bounds : [];
   const order = Object.keys(RUN_BOUNDS);

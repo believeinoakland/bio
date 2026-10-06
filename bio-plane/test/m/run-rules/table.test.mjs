@@ -1,4 +1,4 @@
-/* run-rules R11 (was ai-runs R35's share), R12 (as ai-runs R39) and R15 (K660): the table of every run refusal's row,
+/* run-rules R11 (was ai-runs R35's share), R12 (as ai-runs R39), R15 (K660) and R20 (T33-49): the table of every run refusal's row,
    the one map `AI_RUN_CHECKS` and `translationOf`, and no place named in the module's outward text. */
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -6,7 +6,7 @@ import * as RR from "../../../src/run-rules/index.mjs";
 import { AI_RUN_CHECKS as OBSERVATION_LOG_ROWS } from "../../../src/observation-log/index.mjs";
 
 const { AI_RUNS_CHECKS, AI_RUN_OWN_CHECKS, AI_RUN_ACT_SHAPE_CHECKS, AI_RUNS_CONTEXT_CHECKS, SURFACE_RUN_CHECKS,
-        AI_RUN_OPEN_CHECKS, AI_RUN_PLAN_CHECKS, AI_RUN_CHECKS, translationOf } = RR;
+        AI_RUN_OPEN_CHECKS, AI_RUN_PLAN_CHECKS, AI_USE_CHECKS, AI_RUN_CHECKS, translationOf } = RR;
 
 /** R11's rows minted here, by code, with the site that mints each. */
 const MINTED_HERE = {
@@ -20,7 +20,12 @@ const MINTED_HERE = {
   AI_RUN_BOUND_UNKNOWN: ["C-22.15", "src/run-rules/rules.mjs checkConsume"],
   AI_RUN_BOUND_NO_ALLOWANCE: ["C-22.16", "src/run-rules/rules.mjs checkConsume"],
   AI_RUN_STATE_TOO_LARGE: ["C-22.18", "src/run-rules/rules.mjs checkRunState"],
+  AI_RUN_NOT_A_MEMBER_ACT: ["C-22.19", "src/run-rules/rules.mjs startAllowed"],
+  AI_RUN_VERIFICATION_UNFIT: ["C-22.20", "src/run-rules/deployment.mjs checkVerification"],
+  AI_ASK_BOUND_ABOVE_CEILING: ["C-22.21", "src/run-rules/rules.mjs checkAskBounds"],
 };
+/** R20's rows, minted by ai-runs (its R50, R52) and answers, read here by key. */
+const USE = { AI_USE_CEILING_REACHED: "C-109.8", AI_USE_COPY_CEILING_REACHED: "C-109.9", AI_NO_ACCOUNT: "C-109.10" };
 /** R11's rows minted by ai-runs and read here by key. */
 const AI_RUNS_ACTS = {
   AI_RUN_CAPABILITY_UNAVAILABLE: "C-33.29", AI_RUN_NO_CONTEXT: "C-33.30", AI_RUN_ALREADY_OPEN: "C-33.31",
@@ -45,13 +50,13 @@ function wellFormed(code, row) {
 }
 
 test("R11: the table holds exactly the rows the pure rules mint (each where naming this module's site, C-22.7's skill-version.mjs checkSkillVersion) and the rows of ai-runs' acts, each code once with its number; every refusal carries its row", () => {
-  const want = { ...Object.fromEntries(Object.entries(MINTED_HERE).map(([c, [n]]) => [c, n])), ...AI_RUNS_ACTS, ...PLANNING };
+  const want = { ...Object.fromEntries(Object.entries(MINTED_HERE).map(([c, [n]]) => [c, n])), ...AI_RUNS_ACTS, ...PLANNING, ...USE };
   assert.deepEqual(Object.fromEntries(Object.entries(AI_RUNS_CHECKS).map(([c, r]) => [c, r.check])), want);
   const numbers = Object.values(AI_RUNS_CHECKS).map((r) => r.check);
   assert.equal(new Set(numbers).size, numbers.length, "one condition per C-number");
   for (const [code, row] of Object.entries(AI_RUNS_CHECKS)) wellFormed(code, row);
   for (const [code, [, site]] of Object.entries(MINTED_HERE)) assert.ok(AI_RUNS_CHECKS[code].where.startsWith(site), code);
-  for (const code of [...Object.keys(AI_RUNS_ACTS), ...Object.keys(PLANNING)])
+  for (const code of [...Object.keys(AI_RUNS_ACTS), ...Object.keys(PLANNING), ...Object.keys(USE)])
     assert.match(AI_RUNS_CHECKS[code].where, /^src\/ai-runs\/index\.mjs /, `${code} is minted by ai-runs`);
   /* the families as published, one object across them */
   assert.deepEqual(Object.keys(AI_RUN_OWN_CHECKS), Object.keys(MINTED_HERE));
@@ -59,13 +64,14 @@ test("R11: the table holds exactly the rows the pure rules mint (each where nami
   assert.deepEqual(Object.keys(AI_RUNS_CONTEXT_CHECKS), ["AI_RUNS_NO_CONTEXT_TYPE", "AI_RUNS_UNKNOWN_CONTEXT_TYPE", "AI_RUNS_NO_CONTEXT_ID"]);
   assert.deepEqual(Object.keys(SURFACE_RUN_CHECKS), ["SURFACE_NO_RUN", "SURFACE_RUN_NOT_RUNNING", "SURFACE_NO_BOUND", "SURFACE_BOUND_REACHED"]);
   assert.deepEqual(Object.keys(AI_RUN_OPEN_CHECKS), ["AI_RUN_MODE_NOT_DEPLOYED"]);
-  for (const fam of [AI_RUN_OWN_CHECKS, AI_RUN_ACT_SHAPE_CHECKS, AI_RUNS_CONTEXT_CHECKS, SURFACE_RUN_CHECKS, AI_RUN_OPEN_CHECKS, AI_RUN_PLAN_CHECKS])
+  for (const fam of [AI_RUN_OWN_CHECKS, AI_RUN_ACT_SHAPE_CHECKS, AI_RUNS_CONTEXT_CHECKS, SURFACE_RUN_CHECKS, AI_RUN_OPEN_CHECKS, AI_RUN_PLAN_CHECKS, AI_USE_CHECKS])
     for (const [code, row] of Object.entries(fam)) assert.equal(AI_RUNS_CHECKS[code], row, code);
-  /* each refusal R2–R8 and R10 mint is built from its row here */
+  /* each refusal R2–R8, R10 and R17–R19 mint is built from its row here */
   const minted = [RR.checkBound("x"), RR.checkSkillVersion(""), RR.projectGate({ actor: "a", contextType: "project" }),
     RR.checkRunContextKind({ contextType: "x" }), RR.runPrincipalGate({}), RR.checkConsume({ fetches: -1 }, { map: true }),
     RR.checkConsume({ lease: 0 }, { map: true }), RR.checkConsume({ x: 1 }, { map: true }),
-    RR.checkConsume([{ bound: "fetches" }], { list: true }), RR.checkRunState("x".repeat(262144))];
+    RR.checkConsume([{ bound: "fetches" }], { list: true }), RR.checkRunState("x".repeat(262144)),
+    RR.startAllowed({}), RR.checkVerification(null), RR.checkAskBounds({ turns: 13, bytes: 1, wall_ms: 1, reads: 1 })];
   assert.deepEqual(minted.map((r) => r.code), Object.keys(MINTED_HERE));
   for (const r of minted) assert.deepEqual([r.ok, r.check, r.translation], [false, AI_RUNS_CHECKS[r.code].check, AI_RUNS_CHECKS[r.code].translation]);
 });
@@ -115,9 +121,37 @@ test("R12: no place is named in the module's behaviour or outward text — its r
     RR.checkRunContextKind({ contextType: "x" }).detail, RR.checkRunContextKind({ contextType: "project" }).detail,
     RR.runPrincipalGate({}).detail, RR.runPrincipalGate({ act: "x" }).detail,
     RR.checkRunState({ notes: "x".repeat(262144) }).detail,
-    JSON.stringify(RR.DEPLOYMENT_SEQUENCE),
+    JSON.stringify(RR.DEPLOYMENT_SEQUENCE), JSON.stringify(RR.ASK_MODE), JSON.stringify(RR.ASK_BOUNDS),
+    JSON.stringify(RR.VERIFICATION_RECORDED), RR.startAllowed({}).detail,
+    RR.startAllowed({ mode: "check", standing: { author: "member:a" } }).detail, RR.checkVerification({}).detail,
+    RR.checkAskBounds([]).detail, RR.checkAskBounds({ x: 1 }).detail, RR.checkAskBounds({ turns: 0 }).detail,
+    RR.checkAskBounds({ turns: 1.5 }).detail, RR.checkAskBounds({ turns: 99 }).detail, RR.checkAskBounds({}).detail,
   ];
   for (const t of texts) assert.equal(PLACE.test(String(t)), false, String(t).slice(0, 80));
   /* control: the pattern does catch a place */
   assert.equal(PLACE.test("the City of Anywhere"), true);
+});
+
+test("R20: the ceiling refusals AI_USE_CEILING_REACHED, AI_USE_COPY_CEILING_REACHED, AI_NO_ACCOUNT and R18's AI_RUN_NOT_A_MEMBER_ACT are rows of the table, each with its number and a plain-words translation naming no cost per answer; minted by ai-runs and answers and read here by key", () => {
+  assert.deepEqual(Object.fromEntries(Object.entries(AI_USE_CHECKS).map(([c, r]) => [c, r.check])), USE);
+  const all = { ...AI_USE_CHECKS, AI_RUN_NOT_A_MEMBER_ACT: AI_RUN_OWN_CHECKS.AI_RUN_NOT_A_MEMBER_ACT };
+  for (const [code, row] of Object.entries(all)) {
+    wellFormed(code, row);
+    assert.equal(AI_RUN_CHECKS[code], row, code);
+    assert.equal(translationOf(code), row.translation, code);
+    assert.match(row.translation, /^Nothing was (run|started), because /, `${code}: says nothing ran`);
+    /* K1450: members see no cost per answer, so no translation names a price, a charge or a figure of money */
+    assert.doesNotMatch(row.translation, /\$|\bcost|\bprice|\bcharge|\bdollar|\bspend|\bbill|\btokens?\b|\bcredit/i, code);
+    assert.doesNotMatch(row.translation, /\b[A-Z][A-Z_]{3,}\b/, `${code}: plain words, no machine word`);
+  }
+  for (const code of Object.keys(USE)) assert.match(AI_USE_CHECKS[code].where, /^src\/ai-runs\/index\.mjs /);
+  assert.match(AI_RUN_OWN_CHECKS.AI_RUN_NOT_A_MEMBER_ACT.where, /^src\/run-rules\/rules\.mjs startAllowed, called from src\/ai-runs\/index\.mjs .* answers$/);
+  /* each condition named in its own words: the member's own ceiling, the administrator's for the copy, no account */
+  assert.match(AI_USE_CHECKS.AI_USE_CEILING_REACHED.translation, /your own daily limit/);
+  assert.match(AI_USE_CHECKS.AI_USE_COPY_CEILING_REACHED.translation, /administrator/);
+  assert.match(AI_USE_CHECKS.AI_NO_ACCOUNT.translation, /Claude account or an API key of your own/);
+  const texts = Object.values(all).map((r) => r.translation);
+  assert.equal(new Set(texts).size, texts.length);
+  /* control: the cost pattern does catch a cost */
+  assert.match("this answer cost $0.02", /\$|\bcost/i);
 });
