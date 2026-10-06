@@ -9,6 +9,8 @@
  * (C-2.10's action arms and C-11.1), `RESOLUTIONS`, and the rows `actions`' acts mint: C-32.3, C-32.4, C-32.18–C-32.20,
  * C-33.3–C-33.9, C-72, C-73, C-90, C-94, C-101 and C-117 (C-117.5, `PENDING_CLOCKS_BAD_BEFORE`, is `action-clocks`'; N428).
  * Every value, finding and sentence is the copy's, unchanged; only C-73.6's `where` names its new site (stamped by 1.50.0).
+ * Since T34 layer 9 (T34-87; DEC-149, K1811): a member reads "your group's Civicsmith" where three sentences said "this
+ * instance" or "the plane" (`requestLifecycleOf`'s `says`, C-2.10's kind finding, C-101.1's translation, awaiting T35's stamp).
  * Since T33 layer 9 (K1657): C-117.26–.28, the rows of `actions`' `NO_SUBJECT` (its R62), `MACHINE_CANNOT_SET_PROCEEDING` and
  * `NOT_A_PROCEEDING` (its R65), awaiting promotion's stamp; and C-11.1's past date is read on the office's local day
  * (R7, K1444 (iii)) through `civil-time`.
@@ -624,7 +626,7 @@ export function requestLifecycleOf(fm, today) {
     entries: chain,
     passed_unanswered: chain.filter((c) => c.due && c.due.status === 'passed_unanswered').map((c) => c.ord),
     as_of: day,
-    says: 'Each entry is dated as recorded and names the entry it follows. The plane derives only the days '
+    says: 'Each entry is dated as recorded and names the entry it follows. Your group\'s Civicsmith derives only the days '
       + 'between entries and whether a STATED due date passed with nothing following it; it encodes no law\'s '
       + 'clock and states no judgement about the body.',
   };
@@ -716,7 +718,7 @@ export function checkActionExtension(ctx, findings) {
   /* R10: a kind this instance offers; a kind an action was written with before reads as written (R4). */
   const kinds = Array.isArray(ctx.actionKinds) ? ctx.actionKinds : PRODUCT_KINDS;
   if (!kinds.includes(fm.action_kind) && !kindReadsAsWritten(fm.action_kind))
-    findings.push(f('C-2.10', 'error', `action_kind '${fm.action_kind}' is not a kind this instance offers`));
+    findings.push(f('C-2.10', 'error', `action_kind '${fm.action_kind}' is not a kind your group's Civicsmith offers`));
   recordsLawFindings(fm, findings);
   /* D-182: 1, 2, 3 or undetermined (absent reads undetermined); the words are RISK_TIERS'. */
   if (riskTierState(fm.risk_tier) === null) findings.push(f('C-2.10', 'error', `risk_tier '${fm.risk_tier}' is not one of ${Object.keys(RISK_TIERS).join(', ')}`));
@@ -1137,10 +1139,12 @@ export const RECORDS_LAW_FENCE_CHECKS = {
  * (R37). C-117.1 (K248's family for this module) is R33's direction rule for the one mechanical clock write.
  * ========================================================================= */
 export const ACTION_CATALOGUE_CHECKS = {
+  /* T34-87 (DEC-149, K1811): the translation says "your group's Civicsmith" where it said "this instance"; a changed
+     translation, awaiting T35's stamp (plan Rules (5) 4). */
   ACTION_KIND_UNKNOWN: {
     check: 'C-101.1',
     where: 'src/actions/index.mjs #writeArms > is-promote-action-kind',
-    translation: 'An action is one of the kinds this instance offers: a records request, a request for comment, '
+    translation: 'An action is one of the kinds your group\'s Civicsmith offers: a records request, a request for comment, '
       + '"other", and the kinds the group\'s jurisdiction profile lists. This write named another kind, so nothing '
       + 'was written. Choose one of the listed kinds, or "other".',
   },

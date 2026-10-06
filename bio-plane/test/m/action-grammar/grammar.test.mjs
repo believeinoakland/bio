@@ -158,7 +158,7 @@ test("R7 by hand: a missing counterparty and a pending clock entry past its date
   assert.match(late[0].message, /silently past-due/);
   for (const id of ["not-an-action", "no-object-type", "refs-bad"]) assert.deepEqual(audit(DOCS[id]).findings, [], id);
   assert.deepEqual(pushed((f) => AG.checkActionExtension(null, f)).findings, [], "never throws");
-  assert.deepEqual(audit(DOCS["kind-profile"]).findings.map((x) => x.message), ["action_kind 'bylaw_complaint' is not a kind this instance offers"]);
+  assert.deepEqual(audit(DOCS["kind-profile"]).findings.map((x) => x.message), ["action_kind 'bylaw_complaint' is not a kind your group's Civicsmith offers"]);
   assert.deepEqual(audit(DOCS["kind-profile"], { actionKinds: AG.actionKinds(TEST_VIEW) }).findings, []);
   t.mock.timers.enable({ apis: ["Date"], now: Date.parse("2026-07-03T00:00:00Z") });
   const byClock = pushed((f) => AG.checkActionExtension({ fm: DOCS["clock-past-due"], zone: ZONE }, f)).findings;
@@ -303,7 +303,7 @@ test("R9 by hand: the rows are exactly C-32.3, .4, .18, .19, .20; C-33.3–.9; C
 });
 
 test("R6, R8 (K899 (1)): text a member reads says record, never bundle: actionBasisFindings' target finding and respondsToEdgeFindings' repair are re-worded, and no row, finding, repair or reading over the corpus holds the word", () => {
-  assert.deepEqual(REWORDED_COUNTS.map((n) => n > 0), [true, true], "each old phrase was in the recorded answer");
+  assert.ok(REWORDED_COUNTS.every((n) => n > 0), "each old phrase was in the recorded answer");
   const legs = pushed((f) => AG.actionBasisFindings(DOCS["leg-bad-target"], f)).findings;
   assert.deepEqual(legs.map((x) => x.message), ["action_basis[0].target 'not-an-id' is not a canonical record id"]);
   const refs = pushed((f) => AG.respondsToEdgeFindings(DOCS["refs-bad"], f)).findings;
@@ -360,7 +360,7 @@ test("R11: no place is named in the module's outward text (rows, findings, readi
   for (const p of places) assert.ok(!text.includes(p), `outward text names '${p}'`);
   const unknown = { ...DOCS["kind-profile"], action_kind: "petition" };
   const kinds = AG.actionKinds(TEST_VIEW);
-  assert.deepEqual(audit(unknown, { actionKinds: kinds }).findings.map((x) => x.message), ["action_kind 'petition' is not a kind this instance offers"]);
+  assert.deepEqual(audit(unknown, { actionKinds: kinds }).findings.map((x) => x.message), ["action_kind 'petition' is not a kind your group's Civicsmith offers"]);
   for (const k of kinds.filter((x) => !AG.PRODUCT_KINDS.includes(x)))
     assert.deepEqual(audit({ ...DOCS["clean-other"], action_kind: k }, { actionKinds: kinds }).findings, [], k);
   assert.deepEqual(plain(AG.recordsLawRefusal({ ...DOCS["law-clean"], action_kind: "bylaw_complaint" })).code, "RECORDS_LAW_REFUSED");
@@ -420,4 +420,26 @@ test("R7 (K1444 (iii)): a pending clock entry is past its date only once the off
   /* A met, overdue or waived entry is never past-due, in any zone. */
   for (const status of ["met", "overdue", "waived"])
     assert.equal(audit({ ...fm, clock: [{ ...fm.clock[0], status }] }, { nowMs: Date.parse("2026-08-01T00:00:00Z") }).findings.length, 0, status);
+});
+
+test("R7, R8, R9 (T34-87; DEC-149, K1811): a member reads \"your group's Civicsmith\", never \"this instance\" or \"the plane\": requestLifecycleOf's says (R8), C-2.10's kind finding (R7) and C-101.1 ACTION_KIND_UNKNOWN's translation (R9) are re-worded, and no row, finding, repair or reading over the corpus holds the old names", () => {
+  const says = AG.requestLifecycleOf(DOCS["lifecycle-clean"], TODAY).says;
+  assert.equal(says, "Each entry is dated as recorded and names the entry it follows. Your group's Civicsmith derives only the days "
+    + "between entries and whether a STATED due date passed with nothing following it; it encodes no law's clock and states no "
+    + "judgement about the body.");
+  assert.deepEqual(audit({ ...DOCS["clean-other"], action_kind: "petition" }).findings,
+    [{ check: "C-2.10", severity: "error", message: "action_kind 'petition' is not a kind your group's Civicsmith offers" }]);
+  assert.deepEqual(AG.ACTION_CATALOGUE_CHECKS.ACTION_KIND_UNKNOWN, {
+    check: "C-101.1",
+    where: "src/actions/index.mjs #writeArms > is-promote-action-kind",
+    translation: "An action is one of the kinds your group's Civicsmith offers: a records request, a request for comment, "
+      + "\"other\", and the kinds the group's jurisdiction profile lists. This write named another kind, so nothing was written. "
+      + "Choose one of the listed kinds, or \"other\".",
+  });
+  const words = [];
+  const walk = (v) => { if (typeof v === "string") words.push(v); else if (v && typeof v === "object") Object.values(v).forEach(walk); };
+  walk({ rows: S.rows, docs: S.docs, scalars: S.scalars, values: S.values });
+  const text = words.join("\n");
+  assert.doesNotMatch(text, /\b(this|the) (instance|copy|plane)\b/i);
+  assert.doesNotMatch(text, /\bthis server\b/i);
 });
