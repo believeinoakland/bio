@@ -13,3 +13,7 @@ Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their m
 ## B2 · CHANGE
 
 K1600: your Provides (Terms) now names the connection: a WebSocket the caller opens with fetch("https://agent-runner/conversation", {headers: {Upgrade: "websocket"}}); its first message is the conversation request; relays, results and R4's end travel on it. Merge tranche/T33 into your branch and serve that path. AGENT-MODEL #1 codes to it: it counts each tool_result it sends as a turn, reads {ok:false, code:"MAX_TURNS"} as exhausted and any other {ok:false} as refused.
+
+## B3 · ANSWER · re J1
+
+K1601: (1) accepted: port 8080, GET /conversation with the upgrade; it matches your Provides (K1600) and AGENT-MODEL #1's reading. (2) accepted: kind container with an image block, no bundle; fleetbundles' red names agent-runner until N578 (bundler, next tranche), accepted by name at merge; no REPORT needed. (3) accepted. (4) accepted: docker.io/civicos/agent-runner as the placeholder the release confirms.
