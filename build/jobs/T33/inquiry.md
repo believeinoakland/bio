@@ -1,3 +1,16 @@
 # inquiry (T33)
 
 **Status** · session_01DsBk1p4zfVLvAP4c7F8bt7 · depth 2 · WORKING · handled B1
+
+## J1 · QUESTION
+
+Readings I am building on while leg-earning and inquiry-grammar run; each is my best reading and I carry on with it unless you answer otherwise. Until your CHANGE I keep the moved code and work only on what does not depend on it: R54–R57 (dated waits), R36 (explicit `declareTable`), and R11's new-leg checks coded against inquiry-grammar R13–R15 and leg-earning R9 as injected deps (K1563 (1)).
+
+1. **CALC- legs (R11): calculations has no synchronous read.** A promotion's check is synchronous (promotion R39), and `calculations.read` is `async` (its internals are synchronous: `#visible` says so). No read contract on its `calculations` table either. Reading: inquiry takes a synchronous port `calculation(calcId, viewer) → {held, visible, accepted}`, injected through `inquiryOf(host, deps)` and wired by plane over calculations; with no port, a `CALC-` leg is refused fail-closed as an unknown target (BASIS_REFUSED, the detail saying the record cannot confirm it here), never passed. I REPORT the gap for calculations: a synchronous `calculationStatus({calcId, viewer})` (or `read` made synchronous) would let plane wire the real module. My tests drive the port.
+2. **The viewer of R11's "the viewer may not see"** at a promotion: the promotion's `author` stamp (the control plane's), as the act's viewer.
+3. **R55/R57 time zone.** Uses gain `jurisdictions` (layer 1): the active view's `time_zone`, `jurisdictions.combine` over record-core's `jurisdiction_profiles` setting (duties' pattern), with an injectable `view` dep. No zone held: a wait's state is `undetermined` with why (never the UTC day), and `datedWaitsDue`/`Tick`/`Wake` count none.
+4. **Scheduler R9's arming notice.** scheduler arms "a dated wait set (inquiry) … through the notice its owner offers". R54–R57 name none. Reading: inquiry offers `onWaitSet(module, fn)` (a one-registration slot via membership's `listenerRefusal`, as R42), `fn({inquiry, date, set_by})` called after a promotion sets or re-dates a wait; a throwing listener never undoes the promotion.
+5. **A wait's identity (R54).** Matched across revisions by its text and date: same text and date keeps `set_by`/`set_at`; a changed date ends the old wait `redated` and starts a new one set by this revision's author; a trigger whose text changed or that is gone ends `removed`. `index` is its current position. Held in a new table `inquiry_dated_waits` (`sight: "owner"`, R36), ended waits kept with who and when.
+6. **Refusal rows.** R11's new codes (`PORTION_UNKNOWN`, `NO_SUCH_OCCURRENCE`, `CALCULATION_NOT_ACCEPTED`) are findings inside `BASIS_REFUSED` with check `C-2.8` and their code; `waitLook`'s (`MACHINE_CANNOT_LOOK`, `NOT_YOUR_WAIT`, `NO_SUCH_WAIT`) are codes with no catalogue row. No new C-rows (promotion's stamp of T33 rows is T34's anyway).
+7. **R55 "only the member who set a wait".** `datedWaits` answers only when `viewer` is that member's own stamp (`member:<id>` naming `member`); an administrator or any other viewer reads none.
+8. **inquiry_basis's declaration after the split.** After leg-earning merges it declares `inquiry_basis` (K1505 (2)); I then drop it from my declarations (a second declaration is `TABLE_DECLARED`).
