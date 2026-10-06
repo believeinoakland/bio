@@ -11,7 +11,7 @@
  * `progressions`' `NO_REASON` (C-100.18) and no code is held with two rows (DEC-49). R1's and R27's shared conditions
  * (no breach, not joined, already open) are minted once, in `#pursuable`, which both acts ask (DEC-89). A machine's
  * decline to escalate (R27) has its own code and row, C-116.46, since `MACHINE_CANNOT_DECLINE` is C-116.26's, R13's
- * edge decline (K1084). */
+ * edge decline (K1084). Each translation calls the group's Civicsmith by that name or needs none (DEC-149, T34-87). */
 
 const at = (fn, region) => `src/escalation/index.mjs ${fn} > ${region}`;
 
@@ -221,8 +221,8 @@ export const ESCALATION_CHECKS = Object.freeze({
   },
   PROVIDER_UNAVAILABLE: {
     check: 'C-116.44', where: at("refuseProviderUnavailable", "is-provider-present"),
-    translation: 'Part of the record this answer depends on cannot be read on this instance yet, so nothing is '
-      + 'answered in its place. Nothing was written.',
+    translation: 'Part of the record this answer depends on cannot be read by your group\'s Civicsmith yet, so nothing '
+      + 'is answered in its place. Nothing was written.',
   },
 });
 
