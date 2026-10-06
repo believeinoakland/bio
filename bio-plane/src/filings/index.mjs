@@ -231,7 +231,7 @@ export class Filings {
   #view() {
     const ids = this.#call(() => this.profiles());
     if (!Array.isArray(ids) || !ids.length)
-      return { view: null, conflicts: [], why: "no jurisdiction profile is active on this instance" };
+      return { view: null, conflicts: [], why: "your group's Civicsmith has no active jurisdiction profile" };
     const c = combine(ids);
     if (!c || !c.ok) return { view: null, conflicts: [], why: "the active jurisdiction profiles do not combine" };
     return { view: c.view, conflicts: c.conflicts || [], why: null };
@@ -495,7 +495,7 @@ export class Filings {
       g = g.value;
     }
     const v = str(g);
-    return v ? { value: v, source: SOURCE } : { why: "no producing group is recorded for this instance" };
+    return v ? { value: v, source: SOURCE } : { why: "no producing group is recorded" };
   }
 
   /* R1, R8, R23: the one answer for an action that is resolved or abandoned: nothing is prepared for it. */
@@ -811,7 +811,7 @@ export class Filings {
                   d.filing_id, d.action_id, body, sha, who, at, json(inband));
     return { ok: true, filing: d.filing_id, action: d.action_id, form: d.form, approved_by: who, at, sha, edited: body !== d.text,
              bytes, inband, disclosure: d.disclosure ?? null,
-             says: "approved by the member named: the text is theirs. The instance transmits nothing; a member files it "
+             says: "approved by the member named: the text is theirs. Your group's Civicsmith transmits nothing; a member files it "
                  + "by the venue's own means and records that it was sent" };
   }
 
@@ -1052,8 +1052,8 @@ export class Filings {
      date (or, with none, the earliest `when` among them) to the packet's assembly. The world's lane ("what they did")
      and the registered sources' lane ("what we did") are kept apart, each in events' order, never interleaved; an item
      whose order is undetermined carries events' `order` with its bounds. An item placed nowhere has no `when` to fall
-     within the dates, so the placed-nowhere items are read without them and listed apart. Each item names its record
-     source (R18). R27: an event of the set the reader may not see is left out, never stood in for, and the lane states
+     within the dates, and events' dated read lists it apart all the same (its R29; N602), so one read answers both.
+     Each item names its record source (R18). R27: an event of the set the reader may not see is left out, never stood in for, and the lane states
      `out_of_view: true`, read against the plane's own read. */
   #chronology(a, det, facts, viewer, at, marking) {
     const act = det ? det.act || {} : {};
@@ -1078,18 +1078,17 @@ export class Filings {
     const ids = set.map((x) => x.id);
     const read = (who, o) => this.#call(() => t.timeline({ set: ids, limit: CHRONOLOGY_MAX, viewer: who, ...o }));
     const dated = read(viewer, { from, to });
-    const loose = read(viewer, { lanes: ["world"] });
-    if (!dated || dated.ok === false || !dated.world || !loose || loose.ok === false || !loose.world)
+    if (!dated || dated.ok === false || !dated.world)
       return { ...empty(`the timeline could not be read${dated && dated.reason ? ` (${dated.reason})` : ""}, so the chronology is undetermined`),
                unread: true };
-    const seen = new Set([...dated.world.items, ...loose.world.placed_nowhere].map((i) => i.event_id));
-    const plane = [read(MACHINE_READER, { from, to, lanes: ["world"] }), read(MACHINE_READER, { lanes: ["world"] })];
-    const hidden = !plane.every((p) => p && p.ok !== false && p.world)
-      || [...plane[0].world.items, ...plane[1].world.placed_nowhere].some((i) => !seen.has(i.event_id));
+    const lane = (r) => [...(r.world.items || []), ...(r.world.placed_nowhere || [])];
+    const seen = new Set(lane(dated).map((i) => i.event_id));
+    const plane = read(MACHINE_READER, { from, to, lanes: ["world"] });
+    const hidden = !plane || plane.ok === false || !plane.world || lane(plane).some((i) => !seen.has(i.event_id));
     const world = { label: LANE_WORDS.world,
-                    items: dated.world.items.map((i) => ({ ...i, source: i.event_id })),
-                    placed_nowhere: loose.world.placed_nowhere.map((i) => ({ ...i, placed_nowhere: true, source: i.event_id })),
-                    truncated: !!(dated.world.truncated || loose.world.truncated),
+                    items: (dated.world.items || []).map((i) => ({ ...i, source: i.event_id })),
+                    placed_nowhere: (dated.world.placed_nowhere || []).map((i) => ({ ...i, placed_nowhere: true, source: i.event_id })),
+                    truncated: !!dated.world.truncated,
                     ...(hidden ? { out_of_view: true } : {}) };
     if (world.truncated) world.says = `more events than the ${CHRONOLOGY_MAX} this lane lists are held: the lane is truncated`;
     const ours = { label: LANE_WORDS.ours, sources: (dated.ours && Array.isArray(dated.ours.sources) ? dated.ours.sources : []).map((s) => (s.error
