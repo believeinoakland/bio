@@ -65,3 +65,34 @@ T33-90 and B2 are built on `job/T33/plane` (pushed), on K1683's and K1684's read
 2. `uses` for `modules.json` (architecture names them): answers, budget-doctypes, calculations, case-tensions, connection-grammar (test only), court-doctypes, docprofile, doctypes, duties, events, explore, following, hypotheses, leg-earning, legistar-reader, lines, money, money-checks, notice-producers, people, roster-reader, workbooks.
 3. people's staffing wrapper labels every registered source "read by <module>". The roster-reader source's own answer says "not read" (N614).
 4. answers holds `screens` but has no explain read yet (wizard-scripts R21 and affordances R41 are unbuilt).
+
+## J4 · COMPLETE
+
+**Entries applied.** T33-90 whole on K1683 and K1684's readings: R21–R24 met (marks to strike); B2 (K1674: `op=ask`'s handler, `plane/ask.mjs`, RPC `Store.ask` on `bio`); B5 (K1685: `logRead` handed to dispatch); B6 (K1689: the tranche merged and `t33.test.mjs` R21 cleared). The findings of the START are wired as J3 states:
+- K1541 (seal secret), K1551 and K1571 (`keyedStore`);
+- K1563 (`officeOf`/`officeEntityOf` ports over instance-setup's instance; local-facts `lines`);
+- K1566 (explore), K1569 (duties' `factOf`; `view` defaulted), K1570 (`recompute` over `SHEET_WORKER`), K1573 (money);
+- K1593 (retrieval `terms`), K1601/K1609 (answers), K1607 (hypotheses), K1619 (leg-earning's ops; `waitlook` already in inquiry's map), K1640 (corpus-export's four arms), K1643 (`caseTensionsOps` spread), K1654 (conformance).
+
+The named reds `notices.test.mjs:118–120`, `docket.test.mjs:41` and `store.test.mjs:68` are cleared.
+
+**Deferred.** Nothing of plane's own. As ruled (K1683):
+- R22's capture-origin sentence: N615;
+- roster-reader's store-reading source: N614;
+- retrieval's live relations for answers: N584;
+- `SHEET_WORKER`'s deployment binding and K1531's pins: release/installer.
+
+**Found in other modules.** The J3 list:
+- plane bundle stale;
+- people's roster wrapper labels every source "read by";
+- answers has `screens` but no explain read yet.
+
+**Tests and checks** (after merging tranche/T33 @ 3a42b01d43):
+- `node --test bio-plane/test/m/plane/ bio-plane/test/system/migrate-released.test.mjs`: tests 110, pass 110, fail 0, skipped 0.
+- No layer tests (manifest). No module uses plane.
+- `format: 126 modules, 125 requirements files; 0 failures`
+- `architecture: 36 product files, 357 relative imports (2 naming no tracked file, not judged); 0 failures`
+- `coverage: 1 modules, 24 of 24 live requirement ids named by a test; 0 failures`
+- `ownership: 17 files changed by plane between tranche/T33 and HEAD; 0 failures`
+
+Size (session_017zKzx7PmN8FK2VvvFACCgN): test runs 18, module lines 963
