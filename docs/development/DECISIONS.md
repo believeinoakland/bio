@@ -2315,3 +2315,17 @@ response: **Decided by the design session, 2026-10-06:** (1) **Force**, always b
 decided: 2026-10-06 · the design session (P17)
 reasoning recorded in: this entry; `brand-and-voice.html` §5 (Use, Avoid); `journeys.html` (journey 6; §6's code row).
 owed: (BOB) these words as the member-facing labels of §6B and §6C's constructs when they are built (T35); the queue's Noticed wording for a silent change.
+
+### DEC-146 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (Bob's comment on the layouts page's installer, on "Free software for civic groups": "'and other organizations'? What's the right description here?")
+for: bob-session
+question: The one line that says what Civicsmith is, on the installer and on the page "Made with Civicsmith" links to; "civic groups" leaves out newsrooms, professional associations and a public office checking its own work, all of whom DEC-128 names.
+why it is Bob's: it is not: words beneath his ruling on who Civicsmith is for (DEC-128, amended for newsrooms); decided by the design session (P17) and open to his comment.
+provisional: "Free software for civic groups" (brand-and-voice.html §2's credit; the installer mockup).
+alternative: "civic groups and other organisations" (names no one, and "organisations" reads as firms); a list of kinds alone (names who, not what for); "groups that hold government to account" (takes a side, and misfits an office checking itself).
+recommendation: as decided below.
+reversal cost: low (one line, held in one place, DEC-99).
+response: **Decided by the design session, 2026-10-06:** (1) Civicsmith is described by what a group does with it, not by what kind of group it is: **"Free software for groups that check whether government keeps its own rules and promises."** "Rules and promises" covers what journey 6 calls the standards government set itself (an ordinance, a policy, a budget promise, a contract term, a service target); "check" stays neutral on policy and fits a public office auditing itself (DEC-128). (2) Where there is room for a second line, it names who: **"Neighbourhood and issue groups, newsrooms, professional associations, and public offices checking their own work."** (3) The line is used on the installer, on the page the "Made with Civicsmith" credit links to, and wherever Civicsmith says in one line what it is; never "civic groups" alone, never "and other organisations".
+decided: 2026-10-06 · the design session (P17)
+reasoning recorded in: this entry; `brand-and-voice.html` §2 (the credit); the layouts page's installer (`screens/mock-screens.js`); BIO_Interaction_Constructs_v0_1.md §L (brand and voice).
+owed: (BOB) the line as the installer's and the credit page's description when they are built (installer, public-read).

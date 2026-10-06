@@ -745,7 +745,10 @@ the yardstick every screen and wizard script of the redesign is checked against.
 **Brand and voice (APPROVED 2026-10-04 by Bob, DEC-125).** Who speaks, how the names are written, Civicsmith's voice, tone by
 moment and the words to use and avoid are set in `docs/development/ux-substrate/brand-and-voice.html` (published at
 https://claude.ai/artifact/EipzYKnNxe5LG3YwWnTkpv), the standard every screen's words are checked against. Its V1 (the mark)
-and V4 (translation) are still with Bob.
+and V4 (translation) are still with Bob. **Added 2026-10-06 (DEC-146, the design session, on Bob's comment):** Civicsmith says
+in one line what it is by what a group does with it, never by a kind of group: "Free software for groups that check whether
+government keeps its own rules and promises"; a second line, where there is room, names who: "Neighbourhood and issue groups,
+newsrooms, professional associations, and public offices checking their own work". Never "civic groups" alone.
 
 ## W · WORKING AND PUBLISHED — the fence a member can always see (Bob, 2026-10-01, DEC-106)
 
