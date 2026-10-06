@@ -23,7 +23,12 @@
  *  wake of their own, so they run once per local day at the group's local day start (K1522), and again at the next
  *  firing while their owner says its pass is not done (K1566); the day is `civil-time`'s in the active jurisdiction
  *  view's time zone. Their one piece of state, the day each last finished a pass and the cursor of a pass under way, is
- *  the storage value `sched_daily`, never a table (R18).
+ *  the storage value `sched_daily`, never a table (R18). An act their owners tell of (a duty tracked, a check changed, a
+ *  detector switched on: R9) asks for a pass at the next firing, so the change is not left to the next local day.
+ *
+ *  T34-51 (R22, R23): `scheduled-publish` takes each waiting edition at its set time through `publication` (its R67),
+ *  re-armed by publication's `onPublishScheduled` (its R71); `answers`' `onStandingSet` (its R27) re-arms the standing
+ *  questions. A notice whose registration is refused is a start-up fault, kept and logged (`faults()`), never ignored.
  * ========================================================================= */
 import { retrievalOf } from "../retrieval/index.mjs";
 import { connectionsOf } from "../connections/index.mjs";
@@ -46,6 +51,7 @@ import { moneyChecksOf } from "../money-checks/index.mjs";
 import { answersOf } from "../answers/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { followingOf } from "../following/index.mjs";
+import { publicationOf } from "../publication/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { localDay, dayRange } from "../civil-time/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
@@ -56,11 +62,12 @@ export const SCHED_GRACE_MS = 250;
 /** R5: the registry's order. `capture-request-drain` before `ai-run-wake` is load-bearing: a request that completes
  *  on an alarm wakes its run on the same alarm. `gathering-sweep` (T23) stands after `monitor-cadence`, where R5
  *  places it, so the positions after it move by one; `working-on-seal` and `working-on-attest` (T23) are appended
- *  last. Order is read by name, never by index (K1122). */
+ *  last; `scheduled-publish` (R22) stands before them, so an opening a scheduled commit leaves undone is retried on the
+ *  same alarm. Order is read by name, never by index (K1122). */
 export const SCHEDULER_ORDER = Object.freeze([
   "selection-sweep", "task-drain", "archive-monitor", "connection-derive", "overdue-scan", "queue-renotify",
   "monitor-cadence", "gathering-sweep", "ai-run-reap", "capture-request-drain", "ai-run-wake", "calibration-reprobe",
-  "group-domain-recheck", "bias-debt", "intent-age", "notice-sweep", "deadline-recheck", "working-on-seal",
+  "group-domain-recheck", "bias-debt", "intent-age", "notice-sweep", "deadline-recheck", "scheduled-publish", "working-on-seal",
   "working-on-attest", "follow", "duty-transitions", "interest-checks", "money-detectors", "standing-questions",
   "dated-waits",
 ]);
@@ -71,7 +78,7 @@ export const SCHEDULER_KEYS = Object.freeze({
   "overdue-scan": "overduescan", "queue-renotify": "queuerenotify", "monitor-cadence": "monitorcadence",
   "gathering-sweep": "gatheringsweep", "ai-run-reap": "airunreap", "capture-request-drain": "capturerequests", "ai-run-wake": "airunwake",
   "calibration-reprobe": "calibration", "group-domain-recheck": "groupdomain", "bias-debt": "biasdebt",
-  "intent-age": "intentage", "notice-sweep": "noticesweep", "deadline-recheck": "deadlinerecheck",
+  "intent-age": "intentage", "notice-sweep": "noticesweep", "deadline-recheck": "deadlinerecheck", "scheduled-publish": "scheduledpublish",
   "working-on-seal": "workingonseal", "working-on-attest": "workingonattest", "follow": "follow",
   "duty-transitions": "dutytransitions", "interest-checks": "interestchecks", "money-detectors": "moneydetectors",
   "standing-questions": "standingquestions", "dated-waits": "datedwaits",
@@ -173,11 +180,19 @@ export class Scheduler {
   /* R21, the daily consumers: `{[name]: {day, cursor, more}}` as the value `sched_daily` holds it (null until read),
      and the names whose last pass found nothing to work over, which want no wake until the instance's next start. */
   #daily = null; #dailyIdle = new Set(); #zone;
+  /* R9: the daily consumers an owner's notice asked a pass of, at the next firing, whatever day they last ran. */
+  #dailyPoked = new Set();
+  /* scheduled-publish: the set time of an edition still waiting after a tick at or past it (see the consumer). */
+  #publishHeld = null;
+  /* true while scheduled-publish ticks: a take's notice then leaves the arming to onAlarm's own reconcile (R1). */
+  #publishTicking = false;
+  /* The refused registrations of listenTo, each a start-up fault (R23). */
+  #faults = [];
 
   /** `storage` is the Durable Object's storage (its alarm, and the probe seam's and the daily consumers' values);
    *  `owners` answers each consumer's owner (`retrieval`, `monitoring`, `connections`, `progressions`, `aiRuns`,
    *  `captureRequests`, `calibration`, `bias`, `intent`, `reevaluation`, `networkNotices`, `linkSweep`, `following`,
-   *  `duties`, `people`, `moneyChecks`, `answers`, `inquiry`), each a function returning the owner, so an owner is
+   *  `duties`, `people`, `moneyChecks`, `answers`, `inquiry`, `publication`), each a function returning the owner, so an owner is
    *  reached only when the registry is built; `zone()` answers the group's time zone or null (R21's local day). */
   constructor({ storage, env = null, owners = {}, zone = null } = {}) {
     this.#storage = storage;
@@ -204,7 +219,7 @@ export class Scheduler {
     const st = () => (this.#daily && this.#daily[name]) || {};
     const want = (now, today) => {
       const s = st();
-      if (s.more) return now;
+      if (s.more || this.#dailyPoked.has(name)) return now;
       if (this.#dailyIdle.has(name)) return null;
       return s.day === today.date ? null : today.start;
     };
@@ -213,6 +228,7 @@ export class Scheduler {
       wake: (now) => { const today = this.#day(now); const w = want(now, today); return w !== null || this.#dailyIdle.has(name) ? w : today.next; },
       tick: async (now) => {
         const today = this.#day(now), s = st();
+        this.#dailyPoked.delete(name);
         const settle = (v) => { this.#daily = { ...(this.#daily || {}), [name]: v }; };
         let r;
         try { r = await run(now, s.more ? s.cursor ?? null : null); }
@@ -297,6 +313,28 @@ export class Scheduler {
     if (this.#owners.reevaluation) c["notice-sweep"] = {   /* reevaluation R25 */
       due: (now) => o("reevaluation").noticeSweepDue(now), wake: (now) => o("reevaluation").noticeSweepWake(now),
       tick: (now) => ({ noticesweep: o("reevaluation").noticeSweep(now) }) };
+    /* R22: publication R67's waiting editions, each taken at the first firing at or after its set time (R67 takes only at
+       or before `now`, so a firing inside the grace before it takes nothing and the reconcile re-arms at the time).
+       Its `publishDue` awaits each answer of ratification's publisher, so the tick awaits it (R1). An edition still
+       waiting after a tick at or past its time (a take that failed, or one another firing holds) would keep the wake
+       in the past and the alarm firing at once, again and again: so that time is held, wanting no wake, until
+       publication's next notice (R71: every take, set, move and cancel tells it) or the instance's next start (R11),
+       never retried on an interval of this module's (R7). */
+    if (this.#owners.publication) {
+      const wake = () => { const w = msOf(o("publication").publishWake()); return w !== null && this.#publishHeld !== null && w <= this.#publishHeld ? null : w; };
+      c["scheduled-publish"] = {
+        due: () => wake(), wake: () => wake(),
+        tick: async (now) => {
+          this.#publishTicking = true;
+          try { return { scheduledpublish: await o("publication").publishDue(new Date(now).toISOString()) }; }
+          finally {
+            this.#publishTicking = false;
+            let w = null;
+            try { w = msOf(o("publication").publishWake()); } catch { w = null; }
+            this.#publishHeld = w !== null && w <= now ? w : null;
+          }
+        } };
+    }
     if (this.#owners.networkNotices) {
       c["working-on-seal"] = {   /* network-notices R14, R15: the weekly seal */
         due: (now) => instant(o("networkNotices").sealDue(now), now), wake: (now) => o("networkNotices").sealWake(now),
@@ -468,6 +506,7 @@ export class Scheduler {
   async start(now = Date.now()) {
     const probe = await this.#probeState(now, false);
     this.#dailyIdle.clear();
+    this.#publishHeld = null;
     await this.#loadDaily();
     return await this.#reconcile(now, this.registry(probe), false);
   }
@@ -500,9 +539,14 @@ export class Scheduler {
   /* ---- R9: the earlier producers' notices ---- */
 
   /** Registers `arm` with each notice an earlier producer offers (K72 (9), K206). Each listener only schedules.
-   *  Whether monitoring is configured is asked of the `monitoring` owner when a notice arrives. */
-  listenTo({ retrieval, bias, promotion, capture, progressions, calibration, aiRuns, captureRequests, entities, inquiry, following } = {}) {
+   *  Whether monitoring is configured is asked of the `monitoring` owner when a notice arrives. Answers each
+   *  registration's answer by notice; a refused one is also kept as a start-up fault (`faults()`) and logged. */
+  listenTo({ retrieval, bias, promotion, capture, progressions, calibration, aiRuns, captureRequests, entities, inquiry, following,
+             publication, answers, duties, people, moneyChecks } = {}) {
     const arm = () => this.arm();
+    /* A notice its owner tells without awaiting: the arm runs, and a storage that fails it is never an unhandled
+       rejection (the act stands, its owner's R27, R71). */
+    const told = () => this.arm().catch(() => null);
     /* A notice told inside its owner's transaction, where no storage call may be awaited: the arm is deferred until
        the transaction has returned, once however many notices it told. */
     const deferred = () => {
@@ -550,8 +594,34 @@ export class Scheduler {
     /* following R19 (K1666): a follow recorded, ended or re-dated, told after the act's transaction; the reconcile reads
        the follow's wake (R21). */
     if (following) out.following = following.onFollowed("scheduler", () => arm());
+    /* R22 (publication R71, K1816): after an edition is set to wait, its time moved or cancelled, or a due one taken;
+       the reconcile reads `publishWake` again. A cancel's or a take's call arms nothing new (R4); a take's arrives
+       inside this module's own tick, before onAlarm's authoritative reconcile, which stands. */
+    if (publication) out.publication = publication.onPublishScheduled("scheduler", () => {
+      this.#publishHeld = null;
+      return this.#publishTicking ? null : told();
+    });
+    /* R23 (answers R27): a standing question set or ended re-arms the standing questions' wake at once. */
+    if (answers) out.answers = answers.onStandingSet("scheduler", () => told());
+    /* R9 (duties R26, people R35, money-checks R16): each told after the act's transaction; the daily consumer it
+       concerns is asked for a pass at once, rather than at the next local day, and the alarm armed for it. */
+    const poke = (name) => () => { this.#dailyPoked.add(name); this.#dailyIdle.delete(name); return told(); };
+    if (duties) out.duties = duties.onDutyTracked("scheduler", poke("duty-transitions"));
+    if (people) out.people = people.onChecksChanged("scheduler", poke("interest-checks"));
+    if (moneyChecks) out.moneyChecks = moneyChecks.onDetectorSwitchedOn("scheduler", poke("money-detectors"));
+    for (const [notice, r] of Object.entries(out)) {
+      if (r && r.ok === false) {
+        const fault = { notice, reason: r.reason ?? r.code ?? null, detail: r.detail ?? null };
+        this.#faults.push(fault);
+        try { console.error(`scheduler: the ${notice} notice refused its registration`, JSON.stringify(fault)); } catch { /* logged where it can be */ }
+      }
+    }
     return out;
   }
+
+  /** R23: the registrations listenTo was refused, each `{notice, reason, detail}`: start-up faults, reported, never
+   *  ignored. Empty when every notice took its listener. */
+  faults() { return this.#faults.map((f) => ({ ...f })); }
 }
 
 /* R21: each daily consumer and the owner it calls. */
@@ -571,6 +641,7 @@ export function schedulerOf(ctx, env = null, deps = {}) {
       networkNotices: () => networkNoticesOf(ctx, { env: e }), linkSweep: () => linkSweepOf(ctx),
       duties: () => dutiesOf(ctx), people: () => peopleOf(ctx), moneyChecks: () => moneyChecksOf(ctx),
       answers: () => answersOf(ctx), inquiry: () => inquiryOf(ctx), following: () => followingOf(ctx),
+      publication: () => publicationOf(ctx),
     };
     const zone = deps.zone || (() => viewZone(recordOf(ctx)));
     s = new Scheduler({ storage: deps.storage || ctx.storage, env: e, owners, zone });
@@ -579,7 +650,8 @@ export function schedulerOf(ctx, env = null, deps = {}) {
       s.listenTo({ retrieval: retrievalOf(ctx), bias: biasOf(ctx), promotion: promotionOf(ctx), capture: captureOf(ctx),
                    progressions: progressionsOf(ctx, { env: e }), calibration: calibrationOf(ctx), aiRuns: aiRunsOf(ctx, e),
                    captureRequests: captureRequestsOf(ctx), entities: entitiesOf(ctx), inquiry: inquiryOf(ctx),
-                   following: followingOf(ctx) });
+                   following: followingOf(ctx), publication: publicationOf(ctx), answers: answersOf(ctx),
+                   duties: dutiesOf(ctx), people: peopleOf(ctx), moneyChecks: moneyChecksOf(ctx) });
   }
   return s;
 }

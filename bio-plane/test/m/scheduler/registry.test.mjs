@@ -6,11 +6,11 @@ import { world, consumer, writes, NOW } from "./fixture.mjs";
 
 const LATER = [["tasks", "task-drain", "drain"], ["queue", "queue-renotify", "queuerenotify"], ["instance-setup", "group-domain-recheck", "groupdomain"]];
 
-test("R5: the consumers, in R5's order, each calling its owning module; gathering-sweep after monitor-cadence, working-on-seal and working-on-attest, then R21's six, last", async () => {
+test("R5: the consumers, in R5's order, each calling its owning module; gathering-sweep after monitor-cadence, scheduled-publish (R22) after deadline-recheck, working-on-seal and working-on-attest, then R21's six, last", async () => {
   assert.deepEqual([...SCHEDULER_ORDER], ["selection-sweep", "task-drain", "archive-monitor", "connection-derive",
     "overdue-scan", "queue-renotify", "monitor-cadence", "gathering-sweep", "ai-run-reap", "capture-request-drain",
     "ai-run-wake", "calibration-reprobe", "group-domain-recheck", "bias-debt", "intent-age", "notice-sweep",
-    "deadline-recheck", "working-on-seal", "working-on-attest", "follow", "duty-transitions", "interest-checks",
+    "deadline-recheck", "scheduled-publish", "working-on-seal", "working-on-attest", "follow", "duty-transitions", "interest-checks",
     "money-detectors", "standing-questions", "dated-waits"]);
   const { s } = world({}, null, { daily: true });
   /* registered by the later modules that own them, in an order other than R5's */
@@ -76,7 +76,7 @@ test("R5: deadline-recheck runs monitoring's deadlineRecheck on the alarm its R5
   assert.equal(st.alarm, null, "no pending entry: no wake held for it (R15)");
   const names = s.consumers();
   assert.deepEqual(names.slice(names.indexOf("deadline-recheck"), names.indexOf("deadline-recheck") + 3),
-    ["deadline-recheck", "working-on-seal", "working-on-attest"], "followed by network-notices' two consumers");
+    ["deadline-recheck", "scheduled-publish", "working-on-seal"], "followed by the scheduled publish (R22), then network-notices' two consumers");
 });
 
 test("R5, R16: deadline-recheck never spins on an entry R34 cannot mark: a tick that marks nothing holds the past wake to the next UTC day; one that marks releases it", async () => {

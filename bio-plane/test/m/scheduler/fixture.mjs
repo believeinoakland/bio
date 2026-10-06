@@ -116,6 +116,12 @@ export function owners(set = {}) {
       standingWake: (now) => rec("answers.standingWake", [now], v("standing-questions", "wake", now)),
       standingTick: async (now) => rec("answers.standingTick", [now], v("standing-questions", "tick", now, { at: now, ran: [], remaining: 0 })),
     },
+    /* T34-51 (R22): a stand-in shaped as publication R67: `publishWake()` the earliest set time (instant text or ms),
+       `publishDue(now)` told `now` as instant text, answering a Promise. */
+    publication: {
+      publishWake: () => rec("publication.publishWake", [], v("scheduled-publish", "wake", null)),
+      publishDue: async (now) => rec("publication.publishDue", [now], v("scheduled-publish", "tick", now, { ok: true, taken: [] })),
+    },
     inquiry: {
       datedWaitsDue: (now) => rec("inquiry.datedWaitsDue", [now], v("dated-waits", "due", now, false)),
       datedWaitsWake: (now) => rec("inquiry.datedWaitsWake", [now], v("dated-waits", "wake", now)),
