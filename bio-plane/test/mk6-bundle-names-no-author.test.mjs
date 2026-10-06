@@ -101,7 +101,9 @@ const enrol = async (memberId, handle, cover, capabilities, role = "member") => 
   if (!lg || !lg.token) throw new Error(`login ${memberId}: ${JSON.stringify(lg)}`);
   return lg.token;
 };
-/* A group's first two members are administrators (ADMINS_FIRST), so the publisher and a second admin come first. */
+/* The publisher is an administrator. Since DEC-134 (membership R12; C-96.5 ADMINS_FIRST retired) a group may run with
+   one administrator, so the second administrator (gus) is not required; the suite keeps that account beside the
+   publisher that the observation's population must not depend on. */
 const IRIS = await enrol("iris", "iris", "cover for iris", ["contribute", "publish", "create_projects"], "admin");
 await enrol("gus", "gus", "cover for gus", ["contribute"], "admin");
 const OBSERVER = await enrol(OBS_ID, OBS_HANDLE, `the ${OBS_COVER} volunteer`, ["contribute"]);
@@ -199,7 +201,9 @@ const pub = await POST(`op=publish&token=${IRIS}`, { project: PROJECT, targets: 
   statement: "This case covers the stamp only, on the documents in hand at edition 1.",
   excluded: [], subjectPosition: "sought_and_answered",
   subjectJustification: "We put the claim to the Clerk on 2026-06-20 and printed what came back.",
-  biasAcknowledgement: "This group holds that contracts should be adopted in public session." });
+  biasAcknowledgement: "This group holds that contracts should be adopted in public session.",
+  /* The signer attests no undeclared tie, the act's own field (case-authoring R55, case-disclosures R27; N626). */
+  tieAttested: true });
 /* MK-7: THE AUTHOR CHOOSES `group` for this edition (§4.2); the act re-authors the unsigned case document, and its
    new hash is what the publisher signs. */
 const at = pub && pub.caseDocument ? await POST(`op=attribute&token=${OBSERVER}`, { caseId: pub.caseDocument.case_id,

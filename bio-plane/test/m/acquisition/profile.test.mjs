@@ -11,6 +11,22 @@ import assert from "node:assert/strict";
 import { deflateRawSync } from "node:zlib";
 import { world, run, sha } from "./fixture.mjs";
 import { profileOf, profileView, substanceDigests, ODF_DIGEST_MAX } from "../../../src/acquisition/index.mjs";
+import { registerDoctype, CONFIDENCE, CONTRACT } from "../../../../docprofile/registry.mjs";
+
+/* docprofile registers no content type of its own (K1737), and the content types are wired in by the plane's
+   composition root (plane R22), not by this module. So the content-type axis is judged here by two test-local types,
+   registered through docprofile's own `registerDoctype`: a calendar recogniser (a version, a contract and two
+   signals, for R17 to record as `doctypeFor` answers them) and the one fallback. */
+registerDoctype({
+  key: "test_calendar", label: "a test meeting calendar", version: 1, contract: CONTRACT.MEMBERSHIP,
+  detect(ctx) {
+    const t = String((ctx && ctx.text) || "");
+    const signals = [/MeetingDetail\.aspx\?ID=/.test(t) && "meeting detail links", /<th>Agenda<\/th>/.test(t) && "an Agenda column"].filter(Boolean);
+    return signals.length === 2 ? { match: true, confidence: CONFIDENCE.CERTAIN, signals } : { match: false, confidence: CONFIDENCE.NONE };
+  },
+});
+registerDoctype({ key: "test_fallback", label: "a document of no recognised type", version: 1, fallback: true,
+  contract: CONTRACT.SUBSTANCE, detect: () => ({ match: false, confidence: CONFIDENCE.NONE }) });
 
 const HEX64 = /^[0-9a-f]{64}$/;
 const ASPNET = { "x-powered-by": "ASP.NET", server: "Microsoft-IIS/10.0" };
@@ -179,7 +195,7 @@ test("R17: an ASP.NET WebForms meeting calendar is profiled on both axes, each w
   assert.ok(Array.isArray(p.signals) && p.signals.includes("__VIEWSTATE field"), "the handler's signals");
   assert.equal(p.document_kind, "index", "the document kind is read from the address");
   /* the content type axis */
-  assert.equal(p.content_type, "meeting_calendar");
+  assert.equal(p.content_type, "test_calendar");
   assert.equal(p.content_type_version, 1, "the second recogniser's own version");
   assert.equal(p.content_type_confidence, "certain");
   assert.ok(Array.isArray(p.content_type_signals) && p.content_type_signals.length >= 2, "the second signal set");
@@ -200,17 +216,17 @@ test("R17: an ASP.NET WebForms meeting calendar is profiled on both axes, each w
     { locator: "https://city.example/Calendar.aspx", authority: "City Clerk" });
   const pv = rv.body.document.profile;
   assert.deepEqual([pv.handler, pv.content_type, pv.content_type_confidence, pv.jurisdiction_view],
-                   ["aspnet_webforms", "meeting_calendar", "certain", ["test-port-ellery"]]);
+                   ["aspnet_webforms", "test_calendar", "certain", ["test-port-ellery"]]);
 });
 
-test("R17: a PDF is profiled honestly, the conservative handler and the generic type at no confidence, not read as text, its declared type kept, and its digests undetermined with the basis stated", async () => {
+test("R17: a PDF is profiled honestly, the conservative handler and the registered fallback type at no confidence, not read as text, its declared type kept, and its digests undetermined with the basis stated", async () => {
   const w = world();
   const r = await run(w, { "https://city.example/report.pdf": served(PDF, "application/pdf") },
     { locator: "https://city.example/report.pdf", authority: "City Auditor" });
   assert.equal(r.status, 200);
   const p = r.body.document.profile;
   assert.equal(p.handler, "conservative", "not a fabricated stack");
-  assert.equal(p.content_type, "generic", "not an invented type");
+  assert.equal(p.content_type, "test_fallback", "not an invented type: the registered fallback");
   assert.equal(p.confidence, "none");
   assert.equal(p.profiled_from_text, false);
   assert.equal(p.source_content_type, "application/pdf");
