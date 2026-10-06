@@ -9,8 +9,9 @@
  * owner of the script's project, widened by an administrator; retired, never deleted (R1–R9). A machine proposes steps
  * and nothing else (R19). The module checks every script against the screens registered at start (R12), withholds a
  * group's script that stops matching them until it matches again (R13), serves the scripts that start on a screen to
- * every member's session with no AI and no key (R11), and keeps unattributed daily tallies of use and of refusals
- * (R15, R16). It runs no wizard: the runner and the screens are the interface's.
+ * every member's session with no AI and no key (R11) and, in one form, to the in-process readers that explain a screen
+ * or walk a member through a wizard (R21), and keeps unattributed daily tallies of use and of refusals (R15, R16). It
+ * runs no wizard: the runner and the screens are the interface's.
  *
  * A NEW MODULE (T31, layer 11, first in it; K1364). REACHED as `wizardScriptsOf(host, deps)` (K61): one instance per
  * host, created on the first call. At creation it creates its tables, declares them to record-core's purge (R18) and
@@ -31,10 +32,10 @@ import { isMachineIdentity } from "../record-grammar/actors.mjs";
 import { proposalLabel } from "../record-grammar/labels.mjs";
 import { sha256HexSync } from "../record-grammar/sha256.mjs";
 import { WIZARD_SCRIPTS_CHECKS, rowOf } from "./checks.mjs";
-import { WIZARD_SCRIPTS_TABLES, WIZARD_SCRIPTS_MINT_SEED, migrateWizardScripts } from "./schema.mjs";
+import { WIZARD_SCRIPTS_TABLES, WIZARD_SCRIPTS_TABLE_CLASSES, WIZARD_SCRIPTS_MINT_SEED, migrateWizardScripts } from "./schema.mjs";
 
 export { WIZARD_SCRIPTS_CHECKS } from "./checks.mjs";
-export { WIZARD_SCRIPTS_SCHEMA, WIZARD_SCRIPTS_TABLES } from "./schema.mjs";
+export { WIZARD_SCRIPTS_SCHEMA, WIZARD_SCRIPTS_TABLES, WIZARD_SCRIPTS_TABLE_CLASSES } from "./schema.mjs";
 export { CIVICSMITH_LIBRARY } from "./civicsmith-library.mjs";
 
 /* ---------------------------------------------------------------- the vocabularies */
@@ -1062,24 +1063,57 @@ export class WizardScripts {
   wizardsAt({ screen = null, viewer = null } = {}) {
     const sc = str(screen);
     if (!sc || !this.#registration().screens.has(sc)) return { ok: true, screen: sc, scripts: [] };
-    const out = [];
-    for (const { s, n, steps } of this.#offeredScripts(viewer)) {
-      if (startOf(steps) !== sc) continue;
+    const out = this.#startable(viewer, sc).map(({ s, n, steps, draft }) => {
+      if (draft) return { id: s.id, version: versionId(s.id, n), name: s.name, steps, approver: null, finished: 0, draft: true };
       const view = this.#versionView(s, n, s.origin === "civicsmith" ? [] : this.#events(s.id));
-      out.push({ id: s.id, version: view.id, name: s.name, steps, approver: view.approved ? view.approved.by : null,
-                 finished: this.#useOf(view.id).finish });
-    }
+      return { id: s.id, version: view.id, name: s.name, steps, approver: view.approved ? view.approved.by : null,
+               finished: this.#useOf(view.id).finish };
+    });
+    return { ok: true, screen: sc, scripts: out };
+  }
+
+  /* R11, R21: the scripts `viewer` may start, each `{s, n, steps, draft}`, in R11's order: the offered ones it may see,
+     then its own drafts (`draft: true`); only those whose first step is on `screen` when one is named. */
+  #startable(viewer, screen = null) {
+    const on = (steps) => screen === null || startOf(steps) === screen;
+    const out = this.#offeredScripts(viewer).filter((x) => on(x.steps)).map((x) => ({ ...x, draft: false }));
     const me = this.#member(viewer);
     if (me) {
       for (const r of this.#rows(`SELECT script_id, version FROM wiz_versions WHERE author=? ORDER BY script_id, version`, me)) {
         const s = this.#groupScript(r.script_id);
         if (!this.#canSee(s, viewer) || this.#stateOf(this.#events(s.id), r.version) !== "draft") continue;
         const steps = this.#steps(s, r.version);
-        if (startOf(steps) !== sc) continue;
-        out.push({ id: s.id, version: versionId(s.id, r.version), name: s.name, steps, approver: null, finished: 0, draft: true });
+        if (on(steps)) out.push({ s, n: r.version, steps, draft: true });
       }
     }
-    return { ok: true, screen: sc, scripts: out };
+    return out;
+  }
+
+  /* ================================================================ R21: wizardRegistry */
+
+  /** R21 (in-process; the registry form, Q1-7): for `answers`' explain and walk-through reads and `affordances`'
+   *  no-target answer, every registered screen `{id, acts, scripts}`, each script as R11 answers it to `viewer` on that
+   *  screen, `{id, version, name, start, steps: [{screen, act, what, why, draft?}], origin}` (and `draft: true` for the
+   *  viewer's own draft), a step's `draft` its kind alone (`text`, `template` or `machine`), never its words, template
+   *  or op. Before registration `{registered: false, screens: []}`. Needs no AI credential and no key; runs nothing,
+   *  records no use and writes nothing. */
+  wizardRegistry({ viewer = null } = {}) {
+    if (!this.reg) return { ok: true, registered: false, screens: [] };
+    const byStart = new Map();
+    for (const x of this.#startable(viewer)) {
+      const start = startOf(x.steps);
+      if (!byStart.has(start)) byStart.set(start, []);
+      byStart.get(start).push({ id: x.s.id, version: versionId(x.s.id, x.n), name: x.s.name, start,
+                                steps: x.steps.map(WizardScripts.#bareStep), origin: x.s.origin, ...(x.draft ? { draft: true } : {}) });
+    }
+    const screens = this.registeredScreens().map((sc) => ({ ...sc, scripts: byStart.get(sc.id) || [] }));
+    return { ok: true, registered: true, screens };
+  }
+  /* R21: a step with its draft named by its kind only. */
+  static #bareStep(s) {
+    const o = isObj(s) ? s : {};
+    const kind = o.draft !== undefined && o.draft !== null ? Object.keys(canonicalDraft(o.draft) || {})[0] ?? null : null;
+    return { screen: o.screen ?? null, act: o.act ?? null, what: o.what ?? "", why: o.why ?? "", ...(kind ? { draft: kind } : {}) };
   }
 
   /** R12 (`op=wizardcheck`): `checkScript` against the registration, for any credential, `ai` included. Writes nothing. */
@@ -1213,15 +1247,15 @@ export class WizardScripts {
 /* The reads and acts answer their own refusals with code, check and translation (DEC-49). */
 for (const m of ["wizardRegister", "brokenScripts", "wizardDraft", "wizardRevise", "wizardPropose", "wizardSubmit", "wizardApprove",
                  "wizardEditorGrant", "wizardEditorRevoke", "wizardRetire", "wizards", "wizardRead", "wizardsAt", "wizardCheck",
-                 "wizardProgress", "wizardUse", "wizardCandidates", "submittedFor"]) {
+                 "wizardProgress", "wizardUse", "wizardCandidates", "submittedFor", "wizardRegistry"]) {
   const fn = WizardScripts.prototype[m];
   WizardScripts.prototype[m] = function (...a) { return withRow(fn.apply(this, a)); };
 }
 
 const instances = new WeakMap();
 
-/** K61: the one instance per host; at creation it creates and declares its tables (R18) and registers its opaque ids'
- *  seed (record-core R70). */
+/** K61: the one instance per host; at creation it creates and declares its tables with their classes (R18; record-core
+ *  R21, plan T33 Rules (6)) and registers its opaque ids' seed (record-core R70). */
 export function wizardScriptsOf(host, deps) {
   let w = instances.get(host);
   if (!w) {
@@ -1233,7 +1267,7 @@ export function wizardScriptsOf(host, deps) {
     w = new WizardScripts({ ...d, storage, record, membership, filingTemplates, env: d.env ?? host.env ?? null });
     instances.set(host, w);
     w.migrate();
-    record.declarePurge("wizard-scripts", [...WIZARD_SCRIPTS_TABLES]);
+    record.declareTable("wizard-scripts", WIZARD_SCRIPTS_TABLE_CLASSES.map((t) => ({ ...t })));
     record.registerMintSeed("wizard-scripts", WIZARD_SCRIPTS_MINT_SEED.map((x) => [...x]));
   }
   return w;
