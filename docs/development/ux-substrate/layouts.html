@@ -668,6 +668,7 @@ fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
 .mk-more summary { cursor: pointer; font-weight: 600; color: var(--c-accent-strong, var(--c-accent)); }
 .mk-more h4 { margin: 12px 0 4px; font-size: var(--t-sm); }
 .mk-more p { font-weight: 400; margin: 4px 0; }
+.mk-ifelse { display: none; } main.mk-else .mk-ifelse { display: block; }
 .mk-ifother { display: none; } main.mk-other .mk-ifother { display: block; } main.mk-other .mk-ifheld { display: none; }
 .foot { margin-top: 48px; padding-top: 14px; border-top: var(--hair); color: var(--c-muted); font-size: var(--t-sm); }
 </style>
@@ -932,7 +933,7 @@ function field(id, label, value = '', o = {}) {
   return `<div class="cs-field"${o.act ? ` data-act="${esc(o.act)}"` : ''}><label for="${id}">${esc(label)}</label>${o.help ? `<span class="help">${o.help}</span>` : ''}<${tag} id="${id}" class="${cls}"${o.area ? '' : ' type="text"'}${o.area ? '' : ''}${v}${o.draft ? `<span class="cs-draftlabel">${I(o.draft === 'machine' ? 'machine' : 'wizard')}${o.draft === 'machine' ? 'Draft by the assistant, at your request · edit it until it is yours' : o.draft === 'template' ? 'Draft from your group\'s template · edit it until it is yours' : 'Draft from the wizard · edit it until it is yours'}</span>` : ''}</div>`;
 }
 const choice = (id, label, opts, sel, o = {}) => `<div class="cs-field"${o.act ? ` data-act="${esc(o.act)}"` : ''}><label for="${id}">${esc(label)}</label>${o.help ? `<span class="help">${o.help}</span>` : ''}<select id="${id}" class="cs-input"${o.onchange ? ` onchange="${o.onchange}"` : ''}>${opts.map(x => `<option${x === sel ? ' selected' : ''}>${esc(x)}</option>`).join('')}</select></div>`;
-const checks = (name, opts, o = {}) => `<fieldset class="mk-checks"${o.act ? ` data-act="${esc(o.act)}"` : ''}><legend>${esc(name)}</legend>${opts.map(([t, on], i) => `<label><input type="${o.radio ? 'radio' : 'checkbox'}" name="${esc(name)}"${on ? ' checked' : ''}> ${t}</label>`).join('')}</fieldset>`;
+const checks = (name, opts, o = {}) => `<fieldset class="mk-checks"${o.act ? ` data-act="${esc(o.act)}"` : ''}${o.onchange ? ` onchange="${o.onchange}"` : ''}><legend>${esc(name)}</legend>${opts.map(([t, on], i) => `<label><input type="${o.radio ? 'radio' : 'checkbox'}" name="${esc(name)}"${on ? ' checked' : ''}> ${t}</label>`).join('')}</fieldset>`;
 const h1 = (t, sub) => `<div class="mk-h"><h1 class="t-title">${t}</h1>${sub ? `<p class="mk-sub">${sub}</p>` : ''}</div>`;
 const sec = (t, inner, o = {}) => `<section class="cs-section mk-sec"${o.act ? ` data-act="${esc(o.act)}"` : ''}><h2>${t}</h2>${inner}</section>`;
 const sheet = inner => `<div class="cs-sheet">${inner}</div>`;
@@ -1002,7 +1003,7 @@ SCR.setup = c => ({ frame: 'setup', title: 'Set up', main: `
 
 SCR['group-identity'] = c => ({ rail: 'settings', title: 'Who your group is', crumbs: ['Settings', 'Who your group is'], main: `
   ${h1('Who your group is', 'Optional. It shapes how members are welcomed and locks nothing.')}
-  ${checks('What kind of group are you?', [['Professional', false], ['Issue-specific', false], ['Neighbourhood or community', true], ['Catch-all', false], ['Something else…', false]], { act: 'groupdescriptionset' })}
+  ${checks('What kind of group are you?', [['Professional', false], ['Issue-specific', false], ['Neighbourhood or community', true], ['Catch-all', false], ['Something else…', false]], { act: 'groupdescriptionset', onchange: 'var i=this.querySelectorAll(\'input\');this.closest(\'main\').classList.toggle(\'mk-else\', i[i.length-1].checked)' })}<div class="mk-ifelse">${field('mk-kindelse', 'Describe your kind of group, in a few words', '', { act: 'groupdescriptionset', help: 'For example “a tenants\' union”, “a students\' newspaper”, “a retired auditors\' circle”. It helps Civicsmith offer what fits first; it locks nothing.' })}</div>
   ${field('mk-focus', 'What you focus on', 'Rents and leases on city-owned land; the Coliseum lease; repairs on our streets', { act: 'groupdescriptionset', rec: true })}
   ${field('mk-why', 'Why the group exists, in your own words', 'Tenants near the Coliseum started meeting in 2025 when rents on city land rose twice in a year. We want to know whether the city is keeping its own lease terms.', { area: true, rec: true })}
   ${checks('Who sees this', [['Members only', true], ['Also our public page and the network directory', false]], { radio: true, act: 'groupdescriptionset' })}

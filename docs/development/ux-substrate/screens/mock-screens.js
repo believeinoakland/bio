@@ -57,7 +57,7 @@ SCR.setup = c => ({ frame: 'setup', title: 'Set up', main: `
 
 SCR['group-identity'] = c => ({ rail: 'settings', title: 'Who your group is', crumbs: ['Settings', 'Who your group is'], main: `
   ${h1('Who your group is', 'Optional. It shapes how members are welcomed and locks nothing.')}
-  ${checks('What kind of group are you?', [['Professional', false], ['Issue-specific', false], ['Neighbourhood or community', true], ['Catch-all', false], ['Something else…', false]], { act: 'groupdescriptionset' })}
+  ${checks('What kind of group are you?', [['Professional', false], ['Issue-specific', false], ['Neighbourhood or community', true], ['Catch-all', false], ['Something else…', false]], { act: 'groupdescriptionset', onchange: 'var i=this.querySelectorAll(\'input\');this.closest(\'main\').classList.toggle(\'mk-else\', i[i.length-1].checked)' })}<div class="mk-ifelse">${field('mk-kindelse', 'Describe your kind of group, in a few words', '', { act: 'groupdescriptionset', help: 'For example “a tenants\' union”, “a students\' newspaper”, “a retired auditors\' circle”. It helps Civicsmith offer what fits first; it locks nothing.' })}</div>
   ${field('mk-focus', 'What you focus on', 'Rents and leases on city-owned land; the Coliseum lease; repairs on our streets', { act: 'groupdescriptionset', rec: true })}
   ${field('mk-why', 'Why the group exists, in your own words', 'Tenants near the Coliseum started meeting in 2025 when rents on city land rose twice in a year. We want to know whether the city is keeping its own lease terms.', { area: true, rec: true })}
   ${checks('Who sees this', [['Members only', true], ['Also our public page and the network directory', false]], { radio: true, act: 'groupdescriptionset' })}
