@@ -6,12 +6,13 @@ import { world, consumer, writes, NOW } from "./fixture.mjs";
 
 const LATER = [["tasks", "task-drain", "drain"], ["queue", "queue-renotify", "queuerenotify"], ["instance-setup", "group-domain-recheck", "groupdomain"]];
 
-test("R5: the consumers, in R5's order, each calling its owning module; gathering-sweep after monitor-cadence, working-on-seal and working-on-attest last", async () => {
+test("R5: the consumers, in R5's order, each calling its owning module; gathering-sweep after monitor-cadence, working-on-seal and working-on-attest, then R21's six, last", async () => {
   assert.deepEqual([...SCHEDULER_ORDER], ["selection-sweep", "task-drain", "archive-monitor", "connection-derive",
     "overdue-scan", "queue-renotify", "monitor-cadence", "gathering-sweep", "ai-run-reap", "capture-request-drain",
     "ai-run-wake", "calibration-reprobe", "group-domain-recheck", "bias-debt", "intent-age", "notice-sweep",
-    "deadline-recheck", "working-on-seal", "working-on-attest"]);
-  const { s } = world();
+    "deadline-recheck", "working-on-seal", "working-on-attest", "follow", "duty-transitions", "interest-checks",
+    "money-detectors", "standing-questions", "dated-waits"]);
+  const { s } = world({}, null, { daily: true });
   /* registered by the later modules that own them, in an order other than R5's */
   for (const [m, n, key] of [...LATER].reverse()) assert.equal(s.register(m, consumer(n, { key })).ok, true);
   assert.deepEqual(s.consumers(), [...SCHEDULER_ORDER], "each takes its R5 place");
@@ -74,8 +75,8 @@ test("R5: deadline-recheck runs monitoring's deadlineRecheck on the alarm its R5
   await s.onAlarm(DAY + 1000);
   assert.equal(st.alarm, null, "no pending entry: no wake held for it (R15)");
   const names = s.consumers();
-  assert.deepEqual(names.slice(names.indexOf("deadline-recheck")), ["deadline-recheck", "working-on-seal", "working-on-attest"],
-    "followed only by network-notices' two consumers");
+  assert.deepEqual(names.slice(names.indexOf("deadline-recheck"), names.indexOf("deadline-recheck") + 3),
+    ["deadline-recheck", "working-on-seal", "working-on-attest"], "followed by network-notices' two consumers");
 });
 
 test("R5, R16: deadline-recheck never spins on an entry R34 cannot mark: a tick that marks nothing holds the past wake to the next UTC day; one that marks releases it", async () => {
@@ -126,7 +127,7 @@ test("R8: a consumer that is not {name, key, due, wake, tick}, or whose key anot
   assert.equal(s.register("", consumer("a")).reason, "CONSUMER_MALFORMED");
   for (const key of ["swept", "nextAt", "probes", "drained", "biasdebt"])
     assert.equal(s.register("m", consumer(`c-${key}`, { key })).reason, "CONSUMER_MALFORMED", key);
-  assert.equal(s.consumers().length, SCHEDULER_ORDER.length - LATER.length, "only the module's own consumers");
+  assert.equal(s.consumers().length, SCHEDULER_ORDER.length - LATER.length - 3, "only the module's own consumers (the daily three's owners absent)");
 });
 
 test("R8: a consumer R5 does not name is appended in the order the modules register; it inherits R1–R4", async () => {
@@ -150,7 +151,7 @@ test("R13: with SCHED_PROBE unset or unparsable the registry is exactly R5's con
     const r = await s.onAlarm(NOW);
     await s.arm(NOW);
     assert.deepEqual(r.probes, []);
-    assert.equal(s.registry(await s.probeLog()).length, SCHEDULER_ORDER.length - LATER.length);
+    assert.equal(s.registry(await s.probeLog()).length, SCHEDULER_ORDER.length - LATER.length - 3);
     assert.deepEqual(st.log.filter(([m, k]) => m === "put" || k === "sched_probe" && m !== "get"), [], JSON.stringify(env));
     assert.equal(st.kv.size, 0);
   }

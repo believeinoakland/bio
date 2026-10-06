@@ -98,16 +98,45 @@ export function owners(set = {}) {
       attestTick: async (now) => rec("networkNotices.attestTick", [now], v("working-on-attest", "tick", now,
         { ok: true, monthly: [], missed: [], closed: [], lapsed: [], openings: [] })),
     },
+    /* T33-80 (R21): stand-ins shaped as following R12, R13, duties R13, people R23, money-checks R6, answers R17 and
+       inquiry R57; answers and inquiry read `now` as instant text. */
+    following: {
+      followDue: (now) => rec("following.followDue", [now], v("follow", "due", now)),
+      followWake: (now) => rec("following.followWake", [now], v("follow", "wake", now)),
+      followTick: async (now, rank) => rec("following.followTick", [now, rank], v("follow", "tick", now,
+        { configured: true, at: now, epoch: null, read: 0, captured: 0, unscheduled: [], member_act_required: [], failed: [], paused: false })),
+    },
+    duties: { recordTransitions: (a) => rec("duties.recordTransitions", [a], v("duty-transitions", "tick", a,
+      { ok: true, as_of: a.asOf, duties_read: 0, recorded: 0, cursor: null, done: true })) },
+    people: { evaluateChecks: (a) => rec("people.evaluateChecks", [a], v("interest-checks", "tick", a, { ok: true, evaluated: 0, remaining: false })) },
+    moneyChecks: { runDetectors: (a) => rec("moneyChecks.runDetectors", [a], v("money-detectors", "tick", a,
+      { ok: true, written: 0, unchanged: 0, raised: 0, skipped: {}, persons_skipped: 0, detectors: 0, remaining: false, cursor: null })) },
+    answers: {
+      standingDue: (now) => rec("answers.standingDue", [now], v("standing-questions", "due", now, 0)),
+      standingWake: (now) => rec("answers.standingWake", [now], v("standing-questions", "wake", now)),
+      standingTick: async (now) => rec("answers.standingTick", [now], v("standing-questions", "tick", now, { at: now, ran: [], remaining: 0 })),
+    },
+    inquiry: {
+      datedWaitsDue: (now) => rec("inquiry.datedWaitsDue", [now], v("dated-waits", "due", now, false)),
+      datedWaitsWake: (now) => rec("inquiry.datedWaitsWake", [now], v("dated-waits", "wake", now)),
+      datedWaitsTick: (now) => rec("inquiry.datedWaitsTick", [now], v("dated-waits", "tick", now, { marked: [] })),
+    },
   };
   return { calls, o, of: Object.fromEntries(Object.entries(o).map(([k, x]) => [k, () => x])) };
 }
 
-/** A scheduler over a fresh storage and the owners above; `env` its bindings. */
-export function world(set = {}, env = null) {
-  const st = storage();
-  const w = owners(set);
-  const s = new Scheduler({ storage: st, env, owners: w.of });
-  return { s, st, calls: w.calls, o: w.o, set };
+/** The owners of R21's three daily consumers, whose due and wake this module holds: a fresh instance wants their
+ *  first pass at once, so a world includes them only when a test asks (`daily`), or names one of them in `set`. */
+export const DAILY_OWNERS = Object.freeze({ "duty-transitions": "duties", "interest-checks": "people", "money-detectors": "moneyChecks" });
+
+/** A scheduler over a fresh storage and the owners above; `env` its bindings; `zone` the group's time zone. */
+export function world(set = {}, env = null, { daily = false, zone = null, st = null } = {}) {
+  const store = st || storage();
+  const w = owners(set || {});
+  const of = { ...w.of };
+  for (const [name, owner] of Object.entries(DAILY_OWNERS)) if (!daily && !(set && name in set)) delete of[owner];
+  const s = new Scheduler({ storage: store, env, owners: of, zone: () => zone });
+  return { s, st: store, calls: w.calls, o: w.o, set };
 }
 
 /** A registered consumer answering what it is told, and counting its ticks. */
