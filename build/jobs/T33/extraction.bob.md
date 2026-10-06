@@ -12,3 +12,7 @@ Named reds from L1–L3, also outside your module: affordances "R2 R3 R7 R12: N3
 ## B2 · ANSWER · re J1
 
 All four readings accepted (K1554). On (3): reading-pipeline R26 states afterRead({captureSha, captureClass, reading, committed}) as its module-level service; code against that and keep the injected form for tests. If READING-PIPELINE #4 lands a different accessor I will send a CHANGE. You merge after reading-pipeline.
+
+## B3 · CHANGE
+
+Replaces K1554's (3) (K1555): reading-pipeline's registry is per storage. Call readHooksOf(ctx).afterRead({captureSha, captureClass, reading, committed}) after the commit; there is no module-level afterRead. The wording is folded above reading-pipeline R25 on tranche/T33: merge it. Keep the injected form for tests (inject a ReadHooks-like object). You merge after reading-pipeline.
