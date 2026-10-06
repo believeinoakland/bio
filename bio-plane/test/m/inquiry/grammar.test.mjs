@@ -173,10 +173,11 @@ test("R10 the title is the question's first non-empty line, folded, cut at a wor
   assert.equal(inquiryQuestionOf("---\nid: x\n---\n\n## Other\n\nno\n"), "");
 });
 
-test("R38 R4 the rows the module mints are inquiry-grammar's, read with their ids: C-54.1, C-33.13, C-33.22, C-33.23, C-32.7, C-32.8, and C-21.3 for a leg on an imported finding (N522)", () => {
+test("R38 R4 the rows the module mints are inquiry-grammar's, read with their ids: C-54.1, C-33.13, C-33.22, C-33.23, C-32.7, C-32.8, C-21.3 for a leg on an imported finding (N522), and the three C-2.8 rows of the new leg kinds (inquiry-grammar R16; K1608)", () => {
   assert.deepEqual(Object.fromEntries(Object.entries(INQUIRY_ROWS).map(([k, r]) => [k, r.check])), {
     LEAD_NOT_EVIDENCE: "C-54.1", NOT_INQUIRIES: "C-33.13", SELF_BASIS: "C-33.22", BASIS_CYCLE: "C-33.23",
-    MACHINE_CANNOT_DIVIDE: "C-32.7", MACHINE_CANNOT_GROUND: "C-32.8", IMPORTED_LEG_MALFORMED: "C-21.3" });
+    MACHINE_CANNOT_DIVIDE: "C-32.7", MACHINE_CANNOT_GROUND: "C-32.8", IMPORTED_LEG_MALFORMED: "C-21.3",
+    STANDARD_LEG_AXIS: "C-2.8", CALCULATION_LEG_MALFORMED: "C-2.8", OCCURRENCE_LEG_MALFORMED: "C-2.8" });
   for (const r of Object.values(INQUIRY_ROWS)) assert.ok(typeof r.translation === "string" && r.translation.length > 20);
   const f = []; assert.equal(leadLegFindings("basis[0]", { target: "LEAD-2026-0001-abc" }, f), true);
   assert.equal(f[0].check, "C-54.1");
@@ -186,7 +187,7 @@ test("R38 R4 the rows the module mints are inquiry-grammar's, read with their id
    nothing a refusal could name. Its test arrives with the element (case-authoring or publication). */
 test.todo("R31 a leg naming an opinion case element is refused by name (not yet met: MK-5; no module defines an opinion element or its id yet, K181)");
 
-test("R4 R5 R8 R9 R17 R38 the grammar face re-exports inquiry-grammar's and record-grammar's names as the same bindings, and reads inquiry-grammar's rows, never a copy", async () => {
+test("R4 R5 R8 R9 R38 the grammar face re-exports inquiry-grammar's and record-grammar's names as the same bindings, and reads inquiry-grammar's rows, never a copy", async () => {
   const face = await import("../../../src/inquiry/index.mjs");
   const IG = await import("../../../src/inquiry-grammar/index.mjs");
   const RG = await import("../../../src/record-grammar/index.mjs");

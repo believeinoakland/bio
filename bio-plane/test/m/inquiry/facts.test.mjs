@@ -14,7 +14,7 @@ const Q = "INQ-2026-0001-q", R = "INQ-2026-0002-r", E = "INQ-2026-0003-e", P = "
 const C1 = "INQ-2026-0005-a", C2 = "INQ-2026-0006-b";
 const facts = (w, id) => w.row(`SELECT inquiry_basis_count AS n, inquiry_superseded_by AS by FROM ${BUNDLE_FACTS} WHERE bundle_id=?`, id);
 
-test("R36 R12 R16 the leg count and the superseded-by index are held in this module's own table, one row per bundle, declared to purge; never on bundles", () => {
+test("R36 R12 the leg count and the superseded-by index are held in this module's own table, one row per bundle, declared to purge; never on bundles", () => {
   const w = world(); w.doc(A); w.doc(B);
   w.inquiry(Q, { legs: [{ target: A }, { target: B, role: "cuts_against" }] });
   w.inquiry(E);
@@ -150,7 +150,7 @@ test("R49 R12 N405 the migrated arm of surfaced_in: a migration replay's creatio
   w.st.sql.exec = real;
 });
 
-test("R11 R17 the entry grammar judged with the grammars registered with record-core, as promotion's gate judges it; one that throws is an error naming its module", async () => {
+test("R11 the entry grammar judged with the grammars registered with record-core, as promotion's gate judges it; one that throws is an error naming its module", async () => {
   const w = world();
   const good = inquiryMd("INQ-2026-0009-z");
   const bad = good.replace("surfaced_by: human", "surfaced_by: robot");

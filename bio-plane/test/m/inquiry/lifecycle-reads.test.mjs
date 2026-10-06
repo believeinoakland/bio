@@ -118,7 +118,7 @@ test("R1 R20 R21 R2 dispose moves inquiry@1 and a legacy surfaced problem alike:
   assert.equal(ni.reason, "NOT_INQUIRIES"); assert.deepEqual(ni.offenders, [A]);
 });
 
-test("R12 R16 a legacy focus document's basis is projected as an inquiry's: its legs are read back and rested on", () => {
+test("R12 a legacy focus document's basis is projected as an inquiry's: its legs are read back and rested on", () => {
   const w = world(); w.doc(A);
   const F = "FOCUS-2026-0713-legs";
   assert.equal(w.promote(F, focusMd(F, { refs: [A], legs: [A] })).ok, true);
@@ -310,7 +310,7 @@ test("R20 R21 R42 dismissing a question a published case rests on is refused CIT
   assert.deepEqual(w.fm(CASE).basis.map((l) => l.target), [A, X, MOVED]);
 });
 
-test("R23 R17 R20 a working dependent blocks division and dismissal alike, by name; deferring it raises the obligation on the working dependent", () => {
+test("R23 R20 a working dependent blocks division and dismissal alike, by name; deferring it raises the obligation on the working dependent", () => {
   const { w, calls } = obligationWorld();
   const div = w.k.divide({ target: BLOCKED, reason: "This was two questions and mixing them held both down.", viewer: "admin", author: V("rosa"),
     children: [{ id: KID_A, question: "Who held the delegation?", legs: [0] }, { id: KID_B, question: "Who signed the memo itself?", legs: [0] }] });
@@ -327,7 +327,7 @@ test("R23 R17 R20 a working dependent blocks division and dismissal alike, by na
   assert.deepEqual(calls.map((c) => [c.target, c.cause]), [[BLOCKED, "deferred"]]);
 });
 
-test("R23 R25 R17 R42 a question whose only dependent is a published case divides, and the division raises the obligation on that case, cause supersession", () => {
+test("R23 R25 R42 a question whose only dependent is a published case divides, and the division raises the obligation on that case, cause supersession", () => {
   const { w, calls } = obligationWorld();
   assert.deepEqual(w.k.restsOnLive(MOVED).frozen.map((l) => [l.bundle_id, l.ord]), [[CASE, 2]]);
   assert.deepEqual(w.k.restsOnLive(MOVED).confirmed, [], "a published dependent is frozen, not working");
@@ -350,7 +350,7 @@ test("R23 R25 R17 R42 a question whose only dependent is a published case divide
   assert.equal(d2.ok, true); assert.equal(d2.reevaluation, undefined); assert.match(d2.reevaluation_absent, /no module/);
 });
 
-test("R16 R42 a severed dependent still receives the obligation, marked severed; only the exact recorded withdrawal narrows", () => {
+test("R42 a severed dependent still receives the obligation, marked severed; only the exact recorded withdrawal narrows", () => {
   const w = world(); w.doc(X);
   const T = "INQ-2026-1700-target", DEP = "INQ-2026-1700-depends", SEV = "INQ-2026-1700-severed", ODD = "INQ-2026-1700-oddcase";
   w.inquiry(T, { legs: [{ target: X }] });

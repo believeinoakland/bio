@@ -1,40 +1,14 @@
 /* The reads over the projection: the basis and who rests on a target (R16), the live legs (R17), an inquiry's state
    history (R19), the exclusions naming a target (R18), each gated as R33 says; the recorded subject and member agent
-   (R43, R44). */
+   (R43, R44).
+   The earned registry's own tests (R13–R17 here before T33) moved with those requirements to `leg-earning`'s suite
+   (K617, K1505); what stays is this module's own share. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, inquiryMd, V } from "./fixture.mjs";
 import { INQUIRY_TABLES } from "../../../src/inquiry/index.mjs";
 
 const A = "INFO-2026-0001-a", B = "INFO-2026-0002-b";
-
-test("R16 basisFor answers the projected legs in order; restingOn every leg naming the target, confirmed or severed by the citer's record", () => {
-  const w = world(); w.doc(A); w.doc(B);
-  w.inquiry("INQ-2026-0001-q", { legs: [{ target: B }, { target: A, role: "cuts_against" }] });
-  w.inquiry("INQ-2026-0002-r", { legs: [{ target: A }], refs: [{ target: A, rel: "cites", status: "severed" }] });
-  assert.equal(w.k.basisFor(null).reason, "NO_ID");
-  assert.deepEqual(w.k.basisFor("INQ-2026-0001-q").legs.map((l) => [l.ord, l.target_id, l.role]), [[0, B, "supports"], [1, A, "cuts_against"]]);
-  assert.equal(w.k.restingOn(null).reason, "NO_ID");
-  assert.deepEqual(w.k.restingOn(A).dependents.map((d) => [d.bundle_id, d.ord, d.status]),
-    [["INQ-2026-0001-q", 1, "confirmed"], ["INQ-2026-0002-r", 0, "severed"]]);
-});
-
-test("R17 restsOnLive: a divided citer skipped, a severed one severed, a case member's frozen, the rest confirmed", () => {
-  const caseMembers = new Set();
-  const w = world({ caseMembers }); w.doc(A);
-  const T = "INQ-2026-0009-t";
-  w.inquiry(T);
-  w.inquiry("INQ-2026-0001-q", { legs: [{ target: T }] });
-  w.inquiry("INQ-2026-0002-r", { legs: [{ target: T }], refs: [{ target: T, rel: "cites", status: "severed" }] });
-  w.inquiry("INQ-2026-0003-s", { legs: [{ target: T }] }); caseMembers.add("INQ-2026-0003-s");
-  w.inquiry("INQ-2026-0004-d", { legs: [{ target: T }] });
-  w.st.sql.exec(`UPDATE bundles SET current_state='divided' WHERE bundle_id='INQ-2026-0004-d'`);
-  const r = w.k.restsOnLive(T);
-  assert.deepEqual(r.confirmed.map((l) => l.bundle_id), ["INQ-2026-0001-q"]);
-  assert.deepEqual(r.severed.map((l) => l.bundle_id), ["INQ-2026-0002-r"]);
-  assert.deepEqual(r.frozen.map((l) => l.bundle_id), ["INQ-2026-0003-s"]);
-  assert.deepEqual(r.all.map((l) => l.bundle_id), ["INQ-2026-0001-q", "INQ-2026-0003-s"]);
-});
 
 test("R18 R33 exclusionsNaming answers the exclusions a viewer may see, each with its inquiry, edition, description, reason, author and date", () => {
   const w = world(); w.member("alice"); w.member("bob"); w.doc(A);
@@ -100,17 +74,6 @@ test("R12 R43 R44 subjectEntityOf and memberUserAgent: what the inquiry records,
   assert.equal(w.k.memberUserAgent("INQ-2026-0001-q"), "Mozilla/5.0 test");
   assert.equal(w.k.memberUserAgent("INQ-2026-0002-r"), null);
   assert.equal(w.k.memberUserAgent("INQ-2026-0099-x"), null);
-});
-
-test("R16 basisFor with a limit reads at most that many legs in SQL, the first by ord, and says it was cut", () => {
-  const w = world(); w.doc(A);
-  w.inquiry("INQ-2026-0001-q", { legs: Array.from({ length: 5 }, () => ({ target: A })) });
-  const cut = w.k.basisFor("INQ-2026-0001-q", { limit: 3 });
-  assert.deepEqual([cut.legs.map((l) => l.ord), cut.limit, cut.truncated], [[0, 1, 2], 3, true]);
-  const whole = w.k.basisFor("INQ-2026-0001-q", { limit: 5 });
-  assert.deepEqual([whole.legs.length, whole.truncated], [5, false]);
-  assert.equal(w.k.basisFor("INQ-2026-0001-q").legs.length, 5);
-  assert.equal(w.k.basisFor("INQ-2026-0001-q").truncated, undefined, "unbounded, the answer is unchanged");
 });
 
 test("R44 R36 the member-browser agent is recorded at the creation from the control plane's stamp, never by a revision; a division's children carry it", () => {
