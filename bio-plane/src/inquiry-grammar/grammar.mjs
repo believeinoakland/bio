@@ -16,13 +16,15 @@
  *     `legHasAuthoredExtent`, `CONTENT_ID_RE`, `CONTENT_EXTENT_DOCUMENT_ONLY`; its R48: the catalogue's copy, unchanged);
  *   - `text-chain`: the extent kinds the repair sentence lists (`CONTENT_EXTENT_KINDS`, its R92);
  *   - `connections`: `themeLegFindings` (C-81.1, its R46), asked of each leg before any other complaint about it;
- *   - `observation-log`: `LEAD_ID_RE`, a lead id's shape (its R14).
+ *   - `observation-log`: `LEAD_ID_RE`, a lead id's shape (its R14);
+ *   - `civil-time`: `isCalendarDate`, whether a `YYYY-MM-DD` names a real day (its R6; R3 and the hunch's date, T33-43).
  *
  * Pure (R9): nothing here reads or writes the record, the clock or the network; every function never throws on a
  * document it is handed, and the facts a check needs (the published and earned registries) are handed to it. */
 
 import { BUNDLE_ID_RE, ISO_TS_RE, OBJECT_TYPES, normalizeType, isMachineIdentity, BASIS_ROLES, BASIS_GRADES, GRADE_AXES,
-  TESTIMONY_GRADE, GRADE_SOURCES, EARNED_GRADE_SOURCES } from "../record-grammar/index.mjs";
+  TESTIMONY_GRADE, GRADE_SOURCES, EARNED_GRADE_SOURCES, idPattern } from "../record-grammar/index.mjs";
+import { isCalendarDate } from "../civil-time/index.mjs";
 import { checkContentExtent, legExtent, legHasAuthoredExtent, CONTENT_ID_RE, CONTENT_EXTENT_DOCUMENT_ONLY }
   from "../content/extent-core.mjs";
 import { CONTENT_EXTENT_KINDS } from "../textchain.mjs";
@@ -39,10 +41,10 @@ function f(check, severity, message, repairs, code) {
   return out;
 }
 
-/* The subject registry's own key shape: record-core's `allocId("ENT", year)`
-   yields ENT-<4-digit year>-<4-digit sequence>, with no slug (unlike a bundle
-   id). Shape only — see (a) above. */
-const ENTITY_ID_RE = /^ENT-\d{4}-\d{4}$/;
+/* The subject registry's own key shape, with no slug (unlike a bundle id). Shape only. R12 (S0-4, T33-43): it is
+   record-grammar's `ID_TABLE` form for `ENT` (sequential: a 4-digit year and a counter of four or more digits), read
+   from there and never copied, so `ENT-2026-10000` is a key and `ENT-2026-999` is not. */
+const ENTITY_ID_RE = idPattern('ENT');
 
 /** REC-16: WHAT A `supersedes` EDGE MUST CARRY.
  *
@@ -164,11 +166,16 @@ export function checkRecheckCoverage(ctx, findings) {
       findings.push(f('C-15.1', 'error', `recheck_triggers[${i}] lacks the dual-audience {text, description} shape`));
     } else if (t.date !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(String(t.date))) {
       findings.push(f('C-15.1', 'error', `recheck_triggers[${i}].date '${t.date}' is not YYYY-MM-DD`));
+    } else if (t.date !== undefined && !isCalendarDate(String(t.date))) {
+      /* R3 (T33-43, §7 item 6): shaped as a date and naming no day of the calendar (`2026-02-31`, `2026-13-01`), as
+         civil-time judges it. Its own sentence, so the shape's sentence above stays the catalogue's. */
+      findings.push(f('C-15.1', 'error', `recheck_triggers[${i}].date '${t.date}' is not a calendar date (YYYY-MM-DD)`));
     }
   }
 }
 
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+/* C-6 (T33-43): a date is a calendar date as civil-time judges it (its R6), never a shape alone. */
+const isDate = (v) => typeof v === 'string' && isCalendarDate(v);
 
 /* C-2.8, renamed from checkFocusExtension by REC-10. Keeps surfaced_by and
    disposition_reason exactly as the focus contract had them; REC-11 adds the
@@ -578,6 +585,8 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
   /* R11 (N522): a references[] entry naming an imported finding reference is refused, whatever the legs; such a leg's
      target is not a reference, so C-6.3 never asks it. Raised before the legs, so it holds for an inquiry with none. */
   importedReferenceFindings(fm, findings);
+  /* R15 (T33-43): the same for a duty occurrence, which is not a reference either. */
+  occurrenceReferenceFindings(fm, findings);
   if (legs === undefined || legs === null) { checkGrounds(fm, [], findings); return; }
   if (!Array.isArray(legs)) {
     findings.push(f('C-2.8', 'error', `basis is not an array`));
@@ -601,7 +610,12 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
        note and grounds are asked as of any leg. The grade, axis, source, hunch, testimony, earned, inherited and
        extent arms stay silent: every field they judge is already one C-21.3 departure on such a leg, and a second
        complaint about one broken field helps nobody. */
-    if (importedLegFindings(`basis[${i}]`, leg, findings)) {
+    /* R14, R15 (T33-43): a leg on a calculation or on a duty occurrence is judged by its own arm in the same place and
+       on the same terms: its grades are derived (strength, K1447), so every field the grade and extent arms judge is
+       already one departure here. Neither is a reference (K1601), so C-6.3 asks neither. */
+    const imported = importedLegFindings(`basis[${i}]`, leg, findings);
+    const calculation = !imported && calculationLegFindings(`basis[${i}]`, leg, findings);
+    if (imported || calculation || occurrenceLegFindings(`basis[${i}]`, leg, findings)) {
       if (!BASIS_ROLES.includes(leg.role)) {
         findings.push(f('C-2.8', 'error', `basis[${i}].role '${leg.role}' is not one of: ${BASIS_ROLES.join(', ')}`));
       }
@@ -621,7 +635,9 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
       findings.push(f('C-2.8', 'error', `basis[${i}].target '${String(t).slice(0, 40)}' is not a canonical record id`));
     } else {
       const tt = targetType = normalizeType(OBJECT_TYPES[t.split('-')[0]]);
-      if (tt !== 'information' && tt !== 'inquiry') {
+      /* R13 (K1447 (iii), T33-43): a held standard is a leg target, referenced like an information target and read
+         as one by every other arm; its axis is judged below. */
+      if (tt !== 'information' && tt !== 'inquiry' && tt !== 'standard') {
         findings.push(f('C-2.8', 'error', `basis[${i}].target '${t}' is a ${tt}: a leg rests on information or on another inquiry, nothing else`));
       } else if (!refTargets.has(t)) {
         /* C-6.3 (the arm that replaced elevated_into): refs and inquiry_basis
@@ -643,6 +659,10 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
     if (leg.grade_source !== undefined && leg.grade_source !== null && !GRADE_SOURCES.includes(leg.grade_source)) {
       findings.push(f('C-2.8', 'error', `basis[${i}].grade_source '${leg.grade_source}' is not one of: ${GRADE_SOURCES.join(', ')}`));
     }
+    /* R13: a standard's grade is the capture grade its captured text earns, and nothing else. A connection or
+       testimony axis, or a hunch, is one departure, refused by name; the hunch, testimony, earned and inherited arms
+       then stay silent on the leg (a second complaint about one broken field helps nobody). */
+    const standardAxis = targetType === 'standard' && standardLegFindings(`basis[${i}]`, leg, findings);
     if (graded) {
       if (!GRADE_AXES.includes(leg.grade_axis)) {
         /* MK-2: the axes are LISTED from the vocabulary rather than typed as a
@@ -717,17 +737,17 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
        do — claim more than it can support — was a member typing `A` beside a
        document, against the landed doctrine that grade A is not reachable at
        all here (CAPTURE-FIDELITY.md; index.mjs's own capture note). */
-    if (leg.grade_axis === 'capture' && graded
+    if (leg.grade_axis === 'capture' && graded && !standardAxis
         && (leg.grade_source === 'testimony' || leg.grade_source === 'hunch')) {
       findings.push(f('C-2.8', 'error', `basis[${i}] states a capture-axis grade with grade_source '${leg.grade_source}': a capture grade says how the BYTES REACHED US, which is a fact this record holds about its own machinery and not one a member can assert. ${leg.grade_source === 'testimony' ? 'Testimony is a member\'s account of a connection' : 'A hunch is a member\'s provisional connection'}, and neither is an account of a fetch`,
         ['use grade_source: capture — the capture axis is EARNED from the capture record, and op=earnedbasis says what it earns',
          'or move this grade onto the connection axis, where testimony and hunches belong']));
     }
-    if (leg.grade_source === 'hunch') {
+    if (leg.grade_source === 'hunch' && !standardAxis) {
       if (typeof leg.author !== 'string' || leg.author.trim() === '') {
         findings.push(f('C-2.8', 'error', `basis[${i}] is a hunch with no author: a hunch is declared bias and carries the name of the member declaring it (DEC-15)`));
       }
-      if (!DATE_RE.test(String(leg.date ?? ''))) {
+      if (!isDate(String(leg.date ?? ''))) {
         findings.push(f('C-2.8', 'error', `basis[${i}] is a hunch with no date: a hunch is temporary by construction and carries the date it was declared, YYYY-MM-DD (DEC-15)`));
       }
     }
@@ -736,7 +756,7 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
        complaint about one broken leg helps nobody. The rule is unchanged: the
        letter is TESTIMONY_GRADE on every axis a testimony can sit on. */
     if (leg.grade_source === 'testimony' && graded && leg.grade !== TESTIMONY_GRADE
-        && leg.grade_axis !== 'testimony') {
+        && leg.grade_axis !== 'testimony' && !standardAxis) {
       findings.push(f('C-2.8', 'error', `basis[${i}] states testimony at grade ${leg.grade}: a member's testimony is grade ${TESTIMONY_GRADE} at no other value — a hunch is the only authored grade permitted above ${TESTIMONY_GRADE} (DEC-15)`));
     }
     /* REC-18, the OTHER half of the same rule and it is what makes "always D"
@@ -767,6 +787,7 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
     /* MK-2: BEFORE checkEarnedLeg, so a capture letter on an authored
        observation is refused BY NAME as what it is, rather than as a generic
        undetermined capture — and checkEarnedLeg stays silent on that one case. */
+    if (standardAxis) continue;
     checkTestimonyLeg(leg, i, graded, targetType, earnedRegistry, findings);
     checkEarnedLeg(leg, i, graded, targetType, earnedRegistry, findings);
     checkInheritedLeg(leg, i, graded, publishedRegistry, findings);
@@ -1401,5 +1422,162 @@ function importedReferenceFindings(fm, findings) {
     findings.push(importedRefusal(INQUIRY_GRAMMAR_CHECKS.IMPORTED_LEG_MALFORMED.check,
       `references[${i}].target names another group's finding (${r.target.trim()}): a leg on it is not a reference, so references[] does not list it`,
       [`remove references[${i}]; the basis leg alone names that finding`]));
+  });
+}
+
+
+/* =====================================================================
+ * T33-43 (K1447; Choices 16) — THREE MORE THINGS A LEG MAY REST ON.
+ *
+ * A HELD STANDARD (R13). A leg may cite a standard the group holds, as it cites a document: the standard's captured
+ * text is what it rests on, so its grade is the capture grade that text earns (`leg-earning` R8, through the earned
+ * registry handed in) and nothing a member asserts. Whether the standard holds the portion the leg names is
+ * `inquiry`'s check, which reads the record; here only the portion path's form is asked.
+ *
+ * A CALCULATION (R14) and A DUTY OCCURRENCE (R15). Both are DERIVED: a calculation's grade is its weakest input's
+ * capture (each capped by its derivation), an occurrence's is its source text's and its trigger's attestation
+ * (`strength`, K1447 (i), (ii)). So a leg on either names it and states no grade, axis or source of its own, and no
+ * part: a member's grade there would claim what the record derives. Neither is listed in `references[]` (K1601): a
+ * calculation's id names a row, not a bundle (record-grammar R3), and record-grammar's references arm refuses it there
+ * as it refuses any id that is not a bundle's; the occurrence is not a thing the record holds a row for until it is
+ * read, so it is named by a reference of its own, `occurrence:<DUT id>/<key>`, on R11's pattern, and a `references[]`
+ * entry naming one is refused here. Whether the occurrence exists is `inquiry`'s check, reading `duties`. An action is
+ * never a leg target (D113).
+ * ===================================================================== */
+
+/* standards' portion path (its R18): a path within the instrument, at most 200 characters. */
+const PORTION_MAX = 200;
+
+/** R13: a leg on a held standard. A `target_portion` that is not a portion path is one C-2.8 error. A `connection` or
+ *  `testimony` axis, or a `hunch` source, is one C-2.8 error STANDARD_LEG_AXIS naming the leg, and the answer is true
+ *  (the caller keeps its grade arms silent on that leg); otherwise false. Pure; never throws. */
+function standardLegFindings(label, leg, findings) {
+  const p = leg.target_portion;
+  if (carries(p) && (typeof p !== 'string' || p.trim() === '' || p.length > PORTION_MAX)) {
+    findings.push(f('C-2.8', 'error', `${label}.target_portion '${String(p).slice(0, 40)}' is not a portion path: it names a section within the standard's instrument, as text of at most ${PORTION_MAX} characters`,
+      [`name the portion's path on ${label}`, 'or drop target_portion — the leg then rests on the whole standard']));
+  }
+  const wrong = [];
+  if (leg.grade_axis === 'connection' || leg.grade_axis === 'testimony') wrong.push(`a ${leg.grade_axis} axis`);
+  if (leg.grade_source === 'hunch') wrong.push('a hunch');
+  if (!wrong.length) return false;
+  findings.push(standardLegRefusal(`${label} rests on the standard ${leg.target} and states ${wrong.join(' and ')}: a standard is law the group holds in captured text, so the only grade a leg on it carries is the capture grade that text earns. Whether the standard bears on this question is the inquiry's own argument, not a grade`,
+    [`grade ${label} on the capture axis with grade_source: capture — op=earnedbasis answers what the standard's text earns`,
+     `or state no grade on ${label} — the leg stays in the basis, present and not yet load-bearing`]));
+  return true;
+}
+
+/** R16: the one site STANDARD_LEG_AXIS is minted. */
+function standardLegRefusal(message, repairs) {
+  /* The family helper, by name: DEC-49's guard judges `refusal("CODE"` at the site. */
+  const refusal = (code) => f(INQUIRY_GRAMMAR_CHECKS[code].check, 'error', message, repairs, code);
+  /* DEC-49 REGION is-standard-leg-axis */
+  return refusal("STANDARD_LEG_AXIS");
+  /* END DEC-49 REGION is-standard-leg-axis */
+}
+
+/* The fields a derived leg (R14, R15) states none of, in the order a departure is named: its grade, then its part. */
+const DERIVED_LEG_GRADE = ['grade', 'grade_axis', 'grade_source'];
+
+/** R14, R15: one departure each for a grade field, a content id, an extent and an extent capture on a derived leg. */
+function derivedLegDepartures(label, l, what, why, refusal) {
+  for (const field of DERIVED_LEG_GRADE) {
+    if (carries(l[field])) {
+      refusal(`${label}.${field} is set on a leg on ${what}: ${why}, so the leg states none of its own`,
+        [`remove ${field} from ${label}`]);
+    }
+  }
+  if (carries(l.content_id)) {
+    refusal(`${label}.content_id is set on a leg on ${what}: the leg names it whole, and the parts it reads are its own`,
+      [`remove content_id from ${label}`]);
+  }
+  if (legHasAuthoredExtent(l)) {
+    refusal(`${label} names an extent on a leg on ${what}: the leg names it whole, and the parts it reads are its own`,
+      [`remove the extent fields from ${label}`]);
+  }
+  if (carries(l.extent_capture)) {
+    refusal(`${label}.extent_capture is set on a leg on ${what}: no capture holds it`,
+      [`remove extent_capture from ${label}`]);
+  }
+}
+
+/** R14: exactly a calculation's id, `record-grammar`'s `ID_TABLE` form for `CALC`. */
+export const CALCULATION_REF_RE = idPattern('CALC');
+
+/** R14: a leg whose target is a calculation's id gains one C-2.8 error CALCULATION_LEG_MALFORMED per departure (a
+ *  grade, axis or source; a content id, extent or extent capture), naming the field, and the answer is true; any other
+ *  leg (a non-object read as an empty one) gains nothing and the answer is false. Pure; never throws. */
+export function calculationLegFindings(label, leg, findings) {
+  const l = leg && typeof leg === 'object' ? leg : {};
+  if (typeof l.target !== 'string' || !CALCULATION_REF_RE.test(l.target)) return false;
+  derivedLegDepartures(label, l, `the calculation ${l.target}`,
+    'its grades are derived from the inputs it reads, the weakest input\'s capture capped by its derivation',
+    (message, repairs) => findings.push(calculationLegRefusal(message, repairs)));
+  return true;
+}
+
+/** R16: the one site CALCULATION_LEG_MALFORMED is minted. */
+function calculationLegRefusal(message, repairs) {
+  /* The family helper, by name: DEC-49's guard judges `refusal("CODE"` at the site. */
+  const refusal = (code) => f(INQUIRY_GRAMMAR_CHECKS[code].check, 'error', message, repairs, code);
+  /* DEC-49 REGION is-calculation-leg-form */
+  return refusal("CALCULATION_LEG_MALFORMED");
+  /* END DEC-49 REGION is-calculation-leg-form */
+}
+
+const DUTY_CORE = idPattern('DUT').source.slice(1, -1);
+/* duties' occurrence key (its R9): `OCC-` and 32 lowercase hexadecimal digits, deterministic from the duty, its version
+   and its trigger instance. */
+const OCCURRENCE_KEY = 'OCC-[0-9a-f]{32}';
+
+/** R15: exactly `occurrence:<DUT id>/<key>`; capture 1 is the duty, the last capture the key. */
+export const OCCURRENCE_REF_RE = new RegExp(`^occurrence:(${DUTY_CORE})/(${OCCURRENCE_KEY})$`);
+
+/** R15: `{duty, key}` for an occurrence ref, else null. Never throws. */
+export function parseOccurrenceRef(s) {
+  if (typeof s !== 'string') return null;
+  const m = OCCURRENCE_REF_RE.exec(s);
+  return m ? { duty: m[1], key: m[2] } : null;
+}
+
+/** R15: the ref spelled from its two parts, or null when they would not spell one OCCURRENCE_REF_RE matches. Never
+ *  throws. */
+export function occurrenceRef(duty, key) {
+  if (typeof duty !== 'string' || typeof key !== 'string') return null;
+  const s = `occurrence:${duty}/${key}`;
+  return OCCURRENCE_REF_RE.test(s) ? s : null;
+}
+
+const isOccurrenceRef = (v) => typeof v === 'string' && OCCURRENCE_REF_RE.test(v.trim());
+
+/** R15: a leg whose target is an occurrence ref (read trimmed, as a lead or an imported ref is) gains one C-2.8 error
+ *  OCCURRENCE_LEG_MALFORMED per departure (a grade, axis or source; a content id, extent or extent capture), naming the
+ *  field, and the answer is true; any other leg gains nothing and the answer is false. A `references[]` entry naming
+ *  one is refused by `checkInquiryBasis`. Pure; never throws. */
+export function occurrenceLegFindings(label, leg, findings) {
+  const l = leg && typeof leg === 'object' ? leg : {};
+  if (!isOccurrenceRef(l.target)) return false;
+  derivedLegDepartures(label, l, `an occurrence of a duty (${l.target.trim()})`,
+    'what it rests on is derived from the duty\'s source in force, its trigger date, its due date and the level searched',
+    (message, repairs) => findings.push(occurrenceLegRefusal(message, repairs)));
+  return true;
+}
+
+/** R16: the one site OCCURRENCE_LEG_MALFORMED is minted, for the leg arm and the references arm alike. */
+function occurrenceLegRefusal(message, repairs) {
+  /* The family helper, by name: DEC-49's guard judges `refusal("CODE"` at the site. */
+  const refusal = (code) => f(INQUIRY_GRAMMAR_CHECKS[code].check, 'error', message, repairs, code);
+  /* DEC-49 REGION is-occurrence-leg-form */
+  return refusal("OCCURRENCE_LEG_MALFORMED");
+  /* END DEC-49 REGION is-occurrence-leg-form */
+}
+
+/** R15: each `references[]` entry naming an occurrence ref is one C-2.8 error: the leg alone names the occurrence. */
+function occurrenceReferenceFindings(fm, findings) {
+  const refs = Array.isArray(fm?.references) ? fm.references : [];
+  refs.forEach((r, i) => {
+    if (!r || typeof r !== 'object' || !isOccurrenceRef(r.target)) return;
+    findings.push(occurrenceLegRefusal(`references[${i}].target names an occurrence of a duty (${r.target.trim()}): a leg on it is not a reference, so references[] does not list it`,
+      [`remove references[${i}]; the basis leg alone names that occurrence`]));
   });
 }

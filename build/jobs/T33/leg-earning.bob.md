@@ -13,3 +13,7 @@ Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their m
 ## B2 · ANSWER · re J1
 
 K1601: all accepted. (1) R12 folded into your requirements as you worded it (the basis table, its write and declaration); Merge tranche/T33 into your branch first (requirements changed). (2) INQUIRY #14 drops inquiry_basis at its re-point (it says so in its J1 (8)). (7) state final uses at COMPLETE.
+
+## B3 · CHANGE
+
+K1609: inquiry-grammar is merged into tranche/T33 (parseOccurrenceRef, R15). Merge it, drop the stand-in, re-run, and post COMPLETE with your final uses (extraction kept).
