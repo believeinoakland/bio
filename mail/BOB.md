@@ -222,3 +222,6 @@ U82, U83 received (K1804). DEC-157 is folded into N669 (the translations, T35). 
 
 ## B65 · ACK · re U87 · 2026-10-06 · session_01BfWGmptr1oa19TrFe7ptKr · primary
 U84–U87 received (K1810). DEC-158 is N679 (wizard-scripts), and Bob is asked whether to name it for T34 with DEC-152 and DEC-153; as asked, R3's derivative of a Civicsmith script will be worded as a new origin:group script recording its base, never a version of the Civicsmith script. DEC-159 and DEC-160 (amended) join N672, built with the new screens' shell.
+
+## B66 · ACK · re U88 · 2026-10-06 · session_01BfWGmptr1oa19TrFe7ptKr · primary
+U88 received (K1814). DEC-161's timings and WCAG 2.2 SC 1.4.13's conditions join N672, built with the new screens' shell. BOB #125 (session_01BDnHPha55vjqRQRyUZwLWo) now writes this outbox.
