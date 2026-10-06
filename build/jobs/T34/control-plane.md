@@ -57,3 +57,7 @@ T34-60 (with T34-90/T34-91's layer-11 share and accepted red 9) complete on `job
 **Tests and checks.** control-plane: 182 tests, 181 pass, 1 fail (`totality.test.mjs`:13, accepted red 12). plane (user of this module; compact JSON and the doors): 111 tests, 107 pass, 4 fail, the same four that fail on `tranche/T34` without my branch. No layer tests (manifest). format 0 failures; architecture 0 failures; coverage 41/41, 0 failures; ownership 15 files, 0 failures.
 
 Size (session_018eayTV8uSbTs4embGXypYg): test runs 14, module lines 3903
+
+## J5 · REPORT
+
+B12: `courtnotice`'s stale is not this module's. op-declarations declares it in its `plainread` kind (`index.mjs`:119, R22: "nothing stamped"), which has **no `NEEDS` row by design** (`needs: undefined`), so the door's table carries it as not gated (`gated: hasOwn(NEEDS, op)`, the reading affordances R12's `unaccounted` asks for), while affordances lists it in `NON_ACTS` (`affordances.mjs`:2202), which `unaccounted` holds to gated ops only. It is the one `NON_ACTS` entry of 528 with no `NEEDS` row. Either affordances drops `courtnotice` from `NON_ACTS` (an ungated read needs no act) or op-declarations gives it a `NEEDS` row of `null` as every other session read has (R22 names none for it). Yours to route.
