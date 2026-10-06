@@ -15,7 +15,8 @@ const hash = (lines) => createHash("sha256").update(lines.join("\n")).digest("he
 
 /* ---------------------------------------------------------------- R22 */
 
-/* The requirements' table, word for word (`build/requirements/case-disclosures.md`, R22). */
+/* The requirements' table, word for word (`build/requirements/case-disclosures.md`, R22), C-120.8 as DEC-149 re-words it
+   (T34-87). */
 const ROWS = [
   ["TENSION_NOT_DISCLOSED", "C-120.1", "tensionsJudged", "A finding in this case rests on something the record holds in unresolved conflict, and a case may be published with it only if the conflict is disclosed. Each one is named. One in conflict with a record you cannot see is named by its finding, and the published case will highlight it without naming that record. Disclose it, or resolve it first. Nothing was published."],
   ["DISCLOSURE_NOT_STANDING", "C-120.2", "tensionsJudged", "One of the conflicts disclosed is not an unresolved conflict on this case's findings: it may have been resolved since. Read the list again. Nothing was published."],
@@ -24,7 +25,7 @@ const ROWS = [
   ["SELF_ATTESTED_NO_REASON", "C-120.5", "selfAttestedJudged", "Publishing a document as self-attested only says why. Give the reason. Nothing was written."],
   ["SELF_ATTESTATION_NOT_STANDING", "C-120.6", "selfAttestedJudged", "A document acknowledged as self-attested only is either co-attested already or not one this case rests on, so it needs no acknowledgement. Remove it from the list. Nothing was written."],
   ["UNCLEARED_HUNCH", "C-120.7", "hunchDebt", "A finding in this case rests on a hunch. A hunch is temporary declared bias, and it is the one bias that must be cleared before publication: the case must still hold with the hunch removed. Give each leg a grade the record earns, or take the hunch out of the basis, and publish again. Nothing was written."],
-  ["RELIED_ON_NOT_PRESENTABLE", "C-120.8", "materialsJudged", "A finding this case relies on rests on material this copy does not hold whole, and everything a case relies on travels with it in full. Find a presentable copy, stop relying on the material, or make the finding supporting. Nothing was written."],
+  ["RELIED_ON_NOT_PRESENTABLE", "C-120.8", "materialsJudged", "A finding this case relies on rests on material your group's Civicsmith does not hold whole, and everything a case relies on travels with it in full. Find a presentable copy, stop relying on the material, or make the finding supporting. Nothing was written."],
   ["ACCEPTED_WORK_NOT_IN_FORCE", "C-120.10", "acceptedWorkJudged", "A finding in this case rests on another group's finding, and this group's acceptance of that edition is not in force. Accept it again, or take the leg out. Nothing was written."],
   ["FLAG_NOT_DISCLOSED", "C-120.11", "flagsJudged", "Another group's work this case rests on carries an open flag, and a case may be published with it only if the flag is disclosed. Each one is named. Disclose it, or clear it first. Nothing was published."],
   ["FLAGS_UNDETERMINED", "C-120.12", "flagsJudged", "The flags on another group's work this case rests on could not be read completely, so what must be disclosed is not known. Try again. Nothing was published."],
@@ -297,13 +298,16 @@ const RENDERED = {
   "8708f2958a9f13f2c9d49825b7b401a89b8057e9d9a85128bc72612a47a31dfa": ["tensionBodyLines", [[]]],
   "69c79f41e94ef5e3d1e52e35cb912344feaed5350ded66be74bc0c7e293fbf5e": ["captureBodyLines", [CAPTURES, SOURCES]],
   "fe16ace5dca89d8bb3ea1dd6f7371ae334b08cdc1e964be0800d11d388ff9eb1": ["captureBodyLines", [[], []]],
-  "54051f5fdfe26a6d6017163cb0115033e67c6076a0d9855e96a0c18bbf8b4d6f": ["carriesBodyLines", [METHOD, MATERIALS, "test-group"]],
+  /* re-pinned by DEC-149 (T34-87): the supporting-material sentence names no copy */
+  "f933b18ccb8a667748916216e9ddf568d6c992685df268ff5fc77261fd29ac04": ["carriesBodyLines", [METHOD, MATERIALS, "test-group"]],
   "90eb0ce32c1afc3fa9af5d11f4c768f7ff59c62daac0562ff4516428000324cb": ["carriesBodyLines", [null, { rows: [] }, null]],
   /* re-pinned by N535: the first row's reason ends in its own full stop, which is no longer doubled */
   "ca07dd944ad664fbc7e30d31254e9c6b344aaedecbd8cf67071e9500e797ef17": ["acceptedBodyLines", [ACCEPTED]],
   "c4da3290d6ee7b150705bd817934413dbab78b4a750388db92bec2be569fb2e1": ["acceptedBodyLines", [{ rows: ACCEPTED.rows, flags: [] }]],
 };
 /* N535: the bytes case-authoring's renderer produced before the split, for the two sections that changed. */
+/* DEC-149: the bytes carriesBodyLines produced before T34-87, from the same rows. */
+const CARRIES_BEFORE_DEC149 = "54051f5fdfe26a6d6017163cb0115033e67c6076a0d9855e96a0c18bbf8b4d6f";
 const ACCEPTED_BEFORE_N535 = [["557eeb47abfb15756efe91a681364b912cc007dda9b7d40ec6b73286471a7145", ACCEPTED],
   ["ad9a96ebac55e2784f2d60cee6ad7bfb581b2cd94cc6f355d4a4507123420cc3", { rows: ACCEPTED.rows, flags: [] }]];
 
@@ -322,4 +326,41 @@ test("R13 (N535): acceptedBodyLines changed in one place only — with the doubl
     assert.equal(hash(lines.map((l) => l.replace("because: We recreated it. It was", "because: We recreated it.. It was"))), before);
     assert.notEqual(hash(lines), before, "negative control: the new bytes differ");
   }
+});
+
+/* ---------------------------------------------------------------- DEC-149 (T34-87) */
+
+const DEC149_OLD = /\b(this|the) (instance|copy|plane)\b/i;
+
+test("R6, R22 (DEC-149, T34-87): each member-facing string that named the group's Civicsmith \"this copy\" says \"your group's Civicsmith\" or needs no name — C-120.8's translation, RELIED_ON_NOT_PRESENTABLE's detail, and the case document's supporting-material sentence; and none of this module's member-facing text says \"this instance\", \"this copy\", \"this plane\" or \"the plane\" (negative control: the old wording matches)", () => {
+  /* C-120.8's translation (checks.mjs) */
+  assert.match(CASE_DISCLOSURE_CHECKS.RELIED_ON_NOT_PRESENTABLE.translation,
+    /^A finding this case relies on rests on material your group's Civicsmith does not hold whole, and everything /);
+  /* RELIED_ON_NOT_PRESENTABLE's detail, raised (index.mjs) */
+  const m = world(); m.member("alice"); m.doc(DOC, {}, { indexed: false }); m.finding(Q, [{ target: DOC }]);
+  const r = m.cd.materialsJudged(m.prepared([Q]), m.roles([Q]), V("alice")).refusals[0];
+  assert.match(r.detail, /^1 document\(s\) or observation\(s\) a load-bearing finding of this case rests on are not held whole by your group's Civicsmith \(/);
+  /* the case document's sentence (document.mjs, carriesBodyLines) */
+  const body = CD.carriesBodyLines(METHOD, MATERIALS, "test-group");
+  assert.ok(body.includes("Every document and observation this case's findings reach. One a load-bearing finding relies on travels "
+    + "whole with the case. One that only a supporting finding reaches, and that is not held whole, is listed with its fingerprint, "
+    + "origin and archived copy."));
+  /* the whole member-facing surface: rows, fixed sentences, refusals raised, every renderer's lines */
+  const said = [JSON.stringify(Object.values(CASE_DISCLOSURE_CHECKS).map((x) => x.translation)), JSON.stringify(r),
+                CD.SELF_ATTESTED_SENTENCE, CD.HIGHLIGHT_SENTENCE, CD.NOT_SHOWN_WORDS, CD.TENSIONS_DEPTH_STATED,
+                JSON.stringify(CD.TENSION_TEMPLATES), CD.FLAG_SENTENCE, CD.FLAGS_SAY,
+                ...Object.values(RENDERED).map(([fn, args]) => CD[fn](...args).join("\n")), ...ROWS_T.map(CD.tensionSentence)]
+    /* a capture's copy is a document's copy, not the group's Civicsmith (DEC-149's exclusion; document.mjs's
+       SELF_ATTESTED_SENTENCE), and so are an archived copy and a presentable one */
+    .join("\n").replace(/archived copy|presentable copy|the copy has not changed since capture/g, "");
+  assert.equal(DEC149_OLD.exec(said), null);
+  assert.match("material this copy does not hold whole", DEC149_OLD, "negative control");
+});
+
+test("R7 (DEC-149): carriesBodyLines changed in one sentence only — with \"that this copy does not hold whole\" put back, the section is byte for byte what it was before T34-87", () => {
+  const lines = CD.carriesBodyLines(METHOD, MATERIALS, "test-group");
+  const now = "and that is not held whole, is listed";
+  assert.equal(lines.filter((l) => l.includes(now)).length, 1, "the changed sentence, once");
+  assert.equal(hash(lines.map((l) => l.replace(now, "and that this copy does not hold whole, is listed"))), CARRIES_BEFORE_DEC149);
+  assert.notEqual(hash(lines), CARRIES_BEFORE_DEC149, "negative control: the new bytes differ");
 });
