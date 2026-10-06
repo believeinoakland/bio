@@ -145,7 +145,7 @@ Terms. An **op** is a name the instance answers. An **op spec** is `{classes, ma
 
 ### Invariants
 
-- **R6** (was `control-plane` R31) An op spec for every op any module serves, and no spec without a handler or a store route. A store-internal route, which the plane calls only from within itself and which is never a public op, is not served to a caller and has no spec: `monitoring`'s `monitorlook`, `capture`'s `doorbellrefused` (the Worker's count of a knock it refused before the store, `capture` R80; K1037) and `membership`'s `checkaddressees` (its R106, which `tasks` reads in-process; T34, R22). *(not yet met: T34)*
+- **R6** (was `control-plane` R31) An op spec for every op any module serves, and no spec without a handler or a store route. A store-internal route, which the plane calls only from within itself and which is never a public op, is not served to a caller and has no spec: `monitoring`'s `monitorlook`, `capture`'s `doorbellrefused` (the Worker's count of a knock it refused before the store, `capture` R80; K1037) `membership`'s `checkaddressees` (its R106, which `tasks` reads in-process; T34, R22) and `membership`'s `projectclaimowner` (called within `projectCreated`; K1864). *(not yet met: T34)*
 - **R7** No I/O, no store, no network, no clock; no place is named in this module's behaviour or outward text (`build/layers.md`, "No jurisdiction in the product").
 
 ### Satisfies

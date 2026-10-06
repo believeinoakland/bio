@@ -3,8 +3,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, inquiryMd, V } from "../inquiry/fixture.mjs";
-import { producers, reader, ofKind, sentences, snapshot } from "./fixture.mjs";
-import { WAIT_LOOK } from "../../../src/notice-producers/index.mjs";
+import { producers, reader, ofKind, sentences, snapshot, notHintFailures } from "./fixture.mjs";
+import { WAIT_LOOK, HINT_MARK } from "../../../src/notice-producers/index.mjs";
 
 const Q = "INQ-2026-0701-q", R = "INQ-2026-0702-r";
 const KIND = "inquiry-recheck-due";
@@ -92,4 +92,11 @@ test("R6: with no zone in inquiry's answer, the age is undetermined, never compu
   assert.equal(it.age.state, "undetermined");
   assert.equal(it.age.reason, "no_zone");
   assert.equal(it.due, "2026-10-10");
+});
+
+test("R11: a dated wait's to-do is no hint: it carries no \"Hint · machine work\" mark and never calls itself a hint or a signal", () => {
+  const { read } = setup();
+  const items = ofKind(read("alice", { now: "2026-10-11T00:00:00Z" }), KIND);
+  assert.equal(items.length, 1);
+  assert.deepEqual(notHintFailures(items[0], HINT_MARK), []);
 });

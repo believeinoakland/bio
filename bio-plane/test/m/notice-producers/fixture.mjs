@@ -49,6 +49,28 @@ export function texts(v, out = []) {
 }
 /** The member-facing sentences of an item: its summary, its detail and its options' labels. */
 export const sentences = (i) => [i.summary, i.detail, ...(i.options || []).map((o) => o.label)].filter((s) => typeof s === "string");
+/** R11 (DEC-131): what the machine raised is a hint, never a signal, in member text. */
+export const SIGNAL = /\bsignal(s|led|ling)?\b/i;
+export const HINT = /\bhints?\b/i;
+/** R11: every member-facing sentence of an R2 or R3 item marks it and calls it a hint; none says "signal". The summary
+ *  and detail carry the mark; the option's words, a button, call it a hint without repeating the mark (J1's reading). */
+export function hintFailures(i, mark) {
+  const bad = [];
+  if (i.mark !== mark) bad.push(`mark ${i.mark}`);
+  for (const s of [i.summary, i.detail]) if (typeof s !== "string" || !s.startsWith(mark)) bad.push(`unmarked: ${s}`);
+  for (const s of sentences(i)) {
+    if (!HINT.test(s)) bad.push(`not called a hint: ${s}`);
+    if (SIGNAL.test(s)) bad.push(`says signal: ${s}`);
+  }
+  return bad;
+}
+/** R11: an item of R4, R5 or R6 is no hint: no mark, and none of its sentences calls it one or carries the mark. */
+export function notHintFailures(i, mark) {
+  const bad = [];
+  if ("mark" in i) bad.push(`mark ${i.mark}`);
+  for (const s of sentences(i)) if (s.includes(mark) || HINT.test(s) || SIGNAL.test(s)) bad.push(s);
+  return bad;
+}
 /** R2, R3 (K1473, K1491): words a machine-noticed item never says of a person. */
 export const JUDGMENT = /\b(conflict|conflicted|suspicio\w*|corrupt\w*|violat\w*|breach\w*|wrongdoing|guilty)\b/i;
 
