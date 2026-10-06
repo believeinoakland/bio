@@ -37,3 +37,31 @@ B2 (K1674, op=ask): my readings. I am building on them now.
    - Refusals come in the owners' words: `NO_ACCOUNT` and the seal refusals from credentials. Without the binding it answers 503 `AGENT_WORKER_UNBOUND`, ai-runs' word. The ceiling is agent-worker's `askceiling`, so the plane does not check it.
 2. **"Or a presented ai grant."** `gatedOp` today gets no field saying a grant was presented. Reading: when control-plane hands `gatedOp` the grant's member (I code against `grantMember`, a `member:<id>` stamp; please confirm control-plane's name), the arm forwards the presented token as `grant` and mints none. Every other caller is refused 403 `ASK_NOT_A_MEMBER` before anything is read.
 3. **Not mine.** Who answers `askceiling`, `askcheck` and `askusage`, and in which namespace an ask's reads and its check land, is control-plane's and op-declarations' (their J1). The read log is answers' in-memory map on one object.
+
+## J3 · REPORT
+
+T33-90 and B2 are built on `job/T33/plane` (pushed), on K1683's and K1684's readings. All plane tests pass except one. I post COMPLETE after QUEUE #18 (T33-83) merges and I re-merge the tranche.
+
+**Waiting on one merge.** `t33.test.mjs` "R21 (queue R51; K1683)": op=queue must read the plane's `noticeProducers`. Today's queue code doesn't read that dep; queue's job builds it. This is the one red: plane 107 pass, 1 fail. Its direct half (`noticeItems` over the plane's instances, with no provider failing) passes.
+
+**Built:**
+- **R21:** the new modules composed, each on its first call with the instances it reads:
+  - credentials holds `ACCOUNT_SEAL_SECRET`; standards gets `keyedStore` (`{credentials, env, governor}`) and events.
+  - local-facts and conformance get instance-setup's office reads as ports, null until it answers them.
+  - money gets calculations' `bindingOf` port, `joinPromotion` and `migrate`; money-checks gets the scheduler's progressions.
+  - duties gets `factOf` (action-clocks' `factReader`; a closure list answers `profile_list`). people, explore, calculations (before reevaluation) and workbooks (`recompute` over `SHEET_WORKER`, otherwise NO_ENGINE) are built.
+  - leg-earning, hypotheses, answers (`ceilingRefusal` = ai-runs' `aiUseCheck`; `relations` = the projection; `screens`), case-tensions and following are built, all before the scheduler reaches them.
+  - notice-producers is handed to queue.
+  - Migrations for events, lines, standards, money, money-checks, duties, people, leg-earning and hypotheses run before retrieval's.
+  - The ops maps of all 14 modules are spread; leg-earning's map comes after inquiry's, so leg-earning's own `basis`, `restson` and `earnedbasis` answer those ops. retrieval gets `terms` (`standardsFor`; `holderAt` over a bundle's offices on its date).
+- **R22:** docprofile, then doctypes, legistar, roster, court and budget, then doctypes' `generic` last.
+- **R23:** the roster-reader source ("not read", N614) is registered. Publication's provider is held by case-tensions.
+- **R24:** 21 screens from legacy-ui's `SURFACES` and its call sites, each act declared in OPS. The release suite tests this (`screenFailures`).
+- **B2:** `op=ask` (`plane/ask.mjs`; RPC `Store.ask` on `bio`).
+- **Named reds cleared:** `notices.test.mjs:118–120`, `docket.test.mjs:41`, `store.test.mjs:68`.
+
+**Other modules:**
+1. Stale artifact: `bio-plane/dist/bio-plane.bundled.mjs`.
+2. `uses` for `modules.json` (architecture names them): answers, budget-doctypes, calculations, case-tensions, connection-grammar (test only), court-doctypes, docprofile, doctypes, duties, events, explore, following, hypotheses, leg-earning, legistar-reader, lines, money, money-checks, notice-producers, people, roster-reader, workbooks.
+3. people's staffing wrapper labels every registered source "read by <module>". The roster-reader source's own answer says "not read" (N614).
+4. answers holds `screens` but has no explain read yet (wizard-scripts R21 and affordances R41 are unbuilt).
