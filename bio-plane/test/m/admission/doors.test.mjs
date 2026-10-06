@@ -28,8 +28,10 @@ test("R17: websiteinvite and joinlinkinvite are public ops admitted with no cred
     assert.equal(r.url.searchParams.has("token"), false);
     assert.equal(r.url.searchParams.get("store"), store ?? null, "the namespace named stays as named (R3), whoever calls");
     /* the body's fields only: none survives in the address */
-    for (const k of ["key", "link", "cover"]) assert.equal(r.url.searchParams.has(k), false, `${op}: ${k} not read from the query`);
-    assert.equal(JSON.stringify([...r.url.searchParams]).includes(SECRET), false);
+    const own = op === "websiteinvite" ? ["key", "cover"] : ["link", "cover"];
+    assert.deepEqual([...A.BODY_ONLY_FIELDS[op]].sort(), own.sort(), op);
+    for (const k of own) assert.equal(r.url.searchParams.has(k), false, `${op}: ${k} not read from the query`);
+    assert.equal(JSON.stringify([...r.url.searchParams]).includes(op === "websiteinvite" ? SECRET : LINK), false);
   }
   /* no limit of admission's own: the daily cap is membership's; the hundredth call is admitted as the first */
   for (let i = 0; i < 100; i++) assert.equal((await gate(env, { op: "websiteinvite", token: K.confined })).public, true);
