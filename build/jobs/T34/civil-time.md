@@ -26,3 +26,7 @@
 - `format`: 126 modules, 125 requirements files; 0 failures. `architecture civil-time`: 14 product files, 31 relative imports; 0 failures. `coverage civil-time`: 29 of 29 live requirement ids named by a test; 0 failures. `ownership civil-time tranche/T34`: 6 files changed; 0 failures.
 
 Size (session_01P1fesUg99Ba4Qk6NUET8mr): test runs 9, module lines 1386
+
+## J1 · COMPLETE
+
+T34-3 applied (N565 offset cache per zone by the hour, exact at off-hour changes; N603 a governing correction counted whatever its status now, traced). M-X1a explore elapsed: chain 4136–4487 → 266–283 ms; dense 5170–5909 → 285–293 ms. civil-time 64/0; all 31 users 0 fail except scheduler R12 (inherited, K1708). format, architecture, coverage 29/29, ownership 6 files: 0 failures. Stales the plane bundle and case-checker program.mjs. action-clocks' governedView can go (T34-50). Record: build/jobs/T34/civil-time.md.
