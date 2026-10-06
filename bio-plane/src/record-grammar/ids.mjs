@@ -33,7 +33,7 @@
      a 10-year store at 10^7 ids a year (`measures-T33/assistant-substrate.md` §5). A counted suffix tells its reader
      how many were minted before; a tail tells nothing.
    The census of what was minted or validated at T33's opening is in this module's T33 job record. `MTI CHK MSR HYP DUT
-   CALC STQ` are reserved now (P8), so no later tranche needs a record-grammar job to admit them. */
+   CALC STQ` were reserved at T33 (P8), so no later tranche needs a record-grammar job to admit them. */
 const row = (prefix, owner, form = 'sequential') => Object.freeze({ prefix, owner, form });
 export const ID_TABLE = Object.freeze([
   /* R1's bundle prefixes, each with the module whose record it names. */
@@ -56,7 +56,10 @@ export const ID_TABLE = Object.freeze([
   row('PFA', 'people', 'opaque'), row('IDC', 'people', 'opaque'),
   /* Reserved now (P8), sequential. */
   row('MTI', 'people'), row('CHK', 'people'), row('MSR', 'money'), row('HYP', 'hypotheses'), row('DUT', 'duties'),
-  row('CALC', 'calculations'), row('STQ', 'answers'),
+  /* T34-1 (N570, K1576; DEC-36's withheld-as-absent): `CALC` is opaque, as `EVT` and `MNY` are. A sequential counter
+     told its reader how many calculations had been minted before it, withheld ones included, which is exactly what
+     withheld-as-absent forbids a reader to learn. */
+  row('CALC', 'calculations', 'opaque'), row('STQ', 'answers'),
 ]);
 
 const YEAR = '\\d{4}';

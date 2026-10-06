@@ -132,13 +132,13 @@ const TABLE = [
   ["EVT", "events", "opaque"], ["LIN", "lines", "opaque"], ["MNY", "money", "opaque"], ["PFA", "people", "opaque"],
   ["IDC", "people", "opaque"],
   ["MTI", "people"], ["CHK", "people"], ["MSR", "money"], ["HYP", "hypotheses"], ["DUT", "duties"],
-  ["CALC", "calculations"], ["STQ", "answers"],
+  ["CALC", "calculations", "opaque"], ["STQ", "answers"],
 ].map(([prefix, owner, form = "sequential"]) => ({ prefix, owner, form }));
 const SEQUENTIAL = TABLE.filter((e) => e.form === "sequential").map((e) => e.prefix);
 const OPAQUE = TABLE.filter((e) => e.form === "opaque").map((e) => e.prefix);
 const TAIL = "a1b2c3d4e5f6g7h8";
 
-test("R46 ID_TABLE: frozen, one {prefix, owner, form} per prefix, no prefix twice, holding exactly T33's census", () => {
+test("R46 ID_TABLE: frozen, one {prefix, owner, form} per prefix, no prefix twice, holding exactly T33's census with T34's CALC opaque", () => {
   assert.ok(Object.isFrozen(ID_TABLE));
   for (const e of ID_TABLE) {
     assert.ok(Object.isFrozen(e), e.prefix);
@@ -149,10 +149,12 @@ test("R46 ID_TABLE: frozen, one {prefix, owner, form} per prefix, no prefix twic
   }
   assert.equal(new Set(ID_TABLE.map((e) => e.prefix)).size, ID_TABLE.length);
   assert.deepEqual(ID_TABLE.map((e) => ({ ...e })), TABLE);
-  /* R1's prefixes sequential; ENT widened; the five new objects opaque; the reserved seven sequential, with STQ answers'. */
+  /* R1's prefixes sequential; ENT widened; the five new objects opaque, and since T34 CALC (N570); the other reserved six
+     sequential, with STQ answers'. */
   for (const p of PREFIXES) assert.equal(ID_TABLE.find((e) => e.prefix === p).form, "sequential", p);
-  assert.deepEqual(OPAQUE, ["EVT", "LIN", "MNY", "PFA", "IDC"]);
-  for (const p of ["MTI", "CHK", "MSR", "HYP", "DUT", "CALC", "STQ", "ENT"]) assert.ok(SEQUENTIAL.includes(p), p);
+  assert.deepEqual(OPAQUE, ["EVT", "LIN", "MNY", "PFA", "IDC", "CALC"]);
+  for (const p of ["MTI", "CHK", "MSR", "HYP", "DUT", "STQ", "ENT"]) assert.ok(SEQUENTIAL.includes(p), p);
+  assert.equal(ID_TABLE.find((e) => e.prefix === "CALC").owner, "calculations");
 });
 
 test("R46 every id valid before T33 stays valid; the 10,000th id of every sequential prefix is accepted; the controls refused", () => {
@@ -169,6 +171,9 @@ test("R46 every id valid before T33 stays valid; the 10,000th id of every sequen
   }
   assert.ok(!idPattern("ENT").test("ENT-2026-999"));
   assert.ok(idPattern("ENT").test("ENT-2026-10000"));
+  /* T34 (N570): idPattern('CALC') matches an opaque CALC- core and refuses a sequential one. */
+  assert.ok(idPattern("CALC").test(`CALC-2026-${TAIL}`));
+  for (const seq of ["CALC-2026-0001", "CALC-2026-9999", "CALC-2026-10000"]) assert.ok(!idPattern("CALC").test(seq), seq);
   for (const p of OPAQUE) {
     const re = idPattern(p);
     assert.ok(re.test(`${p}-2026-${TAIL}`) && re.test(`${p}-2026-0000000000000000`) && re.test(`${p}-2026-zzzzzzzzzzzzzzzz`), p);
