@@ -14,7 +14,7 @@
 
 **Deferred:** none.
 
-**Found in another module:** `acquisition` (L3), `checks.mjs:94`, C-83.4's translation "… held by renders this instance is running right now …". It is member-facing: `render-deferred` (R2) carries it whole as its reason. DEC-149's L8–L11 grep did not reach it (N690's L1–L7 re-sweep, T35). My R9 test takes the carried translation out before its check. REPORT J2.
+**Found in another module:** `acquisition` (L3), `checks.mjs:94`, C-83.4's translation "… held by renders this instance is running right now …". It is member-facing: `render-deferred` (R2) carries it whole as its reason. DEC-149's L8–L11 grep did not reach it (N690's L1–L7 re-sweep, T35). My R9 test takes the carried translation out before its check. REPORT J1.
 
 **Tests and checks:**
 - `node --test bio-plane/test/m/machinery-producers/*.test.mjs`: tests 24, pass 24, fail 0.
@@ -32,4 +32,4 @@ acquisition (L3), `bio-plane/src/acquisition/checks.mjs:94`: C-83.4's translatio
 
 ## J2 · COMPLETE
 
-T34-95 applied; R1–R10 met. `machinery-producers/index.mjs` 1,097 lines: `conditionItems` holds qp 353–771, 1842–1936, 1943–2027 and 3031–3236 with their helpers, every key, kind, recipient, bound and basis unchanged. R9's four 'signal'→'status' and DEC-149's three rows are applied, each pinned by a test. Tests: 24/24 (conditions whole, producers 137–209, sweeps 40–221 re-labelled; invariants R1, R6–R10). Checks: format, architecture and coverage (10/10) show 0 failures. Ownership shows 1 failure, `build/modules.json`: my entry's paths and tests, added as your START directed (K1043); the check has no allowance for it, so it is yours to accept. The tranche is merged in; no conflict. Ready to merge before queue-producers. Record: `build/jobs/T34/machinery-producers.md` § Completion; REPORT J2 (acquisition C-83.4 wording).
+T34-95 applied; R1–R10 met. `machinery-producers/index.mjs` 1,097 lines: `conditionItems` holds qp 353–771, 1842–1936, 1943–2027 and 3031–3236 with their helpers, every key, kind, recipient, bound and basis unchanged. R9's four 'signal'→'status' and DEC-149's three rows are applied, each pinned by a test. Tests: 24/24 (conditions whole, producers 137–209, sweeps 40–221 re-labelled; invariants R1, R6–R10). Checks: format, architecture and coverage (10/10) show 0 failures. Ownership shows 1 failure, `build/modules.json`: my entry's paths and tests, added as your START directed (K1043); the check has no allowance for it, so it is yours to accept. The tranche is merged in; no conflict. Ready to merge before queue-producers. Record: `build/jobs/T34/machinery-producers.md` § Completion; REPORT J1 (acquisition C-83.4 wording).
