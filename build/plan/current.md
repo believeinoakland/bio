@@ -39,6 +39,7 @@
    9. (K1836) From following's merge (T34-70) until control-plane's (T34-60, L11): control-plane `families.test.mjs`, until `CHECK_FAMILY_FILES` lists following's new C-137 file. From monitoring's merge until control-plane's: `catalogue-end.test.mjs`'s pins of C-48.8 and C-48.9 (DEC-149 re-wordings), inside its named red (K1789), re-pinned by T34-60.
    10. (K1864) From plane's merge (T34-76) until T35's bundler job (N696): bundler `deploybindings.test.mjs` ×2 (the `SHEET_WORKER` binding).
    11. (K1864) Membership `module-order.test.mjs` ×2 (R83's `MODULE_ORDER` lacks case-catalogue, machinery-producers, setup-page) until T35's membership job (N697).
+   12. (K1872) From op-declarations' merge until control-plane's (T34-60): control-plane `totality.test.mjs`:13 and `r53-routes.test.mjs`:75 (T34's ops and `OP_STAMPS`); until affordances' merge: control-plane's affordances totality (R2, R41). From instance-setup's merge until plane's and installer's: plane `door.test.mjs`:105, installer `requirements.test.mjs`:469 (K1870).
 
 ## Entries
 

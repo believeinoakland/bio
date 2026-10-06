@@ -72,9 +72,10 @@ test("N348 this module holds no Durable Object door or class of its own: its rou
   assert.equal("instanceSetupStore" in S, false);
   assert.equal(typeof S.instanceSetupOps, "function");
   const ops = S.instanceSetupOps(null, new URL("http://do/"), null);
-  assert.deepEqual(Object.keys(ops).sort(), ["assistantset", "assistantstate", "cpuprobeend", "cpuprobestart", "cpuprobestate",
-    "disclosureof", "disclosureshown", "groupdomainset",
-    "groupidentity", "groupidentitypublic", "groupnameset", "instancegroup", "instancegrouppublic", "instancegroupseed",
-    "officesseed", "profiles", "profilesset", "recordcpuprobestep", "runtimeobservations", "seatsseed"]);
+  assert.deepEqual(Object.keys(ops).sort(), ["assistantset", "assistantstate", "cpuprobeend", "cpuprobestart", "cpuprobestate", "disclosureof",
+    "disclosureshown", "groupdomainset", "groupidentity", "groupidentitypublic",
+    "groupnameset", "instancegroup", "instancegrouppublic", "instancegroupseed", "memberlanguage",
+    "memberlanguageset", "officesseed", "placewanted", "placewantedstate", "profiles", "profilesset",
+    "recordcpuprobestep", "runtimeobservations", "seatsseed"]);
   for (const f of Object.values(ops)) assert.equal(typeof f, "function");
 });

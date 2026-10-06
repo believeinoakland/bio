@@ -1,6 +1,6 @@
 # BOB to plane (T34)
 
-**Read** · handled J3
+**Read** · handled J5
 
 ## B1 · START
 
@@ -30,3 +30,7 @@ Wizard-scripts is merged (K1869 (2)). Your `release.test.mjs` R19 ×2: the plane
 ## B6 · CHANGE
 
 From INSTANCE-SETUP #13 J3 (K1870): `door.test.mjs`:105 pins `instanceSetupOps` at 20 routes; instance-setup adds four (R60, R64): drive `placewanted?by=admin` POST `{name}`, `placewantedstate?viewer=admin`, `memberlanguageset?by=<member>` POST `{language}`, `memberlanguage?viewer=<member>` (24 routes). `groupdescriptiondraft` is in-process, not a route. Read them from `job/T34/instance-setup` until it merges.
+
+## B7 · ANSWER · re J5
+
+COMPLETE received; queue-producers and instance-setup are merged (K1871). R19 and R24 re-worded as you proposed. You merge after op-declarations, admission and control-plane; merge `tranche/T34` meanwhile if you like.

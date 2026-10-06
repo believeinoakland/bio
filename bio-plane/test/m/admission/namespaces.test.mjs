@@ -49,8 +49,9 @@ test("R2: an ai credential minted confined to scratch is refused 403 NAMESPACE_C
   }
 });
 
-test("R3: a public op that answers only from bio refuses store=scratch 400 NAMESPACE_PINNED (C-78.2); the public ops that address scratch are exactly invitelook, enroll, instancegroup and groupidentity", async () => {
-  assert.deepEqual([...A.SCRATCH_ADDRESSING_PUBLIC_OPS].sort(), ["enroll", "groupidentity", "instancegroup", "invitelook"]);
+test("R3: a public op that answers only from bio refuses store=scratch 400 NAMESPACE_PINNED (C-78.2); the public ops that address scratch are exactly invitelook, enroll, instancegroup, groupidentity, websiteinvite, joinlinkinvite and groupdescription", async () => {
+  assert.deepEqual([...A.SCRATCH_ADDRESSING_PUBLIC_OPS].sort(),
+                   ["enroll", "groupdescription", "groupidentity", "instancegroup", "invitelook", "joinlinkinvite", "websiteinvite"]);
   for (const op of A.SCRATCH_ADDRESSING_PUBLIC_OPS) assert.equal(OPS[op].classes, null, op);
   const { env } = world();
   for (const op of PUBLIC) {

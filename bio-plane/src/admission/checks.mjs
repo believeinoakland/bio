@@ -6,7 +6,12 @@
  * namespaces C-78 whole, the agent credential's gate and declaration C-29.6–.10, the operator fence C-32.17 and the
  * group identity fence C-64.4. Control-plane's copies were deleted by its own T18 job, after this module merged
  * (K624 (1)), so each code has this one row; the stamp 1.49.0 (T19 layer 2) took them, each `where` re-pointed here
- * (N502, N469's rule). The reasons each row carries are stated beside it. */
+ * (N502, N469's rule). The reasons each row carries are stated beside it.
+ *
+ * T34-87 (DEC-149; K1811, K1821): seven translations call the group's Civicsmith by that name where they said "this
+ * instance" or "this copy" — "your group's Civicsmith" to a member or a credential holder (C-38.3, C-38.8, C-78.1,
+ * C-29.8, C-32.17, C-64.4, the last two worded as ratification R47), "this group's Civicsmith" to a caller who said
+ * who they are not at all (C-38.1). Nothing else changed; the rows await promotion's T35 stamp. */
 
 /* C-38 · THE ADMISSION GATE (REC-79): every refusal a caller meets before their op runs. ADDITIVE ON THE WIRE: each
    refusal keeps its `error` sentence byte-identical beside the code (IC-REC-79). `MACHINE_CREDENTIAL_REQUIRED` is named
@@ -19,7 +24,7 @@ export const ADMISSION_CHECKS = {
     check: 'C-38.1',
     where: 'src/admission/index.mjs admit > is-admission',
     translation: 'Nothing in this request said who you are. Sign in, or send a credential this '
-      + 'instance issued, and try again.',
+      + 'group\'s Civicsmith issued, and try again.',
   },
   /* WRONG CREDENTIAL, NOT INSUFFICIENT CREDENTIAL, and the difference is worth a
      sentence: this is not a rung on a ladder the caller can climb. A credential
@@ -54,7 +59,7 @@ export const ADMISSION_CHECKS = {
     where: 'src/admission/index.mjs sessionOpGate > is-session-op-gate',
     translation: 'This operation is performed by an unattended writer, not by a person at a '
       + 'browser. A signed-in session cannot do it; it needs a machine credential an administrator '
-      + 'has issued. This instance holds a recorded decision to that effect and names it beside '
+      + 'has issued. Your group\'s Civicsmith holds a recorded decision to that effect and names it beside '
       + 'this message.',
   },
   /* D-270 / BOB #17, 2026-09-19. THE SECOND OF THE SESSION GATE'S THREE
@@ -108,7 +113,7 @@ export const ADMISSION_CHECKS = {
   SESSION_ROUTE_NOT_RECORDED: {
     check: 'C-38.8',
     where: 'src/admission/index.mjs sessionOpGate > is-session-op-gate',
-    translation: 'No signed-in session reaches this operation, and this instance holds no recorded '
+    translation: 'No signed-in session reaches this operation, and your group\'s Civicsmith holds no recorded '
       + 'decision saying it is not meant for a person. That is a gap in the record rather than a '
       + 'rule you have run into, and it is worth reporting as one.',
   },
@@ -158,8 +163,8 @@ export const NAMESPACE_CHECKS = {
   NAMESPACE_UNKNOWN: {
     check: 'C-78.1',
     where: 'src/admission/index.mjs namespaceGate > is-namespace-gate',
-    translation: 'This request named a part of the record that does not exist on this copy, so nothing was '
-      + 'read or changed. A copy has two: the record itself, and a scratch area kept apart for testing. The '
+    translation: 'This request named a part of the record that does not exist in your group\'s Civicsmith, so '
+      + 'nothing was read or changed. It has two: the record itself, and a scratch area kept apart for testing. The '
       + 'name must match one of them exactly; the names are listed beside this message.',
   },
   /* D-461 (C-78.2): the scratch area named on a public operation that only ever answers from the record itself.
@@ -221,8 +226,8 @@ export const AI_SCOPE_CHECKS = {
   AI_SCOPE_UNKNOWN_OP: {
     check: 'C-29.8',
     where: 'src/admission/index.mjs aiScopeDeclaration > is-ai-scope-declaration',
-    translation: 'The list of things this credential may change names something this instance does '
-      + 'not do. An entry nothing recognises would sit in the record looking like a permission while '
+    translation: 'The list of things this credential may change names something your group\'s Civicsmith '
+      + 'does not do. An entry nothing recognises would sit in the record looking like a permission while '
       + 'meaning nothing, so it is refused rather than stored.',
   },
   /* THE SHAPE FENCE, AND PL-4'S DELEGATED CONSTRAINT DISCHARGED. Not a list of
@@ -279,8 +284,8 @@ export const OPERATOR_FENCE_CHECKS = {
     where: 'src/admission/index.mjs bearerFence > is-operator-governance-act',
     translation: 'Endorsing an administrator, voting to remove one, and setting what a member may do '
       + 'are things the group holds a named administrator answerable for, and the record names who did '
-      + 'them. The credential that asked here is one of the operator\'s access tokens for this copy, '
-      + 'not a person: it holds no place on the roster, so it cannot be one of the administrators whose '
+      + 'them. The credential that asked here is one of the operator\'s access tokens for your group\'s '
+      + 'Civicsmith, not a person: it holds no place on the roster, so it cannot be one of the administrators whose '
       + 'agreement the rule requires. Sign in as that administrator and do it from there.',
   },
 };
@@ -294,7 +299,7 @@ export const GROUP_IDENTITY_FENCE_CHECKS = {
     where: 'src/admission/index.mjs bearerFence > is-group-identity-session',
     translation: 'The name this group shows the public, and the web address it claims, are set by one of its '
       + 'administrators, and the record names who set each one. The credential that asked here is one of the '
-      + 'operator\'s access tokens for this copy, not a person, so it cannot be that administrator. Sign in as '
+      + 'operator\'s access tokens for your group\'s Civicsmith, not a person, so it cannot be that administrator. Sign in as '
       + 'the administrator and set it from there. Nothing was changed.',
   },
 };
