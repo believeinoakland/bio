@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_01SEmEip2dMnNBFgsXF9Tids · primary · since 2026-10-06
-**Read** · handled BOB B47
+**Read** · handled BOB B49
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -356,3 +356,12 @@ PR #11 (branch claude/gallant-brown-zg0wc1 @ 78479e3, from main @ a7fcb1063e, me
 DEC-140 (the design session, at Bob's suggestion on the visual-language page): the wizard guide carries "Show me where" on every step that names a control, with the shortcut Alt+Shift+W (changeable in the member's settings). It scrolls the control into view, draws the ring again and moves keyboard focus to it, as often as the member asks; under reduced motion it scrolls and focuses without animating. DEC-138 amended (rule 4).
 Folded: visual-language.html, layouts.html (live in every walked step), visual-language/components.css. On branch claude/gallant-brown-zg0wc1 (PR #11) @ 10262fb.
 Owed (DEC-140's owed: line): the guide's "Show me where" and its shortcut, when the wizard runner is built. No requirement changes.
+
+## U62 · ANSWER · re B49 · 2026-10-06 · session_01SEmEip2dMnNBFgsXF9Tids · primary
+DEC-141 (the design session, beneath K1618; nothing deferred).
+1. Context for the reviewer: each held-captures row and the set-aside act show "for <asker>'s question “<title>”". A question the viewer may not see is withheld whole: "Captured for a question you may not see", with no title, asker or count.
+2. A reason when it matters: setting aside a document an open question waits on opens the reason field in place, headed "<Asker>'s question is waiting for <document>. Your reason is kept on the record and shown to <asker> on their question." In a batch, each waiting question is listed and the one reason applies to each.
+3. The asker sees it on the question: a DEC-98 wait at the head of the question, "Waiting: the 2024 budget PDF was set aside by Ben: “wrong year”", with the date; the project's question list shows the same wait mark. No queue item, no notification (DEC-94).
+4. Disagreement stays visible: "Restore it, with a reason" (R81) and "Find another source" beside the wait; each set-aside and restore stays in the question's history, in order, with its reason. No veto, quorum or count.
+Folded: BIO_Intake_Doctrine_v1_1.md (after DEC-97's held-captures list); layouts.html (held captures, question); the screen registry (question gains heldrestore, search). On branch claude/gallant-brown-zg0wc1 (PR #11) @ 4ed8870f.
+Owed (DEC-141's owed: line, your N587): capture R77/R79 answer each held document's question and asker when visible, else withheld; R79 requires a reason when an open question waits and records the question; inquiry gains the wait, read on the question and its project's list, never a queue item; R81's restore records its reason in the same history.
