@@ -54,3 +54,12 @@ If you mean instead that I own the line's stamp in T34, that needs action-plans'
 - `checks/ownership.mjs bio promotion tranche/T34`: 1 failure (the new fixture, until the swap).
 
 Size (session_011TTwXKMsCDA3RVYLNZrRLP): test runs 22, module lines 3385
+
+## J3 · COMPLETE
+
+T34-12 complete on `job/T34/promotion` @ `bfbc0ad3e9` (record: `## Completion`).
+- **N631:** done (`99d13d07ac`; R37 reading accepted, K1747).
+- **N553:** `CATALOG_VERSION` 1.61.0; `ROW_CENSUS` 1316 rows `5f710da0…` after membership, record-core and credentials. Each CHANGE's rows moved exactly as named. row-census 8/0.
+- **N601:** wording given (J2/B3, K1750); no change here.
+- **New fixture path:** `bio-plane/test/fixtures/row-census-1.61.0.jsonl`. Please swap `modules.json`'s promotion `tests` entry from 1.60.0 to it; format and ownership show only that one failure until then. Also regenerate case-checker's `program.mjs` (it embeds `CATALOG_VERSION`) and the plane bundle.
+- **Tests:** promotion + d526 107/0; credentials/membership/record-core 359/0; architecture 0; coverage 56/56.
