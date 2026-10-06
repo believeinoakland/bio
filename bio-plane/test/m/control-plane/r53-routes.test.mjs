@@ -14,6 +14,8 @@ const { ASK_PLANE_OPS } = await import("../../../../agent-worker/src/ops.mjs");
 const { OPS } = O;
 const OP_STAMPS = O.OP_STAMPS || {};
 const KEYS = ["viewer", "by", "bodyBy", "author", "proposer", "member", "session"];
+const MEMBER_ID_BY = ["invitewithdraw", "websitekeycreate", "websitekeyset", "websitekeyrevoke", "joinlinkenable", "joinlinkset",
+                      "joinlinkreplace", "joinlinkoff", "courtnoticeset", "groupdescriptionset"];
 const URL0 = new URL("http://do/");
 
 /* The maps R53 names, and the T33 arms of the existing modules the findings route (K1544, K1550, K1570, K1601, K1604,
@@ -81,7 +83,8 @@ test("R53, R17, R29: for every op `OP_STAMPS` declares and every kind of caller 
       w.env.calls.length = 0;
       const r = await call(w.env, { op, token: c.token, params, method: OPS[op]?.mutating ? "POST" : "GET",
                                     body: OPS[op]?.mutating ? body : undefined });
-      if (r.status !== 200) { assert.ok([401, 403].includes(r.status), `${op}/${c.name}: ${r.text.slice(0, 200)}`); continue; }
+      /* a public op answers from `bio` alone, so a probe's `store=scratch` is admission's pin (R3) */
+      if (r.status !== 200) { assert.ok([401, 403].includes(r.status) || (OPS[op].classes === null && r.json?.reason === "NAMESPACE_PINNED"), `${op}/${c.name}: ${r.text.slice(0, 200)}`); continue; }
       const [inner] = opCalls(w.env);
       if (!inner) continue;   /* answered by a hook (affordances) */
       reached++;
@@ -89,7 +92,10 @@ test("R53, R17, R29: for every op `OP_STAMPS` declares and every kind of caller 
       assert.equal(inner.params.grant, undefined, `${where}: ?grant`);
       for (const k of keys) {
         const got = k === "bodyBy" ? (inner.body?.by ?? null) : (inner.params[k] ?? null);
-        assert.equal(got, c.want[k], `${where}: ${k}`);
+        /* R54 (K1863 (7)): membership's administrator acts take `by` as a member id, the custodial acts' expression */
+        const want = k === "by" && MEMBER_ID_BY.includes(op)
+          ? (c.session ? c.want.proposer : `class:${c.name === "agent" ? "ai" : c.name}`) : c.want[k];
+        assert.equal(got, want, `${where}: ${k}`);
         checked++;
       }
       if (params !== c.params) {
