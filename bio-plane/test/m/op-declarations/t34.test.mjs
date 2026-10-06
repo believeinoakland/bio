@@ -170,7 +170,7 @@ test("R22, R6: membership's T34 ops — the ten administrator's acts with hostin
   assert.notDeepEqual(plain({ ...OPS.joinlinkset, machineClasses: [] }), plain(OPS.hostingaccessset));
 });
 
-test("R23: tasks' checkrequest, checktake and checkrecord mutating, contribute, a member session's only (machineClasses []), by (query) and viewer stamped; checkrequests and checksof reads, viewer stamped, a present null row; all in both session sets", () => {
+test("R23 (K1873): tasks' checkrequest, checktake and checkrecord mutating, contribute, a member session's only (machineClasses []), by (query) and viewer stamped; checkrequests and checksof reads, also a member session's only (machineClasses []), viewer stamped, a present null row; all in both session sets — every binding class arriving without a session is refused (negative control: an open read admits one)", () => {
   for (const op of ["checkrequest", "checktake", "checkrecord"]) {
     assert.deepEqual(plain(OPS[op]), { classes: ["admin", "member"], machineClasses: [], mutating: true }, op);
     assert.equal(NEEDS[op], "contribute", op);
@@ -178,12 +178,18 @@ test("R23: tasks' checkrequest, checktake and checkrecord mutating, contribute, 
     assert.ok(both(op), op);
   }
   for (const op of ["checkrequests", "checksof"]) {
-    assert.equal(OPS[op].mutating, false, op);
+    assert.deepEqual(plain(OPS[op]), { classes: ["admin", "member"], machineClasses: [], mutating: false }, op);
     assert.ok(Object.hasOwn(NEEDS, op) && NEEDS[op] === null, op);
     assert.deepEqual(stamps(op), ["viewer"], op);
     assert.ok(both(op), op);
   }
   assert.deepEqual(OP_FAMILIES.tasks.actor, { key: "by", at: "query" });
+  /* a caller not arriving by a session is judged against machineClasses: no binding class is admitted to any of the five */
+  const BINDING = ["admin", "member", "probe", "daemon"];
+  const machineAdmits = (op) => BINDING.filter((c) => (OPS[op].machineClasses ?? OPS[op].classes).includes(c));
+  for (const op of ["checkrequest", "checktake", "checkrecord", "checkrequests", "checksof"]) assert.deepEqual(machineAdmits(op), [], op);
+  /* negative control: an open read (checks' old posture) admits the bearers */
+  assert.deepEqual(machineAdmits("timeline"), ["admin", "member", "probe"]);
 });
 
 test("R24, R20: the group's API key — groupkeyset, groupkeyremove, groupkeyswitch and groupswitchset an administrator's acts, groupkeystate and groupkeynotice reads, groupkeynoticeseen the member's own act — each a session's only (admin, member; machineClasses []), a present null row, both sets, by or viewer stamped as the owner reads them, in neither bearer fence and not on AI_GRANT_OPS; no other op names the key", async () => {

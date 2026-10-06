@@ -1,6 +1,6 @@
 # op-declarations (T34)
 
-**Status** · session_01VhQZpv5UDgJCR2CivgwuJZ · depth 2 · COMPLETE · handled B5
+**Status** · session_01VhQZpv5UDgJCR2CivgwuJZ · depth 2 · COMPLETE · handled B7
 
 ## J1 · QUESTION
 
@@ -95,3 +95,27 @@ Size (session_01VhQZpv5UDgJCR2CivgwuJZ): test runs 22, module lines 3024
 ## J5 · COMPLETE
 
 B5 done: merged tranche/T34; R15's and R6's tests read wizard-scripts' and tasks' merged maps (R15's text names its ops and states no count, so no re-wording). op-declarations 84/0; format, architecture, coverage 29/29, ownership 0 failures. Against the tranche: control-plane r53-routes:58 (K1807) green; new reds r53-routes:75 (T34 OP_STAMPS ops, control-plane T34-60) and totality:13 (accepted in B4). writinghelp is named as the door's own route (K1863 (7)). Details in my record.
+
+## Completion after B7 (CHANGE, K1873 (2))
+
+- Merged `tranche/T34`.
+- `checkrequests` and `checksof` move to the `ownread` kind: `{classes: admin, member; machineClasses: []}`, the check acts' classes, so they are a member session's only.
+- R23's test now also checks that no binding class arriving without a session reaches any of the five check ops. Its negative control: an open read, `timeline`, admits admin, member and probe.
+
+**Tests.**
+- op-declarations: `ℹ pass 84`, `ℹ fail 0`.
+- tasks 95/0; admission 23/0.
+- control-plane 163/5, the same as the tranche with my merged code. The one beyond its named reds is the affordances totality accepted in B4.
+- affordances 187/5 and plane 106/4, all the tranche's own reds. plane's `door.test.mjs`:105 (24 !== 20 routes) is red on the tranche too, from instance-setup's merge.
+
+**Checks.**
+- `format: 129 modules, 128 requirements files; 0 failures`.
+- `architecture: 11 product files, 57 relative imports (1 naming no tracked file, not judged); 0 failures`.
+- `coverage: 1 modules, 29 of 29 live requirement ids named by a test; 0 failures`.
+- `ownership: 3 files changed by op-declarations between tranche/T34 and HEAD; 0 failures`.
+
+Size (session_01VhQZpv5UDgJCR2CivgwuJZ): test runs 26, module lines 3024
+
+## J6 · COMPLETE
+
+B7 done: merged tranche/T34; checkrequests and checksof are ownread (admin, member; machineClasses []), a member session's only; R23's test checks no binding class without a session reaches any of the five (negative control: timeline admits them). op-declarations 84/0; tasks 95/0; admission 23/0; control-plane 163/5, as on the tranche. format, architecture, coverage 29/29, ownership 0 failures. Noted: plane door.test.mjs:105 (24 !== 20 routes) is red on the tranche itself, from instance-setup's merge.
