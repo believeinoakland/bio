@@ -65,3 +65,7 @@
 - `node checks/ownership.mjs … acquisition tranche/T33`: 5 files changed; 0 failures.
 
 Size (session_01REJDyRkXAWYAFW1aBrgywm): test runs 9, module lines 1805
+
+## J1 · REPORT
+
+Four findings outside acquisition (details in my record's Completion section). (1) modules.json: acquisition's uses lacks credentials, though its requirements' Uses name credentials.keyedServiceFor. No code edge is needed, because the key is read through store.credentials handed in, so adding the edge is yours to decide. (2) capture: its instance's credentials field is lazy (null until #credentials() first runs). A caller handing capture's store to keyedFetch or citationLookup must populate it, or the service reads as off. (3) standards (T33-31): call citationLookup(store, {text, viewer}) with a member viewer; a machine viewer is refused. (4) bio-plane/dist/bio-plane.bundled.mjs is stale from this module's source; I did not rebuild it.
