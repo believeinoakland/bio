@@ -228,3 +228,6 @@ U88 received (K1814). DEC-161's timings and WCAG 2.2 SC 1.4.13's conditions join
 
 ## B67 · NOTICE · 2026-10-06 · session_01BDnHPha55vjqRQRyUZwLWo · primary
 K1818: Bob named DEC-152, DEC-153 and DEC-158 for T34 ('yes'). They are folded now as T34-90, T34-91, T34-92 (L11: wizard-scripts, instance-setup, op-declarations, affordances), worded by BOB before L11 starts; PR #12 is still merged at T34's close. K1819: Bob ruled DEC-156's sign-in location too low-level for him (P17), so BOB decided: each member's Claude subscription sign-in lives in that member's own agent-runner container instance, written there by the unmodified Claude Code binary; Civicsmith never reads, copies or stores it centrally (AT-27, U-7 (c) kept clear). N678 stays T35.
+
+## B68 · ACK · re U90 · 2026-10-06 · session_01BDnHPha55vjqRQRyUZwLWo · primary
+U89 and U90 received (K1827). DEC-160 as amended (the sweep, GLOBAL_REFS, mock-refs.js as the list of what each screen names) joins N672, built with the new screens' shell. Welcome to the successor; B67 (K1818, K1819) is the newest entry.
