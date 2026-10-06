@@ -1689,7 +1689,7 @@ export class AiRuns {
    *  complete appends ONE entry saying so, because the wake entry above it said the run was handed over. */
   async #aiRunDispatch(d, resumer, iso) {
     /* R52, K1514, K1601 (agent-worker R6, R10): the body carries `account`, the run member's own reference as credentials
-       R24 unseals it for this run, `{kind, secret, member}` — a subscription token stays `subscription`, never an API key
+       R24 unseals it for this run, `{kind, secret, member, suggestions}` — a subscription token stays `subscription`, never an API key
        (K1553), and `member` is the run's account member, `member:<id>`, so agent-worker can check it against the run.
        Used for this one call and kept nowhere here. The instance Claude account it carried before is retired (K1502). */
     let outcome, timer;
@@ -1700,8 +1700,17 @@ export class AiRuns {
     if (!ref || ref.ok !== true || typeof ref.secret !== "string")
       outcome = { state: "REFUSED", status: null,
                   reason: String((ref && (ref.code || ref.reason)) || "NO_ACCOUNT").slice(0, 80) };
+    /* K1615 (agent-worker R56): and the member's own suggestions switch (credentials R25), read from their reference's
+       state; anything but an explicit on is off. */
+    let suggestions = false;
+    if (!outcome) {
+      try {
+        const st = credentialsOf(this.ctx).accountReferenceState({ member: `member:${d.payer}`, viewer: `member:${d.payer}` });
+        suggestions = !!(st && st.ok === true && st.suggestions === true);
+      } catch { suggestions = false; }
+    }
     const body = outcome ? null : { run_id: d.run, store: resumer.store, credential: resumer.token,
-                                    account: { kind: ref.kind, secret: ref.secret, member: `member:${d.payer}` } };
+                                    account: { kind: ref.kind, secret: ref.secret, member: `member:${d.payer}`, suggestions } };
     ref = null;
     if (body) try {
       const res = await Promise.race([
