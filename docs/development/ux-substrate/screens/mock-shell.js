@@ -42,6 +42,7 @@ function wizardGuide(w) {
 function mast(c, s) {
   return `<header class="cs-mast"><span class="grp">${G.name}</span><span class="spacer"></span>
     <span class="mk-mastsearch">${I('search')}<span>Search</span></span>
+    <button type="button" class="cs-btn mk-lvlbtn" data-tone="quiet" data-lvltoggle aria-label="Explanations: with guidance. Alt+Shift+I switches" data-tip="<b>Explanations</b>: with guidance, screens and the rail also say what they are. Click or press Alt+Shift+I to switch to marks and names only.">${I('question')}<span class="mk-hide-phone">${typeof window !== 'undefined' && window.CS_LEVEL === 1 ? 'Marks and names' : 'Guidance'}</span></button>
     ${c.ai ? `<button type="button" class="cs-btn" data-tone="quiet" aria-label="The assistant">${I('machine')}<span class="mk-hide-phone">Assistant</span></button>` : ''}
     <span class="cs-kind mk-hide-phone" data-kind="todo">${I('queue')}4</span><span class="mk-avatar" aria-label="Mai">M</span></header>`;
 }

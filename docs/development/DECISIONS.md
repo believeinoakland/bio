@@ -2545,3 +2545,17 @@ response: **Bob, 2026-10-06:** "Properly done, mouseovers cost nothing visually.
 decided: 2026-10-06 · Bob
 reasoning recorded in: this entry; `visual-language/components.css` and `visual-language.html` §6a; `layouts.html` (the viewer's explanations).
 owed: (BOB) the timings and the three WCAG 1.4.13 conditions in the shell's explanation behaviour when the screens are built.
+
+### DEC-162 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (Bob's suggestion: "Maybe every element should have a 'information level'. Level 1s are always active, but those in other levels only when the user has selected an information level that includes them. The information level could be set in the member's settings, but maybe there's also a shortcut key, context menu option, or tag in the heading that they can use to easily switch info levels. Just brainstorming."; question S8)
+for: bob
+question: Whether explanations come in levels a member chooses, and how many.
+why it is Bob's: how Civicsmith teaches (UX) and a new member setting (P17).
+provisional: DEC-159 to DEC-161 (every mark and name explains itself after a 0.5 s rest); screen headings and rail entries gained guidance on 6 October.
+alternative: A, no levels; C, three levels adding "Teach me" (explanations in place, without hovering).
+recommendation: B.
+reversal cost: low.
+response: **Bob, 2026-10-06: "S8: B".** Ruled: (1) two levels: **Marks and names**, always on (every mark's meaning, every reference's card); **Guidance**, adding what each screen, section and rail entry is and what a member can do there; (2) a new member starts with guidance on; after their first month Civicsmith asks once whether to keep it; (3) a member switches with a control in the masthead showing the current level (one click), with Alt+Shift+I, or in Settings › Your account › Explanations; (4) a third level ("Teach me") may be added later if newcomers ask.
+decided: 2026-10-06 · Bob
+reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (the masthead control, the account setting, the viewer's switch; section 7, S8); `screens/mock-refs.js` (`SCREEN_HELP`, `RAIL_HELP`, level 2).
+owed: (BOB) the member's explanation level (a per-member setting, default Guidance, the one-month question); the masthead control and Alt+Shift+I; each element's level (marks and references 1, screen, section and rail guidance 2); the guidance texts as interface words (translation layer, DEC-157); the op behind the registry's `owed:infolevelset DEC-162`.
