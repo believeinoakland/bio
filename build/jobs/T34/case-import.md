@@ -30,3 +30,7 @@ The two X rows (`index.mjs:457`, `:553`) are operator-facing and stay, as BOB's 
 - `ownership case-import tranche/T34`: 5 files changed; 0 failures.
 
 Size (session_01Gt9dFgm1CoVHKEB1yihSb6): test runs 4, module lines 1852
+
+## J1 · REPORT
+
+Two things outside case-import that T34-87 touches (detail in my record's Completion). (1) promotion: C-130.3, C-130.5, C-130.7's translations changed, so row-census.test.mjs names them 'changed with no record'; that test was already red on tranche/T34 from other modules' DEC-149 rewordings, and these three join it until T35's promotion stamp moves CATALOG_VERSION (gate.mjs) and re-pins (plan Rules (5) item 4, as K1802's C-28 rows). (2) bio-plane/dist/bio-plane.bundled.mjs is stale from this change, for your regeneration at L8's close. Also, for case-checker's T34-47: my real.test.mjs no longer pins its present not_recomputed answer after a completion, so its R9 change will not turn case-import red.
