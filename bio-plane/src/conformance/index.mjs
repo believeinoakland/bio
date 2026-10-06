@@ -1175,7 +1175,7 @@ export class Conformance {
     /* DEC-49 REGION is-standard-side-named */
     if (side !== "a" && side !== "b")
       return refusal("STANDARD_SIDE_UNNAMED", "name which side of the question states what the standard requires, a or "
-        + "b: the plane never chooses it. Nothing was written.", { contradiction: from.inquiry });
+        + "b: your group's Civicsmith never chooses it. Nothing was written.", { contradiction: from.inquiry });
     /* END DEC-49 REGION is-standard-side-named */
     let listed = null;
     try { listed = this.contradiction.candidatesFor({ on: { candidate: from.candidate }, viewer }); } catch { listed = null; }
