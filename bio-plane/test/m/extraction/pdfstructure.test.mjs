@@ -294,3 +294,17 @@ test("R31 (N100): the plain read carries pdf-reader's own pageBoxes beside membe
   assert.ok("membership" in r.body && "membershipWhy" in r.body);
   assert.equal(writes(w), before);
 });
+
+test("R34 (reading-pipeline R28; K1557): a re-read's reading carries what the pdf entry emitted beside the text, unaltered: its metadata, or null when it emitted none, and no workbook cells", async () => {
+  const meta = { title: "Council minutes", author: "Clerk", created: "2026-09-01T00:00:00Z", custom: [{ name: "k", value: "v" }] };
+  for (const [emitted, want] of [[meta, meta], [undefined, null]]) {
+    const text = i2([{ page: 0, text: "Text" }, { page: 1, text: "", undetermined: [noText(1)] }], emitted ? { metadata: structuredClone(emitted) } : {});
+    const { w, d } = await held(text);
+    const r = await withEntry(pdf(text, 2),
+      () => w.x.pdfStructure({ ocr: "1", sha: d, viewer: "class:admin", author: "member:m1", env: { OCR_WORKER: member(() => ocrAnswer([1])) } }));
+    assert.equal(r.body.reextraction.written, true);
+    const stored = JSON.parse(w.one(`SELECT reading FROM readings WHERE capture_sha=?`, d).reading);
+    assert.deepEqual(stored.metadata, want);
+    assert.equal(Object.prototype.hasOwnProperty.call(stored, "cells"), false, "cells are a workbook's only");
+  }
+});

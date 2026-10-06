@@ -1,7 +1,7 @@
 /* extraction's test fixture: a Durable Object storage stand-in over node:sqlite (`sql.exec` answering a cursor,
    `transactionSync` nesting as savepoints), record-core's and membership's tables, an evidence bucket, scripted fleet members
    (PDF_WORKER, OCR_WORKER), a calibration provider behaving as calibration's Provides state (R10–R12), a promotion
-   registry recording the step this module registers, and helpers that build capture documents in the shape
+   registry recording the step this module registers, a hook registry stand-in (`readHooks`) when a test hands one (R69), and helpers that build capture documents in the shape
    capture's acquire answer carries. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
@@ -109,7 +109,8 @@ export function promotion() {
 
 /* A fresh store with record-core, membership and this module (its figures registered, R67, as `extractionOf` does).
    `provenance` is handed to the module as `extractionOf` hands it (R65). */
-export function fresh({ evidence = bucket(), env = {}, cal = calibration(), prom = promotion(), provenance = null } = {}) {
+export function fresh({ evidence = bucket(), env = {}, cal = calibration(), prom = promotion(), provenance = null,
+                        readHooks = null, host = null } = {}) {
   const s = storage();
   const ctx = { storage: s };
   const core = recordOf(ctx, { evidence, evidencePrefix: "bio/captures/" });
@@ -121,7 +122,7 @@ export function fresh({ evidence = bucket(), env = {}, cal = calibration(), prom
     for (const t of CALIBRATION_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n").split(";")) if (t.trim()) s.db.exec(t);
     cal = calibrationOf(ctx, { record: core });
   }
-  const x = new Extraction(s, { record: core, membership, calibration: cal, promotion: prom, env,
+  const x = new Extraction(s, { record: core, membership, calibration: cal, promotion: prom, env, readHooks, host,
                                 provenance: typeof provenance === "function" ? provenance(ctx, core, membership) : provenance });
   x.registerFigures();
   x.migrate();
