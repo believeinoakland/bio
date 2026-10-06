@@ -80,3 +80,7 @@ T33-40 complete on job/T33/retrieval (tranche/T33 @ K1585 merged in).
 - `checks/format.mjs`: 0 failures. `checks/coverage.mjs retrieval`: 71 of 71 live ids named, 0 failures. `checks/ownership.mjs retrieval tranche/T33`: 7 files, 0 failures. `checks/architecture.mjs retrieval`: 3 failures, each the missing `uses` edge events, money, duties named above (K1563 (3): uses set at COMPLETE).
 
 Size (session_01KwMzevnkFWbEu7foxwDgaj): test runs 24, module lines 2681
+
+## J7 · COMPLETE
+
+B7 (K1589) applied; already done in J6: the obligor/owed_to test runs on duties' own schema (DUTIES_SCHEMA). tranche/T33 merged in: retrieval 134/134 pass; architecture 0 failures (uses now carry events, money, duties); coverage 71/71; ownership 7 files, 0 failures; format 0. J6 stands as the completion record. Size (session_01KwMzevnkFWbEu7foxwDgaj): test runs 25, module lines 2681
