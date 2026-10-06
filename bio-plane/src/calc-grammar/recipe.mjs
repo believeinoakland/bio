@@ -9,6 +9,8 @@ import { compare as compareTimes, span as spanTimes } from "../civil-time/index.
 import { parseFigure } from "./figures.mjs";
 import { MODES, MAX_PLACES, add, subtract, divide, round, relate, figureFault, statedValue, cmpD,
   refusal, undetermined, isRefusal, isUndetermined } from "./decimal.mjs";
+import { Refused, stop, objectTable, heldTable, streamFault, streamTable, filterView, orderView, extendView, joinView,
+  answerOf } from "./tables.mjs";
 
 export const METHOD = "bio-calc/1";
 export const OPS = Object.freeze(["select", "count", "sum", "difference", "ratio", "share", "group", "span", "compare",
@@ -160,14 +162,15 @@ export function checkRecipe(recipe) {
 // ---- reading cells ----
 
 function tableFault(t) {
-  if (!plain(t) || !Array.isArray(t.fields) || !Array.isArray(t.rows)) return "a table is {fields, rows}";
+  if (!plain(t) || !Array.isArray(t.fields) || !(Array.isArray(t.rows) || typeof t.rows === "function"))
+    return "a table is {fields, rows}: rows a list of row objects, or a function answering an iterator over row arrays";
   const names = new Set();
   for (const f of t.fields) {
     if (!plain(f) || !isFieldName(f.name) || !FIELD_TYPES.includes(f.type)) return "each field is {name, type}, type one of " + FIELD_TYPES.join(", ");
     if (names.has(f.name)) return `the field "${f.name}" is declared twice`;
     names.add(f.name);
   }
-  if (!t.rows.every(plain)) return "each row is an object keyed by field name";
+  if (Array.isArray(t.rows) && !t.rows.every(plain)) return "each row is an object keyed by field name";
   return null;
 }
 
@@ -277,9 +280,6 @@ function test(type, cond, cell, literal) {
 
 // ---- evaluating ----
 
-class Refused { constructor(r) { this.r = r; } }
-const stop = (code, why, step) => { throw new Refused({ refused: code, why, step }); };
-
 function fieldOf(table, name, step, role) {
   const f = table.fields.find((x) => x.name === name);
   if (!f) stop("RECIPE_INVALID", `${role} "${name}" is not a field of the table`, step);
@@ -288,39 +288,75 @@ function fieldOf(table, name, step, role) {
 
 const valueOf = (x) => (x && x.kind === "ratio" ? x.value.value : x.value);
 
-/* R13 then an exact total: a figure, `{undetermined}`, or a refusal by name. */
-function total(table, rows, fieldName, step) {
-  const f = fieldOf(table, fieldName, step, "sum's field");
+/* R13, then exact totals of `fieldName` over each group's rows: row i is in group `gid[i]` (−1 for none), or every
+   row in group 0 when `gid` is null. Two passes, as a total reads: the rule over all of a group's rows first, then
+   its amounts. Each group's answer is `{v, rows: []}` or `{u, rows}`; the first group, in group order, whose total
+   is refused stops the step, naming the values found. */
+function totals(t, fieldName, step, gid, groups) {
+  const f = fieldOf(t, fieldName, step, "sum's field");
   if (f.type !== "number" && f.type !== "integer") stop("RECIPE_INVALID", `"${fieldName}" is not a numeric field`, step);
-  for (const [name, code] of SUM_RULE) {
-    const rf = table.fields.find((x) => x.name === name);
-    if (!rf) continue;
-    const seen = [];
-    const blank = [];
-    rows.forEach(({ row, i }) => {
-      const v = row[name];
-      if (empty(v)) blank.push(i);
-      else if (!seen.includes(String(v))) seen.push(String(v));
-    });
-    if (seen.length > 1) stop(code, `the rows differ in ${name}: ${seen.slice(0, 10).join(", ")}`, step);
-    if (blank.length) return { u: undetermined(`${name} is not stated on row${blank.length > 1 ? "s" : ""} ${blank.join(", ")}`), rows: blank.map((row) => ({ row, why: `${name} is empty` })) };
+  const groupOf = gid ? (i) => gid[i] : () => 0;
+  const rules = SUM_RULE.filter(([name]) => t.fields.some((x) => x.name === name))
+    .map(([name, code]) => ({ name, code, read: t.reader(name), seen: [], blank: [] }));
+  if (rules.length) {
+    let i = 0;
+    for (const row of t.scan()) {
+      const g = groupOf(i);
+      if (g >= 0) for (const r of rules) {
+        const v = r.read(row);
+        if (empty(v)) (r.blank[g] ||= []).push(i);
+        else {
+          const seen = (r.seen[g] ||= []);
+          if (seen.length < 10 && !seen.includes(String(v))) seen.push(String(v));
+        }
+      }
+      i += 1;
+    }
   }
-  let acc = { value: "0", sign: "+", precision: "exact", ...(f.unit && { unit: f.unit }), ...(f.currency && { currency: f.currency }) };
-  const set = [];
-  for (const { row, i } of rows) {
-    const c = readCell(f, row[fieldName]);
-    if (isUndetermined(c)) { set.push({ row: i, why: c.why }); continue; }
-    if (set.length) continue;
-    const next = add(acc, c.v);
-    if (isRefusal(next)) stop(next.refused === "UNIT_MISMATCH" ? "SUM_MIXED_CURRENCY" : next.refused, next.why, step);
-    acc = next;
+  const out = Array.from({ length: groups }, () => undefined);
+  for (let g = 0; g < groups; g++) {
+    for (const r of rules) {
+      const seen = r.seen[g] || []; const blank = r.blank[g] || [];
+      if (seen.length > 1) { out[g] = { stop: [r.code, `the rows differ in ${r.name}: ${seen.join(", ")}`] }; break; }
+      if (blank.length) {
+        out[g] = { u: undetermined(`${r.name} is not stated on row${blank.length > 1 ? "s" : ""} ${blank.join(", ")}`),
+          rows: blank.map((row) => ({ row, why: `${r.name} is empty` })) };
+        break;
+      }
+    }
   }
-  if (set.length) return { u: undetermined(`${set.length} amount${set.length > 1 ? "s are" : " is"} undetermined, so the total is undetermined (never read as zero)`), rows: set };
-  return { v: acc, rows: [] };
+  const zero = { value: "0", sign: "+", precision: "exact", ...(f.unit && { unit: f.unit }), ...(f.currency && { currency: f.currency }) };
+  const acc = []; const set = []; const refused = [];
+  if (out.includes(undefined)) {
+    const read = t.reader(fieldName);
+    let i = 0;
+    for (const row of t.scan()) {
+      const g = groupOf(i);
+      if (g >= 0 && out[g] === undefined && !refused[g]) {
+        const c = readCell(f, read(row));
+        const s = (set[g] ||= []);
+        if (isUndetermined(c)) s.push({ row: i, why: c.why });
+        else if (!s.length) {
+          const next = add(acc[g] || zero, c.v);
+          if (isRefusal(next)) refused[g] = [next.refused === "UNIT_MISMATCH" ? "SUM_MIXED_CURRENCY" : next.refused, next.why];
+          else acc[g] = next;
+        }
+      }
+      i += 1;
+    }
+  }
+  for (let g = 0; g < groups; g++) {
+    if (out[g]) { if (out[g].stop) stop(...out[g].stop, step); continue; }
+    if (refused[g]) stop(...refused[g], step);
+    const s = set[g] || [];
+    out[g] = s.length ? { u: undetermined(`${s.length} amount${s.length > 1 ? "s are" : " is"} undetermined, so the total is undetermined (never read as zero)`), rows: s }
+      : { v: acc[g] || zero, rows: [] };
+  }
+  return out;
 }
+const total = (t, fieldName, step) => totals(t, fieldName, step, null, 1)[0];
 
 const countFigure = (n) => ({ value: String(n), sign: "+", precision: "exact" });
-const indexed = (rows) => rows.map((row, i) => ({ row, i }));
 
 function makeRatio(num, den, places, mode) {
   const value = divide(num, den, { places, mode });
@@ -328,7 +364,16 @@ function makeRatio(num, den, places, mode) {
   return { numerator: num, denominator: den, value };
 }
 
-/* Each op: (step, env, opts) → {kind, value, inputRows, set: [{row, why}]}. */
+/* The rows of `index` keyed by any of `keys`, ascending, each once. */
+function matches(index, keys) {
+  if (keys.length === 1) return index.get(keys[0]) || [];
+  const js = new Set();
+  for (const k of keys) for (const j of index.get(k) || []) js.add(j);
+  return [...js].sort((a, b) => a - b);
+}
+
+/* Each op: (step, env, opts) → {kind, value, inputRows, set: [{row, why}]}. A table value is one of `tables.mjs`'s:
+   held as row objects when its source was bound so, else a view over the streamed source. */
 const RUN = {
   select(st, env) {
     const t = env.table(st.from);
@@ -340,32 +385,34 @@ const RUN = {
       const badLit = lits.find((l) => isUndetermined(l) || isRefusal(l));
       if (badLit) stop(badLit.mismatch ? "UNIT_MISMATCH" : "RECIPE_INVALID", `a condition on "${c.field}": ${badLit.why}`, st.as);
       const vs = lits.map((l) => l.v);
-      return { c, field, literal: c.test === "in" || c.test === "between" ? vs : vs[0] };
+      return { c, field, read: t.reader(c.field), literal: c.test === "in" || c.test === "between" ? vs : vs[0] };
     });
     const kept = []; const set = [];
-    t.rows.forEach((row, i) => {
+    let i = -1;
+    rows: for (const row of t.scan()) {
+      i += 1;
       let open = null;
-      for (const { c, field, literal } of conds) {
-        const cell = readCell(field, row[c.field]);
+      for (const { c, field, read, literal } of conds) {
+        const cell = readCell(field, read(row));
         if (isUndetermined(cell)) { open = open || cell.why; continue; }
         const r = test(field.type, c, cell.v, literal);
         if (isRefusal(r)) stop(r.refused, `"${c.field}": ${r.why}`, st.as);
-        if (r === false) return;
+        if (r === false) continue rows;
         if (r !== true) open = open || r.why;
       }
       if (open) set.push({ row: i, why: open });
-      else kept.push(row);
-    });
-    return { kind: "table", value: { fields: t.fields, rows: kept }, inputRows: t.rows.length, set };
+      else kept.push(t.streamed ? i : row);
+    }
+    return { kind: "table", value: t.streamed ? filterView(t, kept) : objectTable(t.fields, kept), inputRows: t.size, set };
   },
   count(st, env) {
     const t = env.table(st.from);
-    return { kind: "figure", value: countFigure(t.rows.length), inputRows: t.rows.length, set: [] };
+    return { kind: "figure", value: countFigure(t.size), inputRows: t.size, set: [] };
   },
   sum(st, env) {
     const t = env.table(st.from);
-    const r = total(t, indexed(t.rows), st.field, st.as);
-    return { kind: "figure", value: r.u || r.v, inputRows: t.rows.length, set: r.rows };
+    const r = total(t, st.field, st.as);
+    return { kind: "figure", value: r.u || r.v, inputRows: t.size, set: r.rows };
   },
   difference(st, env) {
     const r = subtract(env.value(st.a), env.value(st.b));
@@ -380,50 +427,60 @@ const RUN = {
   share(st, env) {
     const part = env.table(st.part); const whole = env.table(st.whole);
     let num; let den; const set = [];
-    if (st.field === undefined) { num = countFigure(part.rows.length); den = countFigure(whole.rows.length); }
+    if (st.field === undefined) { num = countFigure(part.size); den = countFigure(whole.size); }
     else {
-      const a = total(part, indexed(part.rows), st.field, st.as);
-      const b = total(whole, indexed(whole.rows), st.field, st.as);
+      const a = total(part, st.field, st.as);
+      const b = total(whole, st.field, st.as);
       set.push(...b.rows);
       num = a.u || a.v; den = b.u || b.v;
     }
     if (isUndetermined(num) || isUndetermined(den))
-      return { kind: "ratio", value: { numerator: num, denominator: den, value: undetermined("a total is undetermined") }, inputRows: whole.rows.length, set };
+      return { kind: "ratio", value: { numerator: num, denominator: den, value: undetermined("a total is undetermined") }, inputRows: whole.size, set };
     const r = makeRatio(num, den, st.places ?? RATIO_DEFAULT.places, st.mode ?? RATIO_DEFAULT.mode);
     if (isRefusal(r)) stop(r.refused, r.why, st.as);
-    return { kind: "ratio", value: r, inputRows: whole.rows.length, set };
+    return { kind: "ratio", value: r, inputRows: whole.size, set };
   },
   group(st, env) {
     const t = env.table(st.from);
     const by = st.by.map((n) => fieldOf(t, n, st.as, "the grouping field"));
-    const groups = new Map(); const set = [];
-    t.rows.forEach((row, i) => {
-      const cells = by.map((f) => readCell(f, row[f.name]));
+    const reads = by.map((f) => t.reader(f.name));
+    const keys = new Map(); const firsts = []; const counts = []; const set = [];
+    const gid = st.measure.op === "sum" ? [] : null;
+    let i = 0;
+    for (const row of t.scan()) {
+      const cells = by.map((f, k) => readCell(f, reads[k](row)));
       const open = cells.find(isUndetermined);
-      if (open) return set.push({ row: i, why: open.why });
-      const key = canonicalJson(cells.map(({ v }) => v));
-      if (!groups.has(key)) groups.set(key, { cells: by.map((f) => row[f.name]), rows: [] });
-      groups.get(key).rows.push({ row, i });
-    });
+      let g = -1;
+      if (open) set.push({ row: i, why: open.why });
+      else {
+        const key = canonicalJson(cells.map(({ v }) => v));
+        g = keys.get(key);
+        if (g === undefined) { g = firsts.length; keys.set(key, g); firsts.push(reads.map((read) => read(row))); counts.push(0); }
+        counts[g] += 1;
+      }
+      if (gid) gid.push(g);
+      i += 1;
+    }
     let mfield;
-    if (st.measure.op === "count") mfield = { name: "count", type: "integer" };
+    if (!gid) mfield = { name: "count", type: "integer" };
     else {
       const sf = fieldOf(t, st.measure.field, st.as, "the measure's field");
       mfield = { name: "sum", type: "number", ...(sf.unit && { unit: sf.unit }), ...(sf.currency && { currency: sf.currency }) };
     }
-    const rows = [];
-    for (const g of groups.values()) {
+    const sums = gid && firsts.length ? totals(t, st.measure.field, st.as, gid, firsts.length) : null;
+    const rows = firsts.map((cells, g) => {
+      let m;
+      if (!gid) m = String(counts[g]);
+      else if (sums[g].u) { m = null; set.push(...sums[g].rows.map((x) => ({ ...x, why: `${x.why}; its group's sum is undetermined` }))); }
+      else m = sums[g].v;
+      if (t.streamed) return [...cells, m];
       const out = {};
-      by.forEach((f, k) => { out[f.name] = g.cells[k]; });
-      if (st.measure.op === "count") out.count = String(g.rows.length);
-      else {
-        const r = total(t, g.rows, st.measure.field, st.as);
-        if (r.u) { out.sum = null; set.push(...r.rows.map((x) => ({ ...x, why: `${x.why}; its group's sum is undetermined` }))); }
-        else out.sum = r.v;
-      }
-      rows.push(out);
-    }
-    return { kind: "table", value: { fields: [...by, mfield], rows }, inputRows: t.rows.length, set };
+      by.forEach((f, k) => { out[f.name] = cells[k]; });
+      out[mfield.name] = m;
+      return out;
+    });
+    const fields = [...by, mfield];
+    return { kind: "table", value: t.streamed ? heldTable(fields, rows) : objectTable(fields, rows), inputRows: t.size, set };
   },
   span(st, env, opts) {
     const t = env.table(st.from);
@@ -431,22 +488,30 @@ const RUN = {
     for (const f of [fs, fe]) if (f.type !== "date" && f.type !== "datetime") stop("RECIPE_INVALID", `"${f.name}" is not a date field`, st.as);
     const into = st.into ?? st.as;
     if (t.fields.some((f) => f.name === into)) stop("RECIPE_INVALID", `"${into}" is already a field of the table`, st.as);
-    const set = [];
-    const rows = t.rows.map((row, i) => {
-      const a = readCell(fs, row[fs.name]); const b = readCell(fe, row[fe.name]);
+    const ra = t.reader(fs.name); const rb = t.reader(fe.name);
+    /* A row's span: `{cell}` or `{why}`; pure, so a view over a streamed table computes it again on each pass. */
+    const spanOf = (row) => {
+      const a = readCell(fs, ra(row)); const b = readCell(fe, rb(row));
       const open = [a, b].find(isUndetermined);
-      if (open) { set.push({ row: i, why: open.why }); return { ...row, [into]: null }; }
+      if (open) return { why: open.why };
       let r;
       try { r = spanTimes(a.v, b.v, { unit: st.unit, ...(opts.view && { view: opts.view }), ...(opts.office && { office: opts.office }) }); } catch (e) { r = undetermined(`civil-time could not count: ${e.message}`); }
-      if (!r || !Number.isSafeInteger(r.min) || !Number.isSafeInteger(r.max)) {
-        set.push({ row: i, why: (r && r.why) || "civil-time gave no span" });
-        return { ...row, [into]: null };
-      }
-      const cell = r.min === r.max ? { value: String(Math.abs(r.min)), sign: r.min < 0 ? "-" : "+", precision: "exact", unit: st.unit }
-        : { low: String(r.min), high: String(r.max), sign: r.min < 0 ? "-" : "+", precision: "range", unit: st.unit };
-      return { ...row, [into]: cell };
-    });
-    return { kind: "table", value: { fields: [...t.fields, { name: into, type: "number", unit: st.unit }], rows }, inputRows: t.rows.length, set };
+      if (!r || !Number.isSafeInteger(r.min) || !Number.isSafeInteger(r.max)) return { why: (r && r.why) || "civil-time gave no span" };
+      return { cell: r.min === r.max ? { value: String(Math.abs(r.min)), sign: r.min < 0 ? "-" : "+", precision: "exact", unit: st.unit }
+        : { low: String(r.min), high: String(r.max), sign: r.min < 0 ? "-" : "+", precision: "range", unit: st.unit } };
+    };
+    const field = { name: into, type: "number", unit: st.unit };
+    const set = []; const rows = [];
+    let i = 0;
+    for (const row of t.scan()) {
+      const s = spanOf(row);
+      if ("why" in s) set.push({ row: i, why: s.why });
+      if (!t.streamed) rows.push({ ...row, [into]: "why" in s ? null : s.cell });
+      i += 1;
+    }
+    const value = t.streamed ? extendView(t, field, (row) => { const s = spanOf(row); return "why" in s ? null : s.cell; })
+      : objectTable([...t.fields, field], rows);
+    return { kind: "table", value, inputRows: t.size, set };
   },
   compare(st, env) {
     const r = relate(env.value(st.a), env.value(st.b));
@@ -466,7 +531,7 @@ const RUN = {
     let keyOf;
     if (st.space !== undefined) {
       if (typeof opts.resolveId !== "function") {
-        return { kind: "table", value: undetermined(`no resolver for the space "${st.space}"`), inputRows: L.rows.length, set };
+        return { kind: "table", value: undetermined(`no resolver for the space "${st.space}"`), inputRows: L.size, set };
       }
       keyOf = (v) => {
         let k;
@@ -476,62 +541,84 @@ const RUN = {
     } else {
       const cw = env.table(st.crosswalk.input);
       const cl = fieldOf(cw, st.crosswalk.left, st.as, "the crosswalk's left field"); const cr = fieldOf(cw, st.crosswalk.right, st.as, "the crosswalk's right field");
+      const readL = cw.reader(cl.name); const readR = cw.reader(cr.name);
       const pairs = new Map();
-      for (const row of cw.rows) {
-        if (empty(row[cl.name]) || empty(row[cr.name])) continue;
-        const a = String(row[cl.name]);
+      for (const row of cw.scan()) {
+        const a0 = readL(row); const b0 = readR(row);
+        if (empty(a0) || empty(b0)) continue;
+        const a = String(a0);
         if (!pairs.has(a)) pairs.set(a, []);
-        pairs.get(a).push(`\u0000${String(row[cr.name])}`);
+        pairs.get(a).push(`\u0000${String(b0)}`);
       }
       keyOf = (v, side) => {
         if (side === "right") return [`\u0000${String(v)}`];
         return pairs.has(String(v)) ? pairs.get(String(v)) : undetermined(`"${String(v).slice(0, 64)}" is not in the crosswalk`);
       };
     }
-    const rightKeys = R.rows.map((row, i) => {
-      if (empty(row[rf.name])) { set.push({ side: "right", row: i, why: `"${rf.name}" is empty` }); return null; }
-      const k = keyOf(row[rf.name], "right");
-      if (isUndetermined(k)) { set.push({ side: "right", row: i, why: k.why }); return null; }
-      return k;
-    });
+    // The right side's keys, as an index from key to its rows in order; a value is compared only through its key.
+    const index = new Map();
+    const readRight = R.reader(rf.name);
+    let j = 0;
+    for (const row of R.scan()) {
+      const v = readRight(row);
+      if (empty(v)) set.push({ side: "right", row: j, why: `"${rf.name}" is empty` });
+      else {
+        const k = keyOf(v, "right");
+        if (isUndetermined(k)) set.push({ side: "right", row: j, why: k.why });
+        else for (const key of k) { const js = index.get(key); if (!js) index.set(key, [j]); else if (js[js.length - 1] !== j) js.push(j); }
+      }
+      j += 1;
+    }
     const fields = [...L.fields, ...R.fields.map((f) => ({ ...f, name: `${st.right}.${f.name}` }))];
-    const rows = [];
-    L.rows.forEach((lrow, i) => {
-      if (empty(lrow[lf.name])) return set.push({ side: "left", row: i, why: `"${lf.name}" is empty` });
-      const ks = keyOf(lrow[lf.name], "left");
-      if (isUndetermined(ks)) return set.push({ side: "left", row: i, why: ks.why });
-      R.rows.forEach((rrow, j) => {
-        if (rightKeys[j] && rightKeys[j].some((k) => ks.includes(k))) {
+    const streamed = L.streamed || R.streamed;
+    const li = []; const rj = []; const rows = [];
+    const readLeft = L.reader(lf.name);
+    let i = 0;
+    for (const lrow of L.scan()) {
+      const v = readLeft(lrow);
+      if (empty(v)) set.push({ side: "left", row: i, why: `"${lf.name}" is empty` });
+      else {
+        const ks = keyOf(v, "left");
+        if (isUndetermined(ks)) set.push({ side: "left", row: i, why: ks.why });
+        else for (const m of matches(index, ks)) {
+          if (streamed) { li.push(i); rj.push(m); continue; }
           const out = { ...lrow };
+          const rrow = R.list[m];
           for (const f of R.fields) out[`${st.right}.${f.name}`] = rrow[f.name];
           rows.push(out);
         }
-      });
-    });
-    return { kind: "table", value: { fields, rows }, inputRows: L.rows.length + R.rows.length, set };
+      }
+      i += 1;
+    }
+    return { kind: "table", value: streamed ? joinView(L, R, fields, li, rj) : objectTable(fields, rows), inputRows: L.size + R.size, set };
   },
   sort(st, env) {
     const t = env.table(st.from);
     const f = fieldOf(t, st.by, st.as, "the sort's field");
     if (!QUANTITY_TYPES.includes(f.type) || f.composed === true)
       stop("SORT_NOT_QUANTITY", `"${st.by}" is ${f.composed ? "composed from more than one quantity" : `a ${f.type}`}, not one stated quantity`, st.as);
+    const numeric = f.type === "number" || f.type === "integer";
+    const read = t.reader(f.name);
     const set = []; const keyed = [];
-    t.rows.forEach((row, i) => {
-      const c = readCell(f, row[f.name]);
-      if (isUndetermined(c)) return set.push({ row: i, why: c.why });
-      if ((f.type === "number" || f.type === "integer") && c.v.precision === "range") return set.push({ row: i, why: `"${f.name}" is a range, which has no one place in an order` });
-      keyed.push({ row, v: c.v });
-    });
+    let i = 0;
+    for (const row of t.scan()) {
+      const c = readCell(f, read(row));
+      if (isUndetermined(c)) set.push({ row: i, why: c.why });
+      else if (numeric && c.v.precision === "range") set.push({ row: i, why: `"${f.name}" is a range, which has no one place in an order` });
+      else keyed.push(numeric ? { i, d: statedValue(c.v), unit: c.v.unit, currency: c.v.currency } : { i, v: c.v });
+      i += 1;
+    }
     const sign = st.order === "desc" ? -1 : 1;
     const cmp = (a, b) => {
-      if (f.type === "number" || f.type === "integer") {
-        if (a.v.unit !== b.v.unit || a.v.currency !== b.v.currency) stop("UNIT_MISMATCH", `"${f.name}" mixes units or currencies`, st.as);
-        return sign * cmpD(statedValue(a.v), statedValue(b.v));
+      if (numeric) {
+        if (a.unit !== b.unit || a.currency !== b.currency) stop("UNIT_MISMATCH", `"${f.name}" mixes units or currencies`, st.as);
+        return sign * cmpD(a.d, b.d);
       }
       const o = order(f.type, a.v, b.v);
       return typeof o === "number" ? sign * o : 0; // an undecided pair keeps its input order
     };
-    return { kind: "table", value: { fields: t.fields, rows: mergeSort(keyed, cmp).map((x) => x.row) }, inputRows: t.rows.length, set };
+    const perm = mergeSort(keyed, cmp).map((x) => x.i);
+    return { kind: "table", value: t.streamed ? orderView(t, perm) : objectTable(t.fields, perm.map((k) => t.list[k])), inputRows: t.size, set };
   },
 };
 
@@ -547,13 +634,15 @@ function mergeSort(xs, cmp) {
 }
 
 function summary(r) {
-  if (r.kind === "table") return isUndetermined(r.value) ? r.value : { rows: r.value.rows.length };
+  if (r.kind === "table") return isUndetermined(r.value) ? r.value : { rows: r.value.size };
   return r.value;
 }
 
-/** R7–R14: run a checked recipe over its bound inputs. `{result, undetermined_rows, trace}`, or a refusal
- *  `{refused, why, step?, errors?}`. `opts.resolveId(space, value)` is the caller's normaliser for a join (R11);
- *  `opts.view` and `opts.office` pass to civil-time's `span` for a business-day count (R9). */
+/** R7–R14, R22: run a checked recipe over its bound inputs. `{result, undetermined_rows, trace}`, or a refusal
+ *  `{refused, why, step?, errors?}`. A table input is bound as row objects or streamed (`tables.mjs`); a table
+ *  result is answered as its source was bound: row objects, or a streamed table over the same rows. `opts.resolveId(space, value)`
+ *  is the caller's normaliser for a join (R11); `opts.view` and `opts.office` pass to civil-time's `span` for a
+ *  business-day count (R9). */
 export function evaluate(recipe, bound, opts = {}) {
   if (bound === null || typeof bound !== "object") throw new TypeError("evaluate's bindings are an object");
   if (opts === null || typeof opts !== "object") throw new TypeError("evaluate's options are an object");
@@ -566,7 +655,11 @@ export function evaluate(recipe, bound, opts = {}) {
     const v = bound[inp.name];
     const why = inp.kind === "table" ? tableFault(v) : figureFault(v);
     if (why) return { refused: "INPUT_INVALID", why: `the input "${inp.name}": ${why}` };
-    env.set(inp.name, { kind: inp.kind, value: v });
+    if (inp.kind !== "table") { env.set(inp.name, { kind: inp.kind, value: v }); continue; }
+    if (Array.isArray(v.rows)) { env.set(inp.name, { kind: "table", value: objectTable(v.fields, v.rows) }); continue; }
+    const s = streamFault(v, inp.name);
+    if (s.why) return { refused: "INPUT_INVALID", why: s.why };
+    env.set(inp.name, { kind: "table", value: streamTable(v.fields, v, s.size, inp.name) });
   }
   const trace = [];
   let undeterminedRows = 0;
@@ -578,7 +671,7 @@ export function evaluate(recipe, bound, opts = {}) {
     for (const st of recipe.steps) {
       let r;
       try { r = RUN[st.op](st, access, opts); } catch (e) {
-        if (e instanceof Refused) throw e;
+        if (e instanceof Refused) { if (e.r.step === null) e.r.step = st.as; throw e; }
         if (e && isUndetermined(e.value)) r = { kind: PRODUCES[st.op], value: undetermined(`an input is undetermined: ${e.value.why}`), set: [] };
         else throw e;
       }
@@ -590,7 +683,9 @@ export function evaluate(recipe, bound, opts = {}) {
     if (e instanceof Refused) return { ...e.r, trace };
     throw e;
   }
-  return { result: env.get(recipe.output).value, undetermined_rows: undeterminedRows, trace };
+  const out = env.get(recipe.output);
+  return { result: out.kind === "table" && !isUndetermined(out.value) ? answerOf(out.value) : out.value,
+    undetermined_rows: undeterminedRows, trace };
 }
 
 /** R15: the result key: SHA-256 of the canonical JSON of `{recipe, inputs, method_version}`. */

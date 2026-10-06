@@ -2,6 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { checkRecipe, evaluate, OPS, TESTS, METHOD, SUM_RULE } from "../../../src/calc-grammar/index.mjs";
+import { bothWays } from "./fixtures/stream.mjs";
 
 const fig = (s, extra = {}) => (s.startsWith("-") ? { value: s.slice(1), sign: "-", precision: "exact", ...extra }
   : { value: s, sign: "+", precision: "exact", ...extra });
@@ -102,8 +103,13 @@ const T = {
     { name: "d", n: 1.5, i: "1.5", d: "2024-13-45", e: "2024-01-01", ok: true },
   ],
 };
-const run = (steps, bound = {}, opts) => evaluate(recipe(steps, steps[steps.length - 1].as, [{ name: "t", kind: "table" }, { name: "u", kind: "table" }, { name: "x", kind: "figure" }, { name: "y", kind: "figure" }]),
-  { t: T, u: { fields: [{ name: "who", type: "string" }], rows: [] }, x: fig("1"), y: fig("2"), ...bound }, opts);
+/* Every evaluation here also runs with its tables streamed (R22), and must answer the same. */
+const run = (steps, bound = {}, opts) => {
+  const { objects, compared, streams } = bothWays(recipe(steps, steps[steps.length - 1].as, [{ name: "t", kind: "table" }, { name: "u", kind: "table" }, { name: "x", kind: "figure" }, { name: "y", kind: "figure" }]),
+    { t: T, u: { fields: [{ name: "who", type: "string" }], rows: [] }, x: fig("1"), y: fig("2"), ...bound }, opts);
+  assert.deepEqual(streams, compared, "the same answer over the streamed tables");
+  return objects;
+};
 const names = (res) => res.result.rows.map((r) => r.name);
 
 test("R7 select keeps rows meeting every condition (eq ne lt le gt ge in between, inclusive); an undetermined field is set aside and counted, never coerced", () => {
