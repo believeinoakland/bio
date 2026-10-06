@@ -2387,3 +2387,17 @@ response: **Bob, 2026-10-06:** "If the user just specified a unique place civics
 decided: 2026-10-06 · Bob
 reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (the setup screen; S5); `journeys.html` (journey 1).
 owed: (BOB) instance-setup: the named place (an administrator's act, held locally, never exported to the network) and the queue item when an installed update brings a held profile covering it; the op behind the registry's `owed:placewanted DEC-150`.
+
+### DEC-151 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (the layouts page's question S5, from Bob's comment "They can type in a different location, right?")
+for: bob
+question: May a group outside the places Civicsmith ships rules for write its own place's rules?
+why it is Bob's: a new capability, and it decides who may write the rules a group's due dates rest on (P17).
+provisional: places are chosen among held, researched profiles only (instance-setup R12–R15; jurisdictions R1, R44); choosing none is allowed; DEC-150 lets a group name its place and be told when an update brings it.
+alternative: B, a group writes its own place's rules now; C, a group asks the makers for its place (an outward act).
+recommendation: A for this release; B as the next requirement once a group outside Oakland asks.
+reversal cost: low (A changes nothing built).
+response: **Bob, 2026-10-06: "S5: A for now, but the B capabilities should be recorded as something to be done after the first public release goes out."** Ruled: (1) **now**: only the places Civicsmith ships, researched with their sources; a group elsewhere chooses none, names its place and is told when an update brings it (DEC-150); (2) **after the first public release**: a group may write its own place's rules inside its own Civicsmith (its records and open-meeting laws and their deadlines, holidays, office hours and time zone, offices, where records are published), each with its source, marked as the group's own research and never as Civicsmith's, serving only that group, and offerable later for a release.
+decided: 2026-10-06 · Bob
+reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (section 7, S5); `journeys.html` §6 (the gap list).
+owed: (BOB) (2) recorded as work for after the first public release, wherever BOB keeps such work, to be worded as a requirement then; nothing for the release now.
