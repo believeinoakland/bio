@@ -17,6 +17,11 @@ import { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, VOCABULARIES, MACHINE_REFUSALS, JUST
 import * as actionGrammar from "../../../src/action-grammar/index.mjs";
 import { list as listProfiles, combine as combineProfiles } from "../../../../jurisdictions/index.mjs";
 
+import { T33_RUNGS } from "../../../src/affordances/t33.mjs";
+/* R39's vocabularies, by name. */
+const R39_KEYS = ["event_kinds", "dated_fact_kinds", "event_statuses", "participant_roles", "event_relation_kinds",
+  "line_kinds", "line_capacities", "line_roles", "money_kinds", "money_phases", "money_stages", "money_bases",
+  "money_precisions", "connection_kinds", "identity_claim_kinds"];
 const SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "src");
 /* N463 (plane R8): the Worker entry is the plane's own `src/plane/index.mjs`. */
 const ENTRY = join(SRC, "plane", "index.mjs");
@@ -313,7 +318,8 @@ test("R17 R37: with no target, the catalogue — each act decorated with applies
   const r = await GET(`op=affordances&token=${W.IRIS}`);
   /* R17's six keys, all present; the control plane's door may add its own decoration beside them (`fences`, `pack`:
      control-plane R41, K585 (1), K730) and nothing else */
-  const SIX = ["capture_acts", "catalog", "detail", "set_acts", "target", "vocabularies", "screens", "wizard_scripts" /* R37 */];
+  const SIX = ["capture_acts", "catalog", "detail", "set_acts", "target", "vocabularies", "screens", "wizard_scripts" /* R37 */,
+    "answer_checks" /* K1601 */];
   assert.deepEqual(SIX.filter((k) => !Object.hasOwn(r, k)), []);
   assert.deepEqual(Object.keys(r).filter((k) => !SIX.includes(k) && !["fences", "pack"].includes(k)), []);
   assert.equal(r.target, null);
@@ -327,7 +333,14 @@ test("R17 R37: with no target, the catalogue — each act decorated with applies
   assert.deepEqual(r.capture_acts.map((a) => a.id), CAPTURE_ACTS.map((a) => a.id));
   assert.deepEqual(r.set_acts.map((a) => [a.id, a.set_key, a.item_keys, a.shared_keys, a.max_items]),
     PER_ITEM_ACTS.map((a) => [a.id, a.set_key, a.item_keys, a.shared_keys, PER_ITEM_MAX]));
-  assert.deepEqual(r.vocabularies, JSON.parse(JSON.stringify(VOCABULARIES)));
+  /* R4 R39: every fixed vocabulary as the module holds it; beside them only R39's, each `{values, words}`, for the owners
+     the plane composed (words.mjs; t33.test.mjs holds their content) */
+  const fixed = JSON.parse(JSON.stringify(VOCABULARIES));
+  assert.deepEqual(Object.fromEntries(Object.keys(fixed).map((k) => [k, r.vocabularies[k]])), fixed);
+  const extra = Object.keys(r.vocabularies).filter((k) => !Object.hasOwn(fixed, k));
+  assert.deepEqual(extra.filter((k) => !R39_KEYS.includes(k)), []);
+  for (const k of extra) assert.deepEqual(Object.keys(r.vocabularies[k]).sort(), ["values", "words"], k);
+  assert.ok(extra.includes("connection_kinds"), "the plane composes connection owners");
   /* R37: the plane registers the bundled screen registry (plane R19); each is a list, and every script offered starts on
      a registered screen */
   assert.ok(Array.isArray(r.screens) && Array.isArray(r.wizard_scripts));
@@ -628,7 +641,9 @@ test("R19 R35 R37: together the two drives reach every op RUNGS grades `reasoned
     /* R35: at case-import's interface over its fixture, backing.test.mjs */
     "importaccept", "importacceptwithdraw", "importflag", "importflagclear",
     /* R37: at wizard-scripts' interface over its fixture, t31.test.mjs */
-    "wizardretire"];
+    "wizardretire",
+    /* R40 (T33-85): T33's, each at its owner's interface over its fixture, t33-backing.test.mjs */
+    ...Object.keys(T33_RUNGS).filter((op) => T33_RUNGS[op] === "reasoned")];
   assert.deepEqual(Object.keys(RUNGS).filter((op) => RUNGS[op] === "reasoned" && !driven.includes(op)), []);
 });
 

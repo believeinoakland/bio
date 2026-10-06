@@ -132,6 +132,10 @@ export { affordancesOf, affordancesOps } from "./affordances/facts.mjs";
 /* R17 (T19): `op=affordances`, the composition and the door's arm, with the gate and the stamps handed in by the control
    plane. */
 export { affordancesAnswer, affordancesOp } from "./affordances/door.mjs";
+/* R40 (T33-85): the grades and reasons of every op T33 adds, spread into RUNGS, RUNG_ABSENT and NON_ACTS below. */
+import { T33_RUNGS, T33_RUNG_ABSENT, T33_NON_ACTS } from "./affordances/t33.mjs";
+/* R39 (T33-85): the new closed vocabularies with the members' words, read at the call from the composed owners. */
+import { composedVocabularies } from "./affordances/words.mjs";
 
 /* The disposition set: the target states op=dispose may write. Every other
  * inquiry state is entered by its own act with its own entry requirements
@@ -564,6 +568,10 @@ export const JUSTIFICATION_REFUSALS = [
   /* R37 (DEC-121; N528): retiring a wizard script, or withdrawing a version, says why (wizard-scripts R9, as
      filing-templates R11), refused absent as well as malformed. */
   "WIZARD_REASON_REFUSED",
+  /* R40 (T33-85): a member's statement of a duty occurrence's state names its cause (duties R13), a workbook's method
+     note states its purpose (workbooks R10), and a member verifying an assistant mode's first live run gives the evidence
+     of what they checked (run-rules R19; refused absent as well as malformed). Each the member's own account. */
+  "NO_CAUSE", "NO_PURPOSE", "AI_RUN_VERIFICATION_UNFIT",
 ];
 
 /* THE GROUNDS ON WHICH A MUTATING OP HAS NO RUNG. Written ONCE here and pointed
@@ -838,7 +846,8 @@ export const VOCABULARIES = {
  * (actions' answer with no profile active), never a partial list. */
 export function vocabulariesFor(kinds) {
   const ok = Array.isArray(kinds) && kinds.length > 0 && kinds.every((k) => typeof k === "string" && k.length > 0);
-  return { ...VOCABULARIES, action_kind: ok ? kinds : PRODUCT_KINDS };
+  /* R39: T33's vocabularies, each `{values, words}`, present only where its owner is composed (./affordances/words.mjs). */
+  return { ...VOCABULARIES, action_kind: ok ? kinds : PRODUCT_KINDS, ...composedVocabularies() };
 }
 
 
@@ -1121,6 +1130,9 @@ export const RUNGS = {
      reason, and each takes the other back (case-import R17: an end leaves no watch in force; a new watch puts one back). */
   importwatch:           "reversible", // importunwatch takes it back
   importunwatch:         "reversible", // importwatch takes it back
+
+  /* ---- R40 (T33-85): T33's ops, graded in ./affordances/t33.mjs. */
+  ...T33_RUNGS,
 };
 
 
@@ -1317,6 +1329,8 @@ export const RUNG_ABSENT = {
   wizardeditorgrant:    { ground: "credential", is: "an administrator grants a member the advanced editor: a blank start and adding steps (wizard-scripts R8)" },
   wizardeditorrevoke:   { ground: "credential", is: "an administrator revokes an advanced-editor grant, appended and never deleted (wizard-scripts R8)" },
   wizardprogress:       { ground: "observational", is: "adds one to an unattributed daily tally of a script version's start, step reached or finish; names no member, case or project, and stopping is no event (wizard-scripts R15)" },
+  /* R40 (T33-85): T33's ops, graded in ./affordances/t33.mjs. */
+  ...T33_RUNG_ABSENT,
 };
 
 /* REC-38, UI-22's delegation: THE CAPTURE-DIRECTED ACTS' METADATA, and the
@@ -2880,6 +2894,8 @@ export const NON_ACTS = {
   wizarduse: "read: a script's unattributed daily use tallies by version and day, to its project's owners and its version's author; writes nothing",
   wizardcandidates: "read: where offered scripts' step counts drop most and which acts are refused most, never a member, case, target or project; writes nothing",
   wizardcheck: "read: the checks every wizard script passes, run over a list of steps against the registered screens, naming each refusal's step; reached by any credential, and writes nothing",
+  /* R40 (T33-85): T33's ops, their reasons in ./affordances/t33.mjs. */
+  ...T33_NON_ACTS,
 };
 
 /* D-126 — THE FOURTH WEIGHT, `per-item`, AND THE THREE ACTS THAT TAKE A SET.
@@ -2961,6 +2977,38 @@ export function decorate(act, gate) {
     prompt: act.prompt ?? null,
     phone: phoneOf(id),
   };
+}
+
+/* R41 (Q1-7; for `answers`' explain read): A REFUSAL EXPLAINED FROM ITS TRANSLATION AND A DRY RUN. For a refusal an op
+ * gave: the refusal's catalogue row as its owner holds it — read through `rowOf(code)`, the plane's lookup over the owners'
+ * check families, handed in by the caller as `gate` is (this module precedes the control plane that holds it), never
+ * re-worded here — beside the op's rung, absence ground, prompt and weight (R11), and, with a target's facts (R13–R14,
+ * asked by the caller of the instance method in ./affordances/facts.mjs), the acts R17 would answer for this caller on it
+ * now: `deriveActs` over the facts, nothing performed. So the explanation states what the caller may do instead. A code
+ * no row holds answers `translation: null` with NOT_CATALOGUED in `detail`, the one sentence this composes (R21). Writes
+ * nothing (R22) and never throws. `acts` is null with no target, and [] for a target the caller cannot see. */
+export const NOT_CATALOGUED = "This refusal is not in the catalogue of refusals, so no explanation of it is published; "
+  + "its code is shown as the act gave it.";
+const ALL_PUBLISHED = () => [...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS];
+export function explainRefusal(arg) {
+  const { op = null, code = null, facts = null, gate = null, rowOf = null } = arg && typeof arg === "object" ? arg : {};
+  const id = typeof op === "string" && op ? op : null;
+  const c = typeof code === "string" && code ? code : null;
+  let row = null;
+  try { row = c && typeof rowOf === "function" ? rowOf(c) : null; } catch { row = null; }
+  const catalogued = !!row && typeof row.translation === "string" && row.translation.length > 0;
+  let d = { rung: null, rung_absence: null, prompt: null, weight: null };
+  try { if (id) d = decorate(ALL_PUBLISHED().find((a) => a.id === id) ?? { id, label: id }, gate); } catch { /* stated nulls */ }
+  let acts = null;
+  try {
+    if (facts && typeof facts === "object")
+      acts = facts.ok === true ? deriveActs(facts).map((a) => decorate(a, gate)) : [];
+  } catch { acts = null; }
+  return { op: id, code: c,
+           translation: catalogued ? row.translation : null,
+           check: catalogued && typeof row.check === "string" ? row.check : null,
+           detail: catalogued ? null : NOT_CATALOGUED,
+           rung: d.rung, rung_absence: d.rung_absence, prompt: d.prompt, weight: d.weight, acts };
 }
 
 /* R12: the totality DEC-8 and FW-14 require, as a service over the control plane's table of ops, each
