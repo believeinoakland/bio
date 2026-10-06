@@ -1,7 +1,7 @@
-/* R48 (DEC-107; H15, K1038) at the module's interface: no member-facing sentence this module answers calls a to-do an
-   "obligation" or a signal a "condition". Swept whole: the feed over one item of EVERY catalogued kind (each with the
-   disposition R12 and R46 give it, homed and unhomed, one partly set aside by a project), a task, the mute, disposed,
-   resolved and unattributed blocks; every refusal and answer of queueMute, queueSnooze and proposeDispose; the mint's
+/* R48 (DEC-107, DEC-131; H15, K1038, K1536) at the module's interface: no member-facing sentence this module answers calls
+   a to-do an "obligation", or a status item a "condition" or a "signal". Swept whole: the feed over one item of EVERY
+   catalogued kind (each with the disposition R12 and R46 give it, homed and unhomed, one partly set aside by a
+   project), a task, the mute, disposed, resolved and unattributed blocks; every refusal and answer of queueMute, queueSnooze and proposeDispose; the mint's
    three refusals and R49's; every row's translation, every kind's sentence and the mute's refusal sentence. The
    producers are stubbed with neutral words, so every sentence swept is this module's (queue-producers' own words are
    its R24). And R12's newer-capture door (K1035): adopting takes a why, keeping's is optional, `requires` the notice. */
@@ -14,9 +14,9 @@ import { QUEUE_OBLIGATION_KINDS, QUEUE_FINDING_KINDS, QUEUE_CONDITION_KINDS, MUT
 const FACTS = { objective_gap: { bound: 50, truncated: false }, unattributed: { count: 1, inquiries: ["INQ-1"] },
                 contradiction: { bound: 50, truncated: false }, dispositions: [] };
 /* "condition" names a checkpoint's own condition and an objective's satisfaction condition in two kinds' sentences:
-   neither calls a signal a condition (R48), so exactly those two phrases are set aside before the sweep. */
+   neither calls a status item a condition (R48), so exactly those two phrases are set aside before the sweep. */
 const NOT_A_SIGNAL = [/whether its condition was met/g, /satisfaction condition/g];
-const BANNED = /\b(obligation|condition)s?\b/i;
+const BANNED = /\b(obligation|condition|signal)s?\b/i;
 const offending = (text) => BANNED.test(NOT_A_SIGNAL.reduce((t, re) => t.replace(re, ""), String(text)));
 
 /** Every sentence in an answer: the strings under the keys a member reads. */
@@ -54,7 +54,7 @@ function everyWorld() {
   return w;
 }
 
-test("R48: no member-facing sentence of the feed, over one item of every catalogued kind, calls a to-do an obligation or a signal a condition", () => {
+test("R48: no member-facing sentence of the feed, over one item of every catalogued kind, calls a to-do an obligation, or a status item a condition or a signal", () => {
   const w = everyWorld();
   // one project's set-aside of a project-scoped item, so a home's `disposed_by` sentence is in the answer too
   w.run(`INSERT INTO finding_dispositions VALUES ('PRJ-A', 'FINDING::source-modified::0', 'source-modified', 'deferred', 'later', 'alice', ?)`, iso(NOW));
@@ -73,7 +73,7 @@ test("R48: no member-facing sentence of the feed, over one item of every catalog
   assert.deepEqual(Object.values(f.class_labels).filter(offending), []);
 });
 
-test("R48: no refusal or answer of the acts, the mint or the sort says obligation or condition, nor any row, kind sentence or mute sentence", () => {
+test("R48: no refusal or answer of the acts, the mint or the sort says obligation, condition or signal, nor any row, kind sentence or mute sentence", () => {
   const w = everyWorld();
   const asAlice = { member: "alice", viewer: "member:alice" };
   const pd = (a) => w.q.proposeDispose({ decidedBy: "alice", viewer: "member:alice", identity: "member:alice", to: "deferred", reason: "r", ...a });
@@ -132,6 +132,8 @@ test("R48: no refusal or answer of the acts, the mint or the sort says obligatio
   // negative control: the sweep sees the words it bans, and its two set-asides are exactly the two phrases
   assert.equal(offending("an obligation is owed"), true);
   assert.equal(offending("a CONDITION about the machinery"), true);
+  assert.equal(offending("a signal is a fact about our machinery"), true);
+  assert.equal(offending("Signals"), true);
   assert.equal(offending("whether its condition was met"), false);
   assert.deepEqual(vocab.filter((s) => BANNED.test(s)).length, 2, "only the checkpoint's and the objective's own condition");
 });
