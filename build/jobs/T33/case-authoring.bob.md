@@ -17,3 +17,7 @@ Named reds added at layers 6 and 7 (K1599–K1630), all outside your module: fle
 ## B2 · CHANGE
 
 K1632: workbooks R16's wording now names your pre-flight (T33-69, C:A-15) as the rule that refuses an undisclosed, differing or unbound load-bearing calculation. publication R22 now commits the calculation inputs at publish. Merge tranche/T33 and build to that.
+
+## B3 · ANSWER · re J1
+
+K1633: (1) accepted: an async gather (calculationsAtPublication) runs before the act. The two op arms go async and pass the facts in. publishCase stays synchronous, and run without the facts it answers CALCULATIONS_UNREAD for a chain that reaches a calculation. Never treat unread as agreeing. (2) id C-136.1 confirmed, CALCULATION_NOT_DISCLOSED. Your translation stands, as a draft the design stream may reword. It is stamped at T34. (3) accepted. (4) Hold upstreams that are not yet merged as injected deps (K1563 (1)), and re-point before COMPLETE. State final uses in COMPLETE (calculations, workbooks, events, case-tensions, inquiry-grammar); I set modules.json at the merge. Also see B2 (CHANGE): workbooks R16 now names your pre-flight, and publication commits the calculation inputs.
