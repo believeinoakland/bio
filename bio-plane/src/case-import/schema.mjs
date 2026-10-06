@@ -1,7 +1,7 @@
-/* case-import's tables (requirements: `build/requirements/case-import.md` R1–R9, R12, R13, R17, R18).
+/* case-import's tables (requirements: `build/requirements/case-import.md` R1–R9, R12, R13, R17, R18, R21).
  *
  * APPEND-ONLY (R12): no act of this module updates or deletes a row. An import, an edition, its files, each recreation
- * (one `case_import_checks` row and its results per run: the import's, then each completion's), each acceptance,
+ * (one `case_import_checks` row and its results and calculations per run: the import's, then each completion's), each acceptance,
  * withdrawal, flag and clear, each watch, its end, each docket read and each entry it saw is a row of its own, and what is "in force" or "open" is read from the rows that follow it.
  *
  * THE BYTES (R1, R13). Every part of a case file, and every document a completion supplies, is held by its SHA-256 in
@@ -89,6 +89,21 @@ CREATE TABLE IF NOT EXISTS case_import_results (
   differs       TEXT NOT NULL,
   pair          TEXT,
   published     TEXT,
+  PRIMARY KEY (check_rn, ord)
+);
+-- R3, R21: each calculation the edition carries, as recreated at one recreation: its result (recreated, differs,
+-- not_recreated), what is missing and what differs, the recomputed values, the source's statement beside them (held
+-- only as the source's, never as a record row), and case-checker's own answer for it (its R20).
+CREATE TABLE IF NOT EXISTS case_import_calculations (
+  check_rn      INTEGER NOT NULL,
+  ord           INTEGER NOT NULL,
+  calc          TEXT NOT NULL,
+  result        TEXT NOT NULL,
+  missing       TEXT NOT NULL,
+  differs       TEXT NOT NULL,
+  recomputed    TEXT,
+  stated        TEXT NOT NULL,
+  checker       TEXT,
   PRIMARY KEY (check_rn, ord)
 );
 -- R5: a document a member supplied that completes a missing material.
@@ -208,7 +223,8 @@ CREATE INDEX IF NOT EXISTS case_import_docket_entries_import ON case_import_dock
 
 /** The tables, every one cleared by the whole-store purge only (R13). */
 export const CASE_IMPORT_TABLES = Object.freeze(["case_imports", "case_import_editions", "case_import_parts",
-  "case_import_files", "case_import_blobs", "case_import_checks", "case_import_results", "case_import_documents",
+  "case_import_files", "case_import_blobs", "case_import_checks", "case_import_results", "case_import_calculations",
+  "case_import_documents",
   "case_import_acceptances", "case_import_withdrawals", "case_import_flags", "case_import_clears",
   "case_import_edition_keys", "case_import_watches", "case_import_watch_ends", "case_import_docket_reads",
   "case_import_docket_entries"]);

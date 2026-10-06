@@ -109,11 +109,28 @@ export function findingText(id, pair = { capture: "B", connection: "C" }) {
           "---", "", `# ${id}`, ""].join("\n");
 }
 /** The case document: its lens (`bias_manifest.statements_sha`) and the source's bar (`required_strength`). */
-export function caseDocText({ case: caseId = CASE, edition = 1, lens = LENS, bar = { capture: "B", connection: "B" }, note = "" } = {}) {
+export function caseDocText({ case: caseId = CASE, edition = 1, lens = LENS, bar = { capture: "B", connection: "B" }, note = "",
+                              calcs = null } = {}) {
   return ["---", "format: bio-case-document/6", `case_id: ${caseId}`, `case_edition: ${edition}`, "bias_manifest:",
           `  in_force: ${lens ? "true" : "false"}`, `  statements_sha: ${lens ?? "null"}`, "required_strength:",
           `  declared: ${bar ? "true" : "false"}`, `  capture: ${bar?.capture ?? "null"}`, `  connection: ${bar?.connection ?? "null"}`,
+          ...(calcs ? calculationsBlock(calcs) : []),
           "---", "", `# Case ${caseId}`, note, ""].join("\n");
+}
+
+/** `case-grammar` R18's `calculations:` block, flat rows, each list or map value its canonical JSON in one quoted value. */
+export function calculationsBlock(rows) {
+  const v = (x) => (x === null || x === undefined ? "null" : typeof x === "string" ? `'${x}'` : `'${canonicalJson(x)}'`);
+  return ["calculations:", ...rows.flatMap((r) => [`  - calc: ${r.calc}`, `    recipe: ${v(r.recipe)}`, `    inputs: ${v(r.inputs)}`,
+    `    method_version: ${v(r.method_version)}`, `    results: ${v(r.results)}`, `    result_key: ${v(r.result_key)}`,
+    `    recompute: ${v(r.recompute)}`, `    disclosed: ${v(r.disclosed)}`])];
+}
+
+/** A carried calculation input's path and kind (`case-grammar` R13's `calculation` kind; a material path until that
+ *  kind's path is spelled). */
+export function calcInputAt(name) {
+  const p = caseFilePath("calculation", name);
+  return p ? { path: p, kind: "calculation" } : { path: caseFilePath("document", name), kind: "document" };
 }
 
 /** A case file's parts, as `public-read` R23 writes one (`case-grammar` R13: `caseFilePath` paths, files in path order,
@@ -121,18 +138,20 @@ export function caseDocText({ case: caseId = CASE, edition = 1, lens = LENS, bar
  *  document and its signature in part 1 and each other file in a part of its own. A document is a material, carried
  *  at `materials/<name>/document`. */
 export function caseFile({ group = SOURCE, case: caseId = CASE, edition = 1, lens = LENS, bar, note = "", findings = [F1, F2, F3],
-                           pairs = {}, documents = [], split = false, manifestExtra = {} } = {}) {
+                           pairs = {}, documents = [], split = false, manifestExtra = {}, calcs = null, calcInputs = [] } = {}) {
   const at = (kind, key) => caseFilePath(kind, key);
   const files = [
-    { path: at("case_document"), kind: "case_document", bytes: bytes(caseDocText({ case: caseId, edition, lens, bar, note })) },
+    { path: at("case_document"), kind: "case_document", bytes: bytes(caseDocText({ case: caseId, edition, lens, bar, note, calcs })) },
     { path: at("case_signature"), kind: "case_signature", bytes: bytes(`-----BEGIN SSH SIGNATURE-----\n${caseId}/${edition}\n`) },
     { path: at("complete_edition"), kind: "complete_edition", bytes: bytes(`<!doctype html><title>${caseId}</title>`) },
     ...findings.map((id) => ({ path: at("finding", id), kind: "finding", bytes: bytes(findingText(id, pairs[id])) })),
     ...documents.map((d) => ({ path: at("document", d.name), kind: "document", bytes: d.bytes })),
+    ...calcInputs.map((d) => ({ ...calcInputAt(d.name), bytes: d.bytes, ...(d.listedAs ? { listedAs: d.listedAs } : {}) })),
   ].sort((a, b) => (a.path < b.path ? -1 : 1));
   const rest = files.filter((x) => x.kind !== "case_document" && x.kind !== "case_signature");
   const partOf = (f) => (!split || !rest.includes(f) ? 1 : 2 + rest.indexOf(f));
-  const rows = files.map((f) => ({ path: f.path, sha256: sha(f.bytes), bytes: f.bytes.length, part: partOf(f), kind: f.kind }));
+  /* `listedAs`: bytes the manifest states for a file, standing for a file carried with other bytes than its hash */
+  const rows = files.map((f) => ({ path: f.path, sha256: f.listedAs ? sha(f.listedAs) : sha(f.bytes), bytes: f.bytes.length, part: partOf(f), kind: f.kind }));
   const count = Math.max(...rows.map((r) => r.part));
   const manifest = { format: CASE_FILE_FORMAT, group, case: caseId, edition,
                      case_document_sha: rows.find((r) => r.kind === "case_document").sha256,
@@ -166,7 +185,9 @@ export function world({ minimal = false, realChecker = false } = {}) {
   /* case-checker's checkCaseFile, scripted per finding */
   const script = new Map();
   const checker = { calls: [], throws: false, statement: "Recreating shows the case intact and consistent, not true.",
-                    signature: true, versions: { grading_versions: ["g1"], checks_version: "1.55.0" } };
+                    signature: true, versions: { grading_versions: ["g1"], checks_version: "1.55.0" },
+                    /* its R20's per-calculation answers, when the test scripts them */
+                    calculations: null };
   /* as case-checker answers: a promise (its signatures are verified by WebCrypto) */
   const checkCaseFile = async ({ parts, documents = [] }) => {
     checker.calls.push({ parts: parts.length, documents: documents.length });
@@ -179,6 +200,7 @@ export function world({ minimal = false, realChecker = false } = {}) {
       format: m.format ?? null, case: m.case ?? null, edition: m.edition ?? null, group: m.group ?? null,
       checker: checker.versions, integrity: { departures: [] }, signatures: { case: { verified: checker.signature } },
       publication_checks: { findings: [] }, complete_edition: { equal: true }, statement: checker.statement,
+      ...(checker.calculations ? { calculations: checker.calculations } : {}),
       findings: ids.map((id) => {
         const s = script.get(id) || { role: "load_bearing", result: "recreated", pair: { capture: { state: "graded", grade: "B" },
                                                                                           connection: { state: "graded", grade: "C" } } };

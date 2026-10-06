@@ -1,5 +1,5 @@
 /* case-import — another group's case file, imported into a read-only project (requirements:
- * `build/requirements/case-import.md` R1–R20; DEC-112 (6), DEC-96 items 1, 2, 4, DEC-92, DEC-45, DEC-46 (3), DEC-101 (3),
+ * `build/requirements/case-import.md` R1–R21; DEC-112 (6), DEC-96 items 1, 2, 4, DEC-92, DEC-45, DEC-46 (3), DEC-101 (3),
  * DEC-116 item 8; `BIO_Publication_v0_1.md` §5A, §5C "Import"; N520, N522, N534, K1256, K1257, K1273, K1339, K1366).
  *
  * A member imports another group's case file (R1). The copy holds it as an IMPORT, one per source group, case and lens,
@@ -9,6 +9,11 @@
  * material's fingerprint completes it, and the edition is checked again (R5). The group may accept an edition for the
  * findings that recreated, by a reasoned act, and withdraw that acceptance, and may flag and clear issues on it (R6–R8).
  * Recreating is not endorsing, and an acceptance changes no grade.
+ *
+ * Each calculation the case carries is recreated too, never trusted (R21; C:A-14, K1448): its recipe is evaluated again
+ * by `calc-grammar` over the inputs the case file carries, each first checked against its stated SHA-256, and recorded
+ * `recreated`, `differs` or `not_recreated`. The source's stated values are held only as the source's statement, beside
+ * what was recomputed; no act here writes a `CALC-`, a money fact or any record row from them.
  *
  * A member may watch an import (R17): `monitoring` then reads the publisher's public docket for that case daily and hands
  * each read to `recordDocketRead` (R18), which verifies each new entry (its digest and form, its signature against the
@@ -33,6 +38,8 @@
  *   reevaluation    `acceptanceWithdrawn` (its R31; R7), `citedCaseMoved` (its R33; R18).
  *   checkCaseFile   `case-checker.checkCaseFile` (its R1), pure; it answers a promise. Default: case-checker's own.
  *   caseFileManifestCheck   `case-grammar.caseFileManifestCheck` (its R13), pure.
+ *   caseCalculationsOf      `case-grammar.calculationsOf` (its R18): the case document's `calculations:` rows, pure.
+ *                           Default: case-grammar's own, else `calculationRowsOf` below, coded to its R18.
  *   now             the clock, milliseconds (default `env.BIO_NOW_MS`, else the wall clock).
  *
  * The words a member sees (the origin marks, "another group's", the statement that recreating is not endorsing) are the
@@ -57,6 +64,7 @@ import { DOCKET_UNREADABLE, ENTRY_FORMATS } from "../docket/index.mjs";
 import { CASE_IMPORT_CHECKS, rowOf } from "./checks.mjs";
 import { CASE_IMPORT_TABLES, BLOB_CHUNK, migrateCaseImport } from "./schema.mjs";
 import { checkCaseFile, readCaseFile } from "../case-checker/index.mjs";
+import { evaluate as evaluateRecipe, resultKey, METHOD as CALC_METHOD } from "../calc-grammar/index.mjs";
 
 export { CASE_IMPORT_CHECKS } from "./checks.mjs";
 export { CASE_IMPORT_SCHEMA, CASE_IMPORT_TABLES } from "./schema.mjs";
@@ -180,6 +188,157 @@ function fingerprintsOf(entry, out = new Set(), depth = 0) {
   return out;
 }
 
+/* ================================================================ R21: a carried calculation, recreated */
+
+/** R4, R21: the label every statement of a source's calculation carries: its values are the source's (DEC-45's kind). */
+export const SOURCE_CALCULATION = "the source group's value, as its case states it";
+/** R21: a calculation's results as recreated here. */
+export const CALC_RESULTS = Object.freeze(["recreated", "differs", "not_recreated"]);
+/* `case-checker` R20's answers, read against R21's. */
+const CHECKER_CALC = { agrees: "recreated", differs: "differs", not_recomputed: "not_recreated" };
+/* The most bytes one carried input is read as (a table within a Worker's heap, as `calculations` R1 bounds a table). */
+export const CALC_INPUT_MAX = 20 * 1024 * 1024;
+const jsonOf = (v) => { if (typeof v !== "string") return v ?? null; try { return JSON.parse(v); } catch { return v; } };
+
+/** `case-grammar` R18's rows, read from a case document's front matter as that requirement spells them: one row per
+ *  calculation, flat, each list or map value its canonical JSON in one quoted value. The stand-in until `case-grammar`
+ *  provides `calculationsOf`; a document without the block answers an empty list. Pure; never throws. */
+export function calculationRowsOf(fm) {
+  try {
+    const rows = isObj(fm) && Array.isArray(fm.calculations) ? fm.calculations : [];
+    return rows.filter(isObj).map((r) => ({ calc: r.calc ?? null, recipe: jsonOf(r.recipe), inputs: jsonOf(r.inputs),
+      method_version: r.method_version ?? null, results: jsonOf(r.results), result_key: r.result_key ?? null,
+      recompute: r.recompute ?? null, disclosed: jsonOf(r.disclosed) }));
+  } catch { return []; }
+}
+
+/* R21: a row's inputs as `[{name, sha}]` (a list of `{name, sha256}` or a `{name: sha}` map), or null. */
+function inputsOfRow(v) {
+  const list = Array.isArray(v) ? v.map((x) => (isObj(x) ? { name: str(x.name), sha: x.sha256 ?? x.sha ?? null } : null))
+    : isObj(v) ? Object.entries(v).map(([name, sha]) => ({ name: str(name), sha })) : null;
+  return list && list.every((x) => x && x.name) && new Set(list.map((x) => x.name)).size === list.length ? list : null;
+}
+
+/* R21: the source's stated values, compared by name: `output` and each named step (`calculations` R4's stored shape), or,
+   for results stated as a plain map, each key as a step of that name. */
+function statedValues(results) {
+  if (!isObj(results)) return null;
+  const out = new Map();
+  if ("output" in results || isObj(results.steps)) {
+    if ("output" in results) out.set("output", results.output);
+    if (isObj(results.steps)) for (const [k, v] of Object.entries(results.steps)) out.set(`steps.${k}`, v);
+  } else for (const [k, v] of Object.entries(results)) out.set(k === "output" ? "output" : `steps.${k}`, v);
+  return out.size ? out : null;
+}
+
+/** R21: recreates each calculation a case carries, never trusting it. Each row's recipe is evaluated by `calc-grammar`
+ *  (the evaluator `calculations.evaluate` runs, which writes nothing) over the inputs the case file carries, each found
+ *  by the SHA-256 the row states among the case file's files and the documents supplied for it, and first checked
+ *  against that hash. Each answers `{calc, result, missing[], differs[], recomputed, stated}`: `recreated` when every
+ *  result and the result key recompute equal, `differs` naming each result with the source's value and the recomputed
+ *  one, `not_recreated` naming each input missing or differing from its hash, or a method version this copy does not
+ *  hold. `stated` is the source's statement, held only as the source's. Pure: it reads nothing but its arguments, writes
+ *  nothing and never throws. `files` are `{path, sha256, content, detail?}` (the manifest's stated SHA-256 beside the
+ *  bytes; a file whose bytes differ from it carries `content: null`, as `case-checker` R19 reads one); `documents` are
+ *  bytes. */
+export function recreateCalculations({ rows = [], files = [], documents = [] } = {}) {
+  const byContent = new Map(), byStated = new Map();
+  for (const f of Array.isArray(files) ? files : []) {
+    if (!isObj(f)) continue;
+    /* a file the reader found differing from its manifest row carries no content (`case-checker` R19) */
+    const got = f.content instanceof Uint8Array ? shaOf(f.content) : null;
+    if (got && !byContent.has(got)) byContent.set(got, f.content);
+    if (isSha(f.sha256) && got !== f.sha256 && !byStated.has(f.sha256))
+      byStated.set(f.sha256, { path: f.path ?? null, got, detail: typeof f.detail === "string" ? f.detail.slice(0, 400) : null });
+  }
+  for (const d of Array.isArray(documents) ? documents : []) {
+    const b = bytesOf(d);
+    if (b) { const got = shaOf(b); if (!byContent.has(got)) byContent.set(got, b); }
+  }
+  const out = [];
+  (Array.isArray(rows) ? rows : []).forEach((row, ord) => {
+    try { out.push(recreateOne(row, ord, byContent, byStated)); }
+    catch (e) {
+      out.push({ calc: isObj(row) ? str(row.calc) ?? `#${ord + 1}` : `#${ord + 1}`, result: "not_recreated", differs: [], recomputed: null,
+                 missing: [{ what: "evaluation", why: `it could not be evaluated here: ${String(e && e.message || e).slice(0, 200)}` }],
+                 stated: statedOf(row) });
+    }
+  });
+  return out;
+}
+function statedOf(row) {
+  const r = isObj(row) ? row : {};
+  return { whose: "source", label: SOURCE_CALCULATION, method_version: r.method_version ?? null, results: r.results ?? null,
+           result_key: r.result_key ?? null, recompute: r.recompute ?? null, disclosed: r.disclosed ?? null };
+}
+function recreateOne(row, ord, byContent, byStated) {
+  const calc = isObj(row) ? str(row.calc) ?? `#${ord + 1}` : `#${ord + 1}`;
+  const stated = statedOf(row);
+  const missing = [];
+  const done = (result, differs = [], recomputed = null) => ({ calc, result, missing, differs, recomputed, stated });
+  if (!isObj(row)) { missing.push({ what: "row", why: "the case states this calculation in no readable row" }); return done("not_recreated"); }
+  const method = str(row.method_version);
+  if (method !== CALC_METHOD)
+    missing.push({ what: "method_version", method_version: method, why: method
+      ? `this copy does not hold the method version ${method} (it holds ${CALC_METHOD}): the value was computed by the publishing copy's engine and is not recreated here`
+      : "the case states no method version" });
+  const recipe = isObj(row.recipe) ? row.recipe : null;
+  if (!recipe) missing.push({ what: "recipe", why: "the case states no recipe that can be read" });
+  const inputs = inputsOfRow(row.inputs);
+  if (!inputs) missing.push({ what: "inputs", why: "the case states no list of named inputs that can be read" });
+  const bound = {}, hashes = {};
+  for (const inp of inputs || []) {
+    hashes[inp.name] = inp.sha;
+    if (!isSha(inp.sha)) { missing.push({ input: inp.name, sha: null, why: "the case states no SHA-256 for this input" }); continue; }
+    let b = byContent.get(inp.sha);
+    if (!b) {
+      const listed = byStated.get(inp.sha);
+      missing.push(listed
+        ? { input: inp.name, sha: inp.sha, carried: listed.got, path: listed.path, why: "the file carried for this input differs from its hash",
+            ...(listed.detail ? { detail: listed.detail } : {}) }
+        : { input: inp.name, sha: inp.sha, why: "the case file does not carry this input; bytes with this SHA-256 complete it" });
+      continue;
+    }
+    if (b.length > CALC_INPUT_MAX) { missing.push({ input: inp.name, sha: inp.sha, why: `the input is over ${CALC_INPUT_MAX} bytes, more than this copy reads` }); continue; }
+    const v = (() => { try { return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(b)); } catch { return undefined; } })();
+    if (v === undefined) { missing.push({ input: inp.name, sha: inp.sha, why: "the input's bytes are not the canonical JSON of a value calc-grammar evaluates" }); continue; }
+    bound[inp.name] = v;
+  }
+  if (missing.length) return done("not_recreated");
+  const e = evaluateRecipe(recipe, bound, {});
+  if (!isObj(e) || e.refused) {
+    missing.push({ what: "evaluation", refused: isObj(e) ? e.refused : null,
+                   why: `calc-grammar could not evaluate the recipe over the carried inputs${isObj(e) && e.why ? `: ${e.why}` : ""}` });
+    return done("not_recreated");
+  }
+  const key = resultKey(recipe, hashes, { methodVersion: method });
+  const steps = {};
+  for (const t of Array.isArray(e.trace) ? e.trace : []) steps[t.step] = t.step === recipe.output ? e.result : t.output;
+  const recomputed = { result_key: key, output: e.result, steps };
+  const differs = [];
+  if (row.result_key !== null && row.result_key !== undefined && row.result_key !== key)
+    differs.push({ result: "result_key", source: row.result_key, recomputed: key });
+  const values = statedValues(row.results);
+  if (!values && (row.result_key === null || row.result_key === undefined)) {
+    missing.push({ what: "results", why: "the case states no result and no result key to recreate" });
+    return done("not_recreated", [], recomputed);
+  }
+  for (const [name, v] of values || []) {
+    const r = name === "output" ? e.result : Object.prototype.hasOwnProperty.call(steps, name.slice(6)) ? steps[name.slice(6)] : undefined;
+    if (r === undefined || canonicalJson(r) !== canonicalJson(v)) differs.push({ result: name, source: v, recomputed: r ?? null });
+  }
+  return done(differs.length ? "differs" : "recreated", differs, recomputed);
+}
+
+/* R21: case-checker's own answer for one calculation (its R20), read against this copy's, or null when it gave none. */
+function checkerCalcOf(answer, calc, result) {
+  const list = isObj(answer) && Array.isArray(answer.calculations) ? answer.calculations : null;
+  const c = list ? list.find((x) => isObj(x) && x.calc === calc) : null;
+  if (!c) return null;
+  const read = CHECKER_CALC[c.result] ?? null;
+  return { result: c.result ?? null, agrees_with_this_copy: read === result };
+}
+
 /* R4 (DEC-92): whether the case document's signature verified, as the checker answers it; null when it does not say. */
 function signatureVerified(answer) {
   const s = isObj(answer) ? answer.signatures : null;
@@ -206,6 +365,9 @@ export class CaseImport {
   get acceptedWork() { return this.#deps.acceptedWork ||= acceptedWorkOf(this.#deps.host, { record: this.record }); }
   get #checkCaseFile() { return this.#deps.checkCaseFile || checkCaseFile; }
   get #manifestCheck() { return this.#deps.caseFileManifestCheck || caseGrammar.caseFileManifestCheck; }
+  get #caseCalculationsOf() {
+    return this.#deps.caseCalculationsOf || (typeof caseGrammar.calculationsOf === "function" ? caseGrammar.calculationsOf : calculationRowsOf);
+  }
 
   migrate() { migrateCaseImport(this.sql); }
 
@@ -314,14 +476,21 @@ export class CaseImport {
   /* R3, R12: records one recreation, inside the caller's transaction: its run, and each finding's result with what is
      missing, what differs, the recomputed pair and the checker's versions; each finding's published pair beside it
      (R16). Answers the run's number. */
-  #recordCheck(importId, edition, answer, { cause, document = null, by, at, published }) {
+  #recordCheck(importId, edition, answer, { cause, document = null, by, at, published, calcs = [] }) {
     const { findings = [], ...rest } = answer;
     const checker = isObj(rest.checker) ? rest.checker : null;
     this.sql.exec(`INSERT INTO case_import_checks (import_id, edition, cause, document_sha, checker, answer, checked_by, checked_at)
                    VALUES (?,?,?,?,?,?,?,?)`, importId, edition, cause, document,
-                  canonicalJson({ grading_versions: checker?.grading_versions ?? null, checks_version: checker?.checks_version ?? null }),
+                  canonicalJson({ grading_versions: checker?.grading_versions ?? null, checks_version: checker?.checks_version ?? null,
+                                  ...(checker && checker.calc_versions !== undefined ? { calc_versions: checker.calc_versions } : {}) }),
                   canonicalJson(rest), by, at);
     const rn = Number(this.#one(`SELECT MAX(rn) AS rn FROM case_import_checks`).rn);
+    /* R21: each carried calculation as recreated here, with the checker's own answer for it beside */
+    calcs.forEach((c, ord) => this.sql.exec(`INSERT INTO case_import_calculations (check_rn, ord, calc, result, missing, differs,
+                                                 recomputed, stated, checker) VALUES (?,?,?,?,?,?,?,?,?)`,
+      rn, ord, c.calc, c.result, canonicalJson(c.missing), canonicalJson(c.differs),
+      c.recomputed === null ? null : canonicalJson(c.recomputed), canonicalJson(c.stated),
+      (() => { const k = checkerCalcOf(rest, c.calc, c.result); return k ? canonicalJson(k) : null; })()));
     (Array.isArray(findings) ? findings : []).forEach((f, ord) => {
       const id = isObj(f) ? str(f.finding) : null;
       if (!id) return;
@@ -346,9 +515,17 @@ export class CaseImport {
     }
     return out;
   }
-  #heldFiles(importId, edition) {
-    const parts = this.#parts(importId, edition);
-    return parts.some((p) => !p) ? [] : this.#call(() => readCaseFile(parts).files, []);
+  /* R21: the edition's carried calculations recreated, from its case document's `calculations:` rows (`case-grammar`
+     R18), over its files (each with the SHA-256 its manifest states) and the documents supplied for it. */
+  #calculationsOf(files, manifest, documents) {
+    const listed = new Map(CaseImport.#manifestFiles(manifest).map((f) => [f.path, f.sha]));
+    const doc = files.find((f) => f.kind === "case_document" && f.content instanceof Uint8Array);
+    const fm = doc ? this.#call(() => parseFrontmatter(new TextDecoder().decode(doc.content)).data) : null;
+    const fn = this.#caseCalculationsOf;
+    const rows = isObj(fm) ? this.#call(() => fn(fm), []) : [];
+    return recreateCalculations({ rows: Array.isArray(rows) ? rows : [], documents,
+      files: files.filter(isObj).map((f) => ({ path: f.path, sha256: listed.get(f.path) ?? null,
+                                                content: f.content instanceof Uint8Array ? f.content : null, detail: f.detail ?? null })) });
   }
 
   /* ================================================================ R1: the import */
@@ -416,6 +593,7 @@ export class CaseImport {
                     { import: importId, edition: who.edition, held: held.manifest_sha, given: manifestSha });
     /* END DEC-49 REGION is-import-case-file */
     const answer = await this.#recreate(list, []);
+    const calcs = this.#calculationsOf(Array.isArray(read.files) ? read.files : [], read.manifest, []);
     const at = this.#stamp();
     const published = this.#publishedPairs(files);
     const sourceBar = isObj(fm) && isObj(fm.required_strength) ? fm.required_strength : null;
@@ -440,7 +618,7 @@ export class CaseImport {
       for (const f of files)
         this.sql.exec(`INSERT OR IGNORE INTO case_import_files (import_id, edition, path, kind, sha, bytes, part) VALUES (?,?,?,?,?,?,?)`,
                       importId, who.edition, f.path, str(f.kind), shaOf(f.content), f.content.length, listed.get(f.path)?.part ?? 0);
-      this.#recordCheck(importId, who.edition, answer, { cause: "import", by: k.member, at, published });
+      this.#recordCheck(importId, who.edition, answer, { cause: "import", by: k.member, at, published, calcs });
       return { ok: true };
     });
     if (!out || out.ok !== true) {
@@ -471,6 +649,17 @@ export class CaseImport {
       finding: r.finding, role: r.role ?? null, result: r.result, missing: parse(r.missing, []), differs: parse(r.differs, []),
       pair: r.pair === null ? null : parse(r.pair), published: r.published === null ? null : parse(r.published) }));
   }
+  /* R21: one recreation's calculations, as recorded. */
+  #calculations(rn) {
+    return this.#rows(`SELECT * FROM case_import_calculations WHERE check_rn=? ORDER BY ord`, rn).map((c) => ({
+      calc: c.calc, result: c.result, missing: parse(c.missing, []), differs: parse(c.differs, []),
+      recomputed: c.recomputed === null ? null : parse(c.recomputed), source: parse(c.stated, {}),
+      checker: c.checker === null ? null : parse(c.checker) }));
+  }
+  #calcsOf(importId, edition) {
+    const c = this.#latestCheck(importId, edition);
+    return c ? this.#calculations(c.rn) : [];
+  }
   /* The latest recreation's result per finding, by id. */
   #resultsOf(importId, edition) {
     const c = this.#latestCheck(importId, edition);
@@ -484,7 +673,8 @@ export class CaseImport {
     const answer = parse(c.answer, {});
     return { check: Number(c.rn), cause: c.cause, document: c.document_sha ?? null, checked_at: c.checked_at,
              checker: parse(c.checker, {}), statement: str(answer.statement) ?? STATEMENT,
-             ...(answer.unread ? { unread: answer.unread } : {}), findings: this.#results(c.rn).map(({ published, ...r }) => r) };
+             ...(answer.unread ? { unread: answer.unread } : {}), findings: this.#results(c.rn).map(({ published, ...r }) => r),
+             calculations: this.#calculations(c.rn) };
   }
 
   /* R6, R9: each acceptance of the edition in force (not withdrawn), oldest first. */
@@ -587,6 +777,8 @@ export class CaseImport {
       documents: this.#rows(`SELECT sha, bytes, by_member, at FROM case_import_documents WHERE import_id=? AND edition=? ORDER BY at, sha`,
                             i.import_id, ed).map((d) => ({ sha: d.sha, bytes: Number(d.bytes), by: d.by_member, at: d.at })),
       findings,
+      /* R4, R21: each calculation the edition carries, as recreated here, beside the value the source states (its own) */
+      calculations: rec ? rec.calculations : [],
       flags,
     };
   }
@@ -611,6 +803,8 @@ export class CaseImport {
     const e = this.#edition(importId, edition);
     const missing = new Set();
     if (e) for (const r of this.#resultsOf(e.import_id, Number(e.edition))) for (const m of r.missing) fingerprintsOf(m, missing);
+    /* R21: a carried calculation's input the case file lacks is a missing material too, named by the hash its row states */
+    if (e) for (const c of this.#calcsOf(e.import_id, Number(e.edition))) for (const m of c.missing) if (isObj(m) && isSha(m.sha) && !m.carried) missing.add(m.sha);
     /* DEC-49 REGION is-import-document */
     if (!b || !e || !missing.has(sha))
       return refuse("IMPORT_DOCUMENT_NOT_MISSING", "the bytes match no material this imported edition records as missing",
@@ -619,14 +813,18 @@ export class CaseImport {
     const ed = Number(e.edition);
     const at = this.#stamp();
     const parts = this.#parts(e.import_id, ed);
-    const answer = await this.#recreate(parts, [...this.#documents(e.import_id, ed), b]);
-    const published = this.#publishedPairs(this.#heldFiles(e.import_id, ed));
+    const documents = [...this.#documents(e.import_id, ed), b];
+    const answer = await this.#recreate(parts, documents);
+    const held = parts.some((p) => !p) ? null : this.#call(() => readCaseFile(parts), null);
+    const heldFiles = held && Array.isArray(held.files) ? held.files : [];
+    const published = this.#publishedPairs(heldFiles);
+    const calcs = this.#calculationsOf(heldFiles, held ? held.manifest : null, documents);
     const out = this.record.transact(() => {
       this.#putBlob(sha, b);
       if (!this.#one(`SELECT 1 AS x FROM case_import_documents WHERE import_id=? AND edition=? AND sha=?`, e.import_id, ed, sha))
         this.sql.exec(`INSERT INTO case_import_documents (import_id, edition, sha, bytes, by_member, at) VALUES (?,?,?,?,?,?)`,
                       e.import_id, ed, sha, b.length, k.member, at);
-      this.#recordCheck(e.import_id, ed, answer, { cause: "completion", document: sha, by: k.member, at, published });
+      this.#recordCheck(e.import_id, ed, answer, { cause: "completion", document: sha, by: k.member, at, published, calcs });
       return { ok: true };
     });
     if (!out || out.ok !== true) return out;
