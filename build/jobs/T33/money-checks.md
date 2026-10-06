@@ -1,6 +1,6 @@
 # money-checks (T33)
 
-**Status** · session_019trC8S5wM3AqjiTSTYewWk · depth 2 · COMPLETE · handled B1
+**Status** · session_019trC8S5wM3AqjiTSTYewWk · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
