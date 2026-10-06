@@ -2444,3 +2444,17 @@ response: **Bob, 2026-10-06:** "I'm noticing that screens don't show their names
 decided: 2026-10-06 · Bob
 reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (every screen); `screens/mock-shell.js` (`PATH`, `pathNav`); BIO_Interaction_Constructs_v0_1.md §V.
 owed: (BOB) the path on every member screen and public page when the screens are built (each screen's path as in `screens/mock-shell.js` `PATH`).
+
+### DEC-155 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (Bob's comment on the layouts page's rail)
+for: bob-session
+question: The rail's width.
+why it is Bob's: it is not: layout beneath his direction; decided by the design session (P17) on his comment.
+provisional: a fixed rail of 232px (DEC-138's shell, `--rail`).
+alternative: a fixed narrower rail; a collapse toggle only.
+recommendation: as decided below.
+reversal cost: low.
+response: **Bob, 2026-10-06:** "The width of the rail should adjustable, and the default should be set to include enough whitespace but not eat up precious screen real estate." **Decided by the design session:** (1) the rail is 184px by default, room for every section's name, its count and whitespace; (2) each member sets its width, kept for them on that device: drag its edge, or focus the edge (a separator, named "Width of the sections list") and use the arrow keys in 16px steps; double-click or Home resets it; (3) from 64px to 320px; narrower than 120px it becomes icons only, each section named on hover and focus, and its counts hidden; (4) phones keep the tab bar, unchanged.
+decided: 2026-10-06 · the design session (P17)
+reasoning recorded in: this entry; `docs/development/ux-substrate/visual-language/components.css` and `tokens.head.css` (`--rail`, `.cs-grip`, `.rail-icons`); `layouts.html`; BIO_Interaction_Constructs_v0_1.md §V.
+owed: (BOB) the rail's width as a per-member, per-device setting when the shell is built (held on the device, never in the record).

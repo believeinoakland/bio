@@ -219,7 +219,7 @@ fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
 <div class="anat" aria-label="The working frame's anatomy">
  <div class="m"><b>Masthead</b>The group's name (it leads), search, the assistant (only if connected), the queue, you</div>
  <div class="b"><b>Band</b> · working, not public · or: shared for review · or: another group's case</div>
- <div><b>Rail</b>Home · Queue · Find · Add · Projects · People · Settings</div>
+ <div><b>Rail</b>Home · Queue · Find · Add · Projects · People · Settings. 184px by default; its width is each member's own: drag its edge, or focus the edge and use the arrow keys; double-click resets it. Narrower than 120px it shows icons only, each named on hover and focus (DEC-155).</div>
  <div><b>The work</b>One column, at most about 68 characters of reading text; tables and timelines may use the full width</div>
  <div class="d"><b>The dock</b>The assistant panel or a wizard's guide; never floating, never over the work. Widened by dragging; shrinks back when a wizard needs you to press something</div>
 </div>
@@ -390,5 +390,36 @@ const REG = {{REG}};
   pair(); window.addEventListener('resize', pair);
   window.CS_WALK = { st, stepsNow, draw, render, ring };
   syncSeg(); draw();
+})();
+</script>
+<script>
+/* DEC-155: resizing the rail in the mockups: drag its edge, arrow keys on the focused edge, double-click or Home to reset. */
+(function () {
+  var MIN = 64, MAX = 320, DEF = 184;
+  try { var v = parseInt(localStorage.getItem('cs-railw'), 10); if (v >= MIN && v <= MAX) window.CS_RAILW = v; } catch (e) {}
+  function set(shell, w) {
+    w = Math.max(MIN, Math.min(MAX, Math.round(w)));
+    if (w < 120) w = w < 92 ? MIN : 120;
+    window.CS_RAILW = w;
+    shell.style.setProperty('--rail', w + 'px'); shell.classList.toggle('rail-icons', w < 120);
+    var g = shell.querySelector('.cs-grip'); if (g) g.setAttribute('aria-valuenow', w);
+    try { localStorage.setItem('cs-railw', w); } catch (e) {}
+  }
+  document.addEventListener('pointerdown', function (e) {
+    var g = e.target.closest && e.target.closest('.cs-grip'); if (!g) return;
+    var shell = g.closest('.cs-shell'), rail = shell.querySelector('.cs-rail');
+    var scale = shell.getBoundingClientRect().width / shell.offsetWidth || 1;
+    var x0 = e.clientX, w0 = rail.offsetWidth; e.preventDefault(); g.setPointerCapture(e.pointerId);
+    function mv(ev) { set(shell, w0 + (ev.clientX - x0) / scale); }
+    function up() { g.removeEventListener('pointermove', mv); g.removeEventListener('pointerup', up); }
+    g.addEventListener('pointermove', mv); g.addEventListener('pointerup', up);
+  });
+  document.addEventListener('dblclick', function (e) { var g = e.target.closest && e.target.closest('.cs-grip'); if (g) set(g.closest('.cs-shell'), DEF); });
+  document.addEventListener('keydown', function (e) {
+    var g = e.target.closest && e.target.closest('.cs-grip'); if (!g) return;
+    var shell = g.closest('.cs-shell'), w = shell.querySelector('.cs-rail').offsetWidth;
+    if (e.key === 'ArrowLeft') set(shell, w <= 120 ? MIN : w - 16); else if (e.key === 'ArrowRight') set(shell, w <= MIN ? 120 : w + 16);
+    else if (e.key === 'Home') set(shell, DEF); else return; e.preventDefault();
+  });
 })();
 </script>

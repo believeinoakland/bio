@@ -106,7 +106,7 @@
   --d-1: 120ms; --d-2: 200ms; --ease: cubic-bezier(.2,0,.2,1);
 
   /* layout */
-  --rail: 232px; --dock: 380px; --mast: 52px; --tap: 44px;
+  --rail: 184px; --dock: 380px; --mast: 52px; --tap: 44px;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --c-ground: #11181C;
@@ -469,8 +469,15 @@ textarea.cs-input { min-height: 96px; resize: vertical; }
 .cs-shell { display: grid; grid-template-columns: var(--rail) minmax(0,1fr); grid-template-rows: auto auto minmax(0,1fr); min-height: 100%; }
 .cs-shell.with-dock { grid-template-columns: var(--rail) minmax(0,1fr) var(--dock); }
 .cs-shell > .cs-mast, .cs-shell > .cs-band { grid-column: 1 / -1; }
-.cs-rail { border-right: var(--hair); padding: var(--s-3) var(--s-2); display: grid; gap: 2px; align-content: start; background: var(--c-ground); }
-.cs-rail a { display: flex; align-items: center; gap: var(--s-2); padding: 8px 10px; color: var(--c-ink-2); text-decoration: none; border-radius: var(--r-1); font-weight: 500; }
+.cs-rail { position: relative; border-right: var(--hair); padding: var(--s-3) var(--s-2); display: grid; gap: 2px; align-content: start; background: var(--c-ground); min-width: 0; }
+/* DEC-155: the rail's width is the member's: drag its edge, or focus the edge and use the arrow keys; double-click or Home
+   resets it. Narrower than 120px it becomes icons only, each with its name on hover and focus. */
+.cs-grip { position: absolute; top: 0; right: -4px; bottom: 0; width: 8px; cursor: col-resize; z-index: 2; background: transparent; border: 0; padding: 0; }
+.cs-grip:hover, .cs-grip:focus-visible { background: linear-gradient(to right, transparent 3px, var(--c-accent) 3px, var(--c-accent) 5px, transparent 5px); outline: none; }
+.cs-shell.rail-icons .cs-rail a { justify-content: center; padding: 8px 0; font-size: 0; gap: 0; }
+.cs-shell.rail-icons .cs-rail a svg { width: 20px; height: 20px; }
+.cs-shell.rail-icons .cs-rail a .count { display: none; }
+.cs-rail a { display: flex; align-items: center; gap: var(--s-2); padding: 8px 10px; white-space: nowrap; overflow: hidden; color: var(--c-ink-2); text-decoration: none; border-radius: var(--r-1); font-weight: 500; }
 .cs-rail a[aria-current] { background: var(--c-surface); color: var(--c-ink); font-weight: 700; box-shadow: inset 3px 0 0 var(--c-accent); }
 .cs-rail a .count { margin-left: auto; font-size: var(--t-xs); color: var(--c-muted); }
 .cs-main { padding: var(--s-5) var(--s-5) var(--s-7); display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-5); align-content: start; min-width: 0; }
@@ -759,7 +766,7 @@ fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
 <div class="anat" aria-label="The working frame's anatomy">
  <div class="m"><b>Masthead</b>The group's name (it leads), search, the assistant (only if connected), the queue, you</div>
  <div class="b"><b>Band</b> · working, not public · or: shared for review · or: another group's case</div>
- <div><b>Rail</b>Home · Queue · Find · Add · Projects · People · Settings</div>
+ <div><b>Rail</b>Home · Queue · Find · Add · Projects · People · Settings. 184px by default; its width is each member's own: drag its edge, or focus the edge and use the arrow keys; double-click resets it. Narrower than 120px it shows icons only, each named on hover and focus (DEC-155).</div>
  <div><b>The work</b>One column, at most about 68 characters of reading text; tables and timelines may use the full width</div>
  <div class="d"><b>The dock</b>The assistant panel or a wizard's guide; never floating, never over the work. Widened by dragging; shrinks back when a wizard needs you to press something</div>
 </div>
@@ -1431,6 +1438,8 @@ const PATH = {
 };
 const pathOf = (id, s) => PATH[id] && !(id === 'answers') ? PATH[id] : id === 'answers' ? ['Find', s.title] : [(RAIL.find(r => r[0] === s.rail) || ['', 'Settings'])[1], s.title];
 const pathNav = list => `<nav class="mk-crumbs" aria-label="Where you are">${list.map((x, i) => i === list.length - 1 ? `<b aria-current="page">${esc(x)}</b>` : `<a href="#" onclick="return false">${esc(x)}</a>`).join(' <i>›</i> ')}</nav>`;
+// DEC-155: the rail's width, the member's own (184px by default; 64px is icons only); kept per member and device.
+const railW = () => window.CS_RAILW || 184;
 function render(screenId, c) {
   WRITE_ON = !!c.ai;
   const s = SCR[screenId](c);
@@ -1441,8 +1450,8 @@ function render(screenId, c) {
     <footer class="cs-pubfoot"><span class="id">${G.slug} · signed by an owner of the project · 7c1e…a90b</span><span class="cs-credit">Made with <svg viewBox="0 0 60 90" aria-hidden="true"><use href="#i-mark"/></svg><b>Civicsmith</b></span></footer></div>`;
   if (frame === 'setup' || frame === 'public') return `<div class="cs-frame mk-page mk-plain${dock ? ' with-dock' : ''}" data-frame="${frame}"><main class="mk-plainmain">${pathNav(pathOf(screenId, s))}${s.main}</main>${dock}</div>`;
   const band = s.band || 'working';
-  return `<div class="cs-frame cs-shell mk-page${dock ? ' with-dock' : ''}" data-frame="working">${mast(c, s)}<div class="cs-band" data-band="${band}">${BANDS[band]}</div>
-   <nav class="cs-rail" aria-label="Sections">${RAIL.map(([k, l, ic, n]) => `<a href="#" onclick="return false"${s.rail === k ? ' aria-current="page"' : ''}>${I(ic)}${l}${n ? `<span class="count">${n}</span>` : ''}</a>`).join('')}</nav>
+  return `<div class="cs-frame cs-shell mk-page${dock ? ' with-dock' : ''}${railW() < 120 ? ' rail-icons' : ''}" data-frame="working" style="--rail:${railW()}px">${mast(c, s)}<div class="cs-band" data-band="${band}">${BANDS[band]}</div>
+   <nav class="cs-rail" aria-label="Sections">${RAIL.map(([k, l, ic, n]) => `<a href="#" onclick="return false" title="${l}"${s.rail === k ? ' aria-current="page"' : ''}>${I(ic)}${l}${n ? `<span class="count">${n}</span>` : ''}</a>`).join('')}<button type="button" class="cs-grip" role="separator" aria-orientation="vertical" aria-label="Width of the sections list" aria-valuemin="64" aria-valuemax="320" aria-valuenow="${railW()}" title="Drag to resize; arrow keys too; double-click to reset"></button></nav>
    <main class="cs-main">${pathNav(pathOf(screenId, s))}${s.main}</main>${dock}
    <nav class="cs-tabs" aria-label="Sections">${TABS.map(([k, l, ic]) => `<a href="#" onclick="return false"${(s.rail === k || (k === 'more' && ['projects', 'people', 'settings'].includes(s.rail))) ? ' aria-current="page"' : ''}>${I(ic)}${l}</a>`).join('')}</nav></div>`;
 }
@@ -1669,5 +1678,36 @@ function journeySteps(j, ai) {
   pair(); window.addEventListener('resize', pair);
   window.CS_WALK = { st, stepsNow, draw, render, ring };
   syncSeg(); draw();
+})();
+</script>
+<script>
+/* DEC-155: resizing the rail in the mockups: drag its edge, arrow keys on the focused edge, double-click or Home to reset. */
+(function () {
+  var MIN = 64, MAX = 320, DEF = 184;
+  try { var v = parseInt(localStorage.getItem('cs-railw'), 10); if (v >= MIN && v <= MAX) window.CS_RAILW = v; } catch (e) {}
+  function set(shell, w) {
+    w = Math.max(MIN, Math.min(MAX, Math.round(w)));
+    if (w < 120) w = w < 92 ? MIN : 120;
+    window.CS_RAILW = w;
+    shell.style.setProperty('--rail', w + 'px'); shell.classList.toggle('rail-icons', w < 120);
+    var g = shell.querySelector('.cs-grip'); if (g) g.setAttribute('aria-valuenow', w);
+    try { localStorage.setItem('cs-railw', w); } catch (e) {}
+  }
+  document.addEventListener('pointerdown', function (e) {
+    var g = e.target.closest && e.target.closest('.cs-grip'); if (!g) return;
+    var shell = g.closest('.cs-shell'), rail = shell.querySelector('.cs-rail');
+    var scale = shell.getBoundingClientRect().width / shell.offsetWidth || 1;
+    var x0 = e.clientX, w0 = rail.offsetWidth; e.preventDefault(); g.setPointerCapture(e.pointerId);
+    function mv(ev) { set(shell, w0 + (ev.clientX - x0) / scale); }
+    function up() { g.removeEventListener('pointermove', mv); g.removeEventListener('pointerup', up); }
+    g.addEventListener('pointermove', mv); g.addEventListener('pointerup', up);
+  });
+  document.addEventListener('dblclick', function (e) { var g = e.target.closest && e.target.closest('.cs-grip'); if (g) set(g.closest('.cs-shell'), DEF); });
+  document.addEventListener('keydown', function (e) {
+    var g = e.target.closest && e.target.closest('.cs-grip'); if (!g) return;
+    var shell = g.closest('.cs-shell'), w = shell.querySelector('.cs-rail').offsetWidth;
+    if (e.key === 'ArrowLeft') set(shell, w <= 120 ? MIN : w - 16); else if (e.key === 'ArrowRight') set(shell, w <= MIN ? 120 : w + 16);
+    else if (e.key === 'Home') set(shell, DEF); else return; e.preventDefault();
+  });
 })();
 </script>

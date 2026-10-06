@@ -106,7 +106,7 @@
   --d-1: 120ms; --d-2: 200ms; --ease: cubic-bezier(.2,0,.2,1);
 
   /* layout */
-  --rail: 232px; --dock: 380px; --mast: 52px; --tap: 44px;
+  --rail: 184px; --dock: 380px; --mast: 52px; --tap: 44px;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --c-ground: #11181C;
@@ -469,8 +469,15 @@ textarea.cs-input { min-height: 96px; resize: vertical; }
 .cs-shell { display: grid; grid-template-columns: var(--rail) minmax(0,1fr); grid-template-rows: auto auto minmax(0,1fr); min-height: 100%; }
 .cs-shell.with-dock { grid-template-columns: var(--rail) minmax(0,1fr) var(--dock); }
 .cs-shell > .cs-mast, .cs-shell > .cs-band { grid-column: 1 / -1; }
-.cs-rail { border-right: var(--hair); padding: var(--s-3) var(--s-2); display: grid; gap: 2px; align-content: start; background: var(--c-ground); }
-.cs-rail a { display: flex; align-items: center; gap: var(--s-2); padding: 8px 10px; color: var(--c-ink-2); text-decoration: none; border-radius: var(--r-1); font-weight: 500; }
+.cs-rail { position: relative; border-right: var(--hair); padding: var(--s-3) var(--s-2); display: grid; gap: 2px; align-content: start; background: var(--c-ground); min-width: 0; }
+/* DEC-155: the rail's width is the member's: drag its edge, or focus the edge and use the arrow keys; double-click or Home
+   resets it. Narrower than 120px it becomes icons only, each with its name on hover and focus. */
+.cs-grip { position: absolute; top: 0; right: -4px; bottom: 0; width: 8px; cursor: col-resize; z-index: 2; background: transparent; border: 0; padding: 0; }
+.cs-grip:hover, .cs-grip:focus-visible { background: linear-gradient(to right, transparent 3px, var(--c-accent) 3px, var(--c-accent) 5px, transparent 5px); outline: none; }
+.cs-shell.rail-icons .cs-rail a { justify-content: center; padding: 8px 0; font-size: 0; gap: 0; }
+.cs-shell.rail-icons .cs-rail a svg { width: 20px; height: 20px; }
+.cs-shell.rail-icons .cs-rail a .count { display: none; }
+.cs-rail a { display: flex; align-items: center; gap: var(--s-2); padding: 8px 10px; white-space: nowrap; overflow: hidden; color: var(--c-ink-2); text-decoration: none; border-radius: var(--r-1); font-weight: 500; }
 .cs-rail a[aria-current] { background: var(--c-surface); color: var(--c-ink); font-weight: 700; box-shadow: inset 3px 0 0 var(--c-accent); }
 .cs-rail a .count { margin-left: auto; font-size: var(--t-xs); color: var(--c-muted); }
 .cs-main { padding: var(--s-5) var(--s-5) var(--s-7); display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-5); align-content: start; min-width: 0; }
