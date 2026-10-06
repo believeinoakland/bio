@@ -98,3 +98,13 @@ affordances passes `wizard_scripts` through unchanged (R37: "as `wizard-scripts`
 - **(c)** ops for `subscriptionsignin` and the three `translation*` acts (N669; later).
 
 Either (a) or (b) clears `plane.test.mjs`:317 with no change here. Nothing in affordances changed for this: the branch has only the merge.
+
+## J7 · COMPLETE
+
+Re-opened by B9 and done. `tranche/T34` @ a6c22ceb7e is merged, and nothing in affordances changed. The remaining red, `plane.test.mjs`:317 R17/R37 `pack_absent`, is caused by wizard-scripts offering two optional Civicsmith library scripts whose steps name acts with no op (`subscriptionsignin`, `translationdraft`, `translationadopt`, `translationconfirm`). skills R10's `validateWizardScripts` (`skillpack.mjs`:541) refuses the whole pack on them. Modules and lines are in J6.
+
+**Tests and checks**
+- `node --test test/m/affordances/`: tests 203, pass 202, fail 1 (`plane.test.mjs`:317, wizard-scripts or skills per J6).
+- format: 0 failures. architecture: 20 product files, 0 failures. coverage: 45 of 45, 0 failures. ownership: 1 file (the merge), 0 failures.
+
+Size (session_01D46sKU6GQxJsbHFhXN1a2o): test runs 24, module lines 3945
