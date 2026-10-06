@@ -21,8 +21,9 @@
  * creation it creates its table and declares it with its classes (R5, R9). `deps`:
  *   record, membership   the modules it uses, through their factories on the same host unless a test passes its own.
  *   combine, get, validate   `jurisdictions`' services (default); a test passes its own for profiles it wrote.
- *   lines        an object with `lines.structureAt` (its R10), passed by the composition root; absent, `governingPath`
- *                answers the fallback, saying `lines` is not reachable here.
+ *   lines        an object with `structureAt` (lines R10); absent, `linesOf(host)` (K1563 (1)), reached on the first
+ *                `governingPath` that needs it. When neither answers, `governingPath` answers the fallback, saying
+ *                `lines` is not reachable here.
  *   officeOf     `(entityId, profile)` → the profile office `{role, body}` or `{venue}` an entity stands for (ladders
  *                §5.4's bridge: each profile office is seeded as an entity at setup), or null; absent, no entity maps.
  *   now          the module's clock, an ISO instant (default: the wall clock). */
@@ -34,6 +35,7 @@ import { membershipOf, viewerPredicate } from "../membership/index.mjs";
 import { combine as combineProfiles, get as getProfile, validate as validateProfile } from "../../../jurisdictions/index.mjs";
 import { localDay } from "../civil-time/index.mjs";
 import { BOUNDS } from "../connection-grammar/index.mjs";
+import { linesOf } from "../lines/index.mjs";
 import { LOCAL_FACTS_CHECKS, refusal } from "./checks.mjs";
 import { LOCAL_FACTS_TABLE_CLASSES, migrateLocalFacts } from "./schema.mjs";
 import { factPath, parseFactPath, officesToken } from "./paths.mjs";
@@ -155,7 +157,7 @@ function withValue(p, parts, value) {
 
 export class LocalFacts {
   constructor({ storage, record, membership = null, combine = combineProfiles, get = getProfile,
-                validate = validateProfile, lines = null, officeOf = null, now = null } = {}) {
+                validate = validateProfile, lines = null, officeOf = null, now = null, host = null } = {}) {
     this.storage = storage;
     this.sql = storage.sql;
     this.record = record;
@@ -164,6 +166,7 @@ export class LocalFacts {
     this.getProfile = get;
     this.validate = validate;
     this.lines = lines;
+    this.host = host;
     this.officeOf = typeof officeOf === "function" ? officeOf : null;
     this.now = typeof now === "function" ? now : () => new Date().toISOString();
     migrateLocalFacts(this.sql);   // the table exists once the instance does, so no caller migrates
@@ -480,6 +483,7 @@ export class LocalFacts {
     if (mine) return { ok: true, path: mine, via: "own", lines: [], why: "the profile holds this office's own fact" };
     const entity = typeof b.entity === "string" && b.entity ? b.entity : null;
     if (!entity) return fallback("no registry entity was given for the office, so no part_of line was followed");
+    if (!this.lines && this.host) { try { this.lines = linesOf(this.host); } catch { this.lines = null; } }
     if (!this.lines || typeof this.lines.structureAt !== "function")
       return fallback("`lines` is not reachable on this host, so no part_of line was followed");
     if (!at) return fallback("no date was given, so no part_of line could be judged");
@@ -489,12 +493,14 @@ export class LocalFacts {
       const r = this.lines.structureAt({ entity: cur, at, kinds: ["part_of"], viewer: b.viewer });
       if (!isObj(r) || r.ok === false)
         return fallback(`lines refused the structure of ${cur} at ${at}${isObj(r) && r.reason ? ` (${r.reason})` : ""}`, followed);
+      /* lines R10: `held` the lines in at `at`, `undetermined` each `{line, why}`; only lines from `cur` lead upward */
       const up = (list) => (Array.isArray(list) ? list : []).filter((l) => isObj(l) && l.kind === "part_of" && l.from === cur);
-      const open = up(r.undetermined);
+      const open = up((Array.isArray(r.undetermined) ? r.undetermined : []).map((u) => (isObj(u) && isObj(u.line) ? { ...u.line, why: u.why } : u)));
       if (open.length)
         return fallback(`the part_of line ${open.map((l) => l.line_id).join(", ")} from ${cur} is undetermined at ${at}`
                         + (open[0].why ? ` (${open[0].why})` : ""), followed);
-      const held = up(r.lines ?? r.held);
+      if (r.truncated) return fallback(`the structure of ${cur} at ${at} is truncated, so its part_of lines are not all read`, followed);
+      const held = up(r.held);
       if (!held.length) return fallback(`${cur} is part of no entity at ${at} that the profile holds a fact for`, followed);
       if (held.length > 1)
         return fallback(`${cur} is part of ${held.length} entities at ${at} (${held.map((l) => l.line_id).join(", ")}), so which governs is undetermined`, followed);
@@ -557,7 +563,7 @@ export function localFactsOf(host, deps) {
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
-    s = new LocalFacts({ ...d, storage, record, membership });
+    s = new LocalFacts({ ...d, storage, record, membership, host });
     instances.set(host, s);
     record.declareTable("local-facts", LOCAL_FACTS_TABLE_CLASSES.map((e) => ({ ...e, keys: [...e.keys] })));
   }

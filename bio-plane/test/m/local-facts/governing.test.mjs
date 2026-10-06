@@ -1,6 +1,7 @@
 /* local-facts: governingPath (R6, T33-28): the office's own fact, else the nearest entity it is part_of that the profile
-   holds a fact for, else the profile's `offices` grouping. `lines` is a reader the test writes in lines R10's answer
-   shape (the lines `in` at `at` as held, those undetermined apart), and `officeOf` the profile-office bridge. */
+   holds a fact for, else the profile's `offices` grouping. Most cases use a reader the test writes in lines R10's
+   answer shape (`held`, `undetermined` as `{line, why}`, `truncated`), so each walk shape is exact; the last test runs
+   the real `lines`, reached as `linesOf(host)`. `officeOf` is the profile-office bridge (K1563). */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, P, TP } from "./fixture.mjs";
@@ -19,7 +20,8 @@ function reader(edges, offices = {}) {
       calls.push(q);
       const at = (e) => e.filter(([, f, t]) => f === q.entity || t === q.entity)
         .map(([line_id, from, to]) => ({ line_id, kind: "part_of", from, to, why: "no end is stated" }));
-      return { ok: true, lines: at(edges.filter((e) => e[3] === "in")), undetermined: at(edges.filter((e) => e[3] === "undetermined")) };
+      return { ok: true, entity: q.entity, at: q.at, held: at(edges.filter((e) => e[3] === "in")), truncated: false,
+               undetermined: at(edges.filter((e) => e[3] === "undetermined")).map(({ why, ...line }) => ({ line, why })) };
     },
   };
   return { lines, calls, officeOf: (id, profile) => (profile === TP ? offices[id] ?? null : null) };
@@ -60,7 +62,7 @@ test("R6 governingPath follows part_of upward to the nearest entity whose fact t
 test("R6 governingPath falls back to the profile's offices grouping, saying why: no entity, no lines, no parent, an undetermined line, two parents", () => {
   const cases = [
     [reader([]), { entity: undefined }, /no registry entity/],
-    [{ lines: null, officeOf: null }, { entity: "ENT-board" }, /`lines` is not reachable/],
+    [{ lines: {}, officeOf: null }, { entity: "ENT-board" }, /`lines` is not reachable/],
     [reader([]), { entity: "ENT-board" }, /part of no entity/],
     [reader([["LIN-1", "ENT-board", "ENT-clerk", "undetermined"]], { "ENT-clerk": CLERK }), { entity: "ENT-board" },
      /part_of line LIN-1 from ENT-board is undetermined at 2026-06-01T12:00:00Z \(no end is stated\)/],
@@ -122,4 +124,26 @@ test("R6 governingPath writes nothing and never throws; an unknown profile or a 
   assert.equal(w.lf.governingPath({ profile: TP, fact: "time_zone", viewer: "nobody" }).reason, "NO_SUCH_FACT");
   assert.equal(w.lf.governingPath({ profile: TP, fact: "weather" }).reason, "NO_SUCH_FACT");
   assert.equal(w.count(), 0);
+});
+
+test("R6 governingPath over the real lines (linesOf(host), its R10): an in-force part_of line followed, an expired one not, an open-ended one undetermined", async () => {
+  const { world: linesWorld, ANN } = await import("../lines/fixture.mjs");
+  const { localFactsOf } = await import("../../../src/local-facts/index.mjs");
+  const lw = linesWorld();
+  const board = lw.ent("office", "Selectboard desk"), town = lw.ent("body", "Town office"), old = lw.ent("body", "Old office");
+  const open = lw.ent("office", "Harbour desk"), any = lw.ent("body", "Somewhere");
+  const inForce = lw.say("part_of", board, town, { valid: { from: "2020-01-01", to: "2030-12-31" } });
+  lw.say("part_of", board, old, { valid: { from: "2000-01-01", to: "2009-12-31" } });                 /* out at AT */
+  const unended = lw.say("part_of", open, any, { valid: { from: "2020-01-01" } });                    /* no end stated */
+  const officeOf = (id, profile) => (profile === TP && id === town ? CLERK : profile === TP && id === old ? CLERK : null);
+  const l = localFactsOf(lw.host, { record: lw.record, membership: lw.membership, officeOf, now: () => "2026-09-28T01:00:00Z" });
+  const g = l.governingPath({ profile: TP, fact: "hours", office: BOARD, entity: board, at: "2026-06-15", viewer: ANN });
+  assert.deepEqual([g.path, g.via, g.lines], [P.clerkHours, "part_of", [{ line_id: inForce, from: board, to: town }]]);
+  /* the same office at a date before its in-force line: only the expired line's era, which is out then too */
+  const before = l.governingPath({ profile: TP, fact: "hours", office: BOARD, entity: board, at: "2015-06-15", viewer: ANN });
+  assert.deepEqual([before.path, before.via], [null, "none"]);
+  assert.match(before.why, /part of no entity/);
+  const h = l.governingPath({ profile: TP, fact: "holidays", office: HARBOUR, entity: open, at: "2026-06-15", year: 2026, viewer: ANN });
+  assert.deepEqual([h.path, h.via], [P.y2026, "fallback"]);
+  assert.match(h.why, new RegExp(`part_of line ${unended} from ${open} is undetermined`));
 });
