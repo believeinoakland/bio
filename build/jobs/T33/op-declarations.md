@@ -57,3 +57,7 @@ My readings, on which I am building now (none stops me):
 (6) **`moneydetectorsrun`** has no identity check and is the scheduler's (money-checks R6), and the scheduler calls the service in-process. I declare it classes admin, probe (as `reproject`), in no session set, with an `UNATTENDED_BY_DECISION` row citing money-checks R6 and K1566.
 (7) **`samepersoncandidates`** (people R8: unpublished until M-P6 passes): K1592 records M-P6 met, so I declare it.
 (8) `aigrantmint` reads a `session` stamp (the session token itself) and `member`: I name them in the credentials family's stamps; carrying a session token into a URL is control-plane's to judge.
+
+## J2 · COMPLETE
+
+T33-88 done: R17–R20 as `OP_FAMILIES` (23 owners, 181 ops, one append site each, kinds → OPS, both session sets, NEEDS; stamps named as {key, at}), plus `exportpage`, `moneydetectorsrun` and `ASK_GRANT_OPS` (unattended rows for `moneydetectorsrun`, `askusage`), on J1's readings (no ANSWER yet; a different answer comes as CHANGE). Module 68/68; format, architecture, coverage (20/20), ownership all 0 failures. New reds from the specs: control-plane `declarations.test.mjs:11` (until T33-89 routes the families) and `totality.test.mjs:13` (until T33-85 grades them); affordances' "62 ops" red is now affordances' to clear. Findings for control-plane, capture-requests, action-clocks, answers/agent-worker, credentials, people, money, events, standards, entities, money-checks are in my record's Completion (a)–(f).
