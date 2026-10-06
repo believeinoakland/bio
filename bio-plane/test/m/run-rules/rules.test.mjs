@@ -83,6 +83,8 @@ test("R3: checkConsume — a non-map/non-list shape or an unknown bound C-22.15;
   assert.equal(checkConsume({ fetches: -1, nope: 1 }, { map: true }).code, "AI_RUN_CONSUME_INVALID");
   assert.equal(checkConsume({ nope: 1, fetches: -1 }, { map: true }).code, "AI_RUN_BOUND_UNKNOWN");
   assert.equal(checkConsume({ nope: 1 }, { map: true }).bound, "nope");
+  /* never throws: options that are not an object are no options */
+  for (const o of [null, 3]) assert.equal(checkConsume([["fetches", 1]], o), null);
 });
 
 test("R13: proposals is a bound after surfaces, counted by the plane — a caller's non-zero figure is AI_RUN_BOUND_PLANE_COUNTED, a zero claims nothing, and its declared allowance is uncapped here (control: an unknown bound is still AI_RUN_BOUND_UNKNOWN)", () => {
@@ -129,6 +131,7 @@ test("R4: finishedBound — an offered bound wins; else the first exhausted boun
   assert.equal(finishedBound(null), "completed");
   assert.equal(finishedBound(null, { offered: "" }), "completed");
   assert.equal(finishedBound([null, 3, { bound: "fetches" }]), "completed");
+  for (const o of [null, 3, "x"]) assert.equal(finishedBound([], o), "completed", String(o));
 });
 
 test("R5: runPrincipalGate compares caller and principal with a member credential's /<tokenId> removed; equal and non-empty passes, anything else is AI_RUN_NOT_PRINCIPAL (C-22.12) naming the act", () => {
@@ -148,6 +151,8 @@ test("R5: runPrincipalGate compares caller and principal with a member credentia
   assert.match(plain.detail, /^ticking or closing a run is its principal's act/);
   const named = runPrincipalGate({ caller: "member:bob", principal: "member:ann", act: "opening a question under a run" });
   assert.match(named.detail, /^opening a question under a run is its principal's act/);
+  /* never throws: a call with no object is refused, never thrown on */
+  for (const x of [null, undefined, 3, "x"]) refusal(runPrincipalGate(x), "AI_RUN_NOT_PRINCIPAL");
   /* the detail names nobody */
   for (const r of [plain, named]) for (const who of ["ann", "bob"]) assert.equal(r.detail.includes(who), false);
 });
@@ -169,6 +174,8 @@ test("R6: projectGate — no actor passes unapplied (NO_MEMBER_BEHIND_CALLER); a
   assert.equal(out.permitted, undefined, "a refusal carries no second verdict field");
   assert.ok(out.detail.includes("project P-SECRET"), "the detail names only what the caller sent");
   assert.equal(out.detail.includes("Q-HIDDEN"), false, "the projects are never named");
+  /* never throws: a call with no object has no actor behind it */
+  for (const x of [null, undefined, 3]) assert.equal(projectGate(x).ground, "NO_MEMBER_BEHIND_CALLER");
   assert.equal(runConsultsProjects("project"), true);
   for (const k of ["inquiry", "", null, "Project", "information"]) assert.equal(runConsultsProjects(k), false, String(k));
 });
@@ -185,6 +192,7 @@ test("R7: checkRunContextKind — a context type outside RUN_CONTEXTS, or a cont
   const absent = checkRunContextKind({ contextType: "project", contextId: "P", found: null });
   const other = checkRunContextKind({ contextType: "project", contextId: "P", found: "inquiry" });
   assert.deepEqual(absent, other, "an absent, a hidden and a mismatched context are one answer");
+  for (const x of [null, undefined, 3]) refusal(checkRunContextKind(x), "AI_RUN_NO_SUCH_CONTEXT");
 });
 
 test("R8: checkSkillVersion — a blank version, or one not <pack>@<edition>, is AI_RUN_SKILL_VERSION_UNNAMED (C-22.7), the detail quoting the value; any well-formed version is accepted, current pack or not", () => {

@@ -7,7 +7,7 @@
  * those rows and this table's, one map. C-33's and C-66's other rows stay with their own families' owners (C-66.5
  * `inquiry`'s, C-66.6 `control-plane`'s). Tested in `test/m/run-rules/`. */
 
-/* C-22's run rows: C-22.5, .7, .8, .11–.16, .18. The family's history and its reason for being one row per code are in
+/* C-22's run rows: C-22.5, .7, .8, .11–.16, .18, and T33's .19 (R18), .20 (R19) and .21 (R17). The family's history and its reason for being one row per code are in
  * observation-log's `AI_RUN_CHECKS` header (`../observation-log/checks.mjs`), which holds the log's rows. C-22.7 (`checkSkillVersion`'s, R8) is
  * held here beside its one minting site, `./skill-version.mjs` (R8, R11; K333, N289); `skills` names it by key through
  * this module (its R25). */
@@ -207,6 +207,37 @@ export const AI_RUN_OWN_CHECKS = {
     translation: 'The investigation tried to keep more working notes than one investigation may hold, so nothing it '
       + 'sent with them was recorded and none of its budget was spent. An investigation keeps a short list of what it '
       + 'has left to do, not everything it has read.',
+  },
+  /* R18 (K1481; T33-49): AN AI RUN OR ASK STARTS ONLY AT A MEMBER'S ACT, with one exception: the AI half of a standing
+     question a member wrote, which reads only, asks only, and runs on its author's own account. `startAllowed` makes the
+     decision; `ai-runs` and `answers` relay it before anything is written or any model is called. A C-22 row because
+     its one minting site is this module's pure rule (`rules.mjs`), as C-22.8's is. */
+  AI_RUN_NOT_A_MEMBER_ACT: {
+    check: 'C-22.19',
+    where: 'src/run-rules/rules.mjs startAllowed, called from src/ai-runs/index.mjs open and by answers',
+    translation: 'Nothing was started, because the assistant starts work only when a member asks for it. The one '
+      + 'exception is a standing question a member wrote themselves, which may only read and only answer that '
+      + 'question. Nothing here asked on a member\'s behalf, so nothing ran.',
+  },
+  /* R19 (VF-4; T33-49): THE ACT THAT RECORDS A MODE'S FIRST LIVE RUN VERIFIED is judged here and written by `ai-runs`.
+     One code for every way the act is unfit (a mode outside the order, no run, no person verifying, a machine
+     verifying, no evidence), the detail naming which field: they are one fact — this record cannot enable the next
+     mode — and each remedy is to fill the field the detail names. */
+  AI_RUN_VERIFICATION_UNFIT: {
+    check: 'C-22.20',
+    where: 'src/run-rules/deployment.mjs checkVerification, called from src/ai-runs/index.mjs',
+    translation: 'This record of a kind of work checked in real use was not kept, because it does not say all it must: '
+      + 'which kind of work, which run was checked, which person checked it, and what they saw. A machine cannot '
+      + 'record that its own work was checked. Until such a record is kept, the next kind of work stays switched off.',
+  },
+  /* R17 (Q0-5; T33-49): A PER-ASK BOUND DECLARED ABOVE ITS CEILING. R3's codes say the rest of R17's refusals (an
+     unknown name, an absent or zero figure, a figure that is not a whole number); none of them says this truthfully —
+     the figure is a good whole number, and it is simply more than one ask may have. */
+  AI_ASK_BOUND_ABOVE_CEILING: {
+    check: 'C-22.21',
+    where: 'src/run-rules/rules.mjs checkAskBounds, called from agent-worker and answers when an ask starts',
+    translation: 'Nothing was asked, because the question was given more room than one question may have — more '
+      + 'turns, more reading or more time than the most allowed. Ask again within those limits.',
   },
 };
 
@@ -557,6 +588,49 @@ export const AI_RUN_PLAN_CHECKS = {
   },
 };
 
+/* R20 (Q0-5; K1450, K1502, K1601; D79) / C-109.8–.12 — WHAT HOLDS AN AI RUN OR ASK BACK BEFORE IT STARTS: the member's
+ * use ceiling, the copy's lower one, and no account of the member's own; and the two refusals of setting a ceiling. `ai-runs` mints each at its open and tick (its R50,
+ * R52) and `answers` before any model call of an ask; both read the rows here by key, as R11's `ai-runs` rows are. They
+ * join C-109, the open's family, after the planning run's rows. Each is said in plain words and names no cost: members
+ * see no cost per answer (K1450). */
+export const AI_USE_CHECKS = {
+  /* R50: the member's own daily ceiling, set by the member. */
+  AI_USE_CEILING_REACHED: {
+    check: 'C-109.8',
+    where: 'src/ai-runs/index.mjs open, tick and the ask\'s ceiling, reached from op=airunopen, op=airuntick and an ask',
+    translation: 'Nothing was run, because you have used the assistant as much today as your own daily limit allows. '
+      + 'You set that limit yourself and can raise it; otherwise it resets at the start of tomorrow.',
+  },
+  /* R50: the lower ceiling an administrator set for the copy's own load. */
+  AI_USE_COPY_CEILING_REACHED: {
+    check: 'C-109.9',
+    where: 'src/ai-runs/index.mjs open, tick and the ask\'s ceiling, reached from op=airunopen, op=airuntick and an ask',
+    translation: 'Nothing was run, because you have reached today\'s limit that this group\'s administrator set to keep '
+      + 'the group\'s copy from being overloaded. It resets at the start of tomorrow, or an administrator can raise it.',
+  },
+  /* R52 (K1502, K1503): there is no group-wide account; each member brings their own. */
+  AI_NO_ACCOUNT: {
+    check: 'C-109.10',
+    where: 'src/ai-runs/index.mjs open and the ask\'s account, reached from op=airunopen and an ask',
+    translation: 'Nothing was run, because you have not connected a Claude account or an API key of your own. The '
+      + 'assistant works only on the account of the member who asks; connect yours to use it.',
+  },
+  /* R50 (K1601): a member's ceiling is that member's own to set and read; the copy's lower one an administrator's. */
+  NOT_YOUR_CEILING: {
+    check: 'C-109.11',
+    where: 'src/ai-runs/index.mjs aiCeilingSet, aiCopyCeilingSet and the ceiling\'s reads',
+    translation: 'Nothing was changed, because a member\'s daily limit on the assistant is theirs alone to set or look '
+      + 'at, and the limit for the whole group\'s copy is set only by an administrator.',
+  },
+  /* R50 (K1601): a ceiling's figure is a whole number of one or more, or none at all (null: no ceiling of one's own). */
+  AI_CEILING_INVALID: {
+    check: 'C-109.12',
+    where: 'src/ai-runs/index.mjs aiCeilingSet and aiCopyCeilingSet',
+    translation: 'Nothing was changed, because a daily limit on the assistant is a whole number of one or more, or no '
+      + 'limit of your own at all. Give a whole number, or clear the limit.',
+  },
+};
+
 /** Every row this module holds, by code. */
 export const AI_RUNS_CHECKS = Object.freeze({ ...AI_RUN_OWN_CHECKS, ...AI_RUN_ACT_SHAPE_CHECKS, ...AI_RUNS_CONTEXT_CHECKS,
-  ...SURFACE_RUN_CHECKS, ...AI_RUN_OPEN_CHECKS, ...AI_RUN_PLAN_CHECKS });
+  ...SURFACE_RUN_CHECKS, ...AI_RUN_OPEN_CHECKS, ...AI_RUN_PLAN_CHECKS, ...AI_USE_CHECKS });
