@@ -34,3 +34,7 @@ K1580: money is merged too; re-point at it.
 ## B7 · CHANGE
 
 K1585: duties is merged too (and query-language, money-checks, local-facts, explore). Re-point; people, progressions and retrieval follow.
+
+## B8 · CHANGE
+
+K1592, K1593: people and retrieval are merged into tranche/T33 (every upstream of yours is now merged). Merge tranche/T33 into your branch, re-point at the real people and retrieval, run your tests and checks, and post COMPLETE with your final paths, tests and uses.
