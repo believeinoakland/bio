@@ -2,6 +2,21 @@
 
 **Status** · session_0126RaWsKDwYb2AVQaFGQ3gF · depth 2 · WORKING · handled B1
 
+
+## Completion (ROSTER-READER #2)
+
+**Entries applied.** T34-64 (N614; K1505 (6), K1683, K1725): R12 `rosterSource(reads)` in `roster-reader/source.mjs`, exported from `index.mjs`. A held document is read by R2 (`staff_roster.parse` over its text flattened as `readText` does, rows placed by its own segment map), a held table by R6 (`rosterColumns`), each answered `{source, as_of, rows}`; a contact or unnamed column is never read and a contact point inside a cell is left unread (R4); the level is "held as a table, read by roster-reader"; no held roster gives `rosters: []` with why; `reads` absent, throwing, refusing, answering a promise or no list gives "held as a table, not read" with why; an item it cannot read is named in `unread` with why; it writes nothing and never throws. Built on the readings of J1 (the shape of `reads`' answer; an `org_chart` item read by R3, its named posts as rows), still open with BOB.
+
+**Deferred.** Nothing.
+
+**Other modules (REPORT J3).** `plane`: `bio-plane/src/plane/wiring.mjs` `rosterSource()` still registers the "not read" source (`ROSTER_NOT_READ`), and `store.mjs:183` registers it into `people`. To meet people R18 with this module's R12, plane composes `reads({organisation, viewer})` from the store (the Suggestion: captures placed as `staff_roster` or `org_chart` whose stated organisation resolves to the entity, and calculations' tables with R6's roles), in J1's shape, and registers `rosterSource(reads)` imported from `roster-reader`; its `t33.test.mjs` (lines 280–287) asserts the old not-read source and moves with it. No generated artifact is made stale by this module's change until plane imports it (the plane bundle then).
+
+**Tests and checks.** `node --test roster-reader/test/`: tests 22, pass 22, fail 0 (R12 by six new tests in `test/source.test.mjs`). No layer tests (manifest). From civicos-process: format `126 modules, 125 requirements files; 0 failures`; architecture `15 product files, 30 relative imports (0 naming no tracked file, not judged); 0 failures`; coverage `12 of 12 live requirement ids named by a test; 0 failures`; ownership `4 files changed by roster-reader between tranche/T34 and HEAD; 0 failures`. R12's `*(not yet met: T34)*` mark in `build/requirements/roster-reader.md` is BOB's to clear at merge.
+
+**Final `uses`** (K1505 (7)): `docprofile` (unchanged).
+
+Size (session_0126RaWsKDwYb2AVQaFGQ3gF): test runs 2, module lines 1597
+
 ## J1 · QUESTION
 
 R12, two readings I am building on (carrying on meanwhile):
