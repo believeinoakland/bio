@@ -54,24 +54,24 @@ test("R28 R3 a filing takes at most one of template and text: the profile's file
   const profileText = x.profile().action_kinds.find((k) => k.kind === "bylaw_complaint").template.text;
   assert.equal(p.ok, true, JSON.stringify(p).slice(0, 300));
   assert.deepEqual(p.template, { id: PROFILE_TPL, version: 1, sha: sha(profileText), origin: "profile" });
-  assert.equal(p.text, "To the Selectboard: the works order let on 2026-03-02 does not conform to P.E.B.L. § 12; MCBC 2025-3.");
+  assert.equal(p.text, `To the Selectboard: the adoption recorded as ${x.ACT_EVENT} does not conform to P.E.B.L. § 12; MCBC 2025-3.`);
   /* a group template: its latest approved version by default */
   const T = approved(x, { name: "notice" });
   const v2 = update(x, T, "Second words to the {{counterparty_role}}: {{act}}.");
   const latest = prep(x, A, { template: { id: T } });
   assert.deepEqual([latest.ok, latest.template.id, latest.template.version, latest.template.origin], [true, T, 2, "group"]);
-  assert.equal(latest.text, "Second words to the Selectboard: the works order let on 2026-03-02.");
+  assert.equal(latest.text, `Second words to the Selectboard: the adoption recorded as ${x.ACT_EVENT}.`);
   assert.equal(latest.template_version.default, true);
   assert.equal(prep(x, A, { template: T }).template.version, 2, "a bare id names the template too");
   /* a named updated version: offered, said updated, naming its successor */
   const old = prep(x, A, { template: { id: T, version: 1 } });
   assert.deepEqual([old.ok, old.template.version, old.template_version.state, old.template_version.updated_by], [true, 1, "updated", v2]);
   assert.match(old.template_version.says, /updated by/);
-  assert.equal(old.text, "To the Selectboard (Port Ellery Selectboard): the works order let on 2026-03-02 on 2026-03-02.");
+  assert.equal(old.text, `To the Selectboard (Port Ellery Selectboard): the adoption recorded as ${x.ACT_EVENT} on 2026-03-02.`);
   /* the member's own words, filled as a template's (R3): template null */
   const own = prep(x, A, { text: WORDS });
   assert.deepEqual([own.ok, own.template], [true, null]);
-  assert.equal(own.text, "To the Selectboard: the works order let on 2026-03-02 does not conform to P.E.B.L. § 12; MCBC 2025-3, under [UNFILLED: law].");
+  assert.equal(own.text, `To the Selectboard: the adoption recorded as ${x.ACT_EVENT} does not conform to P.E.B.L. § 12; MCBC 2025-3, under [UNFILLED: law].`);
   assert.deepEqual(own.unfilled.map((u) => u.name), ["law"]);
   assert.ok(own.blanks.every((b) => b.source), "each filled blank names its source");
   /* both */
@@ -210,8 +210,8 @@ test("R31 counselPacket takes a brief template at every tier: its text filled fr
   assert.deepEqual(Object.keys(p.sections), ["facts", "chronology", "exhibits", "standards", "theories", "deadlines", "consequences", "briefing"]);
   const b = p.sections.briefing;
   assert.equal(b.marking, counselMarking(null), "the group's own marking, no counsel named");
-  assert.equal(b.text, "For counsel: the works order let on 2026-03-02 (2026-03-02) breaches P.E.B.L. § 12; MCBC 2025-3, under [UNFILLED: law].");
-  assert.deepEqual(b.items.map((i) => [i.name, i.source]), [["act", x.D], ["act_date", x.D], ["standards", `${x.S1}, ${x.S2}`]]);
+  assert.equal(b.text, `For counsel: the adoption recorded as ${x.ACT_EVENT} (2026-03-02) breaches P.E.B.L. § 12; MCBC 2025-3, under [UNFILLED: law].`);
+  assert.deepEqual(b.items.map((i) => [i.name, i.source]), [["act", x.ACT_EVENT], ["act_date", x.ACT_EVENT], ["standards", `${x.S1}, ${x.S2}`]]);
   assert.deepEqual(b.unfilled.map((u) => u.name), ["law"]);
   const rec = x.f.filingTemplates.templateRead({ template: B, viewer: V("olive") }).version;
   assert.deepEqual([p.template, b.template], [{ id: B, version: 1, sha: rec.sha, origin: "group" }, { id: B, version: 1, sha: rec.sha, origin: "group" }]);
@@ -233,7 +233,7 @@ test("R31 counselPacket takes a brief template at every tier: its text filled fr
                "refused without counsel at Tier 3, before the template");
   const t3 = x.f.counselPacket({ reason: WHY, action: T3, counsel: COUNSEL, template: { id: BRIEF_TPL }, author: V("olive"), viewer: V("olive") });
   assert.deepEqual([t3.ok, t3.template.origin, t3.sections.briefing.marking], [true, "profile", counselMarking(COUNSEL)]);
-  assert.match(t3.sections.briefing.text, /^For counsel: test-group asks whether the works order/);
+  assert.match(t3.sections.briefing.text, /^For counsel: test-group asks whether the adoption recorded as EVT-/);
   const pk = (action, template) => x.f.counselPacket({ reason: WHY, action, counsel: COUNSEL, template, author: V("olive"), viewer: V("olive") });
   assert.equal(pk(A, { id: PROFILE_TPL }).reason, "TEMPLATE_USE_FILE", "a file template is no briefing");
   assert.equal(pk(A, { id: BRIEF_TPL }).reason, "TEMPLATE_KIND_MISMATCH", "the commitment claim's brief on a bylaw complaint");

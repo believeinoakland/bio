@@ -67,7 +67,7 @@ test("R8 an action stating a premise override and no live determination gets a c
   assert.deepEqual(p.sections.facts.items, []);
   assert.match(p.sections.facts.says, /no determination is held/);
   assert.match(p.sections.standards.says, /no determination is held/);
-  assert.equal(p.sections.chronology.items.some((e) => /^the act: /.test(e.event)), false, "no act is set out");
+  assert.equal(p.sections.chronology.set.some((e) => e.is === "the act's event"), false, "no act is set out (R33)");
   assert.equal(p.fileable, false);
   /* nothing drawn from a determination can change: no basis_changed */
   assert.equal(x.f.counselPacketRead({ id: p.id, viewer: V("bo") }).basis_changed, null);

@@ -61,7 +61,9 @@ test("R6 stage 3's trigger to 4: after the sent entry a received or no_response 
     adv(w, 3);
     assert.equal(edge(read(w, ms("2026-12-01T00:00:00Z")), 4).met, false);
   }
-  /* the clock: pending entry dated 2026-09-20 (and a later one); met from 2026-09-21T00:00Z, not a moment before */
+  /* the clock: pending entry dated 2026-09-20 (and a later one); past once the office's local day after it begins
+     (actions R12, T33-73: the test profile's zone, America/Halifax, UTC-3 in September), so met from
+     2026-09-21T03:00Z, not a moment before */
   {
     const w = seeded();
     opened(w); adv(w, 2);
@@ -69,16 +71,30 @@ test("R6 stage 3's trigger to 4: after the sent entry a received or no_response 
     attach(w, n);
     w.correspond(n, "sent", "2026-09-02");
     adv(w, 3);
-    const before = read(w, ms("2026-09-20T23:59:59Z"));
+    const before = read(w, ms("2026-09-21T02:59:59Z"));
     assert.equal(edge(before, 4).met, false);
     assert.deepEqual(before.notes, []);
-    const after = read(w, ms("2026-09-21T00:00:00Z"));
-    assert.deepEqual([edge(after, 4).met, edge(after, 4).instant, edge(after, 4).ids], [true, "2026-09-21T00:00:00Z", [n]]);
+    const after = read(w, ms("2026-09-21T03:00:00Z"));
+    assert.deepEqual([edge(after, 4).met, edge(after, 4).instant, edge(after, 4).ids], [true, "2026-09-21T03:00:00Z", [n]]);
     assert.equal(after.proposed[0].age_ms, 0);
-    assert.equal(read(w, ms("2026-09-23T00:00:00Z")).proposed[0].age_ms, 2 * DAY);
+    assert.equal(read(w, ms("2026-09-23T03:00:00Z")).proposed[0].age_ms, 2 * DAY);
+    assert.equal(read(w, ms("2026-09-23T03:00:00Z")).proposed[0].instant, "2026-09-21T03:00:00Z", "the instant is the record's, not the read's");
     /* a reply before the deadline is met first: the earliest alternative */
     w.correspond(n, "received", "2026-09-15");
     assert.equal(edge(read(w, ms("2026-09-25T00:00:00Z")), 4).instant, "2026-09-15T00:00:00Z");
+  }
+  /* no zone held for the office's local day: whether the entry is past is undetermined, said, and never a trigger */
+  {
+    const w = seeded({ profiles: [] });
+    opened(w); adv(w, 2);
+    const n = w.action({ project: w.P, restsOn: [w.D], clock: [{ date: "2026-09-20" }] });
+    attach(w, n);
+    w.correspond(n, "sent", "2026-09-02");
+    adv(w, 3);
+    const r = read(w, ms("2030-01-01T00:00:00Z"));
+    assert.equal(edge(r, 4).met, false);
+    assert.deepEqual(r.notes.map((x) => x.action), [n]);
+    assert.match(r.notes[0].says, /undetermined/);
   }
   /* no clock entry: never by time, and said */
   {

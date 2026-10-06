@@ -49,18 +49,32 @@
  *                  Its `actionFacts` (R12, the one clock rule) is imported, a pure function. An action's
  *                  `premise_override` (its R8) is read from its document by its `Actions.overrideOf` (R23).
  *   filings        `filingsFor` (its R13), `availableActions` (its R21); default `filingsOf(host)` (K248, B8).
+ *   entities       `readEntity` (its R7): the actor's `office` entity (R4); default `entitiesOf(host)`.
+ *   lines          `structureAt` (its R10): the `oversees`, `appoints` and `part_of` lines (R12); default `linesOf(host)`.
+ *   events         `registerEventSource` (its R30), called once at creation (R30); default `eventsOf(host)`.
  *   view           the active profiles' combined view (`jurisdictions.combine`, record-core R26), or null.
- *   now            the instance clock, an ISO string (default: the wall clock, to the second). */
+ *   now            the instance clock, an ISO string (default: the wall clock, to the second).
+ *
+ * THE ACTOR'S OFFICE AND WHO OVERSEES IT (R4, R12; T33-76, K1442). The determination's actor is resolved to its `office`
+ * entity (conformance R25's `entity_id`, read through `entities`); an actor with none held is stated unresolved and
+ * still triggers. A stage-7 oversight or audit request lands when its office holds an `oversees` or `appoints` line,
+ * valid on the attachment's day, to that entity or to an organisation it is `part_of` (one hop: `lines` walks no
+ * chain); such a line governs over the profile's `oversight` flag, which decides only where no line is held. A line
+ * undetermined on the day is stated so and never read as held. At stage 7 the read offers the offices holding such a
+ * line, each with its line and grades; it offers and never chooses. */
 
 import { recordOf, stampInstant, instantOrder } from "../record-core/index.mjs";
 import { membershipOf } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { conformanceOf, noSuchDetermination, determinationSuperseded } from "../conformance/index.mjs";
 import { consequencesModule } from "../consequences/index.mjs";
-import { Actions, actionsOf, actionFacts, noSuchAction } from "../actions/index.mjs";
+import { Actions, actionsOf, actionFacts, actionOverdue, localToday, zoneOf, noSuchAction } from "../actions/index.mjs";
 import { filingsOf } from "../filings/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { isMachineIdentity, proposalLabel } from "../record-grammar/index.mjs";
+import { entitiesOf } from "../entities/index.mjs";
+import { linesOf } from "../lines/index.mjs";
+import { eventsOf } from "../events/index.mjs";
 import { ESCALATION, escalationId, escalationDoc, appendEntry, logOf, logSection, parseFm } from "./doc.mjs";
 import { ESCALATION_TABLES, migrateEscalation } from "./schema.mjs";
 import { ESCALATION_CHECKS, refusal } from "./checks.mjs";
@@ -81,6 +95,13 @@ export const READINGS = Object.freeze(["complied", "partial", "denied", "none"])
 /** R12: the five accountability purposes of a stage-7 act. */
 export const ACCOUNTABILITY_PURPOSES = Object.freeze(["official_request", "oversight_request", "audit_request",
   "testimony", "enforcing_legislation"]);
+/** R12: the lines by which an office oversees another, and the line from an office to the organisation it is in. */
+export const OVERSIGHT_KINDS = Object.freeze(["oversees", "appoints"]);
+/** R30: the escalation's own acts, as the timeline's "what we did" lane names them (the log's kinds). */
+export const TIMELINE_KINDS = Object.freeze(["open", "advance", "attach", "evaluate", "decline", "suspend", "resume", "end"]);
+/** R30: the lane's bound when the timeline states none, and its most (events R27's clamp). */
+export const TIMELINE_LIMIT = 100;
+export const TIMELINE_MAX = 500;
 /** R24: a reason's bound (R1, R9, R10, R13, R15, R27). */
 export const REASON_MAX = 2000;
 /** R16: the most items `escalationsDue` answers. */
@@ -116,10 +137,42 @@ const instantMs = (v) => {
   return /^\d{4}-\d{2}-\d{2}$/.test(v) ? Date.parse(`${v}T00:00:00Z`) : Date.parse(v);
 };
 const iso = (ms) => stampInstant("second", ms);
+/** R12: the UTC day of an instant (`YYYY-MM-DD`), the day a line is judged on. */
+const dayOf = (v) => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v) ? v.slice(0, 10)
+  : Number.isFinite(v) ? new Date(v).toISOString().slice(0, 10) : null);
 /** R29: words the record holds, quoted as they are held (their line breaks as spaces). */
 const quoted = (v) => `"${String(v).trim().replace(/\s*\n\s*/g, " ")}"`;
 /** R29, R17: who assembles the draft: the plane, a machine, so its label is `machine_proposed`. */
 const DRAFTED_BY = "system";
+
+/** R2, R6 (actions R12, T33-73): the instant a clock entry was first past, by actions' own rule at the office's local
+ *  day (and its close of business where the basis says so): the earliest second at which `actionFacts` answers it
+ *  overdue, found by halving between two days before its date and `nowMs`, so the age is a fact of the record. */
+function overdueSince(text, date, nowMs, place) {
+  const past = (t) => (actionFacts(text, t, place) || {}).clock_overdue === true;
+  let lo = Math.floor((instantMs(date) - 2 * DAY_MS) / 1000), hi = Math.ceil(nowMs / 1000);
+  if (past(lo * 1000)) return lo * 1000;
+  while (hi - lo > 1) {
+    const mid = Math.floor((lo + hi) / 2);
+    if (past(mid * 1000)) hi = mid; else lo = mid;
+  }
+  return hi * 1000;
+}
+
+/** R29 (conformance R25, events R9): an act's event's `when` in words, as the record holds it: a day or instant, a span
+ *  with its precision and zone, placed nowhere, or undetermined with why; never a guessed date. */
+function eventWhenWords(w, why) {
+  if (w === null || w === undefined) return "at no date the record holds (placed nowhere; undetermined)";
+  if (!isObj(w)) return `at a date that is undetermined${why ? ` (${why})` : ""}`;
+  const start = str(w.start), end = str(w.end);
+  if (!start && !end) return "at a date the record does not state (undetermined)";
+  /* a day at day precision is held as its half-open span [start, next day): it reads as that day */
+  const oneDay = str(w.precision) === "day" && start && end && Date.parse(end) - Date.parse(start) === DAY_MS;
+  const at = oneDay ? `on ${start.slice(0, 10)}` : !end || end === start ? `on ${start || end}`
+    : !start ? `on or before ${end}` : `between ${start} and ${end}`;
+  const how = [str(w.precision) ? `to the ${str(w.precision)}` : "", str(w.zone)].filter(Boolean).join(", ");
+  return `${at}${how ? ` (${how})` : ""}`;
+}
 
 /** R29: one consequence part (`consequences` R7) in one sentence: what it affects, its measure or that the measure is
  *  undetermined, its period, its state and its causation, as recorded; never a total, never a weight. */
@@ -179,6 +232,8 @@ export class Escalation {
   get consequences() { return this.#dep("consequences"); }
   get actions() { return this.#dep("actions"); }
   get filings() { return this.#dep("filings"); }
+  get entities() { return this.#dep("entities"); }
+  get lines() { return this.#dep("lines"); }
   #dep(name) {
     const d = this.deps[name];
     const v = typeof d === "function" ? d() : d;
@@ -200,6 +255,12 @@ export class Escalation {
     const ids = this.record.getSetting("jurisdiction_profiles");
     const c = combine(Array.isArray(ids) ? ids : []);
     return c.ok ? c.view : null;
+  }
+
+  /* actions R12: the place its clock rule reads (actions' own `place()`, else the combined view), or null. */
+  #place() {
+    try { if (typeof this.actions.place === "function") return this.actions.place(); } catch { /* fall through */ }
+    return this.#view();
   }
 
   /* ===================================================================== *
@@ -301,6 +362,8 @@ export class Escalation {
         + `only by a live compliant determination of the same act for every standard pursued (escalationEnd)`
       : `no evaluation ${scope} reads denied, partial or none`);
 
+    /* actions R12 (T33-73): a clock entry is past on the office's local day, so its rule reads the place (the view) */
+    const place = e.stage === 3 ? this.#place() : null;
     if (e.stage === 1) {
       /* R4: the determination is live, and its act's actor is an office. */
       const d = this.conformance.determinationRead({ id: e.determination, viewer });
@@ -333,12 +396,16 @@ export class Escalation {
           if (reply) alts.push({ ms: Math.max(instantMs(s.entry.at), instantMs(reply.at)),
                                  ids: [a.action, `${a.action}#${s.entry.ord}`, `${a.action}#${reply.ord}`] });
         }
-        const facts = actionFacts(this.#text(a.action), nowMs) || {};
+        const facts = actionFacts(this.#text(a.action), nowMs, place) || {};
         if (!facts.clock_next)
           notes.push({ action: a.action, says: "this notification action has no pending clock entry, so stage 3 never "
                        + "triggers by time on it; a member states a clock entry, with its basis, on the action" });
         else if (facts.clock_overdue)
-          alts.push({ ms: instantMs(facts.clock_next) + DAY_MS, ids: [a.action], clock: facts.clock_next });
+          alts.push({ ms: overdueSince(this.#text(a.action), facts.clock_next, nowMs, place), ids: [a.action], clock: facts.clock_next });
+        else if (facts.clock_overdue === null)
+          notes.push({ action: a.action, says: "whether this action's clock entry is past is undetermined (actions R12: no "
+                       + "time zone is held for the office's local day, or the entry's day cannot be read), so stage 3 is "
+                       + "not triggered by time on it" });
       }
       edge(4, alts, acts.length ? "no reply or no-response entry follows the sent entry, and no clock entry is past"
                                 : "no notification action is attached at stage 2");
@@ -437,7 +504,7 @@ export class Escalation {
 
   /* The escalation's attached actions as the reader sees them, with stage 7's statements and R12's undetermined
      election or oversight. */
-  #actionsOf(e, viewer, seen) {
+  #actionsOf(e, viewer, seen, actor) {
     const view = this.#view();
     /* R26: one the viewer may not see is withheld whole, with its stage, attacher, time, purpose, standards and
        filings: no id, no placeholder, no count. */
@@ -451,8 +518,23 @@ export class Escalation {
         const office = this.#office(visible.counterparty, view);
         if (a.purpose === "official_request" && office.elected === undefined)
           item.election = { state: "undetermined", says: "the active profiles do not say whether this office is elected" };
-        if ((a.purpose === "oversight_request" || a.purpose === "audit_request") && office.oversight === undefined)
-          item.oversight = { state: "undetermined", says: "the active profiles do not say whether this office is an oversight or audit body" };
+        if (a.purpose === "oversight_request" || a.purpose === "audit_request") {
+          /* R12 (K1442): a line held on the attachment's day governs, named with its grades; with none, the profile's
+             flag; with neither, undetermined. A line undetermined on that day is stated, never read as held. */
+          const target = isObj(visible.counterparty) ? str(visible.counterparty.entity_id) || null : null;
+          const l = this.#oversightLines(target, actor, dayOf(a.at), viewer);
+          const doubt = l.state === "none" && l.undetermined.length ? { undetermined: l.undetermined } : {};
+          if (l.state === "held")
+            item.oversight = { state: "held", lines: l.lines, says: "this office holds a line by which it oversees the "
+              + "actor's office on the attachment's day; the line governs over the profile" };
+          else if (office.oversight === undefined)
+            item.oversight = { state: "undetermined", says: "no line held on the attachment's day shows this office "
+              + "overseeing the actor's office, and the active profiles do not say whether it is an oversight or audit body",
+              ...doubt, ...(l.state === "unread" ? { lines_unread: l.why } : {}) };
+          else if (doubt.undetermined)
+            item.oversight = { state: "profile", profile: office.oversight, says: "no line is held on the attachment's "
+              + "day; the active profiles speak", ...doubt };
+        }
       }
       if (a.stage === 5) {
         const f = this.filings.filingsFor({ action: a.action, viewer });
@@ -469,6 +551,94 @@ export class Escalation {
     if (!o) return {};
     return { elected: typeof o.elected === "boolean" ? o.elected : undefined,
              oversight: typeof o.oversight === "boolean" ? o.oversight : undefined };
+  }
+
+  /* R4 (T33-76): the act's actor as its office entity, `{role, body, entity_id, state, why?}`: `resolved` when the
+     determination names an entity (conformance R25's `entity_id`) that `entities` holds as an `office`, else
+     `unresolved` with why. Unresolved never stops R4's trigger; it is stated. */
+  #actor(d, viewer) {
+    const a = isObj(actOf(d).actor) ? actOf(d).actor : {};
+    const base = { role: str(a.role) || null, body: str(a.body) || null, entity_id: str(a.entity_id) || null };
+    if (!base.entity_id)
+      return { ...base, state: "unresolved", why: "the determination names no office entity for the act's actor" };
+    const r = this.entities.readEntity({ entityId: base.entity_id, viewer });
+    if (!r || r.ok === false || !r.found || !isObj(r.entity))
+      return { ...base, state: "unresolved", why: "the actor's entity is not held in the registry" };
+    if (r.entity.kind !== "office")
+      return { ...base, state: "unresolved", why: `the actor's entity is of kind ${r.entity.kind}, not an office` };
+    return { ...base, state: "resolved", label: r.entity.label ?? null };
+  }
+
+  /* R12: a line as the escalation states it: its id, kind, ends, both grade axes apart (never composed), and its basis. */
+  static #line(l) {
+    return { line_id: l.line_id, kind: l.kind, from: l.from, to: l.to, assertion: l.assertion ?? null,
+             ends: isObj(l.ends) ? { from: l.ends.from ?? null, to: l.ends.to ?? null } : { from: null, to: null },
+             citation: l.citation ?? null };
+  }
+
+  /* R12 (K1442): who holds an `oversees` or `appoints` line, valid on `day`, to the office entity `office` or to an
+     organisation it is `part_of` (one hop), as `viewer` may see the lines (`lines.structureAt`). Answers `{held:
+     [{entity, line, via?}], undetermined: [{entity?, line, via?, why}]}`; a line undetermined on the day, or one reached
+     through a `part_of` line undetermined on it, is listed apart and never read as held. */
+  #overseers(office, day, viewer) {
+    const held = [], undetermined = [];
+    const at = (entity, kinds) => {
+      const r = this.lines.structureAt({ entity, at: day, kinds, viewer });
+      return r && r.ok !== false ? r : { held: [], undetermined: [] };
+    };
+    const intoOver = (entity, via, doubt) => {
+      const s = at(entity, [...OVERSIGHT_KINDS]);
+      for (const l of s.held || [])
+        if (OVERSIGHT_KINDS.includes(l.kind) && l.to === entity && l.from !== office) {
+          const item = { entity: l.from, line: Escalation.#line(l), ...(via ? { via } : {}) };
+          if (doubt) undetermined.push({ ...item, why: doubt });
+          else held.push(item);
+        }
+      for (const u of s.undetermined || [])
+        if (isObj(u.line) && OVERSIGHT_KINDS.includes(u.line.kind) && u.line.to === entity && u.line.from !== office)
+          undetermined.push({ entity: u.line.from, line: Escalation.#line(u.line), ...(via ? { via } : {}),
+                              why: doubt ? `${doubt}; and ${u.why}` : u.why });
+    };
+    intoOver(office, null, null);
+    const parts = at(office, ["part_of"]);
+    for (const l of parts.held || [])
+      if (l.kind === "part_of" && l.from === office) intoOver(l.to, Escalation.#line(l), null);
+    for (const u of parts.undetermined || [])
+      if (isObj(u.line) && u.line.kind === "part_of" && u.line.from === office)
+        intoOver(u.line.to, Escalation.#line(u.line), `the office's part_of line is undetermined on ${day}: ${u.why}`);
+    return { held, undetermined };
+  }
+
+  /* R4: the actor of the escalation's determination as this viewer reads it (R12's attachment check). */
+  #actorOf(e, viewer) {
+    const d = this.conformance.determinationRead({ id: e.determination, viewer });
+    return d && d.ok !== false ? this.#actor(d, viewer)
+      : { state: "unresolved", why: "the determination does not answer to this reader" };
+  }
+
+  /* R12: what the record holds on whether `target` (the stage-7 action's office entity, actions R9) oversees the actor's
+     office on `day`: `{state: "held", lines}` when it holds such a line; else `{state: "none", undetermined}` (with the
+     lines undetermined on the day, if any); `{state: "unread", why}` when either office entity is not held, so no line
+     can be read and the profile's flag alone speaks. */
+  #oversightLines(target, actor, day, viewer) {
+    if (!target) return { state: "unread", why: "the action's office names no entity, so no line to it can be read" };
+    if (actor.state !== "resolved") return { state: "unread", why: `the act's actor is unresolved: ${actor.why}` };
+    const o = this.#overseers(actor.entity_id, day, viewer);
+    const held = o.held.filter((h) => h.entity === target);
+    if (held.length) return { state: "held", lines: held.map(({ entity: _, ...h }) => h) };
+    return { state: "none", undetermined: o.undetermined.filter((u) => u.entity === target).map(({ entity: _, ...u }) => u) };
+  }
+
+  /* R12: at stage 7 the offices the record supports as targets for an oversight or audit request, at `day`, each with
+     its line; offered, never chosen. */
+  #targets(actor, day, viewer) {
+    const says = "offices holding an oversees or appoints line to the actor's office, or to an organisation it is part "
+      + "of, valid on this day: the targets the record supports. They are offered; a member chooses, and the profile "
+      + "is read only where no line is held.";
+    if (actor.state !== "resolved")
+      return { state: "undetermined", on: day, offices: [], undetermined: [], why: `the act's actor is unresolved: ${actor.why}`, says };
+    const o = this.#overseers(actor.entity_id, day, viewer);
+    return { state: o.held.length ? "held" : "none", on: day, offices: o.held, undetermined: o.undetermined, says };
   }
 
   /* The history: every act on the escalation, oldest first, from its document's log (R18). R13's compatibility (N462):
@@ -521,11 +691,15 @@ export class Escalation {
     const seen = this.#sight(attached, viewer);
     const { triggers, notes } = this.#triggers(e, at, viewer, seen);
     const proposed = this.#proposed(e, triggers, at);
+    /* R4: the actor's office entity, which stage 2's notice and stage 7's targets read. */
+    const d = this.conformance.determinationRead({ id: e.determination, viewer });
+    const actor = d && d.ok !== false ? this.#actor(d, viewer)
+      : { role: null, body: null, entity_id: null, state: "unresolved", why: "the determination does not answer to this reader" };
     let answer = {
       ok: true, id: e.id, project: e.project, determination: e.determination, act: e.act, state: e.state,
       stage: e.stage, stage_name: STAGES[e.stage], stage_since: e.stageSince, opened_by: e.openedBy, opened_at: e.openedAt,
       opened_reason: e.openedReason,
-      as_of: iso(at), history: this.#history(e.id), standards: e.standards, actions: this.#actionsOf(e, viewer, seen),
+      as_of: iso(at), actor, history: this.#history(e.id), standards: e.standards, actions: this.#actionsOf(e, viewer, seen, actor),
       evaluations: this.#evaluations(e.id), triggers, notes, proposed, exit: this.#exit(e, viewer),
     };
     answer = this.#withhold(answer, attached, seen);
@@ -533,6 +707,7 @@ export class Escalation {
       answer.suspended = { since: e.stateSince, says: "suspended: its proposals are not reported as due, its clocks keep "
                            + "running in the actions, and it is not ended" };
     if (e.state === "ended") answer.ended = { at: e.stateSince, says: "ended: compliance was restored and the consequences addressed" };
+    if (e.stage === 7) answer.targets = this.#targets(actor, dayOf(at), viewer);
     if (e.stage === 5) {
       const av = this.filings.availableActions({ determination: e.determination, viewer });
       answer.available = av && av.ok !== false ? av
@@ -791,10 +966,18 @@ export class Escalation {
         return refusal("COUNTERPARTY_NOT_ELECTED", "an official request asks an elected office to act on the breach, and "
                        + "the active profiles mark this action's office not elected. Nothing was written.");
       /* END DEC-49 REGION is-elected-office */
+      /* R12 (K1442): a line held on the attachment's day by which the office oversees the actor's office governs; only
+         with none does the profile's flag refuse. A line undetermined on that day is named, never read as held. */
+      const oversight = purpose === "oversight_request" || purpose === "audit_request"
+        ? this.#oversightLines(isObj(a.counterparty) ? str(a.counterparty.entity_id) || null : null,
+                               this.#actorOf(e, viewer), entry.at.slice(0, 10), viewer) : null;
       /* DEC-49 REGION is-oversight-office */
-      if ((purpose === "oversight_request" || purpose === "audit_request") && office.oversight === false)
-        return refusal("COUNTERPARTY_NOT_OVERSIGHT", "an oversight or audit request is addressed to an oversight or audit "
-                       + "body, and the active profiles mark this action's office not one. Nothing was written.");
+      if (oversight && oversight.state !== "held" && office.oversight === false)
+        return refusal("COUNTERPARTY_NOT_OVERSIGHT", "an oversight or audit request is addressed to an office that "
+                       + "oversees the actor's office: no line held on this day shows this action's office overseeing or "
+                       + "appointing it, or an organisation it is part of, and the active profiles mark the office not an "
+                       + "oversight or audit body. Nothing was written.",
+                       oversight.state === "none" && oversight.undetermined.length ? { undetermined: oversight.undetermined } : {});
       /* END DEC-49 REGION is-oversight-office */
       Object.assign(entry, { purpose, standards: [...new Set(named)] });
     }
@@ -1134,11 +1317,21 @@ export class Escalation {
     const act = actOf(d);
     const actor = isObj(act.actor) && str(act.actor.role) && str(act.actor.body)
       ? `${str(act.actor.role)}, ${str(act.actor.body)}` : "an office the record does not name (undetermined)";
+    /* conformance R25 (T33-70): an act is an event, worded from its kind and its `when` (events R9: `{start, end,
+       precision, zone}`, null when placed nowhere, `undetermined` when its cache is stale); a pre-T33 act keeps its
+       description, date and period (conformance R26). */
+    const ev = isObj(d.event) ? d.event : null;
+    const eventWhen = act.when !== undefined && act.when !== null ? act.when : ev ? ev.when ?? null : null;
     const when = str(act.at) ? `on ${str(act.at)}`
       : isObj(act.period) && str(act.period.from) && str(act.period.to) ? `from ${str(act.period.from)} to ${str(act.period.to)}`
+      : str(act.event) || ev ? eventWhenWords(eventWhen, ev && str(ev.why) ? str(ev.why) : null)
       : "at a date the record does not state (undetermined)";
+    const kind = str(act.kind) || (ev ? str(ev.kind) : "");
+    const what = str(act.description) ? quoted(act.description)
+      : str(act.event) ? `the event ${str(act.event)}${kind ? ` (${kind})` : ""}`
+      : "its description could not be read (undetermined)";
     say(actIdOf(d) ?? D, `The act determined${actIdOf(d) ? ` (${actIdOf(d)})` : ""}: `
-      + `${str(act.description) ? quoted(act.description) : "its description could not be read (undetermined)"}, by ${actor}, ${when}.`);
+      + `${what}, by ${actor}, ${when}.`);
     const held = Array.isArray(d.standards) ? d.standards.filter(isObj) : [];
     for (const standard of pursued) {
       const st = held.find((x) => x.standard === standard);
@@ -1157,7 +1350,9 @@ export class Escalation {
     const listed = this.#actionsResting(D, viewer);
     if (!listed) say(D, "The actions resting on the determination could not be read (undetermined).");
     else {
-      const today = new Date(at).toISOString().slice(0, 10);
+      /* actions R12 (T33-73): the office's local day, through actions' own rule and zone */
+      const place = this.#place();
+      const today = localToday(at, zoneOf(place));
       let shown = 0;
       for (const id of listed) {
         const a = this.actions.actionRead({ id, viewer, now: at });
@@ -1175,9 +1370,17 @@ export class Escalation {
           say(id, `Action ${id}'s clock entry ${what ? quoted(what) : "(its text undetermined)"} is due `
             + `${date ?? "on a date the record does not state (undetermined)"}, on the basis `
             + `${str(c.basis) ? quoted(c.basis) : "the record does not state (undetermined)"}, ${str(c.status) || "its status undetermined"}.`);
-          /* actions R12's rule: a pending entry is past once the UTC day after its date has begun. */
-          if (c.status === "pending" && date && date < today)
-            say(id, `The date ${date} on action ${id} passed without a response: the entry is still pending on ${today}.`);
+          /* actions R12's rule, entry by entry: past once the office's local day after it has begun (or its close of
+             business, where the basis says so); undetermined, and said, where no zone is held. */
+          if (c.status === "pending" && date) {
+            let past = null;
+            try { past = actionOverdue({ counterparty: a.counterparty, clock: [c] }, at, place); } catch { past = null; }
+            if (past === true)
+              say(id, `The date ${date} on action ${id} passed without a response: the entry is still pending on ${today ?? "the day of reading"}.`);
+            else if (past === null)
+              say(id, `Whether the date ${date} on action ${id} has passed is undetermined: no time zone is held for the `
+                + "office's local day.");
+          }
         }
       }
       if (!shown) say(D, "No action resting on the determination is recorded.");
@@ -1199,6 +1402,48 @@ export class Escalation {
                  + "then recorded is the member's own. Nothing was written." };
   }
 
+  /** R30 (EVENTS 2a; K1494): this module's source for `events.timeline`'s "what we did" lane. For an explicit set of
+   *  entity or event ids, each act recorded on the escalations `viewer` may see whose determination's act event or
+   *  actor office entity is in the set: `{at, label, ref, kind}`, `kind` the log's (an opening, a stage move, an
+   *  attachment, an evaluation, a decline, a suspension or resumption, an end), `ref` the escalation, oldest first,
+   *  within `from`–`to` (a day bound covers the whole day), bounded by `limit` (1–500, default 100) with `truncated`.
+   *  An attachment of an action the viewer may not see is withheld (R26). With no viewer named it answers no item,
+   *  never every escalation (R20). Writes nothing. */
+  timelineSource({ set, from = null, to = null, limit = null, viewer = null } = {}) {
+    const ids = new Set((Array.isArray(set) ? set : typeof set === "string" ? set.split(",") : []).map(str).filter(Boolean));
+    const n = Number(limit);
+    const cap = Number.isFinite(n) && n >= 1 ? Math.min(Math.floor(n), TIMELINE_MAX) : TIMELINE_LIMIT;
+    if (viewer === null || viewer === undefined || viewer === "" || !ids.size) return { items: [], truncated: false, limit: cap };
+    const lo = str(from) ? instantMs(str(from)) : -Infinity;
+    const hiRaw = str(to);
+    const hi = !hiRaw ? Infinity : /^\d{4}-\d{2}-\d{2}$/.test(hiRaw) ? instantMs(hiRaw) + DAY_MS - 1 : instantMs(hiRaw);
+    const read = new Map();
+    const concerned = (determination) => {
+      if (!read.has(determination)) {
+        const d = this.conformance.determinationRead({ id: determination, viewer });
+        const act = d && d.ok !== false ? actOf(d) : {};
+        const actor = isObj(act.actor) ? act.actor : {};
+        read.set(determination, [str(act.event), str(actor.entity_id)].some((x) => x && ids.has(x)));
+      }
+      return read.get(determination);
+    };
+    const items = [];
+    for (const r of this.#rows(`SELECT escalation_id FROM escalations ORDER BY escalation_id`)) {
+      const e = this.#row(r.escalation_id, viewer);
+      if (!e || !concerned(e.determination)) continue;
+      const seen = this.#sight(this.#attachments(e.id), viewer);
+      for (const x of this.#history(e.id)) {
+        if (x.unreadable || !TIMELINE_KINDS.includes(x.kind)) continue;
+        if (x.kind === "attach" && !seen.get(x.action)) continue;
+        const t = instantMs(x.at);
+        if (!(t >= lo && t <= hi)) continue;
+        items.push({ at: x.at, label: timelineLabel(e.id, x), ref: e.id, kind: x.kind });
+      }
+    }
+    items.sort((a, b) => instantOrder(a.at, b.at) || (a.ref < b.ref ? -1 : a.ref > b.ref ? 1 : 0));
+    return { items: items.slice(0, cap), truncated: items.length > cap, limit: cap };
+  }
+
   /* R29: the ids of the actions resting on the determination that `viewer` may see (`actions.actionsFor`, its R30),
      every page in id order; null when they could not be read. */
   #actionsResting(determination, viewer) {
@@ -1213,6 +1458,23 @@ export class Escalation {
       if (!after) return ids;
     }
     return null;
+  }
+}
+
+/** R30: one act on an escalation in a line a member reads; it names the escalation, the stages and the action as the
+ *  record holds them, and no person (who acted is in the escalation's own read). */
+function timelineLabel(id, x) {
+  const st = (n) => `stage ${n} (${STAGES[n] ?? "unknown"})`;
+  switch (x.kind) {
+    case "open": return `Escalation ${id} opened at ${st(1)}`;
+    case "advance": return `Escalation ${id} advanced from ${st(x.from)} to ${st(x.to)}`;
+    case "attach": return `Action ${x.action} attached to escalation ${id} at ${st(x.stage)}`
+      + `${x.purpose ? `, its purpose ${x.purpose}` : ""}`;
+    case "evaluate": return `A response evaluated in escalation ${id}: ${x.reading}`;
+    case "decline": return `Escalation ${id}: the move from ${st(x.from)} to ${st(x.to)} declined for now`;
+    case "suspend": return `Escalation ${id} suspended at ${st(x.from)}`;
+    case "resume": return `Escalation ${id} resumed at ${st(x.from)}`;
+    default: return `Escalation ${id} ended`;
   }
 }
 
@@ -1283,7 +1545,7 @@ class ProviderAbsent extends Error {
    absent (K248). */
 for (const name of ["escalationOpen", "escalationRead", "escalationAttach", "escalationEvaluate", "escalationAdvance",
                     "escalationDecline", "escalationEnd", "escalationSuspend", "escalationResume", "escalationsDue",
-                    "escalationsFor", "declineToEscalate", "escalationStatus", "escalationReasonDraft"]) {
+                    "escalationsFor", "declineToEscalate", "escalationStatus", "escalationReasonDraft", "timelineSource"]) {
   const f = Escalation.prototype[name];
   Object.defineProperty(Escalation.prototype, name, { configurable: true, writable: true, value: function (...a) {
     try { return f.apply(this, a); }
@@ -1311,11 +1573,17 @@ export function escalationOf(host, deps) {
     const filings = d.filings || (() => filingsOf(host, { record, membership, promotion }));
     const consequences = d.consequences
       || (() => consequencesModule(host, { record, membership, promotion, conformance: typeof conformance === "function" ? conformance() : conformance }));
-    i = new Escalation({ ...d, storage, record, membership, promotion, conformance, consequences, actions, filings });
+    const entities = d.entities || (() => entitiesOf(host, { record, membership }));
+    const lines = d.lines || (() => linesOf(host, { record }));
+    i = new Escalation({ ...d, storage, record, membership, promotion, conformance, consequences, actions, filings,
+                         entities, lines });
     instances.set(host, i);
     i.migrate();
     record.declarePurge("escalation", ESCALATION_TABLES);
     promotion.registerStep("escalation", { check: (c) => i.check(c), project: (c) => i.project(c) });
+    /* R30: registered once, at start (events R30; membership's listener rule refuses a second registration). */
+    const events = d.events || eventsOf(host, { record, membership });
+    events.registerEventSource("escalation", (q) => i.timelineSource(q));
   }
   return i;
 }

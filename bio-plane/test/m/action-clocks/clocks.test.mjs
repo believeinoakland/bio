@@ -1,12 +1,14 @@
 /* action-clocks' reads across actions and its proposal, at its interface (R1, R2, R7). Moved from `actions`' tests with
    the split (K617, K624 (1)), their assertions kept and their ids renamed: `read.test.mjs` "R31 …" and "R32 …",
    `t11.test.mjs` "R31 …" and `t12.test.mjs` "R31 (N311) …" (R31 → R1, R32 → R2); R35's share of "R25 R26 R35 …" is R7's
-   test in `overdue.test.mjs`. */
+   test in `overdue.test.mjs`. T33-74: R2's count is civil-time's, and `received` is counted from the group's `sent`
+   entry (C-1: the old test here counted it from a `received` entry, corrected); the worked examples of
+   `measures-T33/time-law.md` §3 are `worked.test.mjs`. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, MACHINE, actionMd, CP, CLK } from "./fixture.mjs";
+import { world, V, MACHINE, actionMd, CP, CLK, officeCalendarProfile } from "./fixture.mjs";
 import * as clocks from "../../../src/action-clocks/index.mjs";
-import { get as profile } from "../../../../jurisdictions/index.mjs";
+import { get as profile, combine } from "../../../../jurisdictions/index.mjs";
 
 const M = V("alice");
 const A = "ACTN-2026-0001-a", B = "ACTN-2026-0002-b", C = "ACTN-2026-0003-c";
@@ -112,7 +114,7 @@ test("R1 (N311) an action with more pending clock entries than a page (500) is r
     Array.from({ length: 501 }, (_, i) => i).filter((i) => i % 9 === 0 && i > 18).map((i) => `${A}:${i}`)));
 });
 
-test("R2 clockPropose computes from the profile's deadline, stored apart and labelled; refusals in order; never written into clock[]", () => {
+test("R2 clockPropose computes from the profile's deadline through civil-time, stored apart with its trace and labelled; refusals in order; never written into clock[]", () => {
   const w = world();
   const pe = profile("test-port-ellery");
   const dl = pe.deadlines.find((d) => d.applies_to === "records_request");
@@ -120,22 +122,38 @@ test("R2 clockPropose computes from the profile's deadline, stored apart and lab
   const P = (x) => w.c.clockPropose({ target: A, rule: dl.rule, proposer: MACHINE, viewer: MACHINE, ...x });
   const und = P({});
   assert.equal(und.ok, true); assert.equal(und.proposal.entry.date, null, "no start event in the ledger");
-  assert.ok(und.proposal.undetermined);
-  const ev = dl.starts === "filed" ? "sent" : "received";
-  assert.equal(w.actions.actionCorrespond({ target: A, direction: ev, at: "2026-09-01", account: "got it", viewer: M, author: M }).ok, true);
+  assert.match(und.proposal.undetermined, /no sent entry/);
+  /* C-1: `received` is the counterparty's receipt of the group's request, counted from the group's own `sent` entry:
+     a `received` entry alone starts nothing (the correction of this test's old reading, which counted from it). */
+  assert.equal(w.actions.actionCorrespond({ target: A, direction: "received", at: "2026-08-20", account: "got it", viewer: M, author: M }).ok, true);
+  assert.equal(P({}).proposal.entry.date, null, "a received entry is not the start");
+  assert.equal(w.actions.actionCorrespond({ target: A, direction: "sent", at: "2026-09-01", account: "sent it", viewer: M, author: M }).ok, true);
   const before = w.text(A);
   const p = P({});
   assert.equal(p.ok, true); assert.equal(p.evidence, false); assert.equal(p.proposal.machine_work, true);
   assert.equal(p.proposal.state, "machine_proposed"); assert.match(p.proposal.says, /machine work/);
   assert.equal(p.proposal.counted_from, "the day after 2026-09-01", "counted from the day after the start event (B4)");
+  /* Tue 2026-09-01, 5 business days on the 'town' list the rule names, the profile's weekend Sunday alone: Wed 2, Thu 3,
+     Fri 4, Sat 5, (Sun 6), Mon 7. */
+  assert.equal(p.proposal.entry.date, "2026-09-07");
   assert.match(p.proposal.entry.basis, new RegExp(dl.citation.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   assert.match(p.proposal.entry.basis, /profile basis: TEST/);
-  assert.deepEqual(Object.keys(p.proposal.entry).sort(), ["basis", "date", "description", "status", "text"]);
+  assert.deepEqual(Object.keys(p.proposal.entry).sort(), ["basis", "basis_kind", "date", "description", "status", "text"]);
+  assert.equal(p.proposal.entry.basis_kind, "rule", "R7: a profile deadline's basis is a rule");
+  assert.equal(p.proposal.key, `${dl.rule}@${MACHINE}`);
+  /* civil-time's trace is answered with it: the rule, its citation, the list counted on, the Sunday skipped (C-2). */
+  assert.deepEqual([p.proposal.trace.rule, p.proposal.trace.citation, p.proposal.trace.closures], [dl.rule, dl.citation, "town"]);
+  assert.deepEqual(p.proposal.trace.skipped.map((x) => x.day), ["2026-09-06"]);
+  /* the extension is computed, never ignored (C-2): 5 more business days from Mon 7: Tue 8 … Sat 12. */
+  assert.equal(p.proposal.extension.due.value, "2026-09-12");
+  /* the body's observed practice ('court') is answered beside the rule, labelled, never as it. */
+  assert.deepEqual(p.proposal.observed.map((o) => [o.label, o.closures, o.date]), [["observed practice", "court", "2026-09-07"]]);
   assert.equal(w.text(A), before, "the action's document is unchanged");
   assert.equal(w.fm(A).clock, undefined, "never written into clock[]");
   const row = w.rows(`SELECT * FROM action_clock_proposals WHERE bundle_id=?`, A);
   assert.equal(row.length, 1, "a restatement replaces the proposer's own row");
   assert.equal(row[0].proposed_by, MACHINE); assert.deepEqual(JSON.parse(row[0].entry_json), p.proposal.entry);
+  assert.deepEqual(JSON.parse(row[0].trace_json).trace, p.proposal.trace, "the trace is kept with the proposal");
   /* a member's proposal is labelled as one, and is a second row. */
   const mine = w.c.clockPropose({ target: A, rule: dl.rule, proposer: M, viewer: M });
   assert.deepEqual([mine.proposal.state, mine.proposal.machine_work], ["member_proposed", false]);
@@ -161,30 +179,79 @@ test("R2 clockPropose computes from the profile's deadline, stored apart and lab
   assert.equal(bare.c.clockPropose({ target: A, rule: dl.rule, proposer: M, viewer: M }).reason, "NO_SUCH_RULE");
 });
 
-test("R2 a business-day count runs on the profile's holiday calendar, and is undetermined, with why, where it reaches a year the calendar does not list; a calendar count adds days", () => {
-  const d = { rule: "r", days: 5, count: "business", starts: "received" };
-  const view = { holidays: profile("test-port-ellery").holidays };
-  const fm = (at, dir = "received") => ({ correspondence: [{ direction: "sent", at: "2026-06-01" }, { direction: dir, at }] });
-  /* Wednesday 2026-07-01: Thursday, (Friday 3 July a holiday), Monday to Thursday. */
+test("R2 a rule held without a primary source is no basis (UNMEASURED, K1445): a profile holding one does not combine, and the count itself refuses it; a sourced rule counts", () => {
+  const variant = officeCalendarProfile();
+  variant.deadlines = variant.deadlines.map((d) => (d.rule === "records_answer" ? { ...d, basis: "UNMEASURED" } : d));
+  const w = world({ override: { "test-port-ellery": variant } });
+  w.action(A);
+  w.actions.actionCorrespond({ target: A, direction: "sent", at: "2026-09-01", account: "sent it", viewer: M, author: M });
+  /* the profile is refused whole where it is combined (jurisdictions R44: UNMEASURED is BASIS_INVALID for a deadline), so
+     no rule of it applies and nothing is counted. */
+  assert.equal(combine([variant]).ok, false);
+  const p = w.c.clockPropose({ target: A, rule: "records_answer", proposer: M, viewer: M });
+  assert.deepEqual([p.ok, p.reason], [false, "NO_SUCH_RULE"]);
+  /* computeDeadline itself refuses an UNMEASURED basis, whatever its caller. */
+  const d = { rule: "r", units: "days", amount: 5, count: "calendar", starts: "filed", basis: "UNMEASURED" };
+  const c = clocks.computeDeadline(d, { correspondence: [{ direction: "sent", at: "2026-09-01" }] }, null);
+  assert.equal(c.date, null); assert.match(c.why, /UNMEASURED/);
+  assert.equal(clocks.computeDeadline({ ...d, basis: "TEST" }, { correspondence: [{ direction: "sent", at: "2026-09-01" }] }, null).date, "2026-09-06");
+});
+
+test("R2 a business-day count runs on the profile's weekend and holiday calendar through civil-time (C-2), and is undetermined, with why, where it reaches a year the calendar does not list or the profile holds no weekend; a calendar count adds days", () => {
+  const d = { rule: "r", units: "days", amount: 5, count: "business", starts: "received", basis: "TEST" };
+  const view = combine(["test-port-ellery"]).view;
+  const fm = (at) => ({ correspondence: [{ direction: "sent", at }] });
   const ds = ({ date, start }) => ({ date, start });   /* R10's `calendar` statement is its own test's (calendar.test.mjs) */
-  assert.deepEqual(ds(clocks.computeDeadline(d, fm("2026-07-01"), view)), { date: "2026-07-09", start: "2026-07-01" });
-  /* across the weekend with no holiday. */
-  assert.deepEqual(ds(clocks.computeDeadline(d, fm("2026-09-04"), view)), { date: "2026-09-11", start: "2026-09-04" });
+  /* Wednesday 2026-07-01, the profile's weekend Sunday alone: Thu 2, (Fri 3 a holiday for all offices), Sat 4, (Sun 5),
+     Mon 6, Tue 7, Wed 8. A weekend in code (Saturday too) would give the 9th. */
+  assert.deepEqual(ds(clocks.computeDeadline(d, fm("2026-07-01"), view)), { date: "2026-07-08", start: "2026-07-01" });
+  /* Friday 2026-09-04: Sat 5, (Sun 6), Mon 7 … Thu 10. */
+  assert.deepEqual(ds(clocks.computeDeadline(d, fm("2026-09-04"), view)), { date: "2026-09-10", start: "2026-09-04" });
   /* past the calendar's last year (2027): undetermined, naming the year. */
   const far = clocks.computeDeadline(d, fm("2027-12-28"), view);
   assert.deepEqual([far.date, far.start], [null, "2027-12-28"]); assert.match(far.why, /2028/);
-  assert.match(clocks.computeDeadline(d, fm("2026-07-01"), null).why, /2026/, "no calendar at all: undetermined");
-  assert.deepEqual(clocks.computeDeadline({ ...d, count: "calendar", days: 30 }, fm("2026-09-01"), null), { date: "2026-10-01", start: "2026-09-01" });
-  assert.deepEqual(clocks.computeDeadline({ ...d, starts: "filed", count: "calendar", days: 1 }, fm("2026-09-01"), null), { date: "2026-06-02", start: "2026-06-01" });
+  /* no weekend held: never assumed (C-2). */
+  const noWeekend = clocks.computeDeadline(d, fm("2026-07-01"), { ...view, weekend: undefined });
+  assert.equal(noWeekend.date, null); assert.match(noWeekend.why, /weekend/);
+  assert.match(clocks.computeDeadline(d, fm("2026-07-01"), null).why, /weekend/, "no view at all: undetermined");
+  assert.deepEqual(ds(clocks.computeDeadline({ ...d, count: "calendar", amount: 30 }, fm("2026-09-01"), null)), { date: "2026-10-01", start: "2026-09-01" });
+  assert.deepEqual(ds(clocks.computeDeadline({ ...d, starts: "filed", count: "calendar", amount: 1 }, fm("2026-06-01"), null)), { date: "2026-06-02", start: "2026-06-01" });
+  /* C-1: received is counted from the group's sent entry, never from a received entry. */
+  const both = { correspondence: [{ direction: "received", at: "2026-06-20" }, { direction: "sent", at: "2026-07-01" }] };
+  assert.equal(clocks.computeDeadline(d, both, view).date, "2026-07-08");
+  assert.match(clocks.computeDeadline(d, { correspondence: [{ direction: "received", at: "2026-07-01" }] }, view).why, /no sent entry/);
   assert.match(clocks.computeDeadline({ ...d, starts: "known" }, fm("2026-09-01"), view).why, /known/);
-  assert.match(clocks.computeDeadline(d, fm("2026-09-01", "no_response"), view).why, /no received entry/);
   assert.match(clocks.computeDeadline({ ...d, count: "lunar" }, fm("2026-09-01"), view).why, /neither calendar nor business/);
-  assert.match(clocks.computeDeadline({ ...d, days: 1.5 }, fm("2026-09-01"), view).why, /whole number/);
+  assert.match(clocks.computeDeadline({ ...d, amount: 1.5 }, fm("2026-09-01"), view).why, /whole number/);
+  /* hours are counted from the event's time, which a ledger day does not hold (C-4): undetermined, with why. */
+  assert.match(clocks.computeDeadline({ rule: "h", units: "hours", amount: 36, direction: "backward", starts: "filed", basis: "TEST" },
+    fm("2026-09-01"), view).why, /hours rule counts from the anchor's time/);
   /* through the act: the proposal says why it is undetermined. */
   const w = world();
   w.action(A);
-  w.actions.actionCorrespond({ target: A, direction: "received", at: "2027-12-28", account: "got it", viewer: M, author: M });
+  w.actions.actionCorrespond({ target: A, direction: "sent", at: "2026-12-30", account: "sent it", viewer: M, author: M });
   const p = w.c.clockPropose({ target: A, rule: "records_answer", proposer: M, viewer: M });
-  assert.deepEqual([p.ok, p.proposal.entry.date], [true, null]); assert.match(p.proposal.undetermined, /2028/);
+  assert.deepEqual([p.ok, p.proposal.entry.date], [true, null]); assert.match(p.proposal.undetermined, /2027/);
   assert.equal(w.rows(`SELECT date, why FROM action_clock_proposals WHERE bundle_id=?`, A)[0].date, null);
+});
+
+test("R2 the close of business is the governing office's close on the due day (C-4), and an uncertain due date is offered with both candidates, the group's own deadline taking the earliest (K1444 (i))", () => {
+  const view = combine(["test-port-ellery"]).view;
+  /* registry_answer: 4 business days on the 'court' list, due at the close of business: the venue of a commitment
+     claim holds no hours, so the close is undetermined and the due stays a day, saying so. */
+  const reg = view.deadlines.find((x) => x.rule === "registry_answer");
+  const at = { counterparty: { state: "audience", description: "the court" }, action_kind: "commitment_claim",
+               correspondence: [{ direction: "sent", at: "2026-09-01" }] };
+  const c = clocks.computeDeadline(reg, at, view);
+  assert.deepEqual([c.date, c.due.precision], ["2026-09-05", "day"]);
+  assert.match(c.trace.notes.join(" "), /close of business is undetermined/);
+  /* the Town Clerk's hours close at 12:00 on a Friday: a close-of-business rule for that office is due then. */
+  const clerk = { counterparty: { state: "named", role: "Town Clerk", body: "City of Port Ellery" }, action_kind: "commitment_claim",
+                  correspondence: [{ direction: "sent", at: "2026-09-01" }] };
+  const cc = clocks.computeDeadline({ ...reg, amount: 3 }, clerk, view);
+  assert.deepEqual([cc.date, cc.due.value], ["2026-09-04", "2026-09-04T12:00"]);
+  /* appeal_window: 2 months from 2026-12-31 lands on a February with no 31st: both readings, the earliest taken. */
+  const app = { ...view.deadlines.find((x) => x.rule === "appeal_window"), starts: "filed", roll: false };
+  const u = clocks.computeDeadline(app, { correspondence: [{ direction: "sent", at: "2026-12-31" }] }, view);
+  assert.deepEqual([u.date, u.candidates], ["2027-02-28", ["2027-02-28", "2027-03-01"]]);
 });

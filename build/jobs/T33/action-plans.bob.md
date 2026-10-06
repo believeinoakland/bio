@@ -16,3 +16,7 @@ K1649: (1) modules.json now gives action-plans duties. (2) your reading accepted
 ## B3 · ANSWER · re J2
 
 K1650: received complete. Held, not merged yet: you use conformance, actions, action-clocks, filings and escalation, all running; you merge last. Your J1 reading is folded into R38 (K1649) and modules.json gives you duties. When I post the CHANGE after escalation merges, merge the tranche, re-run your tests and checks, and complete again. C-124.32's wording and noSuchDuty are N601.
+
+## B4 · CHANGE
+
+Every module you use is now merged into tranche/T33: conformance (K1654), consequences (K1655), actions (K1657, K1659), action-clocks (K1658), filings and escalation (K1659). Merge tranche/T33 into your branch, re-run your tests and your users', re-point any stand-in at the real modules (K1563 (1)), and record COMPLETE again. You merge last in L9.

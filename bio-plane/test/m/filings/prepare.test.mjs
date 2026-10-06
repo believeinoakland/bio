@@ -118,8 +118,8 @@ test("R3 every blank is filled from the record naming its source, or left as a v
   for (const u of r.unfilled.slice(0, 2)) assert.match(u.why, /addressed to an office, which holds no/);
   assert.deepEqual([by.counterparty_role.value, by.counterparty_role.source], ["Selectboard", B]);
   assert.deepEqual([by.counterparty_body.value, by.counterparty_body.source], ["Port Ellery Selectboard", B]);
-  assert.deepEqual([by.act.value, by.act.source], ["the works order let on 2026-03-02", x.D]);
-  assert.deepEqual([by.act_date.value, by.act_date.source], ["2026-03-02", x.D]);
+  assert.deepEqual([by.act.value, by.act.source], [`the adoption recorded as ${x.ACT_EVENT}`, x.ACT_EVENT], "conformance R25: the act is its event");
+  assert.deepEqual([by.act_date.value, by.act_date.source], ["2026-03-02", x.ACT_EVENT], "the event's when, as one day");
   assert.deepEqual([by.standards.value, by.standards.source], ["P.E.B.L. § 12; MCBC 2025-3", `${x.S1}, ${x.S2}`]);
   assert.deepEqual([by.findings.value, by.findings.source],
                    ["INQ-2026-0001 (case CASE-2026-0001, edition 1)", "INQ-2026-0001@CASE-2026-0001/1"]);
@@ -134,8 +134,8 @@ test("R3 every blank is filled from the record naming its source, or left as a v
   /* a records request states its law, filled from the action */
   const la = prep(x, A);
   assert.equal(la.unfilled.find((u) => u.name === "law"), undefined);
-  /* No value, undetermined: a counterparty undetermined, no laws stated, no clock, no group, no act date. */
-  const D2 = x.determine({ act: { ...x.act, at: undefined, period: { from: "2026-03-01", to: "2026-03-05" } } });
+  /* No value, undetermined: a counterparty undetermined, no laws stated, no clock, no group, an act placed nowhere. */
+  const D2 = x.determine({ act: { ...x.act, event: x.event({ kind: "adoption" }) } });
   const C = x.action({ counterparty: { state: "undetermined", basis: "not yet known" }, clock: [], laws: null,
                        legs: [{ target: D2, kind: "rests_on" }] });
   x.groupRef.value = null;
@@ -148,7 +148,8 @@ test("R3 every blank is filled from the record naming its source, or left as a v
   assert.match(why.counterparty_role, /undetermined/);
   assert.match(why.governing_laws, /undetermined/);
   assert.match(why.group, /no producing group/);
-  assert.equal(u.blanks.find((b) => b.name === "act_date").value, "2026-03-01 to 2026-03-05", "a period, from and to");
+  assert.match(why.act_date, /placed nowhere.*undetermined/, "an act placed nowhere has no date");
+  assert.ok(u.text.includes(unfilledMarker("act_date")));
   /* Not visible: quinn, outside the project, may not see the determination. */
   const h = prep(x, B, { viewer: V("quinn"), preparer: V("quinn") });
   const hw = Object.fromEntries(h.unfilled.map((b) => [b.name, b.why]));
@@ -159,7 +160,7 @@ test("R3 every blank is filled from the record naming its source, or left as a v
   const T = y.action();
   const t = prep(y, T);
   assert.deepEqual(t.unfilled, []);
-  assert.equal(t.text, "To the Selectboard: the works order let on 2026-03-02 does not conform to P.E.B.L. § 12; MCBC 2025-3.");
+  assert.equal(t.text, `To the Selectboard: the adoption recorded as ${y.ACT_EVENT} does not conform to P.E.B.L. § 12; MCBC 2025-3.`);
   assert.equal(prep(y, T, { preparer: MACHINE, viewer: MACHINE }).text, t.text);
 });
 
