@@ -22,6 +22,6 @@ Kept, as BOB's START says: the copy of a document (C-50.4, C-50.8 translations; 
 - New `bio-plane/test/m/basis-versions/dec149-strings.test.mjs` (4 tests, titled R22, R16, R20 and R35 with DEC-149): each changed string driven out of the module and named whole; no refusal row of the module names the Civicsmith as this instance, plane, server or copy.
 - `node --test bio-plane/test/m/basis-versions/`: tests 131, pass 131, fail 0.
 - Layer tests: none named in `build/manifest.md`.
-- `format`: 126 modules, 125 requirements files; 0 failures. `architecture`: 24 product files, 83 relative imports; 0 failures. `coverage`: 44 of 44 live requirement ids named by a test; 0 failures. `ownership`: see the line below, re-run after the commit.
+- `format`: 126 modules, 125 requirements files; 0 failures. `architecture`: 24 product files, 83 relative imports; 0 failures. `coverage`: 44 of 44 live requirement ids named by a test; 0 failures. `ownership`: 3 files changed by basis-versions between tranche/T34 and HEAD; 0 failures.
 
 Size (session_01LMwfB83t6pYsWwQ4KtMjxD): test runs 1, module lines 3594
