@@ -16,13 +16,11 @@
  *   record, membership, promotion, content   the modules it uses, through their factories on the same host unless a
  *                test passes its own.
  *   connections, entities, provenance, standards, duties   reached lazily, on first use, the same way.
- *   parseOccurrenceRef   `inquiry-grammar`'s parser of an occurrence leg's target (its R15); taken from that module when
- *                it provides it, else from here (K1563 (1): an upstream not yet merged is an injected dependency).
  *   now          the module's clock, an ISO instant at second precision (default: the wall clock); R9's `asOf`. */
 
 import { parseFrontmatter, normalizeType, OBJECT_TYPES, BASIS_GRADES, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE,
          TESTIMONY_GRADE } from "../record-grammar/index.mjs";
-import * as inquiryGrammar from "../inquiry-grammar/index.mjs";
+import { parseImportedFindingRef, parseOccurrenceRef } from "../inquiry-grammar/index.mjs";
 import { captureBound, isTranscribed } from "../textchain.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf } from "../membership/index.mjs";
@@ -63,7 +61,7 @@ const GRADE_RANK = gradeRank;
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
 /** R3 (N522): a leg's target that is an imported finding reference (`inquiry-grammar` R11), another group's finding
  *  rather than a bundle of this record: never in `references[]`, no content row, projected as spelled. */
-const isImportedRef = (t) => typeof t === "string" && inquiryGrammar.parseImportedFindingRef(t) !== null;
+const isImportedRef = (t) => typeof t === "string" && parseImportedFindingRef(t) !== null;
 /** R8: a target that is a held standard (`STD-`, record-grammar's `ID_TABLE`). */
 const isStandardId = (t) => typeof t === "string" && normalizeType(OBJECT_TYPES[t.split("-")[0]]) === "standard";
 /** R12: the type a target's prefix names, as the column `target_type` holds it ("" for none). */
@@ -91,10 +89,9 @@ export function legCapped(stated, earned, targetId) {
 
 export class LegEarning {
   #deps;
-  #parseOccurrenceRef;
 
   constructor({ storage, record, membership, promotion, content, connections = null, entities = null, provenance = null,
-                standards = null, duties = null, parseOccurrenceRef = null, host = null, now } = {}) {
+                standards = null, duties = null, host = null, now } = {}) {
     this.storage = storage;
     this.sql = storage.sql;
     this.record = record;
@@ -102,8 +99,6 @@ export class LegEarning {
     this.promotion = promotion;
     this.content = content;
     this.#deps = { connections, entities, provenance, standards, duties, host };
-    this.#parseOccurrenceRef = typeof inquiryGrammar.parseOccurrenceRef === "function" ? inquiryGrammar.parseOccurrenceRef
-      : typeof parseOccurrenceRef === "function" ? parseOccurrenceRef : () => null;
     this.now = typeof now === "function" ? now : () => stampInstant("second");
     migrateLegEarning(this.sql);
   }
@@ -421,7 +416,7 @@ export class LegEarning {
     /* R8, R9: a held standard and a duty occurrence earn by their own rules, after the documents; neither joins the
        connection or the document capture reads below. */
     const standardIds = asked.filter(isStandardId);
-    const occurrenceIds = asked.filter((t) => !isStandardId(t) && this.#parseOccurrenceRef(t) !== null);
+    const occurrenceIds = asked.filter((t) => !isStandardId(t) && parseOccurrenceRef(t) !== null);
     const ids = asked.filter((t) => !standardIds.includes(t) && !occurrenceIds.includes(t));
     const ent = subjectEntity
       ? (() => { const r = this.entities.readEntity({ entityId: subjectEntity });
@@ -846,7 +841,7 @@ export class LegEarning {
    *  nothing, R1). A duty the record does not hold, an occurrence the duty does not derive in that window, and an occurrence
    *  `duties` answers undetermined are each answered `determined: false` with the reason. Never throws. */
   #occurrenceDerivation(ref) {
-    const parsed = this.#parseOccurrenceRef(ref) || {};
+    const parsed = parseOccurrenceRef(ref) || {};
     const base = { mode: "derived", grade: null, duty: parsed.duty ?? null, key: parsed.key ?? null };
     const undetermined = (because, why, extra = {}) => ({ ...base, determined: false, undetermined_because: because,
                                                           why, ...extra });

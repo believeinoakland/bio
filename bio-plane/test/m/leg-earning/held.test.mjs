@@ -1,8 +1,7 @@
 /* R8 and R9: what the earned registry answers for the two leg targets K1447 adds, a held standard (`STD-`) and a duty
    occurrence. Over the real standards and duties (their own test world, `../duties/fixture.mjs`, which composes
-   standards' on one host) with this module created on the same host. `inquiry-grammar`'s occurrence reference parser
-   (its R15, T33-43) is not yet merged: it is taken as an injected dependency coded to that requirement (K1563 (1)),
-   re-pointed at the real one when it merges. */
+   standards' on one host) with this module created on the same host; an occurrence leg's target is spelled by
+   `inquiry-grammar`'s `occurrenceRef` (its R15). */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world as dutiesWorld } from "../duties/fixture.mjs";
@@ -10,11 +9,9 @@ import { legEarningOf, legCapped } from "../../../src/leg-earning/index.mjs";
 import { EARNED_CAPTURE_CEILING } from "../../../src/record-grammar/index.mjs";
 import { EXTRACTION_SCHEMA } from "../../../src/extraction/schema.mjs";
 import { STANDARDS_CHECKS } from "../../../src/standards/index.mjs";
+import { occurrenceRef } from "../../../src/inquiry-grammar/index.mjs";
 
-/* inquiry-grammar R15's form: `occurrence:<DUT id>/<key>`, null for anything else. */
-const OCC_RE = /^occurrence:(DUT-\d{4}-\d{4,})\/(OCC-[0-9a-f]{32})$/;
-const parseOccurrenceRef = (s) => { const m = typeof s === "string" ? OCC_RE.exec(s) : null; return m ? { duty: m[1], key: m[2] } : null; };
-const occ = (duty, key) => `occurrence:${duty}/${key}`;
+const occ = (duty, key) => { const r = occurrenceRef(duty, key); if (!r) throw new Error(`no ref for ${duty}/${key}`); return r; };
 const OCR_C = JSON.stringify([{ step: "pixels" }, { step: "ocr", engine: "tesseract", version: "5.3.4", cap: "C", confidence: { basis: "none" } }]);
 const UNMEASURED = JSON.stringify([{ step: "pixels" }, { step: "ocr", engine: "moondream", version: "2b", confidence: { basis: "none" } }]);
 
@@ -24,7 +21,7 @@ function world() {
   for (const t of ["reading_text_source", "readings"])
     w.st.db.exec(new RegExp(`CREATE TABLE IF NOT EXISTS ${t} \\([\\s\\S]*?\\n\\);`).exec(EXTRACTION_SCHEMA)[0].replace(/--[^\n]*/g, ""));
   w.le = legEarningOf(w.host, { record: w.record, membership: w.membership, promotion: w.promotion, content: w.content,
-                                provenance: w.prov, standards: w.standards, duties: w.duties, parseOccurrenceRef,
+                                provenance: w.prov, standards: w.standards, duties: w.duties,
                                 now: () => w.clock.now.replace(/\.\d{3}Z$/, "Z") });
   w.chain = (capSha, chain) => w.st.sql.exec(`INSERT INTO reading_text_source (capture_sha, bundle_id, transcribed, steps, chain)
                                                VALUES (?, 'INFO-x', 1, 2, ?)`, capSha, chain);
