@@ -37,6 +37,8 @@
    7. (K1828) From case-disclosures' merge until case-authoring's (T34-48): case-authoring's `preflight.test.mjs` R29, which pins C-120.8's old translation.
    8. (K1832) From K1824 until plane's L11 job (T34-76): plane `store.test.mjs`:91 R2/R10, which asks every `modules.json` module to have a step in the plane's construction order; `case-catalogue` is a pure library with none.
    9. (K1836) From following's merge (T34-70) until control-plane's (T34-60, L11): control-plane `families.test.mjs`, until `CHECK_FAMILY_FILES` lists following's new C-137 file. From monitoring's merge until control-plane's: `catalogue-end.test.mjs`'s pins of C-48.8 and C-48.9 (DEC-149 re-wordings), inside its named red (K1789), re-pinned by T34-60.
+   10. (K1864) From plane's merge (T34-76) until T35's bundler job (N696): bundler `deploybindings.test.mjs` ×2 (the `SHEET_WORKER` binding).
+   11. (K1864) Membership `module-order.test.mjs` ×2 (R83's `MODULE_ORDER` lacks case-catalogue, machinery-producers, setup-page) until T35's membership job (N697).
 
 ## Entries
 
