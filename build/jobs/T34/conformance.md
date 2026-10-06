@@ -21,7 +21,7 @@
 - `node checks/format.mjs /home/user/bio` : 127 modules, 126 requirements files; 0 failures.
 - `node checks/architecture.mjs /home/user/bio conformance` : 10 product files, 51 relative imports; 0 failures.
 - `node checks/coverage.mjs /home/user/bio conformance` : 26 of 26 live requirement ids named by a test; 0 failures.
-- `node checks/ownership.mjs /home/user/bio conformance tranche/T34` : run after the commit; result below.
+- `node checks/ownership.mjs /home/user/bio conformance tranche/T34` : 4 files changed by conformance; 0 failures.
 - No layer tests are named in `build/manifest.md`. No service changed, so no user module's tests were owed.
 
 **Read for the job, whole:** JOB.md; `build/manifest.md`; `build/requirements/conformance.md`; the public parts of all fifteen Uses; layer 9's contract; the plan's Rules at the opening and T34-87; K1811; the DEC-149 draft's rows; the module's code (3 files) and tests (7 files).
