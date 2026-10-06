@@ -28,10 +28,12 @@ test("R1 exportManifest answers every bundle with its files, promotions in write
   assert.deepEqual(inq.refs.map((r) => [r.target_id, r.kind]), [["INFO-2026-0001-minutes", "cites"]]);
   assert.deepEqual(x.register.map((r) => r.bundle_id), ["INFO-2026-0001-minutes"]);
   const files = x.bundles.reduce((n, b) => n + b.files.length, 0);
-  assert.deepEqual(x.counts, { bundles: ids.length, files });
+  const tableRows = x.tables.reduce((n, t) => n + (t.rows || 0), 0);
+  assert.deepEqual(x.counts, { bundles: ids.length, files, tables: x.tables.length, rows: tableRows });
   const log = w.rows(`SELECT * FROM export_log`);
   assert.equal(log.length, 1);
-  assert.deepEqual([log[0].scope, log[0].bundles, log[0].files, log[0].note.length], ["working-corpus", ids.length, files, EXPORT_NOTE_MAX]);
+  assert.deepEqual([log[0].scope, log[0].bundles, log[0].files, log[0].note.length, log[0].tables, log[0].rows, log[0].format],
+                   ["working-corpus", ids.length, files, EXPORT_NOTE_MAX, x.tables.length, tableRows, null]);
   assert.equal(EXPORT_NOTE_MAX, 280);
   assert.match(x.recorded, /append-only export log/);
   assert.match(x.verify, /Re-derive/);
@@ -53,5 +55,5 @@ test("R2 exportLog answers the newest rows first, limit clamped to [1, 1000] and
   assert.deepEqual([two.exports.map((e) => e.bundles), two.limit, two.truncated], [[2, 1], 2, true]);
   for (const [asked, got] of [[0, 200], [-5, 1], [5000, 1000], ["x", 200], [2.9, 2]])
     assert.equal(w.ce.exportLog({ limit: asked }).limit, got, `limit ${asked}`);
-  assert.deepEqual(Object.keys(all.exports[0]).sort(), ["at", "bundles", "files", "note", "scope", "seq"]);
+  assert.deepEqual(Object.keys(all.exports[0]).sort(), ["at", "bundles", "files", "format", "note", "rows", "scope", "seq", "tables"]);
 });

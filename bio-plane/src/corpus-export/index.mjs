@@ -20,10 +20,18 @@
  * `register` and connections' `refs`. */
 
 import { recordOf } from "../record-core/index.mjs";
+import { entitiesOf } from "../entities/index.mjs";
+import { eventsOf } from "../events/index.mjs";
+import { linesOf } from "../lines/index.mjs";
+import { moneyOf } from "../money/index.mjs";
 import { createSha256, sha256HexSync } from "../record-grammar/index.mjs";
 import { CORPUS_EXPORT_EXEMPT, migrateCorpusExport } from "./schema.mjs";
+import { TablePager, tableEntry, pageBytes, canonical, PAGE_ROWS, PAGE_BYTES, HELD_NEVER } from "./tables.mjs";
+import { render, itemsOf, FORMATS, STANDARDS } from "./render.mjs";
 
 export { CORPUS_EXPORT_SCHEMA, CORPUS_EXPORT_EXEMPT } from "./schema.mjs";
+export { PAGE_ROWS, PAGE_BYTES, HELD_NEVER, canonical, pageBytes } from "./tables.mjs";
+export { FORMATS, STANDARDS, RENDER_MAX } from "./render.mjs";
 
 /* REC-57: `op=exportlog` read the append-only export log at a literal `LIMIT 200` with no parameter and no published
    bound — on the one op whose whole sentence is a completeness claim to administrators (R19). */
@@ -38,9 +46,11 @@ const HEX64 = /^[0-9a-f]{64}$/;
 const te = new TextEncoder();
 
 export class CorpusExport {
-  constructor({ storage, record, now = null } = {}) {
+  constructor({ storage, record, now = null, entities = null, events = null, lines = null, money = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
+    /* R10's owners: each an instance, or a function answering it on first use. */
+    this.owners = { entities, events, lines, money };
     this.now = typeof now === "function" ? now : () => new Date().toISOString();
     this.purgeDeclaration = null;
   }
@@ -75,6 +85,7 @@ export class CorpusExport {
       `SELECT bundle_id, object_type, title, current_state, bundle_sha, row_version, created, last_updated
        FROM bundles ORDER BY bundle_id`);
     let fileCount = 0;
+    const hasRefs = this.#rows(`SELECT 1 FROM sqlite_master WHERE type='table' AND name='refs'`).length > 0;
     const out = bundles.map((b) => {
       const files = this.#rows(
         `SELECT path, sha256, bytes, blob_sha, (content IS NOT NULL) AS inline
@@ -95,23 +106,72 @@ export class CorpusExport {
         snapshots: this.#rows(
           `SELECT snap_key, path, sha256, created FROM history WHERE bundle_id=? ORDER BY snap_key, path`,
           b.bundle_id),
-        refs: this.#rows(`SELECT target_id, kind FROM refs WHERE bundle_id=?`, b.bundle_id),
+        /* connections' refs (an instance whose store holds no `refs` table holds no reference) */
+        refs: hasRefs ? this.#rows(`SELECT target_id, kind FROM refs WHERE bundle_id=?`, b.bundle_id) : [],
       };
     });
+    /* R7–R9: every table record-core's declarations name, read fresh at each export, by class and paged. */
+    const tables = this.#declared().map((d) => tableEntry(this.sql, d, this.record));
+    const rowCount = tables.reduce((n, t) => n + (t.rows || 0), 0);
     /* The module's clock (`now`), as every instant it writes, so the log row and the answer carry one instant. */
     const at = this.#when();
     this.sql.exec(
-      `INSERT INTO export_log (at,scope,bundles,files,note) VALUES (?,'working-corpus',?,?,?)`,
-      at, bundles.length, fileCount, note ? String(note).slice(0, EXPORT_NOTE_MAX) : null);
+      `INSERT INTO export_log (at,scope,bundles,files,note,tables,rows) VALUES (?,'working-corpus',?,?,?,?,?)`,
+      at, bundles.length, fileCount, note ? String(note).slice(0, EXPORT_NOTE_MAX) : null, tables.length, rowCount);
     return { ok: true, at, scope: "working-corpus",
       bundles: out,
-      counts: { bundles: bundles.length, files: fileCount },
+      tables,
+      counts: { bundles: bundles.length, files: fileCount, tables: tables.length, rows: rowCount },
       register: this.#rows(`SELECT bundle_id, path, capture_sha, bytes FROM register ORDER BY bundle_id`),
       recorded: "this export is in the append-only export log and is visible to every administrator",
       verify: "every file carries its sha256 and every record its history chain and base links. Re-derive "
-            + "them on the way in and byte-compare every registered capture; trust nothing this manifest "
-            + "asserts about itself." };
+            + "them on the way in and byte-compare every registered capture; every table page carries its sha256: "
+            + "fetch each page, re-derive its digest and its rows, and trust nothing this manifest asserts about itself." };
   }
+
+  #declared() {
+    try { return this.record && typeof this.record.declaredTables === "function" ? this.record.declaredTables() : []; }
+    catch { return []; }
+  }
+
+  /** R8: one page of a carried table, fetched alone: from the manifest's `index` and `after` for it, the page's rows and
+   *  canonical bytes with their SHA-256, to check against the manifest and resume from. Writes nothing. Refused
+   *  `EXPORT_TABLE_UNKNOWN` (no declared table by that name), `EXPORT_TABLE_NOT_CARRIED` (declared `never` or
+   *  derived-rebuildable: its rows never travel) or `EXPORT_PAGE_MALFORMED` (an index that is not a whole number). */
+  exportPage({ table = null, index = null, after = null } = {}) {
+    const d = this.#declared().find((x) => x.name === table);
+    if (!d) return { ok: false, reason: "EXPORT_TABLE_UNKNOWN", table, detail: "no declared table has that name" };
+    if (d.export === "never" || d.derive === "derived-rebuildable" || Object.hasOwn(HELD_NEVER, d.name))
+      return { ok: false, reason: "EXPORT_TABLE_NOT_CARRIED", table,
+               detail: d.derive === "derived-rebuildable" ? "derived-rebuildable: it travels as its rule" : "export never: its rows never travel" };
+    const i = Number(index);
+    if (!Number.isInteger(i) || i < 0)
+      return { ok: false, reason: "EXPORT_PAGE_MALFORMED", table, detail: "a page is named by its index, a whole number, and its after" };
+    let from = after;
+    if (typeof from === "string") { try { from = JSON.parse(from); } catch { /* a plain key */ } }
+    const pager = new TablePager(this.sql, d);
+    const p = pager.held ? pager.page(from ?? null) : { rows: [], last: null, more: false };
+    const bytes = pageBytes({ table: d.name, owner: d.module, index: i, rows: p.rows });
+    return { ok: true, table: d.name, owner: d.module, index: i, after: from ?? null, rows: p.rows, bytes,
+             sha256: createSha256().update(bytes).hex(), next: p.more ? p.last : null };
+  }
+
+  /** R10: one rendering in an open standard, for `viewer`, from the rows R7 would carry to that viewer and no others.
+   *  It adds no fact and writes nothing but one `export_log` row naming the format. */
+  exportRendering({ format = null, viewer = null } = {}) {
+    if (!FORMATS.includes(format))
+      return { ok: false, reason: "EXPORT_FORMAT_UNKNOWN", format, formats: [...FORMATS],
+               detail: `a rendering is one of ${FORMATS.join(", ")}; nothing was rendered or logged` };
+    const at = this.#when();
+    const { body, truncated } = render(format, { sql: this.sql, record: this.record, ...this.#ownerDeps() }, viewer, at);
+    const items = itemsOf(format, body);
+    this.sql.exec(`INSERT INTO export_log (at,scope,bundles,files,note,tables,rows,format) VALUES (?,'rendering',0,0,NULL,NULL,?,?)`,
+                  at, items, format);
+    return { ok: true, at, format, standard: STANDARDS[format], items, truncated, rendering: body,
+             recorded: "this rendering is in the append-only export log and is visible to every administrator" };
+  }
+
+  #ownerDeps() { return { ...this.owners }; }
 
   /** The log, readable by in-app administrators who cannot run an export.
    *
@@ -136,7 +196,7 @@ export class CorpusExport {
     /* cap + 1 asked for, cap delivered: the extra row is the whole difference
        between "there are 200 exports" and "here are the first 200". */
     const page = this.#rows(
-      `SELECT seq, at, scope, bundles, files, note FROM export_log ORDER BY seq DESC LIMIT ?`, cap + 1);
+      `SELECT seq, at, scope, bundles, files, note, tables, rows, format FROM export_log ORDER BY seq DESC LIMIT ?`, cap + 1);
     return { ok: true, exports: page.slice(0, cap), limit: cap, truncated: page.length > cap };
   }
 
@@ -172,9 +232,9 @@ export class CorpusExport {
  * expected and what it found. It writes nothing, reads no table and never throws; writing a verified corpus into a
  * receiving store is not stated (R3's Suggestion), so it is not here. */
 export function verifyCorpusExport(input) {
-  const { manifest = null, bytes = null } = input && typeof input === "object" ? input : {};
+  const { manifest = null, bytes = null, declared = null } = input && typeof input === "object" ? input : {};
   const failures = [];
-  const counts = { bundles: 0, files: 0, promotions: 0, snapshots: 0, captures: 0 };
+  const counts = { bundles: 0, files: 0, promotions: 0, snapshots: 0, captures: 0, tables: 0, pages: 0 };
   try {
     if (!manifest || typeof manifest !== "object" || !Array.isArray(manifest.bundles))
       return refused([{ reason: "MANIFEST_MALFORMED", expected: "an export's manifest: an object listing its records",
@@ -266,8 +326,10 @@ export function verifyCorpusExport(input) {
     }
     if (!Array.isArray(manifest.register))
       failures.push({ reason: "MANIFEST_MALFORMED", expected: "the register, a list", found: describe(manifest.register) });
+    const rowTotal = verifyTables(manifest, held, failures, counts, declared);
     const stated = manifest.counts && typeof manifest.counts === "object" ? manifest.counts : {};
-    for (const [k, n] of [["bundles", counts.bundles], ["files", fileTotal]])
+    for (const [k, n] of [["bundles", counts.bundles], ["files", fileTotal],
+                          ...(Array.isArray(manifest.tables) ? [["tables", counts.tables], ...(rowTotal === null ? [] : [["rows", rowTotal]])] : [])])
       if (stated[k] !== n) failures.push({ reason: "COUNTS_MISMATCH", path: `counts.${k}`, expected: n, found: stated[k] ?? null });
     return failures.length ? refused(failures, counts) : { ok: true, verified: true, counts };
   } catch (e) {
@@ -275,6 +337,76 @@ export function verifyCorpusExport(input) {
     return refused([...failures, { reason: "MANIFEST_MALFORMED", expected: "a readable export",
                                    found: String(e && e.message || e).slice(0, 160) }], counts);
   }
+}
+
+/* R3 (T33-61): every table page re-derived. Each carried table's pages run 0..n-1 with none missing; each page's bytes
+   are present, hash to its digest and measure its size; its bytes parse as the canonical page of that table and index,
+   holding the rows it states; the rows of the pages sum to the table's stated rows. A table declared `never` carries no
+   page. Every table the manifest names, or that the importer's own `declared` list names (a list of names, or of
+   `declaredTables()` entries), is carried or named (TABLE_NOT_CARRIED). Answers the rows re-derived. */
+function verifyTables(manifest, held, failures, counts, declared) {
+  const tables = manifest.tables;
+  if (tables === undefined) {
+    if (declared != null) failures.push({ reason: "MANIFEST_MALFORMED", expected: "the declared tables, a list", found: null });
+    return 0;
+  }
+  if (!Array.isArray(tables)) {
+    failures.push({ reason: "MANIFEST_MALFORMED", expected: "the declared tables, a list", found: describe(tables) });
+    return 0;
+  }
+  const td = new TextDecoder("utf-8", { fatal: true });
+  const named = new Set();
+  let total = 0, sound = true;
+  for (const t of tables) {
+    counts.tables++;
+    const table = t && typeof t.table === "string" ? t.table : null;
+    named.add(table);
+    const pages = t && Array.isArray(t.pages) ? t.pages : [];
+    const where = { table };
+    if (t && t.classes && t.classes.export === "never" && (pages.length || t.rows))
+      failures.push({ reason: "TABLE_NEVER_CARRIED", ...where, expected: "no row of a table declared export never",
+                      found: `${pages.length} page(s)` });
+    if (!t || t.carried !== "rows") continue;
+    let rows = 0;
+    const before = failures.length;
+    const byIndex = new Map(pages.map((p) => [p && p.index, p]));
+    for (let i = 0; i < pages.length; i++)
+      if (!byIndex.has(i))
+        failures.push({ reason: "PAGE_MISSING", ...where, page: i, expected: `pages 0 to ${pages.length - 1}`, found: null });
+    for (const p of pages) {
+      counts.pages++;
+      const at = { ...where, page: p ? p.index ?? null : null };
+      const want = lower(p && p.sha256);
+      if (!HEX64.test(want)) { failures.push({ reason: "PAGE_HASH_MISMATCH", ...at, expected: "a SHA-256 digest", found: describe(p && p.sha256) }); continue; }
+      const b = held(want);
+      if (!b) { failures.push({ reason: "BYTES_MISSING", ...at, expected: want, found: null }); continue; }
+      const got = createSha256().update(b).hex();
+      if (got !== want) { failures.push({ reason: "PAGE_HASH_MISMATCH", ...at, expected: want, found: got }); continue; }
+      if (p.bytes != null && Number(p.bytes) !== b.length)
+        failures.push({ reason: "PAGE_SIZE_MISMATCH", ...at, expected: p.bytes, found: b.length });
+      let page = null;
+      try { page = JSON.parse(td.decode(b)); } catch { page = null; }
+      if (!page || !Array.isArray(page.rows) || canonical(page) !== td.decode(b)) {
+        failures.push({ reason: "PAGE_MALFORMED", ...at, expected: "a canonical page of rows", found: null });
+        continue;
+      }
+      if (page.table !== table || page.index !== p.index || page.owner !== t.owner)
+        failures.push({ reason: "PAGE_MISPLACED", ...at, expected: `${t.owner}/${table} page ${p.index}`,
+                        found: `${describe(page.owner)}/${describe(page.table)} page ${describe(page.index)}` });
+      if (page.rows.length !== Number(p.rows))
+        failures.push({ reason: "PAGE_ROWS_MISMATCH", ...at, expected: p.rows, found: page.rows.length });
+      rows += page.rows.length;
+    }
+    total += rows;
+    /* A page already refused is named there; its table's sum is not named again for it. */
+    if (failures.length !== before) { sound = false; continue; }
+    if (rows !== t.rows) failures.push({ reason: "TABLE_ROWS_MISMATCH", ...where, expected: rows, found: t.rows ?? null });
+  }
+  const must = Array.isArray(declared) ? declared.map((d) => (typeof d === "string" ? d : d && d.name)).filter(Boolean) : [];
+  for (const name of must)
+    if (!named.has(name))
+      failures.push({ reason: "TABLE_NOT_CARRIED", table: name, expected: "every declared table carried or named", found: null });
+  return sound ? total : null;
 }
 
 function refused(failures, counts) { return { ok: false, verified: false, failures, counts }; }
@@ -309,6 +441,9 @@ export function corpusExportOps(ce, q) {
   return {
     export: () => ce.exportManifest({ note: q("note") }),
     exportlog: () => ce.exportLog({ limit: q("limit") }),
+    /* T33-61 (J1 (3), (4)): one page of a carried table (R8), and a rendering for the stamped viewer (R10). */
+    exportpage: () => ce.exportPage({ table: q("table"), index: q("index"), after: q("after") }),
+    exportrender: () => ce.exportRendering({ format: q("format"), viewer: q("viewer") }),
   };
 }
 
@@ -323,7 +458,10 @@ export function corpusExportOf(host, deps) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
-    c = new CorpusExport({ ...d, storage, record });
+    /* R10's owners, each reached through its factory on this host on first use unless given. */
+    const owners = { entities: d.entities ?? (() => entitiesOf(host, { record })), events: d.events ?? (() => eventsOf(host, { record })),
+                     lines: d.lines ?? (() => linesOf(host, { record })), money: d.money ?? (() => moneyOf(host, { record })) };
+    c = new CorpusExport({ ...d, ...owners, storage, record });
     instances.set(host, c);
     c.migrate();
     c.purgeDeclaration = record.declarePurge("corpus-export", [], { exempt: [...CORPUS_EXPORT_EXEMPT] });
