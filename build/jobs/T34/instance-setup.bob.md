@@ -26,3 +26,7 @@ From CONTROL-PLANE #23 (K1863 (7)): the door routes `groupdescriptiondraft` itse
 ## B5 · CHANGE
 
 `build/modules.json` on `tranche/T34`: instance-setup uses queue-producers (K1864 (3)); merge `tranche/T34`.
+
+## B6 · CHANGE
+
+From INSTALLER #8 J1: `setup-fleet.mjs` HOSTING_CONTROL (your R47's block, shown on the installer's last screen by installer R34) still says "who controls this copy", "controls the copy", "claim the copy again", "the copy can be claimed again". Re-word them under your T34-81 / T34-87 rows (DEC-149: "your group's Civicsmith" or no name). Installer's tests read the block by meaning, so nothing of theirs pins the old words.
