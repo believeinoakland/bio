@@ -25,3 +25,7 @@
 - Layer tests: none named in `build/manifest.md`.
 
 Size (session_01B2rF1RrCAjrKyXJs9sb1xC): test runs 6, module lines 1097
+
+## J1 · REPORT
+
+acquisition (L3), `bio-plane/src/acquisition/checks.mjs:94`: C-83.4's translation says "… held by renders this instance is running right now …". It is member-facing: my R2's render-deferred carries it whole as its reason (and so does queue-producers' copy until its job). DEC-149's L8–L11 grep did not reach L3 (N690's L1–L7 re-sweep, T35). Nothing for this tranche unless you place it; my R9 test takes the carried translation out before its check.
