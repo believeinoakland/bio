@@ -43,3 +43,12 @@ No generated artifact is stale: nothing imports answers yet.
 - **paths** `bio-plane/src/answers/`; **tests** `bio-plane/test/m/answers/`; **final uses**: record-grammar, jurisdictions, civil-time, calc-grammar, record-core, membership, credentials, content, entities, events, lines, observation-log, standards, duties, people, query-language, retrieval, calculations (strength, inquiry, skills, run-rules, ai-runs, money and explore dropped: answers names their ops in ASK_SCOPE and reads none of them).
 
 Size (session_01UcLiYurAzA7heuFzGf8NrF): test runs 14, module lines 1316
+
+## J2 · REPORT
+
+Findings outside my module (my record, "Found in other modules"):
+1. credentials' `AI_GRANT_OPS` names six ops the plane routes under other names: `careerof` (people: `career`), `occurrences` (duties: `dutyoccurrences`), `lines` (lines: `linesof`/`structureat`), `duties` (duties: `dutiesof`), `calculations` (calculations: `calculation`), `moneyfacts` (money: `money`). A grant would refuse the real op. ASK_SCOPE mirrors the list by the copy test, so N580 can correct both lists together.
+2. retrieval exposes no read of the relations it compiles with, so answers' R15 saved-form check cannot see the T33 fields (a standing question naming one is refused `SAVED_QUERY_DROPS` until plane passes answers a `relations` dep or retrieval exports it); and `runSaved` re-checks the form with `savedForm` without the zone, so a date term accepted at setting may be refused at each run.
+3. credentials R27: `aiGrantMint` refuses a non-member `by`, so a standing question's AI half has no grant path (J1 (5)).
+4. Wiring owed: plane (`answersOf(host, deps)`, `ceilingRefusal` from ai-runs, `relations`), control-plane/op-declarations (ops `rule`, `answercheck`, `asktallies`, `ruleservicesswitch`, `standingset`, `standing`, `standingend`, `standinganswers`, `standingaiswitch`), scheduler (`standingDue`/`standingWake`/`standingTick`), agent-worker (`/ask` through `logRead` and `check`; `registerStandingAnswerer`).
+5. row-census red (Rules (9) 7) grows by C-134.1–C-134.12, for promotion's stamp.
