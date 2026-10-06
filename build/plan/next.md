@@ -38,6 +38,8 @@
 
 - N567 · `calc-grammar` · export `relate` (R10's comparison of two figures) from its index, so `duties` imports it there and not from `decimal.mjs` (DUTIES #1 J2 (1); K1569). **Hard reason:** the order: calc-grammar (L1) is closed.
 
+- N568 · `record-grammar` · a `law_relation` subject in `PROPOSAL_STATES` (law relations, court links, treatments), so `standards`' `lawPropose` labels through it instead of the `standard` subject (STANDARDS #7 J2 (4); K1571). **Hard reason:** the order: record-grammar (L1) is closed.
+
 Otherwise none yet. T33's release at its close (K1501) runs the deployment-gated measurements; the work they unlock is written here then.
 
 ## Carried from T33
