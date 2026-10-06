@@ -4,8 +4,9 @@
  * WHAT TRAVELS (R7). `record-core.declaredTables()` is read fresh at every export, so a table declared after one export
  * is named by the next. Each table travels under its owner with its classes:
  *   - `export: "never"`: named with its owner and classes, no row (member ties and the source↔person link among them);
- *   - `derive: "derived-rebuildable"`: its rule (its owner, its key columns, rebuilt by its owner from its stored rows,
- *     record-core R77), never its rows;
+ *   - `derive: "derived-rebuildable"`: its rule (its owner, its key columns and `from`, the stored tables it is rebuilt
+ *     from, exactly as `declaredTables()` answers it: a list as given, or `null` when the declaration stated none, never
+ *     an empty list and never filled here; record-core R77, N593), never its rows;
  *   - `export: "yes"`, and `"admin-only"` (marked so): its rows, in pages.
  * A `declareTable` entry whose export class lets its rows travel is read as its owner's statement that they may be read
  * for the export (J1 (1)): the rows are read whole, by `SELECT *`, and nothing is written to them.
@@ -21,10 +22,6 @@
  * `record-core.tombstones` lists for a carried table travels in its place as `{table, key, ground, at}`, none of the
  * removed content and nothing more. */
 import { createSha256 } from "../record-grammar/index.mjs";
-
-/** R7 (K1632, K1490): the tables held as `export: "never"` whatever their owner declares, fail closed, until the owner's
- *  declaration says so itself (N594: people declares `member_ties` `admin-only`). */
-export const HELD_NEVER = Object.freeze({ member_ties: "members' ties never travel (K1490); held never here until its owner declares it so (N594)" });
 
 /** R8: the page bound, set from the measured paging cost (job record, T33-61). */
 export const PAGE_ROWS = 1000;
@@ -132,12 +129,14 @@ export function tableEntry(sql, decl, record) {
   if (decl.export === "never")
     return { ...head, carried: "named", rows: null, pages: [],
              why: "declared export never: named with its owner and class, and no row travels" };
-  if (Object.hasOwn(HELD_NEVER, decl.name))
-    return { ...head, carried: "named", rows: null, pages: [], held_never: true, why: HELD_NEVER[decl.name] };
-  if (decl.derive === "derived-rebuildable")
+  if (decl.derive === "derived-rebuildable") {
+    /* R7 (N593): `from` exactly as declared; a declaration that stated none travels as null, said so. */
+    const from = Array.isArray(decl.from) ? [...decl.from] : null;
     return { ...head, carried: "rule", rows: null, pages: [],
-             rule: { owner: decl.module, key: Array.isArray(decl.key) ? [...decl.key] : null,
-                     rebuild: `rebuilt by ${decl.module} from its stored rows (record-core R77); its rows never travel` } };
+             rule: { owner: decl.module, key: Array.isArray(decl.key) ? [...decl.key] : null, from,
+                     rebuild: `rebuilt by ${decl.module} from ${from ? from.join(", ") : "stored tables its declaration did not state"}`
+                              + " (record-core R77); its rows never travel" } };
+  }
   const pager = new TablePager(sql, decl);
   const { rows, pages } = pager.survey();
   return { ...head, carried: "rows", ...(decl.export === "admin-only" ? { admin_only: true } : {}), held: pager.held,

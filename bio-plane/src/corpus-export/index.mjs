@@ -26,11 +26,11 @@ import { linesOf } from "../lines/index.mjs";
 import { moneyOf } from "../money/index.mjs";
 import { createSha256, sha256HexSync } from "../record-grammar/index.mjs";
 import { CORPUS_EXPORT_EXEMPT, migrateCorpusExport } from "./schema.mjs";
-import { TablePager, tableEntry, pageBytes, canonical, PAGE_ROWS, PAGE_BYTES, HELD_NEVER } from "./tables.mjs";
+import { TablePager, tableEntry, pageBytes, canonical, PAGE_ROWS, PAGE_BYTES } from "./tables.mjs";
 import { render, itemsOf, FORMATS, STANDARDS } from "./render.mjs";
 
 export { CORPUS_EXPORT_SCHEMA, CORPUS_EXPORT_EXEMPT } from "./schema.mjs";
-export { PAGE_ROWS, PAGE_BYTES, HELD_NEVER, canonical, pageBytes } from "./tables.mjs";
+export { PAGE_ROWS, PAGE_BYTES, canonical, pageBytes } from "./tables.mjs";
 export { FORMATS, STANDARDS, RENDER_MAX } from "./render.mjs";
 
 /* REC-57: `op=exportlog` read the append-only export log at a literal `LIMIT 200` with no parameter and no published
@@ -141,7 +141,7 @@ export class CorpusExport {
   exportPage({ table = null, index = null, after = null } = {}) {
     const d = this.#declared().find((x) => x.name === table);
     if (!d) return { ok: false, reason: "EXPORT_TABLE_UNKNOWN", table, detail: "no declared table has that name" };
-    if (d.export === "never" || d.derive === "derived-rebuildable" || Object.hasOwn(HELD_NEVER, d.name))
+    if (d.export === "never" || d.derive === "derived-rebuildable")
       return { ok: false, reason: "EXPORT_TABLE_NOT_CARRIED", table,
                detail: d.derive === "derived-rebuildable" ? "derived-rebuildable: it travels as its rule" : "export never: its rows never travel" };
     const i = Number(index);
