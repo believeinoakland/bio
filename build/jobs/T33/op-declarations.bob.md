@@ -20,3 +20,7 @@ Finding (K1635, from DOCKET #5 J2 (4)): `docketprepare` takes two new fields, `o
 Finding (K1640, from CORPUS-EXPORT #3 J3): `corpusExportOps` gains `exportpage` (export's credential) and `exportrender` (R10, a member's stamped viewer); declare both.
 Finding (K1657, from ACTIONS #12 J2 (3)): actions' new op `addresseesuggest` (R62, a read for every signed-in class) and the `proceeding` filter of `op=actions` (R65) are declared here.
 Finding (K1658, from ACTION-CLOCKS #7 J2 (2)): `actionClocksOps` answers `clockadopt` (an act, member-only, R13; `author` stamped), `clocksics` and `clocklateness` (reads, R14, R15; `viewer` stamped); declare the three.
+
+## B2 · CHANGE
+
+K1674 (from CONTROL-PLANE #22 J1): the stamp interface is one frozen export OP_STAMPS from your module: op -> list of stamp keys from the closed set viewer, by, bodyBy, author, proposer, member, session, covering every op you declare (T33's new families included: query by for events, duties, following, credentials, ai-runs, sourcekeyed; body by for lines, money, money-checks, people, hypotheses, workbooks, entityidentify; viewer for reads, calculations, answers; author for clockadopt; member/session for credentials' account ops and aigrantmint). control-plane implements each key once. Build it so, test it, and say in your COMPLETE how your R17-R20 lists map to it.
