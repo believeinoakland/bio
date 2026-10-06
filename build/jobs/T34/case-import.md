@@ -17,7 +17,7 @@ The two X rows (`index.mjs:457`, `:553`) are operator-facing and stay, as BOB's 
 
 **Deferred.** None.
 
-**Found in other modules / stale artifacts (REPORT J2).**
+**Found in other modules / stale artifacts (REPORT J1).**
 - promotion: `CATALOG_VERSION` (`gate.mjs`) and the row census are promotion's; C-130.3, C-130.5 and C-130.7 now read "changed with no record" in `bio-plane/test/system/row-census.test.mjs` (already red on `tranche/T34` from other modules' DEC-149 rewordings; these three join it) until T35's promotion stamp moves the version and re-pins (plan Rules (5) item 4, as K1802's C-28 rows).
 - `bio-plane/dist/bio-plane.bundled.mjs` (not_product) is stale from this change, for BOB's regeneration at L8's close.
 
