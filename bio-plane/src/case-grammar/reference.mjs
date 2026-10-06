@@ -11,13 +11,17 @@
  * handed, folded onto one line but never trimmed or corrected, so a malformed value reaches that refusal as it was
  * handed and is never made well-formed here. Pure; nothing here throws. */
 
+import { idPattern } from "../record-grammar/index.mjs";
 import { caseDocumentRequiresTensionSection } from "./formats.mjs";
 
 /** R10: the front-matter key. */
 export const WORKING_ON_KEY = "working_on";
-/** R10: a notice id is record-core R6's opaque-id shape (as `signatures` R38 states it, K1115): any upper-case prefix,
- *  a four-digit year, a four-digit number, and an optional lower-case tail of hyphen-joined words. */
-export const NOTICE_REFERENCE_PATTERN = /^[A-Z]+-\d{4}-\d{4}(?:-[a-z0-9]+(?:-[a-z0-9]+)*)?$/;
+/** R10 (S0-12, K1115): a notice id is record-core R6's opaque-id shape (as `signatures` R38 states it): any upper-case
+ *  prefix, a four-digit year, the counter, and an optional lower-case tail of hyphen-joined words. The counter is read
+ *  from `record-grammar`'s one id table (`idPattern`, S0-1), the network notice's own row, so it is four or more
+ *  digits, as every sequential id's is, and a four-digit id signed before T33 still passes. */
+const NOTICE_CORE = (idPattern("NOTE") || /^NOTE-\d{4}-\d{4,}$/).source.slice(1, -1).replace(/^NOTE-/, "[A-Z]+-");
+export const NOTICE_REFERENCE_PATTERN = new RegExp(`^${NOTICE_CORE}(?:-[a-z0-9]+(?:-[a-z0-9]+)*)?$`);
 
 /** R10 (K1119): whether a value is a notice reference: a string of record-core R6's opaque-id shape, exactly. Pure;
  *  never throws. */

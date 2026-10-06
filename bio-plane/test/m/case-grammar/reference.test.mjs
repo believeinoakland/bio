@@ -3,7 +3,7 @@
    malformed value, with their negative controls. Driven on the bytes alone. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
+import { parseFrontmatter, idPattern } from "../../../src/record-grammar/index.mjs";
 import { WORKING_ON_KEY, NOTICE_REFERENCE_PATTERN, isNoticeReference, workingOnLines, workingOnOf,
          CASE_DOCUMENT_FORMAT, caseDocumentStatesMemberBlocks, caseDocumentRequiresDisclosures,
          caseDocumentRequiresV4Disclosures, caseDocumentRequiresTensionSection, whatChangedBlockLines,
@@ -15,8 +15,8 @@ const OLDER = ["bio-case-document/4", "bio-case-document/3", "bio-case-document/
 const fmOf = (text) => parseFrontmatter(text).data;
 const NOTICE = "NOTE-2026-0007-parks-budget";
 
-/* The shape, spelled a second way (record-core R6, as signatures R38 states it): an upper-case prefix, a four-digit
-   year, a four-digit number, and an optional tail of hyphen-joined, non-empty words of lower-case letters and digits. */
+/* The shape, spelled a second way (record-core R6, as signatures R38 states it; S0-12): an upper-case prefix, a
+   four-digit year, a counter of four or more digits (record-grammar's id table), and an optional tail of hyphen-joined, non-empty words of lower-case letters and digits. */
 const shapeHolds = (s) => {
   if (typeof s !== "string") return false;
   const parts = s.split("-");
@@ -26,16 +26,26 @@ const shapeHolds = (s) => {
   const upper = (c) => c >= "A" && c <= "Z";
   const digit = (c) => c >= "0" && c <= "9";
   const lower = (c) => (c >= "a" && c <= "z") || digit(c);
-  return all(prefix, upper) && year.length === 4 && all(year, digit) && number.length === 4 && all(number, digit)
+  return all(prefix, upper) && year.length === 4 && all(year, digit) && number.length >= 4 && all(number, digit)
     && tail.every((w) => all(w, lower));
 };
 
-test("R10 isNoticeReference is record-core R6's opaque-id shape exactly: any upper-case prefix, the tail optional, and nothing else", () => {
-  assert.equal(NOTICE_REFERENCE_PATTERN.source, "^[A-Z]+-\\d{4}-\\d{4}(?:-[a-z0-9]+(?:-[a-z0-9]+)*)?$");
-  for (const ok of ["NOTE-2026-0001", "A-0000-9999", "NOTICE-2026-0001-x", NOTICE, "INQ-1999-0042-a1-b2-c3", "ZZZZZZZZ-2026-0001-9"])
+test("R10 isNoticeReference is record-core R6's opaque-id shape exactly, its counter four or more digits as record-grammar's id table reads it: any upper-case prefix, the tail optional, and nothing else", () => {
+  assert.equal(NOTICE_REFERENCE_PATTERN.source, "^[A-Z]+-\\d{4}-\\d{4,}(?:-[a-z0-9]+(?:-[a-z0-9]+)*)?$");
+  /* the counter is the id table's, the network notice's own row: whatever it admits, a notice reference admits */
+  const counter = idPattern("NOTE");
+  for (const n of ["0001", "9999", "10000", "123456789"]) {
+    assert.equal(counter.test(`NOTE-2026-${n}`), true, n);
+    assert.equal(isNoticeReference(`NOTE-2026-${n}`), true, `${n}: a counter of four or more digits`);
+    assert.equal(isNoticeReference(`NOTE-2026-${n}-tail`), true);
+  }
+  /* a signed case document carrying a four-digit id still passes */
+  assert.equal(workingOnOf(fmOf(doc(V5, workingOnLines("NOTE-2026-0007")))), "NOTE-2026-0007");
+  assert.equal(workingOnOf(fmOf(doc(V5, workingOnLines("NOTE-2026-10007-parks")))), "NOTE-2026-10007-parks");
+  for (const ok of ["NOTE-2026-0001", "NOTE-2026-00001", "NOTE-2026-10000-x", "A-0000-9999", "NOTICE-2026-0001-x", NOTICE, "INQ-1999-0042-a1-b2-c3", "ZZZZZZZZ-2026-0001-9"])
     assert.equal(isNoticeReference(ok), true, ok);
   for (const bad of ["", "NOTE", "NOTE-2026", "note-2026-0001", "N0TE-2026-0001", "NOTE-26-0001", "NOTE-20260-0001",
-                     "NOTE-2026-001", "NOTE-2026-00001", "NOTE-2026-0001-", "NOTE-2026-0001--x", "NOTE-2026-0001-X",
+                     "NOTE-2026-001", "NOTE-2026-1", "NOTE-2026-0001-", "NOTE-2026-0001--x", "NOTE-2026-0001-X",
                      "NOTE-2026-0001-a_b", "NOTE-2026-0001-a.b", "-2026-0001", " NOTE-2026-0001", "NOTE-2026-0001 ",
                      "NOTE-2026-0001\n", "\nNOTE-2026-0001", "NOTE-2026-0001-a\nb", "NOTE_2026_0001", "NOTÉ-2026-0001",
                      "NOTE-٢٠٢٦-0001", "\"NOTE-2026-0001\""])
@@ -53,7 +63,7 @@ test("R10 isNoticeReference is record-core R6's opaque-id shape exactly: any upp
   const rnd = (n) => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed % n; };
   const pick = (chars, max) => Array.from({ length: rnd(max + 1) }, () => chars[rnd(chars.length)]).join("");
   for (let i = 0; i < 20000; i++) {
-    const s = [pick("ABNZa0-", 4), pick("0129a-", 5), pick("0189A-", 5), ...Array.from({ length: rnd(3) }, () => pick("az09A-_", 3))]
+    const s = [pick("ABNZa0-", 4), pick("0129a-", 5), pick("0189A-", 6), ...Array.from({ length: rnd(3) }, () => pick("az09A-_", 3))]
       .join("-");
     assert.equal(isNoticeReference(s), shapeHolds(s), JSON.stringify(s));
   }

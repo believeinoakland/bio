@@ -7,8 +7,9 @@
  * reference a case carries (R10, `./reference.mjs`), the method and materials a `/6` case carries and the other
  * group's work it rests on (R11, R12, R16, `./materials.mjs`), each finding's signed grading facts and passages and the
  * one extracted text (R17, `./facts.mjs`), the case file's format (R13, `./casefile.mjs`), the
- * complete edition (R14, `./complete.mjs`) and a finding's standing against the bar (R15, `./standing.mjs`). It reads
- * no table, holds no store and never throws.
+ * complete edition (R14, `./complete.mjs`), a finding's standing against the bar (R15, `./standing.mjs`), the
+ * calculations a case rests on with their PROV-O rendering (R18, R19, `./calculations.mjs`) and the published timeline
+ * (R20, `./timeline.mjs`). It reads no table, holds no store and never throws.
  *
  * Split from `publication` by copy (K651, K624 (1)): the format block of `publication/checks.mjs`, and `fmSafe`,
  * `SECTIONS`, `REAUTHORABLE_SECTIONS`, `signedCitations`, the attribution renderers and `publishedGraphEdges` of
@@ -39,13 +40,16 @@ export { METHOD_FIELDS, methodBlockLines, methodOf, MATERIAL_FIELDS, MATERIAL_AT
          MATERIAL_RESTS_UNDER, ATTESTATION_BY_KINDS, ATTESTATION_LEVELS, ANONYMOUS_ATTESTATION_LEVELS,
          GROUP_ATTESTATION_SIGNATURE, materialsLines, materialAttestationLines, materialBlockLines, materialsOf, ACCEPTED_WORK_FIELDS, ACCEPTED_WORK_FLAG_FIELDS,
          PAIR_AXES, pairLine, pairOf, acceptedWorkBlockLines, acceptedWorkOf } from "./materials.mjs";
-export { CASE_FILE_FORMAT, CASE_FILE_MANIFEST_PATH, CASE_FILE_KINDS, CASE_FILE_SINGLE_KINDS, CASE_FILE_MANIFEST_FIELDS,
+export { CASE_FILE_FORMAT, CASE_FILE_MANIFEST_PATH, CASE_FILE_PROV_PATH, CASE_FILE_KINDS, CASE_FILE_SINGLE_KINDS, CASE_FILE_MANIFEST_FIELDS,
          CASE_FILE_KEY_FIELDS, CASE_FILE_PART_FIELDS, CASE_FILE_FILE_FIELDS, caseFilePath, caseFileEntryOf,
          casePartDigest, caseFileManifestCheck } from "./casefile.mjs";
 export { GRADING_FACT_FIELDS, PASSAGE_FIELDS, gradingFactsLines, passagesLines, gradingFactsOf, passagesOf,
          extractedTextOf } from "./facts.mjs";
 export { BAR_AXES, STANDING_ROLE_WORDS, standingOf } from "./standing.mjs";
-export { COMPLETE_EDITION_HEADINGS, TWO_STRENGTHS_SENTENCE, GRADE_MEANINGS, PRODUCT_NAMES, editionProductOf,
+export { CALCULATION_FIELDS, RECOMPUTE_STATUSES, calculationsLines, calculationsOf, PROV_NAMESPACE, provIds, provOf,
+         calculationFileText } from "./calculations.mjs";
+export { TIMELINE_FIELDS, TIMELINE_LANES, timelineLines, timelineOf } from "./timeline.mjs";
+export { COMPLETE_EDITION_HEADINGS, TIMELINE_HEADING, CALCULATIONS_HEADING, TIMELINE_LANE_WORDS, RECOMPUTE_WORDS, TWO_STRENGTHS_SENTENCE, GRADE_MEANINGS, PRODUCT_NAMES, editionProductOf,
          madeWithLine, CHECKER_READS, completeEditionOf } from "./complete.mjs";
 
 
