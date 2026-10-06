@@ -18,3 +18,7 @@
 - `ownership case-catalogue tranche/T34`: 4 files; 1 failure, `build/modules.json` (my entry only, as directed; above).
 
 Size (session_01FkFUNyZGDuS4mAjGFCbFbM): test runs 2, module lines 1322 (src 999, tests 323)
+
+## J1 · COMPLETE
+
+T34-93 done: R1–R5 met (16/16; format, architecture, coverage 5/5 at 0 failures). src/case-catalogue/checks.mjs (999 lines) is ratification/checks.mjs 14–962 and 1246–1281, names and messages unchanged; tests re-labelled to R1–R5. Ownership names build/modules.json only for my own entry's paths/tests edit, as the START directs (K1043). Ready to merge after case-grammar; details in my record.
