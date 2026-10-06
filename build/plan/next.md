@@ -64,6 +64,8 @@
 
 - N580 · `credentials`, `answers` · `AI_GRANT_OPS` gains `rule` (answers R7's door to every rule service), and answers' copy test returns to equality (ANSWERS #1 J1 (1); K1603). **Hard reason:** the order: credentials (L2) is closed.
 
+- N581 · `duties` · a read as `INTERNAL` reaches other modules as its `SYSTEM_VIEWER` (`class:daemon`), as `#instances` does for events: today `occurrencesOf({viewer: INTERNAL})` answers every `source_in_force` undetermined, because `standards.inForceAt` reads no standard for a non-string viewer (against duties R8, R9; LEG-EARNING #1 J2; K1605). **Hard reason:** the order: duties (L5) is closed.
+
 Otherwise none yet. T33's release at its close (K1501) runs the deployment-gated measurements; the work they unlock is written here then.
 
 ## Carried from T33
