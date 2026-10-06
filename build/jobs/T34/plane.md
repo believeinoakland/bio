@@ -35,3 +35,23 @@ Findings outside plane (none changed by me):
 **Tests and checks** (on the branch with `tranche/T34` @ machinery-producers' merge): `node --test test/m/plane/` 114 pass, 0 fail; wrangler readers elsewhere green (scheduler 5, capture 2, bundler release 34, control-plane limits 1, reevaluation mv5 1, resolveversion 1, newgroup 37+1+1); bundler `deploybindings` 35 passed, 2 failed (J2 1). `format`: 0 failures; `architecture plane`: 0 failures; `coverage plane`: 24 of 24, 0 failures; `ownership plane tranche/T34`: 13 files, 0 failures. P6: `src/plane/` 1,000 lines.
 
 Size (session_016j2cQUCpdP2bQzqEqTf8Co): test runs 7, module lines 1000
+
+## J4 · COMPLETE
+
+B4 and B5 applied (tranche/T34 merged first, at wizard-scripts' merge, K1869).
+
+**B4 (K1868 (2)).** The plane builds `queueProducersOf(ctx, deps)` itself, its deps being `Queue.PRODUCER_DEPS` filtered from the providers it hands queue (filingTemplates, localFacts, docket, caseImport). It hands that instance to queue as `producers` and to instance-setup as `deps.queueProducers`. Instance-setup is now built by `instanceSetupOf(ctx, env, {queueProducers})` before its start. Construction traced: queue-producers is first built at the plane's line, with those four deps. Instance-setup is first built at that line too. Test `t34.test.mjs` K1868 (2): `queueProducersOf(ctx)` is the one instance and holds instance-setup's `placeArrivals`, so a second `registerPlaceArrivals` is refused `PLACE_ARRIVALS_REGISTERED`. A bare instance on another storage holds none.
+
+**B5 (K1869 (2)).** `wizardRegistration().screens` is wizard-scripts' `SCREEN_REGISTRY`. `requiredFailures` defaults `screens` to `[]`, so I pass it explicitly rather than omit it. The plane's own `SCREENS` still goes to answers' explain read and R24's check. **Wording for you:** plane R24 says `SCREENS` is "hands to wizard-scripts (its R13)", and R19 says "the screen registry carried in the plane's bundle". After B5 these should read that wizard-scripts is registered with its `SCREEN_REGISTRY`, and `SCREENS` goes to answers only.
+
+R19's wizard test now also drives R24's help refusal over what was registered: `groupdescriptiondraft` and `writinghelp` conclude on a machine-refused act and on each irreversible act, while case-authoring's drafts are allowed there. The door test's instance-setup route count is no longer pinned at 20: every route instance-setup holds must be in the route map, and the driven ones answer through the door.
+
+**Tests:**
+- On `job/T34/plane` alone: 112 pass, 3 fail. Each failure waits on a merge due before plane's in the L11 order:
+  - release R19 ×2 wait on op-declarations, which declares the owed acts `groupkeyset`, `memberlanguageset` and `publishat`.
+  - K1868 (2) waits on queue-producers' `registerPlaceArrivals` and instance-setup's `deps.queueProducers`.
+- On a scratch merge of plane + `job/T34/queue-producers` + `job/T34/instance-setup` + `job/T34/op-declarations` (heads as fetched now): `node --test test/m/plane/` 115 pass, 0 fail.
+
+**Checks:** format 0, architecture plane 0, coverage plane 24/24 0, ownership plane tranche/T34 14 files 0. P6: `src/plane/` 1,013 lines.
+
+Size (session_016j2cQUCpdP2bQzqEqTf8Co): test runs 12, module lines 1013
