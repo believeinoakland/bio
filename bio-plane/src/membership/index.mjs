@@ -1,6 +1,7 @@
 /* membership — who the members are and what each may do; projects as working groups, sight, and the fence.
  *
- * Requirements: build/requirements/membership.md (R4–R96; T33's R83 order (T33-19a: plan T33's Rules (2), K1438, K1504);
+ * Requirements: build/requirements/membership.md (R4–R111; T34's R10–R13, R84 and R97–R111 (T34-10; DEC-132 to
+ * DEC-136, K1745); T33's R83 order (T33-19a: plan T33's Rules (2), K1438, K1504);
  * T32's R83 order (wizard-scripts, N544, K1396); T28's R83
  * order (accepted-work, case-checker, case-import; K1292, K1299); T27's R83 order (docket, N520, K1256); T25's R83 order (attestation, provenance-routes,
  * reading-pipeline; N512, N513, K1219); T24's R83 order (link-sweep, K1185); T23's R83 order (corpus-export,
@@ -18,7 +19,7 @@
  * SQL joins record-core's `bundles` only on the stated read contract, `bundle_id` and `object_type`
  * (record-core R37); every other bundle fact (a project's title) is asked of `core.bundleInfo` (R34).
  */
-import { MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
+import { MACHINE_CLASS_PREFIX, sha256HexSync } from "../record-grammar/index.mjs";
 import { MEMBERSHIP_SCHEMA, MEMBERSHIP_ADDITIVE_COLUMNS, MEMBERSHIP_EXEMPT_TABLES,
          MEMBERSHIP_PROJECT_TABLES } from "./schema.mjs";
 export { MEMBERSHIP_PROJECT_TABLES, MEMBERSHIP_EXEMPT_TABLES } from "./schema.mjs";
@@ -110,7 +111,7 @@ export function noSuchProject(projectId, extra = null) {
 
 /* R84 (N324, K275, K403; N327, DEC-83). THE ONE ANSWER TO ONE CONDITION: the stamped caller `by` is not an administrator
    (R64) where the act is an administrator's. Every act refusing that condition answers through here (R6, R7, R9, R10,
-   R11, R12, R20, R22, R41 and R75; credentials' R6, R7 and R13; monitoring's R30, intent's R9, bias's R11), so
+   R11, R12, R20, R22, R41 and R75; T34's R98–R100, R102, R103, R107 and R109; credentials' R6, R7 and R13; monitoring's R30, intent's R9, bias's R11), so
    `NOT_AN_ADMIN` is minted at one site and its one row is this module's (C-96.1). Who is admitted stays each act's own
    rule; this only answers the refusal. `act` is the caller's fixed phrase for its act, never a request's words; the
    detail is one fixed sentence around it. `extra` adds a caller's own fields beside these and never replaces one of them. An act with a
@@ -473,9 +474,10 @@ export class Membership {
     return { ok: true, projectId, owner, setting: this.visibilityOf(projectId) };
   }
 
-  /* R10 (section 4.5): an administrator — never the founder, whose standing is the hosting account's (4.6) — may
-     resign while MORE than two administrators exist, becoming an ordinary member. At two it is refused: the group
-     keeps shared administrative access (4.2). */
+  /* R10 (section 4.5; DEC-134 (4)): an administrator — never the founder, whose standing is the hosting account's
+     (4.6) — resigns, becoming an ordinary member, unless they are the last administrator R86 lists (the founder counted
+     once the instance is claimed). The refusal at two (`RESIGN_AT_TWO`, C-96.10) is retired: one administrator is
+     enough (DEC-134 (1)), and only the group left with none is refused (`LAST_ADMIN`, C-96.22). */
   adminResign({ by = null } = {}) {
     if (by === Membership.ROOT_ADMIN)
       return { ok: false, reason: "ROOT_OF_TRUST",
@@ -484,28 +486,20 @@ export class Membership {
     const m = typeof by === "string" && by ? this.#one(`SELECT role, status FROM members WHERE member_id=?`, by) : null;
     if (!m || m.role !== "admin" || m.status !== "active") return notAnAdmin(by, "resigning administrator status");   /* R84 */
     const admins = this.activeAdmins();
-    const refusal = (code, detail, extra) => Membership.#custodialRefusal(code, detail, extra);   /* C-96.10 */
-    /* DEC-49 REGION is-admin-resign-floor */
-    if (admins.length <= 2)
-      return refusal("RESIGN_AT_TWO",
-        "administrative access is shared among at least two people (4.2), so an administrator may "
-      + "resign only while more than two exist. Nothing was written.", { administrators: admins.length });
-    /* END DEC-49 REGION is-admin-resign-floor */
+    /* DEC-49 REGION is-admin-resign-last */
+    if (admins.length <= 1)
+      return Membership.#rowRefusal("LAST_ADMIN",
+        "the group would be left with no administrator, so its last one does not step down (DEC-134 (4)). Add "
+      + "another administrator first. Nothing was written.", { administrators: admins.length });
+    /* END DEC-49 REGION is-admin-resign-last */
     const now = new Date().toISOString();
     this.sql.exec(`UPDATE members SET role='member', status_by=?, updated=? WHERE member_id=?`, by, now, by);
     return { ok: true, memberId: by, role: "member", administrators: admins.length - 1,
              detail: "resigned: an ordinary member now, holding the capabilities an administrator last set for them." };
   }
 
-  /* R11 (section 4.8): the question put to the group when its second administrator is added. */
-  #hostingAccessAsk() {
-    return { asked: true, recorded: this.hostingAccess().recorded,
-             question: "who holds access to the hosting account this instance runs in? Record the answer "
-                     + "(op=hostingaccessset): removing an administrator in the application is half of an ejection, "
-                     + "and reviewing hosting access is the other half (4.8)." };
-  }
-
-  /* R11: the group's answer, recorded by an administrator; append-only, the latest record is the answer. */
+  /* R11 (section 4.8; DEC-134 (3)): the group's answer to who holds hosting access. It is asked at setup
+     (`instance-setup`'s act), never on adding an administrator, so `memberAdd` asks nothing about it. The group's answer, recorded by an administrator; append-only, the latest record is the answer. */
   hostingAccessSet({ holders = null, note = null, by = null } = {}) {
     if (!this.isAdministrator(by)) return notAnAdmin(by, "recording who holds hosting access (4.8)");   /* R84 */
     const refusal = (code, detail, extra) => Membership.#custodialRefusal(code, detail, extra);   /* C-96.11 */
@@ -2199,7 +2193,7 @@ export class Membership {
    *  half of 4.7: without it a captured administrator recruits confederates and
    *  manufactures the majority that ejects the honest ones. */
   async adminEndorse({ memberId, by } = {}) {
-    const m = this.#one(`SELECT member_id, status, role FROM members WHERE member_id=?`, memberId);
+    const m = this.#one(`SELECT member_id, status, role, invite_days FROM members WHERE member_id=?`, memberId);
     if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
     /* N335: C-96.14, this module's row (K275). */
     /* DEC-49 REGION is-endorse-proposed */
@@ -2226,11 +2220,14 @@ export class Membership {
        appears exactly once, here, as it does for any other invitation. */
     const invite = Membership.#rand(16);
     const hash = await Membership.#sha256(invite);
+    /* R97: the invitation expires as R13's does, after the days chosen at `memberAdd` (kept on the proposal), or 7. */
+    const days = Number.isInteger(m.invite_days) ? m.invite_days : Membership.INVITE_DAYS_DEFAULT;
+    const expires = Membership.#expiresAt(now, days);
     /* D-610 (BOB #35, 2026-09-25): the transition is the act of the administrator whose vote COMPLETED
        the consensus, so `status_by` names `by` — not the proposer the row carried from `memberAdd`. */
-    this.sql.exec(`UPDATE members SET status='invited', invite_hash=?, status_by=?, updated=? WHERE member_id=?`,
-      hash, by, now, memberId);
-    return { ok: true, memberId, invite, endorsedBy: have.sort() };
+    this.sql.exec(`UPDATE members SET status='invited', invite_hash=?, invite_expires=?, status_by=?, updated=? WHERE member_id=?`,
+      hash, expires, by, now, memberId);
+    return { ok: true, memberId, invite, expires, endorsedBy: have.sort() };
   }
 
   /** Vote to remove an administrator. Section 4.7. */
@@ -2298,7 +2295,7 @@ export class Membership {
   }
 
   async memberAdd({ memberId, cover, role = "member", capabilities = null,
-                    expertise = null, by = null } = {}) {
+                    expertise = null, expiresInDays = undefined, by = null } = {}) {
     /* REC-159: the roster first — before the id is judged or looked up. */
     const barAdd = this.#custodialBar(by, "adding a member");
     if (barAdd) return barAdd;
@@ -2346,22 +2343,15 @@ export class Membership {
                      + "(section 1.3). It is not set when the invitation is created, because an "
                      + "administrator who could introduce the label would be assigning it rather than "
                      + "confirming it. Use op=expertisedeclare and op=expertiseconfirm." };
+    /* R97 (DEC-133 (2)): how long the invitation lasts, judged last (R12's order). */
+    const days = Membership.#expiryRefusal(expiresInDays);
+    if (typeof days !== "number") return days;
 
     const wantAdmin = role === "admin";
     const admins = this.activeAdmins();
-    /* 4.2 and 4.3. The FIRST invitation a group issues creates a second
-       administrator, and the group cannot grow past the two-administrator floor
-       in any other order. This satisfies Design Requirement 1 and Requirement 14
-       at the earliest moment it is possible to satisfy them, and it is a refusal
-       rather than a nudge because an ordinary member added first is a group with
-       a single point of failure that nobody notices until it fails. */
-    /* DEC-49 REGION is-admins-first */
-    if (!wantAdmin && admins.length < 2)
-      return refusal("ADMINS_FIRST",
-        "the second member of a group must be an administrator, and there are no ordinary "
-      + "members until two exist. Administrative access is shared among at least two people "
-      + "so that losing one person does not lose the group.", { administrators: admins.length });
-    /* END DEC-49 REGION is-admins-first */
+    /* DEC-134 (1), (7): one administrator is enough, and an ordinary member may be invited from the start. The old
+       floor (`ADMINS_FIRST`, C-96.5: no ordinary member until two administrators exist) is retired; a second
+       administrator is a recommendation setup makes once (`instance-setup`), never a gate here. */
 
     const caps = Array.isArray(capabilities) ? capabilities.filter((c) => Membership.CAPABILITIES.includes(c))
                                              : ["contribute"];
@@ -2376,9 +2366,10 @@ export class Membership {
     const inviter = by || null;
     if (wantAdmin && admins.length >= 2) {
       this.sql.exec(
-        `INSERT INTO members (member_id,cover,handle,role,status,invite_hash,capabilities,created,updated,status_by,invited_by)
-         VALUES (?,?,NULL,'admin','proposed',NULL,?,?,?,?,?)`,
-        memberId, label, JSON.stringify(caps), now, now, by || null, inviter);
+        `INSERT INTO members (member_id,cover,handle,role,status,invite_hash,capabilities,created,updated,status_by,invited_by,
+                              invite_days,door)
+         VALUES (?,?,NULL,'admin','proposed',NULL,?,?,?,?,?,?,'administrator')`,
+        memberId, label, JSON.stringify(caps), now, now, by || null, inviter, days);
       /* REC-156: `by` is the control plane's STAMP, relayed from the query by the
          dispatch and never taken from the caller's body — so this row is the
          PROPOSER'S own endorsement. The founder's session is stamped `admin`; a
@@ -2398,19 +2389,17 @@ export class Membership {
 
     const invite = Membership.#rand(16);
     const hash = await Membership.#sha256(invite);
+    const expires = Membership.#expiresAt(now, days);
     this.sql.exec(
-      `INSERT INTO members (member_id,cover,handle,role,status,invite_hash,capabilities,created,updated,status_by,invited_by)
-       VALUES (?,?,NULL,?,?,?,?,?,?,?,?)`,
+      `INSERT INTO members (member_id,cover,handle,role,status,invite_hash,capabilities,created,updated,status_by,invited_by,
+                            invite_expires,door)
+       VALUES (?,?,NULL,?,?,?,?,?,?,?,?,?,'administrator')`,
       memberId, label, wantAdmin ? "admin" : "member", "invited", hash,
-      JSON.stringify(caps), now, now, by || null, inviter);
+      JSON.stringify(caps), now, now, by || null, inviter, expires);
     /* The plaintext invite appears exactly once, here, for handing to the
-       person. It is never readable again. */
-    return { ok: true, memberId, invite, role: wantAdmin ? "admin" : "member", capabilities: caps,
-             invited_by: Membership.#statusBy(inviter),
-             /* R11 (section 4.8): the SECOND administrator is the moment the group is asked who holds hosting
-                access, because from here on administrative access is shared and the hosting account is the
-                other half of every ejection (R8). The answer is recorded with op=hostingaccessset. */
-             ...(wantAdmin && admins.length === 1 ? { hostingAccess: this.#hostingAccessAsk() } : {}) };
+       person. It is never readable again. R11 (DEC-134 (3)): no hosting-access question rides on it. */
+    return { ok: true, memberId, invite, expires, role: wantAdmin ? "admin" : "member", capabilities: caps,
+             invited_by: Membership.#statusBy(inviter) };
   }
 
   /* An invitation is a BURNER: the token in the URL is the whole credential, and
@@ -2428,16 +2417,19 @@ export class Membership {
    * addressed somebody real, which is exactly what the burner is for. */
   static #INVITE_MISS = { ok: false, reason: "NO_SUCH_INVITATION",
     detail: "this invitation is not live. An invitation is spent the moment it is used, and a spent one "
-          + "cannot be told apart from one that never existed." };
+          + "cannot be told apart from one that never existed, nor from one that expired or was withdrawn." };
 
   async #invited(invite) {
     if (typeof invite !== "string" || !/^[0-9a-f]{16,64}$/.test(invite)) return null;
     const hash = await Membership.#sha256(invite);
     /* Looked up BY HASH, so the store never holds a usable invitation and a
        leaked database is not a set of live credentials. */
-    return this.#one(
-      `SELECT member_id, cover, role, status, capabilities
+    const m = this.#one(
+      `SELECT member_id, cover, role, status, capabilities, invite_expires
        FROM members WHERE invite_hash=? AND status='invited'`, hash);
+    /* R97: an expired invitation answers as a spent one, byte for byte, and nothing revives it (no act moves an
+       expiry). One made before invitations expired (NULL) stays as it was made. */
+    return m && !Membership.#expired(m.invite_expires) ? m : null;
   }
 
   /** What a burner URL resolves to. Unauthenticated by necessity: the invitee
@@ -2488,7 +2480,10 @@ export class Membership {
        longer carries the inviter's stamp onto a status the inviter did not set. */
     this.sql.exec(`UPDATE members SET status='active', handle=?, invite_hash=NULL, status_by=?, updated=? WHERE member_id=?`,
       h, m.member_id, new Date().toISOString(), m.member_id);
-    return { ok: true, memberId: m.member_id, handle: h };
+    /* R108 (DEC-136 (1)): while the group chose to tell its members, the joining statement, given here once (an
+       enrolment succeeds once per member); otherwise the key is absent. */
+    return { ok: true, memberId: m.member_id, handle: h,
+             ...(this.courtNotice().choice === "tell" ? { courtStatement: Membership.COURT_STATEMENT } : {}) };
   }
 
   /* R95: the enrolment whose password could not be set. Nothing was written, the invitation is still live, and the
@@ -2541,8 +2536,10 @@ export class Membership {
     const pairs = administer === true || administer === "1";
     return { members: this.#rows(
       `SELECT member_id, ${pairs ? "cover, " : ""}handle, role, status, status_by, invited_by, capabilities, pairing_published, created, updated,
-              CASE WHEN invite_hash IS NULL THEN 0 ELSE 1 END AS invite_pending
-       FROM members ORDER BY member_id`).map((r) => ({ ...r, capabilities: this.#capsOf(r),
+              CASE WHEN invite_hash IS NULL THEN 0 ELSE 1 END AS invite_pending,
+              door, approved_by, invite_expires, invite_withdrawn
+       FROM members ORDER BY member_id`).map(({ door, approved_by, invite_expires, invite_withdrawn, ...r }) => ({
+         ...r, capabilities: this.#capsOf(r),
          status_by: Membership.#statusBy(r.status_by),   /* REC-159: who set the status, or `not recorded` */
          invited_by: Membership.#statusBy(r.invited_by), /* D-134 (BOB #35): who invited them, or `not recorded` */
          /* D-51: served from `member_expertise`, not from the dead column on
@@ -2550,7 +2547,11 @@ export class Membership {
             updated, is the shape that produces a roster nobody can trust. */
          expertise: this.expertiseList({ memberId: r.member_id }).expertise,
          pairing_published: r.pairing_published === 1,              /* R19 */
-         ...(pairs ? { projects: this.#projectsOf(r.member_id) } : {}) })) };   /* R18: an administrator's roster */
+         ...(pairs ? { projects: this.#projectsOf(r.member_id),                /* R18: an administrator's roster */
+                       /* R105: how each came in and their invitation, for an administrator's roster only. */
+                       door: door ?? "administrator", approvedBy: approved_by ?? null,
+                       expires: r.status === "proposed" ? null : invite_expires ?? null,
+                       invitation: Membership.#invitationState(r, invite_expires, invite_withdrawn) } : {}) })) };
   }
 
   memberSet({ memberId, status, by = null } = {}) {
@@ -2601,6 +2602,451 @@ export class Membership {
       detail: "reactivated as an ordinary member. Administrator status is not restored by reactivation: "
             + "the group voted them out under 4.7, and putting them back is an appointment, which needs "
             + "the consensus of all existing administrators like any other." } : {}) };
+  }
+
+  /* ===== T34 (T34-10; DEC-132 to DEC-136, Bob's; K1745) — INVITATIONS THAT EXPIRE, THE GROUP'S TWO DOORS, ADDRESSING
+   * A CHECK, AND THE GROUP'S OWN SETTINGS =====
+   *
+   * Every new refusal is a row of this module's (C-96.22–.38) answered through `#rowRefusal`, its code a literal at
+   * the one region its row's `where` names; the administrator's refusal is R84's. A secret this module hands out (an
+   * invitation, a website key, a join link) is returned once and held only as its hash (R111). No service here sends a
+   * message (R105): an invitation reaches its person only through the answer to its caller. */
+
+  static INVITE_DAYS_DEFAULT = 7;
+
+  static INVITE_DAYS_MAX = 30;
+
+  /* A refusal carrying its row from MEMBERSHIP_CHECKS: `reason` and `code` the same literal, `#custodialRefusal`'s
+     shape. The caller's fields sit beside the row's and never replace them. */
+  static #rowRefusal(code, detail, extra) {
+    const row = MEMBERSHIP_CHECKS[code];
+    return { ...(extra || {}), ok: false, reason: code, code, check: row.check, translation: row.translation, detail };
+  }
+
+  /* R97: the days an invitation lasts: 7 when not given, else a whole number from 1 to 30; anything else BAD_EXPIRY.
+     Answers the number, or the refusal. One judgment for R12, R99, R100, R102 and R103. */
+  static #expiryRefusal(v) {
+    if (v === undefined || v === null) return Membership.INVITE_DAYS_DEFAULT;
+    if (Number.isInteger(v) && v >= 1 && v <= Membership.INVITE_DAYS_MAX) return v;
+    /* DEC-49 REGION is-invitation-expiry */
+    return Membership.#rowRefusal("BAD_EXPIRY",
+      `an invitation lasts a whole number of days from 1 to ${Membership.INVITE_DAYS_MAX} (seven when none is chosen), `
+      + "and the number given is not one. Nothing was written.", { expiresInDays: Membership.#echo(v) });
+    /* END DEC-49 REGION is-invitation-expiry */
+  }
+
+  /* R99: the daily number of invitations a door may make, a whole number of at least 1, which the administrator sets;
+     `required` when nothing stands for it yet (a creation or an enabling). Answers the number, or the refusal. */
+  static #dailyCapRefusal(v, required) {
+    if (!required && (v === undefined || v === null)) return null;
+    if (Number.isInteger(v) && v >= 1) return v;
+    /* DEC-49 REGION is-door-daily-cap */
+    return Membership.#rowRefusal("BAD_DAILY_CAP",
+      "a door makes at most a daily number of invitations the administrator sets: a whole number, at least 1, with "
+      + "no default. Nothing was written.", { dailyCap: Membership.#echo(v) });
+    /* END DEC-49 REGION is-door-daily-cap */
+  }
+
+  /* R99 "BAD_CAPABILITY as R9": the door's capabilities, `["contribute"]` when not given; a non-array or a word outside
+     the vocabulary (`administer` among them) is R9's refusal, naming the words and the vocabulary. Answers the list
+     (each word once, in the order given), or the refusal. */
+  static #doorCapabilities(v, required) {
+    if (v === undefined || v === null) return required ? ["contribute"] : null;
+    if (!Array.isArray(v)) return { ok: false, reason: "BAD_CAPABILITY", detail: "capabilities is an array" };
+    const bad = v.filter((c) => !Membership.CAPABILITIES.includes(c));
+    if (bad.length) return { ok: false, reason: "BAD_CAPABILITY", got: bad.map(Membership.#echo), known: Membership.CAPABILITIES };
+    return [...new Set(v)];
+  }
+
+  /* A caller's value echoed back in a refusal: never more than it can carry safely. */
+  static #echo(v) {
+    try { return typeof v === "string" ? v.slice(0, 40) : typeof v === "number" || typeof v === "boolean" || v === null ? v : String(v).slice(0, 40); }
+    catch { return null; }
+  }
+
+  static #expiresAt(nowIso, days) { return new Date(Date.parse(nowIso) + days * 86_400_000).toISOString(); }
+
+  static #expired(expires) { return typeof expires === "string" && Date.parse(expires) <= Date.now(); }
+
+  /* R105: an invitation's state on an administrator's roster. A proposed administrator has none yet. */
+  static #invitationState(r, expires, withdrawn) {
+    if (r.status === "proposed") return null;
+    if (withdrawn) return "withdrawn";
+    if (r.status === "invited") return r.invite_pending ? (Membership.#expired(expires) ? "expired" : "live") : "expired";
+    if (r.status === "revoked" && !r.handle) return "withdrawn";   /* revoked (R20) before it was used */
+    return "spent";
+  }
+
+  /* ---- R98 (DEC-133 (3)): withdrawing an unused invitation ---- */
+
+  inviteWithdraw({ memberId, by = null } = {}) {
+    if (!this.isAdministrator(by)) return notAnAdmin(by, "withdrawing an invitation");   /* R84 */
+    const m = this.#one(`SELECT status, invite_hash FROM members WHERE member_id=?`, memberId);
+    if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
+    /* DEC-49 REGION is-invitation-unused */
+    if (m.status !== "invited" || !m.invite_hash)
+      return Membership.#rowRefusal("NO_UNUSED_INVITATION",
+        "only an invitation that has not been used, live or expired, is withdrawn, and this member holds none: they "
+        + "have joined, theirs was withdrawn, or none was made yet. Nothing was written.", { memberId, status: m.status });
+    /* END DEC-49 REGION is-invitation-unused */
+    const now = new Date().toISOString();
+    /* Dead at once (the hash goes, so R15 answers NO_SUCH_INVITATION), and the member is revoked, told as R20 tells. */
+    this.sql.exec(`UPDATE members SET status='revoked', invite_hash=NULL, invite_withdrawn=?, status_by=?, updated=?
+                    WHERE member_id=?`, now, by, now, memberId);
+    this.#announceRevoked(memberId, by, now);
+    return { ok: true, memberId, status: "revoked", invitation: "withdrawn", by, at: now };
+  }
+
+  /* ---- R99-R105 (DEC-133): the group's two doors ---- */
+
+  static DOOR_WARNING = "Anyone your website lets through can join and see your group's shared work, including people you "
+    + "are looking into. Keep sensitive work in hidden projects.";
+
+  static #DOOR = {
+    website: { door: "website", start: "create", stop: "revoke", actor: "website" },
+    link: { door: "join link", start: "enable", stop: "off", actor: "join-link" },
+  };
+
+  /* A door's latest row, and whether it is live (its latest row neither a revocation nor a switching off). */
+  #doorNow(kind) {
+    const d = Membership.#DOOR[kind];
+    const r = this.#one(`SELECT door_id, event, secret_hash, capabilities, daily_cap, expires_days FROM join_doors
+                          WHERE door=? ORDER BY seq DESC LIMIT 1`, d.door);
+    if (!r || r.event === d.stop) return null;
+    return { id: r.door_id, hash: r.secret_hash, capabilities: this.#capsOf(r), dailyCap: r.daily_cap,
+             expiresInDays: r.expires_days };
+  }
+
+  #doorAppend(kind, id, event, hash, s, by, at) {
+    this.sql.exec(`INSERT INTO join_doors (door, door_id, event, secret_hash, capabilities, daily_cap, expires_days, set_by, at)
+                   VALUES (?,?,?,?,?,?,?,?,?)`, Membership.#DOOR[kind].door, id, event, hash,
+      JSON.stringify(s.capabilities), s.dailyCap, s.expiresInDays, by, at);
+  }
+
+  /* A door's settings, each judged as R99 judges it: `required` at a creation or an enabling (capabilities default,
+     the cap required, the days default), else each left as `held` has it when not given. Answers the settings, or the
+     first refusal in R99's order. */
+  static #doorSettings({ capabilities, dailyCap, expiresInDays }, held) {
+    const required = !held;
+    const caps = Membership.#doorCapabilities(capabilities, required);
+    if (caps && !Array.isArray(caps)) return caps;
+    const cap = Membership.#dailyCapRefusal(dailyCap, required);
+    if (cap && typeof cap !== "number") return cap;
+    let days = held ? held.expiresInDays : Membership.INVITE_DAYS_DEFAULT;
+    if (expiresInDays !== undefined && expiresInDays !== null || required) {
+      days = Membership.#expiryRefusal(expiresInDays);
+      if (typeof days !== "number") return days;
+    }
+    return { ok: true, capabilities: caps ?? held.capabilities, dailyCap: cap ?? held.dailyCap, expiresInDays: days };
+  }
+
+  static #secret() { return Membership.#rand(32); }
+
+  static #doorIdOf() { return Membership.#rand(8); }
+
+  /* R100's refusal when no key is live, and R103's when no link is: each minted in its one region. */
+  #liveWebsiteKey(act) {
+    const now = this.#doorNow("website");
+    if (now) return now;
+    /* DEC-49 REGION is-website-key-live */
+    return Membership.#rowRefusal("NO_WEBSITE_KEY",
+      `${act} acts on the group's live website key, and there is none. Nothing was written.`);
+    /* END DEC-49 REGION is-website-key-live */
+  }
+
+  #liveJoinLink(act) {
+    const now = this.#doorNow("link");
+    if (now) return now;
+    /* DEC-49 REGION is-join-link-live */
+    return Membership.#rowRefusal("JOIN_LINK_OFF",
+      `${act} acts on the group's join link, and it is off. Nothing was written.`);
+    /* END DEC-49 REGION is-join-link-live */
+  }
+
+  /** R99: an administrator creates the website key, at most one live. The key is answered once and never again. */
+  websiteKeyCreate({ capabilities, dailyCap, expiresInDays, by = null } = {}) {
+    if (!this.isAdministrator(by)) return notAnAdmin(by, "creating the group's website key");   /* R84 */
+    /* DEC-49 REGION is-website-key-one */
+    if (this.#doorNow("website"))
+      return Membership.#rowRefusal("WEBSITE_KEY_EXISTS",
+        "the group holds one live website key at a time (DEC-133). Nothing was created.");
+    /* END DEC-49 REGION is-website-key-one */
+    const s = Membership.#doorSettings({ capabilities, dailyCap, expiresInDays }, null);
+    if (!s.ok) return s;
+    const key = Membership.#secret(), keyId = Membership.#doorIdOf(), at = new Date().toISOString();
+    this.#doorAppend("website", keyId, "create", sha256HexSync(key), s, by, at);
+    return { ok: true, keyId, key, capabilities: s.capabilities, dailyCap: s.dailyCap, expiresInDays: s.expiresInDays,
+             warning: Membership.DOOR_WARNING };
+  }
+
+  /** R100: the live key's scope, cap or invitation days changed, each as R99 judges it, each kept when not given. */
+  websiteKeySet({ capabilities, dailyCap, expiresInDays, by = null } = {}) {
+    if (!this.isAdministrator(by)) return notAnAdmin(by, "changing the group's website key");   /* R84 */
+    const live = this.#liveWebsiteKey("changing the website key");
+    if (live.ok === false) return live;
+    const s = Membership.#doorSettings({ capabilities, dailyCap, expiresInDays }, live);
+    if (!s.ok) return s;
+    const at = new Date().toISOString();
+    this.#doorAppend("website", live.id, "set", live.hash, s, by, at);
+    return { ok: true, keyId: live.id, capabilities: s.capabilities, dailyCap: s.dailyCap, expiresInDays: s.expiresInDays,
+             by, at };
+  }
+
+  /** R100: the live key is dead at once; the invitations it made stay as they are (R98 withdraws them). */
+  websiteKeyRevoke({ by = null } = {}) {
+    if (!this.isAdministrator(by)) return notAnAdmin(by, "switching off the group's website key");   /* R84 */
+    const live = this.#liveWebsiteKey("switching off the website key");
+    if (live.ok === false) return live;
+    const at = new Date().toISOString();
+    this.#doorAppend("website", live.id, "revoke", null, live, by, at);
+    return { ok: true, keyId: live.id, revoked: true, by, at };
+  }
+
+  /* The live door whose secret this is, or null: a secret that is not 64 lowercase hex characters names none, and is
+     never hashed against the log. */
+  #doorFor(kind, secret) {
+    if (typeof secret !== "string" || !/^[0-9a-f]{64}$/.test(secret)) return null;
+    const live = this.#doorNow(kind);
+    return live && live.hash === sha256HexSync(secret) ? live : null;
+  }
+
+  /* The cover a door's caller gives: a non-empty string, or null. */
+  static #doorCover(cover) { return typeof cover === "string" && cover.trim() ? cover : null; }
+
+  /* How many invitations this door's actor made in the 24 hours before now. */
+  #doorToday(actor) {
+    const since = new Date(Date.now() - 86_400_000).toISOString();
+    return this.#one(`SELECT COUNT(*) AS n FROM members WHERE invited_by=? AND created>?`, actor, since).n;
+  }
+
+  /* R101, R104, R105: an ordinary member made through a door: role `member`, `invited` (never proposed), under a fresh
+     member id R12's pattern admits and nothing in the request derives, `invited_by` and `status_by` the door's actor,
+     the door's capabilities, an invitation that expires after the door's days. Answers `{invite, expires}` once. */
+  async #doorMember(kind, live, cover, approvedBy) {
+    const d = Membership.#DOOR[kind];
+    const actor = `${d.actor}:${live.id}`;
+    let memberId;
+    do memberId = `m-${Membership.#rand(10)}`;
+    while (this.#one(`SELECT member_id FROM members WHERE member_id=?`, memberId));
+    const invite = Membership.#rand(16);
+    const now = new Date().toISOString();
+    const expires = Membership.#expiresAt(now, live.expiresInDays);
+    this.sql.exec(
+      `INSERT INTO members (member_id,cover,handle,role,status,invite_hash,capabilities,created,updated,status_by,invited_by,
+                            invite_expires,door,approved_by)
+       VALUES (?,?,NULL,'member','invited',?,?,?,?,?,?,?,?,?)`,
+      memberId, cover, await Membership.#sha256(invite), JSON.stringify(live.capabilities), now, now, actor, actor,
+      expires, d.door, approvedBy);
+    return { ok: true, invite, expires };
+  }
+
+  /** R101: the website's call: one invitation for one cover name, with the approver's name as the website reports it. */
+  async websiteInvite({ key, cover, approvedBy = null } = {}) {
+    const live = this.#doorFor("website", key);
+    /* DEC-49 REGION is-website-key-known */
+    if (!live)
+      return Membership.#rowRefusal("WEBSITE_KEY_UNKNOWN",
+        "this key opens no door of this group: it was never made, was switched off, or is not a key, and the answer "
+        + "is the same for each. Nothing was written.");
+    /* END DEC-49 REGION is-website-key-known */
+    const label = Membership.#doorCover(cover);
+    if (!label) return Membership.#custodialRefusal("NO_COVER",
+      "the website names the person by the cover the group will know them by. Nothing was written.");
+    /* DEC-49 REGION is-website-daily-cap */
+    if (this.#doorToday(`website:${live.id}`) >= live.dailyCap)
+      return Membership.#rowRefusal("WEBSITE_DAILY_CAP",
+        "the website key has made its daily number of invitations in the last 24 hours. Nothing was written.",
+        { dailyCap: live.dailyCap });
+    /* END DEC-49 REGION is-website-daily-cap */
+    const a = approvedBy === null || approvedBy === undefined ? "" : String(approvedBy).trim().slice(0, 120);
+    return this.#doorMember("website", live, label, a || null);
+  }
+
+  /** R102: an administrator switches the join link on, at most one live. The link is answered once and never again. */
+  joinLinkEnable({ capabilities, dailyCap, expiresInDays, by = null } = {}) {
+    if (!this.isAdministrator(by)) return notAnAdmin(by, "switching on the group's join link");   /* R84 */
+    /* DEC-49 REGION is-join-link-one */
+    if (this.#doorNow("link"))
+      return Membership.#rowRefusal("JOIN_LINK_ON",
+        "the group holds one live join link at a time (DEC-133 (6)). Nothing was changed.");
+    /* END DEC-49 REGION is-join-link-one */
+    const s = Membership.#doorSettings({ capabilities, dailyCap, expiresInDays }, null);
+    if (!s.ok) return s;
+    const link = Membership.#secret(), linkId = Membership.#doorIdOf(), at = new Date().toISOString();
+    this.#doorAppend("link", linkId, "enable", sha256HexSync(link), s, by, at);
+    return { ok: true, linkId, link, capabilities: s.capabilities, dailyCap: s.dailyCap, expiresInDays: s.expiresInDays,
+             warning: Membership.DOOR_WARNING };
+  }
+
+  /** R103: the live link's settings changed, as R100 changes the key's. */
+  joinLinkSet({ capabilities, dailyCap, expiresInDays, by = null } = {}) {
+    if (!this.isAdministrator(by)) return notAnAdmin(by, "changing the group's join link");   /* R84 */
+    const live = this.#liveJoinLink("changing the join link");
+    if (live.ok === false) return live;
+    const s = Membership.#doorSettings({ capabilities, dailyCap, expiresInDays }, live);
+    if (!s.ok) return s;
+    const at = new Date().toISOString();
+    this.#doorAppend("link", live.id, "set", live.hash, s, by, at);
+    return { ok: true, linkId: live.id, capabilities: s.capabilities, dailyCap: s.dailyCap, expiresInDays: s.expiresInDays,
+             by, at };
+  }
+
+  /** R103: a new link, answered once, its settings kept; the old one is dead at once. */
+  joinLinkReplace({ by = null } = {}) {
+    if (!this.isAdministrator(by)) return notAnAdmin(by, "replacing the group's join link");   /* R84 */
+    const live = this.#liveJoinLink("replacing the join link");
+    if (live.ok === false) return live;
+    const link = Membership.#secret(), linkId = Membership.#doorIdOf(), at = new Date().toISOString();
+    this.#doorAppend("link", linkId, "replace", sha256HexSync(link), live, by, at);
+    return { ok: true, linkId, link, replaced: live.id, capabilities: live.capabilities, dailyCap: live.dailyCap,
+             expiresInDays: live.expiresInDays, by, at };
+  }
+
+  /** R103: the live link is dead at once. */
+  joinLinkOff({ by = null } = {}) {
+    if (!this.isAdministrator(by)) return notAnAdmin(by, "switching off the group's join link");   /* R84 */
+    const live = this.#liveJoinLink("switching off the join link");
+    if (live.ok === false) return live;
+    const at = new Date().toISOString();
+    this.#doorAppend("link", live.id, "off", null, live, by, at);
+    return { ok: true, linkId: live.id, off: true, by, at };
+  }
+
+  /** R104: the join page's call: one invitation for the cover the person chose; enrolment is R16's. */
+  async joinLinkInvite({ link, cover } = {}) {
+    const live = this.#doorFor("link", link);
+    /* DEC-49 REGION is-join-link-known */
+    if (!live)
+      return Membership.#rowRefusal("NO_SUCH_JOIN_LINK",
+        "this link opens no door of this group: it was never made, was replaced or switched off, or is not a link, "
+        + "and the answer is the same for each. Nothing was written.");
+    /* END DEC-49 REGION is-join-link-known */
+    const label = Membership.#doorCover(cover);
+    if (!label) return Membership.#custodialRefusal("NO_COVER",
+      "choose the name the group will know you by: it need not be, and often should not be, a legal name. Nothing "
+      + "was written.");
+    /* DEC-49 REGION is-join-link-daily-cap */
+    if (this.#doorToday(`join-link:${live.id}`) >= live.dailyCap)
+      return Membership.#rowRefusal("JOIN_LINK_DAILY_CAP",
+        "the join link has let in its daily number of people in the last 24 hours. Nothing was written.",
+        { dailyCap: live.dailyCap });
+    /* END DEC-49 REGION is-join-link-daily-cap */
+    return this.#doorMember("link", live, label, null);
+  }
+
+  /* ---- R106 (DEC-135 (2), (5)): who a check request reaches ---- */
+
+  /** Every active member whose current state for `label` is declared or confirmed and whom R80 admits to `target`, in
+   *  member-id order. It addresses only: writes nothing, grants nothing, and never throws. */
+  checkAddressees({ target, label } = {}) {
+    try {
+      const lab = Membership.#normLabel(label);
+      if (!lab) {
+        const row = MEMBERSHIP_CHECKS.EXPERTISE_NO_LABEL;
+        return { ok: false, reason: "EXPERTISE_NO_LABEL", code: "EXPERTISE_NO_LABEL", check: row.check,
+                 translation: row.translation, detail: "a check request is addressed by a label, such as 'CPA'" };
+      }
+      if (typeof target !== "string" || !target) return [];
+      /* each member's latest entry for the label (R23's log), the member active */
+      const rows = this.#rows(
+        `SELECT x.member_id, m.handle, x.event FROM member_expertise x JOIN members m ON m.member_id = x.member_id
+          WHERE x.label=? AND m.status='active'
+            AND x.seq = (SELECT MAX(y.seq) FROM member_expertise y WHERE y.member_id = x.member_id AND y.label = x.label)
+          ORDER BY x.member_id`, lab);
+      return rows.filter((r) => (r.event === "declared" || r.event === "confirmed") && this.inSight(target, `member:${r.member_id}`))
+        .map((r) => ({ memberId: r.member_id, handle: r.handle ?? null, state: r.event }));
+    } catch { return []; }
+  }
+
+  /* ---- R107, R108 (DEC-136 (1)): whether members are told what a court can reach ---- */
+
+  static COURT_STATEMENT = "Your group's copy keeps this from the public and the people the group looks into. A court "
+    + "order your group can't defeat could still require it to be shown. Write accordingly.";
+
+  /** R107: an administrator's choice, `tell` or `dont`, the same act at setup and in the settings; appended. */
+  courtNoticeSet({ choice, by = null } = {}) {
+    if (!this.isAdministrator(by)) return notAnAdmin(by, "choosing whether members are told what a court can reach");   /* R84 */
+    /* DEC-49 REGION is-court-notice-choice */
+    if (choice !== "tell" && choice !== "dont")
+      return Membership.#rowRefusal("COURT_NOTICE_UNKNOWN_CHOICE",
+        "the choice is `tell` or `dont`, and nothing else. Nothing was written.", { choice: Membership.#echo(choice ?? null) });
+    /* END DEC-49 REGION is-court-notice-choice */
+    const at = new Date().toISOString();
+    this.sql.exec(`INSERT INTO court_notice (choice, set_by, at) VALUES (?,?,?)`, choice, by, at);
+    return { ok: true, choice, by, at };
+  }
+
+  /** R107: the setting and its history; `choice` null until an administrator has chosen, and null reads as not telling. */
+  courtNotice() {
+    try {
+      const history = this.#rows(`SELECT choice, set_by AS by, at FROM court_notice ORDER BY seq`);
+      return { choice: history.length ? history[history.length - 1].choice : null, history };
+    } catch { return { choice: null, history: [] }; }
+  }
+
+  /* ---- R109, R110 (DEC-132): the group's optional self-description ---- */
+
+  static GROUP_KINDS = Object.freeze(["professional", "issue", "community", "catch-all", "other"]);
+
+  /* A text field: trimmed, empty reads as null. */
+  static #text(v) {
+    if (v === undefined || v === null) return null;
+    const t = String(v).trim();
+    return t ? t : null;
+  }
+
+  /** R109: an administrator records the description; each call appends a whole record and overwrites none. */
+  groupDescriptionSet({ kinds, otherKind = null, focus = null, purpose = null, visibility = null, by = null } = {}) {
+    if (!this.isAdministrator(by)) return notAnAdmin(by, "describing the group");   /* R84 */
+    const refuse = (code, detail, extra) => Membership.#rowRefusal(code, `${detail} Nothing was written.`, extra);
+    /* DEC-49 REGION is-group-description */
+    if (!Array.isArray(kinds) || kinds.some((k) => !Membership.GROUP_KINDS.includes(k)))
+      return refuse("GROUP_KIND_UNKNOWN", `the kinds are a list drawn from ${Membership.GROUP_KINDS.join(", ")}, `
+        + "and may be empty.");
+    const ks = [...new Set(kinds)];
+    const other = ks.includes("other") ? Membership.#text(otherKind) : null;
+    if (ks.includes("other") && !other)
+      return refuse("GROUP_KIND_OTHER_EMPTY", "`other` was chosen, and the kind it describes was left empty.");
+    const f = Membership.#text(focus), p = Membership.#text(purpose);
+    for (const [name, v, max] of [["otherKind", other, 120], ["focus", f, 1000], ["purpose", p, 4000]])
+      if (v !== null && v.length > max)
+        return refuse("GROUP_DESCRIPTION_TOO_LONG", `${name} is at most ${max} characters.`, { field: name, max });
+    const vis = visibility === undefined || visibility === null ? "members" : visibility;
+    if (vis !== "members" && vis !== "public")
+      return refuse("GROUP_VISIBILITY_UNKNOWN", "the description is seen by `members` or by the `public` too.");
+    /* END DEC-49 REGION is-group-description */
+    const at = new Date().toISOString();
+    this.sql.exec(`INSERT INTO group_description (kinds, other_kind, focus, purpose, visibility, set_by, at)
+                   VALUES (?,?,?,?,?,?,?)`, JSON.stringify(ks), other, f, p, vis, by, at);
+    return { ok: true, kinds: ks, otherKind: other, focus: f, purpose: p, visibility: vis, by, at };
+  }
+
+  /* Who reads the description and its history: an active member, the founder once claimed, a machine credential. */
+  #insider(viewer) {
+    const g = viewerPredicate(viewer);
+    if (g.scope === "DENY") return false;
+    if (g.member === null) return viewer !== Membership.ROOT_ADMIN || this.isAdministrator(Membership.ROOT_ADMIN);
+    if (g.member === Membership.ROOT_ADMIN) return this.isAdministrator(Membership.ROOT_ADMIN);
+    const m = this.#one(`SELECT status FROM members WHERE member_id=?`, g.member);
+    return !!m && m.status === "active";
+  }
+
+  /** R110: the description and its history to an insider; to anyone else, the public, only the four texts, and only
+   *  while the latest visibility is `public`. Writes nothing, never throws. */
+  groupDescription({ viewer = null } = {}) {
+    try {
+      const history = this.#rows(`SELECT kinds, other_kind, focus, purpose, visibility, set_by, at
+                                    FROM group_description ORDER BY seq`).map((r) => ({
+        kinds: JSON.parse(r.kinds), otherKind: r.other_kind, focus: r.focus, purpose: r.purpose,
+        visibility: r.visibility, by: r.set_by, at: r.at }));
+      const last = history.length ? history[history.length - 1] : null;
+      /* one with no kind, focus or purpose reads as none */
+      const description = last && (last.kinds.length || last.focus || last.purpose) ? last : null;
+      if (this.#insider(viewer)) return { description, history };
+      if (!description || description.visibility !== "public") return { description: null };
+      const { kinds, otherKind, focus, purpose } = description;
+      return { description: { kinds, otherKind, focus, purpose } };
+    } catch { return { description: null }; }
   }
 }
 
@@ -2728,6 +3174,25 @@ export function membershipOps(m, url, body, env) {
         memberpairingset: () => m.memberPairingSet({ ...(body || {}), by: url.searchParams.get("by") }),
         /* N85 (K124): the viewer and administer stamps decide what each caller sees; absent, the published alone. */
         memberpairings: () => m.memberPairings({ viewer: url.searchParams.get("viewer"),
-          administer: url.searchParams.get("administer"), limit: url.searchParams.get("limit") })   /* N70 */
+          administer: url.searchParams.get("administer"), limit: url.searchParams.get("limit") }),   /* N70 */
+        /* T34 (T34-10; DEC-132 to DEC-136): the stamps (`by`, `viewer`) from the query, read after the body so a body's
+           copy never wins; the secrets (a key, a link) and the texts from the body, never the URL. Which credential
+           reaches each, and the doors' routing (R101, R104), are op-declarations', admission's and control-plane's. */
+        invitewithdraw: () => m.inviteWithdraw({ ...(body || {}), by: url.searchParams.get("by") }),
+        websitekeycreate: () => m.websiteKeyCreate({ ...(body || {}), by: url.searchParams.get("by") }),
+        websitekeyset: () => m.websiteKeySet({ ...(body || {}), by: url.searchParams.get("by") }),
+        websitekeyrevoke: () => m.websiteKeyRevoke({ by: url.searchParams.get("by") }),
+        websiteinvite: () => m.websiteInvite({ key: body?.key, cover: body?.cover, approvedBy: body?.approvedBy }),
+        joinlinkenable: () => m.joinLinkEnable({ ...(body || {}), by: url.searchParams.get("by") }),
+        joinlinkset: () => m.joinLinkSet({ ...(body || {}), by: url.searchParams.get("by") }),
+        joinlinkreplace: () => m.joinLinkReplace({ by: url.searchParams.get("by") }),
+        joinlinkoff: () => m.joinLinkOff({ by: url.searchParams.get("by") }),
+        joinlinkinvite: () => m.joinLinkInvite({ link: body?.link, cover: body?.cover }),
+        checkaddressees: () => m.checkAddressees({ target: url.searchParams.get("target"),
+          label: url.searchParams.get("label") }),
+        courtnoticeset: () => m.courtNoticeSet({ ...(body || {}), by: url.searchParams.get("by") }),
+        courtnotice: () => m.courtNotice(),
+        groupdescriptionset: () => m.groupDescriptionSet({ ...(body || {}), by: url.searchParams.get("by") }),
+        groupdescription: () => m.groupDescription({ viewer: url.searchParams.get("viewer") }),
   };
 }

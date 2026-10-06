@@ -30,7 +30,16 @@ CREATE TABLE IF NOT EXISTS members (
   invited_by  TEXT,
   -- R19 (section 3, "Pairing"): whether this member's cover-and-handle pairing is published, the member's or an
   -- administrator's per-member decision. 0 until one of them publishes it.
-  pairing_published INTEGER NOT NULL DEFAULT 0
+  pairing_published INTEGER NOT NULL DEFAULT 0,
+  -- R97, R105 (DEC-133): when the invitation stops working (NULL: made before invitations expired, or none yet),
+  -- the days chosen for one not yet made (a proposed administrator's, R6), when an administrator withdrew it (R98),
+  -- the door it came through ('administrator', 'website', 'join link'; NULL reads 'administrator') and the name the
+  -- website reported as approving (R101). Never a usable invitation: only its hash is held (invite_hash).
+  invite_expires   TEXT,
+  invite_days      INTEGER,
+  invite_withdrawn TEXT,
+  door             TEXT,
+  approved_by      TEXT
 );
 CREATE UNIQUE INDEX IF NOT EXISTS members_handle ON members(handle) WHERE handle IS NOT NULL;
 
@@ -207,6 +216,46 @@ CREATE TABLE IF NOT EXISTS hosting_access (
   recorded_by TEXT NOT NULL,
   at          TEXT NOT NULL
 );
+
+-- R99-R104 (DEC-133): THE GROUP'S TWO DOORS, the website key and the join link, as one APPEND-ONLY log: every
+-- creation, change, revocation, enabling, replacement and switching off is a row with who did it and when, and none is
+-- overwritten (R100, R103). A door's state is its LATEST row: live unless that row is a 'revoke' or an 'off'. The
+-- secret is held only as its hash (R111), so a copy of the store opens no door. Exempt from purge with the members.
+CREATE TABLE IF NOT EXISTS join_doors (
+  seq           INTEGER PRIMARY KEY AUTOINCREMENT,
+  door          TEXT NOT NULL CHECK (door IN ('website','join link')),
+  door_id       TEXT NOT NULL,
+  event         TEXT NOT NULL CHECK (event IN ('create','set','revoke','enable','replace','off')),
+  secret_hash   TEXT,
+  capabilities  TEXT NOT NULL,
+  daily_cap     INTEGER NOT NULL,
+  expires_days  INTEGER NOT NULL,
+  set_by        TEXT NOT NULL,
+  at            TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS join_doors_door ON join_doors(door, seq);
+
+-- R109, R110 (DEC-132): THE GROUP'S OWN DESCRIPTION, optional, one WHOLE record per administrator's act, append-only;
+-- the latest is the description. Exempt from purge (R111).
+CREATE TABLE IF NOT EXISTS group_description (
+  seq         INTEGER PRIMARY KEY AUTOINCREMENT,
+  kinds       TEXT NOT NULL,
+  other_kind  TEXT,
+  focus       TEXT,
+  purpose     TEXT,
+  visibility  TEXT NOT NULL CHECK (visibility IN ('members','public')),
+  set_by      TEXT NOT NULL,
+  at          TEXT NOT NULL
+);
+
+-- R107 (DEC-136 (1)): WHETHER MEMBERS ARE TOLD WHAT A COURT CAN REACH, an administrator's choice, append-only; the
+-- latest row is the setting and no row means nobody has chosen (nothing preselected). Exempt from purge (R111).
+CREATE TABLE IF NOT EXISTS court_notice (
+  seq     INTEGER PRIMARY KEY AUTOINCREMENT,
+  choice  TEXT NOT NULL CHECK (choice IN ('tell','dont')),
+  set_by  TEXT NOT NULL,
+  at      TEXT NOT NULL
+);
 `;
 
 /* Columns a store written before they existed gains at boot: additive and nullable, never back-filled (D-85).
@@ -217,12 +266,19 @@ export const MEMBERSHIP_ADDITIVE_COLUMNS = [
   ["members", "status_by", "TEXT"],
   ["members", "invited_by", "TEXT"],
   ["members", "pairing_published", "INTEGER NOT NULL DEFAULT 0"],
+  ["members", "invite_expires", "TEXT"],
+  ["members", "invite_days", "INTEGER"],
+  ["members", "invite_withdrawn", "TEXT"],
+  ["members", "door", "TEXT"],
+  ["members", "approved_by", "TEXT"],
   ["project_participants", "owner_order", "INTEGER"],
 ];
 
-/* R59: the tables purge never clears (identity and governance) and those keyed by project, cleared with it. The
+/* R59, R111: the tables purge never clears (identity, governance and the group's own settings) and those keyed by project, cleared with it. The
    credential tables (credentials, sessions, bootstrap, signers, ai_credentials) are `credentials`', exempt by its
    R18. */
-export const MEMBERSHIP_EXEMPT_TABLES = ["members", "member_expertise", "admin_votes", "hosting_access"];
+export const MEMBERSHIP_EXEMPT_TABLES = ["members", "member_expertise", "admin_votes", "hosting_access",
+  /* R111 (T34): the doors, the group's description and the court-notice setting. */
+  "join_doors", "group_description", "court_notice"];
 export const MEMBERSHIP_PROJECT_TABLES = ["project_participants", "project_owner_votes", "project_owner_decisions",
   "project_removals", "project_visibility", "project_sight", "project_join_requests"];
