@@ -27,7 +27,7 @@ jobs:
       - name: install
         run: |
           set -euo pipefail
-          for pkg in bio-plane pdf-worker ocr-worker newgroup; do
+          for pkg in bio-plane pdf-worker ocr-worker newgroup agent-runner sheet-worker; do
             [ -f "$pkg/package-lock.json" ] || continue
             (cd "$pkg" && npm ci --no-audit --no-fund --loglevel=error)
           done
@@ -46,6 +46,11 @@ jobs:
           echo "::group::kept suites"
           if node --test bio-plane/test/*.test.mjs bio-plane/test/system/*.test.mjs civicos-ui/test/*.test.mjs; then
             echo "kept suites: passed"; else failed="$failed kept-suites"; fi
+          echo "::endgroup::"
+          # Every module's own tests, read from build/modules.json, so a module is never left out (K1692).
+          echo "::group::every module's tests"
+          if node .github/scripts/module-tests.mjs | tee -a "$GITHUB_STEP_SUMMARY"; then
+            echo "module tests: passed"; else failed="$failed module-tests"; fi
           echo "::endgroup::"
           if [ -n "$failed" ]; then echo "regression: FAILED in$failed" | tee -a "$GITHUB_STEP_SUMMARY"; exit 1; fi
           echo "regression: every package passed" | tee -a "$GITHUB_STEP_SUMMARY"
