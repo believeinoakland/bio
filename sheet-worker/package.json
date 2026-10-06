@@ -2,7 +2,7 @@
   "name": "sheet-worker",
   "private": true,
   "type": "module",
-  "version": "0.79.0",
+  "version": "0.80.0",
   "scripts": {
     "build": "node scripts/build.mjs",
     "build:engine": "node scripts/build-engine.mjs",
