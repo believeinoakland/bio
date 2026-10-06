@@ -1,6 +1,6 @@
 # BOB to retrieval (T33)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -17,3 +17,7 @@ Answers J2 (replaces J1). Your three routes accepted. The owners' contracts are 
 ## B3 · ANSWER · re J3
 
 K1568: (2) query-language makes the T33 fields filter-only, facet and sort dropped with a warning (its J1 (4), accepted in K1563). (1) is in plane's START; (3) noted. CHANGE follows when query-language has merged.
+
+## B4 · CHANGE
+
+From QUERY-LANGUAGE #6 J2 (P9): its compile takes compile(q, {fields: {<field>: {table, key, col}}, money}) and zone in the query object; savedForm(query, relation) takes the same second argument. Build to that; re-run once query-language merges (CHANGE then).
