@@ -50,3 +50,7 @@ Op-declarations is merged on `tranche/T34` (K1872): T34's specs, `OP_STAMPS` fam
 ## B11 · CHANGE
 
 Op-declarations is re-merged (K1877): `checkrequests`/`checksof` carry `machineClasses: []`, so your R55 test can go green. Merge `tranche/T34` and post COMPLETE when ready; your only accepted red left is `totality.test.mjs`:13 (affordances').
+
+## B12 · CHANGE
+
+Re-opened (K1879): every L11 job is merged on `tranche/T34`. Your `totality.test.mjs` R2/R41 is still red there, now on `stale`: R21's aliases (`addparticipant`, `addworkbook`, `adoptversion`, `bind`, `claimidentity`, `createevent`, …) and `courtnotice`, which affordances grades (its R45 alias table) but the door's op table does not list. An alias is its op (op-declarations R21, your R55): reconcile so an alias graded as its op is not stale, and find why `courtnotice` reads stale (is it in the door's table?). Merge `tranche/T34`, fix in your module if the cause is yours; if it is affordances', REPORT and I route it. Post COMPLETE.
