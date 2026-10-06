@@ -72,16 +72,16 @@ export function zoneTransitions(zone, fromYear, toYear) {
 /** One `VTIMEZONE` for `zone` over the years `fromYear`–`toYear`: its offset at the start, then each transition as a
  *  `STANDARD` or `DAYLIGHT` observance (`DAYLIGHT` when it moves to the larger of the zone's offsets that period). */
 export function vtimezone(zone, fromYear, toYear) {
-  const start = Date.UTC(fromYear, 0, 1);
-  const first = offsetMinutes(start, zone);
+  const first = offsetMinutes(Date.UTC(fromYear, 0, 1), zone);
   const tr = zoneTransitions(zone, fromYear, toYear);
   const offs = [first, ...tr.map((x) => x.to)];
   const min = Math.min(...offs);
   const lines = ["BEGIN:VTIMEZONE", `TZID:${zone}`];
-  const obs = (kind, at, from, to) => [`BEGIN:${kind}`, `DTSTART:${wallText(at, from)}`, `TZOFFSETFROM:${offsetText(from)}`,
+  const obs = (kind, wall, from, to) => [`BEGIN:${kind}`, `DTSTART:${wall}`, `TZOFFSETFROM:${offsetText(from)}`,
     `TZOFFSETTO:${offsetText(to)}`, `END:${kind}`];
-  lines.push(...obs(first > min ? "DAYLIGHT" : "STANDARD", start, first, first));
-  for (const x of tr) lines.push(...obs(x.to > min ? "DAYLIGHT" : "STANDARD", x.at, x.from, x.to));
+  /* The first observance from local midnight of 1 January; each change at its wall time before the change. */
+  lines.push(...obs(first > min ? "DAYLIGHT" : "STANDARD", `${fromYear}0101T000000`, first, first));
+  for (const x of tr) lines.push(...obs(x.to > min ? "DAYLIGHT" : "STANDARD", wallText(x.at, x.from), x.from, x.to));
   lines.push("END:VTIMEZONE");
   return lines;
 }
