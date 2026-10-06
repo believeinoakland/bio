@@ -36,3 +36,7 @@ Other modules (detail in this record's Completion):
 3. Stale generated artifacts (§14): agent-worker's bundle (its R45 red: run-rules checks/deployment/rules changed) and the plane bundle, for regeneration.
 4. DEC-149 in observation-log (L5, closed; N664 T35): `OBSERVATION_ACTOR_CLASSES.plane` ("the plane's own scheduler…") and `OBSERVATION_AUTHORITY_KINDS.objective` ("…the instance is monitoring for").
 5. BOB's T34-86 grep missed two run-rules strings split across lines (C-109.1 "this / instance", C-109.9 "the group's copy"); applied here. The same split may hide others in L6+ modules.
+
+## J2 · COMPLETE
+
+T34-32 and T34-86 applied (plus C-109.1, C-109.9, STANDARD_BASIS none-recorded under DEC-149, and AI_NO_ACCOUNT's translation brought to K1755/R20). run-rules 24/24; format, architecture, coverage 20/20, ownership 0 failures. New reds outside this module: skills R18 R29 and agent-worker R44 (the file pin), agent-worker R45 (stale bundle) — see J2. Record: Completion.
