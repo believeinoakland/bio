@@ -1,3 +1,12 @@
 # run-rules (T33)
 
 **Status** · session_017KPFHiYeno8CqF9bqD5opN · depth 2 · WORKING · handled B0
+
+## J1 · QUESTION
+
+Five readings of T33-49 I am building on now; none stops the job. Answer only where you read otherwise.
+1. R16, `ask`'s flag. Its flag is `ASK_MODE.deployed` (false), held beside `DEPLOYMENT_SEQUENCE`, not inside it: skills' doctrine test allows a boolean in `DEPLOYMENT_SEQUENCE` only under `deploys_apart.<m>` for a mode in `order`, and `ask` is not in `order`. `DEPLOYED_MODES` gains `ask` only when that flag is true (not today). When it is flipped, ai-runs' open (R40) would read `ask` as a deployed run mode, though `ask` writes no run row. For that later moment run-rules adds `RUN_MODES` (= `order`), so ai-runs can refuse a mode outside it. ai-runs' job decides; I will report it.
+2. R17, ceiling. Each bound's provisional default is also its ceiling, so an ask may declare less but never more. Defaults: turns 12 (agent-worker's CONVERSATION_MAX_TURNS), bytes 1,048,576, wall_ms 180,000, reads 40. R3's codes as R17 says: an unknown name is C-22.15, absent or zero is C-22.16, a non-integer or negative is C-22.13. No R3 code tells the truth about "above the ceiling", so I mint `AI_ASK_BOUND_ABOVE_CEILING` (C-22.21) in this module's table. If you want C-22.13 instead, say so. `askBoundReached` falls back to the default when a declared figure is invalid, which fails closed.
+3. R18. `startedBy` is the control plane's stamp. A member's act is one whose `runPrincipalOf` begins `member:` with an id (a member's own `ai` credential counts). `class:*`, blank, and anything else do not, which fails closed. `standing` is `{author}`, with the author a member stamp. `AI_RUN_NOT_A_MEMBER_ACT` is minted here by `startAllowed` (pure), so its row is C-22.19, and ai-runs and answers relay it.
+4. R19. `checkVerification` also refuses a blank `verified_by` (nobody verified), and every refusal is one new code, `AI_RUN_VERIFICATION_UNFIT` (C-22.20), whose detail names the field. `deployable`: a chain mode follows the rule. `plan` and `ask` deploy apart (R14, R16), so the chain never decides them and `deployable` answers true: only their own reviewed flag deploys them. Any other word answers false.
+5. R20 numbers. These codes are minted by ai-runs and answers, so they go in C-109, the open's family, which I own. That avoids colliding with new families other L6 jobs are minting now: `AI_USE_CEILING_REACHED` C-109.8, `AI_USE_COPY_CEILING_REACHED` C-109.9, `AI_NO_ACCOUNT` C-109.10.
