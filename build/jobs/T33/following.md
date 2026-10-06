@@ -14,7 +14,7 @@
 **Deferred.** None.
 
 **Found in other modules.**
-- `events` (R22, R4's need): `followedImport` writes a Legistar meeting without linking it to the followed body (no `concerns`, no participant), so `eventsFor({entity: body, kinds: ["meeting"]})` never finds an imported meeting. following R4 reads a body's observed meetings that way, so today only member-recorded meetings concerning the body govern a recurrence instance; Legistar-observed ones cannot until events links the meeting to the `body` it was imported for (a `concerns` row is the smallest change). REPORT J3.
+- `events` (R22, R4's need): `followedImport` writes a Legistar meeting without linking it to the followed body (no `concerns`, no participant), so `eventsFor({entity: body, kinds: ["meeting"]})` never finds an imported meeting. following R4 reads a body's observed meetings that way, so today only member-recorded meetings concerning the body govern a recurrence instance; Legistar-observed ones cannot until events links the meeting to the `body` it was imported for (a `concerns` row is the smallest change). REPORT J2.
 - `modules.json` uses: the product code imports exactly K1665's list; the test fixture also imports `extraction` (the `Extraction` whose projection joins the real promotion, so a landing writes its reading) and `provenance` (its register, where a landing's capture is homed and `events` finds it). Both are earlier layers; adding them clears the architecture check's two fixture lines.
 
 **Tests and checks** (on `job/T33/following` after merging `tranche/T33` @ `8c434d321f`).
